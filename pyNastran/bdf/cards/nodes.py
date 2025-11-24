@@ -944,6 +944,31 @@ class GRID(BaseCard):
         h5_file.create_dataset('ps', data=ps)
         h5_file.create_dataset('seid', data=seid)
 
+    @classmethod
+    def add_op2_data(cls, data: list[int | float], comment: str='') -> GRID:
+        """
+        Adds a GRID card from the OP2.
+
+        Parameters
+        ----------
+        data : list[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+
+        .. todo:: Currently unused, but is tested by test_nodes.py
+
+        """
+        nid = data[0]
+        cp = data[1]
+        xyz = data[2:5]
+        cd = data[5]
+        ps = data[6]
+        seid = data[7]
+        if ps == 0:
+            ps = ''
+        return GRID(nid, xyz, cp, cd, ps, seid, comment=comment)
+
     def __init__(self, nid: int, xyz: np.ndarray | list[float],
                  cp: int=0, cd: int=0, ps: str='', seid: int=0,
                  comment: str='') -> None:
@@ -985,31 +1010,6 @@ class GRID(BaseCard):
         self.cp_ref: Coord = None
         self.cd_ref: Coord = None
         self.elements_ref: list[Element] = None
-
-    @classmethod
-    def add_op2_data(cls, data: list[int | float], comment: str='') -> GRID:
-        """
-        Adds a GRID card from the OP2.
-
-        Parameters
-        ----------
-        data : list[varies]
-            a list of fields defined in OP2 format
-        comment : str; default=''
-            a comment for the card
-
-        .. todo:: Currently unused, but is tested by test_nodes.py
-
-        """
-        nid = data[0]
-        cp = data[1]
-        xyz = data[2:5]
-        cd = data[5]
-        ps = data[6]
-        seid = data[7]
-        if ps == 0:
-            ps = ''
-        return GRID(nid, xyz, cp, cd, ps, seid, comment=comment)
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str='') -> GRID:

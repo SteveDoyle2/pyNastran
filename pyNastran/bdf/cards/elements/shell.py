@@ -2322,6 +2322,17 @@ class CQUAD4(QuadShell):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
+    def __deepcopy__(self, memo_dict):
+        card = CQUAD4(
+            self.eid, self.Pid(), self.node_ids,
+            theta_mcid=self.theta_mcid,
+            zoffset=self.zoffset,
+            tflag=self.tflag,
+            T1=self.T1, T2=self.T2,
+            T3=self.T3, T4=self.T4,
+            comment=self.comment)
+        return card
+
     @classmethod
     def export_to_hdf5(cls, h5_file, model, eids):
         """exports the elements in a vectorized way"""

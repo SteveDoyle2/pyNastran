@@ -279,6 +279,28 @@ class TestLoads(unittest.TestCase):
         card.write_card(size, 'dummy')
         card.raw_fields()
 
+    def test_pload4_raw(self):
+        model = BDF()
+        sid = 1
+        eid = 2
+        p = 3.14
+        eids = eid
+        pressures = p
+        load = model.add_pload4(
+            sid, eids, pressures,
+            g1=None, g34=None, cid=0,
+            nvector=None, surf_or_line='SURF',
+            line_load_dir='NORM',
+        )
+        # print(load.raw_fields())
+        # print(load.get_stats())
+        expected = [
+            'PLOAD4', sid, eid, p, p, p, p,
+            None, None, 0,
+            0., 0., 0., 'SURF',
+        ]
+        assert load.raw_fields() == expected, load.raw_fields()
+
     def test_pload4_line(self):
         """tests a PLOAD4 LINE option"""
         #PLOAD4        10      10      0.819.2319

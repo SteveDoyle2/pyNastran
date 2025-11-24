@@ -78,7 +78,14 @@ class BaseCard:
     def __deepcopy__(self, memo_dict):
         raw_fields = self.raw_fields()
         card = BDFCard(raw_fields)
-        return self.add_card(card, comment=self.comment)
+        try:
+            card2 = self.add_card(card, comment=self.comment)
+        except:
+            print(self)
+            print(type(self))
+            print(self.get_stats())
+            raise
+        return card2
 
     def get_stats(self) -> str:
         """Prints out an easy to read summary of the card"""

@@ -8164,9 +8164,13 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_load_object(load)
         return load
 
-    def add_pload4(self, sid, eids, pressures, g1=None, g34=None, cid=0,
-                   nvector=None, surf_or_line='SURF', line_load_dir='NORM',
-                   comment='') -> PLOAD4:
+    def add_pload4(self, sid: int, eids: list[int],
+                   pressures: list[float],
+                   g1=None, g34=None, cid=0,
+                   nvector=None,
+                   surf_or_line: str='SURF',
+                   line_load_dir: str='NORM',
+                   comment: str='') -> PLOAD4:
         """
         Creates a PLOAD4 card
 

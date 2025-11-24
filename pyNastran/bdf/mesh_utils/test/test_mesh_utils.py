@@ -1,5 +1,6 @@
 """various mesh_utils tests"""
 import os
+import copy
 import unittest
 from pathlib import Path
 from io import StringIO
@@ -132,6 +133,7 @@ class TestMeshUtilsAero(unittest.TestCase):
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
         bdf_filename_out = BWB_PATH / 'bwb_saero_mapped.bdf'
         model_old = read_bdf(bdf_filename)
+        copy.deepcopy(model)
         model_new = read_bdf(bdf_filename, xref=False)
 
         # make the results garbage

@@ -4230,6 +4230,15 @@ class MONPNT1(BaseCard):
         assert len(xyz) == 3, xyz
         self.cp_ref = None
         self.cd_ref = None
+        assert len(self.comp) > 0, self.comp
+
+    def __deepcopy__(self, memo_dict):
+        card = MONPNT1(
+            self.name, self.label, self.axes,
+            self.comp,
+            self.xyz.copy(), cp=self.Cp(),
+            cd=self.Cp(), comment=self.comment)
+        return card
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -4282,10 +4291,14 @@ class MONPNT1(BaseCard):
     def Cd(self) -> int:
         return coord_id(self.cd_ref, self.cd)
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
+        cp = self.Cp()
+        cd = self.Cd()
+        assert len(self.comp) > 0, self.get_stats()
         list_fields = [
-            'MONPNT1', self.name, self.label.strip(), self.axes, self.comp,
-            self.Cp(),] + list(self.xyz) + [self.Cd()]
+            'MONPNT1', self.name, self.label.strip(),
+            self.axes, self.comp,
+            cp] + list(self.xyz) + [cd]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

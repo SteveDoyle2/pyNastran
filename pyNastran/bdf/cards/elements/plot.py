@@ -26,6 +26,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 # from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.cards.base_card import BDFCard
@@ -107,6 +108,10 @@ class PLOTEL(BaseCard):
         #assert len(card) <= 4, f'len(PLOTEL card) = {len(card):d}\ncard={card}'
         assert len(card) <= 8, f'len(PLOTEL card) = {len(card):d}\ncard={card}'
         return PLOTEL(eid, nodes, comment=comment)
+
+    def __deepcopy__(self, memo_dict):
+        card = PLOTEL(self.eid, self.node_ids, comment=self.comment)
+        return card
 
     @classmethod
     def add_op2_data(cls, data, comment: str=''):

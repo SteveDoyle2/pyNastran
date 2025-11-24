@@ -389,9 +389,10 @@ class MomentOfInertiaObject(BaseGui):
             model, nids, xyz_cid0, nid_cd, icd_transform,
             eids, element_centroids_cid0,
             stations, model.coords, coord,
-            iaxis_march=iaxis_march,
-            itime=0, idir=0,
-            nodes_tol=None, debug=False, log=log)
+            # iaxis_march=iaxis_march,
+            # itime=0, idir=0,
+            # nodes_tol=None, debug=False, log=log,
+        )
         self.render()
 
         moi_scale = mass_scale * length_scale ** 2
@@ -695,11 +696,18 @@ def moment_of_inertia_diagram(
         model: BDF,
         nids, xyz_cid0, nid_cd, icd_transform,
         eids, element_centroids_cid0,
-        stations, coords: dict[int, Any], coord,
-        iaxis_march=None,
-        idir: int=0,
-        nodes_tol=None, debug: bool=False):
+        stations: np.ndarray,
+        coords: dict[int, CORD2R],
+        coord: CORD2R,
+        # iaxis_march=None,
+        # idir: int=0,
+        # nodes_tol=None,
+        debug: bool=False):
+    dys = np.linspace(0., 100.)
     log = model.log
+    # np.array([0., 1., 0.])
+    normal_plane = coord.j
+
     out = cut_and_plot_moi(
         model, normal_plane, log,
         dys, coords,

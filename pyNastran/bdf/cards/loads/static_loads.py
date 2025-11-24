@@ -2458,9 +2458,16 @@ class PLOAD4(Load):
                       cid=0,
                       surf_or_line='SURF')
 
-    def __init__(self, sid, eids, pressures, g1, g34,
-                 cid=0, nvector=None, surf_or_line='SURF',
-                 line_load_dir='NORM', comment=''):
+    def __init__(self, sid: int,
+                 eids: list[int],
+                 pressures: list[float],
+                 g1: Optional[int],
+                 g34: Optional[int],
+                 cid: int=0,
+                 nvector=None,
+                 surf_or_line: str='SURF',
+                 line_load_dir: str='NORM',
+                 comment: str=''):
         """
         Creates a PLOAD4 card
 
@@ -2476,7 +2483,7 @@ class PLOAD4(Load):
             list[float] :
               tri : must be length 4 (the last value should be the same as the 0th value)
               quad : must be length 4
-        g1 : int/None
+        g1 : int / None
             only used for solid elements
         g34 : int / None
             only used for solid elements
@@ -2600,13 +2607,13 @@ class PLOAD4(Load):
         # If both (CID, N1, n2, N3) and LDIR are blank, then the default is
         # LDIR=NORM.
         cid = integer_or_blank(card, 9, 'cid')
-        n1 = double_or_blank(card, 10, 'N1', 0.)
-        n2 = double_or_blank(card, 11, 'N2', 0.)
-        n3 = double_or_blank(card, 12, 'N3', 0.)
+        n1 = double_or_blank(card, 10, 'N1', default=0.)
+        n2 = double_or_blank(card, 11, 'N2', default=0.)
+        n3 = double_or_blank(card, 12, 'N3', default=0.)
         nvector = np.array([n1, n2, n3])
 
-        surf_or_line = string_or_blank(card, 13, 'sorl', 'SURF')
-        line_load_dir = string_or_blank(card, 14, 'ldir', 'NORM')
+        surf_or_line = string_or_blank(card, 13, 'sorl', default='SURF')
+        line_load_dir = string_or_blank(card, 14, 'ldir', default='NORM')
         assert len(card) <= 15, f'len(PLOAD4 card) = {len(card):d}\ncard={card}'
         return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector,
                       surf_or_line, line_load_dir, comment=comment)
@@ -2724,18 +2731,18 @@ class PLOAD4(Load):
         self.cid_ref = None
         self.eids_ref = None
 
-    def G1(self):
+    def G1(self) -> Optional[int]:
         if self.g1_ref is not None:
             return self.g1_ref.nid
         return self.g1
 
-    def G34(self):
+    def G34(self) -> Optional[int]:
         if self.g34_ref is not None:
             return self.g34_ref.nid
         return self.g34
 
     @property
-    def node_ids(self):
+    def node_ids(self) -> list[int]:
         node_ids = [self.G1(), self.G34()]
         return node_ids
 
@@ -2760,7 +2767,7 @@ class PLOAD4(Load):
     def element_ids(self):
         return self.get_element_ids()
 
-    def repr_fields(self):
+    def repr_fields(self) -> list:
         eids = self.element_ids
         eid = eids[0]
         p1 = self.pressures[0]
@@ -2811,14 +2818,10 @@ class PLOAD4(Load):
             list_fields.append(line_load_dir)
         return list_fields
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         eids = self.element_ids
         eid = eids[0]
-        p1 = self.pressures[0]
-        p2 = self.pressures[1]
-        p3 = self.pressures[2]
-        p4 = self.pressures[3]
-        list_fields = ['PLOAD4', self.sid, eid, p1, p2, p3, p4]
+        list_fields = ['PLOAD4', self.sid, eid] + self.pressures.tolist()
 
         if self.g1 is not None:
             # is it a SOLID element
@@ -2841,11 +2844,8 @@ class PLOAD4(Load):
 
         cid = self.Cid()
         if cid is not None or not np.all(np.isnan(self.nvector)):
-            n1 = self.nvector[0]
-            n2 = self.nvector[1]
-            n3 = self.nvector[2]
             list_fields.append(cid)
-            list_fields += [n1, n2, n3]
+            list_fields += self.nvector.tolist()
         else:
             list_fields += [None, None, None, None]
 
