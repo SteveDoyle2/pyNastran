@@ -223,6 +223,7 @@ def get_stations(model: BDF,
     return xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, x_stations_march
 
 def _setup_faces(bdf_filename: PathLike | BDF) -> tuple[np.ndarray, np.ndarray,
+                                                         list[tuple[int, int]], lst,
                                                          list[tuple[int, int, int]], list[int]]:
     """helper method"""
     model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
@@ -230,47 +231,59 @@ def _setup_faces(bdf_filename: PathLike | BDF) -> tuple[np.ndarray, np.ndarray,
     nid_cp_cd, xyz_cid0, unused_xyz_cp, unused_icd_transform, unused_icp_transform = out
     nids = nid_cp_cd[:, 0]
     #eid_to_edge_map, nid_to_edge_map, edge_to_eid_map = create_maps(model)
-    #model = BDF()
+    line_eids = []
+    lines = []
     face_eids = []
     faces = []
     shells = {
         'CTRIA3', 'CTRIAX', 'CTRIA6', 'CTRIAX6',
         'CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUADX8',
         'CSHEAR'}
-    for eid, elem in model.elements.items():
-        if elem.type in shells:
-            if elem.type == 'CQUAD4':
-                # split to 2 faces
-                n1, n2, n3, n4 = elem.node_ids
-                face_eids.append(eid)
-                face_eids.append(-eid)
-                faces.append((n1, n2, n3))
-                faces.append((n1, n3, n4))
-            elif elem.type == 'CTRIA3':
-                face_eids.append(eid)
-                faces.append(elem.node_ids)
-            else:
-                model.log.debug('skipping %s' % elem.type)
 
-    #out = model._get_maps(eids=None, map_names=None,
-                          #consider_0d=False, consider_0d_rigid=False,
-                          #consider_1d=False, consider_2d=True, consider_3d=False)
-    #edge_to_eid_map = out['edge_to_eid_map']
-    return nids, xyz_cid0, faces, face_eids
+    elements_skipped = []
+    for eid, elem in model.elements.items():
+        # if elem.type in shells:
+        if elem.type == 'CQUAD4':
+            # split to 2 faces
+            n1, n2, n3, n4 = elem.node_ids
+            face_eids.append(eid)
+            face_eids.append(-eid)
+            faces.append((n1, n2, n3))
+            faces.append((n1, n3, n4))
+        elif elem.type == 'CTRIA3':
+            face_eids.append(eid)
+            faces.append(elem.node_ids)
+        elif elem.type in ['CBAR', 'CBEAM', 'CROD', 'CTUBE']:
+            line_eids.append(eid)
+            lines.append(elem.node_ids)
+        else:
+            elements_skipped.append(str(elem))
+    if elements_skipped:
+        elems = ''.join(elements_skipped)
+        model.log.warning(f'skipped\n{elems}')
+
+    out = model._get_maps(
+        eids=None, map_names=None,
+        consider_0d=False, consider_0d_rigid=False,
+        consider_1d=False, consider_2d=True, consider_3d=False)
+    # edge_to_eid_map = out['edge_to_eid_map']
+    return nids, xyz_cid0, lines, line_eids, faces, face_eids
 
 def cut_face_model_by_coord(bdf_filename: PathLike | BDF, coord: CORD2R, tol: float,
                             nodal_result: np.ndarray,
                             plane_atol: float=1e-5, skip_cleanup: bool=True,
-                            csv_filename=None,
-                            plane_bdf_filename: PathLike='plane_face.bdf',
+
+                            csv_filename: PathLike='',
+                            plane_bdf_filename1: PathLike='plane_face1.bdf',
                             plane_bdf_filename2: PathLike='plane_face2.bdf',
-                            plane_bdf_offset: float=0.0):
+                            plane_bdf_offset: float=0.0,
+                            face_data=None):
     """
     Cuts a Nastran model with a cutting plane
 
     Parameters
     ----------
-    bdf_filename : str / BDF
+    bdf_filename : str / Path / BDF
         str : the bdf filename
         model : a properly configurated BDF object
     coord : Coord
@@ -282,19 +295,26 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF, coord: CORD2R, tol: fl
         the result to cut the model with
     plane_atol : float; default=1e-5
         the tolerance for a line that's located on the y=0 local plane
-    csv_filename : str; default=None
-        None : don't write a csv
+    csv_filename : str; default=''
+        '' : don't write a csv
         str : write a csv
     plane_bdf_filename : str; default='plane_face.bdf'
         the path to the simplified conrod model
 
     """
     assert isinstance(tol, float), tol
-    nids, xyz_cid0, faces, face_eids = _setup_faces(bdf_filename)
+    if face_data is None:
+        face_data = _setup_faces(bdf_filename)
+
+    nids, xyz_cid0, lines, line_eids, faces, face_eids = face_data
     unique_geometry_array, unique_results_array, rods_array = _cut_face_model_by_coord(
-        nids, xyz_cid0, faces, face_eids, coord, tol,
-        nodal_result, plane_atol=plane_atol, skip_cleanup=skip_cleanup,
-        plane_bdf_filename=plane_bdf_filename,
+        nids, xyz_cid0,
+        lines, line_eids,
+        faces, face_eids,
+        coord, tol,
+        nodal_result, plane_atol=plane_atol,
+        skip_cleanup=skip_cleanup,
+        plane_bdf_filename1=plane_bdf_filename1,
         plane_bdf_filename2=plane_bdf_filename2,
         plane_bdf_offset=plane_bdf_offset)
     if csv_filename and unique_geometry_array is not None:
@@ -304,7 +324,8 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF, coord: CORD2R, tol: fl
     return unique_geometry_array, unique_results_array, rods_array
 
 
-def export_face_cut(csv_filename: PathLike, geometry_arrays: np.ndarray,
+def export_face_cut(csv_filename: PathLike,
+                    geometry_arrays: np.ndarray,
                     results_arrays: np.ndarray,
                     header: str='') -> None:
     """
@@ -507,10 +528,13 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
     #return NotImplementedError()
 
 def _cut_face_model_by_coord(nids, xyz_cid0: np.ndarray,
-                             faces, face_eids,
+                             lines: list[tuple[int, int]],
+                             line_eids: list[int],
+                             faces: list[tuple[int, int, int] | tuple[int, int, int, int]],
+                             face_eids: list[int],
                              coord: Coord, tol: float,
                              nodal_result, plane_atol: float=1e-5, skip_cleanup: bool=True,
-                             plane_bdf_filename: PathLike='plane_face.bdf',
+                             plane_bdf_filename1: PathLike='plane_face.bdf',
                              plane_bdf_filename2: PathLike='plane_face2.bdf',
                              plane_bdf_offset: float=0.) -> tuple[Any, Any, Any]:
     """
@@ -522,8 +546,18 @@ def _cut_face_model_by_coord(nids, xyz_cid0: np.ndarray,
         the node ids in the model
     xyz_cid0 : (nnodes, 3) float ndarray
         the node xyzs in the model
-    faces : ???
+    lines : list[line]
+        the lines of the model
+        line : varies
+            tuple[int, int]
+            tuple[int, int, int]
+    line_eids : list[int]
+        the parent element
+    faces : list[face]
         the faces of the model
+        face : varies
+            tuple[int, int, int]
+            tuple[int, int, int, int]
     face_eids : list[int]
         the parent element
     coord : Coord
@@ -577,7 +611,7 @@ def _cut_face_model_by_coord(nids, xyz_cid0: np.ndarray,
     unique_geometry_array, unique_results_array, rods_array = slice_faces(
         nids, xyz_cid0, xyz_cid, iclose_faces_array, close_face_eids_array,
         nodal_result, coord, plane_atol=plane_atol, skip_cleanup=skip_cleanup,
-        plane_bdf_filename=plane_bdf_filename,
+        plane_bdf_filename1=plane_bdf_filename1,
         plane_bdf_filename2=plane_bdf_filename2,
         plane_bdf_offset=plane_bdf_offset)
 
@@ -629,7 +663,7 @@ def slice_faces(nodes, xyz_cid0: np.ndarray, xyz_cid: np.ndarray,
                 coord: Coord, # CORD2R,
                 plane_atol: float=1e-5,
                 skip_cleanup: bool=True,
-                plane_bdf_filename: PathLike='plane_face.bdf',
+                plane_bdf_filename1: PathLike='plane_face1.bdf',
                 plane_bdf_filename2: PathLike='plane_face2.bdf',
                 plane_bdf_offset: float=0.):
     """
@@ -681,16 +715,20 @@ def slice_faces(nodes, xyz_cid0: np.ndarray, xyz_cid: np.ndarray,
 
     #base, ext = os.path.splitext(plane_bdf_filename)
     #plane_bdf_filename2 = base + '2' + ext
-    #with open(plane_bdf_filename, 'w') as fbdf, open(plane_bdf_filename2, 'w') as fbdf2:
-    fbdf = open(plane_bdf_filename, 'w')
-    fbdf.write('$pyNastran: punch=True\n')
-    fbdf.write('MAT1,1,3.0e7,,0.3\n')
-    fbdf.write('MAT1,2,3.0e7,,0.3\n')
+    #with open(plane_bdf_filename, 'w') as fbdf1, open(plane_bdf_filename2, 'w') as fbdf2:
+    fbdf1 = None
+    fbdf2 = None
+    if plane_bdf_filename1:
+        fbdf1 = open(plane_bdf_filename1, 'w')
+        fbdf1.write('$pyNastran: punch=True\n')
+        fbdf1.write('MAT1,1,3.0e7,,0.3\n')
+        fbdf1.write('MAT1,2,3.0e7,,0.3\n')
 
-    fbdf2 = open(plane_bdf_filename2, 'w')
-    fbdf2.write('$pyNastran: punch=True\n')
-    fbdf2.write('MAT1,1,3.0e7,,0.3\n')
-    fbdf2.write('MAT1,2,3.0e7,,0.3\n')
+    if plane_bdf_filename2:
+        fbdf2 = open(plane_bdf_filename2, 'w')
+        fbdf2.write('$pyNastran: punch=True\n')
+        fbdf2.write('MAT1,1,3.0e7,,0.3\n')
+        fbdf2.write('MAT1,2,3.0e7,,0.3\n')
 
     for eid, face in zip(tri_face_eids, tri_faces):
         #if len(face) == 4:
@@ -747,7 +785,7 @@ def slice_faces(nodes, xyz_cid0: np.ndarray, xyz_cid: np.ndarray,
             #print('  is_same_sign=%s is_far_from_plane=%s' % (is_same_sign, is_far_from_plane))
             eid_new, nid_new = _interpolate_face_to_bar(
                 nodes, eid, eid_new, nid_new, mid, area, J,
-                fbdf, fbdf2,
+                fbdf1, fbdf2,
                 inid1, inid2, inid3,
                 xyz1_local, xyz2_local, xyz3_local,
                 xyz1_global, xyz2_global, xyz3_global,
@@ -761,14 +799,18 @@ def slice_faces(nodes, xyz_cid0: np.ndarray, xyz_cid: np.ndarray,
             msg = 'lengths are not equal; local_points=%s result=%s' % (
                 len(local_points), len(result))
             raise RuntimeError(msg)
-        fbdf.write('$------\n')
-        fbdf2.write('$------\n')
+        if fbdf1 is not None:
+            fbdf1.write('$------\n')
+        if fbdf2 is not None:
+            fbdf2.write('$------\n')
         #print('----------------------')
-    fbdf.close()
-    fbdf2.close()
+    if fbdf1 is not None:
+        fbdf1.close()
+    if fbdf2 is not None:
+        fbdf2.close()
 
     if len(rod_elements) == 0:
-        os.remove(plane_bdf_filename)
+        os.remove(plane_bdf_filename1)
 
     if len(geometry) == 0:
         return None, None, (None, None, None)
@@ -989,7 +1031,7 @@ def iedges_to_geometry_results(iedges_all,
 
 def _face_on_edge(eid: int, eid_new: int,
                   nid_new: int, mid: int,
-                  area: float, J: float, fbdf,
+                  area: float, J: float, fbdf1,
                   inid1: int, inid2: int, unused_inid3: int,
                   xyz1_local: np.ndarray, xyz2_local: np.ndarray, unused_xyz3_local: np.ndarray,
                   xyz1_global: np.ndarray, xyz2_global: np.ndarray, unused_xyz3_global: np.ndarray,
@@ -1013,10 +1055,11 @@ def _face_on_edge(eid: int, eid_new: int,
     out_grid2: list[str | int | float] = ['GRID', nid_new + 1, cid, ] + xyz2_local.tolist()
     conrod: list[str | int | float] = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
     conm2: list[str | int | float] = ['CONM2', eid_new+1, nid_new, 0, 100.]
-    fbdf.write(print_card_8(out_grid1))
-    fbdf.write(print_card_8(out_grid2))
-    fbdf.write(print_card_8(conrod))
-    fbdf.write(print_card_8(conm2))
+    if fbdf1 is not None:
+        fbdf1.write(print_card_8(out_grid1))
+        fbdf1.write(print_card_8(out_grid2))
+        fbdf1.write(print_card_8(conrod))
+        fbdf1.write(print_card_8(conm2))
     rod_elements.append([eid_new, nid_new, nid_new + 1])
     rod_nids.extend([nid_new, nid_new + 1])
     rod_xyzs.append([xyz1_local, xyz2_local])
@@ -1047,7 +1090,7 @@ def _face_on_edge(eid: int, eid_new: int,
 def _interpolate_face_to_bar(nodes,
                              eid: int, eid_new: int, nid_new: int, mid: int,
                              area: float, J: float,
-                             fbdf, fbdf2,
+                             fbdf1, fbdf2,
                              inid1: int, inid2: int, inid3: int,
                              xyz1_local: np.ndarray, xyz2_local: np.ndarray, xyz3_local: np.ndarray,
                              xyz1_global: np.ndarray, xyz2_global: np.ndarray, xyz3_global: np.ndarray,
@@ -1225,8 +1268,10 @@ def _interpolate_face_to_bar(nodes,
         mid = 2
         return eid_new, nid_new
 
-    fbdf.write(msg)
-    fbdf2.write(msg2)
+    if fbdf1 is not None:
+        fbdf1.write(msg)
+    if fbdf2 is not None:
+        fbdf2.write(msg2)
     local_points.extend(local_points_temp)
     global_points.extend(global_points_temp)
     geometry.extend(geometry_temp)
@@ -1255,8 +1300,10 @@ def _interpolate_face_to_bar(nodes,
     # we'll take the first two
     conrod = ['CONROD', eid, nid_a_prime, nid_b_prime, mid, area, J]
     #print('  ', conrod)
-    fbdf.write(print_card_8(conrod))
-    fbdf2.write(print_card_8(conrod))
+    if fbdf1 is not None:
+        fbdf1.write(print_card_8(conrod))
+    if fbdf2 is not None:
+        fbdf2.write(print_card_8(conrod))
     rod_elements.append([eid, nid_a_prime, nid_b_prime])
 
     eid_new += 1

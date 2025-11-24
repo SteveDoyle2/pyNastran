@@ -2848,7 +2848,9 @@ class CORD2R(Cord2x, RectangularCoord):
     type = 'CORD2R'
     Type = 'R'
 
-    def __init__(self, cid: int, origin, zaxis, xzplane,
+    def __init__(self, cid: int, origin: list[float],
+                 zaxis: list[float],
+                 xzplane: list[float],
                  rid: int=0, setup: bool=True, comment: str=''):
         """
         Creates the CORD2R card, which defines a rectangular coordinate

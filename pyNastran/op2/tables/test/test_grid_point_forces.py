@@ -18,7 +18,6 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointFo
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
     get_element_centroids, _p1_p2_zaxis_to_cord2r,
     get_stations,
-    #cut_edge_model_by_coord, cut_face_model_by_coord,
 )
 
 PKG_PATH = Path(pyNastran.__path__[0])

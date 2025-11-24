@@ -1,6 +1,7 @@
 """defines cutting plane tests"""
 import os
 from itertools import count
+from pathlib import Path
 from typing import Any
 import unittest
 import numpy as np
@@ -18,18 +19,21 @@ if IS_MATPLOTLIB:
     import matplotlib.pyplot as plt  # pylint: disable=unused-import
 
 import pyNastran
+from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import read_bdf, BDF, CORD2R
 from cpylog import SimpleLogger
 
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
     cut_edge_model_by_coord, cut_face_model_by_coord, connect_face_rows,
-    split_to_trias, calculate_area_moi, _get_shell_inertia)
+    split_to_trias, calculate_area_moi, _get_shell_inertia,
+    _setup_faces,
+)
 from pyNastran.bdf.mesh_utils.cutting_plane_plotter import cut_and_plot_model
 #from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.op2.op2_geom import read_op2_geom
 
 PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+MODEL_PATH = Path(os.path.join(PKG_PATH, '..', 'models'))
 
 
 class TestCuttingPlane(unittest.TestCase):
@@ -151,29 +155,30 @@ class TestCuttingPlane(unittest.TestCase):
         assert np.allclose(thicknessi, sum(thicknesses))
         assert np.allclose(areai, thicknessi*lengthi)
         assert np.allclose(imat_rotation_angle_deg, 0.)
-        #assert np.allclose(Ex, e11)
-        #assert np.allclose(Ey, e22)
-        #assert np.allclose(Gxy, g12)
-        #assert np.allclose(nu_xy, nu12)
+        # assert np.allclose(Ex, e11)
+        # assert np.allclose(Ey, e22)
+        # assert np.allclose(Gxy, g12)
+        # assert np.allclose(nu_xy, nu12)
 
         # fabric - rotate by 45 degrees: +/- 45 deg
-        #thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
-            #element12, normal_plane, normal_plane_vector, lengthi)
-        #assert np.allclose(thicknessi, sum(thicknesses))
-        #assert np.allclose(areai, thicknessi*lengthi)
-        #assert np.allclose(imat_rotation_angle_deg, 45.)
-        #assert np.allclose(Ex, 1317292.3250658484)
-        #assert np.allclose(Ey, 1317292.3250658484)
-        #assert np.allclose(Gxy, 3515514.7806900046)
-        #assert np.allclose(nu_xy, 4.766908439759332e-13)
+        # thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
+        #     element12, normal_plane, normal_plane_vector, lengthi)
+        # assert np.allclose(thicknessi, sum(thicknesses))
+        # assert np.allclose(areai, thicknessi*lengthi)
+        # assert np.allclose(imat_rotation_angle_deg, 45.)
+        # assert np.allclose(Ex, 1317292.3250658484)
+        # assert np.allclose(Ey, 1317292.3250658484)
+        # assert np.allclose(Gxy, 3515514.7806900046)
+        # assert np.allclose(nu_xy, 4.766908439759332e-13)
 
         x = 1
 
     def test_cut_plate(self):
         """mode 10 is a sine wave"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        bdf_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.dat')
-        op2_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.op2')
+        dirname = MODEL_PATH / 'plate_py'
+        bdf_filename = dirname / 'plate_py.dat'
+        op2_filename = dirname / 'plate_py.op2'
         model = read_bdf(bdf_filename, log=log)
         op2_model = read_op2_geom(op2_filename, log=log)
 
@@ -181,7 +186,8 @@ class TestCuttingPlane(unittest.TestCase):
         p1 = None
         p2 = None
         zaxis = None
-        coord = CORD2R(1, rid=0, origin=[0., 0., 0.], zaxis=[0., 0., 1], xzplane=[1., 0., 0.],
+        coord = CORD2R(1, rid=0, origin=[0., 0., 0.],
+                       zaxis=[0., 0., 1], xzplane=[1., 0., 0.],
                        comment='')
         model.coords[1] = coord
         ytol = 2.
@@ -204,80 +210,64 @@ class TestCuttingPlane(unittest.TestCase):
         # complex
         nodal_result2 = np.asarray(nodal_result, dtype='complex64')
         nodal_result2.imag = -nodal_result.real
-        cut_and_plot_model(title, p1, p2, zaxis,
-                           model, coord, nodal_result2, model.log, ytol,
-                           plane_atol=1e-5, csv_filename='complex_result.csv', invert_yaxis=True,
-                           cut_type='edge', plot=IS_MATPLOTLIB, show=False)
-        os.remove('real_result.csv')
-        os.remove('complex_result.csv')
-
-    def _test_cut_box(self):  # pragma: no cover
-        """recover element ids"""
-        log = SimpleLogger(level='warning', encoding='utf-8')
-        #bdf_filename = r'SEction_1_box.bdf'  # x-axis
-        #normal_plane = np.array([1., 0., 0.])
-        bdf_filename = 'Section_1_box_4.bdf'  # y-axis
-        normal_plane = np.array([0., 1., 0.])
-        dys, coords = get_coords_box()
-        y, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2 = cut_and_plot_moi(
-            bdf_filename, normal_plane, log,
-            dys, coords,
-            ytol=0.0,
-            plot=True, show=True)
-
-        show = True
-        if IS_MATPLOTLIB:
-            plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show)
+        cut_and_plot_model(
+            title, p1, p2, zaxis,
+            model, coord, nodal_result2, model.log, ytol,
+            plane_atol=1e-5,
+            csv_filename='complex_result.csv', invert_yaxis=True,
+            cut_type='edge', plot=IS_MATPLOTLIB, show=False)
+        dirname = Path('.')
+        os.remove(dirname / 'real_result.csv')
+        os.remove(dirname / 'complex_result.csv')
 
     def test_cut_bwb(self):
         """recover element ids"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        is_bwb = True
-        if is_bwb:
-            bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')  # ymax~=1262.0
-            dys, coords = get_coords_bwb()
-        else:  #  pragma: no cover
-            bdf_filename = r'C:\NASA\asm\all_modes_mach_0.85\flutter.bdf'  # ymax=1160.601
-            dys, coords = get_coords_crm()
+        dirname = MODEL_PATH / 'bwb'
+        bdf_filename = dirname / 'bwb_saero.bdf'  # ymax~=1262.0
+        model = read_bdf(bdf_filename, log=log)
+        dys, coords = get_coords_bwb()
         normal_plane = np.array([0., 1., 0.])
 
+        face_data = _setup_faces(model)
         y, A, I, J, EI, J, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2 = cut_and_plot_moi(
             bdf_filename, normal_plane, log,
             dys, coords,
             ytol=2.0,
-            plot=True, show=True)
+            dirname=dirname,
+            plot=True, show=False, face_data=face_data)
 
         show = True
         #show = False
         if IS_MATPLOTLIB:
             GJ = J
             plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show)
-            os.remove('normalized_inertia_vs_span.png')
-            os.remove('area_vs_span.png')
-            os.remove('amoi_vs_span.png')
-            os.remove('e_amoi_vs_span.png')
-            os.remove('cg_vs_span.png')
+            os.remove(dirname / 'normalized_inertia_vs_span.png')
+            os.remove(dirname / 'area_vs_span.png')
+            os.remove(dirname / 'amoi_vs_span.png')
+            os.remove(dirname / 'e_amoi_vs_span.png')
+            os.remove(dirname / 'cg_vs_span.png')
 
-        #bdf_merge(plane_bdf_filenames, bdf_filename_out='merge.bdf', renumber=True,
-                  #encoding=None, size=8, is_double=False, cards_to_skip=None,
-                  #log=None, skip_case_control_deck=False)
+        # bdf_merge(plane_bdf_filenames, bdf_filename_out='merge.bdf', renumber=True,
+        #           encoding=None, size=8, is_double=False, cards_to_skip=None,
+        #           log=None, skip_case_control_deck=False)
         for plane_bdf_filename in plane_bdf_filenames:
             os.remove(plane_bdf_filename)
-        os.remove('thetas.csv')
-        os.remove('equivalent_beam_model.bdf')
-        os.remove('cut_data_vs_span.csv')
-        #os.remove('cut_face.csv')
-        #if IS_MATPLOTLIB:
-            #os.remove('area_vs_span.png')
-            #os.remove('amoi_vs_span.png')
-            #os.remove('normalized_inertia_vs_span.png')
-            #os.remove('cg_vs_span.png')
-            #os.remove('e_amoi_vs_span.png')
+        os.remove(dirname / 'thetas.csv')
+        # os.remove(dirname / 'equivalent_beam_model.bdf')
+        os.remove(dirname / 'cut_data_vs_span.csv')
+        # os.remove('cut_face.csv')
+        # if IS_MATPLOTLIB:
+        #     os.remove('area_vs_span.png')
+        #     os.remove('amoi_vs_span.png')
+        #     os.remove('normalized_inertia_vs_span.png')
+        #     os.remove('cg_vs_span.png')
+        #     os.remove('e_amoi_vs_span.png')
 
     def test_cut_plate_eids(self):
         """recover element ids"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        bdf_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.dat')
+        bdf_filename = MODEL_PATH / 'plate_py' / 'plate_py.dat'
         model = read_bdf(bdf_filename, log=log)
         nnodes = len(model.nodes)
         nodal_result = np.ones(nnodes)
@@ -290,8 +280,17 @@ class TestCuttingPlane(unittest.TestCase):
         unique_geometry_array, unique_results_array, unused_rods = cut_face_model_by_coord(
             bdf_filename, coord, ytol,
             nodal_result, plane_atol=1e-5, skip_cleanup=True,
+            csv_filename='',
+            plane_bdf_filename1='',
+            plane_bdf_filename2='',
+            face_data=None,
+        )
+        unique_geometry_array, unique_results_array, unused_rods = cut_face_model_by_coord(
+            bdf_filename, coord, ytol,
+            nodal_result, plane_atol=1e-5, skip_cleanup=True,
             csv_filename='cut_face.csv',
-            plane_bdf_filename='plane_face.bdf',
+            plane_bdf_filename1='plane_face.bdf',
+            face_data=None,
         )
         #print(unique_geometry_array)
         #print(unique_results_array)
@@ -340,11 +339,13 @@ class TestCuttingPlane(unittest.TestCase):
 
         unused_geometry_array, result_array, unused_rods = cut_face_model_by_coord(
             model, coord, tol, nodal_result,
-            plane_atol=1e-5)
+            plane_atol=1e-5,
+            face_data=None,
+        )
         result_array = np.array(result_array)
         assert result_array.shape == (1, 8, 7), result_array.shape
         #os.remove('plane_edge.bdf')
-        os.remove('plane_face.bdf')
+        os.remove('plane_face1.bdf')
 
     def test_cut_shell_model_edge_2(self):
         """
@@ -382,13 +383,15 @@ class TestCuttingPlane(unittest.TestCase):
 
         unused_geometry_arrays, result_arrays, unused_rods = cut_face_model_by_coord(
             model, coord, tol, nodal_result,
-            plane_atol=1e-5, csv_filename='cut_face_2.csv')
+            plane_atol=1e-5,
+            csv_filename='cut_face_2.csv',
+            face_data=None)
         assert len(result_arrays[0]) == 8, len(result_arrays)
         os.remove('tris.bdf')
         os.remove('cut_edge_2.csv')
         os.remove('cut_face_2.csv')
         #os.remove('plane_edge.bdf')
-        os.remove('plane_face.bdf')
+        os.remove('plane_face1.bdf')
 
     def test_cut_shell_model_face_1(self):
         """
@@ -521,56 +524,33 @@ def get_coords_bwb(ncuts: int=2000) -> tuple[list[float], list[CORD2R]]:  # prag
         coords.append(coord)
     return dys, coords
 
-def get_coords_crm(ncuts: int=2000) -> tuple[list[float], list[CORD2R]]:  # pragma: no cover
-    dys = []
-    coords = []
-    for i in range(ncuts):
-        dy = 4. * i + 1.  #  CRM
-        coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
-        dys.append(dy)
-        coords.append(coord)
-    return dys, coords
-
-def get_coords_box(ncuts: int) -> tuple[list[float], list[CORD2R]]:  # pragma: no cover
-    dys = []
-    coords = []
-    for i in range(ncuts):
-        dy = -0.1 * i - 0.1  #  box
-        #coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
-        coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
-
-        #if dy < -5:
-            #print('break', dy)
-            #break
-
-        #origin = np.array([0., dy, 0.])
-        #xzplane = origin + dx
-        #xzplane = np.array([1., dy, 0.])
-        #coord = CORD2R.add_axes(cid, rid=0, origin=p1, xaxis=p2-p1, yaxis=None, zaxis=None,
-                                 #xyplane=None, yzplane=None, xzplane=None, comment='')
-        #print(coord)
-        dys.append(dy)
-        coords.append(coord)
-    return dys, coords
-
-def cut_and_plot_moi(bdf_filename: str,
-                     normal_plane: np.ndarray, log: SimpleLogger,
+def cut_and_plot_moi(bdf_filename: PathLike | BDF,
+                     normal_plane: np.ndarray,
+                     log: SimpleLogger,
                      dys: list[float],
                      coords: list[CORD2R],
                      ytol: float=2.0,
-                     dirname: str='',
-                     plot: bool=True, show: bool=False) -> tuple[Any, Any, Any, Any, Any]: # y, A, I, EI, avg_centroid
-    model = read_bdf(bdf_filename, log=log)
-    model2 = read_bdf(bdf_filename, log=log)
+                     face_data=None,
+                     dirname: PathLike='',
+                     plot: bool=True,
+                     show: bool=False) -> tuple[Any, Any, Any, Any, Any]: # y, A, I, EI, avg_centroid
+    if isinstance(dirname, str):
+        dirname = Path(dirname)
+    if isinstance(bdf_filename, PathLike):
+        model = read_bdf(bdf_filename, log=log)
+        model_static = read_bdf(bdf_filename, log=log)
+    else:
+        model = bdf_filename
+        model_static = bdf_filename
 
     out = _get_station_data(
-        model, model2,
+        model, model_static,
         dys, coords, normal_plane,
-        ytol, dirname)
+        ytol, dirname, face_data=face_data)
     thetas, y, dx, dz, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2 = out
 
     assert len(y) > 0, y
-    thetas_csv_filename = os.path.join(dirname, 'thetas.csv')
+    thetas_csv_filename = dirname / 'thetas.csv'
 
     with open(thetas_csv_filename, 'w') as csv_filename:
         csv_filename.write('# eid(%i),theta,Ex,Ey,Gxy\n')
@@ -578,7 +558,6 @@ def cut_and_plot_moi(bdf_filename: str,
             csv_filename.write('%d,%f,%f,%f,%f\n' % (eid, theta, Ex, Ey, Gxy))
 
     inid = 1
-    beam_model = BDF(debug=False)
     avg_centroid[:, 1] = y
 
     # wrong
@@ -602,6 +581,45 @@ def cut_and_plot_moi(bdf_filename: str,
 
     J = Ix + Iz
     #i1, i2, i12 = Ix, Iy, Ixy
+
+    beam_model_bdf_filename = dirname / 'equivalent_beam_model.bdf'
+    _write_beam_model(
+        avg_centroid,
+        A, Ix, Iz, Ixz,
+        beam_model_bdf_filename,
+    )
+
+    cut_data_span_filename = dirname / 'cut_data_vs_span.csv'
+    if cut_data_span_filename:
+        X = np.vstack([y, dx, dz, A, Ix, Iz, Ixz, ExIx, ExIz, ExIxz]).T
+        Y = np.hstack([X, avg_centroid])
+        header = 'y, dx, dz, A, Ix, Iz, Ixz, Ex*Ix, Ex*Iz, Ex*Ixz, xcentroid, ycentroid, zcentroid'
+        np.savetxt(cut_data_span_filename, Y, header=header, delimiter=',')
+
+    plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show, dirname=dirname)
+    return y, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2
+
+def _write_beam_model(avg_centroid: np.ndarray,
+                      A, I, J, EI, GJ,
+                      bdf_filename: PathLike=''):
+    if isinstance(bdf_filename, str) and len(bdf_filename) == 0:
+        return
+
+    #   0    1    2    3    4    5
+    # [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
+    Ix = I[:, 0]
+    Iy = I[:, 1]
+    Iz = I[:, 2]
+    Ixz = I[:, 5]
+
+    ExIx = EI[:, 0]
+    ExIy = EI[:, 1]
+    ExIz = EI[:, 2]
+    ExIxz = EI[:, 5]
+    J = Ix + Iz
+
+    mid = 1
+    beam_model = BDF(debug=False)
     for inid, xyz in enumerate(avg_centroid):
         beam_model.add_grid(inid+1, xyz)
     for eid in range(1, len(A)):
@@ -611,7 +629,6 @@ def cut_and_plot_moi(bdf_filename: str,
         g0 = None
         beam_model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                              pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
-
         # j = i1 + i2
         so = ['YES', 'YES']
         xxb = [0., 1.]
@@ -626,22 +643,12 @@ def cut_and_plot_moi(bdf_filename: str,
                              m1a=0., m2a=0., m1b=None, m2b=None,
                              n1a=0., n2a=0., n1b=None, n2b=None,
                              comment='')
+    beam_model.write_bdf(bdf_filename)
 
-    beam_model_bdf_filename = os.path.join(dirname, 'equivalent_beam_model.bdf')
-    beam_model.write_bdf(beam_model_bdf_filename)
-
-    X = np.vstack([y, dx, dz, A, Ix, Iz, Ixz, ExIx, ExIz, ExIxz]).T
-    Y = np.hstack([X, avg_centroid])
-    header = 'y, dx, dz, A, Ix, Iz, Ixz, Ex*Ix, Ex*Iz, Ex*Ixz, xcentroid, ycentroid, zcentroid'
-    cut_data_span_filename = os.path.join(dirname, 'cut_data_vs_span.csv')
-    np.savetxt(cut_data_span_filename, Y, header=header, delimiter=',')
-
-    plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show, dirname=dirname)
-    return y, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2
-
-def _get_station_data(model: BDF, model2: BDF,
-                     dys, coords, normal_plane: np.ndarray,
-                     ytol: float, dirname: str, ) -> tuple[
+def _get_station_data(model: BDF, model_static: BDF,
+                      dys, coords, normal_plane: np.ndarray,
+                      ytol: float, dirname: Path,
+                      face_data=None) -> tuple[
                          dict[int, tuple[float, float, float, float]],  # thetas
                          #y, dx, dz,
                          #A, I, J,
@@ -661,47 +668,49 @@ def _get_station_data(model: BDF, model2: BDF,
     #p2 = np.array([624.91345, 639.68896, -0.99763656])
     #dx = p2 - p1
     nodal_result = None
-    plane_bdf_filenames = []
+    plane_bdf_filenames1 = []
     plane_bdf_filenames2 = []
-    y = []
-    dx = []
-    dz = []
-    A = []
-    I = []
-    J = []
-    EI = []
-    GJ = []
-    avg_centroid = []
 
-    assert len(dys) > 0, dys
-    for i, dy, coord in zip(count(), dys, coords):
+    ny = len(dys)
+    assert ny > 0, dys
+    y = np.full(ny, np.nan, dtype='float64')
+    dx = np.full(ny, np.nan, dtype='float64')
+    dz = np.full(ny, np.nan, dtype='float64')
+    A = np.full(ny, np.nan, dtype='float64')
+    I = np.full((ny, 6), np.nan, dtype='float64')
+    J = np.full(ny, np.nan, dtype='float64')
+    EI = np.full((ny, 6), np.nan, dtype='float64')
+    GJ = np.full(ny, np.nan, dtype='float64')
+    avg_centroid = np.full((ny, 3), np.nan, dtype='float64')
+
+    for icut, dy, coord in zip(count(), dys, coords):
         model.coords[1] = coord
-        plane_bdf_filename = os.path.join(dirname, f'plane_face_{i:d}.bdf')
-        plane_bdf_filename2 = os.path.join(dirname, f'plane_face2_{i:d}.bdf')
-        cut_face_filename = os.path.join(dirname, f'cut_face_{i:d}.csv')
+        plane_bdf_filename1 = dirname / f'plane_face1_{icut:d}.bdf'
+        plane_bdf_filename2 = dirname / f'plane_face2_{icut:d}.bdf'
+        cut_face_filename = dirname / f'cut_face_{icut:d}.csv'
         if os.path.exists(cut_face_filename):
             os.remove(cut_face_filename)
         try:
             out = cut_face_model_by_coord(
-                model2, coord, ytol,
+                model_static, coord, ytol,
                 nodal_result, plane_atol=1e-5, skip_cleanup=True,
                 #csv_filename=cut_face_filename,
                 csv_filename=None,
                 #plane_bdf_filename=None)
-                plane_bdf_filename=plane_bdf_filename,
+                plane_bdf_filename1=plane_bdf_filename1,
                 plane_bdf_filename2=plane_bdf_filename2,
-                plane_bdf_offset=dy)
+                plane_bdf_offset=dy, face_data=face_data)
         except PermissionError:
-            print(f'failed to delete {plane_bdf_filename}')
+            print(f'failed to delete {plane_bdf_filename1}')
             continue
         except RuntimeError:
             # incorrect ivalues=[0, 1, 2]; dy=771. for CRM
             continue
         unused_unique_geometry_array, unused_unique_results_array, rods = out
 
-        if not os.path.exists(plane_bdf_filename):
+        if not os.path.exists(plane_bdf_filename1):
             break
-        plane_bdf_filenames.append(plane_bdf_filename)
+        plane_bdf_filenames1.append(plane_bdf_filename1)
         plane_bdf_filenames2.append(plane_bdf_filename2)
         # eid, nid, inid1, inid2
         #print(unique_geometry_array)
@@ -712,31 +721,31 @@ def _get_station_data(model: BDF, model2: BDF,
 
         #print(out)
         Ji = GJi = 1.0
-        y.append(dy)
-        dx.append(dxi)  # length
-        dz.append(dzi)  # height
-        A.append(Ai)
-        I.append(Ii)
-        J.append(Ji)
-        EI.append(EIi)
-        GJ.append(GJi)
-        avg_centroid.append(avg_centroidi)
+        y[icut] = dy
+        dx[icut] = dxi  # length
+        dz[icut] = dzi  # height
+        A[icut] = Ai
+        I[icut, :] = Ii
+        # print(Ji, EIi, GJi)
+        # print(len(Ji), len(EIi), len(GJi))
+        J[icut] = Ji
+        EI[icut, :] = EIi
+        GJ[icut] = GJi
+        avg_centroid[icut, :] = avg_centroidi
         #break
-    assert len(y) > 0, y
 
-    y = np.array(y, dtype='float64')
-    A = np.array(A, dtype='float64')
-    dx = np.array(dx, dtype='float64')
-    dz = np.array(dz, dtype='float64')
-    I = np.array(I, dtype='float64')
-    J = np.array(J, dtype='float64')
-    EI = np.array(EI, dtype='float64')
-    GJ = np.array(GJ, dtype='float64')
-    avg_centroid = np.array(avg_centroid, dtype='float64')
-    return thetas, y, dx, dz, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2
+    out = (
+        thetas, y, dx, dz,
+        A, I, J, EI, GJ,
+        avg_centroid,
+        plane_bdf_filenames1, plane_bdf_filenames2
+    )
+    return out
 
 
-def plot_inertia(y, A, I, J, EI, GJ, avg_centroid, ifig: int=1, show: bool=True, dirname: str=''):
+def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
+                 ifig: int=1, show: bool=True,
+                 dirname: PathLike=''):
     """helper method for test"""
     #plt.plot(y, I[:, 0] / I[:, 0].max(), 'ro-', label='Qxx')
     #plt.plot(y, I[:, 1] / I[:, 1].max(), 'bo-', label='Qyy')
@@ -760,7 +769,8 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid, ifig: int=1, show: bool=True,
     ax.set_xlabel('Span, y')
     ax.set_ylabel('Normalized Area MOI, I')
     ax.legend()
-    fig.savefig('normalized_inertia_vs_span.png')
+    png_filename = os.path.join(dirname, 'normalized_inertia_vs_span.png')
+    fig.savefig(png_filename)
     #-------------------------------------------------------
 
     fig = plt.figure(ifig + 1)
@@ -771,7 +781,8 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid, ifig: int=1, show: bool=True,
     ax.set_xlabel('Span, y')
     ax.set_ylabel('Area, A')
     ax.legend()
-    fig.savefig('area_vs_span.png')
+    png_filename = os.path.join(dirname, 'area_vs_span.png')
+    fig.savefig(png_filename)
     #-------------------------------------------------------
 
     fig = plt.figure(ifig + 2)
@@ -783,7 +794,8 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid, ifig: int=1, show: bool=True,
     ax.set_xlabel('Span, y')
     ax.set_ylabel('Area MOI, I')
     ax.legend()
-    fig.savefig('amoi_vs_span.png')
+    png_filename = os.path.join(dirname, 'amoi_vs_span.png')
+    fig.savefig(png_filename)
     #-------------------------------------------------------
 
 
@@ -795,7 +807,8 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid, ifig: int=1, show: bool=True,
     ax.set_xlabel('Span, y')
     ax.set_ylabel('Exx*Area MOI, Exx*I')
     ax.legend()
-    fig.savefig('e_amoi_vs_span.png')
+    png_filename = os.path.join(dirname, 'e_amoi_vs_span.png')
+    fig.savefig(png_filename)
     #-------------------------------------------------------
 
     fig = plt.figure(ifig + 4)
@@ -806,7 +819,8 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid, ifig: int=1, show: bool=True,
     ax.set_xlabel('Span, y')
     ax.set_ylabel('CG')
     ax.legend()
-    fig.savefig('cg_vs_span.png')
+    png_filename = os.path.join(dirname, 'cg_vs_span.png')
+    fig.savefig(png_filename)
     #-------------------------------------------------------
 
     if show:

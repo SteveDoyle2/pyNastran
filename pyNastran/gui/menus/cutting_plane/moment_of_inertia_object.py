@@ -25,6 +25,8 @@ from pyNastran.op2.tables.ogf_gridPointForces.smt import (
 from pyNastran.gui.typing import ColorFloat
 from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import (
     set_plane_opacity_color, clear_actors)
+from pyNastran.bdf.mesh_utils.test.test_cutting_plane import cut_and_plot_moi
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.gui.main_window import MainWindow
@@ -384,7 +386,7 @@ class MomentOfInertiaObject(BaseGui):
 
         coord = cast(CORD2R, coord)
         mass_sum, cg_sum, moi_sum, new_coords, nelems, nnodes = moment_of_inertia_diagram(
-            nids, xyz_cid0, nid_cd, icd_transform,
+            model, nids, xyz_cid0, nid_cd, icd_transform,
             eids, element_centroids_cid0,
             stations, model.coords, coord,
             iaxis_march=iaxis_march,
@@ -688,6 +690,23 @@ class MomentOfInertiaObject(BaseGui):
         #                         opacity=opacity, color=color)
         # plane_actor.VisibilityOn()
         return plane_actor
+
+def moment_of_inertia_diagram(
+        model: BDF,
+        nids, xyz_cid0, nid_cd, icd_transform,
+        eids, element_centroids_cid0,
+        stations, coords: dict[int, Any], coord,
+        iaxis_march=None,
+        idir: int=0,
+        nodes_tol=None, debug: bool=False):
+    log = model.log
+    out = cut_and_plot_moi(
+        model, normal_plane, log,
+        dys, coords,
+        ytol=2.0,
+        plot=True, show=True)
+    # y, A, I, J, EI, J, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2 = out
+    return out
 
 
 def write_moi_to_csv(csv_filename: str,

@@ -92,7 +92,9 @@ def cut_and_plot_model(title: str,
         geometry_arrays, results_arrays, unused_rods_array = cut_face_model_by_coord(
             model, coord, ytol,
             nodal_result, plane_atol=plane_atol,
-            csv_filename=csv_filename_face)
+            csv_filename=csv_filename_face,
+            face_data=None,
+        )
 
         plot_cutting_plane_faces(title, p1, p2, zaxis,
                                  geometry_arrays, results_arrays,

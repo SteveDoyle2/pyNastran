@@ -374,7 +374,7 @@ class MomentOfInertiaWindow(PyDialog):
         default_dirname = os.getcwd()
         if self.win_parent is not None:
             default_dirname = self.win_parent.last_dir
-        default_filename = os.path.join(default_dirname, 'shear_moment_torque.csv')
+        default_filename = os.path.join(default_dirname, 'moment_of_inerita.csv')
         self.csv_edit.setText(default_filename)
 
         #self.csv_label.setEnabled(False)
