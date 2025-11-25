@@ -176,15 +176,14 @@ class OtherSettings:
         Creates the OtherSettings object
         """
         self.parent = parent
-        # self.log = self.parent.log
         self.reset_settings()
 
     def reset_settings(self) -> None:
         self.cart3d_fluent_include: tuple[int, ...] = ()
         self.cart3d_fluent_remove: tuple[int, ...] = ()
         self.sref = 1.0
-        self.bref = 1.0
         self.cref = 1.0
+        self.bref = 1.0
         self.xyz_ref = np.array([0., 0., 0.])
         #('in', 'lbf', 's', 'psi')
         self.units_model_in = ('unitless', '', '', '')
@@ -579,7 +578,6 @@ class Settings:
         #self.annotation_scale = 1.0
 
         self.nastran_settings = NastranSettings(self.parent)
-        self.other_settings = OtherSettings(self.parent)
 
     def finish_startup(self):
         self.set_background_color(self.background_color, render=False, quiet=True)

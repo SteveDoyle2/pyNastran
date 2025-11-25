@@ -144,6 +144,17 @@ class TestMeshUtilsAero(unittest.TestCase):
         map_aero_model(model_old, model_new, bdf_filename_out,
                        remove_new_aero_cards=True)
 
+    def test_map_spline(self):
+        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
+        structure_model = read_bdf(bdf_filename, debug=False)
+        from pyNastran.bdf.cards.aero.aero import deform_spline
+        displacement_aero = deform_spline(
+            structure_model,
+            aero_model=None,
+            nids=None,
+            xyz_cid0=None,
+            displacement0=None)
+
     def test_export_caero_mesh_caero1_wkk(self):
         model = BDF(debug=None)
         model.bdf_filename = 'test'

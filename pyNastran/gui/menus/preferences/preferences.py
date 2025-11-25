@@ -14,6 +14,7 @@ from math import log10, ceil
 from functools import partial
 from typing import Optional, Any, TYPE_CHECKING
 
+from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
@@ -22,7 +23,7 @@ from qtpy.QtWidgets import (
 )
 
 from pyNastran.utils.locale import func_str, float_locale
-from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color
 from pyNastran.gui.utils.qt.qcombobox import make_combo_box, get_combo_box_text
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
@@ -121,6 +122,11 @@ class PreferencesWindow(PyDialog):
         self._cart3d_fluent_include = data['cart3d_fluent_include']
         self._cart3d_fluent_remove = data['cart3d_fluent_remove']
 
+        self._sref = data['sref']
+        self._cref = data['cref']
+        self._bref = data['bref']
+        self._xyz_ref = data['xyz_ref']
+
         self._units_model_in = data['units_model_in']
         self._units_length = data['units_length']
         #self._units_area = data['units_area']
@@ -134,9 +140,9 @@ class PreferencesWindow(PyDialog):
 
         self._is_trackball_camera = data['is_trackball_camera']
         self._parallel_projection = data['use_parallel_projection']
-        self._use_gradient_background = data['use_gradient_background'] # bool
+        self._use_gradient_background = data['use_gradient_background']  # bool
         self._show_corner_coord = data['show_corner_coord']
-        self._annotation_size = data['annotation_size'] # int
+        self._annotation_size = data['annotation_size']  # int
 
         #self.out_data = data
 
@@ -540,6 +546,18 @@ class PreferencesWindow(PyDialog):
         remove_str = ' '.join(str(val) for val in self._cart3d_fluent_remove)
         self.cart3d_fluent_regions_include = QLineEdit(include_str)
         self.cart3d_fluent_regions_remove = QLineEdit(remove_str)
+        length_units = self._units_length
+        self.sref_label = QLabel(f'Reference Area, Sref ({length_units}\u00B2)')
+        self.cref_label = QLabel(f'Reference Chord, cref ({length_units})')
+        self.bref_label = QLabel(f'Reference Span, bref ({length_units})')
+        self.xyz_ref_label = QLabel(f'Reference Location ({length_units})')
+        self.sref_edit = QFloatEdit(str(self._sref))
+        self.cref_edit = QFloatEdit(str(self._cref))
+        self.bref_edit = QFloatEdit(str(self._bref))
+
+        self.xref_edit = QFloatEdit(str(self._xyz_ref[0]))
+        self.yref_edit = QFloatEdit(str(self._xyz_ref[1]))
+        self.zref_edit = QFloatEdit(str(self._xyz_ref[2]))
 
         self.units_label = QLabel('Units:')
         self.model_in_label = QLabel('Input Units:')
@@ -799,9 +817,23 @@ class PreferencesWindow(PyDialog):
         irow += 1
         vbox_other.addWidget(self.region_remove_label, irow, 0)
         vbox_other.addWidget(self.cart3d_fluent_regions_remove, irow, 1)
-
-
         irow += 1
+
+        vbox_other.addWidget(self.sref_label, irow, 0)
+        vbox_other.addWidget(self.sref_edit, irow, 1)
+        irow += 1
+        vbox_other.addWidget(self.cref_label, irow, 0)
+        vbox_other.addWidget(self.cref_edit, irow, 1)
+        irow += 1
+        vbox_other.addWidget(self.bref_label, irow, 0)
+        vbox_other.addWidget(self.bref_edit, irow, 1)
+        irow += 1
+        vbox_other.addWidget(self.xyz_ref_label, irow, 0)
+        vbox_other.addWidget(self.xref_edit, irow, 1)
+        vbox_other.addWidget(self.yref_edit, irow, 2)
+        vbox_other.addWidget(self.zref_edit, irow, 3)
+        irow += 1
+
         vbox_other.addWidget(self.units_label, irow, 0)
         irow += 1
         vbox_other.addWidget(self.units_model_label, irow, 0)
@@ -966,9 +998,17 @@ class PreferencesWindow(PyDialog):
         #self.nastran_beam_strain_checkbox = QCheckBox('Beam Strain')
         return grid_nastran
 
+    def on_length_units(self):
+        """TODO: scale units?"""
+        length_units = self.length_pulldown.currentText()
+        self.sref_label.setText(f'Reference Area, Sref ({length_units}\u00B2)')
+        self.cref_label.setText(f'Reference Chord, cref ({length_units})')
+        self.bref_label.setText(f'Reference Span, bref ({length_units})')
+        self.xyz_ref_label.setText(f'Reference Location ({length_units})')
+
     def _set_other_connections(self):
         #self.cart3d_fluent_regions_include
-        pass
+        self.length_pulldown.currentIndexChanged.connect(self.on_length_units)
 
     def _set_nastran_connections(self):
         # format-specific
@@ -1163,15 +1203,15 @@ class PreferencesWindow(PyDialog):
 
     def on_nastran_version(self) -> None:
         version = get_combo_box_text(self.nastran_version_pulldown).lower()
-        #iversion = self.nastran_version_pulldown.currentIndex()
-        #version = NASTRAN_VERSIONS[iversion].lower()
+        # iversion = self.nastran_version_pulldown.currentIndex()
+        # version = NASTRAN_VERSIONS[iversion].lower()
         self.nastran_settings.version = version
 
-    #def on_nastran_is_shell_mcids2(self):
-        #"""set the nastran properties preferences"""
-        #is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
-        #if self.win_parent is not None:
-            #self.nastran_settings.is_shell_mcids = is_checked
+    # def on_nastran_is_shell_mcids2(self):
+    #     """set the nastran properties preferences"""
+    #     is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
+    #     if self.win_parent is not None:
+    #         self.nastran_settings.is_shell_mcids = is_checked
 
     def on_font(self, value=None):
         """update the font for the current window"""
@@ -1196,9 +1236,9 @@ class PreferencesWindow(PyDialog):
         if value is None:
             value = int(self.annotation_size_edit.text())
         self._annotation_size = value
-        #self.on_apply(force=True)
-        #self.min_edit.setText(func_str(self._default_min))
-        #self.min_edit.setStyleSheet(QLINEEDIT_GOOD)
+        # self.on_apply(force=True)
+        # self.min_edit.setText(func_str(self._default_min))
+        # self.min_edit.setStyleSheet(QLINEEDIT_GOOD)
         self.update_annotation_size_color()
 
     def update_annotation_size_color(self) -> None:
@@ -1463,7 +1503,16 @@ class PreferencesWindow(PyDialog):
             self.cart3d_fluent_regions_include.setStyleSheet(QLINEEDIT_ERROR)
             self.cart3d_fluent_regions_remove.setStyleSheet(QLINEEDIT_ERROR)
 
-        if all([flag0, flag1, flag2, flag3, flag4, flag5, flag6]):
+        sref_value, flag10 = check_float_positive(self.sref_edit)
+        cref_value, flag11 = check_float_positive(self.cref_edit)
+        bref_value, flag12 = check_float_positive(self.bref_edit)
+
+        xref_value, flag13 = check_float(self.xref_edit)
+        yref_value, flag14 = check_float(self.yref_edit)
+        zref_value, flag15 = check_float(self.zref_edit)
+
+        if all([flag0, flag1, flag2, flag3, flag4, flag5, flag6,
+                flag10, flag11, flag12, flag13, flag14, flag15]):
             self._annotation_size = annotation_size_value
             self._picker_size = picker_size_value
 
@@ -1472,6 +1521,12 @@ class PreferencesWindow(PyDialog):
             self.out_data['max_clip'] = max(clipping_min_value, clipping_max_value)
             self.out_data['cart3d_fluent_include'] = cart3d_fluent_include
             self.out_data['cart3d_fluent_remove'] = cart3d_fluent_remove
+
+            self.out_data['sref'] = sref_value
+            self.out_data['cref'] = cref_value
+            self.out_data['bref'] = bref_value
+            self.out_data['xyz_ref'] = [xref_value, yref_value, zref_value]
+
             self.out_data['clicked_ok'] = True
             return True
         return False
@@ -1558,6 +1613,13 @@ def set_pushbutton_color(color_edit: QPushButtonColor,
 def check_float(cell: QDoubleSpinBox) -> tuple[str, bool]:
     text = cell.text()
     value = float_locale(text)
+    return value, True
+
+
+def check_float_positive(cell: QDoubleSpinBox) -> tuple[str, bool]:
+    text = cell.text()
+    value = float_locale(text)
+    assert value > 0, value
     return value, True
 
 
@@ -1652,6 +1714,11 @@ def main():  # pragma: no cover
         #other
         'cart3d_fluent_include': (),
         'cart3d_fluent_remove': (3,),
+        'sref': 1.0,
+        'bref': 1.0,
+        'cref': 1.0,
+        'xyz_ref': [1.0, 0., 0.],
+
         'units_model_in': ('in', 'lbf', 's', 'psi'),
         'units_length': 'in',
         #'units_area': 'in^2',
