@@ -109,8 +109,8 @@ def map_aero_model(model_old: PathLike | BDF,
     for inid, spline_id_old, spline_id_new in zip(count(), spline_nids, spline_nids_new):
         xyz_oldi = xyz_cid0_old[inid, :]
         xyz_newi = xyz_cid0_new_out[inid, :]
-        print(f'{inid}: {spline_id_old} -> {spline_id_new}')
-        print(f'    {xyz_oldi} -> {xyz_newi}')
+        # print(f'{inid}: {spline_id_old} -> {spline_id_new}')
+        # print(f'    {xyz_oldi} -> {xyz_newi}')
    #aaa
     for spline_id, spline_old in model_old.splines.items():
         spline_new = model_new.splines[spline_id]
