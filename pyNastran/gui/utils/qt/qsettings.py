@@ -2,6 +2,8 @@
 # pylint: disable=W0201,C0301
 import os
 import json
+import warnings
+import traceback
 
 #from pyNastran.gui.qt_version import qt_int, qt_version
 import numpy as np
@@ -81,26 +83,35 @@ class QSettingsLike2:
     def load_json(self) -> None:
         if os.path.exists(self._filename):
             with open(self._filename, 'r') as json_file:
-                self.data = json.load(json_file)
+                try:
+                    self.data = json.load(json_file)
+                except Exception as e:
+                    warnings.warn(f'failed to load {self._filename}\n{str(e)}')
+                    print(traceback.format_exc())
+                    # print(traceback.format_exception_only(e))
+                    # raise
+                    return
         #x = 1
 
     def save_json(self) -> None:
         data = {}
         for key, value in self.data.items():
-            if isinstance(value, (str, integer_types, float_types)):
-                data[key] = value
+            if isinstance(value, (str, integer_types)):
+                value_out = value
+            elif isinstance(value, float_types):
+                value_out = float(value)
             elif key == 'recent_files':
-                data[key] = value
+                value_out = value
             elif value.__class__.__name__ == 'QByteArray':
                 value2 = bytes(value.toBase64())
-                data[key] = value2.decode('ascii')
+                value_out = value2.decode('ascii')
             elif key in self._tuples:
-                value = totuple(key, value)
-                assert isinstance(value, tuple), (key, value)
-                data[key] = value
+                value_out = totuple(key, value)
+                assert isinstance(value_out, tuple), (key, value_out)
             else:  # pragma: no cover
                 print(f'error...{key!r}={value} type={str(type(value))}')
                 raise NotImplementedError(f'key={key!r} value={value!r}')
+            data[key] = value_out
 
         with open(self._filename, 'w') as json_file:
             json.dump(data, json_file, indent=True)
