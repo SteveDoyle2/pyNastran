@@ -836,7 +836,7 @@ class TestNX(Tester):
     def test_nx_glue_slide_distance(self):
         """test NX 2020 version"""
         # log = SimpleLogger(level='warning')
-        log = SimpleLogger(level='info')
+        log = SimpleLogger(level='warning')
         # log = SimpleLogger(level='debug')
         op2_filename = MODEL_PATH / 'nx' / 'glue' / 'n401gsh01.op2'
         # read_op2(op2_filename)
@@ -871,7 +871,7 @@ class TestNX(Tester):
         checks nx/contact_model.bdf, which tests
         initial/final contact separation distance
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'contact_model.bdf'
         op2_filename = MODEL_PATH / 'nx' / 'contact_model.op2'
 
@@ -903,7 +903,7 @@ class TestNX(Tester):
         checks nx/composite_solids/test.bdf, which tests
         centroidal CHEXA composite stress
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test.bdf'
         op2_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test.op2'
 
@@ -964,7 +964,7 @@ class TestNX(Tester):
         checks nx/composite_solids/test_nx_corner.bdf, which tests
         corner CHEXA composite stress
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test_nx_corner.bdf'
         op2_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test_nx_corner.op2'
 
@@ -993,7 +993,7 @@ class TestNX(Tester):
 
     def test_nx_cplstn(self):
         """CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'conedg01e.bdf'
         op2_filename = MODEL_PATH / 'other' / 'conedg01e.op2'
 
@@ -1080,7 +1080,7 @@ class TestNX(Tester):
 
 class TestMSC(Tester):
     def test_cantilever_plate_nonlinear_msc_2021(self):
-        log = get_logger(level='debug')
+        log = get_logger(level='warning')
         folder = MODEL_PATH / 'bugs' / 'cantilevered_plate'
         op2_filename1 = folder / '3Delements' / 'non_linear' / 'cantilevered_plate_3d.op2'
         unused_op2, unused_is_passed = run_op2(
@@ -1191,7 +1191,7 @@ class TestMSC(Tester):
          - op2_results.failure_indices.cquad4_composite_force[1]
 
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'msc' / 'failure_indices_strength_ratio' / 'TestStressTemp.bdf'
         op2_filename = MODEL_PATH / 'msc' / 'failure_indices_strength_ratio' / 'TestStressTemp.op2'
 
@@ -1254,7 +1254,7 @@ class TestMSC(Tester):
         checks msc/cbush_2021/cbush_test.op2, which tests
          - UNITS table for MSC 2021
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'msc' / 'cbush_2021' / 'cbush_test.bdf'
         op2_filename = MODEL_PATH / 'msc' / 'cbush_2021' / 'cbush_test.op2'
 
@@ -1285,7 +1285,7 @@ class TestMSC(Tester):
         checks bugs/msc_RBE_tests/rigid_rbe2--v2020.op2, which tests
          - RBE2 alpha for MSC 2020
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2.bdf'
         op2_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2--v2020.op2'
 
@@ -1316,7 +1316,7 @@ class TestMSC(Tester):
         checks bugs/msc_RBE_tests/rigid_rbe2--v2021.1.op2, which tests
          - RBE2 tref for MSC 2021
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2.bdf'
         op2_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2--v2021.1.op2'
 
