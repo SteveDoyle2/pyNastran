@@ -3370,8 +3370,11 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
                 column_values, column_names,
                 headers, element_node, self.data, from_tuples=False, from_array=True)
         else:
-            df1 = pd.DataFrame(element_node).T
-            df1.columns = ['ElementID', 'NodeID']
+            data = {
+                'ElementID': self.element_node[:, 0],
+                'NodeID': self.element_node[:, 0],
+            }
+            df1 = pd.DataFrame(data)
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join(df2)
@@ -4259,8 +4262,10 @@ class RealConeAxForceArray(RealForceObject):
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            df1 = pd.DataFrame(self.element)
-            df1.columns = ['ElementID']
+            data = {
+                'ElementID': self.element,
+            }
+            df1 = pd.DataFrame(data)
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             self.data_frame = df1.join([df2])
@@ -4468,10 +4473,11 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Location', 'Item']
         else:
-            df1 = pd.DataFrame({
+            data = {
                 'ElementID': self.element,
                 'Location': self.data[0, :, 0],
-            })
+            }
+            df1 = pd.DataFrame(data)
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             self.data_frame = df1.join([df2])
@@ -4950,8 +4956,12 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
             #data_frame.columns.names = column_names
             #data_frame.index.names = ['ElementID', 'Item']
         else:
-            df1 = pd.DataFrame(self.element_node)
-            df1.columns = ['ElementID', 'NodeA', 'NodeB']
+            data = {
+                'ElementID': self.element_node[:, 0],
+                'NodeA': self.element_node[:, 1],
+                'NodeB': self.element_node[:, 2],
+            }
+            df1 = pd.DataFrame(data)
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join(df2)

@@ -381,8 +381,11 @@ class RealGridPointForcesArray(GridPointForces):
             data_frame = df1.join(dfs)
             #print(self.data_frame)
         else:
-            df1 = pd.DataFrame(node_element)
-            df1.columns = ['NodeID', 'ElementID']
+            data = {
+                'ElementID': element_node[:, 0],
+                'NodeID': element_node[:, 1],
+            }
+            df1 = pd.DataFrame(data)
             df2 = pd.DataFrame(self.element_names[0, :])
             df2.columns = ['ElementType']
             df3 = pd.DataFrame(self.data[0])
@@ -1686,13 +1689,15 @@ class ComplexGridPointForcesArray(GridPointForces):
             data_frame = df1.join(dfs)
             #print(self.data_frame)
         else:
-            df1 = pd.DataFrame(node_element)
-            df1.columns = ['NodeID', 'ElementID']
-            df2 = pd.DataFrame(self.element_names[0, :])
-            df2.columns = ['ElementType']
-            df3 = pd.DataFrame(self.data[0])
-            df3.columns = headers
-            data_frame = df1.join([df2, df3])
+            data = {
+                'NodeID': node_element[:, 0],
+                'ElementID': node_element[:, 1],
+                'ElementType': self.element_names[0, :],
+            }
+            df1 = pd.DataFrame(data)
+            df2 = pd.DataFrame(self.data[0])
+            df2.columns = headers
+            data_frame = df1.join([df2])
             #print(data_frame)
         return data_frame
 

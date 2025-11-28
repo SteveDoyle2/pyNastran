@@ -106,8 +106,10 @@ class Real1DHeatFluxArray(BaseElement):
             # 6          7 -0.042596  1.401298e-45  ...  0.025558  1.401298e-45  1.401298e-45
             # 7          8 -2.334058  1.401298e-45  ...  1.400435  1.401298e-45  1.401298e-45
             # 8          9 -3.946891  1.401298e-45  ...  2.368135  1.401298e-45  1.401298e-45
-            df1 = pd.DataFrame(self.element)
-            df1.columns = ['ElementID']
+            data = {
+                'ElementID': self.element,
+            }
+            df1 = pd.DataFrame(data)
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join(df2)
@@ -262,8 +264,10 @@ class RealHeatFlux_2D_3DArray(RealElementTableArray):
                 column_values, column_names,
                 headers, self.element, self.data)
         else:
-            df1 = pd.DataFrame(self.element)
-            df1.columns = ['ElementID']
+            data = {
+                'ElementID': self.element,
+            }
+            df1 = pd.DataFrame(data)
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join(df2)

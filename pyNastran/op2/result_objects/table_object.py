@@ -622,8 +622,7 @@ class TableArray(ScalarObject):  # displacement style table
                 #print(data_frame)
                 #print(self.data_frame.index.names)
                 #data_frame = pandas_extract_rows(data_frame, ugridtype_str, ['NodeID', 'Item'])
-            self.data_frame = data_frame
-            #print(self.data_frame)
+            #print(data_frame)
 
         else:
             #self.data_frame = pd.Panel(self.data[0, :, :], major_axis=node_gridtype, minor_axis=headers).to_frame()
@@ -636,13 +635,13 @@ class TableArray(ScalarObject):  # displacement style table
             # 2        3    G     0.0     0.000000  0.000000e+00  0.0  0.0  0.0
             #self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.node_gridtype)
 
-            df1 = pd.DataFrame(self.node_gridtype[:, 0])
-            df1.columns = ['NodeID']
-            df2 = pd.DataFrame(self.gridtype_str)
-            df2.columns = ['Type']
-            df3 = pd.DataFrame(self.data[0])
-            df3.columns = headers
-            self.data_frame = df1.join([df2, df3])
+            data = {
+                'NodeID': self.node_gridtype[:, 0],
+                'Type': self.gridtype_str,
+            }
+            for i, header in enumerate(headers):
+                data[header] = self.data[0, :, i]
+            data_frame = pd.DataFrame(data)
 
             #df1 = pd.DataFrame(self.node_gridtype)
             #df1.columns = ['NodeID', 'Type']
@@ -650,6 +649,7 @@ class TableArray(ScalarObject):  # displacement style table
             #df2.columns = headers
             #self.data_frame = df1.join([df2])
         #print(self.data_frame)
+        self.data_frame = data_frame
 
     def finalize(self):
         """

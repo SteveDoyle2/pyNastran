@@ -24,6 +24,7 @@ from typing import Any, TYPE_CHECKING
 from numpy import fromstring, frombuffer, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
+import pyNastran
 from pyNastran.op2.op2_interface.op2_codes import SORT1_TABLES_BYTES, TABLES_BYTES
 from pyNastran.op2.op2_interface.utils import (
     mapfmt, mapfmt8,
@@ -129,8 +130,11 @@ from pyNastran.op2.tables.oes_stressStrain.utils import (
 )
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
+
+IS_DEV = 'dev' in pyNastran.__version__
 NX_TABLES_BYTES = [b'OESVM1', b'OESVM2']
 NASA_TABLES_BYTES = [b'OESC1']
+
 
 class OP2Common2:
     def __init__(self, op2: OP2):
@@ -2474,7 +2478,8 @@ class OES(OP2Common2):
             n = op2._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
-        elif op2.table_code == 605 and result_type == 1 and op2.num_wide in [67]:
+        elif result_type == 1 and op2.num_wide in [67] and prefix == 'psd.':
+            # [b'OESPSD1'] and op2.table_code == 605:
             # test_nx_beam_psd
             #   device_code = 0   ???
             #   analysis_code = 5 Frequency
@@ -2508,7 +2513,13 @@ class OES(OP2Common2):
             n = oes_cbeam_random_67(op2, data, obj,
                                     nelements, nnodes, dt)
         else:  # pragma: no cover
-            raise RuntimeError(op2.code_information())
+            # raise RuntimeError(table_name_bytes)
+            if IS_DEV:
+                raise RuntimeError(f'prefix={prefix!r}\n{op2.code_information()}')
+            msg = 'skipping freq CBEAM; numwide=67'
+            n = op2._not_implemented_or_skip(data, ndata, msg)
+            nelements = None
+            ntotal = None
         return n, nelements, ntotal
 
     def _oes_cshear(self, data, ndata, dt, is_magnitude_phase,

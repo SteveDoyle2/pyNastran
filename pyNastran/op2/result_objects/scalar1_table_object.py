@@ -267,8 +267,10 @@ class ScalarTableArray(ScalarObject):  # displacement style table
             #self.data_frame.columns.names = ['Static']
             #self.data_frame.index.names = ['NodeID', 'Type', 'Item']
 
-            df1 = pd.DataFrame(self.node)
-            df1.columns = ['NodeID']
+            data = {
+                'NodeID': self.node,
+            }
+            df1 = pd.DataFrame(data)
             df3 = pd.DataFrame(self.data[0])
             df3.columns = headers
             data_frame = df1.join([df3])
