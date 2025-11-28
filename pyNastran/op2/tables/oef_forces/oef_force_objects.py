@@ -416,7 +416,7 @@ class FailureIndicesArray(RealForceObject):
         self.nelements = 0  # result specific
 
     @property
-    def nnodes_per_element(self):
+    def nnodes_per_element(self) -> int:
         return 1
 
     def build(self):
@@ -3445,7 +3445,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         self.itotal += 1
 
     @property
-    def nnodes_per_element(self):
+    def nnodes_per_element(self) -> int:
         if self.element_type == 144:  # CQUAD4
             nnodes_element = 5
         elif self.element_type == 64:  # CQUAD8

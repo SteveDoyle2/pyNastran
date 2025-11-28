@@ -46,7 +46,7 @@ class ComplexForceObject(ForceObject):
         return True
 
     @property
-    def nnodes_per_element(self):
+    def nnodes_per_element(self) -> int:
         return 1
 
 
@@ -1423,7 +1423,7 @@ class ComplexPlateForceArray(ComplexForceObject):
         self.itotal += 1
 
     #@property
-    #def nnodes_per_element(self):
+    #def nnodes_per_element(self) -> int:
         #return 1
 
     def get_stats(self, short: bool=False) -> list[str]:

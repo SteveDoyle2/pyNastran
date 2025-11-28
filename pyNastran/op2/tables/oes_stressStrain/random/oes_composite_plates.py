@@ -45,7 +45,7 @@ class RandomCompositePlateArray(OES_Object):
     def is_complex(self) -> bool:
         return False
 
-    def nnodes_per_element(self):
+    def nnodes_per_element(self) -> int:
         return 1
 
     def finalize(self):
@@ -410,7 +410,7 @@ class RandomCompositePlateVMArray(OES_Object):
     def is_complex(self) -> bool:
         return False
 
-    def nnodes_per_element(self):
+    def nnodes_per_element(self) -> int:
         return 1
 
     def finalize(self):

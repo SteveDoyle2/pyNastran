@@ -603,7 +603,7 @@ class RealCompositePlateStressStrengthRatioArray(RealCompositePlateStrengthRatio
         StressObject.__init__(self, data_code, isubcase)
 
     @property
-    def nnodes_per_element(self):
+    def nnodes_per_element(self) -> int:
         return 1
 
     @property

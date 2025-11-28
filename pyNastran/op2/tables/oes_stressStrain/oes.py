@@ -2440,10 +2440,7 @@ class OES(OP2Common2):
             # TODO: vectorize
             ntotal = 268 * self.factor # 1 + 11*6  (11 nodes)
 
-            if op2.is_stress:
-                obj_vector_random = RandomBeamStressArray
-            else:
-                obj_vector_random = RandomBeamStrainArray
+            obj_vector_random = RandomBeamStressArray if op2.is_stress else RandomBeamStrainArray
 
             nelements = ndata // ntotal
             nlayers = nelements * 11
@@ -2667,10 +2664,7 @@ class OES(OP2Common2):
         op2._results._found_result(result_name)
         slot = op2.get_result(result_name)
         if result_type == 0 and op2.num_wide == 16:  # real
-            if op2.is_stress:
-                obj_vector_real = RealBarStressArray
-            else:
-                obj_vector_real = RealBarStrainArray
+            obj_vector_real = RealBarStressArray if op2.is_stress else RealBarStrainArray
 
             ntotal = 64 * self.factor  # 16*4
             nelements = ndata // ntotal
@@ -2714,10 +2708,7 @@ class OES(OP2Common2):
                     op2.log.debug('vectorize CBAR real SORT%s' % op2.sort_method)
                 n = oes_cbar_real_16(op2, data, obj, nelements, ntotal, dt)
         elif result_type == 1 and op2.num_wide == 19:  # imag
-            if op2.is_stress:
-                obj_vector_complex = ComplexBarStressArray
-            else:
-                obj_vector_complex = ComplexBarStrainArray
+            obj_vector_complex = ComplexBarStressArray if op2.is_stress else ComplexBarStrainArray
 
             ntotal = 76 * self.factor
             nelements = ndata // ntotal
@@ -2768,10 +2759,7 @@ class OES(OP2Common2):
             # format_code = 2 - ATO/PSD/CRM (actually SORT2)
             #
             element_id = op2.nonlinear_factor
-            if op2.is_stress:
-                obj_vector_random = RandomBarStressArray
-            else:
-                obj_vector_random = RandomBarStrainArray
+            obj_vector_random = RandomBarStressArray if op2.is_stress else RandomBarStrainArray
             op2.data_code['nonlinear_factor'] = element_id
 
             ntotal = 10 * self.size
@@ -4518,10 +4506,7 @@ class OES(OP2Common2):
         op2._results._found_result(result_name)
         slot = op2.get_result(result_name)
         if result_type == 0 and op2.num_wide == 8:  # real
-            if op2.is_stress:
-                obj_vector_real = RealWeldStressArray
-            else:
-                obj_vector_real = RealWeldStrainArray
+            obj_vector_real = RealWeldStressArray if op2.is_stress else RealWeldStrainArray
 
             ntotal = 32 * self.factor  # 8*4
             nelements = ndata // ntotal
@@ -4564,10 +4549,7 @@ class OES(OP2Common2):
                     op2.log.debug('vectorize WELDP real SORT%s' % op2.sort_method)
                 n = oes_weldp_msc_real_8(op2, data, obj, nelements, ntotal, dt)
         elif result_type == 1 and op2.num_wide == 15:  # complex
-            if op2.is_stress:
-                obj_vector_complex = ComplexWeldStressArray
-            else:
-                obj_vector_complex = ComplexWeldStrainArray
+            obj_vector_complex = ComplexWeldStressArray if op2.is_stress else ComplexWeldStrainArray
 
             ntotal = 60 * self.factor  # 15*4
             nelements = ndata // ntotal
@@ -4636,20 +4618,15 @@ class OES(OP2Common2):
             #op2.sort_method = 2
 
         n = 0
-        if op2.is_stress:
-            result_name = prefix + 'cfast_stress' + postfix
-        else:
-            result_name = prefix + 'cfast_strain' + postfix
+        result_name = (prefix + 'cfast_stress' + postfix if op2.is_stress
+                       else prefix + 'cfast_strain' + postfix)
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
         op2._results._found_result(result_name)
         slot = op2.get_result(result_name)
         if result_type == 0 and op2.num_wide == 7:  # real
-            if op2.is_stress:
-                obj_vector_real = RealFastStressArray
-            else:
-                obj_vector_real = RealFastStrainArray
+            obj_vector_real = RealFastStressArray if op2.is_stress else RealFastStrainArray
 
             ntotal = 28 * self.factor  # 7*4
             nelements = ndata // ntotal
@@ -4692,10 +4669,7 @@ class OES(OP2Common2):
                     op2.log.debug('vectorize real-FASTP real SORT%s' % op2.sort_method)
                 n = oes_fastp_msc_real_7(op2, data, obj, nelements, ntotal, dt)
         elif result_type == 1 and op2.num_wide == 13:  # complex
-            if op2.is_stress:
-                obj_vector_complex = ComplexFastStressArray
-            else:
-                obj_vector_complex = ComplexFastStrainArray
+            obj_vector_complex = ComplexFastStressArray if op2.is_stress else ComplexFastStrainArray
             ntotal = 52 * self.factor  # 13*4
             nelements = ndata // ntotal
             assert ndata % ntotal == 0
@@ -4887,10 +4861,7 @@ class OES(OP2Common2):
         elif result_type in [1, 2] and op2.num_wide == 9: # random msc
             # _oes_cquad4 is the same as _oes_ctria3
             element_id = op2.nonlinear_factor
-            if op2.is_stress:
-                obj_vector_random = RandomPlateStressArray
-            else:
-                obj_vector_random = RandomPlateStrainArray
+            obj_vector_random = RandomPlateStressArray if op2.is_stress else RandomPlateStrainArray
             op2.data_code['nonlinear_factor'] = element_id
 
             if op2._results.is_not_saved(result_name):
@@ -5021,10 +4992,7 @@ class OES(OP2Common2):
             #11 RMSVM2 RS RMS von Mises at Z2
 
             element_id = op2.nonlinear_factor
-            if op2.is_stress:
-                obj_vector_random = RandomPlateVMStressArray
-            else:
-                obj_vector_random = RandomPlateVMStrainArray
+            obj_vector_random = RandomPlateVMStressArray if op2.is_stress else RandomPlateVMStrainArray
             op2.data_code['nonlinear_factor'] = element_id
 
             if op2._results.is_not_saved(result_name):
@@ -5370,10 +5338,7 @@ class OES(OP2Common2):
             #11 RMSVM2 RS RMS von Mises at Z2
 
             element_id = op2.nonlinear_factor
-            if op2.is_stress:
-                obj_vector_random = RandomPlateVMStressArray
-            else:
-                obj_vector_random = RandomPlateVMStrainArray
+            obj_vector_random = RandomPlateVMStressArray if op2.is_stress else RandomPlateVMStrainArray
             op2.data_code['nonlinear_factor'] = element_id
 
             if op2._results.is_not_saved(result_name):
@@ -5798,10 +5763,7 @@ class OES(OP2Common2):
                 nlayers = nelements * 2
                 assert ndata % ntotal == 0
 
-                if op2.is_stress:
-                    obj_vector_complex = ComplexPlateVMStressArray
-                else:
-                    obj_vector_complex = ComplexPlateVMStrainArray
+                obj_vector_complex = ComplexPlateVMStressArray if op2.is_stress else ComplexPlateVMStrainArray
 
                 auto_return, is_vectorized = op2._create_oes_object4(
                     nlayers, result_name, slot, obj_vector_complex)
@@ -5854,10 +5816,7 @@ class OES(OP2Common2):
                 raise RuntimeError(op2.code_information())
 
             assert 2 + 11 * nnodes == op2.num_wide, op2.code_information()
-            if op2.is_stress:
-                obj_vector_random = RandomPlateVMStressArray
-            else:
-                obj_vector_random = RandomPlateVMStrainArray
+            obj_vector_random = RandomPlateVMStressArray if op2.is_stress else RandomPlateVMStrainArray
 
             ntotal = op2.num_wide * size
             nelements = ndata // ntotal
@@ -5974,10 +5933,7 @@ class OES(OP2Common2):
         else:  # pragma: no cove
             raise RuntimeError(op2.element_type)
 
-        if op2.is_stress:
-            result_name = f'{prefix}{etype}_stress{postfix}'
-        else:
-            result_name = f'{prefix}{etype}_strain{postfix}'
+        result_name = f'{prefix}{etype}_stress{postfix}' if op2.is_stress else f'{prefix}{etype}_strain{postfix}'
 
         slot = op2.get_result(result_name)
         op2._results._found_result(result_name)
@@ -6339,10 +6295,7 @@ class OES(OP2Common2):
             ntotal = 28 * self.factor
             nelements = ndata // ntotal
 
-            if op2.is_stress:
-                obj_vector_random = RandomCompositePlateStressArray
-            else:
-                obj_vector_random = RandomCompositePlateStrainArray
+            obj_vector_random = RandomCompositePlateStressArray if op2.is_stress else RandomCompositePlateStrainArray
 
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_vector_random)
@@ -6533,9 +6486,9 @@ class OES(OP2Common2):
         op2 = self.op2
         n = 0
         if op2.is_stress:
-            result_name = prefix + 'ctriax_stress' + postfix
+            result_name = f'{prefix}ctriax_stress{postfix}'
         else:
-            result_name = prefix + 'ctriax_strain' + postfix
+            result_name = f'{prefix}ctriax_strain{postfix}'
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
@@ -6543,10 +6496,7 @@ class OES(OP2Common2):
 
         slot = op2.get_result(result_name)
         if result_type == 0 and op2.num_wide == 33: # real
-            if op2.is_stress:
-                obj_vector_real = RealTriaxStressArray
-            else:
-                obj_vector_real = RealTriaxStrainArray
+            obj_vector_real = RealTriaxStressArray if op2.is_stress else RealTriaxStrainArray
 
             ntotal = 132 * self.factor  # (1+8*4)*4 = 33*4 = 132
             nelements = ndata // ntotal
@@ -6682,10 +6632,7 @@ class OES(OP2Common2):
         slot = op2.get_result(result_name)
         table_name = op2.table_name_str
         if result_type in [0, 2] and op2.num_wide == 7:  # real, random
-            if op2.is_stress:
-                obj_vector_real = RealBushStressArray
-            else:
-                obj_vector_real = RealBushStrainArray
+            obj_vector_real = RealBushStressArray if op2.is_stress else RealBushStrainArray
 
             assert op2.num_wide == 7, "num_wide=%s not 7" % op2.num_wide
             ntotal = 28 * self.factor # 4*7
@@ -6713,10 +6660,7 @@ class OES(OP2Common2):
                 n = oes_cbush_real_7(op2, data, obj,
                                      nelements, ntotal, dt)
         elif result_type == 1 and op2.num_wide == 13:  # imag
-            if op2.is_stress:
-                obj_complex = ComplexCBushStressArray
-            else:
-                obj_complex = ComplexCBushStrainArray
+            obj_complex = ComplexCBushStressArray if op2.is_stress else ComplexCBushStrainArray
 
             ntotal = 52 * self.factor  # 4*13
             nelements = ndata // ntotal
@@ -6914,10 +6858,7 @@ class OES(OP2Common2):
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
 
-        if op2.is_stress:
-            result_name = f'{prefix}{etype}_stress{postfix}'
-        else:
-            result_name = f'{prefix}{etype}_strain{postfix}'
+        result_name = f'{prefix}{etype}_stress{postfix}' if op2.is_stress else f'{prefix}{etype}_strain{postfix}'
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
@@ -7640,9 +7581,9 @@ class OES(OP2Common2):
         op2 = self.op2
         n = 0
         if op2.is_stress:
-            result_name = prefix + 'cgap_stress' + postfix # nonlinear_
+            result_name = f'{prefix}cgap_stress{postfix}' # nonlinear_
         else:
-            result_name = prefix + 'cgap_strain' + postfix # nonlinear_
+            result_name = f'{prefix}cgap_strain{postfix}' # nonlinear_
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
@@ -7711,9 +7652,9 @@ class OES(OP2Common2):
         numwide_random = 0
 
         if op2.is_stress:
-            result_name = prefix + 'cbeam_stress' + postfix
+            result_name = f'{prefix}cbeam_stress{postfix}'
         else:
-            result_name = prefix + 'cbeam_strain' + postfix
+            result_name = f'{prefix}cbeam_strain{postfix}'
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None

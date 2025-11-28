@@ -932,7 +932,7 @@ class TestNX(Tester):
 
     def test_nx_thermal_plastic_strain(self):
         """tests thermal and plastic quad4 strain"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'laminate' / 'laminate_elstrn_fiber_center.bdf'
         op2_filename = MODEL_PATH / 'nx' / 'laminate' / 'laminate_elstrn_fiber_center.op2'
 
@@ -1023,7 +1023,7 @@ class TestNX(Tester):
 
     def test_nx_sol111_solid_stress(self):
         """OESVM1 for solids"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'sol111_solid_stress' / 'nx_sine.bdf'
         op2_filename = MODEL_PATH / 'nx' / 'sol111_solid_stress' / 'nx_sine.op2'
 
@@ -1050,7 +1050,7 @@ class TestNX(Tester):
     def test_nx_sol401_tstep1(self):
         """Test SOL401 simulation with a TSTEP1 card."""
 
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'sol401' / 'sol401_tstep1.dat'
         op2_filename = MODEL_PATH / 'nx' / 'sol401' / 'sol401_tstep1.op2'
 
@@ -3979,7 +3979,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_cbush_nonlinear(self):
         """checks tr1091x.bdf, which tests RealBendForceArray"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = OP2_TEST_PATH / 'cbush_nonlinear' / 'cbush_106_large_disp.bdf'
         op2_filename = OP2_TEST_PATH / 'cbush_nonlinear' / 'cbush_106_large_disp.op2'
 
