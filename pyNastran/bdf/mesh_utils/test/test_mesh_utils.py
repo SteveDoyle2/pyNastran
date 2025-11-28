@@ -12,7 +12,8 @@ from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.map_pressure_to_caero import map_caero
-from pyNastran.bdf.mesh_utils.deform_aero_spline import deform_aero_spline
+from pyNastran.bdf.mesh_utils.deform_aero_spline import (
+    deform_aero_spline, deform_aero_spline_from_files)
 
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
@@ -154,6 +155,19 @@ class TestMeshUtilsAero(unittest.TestCase):
             nids=None,
             xyz_cid0=None,
             displacement0=None)
+
+    def test_deform_aero_spline_from_files(self):
+        dirname = MODEL_PATH / 'bwb'
+        bdf_filename = dirname / 'bwb_saero.bdf'
+        op2_filename = dirname / 'bwb_saero.op2'
+        bdf_filename_out = dirname / 'bwb_saero_spline.bdf'
+        op2_filename_out = dirname / 'bwb_saero_spline.op2'
+
+        deform_aero_spline_from_files(
+            bdf_filename, op2_filename,
+            bdf_filename_out=bdf_filename_out,
+            op2_filename_out=op2_filename_out,
+        )
 
     def test_export_caero_mesh_caero1_wkk(self):
         model = BDF(debug=None)

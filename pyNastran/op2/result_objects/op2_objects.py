@@ -1034,7 +1034,7 @@ class BaseElement(ScalarObject):
                 eid_nid_item.append(eidi.ravel())
             if 1:
                 all_headers = headers * nelements
-                print(all_headers)
+                # print(all_headers)
             if 0:
                 all_headers = headers * neid
                 print(all_headers)

@@ -399,6 +399,9 @@ def oes_cbeam_random_67(op2: OP2, data: bytes,
             op2.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
 
         #(grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
+        #(grid, sd, sxc, sxd, sxe, sxf) = out
+
+        # grid, sd, sxc, sxd, sxe, sxf = out[1:]
         add_eid_sort_x(dt, eid, *out[1:])
 
         for unused_inode in range(nnodes):
@@ -406,6 +409,7 @@ def oes_cbeam_random_67(op2: OP2, data: bytes,
             n += n2
             out = s2.unpack(edata)
             # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
+            # grid, sd, sxc, sxd, sxe, sxf = out
             add_sort_x(dt, eid, *out)
     return n
 

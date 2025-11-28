@@ -725,6 +725,19 @@ class TestSATKOP2(Tester):
 
 
 class TestNX(Tester):
+    def test_nx_beam_psd(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'bugs' / 'cbeam_example'
+        op2_filename = folder / 'cbeam_example.op2'
+        bdf_filename = folder / 'cbeam_example.bdf'
+        op2_model, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=False, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=True, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
     def test_nx_rotor_1(self):
         log = get_logger(level='warning')
         folder = MODEL_PATH / 'nx' / 'rotor'

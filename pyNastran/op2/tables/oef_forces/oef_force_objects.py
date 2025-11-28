@@ -1574,7 +1574,7 @@ class RealCBeamForceArray(RealForceObject):
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join([df2])
-        #self.data_frame = data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
+        #data_frame = data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
         self.data_frame = data_frame
 
     @classmethod
@@ -1827,7 +1827,7 @@ class RealCBeamForceArray(RealForceObject):
             msg.append('  type=%s nelements=%i; table_name=%r\n' % (
                 self.__class__.__name__, nelements, self.table_name))
         #msg.append('  eType, cid\n')
-        msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
+        # msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append(f'  element.shape = {self.element.shape}\n')
         msg.append(f'  element_node.shape = {self.element_node.shape}\n')

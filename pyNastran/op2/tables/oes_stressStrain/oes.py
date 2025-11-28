@@ -2434,7 +2434,7 @@ class OES(OP2Common2):
 
         elif result_type == 2 and op2.num_wide == 67: # random
             # TODO: vectorize
-            ntotal = 268 # 1 + 11*6  (11 nodes)
+            ntotal = 268 * self.factor # 1 + 11*6  (11 nodes)
 
             if op2.is_stress:
                 obj_vector_random = RandomBeamStressArray
@@ -2462,18 +2462,51 @@ class OES(OP2Common2):
                 n = oes_cbeam_random_67(op2, data, obj,
                                         nelements, nnodes, dt)
 
-        elif result_type == 1 and op2.num_wide in [67] and table_name_bytes in [b'OESXNO1']:  # CBEAM
+        elif result_type == 1 and op2.num_wide in [67] and table_name_bytes in [b'OESXNO1']:
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
             msg = 'skipping freq CBEAM; numwide=67'
             n = op2._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
-        elif result_type == 2 and op2.num_wide in [67] and table_name_bytes in [b'OESXNO1']:  # CBEAM
+        elif result_type == 2 and op2.num_wide in [67] and table_name_bytes in [b'OESXNO1']:
             #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
             msg = 'skipping random CBEAM; numwide=67'
             n = op2._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
+        elif op2.table_code == 605 and result_type == 1 and op2.num_wide in [67]:
+            # test_nx_beam_psd
+            #   device_code = 0   ???
+            #   analysis_code = 5 Frequency
+            #   table_code = 605
+            #   OESPSD1 - OSTPSD2C - Composite Strain Power Spectral Density
+            #   format_code = 2 Real / Imaginary
+            #   result_type = 1 Complex
+            #   sort_method = 1
+            #   sort_code = 4
+            #   sort_bits = (0, 0, 1)
+            #   data_format = 0 Real
+            #   sort_type = 0 Sort1
+            #   is_random = 1 Random Responses
+            # random_code = 0
+            ntotal = (67 * 4 * self.factor)
+            nelements = ndata // ntotal
+            assert ntotal % ntotal == 0
+            assert nelements > 0, nelements
+
+            cls = RandomBeamStressArray if op2.is_stress else RandomBeamStrainArray
+            nlayers = nelements * 11
+            auto_return, is_vectorized = op2._create_oes_object4(
+                nlayers, result_name, slot, cls)
+
+            if auto_return:
+                op2._data_factor = 11
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
+            obj = op2.obj
+            nnodes = 10  # 11-1
+            n = oes_cbeam_random_67(op2, data, obj,
+                                    nelements, nnodes, dt)
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         return n, nelements, ntotal

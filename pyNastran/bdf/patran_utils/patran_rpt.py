@@ -18,7 +18,7 @@ def rpt_read():
             headers2.append(header)
     headers = headers2
     #headers2 = [header if header.strip() for header in headers]
-    print(headers)
+    # print(headers)
 
     i = 2
     j = 0

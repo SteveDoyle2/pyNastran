@@ -14,7 +14,7 @@ class RandomBeamArray(OES_Object):
      - RandomBeamStressArray
      - RandomBeamStrainArray
     """
-    def __init__(self, data_code, is_sort1, isubcase, unused_dt):
+    def __init__(self, data_code, is_sort1: bool, isubcase: int, unused_dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -108,15 +108,23 @@ class RandomBeamArray(OES_Object):
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=element_node, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+            data = {
+                'ElementID': self.element_node[:, 0],
+                'NodeID': self.element_node[:, 1],
+                'Station': self.xxb,
+            }
+            df1 = pd.DataFrame(data)
+            # data_frame = pd.Panel(self.data, items=column_values,
+            #                       major_axis=element_node, minor_axis=headers).to_frame()
+            # data_frame.columns.names = column_names
+            # data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+            data_frame = df1
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=element_node,
-                                       minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+            data_frame = pd.Panel(self.data, major_axis=element_node,
+                                  minor_axis=headers).to_frame()
+            data_frame.columns.names = ['Static']
+            data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -158,7 +166,8 @@ class RandomBeamArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_eid_sort1(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf):
+    def add_eid_sort1(self, dt, eid, grid, sd,
+                      sxc, sxd, sxe, sxf):
         assert isinstance(eid, integer_types), eid
         assert eid >= 0, eid
         self._times[self.itime] = dt
@@ -297,7 +306,7 @@ class RandomBeamArray(OES_Object):
 
 class RandomBeamStressArray(RandomBeamArray, StressObject):
     """Random CBEAM Stress"""
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code, is_sort1: bool, isubcase: int, dt):
         RandomBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
@@ -308,7 +317,7 @@ class RandomBeamStressArray(RandomBeamArray, StressObject):
         ]
         return headers
 
-    def _get_msgs(self):
+    def _get_msgs(self) -> list[str]:
         if self.element_type == 2:
             pass
         else:
@@ -324,7 +333,7 @@ class RandomBeamStressArray(RandomBeamArray, StressObject):
 
 class RandomBeamStrainArray(RandomBeamArray, StrainObject):
     """Random CBEAM Strain"""
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code, is_sort1: bool, isubcase: int, dt):
         RandomBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 

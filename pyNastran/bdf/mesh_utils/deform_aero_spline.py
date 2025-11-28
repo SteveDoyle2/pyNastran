@@ -1,7 +1,12 @@
+import os
+import copy
+from pathlib import Path
 from itertools import count
 from typing import Optional
 import numpy as np
+from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import read_bdf, BDF
+from pyNastran.op2.op2 import read_op2, OP2
 
 
 def _get_nids_xyz_cid0(model: BDF,
@@ -28,9 +33,17 @@ def _get_discrete_aero_mesh(structure_model: Optional[BDF],
     regardless of the connectivity. This simplifies deflection mapping.
     """
     if aero_model is None:
+        pid = 1
+        eid = 1
+        mid = 1
+        t = 0.1
         aero_model = BDF()
+        aero_model.add_pshell(pid, mid, t)
+        aero_model.add_mat1(mid, 3.0e7, None, 0.3)
+
         naero_boxes_all = 0
         aero_xyz_cid0_point_list = []
+        nid0 = 1
         for caero_id, caero in sorted(structure_model.caeros.items()):
             caero_type = caero.type
             if caero_type == 'CAERO1':
@@ -45,12 +58,18 @@ def _get_discrete_aero_mesh(structure_model: Optional[BDF],
                     aero_xyz_cid0_point_list.append(p2)
                     aero_xyz_cid0_point_list.append(p3)
                     aero_xyz_cid0_point_list.append(p4)
+                    aero_model.add_cquad4(eid, pid, nid0+elem)
+                    eid += 1
             #elif caero_type == 'CAERO2':
             else:
                 raise NotImplementedError(caero)
+            nid0 += len(points)
         aero_xyz_cid0_point = np.array(aero_xyz_cid0_point_list, dtype='float64')
         naero_nodes_all = naero_boxes_all * 4
         assert len(aero_xyz_cid0_point) == naero_nodes_all
+
+        for inid, xyz in enumerate(aero_xyz_cid0_point):
+            aero_model.add_grid(inid+1, xyz)
     else:
         # get the entire caero box mesh
         aero_xyz_cid0 = aero_model.get_xyz_in_coord()
@@ -71,6 +90,9 @@ def _get_discrete_aero_mesh(structure_model: Optional[BDF],
                 xyzi = node.get_position()
                 aero_xyz_cid0_point_list.append(xyzi)
         aero_xyz_cid0_point = np.array(aero_xyz_cid0_point_list, dtype='float64')
+
+    naero_nodes = len(aero_model.nodes)
+    assert naero_nodes > 0, naero_nodes
     return aero_model, aero_xyz_cid0_point, naero_boxes_all
 
 
@@ -86,11 +108,75 @@ def _get_all_aero_boxs(model: BDF) -> np.ndarray:
     return all_aero_box
 
 
+def deform_aero_spline_from_files(bdf_filename: PathLike,
+                                  op2_filename: PathLike,
+                                  bdf_filename_out: PathLike='',
+                                  op2_filename_out: PathLike=''):
+    dirname = Path(os.path.dirname(bdf_filename))
+    if bdf_filename_out in {None, ''}:
+        bdf_filename_out = dirname / 'aero_model_splined.bdf'
+    if op2_filename_out in {None, ''}:
+        op2_filename_out = dirname / 'aero_model_splined.op2'
+
+    structure_model = read_bdf(bdf_filename, debug=False)
+    nids, xyz_cid0 = _get_nids_xyz_cid0(
+        structure_model, nids=None, xyz_cid0=None)
+    aero_model, aero_xyz_cid0_point, naero_boxes_all = _get_discrete_aero_mesh(
+        structure_model, aero_model=None)
+    naero_node = len(aero_model.nodes)
+    assert naero_node > 0, naero_node
+    aero_model.write_bdf(bdf_filename_out)
+    # -------------------------------------------------
+    results_model = read_op2(op2_filename, debug=False)
+    results_model_out = OP2(debug=False, mode='msc')
+
+    for case_key, disp in results_model.displacements.items():
+        case = copy.deepcopy(disp)
+        _fill_disp_case(structure_model, disp, case, naero_node)
+        results_model_out.displacements[case_key] = case
+
+    for case_key, eigenvectors in results_model.eigenvectors.items():
+        case = copy.deepcopy(eigenvectors)
+        _fill_disp_case(structure_model, eigenvectors, case, naero_node)
+        results_model_out.eigenvectors[case_key] = case
+
+    # results_model_out._nastran_format = 'msc'
+    results_model_out.write_op2(op2_filename_out,
+                                nastran_format='msc')
+    return
+
+def _fill_disp_case(structure_model: BDF,
+                    disp, case,
+                    naero_node: int):
+    ntime = case.data.shape[0]
+    data_out = np.zeros((ntime, naero_node, 6), dtype='float32')
+    data_out2 = data_out[:, :, :3]
+    for i in range(ntime):
+        datai = disp.data[i, :, :]
+        datai2 = deform_aero_spline(
+            structure_model,
+            aero_model=None,
+            nids=None,
+            xyz_cid0=None,
+            displacement0=datai)
+        assert datai2.shape[0] == naero_node, (datai2.shape, naero_node)
+        #naero_node, three = datai2.shape
+        # assert three == 3, three
+        data_out2[i, :, :] = datai2
+    assert data_out.shape == (ntime, naero_node, 6), (data_out.shape, (ntime, naero_node, 6))
+
+    # save the ata
+    node = np.arange(1, naero_node+1, dtype='int32')
+    gridtype = np.zeros(naero_node, dtype='int32')
+    case.data = data_out
+    case.node_gridtype = np.column_stack([node, gridtype])
+    return case
+
 def deform_aero_spline(structure_model: BDF,
-                       aero_model: BDF,
-                       nids: np.ndarray=None,
-                       xyz_cid0: np.ndarray=None,
-                       displacement0: np.ndarray=None):
+                       aero_model: Optional[BDF]=None,
+                       nids: Optional[np.ndarray]=None,
+                       xyz_cid0: Optional[np.ndarray]=None,
+                       displacement0: Optional[np.ndarray]=None):
     """
     Parameters
     ----------
@@ -101,7 +187,7 @@ def deform_aero_spline(structure_model: BDF,
         expected model consists of CQUAD4s and GRIDs and that's it
     nids : (nnodes,) int array
         the node ids
-    xyz_cid0 : (nnodes,) int array
+    xyz_cid0 : (nnodes,3) float array
         the xyz locations in the basic frame (cid=0)
         corresponds to the structural nodes
     displacement0 : (nnodes, 6) float array
@@ -116,7 +202,8 @@ def deform_aero_spline(structure_model: BDF,
     nids, xyz_cid0 = _get_nids_xyz_cid0(structure_model, nids, xyz_cid0)
     assert np.array_equal(nids, np.unique(nids))
 
-    aero_model, aero_xyz_cid0_point, naero_boxes_all = _get_discrete_aero_mesh(structure_model, aero_model)
+    aero_model, aero_xyz_cid0_point, naero_boxes_all = _get_discrete_aero_mesh(
+        structure_model, aero_model)
     log = aero_model.log
     maxs = aero_xyz_cid0_point.max(axis=0)
     log.info(f'aero_xyz_cid0_point.max() = {maxs}')
@@ -130,10 +217,27 @@ def deform_aero_spline(structure_model: BDF,
         ymax = np.abs(y).max()
         disp = (xyz_cid0[:, 2] / ymax) ** 2
         displacement0[:, 2] = disp
+    assert len(displacement0.shape) == 2, displacement0.shape
+    assert displacement0.shape[1] == 6, displacement0.shape
 
     all_aero_box = _get_all_aero_boxs(structure_model)
     assert aero_xyz_cid0_point.shape == (naero_boxes_all * 4, 3), aero_xyz_cid0_point.shape
+    aero_xyz_cid0_point = _deform_aero_spline(
+        structure_model, nids, xyz_cid0,
+        displacement0,
+        aero_model,
+        aero_xyz_cid0_point,
+        all_aero_box)
+    return aero_xyz_cid0_point
 
+
+def _deform_aero_spline(structure_model: BDF,
+                        nids: np.ndarray,
+                        xyz_cid0: np.ndarray,
+                        displacement0: np.ndarray,
+                        aero_model: BDF,
+                        aero_xyz_cid0_point: np.ndarray,
+                        all_aero_box: np.ndarray) -> np.ndarray:
     for eid, spline in sorted(structure_model.splines.items()):
         comment = f'{spline.type} eid={eid}'
         cid = max(aero_model.coords) + 1
@@ -164,6 +268,7 @@ def deform_aero_spline(structure_model: BDF,
         assert disp0.shape == (nstructure, 3), disp0.shape
 
         # get the aero spline xyz locations
+        # preallocate
         aero_disp_spline_cid0 = np.zeros((naero_nodesi, 3), dtype='float64')
 
         # split aero model into individual panels
@@ -266,6 +371,8 @@ def deform_aero_spline(structure_model: BDF,
             i0 = 4 * iboxi
             i1 = 4 * (iboxi + 1)
             aero_xyz_cid0_point[i0:i1, :] = xyz_aeroi
+    assert len(aero_xyz_cid0_point.shape) == 2, aero_xyz_cid0_point.shape
+    assert aero_xyz_cid0_point.shape[1] == 3, aero_xyz_cid0_point.shape
     return aero_xyz_cid0_point
 
 
