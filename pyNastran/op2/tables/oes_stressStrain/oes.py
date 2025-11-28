@@ -99,16 +99,16 @@ from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_bush import RealNonline
 from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
     HyperelasticQuadArray)
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
-from pyNastran.op2.tables.oes_stressStrain.cplstn import (
+from pyNastran.op2.tables.oes_stressStrain.utils_cplstn import (
     oes_cplstn3_real_6, oes_cplstn4_real_32, oes_cplstn6_real_26,
 )
-from pyNastran.op2.tables.oes_stressStrain.spring_utils import (
+from pyNastran.op2.tables.oes_stressStrain.utils_spring import (
     oes_celas_complex_3, oes_celas_real_2,
 )
-from pyNastran.op2.tables.oes_stressStrain.rod_utils import (
+from pyNastran.op2.tables.oes_stressStrain.utils_rod import (
     oes_crod_real_5, oes_crod_complex_5, oes_crod_random_3,
 )
-from pyNastran.op2.tables.oes_stressStrain.plate_utils import (
+from pyNastran.op2.tables.oes_stressStrain.utils_plate import (
     oes_cquad4_33_complex_15, oes_cquad4_33_random_9,
     oes_cquad4_33_complex_vm_17, oes_cquad4_33_random_vm_11, oes_cquad4_random_vm_57,
     oes_cquad4_144_complex_77, oes_cquad4_144_random, oes_cquad4_144_real,
@@ -119,7 +119,7 @@ from pyNastran.op2.tables.oes_stressStrain.plate_utils import (
     oes_ctria3_random_9, oes_ctria3_random_vm_11,
     oes_ctria3_complex_15, oes_ctria3_complex_vm_17,
 )
-from pyNastran.op2.tables.oes_stressStrain.beam_utils import (
+from pyNastran.op2.tables.oes_stressStrain.utils_beam import (
     oes_cbeam_complex_111, oes_cbeam_random_67, oes_cbeam_real_111,
 )
 from pyNastran.op2.tables.oes_stressStrain.utils_composite_plates import (
