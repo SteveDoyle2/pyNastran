@@ -102,31 +102,45 @@ from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPla
 from pyNastran.op2.tables.oes_stressStrain.cplstn import (
     oes_cplstn3_real_6, oes_cplstn4_real_32, oes_cplstn6_real_26,
 )
+from pyNastran.op2.tables.oes_stressStrain.spring_utils import (
+    oes_celas_complex_3, oes_celas_real_2,
+)
+from pyNastran.op2.tables.oes_stressStrain.rod_utils import (
+    oes_crod_real_5, oes_crod_complex_5, oes_crod_random_3,
+)
+from pyNastran.op2.tables.oes_stressStrain.plate_utils import (
+    oes_cquad4_33_complex_15, oes_cquad4_33_random_9,
+    oes_cquad4_33_complex_vm_17, oes_cquad4_33_random_vm_11, oes_cquad4_random_vm_57,
+    oes_cquad4_144_complex_77, oes_cquad4_144_random, oes_cquad4_144_real,
+    oes_cquad4_complex_vm_87,
+    oes_quad4_33_real_17,
+
+    oes_ctria3_real_17,
+    oes_ctria3_random_9, oes_ctria3_random_vm_11,
+    oes_ctria3_complex_15, oes_ctria3_complex_vm_17,
+)
+from pyNastran.op2.tables.oes_stressStrain.beam_utils import (
+    oes_cbeam_complex_111, oes_cbeam_random_67, oes_cbeam_real_111,
+)
+from pyNastran.op2.tables.oes_stressStrain.utils_composite_plates import (
+    oes_comp_shell_real_11,
+    oes_shell_composite_complex_11, oes_shell_composite_complex_13,
+)
 from pyNastran.op2.tables.oes_stressStrain.utils import (
+    oes_cbush1d_real_8,
     oes_cbar_complex_19,
     oes_cbar100_real_10,
     oesrt_comp_shell_real_9, oesrt_cquad4_95,
     oes_cbar_real_16, oes_cbar_random_10,
-    oes_cbeam_complex_111, oes_cbeam_random_67, oes_cbeam_real_111,
     oes_cbend_real_21,
     oes_cbush_complex_13, oes_cbush_real_7,
-    oes_celas_complex_3, oes_celas_real_2,
     oes_cshear_real_4, oes_cshear_complex_5, oes_cshear_random_3,
-    oes_comp_shell_real_11,
     oes_weldp_msc_real_8, oes_weldp_msc_complex_15,
     oes_fastp_msc_real_7, oes_fastp_msc_complex_13,
-    oes_cquad4_33_complex_15, oes_cquad4_33_random_9,
-    oes_cquad4_33_complex_vm_17, oes_cquad4_33_random_vm_11, oes_cquad4_random_vm_57,
-    oes_cquad4_144_complex_77, oes_cquad4_144_random, oes_cquad4_144_real,
-    oes_cquad4_complex_vm_87, oes_crod_real_5, oes_crod_complex_5, oes_crod_random_3,
     oes_csolid_real, oes_csolid_complex, oes_csolid_random, _oes_csolid2_real,
     oes_csolid_composite_real,
     oes_csolid_linear_hyperelastic_cosine_real, oes_csolid_linear_hyperelastic_real,
-    oes_ctria3_real_17, oes_ctria3_complex_vm_17, oes_ctria3_random_9,
     oes_ctriax6_real_33, oes_ctriax_complex_37,
-    oes_ctria3_random_vm_11,
-    oes_quad4_33_real_17,
-    oes_shell_composite_complex_11, oes_shell_composite_complex_13,
 )
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -3425,6 +3439,7 @@ class OES(OP2Common2):
             #msg = op2.code_information()
             #return op2._not_implemented_or_skip(data, ndata, msg), None, None
         else:  # pragma: no cover
+            numwide_random2 = 0
             raise RuntimeError(op2.code_information() +
                                f'\nnumwide real={numwide_real} imag={numwide_imag} '
                                f'random2={numwide_random2} random3={numwide_random3}')
@@ -5243,40 +5258,11 @@ class OES(OP2Common2):
             else:
                 if is_vectorized and op2.use_vector:  # pragma: no cover
                     op2.log.debug(f'vectorize CTRIA3 imag SORT{sort_method}')
-                struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'14f', self.size))
-                cen = 0 # CEN/3
-                for unused_i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = struct1.unpack(edata)
-                    (eid_device,
-                     fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
-                     fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i,) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, op2.nonlinear_factor, op2.sort_method)
 
-                    if op2.is_debug_file:
-                        op2.binary_debug.write('  OESC %s - eid=%i; C=[%s]\n' % (
-                            element_name_type, eid,
-                            ', '.join(['%r' % di for di in out])))
-
-                    if is_magnitude_phase:
-                        sx1 = polar_to_real_imag(sx1r, sx1i)
-                        sy1 = polar_to_real_imag(sy1r, sy1i)
-                        sx2 = polar_to_real_imag(sx2r, sx2i)
-                        sy2 = polar_to_real_imag(sy2r, sy2i)
-                        txy1 = polar_to_real_imag(txy1r, txy1i)
-                        txy2 = polar_to_real_imag(txy2r, txy2i)
-                    else:
-                        sx1 = complex(sx1r, sx1i)
-                        sy1 = complex(sy1r, sy1i)
-                        sx2 = complex(sx2r, sx2i)
-                        sy2 = complex(sy2r, sy2i)
-                        txy1 = complex(txy1r, txy1i)
-                        txy2 = complex(txy2r, txy2i)
-                    obj.add_sort1(dt, eid, cen,
-                                  fd1, sx1, sy1, txy1,
-                                  fd2, sx2, sy2, txy2)
-                    n += ntotal
+                n = oes_ctria3_complex_15(
+                    op2, data, obj,
+                    nelements, ntotal, is_magnitude_phase,
+                    element_name_type)
         #elif op2.format_code == 1 and op2.num_wide == 9: # random?
             #msg = op2.code_information()
             #return op2._not_implemented_or_skip(data, ndata, msg), None, None
@@ -6756,20 +6742,7 @@ class OES(OP2Common2):
                 obj.ielement = itotal2
                 obj.itotal = itotal2
             else:
-                struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'6fi')
-                for unused_i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = struct1.unpack(edata)  # num_wide=25
-                    if op2.is_debug_file:
-                        op2.binary_debug.write('CBUSH1D-40 - %s\n' % (str(out)))
-                    (eid_device, fe, ue, ve, ao, ae, ep, fail) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, op2.nonlinear_factor, op2.sort_method)
-
-                    # axial_force, axial_displacement, axial_velocity, axial_stress,
-                    # axial_strain, plastic_strain, is_failed
-                    obj.add_sort1(dt, eid, fe, ue, ve, ao, ae, ep, fail)
-                    n += ntotal
+                n = oes_cbush1d_real_8(op2, data, obj, nelements, ntotal)
         elif result_type == 1 and op2.num_wide == 9:  # imag
             # TODO: vectorize object
             ntotal = 36 * self.factor  # 4*9
