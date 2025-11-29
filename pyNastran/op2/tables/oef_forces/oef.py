@@ -35,9 +35,12 @@ from pyNastran.op2.tables.oef_forces.utils_celas_cdamp import oef_celas_cdamp
 from pyNastran.op2.tables.oef_forces.utils_cbar import oef_cbar_34, oef_cbar_100
 from pyNastran.op2.tables.oef_forces.utils_crod import oef_crod
 from pyNastran.op2.tables.oef_forces.utils_visc import oef_cvisc
+from pyNastran.op2.tables.oef_forces.utils_cgap import oef_cgap
+from pyNastran.op2.tables.oef_forces.utils_cbend import oef_cbend
 from pyNastran.op2.tables.oef_forces.utils_cbush import oef_cbush
 from pyNastran.op2.tables.oef_forces.utils_cshear import oef_cshear
 from pyNastran.op2.tables.oef_forces.utils_cbeam import oef_cbeam
+from pyNastran.op2.tables.oef_forces.utils_shells import oef_shells_centroidal
 from pyNastran.op2.tables.oef_forces.utils_composite_plates import oef_shells_composite
 from pyNastran.op2.tables.oef_forces.utils_solid import oef_csolid_pressure
 
@@ -48,13 +51,11 @@ from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     RealConvHeatFluxArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_force_objects import (
-    RealPlateForceArray,
     RealPlateBilinearForceArray,
     RealConeAxForceArray,
     RealBendForceArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
-    ComplexPlateForceArray,
     ComplexPlate2ForceArray,
     ComplexCBendForceArray,
 )
@@ -66,95 +67,6 @@ class OEF:
     """Defines OEFx table reading for element forces/heat flux"""
     def __init__(self, op2: OP2):
         self.op2 = op2
-
-    def get_oef_prefix_postfix(self) -> tuple[str, str]:
-        """
-        NX Case Control  Block         Description
-        ===============  ==========    ===========
-        NLSTRESS         OESNLXR       Nonlinear static stresses
-        BOUTPUT          OESNLBR       Slideline stresses
-        STRESS           OESNLXD       Nonlinear Transient Stresses
-        STRESS           OES1C/OSTR1C  Ply stresses/strains
-        STRESS           OES1X         Element stresses with intermediate (CBAR and CBEAM)
-                                       station stresses and stresses on nonlinear elements
-        STRESS           OES/OESVM     Element stresses (linear elements only)
-        STRAIN           OSTR1         Element strains
-        STRESS/STRAIN    DOES1/DOSTR1  Scaled Response Spectra
-        MODCON           OSTRMC        Modal contributions
-        """
-        op2 = self.op2
-        prefix = ''
-        postfix = ''
-        table_name_bytes = op2.table_name
-        assert isinstance(table_name_bytes, bytes), table_name_bytes
-        is_sort1 = table_name_bytes in SORT1_TABLES_BYTES
-        assert table_name_bytes in TABLES_BYTES, table_name_bytes
-
-        if table_name_bytes in [b'OEF1X', b'OEF1', b'OEF2']:
-            if op2.thermal == 0:
-                prefix = 'force.'
-            elif op2.thermal == 1:
-                prefix = 'thermal_load.'
-            else:
-                raise NotImplementedError(op2.code_information())
-        elif table_name_bytes in [b'HOEF1']:
-            postfix = '_flux'
-        #elif op2.table_name in ['OESNLXR']:
-            #prefix = 'sideline_'
-        #elif op2.table_name in ['OESNLXD', 'OESNL1X', 'OESNLXR']:
-            #prefix = 'nonlinear_'
-        #elif op2.table_name == 'OESNLBR':
-            #prefix = 'sideline_'
-        #elif op2.table_name == 'OESRT':
-            #prefix = 'strength_ratio.'
-        #elif op2.table_name in ['OESCP', 'OESTRCP']:
-            #pass # TODO: update
-        elif table_name_bytes in [b'OEFCRM1', b'OEFCRM2']:
-            assert op2.table_code in [4, 504], op2.code_information()
-            prefix = 'crm.'
-            op2._op2_readers.reader_oes._set_as_random()
-        elif table_name_bytes in [b'OEFPSD1', b'OEFPSD2']:
-            assert op2.table_code in [4, 604], op2.code_information()
-            op2._op2_readers.reader_oes._set_as_random()
-            prefix = 'psd.'
-        elif table_name_bytes in [b'OEFRMS1', b'OEFRMS2', b'OEFPK1']:
-            assert op2.table_code in [4, 404, 804], op2.code_information()
-            op2._op2_readers.reader_oes._set_as_random()
-            is_sort1 = True
-            op2._analysis_code_fmt = b'i'
-            prefix = 'rms.'
-        elif table_name_bytes in [b'OEFNO1', b'OEFNO2']:
-            assert op2.table_code in [4, 904], op2.code_information()
-            op2._op2_readers.reader_oes._set_as_random()
-            op2.sort_method = 1
-            op2.data_code['nonlinear_factor'] = None
-            op2._analysis_code_fmt = b'i'
-            assert op2.sort_method == 1, op2.code_information()
-            prefix = 'no.'
-        elif table_name_bytes in [b'OEFATO1', b'OEFATO2']:
-            assert op2.table_code in [4], op2.code_information()
-            prefix = 'ato.'
-
-        elif table_name_bytes in [b'RAFCONS']:
-            prefix = 'RAFCONS.'
-        elif table_name_bytes in [b'RAFEATC']:
-            prefix = 'RAFEATC.'
-        elif table_name_bytes in [b'DOEF1']:
-            assert op2.table_code in [4], op2.code_information()
-            prefix = shock_response_prefix(op2.thermal)
-        elif table_name_bytes in [b'OEFIT']:
-            assert op2.table_code in [25], op2.code_information()
-            prefix = 'failure_indices.'
-            #raise NotImplementedError(op2.code_information())
-        elif table_name_bytes in [b'OEFITSTN']: # composite failure indicies
-            assert op2.table_code in [25], op2.code_information()
-            prefix = 'failure_indices.'
-        else:
-            raise NotImplementedError('%r' % op2.table_name)
-
-        op2.sort_bits.is_sort1 = is_sort1 # sort2
-        op2.sort_method = 1 if is_sort1 else 2
-        return prefix, postfix
 
     def _oef_force_code(self):
         """
@@ -439,7 +351,7 @@ class OEF:
         op2 = self.op2
         if op2._results.is_not_saved('force'):
             return ndata
-        prefix, postfix = self.get_oef_prefix_postfix()
+        prefix, postfix = get_oef_prefix_postfix(op2)
 
         n = 0
         #thermal
@@ -500,29 +412,31 @@ class OEF:
         n = 0
         obj_vector_real = Real1DHeatFluxArray
         #if op2.element_type == 1: # CROD
-        if op2.element_type == 1:
+        element_type = op2.element_type
+        if element_type == 1:
             result_name = prefix + 'crod_thermal_load' + postfix
-        elif op2.element_type == 2:
+        elif element_type == 2:
             result_name = prefix + 'cbeam_thermal_load' + postfix
-        elif op2.element_type == 3:
+        elif element_type == 3:
             result_name = prefix + 'ctube_thermal_load' + postfix
-        elif op2.element_type == 10:
+        elif element_type == 10:
             result_name = prefix + 'conrod_thermal_load' + postfix
-        elif op2.element_type == 34:
+        elif element_type == 34:
             result_name = prefix + 'cbar_thermal_load' + postfix
-        elif op2.element_type == 69:
+        elif element_type == 69:
             result_name = prefix + 'cbend_thermal_load' + postfix
         else:
             raise NotImplementedError('element_type=%s element_name=%s' % (
-                op2.element_type, op2.element_name))
+                element_type, op2.element_name))
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
         op2._results._found_result(result_name)
         slot = op2.get_result(result_name)
 
+        factor = op2.factor
         if op2.format_code == 1 and op2.num_wide == 9:  # real
-            ntotal = 36
+            ntotal = 36 * factor
             nelements = ndata // ntotal
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
@@ -920,7 +834,7 @@ class OEF:
         if op2._results.is_not_saved('force'):
             return ndata
 
-        prefix, postfix = self.get_oef_prefix_postfix()
+        prefix, postfix = get_oef_prefix_postfix(op2)
         _sort_method = func1(op2.tCode)
         result_type = op2.result_type # func7(op2.tCode)
 
@@ -976,13 +890,13 @@ class OEF:
         elif element_type in [33, 74]:  # centroidal shells
             # 33-CQUAD4
             # 74-CTRIA3
-            n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase,
-                                                               result_type, prefix, postfix)
+            n, nelements, ntotal = oef_shells_centroidal(self.op2, data, ndata, dt, is_magnitude_phase,
+                                                         result_type, prefix, postfix)
         elif op2.is_nx and element_type in [227, 228]:  # centroidal shells
             # 227-CTRIAR? (C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqrdbx102.op2)
             # 228-CQUADR
-            n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase,
-                                                               result_type, prefix, postfix)
+            n, nelements, ntotal = oef_shells_centroidal(self.op2, data, ndata, dt, is_magnitude_phase,
+                                                         result_type, prefix, postfix)
 
         elif element_type in [64, 70, 75, 82, 144]: # bilinear shells
             # 64-CQUAD8
@@ -1042,12 +956,12 @@ class OEF:
                                                      result_type, prefix, postfix)
 
         elif element_type == 38:  # cgap
-            n, nelements, ntotal = self._oef_cgap(data, ndata, dt, is_magnitude_phase,
-                                                  result_type, prefix, postfix)
+            n, nelements, ntotal = oef_cgap(self.op2, data, ndata, dt, is_magnitude_phase,
+                                            result_type, prefix, postfix)
 
         elif element_type == 69:  # cbend
-            n, nelements, ntotal = self._oef_cbend(data, ndata, dt, is_magnitude_phase,
-                                                   result_type, prefix, postfix)
+            n, nelements, ntotal = oef_cbend(self.op2, data, ndata, dt, is_magnitude_phase,
+                                             result_type, prefix, postfix)
 
         elif element_type in [76, 77, 78, 79]:
             # 76-HEXPR
@@ -1145,116 +1059,6 @@ class OEF:
         assert n is not None and n > 0, op2.code_information()
         return n
 
-    def _oef_shells_centroidal(self, data, ndata, dt, is_magnitude_phase,
-                               result_type, prefix, postfix):
-        """
-        33-CQUAD4
-        74-CTRIA3
-        227-CTRIAR
-        228-CQUADR
-
-        """
-        op2 = self.op2
-        assert op2.element_name != 'RBAR', op2.code_information()
-        n = 0
-        if op2.element_type == 33:
-            result_name = prefix + 'cquad4_force' + postfix
-        elif op2.element_type in [74, 83]:
-            result_name = prefix + 'ctria3_force' + postfix
-        elif op2.element_type == 227:
-            result_name = prefix + 'ctriar_force' + postfix
-        elif op2.element_type == 228:
-            result_name = prefix + 'cquadr_force' + postfix
-        else:
-            #msg = 'sort1 Type=%s num=%s' % (op2.element_name, op2.element_type)
-            #return op2._not_implemented_or_skip(data, ndata, msg)
-            raise NotImplementedError(op2.code_information())
-        #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
-
-        if op2._results.is_not_saved(result_name):
-            return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
-
-        assert op2._data_factor == 1, op2._data_factor
-
-        factor = op2.factor
-        if op2.format_code in [1, 2] and op2.num_wide == 9:
-            # real - format_code == 1
-            # random - format_code == 2
-            ntotal = 36 * factor # 9*4
-            nelements = ndata // ntotal
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, RealPlateForceArray)
-            if auto_return:
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * ntotal
-                ielement = obj.ielement
-                ielement2 = ielement + nelements
-
-                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)
-                obj._times[obj.itime] = dt
-                if obj.itime == 0:
-                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[ielement:ielement2] = eids
-
-                #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-                obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:].copy()
-                obj.itotal = ielement2
-                obj.ielement = ielement2
-            else:
-                n = oef_cquad4_33_real_9(op2, data, obj,
-                                         nelements, ntotal)
-
-        elif op2.format_code in [2, 3] and op2.num_wide == 17:  # imag
-            ntotal = 68 * factor
-            nelements = ndata // ntotal
-
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, ComplexPlateForceArray)
-            if auto_return:
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * ntotal
-                ielement = obj.ielement
-                ielement2 = ielement + nelements
-                itotal = obj.itotal
-                itotal2 = itotal + nelements
-
-                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 17).copy()
-                obj._times[obj.itime] = dt
-                if obj.itime == 0:
-                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 17)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
-
-                #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-                isave1 = [1, 2, 3, 4, 5, 6, 7, 8]
-                isave2 = [9, 10, 11, 12, 13, 14, 15, 16]
-                real_imag = apply_mag_phase(floats, is_magnitude_phase, isave1, isave2)
-                obj.data[obj.itime, itotal:itotal2, :] = real_imag
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                n = oef_cquad4_33_imag_17(op2, data, ndata, obj,
-                                          nelements, ntotal,
-                                          is_magnitude_phase)
-
-        else:  # pragma: no cover
-            raise RuntimeError(op2.code_information())
-            #msg = op2.code_information()
-            #print(msg)
-            #return op2._not_implemented_or_skip(data, ndata, msg), None, None
-        return n, nelements, ntotal
-
     def _oef_shells_nodal(self, data, ndata, dt, is_magnitude_phase,
                           result_type, prefix, postfix):
         """
@@ -1267,24 +1071,25 @@ class OEF:
         """
         op2 = self.op2
         n = 0
-        if op2.element_type == 64:
+        element_type = op2.element_type
+        if element_type == 64:
             result_name = prefix + 'cquad8_force' + postfix
-        elif op2.element_type == 70:
+        elif element_type == 70:
             result_name = prefix + 'ctriar_force' + postfix
-        elif op2.element_type == 75:
+        elif element_type == 75:
             result_name = prefix + 'ctria6_force' + postfix
-        elif op2.element_type == 82:
+        elif element_type == 82:
             result_name = prefix + 'cquadr_force' + postfix
-        elif op2.element_type == 144:
+        elif element_type == 144:
             result_name = prefix + 'cquad4_force' + postfix
         else:
             raise NotImplementedError(op2.code_information())
             #msg = op2.code_information()
             #return op2._not_implemented_or_skip(data, ndata, msg)
 
-        if op2.element_type in [70, 75]:  # CTRIAR,CTRIA6
+        if element_type in [70, 75]:  # CTRIAR,CTRIA6
             nnodes = 3
-        elif op2.element_type in [64, 82, 144]:  # CQUAD8,CQUADR,CQUAD4-bilinear
+        elif element_type in [64, 82, 144]:  # CQUAD8,CQUADR,CQUAD4-bilinear
             nnodes = 4
         else:
             raise NotImplementedError(op2.code_information())
@@ -1407,8 +1212,9 @@ class OEF:
         slot = op2.get_result(result_name)
 
         n = 0
+        factor = op2.factor
         if op2.format_code == 1 and op2.num_wide == 7:  # real
-            ntotal = 28  # 7*4
+            ntotal = 28 * factor # 7*4
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = op2._create_oes_object4(
@@ -1445,240 +1251,6 @@ class OEF:
             #return op2._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
-    def _oef_cbend(self, data, ndata, dt, is_magnitude_phase,
-                   result_type, prefix, postfix):
-        """69-CBEND"""
-        op2 = self.op2
-        result_name = prefix + 'cbend_force' + postfix
-        if op2._results.is_not_saved(result_name):
-            return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
-
-        n = 0
-        if op2.format_code == 1 and op2.num_wide == 15:  # real
-            ntotal = 60  # 15*4
-            nelements = ndata // ntotal
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, RealBendForceArray)
-            if auto_return:
-                return nelements * op2.num_wide * 4, None, None
-
-            obj = op2.obj
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * 4 * op2.num_wide
-                itotal = obj.ielement
-                ielement2 = obj.itotal + nelements
-                itotal2 = ielement2
-
-                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 15).copy()
-                obj._times[obj.itime] = dt
-                if obj.itime == 0:
-                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 15).copy()
-                    eids = ints[:, 0] // 10
-                    nids_a = ints[:, 1]
-                    nids_b = ints[:, 8]
-                    assert eids.min() > 0, eids.min()
-                    obj.element_node[itotal:itotal2, 0] = eids
-                    obj.element_node[itotal:itotal2, 1] = nids_a
-                    obj.element_node[itotal:itotal2, 2] = nids_b
-
-                # [nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
-                #  nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b]
-                assert floats[:, 2:8].shape[1] == 6, floats[:, 2:8].shape
-                assert floats[:, 9:].shape[1] == 6, floats[:, 9:].shape
-                obj.data[obj.itime, itotal:itotal2, :6] = floats[:, 2:8]
-                obj.data[obj.itime, itotal:itotal2, 6:] = floats[:, 9:]
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                s = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b' i6fi6f', op2.size))
-                add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal]
-
-                    out = s.unpack(edata)
-                    if op2.is_debug_file:
-                        op2.binary_debug.write('OEF_BEND-69 - %s\n' % (str(out)))
-                    (eid_device,
-                     nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
-                     nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, op2.nonlinear_factor, op2.sort_method)
-
-                    add_sort_x(
-                        dt, eid,
-                        nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
-                        nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b)
-                    n += ntotal
-        elif op2.format_code in [2, 3] and op2.num_wide == 27:  # imag
-            # TODO: vectorize
-            ntotal = 108  # 27*4
-            nelements = ndata // ntotal
-
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, ComplexCBendForceArray)
-            if auto_return:
-                return nelements * op2.num_wide * 4, None, None
-
-            obj = op2.obj
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * 4 * op2.num_wide
-                itotal = obj.ielement
-                ielement2 = obj.itotal + nelements
-                itotal2 = ielement2
-
-                ireal = [2, 3, 4, 5, 6, 7, 15, 16, 17, 18, 19, 20]
-                iimag = [8, 9, 10, 11, 12, 13, 21, 22, 23, 24, 25, 26]
-                # 0    1
-                # eid, nidA,
-                # 2      3      4       5     6     7
-                # 8      9      10      11    12    13
-                # bm1Ar, bm2Ar, ts1Ar, ts2Ar, afAr, trqAr,
-                # bm1Ai, bm2Ai, ts1Ai, ts2Ai, afAi, trqAi,
-                # 14
-                # nidB
-                # 15     16     17     18     19    20
-                # 21     22     23     24     25    26
-                # bm1Br, bm2Br, ts1Br, ts2Br, afBr, trqBr,
-                # bm1Bi, bm2Bi, ts1Bi, ts2Bi, afBi, trqBi
-                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 27).copy()
-                obj._times[obj.itime] = dt
-                if obj.itime == 0:
-                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 27).copy()
-                    eids = ints[:, 0] // 10
-                    nids_a = ints[:, 1]
-                    nids_b = ints[:, 14]
-                    assert nids_a.min() > 0, nids_a
-                    assert nids_b.min() > 0, nids_b
-                    assert eids.min() > 0, eids.min()
-                    #print(nids_b)
-                    obj.element_node[itotal:itotal2, 0] = eids
-                    obj.element_node[itotal:itotal2, 1] = nids_a
-                    obj.element_node[itotal:itotal2, 2] = nids_b
-
-                real_imag = apply_mag_phase(floats, is_magnitude_phase, ireal, iimag)
-                obj.data[obj.itime, itotal:itotal2, :] = real_imag
-                #assert floats[:, 1:6].shape[1] == 12, floats[:, 1:6].shape
-                #assert floats[:, 7:].shape[1] == 6, floats[:, 7:].shape
-                #obj.data[obj.itime, itotal:itotal2, :6] = floats[:, 1:6]
-                #obj.data[obj.itime, itotal:itotal2, 6:] = floats[:, 7:]
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                s = Struct(op2._endian + op2._analysis_code_fmt + b' i12f i12f')
-                add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-                for unused_i in range(nelements):
-                    edata = data[n:n+108]
-                    n += ntotal
-                    out = s.unpack(edata)
-                    if op2.is_debug_file:
-                        op2.binary_debug.write('OEF_BEND-69 - %s\n' % (str(out)))
-                    (eid_device, nid_a,
-                     bm1_ar, bm2_ar, ts1_ar, ts2_ar, af_ar, trq_ar,
-                     bm1_ai, bm2_ai, ts1_ai, ts2_ai, af_ai, trq_ai,
-                     nid_b,
-                     bm1_br, bm2_br, ts1_br, ts2_br, af_br, trq_br,
-                     bm1_bi, bm2_bi, ts1_bi, ts2_bi, af_bi, trq_bi) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, op2.nonlinear_factor, op2.sort_method)
-
-                    if is_magnitude_phase:
-                        bm1_a = polar_to_real_imag(bm1_ar, bm1_ai)
-                        bm1_b = polar_to_real_imag(bm1_br, bm1_bi)
-                        bm2_a = polar_to_real_imag(bm2_ar, bm2_ai)
-                        bm2_b = polar_to_real_imag(bm2_br, bm2_bi)
-                        ts1_a = polar_to_real_imag(ts1_ar, ts1_ai)
-                        ts1_b = polar_to_real_imag(ts1_br, ts1_bi)
-                        ts2_a = polar_to_real_imag(ts2_ar, ts2_ai)
-                        ts2_b = polar_to_real_imag(ts2_br, ts2_bi)
-                        af_a = polar_to_real_imag(af_ar, af_ai)
-                        af_b = polar_to_real_imag(af_br, af_bi)
-                        trq_a = polar_to_real_imag(trq_ar, trq_ai)
-                        trq_b = polar_to_real_imag(trq_br, trq_bi)
-                    else:
-                        bm1_a = complex(bm1_ar, bm1_ai)
-                        bm1_b = complex(bm1_br, bm1_bi)
-                        bm2_a = complex(bm2_ar, bm2_ai)
-                        bm2_b = complex(bm2_br, bm2_bi)
-                        ts1_a = complex(ts1_ar, ts1_ai)
-                        ts1_b = complex(ts1_br, ts1_bi)
-                        ts2_a = complex(ts2_ar, ts2_ai)
-                        ts2_b = complex(ts2_br, ts2_bi)
-                        af_a = complex(af_ar, af_ai)
-                        af_b = complex(af_br, af_bi)
-                        trq_a = complex(trq_ar, trq_ai)
-                        trq_b = complex(trq_br, trq_bi)
-
-                    add_sort_x(dt, eid,
-                               nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
-                               nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b)
-        else:  # pragma: no cover
-            raise RuntimeError(op2.code_information())
-            #msg = op2.code_information()
-            #return op2._not_implemented_or_skip(data, ndata, msg), None, None
-        return n, nelements, ntotal
-
-
-def oef_cquad4_33_real_9(self, data: bytes,
-                         obj: RealPlateForceArray,
-                         nelements: int, ntotal: int) -> int:
-    op2 = self
-    n = 0
-    s = Struct(mapfmt(op2._endian + op2._analysis_code_fmt + b'8f', op2.size))
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n+ntotal]
-        out = s.unpack(edata)
-        if op2.is_debug_file:
-            op2.binary_debug.write('real_OEF_Plate-%s - %s\n' % (op2.element_type, str(out)))
-        (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-        add_sort_x(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-        n += ntotal
-    return n
-
-def oef_cquad4_33_imag_17(self, data: bytes, ndata: int,
-                          obj: ComplexPlateForceArray,
-                          nelements: int, ntotal: int,
-                          is_magnitude_phase: bool) -> int:
-    op2 = self
-    n = 0
-    s = Struct(mapfmt(op2._endian + op2._analysis_code_fmt + b'16f', op2.size))
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n+ntotal]
-        out = s.unpack(edata)
-        (eid_device,
-         mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
-         mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-        if op2.is_debug_file:
-            op2.binary_debug.write('complex_OEF_Plate-%s - %s\n' % (op2.element_type, str(out)))
-
-        if is_magnitude_phase:
-            mx = polar_to_real_imag(mxr, mxi)
-            my = polar_to_real_imag(myr, myi)
-            mxy = polar_to_real_imag(mxyr, mxyi)
-            bmx = polar_to_real_imag(bmxr, bmxi)
-            bmy = polar_to_real_imag(bmyr, bmyi)
-            bmxy = polar_to_real_imag(bmxyr, bmxyi)
-            tx = polar_to_real_imag(txr, txi)
-            ty = polar_to_real_imag(tyr, tyi)
-        else:
-            mx = complex(mxr, mxi)
-            my = complex(myr, myi)
-            mxy = complex(mxyr, mxyi)
-            bmx = complex(bmxr, bmxi)
-            bmy = complex(bmyr, bmyi)
-            bmxy = complex(bmxyr, bmxyi)
-            tx = complex(txr, txi)
-            ty = complex(tyr, tyi)
-        add_sort_x(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-        n += ntotal
-    return n
 
 def oef_cquad4_144_real_9(op2: OP2, data: bytes,
                           obj: RealPlateBilinearForceArray,
@@ -1818,6 +1390,7 @@ def oef_cquad4_imag_17(op2: OP2, data: bytes, ndata: int,
     #aaa
     return n
 
+
 def oef_cconeax_real_7(self, data: bytes,
                        obj: RealConeAxForceArray,
                        nelements: int, ntotal: int, dt: Any) -> int:
@@ -1853,3 +1426,92 @@ def shock_response_prefix(thermal: int) -> str:
     else:
         assert thermal in [2, 4, 8], thermal # , op2.code_information() # abs
     return prefix
+
+
+def get_oef_prefix_postfix(op2: OP2) -> tuple[str, str]:
+    """
+    NX Case Control  Block         Description
+    ===============  ==========    ===========
+    NLSTRESS         OESNLXR       Nonlinear static stresses
+    BOUTPUT          OESNLBR       Slideline stresses
+    STRESS           OESNLXD       Nonlinear Transient Stresses
+    STRESS           OES1C/OSTR1C  Ply stresses/strains
+    STRESS           OES1X         Element stresses with intermediate (CBAR and CBEAM)
+                                   station stresses and stresses on nonlinear elements
+    STRESS           OES/OESVM     Element stresses (linear elements only)
+    STRAIN           OSTR1         Element strains
+    STRESS/STRAIN    DOES1/DOSTR1  Scaled Response Spectra
+    MODCON           OSTRMC        Modal contributions
+    """
+    prefix = ''
+    postfix = ''
+    table_name_bytes = op2.table_name
+    assert isinstance(table_name_bytes, bytes), table_name_bytes
+    is_sort1 = table_name_bytes in SORT1_TABLES_BYTES
+    assert table_name_bytes in TABLES_BYTES, table_name_bytes
+
+    if table_name_bytes in [b'OEF1X', b'OEF1', b'OEF2']:
+        if op2.thermal == 0:
+            prefix = 'force.'
+        elif op2.thermal == 1:
+            prefix = 'thermal_load.'
+        else:
+            raise NotImplementedError(op2.code_information())
+    elif table_name_bytes in [b'HOEF1']:
+        postfix = '_flux'
+    #elif op2.table_name in ['OESNLXR']:
+        #prefix = 'sideline_'
+    #elif op2.table_name in ['OESNLXD', 'OESNL1X', 'OESNLXR']:
+        #prefix = 'nonlinear_'
+    #elif op2.table_name == 'OESNLBR':
+        #prefix = 'sideline_'
+    #elif op2.table_name == 'OESRT':
+        #prefix = 'strength_ratio.'
+    #elif op2.table_name in ['OESCP', 'OESTRCP']:
+        #pass # TODO: update
+    elif table_name_bytes in [b'OEFCRM1', b'OEFCRM2']:
+        assert op2.table_code in [4, 504], op2.code_information()
+        prefix = 'crm.'
+        op2._op2_readers.reader_oes._set_as_random()
+    elif table_name_bytes in [b'OEFPSD1', b'OEFPSD2']:
+        assert op2.table_code in [4, 604], op2.code_information()
+        op2._op2_readers.reader_oes._set_as_random()
+        prefix = 'psd.'
+    elif table_name_bytes in [b'OEFRMS1', b'OEFRMS2', b'OEFPK1']:
+        assert op2.table_code in [4, 404, 804], op2.code_information()
+        op2._op2_readers.reader_oes._set_as_random()
+        is_sort1 = True
+        op2._analysis_code_fmt = b'i'
+        prefix = 'rms.'
+    elif table_name_bytes in [b'OEFNO1', b'OEFNO2']:
+        assert op2.table_code in [4, 904], op2.code_information()
+        op2._op2_readers.reader_oes._set_as_random()
+        op2.sort_method = 1
+        op2.data_code['nonlinear_factor'] = None
+        op2._analysis_code_fmt = b'i'
+        assert op2.sort_method == 1, op2.code_information()
+        prefix = 'no.'
+    elif table_name_bytes in [b'OEFATO1', b'OEFATO2']:
+        assert op2.table_code in [4], op2.code_information()
+        prefix = 'ato.'
+
+    elif table_name_bytes in [b'RAFCONS']:
+        prefix = 'RAFCONS.'
+    elif table_name_bytes in [b'RAFEATC']:
+        prefix = 'RAFEATC.'
+    elif table_name_bytes in [b'DOEF1']:
+        assert op2.table_code in [4], op2.code_information()
+        prefix = shock_response_prefix(op2.thermal)
+    elif table_name_bytes in [b'OEFIT']:
+        assert op2.table_code in [25], op2.code_information()
+        prefix = 'failure_indices.'
+        #raise NotImplementedError(op2.code_information())
+    elif table_name_bytes in [b'OEFITSTN']: # composite failure indicies
+        assert op2.table_code in [25], op2.code_information()
+        prefix = 'failure_indices.'
+    else:
+        raise NotImplementedError('%r' % op2.table_name)
+
+    op2.sort_bits.is_sort1 = is_sort1 # sort2
+    op2.sort_method = 1 if is_sort1 else 2
+    return prefix, postfix

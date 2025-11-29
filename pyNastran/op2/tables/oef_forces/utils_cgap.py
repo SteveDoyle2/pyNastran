@@ -15,8 +15,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 
-def _oef_cgap(op2: OP2, data, ndata, dt, unused_is_magnitude_phase,
-              result_type, prefix, postfix):
+def oef_cgap(op2: OP2, data, ndata, dt, unused_is_magnitude_phase,
+             result_type, prefix, postfix):
     """38-GAP"""
     result_name = prefix + 'cgap_force' + postfix
     if op2._results.is_not_saved(result_name):
