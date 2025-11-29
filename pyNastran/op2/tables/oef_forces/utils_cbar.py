@@ -122,6 +122,56 @@ def oef_cbar_34(op2: OP2, data: bytes, ndata: int, dt: Any,
     return n, nelements, ntotal
 
 
+def oef_cbar_100(op2: OP2, data, ndata, dt, unused_is_magnitude_phase,
+                 result_type, prefix, postfix):
+    """100-BARS"""
+    result_name = prefix + 'cbar_force' + postfix  # _10nodes
+    if op2._results.is_not_saved(result_name):
+        return ndata, None, None
+    op2._results._found_result(result_name)
+    slot = op2.get_result(result_name)
+
+    factor = op2.factor
+    if op2.format_code == 1 and op2.num_wide == 8:  # real
+        ntotal = 32 * factor  # 8*4
+        nelements = ndata // ntotal
+        auto_return, is_vectorized = op2._create_oes_object4(
+            nelements, result_name, slot, RealCBar100ForceArray)
+        if auto_return:
+            return nelements * ntotal, None, None
+
+        obj = op2.obj
+        if op2.use_vector and is_vectorized and op2.sort_method == 1:
+            n = nelements * ntotal
+            itotal = obj.ielement
+            ielement2 = obj.itotal + nelements
+            itotal2 = ielement2
+
+            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
+            obj._times[obj.itime] = dt
+            if obj.itime == 0:
+                ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 8)
+                eids = ints[:, 0] // 10
+                assert eids.min() > 0, eids.min()
+                obj.element[itotal:itotal2] = eids
+
+            # [axial, torsion, SMa, SMt]
+            obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:].copy()
+            obj.itotal = itotal2
+            obj.ielement = ielement2
+        else:
+            n = oef_cbar_100_real_8(op2, data, obj,
+                                    nelements, ntotal)
+
+    # elif op2.format_code in [2, 3] and op2.num_wide == 14:  # imag
+    else:  # pragma: no cover
+        raise RuntimeError(op2.code_information())
+        # msg = op2.code_information()
+        # print(msg)
+        # return op2._not_implemented_or_skip(data, ndata, msg)
+    return n, nelements, ntotal
+
+
 def oef_cbar_real_9(op2: OP2, data: bytes,
                     obj: RealCBarForceArray,
                     nelements: int, ntotal: int) -> int:
