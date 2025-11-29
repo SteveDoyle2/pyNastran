@@ -10,8 +10,10 @@ import numpy as np
 
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_helper import polar_to_real_imag
+from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import (
     RealGridPointForcesArray, ComplexGridPointForcesArray)
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
@@ -19,15 +21,9 @@ class OGPF:
     def __init__(self, op2: OP2):
         self.op2 = op2
 
-    @property
-    def size(self) -> int:
-        return self.op2.size
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
-
     def _read_ogpf1_3(self, data: bytes, ndata: int):
         self.op2._op2_readers.reader_opg._read_opg1_3(data, ndata)  # TODO: this is wrong...
+
     def _read_ogpf2_3(self, data: bytes, ndata: int):
         self.op2._op2_readers.reader_opg._read_opg2_3(data, ndata)  # TODO: this is wrong...
 
@@ -67,15 +63,15 @@ class OGPF:
         n = 0
         is_magnitude_phase = op2.is_magnitude_phase()
 
+        factor = op2.factor
         if op2.thermal == 0:
             result_name = prefix + 'grid_point_forces'
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            slot = op2.get_result(result_name)
 
             if op2.num_wide == 10:
-                ntotal = 40 * self.factor # 4*10
+                ntotal = 40 * factor # 4*10
                 nnodes = ndata // ntotal
                 obj_vector_real = RealGridPointForcesArray
                 auto_return, is_vectorized = op2._op2_readers.reader_oes._create_ntotal_object(
@@ -109,7 +105,7 @@ class OGPF:
 
                         nids = ints[:, 0] // 10
                         eids = ints[:, 1]
-                        if self.size == 4:
+                        if op2.size == 4:
                             strings = np.frombuffer(data, dtype=op2._uendian + 'S8').reshape(nnodes, 5).copy()
                             strings_save = strings[:, 1]
                         else:
@@ -142,7 +138,7 @@ class OGPF:
                                 floats[i, 4], floats[i, 5], floats[i, 6],
                                 floats[i, 7], floats[i, 8], floats[i, 9], ))
                 else:
-                    if self.size == 4:
+                    if op2.size == 4:
                         fmt = op2._endian + b'ii8s6f'
                     else:
                         fmt = op2._endian + b'qq16s6d'
@@ -161,7 +157,7 @@ class OGPF:
                 # complex
                 ntotal = 64
                 nnodes = ndata // ntotal
-                assert self.size == 4, self.size
+                assert op2.size == 4, op2.size
                 obj_vector_real = ComplexGridPointForcesArray
                 auto_return, is_vectorized = op2._op2_readers.reader_oes._create_ntotal_object(
                     nnodes, result_name, slot, obj_vector_real)
@@ -253,13 +249,12 @@ class OGPF:
 
         result_name = prefix + 'grid_point_forces'
         #print(op2.code_information())
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         if op2.num_wide == 8:
-            ntotal = 32 * self.factor # 4*8
+            ntotal = 32 * op2.factor # 4*8
             nnodes = ndata // ntotal
             #obj_vector_real = RealGridPointForcesArray
             #auto_return, is_vectorized = op2._op2_readers.reader_oes._create_ntotal_object(
@@ -267,7 +262,7 @@ class OGPF:
             auto_return = data is None
             if auto_return:
                 return nnodes * ntotal
-            if self.size == 4:
+            if op2.size == 4:
                 fmt = op2._endian + op2._analysis_code_fmt + b'4s 6f'
             else:
                 fmt = op2._endian + mapfmt(op2._analysis_code_fmt, 8) + b'8s 6d'

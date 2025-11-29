@@ -6,7 +6,7 @@ import numpy as np
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
-from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
+from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_interface.utils import (
     apply_mag_phase,
 )
@@ -56,10 +56,9 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
         obj_vector_complex = ComplexPlateStrainArray
     result_name = f'{prefix}{etype}_{stress_strain}{postfix}'
 
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
-    slot = op2.get_result(result_name)
 
     numwide_real = 17
     sort_method = op2.sort_method
@@ -169,11 +168,10 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
         obj_vector_random = RandomPlateStressArray if op2.is_stress else RandomPlateStrainArray
         op2.data_code['nonlinear_factor'] = element_id
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             op2._data_factor = 2
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         ntotal = 36 * factor  # 4*9
         nelements = ndata // ntotal
@@ -299,10 +297,9 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
         obj_vector_random = RandomPlateVMStressArray if op2.is_stress else RandomPlateVMStrainArray
         op2.data_code['nonlinear_factor'] = element_id
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         ntotal = 44 * factor  # 4*11
         nelements = ndata // ntotal
@@ -356,10 +353,9 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
             obj_vector_complex = ComplexPlateVMStrainArray
         op2.data_code['nonlinear_factor'] = element_id
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         ntotal = 68 * factor  # 4*17
         nelements = ndata // ntotal
@@ -440,14 +436,13 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
     # stress.cquad4_stress
     result_name = prefix + f'{element_base}_{stress_strain}' + postfix
 
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
     log = op2.log
 
     nnodes_all = nnodes + 1  # adding the centroid
 
-    slot = op2.get_result(result_name)
     numwide_real = 2 + 17 * nnodes_all
     numwide_imag = 2 + 15 * nnodes_all
     numwide_random = 2 + 9 * nnodes_all
@@ -894,11 +889,10 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
     # stress.ctria3_stress
     result_name = prefix + f'{element_base}_{stress_strain}' + postfix
 
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
 
-    slot = op2.get_result(result_name)
     # print(op2.element_name, result_name, op2.format_code, op2.num_wide)
     # table_names = [
     #    b'OES1', b'OES1X', b'OES1X1', b'OSTR1X',
@@ -1031,10 +1025,9 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
             obj_vector_complex = ComplexPlateVMStrainArray
         op2.data_code['nonlinear_factor'] = element_id
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         ntotal = 68 * factor  # 17*4
         nelements = ndata // ntotal
@@ -1080,10 +1073,9 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
         obj_vector_random = RandomPlateVMStressArray if op2.is_stress else RandomPlateVMStrainArray
         op2.data_code['nonlinear_factor'] = element_id
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         ntotal = 44 * factor  # 4*11
         nelements = ndata // ntotal
@@ -1140,10 +1132,9 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
 
         op2.data_code['nonlinear_factor'] = element_id
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         ntotal = 36 * factor  # 4*9
         nelements = ndata // ntotal

@@ -11,7 +11,7 @@ from pyNastran.op2.op2_interface.utils import (
     apply_mag_phase,
 )
 
-from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
+from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_interface.op2_codes import TABLES_BYTES
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (
@@ -49,11 +49,10 @@ def oes_cbeam_2(op2: OP2, data: bytes, ndata: int,
     assert isinstance(table_name_bytes, bytes), table_name_bytes
     assert table_name_bytes in TABLES_BYTES, table_name_bytes
 
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
 
-    slot = op2.get_result(result_name)
     factor = op2.factor
     if result_type == 0 and op2.num_wide == 111:  # real
         # TODO: vectorize

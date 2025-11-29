@@ -8,7 +8,7 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_interface.utils import (
     apply_mag_phase,
 )
-from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
+from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStrainArray, RealSolidStressArray
@@ -66,10 +66,9 @@ def oes_csolid(oes: OES,
     # stress.chexa_stress
     result_name = prefix + f'{element_base}_{stress_strain}' + postfix
 
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
-    slot = op2.get_result(result_name)
 
     numwide_real = 4 + 21 * nnodes_expected
     numwide_imag = 4 + (17 - 4) * nnodes_expected

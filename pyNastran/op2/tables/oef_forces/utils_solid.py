@@ -6,7 +6,7 @@ import numpy as np
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_helper import polar_to_real_imag
 # from pyNastran.op2.op2_interface.utils import reshape_bytes_block_strip
-from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
+from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 
 from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealSolidPressureForceArray,

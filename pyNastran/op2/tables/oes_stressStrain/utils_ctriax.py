@@ -5,7 +5,7 @@ import numpy as np
 
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_helper import polar_to_real_imag
-from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
+from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_interface.utils import (
     apply_mag_phase,
 )
@@ -27,11 +27,10 @@ def oes_ctriax6_53(op2: OP2, data, ndata, dt, is_magnitude_phase,
     stress_strain = 'stress' if op2.is_stress else 'strain'
     result_name = f'{prefix}ctriax_{stress_strain}{postfix}'
 
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
 
-    slot = op2.get_result(result_name)
     if result_type == 0 and op2.num_wide == 33:  # real
         obj_vector_real = RealTriaxStressArray if op2.is_stress else RealTriaxStrainArray
 

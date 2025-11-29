@@ -6,7 +6,7 @@ import numpy as np
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
-from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
+from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_interface.utils import (
     apply_mag_phase,
 )
@@ -50,12 +50,11 @@ def oes_crod(op2: OP2, data, ndata, dt, is_magnitude_phase,
         obj_vector_random = RandomRodStrainArray
         result_name = f'{prefix}{etype}_strain{postfix}'
 
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
 
     # result_name, unused_is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
-    slot = op2.get_result(result_name)
     factor = op2.factor
     if result_type == 0 and op2.num_wide == 5:  # real
         ntotal = 5 * 4 * factor

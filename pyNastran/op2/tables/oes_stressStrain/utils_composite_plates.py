@@ -6,7 +6,7 @@ import numpy as np
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 # from pyNastran.op2.op2_helper import polar_to_real_imag
 
-from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
+from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import (
     ComplexLayeredCompositeStrainArray, ComplexLayeredCompositeStressArray,
     ComplexLayeredCompositesArray)
@@ -76,10 +76,9 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
         return ndata, None, None
 
     result_name = prefix + f'{element_name}_composite_{stress_strain}' + postfix
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
-    slot = op2.get_result(result_name)
 
     etype = op2.element_name
     sort_method = op2.sort_method

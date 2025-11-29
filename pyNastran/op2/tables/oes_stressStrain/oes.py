@@ -33,7 +33,7 @@ from pyNastran.op2.op2_interface.utils import (
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.function_codes import func1, func7
 
-from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
+from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.tables.oug.oug import get_shock_prefix_postfix
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import RealBar10NodesStressArray, RealBar10NodesStrainArray
 
@@ -2020,10 +2020,9 @@ class OES(OP2Common2):
         # chexa_stress
         result_name = prefix + f'{element_base}_{stress_strain}' + postfix
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         numwide_real = 3 + 8 * nnodes_expected
         #numwide_imag = 4 + (17 - 4) * nnodes_expected
@@ -2185,10 +2184,9 @@ class OES(OP2Common2):
                 #msg = 'sort1 Type=%s num=%s' % (op2.element_name, op2.element_type)
                 #return op2._not_implemented_or_skip(data, ndata, msg)
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         numwide_real = 3 + 8 * nedges # 3 + 8*4 = 35
         numwide_imag = 3 + 7 * 14 # 3 + 7 * 14 = 101
@@ -2401,10 +2399,9 @@ class OES(OP2Common2):
                 #msg = 'sort1 Type=%s num=%s' % (op2.element_name, op2.element_type)
                 #return op2._not_implemented_or_skip(data, ndata, msg)
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         numwide_real = 2 + 20 * nnodes_expected
         #numwide_real = 162  # CHEXA
@@ -2586,10 +2583,9 @@ class OES(OP2Common2):
                 #msg = 'sort1 Type=%s num=%s' % (op2.element_name, op2.element_type)
                 #return op2._not_implemented_or_skip(data, ndata, msg)
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         numwide_real = 2 + 20 * nnodes_expected
         #numwide_real = 122  # CHEXA
@@ -2782,10 +2778,9 @@ class OES(OP2Common2):
                 #msg = 'sort1 Type=%s num=%s' % (op2.element_name, op2.element_type)
                 #return op2._not_implemented_or_skip(data, ndata, msg)
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         numwide_real = 2 + 15 * nnodes_expected
         #numwide_real = 122  # CHEXA
@@ -2959,10 +2954,9 @@ class OES(OP2Common2):
         #numwide_imag = 2 + 16 * nnodes
         #ntotal = 8 + 64 * nnodes
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         if op2.format_code == 1 and op2.num_wide == numwide_real:
             #if op2.read_mode == 1:
@@ -3054,14 +3048,15 @@ class OES(OP2Common2):
         stress_strain = 'stress' if op2.is_stress else 'strain'
         result_name = f'{prefix}cweld_{stress_strain}{postfix}'
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
+
+        factor = op2.factor
         if result_type == 0 and op2.num_wide == 8:  # real
             obj_vector_real = RealWeldStressArray if op2.is_stress else RealWeldStrainArray
 
-            ntotal = 32 * self.factor  # 8*4
+            ntotal = 32 * factor  # 8*4
             nelements = ndata // ntotal
             #print('WELDP nelements =', nelements)
 
@@ -3174,10 +3169,11 @@ class OES(OP2Common2):
         stress_strain = 'stress' if op2.is_stress else 'strain'
         result_name = f'{prefix}cfast_{stress_strain}{postfix}'
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
+
+        factor = op2.factor
         if result_type == 0 and op2.num_wide == 7:  # real
             obj_vector_real = RealFastStressArray if op2.is_stress else RealFastStrainArray
 
@@ -3430,10 +3426,11 @@ class OES(OP2Common2):
         stress_strain = 'stress' if op2.is_stress else 'strain'
         result_name = f'{prefix}{etype}_{stress_strain}{postfix}'
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
+
+        factor = op2.factor
         if result_type == 0 and op2.num_wide == 7:  # real
             ntotal = 28 * self.factor #  7*4 = 28
             nelements = ndata // ntotal
@@ -3508,14 +3505,14 @@ class OES(OP2Common2):
         else:  # pragma: no cover
             raise NotImplementedError('NonlinearSpringStrain')
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
 
-        slot = op2.get_result(result_name)
+        factor = op2.factor
         if result_type == 0 and op2.num_wide == numwide_real:
             assert op2.num_wide == 3, "num_wide=%s not 3" % op2.num_wide
-            ntotal = 12 * self.factor  # 4*3
+            ntotal = 12 * factor  # 4*3
             nelements = ndata // ntotal
 
             if op2.is_stress:
@@ -3584,12 +3581,13 @@ class OES(OP2Common2):
             else:  # pragma: no cover
                 raise RuntimeError(op2.code_information())
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
+
+        factor = op2.factor
         if result_type == 0 and op2.num_wide == 19:  # real
-            ntotal = 76 * self.factor  #  19*4 = 76
+            ntotal = 76 * factor  #  19*4 = 76
             nelements = ndata // ntotal
             assert ndata % ntotal == 0
             auto_return, is_vectorized = op2._create_oes_object4(
@@ -3733,10 +3731,9 @@ class OES(OP2Common2):
             raise NotImplementedError(op2.code_information())
         result_name = f'{stress_strain}.{name}_composite_{stress_strain}'
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         #if result_type == 0 and op2.num_wide == 43:  # real
             #op2.log.warning(f'skipping corner option for composite solid-{op2.element_name}-{op2.element_type}')
@@ -3794,12 +3791,12 @@ class OES(OP2Common2):
             obj_vector_complex = ComplexBendStrainArray
             obj_vector_random = RandomBendStrainArray
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         #print(op2.code_information())
+        factor = op2.factor
         if result_type == 0 and op2.num_wide == 21:  # real
             #TCODE,7 =0 Real
             #2 GRID I External Grid Point identification number
@@ -3993,10 +3990,9 @@ class OES(OP2Common2):
         stress_strain = 'stress' if op2.is_stress else 'strain'
         result_name = f'{prefix}cgap_{stress_strain}{postfix}' # nonlinear_
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         if result_type == 0 and op2.num_wide == 11:  # real?
             if op2.is_stress:
@@ -4062,11 +4058,11 @@ class OES(OP2Common2):
         stress_strain = 'stress' if op2.is_stress else 'strain'
         result_name = f'{prefix}cbeam_{stress_strain}{postfix}'
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
+        factor = op2.factor
         if result_type == 0 and op2.num_wide == numwide_real:
             msg = result_name
             if op2.is_stress:
@@ -4149,11 +4145,11 @@ class OES(OP2Common2):
         stress_strain = 'stress' if op2.is_stress else 'strain'
         result_name = f'{prefix}cbar_{stress_strain}_10nodes{postfix}'
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
+        factor = op2.factor
         if result_type == 0 and op2.num_wide == 10:  # real
             if op2.is_stress:
                 obj_vector_real = RealBar10NodesStressArray
@@ -4216,9 +4212,11 @@ class OES(OP2Common2):
             flag = 'strain'
         result_name = prefix + result_name_base + flag + postfix
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
 
+        factor = op2.factor
         if result_type == 0 and op2.num_wide == 30:
             obj_vector_real = HyperelasticQuadArray
 

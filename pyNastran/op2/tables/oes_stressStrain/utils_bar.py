@@ -7,7 +7,7 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_interface.utils import apply_mag_phase
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
-from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
+from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.tables.oes_stressStrain.utils import obj_set_element
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
@@ -27,7 +27,6 @@ def oes_cbar_34(op2: OP2, data: bytes, ndata: int, dt: Any,
      - 34 : CBAR
 
     """
-    factor = op2.factor
     # if isinstance(op2.nonlinear_factor, float):
     # op2.sort_bits[0] = 1 # sort2
     # op2.sort_method = 2
@@ -36,10 +35,11 @@ def oes_cbar_34(op2: OP2, data: bytes, ndata: int, dt: Any,
     stress_strain = 'stress' if op2.is_stress else 'strain'
     result_name = f'{prefix}cbar_{stress_strain}{postfix}'
 
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
-    slot = op2.get_result(result_name)
+
+    factor = op2.factor
     if result_type == 0 and op2.num_wide == 16:  # real
         obj_vector_real = RealBarStressArray if op2.is_stress else RealBarStrainArray
 

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from struct import Struct
 import numpy as np
 
+from pyNastran.op2.tables.utils import get_is_slot_saved
 from pyNastran.op2.tables.oee_energy.oee_objects import (
     RealStrainEnergyArray, ComplexStrainEnergyArray,
     RealKineticEnergyArray,)
@@ -489,11 +490,9 @@ class ONR:
         result_name = f'{prefix}{result_name}{result_name_suffix}{postfix}'
         #result_name = 'strain_energy'
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-
-        slot = op2.get_result(result_name)
 
         if 'strain_energy' in result_name:
             real_cls = RealStrainEnergyArray
@@ -846,7 +845,7 @@ def complex_strain_energy_4(op2: OP2, data: bytes, sort_method: int,
     obj: ComplexStrainEnergyArray = op2.obj
     s = Struct(op2._endian + b'8s3f')
     for unused_i in range(nnodes):
-        edata = data[n:n+20]
+        edata = data[n:n+ntotal]
         out = s.unpack(edata)
         (word, energy, percent, density) = out
         word = word.strip()

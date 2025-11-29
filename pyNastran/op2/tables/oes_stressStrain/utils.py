@@ -6,7 +6,7 @@ import numpy as np
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
-from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
+from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
 #from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import RealBar10NodesStressArray, RealBar10NodesStrainArray
 
@@ -254,7 +254,10 @@ def oesrt_cquad4_95(op2: OP2, data: bytes, ndata: int) -> int:
     #oesrt_cquad4_95
 
     n = 0
-    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'8si3fi4s')
+    if op2.size == 4:
+        struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'8si3fi4s')
+    else:
+        struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt, 8) + b'16sq3dq8s')
     nelements = ndata // ntotal
     #obj = op2.obj
     for unused_i in range(nelements):
@@ -297,8 +300,12 @@ def oes_csolid_composite_real(op2: OP2, data: bytes,
     For each fiber location requested (PLSLOC), words 3 through 10 repeat 4 times.
     """
     n = 0
-    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i4s')
-    struct2 = Struct(op2._endian + b'i7f')
+    if op2.size == 4:
+        struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i4s')
+        struct2 = Struct(op2._endian + b'i7f')
+    else:
+        struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt, 8) + b'q8s')
+        struct2 = Struct(op2._endian + b'q7d')
     if op2.is_debug_file:
         msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, syy, szz, txy, tyz, txz, ovm,\n' % (
             op2.element_name, op2.element_type, nelements, nedges)
@@ -454,8 +461,12 @@ def oes_csolid_linear_hyperelastic_cosine_real(op2: OP2, data: bytes,
     # 21 CY RS
     # 22 CZ RS
     # Words 3 through 22 repeat 008 times
-    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'4s')
-    struct2 = Struct(op2._endian + b'i19f')
+    if op2.size == 4:
+        struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'4s')
+        struct2 = Struct(op2._endian + b'i19f')
+    else:
+        struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt, 8) + b'8s')
+        struct2 = Struct(op2._endian + b'q19d')
     if op2.is_debug_file:
         msg = (
             f'{op2.element_name}-{op2.element_type} nelements={nelements} '
@@ -536,8 +547,12 @@ def oes_csolid_linear_hyperelastic_real(op2: OP2, data: bytes, obj,
     #21 CY RS
     #22 CZ RS
     #Words 3 through 22 repeat 027 times
-    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'4s')
-    struct2 = Struct(op2._endian + b'i19f')
+    if op2.size == 4:
+        struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'4s')
+        struct2 = Struct(op2._endian + b'i19f')
+    else:
+        struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt, 8) + b'8s')
+        struct2 = Struct(op2._endian + b'q19d')
     #if op2.is_debug_file:
         #msg = (
             #f'{op2.element_name}-{op2.element_type} nelements={nelements} '

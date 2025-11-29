@@ -7,7 +7,7 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.oes_stressStrain.utils import obj_set_element
-from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
+from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import (
     RealSpringStressArray, RealSpringStrainArray,
@@ -56,11 +56,10 @@ def oes_celas(op2: OP2, data, ndata, dt, is_magnitude_phase,
         obj_complex = ComplexSpringStrainArray
         result_name = f'{prefix}{etype}_strain{postfix}'
 
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
     log = op2.log
-    op2._results._found_result(result_name)
-    slot = op2.get_result(result_name)
 
     if op2.format_code == 1 and op2.num_wide == 2:  # real
         ntotal = 8 * factor  # 2 * 4
