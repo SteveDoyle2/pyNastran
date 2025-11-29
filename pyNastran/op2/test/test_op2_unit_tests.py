@@ -444,7 +444,7 @@ class TestSATKOP2(Tester):
     """various OP2 tests"""
     def test_bdf_op2_satk_1(self):
         """checks pn_mwe_s-solution_1.dat, which tests dynamics matrices"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'satk' / 'pn_mwe_s-solution_1.dat'
         op2_filename = MODEL_PATH / 'satk' / 'pn_mwe_s-solution_1.op2'
 
@@ -507,7 +507,7 @@ class TestSATKOP2(Tester):
 
     def test_bdf_op2_satk_3(self):
         """checks pn_mwe_s-sol_111.dat, which tests PSD tables"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'cbush_psd_bug' / 'pn_mwe_s-sol_111.dat'
         op2_filename = MODEL_PATH / 'cbush_psd_bug' / 'pn_mwe_s-sol_111.op2'
         op2_filename2 = MODEL_PATH / 'cbush_psd_bug' / 'pn_mwe_s-rd_satk-rbe.op2'
@@ -1222,7 +1222,7 @@ class TestMSC(Tester):
         checks msc/units_mass_spring_damper/units_mass_spring_damper.op2, which tests
          - UNITS table for MSC 2014
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         #bdf_filename = MODEL_PATH / 'msc' / 'units_mass_spring_damper' / 'test_nx_corner.bdf'
         op2_filename = MODEL_PATH / 'msc' / 'units_mass_spring_damper' / 'units_mass_spring_damper.op2'
 
@@ -2447,7 +2447,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_24(self):
         """checks tst1d3.bdf, which tests RealBar10NodesStrainArray"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'tst1d3.bdf'
         op2_filename = MODEL_PATH / 'other' / 'tst1d3.op2'
 
@@ -2477,7 +2477,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_25(self):
         """checks trncomp12.bdf, which tests FailureIndicesArray"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'trncomp12.bdf'
         op2_filename = MODEL_PATH / 'other' / 'trncomp12.op2'
 
@@ -2507,7 +2507,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_26(self):
         """checks tr1091x.bdf, which tests RealBendForceArray"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'tr1091x.bdf'
         op2_filename = MODEL_PATH / 'other' / 'tr1091x.op2'
 
@@ -2545,7 +2545,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_27(self):
         """checks ac10804.bdf, which tests ComplexPlateStressArray"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'ac10804.bdf'
         op2_filename = MODEL_PATH / 'other' / 'ac10804.op2'
 
@@ -2581,7 +2581,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_28(self):
         """checks sdr11se_s2dc.bdf, which tests ComplexCBushStressArray"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
         op2_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.op2'
 
@@ -2610,7 +2610,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_30(self):
         """checks rot063akd2s_107.bdf, which tests CampbellDiagram"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         #bdf_filename = MODEL_PATH / 'other' / 'rot063akd2s_107.bdf'
         op2_filename = MODEL_PATH / 'other' / 'rot063akd2s_107.op2'
 
@@ -2639,7 +2639,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_31(self):
         """checks htrussx.bdf, which tests getting rid of the Panel"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'htrussx.bdf'
         op2_filename = MODEL_PATH / 'other' / 'htrussx.op2'
 
@@ -2733,7 +2733,7 @@ class TestOP2Main(Tester):
         extse04c
         EXTRN
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'extse04c.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'superelements', 'extse04c.op2')
 

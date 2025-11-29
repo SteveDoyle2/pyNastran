@@ -67,10 +67,7 @@ def oes_cbeam_complex_111(op2: OP2, data: bytes,
     n2 = 40 * op2.factor
 
     s1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'i9f', op2.size))
-    if op2.size == 4:
-        s2 = Struct(op2._endian + b'i9f')
-    else:
-        s2 = Struct(op2._endian + b'q9d')
+    s2 = Struct(mapfmt(op2._endian + b'i9f', op2.size))
 
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):

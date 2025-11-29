@@ -108,6 +108,13 @@ from pyNastran.op2.tables.oes_stressStrain.utils_spring import (
 from pyNastran.op2.tables.oes_stressStrain.utils_rod import (
     oes_crod_real_5, oes_crod_complex_5, oes_crod_random_3,
 )
+from pyNastran.op2.tables.oes_stressStrain.utils_bar import (
+    oes_cbar_complex_19,
+    oes_cbar_real_16, oes_cbar_random_10,
+)
+from pyNastran.op2.tables.oes_stressStrain.utils_beam import (
+    oes_cbeam_complex_111, oes_cbeam_random_67, oes_cbeam_real_111,
+)
 from pyNastran.op2.tables.oes_stressStrain.utils_plate import (
     oes_cquad4_33_complex_15, oes_cquad4_33_random_9,
     oes_cquad4_33_complex_vm_17, oes_cquad4_33_random_vm_11, oes_cquad4_random_vm_57,
@@ -119,19 +126,14 @@ from pyNastran.op2.tables.oes_stressStrain.utils_plate import (
     oes_ctria3_random_9, oes_ctria3_random_vm_11,
     oes_ctria3_complex_15, oes_ctria3_complex_vm_17,
 )
-from pyNastran.op2.tables.oes_stressStrain.utils_beam import (
-    oes_cbeam_complex_111, oes_cbeam_random_67, oes_cbeam_real_111,
-)
 from pyNastran.op2.tables.oes_stressStrain.utils_composite_plates import (
     oes_comp_shell_real_11,
     oes_shell_composite_complex_11, oes_shell_composite_complex_13,
 )
 from pyNastran.op2.tables.oes_stressStrain.utils import (
     oes_cbush1d_real_8,
-    oes_cbar_complex_19,
     oes_cbar100_real_10,
     oesrt_comp_shell_real_9, oesrt_cquad4_95,
-    oes_cbar_real_16, oes_cbar_random_10,
     oes_cbend_real_21,
     oes_cbush_complex_13, oes_cbush_real_7,
     oes_cshear_real_4, oes_cshear_complex_5, oes_cshear_random_3,
