@@ -4,15 +4,187 @@ from typing import Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import apply_mag_phase
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
+from pyNastran.op2.tables.oes_stressStrain.utils import obj_set_element
+
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
+from pyNastran.op2.tables.oes_stressStrain.random.oes_bars import RandomBarStressArray, RandomBarStrainArray
+
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
-    from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
-    from pyNastran.op2.tables.oes_stressStrain.random.oes_bars import RandomBarStressArray, RandomBarStrainArray
     from pyNastran.op2.op2 import OP2
+
+
+def oes_cbar_34(op2: OP2, data: bytes, ndata: int, dt: Any,
+                is_magnitude_phase: bool,
+                result_type: str, prefix: str, postfix: str) -> tuple[int, int, int]:
+    """
+    reads stress/strain for element type:
+     - 34 : CBAR
+
+    """
+    factor = op2.factor
+    # if isinstance(op2.nonlinear_factor, float):
+    # op2.sort_bits[0] = 1 # sort2
+    # op2.sort_method = 2
+
+    n = 0
+    if op2.is_stress:
+        result_name = prefix + 'cbar_stress' + postfix
+    else:
+        result_name = prefix + 'cbar_strain' + postfix
+
+    if op2._results.is_not_saved(result_name):
+        return ndata, None, None
+    op2._results._found_result(result_name)
+    slot = op2.get_result(result_name)
+    if result_type == 0 and op2.num_wide == 16:  # real
+        obj_vector_real = RealBarStressArray if op2.is_stress else RealBarStrainArray
+
+        ntotal = 64 * factor  # 16*4
+        nelements = ndata // ntotal
+        # print('CBAR nelements =', nelements)
+
+        auto_return, is_vectorized = op2._create_oes_object4(
+            nelements, result_name, slot, obj_vector_real)
+        if auto_return:
+            return ndata, None, None
+
+        if op2.is_debug_file:
+            op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+            # op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+            op2.binary_debug.write('  #elementi = [eid_device, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,\n')
+            op2.binary_debug.write('                           s1b, s2b, s3b, s4b, smaxb, sminb,        MSc]\n')
+            op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+        obj = op2.obj
+        if op2.use_vector and is_vectorized and op2.sort_method == 1:
+            # self.itime = 0
+            # self.ielement = 0
+            # self.itotal = 0
+            # self.ntimes = 0
+            # self.nelements = 0
+            n = nelements * op2.num_wide * 4
+
+            ielement = obj.ielement
+            ielement2 = ielement + nelements
+            obj._times[obj.itime] = dt
+            obj_set_element(op2, obj, ielement, ielement2, data, nelements)
+
+            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 16)
+
+            # [s1a, s2a, s3a, s4a, axial, smaxa, smina, margin_tension,
+            # s1b, s2b, s3b, s4b,        smaxb, sminb, margin_compression]
+            obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:].copy()
+            obj.itotal = ielement2
+            obj.ielement = ielement2
+        else:
+            if is_vectorized and op2.use_vector:  # pragma: no cover
+                op2.log.debug('vectorize CBAR real SORT%s' % op2.sort_method)
+            n = oes_cbar_real_16(op2, data, obj, nelements, ntotal, dt)
+    elif result_type == 1 and op2.num_wide == 19:  # imag
+        obj_vector_complex = ComplexBarStressArray if op2.is_stress else ComplexBarStrainArray
+
+        ntotal = 76 * factor
+        nelements = ndata // ntotal
+        auto_return, is_vectorized = op2._create_oes_object4(
+            nelements, result_name, slot, obj_vector_complex)
+        if auto_return:
+            return ndata, None, None
+
+        if op2.is_debug_file:
+            op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+            # op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+            op2.binary_debug.write('  #elementi = [eid_device, s1a, s2a, s3a, s4a, axial,\n')
+            op2.binary_debug.write('                           s1b, s2b, s3b, s4b]\n')
+            op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+        obj = op2.obj
+        if op2.use_vector and is_vectorized and op2.sort_method == 1:
+            n = nelements * ntotal
+            itotal = obj.itotal
+            itotal2 = itotal + nelements
+            ielement2 = itotal2
+
+            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 19).copy()
+            obj._times[obj.itime] = dt
+            obj_set_element(op2, obj, itotal, itotal2, data, nelements)
+
+            isave1 = [1, 2, 3, 4, 5, 11, 12, 13, 14]
+            isave2 = [6, 7, 8, 9, 10, 15, 16, 17, 18]
+            real_imag = apply_mag_phase(floats, is_magnitude_phase, isave1, isave2)
+            obj.data[obj.itime, itotal:itotal2, :] = real_imag
+
+            obj.itotal = itotal2
+            obj.ielement = ielement2
+        else:
+            if is_vectorized and op2.use_vector:  # pragma: no cover
+                op2.log.debug('vectorize CBAR imag SORT%s' % op2.sort_method)
+            n = oes_cbar_complex_19(op2, data, obj, nelements, ntotal, is_magnitude_phase)
+    elif result_type == 2 and op2.num_wide == 19:  # random strain?
+        raise RuntimeError(op2.code_information())
+
+    elif result_type in [1, 2] and op2.num_wide == 10:  # random
+        # random stress/strain per example
+        #
+        # DMAP says random stress has num_wide=10 and
+        # random strain has numwide=19, but it's wrong...maybe???
+        #
+        # format_code = 1 - NO/RMS (SORT1 regardless of whether this is a SORT2 table or not)
+        # format_code = 2 - ATO/PSD/CRM (actually SORT2)
+        #
+        element_id = op2.nonlinear_factor
+        obj_vector_random = RandomBarStressArray if op2.is_stress else RandomBarStrainArray
+        op2.data_code['nonlinear_factor'] = element_id
+
+        ntotal = 10 * op2.size
+        nelements = ndata // ntotal
+        # print(f'CBAR* nelements={nelements}')
+        auto_return, is_vectorized = op2._create_oes_object4(
+            nelements, result_name, slot, obj_vector_random)
+        if auto_return:
+            return ndata, None, None
+
+        if op2.is_debug_file:
+            op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+            # op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+            op2.binary_debug.write('  #elementi = [eid_device, s1a, s2a, s3a, s4a, axial,\n')
+            op2.binary_debug.write('                           s1b, s2b, s3b, s4b]\n')
+            op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+        obj = op2.obj
+        if op2.use_vector and is_vectorized and 0:  # pragma: no cover
+            # self.itime = 0
+            # self.ielement = 0
+            # self.itotal = 0
+            # self.ntimes = 0
+            # self.nelements = 0
+            n = nelements * ntotal
+
+            ielement = obj.ielement
+            ielement2 = ielement + nelements
+            obj._times[obj.itime] = dt
+            obj_set_element(op2, obj, ielement, ielement2, data, nelements)
+
+            floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, 10)
+
+            # [s1a, s2a, s3a, s4a, axial,
+            # s1b, s2b, s3b, s4b]
+            obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:].copy()
+            obj.itotal = ielement2
+            obj.ielement = ielement2
+        else:
+            if is_vectorized and op2.use_vector and obj.itime == 0:  # pragma: no cover
+                op2.log.debug('vectorize CBAR random SORT%s' % op2.sort_method)
+            n = oes_cbar_random_10(op2, data, obj,
+                                   nelements, ntotal)
+    else:  # pragma: no cover
+        raise RuntimeError(op2.code_information())
+    return n, nelements, ntotal
 
 
 def oes_cbar_real_16(op2: OP2, data: bytes,
