@@ -162,12 +162,12 @@ class TestMeshUtilsAero(unittest.TestCase):
         op2_filename = dirname / 'bwb_saero.op2'
         bdf_filename_out = dirname / 'bwb_saero_spline.bdf'
         op2_filename_out = dirname / 'bwb_saero_spline.op2'
-
-        deform_aero_spline_from_files(
-            bdf_filename, op2_filename,
-            bdf_filename_out=bdf_filename_out,
-            op2_filename_out=op2_filename_out,
-        )
+        if op2_filename.exists():
+            deform_aero_spline_from_files(
+                bdf_filename, op2_filename,
+                bdf_filename_out=bdf_filename_out,
+                op2_filename_out=op2_filename_out,
+            )
 
     def test_export_caero_mesh_caero1_wkk(self):
         model = BDF(debug=None)

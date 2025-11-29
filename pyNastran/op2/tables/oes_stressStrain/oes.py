@@ -72,6 +72,7 @@ from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPla
 from pyNastran.op2.tables.oes_stressStrain.utils_cplstn import oes_cplstn_nx
 from pyNastran.op2.tables.oes_stressStrain.utils_spring import oes_celas
 from pyNastran.op2.tables.oes_stressStrain.utils_rod import oes_crod
+from pyNastran.op2.tables.oes_stressStrain.utils_ctriax import oes_ctriax6_53
 
 from pyNastran.op2.tables.oes_stressStrain.utils_bar import (
     oes_cbar_34, oes_cbar100_real_10,
@@ -1621,8 +1622,8 @@ class OES(OP2Common2):
                                                         result_type, prefix, postfix)
 
         elif op2.element_type == 53: # axial plates - ctriax6
-            n, nelements, ntotal = self._oes_ctriax6(data, ndata, dt, is_magnitude_phase,
-                                                     result_type, prefix, postfix)
+            n, nelements, ntotal = oes_ctriax6_53(self.op2, data, ndata, dt, is_magnitude_phase,
+                                                  result_type, prefix, postfix)
 
         elif op2.element_type == 102: # cbush
             n, nelements, ntotal = oes_cbush(self.op2, data, ndata, dt, is_magnitude_phase,

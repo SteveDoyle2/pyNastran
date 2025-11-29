@@ -16,8 +16,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 
-def oes_ctriax6(op2: OP2, data, ndata, dt, is_magnitude_phase,
-                result_type, prefix, postfix):
+def oes_ctriax6_53(op2: OP2, data, ndata, dt, is_magnitude_phase,
+                   result_type, prefix, postfix):
     """
     reads stress/strain for element type:
      - 53 : CTRIAX6
