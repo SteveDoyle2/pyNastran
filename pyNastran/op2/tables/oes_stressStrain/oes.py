@@ -3051,10 +3051,8 @@ class OES(OP2Common2):
             #op2.sort_method = 2
 
         n = 0
-        if op2.is_stress:
-            result_name = prefix + 'cweld_stress' + postfix
-        else:
-            result_name = prefix + 'cweld_strain' + postfix
+        stress_strain = 'stress' if op2.is_stress else 'strain'
+        result_name = f'{prefix}cweld_{stress_strain}{postfix}'
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
@@ -3173,8 +3171,8 @@ class OES(OP2Common2):
             #op2.sort_method = 2
 
         n = 0
-        result_name = (prefix + 'cfast_stress' + postfix if op2.is_stress
-                       else prefix + 'cfast_strain' + postfix)
+        stress_strain = 'stress' if op2.is_stress else 'strain'
+        result_name = f'{prefix}cfast_{stress_strain}{postfix}'
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
@@ -3294,7 +3292,8 @@ class OES(OP2Common2):
         else:  # pragma: no cove
             raise RuntimeError(op2.element_type)
 
-        result_name = f'{prefix}{etype}_stress{postfix}' if op2.is_stress else f'{prefix}{etype}_strain{postfix}'
+        stress_strain = 'stress' if op2.is_stress else 'strain'
+        result_name = f'{prefix}{etype}_{stress_strain}{postfix}'
 
         slot = op2.get_result(result_name)
         op2._results._found_result(result_name)
@@ -3428,7 +3427,8 @@ class OES(OP2Common2):
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
 
-        result_name = f'{prefix}{etype}_stress{postfix}' if op2.is_stress else f'{prefix}{etype}_strain{postfix}'
+        stress_strain = 'stress' if op2.is_stress else 'strain'
+        result_name = f'{prefix}{etype}_{stress_strain}{postfix}'
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
@@ -3726,11 +3726,12 @@ class OES(OP2Common2):
 
         stress_strain = 'stress' if op2.is_stress else 'strain'
         if op2.element_type == 269:
-            result_name = f'{stress_strain}.chexa_composite_{stress_strain}'
+            name = 'chexa'
         elif op2.element_type == 270:
-            result_name = f'{stress_strain}.cpenta_composite_{stress_strain}'
+            name = 'cpenta'
         else:
             raise NotImplementedError(op2.code_information())
+        result_name = f'{stress_strain}.{name}_composite_{stress_strain}'
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
@@ -3989,10 +3990,8 @@ class OES(OP2Common2):
         """
         op2 = self.op2
         n = 0
-        if op2.is_stress:
-            result_name = f'{prefix}cgap_stress{postfix}' # nonlinear_
-        else:
-            result_name = f'{prefix}cgap_strain{postfix}' # nonlinear_
+        stress_strain = 'stress' if op2.is_stress else 'strain'
+        result_name = f'{prefix}cgap_{stress_strain}{postfix}' # nonlinear_
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
@@ -4060,10 +4059,8 @@ class OES(OP2Common2):
         numwide_real = 51
         numwide_random = 0
 
-        if op2.is_stress:
-            result_name = f'{prefix}cbeam_stress{postfix}'
-        else:
-            result_name = f'{prefix}cbeam_strain{postfix}'
+        stress_strain = 'stress' if op2.is_stress else 'strain'
+        result_name = f'{prefix}cbeam_{stress_strain}{postfix}'
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
@@ -4149,10 +4146,8 @@ class OES(OP2Common2):
         """
         op2 = self.op2
         n = 0
-        if op2.is_stress:
-            result_name = prefix + 'cbar_stress_10nodes' + postfix
-        else:
-            result_name = prefix + 'cbar_strain_10nodes' + postfix
+        stress_strain = 'stress' if op2.is_stress else 'strain'
+        result_name = f'{prefix}cbar_{stress_strain}_10nodes{postfix}'
 
         if op2._results.is_not_saved(result_name):
             return ndata, None, None

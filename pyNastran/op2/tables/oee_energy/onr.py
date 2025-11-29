@@ -486,7 +486,7 @@ class ONR:
 
         # strain_energy.cbar_strain_energy
         # kinetic_energy.cbar_kinetic_energy
-        result_name = prefix + result_name + result_name_suffix + postfix
+        result_name = f'{prefix}{result_name}{result_name_suffix}{postfix}'
         #result_name = 'strain_energy'
 
         if op2._results.is_not_saved(result_name):

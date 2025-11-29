@@ -47,14 +47,14 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
     else:  # pragma: no cover
         raise NotImplementedError(op2.code_information())
 
+    stress_strain = 'stress' if op2.is_stress else 'strain'
     if op2.is_stress:
         obj_vector_real = RealPlateStressArray
         obj_vector_complex = ComplexPlateStressArray
-        result_name = f'{prefix}{etype}_stress{postfix}'
     else:
         obj_vector_real = RealPlateStrainArray
         obj_vector_complex = ComplexPlateStrainArray
-        result_name = f'{prefix}{etype}_strain{postfix}'
+    result_name = f'{prefix}{etype}_{stress_strain}{postfix}'
 
     if op2._results.is_not_saved(result_name):
         return ndata, None, None

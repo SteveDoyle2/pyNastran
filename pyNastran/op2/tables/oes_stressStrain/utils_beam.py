@@ -43,10 +43,8 @@ def oes_cbeam_2(op2: OP2, data: bytes, ndata: int,
     n = 0
     ## TODO: fix method to follow correct pattern...regarding???
 
-    if op2.is_stress:
-        result_name = prefix + 'cbeam_stress' + postfix
-    else:
-        result_name = prefix + 'cbeam_strain' + postfix
+    stress_strain = 'stress' if op2.is_stress else 'strain'
+    result_name = f'{prefix}cbeam_{stress_strain}{postfix}'
     table_name_bytes = op2.table_name
     assert isinstance(table_name_bytes, bytes), table_name_bytes
     assert table_name_bytes in TABLES_BYTES, table_name_bytes

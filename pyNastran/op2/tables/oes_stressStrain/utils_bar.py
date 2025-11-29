@@ -33,10 +33,8 @@ def oes_cbar_34(op2: OP2, data: bytes, ndata: int, dt: Any,
     # op2.sort_method = 2
 
     n = 0
-    if op2.is_stress:
-        result_name = prefix + 'cbar_stress' + postfix
-    else:
-        result_name = prefix + 'cbar_strain' + postfix
+    stress_strain = 'stress' if op2.is_stress else 'strain'
+    result_name = f'{prefix}cbar_{stress_strain}{postfix}'
 
     if op2._results.is_not_saved(result_name):
         return ndata, None, None

@@ -24,10 +24,8 @@ def oes_ctriax6_53(op2: OP2, data, ndata, dt, is_magnitude_phase,
     """
     factor = op2.factor
     # n = 0
-    if op2.is_stress:
-        result_name = f'{prefix}ctriax_stress{postfix}'
-    else:
-        result_name = f'{prefix}ctriax_strain{postfix}'
+    stress_strain = 'stress' if op2.is_stress else 'strain'
+    result_name = f'{prefix}ctriax_{stress_strain}{postfix}'
 
     if op2._results.is_not_saved(result_name):
         return ndata, None, None

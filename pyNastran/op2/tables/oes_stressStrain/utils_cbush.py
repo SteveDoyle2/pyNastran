@@ -27,10 +27,8 @@ def oes_cbush_102(op2: OP2,
     """
     # n = 0
     factor = op2.factor
-    if op2.is_stress:
-        result_name = prefix + 'cbush_stress' + postfix
-    else:
-        result_name = prefix + 'cbush_strain' + postfix
+    stress_strain = 'stress' if op2.is_stress else 'strain'
+    result_name = f'{prefix}cbush_{stress_strain}{postfix}'
 
     if op2._results.is_not_saved(result_name):
         return ndata, None, None

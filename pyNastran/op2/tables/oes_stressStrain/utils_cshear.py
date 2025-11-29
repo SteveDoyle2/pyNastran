@@ -33,10 +33,8 @@ def oes_cshear_4(op2: OP2, data, ndata, dt, is_magnitude_phase,
     obj_vector_real = RealShearStressArray if op2.is_stress else RealShearStrainArray
     obj_vector_complex = ComplexShearStressArray if op2.is_stress else ComplexShearStressArray
     obj_vector_random = RandomShearStressArray if op2.is_stress else RandomShearStrainArray
-    if op2.is_stress:
-        result_name = f'{prefix}cshear_stress{postfix}'
-    else:
-        result_name = f'{prefix}shear_strain{postfix}'
+    stress_strain = 'stress' if op2.is_stress else 'strain'
+    result_name = f'{prefix}cshear_{stress_strain}{postfix}'
 
     if op2._results.is_not_saved(result_name):
         return ndata, None, None
@@ -68,6 +66,10 @@ def oes_cshear_4(op2: OP2, data, ndata, dt, is_magnitude_phase,
             obj.data[itime, itotal:itotal2, :] = floats[:, 1:].copy()
             obj.itotal = itotal2
             obj.ielement = ielement2
+        elif op2.use_vector and is_vectorized and op2.sort_method == 2:
+            op2.log.debug('vectorize CSHEAR real SORT%s' % op2.sort_method)
+            n = oes_cshear_real_4(op2, data, obj,
+                                  ntotal, nelements, dt)
         else:
             if is_vectorized and op2.use_vector:  # pragma: no cover
                 op2.log.debug('vectorize CSHEAR real SORT%s' % op2.sort_method)
