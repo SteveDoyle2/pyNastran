@@ -43,8 +43,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStres
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plate_strain_nx import RealCPLSTRNPlateStressNXArray, RealCPLSTRNPlateStrainNXArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidStressArrayNx, RealSolidStrainArrayNx
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_composite_nx import RealSolidCompositeStressArray, RealSolidCompositeStrainArray
-from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import (RealSpringStressArray,  # RealSpringStrainArray,
-                                                                    RealNonlinearSpringStressArray)
+from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealNonlinearSpringStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStressArray, RealTriaxStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bend import RealBendStressArray, RealBendStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_weld import RealWeldStressArray, RealWeldStrainArray
@@ -54,7 +53,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_fast import RealFastStressAr
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_fast import ComplexFastStressArray, ComplexFastStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_weld import ComplexWeldStressArray, ComplexWeldStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray
+# from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates_vm import (
     ComplexPlateVMStressArray, ComplexPlateVMStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bend import ComplexBendStressArray, ComplexBendStrainArray
@@ -69,9 +68,8 @@ from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_bush import RealNonline
 from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
     HyperelasticQuadArray)
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
-from pyNastran.op2.tables.oes_stressStrain.utils_cplstn import (
-    oes_cplstn3_real_6, oes_cplstn4_real_32, oes_cplstn6_real_26,
-)
+
+from pyNastran.op2.tables.oes_stressStrain.utils_cplstn import oes_cplstn_nx
 from pyNastran.op2.tables.oes_stressStrain.utils_spring import oes_celas
 from pyNastran.op2.tables.oes_stressStrain.utils_rod import oes_crod
 
@@ -1688,8 +1686,8 @@ class OES(OP2Common2):
             # 272 CPLSTN4
             # 273 CPLSTN6
             # 274 CPLSTN8
-            n, nelements, ntotal = self._oes_cplstn_nx(
-                data, ndata, dt, is_magnitude_phase,
+            n, nelements, ntotal = oes_cplstn_nx(
+                self.op2, data, ndata, dt, is_magnitude_phase,
                 result_type, prefix, postfix)
 
         elif op2.element_type in [275]: # 271,
@@ -3646,167 +3644,6 @@ class OES(OP2Common2):
             raise RuntimeError(op2.code_information())
         return n, nelements, ntotal
 
-    def _oes_cplstn_nx(self, data, ndata: int, dt, is_magnitude_phase: bool,
-                       result_type: str, prefix: str, postfix: str):
-        """
-        reads stress/strain for element type:
-        - 271 CPLSTN3
-        - 272 CPLSTN4
-        - 273 CPLSTN6
-        - 274 CPLSTN8
-
-        """
-        op2 = self.op2
-        n = 0
-        if op2.is_stress:
-            stress_strain = 'stress'
-            obj_vector_real = RealCPLSTRNPlateStressNXArray
-        else:
-            stress_strain = 'strain'
-            obj_vector_real = RealCPLSTRNPlateStrainNXArray
-
-        if op2.element_type == 271:    # CPLSTN3
-            nnodes = 3
-            nnodes_cen = 1
-        elif op2.element_type == 272:    # CPLSTN4
-            nnodes = 4
-            nnodes_cen = 5
-        elif op2.element_type == 273:  # CPLSTN6
-            nnodes = 6
-            nnodes_cen = 4
-        elif op2.element_type == 274:  # CPLSTN8
-            nnodes = 8
-            nnodes_cen = 5
-        else:  # pragma: no cover
-            #raise RuntimeError(op2.element_type)
-            raise RuntimeError(op2.code_information())
-        result_name = f'{stress_strain}.cplstn{nnodes}_{stress_strain}'
-        name = f'CPLSTN{nnodes}'
-
-        if op2._results.is_not_saved(result_name):
-            return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
-
-        num_wide = op2.num_wide
-        ntotal = num_wide * self.size
-        num_wide_real = 32  # CPLSTN4, CPLSTN3
-        num_wide_real = 26  # CPLSTN6
-        nelements = ndata // ntotal
-        assert ndata % ntotal == 0
-        #print(f'result_name = {result_name}')
-
-        if result_type == 0 and num_wide == 6 and nnodes == 3:  # real; CPLSTN3
-            nlayers = nelements
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nlayers, result_name, slot, obj_vector_real)
-            if auto_return:
-                assert ntotal == op2.num_wide * 4
-                return nelements * ntotal, None, None
-
-            obj: RealCPLSTRNPlateStressNXArray = op2.obj
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * op2.num_wide * 4
-                istart = obj.itotal
-                iend = istart + nlayers
-                obj._times[obj.itime] = dt
-
-                if obj.itime == 0:
-                    ints1 = frombuffer(data, dtype=op2.idtype).reshape(nelements, 6).copy()
-                    eids = ints1[:, 0] // 10
-                    obj.element[istart:iend] = eids
-                    obj.element_node[istart:iend, 0] = eids
-                    obj.element_node[istart:iend, 1] = 0
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 6)[:, 1:]
-                #[oxx, oyy, ozz, txy, von_mises]
-                obj.data[obj.itime, istart:iend, :] = floats.copy()
-            else:
-                n = oes_cplstn3_real_6(
-                    op2, data, obj,
-                    nelements, ntotal, dt)
-
-        elif result_type == 0 and num_wide == 32 and nnodes in {4, 8}:  # real; CPLSTN4
-            nlayers = nelements * nnodes_cen
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nlayers, result_name, slot, obj_vector_real)
-            if auto_return:
-                op2._data_factor = nnodes_cen
-                assert ntotal == op2.num_wide * 4
-                return nelements * ntotal, None, None
-
-            obj: RealCPLSTRNPlateStressNXArray = op2.obj
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                #op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                #op2.binary_debug.write('  element1 = [eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
-                #op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * op2.num_wide * 4
-                iestart = obj.ielement
-                ieend = iestart + nelements
-                istart = obj.itotal
-                iend = istart + nlayers
-                obj._times[obj.itime] = dt
-
-                if obj.itime == 0:
-                    ints1 = frombuffer(data, dtype=op2.idtype).reshape(nelements, 32).copy()
-                    ints2 = ints1[:, 2:].reshape(nlayers, 6)
-                    eids = ints1[:, 0] // 10
-                    nids = ints2[:, 0]
-                    obj.element[iestart:ieend] = eids
-                    eids2 = np.vstack([eids] * nnodes_cen).T.ravel()
-                    obj.element_node[istart:iend, 0] = eids2
-                    obj.element_node[istart:iend, 1] = nids
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 32)[:, 2:]
-                floats2 = floats.reshape(nlayers, 6)
-                #[oxx, oyy, ozz, txy, von_mises]
-                obj.data[obj.itime, istart:iend, :] = floats2[:, 1:].copy()
-            else:
-                n = oes_cplstn4_real_32(
-                    op2, data, obj,
-                    nelements, ntotal, dt)
-
-        elif result_type == 0 and num_wide == 26 and nnodes == 6:  # real; CPLSTN6
-            nlayers = nelements * nnodes_cen
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nlayers, result_name, slot, obj_vector_real)
-            if auto_return:
-                op2._data_factor = nnodes_cen
-                assert ntotal == op2.num_wide * 4
-                return nelements * ntotal, None, None
-
-            obj: RealCPLSTRNPlateStressNXArray = op2.obj
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * op2.num_wide * 4
-                iestart = obj.ielement
-                ieend = iestart + nelements
-                istart = obj.itotal
-                iend = istart + nlayers
-                obj._times[obj.itime] = dt
-
-                if obj.itime == 0:
-                    ints1 = frombuffer(data, dtype=op2.idtype).reshape(nelements, 26).copy()
-                    ints2 = ints1[:, 2:].reshape(nlayers, 6)
-                    eids = ints1[:, 0] // 10
-                    nids = ints2[:, 0]
-                    obj.element[iestart:ieend] = eids
-                    eids2 = np.vstack([eids] * nnodes_cen).T.ravel()
-                    obj.element_node[istart:iend, 0] = eids2
-                    obj.element_node[istart:iend, 1] = nids
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 26)[:, 2:]
-                floats2 = floats.reshape(nlayers, 6)
-                #[oxx, oyy, ozz, txy, von_mises]
-                obj.data[obj.itime, istart:iend, :] = floats2[:, 1:].copy()
-            else:
-                n = oes_cplstn6_real_26(
-                    op2, data, obj,
-                    nelements, ntotal, dt)
-
-        else:  # pragma: no cover
-            raise RuntimeError(op2.code_information())
-        return n, nelements, ntotal
-
     def _oes_composite_solid_nx(self, data, ndata: int, dt, is_magnitude_phase: bool,
                                 result_type: str, prefix: str, postfix: str):
         """
@@ -3916,7 +3753,7 @@ class OES(OP2Common2):
                 assert ntotal == op2.num_wide * 4
                 return nelements * ntotal, None, None
 
-            obj = op2.obj  # type: RealCompositeSolidStressArray
+            obj: RealCompositeSolidStressArray = op2.obj
             n = oes_composite_solid_nx_real_center(op2, data, obj, nelements, ntotal)
 
         elif result_type == 0 and op2.num_wide == 43:  # real; center
@@ -3930,7 +3767,7 @@ class OES(OP2Common2):
                 assert ntotal == op2.num_wide * 4
                 return nelements * ntotal, None, None
 
-            obj = op2.obj  # type: RealCompositeSolidStressArray
+            obj: RealCompositeSolidStressArray = op2.obj
             n = oes_composite_solid_nx_real_172(op2, data, obj, nelements, ntotal)
         else:
             raise NotImplementedError(op2.code_information())
@@ -4958,6 +4795,7 @@ def oes_csolid_nonlinear_hyperelastic_real(op2: OP2, data: bytes,
                                        sxx, syy, szz, txy, tyz, txz, ovm)
             n += 60
     return n
+
 
 def oes_cbend_complex_21(op2: OP2, data: bytes,
                          obj: ComplexBendStressArray | ComplexBendStrainArray,
