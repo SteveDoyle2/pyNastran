@@ -6,6 +6,7 @@ import numpy as np
 from pyNastran.op2.op2_interface.utils import (
     apply_mag_phase,
 )
+from pyNastran.op2.op2_interface.op2_reader import mapfmt
 # from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
@@ -26,11 +27,10 @@ def oes_cbush1d(op2: OP2, data, ndata, dt, is_magnitude_phase,
      - 40 : CBUSH1D
     """
     factor = op2.factor
-    n = 0
     if op2.is_stress:
-        result_name = prefix + 'cbush1d_stress_strain' + postfix
+        result_name = f'{prefix}cbush1d_stress_strain{postfix}'
     else:
-        result_name = prefix + 'cbush1d_stress_strain' + postfix
+        result_name = f'{prefix}cbush1d_stress_strain{postfix}'
 
     if op2._results.is_not_saved(result_name):
         return ndata, None, None
@@ -112,8 +112,7 @@ def oes_cbush1d(op2: OP2, data, ndata, dt, is_magnitude_phase,
         else:
             n = oes_cbush1d_complex_9(
                 op2, data, obj, nelements, ntotal,
-                is_magnitude_phase,
-            )
+                is_magnitude_phase)
     else:  # pragma: no cover
         raise RuntimeError(op2.code_information())
         # msg = op2.code_information()
@@ -126,7 +125,8 @@ def oes_cbush1d_real_8(op2: OP2, data: bytes,
                        obj: RealBush1DStressArray,
                        nelements: int, ntotal: int) -> int:
     n = 0
-    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'6fi')
+    fmt = mapfmt(op2._analysis_code_fmt + b'6fi', op2.size)
+    struct1 = Struct(op2._endian + fmt)
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
         out = struct1.unpack(edata)  # num_wide=25
@@ -147,7 +147,8 @@ def oes_cbush1d_complex_9(op2: OP2, data: bytes,
                           nelements: int, ntotal: int,
                           is_magnitude_phase: bool) -> int:
     n = 0
-    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'8f')
+    fmt = mapfmt(op2._analysis_code_fmt + b'8f', op2.size)
+    struct1 = Struct(op2._endian + fmt)
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
 

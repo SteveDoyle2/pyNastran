@@ -254,7 +254,6 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
                     # assert eids.min() > 0, eids.min()
                     # obj.element[itotal:itotal2, 0] = eids
                     obj._times[itotal:itotal2] = eids
-                    aaa
                 elif op2._analysis_code_fmt == b'f' and obj.itime == 0:
                     # print(floats[:, 0])
                     # print(floats[:, 0].shape, obj._times.shape)
@@ -657,9 +656,9 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
                     obj.float_mask = float_mask1
 
             if obj.nonlinear_factor is not None:
-                results = frombuffer(data, dtype=op2.fdtype)[obj.float_mask].copy()
+                results = np.frombuffer(data, dtype=op2.fdtype)[obj.float_mask].copy()
             else:
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)
+                floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)
                 floats1 = floats[:, 2:].reshape(nlayers // 2, 17)
                 results = floats1[:, 1:].reshape(nlayers, 8).copy()
 
@@ -703,7 +702,7 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
             #
             # ndata=1044
             assert op2.num_wide in [70, 87], op2.code_information()
-            ntotal = op2.num_wide * self.size  # 87*4
+            ntotal = op2.num_wide * size  # 87*4
             nelements = ndata // ntotal
             nlayers = nelements * 2
             assert ndata % ntotal == 0
@@ -941,7 +940,7 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
 
             itime = obj.itime
             if itime == 0:
-                ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 17)
+                ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 17)
                 eids = ints[:, 0] // 10
                 # ilayers = ints[:, 1]
                 # ints2 = ints[:, 1:].reshape(nlayers, 8)
@@ -951,7 +950,7 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
                 obj.element_node[itotal + 1:iend + 1:2, 0] = eids
                 # obj.element_node[itotal:iend, 1] = 0
 
-            floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 17)
+            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 17)
             floats1 = floats[:, 1:].reshape(nlayers, 8).copy()
             obj.data[obj.itime, itotal:iend, :] = floats1
             obj._times[obj.itime] = dt
@@ -983,11 +982,11 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
             ielement = obj.ielement
             ielement2 = ielement + nelements
 
-            floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 15)
+            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 15)
             floats1 = floats[:, 1:].reshape(nelements * 2, 7).copy()
             obj._times[obj.itime] = dt
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 15).copy()
+                ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 15).copy()
                 eids = ints[:, 0] // 10
                 ints[:, 0] = 0
                 unused_ints1 = ints.reshape(nelements, 15)
@@ -1106,19 +1105,19 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
             itotal2 = itotal + nelements * nnodes_expected
             obj._times[obj.itime] = dt
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=op2.idtype)
+                ints = np.frombuffer(data, dtype=op2.idtype)
                 ints1 = ints.reshape(nelements, 9)
                 eids = ints1[:, 0] // 10
-                print(eids)
+                # print(eids)
                 eids = np.vstack([eids, eids]).T.ravel()
-                print(eids.shape)
-                print(eids)
-                print(obj.element)
+                # print(eids.shape)
+                # print(eids)
+                # print(obj.element)
                 assert eids.min() > 0, eids.min()
                 obj.element[itotal:itotal2, 0] = eids
 
-            floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 11)[:, 1:]
-            print(floats.shape)
+            floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, 11)[:, 1:]
+            # print(floats.shape)
             # fd, sx, sy, txy,
             floats1 = floats.reshape(nelements * nnodes_expected, 10)
             obj.data[obj.itime, itotal:itotal2, :] = floats1.copy()
@@ -1166,7 +1165,7 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
             itotal2 = itotal + nelements * nnodes_expected
             obj._times[obj.itime] = dt
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=op2.idtype)
+                ints = np.frombuffer(data, dtype=op2.idtype)
                 ints1 = ints.reshape(nelements, 9)
                 eids = ints1[:, 0] // 10
                 # print(eids)
@@ -1177,7 +1176,7 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
                 assert eids.min() > 0, eids.min()
                 obj.element[itotal:itotal2, 0] = eids
 
-            floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 9)[:, 1:]
+            floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, 9)[:, 1:]
             # print(floats.shape)
             # fd, sx, sy, txy,
             floats1 = floats.reshape(nelements * nnodes_expected, 8)

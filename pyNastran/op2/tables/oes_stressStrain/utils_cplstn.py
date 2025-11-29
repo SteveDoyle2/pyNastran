@@ -2,6 +2,7 @@ from __future__ import annotations
 from struct import Struct
 from typing import TYPE_CHECKING
 
+from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plate_strain_nx import (
     RealCPLSTRNPlateStressNXArray, RealCPLSTRNPlateStrainNXArray)
 from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
@@ -14,7 +15,8 @@ def oes_cplstn3_real_6(op2: OP2, data: bytes,
     n = 0
     nid = 0
     name = 'CPLSTN3'
-    struct_cen = Struct(op2._endian + op2._analysis_code_fmt + b'5f')
+    fmt = mapfmt(op2._analysis_code_fmt + b'5f', op2.size)
+    struct_cen = Struct(op2._endian + fmt)
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
         out = struct_cen.unpack(edata)
@@ -33,8 +35,8 @@ def oes_cplstn4_real_32(op2: OP2, data: bytes,
     n = 0
     name = 'CPLSTN4'
     nnodes_cen = 5
-    struct_cen = Struct(op2._endian + op2._analysis_code_fmt + b'4s i5f')
-    struct_node = Struct(op2._endian + b'i5f')
+    struct_cen = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'4s i5f', op2.size))
+    struct_node = Struct(op2._endian + mapfmt(b'i5f', op2.size))
     ntotal1 = (2 + 6) * op2.size
     ntotal2 = 6 * op2.size
 
@@ -63,8 +65,9 @@ def oes_cplstn6_real_26(op2: OP2, data: bytes,
     n = 0
     nnodes_cen = 4
     name = 'CPLSTN6'
-    struct_cen = Struct(op2._endian + op2._analysis_code_fmt + b'4s i5f')
-    struct_node = Struct(op2._endian + b'i5f')
+    fmt = op2._analysis_code_fmt + b'4s i5f'
+    struct_cen = Struct(op2._endian + fmt)
+    struct_node = Struct(op2._endian + mapfmt(b'i5f', op2.fmt))
     ntotal1 = (2 + 6) * op2.size
     ntotal2 = 6 * op2.size
     for unused_i in range(nelements):

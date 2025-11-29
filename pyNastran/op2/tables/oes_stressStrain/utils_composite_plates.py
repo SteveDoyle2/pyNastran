@@ -7,8 +7,6 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt
 # from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
-from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateStressArray, \
-    RealCompositePlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import (
     ComplexLayeredCompositeStrainArray, ComplexLayeredCompositeStressArray,
     ComplexLayeredCompositesArray)
@@ -400,8 +398,7 @@ def oes_shells_composite_oesrt(op2: OP2, result_name: str, slot: dict[Any, Any],
 
         element_type = op2.element_type
         if op2.use_vector and is_vectorized and sort_method == 1 and 0:
-            n = nelements * op2.num_wide * 4
-            asdf
+            n = nelements * op2.num_wide * 4 * factor
         else:
             op2.log.warning(f'need to vectorize oes_shell_composite; {op2.element_name}-{op2.element_type} '
                             f'(numwide={op2.num_wide}) {op2.table_name_str}')
@@ -466,7 +463,8 @@ def oes_comp_shell_real_11(op2: OP2, data: bytes, ndata: int,
                            ntotal: int, nelements: int, etype: str, dt: Any) -> int:
     n = 0
     eid_old = 0
-    struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'i9f', op2.size)) # 11
+    fmt = mapfmt(op2._analysis_code_fmt + b'i9f', op2.size)  # 11
+    struct1 = Struct(op2._endian + fmt)
     sort_method = op2.sort_method
     add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(op2.sort_method))
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
@@ -500,7 +498,8 @@ def oes_shell_composite_complex_11(op2: OP2,
                                    dt: Any, is_magnitude_phase: bool) -> int:
     """OESCP, OESTRCP"""
     n = 0
-    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i9f')
+    fmt = mapfmt(op2._analysis_code_fmt + b'i9f', op2.size)
+    struct1 = Struct(op2._endian + fmt)
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
@@ -527,7 +526,8 @@ def oes_shell_composite_complex_13(op2: OP2,
     """OESVM1C, OSTRVM1C"""
     # OESCP - STRAINS IN LAYERED COMPOSITE ELEMENTS (QUAD4)
     n = 0
-    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i9f ff')
+    fmt = mapfmt(op2._analysis_code_fmt + b'i9f ff', op2.size)
+    struct1 = Struct(op2._endian + fmt)
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
@@ -556,7 +556,8 @@ def oes_composite_shells_nx_random_7(op2: OP2, data: bytes,
     n = 0
     size = op2.size
     assert size == 4, size
-    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i5f')
+    fmt = mapfmt(op2._analysis_code_fmt + b'i5f', op2.size)
+    struct1 = Struct(op2._endian + fmt)
     add_sort_x_7words = getattr(obj, f'add_sort{op2.sort_method}_7words')
     #obj.add_sort1_7words
     #print(f'random nelements={nelements}')
@@ -668,7 +669,8 @@ def oes_composite_solid_nx_real_center(op2: OP2, data: bytes,
     n = 0
     size = op2.size
 
-    struct11 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'i 4s i 7f', size)) # 11
+    fmt = mapfmt(op2._analysis_code_fmt + b'i 4s i 7f', size) # 11
+    struct11 = Struct(op2._endian + fmt)
     #sort_method = op2.sort_method
     #add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(op2.sort_method))
     #add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
