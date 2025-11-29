@@ -602,9 +602,13 @@ def oesrt_comp_shell_real_9(op2: OP2, data: bytes, ndata: int,
     """
     n = 0
     eid_old = 0
-                                                                # ft ply  sr,fi,sr
-    structs = Struct(op2._endian + op2._analysis_code_fmt + b' 8s  i    f  4s  f  f 4s')
-    structf = Struct(op2._endian + op2._analysis_code_fmt + b' 8s  i    f  f   f  f 4s')
+    if op2.size == 4:
+                                                                    # ft ply  sr,fi,sr
+        structs = Struct(op2._endian + op2._analysis_code_fmt + b' 8s  i    f  4s  2f 4s')
+        structf = Struct(op2._endian + op2._analysis_code_fmt + b' 8s  i    f  f   2f 4s')
+    else:
+        structs = Struct(op2._endian + op2._analysis_code_fmt + b' 16s q    d  8s  2d 4s')
+        structf = Struct(op2._endian + op2._analysis_code_fmt + b' 16s q    d  d   2d 4s')
     sort_method = op2.sort_method
     assert sort_method == 1, 'oesrt_comp_shell_real_9'
     add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(op2.sort_method))

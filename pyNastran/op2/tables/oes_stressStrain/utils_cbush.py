@@ -17,9 +17,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 
-def oes_cbush(op2: OP2,
-              data, ndata, dt, is_magnitude_phase,
-              result_type, prefix, postfix):
+def oes_cbush_102(op2: OP2,
+                  data, ndata, dt, is_magnitude_phase: bool,
+                  result_type: str, prefix: str, postfix: str):
     """
     reads stress/strain for element type:
      - 102 : CBUSH

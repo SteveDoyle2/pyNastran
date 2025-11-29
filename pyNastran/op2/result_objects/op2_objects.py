@@ -1104,6 +1104,7 @@ class BaseElement(ScalarObject):
         if names is None:
             names = ['ElementID', 'NodeID', 'Item']
 
+        element_node = {}
         nvars = len(element_node)
         assert len(names) == nvars + 1, f'names={names} element_node={element_node} (n={len(element_node)})'
         neid = len(element_node[0])
@@ -1302,3 +1303,25 @@ def set_as_sort1(obj):
         #print(self.get_stats())
         obj.name = obj.analysis_method
         del obj.analysis_method
+
+
+def recast_gridtype_as_string(self, grid_type: int) -> str:
+    """
+    converts a grid_type integer to a string
+
+    Point type (per NX 10; OUG table; p.5-663):
+    -1, Harmonic Point (my choice) -> '    ' = 538976288 (as an integer)
+    =1, GRID Point
+    =2, Scalar Point
+    =3, Extra Point
+    =4, Modal
+    =5, p-elements, 0-DOF
+    -6, p-elements, number of DOF
+    """
+    try:
+        grid_type_str = GRID_TYPE_INT_TO_STR[grid_type]
+    except KeyError:
+        if grid_type in NULL_GRIDTYPE:  # 32/64 bit error...
+            warnings.warn(''.join(self.get_stats()))
+        raise RuntimeError(f'grid_type={grid_type!r}')
+    return grid_type_str

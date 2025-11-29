@@ -126,8 +126,8 @@ class RealTriaxArray(OES_Object):
             #          5313   -0.032047  -0.038660  0.001105  0.011260 -0.038660  0.021614  0.041742
             #          5315   -0.017285  -0.129091 -0.017932  0.002921 -0.129091  0.057211  0.111599
             data = {
-                'ElementID': element_node[:, 0],
-                'NodeID': element_node[:, 1],
+                'ElementID': self.element_node[:, 0],
+                'NodeID': self.element_node[:, 1],
             }
             df1 = pd.DataFrame(data)
             df2 = pd.DataFrame(self.data[0], columns=headers)
