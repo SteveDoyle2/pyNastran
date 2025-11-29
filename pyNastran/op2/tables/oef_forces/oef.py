@@ -20,7 +20,6 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
-from numpy import frombuffer, vstack, sin, cos, radians, array, hstack, zeros
 
 from pyNastran.op2.op2_interface.function_codes import func1, func7
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
@@ -31,6 +30,12 @@ from pyNastran.op2.op2_interface.msc_tables import MSC_OEF_REAL_MAPPER, MSC_OEF_
 from pyNastran.op2.op2_interface.nx_tables import NX_OEF_REAL_MAPPER, NX_OEF_IMAG_MAPPER
 from pyNastran.op2.op2_interface.op2_codes import SORT1_TABLES_BYTES, TABLES_BYTES
 
+from pyNastran.op2.tables.oef_forces.utils_cbar import oef_cbar_34, oef_cbar_100_real_8
+from pyNastran.op2.tables.oef_forces.utils_crod import oef_crod
+from pyNastran.op2.tables.oef_forces.utils_visc import oef_cvisc
+from pyNastran.op2.tables.oef_forces.utils_cbush import oef_cbush
+from pyNastran.op2.tables.oef_forces.utils_cshear import oef_cshear
+from pyNastran.op2.tables.oef_forces.utils_cbeam import oef_cbeam
 from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     Real1DHeatFluxArray,
     RealHeatFlux_2D_3DArray,
@@ -39,31 +44,26 @@ from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
 )
 from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     FailureIndicesArray,
-    RealRodForceArray, RealViscForceArray,
-    RealCBarForceArray, RealCBar100ForceArray,
-    RealCFastForceArrayNX, RealCWeldForceArray,
-    RealCFastForceArrayMSC, RealCBushForceArray, RealCBearForceArray,
-    RealCWeldForceArrayMSC,
+    # RealCFastForceArrayNX, RealCWeldForceArray,
+    # RealCFastForceArrayMSC, RealCBushForceArray, RealCBearForceArray,
+    # RealCWeldForceArrayMSC,
+    RealCBar100ForceArray,
     RealPlateForceArray,
     RealPlateBilinearForceArray,
     RealSpringForceArray, RealDamperForceArray,
-    RealCShearForceArray,
+    # RealCShearForceArray,
     RealCGapForceArray,
     RealConeAxForceArray,
     RealSolidPressureForceArray,
-    RealCBeamForceArray,
+    # RealCBeamForceArray,
     RealBendForceArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
-    ComplexRodForceArray,
-    ComplexCBarForceArray, ComplexCWeldForceArray, ComplexCWeldForceArrayMSC,
-    ComplexCBeamForceArray,
-    ComplexCBushForceArray, ComplexCFastForceArrayMSC,
-    ComplexCBearForceArray,
-    ComplexCShearForceArray,
+    # ComplexCBeamForceArray,
+    # ComplexCBearForceArray,
+    # ComplexCShearForceArray,
     ComplexSpringForceArray,
     ComplexDamperForceArray,
-    ComplexViscForceArray,
     ComplexPlateForceArray,
     ComplexPlate2ForceArray,
     ComplexSolidPressureForceArray,
@@ -562,16 +562,16 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)
                 obj._times[obj.itime] = dt
 
-                strings = frombuffer(data, dtype=op2._uendian + 'S4').reshape(nelements, 9)
-                s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+                strings = np.frombuffer(data, dtype=op2._uendian + 'S4').reshape(nelements, 9)
+                s = np.array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
                 #print(s)
                 #print('itime = ', obj.itime)
                 #print('---------')
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -668,15 +668,15 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)
                 obj._times[obj.itime] = dt
                 #if obj.itime == 0:
-                ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
+                ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
                 eids = ints[:, 0] // 10
                 assert eids.min() > 0, eids.min()
                 obj.element[itotal:itotal2] = eids
-                strings = frombuffer(data, dtype=op2._uendian + 'S4').reshape(nelements, 9)
-                obj.element_data_type[itotal:itotal2] = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+                strings = np.frombuffer(data, dtype=op2._uendian + 'S4').reshape(nelements, 9)
+                obj.element_data_type[itotal:itotal2] = np.array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
 
                 #[etype, xgrad, ygrad, zgrad, xflux, yflux, zflux]
                 obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:].copy()
@@ -715,15 +715,15 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 10)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 10)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 10)
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 10)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
-                    strings = frombuffer(data, dtype=op2._uendian + 'S4').reshape(nelements, 10)
-                    obj.element_data_type[itotal:itotal2] = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+                    strings = np.frombuffer(data, dtype=op2._uendian + 'S4').reshape(nelements, 10)
+                    obj.element_data_type[itotal:itotal2] = np.array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
 
                 #[etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, zed]
                 obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:-1].copy()
@@ -808,10 +808,10 @@ class OEF:
                     ielement2 = obj.itotal + nelements
                     itotal2 = ielement2
 
-                    floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
+                    floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
-                        ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 8)
+                        ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 8)
                         eids = ints[:, 0] // 10
                         assert eids.min() > 0, eids.min()
                         obj.element[itotal:itotal2] = eids
@@ -871,10 +871,10 @@ class OEF:
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 4).copy()
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 4).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 4).copy()
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 4).copy()
                     eids = ints[:, 0] // 10
                     nids = ints[:, 2]
                     assert eids.min() > 0, eids.min()
@@ -956,13 +956,13 @@ class OEF:
 
         element_type = op2.element_type
         if element_type in [1, 3, 10]:  # rods
-            n, nelements, ntotal = self._oef_crod(data, ndata, dt, is_magnitude_phase,
-                                                  result_type, prefix, postfix)
+            n, nelements, ntotal = oef_crod(self.op2, data, ndata, dt, is_magnitude_phase,
+                                            result_type, prefix, postfix)
 
         elif element_type == 2:  # cbeam
             #2-CBEAM
-            n, nelements, ntotal = self._oef_cbeam(data, ndata, dt, is_magnitude_phase,
-                                                   result_type, prefix, postfix)
+            n, nelements, ntotal = oef_cbeam(self.op2, data, ndata, dt, is_magnitude_phase,
+                                             result_type, prefix, postfix)
 
         elif element_type in [11, 12, 13, 14,   # springs
                                   20, 21, 22, 23]:  # dampers
@@ -979,13 +979,13 @@ class OEF:
                                                          result_type, prefix, postfix)
 
         elif element_type == 24:  # CVISC
-            n, nelements, ntotal = self._oef_cvisc(data, ndata, dt, is_magnitude_phase,
-                                                   result_type, prefix, postfix)
+            n, nelements, ntotal = oef_cvisc(self.op2, data, ndata, dt, is_magnitude_phase,
+                                             result_type, prefix, postfix)
 
         elif element_type == 34:  # cbar
             # 34-CBAR
-            n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
-                                                     result_type, prefix, postfix)
+            n, nelements, ntotal = oef_cbar_34(self.op2, data, ndata, dt, is_magnitude_phase,
+                                               result_type, prefix, postfix)
 
         elif element_type == 100:  # cbar
             #100-BARS
@@ -1053,8 +1053,8 @@ class OEF:
             #return ndata
 
         elif element_type == 4:  # cshear
-            n, nelements, ntotal = self._oef_cshear(data, ndata, dt, is_magnitude_phase,
-                                                    result_type, prefix, postfix)
+            n, nelements, ntotal = oef_cshear(self.op2, data, ndata, dt, is_magnitude_phase,
+                                              result_type, prefix, postfix)
 
         elif element_type == 35:  # coneax
             n, nelements, ntotal = self._oef_cconeax(data, ndata, dt, is_magnitude_phase,
@@ -1079,8 +1079,8 @@ class OEF:
         elif element_type in [102, 280]:
             # 102: cbush
             # 280: cbear
-            n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase,
-                                                   result_type, prefix, postfix)
+            n, nelements, ntotal = oef_cbush(self.op2, data, ndata, dt, is_magnitude_phase,
+                                             result_type, prefix, postfix)
 
         elif element_type in [145, 146, 147]:
             # 145-VUHEXA
@@ -1092,17 +1092,17 @@ class OEF:
 
         elif element_type == 126 and op2.is_msc:
             # 119-CFAST-MSC
-            n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase,
-                                                   result_type, prefix, postfix)
+            n, nelements, ntotal = oef_cbush(self.op2, data, ndata, dt, is_magnitude_phase,
+                                             result_type, prefix, postfix)
         elif element_type == 119 and op2.is_nx:
             # 119-CFAST-NX
-            n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
-                                                     result_type, prefix, postfix)
+            n, nelements, ntotal = oef_cbar_34(self.op2, data, ndata, dt, is_magnitude_phase,
+                                               result_type, prefix, postfix)
         elif element_type in [117, 200]:
             # 117-CWELDC
             # 200-CWELD
-            n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
-                                                     result_type, prefix, postfix)
+            n, nelements, ntotal = oef_cbar_34(self.op2, data, ndata, dt, is_magnitude_phase,
+                                               result_type, prefix, postfix)
         #elif element_type == 119 and op2.is_msc:
             #raise NotImplementedError(op2.code_information())
         elif element_type == 235:
@@ -1141,8 +1141,8 @@ class OEF:
         else:
             if element_type == 118:
                 # 118-WELDP
-                n, nelements, ntotal = self._oef_cbar_34(
-                    data, ndata, dt, is_magnitude_phase,
+                n, nelements, ntotal = oef_cbar_34(
+                    self.op2, data, ndata, dt, is_magnitude_phase,
                     result_type, prefix, postfix)
             else:
                 #print(op2.code_information())
@@ -1163,296 +1163,6 @@ class OEF:
         assert op2.num_wide * 4 * self.factor == ntotal, f'numwide*4={op2.num_wide*4} ntotal={ntotal}'
         assert n is not None and n > 0, op2.code_information()
         return n
-
-    def _oef_crod(self, data, ndata, dt, is_magnitude_phase,
-                  result_type, prefix, postfix):
-        """
-        1-CROD
-        3-CTUBE
-        10-CONROD
-
-        """
-        op2 = self.op2
-        n = 0
-        obj_real = RealRodForceArray
-        obj_complex = ComplexRodForceArray
-        if op2.element_type == 1: # CROD
-            result_name = prefix + 'crod_force' + postfix
-        elif op2.element_type == 3:  # CTUBE
-            result_name = prefix + 'ctube_force' + postfix
-        elif op2.element_type == 10:  # CONROD
-            result_name = prefix + 'conrod_force' + postfix
-        else:
-            raise NotImplementedError(op2.code_information())
-            #msg = 'sort1 Type=%s num=%s' % (op2.element_name, op2.element_type)
-            #return op2._not_implemented_or_skip(data, ndata, msg)
-
-        if op2._results.is_not_saved(result_name):
-            return ndata, None, None
-        op2._results._found_result(result_name)
-
-        slot = op2.get_result(result_name)
-        if op2.format_code == 1 and op2.num_wide == 3: # real
-            ntotal = 3 * 4 * self.factor
-            nelements = ndata // ntotal
-
-            auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, obj_real)
-            if auto_return:
-                return nelements * op2.num_wide * 4, None, None
-            obj = op2.obj
-            if op2.is_debug_file:
-                op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                op2.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
-                op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * ntotal
-                itotal = obj.ielement
-                ielement2 = obj.itotal + nelements
-                itotal2 = ielement2
-
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 3)
-                obj._times[obj.itime] = dt
-                if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 3)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
-
-                #[axial, torsion]
-                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:].copy()
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                n = oef_crod_real_3(op2, data, obj,
-                                    nelements, ntotal)
-
-        elif op2.format_code in [2, 3] and op2.num_wide == 5: # imag
-            ntotal = 20 * self.factor  # 5*4
-            nelements = ndata // ntotal
-
-            auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, obj_complex)
-            if auto_return:
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            if op2.is_debug_file:
-                op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                op2.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
-                op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * ntotal
-                itotal = obj.ielement
-                ielement2 = obj.itotal + nelements
-                itotal2 = ielement2
-
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 5).copy()
-                obj._times[obj.itime] = dt
-                if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 5)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
-
-                #[axial_force, torque]
-                #(eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
-                real_imag = apply_mag_phase(floats, is_magnitude_phase, [1, 2], [3, 4])
-                obj.data[obj.itime, itotal:itotal2, :] = real_imag
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                n = oef_crod_imag_5(op2, data, obj,
-                                    nelements, ntotal,
-                                    is_magnitude_phase)
-
-        else:  # pragma: no cover
-            raise RuntimeError(op2.code_information())
-            #msg = op2.code_information()
-            #print(msg)
-            #return op2._not_implemented_or_skip(data, ndata, msg), None, None
-        return n, nelements, ntotal
-
-    def _oef_cbeam(self, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
-                   result_type: str, prefix: str, postfix: str) -> int:
-        """2-CBEAM"""
-        op2 = self.op2
-        n = 0
-        result_name = prefix + 'cbeam_force' + postfix
-
-        if op2._results.is_not_saved(result_name):
-            return ndata, None, None
-        op2._results._found_result(result_name)
-
-        #if op2.format_code == 1 and op2.num_wide == 9:  # real centroid ???
-            #raise RuntimeError('is this used?')
-            #auto_return, is_vectorized = self._create_oes_object4(
-                #nelements, result_name, slot, RealCBeamForceArray)
-            #if auto_return:
-                #return nelements * op2.num_wide * 4
-
-            #obj = op2.obj
-            ##is_vectorized = False
-            #if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                #n = nelements * 4 * op2.num_wide
-                #itotal = obj.itotal
-                #itotal2 = obj.itotal + nelements
-                #ielement2 = obj.ielement + nelements
-
-                #floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)[:, 1:]
-                #obj._times[obj.itime] = dt
-                #if obj.itime == 0:
-                    #ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
-                    #eids = ints[:, 0] // 10
-                    #assert eids.min() > 0, eids.min()
-                    #assert 0 not in eids, eids
-
-                    #obj.element[itotal:itotal2] = eids
-                    #obj.element_node[itotal:itotal2, 0] = eids
-                    ##obj.element_node[itotal:itotal2, 1] = nids
-
-                ##[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
-                #obj.data[obj.itime, itotal:itotal2, :] = floats.copy()
-                #obj.itotal = itotal2
-                #obj.ielement = ielement2
-            #else:
-                #s = Struct(op2._endian + b'i8f')  # 36
-                #ntotal = 36
-                #nelements = ndata // ntotal
-                #obj = op2.obj
-                #for i in range(nelements):
-                    #edata = data[n:n+36]
-                    #out = s.unpack(edata)
-                    #if op2.is_debug_file:
-                        #op2.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
-                    #(eid_device, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
-                    #eid, dt = get_eid_dt_from_eid_device(
-                        #eid_device, op2.nonlinear_factor, op2.sort_method)
-                    #n += 36
-
-        if result_type in [0, 2] and op2.num_wide == 100:  # real/random
-            if op2.sort_method == 2:
-                msg = op2.code_information()
-                if op2.read_mode == 2:
-                    return op2._not_implemented_or_skip(data, ndata, msg), None, None
-                return ndata, None, None
-            # real - format_code == 1
-            # random - format_code == 2
-            #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
-            slot = op2.get_result(result_name)
-            ntotal = 400 * self.factor  # 1+(10-1)*11=100 ->100*4 = 400
-            nelements = ndata // ntotal
-            auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, RealCBeamForceArray)
-            if auto_return:
-                op2._data_factor = 11
-                return nelements * op2.num_wide * 4, None, None
-            obj = op2.obj
-
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * ntotal
-                itotal = obj.itotal
-                itotal2 = obj.itotal + nelements * 11
-                #ielement = obj.ielement
-                ielement2 = obj.ielement + nelements
-
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 100)[:, 1:]
-                obj._times[obj.itime] = dt
-                if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 100)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    assert 0 not in eids, eids
-                    eids2 = np.repeat(eids, 11)
-
-                    ints2 = ints[:, 1:].reshape(nelements * 11, 9)
-                    nids = ints2[:, 0]
-
-                    obj.element[itotal:itotal2] = eids2
-                    obj.element_node[itotal:itotal2, 0] = eids2
-                    obj.element_node[itotal:itotal2, 1] = nids
-
-                #[nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
-                floats2 = floats.reshape(nelements * 11, 9)[:, 1:].copy()
-                #sd = floats2[:, 0]
-                #obj.data[obj.itime, itotal:itotal2, :] = sd
-                obj.data[obj.itime, itotal:itotal2, :] = floats2
-
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                n = oef_cbeam_real_100(op2, data, obj,
-                                       nelements, ntotal, dt)
-
-        elif result_type == 1 and op2.num_wide == 177: # imag
-            slot = op2.get_result(result_name)
-            ntotal = 708 * self.factor # 177*4
-            nelements = ndata // ntotal
-
-            auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, ComplexCBeamForceArray)
-            if auto_return:
-                op2._data_factor = 11
-                return nelements * op2.num_wide * 4, None, None
-
-            obj = op2.obj
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * ntotal
-                itotal = obj.itotal
-                itotal2 = obj.itotal + nelements * 11
-                #ielement = obj.ielement
-                ielement2 = obj.ielement + nelements
-
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 177)[:, 1:]
-                obj._times[obj.itime] = dt
-                if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 177)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    assert 0 not in eids, eids
-                    eids2 = np.repeat(eids, 11)
-
-                    ints2 = ints[:, 1:].reshape(nelements * 11, 16)
-                    nids = ints2[:, 0].copy()
-
-                    obj.element[itotal:itotal2] = eids2
-                    obj.element_node[itotal:itotal2, 0] = eids2
-                    obj.element_node[itotal:itotal2, 1] = nids
-
-                #[nid, sd, bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
-                #          bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]
-                floats2 = floats.reshape(nelements * 11, 16)[:, 1:].copy()
-                isave1 = slice(1, 8)
-                isave2 = slice(8, None)
-                real_imag = apply_mag_phase(floats2, is_magnitude_phase, isave1, isave2)
-
-                sd = floats2[:, 0]
-                obj.data[obj.itime, itotal:itotal2, 0] = sd
-                obj.data[obj.itime, itotal:itotal2, 1:] = real_imag
-
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                if op2.is_debug_file:
-                    op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                    op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                    #op2.binary_debug.write('  #elementi = [eid_device, force]\n')
-                    #op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-
-                ntotal = 708 * self.factor # (16*11+1)*4 = 177*4
-                nelements = ndata // ntotal
-                n = oef_cbeam_imag_177(op2, data, obj, nelements, ntotal, is_magnitude_phase)
-        else:
-            raise RuntimeError(op2.code_information())
-            #msg = op2.code_information()
-            #raise RuntimeError(msg)
-            #print(msg)
-            #return op2._not_implemented_or_skip(data, ndata, msg), None, None
-        return n, nelements, ntotal
 
     def _oef_celas_cdamp(self, data, ndata, dt, is_magnitude_phase,
                          result_type, prefix, postfix):
@@ -1525,10 +1235,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 2)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 2)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 2)
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 2)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -1563,10 +1273,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 3).copy()
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 3).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 3)
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 3)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -1586,196 +1296,6 @@ class OEF:
             #msg = op2.code_information()
             #print(msg)
             #return op2._not_implemented_or_skip(data, ndata, msg), None, None
-        return n, nelements, ntotal
-
-    def _oef_cvisc(self, data, ndata, dt, is_magnitude_phase,
-                   result_type, prefix, postfix):
-        op2 = self.op2
-        result_name = prefix + 'cvisc_force' + postfix
-        if op2._results.is_not_saved(result_name):
-            return ndata, None, None
-        n = 0
-        op2._results._found_result(result_name)
-
-        slot = op2.get_result(result_name)
-        obj_real = RealViscForceArray
-
-        if op2.format_code == 1 and op2.num_wide == 3: # real
-            ntotal = 12 * self.factor # 3 * 4
-            nelements = ndata // ntotal
-
-            auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, obj_real)
-            if auto_return:
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * ntotal
-                itotal = obj.ielement
-                ielement2 = obj.itotal + nelements
-                itotal2 = ielement2
-
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 3)
-                obj._times[obj.itime] = dt
-                if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 3)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
-
-                #(eid_device, axial, torque)
-                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:].copy()
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                n = oef_cvisc_real_3(op2, data, obj,
-                                     nelements, ntotal, dt)
-
-        elif op2.format_code in [2, 3] and op2.num_wide == 5: # complex
-            ntotal = 20 * self.factor # 5*4
-            nelements = ndata // ntotal
-
-            auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, ComplexViscForceArray)
-            if auto_return:
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            if op2.is_debug_file:
-                op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                op2.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
-                op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * ntotal
-                itotal = obj.ielement
-                ielement2 = obj.itotal + nelements
-                itotal2 = ielement2
-
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 5).copy()
-                obj._times[obj.itime] = dt
-                if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 5)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
-
-                #[axial_force, torque]
-                #(eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
-                real_imag = apply_mag_phase(floats, is_magnitude_phase, [1, 2], [3, 4])
-                obj.data[obj.itime, itotal:itotal2, :] = real_imag
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                n = oef_cvisc_imag_5(op2, data, obj,
-                                     nelements, ntotal,
-                                     is_magnitude_phase)
-        else:
-            raise RuntimeError(op2.code_information())
-            #msg = op2.code_information()
-            #print(msg)
-            #return op2._not_implemented_or_skip(data, ndata, msg), None, None
-        return n, nelements, ntotal
-
-    def _oef_cbar_34(self, data: bytes, ndata: int, dt: Any,
-                     is_magnitude_phase: bool,
-                     result_type: str, prefix: str, postfix: str) -> tuple[int, int, int]:
-        """
-        34-CBAR
-        117-CWELDC
-        119-CFAST-NX  (126-CFAST-MSC is like the CBUSH)
-        118-WELDP-MSC
-
-        """
-        op2 = self.op2
-        n = 0
-        if op2.element_type == 34:
-            result_name = prefix + 'cbar_force' + postfix
-            obj_real = RealCBarForceArray
-            obj_complex = ComplexCBarForceArray
-        elif op2.element_type in [117, 200]:
-            result_name = prefix + 'cweld_force' + postfix
-            obj_real = RealCWeldForceArray
-            obj_complex = ComplexCWeldForceArray
-            assert op2.num_wide in [9, 17], op2.code_information()
-        elif op2.element_type == 118:  # WELDP
-            result_name = prefix + 'cweld_force' + postfix
-            obj_real = RealCWeldForceArrayMSC
-            obj_complex = ComplexCWeldForceArrayMSC
-        elif op2.element_type == 119:
-            result_name = prefix + 'cfast_force' + postfix
-            obj_real = RealCFastForceArrayNX
-            assert op2.num_wide == 9, op2.code_information()
-        else:
-            raise NotImplementedError(op2.element_type)
-
-        if op2._results.is_not_saved(result_name):
-            return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
-        #print(result_type in [0, 2], op2.num_wide == 9)
-        #print(result_type == 1, op2.num_wide == 17)
-        if result_type in [0, 2] and op2.num_wide == 9: # real/random
-            # real - format_code == 1
-            # random - format_code == 3
-            #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
-            slot = op2.get_result(result_name)
-
-            ntotal = 36 * self.factor  # 9*4
-            nelements = ndata // ntotal
-            auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, obj_real)
-            if auto_return:
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            #return nelements * op2.num_wide * 4
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * ntotal
-                itotal = obj.ielement
-                ielement2 = obj.itotal + nelements
-                itotal2 = ielement2
-
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)
-                obj._times[obj.itime] = dt
-                if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
-
-                #[bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
-                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:].copy()
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            # elif op2.use_vector and is_vectorized and op2.sort_method == 1:
-            else:
-                n = oef_cbar_real_9(op2, data, obj, nelements, ntotal)
-        elif result_type == 1 and op2.num_wide == 17: # imag
-            # TODO: vectorize
-            ntotal = 68 * self.factor  # 17*4
-            nelements = ndata // ntotal
-            assert ndata % ntotal == 0
-
-            auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, obj_complex)
-            if auto_return:
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            n = oef_cbar_imag_17(op2, data, obj, nelements, ntotal, is_magnitude_phase)
-        else:
-            raise RuntimeError(op2.code_information())
-            #print(op2.table_name)
-            #msg = op2.code_information()
-            #print(msg)
-            #print(result_type)
-            #raise NotImplementedError(op2.code_information())
-            #aaa
-            #return op2._not_implemented_or_skip(data, ndata, msg), None, None
-        #print self.barForces
         return n, nelements, ntotal
 
     def _oef_cbar_100(self, data, ndata, dt, unused_is_magnitude_phase,
@@ -1804,10 +1324,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 8)
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 8)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -1876,10 +1396,10 @@ class OEF:
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[ielement:ielement2] = eids
@@ -1909,10 +1429,10 @@ class OEF:
                 itotal = obj.itotal
                 itotal2 = itotal + nelements
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 17).copy()
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 17).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 17)
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 17)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2004,18 +1524,18 @@ class OEF:
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, numwide_real).copy()
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, numwide_real).copy()
                     # Nastran makes this a 4 for CQUAD4s instead
                     # of 0 like the bilinear stress element...
                     ints[:, 2] = 0
 
                     nids = ints[:, 2:].reshape(nlayers, 9)[:, 0]
                     eids = ints[:, 0] // 10
-                    eids2 = vstack([eids] * nnodes_all).T.ravel()
+                    eids2 = np.vstack([eids] * nnodes_all).T.ravel()
                     obj.element_node[istart:iend, 0] = eids2
                     obj.element_node[istart:iend, 1] = nids
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, numwide_real)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, numwide_real)
                 results = floats[:, 2:].reshape(nlayers, 9)[:, 1:].copy()
                 #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                 obj.data[obj.itime, istart:iend, :] = results
@@ -2041,17 +1561,17 @@ class OEF:
                 ielement2 = obj.ielement + nelements
                 itotal2 = obj.itotal + nelements * nnodes_all
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, numwide_imag)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, numwide_imag)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, numwide_imag).copy()
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, numwide_imag).copy()
                     ints[:, 2] = 0
                     ints2 = ints[:, 2:].reshape(nelements * nnodes_all, 17)
 
                     eids = ints[:, 0] // 10
                     nids = ints2[:, 0]
                     assert eids.min() > 0, eids.min()
-                    eids2 = vstack([eids] * nnodes_all).T.ravel()
+                    eids2 = np.vstack([eids] * nnodes_all).T.ravel()
                     obj.element[ielement:ielement2] = eids
                     obj.element_node[itotal:itotal2, 0] = eids2
                     obj.element_node[itotal:itotal2, 1] = nids
@@ -2217,104 +1737,6 @@ class OEF:
             #return op2._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
-    def _oef_cshear(self, data, ndata, dt, is_magnitude_phase,
-                    result_type, prefix, postfix):
-        """4-CSHEAR"""
-        op2 = self.op2
-        result_name = prefix + 'cshear_force' + postfix
-        if op2._results.is_not_saved(result_name):
-            return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
-
-        n = 0
-        if op2.format_code == 1 and op2.num_wide == 17:  # real
-            ntotal = 68  # 17*4
-            nelements = ndata // ntotal
-
-            obj_real = RealCShearForceArray
-            auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, obj_real)
-            if auto_return:
-                return nelements * op2.num_wide * 4, None, None
-
-            obj = op2.obj
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * 4 * op2.num_wide
-                itotal = obj.ielement
-                ielement2 = obj.itotal + nelements
-                itotal2 = ielement2
-
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 17)
-                obj._times[obj.itime] = dt
-                if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 17)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
-
-                # [f41, f21, f12, f32, f23, f43, f34, f14, kf1,
-                #  s12, kf2, s23, kf3, s34, kf4, s41]
-                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:].copy()
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                n = oef_cshear_real_17(op2, data, obj,
-                                       nelements, ntotal, dt)
-
-        elif op2.format_code in [2, 3] and op2.num_wide == 33:  # imag
-            ntotal = 132 * self.factor # 33*4
-            nelements = ndata // ntotal
-
-            obj_complex = ComplexCShearForceArray
-            auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, obj_complex)
-            if auto_return:
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                #op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                #op2.binary_debug.write('  #elementi = [eid_device, axial, torque]\n')
-                #op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * 4 * op2.num_wide
-                itotal = obj.ielement
-                ielement2 = obj.itotal + nelements
-                itotal2 = ielement2
-
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 33).copy()
-                obj._times[obj.itime] = dt
-                if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 33)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
-
-                #[f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r
-                # kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r
-                # f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i
-                # kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i]
-                isave1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-                isave2 = [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]
-                real_imag = apply_mag_phase(floats, is_magnitude_phase, isave1, isave2)
-                obj.data[obj.itime, itotal:itotal2, :] = real_imag
-
-                #obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                n = oef_cshear_imag_33(op2, data, obj,
-                                       nelements, ntotal,
-                                       is_magnitude_phase)
-        else:  # pragma: no cover
-            raise RuntimeError(op2.code_information())
-            #msg = op2.code_information()
-            #return op2._not_implemented_or_skip(data, ndata, msg), None, None
-        return n, nelements, ntotal
-
     def _oef_cconeax(self, data, ndata, dt, unused_is_magnitude_phase,
                      result_type, prefix, postfix):
         """35-CONEAX"""
@@ -2342,10 +1764,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 7)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 7)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 7)
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 7)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2392,10 +1814,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2441,10 +1863,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 15).copy()
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 15).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 15).copy()
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 15).copy()
                     eids = ints[:, 0] // 10
                     nids_a = ints[:, 1]
                     nids_b = ints[:, 8]
@@ -2512,10 +1934,10 @@ class OEF:
                 # 21     22     23     24     25    26
                 # bm1Br, bm2Br, ts1Br, ts2Br, afBr, trqBr,
                 # bm1Bi, bm2Bi, ts1Bi, ts2Bi, afBi, trqBi
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 27).copy()
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 27).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 27).copy()
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 27).copy()
                     eids = ints[:, 0] // 10
                     nids_a = ints[:, 1]
                     nids_b = ints[:, 14]
@@ -2640,10 +2062,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 10)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 10)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 10)
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 10)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2677,10 +2099,10 @@ class OEF:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 16).copy()
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 16).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 16)
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 16)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2689,17 +2111,17 @@ class OEF:
                 # xacci, yacci, zacci, xveli, yveli, zveli]
                 if is_magnitude_phase:
                     mag = floats[:, [3, 4, 5, 6, 7, 8, 9]]
-                    phase = hstack([
+                    phase = np.hstack([
                         floats[:, [10, 11, 12, 13, 14, 15]],
-                        zeros((len(floats), 1), dtype='float32')
+                        np.zeros((len(floats), 1), dtype='float32')
                     ])
-                    rtheta = radians(phase)
-                    real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
+                    rtheta = np.radians(phase)
+                    real_imag = mag * (np.cos(rtheta) + 1.j * np.sin(rtheta))
                 else:
                     real = floats[:, [3, 4, 5, 6, 7, 8, 9]]
-                    imag = hstack([
+                    imag = np.hstack([
                         floats[:, [10, 11, 12, 13, 14, 15]],
-                        zeros((len(floats), 1), dtype='float32')
+                        np.zeros((len(floats), 1), dtype='float32')
                     ])
                     real_imag = real + 1.j * imag
                 obj.data[obj.itime, itotal:itotal2, :] = real_imag
@@ -2715,163 +2137,6 @@ class OEF:
             #return op2._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
-    def _oef_cbush(self, data, ndata, dt, is_magnitude_phase,
-                   result_type, prefix, postfix):
-        """
-        102-CBUSH
-        126-CFAST-MSC
-        280-CBEAR
-
-        """
-        op2 = self.op2
-        num_wide = op2.num_wide
-        if op2.element_type == 102:
-            result_name = prefix + 'cbush_force' + postfix
-            real_obj = RealCBushForceArray
-            complex_obj = ComplexCBushForceArray
-            assert num_wide in [7, 13], op2.code_information()
-        elif op2.element_type == 126:
-            result_name = prefix + 'cfast_force' + postfix
-            real_obj = RealCFastForceArrayMSC
-            complex_obj = ComplexCFastForceArrayMSC
-            assert num_wide in [7, 13], op2.code_information()
-        elif op2.element_type == 280:
-            result_name = prefix + 'cbear_force' + postfix
-            assert num_wide in [7, 13], op2.code_information()
-            real_obj = RealCBearForceArray
-            complex_obj = ComplexCBearForceArray
-        else:
-            raise NotImplementedError(op2.code_information())
-
-        #print(op2.code_information())
-        if op2._results.is_not_saved(result_name):
-            return ndata, None, None
-        #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
-
-        n = 0
-        #op2.log.warning('dt=%s num_wide=%s result_type=%s', dt, num_wide, result_type)
-        if result_type in {0, 2} and num_wide == 7:  # real/random
-            numwide_real = 7
-            # real - format_code == 1
-            # random - format_code == 3
-            ntotal = 28 *  self.factor # 7*4
-            nelements = ndata // ntotal
-
-            auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, real_obj)
-            if auto_return:
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                # self.itime = 0
-                # self.ielement = 0
-                # self.itotal = 0
-                #self.ntimes = 0
-                #self.nelements = 0
-                n = nelements * ntotal
-
-                istart = obj.itotal
-                iend = istart + nelements
-                obj._times[obj.itime] = dt
-
-                if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, numwide_real).copy()
-                    eids = ints[:, 0] // 10
-                    obj.element[istart:iend] = eids
-                results = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, numwide_real)
-
-                #[fx, fy, fz, mx, my, mz]
-                obj.data[obj.itime, istart:iend, :] = results[:, 1:].copy()
-            else:
-                n = oef_cbush_real_7(op2, data, obj,
-                                     nelements, ntotal, dt)
-        elif result_type == 1 and op2.num_wide == 13:  # imag
-            # TCODE,7 =1 Real/imaginary or magnitude/phase
-            # 2 FXR RS Force x - real/mag. part
-            # 3 FYR RS Force y - real/mag. part
-            # 4 FZR RS Force z - real/mag. part
-            # 5 MXR RS Moment x - real/mag. part
-            # 6 MYR RS Moment y - real/mag. part
-            # 7 MZR RS Moment z - real/mag. part
-            # 8 FXI RS Force x - imag./phase part
-            # 9 FYI RS Force y - imag./phase part
-            # 10 FZI RS Force z - imag./phase part
-            # 11 MXI RS Moment x - imag./phase part
-            # 12 MYI RS Moment y - imag./phase part
-            # 13 MZI RS Moment z - imag./phase part
-
-            # TODO: vectorize
-            ntotal = 52 * self.factor  # 13*4
-            nelements = ndata // ntotal
-            #result_name = prefix + 'cbush_force' + postfix
-            auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, complex_obj)
-            if auto_return:
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            n = oef_cbush_imag_13(op2, data, obj,
-                                  nelements, ntotal,
-                                  is_magnitude_phase)
-        #elif op2.format_code == 2 and op2.num_wide == 7:
-            #op2.log.warning(op2.code_information())
-        else:
-            raise NotImplementedError(op2.code_information())
-        #else:  # pragma: no cover
-            #msg = op2.code_information()
-            #print(msg)
-            #return op2._not_implemented_or_skip(data, ndata, msg), None, None
-        return n, nelements, ntotal
-
-def oef_crod_real_3(op2: OP2, data: bytes,
-                    obj: RealRodForceArray,
-                    nelements: int, ntotal: int) -> int:
-    n = 0
-    fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'ff', op2.size)  # 3
-    s = Struct(fmt)
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n+ntotal]
-        out = s.unpack(edata)
-        (eid_device, axial, torque) = out
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-        if op2.is_debug_file:
-            op2.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
-        add_sort_x(dt, eid, axial, torque)
-        n += ntotal
-    return n
-
-def oef_crod_imag_5(op2: OP2, data: bytes,
-                    obj: ComplexRodForceArray,
-                    nelements: int, ntotal: int,
-                    is_magnitude_phase: bool) -> int:
-    n = 0
-    fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'4f', op2.size)
-    s = Struct(fmt)
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n+ntotal]
-
-        out = s.unpack(edata)
-        if op2.is_debug_file:
-            op2.binary_debug.write('OEF_CRod - %s\n' % (str(out)))
-        (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-        if is_magnitude_phase:
-            axial = polar_to_real_imag(axial_real, axial_imag)
-            torque = polar_to_real_imag(torque_real, torque_imag)
-        else:
-            axial = complex(axial_real, axial_imag)
-            torque = complex(torque_real, torque_imag)
-
-        add_sort_x(dt, eid, axial, torque)
-        n += ntotal
-    return n
 
 def oef_celas_cdamp_imag_3(self, data: bytes,
                            obj: ComplexSpringForceArray | ComplexDamperForceArray,
@@ -2921,189 +2186,6 @@ def oef_cgap_real_9(self, data: bytes,
         n += ntotal
     return n
 
-def oef_cbar_real_9(self, data: bytes,
-                    obj: RealCBarForceArray,
-                    nelements: int, ntotal: int) -> int:
-    op2 = self
-    n = 0
-    fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'8f', self.size)
-    s = Struct(fmt)
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n + ntotal]
-
-        out = s.unpack(edata)
-        if op2.is_debug_file:
-            op2.binary_debug.write('OEF_CBar - %s\n' % (str(out)))
-        (eid_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq) = out
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-        #data_in = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
-        add_sort_x(dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq)
-        n += ntotal
-    return n
-
-def oef_cbar_imag_17(self, data: bytes,
-                     obj: ComplexCBarForceArray,
-                     nelements: int, ntotal: int,
-                     is_magnitude_phase: bool) -> int:
-    op2 = self
-    n = 0
-    fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'16f', self.size)
-    s = Struct(fmt)
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n + ntotal]
-
-        out = s.unpack(edata)
-        (eid_device,
-         bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
-         bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi) = out
-        if op2.is_debug_file:
-            op2.binary_debug.write('OEF_CBar - %s\n' % (str(out)))
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-
-        if is_magnitude_phase:
-            bm1a = polar_to_real_imag(bm1ar, bm1ai)
-            bm2a = polar_to_real_imag(bm2ar, bm2ai)
-            bm1b = polar_to_real_imag(bm1br, bm1bi)
-            bm2b = polar_to_real_imag(bm2br, bm2bi)
-            ts1 = polar_to_real_imag(ts1r, ts1i)
-            ts2 = polar_to_real_imag(ts2r, ts2i)
-            af = polar_to_real_imag(afr, afi)
-            trq = polar_to_real_imag(trqr, trqi)
-        else:
-            bm1a = complex(bm1ar, bm1ai)
-            bm2a = complex(bm2ar, bm2ai)
-            bm1b = complex(bm1br, bm1bi)
-            bm2b = complex(bm2br, bm2bi)
-            ts1 = complex(ts1r, ts1i)
-            ts2 = complex(ts2r, ts2i)
-            af = complex(afr, afi)
-            trq = complex(trqr, trqi)
-
-        #data_in = [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
-        #print("eid_device=%s eid=%s dt=%s %s" % (
-            #eid_device, eid, dt, self.get_element_type(op2.element_type)), data_in)
-        add_sort_x(dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq)
-        n += ntotal
-    return n
-
-def oef_cbar_100_real_8(self, data: bytes,
-                        obj: RealCBar100ForceArray,
-                        nelements: int, ntotal: int) -> int:
-    op2 = self
-    n = 0
-    s = Struct(op2._endian + op2._analysis_code_fmt + b'7f')
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n+ntotal]
-
-        out = s.unpack(edata)
-        if op2.is_debug_file:
-            op2.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
-        (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-        add_sort_x(dt, eid, sd, bm1, bm2, ts1, ts2, af, trq)
-        n += ntotal
-    return n
-
-def oef_cbeam_real_100(self, data: bytes, obj: RealCBeamForceArray,
-                       nelements: int, ntotal: int, dt: Any) -> int:
-    op2 = self
-    n = 0
-    ntotal1 = 4 * self.factor
-    ntotal2 = 36 * self.factor
-    if self.size == 4:
-        s1 = self.struct_i
-        s2 = Struct(op2._endian + b'i8f')  # 36
-    else:
-        s1 = self.struct_q
-        s2 = Struct(op2._endian + b'q8d')  # 36
-
-    sort_method = op2.sort_method
-    add_sort_x = getattr(obj, 'add_sort' + str(sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n+ntotal1]
-        eid_device, = s1.unpack(edata)
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, sort_method)
-        n += ntotal1
-
-        for istation in range(11):
-            edata = data[n:n+ntotal2]
-            out = s2.unpack(edata)
-            if op2.is_debug_file:
-                op2.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
-            (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
-
-            if istation == 0 or sd > 0:
-                add_sort_x(dt, eid, nid, sd, bm1, bm2, ts1, ts2,
-                           af, ttrq, wtrq)
-            n += ntotal2
-    return n
-
-def oef_cbeam_imag_177(self, data: bytes,
-                       obj: ComplexCBeamForceArray,
-                       nelements: int, ntotal: int,
-                       is_magnitude_phase: bool) -> int:
-    op2 = self
-    n = 0
-    #s1 = self.struct_i
-    ntotal1 = 4 * self.factor
-    ntotal2 = 64 * self.factor
-    s1 = Struct(mapfmt(op2._endian + b'i', op2.size)) # self.struct_i
-    s2 = Struct(mapfmt(op2._endian + b'i15f', op2.size))
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n + ntotal1]
-        eid_device, = s1.unpack(edata)
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-
-        n += ntotal1
-        for unused_istation in range(11):
-            edata = data[n:n+ntotal2]
-            n += ntotal2
-            out = s2.unpack(edata)
-            if op2.is_debug_file:
-                op2.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
-            (nid, sd,
-             bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
-             bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi) = out
-
-            if is_magnitude_phase:
-                bm1 = polar_to_real_imag(bm1r, bm1i)
-                bm2 = polar_to_real_imag(bm2r, bm2i)
-                ts1 = polar_to_real_imag(ts1r, ts1i)
-                ts2 = polar_to_real_imag(ts2r, ts2i)
-                af = polar_to_real_imag(afr, afi)
-                ttrq = polar_to_real_imag(ttrqr, ttrqi)
-                wtrq = polar_to_real_imag(wtrqr, wtrqi)
-            else:
-                bm1 = complex(bm1r, bm1i)
-                bm2 = complex(bm2r, bm2i)
-                ts1 = complex(ts1r, ts1i)
-                ts2 = complex(ts2r, ts2i)
-                af = complex(afr, afi)
-                ttrq = complex(ttrqr, ttrqi)
-                wtrq = complex(wtrqr, wtrqi)
-
-            #if i == 0:
-                #obj.add_new_element_sort1(
-                    #dt, eid, nid, sd, bm1, bm2, ts1, ts2,
-                    #af, ttrq, wtrq)
-            #elif sd > 0.:
-            add_sort_x(
-                dt, eid, nid, sd, bm1, bm2, ts1, ts2,
-                af, ttrq, wtrq)
-            #else:
-                ## don't add this field
-                #pass
-                #raise RuntimeError('CBEAM error; i=%s sd=%s' % (i, sd))
-    return n
 
 def oef_shells_composite_real_9(self, data: bytes,
                                 obj: FailureIndicesArray,
@@ -3240,118 +2322,6 @@ def oef_shells_composite_real_9(self, data: bytes,
         #n += ntotal
     return n
 
-def oef_cbush_real_7(self, data: bytes,
-                     obj: RealCBushForceArray | RealCFastForceArrayMSC | RealCBearForceArray,
-                     nelements: int, ntotal: int, dt: Any) -> int:
-    op2 = self
-    n = 0
-    struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'6f', op2.size))
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n+ntotal]
-        out = struct1.unpack(edata)
-        if op2.is_debug_file:
-            op2.binary_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
-        (eid_device, fx, fy, fz, mx, my, mz) = out
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-        #op2.log.debug('eid=%s dt=%s', eid, dt)
-        add_sort_x(dt, eid, fx, fy, fz, mx, my, mz)
-        n += ntotal
-    return n
-
-def oef_cbush_imag_13(self, data: bytes,
-                      obj: ComplexCBushForceArray | ComplexCFastForceArrayMSC,
-                      nelements: int, ntotal: int,
-                      is_magnitude_phase: bool) -> int:
-    """
-    102-CBUSH
-    126-CFAST-MSC
-    280-CBEAR
-
-    """
-    op2 = self
-    n = 0
-    s = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'12f', op2.size))
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n + ntotal]
-        out = s.unpack(edata)
-        if op2.is_debug_file:
-            op2.binary_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
-        (eid_device,
-         fxr, fyr, fzr, mxr, myr, mzr,
-         fxi, fyi, fzi, mxi, myi, mzi) = out
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-
-        if is_magnitude_phase:
-            fx = polar_to_real_imag(fxr, fxi)
-            mx = polar_to_real_imag(mxr, mxi)
-            fy = polar_to_real_imag(fyr, fyi)
-            my = polar_to_real_imag(myr, myi)
-            fz = polar_to_real_imag(fzr, fzi)
-            mz = polar_to_real_imag(mzr, mzi)
-        else:
-            fx = complex(fxr, fxi)
-            mx = complex(mxr, mxi)
-            fy = complex(fyr, fyi)
-            my = complex(myr, myi)
-            fz = complex(fzr, fzi)
-            mz = complex(mzr, mzi)
-
-        add_sort_x(dt, eid, fx, fy, fz, mx, my, mz)
-        n += ntotal
-    return n
-
-def oef_cvisc_real_3(self, data: bytes, obj: RealViscForceArray,
-                     nelements: int, ntotal: int, dt: Any) -> int:
-    op2 = self
-    n = 0
-    fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'ff', self.size)
-    s = Struct(fmt)
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n+ntotal]
-
-        out = s.unpack(edata)
-        if op2.is_debug_file:
-            op2.binary_debug.write('OEF_CVisc - %s\n' % (str(out)))
-        (eid_device, axial, torque) = out
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-        add_sort_x(dt, eid, axial, torque)
-        n += ntotal
-    return n
-
-def oef_cvisc_imag_5(self, data: bytes,
-                     obj: ComplexViscForceArray,
-                     nelements: int, ntotal: int,
-                     is_magnitude_phase: bool) -> int:
-    op2 = self
-    n = 0
-    s = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'4f', op2.size))  # 5
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n+20]
-
-        out = s.unpack(edata)
-        if op2.is_debug_file:
-            op2.binary_debug.write('OEF_CVisc - %s\n' % (str(out)))
-        (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-        if is_magnitude_phase:
-            axial = polar_to_real_imag(axial_real, axial_imag)
-            torque = polar_to_real_imag(torque_real, torque_imag)
-        else:
-            axial = complex(axial_real, axial_imag)
-            torque = complex(torque_real, torque_imag)
-
-        add_sort_x(dt, eid, axial, torque)
-        n += ntotal
-    return n
-
 def oef_celas_cdamp_real_2(self, data: bytes,
                            obj: RealSpringForceArray | RealDamperForceArray,
                            nelements: int, ntotal: int, dt: Any) -> int:
@@ -3372,96 +2342,6 @@ def oef_celas_cdamp_real_2(self, data: bytes,
         n += ntotal
     return n
 
-def oef_cshear_real_17(self, data: bytes,
-                       obj: RealCShearForceArray,
-                       nelements: int, ntotal: int, dt: Any) -> int:
-    op2 = self
-    n = 0
-    s = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'16f', op2.size))
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n+ntotal]
-
-        out = s.unpack(edata)
-        if op2.is_debug_file:
-            op2.binary_debug.write('OEF_Shear - %s\n' % (str(out)))
-        (eid_device,
-         f41, f21, f12, f32, f23, f43, f34, f14, kf1,
-         s12, kf2, s23, kf3, s34, kf4, s41) = out
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-
-        #data_in = [eid,
-                   #f41, f21, f12, f32, f23, f43, f34,
-                   #f14, kf1, s12, kf2, s23, kf3, s34, kf4, s41]
-        #print "%s" % (self.get_element_type(op2.element_type)), data_in
-        add_sort_x(dt, eid,
-                   f41, f21, f12, f32, f23, f43, f34,
-                   f14, kf1, s12, kf2, s23, kf3, s34, kf4, s41)
-        n += ntotal
-    return n
-
-def oef_cshear_imag_33(self, data: bytes,
-                       obj: ComplexCShearForceArray,
-                       nelements: int, ntotal: int,
-                       is_magnitude_phase: bool) -> int:
-    op2 = self
-    #ntotal1 = 132 * self.factor
-    n = 0
-    s = Struct(mapfmt(op2._endian + op2._analysis_code_fmt + b'32f', op2.size))
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
-        edata = data[n:n+ntotal]
-        n += ntotal
-        out = s.unpack(edata)
-        if op2.is_debug_file:
-            op2.binary_debug.write('OEF_Shear - %s\n' % (str(out)))
-        (eid_device,
-         f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r, # 8
-         kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r, # 16
-         f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i,
-         kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i) = out
-        if is_magnitude_phase:
-            f41 = polar_to_real_imag(f41r, f41i)
-            kf1 = polar_to_real_imag(kf1r, kf1i)
-            f21 = polar_to_real_imag(f21r, f21i)
-            kf2 = polar_to_real_imag(kf2r, kf2i)
-            f12 = polar_to_real_imag(f12r, f12i)
-            kf3 = polar_to_real_imag(kf3r, kf3i)
-            f23 = polar_to_real_imag(f23r, f23i)
-            kf4 = polar_to_real_imag(kf4r, kf4i)
-            f32 = polar_to_real_imag(f32r, f32i)
-            s12 = polar_to_real_imag(s12r, s12i)
-            f43 = polar_to_real_imag(f43r, f43i)
-            s23 = polar_to_real_imag(s23r, s23i)
-            f34 = polar_to_real_imag(f34r, f34i)
-            s34 = polar_to_real_imag(s34r, s34i)
-            f14 = polar_to_real_imag(f14r, f14i)
-            s41 = polar_to_real_imag(s41r, s41i)
-        else:
-            f41 = complex(f41r, f41i)
-            kf1 = complex(kf1r, kf1i)
-            f21 = complex(f21r, f21i)
-            kf2 = complex(kf2r, kf2i)
-            f12 = complex(f12r, f12i)
-            kf3 = complex(kf3r, kf3i)
-            f23 = complex(f23r, f23i)
-            kf4 = complex(kf4r, kf4i)
-            f32 = complex(f32r, f32i)
-            s12 = complex(s12r, s12i)
-            f43 = complex(f43r, f43i)
-            s23 = complex(s23r, s23i)
-            f34 = complex(f34r, f34i)
-            s34 = complex(s34r, s34i)
-            f14 = complex(f14r, f14i)
-            s41 = complex(s41r, s41i)
-
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-        add_sort_x(dt, eid,
-                   f41, f21, f12, f32, f23, f43, f34, f14,
-                   kf1, s12, kf2, s23, kf3, s34, kf4, s41)
-    return n
 
 def oef_cquad4_33_real_9(self, data: bytes,
                          obj: RealPlateForceArray,
