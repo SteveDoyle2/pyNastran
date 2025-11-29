@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from struct import Struct
 from numpy import frombuffer
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.tables.utils import get_is_slot_saved
 from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (
     GridPointSurfaceStressesArray,
     GridPointStressesVolumeDirectArray, GridPointStressesVolumePrincipalArray,
@@ -16,16 +17,17 @@ from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
+
 class OGS:
     def __init__(self, op2: OP2):
         self.op2 = op2
 
-    @property
-    def size(self) -> int:
-        return self.op2.size
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
+    # @property
+    # def size(self) -> int:
+    #     return self.op2.size
+    # @property
+    # def factor(self) -> int:
+    #     return self.op2.factor
 
     def _read_ogstr1_3(self, data: bytes, ndata: int):
         """OGSTR1 - grid point strains"""
@@ -180,21 +182,21 @@ class OGS:
         15 EHVM RS Hencky-von Mises or octahedral
         """
         op2 = self.op2
+        factor = op2.factor
         result_name = f'grid_point_{restype}_volume_principal'
         if 'strain' in restype:
             obj_vector_real = GridPointStrainsVolumePrincipalArray
         else:
             obj_vector_real = GridPointStressesVolumePrincipalArray
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             op2.log.warning(f'skipping {result_name}')
             return ndata
-        op2._results._found_result(result_name)
-        slot = getattr(op2, result_name)
-        n = 0
 
+        n = 0
         #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
-        ntotal = 60 * self.factor # 15 * 4
+        ntotal = 60 * op2.factor # 15 * 4
         nelements = ndata // ntotal
         assert ndata % ntotal == 0
         auto_return, is_vectorized = op2._create_oes_object4(
@@ -228,7 +230,7 @@ class OGS:
             #obj.ielement = ielement2
             #n = ndata
         else:
-            s = Struct(mapfmt(op2._endian + b'i14f', self.size))
+            s = Struct(mapfmt(op2._endian + b'i14f', op2.size))
             #nelements = ndata // 60  # 15*4
             for unused_i in range(nelements):
                 edata = data[n:n+ntotal]
@@ -243,7 +245,7 @@ class OGS:
         assert ndata > 0, ndata
         assert nelements > 0, f'nelements={nelements} element_type={op2.element_type} element_name={op2.element_name!r}'
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (op2.element_name, ndata % ntotal, ndata % op2.num_wide, ndata, ntotal)
-        assert op2.num_wide * 4 * self.factor == ntotal, 'numwide*4=%s ntotal=%s' % (op2.num_wide * 4, ntotal)
+        assert op2.num_wide * 4 * factor == ntotal, 'numwide*4=%s ntotal=%s' % (op2.num_wide * 4, ntotal)
         assert n > 0, f'n = {n} result_name={result_name}'
         return n
 
@@ -274,7 +276,7 @@ class OGS:
         n = 0
 
         #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
-        ntotal = 44 * self.factor # 4*11
+        ntotal = 44 * op2.factor # 4*11
         nelements = ndata // ntotal
         auto_return, is_vectorized = op2._create_oes_object4(
             nelements, result_name, slot, obj_vector_real)
@@ -301,7 +303,7 @@ class OGS:
                 obj.node_element[itotal:itotal2, 1] = eids
 
             #[fiber, nx, ny, txy, angle, major, minor, tmax, ovm]
-            s4 = 'S%i' % self.size
+            s4 = 'S%i' % size
             strings = frombuffer(data, dtype=op2._uendian + s4).reshape(nelements, 11)[:, 2].copy()
             obj.location[itotal:itotal2] = strings
             obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:]#.copy()
@@ -309,7 +311,7 @@ class OGS:
             obj.ielement = ielement2
             n = ndata
         else:
-            fmt = op2._endian + (b'2i4s8f' if self.size == 4 else b'2q8s8d')
+            fmt = op2._endian + (b'2i4s8f' if op2.size == 4 else b'2q8s8d')
             s = Struct(fmt)
             nelements = ndata // ntotal  # 11*4
             for unused_i in range(nelements):
@@ -326,7 +328,7 @@ class OGS:
         assert ndata > 0, ndata
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, op2.element_type, op2.element_name)
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (op2.element_name, ndata % ntotal, ndata % op2.num_wide, ndata, ntotal)
-        #assert op2.num_wide * 4 * self.factor == ntotal, 'numwide*4=%s ntotal=%s' % (op2.num_wide * 4, ntotal)
+        #assert op2.num_wide * 4 * factor == ntotal, 'numwide*4=%s ntotal=%s' % (op2.num_wide * 4, ntotal)
         assert n > 0, f'n = {n} result_name={result_name}'
         return n
 
@@ -371,7 +373,7 @@ class OGS:
         n = 0
 
         #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
-        ntotal = 36 * self.factor  # 9 * 4
+        ntotal = 36 * factor  # 9 * 4
         nelements = ndata // ntotal
         assert ndata % (nelements * ntotal) == 0, ndata % (nelements * ntotal)
         auto_return, is_vectorized = op2._create_oes_object4(
@@ -404,7 +406,7 @@ class OGS:
             obj.ielement = ielement2
             n = ndata
         else:
-            fmt = mapfmt(op2._endian + b'i8f', self.size)
+            fmt = mapfmt(op2._endian + b'i8f', op2.size)
             s = Struct(fmt)
             for unused_i in range(nelements):
                 edata = data[n:n+ntotal]
@@ -434,11 +436,10 @@ class OGS:
             result_name = 'grid_point_strain_discontinuities'
         else:
             result_name = 'grid_point_stress_discontinuities'
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             op2.log.warning(f'skipping {result_name}')
             return ndata
-        op2._results._found_result(result_name)
-        slot = getattr(op2, result_name)
         n = 0
 
         if op2.num_wide == 6:
@@ -448,7 +449,7 @@ class OGS:
                 obj_vector_real = GridPointStressesSurfaceDiscontinutiesArray
 
             #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
-            ntotal = 6 * 4 * self.factor
+            ntotal = 6 * 4 * op2.factor
             nelements = ndata // ntotal
             assert ndata % (nelements * ntotal) == 0, ndata % (nelements * ntotal)
             auto_return, is_vectorized = op2._create_oes_object4(
@@ -479,7 +480,7 @@ class OGS:
                 obj.ielement = ielement2
                 n = ndata
             else:
-                s = Struct(mapfmt(op2._endian + b'i5f', self.size))
+                s = Struct(mapfmt(op2._endian + b'i5f', size))
                 nelements = ndata // ntotal  # 6*4
                 for unused_i in range(nelements):
                     out = s.unpack(data[n:n+ntotal])

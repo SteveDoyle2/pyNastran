@@ -68,6 +68,7 @@ from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_bush import RealNonline
 from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
     HyperelasticQuadArray)
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_composite_nx import RealSolidCompositeStressArray, RealSolidCompositeStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.utils_cplstn import oes_cplstn_nx
 from pyNastran.op2.tables.oes_stressStrain.utils_spring import oes_celas
@@ -1441,9 +1442,9 @@ class OES(OP2Common2):
             assert op2.num_wide == 4, op2.code_information()
             if op2.read_mode == 1:
                 return ndata
-            ntotal = 16 * self.factor # 4*4
+            ntotal = 16 * op2.factor # 4*4
             nelements = ndata // ntotal
-            fmt = mapfmt(op2._endian + b'i3f', self.size)
+            fmt = mapfmt(op2._endian + b'i3f', op2.size)
             struct1 = Struct(fmt)
             for ielem in range(nelements):
                 edata = data[n:n+ntotal]
@@ -1466,6 +1467,9 @@ class OES(OP2Common2):
         n = 0
         is_magnitude_phase = op2.is_magnitude_phase()
         dt = op2.nonlinear_factor
+
+        if prefix and prefix.endswith('.') and op2._results.is_not_saved(prefix.strip('.')):
+            return ndata
 
         #flag = 'element_id'
         if op2.is_stress:
@@ -1873,7 +1877,7 @@ class OES(OP2Common2):
         assert ndata > 0, ndata
         assert nelements > 0, f'nelements={nelements} element_type={op2.element_type} element_name={op2.element_name!r}'
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (op2.element_name, ndata % ntotal, ndata % op2.num_wide, ndata, ntotal)
-        assert op2.num_wide * 4 * self.factor == ntotal, f'numwide*4={op2.num_wide*4} ntotal={ntotal} element_name={op2.element_name!r}\n{op2.code_information()}'
+        assert op2.num_wide * 4 * op2.factor == ntotal, f'numwide*4={op2.num_wide*4} ntotal={ntotal} element_name={op2.element_name!r}\n{op2.code_information()}'
         #assert op2.thermal == 0, "thermal = %%s" % op2.thermal
         assert n is not None and n > 0, f'n={n} result_name={result_name}\n{op2.code_information()}'
 
@@ -2033,7 +2037,7 @@ class OES(OP2Common2):
         #print('numwide real=%s imag=%s random=%s' % (numwide_real, numwide_imag, numwide_random2))
         op2._data_factor = nnodes_expected
         if op2.format_code == 1 and op2.num_wide == numwide_real:  # real
-            ntotal = (12 + 32 * nnodes_expected) * self.factor
+            ntotal = (12 + 32 * nnodes_expected) * op2.factor
             nelements = ndata // ntotal
             #auto_return, is_vectorized = op2._create_oes_object4(
                 #nelements, result_name, slot, obj_vector_real)
@@ -2962,7 +2966,7 @@ class OES(OP2Common2):
             #if op2.read_mode == 1:
                 #return ndata, None, None
 
-            ntotal = numwide_real * 4 * self.factor
+            ntotal = numwide_real * 4 * op2.factor
             #if op2.is_stress:
                 #op2.create_transient_object(self.nonlinearPlateStress, NonlinearSolid)
             #else:
@@ -2975,7 +2979,7 @@ class OES(OP2Common2):
             #raise RuntimeError(op2.code_information())
         #elif op2.format_code in [2, 3] and op2.num_wide == numwide_imag:  # imag
 
-            ntotal = numwide_random * 4 * self.factor
+            ntotal = numwide_random * 4 * op2.factor
             nelements = ndata // ntotal
             self.ntotal += nelements * nnodes
             #print(op2.read_mode, RealNonlinearSolidArray)
@@ -3009,7 +3013,7 @@ class OES(OP2Common2):
             num_wide = op2.num_wide
             assert num_wide == 148, num_wide
             assert nnodes == 9, nnodes
-            ntotal = num_wide * 4 * self.factor
+            ntotal = num_wide * 4 * op2.factor
             nelements = ndata // ntotal
             self.ntotal += nelements * nnodes
             #print(op2.read_mode, RealNonlinearSolidArray)
@@ -3099,7 +3103,7 @@ class OES(OP2Common2):
         elif result_type == 1 and op2.num_wide == 15:  # complex
             obj_vector_complex = ComplexWeldStressArray if op2.is_stress else ComplexWeldStrainArray
 
-            ntotal = 60 * self.factor  # 15*4
+            ntotal = 60 * op2.factor  # 15*4
             nelements = ndata // ntotal
             #print('WELDP nelements =', nelements)
 
@@ -3177,7 +3181,7 @@ class OES(OP2Common2):
         if result_type == 0 and op2.num_wide == 7:  # real
             obj_vector_real = RealFastStressArray if op2.is_stress else RealFastStrainArray
 
-            ntotal = 28 * self.factor  # 7*4
+            ntotal = 28 * op2.factor  # 7*4
             nelements = ndata // ntotal
             assert ndata % ntotal == 0
             #print('WELDP nelements =', nelements)
@@ -3219,7 +3223,7 @@ class OES(OP2Common2):
                 n = oes_fastp_msc_real_7(op2, data, obj, nelements, ntotal, dt)
         elif result_type == 1 and op2.num_wide == 13:  # complex
             obj_vector_complex = ComplexFastStressArray if op2.is_stress else ComplexFastStrainArray
-            ntotal = 52 * self.factor  # 13*4
+            ntotal = 52 * op2.factor  # 13*4
             nelements = ndata // ntotal
             assert ndata % ntotal == 0
             #print('FASTP nelements =', nelements)
@@ -3298,7 +3302,7 @@ class OES(OP2Common2):
         log = op2.log
         if op2.format_code == 1 and op2.num_wide == 13 and op2.element_type in [88, 90]:  # real
             # single layered hyperelastic (???) ctria3, cquad4
-            ntotal = 52 * self.factor  # 4*13
+            ntotal = 52 * op2.factor  # 4*13
             nelements = ndata // ntotal
 
             obj_vector_real = RealNonlinearPlateArray
@@ -3342,7 +3346,7 @@ class OES(OP2Common2):
             #               7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00   2.665485E-14   4.557830E+02   5.240113E-02   0.0
             #                              4.775555E-02  -2.081668E-17  -4.625990E-02   9.523495E-18
             #
-            ntotal = 100 * self.factor  # 4*25
+            ntotal = 100 * op2.factor  # 4*25
             nelements = ndata // ntotal
             obj_vector_real = RealNonlinearPlateArray
 
@@ -3432,7 +3436,7 @@ class OES(OP2Common2):
 
         factor = op2.factor
         if result_type == 0 and op2.num_wide == 7:  # real
-            ntotal = 28 * self.factor #  7*4 = 28
+            ntotal = 28 * factor #  7*4 = 28
             nelements = ndata // ntotal
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, RealNonlinearRodArray)
@@ -3461,7 +3465,7 @@ class OES(OP2Common2):
                 # eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss]
                 obj.data[obj.itime, istart:iend, :] = floats[:, 1:].copy()
             else:
-                struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'6f', self.size))  # 1+6=7
+                struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'6f', op2.size))  # 1+6=7
                 for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = struct1.unpack(edata)
@@ -3737,13 +3741,13 @@ class OES(OP2Common2):
 
         #if result_type == 0 and op2.num_wide == 43:  # real
             #op2.log.warning(f'skipping corner option for composite solid-{op2.element_name}-{op2.element_type}')
-            #struct9 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'i 4s i 5f', self.size)) # 9
+            #struct9 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'i 4s i 5f', op2.size)) # 9
         obj_vector_real = RealSolidCompositeStressArray if op2.is_stress else RealSolidCompositeStrainArray
         #obj_vector_real = RealSolidCompositeStressArray
 
         if result_type == 0 and op2.num_wide == 11:  # real; center
             #op2.log.warning(f'skipping center option for composite solid-{op2.element_name}-{op2.element_type}')
-            ntotal = 44 * self.factor # 11 * 4
+            ntotal = 44 * op2.factor # 11 * 4
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = op2._create_oes_object4(
@@ -3757,7 +3761,7 @@ class OES(OP2Common2):
 
         elif result_type == 0 and op2.num_wide == 43:  # real; center
             #op2.log.warning(f'skipping center option for composite solid-{op2.element_name}-{op2.element_type}')
-            ntotal = 172 * self.factor  # 43*4
+            ntotal = 172 * op2.factor  # 43*4
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = op2._create_oes_object4(
@@ -3766,7 +3770,7 @@ class OES(OP2Common2):
                 assert ntotal == op2.num_wide * 4
                 return nelements * ntotal, None, None
 
-            obj: RealCompositeSolidStressArray = op2.obj
+            obj: RealSolidCompositeStressArray = op2.obj
             n = oes_composite_solid_nx_real_172(op2, data, obj, nelements, ntotal)
         else:
             raise NotImplementedError(op2.code_information())
@@ -3811,7 +3815,7 @@ class OES(OP2Common2):
             #11 MSC RS Margin of Safety in Compression
             #Words 2 through 11 repeat 002 times
             n = 0
-            ntotal = 84 * self.factor  # 4*21
+            ntotal = 84 * op2.factor  # 4*21
             nelements = ndata // ntotal
             assert ndata % ntotal == 0, 'ndata=%s ntotal=%s nelements=%s error=%s' % (ndata, ntotal, nelements, ndata % ntotal)
 
@@ -3858,7 +3862,7 @@ class OES(OP2Common2):
             #return n, None, None
         elif result_type == 1 and op2.num_wide == 21:  # complex
             n = 0
-            ntotal = 84 * self.factor  # 4*21
+            ntotal = 84 * op2.factor  # 4*21
             nelements = ndata // ntotal
             assert ndata % ntotal == 0, 'ndata=%s ntotal=%s nelements=%s error=%s' % (ndata, ntotal, nelements, ndata % ntotal)
             #TCODE,7 =1 Real / Imaginary
@@ -3908,7 +3912,7 @@ class OES(OP2Common2):
 
         elif result_type == 2 and op2.num_wide == 13:
             n = 0
-            ntotal = 52 * self.factor  # 4*13
+            ntotal = 52 * op2.factor  # 4*13
             nelements = ndata // ntotal
             #TCODE,7 =2 Real
             #2 GRID I External Grid Point identification number
@@ -4000,7 +4004,7 @@ class OES(OP2Common2):
             else:
                 raise NotImplementedError('NonlinearGapStrain')
 
-            ntotal = 44 * self.factor # 4*11
+            ntotal = 44 * op2.factor # 4*11
             nelements = ndata // ntotal
             assert ndata % ntotal == 0
             auto_return, is_vectorized = op2._create_oes_object4(
@@ -4024,7 +4028,7 @@ class OES(OP2Common2):
                     #obj.element[ielement:ielement2] = eids
 
                 #print(data, len(data))
-                if self.size == 4:
+                if op2.size == 4:
                     strings = frombuffer(data, dtype='|S4').reshape(nelements, 11)[:, [9, 10]]
                 else:
                     strings = frombuffer(data, dtype='|S8').reshape(nelements, 11)[:, [9, 10]]
@@ -4070,7 +4074,7 @@ class OES(OP2Common2):
             else:
                 raise NotImplementedError('Nonlinear CBEAM Strain...this should never happen')
 
-            ntotal = numwide_real * 4 * self.factor  # 204
+            ntotal = numwide_real * 4 * op2.factor  # 204
             nelements = ndata // ntotal
 
             nlayers = nelements * 8
@@ -4087,10 +4091,10 @@ class OES(OP2Common2):
                 #op2.binary_debug.write('                           s1b, s2b, s3b, s4b, smaxb, sminb,        MSc]\n')
                 #op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-            if self.size == 4:
+            if op2.size == 4:
                 struct1 = Struct(op2._endian + b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
             else:
-                assert self.size == 8, self.size
+                assert op2.size == 8, op2.size
                 struct1 = Struct(op2._endian + b'2q 8s5d 8s5d 8s5d 8s5d q 8s5d 8s5d 8s5d 8s5d')  # 2 + 6*8 + 1 = 51
 
             for unused_i in range(nelements):  # num_wide=51
@@ -4156,7 +4160,7 @@ class OES(OP2Common2):
             else:
                 obj_vector_real = RealBar10NodesStrainArray
 
-            ntotal = 10 * 4 * self.factor
+            ntotal = 10 * 4 * op2.factor
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = op2._create_oes_object4(
@@ -4224,7 +4228,7 @@ class OES(OP2Common2):
             slot = op2.get_result(result_name)
             #op2.create_transient_object(result_name, slot, obj_vector_real)
 
-            ntotal = 120 * self.factor # 36+28*3
+            ntotal = 120 * op2.factor # 36+28*3
             nelements = ndata // ntotal
 
             #print(op2.code_information())
@@ -4279,8 +4283,8 @@ class OES(OP2Common2):
             else:
                 n = 0
                 # (2 + 7*4)*4 = 30*4 = 120
-                ntotal1 = 36 * self.factor  # 4*9
-                ntotal2 = 28 * self.factor  # 4*7
+                ntotal1 = 36 * op2.factor  # 4*9
+                ntotal2 = 28 * op2.factor  # 4*7
                 s1 = Struct(op2._endian + op2._analysis_code_fmt + b'4s i6f')  # 1 + 4+1+6 = 12
                 s2 = Struct(op2._endian + b'i6f')
                 for unused_i in range(nelements):

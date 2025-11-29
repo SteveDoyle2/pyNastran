@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 #from pyNastran.op2.tables.opg_appliedLoads.opg_objects import (#RealAppliedLoads,  #ComplexAppliedLoads,
                                                                #RealAppliedLoadsVectorArray, ComplexAppliedLoadsVectorArray)
+from pyNastran.op2.tables.utils import get_is_slot_saved
 from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
     #RealLoadVector, ComplexLoadVector,
     RealLoadVectorArray, ComplexLoadVectorArray,
@@ -24,13 +25,6 @@ if TYPE_CHECKING:  # pragma: no cover
 class OPG:
     def __init__(self, OP2: OP2):
         self.op2 = OP2
-
-    @property
-    def size(self) -> int:
-        return self.op2.size
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
 
     def _read_opg1_3(self, data: bytes, ndata: int) -> None:
         op2 = self.op2
@@ -345,25 +339,23 @@ class OPG:
         """
         op2 = self.op2
         if op2.thermal == 0:
-            result_name = prefix + 'load_vectors' + postfix
-            storage_obj = op2.get_result(result_name)
-            if op2._results.is_not_saved(result_name):
+            result_name = f'{prefix}load_vectors{postfix}'
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealLoadVectorArray, ComplexLoadVectorArray,
                                            'node', random_code=op2.random_code)
         elif op2.thermal == 1:
             result_name = prefix + 'thermal_load_vectors' + postfix
-            storage_obj = op2.get_result(result_name)
 
             #RealThermalLoadVectorVector = None
             #ComplexThermalLoadVectorVector = None
             ComplexThermalLoadVectorArray = None
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            n = op2._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_scalar_table_vectorized(data, ndata, result_name, slot,
                                                   RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
                                                   'node', random_code=op2.random_code)
 
@@ -378,13 +370,12 @@ class OPG:
         op2 = self.op2
         if op2.thermal == 0:
             result_name = 'force_vectors'
-            storage_obj = op2.get_result(result_name)
             #ForceVectorVector = None
             ComplexForceVectorArray = None
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealForceVectorArray, ComplexForceVectorArray,
                                            'node', random_code=op2.random_code)
 

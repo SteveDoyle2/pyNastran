@@ -20,6 +20,7 @@ from pyNastran import DEV
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
+from pyNastran.op2.tables.utils import get_is_slot_saved
 from pyNastran.op2.tables.oug.oug_displacements import (
     RealDisplacementArray, ComplexDisplacementArray)
 
@@ -826,10 +827,9 @@ class OUG:
             msg = 'displacements; table_name=%s' % op2.table_name
             raise NotImplementedError(msg)
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-        storage_obj = op2.get_result(result_name)
 
         if op2.thermal == 0:
             #result_name = 'displacements'
@@ -839,13 +839,13 @@ class OUG:
                                        b'OUG1F',
                                        b'OUGF1', b'OUGF2',
                                        b'BOUGF1', b'OUPV1'], op2.table_name
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=op2.random_code,
                                             is_cid=is_cid)
         elif op2.thermal == 1:
             assert op2.table_name in [b'OUGV1', b'OUGV2', b'TOUGV1', b'TOUGV2', b'OUG1'], op2.table_name
-            n = op2._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_scalar_table_vectorized(data, ndata, result_name, slot,
                                                   RealTemperatureArray, None,
                                                   'node', random_code=op2.random_code,
                                                   is_cid=is_cid)
@@ -900,16 +900,16 @@ class OUG:
 
         #result_name = 'velocities'
         #storage_obj = self.velocities
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-        storage_obj = op2.get_result(result_name)
+
         if op2.thermal == 0:
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                             RealVelocityArray, ComplexVelocityArray,
                                             'node', random_code=op2.random_code)
         elif op2.thermal == 1:
-            n = op2._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_scalar_table_vectorized(data, ndata, result_name, slot,
                                                    RealThermalVelocityVectorArray, None,
                                                    'node', random_code=op2.random_code)
 
@@ -958,10 +958,10 @@ class OUG:
         if op2.thermal == 0:
             if op2.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1', b'ROUGV2', b'OAG1', b'BOUGV1', b'OUXY1', b'OUXY2', b'OUPV1']:
                 assert result_name is not None, op2.table_name
-                if op2._results.is_not_saved(result_name):
+                is_saved, slot = get_is_slot_saved(op2, result_name)
+                if not is_saved:
                     return ndata
-                storage_obj = op2.get_result(result_name)
-                n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+                n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                                 RealAccelerationArray,
                                                 ComplexAccelerationArray,
                                                 'node', random_code=op2.random_code)
@@ -978,26 +978,24 @@ class OUG:
         elif op2.thermal == 1:
             result_name = 'accelerations'
             storage_obj = op2.accelerations
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
             raise NotImplementedError(op2.code_information())
         elif op2.thermal == 2:
             result_name = 'abs.accelerations'
-            storage_obj = op2.get_result(result_name)
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                             RealAccelerationArray, ComplexAccelerationArray,
                                             'node', random_code=op2.random_code)
         elif op2.thermal == 4:
             result_name = 'srss.accelerations'
-            storage_obj = op2.get_result(result_name)
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                             RealAccelerationArray, ComplexAccelerationArray,
                                             'node', random_code=op2.random_code)
         else:
@@ -1056,10 +1054,9 @@ class OUG:
             raise NotImplementedError(msg)
         assert op2.thermal in [0, 2, 3], op2.code_information()
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-        storage_obj = op2.get_result(result_name)
 
         # NX THERMAL
         # 1: heat transfer
@@ -1067,7 +1064,7 @@ class OUG:
         # 3: for cyclic symmetric;
         # 0: otherwise
         if op2.thermal in [0, 2, 3]:
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealEigenvectorArray, ComplexEigenvectorArray,
                                            'node', random_code=op2.random_code)
         elif op2.thermal == 1:
@@ -1144,12 +1141,10 @@ class OUG:
                 n = op2._not_implemented_or_skip(data, ndata, op2.code_information())
                 return n
 
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-
-            storage_obj = op2.get_result(result_name)
-            n = op2._read_random_table(data, ndata, result_name, storage_obj,
+            n = op2._read_random_table(data, ndata, result_name, slot,
                                         obj, 'node',
                                         random_code=op2.random_code)
         #elif op2.thermal == 1:
@@ -1231,12 +1226,10 @@ class OUG:
                 n = op2._not_implemented_or_skip(data, ndata, op2.code_information())
                 return n
 
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-
-            storage_obj = op2.get_result(result_name)
-            n = op2._read_random_table(data, ndata, result_name, storage_obj,
+            n = op2._read_random_table(data, ndata, result_name, slot,
                                        obj, 'node',
                                        random_code=op2.random_code)
             #n = self._read_table_sort1_real(data, ndata, result_name, storage_obj,
@@ -1318,12 +1311,11 @@ class OUG:
             else:
                 n = op2._not_implemented_or_skip(data, ndata, op2.code_information())
                 return n
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
 
-            storage_obj = op2.get_result(result_name)
-            n = op2._read_random_table(data, ndata, result_name, storage_obj,
+            n = op2._read_random_table(data, ndata, result_name, slot,
                                        obj, 'node',
                                        random_code=op2.random_code)
 
@@ -1386,11 +1378,10 @@ class OUG:
         else:
             raise NotImplementedError(op2.thermal)
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-        storage_obj = op2.get_result(result_name)
-        n = op2._read_random_table(data, ndata, result_name, storage_obj,
+        n = op2._read_random_table(data, ndata, result_name, slot,
                                    obj, 'node',
                                    random_code=op2.random_code)
         return n
@@ -1439,12 +1430,10 @@ class OUG:
                 #raise RuntimeError(op2.code_information())
                 return n
 
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-
-            storage_obj = op2.get_result(result_name)
-            n = op2._read_random_table(data, ndata, result_name, storage_obj,
+            n = op2._read_random_table(data, ndata, result_name, slot,
                                         obj, 'node',
                                         random_code=op2.random_code)
 

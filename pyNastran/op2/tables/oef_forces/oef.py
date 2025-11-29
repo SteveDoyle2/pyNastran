@@ -17,15 +17,13 @@ FLUX             HOEF1         Element heat flux
 """
 from __future__ import annotations
 from struct import Struct
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from pyNastran.op2.op2_interface.function_codes import func1, func7
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
-from pyNastran.op2.op2_helper import polar_to_real_imag
-from pyNastran.op2.op2_interface.utils import apply_mag_phase
 from pyNastran.op2.op2_interface.msc_tables import MSC_OEF_REAL_MAPPER, MSC_OEF_IMAG_MAPPER
 from pyNastran.op2.op2_interface.nx_tables import NX_OEF_REAL_MAPPER, NX_OEF_IMAG_MAPPER
 from pyNastran.op2.op2_interface.op2_codes import SORT1_TABLES_BYTES, TABLES_BYTES
@@ -835,6 +833,9 @@ class OEF:
             return ndata
 
         prefix, postfix = get_oef_prefix_postfix(op2)
+        if prefix and op2._results.is_not_saved(prefix.strip('.')):
+            return ndata
+
         _sort_method = func1(op2.tCode)
         result_type = op2.result_type # func7(op2.tCode)
 
