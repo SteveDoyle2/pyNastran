@@ -19,6 +19,7 @@ import numpy as np
 from pyNastran import DEV
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.tables.utils import get_is_slot_saved
 
 from pyNastran.op2.tables.oug.oug_displacements import (
     RealDisplacementArray, ComplexDisplacementArray)
@@ -322,10 +323,9 @@ class OUGSTRS:
         #op2.show_data(data, types='ifs', endian=None, force=False)
 
         result_name = 'contact_displacements'
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-        storage_obj = op2.get_result(result_name)
 
         #ndata = len(data)
         if op2.num_wide == 8:
@@ -333,7 +333,7 @@ class OUGSTRS:
             ntotal = 28 * factor
             nnodes = ndata // ntotal  # 8*4
             auto_return = op2._create_table_vector(
-                result_name, nnodes, storage_obj, RealDisplacementArray, is_cid=False)
+                result_name, nnodes, slot, RealDisplacementArray, is_cid=False)
             if auto_return:
                 return ndata
 

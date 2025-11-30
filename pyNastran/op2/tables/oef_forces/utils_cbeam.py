@@ -77,8 +77,8 @@ def oef_cbeam(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
     factor = op2.factor
     if result_type in [0, 2] and op2.num_wide == 100:  # real/random
         if op2.sort_method == 2:
-            msg = op2.code_information()
             if op2.read_mode == 2:
+                msg = op2.code_information()
                 ndata = op2._not_implemented_or_skip(data, ndata, msg)
             return ndata, None, None
         # real - format_code == 1

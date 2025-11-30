@@ -51,11 +51,10 @@ def oef_cbush(op2: OP2, data, ndata, dt, is_magnitude_phase,
         raise NotImplementedError(op2.code_information())
 
     #print(op2.code_information())
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
     # result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
-    op2._results._found_result(result_name)
-    slot = op2.get_result(result_name)
 
     n = 0
     # op2.log.warning('dt=%s num_wide=%s result_type=%s', dt, num_wide, result_type)

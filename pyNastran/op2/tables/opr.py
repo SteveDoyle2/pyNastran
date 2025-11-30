@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.op2.result_objects.table_object import RealTableArray # , ComplexTableArray
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.tables.utils import get_is_slot_saved
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -384,12 +385,11 @@ class OPR:
         #fdata = np.frombuffer(data, dtype=op2.fdtype8).reshape(nrows, 8)[:, 2:]
         #[50000 50003 50024 50040 50042 50075 50088]
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-        storage_obj = op2.get_result(result_name)
 
-        n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+        n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                        RealPressureArray, None,
                                        'node', random_code=op2.random_code)
         #n = op2._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,

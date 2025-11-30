@@ -54,10 +54,9 @@ def oef_cbar_34(op2: OP2, data: bytes, ndata: int, dt: Any,
     else:
         raise NotImplementedError(op2.element_type)
 
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
-    slot = op2.get_result(result_name)
     # print(result_type in [0, 2], op2.num_wide == 9)
     # print(result_type == 1, op2.num_wide == 17)
     if result_type in [0, 2] and op2.num_wide == 9:  # real/random
@@ -126,10 +125,9 @@ def oef_cbar_100(op2: OP2, data, ndata, dt, unused_is_magnitude_phase,
                  result_type, prefix, postfix):
     """100-BARS"""
     result_name = prefix + 'cbar_force' + postfix  # _10nodes
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
-    slot = op2.get_result(result_name)
 
     factor = op2.factor
     if op2.format_code == 1 and op2.num_wide == 8:  # real

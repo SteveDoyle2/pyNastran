@@ -1288,7 +1288,7 @@ def set_as_sort1(obj):
     bit0, bit1, bit2 = obj.sort_bits
     obj.table_name = SORT2_TABLE_NAME_MAP[obj.table_name]
     obj.sort_code = bit0 + 2*bit1 + 4*bit2
-    print(obj.code_information())
+    # print(obj.code_information())
     # assert obj.is_sort1
 
     if analysis_method != 'N/A':

@@ -451,12 +451,11 @@ class OQG:
                 result_name = 'RARCONS.spc_forces'
             else:
                 raise NotImplementedError(op2.table_name_str)
-            if op2._results.is_not_saved(result_name):
+
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            #storage_obj = getattr(op2, result_name)
-            storage_obj = op2.get_result(result_name)
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealSPCForcesArray, ComplexSPCForcesArray,
                                            'node', random_code=op2.random_code)
         elif op2.thermal == 1:
@@ -464,11 +463,10 @@ class OQG:
             op2._setup_op2_subcase('FLUX')
 
             result_name = 'thermal_gradient_and_flux'
-            storage_obj = op2.thermal_gradient_and_flux
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                             RealTemperatureGradientAndFluxArray, None,
                                             'node', random_code=op2.random_code)
         elif op2.thermal == 8:  # 4 ?

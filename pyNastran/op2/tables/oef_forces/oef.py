@@ -422,10 +422,9 @@ class OEF:
             raise NotImplementedError('element_type=%s element_name=%s' % (
                 element_type, op2.element_name))
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         factor = op2.factor
         if op2.format_code == 1 and op2.num_wide == 9:  # real
@@ -528,10 +527,9 @@ class OEF:
         #if op2.element_type == 1: # CROD
         #result_name = 'thermalLoad_2D_3D'
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         factor = op2.factor
         size = op2.size
@@ -673,10 +671,9 @@ class OEF:
         size = op2.size
         if op2.format_code == 1 and op2.num_wide == 8:  # real
             #result_name = 'thermalLoad_CHBDY'
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata, None, None
-            op2._results._found_result(result_name)
-            slot = op2.get_result(result_name)
 
             if op2.format_code == 1 and op2.num_wide == 8:  # real
                 obj_vector_real = RealChbdyHeatFluxArray
@@ -740,10 +737,9 @@ class OEF:
         n = 0
         # 110-CONV
         result_name = prefix + 'conv_thermal_load' + postfix
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata, None, None
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         factor = op2.factor
         if op2.format_code == 1 and op2.num_wide == 4:

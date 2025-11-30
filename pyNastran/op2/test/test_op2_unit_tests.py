@@ -3773,7 +3773,7 @@ class TestOP2Main(Tester):
 
     def test_op2_good_sine_01(self):
         """tests freq_sine/good_sine.op2"""
-        op2_filename = os.path.join(MODEL_PATH, 'freq_sine', 'good_sine.op2')
+        op2_filename = MODEL_PATH / 'freq_sine' / 'good_sine.op2'
         make_geom = False
         write_bdf = False
         write_f06 = False

@@ -268,11 +268,11 @@ class OGS:
             obj_vector_real = GridPointSurfaceStrainsArray
         else:
             obj_vector_real = GridPointSurfaceStressesArray
-        if op2._results.is_not_saved(result_name):
+
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             op2.log.warning(f'skipping {result_name}')
             return ndata
-        op2._results._found_result(result_name)
-        slot = getattr(op2, result_name)
         n = 0
 
         #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
@@ -360,7 +360,8 @@ class OGS:
         """
         op2 = self.op2
         result_name = f'grid_point_{restype}_volume_direct'
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             op2.log.warning(f'skipping {result_name}')
             return ndata
 
@@ -368,8 +369,6 @@ class OGS:
             obj_vector_real = GridPointStrainsVolumeDirectArray
         else:
             obj_vector_real = GridPointStressesVolumeDirectArray
-        op2._results._found_result(result_name)
-        slot = getattr(op2, result_name)
         n = 0
 
         #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)

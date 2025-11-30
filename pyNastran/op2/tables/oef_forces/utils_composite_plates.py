@@ -43,11 +43,10 @@ def oef_shells_composite(op2: OP2, data, ndata, dt, unused_is_magnitude_phase,
         result_name = prefix + 'ctriar_composite_force' + postfix
     else:  # pragma: no cover
         raise NotImplementedError(op2.code_information())
-    if op2._results.is_not_saved(result_name):
-        return ndata, None, None
 
-    op2._results._found_result(result_name)
-    slot = op2.get_result(result_name)
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
+        return ndata, None, None
 
     n = 0
     factor = op2.factor

@@ -19,10 +19,9 @@ def oef_cgap(op2: OP2, data, ndata, dt, unused_is_magnitude_phase,
              result_type, prefix, postfix):
     """38-GAP"""
     result_name = prefix + 'cgap_force' + postfix
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
-    slot = op2.get_result(result_name)
 
     factor = op2.factor
     if op2.format_code == 1 and op2.num_wide == 9:  # real

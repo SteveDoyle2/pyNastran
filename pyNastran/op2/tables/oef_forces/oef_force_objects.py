@@ -4720,6 +4720,10 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
         self.itotal = 0
         self.ielement = 0
 
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
+
     def get_headers(self) -> list[str]:
         headers = [
             'fx', 'sfy', 'sfz', 'u', 'v', 'w', 'sv', 'sw'

@@ -31,6 +31,10 @@ class RandomBarArray(OES_Object):
             #self.addNewNode = self.addNewNodeSort2
 
     @property
+    def nnodes_per_element(self) -> int:
+        return 1
+
+    @property
     def is_real(self) -> bool:
         return True
 
@@ -345,4 +349,3 @@ class RandomBarStrainArray(RandomBarArray, StrainObject):
         ]
 
         return msg
-

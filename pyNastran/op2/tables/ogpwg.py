@@ -3,6 +3,7 @@ from struct import unpack
 from typing import TYPE_CHECKING
 from numpy import array
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.tables.utils import get_is_slot_saved
 from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -62,11 +63,10 @@ class OGPWG:
             return ndata
 
         result_name = 'grid_point_weight'
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
 
-        slot = op2.get_result(result_name)
         #print('  num_wide = %r' % self.num_wide)
         size = op2.size
         fmt_mo = mapfmt(b'36f', size)

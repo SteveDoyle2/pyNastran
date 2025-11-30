@@ -54,11 +54,10 @@ def oef_shells_nodal(op2: OP2, data, ndata, dt, is_magnitude_phase,
         #msg = 'name=%r type=%r' % (op2.element_name, op2.element_type)
         #return op2._not_implemented_or_skip(data, ndata, msg), None, None
 
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
 
-    slot = op2.get_result(result_name)
     nnodes_all = nnodes + 1
     numwide_real = 2 + nnodes_all * 9 # centroidal node is the + 1
     numwide_imag = 2 + nnodes_all * 17

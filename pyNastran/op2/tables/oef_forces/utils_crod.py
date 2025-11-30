@@ -43,11 +43,10 @@ def oef_crod(op2: OP2,
         # msg = 'sort1 Type=%s num=%s' % (op2.element_name, op2.element_type)
         # return op2._not_implemented_or_skip(data, ndata, msg)
 
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
 
-    slot = op2.get_result(result_name)
     if op2.format_code == 1 and op2.num_wide == 3:  # real
         ntotal = 3 * 4 * factor
         nelements = ndata // ntotal

@@ -13,6 +13,7 @@ from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.tables.utils import get_is_slot_saved
 
 from pyNastran.op2.tables.oqg_constraintForces.separation_distance import (
     SeparationDistanceArray)
@@ -153,10 +154,9 @@ class OBC:
         """C O N T A C T  P R E S S U R E  A N D  T R A C T I O N S"""
         op2 = self.op2
         result_name = 'contact_tractions_and_pressure'
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         ntotal = 20 * self.factor
         nnodes = ndata // ntotal
