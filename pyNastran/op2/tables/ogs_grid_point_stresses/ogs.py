@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from struct import Struct
-from numpy import frombuffer
+import numpy as np
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.tables.utils import get_is_slot_saved
 from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (
@@ -292,10 +292,10 @@ class OGS:
             ielement2 = obj.itotal + nelements
             itotal2 = ielement2
 
-            floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 11).copy()
+            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 11).copy()
             obj._times[obj.itime] = dt
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 11).copy()
+                ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 11).copy()
                 nids = ints[:, 0] // 10
                 eids = ints[:, 1]
                 assert nids.min() > 0, nids.min()
@@ -303,8 +303,8 @@ class OGS:
                 obj.node_element[itotal:itotal2, 1] = eids
 
             #[fiber, nx, ny, txy, angle, major, minor, tmax, ovm]
-            s4 = 'S%i' % size
-            strings = frombuffer(data, dtype=op2._uendian + s4).reshape(nelements, 11)[:, 2].copy()
+            s4 = 'S%i' % op2.size
+            strings = np.frombuffer(data, dtype=op2._uendian + s4).reshape(nelements, 11)[:, 2].copy()
             obj.location[itotal:itotal2] = strings
             obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:]#.copy()
             obj.itotal = itotal2
@@ -373,7 +373,7 @@ class OGS:
         n = 0
 
         #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
-        ntotal = 36 * factor  # 9 * 4
+        ntotal = 36 * op2.factor  # 9 * 4
         nelements = ndata // ntotal
         assert ndata % (nelements * ntotal) == 0, ndata % (nelements * ntotal)
         auto_return, is_vectorized = op2._create_oes_object4(
@@ -390,10 +390,10 @@ class OGS:
             ielement2 = obj.itotal + nelements
             itotal2 = ielement2
 
-            floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)#.copy()
+            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 9)#.copy()
             obj._times[obj.itime] = dt
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
+                ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 9)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node[itotal:itotal2] = nids
@@ -466,10 +466,10 @@ class OGS:
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 6)#.copy()
+                floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, 6)#.copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 6)
+                    ints = np.frombuffer(data, dtype=op2.idtype).reshape(nelements, 6)
                     nids = ints[:, 0] // 10
                     assert nids.min() > 0, nids.min()
                     obj.node[itotal:itotal2] = nids
@@ -480,10 +480,10 @@ class OGS:
                 obj.ielement = ielement2
                 n = ndata
             else:
-                s = Struct(mapfmt(op2._endian + b'i5f', size))
+                structi = Struct(mapfmt(op2._endian + b'i5f', op2.size))
                 nelements = ndata // ntotal  # 6*4
                 for unused_i in range(nelements):
-                    out = s.unpack(data[n:n+ntotal])
+                    out = structi.unpack(data[n:n+ntotal])
                     (nid_device, nx, ny, nz, txy, pressure) = out
                     nid = nid_device // 10
                     assert nid > 0, nid

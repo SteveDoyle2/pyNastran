@@ -9,7 +9,7 @@ import sys
 import copy
 import getpass
 from datetime import date
-from collections import defaultdict
+from collections import defaultdict, Counter
 from traceback import print_exc
 from typing import Optional, cast, TextIO, TYPE_CHECKING
 
@@ -213,10 +213,32 @@ class F06Writer(OP2_F06_Common):
 
     def get_all_results(self) -> list[str]:
         all_results = [
+            # 'bolt_results',
+            'modal_contribution', 'solution_set',
+            'strength_ratio', 'failure_indices',
+            'strain_energy', 'kinetic_energy',
+            'RADEFFM', 'ROQGM1', 'ROUGV1',
+            'RAECONS', 'RASCONS', 'RAFCONS', 'RADCONS'
+            'RARCONS', 'RANCONS', 'RAPCONS', 'RAGCONS',
+            'RAFEATC', 'RADEATC', 'RAQCONS',
+            'RAGEATC', 'RAEEATC', 'RASEATC',
+            'RAQEATC', 'RAREATC', 'RANEATC', 'RAPEATC',
+            # 'psds',
+            'psd', 'ato', 'no', 'crm', 'rms',
+            'abs', 'nrl', 'srss',
+            'trmbd', 'trmbu', 'cstm',
+            'acoustic',
             'stress', 'strain', 'stressa',
-            'elastic_strain', 'plastic_strain', 'thermal_strain', 'creep_strain',
+            'elastic_strain', 'plastic_strain',
+            'thermal_strain', 'creep_strain',
             'force', 'constraint_forces', 'thermal_load',
+            # 'vg_vf_response',
+            # 'superelement_tables',
             ] + self.get_table_types()
+
+        counts = Counter(all_results)
+        duplicates = [item for item, count in counts.items() if count > 1]
+        assert len(duplicates) == 0, duplicates
         return all_results
 
     def clear_results(self) -> None:
@@ -660,7 +682,7 @@ class F06Writer(OP2_F06_Common):
                 #else:
                     #is_compressed = True
 
-                res_length = get_result_length(res_types, res_key)
+                res_length = get_result_length(self, res_types, res_key)
                 if res_length == 0:
                     # skipped subcase; no saved results
                     continue

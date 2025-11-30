@@ -28,7 +28,6 @@ Defines the sub-OP2 class.  This should never be called outside of the OP2 class
    - _not_available(data, ndata)
    - _table_crasher(data, ndata)
    - _table_passer(data, ndata)
-   - _validate_op2_filename(op2_filename)
    - _create_binary_debug()
    - _make_tables()
    - _read_tables(table_name)
@@ -51,12 +50,12 @@ import numpy as np
 
 from cpylog import log_exc, __version__ as CPYLOG_VERSION
 if CPYLOG_VERSION > '1.6.0':
-    from cpylog import get_logger
+    from cpylog import SimpleLogger, get_logger
 else:  # pragma: no cover
-    from cpylog import get_logger2 as get_logger
+    from cpylog import SimpleLogger, get_logger2 as get_logger
 
 
-from pyNastran import is_release, stop_on_op2_table_passer, __version__
+from pyNastran import is_release, __version__
 from pyNastran.utils import PathLike, is_binary_file
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import EmptyRecordError
@@ -1851,36 +1850,10 @@ class OP2_Scalar(OP2Common, FortranFormat):
         if self.isubtable > -4:
             if self.table_name in GEOM_TABLES and not self.make_geom:
                 pass
-            elif stop_on_op2_table_passer:
+            elif self.stop_on_op2_table_passer:
                 print(f'dont skip table {self.table_name_str!r}')
                 raise RuntimeError(f'dont skip table {self.table_name_str!r}')
         return ndata
-
-    def _validate_op2_filename(self, op2_filename: Optional[str]) -> str:
-        """
-        Pops a GUI if the op2_filename hasn't been set.
-
-        Parameters
-        ----------
-        op2_filename : str
-            the filename to check (None -> gui)
-
-        Returns
-        -------
-        op2_filename : str
-            a valid file string
-
-        """
-        if op2_filename is None:
-            from pyNastran.utils.gui_io import load_file_dialog
-            wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \
-                "All files (*.*)|*.*"
-            wildcard_qt = "Nastran OP2 (*.op2);;All files (*)"
-            title = 'Please select a OP2 to load'
-            op2_filename, unused_wildcard_level = load_file_dialog(
-                title, wildcard_wx, wildcard_qt, dirname='')
-            assert op2_filename is not None, op2_filename
-        return op2_filename
 
     def _create_binary_debug(self) -> None:
         """Instatiates the ``self.binary_debug`` variable/file"""
@@ -1956,7 +1929,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             pass
 
         if self.read_mode != 2:
-            op2_filename = self._validate_op2_filename(op2_filename)
+            op2_filename = _validate_op2_filename(op2_filename)
             self.log.info(f'op2_filename = {str(op2_filename)!r}')
             self._setup_filenames(op2_filename, force=True)
             if not is_binary_file(op2_filename):
@@ -2529,7 +2502,9 @@ def main():  # pragma: no cover
     #f06_outname = model + '.test_op2.f06'
     #o.write_f06(f06_outname)
 
-def create_binary_debug(op2_filename: str, debug_file: str, log) -> tuple[bool, Any]:
+
+def create_binary_debug(op2_filename: str, debug_file: str,
+                        log: SimpleLogger) -> tuple[bool, Any]:
     """helper method"""
     binary_debug = None
 
@@ -2548,6 +2523,33 @@ def check_param_strings(key: str, value: str, allowed_values: set[str]) -> None:
     if value not in allowed_values:
         raise ValueError(f'PARAM key={key!r} value={value} '
                          f'not in allowed_values={allowed_values}')
+
+
+def _validate_op2_filename(op2_filename: Optional[str]) -> str:
+    """
+    Pops a GUI if the op2_filename hasn't been set.
+
+    Parameters
+    ----------
+    op2_filename : str
+        the filename to check (None -> gui)
+
+    Returns
+    -------
+    op2_filename : str
+        a valid file string
+
+    """
+    if op2_filename is None:
+        from pyNastran.utils.gui_io import load_file_dialog
+        wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \
+            "All files (*.*)|*.*"
+        wildcard_qt = "Nastran OP2 (*.op2);;All files (*)"
+        title = 'Please select a OP2 to load'
+        op2_filename, unused_wildcard_level = load_file_dialog(
+            title, wildcard_wx, wildcard_qt, dirname='')
+        assert op2_filename is not None, op2_filename
+    return op2_filename
 
 
 if __name__ == '__main__':  # pragma: no cover

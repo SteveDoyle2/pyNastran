@@ -87,6 +87,18 @@ class OP2(OP2_Scalar, OP2Writer):
         self.stop_on_unclosed_file = True
         self.allow_empty_records = False
 
+        # separate table_passer crasher; previously controlled by is_release
+        # TODO: currently no warn option
+        self.stop_on_op2_table_passer = False
+
+        ## True=turns on skipping of tables that aren't supported
+        # a missed table refers to the not_implemented_error_or_skip method
+        self.warn_on_op2_missed_table = True
+
+        # stop takes priority; previously controlled by is_release
+        # a missed table refers to the not_implemented_error_or_skip method
+        self.stop_on_op2_missed_table = False
+
         # you can pass a few more tests if you add the OP2 table name (i.e., OUGV1)
         # to the result key, but rarely do you want to do it
         self.use_table_name_in_code = False

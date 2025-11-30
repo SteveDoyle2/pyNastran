@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from cpylog import SimpleLogger
-from pyNastran import stop_on_op2_missed_table
 from pyNastran.utils import object_attributes, object_methods, object_stats, simplify_object_keys
 from pyNastran.utils.numpy_utils import integer_types
 
@@ -255,9 +254,9 @@ class BaseScalarObject(Op2Codes):
 
     def get_stats(self, short: bool=False):
         msg = 'get_stats is not implemented in %s\n' % self.__class__.__name__
-        if stop_on_op2_missed_table:
-            raise NotImplementedError(msg)
-        return msg
+        # if stop_on_op2_missed_table:
+        raise NotImplementedError(msg)
+        # return msg
 
 
 class ScalarObject(BaseScalarObject):

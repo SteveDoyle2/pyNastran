@@ -341,6 +341,7 @@ class OEF:
         """Table 4 parser for OEF1 thermal table"""
         op2 = self.op2
         if op2._results.is_not_saved('force'):
+            # self.log.debug('skipping OEF due to force')
             return ndata
         prefix, postfix = get_oef_prefix_postfix(op2)
 
@@ -834,6 +835,7 @@ class OEF:
 
         prefix, postfix = get_oef_prefix_postfix(op2)
         if prefix and op2._results.is_not_saved(prefix.strip('.')):
+            # op2.log.info(f'skipping {op2.table_name} due to prefix={prefix}')
             return ndata
 
         _sort_method = func1(op2.tCode)
@@ -878,13 +880,11 @@ class OEF:
             n, nelements, ntotal = oef_cvisc(self.op2, data, ndata, dt, is_magnitude_phase,
                                              result_type, prefix, postfix)
 
-        elif element_type == 34:  # cbar
-            # 34-CBAR
+        elif element_type == 34:  # cbar-34
             n, nelements, ntotal = oef_cbar_34(self.op2, data, ndata, dt, is_magnitude_phase,
                                                result_type, prefix, postfix)
 
-        elif element_type == 100:  # cbar
-            #100-BARS
+        elif element_type == 100:  # cbar-100
             n, nelements, ntotal = oef_cbar_100(self.op2, data, ndata, dt, is_magnitude_phase,
                                                 result_type, prefix, postfix)
 

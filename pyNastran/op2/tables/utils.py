@@ -6,6 +6,7 @@ if TYPE_CHECKING:
 
 def get_is_slot_saved(op2: OP2, result_name: str) -> tuple[bool, dict]:
     if op2._results.is_not_saved(result_name):
+        # op2.log.info(f'skipping {op2.table_name!r} due to {result_name!r}')
         return False, {}
     op2._results._found_result(result_name)
     slot = op2.get_result(result_name)

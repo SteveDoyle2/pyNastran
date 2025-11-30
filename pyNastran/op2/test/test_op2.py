@@ -58,7 +58,9 @@ def run_lots_of_files(files: list[str],
                       write_hdf5: bool=True, debug: bool=True, skip_files: Optional[list[str]]=None,
                       include_results: Optional[str]=None,
                       exclude_results: Optional[str]=None,
-                      stop_on_failure: bool=False, nstart: int=0, nstop: int=1000000000,
+                      stop_on_failure: bool=False,
+                      nstart: int=0, nstop: int=1000000000,
+                      stop_on_skip: bool=False,
                       short_stats: bool=False,
                       binary_debug: list[bool]=False,
                       compare: bool=True, quiet: bool=False, dev: bool=True, xref_safe: bool=False):
@@ -113,6 +115,7 @@ def run_lots_of_files(files: list[str],
                                      short_stats=short_stats,
                                      subcases=subcases, debug=debug,
                                      stop_on_failure=stop_on_failure,
+                                     stop_on_skip=stop_on_skip,
                                      binary_debug=binary_debug,
                                      compare=compare, dev=dev,
                                      xref_safe=xref_safe,
@@ -146,6 +149,7 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
             subcases: Optional[str] | list[str]=None,
             include_results: Optional[str]=None,
             exclude_results: Optional[str]=None,
+            stop_on_skip: bool=True,
             short_stats: bool=False, compare: bool=True,
             debug: bool=False, log: Any=None,
             binary_debug: bool=False, quiet: bool=False,
@@ -321,7 +325,11 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
     if subcases:
         op2.set_subcases(subcases)
         op2_nv.set_subcases(subcases)
-
+    if stop_on_skip:
+        op2.stop_on_op2_missed_table = True
+        # op2.stop_on_op2_table_passer = True
+        op2_nv.stop_on_op2_missed_table = True
+        # op2_nv.stop_on_op2_table_passer = True
 
     op2.include_exclude_results(
         exclude_results=exclude_results,
@@ -923,6 +931,7 @@ def main(argv=None, show_args: bool=True) -> None:
             is_testing=data['test'],
             slice_nodes=slice_nodes,
             slice_elements=slice_elements,
+            stop_on_skip=False,
         )
         prof.dump_stats('op2.profile')
 
@@ -961,8 +970,10 @@ def main(argv=None, show_args: bool=True) -> None:
             is_testing=data['test'],
             slice_nodes=slice_nodes,
             slice_elements=slice_elements,
+            stop_on_skip=False,
         )
     print("dt = %f" % (time.time() - time0))
+
 
 if __name__ == '__main__':  # pragma: no cover
     main(show_args=True)

@@ -406,7 +406,7 @@ class CSVWriter:
                 #else:
                     #is_compressed = True
 
-                res_length = get_result_length(res_types, res_key)
+                res_length = get_result_length(self.op2, res_types, res_key)
                 if res_length == 0:
                     # skipped subcase; no saved results
                     continue

@@ -851,28 +851,26 @@ class OUG:
                                                   is_cid=is_cid)
         elif op2.thermal == 2:  # ABS
             assert op2.table_name in [b'OUPV1'], op2.table_name
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealDisplacementArray, ComplexDisplacementArray,
                                            'node', random_code=op2.random_code)
         elif op2.thermal == 4:  # SRSS
             # F:\work\pyNastran\examples\Dropbox\move_tpl\ms103.op2
             assert op2.table_name in [b'OUPV1'], op2.table_name
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealDisplacementArray, ComplexDisplacementArray,
                                            'node', random_code=op2.random_code)
         elif op2.thermal == 8:  # NRL
             assert op2.table_name in [b'OUPV1'], op2.table_name
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealDisplacementArray, ComplexDisplacementArray,
                                            'node', random_code=op2.random_code)
         else:
             raise RuntimeError(op2.code_information())
             #n = op2._not_implemented_or_skip(data, ndata, 'bad thermal=%r table' % op2.thermal)
-        #else:
-            #raise NotImplementedError(op2.thermal)
         return n
 
-    def _read_oug_velocity(self, data: bytes, ndata: int):
+    def _read_oug_velocity(self, data: bytes, ndata: int) -> int:
         """
         table_code = 10
         """
@@ -914,17 +912,15 @@ class OUG:
                                                    'node', random_code=op2.random_code)
 
         elif op2.thermal == 2:
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealVelocityArray, ComplexVelocityArray,
                                            'node', random_code=op2.random_code)
         else:
             raise NotImplementedError(op2.thermal)
         return n
 
-    def _read_oug_acceleration(self, data: bytes, ndata: int):
-        """
-        table_code = 11
-        """
+    def _read_oug_acceleration(self, data: bytes, ndata: int) -> int:
+        """table_code = 11"""
         op2 = self.op2
         op2._setup_op2_subcase('acceleration')
 
@@ -973,11 +969,10 @@ class OUG:
                 n = self._read_oug_crm(data, ndata)
             elif op2.table_name in [b'OAGNO1', b'OAGNO2']:
                 n = self._read_oug_no(data, ndata)
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(op2.code_information())
         elif op2.thermal == 1:
             result_name = 'accelerations'
-            storage_obj = op2.accelerations
             is_saved, slot = get_is_slot_saved(op2, result_name)
             if not is_saved:
                 return ndata
@@ -1458,7 +1453,7 @@ def get_shock_prefix_postfix(thermal: int) -> tuple[str, str]:
     elif thermal == 8:
         prefix = 'nrl.'
     else:  # pragma: no cover
-        msg = 'thermal=%s' % thermal
+        msg = f'thermal={thermal}'
         raise NotImplementedError(msg)
 
     #assert op2.thermal in [0, 2, 4, 8], op2.code_information()

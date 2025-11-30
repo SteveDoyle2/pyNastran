@@ -32,6 +32,7 @@ except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
 import pyNastran
+
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import OP2, read_op2  # FatalError, FortranMarkerError
 from pyNastran.op2.op2_interface.op2_common import get_scode_word
@@ -583,7 +584,9 @@ class TestSATKOP2(Tester):
         # sort1
         # freqs = [  20.      20.943   21.93  ... 1861.173 1909.985 2000.   ]; dtype=float32
 
-        assert len(op2.op2_results.psd.cbar_force[(3, 5, 2, 0, 0, '', 'RANDOM  103')].freqs) == 127
+        key = (3, 5, 2, 0, 0, '', 'RANDOM  103')
+        case = op2.op2_results.psd.cbar_force[key]
+        assert len(case.freqs) == 127, len(case.freqs)
         # type=RealCBarForceArray ntimes=127 nelements=5; table_name='OEFPSD1'
         # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
         #                                    shear1, shear2, axial, torque]
@@ -1856,7 +1859,7 @@ class TestOP2Main(Tester):
             include_results=include_results,
             short_stats=False,
             compare=True, debug=False, binary_debug=True,
-            quiet=True,
+            quiet=True, stop_on_skip=False,
             stop_on_failure=True, dev=False,
             build_pandas=False, log=log)  # TODO: enable pandas...
         if IS_PANDAS:
@@ -2272,7 +2275,7 @@ class TestOP2Main(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True,
+                quiet=True, stop_on_skip=False,
                 stop_on_failure=True, dev=False,
                 build_pandas=False, log=log)
 
@@ -2380,7 +2383,7 @@ class TestOP2Main(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True,
+                quiet=True, stop_on_skip=False,
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
@@ -2441,7 +2444,7 @@ class TestOP2Main(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
-                quiet=True,
+                quiet=True, stop_on_skip=False,
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
@@ -2790,7 +2793,7 @@ class TestOP2Main(Tester):
         log = get_logger(level='warning')
         folder = os.path.join(MODEL_PATH, 'solid_bending')
         op2_filename = os.path.join(folder, 'solid_bending.op2')
-        model = OP2()
+        model = OP2(log=log)
         model.is_nx = False
 
         tables_to_skip = {
@@ -4042,7 +4045,7 @@ class TestOP2Main(Tester):
         assert len(op2res.rms.accelerations) == 1
         assert len(op2res.crm.accelerations) == 1
         assert len(op2res.no.accelerations) == 1
-        assert len(op2res.crm.cbar_force) == 1
+        assert len(op2res.crm.cbar_force) == 1, len(op2res.crm.cbar_force)
         assert len(op2res.psd.cbar_force) == 1
         assert len(op2res.rms.cbar_force) == 1
         assert len(op2res.no.cbar_force) == 1

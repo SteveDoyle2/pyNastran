@@ -96,15 +96,3 @@ __issue__ = 'https://github.com/SteveDoyle2/pyNastran/issues'
 __discussion_forum__ = 'https://groups.google.com/forum/#!forum/pynastran-discuss'
 
 is_release = True  ## True=turns on skipping of tables that aren't supported
-
-# separarate table_passer crasher; previously controlled by is_release
-# TODO: currently no warn option
-stop_on_op2_table_passer = False
-
-# stop takes priority; previously controlled by is_release
-# a missed table refers to the not_implemented_error_or_skip method
-stop_on_op2_missed_table = False
-
-## True=turns on skipping of tables that aren't supported
-# a missed table refers to the not_implemented_error_or_skip method
-warn_on_op2_missed_table = True

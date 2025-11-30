@@ -361,6 +361,7 @@ class OES(OP2Common2):
             191,  # VUBEAM
             256,  # CPYRAM
             227,  # CTRIAR
+            233, # CTRIAR-composite
             275,  # CPLSTS3
         ]
         if op2.element_type in elements_to_read:
