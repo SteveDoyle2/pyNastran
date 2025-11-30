@@ -50,7 +50,7 @@ def oef_cbush(op2: OP2, data, ndata, dt, is_magnitude_phase,
     else:
         raise NotImplementedError(op2.code_information())
 
-    # print(op2.code_information())
+    #print(op2.code_information())
     if op2._results.is_not_saved(result_name):
         return ndata, None, None
     # result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)

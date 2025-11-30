@@ -490,7 +490,6 @@ def oes_csolid(oes: OES,
         # 76 = 9 * 8 + 4  (HEXA)
         msg = 'skipping random CHEXA; numwide=67'
         # print(op2.code_information())
-        # asdf
         n = op2._not_implemented_or_skip(data, ndata, msg)
         nelements = None
         ntotal = None

@@ -2542,7 +2542,7 @@ class TestOP2Main(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=exclude_results, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
-                quiet=True,
+                quiet=True, stop_on_skip=False,
                 stop_on_failure=True, dev=False,
                 build_pandas=False, log=log)
 

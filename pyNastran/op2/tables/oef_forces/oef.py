@@ -335,6 +335,7 @@ class OEF:
             n = self._read_oef1_loads(data, ndata)
         else:
             n = op2._not_implemented_or_skip(data, ndata, 'thermal=%s' % op2.thermal)
+        assert n is not None, op2.code_information()
         return n
 
     def _read_oef1_thermal(self, data: bytes, ndata: int):
@@ -826,7 +827,7 @@ class OEF:
         return new_func
 
     # @_print_obj_name_on_crash
-    def _read_oef1_loads(self, data: bytes, ndata: int):
+    def _read_oef1_loads(self, data: bytes, ndata: int) -> int:
         """Reads the OEF1 table; stores the element forces/heat flux."""
         op2 = self.op2
         #self._apply_oef_ato_crm_psd_rms_no('') # TODO: just testing
@@ -875,6 +876,8 @@ class OEF:
             # 23-CDAMP4
             n, nelements, ntotal = oef_celas_cdamp(self.op2, data, ndata, dt, is_magnitude_phase,
                                                    result_type, prefix, postfix)
+            # if op2.table_name_str.startswith('OEFCR'):
+            #     raise RuntimeError(op2.table_name)
 
         elif element_type == 24:  # CVISC
             n, nelements, ntotal = oef_cvisc(self.op2, data, ndata, dt, is_magnitude_phase,

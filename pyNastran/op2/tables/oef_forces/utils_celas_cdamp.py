@@ -35,36 +35,37 @@ def oef_celas_cdamp(op2: OP2, data, ndata, dt, is_magnitude_phase,
     23-CDAMP4
 
     """
-    if op2.element_type == 11:
+    element_type = op2.element_type
+    if element_type == 11:
         result_name = prefix + 'celas1_force' + postfix
         obj_real = RealSpringForceArray
         obj_complex = ComplexSpringForceArray
-    elif op2.element_type == 12:
+    elif element_type == 12:
         result_name = prefix + 'celas2_force' + postfix
         obj_real = RealSpringForceArray
         obj_complex = ComplexSpringForceArray
-    elif op2.element_type == 13:
+    elif element_type == 13:
         result_name = prefix + 'celas3_force' + postfix
         obj_real = RealSpringForceArray
         obj_complex = ComplexSpringForceArray
-    elif op2.element_type == 14:
+    elif element_type == 14:
         result_name = prefix + 'celas4_force' + postfix
         obj_real = RealSpringForceArray
         obj_complex = ComplexSpringForceArray
 
-    elif op2.element_type == 20:
+    elif element_type == 20:
         result_name = prefix + 'cdamp1_force' + postfix
         obj_real = RealDamperForceArray
         obj_complex = ComplexDamperForceArray
-    elif op2.element_type == 21:
+    elif element_type == 21:
         result_name = prefix + 'cdamp2_force' + postfix
         obj_real = RealDamperForceArray
         obj_complex = ComplexDamperForceArray
-    elif op2.element_type == 22:
+    elif element_type == 22:
         result_name = prefix + 'cdamp3_force' + postfix
         obj_real = RealDamperForceArray
         obj_complex = ComplexDamperForceArray
-    elif op2.element_type == 23:
+    elif element_type == 23:
         result_name = prefix + 'cdamp4_force' + postfix
         obj_real = RealDamperForceArray
         obj_complex = ComplexDamperForceArray

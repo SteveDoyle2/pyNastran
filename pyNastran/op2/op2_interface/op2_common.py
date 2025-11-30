@@ -1637,7 +1637,8 @@ class OP2Common(Op2Codes, F06Writer):
         #self.log.debug('code = %s' % str(self.code))
         return self.code
 
-    def _not_implemented_or_skip(self, unused_data, ndata, msg=''):
+    def _not_implemented_or_skip(self, unused_data,
+                                 ndata: int, msg: str='') -> int:
         """
         A simple pass loop for unsupported tables that can be hacked on
         to crash the program everywhere that uses it.
@@ -1666,7 +1667,6 @@ class OP2Common(Op2Codes, F06Writer):
                     if msg == '':
                         self.log.warning(self.code_information())
                     self.log.warning(msg)
-                    #ddd
 
                     #if not('VUHEXA' in msg or 'VUPENTA' in msg or 'VUTETRA' in msg
                            #or 'Element Stress' in self.code_information()
@@ -1680,7 +1680,7 @@ class OP2Common(Op2Codes, F06Writer):
                 #else:
                 #    self.log.warning(self.code_information())
                 self._last_comment = msg
-            return ndata
+        return ndata
 
     @property
     def size(self) -> int:
@@ -2150,8 +2150,8 @@ class OP2Common(Op2Codes, F06Writer):
                 try:
                     build_obj(self.obj)
                 except AssertionError:
-                    print(self.code)
-                    print(self.code_information())
+                    log.error(str(self.code))
+                    log.error(self.code_information())
                     raise
 
             else:  # not vectorized
@@ -2246,8 +2246,8 @@ class OP2Common(Op2Codes, F06Writer):
                 try:
                     build_obj(self.obj)
                 except AssertionError:
-                    print(self.code)
-                    print(self.code_information())
+                    log.error(str(self.code))
+                    log.error(self.code_information())
                     raise
 
             else:  # not vectorized

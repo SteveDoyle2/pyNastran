@@ -22,11 +22,11 @@ def oef_cbeam(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
               result_type: str, prefix: str, postfix: str) -> int:
     """2-CBEAM"""
     n = 0
-    result_name = prefix + 'cbeam_force' + postfix
+    result_name = f'{prefix}cbeam_force{postfix}'
 
-    if op2._results.is_not_saved(result_name):
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
         return ndata, None, None
-    op2._results._found_result(result_name)
 
     # if op2.format_code == 1 and op2.num_wide == 9:  # real centroid ???
     # raise RuntimeError('is this used?')
@@ -79,19 +79,18 @@ def oef_cbeam(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
         if op2.sort_method == 2:
             msg = op2.code_information()
             if op2.read_mode == 2:
-                return op2._not_implemented_or_skip(data, ndata, msg), None, None
+                ndata = op2._not_implemented_or_skip(data, ndata, msg)
             return ndata, None, None
         # real - format_code == 1
         # random - format_code == 2
         # result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
-        slot = op2.get_result(result_name)
         ntotal = 400 * factor  # 1+(10-1)*11=100 ->100*4 = 400
         nelements = ndata // ntotal
         auto_return, is_vectorized = op2._create_oes_object4(
             nelements, result_name, slot, RealCBeamForceArray)
         if auto_return:
             op2._data_factor = 11
-            return nelements * op2.num_wide * 4, None, None
+            return nelements * ntotal, None, None
         obj = op2.obj
 
         if op2.use_vector and is_vectorized and op2.sort_method == 1:
@@ -130,7 +129,6 @@ def oef_cbeam(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
                                    nelements, ntotal, dt)
 
     elif result_type == 1 and op2.num_wide == 177:  # imag
-        slot = op2.get_result(result_name)
         ntotal = 708 * factor  # 177*4
         nelements = ndata // ntotal
 
@@ -138,7 +136,7 @@ def oef_cbeam(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
             nelements, result_name, slot, ComplexCBeamForceArray)
         if auto_return:
             op2._data_factor = 11
-            return nelements * op2.num_wide * 4, None, None
+            return nelements * ntotal, None, None
 
         obj = op2.obj
         if op2.use_vector and is_vectorized and op2.sort_method == 1:
@@ -193,6 +191,7 @@ def oef_cbeam(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
         # raise RuntimeError(msg)
         # print(msg)
         # return op2._not_implemented_or_skip(data, ndata, msg), None, None
+    assert n is not None, op2.code_information()
     return n, nelements, ntotal
 
 

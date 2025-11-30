@@ -1901,11 +1901,11 @@ class OES(OP2Common2):
             elif hasattr(obj, 'element'):
                 eids = obj.element
             else:
-                print(op2.code_information())
+                op2.log.error(op2.code_information())
                 raise RuntimeError(''.join(obj.get_stats()))
             if eids.min() <= 0:
                 #print(obj.code_information())
-                print(''.join(obj.get_stats()))
+                op2.log.error(''.join(obj.get_stats()))
                 raise RuntimeError(f'{op2.element_name}-{op2.element_type}: {eids}')
         #else:
             #assert._times
@@ -3823,7 +3823,7 @@ class OES(OP2Common2):
             #nlayers = nelements * 2
             if op2.sort_method == 2:
                 op2.log.warning('real cbend stress/strain for SORT2 is not supported')
-                print(op2.code_information())
+                # print(op2.code_information())
                 return nelements * ntotal, None, None
 
             auto_return, is_vectorized = op2._create_oes_object4(

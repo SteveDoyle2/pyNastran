@@ -148,7 +148,7 @@ class FortranFormat:
 
             data, ndata = op2_reader._read_record_ndata()
             n = table4_parser(data, ndata)
-            assert isinstance(n, integer_types), self.table_name
+            assert isinstance(n, integer_types), (self.table_name, table4_parser)
 
             self._reset_vector_counter()
 

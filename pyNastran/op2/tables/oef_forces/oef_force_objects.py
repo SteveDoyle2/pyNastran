@@ -1521,6 +1521,7 @@ class RealCBeamForceArray(RealForceObject):
         self.data = np.full((ntimes, ntotal, 8), np.nan, fdtype)
 
     def finalize(self):
+        assert self.data is not None
         sd = self.data[0, :, 0]
         i_sd_zero = np.where(np.isfinite(sd) & (sd != 0.0))[0]
         i_node_zero = np.where(self.element_node[:, 1] != 0)[0]

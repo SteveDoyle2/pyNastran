@@ -148,7 +148,6 @@ class OBG:
             op2.binary_debug.write('  isubcase       = %r\n' % op2.isubcase)
         op2._read_title(data)
         op2._write_debug_bits()
-        # print(op2.code_information())
 
     def read_4(self, data: bytes, ndata: int) -> int:
         """C O N T A C T  P R E S S U R E  A N D  T R A C T I O N S"""
