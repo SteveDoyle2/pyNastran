@@ -19,21 +19,29 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def oes_cbush_102(op2: OP2,
                   data, ndata, dt, is_magnitude_phase: bool,
-                  result_type: str, prefix: str, postfix: str):
+                  result_type: int, prefix: str, postfix: str):
     """
     reads stress/strain for element type:
      - 102 : CBUSH
 
     """
     # n = 0
-    factor = op2.factor
     stress_strain = 'stress' if op2.is_stress else 'strain'
     result_name = f'{prefix}cbush_{stress_strain}{postfix}'
 
+    return _oes_cbush(
+        op2, data, ndata, dt, is_magnitude_phase,
+        result_type, result_name)
+
+
+def _oes_cbush(op2: OP2,
+               data, ndata, dt, is_magnitude_phase: bool,
+               result_type: int, result_name: str):
     is_saved, slot = get_is_slot_saved(op2, result_name)
     if not is_saved:
         return ndata, None, None
 
+    factor = op2.factor
     table_name = op2.table_name_str
     if result_type in [0, 2] and op2.num_wide == 7:  # real, random
         obj_vector_real = RealBushStressArray if op2.is_stress else RealBushStrainArray
@@ -63,9 +71,9 @@ def oes_cbush_102(op2: OP2,
         else:
             n = oes_cbush_real_7(op2, data, obj,
                                  nelements, ntotal, dt)
+
     elif result_type == 1 and op2.num_wide == 13:  # imag
         obj_complex = ComplexCBushStressArray if op2.is_stress else ComplexCBushStrainArray
-
         ntotal = 52 * factor  # 4*13
         nelements = ndata // ntotal
         auto_return, is_vectorized = op2._create_oes_object4(
@@ -96,9 +104,11 @@ def oes_cbush_102(op2: OP2,
                                      nelements, ntotal,
                                      is_magnitude_phase)
     elif result_type == 1 and op2.num_wide == 7 and table_name == 'OESPSD1':
+        # using recursion to go back
         result_type = 2
-        n, nelements, ntotal = oes_cbush(op2, data, ndata, dt, is_magnitude_phase,
-                                         result_type, prefix, postfix)
+        n, nelements, ntotal = _oes_cbush(
+            op2, data, ndata, dt, is_magnitude_phase,
+            result_type, result_name)
     else:  # pragma: no cover
         raise RuntimeError(op2.code_information())
         # msg = op2.code_information()
@@ -106,12 +116,15 @@ def oes_cbush_102(op2: OP2,
         # return op2._not_implemented_or_skip(data, ndata, msg)
     return n, nelements, ntotal
 
+
 def oes_cbush_real_7(op2: OP2, data: bytes,
                      obj: RealBushStressArray | RealBushStrainArray,
-                     nelements: int, ntotal: int, dt, debug: bool=False) -> int:
+                     nelements: int, ntotal: int, dt,
+                     debug: bool=False) -> int:
     n = 0
+    sort_method = op2.sort_method
     struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'6f', op2.size))
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(sort_method))
     nonlinear_factor = op2.nonlinear_factor
     #print(add_sort_x)
     #print('obj.is_sort1 =', obj.is_sort1, obj.table_name)
@@ -125,7 +138,7 @@ def oes_cbush_real_7(op2: OP2, data: bytes,
 
         (eid_device, tx, ty, tz, rx, ry, rz) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, nonlinear_factor, op2.sort_method)
+            eid_device, nonlinear_factor, sort_method)
         if debug:  # pragma: no cover
             print(f'CBUSH: eid_device={eid_device} eid={eid} dt={nonlinear_factor} nf={nonlinear_factor} -> {obj.data.shape}')
 

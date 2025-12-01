@@ -35,7 +35,6 @@ from pyNastran.op2.op2_interface.function_codes import func1, func7
 
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.tables.oug.oug import get_shock_prefix_postfix
-from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import RealBar10NodesStressArray, RealBar10NodesStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealNonlinearBeamStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressArray
@@ -72,14 +71,15 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_composite_nx import R
 
 from pyNastran.op2.tables.oes_stressStrain.utils_cplstn import oes_cplstn_nx
 from pyNastran.op2.tables.oes_stressStrain.utils_spring import oes_celas
-from pyNastran.op2.tables.oes_stressStrain.utils_rod import oes_crod
+from pyNastran.op2.tables.oes_stressStrain.utils_crod import oes_crod
 from pyNastran.op2.tables.oes_stressStrain.utils_ctriax import oes_ctriax6_53
 
-from pyNastran.op2.tables.oes_stressStrain.utils_bar import (
-    oes_cbar_34, oes_cbar100_real_10,
+from pyNastran.op2.tables.oes_stressStrain.utils_cbar import (
+    oes_cbar_34, oes_cbar_100,
 )
-from pyNastran.op2.tables.oes_stressStrain.utils_beam import oes_cbeam_2
+from pyNastran.op2.tables.oes_stressStrain.utils_cbeam import oes_cbeam_2
 from pyNastran.op2.tables.oes_stressStrain.utils_cbush import oes_cbush_102
+from pyNastran.op2.tables.oes_stressStrain.utils_cbend import oes_cbend_69
 from pyNastran.op2.tables.oes_stressStrain.utils_cbush1d import oes_cbush1d
 from pyNastran.op2.tables.oes_stressStrain.utils_cshear import oes_cshear_4
 
@@ -93,7 +93,6 @@ from pyNastran.op2.tables.oes_stressStrain.utils_composite_plates import (
 )
 from pyNastran.op2.tables.oes_stressStrain.utils_solid import oes_csolid
 from pyNastran.op2.tables.oes_stressStrain.utils import (
-    oes_cbend_real_21,
     oes_weldp_msc_real_8, oes_weldp_msc_complex_15,
     oes_fastp_msc_real_7, oes_fastp_msc_complex_13,
     _oes_csolid2_real,
@@ -1654,8 +1653,8 @@ class OES(OP2Common2):
 
         elif op2.element_type == 69:  # cbend
             # 69-CBEND
-            n, nelements, ntotal = self._oes_cbend(data, ndata, dt, is_magnitude_phase,
-                                                   result_type, prefix, postfix)
+            n, nelements, ntotal = oes_cbend_69(self.op2, data, ndata, dt, is_magnitude_phase,
+                                                result_type, prefix, postfix)
 
         elif op2.element_type == 86:  # cgap
             # 86-GAPNL
@@ -1674,8 +1673,8 @@ class OES(OP2Common2):
 
         elif op2.element_type == 100:  # bars
             # 100-BARS
-            n, nelements, ntotal = self._oes_cbar_100(data, ndata, dt, is_magnitude_phase,
-                                                      result_type, prefix, postfix)
+            n, nelements, ntotal = oes_cbar_100(self.op2, data, ndata, dt, is_magnitude_phase,
+                                                result_type, prefix, postfix)
 
         #-----------------------------------------------------------------------
 
@@ -3777,213 +3776,6 @@ class OES(OP2Common2):
             raise NotImplementedError(op2.code_information())
         return n, nelements, ntotal
 
-    def _oes_cbend(self, data, ndata, dt, is_magnitude_phase,
-                   result_type, prefix, postfix):
-        """
-        reads stress/strain for element type:
-         - 69 : CBEND
-
-        """
-        op2 = self.op2
-        if op2.is_stress:
-            result_name = prefix + 'cbend_stress' + postfix
-            obj_vector_real = RealBendStressArray
-            obj_vector_complex = ComplexBendStressArray
-            obj_vector_random = RandomBendStressArray
-        else:
-            result_name = prefix + 'cbend_strain' + postfix
-            obj_vector_real = RealBendStrainArray
-            obj_vector_complex = ComplexBendStrainArray
-            obj_vector_random = RandomBendStrainArray
-
-        is_saved, slot = get_is_slot_saved(op2, result_name)
-        if not is_saved:
-            return ndata, None, None
-
-        #print(op2.code_information())
-        factor = op2.factor
-        if result_type == 0 and op2.num_wide == 21:  # real
-            #TCODE,7 =0 Real
-            #2 GRID I External Grid Point identification number
-            #3 CA RS Circumferential Angle
-            #4 EC RS Long. strain at Point C
-            #5 ED RS Long. strain at Point D
-            #6 EE RS Long. strain at Point E
-            #7 EF RS Long. strain at Point F
-            #8 EMAX RS Maximum strain
-            #9 EMIN RS Minimum strain
-            #10 MST RS Margin of Safety in Tension
-            #11 MSC RS Margin of Safety in Compression
-            #Words 2 through 11 repeat 002 times
-            n = 0
-            ntotal = 84 * op2.factor  # 4*21
-            nelements = ndata // ntotal
-            assert ndata % ntotal == 0, 'ndata=%s ntotal=%s nelements=%s error=%s' % (ndata, ntotal, nelements, ndata % ntotal)
-
-            #nlayers = nelements * 2
-            if op2.sort_method == 2:
-                op2.log.warning('real cbend stress/strain for SORT2 is not supported')
-                # print(op2.code_information())
-                return nelements * ntotal, None, None
-
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, obj_vector_real)
-            if auto_return:
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            assert obj is not None
-            if op2.use_vector and is_vectorized and op2.sort_method == 1 and 0:
-                n = nelements * ntotal
-                itotal = obj.ielement
-                ielement2 = obj.itotal + nelements
-                itotal2 = ielement2
-
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 4)
-                itime = obj.itime
-                obj._times[itime] = dt
-                if itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 4)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
-
-                #[max_strain, avg_strain, margin]
-                obj.data[itime, itotal:itotal2, :] = floats[:, 1:].copy()
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                n = oes_cbend_real_21(op2, data, obj,
-                                      nelements, ntotal, dt)
-
-            #msg = ''
-            #if op2.read_mode == 2:
-                #msg = op2.code_information()
-            #n = op2._not_implemented_or_skip(data, ndata, msg)
-            #return n, None, None
-        elif result_type == 1 and op2.num_wide == 21:  # complex
-            n = 0
-            ntotal = 84 * op2.factor  # 4*21
-            nelements = ndata // ntotal
-            assert ndata % ntotal == 0, 'ndata=%s ntotal=%s nelements=%s error=%s' % (ndata, ntotal, nelements, ndata % ntotal)
-            #TCODE,7 =1 Real / Imaginary
-            #2 GRID I External Grid Point identification number
-            #3 CA RS Circumferential Angle
-            #4 SCR RS Long. Stress at Point C
-            #5 SDR RS Long. Stress at Point D
-            #6 SER RS Long. Stress at Point E
-            #7 SFR RS Long. Stress at Point F
-            #8 SCI RS Long. Stress at Point C
-            #9 SDI RS Long. Stress at Point D
-            #10 SEI RS Long. Stress at Point E
-            #11 SFI RS Long. Stress at Point F
-            #Words 2 through 11 repeat 002 times
-
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, obj_vector_complex)
-            if auto_return:
-                assert ntotal == op2.num_wide * 4
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            assert obj is not None
-            if op2.use_vector and is_vectorized and op2.sort_method == 1 and 0:
-                n = nelements * 4 * op2.num_wide
-                itotal = obj.ielement
-                ielement2 = obj.itotal + nelements
-                itotal2 = ielement2
-
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 4)
-                itime = obj.itime
-                obj._times[itime] = dt
-
-                if itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 4)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
-
-                #[max_strain, avg_strain, margin]
-                obj.data[itime, itotal:itotal2, :] = floats[:, 1:].copy()
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                n = oes_cbend_complex_21(op2, data, obj, nelements, ntotal,
-                                         is_magnitude_phase)
-
-        elif result_type == 2 and op2.num_wide == 13:
-            n = 0
-            ntotal = 52 * op2.factor  # 4*13
-            nelements = ndata // ntotal
-            #TCODE,7 =2 Real
-            #2 GRID I External Grid Point identification number
-            #3 CA RS Circumferential Angle
-            #4 SC RS Long. Stress at Point C
-            #5 SD RS Long. Stress at Point D
-            #6 SE RS Long. Stress at Point E
-            #7 SF RS Long. Stress at Point F
-            #Words 2 through 7 repeat 002 times
-            #if op2.table_name != "OESPSD2":
-                #msg = ''
-                #if op2.read_mode == 2:
-                    #msg = op2.code_information()
-                #n = op2._not_implemented_or_skip(data, ndata, msg)
-                #return n, None, None
-
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, obj_vector_random)
-            if auto_return:
-                assert ntotal == op2.num_wide * 4
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            if op2.use_vector and is_vectorized and op2.sort_method == 1 and 0:
-                n = nelements * 4 * op2.num_wide
-                itotal = obj.ielement
-                ielement2 = obj.itotal + nelements
-                itotal2 = ielement2
-
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 4)
-                itime = obj.itime
-                obj._times[itime] = dt
-                if itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 4)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
-
-                #[max_strain, avg_strain, margin]
-                obj.data[itime, itotal:itotal2, :] = floats[:, 1:].copy()
-                obj.itotal = itotal2
-                obj.ielement = ielement2
-            else:
-                ntotali = 24
-                struct1 = Struct(op2._endian + op2._analysis_code_fmt)
-                struct2 = Struct(op2._endian + b'i5f')
-
-                for unused_i in range(nelements):
-                    edata = data[n:n + 4]
-                    #self.show_data(edata)
-                    eid_device, = struct1.unpack(edata)
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, op2.nonlinear_factor, op2.sort_method)
-
-                    n += 4
-                    for unused_i in range(2):
-                        edata = data[n:n + ntotali]
-                        out = struct2.unpack(edata)
-                        if op2.is_debug_file:
-                            op2.binary_debug.write('BEND-69 - eid=%s dt=%s %s\n' % (eid, dt, str(out)))
-                        #print('BEND-69 - eid=%s dt=%s %s\n' % (eid, dt, str(out)))
-
-                        (grid, angle, sc, sd, se, sf) = out
-                        obj.add_sort1(dt, eid, grid, angle, sc, sd, se, sf)
-                        n += ntotali
-
-        else:  # pragma: no cover
-            raise RuntimeError(op2.code_information())
-        return n, nelements, ntotal
-
     def _oes_cgap_nonlinear(self, data, ndata, dt, is_magnitude_phase,
                             result_type, prefix, postfix):
         """
@@ -4135,70 +3927,6 @@ class OES(OP2Common2):
             msg = op2.code_information()
             raise NotImplementedError(msg)
             #return op2._not_implemented_or_skip(data, ndata, msg)
-        else:  # pragma: no cover
-            raise RuntimeError(op2.code_information())
-        return n, nelements, ntotal
-
-    def _oes_cbar_100(self, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
-                      result_type: str, prefix: str, postfix: str):
-        """
-        reads stress/strain for element type:
-         - 100 : BARS
-        """
-        op2 = self.op2
-        n = 0
-        stress_strain = 'stress' if op2.is_stress else 'strain'
-        result_name = f'{prefix}cbar_{stress_strain}_10nodes{postfix}'
-
-        is_saved, slot = get_is_slot_saved(op2, result_name)
-        if not is_saved:
-            return ndata, None, None
-
-        factor = op2.factor
-        if result_type == 0 and op2.num_wide == 10:  # real
-            if op2.is_stress:
-                obj_vector_real = RealBar10NodesStressArray
-            else:
-                obj_vector_real = RealBar10NodesStrainArray
-
-            ntotal = 10 * 4 * op2.factor
-            nelements = ndata // ntotal
-
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, obj_vector_real)
-            if auto_return:
-                return ndata, None, None
-
-            if op2.is_debug_file:
-                op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                #op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                op2.binary_debug.write('  #elementi = [eid_device, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]\n')
-                op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-            obj = op2.obj
-
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                # self.itime = 0
-                # self.ielement = 0
-                # self.itotal = 0
-                #self.ntimes = 0
-                #self.nelements = 0
-                n = nelements * ntotal
-
-                istart = obj.itotal
-                iend = istart + nelements
-                obj._times[obj.itime] = dt
-
-                self.obj_set_element(obj, istart, iend, data, nelements)
-
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 10)
-                #[sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
-                obj.data[obj.itime, istart:iend, :] = floats[:, 1:].copy()
-            else:
-                n = oes_cbar100_real_10(op2, data, obj, nelements, ntotal, dt)
-
-        elif result_type == 1 and op2.num_wide == 16:  # complex
-            msg = op2.code_information()
-            return op2._not_implemented_or_skip(data, ndata, msg), None, None
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         return n, nelements, ntotal
@@ -4793,46 +4521,4 @@ def oes_csolid_nonlinear_hyperelastic_real(op2: OP2, data: bytes,
                     obj.add_node_sort1(dt, eid, inode, grid,
                                        sxx, syy, szz, txy, tyz, txz, ovm)
             n += 60
-    return n
-
-
-def oes_cbend_complex_21(op2: OP2, data: bytes,
-                         obj: ComplexBendStressArray | ComplexBendStrainArray,
-                         nelements: int, ntotal: int, is_magnitude_phase: bool) -> int:
-    n = 0
-    #size = op2.size
-    ntotali = 40
-    struct1 = Struct(op2._endian + op2._analysis_code_fmt)
-    struct2 = Struct(op2._endian + b'i9f')
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-
-    for unused_i in range(nelements):
-        edata = data[n:n + 4]
-        eid_device, = struct1.unpack(edata)
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-
-        n += 4
-        for unused_j in range(2):
-            edata = data[n:n + ntotali]
-            out = struct2.unpack(edata)
-            if op2.is_debug_file:
-                op2.binary_debug.write('BEND-69 - eid=%s %s\n' % (eid, str(out)))
-            #print('BEND-69 - eid=%s %s\n' % (eid, str(out)))
-
-            (grid, angle, scr, sdr, ser, sfr,
-             sci, sdi, sei, sfi) = out
-
-            if is_magnitude_phase:
-                sc = polar_to_real_imag(scr, sci)
-                sd = polar_to_real_imag(sdr, sdi)
-                se = polar_to_real_imag(ser, sei)
-                sf = polar_to_real_imag(sfr, sfi)
-            else:
-                sc = complex(scr, sci)
-                sd = complex(sdr, sdi)
-                se = complex(ser, sei)
-                sf = complex(sfr, sfi)
-            add_sort_x(dt, eid, grid, angle, sc, sd, se, sf)
-            n += ntotali
     return n

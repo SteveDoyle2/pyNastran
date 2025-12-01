@@ -7,46 +7,15 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
-from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import RealBar10NodesStressArray, RealBar10NodesStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_fast import ComplexFastStressArray, ComplexFastStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_weld import ComplexWeldStressArray, ComplexWeldStrainArray
-from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateStressArray, RealCompositePlateStrainArray
-#RealCompositePlateStressStrengthRatioArray, RealCompositePlateStrainStrengthRatioArray = None, None
-#RealCompositePlateStrainStrengthRatioArray = None
-from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates_strength_ratio import RealCompositePlateStressStrengthRatioArray  # , RealCompositePlateStrainStrengthRatioArray
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressArray
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_plate_strain import RealCPLSTRNPlateStressArray, RealCPLSTRNPlateStrainArray
-from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStrainArray, RealShearStressArray
-from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStrainArray, RealSolidStressArray
+
+#from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStrainArray, RealSolidStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidStressArrayNx, RealSolidStrainArrayNx
-from pyNastran.op2.tables.oes_stressStrain.real.oes_bend import RealBendStressArray, RealBendStrainArray
 
-
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamStressArray, ComplexBeamStrainArray
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import (
-    ComplexPlateStressArray, ComplexPlateStrainArray)
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import (
-    ComplexLayeredCompositeStrainArray, ComplexLayeredCompositeStressArray,
-    ComplexLayeredCompositesArray)
-
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates_vm import (
-    ComplexPlateVMStressArray, ComplexPlateVMStrainArray)
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriaxStressArray
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray, ComplexSpringStrainArray
-#from pyNastran.op2.tables.oes_stressStrain.complex.oes_bend import ComplexBendStressArray, ComplexBendStrainArray
-
-from pyNastran.op2.tables.oes_stressStrain.random.oes_bars import RandomBarStressArray, RandomBarStrainArray
-#from pyNastran.op2.tables.oes_stressStrain.random.oes_bend import RandomBendStressArray, RandomBendStrainArray
-from pyNastran.op2.tables.oes_stressStrain.random.oes_plates import RandomPlateStressArray, RandomPlateStrainArray
-from pyNastran.op2.tables.oes_stressStrain.random.oes_plates_vm import RandomPlateVMStressArray, RandomPlateVMStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_solids import RandomSolidStressArray, RandomSolidStrainArray
-from pyNastran.op2.tables.oes_stressStrain.random.oes_shear import RandomShearStressArray, RandomShearStrainArray
-#from pyNastran.op2.tables.oes_stressStrain.random.oes_composite_plates import RandomCompositePlateStressArray, RandomCompositePlateStrainArray
 
 #from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 #from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_bush import RealNonlinearBushArray
@@ -55,7 +24,6 @@ from pyNastran.op2.tables.oes_stressStrain.random.oes_shear import RandomShearSt
 #from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
-
 
 
 def obj_set_element(op2: OP2, obj,
@@ -213,37 +181,6 @@ def oes_fastp_msc_complex_13(op2: OP2,
             moment_z = complex(rmoment_z, imoment_z)
         add_sort_x(dt, eid, force_x, force_y, force_z, moment_x, moment_y, moment_z)
         n += ntotal
-    return n
-
-
-def oes_cbend_real_21(op2: OP2, data: bytes,
-                      obj: RealBendStressArray | RealBendStrainArray,
-                      nelements: int, ntotal: int, dt) -> int:
-    n = 0
-    ntotali = 40 * op2.factor
-    struct1 = Struct(op2._endian + op2._analysis_code_fmt)
-    struct2 = Struct(op2._endian + b'i9f')
-    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-
-    #print('ntimes =', nelements)
-    for unused_i in range(nelements):
-        edata = data[n:n + 4]
-        eid_device, = struct1.unpack(edata)
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, op2.nonlinear_factor, op2.sort_method)
-        n += 4
-
-        for unused_j in range(2):
-            edata = data[n:n + ntotali]
-            out = struct2.unpack(edata)
-            if op2.is_debug_file:
-                op2.binary_debug.write('BEND-69 - eid=%s %s\n' % (eid, str(out)))
-            #print('BEND-69 - eid=%s %s\n' % (eid, str(out)))
-
-            (grid, angle, sc, sd, se, sf, omax, omin, mst, msc) = out
-
-            add_sort_x(dt, eid, grid, angle, sc, sd, se, sf, omax, omin, mst, msc)
-            n += ntotali
     return n
 
 

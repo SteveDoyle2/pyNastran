@@ -2,6 +2,7 @@
 import os
 import copy
 import unittest
+from io import StringIO
 from pathlib import Path
 
 import numpy as np
@@ -38,6 +39,7 @@ from pyNastran.op2.op2 import OP2, read_op2  # FatalError, FortranMarkerError
 from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2, main as test_op2
+from pyNastran.op2.result_objects.contact_traction_and_pressure import RealContactTractionAndPressureArray
 
 from pyNastran.bdf.test.test_bdf_unit_tests import Tester
 from pyNastran.bdf.cards.test.utils import save_load_deck
@@ -61,6 +63,44 @@ OP2_TEST = PKG_PATH / 'op2' / 'test'
 
 class TestOP2Unit(Tester):
     """various OP2 tests"""
+    def test_traction(self):
+        cls = RealContactTractionAndPressureArray
+
+        isubcase = 1
+        nnode = 10
+        nodes = np.arange(1, nnode+1, dtype='int32')
+        gridtype = np.zeros(nnode, dtype='int32')
+        node_gridtype = np.vstack([nodes, gridtype])
+        data = np.zeros((1, nnode, 4), dtype='float32')
+
+        table_name = 'OBC1'
+        modes = np.array([1], dtype='int32')
+        eigenvalues = np.array([2.], dtype='float32')
+        mode_cycles = np.array([3.], dtype='float32')
+
+        obj1 = cls.add_static_case(
+            table_name, node_gridtype, data,
+            isubcase,
+            is_msc=False)
+
+        obj2 = cls.add_modal_case(
+            table_name, node_gridtype, data,
+            isubcase, modes, eigenvalues, mode_cycles,
+            is_msc=False)
+
+        times = np.array([3.154], dtype='float32')
+        obj3 = cls.add_transient_case(
+            table_name, node_gridtype, data,
+            isubcase, times,
+            is_msc=False)
+        obj1.get_stats()
+        obj2.get_stats()
+        obj3.get_stats()
+        f06_file = StringIO()
+        obj1.write_f06(f06_file)
+        obj2.write_f06(f06_file)
+        obj3.write_f06(f06_file)
+
     def test_grid_point_weight(self):
         """tests GridPointWeight"""
         reference_point = 0
@@ -728,9 +768,22 @@ class TestSATKOP2(Tester):
 
 
 class TestNX(Tester):
-    def test_nx_beam_psd(self):
+    def test_nx_cbush_psd(self):
         log = get_logger(level='warning')
-        folder = MODEL_PATH / 'bugs' / 'cbeam_example'
+        folder = MODEL_PATH / 'bugs' / 'random_cbush_example'
+        op2_filename = folder / 'cbush_example.op2'
+        bdf_filename = folder / 'cbush_example.bdf'
+        op2_model, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=False, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=True, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_nx_cbeam_psd(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'bugs' / 'random_cbeam_example'
         op2_filename = folder / 'cbeam_example.op2'
         bdf_filename = folder / 'cbeam_example.bdf'
         op2_model, unused_is_passed = run_op2(
@@ -3756,6 +3809,10 @@ class TestOP2Main(Tester):
         write_f06 = False
         log = get_logger(level='warning')
         op2_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.op2')
+
+        argv = ['test_op2', op2_filename, '-tgc', '--quiet', '--safe']
+        test_op2(argv, show_args=False)
+
         read_op2(op2_filename, log=log)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                 write_f06=write_f06,
@@ -3767,9 +3824,6 @@ class TestOP2Main(Tester):
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                 write_f06=write_f06,
                 log=log, stop_on_failure=True, quiet=True)
-
-        argv = ['test_op2', op2_filename, '-tgc', '--quiet', '--safe']
-        test_op2(argv, show_args=False)
 
     def test_op2_good_sine_01(self):
         """tests freq_sine/good_sine.op2"""

@@ -32,7 +32,7 @@ from pyNastran.op2.op2_interface.op2_codes import SORT1_TABLES_BYTES, TABLES_BYT
 from pyNastran.op2.tables.oef_forces.utils_celas_cdamp import oef_celas_cdamp
 from pyNastran.op2.tables.oef_forces.utils_cbar import oef_cbar_34, oef_cbar_100
 from pyNastran.op2.tables.oef_forces.utils_crod import oef_crod
-from pyNastran.op2.tables.oef_forces.utils_visc import oef_cvisc
+from pyNastran.op2.tables.oef_forces.utils_cvisc import oef_cvisc
 from pyNastran.op2.tables.oef_forces.utils_cgap import oef_cgap
 from pyNastran.op2.tables.oef_forces.utils_cbend import oef_cbend
 from pyNastran.op2.tables.oef_forces.utils_cbush import oef_cbush

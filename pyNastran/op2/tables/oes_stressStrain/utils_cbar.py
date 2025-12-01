@@ -14,6 +14,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArr
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_bars import RandomBarStressArray, RandomBarStrainArray
 
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import RealBar10NodesStressArray, RealBar10NodesStrainArray
+
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -307,6 +309,69 @@ def oes_cbar_random_10(op2: OP2, data: bytes,
                    s1a, s2a, s3a, s4a, axial,
                    s1b, s2b, s3b, s4b)
     return n
+
+
+def oes_cbar_100(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
+                 result_type: str, prefix: str, postfix: str):
+    """
+    reads stress/strain for element type:
+     - 100 : BARS
+    """
+    stress_strain = 'stress' if op2.is_stress else 'strain'
+    result_name = f'{prefix}cbar_{stress_strain}_10nodes{postfix}'
+
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
+        return ndata, None, None
+
+    factor = op2.factor
+    if result_type == 0 and op2.num_wide == 10:  # real
+        if op2.is_stress:
+            obj_vector_real = RealBar10NodesStressArray
+        else:
+            obj_vector_real = RealBar10NodesStrainArray
+
+        ntotal = 10 * 4 * factor
+        nelements = ndata // ntotal
+
+        auto_return, is_vectorized = op2._create_oes_object4(
+            nelements, result_name, slot, obj_vector_real)
+        if auto_return:
+            return ndata, None, None
+
+        if op2.is_debug_file:
+            op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+            # op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+            op2.binary_debug.write('  #elementi = [eid_device, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]\n')
+            op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+        obj = op2.obj
+
+        if op2.use_vector and is_vectorized and op2.sort_method == 1:
+            # self.itime = 0
+            # self.ielement = 0
+            # self.itotal = 0
+            # self.ntimes = 0
+            # self.nelements = 0
+            n = nelements * ntotal
+
+            istart = obj.itotal
+            iend = istart + nelements
+            obj._times[obj.itime] = dt
+
+            op2.obj_set_element(obj, istart, iend, data, nelements)
+
+            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 10)
+            # [sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
+            obj.data[obj.itime, istart:iend, :] = floats[:, 1:].copy()
+        else:
+            n = oes_cbar100_real_10(op2, data, obj, nelements, ntotal, dt)
+
+    elif result_type == 1 and op2.num_wide == 16:  # complex
+        msg = op2.code_information()
+        return op2._not_implemented_or_skip(data, ndata, msg), None, None
+    else:  # pragma: no cover
+        raise RuntimeError(op2.code_information())
+    return n, nelements, ntotal
 
 
 def oes_cbar100_real_10(op2: OP2, data: bytes, obj, nelements: int, ntotal: int, dt: Any) -> int:

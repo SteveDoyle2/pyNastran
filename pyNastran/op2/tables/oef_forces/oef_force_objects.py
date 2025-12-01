@@ -1469,7 +1469,9 @@ class RealRodForceArray(RealForceObject):
 
 class RealCBeamForceArray(RealForceObject):
     """11 nodes/element"""
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code,
+                 is_sort1: bool, isubcase: int,
+                 dt: int | float):
         #ForceObject.__init__(self, data_code, isubcase)
         RealForceObject.__init__(self, data_code, isubcase)
 
@@ -1482,6 +1484,10 @@ class RealCBeamForceArray(RealForceObject):
         #     pass
         # else:
         #     raise NotImplementedError('SORT2')
+
+    @property
+    def nnode_per_element(self) -> int:
+        return 2
 
     def build(self):
         """sizes the vectorized attributes of the RealCBeamForceArray"""
