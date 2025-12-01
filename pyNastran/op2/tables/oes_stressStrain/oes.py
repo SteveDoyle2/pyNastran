@@ -93,6 +93,7 @@ from pyNastran.op2.tables.oes_stressStrain.utils_composite_plates import (
 )
 from pyNastran.op2.tables.oes_stressStrain.utils_solid import oes_csolid
 from pyNastran.op2.tables.oes_stressStrain.utils import (
+    obj_set_element,
     oes_weldp_msc_real_8, oes_weldp_msc_complex_15,
     oes_fastp_msc_real_7, oes_fastp_msc_complex_13,
     _oes_csolid2_real,
@@ -3088,7 +3089,7 @@ class OES(OP2Common2):
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 obj._times[obj.itime] = dt
-                self.obj_set_element(obj, ielement, ielement2, data, nelements)
+                obj_set_element(op2, obj, ielement, ielement2, data, nelements)
 
                 floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
 
@@ -3131,7 +3132,7 @@ class OES(OP2Common2):
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 obj._times[obj.itime] = dt
-                self.obj_set_element(obj, ielement, ielement2, data, nelements)
+                obj_set_element(op2, obj, ielement, ielement2, data, nelements)
 
                 floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
 
@@ -3209,7 +3210,7 @@ class OES(OP2Common2):
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 obj._times[obj.itime] = dt
-                self.obj_set_element(obj, ielement, ielement2, data, nelements)
+                obj_set_element(op2, obj, ielement, ielement2, data, nelements)
 
                 floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 7)
 
@@ -3251,7 +3252,7 @@ class OES(OP2Common2):
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 obj._times[obj.itime] = dt
-                self.obj_set_element(obj, ielement, ielement2, data, nelements)
+                obj_set_element(op2, obj, ielement, ielement2, data, nelements)
 
                 floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 13)# [:, 1:]
                 isave_real = [1, 2, 3, 4, 5, 6]
@@ -3319,7 +3320,7 @@ class OES(OP2Common2):
                 ielement2 = ielement + nelements
                 obj._times[obj.itime] = dt
 
-                self.obj_set_element(obj, ielement, ielement2, data, nelements)
+                obj_set_element(op2, obj, ielement, ielement2, data, nelements)
 
                 floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 13).copy()
 
@@ -3813,7 +3814,7 @@ class OES(OP2Common2):
                 ielement2 = ielement + nelements
                 obj._times[obj.itime] = dt
 
-                self.obj_set_element(obj, ielement, ielement2, data, nelements)
+                obj_set_element(op2, obj, ielement, ielement2, data, nelements)
 
                 #if obj.itime == 0:
                     #ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 11).copy()
@@ -4098,7 +4099,7 @@ class OES(OP2Common2):
             #iend = istart + nelements
             #obj._times[obj.itime] = dt
 
-            #self.obj_set_element(obj, istart, iend, data, nelements)
+            #obj_set_element(op2, obj, istart, iend, data, nelements)
             #floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)
             #results = floats[:, 1:].copy()
             ##print('results.shape', results.shape)
@@ -4190,13 +4191,6 @@ class OES(OP2Common2):
             #msg = 'sort1 Type=%s num=%s' % (op2.element_name, op2.element_type)
             #return op2._not_implemented_or_skip(data, ndata, msg)
 
-    def obj_set_element(self, obj, ielement, ielement2, data, nelements):
-        op2 = self.op2
-        if obj.itime == 0:
-            ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, op2.num_wide).copy()
-            eids = ints[:, 0] // 10
-            assert eids.min() > 0, eids.min()
-            obj.element[ielement:ielement2] = eids
 
 def oes_cgapnl_real_11(op2: OP2, data: bytes,
                        obj: NonlinearGapStressArray,

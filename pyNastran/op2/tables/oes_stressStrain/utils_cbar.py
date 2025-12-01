@@ -358,7 +358,7 @@ def oes_cbar_100(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bool
             iend = istart + nelements
             obj._times[obj.itime] = dt
 
-            op2.obj_set_element(obj, istart, iend, data, nelements)
+            obj_set_element(op2, obj, istart, iend, data, nelements)
 
             floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 10)
             # [sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
