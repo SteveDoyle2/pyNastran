@@ -63,7 +63,7 @@ class ComplexLayeredCompositesArray(OES_Object):
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
         # print(self._ntotals, self.ntotal)
-        # print(self.code_information())
+        #print(self.code_information())
 
         # self.names = []
         # self.nelements //= nnodes
@@ -352,4 +352,3 @@ def _get_composite_plate_msg(self, is_mag_phase=True, is_sort1=True) -> tuple[li
         msg = 'element_name=%s element_type=%s' % (self.element_name, self.element_type)
         raise NotImplementedError(msg)
     return msg, nnodes
-

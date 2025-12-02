@@ -19,6 +19,7 @@ import numpy as np
 #from pyNastran import DEV
 #from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.tables.utils import get_is_slot_saved
 
 from pyNastran.op2.tables.contact.slide_objects import (
     RealSlideDistanceArray, ) # ComplexDisplacementArray
@@ -326,17 +327,17 @@ class OSLIDE:
             result_name = 'contact_slide_distance'
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
-        if op2._results.is_not_saved(result_name):
+
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-        storage_obj = op2.get_result(result_name)
 
         if op2.num_wide == 7:
             factor = op2.factor
             ntotal = 28 * factor
             nnodes = ndata // ntotal  # 8*4
             auto_return = op2._create_table_vector(
-                result_name, nnodes, storage_obj, RealSlideDistanceArray, is_cid=False)
+                result_name, nnodes, slot, RealSlideDistanceArray, is_cid=False)
             if auto_return:
                 return ndata
 

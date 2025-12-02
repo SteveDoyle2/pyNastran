@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
+from pyNastran.op2.tables.utils import get_is_slot_saved
 from pyNastran.op2.tables.oug.oug_temperatures import RealTemperatureArray
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -79,13 +80,15 @@ class OTEMP:
         nfields = ndata // 4
         nnodes = nfields // 2
         result_name = 'temperatures'
-        storage_obj = op2.temperatures
         real_vector = RealTemperatureArray
         is_cid = False
         op2.data_code['_times_dtype'] = 'float32'
         #self._times_dtype = 'float32'
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
+            return ndata
         auto_return = op2._create_table_vector(
-            result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
+            result_name, nnodes, slot, real_vector, is_cid=is_cid)
         if auto_return:
             return ndata
 

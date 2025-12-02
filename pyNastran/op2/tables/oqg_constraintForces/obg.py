@@ -13,6 +13,7 @@ from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.tables.utils import get_is_slot_saved
 
 from pyNastran.op2.tables.oqg_constraintForces.separation_distance import (
     SeparationDistanceArray)
@@ -148,17 +149,15 @@ class OBG:
             op2.binary_debug.write('  isubcase       = %r\n' % op2.isubcase)
         op2._read_title(data)
         op2._write_debug_bits()
-        # print(op2.code_information())
 
     def read_4(self, data: bytes, ndata: int) -> int:
         """C O N T A C T  P R E S S U R E  A N D  T R A C T I O N S"""
         op2: OP2 = self.op2
 
         result_name = 'glue_force'
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-        slot = op2.get_result(result_name)
 
         assert self.num_wide == 5, op2.code_information()
         ntotal = 20 * self.factor

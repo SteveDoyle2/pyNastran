@@ -416,7 +416,7 @@ class FailureIndicesArray(RealForceObject):
         self.nelements = 0  # result specific
 
     @property
-    def nnodes_per_element(self):
+    def nnodes_per_element(self) -> int:
         return 1
 
     def build(self):
@@ -1469,7 +1469,9 @@ class RealRodForceArray(RealForceObject):
 
 class RealCBeamForceArray(RealForceObject):
     """11 nodes/element"""
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code,
+                 is_sort1: bool, isubcase: int,
+                 dt: int | float):
         #ForceObject.__init__(self, data_code, isubcase)
         RealForceObject.__init__(self, data_code, isubcase)
 
@@ -1482,6 +1484,10 @@ class RealCBeamForceArray(RealForceObject):
         #     pass
         # else:
         #     raise NotImplementedError('SORT2')
+
+    @property
+    def nnode_per_element(self) -> int:
+        return 2
 
     def build(self):
         """sizes the vectorized attributes of the RealCBeamForceArray"""
@@ -1521,6 +1527,7 @@ class RealCBeamForceArray(RealForceObject):
         self.data = np.full((ntimes, ntotal, 8), np.nan, fdtype)
 
     def finalize(self):
+        assert self.data is not None
         sd = self.data[0, :, 0]
         i_sd_zero = np.where(np.isfinite(sd) & (sd != 0.0))[0]
         i_node_zero = np.where(self.element_node[:, 1] != 0)[0]
@@ -1574,7 +1581,7 @@ class RealCBeamForceArray(RealForceObject):
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join([df2])
-        #self.data_frame = data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
+        #data_frame = data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
         self.data_frame = data_frame
 
     @classmethod
@@ -1827,7 +1834,7 @@ class RealCBeamForceArray(RealForceObject):
             msg.append('  type=%s nelements=%i; table_name=%r\n' % (
                 self.__class__.__name__, nelements, self.table_name))
         #msg.append('  eType, cid\n')
-        msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
+        # msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append(f'  element.shape = {self.element.shape}\n')
         msg.append(f'  element_node.shape = {self.element_node.shape}\n')
@@ -3370,8 +3377,11 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
                 column_values, column_names,
                 headers, element_node, self.data, from_tuples=False, from_array=True)
         else:
-            df1 = pd.DataFrame(element_node).T
-            df1.columns = ['ElementID', 'NodeID']
+            data = {
+                'ElementID': self.element_node[:, 0],
+                'NodeID': self.element_node[:, 0],
+            }
+            df1 = pd.DataFrame(data)
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join(df2)
@@ -3442,7 +3452,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         self.itotal += 1
 
     @property
-    def nnodes_per_element(self):
+    def nnodes_per_element(self) -> int:
         if self.element_type == 144:  # CQUAD4
             nnodes_element = 5
         elif self.element_type == 64:  # CQUAD8
@@ -4259,8 +4269,10 @@ class RealConeAxForceArray(RealForceObject):
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            df1 = pd.DataFrame(self.element)
-            df1.columns = ['ElementID']
+            data = {
+                'ElementID': self.element,
+            }
+            df1 = pd.DataFrame(data)
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             self.data_frame = df1.join([df2])
@@ -4468,10 +4480,11 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Location', 'Item']
         else:
-            df1 = pd.DataFrame({
+            data = {
                 'ElementID': self.element,
                 'Location': self.data[0, :, 0],
-            })
+            }
+            df1 = pd.DataFrame(data)
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             self.data_frame = df1.join([df2])
@@ -4713,6 +4726,10 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
         self.itotal = 0
         self.ielement = 0
 
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
+
     def get_headers(self) -> list[str]:
         headers = [
             'fx', 'sfy', 'sfz', 'u', 'v', 'w', 'sv', 'sw'
@@ -4950,8 +4967,12 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
             #data_frame.columns.names = column_names
             #data_frame.index.names = ['ElementID', 'Item']
         else:
-            df1 = pd.DataFrame(self.element_node)
-            df1.columns = ['ElementID', 'NodeA', 'NodeB']
+            data = {
+                'ElementID': self.element_node[:, 0],
+                'NodeA': self.element_node[:, 1],
+                'NodeB': self.element_node[:, 2],
+            }
+            df1 = pd.DataFrame(data)
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join(df2)

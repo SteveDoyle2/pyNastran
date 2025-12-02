@@ -2,6 +2,7 @@
 import os
 import copy
 import unittest
+from io import StringIO
 from pathlib import Path
 
 import numpy as np
@@ -32,11 +33,13 @@ except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
 import pyNastran
+
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import OP2, read_op2  # FatalError, FortranMarkerError
 from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2, main as test_op2
+from pyNastran.op2.result_objects.contact_traction_and_pressure import RealContactTractionAndPressureArray
 
 from pyNastran.bdf.test.test_bdf_unit_tests import Tester
 from pyNastran.bdf.cards.test.utils import save_load_deck
@@ -60,6 +63,44 @@ OP2_TEST = PKG_PATH / 'op2' / 'test'
 
 class TestOP2Unit(Tester):
     """various OP2 tests"""
+    def test_traction(self):
+        cls = RealContactTractionAndPressureArray
+
+        isubcase = 1
+        nnode = 10
+        nodes = np.arange(1, nnode+1, dtype='int32')
+        gridtype = np.zeros(nnode, dtype='int32')
+        node_gridtype = np.vstack([nodes, gridtype])
+        data = np.zeros((1, nnode, 4), dtype='float32')
+
+        table_name = 'OBC1'
+        modes = np.array([1], dtype='int32')
+        eigenvalues = np.array([2.], dtype='float32')
+        mode_cycles = np.array([3.], dtype='float32')
+
+        obj1 = cls.add_static_case(
+            table_name, node_gridtype, data,
+            isubcase,
+            is_msc=False)
+
+        obj2 = cls.add_modal_case(
+            table_name, node_gridtype, data,
+            isubcase, modes, eigenvalues, mode_cycles,
+            is_msc=False)
+
+        times = np.array([3.154], dtype='float32')
+        obj3 = cls.add_transient_case(
+            table_name, node_gridtype, data,
+            isubcase, times,
+            is_msc=False)
+        obj1.get_stats()
+        obj2.get_stats()
+        obj3.get_stats()
+        f06_file = StringIO()
+        obj1.write_f06(f06_file)
+        obj2.write_f06(f06_file)
+        obj3.write_f06(f06_file)
+
     def test_grid_point_weight(self):
         """tests GridPointWeight"""
         reference_point = 0
@@ -444,7 +485,7 @@ class TestSATKOP2(Tester):
     """various OP2 tests"""
     def test_bdf_op2_satk_1(self):
         """checks pn_mwe_s-solution_1.dat, which tests dynamics matrices"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'satk' / 'pn_mwe_s-solution_1.dat'
         op2_filename = MODEL_PATH / 'satk' / 'pn_mwe_s-solution_1.op2'
 
@@ -507,7 +548,7 @@ class TestSATKOP2(Tester):
 
     def test_bdf_op2_satk_3(self):
         """checks pn_mwe_s-sol_111.dat, which tests PSD tables"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'cbush_psd_bug' / 'pn_mwe_s-sol_111.dat'
         op2_filename = MODEL_PATH / 'cbush_psd_bug' / 'pn_mwe_s-sol_111.op2'
         op2_filename2 = MODEL_PATH / 'cbush_psd_bug' / 'pn_mwe_s-rd_satk-rbe.op2'
@@ -583,7 +624,9 @@ class TestSATKOP2(Tester):
         # sort1
         # freqs = [  20.      20.943   21.93  ... 1861.173 1909.985 2000.   ]; dtype=float32
 
-        assert len(op2.op2_results.psd.cbar_force[(3, 5, 2, 0, 0, '', 'RANDOM  103')].freqs) == 127
+        key = (3, 5, 2, 0, 0, '', 'RANDOM  103')
+        case = op2.op2_results.psd.cbar_force[key]
+        assert len(case.freqs) == 127, len(case.freqs)
         # type=RealCBarForceArray ntimes=127 nelements=5; table_name='OEFPSD1'
         # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
         #                                    shear1, shear2, axial, torque]
@@ -725,6 +768,32 @@ class TestSATKOP2(Tester):
 
 
 class TestNX(Tester):
+    def test_nx_cbush_psd(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'bugs' / 'random_cbush_example'
+        op2_filename = folder / 'cbush_example.op2'
+        bdf_filename = folder / 'cbush_example.bdf'
+        op2_model, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=False, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=True, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_nx_cbeam_psd(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'bugs' / 'random_cbeam_example'
+        op2_filename = folder / 'cbeam_example.op2'
+        bdf_filename = folder / 'cbeam_example.bdf'
+        op2_model, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=False, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=True, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
     def test_nx_rotor_1(self):
         log = get_logger(level='warning')
         folder = MODEL_PATH / 'nx' / 'rotor'
@@ -823,7 +892,7 @@ class TestNX(Tester):
     def test_nx_glue_slide_distance(self):
         """test NX 2020 version"""
         # log = SimpleLogger(level='warning')
-        log = SimpleLogger(level='info')
+        log = SimpleLogger(level='warning')
         # log = SimpleLogger(level='debug')
         op2_filename = MODEL_PATH / 'nx' / 'glue' / 'n401gsh01.op2'
         # read_op2(op2_filename)
@@ -858,7 +927,7 @@ class TestNX(Tester):
         checks nx/contact_model.bdf, which tests
         initial/final contact separation distance
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'contact_model.bdf'
         op2_filename = MODEL_PATH / 'nx' / 'contact_model.op2'
 
@@ -890,7 +959,7 @@ class TestNX(Tester):
         checks nx/composite_solids/test.bdf, which tests
         centroidal CHEXA composite stress
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test.bdf'
         op2_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test.op2'
 
@@ -919,7 +988,7 @@ class TestNX(Tester):
 
     def test_nx_thermal_plastic_strain(self):
         """tests thermal and plastic quad4 strain"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'laminate' / 'laminate_elstrn_fiber_center.bdf'
         op2_filename = MODEL_PATH / 'nx' / 'laminate' / 'laminate_elstrn_fiber_center.op2'
 
@@ -951,7 +1020,7 @@ class TestNX(Tester):
         checks nx/composite_solids/test_nx_corner.bdf, which tests
         corner CHEXA composite stress
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test_nx_corner.bdf'
         op2_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test_nx_corner.op2'
 
@@ -980,7 +1049,7 @@ class TestNX(Tester):
 
     def test_nx_cplstn(self):
         """CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'conedg01e.bdf'
         op2_filename = MODEL_PATH / 'other' / 'conedg01e.op2'
 
@@ -1010,7 +1079,7 @@ class TestNX(Tester):
 
     def test_nx_sol111_solid_stress(self):
         """OESVM1 for solids"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'sol111_solid_stress' / 'nx_sine.bdf'
         op2_filename = MODEL_PATH / 'nx' / 'sol111_solid_stress' / 'nx_sine.op2'
 
@@ -1037,7 +1106,7 @@ class TestNX(Tester):
     def test_nx_sol401_tstep1(self):
         """Test SOL401 simulation with a TSTEP1 card."""
 
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'sol401' / 'sol401_tstep1.dat'
         op2_filename = MODEL_PATH / 'nx' / 'sol401' / 'sol401_tstep1.op2'
 
@@ -1067,7 +1136,7 @@ class TestNX(Tester):
 
 class TestMSC(Tester):
     def test_cantilever_plate_nonlinear_msc_2021(self):
-        log = get_logger(level='debug')
+        log = get_logger(level='warning')
         folder = MODEL_PATH / 'bugs' / 'cantilevered_plate'
         op2_filename1 = folder / '3Delements' / 'non_linear' / 'cantilevered_plate_3d.op2'
         unused_op2, unused_is_passed = run_op2(
@@ -1178,7 +1247,7 @@ class TestMSC(Tester):
          - op2_results.failure_indices.cquad4_composite_force[1]
 
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'msc' / 'failure_indices_strength_ratio' / 'TestStressTemp.bdf'
         op2_filename = MODEL_PATH / 'msc' / 'failure_indices_strength_ratio' / 'TestStressTemp.op2'
 
@@ -1209,7 +1278,7 @@ class TestMSC(Tester):
         checks msc/units_mass_spring_damper/units_mass_spring_damper.op2, which tests
          - UNITS table for MSC 2014
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         #bdf_filename = MODEL_PATH / 'msc' / 'units_mass_spring_damper' / 'test_nx_corner.bdf'
         op2_filename = MODEL_PATH / 'msc' / 'units_mass_spring_damper' / 'units_mass_spring_damper.op2'
 
@@ -1241,7 +1310,7 @@ class TestMSC(Tester):
         checks msc/cbush_2021/cbush_test.op2, which tests
          - UNITS table for MSC 2021
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'msc' / 'cbush_2021' / 'cbush_test.bdf'
         op2_filename = MODEL_PATH / 'msc' / 'cbush_2021' / 'cbush_test.op2'
 
@@ -1272,7 +1341,7 @@ class TestMSC(Tester):
         checks bugs/msc_RBE_tests/rigid_rbe2--v2020.op2, which tests
          - RBE2 alpha for MSC 2020
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2.bdf'
         op2_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2--v2020.op2'
 
@@ -1303,7 +1372,7 @@ class TestMSC(Tester):
         checks bugs/msc_RBE_tests/rigid_rbe2--v2021.1.op2, which tests
          - RBE2 tref for MSC 2021
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2.bdf'
         op2_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2--v2021.1.op2'
 
@@ -1843,7 +1912,7 @@ class TestOP2Main(Tester):
             include_results=include_results,
             short_stats=False,
             compare=True, debug=False, binary_debug=True,
-            quiet=True,
+            quiet=True, stop_on_skip=False,
             stop_on_failure=True, dev=False,
             build_pandas=False, log=log)  # TODO: enable pandas...
         if IS_PANDAS:
@@ -2259,7 +2328,7 @@ class TestOP2Main(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True,
+                quiet=True, stop_on_skip=False,
                 stop_on_failure=True, dev=False,
                 build_pandas=False, log=log)
 
@@ -2367,7 +2436,7 @@ class TestOP2Main(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True,
+                quiet=True, stop_on_skip=False,
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
@@ -2428,13 +2497,13 @@ class TestOP2Main(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
-                quiet=True,
+                quiet=True, stop_on_skip=False,
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
     def test_bdf_op2_other_24(self):
         """checks tst1d3.bdf, which tests RealBar10NodesStrainArray"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'tst1d3.bdf'
         op2_filename = MODEL_PATH / 'other' / 'tst1d3.op2'
 
@@ -2464,7 +2533,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_25(self):
         """checks trncomp12.bdf, which tests FailureIndicesArray"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'trncomp12.bdf'
         op2_filename = MODEL_PATH / 'other' / 'trncomp12.op2'
 
@@ -2494,7 +2563,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_26(self):
         """checks tr1091x.bdf, which tests RealBendForceArray"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'tr1091x.bdf'
         op2_filename = MODEL_PATH / 'other' / 'tr1091x.op2'
 
@@ -2526,13 +2595,13 @@ class TestOP2Main(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=exclude_results, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
-                quiet=True,
+                quiet=True, stop_on_skip=False,
                 stop_on_failure=True, dev=False,
                 build_pandas=False, log=log)
 
     def test_bdf_op2_other_27(self):
         """checks ac10804.bdf, which tests ComplexPlateStressArray"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'ac10804.bdf'
         op2_filename = MODEL_PATH / 'other' / 'ac10804.op2'
 
@@ -2568,7 +2637,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_28(self):
         """checks sdr11se_s2dc.bdf, which tests ComplexCBushStressArray"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
         op2_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.op2'
 
@@ -2597,7 +2666,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_30(self):
         """checks rot063akd2s_107.bdf, which tests CampbellDiagram"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         #bdf_filename = MODEL_PATH / 'other' / 'rot063akd2s_107.bdf'
         op2_filename = MODEL_PATH / 'other' / 'rot063akd2s_107.op2'
 
@@ -2626,7 +2695,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_31(self):
         """checks htrussx.bdf, which tests getting rid of the Panel"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'htrussx.bdf'
         op2_filename = MODEL_PATH / 'other' / 'htrussx.op2'
 
@@ -2720,7 +2789,7 @@ class TestOP2Main(Tester):
         extse04c
         EXTRN
         """
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'extse04c.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'superelements', 'extse04c.op2')
 
@@ -2777,7 +2846,7 @@ class TestOP2Main(Tester):
         log = get_logger(level='warning')
         folder = os.path.join(MODEL_PATH, 'solid_bending')
         op2_filename = os.path.join(folder, 'solid_bending.op2')
-        model = OP2()
+        model = OP2(log=log)
         model.is_nx = False
 
         tables_to_skip = {
@@ -3740,6 +3809,10 @@ class TestOP2Main(Tester):
         write_f06 = False
         log = get_logger(level='warning')
         op2_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.op2')
+
+        argv = ['test_op2', op2_filename, '-tgc', '--quiet', '--safe']
+        test_op2(argv, show_args=False)
+
         read_op2(op2_filename, log=log)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                 write_f06=write_f06,
@@ -3752,12 +3825,9 @@ class TestOP2Main(Tester):
                 write_f06=write_f06,
                 log=log, stop_on_failure=True, quiet=True)
 
-        argv = ['test_op2', op2_filename, '-tgc', '--quiet', '--safe']
-        test_op2(argv, show_args=False)
-
     def test_op2_good_sine_01(self):
         """tests freq_sine/good_sine.op2"""
-        op2_filename = os.path.join(MODEL_PATH, 'freq_sine', 'good_sine.op2')
+        op2_filename = MODEL_PATH / 'freq_sine' / 'good_sine.op2'
         make_geom = False
         write_bdf = False
         write_f06 = False
@@ -3966,7 +4036,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_cbush_nonlinear(self):
         """checks tr1091x.bdf, which tests RealBendForceArray"""
-        log = get_logger(level='info')
+        log = get_logger(level='warning')
         bdf_filename = OP2_TEST_PATH / 'cbush_nonlinear' / 'cbush_106_large_disp.bdf'
         op2_filename = OP2_TEST_PATH / 'cbush_nonlinear' / 'cbush_106_large_disp.op2'
 
@@ -4029,7 +4099,7 @@ class TestOP2Main(Tester):
         assert len(op2res.rms.accelerations) == 1
         assert len(op2res.crm.accelerations) == 1
         assert len(op2res.no.accelerations) == 1
-        assert len(op2res.crm.cbar_force) == 1
+        assert len(op2res.crm.cbar_force) == 1, len(op2res.crm.cbar_force)
         assert len(op2res.psd.cbar_force) == 1
         assert len(op2res.rms.cbar_force) == 1
         assert len(op2res.no.cbar_force) == 1

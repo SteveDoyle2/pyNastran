@@ -7,9 +7,6 @@ from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
-from pyNastran import (
-    warn_on_op2_missed_table,
-    stop_on_op2_missed_table)
 from pyNastran.op2.errors import OverwriteTableError
 from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.op2_interface.function_codes import func7
@@ -1640,7 +1637,8 @@ class OP2Common(Op2Codes, F06Writer):
         #self.log.debug('code = %s' % str(self.code))
         return self.code
 
-    def _not_implemented_or_skip(self, unused_data, ndata, msg=''):
+    def _not_implemented_or_skip(self, unused_data,
+                                 ndata: int, msg: str='') -> int:
         """
         A simple pass loop for unsupported tables that can be hacked on
         to crash the program everywhere that uses it.
@@ -1657,19 +1655,18 @@ class OP2Common(Op2Codes, F06Writer):
                                      #69, # CBEND
                                      #]:
                 #return ndata
-        if stop_on_op2_missed_table:
+        if self.stop_on_op2_missed_table:
             msg = 'table_name=%s table_code=%s %s\n%s' % (
                 self.table_name, self.table_code, msg, self.code_information())
             raise NotImplementedError(msg)
 
-        if warn_on_op2_missed_table:
+        if self.warn_on_op2_missed_table:
             if msg != self._last_comment:
                 #print(self.code_information())
                 if self.read_mode == 2:
                     if msg == '':
                         self.log.warning(self.code_information())
                     self.log.warning(msg)
-                    #ddd
 
                     #if not('VUHEXA' in msg or 'VUPENTA' in msg or 'VUTETRA' in msg
                            #or 'Element Stress' in self.code_information()
@@ -1683,7 +1680,7 @@ class OP2Common(Op2Codes, F06Writer):
                 #else:
                 #    self.log.warning(self.code_information())
                 self._last_comment = msg
-            return ndata
+        return ndata
 
     @property
     def size(self) -> int:
@@ -2153,8 +2150,8 @@ class OP2Common(Op2Codes, F06Writer):
                 try:
                     build_obj(self.obj)
                 except AssertionError:
-                    print(self.code)
-                    print(self.code_information())
+                    log.error(str(self.code))
+                    log.error(self.code_information())
                     raise
 
             else:  # not vectorized
@@ -2249,8 +2246,8 @@ class OP2Common(Op2Codes, F06Writer):
                 try:
                     build_obj(self.obj)
                 except AssertionError:
-                    print(self.code)
-                    print(self.code_information())
+                    log.error(str(self.code))
+                    log.error(self.code_information())
                     raise
 
             else:  # not vectorized

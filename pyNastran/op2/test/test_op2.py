@@ -58,7 +58,9 @@ def run_lots_of_files(files: list[str],
                       write_hdf5: bool=True, debug: bool=True, skip_files: Optional[list[str]]=None,
                       include_results: Optional[str]=None,
                       exclude_results: Optional[str]=None,
-                      stop_on_failure: bool=False, nstart: int=0, nstop: int=1000000000,
+                      stop_on_failure: bool=False,
+                      nstart: int=0, nstop: int=1000000000,
+                      stop_on_skip: bool=False,
                       short_stats: bool=False,
                       binary_debug: list[bool]=False,
                       compare: bool=True, quiet: bool=False, dev: bool=True, xref_safe: bool=False):
@@ -113,6 +115,7 @@ def run_lots_of_files(files: list[str],
                                      short_stats=short_stats,
                                      subcases=subcases, debug=debug,
                                      stop_on_failure=stop_on_failure,
+                                     stop_on_skip=stop_on_skip,
                                      binary_debug=binary_debug,
                                      compare=compare, dev=dev,
                                      xref_safe=xref_safe,
@@ -146,6 +149,7 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
             subcases: Optional[str] | list[str]=None,
             include_results: Optional[str]=None,
             exclude_results: Optional[str]=None,
+            stop_on_skip: bool=True,
             short_stats: bool=False, compare: bool=True,
             debug: bool=False, log: Any=None,
             binary_debug: bool=False, quiet: bool=False,
@@ -321,7 +325,11 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
     if subcases:
         op2.set_subcases(subcases)
         op2_nv.set_subcases(subcases)
-
+    if stop_on_skip:
+        op2.stop_on_op2_missed_table = True
+        # op2.stop_on_op2_table_passer = True
+        op2_nv.stop_on_op2_missed_table = True
+        # op2_nv.stop_on_op2_table_passer = True
 
     op2.include_exclude_results(
         exclude_results=exclude_results,
@@ -573,7 +581,7 @@ class TestOp2Args(TypedDict):
    # is_autodesk = data['autodesk'],
 
 
-def get_test_op2_data(argv=None) -> TestOp2Args:
+def get_test_op2_data0(argv=None) -> TestOp2Args:
     if argv is None:
         argv = sys.argv[1:]  # same as argparse
         #print('get_inputs; argv was None -> %s' % argv)
@@ -623,27 +631,27 @@ def get_test_op2_data(argv=None) -> TestOp2Args:
         parent_parser.add_argument('--profile', action='store_true', help="Profiles the code")
         parent_parser.add_argument('--nocombine', action='store_true', help="Disables case combination")
         parent_parser.add_argument('--test', action='store_true', help="Adds additional table checks")
-
+        parent_parser.add_argument('--stop_on_skip', action='store_true', help="Crash on result skipping")
 
     version = f'[--nx|--autodesk]'
     pre_options = '[-p] [-d] [-z] [-w] [-t] [-s <sub>] [--node NIDFILE] [--element EIDFILE]'
     #options = f'{pre_options} [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
     options = f'{pre_options} [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5]'
-    if is_dev:
-        line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--test] [--nocombine] {options} OP2_FILENAME\n"
-    else:
-        line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] {options} OP2_FILENAME\n"
+
+    dev_options = '[--profile] [--test] [--stop_on_skip][--nocombine] ' if is_dev else ''
+    line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] {dev_options}{options} OP2_FILENAME\n"
 
     while '  ' in line1:
         line1 = line1.replace('  ', ' ')
 
-    usage = "Tests to see if an OP2 will work with pyNastran %s.\n" % ver
-    usage += "Usage:  "
-    usage += line1
-    usage += "        test_op2 -h | --help\n"
-    usage += "        test_op2 -v | --version\n"
-    usage += "\n"
-
+    usage = (
+        f"Tests to see if an OP2 will work with pyNastran {ver}.\n"
+        "Usage:  " +
+        line1 +
+        "        test_op2 -h | --help\n"
+        "        test_op2 -v | --version\n"
+        "\n"
+    )
     args = (
         "\n"
         "Positional Arguments:\n"
@@ -668,20 +676,22 @@ def get_test_op2_data(argv=None) -> TestOp2Args:
     )
     if is_dev:
         args += "  --nocombine            Disables case combination\n"
-    args += "  -s <sub>, --subcase    Specify one or more subcases to parse; (e.g. 2_5)\n"
-    args += "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
-    args += "  -x <arg>, --exclude    Exclude specific results\n"
-    args += "  --nx                   Assume NX Nastran\n"
-    args += "  --autodesk             Assume Autodesk Nastran\n"
-    args += "  --post POST            Set the PARAM,POST flag\n"
-    args += "  --safe                 Safe cross-references BDF (default=False)\n"
-
+    args += (
+        "  -s <sub>, --subcase    Specify one or more subcases to parse; (e.g. 2_5)\n"
+        "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
+        "  -x <arg>, --exclude    Exclude specific results\n"
+        "  --nx                   Assume NX Nastran\n"
+        "  --autodesk             Assume Autodesk Nastran\n"
+        "  --post POST            Set the PARAM,POST flag\n"
+        "  --safe                 Safe cross-references BDF (default=False)\n"
+    )
     if is_dev:
         args += (
             "\n"
             "Developer:\n"
             '  --profile         Profiles the code (default=False)\n'
             '  --test            Adds additional table checks (default=False)\n'
+            '  --stop_on_skip    Crash on result skipping (default=True)\n'
         )
 
     args += (
@@ -713,6 +723,8 @@ def get_test_op2_data(argv=None) -> TestOp2Args:
     #_set_version(args2)
 
     data = _update_data(args2, is_dev)
+
+    assert 'stop_on_skip' in data, list(data)
     return data
 
 def get_test_op2_data(argv) -> dict[str, str]:
@@ -726,19 +738,17 @@ def get_test_op2_data(argv) -> dict[str, str]:
     pre_options = '[-p] [-d] [-z] [-w] [-t] [-s <sub>] [--node NIDFILE] [--element EIDFILE]'
     #options = f'{pre_options} [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
     options = f'{pre_options} [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5] [--debug]'
-    if is_dev:
-        line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--test] [--nocombine] {options} OP2_FILENAME\n"
-    else:
-        line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] {options} OP2_FILENAME\n"
+    dev_options = '[--profile] [--test] [--nocombine] [--stop_on_skip] ' if is_dev else ''
+    line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] {dev_options}{options} OP2_FILENAME\n"
 
     while '  ' in line1:
         line1 = line1.replace('  ', ' ')
     msg += line1
-    msg += "        test_op2 -h | --help\n"
-    msg += "        test_op2 -v | --version\n"
-    msg += "\n"
-    msg += "Tests to see if an OP2 will work with pyNastran %s.\n" % ver
     msg += (
+        "        test_op2 -h | --help\n"
+        "        test_op2 -v | --version\n"
+        "\n"
+        f"Tests to see if an OP2 will work with pyNastran {str(ver)}.\n"
         "\n"
         "Positional Arguments:\n"
         "  OP2_FILENAME         Path to OP2 file\n"
@@ -764,24 +774,28 @@ def get_test_op2_data(argv) -> dict[str, str]:
         "  --debug                Sets the debug flag [default: False]\n"
     )
     if is_dev:
-        msg += "  --nocombine            Disables case combination\n"
-    msg += "  -s <sub>, --subcase    Specify one or more subcases to parse; (e.g. 2_5)\n"
-    msg += "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
-    msg += "  -x <arg>, --exclude    Exclude specific results\n"
-    msg += "  -i <arg>, --include    Include specific results\n"
-    msg += "  --post POST            Set the PARAM,POST flag\n"
-    msg += "  --safe                 Safe cross-references BDF (default=False)\n"
-
-    msg += "\nVersions (default is MSC Nastran):\n"
-    msg += '  --nx                   Assume NX Nastran (Simcenter)\n'
-    msg += '  --optistruct           Assume Altair Optistruct\n'
-    msg += '  --autodesk             Assume Autodesk Nastran\n'
+        msg += (
+            '  --nocombine            Disables case combination\n'
+        )
+    msg += (
+        "  -s <sub>, --subcase    Specify one or more subcases to parse; (e.g. 2_5)\n"
+        "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
+        "  -x <arg>, --exclude    Exclude specific results\n"
+        "  -i <arg>, --include    Include specific results\n"
+        "  --post POST            Set the PARAM,POST flag\n"
+        "  --safe                 Safe cross-references BDF (default=False)\n"
+        "\nVersions (default is MSC Nastran):\n"
+        '  --nx                   Assume NX Nastran (Simcenter)\n'
+        '  --optistruct           Assume Altair Optistruct\n'
+        '  --autodesk             Assume Autodesk Nastran\n'
+    )
 
     if is_dev:
         msg += (
             '\nDeveloper:\n'
             '  --profile         Profiles the code (default=False)\n'
             '  --test            Adds additional table checks (default=False)\n'
+            '  --stop_on_skip    Crash on result skipping (default=True)\n'
         )
 
     msg += (
@@ -793,8 +807,9 @@ def get_test_op2_data(argv) -> dict[str, str]:
         sys.exit(msg)
 
     data = docopt(msg, version=ver, argv=argv[1:])
+    print('data', data)
     data2 = _update_data2(data, is_dev)
-    print("data", data)
+    assert 'stop_on_skip' in data2, list(data2)
     return data2
 
 def _update_data(data, is_dev: bool):
@@ -803,6 +818,7 @@ def _update_data(data, is_dev: bool):
         data['profile'] = False
         data['write_xlsx'] = False
         data['nocombine'] = False
+        data['stop_on_skip'] = False
 
     if 'geometry' not in data:
         data['geometry'] = False
@@ -923,6 +939,7 @@ def main(argv=None, show_args: bool=True) -> None:
             is_testing=data['test'],
             slice_nodes=slice_nodes,
             slice_elements=slice_elements,
+            stop_on_skip=data['stop_on_skip'],
         )
         prof.dump_stats('op2.profile')
 
@@ -961,8 +978,10 @@ def main(argv=None, show_args: bool=True) -> None:
             is_testing=data['test'],
             slice_nodes=slice_nodes,
             slice_elements=slice_elements,
+            stop_on_skip=data['stop_on_skip'],
         )
     print("dt = %f" % (time.time() - time0))
+
 
 if __name__ == '__main__':  # pragma: no cover
     main(show_args=True)

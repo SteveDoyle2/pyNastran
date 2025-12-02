@@ -14,6 +14,7 @@ from typing import Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
+from pyNastran.op2.tables.utils import get_is_slot_saved
 from pyNastran.op2.tables.oug.oug import get_shock_prefix_postfix
 from pyNastran.op2.tables.oqg_constraintForces.separation_distance import (
     SeparationDistanceArray)
@@ -450,12 +451,11 @@ class OQG:
                 result_name = 'RARCONS.spc_forces'
             else:
                 raise NotImplementedError(op2.table_name_str)
-            if op2._results.is_not_saved(result_name):
+
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            #storage_obj = getattr(op2, result_name)
-            storage_obj = op2.get_result(result_name)
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealSPCForcesArray, ComplexSPCForcesArray,
                                            'node', random_code=op2.random_code)
         elif op2.thermal == 1:
@@ -463,22 +463,22 @@ class OQG:
             op2._setup_op2_subcase('FLUX')
 
             result_name = 'thermal_gradient_and_flux'
-            storage_obj = op2.thermal_gradient_and_flux
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                             RealTemperatureGradientAndFluxArray, None,
                                             'node', random_code=op2.random_code)
         elif op2.thermal == 8:  # 4 ?
             result_name0 = 'spc_forces'
             prefix, postfix = get_shock_prefix_postfix(op2.thermal)
             result_name = prefix + result_name0 + postfix
-            if op2._results.is_not_saved(result_name):
+
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            storage_obj = op2.get_result(result_name)
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealSPCForcesArray, ComplexSPCForcesArray,
                                            'node', random_code=op2.random_code)
         else:
@@ -510,12 +510,11 @@ class OQG:
             msg = 'mpc_forces; table_name=%s' % op2.table_name
             raise NotImplementedError(msg)
 
-        storage_obj = op2.get_result(result_name)
         if op2.thermal == 0:
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealMPCForcesArray, ComplexMPCForcesArray,
                                            'node', random_code=op2.random_code)
         else:
@@ -538,12 +537,11 @@ class OQG:
             msg = 'contact_forces; table_name=%s' % op2.table_name
             raise NotImplementedError(msg)
 
-        storage_obj = op2.get_result(result_name)
         if op2.thermal == 0:
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealContactForcesArray, None,
                                            'node', random_code=op2.random_code)
         else:
@@ -566,12 +564,11 @@ class OQG:
             msg = 'glue_forces; table_name=%s' % op2.table_name
             raise NotImplementedError(msg)
 
-        storage_obj = op2.get_result(result_name)
         if op2.thermal == 0:
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealContactForcesArray, None,
                                            'node', random_code=op2.random_code)
         else:
@@ -595,12 +592,11 @@ class OQG:
         else:
             raise RuntimeError(op2.code_information())
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
 
-        storage_obj = op2.get_result(result_name)
-        n = op2._read_random_table(data, ndata, result_name, storage_obj,
+        n = op2._read_random_table(data, ndata, result_name, slot,
                                    obj, 'node',
                                    random_code=op2.random_code)
         return n
@@ -613,11 +609,10 @@ class OQG:
         if op2.thermal == 0:
             if op2.table_code in [3, 803]:
                 result_name = 'rms.spc_forces'
-                if op2._results.is_not_saved(result_name):
+                is_saved, slot = get_is_slot_saved(op2, result_name)
+                if not is_saved:
                     return ndata
-                storage_obj = op2.get_result(result_name)
-                op2._results._found_result(result_name)
-                n = op2._read_random_table(data, ndata, result_name, storage_obj,
+                n = op2._read_random_table(data, ndata, result_name, slot,
                                            RealSPCForcesArray, 'node',
                                            random_code=op2.random_code)
             else:
@@ -642,11 +637,10 @@ class OQG:
                 print(op2.table_code)
                 raise RuntimeError(op2.code_information())
 
-            if op2._results.is_not_saved(result_name):
+            is_saved, slot = get_is_slot_saved(op2, result_name)
+            if not is_saved:
                 return ndata
-            op2._results._found_result(result_name)
-            storage_obj = op2.get_result(result_name)
-            n = op2._read_random_table(data, ndata, result_name, storage_obj,
+            n = op2._read_random_table(data, ndata, result_name, slot,
                                        RealSPCForcesArray, 'node',
                                        random_code=op2.random_code)
         else:
@@ -662,11 +656,10 @@ class OQG:
         if op2.thermal == 0:
             if op2.table_code in [3, 503]:
                 result_name = 'crm.spc_forces'
-                storage_obj = op2.get_result(result_name)
-                if op2._results.is_not_saved(result_name):
+                is_saved, slot = get_is_slot_saved(op2, result_name)
+                if not is_saved:
                     return ndata
-                op2._results._found_result(result_name)
-                n = op2._read_random_table(data, ndata, result_name, storage_obj,
+                n = op2._read_random_table(data, ndata, result_name, slot,
                                            RealSPCForcesArray, 'node',
                                            random_code=op2.random_code)
             else:
@@ -690,12 +683,10 @@ class OQG:
         else:
             raise RuntimeError(op2.code_information())
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-
-        storage_obj = op2.get_result(result_name)
-        n = op2._read_random_table(data, ndata, result_name, storage_obj,
+        n = op2._read_random_table(data, ndata, result_name, slot,
                                    obj, 'node',
                                    random_code=op2.random_code)
         return n
@@ -719,12 +710,11 @@ class OQG:
         else:
             raise RuntimeError(op2.code_information())
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
 
-        storage_obj = op2.get_result(result_name)
-        n = op2._read_random_table(data, ndata, result_name, storage_obj,
+        n = op2._read_random_table(data, ndata, result_name, slot,
                                     obj, 'node',
                                     random_code=op2.random_code)
 
@@ -750,12 +740,11 @@ class OQG:
         else:
             raise RuntimeError(op2.code_information())
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
 
-        storage_obj = op2.get_result(result_name)
-        n = op2._read_random_table(data, ndata, result_name, storage_obj,
+        n = op2._read_random_table(data, ndata, result_name, slot,
                                    obj, 'node',
                                    random_code=op2.random_code)
 
@@ -781,12 +770,11 @@ class OQG:
         else:
             raise RuntimeError(op2.code_information())
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
 
-        storage_obj = op2.get_result(result_name)
-        n = op2._read_random_table(data, ndata, result_name, storage_obj,
+        n = op2._read_random_table(data, ndata, result_name, slot,
                                    obj, 'node',
                                    random_code=op2.random_code)
         assert n is not None, n
@@ -810,12 +798,11 @@ class OQG:
         else:
             raise RuntimeError(op2.code_information())
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
 
-        storage_obj = op2.get_result(result_name)
-        n = op2._read_random_table(data, ndata, result_name, storage_obj,
+        n = op2._read_random_table(data, ndata, result_name, slot,
                                    obj, 'node',
                                    random_code=op2.random_code)
 
@@ -840,12 +827,11 @@ class OQG:
         else:
             raise RuntimeError(op2.code_information())
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
 
-        storage_obj = op2.get_result(result_name)
-        n = op2._read_random_table(data, ndata, result_name, storage_obj,
+        n = op2._read_random_table(data, ndata, result_name, slot,
                                    obj, 'node',
                                    random_code=op2.random_code)
         assert n is not None, n

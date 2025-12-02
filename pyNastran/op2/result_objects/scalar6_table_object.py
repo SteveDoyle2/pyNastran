@@ -293,13 +293,13 @@ class ScalarTableArray(ScalarObject):  # displacement style table
             #self.data_frame.columns.names = ['Static']
             #self.data_frame.index.names = ['NodeID', 'Type', 'Item']
 
-            df1 = pd.DataFrame(self.node_gridtype[:, 0])
-            df1.columns = ['NodeID']
-            df2 = pd.DataFrame(self.gridtype_str)
-            df2.columns = ['Type']
-            df3 = pd.DataFrame(self.data[0])
-            df3.columns = headers
-            data_frame = df1.join([df2, df3])
+            data = {
+                'NodeID': self.node_gridtype[:, 0],
+                'Type': self.gridtype_str,
+            }
+            for i, header in enumerate(headers):
+                data[header] = self.data[0, :, i]
+            data_frame = pd.DataFrame(data)
         self.data_frame = data_frame
         #print(self.data_frame)
 

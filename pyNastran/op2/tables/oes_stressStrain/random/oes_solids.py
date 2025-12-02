@@ -159,7 +159,7 @@ class RandomSolidArray(OES_Object):
         self.itotal += 1
 
     @property
-    def nnodes_per_element(self):
+    def nnodes_per_element(self) -> int:
         if self.element_type == 39: # CTETRA
             nnodes = 4
         elif self.element_type == 67: # CHEXA

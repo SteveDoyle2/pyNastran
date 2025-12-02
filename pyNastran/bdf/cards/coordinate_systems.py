@@ -757,7 +757,8 @@ class CoordBase(BaseCard):
             return xyz
         return self.transform_vector_to_global_array(xyz) + self.origin
 
-    def _transform_node_to_local(self, xyz, beta):
+    def _transform_node_to_local(self, xyz: np.ndarray,
+                                 beta: np.ndarray) -> np.ndarray:
         """
         Parameters
         ----------
@@ -776,7 +777,8 @@ class CoordBase(BaseCard):
         xyz_local = self.xyz_to_coord(xyz_coord)
         return xyz_local
 
-    def _transform_node_to_local_array(self, xyz, beta):
+    def _transform_node_to_local_array(self, xyz: np.ndarray,
+                                       beta: np.ndarray) -> np.ndarray:
         """
         Parameters
         ----------

@@ -74,15 +74,17 @@ class RealEigenvalues(BaseScalarObject):
         import pandas as pd
         headers = self.get_headers()
         #cycle = sqrt(abs(eigenvalue)) / (2. * pi)
-        data = np.vstack([self.eigenvalues, self.radians, self.cycles,
-                          self.generalized_mass, self.generalized_stiffness]).T
-        modes_extraction_order = np.vstack([self.mode, self.extraction_order]).T
-
-        df1 = pd.DataFrame(modes_extraction_order)
-        df1.columns = ['Mode', 'ExtractionOrder']
-        df2 = pd.DataFrame(data)
-        df2.columns = headers
-        self.data_frame = df1.join(df2)
+        data = {
+            'Mode': self.mode,
+            'ExtractionOrder': self.extraction_order,
+            headers[0]: self.eigenvalues,
+            headers[1]: self.radians,
+            headers[2]:self.cycles,
+            headers[3]:self.generalized_mass,
+            headers[4]: self.generalized_stiffness,
+        }
+        assert len(headers) == 5, headers
+        self.data_frame = pd.DataFrame(data)
 
     def add_f06_data(self, data):
         for i, line in enumerate(data):
@@ -432,17 +434,15 @@ class ComplexEigenvalues(BaseScalarObject):
         import pandas as pd
         headers = self.get_headers()
 
-        cdata = self.eigenvalues
-        fdata = np.vstack([self.cycles, self.damping]).T
-        modes_extraction_order = np.vstack([self.mode, self.extraction_order]).T
-
-        df1 = pd.DataFrame(modes_extraction_order)
-        df1.columns = ['Mode', 'ExtractionOrder']
-        df2 = pd.DataFrame(cdata)
-        df2.columns = [headers[0]]
-        df3 = pd.DataFrame(fdata)
-        df3.columns = headers[1:]
-        self.data_frame = df1.join([df2, df3])
+        data = {
+            'Mode': self.mode,
+            'ExtractionOrder': self.extraction_order,
+            headers[0]: self.eigenvalues,
+            headers[1]: self.cycles,
+            headers[2]: self.damping,
+        }
+        assert len(headers) == 3, headers
+        self.data_frame = pd.DataFrame(data)
         #print(self.data_frame)
 
     def write_f06(self, f06_file, header, page_stamp, page_num=1):  # not proper msg start
@@ -690,7 +690,7 @@ class BucklingEigenvalues(BaseScalarObject):
     def is_complex(self) -> bool:
         return False
 
-    def is_buckling(self):
+    def is_buckling(self) -> bool:
         return True
 
     def add_op2_line(self, data, imode: int) -> None:
@@ -710,29 +710,17 @@ class BucklingEigenvalues(BaseScalarObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
-        headers = self.get_headers()
-        nmodes = len(self.eigenvalues)
-
-        modes_extraction_order = np.zeros((nmodes, 2), dtype='float32')
-        fdata = np.zeros((nmodes, 5), dtype='float32')
-
-        imodei = 0
-        for (imode, unused_mode) in enumerate(self.mode):
-            eigi = self.eigenvalues[imode]
-            extraction_order = self.extraction_order[imode]
-            freq = self.freqs[imode]
-            omega = self.omegas[imode]
-            gen_m = self.generalized_mass[imode]
-            gen_k = self.generalized_stiffness[imode]
-
-            fdata[imodei, :] = [eigi, freq, omega, gen_m, gen_k]
-            modes_extraction_order[imodei, :] = [imode, extraction_order]
-            imodei += 1
-        df1 = pd.DataFrame(modes_extraction_order)
-        df1.columns = ['Mode', 'ExtractionOrder']
-        df2 = pd.DataFrame(fdata)
-        df2.columns = headers
-        self.data_frame = df1.join([df2])
+        # headers = self.get_headers()
+        data = {
+            'Mode': self.mode,
+            'ExtractionOrder': self.extraction_order,
+            'eigenvalue': self.eigenvalues,
+            'radians': self.freqs,
+            'cycles': self.omegas,
+            'generalized_mass': self.generalized_mass,
+            'generalized_stiffness': self.generalized_stiffness,
+        }
+        self.data_frame = pd.DataFrame(data)
         #print(self.data_frame)
 
     def get_headers(self) -> list[str]:

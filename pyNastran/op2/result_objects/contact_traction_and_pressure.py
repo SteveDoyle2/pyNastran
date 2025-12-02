@@ -32,22 +32,14 @@ from pyNastran.op2.result_objects.op2_objects import ScalarObject, set_as_sort1
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e # write_imag_floats_13e
 from pyNastran.op2.errors import SixtyFourBitError
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
-from pyNastran.op2.writer.utils import fix_table3_types
+# from pyNastran.op2.writer.utils import fix_table3_types
 
 float_types = (float, np.float32)
 integer_types = (int, np.int32)
 
 table_name_to_table_code = {
-    # displacement (msc/nx)
-    'OUGV1' : 1,
-    'BOUGV1' : 1,
-    # load vector (msc/nx)
-    'OPG1' : 2,
-    'BOPG1' : 2,
-    #'BOPHIG1' : 5, # ???
-
-    # spc/mpc forces
-    'OQG1' : 3,
+    # contact traction and pressure - nx
+    'OBC1': 62,
 }
 def append_sort1_sort2(data1, data2, to_sort1=True):
     """
@@ -569,11 +561,12 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
         self._times = [None]
 
     @classmethod
-    def add_static_case(cls, table_name, node_gridtype, data, isubcase,
+    def add_static_case(cls, table_name: str,
+                        node_gridtype: np.ndarray, data: np.ndarray,
+                        isubcase: int,
                         is_sort1=True, is_random=False, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
-
-        table_name = table_name
+        assert data.shape[2] == 4, data.shape
         analysis_code = 1 # static
         data_code = oug_data_code(table_name, analysis_code,
                                   is_sort1=is_sort1, is_random=is_random,
@@ -601,7 +594,7 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
                            times,
                            is_sort1=True, is_random=False, is_msc=True,
                            random_code=0, title='', subtitle='', label=''):
-
+        assert data.shape[2] == 4, data.shape
         analysis_code = 6 # transient
         data_code = oug_data_code(table_name, analysis_code,
                                   is_sort1=is_sort1, is_random=is_random,
@@ -628,7 +621,7 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
                        modes, eigenvalues, mode_cycles,
                        is_sort1=True, is_random=False, is_msc=True,
                        random_code=0, title='', subtitle='', label=''):
-
+        assert data.shape[2] == 4, data.shape
         #elif self.analysis_code == 2:  # real eigenvalues
             ## mode number
             #self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
@@ -797,6 +790,23 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
                 csv_file.write('\n')
         return
 
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
+        if header is None:
+            header = []
+        words = ['                                             D I S P L A C E M E N T   V E C T O R\n', ]
+        #' \n',
+        #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        write_words = True
+        assert self.table_name == 'OBC1', self.table_name
+
+        #words += self.get_table_marker()
+        if self.nonlinear_factor not in (None, np.nan):
+            return self._write_f06_transient_block(
+                words, header, page_stamp, page_num, f06_file, write_words,
+                is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        return self._write_f06_block(words, header, page_stamp, page_num, f06_file, write_words,)
+
     def _write_f06_block(self, words, header, page_stamp, page_num, f06_file, write_words,
                          is_mag_phase=False, is_sort1=True):
         if write_words:
@@ -806,19 +816,19 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
-        t1 = self.data[0, :, 0]
-        t2 = self.data[0, :, 1]
-        t3 = self.data[0, :, 2]
-        r1 = self.data[0, :, 3]
-        r2 = self.data[0, :, 4]
-        r3 = self.data[0, :, 5]
-        for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
+
+        # POINT ID. TYPE  PRESSURE  S1  S2  S3
+        pressure = self.data[0, :, 0]
+        s1 = self.data[0, :, 1]
+        s2 = self.data[0, :, 2]
+        s3 = self.data[0, :, 3]
+        for node_id, gridtypei, pi, s1i, s2i, s3i in zip(node, gridtype, pressure, s1, s2, s3):
             sgridtype = self.recast_gridtype_as_string(gridtypei)
-            vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+            vals = [pi, s1i, s2i, s3i]
             vals2 = write_floats_13e(vals)
-            (dx, dy, dz, rx, ry, rz) = vals2
-            f06_file.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+            (dp, ds1, ds2, ds3) = vals2
+            f06_file.write('%14i %6s     %-13s  %-13s  %-13s  %s\n' % (
+                node_id, sgridtype, dp, ds1, ds2, ds3))
         f06_file.write(page_stamp % page_num)
         return page_num
 
@@ -860,68 +870,36 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
 
         for itime in range(self.ntimes):
             dt = self._times[itime]
-            t1 = self.data[itime, :, 0]
-            t2 = self.data[itime, :, 1]
-            t3 = self.data[itime, :, 2]
-            r1 = self.data[itime, :, 3]
-            r2 = self.data[itime, :, 4]
-            r3 = self.data[itime, :, 5]
+            pressure = self.data[itime, :, 0]
+            s1 = self.data[itime, :, 1]
+            s2 = self.data[itime, :, 2]
+            s3 = self.data[itime, :, 3]
 
             if isinstance(dt, float_types):
                 header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             else:
                 header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
             f06_file.write(''.join(header + words))
-            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(nodes, gridtypes, t1, t2, t3, r1, r2, r3):
+            for node_id, gridtypei, p1, s1i, s2i, s3i in zip(nodes, gridtypes, pressure, s1, s2, s3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
-                vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                vals = [p1, s1i, s2i, s3i]
                 vals2 = write_floats_13e(vals)
-                (dx, dy, dz, rx, ry, rz) = vals2
+                (dp, ds1, ds2, ds3) = vals2
                 if sgridtype in ['G', 'H', 'L']:
-                    f06_file.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                        node_id, sgridtype, dx, dy, dz, rx, ry, rz))
-                elif sgridtype in ['S', 'M', 'E']:
-                    f06_file.write('%14i %6s     %s\n' % (node_id, sgridtype, dx))
+                    f06_file.write('%14i %6s     %-13s  %-13s  %-13s  %s\n' % (
+                        node_id, sgridtype, dp, ds1, ds2, ds3))
+                # elif sgridtype in ['S', 'M', 'E']:
+                #     f06_file.write('%14i %6s     %s\n' % (node_id, sgridtype, dx))
                 else:  # pragma: no cover
                     raise NotImplementedError(f'node_id={node_id} sgridtype={sgridtype} vals={vals2}')
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
-    #def _write_sort2_as_sort2(self, f06_file, page_num, page_stamp, header, words):
-        #nodes = self.node_gridtype[:, 0]
-        #gridtypes = self.node_gridtype[:, 1]
-        #times = self._times
-        #for inode, (node_id, gridtypei) in enumerate(zip(nodes, gridtypes)):
-            #t1 = self.data[inode, :, 0]
-            #t2 = self.data[inode, :, 1]
-            #t3 = self.data[inode, :, 2]
-            #r1 = self.data[inode, :, 3]
-            #r2 = self.data[inode, :, 4]
-            #r3 = self.data[inode, :, 5]
-
-            #header[1] = ' POINT-ID = %10i\n' % node_id
-            #f06_file.write(''.join(header + words))
-            #for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
-                #sgridtype = self.recast_gridtype_as_string(gridtypei)
-                #vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                #vals2 = write_floats_13e(vals)
-                #(dx, dy, dz, rx, ry, rz) = vals2
-                #if sgridtype in ['G', 'H', 'L']:
-                    #f06_file.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                        #write_float_12e(dt), sgridtype, dx, dy, dz, rx, ry, rz))
-                #elif sgridtype == 'S':
-                    #f06_file.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
-                #else:
-                    #raise NotImplementedError(sgridtype)
-            #f06_file.write(page_stamp % page_num)
-            #page_num += 1
-        #return page_num
-
     def _write_f06_transient_block(self, words, header, page_stamp, page_num, f06_file, write_words,
                                    is_mag_phase=False, is_sort1=True):
         if write_words:
-            words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+            words += [' \n', '      POINT ID.   TYPE          PRESSURE          S1             S2             S3\n']
         #words += self.getTableMarker()
 
         if not len(header) >= 3:
@@ -942,7 +920,7 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
     def extract_xyplot(self, node_ids, index):
         node_ids = np.asarray(node_ids, dtype='int32')
         i = index - 1
-        assert index in [1, 2, 3, 4, 5, 6], index
+        assert index in [1, 2, 3, 4], index
         nids = self.node_gridtype[:, 0]
         inids = np.searchsorted(nids, node_ids)
         assert all(nids[inids] == node_ids), 'nids=%s expected=%s; all=%s'  % (nids[inids], node_ids, nids)

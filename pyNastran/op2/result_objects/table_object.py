@@ -34,7 +34,10 @@ import numpy as np
 from pyNastran.bdf import MAX_32_BIT_INT
 from pyNastran.op2.result_objects.op2_objects import (
     ScalarObject, get_sort_node_sizes, set_as_sort1,
-    NULL_GRIDTYPE, SORT1_TABLES, SORT2_TABLES)
+    NULL_GRIDTYPE, SORT1_TABLES, SORT2_TABLES,
+    # GRID_TYPE_INT_TO_STR,
+    recast_gridtype_as_string,
+)
 
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long,
@@ -415,7 +418,7 @@ class TableArray(ScalarObject):  # displacement style table
         # ]
         ntimes, nnodes = self.data.shape[:2]
 
-        ugridtype_str = np.unique(self.gridtype_str)
+        # ugridtype_str = np.unique(self.gridtype_str)
         if self.nonlinear_factor not in (None, np.nan):
             # if not self.is_sort1:
             #     print("skipping %s because it's not SORT1" % self.class_name)
@@ -622,8 +625,7 @@ class TableArray(ScalarObject):  # displacement style table
                 #print(data_frame)
                 #print(self.data_frame.index.names)
                 #data_frame = pandas_extract_rows(data_frame, ugridtype_str, ['NodeID', 'Item'])
-            self.data_frame = data_frame
-            #print(self.data_frame)
+            #print(data_frame)
 
         else:
             #self.data_frame = pd.Panel(self.data[0, :, :], major_axis=node_gridtype, minor_axis=headers).to_frame()
@@ -636,35 +638,30 @@ class TableArray(ScalarObject):  # displacement style table
             # 2        3    G     0.0     0.000000  0.000000e+00  0.0  0.0  0.0
             #self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.node_gridtype)
 
-            df1 = pd.DataFrame(self.node_gridtype[:, 0])
-            df1.columns = ['NodeID']
-            df2 = pd.DataFrame(self.gridtype_str)
-            df2.columns = ['Type']
-            df3 = pd.DataFrame(self.data[0])
-            df3.columns = headers
-            self.data_frame = df1.join([df2, df3])
+            nnode = self.node_gridtype.shape[0]
+            # gridtype_str1 = self.gridtype_str
+            gridtype_str = get_gridtype_str(self, self.node_gridtype)
+            # print('gridtype_str1 = ', gridtype_str1, gridtype_str1.shape)
+            # print('gridtype_str2 = ', gridtype_str2, gridtype_str2.shape)
+            data_dict = {
+                'NodeID': self.node_gridtype[:, 0],
+                'Type': gridtype_str,
+            }
+            for i, header in enumerate(headers):
+                datai = self.data[0, :, i]
+                assert len(datai) == nnode, (len(datai), nnode)
+                data_dict[header] = datai
+            data_frame = pd.DataFrame(data_dict)
+        #print(data_frame)
+        self.data_frame = data_frame
 
-            #df1 = pd.DataFrame(self.node_gridtype)
-            #df1.columns = ['NodeID', 'Type']
-            #df2 = pd.DataFrame(self.data[0])
-            #df2.columns = headers
-            #self.data_frame = df1.join([df2])
-        #print(self.data_frame)
-
-    def finalize(self):
+    def finalize(self) -> None:
         """
         Calls any OP2 objects that need to do any post matrix calcs
         """
         self.set_as_sort1()
-        gridtypes = self.node_gridtype[:, 1]
-        nnodes = len(gridtypes)
         #self.gridtype_str2 = np.chararray(nnodes, unicode=True)
-        self.gridtype_str = np.zeros(nnodes, dtype='U1')
-        ugridtypes = np.unique(gridtypes)
-        for ugridtype in ugridtypes:
-            i = np.where(gridtypes == ugridtype)
-            self.gridtype_str[i] = self.recast_gridtype_as_string(ugridtype)
-            #self.gridtype_str2[i] = self.recast_gridtype_as_string(ugridtype)
+        self.gridtype_str = get_gridtype_str(self, self.node_gridtype)
         #print(self.gridtype_str, self.gridtype_str.dtype)
         #print(self.gridtype_str2, self.gridtype_str2.dtype)
         #asdf
@@ -1546,7 +1543,7 @@ class RealTableArray(TableArray):
         r2 = self.data[0, :, 4]
         r3 = self.data[0, :, 5]
         for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
-            sgridtype = self.recast_gridtype_as_string(gridtypei)
+            sgridtype = recast_gridtype_as_string(self, gridtypei)
             vals = [t1i, t2i, t3i, r1i, r2i, r3i]
             vals2 = write_floats_13e(vals)
             (dx, dy, dz, rx, ry, rz) = vals2
@@ -1571,7 +1568,7 @@ class RealTableArray(TableArray):
             header[1] = ' POINT-ID = %10i\n' % node_id
             f06_file.write(''.join(header + words))
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
-                sgridtype = self.recast_gridtype_as_string(gridtypei)
+                sgridtype = recast_gridtype_as_string(self, gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
@@ -1606,7 +1603,7 @@ class RealTableArray(TableArray):
                 header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
             f06_file.write(''.join(header + words))
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(nodes, gridtypes, t1, t2, t3, r1, r2, r3):
-                sgridtype = self.recast_gridtype_as_string(gridtypei)
+                sgridtype = recast_gridtype_as_string(self, gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
@@ -1867,7 +1864,7 @@ class ComplexTableArray(TableArray):
             header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             f06_file.write(''.join(header + words))
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
-                sgridtype = self.recast_gridtype_as_string(gridtypei)
+                sgridtype = recast_gridtype_as_string(self, gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
@@ -1908,7 +1905,7 @@ class ComplexTableArray(TableArray):
             header[2] = ' POINT-ID = %10i\n' % node_id
             f06_file.write(''.join(header + words))
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
-                sgridtype = self.recast_gridtype_as_string(gridtypei)
+                sgridtype = recast_gridtype_as_string(self, gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
@@ -2428,3 +2425,15 @@ def pandas_extract_rows(data_frame, ugridtype_str: np.ndarray, index_names: list
     #@property
     #def node_ids(self):
         #return self.node_gridtype[:, 0]
+
+
+def get_gridtype_str(self, node_gridtype: np.ndarray) -> np.ndarray:
+    gridtypes = node_gridtype[:, 1]
+    nnodes = len(gridtypes)
+    gridtype_str = np.zeros(nnodes, dtype='U1')
+    ugridtypes = np.unique(gridtypes)
+    for ugridtype in ugridtypes:
+        i = np.where(gridtypes == ugridtype)
+        gridtype_str[i] = recast_gridtype_as_string(self, ugridtype)
+        # gridtype_str2[i] = recast_gridtype_as_string(self, ugridtype)
+    return gridtype_str

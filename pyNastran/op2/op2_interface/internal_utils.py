@@ -1,9 +1,12 @@
-from pyNastran import warn_on_op2_missed_table
+from __future__ import annotations
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.f06_formatting import get_key0
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from pyNastran.op2.op2 import OP2
 
 
-def get_result_length(res_types: list[dict], res_key: str) -> int:
+def get_result_length(op2: OP2, res_types: list[dict], res_key: str) -> int:
     """
     gets the length of the output data so we can line up:
 
@@ -51,7 +54,7 @@ def get_result_length(res_types: list[dict], res_key: str) -> int:
             class_name = result.__class__.__name__
             res_length = max(len(class_name), res_length)
 
-            if not warn_on_op2_missed_table:
+            if not op2.warn_on_op2_missed_table:
                 print(' %s - results not found...key=%s' % (class_name, res_key))
         else:  # empty result
             #print('else')

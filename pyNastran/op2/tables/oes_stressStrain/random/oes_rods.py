@@ -15,6 +15,10 @@ class RandomRodArray(OES_Object):
         self.nelements = 0  # result specific
 
     @property
+    def nnodes_per_element(self) -> int:
+        return 1
+
+    @property
     def is_real(self) -> bool:
         return True
 

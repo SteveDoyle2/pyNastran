@@ -228,7 +228,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         return False
 
     @property
-    def nnodes_per_element(self) -> bool:
+    def nnodes_per_element(self) -> int:
         return 1
 
     def data_type(self) -> str:
@@ -568,4 +568,3 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
             #f06_file.write(page_stamp % page_num)
             #page_num += 1
         #return page_num
-

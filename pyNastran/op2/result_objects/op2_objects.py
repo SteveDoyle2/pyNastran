@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from cpylog import SimpleLogger
-from pyNastran import stop_on_op2_missed_table
 from pyNastran.utils import object_attributes, object_methods, object_stats, simplify_object_keys
 from pyNastran.utils.numpy_utils import integer_types
 
@@ -255,9 +254,9 @@ class BaseScalarObject(Op2Codes):
 
     def get_stats(self, short: bool=False):
         msg = 'get_stats is not implemented in %s\n' % self.__class__.__name__
-        if stop_on_op2_missed_table:
-            raise NotImplementedError(msg)
-        return msg
+        # if stop_on_op2_missed_table:
+        raise NotImplementedError(msg)
+        # return msg
 
 
 class ScalarObject(BaseScalarObject):
@@ -1017,7 +1016,7 @@ class BaseElement(ScalarObject):
         assert not(from_tuples and from_array)
         if from_tuples:
             nvars = element_node.shape[1]
-            assert len(names) == nvars + 1, f'names={names} element_node={element_node} {element_node.shape}'
+            assert len(names) == nvars + 1, f'names={names} nvars+1={nvars+1}; element_node={element_node} {element_node.shape}'
             eid_nid_item = []
             for eid, nid in element_node:
                 for header in headers:
@@ -1026,7 +1025,7 @@ class BaseElement(ScalarObject):
             index = pd.MultiIndex.from_tuples(eid_nid_item, names=names)
         elif from_array:
             nvars = len(element_node)
-            assert len(names) == nvars + 1, f'names={names} element_node={element_node} (n={len(element_node)})'
+            assert len(names) == nvars + 1, f'names={names} nvars+1={nvars+1:d}; element_node={element_node} (n={len(element_node)})'
             eid_nid_item = []
             neid = len(element_node[0])
             for eid in element_node:
@@ -1034,7 +1033,7 @@ class BaseElement(ScalarObject):
                 eid_nid_item.append(eidi.ravel())
             if 1:
                 all_headers = headers * nelements
-                print(all_headers)
+                # print(all_headers)
             if 0:
                 all_headers = headers * neid
                 print(all_headers)
@@ -1054,6 +1053,85 @@ class BaseElement(ScalarObject):
             index = pd.MultiIndex.from_arrays(eid_nid_item, names=names)
         else:  # pragma: no cover
             raise RuntimeError('from_tuple, from_array')
+        data_frame = pd.DataFrame(A, columns=columns, index=index)
+
+        #element_node = [element_node[:, 0], element_node[:, 1]]
+        #data_frame = pd.Panel(data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+        #data_frame.columns.names = column_names
+        #data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+        #print(data_frame)
+        return data_frame
+
+    def _build_pandas_transient_from_dict(self,
+                                          column_values, column_names, headers: list[str],
+                                          mydict: dict[str, np.ndarray],
+                                          data: np.ndarray,
+                                          names: list[str]) -> pd.DataFrame:  # pragma: no cover
+        """
+        common method to build a transient dataframe
+        handles mixed type arrays for element_node
+        TODO: not done...
+        """
+        # Freq                  0.00001  10.00000 20.00000 30.00000                 40.00000 50.00000 60.00000
+        # ElementID NodeID Item
+        # 1         0      oxx        0j       0j       0j       0j    (3200.0806+6017.714j)       0j       0j
+        #                  oyy        0j       0j       0j       0j    (410.68146+772.2816j)       0j       0j
+        #                  ozz        0j       0j       0j       0j    (0.306115+0.5756457j)       0j       0j
+        #                  txy        0j       0j       0j       0j  (-120.69606-226.96753j)       0j       0j
+        #                  tyz        0j       0j       0j       0j  (0.70554054+1.3267606j)       0j       0j
+        #                  txz        0j       0j       0j       0j     (5193.834+9766.943j)       0j       0j
+        # 2                oxx        0j       0j       0j       0j    (8423.371+15840.051j)       0j       0j
+        #                  oyy        0j       0j       0j       0j    (-3364.359-6326.637j)       0j       0j
+        #                  ozz        0j       0j       0j       0j  (-74931.664-140908.11j)       0j       0j
+        #                  txy        0j       0j       0j       0j  (-261.20972-491.20178j)       0j       0j
+        #                  tyz        0j       0j       0j       0j   (121.57285+228.61633j)       0j       0j
+        #                  txz        0j       0j       0j       0j     (5072.678+9539.112j)       0j       0j
+        import pandas as pd
+        columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
+
+        #print(data.shape)
+        ntimes, nelements = data.shape[:2]
+        nheaders = len(headers)
+        try:
+            A = data.reshape(ntimes, nelements*nheaders).T
+        except ValueError:  # pragma: no cover
+            ntotal = ntimes * nelements * nheaders
+            print(f'data.shape={data.shape}; ntimes={ntimes} nelements={nelements} nheaders={nheaders}; ntotal={ntotal}')
+            raise
+        assert ntimes == len(column_values[0]), (ntimes, column_values[0])
+
+        if names is None:
+            names = ['ElementID', 'NodeID', 'Item']
+
+        element_node = {}
+        nvars = len(element_node)
+        assert len(names) == nvars + 1, f'names={names} element_node={element_node} (n={len(element_node)})'
+        neid = len(element_node[0])
+
+        data_list = []
+        for key, datai in mydict.items():
+            irange = np.arange(len(datai))
+
+        if 1:
+            all_headers = headers * nelements
+            # print(all_headers)
+        if 0:
+            all_headers = headers * neid
+            print(all_headers)
+        if 0:
+            ndata = len(element_node[0])
+            neid = len(np.unique(element_node[0]))
+        if 0:
+            names_list = []
+            for header in headers:
+                namei = np.full(nelements, header)
+                names_list.append(namei)
+            all_headers = np.hstack(names_list)
+            print(all_headers)
+        eid_nid_item.append(all_headers)
+        # print('nheaders = ', len(all_headers))
+
+        index = pd.MultiIndex.from_arrays(eid_nid_item, names=names)
         data_frame = pd.DataFrame(A, columns=columns, index=index)
 
         #element_node = [element_node[:, 0], element_node[:, 1]]
@@ -1210,7 +1288,7 @@ def set_as_sort1(obj):
     bit0, bit1, bit2 = obj.sort_bits
     obj.table_name = SORT2_TABLE_NAME_MAP[obj.table_name]
     obj.sort_code = bit0 + 2*bit1 + 4*bit2
-    print(obj.code_information())
+    # print(obj.code_information())
     # assert obj.is_sort1
 
     if analysis_method != 'N/A':
@@ -1224,3 +1302,25 @@ def set_as_sort1(obj):
         #print(self.get_stats())
         obj.name = obj.analysis_method
         del obj.analysis_method
+
+
+def recast_gridtype_as_string(self, grid_type: int) -> str:
+    """
+    converts a grid_type integer to a string
+
+    Point type (per NX 10; OUG table; p.5-663):
+    -1, Harmonic Point (my choice) -> '    ' = 538976288 (as an integer)
+    =1, GRID Point
+    =2, Scalar Point
+    =3, Extra Point
+    =4, Modal
+    =5, p-elements, 0-DOF
+    -6, p-elements, number of DOF
+    """
+    try:
+        grid_type_str = GRID_TYPE_INT_TO_STR[grid_type]
+    except KeyError:
+        if grid_type in NULL_GRIDTYPE:  # 32/64 bit error...
+            warnings.warn(''.join(self.get_stats()))
+        raise RuntimeError(f'grid_type={grid_type!r}')
+    return grid_type_str

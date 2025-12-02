@@ -188,7 +188,7 @@ class RandomPlateVMArray(OES_Object):
             headers, element_node, self.data[:, ipos, :], from_tuples=False, from_array=True,
             names=names,
         )
-        print(data_frame)
+        # print(data_frame)
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover

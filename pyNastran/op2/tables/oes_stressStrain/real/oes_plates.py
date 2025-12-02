@@ -170,7 +170,7 @@ class RealPlateArray(OES_Object):
             # print(f'ntimes={ntimes} nelements={nelements} nlayers={nlayers}; '
             #       f'nlayers_per_element={nlayers_per_element}')
             # assert ntimes == 1, ntimes
-            # print(self.code_information())
+            #print(self.code_information())
 
         if self.analysis_code == 1:
             # ntimes = 1

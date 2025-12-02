@@ -15,6 +15,7 @@ import numpy as np
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 from pyNastran.op2.tables.oug.oug_velocities import RealVelocityArray
 from pyNastran.op2.tables.oug.oug_accelerations import RealAccelerationArray
+from pyNastran.op2.tables.utils import get_is_slot_saved
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -36,13 +37,6 @@ class OUGPK:
      """
     def __init__(self, op2: OP2):
         self.op2 = op2
-
-    @property
-    def size(self) -> int:
-        return self.op2.size
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
 
     def _read_ougpk1_3(self, data: bytes, ndata: int):
         """reads table 3 (the header table)"""
@@ -122,16 +116,15 @@ class OUGPK:
         else:
             raise RuntimeError(op2.table_code)
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-        storage_obj = op2.get_result(result_name)
 
         assert op2.format_code == 1, op2.format_code
         assert op2.num_wide == 8, op2.num_wide
 
         op2.random_code
-        n = op2._read_random_table(data, ndata, result_name, storage_obj,
+        n = op2._read_random_table(data, ndata, result_name, slot,
                                     obj, 'node',
                                     random_code=op2.random_code)
         return n

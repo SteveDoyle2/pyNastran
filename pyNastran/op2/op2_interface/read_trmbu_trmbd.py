@@ -215,7 +215,7 @@ def read_trmbu(op2_reader: OP2Reader) -> None:
             element = 'CPLSTS8'
         else:
             print(int_data[:10])
-            print(op2.code_information())
+            op2.log.error(op2.code_information())
             raise NotImplementedError(f"Element type {element_type} is not implemented.\n")
 
         assert numwide == 4, numwide
@@ -471,7 +471,7 @@ def read_trmbd(op2_reader: OP2Reader) -> None:
             element = 'CPLSTS8'
         else:
             #print(int_data[:20])
-            print(op2.code_information())
+            op2.log.error(op2.code_information())
             raise NotImplementedError(f"Element type {element_type:d} is not implemented.\n")
         nelements, int_data, float_data = reshape_trmbd(
             element, nnodes, int_data, float_data)
@@ -509,4 +509,3 @@ def reshape_trmbd(element_name: str, nnodes: int,
     int_data = int_data.reshape(n_elements, ndata_per_element)
     float_data = float_data.reshape(n_elements, ndata_per_element)
     return n_elements, int_data, float_data
-

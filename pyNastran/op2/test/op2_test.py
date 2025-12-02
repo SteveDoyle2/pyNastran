@@ -214,6 +214,7 @@ def run(regenerate=True, make_geom=False, combine=True,
         include_results: Optional[str] | list[str]=None,
         exclude_results: Optional[str] | list[str]=None,
         save_cases=True, debug=False, write_f06=True, write_op2=False,
+        stop_on_skip=False,
         compare=True, short_stats=False, write_hdf5=True):
     # works
     #files = get_files_of_type('tests', '.op2')
@@ -263,10 +264,10 @@ def run(regenerate=True, make_geom=False, combine=True,
     # files = [filename for filename in files
     #          if 'Siemens' not in filename and 'simcenter' not in filename]
     assert len(files)
-    if regenerate:
-        print('files:')
-        for filename in files:
-            print(filename)
+    # if regenerate:
+    #     print('files:')
+    #     for filename in files:
+    #         print(filename)
 
     skip_files = []
     #skip_files = ['nltrot99.op2', 'rot12901.op2', 'plan20s.op2'] # giant
@@ -298,6 +299,7 @@ def run(regenerate=True, make_geom=False, combine=True,
             write_op2=write_op2, delete_op2=True,
             write_hdf5=write_hdf5, delete_hdf5=True,
             build_pandas=build_pandas,
+            stop_on_skip=stop_on_skip,
             debug=debug,
             skip_files=skip_files, stop_on_failure=stop_on_failure,
             nstart=nstart, nstop=nstop, binary_debug=binary_debug,
@@ -328,39 +330,42 @@ def main():
     from docopt import docopt
     ver = str(pyNastran.__version__)
 
-    msg = "Usage:  "
-    #is_release = False
-    #is_dev = 'dev' in ver
-    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [-x <arg>]... [--safe] [--skip_dataframe] [--nocombine]\n"
-    msg += '        op2_test -h | --help\n'
-    msg += '        op2_test -v | --version\n'
-    msg += '\n'
-    msg += f'Tests to see if an OP2 will work with pyNastran {ver}.\n'
-    msg += '\n'
-    #msg += "Positional Arguments:\n"
-    #msg += "  OP2_FILENAME         Path to OP2 file\n"
-    #msg += "\n"
-    msg += "Options:\n"
-    msg += "  -r, --regenerate       Resets the tests\n"
-    msg += "  -b, --binary_debug     Dumps the OP2 as a readable text file\n"
-    msg += "  -c, --disablecompare   Doesn't do a validation of the vectorized result\n"
-    msg += "  -t, --short_stats      Short get_op2_stats printout\n"
-    msg += "  -g, --geometry         Reads the OP2 for geometry, which can be written out\n"
-    # n is for NAS
-    msg += "  -n, --write_bdf        Writes the bdf to fem.test_op2.bdf (default=False)\n"
-    msg += "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
-    msg += "  -o, --write_op2        Writes the op2 to fem.test_op2.op2\n"
-    msg += "  -h, --write_hdf5       Writes the hdf5 to fem.test_op2.h5\n"
-    msg += "  --skip_dataframe       Disables pandas dataframe building; [default: False]\n"
-    msg += "  --nocombine            Disables case combination\n"
-    msg += "  -s, --save_cases       Disables saving of the cases (default=False)\n"
-    msg += "  -x <arg>, --exclude    Exclude specific results\n"
-    msg += "  -i <arg>, --include    Include specific results\n"
-    msg += "  --safe                 Safe cross-references BDF (default=False)\n"
-    #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
-    #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
-    #msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
-    msg += "   -d, --debug            debug logging\n"
+    msg = (
+        "Usage:  "
+        #is_release = False
+        #is_dev = 'dev' in ver
+        "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [-x <arg>]... [--safe] [--skip_dataframe] [--nocombine] [--stop_on_skip]\n"
+        '        op2_test -h | --help\n'
+        '        op2_test -v | --version\n'
+        '\n'
+        f'Tests to see if an OP2 will work with pyNastran {ver}.\n'
+        '\n'
+        #msg += "Positional Arguments:\n"
+        #msg += "  OP2_FILENAME         Path to OP2 file\n"
+        #msg += "\n"
+        "Options:\n"
+        "  -r, --regenerate       Resets the tests\n"
+        "  -b, --binary_debug     Dumps the OP2 as a readable text file\n"
+        "  -c, --disablecompare   Doesn't do a validation of the vectorized result\n"
+        "  -t, --short_stats      Short get_op2_stats printout\n"
+        "  -g, --geometry         Reads the OP2 for geometry, which can be written out\n"
+        # n is for NAS
+        "  -n, --write_bdf        Writes the bdf to fem.test_op2.bdf (default=False)\n"
+        "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
+        "  -o, --write_op2        Writes the op2 to fem.test_op2.op2\n"
+        "  -h, --write_hdf5       Writes the hdf5 to fem.test_op2.h5\n"
+        "  --skip_dataframe       Disables pandas dataframe building; [default: False]\n"
+        "  --nocombine            Disables case combination\n"
+        "  -s, --save_cases       Disables saving of the cases (default=False)\n"
+        "  -x <arg>, --exclude    Exclude specific results\n"
+        "  -i <arg>, --include    Include specific results\n"
+        "  --safe                 Safe cross-references BDF (default=False)\n"
+        "  --stop_on_skip         Raise an error if a results table is skipped\n"
+        #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
+        #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
+        #msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
+        "   -d, --debug            debug logging\n"
+    )
     if len(sys.argv) == 0:
         sys.exit(msg)
 
@@ -381,6 +386,7 @@ def main():
     exclude_results = data['--exclude']
     xref_safe = data['--safe']
     combine = not data['--nocombine']
+    stop_on_skip = not data['--stop_on_skip']
     run(regenerate=regenerate, make_geom=make_geom,
         combine=combine,
         write_bdf=write_bdf,
@@ -390,7 +396,9 @@ def main():
         save_cases=save_cases, write_f06=write_f06,
         write_op2=write_op2, write_hdf5=write_hdf5,
         short_stats=short_stats,
-        build_pandas=build_pandas, compare=compare, debug=debug)
+        build_pandas=build_pandas,
+        stop_on_skip=stop_on_skip,
+        compare=compare, debug=debug)
 
 
 if __name__ == '__main__':   # pragma: no cover

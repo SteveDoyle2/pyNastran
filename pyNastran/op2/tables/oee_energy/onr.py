@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from struct import Struct
 import numpy as np
 
+from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.tables.oee_energy.oee_objects import (
     RealStrainEnergyArray, ComplexStrainEnergyArray,
     RealKineticEnergyArray,)
@@ -486,14 +487,12 @@ class ONR:
 
         # strain_energy.cbar_strain_energy
         # kinetic_energy.cbar_kinetic_energy
-        result_name = prefix + result_name + result_name_suffix + postfix
+        result_name = f'{prefix}{result_name}{result_name_suffix}{postfix}'
         #result_name = 'strain_energy'
 
-        if op2._results.is_not_saved(result_name):
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
             return ndata
-        op2._results._found_result(result_name)
-
-        slot = op2.get_result(result_name)
 
         if 'strain_energy' in result_name:
             real_cls = RealStrainEnergyArray
@@ -507,11 +506,13 @@ class ONR:
         #auto_return = False
         if op2.is_debug_file:
             op2.binary_debug.write('cvalares = %s\n' % op2.cvalres)
+
+        factor = op2.factor
         if op2.format_code in [1, 2] and op2.num_wide == 4:
             assert op2.cvalres in [0, 1], op2.cvalres
 
             assert op2.num_wide == 4
-            ntotal = 16 * self.factor  # 4*4=16
+            ntotal = 16 * factor  # 4*4=16
             nelements = ndata // ntotal
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, real_cls)
@@ -560,11 +561,11 @@ class ONR:
                 obj.itotal2 = itotal2
                 obj.ielement = ielement2
             else:
-                n = real_strain_energy_4(op2, data, op2.sort_method,
-                                         self.size, n, ntotal, nelements, dt)
+                n = real_strain_energy_4(op2, obj, data,
+                                         n, ntotal, nelements, dt)
         elif op2.format_code == 1 and op2.num_wide == 5:
             assert op2.cvalres in [0, 1, 2], op2.cvalres  # 0??
-            ntotal = 20
+            ntotal = 20 * factor
             nnodes = ndata // ntotal
             nelements = nnodes
 
@@ -575,7 +576,7 @@ class ONR:
 
             obj = op2.obj
             if op2.use_vector:
-                n = nelements * 4 * op2.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -607,18 +608,18 @@ class ONR:
                 obj.ielement = ielement2
             else:
                 n = complex_strain_energy_4(op2, data, op2.sort_method,
-                                            self.size, n, ntotal, nelements, dt)
+                                            n, ntotal, nelements, dt)
         elif op2.format_code in [2, 3] and op2.num_wide == 5:
             #ELEMENT-ID   STRAIN-ENERGY (MAG/PHASE)  PERCENT OF TOTAL  STRAIN-ENERGY-DENSITY
             #    5         2.027844E-10 /   0.0            1.2581            2.027844E-09
             assert complex_cls is not None, op2.code_information()
 
-            ntotal = 20
+            ntotal = 20 * factor
             nelements = ndata // ntotal
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, complex_cls)
             if auto_return:
-                return nelements * op2.num_wide * 4
+                return nelements * ntotal
 
             obj = op2.obj
             if op2.use_vector:
@@ -643,22 +644,22 @@ class ONR:
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                n = complex_strain_energy_5(op2, data, op2.sort_method,
-                                            self.size, n, ntotal, nelements, dt)
+                n = complex_strain_energy_5(op2, obj, data,
+                                            n, ntotal, nelements, dt)
 
         elif op2.format_code == 1 and op2.num_wide == 6:
             ## TODO: figure this out...
-            ntotal = 24
+            ntotal = 24 * factor
             nelements = ndata // ntotal
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, RealStrainEnergyArray)
 
             if auto_return:
-                return nelements * op2.num_wide * 4
+                return nelements * ntotal
 
             obj = op2.obj
             if op2.use_vector:
-                n = nelements * 4 * op2.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -681,19 +682,9 @@ class ONR:
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                struct1 = Struct(op2._endian + b'i8s3f')
-                for unused_i in range(nelements):  # TODO: is this nnodes?
-                    edata = data[n:n+ntotal]
-                    out = struct1.unpack(edata)
-                    (word, energy, percent, density) = out  # TODO: this has to be wrong...
-                    word = word.strip()
-                    #print "eType=%s" % (eType)
-                    #print "%s" %(self.get_element_type(self.element_type)), data_in
-                    #eid = op2.obj.add_new_eid_sort1(out)
-                    if op2.is_debug_file:
-                        op2.binary_debug.write('  word=%s; %s\n' % (word, str(out)))
-                    obj.add_sort1(dt, word, energy, percent, density)
-                    n += ntotal
+                n = real_strain_energy_6(
+                    op2, obj, data,
+                    n, ntotal, nelements, dt)
         elif op2.format_code in [2, 3] and op2.num_wide == 4:
             #
             #  FREQUENCY =  1.000000E+01
@@ -733,19 +724,49 @@ class ONR:
         return n
 
 
-def complex_strain_energy_5(op2: OP2, data: bytes, sort_method: int,
-                            size: int, n: int,
+def real_strain_energy_6(op2: OP2,
+                         obj: RealStrainEnergyArray,
+                         data: bytes,
+                         n: int,
+                         ntotal: int,
+                         nelements: int,
+                         dt) -> int:
+    if op2.size == 4:
+        struct1 = Struct(op2._endian + b'i8s3f')
+    else:
+        struct1 = Struct(op2._endian + b'q16s3d')
+
+    for unused_i in range(nelements):  # TODO: is this nnodes?
+        edata = data[n:n + ntotal]
+        out = struct1.unpack(edata)
+        (word, energy, percent, density) = out  # TODO: this has to be wrong...
+        word = word.strip()
+        # print "eType=%s" % (eType)
+        # print "%s" %(self.get_element_type(self.element_type)), data_in
+        # eid = op2.obj.add_new_eid_sort1(out)
+        if op2.is_debug_file:
+            op2.binary_debug.write('  word=%s; %s\n' % (word, str(out)))
+        obj.add_sort1(dt, word, energy, percent, density)
+        n += ntotal
+    return n
+
+
+def complex_strain_energy_5(op2: OP2,
+                            obj: ComplexStrainEnergyArray,
+                            data: bytes,
+                            n: int,
                             ntotal: int, nelements: int, dt) -> int:
-    obj: RealStrainEnergyArray = op2.obj
 
     #fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'3f', size)
-    fmt = op2._endian + b'i4f'
+    fmt = op2._endian + mapfmt(b'i4f', op2.size)
     struct1 = Struct(fmt)
     for unused_i in range(nelements):
-        edata = data[n:n + 20]
+        edata = data[n:n + ntotal]
         out = struct1.unpack(edata)
         (eid_device, energyr, energyi, percent, density) = out
-        eid = eid_device // 10
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+
         # if is_magnitude_phase:
         # energy = polar_to_real_imag(energyr, energyi)
         # else:
@@ -753,19 +774,20 @@ def complex_strain_energy_5(op2: OP2, data: bytes, sort_method: int,
 
         if op2.is_debug_file:
             op2.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
+
+        #             dt, eid, energyi, percenti, densityi
         obj.add_sort1(dt, eid, energyr, energyi, percent, density)
         n += ntotal
     return n
 
 
 def real_strain_energy_4(op2: OP2,
+                         obj: RealStrainEnergyArray | RealKineticEnergyArray,
                          data: bytes,
-                         sort_method: int,
-                         size: int,
                          n: int,
                          ntotal: int,
                          nelements: int,
-                         dt) -> int:
+                         dt: int | float) -> int:
     """
     (eid_device       eid energy percent  density)
     (11                 1 0.0114 0.1983   0.01147) typical
@@ -773,12 +795,10 @@ def real_strain_energy_4(op2: OP2,
     (1000000000 100000000    sum    sum       NaN) nx/msc     - final
 
     """
-    fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'3f', size)
+    fmt = op2._endian + mapfmt(op2._analysis_code_fmt + b'3f', op2.size)
     struct1 = Struct(fmt)
-    obj: RealStrainEnergyArray = op2.obj
-
     if op2.is_optistruct:
-        fmt2 = mapfmt(op2._endian + op2._analysis_code_fmt + b'2f i', size)
+        fmt2 = mapfmt(op2._endian + op2._analysis_code_fmt + b'2f i', op2.size)
         struct2 = Struct(fmt2)
 
         edata = data[n:n+ntotal]
@@ -786,14 +806,11 @@ def real_strain_energy_4(op2: OP2,
         sum_percent = 0.
         for unused_i in range(nelements-1):
             edata = data[n:n+ntotal]
-
             out = struct1.unpack(edata)
             (eid_device, energy, percent, density) = out
-            if sort_method == 1:
-                eid = eid_device // 10
-            else:
-                eid = op2.nonlinear_factor
-                dt = eid_device
+            eid, dt = get_eid_dt_from_eid_device(
+                eid_device, op2.nonlinear_factor, op2.sort_method)
+
             # print(f'adding dt={dt:g} eid_device={eid_device} eid={eid} '
             #       f'energy={energy:g} percent={percent:g} density={density:g}')
             if op2.is_debug_file:
@@ -807,12 +824,9 @@ def real_strain_energy_4(op2: OP2,
         out = struct2.unpack(edata)
         (eid_device, energy, percent, density) = out
         assert eid_device == 0, eid_device
-        if sort_method == 1:
-            eid = eid_device // 10
-        else:  # pragma: no cover
-            raise NotImplementedError(sort_method)
-            #eid = op2.nonlinear_factor
-            #dt = eid_device
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+
         # print(f'adding dt={dt:g} eid_device={eid_device} eid={eid} '
         #       f'energy={energy:g} percent={percent:g} density={density:g}')
         #if op2.is_debug_file:
@@ -826,11 +840,9 @@ def real_strain_energy_4(op2: OP2,
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
             (eid_device, energy, percent, density) = out
-            if sort_method == 1:
-                eid = eid_device // 10
-            else:
-                eid = op2.nonlinear_factor
-                dt = eid_device
+            eid, dt = get_eid_dt_from_eid_device(
+                eid_device, op2.nonlinear_factor, op2.sort_method)
+
             # print(f'adding dt={dt:g} eid_device={eid_device} eid={eid} '
             #       f'energy={energy} percent={percent:g} density={density:g}')
             if op2.is_debug_file:
@@ -841,13 +853,16 @@ def real_strain_energy_4(op2: OP2,
 
 
 def complex_strain_energy_4(op2: OP2, data: bytes, sort_method: int,
-                            size: int, n: int,
+                            n: int,
                             ntotal: int, nnodes: int, dt) -> int:
     obj: ComplexStrainEnergyArray = op2.obj
-    s = Struct(op2._endian + b'8s3f')
+    if op2.size == 4:
+        structi = Struct(op2._endian + b'8s3f')
+    else:
+        structi = Struct(op2._endian + b'16s3d')
     for unused_i in range(nnodes):
-        edata = data[n:n+20]
-        out = s.unpack(edata)
+        edata = data[n:n+ntotal]
+        out = structi.unpack(edata)
         (word, energy, percent, density) = out
         word = word.strip()
         if op2.is_debug_file:
