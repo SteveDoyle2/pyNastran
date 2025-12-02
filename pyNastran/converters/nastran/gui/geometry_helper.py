@@ -184,7 +184,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                                  points: vtkPoints,
                                  nodes: np.ndarray) -> None:  # pragma: no cover
             """custom function to update the 3d bars"""
-            if not gui.settings.nastran_is_3d_bars_update:
+            if not gui.settings.nastran_settings.is_3d_bars_update:
                 return
             points_list: list[np.ndarray] = []
             node0b = 0
@@ -245,7 +245,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
 
         #def update_grid_function(unused_nid_map, ugrid, points, nodes) -> None:  # pragma: no cover
             #"""custom function to update the 3d bars"""
-            #if not gui.settings.nastran_is_3d_bars_update:
+            #if not gui.settings.nastran_settings.is_3d_bars_update:
                 #return
             #update_3d_beams(ugrid, model, bar_pid_to_eids)
 

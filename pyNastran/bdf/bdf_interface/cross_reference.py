@@ -96,6 +96,7 @@ class XrefMesh(BDFAttributes):
                         xref: bool=True,
                         xref_nodes: bool=True,
                         xref_elements: bool=True,
+                        xref_rigid_elements: bool=True,
                         xref_nodes_with_elements: bool=False,
                         xref_properties: bool=True,
                         xref_masses: bool=True,
@@ -115,7 +116,9 @@ class XrefMesh(BDFAttributes):
            cross references the model
         xref_nodes : bool; default=True
            set cross referencing of nodes/coords
-        xref_element : bool; default=True
+        xref_elements : bool; default=True
+           set cross referencing of elements & masses
+        xref_rigid_elements : bool; default=True
            set cross referencing of elements
         xref_properties : bool; default=True
            set cross referencing of properties
@@ -160,6 +163,7 @@ class XrefMesh(BDFAttributes):
         if xref_elements:
             xref_obj.cross_reference_bolts()
             xref_obj.cross_reference_elements()
+        if xref_rigid_elements:
             xref_obj.cross_reference_rigid_elements()
         if xref_properties:
             xref_obj.cross_reference_properties()

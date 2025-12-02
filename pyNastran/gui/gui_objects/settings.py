@@ -352,7 +352,7 @@ class NastranSettings:
         self.strain_energy = True
         self.grid_point_force = True
 
-        #---------------------------------------0000000000000000
+        # ------------------------------------------------------
         # colors
         self.caero_color = CAERO_COLOR
         self.rbe_line_color = RBE_LINE_COLOR

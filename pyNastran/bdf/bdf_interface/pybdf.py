@@ -425,7 +425,7 @@ class BDFInputPy:
         # the directory of the 1st BDF (include BDFs are relative to this one)
         self.include_dir = os.path.dirname(os.path.abspath(bdf_filename))
 
-        with self._open_file(bdf_filename, basename=True) as bdf_file:
+        with self._open_file(bdf_filename, basename=True, is_file0=True) as bdf_file:
             try:
                 lines = bdf_file.readlines()
             except UnicodeDecodeError:
@@ -565,7 +565,7 @@ class BDFInputPy:
             #raise IOError(msg)
 
         read_again = False
-        with self._open_file(bdf_filename2, basename=False) as bdf_file:
+        with self._open_file(bdf_filename2, basename=False, is_file0=False) as bdf_file:
             #print('bdf_file.name = %s' % bdf_file.name)
             try:
                 lines2 = bdf_file.readlines()
@@ -772,7 +772,8 @@ class BDFInputPy:
 
     def _open_file(self, bdf_filename: str | StringIO,
                    basename: bool=False, check: bool=True,
-                   encoding: Optional[str]=None) -> Any:
+                   encoding: Optional[str]=None,
+                   is_file0: bool=False) -> Any:
         """
         Opens a new bdf_filename with the proper encoding and include directory
 
@@ -802,7 +803,7 @@ class BDFInputPy:
         self._validate_open_file(bdf_filename_inc, check)
 
         #ifile = len(self.active_filenames)
-        if is_file_case_sensitive(bdf_filename_inc):
+        if is_file0 or is_file_case_sensitive(bdf_filename_inc):
             self.log.debug(f'opening {bdf_filename_inc!r}')
         else:
             self.log.warning(f'opening {bdf_filename_inc!r} (not case sensitive)')

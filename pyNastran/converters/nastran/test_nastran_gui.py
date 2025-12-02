@@ -1486,12 +1486,12 @@ class TestNastranGUI(unittest.TestCase):
         assert len(test.result_cases) == 198, len(test.result_cases)
 
         #test = NastranGUI()
-        test.settings.nastran_create_coords = False
-        test.settings.nastran_is_bar_axes = False
-        test.settings.nastran_is_3d_bars = False
-        test.settings.nastran_is_3d_bars_update = False
-        test.settings.nastran_is_element_quality = False
-        test.settings.nastran_is_properties = False
+        test.settings.nastran_settings.create_coords = False
+        test.settings.nastran_settings.is_bar_axes = False
+        test.settings.nastran_settings.is_3d_bars = False
+        test.settings.nastran_settings.is_3d_bars_update = False
+        test.settings.nastran_settings.is_element_quality = False
+        test.settings.nastran_settings.is_properties = False
         test.load_nastran_geometry(op2_filename)
 
     def test_gui_elements_missing_pcomp_subcase(self):
