@@ -96,18 +96,22 @@ class QSettingsLike2:
     def save_json(self) -> None:
         data = {}
         for key, value in self.data.items():
-            if isinstance(value, (str, integer_types)):
+            if isinstance(value, str):
                 value_out = value
             elif isinstance(value, float_types):
+                # json struggles with numpy floats
                 value_out = float(value)
+            elif isinstance(value, integer_types):
+                # json probably struggles with numpy ints
+                value_out = int(value)
+            elif key in self._tuples:
+                value_out = totuple(key, value)
+                assert isinstance(value_out, tuple), (key, value_out)
             elif key == 'recent_files':
                 value_out = value
             elif value.__class__.__name__ == 'QByteArray':
                 value2 = bytes(value.toBase64())
                 value_out = value2.decode('ascii')
-            elif key in self._tuples:
-                value_out = totuple(key, value)
-                assert isinstance(value_out, tuple), (key, value_out)
             else:  # pragma: no cover
                 print(f'error...{key!r}={value} type={str(type(value))}')
                 raise NotImplementedError(f'key={key!r} value={value!r}')
