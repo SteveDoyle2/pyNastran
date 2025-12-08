@@ -12,7 +12,7 @@ defines:
 from __future__ import annotations
 import os
 from itertools import count
-from typing import TextIO, Any, TYPE_CHECKING
+from typing import TextIO, Any, cast, TypedDict, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -26,6 +26,11 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, CTRIA3, CQUAD4
     from pyNastran.bdf.cards.coordinate_systems import Coord
     from pyNastran.nptyping_interface import NDArrayNint, NDArray3float, NDArrayNfloat
+    # Elements = dict[str, tuple[list[int], list[list[int, ...]]]]
+
+    class Elements(TypedDict):
+        line2: tuple[list[int], list[tuple[int, int]]]
+        tri3:  tuple[list[int], list[tuple[int, int, int]]]
     Rods = tuple[np.ndarray, np.ndarray, np.ndarray]
 
 def get_nid_cd_xyz_cid0(model: BDF) -> tuple[NDArrayNint, NDArrayNint,
@@ -223,11 +228,9 @@ def get_stations(model: BDF,
 
     return xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, x_stations_march
 
+
 def _setup_faces(bdf_filename: PathLike | BDF,
-                 ) -> tuple[np.ndarray, np.ndarray,
-                            list[tuple[int, int]],
-                            list,
-                            list[tuple[int, int, int]], list[int]]:
+                 ) -> tuple[np.ndarray, np.ndarray, Elements]:
     """helper method"""
     model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
     out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
@@ -238,10 +241,10 @@ def _setup_faces(bdf_filename: PathLike | BDF,
     lines = []
     face_eids = []
     faces = []
-    shells = {
-        'CTRIA3', 'CTRIAX', 'CTRIA6', 'CTRIAX6',
-        'CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUADX8',
-        'CSHEAR'}
+    # shells = {
+    #     'CTRIA3', 'CTRIAX', 'CTRIA6', 'CTRIAX6',
+    #     'CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUADX8',
+    #     'CSHEAR'}
 
     elements_skipped = []
     # split the CQUAD4s/CTRIA3s into triangles
@@ -271,7 +274,11 @@ def _setup_faces(bdf_filename: PathLike | BDF,
         consider_0d=False, consider_0d_rigid=False,
         consider_1d=False, consider_2d=True, consider_3d=False)
     # edge_to_eid_map = out['edge_to_eid_map']
-    return nids, xyz_cid0, lines, line_eids, faces, face_eids
+    elements = {
+        'line2': (line_eids, lines),
+        'tri3': (face_eids, faces),
+    }
+    return nids, xyz_cid0, elements
 
 
 def cut_face_model_by_coord(bdf_filename: PathLike | BDF, coord: CORD2R, tol: float,
@@ -308,17 +315,18 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF, coord: CORD2R, tol: fl
         the path to the simplified conrod model
     plane_bdf_filename2 : str; default='plane_face.bdf'
         the path to the simplified conrod model
+    debug_vectorize : bool; default=True
+        verify the vectorization is correct
 
     """
     assert isinstance(tol, float), tol
     if face_data is None:
         face_data = _setup_faces(bdf_filename)
 
-    nids, xyz_cid0, lines, line_eids, faces, face_eids = face_data
+    nids, xyz_cid0, elements = face_data
     unique_geometry_array, unique_results_array, rods_array = _cut_face_model_by_coord(
         nids, xyz_cid0,
-        lines, line_eids,
-        faces, face_eids,
+        elements,
         coord, tol,
         nodal_result, plane_atol=plane_atol,
         skip_cleanup=skip_cleanup,
@@ -380,6 +388,7 @@ def _determine_cord2r(origin: np.ndarray, zaxis: np.ndarray, xzplane: np.ndarray
     i = np.cross(j, k)
     return i, k
 
+
 def _project_z_axis(p1: NDArray3float,
                     p2: NDArray3float,
                     z_global: NDArray3float) -> tuple[NDArray3float, NDArray3float, NDArray3float,
@@ -410,6 +419,7 @@ def _project_z_axis(p1: NDArray3float,
     zaxis = p1 + k
     xzplane = p1 + i
     return i, k, origin, zaxis, xzplane
+
 
 def _project_vectors(p1: NDArray3float,
                      p2: NDArray3float,
@@ -450,6 +460,7 @@ def _project_vectors(p1: NDArray3float,
     # add the origin
     xyz2 = origin + i
     return xyz2, i, k, origin, origin_zaxis, origin_xzplane
+
 
 def _p1_p2_zaxis_to_cord2r(model: BDF,
                            p1: NDArray3float, p2: NDArray3float, zaxis: NDArray3float,
@@ -529,6 +540,7 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
     #print(f'origin_xzplane={origin_xzplane}')
     return xyz1, xyz2, z_global, i, k, origin, origin_zaxis, origin_xzplane
 
+
 #def _merge_bodies(local_points_array, global_points_array, result_array):
     #local_points_dict = {}
     #global_points_dict = {}
@@ -536,11 +548,9 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
     #return local_points_dict, global_points_dict, result_dict
     #return NotImplementedError()
 
+
 def _cut_face_model_by_coord(nids, xyz_cid0: np.ndarray,
-                             lines: list[tuple[int, int]],
-                             line_eids: list[int],
-                             faces: list[tuple[int, int, int] | tuple[int, int, int, int]],
-                             face_eids: list[int],
+                             elements: Elements,
                              coord: Coord, tol: float,
                              nodal_result, plane_atol: float=1e-5, skip_cleanup: bool=True,
                              plane_bdf_filename1: PathLike='plane_face1.bdf',
@@ -556,20 +566,18 @@ def _cut_face_model_by_coord(nids, xyz_cid0: np.ndarray,
         the node ids in the model
     xyz_cid0 : (nnodes, 3) float ndarray
         the node xyzs in the model
-    lines : list[line]
-        the lines of the model
-        line : varies
-            tuple[int, int]
-            tuple[int, int, int]
-    line_eids : list[int]
-        the parent element
-    faces : list[face]
-        the faces of the model
-        face : varies
-            tuple[int, int, int]
-            tuple[int, int, int, int]
-    face_eids : list[int]
-        the parent element
+    elements : dict['line2'/'tri3', tuple[eids, element_nodes]]
+        line2:
+            line_eids : list[int]
+                the parent element
+            lines : list[tuple[int, int]]
+                the node ids
+        tri3:
+            face_eids : list[int]
+                the parent element
+            faces : list[[int, int, int]]
+                the node ids of the CQUAD4s/CTRIA3s
+                quads are split into two triangles
     coord : Coord
         the coordinate system to cut the model with
     tol : float
@@ -581,6 +589,8 @@ def _cut_face_model_by_coord(nids, xyz_cid0: np.ndarray,
         the tolerance for a line that's located on the y=0 local plane
     plane_bdf_offset : float; default=0.
         ???
+    debug_vectorize : bool; default=True
+        verify the vectorization is correct
 
     Returns
     -------
@@ -592,6 +602,8 @@ def _cut_face_model_by_coord(nids, xyz_cid0: np.ndarray,
         ???
 
     """
+    face_eids, faces = elements['tri3']
+
     xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
     #face_eids = np.asarray(face_eids)
 
@@ -672,7 +684,9 @@ def split_to_trias(model: BDF) -> None:
 
 def cut_faces(node_ids: np.ndarray,
               xyz_cid0: np.ndarray, xyz_cid: np.ndarray,
-              faces, face_eids, nodal_result,
+              faces: np.ndarray,
+              face_eids: np.ndarray,
+              nodal_result: np.ndarray,
               coord: Coord, # CORD2R,
               plane_atol: float=1e-5,
               skip_cleanup: bool=True,
@@ -685,7 +699,7 @@ def cut_faces(node_ids: np.ndarray,
 
     Parameters
     ----------
-    node_ids : (nnid,) int ndarray
+    node_ids : (nnodes,) int ndarray
         the node ids for xyz_cid and xyz_cid0
     xyz_cid0 : (nnodes, 3) float ndarray
         the node xyzs in the model
@@ -729,9 +743,6 @@ def cut_faces(node_ids: np.ndarray,
     result: list[np.ndarray] = []
     geometry: list[np.ndarray] = []
 
-    #base, ext = os.path.splitext(plane_bdf_filename)
-    #plane_bdf_filename2 = base + '2' + ext
-    #with open(plane_bdf_filename, 'w') as fbdf1, open(plane_bdf_filename2, 'w') as fbdf2:
     fbdf1 = None
     fbdf2 = None
     if plane_bdf_filename1:
@@ -794,14 +805,12 @@ def cut_faces(node_ids: np.ndarray,
 
     if len(geometry) == 0:
         return None, None, (None, None, None)
-    unused_local_points_array = np.array(local_points)
-    unused_global_points_array = np.array(global_points)
+    # unused_local_points_array = np.array(local_points)
+    # unused_global_points_array = np.array(global_points)
     results_array = np.array(result)
     #print('*result', result)
     #print('*results_array', results_array, type(results_array))
 
-    #for g in geometry:
-        #print(g)
     geometry_array = np.array(geometry, dtype='int32')
     rods_elements_array = np.array(rod_elements, dtype='int32')
     rod_nids_array = np.array(rod_nids, dtype='int32')
@@ -811,6 +820,7 @@ def cut_faces(node_ids: np.ndarray,
         geometry_array, results_array, node_ids, skip_cleanup=skip_cleanup)
     #print('*unique_results_array', unique_results_array, type(unique_results_array))
     return unique_geometry_array, unique_results_array, (rods_elements_array, rod_nids_array, rod_xyzs_array)
+
 
 def _filter_tri_faces(xyz_cid: np.ndarray,
                       xyz_cid0: np.ndarray,
@@ -834,7 +844,9 @@ def _filter_tri_faces(xyz_cid: np.ndarray,
     tri_faces: (ntri, 3) int ndarray
         tri node indices into xyz_cid/xyz_cid0
     plane_atol: float
-        ???
+        the tolerance for a line that's located on the y=0 local plane
+    debug_vectorize : bool; default=True
+        verify the vectorization is correct
 
     """
     assert isinstance(tri_face_eids, np.ndarray)
