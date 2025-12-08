@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import unittest
 import numpy as np
 
@@ -7,7 +8,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.refine import (
     refine_model, _quad_nids_to_node_ids, _hexa_nids_to_node_ids,
     _insert_quad_nodes)
-pkg_path = pyNastran.__path__[0]
+pkg_path = Path(pyNastran.__path__[0])
 #model_path = os.path.join(pkg_path, '..', 'models')
 #bwb_path = os.path.join(model_path, 'bwb')
 DIRNAME = os.path.dirname(__file__)
@@ -379,18 +380,17 @@ class TestRefine(unittest.TestCase):
         x = 1
 
 
-    def _test_refine_bwb(self):
-        model_path = os.path.join(pkg_path, '..', 'models')
-        bwb_path = os.path.join(model_path, 'bwb')
-        bdf_filename = os.path.join(bwb_path, 'bwb_saero.bdf')
-        bdf_filename_out = os.path.join(bwb_path, 'bwb_saero_fine.bdf')
+    def test_refine_bwb(self):
+        model_path = pkg_path / '..' / 'models'
+        bwb_path = model_path / 'bwb'
+        bdf_filename = bwb_path / 'bwb_saero.bdf'
+        bdf_filename_out = bwb_path / 'bwb_saero_fine.bdf'
 
-        #bdf_filename = os.path.join(model_path, 'plate', 'plate.bdf')
+        # bdf_filename = model_path / 'plate' / 'plate.bdf'
         model = refine_model(bdf_filename, refinement_ratio=2)
         model.write_bdf(bdf_filename_out)
         model.validate()
         model.cross_reference()
-        x = 1
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
