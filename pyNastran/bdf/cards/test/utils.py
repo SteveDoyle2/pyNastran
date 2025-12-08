@@ -48,6 +48,7 @@ def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
                    run_op2_writer: bool=True,
                    run_op2_reader: bool=True,
                    remove_disabled_cards: bool=True,
+                   stringify: bool=False,
                    nastran_format: str='nx',
                    op2_log_level: str='warning') -> BDF:
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
@@ -85,6 +86,14 @@ def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
     #print(bdf_file.getvalue())
     if not remove_disabled_cards:
         model2._add_disabled_cards()
+
+    if stringify:
+        bdf_filename = model.bdf_filename
+        bdf_filename_out = str(bdf_filename) + '_temp.bdf'
+        with open(bdf_filename_out, 'w') as bdf_file_out:
+            bdf_file_out.writelines(bdf_file.getvalue())
+        bdf_file = bdf_filename_out
+        assert len(model2.zona.pafoil) == 0
     model2.read_bdf(bdf_file, punch=punch, xref=False)
     _cross_reference(model2, xref)
 

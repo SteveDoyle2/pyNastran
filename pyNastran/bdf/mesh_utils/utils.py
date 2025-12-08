@@ -708,59 +708,47 @@ def flip_shell_normals(model: BDF, zero_zoffset: float) -> None:
 
 def cmd_line_convert(argv=None, quiet: bool=False) -> None:
     """command line interface to bdf_merge"""
-    if argv is None:  # pragma: no cover
-        argv = sys.argv
+    FILE = os.path.abspath(__file__)
+    if argv is None:
+        argv = sys.argv[1:]  # ['run_jobs'] + sys.argv[2:]
+    else:
+        argv = [FILE] + argv[2:]  # ['convert'] + sys.argv[2:]
+    # print(argv)
+    import argparse
+    parser = argparse.ArgumentParser(prog='convert')
+    parser.add_argument('convert')
+    parser.add_argument("IN_BDF_FILENAME", help='path to input BDF/DAT/NAS file')
+    parser.add_argument('--in_units', help='input length,mass (default=m,kg)')
+    parser.add_argument('--out_units', help='output length,mass (default=m,kg)')
+    parser.add_argument('-o', '--output', help='path to output BDF/DAT/NAS file')
+    args = parser.parse_args()
+    bdf_filename = args.IN_BDF_FILENAME
+    bdf_filename_out = args.output
+    in_units = args.in_units
+    out_units = args.out_units
+    print(args)
 
-    from docopt import docopt
-    msg = (
-        "Usage:\n"
-        '  bdf convert IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--in_units IN_UNITS] [--out_units OUT_UNITS]\n'
-        '  bdf convert -h | --help\n'
-        '  bdf convert -v | --version\n'
-        '\n'
-
-        'Options:\n'
-        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n'
-        '  --in_units  IN_UNITS                length,mass\n'
-        '  --out_units  OUT_UNITS              length,mass\n\n'
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n\n"
-
-        'Example:\n'
-        '  bdf convert model.bdf --in_units m,kg  --out_units in,lbm\n'
-        '  bdf convert model.bdf --in_units m,kg  --out_units in,slinch\n'
-        '  bdf convert model.bdf --in_units m,kg  --out_units ft,slug\n'
-        '  bdf convert model.bdf --in_units m,kg  --out_units ft,lbm\n'
-    )
-    if len(argv) == 1:
-        sys.exit(msg)
-
-    ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
-    if not quiet:  # pragma: no cover
-        print(data)
-    #size = 16
-    bdf_filename = data['IN_BDF_FILENAME']
-    bdf_filename_out = data['--output']
     if bdf_filename_out is None:
         #bdf_filename_out = 'merged.bdf'
         bdf_filename_out = bdf_filename + '.convert.bdf'
 
-    in_units = data['IN_UNITS']
     if in_units is None:
         in_units = 'm,kg'
 
-    out_units = data['OUT_UNITS']
     if out_units is None:
         out_units = 'm,kg'
 
-    length_in, mass_in = in_units.split(',')
-    length_out, mass_out = out_units.split(',')
+    try:
+        length_in, mass_in = in_units.split(',')
+    except:
+        print(f'in_units = {in_units!r}')
+        raise
+
+    try:
+        length_out, mass_out = out_units.split(',')
+    except:
+        print(f'out_units = {out_units!r}')
+        raise
     units_to = [length_out, mass_out, 's']
     units = [length_in, mass_in, 's']
 
@@ -790,8 +778,8 @@ def cmd_line_convert(argv=None, quiet: bool=False) -> None:
                      skip_cards=None, read_cards=None,
                      encoding=None, log=log, debug=True, mode='msc')
     convert(model, units_to, units=units)
-    for prop in model.properties.values():
-        prop.comment = ''
+    # for prop in model.properties.values():
+    #     prop.comment = ''
     model.write_bdf(bdf_filename_out)
 
 

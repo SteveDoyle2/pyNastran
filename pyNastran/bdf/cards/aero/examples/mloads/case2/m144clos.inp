@@ -1,3 +1,4 @@
+$ pyNastran: version=zona
 $ ********************************************************************* $
 $                                                                       $
 $                       M144CLOS.INP                                    $
@@ -39,6 +40,7 @@ $ OPEN-LOOP ASE ANALYSIS TO OBTAIN THE INSTABILITY BOUNDARY.            $
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $---1--><--2---><--3---><--4---><--5---><--6---><--7---><--8---><--9--->
 $       SETID   IDCON   IDFLT   IDGUST  RAAID   MARID         
+$	ase_id	asecont	flutter	mldstat	minstat	cmargin
 ASE     100             100             140     
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $                         SUBCASE 2                                     $
@@ -341,6 +343,7 @@ ACTU    1006    8.635E0677891.0 274.04
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $ CONTROL SYSTEM DEFINITION                                             $
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$	asecont	surfset	senset	tfset	gainset	CNCTSET	
 ASECONT 2       1010    100     331             481
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $ CONTROO SURFACES FOR INPUT                                            $
@@ -354,13 +357,17 @@ $
 ASESNSR 101     1       121     3
 ASESNSR 102     1       122     3
 ASESNSR 103     1       112     3
-$
+$ CJUNCT, MIMOSS, SISOTF
+$	tfset	MIMOSS	CJUNCT
 TFSET   331     330     500
+$ define the TFs for the system
+$	setid	CONCT1	CONCT2
 CNCTSET 481     471     472     473     671     672     673     674
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $ DIRECT MATRIX INPUT FOR MIMO SYSTEM                                   $
 $ ABCD IS A MATRIX IMPORTED BY THE ASSIGN MATRIX EXECUTIVE COMMAND      $
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$	mimoss	ntforder nu     ny	label
 MIMOSS  330     38      3       3       ABCD
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $  SENSOR CONNECTION                                                    $
@@ -380,6 +387,7 @@ $ CJUNCT COMBINES THE COMMANDS FROM THE PILOT INPUT COMMAND (EXTINP=100)$
 $ AND THE COMMAND FROM THE MIMO CONTROLLER AND PROVIDES A INPUT COMMAND $
 $ TO THE ACTUATOR OF THE CONTROL SURFACE TEFLAP2.                       $
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$	cjunct	nu	ny	d1	d2
 CJUNCT  500     2       1       1.      1.
 $
 ENDDATA

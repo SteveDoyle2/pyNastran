@@ -1420,3 +1420,31 @@ def interpret_value(value_raw: Optional[str],
     value = sci0 * 10 ** sci1
     # scientific
     return value
+
+
+def string_multifield(card: BDFCard, ifields: tuple[int, ...],
+                      fieldname: str) -> str:
+    # remarka = string_or_blank(card, 7, 'label', default='')
+    # remarkb = string_or_blank(card, 8, 'label', default='')
+    value = ''
+    for ifield in ifields:
+        if card.field(ifield):
+            value += card.field(ifield)
+    value = value.strip()
+    assert len(value), f'fieldname={value!r}'
+    assert ' ' not in value, f'fieldname={value!r}'
+    return value
+
+def string_multifield_or_blank(card: BDFCard, ifields: tuple[int, ...],
+                               fieldname: str, default=None) -> str:
+    # remarka = string_or_blank(card, 7, 'label', default='')
+    # remarkb = string_or_blank(card, 8, 'label', default='')
+    value = ''
+    for ifield in ifields:
+        if card.field(ifield):
+            value += card.field(ifield)
+    value = value.strip()
+    if value == '':
+        return default
+    assert ' ' not in value, f'fieldname={value!r}'
+    return value

@@ -522,6 +522,20 @@ class CrossReference:
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, prop)
 
+        for nsms in model.nsms.values():
+            for nsm in nsms:
+                try:
+                    nsm.safe_cross_reference(model, xref_errors)
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
+                    self._store_xref_error(error, nsm)
+
+        for nsmadds in model.nsmadds.values():
+            for nsmadd in nsmadds:
+                try:
+                    nsmadd.safe_cross_reference(model, xref_errors)
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
+                    self._store_xref_error(error, nsmadd)
+
     def cross_reference_elements(self) -> None:
         """
         Links the elements to nodes, properties (and materials depending on
@@ -529,12 +543,6 @@ class CrossReference:
         """
         model = self.model
         for elem in model.elements.values():
-            try:
-                elem.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
-                self._store_xref_error(error, elem)
-
-        for elem in model.masses.values():
             try:
                 elem.cross_reference(model)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
@@ -555,12 +563,6 @@ class CrossReference:
                 elem.cross_reference(model)
                 missing_safe_xref.add(elem.type)
 
-        for elem in model.masses.values():
-            if hasattr(elem, 'safe_cross_reference'):
-                elem.safe_cross_reference(model, xref_errors)
-            else:
-                elem.cross_reference(model)
-                missing_safe_xref.add(elem.type)
 
         for elem in model.rigid_elements.values():
             elem.safe_cross_reference(model, xref_errors)

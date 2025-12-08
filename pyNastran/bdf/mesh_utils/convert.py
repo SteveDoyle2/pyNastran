@@ -8,12 +8,14 @@ from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 
 import numpy as np
+from pyNastran.utils.numpy_utils import float_types
 from pyNastran.bdf.cards.base_card import break_word_by_trailing_parentheses_integer_ab
 from pyNastran.bdf.bdf import read_bdf
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import (BDF, DVCREL1, DVCREL2, DCONSTR,
-                                   PBAR, PBEAM, PBEAM3, PBUSH, PBUSH1D)
+                                   PBAR, PBEAM, PBEND, PBEAM3,
+                                   PBUSH, PBUSH1D)
 
 
 def convert(model: BDF, units_to: list[str],
@@ -54,7 +56,9 @@ def convert(model: BDF, units_to: list[str],
 
 def scale_by_terms(bdf_filename: BDF | str, terms: list[str], scales: list[float],
                    bdf_filename_out: Optional[str]=None,
-                   encoding: Optional[str]=None, log=None, debug: bool=True) -> BDF:
+                   encoding: Optional[str]=None,
+                   log: Optional[SimpleLogger]=None,
+                   debug: bool=True) -> BDF:
     """
     Scales a BDF based on factors for 3 of the 6 independent terms
 
@@ -371,6 +375,7 @@ def _convert_elements(model: BDF,
 
     scales = set([])
     scale_map = {
+        'mass': f'mass (M) = {mass_scale:g}',
         'nsm_bar': 'nsm_bar_scale (M/L) = %g' % nsm_bar_scale,
         'area_moi': 'area_moi_scale (L^4) = %g' % area_moi_scale,
         'area': 'area_scale (L^2) = %g' % area_scale,
@@ -515,7 +520,7 @@ def _convert_elements(model: BDF,
             elem.mass *= mass_scale
         else:
             raise NotImplementedError(elem)
-    _write_scales(model.log, scale_map, scales, {'length', 'mass'})
+    _write_scales(model.log, 'elements', scale_map, scales, {'length', 'mass'})
 
 
 def _convert_properties(model: BDF,
@@ -567,7 +572,7 @@ def _convert_properties(model: BDF,
         'nsm_plate': f'nsm_plate_scale (M/L^2) = {nsm_plate_scale:g}',
         'area_moi': f'area_moi_scale (L^4) = {area_moi_scale:g}',
         'force': f'force_scale (F) = {force_scale:g}',
-        'moment': f'force_scale (F*L) = {moment_scale:g}',
+        'moment': f'moment_scale (F*L) = {moment_scale:g}',
         'stiffness': f'stiffness_scale (F/L) = {stiffness_scale:g}',
         'damping': f'damping_scale (F/V) = {damping_scale:g}',
         'stress': f'stress_scale (F/L^2) = {stress_scale:g}',
@@ -625,11 +630,12 @@ def _convert_properties(model: BDF,
 
         elif prop_type == 'PBEAM':
             _convert_pbeam(scales, prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale)
-
         elif prop_type == 'PBEAML':
             scales.update(['length', 'nsm_plate'])
             prop.dim *= xyz_scale
             prop.nsm *= nsm_bar_scale
+        elif prop_type == 'PBEND':
+            _convert_pbend(scales, prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale, log)
         elif prop_type == 'PBEAM3':
             _convert_pbeam3(scales, prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale)
         elif prop_type == 'PSHELL':
@@ -668,7 +674,8 @@ def _convert_properties(model: BDF,
             prop.nsm *= nsm_bar_scale
 
         elif prop_type == 'PBUSH':
-            _convert_pbush(scales, prop, velocity_scale, mass_scale, stiffness_scale, log)
+            _convert_pbush(scales, prop, xyz_scale, velocity_scale,
+                           mass_scale, force_scale, moment_scale, stiffness_scale, log)
         elif prop_type == 'PBUSH1D':
             _convert_pbush1d(model, scales, prop, xyz_scale, area_scale,
                              mass_scale, damping_scale, stiffness_scale,
@@ -775,7 +782,7 @@ def _convert_properties(model: BDF,
 
     _set_pbush1d_tables(model, scales, spring_tables, damper_tables,
                         xyz_scale, velocity_scale, force_scale)
-    _write_scales(model.log, scale_map, scales, {'length', 'area', 'mass', 'temperature'})
+    _write_scales(model.log, 'properties', scale_map, scales, {'length', 'area', 'mass', 'temperature'})
 
 
 def _convert_pbar(scales: set[str],
@@ -835,6 +842,82 @@ def _convert_pbeam(scales: set[str],
     prop.n2b *= xyz_scale
 
 
+def _convert_pbend(scales: set[str],
+                   prop: PBEND,
+                   xyz_scale: float,
+                   area_scale: float,
+                   area_moi_scale: float,
+                   nsm_bar_scale: float,
+                   log: SimpleLogger) -> None:
+    """converts a PBEND"""
+    if prop.beam_type != 1:
+        log.warning(f'skipping PBEND convert because beam_type={prop.beam_type:d}')
+        return
+    if prop.fsi != 0:
+        # Flag selecting the flexibility and stress intensification factors.
+        log.warning(f'skipping PBEND convert because fsi={prop.fsi:d}')
+        return
+    if prop.delta_n != 0.0:
+        log.warning(f'skipping PBEND convert because delta_n={prop.delta_n}')
+        return
+    if prop.p is not None:
+        log.warning(f'skipping PBEND convert because p={prop.delta_n}')
+        return
+
+    prop.A *= area_scale
+
+    prop.c1 *= xyz_scale
+    prop.c2 *= xyz_scale
+    prop.d1 *= xyz_scale
+    prop.d2 *= xyz_scale
+    prop.e1 *= xyz_scale
+    prop.e2 *= xyz_scale
+    prop.f1 *= xyz_scale
+    prop.f2 *= xyz_scale
+
+    prop.i1 *= area_moi_scale
+    prop.i2 *= area_moi_scale
+    if prop.i12 is not None:
+        prop.i12 *= area_moi_scale
+    prop.j *= area_moi_scale
+
+    prop.nsm *= nsm_bar_scale
+
+    # K1, K2 Shear stiffness factor K in K*A*G for plane 1 and plane 2. (Real)
+    # - no scaling
+    # KX For FSI=6, the user defined flexibility factor for the torsional moment. (Real >= 1.0)
+    # KY For FSI=6, the user defined flexibility factor for the out-of-plane bending moment. (Real >= 1.0)
+    # KZ For FSI=6, the user defined flexbility factor for the in-plane bending moment. (Real >= 1.0)
+    # - no scaling
+    # SY For FSI=6, the user defined stress intensificatation factor for the out-of-plane bending. (Real >= 1.0)
+    # SZ For FSI=6, the user defined stress intensification factor for the in-plane bending. (Real >= 1.0)
+    # - no scaling
+
+    # TODO: P Internal pressure. (Real)
+    #prop.p *= pressure_scale
+
+    # RB: Bend radius of the line of centroids.
+    # RC: Radial offset of the geometric centroid from points GA and GB
+    # ZC: Offset of the geometric centroid in a direction perpendicular to the plane of points GA and GB and vector v
+    # RM: Mean cross-sectional radius of the curved pipe.
+    # T: Wall thickness of the curved pipe
+    # DELTAN: Radial offset of the neutral axis from the geometric centroid, positive is toward the center of curvature.
+    prop.rb *= xyz_scale
+    prop.rc *= xyz_scale
+    prop.zc *= xyz_scale
+    if prop.rm is not None:
+        prop.rm *= xyz_scale
+    if prop.t is not None:
+        prop.t *= xyz_scale
+    if prop.delta_n is not None:
+        prop.delta_n *= xyz_scale
+
+    # beam_type : 1
+    # pid, mid
+    # theta_b : None
+    scales.update(['area', 'area_moi', 'nsm_bar', 'length'])
+    # if prop.
+
 def _convert_pbeam3(scales: set[str],
                     prop: PBEAM3,
                     xyz_scale: float,
@@ -876,8 +959,11 @@ def _convert_pbeam3(scales: set[str],
 
 def _convert_pbush(scales: set[str],
                    prop: PBUSH,
+                   xyz_scale: float,
                    velocity_scale: float,
                    mass_scale: float,
+                   force_scale: float,
+                   moment_scale: float,
                    stiffness_scale: float,
                    log: SimpleLogger) -> None:
     # can be length=0
@@ -894,7 +980,17 @@ def _convert_pbush(scales: set[str],
             prop.b = [bi*velocity_scale if bi is not None else None
                        for bi in prop.b]
         elif var == 'RCV':
-            log.warning('Skipping RCV for PBUSH %i' % prop.pid)
+            # SA Stress recovery coefficient in the translational component numbers 1 through 3. (Real; Default=1.0)
+            # ST Stress recovery coefficient in the rotational component numbers 4 through 6.    (Real; Default=1.0)
+            # Stresses are computed by multiplying the stress coefficients with the element forces.
+            # Strains  are computed by multiplying the strain coefficients with the element displacements.
+            scales.update(['force'])
+            scales.update(['moment'])
+            scales.update(['length'])
+            prop.sa *= force_scale
+            prop.st *= moment_scale
+            prop.ea *= xyz_scale
+            #prop.et *= 1  # units of angular displacement are radians
         elif var == 'GE':
             pass
         else:  # pragma: no cover
@@ -903,7 +999,7 @@ def _convert_pbush(scales: set[str],
     #prop.rcv
     if prop.mass is not None:
         scales.update(['mass'])
-        print(prop.get_stats(), prop.mass)
+        # print(prop.get_stats(), prop.mass)
         if isinstance(prop.mass, list):
             # Optistruct
             prop.mass = [massi*mass_scale for massi in prop.mass]
@@ -1172,20 +1268,36 @@ def _convert_materials(model: BDF,
         'a': 'alpha_scale (1/L) = %g' % a_scale,
         'temperature': 'temperature_scale (theta) = %g' % temperature_scale,
     }
-    _write_scales(model.log, scale_map, scales)
+    _write_scales(model.log, 'materials', scale_map, scales)
 
 
-def _write_scales(log: SimpleLogger, scale_map: dict[str, str], scales: set[str],
+def _write_scales(log: SimpleLogger,
+                  word: str,
+                  scale_map: dict[str, str],
+                  scales: set[str],
                   keys_to_skip=None) -> None:
     if keys_to_skip is None:
         keys_to_skip = set([])
-    for scale, msg in scale_map.items():
-        if scale in scales:
+
+    keys = list(scale_map)
+    for scale in scales:
+        if scale in scale_map:
+            msg = scale_map[scale]
             log.debug(msg)
-            scales.remove(scale)
-        elif scale in keys_to_skip and scale in scales:
-            scales.remove(scale)
-    assert len(scales - keys_to_skip) == 0, f'scales={scales} keys_to_skip={keys_to_skip}'
+        elif scale in keys_to_skip:
+            pass
+        else:
+            log.error(f'{word}: unknown scale={scale!r}; scale_map_keys={keys}')
+
+    # for scale, msg in scale_map.items():
+    #     if scale in scales:
+    #         log.debug(msg)
+    #         scales.remove(scale)
+    #     elif scale in keys_to_skip and scale in scales:
+    #         scales.remove(scale)
+    #     else:
+    #         log.error(f'{word}: unknown scale={scale!r}; scales={list(scales)}')
+    # assert len(scales - keys_to_skip) == 0, f'scales={scales} keys_to_skip={keys_to_skip}'
     #model.log.debug('density_scale (M/L^3) = %g' % density_scale)
     #model.log.debug('stress_scale (F/L^3) = %g' % stress_scale)
     #model.log.debug('a_scale (1/L) = %g\n' % a_scale)
@@ -1205,8 +1317,8 @@ def _convert_constraints(model: BDF, xyz_scale: float) -> None:
                 continue
             elif spc.type == 'SPC':
                 spc.enforced = [enforcedi*xyz_scale for enforcedi in spc.enforced]
-            elif spc.type == 'SPCAX':
-                spc.enforced = spc.enforced * xyz_scale
+            # elif spc.type == 'SPCAX':  # removed
+            #     spc.enforced = spc.enforced * xyz_scale
             else:
                 raise NotImplementedError(spc)
 
@@ -1443,17 +1555,17 @@ def _convert_loads(model: BDF,
                 #temperatures : {1901: 100.0}
                 for nid in load.temperatures:
                     load.temperatures[nid] *= temperature_scale
-            elif load_type == 'FORCEAX':
+            elif load_type == 'FORCEAX':  # removed
                 scales.add('force')
                 load.f_rtz *= force_scale
             elif load_type in skip_cards:
                 model.log.warning('skipping %s' % load)
-            elif load_type == 'TEMPAX':
-                scales.add('temperature')
-                load.temperature *= temperature_scale
-            elif load_type == 'PRESAX':
-                scales.add('pressure')
-                load.pressure *= pressure_scale
+            # elif load_type == 'TEMPAX':  # removed
+            #     scales.add('temperature')
+            #     load.temperature *= temperature_scale
+            # elif load_type == 'PRESAX':  # removed
+            #     scales.add('pressure')
+            #     load.pressure *= pressure_scale
             elif load_type == 'TEMPP1':
                 # t_stress: [3.14]
                 load.tbar *= temperature_scale
@@ -1471,7 +1583,7 @@ def _convert_loads(model: BDF,
                 load.enforced = [enforcedi * xyz_scale for enforcedi in load.enforced]
             else:
                 raise NotImplementedError(f'{load.get_stats()}\n{load}')
-    _write_scales(model.log, scale_map, scales, {'length'})
+    _write_scales(model.log, 'loads', scale_map, scales, {'length'})
 
 
 def _convert_aero(model: BDF,
@@ -1636,7 +1748,7 @@ def _convert_aero(model: BDF,
         flfact = model.flfacts[flfact_id]
         flfact.factors *= velocity_scale
         scales.add('velocity')
-    _write_scales(model.log, scale_map, scales, {'length', 'area'})
+    _write_scales(model.log, 'aero', scale_map, scales, {'length', 'area'})
 
 
 def _scale_caero(caero, xyz_scale: float, xyz_aefacts: set[int]) -> None:
@@ -1757,6 +1869,7 @@ def _convert_dconstr(model: BDF, dconstr: DCONSTR, pressure_scale: float) -> Non
     """helper for ``_convert_optimization``"""
     otype = dconstr.type
     if otype == 'DCONSTR':
+        scale = 1.0
         dresp = dconstr.dresp_id_ref
         if dresp.type == 'DRESP1':
             #property_type = dresp.ptype

@@ -340,34 +340,51 @@ class BDFInputPy:
                 header_upper = header.upper()
                 if header_upper.startswith('ASSIGN FEM'):
                     unused_fem, filename = header.split('=')
-                    filename = filename.strip('"\'')
-                    log.debug(f'reading {filename}')
-                    filename_lower = filename.lower()
-                    if filename_lower.endswith('.f06'):
+                    filename = filename.strip('"\'').strip()
+                    log.debug(f'reading {filename!r}')
+                    filename_ext = os.path.splitext(filename)[1].lower()
+                    filename = os.path.join(self.include_dir, filename)
+                    if filename_ext == '.f06':
+                        # apply the directory name
                         if os.path.exists(filename):
                             log.debug(f'reading geom from f06: {filename}')
                             from pyNastran.f06.parse_geom import parse_f06_geom
-                            out = parse_f06_geom(filename)
+                            out = parse_f06_geom(filename, log)
                             (_system_lines, _executive_control_lines,
-                             _case_control_lines, bulk_data_lines2) = out
+                             _case_control_lines, bulk_data_lines_f06) = out
                             is_bdf = False
-                            bulk_data_ilines2 = np.arange(len(bulk_data_ilines2))
-                            bulk_data_lines = bulk_data_lines2 + bulk_data_lines
-                            bulk_data_ilines = np.vstack([bulk_data_ilines2, bulk_data_ilines])
+                            nlines_f06 = len(bulk_data_lines_f06)
+                            # print('bulk_data_lines_f06 =', nlines_f06, bulk_data_lines_f06)
+                            # print('bulk_data_ilines2 =', bulk_data_ilines2) # doesnt exist
+                            if len(bulk_data_lines_f06):
+                                # print('bulk_data_ilines2.shape', bulk_data_ilines2.shape)
+                                # bulk_data_ilines2 = np.arange(len(bulk_data_ilines2))
+
+                                ifile_f06 = 1000
+                                ilines_f06 = np.arange(nlines_f06, dtype='int32')
+                                ifile_f06 = np.full(nlines_f06, ifile_f06, dtype='int32')
+                                # ifile_iline
+                                bulk_data_ilines_f06 = np.column_stack([ifile_f06, ilines_f06])
+
+                                bulk_data_lines = bulk_data_lines_f06 + bulk_data_lines
+                                bulk_data_ilines = np.vstack([bulk_data_ilines_f06, bulk_data_ilines])
+                            else:
+                                pass
                         else:
                             log.debug(f'reading geom from bdf: {filename}')
                             is_bdf = True
                             filename = os.path.splitext(filename)[0] + '.bdf'
                     else:
-                        if filename_lower.endswith(('.fre', '.mod')):
+                        if filename_ext in {'.fre', '.mod'}:
                             continue
                         is_bdf = True
-                        if not filename_lower.endswith('.bdf'):
+                        if not filename_ext in {'.bdf', '.prt'}:
+                            # prt is astos
                             raise RuntimeError(f'filename must end in bdf; {filename}')
 
                     if is_bdf:
                         if not os.path.exists(filename):
-                            log.error(f'skipping {filename}; missing')
+                            log.error(f'skipping {filename}; missing\n{print_bad_path(filename)}')
                             continue
                         _main_lines = self.get_main_lines(filename)
                         make_ilines = bulk_data_ilines is not None

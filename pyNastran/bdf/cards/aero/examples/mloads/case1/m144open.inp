@@ -1,3 +1,4 @@
+$ pyNastran: version=zona
 $ ********************************************************************* $
 $                                                                       $
 $                      M144OPEN.INP                                     $
@@ -68,7 +69,8 @@ SET1    107     20      30
 $
 $ TRIMFNC=20 REFERS TO THE WING ROOT BENDING MOMENT BY  LOADMOD.        $
 $ FEM GRID POINTS ON THE WING ARE 110 111 112 120 121 122               $
-$                                                                       $
+$                                     
+$	idfnc	type	label	rhs	isset	iaset	remark
 TRIMFNC 20      FEM     LOADMOD1RHS     101             WINGROOT.BENDING
 LOADMOD 101     XMOMENT 0       1100    1101
 SET1    1101    110     111     112     120     121     122
@@ -113,6 +115,11 @@ $ TRANSFORMED TO FOUR AIRFRAME STATES; H, ALPHA, Q AND THETA            $
 $ INITIAL ALPHA=THETA=3.123-03 RAD.                                     $
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $---1--><--2---><--3---><--4---><--5---><--6---><--7---><--8---><--9--->
+$ RAAID   MINSTAT card specifying rational function aerodynamic approximation
+$ STATES  MLDSTAT card specifying airframe states
+$ COMMAND MLDCOMD card specifying pilot’s input commands for the maneuver.
+$ TIME    MLDTIME card specifying time integration for solving the transient response problem
+$ MLDPRN  MLDPRNT card specifying the time history of parameters that are to be printed out
 $$$$$$$ SID     CONID   FLTID   RAAID   STATES  COMMAND TIME    MLDPRN
 MLOADS  100             10      140     100     100     100     100
 $               .01
@@ -125,13 +132,16 @@ $ THREE RIGID BODY FEM MODES AND 19 ELASTIC MODES                       $
 $ TRANSFORMED TO FOUR AIRFRAME STATES; H, ALPHA, Q AND THETA            $
 $ MLDTRIM CARD IS AUTOMATICALLY DEACTIVATED.                            $
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$	MLOADS	SID	CONID	FLTID	RAAID	STATES	COMMAND	TIME	MLDPRNT
+$	FMAX	DF	SAVEFRQ	FILEFRQ
 MLOADS  200             10              100     100     100     200
 $               .01
 $-----------------------------------------------------------------------
-$$$$$$$ IDSTAT  IDTRIM  TRNSFM  ARR     BRR   
+$ *******
+$$$$$$$ IDSTAT  IDTRIM  TRNSFM  ARR     BRR	DXTOX	FILENM   
 MLDSTAT 100     100                                                     +M1
 $$$$$$$ STATE   INITIAL STATE   INITIAL STATE   INITIAL STATE   INITIAL
-+M1     ALPHA   -4.31-05Q       0.      THETA   -4.31-05H       0.0
++M1     ALPHA   -4.31-5 Q       0.      THETA   -4.31-5 H       0.0
 $-----------------------------------------------------------------------
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $         MLDTRIM FOR INITIAL TRIM CONDITON.                            $
@@ -167,6 +177,7 @@ $$$$$$$ SETID
 MLDCOMD 100                                                             +M2
 $$$$$$$ EXTINP  IDTAB   
 +M2     100     100                    
+$ 	id	unutype	itfid	ci	label
 EXTINP  100             100     1       CANARD
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $                                                                       $
@@ -174,7 +185,14 @@ $ ONE CONTROL SURFACE: CANARD WITH ACUATOR TRANSFER FUNCTION=           $
 $                      1.45E12/(S**3+3400.25*S**2+3.827E8+1.45E12)      $
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $                                                                       $
-$       LABEL   TYPE    CID     SETK    SETG
+$ SETK  Identification number of PANLST1, PANLST2 or PANLST3 bulk data card used to
+$       identify the aerodynamic box ID's of the control surface
+$ SETG  Identification number of SET1 or SETADD bulk data card used to identify the structural
+$       grid point ID's of the control surface
+$ ACTID Identification number of the ACTU bulk data card defining the transfer function of the
+$       actuator attached to this control surface.
+$
+$       LABEL   TYPE    CID     SETK    SETG    ACTID
 $...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10$
 AESURFZ CANARD  SYM     1       1000            100 
 $       CID     RID     A1      A2      A3      B1      B2      B3      $
@@ -191,7 +209,8 @@ $$$$$$$ TID     XAXIS   YAXIS
 TABLED1 100                                                             +TAB1
 $$$$$$$ XI      YI
 +TAB1   -2.0    0.      .1      0.      .16     .05236  .66     .05236  +TAB2
-+TAB2   .78     -.05236 1.28    -.05236 1.34    0.      100.    0.
++TAB2   .78     -.05236 1.28    -.05236 1.34    0.      100.    0.      +TAB3
++TAB3   ENDT
 $-----------------------------------------------------------------------
 $                                                                       $
 $ SIX PARAMETERS ARE PRINTED OUT NO FILE "HA144MD.PLT"                  $
