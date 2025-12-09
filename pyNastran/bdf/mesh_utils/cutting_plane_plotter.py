@@ -20,6 +20,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF, CORD2R
 
+
 def cut_and_plot_model(title: str,
                        p1: np.ndarray,
                        p2: np.ndarray,
@@ -118,7 +119,7 @@ def plot_cutting_plane_faces(title: str,
     try:
         local_x = result_arrays[:, 0]
     except TypeError:
-        print('results_arrays', result_arrays)
+        print('results_arrays', type(result_arrays), result_arrays)
         raise
 
     #x = global_points_array[:, 0]

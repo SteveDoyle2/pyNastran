@@ -33,6 +33,29 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      dirname: PathLike='',
                      plot: bool=True,
                      show: bool=False) -> tuple[Any, Any, Any, Any, Any]: # y, A, I, EI, avg_centroid
+    """
+    Parameters
+    ----------
+    bdf_filename : PathLike
+        the path to the bdf
+    normal_plane : (3,) float ndarray
+    log : SimpleLogger
+        the logger
+    dys : list[float]
+        ???
+    coords : list[CORD2R]
+        coords to
+        x:   defines axial direction (E1*A)
+        y/z: defines transverse directions (E1*Iy)
+    ytol : float; default=2.0
+    face_data : ???
+    dirname : PathLike; default=''
+        directory for output plots/csv/bdfs
+    plot : bool; default=True
+        not used
+    show : bool; default=False
+        show the plots at the end
+    """
     if isinstance(dirname, str):
         dirname = Path(dirname)
     if isinstance(bdf_filename, PathLike):
@@ -98,6 +121,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show, dirname=dirname)
     return y, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2
 
+
 def _write_beam_model(avg_centroid: np.ndarray,
                       A, I, J, EI, GJ,
                       bdf_filename: PathLike=''):
@@ -144,8 +168,12 @@ def _write_beam_model(avg_centroid: np.ndarray,
                              comment='')
     beam_model.write_bdf(bdf_filename)
 
-def _get_station_data(model: BDF, model_static: BDF,
-                      dys, coords, normal_plane: np.ndarray,
+
+def _get_station_data(model: BDF,
+                      model_static: BDF,
+                      dys: list[float],
+                      coords: list[CORD2R],
+                      normal_plane: np.ndarray,
                       ytol: float, dirname: Path,
                       face_data=None) -> tuple[
                          dict[int, tuple[float, float, float, float]],  # thetas
@@ -157,6 +185,23 @@ def _get_station_data(model: BDF, model_static: BDF,
                          Any, Any, Any,
                          #plane_bdf_filenames, plane_bdf_filenames2,
                          list[str], list[str]]:
+    """
+    Helper for ``cut_and_plot_moi``
+
+    Parameters
+    ----------
+    model : BDF()
+        ???
+    model_static : BDF()
+        ???
+    dys : list[float]
+    coords : list[CORD2R]
+    normal_plane :
+    ytol : float; default=2.0
+    dirname :
+    face_data : ???
+        ???
+    """
     # initialize theta
     thetas = {}
     for eid in model.elements:
@@ -193,7 +238,7 @@ def _get_station_data(model: BDF, model_static: BDF,
             out = cut_face_model_by_coord(
                 model_static, coord, ytol,
                 nodal_result, plane_atol=1e-5, skip_cleanup=True,
-                #csv_filename=cut_face_filename,
+                 #csv_filename=cut_face_filename,
                 csv_filename=None,
                 #plane_bdf_filename=None)
                 plane_bdf_filename1=plane_bdf_filename1,
@@ -204,6 +249,7 @@ def _get_station_data(model: BDF, model_static: BDF,
             continue
         except RuntimeError:
             # incorrect ivalues=[0, 1, 2]; dy=771. for CRM
+            raise
             continue
         unused_unique_geometry_array, unused_unique_results_array, rods = out
 
@@ -216,7 +262,8 @@ def _get_station_data(model: BDF, model_static: BDF,
         #moi_filename = 'amoi_%i.bdf' % i
         moi_filename = None
         dxi, dzi, Ai, Ii, EIi, avg_centroidi = calculate_area_moi(
-            model, rods, normal_plane, thetas, moi_filename=moi_filename)
+            model, rods, normal_plane, thetas,
+            moi_filename=moi_filename)
 
         #print(out)
         Ji = GJi = 1.0

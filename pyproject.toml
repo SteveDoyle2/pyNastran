@@ -116,9 +116,9 @@ classifiers = [
 dependencies = [
     #"numpy==1.23.2; python_version=='3.11' and platform_python_implementation != 'PyPy'",
     #"numpy>=1.26.0,<1.27; python_version=='3.12'",
-    'numpy<3',
-    'scipy<2',
-    'matplotlib<4',
+    'numpy>1.25,<3',
+    'scipy>1.8,<2',
+    'matplotlib>3.6,<4',
     'cpylog>=1.6.0',
     'docopt-ng>=0.9.0',
     'colorama',

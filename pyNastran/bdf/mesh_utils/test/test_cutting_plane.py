@@ -168,7 +168,6 @@ class TestCuttingPlane(unittest.TestCase):
         # assert np.allclose(Ey, 1317292.3250658484)
         # assert np.allclose(Gxy, 3515514.7806900046)
         # assert np.allclose(nu_xy, 4.766908439759332e-13)
-
         x = 1
 
     def test_cut_plate(self):
@@ -219,7 +218,7 @@ class TestCuttingPlane(unittest.TestCase):
         os.remove(dirname / 'complex_result.csv')
 
     def test_cut_bwb(self):
-        """recover element ids"""
+        """cut_and_plot_moi"""
         log = SimpleLogger(level='warning', encoding='utf-8')
         dirname = MODEL_PATH / 'bwb'
         bdf_filename = dirname / 'bwb_saero.bdf'  # ymax~=1262.0
@@ -290,6 +289,7 @@ class TestCuttingPlane(unittest.TestCase):
             plane_bdf_filename1='',
             plane_bdf_filename2='',
             face_data=None,
+            debug_vectorize=False,
         )
         unique_geometry_array, unique_results_array, unused_rods = cut_face_model_by_coord(
             bdf_filename, coord, ytol,
@@ -521,6 +521,7 @@ class TestCuttingPlane(unittest.TestCase):
 
 
 def get_coords_bwb(ncuts: int=2000) -> tuple[list[float], list[CORD2R]]:  # pragma: no cover
+    """gets coords from y=0 to y=100*ncuts"""
     dys = []
     coords = []
     for i in range(ncuts):
