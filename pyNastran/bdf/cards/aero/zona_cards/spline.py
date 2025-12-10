@@ -8,6 +8,7 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank,
     string_or_blank, blank,
+    integer_string_or_blank,
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import (
     force_double_or_blank,
@@ -269,7 +270,7 @@ class SPLINE2_ZONA(Spline):
 
         """
         eid = integer(card, 1, 'eid')
-        model = string_or_blank(card, 2, 'model')
+        model = integer_string_or_blank(card, 2, 'model', default='')
         panlst = integer(card, 3, 'panlst/setk')
         setg = integer(card, 4, 'setg')
         dz = double_or_blank(card, 5, 'dz', default=0.0)

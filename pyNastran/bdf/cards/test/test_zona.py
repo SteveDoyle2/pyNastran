@@ -159,17 +159,17 @@ class TestAeroZona(unittest.TestCase):
         model.zona.cross_reference()
         model.write_bdf(GLOADS_DIR / 'zona.inp')
 
-    # def test_zona_gloads_case2(self):
-    #     zona_filename = GLOADS_DIR / 'case2' / 'gbj_dgust.inp'
-    #     model = read_bdf(zona_filename, mode='zona', xref=False, debug=True)
-    #     model.zona.cross_reference()
-    #     model.write_bdf(GLOADS_DIR / 'zona.inp')
+    def test_zona_gloads_case2(self):
+        zona_filename = GLOADS_DIR / 'case2' / 'gbj_dgust.inp'
+        model = read_bdf(zona_filename, mode='zona', xref=False, debug=True)
+        model.zona.cross_reference()
+        model.write_bdf(GLOADS_DIR / 'zona.inp')
 
-    # def test_zona_gloads_case3(self):
-    #     zona_filename = GLOADS_DIR / 'case3' / 'gbj_cgust.inp'
-    #     model = read_bdf(zona_filename, mode='zona', xref=False, debug=True)
-    #     model.zona.cross_reference()
-    #     model.write_bdf(GLOADS_DIR / 'zona.inp')
+    def test_zona_gloads_case3(self):
+        zona_filename = GLOADS_DIR / 'case3' / 'gbj_cgust.inp'
+        model = read_bdf(zona_filename, mode='zona', xref=False, debug=True)
+        model.zona.cross_reference()
+        model.write_bdf(GLOADS_DIR / 'zona.inp')
 
     # def test_zona_gloads_case4a(self):
     #     zona_filename = GLOADS_DIR / 'case4' / 'cgust_md.inp'

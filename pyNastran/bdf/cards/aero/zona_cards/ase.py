@@ -14,7 +14,8 @@ from pyNastran.bdf.cards.aero import zona
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, string, string_or_blank, double_or_blank,
+    integer, integer_or_blank, double, string, string_or_blank,
+    double_or_blank, integer_or_string,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -221,6 +222,108 @@ class ASECONT(BaseCard):
         return self.comment + print_card_8(card)
 
 
+class ASEGAIN(BaseCard):
+    type = 'ASEGAIN'
+    # _field_map = {
+    #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
+    # }
+
+    def __init__(self, asegain_id: int,
+                 otf_id: int, c_out: int,
+                 itf_id: int, c_in: int,
+                 gain: float, gain_type: str, comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.asegain_id = asegain_id
+        self.otf_id = otf_id
+        self.c_out = c_out
+        self.itf_id = itf_id
+        self.c_in = c_in
+        self.gain = gain
+        self.gain_type = gain_type
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a ASECONT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        # ASEGAIN ID OTFID CO ITFID CI GAIN TYPE
+        # ASEGAIN 10 1     1  2     2  0.6  H
+        asegain_id = integer(card, 1, 'asegain_id')
+        otf_id = integer(card, 2, 'otfid')
+        c_out = integer(card, 3, 'CO')
+        itf_id = integer(card, 4, 'itfid')
+        c_in = integer(card, 5, 'CI')
+        gain = double(card, 6, 'gain')
+        gain_type = string_or_blank(card, 7, 'gain_type', default='Q')
+
+        assert len(card) < 9, f'len(ASECONT card) = {len(card):d}\ncard={card}'
+        asecont = ASEGAIN(asegain_id, otf_id, c_out, itf_id, c_in,
+                          gain, gain_type, comment=comment)
+        return asecont
+
+    # def validate(self):
+    #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
+
+    def cross_reference(self, model: BDF) -> None:
+        msg = f', which is required by ASECONT={self.asecont_id}'
+        # ASE, MLOADS, ELOADS, GLOADS, DFS, or NLFLTR
+        zona = model.zona
+        # CNCTSET
+        # self.conct_ref = model.conct[self.conct_id]
+        if self.extinp_set_id:
+            self.extinp_set_ref = model.Set(self.extinp_set_id, msg)
+            for id in self.extinp_set_ref.ids():
+                asdf
+        if self.extout_set_id:
+            self.extout_set_ref = model.Set(self.extout_set_id, msg)
+            for id in self.extout_set_ref.ids():
+                asdf
+
+
+    def safe_cross_reference(self, model: BDF):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
+
+        """
+        list_fields = [
+            'ASECONT', self.asegain_id,
+            self.otf_id, self.c_out,
+            self.itf_id, self.c_in,
+            self.gain, self.gain_type]
+        return list_fields
+
+    def repr_fields(self):
+        list_fields = self.raw_fields()
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
 class ASESNSR(BaseCard):
     type = 'ASESNSR'
 
@@ -297,6 +400,90 @@ class ASESNSR(BaseCard):
         list_fields = [
             'ASESNSR', self.asesnsr_id, self.sensor_type,
             self.sgid, self.component, self.factor, self.sum_method]
+        return list_fields
+
+    def repr_fields(self):
+        list_fields = self.raw_fields()
+        return list_fields
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class ASESNS1(BaseCard):
+    type = 'ASESNS1'
+
+    # _field_map = {
+    #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
+    # }
+
+    def __init__(self, asesns1_id: int,
+                 label: str, ikey: int | str,
+                 factor: float, sum_method: str='NO', comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.asesns1_id = asesns1_id
+        self.label = label
+        self.ikey = ikey
+        self.factor = factor
+        self.sum_method = sum_method
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str = ''):
+        """
+        Adds a ASECONT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        # ASESNS1 ID LABEL   IKEY SOF FACTOR
+        # ASESNS1 10 GRIDGT3 7   NO   0.0176
+        asesns1_id = integer(card, 1, 'asesns1_id')
+        label = string(card, 2, 'label')
+        ikey = integer_or_string(card, 3, 'ikey')
+        sum_method = string_or_blank(card, 6, 'sum_method', default='NO')
+        factor = double_or_blank(card, 5, 'factor', default=1.0)
+
+        assert len(card) < 7, f'len(ASECONT card) = {len(card):d}\ncard={card}'
+        asecont = ASESNS1(asesns1_id, label, ikey, factor,
+                          sum_method=sum_method, comment=comment)
+        return asecont
+
+    # def validate(self):
+    #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
+
+    def cross_reference(self, model: BDF) -> None:
+        # SGID
+        pass
+
+    def safe_cross_reference(self, model: BDF):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
+
+        """
+        list_fields = [
+            'ASESNS1', self.asesns1_id, self.label,
+            self.ikey, self.sum_method, self.factor]
         return list_fields
 
     def repr_fields(self):
@@ -621,10 +808,12 @@ class SENSET(BaseCard):
             # ASESNSR or ASESNS1
             if idi in zona.asesnsr:
                 id_ref = zona.asesnsr[idi]
+            elif idi in zona.asesns1:
+                id_ref = zona.asesns1[idi]
             else:
                 asesnsr = list(zona.asesnsr)
                 asesns1 = list(zona.asesns1)
-                sisotf = list(zona.sisotf)
+                # sisotf = list(zona.sisotf)
                 msg = (
                     f'SENSET={self.senset_id}: id={idi} is not [ASESNSR, ASESNS1]\n'
                     f' - asesnsr = {asesnsr}\n'
@@ -661,6 +850,104 @@ class SENSET(BaseCard):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class GAINSET(BaseCard):
+    type = 'GAINSET'
+    # _field_map = {
+    #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
+    # }
+
+    def __init__(self, gainset_id: int, ids: list[int], comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.gainset_id = gainset_id
+        self.ids = ids
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a GAINSET card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        # GAINSET SID TF1 TF2 TF3 TF4
+        # GAINSET 10  1   2   3
+        gainset_id = integer(card, 1, 'gainset_id')
+
+        # CJUNCT, MIMOSS, SISOTF
+        ids = []
+        for ifield in range(2, len(card)):
+            idi = integer(card, ifield, 'OTFID, id')
+            ids.append(idi)
+        assert len(card) >= 3, f'len(GAINSET card) = {len(card):d}\ncard={card}'
+        return GAINSET(gainset_id, ids, comment=comment)
+
+    # def validate(self):
+    #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
+
+    def cross_reference(self, model: BDF) -> None:
+        ids_ref = []
+        log = model.log
+        zona = model.zona
+        for idi in self.ids:
+            if idi in zona.asegain:
+                id_ref = zona.asegain[idi]
+            # elif idi in zona.mimoss:
+            #     id_ref = zona.mimoss[idi]
+            # elif idi in zona.sisotf:
+            #     id_ref = zona.sisotf[idi]
+            # else:
+                asegain = list(zona.asegain)
+                # mimoss = list(zona.mimoss)
+                # sisotf = list(zona.sisotf)
+                msg = (
+                    f'GAINSET={self.gainset_id}: id={idi} is not [ASEGAIN]\n'
+                    f' - asegain = {asegain}\n'
+                    # f' - mimoss = {mimoss}\n'
+                    # f' - sisotf = {sisotf}\n'
+                )
+                log.warning(msg)
+                id_ref = None
+                # raise RuntimeError(msg)
+            ids_ref.append(id_ref)
+        self.ids_ref = ids_ref
+
+    def safe_cross_reference(self, model: BDF):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
+
+        """
+        list_fields = ['GAINSET', self.gainset_id] + self.ids
+        return list_fields
+
+    def repr_fields(self):
+        list_fields = self.raw_fields()
+        return list_fields
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 

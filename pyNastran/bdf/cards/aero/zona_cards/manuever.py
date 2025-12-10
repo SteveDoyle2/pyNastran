@@ -107,7 +107,7 @@ class MLOADS(BaseCard):
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
         """
-        Adds a TRIM card from ``BDF.add_card(...)``
+        Adds a MLOADS card from ``BDF.add_card(...)``
 
         Parameters
         ----------

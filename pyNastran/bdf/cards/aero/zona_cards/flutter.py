@@ -189,7 +189,9 @@ class FLUTTER_ZONA(BaseCard):
         self.mlist = mlist
         self.conmlst = conmlst
         self.nkstep = nkstep
-        assert sym in {'SYM', 'ANTI', 'ASYM'}, f'FLUTTER sid={self.sid} sym={sym!r}'
+        assert sym in {'SYM', 'ANTI', 'ASYM',
+                       'SYMML', 'ANTIL', 'ASYMP',
+                       'SYMMP', 'ANTIP',}, f'FLUTTER sid={self.sid} sym={sym!r}'
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):

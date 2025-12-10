@@ -128,6 +128,9 @@ class NSMx(Property):
     def cross_reference(self, model: BDF) -> None:
         pass
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
     def raw_fields(self):
         #nodes = self.node_ids
         list_fields = [self.type, self.sid, self.nsm_type, self.id, self.value]
@@ -260,6 +263,9 @@ class NSM1x(Property):
 
     def cross_reference(self, model: BDF) -> None:
         pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
 
     def raw_fields(self):
         list_fields = [self.type, self.sid, self.nsm_type, self.value] + self.ids

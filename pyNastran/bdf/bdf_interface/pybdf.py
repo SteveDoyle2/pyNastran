@@ -200,6 +200,7 @@ class BDFInputPy:
         self.debug: bool = debug
         self.log = get_logger(log, debug)
         self.use_new_parser: bool = False
+        self.heavy_debug = False
 
     def get_lines(self, bdf_filename: PathLike | StringIO,
                   punch: Optional[bool]=False,
@@ -317,7 +318,8 @@ class BDFInputPy:
             bulk_data_lines, bulk_data_ilines, system_lines = self._get_lines_zona(
                 system_lines, bulk_data_lines, bulk_data_ilines, punch)
         else:
-            msg = f'nastran_format={nastran_format!r} and must be msc, nx, optistruct, mystran, or zona'
+            mystran = '' # 'mystran, '
+            msg = f'nastran_format={nastran_format!r} and must be msc, nx, optistruct, {mystran}or zona'
             raise NotImplementedError(msg)
 
         #for line in bulk_data_lines:
@@ -344,7 +346,7 @@ class BDFInputPy:
                     log.debug(f'reading {filename!r}')
                     filename_ext = os.path.splitext(filename)[1].lower()
                     filename = os.path.join(self.include_dir, filename)
-                    if filename_ext == '.f06':
+                    if filename_ext in {'.f06', '.prt'}:
                         # apply the directory name
                         if os.path.exists(filename):
                             log.debug(f'reading geom from f06: {filename}')
@@ -1167,7 +1169,8 @@ def _lines_to_decks_main(lines: list[str],
                          keep_enddata: bool=True,
                          consider_superelements: bool=False,
                          start_flag: int=0,
-                         nastran_format: str='msc') -> tuple[
+                         nastran_format: str='msc',
+                         heavy_debug: bool=False) -> tuple[
                         list[str], list[str], list[str], list[str], NDArrayN2int,
                         list[str], list[str], list[str]]:
     """
@@ -1214,6 +1217,7 @@ def _lines_to_decks_main(lines: list[str],
         ???
 
     """
+    # heavy_debug = True
     make_ilines = ilines is not None
     guess_deck_sections = punch is None
 
@@ -1257,10 +1261,12 @@ def _lines_to_decks_main(lines: list[str],
         ilines = count()
 
     #guess_deck_sections = True
-    #print('guess_deck_sections =', guess_deck_sections, punch)
+    if heavy_debug:
+        print('guess_deck_sections =', guess_deck_sections, punch)
     for i, ifile_iline, line in zip(count(), ilines, lines):
-        #print('%s %-8s %s' % (ifile_iline, flag_word, line.rstrip()))
-        #print('%s %i %s' % (ifile_iline, flag, line.rstrip()))
+        if heavy_debug:
+            print('%s %-8s %s' % (ifile_iline, flag_word, line.rstrip()))
+            print('%s %i %s' % (ifile_iline, flag, line.rstrip()))
         line_upper = line.split('$')[0].upper().strip()
 
         if guess_deck_sections and flag == 1 and line_upper.startswith('BEGIN'):
@@ -1343,7 +1349,8 @@ def _lines_to_decks_main(lines: list[str],
             if '$' in line:
                 line, comment = line.split('$', 1)
                 current_lines.append('$' + comment.rstrip())
-                #print('%s: %s' % (flag_word, '$' + comment.rstrip()))
+                if heavy_debug:
+                    print('%s: %s' % (flag_word, '$' + comment.rstrip()))
 
             # just reuse the existing one
             #line_upper = line.upper().strip()
@@ -1361,15 +1368,18 @@ def _lines_to_decks_main(lines: list[str],
                                      is_superelement or consider_superelements)
 
                     if not is_extra_bulk:
-                        #print('breaking begin bulk...')
+                        if heavy_debug:
+                            print('breaking begin bulk...')
                         bulk_data_ilines = _bulk_data_lines_extract(
                             lines, ilines, bulk_data_lines, i,
                             make_ilines=make_ilines, keep_enddata=keep_enddata)
                         break
-                    #print('setting lines to bulk---')
+                    if heavy_debug:
+                        print('setting lines to bulk---')
                     current_lines = bulk_data_lines
                     flag_word = 'bulk'
-                    #print('case: %s' % (line.rstrip()))
+                    if heavy_debug:
+                        print('case: %s' % (line.rstrip()))
                     case_control_lines.append(line.rstrip())
                     continue
 
@@ -1409,7 +1419,8 @@ def _lines_to_decks_main(lines: list[str],
                     msg = f'expected "BEGIN BULK" or "BEGIN SUPER=1"\nline = {line}'
                     raise RuntimeError(msg)
 
-                #print('%s: %s' % (flag_word, line.rstrip()))
+                if heavy_debug:
+                    print('%s: %s' % (flag_word, line.rstrip()))
                 current_lines.append(line.rstrip())
             elif line_upper.startswith('SUPER'):
                 # case control line
@@ -1440,7 +1451,8 @@ def _lines_to_decks_main(lines: list[str],
                                        'when going to an AFPM model')
                 is_afpm = True
 
-            #print('%s: %s' % (flag_word, line.rstrip()))
+            if heavy_debug:
+                print('%s: %s' % (flag_word, line.rstrip()))
             current_lines.append(line.rstrip())
         elif flag == 3:
             is_special_flag = (
@@ -1481,7 +1493,8 @@ def _lines_to_decks_main(lines: list[str],
              afpm_id, is_afpm_active,
              flag, current_lines) = out
             if is_broken:
-                #print('breaking...')
+                if heavy_debug:
+                    print('breaking...')
                 break
         else:  # pragma: no cover
             raise RuntimeError(line)

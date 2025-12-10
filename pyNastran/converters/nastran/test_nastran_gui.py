@@ -27,7 +27,7 @@ import pyNastran
 from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import OP2, read_op2
-from pyNastran.bdf.cards.test.test_aero import get_zona_model
+from pyNastran.bdf.cards.test.test_zona import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
 
 from pyNastran.gui import (

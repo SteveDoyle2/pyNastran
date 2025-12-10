@@ -902,7 +902,8 @@ def _convert_pbend(scales: set[str],
     # RM: Mean cross-sectional radius of the curved pipe.
     # T: Wall thickness of the curved pipe
     # DELTAN: Radial offset of the neutral axis from the geometric centroid, positive is toward the center of curvature.
-    prop.rb *= xyz_scale
+    if prop.rb is not None:
+        prop.rb *= xyz_scale
     prop.rc *= xyz_scale
     prop.zc *= xyz_scale
     if prop.rm is not None:

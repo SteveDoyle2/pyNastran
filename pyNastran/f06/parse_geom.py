@@ -68,9 +68,8 @@ def parse_f06_geom(f06_filename: PathLike,
 
     system_lines = [line.lstrip() for line in system_lines]
     exec_lines = [line.lstrip() for line in exec_lines]
-    case_lines1 = [line.lstrip() for line in case_lines]
-    case_lines = [line.split(' ', 1)[1].lstrip() for line in case_lines1 if ' ' in line]
-    bulk_lines = [line.split('- ', 1)[1].lstrip() for line in bulk_lines if '-' in line] # 17-        CQUAD4
+    case_lines = clean_case_lines(case_lines)
+    bulk_lines = clean_bulk_lines(bulk_lines)
 
     # for i, linei in enumerate(system_lines):
     #     print(f'system {i}: {linei}')
@@ -83,6 +82,25 @@ def parse_f06_geom(f06_filename: PathLike,
     #asdf
     return system_lines, exec_lines, case_lines, bulk_lines
 
+def clean_case_lines(lines: list[str]) -> list[str]:
+    case_lines1 = [line.lstrip() for line in lines]
+    case_lines = [line.split(' ', 1)[1].lstrip() for line in case_lines1 if ' ' in line]
+    return case_lines
+
+
+def clean_bulk_lines(lines: list[str]) -> list[str]:
+    try:
+        out_lines = [line.split('-        ', 1)[1].lstrip() for line in lines if '-' in line]
+    except:
+        out_lines = []
+        for line in lines:
+            if '-        ' not in line:
+                continue
+            # print(f'{line!r}')
+            sline = line.split('- ', 1)
+            line2 = sline[1].lstrip()
+            out_lines.append(line2)
+    return out_lines
 
 def _get_geom_section(f06_file, iline: int, lines: list[str],
                       log: SimpleLogger, require_lines: bool=True) -> tuple[int, str]:

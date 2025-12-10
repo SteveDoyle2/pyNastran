@@ -19,10 +19,13 @@ from pyNastran.bdf.cards.aero.zona_cards.trim import (
     TRIM_ZONA, TRIMVAR, TRIMLNK,)
 from pyNastran.bdf.cards.aero.zona_cards.manuever import (
     MLOADS, EXTINP, EXTOUT, TRIMFNC, ACTU, LOADMOD, RBRED,)
+from pyNastran.bdf.cards.aero.zona_cards.gust import (
+    GLOADS, DGUST, CGUST, MFTGUST)
 from pyNastran.bdf.cards.aero.zona_cards.ase import (
-    ASE, ASECONT, ASESNSR,
+    ASE, ASECONT, ASESNSR, ASESNS1,
     CJUNCT, CONCT, TFSET, MIMOSS,
     SENSET, SURFSET, CNCTSET,
+    ASEGAIN, GAINSET,
 )
 from pyNastran.bdf.cards.aero.zona_cards.bdf_tables import (
     TABLED1_ZONA, TABDMP1_ZONA)
@@ -191,9 +194,10 @@ class AddMethods:
         """adds an PAFOIL7/PAFOIL8 object"""
         key = pafoil.pid
         assert pafoil.pid > 0
-        assert key not in self.model.zona.pafoil, '\npafoil7=\n%s old=\n%s' % (
-            pafoil, self.model.zona.pafoil[key])
-        self.model.zona.pafoil[key] = pafoil
+        zona = self.model.zona
+        assert key not in zona.pafoil, '\npafoil7=\n%s old=\n%s' % (
+            pafoil, zona.pafoil[key])
+        zona.pafoil[key] = pafoil
         self.model._type_to_id_map[pafoil.type].append(key)
 
     def add_aesurfz_object(self, aesurf: AESURFZ) -> None:
@@ -209,45 +213,110 @@ class AddMethods:
         """adds an MLOADS object"""
         key = mloads.mloads_id
         model = self.model
-        assert key not in model.aesurf, '\nmloads=\n%s old=\n%s' % (
-            mloads, model.mloads[key])
-        self.model.zona.mloads[key] = mloads
+        zona = model.zona
+        assert key not in zona.mloads, '\nmloads=\n%s old=\n%s' % (
+            mloads, zona.mloads[key])
+        zona.mloads[key] = mloads
         model._type_to_id_map[mloads.type].append(key)
+
+    def add_gloads_object(self, gloads: GLOADS) -> None:
+        """adds an GLOADS object"""
+        key = gloads.gloads_id
+        model = self.model
+        zona = model.zona
+        assert key not in zona.gloads, '\ngloads=\n%s old=\n%s' % (
+            gloads, model.gloads[key])
+        zona.gloads[key] = gloads
+        model._type_to_id_map[gloads.type].append(key)
+
+    def add_dgust_object(self, dgust: DGUST) -> None:
+        """adds an DGUST object"""
+        key = dgust.dgust_id
+        model = self.model
+        zona = model.zona
+        assert key not in zona.dgust, '\ndgust=\n%s old=\n%s' % (
+            dgust, zona.dgust[key])
+        zona.dgust[key] = dgust
+        model._type_to_id_map[dgust.type].append(key)
+
+    def add_cgust_object(self, cgust: CGUST) -> None:
+        """adds an CGUST object"""
+        key = cgust.cgust_id
+        model = self.model
+        zona = model.zona
+        assert key not in zona.cgust, '\ncgust=\n%s old=\n%s' % (
+            cgust, zona.cgust[key])
+        zona.cgust[key] = cgust
+        model._type_to_id_map[cgust.type].append(key)
 
     def add_ase_object(self, ase: ASE) -> None:
         """adds an ASE object"""
         key = ase.ase_id
         model = self.model
-        assert key not in model.aesurf, '\nase=\n%s old=\n%s' % (
-            ase, model.ase[key])
-        self.model.zona.asecont[key] = ase
+        zona = model.zona
+        assert key not in zona.ase, '\nase=\n%s old=\n%s' % (
+            ase, zona.ase[key])
+        zona.ase[key] = ase
         model._type_to_id_map[ase.type].append(key)
 
     def add_asecont_object(self, asecont: ASECONT) -> None:
         """adds an ASECONT object"""
         key = asecont.asecont_id
         model = self.model
-        assert key not in model.aesurf, '\nasecont=\n%s old=\n%s' % (
-            asecont, model.asecont[key])
-        self.model.zona.asecont[key] = asecont
+        zona = model.zona
+        assert key not in zona.asecont, '\nasecont=\n%s old=\n%s' % (
+            asecont, zona.asecont[key])
+        zona.asecont[key] = asecont
         model._type_to_id_map[asecont.type].append(key)
+
+    def add_asegain_object(self, asegain: ASEGAIN) -> None:
+        """adds an ASEGAIN object"""
+        key = asegain.asegain_id
+        model = self.model
+        zona = model.zona
+        assert key not in zona.asegain, '\nasegain=\n%s old=\n%s' % (
+            asegain, zona.asegain[key])
+        zona.asecont[key] = asegain
+        model._type_to_id_map[asegain.type].append(key)
 
     def add_asesnsr_object(self, asesnsr: ASESNSR) -> None:
         """adds an ASESNSR object"""
         key = asesnsr.asesnsr_id
         model = self.model
-        assert key not in model.aesurf, '\nasesnsr=\n%s old=\n%s' % (
-            asesnsr, model.asesnsr[key])
-        self.model.zona.asesnsr[key] = asesnsr
+        zona = model.zona
+        assert key not in zona.asesnsr, '\nasesnsr=\n%s old=\n%s' % (
+            asesnsr, zona.asesnsr[key])
+        zona.asesnsr[key] = asesnsr
         model._type_to_id_map[asesnsr.type].append(key)
+
+    def add_asesns1_object(self, asesns1: ASESNS1) -> None:
+        """adds an ASESNS1 object"""
+        key = asesns1.asesns1_id
+        model = self.model
+        zona = model.zona
+        assert key not in zona.asesns1, '\nasesns1=\n%s old=\n%s' % (
+            asesns1, zona.asesns1[key])
+        zona.asesns1[key] = asesns1
+        model._type_to_id_map[asesns1.type].append(key)
+
+    def add_gainset_object(self, gainset: GAINSET) -> None:
+        """adds an ASEGAIN object"""
+        key = gainset.asegain_id
+        model = self.model
+        zona = model.zona
+        assert key not in zona.gainset, '\ngainset=\n%s old=\n%s' % (
+            gainset, zona.gainset[key])
+        zona.asecont[key] = gainset
+        model._type_to_id_map[gainset.type].append(key)
 
     def add_cjunct_object(self, cjunct: CJUNCT) -> None:
         """adds an CJUNCT object"""
         key = cjunct.cjunct_id
         model = self.model
-        assert key not in model.aesurf, '\ncjunct=\n%s old=\n%s' % (
-            cjunct, model.cjunct[key])
-        self.model.zona.cjunct[key] = cjunct
+        zona = model.zona
+        assert key not in zona.cjunct, '\ncjunct=\n%s old=\n%s' % (
+            cjunct, zona.cjunct[key])
+        zona.cjunct[key] = cjunct
         model._type_to_id_map[cjunct.type].append(key)
 
     def add_conct_object(self, conct: CONCT) -> None:
@@ -264,9 +333,10 @@ class AddMethods:
         """adds an AESURFZ object"""
         key = actu.actu_id
         model = self.model
-        assert key not in model.aesurf, '\nactu=\n%s old=\n%s' % (
-            actu, model.actu[key])
-        self.model.zona.actu[key] = actu
+        zona = model.zona
+        assert key not in zona.actu, '\nactu=\n%s old=\n%s' % (
+            actu, zona.actu[key])
+        zona.actu[key] = actu
         model._type_to_id_map[actu.type].append(key)
 
     def add_mkaeroz_object(self, mkaeroz: MKAEROZ) -> None:
@@ -332,15 +402,39 @@ class ZONA:
         self.attach: dict[int, PLTAERO] = {}
         self.plotaero: dict[int, PLTAERO] = {}
         self.plotmode: dict[int, PLTMODE] = {}
+
         #: store PAFOIL7/PAFOIL8
         self.pafoil: dict[int, PAFOIL7] = {}
         self.mloads: dict[int, MLOADS] = {}
-        # TODO: add me
-        self.eloads: dict[int, MLOADS] = {}
-        self.gloads: dict[int, MLOADS] = {}
-        self.nlfltr: dict[int, MLOADS] = {}
-        self.dse: dict[int, MLOADS] = {}
 
+        # TODO: add me
+        self.eloads: dict[int, ELOADS] = {}
+        self.nlfltr: dict[int, NLFLTR] = {}
+        self.dse: dict[int, DSE] = {}
+        self.extfile: dict[int, EXTFILE] = {}
+        # FOILSEC
+        # CPFACT
+        # TRIMFLT
+
+        # gust
+        self.gloads: dict[int, GLOADS] = {}
+        self.dgust: dict[int, DGUST] = {}
+        self.cgust: dict[int, CGUST] = {}
+        self.gengust: dict[int, GENGUST] = {}
+        self.gustinp: dict[int, GUSTINP] = {}
+
+        # ase
+        self.ase: dict[int, ASE] = {}
+        self.asecont: dict[int, ASECONT] = {}
+        self.asesnsr: dict[int, ASESNSR] = {}
+        self.asesns1: dict[int, ASESNS1] = {}
+        self.asegain: dict[int, ASEGAIN] = {}
+        self.gainset: dict[int, GAINSET] = {}
+        self.aseout: dict[int, ASEOUT] = {}
+        self.apcnsnd: dict[int, APCNSND] = {}
+        self.apcnscp: dict[int, APCNSCP] = {}
+
+        # other
         self.extinp: dict[int, EXTINP] = {}
         self.extout: dict[int, EXTOUT] = {}
         self.trimfnc: dict[int, TRIMFNC] = {}
@@ -356,9 +450,6 @@ class ZONA:
         self.mldtime: dict[int, MLDTIME] = {}
         self.dmil: dict[tuple[str, int, int], DMIL] = {}
         self.actu: dict[int, ACTU] = {}
-        self.ase: dict[int, ASE] = {}
-        self.asecont: dict[int, ASECONT] = {}
-        self.asesnsr: dict[int, ASESNSR] = {}
         self.cjunct: dict[int, CJUNCT] = {}
         self.conct: dict[int, CONCT] = {}
         self.tfset: dict[int, TFSET] = {}
@@ -498,20 +589,7 @@ class ZONA:
             'TABDMP1': (TABDMP1_ZONA, add_methods.add_table_sdamping_object),
             'CAERO7': (CAERO7, add_methods.add_caero_object),
             'AEROZ': (AEROZ, add_methods.add_aeros_object),
-            'AESURFZ': (AESURFZ, zona_add.add_aesurfz_object),
-            'FLUTTER': (FLUTTER_ZONA, add_methods.add_flutter_object),
-            'MLOADS': (MLOADS, zona_add.add_mloads_object),
-            'ASE': (ASE, zona_add.add_ase_object),
-            'ASECONT': (ASECONT, zona_add.add_asecont_object),
-            'ASESNSR': (ASESNSR, zona_add.add_asesnsr_object),
-            'SENSET': (SENSET, zona_add.add_senset_object),
-            'CNCTSET': (CNCTSET, zona_add.add_cnctset_object),
-            'SURFSET': (SURFSET, zona_add.add_surfset_object),
-            'CJUNCT': (CJUNCT, zona_add.add_cjunct_object),
-            'CONCT': (CONCT, zona_add.add_conct_object),
-            'ACTU': (ACTU, zona_add.add_actu_object),
-            'LOADMOD': (LOADMOD, zona_add.add_loadmod_object),
-            'RBRED': (RBRED, zona_add.add_rbred_object),
+            # geometry
             'SPLINE1': (SPLINE1_ZONA, add_methods.add_spline_object),
             'SPLINE2': (SPLINE2_ZONA, add_methods.add_spline_object),
             'SPLINE3': (SPLINE3_ZONA, add_methods.add_spline_object),
@@ -524,6 +602,28 @@ class ZONA:
             'BODY7': (BODY7, add_methods.add_caero_object),
             'CAERO7': (CAERO7, add_methods.add_caero_object),
             'ACOORD': (ACOORD, add_methods.add_coord_object),
+            'AESURFZ': (AESURFZ, zona_add.add_aesurfz_object),
+            # flutter
+            'FLUTTER': (FLUTTER_ZONA, add_methods.add_flutter_object),
+            # mloads
+            'MLOADS': (MLOADS, zona_add.add_mloads_object),
+            # gust
+            'GLOADS': (GLOADS, zona_add.add_gloads_object),
+            'DGUST': (DGUST, zona_add.add_dgust_object),
+            'CGUST': (CGUST, zona_add.add_cgust_object),
+            # ase
+            'ASE': (ASE, zona_add.add_ase_object),
+            'ASECONT': (ASECONT, zona_add.add_asecont_object),
+            'ASESNSR': (ASESNSR, zona_add.add_asesnsr_object),
+            'ASESNS1': (ASESNS1, zona_add.add_asesns1_object),
+            'SENSET': (SENSET, zona_add.add_senset_object),
+            'CNCTSET': (CNCTSET, zona_add.add_cnctset_object),
+            'SURFSET': (SURFSET, zona_add.add_surfset_object),
+            'CJUNCT': (CJUNCT, zona_add.add_cjunct_object),
+            'CONCT': (CONCT, zona_add.add_conct_object),
+            'ACTU': (ACTU, zona_add.add_actu_object),
+            'LOADMOD': (LOADMOD, zona_add.add_loadmod_object),
+            'RBRED': (RBRED, zona_add.add_rbred_object),
             'TRIMVAR': (TRIMVAR, zona_add.add_trimvar_object),
             'TRIMLNK': (TRIMLNK, zona_add.add_trimlnk_object),
             'ATTACH': (ATTACH, zona_add.add_attach_object),
@@ -548,28 +648,42 @@ class ZONA:
         }
         card_parser.update(card_parser2)
         cards = [
+            # geometry
             'CAERO7', 'AEROZ', 'AESURFZ', 'ATTACH',
             'PANLST1', 'PANLST2', 'PANLST3', 'PAFOIL7',
             'SEGMESH', 'BODY7', 'ACOORD', 'MKAEROZ',
-            'TRIMVAR', 'TRIMLNK', 'FLUTTER',
-            'PLTMODE', 'PLTAERO',
+            'TRIMVAR', 'TRIMLNK',
+            # -------------
+            # flutter
+            'FLUTTER',
+            'FIXMDEN', 'FIXHATM', 'FIXMACH',
+            # -------------
+            # plotting
+            'PLTMODE', 'PLTAERO', 'PLTTIME',
+            # -------------
             # mloads
             'MLOADS',
-            'ASE', 'ASECONT', 'ASESNSR',
             'CJUNCT', 'CONCT', 'TFSET',
             'MLDSTAT', 'MLDTRIM', 'MLDPRNT', 'MLDCOMD',
             'EXTINP', 'EXTOUT', 'TRIMFNC', 'LOADMOD',
+            # -------------
+            # gust
+            'GLOADS', 'DGUST', 'CGUST',
+            # -------------
+            # ase
+            'ASE', 'ASECONT', 'ASESNSR', 'ASESNS1', 'ASEGAIN',
+            'AEROLAG', 'ACTU',
+            'MIMOSS', 'GAINSET',
+            # -------------
+            # other
             'DMIL',
-            'MLDTIME', 'MLDCOMD', 'ACTU',
-            'PLTTIME', 'MINSTAT', 'AEROLAG', 'APCONST',
+            'MLDTIME', 'MLDCOMD',
+            'MINSTAT', 'APCONST',
             # 'PLTFLUT', 'PLTVG', 'PLTCP', 'PLTMIST',
-            'FIXMDEN', 'FIXHATM', 'FIXMACH',
             'RBRED',
             # 'SPLINE0', 'PBODY7',
-            'MIMOSS',
             'SENSET', 'CNCTSET', 'SURFSET',
         ]
-
         self.model.cards_to_read.update(set(cards))
 
     def cross_reference(self):
@@ -579,16 +693,21 @@ class ZONA:
         dicts = [
             self.mkaeroz, self.trimvar, self.trimlnk,
             self.attach, self.pafoil,
-            self.mloads, self.eloads, self.gloads, self.dse, self.nlfltr,
-            self.cjunct, self.conct, self.tfset,
-            self.ase, self.asecont, self.asesnsr,
-            self.senset, self.cnctset, self.surfset,
+            self.mloads, self.eloads, self.dse, self.nlfltr,
+            # ase
+            self.cjunct, self.conct, self.tfset, self.cnctset,
+            self.ase, self.asecont, self.asesnsr, self.asesns1,
+            self.asegain, self.gainset,
             self.mimoss,
+            #
+            self.senset, self.surfset,
             self.mldtrim, self.mldstat, self.mldprnt,
             self.mldcomd, self.mldtime, self.pafoil,
             # self.extinp, self.extout,
             self.trimfnc,
             self.loadmod, self.rbred,
+            # gust
+            self.gloads, self.dgust, self.cgust,
         ]
 
         for items in dicts:
@@ -633,15 +752,20 @@ class ZONA:
             bdf_file.write(attach.write_card(size=size, is_double=is_double))
 
         dicts = [
-            self.mloads, self.eloads, self.gloads, self.dse, self.nlfltr,
-            self.cjunct, self.conct, self.tfset,
-            self.ase, self.asecont, self.asesnsr,
-            self.senset, self.cnctset, self.surfset,
+            self.mloads, self.eloads, self.dse, self.nlfltr,
+            # ase
+            self.cjunct, self.conct, self.tfset, self.cnctset,
+            self.ase, self.asecont, self.asesnsr, self.asesns1,
+            self.asegain, self.gainset,
             self.mimoss,
+            # other
+            self.senset, self.surfset,
             self.mldtrim, self.mldstat, self.minstat, self.mldprnt,
             self.mldcomd, self.mldtime,
             self.extinp, self.extout, self.trimfnc,
             self.loadmod, self.rbred,
+            # gust
+            self.gloads, self.dgust, self.cgust,
         ]
         for items in dicts:
             for key, value in items.items():

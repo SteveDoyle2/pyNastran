@@ -1424,7 +1424,9 @@ class CAERO7(BaseCard):
                  cp: int=0,
                  nspan: int=0, nchord: int=0, lspan: int=0,
                  p_airfoil: Optional[int]=None,
-                 ztaic: Optional[int]=None, comment: str=''):
+                 ztaic: Optional[int]=None,
+                 lchord_tip=0, attach_tip=0, achord_tip=0,
+                 comment: str=''):
         """
         Defines a CAERO1 card, which defines a simplified lifting surface
         (e.g., wing/tail).
@@ -1493,6 +1495,10 @@ class CAERO7(BaseCard):
         self.p4 = p4
         self.x43 = x43
         self.ztaic = ztaic
+
+        self.lchord_tip = lchord_tip
+        self.attach_tip = attach_tip
+        self.achord_tip = achord_tip
 
         self.pid_ref = None
         self.cp_ref = None
@@ -1574,14 +1580,16 @@ class CAERO7(BaseCard):
         z4 = double_or_blank(card, 19, 'z4', default=0.0)
         p4 = np.array([x4, y4, z4])
         x43 = double_or_blank(card, 20, 'x43', default=0.)
-        unused_lchord_tip = integer_or_blank(card, 21, 'lchord_tip')
-        unused_attach_tip = integer_or_blank(card, 22, 'attach_tip')
-        unused_achord_tip = integer_or_blank(card, 23, 'achord_tip')
+        lchord_tip = integer_or_blank(card, 21, 'lchord_tip')
+        attach_tip = integer_or_blank(card, 22, 'attach_tip')
+        achord_tip = integer_or_blank(card, 23, 'achord_tip')
 
-        assert len(card) <= 23, f'len(CAERO7 card) = {len(card):d}\ncard={card}'
+        # print(card.write_card())
+        assert len(card) <= 24, f'len(CAERO7 card) = {len(card):d}\ncard={card}'
         return CAERO7(eid, name, p1, x12, p4, x43,
                       cp=cp, nspan=nspan, nchord=nchord, lspan=lspan,
                       p_airfoil=p_airfoil, ztaic=ztaic,
+                      lchord_tip=lchord_tip, attach_tip=attach_tip, achord_tip=achord_tip,
                       comment=comment)
 
     def flip_normal(self):
