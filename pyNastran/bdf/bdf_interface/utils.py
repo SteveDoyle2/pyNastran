@@ -124,6 +124,17 @@ def _to_fields_micpnt(card_lines: list[str]) -> list[str]:
     return fields
 
 
+def _to_fields_trimfnc(card_lines: list[str]) -> list[str]:
+    """splits a TRIMFNC"""
+    assert len(card_lines) == 1, card_lines
+    line = card_lines[0]
+    if '\t' in line:
+        line = expand_tabs(line)
+
+    new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
+                  line[32:40], line[40:48], line[48:56], line[56:72]]
+    return new_fields
+
 def _to_fields_amlreg(card_lines: list[str]) -> list[str]:
     """splits an AMLREG"""
     line1 = card_lines[0]
@@ -364,6 +375,8 @@ def to_fields(card_lines: list[str], card_name: str,
         return _to_fields_amlreg(card_lines)
     elif card_name == 'MICPNT':
         return _to_fields_micpnt(card_lines)
+    elif card_name == 'TRIMFNC':
+        return _to_fields_trimfnc(card_lines)
     #elif card_name == 'SET1':
         #return _to_fields_set1(card_lines, card_name)
 

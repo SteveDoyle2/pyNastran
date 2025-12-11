@@ -26,6 +26,7 @@ ZONA_PATH = MODEL_PATH / 'aero' / 'zona'
 EXAMPLES_DIR = PKG_PATH / 'bdf' / 'cards' / 'aero' / 'examples'
 
 ASE_DIR = EXAMPLES_DIR / 'ase'
+TRIM_DIR = EXAMPLES_DIR / 'trim'
 FLUTTER_DIR = EXAMPLES_DIR / 'flutter'
 GLOADS_DIR = EXAMPLES_DIR / 'gloads'
 MLOADS_DIR = EXAMPLES_DIR / 'mloads'
@@ -79,54 +80,69 @@ class TestAeroZona(unittest.TestCase):
         os.remove('zona.bdf')
         model2.zona.convert_to_nastran()
 
+    def test_zona_trim_case1_in(self):
+        zona_filename = TRIM_DIR / 'case1' / 'ha144d.inp'
+        model = read_bdf(zona_filename, xref=True, debug=True, mode='zona')
+        model.zona.safe_cross_reference()
+        model.write_bdf(TRIM_DIR / 'zona.inp')
+
     def test_zona_flutter_case1_in(self):
         zona_filename = FLUTTER_DIR / 'case1' / 'ha145e.inp'
         model = read_bdf(zona_filename, xref=True, debug=True)
+        model.zona.safe_cross_reference()
         model.write_bdf(FLUTTER_DIR / 'zona.inp')
 
     def test_zona_flutter_case2_in(self):
         zona_filename = FLUTTER_DIR / 'case2' / 'crop.inp'
         model = read_bdf(zona_filename, xref=True, debug=True)
+        model.zona.safe_cross_reference()
         model.write_bdf(FLUTTER_DIR / 'zona.inp')
 
     def test_zona_flutter_case3_in(self):
         zona_filename = FLUTTER_DIR / 'case3' / 'ha145fb.inp'
         model = read_bdf(zona_filename, xref=True, debug=True)
+        model.zona.safe_cross_reference()
         model.write_bdf(FLUTTER_DIR / 'zona.inp')
 
     def test_zona_flutter_case4_in(self):
         zona_filename = FLUTTER_DIR / 'case4' / 'ha145g.inp'
         model = read_bdf(zona_filename, xref=True, debug=True)
+        model.zona.safe_cross_reference()
         model.write_bdf(FLUTTER_DIR / 'zona.inp')
 
     def test_zona_flutter_case5_in(self):
         zona_filename = FLUTTER_DIR / 'case5' / 'f16ma41.inp'
         model = read_bdf(zona_filename, xref=False, debug=True)
         model.zona.cross_reference()
+        model.zona.safe_cross_reference()
         model.write_bdf(FLUTTER_DIR / 'zona.inp')
 
     def test_zona_flutter_case6_in_trim(self):
         zona_filename = FLUTTER_DIR / 'case6' / 'agard_trim.inp'
         model = read_bdf(zona_filename, xref=False, debug=True)
         model.zona.cross_reference()
+        model.zona.safe_cross_reference()
         model.write_bdf(FLUTTER_DIR / 'zona.inp')
 
     def test_zona_flutter_case6_in_tran(self):
         zona_filename = FLUTTER_DIR / 'case6' / 'agardztran.inp'
         model = read_bdf(zona_filename, xref=False, debug=True)
         model.zona.cross_reference()
+        model.zona.safe_cross_reference()
         model.write_bdf(MLOADS_DIR / 'zona.inp')
 
     def test_zona_flutter_case7_in(self):
         zona_filename = FLUTTER_DIR / 'case7' / 'agardztaw.inp'
         model = read_bdf(zona_filename, xref=False, debug=True)
         model.zona.cross_reference()
+        model.zona.safe_cross_reference()
         model.write_bdf(MLOADS_DIR / 'zona.inp')
 
     def test_zona_mloads_case1_in(self):
         zona_filename = MLOADS_DIR / 'case1' / 'm144open.inp'
         model = read_bdf(zona_filename, xref=True, debug=True)
         # model.zona.cross_reference()
+        model.zona.safe_cross_reference()
         model.write_bdf(MLOADS_DIR / 'zona.inp')
         assert len(model.zona.mloads)
         plot = False
@@ -141,34 +157,46 @@ class TestAeroZona(unittest.TestCase):
     def test_zona_mloads_case2a_in(self):
         zona_filename = MLOADS_DIR / 'case2' / 'm144_trim.inp'
         model = read_bdf(zona_filename, xref=True, debug=True)
+        model.zona.safe_cross_reference()
         model.write_bdf(MLOADS_DIR / 'zona.inp')
 
     def test_zona_mloads_case2b_in(self):
         zona_filename = MLOADS_DIR / 'case2' / 'm144clos.inp'
         model = read_bdf(zona_filename, xref=True, debug=True)
+        model.zona.safe_cross_reference()
         model.write_bdf(MLOADS_DIR / 'zona.inp')
 
     def test_zona_ase_case1(self):
         zona_filename = ASE_DIR / 'case1' / 'cropase.inp'
         model = read_bdf(zona_filename, mode='zona', xref=True, debug=True)
+        model.zona.safe_cross_reference()
+        model.write_bdf(ASE_DIR / 'zona.inp')
+
+    def test_zona_ase_case2(self):
+        zona_filename = ASE_DIR / 'case2' / 'gafa.inp'
+        model = read_bdf(zona_filename, mode='zona', xref=True, debug=True)
+        model.zona.safe_cross_reference()
         model.write_bdf(ASE_DIR / 'zona.inp')
 
     def test_zona_gloads_case1(self):
         zona_filename = GLOADS_DIR / 'case1' / 'kussner.inp'
         model = read_bdf(zona_filename, mode='zona', xref=False, debug=True)
         model.zona.cross_reference()
+        model.zona.safe_cross_reference()
         model.write_bdf(GLOADS_DIR / 'zona.inp')
 
     def test_zona_gloads_case2(self):
         zona_filename = GLOADS_DIR / 'case2' / 'gbj_dgust.inp'
         model = read_bdf(zona_filename, mode='zona', xref=False, debug=True)
         model.zona.cross_reference()
+        model.zona.safe_cross_reference()
         model.write_bdf(GLOADS_DIR / 'zona.inp')
 
     def test_zona_gloads_case3(self):
         zona_filename = GLOADS_DIR / 'case3' / 'gbj_cgust.inp'
         model = read_bdf(zona_filename, mode='zona', xref=False, debug=True)
         model.zona.cross_reference()
+        model.zona.safe_cross_reference()
         model.write_bdf(GLOADS_DIR / 'zona.inp')
 
     # def test_zona_gloads_case4a(self):
@@ -225,12 +253,12 @@ def get_zona_model() -> StringIO:
         'AEFACT,14, 0., 1., -1., 0.\n'
         '$ MKAEROZ, ID, MACH, METHOD, IDFLT\n'
         'MKAEROZ,   101, 0.8, -1,     -1,  \n'
-        '$ TRIM, ID, MKAEROZ, Q,   LABEL1, UX1,    CGX, CGY,\n'
-        'TRIM, 100,  101,     42., ALPHA,  5., 0., 0.,  0.,\n'
-        '$CGZ, WEIGHT, Ixx, Ixy, Iyy, Ixz, Iyz, Izz\n'
-        ',0.,  1e4,    1e3, 1e3, 1e5, 1e3, 1e3, 1e4\n'
-        '$TRUE/G, NX,     NY,  NZ,  P,       Q,   R, \n'
-        ', TRUE,  FREE, NONE,  32., FREE, NONE, 42., \n'
+        '$ TRIM, ID, MKAEROZ, Q,   IDOBJ, IDCONS, CGX, CGY, CGZ\n'
+        'TRIM, 100,  101,     42., 0,     0,      5., 0., 0.\n'
+        '$WTMASS, WEIGHT, Ixx, Ixy, Iyy, Ixz, Iyz, Izz\n'
+        ',1.,     1e4,    1e3, 1e3, 1e5, 1e3, 1e3, 1e4\n'
+        '$TRUE/G, NX,     NY,  NZ,  PDOT, QDOT, RDOT,\n'
+        ', TRUE,  FREE, NONE,  32., FREE, NONE, 42.,\n'
         '$var, value\n'
         ',17,  1.0,\n'
         '$\n'
@@ -260,5 +288,3 @@ def get_zona_model() -> StringIO:
     )
     bdf_file.seek(0)
     return bdf_file
-
-

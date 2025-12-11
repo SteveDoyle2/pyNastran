@@ -1,0 +1,70 @@
+SOL 103
+CEND
+TITLE = EXAMPLE HA144D: 30 DEG FWD SWEPT WING WITH CANARD & FI HA144D                   
+SUBTI = SYMMETRIC FLIGHT CONDITIONS, DOUBLET-LATTICE AERO                               
+LABEL = HALF-SPAN MODEL, STATIC ANTISYMMETRIC LOADING                                   
+  ECHO    = SORTED                                                                      
+  SPC = 2                                                                               
+  METHOD=1                                                                              
+  DISP    = ALL $ PRINT ALL DISPLACEMENTS                                               
+  STRESS=ALL                                                                            
+BEGIN BULK                                                                              
+
+BEGIN BULK                                                                                                      
+CBAR    100     100     90      99      0.      0.      1.                      
+CBAR    101     100     97      98      0.      0.      1.                      
+CBAR    102     100     98      90      0.      0.      1.                      
+CBAR    103     100     99      100     0.      0.      1.                      
+CBAR    110     101     100     110     0.      0.      1.                      
+CBAR    120     101     110     120     0.      0.      1.                      
+CBAR    310     301     100     310     0.      0.      1.                      
+CONM2   97      97      0       1500.0                                          
+CONM2   98      98      0       1500.0                                          
+CONM2   99      99      0       1500.0                                          
+CONM2   100     100     0       1500.0                                          
+CONM2   111     111     0       600.0                                           
+CONM2   112     112     0       400.0                                           
+CONM2   121     121     0       600.0                                           
+CONM2   122     122     0       400.0                                           
+CONM2   311     311     0       30.0                                            
+CONM2   312     312     0       20.0                                            
+EIGR    1       MGIV    0.      30000.          24                      +M      
++M      MAX                                                                     
+GRID    90              15.     0.      0.                                      
+GRID    97              0.      0.      0.                                      
+GRID    98              10.     0.      0.                                      
+GRID    99              20.     0.      0.                                      
+GRID    100             30.     0.      0.                                      
+GRID    110             27.11325+5.     0.                                      
+GRID    111             24.61325+5.     0.                                      
+GRID    112             29.61325+5.     0.                                      
+GRID    120             21.33975+15.    0.                                      
+GRID    121             18.83975+15.    0.                                      
+GRID    122             23.83975+15.    0.                                      
+GRID    310             32.88675+0.     5.                                      
+GRID    311             30.38675+0.     5.                                      
+GRID    312             35.38675+0.     5.                                      
+MAT1    1       1.44+9  5.40+8                                                  
+PARAM   GRDPNT  90                                                              
+PARAM   WTMASS  .031081                                                         
+PBAR    100     1       2.0     .173611 0.15    0.5                     +PB1F   
++PB1F   1.0     1.0     1.0     -1.0    -1.0    1.0     -1.0    -1.0    +PB2F   
++PB2F                   0.0                                                     
+PBAR    101     1       1.5     0.173611+2.0    0.462963                +PB1W   
++PB1W   0.5     3.0     0.5     -3.0    -0.5    3.0     -0.5    -3.0    +PB2W   
++PB2W                   0.0                                                     
+PBAR    301     1       .75     .086806 1.0     .231482                 +PB1FI  
++PB1FI  0.5     3.0     0.5     -3.0    -0.5    3.0     -0.5    -3.0    +PB2FI  
++PB2FI                  0.                                                      
+RBAR    111     110     111     123456                                          
+RBAR    112     110     112     123456                                          
+RBAR    121     120     121     123456                                          
+RBAR    122     120     122     123456                                          
+RBAR    311     310     311     123456                                          
+RBAR    312     310     312     123456                                          
+SPC1    1       135     90                                                      
+SPC1    1       135     97      98      99      100     310                     
+SPC1    2       246     90                                                      
+SPC1    2       246     97      98      99      100     310                     
+SUPORT  90      135                                                             
+ENDDATA 

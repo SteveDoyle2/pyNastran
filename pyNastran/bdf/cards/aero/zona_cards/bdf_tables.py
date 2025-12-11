@@ -2,18 +2,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
-from pyNastran.bdf.cards.bdf_tables import TABLED1, TABDMP1, read_table_lax, read_table
+from pyNastran.bdf.cards.bdf_tables import Table, TABDMP1, read_table_lax, read_table
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank,
-    string_or_blank,
+    string_or_blank, double_or_blank,
 )
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
-class TABLED1_ZONA(TABLED1):
+class TABLED1_ZONA(Table):
     """
     Dynamic Load Tabular Function, Form 1
     Defines a tabular function for use in generating frequency-dependent and
@@ -45,7 +45,8 @@ class TABLED1_ZONA(TABLED1):
 
     def __init__(self, tid: int, x: np.ndarray, y: np.ndarray,
                  xaxis: str='LINEAR', yaxis: str='LINEAR',
-                 extrap: int=0, comment: str=''):
+                 extrap_xl: str='NO', extrap_xu: str='NO',
+                 y_scale: float=1.0, comment: str=''):
         """
         Creates a TABLED1, which is a dynamic load card that is applied
         by the DAREA card
@@ -62,11 +63,12 @@ class TABLED1_ZONA(TABLED1):
             LINEAR, LOG
         yaxis : str
             LINEAR, LOG
-        extrap : int; default=0
-            Extrapolation method:
-                0 : linear
-                1 : constant
-            .. note:: this is NX specific
+        extrap_xl : str; default='NO'
+            YES, NO
+        extrap_xu : str; default='NO'
+            YES, NO
+        y_scale : float; default=1.0
+            scaling factor for y-values
         comment : str; default=''
             a comment for the card
 
@@ -75,7 +77,9 @@ class TABLED1_ZONA(TABLED1):
         if comment:
             self.comment = comment
         self.tid = tid
-        self.extrap = extrap
+        self.extrap_xl = extrap_xl
+        self.extrap_xu = extrap_xu
+        self.y_scale = y_scale
         self.x = np.asarray(x, dtype='float64')
         self.y = np.asarray(y, dtype='float64')
         self.xaxis = xaxis
@@ -99,10 +103,14 @@ class TABLED1_ZONA(TABLED1):
         table_id = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', default='LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', default='LINEAR')
-        extrap = integer_or_blank(card, 4, 'extrap', default=0)
+        extrap_xl = string_or_blank(card, 4, 'extrap', default='NO')
+        extrap_xu = string_or_blank(card, 5, 'extrap', default='NO')
+        y_scale = double_or_blank(card, 6, 'extrap', default=1.0)
 
         x, y = read_table(card, table_id, 'TABLED1')
-        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
+        return TABLED1_ZONA(table_id, x, y, xaxis=xaxis, yaxis=yaxis,
+                            extrap_xl=extrap_xl, extrap_xu=extrap_xu,
+                            y_scale=y_scale, comment=comment)
 
     @classmethod
     def add_card_lax(cls, card: BDFCard, comment: str=''):
@@ -120,35 +128,33 @@ class TABLED1_ZONA(TABLED1):
         table_id = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', default='LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', default='LINEAR')
-        extrap = integer_or_blank(card, 4, 'yaxis', default=0)
+        extrap_xl = string_or_blank(card, 4, 'extrap', default='NO')
+        extrap_xu = string_or_blank(card, 5, 'extrap', default='NO')
+        y_scale = double_or_blank(card, 6, 'extrap', default=1.0)
 
         x, y = read_table_lax(card, table_id, 'TABLED1')
-        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
-
-    @classmethod
-    def add_op2_data(cls, data, comment: str=''):
-        table_id, extrap, xcode, ycode, xs, ys = data
-        xaxis = _map_axis(xcode)
-        yaxis = _map_axis(ycode)
-        x = np.array(xs, dtype='float64')
-        y = np.array(ys, dtype='float64')
-        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
+        return TABLED1_ZONA(table_id, x, y, xaxis=xaxis, yaxis=yaxis,
+                            extrap_xl=extrap_xl, extrap_xu=extrap_xu,
+                            y_scale=y_scale, comment=comment)
 
     def raw_fields(self):
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
-        list_fields = ['TABLED1', self.tid, self.xaxis, self.yaxis, self.extrap,
-                       None, None, None, None] + xy + ['ENDT']
+        list_fields = ['TABLED1', self.tid, self.xaxis, self.yaxis,
+                       self.extrap_xl, self.extrap_xu, self.factor,
+                       None, None, None] + xy + ['ENDT']
         return list_fields
 
     def repr_fields(self):
-        extrap = set_blank_if_default(self.extrap, 0)
+        extrap_xl = set_blank_if_default(self.extrap_xl, 'NO')
+        extrap_xu = set_blank_if_default(self.extrap_xu, 'NO')
+        y_scale = set_blank_if_default(self.y_scale, 1.0)
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
-        list_fields = ['TABLED1', self.tid, self.xaxis, self.yaxis, extrap,
-                       None, None, None, None] + xy + ['ENDT']
+        list_fields = ['TABLED1', self.tid, self.xaxis, self.yaxis, extrap_xl,
+                       extrap_xu, y_scale, None, None] + xy + ['ENDT']
         return list_fields
 
     def interpolate(self, x):

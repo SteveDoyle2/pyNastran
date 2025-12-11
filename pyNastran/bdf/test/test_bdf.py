@@ -2324,6 +2324,7 @@ def test_bdf_argparse(argv=None):
     version_group_map = {
         '--msc': 'Assume MSC Nastran (default=True)',
         '--nx': 'Assume NX Nastran/Simcenter (default=False)',
+        '--zona': 'Assume ZONA (default=True)',
         '--optistruct': 'Assume Altair OptiStruct (default=False)',
         '--mystran': 'Assume Mystran (default=False)',
     }
@@ -2433,6 +2434,8 @@ def _set_version(args: dict[str, Any]):
         version = 'msc'
     elif args['nx']:
         version = 'nx'
+    elif args['zona']:
+        version = 'zona'
     elif args['optistruct']:
         version = 'optistruct'
     elif args['mystran']:
@@ -2440,7 +2443,9 @@ def _set_version(args: dict[str, Any]):
     else:
         version = None
     args['version'] = version
-    del args['msc'], args['nx'], args['mystran'], args['optistruct']
+    for name in ['msc', 'nx', 'optistruct', 'mystran', 'zona']:
+        if name in args:
+            del args[name]
 
 # defaults
 #check        = False
@@ -2466,7 +2471,7 @@ def _set_version(args: dict[str, Any]):
 
 def get_test_bdf_usage_args_examples(encoding):
     """helper method"""
-    formats = '--msc|--nx|--optistruct|--mystran'
+    formats = '--msc|--nx|--optistruct|--zona|--mystran'
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'

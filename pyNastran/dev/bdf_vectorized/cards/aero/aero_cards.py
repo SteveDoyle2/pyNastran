@@ -4317,7 +4317,7 @@ class PAERO1(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         pass
 
     def uncross_reference(self) -> None:
@@ -6116,7 +6116,7 @@ class TRIM(BaseCard):
         #self.aelinks = model.aelinks
         #self.aesurf = model.aesurf
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         self.cross_reference(model)
 
     @classmethod

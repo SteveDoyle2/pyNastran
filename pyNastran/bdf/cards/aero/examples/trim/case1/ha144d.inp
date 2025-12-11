@@ -1,0 +1,464 @@
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$              Z A E R O    I N P U T    (HA144D.INP)                   $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       
+$
+$Begin Executive Control Section
+$                                                                       $
+$ ha144ds.f06 IS THE SYMMETRIC MODAL ANALYSIS OUTPUT FILE OF MSC.NASTRAN$
+$ IT HAS THREE RIGID BODY MODES DEFINED BY SUPORT=135.                  $
+$                                                                       $
+ASSIGN FEM=ha144ds.f06,PRINT=0,FORM=MSC,BOUND=SYM,SUPORT=135
+$                                                                       $
+$ ha144da.f06 IS THE ANTI-SYMM MODAL ANALYSIS OUTPUT FILE OF MSC.NASTRAN$
+$ IT HAS THREE RIGID BODY MODES DEFINED BY SUPORT=246.                  $
+$                                                                       $
+ASSIGN FEM=ha144da.f06,PRINT=0,FORM=MSC,BOUND=ANTI,SUPORT=246
+$                                                                       $
+$ ha144ds.mgh CONTAINS THE MATRIX [Mgg][PHI]=[SMGH] THAT IS REQUIRED    $
+$ FOR COMPUTING THE SYMMETRIC INERTIAL LOADS.                           $
+$ WHERE [Mgg] IS THE MASS MATRIX IN G-SET AND [PHI] IS THE SYMMETRIC    $
+$ MODAL MATRIX. [SMGH] IS OBTAINED BY THE OUTPUT4 MODULE OF NASTRAN     $
+$                                                                       $
+ASSIGN MATRIX=ha144ds.mgh,PRINT=0,FORM=FORMAT,MNAME=SMGH
+$                                                                       $
+$ ha144da.mgh CONTAINS THE MATRIX [Mgg][PHI]=[AMGH] THAT IS REQUIRED    $
+$ FOR COMPUTING THE ANTI-SYMM INERTIAL LOADS.                           $
+$ WHERE [Mgg] IS THE MASS MATRIX IN G-SET AND [PHI] IS THE ANTI-SYMM    $
+$ MODAL MATRIX. [AMGH] IS OBTAINED BY THE OUTPUT4 MODULE OF NASTRAN     $
+$                                                                       $
+ASSIGN MATRIX=ha144da.mgh,PRINT=0,FORM=FORMAT,MNAME=AMGH
+$                                                                       $
+DIAG 1                                                                 
+double
+CEND                                                                            
+$Begin Case Control Section
+TITLE= HA144D FORWARD SWEEP WING FOR STATIC AEROELASTIC ANALYSIS. 
+ECHO = SORT    
+SUBCASE = 1  
+    SUBTITLE=ASYMMETRIC ROLLING PULLOUT AT M=0.90, Q=1200 PSF
+    LABEL=DETERMINED TRIM SYSTEM. 5 TRIM D.O.F. & 9 TRIM VARIABLES
+    TRIM=100      
+SUBCASE = 2  
+    SUBTITLE= SYMMETRIC ONE G LEVEL FLIGHT AT M=0.9 Q=40 PSF
+    LABEL= DETERMINED TRIM SYSTEM WITH FOUR TRIM VARIABLES      
+    TRIM=200      
+SUBCASE = 3  
+    SUBTITLE=OVER-DETEMINATED TRIM SYSTEM WITH CDL AND STESS MINIMIZATION
+    LABEL= SAME AS SUBCASE 2 EXCEPT TEFLAP=FREE IS INTRODUCED.
+    TRIM=300      
+BEGIN BULK
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                 * AERO PARAMETERS / FLIGHT CONDITIONS *               $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       ACSID   XZSYM   FLIP    FMMUNIT FMLUNIT REFC    REFB    REFS    +ABC
+AEROZ   0       YES     NO      SLUG    FT      10.     40.     400.    +A      
+$+ABC   REFX    REFY    REFZ
++A      15.000  0.      0.
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 90      .90     0       0       SAVE    FSW.AIC         0       +MK1
+$       FREQ1   FREQ2   ETC                                             $
++MK1    0.01    
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                        * WING MACROELEMENTS *                         $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$ FORWARD SWEPT WING - 4 x 8 AERO BOXES EVENLY CUT                      $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  1100    WING            9       5       0               1101    +CA1
+$       XRL     YRL     ZRL     RCH     LRCHD   ATTCHR                  $
++CA1    25.     0.      0.      10.     0       0                       +CA2
+$       XRT     YRT     ZRT     TCH     LTCHD   ATTCHT                  $
++CA2    13.4529920.     0.      10.     0       0
+$                                                                       $
+$ A PAFOIL7 CARD IS USED TO DEFINE THE A 0.1 DEG INCIDENCE ANGLE,       $
+$ BUT WITH NO THICKNESS.                                                $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       ID      ITAX    ITHR    ICAMR   RADR    ITHT    ICAMT   RADT    $
+PAFOIL7 1101    1102    1103    1104    0.0     1103    1104    0.0
+AEFACT  1102    0.0     50.0    100.0
+AEFACT  1103    0.0     0.0     0.0
+$ AEFACT TO DESCRIBE THE AIRFOIL CAMBER (0.1 DEG INCIDENCE)             $
+AEFACT  1104    0.0     -0.0872 -0.1744
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                        * CANARD MACROELEMENT *                        $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  1000    CANARD          3       5       0                       +CA1
++CA1    10.     0.0     0.0     10.     0       0                       +CA2
++CA2    10.     5.0     0.0     10.     0       0
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                        * FIN MACROELEMENT *                           $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  3100    FIN     0       5       5                               +CA101
++CA101  30.7735 0.      10.     10.0                                    +CA102
++CA102  25.     0.0     0.0     10.                     
+$                                                                       $
+$ GENERATES PLOT FILE FOR AEROMODEL.                                    $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+PLTAERO 310     NO              TECPLOT HA144AERO.PLT
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                  * SPLINE INPUT *                                     $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$ THE BEAM SPLINE METHOD IS USED TO SPLINE THE WING AERO                $
+$ BOXES TO THE WING STRUCTURE GRIDS.  THE SETK BULK DATA CARD REFERS    $
+$ TO THE GRID POINTS SPECIFIED IN THE SET1 (SID=1105) BULK DATA CARD.   $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       EID     MODEL   SETK    SETG    DZ      EPS     CID             $
+SPLINE2 1601    WING    1100    1105    0.0             2
+$                                                                       $
+$ CORD2R = 2 DEFINES THE BEAM SPLINE AXIS.                              $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+CORD2R  2       0       30.     0.      0.      30.     0.0     10.     +CRD2
+$       C1      C2      C3                                              $
++CRD2   38.66025+5.0    0.0    
+$                                                                       $
+$ PANLST1 DEFINES THE WING AERO BOX ID'S THAT ARE REFERRED TO BY SPLINE2$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   MACROID BOX1    BOX2                                    $
+PANLST1 1100    1100    1100    1131
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SID     G1      G2      ETC                                     $
+SET1    1105    100     110     120     
+$                                                                       $
+$ SINCE THERE IS NO STRUCTURAL GRID ON THE CANARD, ATTACH METHOD IS USED$
+$ TO ATTACH THE CANARD TO GRID 90                                       $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       EID     MODEL   SETK    REFGRID 
+ATTACH  1501    CANARD  1000    90     
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+PANLST3 1000    CANARD    
+$                                                                       $
+$ INFINITE PLATE SPLINE METHOD FOR FIN.                                 $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+SPLINE1 3100    FIN             3100    3100    0.0  
+PANLST3 3100    FIN                     
+$       SID     G1      G2      ETC                                     $
+SET1    3100    100     311     310     312                         
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$ THREE CONTROL SURFACES ARE USED FOR VARIOUS TRIM CAES:                $
+$ (1) WHOLE CANARD AS A SYMMETRIC TRIM VARIABLE. HINGE LINE: CORD2R=1   $
+$ (2) AILERON AS AN ANTI-SYMMETRIC TRIM VARIABLE. HINGE LINE: CORD2R=110$
+$     AEROBOX ID'S: 1119,1123,1127, AND 1131                            $
+$ (3) TEFLAP AS A SYMMETRIC TRIM VARIABLE. IT SHEARS THE SAME AEROBOXES $
+$     AS THESE OF THE AILERON BUT FOR SYMMETRIC TRIM.                   $
+$ (4) RUDDER AS AN ANTI-SYMMETRIC TRIM VARIABLE.  HINGE LINE: CORD2R=301$
+$     AEROBOXES ID'S: 3103,3107,3111, AND 3115                          $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       LABEL   TYPE    CID     SETK    SETG
+AESURFZ CANARD  SYM     1       1000
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       CID     RID     A1      A2      A3      B1      B2      B3      $
+CORD2R  1       0       12.5    0.0     0.0     12.5    0.0     10.0    +CRD2
+$       C1      C2      C3                                              $
++CRD2   20.0    0.0     10.0
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+AESURFZ AILERON ANTI    110     2000
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+PANLST2 2000    1100    1119    1123    1127    1131 
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       CID     RID     A1      A2      A3      B1      B2      B3      $
+CORD2R  110     0       26.7265 10.     0.      26.7265 10.     -10.    +CRD2
+$       C1      C2      C3                                              $
++CRD2   36.7265 15.7735 0.0 
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+AESURFZ TEFLAP  SYM     110     2000
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+AESURFZ RUDDER  ANTI    301     3000
+$                                                                       $
+PANLST2 3000    3100    3103    3107    3111    3115 
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       CID     RID     A1      A2      A3      B1      B2      B3      $
+CORD2R  301     0       32.5    0.      0.      32.5    -10.    0.      +CRD2
+$       C1      C2      C3                                              $
++CRD2   22.5    0.0     5.7735
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                         TRIM = 100                                    $
+$ ASYMMETRIC ROLLING PULLOUT AT MACH=0.9 Q=1200. PSF                    $
+$ FIVE TRIM D.O.F'S: NY=0., NZ=4.8G, PDOT=QDOT=RDOT=0.0                 $
+$ NINE TRIM VARIABLES: AILERON=25.0, QRATE=0.000605 (QC/2V), RUDDER=FREE$
+$                      BETA=FREE, PRATE=FREE, CANARD=FREE, ALPHA=FREE   $
+$                      RRATE=0.0, AND THKCAM=0.0                        $
+$ SINCE THERE ARE FIVE 'FREE' TRIM VARIABLES AND FIVE TRIM D.O.F.'S     $
+$ THIS IS A DETERMINED TRIM SYSTEM AND NO OPTIMINATION IS REQUIRED.     $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$TRIMID  IDMK    QINF    IDOBJ   IDCONS  RHOX    RHOY    RHOZ
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIM    100     90      1200.   0       0       2.27607 0.0     .0310559+T1 
+$
+$$$$$$$$WTMASS  WEIGHT  IXX     IXY     IYY     IXZ     IYZ     IZZ
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
++T1     .031081 16100.  502484.40.0     1811849.-7555.340.0     2309364.+T2 
+$
+$$$$$$$$TRNACC  NX      NY      NZ      PDOT    QDOT    RDOT    LOADSET
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
++T2     G       NONE    0.0     4.8     0.0     0.0     0.0     100     +T3
+$
+$$$$$$$$IDVAR    VAL    ETC..
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
++T3     100      25.    700     .000605 300     FREE    400     FREE    +T4
++T4     200      FREE   600      FREE   800     FREE    900     0.0     +T5
++T5     500      0.0
+$
+TRIMVAR 100     AILERON -30.    +30.
+TRIMVAR 200     PRATE   
+TRIMVAR 300     RUDDER  -30.    +30.
+TRIMVAR 400     BETA    -10.    +10.
+TRIMVAR 500     THKCAM 
+TRIMVAR 600     CANARD  -40.    +40.
+TRIMVAR 700     QRATE   
+TRIMVAR 800     ALPHA   -50.    +50.     
+TRIMVAR 900     RRATE    
+$                                                                       $
+$ SET1=100 IS REFERRED TO BY LOADSET ENTRY IN TRIM=100 TO OUTPUT THE    $
+$ VALUES OF A SET OF TRIM FUNCTIONS (TRIMFNC BULK DATA CARDS)           $
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+SET1    100     10      20      25      30
+$                                                                       $
+$ TRIMFNC=10 REFERS TO LOADMOD=100 THAT IS THE HINGE MOMENT OF THE RHS  $
+$ AILERON COMPUTED AT AEROBOXES ( NO INERTIAL LOADS INCLUDED)           $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMFNC 10      AERO    LOADMOD RHS     100             HM.OF.RHS.AIL    
+LOADMOD 100     YMOMENT 110     2000    105
+SET1    105     122
+$                                                                       $
+$ TRIMFNC=20 REFERS TO LOADMOD=101 THAT IS THE BENDING MOMENT OF THE RHS$
+$ WING INCLUDING AERO & INERTIAL LOADS.                                 $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMFNC 20      FEM     LOADMOD RHS     101             BM.OF.RHS.WING
+LOADMOD 101     XMOMENT 0       1100    1101
+SET1    1101    110     111     112     120     121     122
+$                                                                       $
+$ TRIMFNC=25 IS THE SAME AS TRIMFNC=20 BUT FOR THE LHS WING.            $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMFNC 25      FEM     LOADMOD LHS     101             BM.OF.LHS.WING
+$                                                                       $
+$ TRIMFNC=30 REFERS TO THE MODAL STRESS AT THE CBAR ELEMENT=110 OF      $
+$ THE FEM MODEL. THE MODAL STRESSES ARE OBTAINED BY ACTIVATING          $
+$ STRESS=ALL IN THE NATRAN ANALYSIS. THESE STRESSES ARE INPUT BY DMI=   $
+$ SBAR110 AND DMI=ABAR110 FOR THE SYMMETRC AND ANTI-SYMMETRIC MODAL     $
+$ DATA, RESPECTIVELY.                                                   $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMFNC 30      MODAL   DMI     RHS     SBAR110 ABAR110 STRESS.CBAR=110
+$                                                                       $
+$ IMPORT SA1 MODAL STRESS AT CBAR 110 OF SYMMETRIC MODES BY DMI IN      $
+$ THE FIRST COLUMN                                                      $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+DMI     SBAR110       0       2       2         DMIL    21      2
+DMIL            SBAR110               1               4 -6.394756E+06 
+        -1.152244E+07   -5.749906E+07   9.741695E+06    5.092602E+06  
+        -6.526524E+07   -1.760658E+07   4.305552E+07    -4.120752E+08 
+        -3.025869E+08   -8.581570E+07   -7.733596E+08   5.866129E+07    
+        9.951519E+07    -8.239151E+08   -4.086227E+08   2.106677E+09   
+        -1.473281E+07 
+$                                                                       $
+$ IMPORT SB1 MODAL STRESS AT CBAR 110 OF SYMMETRIC MODES BY DMI IN      $
+$ THE SECOND COLUMN                                                     $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+DMIL            SBAR110               2               4 -4.407347E+06
+        -6.496776E+06   -3.895416E+07   1.265445E+07    -4.436399E+06  
+        2.878260E+07    2.542621E+07    -2.668230E+07   1.063493E+08  
+        -1.609337E+07   2.604834E+08    5.830810E+08    -2.010839E+06   
+        -6.087351E+08   1.211331E+09    7.617252E+08    -2.937442E+09    
+        1.729023E+07 
+$                                                                       $
+$ IMPORT SA1 MODAL STRESS AT CBAR 110 OF ANTI-SYMMETRIC MODES BY DMI IN $
+$ THE FIRST COLUMN                                                      $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+DMI     ABAR110       0       2       2         DMIL    16      2
+DMIL            ABAR110               1               4 -2.396046E+06  
+        1.161603E+07    -9.451227E+06   2.158134E+07    1.713374E+07  
+        -3.067258E+07   -5.219530E+06   -7.453044E+07   -9.104968E+07    
+        -1.770030E+08   1.334070E+08    -2.587715E+08   -9.871086E+07  
+$                                                                       $
+$ IMPORT SB1 MODAL STRESS AT CBAR 110 OF ANTI-SYMMETRIC MODES BY DMI IN $
+$ THE SECOND COLUMN                                                     $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+DMIL            ABAR110               2               4 -1.494378E+06 
+        7.063404E+06    -2.097288E+07   1.591460E+07    -3.603821E+07 
+        -3.850126E+07   1.763081E+08    2.447600E+07    1.059833E+07 
+        2.132236E+08    -8.262378E+08   2.547131E+09    5.878163E+08   
+         
+$                                                                       $
+$ OUTPUT DEFORMED AEROMODEL ON FILE HA144DEF.PLT IN TECPLOT FORMAT      $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+PLTTRIM 100     100     FLEX    DEFORM  TECPLOT  HA144DEF.PLT
+$                                                                       $
+$ OUTPUT LOADS IN NATRAN FORCE/MOMENT BULK CARDS FOR STATIC ANALYSIS    $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+PLTTRIM 100     100     FLEX    FORCE            HA144FOR.BDF
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                        TRIM  = 200                                    $
+$ SYMMETRIC ONE G LEVEL FLIGHT CASE AT M=0.90, Q=40 PSF                 $
+$ THREE TRIM D.O.F.: NX='FREE', NZ=1G, QDOT=0.0                         $
+$ SIX TRIM VARIABLES: THKCAM=1.0, CANARD=FREE, QRATE=0.0 AND ALPHA=FREE $
+$                     , AND A USER DEFINED TRIM VARIABLE; THRUST=1.0    $
+$ ALPHA(TRIMVAR=810) AND THKCAM (TRIMVAR=501) ARE NEWLY DEFINED TRIM    $
+$ VARIABLES. ALPHA IS LINKED TO THE AESURFZ=TEFLAP THROUGH TRMLNK BULK  $
+$ DATA CARD WITH LINKING COEFF=+1.  THIS IMPLIES THAT AS ALPHA=1.0      $
+$ DEGREE, TEFLAP ALSO DELFECTS +1. DEGREE.                              $
+$ FOR THKCAM, A USER INPUT CD0=0.01 IS USED TO REPLACE THE PROGRAM      $
+$ COMPUTED VALUE. THIS IS TO INCLUDE SKIN FRACTION DRAG FOR COMPUTING   $
+$ MORE ACCURATE NX TRIM DEGREE OF FREEDOM.                              $
+$ THE USER DEFINED TRIM VARIABLE THRUST (IDVAR=1100) HAS A THRUST VAULE $
+$ OF 1000. LBF. NORMALIZING THIS THRUST BY REFS AND Q GIVES CDC=0.0625  $
+$ FUTHERMORE, THE THRUST CAN NOT PRODUCE FORCE ALONG OTHER DEGREES OF   $
+$ FREEDOM; CDY=CDL=CDR=CDM=CDN=0.0. SINCE THE THRUST IS ACTING ALONG    $
+$ THE NEGATIVE NX DIRECTION, ITS ASSIGNED VALUE SHOULD -1.0             $
+$ SINCE THERE THREE TRIM D.O.F. AND THREE UNKNOWNS ( TWO FREE TRIM      $
+$ VARIABLES AND ONE FREE TRIM DEGREE OF FREEDOM),THIS IS A DETERMINED   $
+$ TRIM SYSTEM.                                                          $
+$ LOADSET=100 IS THE SAME AS THE PREVIOUS TRIM CASE FOR PRINTING OUT A  $
+$ SET OF TRIMFNC VALUES.                                                $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIM    200     90      40.0    0       0       2.27607 0.0     .0310559+T1 
++T1     .031081 16100.  502484.40.0     1811849.-7555.340.0     2309364.+T2 
++T2     TRUE    FREE    NONE    32.175  NONE    0.0     NONE    100     +T3 
++T3     501     1.0     600     FREE    700     0.0     810     FREE    +T4
++T4     1100    -1.0
+$                                                                       $
+$ DEFINES ANGLE OF ATTACK WITH TRIMLNK TO LINK TEFLAP (TRIMVAR=1000)    $
+$ WITH ALPHA. THIS IS INTRODUCED THROUG TRIMLNK=10 THAT IS REFERRED TO  $
+$ BY TRIMVAR=810                                                        $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMVAR 810     ALPHA                   10          
+TRIMLNK 10      SYM     1.0      1000
+$                                                                       $
+$ TEFLAP IS DEFINED BY THE AESURFZ LABEL=TEFLAP AS A SYMMETRIC          $
+$ TRIM VARIABLE.                                                        $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMVAR 1000    TEFLAP  -15.     15.
+$                                                                       $
+$ SINCE THKCAM IS A PROGRAM ASSIGNED TRIM VAIRABLE, DCY,DCL,DCR,DCM,AND $
+$ DCN CAN BE NONE. THIS IMPLIES THAT THE PROGRAM COMPUTED VALUES ARE    $
+$ USED. HOWEVER, SINCE NX=0.01 IS SPECIFIED, THE PROGRAM COMPUTED VALUE $
+$ OF DCD IS REPLACED BY 0.01.                                           $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMVAR 501      THKCAM                                                 +T1
++T1     0.01     NONE   NONE    NONE    NONE    NONE
+$                                                                       $
+$ THRUST IS A USER DEFINED TRIM VARIABLE. ALL DCD, DCY, DCL, DCR,DCM    $
+$ AND DCN MUST BE SPECIFIED BY REAL VAULES AND THE SYM ENTRY MUST BE    $
+$ DEFINED.                                                              $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMVAR 1100     THRUST                                 SYM             +T1
++T1     .0625    0.     0.      0.      0.      0.
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                        TRIM  = 300                                    $
+$ SYMMETRIC ONE G LEVEL FLIGHT CASE AT M=0.90, Q=40 PSF                 $
+$ THIS CASE IS THE SAME AS TRIM=200 EXCEPT TRIM VARIABLE ALPHA IS NOT   $
+$ LINKED WITH TEFLAP. INSTEAD, TEFLAP=1000 IS DEFINED AS A 'FREE' TRIM  $
+$ VARIABLE. THIS DEFINES A OVER-DETERMINED TRIM SYSTEM SINCE THERE ARE  $
+$ 4 UNKNOWS ( THREE FREE TRIM VARIABLES AND ONE FREE TRIM DEGREE OF     $
+$ FREEDOM ), BUT THERE ARE ONLY 3 TRIM D.O.F.'S.                        $
+$ THE FOUR UNKNOWS ARE SOLVED BY MINIMIZING THE OBJECTIVE FUNCTION      $
+$ (IDOBJ=10 REFERS TO A TRIMOBJ BULK DATA CARD) WHILE SUBECTED TO THE   $
+$ CONSTRAINT FUNCTIONS ( IDCONS=20 REFERS TO A TRIMCON BULK DATA CARD ) $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIM    300     90      40.0    10      20      2.27607 0.0     .0310559+T1 
++T1     .031081 16100.  502484.40.0     1811849.-7555.340.0     2309364.+T2 
++T2     TRUE    FREE    NONE    32.175  NONE    0.0     NONE    100     +T3 
++T3     501     1.0     600     FREE    700     0.0     800     FREE    +T4
++T4     1000    FREE    1100    -1.0
+$                                                                       $
+$ THE INDUCED DRAG + STRESS AT CBAR=110 ARE USED AS THE OBJECTIVE       $
+$ FUNCTION TO BE MINIMIZED.                                             $
+$ TRIMOBJ=10 DEFINES THE OBJECTIVE FUNCTION AS:                         $
+$                  E11         E21 E1           E12            E22 E2   $
+$ OBJ =((C11*F1-S11)+(C21*F1-S21)  )+((C12*F2-S12) + (C22*F2-S22)  )    $
+$ WHERE: C11=1. S11=0. C21=0. S21=0. E21=1. AND E1=1.0                  $
+$ F1 IS DEFINED BY A TRIM FUNCTION (TRIMFNC=11 FOR INDUCED DRAG)        $
+$ WHERE: C12=1.E-10  C21=0. C22=0. S22=0. E22=1. AND E2=1.0             $
+$ F2 IS DEFINED BY A TRIM FUNCTION (TRIMFNC=30 FOR STRESS AT CBAR 110)  $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMOBJ 10                                                              +OBJ1
++OBJ1   11      1.0     0.0     1.0     0.0     0.0     0.0     1.0     +OBJ2
++OBJ2   30      0.3E-10 0.0     2.0     0.0     0.0     0.0     1.0
+$                                                                       $
+$ TRIMFNC=11 IS REFERRED TO BY TRIMOBJ FOR F1.                          $
+$ IT DEFINES THE INDUCED DRAG (CDL) AS THE FUNCTION F1 IN TRIMOBJ       $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMFNC 11      AERO    CDL                             INDUCED.DRAG
+$                                                                       $
+$ ONE CONSTRAINT IS USED. THE ABSOLUTE HINGE MOMENT OF TEFLAP MUST BE   $     
+$ LESS THAN 900. IN-LBF.                                                $
+$                                    E                                  $
+$ CONSTRAINT FUNCTION  : G = ( F1-S1 ) < +810000.                       $
+$ WHERE S1=0.0 AND E=2.0. F1 IS A TRIM FUNCTION DEFINED BY TRIMFNC=10   $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMCON 20                                                              +CON1
++CON1   10      0.0     2.0     LT      810000.    
+$                                                                       $
+$ TRIMFNC=12 IS REFERRED TO BY TRIMCON.                                 $
+$ IT DEFINES THE DEFLECTION ANGLE OF THE TRIM VARIABLE=1000 (TEFLAP)    $
+$ AS THE FUNCTION F1 IN THE CONTRAINT FUNCTIONS.                        $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMFNC 12      AERO    TRIMVAR RHS     1000            ANGLE.OF.TEFLAP
+$
+ENDDATA

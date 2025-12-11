@@ -79,6 +79,9 @@ class MKAEROZ(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         return
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
     def repr_fields(self):
         """
         Gets the fields in their simplified form

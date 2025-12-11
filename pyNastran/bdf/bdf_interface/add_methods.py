@@ -1967,7 +1967,19 @@ def _get_tag(model: BDF, obj1: BaseCard, obj2: BaseCard) -> str:
     ifile1 = obj1.ifile
     ifile2 = obj2.ifile
     filename1 = model.active_filenames[ifile1]
-    filename2 = model.active_filenames[ifile2]
+    try:
+        filename2 = model.active_filenames[ifile2]
+    except IndexError:
+        if ifile2 != 1000:
+            model.log.error(f'ifile2={ifile2}')
+            model.log.error(f'active_filenames={model.active_filenames}; n={len(model.active_filenames)}')
+            raise
+        tag = (
+            f'\n'
+            f'file1: {filename1}\n'
+            f'file2: f06'
+        )
+        return tag
     tag = (
         f'\n'
         f'file1: {filename1}\n'

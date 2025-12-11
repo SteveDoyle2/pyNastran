@@ -3685,11 +3685,17 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             try:
                 class_instance = card_class.add_card(card_obj, comment=comment)
                 class_instance.ifile = ifile
+                # if card_name == 'MLDSTAT':
+                #     class_instance.comment = ''
+                # print(class_instance)
+                # print(class_instance.get_stats())
                 add_card_function(class_instance)
             except TypeError:
                 # this should never be turned on, but is useful for testing
                 msg = f'problem adding {card_obj}'
                 print(msg)
+                _filename = self.active_filenames[ifile]
+                print(f'file: {_filename}')
                 raise
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 # don't catch NameError
@@ -3699,6 +3705,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 self._stored_parse_errors.append((card, var))
                 if self._iparse_errors > self._nparse_errors:
                     self.pop_parse_errors()
+                raise
 
         elif card_name in self._card_parser_prepare:
             add_card_function = self._card_parser_prepare[card_name]
@@ -4630,8 +4637,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 if self.is_reject(card_name):  # pragma: no cover
                     msg = f"save_file_structure=True doesn't support {card_name}\n"
                     msg += f'card_lines = {card_lines}'
-                    raise NotImplementedError(msg)
-                    # self.reject_card_lines(card_name, card_lines, comment)
+                    #raise NotImplementedError(msg)
+                    self.reject_card_lines(card_name, card_lines, comment=comment)
                 else:
                     self.add_card_ifile(ifile, card_lines, card_name, comment=comment,
                                         is_list=False, has_none=False)

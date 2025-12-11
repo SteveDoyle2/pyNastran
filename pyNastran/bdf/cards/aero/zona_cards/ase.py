@@ -32,7 +32,7 @@ class ASE(BaseCard):
 
     def __init__(self, ase_id: int, asecont_id: int, flutter_id: int,
                  mldstat_id: int, minstat_id: int, cmargin_id: int,
-                 comment: str = ''):
+                 comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -71,7 +71,7 @@ class ASE(BaseCard):
         minstat_id = integer_or_blank(card, 5, 'raaid, minstat_id', default=0)
         cmargin_id = integer_or_blank(card, 6, 'marid, cmargin_id', default=0)
 
-        assert 4 <= len(card) < 8, f'len(ASE card) = {len(card):d}\ncard={card}'
+        assert 4 <= len(card) <= 7, f'len(ASE card) = {len(card):d}\ncard={card}'
         return ASE(ase_id, asecont_id, flutter_id, mldstat_id, minstat_id, cmargin_id, comment=comment)
 
     # def validate(self):
@@ -86,10 +86,10 @@ class ASE(BaseCard):
             self.mldstat_ref = zona.mldstat[self.mldstat_id]
         if self.minstat_id:
             self.minstat_ref = zona.minstat[self.minstat_id]
-        if self.cmargin_id:
-            self.asecont_ref = zona.cmargin[self.cmargin_id]
+        if self.cmargin_id and 0:
+            self.cmargin_ref = zona.cmargin[self.cmargin_id]
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -167,7 +167,7 @@ class ASECONT(BaseCard):
         extinp_set_id = integer_or_blank(card, 7, 'extinp_set_id', default=0)
         extout_set_id = integer_or_blank(card, 8, 'extout_set_id', default=0)
 
-        assert len(card) < 9, f'len(ASECONT card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 9, f'len(ASECONT card) = {len(card):d}\ncard={card}'
         asecont = ASECONT(asecont_id, surf_id, sens_id, tf_id, gain_id,
                           conct_id, extinp_set_id, extout_set_id, comment=comment)
         return asecont
@@ -191,7 +191,7 @@ class ASECONT(BaseCard):
                 asdf
 
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -291,7 +291,7 @@ class ASEGAIN(BaseCard):
                 asdf
 
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -368,7 +368,7 @@ class ASESNSR(BaseCard):
         factor = double_or_blank(card, 5, 'factor', default=1.0)
         sum_method = string_or_blank(card, 6, 'conct_id', default='NO')
 
-        assert len(card) < 7, f'len(ASECONT card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 7, f'len(ASECONT card) = {len(card):d}\ncard={card}'
         asecont = ASESNSR(asesnsr_id, sensor_type, sgid, component, factor,
                           sum_method, comment=comment)
         return asecont
@@ -380,7 +380,7 @@ class ASESNSR(BaseCard):
         # SGID
         pass
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -464,7 +464,7 @@ class ASESNS1(BaseCard):
         # SGID
         pass
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -547,7 +547,7 @@ class CJUNCT(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -628,7 +628,7 @@ class CONCT(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -729,7 +729,7 @@ class TFSET(BaseCard):
             ids_ref.append(id_ref)
         self.ids_ref = ids_ref
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -825,7 +825,7 @@ class SENSET(BaseCard):
             ids_ref.append(id_ref)
         self.ids_ref = ids_ref
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -903,19 +903,11 @@ class GAINSET(BaseCard):
         for idi in self.ids:
             if idi in zona.asegain:
                 id_ref = zona.asegain[idi]
-            # elif idi in zona.mimoss:
-            #     id_ref = zona.mimoss[idi]
-            # elif idi in zona.sisotf:
-            #     id_ref = zona.sisotf[idi]
             # else:
                 asegain = list(zona.asegain)
-                # mimoss = list(zona.mimoss)
-                # sisotf = list(zona.sisotf)
                 msg = (
                     f'GAINSET={self.gainset_id}: id={idi} is not [ASEGAIN]\n'
                     f' - asegain = {asegain}\n'
-                    # f' - mimoss = {mimoss}\n'
-                    # f' - sisotf = {sisotf}\n'
                 )
                 log.warning(msg)
                 id_ref = None
@@ -923,7 +915,7 @@ class GAINSET(BaseCard):
             ids_ref.append(id_ref)
         self.ids_ref = ids_ref
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -1032,7 +1024,7 @@ class MIMOSS(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -1115,13 +1107,21 @@ class SURFSET(BaseCard):
             # AESURFZ, AESLINK, PZTMODE or JETFRC
             if idi in model.aesurf:
                 id_ref = model.aesurf[idi]
+            # elif idi in zona.aesurfz:
+            #     id_ref = zona.aesurfz[idi]
+            elif idi in zona.aeslink:
+                id_ref = zona.aeslink[idi]
             else:
                 aesurf = list(model.aesurf)
+                aeslink = list(zona.aeslink)
+                # aesurfz = list(zona.aesurfz)
                 asesnsr = list(zona.asesnsr)
                 # asesns1 = list(zona.asesns1)
                 msg = (
                     f'SURFSET={self.surfset_id}: id={idi} is not [AESURFZ, AESLINK, PZTMODE, JETFRC]\n'
                     f' - aesurf  = {aesurf}\n'
+                    f' - aeslink = {aeslink}\n'
+                    # f' - aesurfz = {aesurfz}\n'
                     f' - asesnsr = {asesnsr}\n'
                     # f' - asesns1 = {asesns1}'
                 )
@@ -1131,7 +1131,7 @@ class SURFSET(BaseCard):
             ids_ref.append(id_ref)
         self.ids_ref = ids_ref
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -1222,7 +1222,7 @@ class CNCTSET(BaseCard):
             ids_ref.append(id_ref)
         self.ids_ref = ids_ref
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -1247,5 +1247,104 @@ class CNCTSET(BaseCard):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class SISOTF(BaseCard):
+    type = 'SISOTF'
+    # _field_map = {
+    #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
+    # }
+
+    def __init__(self, sisotf_id: int,
+                 nnumerator: int, ndenominator: int,
+                 b: list[float], a: list[float],
+                 comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.sisotf_id = sisotf_id
+        self.nnumerator = nnumerator
+        self.ndenominator = ndenominator
+        self.b = b # numerator
+        self.a = a # denominator
+        assert 0 <= self.nnumerator <= self.ndenominator, f'nnumerator={nnumerator}; ndenominator={ndenominator}'
+        assert len(b) == nnumerator+1, f'nb={len(b)}; nnumerator={nnumerator}; b={b} a={a}'
+        assert len(a) == ndenominator, f'na={len(a)}; ndenominator={ndenominator}'
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a MIMOSS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        # SISOTF ID NDEN  NNUM      A0 A1 A2 A3 A4
+        #        A5 -etc- A(NDEN-1) B0 B1 B2 B3 B4
+        #        B5 -etc- B(NNUM)
+        sisotf_id = integer(card, 1, 'sisotf_id')
+        ndenominator = integer(card, 2, 'NDEN')
+        nnumerator = integer(card, 3, 'NNUM')
+        j = 1
+        a = []
+        ifield0 = 4
+        # nvalues = na + (nb + 1)
+        # print(f'na={ndenominator} nb={nnumerator}')
+        for ifield in range(ifield0, ifield0+ndenominator):
+            ai = double(card, ifield, f'a{j}')
+            j += 1
+            a.append(ai)
+
+        j = 1
+        b = []
+        ifield0 += ndenominator
+        for ifield in range(ifield0, ifield0+nnumerator+1):
+            bi = double(card, ifield, f'b{j}')
+            j += 1
+            b.append(bi)
+        return SISOTF(sisotf_id, nnumerator, ndenominator,
+                      b, a, comment=comment)
+
+    # def validate(self):
+    #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
+
+        """
+        list_fields = [
+            'SISOTF', self.sisotf_id, self.ndenominator, self.nnumerator] + \
+            self.a + self.b
+        return list_fields
+
+    def repr_fields(self):
+        list_fields = self.raw_fields()
+        return list_fields
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)

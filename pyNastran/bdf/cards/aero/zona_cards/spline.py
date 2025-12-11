@@ -2,7 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
-
+from pyNastran.bdf.cards.aero.zona_cards.geometry import (
+    PANLST1, PANLST2, PANLST3, cross_reference_panlst)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -45,7 +46,7 @@ class SPLINE1_ZONA(Spline):
     """
     type = 'SPLINE1_ZONA'
 
-    def __init__(self, eid, panlst, setg, model=None, cp=None,
+    def __init__(self, eid: int, panlst: int, setg: int, model: str='', cp=None,
                  dz=None, eps=0.01, comment=''):
         """
         Creates a SPLINE1 card, which is useful for control surface
@@ -89,7 +90,7 @@ class SPLINE1_ZONA(Spline):
 
         """
         eid = integer(card, 1, 'eid')
-        model = string_or_blank(card, 2, 'model')
+        model = string_or_blank(card, 2, 'model', default='')
         cp = blank(card, 3, 'cp')
 
         panlst = integer(card, 4, 'panlst/setk')
@@ -124,27 +125,30 @@ class SPLINE1_ZONA(Spline):
                             comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
-        msg = ', which is required by SPLINE1 eid=%s' % self.eid
-        self.setg_ref = model.Set(self.setg, msg=msg)
-        self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
+        msg = f'SPLINE1 eid={self.eid}: setg is missing'
+        self.setg_ref = cross_reference_set(model, self.setg, msg=msg)
+        if self.setg_ref:
+            msg = f', which is required by SPLINE1 eid={self.eid}'
+            self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
-        self.panlst_ref = model.zona.panlsts[self.panlst]
-        self.panlst_ref.cross_reference(model)
-        self.aero_element_ids = self.panlst_ref.aero_element_ids
+        self.panlst_ref, self.aero_element_ids = cross_reference_panlst(
+            model, self.panlst)
+        # model.log.info(f'SPLINE1={self.eid} model={self.model}: boxs={self.aero_element_ids}')
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
+        self.setg_ref = cross_reference_set(model, self.setg, msg=msg)
+
         try:
-            self.setg_ref = model.Set(self.setg, msg=msg)
             self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
         except KeyError:
             model.log.warning('failed to find SETx set_id=%s%s; allowed_sets=%s' % (
                 self.setg, msg, np.unique(list(model.sets.keys()))))
 
         try:
-            self.panlst_ref = model.zona.panlsts[self.panlst]
-            self.panlst_ref.safe_cross_reference(model, xref_errors)
-            self.aero_element_ids = self.panlst_ref.aero_element_ids
+            self.panlst_ref, self.aero_element_ids = cross_reference_panlst(
+                model, self.panlst)
+            # model.log.info(f'SPLINE1={self.eid} model={self.model}: boxs={self.aero_element_ids}')
         except KeyError:
             pass
 
@@ -183,20 +187,21 @@ class SPLINE1_ZONA(Spline):
         comment = '-' * 72 + '\n' #+ self._comment
         #self._comment = ''
         comment += str(self)
-        for panel_groups in self.panlst_ref.panel_groups:
-            eid = model.zona.caero_to_name_map[panel_groups]
-            caero = model.caeros[eid]
-            caero_id = eid
-            box1 = caero.eid
-            box2 = box1 + caero.npanels - 1
-            assert caero.npanels > 0, caero
-            #assert box1 > 0 and box2 > 0, 'box1=%s box2=%s' % (box1, box2)
-            spline = SPLINE1(eid, caero_id, box1, box2, self.setg, dz=self.dz,
-                             method='IPS', usage='BOTH',
-                             nelements=10, melements=10, comment=comment)
-            spline.validate()
-            splines.append(spline)
-            comment = ''
+        for panlst in self.panlst_ref:
+            for panel_groups in panlst.panel_groups:
+                eid = model.zona.caero_to_name_map[panel_groups]
+                caero = model.caeros[eid]
+                caero_id = eid
+                box1 = caero.eid
+                box2 = box1 + caero.npanels - 1
+                assert caero.npanels > 0, caero
+                #assert box1 > 0 and box2 > 0, 'box1=%s box2=%s' % (box1, box2)
+                spline = SPLINE1(eid, caero_id, box1, box2, self.setg, dz=self.dz,
+                                 method='IPS', usage='BOTH',
+                                 nelements=10, melements=10, comment=comment)
+                spline.validate()
+                splines.append(spline)
+                comment = ''
         return splines
 
     def raw_fields(self):
@@ -282,13 +287,10 @@ class SPLINE2_ZONA(Spline):
 
     def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
-        self.setg_ref = model.Set(self.setg, msg=msg)
-        self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
+        self.setg_ref = cross_reference_set(model, self.setg, msg=msg)
         #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         #self.caero_ref = model.CAero(self.caero, msg=msg)
-        self.panlst_ref = model.zona.panlsts[self.panlst]
-        self.panlst_ref.cross_reference(model)
-        self.aero_element_ids = self.panlst_ref.aero_element_ids
+        self.panlst_ref, self.aero_element_ids = cross_reference_panlst(model, self.panlst)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         try:
@@ -299,9 +301,7 @@ class SPLINE2_ZONA(Spline):
             pass
         #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         #self.caero_ref = model.CAero(self.caero, msg=msg)
-        self.panlst_ref = model.zona.panlsts[self.panlst]
-        self.panlst_ref.safe_cross_reference(model, xref_errors)
-        self.aero_element_ids = self.panlst_ref.aero_element_ids
+        self.panlst_ref, self.aero_element_ids = cross_reference_panlst(model, self.panlst)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -393,9 +393,8 @@ class SPLINE3_ZONA(Spline):
         self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
         #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         #self.caero_ref = model.CAero(self.caero, msg=msg)
-        self.panlst_ref = model.zona.panlsts[self.panlst]
-        self.panlst_ref.cross_reference(model)
-        self.aero_element_ids = self.panlst_ref.aero_element_ids
+        self.panlst_ref, self.aero_element_ids = cross_reference_panlst(
+            model, self.panlst)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by SPLINE3 eid=%s' % self.eid
@@ -404,9 +403,8 @@ class SPLINE3_ZONA(Spline):
             self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
         except Exception:
             pass
-        self.panlst_ref = model.zona.panlsts[self.panlst]
-        self.panlst_ref.safe_cross_reference(model, xref_errors)
-        self.aero_element_ids = self.panlst_ref.aero_element_ids
+        self.panlst_ref, self.aero_element_ids = cross_reference_panlst(
+            model, self.panlst)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -436,3 +434,27 @@ class SPLINE3_ZONA(Spline):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+
+def cross_reference_set(model: BDF,
+                        set_id: int,
+                        msg: str='',
+                        which_msg: str='') -> tuple:
+    zona = model.zona
+    if set_id in zona.setadd:
+        set_ref = zona.setadd[set_id]
+    elif set_id in model.sets:
+        set_ref = model.sets[set_id]
+    else:
+        setadd = list(zona.setadd)
+        sets = list(model.sets)
+        setadd.sort()
+        sets.sort()
+        msg = (
+            f'{msg}: is not [SETADD, SET1]\n'
+            f' - setadd = {setadd}\n'
+            f' - sets = {sets}'
+        )
+        model.log.warning(msg)
+        set_ref = None
+    return set_ref

@@ -1410,6 +1410,7 @@ def map_version(fem: BDF, version: str) -> None:
         'optistruct': fem.set_as_optistruct,
         'mystran': fem.set_as_mystran,
         'zona': fem.set_as_zona,
+        'zaero': fem.set_as_zona,
     }
     try:
         func = version_map[version]

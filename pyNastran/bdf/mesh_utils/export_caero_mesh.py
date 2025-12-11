@@ -92,17 +92,22 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
     eids_to_rotate_dict = {}
     aesurf_aerobox_eid_list = []
     for aesurf_id, aesurf in model.aesurf.items():
-        cid1_ref: Coord = aesurf.cid1_ref
-        aelist1_ref: AELIST = aesurf.aelist_id1_ref
-        panel1_eids = aelist1_ref.elements
-        eids_to_rotate_dict[(aesurf.label, 1)] = (cid1_ref, panel1_eids)
-        aesurf_aerobox_eid_list.extend(panel1_eids)
-        if aesurf.aelist_id2_ref is not None:
-            cid2_ref: Coord = aesurf.cid2_ref
-            aelist2_ref: AELIST = aesurf.aelist_id2_ref
-            panel2_eids = aelist2_ref.elements
-            eids_to_rotate_dict[(aesurf.label, 2)] = (cid2_ref, panel2_eids)
-            aesurf_aerobox_eid_list.extend(panel2_eids)
+        if aesurf.type == 'AESURF':
+            cid1_ref: Coord = aesurf.cid1_ref
+            aelist1_ref: AELIST = aesurf.aelist_id1_ref
+            panel1_eids = aelist1_ref.elements
+            eids_to_rotate_dict[(aesurf.label, 1)] = (cid1_ref, panel1_eids)
+            aesurf_aerobox_eid_list.extend(panel1_eids)
+            if aesurf.aelist_id2_ref is not None:
+                cid2_ref: Coord = aesurf.cid2_ref
+                aelist2_ref: AELIST = aesurf.aelist_id2_ref
+                panel2_eids = aelist2_ref.elements
+                eids_to_rotate_dict[(aesurf.label, 2)] = (cid2_ref, panel2_eids)
+                aesurf_aerobox_eid_list.extend(panel2_eids)
+        elif aesurf.type == 'AESURFZ':
+            pass
+        else:
+            raise RuntimeError(f'aesurf_type={aesurf.type} is not supported')
     aesurf_aerobox_eids = np.array(aesurf_aerobox_eid_list, dtype='int32')
 
     with open(caero_bdf_filename, 'w') as bdf_file:
@@ -304,12 +309,17 @@ def _get_coords_to_write_dict(model: BDF) -> dict[int, Coord]:
         rcsid_ref = model.aeros.rcsid_ref
         coords_to_write_dict[rcsid_ref.cid] = rcsid_ref
     for aesurf_id, aesurf in model.aesurf.items():
-        #print(aesurf)
-        if aesurf.cid1_ref is not None:
-            #print(aesurf.cid1_ref)
-            coords_to_write_dict[aesurf.cid1_ref.cid] = aesurf.cid1_ref
-        if aesurf.cid2_ref is not None:
-            coords_to_write_dict[aesurf.cid2_ref.cid] = aesurf.cid2_ref
+        if aesurf.type == 'AESURF':
+            #print(aesurf)
+            if aesurf.cid1_ref is not None:
+                #print(aesurf.cid1_ref)
+                coords_to_write_dict[aesurf.cid1_ref.cid] = aesurf.cid1_ref
+            if aesurf.cid2_ref is not None:
+                coords_to_write_dict[aesurf.cid2_ref.cid] = aesurf.cid2_ref
+        elif aesurf.type == 'AESURFZ':
+            pass
+        else:
+            raise NotImplementedError(f'aesurf type {aesurf.type!r} is not supported')
     _add_traced_coords(model, coords_to_write_dict)
     return coords_to_write_dict
 
@@ -604,10 +614,12 @@ def _write_dmi(model: BDF,
                     loads += f'PLOAD2,{isubcase},{value},{eid}\n'
                 isubcase += 1
         else:  # pragma: no cover
-            msg = f'{name} matrix_form_str={matrix_form_str}:\n'
+            matrix_form_str = dmi.matrix_form_str
+            msg = f'skipping DMI={name} matrix_form_str={matrix_form_str}:\n'
             msg += str(data)
+            log.warning(msg)
             #continue
-            raise NotImplementedError(msg)
+            # raise NotImplementedError(msg)
         isubcase += 1
     return isubcase, loads, subcases
 

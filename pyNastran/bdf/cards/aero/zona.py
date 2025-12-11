@@ -1,16 +1,19 @@
 # coding: utf-8
 # pylint: disable=W0212,C0103
 from __future__ import annotations
+from collections import defaultdict
 from typing import TextIO, Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils import object_attributes, object_methods
 
+from pyNastran.bdf.cards.aero.zona_cards.atm import (
+    ATM, FIXMATM,)
 from pyNastran.bdf.cards.aero.zona_cards.spline import (
     SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA,)
 from pyNastran.bdf.cards.aero.zona_cards.geometry import (
     PANLST1, PANLST2, PANLST3, SEGMESH,
-    CAERO7, BODY7, PAFOIL7, AESURFZ)
+    CAERO7, BODY7, PAFOIL7, AESURFZ, AESLINK)
 from pyNastran.bdf.cards.aero.zona_cards.plot import (
     PLTAERO, PLTMODE, )
 from pyNastran.bdf.cards.aero.zona_cards.flutter import (
@@ -23,7 +26,7 @@ from pyNastran.bdf.cards.aero.zona_cards.gust import (
     GLOADS, DGUST, CGUST, MFTGUST)
 from pyNastran.bdf.cards.aero.zona_cards.ase import (
     ASE, ASECONT, ASESNSR, ASESNS1,
-    CJUNCT, CONCT, TFSET, MIMOSS,
+    CJUNCT, CONCT, TFSET, MIMOSS, SISOTF,
     SENSET, SURFSET, CNCTSET,
     ASEGAIN, GAINSET,
 )
@@ -32,7 +35,7 @@ from pyNastran.bdf.cards.aero.zona_cards.bdf_tables import (
 from pyNastran.bdf.cards.aero.zona_cards.dmi import DMIL
 from pyNastran.bdf.cards.aero.zona_cards.cards import (
     MLDPRNT, MLDSTAT, MINSTAT, MLDTRIM, MLDCOMD, MLDTIME,
-    AEROZ, ACOORD, ATTACH,
+    AEROZ, ACOORD, ATTACH, EXTFILE,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -89,9 +92,10 @@ class AddMethods:
     def add_mldstat_object(self, mldstat: MLDSTAT) -> None:
         """adds an MLDSTAT object"""
         key = mldstat.mldstat_id
-        assert key not in self.model.zona.mldstat, key
         assert key > 0, key
-        self.model.zona.mldstat[key] = mldstat
+        zona = self.model.zona
+        assert key not in zona.mldstat, key
+        zona.mldstat[key] = mldstat
         self.model._type_to_id_map[mldstat.type].append(key)
 
     def add_minstat_object(self, minstat: MINSTAT) -> None:
@@ -133,6 +137,15 @@ class AddMethods:
         assert key > 0, key
         self.model.zona.mimoss[key] = mimoss
         self.model._type_to_id_map[mimoss.type].append(key)
+
+
+    def add_sisotf_object(self, sisotf: SISOTF) -> None:
+        """adds an SISOTF object"""
+        key = sisotf.sisotf_id
+        assert key not in self.model.zona.sisotf, key
+        assert key > 0, key
+        self.model.zona.sisotf[key] = sisotf
+        self.model._type_to_id_map[sisotf.type].append(key)
 
     def add_tfset_object(self, tfset: TFSET) -> None:
         """adds an TFSET object"""
@@ -185,9 +198,13 @@ class AddMethods:
     def add_panlst_object(self, panlst: PANLST1 | PANLST2 | PANLST3) -> None:
         """adds an PANLST1/PANLST2/PANLST3 object"""
         key = panlst.eid
-        assert panlst.eid not in self.model.zona.panlsts, key
         assert key > 0, key
-        self.model.zona.panlsts[key] = panlst
+        zona = self.model.zona
+        # assert key not in zona.panlsts, '\npanlst=\n%s old=\n%s' % (
+        #     panlst, zona.panlsts[key])
+        if key not in zona.panlsts:
+            zona.panlsts[key] = []
+        zona.panlsts[key].append(panlst)
         self.model._type_to_id_map[panlst.type].append(key)
 
     def add_pafoil_object(self, pafoil: PAFOIL7) -> None:
@@ -208,6 +225,16 @@ class AddMethods:
             aesurf, model.aesurf[key])
         model.aesurf[key] = aesurf
         model._type_to_id_map[aesurf.type].append(key)
+
+    def add_aeslink_object(self, aeslink: AESLINK) -> None:
+        """adds an AESLINK object"""
+        key = aeslink.label
+        model = self.model
+        zona = model.zona
+        assert key not in zona.aeslink, '\naeslink=\n%s old=\n%s' % (
+            aeslink, zona.aeslink[key])
+        zona.aeslink[key] = aeslink
+        model._type_to_id_map[aeslink.type].append(key)
 
     def add_mloads_object(self, mloads: MLOADS) -> None:
         """adds an MLOADS object"""
@@ -396,9 +423,6 @@ class ZONA:
 
         #: store PANLST1,PANLST2,PANLST3
         self.panlsts: dict[int, PANLST1 | PANLST2 | PANLST3] = {}
-        self.mkaeroz: dict[int, MKAEROZ] = {}
-        self.trimvar: dict[int, TRIMVAR] = {}
-        self.trimlnk: dict[int, TRIMLNK] = {}
         self.attach: dict[int, PLTAERO] = {}
         self.plotaero: dict[int, PLTAERO] = {}
         self.plotmode: dict[int, PLTMODE] = {}
@@ -408,13 +432,30 @@ class ZONA:
         self.mloads: dict[int, MLOADS] = {}
 
         # TODO: add me
-        self.eloads: dict[int, ELOADS] = {}
-        self.nlfltr: dict[int, NLFLTR] = {}
         self.dse: dict[int, DSE] = {}
         self.extfile: dict[int, EXTFILE] = {}
         # FOILSEC
         # CPFACT
         # TRIMFLT
+
+        # transient
+        self.eloads: dict[int, ELOADS] = {}
+        self.mldcomd: dict[int, MLDCOMD] = {}
+
+        # trim
+        self.aeslink: dict[int, AESLINK] = {}
+        self.trimvar: dict[int, TRIMVAR] = {}
+        self.trimlnk: dict[int, TRIMLNK] = {}
+        self.mldtrim: dict[int, MLDTRIM] = {}
+
+        # flutter
+        self.mkaeroz: dict[int, MKAEROZ] = {}
+        self.nlfltr: dict[int, NLFLTR] = {}
+
+        # trim
+        self.trimfnc: dict[int, TRIMFNC] = {}
+        self.trimobj: dict[int, TRIMOBJ] = {}
+        self.trimcon: dict[int, TRIMCON] = {}
 
         # gust
         self.gloads: dict[int, GLOADS] = {}
@@ -433,33 +474,31 @@ class ZONA:
         self.aseout: dict[int, ASEOUT] = {}
         self.apcnsnd: dict[int, APCNSND] = {}
         self.apcnscp: dict[int, APCNSCP] = {}
+        self.mimoss: dict[int, MIMOSS] = {}
+        self.sisotf: dict[int, SISOTF] = {}
+        self.cmargin: dict[int, CMARGIN] = {}
 
         # other
         self.extinp: dict[int, EXTINP] = {}
         self.extout: dict[int, EXTOUT] = {}
-        self.trimfnc: dict[int, TRIMFNC] = {}
         self.loadmod: dict[int, LOADMOD] = {}
         self.rbred: dict[int, RBRED] = {}
 
-        self.cmargin: dict[int, CMARGIN] = {}
-        self.mldtrim: dict[int, MLDTRIM] = {}
         self.mldstat: dict[int, MLDSTAT] = {}
         self.minstat: dict[int, MINSTAT] = {}
         self.mldprnt: dict[int, MLDPRNT] = {}
-        self.mldcomd: dict[int, MLDCOMD] = {}
         self.mldtime: dict[int, MLDTIME] = {}
         self.dmil: dict[tuple[str, int, int], DMIL] = {}
         self.actu: dict[int, ACTU] = {}
         self.cjunct: dict[int, CJUNCT] = {}
         self.conct: dict[int, CONCT] = {}
         self.tfset: dict[int, TFSET] = {}
-        self.mimoss: dict[int, MIMOSS] = {}
         self.senset: dict[int, SENSET] = {}
         self.cnctset: dict[int, CNCTSET] = {}
         self.surfset: dict[int, SURFSET] = {}
+        self.setadd: dict[int, SETADD] = {}
 
         # TODO:
-        self.sisotf: dict[int, SISOTF] = {}
         self.extfile: dict[int, EXTFILE] = {}
 
     @classmethod
@@ -558,17 +597,14 @@ class ZONA:
         if self.model.nastran_format != 'zona':
             return
         for panlst in self.panlsts.values():
-            panlst.validate()
-        for mkaeroz in self.mkaeroz.values():
-            mkaeroz.validate()
-        for trimvar in self.trimvar.values():
-            trimvar.validate()
-        for trimlnk in self.trimlnk.values():
-            trimlnk.validate()
-        for pafoil in self.pafoil.values():
-            pafoil.validate()
-        for attach in self.attach.values():
-            attach.validate()
+            for panlsti in panlst:
+                panlsti.validate()
+
+        dicts = get_dicts(self, 'write')
+        for items in dicts:
+            for item in items.values():
+                # self.model.log.info(f'xref {item.type}')
+                item.validate()
 
     def PAFOIL(self, pid, msg=''):
         """gets a pafoil profile (PAFOIL7/PAFOIL8)"""
@@ -587,7 +623,6 @@ class ZONA:
             'TRIM': (TRIM_ZONA, add_methods.add_trim_object),
             'TABLED1': (TABLED1_ZONA, add_methods.add_tabled_object),
             'TABDMP1': (TABDMP1_ZONA, add_methods.add_table_sdamping_object),
-            'CAERO7': (CAERO7, add_methods.add_caero_object),
             'AEROZ': (AEROZ, add_methods.add_aeros_object),
             # geometry
             'SPLINE1': (SPLINE1_ZONA, add_methods.add_spline_object),
@@ -603,6 +638,10 @@ class ZONA:
             'CAERO7': (CAERO7, add_methods.add_caero_object),
             'ACOORD': (ACOORD, add_methods.add_coord_object),
             'AESURFZ': (AESURFZ, zona_add.add_aesurfz_object),
+            'AESLINK': (AESLINK, zona_add.add_aeslink_object),
+            # atmosphere
+            # 'ATM': (ATM, zona_add.add_atm_object),
+            # 'FIXMATM': (FIXMATM, zona_add.add_fixmatm_object),
             # flutter
             'FLUTTER': (FLUTTER_ZONA, add_methods.add_flutter_object),
             # mloads
@@ -616,11 +655,14 @@ class ZONA:
             'ASECONT': (ASECONT, zona_add.add_asecont_object),
             'ASESNSR': (ASESNSR, zona_add.add_asesnsr_object),
             'ASESNS1': (ASESNS1, zona_add.add_asesns1_object),
+            'MIMOSS': (MIMOSS, zona_add.add_mimoss_object),
+            'SISOTF': (SISOTF, zona_add.add_sisotf_object),
+            'CJUNCT': (CJUNCT, zona_add.add_cjunct_object),
+            'CONCT': (CONCT, zona_add.add_conct_object),
+            # other
             'SENSET': (SENSET, zona_add.add_senset_object),
             'CNCTSET': (CNCTSET, zona_add.add_cnctset_object),
             'SURFSET': (SURFSET, zona_add.add_surfset_object),
-            'CJUNCT': (CJUNCT, zona_add.add_cjunct_object),
-            'CONCT': (CONCT, zona_add.add_conct_object),
             'ACTU': (ACTU, zona_add.add_actu_object),
             'LOADMOD': (LOADMOD, zona_add.add_loadmod_object),
             'RBRED': (RBRED, zona_add.add_rbred_object),
@@ -638,7 +680,6 @@ class ZONA:
             'MLDTRIM': (MLDTRIM, zona_add.add_mldtrim_object),
             'MLDCOMD': (MLDCOMD, zona_add.add_mldcomd_object),
             'MLDTIME': (MLDTIME, zona_add.add_mldtime_object),
-            'MIMOSS': (MIMOSS, zona_add.add_mimoss_object),
             'DMIL': (DMIL, zona_add.add_dmil_object),
             #'MLDPRNT': (MLDPRNT, self.add_mldprnt_object),
             # PLTCP
@@ -649,7 +690,8 @@ class ZONA:
         card_parser.update(card_parser2)
         cards = [
             # geometry
-            'CAERO7', 'AEROZ', 'AESURFZ', 'ATTACH',
+            'CAERO7', 'AEROZ', 'AESURFZ', 'AESLINK',
+            'ATTACH',
             'PANLST1', 'PANLST2', 'PANLST3', 'PAFOIL7',
             'SEGMESH', 'BODY7', 'ACOORD', 'MKAEROZ',
             'TRIMVAR', 'TRIMLNK',
@@ -671,9 +713,11 @@ class ZONA:
             'GLOADS', 'DGUST', 'CGUST',
             # -------------
             # ase
-            'ASE', 'ASECONT', 'ASESNSR', 'ASESNS1', 'ASEGAIN',
+            'ASE', 'ASECONT',
+            'ASESNSR', 'ASESNS1', 'SENSET',
             'AEROLAG', 'ACTU',
-            'MIMOSS', 'GAINSET',
+            'MIMOSS', 'SISOTF',
+            'ASEGAIN', 'GAINSET',
             # -------------
             # other
             'DMIL',
@@ -682,91 +726,57 @@ class ZONA:
             # 'PLTFLUT', 'PLTVG', 'PLTCP', 'PLTMIST',
             'RBRED',
             # 'SPLINE0', 'PBODY7',
-            'SENSET', 'CNCTSET', 'SURFSET',
+            'CNCTSET', 'SURFSET',
         ]
         self.model.cards_to_read.update(set(cards))
 
     def cross_reference(self):
         if self.model.nastran_format != 'zona':
             return
-
-        dicts = [
-            self.mkaeroz, self.trimvar, self.trimlnk,
-            self.attach, self.pafoil,
-            self.mloads, self.eloads, self.dse, self.nlfltr,
-            # ase
-            self.cjunct, self.conct, self.tfset, self.cnctset,
-            self.ase, self.asecont, self.asesnsr, self.asesns1,
-            self.asegain, self.gainset,
-            self.mimoss,
-            #
-            self.senset, self.surfset,
-            self.mldtrim, self.mldstat, self.mldprnt,
-            self.mldcomd, self.mldtime, self.pafoil,
-            # self.extinp, self.extout,
-            self.trimfnc,
-            self.loadmod, self.rbred,
-            # gust
-            self.gloads, self.dgust, self.cgust,
-        ]
-
+        dicts = get_dicts(self, 'xref')
         for items in dicts:
             for item in items.values():
                 # self.model.log.info(f'xref {item.type}')
                 item.cross_reference(self.model)
-        # for mkaeroz in self.mkaeroz.values():
-        #     mkaeroz.cross_reference(self.model)
-        # for trimvar in self.trimvar.values():
-        #     trimvar.cross_reference(self.model)
-        # for trimlnk in self.trimlnk.values():
-        #     trimlnk.cross_reference(self.model)
-        # for unused_id, pafoil in self.pafoil.items():
-        #     pafoil.cross_reference(self.model)
-        # for unused_id, attach in self.attach.items():
-        #     attach.cross_reference(self.model)
-        #for aeroz in self.aeroz.values():
-            #aeroz.cross_reference(self.model)
 
         for caero in self.model.caeros.values():
             #print('%s uses CAERO eid=%s' % (caero.label, caero.eid))
             self.caero_to_name_map[caero.label] = caero.eid
 
-    def safe_cross_reference(self):
-        self.cross_reference()
+    def safe_cross_reference(self, xref_errors=None):
+        if self.model.nastran_format != 'zona':
+            return
+        if xref_errors is None:
+            xref_errors = defaultdict(list)
+        dicts = get_dicts(self, 'xref')
+        for items in dicts:
+            for item in items.values():
+                # self.model.log.info(f'xref {item.type}')
+                item.safe_cross_reference(self.model, {})
+
+        for caero in self.model.caeros.values():
+            #print('%s uses CAERO eid=%s' % (caero.label, caero.eid))
+            self.caero_to_name_map[caero.label] = caero.eid
 
     def write_bdf(self, bdf_file: TextIO, size: int=8,
                   is_double: bool=False):
         #if self.model.nastran_format != 'zona':
             #return
         for unused_id, panlst in self.panlsts.items():
-            bdf_file.write(panlst.write_card(size=size, is_double=is_double))
-        for unused_id, mkaeroz in self.mkaeroz.items():
-            bdf_file.write(mkaeroz.write_card(size=size, is_double=is_double))
-        for unused_id, trimvar in self.trimvar.items():
-            bdf_file.write(trimvar.write_card(size=size, is_double=is_double))
-        for unused_id, trimlnk in self.trimlnk.items():
-            bdf_file.write(trimlnk.write_card(size=size, is_double=is_double))
-        for unused_id, pafoil in self.pafoil.items():
-            bdf_file.write(pafoil.write_card(size=size, is_double=is_double))
-        for unused_id, attach in self.attach.items():
-            bdf_file.write(attach.write_card(size=size, is_double=is_double))
+            for panlsti in panlst:
+                bdf_file.write(panlsti.write_card(size=size, is_double=is_double))
+        # for unused_id, mkaeroz in self.mkaeroz.items():
+        #     bdf_file.write(mkaeroz.write_card(size=size, is_double=is_double))
+        # for unused_id, trimvar in self.trimvar.items():
+        #     bdf_file.write(trimvar.write_card(size=size, is_double=is_double))
+        # for unused_id, trimlnk in self.trimlnk.items():
+        #     bdf_file.write(trimlnk.write_card(size=size, is_double=is_double))
+        # for unused_id, pafoil in self.pafoil.items():
+        #     bdf_file.write(pafoil.write_card(size=size, is_double=is_double))
+        # for unused_id, attach in self.attach.items():
+        #     bdf_file.write(attach.write_card(size=size, is_double=is_double))
 
-        dicts = [
-            self.mloads, self.eloads, self.dse, self.nlfltr,
-            # ase
-            self.cjunct, self.conct, self.tfset, self.cnctset,
-            self.ase, self.asecont, self.asesnsr, self.asesns1,
-            self.asegain, self.gainset,
-            self.mimoss,
-            # other
-            self.senset, self.surfset,
-            self.mldtrim, self.mldstat, self.minstat, self.mldprnt,
-            self.mldcomd, self.mldtime,
-            self.extinp, self.extout, self.trimfnc,
-            self.loadmod, self.rbred,
-            # gust
-            self.gloads, self.dgust, self.cgust,
-        ]
+        dicts = get_dicts(self, 'write')
         for items in dicts:
             for key, value in items.items():
                 bdf_file.write(value.write_card(size=size, is_double=is_double))
@@ -902,3 +912,43 @@ class ZONA:
             len(self.panlsts), len(self.mkaeroz),
         )
         return msg
+
+
+def get_dicts(zona: ZONA, method: str) -> list[dict]:
+    assert method in ['xref', 'write'], f'method={method!r}'
+    dicts = [
+        # --------------general-------------
+        # zona.aeroz,
+        # -------------geometry-------------
+        # zona.panlsts,  # special-list
+        zona.pafoil,
+        zona.attach,
+        # -------------transient------------
+        zona.mloads, zona.eloads,
+        # --------------flutter-------------
+        zona.nlfltr, zona.mkaeroz,
+        # ---------------trim---------------
+        # zona.trim,
+        zona.aeslink, zona.trimvar, zona.trimlnk,
+        zona.trimfnc, zona.trimobj, zona.trimcon,
+        # ---------------ase---------------
+        zona.cjunct, zona.conct, zona.tfset, zona.cnctset,
+        zona.ase, zona.asecont, zona.asesnsr, zona.asesns1,
+        zona.asegain, zona.gainset,
+        zona.mimoss, zona.sisotf,
+        #
+        zona.senset, zona.surfset,
+        zona.mldtrim, zona.mldstat, zona.minstat, zona.mldprnt,
+        zona.mldcomd, zona.mldtime,
+        # zona.extinp, zona.extout,
+        zona.loadmod, zona.rbred,
+        # ---------------gust---------------
+        zona.gloads, zona.dgust, zona.cgust,
+        # ---------------other--------------
+        zona.extfile,
+        zona.dse,
+    ]
+    if method == 'write':
+        dicts.extend([zona.extinp, zona.extout])
+    return dicts
+

@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from matplotlib import pyplot as plt
 
+from pyNastran.bdf.cards.aero.zona_cards.spline import cross_reference_set
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
@@ -159,7 +160,7 @@ class MLOADS(BaseCard):
         # self.mldtime_ref = zona.mldtime[self.mldtime_id]
         # self.mldprint_ref = zona.mldprnt[self.mldprint_id]
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -397,7 +398,8 @@ class ACTU(BaseCard):
     #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
     # }
 
-    def __init__(self, actu_id: int, a0: float, a1: float, a2: float, comment: str=''):
+    def __init__(self, actu_id: int,
+                 a0: float, a1: float, a2: float, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -423,10 +425,10 @@ class ACTU(BaseCard):
         # ACTU ID A0  A1  A2
         # ACTU 10 0.8 0.5 0.2
         actu_id = integer(card, 1, 'actu_id')
-        a0 = double_or_blank(card, 2, 'a0', default=0)
-        a1 = double(card, 3, 'a1')
-        a2 = double(card, 4, 'a2')
-        assert len(card) == 5, f'len(ACTU card) = {len(card):d}\ncard={card}'
+        a0 = double_or_blank(card, 2, 'a0', default=0.0)
+        a1 = double_or_blank(card, 3, 'a1', default=0.0)
+        a2 = double_or_blank(card, 4, 'a2', default=0.0)
+        assert 2 <= len(card) <= 5, f'len(ACTU card) = {len(card):d}\ncard={card}'
         return ACTU(actu_id, a0, a1, a2, comment=comment)
 
     # def validate(self):
@@ -435,7 +437,7 @@ class ACTU(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -520,8 +522,8 @@ class TRIMFNC(BaseCard):
         trimfnc_id = integer(card, 1, 'trimfnc_id')
         fcn_type = string(card, 2, 'fcn_type')
         label = string(card, 3, 'label')
-        rhs_flag = string(card, 4, 'rhs_flag')
-        is_set = integer_or_string(card, 5, 'is_set')
+        rhs_flag = string_or_blank(card, 4, 'rhs_flag', default='')
+        is_set = integer_string_or_blank(card, 5, 'is_set', default='')
         ia_set = integer_string_or_blank(card, 6, 'ia_set', default='')
 
         remark = string_multifield(card, (7, 8), 'remark')
@@ -549,7 +551,12 @@ class TRIMFNC(BaseCard):
             self.is_set_ref = zona.loadmod[self.is_set]
         elif self.fcn_type == 'MODAL' and self.label == 'DMI':
             self.is_set_ref = model.dmi[self.is_set]
-
+        elif self.fcn_type == 'AERO' and self.label in {'CP', 'CDL',
+                                                        'CY', 'CL',
+                                                        'CR', 'CM', 'CN',
+                                                        'NX', 'NY', 'NZ',
+                                                        'PDOT', 'QDOT', 'RDOT'}:
+            self.is_set_ref = None
         else:
             raise RuntimeError(f'fcn_type={self.fcn_type!r}, label={self.label!r} not implemented')
 
@@ -563,7 +570,7 @@ class TRIMFNC(BaseCard):
         # else:
         #     self.ia_set_ref = model.dmi[self.is_set]
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -647,15 +654,16 @@ class LOADMOD(BaseCard):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
 
     def cross_reference(self, model: BDF) -> None:
-        msg = f', which is required by LOADMOD={self.loadmod_id}'
-        self.cid_ref = model.Coord(self.cid, msg)
+        which_msg = f', which is required by LOADMOD={self.loadmod_id}'
+        self.cid_ref = model.Coord(self.cid, which_msg)
         zona = model.zona
         if self.set_k > 0:
             self.set_k_ref = zona.panlsts[self.set_k]
         if self.set_g > 0:
-            self.set_g_ref = model.Set(self.set_g, msg)
+            msg = f'LOADMOD={self.loadmod_id}'
+            self.set_g_ref = cross_reference_set(model, self.set_g, msg, which_msg)
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -725,9 +733,9 @@ class RBRED(BaseCard):
         sid = integer(card, 1, 'sid')
         id_ase = integer(card, 2, 'id_ase')
         component = fcomponent(card, 3, 'component')
-        node_id = integer(card, 4, 'node_id')
+        node_id = integer_or_blank(card, 4, 'node_id', default=0)
         phugoid0 = string_or_blank(card, 5, 'phugoid0', default='NO')
-        assert len(card) in [5, 6], f'len(RBRED) = {len(card):d}\ncard={card}'
+        assert 4 <= len(card) <= 6, f'len(RBRED) = {len(card):d}\ncard={card}'
         return RBRED(sid, id_ase, component, node_id, phugoid0, comment=comment)
 
     # def validate(self):
@@ -763,7 +771,7 @@ class RBRED(BaseCard):
             raise RuntimeError(msg)
         # self.node_ref = model.Node(self.id_ase, msg)
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:

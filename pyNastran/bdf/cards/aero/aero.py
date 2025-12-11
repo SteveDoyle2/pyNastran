@@ -179,7 +179,7 @@ class AECOMP(BaseCard):
         else:  # pragma: no cover
             raise NotImplementedError(self.list_type)
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by AECOMP name=%r' % self.name
         #return
         lists_ref = []
@@ -1339,7 +1339,7 @@ class AESURFS(BaseCard):
             self.list2_ref = model.Set(self.list2, msg=msg)
             self.list2_ref.cross_reference_set(model, 'Node', msg)
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = f', which is required by AESURFS aesid={self.aesid}'
         self.label_ref = model.safe_aesurf(self.label, msg)
         try:

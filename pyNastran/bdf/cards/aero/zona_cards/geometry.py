@@ -8,7 +8,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, string,
-    integer_or_string,
+    integer_or_string, double,
 )
 from pyNastran.bdf.cards.aero.utils import (
     elements_from_quad,
@@ -182,7 +182,6 @@ class PANLST2(Spline):
         macro_id = integer(card, 2, 'macro_id')
 
         box1 = integer(card, 3, 'box1')
-        boxs = []
         thru = integer_or_string(card, 4, 'thru')
         if isinstance(thru, str):
             assert thru == 'THRU', thru
@@ -190,9 +189,9 @@ class PANLST2(Spline):
             boxs = [box1, 'THRU', box2]
             assert len(card) == 6, f'len(PANLST2 card) = {len(card):d}\ncard={card}'
         else:
-            boxs.append(thru)
+            boxs = [box1, thru]
             for ifield in range(5, len(card)):
-                box2 = integer(card, 5, 'box2')
+                box2 = integer(card, ifield, 'box2')
                 boxs.append(box2)
         return PANLST2(eid, macro_id, boxs, comment=comment)
 
@@ -2012,6 +2011,7 @@ class CAERO7(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+
 class AESURFZ(BaseCard):
     """
     Specifies an aerodynamic control surface for aeroservoelastic, static
@@ -2074,6 +2074,7 @@ class AESURFZ(BaseCard):
         #: y-axis that defines the hinge line of the control surface
         #: component.
         self.cid = cid
+        assert surface_type in ['SYM', 'ANTI', 'ANTISYM', 'ASYM'], f'surface_type={surface_type!r}'
 
         self.cid_ref = None
         self.panlst_ref = None
@@ -2099,7 +2100,6 @@ class AESURFZ(BaseCard):
         setg = integer_or_blank(card, 5, 'SETG', default=0) # SET1, SETADD
         actuator_tf = integer_or_blank(card, 6, 'ACTID') # ACTU card
         assert len(card) <= 7, f'len(AESURFZ card) = {len(card):d}\ncard={card}'
-        assert surface_type in ['SYM', 'ANTISYM', 'ASYM']
         return AESURFZ(label, surface_type, cid, panlst, setg, actuator_tf, comment=comment)
 
     def Cid(self) -> int:
@@ -2108,8 +2108,9 @@ class AESURFZ(BaseCard):
         return self.cid
 
     def SetK(self):
-        if self.panlst_ref is not None:
-            return self.panlst_ref.eid
+        for panlst in self.panlst_ref:
+            if panlst is not None:
+                return panlst.eid
         return self.panlst
 
     #def aelist_id1(self):
@@ -2133,45 +2134,14 @@ class AESURFZ(BaseCard):
 
         """
         self.cid_ref = model.Coord(self.cid)
-
-        #self.alid1_ref = model.AELIST(self.alid1)
-        #if self.alid2:
-            #self.alid2_ref = model.AELIST(self.alid2)
-        #if self.tqllim is not None:
-            #self.tqllim_ref = model.TableD(self.tqllim)
-        #if self.tqulim is not None:
-            #self.tqulim_ref = model.TableD(self.tqulim)
-        self.panlst_ref = model.zona.panlsts[self.panlst]
-        self.panlst_ref.cross_reference(model)
-        self.aero_element_ids = self.panlst_ref.aero_element_ids
+        self.panlst_ref, self.aero_element_ids = cross_reference_panlst(
+            model, self.panlst)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
-        msg = ', which is required by AESURF aesid=%s' % self.aesid
+        msg = ', which is required by AESURFZ aesid=%s' % self.aesid
         self.cid_ref = model.safe_coord(self.cid, self.aesid, xref_errors, msg=msg)
-        #if self.cid2 is not None:
-            #self.cid2_ref = model.safe_coord(self.cid2, self.aesid, xref_errors, msg=msg)
-        #try:
-            #self.alid1_ref = model.AELIST(self.alid1)
-        #except KeyError:
-            #pass
-        #if self.alid2:
-            #try:
-                #self.alid2_ref = model.AELIST(self.alid2)
-            #except KeyError:
-                #pass
-        #if self.tqllim is not None:
-            #try:
-                #self.tqllim_ref = model.TableD(self.tqllim)
-            #except KeyError:
-                #pass
-        #if self.tqulim is not None:
-            #try:
-                #self.tqulim_ref = model.TableD(self.tqulim)
-            #except KeyError:
-                #pass
-        self.panlst_ref = model.zona.panlsts[self.panlst]
-        self.panlst_ref.cross_reference(model)
-        self.aero_element_ids = self.panlst_ref.aero_element_ids
+        self.panlst_ref, self.aero_element_ids = cross_reference_panlst(
+            model, self.panlst)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -2259,3 +2229,233 @@ class AESURFZ(BaseCard):
         return self.comment + print_card_8(card)
 
 
+class AESLINK(BaseCard):
+    r"""
+    Defines relationships between or among AESTAT and AESURF entries, such
+    that:
+
+    .. math:: u^D + \Sigma_{i=1}^n C_i u_i^I = 0.0
+
+    +---------+-------+-------+--------+------+-------+----+-------+----+
+    |    1    |   2   |   3   |   4    |   5  |   6   |  7 |   8   |  9 |
+    +=========+=======+=======+========+======+=======+====+=======+====+
+    | AESLINK |  ID   | LABLD | LABL1  |  C1  | LABL2 | C2 | LABL3 | C3 |
+    +---------+-------+-------+--------+------+-------+----+-------+----+
+    |         | LABL4 |  C4   |  etc.  |      |       |    |       |    |
+    +---------+-------+-------+--------+------+-------+----+-------+----+
+    | AESLINK |  10   | INBDA |  OTBDA | -2.0 |       |    |       |    |
+    +---------+-------+-------+--------+------+-------+----+-------+----+
+    """
+    type = 'AESLINK'
+
+    # @classmethod
+    # def _init_from_empty(cls):
+    #     aelink_id = 1
+    #     label = 'ELEV'
+    #     independent_labels = ['ELEV1', 'ELEV2']
+    #     linking_coefficients = [1., 2.]
+    #     return AELINK(aelink_id, label, independent_labels, linking_coefficients, comment='')
+
+    def __init__(self, label: int | str,
+                 link_type: str,
+                 actu_id: int, independent_labels: list[str],
+                 linking_coefficients: list[float],
+                 comment: str='') -> None:
+        """
+        Creates an AESLINK card, which defines an equation linking
+        ??? and AESURFZ cards
+
+        Parameters
+        ----------
+        label : int/str
+            unique id
+        actu_id : id
+            ACTU card
+        independent_labels : list[str, ..., str]
+            name for the independent variables (AESTATs)
+        linking_coefficients : list[float]
+            linking coefficients
+        comment : str; default=''
+            a comment for the card
+
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.label = label
+        self.link_type = link_type
+        self.actu_id = actu_id
+
+        #: defines the independent variable name (string)
+        self.independent_labels = [independent_label.upper()
+                                   for independent_label in independent_labels]
+
+        #: linking coefficients (real)
+        self.linking_coefficients = linking_coefficients
+
+        self.dependent_label_ref = None
+        self.independent_labels_ref = []
+
+    @property
+    def dependent_label(self) -> str:
+        return self.label
+
+    # def validate(self):
+    #     errors = []
+    #     if not self.label[0].isalpha():
+    #         msgi = f'label={self.label!r} must start with a character'
+    #         errors.append(msgi)
+    #
+    #     for label in self.independent_labels:
+    #         if not label[0].isalpha():
+    #             msgi = f' ind_label={label!r} must start with a character'
+    #             errors.append(msgi)
+    #
+    #     if isinstance(self.aelink_id, integer_types) and self.aelink_id < 0:
+    #         msgi = "aelink_id must be greater than or equal to 0 (or 'ALWAYS')"
+    #         errors.append(msgi)
+    #
+    #     if len(self.independent_labels) != len(self.linking_coefficients):
+    #         msgi = 'nlabels=%d nci=%d\nindependent_labels=%s linking_coefficients=%s\n%s' % (
+    #             len(self.independent_labels), len(self.linking_coefficients),
+    #             self.independent_labels, self.linking_coefficients, str(self))
+    #         errors.append(msgi)
+    #
+    #     if len(self.independent_labels) == 0:
+    #         msgi = 'nlabels=%d nci=%d\nindependent_labels=%s linking_coefficients=%s\n%s' % (
+    #             len(self.independent_labels), len(self.linking_coefficients),
+    #             self.independent_labels, self.linking_coefficients, str(self))
+    #         errors.append(msgi)
+    #
+    #     if errors:
+    #         msg = f'AESLINK id={self.aelink_id:d}\n -' + '\n - '.join(errors)
+    #         raise RuntimeError(msg.rstrip('\n- '))
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds an AESLINK card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        # AESLINK LABEL  TYPE    ACTID
+        #         COEFF1 AESURF1 COEFF2 AESURF2 -etc-
+        # AESLINK AES1 SYM  100
+        #         1.0  AES2 0.5 AES3 0.3 AES4
+
+        label = integer_or_string(card, 1, 'label')
+        link_type = string(card, 2, 'link_type')
+        actu_id = integer(card, 3, 'actu_id')
+        assert link_type in {'SYM', 'ANTISYM', 'ASYM'}, f'link_type={link_type!r}'
+        independent_labels = []
+        linking_coefficients = []
+
+        nfields = len(card)
+
+        assert nfields % 2 == 1, f'nfields={nfields} must be odd'
+        j = 1
+        for ifield in range(9, nfields, 2):
+            linking_coefficent = double(card, ifield, f'coeff{j}')
+            independent_label = string(card, ifield+1, f'label{j}')
+            independent_labels.append(independent_label)
+            linking_coefficients.append(linking_coefficent)
+        return AESLINK(label, link_type, actu_id, independent_labels, linking_coefficients,
+                       comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        We're simply going to validate the labels
+        Updating the labels on the AESURFs will NOT propogate to the AELINK
+        """
+        msg = ', which is required by:\n%s' % str(self)
+
+        zona = model.zona
+        aesurf_names = {aesurf.label for aesurf in model.aesurf.values()}
+        aestat_names = {aestat.label for aestat in model.aestats.values()}
+        is_aesurf = self.dependent_label in aesurf_names
+        is_aeparam = False
+        # if not (is_aesurf or is_aeparam):
+        #     raise RuntimeError(f'dependent_label={self.dependent_label} is an AESURF and AEPARM\n{self}\n'
+        #                        f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
+        if is_aesurf:
+            self.dependent_label_ref = model.AESurf(self.dependent_label,
+                                                    msg='dependent_label={self.dependent_label!r}; ' + msg)
+        elif is_aeparam:
+            self.dependent_label_ref = model.AEParam(self.dependent_label, msg=msg)
+        else:
+            return
+            raise RuntimeError(f'dependent_label={self.dependent_label} is not an AESURF or AEPARM\n{self}')
+
+        self.independent_labels_ref = []
+        for independent_label in self.independent_labels:
+            is_aesurf = independent_label in aesurf_names
+            is_aeparam = independent_label in aparam_names
+            is_aestat = independent_label in aestat_names
+            if not (is_aesurf or is_aeparam or is_aestat):
+                raise RuntimeError(f'independent_label={independent_label} is an AESURF and AEPARM\n{self}\n'
+                                   f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
+            elif is_aesurf:
+                independent_aelink = model.AESurf(independent_label, msg=msg)
+            #elif is_aeparam:
+                #independent_aelink = model.AEParam(independent_label, msg=msg)
+            elif is_aestat:
+                independent_aelink = model.AEStat(independent_label, msg=msg)
+            else:
+                raise RuntimeError(f'independent_label={independent_label} is an AESURF and AEPARM\n{self}\n'
+                                   f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
+            self.independent_labels_ref.append(independent_aelink)
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    #def uncross_reference(self) -> None:
+        #"""Removes cross-reference links"""
+        #pass
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        list_fields : list[int/float/str]
+            the fields that define the card
+
+        """
+        list_fields = ['AESLINK', self.label, self.link_type, self.actu_id,
+                       None, None, None, None, None]
+        for (ivar, ival) in zip(self.independent_labels, self.linking_coefficients):
+            list_fields += [ival, ivar]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+
+        """
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
+
+
+def cross_reference_panlst(model: BDF,
+                           panlist_id: int) -> tuple[list[PANLST1 | PANLST2 | PANLST3],
+                                                     np.ndarray]:
+    panlst_ref = model.zona.panlsts[panlist_id]
+    aero_ids_list = []
+    for panlst in panlst_ref:
+        panlst.cross_reference(model)
+        aero_ids_list.append(panlst.aero_element_ids)
+    aero_element_ids = np.hstack(aero_ids_list)
+    return panlst_ref, aero_element_ids

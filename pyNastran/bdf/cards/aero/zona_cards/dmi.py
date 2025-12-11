@@ -68,7 +68,7 @@ class DMIL(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         pass
 
     def uncross_reference(self) -> None:

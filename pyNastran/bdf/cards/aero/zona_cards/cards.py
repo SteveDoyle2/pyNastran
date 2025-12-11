@@ -292,7 +292,7 @@ class AEROZ(Aero):
         acsid = integer_or_blank(card, 1, 'acsid', 0)
         sym_xz = string(card, 2, 'sym_xz')
         flip = string(card, 3, 'flip')
-        fm_mass_unit = string(card, 4, 'fm_mass_unit')
+        fm_mass_unit = string_or_blank(card, 4, 'fm_mass_unit', default='NONE')
         fm_length_unit = string(card, 5, 'fm_length_unit')
 
         # YES-aero=half,structure=half
@@ -302,18 +302,18 @@ class AEROZ(Aero):
 
         # YES-structure=left,aero=right
         assert flip in ['YES', 'NO'], f'flip={flip!r}'
-        assert fm_mass_unit in ['SLIN', 'LBM', 'SLUG'], f'fm_mass_unit={fm_mass_unit!r}'
-        assert fm_length_unit in ['IN', 'FT'], f'fm_length_unit={fm_length_unit!r}'
+        assert fm_mass_unit in ['SLIN', 'LBM', 'SLUG', 'NONE'], f'fm_mass_unit={fm_mass_unit!r}'
+        assert fm_length_unit in ['IN', 'FT', 'M', 'CM', 'MM', 'NONE'], f'fm_length_unit={fm_length_unit!r}'
 
         #rcsid = integer_or_blank(card, 2, 'rcsid', 0)
 
-        cref = double_or_blank(card, 6, 'cRef', 1.)
-        bref = double_or_blank(card, 7, 'bRef', 1.)
-        sref = double_or_blank(card, 8, 'Sref', 1.)
+        cref = double_or_blank(card, 6, 'cRef', default=1.)
+        bref = double_or_blank(card, 7, 'bRef', default=1.)
+        sref = double_or_blank(card, 8, 'Sref', default=1.)
 
-        xref = double_or_blank(card, 9, 'xRef', 0.)
-        yref = double_or_blank(card, 10, 'yRef', 0.)
-        zref = double_or_blank(card, 11, 'zref', 0.)
+        xref = double_or_blank(card, 9, 'xRef', default=0.)
+        yref = double_or_blank(card, 10, 'yRef', default=0.)
+        zref = double_or_blank(card, 11, 'zref', default=0.)
         xyz_ref = [xref, yref, zref]
 
         assert len(card) <= 12, f'len(AEROZ card) = {len(card):d}\ncard={card}'
@@ -495,6 +495,9 @@ class ATTACH(BaseCard):
         msg = f', which is required by ATTACH={self.attach_id}'
         # self.setk_ref = model.Set(self.setk, msg)
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
     def repr_fields(self):
         """
         Gets the fields in their simplified form
@@ -561,7 +564,7 @@ class MLDPRNT(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -596,10 +599,13 @@ class MLDSTAT(BaseCard):
     # _field_map = {
     #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
     # }
-
-    def __init__(self, mldstat_id, mldtrim_id, transform, filename,
+    def __init__(self, mldstat_id: int, mldtrim_id: int,
+                 transform,
+                 filename: str,
                  states: list[str], values: list[float],
-                 dx_tox: str='YES', state_dmi: int=0,
+                 dx_tox: str='YES',
+                 state_space_arr: str='',
+                 state_space_brr: str='',
                  comment: str=''):
         BaseCard.__init__(self)
         if comment:
@@ -612,12 +618,14 @@ class MLDSTAT(BaseCard):
         self.states = states
         self.values = values
         self.dx_tox = dx_tox
-        self.state_dmi = state_dmi
+        self.state_space_arr = state_space_arr
+        self.state_space_brr = state_space_brr
+        # print(str(self))
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
         """
-        Adds a TRIM card from ``BDF.add_card(...)``
+        Adds a MLDSTAT card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -627,20 +635,19 @@ class MLDSTAT(BaseCard):
             a comment for the card
 
         """
+        print('********', card)
         # MLDSTAT IDSTAT IDTRIM TRNSFM ARR BRR DXTOX FILENM CONT
         #         STATE1 INITIAL
         mldstat_id = integer(card, 1, 'mldstat_id')
         mldtrim_id = integer(card, 2, 'mldtrim_id')
         transform = string_or_blank(card, 3, 'transform', default='')
-        state_dmi = integer_or_blank(card, 4, 'state_dmi', default=0)
+        state_space_arr = string_or_blank(card, 4, 'state_space_arr', default='')
+        state_space_brr = string_or_blank(card, 4, 'state_space_brr', default='')
         dx_tox = string_or_blank(card, 5, 'dx_tox', default='YES')
         assert dx_tox in {'YES', 'NO'}, f'dx_tox={dx_tox!r}'
 
-        filename = ''
-        if card.field(6) is not None:
-            filename += string(card, 6, 'filenameA').strip()
-        if card.field(7) is not None:
-            filename += string(card, 7, 'filenameB').strip()
+        # filename = ''
+        filename = string_multifield_or_blank(card, (6, 7), 'filename', default='')
         i = 9
         j = 1
         states = []
@@ -654,7 +661,9 @@ class MLDSTAT(BaseCard):
             i += 2
             j += 1
         return MLDSTAT(mldstat_id, mldtrim_id, transform, filename,
-                       states, values, dx_tox=dx_tox, state_dmi=state_dmi,
+                       states, values, dx_tox=dx_tox,
+                       state_space_arr=state_space_arr,
+                       state_space_brr=state_space_brr,
                        comment=comment)
 
     # def validate(self):
@@ -663,7 +672,7 @@ class MLDSTAT(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -682,7 +691,7 @@ class MLDSTAT(BaseCard):
         """
         list_fields = [
             'MLDSTAT', self.mldstat_id, self.mldtrim_id, self.transform,
-            self.dx_tox, self.state_dmi, self.filename,]
+            self.state_space_arr, self.state_space_brr, self.dx_tox, self.filename,]
         for state, value in zip(self.states, self.values):
             list_fields.append(state)
             list_fields.append(value)
@@ -694,7 +703,17 @@ class MLDSTAT(BaseCard):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        msg = (
+            f'MLDSTAT {self.mldstat_id:<8d}{self.mldtrim_id:<8d}{self.transform:<8s}'
+            f'{self.state_space_arr:<8s}{self.state_space_brr:<8s}'
+            f'{self.dx_tox:<8s}{self.filename:>16s}\n    '
+        )
+        for istate, state, value in zip(count(), self.states, self.values):
+            msg += f'{state}{value}'
+            if istate > 0 and istate % 4 == 0:
+                msg += '\n    '
+        print(msg)
+        return self.comment + msg.rstrip() + '\n'
 
 
 class MINSTAT(BaseCard):
@@ -771,7 +790,7 @@ class MINSTAT(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -789,7 +808,7 @@ class MINSTAT(BaseCard):
 
         """
         list_fields = [
-            'MLDSTAT',
+            'MINSTAT',
             self.minstat_id, self.aerolag_id, self.itmax, self.apcid,
             self.pweight_id, self.dinit_id, self.klist_id, self.min_inp,
             self.print_flag, self.save_flag, self.filename,
@@ -869,7 +888,7 @@ class MLDCOMD(BaseCard):
         self.extinps_ref = extinps_ref
         self.tables_ref = tables_ref
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -955,7 +974,7 @@ class MLDTIME(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -1050,7 +1069,7 @@ class MLDTRIM(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -1080,5 +1099,48 @@ class MLDTRIM(BaseCard):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class EXTFILE(BaseCard):
+    type = 'EXTFILE'
+
+    def __init__(self, extfile_id: int, filename: str, comment: str=''):
+        BaseCard.__init__(self)
+
+        if comment:
+            self.comment = comment
+        self.extfile_id = extfile_id
+        self.filename = filename
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        extfile_id = integer(card, 1, 'extfile_id')
+        filename = str(card, 2, 'filename') # not used
+        assert len(card) == 2, f'len(EXTFILE card) = {len(card):d}\ncard={card}'
+        return EXTFILE(extfile_id, filename, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : list[varies]
+          the fields that define the card
+
+        """
+        list_fields = ['EXTFILE', self.extfile_id, self.filename]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        msg = f'EXTFILE{self.extfile_id:<8d}{self.filename}'
         card = self.repr_fields()
         return self.comment + print_card_8(card)

@@ -7,6 +7,7 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
     string_or_blank, double_or_string, blank,
+    double_string_or_blank,
 )
 from pyNastran.bdf.cards.aero.aero import AELINK
 from pyNastran.bdf.cards.aero.static_loads import TRIM
@@ -22,13 +23,17 @@ class TRIM_ZONA(BaseCard):
     """
     type = 'TRIM_ZONA'
     _field_map = {
-        1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
+        1: 'sid', 2: 'mkaeroz', 3: 'q',
+        9: 'wtmass', 10: 'weight',
+        17: 'true_g',
     }
 
     def __init__(self, sid: int, mkaeroz: int, q: float,
-                 cg: list[float], true_g: str,
-                 nxyz: list[float], pqr: list[float], loadset: Optional[int],
-                 labels: list[int], uxs: list[float], comment: str=''):
+                 trimobj_id: int, trimcon_id: int,
+                 weight: float, cg: list[float], inertia: list[float], true_g: str,
+                 nxyz: list[float], pqr_dot: list[float], loadset: Optional[int],
+                 labels: list[int], uxs: list[float],
+                 wtmass: float=1.0, comment: str=''):
         """
         Creates a TRIM card for a static aero (144) analysis.
 
@@ -43,8 +48,8 @@ class TRIM_ZONA(BaseCard):
             'G':    nxyz given in g's
         nxyz : list[float]
             g loading in xyz directions
-        pqr : list[float]
-            [roll_rate, pitch_rate, yaw_rate]
+        pqr_dot : list[float]
+            [roll_accel, pitch_accel, yaw_accel]
         loadset : int
             Identification number of a SET1 or SETADD bulk data card that
             specifies a set of identification numbers of TRIMFNC or
@@ -69,10 +74,17 @@ class TRIM_ZONA(BaseCard):
         #: Dynamic pressure. (Real > 0.0)
         self.q = q
 
+        self.trimobj_id = trimobj_id
+        self.trimcon_id = trimcon_id
+
+        self.weight = weight
+        self.wtmass = wtmass
         self.cg = cg
+        self.inertia = inertia
+
         self.nxyz = nxyz
         self.true_g = true_g
-        self.pqr = pqr
+        self.pqr_dot = pqr_dot
         self.loadset = loadset
 
         #: The label identifying aerodynamic trim variables defined on an
@@ -104,17 +116,24 @@ class TRIM_ZONA(BaseCard):
         sid = integer(card, 1, 'sid')
         mkaeroz = integer(card, 2, 'mkaeroz')
         qinf = double(card, 3, 'dynamic_pressure')
-        # 5
-        # 6
+
+        # over-determined problem
+        #       id    mkaero q     ???
+        # TRIM, 100,  101,   42.,  ALPHA, 5.,   0.,   0., 0., 0.,
+        #       1e4,  1e3,   1e3,  1e5,   1e3,  1e3,  1e4,
+        #       TRUE, FREE, NONE, 32.,   FREE, NONE, 42., None, 17, 1.0
+        trimobj_id = integer_or_blank(card, 4, 'trimobj_id', default=0)
+        trimcon_id = integer_or_blank(card, 5, 'trimcon_id', default=0)
+
         cg = [
-            double(card, 7, 'cg-x'),
-            double(card, 8, 'cg-y'),
-            double(card, 9, 'cg-z'),
+            double(card, 6, 'cg-x'),
+            double(card, 7, 'cg-y'),
+            double(card, 8, 'cg-z'),
         ]
 
-        unused_wtmass = double(card, 9, 'wtmass')
-        unused_weight = double(card, 10, 'weight')
-        unused_inertia = [
+        wtmass = double(card, 9, 'wtmass')
+        weight = double(card, 10, 'weight')
+        inertia = [
             double(card, 11, 'Ixx'),
             double(card, 12, 'Ixy'),
             double(card, 13, 'Iyy'),
@@ -129,10 +148,10 @@ class TRIM_ZONA(BaseCard):
         nz = double_or_string(card, 20, 'NZ')
         nxyz = [nx, ny, nz]
 
-        p = double_or_string(card, 21, 'P')
-        q = double_or_string(card, 22, 'Q')
-        r = double_or_string(card, 23, 'R')
-        pqr = [p, q, r]
+        pdot = double_or_string(card, 21, 'P')
+        qdot = double_or_string(card, 22, 'Q')
+        rdot = double_or_string(card, 23, 'R')
+        pqr_dot = [pdot, qdot, rdot]
         loadset = integer_or_blank(card, 24, 'loadset')
 
         labels = []
@@ -151,8 +170,11 @@ class TRIM_ZONA(BaseCard):
             i += 2
             n += 1
         assert len(card) >= 25, f'len(TRIM card) = {len(card):d}\ncard={card}'
-        return TRIM_ZONA(sid, mkaeroz, qinf, cg, true_g, nxyz, pqr, loadset,
-                         labels, uxs, comment=comment)
+        return TRIM_ZONA(sid, mkaeroz, qinf,
+                         trimobj_id, trimcon_id,
+                         weight, cg, inertia,
+                         true_g, nxyz, pqr_dot, loadset,
+                         labels, uxs, wtmass=wtmass, comment=comment)
 
     def validate(self):
         assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
@@ -161,9 +183,9 @@ class TRIM_ZONA(BaseCard):
         assert isinstance(self.nxyz[1], float) or self.nxyz[1] in ['FREE', 'NONE'], 'ny=%r' % self.nxyz[1]
         assert isinstance(self.nxyz[2], float) or self.nxyz[2] in ['FREE', 'NONE'], 'nz=%r' % self.nxyz[2]
 
-        assert isinstance(self.pqr[0], float) or self.pqr[0] in ['FREE', 'NONE'], 'p=%r' % self.pqr[0]
-        assert isinstance(self.pqr[1], float) or self.pqr[1] in ['FREE', 'NONE'], 'q=%r' % self.pqr[1]
-        assert isinstance(self.pqr[2], float) or self.pqr[2] in ['FREE', 'NONE'], 'r=%r' % self.pqr[2]
+        assert isinstance(self.pqr_dot[0], float) or self.pqr_dot[0] in ['FREE', 'NONE'], 'pdot=%r' % self.pqr_dot[0]
+        assert isinstance(self.pqr_dot[1], float) or self.pqr_dot[1] in ['FREE', 'NONE'], 'qdot=%r' % self.pqr_dot[1]
+        assert isinstance(self.pqr_dot[2], float) or self.pqr_dot[2] in ['FREE', 'NONE'], 'rdot=%r' % self.pqr_dot[2]
 
         assert self.q > 0.0, 'q=%s\n%s' % (self.q, str(self))
         if len(set(self.labels)) != len(self.labels):
@@ -176,13 +198,14 @@ class TRIM_ZONA(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         self.mkaeroz_ref = model.zona.mkaeroz[self.mkaeroz]
+
         #self.suport = model.suport
         #self.suport1 = model.suport1
         #self.aestats = model.aestats
         #self.aelinks = model.aelinks
         #self.aesurf = model.aesurf
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         pass
 
     def uncross_reference(self) -> None:
@@ -227,7 +250,11 @@ class TRIM_ZONA(BaseCard):
         """
         mach = 1.0
         aeqr = 0.0
-        list_fields = ['TRIM', self.sid, mach, self.q]
+        list_fields = [
+            'TRIM', self.sid, mach, self.q, self.trimobj_id, self.trimcon_id,
+        ] + self.cg + [self.wtmass, self.weight] + self.inertia + [
+            self.true_g] + self.nxyz + self.pqr_dot + [self.loadset]
+
         nlabels = len(self.labels)
         assert nlabels > 0, self.labels
         for (i, label, ux) in zip(count(), self.labels, self.uxs):
@@ -239,12 +266,9 @@ class TRIM_ZONA(BaseCard):
         return list_fields
 
     def repr_fields(self):
-        # fixes a Nastran bug
-        #aeqr = set_blank_if_default(self.aeqr, 1.0)
-        aeqr = 0.
-
+        # trimobj_id = set_blank_if_default(self.trimobj_id, 0)
+        # trimcon_id = set_blank_if_default(self.trimcon_id, 0)
         list_fields = self.raw_fields()
-        list_fields[8] = aeqr
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -265,11 +289,14 @@ class TRIMLNK(BaseCard):
     +---------+--------+--------+--------+--------+--------+--------+--------+--------+
     |         | COEFF4 | IDVAR4 |  etc.  |        |        |        |        |        |
     +---------+--------+--------+--------+--------+--------+--------+--------+--------+
-
+    | TRIMLNK |   10   |   SYM  |   1.0  |   100  |   0.5  |   200  |         |        |
+    +---------+--------+--------+--------+--------+--------+--------+--------+--------+
     """
     type = 'TRIMLNK'
 
-    def __init__(self, link_id, sym, coeffs, var_ids, comment=''):
+    def __init__(self, link_id: int, sym: str,
+                 coeffs: list[float], var_ids: list[int],
+                 comment: str=''):
         """
         Creates a TRIMLNK card
 
@@ -279,10 +306,10 @@ class TRIMLNK(BaseCard):
             the TRIMLNK id
         sym : ???
             ???
-        coeffs : ???
-            ???
-        var_ids : ???
-            ???
+        coeffs : list[float]
+            linkage coefficients
+        var_ids : list[int]
+            pointer to the TRIMVAR
         comment : str; default=''
             a comment for the card
 
@@ -296,6 +323,7 @@ class TRIMLNK(BaseCard):
         self.coeffs = coeffs
         self.var_ids = var_ids
         assert sym in ['SYM', 'ASYM', 'ANTI'], sym
+        self.trimvar_refs = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -328,15 +356,23 @@ class TRIMLNK(BaseCard):
         return TRIMLNK(link_id, sym, coeffs, var_ids, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
-        pass
+        trimvar_refs = []
+        zona = model.zona
+        for var_id in self.var_ids:
+            if var_id in zona.trimvar:
+                ref_id = zona.trimvar[var_id]
+            else:
+                raise RuntimeError(f'var_id {var_id} not in trimvar')
+            trimvar_refs.append(ref_id)
+        self.trimvar_refs = trimvar_refs
         #self.suport = model.suport
         #self.suport1 = model.suport1
         #self.aestats = model.aestats
         #self.aelinks = model.aelinks
         #self.aesurf = model.aesurf
 
-    def safe_cross_reference(self, model):
-        pass
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -442,15 +478,15 @@ class TRIMVAR(BaseCard):
         lower = double_or_blank(card, 3, 'lower')
         upper = double_or_blank(card, 4, 'upper')
         trimlnk = integer_or_blank(card, 5, 'TRIMLNK')
-        dmi = blank(card, 6, 'DMI')
+        dmi = string_or_blank(card, 6, 'DMI', default='')
         sym = string_or_blank(card, 7, 'sym')
-        initial = blank(card, 8, 'initial')
-        dcd = double_or_blank(card, 9, 'DCD')
-        dcy = double_or_blank(card, 10, 'DCY')
-        dcl = double_or_blank(card, 11, 'DCL')
-        dcr = double_or_blank(card, 12, 'DCR')
-        dcm = double_or_blank(card, 13, 'DCM')
-        dcn = double_or_blank(card, 14, 'DCN')
+        initial = double_or_blank(card, 8, 'initial', default=None)
+        dcd = double_string_or_blank(card, 9, 'DCD', default='NONE')
+        dcy = double_string_or_blank(card, 10, 'DCY', default='NONE')
+        dcl = double_string_or_blank(card, 11, 'DCL', default='NONE')
+        dcr = double_string_or_blank(card, 12, 'DCR', default='NONE')
+        dcm = double_string_or_blank(card, 13, 'DCM', default='NONE')
+        dcn = double_string_or_blank(card, 14, 'DCN', default='NONE')
         return TRIMVAR(var_id, label, lower, upper, trimlnk, dmi, sym,
                        initial, dcd, dcy, dcl, dcr, dcm,
                        dcn, comment=comment)
@@ -463,7 +499,7 @@ class TRIMVAR(BaseCard):
         #self.aelinks = model.aelinks
         #self.aesurf = model.aesurf
 
-    def safe_cross_reference(self, model: BDF):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         pass
 
     def uncross_reference(self) -> None:

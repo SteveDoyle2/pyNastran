@@ -300,8 +300,8 @@ class CrossReference:
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARM, AESTAT, AESURF, AESURFS
         """
         model = self.model
-        model.zona.safe_cross_reference()
         xref_errors = defaultdict(list)
+        model.zona.safe_cross_reference(xref_errors)
         for caero in model.caeros.values():
             caero.safe_cross_reference(model, xref_errors)
         self._show_safe_xref_errors('caeros', xref_errors)
@@ -312,7 +312,7 @@ class CrossReference:
         self._show_safe_xref_errors('paeros', xref_errors)
 
         for trim in model.trims.values():
-            trim.safe_cross_reference(model)
+            trim.safe_cross_reference(model, xref_errors)
         self._show_safe_xref_errors('trims', xref_errors)
 
         xref_errors = defaultdict(list)
