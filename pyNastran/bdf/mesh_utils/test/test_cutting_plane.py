@@ -239,7 +239,9 @@ class TestCuttingPlane(unittest.TestCase):
             dys, coords,
             ytol=2.0,
             dirname=dirname,
-            plot=True, show=False, face_data=face_data)
+            plot=True, show=False, face_data=face_data,
+            debug_vectorize=True,
+        )
         # assert np.allclose(avg_centroid, avg_centroid0)
 
         # show = True

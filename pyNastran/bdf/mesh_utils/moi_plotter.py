@@ -31,6 +31,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      ytol: float=2.0,
                      face_data=None,
                      dirname: PathLike='',
+                     debug_vectorize: bool=True,
                      plot: bool=True,
                      show: bool=False) -> tuple[Any, Any, Any, Any, Any]: # y, A, I, EI, avg_centroid
     """
@@ -68,7 +69,9 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     out = _get_station_data(
         model, model_static,
         dys, coords, normal_plane,
-        ytol, dirname, face_data=face_data)
+        ytol, dirname, face_data=face_data,
+        debug_vectorize=debug_vectorize,
+    )
     thetas, y, dx, dz, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2 = out
 
     assert len(y) > 0, y
@@ -175,6 +178,7 @@ def _get_station_data(model: BDF,
                       coords: list[CORD2R],
                       normal_plane: np.ndarray,
                       ytol: float, dirname: Path,
+                      debug_vectorize: bool=True,
                       face_data=None) -> tuple[
                          dict[int, tuple[float, float, float, float]],  # thetas
                          #y, dx, dz,
@@ -243,10 +247,13 @@ def _get_station_data(model: BDF,
                 #plane_bdf_filename=None)
                 plane_bdf_filename1=plane_bdf_filename1,
                 plane_bdf_filename2=plane_bdf_filename2,
-                plane_bdf_offset=dy, face_data=face_data)
+                plane_bdf_offset=dy, face_data=face_data,
+                debug_vectorize=debug_vectorize,
+            )
         except PermissionError:
             print(f'failed to delete {plane_bdf_filename1}')
-            continue
+            raise
+            # continue
         except RuntimeError:
             # incorrect ivalues=[0, 1, 2]; dy=771. for CRM
             raise
