@@ -200,6 +200,7 @@ class BDFInputPy:
         self.debug: bool = debug
         self.log = get_logger(log, debug)
         self.use_new_parser: bool = False
+        self.heavy_debug = False
 
     def get_lines(self, bdf_filename: PathLike | StringIO,
                   punch: Optional[bool]=False,
@@ -317,7 +318,8 @@ class BDFInputPy:
             bulk_data_lines, bulk_data_ilines, system_lines = self._get_lines_zona(
                 system_lines, bulk_data_lines, bulk_data_ilines, punch)
         else:
-            msg = f'nastran_format={nastran_format!r} and must be msc, nx, optistruct, mystran, or zona'
+            mystran = '' # 'mystran, '
+            msg = f'nastran_format={nastran_format!r} and must be msc, nx, optistruct, {mystran}or zona'
             raise NotImplementedError(msg)
 
         #for line in bulk_data_lines:
@@ -340,34 +342,51 @@ class BDFInputPy:
                 header_upper = header.upper()
                 if header_upper.startswith('ASSIGN FEM'):
                     unused_fem, filename = header.split('=')
-                    filename = filename.strip('"\'')
-                    log.debug(f'reading {filename}')
-                    filename_lower = filename.lower()
-                    if filename_lower.endswith('.f06'):
+                    filename = filename.strip('"\'').strip()
+                    log.debug(f'reading {filename!r}')
+                    filename_ext = os.path.splitext(filename)[1].lower()
+                    filename = os.path.join(self.include_dir, filename)
+                    if filename_ext in {'.f06', '.prt'}:
+                        # apply the directory name
                         if os.path.exists(filename):
                             log.debug(f'reading geom from f06: {filename}')
                             from pyNastran.f06.parse_geom import parse_f06_geom
-                            out = parse_f06_geom(filename)
+                            out = parse_f06_geom(filename, log)
                             (_system_lines, _executive_control_lines,
-                             _case_control_lines, bulk_data_lines2) = out
+                             _case_control_lines, bulk_data_lines_f06) = out
                             is_bdf = False
-                            bulk_data_ilines2 = np.arange(len(bulk_data_ilines2))
-                            bulk_data_lines = bulk_data_lines2 + bulk_data_lines
-                            bulk_data_ilines = np.vstack([bulk_data_ilines2, bulk_data_ilines])
+                            nlines_f06 = len(bulk_data_lines_f06)
+                            # print('bulk_data_lines_f06 =', nlines_f06, bulk_data_lines_f06)
+                            # print('bulk_data_ilines2 =', bulk_data_ilines2) # doesnt exist
+                            if len(bulk_data_lines_f06):
+                                # print('bulk_data_ilines2.shape', bulk_data_ilines2.shape)
+                                # bulk_data_ilines2 = np.arange(len(bulk_data_ilines2))
+
+                                ifile_f06 = 1000
+                                ilines_f06 = np.arange(nlines_f06, dtype='int32')
+                                ifile_f06 = np.full(nlines_f06, ifile_f06, dtype='int32')
+                                # ifile_iline
+                                bulk_data_ilines_f06 = np.column_stack([ifile_f06, ilines_f06])
+
+                                bulk_data_lines = bulk_data_lines_f06 + bulk_data_lines
+                                bulk_data_ilines = np.vstack([bulk_data_ilines_f06, bulk_data_ilines])
+                            else:
+                                pass
                         else:
                             log.debug(f'reading geom from bdf: {filename}')
                             is_bdf = True
                             filename = os.path.splitext(filename)[0] + '.bdf'
                     else:
-                        if filename_lower.endswith(('.fre', '.mod')):
+                        if filename_ext in {'.fre', '.mod'}:
                             continue
                         is_bdf = True
-                        if not filename_lower.endswith('.bdf'):
+                        if not filename_ext in {'.bdf', '.prt'}:
+                            # prt is astos
                             raise RuntimeError(f'filename must end in bdf; {filename}')
 
                     if is_bdf:
                         if not os.path.exists(filename):
-                            log.error(f'skipping {filename}; missing')
+                            log.error(f'skipping {filename}; missing\n{print_bad_path(filename)}')
                             continue
                         _main_lines = self.get_main_lines(filename)
                         make_ilines = bulk_data_ilines is not None
@@ -1150,7 +1169,8 @@ def _lines_to_decks_main(lines: list[str],
                          keep_enddata: bool=True,
                          consider_superelements: bool=False,
                          start_flag: int=0,
-                         nastran_format: str='msc') -> tuple[
+                         nastran_format: str='msc',
+                         heavy_debug: bool=False) -> tuple[
                         list[str], list[str], list[str], list[str], NDArrayN2int,
                         list[str], list[str], list[str]]:
     """
@@ -1197,6 +1217,7 @@ def _lines_to_decks_main(lines: list[str],
         ???
 
     """
+    # heavy_debug = True
     make_ilines = ilines is not None
     guess_deck_sections = punch is None
 
@@ -1240,10 +1261,12 @@ def _lines_to_decks_main(lines: list[str],
         ilines = count()
 
     #guess_deck_sections = True
-    #print('guess_deck_sections =', guess_deck_sections, punch)
+    if heavy_debug:
+        print('guess_deck_sections =', guess_deck_sections, punch)
     for i, ifile_iline, line in zip(count(), ilines, lines):
-        #print('%s %-8s %s' % (ifile_iline, flag_word, line.rstrip()))
-        #print('%s %i %s' % (ifile_iline, flag, line.rstrip()))
+        if heavy_debug:
+            print('%s %-8s %s' % (ifile_iline, flag_word, line.rstrip()))
+            print('%s %i %s' % (ifile_iline, flag, line.rstrip()))
         line_upper = line.split('$')[0].upper().strip()
 
         if guess_deck_sections and flag == 1 and line_upper.startswith('BEGIN'):
@@ -1326,7 +1349,8 @@ def _lines_to_decks_main(lines: list[str],
             if '$' in line:
                 line, comment = line.split('$', 1)
                 current_lines.append('$' + comment.rstrip())
-                #print('%s: %s' % (flag_word, '$' + comment.rstrip()))
+                if heavy_debug:
+                    print('%s: %s' % (flag_word, '$' + comment.rstrip()))
 
             # just reuse the existing one
             #line_upper = line.upper().strip()
@@ -1344,15 +1368,18 @@ def _lines_to_decks_main(lines: list[str],
                                      is_superelement or consider_superelements)
 
                     if not is_extra_bulk:
-                        #print('breaking begin bulk...')
+                        if heavy_debug:
+                            print('breaking begin bulk...')
                         bulk_data_ilines = _bulk_data_lines_extract(
                             lines, ilines, bulk_data_lines, i,
                             make_ilines=make_ilines, keep_enddata=keep_enddata)
                         break
-                    #print('setting lines to bulk---')
+                    if heavy_debug:
+                        print('setting lines to bulk---')
                     current_lines = bulk_data_lines
                     flag_word = 'bulk'
-                    #print('case: %s' % (line.rstrip()))
+                    if heavy_debug:
+                        print('case: %s' % (line.rstrip()))
                     case_control_lines.append(line.rstrip())
                     continue
 
@@ -1392,7 +1419,8 @@ def _lines_to_decks_main(lines: list[str],
                     msg = f'expected "BEGIN BULK" or "BEGIN SUPER=1"\nline = {line}'
                     raise RuntimeError(msg)
 
-                #print('%s: %s' % (flag_word, line.rstrip()))
+                if heavy_debug:
+                    print('%s: %s' % (flag_word, line.rstrip()))
                 current_lines.append(line.rstrip())
             elif line_upper.startswith('SUPER'):
                 # case control line
@@ -1423,7 +1451,8 @@ def _lines_to_decks_main(lines: list[str],
                                        'when going to an AFPM model')
                 is_afpm = True
 
-            #print('%s: %s' % (flag_word, line.rstrip()))
+            if heavy_debug:
+                print('%s: %s' % (flag_word, line.rstrip()))
             current_lines.append(line.rstrip())
         elif flag == 3:
             is_special_flag = (
@@ -1464,7 +1493,8 @@ def _lines_to_decks_main(lines: list[str],
              afpm_id, is_afpm_active,
              flag, current_lines) = out
             if is_broken:
-                #print('breaking...')
+                if heavy_debug:
+                    print('breaking...')
                 break
         else:  # pragma: no cover
             raise RuntimeError(line)

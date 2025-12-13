@@ -23,7 +23,7 @@ All table cards are defined in this file.  This includes:
 """
 from __future__ import annotations
 import warnings
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
@@ -65,6 +65,9 @@ def make_xy(table_id, table_type, xy):
 class Table(BaseCard):
     def __init__(self):
         BaseCard.__init__(self)
+        self.tid = -1
+        self.x = np.array([])
+        self.y = np.array([])
 
     #def parse_fields(self, xy, nrepeated, is_data=False):
         #self.table = TableObj(xy, nrepeated, is_data)
@@ -972,7 +975,8 @@ class TABLEM1(Table):
         y = [0., 1.]
         return TABLEM1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment='')
 
-    def __init__(self, tid: int, x, y, xaxis: str='LINEAR', yaxis: str='LINEAR',
+    def __init__(self, tid: int, x, y,
+                 xaxis: str='LINEAR', yaxis: str='LINEAR',
                  extrap: int=0, comment: str=''):
         """
         Creates a TABLEM1, which is a dynamic load card that is applied
@@ -2051,7 +2055,6 @@ def read_table(card: BDFCard, table_id: int, table_type: str) -> tuple[np.ndarra
         if xi == 'SKIP' or yi == 'SKIP':
             continue
         xy.append([xi, yi])
-    string(card, nfields, 'ENDT')
     x, y = make_xy(table_id, table_type, xy)
     return x, y
 
@@ -2078,7 +2081,6 @@ def read_table_lax(card: BDFCard, table_id: int,
     endt_value = card.field(nfields).strip()
     if endt_value.upper() != 'ENDT':
         warnings.warn(f'expected ENDT; found {endt_value!r}')
-        #string(card, nfields, 'ENDT')
     x, y = make_xy(table_id, table_type, xy)
     return x, y
 

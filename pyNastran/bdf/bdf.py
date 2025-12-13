@@ -1043,9 +1043,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         hdf5_filename : str
             the path to the hdf5 file
 
-        TODO: doesn't support:
-          - BucklingEigenvalues
-
         """
         import h5py
         self.log.debug('starting export_hdf5_file of %r' % hdf5_filename)
@@ -1606,7 +1603,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'se_bsets', 'se_csets', 'se_qsets',
             'mkaeros', 'monitor_points', 'suport',
         ]
-        zona_cards_to_skip = ['STFLOW', 'TRIMVAR', 'AEROZ']
+        zona_cards_to_skip = ['STFLOW', 'TRIMVAR', 'AEROZ', 'TRIMFNC', 'LOADMOD']
         zona_slots_to_skip = ['panlsts', 'pafoils', 'attach']
         rslot_to_type_map = self.get_rslot_map()
 
@@ -5062,6 +5059,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     print(str(card_obj).rstrip())
                 else:
                     print(print_card_16(card_obj).rstrip())
+                raise
 
         if card_name in self._card_parser:
             card_class, add_card_function = self._card_parser[card_name]
@@ -5168,6 +5166,7 @@ def _echo_card(card, card_obj):
             print(str(card_obj).rstrip())
         else:
             print(print_card_16(card_obj).rstrip())
+        raise
 
 
 def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True,
