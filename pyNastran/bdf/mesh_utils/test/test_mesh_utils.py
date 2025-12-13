@@ -41,7 +41,7 @@ from pyNastran.bdf.mesh_utils.breakdowns import (
 from pyNastran.bdf.mesh_utils.map_aero_model import map_aero_model
 
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s, create_structured_chexas
-from pyNastran.bdf.mesh_utils.cmd_line.bdf_merge import cmd_line_merge
+from pyNastran.bdf.mesh_utils.cmd_line.merge import cmd_line_merge
 from pyNastran.bdf.mesh_utils.dvxrel import get_dvprel_ndarrays
 from pyNastran.bdf.mesh_utils.rbe_tools import (
     merge_rbe2, rbe3_to_rbe2, rbe2_to_rbe3)

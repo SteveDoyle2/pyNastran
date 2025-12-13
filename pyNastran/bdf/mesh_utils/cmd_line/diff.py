@@ -1,8 +1,5 @@
 from __future__ import annotations
 import sys
-#from typing import TYPE_CHECKING
-#if TYPE_CHECKING:  # pragma: no cover
-#    from pyNastran.bdf.bdf import BDF
 
 
 def cmd_line_diff(argv=None, quiet: bool=False) -> None:
@@ -10,7 +7,6 @@ def cmd_line_diff(argv=None, quiet: bool=False) -> None:
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    import os
     from docopt import docopt
     import pyNastran
     msg = (

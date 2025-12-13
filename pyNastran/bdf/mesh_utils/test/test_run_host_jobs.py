@@ -36,7 +36,7 @@ class TestRunHostJobs(unittest.TestCase):
     def test_run_jobs_path(self):
         str_model_path = str(MODEL_PATH)
         args = ['bdf', 'run_jobs', str_model_path, '--cleanup', '-r', '--test']
-        nfiles = cmd_line_run_jobs(args)
+        # nfiles = cmd_line_run_jobs(args)
         nfiles = cmd_line_run_jobs(args, quiet=True)
         assert nfiles >= 1, nfiles  # 105
 
