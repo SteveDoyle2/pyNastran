@@ -13,7 +13,6 @@ defines:
 from __future__ import annotations
 import sys
 from typing import TYPE_CHECKING
-from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.mesh_utils.bdf_renumber_exclude import bdf_renumber_exclude
@@ -31,9 +30,10 @@ from pyNastran.bdf.mesh_utils.get_oml import get_oml_eids
 
 from pyNastran.bdf.mesh_utils.run_jobs import cmd_line_run_jobs
 from pyNastran.bdf.mesh_utils.host_jobs import cmd_line_host_jobs
+from .solid_dof import solid_dof
+from .flip_shell_normals import flip_shell_normals
 
-
-from .cmd_line.bdf_cmd_line import import cmd_line
+from .cmd_line.bdf_cmd_line import cmd_line
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 

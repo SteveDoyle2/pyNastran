@@ -85,7 +85,7 @@ SCALES = (
     '[--pressure PRESSURE_SF] [--time TIME_SF] [--velocity VEL_SF]')
 
 
-def cmd_line(argv=None, quiet: bool=False) -> None:
+def cmd_line(argv=None, log=None, quiet: bool=False) -> None:
     """command line interface to multiple other command line scripts"""
     if argv is None:  # pragma: no cover
         argv = sys.argv

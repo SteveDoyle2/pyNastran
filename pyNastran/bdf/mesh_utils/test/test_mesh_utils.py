@@ -28,7 +28,7 @@ from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm)  #mass_properties_breakdown
 from pyNastran.bdf.mesh_utils.make_half_model import make_half_model
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
-from pyNastran.bdf.mesh_utils.utils import cmd_line, CMD_MAPS
+from pyNastran.bdf.mesh_utils.cmd_line.bdf_cmd_line import cmd_line, CMD_MAPS
 from pyNastran.bdf.mesh_utils.find_closest_nodes import find_closest_nodes
 from pyNastran.bdf.mesh_utils.find_coplanar_elements import find_coplanar_triangles
 from pyNastran.bdf.mesh_utils.force_to_pressure import force_to_pressure
@@ -67,7 +67,8 @@ DIRNAME = Path(os.path.dirname(__file__))
 class TestRbeTools(unittest.TestCase):
 
     def test_rbe2_to_rbe3_to_rbe2(self):
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [0., 0., 0.])
         model.add_grid(3, [0., 0., 0.])
@@ -98,7 +99,8 @@ class TestRbeTools(unittest.TestCase):
             os.remove(fname)
 
     def test_merge_rbe2(self):
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [0., 0., 0.])
         model.add_grid(3, [0., 0., 0.])
@@ -128,7 +130,8 @@ class TestRbeTools(unittest.TestCase):
 class TestMeshUtilsAero(unittest.TestCase):
     def test_bwb_caero_map(self):
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
-        map_caero(bdf_filename)
+        log = SimpleLogger(level='warning')
+        map_caero(bdf_filename, log=log)
 
     def test_map_aero_model(self):
         """tests ``map_aero_model``"""
@@ -147,8 +150,11 @@ class TestMeshUtilsAero(unittest.TestCase):
                        remove_new_aero_cards=True)
 
     def test_deform_aero_spline(self):
-        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
-        structure_model = read_bdf(bdf_filename, debug=False)
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        structure_model = read_bdf(bdf_filename, log=log, debug=False)
         displacement_aero = deform_aero_spline(
             structure_model,
             aero_model=None,
@@ -170,7 +176,8 @@ class TestMeshUtilsAero(unittest.TestCase):
             )
 
     def test_export_caero_mesh_caero1_wkk(self):
-        model = BDF(debug=None)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log, debug=None)
         model.bdf_filename = 'test'
         p1 = [0., 0., 0.]
         p4 = [0., 1., 0.]
@@ -198,7 +205,8 @@ class TestMeshUtilsAero(unittest.TestCase):
                       Real, Complex=None, comment='wkk')
 
     def test_export_caero_mesh_caero1_wkk2(self):
-        model = BDF(debug=None)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.bdf_filename = 'test'
         p1 = [0., 0., 0.]
         p4 = [0., 1., 0.]
@@ -244,7 +252,8 @@ class TestMeshUtilsAero(unittest.TestCase):
         #               main structure will be pid=1
         #    'caero' : write the CAERO1 as the property id
         #    'paero' : write the PAERO1 as the property id
-        model = read_bdf(bdf_filename, debug=False)
+        log = SimpleLogger(level='warning')
+        model = read_bdf(bdf_filename, log=log)
         tin = tout = 'float32'
         nrows = 1
         GCj = [101]
@@ -264,7 +273,7 @@ class TestMeshUtilsAero(unittest.TestCase):
 
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.paero.bdf',
                 '--pid', 'paero']
-        cmd_line(argv=argv, quiet=True)
+        cmd_line(argv=argv, log=log, quiet=True)
 
     def test_export_caero_mesh_w2gj(self):
         path = MODEL_PATH / 'aero'
@@ -279,8 +288,8 @@ class TestMeshUtilsAero(unittest.TestCase):
 
     def test_export_caero_mesh(self):
         """tests multiple ``bdf`` tools"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_no_sub.bdf']
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        argv = ['bdf', 'export_caero_mesh', str(bdf_filename), '-o', 'caero_no_sub.bdf']
         with self.assertRaises(SystemExit):
             cmd_line(argv=argv[:1], quiet=True)
         with self.assertRaises(SystemExit):
@@ -350,7 +359,8 @@ class TestMeshUtilsAero(unittest.TestCase):
 class TestMeshUtilsCmdLine(unittest.TestCase):
     def test_solid_dof(self):
         bdf_filename = TEST_DIR / 'solid_dof.bdf'
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [0., 1., 0.])

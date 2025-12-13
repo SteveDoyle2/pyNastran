@@ -5,8 +5,8 @@ from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
 
 
-def map_caero(bdf_filename: PathLike):
-    model = read_bdf(bdf_filename, xref=False)
+def map_caero(bdf_filename: PathLike, log=None):
+    model = read_bdf(bdf_filename, log=log, xref=False)
     model.xref_obj.cross_reference_coordinates()
     model.xref_obj.cross_reference_nodes()
     neid = len(model.elements)

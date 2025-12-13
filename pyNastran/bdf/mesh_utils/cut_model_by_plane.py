@@ -12,7 +12,7 @@ defines:
 from __future__ import annotations
 import os
 from itertools import count
-from typing import TextIO, Any, TypedDict, TYPE_CHECKING
+from typing import TextIO, Optional, Any, TypedDict, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -22,6 +22,7 @@ from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.cards.coordinate_systems import Coord, xyz_to_rtz_array, rtz_to_xyz_array
 
 if TYPE_CHECKING:  # pragma: no cover
+    from io import StringIO
     from pyNastran.utils import PathLike
     from pyNastran.bdf.bdf import BDF, CTRIA3, CQUAD4
     from pyNastran.bdf.cards.coordinate_systems import Coord
@@ -733,9 +734,6 @@ def cut_faces(node_ids: np.ndarray,
         ???
     """
     assert len(tri_face_eids) > 0, tri_face_eids
-    rod_elements: list[tuple[int, int, int]] = []
-    rod_nids: list[Any] = []
-    rod_xyzs: list[np.ndarray] = []
 
     #cid = 0
     fbdf1 = None
@@ -767,22 +765,24 @@ def cut_faces(node_ids: np.ndarray,
         area = 1.0
         J = 1.0
         #print('  intersection-eid=%s face=%s' % (eid, face))
-        out = _interpolate_face_to_barv(
+        out, rods = _interpolate_face_to_barv(
             tri_face_eids2, tri_ifaces2,
             xyz_cid, xyz_cid0,
             eid_new, nid_new, mid, area, J,
             fbdf1, fbdf2,
             nodal_result,
-            local_points, global_points,
-            geometry, result,
-            rod_elements, rod_nids, rod_xyzs,
             coord, plane_atol, plane_bdf_offset=plane_bdf_offset)
         local_points, global_points, result, geometry = out
+        rod_nids, rod_xyzs, rod_elements = rods
     else:
         local_points: list[np.ndarray] = []
         global_points: list[np.ndarray] = []
         result: list[np.ndarray] = []
         geometry: list[np.ndarray] = []
+
+        rod_nids: list[Any] = []
+        rod_xyzs: list[np.ndarray] = []
+        rod_elements: list[tuple[int, int, int]] = []
         mid = 1
         area = 1.0
         J = 1.0
@@ -797,7 +797,8 @@ def cut_faces(node_ids: np.ndarray,
 
             #print('  intersection-eid=%s face=%s' % (eid, face))
             eid_new, nid_new = _interpolate_face_to_bar(
-                node_ids, eid, eid_new, nid_new, mid, area, J,
+                eid, eid_new, nid_new,
+                mid, area, J,
                 fbdf1, fbdf2,
                 inid1, inid2, inid3,
                 xyz1_local, xyz2_local, xyz3_local,
@@ -805,8 +806,9 @@ def cut_faces(node_ids: np.ndarray,
                 nodal_result,
                 local_points, global_points,
                 geometry, result,
-                rod_elements, rod_nids, rod_xyzs,
-                coord, plane_atol, plane_bdf_offset=plane_bdf_offset)
+                rod_nids, rod_xyzs, rod_elements,
+                coord, plane_atol,
+                plane_bdf_offset=plane_bdf_offset)
 
             if len(local_points) != len(result):
                 msg = 'lengths are not equal; local_points=%s result=%s' % (
@@ -1269,19 +1271,23 @@ def _face_on_edge(eid: int, eid_new: int,
     return eid_new, nid_new
 
 
+# tri_face_eids2,
+# tri_ifaces2,
+# xyz_cid, xyz_cid0,
+# eid_new, nid_new, mid, area, J,
+# fbdf1, fbdf2,
+# nodal_result,
+# coord, plane_atol, plane_bdf_offset = plane_bdf_offset)
+
 def _interpolate_face_to_barv(eids: np.ndarray,
                               tri_ifaces: np.ndarray,
                               xyz_cid: np.ndarray,
                               xyz_cid0: np.ndarray,
                               eid_new: int, nid_new: int,
                               mid: int, area: float, J: float,
-                              fbdf1: TextIO, fbdf2: TextIO,
-                              nodal_result,
-                              local_points, global_points,
-                              geometry, result,
-                              rod_elements: list[float],
-                              rod_nids: list[int],
-                              rod_xyzs: list[np.ndarray],
+                              fbdf1: Optional[TextIO | StringIO],
+                              fbdf2: Optional[TextIO | StringIO],
+                              nodal_result: np.ndarray,
                               coord: CORD2R,
                               plane_atol: float,
                               plane_bdf_offset: float=0.):
@@ -1342,6 +1348,15 @@ def _interpolate_face_to_barv(eids: np.ndarray,
     2    e12, e23    1., 0.
     3    e13, e23    1., 1.
     """
+    local_points: list[np.ndarray] = []
+    global_points: list[np.ndarray] = []
+    result: list[np.ndarray] = []
+    geometry: list[np.ndarray] = []
+
+    rod_nids: list[np.ndarray] = []
+    rod_xyzs: list[np.ndarray] = []
+    rod_elements: list[np.ndarray] = []
+
     inid1 = tri_ifaces[:, 0]
     inid2 = tri_ifaces[:, 1]
     inid3 = tri_ifaces[:, 2]
@@ -1365,17 +1380,17 @@ def _interpolate_face_to_barv(eids: np.ndarray,
               (inid3, xyz3_locals, xyz3_globals))  # edge 2-3
     edge31 = ((inid1, xyz1_locals, xyz1_globals),
               (inid3, xyz3_locals, xyz3_globals))  # edge 1-3
-    edgesi = (edge12, edge23, edge31)
+    edges = (edge12, edge23, edge31)
 
     neid = len(eids)
-    eids_new = np.arange(1, neid+1, dtype='int32')
+    # eids_new = np.arange(1, neid+1, dtype='int32')
 
     # has to be at least 3; 10 is nice
-    nnodes_each = 10
-    nids_all = np.arange(1, nnodes_each*neid+1, dtype='int32').reshape(neid, nnodes_each)
-    nids_new = nids_all[:, 0]
-    nid_a_prime = nids_new
-    nid_b_prime = nids_new + 1
+    # nnodes_each = 10
+    # nids_all = np.arange(1, nnodes_each*neid+1, dtype='int32').reshape(neid, nnodes_each)
+    # nids_new = nids_all[:, 0]
+    # nid_a_prime = nids_new
+    # nid_b_prime = nids_new + 1
     # not used, but we mabye calculated a dot that we'll filter
     # so we need to allocate for it
     # nid_c_prime = nids_new + 2
@@ -1384,10 +1399,10 @@ def _interpolate_face_to_barv(eids: np.ndarray,
     #lengths = []
 
     # we need to prevent dots
-    results_temp = []
-    geometry_temp = []
-    local_points_temp = []
-    global_points_temp = []
+    # results_temp = []
+    # geometry_temp = []
+    # local_points_temp = []
+    # global_points_temp = []
     is_result = nodal_result is not None
 
     sid = 1
@@ -1395,10 +1410,10 @@ def _interpolate_face_to_barv(eids: np.ndarray,
     msg2s = []
     i_values = np.full((neid, 3), -1, dtype='int32')
     percent_values = np.full((neid, 3), np.nan, dtype='float64')
-    for i, (edges1, edges2) in enumerate(edgesi):
+    for i, (point1, point2) in enumerate(edges):
         all_true = np.full(neid, True, dtype='bool')
-        (inids_a, p1_locals, p1_globals) = edges1
-        (inids_b, p2_locals, p2_globals) = edges2
+        (inids_a, p1_locals, p1_globals) = point1
+        (inids_b, p2_locals, p2_globals) = point2
         assert len(inids_a) == len(p1_locals)
         assert len(inids_a) == len(p1_globals)
         assert len(inids_a) == len(inids_b)
@@ -1461,115 +1476,209 @@ def _interpolate_face_to_barv(eids: np.ndarray,
         assert len(ivalid1) == neid
         assert len(ivalid2) == neid
         assert len(ivalid) == neid
-        # eids_valid = eids[ivalid]
-        inid_a = inids_a[ivalid]
-        inid_b = inids_b[ivalid]
-        p1_local = p1_locals[ivalid]
-        p2_local = p2_locals[ivalid]
-        p1_global = p1_globals[ivalid]
-        p2_global = p2_globals[ivalid]
-        percent = percents[ivalid][:, np.newaxis]
-        cut_edgei = np.column_stack([inid_a, inid_b])
-        cut_edgei.sort(axis=1)
-        assert cut_edgei is not None
-        avg_local  = p2_local  * percent + p1_local  * (1 - percent)
-        avg_global = p2_global * percent + p1_global * (1 - percent)
-        #projected_points.append(avg_global)
+        percent_col = percents[ivalid]
+        percent = percent_col[:, np.newaxis]
+        if 0:
+            # eids_valid = eids[ivalid]
+            inid_a = inids_a[ivalid]
+            inid_b = inids_b[ivalid]
+            p1_local = p1_locals[ivalid]
+            p2_local = p2_locals[ivalid]
+            p1_global = p1_globals[ivalid]
+            p2_global = p2_globals[ivalid]
+            cut_edgei = np.column_stack([inid_a, inid_b])
+            cut_edgei.sort(axis=1)
+            assert cut_edgei is not None
+            avg_local  = p2_local  * percent + p1_local  * (1 - percent)
+            avg_global = p2_global * percent + p1_global * (1 - percent)
+            #projected_points.append(avg_global)
 
-        # we calculated all intersections that made it here
-        # we accidently added one extra point, so we need
-        # a delta point size of 3
-        local_points_temp.append(avg_local)
-        global_points_temp.append(avg_global)
+            # we calculated all intersections that made it here
+            # we accidently added one extra point, so we need
+            # a delta point size of 3
+            local_points_temp.append(avg_local)
+            global_points_temp.append(avg_global)
 
-        #print('  inid1=%s inid2=%s edge1=%s' % (inid1, inid2, str(edge1)))
-        #print('    xyz1_local=%s xyz2_local=%s' % (xyz1_local, xyz2_local))
-        #print('    avg_local=%s' % avg_local)
-        #print('    avg_global=%s' % avg_global)
-        # ['GRID', nid_new, cp=None, x, y, z]
-        rod_nids.append(nids_new)
-        rod_xyzs.append(avg_local)
-        if save_bdf_data:
-            for nid_new, avg_locali, avg_globali in zip(nids_new, avg_local, avg_global):
-                out_grid1 = ['GRID', nid_new, None, ] + list(avg_locali)
-                out_grid2 = ['GRID', nid_new, None, ] + list(avg_globali)
-                #rod_elements, rod_nids, rod_xyzs
-                out_grid1[4] += plane_bdf_offset
-                msg1s.append(out_grid1)
-                msg2s.append(out_grid2)
-
-        #print('  ', out_grid1)
-        #print('  plane_atol=%s dy=%s\n' % (plane_atol, dy))
-        eids_valid = eids[ivalid]
-        if is_result:
-            result1 = nodal_result[inids_a]
-            result2 = nodal_result[inids_b]
-            resulti = result2 * percent + result1 * (1 - percent)
+            #print('  inid1=%s inid2=%s edge1=%s' % (inid1, inid2, str(edge1)))
+            #print('    xyz1_local=%s xyz2_local=%s' % (xyz1_local, xyz2_local))
+            #print('    avg_local=%s' % avg_local)
+            #print('    avg_global=%s' % avg_global)
+            # ['GRID', nid_new, cp=None, x, y, z]
+            rod_nids.append(nids_new)
+            rod_xyzs.append(avg_local)
             if save_bdf_data:
-                for val in resulti:
-                    out_temp = ['TEMP', sid, nid_new, val] #+ resulti.tolist()
-                    msg1s.append(out_temp)
-                    msg2s.append(out_temp)
+                for nid_new, avg_locali, avg_globali in zip(nids_new, avg_local, avg_global):
+                    out_grid1 = ['GRID', nid_new, None, ] + list(avg_locali)
+                    out_grid2 = ['GRID', nid_new, None, ] + list(avg_globali)
+                    #rod_elements, rod_nids, rod_xyzs
+                    out_grid1[4] += plane_bdf_offset
+                    msg1s.append(out_grid1)
+                    msg2s.append(out_grid2)
 
-            assert len(eids) == len(nids_new), (len(eids), len(nids_new))
-            assert len(eids_valid) == len(cut_edgei), (len(eids[ivalid]), len(cut_edgei))
-            geom_datai = np.column_stack([eids[ivalid], nids_new[ivalid], cut_edgei])
-            # geom_datai = [eid, nid_new] + cut_edgei
-            # TODO: doesn't handle results of length 2+
-            result_datai = np.column_stack([avg_local, avg_global, resulti])
-            # result_datai = [xl, yl, zl, xg, yg, zg, resulti]
-        else:
-            assert len(eids) == len(nids_new), (len(eids), len(nids_new))
-            assert len(eids_valid) == len(cut_edgei), (len(eids[ivalid]), len(cut_edgei))
-            geom_datai = np.column_stack([eids_valid, nids_new[ivalid], cut_edgei])
-            # geom_datai = [eid, nid_new] + cut_edgei
-            # result_datai = [xl, yl, zl, xg, yg, zg]
-            result_datai = np.column_stack([avg_local, avg_global])
-            assert len(result_datai) == nvalid, (len(result_datai), nvalid)
+            #print('  ', out_grid1)
+            #print('  plane_atol=%s dy=%s\n' % (plane_atol, dy))
+            eids_valid = eids[ivalid]
+            if is_result:
+                result1 = nodal_result[inids_a]
+                result2 = nodal_result[inids_b]
+                resulti = result2 * percent + result1 * (1 - percent)
+                if save_bdf_data:
+                    for val in resulti:
+                        out_temp = ['TEMP', sid, nid_new, val] #+ resulti.tolist()
+                        msg1s.append(out_temp)
+                        msg2s.append(out_temp)
 
-        geometry_temp.append(geom_datai)
-        results_temp.append(result_datai)
+                assert len(eids) == len(nids_new), (len(eids), len(nids_new))
+                assert len(eids_valid) == len(cut_edgei), (len(eids_valid), len(cut_edgei))
+                geom_datai = np.column_stack([eids_valid, nids_new[ivalid], cut_edgei])
+                # geom_datai = [eid, nid_new] + cut_edgei
+                # TODO: doesn't handle results of length 2+
+                result_datai = np.column_stack([avg_local, avg_global, resulti])
+                # result_datai = [xl, yl, zl, xg, yg, zg, resulti]
+            else:
+                assert len(eids) == len(nids_new), (len(eids), len(nids_new))
+                assert len(eids_valid) == len(cut_edgei), (len(eids[ivalid]), len(cut_edgei))
+                geom_datai = np.column_stack([eids_valid, nids_new[ivalid], cut_edgei])
+                # geom_datai = [eid, nid_new] + cut_edgei
+                # result_datai = [xl, yl, zl, xg, yg, zg]
+                result_datai = np.column_stack([avg_local, avg_global])
+                assert len(result_datai) == nvalid, (len(result_datai), nvalid)
+
+            geometry_temp.append(geom_datai)
+            results_temp.append(result_datai)
         i_values[ivalid] = i
-        percent_values[ivalid, i] = percent.ravel()
-        nids_new += neid
+        percent_values[ivalid, i] = percent_col
 
-    idot = _is_dotv(i_values, percent_values, plane_atol)
-    if idot.sum() == 0:
+    itri, i01, i02, i12 = _is_dotv(i_values, percent_values, plane_atol)
+    ntri = itri.sum()
+    if ntri == 0:
         return
-    if fbdf1 is not None:
-        msg1 = ''.join(print_card_8(msg) for msg in msg1s)
-        fbdf1.write(msg1)
-    if fbdf2 is not None:
-        msg2 = ''.join(print_card_8(msg) for msg in msg2s)
-        fbdf2.write(msg2)
-    local_points.extend(local_points_temp)
-    global_points.extend(global_points_temp)
-    geometry.extend(geometry_temp)
-    result.extend(results_temp)
+    ninitial = len(itri)
+    del i_values, itri, ntri
 
-    nids_a = nid_a_prime[ivalid]
-    nids_b = nid_b_prime[ivalid]
-    if save_bdf_data:
-        # if there are 3 nodes in the cut edge, it's fine
-        # we'll take the first two
-        conrod_msgs = []
-        for eid, nida, nidb in zip(eids_valid, nids_a, nids_b):
-            conrod = ['CONROD', eid, nida, nidb, mid, area, J]
-            conrod_msgs.append(print_card_8(conrod))
-        msg = ''.join(conrod_msgs)
-        #print('  ', conrod)
-        if fbdf1 is not None:
-            fbdf1.write(msg)
-        if fbdf2 is not None:
-            fbdf2.write(msg)
-    rod_datai = np.column_stack([eids_valid, nids_a, nids_b])
-    rod_elements.append(rod_datai)
-    return local_points, global_points, result, geometry
+    # [1, 2]
+    # [3, 4]
+    # [5, 6]
+    # ...
+    nids_all = np.arange(1, 2*ninitial+1, dtype='int32').reshape(ninitial, 2)
+    # nids_new = nids_all[:, 0]
+
+    # nid_a_prime = nids_new
+    # nid_b_prime = nids_new + 1
+    nid_a_prime = nids_all[:, 0]
+    nid_b_prime = nids_all[:, 1]
+    iloops = [
+        (0, 1, i01),
+        (0, 2, i02),
+        (1, 2, i12),
+    ]
+
+    # edges = (edge12, edge23, edge31)
+
+    # we have to store the data for each valid edge of the
+    # triangle-plane intersection
+    #
+    # make two GRIDs
+    # then make a conrod between the GRIDs
+    is_out = False
+    for e0_e1_iloop in iloops:
+        # go back over each correct edge pair
+        e0, e1, iloop = e0_e1_iloop
+        sumi = int(iloop.sum())
+        if sumi == 0:
+            continue
+
+        is_out = True
+        edges0 = edges[e0]
+        edges1 = edges[e1]
+        eids_valid = eids[iloop]
+        assert iloop.sum(), ((e0, e1), sumi)
+
+        nids_a_primei = nid_a_prime[iloop]
+        nids_b_primei = nid_b_prime[iloop]
+
+        iedges = (e0, e1)
+        edgesi = (edges0, edges1)
+        nids_grids = (nid_a_prime, nid_b_prime)  # correct length; no slicing
+
+        # add an interpolated GRID on the edge
+        for iedge, points, nids_grid in zip(iedges, edgesi, nids_grids):
+            point1, point2 = points
+            inids_a, p1_locals, p1_globals = point1
+            inids_b, p2_locals, p2_globals = point2
+
+            percent = percent_values[iloop, iedge][:, np.newaxis]
+            inid_a = inids_a[iloop]
+            inid_b = inids_b[iloop]
+            # nids_a = nid_a_prime[iloop]
+            # nids_b = nid_b_prime[iloop]
+            p1_local = p1_locals[iloop]
+            p2_local = p2_locals[iloop]
+            p1_global = p1_globals[iloop]
+            p2_global = p2_globals[iloop]
+
+            cut_edgei = np.column_stack([inid_a, inid_b])
+            assert len(eids_valid) == len(inid_a), (len(eids_valid), len(inid_a))
+            assert len(eids_valid) == len(nids_grid), (len(eids_valid), len(nids_grid))
+            geom_datai = np.column_stack([eids_valid, nids_grid, cut_edgei])
+
+            avg_local  = p2_local  * percent + p1_local  * (1 - percent)
+            avg_global = p2_global * percent + p1_global * (1 - percent)
+            result_datai = np.column_stack([avg_local, avg_global])
+            if is_results:
+                bad_results
+            local_points.extend(avg_local)
+            global_points.extend(avg_global)
+            geometry.extend(geom_datai)
+            result.append(result_datai)
+
+            assert len(nids_grids) == len(avg_local)
+            assert len(nids_grids) == len(avg_global)
+            rod_nids.append(nids_grids)
+            rod_xyzs.append(avg_local)
+            if save_bdf_data:
+                for nidi, avg_locali, avg_globali in zip(nids_grids, avg_local, avg_global):
+                    out_grid1 = ['GRID', nidi, '', ] + list(avg_locali)
+                    out_grid2 = ['GRID', nidi, '', ] + list(avg_globali)
+                    # rod_elements, rod_nids, rod_xyzs
+                    out_grid1[4] += plane_bdf_offset
+                    msg1s.append(out_grid1)
+                    msg2s.append(out_grid2)
+
+        # now that we have two GRIDs, draw a line
+        rod_datai = np.column_stack([eids_valid, nids_a_primei, nids_b_primei])
+        rod_elements.append(rod_datai)
+        if save_bdf_data:
+            conrod_msgs = []
+            # if there are 3 nodes in the cut edge, it's fine
+            # we'll take the first two
+            for eid, nida, nidb in zip(eids_valid, nids_a_primei, nids_b_primei):
+                conrod = ['CONROD', eid, nida, nidb, mid, area, J]
+                conrod_msgs.append(print_card_8(conrod))
+
+            conrod_msg = ''.join(conrod_msgs)
+            if fbdf1 is not None:
+                msg1 = ''.join(print_card_8(msg) for msg in msg1s)
+                fbdf1.write(msg1)
+                fbdf1.write(conrod_msg)
+                fbdf1.close()
+            if fbdf2 is not None:
+                msg2 = ''.join(print_card_8(msg) for msg in msg2s)
+                fbdf2.write(msg2)
+                fbdf2.write(conrod_msg)
+                fbdf2.close()
+
+    assert len(local_points), local_points
+    assert len(rod_nids), rod_nids
+    assert is_out, is_out
+    out = local_points, global_points, result, geometry
+    rods = (rod_nids, rod_xyzs, rod_elements)
+    return out, rods
 
 
 def _interpolate_face_to_bar(eid: int, eid_new: int,
-                             nid_new: int, mid: int,
-                             area: float, J: float,
+                             nid_new: int,
+                             mid: int, area: float, J: float,
                              fbdf1: TextIO, fbdf2: TextIO,
                              inid1: int, inid2: int, inid3: int,
                              xyz1_local: np.ndarray, xyz2_local: np.ndarray, xyz3_local: np.ndarray,
@@ -1578,9 +1687,9 @@ def _interpolate_face_to_bar(eid: int, eid_new: int,
                              local_points, global_points,
                              geometry, result,
                              # eid, nid_a_prime, nid_b_prime
-                             rod_elements: list[tuple[int, int, int]],
                              rod_nids: list[int],
                              rod_xyzs: list[np.ndarray],
+                             rod_elements: list[tuple[int, int, int]],
                              coord: CORD2R,
                              plane_atol: float,
                              plane_bdf_offset: float=0.) -> tuple[int, int]:
@@ -1805,7 +1914,8 @@ def _interpolate_face_to_bar(eid: int, eid_new: int,
 
 def _is_dotv(ivalues: np.ndarray,
              percent: np.ndarray,
-             plane_atol: float) -> np.ndarray:
+             plane_atol: float) -> tuple[np.ndarray, np.ndarray,
+                                         np.ndarray, np.ndarray]:
     """we don't want dots
 
     This is an array of:
@@ -1840,9 +1950,14 @@ def _is_dotv(ivalues: np.ndarray,
     # if is_dot.min() == -1:
     #     raise RuntimeError('incorrect ivalues=-1')
 
-    is_dot_vectorized = (is_dot == 1)
-    #print('%s; percents=%s is_dot=%s' % (dot_type, percent_array, is_dot))
-    return is_dot_vectorized
+    is_dot = (is_dot == 1)
+    is_valid = ~is_dot
+
+    #print('%s; percents=%s is_dot=%s' % (dot_type, percent, is_dot))
+    i01b = ((i0 == 0)  & (i1 == 1)  & (i2 == -1))
+    i02b = ((i0 == 0)  & (i1 == -1) & (i2 == 2))
+    i12b = ((i0 == -1) & (i1 == 1)  & (i2 == 2))
+    return is_valid, (is_valid & i01), (is_valid & i02), (is_valid & i12)
 
 
 def _is_dot(ivalues: list[int],

@@ -44,6 +44,10 @@ def filter_no_args(msg: str, argv: list[str], quiet: bool=False):
         if quiet:
             sys.exit()
         sys.exit(msg)
+    for i in range(len(argv)):
+        arg = argv[i]
+        if not isinstance(arg, str):
+            argv[i] = str(arg)
 
 
 def get_is_double_large(data: dict[str, Any]) -> tuple[int, bool]:

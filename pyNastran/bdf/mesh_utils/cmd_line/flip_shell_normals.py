@@ -1,3 +1,9 @@
+import sys
+from docopt import docopt
+import pyNastran
+from .utils import filter_no_args, get_bdf_filename_punch_log
+
+
 def cmd_line_flip_shell_normals(argv=None, quiet: bool=False) -> None:
     """command line interface to flip_shell_normals"""
     if argv is None:  # pragma: no cover
@@ -44,6 +50,7 @@ def cmd_line_flip_shell_normals(argv=None, quiet: bool=False) -> None:
 
     #from io import StringIO
     from pyNastran.bdf.bdf import read_bdf, BDF
+    from pyNastran.bdf.mesh_utils.flip_shell_normals import flip_shell_normals
 
     model = BDF(log=log)
     model.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
