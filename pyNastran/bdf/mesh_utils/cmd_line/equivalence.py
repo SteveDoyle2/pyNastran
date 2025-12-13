@@ -7,6 +7,7 @@ from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 
+
 def cmd_line_equivalence(argv=None, quiet: bool=False) -> None:
     """command line interface to bdf_equivalence_nodes"""
     if argv is None:  # pragma: no cover

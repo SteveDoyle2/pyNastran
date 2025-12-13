@@ -787,19 +787,23 @@ class Subcase:
         assert key in self.params, f'key={key!r} is not in isubcase={self.id}'
         self._add_data(key, value, options, param_type)
 
-    def add_set_from_values(self, set_id: int, values: list[int]) -> None:
+    def add_set_from_values(self, set_id: int, values: list[int | str]) -> None:
         """
         Simple way to add SET cards
 
         Example
         -------
-        >>> set_id = 42
-        >>> values = [1, 2, 3]
-        >>> subcase.add_set_from_values(set_id, values)
+        >>> set_id1 = 42
+        >>> values1 = [1, 2, 3]
+        >>> subcase.add_set_from_values(set_id1, values1)
+        >>> set_id2 = 43
+        >>> values2 = ['KAAX']
+        >>> subcase.add_set_from_values(set_id2, values2)
         >>> subcase
 
         SUBCASE 1
             SET 42 = 1, 2, 3
+            SET 43 = KAAX
 
         """
         key = f'SET {set_id:d}'

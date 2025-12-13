@@ -1,6 +1,7 @@
 import os
 import unittest
-from pyNastran.bdf.mesh_utils.utils import cmd_line, cmd_line_create_flutter
+from pyNastran.bdf.mesh_utils.cmd_line.bdf_cmd_line import (
+    cmd_line, cmd_line_create_flutter)
 TEST_DIR = os.path.dirname(__file__)
 
 
