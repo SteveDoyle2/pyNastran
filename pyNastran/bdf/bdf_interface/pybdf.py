@@ -312,7 +312,7 @@ class BDFInputPy:
                 additional_deck_lines[super_tuple] = super_lines
             del superelement_lines, superelement_ilines
 
-        print('nastran_format', nastran_format)
+        # print('nastran_format', nastran_format)
         if nastran_format in {'msc', 'nx', 'optistruct', 'mystran'}:
             pass
         elif nastran_format == 'zona':

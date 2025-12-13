@@ -85,7 +85,7 @@ def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str,
         mode = 'nx'
         version_str = version[2:].strip().decode(encoding)
         if version_str not in NX_VERSIONS:
-            log.warning(f'nx version={version_str!r} is not supported')
+            log.warning(f'parse_nastran_version_8: nx version={version_str!r} is not supported')
     elif version.startswith(b'MODEP'):
         # TODO: why is this separate?
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2

@@ -1039,7 +1039,7 @@ class FLUTTER(BaseCard):
         self.mach_ref = model.FLFACT(self.mach, msg=msg)
         self.reduced_freq_velocity_ref = model.FLFACT(self.reduced_freq_velocity, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model: BDF, xref_error) -> None:
         msg = ', which is required by FLUTTER sid=%s' % self.sid
         try:
             self.density_ref = model.FLFACT(self.density, msg=msg)

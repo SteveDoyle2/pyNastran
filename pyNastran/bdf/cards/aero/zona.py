@@ -7,8 +7,12 @@ import numpy as np
 
 from pyNastran.utils import object_attributes, object_methods
 
+from typing import Any
+from pyNastran.bdf.bdf_interface.utils import _prep_comment
+from pyNastran.bdf.bdf_interface.pybdf import _clean_comment
+
 from pyNastran.bdf.cards.aero.zona_cards.atm import (
-    ATM, FIXMATM,)
+    ATMOS, FIXMATM, FIXHATM)
 from pyNastran.bdf.cards.aero.zona_cards.spline import (
     SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA,)
 from pyNastran.bdf.cards.aero.zona_cards.geometry import (
@@ -41,6 +45,52 @@ from pyNastran.bdf.cards.aero.zona_cards.cards import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
+ZONA_CARDS = [
+    # atmosphere
+    'FIXHATM', 'FIXMATM',  # flutter table
+    'ATMOS',
+
+    # geometry
+    'CAERO7', 'AEROZ', 'AESURFZ', 'AESLINK',
+    'ATTACH',
+    'PANLST1', 'PANLST2', 'PANLST3', 'PAFOIL7',
+    'SEGMESH', 'BODY7', 'ACOORD', 'MKAEROZ',
+    'TRIMVAR', 'TRIMLNK',
+    # -------------
+    # flutter
+    'FLUTTER',
+    'FIXMDEN', 'FIXHATM', 'FIXMACH',
+    # -------------
+    # plotting
+    'PLTMODE', 'PLTAERO', 'PLTTIME',
+    # -------------
+    # mloads
+    'MLOADS',
+    'CJUNCT', 'CONCT', 'TFSET',
+    'MLDSTAT', 'MLDTRIM', 'MLDPRNT', 'MLDCOMD',
+    'EXTINP', 'EXTOUT', 'TRIMFNC', 'LOADMOD',
+    # -------------
+    # gust
+    'GLOADS', 'DGUST', 'CGUST',
+    # -------------
+    # ase
+    'ASE', 'ASECONT',
+    'ASESNSR', 'ASESNS1', 'SENSET',
+    'AEROLAG', 'ACTU',
+    'MIMOSS', 'SISOTF',
+    'ASEGAIN', 'GAINSET',
+    # -------------
+    # other
+    'DMIL', 'EXTFILE',
+    'MLDTIME', 'MLDCOMD',
+    'MINSTAT', 'APCONST',
+    # 'PLTFLUT', 'PLTVG', 'PLTCP', 'PLTMIST',
+    'RBRED',
+    # 'SPLINE0', 'PBODY7',
+    'CNCTSET', 'SURFSET',
+]
+
+
 class AddMethods:
     def __init__(self, model: BDF):
         self.model = model
@@ -65,6 +115,14 @@ class AddMethods:
         self.model.zona.mldcomd[key] = mldcomd
         self.model._type_to_id_map[mldcomd.type].append(key)
 
+    def add_extfile_object(self, extfile: EXTFILE) -> None:
+        """adds an EXTFILE object"""
+        key = extfile.extfile_id
+        assert key not in self.model.zona.extfile, key
+        assert key > 0, key
+        self.model.zona.extfile[key] = extfile
+        self.model._type_to_id_map[extfile.type].append(key)
+
     def add_dmil_object(self, dmil: DMIL) -> None:
         """adds an DMIL object"""
         name = dmil.name
@@ -80,6 +138,14 @@ class AddMethods:
         assert key > 0, key
         self.model.zona.mldtime[key] = mldtime
         self.model._type_to_id_map[mldtime.type].append(key)
+
+    def add_mldprnt_object(self, mldprnt: MLDPRNT) -> None:
+        """adds an MLDPRNT object"""
+        key = mldprnt.mldtime_id
+        assert key not in self.model.zona.mldtime, key
+        assert key > 0, key
+        self.model.zona.mldprnt[key] = mldprnt
+        self.model._type_to_id_map[mldprnt.type].append(key)
 
     def add_mldtrim_object(self, mldtrim: MLDTRIM) -> None:
         """adds an MLDTRIM object"""
@@ -414,12 +480,35 @@ class AddMethods:
         self.model.zona.plotaero[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
+    def add_flutter_table_object(self, flutter_table: FIXHATM | FIXMATM) -> None:
+        """adds an FIXMATM object"""
+        key = flutter_table.sid
+        model = self.model
+        zona = model.zona
+        assert key not in zona.flutter_table, '\nflutter_table=\n%s old=\n%s' % (
+            flutter_table, zona.flutter_table[key])
+        zona.flutter_table[key] = flutter_table
+        model._type_to_id_map[flutter_table.type].append(key)
+
+    def add_atmos_object(self, atmos: ATMOS) -> None:
+        """adds an ATMOS object"""
+        key = atmos.atmos_id
+        model = self.model
+        zona = model.zona
+        assert key not in zona.atmos, '\natmos=\n%s old=\n%s' % (
+            atmos, zona.atm[key])
+        zona.atmos[key] = atmos
+        model._type_to_id_map[atmos.type].append(key)
 
 class ZONA:
     def __init__(self, model):
         self.model = model
         self.caero_to_name_map = {}
         self._add_methods = AddMethods(model)
+
+        # aero models
+        self.atmos: dict[int, ATMOS] = {}
+        self.flutter_table: dict[int, FIXHATM | FIXMATM] = {}
 
         #: store PANLST1,PANLST2,PANLST3
         self.panlsts: dict[int, PANLST1 | PANLST2 | PANLST3] = {}
@@ -620,6 +709,11 @@ class ZONA:
         add_methods = self.model._add_methods
         zona_add = self._add_methods
         card_parser2 = {
+            # aero models
+            'ATMOS': (ATMOS, zona_add.add_atmos_object),
+            'FIXMATM': (FIXMATM, zona_add.add_flutter_table_object),
+            'FIXHATM': (FIXHATM, zona_add.add_flutter_table_object),
+            # trim
             'TRIM': (TRIM_ZONA, add_methods.add_trim_object),
             'TABLED1': (TABLED1_ZONA, add_methods.add_tabled_object),
             'TABDMP1': (TABDMP1_ZONA, add_methods.add_table_sdamping_object),
@@ -639,9 +733,6 @@ class ZONA:
             'ACOORD': (ACOORD, add_methods.add_coord_object),
             'AESURFZ': (AESURFZ, zona_add.add_aesurfz_object),
             'AESLINK': (AESLINK, zona_add.add_aeslink_object),
-            # atmosphere
-            # 'ATM': (ATM, zona_add.add_atm_object),
-            # 'FIXMATM': (FIXMATM, zona_add.add_fixmatm_object),
             # flutter
             'FLUTTER': (FLUTTER_ZONA, add_methods.add_flutter_object),
             # mloads
@@ -681,54 +772,15 @@ class ZONA:
             'MLDCOMD': (MLDCOMD, zona_add.add_mldcomd_object),
             'MLDTIME': (MLDTIME, zona_add.add_mldtime_object),
             'DMIL': (DMIL, zona_add.add_dmil_object),
-            #'MLDPRNT': (MLDPRNT, self.add_mldprnt_object),
+            'EXTFILE': (EXTFILE, zona_add.add_extfile_object),
+            'MLDPRNT': (MLDPRNT, zona_add.add_mldprnt_object),
             # PLTCP
             # PLTFLUT
             # PLTVG
             # PLTMIST
         }
         card_parser.update(card_parser2)
-        cards = [
-            # geometry
-            'CAERO7', 'AEROZ', 'AESURFZ', 'AESLINK',
-            'ATTACH',
-            'PANLST1', 'PANLST2', 'PANLST3', 'PAFOIL7',
-            'SEGMESH', 'BODY7', 'ACOORD', 'MKAEROZ',
-            'TRIMVAR', 'TRIMLNK',
-            # -------------
-            # flutter
-            'FLUTTER',
-            'FIXMDEN', 'FIXHATM', 'FIXMACH',
-            # -------------
-            # plotting
-            'PLTMODE', 'PLTAERO', 'PLTTIME',
-            # -------------
-            # mloads
-            'MLOADS',
-            'CJUNCT', 'CONCT', 'TFSET',
-            'MLDSTAT', 'MLDTRIM', 'MLDPRNT', 'MLDCOMD',
-            'EXTINP', 'EXTOUT', 'TRIMFNC', 'LOADMOD',
-            # -------------
-            # gust
-            'GLOADS', 'DGUST', 'CGUST',
-            # -------------
-            # ase
-            'ASE', 'ASECONT',
-            'ASESNSR', 'ASESNS1', 'SENSET',
-            'AEROLAG', 'ACTU',
-            'MIMOSS', 'SISOTF',
-            'ASEGAIN', 'GAINSET',
-            # -------------
-            # other
-            'DMIL',
-            'MLDTIME', 'MLDCOMD',
-            'MINSTAT', 'APCONST',
-            # 'PLTFLUT', 'PLTVG', 'PLTCP', 'PLTMIST',
-            'RBRED',
-            # 'SPLINE0', 'PBODY7',
-            'CNCTSET', 'SURFSET',
-        ]
-        self.model.cards_to_read.update(set(cards))
+        self.model.cards_to_read.update(set(ZONA_CARDS))
 
     def cross_reference(self):
         if self.model.nastran_format != 'zona':
@@ -913,12 +965,150 @@ class ZONA:
         )
         return msg
 
+    def get_bdf_cards(self, bulk_data_lines: list[str],
+                      bulk_data_ilines: Optional[Any]=None,
+                      use_dict: bool=False) -> tuple[Any, Any, Any]:
+        """Parses the BDF lines into a list of card_lines"""
+        #self.log.warning('get_bdf_cards')
+        use_dict = False
+
+        dict_cards = {}
+        model = self.model
+        allow_tabs = False
+        if bulk_data_ilines is None:
+            bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
+
+        cards_list: list[Any] = []
+        cards_dict: dict[str, list[Any]] = defaultdict(list)
+        #cards = defaultdict(list)
+        card_count: dict[str, int] = defaultdict(int)
+        full_comment = ''
+        card_lines = []
+        card_ilines = []
+        old_ifile_iline = None
+        old_card_name = None
+        backup_comment = ''
+        nlines = len(bulk_data_lines)
+
+        # self.echo = True
+        # self.force_echo_off = False
+
+        log = self.model.log
+        for iline_bulk, line in enumerate(bulk_data_lines):
+            ifile_iline = bulk_data_ilines[iline_bulk, :]
+            # print(iline_bulk, ifile_iline)
+            # print(iline_bulk, ifile_iline, line)
+            # print('    backup={backup_comment!r}')
+            comment = ''
+            if '$' in line and (line.lstrip().startswith('$') or line.index('$') >= 72):
+                line, comment = line.split('$', 1)
+                if line.strip():
+                    print(line)
+                strip_comment = comment.strip()
+                if strip_comment.lower().startswith('group:'):
+                    continue_flag = model._store_group(strip_comment)
+                    if continue_flag:
+                        continue
+            #if not self.allow_tabs and '\t' in line:
+                #raise RuntimeError(f'There are tabs in:\n{line}')
+                #self.log.warning(f'There are tabs in:\n{line}')
+
+            card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
+            if card_name and card_name[0] not in ['+', '*']:
+                if old_card_name:
+                    # multiline card is finished
+                    if card_name not in ZONA_CARDS:
+                        pass
+                    elif not allow_tabs and '\t' in (joined_lines_n := '\n'.join(card_lines)):
+                        joined_lines_n2 = '\n'.join((f'{line!r}' for line in card_lines))
+                        log.warning(f'There are tabs in:\n{joined_lines_n2}')
+                        # raise RuntimeError(f'There are tabs in:\n{joined_lines_n2}')
+
+                    if model.echo and not model.force_echo_off:
+                        model.log.info('Reading %s:\n' %
+                                      old_card_name + full_comment + ''.join(card_lines))
+
+                    #if full_comment:
+                        #print('full_comment = ', full_comment)
+                    cards_list.append([old_card_name, _prep_comment(full_comment),
+                                       card_lines, card_ilines[-1]])
+
+                    card_count[old_card_name] += 1
+                    card_lines = []
+                    card_ilines = []
+                    full_comment = ''
+
+                    if old_card_name == 'ECHOON':
+                        self.echo = True
+                    elif old_card_name == 'ECHOOFF':
+                        self.echo = False
+                old_ifile_iline = ifile_iline
+                old_card_name = card_name.rstrip(' *')
+
+                if old_card_name == 'ENDDATA':
+                    model.card_count['ENDDATA'] = 1
+                    if nlines - iline_bulk > 1:
+                        nleftover = nlines - iline_bulk - 1
+                        msg = 'exiting due to ENDDATA found with %i lines left' % nleftover
+                        model.log.debug(msg)
+                    return cards_list, cards_dict, card_count
+                #print("card_name = %s" % card_name)
+
+            comment = _clean_comment(comment)
+
+            #TODO: these additional \n need to be there for rejected cards
+            #      but not parsed cards
+            if line.rstrip():
+                card_lines.append(line)
+                card_ilines.append(ifile_iline)
+                if backup_comment:
+                    if comment:
+                        full_comment += backup_comment + comment + '\n'
+                    else:
+                        full_comment += backup_comment
+                    backup_comment = ''
+                elif comment:
+                    full_comment += comment + '\n'
+                    backup_comment = ''
+
+            elif comment:
+                backup_comment += comment + '\n'
+            #elif comment:
+                #backup_comment += '$' + comment + '\n'
+
+        if card_lines:
+            if not allow_tabs and '\t' in (joined_lines_n := '\n'.join(card_lines)):
+                raise RuntimeError(f'There are tabs in:\n{joined_lines_n}')
+
+            if model.echo and not model.force_echo_off:
+                model.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
+            #print('end_add %s' % card_lines)
+
+            # old dictionary version
+            #cards[old_card_name].append([backup_comment + full_comment, card_lines])
+
+            # new list version
+            #if backup_comment + full_comment:
+                #print('backup_comment + full_comment = ', backup_comment + full_comment)
+            if old_card_name in dict_cards:
+                cards_dict[old_card_name].append([_prep_comment(
+                    backup_comment + full_comment), card_lines, ifile_iline])
+            else:
+                # cards_list.append([old_card_name, _prep_comment(
+                #     backup_comment + full_comment), card_lines, ifile_iline])
+                cards_list.append([old_card_name, _prep_comment(
+                    backup_comment + full_comment), card_lines, card_ilines[-1]])
+            card_count[old_card_name] += 1
+        self.echo = False
+        return cards_list, cards_dict, card_count
+
 
 def get_dicts(zona: ZONA, method: str) -> list[dict]:
     assert method in ['xref', 'write'], f'method={method!r}'
     dicts = [
         # --------------general-------------
         # zona.aeroz,
+        zona.atmos, zona.flutter_table,
         # -------------geometry-------------
         # zona.panlsts,  # special-list
         zona.pafoil,
@@ -928,7 +1118,7 @@ def get_dicts(zona: ZONA, method: str) -> list[dict]:
         # --------------flutter-------------
         zona.nlfltr, zona.mkaeroz,
         # ---------------trim---------------
-        # zona.trim,
+        # zona.trim,  # part of the main BDF
         zona.aeslink, zona.trimvar, zona.trimlnk,
         zona.trimfnc, zona.trimobj, zona.trimcon,
         # ---------------ase---------------
@@ -947,8 +1137,10 @@ def get_dicts(zona: ZONA, method: str) -> list[dict]:
         # ---------------other--------------
         zona.extfile,
         zona.dse,
+        zona.dmil,
     ]
     if method == 'write':
+        # these are xref'd by their parent
         dicts.extend([zona.extinp, zona.extout])
     return dicts
 

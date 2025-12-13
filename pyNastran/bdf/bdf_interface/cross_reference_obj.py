@@ -131,31 +131,32 @@ class CrossReference:
         SUPORT1, SESUPORT cards.
         """
         model = self.model
+        xref_errors = defaultdict(list)
         for spcadds in model.spcadds.values():
             for spcadd in spcadds:
-                spcadd.safe_cross_reference(model)
+                spcadd.safe_cross_reference(model, xref_errors)
         for spcs in model.spcs.values():
             for spc in spcs:
-                spc.safe_cross_reference(model)
+                spc.safe_cross_reference(model, xref_errors)
         for spcoffs in model.spcoffs.values():
             for spcoff in spcoffs:
-                spcoff.safe_cross_reference(model)
+                spcoff.safe_cross_reference(model, xref_errors)
 
         for mpcadds in model.mpcadds.values():
             for mpcadd in mpcadds:
-                mpcadd.safe_cross_reference(model)
+                mpcadd.safe_cross_reference(model, xref_errors)
         for mpcs in model.mpcs.values():
             for mpc in mpcs:
-                mpc.safe_cross_reference(model)
+                mpc.safe_cross_reference(model, xref_errors)
 
         for suport in model.suport:
-            suport.safe_cross_reference(model)
+            suport.safe_cross_reference(model, xref_errors)
 
         for unused_suport1_id, suport1 in model.suport1.items():
-            suport1.safe_cross_reference(model)
+            suport1.safe_cross_reference(model, xref_errors)
 
         for se_suport in model.se_suport:
-            se_suport.safe_cross_reference(model)
+            se_suport.safe_cross_reference(model, xref_errors)
 
     def cross_reference_sets(self) -> None:
         """cross references the SET objects"""
@@ -326,13 +327,16 @@ class CrossReference:
         self._show_safe_xref_errors('splines', xref_errors)
 
         for aecomp in model.aecomps.values():
-            aecomp.safe_cross_reference(model)
+            aecomp.safe_cross_reference(model, xref_errors)
+        self._show_safe_xref_errors('aecomps', xref_errors)
 
         for aelist in model.aelists.values():
-            aelist.safe_cross_reference(model)
+            aelist.safe_cross_reference(model, xref_errors)
+        self._show_safe_xref_errors('aelists', xref_errors)
 
         for aeparam in model.aeparams.values():
-            aeparam.safe_cross_reference(model)
+            aeparam.safe_cross_reference(model, xref_errors)
+        self._show_safe_xref_errors('aeparams', xref_errors)
 
         #for aestat in model.aestats):
             #aestat.safe_cross_reference(self)
@@ -347,10 +351,10 @@ class CrossReference:
         self._show_safe_xref_errors('aesurf', xref_errors)
 
         for aesurfs in model.aesurfs.values():
-            aesurfs.safe_cross_reference(model)
+            aesurfs.safe_cross_reference(model, xref_errors)
 
         for flutter in model.flutters.values():
-            flutter.safe_cross_reference(model)
+            flutter.safe_cross_reference(model, xref_errors)
 
         xref_errors = defaultdict(list)
         for monitor_point in model.monitor_points:

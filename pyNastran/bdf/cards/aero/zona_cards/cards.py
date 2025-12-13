@@ -5,8 +5,10 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 
+from .utils import split_filename_dollar
 from pyNastran.bdf.cards.aero.dynamic_loads import Aero
-from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
+from pyNastran.bdf.field_writer_8 import (
+    set_blank_if_default, print_card_8, print_float_8)
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
@@ -326,6 +328,25 @@ class AEROZ(Aero):
                      sym_xz=sym_xz, flip=flip, xyz_ref=xyz_ref,
                      comment=comment)
 
+    @property
+    def weight_unit(self):
+        if self.fm_mass_unit == 'NONE':
+            weight_unit = 'NONE'
+        elif self.fm_length_unit in ['IN', 'FT']:
+            weight_unit = 'LBF'
+        elif self.fm_length_unit in ['MM', 'CM', 'M', 'KM']:
+            weight_unit ='N'
+        else:
+            raise RuntimeError(f'weight_unit={self.fm_length_unit!r}')
+        # UNIT_MAP = {
+        #     ('SLIN', 'IN'): 'LBF',
+        #     ('SLUG', 'FT'): 'LBF',
+        #     ('LBF', 'IN'): 'LBF',
+        # }
+        # key = (self.fm_mass_unit, self.fm_length_unit)
+        # return UNIT_MAP.get(key, '???')
+        return weight_unit
+
     def Acsid(self):
         try:
             return self.acsid_ref.cid
@@ -620,7 +641,9 @@ class MLDSTAT(BaseCard):
         self.dx_tox = dx_tox
         self.state_space_arr = state_space_arr
         self.state_space_brr = state_space_brr
-        # print(str(self))
+        self.mldtrim_ref = None
+        self.ssa_ref = None
+        self.ssb_ref = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -635,7 +658,6 @@ class MLDSTAT(BaseCard):
             a comment for the card
 
         """
-        print('********', card)
         # MLDSTAT IDSTAT IDTRIM TRNSFM ARR BRR DXTOX FILENM CONT
         #         STATE1 INITIAL
         mldstat_id = integer(card, 1, 'mldstat_id')
@@ -648,6 +670,8 @@ class MLDSTAT(BaseCard):
 
         # filename = ''
         filename = string_multifield_or_blank(card, (6, 7), 'filename', default='')
+        if filename.startswith('$'):
+            filename = int(filename[1:])
         i = 9
         j = 1
         states = []
@@ -655,7 +679,6 @@ class MLDSTAT(BaseCard):
         while i < len(card):
             state = string(card, i, f'state{j}')
             value = double(card, i+1, f'value{j}')
-
             states.append(state)
             values.append(value)
             i += 2
@@ -670,7 +693,12 @@ class MLDSTAT(BaseCard):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
 
     def cross_reference(self, model: BDF) -> None:
-        pass
+        msg = f', which is required by MLDSTAT={self.mldstat_id}\n{str(self)}'
+        self.mldtrim_ref = model.Trim(self.mldtrim_id, msg)
+        if self.state_space_arr:
+            self.ssa_ref = model.dmi[self.state_space_arr]
+        if self.state_space_arr:
+            self.ssb_ref = model.dmi[self.state_space_brr]
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -689,9 +717,10 @@ class MLDSTAT(BaseCard):
             the fields that define the card
 
         """
+        filename_a, filename_b = split_filename_dollar(self.filename)
         list_fields = [
             'MLDSTAT', self.mldstat_id, self.mldtrim_id, self.transform,
-            self.state_space_arr, self.state_space_brr, self.dx_tox, self.filename,]
+            self.state_space_arr, self.state_space_brr, self.dx_tox, filename_a, filename_b,]
         for state, value in zip(self.states, self.values):
             list_fields.append(state)
             list_fields.append(value)
@@ -706,13 +735,12 @@ class MLDSTAT(BaseCard):
         msg = (
             f'MLDSTAT {self.mldstat_id:<8d}{self.mldtrim_id:<8d}{self.transform:<8s}'
             f'{self.state_space_arr:<8s}{self.state_space_brr:<8s}'
-            f'{self.dx_tox:<8s}{self.filename:>16s}\n    '
+            f'{self.dx_tox:<8s}{self.filename:>16s}\n        '
         )
         for istate, state, value in zip(count(), self.states, self.values):
-            msg += f'{state}{value}'
+            msg += f'{state:>8s}{print_float_8(value)}'
             if istate > 0 and istate % 4 == 0:
-                msg += '\n    '
-        print(msg)
+                msg += '\n        '
         return self.comment + msg.rstrip() + '\n'
 
 
@@ -773,7 +801,9 @@ class MINSTAT(BaseCard):
         min_inp = integer_or_blank(card, 8, 'min_inp', default=0)
         print_flag = integer_or_blank(card, 9, 'print_flag', default=0)
         save_flag = string_or_blank(card, 10, 'save_flag', default='')
-        filename = string_multifield_or_blank(card, (11, 12), 'filename')
+        filename = string_multifield_or_blank(card, (11, 12), 'filename', default='')
+        if filename.startswith('$'):
+            filename = int(filename[1:])
         msmod = integer_or_blank(card, 13, 'msmod', default=0)
         aerolag_gust_id = integer_or_blank(card, 14, 'LAGIDG, aerolag2_id', default=0)
         dinit_gust_id = integer_or_blank(card, 15, 'DMATIDG, dinit_id', default=0)
@@ -865,6 +895,7 @@ class MLDCOMD(BaseCard):
         table_ids = []
         while i < len(card):
             extinp_id = integer(card, i, f'extinp_id{j}')
+            print(extinp_id)
             table_id = integer(card, i+1, f'table_id{j}')
             extinp_ids.append(extinp_id)
             table_ids.append(table_id)
@@ -879,10 +910,11 @@ class MLDCOMD(BaseCard):
         extinps_ref = []
         tables_ref = []
         zona = model.zona
+        msg = f', which is required by MLDCOMD={self.mldcomd_id}\n{str(self)}'
         for extinp_id, tabled_id in zip(self.extinp_ids, self.table_ids):
             extinp = zona.extinp[extinp_id]
             extinp.cross_reference(model, self)
-            tabled = model.tables_d[tabled_id]
+            tabled = model.TableD(tabled_id, msg)
             extinps_ref.append(extinp)
             tables_ref.append(tabled)
         self.extinps_ref = extinps_ref
@@ -906,7 +938,7 @@ class MLDCOMD(BaseCard):
             the fields that define the card
 
         """
-        list_fields = ['MLDCOMD', self.mldcomd_id, None, None, None, None, None, None, ]
+        list_fields = ['MLDCOMD', self.mldcomd_id, None, None, None, None, None, None, None]
         for key, value in zip(self.extinp_ids, self.table_ids):
             list_fields.append(key)
             list_fields.append(value)
@@ -927,8 +959,8 @@ class MLDTIME(BaseCard):
     # _field_map = {
     #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
     # }
-    def __init__(self, mldtime_id, tstart, tend, dt, out_dt,
-                       print_flag, method,
+    def __init__(self, mldtime_id: int, tstart: float, tend: float, dt: float,
+                 out_dt: int, print_flag: int, method: str,
                  comment: str=''):
         BaseCard.__init__(self)
         if comment:
@@ -1117,8 +1149,9 @@ class EXTFILE(BaseCard):
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
         extfile_id = integer(card, 1, 'extfile_id')
-        filename = str(card, 2, 'filename') # not used
-        assert len(card) == 2, f'len(EXTFILE card) = {len(card):d}\ncard={card}'
+        assert len(card) == 3, f'len(EXTFILE card) = {len(card):d}\ncard={card}'
+        filename = card.field(2)
+        assert len(filename) > 0, card
         return EXTFILE(extfile_id, filename, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -1141,6 +1174,6 @@ class EXTFILE(BaseCard):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        msg = f'EXTFILE{self.extfile_id:<8d}{self.filename}'
+        msg = f'EXTFILE{self.extfile_id:<8d}{self.filename}\n'
         card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        return self.comment + msg

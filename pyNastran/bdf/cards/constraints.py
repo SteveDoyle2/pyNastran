@@ -834,7 +834,7 @@ class SPC(Constraint):
         msg = f', which is required by SPC={self.conid:d}'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model: BDF, debug=True):
+    def safe_cross_reference(self, model: BDF, xref_errors, debug: bool=True):
         nids2 = []
         msg = ', which is required by SPC=%s' % self.conid
         for nid in self.node_ids:
@@ -1026,7 +1026,7 @@ class SPCAX(Constraint):
         #self.ringax = model.ring[self.ringax]
         #self.hid = model.harmonic[self.hid]
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -1292,7 +1292,7 @@ class SPCOFF(Constraint):
         msg = ', which is required by SPCOFF'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model: BDF, debug=True):
+    def safe_cross_reference(self, model: BDF, xref_errors, debug: bool=True):
         nids2 = []
         missing_nids = []
         for nid in self.node_ids:
@@ -1554,7 +1554,7 @@ class SPCADD(ConstraintAdd):
         for spc_id in self.sets:
             self.sets_ref.append(model.SPC(spc_id, consider_spcadd=False, msg=msg))
 
-    def safe_cross_reference(self, model: BDF, debug=True):
+    def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
         self.sets_ref = []
         msg = ', which is required by SPCADD=%s' % self.conid
         for spc_id in self.sets:

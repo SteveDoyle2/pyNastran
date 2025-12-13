@@ -327,7 +327,7 @@ class AECOMPL(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         pass
 
     def uncross_reference(self) -> None:
@@ -756,7 +756,7 @@ class AELIST(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         pass
 
     def uncross_reference(self) -> None:
@@ -877,7 +877,7 @@ class AEPARM(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         pass
 
     def uncross_reference(self) -> None:

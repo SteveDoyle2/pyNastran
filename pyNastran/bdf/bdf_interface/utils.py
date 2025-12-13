@@ -135,6 +135,19 @@ def _to_fields_trimfnc(card_lines: list[str]) -> list[str]:
                   line[32:40], line[40:48], line[48:56], line[56:72]]
     return new_fields
 
+def _to_fields_extfile(card_lines: list[str]) -> list[str]:
+    """splits a EXTFILE"""
+    assert len(card_lines) == 1, card_lines
+    line = card_lines[0]
+    assert '\t' not in line, line
+    # if '\t' in line:
+    #     line = expand_tabs(line)
+    new_fields = [line[0:8], line[8:16], line[16:72]]
+    return new_fields
+
+def _to_fields_dollar(card_lines: list[str], card_name: str) -> list[str]:
+    return _to_fields_standard(card_lines, card_name)
+
 def _to_fields_amlreg(card_lines: list[str]) -> list[str]:
     """splits an AMLREG"""
     line1 = card_lines[0]
@@ -341,6 +354,8 @@ def to_fields(card_lines: list[str], card_name: str,
         the lines of the BDF card object
     card_name : str
         the card_name -> 'GRID'
+    allow_tabs : bool; default=True
+        tabs are ok
 
     Returns
     -------
@@ -363,7 +378,6 @@ def to_fields(card_lines: list[str], card_name: str,
         joined_lines = '\n'.join(card_lines)
         if not allow_tabs and '\t' in joined_lines:
             raise RuntimeError(f'There are tabs in:\n{joined_lines}')
-    fields: list[str] = []
 
     if card_name in ['MONPNT1', 'MONDSP1']:
         return _to_fields_mntpnt1(card_lines)
@@ -377,9 +391,17 @@ def to_fields(card_lines: list[str], card_name: str,
         return _to_fields_micpnt(card_lines)
     elif card_name == 'TRIMFNC':
         return _to_fields_trimfnc(card_lines)
+    elif card_name == 'EXTFILE':
+        return _to_fields_extfile(card_lines)
+    elif card_name == 'MKAEROZ':
+        return _to_fields_dollar(card_lines, card_name)
     #elif card_name == 'SET1':
         #return _to_fields_set1(card_lines, card_name)
+    return _to_fields_standard(card_lines, card_name)
 
+
+def _to_fields_standard(card_lines: list[str], card_name: str) -> list[str]:
+    fields: list[str] = []
     # first line
     line = card_lines[0].rstrip()
     if '=' in line:

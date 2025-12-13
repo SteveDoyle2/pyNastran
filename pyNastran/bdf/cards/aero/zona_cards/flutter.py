@@ -7,6 +7,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string,
     string_or_blank, string_multifield_or_blank,
 )
+from .utils import split_filename_dollar
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -66,6 +67,8 @@ class MKAEROZ(BaseCard):
         save = string_or_blank(card, 5, 'SAVE')
         #print(f'card = {card}')
         filename = string_multifield_or_blank(card, (6, 7), 'filename', default='')
+        if filename.startswith('$'):
+            filename = int(filename[1:])
         print_flag = integer_or_blank(card, 8, 'PRINT_FLAG', 0)
         freqs = []
         ifreq = 1
@@ -92,8 +95,7 @@ class MKAEROZ(BaseCard):
           the fields that define the card
 
         """
-        filename_a = self.filename[:8]
-        filename_b = self.filename[8:]
+        filename_a, filename_b = split_filename_dollar(self.filename)
         list_fields = ['MKAEROZ', self.sid, self.mach, self.method, self.flt_id,
                        self.save, filename_a, filename_b, self.print_flag] + self.freqs
         return list_fields
@@ -266,5 +268,4 @@ class FLUTTER_ZONA(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
-
 

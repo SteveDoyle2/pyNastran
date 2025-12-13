@@ -1455,7 +1455,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             save_file_structure=save_file_structure,
             encoding=encoding)
         cards_list, cards_dict, card_count = self.get_bdf_cards(
-            bulk_data_lines, bulk_data_ilines, use_dict=False)
+            bulk_data_lines, bulk_data_ilines)
         assert len(cards_dict) == 0, cards_dict
         # for card in cards_list:
         #     card_name = card[0]
@@ -1603,7 +1603,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'se_bsets', 'se_csets', 'se_qsets',
             'mkaeros', 'monitor_points', 'suport',
         ]
-        zona_cards_to_skip = ['STFLOW', 'TRIMVAR', 'AEROZ', 'TRIMFNC', 'LOADMOD']
+        zona_cards_to_skip = ['STFLOW', 'TRIMVAR', 'AEROZ', 'TRIMFNC', 'LOADMOD', 'EXTFILE']
         zona_slots_to_skip = ['panlsts', 'pafoils', 'attach']
         rslot_to_type_map = self.get_rslot_map()
 
@@ -1879,6 +1879,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                       bulk_data_ilines: Optional[Any]=None,
                       use_dict: bool=True) -> tuple[Any, Any, Any]:
         """Parses the BDF lines into a list of card_lines"""
+        if self._nastran_format == 'zona':
+            cards_list, cards_dict, card_count = self.zona.get_bdf_cards(
+                bulk_data_lines, bulk_data_ilines, use_dict)
+            return cards_list, cards_dict, card_count
+
         #self.log.warning('get_bdf_cards')
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')

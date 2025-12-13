@@ -85,10 +85,7 @@ class DMIL(BaseCard):
             the fields that define the card
 
         """
-        list_fields = [
-            'DMIL', self.mldtime_id, self.tstart, self.tend,
-            self.dt, self.out_dt,
-            self.print_flag, self.method]
+        list_fields = ['DMIL']
         return list_fields
 
     def repr_fields(self):

@@ -230,7 +230,7 @@ class TestAero(unittest.TestCase):
         #model.add_aefact(aefact_mach)
         #model.add_aefact(aefact_delta)
 
-        aecomp1.safe_cross_reference(model)
+        aecomp1.safe_cross_reference(model, None)
         aecomp1.uncross_reference()
 
         aecomp1.cross_reference(model)
@@ -496,7 +496,7 @@ class TestAero(unittest.TestCase):
         aeparm.validate()
         aeparm.cross_reference(None)
         aeparm.uncross_reference()
-        aeparm.safe_cross_reference(None)
+        aeparm.safe_cross_reference(None, None)
         aeparm.write_card()
         save_load_deck(model)
 

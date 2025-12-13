@@ -1015,7 +1015,7 @@ class TRIM(BaseCard):
         #self.aelinks = model.aelinks
         #self.aesurf = model.aesurf
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         pass
 
     def uncross_reference(self) -> None:

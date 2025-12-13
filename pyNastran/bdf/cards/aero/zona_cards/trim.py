@@ -6,7 +6,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
-    string_or_blank, double_or_string, blank,
+    string_or_blank, double_or_string,
     double_string_or_blank,
 )
 from pyNastran.bdf.cards.aero.aero import AELINK
@@ -32,7 +32,7 @@ class TRIM_ZONA(BaseCard):
                  trimobj_id: int, trimcon_id: int,
                  weight: float, cg: list[float], inertia: list[float], true_g: str,
                  nxyz: list[float], pqr_dot: list[float], loadset: Optional[int],
-                 labels: list[int], uxs: list[float],
+                 trimvar_ids: list[int], uxs: list[float],
                  wtmass: float=1.0, comment: str=''):
         """
         Creates a TRIM card for a static aero (144) analysis.
@@ -56,7 +56,7 @@ class TRIM_ZONA(BaseCard):
             TRIMADD bulk data card.  All values of the trim functions
             defined by the TRIMFNC or TRIMADD bulk data card are computed
             and printed out.
-        labels : list[str]
+        trimvar_ids : list[str]
             points to a TRIMVAR
             names of the fixed variables; TODO: why are these integers???
         uxs : list[float]
@@ -90,11 +90,15 @@ class TRIM_ZONA(BaseCard):
         #: The label identifying aerodynamic trim variables defined on an
         #: AESTAT or AESURF entry.
         # points to a TRIMVAR
-        self.labels = labels
+        self.trimvar_ids = trimvar_ids
+        assert len(trimvar_ids) > 0, trimvar_ids
 
         #: The magnitude of the aerodynamic extra point degree-of-freedom.
         #: (Real)
         self.uxs = uxs
+
+        self.mkaeroz_ref = None
+        self.trimvar_refs = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -154,27 +158,31 @@ class TRIM_ZONA(BaseCard):
         pqr_dot = [pdot, qdot, rdot]
         loadset = integer_or_blank(card, 24, 'loadset')
 
-        labels = []
         uxs = []
+        trimvar_ids = []
 
         i = 25
         n = 1
+        print(f'trim_id={sid} ncard={len(card)}')
         while i < len(card):
-            label = integer(card, i, 'label%d' % n)
-            ux = double_or_string(card, i + 1, 'ux%d' % n)
+            trimvar_id = integer(card, i, f'label{n:d}')
+            ux = double_or_string(card, i + 1, f'ux{n:d}')
             if isinstance(ux, str):
                 assert ux == 'FREE', 'ux=%r' % ux
-            #print('  label=%s ux=%s' % (label, ux))
-            labels.append(label)
+            print('  label=%s ux=%s' % (trimvar_id, ux))
+            trimvar_ids.append(trimvar_id)
             uxs.append(ux)
             i += 2
             n += 1
+        print(f'trimvar_ids = {trimvar_ids}')
         assert len(card) >= 25, f'len(TRIM card) = {len(card):d}\ncard={card}'
+        assert len(trimvar_ids) > 0, trimvar_ids
+        assert len(uxs) > 0, uxs
         return TRIM_ZONA(sid, mkaeroz, qinf,
                          trimobj_id, trimcon_id,
                          weight, cg, inertia,
                          true_g, nxyz, pqr_dot, loadset,
-                         labels, uxs, wtmass=wtmass, comment=comment)
+                         trimvar_ids, uxs, wtmass=wtmass, comment=comment)
 
     def validate(self):
         assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
@@ -188,17 +196,145 @@ class TRIM_ZONA(BaseCard):
         assert isinstance(self.pqr_dot[2], float) or self.pqr_dot[2] in ['FREE', 'NONE'], 'rdot=%r' % self.pqr_dot[2]
 
         assert self.q > 0.0, 'q=%s\n%s' % (self.q, str(self))
-        if len(set(self.labels)) != len(self.labels):
-            msg = 'not all labels are unique; labels=%s' % str(self.labels)
+        if len(set(self.trimvar_ids)) != len(self.trimvar_ids):
+            msg = 'not all labels are unique; labels=%s' % str(self.trimvar_ids)
             raise RuntimeError(msg)
-        if len(self.labels) != len(self.uxs):
+        if len(self.trimvar_ids) != len(self.uxs):
             msg = 'nlabels=%s != nux=%s; labels=%s uxs=%s' % (
-                len(self.labels), len(self.uxs), str(self.labels), str(self.uxs))
+                len(self.trimvar_ids), len(self.uxs), str(self.trimvar_ids), str(self.uxs))
             raise RuntimeError(msg)
 
     def cross_reference(self, model: BDF) -> None:
-        self.mkaeroz_ref = model.zona.mkaeroz[self.mkaeroz]
+        zona = model.zona
+        self.mkaeroz_ref = zona.mkaeroz[self.mkaeroz]
 
+        assert self.trimobj_id == 0, self.trimobj_id
+        assert self.trimcon_id == 0, self.trimcon_id
+        weight_unit = '???'
+        mass_unit = '???'
+        length_unit = '???'
+        inertia_unit = '???'
+        aeroz = model.aeros
+        if aeroz is not None:
+            mass_unit = aeroz.fm_mass_unit
+            weight_unit = aeroz.weight_unit
+            length_unit = aeroz.fm_length_unit
+            inertia_unit = f'{mass_unit}*{length_unit}^2'
+
+        msg = (
+            f'trim_id = {self.sid}\n'
+            f'  weight={self.weight:g} ({weight_unit})\n'
+            f'  mass={self.weight*self.wtmass:g} ({mass_unit})\n'
+            f'  cg={self.cg} ({length_unit})\n'
+            f'  inertia={self.inertia} ({inertia_unit})\n'
+            f'  true/g={self.true_g}\n\n'
+            f'  nxyz={self.nxyz}\n'
+            f'  pqr_dot={self.pqr_dot}\n'
+        )
+        free_variables = []
+        fixed_variables = []
+        linked_variables = []
+        state_variables = []
+        for name, nxyzi in zip(('NX', 'NY', 'NZ'), self.nxyz):
+            if isinstance(nxyzi, str):
+                if nxyzi == 'FREE':
+                    msg += f'Trim DOF (Free): {name} = {nxyzi}\n'
+                    free_variables.append(name)
+                elif nxyzi == 'NONE':
+                    msg += f'Trim DOF (N/A): {name} = {nxyzi}\n'
+                    pass
+                else:
+                    raise RuntimeError(f'{name}={nxyzi} is not [FREE, NONE]')
+            elif isinstance(nxyzi, float):
+                msg += f'Trim DOF (Fixed): {name} = {nxyzi}\n'
+                fixed_variables.append(f'{name}={nxyzi}')
+            else:
+                raise RuntimeError(f'{name}={nxyzi!r} is not a valid type; type={type(nxyzi)}')
+
+        for name, pqrdi in zip(('PDOT', 'QDOT', 'RDOT'), self.pqr_dot):
+            # msg += f'Trim DOF: {name} = {pqrdi}\n'
+            if isinstance(pqrdi, str):
+                if pqrdi == 'FREE':
+                    msg += f'Trim DOF (Free): {name} = {pqrdi}\n'
+                    free_variables.append(name)
+                elif pqrdi == 'NONE':
+                    msg += f'Trim DOF (N/A): {name} = {pqrdi}\n'
+                else:
+                    raise RuntimeError(f'{name}={pqrdi!r} is not [FREE, NONE]')
+            elif isinstance(pqrdi, float):
+                msg += f'Trim DOF (Fixed): {name} = {pqrdi}\n'
+                fixed_variables.append(f'{name}={pqrdi}')
+            else:
+                raise RuntimeError(f'{name}={pqrdi!r} is not FREE')
+
+        assert len(self.trimvar_ids)
+        assert len(self.trimvar_ids) == len(self.uxs)
+        trimvar_refs = get_trimvars(model, self.trimvar_ids)
+        assert len(trimvar_refs)
+
+        # print(self.get_stats())
+        aesurfz = [key for key in model.aesurf]
+        aesurfz.sort()
+        set_aesurfz = set(aesurfz)
+        zona_state_vars = {'ALPHA', 'BETA', 'PRATE', 'QRATE', 'RRATE', 'THKCAM'}
+        for trimvar_id, trimvar_ref, ux in zip(self.trimvar_ids, trimvar_refs, self.uxs):
+            # print(trimvar_ref.get_stats())
+            if trimvar_ref is None:
+                free_variables.append('trimvar_id=???')
+                msg += f'Trim Variable: ???={ux} ({trimvar_id})\n'
+                continue
+
+            label = trimvar_ref.label
+            trimlnk_id = trimvar_ref.trimlnk_id
+            if trimlnk_id == 0:
+                linkage = ''
+            else:
+                if trimvar_ref.trimlnk_ref is None:
+                    linkage = f'; linked/missing ({trimlnk_id})'
+                else:
+                    linkage = f'; linked ({trimlnk_id})'
+                linked_variables.append(f'{label}={trimlnk_id}')
+
+            if isinstance(ux, str):
+                if ux == 'FREE':
+                    free_variables.append(label)
+                    msg += f'Trim Variable (Free): {label!r}={ux} ({trimvar_id}){linkage}\n'
+                    if label not in zona_state_vars and label in set_aesurfz:
+                        set_aesurfz.remove(label)
+                elif ux == 'NONE':
+                    msg += f'Trim DOF (N/A): {label!r}={ux} ({trimvar_id}){linkage}\n'
+                else:
+                    raise RuntimeError(f'{label!r}={ux} ({trimvar_id}) is not [FREE, NONE]')
+            elif isinstance(ux, float):
+                msg += f'Trim Variable (State): {label!r}={ux} ({trimvar_id}){linkage}\n'
+                state_variables.append(f'{label}={ux}')
+                if label not in zona_state_vars and label in set_aesurfz:
+                    set_aesurfz.remove(label)
+            else:
+                raise RuntimeError(f'{label!r}={ux} ({trimvar_id}) is not [FREE, NONE]')
+
+        self.trimvar_refs = trimvar_refs
+
+        nfree = len(free_variables)
+        nfixed = len(fixed_variables)
+        nlinked = len(linked_variables)
+        nstate = len(state_variables)
+        nunused_aesurfz = len(set_aesurfz)
+        msg += f'\nSummary:\n'
+        msg += f'  fixed_variables = {fixed_variables}; nfixed={nfixed}\n'
+        msg += f'  free_variables  = {free_variables}; nfree={nfree}\n\n'
+        msg += f'  state_variables = {state_variables}; nstate={nstate}\n'
+        msg += f'  aesurfz = {aesurfz}; n={len(aesurfz)}\n\n'
+        msg += f'  linked_variables = {linked_variables}; nlinked={nlinked}\n'
+        msg += f'  unused_aesurfz = {list(set_aesurfz)}; n={nunused_aesurfz} (should be linked, optimized, or unused)\n'
+        print(msg)
+        assert nfixed == nfree, msg
+        # assert nlinked == nunused_aesurfz, msg
+
+        # ] + self.cg + [self.wtmass, self.weight] + self.inertia + [
+        #     self.true_g] + self.nxyz + self.pqr_dot + [self.loadset]
+
+        # nlabels = len(self.trimvar_ids)
         #self.suport = model.suport
         #self.suport1 = model.suport1
         #self.aestats = model.aestats
@@ -206,7 +342,8 @@ class TRIM_ZONA(BaseCard):
         #self.aesurf = model.aesurf
 
     def safe_cross_reference(self, model: BDF, xref_errors):
-        pass
+        self.cross_reference(model)
+        del xref_errors
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -220,9 +357,10 @@ class TRIM_ZONA(BaseCard):
         labels = []
         uxs = []
         comment = str(self)
-        for label_id, ux in zip(self.labels, self.uxs):
+        assert len(self.trimvar_ids) == len(self.uxs)
+        for trimvar_id, ux in zip(self.trimvar_ids, self.uxs):
             if ux != 'FREE':
-                trimvar = model.zona.trimvar[label_id]
+                trimvar = model.zona.trimvar[trimvar_id]
                 label = trimvar.label
                 assert isinstance(label, str), 'label=%r' % label
                 comment += str(trimvar)
@@ -248,21 +386,15 @@ class TRIM_ZONA(BaseCard):
             the fields that define the card
 
         """
-        mach = 1.0
-        aeqr = 0.0
         list_fields = [
-            'TRIM', self.sid, mach, self.q, self.trimobj_id, self.trimcon_id,
+            'TRIM', self.sid, self.mkaeroz, self.q, self.trimobj_id, self.trimcon_id,
         ] + self.cg + [self.wtmass, self.weight] + self.inertia + [
             self.true_g] + self.nxyz + self.pqr_dot + [self.loadset]
 
-        nlabels = len(self.labels)
-        assert nlabels > 0, self.labels
-        for (i, label, ux) in zip(count(), self.labels, self.uxs):
+        nlabels = len(self.trimvar_ids)
+        assert nlabels > 0, self.trimvar_ids
+        for (i, label, ux) in zip(count(), self.trimvar_ids, self.uxs):
             list_fields += [label, ux]
-            if i == 1:
-                list_fields += [aeqr]
-        if nlabels == 1:
-            list_fields += [None, None, aeqr]
         return list_fields
 
     def repr_fields(self):
@@ -272,9 +404,8 @@ class TRIM_ZONA(BaseCard):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        return ''
-        #card = self.repr_fields()
-        #return self.comment + print_card_8(card)
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
 
 
 class TRIMLNK(BaseCard):
@@ -373,6 +504,7 @@ class TRIMLNK(BaseCard):
 
     def safe_cross_reference(self, model: BDF, xref_errors) -> None:
         self.cross_reference(model)
+        del xref_errors
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -427,7 +559,7 @@ class TRIMVAR(BaseCard):
     type = 'TRIMVAR'
 
     def __init__(self, var_id: int, label: str, lower: float, upper: float,
-                 trimlnk: int, dmi: None, sym: int, initial: None,
+                 trimlnk_id: int, dmi: None, sym: int, initial: None,
                  dcd: float, dcy: float, dcl: float,
                  dcr: float, dcm: float, dcn: float, comment: str=''):
         """
@@ -449,7 +581,7 @@ class TRIMVAR(BaseCard):
         self.label = label
         self.lower = lower
         self.upper = upper
-        self.trimlnk = trimlnk
+        self.trimlnk_id = trimlnk_id
         self.dmi = dmi
         self.sym = sym
         self.initial = initial
@@ -459,6 +591,7 @@ class TRIMVAR(BaseCard):
         self.dcr = dcr
         self.dcm = dcm
         self.dcn = dcn
+        self.trimlnk_ref = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment:  str=''):
@@ -477,7 +610,7 @@ class TRIMVAR(BaseCard):
         label = string(card, 2, 'label')
         lower = double_or_blank(card, 3, 'lower')
         upper = double_or_blank(card, 4, 'upper')
-        trimlnk = integer_or_blank(card, 5, 'TRIMLNK')
+        trimlnk_id = integer_or_blank(card, 5, 'TRIMLNK', default=0)
         dmi = string_or_blank(card, 6, 'DMI', default='')
         sym = string_or_blank(card, 7, 'sym')
         initial = double_or_blank(card, 8, 'initial', default=None)
@@ -487,12 +620,13 @@ class TRIMVAR(BaseCard):
         dcr = double_string_or_blank(card, 12, 'DCR', default='NONE')
         dcm = double_string_or_blank(card, 13, 'DCM', default='NONE')
         dcn = double_string_or_blank(card, 14, 'DCN', default='NONE')
-        return TRIMVAR(var_id, label, lower, upper, trimlnk, dmi, sym,
+        return TRIMVAR(var_id, label, lower, upper, trimlnk_id, dmi, sym,
                        initial, dcd, dcy, dcl, dcr, dcm,
                        dcn, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
-        pass
+        if self.trimlnk_id:
+            self.trimlnk_ref = model.zona.trimlnk[self.trimlnk_id]
         #self.suport = model.suport
         #self.suport1 = model.suport1
         #self.aestats = model.aestats
@@ -500,7 +634,8 @@ class TRIMVAR(BaseCard):
         #self.aesurf = model.aesurf
 
     def safe_cross_reference(self, model: BDF, xref_errors):
-        pass
+        self.cross_reference(model)
+        del xref_errors
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -534,7 +669,7 @@ class TRIMVAR(BaseCard):
 
         """
         list_fields = ['TRIMVAR', self.var_id, self.label, self.lower, self.upper,
-                       self.trimlnk, self.dmi, self.sym, self.initial,
+                       self.trimlnk_id, self.dmi, self.sym, self.initial,
                        self.dcd, self.dcy, self.dcl, self.dcr, self.dcm, self.dcn]
         return list_fields
 
@@ -544,3 +679,14 @@ class TRIMVAR(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+def get_trimvars(model: BDF, trimvar_ids) -> list[TRIMVAR]:
+    trimvar_refs = []
+    for trimvar_id in trimvar_ids:
+        try:
+            trimvar_ref = model.zona.trimvar[trimvar_id]
+        except KeyError as error:
+            trimvar_refs.append(None)
+            continue
+        trimvar_refs.append(trimvar_ref)
+    return trimvar_refs

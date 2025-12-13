@@ -42,7 +42,7 @@ class GLOADS(BaseCard):
     def __init__(self, gloads_id: int, asecont_id: int,
                  flutter_id: int, minstat_id: int,
                  mldstat_id: int, mldcomd_id: int, mldtime_id: int,
-                 mldprint_id: int,
+                 mldprnt_id: int,
                  save_flag: str, form: str, filename: str,
                  save_freq: str, filename_freq: str, comment: str=''):
         BaseCard.__init__(self)
@@ -61,7 +61,7 @@ class GLOADS(BaseCard):
         self.mldstat_id = mldstat_id
         self.mldcomd_id = mldcomd_id
         self.mldtime_id = mldtime_id
-        self.mldprint_id = mldprint_id
+        self.mldprnt_id = mldprnt_id
 
         self.form = form
         self.save_flag = save_flag
@@ -75,7 +75,7 @@ class GLOADS(BaseCard):
         self.mldstat_ref = None
         self.mldcomd_ref = None
         self.mldtime_ref = None
-        self.mldprint_ref = None
+        self.mldprnt_ref = None
         assert form in {'FORMAT', 'FORMAT23', 'UNFORM', ''}, f'form={form!r}'
         assert save_flag in {'SAVE', 'ACQUIRE', ''}, f'save_flag={save_flag!r}'
         assert save_freq in {'SAVE', 'ACQUIRE', ''}, f'save_freq={save_freq!r}'
@@ -106,7 +106,7 @@ class GLOADS(BaseCard):
         mldstat_id = integer_or_blank(card, 5, 'states/mldstat_id', default=0)
         mldcomd_id = integer(card, 6, 'command/dgust/mldcomd_id')
         mldtime_id = integer_or_blank(card, 7, 'time/mldtime_id', default=0)
-        mldprint_id = integer_or_blank(card, 8, 'mldprint_id', default=0)
+        mldprnt_id = integer_or_blank(card, 8, 'mldprnt_id', default=0)
 
         save_flag = string_or_blank(card, 9, 'save_flag', default='')
         form = string_or_blank(card, 10, 'save_flag', default='')
@@ -120,7 +120,7 @@ class GLOADS(BaseCard):
         assert 7 <= len(card) < 14, f'len(GLOADS card) = {len(card):d}\ncard={card}'
         return GLOADS(gloads_id, asecont_id, flutter_id, minstat_id,
                       mldstat_id, mldcomd_id, mldtime_id,
-                      mldprint_id, save_flag, form, filename,
+                      mldprnt_id, save_flag, form, filename,
                       save_freq, filename_freq, comment=comment)
 
     # def validate(self):
@@ -132,7 +132,7 @@ class GLOADS(BaseCard):
             self.asecont_ref = zona.asecont[self.asecont_id]
         if self.flutter_id > 0:
             self.flutter_ref = model.flutters[self.flutter_id]
-        # self.minstat_ref = zona.minstat[self.minstat_id]
+        self.minstat_ref = zona.minstat[self.minstat_id]
 
         if self.mldstat_id > 0:
             self.mldstat_ref = zona.mldstat[self.mldstat_id]
@@ -152,9 +152,9 @@ class GLOADS(BaseCard):
 
         if self.mldcomd_id in zona.mldcomd:
             self.mldcomd_ref = zona.mldcomd[self.mldcomd_id]
-
-        # self.mldtime_ref = zona.mldtime[self.mldtime_id]
-        # self.mldprint_ref = zona.mldprnt[self.mldprint_id]
+        if self.mldtime_id:
+            self.mldtime_ref = zona.mldtime[self.mldtime_id]
+        self.mldprnt_ref = zona.mldprnt[self.mldprnt_id]
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -167,7 +167,7 @@ class GLOADS(BaseCard):
         self.mldstat_ref = None
         self.mldcomd_ref = None
         self.mldtime_ref = None
-        self.mldprint_ref = None
+        self.mldprnt_ref = None
 
     def plot(self, fig: plt.Figure):
         # if self.mldcomd_ref is None:
@@ -200,10 +200,10 @@ class GLOADS(BaseCard):
 
         """
         list_fields = [
-            'MLOADS', self.gloads_id, self.asecont_id,
+            'GLOADS', self.gloads_id, self.asecont_id,
             self.flutter_id, self.minstat_id,
             self.mldstat_id, self.mldcomd_id, self.mldtime_id,
-            self.mldprint_id, self.save_flag, self.form,
+            self.mldprnt_id, self.save_flag, self.form,
             self.filename, self.save_freq, self.filename_freq]
         return list_fields
 

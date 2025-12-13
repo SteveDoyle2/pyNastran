@@ -14,14 +14,16 @@ from typing import TYPE_CHECKING
 from matplotlib import pyplot as plt
 
 from pyNastran.bdf.cards.aero.zona_cards.spline import cross_reference_set
+from pyNastran.bdf.cards.aero.zona_cards.utils import split_filename_dollar
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, string,
-    string_or_blank, double,
-    integer_or_string, integer_string_or_blank,
+    string_or_blank,
+    integer_string_or_blank,
     string_multifield, parse_components as fcomponent
+,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -74,7 +76,7 @@ class MLOADS(BaseCard):
     def __init__(self, mloads_id: int, asecont_id: int,
                  flutter_id: int, minstat_id: int,
                  mldstat_id: int, mldcomd_id: int, mldtime_id: int,
-                 mldprint_id: int,
+                 mldprnt_id: int,
                  fmax: float, save_freq: str, filename: str,
                  df: float=0.01, comment: str=''):
         BaseCard.__init__(self)
@@ -90,7 +92,7 @@ class MLOADS(BaseCard):
         self.mldstat_id = mldstat_id
         self.mldcomd_id = mldcomd_id
         self.mldtime_id = mldtime_id
-        self.mldprint_id = mldprint_id
+        self.mldprnt_id = mldprnt_id
 
         self.df = df
         self.fmax = fmax
@@ -103,7 +105,7 @@ class MLOADS(BaseCard):
         self.mldstat_ref = None
         self.mldcomd_ref = None
         self.mldtime_ref = None
-        self.mldprint_ref = None
+        self.mldprnt_ref = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -128,7 +130,7 @@ class MLOADS(BaseCard):
         mldstat_id = integer_or_blank(card, 5, 'states/mldstat_id', default=0)
         mldcomd_id = integer(card, 6, 'command/mldcomd_id')
         mldtime_id = integer(card, 7, 'time/mldtime_id')
-        mldprint_id = integer_or_blank(card, 8, 'mldprint_id', default=0)
+        mldprnt_id = integer_or_blank(card, 8, 'mldprnt_id', default=0)
 
         fmax = double_or_blank(card, 9, 'fmax', default=None)
         df = double_or_blank(card, 10, 'df', default=0.01)
@@ -141,24 +143,26 @@ class MLOADS(BaseCard):
         assert 7 <= len(card) < 14, f'len(MLOADS card) = {len(card):d}\ncard={card}'
         return MLOADS(mloads_id, asecont_id, flutter_id, minstat_id,
                       mldstat_id, mldcomd_id, mldtime_id,
-                      mldprint_id, fmax, save_freq, filename, df=df, comment=comment)
+                      mldprnt_id, fmax, save_freq, filename, df=df, comment=comment)
 
     # def validate(self):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
 
     def cross_reference(self, model: BDF) -> None:
-        zona = model.zona
+        # zona = model.zona
+        msg = f', which is required by MLOADS={self.mloads_id}\n{str(self)}'
         if self.asecont_id > 0:
-            self.asecont_ref = zona.asecont[self.asecont_id]
+            self.asecont_ref = get_zona_obj(model, self.asecont_id, 'asecont', msg)
         if self.flutter_id > 0:
-            self.flutter_ref = model.flutters[self.flutter_id]
-        # self.minstat_ref = zona.minstat[self.minstat_id]
+            self.flutter_ref = model.Flutter(self.flutter_id, msg)
+        if self.minstat_id > 0:
+            self.minstat_ref = get_zona_obj(model, self.minstat_id, 'minstat', msg)
 
         if self.mldstat_id > 0:
-            self.mldstat_ref = zona.mldstat[self.mldstat_id]
-        self.mldcomd_ref = zona.mldcomd[self.mldcomd_id]
-        # self.mldtime_ref = zona.mldtime[self.mldtime_id]
-        # self.mldprint_ref = zona.mldprnt[self.mldprint_id]
+            self.mldstat_ref = get_zona_obj(model, self.mldstat_id, 'mldstat', msg)
+        self.mldcomd_ref = get_zona_obj(model, self.mldcomd_id, 'mldcomd', msg)
+        self.mldtime_ref = get_zona_obj(model, self.mldtime_id, 'mldtime', msg)
+        self.mldprnt_ref = get_zona_obj(model, self.mldprnt_id, 'mldprnt', msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -171,7 +175,7 @@ class MLOADS(BaseCard):
         self.mldstat_ref = None
         self.mldcomd_ref = None
         self.mldtime_ref = None
-        self.mldprint_ref = None
+        self.mldprnt_ref = None
 
     def plot(self, fig: plt.Figure):
         # if self.mldcomd_ref is None:
@@ -203,12 +207,13 @@ class MLOADS(BaseCard):
             the fields that define the card
 
         """
+        filenamea, filenameb = split_filename_dollar(self.filename)
         list_fields = [
             'MLOADS', self.mloads_id, self.asecont_id,
             self.flutter_id, self.minstat_id,
             self.mldstat_id, self.mldcomd_id, self.mldtime_id,
-            self.mldprint_id, self.fmax, self.df, self.save_freq,
-            self.filename]
+            self.mldprnt_id, self.fmax, self.df, self.save_freq,
+            filenamea, filenameb]
         return list_fields
 
     def repr_fields(self):
@@ -218,6 +223,7 @@ class MLOADS(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
 
 
 class EXTINP(BaseCard):
@@ -256,7 +262,7 @@ class EXTINP(BaseCard):
         # EXTINP ID  TYPE ITFID CI LABEL
         # EXTINP 100      400   1  PILOT
         extinp_id = integer(card, 1, 'extinp_id')
-        input_type = string_or_blank(card, 2, 'input_type', default='')
+        input_type = card.field(2) if card.field(2) else ''  # unused
         itf_id = integer(card, 3, 'asecont_id')
         itf_component = integer(card, 4, 'itf_component')
         assert itf_component in {1, 2, 3, 4, 5, 6}, itf_component
@@ -599,7 +605,7 @@ class TRIMFNC(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = f'TRIMFNC {self.trimfnc_id:<8d}{self.fcn_type:<8s}{self.label:<8s}'\
               f'{self.rhs_flag:<8s}{str(self.is_set):<8s}{str(self.ia_set):<8s}{self.remark}\n'
-        card = self.repr_fields()
+        # card = self.repr_fields()
         # return self.comment + print_card_8(card)
         return self.comment + msg
 
@@ -853,3 +859,16 @@ def get_external_obj(obj: EXTINP | EXTOUT, model: BDF,
         else:
             raise RuntimeError(msg)
     return itf_ref
+
+
+def get_zona_obj(model: BDF, idi: int, attr_name: str, msg='') -> ASECONT:
+    card_name = attr_name.upper()
+    objs = getattr(model.zona, attr_name)
+    try:
+        ref_obj = objs[idi]
+    except KeyError:
+        ids = list(objs)
+        ids.sort()
+        model.log.warning(f'cannot find {card_name}={idi}{msg}; ids={ids}')
+        ref_obj = None
+    return ref_obj
