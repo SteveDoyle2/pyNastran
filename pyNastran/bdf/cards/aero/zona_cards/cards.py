@@ -12,7 +12,7 @@ from pyNastran.bdf.field_writer_8 import (
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
-    string_or_blank, double_or_string, blank,
+    string_or_blank, integer_or_string, blank,
     integer_string_or_blank, string_multifield_or_blank,
 )
 from pyNastran.bdf.cards.aero.aero import AELINK
@@ -542,18 +542,27 @@ class MLDPRNT(BaseCard):
     #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
     # }
 
-    def __init__(self, mldprnt_id: int, input_type: int,
-                 itf_id: int, itf_component: int,
-                 label: str, comment: str=''):
+    def __init__(self, mldprnt_id: int, filename: str,
+                 form: str,
+                 tspnt: float, tepnt: float,
+                 labels: list[str], ikeys: list[int],
+                 psd_time: str='TIME', sof='NO', comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
 
         self.mldprnt_id = mldprnt_id
-        self.input_type = input_type
-        self.itf_id = itf_id
-        self.itf_component = itf_component
-        self.label = label
+        self.filename = filename
+        self.form = form
+        self.psd_time = psd_time
+        self.tspnt = tspnt
+        self.tepnt = tepnt
+        self.sof = sof
+        self.labels = labels
+        self.ikeys = ikeys
+        assert form in {'TABLE', 'IDEAS', 'FEMAP', 'ESA'}, f'form={form!r}'
+        assert psd_time in {'PSD', 'TIME'}, f'psd_time={psd_time!r}'
+        assert sof in {'YES', 'NO', 'RFA'}, f'sof={sof!r}'
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -568,16 +577,35 @@ class MLDPRNT(BaseCard):
             a comment for the card
 
         """
-        # EXTINP ID  TYPE ITFID CI LABEL
-        # EXTINP 100      400   1  PILOT
-        extinp_id = integer(card, 1, 'extinp_id')
-        input_type = string_or_blank(card, 2, 'input_type', default='')
-        itf_id = integer(card, 3, 'asecont_id')
-        itf_component = integer(card, 4, 'itf_component')
-        assert itf_component in {1, 2, 3, 4, 5, 6}, itf_component
-        label = string(card, 5, 'label')
-        assert len(card) == 6, f'len(EXTINP card) = {len(card):d}\ncard={card}'
-        return MLDPRNT(extinp_id, input_type, itf_id, itf_component, label, comment=comment)
+        # MLDPRNT IDPRNT  ---FILENM---- FORM    PSD    TSPNT TEPNT SOF
+        #         LABEL1  IKEY1  LABEL2 IKEY2
+        # MLDPRNT 10      HA144MLD.PLT  TABLE                      YES
+        #         STATE   X      MODALX 1       EXTOUT 100
+        mldprnt_id = integer(card, 1, 'mldprnt_id')
+        filename = string_multifield_or_blank(card, (2, 3), 'filename', default='')
+        form = string_or_blank(card, 4, 'form', default='TABLE')
+        psd_time = string_or_blank(card, 5, 'psd/time', default='TIME')
+        tspnt = double_or_blank(card, 6, 'TSPNT')
+        tepnt = double_or_blank(card, 7, 'TEPNT')
+        sof = string_or_blank(card, 8, 'SOF', default='NO')
+
+        nfields_left = len(card) - 9
+        assert nfields_left % 2 == 0, nfields_left
+        assert nfields_left // 2 > 0, nfields_left
+
+        labels = []
+        ikeys = []
+        j = 1
+        for ifield in range(9, len(card), 2):
+            label = string(card, ifield, f'label{j}')
+            ikey = integer_or_string(card, ifield+1, f'ikey{j}')
+            labels.append(label)
+            ikeys.append(ikey)
+            j += 1
+        assert len(card) > 9, f'len(MLDPRNT card) = {len(card):d}\ncard={card}'
+        return MLDPRNT(mldprnt_id, filename, form,
+                       tspnt, tepnt, labels, ikeys,
+                       psd_time=psd_time, sof=sof, comment=comment)
 
     # def validate(self):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
@@ -602,8 +630,13 @@ class MLDPRNT(BaseCard):
             the fields that define the card
 
         """
-        list_fields = ['EXTINP', self.extinp_id, self.input_type,
-                       self.itf_id, self.itf_component, self.label]
+        filenamea, filenameb = split_filename_dollar(self.filename)
+        list_fields = [
+            'MLDPRNT', self.mldprnt_id, filenamea, filenameb,
+            self.form, self.psd_time, self.tspnt, self.tepnt, self.sof]
+        for label, ikey in zip(self.labels, self.ikeys):
+            list_fields.append(label)
+            list_fields.append(ikey)
         return list_fields
 
     def repr_fields(self):
@@ -694,7 +727,8 @@ class MLDSTAT(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         msg = f', which is required by MLDSTAT={self.mldstat_id}\n{str(self)}'
-        self.mldtrim_ref = model.Trim(self.mldtrim_id, msg)
+        if self.mldtrim_id:
+            self.mldtrim_ref = model.Trim(self.mldtrim_id, msg)
         if self.state_space_arr:
             self.ssa_ref = model.dmi[self.state_space_arr]
         if self.state_space_arr:

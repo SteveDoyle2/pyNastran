@@ -141,8 +141,11 @@ class AddMethods:
 
     def add_mldprnt_object(self, mldprnt: MLDPRNT) -> None:
         """adds an MLDPRNT object"""
-        key = mldprnt.mldtime_id
-        assert key not in self.model.zona.mldtime, key
+        key = mldprnt.mldprnt_id
+        if key in self.model.zona.mldprnt:
+            self.model.log.warning(f'skipping MLDPRNT\n{str(mldprnt)}')
+            return
+        assert key not in self.model.zona.mldprnt, key
         assert key > 0, key
         self.model.zona.mldprnt[key] = mldprnt
         self.model._type_to_id_map[mldprnt.type].append(key)
@@ -1078,7 +1081,8 @@ class ZONA:
 
         if card_lines:
             if not allow_tabs and '\t' in (joined_lines_n := '\n'.join(card_lines)):
-                raise RuntimeError(f'There are tabs in:\n{joined_lines_n}')
+                log.error(f'There are tabs in:\n{joined_lines_n}')
+                # raise RuntimeError(f'There are tabs in:\n{joined_lines_n}')
 
             if model.echo and not model.force_echo_off:
                 model.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))

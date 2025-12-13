@@ -4,7 +4,7 @@ def split_filename_dollar(filename: int | str) -> tuple[str, str]:
     else:
         assert isinstance(filename, int)
         filename = f'${filename:d}'
-    assert len(filename) < 16, filename
+    assert len(filename) <= 16, f'filename={filename!r}, n={len(filename)}'
     filename_a = filename[:8]
     filename_b = filename[8:]
     return filename_a, filename_b

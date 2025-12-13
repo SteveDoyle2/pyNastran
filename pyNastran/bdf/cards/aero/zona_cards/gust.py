@@ -132,7 +132,8 @@ class GLOADS(BaseCard):
             self.asecont_ref = zona.asecont[self.asecont_id]
         if self.flutter_id > 0:
             self.flutter_ref = model.flutters[self.flutter_id]
-        self.minstat_ref = zona.minstat[self.minstat_id]
+        if self.minstat_id:
+            self.minstat_ref = zona.minstat[abs(self.minstat_id)]
 
         if self.mldstat_id > 0:
             self.mldstat_ref = zona.mldstat[self.mldstat_id]
