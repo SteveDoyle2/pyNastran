@@ -16,7 +16,7 @@ from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.bdf_interface.write_mesh_utils import (
     find_aero_location, write_dict, get_properties_by_element_type)
 from pyNastran.bdf.cards.nodes import write_xpoints
-
+from pyNastran.bdf.bdf_interface.utils import sorteddict
 try:
     from natsort import natsorted
 except ModuleNotFoundError:
@@ -1564,9 +1564,3 @@ def write_optimization_include(model: BDF, pch_include_filename: PathLike,
         for desvar in desvars:
             pch_file.write(desvar.write_card(size=size))
     return
-
-
-def sorteddict(mydict, sort_cards):
-    if sort_cards:
-        return sorted(mydict.items())
-    return mydict.items()

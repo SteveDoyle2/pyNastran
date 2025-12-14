@@ -503,8 +503,8 @@ class ATTACH(BaseCard):
         attach_id = integer(card, 1, 'attach_id')
         model = integer_string_or_blank(card, 2, 'model', default='NONE') # not used
         if isinstance(model, integer_types):
-            setk = model
-            model = 'NONE'
+            setk = integer(card, 3, 'setk')
+            # model = 'NONE'
             refgrid = integer(card, 3, 'refgrid')
         else:
             setk = integer(card, 3, 'setk')  # PANLST1/2/3

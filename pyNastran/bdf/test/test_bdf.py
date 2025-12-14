@@ -2577,6 +2577,7 @@ def main(argv=None):
     skip_cards = data['skip_cards']
     skip_cards_list = [] if skip_cards is None else skip_cards.split(',')
     save_file_structure = data['ifile']
+    sort_cards = not data['nosort']
 
     is_double = False
     if data['double']:
@@ -2627,6 +2628,7 @@ def main(argv=None):
 
             is_lax_parser=data['lax'],
             allow_duplicates=data['duplicate'],
+            sort_cards=sort_cards,
             stop=data['stop'],
             quiet=data['quiet'],
             dumplines=data['dumplines'],
@@ -2686,6 +2688,7 @@ def main(argv=None):
 
             is_lax_parser=data['lax'],
             allow_duplicates=data['duplicate'],
+            sort_cards=sort_cards,
             stop=data['stop'],
             quiet=data['quiet'],
             dumplines=data['dumplines'],

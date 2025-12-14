@@ -8,6 +8,7 @@ import numpy as np
 from pyNastran.utils import object_attributes, object_methods
 
 from typing import Any
+from pyNastran.bdf.bdf_interface.utils import sorteddict
 from pyNastran.bdf.bdf_interface.utils import _prep_comment
 from pyNastran.bdf.bdf_interface.pybdf import _clean_comment
 
@@ -49,6 +50,9 @@ ZONA_CARDS = [
     # atmosphere
     'FIXHATM', 'FIXMATM',  # flutter table
     'ATMOS',
+
+    # already added
+    'AEFACT', 'CORD2R',
 
     # geometry
     'CAERO7', 'AEROZ', 'AESURFZ', 'AESLINK',

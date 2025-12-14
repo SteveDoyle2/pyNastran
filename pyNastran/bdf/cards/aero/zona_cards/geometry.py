@@ -1424,7 +1424,8 @@ class CAERO7(BaseCard):
                  nspan: int=0, nchord: int=0, lspan: int=0,
                  p_airfoil: Optional[int]=None,
                  ztaic: Optional[int]=None,
-                 lchord_tip=0, attach_tip=0, achord_tip=0,
+                 lchord_root: int=0, attach_root: int=0, achord_root: int=0,
+                 lchord_tip: int=0, attach_tip: int=0, achord_tip: int=0,
                  comment: str=''):
         """
         Defines a CAERO1 card, which defines a simplified lifting surface
@@ -1494,6 +1495,10 @@ class CAERO7(BaseCard):
         self.p4 = p4
         self.x43 = x43
         self.ztaic = ztaic
+
+        self.lchord_root = lchord_root
+        self.attach_root = attach_root
+        self.achord_root = achord_root
 
         self.lchord_tip = lchord_tip
         self.attach_tip = attach_tip
@@ -1570,9 +1575,9 @@ class CAERO7(BaseCard):
         z1 = double_or_blank(card, 11, 'z1', default=0.0)
         p1 = np.array([x1, y1, z1])
         x12 = double_or_blank(card, 12, 'x12', default=0.)
-        unused_lchord_root = integer_or_blank(card, 13, 'lchord_root')
-        unused_attach_root = integer_or_blank(card, 14, 'attach_root')
-        unused_achord_root = integer_or_blank(card, 15, 'achord_root')
+        lchord_root = integer_or_blank(card, 13, 'lchord_root')
+        attach_root = integer_or_blank(card, 14, 'attach_root')
+        achord_root = integer_or_blank(card, 15, 'achord_root')
 
         x4 = double_or_blank(card, 17, 'x4', default=0.0)
         y4 = double_or_blank(card, 18, 'y4', default=0.0)
@@ -1588,6 +1593,7 @@ class CAERO7(BaseCard):
         return CAERO7(eid, name, p1, x12, p4, x43,
                       cp=cp, nspan=nspan, nchord=nchord, lspan=lspan,
                       p_airfoil=p_airfoil, ztaic=ztaic,
+                      lchord_root=lchord_root, attach_root=attach_root, achord_root=achord_root,
                       lchord_tip=lchord_tip, attach_tip=attach_tip, achord_tip=achord_tip,
                       comment=comment)
 
@@ -1957,7 +1963,7 @@ class CAERO7(BaseCard):
                 point_name = f'p{pid}'
                 ax.annotate(point_name, point, ha='center')
 
-    def get_LSpan(self):
+    def get_LSpan(self) -> int:
         if self.lspan_ref is not None:
             return self.lspan_ref.sid
         return self.lspan
@@ -1979,8 +1985,8 @@ class CAERO7(BaseCard):
         list_fields = (
             ['CAERO7', self.eid, self.label, cp, nspan, nchord, lspan, self.ztaic,
              self.p_airfoil,] +
-            list(self.p1) + [self.x12, None, None, None, None] +
-            list(self.p4) + [self.x43, None, None, None, None])
+            list(self.p1) + [self.x12, self.lchord_root, self.attach_root, self.achord_root, None] +
+            list(self.p4) + [self.x43, self.lchord_tip, self.attach_tip, self.achord_tip, None])
         return list_fields
 
     def repr_fields(self):

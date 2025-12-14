@@ -757,3 +757,9 @@ def _prep_comment(comment: str) -> str:
     # sline = [comment[1:] if len(comment) and comment[0] == ' ' else comment
     #          for comment in comment.rstrip().split('\n')]
     # print('sline = ', sline)
+
+
+def sorteddict(mydict, sort_cards):
+    if sort_cards:
+        return sorted(mydict.items())
+    return mydict.items()
