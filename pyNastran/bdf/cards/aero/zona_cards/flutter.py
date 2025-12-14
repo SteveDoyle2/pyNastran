@@ -85,6 +85,9 @@ class MKAEROZ(BaseCard):
     def safe_cross_reference(self, model: BDF, xref_errors) -> None:
         self.cross_reference(model)
 
+    def uncross_reference(self) -> None:
+        return
+
     def repr_fields(self):
         """
         Gets the fields in their simplified form
@@ -268,4 +271,3 @@ class FLUTTER_ZONA(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
-

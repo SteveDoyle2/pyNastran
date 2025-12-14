@@ -759,7 +759,7 @@ def _prep_comment(comment: str) -> str:
     # print('sline = ', sline)
 
 
-def sorteddict(mydict, sort_cards):
+def sorteddict(mydict: dict, sort_cards: bool):
     if sort_cards:
         return sorted(mydict.items())
     return mydict.items()

@@ -36,19 +36,23 @@ class ATMOS(BaseCard):
     #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
     # }
 
-    def __init__(self, atm_id: int, mass_unit: str, length_unit,
+    def __init__(self, atmos_id: int,
+                 mass_unit: str,
+                 length_unit: str,
+                 temperature_unit: str,
                  atmosphere_table: list[float], comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
 
-        self.atm_id = atm_id
+        self.atmos_id = atmos_id
         self.mass_unit = mass_unit
         self.length_unit = length_unit
+        self.temperature_unit = temperature_unit
         self.atmosphere_table = atmosphere_table
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment: str = ''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a ATMOS card from ``BDF.add_card(...)``
 
@@ -65,31 +69,25 @@ class ATMOS(BaseCard):
         #       ALTi  SOUNDi  DENi    TEMPi -etc-
         # FIXMATM 100     10    12    slug ft 1.0 -1 +FIX1
         #         -10000. 0. 10000. 20000. 30000.
-        atm_id = integer(card, 1, 'atm_id')
+        atmos_id = integer(card, 1, 'atmos_id')
         mass_unit = string(card, 2, 'mass_unit')
         length_unit = string(card, 3, 'length_unit')
         temperature_unit = string(card, 3, 'temperature_unit')
 
         atmosphere_table = []
-        j = 0
-        for ifield in range(9, len(card)):
-            k = j // 4
-            if j % 4 == 0:
-                name = 'alt'
-            elif j % 4 == 1:
-                name = 'sound'
-            elif j % 4 == 2:
-                name = 'density'
-            else:
-                name = 'temperature'
-            value = integer(card, ifield, f'{name}{k+1}')
-            atmosphere_table.append(value)
+        j = 1
+        for ifield in range(9, len(card), 4):
+            alt = double(card, ifield, f'alt{j+1}')
+            sos = double(card, ifield+1, f'sound{j+1}')
+            rho = double(card, ifield+2, f'density{j+1}')
+            temp = double(card, ifield+3, f'temperature{j+1}')
+            atmosphere_table.extend([alt, sos, rho, temp])
             j += 1
         assert len(atmosphere_table) % 4 == 0
         assert len(atmosphere_table) // 4 > 0
         assert len(card) > 8, f'len(FIXEMATM card) = {len(card):d}\ncard={card}'
-        return ATMOS(atm_id, mass_unit,
-                     length_unit, atmosphere_table, comment=comment)
+        return ATMOS(atmos_id, mass_unit, length_unit,
+                     temperature_unit, atmosphere_table, comment=comment)
 
     # def validate(self):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
@@ -124,7 +122,8 @@ class ATMOS(BaseCard):
 
         """
         list_fields = [
-            'ATMOS', self.atm_id, self.mass_unit, self.length_unit,
+            'ATMOS', self.atmos_id, self.mass_unit, self.length_unit, self.temperature_unit,
+            None, None, None, None,
         ] + self.atmosphere_table
         return list_fields
 
@@ -144,8 +143,10 @@ class FIXHATM(BaseCard):
     #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
     # }
 
-    def __init__(self, sid, alt: float, atm_id, mass_unit,
-                 length_unit, vref, fluttf_id, print_flag, mkaeroz_ids, comment: str=''):
+    def __init__(self, sid: int, alt: float, atm_id: int,
+                 mass_unit: str, length_unit: str, vref: float,
+                 fluttf_id: int, print_flag: int, mkaeroz_ids: list[int],
+                 comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -159,7 +160,7 @@ class FIXHATM(BaseCard):
         self.fluttf_id = fluttf_id
         self.print_flag = print_flag
         self.alt = alt
-        self.atm_ref = None
+        self.atmos_ref = None
         self.mkaerozs_ref = None
 
     @classmethod
@@ -188,8 +189,8 @@ class FIXHATM(BaseCard):
         fluttf_id = integer_or_blank(card, 7, 'fluttf_id', default=0)
         print_flag = integer(card, 8, 'print_flag')
 
-        mkaeroz_ids = []
         j = 1
+        mkaeroz_ids = []
         for ifield in range(9, len(card)):
             mkaeoz_id = integer(card, ifield, f'mkaeoz_id{j}')
             mkaeroz_ids.append(mkaeoz_id)
@@ -203,7 +204,7 @@ class FIXHATM(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         if self.atm_id:
-            self.atm_ref = model.zona.atm[self.atm_id]
+            self.atmos_ref = model.zona.atmos[self.atm_id]
         mkaerozs_ref = []
         for mkaeroz_id in self.mkaeroz_ids:
             mkaeroz_ref = model.zona.mkaeroz[mkaeroz_id]
@@ -215,7 +216,8 @@ class FIXHATM(BaseCard):
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
-        pass
+        self.atmos_ref = None
+        self.mkaerozs_ref = None
 
     def plot(self, fig: plt.Figure):
         ntables = 1
@@ -273,12 +275,12 @@ class FIXMATM(BaseCard):
         self.fluttf_id = fluttf_id
         self.print_flag = print_flag
         self.alts = alts
-        self.atm_ref = None
+        self.atmos_ref = None
         self.mkaeroz_ref = None
         assert isinstance(mkaeroz_id, integer_types), self.get_stats()
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment: str = ''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FIXMATM card from ``BDF.add_card(...)``
 
@@ -319,7 +321,7 @@ class FIXMATM(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         if self.atm_id:
-            self.atm_ref = model.zona.atm[self.atm_id]
+            self.atmos_ref = model.zona.atmos[self.atm_id]
         assert isinstance(self.mkaeroz_id, integer_types), self.get_stats()
         self.mkaeroz_ref = model.zona.mkaeroz[self.mkaeroz_id]
 
@@ -328,7 +330,8 @@ class FIXMATM(BaseCard):
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
-        pass
+        self.atmos_ref = None
+        self.mkaeroz_ref = None
 
     def plot(self, fig: plt.Figure):
         ntables = 1

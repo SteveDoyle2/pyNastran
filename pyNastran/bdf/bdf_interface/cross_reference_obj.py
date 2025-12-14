@@ -217,14 +217,12 @@ class CrossReference:
         model = self.model
         model.log
         model.zona.cross_reference()
+
         for caero in model.caeros.values():
             caero.cross_reference(model)
 
         for paero in model.paeros.values():
             paero.cross_reference(model)
-
-        for trim in model.trims.values():
-            trim.cross_reference(model)
 
         for csschd in model.csschds.values():
             csschd.cross_reference(model)
@@ -264,6 +262,9 @@ class CrossReference:
             model.aero.cross_reference(model)
         if model.aeros:
             model.aeros.cross_reference(model)
+
+        for trim in model.trims.values():
+            trim.cross_reference(model)
 
         if len(model.caeros) and 'WKK' in model.dmi:
             check_caero_element_ids = True

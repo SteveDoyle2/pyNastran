@@ -4,7 +4,6 @@ from typing import Optional, Any, TYPE_CHECKING
 
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, string,
@@ -105,6 +104,9 @@ class PANLST1(Spline):
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
+    def uncross_reference(self) -> None:
+        self.caero_ref = None
+
     def raw_fields(self):
         list_fields = ['PANLST1', self.eid, self.macro_id, self.box1, self.box2]
         return list_fields
@@ -200,10 +202,14 @@ class PANLST2(Spline):
         self.caero_ref = model.CAero(self.macro_id, msg=msg)
         if 'THRU' in self.boxs:
             box1, thru, box2 = self.boxs
-            boxs = np.arange(box1, box2)
+            # +1 leads to [box1, box2] instead of [box1, box2)
+            boxs = np.arange(box1, box2+1)
         else:
             boxs = np.asarray(self.boxs, dtype='int32')
         self.aero_element_ids = boxs
+
+    def uncross_reference(self) -> None:
+        self.caero_ref = None
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -294,7 +300,19 @@ class PANLST3(Spline):
         caero_refs = []
         aero_element_ids = []
         for caero_label in self.panel_groups:
-            caero_eid = model.zona.caero_to_name_map[caero_label]
+            try:
+                caero_eid = model.zona.caero_to_name_map[caero_label]
+            except KeyError:
+                keys = list(model.zona.caero_to_name_map)
+                keys.sort()
+                caero_labels = [caero.label for caero in model.caeros.values()]
+                caero_labels.sort()
+                msg = (
+                    f'PANLST3 eid={self.eid}: Missing label={caero_label!r}\n'
+                    f' - keys        ={keys}\n'
+                    f' - caero_labels={caero_labels}'
+                )
+                raise RuntimeError(msg)
             caero_ref = model.CAero(caero_eid, msg=msg)
             caero_refs.append(caero_ref)
             eid = caero_ref.eid
@@ -310,6 +328,10 @@ class PANLST3(Spline):
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        self.caero_refs = None
+        # self.aero_element_ids = aero_element_ids
 
     def raw_fields(self):
         list_fields = ['PANLST3', self.eid] + self.panel_groups
@@ -359,9 +381,6 @@ class PAFOIL7(BaseCard):
             Identification number of an AEFACT bulk data card used to
             specify the half thickness of the airfoil at the wing
             root/tip.
-        i_camber : int; default=0
-            Identification number of an AEFACT bulk data card used to
-            specify the camber of the airfoil at the wing root.
         le_radius_root / le_radius_root: float
             Leading edge radius at the root/tip normalized by the
             root/tip chord.
@@ -925,6 +944,8 @@ class BODY7(BaseCard):
     @property
     def npanels(self) -> int:
         """gets the number of panels for the body"""
+        if self.segmesh_refs is None:
+            raise RuntimeError('xref the BODY7')
         nz = len(self.segmesh_refs)
         unused_segmesh = self.segmesh_refs[0]
         nthetas = self._get_nthetas()
@@ -2012,6 +2033,134 @@ class CAERO7(BaseCard):
             list(self.p1) + [self.x12, None, None, None, None] +
             list(self.p4) + [self.x43, None, None, None, None])
         return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class PAFOIL8(BaseCard):
+    """
+
+    +---------+----+------+------+-------+------+------+-------+------+
+    |   1     |  2 |   3  |  4   |   5   |   6  |   7  |   8   |  9   |
+    +=========+====+======+======+=======+======+======+=======+======+
+    | PAFOIL7 | ID | ITAX | ITHR | ICAMR | RADR | ITHT | ICAMT | RADT |
+    +---------+----+------+------+-------+------+------+-------+------+
+    | PAFOIL7 |  1 | -201 |  202 |  203  |  0.1 |  211 |  212  |  0.1 |
+    +---------+----+------+------+-------+------+------+-------+------+
+
+    """
+    type = 'PAFOIL8'
+
+    def __init__(self, pid: int, i_axial: int,
+                 i_thickness_root: int, i_camber_root: int, le_radius_root: float,
+                 i_thickness_tip: int, comment: str=''):
+        """
+        Defines a BODY7 card, which defines a slender body
+        (e.g., fuselage/wingtip tank).
+
+        Parameters
+        ----------
+        pid : int
+            PAFOIL8 identification number.
+        comment : str; default=''
+            a comment for the card
+
+        """
+        BaseCard.__init__(self)
+
+        if comment:
+            self.comment = comment
+
+        self.pid = pid
+        self.i_axial = i_axial
+
+        self.i_thickness_root = i_thickness_root
+        self.i_camber_root = i_camber_root
+        self.le_radius_root = le_radius_root
+        self.i_thickness_tip = i_thickness_tip
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a PAFOIL8 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+
+        # card = ['PAFOIL8', '4001',
+        #         '1.0', '4002',
+        #         '1.0', '4002', '0']
+        pid = integer(card, 1, 'pid')
+
+        i_axial = double(card, 2, 'i_axial')
+        i_thickness_root = integer(card, 3, 'i_thickness_root')
+        i_camber_root = double(card, 4, 'i_camber_root')
+        le_radius_root = integer(card, 5, 'le_radius_root')
+        i_thickness_tip = integer(card, 6, 'i_thickness_tip')
+
+        assert len(card) == 7, f'len(PAFOIL8 card) = {len(card):d}\ncard={card}'
+        return PAFOIL8(pid, i_axial,
+                       i_thickness_root, i_camber_root, le_radius_root,
+                       i_thickness_tip, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by PAFOIL8 pid=%s' % self.pid
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+
+    def convert_to_nastran(self, model):
+        raise NotImplementedError('PAFOIL8: convert_to_nastran')
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : list
+            The fields that define the card
+
+        """
+        list_fields = [
+            'PAFOIL8', self.pid, self.i_axial,
+            self.i_thickness_root, self.i_camber_root, self.le_radius_root,
+            self.i_thickness_tip,
+        ]
+        return list_fields
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : list
+            The fields that define the card
+
+        """
+        return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()

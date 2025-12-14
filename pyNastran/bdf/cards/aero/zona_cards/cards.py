@@ -519,6 +519,9 @@ class ATTACH(BaseCard):
     def safe_cross_reference(self, model: BDF, xref_errors) -> None:
         self.cross_reference(model)
 
+    def uncross_reference(self) -> None:
+        return
+
     def repr_fields(self):
         """
         Gets the fields in their simplified form
@@ -1193,6 +1196,9 @@ class EXTFILE(BaseCard):
 
     def safe_cross_reference(self, model: BDF, xref_errors) -> None:
         self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        return
 
     def repr_fields(self):
         """

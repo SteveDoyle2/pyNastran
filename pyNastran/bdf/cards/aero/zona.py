@@ -18,7 +18,7 @@ from pyNastran.bdf.cards.aero.zona_cards.spline import (
     SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA,)
 from pyNastran.bdf.cards.aero.zona_cards.geometry import (
     PANLST1, PANLST2, PANLST3, SEGMESH,
-    CAERO7, BODY7, PAFOIL7, AESURFZ, AESLINK)
+    CAERO7, BODY7, PAFOIL7, PAFOIL8, AESURFZ, AESLINK)
 from pyNastran.bdf.cards.aero.zona_cards.plot import (
     PLTAERO, PLTMODE, )
 from pyNastran.bdf.cards.aero.zona_cards.flutter import (
@@ -57,7 +57,8 @@ ZONA_CARDS = [
     # geometry
     'CAERO7', 'AEROZ', 'AESURFZ', 'AESLINK',
     'ATTACH',
-    'PANLST1', 'PANLST2', 'PANLST3', 'PAFOIL7',
+    'PANLST1', 'PANLST2', 'PANLST3',
+    'PAFOIL7', 'PAFOIL8',
     'SEGMESH', 'BODY7', 'ACOORD', 'MKAEROZ',
     'TRIMVAR', 'TRIMLNK',
     # -------------
@@ -280,7 +281,7 @@ class AddMethods:
         zona.panlsts[key].append(panlst)
         self.model._type_to_id_map[panlst.type].append(key)
 
-    def add_pafoil_object(self, pafoil: PAFOIL7) -> None:
+    def add_pafoil_object(self, pafoil: PAFOIL7 | PAFOIL8) -> None:
         """adds an PAFOIL7/PAFOIL8 object"""
         key = pafoil.pid
         assert pafoil.pid > 0
@@ -524,7 +525,7 @@ class ZONA:
         self.plotmode: dict[int, PLTMODE] = {}
 
         #: store PAFOIL7/PAFOIL8
-        self.pafoil: dict[int, PAFOIL7] = {}
+        self.pafoil: dict[int, PAFOIL7 | PAFOIL8] = {}
         self.mloads: dict[int, MLOADS] = {}
 
         # TODO: add me
@@ -702,7 +703,7 @@ class ZONA:
                 # self.model.log.info(f'xref {item.type}')
                 item.validate()
 
-    def PAFOIL(self, pid, msg=''):
+    def PAFOIL(self, pid: int, msg: str=''):
         """gets a pafoil profile (PAFOIL7/PAFOIL8)"""
         try:
             return self.pafoil[pid]
@@ -733,6 +734,7 @@ class ZONA:
             'PANLST2': (PANLST2, zona_add.add_panlst_object),
             'PANLST3': (PANLST3, zona_add.add_panlst_object),
             'PAFOIL7': (PAFOIL7, zona_add.add_pafoil_object),
+            'PAFOIL8': (PAFOIL8, zona_add.add_pafoil_object),
             'MKAEROZ': (MKAEROZ, zona_add.add_mkaeroz_object),
             'SEGMESH': (SEGMESH, add_methods.add_paero_object),
             'BODY7': (BODY7, add_methods.add_caero_object),
@@ -792,33 +794,55 @@ class ZONA:
     def cross_reference(self):
         if self.model.nastran_format != 'zona':
             return
+
+        # these will be xref'd twice
+        for caero in self.model.caeros.values():
+            caero.cross_reference(self.model)
+            self.caero_to_name_map[caero.label] = caero.eid
+
         dicts = get_dicts(self, 'xref')
         for items in dicts:
             for item in items.values():
                 # self.model.log.info(f'xref {item.type}')
                 item.cross_reference(self.model)
 
-        for caero in self.model.caeros.values():
-            #print('%s uses CAERO eid=%s' % (caero.label, caero.eid))
-            self.caero_to_name_map[caero.label] = caero.eid
+        for unused_id, panlst in self.panlsts.items():
+            for panlsti in panlst:
+                panlsti.cross_reference(self.model)
 
     def safe_cross_reference(self, xref_errors=None):
         if self.model.nastran_format != 'zona':
             return
         if xref_errors is None:
             xref_errors = defaultdict(list)
+
+        for caero in self.model.caeros.values():
+            caero.safe_cross_reference(self.model, xref_errors)
+            self.caero_to_name_map[caero.label] = caero.eid
+
         dicts = get_dicts(self, 'xref')
         for items in dicts:
             for item in items.values():
                 # self.model.log.info(f'xref {item.type}')
                 item.safe_cross_reference(self.model, {})
 
-        for caero in self.model.caeros.values():
-            #print('%s uses CAERO eid=%s' % (caero.label, caero.eid))
-            self.caero_to_name_map[caero.label] = caero.eid
+        for unused_id, panlst in self.panlsts.items():
+            for panlsti in panlst:
+                panlsti.safe_cross_reference(self.model, xref_errors)
+
+    def uncross_reference(zona: ZONA):
+        dicts = get_dicts(zona, 'write')
+        for panlsts in zona.panlsts.values():
+            for panlst in panlsts:
+                panlst.uncross_reference()
+
+        for dicti in dicts:
+            for value in dicti.values():
+                value.uncross_reference()
 
     def write_bdf(self, bdf_file: TextIO, size: int=8,
-                  is_double: bool=False):
+                  is_double: bool=False,
+                  sort_cards: bool=True):
         #if self.model.nastran_format != 'zona':
             #return
         for unused_id, panlst in self.panlsts.items():
@@ -837,7 +861,7 @@ class ZONA:
 
         dicts = get_dicts(self, 'write')
         for items in dicts:
-            for key, value in items.items():
+            for key, value in sorteddict(items, sort_cards):
                 bdf_file.write(value.write_card(size=size, is_double=is_double))
 
     def convert_to_nastran(self, save=True):
@@ -848,14 +872,14 @@ class ZONA:
             make_paero1 = False
             return caeros, caero2s, make_paero1
 
-        caeros, caero2s, make_paero1 = self._convert_caeros()
-        splines = self._convert_splines()
-        aesurf, aelists = self._convert_aesurf_aelist()
+        caeros, caero2s, make_paero1 = _convert_caeros(self)
+        splines = _convert_splines(self)
+        aesurf, aelists = _convert_aesurf_aelist(self)
 
-        trims = self._convert_trim()
+        trims = _convert_trim(self)
         aeros, aero = self.model.aeros.convert_to_zona(self.model)
 
-        aelinks = self._convert_trimlnk()
+        aelinks = _convert_trimlnk(self)
 
         if save:
             self.clear()
@@ -866,26 +890,6 @@ class ZONA:
             self.model.trims = trims
             self.model.aeros = aeros
             self.model.aero = aero
-        return caeros, caero2s, make_paero1
-
-    def _convert_caeros(self):
-        """Converts ZONA CAERO7/BODY7 to CAERO1/CAERO2"""
-        model = self.model
-        caeros = {}
-        caero2s = []
-        make_paero1 = False
-        for caero_id, caero in sorted(model.caeros.items()):
-            if caero.type == 'CAERO7':
-                caero_new = caero.convert_to_nastran()
-                make_paero1 = True
-            elif caero.type == 'BODY7':
-                caero2s.append(caero)
-                continue
-            else:
-                raise NotImplementedError(caero)
-            caeros[caero_id] = caero_new
-
-        self.add_caero2s(caero2s, add=False)
         return caeros, caero2s, make_paero1
 
     def add_caero2s(self, caero2s, add=False):
@@ -906,65 +910,6 @@ class ZONA:
                 add_methods.add_paero_object(paero2)
                 add_methods.add_caero_object(caero_new)
         return
-
-    def _convert_splines(self):
-        """Converts ZONA splines to splines"""
-        splines = {}
-        for unused_spline_id, spline in self.model.splines.items():
-            #print(spline)
-            if spline.type == 'SPLINE1_ZONA':
-                splines_new = spline.convert_to_nastran(self.model)
-            elif spline.type == 'SPLINE3_ZONA':
-                splines_new = spline.convert_to_nastran(self.model)
-            else:
-                raise NotImplementedError(spline)
-            for spline_new in splines_new:
-                splines[spline.eid] = spline_new
-        return splines
-
-    def _convert_aesurf_aelist(self):
-        """
-        Converts ZONA AESURFZ to AESURF/AELIST
-
-        +---------+--------+-------+-------+-------+--------+--------+
-        |    1    |   2    |   3   |   4   |   5   |   6    |    7   |
-        +=========+========+=======+=======+=======+========+========+
-        | AESURFZ | LABEL  |  TYPE |  CID  |  SETK |  SETG  |  ACTID |
-        +---------+--------+-------+-------+-------+--------+--------+
-        | AESURFZ | RUDDER |  ASYM |   1   |   10  |   20   |    0   |
-        +---------+--------+-------+-------+-------+--------+--------+
-        """
-        model = self.model
-        aelist_id = max(model.aelists) + 1 if model.aelists else 1
-        aesurf_id = aelist_id
-        aesurf = {}
-        aelists = {}
-        for unused_aesurf_name, aesurfi in sorted(model.aesurf.items()):
-            aelist, aesurfi2 = aesurfi.convert_to_nastran(model, aesurf_id, aelist_id)
-            aelists[aelist.sid] = aelist
-            aesurf[aesurfi2.aesurf_id] = aesurfi2
-            aesurf_id += 1
-            aelist_id += 1
-        return aesurf, aelists
-
-    def _convert_trim(self):
-        """Converts ZONA TRIM to TRIM"""
-        trims = {}
-        model = self.model
-        for trim_id, trim in sorted(model.trims.items()):
-            trim_new = trim.convert_to_nastran(model)
-            trims[trim_id] = trim_new
-        return trims
-
-    def _convert_trimlnk(self):
-        """Converts ZONA TRIMLNK to AELINK"""
-        model = self.model
-        assert isinstance(model.aelinks, dict), model.aelinks
-        aelinks = {}
-        for trim_id, trimlnk in sorted(self.trimlnk.items()):
-            aelink = trimlnk.convert_to_nastran(model)
-            aelinks[trim_id] = aelink
-        return aelinks
 
     def __repr__(self):
         msg = '<ZONA>; nPANLSTs=%s nmkaeroz=%s' % (
@@ -1152,3 +1097,86 @@ def get_dicts(zona: ZONA, method: str) -> list[dict]:
         dicts.extend([zona.extinp, zona.extout])
     return dicts
 
+
+def _convert_caeros(zona: ZONA) -> dict[int, Any]:
+    """Converts ZONA CAERO7/BODY7 to CAERO1/CAERO2"""
+    model = zona.model
+    caeros = {}
+    caero2s = []
+    make_paero1 = False
+    for caero_id, caero in sorted(model.caeros.items()):
+        if caero.type == 'CAERO7':
+            caero_new = caero.convert_to_nastran()
+            make_paero1 = True
+        elif caero.type == 'BODY7':
+            caero2s.append(caero)
+            continue
+        else:
+            raise NotImplementedError(caero)
+        caeros[caero_id] = caero_new
+
+    zona.add_caero2s(caero2s, add=False)
+    return caeros, caero2s, make_paero1
+
+
+def _convert_aesurf_aelist(zona: ZONA) -> tuple[dict[int, Any], list]:
+    """
+    Converts ZONA AESURFZ to AESURF/AELIST
+
+    +---------+--------+-------+-------+-------+--------+--------+
+    |    1    |   2    |   3   |   4   |   5   |   6    |    7   |
+    +=========+========+=======+=======+=======+========+========+
+    | AESURFZ | LABEL  |  TYPE |  CID  |  SETK |  SETG  |  ACTID |
+    +---------+--------+-------+-------+-------+--------+--------+
+    | AESURFZ | RUDDER |  ASYM |   1   |   10  |   20   |    0   |
+    +---------+--------+-------+-------+-------+--------+--------+
+    """
+    model = zona.model
+    aelist_id = max(model.aelists) + 1 if model.aelists else 1
+    aesurf_id = aelist_id
+    aesurf = {}
+    aelists = {}
+    for unused_aesurf_name, aesurfi in sorted(model.aesurf.items()):
+        aelist, aesurfi2 = aesurfi.convert_to_nastran(model, aesurf_id, aelist_id)
+        aelists[aelist.sid] = aelist
+        aesurf[aesurfi2.aesurf_id] = aesurfi2
+        aesurf_id += 1
+        aelist_id += 1
+    return aesurf, aelists
+
+
+def _convert_splines(zona: ZONA) -> dict[int, Any]:
+    """Converts ZONA splines to splines"""
+    splines = {}
+    model = zona.model
+    for unused_spline_id, spline in model.splines.items():
+        # print(spline)
+        if spline.type == 'SPLINE1_ZONA':
+            splines_new = spline.convert_to_nastran(model)
+        elif spline.type == 'SPLINE3_ZONA':
+            splines_new = spline.convert_to_nastran(model)
+        else:
+            raise NotImplementedError(spline)
+        for spline_new in splines_new:
+            splines[spline.eid] = spline_new
+    return splines
+
+
+def _convert_trim(zona: ZONA) -> dict[int, Any]:
+    """Converts ZONA TRIM to TRIM"""
+    trims = {}
+    model = zona.model
+    for trim_id, trim in sorted(model.trims.items()):
+        trim_new = trim.convert_to_nastran(model)
+        trims[trim_id] = trim_new
+    return trims
+
+def _convert_trimlnk(zona: ZONA) -> dict[int, Any]:
+    """Converts ZONA TRIMLNK to AELINK"""
+    model = zona.model
+    assert isinstance(model.aelinks, dict), model.aelinks
+    aelinks = {}
+    for trim_id, trimlnk in sorted(zona.trimlnk.items()):
+        aelink = trimlnk.convert_to_nastran(model)
+        aelinks[trim_id] = aelink
+    return aelinks

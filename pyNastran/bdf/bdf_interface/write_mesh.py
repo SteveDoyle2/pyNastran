@@ -140,7 +140,7 @@ class WriteMesh(BDFAttributes):
         if is_error:
             raise RuntimeError('stopping...')
 
-    def write_bdf(self, out_filename: Optional[str | StringIO]=None,
+    def write_bdf(self, out_filename: Optional[PathLike | StringIO]=None,
                   encoding: Optional[str]=None,
                   size: int=8,
                   nodes_size: Optional[int]=None,
