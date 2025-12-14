@@ -954,8 +954,8 @@ class ZONA:
             comment = ''
             if '$' in line and (line.lstrip().startswith('$') or line.index('$') >= 72):
                 line, comment = line.split('$', 1)
-                if line.strip():
-                    print(line)
+                # if line.strip():
+                #     print(line)
                 strip_comment = comment.strip()
                 if strip_comment.lower().startswith('group:'):
                     continue_flag = model._store_group(strip_comment)
@@ -1003,6 +1003,8 @@ class ZONA:
                         nleftover = nlines - iline_bulk - 1
                         msg = 'exiting due to ENDDATA found with %i lines left' % nleftover
                         model.log.debug(msg)
+                    cards_list, cards_dict, card_count = fix_card_list(
+                        cards_list, cards_dict, card_count)
                     return cards_list, cards_dict, card_count
                 #print("card_name = %s" % card_name)
 
@@ -1053,8 +1055,41 @@ class ZONA:
                     backup_comment + full_comment), card_lines, card_ilines[-1]])
             card_count[old_card_name] += 1
         self.echo = False
+
+        cards_list, cards_dict, card_count = fix_card_list(
+            cards_list, cards_dict, card_count)
         return cards_list, cards_dict, card_count
 
+
+def fix_card_list(cards_list, cards_dict, card_count):
+    assert len(cards_dict) == 0, cards_dict
+    card_count = defaultdict(int)
+    # skip_cards = {'SPLINE1', 'SPLINE2', 'SPLINE3', 'AEFACT', 'CONM2',
+    #               'GENEL', 'DMI', 'DMIG', 'TABLED1', 'TABLED2',
+    #               'EIGR', 'EIGRL', 'DAREA'}
+    include_cards = {
+        'GRID', 'SPOINT', 'EPOINT',
+        'CORD2R', 'CORD2C', 'CORD2S',
+        'CORD1R', 'CORD1C', 'CORD1S',
+        'CBEAM', 'PBEAM', 'PBEAML',
+        'CBAR', 'PBAR', 'PBARL',
+        'CBUSH', 'PBUSH',
+        'CBUSH1D', 'PBUSH1D',
+        'CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM',
+        'PSOLID', 'PLSOLID',
+        'CQUAD4', 'CTRIA3', 'CQUAD8', 'CTRIA6',
+        'CTRIAR', 'CQUADR', 'CQUAD',
+        'PSHELL', 'PCOMP', 'PCOMPG',
+        'MAT1', 'MAT2', 'MAT8', 'MAT9', 'MAT10',
+    }
+    cards_list2 = []
+    for card_name, comment, card_lines, ifile_iline in cards_list:
+        # (ifile, iline) = ifile_iline
+        if ifile_iline[0] == 1000 and card_name not in include_cards: # f06/prt
+            continue
+        card_count[card_name] += 1
+        cards_list2.append((card_name, comment, card_lines, ifile_iline))
+    return cards_list2, cards_dict, dict(card_count)
 
 def get_dicts(zona: ZONA, method: str) -> list[dict]:
     assert method in ['xref', 'write'], f'method={method!r}'
