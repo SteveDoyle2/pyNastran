@@ -240,19 +240,19 @@ class TestAeroZona(unittest.TestCase):
         model.write_bdf(GLOADS_DIR / 'zona.inp')
         model.zona.uncross_reference()
 
-    # def test_zona_gloads_case4a(self):
-    #     zona_filename = GLOADS_DIR / 'case4' / 'cgust_md.inp'
-    #     model = read_bdf(zona_filename, mode='zona', xref=False, debug=True)
-    #     model.zona.cross_reference()
-    #     model.write_bdf(GLOADS_DIR / 'zona.inp')
-    #     model.zona.uncross_reference()
+    def test_zona_gloads_case4a(self):
+        zona_filename = GLOADS_DIR / 'case4' / 'cgust_md.inp'
+        model = read_bdf(zona_filename, mode='zona', xref=False, debug=True)
+        model.zona.cross_reference()
+        model.write_bdf(GLOADS_DIR / 'zona.inp')
+        model.zona.uncross_reference()
 
-    # def test_zona_gloads_case4b(self):
-    #     zona_filename = GLOADS_DIR / 'case4' / 'cgust_sof.inp'
-    #     model = read_bdf(zona_filename, mode='zona', xref=False, debug=True)
-    #     model.zona.cross_reference()
-    #     model.write_bdf(GLOADS_DIR / 'zona.inp')
-    #     model.zona.uncross_reference()
+    def test_zona_gloads_case4b(self):
+        zona_filename = GLOADS_DIR / 'case4' / 'cgust_sof.inp'
+        model = read_bdf(zona_filename, mode='zona', xref=False, debug=True)
+        model.zona.cross_reference()
+        model.write_bdf(GLOADS_DIR / 'zona.inp')
+        model.zona.uncross_reference()
 
 
 def get_zona_model() -> StringIO:

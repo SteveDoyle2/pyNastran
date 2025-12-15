@@ -1031,8 +1031,8 @@ class MLDTIME(BaseCard):
         tstart = double(card, 2, 'tstart')
         tend = double(card, 3, 'tend')
         dt = double(card, 4, 'dt')
-        out_dt = integer(card, 5, 'out_dt')
-        print_flag = integer(card, 6, 'print_flag')
+        out_dt = integer_or_blank(card, 5, 'out_dt', default=1)
+        print_flag = integer_or_blank(card, 6, 'print_flag', default=-1)
         method = integer_or_blank(card, 7, 'method')
 
         return MLDTIME(mldtime_id, tstart, tend, dt, out_dt,
