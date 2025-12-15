@@ -519,8 +519,6 @@ def double_from_str(svalue: str) -> float:
 
     Parameters
     ----------
-    card : BDFCard()
-        BDF card as a list
     svalue : str
         field
 
@@ -1433,6 +1431,15 @@ def string_multifield(card: BDFCard, ifields: tuple[int, ...],
     assert len(value), f'{fieldname}={value!r}'
     assert ' ' not in value, f'{fieldname}={value!r}'
     return value
+
+
+def string_multifield_dollar_int(card: BDFCard,
+                                ifields: tuple[int, ...],
+                                fieldname: str) -> str | int:
+    filename = string_multifield(card, ifields, fieldname)
+    if filename.startswith('$'):
+        filename = int(filename[1:])
+    return filename
 
 
 def string_multifield_dollar_int_or_blank(card: BDFCard,

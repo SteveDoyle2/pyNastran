@@ -15,14 +15,14 @@ from pyNastran.bdf.bdf_interface.pybdf import _clean_comment
 from .zona_cards.zona_sets import (
     SETADD)
 from pyNastran.bdf.cards.aero.zona_cards.atm import (
-    ATMOS, FIXMATM, FIXHATM)
+    ATMOS, FIXMATM, FIXHATM, FIXMACH, FIXMDEN)
 from pyNastran.bdf.cards.aero.zona_cards.spline import (
     SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA,)
 from pyNastran.bdf.cards.aero.zona_cards.geometry import (
     PANLST1, PANLST2, PANLST3, SEGMESH,
     CAERO7, BODY7, PAFOIL7, PAFOIL8, AESURFZ, AESLINK)
 from pyNastran.bdf.cards.aero.zona_cards.plot import (
-    PLTAERO, PLTMODE, PLTVG, PLTFLUT,
+    PLTAERO, PLTMODE, PLTVG, PLTFLUT, PLTTIME,
     PLTCP, PLTMIST, PLTSURF, PLTBODE)
 from pyNastran.bdf.cards.aero.zona_cards.flutter import (
     FLUTTER_ZONA, MKAEROZ)
@@ -51,9 +51,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 ZONA_CARDS = [
     # atmosphere
-    'FIXHATM', 'FIXMATM',  # flutter table
-    # 'FIXMDEN', 'FIXMACH',
     'ATMOS',
+    'FIXHATM', 'FIXMATM', 'FIXMACH', 'FIXMDEN',
 
     # already added
     'AEFACT', 'CORD2R',
@@ -68,6 +67,7 @@ ZONA_CARDS = [
     # trim
     'PLTCP',
     'TRIMVAR', 'TRIMLNK',
+    'TRIMFNC', # optimization
     # -------------
     # flutter
     'FLUTTER',
@@ -82,7 +82,8 @@ ZONA_CARDS = [
     'MLOADS',
     'CJUNCT', 'CONCT', 'TFSET',
     'MLDSTAT', 'MLDTRIM', 'MLDPRNT', 'MLDCOMD',
-    'EXTINP', 'EXTOUT', 'TRIMFNC', 'LOADMOD',
+    'EXTINP', 'EXTOUT', 'LOADMOD',
+    'PLTTIME',
     # -------------
     # gust
     'GLOADS', 'DGUST', 'CGUST',
@@ -395,7 +396,7 @@ class AddMethods:
         zona = model.zona
         assert key not in zona.asegain, '\nasegain=\n%s old=\n%s' % (
             asegain, zona.asegain[key])
-        zona.asecont[key] = asegain
+        zona.asegain[key] = asegain
         model._type_to_id_map[asegain.type].append(key)
 
     def add_asesnsr_object(self, asesnsr: ASESNSR) -> None:
@@ -433,6 +434,9 @@ class AddMethods:
         key = pltbode.set_id
         model = self.model
         zona = model.zona
+        if key in zona.pltbode:
+            model.log.warning(f'skipping duplicate PLTBODE\n{str(pltbode)}')
+            return
         assert key not in zona.pltbode, '\npltbode=\n%s old=\n%s' % (
             pltbode, zona.pltbode[key])
         zona.pltbode[key] = pltbode
@@ -542,6 +546,16 @@ class AddMethods:
         self.model.zona.pltcp[key].append(plot)
         self.model._type_to_id_map[plot.type].append(key)
 
+    def add_plttime_object(self, plot: PLTTIME) -> None:
+        """adds an PLTTIME object"""
+        # assert plot.set_id not in self.model.zona.pltcp, str(plot)
+        assert plot.set_id > 0
+        key = plot.set_id
+        if key not in self.model.zona.plttime:
+            self.model.zona.plttime[key] = []
+        self.model.zona.plttime[key].append(plot)
+        self.model._type_to_id_map[plot.type].append(key)
+
     def add_pltflut_object(self, plot: PLTFLUT) -> None:
         """adds an PLTFLUT object"""
         # assert plot.set_id not in self.model.zona.pltcp, str(plot)
@@ -560,7 +574,7 @@ class AddMethods:
         self.model.zona.pltmist[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
-    def add_flutter_table_object(self, flutter_table: FIXHATM | FIXMATM) -> None:
+    def add_flutter_table_object(self, flutter_table: FIXHATM | FIXMATM | FIXMDEN | FIXMACH) -> None:
         """adds an FIXMATM object"""
         key = flutter_table.sid
         model = self.model
@@ -588,7 +602,7 @@ class ZONA:
 
         # aero models
         self.atmos: dict[int, ATMOS] = {}
-        self.flutter_table: dict[int, FIXHATM | FIXMATM] = {}
+        self.flutter_table: dict[int, FIXHATM | FIXMATM | FIXMDEN | FIXMACH] = {}
 
         #: store PANLST1,PANLST2,PANLST3
         self.pltsurf: dict[int, PLTSURF] = {}
@@ -612,6 +626,7 @@ class ZONA:
         # transient
         self.eloads: dict[int, ELOADS] = {}
         self.mldcomd: dict[int, MLDCOMD] = {}
+        self.plttime: dict[int, PLTTIME] = {}
 
         # trim
         self.pltcp: dict[int, PLTCP] = {}
@@ -806,15 +821,20 @@ class ZONA:
         zona_add = self._add_methods
         card_parser2 = {
             # aero models
+            'AEROZ': (AEROZ, add_methods.add_aeros_object),
             'ATMOS': (ATMOS, zona_add.add_atmos_object),
             'FIXMATM': (FIXMATM, zona_add.add_flutter_table_object),
             'FIXHATM': (FIXHATM, zona_add.add_flutter_table_object),
-            # 'FIXMDEN': (FIXMDEN, zona_add.add_flutter_table_object),
+            'FIXMACH': (FIXMACH, zona_add.add_flutter_table_object),
+            'FIXMDEN': (FIXMDEN, zona_add.add_flutter_table_object),
             # trim
             'TRIM': (TRIM_ZONA, add_methods.add_trim_object),
             'TABLED1': (TABLED1_ZONA, add_methods.add_tabled_object),
             'TABDMP1': (TABDMP1_ZONA, add_methods.add_table_sdamping_object),
-            'AEROZ': (AEROZ, add_methods.add_aeros_object),
+            'TRIMFNC': (TRIMFNC, zona_add.add_trimfnc_object),
+            'PLTTIME': (PLTTIME, zona_add.add_plttime_object),
+            'TRIMVAR': (TRIMVAR, zona_add.add_trimvar_object),
+            'TRIMLNK': (TRIMLNK, zona_add.add_trimlnk_object),
             # geometry
             'SPLINE1': (SPLINE1_ZONA, add_methods.add_spline_object),
             'SPLINE2': (SPLINE2_ZONA, add_methods.add_spline_object),
@@ -861,8 +881,6 @@ class ZONA:
             'ACTU': (ACTU, zona_add.add_actu_object),
             'LOADMOD': (LOADMOD, zona_add.add_loadmod_object),
             'RBRED': (RBRED, zona_add.add_rbred_object),
-            'TRIMVAR': (TRIMVAR, zona_add.add_trimvar_object),
-            'TRIMLNK': (TRIMLNK, zona_add.add_trimlnk_object),
             'ATTACH': (ATTACH, zona_add.add_attach_object),
             'PLTMODE': (PLTMODE, zona_add.add_pltmode_object),
             'PLTAERO': (PLTAERO, zona_add.add_pltaero_object),
@@ -872,7 +890,6 @@ class ZONA:
             'EXTINP': (EXTINP, zona_add.add_extinp_object),
             'EXTOUT': (EXTOUT, zona_add.add_extout_object),
             'TFSET': (TFSET, zona_add.add_tfset_object),
-            'TRIMFNC': (TRIMFNC, zona_add.add_trimfnc_object),
             'MLDSTAT': (MLDSTAT, zona_add.add_mldstat_object),
             'MINSTAT': (MINSTAT, zona_add.add_minstat_object),
             'MLDTRIM': (MLDTRIM, zona_add.add_mldtrim_object),
@@ -1266,7 +1283,7 @@ def get_dicts(zona: ZONA, method: str) -> tuple[dicts[int, list],
         zona.pltbode,
     ]
     dict_lists = [
-        zona.pltflut,
+        zona.pltflut, zona.plttime,
     ]
     if method == 'write':
         # these are xref'd by their parent

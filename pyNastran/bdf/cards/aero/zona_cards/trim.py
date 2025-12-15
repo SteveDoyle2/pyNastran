@@ -15,6 +15,7 @@ from pyNastran.bdf.cards.aero.static_loads import TRIM
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+    from pyNastran.bdf.cards.aero.zona import AEROZ
 
 
 class TRIM_ZONA(BaseCard):
@@ -31,7 +32,7 @@ class TRIM_ZONA(BaseCard):
 
     def __init__(self, sid: int, mkaeroz: int, q: float,
                  trimobj_id: int, trimcon_id: int,
-                 weight: float, cg: list[float], inertia: list[float], true_g: str,
+                 weight: float, dcg: list[float], inertia: list[float], true_g: str,
                  nxyz: list[float], pqr_dot: list[float], loadset: Optional[int],
                  trimvar_ids: list[int], uxs: list[float],
                  wtmass: float=1.0, comment: str=''):
@@ -80,7 +81,7 @@ class TRIM_ZONA(BaseCard):
 
         self.weight = weight
         self.wtmass = wtmass
-        self.cg = np.asarray(cg)
+        self.dcg = np.asarray(dcg)
         self.inertia = np.asarray(inertia)
 
         self.nxyz = nxyz
@@ -130,10 +131,10 @@ class TRIM_ZONA(BaseCard):
         trimobj_id = integer_or_blank(card, 4, 'trimobj_id', default=0)
         trimcon_id = integer_or_blank(card, 5, 'trimcon_id', default=0)
 
-        cg = [
-            double(card, 6, 'cg-x'),
-            double(card, 7, 'cg-y'),
-            double(card, 8, 'cg-z'),
+        dcg = [
+            double(card, 6, 'dcg-x'),
+            double(card, 7, 'dcg-y'),
+            double(card, 8, 'dcg-z'),
         ]
 
         wtmass = double(card, 9, 'wtmass')
@@ -181,7 +182,7 @@ class TRIM_ZONA(BaseCard):
         assert len(uxs) > 0, uxs
         return TRIM_ZONA(sid, mkaeroz, qinf,
                          trimobj_id, trimcon_id,
-                         weight, cg, inertia,
+                         weight, dcg, inertia,
                          true_g, nxyz, pqr_dot, loadset,
                          trimvar_ids, uxs, wtmass=wtmass, comment=comment)
 
@@ -225,12 +226,16 @@ class TRIM_ZONA(BaseCard):
         else:
             inertia_unit = f'{weight_unit}*{length_unit}^2'
 
-
+        aeroz: AEROZ = model.aeros
+        ref = aeroz.xyz_ref
+        cg = self.dcg + ref
         msg = (
             f'trim_id = {self.sid}\n'
             f'  weight={self.weight:g} ({weight_unit})\n'
             f'  mass={self.weight*self.wtmass:g} ({mass_unit})\n'
-            f'  cg={self.cg} ({length_unit})\n'
+            f'  ref={ref} ({length_unit}); per AEROZ\n'
+            f'  dcg={self.dcg} ({length_unit}); per TRIM\n'
+            f'  cg={cg} ({length_unit})\n'
             f'  inertia={self.inertia*self.wtmass} ({inertia_unit})\n'
             f'  true/g={self.true_g}\n\n'
             f'  nxyz={self.nxyz}\n'
@@ -240,10 +245,13 @@ class TRIM_ZONA(BaseCard):
         fixed_variables = []
         linked_variables = []
         state_variables = []
+        trim_dofs = []
+        trim_variables = []
         for name, nxyzi in zip(('NX', 'NY', 'NZ'), self.nxyz):
             if isinstance(nxyzi, str):
                 if nxyzi == 'FREE':
                     msg += f'Trim DOF (Free): {name} = {nxyzi}\n'
+                    trim_dofs.append(name)
                     free_variables.append(name)
                 elif nxyzi == 'NONE':
                     msg += f'Trim DOF (N/A): {name} = {nxyzi}\n'
@@ -252,6 +260,7 @@ class TRIM_ZONA(BaseCard):
                     raise RuntimeError(f'{name}={nxyzi} is not [FREE, NONE]')
             elif isinstance(nxyzi, float):
                 msg += f'Trim DOF (Fixed): {name} = {nxyzi}\n'
+                trim_dofs.append(f'{name}={nxyzi}')
                 fixed_variables.append(f'{name}={nxyzi}')
             else:
                 raise RuntimeError(f'{name}={nxyzi!r} is not a valid type; type={type(nxyzi)}')
@@ -261,6 +270,7 @@ class TRIM_ZONA(BaseCard):
             if isinstance(pqrdi, str):
                 if pqrdi == 'FREE':
                     msg += f'Trim DOF (Free): {name} = {pqrdi}\n'
+                    trim_dofs.append(name)
                     free_variables.append(name)
                 elif pqrdi == 'NONE':
                     msg += f'Trim DOF (N/A): {name} = {pqrdi}\n'
@@ -268,6 +278,7 @@ class TRIM_ZONA(BaseCard):
                     raise RuntimeError(f'{name}={pqrdi!r} is not [FREE, NONE]')
             elif isinstance(pqrdi, float):
                 msg += f'Trim DOF (Fixed): {name} = {pqrdi}\n'
+                trim_dofs.append(f'{name}={pqrdi}')
                 fixed_variables.append(f'{name}={pqrdi}')
             else:
                 raise RuntimeError(f'{name}={pqrdi!r} is not FREE')
@@ -286,6 +297,7 @@ class TRIM_ZONA(BaseCard):
             # print(trimvar_ref.get_stats())
             if trimvar_ref is None:
                 free_variables.append('trimvar_id=???')
+                trim_variables.append('trimvar_id=???')
                 msg += f'Trim Variable: ???={ux} ({trimvar_id})\n'
                 continue
 
@@ -302,6 +314,7 @@ class TRIM_ZONA(BaseCard):
 
             if isinstance(ux, str):
                 if ux == 'FREE':
+                    trim_variables.append(label)
                     free_variables.append(label)
                     msg += f'Trim Variable (Free): {label!r}={ux} ({trimvar_id}){linkage}\n'
                     if label not in zona_state_vars and label in set_aesurfz:
@@ -313,11 +326,12 @@ class TRIM_ZONA(BaseCard):
             elif isinstance(ux, float):
                 msg += f'Trim Variable (State): {label!r}={ux} ({trimvar_id}){linkage}\n'
                 state_variables.append(f'{label}={ux}')
+                #fixed_variables.append(f'{label}={ux}')  # TODO: not sure
+                trim_variables.append(f'{label}={ux}')
                 if label not in zona_state_vars and label in set_aesurfz:
                     set_aesurfz.remove(label)
             else:
                 raise RuntimeError(f'{label!r}={ux} ({trimvar_id}) is not [FREE, NONE]')
-
         self.trimvar_refs = trimvar_refs
 
         nfree = len(free_variables)
@@ -326,13 +340,20 @@ class TRIM_ZONA(BaseCard):
         nstate = len(state_variables)
         nunused_aesurfz = len(set_aesurfz)
         msg += f'\nSummary:\n'
+        msg += f'  trim_dofs = {trim_dofs}; ntrim_dof={len(trim_dofs)}\n'
+        msg += f'  trim_variables = {trim_variables}; ntrimvar={len(trim_variables)}\n\n'
+
         msg += f'  fixed_variables = {fixed_variables}; nfixed={nfixed}\n'
         msg += f'  free_variables  = {free_variables}; nfree={nfree}\n\n'
         msg += f'  state_variables = {state_variables}; nstate={nstate}\n'
         msg += f'  aesurfz = {aesurfz}; n={len(aesurfz)}\n\n'
         msg += f'  linked_variables = {linked_variables}; nlinked={nlinked}\n'
         msg += f'  unused_aesurfz = {list(set_aesurfz)}; n={nunused_aesurfz} (should be linked, optimized, or unused)\n'
+        ndelta = nfree - (nfixed + nlinked)
+        msg += f'ndelta1 = nfree - (nfixed + nlinked) = {nfree} - ({nfixed} + {nlinked}) = {nfree} - {nfixed + nlinked} = {ndelta}\n'
+        msg += f'ndelta2 = nfree - nfixed = {nfree} - {nfixed} = {nfree - nfixed}\n'
         print(msg)
+        assert nfixed == nfree, msg
         assert nfixed == nfree, msg
         # assert nlinked == nunused_aesurfz, msg
 
@@ -393,7 +414,7 @@ class TRIM_ZONA(BaseCard):
         """
         list_fields = [
             'TRIM', self.sid, self.mkaeroz, self.q, self.trimobj_id, self.trimcon_id,
-        ] + list(self.cg) + [self.wtmass, self.weight] + list(self.inertia) + [
+        ] + list(self.dcg) + [self.wtmass, self.weight] + list(self.inertia) + [
             self.true_g] + self.nxyz + self.pqr_dot + [self.loadset]
 
         nlabels = len(self.trimvar_ids)
