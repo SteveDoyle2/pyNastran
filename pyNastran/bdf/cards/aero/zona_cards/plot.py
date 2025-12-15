@@ -543,3 +543,71 @@ class PLTFLUT(BaseCard):
         # TODO: needs a better writer
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+class PLTBODE(BaseCard):
+    type = 'PLTBODE'
+    def __init__(self, set_id: int,
+                 filename: str,
+                 scale_factor: float=1.0,
+                 comment: str=''):
+        BaseCard.__init__(self)
+
+        if comment:
+            self.comment = comment
+
+        self.set_id = set_id
+        self.scale_factor = scale_factor
+        self.filename = filename
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # remove None
+        #print(card)
+        #fields = [field for field in card.card if field is not None]
+        #card.card = fields
+        card.nfields = len(card.card)
+
+        ['PLTBODE', '101', '1',
+         '5.', '70.',
+         '51', '0', 'STATE_BO', 'DE.PLT']
+        set_id = integer(card, 1, 'set_id')
+        field2 = integer(card, 2, 'field2')
+        scale_factor = double(card, 3, 'scale_factor')
+        scale_factor2 = double(card, 3, 'scale_factor2')
+        field7 = integer(card, 5, 'field7')
+        field8 = integer(card, 6, 'field8')
+
+        filename = string_multifield(card, (7, 8), 'filename')
+        # assert filename == 'ROGER11.DAT', f'filename={filename!r}'
+        assert len(card) == 9, f'len(PLTBODE card) = {len(card):d}\ncard={card}'
+        return PLTBODE(set_id, filename,
+                       scale_factor=scale_factor, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        return
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : list[varies]
+          the fields that define the card
+
+        """
+        filenamea, filenameb = split_filename_dollar(self.filename)
+        list_fields = ['PLTBODE', self.set_id, None, None, None,
+                       self.scale_factor, None, filenamea, filenameb]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        # TODO: needs a better writer
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)

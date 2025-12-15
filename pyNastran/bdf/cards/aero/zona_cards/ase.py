@@ -15,7 +15,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string, string_or_blank,
-    double_or_blank, integer_or_string,
+    double_or_blank, integer_or_string, integer_or_double,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -259,12 +259,13 @@ class ASEGAIN(BaseCard):
         """
         # ASEGAIN ID OTFID CO ITFID CI GAIN TYPE
         # ASEGAIN 10 1     1  2     2  0.6  H
+        ['ASEGAIN', '301', '100', '1', '209', '1', '425', 'DEN']
         asegain_id = integer(card, 1, 'asegain_id')
         otf_id = integer(card, 2, 'otfid')
         c_out = integer(card, 3, 'CO')
         itf_id = integer(card, 4, 'itfid')
         c_in = integer(card, 5, 'CI')
-        gain = double(card, 6, 'gain')
+        gain = integer_or_double(card, 6, 'gain')
         gain_type = string_or_blank(card, 7, 'gain_type', default='Q')
 
         assert len(card) < 9, f'len(ASECONT card) = {len(card):d}\ncard={card}'
@@ -276,20 +277,11 @@ class ASEGAIN(BaseCard):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
 
     def cross_reference(self, model: BDF) -> None:
-        msg = f', which is required by ASECONT={self.asecont_id}'
+        msg = f', which is required by ASEGAIN={self.asegain_id}'
         # ASE, MLOADS, ELOADS, GLOADS, DFS, or NLFLTR
         zona = model.zona
         # CNCTSET
         # self.conct_ref = model.conct[self.conct_id]
-        if self.extinp_set_id:
-            self.extinp_set_ref = model.Set(self.extinp_set_id, msg)
-            for id in self.extinp_set_ref.ids():
-                asdf
-        if self.extout_set_id:
-            self.extout_set_ref = model.Set(self.extout_set_id, msg)
-            for id in self.extout_set_ref.ids():
-                asdf
-
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -308,8 +300,10 @@ class ASEGAIN(BaseCard):
             the fields that define the card
 
         """
+        # ASEGAIN ID OTFID CO ITFID CI GAIN TYPE
+        # ASEGAIN 10 1     1  2     2  0.6  H
         list_fields = [
-            'ASECONT', self.asegain_id,
+            'ASEGAIN', self.asegain_id,
             self.otf_id, self.c_out,
             self.itf_id, self.c_in,
             self.gain, self.gain_type]
@@ -903,7 +897,7 @@ class GAINSET(BaseCard):
         for idi in self.ids:
             if idi in zona.asegain:
                 id_ref = zona.asegain[idi]
-            # else:
+            else:
                 asegain = list(zona.asegain)
                 msg = (
                     f'GAINSET={self.gainset_id}: id={idi} is not [ASEGAIN]\n'

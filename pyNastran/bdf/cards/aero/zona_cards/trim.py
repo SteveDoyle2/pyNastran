@@ -1,6 +1,7 @@
 from __future__ import annotations
 from itertools import count
 from typing import Optional, TYPE_CHECKING
+import numpy as np
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
@@ -79,8 +80,8 @@ class TRIM_ZONA(BaseCard):
 
         self.weight = weight
         self.wtmass = wtmass
-        self.cg = cg
-        self.inertia = inertia
+        self.cg = np.asarray(cg)
+        self.inertia = np.asarray(inertia)
 
         self.nxyz = nxyz
         self.true_g = true_g
@@ -219,14 +220,18 @@ class TRIM_ZONA(BaseCard):
             mass_unit = aeroz.fm_mass_unit
             weight_unit = aeroz.weight_unit
             length_unit = aeroz.fm_length_unit
+        if self.wtmass == 1.0:
             inertia_unit = f'{mass_unit}*{length_unit}^2'
+        else:
+            inertia_unit = f'{weight_unit}*{length_unit}^2'
+
 
         msg = (
             f'trim_id = {self.sid}\n'
             f'  weight={self.weight:g} ({weight_unit})\n'
             f'  mass={self.weight*self.wtmass:g} ({mass_unit})\n'
             f'  cg={self.cg} ({length_unit})\n'
-            f'  inertia={self.inertia} ({inertia_unit})\n'
+            f'  inertia={self.inertia*self.wtmass} ({inertia_unit})\n'
             f'  true/g={self.true_g}\n\n'
             f'  nxyz={self.nxyz}\n'
             f'  pqr_dot={self.pqr_dot}\n'
@@ -388,7 +393,7 @@ class TRIM_ZONA(BaseCard):
         """
         list_fields = [
             'TRIM', self.sid, self.mkaeroz, self.q, self.trimobj_id, self.trimcon_id,
-        ] + self.cg + [self.wtmass, self.weight] + self.inertia + [
+        ] + list(self.cg) + [self.wtmass, self.weight] + list(self.inertia) + [
             self.true_g] + self.nxyz + self.pqr_dot + [self.loadset]
 
         nlabels = len(self.trimvar_ids)

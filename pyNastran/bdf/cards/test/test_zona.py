@@ -41,11 +41,12 @@ class TestAeroZona(unittest.TestCase):
                          mode='zona', debug=None, log=log)
         model.zona.uncross_reference()
         model.safe_cross_reference()
-        # save_load_deck(model, xref='safe',
-        #                run_renumber=False, run_convert=False, run_remove_unused=False,
-        #                run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False,
-        #                run_test_bdf=False, run_op2_writer=False, run_export_caero=False,
-        #                stringify=True)
+        # save_load_deck(
+        #     model, xref='safe', nastran_format='zona',
+        #     run_renumber=False, run_convert=False, run_remove_unused=False,
+        #     run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False,
+        #     run_test_bdf=False, run_op2_writer=False, run_export_caero=False,
+        #     stringify=True)
         with self.assertRaises(NotImplementedError):
             model.zona.convert_to_nastran()
 
@@ -244,14 +245,14 @@ class TestAeroZona(unittest.TestCase):
 
     def test_zona_gloads_case4a(self):
         zona_filename = GLOADS_DIR / 'case4' / 'cgust_md.inp'
-        model = read_bdf(zona_filename, mode='zona', xref=False, debug=True)
+        model = read_bdf(zona_filename, mode='zona', xref=False, debug=False)
         model.zona.cross_reference()
         model.write_bdf(GLOADS_DIR / 'zona.inp')
         model.zona.uncross_reference()
 
     def test_zona_gloads_case4b(self):
         zona_filename = GLOADS_DIR / 'case4' / 'cgust_sof.inp'
-        model = read_bdf(zona_filename, mode='zona', xref=False, debug=True)
+        model = read_bdf(zona_filename, mode='zona', xref=False, debug=False)
         model.zona.cross_reference()
         model.write_bdf(GLOADS_DIR / 'zona.inp')
         model.zona.uncross_reference()

@@ -12,6 +12,8 @@ from pyNastran.bdf.bdf_interface.utils import sorteddict
 from pyNastran.bdf.bdf_interface.utils import _prep_comment
 from pyNastran.bdf.bdf_interface.pybdf import _clean_comment
 
+from .zona_cards.zona_sets import (
+    SETADD)
 from pyNastran.bdf.cards.aero.zona_cards.atm import (
     ATMOS, FIXMATM, FIXHATM)
 from pyNastran.bdf.cards.aero.zona_cards.spline import (
@@ -21,7 +23,7 @@ from pyNastran.bdf.cards.aero.zona_cards.geometry import (
     CAERO7, BODY7, PAFOIL7, PAFOIL8, AESURFZ, AESLINK)
 from pyNastran.bdf.cards.aero.zona_cards.plot import (
     PLTAERO, PLTMODE, PLTVG, PLTFLUT,
-    PLTCP, PLTMIST, PLTSURF)
+    PLTCP, PLTMIST, PLTSURF, PLTBODE)
 from pyNastran.bdf.cards.aero.zona_cards.flutter import (
     FLUTTER_ZONA, MKAEROZ)
 from pyNastran.bdf.cards.aero.zona_cards.trim import (
@@ -50,6 +52,7 @@ if TYPE_CHECKING:  # pragma: no cover
 ZONA_CARDS = [
     # atmosphere
     'FIXHATM', 'FIXMATM',  # flutter table
+    # 'FIXMDEN', 'FIXMACH',
     'ATMOS',
 
     # already added
@@ -90,12 +93,13 @@ ZONA_CARDS = [
     'ACTU', #'AEROLAG',
     'MIMOSS', 'SISOTF',
     'ASEGAIN', 'GAINSET',
+    'PLTBODE',
     # -------------
     # other
+    'SETADD',
     'DMIL', 'EXTFILE',
     'MLDTIME', 'MLDCOMD',
     'MINSTAT', #'APCONST',
-    # 'PLTFLUT',
     'RBRED',
     # 'SPLINE0', 'PBODY7',
     'CNCTSET', 'SURFSET',
@@ -234,6 +238,14 @@ class AddMethods:
         assert key > 0, key
         self.model.zona.tfset[key] = tfset
         self.model._type_to_id_map[tfset.type].append(key)
+
+    def add_setadd_object(self, setadd: SETADD) -> None:
+        """adds an SETADD object"""
+        key = setadd.setadd_id
+        assert key not in self.model.zona.setadd, key
+        assert key > 0, key
+        self.model.zona.setadd[key] = setadd
+        self.model._type_to_id_map[setadd.type].append(key)
 
     def add_senset_object(self, senset: SENSET) -> None:
         """adds an SENSET object"""
@@ -415,6 +427,16 @@ class AddMethods:
             gainset, zona.gainset[key])
         zona.asecont[key] = gainset
         model._type_to_id_map[gainset.type].append(key)
+
+    def add_pltbode_object(self, pltbode: PLTBODE) -> None:
+        """adds an PLTBODE object"""
+        key = pltbode.set_id
+        model = self.model
+        zona = model.zona
+        assert key not in zona.pltbode, '\npltbode=\n%s old=\n%s' % (
+            pltbode, zona.pltbode[key])
+        zona.pltbode[key] = pltbode
+        model._type_to_id_map[pltbode.type].append(key)
 
     def add_cjunct_object(self, cjunct: CJUNCT) -> None:
         """adds an CJUNCT object"""
@@ -623,6 +645,7 @@ class ZONA:
         self.asesns1: dict[int, ASESNS1] = {}
         self.asegain: dict[int, ASEGAIN] = {}
         self.gainset: dict[int, GAINSET] = {}
+        self.pltbode: dict[int, PLTBODE] = {}
         self.aseout: dict[int, ASEOUT] = {}
         self.apcnsnd: dict[int, APCNSND] = {}
         self.apcnscp: dict[int, APCNSCP] = {}
@@ -753,6 +776,11 @@ class ZONA:
                 panlsti.validate()
 
         dicts, dicts_list = get_dicts(self, 'write')
+        for items in dicts_list:
+            for item in items.values():
+                for itemi in item:
+                    itemi.validate()
+
         for items in dicts:
             for item in items.values():
                 if isinstance(item, list):
@@ -820,11 +848,13 @@ class ZONA:
             'ASESNS1': (ASESNS1, zona_add.add_asesns1_object),
             'ASEGAIN': (ASEGAIN, zona_add.add_asegain_object),
             'GAINSET': (GAINSET, zona_add.add_gainset_object),
+            'PLTBODE': (PLTBODE, zona_add.add_pltbode_object),
             'MIMOSS': (MIMOSS, zona_add.add_mimoss_object),
             'SISOTF': (SISOTF, zona_add.add_sisotf_object),
             'CJUNCT': (CJUNCT, zona_add.add_cjunct_object),
             'CONCT': (CONCT, zona_add.add_conct_object),
             # other
+            'SETADD': (SETADD, zona_add.add_setadd_object),
             'SENSET': (SENSET, zona_add.add_senset_object),
             'CNCTSET': (CNCTSET, zona_add.add_cnctset_object),
             'SURFSET': (SURFSET, zona_add.add_surfset_object),
@@ -866,49 +896,66 @@ class ZONA:
         # print('update for zona!!!!!!!!!!!')
 
     def cross_reference(self):
-        if self.model.nastran_format != 'zona':
+        model = self.model
+        if model.nastran_format != 'zona':
             return
 
         # these will be xref'd twice
-        for caero in self.model.caeros.values():
-            caero.cross_reference(self.model)
+        for caero in model.caeros.values():
+            caero.cross_reference(model)
             self.caero_to_name_map[caero.label] = caero.eid
 
         dicts, dicts_list = get_dicts(self, 'xref')
+        for items in dicts_list:
+            for item in items.values():
+                for itemi in item:
+                    itemi.cross_reference(model)
+
         for items in dicts:
             for item in items.values():
                 # self.model.log.info(f'xref {item.type}')
-                item.cross_reference(self.model)
+                item.cross_reference(model)
 
         for unused_id, panlst in self.panlsts.items():
             for panlsti in panlst:
-                panlsti.cross_reference(self.model)
+                panlsti.cross_reference(model)
 
     def safe_cross_reference(self, xref_errors=None):
-        if self.model.nastran_format != 'zona':
+        model = self.model
+        if model.nastran_format != 'zona':
             return
         if xref_errors is None:
             xref_errors = defaultdict(list)
 
-        for caero in self.model.caeros.values():
-            caero.safe_cross_reference(self.model, xref_errors)
+        for caero in model.caeros.values():
+            caero.safe_cross_reference(model, xref_errors)
             self.caero_to_name_map[caero.label] = caero.eid
 
         dicts, dicts_list = get_dicts(self, 'xref')
+        for items in dicts_list:
+            for item in items.values():
+                for itemi in item:
+                    itemi.safe_cross_reference(model, xref_errors)
+
         for items in dicts:
             for item in items.values():
                 # self.model.log.info(f'xref {item.type}')
-                item.safe_cross_reference(self.model, {})
+                item.safe_cross_reference(model, xref_errors)
 
         for unused_id, panlst in self.panlsts.items():
             for panlsti in panlst:
-                panlsti.safe_cross_reference(self.model, xref_errors)
+                panlsti.safe_cross_reference(model, xref_errors)
 
     def uncross_reference(zona: ZONA):
         dicts, dicts_list = get_dicts(zona, 'write')
         for panlsts in zona.panlsts.values():
             for panlst in panlsts:
                 panlst.uncross_reference()
+
+        for items in dicts_list:
+            for item in items.values():
+                for itemi in item:
+                    itemi.uncross_reference()
 
         for dicti in dicts:
             if isinstance(dicti, list):
@@ -939,6 +986,11 @@ class ZONA:
         #     bdf_file.write(attach.write_card(size=size, is_double=is_double))
 
         dicts, dicts_list = get_dicts(self, 'write')
+        for items in dicts_list:
+            for item in items.values():
+                for itemi in item:
+                    bdf_file.write(itemi.write_card(size=size, is_double=is_double))
+
         for items in dicts:
             for key, value in sorteddict(items, sort_cards):
                 bdf_file.write(value.write_card(size=size, is_double=is_double))
@@ -1183,6 +1235,7 @@ def get_dicts(zona: ZONA, method: str) -> tuple[dicts[int, list],
         zona.pafoil,
         zona.attach,
         zona.pltsurf, zona.pltmode, zona.pltmist,
+        zona.pltbode,
         # -------------transient------------
         zona.mloads, zona.eloads,
         # --------------flutter-------------
@@ -1208,13 +1261,16 @@ def get_dicts(zona: ZONA, method: str) -> tuple[dicts[int, list],
         zona.extfile,
         zona.dse,
         zona.dmil,
+        # plotting
+        zona.pltvg,
+        zona.pltbode,
     ]
     dict_lists = [
-        zona.pltvg, zona.pltflut,
+        zona.pltflut,
     ]
     if method == 'write':
         # these are xref'd by their parent
-        dicts.extend([zona.extinp, zona.extout])
+        dicts.extend([zona.setadd, zona.extinp, zona.extout])
     return dicts, dict_lists
 
 
