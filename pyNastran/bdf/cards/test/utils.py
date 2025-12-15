@@ -3,6 +3,7 @@ import os
 import copy
 from io import StringIO
 from collections import ChainMap
+from pathlib import Path
 import inspect
 
 import numpy as np
@@ -97,24 +98,25 @@ def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
     model2.read_bdf(bdf_file, punch=punch, xref=False)
     _cross_reference(model2, xref)
 
+    dirname = Path('.')
     model2.pop_parse_errors()
     model2.get_bdf_stats()
-    model2.write_bdf('model2.bdf')
+    model2.write_bdf(dirname / 'model2.bdf')
 
     # pulls nastran_format from the header
     model_parse = BDF(log=model.log)
     model_parse._parse = False
-    model_parse.read_bdf('model2.bdf')
+    model_parse.read_bdf(dirname / 'model2.bdf')
     #head('model2.bdf')
 
     if run_test_bdf:
         folder = ''
         log_error = SimpleLogger(level='error', encoding='utf-8')
-        test_bdf(folder, 'model2.bdf', stop_on_failure=True,
+        test_bdf(folder, dirname / 'model2.bdf', stop_on_failure=True,
                  punch=punch,
                  quiet=True, log=log_error, is_lax_parser=True,
                  run_mass=run_mass_properties)
-        os.remove('model2.test_bdf.bdf')
+        os.remove(dirname / 'model2.test_bdf.bdf')
 
     nelements = len(model2.elements) + len(model2.masses)
     nnodes = len(model2.nodes) + len(model2.spoints) + len(model2.epoints)

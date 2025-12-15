@@ -562,7 +562,7 @@ def _parse_pynastran_header(line: str) -> tuple[Optional[str], Optional[str]]:
         base, word = lline.split(':', 1)
         if base.strip() != 'pynastran':
             msg = 'unrecognized pyNastran marker\n'
-            msg += 'line=%r' % line
+            msg += f'line={line!r}'
             raise SyntaxError(msg)
         try:
             key, value = word.strip().split('=', 1)

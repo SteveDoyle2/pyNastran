@@ -20,7 +20,8 @@ from pyNastran.bdf.cards.aero.zona_cards.geometry import (
     PANLST1, PANLST2, PANLST3, SEGMESH,
     CAERO7, BODY7, PAFOIL7, PAFOIL8, AESURFZ, AESLINK)
 from pyNastran.bdf.cards.aero.zona_cards.plot import (
-    PLTAERO, PLTMODE, PLTVG, PLTCP, PLTMIST, PLTSURF)
+    PLTAERO, PLTMODE, PLTVG, PLTFLUT,
+    PLTCP, PLTMIST, PLTSURF)
 from pyNastran.bdf.cards.aero.zona_cards.flutter import (
     FLUTTER_ZONA, MKAEROZ)
 from pyNastran.bdf.cards.aero.zona_cards.trim import (
@@ -67,11 +68,11 @@ ZONA_CARDS = [
     # -------------
     # flutter
     'FLUTTER',
-    'FIXMDEN', 'FIXHATM', 'FIXMACH',
-    'PLTVG', 'PLTSURF',
+    'FIXHATM', 'FIXMATM', # 'FIXMDEN',
+    'PLTVG', 'PLTFLUT', 'PLTSURF',
     # -------------
     # plotting
-    'PLTMODE', 'PLTAERO', 'PLTTIME',
+    'PLTMODE', 'PLTAERO', #'PLTTIME',
     'PLTMIST',
     # -------------
     # mloads
@@ -86,14 +87,14 @@ ZONA_CARDS = [
     # ase
     'ASE', 'ASECONT',
     'ASESNSR', 'ASESNS1', 'SENSET',
-    'AEROLAG', 'ACTU',
+    'ACTU', #'AEROLAG',
     'MIMOSS', 'SISOTF',
     'ASEGAIN', 'GAINSET',
     # -------------
     # other
     'DMIL', 'EXTFILE',
     'MLDTIME', 'MLDCOMD',
-    'MINSTAT', 'APCONST',
+    'MINSTAT', #'APCONST',
     # 'PLTFLUT',
     'RBRED',
     # 'SPLINE0', 'PBODY7',
@@ -406,8 +407,8 @@ class AddMethods:
         model._type_to_id_map[asesns1.type].append(key)
 
     def add_gainset_object(self, gainset: GAINSET) -> None:
-        """adds an ASEGAIN object"""
-        key = gainset.asegain_id
+        """adds an GAINSET object"""
+        key = gainset.gainset_id
         model = self.model
         zona = model.zona
         assert key not in zona.gainset, '\ngainset=\n%s old=\n%s' % (
@@ -477,31 +478,31 @@ class AddMethods:
         self.model.zona.attach[key] = attach
         self.model._type_to_id_map[attach.type].append(key)
 
-    def add_plotmode_object(self, plot: PLTMODE) -> None:
+    def add_pltmode_object(self, plot: PLTMODE) -> None:
         """adds an PLTMODE object"""
-        assert plot.set_id not in self.model.zona.plotmode, str(plot)
+        assert plot.set_id not in self.model.zona.pltmode, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
-        self.model.zona.plotmode[key] = plot
+        self.model.zona.pltmode[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
-    def add_plotaero_object(self, plot: PLTAERO) -> None:
+    def add_pltaero_object(self, plot: PLTAERO) -> None:
         """adds an PLTAERO object"""
-        assert plot.set_id not in self.model.zona.plotaero, str(plot)
+        assert plot.set_id not in self.model.zona.pltaero, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
-        self.model.zona.plotaero[key] = plot
+        self.model.zona.pltaero[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
-    def add_plotvg_object(self, plot: PLTVG) -> None:
+    def add_pltvg_object(self, plot: PLTVG) -> None:
         """adds an PLTVG object"""
-        assert plot.set_id not in self.model.zona.plotvg, str(plot)
+        assert plot.set_id not in self.model.zona.pltvg, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
-        self.model.zona.plotvg[key] = plot
+        self.model.zona.pltvg[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
-    def add_plotsurf_object(self, plot: PLTSURF) -> None:
+    def add_pltsurf_object(self, plot: PLTSURF) -> None:
         """adds an PLTSURF object"""
         assert plot.set_id not in self.model.zona.pltsurf, str(plot)
         assert plot.set_id > 0
@@ -509,7 +510,7 @@ class AddMethods:
         self.model.zona.pltsurf[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
-    def add_plotcp_object(self, plot: PLTCP) -> None:
+    def add_pltcp_object(self, plot: PLTCP) -> None:
         """adds an PLTCP object"""
         # assert plot.set_id not in self.model.zona.pltcp, str(plot)
         assert plot.set_id > 0
@@ -519,12 +520,22 @@ class AddMethods:
         self.model.zona.pltcp[key].append(plot)
         self.model._type_to_id_map[plot.type].append(key)
 
-    def add_plotmist_object(self, plot: PLTMIST) -> None:
-        """adds an PLTMIST object"""
-        assert plot.set_id not in self.model.zona.plotmist, str(plot)
+    def add_pltflut_object(self, plot: PLTFLUT) -> None:
+        """adds an PLTFLUT object"""
+        # assert plot.set_id not in self.model.zona.pltcp, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
-        self.model.zona.plotmist[key] = plot
+        if key not in self.model.zona.pltflut:
+            self.model.zona.pltflut[key] = []
+        self.model.zona.pltflut[key].append(plot)
+        self.model._type_to_id_map[plot.type].append(key)
+
+    def add_pltmist_object(self, plot: PLTMIST) -> None:
+        """adds an PLTMIST object"""
+        assert plot.set_id not in self.model.zona.pltmist, str(plot)
+        assert plot.set_id > 0
+        key = plot.set_id
+        self.model.zona.pltmist[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
     def add_flutter_table_object(self, flutter_table: FIXHATM | FIXMATM) -> None:
@@ -561,9 +572,9 @@ class ZONA:
         self.pltsurf: dict[int, PLTSURF] = {}
         self.panlsts: dict[int, PANLST1 | PANLST2 | PANLST3] = {}
         self.attach: dict[int, PLTAERO] = {}
-        self.plotaero: dict[int, PLTAERO] = {}
-        self.plotmode: dict[int, PLTMODE] = {}
-        self.plotmist: dict[int, PLTMIST] = {}
+        self.pltaero: dict[int, PLTAERO] = {}
+        self.pltmode: dict[int, PLTMODE] = {}
+        self.pltmist: dict[int, PLTMIST] = {}
 
         #: store PAFOIL7/PAFOIL8
         self.pafoil: dict[int, PAFOIL7 | PAFOIL8] = {}
@@ -588,9 +599,10 @@ class ZONA:
         self.mldtrim: dict[int, MLDTRIM] = {}
 
         # flutter
-        self.plotvg: dict[int, PLTVG] = {}
+        self.pltvg: dict[int, PLTVG] = {}
         self.mkaeroz: dict[int, MKAEROZ] = {}
         self.nlfltr: dict[int, NLFLTR] = {}
+        self.pltflut: dict[int, PLTFLUT] = {}
 
         # trim
         self.trimfnc: dict[int, TRIMFNC] = {}
@@ -740,9 +752,14 @@ class ZONA:
             for panlsti in panlst:
                 panlsti.validate()
 
-        dicts = get_dicts(self, 'write')
+        dicts, dicts_list = get_dicts(self, 'write')
         for items in dicts:
             for item in items.values():
+                if isinstance(item, list):
+                    if len(item):
+                        print(item)
+                        asdf
+                    continue
                 # self.model.log.info(f'xref {item.type}')
                 item.validate()
 
@@ -764,6 +781,7 @@ class ZONA:
             'ATMOS': (ATMOS, zona_add.add_atmos_object),
             'FIXMATM': (FIXMATM, zona_add.add_flutter_table_object),
             'FIXHATM': (FIXHATM, zona_add.add_flutter_table_object),
+            # 'FIXMDEN': (FIXMDEN, zona_add.add_flutter_table_object),
             # trim
             'TRIM': (TRIM_ZONA, add_methods.add_trim_object),
             'TABLED1': (TABLED1_ZONA, add_methods.add_tabled_object),
@@ -787,6 +805,8 @@ class ZONA:
             'AESLINK': (AESLINK, zona_add.add_aeslink_object),
             # flutter
             'FLUTTER': (FLUTTER_ZONA, add_methods.add_flutter_object),
+            'PLTVG': (PLTVG, zona_add.add_pltvg_object),
+            'PLTFLUT': (PLTFLUT, zona_add.add_pltflut_object),
             # mloads
             'MLOADS': (MLOADS, zona_add.add_mloads_object),
             # gust
@@ -798,6 +818,8 @@ class ZONA:
             'ASECONT': (ASECONT, zona_add.add_asecont_object),
             'ASESNSR': (ASESNSR, zona_add.add_asesnsr_object),
             'ASESNS1': (ASESNS1, zona_add.add_asesns1_object),
+            'ASEGAIN': (ASEGAIN, zona_add.add_asegain_object),
+            'GAINSET': (GAINSET, zona_add.add_gainset_object),
             'MIMOSS': (MIMOSS, zona_add.add_mimoss_object),
             'SISOTF': (SISOTF, zona_add.add_sisotf_object),
             'CJUNCT': (CJUNCT, zona_add.add_cjunct_object),
@@ -812,12 +834,11 @@ class ZONA:
             'TRIMVAR': (TRIMVAR, zona_add.add_trimvar_object),
             'TRIMLNK': (TRIMLNK, zona_add.add_trimlnk_object),
             'ATTACH': (ATTACH, zona_add.add_attach_object),
-            'PLTMODE': (PLTMODE, zona_add.add_plotmode_object),
-            'PLTAERO': (PLTAERO, zona_add.add_plotaero_object),
-            'PLTVG': (PLTVG, zona_add.add_plotvg_object),
-            'PLTCP': (PLTCP, zona_add.add_plotcp_object),
-            'PLTSURF': (PLTSURF, zona_add.add_plotsurf_object),
-            'PLTMIST': (PLTMIST, zona_add.add_plotmist_object),
+            'PLTMODE': (PLTMODE, zona_add.add_pltmode_object),
+            'PLTAERO': (PLTAERO, zona_add.add_pltaero_object),
+            'PLTCP': (PLTCP, zona_add.add_pltcp_object),
+            'PLTSURF': (PLTSURF, zona_add.add_pltsurf_object),
+            'PLTMIST': (PLTMIST, zona_add.add_pltmist_object),
             'EXTINP': (EXTINP, zona_add.add_extinp_object),
             'EXTOUT': (EXTOUT, zona_add.add_extout_object),
             'TFSET': (TFSET, zona_add.add_tfset_object),
@@ -830,10 +851,19 @@ class ZONA:
             'DMIL': (DMIL, zona_add.add_dmil_object),
             'EXTFILE': (EXTFILE, zona_add.add_extfile_object),
             'MLDPRNT': (MLDPRNT, zona_add.add_mldprnt_object),
-            # PLTFLUT
         }
+        skip_keys = [
+            'TRIM', 'TABLED1', 'TABDMP1',
+            'SPLINE1', 'SPLINE2', 'SPLINE3',
+        ]
+        for key in card_parser2:
+            assert key in ZONA_CARDS or key in skip_keys, f'add key={key!r} to zona card_parser2'
+        skip_cards = ['AEFACT', 'CORD2R', 'SET1']
+        for key in ZONA_CARDS:
+            assert key in card_parser2 or key in skip_cards, f'add key={key!r} to card_parser2'
         card_parser.update(card_parser2)
         self.model.cards_to_read.update(set(ZONA_CARDS))
+        # print('update for zona!!!!!!!!!!!')
 
     def cross_reference(self):
         if self.model.nastran_format != 'zona':
@@ -844,7 +874,7 @@ class ZONA:
             caero.cross_reference(self.model)
             self.caero_to_name_map[caero.label] = caero.eid
 
-        dicts = get_dicts(self, 'xref')
+        dicts, dicts_list = get_dicts(self, 'xref')
         for items in dicts:
             for item in items.values():
                 # self.model.log.info(f'xref {item.type}')
@@ -864,7 +894,7 @@ class ZONA:
             caero.safe_cross_reference(self.model, xref_errors)
             self.caero_to_name_map[caero.label] = caero.eid
 
-        dicts = get_dicts(self, 'xref')
+        dicts, dicts_list = get_dicts(self, 'xref')
         for items in dicts:
             for item in items.values():
                 # self.model.log.info(f'xref {item.type}')
@@ -875,12 +905,17 @@ class ZONA:
                 panlsti.safe_cross_reference(self.model, xref_errors)
 
     def uncross_reference(zona: ZONA):
-        dicts = get_dicts(zona, 'write')
+        dicts, dicts_list = get_dicts(zona, 'write')
         for panlsts in zona.panlsts.values():
             for panlst in panlsts:
                 panlst.uncross_reference()
 
         for dicti in dicts:
+            if isinstance(dicti, list):
+                if len(dicti):
+                    print(dicti)
+                    asdf
+                continue
             for value in dicti.values():
                 value.uncross_reference()
 
@@ -903,7 +938,7 @@ class ZONA:
         # for unused_id, attach in self.attach.items():
         #     bdf_file.write(attach.write_card(size=size, is_double=is_double))
 
-        dicts = get_dicts(self, 'write')
+        dicts, dicts_list = get_dicts(self, 'write')
         for items in dicts:
             for key, value in sorteddict(items, sort_cards):
                 bdf_file.write(value.write_card(size=size, is_double=is_double))
@@ -962,7 +997,7 @@ class ZONA:
         return msg
 
     def get_bdf_cards(self, bulk_data_lines: list[str],
-                      bulk_data_ilines: Optional[Any]=None,
+                      bulk_data_ilines: Optional[np.ndarray]=None,
                       use_dict: bool=False) -> tuple[Any, Any, Any]:
         """Parses the BDF lines into a list of card_lines"""
         #self.log.warning('get_bdf_cards')
@@ -1115,10 +1150,11 @@ def fix_card_list(cards_list, cards_dict, card_count):
         'GRID', 'SPOINT', 'EPOINT',
         'CORD2R', 'CORD2C', 'CORD2S',
         'CORD1R', 'CORD1C', 'CORD1S',
-        'CBEAM', 'PBEAM', 'PBEAML',
-        'CBAR', 'PBAR', 'PBARL',
+        'CROD', 'PROD', 'CONROD',
         'CBUSH', 'PBUSH',
         'CBUSH1D', 'PBUSH1D',
+        'CBAR', 'PBAR', 'PBARL',
+        'CBEAM', 'PBEAM', 'PBEAML',
         'CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM',
         'PSOLID', 'PLSOLID',
         'CQUAD4', 'CTRIA3', 'CQUAD8', 'CTRIA6',
@@ -1135,7 +1171,8 @@ def fix_card_list(cards_list, cards_dict, card_count):
         cards_list2.append((card_name, comment, card_lines, ifile_iline))
     return cards_list2, cards_dict, dict(card_count)
 
-def get_dicts(zona: ZONA, method: str) -> list[dict]:
+def get_dicts(zona: ZONA, method: str) -> tuple[dicts[int, list],
+                                                list[dict]]:
     assert method in ['xref', 'write'], f'method={method!r}'
     dicts = [
         # --------------general-------------
@@ -1145,6 +1182,7 @@ def get_dicts(zona: ZONA, method: str) -> list[dict]:
         # zona.panlsts,  # special-list
         zona.pafoil,
         zona.attach,
+        zona.pltsurf, zona.pltmode, zona.pltmist,
         # -------------transient------------
         zona.mloads, zona.eloads,
         # --------------flutter-------------
@@ -1171,10 +1209,13 @@ def get_dicts(zona: ZONA, method: str) -> list[dict]:
         zona.dse,
         zona.dmil,
     ]
+    dict_lists = [
+        zona.pltvg, zona.pltflut,
+    ]
     if method == 'write':
         # these are xref'd by their parent
         dicts.extend([zona.extinp, zona.extout])
-    return dicts
+    return dicts, dict_lists
 
 
 def _convert_caeros(zona: ZONA) -> dict[int, Any]:

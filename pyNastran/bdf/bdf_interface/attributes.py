@@ -1418,6 +1418,7 @@ def map_version(fem: BDF, version: str) -> None:
         fmts = ', '.join(version_map)
         msg = f'mode={version!r} is not supported; modes=[{fmts}]'
         raise RuntimeError(msg)
+    # fem.log.info(f'map_version={version!r} {func}')
     func()
 
 
@@ -1443,4 +1444,5 @@ def map_update(fem: BDF, version: str) -> None:
     except KeyError:
         msg = f'mode={version!r} is not supported; modes=[msc, nx, optistruct, zona, mystran]'
         raise RuntimeError(msg)
+    # fem.log.info(f'mapping version={version!r} vfunc={func}')
     func()

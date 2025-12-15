@@ -1801,7 +1801,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 raise
             is_error = False
             msg = ''
-            
+
             is_error, msg = self._pop_error(
                 is_error, msg,
                 'element', 'elements',
@@ -4794,16 +4794,21 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             # key/value are lowercase
             if key == 'version':
                 assert value.lower() in {'msc', 'nx', 'optistruct', 'zona', 'mystran'}, f'version={value!r} is not supported'
+                assert hasattr(self, 'nastran_format')
                 self.nastran_format = value
             elif key == 'encoding':
+                assert hasattr(self, '_encoding')
                 self._encoding = value
             elif key == 'punch':
+                assert hasattr(self, 'punch')
                 self.punch = _bool(value)
             elif key in ['nnodes', 'nelements']:
                 pass
             elif key == 'dumplines':
+                assert hasattr(self, 'dumplines')
                 self.dumplines = _bool(value)
             elif key == 'is_superelements':
+                assert hasattr(self, 'is_superelements')
                 self.is_superelements = _bool(value)
             elif key == 'skip_cards':
                 cards = {value.strip() for value in value.upper().split(',')}
@@ -4824,6 +4829,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #elif key == 'skip_elements'
             #elif key == 'skip_properties'
             elif key == 'units':
+                assert hasattr(self, 'units')
                 self.units = [value.strip() for value in value.upper().split(',')]
             elif key in {'code-block', 'code_block'}:
                 value = line.split('=', 1)[1]

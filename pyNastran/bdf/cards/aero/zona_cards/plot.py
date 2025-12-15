@@ -8,6 +8,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     string_or_blank, string_multifield,
     blank, string_multifield_dollar_int_or_blank,
 )
+from .utils import split_filename_dollar
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -27,12 +28,17 @@ class PLTMODE(BaseCard):
 
         if comment:
             self.comment = comment
+
+        if output_format == 'TECP':
+            output_format = 'TECPLOT'
         self.set_id = set_id
         self.mode = mode
         self.symmetry = symmetry
         self.max_disp = max_disp
         self.output_format = output_format
         self.filename = filename
+        assert output_format in {'TECPLOT', 'FEMAP', 'NASTRAN', 'PATRAN'}, output_format
+        assert symmetry in {'SYM', 'ASYM', 'ANTI'}, symmetry
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -47,15 +53,11 @@ class PLTMODE(BaseCard):
         symmetry = string(card, 2, 'sym/asym')
         mode = integer(card, 3, 'mode')
         max_disp = double(card, 4, 'max_disp')
-        assert symmetry in {'SYM', 'ASYM', 'ANTI'}, symmetry
         # if max_disp is None:
         #     ifield += 1
         #     max_disp = double(card, ifield, 'max_disp')
         #     ifield += 1
         output_format = string(card, 5, 'format')
-        if output_format == 'TECP':
-            output_format = 'TECPLOT'
-        assert output_format in {'TECPLOT', 'FEMAP', 'NASTRAN', 'PATRAN'}, format
 
         filename = string_multifield(card, (6, 7), 'filename')
         assert len(card) <= 8, f'len(PLTMODE card) = {len(card):d}\ncard={card}'
@@ -64,6 +66,12 @@ class PLTMODE(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         return
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
 
     def repr_fields(self):
         """
@@ -75,8 +83,12 @@ class PLTMODE(BaseCard):
           the fields that define the card
 
         """
-        list_fields = ['PLTMODE', self.set_id, self.mode, self.max_disp,
-                       self.output_format, self.filename]
+        filenamea, filenameb = split_filename_dollar(self.filename)
+
+        list_fields = [
+            'PLTMODE', self.set_id, self.symmetry,
+            self.mode, self.max_disp,
+            self.output_format, filenamea, filenameb]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -142,6 +154,12 @@ class PLTAERO(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         return
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
 
     def repr_fields(self):
         """
@@ -209,6 +227,12 @@ class PLTVG(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         return
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
     def repr_fields(self):
         """
         Gets the fields in their simplified form
@@ -219,8 +243,9 @@ class PLTVG(BaseCard):
           the fields that define the card
 
         """
+        filenamea, filenameb = split_filename_dollar(self.filename)
         list_fields = ['PLTVG', self.set_id, self.flutter_id, None,
-                       None, self.filename]
+                       None, filenamea, filenameb]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -274,6 +299,12 @@ class PLTCP(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         return
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
 
     def repr_fields(self):
         """
@@ -343,6 +374,12 @@ class PLTMIST(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         return
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
     def repr_fields(self):
         """
         Gets the fields in their simplified form
@@ -353,8 +390,9 @@ class PLTMIST(BaseCard):
           the fields that define the card
 
         """
-        list_fields = ['PLTMIST', self.set_id, self.femgrid, self.offset,
-                       self.out_format, self.filename, self.cell, self.vct]
+        filenamea, filenameb = split_filename_dollar(self.filename)
+        list_fields = ['PLTMIST', self.set_id, None, None, None, None,
+                       self.out_format, filenamea, filenameb]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -407,6 +445,12 @@ class PLTSURF(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         return
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
     def repr_fields(self):
         """
         Gets the fields in their simplified form
@@ -417,8 +461,82 @@ class PLTSURF(BaseCard):
           the fields that define the card
 
         """
-        list_fields = ['PLTSURF', self.set_id, self.femgrid, self.offset,
-                       self.out_format, self.filename, self.cell, self.vct]
+        filenamea, filenameb = split_filename_dollar(self.filename)
+        list_fields = [
+            'PLTSURF', self.set_id, self.label, self.scale_factor,
+            self.out_format, filenamea, filenameb]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        # TODO: needs a better writer
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class PLTFLUT(BaseCard):
+    type = 'PLTFLUT'
+    def __init__(self, set_id: int,
+                 out_format: str, filename: str,
+                 scale_factor: float=1.0,
+                 comment: str=''):
+        BaseCard.__init__(self)
+
+        if comment:
+            self.comment = comment
+
+        if out_format == 'TECP':
+            out_format = 'TECPLOT'
+
+        self.set_id = set_id
+        self.out_format = out_format
+        self.scale_factor = scale_factor
+        self.filename = filename
+        assert out_format in {'TECPLOT', ''}, f'out_format={out_format!r}'
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # remove None
+        #print(card)
+        #fields = [field for field in card.card if field is not None]
+        #card.card = fields
+        card.nfields = len(card.card)
+
+        # ['PLTFLUT', '10', '10', '1', '25', '0.5', 'TECPLOT', 'OPENFLT', '.PLT']
+        set_id = integer(card, 1, 'set_id')
+        field2 = integer(card, 2, 'field2')
+        field3 = integer(card, 3, 'field3')
+        field4 = integer(card, 4, 'field4')
+        scale_factor = double(card, 5, 'scale_factor')
+        out_format = string(card, 6, 'out_format')
+
+        filename = string_multifield(card, (7, 8), 'filename')
+        # assert filename == 'ROGER11.DAT', f'filename={filename!r}'
+        assert len(card) == 9, f'len(PLTFLUT card) = {len(card):d}\ncard={card}'
+        return PLTFLUT(set_id, out_format, filename,
+                       scale_factor=scale_factor, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        return
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : list[varies]
+          the fields that define the card
+
+        """
+        filenamea, filenameb = split_filename_dollar(self.filename)
+        list_fields = ['PLTFLUT', self.set_id, None, None, None,
+                       self.scale_factor, self.out_format, filenamea, filenameb]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
