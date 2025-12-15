@@ -5,7 +5,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string,
-    string_or_blank, string_multifield_or_blank,
+    string_or_blank, string_multifield_dollar_int_or_blank,
 )
 from .utils import split_filename_dollar
 if TYPE_CHECKING:  # pragma: no cover
@@ -66,9 +66,8 @@ class MKAEROZ(BaseCard):
         flt_id = integer_or_blank(card, 4, 'IDFLT')
         save = string_or_blank(card, 5, 'SAVE')
         #print(f'card = {card}')
-        filename = string_multifield_or_blank(card, (6, 7), 'filename', default='')
-        if filename.startswith('$'):
-            filename = int(filename[1:])
+        filename = string_multifield_dollar_int_or_blank(
+            card, (6, 7), 'filename', default='')
         print_flag = integer_or_blank(card, 8, 'PRINT_FLAG', 0)
         freqs = []
         ifreq = 1

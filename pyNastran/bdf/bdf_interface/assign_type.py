@@ -463,7 +463,6 @@ def double(card: BDFCard, ifield: int, fieldname: str,
 
     """
     svalue = card.field(ifield)
-
     if isinstance(svalue, float_types):
         return svalue
     elif isinstance(svalue, integer_types):
@@ -1431,9 +1430,20 @@ def string_multifield(card: BDFCard, ifields: tuple[int, ...],
         if card.field(ifield):
             value += card.field(ifield)
     value = value.strip()
-    assert len(value), f'fieldname={value!r}'
-    assert ' ' not in value, f'fieldname={value!r}'
+    assert len(value), f'{fieldname}={value!r}'
+    assert ' ' not in value, f'{fieldname}={value!r}'
     return value
+
+
+def string_multifield_dollar_int_or_blank(card: BDFCard,
+                                          ifields: tuple[int, ...],
+                                          fieldname: str, default='') -> str | int:
+    filename = string_multifield_or_blank(
+        card, ifields, fieldname, default=default)
+    if filename.startswith('$'):
+        filename = int(filename[1:])
+    return filename
+
 
 def string_multifield_or_blank(card: BDFCard, ifields: tuple[int, ...],
                                fieldname: str, default=None) -> str:
@@ -1443,8 +1453,10 @@ def string_multifield_or_blank(card: BDFCard, ifields: tuple[int, ...],
     for ifield in ifields:
         if card.field(ifield):
             value += card.field(ifield)
+        # else:
+        #     value += '        '
     value = value.strip()
     if value == '':
         return default
-    assert ' ' not in value, f'fieldname={value!r}'
+    assert ' ' not in value, f'{fieldname}={value!r}'
     return value

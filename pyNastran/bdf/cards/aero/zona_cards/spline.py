@@ -230,10 +230,12 @@ class SPLINE2_ZONA(Spline):
     """
     type = 'SPLINE2_ZONA'
 
-    def __init__(self, eid, panlst, setg, model=None, dz=None, eps=0.01,
-                 cp=None, curvature=None, comment=''):
+    def __init__(self, eid: int, panlst: int,
+                 setg: int, model: str='', dz=None,
+                 eps: float=0.01, cp=None, curvature=None,
+                 comment: str=''):
         """
-        Creates a SPLINE1 card, which is useful for control surface
+        Creates a SPLINE2 card, which is useful for control surface
         constraints.
 
         Parameters
@@ -264,7 +266,7 @@ class SPLINE2_ZONA(Spline):
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
         """
-        Adds a SPLINE1 card from ``BDF.add_card(...)``
+        Adds a SPLINE2 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -275,7 +277,7 @@ class SPLINE2_ZONA(Spline):
 
         """
         eid = integer(card, 1, 'eid')
-        model = integer_string_or_blank(card, 2, 'model', default='')
+        model = str(integer_string_or_blank(card, 2, 'model', default=''))
         panlst = integer(card, 3, 'panlst/setk')
         setg = integer(card, 4, 'setg')
         dz = double_or_blank(card, 5, 'dz', default=0.0)

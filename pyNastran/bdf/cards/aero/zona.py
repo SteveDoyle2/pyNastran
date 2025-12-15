@@ -20,7 +20,7 @@ from pyNastran.bdf.cards.aero.zona_cards.geometry import (
     PANLST1, PANLST2, PANLST3, SEGMESH,
     CAERO7, BODY7, PAFOIL7, PAFOIL8, AESURFZ, AESLINK)
 from pyNastran.bdf.cards.aero.zona_cards.plot import (
-    PLTAERO, PLTMODE, )
+    PLTAERO, PLTMODE, PLTVG, PLTCP, PLTMIST, PLTSURF)
 from pyNastran.bdf.cards.aero.zona_cards.flutter import (
     FLUTTER_ZONA, MKAEROZ)
 from pyNastran.bdf.cards.aero.zona_cards.trim import (
@@ -60,14 +60,19 @@ ZONA_CARDS = [
     'PANLST1', 'PANLST2', 'PANLST3',
     'PAFOIL7', 'PAFOIL8',
     'SEGMESH', 'BODY7', 'ACOORD', 'MKAEROZ',
+    # -------------
+    # trim
+    'PLTCP',
     'TRIMVAR', 'TRIMLNK',
     # -------------
     # flutter
     'FLUTTER',
     'FIXMDEN', 'FIXHATM', 'FIXMACH',
+    'PLTVG', 'PLTSURF',
     # -------------
     # plotting
     'PLTMODE', 'PLTAERO', 'PLTTIME',
+    'PLTMIST',
     # -------------
     # mloads
     'MLOADS',
@@ -89,7 +94,7 @@ ZONA_CARDS = [
     'DMIL', 'EXTFILE',
     'MLDTIME', 'MLDCOMD',
     'MINSTAT', 'APCONST',
-    # 'PLTFLUT', 'PLTVG', 'PLTCP', 'PLTMIST',
+    # 'PLTFLUT',
     'RBRED',
     # 'SPLINE0', 'PBODY7',
     'CNCTSET', 'SURFSET',
@@ -488,6 +493,40 @@ class AddMethods:
         self.model.zona.plotaero[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
+    def add_plotvg_object(self, plot: PLTVG) -> None:
+        """adds an PLTVG object"""
+        assert plot.set_id not in self.model.zona.plotvg, str(plot)
+        assert plot.set_id > 0
+        key = plot.set_id
+        self.model.zona.plotvg[key] = plot
+        self.model._type_to_id_map[plot.type].append(key)
+
+    def add_plotsurf_object(self, plot: PLTSURF) -> None:
+        """adds an PLTSURF object"""
+        assert plot.set_id not in self.model.zona.pltsurf, str(plot)
+        assert plot.set_id > 0
+        key = plot.set_id
+        self.model.zona.pltsurf[key] = plot
+        self.model._type_to_id_map[plot.type].append(key)
+
+    def add_plotcp_object(self, plot: PLTCP) -> None:
+        """adds an PLTCP object"""
+        # assert plot.set_id not in self.model.zona.pltcp, str(plot)
+        assert plot.set_id > 0
+        key = plot.set_id
+        if key not in self.model.zona.pltcp:
+            self.model.zona.pltcp[key] = []
+        self.model.zona.pltcp[key].append(plot)
+        self.model._type_to_id_map[plot.type].append(key)
+
+    def add_plotmist_object(self, plot: PLTMIST) -> None:
+        """adds an PLTMIST object"""
+        assert plot.set_id not in self.model.zona.plotmist, str(plot)
+        assert plot.set_id > 0
+        key = plot.set_id
+        self.model.zona.plotmist[key] = plot
+        self.model._type_to_id_map[plot.type].append(key)
+
     def add_flutter_table_object(self, flutter_table: FIXHATM | FIXMATM) -> None:
         """adds an FIXMATM object"""
         key = flutter_table.sid
@@ -519,10 +558,12 @@ class ZONA:
         self.flutter_table: dict[int, FIXHATM | FIXMATM] = {}
 
         #: store PANLST1,PANLST2,PANLST3
+        self.pltsurf: dict[int, PLTSURF] = {}
         self.panlsts: dict[int, PANLST1 | PANLST2 | PANLST3] = {}
         self.attach: dict[int, PLTAERO] = {}
         self.plotaero: dict[int, PLTAERO] = {}
         self.plotmode: dict[int, PLTMODE] = {}
+        self.plotmist: dict[int, PLTMIST] = {}
 
         #: store PAFOIL7/PAFOIL8
         self.pafoil: dict[int, PAFOIL7 | PAFOIL8] = {}
@@ -540,12 +581,14 @@ class ZONA:
         self.mldcomd: dict[int, MLDCOMD] = {}
 
         # trim
+        self.pltcp: dict[int, PLTCP] = {}
         self.aeslink: dict[int, AESLINK] = {}
         self.trimvar: dict[int, TRIMVAR] = {}
         self.trimlnk: dict[int, TRIMLNK] = {}
         self.mldtrim: dict[int, MLDTRIM] = {}
 
         # flutter
+        self.plotvg: dict[int, PLTVG] = {}
         self.mkaeroz: dict[int, MKAEROZ] = {}
         self.nlfltr: dict[int, NLFLTR] = {}
 
@@ -771,6 +814,10 @@ class ZONA:
             'ATTACH': (ATTACH, zona_add.add_attach_object),
             'PLTMODE': (PLTMODE, zona_add.add_plotmode_object),
             'PLTAERO': (PLTAERO, zona_add.add_plotaero_object),
+            'PLTVG': (PLTVG, zona_add.add_plotvg_object),
+            'PLTCP': (PLTCP, zona_add.add_plotcp_object),
+            'PLTSURF': (PLTSURF, zona_add.add_plotsurf_object),
+            'PLTMIST': (PLTMIST, zona_add.add_plotmist_object),
             'EXTINP': (EXTINP, zona_add.add_extinp_object),
             'EXTOUT': (EXTOUT, zona_add.add_extout_object),
             'TFSET': (TFSET, zona_add.add_tfset_object),
@@ -783,10 +830,7 @@ class ZONA:
             'DMIL': (DMIL, zona_add.add_dmil_object),
             'EXTFILE': (EXTFILE, zona_add.add_extfile_object),
             'MLDPRNT': (MLDPRNT, zona_add.add_mldprnt_object),
-            # PLTCP
             # PLTFLUT
-            # PLTVG
-            # PLTMIST
         }
         card_parser.update(card_parser2)
         self.model.cards_to_read.update(set(ZONA_CARDS))

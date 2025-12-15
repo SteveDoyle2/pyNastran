@@ -13,7 +13,9 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
     string_or_blank, integer_or_string, blank,
-    integer_string_or_blank, string_multifield_or_blank,
+    integer_string_or_blank,
+    # string_multifield_or_blank,
+    string_multifield_dollar_int_or_blank,
 )
 from pyNastran.bdf.cards.aero.aero import AELINK
 from pyNastran.bdf.cards.aero.static_loads import AEROS
@@ -585,7 +587,8 @@ class MLDPRNT(BaseCard):
         # MLDPRNT 10      HA144MLD.PLT  TABLE                      YES
         #         STATE   X      MODALX 1       EXTOUT 100
         mldprnt_id = integer(card, 1, 'mldprnt_id')
-        filename = string_multifield_or_blank(card, (2, 3), 'filename', default='')
+        filename = string_multifield_dollar_int_or_blank(
+            card, (2, 3), 'filename', default='')
         form = string_or_blank(card, 4, 'form', default='TABLE')
         psd_time = string_or_blank(card, 5, 'psd/time', default='TIME')
         tspnt = double_or_blank(card, 6, 'TSPNT')
@@ -705,9 +708,8 @@ class MLDSTAT(BaseCard):
         assert dx_tox in {'YES', 'NO'}, f'dx_tox={dx_tox!r}'
 
         # filename = ''
-        filename = string_multifield_or_blank(card, (6, 7), 'filename', default='')
-        if filename.startswith('$'):
-            filename = int(filename[1:])
+        filename = string_multifield_dollar_int_or_blank(
+            card, (6, 7), 'filename', default='')
         i = 9
         j = 1
         states = []
@@ -838,9 +840,8 @@ class MINSTAT(BaseCard):
         min_inp = integer_or_blank(card, 8, 'min_inp', default=0)
         print_flag = integer_or_blank(card, 9, 'print_flag', default=0)
         save_flag = string_or_blank(card, 10, 'save_flag', default='')
-        filename = string_multifield_or_blank(card, (11, 12), 'filename', default='')
-        if filename.startswith('$'):
-            filename = int(filename[1:])
+        filename = string_multifield_dollar_int_or_blank(
+            card, (11, 12), 'filename', default='')
         msmod = integer_or_blank(card, 13, 'msmod', default=0)
         aerolag_gust_id = integer_or_blank(card, 14, 'LAGIDG, aerolag2_id', default=0)
         dinit_gust_id = integer_or_blank(card, 15, 'DMATIDG, dinit_id', default=0)
