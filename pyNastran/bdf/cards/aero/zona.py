@@ -37,6 +37,7 @@ from pyNastran.bdf.cards.aero.zona_cards.ase import (
     CJUNCT, CONCT, TFSET, MIMOSS, SISOTF,
     SENSET, SURFSET, CNCTSET,
     ASEGAIN, GAINSET,
+    AEROLAG,
 )
 from pyNastran.bdf.cards.aero.zona_cards.bdf_tables import (
     TABLED1_ZONA, TABDMP1_ZONA)
@@ -91,10 +92,10 @@ ZONA_CARDS = [
     # ase
     'ASE', 'ASECONT',
     'ASESNSR', 'ASESNS1', 'SENSET',
-    'ACTU', #'AEROLAG',
+    'ACTU',
     'MIMOSS', 'SISOTF',
     'ASEGAIN', 'GAINSET',
-    'PLTBODE',
+    'PLTBODE', 'AEROLAG',
     # -------------
     # other
     'SETADD',
@@ -462,6 +463,16 @@ class AddMethods:
         zona.conct[key] = conct
         model._type_to_id_map[conct.type].append(key)
 
+    def add_aerolag_object(self, aerolag: AEROLAG) -> None:
+        """adds an CONCT object"""
+        key = aerolag.aerolag_id
+        model = self.model
+        zona = model.zona
+        assert key not in zona.conct, '\naerolag=\n%s old=\n%s' % (
+            aerolag, zona.aerolag[key])
+        zona.aerolag[key] = aerolag
+        model._type_to_id_map[aerolag.type].append(key)
+
     def add_actu_object(self, actu: ACTU) -> None:
         """adds an AESURFZ object"""
         key = actu.actu_id
@@ -667,6 +678,7 @@ class ZONA:
         self.mimoss: dict[int, MIMOSS] = {}
         self.sisotf: dict[int, SISOTF] = {}
         self.cmargin: dict[int, CMARGIN] = {}
+        self.aerolag: dict[int, AEROLAG] = {}
 
         # other
         self.extinp: dict[int, EXTINP] = {}
@@ -873,6 +885,7 @@ class ZONA:
             'SISOTF': (SISOTF, zona_add.add_sisotf_object),
             'CJUNCT': (CJUNCT, zona_add.add_cjunct_object),
             'CONCT': (CONCT, zona_add.add_conct_object),
+            'AEROLAG': (AEROLAG, zona_add.add_aerolag_object),
             # other
             'SETADD': (SETADD, zona_add.add_setadd_object),
             'SENSET': (SENSET, zona_add.add_senset_object),
@@ -1272,6 +1285,7 @@ def get_dicts(zona: ZONA, method: str) -> tuple[dicts[int, list],
         zona.mldcomd, zona.mldtime,
         # zona.extinp, zona.extout,
         zona.loadmod, zona.rbred,
+        zona.aerolag,
         # ---------------gust---------------
         zona.gloads, zona.dgust, zona.cgust,
         # ---------------other--------------

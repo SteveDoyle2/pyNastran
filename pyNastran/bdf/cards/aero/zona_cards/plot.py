@@ -676,6 +676,7 @@ class PLTTIME(BaseCard):
         self.tend = tend
         self.ndt = ndt
         self.out_type = out_type
+        self.output_format = output_format
         self.scale_factor = scale_factor
         self.filename = filename
         self.aero_filename = aero_filename

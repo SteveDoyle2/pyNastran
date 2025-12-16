@@ -1,8 +1,11 @@
 import os
-from pyNastran.bdf.bdf import read_bdf
 from cpylog import SimpleLogger
+from pyNastran.bdf.bdf import read_bdf
+from pyNastran.utils import PathLike
 
-def nastran_to_fluent(nastran_filename: str, fluent_filename: str,
+
+def nastran_to_fluent(nastran_filename: PathLike,
+                      fluent_filename: PathLike,
                       log: SimpleLogger=None):
     model = read_bdf(nastran_filename, log=log)
     vrt_filename = os.path.splitext(fluent_filename)[0] + '.vrt'

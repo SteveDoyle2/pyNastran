@@ -1351,3 +1351,81 @@ class SISOTF(BaseCard):
     def write_card(self, size: int = 8, is_double: bool = False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+
+class AEROLAG(BaseCard):
+    type = 'AEROLAG'
+    # _field_map = {
+    #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
+    # }
+
+    def __init__(self, aerolag_id: int, nlag: int, lag_values: list[float],
+                 comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.aerolag_id = aerolag_id
+        self.nlag = nlag
+        self.lag_values = lag_values
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a TRIM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        # AEROLAG SID NLAG R1    R2   R3    R4 R5 R6
+        #         R7  R8   -etc-
+        # AEROLAG 10  4  -0.2    -0.5 -1.0 -2.0
+        aerolag_id = integer(card, 1, 'aerolag_id')
+        nlag = integer(card, 1, 'nlag')
+
+        lag_values = []
+        for ifield in range(3, len(card)):
+            idi = double(card, ifield, 'OTFID, id')
+            lag_values.append(idi)
+        # assert len(lag_values) == nlag, (lag_values, nlag)
+        assert len(card) >= 3, f'len(AEROLAG card) = {len(card):d}\ncard={card}'
+        return AEROLAG(aerolag_id, nlag, lag_values, comment=comment)
+
+    # def validate(self):
+    #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
+
+        """
+        list_fields = ['AEROLAG', self.aerolag_id, self.nlag] + self.lag_values
+        return list_fields
+
+    def repr_fields(self):
+        list_fields = self.raw_fields()
+        return list_fields
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
