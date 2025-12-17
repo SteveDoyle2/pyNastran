@@ -1,9 +1,10 @@
 from __future__ import annotations
 import copy
+from typing import Optional
 
 import numpy as np
 
-from pyNastran.utils.numpy_utils import integer_types, float_types
+from pyNastran.utils.numpy_utils import integer_types, float_types, integer_float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
@@ -132,6 +133,26 @@ class RealBeamArray(OES_Object):
             self.element_node = element_node
             self.xxb = xxb
             self.data = data
+
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        # headers = [
+        #     'sxc', 'sxd', 'sxe', 'sxf',
+        #     'smax', 'smin', 'MS_tension', 'MS_compression'
+        # ]
+        import warnings
+        warnings.warn('update oes_beam margins')
+        if data is None:
+            self.data *= factor
+        else:
+            self.data += data * factor
+        if update:
+            self.update_data_components()
+
+    def update_data_components(self):
+        return
 
     def finalize(self):
         """Calls any OP2 objects that need to do any post matrix calcs"""

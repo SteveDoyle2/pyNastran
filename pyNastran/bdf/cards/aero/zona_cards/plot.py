@@ -742,3 +742,89 @@ class PLTTIME(BaseCard):
         # TODO: needs a better writer
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+
+class PLTTRIM(BaseCard):
+    type = 'PLTTRIM'
+    def __init__(self, set_id: int,
+                 trim_id: int,
+                 out_type: str, filename: str, aero_filename: str,
+                 flex: str='FLEX', output_format: str='TECPLOT',
+                 scale_factor: float=1.0,
+                 comment: str=''):
+        BaseCard.__init__(self)
+
+        if comment:
+            self.comment = comment
+        if out_type == 'ELAS':
+            out_type = 'ELASTIC'
+        self.set_id = set_id
+        self.trim_id = trim_id
+        self.flex = flex
+        self.out_type = out_type
+        self.output_format = output_format
+        self.scale_factor = scale_factor
+        self.filename = filename
+        self.aero_filename = aero_filename
+        assert flex in {'RIGID', 'FLEX'}, f'flex={flex!r}'
+        assert out_type in {'FORCE', 'AERO', 'INERTIAL', 'CP', 'DEFORM', 'ELASTIC'}, f'out_type={out_type!r}'
+        assert output_format in {'TECPLOT', 'PATRAN', 'IDEAS', 'FEMAP', 'OUTPUT4', 'NASTRAN', 'NASTNL'}, f'output_format={output_format!r}'
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # remove None
+        #print(card)
+        #fields = [field for field in card.card if field is not None]
+        #card.card = fields
+        # card.nfields = len(card.card)
+
+        # PLTTRIM IDPLT IDTRIM FLEX TYPE   FORM    ---FILENM--- SCALE
+        #         ---AERONM---
+        # PLTTRIM 100   10     FLEX DEFORM TECPLOT PLTTRIM.DAT
+        set_id = integer(card, 1, 'set_id')
+        trim_id = integer(card, 2, 'trim_id')
+        flex = string_or_blank(card, 3, 'flex', default='FLEX')
+        out_type = string(card, 4, 'out_type')
+        output_format = string_or_blank(card, 5, 'output_format', default='TECPLOT')
+        filename = string_multifield_dollar_int(card, (6, 7), 'filename')
+        scale_factor = double_or_blank(card, 8, 'draw_flag', default=1.0)
+        aero_filename = string_multifield_dollar_int_or_blank(
+            card, (9, 10), 'aero_filename')
+        # assert filename == 'ROGER11.DAT', f'filename={filename!r}'
+        assert len(card) <= 10, f'len(PLTTRIM card) = {len(card):d}\ncard={card}'
+        return PLTTRIM(set_id, trim_id, out_type, filename,
+                       aero_filename, flex=flex,
+                       output_format=output_format, scale_factor=scale_factor,
+                       comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        return
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : list[varies]
+          the fields that define the card
+
+        """
+        filenamea, filenameb = split_filename_dollar(self.filename)
+        aerofilenamea, aerofilenameb = split_filename_dollar(self.aero_filename)
+        list_fields = ['PLTTRIM', self.set_id, self.trim_id,
+                       self.flex, self.out_type, self.output_format,
+                       filenamea, filenameb, self.scale_factor,
+                       aerofilenamea, aerofilenameb]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        # TODO: needs a better writer
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)

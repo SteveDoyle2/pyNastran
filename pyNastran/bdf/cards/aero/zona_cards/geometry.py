@@ -1719,7 +1719,7 @@ class CAERO7(BaseCard):
         self.lspan_ref = None
         self.ascid_ref = None
 
-    def convert_to_nastran(self):
+    def convert_to_nastran(self, pid: int=1):
         """
         +--------+-----+-----+----+-------+--------+--------+--------+------+
         |   1    |  2  |  3  | 4  |   5   |   6    |    7   |   8    |   9  |
@@ -1730,7 +1730,6 @@ class CAERO7(BaseCard):
         +--------+-----+-----+----+-------+--------+--------+--------+------+
 
         """
-        pid = 1
         igroup = 1
         caero = CAERO1(self.eid, pid, igroup, self.p1, self.x12,
                        self.p4, self.x43, cp=self.cp,

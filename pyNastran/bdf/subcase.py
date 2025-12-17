@@ -795,6 +795,7 @@ class Subcase:
         -------
         >>> set_id1 = 42
         >>> values1 = [1, 2, 3]
+        >>> subcase = Subcase()
         >>> subcase.add_set_from_values(set_id1, values1)
         >>> set_id2 = 43
         >>> values2 = ['KAAX']
@@ -821,6 +822,7 @@ class Subcase:
         key : str
             the name
 
+        >>> subcase = Subcase()
         >>> subcase._add_data(key, value, options, param_type)
 
         """

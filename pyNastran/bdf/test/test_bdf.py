@@ -587,35 +587,35 @@ def run_and_compare_fems(
         if not dev:
             raise
         print('failed test because MissingDeckSections...ignoring')
-    except DuplicateIDsError as e:
+    except DuplicateIDsError as error:
         # only temporarily uncomment this when running lots of tests
         if not dev:
             raise
         #elif is_mesh_opt:
             #print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
-            #print(e)
+            #print(error)
         else:
             print('failed test because DuplicateIDsError...ignoring')
     except MeshOptimizationError:
         print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
-    except DisabledCardError as e:
+    except DisabledCardError as error:
         if not dev:
             raise
     except EnvironmentVariableError:
         if not dev:
             raise
-    #except RuntimeError as e:
+    #except RuntimeError as error:
         # only temporarily uncomment this when running lots of tests
         #if not dev:
             #raise
         #elif is_mesh_opt:
             #print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
-            #print(e)
+            #print(error)
         #else:
             #raise
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
-    #except SyntaxError as e:
+    #except SyntaxError as error:
         # only temporarily uncomment this when running lots of tests
         #if not dev:
             #raise
@@ -624,12 +624,12 @@ def run_and_compare_fems(
             #print(e)
         #else:
             #raise
-    #except KeyError as e:  # only temporarily uncomment this when running lots of tests
+    #except KeyError as error:  # only temporarily uncomment this when running lots of tests
         #if not dev:
             #raise
         #elif is_mesh_opt:
             #print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
-            #print(e)
+            #print(error)
         #else:
             #raise
     #except AssertionError:  # only temporarily uncomment this when running lots of tests
@@ -1008,7 +1008,7 @@ def verify_dof_map(model: BDF,
         if len(set_types) > 1:
             set_types_str = ', '.join(set_types)
             log.warning(f'dof={dof} is used by multiple sets: {set_types_str}')
-    return
+    return True
 
 
 def _fem_xref_methods_check(fem1: BDF,
@@ -2324,7 +2324,8 @@ def test_bdf_argparse(argv=None):
     version_group_map = {
         '--msc': 'Assume MSC Nastran (default=True)',
         '--nx': 'Assume NX Nastran/Simcenter (default=False)',
-        '--zona': 'Assume ZONA (default=True)',
+        # '--zona': 'Assume ZONA (default=True)',
+        '--zaero': 'Assume ZAERO (default=True)',
         '--optistruct': 'Assume Altair OptiStruct (default=False)',
         '--mystran': 'Assume Mystran (default=False)',
     }
@@ -2340,7 +2341,7 @@ def test_bdf_argparse(argv=None):
     parent_parser.add_argument('-e', '--nerrors', default=100, type=int,
                                help='Allow for cross-reference errors (default=100)')
     parent_parser.add_argument('--encoding', default=encoding, type=str,
-                               help='the encoding method (default=%r)\n' % encoding)
+                               help=f'the encoding method (default={encoding!r})\n')
     #parent_parser.add_argument('--skip_nominal', action='store_true',
                                #help='skip the nominal model comparison (default=False)')
 
@@ -2434,8 +2435,10 @@ def _set_version(args: dict[str, Any]):
         version = 'msc'
     elif args['nx']:
         version = 'nx'
-    elif args['zona']:
-        version = 'zona'
+    # elif args['zona']:
+    #     version = 'zona'
+    elif args['zaero']:
+        version = 'zaero'
     elif args['optistruct']:
         version = 'optistruct'
     elif args['mystran']:
@@ -2443,7 +2446,7 @@ def _set_version(args: dict[str, Any]):
     else:
         version = None
     args['version'] = version
-    for name in ['msc', 'nx', 'optistruct', 'mystran', 'zona']:
+    for name in ['msc', 'nx', 'optistruct', 'mystran', 'zona', 'zaero']:
         if name in args:
             del args[name]
 
@@ -2471,7 +2474,7 @@ def _set_version(args: dict[str, Any]):
 
 def get_test_bdf_usage_args_examples(encoding):
     """helper method"""
-    formats = '--msc|--nx|--optistruct|--zona|--mystran'
+    formats = '--msc|--nx|--optistruct|--zona|--zaero|--mystran'
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'

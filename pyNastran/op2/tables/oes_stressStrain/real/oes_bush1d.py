@@ -1,9 +1,9 @@
 from itertools import count
+from typing import Optional
 
 import numpy as np
-from numpy import zeros, searchsorted, ravel
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -59,6 +59,22 @@ class RealBush1DStressArray(OES_Object):
                    'axial_stress', 'axial_strain', 'plastic_strain']
         return headers
 
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        # headers = ['element_force', 'axial_displacement', 'axial_velocity',
+        #            'axial_stress', 'axial_strain', 'plastic_strain']
+        if data is None:
+            self.data *= factor
+        else:
+            self.data += data * factor
+        if update:
+            self.update_data_components()
+
+    def update_data_components(self):
+        return
+
     def build(self):
         """sizes the vectorized attributes of the RealBush1DStressArray"""
         #print("self.ielement =", self.ielement)
@@ -78,12 +94,12 @@ class RealBush1DStressArray(OES_Object):
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements,
             #self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.ntotal, dtype=idtype)
-        self.is_failed = zeros((self.ntimes, self.ntotal, 1), dtype='int32')
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(self.ntotal, dtype=idtype)
+        self.is_failed = np.zeros((self.ntimes, self.ntotal, 1), dtype='int32')
 
         # [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
-        self.data = zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
+        self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -203,11 +219,11 @@ class RealBush1DStressArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
+        itot = np.searchsorted(eids, self.element)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsorted(self.element == eid) for eid in eids])
+        ind = np.ravel([np.searchsorted(self.element == eid) for eid in eids])
         return ind
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',

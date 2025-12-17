@@ -2,16 +2,17 @@
 #pylint disable=C0103
 from itertools import count
 import warnings
-from typing import TextIO
+from typing import TextIO, Optional
 import numpy as np
 
 from pyNastran.utils.mathematics import get_abs_max
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 from pyNastran.op2.op2_interface.write_utils import to_column_bytes, view_dtype, view_idtype_as_fdtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_real_data_code, get_scode,
     set_static_case, set_modal_case, set_transient_case)
+from pyNastran.op2.stress_reduction import von_mises_2d, max_shear
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.f06.f06_formatting import write_floats_13e, write_floats_13e_long, _eigenvalue_header
 from pyNastran.op2.errors import SixtyFourBitError
@@ -620,9 +621,74 @@ class RealPlateArray(OES_Object):
         #ind.sort()
         return ind
 
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        # [fiber_dist2, oxx2, oyy2, txy2, angle2,
+        #  major_principal2, minor_principal2, ovm2]
+        ires = [1, 2, 3]
+
+        if data is None:
+            self.data[:, :, ires] *= factor
+        else:
+            self.data[:, :, ires] += data[:, :, ires] * factor
+        if update:
+            self.update_data_components()
+
+    def update_data_components(self):
+        assert self.is_von_mises
+
+        # data = max_shear(omax, omin)
+        if self.is_stress:
+            oxx = self.data[:, :, 1]
+            oyy = self.data[:, :, 2]
+            txy = self.data[:, :, 3]
+        else:
+            oxx = self.data[:, :, 1]
+            oyy = self.data[:, :, 2]
+            txy = self.data[:, :, 3] * 2 # 2*gxy = exy
+
+        # https://en.wikipedia.org/wiki/Mohr%27s_circle
+        # tan(2*theta) = 2*txy / (oyy-oxx)
+        theta2 = np.degrees(np.atan2(2*txy, oyy-oxx))
+        theta = theta2 / 2
+
+        shape = oxx.shape
+        ndata = len(oxx.ravel())
+
+        mat = np.zeros((ndata, 2, 2))
+        mat[:, 0, 0] = oxx.ravel()
+        mat[:, 1, 1] = oyy.ravel()
+        mat[:, 0, 1] = txy.ravel()
+        mat[:, 1, 0] = txy.ravel()
+        eigs = np.linalg.eigvalsh(mat)
+
+        eig_min = eigs.min(axis=1)
+        eig_max = eigs.max(axis=1)
+        assert eigs.shape == (ndata, 2), eigs.shape
+        assert len(eig_min) == ndata, eig_min
+
+        # [fiber_dist2, oxx2, oyy2, txy2, angle2,
+        #  major_principal2, minor_principal2, ovm2]
+        itheta = 4
+        imax = 5
+        imin = 6
+        ivm = 7
+        ovm = von_mises_2d(oxx, oyy, txy)
+
+        import warnings
+        warnings.warn('verify plate stress/strain principals, theta, and von-mises')
+        self.data[:, :, itheta] = theta
+        self.data[:, :, imax] = eig_max.reshape(shape)
+        self.data[:, :, imin] = eig_min.reshape(shape)
+        self.data[:, :, ivm] = ovm
+        return
+
     def write_csv(self, csv_file: TextIO,
                   is_exponent_format: bool=False,
-                  is_mag_phase: bool=False, is_sort1: bool=True,
+                  is_mag_phase: bool=False,
+                  is_sort1: bool=True,
                   write_header: bool=True):
         """
         Stress Table - PSHELL

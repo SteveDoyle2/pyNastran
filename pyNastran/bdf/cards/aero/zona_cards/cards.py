@@ -237,6 +237,8 @@ class AEROZ(Aero):
         if comment:
             self.comment = comment
 
+        if xyz_ref is None:
+            xyz_ref = [0., 0., 0.]
         self.fm_mass_unit = fm_mass_unit
         self.fm_length_unit = fm_length_unit
         self.flip = flip

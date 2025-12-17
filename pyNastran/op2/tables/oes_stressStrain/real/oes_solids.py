@@ -2,13 +2,13 @@
 import warnings
 from itertools import count
 from struct import pack
-from typing import TextIO, Any
+from typing import TextIO, Optional, Any
 
 import numpy as np
 from numpy import zeros, where, searchsorted
 from numpy.linalg import eigh  # type: ignore
 
-from pyNastran.utils.numpy_utils import float_types
+from pyNastran.utils.numpy_utils import float_types, integer_float_types
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long, _eigenvalue_header)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
@@ -75,6 +75,11 @@ class RealSolidArray(OES_Object):
             ntimes, nelements_nnodes,
             oxx, oyy, ozz, txy, tyz, txz,
             self.is_stress)
+
+        if self.is_strain:
+            import warnings
+            warnings.warn('verify principal strains')
+
         ovm_sheari = calculate_ovm_shear(oxx, oyy, ozz, txy, tyz, txz, o1, o3,
                                          self.is_von_mises, self.is_stress)
         ovm_sheari2 = ovm_sheari.reshape(ntimes, nelements_nnodes)
@@ -108,13 +113,31 @@ class RealSolidArray(OES_Object):
             raise TypeError(f'factor={factor} and must be a float')
         self.update_data_components()
 
-    def __imul__(self, factor):
+    def __imul__(self, factor: integer_float_types):
         """[A] *= b"""
-        assert isinstance(factor, float_types), f'factor={factor} and must be a float'
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
         self.data[:, :, :6] *= factor
         self.update_data_components()
 
-    def __idiv__(self, factor):
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        """[A] * b"""
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        if data is None:
+            self.data[:, :, :6] *= factor
+        else:
+            self.data[:, :, :6] += data[:, :, :6] * factor
+        if update:
+            self.update_data_components()
+
+    # def __rmul__(self, factor: integer_float_types):
+    #     """[A] * b"""
+    #     assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+    #     self.data[:, :, :6] *= factor
+    #     self.update_data_components()
+
+    def __idiv__(self, factor: integer_float_types):
         """[A] *= b"""
         assert isinstance(factor, float_types), f'factor={factor} and must be a float'
         self.data[:, :, :6] *= 1. / factor
