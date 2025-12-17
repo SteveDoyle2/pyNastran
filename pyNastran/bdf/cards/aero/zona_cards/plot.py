@@ -1,8 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from plotly.graph_objs.layout import xaxis
-
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
