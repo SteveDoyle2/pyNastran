@@ -97,14 +97,15 @@ class TestAero(unittest.TestCase):
         tin = tout = 'float32'
         GCj = np.arange(1, 25+1)
         assert len(GCj) == 25
-        assert GCj.min() == 1
-        assert GCj.max() == 25
-        Real = np.ones(nelements, dtype='float64') * 1.2
+        # assert GCj.min() == 1
+        # assert GCj.max() == 25
+        reals = np.ones(nelements, dtype='float64') * 1.2
         nrow = len(GCj)
         dmi = model.add_dmi_w2gj(
             tin, tout,
-            nrow, GCj, Real,
+            nrow, reals, #GCj=GCj,
             comment='w2gj')
+        assert np.array_equal(dmi.GCj, GCj)
 
         bdf_mirror(model)
         assert len(model.paeros) == 1, model.paeros
@@ -142,11 +143,11 @@ class TestAero(unittest.TestCase):
         assert len(GCj) == 7
         assert GCj.min() == 1
         assert GCj.max() == 7
-        Real = np.ones(nelements, dtype='float64') * 1.2
+        reals = np.ones(nelements, dtype='float64') * 1.2
         nrow = len(GCj)
         dmi = model.add_dmi_w2gj(
             tin, tout,
-            nrow, GCj, Real,
+            nrow, reals, GCj=GCj,
             comment='w2gj')
 
         bdf_mirror(model)
