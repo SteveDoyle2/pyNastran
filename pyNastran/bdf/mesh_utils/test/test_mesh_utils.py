@@ -257,8 +257,8 @@ class TestMeshUtilsAero(unittest.TestCase):
         tin = tout = 'float32'
         nrows = 1
         GCj = [101]
-        Real = [np.radians(5.)]
-        model.add_dmi_w2gj(tin, tout, nrows, GCj, Real)
+        reals = [np.radians(5.)]
+        model.add_dmi_w2gj(tin, tout, nrows, reals, GCj=GCj)
         #print(model.caeros)
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf_aeroboxes.bdf',
                 '--pid', 'aesurf', '--aerobox']

@@ -37,6 +37,7 @@ def load_combinations(combination_filenames: list[PathLike],
 
 def _load_combination(combination_filename: PathLike,
                       delimiter=',') -> tuple[list[int], list]:
+    """parses a single load case combination file"""
     with open(combination_filename, 'r') as combination_file:
         lines = combination_file.readlines()
 
@@ -73,9 +74,16 @@ def _load_combination(combination_filename: PathLike,
 
 def run_load_case_combinations(op2_filename: PathLike,
                                combination_filenames: list[PathLike] | PathLike,
+                               op2_filenames_new: list[PathLike] | PathLike=None,
                                mode: Optional[str]=None,
                                log: Optional[SimpleLogger]=None) -> None:
     """
+    Does a linear combination of a single op2 file.
+
+    Supports multiple combination files to:
+     - reduce memory usage
+     - reduce file size
+     - focus on critical cases
 
     Parameters
     ----------
@@ -83,6 +91,10 @@ def run_load_case_combinations(op2_filename: PathLike,
         path to input file
     combination_filenames : list[PathLike]
         list of paths to input file
+    op2_filenames_new : list[PathLike]; default=None
+        list of paths to output files
+        must be same length as combination filenames
+        default -> 'combination_filename.op2'
     mode : Optional[str]
         the nastran format (msc, nx)
     log : Optional[SimpleLogger]
@@ -94,10 +106,17 @@ def run_load_case_combinations(op2_filename: PathLike,
     if not isinstance(combination_filenames, (list, tuple)):
         combination_filenames = [combination_filenames]
 
+    if op2_filenames_new is None:
+        op2_filenames_new = [os.path.splitext(filename)[0] + '.op2'
+                             for filename in combination_filenames]
+    elif isinstance(op2_filenames_new, PathLike):
+        op2_filenames_new = [op2_filenames_new]
+    else:
+        assert isinstance(op2_filenames_new, (list, tuple)), op2_filenames_new
+
     all_combinations = load_combinations(combination_filenames)
-    op2_filenames_new = [os.path.splitext(filename)[0] + '.op2'
-                         for filename in combination_filenames]
     print(f'op2_filenames_new = {op2_filenames_new}')
+    assert len(op2_filenames_new) == len(combination_filenames)
 
     # load_geometry: bool = False,
     # combine: bool = True,
@@ -125,9 +144,16 @@ def run_load_case_combinations(op2_filename: PathLike,
         combine(model, op2_filename_new,
                 subcases_in, combinations, model.log, mode_out)
 
+
 def get_local_factors(label: str,
                       subcases_in: list[int],
                       factors_in: list[float]) -> tuple[list[int], list[float]]:
+    """
+    shrink down the number of operations
+    [result] = 1.0*[case1] + 2.0*[case2] + 0.0*[case3]
+    becomes:
+    [result] = 1.0*[case1] + 2.0*[case2]
+    """
     factors_out = []
     subcases_out = []
     nsubcases_in = len(subcases_in)
@@ -141,12 +167,14 @@ def get_local_factors(label: str,
     assert len(factors_out) > 0, f'label={label!r} has no factors != 0'
     return subcases_in, factors_out
 
+
 def combine(model: OP2,
             op2_filename_new: PathLike,
             subcases_in: list[int],
             combinations: list[tuple],
             log: SimpleLogger,
-            mode: str):
+            mode: str) -> None:
+    """Writes a single op2 filename"""
     # assert len(subcases_in) == len(combinations), f'subcases_in={subcases_in} combinations={combinations}'
 
     unallowed_results = [
@@ -170,9 +198,12 @@ def combine(model: OP2,
                 continue
             # print(res_type)
 
-            # displacement
+            # TODO: we could be smarter here and look for
+            #       a case that has a 1.0 factor
+            # TODO: is there a way to eliminate the deepcopy?
             case0 = res_type[subcase0]
             case_new = copy.deepcopy(case0)
+            # case_new.isubcase = subcase_out
             case_new.label = label
 
             case_new.linear_combination(0.0, update=False)
@@ -180,8 +211,6 @@ def combine(model: OP2,
             for subcase, factor in zip(subcases, factors):
                 casei = res_type[subcase]
                 case_new.linear_combination(factor, casei.data, update=False)
-                #casei = caseii * factor
-                #case.data = casei.data
 
             if hasattr(case_new, 'update_data_components'):
                 case_new.update_data_components()
@@ -198,34 +227,16 @@ def combine(model: OP2,
     model2.write_op2(op2_filename_new)
     return
 
-def main():
-    lines = """
-    # this is line 0. line 1 has the input subcase ids
-                        1,      # 2,      3
-    # Subcase Name,      Scale1,# Scale2, Scale3
-    10,        case10,    1.0,  #  2.0,    3.0
-    20,        case20,    1.2,  #  2.2,    3.2
-    30,        "case 30", 1.2,  #  2.2,    3.2
-"""
+
+def main():  # pragma: no cover
     from pathlib import Path
-    import pyNastran
     dirname = Path(__file__).parent
-    pkg_path = Path(pyNastran.__path__[0]).parent
-    # op2_filename = pkg_path / 'models' / 'bwb' / 'bwb_saero_fine.op2'
-    # op2_filename = pkg_path / 'models' / 'solid_bending' / 'solid_bending.op2'
 
     op2_filename = dirname / 'test load combo-000.op2'
     assert os.path.exists(op2_filename), print_bad_path(op2_filename)
-
-    # combination_filename = dirname / 'combination_file2.txt'
-    # with open(combination_filename, 'w') as combination_file:
-    #     combination_file.write(lines)
-
     combination_filename = dirname / 'combination_file_real.txt'
-    combinations = load_combinations([combination_filename], delimiter=',')
-
     run_load_case_combinations(op2_filename, combination_filename)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

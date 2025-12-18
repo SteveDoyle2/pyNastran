@@ -10,6 +10,7 @@ from __future__ import annotations
 import copy
 from itertools import count
 from collections import defaultdict
+import warnings
 from typing import cast, Optional, Any, TYPE_CHECKING
 
 from numpy import array, cross, dot
@@ -22,7 +23,10 @@ from pyNastran.utils.mathematics import integrate_positive_unit_line
 CHECK_MASS = False  # should additional checks be done
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF, NSM1, CBEAM, Element  # CQUAD4, CBAR, CROD, CONROD, CTRIA3,
+    from pyNastran.bdf.bdf import (
+        BDF, NSM1, CBEAM, Element, CORD2R,
+        # CQUAD4, CBAR, CROD, CONROD, CTRIA3,
+    )
 
 NO_MASS = {
     # has mass
@@ -77,9 +81,14 @@ NO_MASS = {
 }
 
 
-def transform_inertia(mass: float, xyz_cg: np.ndarray,
-                      xyz_ref: np.ndarray, xyz_ref2: np.ndarray,
-                      I_ref: np.ndarray) -> np.ndarray:
+def transform_inertia(mass: float,
+                      xyz_cg: np.ndarray,
+                      xyz_ref1: np.ndarray,
+                      xyz_ref2: np.ndarray,
+                      inertia_ref1: np.ndarray,
+                      coord1: Optional[CORD2R]=None,
+                      coord2: Optional[CORD2R]=None,
+                      ) -> np.ndarray:
     """
     Transforms mass moment of inertia using parallel-axis theorem.
 
@@ -89,11 +98,11 @@ def transform_inertia(mass: float, xyz_cg: np.ndarray,
         the mass
     xyz_cg : (3, ) float ndarray
         the CG location
-    xyz_ref : (3, ) float ndarray
+    xyz_ref1 : (3, ) float ndarray
         the original reference location
     xyz_ref2 : (3, ) float ndarray
         the new reference location
-    I_ref : (6, ) float ndarray
+    inertia_ref1 : (6, ) float ndarray
         the mass moment of inertias about the original reference point
         [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
 
@@ -105,19 +114,19 @@ def transform_inertia(mass: float, xyz_cg: np.ndarray,
 
     """
     xcg, ycg, zcg = xyz_cg
-    xref, yref, zref = xyz_ref
+    xref1, yref1, zref1 = xyz_ref1
     xref2, yref2, zref2 = xyz_ref2
 
-    dx1 = xcg - xref
-    dy1 = ycg - yref
-    dz1 = zcg - zref
+    dx1 = xcg - xref1
+    dy1 = ycg - yref1
+    dz1 = zcg - zref1
 
     dx2 = xref2 - xcg
     dy2 = yref2 - ycg
     dz2 = zref2 - zcg
 
     # consistent with mass_properties, not CONM2
-    Ixx_ref, Iyy_ref, Izz_ref, Ixy_ref, Ixz_ref, Iyz_ref = I_ref
+    Ixx_ref, Iyy_ref, Izz_ref, Ixy_ref, Ixz_ref, Iyz_ref = inertia_ref1
     dx = dx1**2 - dx2**2
     dy = dy1**2 - dy2**2
     dz = dz1**2 - dz2**2
@@ -128,9 +137,170 @@ def transform_inertia(mass: float, xyz_cg: np.ndarray,
     Ixz2 = Ixz_ref - mass * (dx1 * dz1 - dx2 * dz2)
     Iyz2 = Iyz_ref - mass * (dy1 * dz1 - dy2 * dz2)
     I_new = np.array([Ixx2, Iyy2, Izz2, Ixy2, Ixz2, Iyz2])
+    return I_new
+
+
+def transform_inertia2(mass: float,
+                      xyz_cg: np.ndarray,
+                      xyz_ref1: np.ndarray,
+                      xyz_ref2: np.ndarray,
+                      inertia_ref1: np.ndarray,
+                      coord1: Optional[CORD2R]=None,
+                      coord2: Optional[CORD2R]=None,
+                      debug: bool=False) -> np.ndarray:
+    """
+    Transforms mass moment of inertia using parallel-axis theorem.
+
+    Parameters
+    ----------
+    mass : float
+        the mass
+    xyz_cg : (3, ) float ndarray
+        the CG location in coord1
+    xyz_ref1 : (3, ) float ndarray
+        the original reference location in coord1
+    xyz_ref2 : (3, ) float ndarray
+        the new reference location in coord2
+    inertia_ref1 : (6, ) float ndarray
+        the mass moment of inertias about the original reference point
+        [Ixx, Iyy, Izz, Ixy, Ixz, Iyz] in coord1
+    coord1: CORD2R | None
+        None: cid=0 (basic frame)
+        not supported yet
+    coord2: CORD2R | None
+        None: cid=0 (basic frame)
+        not validated yet
+
+    Returns
+    -------
+    I_new : (6, ) float ndarray
+        the mass moment of inertias about the new reference point
+        [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
+
+    """
+    eye = np.eye(3, dtype='float64')
+
+    if coord1 is None:
+        beta1 = eye
+        is_beta1 = False
+        # xcg0, ycg0, zcg0 = xyz_ref1
+        xyz_cg0 = xyz_ref1
+    else:
+        # xcg1, ycg1, zcg1 = coord1.transform_node_to_local(xyz_cg)
+        # xref1, yref1, zref1 = coord1.transform_node_to_local(xyz_ref1)
+
+        # the cg location in the basic frame
+        xyz_cg0 = coord1.transform_node_to_global(xyz_cg)
+
+        beta1 = coord1.beta()
+        is_beta1 = not np.array_equal(beta1, eye)
+        assert not is_beta1, 'coord1 xform not supported yet'
+        assert coord1.type in {'CORD1R', 'CORD2R'}, coord1
+
+    # the cg/ref point is in coord1
+    # this is the same frame as inertia
+    xcg1, ycg1, zcg1 = xyz_cg
+    xref1, yref1, zref1 = xyz_ref1
+    # del beta1
+
+    # xyz_ref2 is in coord2
+    if coord2 is None:
+        beta2 = eye
+        xcg2, ycg2, zcg2 = xyz_cg
+    else:
+        beta2 = coord2.beta()
+        xcg2, ycg2, zcg2 = coord2.transform_node_to_local(xyz_cg0)
+        assert coord2.type in {'CORD1R', 'CORD2R'}, coord2
+    xref2, yref2, zref2 = xyz_ref2
+
+    # is_beta2 = we need a transfom
+    is_beta2 = not np.array_equal(beta2, eye)
+
+    if is_beta2:
+        warnings.warn('coord2 xform not validated yet')
+
+    #---------------------------------------------
+    is_transform_required = (is_beta1 or is_beta2)
+    # no_transforms_required = (not is_beta1 and not is_beta2)
+    no_transform_required = not is_transform_required
+
+    # in coord1
+    dx1 = xcg1 - xref1
+    dy1 = ycg1 - yref1
+    dz1 = zcg1 - zref1
+
+    # in coord2
+    dx2 = xref2 - xcg2
+    dy2 = yref2 - ycg2
+    dz2 = zref2 - zcg2
+    Ixx_ref, Iyy_ref, Izz_ref, Ixy_ref, Ixz_ref, Iyz_ref = inertia_ref1
+
+    if no_transform_required:
+        # consistent with mass_properties, not CONM2
+        dx = dx1**2 - dx2**2
+        dy = dy1**2 - dy2**2
+        dz = dz1**2 - dz2**2
+        Ixx2 = Ixx_ref - mass * (dy + dz)
+        Iyy2 = Iyy_ref - mass * (dx + dz)
+        Izz2 = Izz_ref - mass * (dx + dy)
+        Ixy2 = Ixy_ref - mass * (dx1 * dy1 - dx2 * dy2)
+        Ixz2 = Ixz_ref - mass * (dx1 * dz1 - dx2 * dz2)
+        Iyz2 = Iyz_ref - mass * (dy1 * dz1 - dy2 * dz2)
+        I_new = np.array([Ixx2, Iyy2, Izz2, Ixy2, Ixz2, Iyz2])
+    else:
+        # transform to the cg
+        dx = dx1 ** 2
+        dy = dy1 ** 2
+        dz = dz1 ** 2
+        Ixx_cg = Ixx_ref - mass * (dy + dz)
+        Iyy_cg = Iyy_ref - mass * (dx + dz)
+        Izz_cg = Izz_ref - mass * (dx + dy)
+        Ixy_cg = Ixy_ref - mass * (dx1 * dy1)
+        Ixz_cg = Ixz_ref - mass * (dx1 * dz1)
+        Iyz_cg = Iyz_ref - mass * (dy1 * dz1)
+        Icg1 = np.array([
+            [Ixx_cg, Ixy_cg, Ixz_cg],
+            [Ixy_cg, Iyy_cg, Iyz_cg],
+            [Ixz_cg, Iyz_cg, Izz_cg],
+        ])
+
+        # now rotate into the basic frame
+        Icg0 = Icg1
+        if is_beta1:
+            # in coord1
+            # beta is global to local
+            Icg0 = beta1.T @ Icg1 * beta1
+
+        if is_beta2:
+            Icg2 = beta2 @ Icg0 @ beta2.T
+            dx = dx2**2
+            dy = dy2**2
+            dz = dz2**2
+            Ixx2 = Icg2[0, 0] + mass * (dy + dz)
+            Iyy2 = Icg2[1, 1] + mass * (dx + dz)
+            Izz2 = Icg2[2, 2] + mass * (dx + dy)
+            Ixy2 = Icg2[0, 1] + mass * (dx2 * dy2)
+            Ixz2 = Icg2[0, 2] + mass * (dx2 * dz2)
+            Iyz2 = Icg2[1, 2] + mass * (dy2 * dz2)
+            I_new = np.array([Ixx2, Iyy2, Izz2, Ixy2, Ixz2, Iyz2])
+        else:
+            I_new = np.array([
+                Icg0[0, 0], Icg0[1, 1], Icg0[2, 2],
+                Icg0[0, 1], Icg0[0, 2], Icg0[1, 2]])
     #print('  Iref = %s' % str(I_ref))
     #print('  Inew = %s' % str(I_new))
     return I_new
+
+
+# def mass_inertia_to_array(Ixx: float, Iyy: float, Izz: float,
+#                           Ixy: float, Ixz: float, Iyz: float) -> np.ndarray:
+#     inertia = np.array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
+#     return inertia
+
+# def mass_inertia_from_array(inertia: np.ndaray) -> tuple[float, float, float,
+#                                                          float, float, float]:
+#     Ixx, Iyy, Izz, Ixy, Ixz, Iyz = inertia
+#     return Ixx, Iyy, Izz, Ixy, Ixz, Iyz
 
 
 def _mass_properties_elements_init(model: BDF,
@@ -213,20 +383,22 @@ def mass_properties(model: BDF,
     .. seealso:: model.mass_properties
 
     """
-    reference_point, is_cg = _update_reference_point(
+    coord1 = model.coords[0]
+    reference_point, coord2, is_cg = _update_reference_point(
         model, reference_point, inertia_reference)
     element_ids, elements, mass_ids, masses = _mass_properties_elements_init(
         model, element_ids, mass_ids)
     mass, cg, inertia = _mass_properties(
         model, elements, masses,
-        reference_point, is_cg)
+        reference_point, is_cg,
+        coord1, coord2)
     mass, cg, inertia = _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia)
     return mass, cg, inertia
 
 
 def _update_reference_point(model: BDF,
                             reference_point: np.ndarray,
-                            inertia_reference: str='cg') -> tuple[np.ndarray, bool]:
+                            inertia_reference: str='cg') -> tuple[np.ndarray, CORD2R, bool]:
     """helper method for handling reference point"""
     inertia_reference = inertia_reference.lower()
     if inertia_reference == 'cg':
@@ -236,17 +408,23 @@ def _update_reference_point(model: BDF,
     else:
         raise ValueError("inertia_reference=%r and must be 'cg' or 'ref'" % inertia_reference)
 
+    coord = model.coords[0]
     if reference_point is None:
         reference_point = np.array([0., 0., 0.])
     elif isinstance(reference_point, integer_types):
-        reference_point = model.nodes[reference_point].get_position()
+        nid_ref = model.nodes[reference_point]
+        reference_point = nid_ref.get_position()
+        coord = reference_point.cd_ref
+        assert coord is not None, reference_point.get_stats()
+        assert coord.type in {'CORD1R', 'CORD2R'}, coord
     else:
+        # TODO: this method doesn't support coord
         reference_point = np.asarray(reference_point, dtype='float64')
         if len(reference_point.shape) != 1 or len(reference_point) != 3:
             msg = ("reference_point=%r and must be None, "
                    "a list of 3 floats, or an integer (node id)" % reference_point)
             raise ValueError(msg)
-    return reference_point, is_cg
+    return reference_point, coord, is_cg
 
 
 def mass_properties_no_xref(model, element_ids=None, mass_ids=None,
@@ -258,7 +436,8 @@ def mass_properties_no_xref(model, element_ids=None, mass_ids=None,
     .. see:: mass_properties
 
     """
-    reference_point, is_cg = _update_reference_point(
+    coord1 = model.coords[0]
+    reference_point, coord2, is_cg = _update_reference_point(
         model, reference_point, inertia_reference)
     element_ids, elements, mass_ids, masses = _mass_properties_elements_init(
         model, element_ids, mass_ids)
@@ -266,15 +445,20 @@ def mass_properties_no_xref(model, element_ids=None, mass_ids=None,
 
     mass, cg, inertia = _mass_properties_no_xref(
         model, elements, masses,
-        reference_point, is_cg)
+        reference_point, is_cg,
+        coord1, coord2)
 
     mass, cg, inertia = _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia)
     return mass, cg, inertia
 
 
-def _mass_properties(model: BDF, elements: list[Element], masses: list[Element],
+def _mass_properties(model: BDF,
+                     elements: list[Element],
+                     masses: list[Element],
                      reference_point: np.ndarray,
-                     is_cg: bool) -> tuple[float, np.ndarray, np.ndarray]:
+                     is_cg: bool,
+                     coord1: CORD2R,
+                     coord2: CORD2R) -> tuple[float, np.ndarray, np.ndarray]:
     """helper method for ``mass_properties``"""
     mass = 0.
     cg = array([0., 0., 0.])
@@ -330,13 +514,19 @@ def _mass_properties(model: BDF, elements: list[Element], masses: list[Element],
     if is_cg:
         xyz_ref = reference_point
         xyz_ref2 = cg
-        inertia = transform_inertia(mass, cg, xyz_ref, xyz_ref2, inertia)
+        inertia = transform_inertia(
+            mass, cg, xyz_ref, xyz_ref2, inertia,
+            coord1=coord1, coord2=coord2)
     return mass, cg, inertia
 
 
-def _mass_properties_no_xref(model: BDF, elements: list[int], masses: list[int],
-                             reference_point: np.ndarray, is_cg: bool,
-                             ) -> tuple[float, np.ndarray, np.ndarray]:  # pragma: no cover
+def _mass_properties_no_xref(model: BDF,
+                             elements: list[int],
+                             masses: list[int],
+                             reference_point: np.ndarray,
+                             is_cg: bool,
+                             coord1: CORD2R,
+                             coord2: CORD2R) -> tuple[float, np.ndarray, np.ndarray]:  # pragma: no cover
     """
     Calculates mass properties in the global system about the
     reference point.
@@ -409,7 +599,9 @@ def _mass_properties_no_xref(model: BDF, elements: list[int], masses: list[int],
     if is_cg:
         xyz_ref = reference_point
         xyz_ref2 = cg
-        inertia = transform_inertia(mass, cg, xyz_ref, xyz_ref2, inertia)
+        inertia = transform_inertia(
+            mass, cg, xyz_ref, xyz_ref2, inertia,
+            coord1=coord1, coord2=coord2)
     return mass, cg, inertia
 
 
@@ -546,7 +738,8 @@ def mass_properties_nsm(model: BDF,
 
     """
     # TODO: check CG for F:\work\pyNastran\examples\Dropbox\move_tpl\ac11102g.bdf
-    reference_point, is_cg = _update_reference_point(
+    coord1 = model.coords[0]
+    reference_point, coord2, is_cg = _update_reference_point(
         model, reference_point, inertia_reference)
 
     xyz = _get_xyz_cid0_dict(model, xyz_cid0_dict)
@@ -618,7 +811,10 @@ def mass_properties_nsm(model: BDF,
     if is_cg:
         xyz_ref = reference_point
         xyz_ref2 = cg
-        inertia = transform_inertia(mass, cg, xyz_ref, xyz_ref2, inertia)
+        inertia = transform_inertia(
+            mass, cg, xyz_ref, xyz_ref2, inertia,
+            coord1=coord1, coord2=coord2,
+        )
 
     mass, cg, inertia = _apply_mass_symmetry(model, sym_axis, scale,
                                              mass, cg, inertia)
@@ -2210,7 +2406,8 @@ def mass_properties_breakdown(model: BDF,
                               inertia_reference: str='cg',
                               debug: bool=False):
     """Gets an incomplete breakdown the mass properties on a per element basis"""
-    reference_point, is_cg = _update_reference_point(
+    coord1 = model.coords[0]
+    reference_point, coord2, is_cg = _update_reference_point(
         model, reference_point, inertia_reference)
     #print('is_cg =', is_cg)
 
@@ -2220,10 +2417,10 @@ def mass_properties_breakdown(model: BDF,
 
     xyz_mean = xyz_cid0.mean(axis=0)
     assert len(xyz_mean) == 3, xyz_mean.shape
-    if 0:
-        reference_point = np.array([xyz_mean[0], 0., 0.], dtype='float64')
-    else:
-        reference_point = xyz_mean
+    # if 0:
+    #     reference_point = np.array([xyz_mean[0], 0., 0.], dtype='float64')
+    # else:
+    reference_point = xyz_mean
 
     ncoords = len(model.coords)
     cids = np.zeros(ncoords, dtype='int32')

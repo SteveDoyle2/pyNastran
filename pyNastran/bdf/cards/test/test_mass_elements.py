@@ -6,7 +6,8 @@ import numpy as np
 from cpylog import get_logger
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
+from pyNastran.bdf.mesh_utils.mass_properties import (
+    mass_properties, transform_inertia2)
 #from pyNastran.op2.op2 import OP2, read_op2
 
 
@@ -62,6 +63,91 @@ class TestMassElements(unittest.TestCase):
         model.add_grid(nid, [0., 0., 0.])
         model.validate()
         save_load_deck(model)
+
+    def test_mass_transform1(self):
+        mass = 0.2
+        dx1 = 3.
+        dx2 = 1.
+        xyz_ref1 = np.array([0., 0., 0.])
+        xyz_cg = np.array([dx1, 0., 0.])
+        xyz_ref2 = np.array([dx1+dx2, 0., 0.])
+        Ixy = 0.0
+        Ixz = 0.0
+        Iyz = 0.0
+        Ixx = 10.0
+        Iyy = 20.0
+        Izz = 30.0
+        Ixx_expected = 10.0
+        Iyy_expected = Iyy + mass * (dx2 ** 2 - dx1**2) #  18.4
+        Izz_expected = Izz + mass * (dx2 ** 2 - dx1**2)
+        inertia = np.array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
+
+        inertia2 = transform_inertia2(
+            mass, xyz_cg,
+            xyz_ref1, xyz_ref2, inertia)
+        Ixx2, Iyy2, Izz2, Ixy2, Ixz2, Iyz2 = inertia2
+        assert np.allclose(Ixy2, 0.0), Ixy2
+        assert np.allclose(Ixz2, 0.0), Ixz2
+        assert np.allclose(Iyz2, 0.0), Iyz2
+
+        assert np.allclose(Ixx2, Ixx_expected), (Ixx2, Ixx_expected)
+        assert np.allclose(Iyy2, Iyy_expected), (Iyy2, Iyy_expected)
+        assert np.allclose(Izz2, Izz_expected), (Izz2, Izz_expected)
+
+    def test_mass_transform2(self):
+        mass = 1.0
+        xyz_cg = np.array([0., 0., 0.])
+        xyz_ref1 = np.array([0., 0., 0.])
+        xyz_ref2 = np.array([0., 0., 0.])
+
+        origin = np.array([0., 0., 0.])
+        # we're flipping the x/z axes
+        zaxis = np.array([1., 0., 0.])
+        xzplane = np.array([0., 0., 1.])
+        Ixy = 0.0
+        Ixz = 0.0
+        Iyz = 0.0
+
+        Izz_expected = Ixx = 1.0
+        Iyy_expected = Iyy = 2.0
+        Ixx_expected = Izz = 3.0
+        inertia = np.array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
+
+        model = BDF(debug=False)
+        coord = model.add_cord2r(1, origin, zaxis, xzplane)
+        inertia2 = transform_inertia2(
+            mass, xyz_cg,
+            xyz_ref1, xyz_ref2,
+            inertia,
+            coord1=None, coord2=coord,
+            debug=True)
+        Ixx2, Iyy2, Izz2, Ixy2, Ixz2, Iyz2 = inertia2
+        assert np.allclose(Ixy2, 0.0), Ixy2
+        assert np.allclose(Ixz2, 0.0), Ixz2
+        assert np.allclose(Iyz2, 0.0), Iyz2
+
+        assert np.allclose(Ixx2, Ixx_expected), (Ixx2, Ixx_expected)
+        assert np.allclose(Iyy2, Iyy_expected), (Iyy2, Iyy_expected)
+        assert np.allclose(Izz2, Izz_expected), (Izz2, Izz_expected)
+
+        #---------------------------
+        # flip2: change xz plane to y
+        zaxis = np.array([1., 0., 0.])
+        xzplane = np.array([0., 1., 0.])
+        Izz_expected = Ixx = 1.0
+        Ixx_expected = Iyy = 2.0
+        Iyy_expected = Izz = 3.0
+        coord = model.add_cord2r(2, origin, zaxis, xzplane)
+        inertia2 = transform_inertia2(
+            mass, xyz_cg,
+            xyz_ref1, xyz_ref2,
+            inertia,
+            coord1=None, coord2=coord,
+            debug=False)
+        Ixx2, Iyy2, Izz2, Ixy2, Ixz2, Iyz2 = inertia2
+        assert np.allclose(Ixx2, Ixx_expected), (Ixx2, Ixx_expected)
+        assert np.allclose(Iyy2, Iyy_expected), (Iyy2, Iyy_expected)
+        assert np.allclose(Izz2, Izz_expected), (Izz2, Izz_expected)
 
     def test_conm2(self):
         """tests a conm2"""

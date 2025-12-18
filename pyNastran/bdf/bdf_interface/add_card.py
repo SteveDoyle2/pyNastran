@@ -10,8 +10,11 @@ from typing import Optional, Any
 import numpy as np
 
 from pyNastran.utils import PathLike
-from pyNastran.utils.numpy_utils import float_types
+from pyNastran.utils.numpy_utils import (
+    integer_types, integer_string_types, float_types)
+
 from pyNastran.nptyping_interface import NDArray3float, NDArray66float
+from pyNastran.bdf.write_path import write_include
 from pyNastran.bdf.field_writer import print_card_
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
@@ -160,9 +163,6 @@ from pyNastran.bdf.cards.contact import (
     BGADD, BGSET, BCTPARM, BCPARA, BCBODY,
 )
 from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
-
-from pyNastran.utils.numpy_utils import integer_string_types
-from pyNastran.bdf.write_path import write_include
 
 CARD_MAP = {
     # '=': Crash, None),
@@ -9482,7 +9482,10 @@ class AddCards(AddCoords, AddContact, AddBolts,
     def add_dmi_column(self, name: str,
                        tin: int | str, tout: int | str,
                        nrows: int,
-                       reals: list[float],  GCj=None, comment: str='') -> DMI:
+                       reals: list[float],  GCj=None,
+                       comment: str='') -> DMI:
+        assert isinstance(nrows, integer_types), nrows
+        # print(f'GCj={GCj} reals={reals}')
         if GCj is None:
             # rows
             GCj = np.arange(1, nrows+1, dtype='int32')
@@ -9505,8 +9508,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
          - CAERO2: 1/2 chord
         """
         name = 'W2GJ'
-        return self.add_dmi_column(name, tin, tout, nrows, reals, GCj, comment=comment)
-
+        return self.add_dmi_column(name, tin, tout, nrows, reals,
+                                   GCj=GCj, comment=comment)
 
     def add_dmi(self, name: str, form: int | str,
                 tin: int | str, tout: int | str,
