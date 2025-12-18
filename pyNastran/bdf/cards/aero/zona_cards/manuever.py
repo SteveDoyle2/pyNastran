@@ -162,7 +162,8 @@ class MLOADS(BaseCard):
             self.mldstat_ref = get_zona_obj(model, self.mldstat_id, 'mldstat', msg)
         self.mldcomd_ref = get_zona_obj(model, self.mldcomd_id, 'mldcomd', msg)
         self.mldtime_ref = get_zona_obj(model, self.mldtime_id, 'mldtime', msg)
-        self.mldprnt_ref = get_zona_obj(model, self.mldprnt_id, 'mldprnt', msg)
+        if self.mldprnt_id:
+            self.mldprnt_ref = get_zona_obj(model, self.mldprnt_id, 'mldprnt', msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)

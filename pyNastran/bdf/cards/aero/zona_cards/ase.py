@@ -583,13 +583,15 @@ class CONCT(BaseCard):
     #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
     # }
 
-    def __init__(self, cjunct_id, output_tf_id, output_component,
-                 input_tf_id, input_component, comment: str=''):
+    def __init__(self, conct_id: int,
+                 output_tf_id: int, output_component: int,
+                 input_tf_id: int, input_component: int,
+                 comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
 
-        self.cjunct_id = cjunct_id
+        self.conct_id = conct_id
         self.output_tf_id = output_tf_id
         self.output_component = output_component
         self.input_tf_id = input_tf_id
@@ -610,7 +612,7 @@ class CONCT(BaseCard):
         """
         # CONCT ID OTFID CO ITFID CI
         # CONCT 10 1     1  2     2
-        cjunct_id = integer(card, 1, 'cjunct_id')
+        conct_id = integer(card, 1, 'conct_id')
 
         # CJUNCT, MIMOSS, SISOTF, ASESNSR, or ASESNS1
         output_tf_id = integer(card, 2, 'OTFID, output_tf_id')
@@ -619,13 +621,74 @@ class CONCT(BaseCard):
         input_tf_id = integer(card, 4, 'ITFID, input_tf_id')
         input_component = integer(card, 5, 'CI, input_component')
         assert len(card) == 6, f'len(CJUNCT card) = {len(card):d}\ncard={card}'
-        return CONCT(cjunct_id, output_tf_id, output_component, input_tf_id, input_component, comment=comment)
+        return CONCT(conct_id, output_tf_id, output_component, input_tf_id, input_component, comment=comment)
 
     # def validate(self):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
 
     def cross_reference(self, model: BDF) -> None:
-        pass
+        zona = model.zona
+        log = model.log
+
+        idi = self.input_tf_id
+        if idi in zona.sisotf:
+            input_ref = zona.sisotf[idi]
+            assert idi not in zona.cjunct, f'idi={idi} in cjunct (already in sisotf)'
+            assert idi not in zona.actu, f'idi={idi} in actu (already in sisotf)'
+        elif idi in zona.cjunct:
+            input_ref = zona.cjunct[idi]
+            assert idi not in zona.actu, f'idi={idi} in actu (already in sisotf)'
+        elif idi in zona.actu:
+            input_ref = zona.actu[idi]
+        else:
+            cjunct = list(zona.cjunct)
+            mimoss = list(zona.mimoss)
+            sisotf = list(zona.sisotf)
+            actu = list(zona.actu)
+            cjunct.sort()
+            mimoss.sort()
+            sisotf.sort()
+            actu.sort()
+            msg = (
+                f'CONCT={self.conct_id}: input={idi} is not [CJUNCT, MIMOSS, SISOTF]\n'
+                f' - cjunct = {cjunct}\n'
+                f' - mimoss = {mimoss} (not supported yet)\n'
+                f' - sisotf = {sisotf}\n'
+                f' - actu = {actu}\n'
+            )
+            log.warning(msg)
+            input_ref = None
+        self.input_ref = input_ref
+
+        #-------------
+        idi = self.output_tf_id
+        if idi in zona.sisotf:
+            output_ref = zona.sisotf[idi]
+            assert idi not in zona.cjunct, f'idi={idi} in cjunct (already in sisotf)'
+        elif idi in zona.cjunct:
+            output_ref = zona.cjunct[idi]
+            # assert idi not in zona.actu, f'idi={idi} in actu (already in sisotf)'
+        # elif idi in zona.actu:
+        #     output_ref = zona.actu[idi]
+        else:
+            cjunct = list(zona.cjunct)
+            mimoss = list(zona.mimoss)
+            sisotf = list(zona.sisotf)
+            actu = list(zona.actu)
+            cjunct.sort()
+            mimoss.sort()
+            sisotf.sort()
+            actu.sort()
+            msg = (
+                f'CONCT={self.conct_id}: output={idi} is not [CJUNCT, MIMOSS, SISOTF]\n'
+                f' - cjunct = {cjunct}\n'
+                f' - mimoss = {mimoss} (not supported yet)\n'
+                f' - sisotf = {sisotf}\n'
+                f' - actu = {actu}\n'
+            )
+            log.warning(msg)
+            output_ref = None
+        self.output_ref = output_ref
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -645,7 +708,7 @@ class CONCT(BaseCard):
 
         """
         list_fields = [
-            'CONCT', self.cjunct_id,
+            'CONCT', self.conct_id,
              self.output_tf_id, self.output_component,
              self.input_tf_id, self.input_component]
         return list_fields
@@ -1005,7 +1068,7 @@ class MIMOSS(BaseCard):
             # type, print, labels, values not required
             assert len(card) >= 5, f'len(MIMOSS card) = {len(card):d}\ncard={card}'
         else:
-            print(f'dmi_label = {dmi_label}')
+            # print(f'dmi_label = {dmi_label}')
             dfields = len(card) - 8
             assert dfields // 2 == 0, dfields
             assert dfields > 0, dfields

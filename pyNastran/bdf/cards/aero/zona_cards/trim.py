@@ -165,18 +165,18 @@ class TRIM_ZONA(BaseCard):
 
         i = 25
         n = 1
-        print(f'trim_id={sid} ncard={len(card)}')
+        # print(f'trim_id={sid} ncard={len(card)}')
         while i < len(card):
             trimvar_id = integer(card, i, f'label{n:d}')
             ux = double_or_string(card, i + 1, f'ux{n:d}')
             if isinstance(ux, str):
                 assert ux == 'FREE', 'ux=%r' % ux
-            print('  label=%s ux=%s' % (trimvar_id, ux))
+            # print('  label=%s ux=%s' % (trimvar_id, ux))
             trimvar_ids.append(trimvar_id)
             uxs.append(ux)
             i += 2
             n += 1
-        print(f'trimvar_ids = {trimvar_ids}')
+        # print(f'trimvar_ids = {trimvar_ids}')
         assert len(card) >= 25, f'len(TRIM card) = {len(card):d}\ncard={card}'
         assert len(trimvar_ids) > 0, trimvar_ids
         assert len(uxs) > 0, uxs
@@ -221,16 +221,21 @@ class TRIM_ZONA(BaseCard):
             mass_unit = aeroz.fm_mass_unit
             weight_unit = aeroz.weight_unit
             length_unit = aeroz.fm_length_unit
+
+        pressure_unit = f'{weight_unit}/{length_unit}^2'
         if self.wtmass == 1.0:
             inertia_unit = f'{mass_unit}*{length_unit}^2'
+            weight_unit = mass_unit
         else:
             inertia_unit = f'{weight_unit}*{length_unit}^2'
 
         aeroz: AEROZ = model.aeros
         ref = aeroz.xyz_ref
         cg = self.dcg + ref
+        mach = self.mkaeroz_ref.mach
         msg = (
             f'trim_id = {self.sid}\n'
+            f'  mach={mach:g}; q={self.q} ({pressure_unit})\n'
             f'  weight={self.weight:g} ({weight_unit})\n'
             f'  mass={self.weight*self.wtmass:g} ({mass_unit})\n'
             f'  ref={ref} ({length_unit}); per AEROZ\n'
@@ -244,7 +249,7 @@ class TRIM_ZONA(BaseCard):
         free_variables = []
         fixed_variables = []
         linked_variables = []
-        state_variables = []
+        rb_state_variables = []
         trim_dofs = []
         trim_variables = []
         for name, nxyzi in zip(('NX', 'NY', 'NZ'), self.nxyz):
@@ -316,17 +321,21 @@ class TRIM_ZONA(BaseCard):
                 if ux == 'FREE':
                     trim_variables.append(label)
                     free_variables.append(label)
-                    msg += f'Trim Variable (Free): {label!r}={ux} ({trimvar_id}){linkage}\n'
+                    if label in zona_state_vars:
+                        rb_state_variables.append(f'{label}')
+                        msg += f'Trim Variable (Free RB State): {label!r}={ux} ({trimvar_id}){linkage}\n'
+                        continue
                     if label not in zona_state_vars and label in set_aesurfz:
                         set_aesurfz.remove(label)
+                    msg += f'Trim Variable (Free): {label!r}={ux} ({trimvar_id}){linkage}\n'
                 elif ux == 'NONE':
                     msg += f'Trim DOF (N/A): {label!r}={ux} ({trimvar_id}){linkage}\n'
                 else:
                     raise RuntimeError(f'{label!r}={ux} ({trimvar_id}) is not [FREE, NONE]')
             elif isinstance(ux, float):
-                msg += f'Trim Variable (State): {label!r}={ux} ({trimvar_id}){linkage}\n'
-                state_variables.append(f'{label}={ux}')
-                #fixed_variables.append(f'{label}={ux}')  # TODO: not sure
+                msg += f'Trim Variable (Fixed RB State): {label!r}={ux} ({trimvar_id}){linkage}\n'
+                rb_state_variables.append(f'{label}={ux}')
+                # fixed_variables.append(f'{label}={ux}')  # TODO: not sure; yes
                 trim_variables.append(f'{label}={ux}')
                 if label not in zona_state_vars and label in set_aesurfz:
                     set_aesurfz.remove(label)
@@ -337,24 +346,32 @@ class TRIM_ZONA(BaseCard):
         nfree = len(free_variables)
         nfixed = len(fixed_variables)
         nlinked = len(linked_variables)
-        nstate = len(state_variables)
+        nstate = len(rb_state_variables)
         nunused_aesurfz = len(set_aesurfz)
         msg += f'\nSummary:\n'
         msg += f'  trim_dofs = {trim_dofs}; ntrim_dof={len(trim_dofs)}\n'
         msg += f'  trim_variables = {trim_variables}; ntrimvar={len(trim_variables)}\n\n'
 
-        msg += f'  fixed_variables = {fixed_variables}; nfixed={nfixed}\n'
-        msg += f'  free_variables  = {free_variables}; nfree={nfree}\n\n'
-        msg += f'  state_variables = {state_variables}; nstate={nstate}\n'
+        msg += f'  fixed_variables    = {fixed_variables}; nfixed={nfixed}\n'
+        msg += f'  free_variables     = {free_variables}; nfree={nfree}\n\n'
+        msg += f'  rb_state_variables = {rb_state_variables}; nstate={nstate}\n'
         msg += f'  aesurfz = {aesurfz}; n={len(aesurfz)}\n\n'
         msg += f'  linked_variables = {linked_variables}; nlinked={nlinked}\n'
         msg += f'  unused_aesurfz = {list(set_aesurfz)}; n={nunused_aesurfz} (should be linked, optimized, or unused)\n'
-        ndelta = nfree - (nfixed + nlinked)
-        msg += f'ndelta1 = nfree - (nfixed + nlinked) = {nfree} - ({nfixed} + {nlinked}) = {nfree} - {nfixed + nlinked} = {ndelta}\n'
-        msg += f'ndelta2 = nfree - nfixed = {nfree} - {nfixed} = {nfree - nfixed}\n'
-        print(msg)
+        # ndelta1 = nfree - (nfixed + nlinked)
+        # msg += f'ndelta1 = nfree - (nfixed + nlinked) = {nfree} - ({nfixed} + {nlinked}) = {nfree} - {nfixed + nlinked} = {ndelta1}\n'
+
+        ndelta = nfree - nfixed
+        if ndelta == 0:
+            determination = 'solvable'
+        elif ndelta > 0:
+            determination = 'over-determined; reduce ndelta'
+        else:
+            determination = 'under-determined; increase ndelta'
+        msg += f'ndelta = nfree - nfixed = {nfree} - {nfixed} = {ndelta} ({determination})\n'
+        # print(msg)
         assert nfixed == nfree, msg
-        assert nfixed == nfree, msg
+        # assert nfixed == nfree, msg
         # assert nlinked == nunused_aesurfz, msg
 
         # ] + self.cg + [self.wtmass, self.weight] + self.inertia + [
@@ -585,9 +602,9 @@ class TRIMVAR(BaseCard):
     type = 'TRIMVAR'
 
     def __init__(self, var_id: int, label: str, lower: float, upper: float,
-                 trimlnk_id: int, dmi: None, sym: int, initial: None,
-                 dcd: float, dcy: float, dcl: float,
-                 dcr: float, dcm: float, dcn: float, comment: str=''):
+                 trimlnk_id: int, dmi: None, sym: int, initial: Optional[float]=None,
+                 dcd: float|str='NONE', dcy: float|str='NONE', dcl: float|str='NONE',
+                 dcr: float|str='NONE', dcm: float|str='NONE', dcn: float|str='NONE', comment: str=''):
         """
         Creates a TRIMVAR card for a static aero (144) analysis.
 
