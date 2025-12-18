@@ -1,11 +1,14 @@
 # coding: utf-8
 # pylint: disable=W0212,C0103
 from __future__ import annotations
+
+import copy
 from collections import defaultdict
 from typing import TextIO, Optional, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.utils import object_attributes, object_methods
+from pyNastran.utils import (
+    PathLike, object_attributes, object_methods)
 
 from typing import Any
 from pyNastran.bdf.bdf_interface.utils import sorteddict
@@ -15,15 +18,15 @@ from pyNastran.bdf.bdf_interface.pybdf import _clean_comment
 from .zona_cards.zona_sets import (
     SETADD)
 from pyNastran.bdf.cards.aero.zona_cards.atm import (
-    ATMOS, FIXMATM, FIXHATM)
+    ATMOS, FIXMATM, FIXHATM, FIXMACH, FIXMDEN)
 from pyNastran.bdf.cards.aero.zona_cards.spline import (
     SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA,)
 from pyNastran.bdf.cards.aero.zona_cards.geometry import (
     PANLST1, PANLST2, PANLST3, SEGMESH,
     CAERO7, BODY7, PAFOIL7, PAFOIL8, AESURFZ, AESLINK)
 from pyNastran.bdf.cards.aero.zona_cards.plot import (
-    PLTAERO, PLTMODE, PLTVG, PLTFLUT,
-    PLTCP, PLTMIST, PLTSURF, PLTBODE)
+    PLTAERO, PLTMODE, PLTVG, PLTFLUT, PLTTIME,
+    PLTCP, PLTMIST, PLTSURF, PLTBODE, PLTTRIM)
 from pyNastran.bdf.cards.aero.zona_cards.flutter import (
     FLUTTER_ZONA, MKAEROZ)
 from pyNastran.bdf.cards.aero.zona_cards.trim import (
@@ -37,6 +40,7 @@ from pyNastran.bdf.cards.aero.zona_cards.ase import (
     CJUNCT, CONCT, TFSET, MIMOSS, SISOTF,
     SENSET, SURFSET, CNCTSET,
     ASEGAIN, GAINSET,
+    AEROLAG,
 )
 from pyNastran.bdf.cards.aero.zona_cards.bdf_tables import (
     TABLED1_ZONA, TABDMP1_ZONA)
@@ -47,13 +51,12 @@ from pyNastran.bdf.cards.aero.zona_cards.cards import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, AELIST
 
 ZONA_CARDS = [
     # atmosphere
-    'FIXHATM', 'FIXMATM',  # flutter table
-    # 'FIXMDEN', 'FIXMACH',
     'ATMOS',
+    'FIXHATM', 'FIXMATM', 'FIXMACH', 'FIXMDEN',
 
     # already added
     'AEFACT', 'CORD2R',
@@ -68,6 +71,8 @@ ZONA_CARDS = [
     # trim
     'PLTCP',
     'TRIMVAR', 'TRIMLNK',
+    'TRIMFNC', # optimization
+    'PLTTRIM',
     # -------------
     # flutter
     'FLUTTER',
@@ -82,7 +87,8 @@ ZONA_CARDS = [
     'MLOADS',
     'CJUNCT', 'CONCT', 'TFSET',
     'MLDSTAT', 'MLDTRIM', 'MLDPRNT', 'MLDCOMD',
-    'EXTINP', 'EXTOUT', 'TRIMFNC', 'LOADMOD',
+    'EXTINP', 'EXTOUT', 'LOADMOD',
+    'PLTTIME',
     # -------------
     # gust
     'GLOADS', 'DGUST', 'CGUST',
@@ -90,10 +96,10 @@ ZONA_CARDS = [
     # ase
     'ASE', 'ASECONT',
     'ASESNSR', 'ASESNS1', 'SENSET',
-    'ACTU', #'AEROLAG',
+    'ACTU',
     'MIMOSS', 'SISOTF',
     'ASEGAIN', 'GAINSET',
-    'PLTBODE',
+    'PLTBODE', 'AEROLAG',
     # -------------
     # other
     'SETADD',
@@ -395,7 +401,7 @@ class AddMethods:
         zona = model.zona
         assert key not in zona.asegain, '\nasegain=\n%s old=\n%s' % (
             asegain, zona.asegain[key])
-        zona.asecont[key] = asegain
+        zona.asegain[key] = asegain
         model._type_to_id_map[asegain.type].append(key)
 
     def add_asesnsr_object(self, asesnsr: ASESNSR) -> None:
@@ -433,6 +439,9 @@ class AddMethods:
         key = pltbode.set_id
         model = self.model
         zona = model.zona
+        if key in zona.pltbode:
+            model.log.warning(f'skipping duplicate PLTBODE\n{str(pltbode)}')
+            return
         assert key not in zona.pltbode, '\npltbode=\n%s old=\n%s' % (
             pltbode, zona.pltbode[key])
         zona.pltbode[key] = pltbode
@@ -458,6 +467,16 @@ class AddMethods:
         zona.conct[key] = conct
         model._type_to_id_map[conct.type].append(key)
 
+    def add_aerolag_object(self, aerolag: AEROLAG) -> None:
+        """adds an CONCT object"""
+        key = aerolag.aerolag_id
+        model = self.model
+        zona = model.zona
+        assert key not in zona.conct, '\naerolag=\n%s old=\n%s' % (
+            aerolag, zona.aerolag[key])
+        zona.aerolag[key] = aerolag
+        model._type_to_id_map[aerolag.type].append(key)
+
     def add_actu_object(self, actu: ACTU) -> None:
         """adds an AESURFZ object"""
         key = actu.actu_id
@@ -478,9 +497,10 @@ class AddMethods:
 
     def add_trimvar_object(self, trimvar: TRIMVAR) -> None:
         """adds an TRIMVAR object"""
-        assert trimvar.var_id not in self.model.zona.trimvar
-        assert trimvar.var_id > 0
         key = trimvar.var_id
+        assert trimvar.var_id not in self.model.zona.trimvar, '\ntrimvar=\n%s old=\n%s' % (
+            trimvar, self.model.zona.trimvar[key])
+        assert trimvar.var_id > 0
         self.model.zona.trimvar[key] = trimvar
         self.model._type_to_id_map[trimvar.type].append(key)
 
@@ -542,6 +562,26 @@ class AddMethods:
         self.model.zona.pltcp[key].append(plot)
         self.model._type_to_id_map[plot.type].append(key)
 
+    def add_plttrim_object(self, plot: PLTTRIM) -> None:
+        """adds an PLTTRIM object"""
+        # assert plot.set_id not in self.model.zona.plttrim, str(plot)
+        assert plot.set_id > 0
+        key = plot.set_id
+        if key not in self.model.zona.plttrim:
+            self.model.zona.plttrim[key] = []
+        self.model.zona.plttrim[key].append(plot)
+        self.model._type_to_id_map[plot.type].append(key)
+
+    def add_plttime_object(self, plot: PLTTIME) -> None:
+        """adds an PLTTIME object"""
+        # assert plot.set_id not in self.model.zona.pltcp, str(plot)
+        assert plot.set_id > 0
+        key = plot.set_id
+        if key not in self.model.zona.plttime:
+            self.model.zona.plttime[key] = []
+        self.model.zona.plttime[key].append(plot)
+        self.model._type_to_id_map[plot.type].append(key)
+
     def add_pltflut_object(self, plot: PLTFLUT) -> None:
         """adds an PLTFLUT object"""
         # assert plot.set_id not in self.model.zona.pltcp, str(plot)
@@ -560,7 +600,7 @@ class AddMethods:
         self.model.zona.pltmist[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
-    def add_flutter_table_object(self, flutter_table: FIXHATM | FIXMATM) -> None:
+    def add_flutter_table_object(self, flutter_table: FIXHATM | FIXMATM | FIXMDEN | FIXMACH) -> None:
         """adds an FIXMATM object"""
         key = flutter_table.sid
         model = self.model
@@ -588,7 +628,7 @@ class ZONA:
 
         # aero models
         self.atmos: dict[int, ATMOS] = {}
-        self.flutter_table: dict[int, FIXHATM | FIXMATM] = {}
+        self.flutter_table: dict[int, FIXHATM | FIXMATM | FIXMDEN | FIXMACH] = {}
 
         #: store PANLST1,PANLST2,PANLST3
         self.pltsurf: dict[int, PLTSURF] = {}
@@ -612,9 +652,11 @@ class ZONA:
         # transient
         self.eloads: dict[int, ELOADS] = {}
         self.mldcomd: dict[int, MLDCOMD] = {}
+        self.plttime: dict[int, PLTTIME] = {}
 
         # trim
         self.pltcp: dict[int, PLTCP] = {}
+        self.plttrim: dict[int, PLTTRIM] = {}
         self.aeslink: dict[int, AESLINK] = {}
         self.trimvar: dict[int, TRIMVAR] = {}
         self.trimlnk: dict[int, TRIMLNK] = {}
@@ -652,6 +694,7 @@ class ZONA:
         self.mimoss: dict[int, MIMOSS] = {}
         self.sisotf: dict[int, SISOTF] = {}
         self.cmargin: dict[int, CMARGIN] = {}
+        self.aerolag: dict[int, AEROLAG] = {}
 
         # other
         self.extinp: dict[int, EXTINP] = {}
@@ -806,15 +849,20 @@ class ZONA:
         zona_add = self._add_methods
         card_parser2 = {
             # aero models
+            'AEROZ': (AEROZ, add_methods.add_aeros_object),
             'ATMOS': (ATMOS, zona_add.add_atmos_object),
             'FIXMATM': (FIXMATM, zona_add.add_flutter_table_object),
             'FIXHATM': (FIXHATM, zona_add.add_flutter_table_object),
-            # 'FIXMDEN': (FIXMDEN, zona_add.add_flutter_table_object),
+            'FIXMACH': (FIXMACH, zona_add.add_flutter_table_object),
+            'FIXMDEN': (FIXMDEN, zona_add.add_flutter_table_object),
             # trim
             'TRIM': (TRIM_ZONA, add_methods.add_trim_object),
             'TABLED1': (TABLED1_ZONA, add_methods.add_tabled_object),
             'TABDMP1': (TABDMP1_ZONA, add_methods.add_table_sdamping_object),
-            'AEROZ': (AEROZ, add_methods.add_aeros_object),
+            'TRIMFNC': (TRIMFNC, zona_add.add_trimfnc_object),
+            'PLTTIME': (PLTTIME, zona_add.add_plttime_object),
+            'TRIMVAR': (TRIMVAR, zona_add.add_trimvar_object),
+            'TRIMLNK': (TRIMLNK, zona_add.add_trimlnk_object),
             # geometry
             'SPLINE1': (SPLINE1_ZONA, add_methods.add_spline_object),
             'SPLINE2': (SPLINE2_ZONA, add_methods.add_spline_object),
@@ -853,6 +901,7 @@ class ZONA:
             'SISOTF': (SISOTF, zona_add.add_sisotf_object),
             'CJUNCT': (CJUNCT, zona_add.add_cjunct_object),
             'CONCT': (CONCT, zona_add.add_conct_object),
+            'AEROLAG': (AEROLAG, zona_add.add_aerolag_object),
             # other
             'SETADD': (SETADD, zona_add.add_setadd_object),
             'SENSET': (SENSET, zona_add.add_senset_object),
@@ -861,18 +910,16 @@ class ZONA:
             'ACTU': (ACTU, zona_add.add_actu_object),
             'LOADMOD': (LOADMOD, zona_add.add_loadmod_object),
             'RBRED': (RBRED, zona_add.add_rbred_object),
-            'TRIMVAR': (TRIMVAR, zona_add.add_trimvar_object),
-            'TRIMLNK': (TRIMLNK, zona_add.add_trimlnk_object),
             'ATTACH': (ATTACH, zona_add.add_attach_object),
             'PLTMODE': (PLTMODE, zona_add.add_pltmode_object),
             'PLTAERO': (PLTAERO, zona_add.add_pltaero_object),
             'PLTCP': (PLTCP, zona_add.add_pltcp_object),
+            'PLTTRIM': (PLTTRIM, zona_add.add_plttrim_object),
             'PLTSURF': (PLTSURF, zona_add.add_pltsurf_object),
             'PLTMIST': (PLTMIST, zona_add.add_pltmist_object),
             'EXTINP': (EXTINP, zona_add.add_extinp_object),
             'EXTOUT': (EXTOUT, zona_add.add_extout_object),
             'TFSET': (TFSET, zona_add.add_tfset_object),
-            'TRIMFNC': (TRIMFNC, zona_add.add_trimfnc_object),
             'MLDSTAT': (MLDSTAT, zona_add.add_mldstat_object),
             'MINSTAT': (MINSTAT, zona_add.add_minstat_object),
             'MLDTRIM': (MLDTRIM, zona_add.add_mldtrim_object),
@@ -1223,7 +1270,270 @@ def fix_card_list(cards_list, cards_dict, card_count):
         cards_list2.append((card_name, comment, card_lines, ifile_iline))
     return cards_list2, cards_dict, dict(card_count)
 
-def get_dicts(zona: ZONA, method: str) -> tuple[dicts[int, list],
+
+def nastran_to_zaero(model: BDF, zero_inp_filename: PathLike):
+    from typing import cast
+    from pyNastran.bdf.bdf import BDF, SPLINE1, AEFACT, AELIST, AEROS
+    model2 = BDF(mode='zaero')
+    zaero = model2.zona
+    zaero_add = zaero._add_methods
+
+    aeros: AEROS = model.aeros
+    # print(aeros.get_stats())
+    length_unit = 'IN'
+    mass_unit = 'SLIN'
+
+    model2.coords[aeros.acsid] = aeros.acsid_ref
+    model2.coords[aeros.rcsid] = aeros.rcsid_ref
+    model2.aeros = AEROZ(
+        mass_unit, length_unit,
+        aeros.cref, aeros.bref, aeros.sref,
+        acsid=aeros.acsid, rcsid=aeros.rcsid, xyz_ref=None,
+        sym_xz='NO', #sym_xy='NO',
+    )
+    # (aeroz.acsid, aeroz.bref, aeroz.sref, aeroz.sym_xy, aeroz.sym_xz))
+    icaero = 11
+    for caero_id, caero in model.caeros.items():
+        label = f'caero{icaero}'
+        comment = f'{caero.comment}\n{str(caero)}'
+        model2.coords[caero.cp] = caero.cp_ref
+        caero7 = CAERO7(caero.eid, label,
+                        caero.p1, caero.x12, caero.p4, caero.x43,
+                        caero.cp, caero.nspan, caero.nchord, caero.lspan,
+                        comment=comment)
+        panlst_id = caero_id + 1
+        model2.caeros[caero_id] = caero7
+        icaero += 1
+
+    cp = 950
+    for spline_id, spline in model.splines.items():
+        assert spline.type == 'SPLINE1', spline
+        # model_str = ''
+        if spline.type == 'SPLINE1':
+            caero_id = spline.caero
+            caero = model2.caeros[caero_id]
+            comment = str(spline.comment)
+            model_str = caero.label
+
+            spline = cast(SPLINE1, spline)
+            setg = int(spline.setg)
+            set_card = model.sets[setg]
+            set_ids = set_card.ids
+
+            xyz_list = [model.nodes[nid].get_position() for nid in set_ids]
+            xyzs = np.vstack(xyz_list)
+            origin, zaxis, xzplane = fit_plane_to_point_cloud(xyzs)
+            origin = np.zeros(3)
+            model2.add_cord2r(cp, origin, origin+zaxis, origin+xzplane)
+
+            cp2 = None
+            model2.sets[setg] = set_card
+            splinez = SPLINE1_ZONA(
+                spline_id, panlst_id, setg, model_str, cp2,
+                spline.dz, eps=0.01, comment=comment)
+            model2.splines[spline_id] = splinez
+            cp += 1
+
+    for aefact_id, aefact in model.aefacts.items():
+        print(aefact.get_stats())
+        print(aefact.factors)
+        asdf
+    # TODO: only does cid1
+    surface_type = 'SYM' # assumed
+    setg = 0
+    aesurf_dict = {}
+    # aesurf_names = []
+    for aesurf_id, aesurf in model.aesurf.items():
+        # aesurf_names.append('FREE')
+        actu_id = aesurf_id
+        panlst_id = aesurf.aelist_id1
+
+        label = aesurf.label
+        aesurf_dict[label] = aesurf_id
+        cid = aesurf.cid1
+        cid_ref = aesurf.cid1_ref
+        cid_ref.comment = f'AESURF label={label!r}'
+        model2.coords[cid] = cid_ref
+        aesurfz = AESURFZ(label, surface_type, cid, panlst_id, setg, actu_id)
+        model2.aesurf[label] = aesurfz
+
+        # bag of panels
+        aelist: AELIST = aesurf.aelist_id1_ref
+        boxes = aelist.elements
+        panlst = PANLST2(panlst_id, panlst_id, boxes)
+        zaero_add.add_panlst_object(panlst)
+
+        # actuator
+        actu = ACTU(actu_id, None, None, None)
+        zaero_add.add_actu_object(actu)
+
+        trimobj_id = 0
+        trimcon_id = 0
+        weight = 1000.
+        dcg = [0.1, 0.2, 0.3]
+        inertia = [0.4, 0.5, 0.6,
+                   0.7, 0.8, 0.9]
+
+        true_g = 'G'
+        loadset = 0
+
+        trimvar_dict = {}
+        nxyz_root = ['NONE', 'NONE', 'NONE']
+        pqr_dot_root = ['NONE', 'NONE', 'NONE']
+        for aestat_id, aestat in model.aestats.items():
+            label = aestat.label
+            if label in ['URDD1', 'URDD2', 'URDD3']:
+                iurdd = int(label[-1]) - 1  # 1->0
+                nxyz_root[iurdd] = 'FREE'
+            elif label in ['URDD4', 'URDD5', 'URDD6']:
+                iurdd = int(label[-1]) - 4  # 4->0
+                pqr_dot_root[iurdd] = 'FREE'
+            else:
+                # ALPHA, BETA
+                trimvar_dict[label] = aestat_id
+
+        lower = ''
+        upper = ''
+        trimlnk = ''
+        dmi = None
+        sym = 'SYM'
+        print('trimvar_dict = ', trimvar_dict)
+        for label, aestat_id in trimvar_dict.items():
+            trimvar = TRIMVAR(aestat_id, label,
+                              lower, upper, trimlnk,
+                              dmi, sym)
+            zaero_add.add_trimvar_object(trimvar)
+            # zaero.trimvar[aestat_id] = trimvar
+        assert len(model.trims) == 1, len(model.trims)
+        wtmass = model.wtmass
+
+        for trim_id, trim in model.trims.items():
+            mkaeroz_id = trim_id+1
+            flt_id = trim_id+2
+
+            nxyz = copy.deepcopy(nxyz_root)
+            pqr_dot = copy.deepcopy(pqr_dot_root)
+            trimvar_ids = []
+            uxs = []
+
+            print_flag = 0
+            freqs = [0.]
+            filename = ''
+            mkaeroz = MKAEROZ(
+                mkaeroz_id, trim.mach, flt_id,
+                 filename, print_flag, freqs,
+                 method=0, save=None)
+
+            zaero.mkaeroz[mkaeroz_id] = mkaeroz
+            commenti = ''
+            for label, ux in zip(trim.labels, trim.uxs):
+                if label in ['URDD1', 'URDD2', 'URDD3']:
+                    iurddt = int(label[-1]) - 1  # 1->0
+                    nxyz[iurddt] = ux
+                elif label in ['URDD4', 'URDD5', 'URDD6']:
+                    iurddr = int(label[-1]) - 4  # 4->0
+                    pqr_dot[iurddr] = ux
+                else:
+                    aestat_id = trimvar_dict[label]
+                    trimvar_ids.append(aestat_id)
+                    # trimvar_dict[aestat_id] = label
+                    uxs.append(ux)
+                    commenti += f' {label} = {ux} (TRIMVAR={aestat_id})\n'
+
+            comment = (
+                f' weight={weight} (assumed)\n'
+                f' dref={dcg} (assumed)\n'
+                f' inertia={inertia} (assumed)\n'
+                f' nxyz={nxyz} g\n'
+                f' pqr_dot={pqr_dot} rad/s^2\n'
+                f'{commenti}'
+            )
+            for label, aesurf_id in aesurf_dict.items():
+                if label not in trimvar_dict:
+                    trimvar_ids.append(aesurf_id)
+                    comment += f' {label} = FREE (AESURFZ={aesurf_id})\n'
+                    uxs.append('FREE')
+                    trimvar = TRIMVAR(aesurf_id, label,
+                                      lower, upper, trimlnk,
+                                      dmi, sym)
+                    zaero_add.add_trimvar_object(trimvar)
+
+            trimz = TRIM_ZONA(
+                trim_id, mkaeroz_id, trim.q,
+                trimobj_id, trimcon_id,
+                weight, dcg, inertia,
+                true_g, nxyz, pqr_dot,
+                loadset, trimvar_ids, uxs,
+                wtmass=wtmass, comment=comment)
+            model2.trims[trim_id] = trimz
+    if zero_inp_filename != '':
+        model2.write_bdf(zero_inp_filename)
+    return model2
+
+
+def fit_plane_to_point_cloud(point_cloud: np.ndarray,) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Fits a best-fit plane to a 3D point cloud using SVD.
+
+    Args:
+        point_cloud (numpy.ndarray): An array of shape (N, 3) representing N points (x, y, z).
+
+    Returns:
+        tuple: (normal_vector, centroid) of the best-fit plane.
+               The normal_vector is a unit vector.
+               The plane equation is normal[0]*x + normal[1]*y + normal[2]*z + d = 0,
+               where d = -np.dot(normal, centroid).
+    """
+    # 1. Calculate the centroid (center of mass) of the points
+    centroid = np.mean(point_cloud, axis=0)
+
+    # 2. Translate points to the origin
+    # This centers the data around (0, 0, 0)
+    points_centered = point_cloud - centroid
+
+    # 3. Apply Singular Value Decomposition (SVD)
+    # The normal vector of the best-fit plane corresponds to the left singular vector
+    # (or right singular vector, depending on implementation) associated with the smallest singular value.
+    # In numpy's SVD (np.linalg.svd), the right singular vectors (vh) are returned.
+    # The last row of vh is the normal vector.
+    _, _, vh = np.linalg.svd(points_centered)
+
+    # The normal vector is the last row of vh
+    normal_vector = vh[2, :]
+    orthogonal_v = find_orthogonal_vector_cross(normal_vector)
+    zaxis = normal_vector
+    xzplane = orthogonal_v
+    return centroid, zaxis, xzplane
+
+
+def find_orthogonal_vector_cross(v: np.ndarray) -> np.ndarray:
+    # Convert list to numpy array if it isn't already
+    v = np.array(v)
+
+    # Define a "helper" vector that is not parallel to v
+    # A common way to pick one is to find the smallest component of v,
+    # set it to 1, and the other two to 0, or by some more robust logic.
+    # For general robustness, we can check which standard axis is least aligned.
+
+    if np.abs(v[0]) < np.abs(v[1]) and np.abs(v[0]) < np.abs(v[2]):
+        helper = np.array([1, 0, 0])
+    elif np.abs(v[1]) < np.abs(v[2]):
+        helper = np.array([0, 1, 0])
+    else:
+        helper = np.array([0, 0, 1])
+
+    # Calculate the cross product, which is orthogonal to both v and helper
+    orthogonal_v = np.cross(v, helper)
+
+    # Normalize the resulting vector (optional, but often useful)
+    norm_orthogonal_v = np.linalg.norm(orthogonal_v)
+    if norm_orthogonal_v == 0:
+        # This case is extremely rare and only happens if the helper
+        # vector was perfectly parallel. The logic above prevents this.
+        pass
+    return orthogonal_v
+
+def get_dicts(zona: ZONA, method: str) -> tuple[dict[int, list],
                                                 list[dict]]:
     assert method in ['xref', 'write'], f'method={method!r}'
     dicts = [
@@ -1255,6 +1565,7 @@ def get_dicts(zona: ZONA, method: str) -> tuple[dicts[int, list],
         zona.mldcomd, zona.mldtime,
         # zona.extinp, zona.extout,
         zona.loadmod, zona.rbred,
+        zona.aerolag,
         # ---------------gust---------------
         zona.gloads, zona.dgust, zona.cgust,
         # ---------------other--------------
@@ -1266,7 +1577,7 @@ def get_dicts(zona: ZONA, method: str) -> tuple[dicts[int, list],
         zona.pltbode,
     ]
     dict_lists = [
-        zona.pltflut,
+        zona.pltflut, zona.plttime,
     ]
     if method == 'write':
         # these are xref'd by their parent
@@ -1279,10 +1590,11 @@ def _convert_caeros(zona: ZONA) -> dict[int, Any]:
     model = zona.model
     caeros = {}
     caero2s = []
+    paero1_id = 1
     make_paero1 = False
     for caero_id, caero in sorted(model.caeros.items()):
         if caero.type == 'CAERO7':
-            caero_new = caero.convert_to_nastran()
+            caero_new = caero.convert_to_nastran(paero1_id)
             make_paero1 = True
         elif caero.type == 'BODY7':
             caero2s.append(caero)
@@ -1291,6 +1603,8 @@ def _convert_caeros(zona: ZONA) -> dict[int, Any]:
             raise NotImplementedError(caero)
         caeros[caero_id] = caero_new
 
+    # if make_paero1:
+    #     paero = model.add_paero1(paero_id)
     zona.add_caero2s(caero2s, add=False)
     return caeros, caero2s, make_paero1
 

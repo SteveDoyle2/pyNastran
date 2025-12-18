@@ -85,7 +85,7 @@ def oes_csolid(oes: OES,
     # print(op2.format_code, op2.table_name, op2.num_wide, op2.element_name)
     # print(op2.code_information())
     if op2.format_code == 1 and op2.num_wide == numwide_real:  # real
-        op2.log.debug(f'numwide_real={numwide_real}')
+        # op2.log.debug(f'numwide_real={numwide_real}')
         ntotal = (16 + 84 * nnodes_expected) * factor
         nelements = ndata // ntotal
         auto_return, is_vectorized = op2._create_oes_object4(

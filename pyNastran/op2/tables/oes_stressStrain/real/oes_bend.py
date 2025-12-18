@@ -1,8 +1,9 @@
 from itertools import cycle
+from typing import Optional
 
 import numpy as np
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
@@ -198,6 +199,25 @@ class RealBendArray(OES_Object):
     def get_headers(self) -> list[str]:
         return self.headers
 
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        # ['angle', 'sc', 'sd', 'se', 'sf', 'omax', 'omin', 'mst', 'msc']
+        import warnings
+        warnings.warn('update oes_bend margins/angle')
+        import warnings
+        warnings.warn('ignoring margin & angles')
+        if data is None:
+            self.data *= factor
+        else:
+            self.data += data * factor
+        if update:
+            self.update_data_components()
+
+    def update_data_components(self):
+        return
+
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         """
@@ -304,6 +324,7 @@ class RealBendStressArray(RealBendArray, StressObject):
 
     def _get_headers(self):
         return ['angle', 'sc', 'sd', 'se', 'sf', 'omax', 'omin', 'mst', 'msc']
+
 
 class RealBendStrainArray(RealBendArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

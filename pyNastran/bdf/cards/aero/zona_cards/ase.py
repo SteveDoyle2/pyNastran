@@ -48,6 +48,7 @@ class ASE(BaseCard):
         self.mldstat_ref = None
         self.minstat_ref = None
         self.asecont_ref = None
+        self.cmargin_ref = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str = ''):
@@ -94,7 +95,11 @@ class ASE(BaseCard):
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
-        pass
+        self.asecont_ref = None
+        self.flutter_ref = None
+        self.mldstat_ref = None
+        self.minstat_ref = None
+        self.cmargin_ref = None
 
     def raw_fields(self):
         """
@@ -178,16 +183,16 @@ class ASECONT(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         msg = f', which is required by ASECONT={self.asecont_id}'
         # ASE, MLOADS, ELOADS, GLOADS, DFS, or NLFLTR
-        zona = model.zona
+        # zona = model.zona
         # CNCTSET
         # self.conct_ref = model.conct[self.conct_id]
         if self.extinp_set_id:
             self.extinp_set_ref = model.Set(self.extinp_set_id, msg)
-            for id in self.extinp_set_ref.ids():
+            for idi in self.extinp_set_ref.ids():
                 asdf
         if self.extout_set_id:
             self.extout_set_ref = model.Set(self.extout_set_id, msg)
-            for id in self.extout_set_ref.ids():
+            for idi in self.extout_set_ref.ids():
                 asdf
 
 
@@ -259,7 +264,7 @@ class ASEGAIN(BaseCard):
         """
         # ASEGAIN ID OTFID CO ITFID CI GAIN TYPE
         # ASEGAIN 10 1     1  2     2  0.6  H
-        ['ASEGAIN', '301', '100', '1', '209', '1', '425', 'DEN']
+        # ['ASEGAIN', '301', '100', '1', '209', '1', '425', 'DEN']
         asegain_id = integer(card, 1, 'asegain_id')
         otf_id = integer(card, 2, 'otfid')
         c_out = integer(card, 3, 'CO')
@@ -898,9 +903,13 @@ class GAINSET(BaseCard):
             if idi in zona.asegain:
                 id_ref = zona.asegain[idi]
             else:
+                gainset = list(zona.gainset)
                 asegain = list(zona.asegain)
+                gainset.sort()
+                asegain.sort()
                 msg = (
                     f'GAINSET={self.gainset_id}: id={idi} is not [ASEGAIN]\n'
+                    f' - gainset = {gainset}\n'
                     f' - asegain = {asegain}\n'
                 )
                 log.warning(msg)
@@ -1333,6 +1342,84 @@ class SISOTF(BaseCard):
         list_fields = [
             'SISOTF', self.sisotf_id, self.ndenominator, self.nnumerator] + \
             self.a + self.b
+        return list_fields
+
+    def repr_fields(self):
+        list_fields = self.raw_fields()
+        return list_fields
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class AEROLAG(BaseCard):
+    type = 'AEROLAG'
+    # _field_map = {
+    #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
+    # }
+
+    def __init__(self, aerolag_id: int, nlag: int, lag_values: list[float],
+                 comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.aerolag_id = aerolag_id
+        self.nlag = nlag
+        self.lag_values = lag_values
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a TRIM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        # AEROLAG SID NLAG R1    R2   R3    R4 R5 R6
+        #         R7  R8   -etc-
+        # AEROLAG 10  4  -0.2    -0.5 -1.0 -2.0
+        aerolag_id = integer(card, 1, 'aerolag_id')
+        nlag = integer(card, 1, 'nlag')
+
+        lag_values = []
+        for ifield in range(3, len(card)):
+            idi = double(card, ifield, 'OTFID, id')
+            lag_values.append(idi)
+        # assert len(lag_values) == nlag, (lag_values, nlag)
+        assert len(card) >= 3, f'len(AEROLAG card) = {len(card):d}\ncard={card}'
+        return AEROLAG(aerolag_id, nlag, lag_values, comment=comment)
+
+    # def validate(self):
+    #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
+
+        """
+        list_fields = ['AEROLAG', self.aerolag_id, self.nlag] + self.lag_values
         return list_fields
 
     def repr_fields(self):

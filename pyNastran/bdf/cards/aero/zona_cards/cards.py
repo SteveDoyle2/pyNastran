@@ -237,6 +237,8 @@ class AEROZ(Aero):
         if comment:
             self.comment = comment
 
+        if xyz_ref is None:
+            xyz_ref = [0., 0., 0.]
         self.fm_mass_unit = fm_mass_unit
         self.fm_length_unit = fm_length_unit
         self.flip = flip
@@ -261,7 +263,7 @@ class AEROZ(Aero):
         #: Default = 0)
         self.sym_xz = sym_xz
 
-        self.xyz_ref = xyz_ref
+        self.xyz_ref = np.asarray(xyz_ref, dtype='float64')
 
         if self.acsid is None:
             self.acsid = 0
@@ -349,36 +351,36 @@ class AEROZ(Aero):
         # return UNIT_MAP.get(key, '???')
         return weight_unit
 
-    def Acsid(self):
+    def Acsid(self) -> int:
         try:
             return self.acsid_ref.cid
         except AttributeError:
             return self.acsid
 
-    def Rcsid(self):
+    def Rcsid(self) -> int:
         try:
             return self.rcsid_ref.cid
         except AttributeError:
             return self.rcsid
 
-    #def validate(self):
-        #msg = ''
-        #if not isinstance(self.acsid, integer_types):
-            #msg += 'acsid=%s must be an integer; type=%s\n' % (self.acsid, type(self.acsid))
-        #if not isinstance(self.rcsid, integer_types):
-            #msg += 'rcsid=%s must be an integer; type=%s\n' % (self.rcsid, type(self.rcsid))
-        #if not isinstance(self.cref, float):
-            #msg += 'cref=%s must be an float; type=%s\n' % (self.cref, type(self.cref))
-        #if not isinstance(self.bref, float):
-            #msg += 'bref=%s must be an float; type=%s\n' % (self.bref, type(self.bref))
-        #if not isinstance(self.sref, float):
-            #msg += 'sref=%s must be an float; type=%s\n' % (self.sref, type(self.sref))
-        #if not isinstance(self.sym_xz, integer_types):
-            #msg += 'sym_xz=%s must be an integer; type=%s\n' % (self.sym_xz, type(self.sym_xz))
-        #if not isinstance(self.sym_xy, integer_types):
-            #msg += 'sym_xy=%s must be an integer; type=%s\n' % (self.sym_xy, type(self.sym_xy))
-        #if msg:
-            #raise TypeError('There are errors on the AEROS card:\n%s%s' % (msg, self))
+    # def validate(self):
+    #     msg = ''
+    #     if not isinstance(self.acsid, integer_types):
+    #         msg += 'acsid=%s must be an integer; type=%s\n' % (self.acsid, type(self.acsid))
+    #     if not isinstance(self.rcsid, integer_types):
+    #         msg += 'rcsid=%s must be an integer; type=%s\n' % (self.rcsid, type(self.rcsid))
+    #     if not isinstance(self.cref, float):
+    #         msg += 'cref=%s must be an float; type=%s\n' % (self.cref, type(self.cref))
+    #     if not isinstance(self.bref, float):
+    #         msg += 'bref=%s must be an float; type=%s\n' % (self.bref, type(self.bref))
+    #     if not isinstance(self.sref, float):
+    #         msg += 'sref=%s must be an float; type=%s\n' % (self.sref, type(self.sref))
+    #     if not isinstance(self.sym_xz, integer_types):
+    #         msg += 'sym_xz=%s must be an integer; type=%s\n' % (self.sym_xz, type(self.sym_xz))
+    #     if not isinstance(self.sym_xy, integer_types):
+    #         msg += 'sym_xy=%s must be an integer; type=%s\n' % (self.sym_xy, type(self.sym_xy))
+    #     if msg:
+    #         raise TypeError('There are errors on the AEROS card:\n%s%s' % (msg, self))
 
     def cross_reference(self, model: BDF) -> None:
         """

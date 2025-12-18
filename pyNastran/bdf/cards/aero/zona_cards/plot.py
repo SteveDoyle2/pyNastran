@@ -6,7 +6,9 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string,
     string_or_blank, string_multifield,
-    blank, string_multifield_dollar_int_or_blank,
+    blank, string_multifield_dollar_int,
+    string_multifield_dollar_int_or_blank, double_or_blank,
+    integer_or_string,
 )
 from .utils import split_filename_dollar
 
@@ -43,24 +45,29 @@ class PLTMODE(BaseCard):
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
         # remove None
-        fields = [field for field in card.card if field is not None]
-        card.card = fields
-        card.nfields = len(card.card)
+        # fields = [field for field in card.card if field is not None]
+        # card.card = fields
+        # card.nfields = len(card.card)
 
-        #['PLTMODE', '27', 'ASYM', '7', '0.4', 'tecplot', 'MODE07.p', 'lt']
+        # ['PLTMODE', '27',  'ASYM', '7', '0.4', 'tecplot', 'MODE07.p', 'lt']
+        # ['PLTMODE', '104', 'ANTI', '4', None, '2.0', 'TECPLOT', 'GAFA_MOD', 'E4.PLT']
         set_id = integer(card, 1, 'set_id')
 
         symmetry = string(card, 2, 'sym/asym')
         mode = integer(card, 3, 'mode')
-        max_disp = double(card, 4, 'max_disp')
+        mode_type = '' if card.field(4) is None else card.field(4)
+        max_disp = double(card, 5, 'max_disp')
         # if max_disp is None:
         #     ifield += 1
         #     max_disp = double(card, ifield, 'max_disp')
         #     ifield += 1
-        output_format = string(card, 5, 'format')
+        output_format = string(card, 6, 'format')
 
-        filename = string_multifield(card, (6, 7), 'filename')
-        assert len(card) <= 8, f'len(PLTMODE card) = {len(card):d}\ncard={card}'
+        filename = string_multifield_dollar_int(card, (7, 8), 'filename')
+        # assert filename == 'GAFA_MODE4.PLT', filename
+        aero_filename = string_multifield_dollar_int_or_blank(
+            card, (9, 10), 'aero_filename', default='AEROGEOM.PAT')
+        assert len(card) <= 9, f'len(PLTMODE card) = {len(card):d}\ncard={card}'
         return PLTMODE(set_id, symmetry, mode, max_disp,
                        output_format, filename, comment=comment)
 
@@ -184,7 +191,8 @@ class PLTVG(BaseCard):
     type = 'PLTVG'
 
     def __init__(self, set_id: int, flutter_id: int,
-                 filename: str | int,
+                 xaxis: str, filename: str | int, nmode: int=0,
+                 output_format: str='TABLE', rho_ref: float=1.0,
                  comment: str=''):
         BaseCard.__init__(self)
 
@@ -193,10 +201,16 @@ class PLTVG(BaseCard):
 
         self.set_id = set_id
         self.flutter_id = flutter_id
+        self.nmode = nmode
+        self.xaxis = xaxis
+        self.output_format = output_format
         self.filename = filename
+        self.rho_ref = rho_ref
         # assert out_format in {'TECPLOT', 'PATRAN', 'IDEAS', 'FEMAP', 'NASTRAN', 'NASTL', 'ANSYS'}, out_format
         # assert vct in {'YES', 'NO'}, vct
         # assert cell in {'YES', 'NO'}, cell
+        assert xaxis in {'M', 'R', 'Q', 'H', 'V/VR', 'V', 'EQUV'}, f'field4={xaxis!r}'
+        assert output_format in {'TABLE', 'IDEAS', 'FEMAP', 'ESA'}, f'output_format={output_format!r}'
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -212,17 +226,17 @@ class PLTVG(BaseCard):
         # ['PLTVG', '100', '100', None, 'Q', None,    'PLTVG_FR', 'Q.DAT']
         set_id = integer(card, 1, 'set_id')
         flutter_id = integer(card, 2, 'flutter_id')
-        field3 = integer_or_blank(card, 3, 'field3', default=0)
-        field4 = string(card, 4, 'field4')
-        assert field4 in {'M', 'Q', 'V'}, f'field4={field4!r}'
-        field5 = string_or_blank(card, 5, 'field5', default='')
-        # assert field4 == 0, field4
+        nmode = integer_or_blank(card, 3, 'field3', default=0)
+        xaxis = string(card, 4, 'field4')
+        output_format = string_or_blank(card, 5, 'form', default='TABLE')
         filename = string_multifield_dollar_int_or_blank(
             card, (6, 7), 'filename', default='')
+        rho_ref = double_or_blank(card, 8, 'rho_ref', default=1.0)
         # assert filename == 'PLTVG_FRQ.DAT', filename
         assert len(card) <= 8, f'len(PLTVG card) = {len(card):d}\ncard={card}'
-        return PLTVG(set_id, flutter_id, filename,
-                     comment=comment)
+        return PLTVG(set_id, flutter_id, xaxis, filename,
+                     nmode=nmode, output_format=output_format,
+                     rho_ref=rho_ref, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         return
@@ -244,8 +258,8 @@ class PLTVG(BaseCard):
 
         """
         filenamea, filenameb = split_filename_dollar(self.filename)
-        list_fields = ['PLTVG', self.set_id, self.flutter_id, None,
-                       None, filenamea, filenameb]
+        list_fields = ['PLTVG', self.set_id, self.flutter_id, self.nmode,
+                       self.xaxis, self.output_format, filenamea, filenameb]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -283,15 +297,19 @@ class PLTCP(BaseCard):
         # card.card = fields
         card.nfields = len(card.card)
 
-        ['PLTCP', '30', 'SYM', '80', '5', '1', 'TECPLOT', 'CP7.PLT']
+        # PLTCP SETID SYM IDMK IK MODE FORM FILENM CONT
+        #       AERONM
+        # ['PLTCP', '30', 'SYM', '80', '5', '1', 'TECPLOT', 'CP7.PLT']
         set_id = integer(card, 1, 'set_id')
         sym_flag = string(card, 2, 'field2')
-        field3 = integer(card, 3, 'field3')
-        field4 = integer(card, 4, 'field4')
-        field5 = integer(card, 5, 'field5')
-        out_format = string(card, 6, 'field5')
+        mkaero_id = integer(card, 3, 'field3')
+        ik = integer(card, 4, 'ik')
+        mode = integer_or_string(card, 5, 'mode')
+        out_format = string_or_blank(card, 6, 'out_format', default='TECPLOT')
         filename = string_multifield_dollar_int_or_blank(
             card, (7, 8), 'filename', default='')
+        aero_filename = string_multifield_dollar_int_or_blank(
+            card, (9, 10), 'aero_filename', default='')
         # assert filename == 'CP7.PLT', filename
         assert len(card) <= 9, f'len(PLTCP card) = {len(card):d}\ncard={card}'
         return PLTCP(set_id, sym_flag, out_format, filename,
@@ -330,7 +348,8 @@ class PLTCP(BaseCard):
 class PLTMIST(BaseCard):
     type = 'PLTMIST'
 
-    def __init__(self, set_id: int,
+    def __init__(self, set_id: int, ase_id: int,
+                 irow: int, icol: int, klist: int,
                  out_format: str, filename: str,
                  comment: str=''):
         BaseCard.__init__(self)
@@ -342,6 +361,10 @@ class PLTMIST(BaseCard):
             out_format = 'TECPLOT'
 
         self.set_id = set_id
+        self.ase_id = ase_id
+        self.irow = irow
+        self.icol = icol
+        self.klist = klist
         self.out_format = out_format
         self.filename = filename
         assert out_format in {'TECPLOT', ''}, f'out_format={out_format!r}'
@@ -354,21 +377,20 @@ class PLTMIST(BaseCard):
         #card.card = fields
         card.nfields = len(card.card)
 
-        ['PLTMIST', '150', '150', '1', '1',  None, None,      'ROGER11', '.DAT']
-        ['PLTMIST', '31',  '30',  '1', '33', None, 'TECPLOT', 'QHG1.PL', 'T']
+        # ['PLTMIST', '150', '150', '1', '1',  None, None,      'ROGER11', '.DAT']
+        # ['PLTMIST', '31',  '30',  '1', '33', None, 'TECPLOT', 'QHG1.PL', 'T']
         set_id = integer(card, 1, 'set_id')
-        field2 = integer(card, 2, 'field2')
-        field3 = integer(card, 3, 'field3')
-        field4 = integer(card, 4, 'field4')
-        field5 = blank(card, 5, 'field5')
-        # assert femgrid in {'YES', 'NO', ''}, f'femgrid={femgrid!r}'
-
+        ase_id = integer(card, 2, 'ase_id')
+        irow = integer(card, 3, 'irow')
+        icol = integer(card, 4, 'icol')
+        klist = integer_or_blank(card, 5, 'klist', default=0)
         out_format = string_or_blank(card, 6, 'format', default='')
 
-        filename = string_multifield(card, (7, 8), 'filename')
+        filename = string_multifield_dollar_int(
+            card, (7, 8), 'filename')
         # assert filename == 'ROGER11.DAT', f'filename={filename!r}'
         assert len(card) <= 9, f'len(PLTMIST card) = {len(card):d}\ncard={card}'
-        return PLTMIST(set_id, out_format, filename,
+        return PLTMIST(set_id, ase_id, irow, icol, klist, out_format, filename,
                        comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -391,7 +413,8 @@ class PLTMIST(BaseCard):
 
         """
         filenamea, filenameb = split_filename_dollar(self.filename)
-        list_fields = ['PLTMIST', self.set_id, None, None, None, None,
+        list_fields = ['PLTMIST', self.set_id, self.ase_id,
+                       self.irow, self.icol, self.klist,
                        self.out_format, filenamea, filenameb]
         return list_fields
 
@@ -420,7 +443,7 @@ class PLTSURF(BaseCard):
         self.out_format = out_format
         self.scale_factor = scale_factor
         self.filename = filename
-        assert out_format in {'TECPLOT', ''}, f'out_format={out_format!r}'
+        assert out_format in {'TECPLOT', 'PATRAN', 'IDEAS', 'FEMAP', 'ANSYS', 'NASTRAN', 'NASTL'}, f'out_format={out_format!r}'
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -430,7 +453,7 @@ class PLTSURF(BaseCard):
         #card.card = fields
         card.nfields = len(card.card)
 
-        ['PLTSURF', '201', 'AILERON', '10.', 'TECPLOT', 'AILERON.', 'PLT']
+        # ['PLTSURF', '201', 'AILERON', '10.', 'TECPLOT', 'AILERON.', 'PLT']
         set_id = integer(card, 1, 'set_id')
         label = string(card, 2, 'label')
         scale_factor = double(card, 3, 'scale_factor')
@@ -501,15 +524,19 @@ class PLTFLUT(BaseCard):
         #card.card = fields
         card.nfields = len(card.card)
 
+        # PLTFLUT SETID IDFLUT MODE NTIME MAXDISP FORM FILENM
+        #         ---AERONM---
         # ['PLTFLUT', '10', '10', '1', '25', '0.5', 'TECPLOT', 'OPENFLT', '.PLT']
         set_id = integer(card, 1, 'set_id')
-        field2 = integer(card, 2, 'field2')
-        field3 = integer(card, 3, 'field3')
-        field4 = integer(card, 4, 'field4')
-        scale_factor = double(card, 5, 'scale_factor')
-        out_format = string(card, 6, 'out_format')
+        flutter_id = integer(card, 2, 'flutter_id')
+        mode = integer(card, 3, 'mode')
+        ntime = integer_or_blank(card, 4, 'ntime', default=1)
+        scale_factor = double_or_blank(card, 5, 'scale_factor', default=1.0)
+        out_format = string_or_blank(card, 6, 'out_format', default='TECPLOT')
 
         filename = string_multifield(card, (7, 8), 'filename')
+        aero_filename = string_multifield_dollar_int_or_blank(
+            card, (9, 10), 'aero_filename', default='AEROGEOM.PAT')
         # assert filename == 'ROGER11.DAT', f'filename={filename!r}'
         assert len(card) == 9, f'len(PLTFLUT card) = {len(card):d}\ncard={card}'
         return PLTFLUT(set_id, out_format, filename,
@@ -544,19 +571,29 @@ class PLTFLUT(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+
 class PLTBODE(BaseCard):
     type = 'PLTBODE'
     def __init__(self, set_id: int,
+                 cmargin_id: int,
+                 fmin: float,
+                 fmax: float,
+                 nf: int,
                  filename: str,
-                 scale_factor: float=1.0,
+                 log_scale_flag: int=0,
+                 draw_flag: int=0,
                  comment: str=''):
         BaseCard.__init__(self)
 
         if comment:
             self.comment = comment
-
         self.set_id = set_id
-        self.scale_factor = scale_factor
+        self.cmargin_id = cmargin_id
+        self.fmin = fmin
+        self.fmax = fmax
+        self.nf = nf
+        self.log_scale_flag = log_scale_flag
+        self.draw_flag = draw_flag
         self.filename = filename
 
     @classmethod
@@ -565,23 +602,27 @@ class PLTBODE(BaseCard):
         #print(card)
         #fields = [field for field in card.card if field is not None]
         #card.card = fields
-        card.nfields = len(card.card)
+        # card.nfields = len(card.card)
 
-        ['PLTBODE', '101', '1',
-         '5.', '70.',
-         '51', '0', 'STATE_BO', 'DE.PLT']
+        # PLTBODE SETID IDCMAR FMIN FMAX NF LOGSCAL FILENM
+        #         DRAW
+        # PLTBODE 20    10     50.  200. 21 0       BODE.PLT
+        # ['PLTBODE', '101', '1',
+        #  '5.', '70.',
+        #  '51', '0', 'STATE_BO', 'DE.PLT']
         set_id = integer(card, 1, 'set_id')
-        field2 = integer(card, 2, 'field2')
-        scale_factor = double(card, 3, 'scale_factor')
-        scale_factor2 = double(card, 3, 'scale_factor2')
-        field7 = integer(card, 5, 'field7')
-        field8 = integer(card, 6, 'field8')
+        cmargin_id = integer(card, 2, 'field2')
+        fmin = double(card, 3, 'fmin')
+        fmax = double(card, 3, 'fmax')
+        nf = integer(card, 5, 'field7')
+        log_scale_flag = integer_or_blank(card, 6, 'field8', default=0)
 
         filename = string_multifield(card, (7, 8), 'filename')
+        draw_flag = integer_or_blank(card, 9, 'draw_flag', default=0)
         # assert filename == 'ROGER11.DAT', f'filename={filename!r}'
-        assert len(card) == 9, f'len(PLTBODE card) = {len(card):d}\ncard={card}'
-        return PLTBODE(set_id, filename,
-                       scale_factor=scale_factor, comment=comment)
+        assert len(card) <= 10, f'len(PLTBODE card) = {len(card):d}\ncard={card}'
+        return PLTBODE(set_id, cmargin_id, fmin, fmax, nf, filename,
+                       log_scale_flag=log_scale_flag, draw_flag=draw_flag, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         return
@@ -603,8 +644,182 @@ class PLTBODE(BaseCard):
 
         """
         filenamea, filenameb = split_filename_dollar(self.filename)
-        list_fields = ['PLTBODE', self.set_id, None, None, None,
-                       self.scale_factor, None, filenamea, filenameb]
+        list_fields = ['PLTBODE', self.set_id, self.cmargin_id,
+                       self.fmin, self.fmax, self.nf,
+                       self.log_scale_flag, filenamea, filenameb, self.draw_flag]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        # TODO: needs a better writer
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class PLTTIME(BaseCard):
+    type = 'PLTTIME'
+    def __init__(self, set_id: int,
+                 mloads_id: int, tstart: float, tend: float, ndt: int,
+                 out_type: str, filename: str, aero_filename: str,
+                 output_format: str='TECPLOT', scale_factor: float=1.0,
+                 comment: str=''):
+        BaseCard.__init__(self)
+
+        if comment:
+            self.comment = comment
+        if out_type == 'ELAS':
+            out_type = 'ELASTIC'
+        self.set_id = set_id
+        self.mloads_id = mloads_id
+        self.tstart = tstart
+        self.tend = tend
+        self.ndt = ndt
+        self.out_type = out_type
+        self.output_format = output_format
+        self.scale_factor = scale_factor
+        self.filename = filename
+        self.aero_filename = aero_filename
+        assert out_type in {'FORCE', 'FORCESOF', 'FORCERFA', 'MANEUVER', 'ELASTIC', 'NORIGID', 'UCP'}, f'out_type={out_type!r}'
+        assert output_format in {'TECPLOT', 'PATRAN', 'IDEAS', 'FEMAP', 'OUTPUT4', 'NASTRAN', 'NASTNL'}, f'output_format={output_format!r}'
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # remove None
+        #print(card)
+        #fields = [field for field in card.card if field is not None]
+        #card.card = fields
+        # card.nfields = len(card.card)
+
+        # PLTTIME IDPLT  IDMLD TS    TE     NDT TYPE    FORM    SCALE
+        #         ---FILENM--- ---AERONM---
+        # PLTTIME 10     20    -2.0  1.0    10  ELASTIC TECPLOT 1.0
+        #         TECPLOT.PLT
+        set_id = integer(card, 1, 'set_id')
+        mloads_id = integer(card, 2, 'mloads_id')
+        tstart = double(card, 3, 'tstart')
+        tend = double(card, 4, 'tend')
+        ndt = integer(card, 5, 'ndt')
+        out_type = string(card, 6, 'out_type')
+        output_format = string_or_blank(card, 7, 'output_format', default='TECPLOT')
+        scale_factor = double_or_blank(card, 8, 'draw_flag', default=1.0)
+
+        filename = string_multifield_dollar_int(card, (9, 10), 'filename')
+        aero_filename = string_multifield_dollar_int(card, (10, 11), 'aero_filename')
+        # assert filename == 'ROGER11.DAT', f'filename={filename!r}'
+        assert len(card) <= 11, f'len(PLTTIME card) = {len(card):d}\ncard={card}'
+        return PLTTIME(set_id, mloads_id, tstart, tend, ndt, out_type, filename,
+                       aero_filename, output_format=output_format, scale_factor=scale_factor, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        return
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : list[varies]
+          the fields that define the card
+
+        """
+        filenamea, filenameb = split_filename_dollar(self.filename)
+        aerofilenamea, aerofilenameb = split_filename_dollar(self.aero_filename)
+        list_fields = ['PLTTIME', self.set_id, self.mloads_id,
+                       self.tstart, self.tend, self.ndt,
+                       self.out_type, self.output_format, self.scale_factor,
+                       filenamea, filenameb, aerofilenamea, aerofilenameb]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        # TODO: needs a better writer
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class PLTTRIM(BaseCard):
+    type = 'PLTTRIM'
+    def __init__(self, set_id: int,
+                 trim_id: int,
+                 out_type: str, filename: str, aero_filename: str,
+                 flex: str='FLEX', output_format: str='TECPLOT',
+                 scale_factor: float=1.0,
+                 comment: str=''):
+        BaseCard.__init__(self)
+
+        if comment:
+            self.comment = comment
+        if out_type == 'ELAS':
+            out_type = 'ELASTIC'
+        self.set_id = set_id
+        self.trim_id = trim_id
+        self.flex = flex
+        self.out_type = out_type
+        self.output_format = output_format
+        self.scale_factor = scale_factor
+        self.filename = filename
+        self.aero_filename = aero_filename
+        assert flex in {'RIGID', 'FLEX'}, f'flex={flex!r}'
+        assert out_type in {'FORCE', 'AERO', 'INERTIAL', 'CP', 'DEFORM', 'ELASTIC'}, f'out_type={out_type!r}'
+        assert output_format in {'TECPLOT', 'PATRAN', 'IDEAS', 'FEMAP', 'OUTPUT4', 'NASTRAN', 'NASTNL'}, f'output_format={output_format!r}'
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # remove None
+        #print(card)
+        #fields = [field for field in card.card if field is not None]
+        #card.card = fields
+        # card.nfields = len(card.card)
+
+        # PLTTRIM IDPLT IDTRIM FLEX TYPE   FORM    ---FILENM--- SCALE
+        #         ---AERONM---
+        # PLTTRIM 100   10     FLEX DEFORM TECPLOT PLTTRIM.DAT
+        set_id = integer(card, 1, 'set_id')
+        trim_id = integer(card, 2, 'trim_id')
+        flex = string_or_blank(card, 3, 'flex', default='FLEX')
+        out_type = string(card, 4, 'out_type')
+        output_format = string_or_blank(card, 5, 'output_format', default='TECPLOT')
+        filename = string_multifield_dollar_int(card, (6, 7), 'filename')
+        scale_factor = double_or_blank(card, 8, 'draw_flag', default=1.0)
+        aero_filename = string_multifield_dollar_int_or_blank(
+            card, (9, 10), 'aero_filename')
+        # assert filename == 'ROGER11.DAT', f'filename={filename!r}'
+        assert len(card) <= 10, f'len(PLTTRIM card) = {len(card):d}\ncard={card}'
+        return PLTTRIM(set_id, trim_id, out_type, filename,
+                       aero_filename, flex=flex,
+                       output_format=output_format, scale_factor=scale_factor,
+                       comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        return
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : list[varies]
+          the fields that define the card
+
+        """
+        filenamea, filenameb = split_filename_dollar(self.filename)
+        aerofilenamea, aerofilenameb = split_filename_dollar(self.aero_filename)
+        list_fields = ['PLTTRIM', self.set_id, self.trim_id,
+                       self.flex, self.out_type, self.output_format,
+                       filenamea, filenameb, self.scale_factor,
+                       aerofilenamea, aerofilenameb]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

@@ -5,9 +5,9 @@ from typing import Optional, Any, TYPE_CHECKING
 
 from pyNastran.utils.mathematics import get_abs_max
 from pyNastran.femutils.utils import abs_nan_min_max, safe_nanstd
-from pyNastran.op2.stress_reduction import von_mises_2d, max_shear
 
 from pyNastran.gui.gui_objects.vector_results import VectorResultsCommon, filter_ids
+from pyNastran.op2.stress_reduction import von_mises_2d, max_shear
 from .nodal_averaging import nodal_average, nodal_combine_map, derivation_map
 
 if TYPE_CHECKING:  # pragma: no cover

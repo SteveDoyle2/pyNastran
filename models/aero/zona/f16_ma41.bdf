@@ -1897,17 +1897,18 @@ SET1	500160	-3080	-3082	-3085	-3089
 PANLST3	500280	LLAULU
 $
 $...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
-$PLTMODE 21      ASYM    1       0.4     tecplot MODE01.plt
-$PLTMODE 22      ASYM    2       0.4     tecplot MODE02.plt
-$PLTMODE 23      ASYM    3       0.4     tecplot MODE03.plt
-$PLTMODE 24      ASYM    4       0.4     tecplot MODE04.plt
-$PLTMODE 25      ASYM    5       0.4     tecplot MODE05.plt
-$PLTMODE 26      ASYM    6       0.4     tecplot MODE06.plt
-PLTMODE 27      ASYM    7       0.4     tecplot MODE07.plt
-$PLTMODE 28      ASYM    8       0.4     tecplot MODE08.plt
-$PLTMODE 29      ASYM    9       0.4     tecplot MODE09.plt
-$PLTMODE 30      ASYM    10      0.4     tecplot MODE10.plt
-$PLTMODE 31      ASYM    11      0.4     tecplot MODE11.plt
-$PLTMODE 32      ASYM    12      0.4     tecplot MODE12.plt
-$PLTMODE 33      ASYM    13      0.4     tecplot MODE13.plt
-$PLTMODE 34      ASYM    14      0.4     tecplot MODE14.plt	
+$	setid	sym	mode	type	maxdisp	form	filename
+$PLTMODE 21      ASYM    1              0.4     tecplot MODE01.plt
+$PLTMODE 22      ASYM    2              0.4     tecplot MODE02.plt
+$PLTMODE 23      ASYM    3              0.4     tecplot MODE03.plt
+$PLTMODE 24      ASYM    4              0.4     tecplot MODE04.plt
+$PLTMODE 25      ASYM    5              0.4     tecplot MODE05.plt
+$PLTMODE 26      ASYM    6              0.4     tecplot MODE06.plt
+PLTMODE 27      ASYM    7               0.4     tecplot MODE07.plt
+$PLTMODE 28      ASYM    8              0.4     tecplot MODE08.plt
+$PLTMODE 29      ASYM    9              0.4     tecplot MODE09.plt
+$PLTMODE 30      ASYM    10             0.4     tecplot MODE10.plt
+$PLTMODE 31      ASYM    11             0.4     tecplot MODE11.plt
+$PLTMODE 32      ASYM    12             0.4     tecplot MODE12.plt
+$PLTMODE 33      ASYM    13             0.4     tecplot MODE13.plt
+$PLTMODE 34      ASYM    14             0.4     tecplot MODE14.plt

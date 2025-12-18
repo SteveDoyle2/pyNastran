@@ -11,7 +11,7 @@ from pyNastran.converters.tecplot.tecplot import read_tecplot, Tecplot
 
 def get_aero_model(aero_filename: PathLike, aero_format: str,
                    aero_xyz_scale: float=1.0,
-                   xyz_units: str='in',
+                   xyz_units: str='???',
                    stop_on_failure: bool=True) -> tuple[Any, list[str]]:
     if isinstance(aero_filename, PathLike):
         assert os.path.exists(aero_filename), print_bad_path(aero_filename)

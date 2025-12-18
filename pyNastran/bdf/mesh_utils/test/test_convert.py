@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import unittest
 
 import numpy as np
@@ -72,6 +73,17 @@ class TestConvert(unittest.TestCase):
         model.write_bdf(bdf_filename_out2)
         os.remove(bdf_filename_out)
         os.remove(bdf_filename_out2)
+
+    def test_convert_nastran_to_zona(self):
+        """converts a bwb model"""
+        log = SimpleLogger(level='error')
+        bdf_filename = Path(pkg_path) / '..' / 'models' / 'bwb' / 'bwb_saero.bdf'
+        zaero_filename = Path(pkg_path) / '..' / 'models' / 'bwb' / 'bwb_saero_zaero.inp'
+        model = read_bdf(bdf_filename, log=log, validate=False)
+        from pyNastran.bdf.cards.aero.zona import nastran_to_zaero
+        nastran_to_zaero(model, zaero_filename)
+        #model = read_bdf(zaero_filename, xref=False)
+        #model.safe_cross_reference()
 
     def test_convert_bwb(self):
         """converts a bwb model"""

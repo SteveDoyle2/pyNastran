@@ -11,7 +11,7 @@ from scipy.sparse import coo_matrix  # type: ignore
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.femutils.utils import unique2d
 from pyNastran.bdf.cards.base_card import BaseCard
-from pyNastran.bdf.cards.collpase_card import collapse_thru_packs, collapse_thru_ipacks
+from pyNastran.bdf.cards.collpase_card import collapse_thru_ipacks
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -203,7 +203,6 @@ class DTI(BaseCard):
         self.fields = {key: value for key, value in zip(keys, values_str)}
         print('values_str', values_str)
         print('fields', self.fields)
-        asdf
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model: BDF, encoding: str):
@@ -1827,7 +1826,8 @@ class DMI(NastranMatrix):
     def export_to_hdf5(cls, h5_file, model, encoding):
         _export_dmig_to_hdf5(h5_file, model, model.dmi, encoding)
 
-    def __init__(self, name: str, matrix_form: int, tin: int, tout: int,
+    def __init__(self, name: str, matrix_form: int | str,
+                 tin: int | str, tout: int | str,
                  nrows: int, ncols: int,
                  GCj, GCi, Real, Complex=None,
                  comment: str='', finalize: bool=True):
@@ -2320,10 +2320,10 @@ class DMI(NastranMatrix):
             self.tin, size, is_double)
 
         if size == 8:
-            return self.write_card_8()
+            return self.comment + self.write_card_8()
         if is_double:
-            return self.write_card_double()
-        return self.write_card_16()
+            return self.comment + self.write_card_double()
+        return self.comment + self.write_card_16()
 
     def __repr__(self):
         """

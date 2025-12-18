@@ -5,12 +5,12 @@ import copy
 import warnings
 from abc import abstractmethod
 import inspect
-from typing import TextIO
+from typing import TextIO, Optional
 
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
-from pyNastran.utils.numpy_utils import integer_types, float_types
+from pyNastran.utils.numpy_utils import integer_types, float_types, integer_float_types
 from pyNastran.op2.result_objects.op2_objects import (
     BaseElement, get_times_dtype, get_sort_element_sizes, set_as_sort1)
 from pyNastran.f06.f06_formatting import (
@@ -1766,6 +1766,20 @@ class RealCBeamForceArray(RealForceObject):
         new_table.data[:, :, 1:] = new_data
         return new_table
 
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        if data is None:
+            self.data[:, :, 1:] *= factor
+        else:
+            self.data[:, :, 1:] += data[:, :, 1:] * factor
+        if update:
+            self.update_data_components()
+
+    def update_data_components(self):
+        return
+
     def _check_math(self, table: RealCBeamForceArray) -> None:
         """verifies that the shapes are the same"""
         assert self.ntimes == table.ntimes, f'ntimes={self.ntimes} table.times={table.ntimes}'
@@ -2858,6 +2872,21 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
     def get_headers(self) -> list[str]:
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
 
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        # ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
+        if data is None:
+            self.data *= factor
+        else:
+            self.data += data * factor
+        if update:
+            self.update_data_components()
+
+    def update_data_components(self):
+        return
+
     def build(self):
         """sizes the vectorized attributes of the RealPlateForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
@@ -3300,6 +3329,21 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
     def get_headers(self) -> list[str]:
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
+
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        # ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
+        if data is None:
+            self.data *= factor
+        else:
+            self.data += data * factor
+        if update:
+            self.update_data_components()
+
+    def update_data_components(self):
+        return
 
     def build(self):
         """sizes the vectorized attributes of the RealPlateBilinearForceArray"""
@@ -4177,6 +4221,25 @@ class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
         return words
 
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        # headers = [
+        #     'bending_moment_a1', 'bending_moment_a2',
+        #     'bending_moment_b1', 'bending_moment_b2',
+        #     'shear1', 'shear2',
+        #     'axial', 'torque']
+        if data is None:
+            self.data *= factor
+        else:
+            self.data += data * factor
+        if update:
+            self.update_data_components()
+
+    def update_data_components(self):
+        return
+
 
 class RealCWeldForceArray(RealCBarFastForceArray):  # 34-CBAR
     """117-CWELD"""
@@ -4917,6 +4980,20 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         ]
         return headers
 
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        if data is None:
+            self.data *= factor
+        else:
+            self.data += data * factor
+        if update:
+            self.update_data_components()
+
+    def update_data_components(self):
+        return
+
     def build(self):
         """sizes the vectorized attributes of the RealBendForceArray"""
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
@@ -5423,6 +5500,21 @@ class RealForceMomentArray(RealForceObject):
     def get_headers(self) -> list[str]:
         headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
         return headers
+
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        # headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
+        if data is None:
+            self.data *= factor
+        else:
+            self.data += data * factor
+        if update:
+            self.update_data_components()
+
+    def update_data_components(self):
+        return
 
     def build(self):
         """sizes the vectorized attributes of the RealCBushForceArray"""
