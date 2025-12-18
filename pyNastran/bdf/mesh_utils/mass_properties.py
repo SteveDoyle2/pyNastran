@@ -126,7 +126,7 @@ def transform_inertia(mass: float,
     dz2 = zref2 - zcg
 
     # consistent with mass_properties, not CONM2
-    Ixx_ref, Iyy_ref, Izz_ref, Ixy_ref, Ixz_ref, Iyz_ref = I_ref
+    Ixx_ref, Iyy_ref, Izz_ref, Ixy_ref, Ixz_ref, Iyz_ref = inertia_ref1
     dx = dx1**2 - dx2**2
     dy = dy1**2 - dy2**2
     dz = dz1**2 - dz2**2

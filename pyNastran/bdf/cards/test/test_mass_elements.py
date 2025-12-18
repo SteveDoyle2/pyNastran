@@ -7,7 +7,7 @@ from cpylog import get_logger
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mass_properties import (
-    mass_properties, transform_inertia)
+    mass_properties, transform_inertia2)
 #from pyNastran.op2.op2 import OP2, read_op2
 
 
@@ -82,7 +82,7 @@ class TestMassElements(unittest.TestCase):
         Izz_expected = Izz + mass * (dx2 ** 2 - dx1**2)
         inertia = np.array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
 
-        inertia2 = transform_inertia(
+        inertia2 = transform_inertia2(
             mass, xyz_cg,
             xyz_ref1, xyz_ref2, inertia)
         Ixx2, Iyy2, Izz2, Ixy2, Ixz2, Iyz2 = inertia2
@@ -115,7 +115,7 @@ class TestMassElements(unittest.TestCase):
 
         model = BDF(debug=False)
         coord = model.add_cord2r(1, origin, zaxis, xzplane)
-        inertia2 = transform_inertia(
+        inertia2 = transform_inertia2(
             mass, xyz_cg,
             xyz_ref1, xyz_ref2,
             inertia,
@@ -138,7 +138,7 @@ class TestMassElements(unittest.TestCase):
         Ixx_expected = Iyy = 2.0
         Iyy_expected = Izz = 3.0
         coord = model.add_cord2r(2, origin, zaxis, xzplane)
-        inertia2 = transform_inertia(
+        inertia2 = transform_inertia2(
             mass, xyz_cg,
             xyz_ref1, xyz_ref2,
             inertia,
