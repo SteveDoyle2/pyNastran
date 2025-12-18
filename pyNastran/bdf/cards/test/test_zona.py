@@ -29,6 +29,7 @@ FLUTTER_DIR = EXAMPLES_DIR / 'flutter'
 GLOADS_DIR = EXAMPLES_DIR / 'gloads'
 MLOADS_DIR = EXAMPLES_DIR / 'mloads'
 assert FLUTTER_DIR.exists(), print_bad_path(FLUTTER_DIR)
+dirname = Path(os.path.dirname(__file__))
 
 
 class TestAeroZona(unittest.TestCase):
@@ -79,6 +80,7 @@ class TestAeroZona(unittest.TestCase):
         model.safe_cross_reference()
         model.write_bdf('zona.bdf')
         model.zona.uncross_reference()
+        # model.zona.convert_to_nastran('zona.bdf')
 
         bdf_file.seek(0)
         model.clear_attributes()
@@ -86,6 +88,7 @@ class TestAeroZona(unittest.TestCase):
         os.remove('zona.bdf')
         write_raw_fields(model2.zona)
         model2.zona.convert_to_nastran()
+        #model2.write_bdf('zona2.bdf')
 
     def test_zona_trim_case1_in(self):
         zona_filename = TRIM_DIR / 'case1' / 'ha144d.inp'

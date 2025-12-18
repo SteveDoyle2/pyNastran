@@ -1119,6 +1119,20 @@ class RealRodForceArray(RealForceObject):
         headers = ['axial', 'torsion']
         return headers
 
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        if data is None:
+            self.data *= factor
+        else:
+            self.data += data * factor
+        # if update:
+        #     self.update_data_components()
+
+    def update_data_components(self):
+        return
+
     #def get_headers(self):
         #headers = ['axial', 'torque']
         #return headers

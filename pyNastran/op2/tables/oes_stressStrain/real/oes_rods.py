@@ -1,7 +1,7 @@
-from typing import TextIO
+from typing import TextIO, Optional
 import numpy as np
-from numpy import zeros, searchsorted, allclose
 
+from pyNastran.utils.numpy_utils import integer_float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_real_data_code,
@@ -164,11 +164,11 @@ class RealRodArray(OES_Object):
         """actually performs the build step"""
         self.ntimes = ntimes
         self.nelements = nelements
-        _times = zeros(ntimes, dtype=self.analysis_fmt)
-        element = zeros(nelements, dtype=idtype)
+        _times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        element = np.zeros(nelements, dtype=idtype)
 
         #[axial, torsion, SMa, SMt]
-        data = zeros((ntimes, nelements, 4), dtype=fdtype)
+        data = np.zeros((ntimes, nelements, 4), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -181,6 +181,24 @@ class RealRodArray(OES_Object):
             self._times = _times
             self.element = element
             self.data = data
+
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        #[axial, torsion, SMa, SMt]
+
+        ires = [0, 1] # axial, torsion
+        if data is None:
+            self.data[:, :, ires] *= factor
+        else:
+            self.data[:, :, ires] += data[:, :, ires] * factor
+        if update:
+            self.update_data_components()
+
+    def update_data_components(self):
+        import warnings
+        warnings.warn('verify oes_crod margins')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -230,7 +248,7 @@ class RealRodArray(OES_Object):
                         t2 = table.data[itime, ieid, :]
                         (axial1, torsion1, sma1, smt1) = t1
                         (axial2, torsion2, sma2, smt2) = t2
-                        if not allclose(t1, t2):
+                        if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s)\n  (%s, %s, %s, %s)\n' % (
                                 eid,
@@ -301,12 +319,12 @@ class RealRodArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
+        itot = np.searchsorted(eids, self.element)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
         #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
-        ind = searchsorted(eids, self.element)
+        ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind

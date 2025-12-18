@@ -37,7 +37,6 @@ def load_combinations(combination_filenames: list[PathLike],
 
 def _load_combination(combination_filename: PathLike,
                       delimiter=',') -> tuple[list[int], list]:
-    """parses a single load case combination file"""
     with open(combination_filename, 'r') as combination_file:
         lines = combination_file.readlines()
 
@@ -74,16 +73,10 @@ def _load_combination(combination_filename: PathLike,
 
 def run_load_case_combinations(op2_filename: PathLike,
                                combination_filenames: list[PathLike] | PathLike,
-                               op2_filenames_new: list[PathLike] | PathLike=None,
                                mode: Optional[str]=None,
+                               revision: Optional[str]=None,
                                log: Optional[SimpleLogger]=None) -> None:
     """
-    Does a linear combination of a single op2 file.
-
-    Supports multiple combination files to:
-     - reduce memory usage
-     - reduce file size
-     - focus on critical cases
 
     Parameters
     ----------
@@ -91,10 +84,6 @@ def run_load_case_combinations(op2_filename: PathLike,
         path to input file
     combination_filenames : list[PathLike]
         list of paths to input file
-    op2_filenames_new : list[PathLike]; default=None
-        list of paths to output files
-        must be same length as combination filenames
-        default -> 'combination_filename.op2'
     mode : Optional[str]
         the nastran format (msc, nx)
     log : Optional[SimpleLogger]
@@ -106,17 +95,10 @@ def run_load_case_combinations(op2_filename: PathLike,
     if not isinstance(combination_filenames, (list, tuple)):
         combination_filenames = [combination_filenames]
 
-    if op2_filenames_new is None:
-        op2_filenames_new = [os.path.splitext(filename)[0] + '.op2'
-                             for filename in combination_filenames]
-    elif isinstance(op2_filenames_new, PathLike):
-        op2_filenames_new = [op2_filenames_new]
-    else:
-        assert isinstance(op2_filenames_new, (list, tuple)), op2_filenames_new
-
     all_combinations = load_combinations(combination_filenames)
+    op2_filenames_new = [os.path.splitext(filename)[0] + '.op2'
+                         for filename in combination_filenames]
     print(f'op2_filenames_new = {op2_filenames_new}')
-    assert len(op2_filenames_new) == len(combination_filenames)
 
     # load_geometry: bool = False,
     # combine: bool = True,
@@ -128,6 +110,7 @@ def run_load_case_combinations(op2_filename: PathLike,
     # skip_undefined_matrices: bool = True,
     model = read_op2(op2_filename, log=log, mode=mode, combine=True)
     mode_out = model._nastran_format
+    model._nastran_revision = revision
 
     # check displacements exist
     assert len(all_combinations) == len(op2_filenames_new)
@@ -142,18 +125,11 @@ def run_load_case_combinations(op2_filename: PathLike,
     # do the combinations
     for op2_filename_new, (subcases_in, combinations) in zip(op2_filenames_new, all_combinations):
         combine(model, op2_filename_new,
-                subcases_in, combinations, model.log, mode_out)
-
+                subcases_in, combinations, model.log, mode_out, revision)
 
 def get_local_factors(label: str,
                       subcases_in: list[int],
                       factors_in: list[float]) -> tuple[list[int], list[float]]:
-    """
-    shrink down the number of operations
-    [result] = 1.0*[case1] + 2.0*[case2] + 0.0*[case3]
-    becomes:
-    [result] = 1.0*[case1] + 2.0*[case2]
-    """
     factors_out = []
     subcases_out = []
     nsubcases_in = len(subcases_in)
@@ -167,14 +143,12 @@ def get_local_factors(label: str,
     assert len(factors_out) > 0, f'label={label!r} has no factors != 0'
     return subcases_in, factors_out
 
-
 def combine(model: OP2,
             op2_filename_new: PathLike,
             subcases_in: list[int],
             combinations: list[tuple],
             log: SimpleLogger,
-            mode: str) -> None:
-    """Writes a single op2 filename"""
+            mode: str, revision: Optional[str]):
     # assert len(subcases_in) == len(combinations), f'subcases_in={subcases_in} combinations={combinations}'
 
     unallowed_results = [
@@ -186,6 +160,7 @@ def combine(model: OP2,
                             if table_type not in unallowed_results and not table_type.startswith('responses.'))
 
     model2 = OP2(log=log, mode=mode)
+    model2._nastran_revision = revision
     for combination in combinations:
         (subcase_out, label, factors_in) = combination
         assert len(subcases_in) == len(factors_in), f'subcases_in={subcases_in} factors_in={factors_in}'
@@ -198,12 +173,9 @@ def combine(model: OP2,
                 continue
             # print(res_type)
 
-            # TODO: we could be smarter here and look for
-            #       a case that has a 1.0 factor
-            # TODO: is there a way to eliminate the deepcopy?
+            # displacement
             case0 = res_type[subcase0]
             case_new = copy.deepcopy(case0)
-            # case_new.isubcase = subcase_out
             case_new.label = label
 
             case_new.linear_combination(0.0, update=False)
@@ -211,6 +183,8 @@ def combine(model: OP2,
             for subcase, factor in zip(subcases, factors):
                 casei = res_type[subcase]
                 case_new.linear_combination(factor, casei.data, update=False)
+                #casei = caseii * factor
+                #case.data = casei.data
 
             if hasattr(case_new, 'update_data_components'):
                 case_new.update_data_components()
@@ -219,7 +193,7 @@ def combine(model: OP2,
 
             from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
             slot[subcase_out] = case_new
-        break # end of first combination
+        # break # end of first combination
 
     print(f'op2_filename_new = {op2_filename_new}')
     assert mode is not None, mode
@@ -228,15 +202,20 @@ def combine(model: OP2,
     return
 
 
-def main():  # pragma: no cover
+def main():
     from pathlib import Path
+    import pyNastran
     dirname = Path(__file__).parent
+    pkg_path = Path(pyNastran.__path__[0]).parent
 
     op2_filename = dirname / 'test load combo-000.op2'
-    assert os.path.exists(op2_filename), print_bad_path(op2_filename)
     combination_filename = dirname / 'combination_file_real.txt'
-    run_load_case_combinations(op2_filename, combination_filename)
+
+    assert os.path.exists(op2_filename), print_bad_path(op2_filename)
+    combinations = load_combinations([combination_filename], delimiter=',')
+
+    run_load_case_combinations(op2_filename, combination_filename, mode='nx', revision='2306')
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == '__main__':
     main()

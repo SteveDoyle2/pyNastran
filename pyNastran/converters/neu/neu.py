@@ -154,6 +154,7 @@ class Neu:
             ncurrent = len(set_id_to_results_default[set_id])
             #print(f'set_id={set_id} vector_id={vector_id}')
             #assert ncurrent + 1 == vector_id
+            print(result)
             set_id_to_results_default[set_id].append(result)
 
         set_id_to_results = {}
@@ -166,6 +167,7 @@ class Neu:
                 titles = []
                 results_list = []
                 for (titlei, idsi, valuesi) in results:
+                    self.log.info(f'titlei={titlei!r}')
                     if not np.array_equal(ids, idsi):
                         self.log.error(f'cannot collapse results; failed on {titlei}')
                         return passed, self.results
@@ -174,6 +176,8 @@ class Neu:
                     titles.append(titlei)
                     results_list.append(valuesi)
                 results2 = np.column_stack(results_list)
+                self.log.info(f'titles = {titles!r}')
+                assert isinstance(titles, list), titles
                 set_id_to_results[set_id] = (titles, idsi, results2)
         passed = True
         return passed, set_id_to_results
@@ -224,6 +228,7 @@ class Neu:
             return
         results = self.split_results_by_complex(set_id_to_results)
         op2_model = OP2(log=self.log)
+        log = self.log
 
         ntimes = 1
         ogs = 0
@@ -235,7 +240,7 @@ class Neu:
             isubcase = output_set
             #---------------------
             data_dict = self.result_headers[output_set]
-            print(data_dict)
+            # print(data_dict)
 
             title = data_dict['title']
             if 'T1 Translation' in names[0]:
@@ -248,6 +253,7 @@ class Neu:
                 table_name = 'OUGV1'
                 class_obj = RealDisplacementArray
             else:
+                log.warning("no 'T1 Translation' found")
                 print(data_dict)
 
             time = data_dict['dt']
@@ -422,7 +428,7 @@ def read_neu(neu_filename: str,
             for iblock, blocki in enumerate(block):
                 results = read_results(
                     result_headers,
-                    blocki, version, debug=debug)
+                    blocki, version, log, debug=debug)
                 if debug:
                     print('-------------------')
         else:  # pragma: no cover
@@ -547,6 +553,7 @@ def read_output_headers(log: SimpleLogger,
 
     # Flutter Mode  1    5.44Hz
     title = block[2].strip()
+    log.debug(f'  title={title!r}')
 
     from_program, analysis_type_tag = split_line(block[3])
     analysis_type, analysis_step = analysis_type_dict[int(analysis_type_tag)]
@@ -617,7 +624,7 @@ def _read_results_header(nums: list[str],
 
 def read_results(headers: dict[int, tuple[str, str, str]],
                  block: list[str], version: str,
-                 debug: bool=True):
+                 log: SimpleLogger, debug: bool=True):
     """
        1,   1,   1,
     CPRE:       2M= 0.9k= 0.1
@@ -645,6 +652,7 @@ def read_results(headers: dict[int, tuple[str, str, str]],
     ids = []
     values = []
     title_lines = headers[output_set_id]
+    log.info(f'title_lines = {title_lines}')
     if debug:
         print('title_lines =', title_lines)
     #title_end = title_lines[-1]

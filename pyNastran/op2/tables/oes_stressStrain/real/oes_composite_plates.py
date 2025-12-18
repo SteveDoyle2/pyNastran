@@ -1,8 +1,7 @@
-from typing import TextIO
+from typing import TextIO, Optional
 import numpy as np
-from numpy import zeros, searchsorted, unique, ravel
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_real_data_code, get_scode,
@@ -89,11 +88,11 @@ class RealCompositePlateArray(OES_Object):
             ntimes = self.ntotal
             ntotal = self.ntimes
 
-        _times = zeros(ntimes, dtype=self.analysis_fmt)
-        element_layer = zeros((ntotal, 2), dtype=idtype)
+        _times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        element_layer = np.zeros((ntotal, 2), dtype=idtype)
 
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
-        data = zeros((ntimes, ntotal, 9), dtype=fdtype)
+        data = np.zeros((ntimes, ntotal, 9), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -386,7 +385,7 @@ class RealCompositePlateArray(OES_Object):
         ntimes = self.ntimes
         #nnodes = self.nnodes
         ntotal = self.ntotal
-        nelements = len(unique(self.element_layer[:, 0]))
+        nelements = len(np.unique(self.element_layer[:, 0]))
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append(f'  type={class_name} ntimes={ntimes:d} nelements={nelements:d} ntotal={ntotal}; table_name={self.table_name_str}\n')
@@ -425,15 +424,72 @@ class RealCompositePlateArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element_layer[:, 0])  #[0]
+        itot = np.searchsorted(eids, self.element_layer[:, 0])  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsorted(self.element_layer[:, 0] == eid) for eid in eids])
+        ind = np.ravel([np.searchsorted(self.element_layer[:, 0] == eid) for eid in eids])
         #ind = searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind
+
+
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm/shear]
+
+        ires = [0, 1, 2, 3, 4] # o11-t2z
+        if data is None:
+            self.data[:, :, ires] *= factor
+        else:
+            self.data[:, :, ires] += data[:, :, ires] * factor
+        if update:
+            self.update_data_components()
+
+    def update_data_components(self):
+        if self.is_strain:
+            import warnings
+            warnings.warn('verify composite plate principal strains/angle, von_mises/max_shear')
+
+        # https://www.continuummechanics.org/principalstressesandstrains.html
+        o11 = self.data[:, :, 0]
+        o22 = self.data[:, :, 1]
+        t12 = self.data[:, :, 2]
+
+        # ndata = len(o11.ravel())
+        # mat = np.zeros((ndata, 2, 2))
+        # mat[:, 0, 0] = o11.ravel()
+        # mat[:, 1, 1] = o22.ravel()
+        # mat[:, 0, 1] = mat[:, 1, 0] = t12.ravel()
+        # eign = np.linalg.eigvals(mat)
+        # assert eign.shape == (ndata, 2)
+
+        #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm/shear]
+        itheta = 5
+        imax = 6
+        imin = 7
+        ivm = 8
+        mid = (o11 + o22) / 2
+        do11_22 = o11 - o22
+        radius = np.sqrt((do11_22 / 2)**2 + t12**2)
+        theta2 = np.atan2(2*t12, do11_22)
+        maxi = mid + radius
+        mini = mid - radius
+
+        if self.is_von_mises:
+            # https://en.wikipedia.org/wiki/Von_Mises_yield_criterion
+            ovm = np.sqrt(maxi**2 + mini**2 - maxi*mini)
+        else:
+            # https://ansyshelp.ansys.com/public/account/secured?returnurl=/Views/Secured/corp/v251/en/wb_sim/ds_Maximum_Stress.html
+            ovm = (maxi - mini) / 2.
+        self.data[:, :, itheta] = np.degrees(theta2 / 2.)
+        self.data[:, :, imax] = maxi
+        self.data[:, :, imin] = mini
+        self.data[:, :, ivm] = ovm
+        return
 
     def write_csv(self, csv_file: TextIO,
                   is_exponent_format: bool=False,

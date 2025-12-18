@@ -78,7 +78,7 @@ class RealSolidArray(OES_Object):
 
         if self.is_strain:
             import warnings
-            warnings.warn('verify principal strains')
+            warnings.warn('verify solid principal strains; solid von-mises stress/strain')
 
         ovm_sheari = calculate_ovm_shear(oxx, oyy, ozz, txy, tyz, txz, o1, o3,
                                          self.is_von_mises, self.is_stress)
@@ -1111,13 +1111,22 @@ def calculate_ovm_shear(oxx, oyy, ozz,
                         txy, tyz, txz, o1, o3,
                         is_von_mises: bool,
                         is_stress: bool):
-    if is_von_mises:
-        # von mises
-        ovm_shear = np.sqrt((oxx - oyy)**2 + (oyy - ozz)**2 + (oxx - ozz)**2 +
-                            3. * (txy**2 + tyz**2 + txz ** 2))
+    if is_stress:
+        if is_von_mises:
+            # von mises
+            ovm_shear = np.sqrt((oxx - oyy)**2 + (oyy - ozz)**2 + (oxx - ozz)**2 +
+                                3. * (txy**2 + tyz**2 + txz ** 2))
+        else:
+            # max shear
+            ovm_shear = (o1 - o3) / 2.
     else:
-        # max shear
-        ovm_shear = (o1 - o3) / 2.
+        if is_von_mises:
+            # von mises
+            ovm_shear = np.sqrt((oxx - oyy)**2 + (oyy - ozz)**2 + (oxx - ozz)**2 +
+                                3. * (txy**2 + tyz**2 + txz ** 2))
+        else:
+            # max shear
+            ovm_shear = (o1 - o3) / 2.
     return ovm_shear
 
 def set_element_cid_case(cls: RealSolidArray, data_code, is_sort1, isubcase,

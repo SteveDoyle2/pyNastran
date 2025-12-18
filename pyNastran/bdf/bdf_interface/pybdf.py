@@ -349,7 +349,7 @@ class BDFInputPy:
                     filename = os.path.join(self.include_dir, filename)
                     if filename_ext in {'.f06', '.prt'}:
                         # apply the directory name
-                        if os.path.exists(filename):
+                        if os.path.exists(filename) and 0:
                             log.debug(f'reading geom from f06: {filename}')
                             from pyNastran.f06.parse_geom import parse_f06_geom
                             out = parse_f06_geom(filename, log)
@@ -382,8 +382,9 @@ class BDFInputPy:
                             continue
                         is_bdf = True
                         if not filename_ext in {'.bdf', '.prt'}:
+                            is_bdf = False
                             # prt is astos
-                            raise RuntimeError(f'filename must end in bdf; {filename}')
+                            # raise RuntimeError(f'filename must end in bdf; {filename}')
 
                     if is_bdf:
                         if not os.path.exists(filename):

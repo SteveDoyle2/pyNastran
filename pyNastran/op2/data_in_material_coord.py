@@ -8,7 +8,7 @@ import copy
 from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy import cos, sin, cross
+# from numpy import cos, sin, cross
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -38,7 +38,7 @@ def transf_Mohr(Sxx: np.ndarray,
     ----------
     Sxx, Syy, Sxy : array-like
         Sigma_xx, Sigma_yy, Sigma_xy stresses.
-    thetarad : array-like
+    theta_rad : array-like
         Array with angles for which the stresses should be transformed.
 
     Returns
@@ -54,10 +54,10 @@ def transf_Mohr(Sxx: np.ndarray,
     Scenter = (Sxx + Syy) / 2.
     R = np.sqrt((Sxx - Scenter)**2 + Sxy**2)
     theta_rad_Mohr = np.arctan2(-Sxy, Sxx - Scenter) + 2*theta_rad
-    cos_Mohr = cos(theta_rad_Mohr)
+    cos_Mohr = np.cos(theta_rad_Mohr)
     Sxx_theta = Scenter + R*cos_Mohr
     Syy_theta = Scenter - R*cos_Mohr
-    Sxy_theta = -R*sin(theta_rad_Mohr)
+    Sxy_theta = -R*np.sin(theta_rad_Mohr)
     return Sxx_theta, Syy_theta, Sxy_theta
 
 
@@ -360,7 +360,7 @@ def get_eid_to_theta_rad(bdf: BDF, debug: bool) -> dict[int, float]:
         tmp[this_tria] *= np.sign((check_normal * normals).sum(axis=1))
         theta_rad[mcid] = tmp
 
-    eid_to_theta_rad = dict([[eid, theta] for eid, theta in zip(eids, theta_rad)])
+    eid_to_theta_rad = {eid: theta for eid, theta in zip(eids, theta_rad)}
     return eid_to_theta_rad
 
 def _get_tri_nodes(nids: np.ndarray,
@@ -374,7 +374,7 @@ def _get_tri_nodes(nids: np.ndarray,
 
 def _get_quad_nodes(nids: np.ndarray,
                     xyz_cid0: np.ndarray,
-                    element_nodes: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+                    element_nodes: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     inode = np.searchsorted(nids, element_nodes)
     g1 = xyz_cid0[inode[:, 0], :]
     g2 = xyz_cid0[inode[:, 1], :]
@@ -595,8 +595,8 @@ def _transform_shell_force(vec_name: str,
         # transverse terms
         Qx = vector.data[:, slicei, 6]
         Qy = vector.data[:, slicei, 7]
-        cos_theta = cos(vec_theta_rad)
-        sin_theta = sin(vec_theta_rad)
+        cos_theta = np.cos(vec_theta_rad)
+        sin_theta = np.sin(vec_theta_rad)
         if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
             Qx_new_real = cos_theta*Qx.real + sin_theta*Qy.real
             Qy_new_real = -sin_theta*Qx.real + cos_theta*Qy.real

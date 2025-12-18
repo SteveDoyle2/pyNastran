@@ -16,7 +16,7 @@ from pyNastran.f06.f06_formatting import (
     _eigenvalue_header, write_imag_floats_13e)
 from pyNastran.op2.vector_utils import (
     transform_force_moment, transform_force_moment_sum, sortedsum1d)
-from pyNastran.utils.numpy_utils import integer_types, float_types
+from pyNastran.utils.numpy_utils import integer_types, float_types, integer_float_types
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.writer.utils import fix_table3_types
 
@@ -183,6 +183,7 @@ class RealGridPointForcesArray(GridPointForces):
         new_table = deepcopy(self)
         new_table.data = new_data
         return new_table
+
     # __radd__: reverse order adding (b+a)
     def __iadd__(self, table: RealGridPointForcesArray) -> RealGridPointForcesArray:
         """inplace adding; a += b"""
@@ -234,6 +235,20 @@ class RealGridPointForcesArray(GridPointForces):
         new_table = deepcopy(self)
         new_table.data = new_data
         return new_table
+
+    def linear_combination(self, factor: integer_float_types,
+                           data: Optional[np.ndarray]=None,
+                           update: bool=True):
+        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+        if data is None:
+            self.data *= factor
+        else:
+            self.data += data * factor
+        # if update:
+        #     self.update_data_components()
+
+    def update_data_components(self):
+        return
 
     def _check_math(self, table: RealGridPointForcesArray) -> None:
         """verifies that the shapes are the same"""

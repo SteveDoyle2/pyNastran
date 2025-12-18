@@ -459,7 +459,7 @@ class AddMethods:
 
     def add_conct_object(self, conct: CONCT) -> None:
         """adds an CONCT object"""
-        key = conct.cjunct_id
+        key = conct.conct_id
         model = self.model
         zona = model.zona
         assert key not in zona.conct, '\nconct=\n%s old=\n%s' % (
@@ -967,6 +967,45 @@ class ZONA:
             for panlsti in panlst:
                 panlsti.cross_reference(model)
 
+        self._check_cntcset()
+
+    def _check_cntcset(self):
+        # assert len(self.cnctset) in [0, 1], len(self.cnctset)
+        cntcset_ids = set()
+        for idi, cnctset in self.cnctset.items():
+            cntcset_ids.update(cnctset.ids)
+        cntc_ids = set(list(self.conct))
+        extra = cntc_ids - cntcset_ids
+        missing = cntcset_ids - cntc_ids
+        assert len(extra) == 0, f'There are more CNTCs than values in CNTCADD; extra={extra}'
+        assert len(missing) == 0, f'There are fewer CNTCs than values in CNTCADD; missing={missing}'
+        all_blocks = []
+        assert len(self.mimoss) == 0, self.mimoss
+        for idi, card in self.sisotf.items():
+            all_blocks.append(f'{card.type}={idi}-1')
+        for idi, card in self.mimoss.items():
+            all_blocks.append(f'{card.type}={idi}-1')
+        for idi, card in self.actu.items():
+            all_blocks.append(f'{card.type}={idi}-1')
+        for idi, card in self.cjunct.items():
+            all_blocks.append(f'{card.type}={idi}-1')
+
+        print(f'all_blocks = {all_blocks}')
+        for idi, card in self.conct.items():
+            # 'SISOTF=31004-1', 'ACTU=21001-1', 'ACTU=21002-1
+            input_ref = card.input_ref
+            output_ref = card.output_ref
+            input_name = f'{input_ref.type}={card.input_tf_id}-{card.input_component}'
+            output_name = f'{output_ref.type}={card.output_tf_id}-{card.output_component}'
+            # print(card)
+            # print(card.get_stats())
+            assert input_name in all_blocks, f'input={input_name!r} not in all_blocks\n{str(card)}'
+            assert output_name in all_blocks, f'output={output_name!r} not in all_blocks\n{str(card)}'
+            # asdf
+        # for
+        asdf
+
+
     def safe_cross_reference(self, xref_errors=None):
         model = self.model
         if model.nastran_format != 'zona':
@@ -992,6 +1031,7 @@ class ZONA:
         for unused_id, panlst in self.panlsts.items():
             for panlsti in panlst:
                 panlsti.safe_cross_reference(model, xref_errors)
+        self._check_cntcset()
 
     def uncross_reference(zona: ZONA):
         dicts, dicts_list = get_dicts(zona, 'write')

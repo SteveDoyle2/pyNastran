@@ -53,9 +53,8 @@ class TestCombintion(unittest.TestCase):
 
         # combinations = load_combinations([combination_filename], delimiter=',')
 
-        with self.assertRaises(AttributeError):
-            run_load_case_combinations(
-                op2_filename, combination_filename, log=log)
+        run_load_case_combinations(
+            op2_filename, combination_filename, log=log)
         combination_filename.unlink()
 
 
