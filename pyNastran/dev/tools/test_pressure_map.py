@@ -112,6 +112,7 @@ class TestPressureMap(unittest.TestCase):
                 regions_to_include=None,
                 regions_to_remove=None)
 
+        pressure_filename = DIRNAME / 'cart3d_forcemoment_panelmodel_4.bdf'
         pressure_map(
             aero_model, #cart3d_filename,
             caero_bdf_filename,
@@ -127,28 +128,27 @@ class TestPressureMap(unittest.TestCase):
             force_sid=2,
             moment_sid=3,
             idtype='int32', fdtype='float64',
-            pressure_filename=DIRNAME/'cart3d_forcemoment_panelmodel_4.bdf',
+            pressure_filename=pressure_filename,
             aero_xyz_scale=1.0, qinf=1.0,
             sref=1.0, cref=1.0, bref=1.0,
             reference_point=None,
             regions_to_include=None,
             regions_to_remove=None)
 
-    pressure_filename = DIRNAME/'cart3d_forcemoment_panelmodel_4.bdf'
-    fa2j_filename = DIRNAME/'cart3d_fa2j_5.bdf'
-    pressure_filename_to_fa2j(pressure_filename, fa2j_filename, sid=1)
+        fa2j_filename = DIRNAME/'cart3d_fa2j_5.bdf'
+        pressure_filename_to_fa2j(pressure_filename, fa2j_filename, sid=1)
 
-    wkk_filename = DIRNAME/'cart3d_wkk_6.bdf'
-    pressure_filename1 = pressure_filename
-    pressure_filename2 = pressure_filename
-    pressure_filename_to_wkk_diag(
-        pressure_filename1,
-        pressure_filename2,
-        np.zeros(2),
-        np.ones(2),
-        wkk_filename,
-        force_sid1=2, moment_sid1=3,
-        force_sid2=1, moment_sid2=3)
+        wkk_filename = DIRNAME/'cart3d_wkk_6.bdf'
+        pressure_filename1 = pressure_filename
+        pressure_filename2 = pressure_filename
+        pressure_filename_to_wkk_diag(
+            pressure_filename1,
+            pressure_filename2,
+            np.zeros(2),
+            np.ones(2),
+            wkk_filename,
+            force_sid1=2, moment_sid1=3,
+            force_sid2=1, moment_sid2=3)
 
     def test_pressure_map_fluent(self):
         aero_format = 'fluent'
