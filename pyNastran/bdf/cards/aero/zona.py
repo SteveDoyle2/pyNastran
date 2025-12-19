@@ -980,7 +980,7 @@ class ZONA:
         assert len(extra) == 0, f'There are more CNTCs than values in CNTCADD; extra={extra}'
         assert len(missing) == 0, f'There are fewer CNTCs than values in CNTCADD; missing={missing}'
         all_blocks = []
-        assert len(self.mimoss) == 0, self.mimoss
+        # assert len(self.mimoss) == 0, self.mimoss
         for idi, card in self.sisotf.items():
             all_blocks.append(f'{card.type}={idi}-1')
         for idi, card in self.mimoss.items():
@@ -990,20 +990,29 @@ class ZONA:
         for idi, card in self.cjunct.items():
             all_blocks.append(f'{card.type}={idi}-1')
 
+        log = self.model.log
         print(f'all_blocks = {all_blocks}')
         for idi, card in self.conct.items():
             # 'SISOTF=31004-1', 'ACTU=21001-1', 'ACTU=21002-1
-            input_ref = card.input_ref
-            output_ref = card.output_ref
-            input_name = f'{input_ref.type}={card.input_tf_id}-{card.input_component}'
-            output_name = f'{output_ref.type}={card.output_tf_id}-{card.output_component}'
             # print(card)
             # print(card.get_stats())
+            input_ref = card.input_ref
+            if input_ref is None:
+                log.warning(f'missing input-type for:\n{str(card)}')
+                continue
+            input_name = f'{input_ref.type}={card.input_tf_id}-{card.input_component}'
             assert input_name in all_blocks, f'input={input_name!r} not in all_blocks\n{str(card)}'
-            assert output_name in all_blocks, f'output={output_name!r} not in all_blocks\n{str(card)}'
+
+            output_ref = card.output_ref
+            if output_ref is None:
+                log.warning(f'missing output-type for:\n{str(card)}')
+                continue
+            output_name = f'{output_ref.type}={card.output_tf_id}-{card.output_component}'
+            if output_name not in all_blocks:
+                log.warning(f'output={output_name!r} not in all_blocks\n{str(card)}')
             # asdf
         # for
-        asdf
+        # asdf
 
 
     def safe_cross_reference(self, xref_errors=None):
