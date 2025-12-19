@@ -1470,6 +1470,7 @@ class OES(OP2Common2):
         dt = op2.nonlinear_factor
 
         if prefix and prefix.endswith('.') and op2._results.is_not_saved(prefix.strip('.')):
+            #op2.log.debug(f'returning on prefix={prefix}')
             return ndata
 
         #flag = 'element_id'

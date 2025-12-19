@@ -1307,7 +1307,7 @@ class BDFAttributes:
         self.is_mystran = False
         self.is_zona = False
 
-    def set_as_zona(self):
+    def set_as_zaero(self):
         self._nastran_format = 'zona'
         self.is_nx = False
         self.is_msc = False

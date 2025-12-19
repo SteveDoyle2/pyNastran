@@ -852,8 +852,6 @@ class Strain:
             'cfast_strain',
             'cbush_strain',
             'hyperelastic_cquad4_strain',
-
-
         ]
         if include_class:
             return [f'{self.word}.' + table for table in tables]

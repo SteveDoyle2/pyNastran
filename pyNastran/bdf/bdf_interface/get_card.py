@@ -381,8 +381,8 @@ class GetCard(GetMethods):
             try:
                 slot = getattr(self, key)
             except AttributeError:
-                if hasattr(self.zona, key):
-                    slot = getattr(self.zona, key)
+                if hasattr(self.zaero, key):
+                    slot = getattr(self.zaero, key)
                 else:
                     raise
             ids = self._type_to_id_map[card_type]

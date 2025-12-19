@@ -123,6 +123,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.expected_times = None
 
         self._endian = None
+        self._nastran_revision = None
 
         # sets the element mapper
         #self.get_element_type(33)

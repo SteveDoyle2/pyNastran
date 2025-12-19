@@ -640,34 +640,61 @@ class RealPlateArray(OES_Object):
         assert self.is_von_mises
 
         # data = max_shear(omax, omin)
+        # [fiber_dist2, oxx2, oyy2, txy2, angle2,
+        #  major_principal2, minor_principal2, ovm2]
         if self.is_stress:
-            oxx = self.data[:, :, 1]
-            oyy = self.data[:, :, 2]
-            txy = self.data[:, :, 3]
-        else:
-            oxx = self.data[:, :, 1]
-            oyy = self.data[:, :, 2]
-            txy = self.data[:, :, 3] * 2 # 2*gxy = exy
+            # principal stresses are good
+            # von mises is good
+            oxx = self.data[:, :, 1].ravel()
+            oyy = self.data[:, :, 2].ravel()
+            txy = self.data[:, :, 3].ravel()
+            center = (oxx + oyy) / 2
+            radius = np.sqrt((oxx-oyy)**2/4 + txy**2)
+            eig_max = center + radius
+            eig_min = center - radius
+            ovm = von_mises_2d(oxx, oyy, txy)
 
-        # https://en.wikipedia.org/wiki/Mohr%27s_circle
-        # tan(2*theta) = 2*txy / (oyy-oxx)
-        theta2 = np.degrees(np.atan2(2*txy, oyy-oxx))
-        theta = theta2 / 2
+            # https://en.wikipedia.org/wiki/Mohr%27s_circle
+            # tan(2*theta) = 2*txy / (oyy-oxx)
+            theta2 = np.degrees(np.atan2(2 * txy, oyy - oxx))
+            theta = theta2 / 2
+        else:
+            # https://www.simscale.com/docs/simwiki/fea-finite-element-analysis/principal-stress-and-principal-strain/
+            oxx = self.data[:, :, 1].ravel()
+            oyy = self.data[:, :, 2].ravel()
+            txy = self.data[:, :, 3].ravel() # 2*gxy = exy
+            center = (oxx + oyy) / 2
+            radius = np.sqrt((oxx-oyy)**2/4 + txy**2/4)
+            eig_max = center + radius
+            eig_min = center - radius
+            # ovm = von_mises_2d(oxx/2, oyy/2, txy/2)
+            ovm = von_mises_2d(eig_max, eig_min, txy*0)
+
+            # https://en.wikipedia.org/wiki/Mohr%27s_circle
+            # https://web1.eng.famu.fsu.edu/~woates/template/Kaushik%20Bhattacharya%27s%20Group_files/teaching/MoMI/Chapter15.pdf
+            theta2 = np.degrees(np.atan2(txy, oxx - oyy)) # -50 vs -79
+            theta = theta2 / 2
 
         shape = oxx.shape
         ndata = len(oxx.ravel())
 
-        mat = np.zeros((ndata, 2, 2))
-        mat[:, 0, 0] = oxx.ravel()
-        mat[:, 1, 1] = oyy.ravel()
-        mat[:, 0, 1] = txy.ravel()
-        mat[:, 1, 0] = txy.ravel()
-        eigs = np.linalg.eigvalsh(mat)
+        if 0:  # pragma: no cover
+            # TODO: potentially faster, but currently wrong
+            mat = np.zeros((ndata, 2, 2))
+            mat[:, 0, 0] = oxx.ravel()
+            mat[:, 1, 1] = oyy.ravel()
+            mat[:, 0, 1] = txy.ravel()
+            mat[:, 1, 0] = txy.ravel()
+            print('mat[0, :, :]\n', mat[0, :, :])
+            eig0 = np.linalg.eigvals(mat[0, :, :])
+            print('eig0', eig0, omax[0], omin[0])
 
-        eig_min = eigs.min(axis=1)
-        eig_max = eigs.max(axis=1)
-        assert eigs.shape == (ndata, 2), eigs.shape
-        assert len(eig_min) == ndata, eig_min
+            eigs = np.linalg.eigvalsh(mat, UPLO='U')
+            eig_min = eigs.min(axis=1)
+            eig_max = eigs.max(axis=1)
+            assert eigs.shape == (ndata, 2), eigs.shape
+            assert len(eig_min) == ndata, eig_min
+            print(f'eig_max        = {eig_max}')
 
         # [fiber_dist2, oxx2, oyy2, txy2, angle2,
         #  major_principal2, minor_principal2, ovm2]
@@ -675,10 +702,14 @@ class RealPlateArray(OES_Object):
         imax = 5
         imin = 6
         ivm = 7
-        ovm = von_mises_2d(oxx, oyy, txy)
 
         import warnings
-        warnings.warn('verify plate stress/strain principals, theta, and von-mises')
+        if self.is_stress:
+            warnings.warn('verify oes_plates theta. verify von-mises stress')
+        else:
+            warnings.warn('verify ostr_plates. von-mises strain is wrong')
+        # print(f'theta_mine = {theta}')
+        # print(f'ovm_mine = {ovm}')
         self.data[:, :, itheta] = theta
         self.data[:, :, imax] = eig_max.reshape(shape)
         self.data[:, :, imin] = eig_min.reshape(shape)
@@ -782,6 +813,10 @@ class RealPlateArray(OES_Object):
 
     def write_f06(self, f06_file: TextIO, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
+        # print(f'eig_max_correct = {self.data[:, :, 5].ravel()}')
+        # print(f'theta_correct = {self.data[:, :, 4].ravel()}')
+        # print(f'ovm_correct = {self.data[:, :, 7].ravel()}')
+        self.update_data_components()
         if header is None:
             header = []
         msg, nnodes, cen = _get_plate_msg(self)
@@ -810,6 +845,7 @@ class RealPlateArray(OES_Object):
             major_principal = self.data[itime, :, 5]
             minor_principal = self.data[itime, :, 6]
             ovm = self.data[itime, :, 7]
+            # print('ovm_f06 = ', self.is_stress, self.is_strain, ovm)
 
             is_linear = self.element_type in {33, 74, 227, 228, 83}
             is_bilinear = self.element_type in {64, 70, 75, 82, 144}

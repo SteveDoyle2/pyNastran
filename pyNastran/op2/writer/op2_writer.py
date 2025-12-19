@@ -49,7 +49,8 @@ class OP2Writer(OP2_F06_Common):
                   endian: bytes=b'<',
                   includes: Optional[list[str]]=None,
                   skips: Optional[list[str]]=None,
-                  nastran_format: Optional[str]=None) -> int:
+                  nastran_format: Optional[str]=None,
+                  nastran_revision: Optional[str]=None) -> int:
         """
         Writes an OP2 file based on the data we have stored in the object
 
@@ -75,6 +76,8 @@ class OP2Writer(OP2_F06_Common):
         """
         if nastran_format is None:
             nastran_format = self._nastran_format
+        if nastran_revision is not None:
+            self._nastran_revision = nastran_revision
         assert nastran_format in {'msc', 'nx', 'optistruct'}, nastran_format
         skips = _set_skips(self, includes, skips)
 
@@ -98,7 +101,9 @@ class OP2Writer(OP2_F06_Common):
                 op2_file, fop2_ascii, self,
                 skips,
                 post=post, endian=endian,
-                nastran_format=nastran_format)
+                nastran_format=nastran_format,
+                nastran_revision=self._nastran_revision,
+            )
         except Exception:  # NotImplementedError
             if close:
                 op2_file.close()
@@ -162,13 +167,16 @@ def _set_skips(model: OP2Writer,
 def _write_op2(op2_file, fop2_ascii, obj: OP2,
                skips: set[str],
                post: int=-1, endian: bytes=b'<',
-               nastran_format: str='nx') -> tuple[int, list[str]]:
+               nastran_format: str='nx',
+               nastran_revision: Optional[str]=None) -> tuple[int, list[str]]:
     """actually writes the op2"""
     date = obj.date
     #op2_ascii.write('writing [3, 7, 0] header\n')
 
     struct_3i = Struct(endian + b'3i')
-    write_op2_header(obj, op2_file, fop2_ascii, struct_3i, post=post, endian=endian)
+    write_op2_header(obj, op2_file, fop2_ascii, struct_3i,
+                     nastran_revision=nastran_revision,
+                     post=post, endian=endian)
     #if 'CASECC' not in skips:
         #write_casecc(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     obj.log.debug(f'nastran_format={nastran_format}')
@@ -284,7 +292,6 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'OESATO1', 'OESCRM1', 'OESNO1', 'OESPSD1', 'OESRMS1', 'OESXNO1', 'OESXRMS1',
         'OESATO2', 'OESCRM2', 'OESNO2', 'OESPSD2', 'OESRMS2',
 
-
         # ---------------
         #strain
         'OSTR1', 'OSTR1X', 'OSTR1C', 'OSTRVM1', 'OSTRVM1C',
@@ -311,7 +318,6 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'RAFCONS', 'RAFEATC',
         'RAGCONS', 'RAGEATC',
         'RANCONS', 'RANEATC',
-
     ]
     skip_results = {'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3', 'cstm'}
     for table_type in obj.get_table_types():
@@ -470,6 +476,7 @@ def _fix_subcase_id(key: int | tuple[Any], res: Any) -> None:
 
 def write_op2_header(model: OP2, op2_file, fop2_ascii,
                      struct_3i: Struct,
+                     nastran_revision=None,
                      post: int=-1, endian: bytes=b'<'):
     """writes the op2 header"""
     is_nx = model.is_nx
@@ -487,7 +494,11 @@ def write_op2_header(model: OP2, op2_file, fop2_ascii,
             op2_file.write(pack(endian + b'7i 28s i', *[4, 1, 4,
                                                         4, 7, 4,
                                                         28, tape_code, 28]))
-            nastran_version = b'NX8.5   '
+            if nastran_revision is None:
+                nastran_revision = '8.5'
+            nastran_version_str = f'NX{nastran_revision:6s}'
+            nastran_version = nastran_version_str.encode('utf8')
+
         elif is_msc or is_optistruct:
             day, month, year = model.date
             op2_file.write(pack(endian + b'9i 28s i', *[12,

@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf_interface.cross_reference_obj import CrossReference
 #from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
-from pyNastran.bdf.cards.aero.zona import ZONA
+from pyNastran.bdf.cards.aero.zona import ZONA as ZAERO
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -504,7 +504,7 @@ class BDFAttributes:
         self.is_mystran = False
         self.is_zona = False
 
-    def set_as_zona(self):
+    def set_as_zaero(self):
         self._nastran_format = 'zona'
         self.is_nx = False
         self.is_msc = False
@@ -1049,7 +1049,7 @@ class BDFAttributes:
 
         #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
         self.splines: dict[int, SPLINEs] = {}
-        self.zona = ZONA(self)
+        self.zaero = ZAERO(self)
 
         # axisymmetric
         # self.axic: Optional[AXIC] = None
@@ -1159,6 +1159,10 @@ class BDFAttributes:
         self._type_to_id_map: dict[int, list[Any]] = defaultdict(list)
         self._slot_to_type_map = SLOT_TO_TYPE_MAP
         self._type_to_slot_map = self.get_rslot_map()
+
+    @property
+    def zona(self) -> ZAERO:
+        return self.zaero
 
     @property
     def type_slot_str(self) -> str:
@@ -1409,12 +1413,12 @@ def map_version(fem: BDF, version: str) -> None:
         'nx': fem.set_as_nx,
         'optistruct': fem.set_as_optistruct,
         'mystran': fem.set_as_mystran,
-        'zona': fem.set_as_zona,
-        'zaero': fem.set_as_zona,
+        'zona': fem.set_as_zaero,
+        'zaero': fem.set_as_zaero,
     }
     try:
         func = version_map[version]
-    except KeyError:  # msc, nx, zona, mystran
+    except KeyError:  # msc, nx, zaero, mystran
         fmts = ', '.join(version_map)
         msg = f'mode={version!r} is not supported; modes=[{fmts}]'
         raise RuntimeError(msg)
@@ -1438,11 +1442,12 @@ def map_update(fem: BDF, version: str) -> None:
         'optistruct': fem._update_for_optistruct,
         'mystran': fem._update_for_mystran,
         'zona': fem.zona.update_for_zona,
+        'zaero': fem.zona.update_for_zona,
     }
     try:
         func = version_map[version]
     except KeyError:
-        msg = f'mode={version!r} is not supported; modes=[msc, nx, optistruct, zona, mystran]'
+        msg = f'mode={version!r} is not supported; modes=[msc, nx, optistruct, zaero, zona, mystran]'
         raise RuntimeError(msg)
     # fem.log.info(f'mapping version={version!r} vfunc={func}')
     func()

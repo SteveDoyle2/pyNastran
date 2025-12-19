@@ -265,6 +265,12 @@ class F06Writer(OP2_F06_Common):
             elif result == 'strain':
                 strain_results = add_results_of_exact_type(all_results, 'strain')
                 self._results.update(strain_results)
+            elif 'elastic_strain' in result.lower():
+                self._results.add('elastic_strain')
+            elif 'plastic_strain' in result.lower():
+                self._results.add('plastic_strain')
+            elif 'thermal_strain' in result.lower():
+                self._results.add('thermal_strain')
             elif 'stressa' in result.lower():
                 self._results.add('stressa')
             elif 'stress' in result.lower():

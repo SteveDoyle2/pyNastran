@@ -4963,7 +4963,7 @@ def map_version(fem: BDF, version: str):
         'nx': fem.set_as_nx,
         'optistruct': fem.set_as_optistruct,
         'mystran': fem.set_as_mystran,
-        'zona': fem.set_as_zona,
+        'zaero': fem.set_as_zaero,
     }
     try:
         func = version_map[version]
@@ -5003,10 +5003,10 @@ def map_update(fem: BDF, version: str):
 #     self.set_as_nx()
 # elif mode == 'mystran':
 #     self.set_as_mystran()
-# elif mode == 'zona':
-#     self.set_as_zona()
+# elif mode == 'zaero':
+#     self.set_as_zaero()
 # else:  # pragma: no cover
-#     msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zona, mystran]'
+#     msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zaero, mystran]'
 #     raise NotImplementedError(msg)
 
 
