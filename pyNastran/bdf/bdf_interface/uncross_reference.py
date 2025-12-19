@@ -169,6 +169,7 @@ class UnXrefMesh(SafeXrefMesh):
             self.aero.uncross_reference()
         if self.aeros:
             self.aeros.uncross_reference()
+        self.zaero.uncross_reference()
 
     def _uncross_reference_constraints(self) -> None:
         """

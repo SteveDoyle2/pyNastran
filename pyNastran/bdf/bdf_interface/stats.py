@@ -126,7 +126,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         # not handled
         'acmodl',
         'baror', 'beamor', 'doptprm', 'dtable',
-        'zona',
+        'zona', 'zaero',
     ]
 
     list_attrs = [
@@ -166,7 +166,6 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'radset',
         'dmig', 'dmiji', 'dmij', 'dmik', 'dmi',
 
-
         # vector
         'cbar', 'cbeam', 'cbush',
         'conm2',
@@ -194,6 +193,9 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'bolt', 'boltld', 'boltfor', 'boltseq', 'boltfrc',
         'use_new_deck_parser', 'allow_overwrites_set', '_parse',
         'allow_tabs',
+
+        # to remove
+        'zaero',
     ] + list_attrs + card_dict_groups + scalar_attrs
     missed_attrs = []
     for attr in model.object_attributes(filter_properties=True,

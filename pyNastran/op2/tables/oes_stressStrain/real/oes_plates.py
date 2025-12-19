@@ -710,10 +710,10 @@ class RealPlateArray(OES_Object):
             warnings.warn('verify ostr_plates. von-mises strain is wrong')
         # print(f'theta_mine = {theta}')
         # print(f'ovm_mine = {ovm}')
-        self.data[:, :, itheta] = theta
+        self.data[:, :, itheta] = theta.reshape(shape)
         self.data[:, :, imax] = eig_max.reshape(shape)
         self.data[:, :, imin] = eig_min.reshape(shape)
-        self.data[:, :, ivm] = ovm
+        self.data[:, :, ivm] = ovm.reshape(shape)
         return
 
     def write_csv(self, csv_file: TextIO,
@@ -816,7 +816,7 @@ class RealPlateArray(OES_Object):
         # print(f'eig_max_correct = {self.data[:, :, 5].ravel()}')
         # print(f'theta_correct = {self.data[:, :, 4].ravel()}')
         # print(f'ovm_correct = {self.data[:, :, 7].ravel()}')
-        self.update_data_components()
+        # self.update_data_components()
         if header is None:
             header = []
         msg, nnodes, cen = _get_plate_msg(self)

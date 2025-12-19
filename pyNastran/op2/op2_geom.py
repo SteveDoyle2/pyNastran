@@ -418,7 +418,7 @@ def bdf_to_op2_geom(model: BDF, validate: bool=True) -> OP2Geom:
 
     # apply data from our 2 models to the new model
     _properties = model._properties
-    keys_to_skip = _properties + ['_properties', 'npoints', 'is_geometry']
+    keys_to_skip = _properties + ['_properties', 'npoints', 'is_geometry', 'zona']
     for key in model.object_attributes(mode='both', keys_to_skip=keys_to_skip):
         value = getattr(model, key)
         #if isinstance(value, (dict, list)) and len(value) == 0:

@@ -40,7 +40,7 @@ class TestAeroZona(unittest.TestCase):
         bdf_filename = ZONA_PATH / 'f16_ma41.bdf'
         model = read_bdf(bdf_filename, xref=False,
                          mode='zona', debug=None, log=log)
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
         model.safe_cross_reference()
         # save_load_deck(
         #     model, xref='safe', nastran_format='zona',
@@ -49,7 +49,7 @@ class TestAeroZona(unittest.TestCase):
         #     run_test_bdf=False, run_op2_writer=False, run_export_caero=False,
         #     stringify=True)
         with self.assertRaises(NotImplementedError):
-            model.zona.convert_to_nastran()
+            model.zaero.convert_to_nastran()
 
     def _test_zona_2(self):
         """zona explicit test"""
@@ -61,9 +61,9 @@ class TestAeroZona(unittest.TestCase):
                        run_renumber=False, run_convert=False, run_remove_unused=False,
                        run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False,
                        run_export_caero=False, run_test_bdf=False, run_op2_writer=False)
-        model.zona.convert_to_nastran()
-        write_raw_fields(model.zona)
-        model.zona.uncross_reference()
+        model.zaero.convert_to_nastran()
+        write_raw_fields(model.zaero)
+        model.zaero.uncross_reference()
 
     def test_zona_model_1(self):
         """totally fake zona model"""
@@ -79,110 +79,110 @@ class TestAeroZona(unittest.TestCase):
         model.write_bdf('zona.bdf')
         model.safe_cross_reference()
         model.write_bdf('zona.bdf')
-        model.zona.uncross_reference()
-        # model.zona.convert_to_nastran('zona.bdf')
+        model.zaero.uncross_reference()
+        # model.zaero.convert_to_nastran('zona.bdf')
 
         bdf_file.seek(0)
         model.clear_attributes()
         model2 = read_bdf('zona.bdf', debug=None)
         os.remove('zona.bdf')
-        write_raw_fields(model2.zona)
-        model2.zona.convert_to_nastran()
+        write_raw_fields(model2.zaero)
+        model2.zaero.convert_to_nastran()
         #model2.write_bdf('zona2.bdf')
 
     def test_zona_trim_case1_in(self):
         zona_filename = TRIM_DIR / 'case1' / 'ha144d.inp'
         model = read_bdf(zona_filename, xref=False, debug=False, mode='zona')
-        model.zona.safe_cross_reference()
-        model.zona.uncross_reference()
+        model.zaero.safe_cross_reference()
+        model.zaero.uncross_reference()
 
         with self.assertRaises(AssertionError):
             model.cross_reference()
-        write_raw_fields(model.zona)
+        write_raw_fields(model.zaero)
         model.write_bdf(TRIM_DIR / 'zona.inp')
 
     def test_zona_flutter_case1_in(self):
         zona_filename = FLUTTER_DIR / 'case1' / 'ha145e.inp'
         model = read_bdf(zona_filename, xref=True, debug=False)
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(FLUTTER_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_flutter_case2_in(self):
         zona_filename = FLUTTER_DIR / 'case2' / 'crop.inp'
         model = read_bdf(zona_filename, xref=True, debug=False)
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(FLUTTER_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_flutter_case3_in(self):
         zona_filename = FLUTTER_DIR / 'case3' / 'ha145fb.inp'
         model = read_bdf(zona_filename, xref=True, debug=False)
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(FLUTTER_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_flutter_case4_in(self):
         zona_filename = FLUTTER_DIR / 'case4' / 'ha145g.inp'
         model = read_bdf(zona_filename, xref=True, debug=False)
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(FLUTTER_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_flutter_case5_in(self):
         zona_filename = FLUTTER_DIR / 'case5' / 'f16ma41.inp'
         model = read_bdf(zona_filename, xref=False, debug=False)
-        model.zona.cross_reference()
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        model.zaero.cross_reference()
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(FLUTTER_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_flutter_case6_in_trim(self):
         zona_filename = FLUTTER_DIR / 'case6' / 'agard_trim.inp'
         model = read_bdf(zona_filename, xref=False, debug=False)
-        model.zona.cross_reference()
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        model.zaero.cross_reference()
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(FLUTTER_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_flutter_case6_in_tran(self):
         zona_filename = FLUTTER_DIR / 'case6' / 'agardztran.inp'
         model = read_bdf(zona_filename, xref=False, debug=False)
-        model.zona.cross_reference()
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        model.zaero.cross_reference()
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(MLOADS_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_flutter_case7_in(self):
         zona_filename = FLUTTER_DIR / 'case7' / 'agardztaw.inp'
         model = read_bdf(zona_filename, xref=False, debug=False)
-        model.zona.cross_reference()
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        model.zaero.cross_reference()
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(MLOADS_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_mloads_case1_in(self):
         zona_filename = MLOADS_DIR / 'case1' / 'm144open.inp'
         model = read_bdf(zona_filename, xref=True, debug=False)
-        model.zona.uncross_reference()
-        # model.zona.cross_reference()
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        model.zaero.uncross_reference()
+        # model.zaero.cross_reference()
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(MLOADS_DIR / 'zona.inp')
-        assert len(model.zona.mloads)
+        assert len(model.zaero.mloads)
         plot = False
         # if plot:
         #     import matplotlib.pyplot as plt
         #     fig = plt.figure()
-        #     for extid, mloads in model.zona.mloads.items():
+        #     for extid, mloads in model.zaero.mloads.items():
         #         mloads.plot(fig)
         #         plt.show()
         #         break
@@ -190,75 +190,75 @@ class TestAeroZona(unittest.TestCase):
     def test_zona_mloads_case2a_in(self):
         zona_filename = MLOADS_DIR / 'case2' / 'm144_trim.inp'
         model = read_bdf(zona_filename, xref=True, debug=False)
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(MLOADS_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_mloads_case2b_in(self):
         zona_filename = MLOADS_DIR / 'case2' / 'm144clos.inp'
         model = read_bdf(zona_filename, xref=True, debug=False)
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(MLOADS_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_ase_case1(self):
-        zona_filename = ASE_DIR / 'case1' / 'cropase.inp'
-        model = read_bdf(zona_filename, mode='zona', xref=True, debug=False)
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        zaero_filename = ASE_DIR / 'case1' / 'cropase.inp'
+        model = read_bdf(zaero_filename, mode='zona', xref=True, debug=False)
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(ASE_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_ase_case2(self):
-        zona_filename = ASE_DIR / 'case2' / 'gafa.inp'
-        model = read_bdf(zona_filename, mode='zona', xref=True, debug=False)
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        zaero_filename = ASE_DIR / 'case2' / 'gafa.inp'
+        model = read_bdf(zaero_filename, mode='zona', xref=True, debug=False)
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(ASE_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_gloads_case1(self):
-        zona_filename = GLOADS_DIR / 'case1' / 'kussner.inp'
-        model = read_bdf(zona_filename, mode='zona', xref=False, debug=False)
-        model.zona.cross_reference()
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        zaero_filename = GLOADS_DIR / 'case1' / 'kussner.inp'
+        model = read_bdf(zaero_filename, mode='zona', xref=False, debug=False)
+        model.zaero.cross_reference()
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(GLOADS_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_gloads_case2(self):
         zona_filename = GLOADS_DIR / 'case2' / 'gbj_dgust.inp'
         model = read_bdf(zona_filename, mode='zona', xref=False, debug=False)
-        model.zona.cross_reference()
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        model.zaero.cross_reference()
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(GLOADS_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_gloads_case3(self):
-        zona_filename = GLOADS_DIR / 'case3' / 'gbj_cgust.inp'
-        model = read_bdf(zona_filename, mode='zona', xref=False, debug=False)
-        model.zona.cross_reference()
-        model.zona.safe_cross_reference()
-        write_raw_fields(model.zona)
+        zaero_filename = GLOADS_DIR / 'case3' / 'gbj_cgust.inp'
+        model = read_bdf(zaero_filename, mode='zona', xref=False, debug=False)
+        model.zaero.cross_reference()
+        model.zaero.safe_cross_reference()
+        write_raw_fields(model.zaero)
         model.write_bdf(GLOADS_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_gloads_case4a(self):
         zona_filename = GLOADS_DIR / 'case4' / 'cgust_md.inp'
         model = read_bdf(zona_filename, mode='zona', xref=False, debug=False)
-        model.zona.cross_reference()
+        model.zaero.cross_reference()
         model.write_bdf(GLOADS_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
     def test_zona_gloads_case4b(self):
         zona_filename = GLOADS_DIR / 'case4' / 'cgust_sof.inp'
         model = read_bdf(zona_filename, mode='zona', xref=False, debug=False)
-        model.zona.cross_reference()
+        model.zaero.cross_reference()
         model.write_bdf(GLOADS_DIR / 'zona.inp')
-        model.zona.uncross_reference()
+        model.zaero.uncross_reference()
 
 
 def get_zona_model() -> StringIO:

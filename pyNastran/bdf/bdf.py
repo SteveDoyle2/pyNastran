@@ -1149,6 +1149,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'point_ids', 'subcases',
             '_card_parser', '_card_parser_prepare',
             'wtmass',
+            'zona',
         ]
         attrs = object_attributes(self, mode='all', keys_to_skip=keys_to_skip)
         for key in attrs:

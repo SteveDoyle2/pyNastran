@@ -94,7 +94,7 @@ def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
         with open(bdf_filename_out, 'w') as bdf_file_out:
             bdf_file_out.writelines(bdf_file.getvalue())
         bdf_file = bdf_filename_out
-        assert len(model2.zona.pafoil) == 0
+        assert len(model2.zaero.pafoil) == 0
     model2.read_bdf(bdf_file, punch=punch, xref=False)
     _cross_reference(model2, xref)
 
