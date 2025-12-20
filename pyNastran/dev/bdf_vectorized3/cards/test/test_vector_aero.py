@@ -83,7 +83,8 @@ class TestAero(unittest.TestCase):
     """
     def test_cpmopt(self):
         bdf_filename = AERO_PATH / 'cpmopt.bdf'
-        model = read_bdf(bdf_filename)
+        log = SimpleLogger(level='warning')
+        model = read_bdf(bdf_filename, log=log)
         check_set_methods(model)
         methods = SetMethods(model)
         spline_nodes = methods.get_spline_nodes()
@@ -91,8 +92,9 @@ class TestAero(unittest.TestCase):
         assert np.array_equal(spline_nodes, expected_spline_nodes), spline_nodes.tolist()
 
     def test_freedlm(self):
+        log = SimpleLogger(level='warning')
         bdf_filename = AERO_PATH / 'freedlm' / 'freedlm.bdf'
-        model = read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, log=log)
 
         check_set_methods(model)
         methods = SetMethods(model)
@@ -141,7 +143,8 @@ class TestAero(unittest.TestCase):
 
     def test_bwb(self):
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
-        model = read_bdf(bdf_filename)
+        log = SimpleLogger(level='warning')
+        model = read_bdf(bdf_filename, log=log)
         get_element_table(model)
         get_property_table(model)
         get_material_table(model)

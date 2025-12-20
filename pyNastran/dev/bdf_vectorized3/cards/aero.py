@@ -3809,7 +3809,7 @@ class PAERO5(PAERO):
              nalphai, lalphai, nxisi, lxisi,
              ntausi, ltausi,
              ifilei, commenti) = card
-            ifile[icard] = ifile
+            ifile[icard] = ifilei
             property_id[icard] = pid
 
             #ndoci = len(docs)
