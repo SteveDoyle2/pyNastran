@@ -2844,8 +2844,8 @@ class TestOP2Main(Tester):
 
     def test_op2_solid_bending_skip(self):
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'solid_bending')
-        op2_filename = os.path.join(folder, 'solid_bending.op2')
+        folder = MODEL_PATH / 'solid_bending'
+        op2_filename = folder / 'solid_bending.op2'
         model = OP2(log=log)
         model.is_nx = False
 
@@ -2858,6 +2858,7 @@ class TestOP2Main(Tester):
         model.read_op2(op2_filename)
 
     def test_op2_solid_bending_01(self):
+        # log = SimpleLogger(level='debug')
         log = SimpleLogger(level='warning')
         folder = MODEL_PATH / 'solid_bending'
         op2_filename = folder / 'solid_bending.op2'

@@ -11,7 +11,8 @@ from numpy.linalg import eigh  # type: ignore
 from pyNastran.utils.numpy_utils import float_types, integer_float_types
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long, _eigenvalue_header)
-from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.op2_objects import (
+    get_times_dtype, combination_inplace)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_real_data_code, set_static_case, set_modal_case,
@@ -123,11 +124,11 @@ class RealSolidArray(OES_Object):
                            data: Optional[np.ndarray]=None,
                            update: bool=True):
         """[A] * b"""
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        if data is None:
-            self.data[:, :, :6] *= factor
-        else:
-            self.data[:, :, :6] += data[:, :, :6] * factor
+        combination_inplace(self.data, data, factor, ires=slice(None, 6))
+        # if data is None:
+        #     self.data[:, :, :6] *= factor
+        # else:
+        #     self.data[:, :, :6] += data[:, :, :6] * factor
         if update:
             self.update_data_components()
 

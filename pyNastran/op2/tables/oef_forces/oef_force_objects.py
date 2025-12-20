@@ -19,6 +19,7 @@ from pyNastran.f06.f06_formatting import (
     write_floats_12e,
     _eigenvalue_header,
 )
+from pyNastran.op2.result_objects.op2_objects import combination_inplace
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     update_stress_force_time_word,
@@ -1121,12 +1122,8 @@ class RealRodForceArray(RealForceObject):
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        if data is None:
-            self.data *= factor
-        else:
-            self.data += data * factor
+                           update: bool=True) -> None:
+        return combination_inplace(self.data, data, factor)
         # if update:
         #     self.update_data_components()
 
@@ -1782,12 +1779,12 @@ class RealCBeamForceArray(RealForceObject):
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        if data is None:
-            self.data[:, :, 1:] *= factor
-        else:
-            self.data[:, :, 1:] += data[:, :, 1:] * factor
+                           update: bool=True) -> None:
+        combination_inplace(self.data, data, factor, ires=slice(1,None))
+        # if data is None:
+        #     self.data[:, :, 1:] *= factor
+        # else:
+        #     self.data[:, :, 1:] += data[:, :, 1:] * factor
         if update:
             self.update_data_components()
 
@@ -2888,13 +2885,9 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        # ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
-        if data is None:
-            self.data *= factor
-        else:
-            self.data += data * factor
+                           update: bool=True) -> None:
+        # [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        combination_inplace(self.data, data, factor)
         if update:
             self.update_data_components()
 
@@ -3346,13 +3339,9 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        # ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
-        if data is None:
-            self.data *= factor
-        else:
-            self.data += data * factor
+                           update: bool=True) -> None:
+        # [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        combination_inplace(self.data, data, factor)
         if update:
             self.update_data_components()
 
@@ -4237,17 +4226,11 @@ class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        # headers = [
-        #     'bending_moment_a1', 'bending_moment_a2',
-        #     'bending_moment_b1', 'bending_moment_b2',
-        #     'shear1', 'shear2',
-        #     'axial', 'torque']
-        if data is None:
-            self.data *= factor
-        else:
-            self.data += data * factor
+                           update: bool=True) -> None:
+        # [bending_moment_a1, bending_moment_a2,
+        #  bending_moment_b1, bending_moment_b2,
+        #  shear1, shear2, axial, torque]
+        combination_inplace(self.data, data, factor)
         if update:
             self.update_data_components()
 
@@ -4996,12 +4979,8 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        if data is None:
-            self.data *= factor
-        else:
-            self.data += data * factor
+                           update: bool=True) -> None:
+        combination_inplace(self.data, data, factor)
         if update:
             self.update_data_components()
 
@@ -5517,13 +5496,9 @@ class RealForceMomentArray(RealForceObject):
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        # headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
-        if data is None:
-            self.data *= factor
-        else:
-            self.data += data * factor
+                           update: bool=True) -> None:
+        # [fx, fy, fz, mx, my, mz]
+        combination_inplace(self.data, data, factor)
         if update:
             self.update_data_components()
 

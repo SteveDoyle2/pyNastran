@@ -8,6 +8,7 @@ import os
 import sys
 import copy
 import getpass
+import warnings
 from datetime import date
 from collections import defaultdict, Counter
 from traceback import print_exc
@@ -479,9 +480,10 @@ class F06Writer(OP2_F06_Common):
         self.page_num = _write_responses2(self, f06, page_stamp, self.page_num)
 
         # writes all results for
-        self._write_f06_subcase_based(f06, page_stamp, delete_objects=delete_objects,
-                                      is_mag_phase=is_mag_phase, is_sort1=is_sort1,
-                                      quiet=quiet, repr_check=repr_check)
+        self._write_f06_subcase_based(
+            f06, page_stamp, delete_objects=delete_objects,
+            is_mag_phase=is_mag_phase, is_sort1=is_sort1,
+            quiet=quiet, repr_check=repr_check)
 
         self.op2_results.psds.write_f06(f06)
         self._write_normalized_mass_density(f06)
@@ -655,6 +657,7 @@ class F06Writer(OP2_F06_Common):
                 else:
                     print(res_format % (class_name, isubcase))
 
+                _check_combination(result, log)
                 self.page_num = result.write_f06(
                     f06, header, page_stamp,
                     self.page_num, is_mag_phase=is_mag_phase,
@@ -770,6 +773,30 @@ class F06Writer(OP2_F06_Common):
             for eid, density in zip(mass.eids, mass.data):
                 f06.write(f' {eid:-8d} {density:.8f}\n')
 
+
+def _check_combination(result, log: SimpleLogger):
+    try:
+        name = result.class_name
+        headers = result.get_headers()
+        if not hasattr(result, 'update_data_components'):
+            log.warning(f'{name} doesnt have update_data_components')
+            return
+
+        og_data = copy.deepcopy(result.data)
+        result.update_data_components()
+        if result.data.ndim == 3:
+            nres = result.data.shape[2]
+            assert nres == len(headers), (headers, len(headers), nres)
+            for ires in range(nres):
+                header = headers[ires]
+                if not np.allclose(og_data[:,:,ires], result.data[:,:,ires]):
+                    print(f'res_og:  {og_data[:,:,ires].ravel()}')
+                    print(f'res_new: {result.data[:,:,ires].ravel()}')
+                    raise RuntimeError(f'{name}, {header} ires={ires} is different')
+        else:
+            raise RuntimeError(result)
+    except Exception as error:
+        warnings.warn(str(error))
 
 def check_element_node(obj):
     if obj is None:

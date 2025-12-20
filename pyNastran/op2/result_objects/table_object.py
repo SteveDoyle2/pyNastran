@@ -50,6 +50,7 @@ from pyNastran.op2.writer.utils import fix_table3_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     set_static_case, set_modal_case, set_transient_case,
     set_freq_case, set_complex_modes_case)
+from pyNastran.op2.result_objects.op2_objects import combination_inplace
 
 table_name_to_table_code = {
     # displacement (msc/nx)
@@ -1048,12 +1049,8 @@ class RealTableArray(TableArray):
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        if data is None:
-            self.data[:, :, :] *= factor
-        else:
-            self.data[:, :, :] += data[:, :, :] * factor
+                           update: bool=True) -> None:
+        combination_inplace(self.data, data, factor)
         # if update:
         #     self.update_data_components()
 

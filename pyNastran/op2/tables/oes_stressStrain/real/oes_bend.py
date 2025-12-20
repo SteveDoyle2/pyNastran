@@ -4,7 +4,8 @@ from typing import Optional
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
-from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.op2_objects import (
+    get_times_dtype, combination_inplace)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, write_floats_8p1e
@@ -201,17 +202,11 @@ class RealBendArray(OES_Object):
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        # ['angle', 'sc', 'sd', 'se', 'sf', 'omax', 'omin', 'mst', 'msc']
+                           update: bool=True) -> None:
+        # [angle, sc, sd, se, sf, omax, omin, mst, msc]
         import warnings
         warnings.warn('update oes_bend margins/angle')
-        import warnings
-        warnings.warn('ignoring margin & angles')
-        if data is None:
-            self.data *= factor
-        else:
-            self.data += data * factor
+        combination_inplace(self.data, data, factor)
         if update:
             self.update_data_components()
 

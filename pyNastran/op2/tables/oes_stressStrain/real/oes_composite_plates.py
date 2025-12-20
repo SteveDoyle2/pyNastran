@@ -2,7 +2,7 @@ from typing import TextIO, Optional
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
-from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype, combination_inplace
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_real_data_code, get_scode,
     set_static_case, set_modal_case, set_transient_case, set_post_buckling_case,
@@ -437,15 +437,10 @@ class RealCompositePlateArray(OES_Object):
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+                           update: bool=True) -> None:
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm/shear]
-
         ires = [0, 1, 2, 3, 4] # o11-t2z
-        if data is None:
-            self.data[:, :, ires] *= factor
-        else:
-            self.data[:, :, ires] += data[:, :, ires] * factor
+        combination_inplace(self.data, data, factor, ires=ires)
         if update:
             self.update_data_components()
 

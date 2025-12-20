@@ -3,7 +3,8 @@ import numpy as np
 from numpy import zeros, searchsorted, ravel
 
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
-from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.op2_objects import (
+    get_times_dtype, combination_inplace)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_real_data_code,
     set_element_case, set_static_case, set_modal_case,
@@ -22,6 +23,7 @@ ELEMENT_NAME_TO_ELEMENT_TYPE = {
 #txy = 1. # from transverse shear; txy=Vz/(Ky*A)
 #t = 2. # from torsional stress; t=T*C/J
 #ovm = (oxx**2 + 3 * (txy**2 + txz**2 + t**2))**0.5
+
 
 class RealBarArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -339,16 +341,12 @@ class RealBarArray(OES_Object):
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        # headers = ['s1a', 's2a', 's3a', 's4a', 'axial', 'smaxa', 'smina', 'MS_tension',
-        #            's1b', 's2b', 's3b', 's4b',          'smaxb', 'sminb', 'MS_compression']
+                           update: bool=True) -> None:
+        # [s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
+        #  s1b, s2b, s3b, s4b,        smaxb, sminb, MS_compression]
         import warnings
         warnings.warn('update oes_bar margins')
-        if data is None:
-            self.data *= factor
-        else:
-            self.data += data * factor
+        combination_inplace(self.data, data, factor)
         if update:
             self.update_data_components()
 

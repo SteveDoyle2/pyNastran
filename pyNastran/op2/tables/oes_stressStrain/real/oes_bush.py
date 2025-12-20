@@ -4,7 +4,7 @@ import numpy as np
 from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
-from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype, combination_inplace
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
@@ -98,13 +98,9 @@ class RealBushArray(OES_Object):
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        # headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz']
-        if data is None:
-            self.data *= factor
-        else:
-            self.data += data * factor
+                           update: bool=True) -> None:
+        # [tx, ty, tz, rx, ry, rz]
+        combination_inplace(self.data, data, factor)
         if update:
             self.update_data_components()
 

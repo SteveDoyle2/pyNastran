@@ -10,7 +10,8 @@ import numpy as np
 
 from cpylog import SimpleLogger
 
-from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtype
+from pyNastran.op2.result_objects.op2_objects import (
+    BaseElement, get_times_dtype, combination_inplace)
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long,
     _eigenvalue_header, write_imag_floats_13e)
@@ -238,12 +239,8 @@ class RealGridPointForcesArray(GridPointForces):
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        if data is None:
-            self.data *= factor
-        else:
-            self.data += data * factor
+                           update: bool=True) -> None:
+        combination_inplace(self.data, data, factor)
         # if update:
         #     self.update_data_components()
 

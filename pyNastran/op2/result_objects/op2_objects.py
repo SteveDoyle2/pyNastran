@@ -9,7 +9,7 @@ import numpy as np
 
 from cpylog import SimpleLogger
 from pyNastran.utils import object_attributes, object_methods, object_stats, simplify_object_keys
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 
 from pyNastran.op2.errors import OverwriteTableError
 from pyNastran.op2.op2_interface.op2_codes import Op2Codes, get_sort_method_from_table_name
@@ -1324,3 +1324,32 @@ def recast_gridtype_as_string(self, grid_type: int) -> str:
             warnings.warn(''.join(self.get_stats()))
         raise RuntimeError(f'grid_type={grid_type!r}')
     return grid_type_str
+
+
+def combination_inplace(data: np.ndarray,
+                        datai: np.ndarray,
+                        factor: integer_float_types,
+                        ires=None) -> None:
+    """does a linear combination; deals with underflow bugs"""
+    assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+    if datai is None:
+        data *= factor
+    elif ires is not None:
+        assert data.ndim == 3, data.shape
+        return combination_inplace(data[:, :, ires], None, factor)
+    else:
+        try:
+            data += datai * factor
+        except FloatingPointError as error:
+            dtype = data.dtype.name
+            import warnings
+            if dtype in {'float32'}:
+                # underflow
+                # warnings.warn('upcasting to try and prevent error')
+                with np.errstate(under='ignore'):
+                    data32 = (datai.astype('float64') * factor).astype('float32')
+                data += data32
+                # data += datai * factor
+            else:
+                raise RuntimeError(f'Floating point error: dtype={dtype!r} factor={factor}')
+    return

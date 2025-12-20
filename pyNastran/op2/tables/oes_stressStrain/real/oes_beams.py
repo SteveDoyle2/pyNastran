@@ -5,7 +5,8 @@ from typing import Optional
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types, integer_float_types
-from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.op2_objects import (
+    get_times_dtype, combination_inplace)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_real_data_code, set_element_node_xxb_case,
@@ -136,18 +137,13 @@ class RealBeamArray(OES_Object):
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
+                           update: bool=True) -> None:
         assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-        # headers = [
-        #     'sxc', 'sxd', 'sxe', 'sxf',
-        #     'smax', 'smin', 'MS_tension', 'MS_compression'
-        # ]
+        # [sxc,  sxd,  sxe, sxf,
+        #  smax, smin, MS_tension, MS_compression]
         import warnings
         warnings.warn('update oes_beam margins')
-        if data is None:
-            self.data *= factor
-        else:
-            self.data += data * factor
+        combination_inplace(self.data, data, factor)
         if update:
             self.update_data_components()
 

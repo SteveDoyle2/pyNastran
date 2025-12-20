@@ -13,7 +13,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     oes_real_data_code, get_scode,
     set_static_case, set_modal_case, set_transient_case)
 from pyNastran.op2.stress_reduction import von_mises_2d, max_shear
-from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype, combination_inplace
 from pyNastran.f06.f06_formatting import write_floats_13e, write_floats_13e_long, _eigenvalue_header
 from pyNastran.op2.errors import SixtyFourBitError
 
@@ -623,16 +623,11 @@ class RealPlateArray(OES_Object):
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
-                           update: bool=True):
-        assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
+                           update: bool=True) -> None:
         # [fiber_dist2, oxx2, oyy2, txy2, angle2,
         #  major_principal2, minor_principal2, ovm2]
         ires = [1, 2, 3]
-
-        if data is None:
-            self.data[:, :, ires] *= factor
-        else:
-            self.data[:, :, ires] += data[:, :, ires] * factor
+        combination_inplace(self.data, data, factor, ires=ires)
         if update:
             self.update_data_components()
 
