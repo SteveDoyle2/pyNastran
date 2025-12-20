@@ -1,18 +1,16 @@
 from itertools import count
 from numpy import array, zeros, arange, searchsorted, unique
 
-from pyNastran.dev.bdf_vectorized.cards.elements.property import Property
-
-from pyNastran.bdf.field_writer_8 import print_card_8 #, set_default_if_blank
+from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default #, set_default_if_blank
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 #from pyNastran.bdf.field_writer_double import print_card_double
-
-from pyNastran.bdf.field_writer_8 import set_blank_if_default
-#from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
-#from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
-
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, string, double_or_blank, string_or_blank, double) # fields
+
+#from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
+#from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
+from pyNastran.dev.bdf_vectorized.cards.elements.property import Property
 #from pyNastran.dev.bdf_vectorized.utils import slice_to_iter
 
 

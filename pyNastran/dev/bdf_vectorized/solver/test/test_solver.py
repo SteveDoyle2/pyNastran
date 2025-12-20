@@ -1,6 +1,7 @@
 """tests the pyNastran solver"""
 import os
 import unittest
+from pathlib import Path
 from cpylog import SimpleLogger
 
 import pyNastran
@@ -8,8 +9,8 @@ from pyNastran.dev.bdf_vectorized.solver.solver import Solver
 from pyNastran.utils import print_bad_path
 
 
-PKG_PATH = pyNastran.__path__[0]
-TEST_PATH = os.path.join(PKG_PATH, 'dev', 'bdf_vectorized', 'solver', 'test')
+PKG_PATH = Path(pyNastran.__path__[0])
+TEST_PATH = PKG_PATH / 'dev' / 'bdf_vectorized' / 'solver' / 'test'
 log = SimpleLogger('warning', encoding='utf8')
 
 class TestSolverSpring(unittest.TestCase):

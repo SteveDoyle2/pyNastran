@@ -7,6 +7,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank)
 from pyNastran.dev.bdf_vectorized.cards.elements.shell.cquad4 import _cquad4_normal_A
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class CQUAD8(ShellElement):

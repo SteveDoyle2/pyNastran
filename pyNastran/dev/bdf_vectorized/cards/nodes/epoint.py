@@ -1,7 +1,8 @@
-from numpy import zeros
+import numpy as np
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class EPOINT:
@@ -20,7 +21,7 @@ class EPOINT:
         cards = self._cards
         self.n = len(cards)
         if self.n:
-            self.epoint = zeros(self.n, 'int32')
+            self.epoint = np.zeros(self.n, 'int32')
             for i, card in enumerate(cards):
                 self.epoint[i] = i
             self.epoint.sort()

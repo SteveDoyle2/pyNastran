@@ -1,6 +1,7 @@
 from collections import defaultdict
 from io import StringIO
 from numpy import array, union1d
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.dev.bdf_vectorized.cards.loads.load import LOAD
 
 

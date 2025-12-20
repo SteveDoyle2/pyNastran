@@ -11,6 +11,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank)
 from pyNastran.utils.dev import list_print
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class CQUAD4(ShellElement):

@@ -2,9 +2,10 @@ from numpy import array, zeros, asarray
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.dev.bdf_vectorized.cards.elements.property import Property
-
 from pyNastran.bdf.cards.properties.beam import PBEAM as vPBEAM
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+
+from pyNastran.dev.bdf_vectorized.cards.elements.property import Property
 from pyNastran.dev.bdf_vectorized.utils import slice_to_iter
 
 

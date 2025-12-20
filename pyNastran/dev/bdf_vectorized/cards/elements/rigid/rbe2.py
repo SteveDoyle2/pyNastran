@@ -2,11 +2,11 @@ from itertools import count
 
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_double, components_or_blank)
 
-from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
-from pyNastran.bdf.field_writer_8 import set_blank_if_default
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 #from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
 #from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 

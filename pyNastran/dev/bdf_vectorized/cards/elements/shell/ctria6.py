@@ -6,6 +6,7 @@ from pyNastran.dev.bdf_vectorized.cards.elements.shell.ctria3 import _ctria3_nor
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank)
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 class CTRIA6(ShellElement):
     type = 'CTRIA6'

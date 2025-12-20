@@ -3,6 +3,7 @@ from numpy import array, zeros, unique, searchsorted, asarray, int64, where
 
 from pyNastran.bdf.bdf_interface.assign_type import (double_or_blank,
     components, components_or_blank, integer_double_or_blank, blank, integer)
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 from pyNastran.bdf.field_writer_8 import (print_card_8, set_blank_if_default,
                                           #set_string8_blank_if_default

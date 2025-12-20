@@ -3365,4 +3365,5 @@ def check_set_methods(model: BDF) -> None:
             #print(rset)
 
 if __name__ == '__main__':  # pragma: no cover
+    np.seterr(all='raise')
     unittest.main()

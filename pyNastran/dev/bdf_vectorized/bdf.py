@@ -91,7 +91,7 @@ from pyNastran.dev.bdf_vectorized.cards.bdf_sets import (
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
-from pyNastran.bdf.cards.elements.elements import PLOTEL #CFAST, CGAP, CRAC2D, CRAC3D,
+from pyNastran.bdf.cards.elements.plot import PLOTEL #CFAST, CGAP, CRAC2D, CRAC3D,
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
 #from pyNastran.bdf.cards.loads.loads import (
@@ -213,6 +213,22 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
         #model.get_bdf_stats()
     return model
 
+class AddMethods:
+    def __init__(self, model):
+        pass
+    def add_param_object(self, obj):
+        pass
+    def add_plotel_object(self, obj):
+        pass
+    def add_rigid_element_object(self, obj):
+        pass
+    def add_doptprm_object(self, obj):
+        pass
+    def add_desvar_object(self, obj):
+        pass
+    def add_aecomp_object(self, obj):
+        pass
+
 
 class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
     """
@@ -244,6 +260,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         assert debug in [True, False, None], 'debug=%r' % debug
         self.echo = False
         self.read_includes = True
+        self._add_methods = AddMethods(self)
 
         # file management parameters
         self.active_filenames = []
@@ -259,7 +276,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         # (multiple BDF passes among other things)
         self._fast_add = True
 
-        self.log = get_logger(log=log, level=debug, **log_args)
+        self.log = get_logger(log=log, level=debug)
+        # self.log = get_logger(log=log, level=debug, **log_args)
 
         #: list of all read in cards - useful in determining if entire BDF
         #: was read & really useful in debugging
@@ -1069,7 +1087,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 for eid in uduplicate_eids:
                     msg += 'old_mass=\n%s\n' % str(self.masses[eid])
                     msg += 'new_masses=\n'
-                    for elem, eidi in zip(duplicates duplicate_eids):
+                    for elem, eidi in zip(duplicates, duplicate_eids):
                         if eidi == eid:
                             msg += str(elem)
                     msg += '\n'
@@ -1576,7 +1594,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 """the method that forces the crash"""
                 raise NotImplementedError(card)
 
-        add_methods = self #._add_methods
+        add_methods = self._add_methods
         self._card_parser = {
             #'=' : (Crash, None),
             '/' : (Crash, None),
@@ -1695,7 +1713,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'RROD' : (RROD, add_methods.add_rigid_element_object),
             'RSPLINE' : (RSPLINE, add_methods.add_rigid_element_object),
 
-
             ## there is no MAT6 or MAT7
             #'MAT1' : (MAT1, self.add_structural_material),
             #'MAT2' : (MAT2, self.add_structural_material),
@@ -1801,75 +1818,75 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'PCONVM' : (PCONVM, self.add_convection_property),
 
             # aero
-            'AECOMP' : (AECOMP, add_methods.add_aecomp_object),
-            'AEFACT' : (AEFACT, add_methods.add_aefact_object),
-            'AELINK' : (AELINK, add_methods.add_aelink_object),
-            'AELIST' : (AELIST, add_methods.add_aelist_object),
-            'AEPARM' : (AEPARM, add_methods.add_aeparm_object),
-            'AESTAT' : (AESTAT, add_methods.add_aestat_object),
-            'AESURF' : (AESURF, add_methods.add_aesurf_object),
-            'AESURFS' : (AESURFS, add_methods.add_aesurfs_object),
-
-            'CAERO1' : (CAERO1, add_methods.add_caero_object),
-            'CAERO2' : (CAERO2, add_methods.add_caero_object),
-            'CAERO3' : (CAERO3, add_methods.add_caero_object),
-            'CAERO4' : (CAERO4, add_methods.add_caero_object),
-            'CAERO5' : (CAERO5, add_methods.add_caero_object),
-
-            'PAERO1' : (PAERO1, add_methods.add_paero_object),
-            'PAERO2' : (PAERO2, add_methods.add_paero_object),
-            'PAERO3' : (PAERO3, add_methods.add_paero_object),
-            'PAERO4' : (PAERO4, add_methods.add_paero_object),
-            'PAERO5' : (PAERO5, add_methods.add_paero_object),
-
-            'SPLINE1' : (SPLINE1, add_methods.add_spline_object),
-            'SPLINE2' : (SPLINE2, add_methods.add_spline_object),
-            'SPLINE3' : (SPLINE3, add_methods.add_spline_object),
-            'SPLINE4' : (SPLINE4, add_methods.add_spline_object),
-            'SPLINE5' : (SPLINE5, add_methods.add_spline_object),
-
-            # SOL 144
-            'AEROS' : (AEROS, add_methods.add_aeros_object),
-            'TRIM' : (TRIM, add_methods.add_trim_object),
-            'DIVERG' : (DIVERG, add_methods.add_diverg_object),
-
-            # SOL 145
-            'AERO' : (AERO, add_methods.add_aero_object),
-            'FLUTTER' : (FLUTTER, add_methods.add_flutter_object),
-            'FLFACT' : (FLFACT, add_methods.add_flfact_object),
-            'MKAERO1' : (MKAERO1, add_methods.add_mkaero_object),
-            'MKAERO2' : (MKAERO2, add_methods.add_mkaero_object),
-
-            'GUST' : (GUST, add_methods.add_gust_object),
-            'CSSCHD' : (CSSCHD, add_methods.add_csschd_object),
-            'MONPNT1' : (MONPNT1, add_methods.add_monpnt_object),
-            'MONPNT2' : (MONPNT2, add_methods.add_monpnt_object),
-            'MONPNT3' : (MONPNT3, add_methods.add_monpnt_object),
-
-            'NLPARM' : (NLPARM, add_methods.add_nlparm_object),
-            'NLPCI' : (NLPCI, add_methods.add_nlpci_object),
-            'TSTEP' : (TSTEP, add_methods.add_tstep_object),
-            'TSTEPNL' : (TSTEPNL, add_methods.add_tstepnl_object),
-
-            #'TF' : (TF, self.add_TF),
-            #'DELAY' : (DELAY, self.add_DELAY),
-
-            'DCONADD' : (DCONADD, add_methods.add_dconstr_object),
-            'DCONSTR' : (DCONSTR, add_methods.add_dconstr_object),
-            'DDVAL' : (DDVAL, add_methods.add_ddval_object),
-            'DLINK' : (DLINK, add_methods.add_dlink_object),
-
-            #'DTABLE' : (DTABLE, self.add_dtable),
-            'DRESP1' : (DRESP1, add_methods.add_dresp_object),
-            'DRESP2' : (DRESP2, add_methods.add_dresp_object), # deqatn
-            'DRESP3' : (DRESP3, add_methods.add_dresp_object),
-            'DVCREL1' : (DVCREL1, add_methods.add_dvcrel_object), # dvcrels
-            'DVCREL2' : (DVCREL2, add_methods.add_dvcrel_object),
-            'DVPREL1' : (DVPREL1, add_methods.add_dvprel_object), # dvprels
-            'DVPREL2' : (DVPREL2, add_methods.add_dvprel_object),
-            'DVMREL1' : (DVMREL1, add_methods.add_dvmrel_object), # ddvmrels
-            'DVMREL2' : (DVMREL2, add_methods.add_dvmrel_object),
-            'DVGRID' : (DVGRID, add_methods.add_dvgrid_object), # dvgrids
+            # 'AECOMP' : (AECOMP, add_methods.add_aecomp_object),
+            # 'AEFACT' : (AEFACT, add_methods.add_aefact_object),
+            # 'AELINK' : (AELINK, add_methods.add_aelink_object),
+            # 'AELIST' : (AELIST, add_methods.add_aelist_object),
+            # 'AEPARM' : (AEPARM, add_methods.add_aeparm_object),
+            # 'AESTAT' : (AESTAT, add_methods.add_aestat_object),
+            # 'AESURF' : (AESURF, add_methods.add_aesurf_object),
+            # 'AESURFS' : (AESURFS, add_methods.add_aesurfs_object),
+            #
+            # 'CAERO1' : (CAERO1, add_methods.add_caero_object),
+            # 'CAERO2' : (CAERO2, add_methods.add_caero_object),
+            # 'CAERO3' : (CAERO3, add_methods.add_caero_object),
+            # 'CAERO4' : (CAERO4, add_methods.add_caero_object),
+            # 'CAERO5' : (CAERO5, add_methods.add_caero_object),
+            #
+            # 'PAERO1' : (PAERO1, add_methods.add_paero_object),
+            # 'PAERO2' : (PAERO2, add_methods.add_paero_object),
+            # 'PAERO3' : (PAERO3, add_methods.add_paero_object),
+            # 'PAERO4' : (PAERO4, add_methods.add_paero_object),
+            # 'PAERO5' : (PAERO5, add_methods.add_paero_object),
+            #
+            # 'SPLINE1' : (SPLINE1, add_methods.add_spline_object),
+            # 'SPLINE2' : (SPLINE2, add_methods.add_spline_object),
+            # 'SPLINE3' : (SPLINE3, add_methods.add_spline_object),
+            # 'SPLINE4' : (SPLINE4, add_methods.add_spline_object),
+            # 'SPLINE5' : (SPLINE5, add_methods.add_spline_object),
+            #
+            # # SOL 144
+            # 'AEROS' : (AEROS, add_methods.add_aeros_object),
+            # 'TRIM' : (TRIM, add_methods.add_trim_object),
+            # 'DIVERG' : (DIVERG, add_methods.add_diverg_object),
+            #
+            # # SOL 145
+            # 'AERO' : (AERO, add_methods.add_aero_object),
+            # 'FLUTTER' : (FLUTTER, add_methods.add_flutter_object),
+            # 'FLFACT' : (FLFACT, add_methods.add_flfact_object),
+            # 'MKAERO1' : (MKAERO1, add_methods.add_mkaero_object),
+            # 'MKAERO2' : (MKAERO2, add_methods.add_mkaero_object),
+            #
+            # 'GUST' : (GUST, add_methods.add_gust_object),
+            # 'CSSCHD' : (CSSCHD, add_methods.add_csschd_object),
+            # 'MONPNT1' : (MONPNT1, add_methods.add_monpnt_object),
+            # 'MONPNT2' : (MONPNT2, add_methods.add_monpnt_object),
+            # 'MONPNT3' : (MONPNT3, add_methods.add_monpnt_object),
+            #
+            # 'NLPARM' : (NLPARM, add_methods.add_nlparm_object),
+            # 'NLPCI' : (NLPCI, add_methods.add_nlpci_object),
+            # 'TSTEP' : (TSTEP, add_methods.add_tstep_object),
+            # 'TSTEPNL' : (TSTEPNL, add_methods.add_tstepnl_object),
+            #
+            # #'TF' : (TF, self.add_TF),
+            # #'DELAY' : (DELAY, self.add_DELAY),
+            #
+            # 'DCONADD' : (DCONADD, add_methods.add_dconstr_object),
+            # 'DCONSTR' : (DCONSTR, add_methods.add_dconstr_object),
+            # 'DDVAL' : (DDVAL, add_methods.add_ddval_object),
+            # 'DLINK' : (DLINK, add_methods.add_dlink_object),
+            #
+            # #'DTABLE' : (DTABLE, self.add_dtable),
+            # 'DRESP1' : (DRESP1, add_methods.add_dresp_object),
+            # 'DRESP2' : (DRESP2, add_methods.add_dresp_object), # deqatn
+            # 'DRESP3' : (DRESP3, add_methods.add_dresp_object),
+            # 'DVCREL1' : (DVCREL1, add_methods.add_dvcrel_object), # dvcrels
+            # 'DVCREL2' : (DVCREL2, add_methods.add_dvcrel_object),
+            # 'DVPREL1' : (DVPREL1, add_methods.add_dvprel_object), # dvprels
+            # 'DVPREL2' : (DVPREL2, add_methods.add_dvprel_object),
+            # 'DVMREL1' : (DVMREL1, add_methods.add_dvmrel_object), # ddvmrels
+            # 'DVMREL2' : (DVMREL2, add_methods.add_dvmrel_object),
+            # 'DVGRID' : (DVGRID, add_methods.add_dvgrid_object), # dvgrids
 
             #'TABLED1' : (TABLED1, self.add_table),
             #'TABLED2' : (TABLED2, self.add_table),
@@ -1887,46 +1904,46 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'TABRND1' : (TABRND1, self.add_random_table),
             #'TABRNDG' : (TABRNDG, self.add_random_table),
 
-            'EIGB' : (EIGB, add_methods.add_method_object),
-            'EIGR' : (EIGR, add_methods.add_method_object),
-            'EIGRL' : (EIGRL, add_methods.add_method_object),
-            'EIGC' : (EIGC, add_methods.add_cmethod_object),
-            'EIGP' : (EIGP, add_methods.add_cmethod_object),
-
-            'BCRPARA' : (BCRPARA, add_methods.add_bcrpara_object),
-            'BCTADD' : (BCTADD, add_methods.add_bctadd_object),
-            'BCTPARA' : (BCTPARA, add_methods.add_bctpara_object),
-            'BSURF' : (BSURF, add_methods.add_bsurf_object),
-            'BSURFS' : (BSURFS, add_methods.add_bsurfs_object),
-
-            'ASET' : (ASET, add_methods.add_aset_object),
-            'ASET1' : (ASET1, add_methods.add_aset_object),
-
-            'BSET' : (BSET, add_methods.add_bset_object),
-            'BSET1' : (BSET1, add_methods.add_bset_object),
-
-            'CSET' : (CSET, add_methods.add_cset_object),
-            'CSET1' : (CSET1, add_methods.add_cset_object),
-
-            'QSET' : (QSET, add_methods.add_qset_object),
-            'QSET1' : (QSET1, add_methods.add_qset_object),
-
-            'USET' : (USET, add_methods.add_uset_object),
-            'USET1' : (USET1, add_methods.add_uset_object),
-
-            'SET1' : (SET1, add_methods.add_set_object),
-            'SET3' : (SET3, add_methods.add_set_object),
-
-            'SESET' : (SESET, add_methods.add_seset_object),
-
-            'SEBSET' : (SEBSET, add_methods.add_sebset_object),
-            'SEBSET1' : (SEBSET1, add_methods.add_sebset_object),
-
-            'SECSET' : (SECSET, add_methods.add_secset_object),
-            'SECSET1' : (SECSET1, add_methods.add_secset_object),
-
-            'SEQSET' : (SEQSET, add_methods.add_seqset_object),
-            'SEQSET1' : (SEQSET1, add_methods.add_seqset_object),
+            # 'EIGB' : (EIGB, add_methods.add_method_object),
+            # 'EIGR' : (EIGR, add_methods.add_method_object),
+            # 'EIGRL' : (EIGRL, add_methods.add_method_object),
+            # 'EIGC' : (EIGC, add_methods.add_cmethod_object),
+            # 'EIGP' : (EIGP, add_methods.add_cmethod_object),
+            #
+            # 'BCRPARA' : (BCRPARA, add_methods.add_bcrpara_object),
+            # 'BCTADD' : (BCTADD, add_methods.add_bctadd_object),
+            # 'BCTPARA' : (BCTPARA, add_methods.add_bctpara_object),
+            # 'BSURF' : (BSURF, add_methods.add_bsurf_object),
+            # 'BSURFS' : (BSURFS, add_methods.add_bsurfs_object),
+            #
+            # 'ASET' : (ASET, add_methods.add_aset_object),
+            # 'ASET1' : (ASET1, add_methods.add_aset_object),
+            #
+            # 'BSET' : (BSET, add_methods.add_bset_object),
+            # 'BSET1' : (BSET1, add_methods.add_bset_object),
+            #
+            # 'CSET' : (CSET, add_methods.add_cset_object),
+            # 'CSET1' : (CSET1, add_methods.add_cset_object),
+            #
+            # 'QSET' : (QSET, add_methods.add_qset_object),
+            # 'QSET1' : (QSET1, add_methods.add_qset_object),
+            #
+            # 'USET' : (USET, add_methods.add_uset_object),
+            # 'USET1' : (USET1, add_methods.add_uset_object),
+            #
+            # 'SET1' : (SET1, add_methods.add_set_object),
+            # 'SET3' : (SET3, add_methods.add_set_object),
+            #
+            # 'SESET' : (SESET, add_methods.add_seset_object),
+            #
+            # 'SEBSET' : (SEBSET, add_methods.add_sebset_object),
+            # 'SEBSET1' : (SEBSET1, add_methods.add_sebset_object),
+            #
+            # 'SECSET' : (SECSET, add_methods.add_secset_object),
+            # 'SECSET1' : (SECSET1, add_methods.add_secset_object),
+            #
+            # 'SEQSET' : (SEQSET, add_methods.add_seqset_object),
+            # 'SEQSET1' : (SEQSET1, add_methods.add_seqset_object),
 
             #'SESUP' : (SESUP, self.add_SESUP),  # pseudo-constraint
 

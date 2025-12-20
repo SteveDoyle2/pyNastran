@@ -3,6 +3,7 @@ from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import integer, integer_or_blank
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 from pyNastran.dev.bdf_vectorized.cards.elements.solid.chexa8 import quad_area_centroid, volume8
 from pyNastran.dev.bdf_vectorized.cards.elements.solid.solid_element import SolidElement

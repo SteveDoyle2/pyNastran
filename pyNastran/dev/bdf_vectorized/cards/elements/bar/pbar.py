@@ -1,11 +1,14 @@
 from numpy import array, zeros, arange, searchsorted, unique
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.dev.bdf_vectorized.cards.elements.property import Property
 
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double_or_blank)
+
+from pyNastran.dev.bdf_vectorized.cards.elements.property import Property
+
 
 class PBAR(Property):
     type = 'PBAR'

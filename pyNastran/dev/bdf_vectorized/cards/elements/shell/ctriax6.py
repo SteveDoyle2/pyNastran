@@ -6,6 +6,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank)
 from pyNastran.dev.bdf_vectorized.cards.elements.element import Element
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class CTRIAX6(Element):

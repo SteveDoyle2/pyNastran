@@ -5,6 +5,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
     string_or_blank)
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 from pyNastran.dev.bdf_vectorized.cards.elements.property import Property
 

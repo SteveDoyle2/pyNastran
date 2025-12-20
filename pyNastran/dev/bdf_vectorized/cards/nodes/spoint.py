@@ -3,6 +3,7 @@ from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.bdf.cards.collpase_card import collapse_thru
 
 from pyNastran.bdf.bdf_interface.assign_type import integer_or_string
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 class SPOINT:
     type = 'SPOINT'

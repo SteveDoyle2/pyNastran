@@ -1,8 +1,9 @@
-from numpy import where, zeros, unique, dot, transpose, arange
+import numpy as np
 from pyNastran.bdf.bdf_interface.assign_type import double_or_blank, integer_or_blank, integer
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class POINT:
@@ -38,9 +39,9 @@ class POINT:
         self.n = ncards
         if ncards:
             float_fmt = self.model.float_fmt
-            self.node_id = zeros(ncards, 'int32')
-            self.xyz = zeros((ncards, 3), float_fmt)
-            self.coord_id = zeros(ncards, 'int32')
+            self.node_id = np.zeros(ncards, 'int32')
+            self.xyz = np.zeros((ncards, 3), float_fmt)
+            self.coord_id = np.zeros(ncards, 'int32')
 
             cp0 = self.model.grdset.cp
             for i, card in enumerate(cards):
@@ -61,16 +62,16 @@ class POINT:
             node_ids = self.node_id
         xyz = xyz.copy()
 
-        n = arange(self.n)
-        i = where(self.coord_id != 0)[0]
+        n = np.arange(self.n)
+        i = np.where(self.coord_id != 0)[0]
         if i:
             n = n[i]
-            cids = set(list(unique(self.coord_id)))
+            cids = set(list(np.unique(self.coord_id)))
             for cid in cids:
-                i = where(self.coord_id != 0)[0]
+                i = np.where(self.coord_id != 0)[0]
                 T = self.model.coord.transform(cid)
                 xyzi = xyz[n[i], :]
-                xyzi = dot(transpose(T), dot(xyzi, T))
+                xyzi = np.dot(np.transpose(T), np.dot(xyzi, T))
         return xyz
 
     def positions_wrt(self, node_ids=None, cids=None):

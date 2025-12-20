@@ -3,8 +3,9 @@ from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import integer, integer_or_blank
-from pyNastran.dev.bdf_vectorized.cards.elements.solid.cpenta6 import tri_area_centroid
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
+from pyNastran.dev.bdf_vectorized.cards.elements.solid.cpenta6 import tri_area_centroid
 from pyNastran.dev.bdf_vectorized.cards.elements.solid.solid_element import SolidElement
 
 class CPENTA15(SolidElement):

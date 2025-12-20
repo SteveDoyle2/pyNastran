@@ -2,6 +2,7 @@ from numpy import arange, zeros, searchsorted, unique
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double, integer_string_or_blank)
 
@@ -114,4 +115,3 @@ class PLOAD2:
                     bdf_file.write(print_card_8(card))
                 else:
                     bdf_file.write(print_card_16(card))
-
