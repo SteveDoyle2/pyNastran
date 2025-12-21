@@ -40,6 +40,7 @@ from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2, main as test_op2
 from pyNastran.op2.result_objects.contact_traction_and_pressure import RealContactTractionAndPressureArray
+from pyNastran.op2.result_objects.glue_force import GlueForceArray
 
 from pyNastran.bdf.test.test_bdf_unit_tests import Tester
 from pyNastran.bdf.cards.test.utils import save_load_deck
@@ -63,7 +64,27 @@ OP2_TEST = PKG_PATH / 'op2' / 'test'
 
 class TestOP2Unit(Tester):
     """various OP2 tests"""
-    def test_traction(self):
+    def test_op2_glue_force(self):
+        cls = GlueForceArray
+        isubcase = 1
+        nnode = 10
+        nodes = np.arange(1, nnode+1, dtype='int32')
+        gridtype = np.zeros(nnode, dtype='int32')
+        node_gridtype = np.vstack([nodes, gridtype])
+        data = np.zeros((1, nnode, 4), dtype='float32')
+
+        table_name = 'OBC1'
+        # modes = np.array([1], dtype='int32')
+        # eigenvalues = np.array([2.], dtype='float32')
+        # mode_cycles = np.array([3.], dtype='float32')
+
+        obj1 = cls.add_static_case(
+            table_name, node_gridtype, data,
+            isubcase,
+            is_msc=False)
+        obj1.assert_equal(obj1, rtol=1.e-5, atol=1.e-8)
+
+    def test_op2_traction(self):
         cls = RealContactTractionAndPressureArray
 
         isubcase = 1
@@ -93,6 +114,11 @@ class TestOP2Unit(Tester):
             table_name, node_gridtype, data,
             isubcase, times,
             is_msc=False)
+
+        obj1.assert_equal(obj1, rtol=1.e-5, atol=1.e-8)
+        obj2.assert_equal(obj2, rtol=1.e-5, atol=1.e-8)
+        obj3.assert_equal(obj3, rtol=1.e-5, atol=1.e-8)
+
         obj1.get_stats()
         obj2.get_stats()
         obj3.get_stats()

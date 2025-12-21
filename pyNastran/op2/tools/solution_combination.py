@@ -525,12 +525,10 @@ def _results(model: OP2) -> list[dict]:
     return table_res_types
 
 
-def main():
+def main():  # pragma: no cover
     from pathlib import Path
     import pyNastran
     dirname = Path(__file__).parent
-    pkg_path = Path(pyNastran.__path__[0]).parent
-
     op2_filename = dirname / 'test load combo-000.op2'
     combination_filename = dirname / 'combination_file_real.txt'
 
@@ -540,5 +538,5 @@ def main():
     run_load_case_combinations(op2_filename, combination_filename, mode='nx', revision='2306')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
