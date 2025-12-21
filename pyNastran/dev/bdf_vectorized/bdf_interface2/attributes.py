@@ -98,7 +98,6 @@ from pyNastran.dev.bdf_vectorized.cards.materials.mat1 import MAT1
 from pyNastran.dev.bdf_vectorized.cards.materials.mat8 import MAT8
 from pyNastran.dev.bdf_vectorized.cards.materials.mats1 import MATS1
 
-from pyNastran.dev.bdf_vectorized.cards.materials.mathp import MATHP
 from pyNastran.dev.bdf_vectorized.cards.materials.materials import Materials
 
 # constraints
@@ -299,7 +298,6 @@ class BDFAttributes:
         self.mat8 = MAT8(self)
         #self.mat10 = MAT10(self)
         #self.mat11 = MAT11(self)
-        self.mathp = MATHP(self)
 
         self.materials = Materials(self)
 

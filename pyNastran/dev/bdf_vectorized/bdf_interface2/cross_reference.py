@@ -4,7 +4,6 @@ from pyNastran.dev.bdf_vectorized.cards.loads.loadcase import LoadCase
 
 class CrossReference(BDFAttributes):
     """defines methods for writing cards"""
-
     def __init___(self):
         """creates methods for writing cards"""
         BDFAttributes.__init__(self)
@@ -55,4 +54,3 @@ class CrossReference(BDFAttributes):
 
         # DAREA
         # RANDPS
-

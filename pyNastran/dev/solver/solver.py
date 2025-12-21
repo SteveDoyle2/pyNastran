@@ -36,6 +36,7 @@ from .build_stiffness import build_Kgg, DOF_MAP, Kbb_to_Kgg
 if TYPE_CHECKING:  #  pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 
+
 class Solver:
     """defines the Nastran knockoff class"""
     def __init__(self, model: BDF):

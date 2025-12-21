@@ -13,7 +13,7 @@ PKG_PATH = Path(pyNastran.__path__[0])
 TEST_PATH = PKG_PATH / 'dev' / 'bdf_vectorized' / 'solver' / 'test'
 log = SimpleLogger('warning', encoding='utf8')
 
-class TestSolverSpring(unittest.TestCase):
+class TestSolverSpring1(unittest.TestCase):
     """tests the pyNastran solver"""
 
     def test_celas1(self):

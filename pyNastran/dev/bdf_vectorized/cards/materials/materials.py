@@ -26,7 +26,6 @@ class Materials:
         self.mat8 = model.mat8
         #self.mat10 = model.mat10
         #self.mat11 = model.mat11
-        self.mathp = model.mathp
 
     #def add_mat1(self, card, comment):
         #self.model.log.debug('adding mat1')
@@ -52,9 +51,6 @@ class Materials:
 
     #def add_mat11(self, card, comment):
         #self.mat11.add(card, comment)
-
-    #def add_mathp(self, card, comment):
-        #self.mathp.add(card, comment)
 
     def allocate(self, card_count):
         self.model.log.info('allocate Materials')
@@ -124,7 +120,6 @@ class Materials:
             self.mat1,
             #self.mat2,
             self.mat8,
-            self.mathp,
         ]
         for mat_type in mat_types:
             for iumid, mid in enumerate(umids):
@@ -302,7 +297,6 @@ class Materials:
                 self.mat8,
                 #self.mat10,
                 self.mats1,
-                self.mathp,
                 ]
 
     def _get_type_names(self):
@@ -328,7 +322,6 @@ class Materials:
                 self.mat8,
                 #self.mat10,
                 self.mats1,
-                self.mathp,
             ]
             for materials in types:
                 if materials.n:

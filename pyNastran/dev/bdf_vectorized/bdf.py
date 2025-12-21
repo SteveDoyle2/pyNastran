@@ -54,28 +54,6 @@ from pyNastran.dev.bdf_vectorized.cards.constraints.mpc import MPC, get_mpc_cons
 #from pyNastran.dev.bdf_vectorized.cards.constraints.mpcax import MPCAX
 from pyNastran.dev.bdf_vectorized.cards.constraints.mpcadd import MPCADD
 
-from pyNastran.dev.bdf_vectorized.cards.deqatn import DEQATN
-from pyNastran.dev.bdf_vectorized.cards.dynamic import (
-    #DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4,
-    TSTEP, TSTEPNL, NLPARM, NLPCI, #TF
-)
-
-from pyNastran.dev.bdf_vectorized.cards.aero.aero_cards import (
-    AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
-    AESURF, AESURFS, AERO, AEROS, CSSCHD,
-    CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-    PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    MONPNT1, MONPNT2, MONPNT3,
-    FLFACT, FLUTTER, GUST, MKAERO1,
-    MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
-    SPLINE5, TRIM, DIVERG)
-from pyNastran.dev.bdf_vectorized.cards.optimization import (
-    DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
-    DRESP1, DRESP2, DRESP3,
-    DVCREL1, DVCREL2,
-    DVMREL1, DVMREL2,
-    DVPREL1, DVPREL2,
-    DVGRID)
 from pyNastran.dev.bdf_vectorized.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
@@ -86,17 +64,11 @@ from pyNastran.dev.bdf_vectorized.cards.bdf_sets import (
 )
 
 
-
 # old cards
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
-from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
 from pyNastran.bdf.cards.elements.plot import PLOTEL #CFAST, CGAP, CRAC2D, CRAC3D,
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
-from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
-#from pyNastran.bdf.cards.loads.loads import (
-    #DAREA, #LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN
-#)
 from pyNastran.bdf.errors import DuplicateIDsError, CrossReferenceError, CardParseSyntaxError
 #from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
                                   #CardParseSyntaxError, UnsupportedCard, DisabledCardError,
@@ -169,16 +141,11 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
             #'_process_card', 'read_bdf', 'disable_cards', 'set_dynamic_syntax',
             #'create_card_object', 'create_card_object_fields', 'create_card_object_list',
 
-            #'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
-            #'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_ASET', 'add_BCRPARA', 'add_BCTADD',
-            #'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
-            #'add_DIVERG',
-            #'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DCONSTR', 'add_DDVAL',
-            #'add_DELAY', 'add_DEQATN', 'add_DESVAR', 'add_DLINK', 'add_DMI', 'add_DMIG',
-            #'add_DMIJ', 'add_DMIJI', 'add_DMIK', 'add_DPHASE', 'add_DRESP', 'add_DTABLE',
-            #'add_DVMREL', 'add_DVPREL', 'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
-            #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
-            #'add_PAERO', 'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY',
+            #'add_ASET', 'add_BSET', 'add_CSET',
+            #'add_DAREA', 'add_DCONADD', 'add_DCONSTR', 'add_DDVAL',
+            #'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
+            #'add_LSEQ',
+            #'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY',
             #'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
             #'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_tempd', 'add_TF', 'add_TRIM',
             #'add_TSTEP', 'add_TSTEPNL', 'add_USET',
@@ -221,12 +188,6 @@ class AddMethods:
     def add_plotel_object(self, obj):
         pass
     def add_rigid_element_object(self, obj):
-        pass
-    def add_doptprm_object(self, obj):
-        pass
-    def add_desvar_object(self, obj):
-        pass
-    def add_aecomp_object(self, obj):
         pass
 
 
@@ -1675,12 +1636,12 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'CVISC' : (CVISC, self.add_element),
             #'PELAST' : (PELAST, self.add_PELAST),
 
-            #'CDAMP1' : (CDAMP1, self.add_damper),
-            #'CDAMP2' : (CDAMP2, self.add_damper),
-            #'CDAMP3' : (CDAMP3, self.add_damper),
+            # 'CDAMP1' : (CDAMP1, self.add_damper),
+            # 'CDAMP2' : (CDAMP2, self.add_damper),
+            # 'CDAMP3' : (CDAMP3, self.add_damper),
             # CDAMP4 added later because the documentation is wrong
-            #'CDAMP5' : (CDAMP5, self.add_damper),
-            #'PDAMP5' : (PDAMP5, self.add_property),
+            # 'CDAMP5' : (CDAMP5, self.add_damper),
+            # 'PDAMP5' : (PDAMP5, self.add_property),
 
             #'CFAST' : (CFAST, self.add_damper),
             #'PFAST' : (PFAST, self.add_property),
@@ -1800,10 +1761,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'FREQ2' : (FREQ2, self.add_FREQ),
             #'FREQ4' : (FREQ4, self.add_FREQ),
 
-            'DOPTPRM' : (DOPTPRM, add_methods.add_doptprm_object),
-            'DESVAR' : (DESVAR, add_methods.add_desvar_object),
-            # BCTSET
-
             #'TEMP' : (TEMP, self.add_thermal_load),
             #'QBDY1' : (QBDY1, self.add_thermal_load),
             #'QBDY2' : (QBDY2, self.add_thermal_load),
@@ -1816,93 +1773,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'CHBDYP' : (CHBDYP, self.add_thermal_element),
             #'PCONV' : (PCONV, self.add_convection_property),
             #'PCONVM' : (PCONVM, self.add_convection_property),
-
-            # aero
-            # 'AECOMP' : (AECOMP, add_methods.add_aecomp_object),
-            # 'AEFACT' : (AEFACT, add_methods.add_aefact_object),
-            # 'AELINK' : (AELINK, add_methods.add_aelink_object),
-            # 'AELIST' : (AELIST, add_methods.add_aelist_object),
-            # 'AEPARM' : (AEPARM, add_methods.add_aeparm_object),
-            # 'AESTAT' : (AESTAT, add_methods.add_aestat_object),
-            # 'AESURF' : (AESURF, add_methods.add_aesurf_object),
-            # 'AESURFS' : (AESURFS, add_methods.add_aesurfs_object),
-            #
-            # 'CAERO1' : (CAERO1, add_methods.add_caero_object),
-            # 'CAERO2' : (CAERO2, add_methods.add_caero_object),
-            # 'CAERO3' : (CAERO3, add_methods.add_caero_object),
-            # 'CAERO4' : (CAERO4, add_methods.add_caero_object),
-            # 'CAERO5' : (CAERO5, add_methods.add_caero_object),
-            #
-            # 'PAERO1' : (PAERO1, add_methods.add_paero_object),
-            # 'PAERO2' : (PAERO2, add_methods.add_paero_object),
-            # 'PAERO3' : (PAERO3, add_methods.add_paero_object),
-            # 'PAERO4' : (PAERO4, add_methods.add_paero_object),
-            # 'PAERO5' : (PAERO5, add_methods.add_paero_object),
-            #
-            # 'SPLINE1' : (SPLINE1, add_methods.add_spline_object),
-            # 'SPLINE2' : (SPLINE2, add_methods.add_spline_object),
-            # 'SPLINE3' : (SPLINE3, add_methods.add_spline_object),
-            # 'SPLINE4' : (SPLINE4, add_methods.add_spline_object),
-            # 'SPLINE5' : (SPLINE5, add_methods.add_spline_object),
-            #
-            # # SOL 144
-            # 'AEROS' : (AEROS, add_methods.add_aeros_object),
-            # 'TRIM' : (TRIM, add_methods.add_trim_object),
-            # 'DIVERG' : (DIVERG, add_methods.add_diverg_object),
-            #
-            # # SOL 145
-            # 'AERO' : (AERO, add_methods.add_aero_object),
-            # 'FLUTTER' : (FLUTTER, add_methods.add_flutter_object),
-            # 'FLFACT' : (FLFACT, add_methods.add_flfact_object),
-            # 'MKAERO1' : (MKAERO1, add_methods.add_mkaero_object),
-            # 'MKAERO2' : (MKAERO2, add_methods.add_mkaero_object),
-            #
-            # 'GUST' : (GUST, add_methods.add_gust_object),
-            # 'CSSCHD' : (CSSCHD, add_methods.add_csschd_object),
-            # 'MONPNT1' : (MONPNT1, add_methods.add_monpnt_object),
-            # 'MONPNT2' : (MONPNT2, add_methods.add_monpnt_object),
-            # 'MONPNT3' : (MONPNT3, add_methods.add_monpnt_object),
-            #
-            # 'NLPARM' : (NLPARM, add_methods.add_nlparm_object),
-            # 'NLPCI' : (NLPCI, add_methods.add_nlpci_object),
-            # 'TSTEP' : (TSTEP, add_methods.add_tstep_object),
-            # 'TSTEPNL' : (TSTEPNL, add_methods.add_tstepnl_object),
-            #
-            # #'TF' : (TF, self.add_TF),
-            # #'DELAY' : (DELAY, self.add_DELAY),
-            #
-            # 'DCONADD' : (DCONADD, add_methods.add_dconstr_object),
-            # 'DCONSTR' : (DCONSTR, add_methods.add_dconstr_object),
-            # 'DDVAL' : (DDVAL, add_methods.add_ddval_object),
-            # 'DLINK' : (DLINK, add_methods.add_dlink_object),
-            #
-            # #'DTABLE' : (DTABLE, self.add_dtable),
-            # 'DRESP1' : (DRESP1, add_methods.add_dresp_object),
-            # 'DRESP2' : (DRESP2, add_methods.add_dresp_object), # deqatn
-            # 'DRESP3' : (DRESP3, add_methods.add_dresp_object),
-            # 'DVCREL1' : (DVCREL1, add_methods.add_dvcrel_object), # dvcrels
-            # 'DVCREL2' : (DVCREL2, add_methods.add_dvcrel_object),
-            # 'DVPREL1' : (DVPREL1, add_methods.add_dvprel_object), # dvprels
-            # 'DVPREL2' : (DVPREL2, add_methods.add_dvprel_object),
-            # 'DVMREL1' : (DVMREL1, add_methods.add_dvmrel_object), # ddvmrels
-            # 'DVMREL2' : (DVMREL2, add_methods.add_dvmrel_object),
-            # 'DVGRID' : (DVGRID, add_methods.add_dvgrid_object), # dvgrids
-
-            #'TABLED1' : (TABLED1, self.add_table),
-            #'TABLED2' : (TABLED2, self.add_table),
-            #'TABLED3' : (TABLED3, self.add_table),
-            #'TABLED4' : (TABLED4, self.add_table),
-            #'TABLEM1' : (TABLEM1, self.add_table),
-            #'TABLEM2' : (TABLEM2, self.add_table),
-            #'TABLEM3' : (TABLEM3, self.add_table),
-            #'TABLEM4' : (TABLEM4, self.add_table),
-
-            #'TABLES1' : (TABLES1, self.add_table),
-            #'TABLEST' : (TABLEST, self.add_table),
-
-            #'TABDMP1' : (TABDMP1, self.add_table_sdamping),
-            #'TABRND1' : (TABRND1, self.add_random_table),
-            #'TABRNDG' : (TABRNDG, self.add_random_table),
 
             # 'EIGB' : (EIGB, add_methods.add_method_object),
             # 'EIGR' : (EIGR, add_methods.add_method_object),
@@ -1971,14 +1841,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'CMASS4' : self._prepare_cmass4,
             #'CDAMP4' : self._prepare_cdamp4,
 
-            'DMIG' : self._prepare_dmig,
-            'DMI' : self._prepare_dmi,
-            'DMIJ' : self._prepare_dmij,
-            'DMIK' : self._prepare_dmik,
-            'DMIJI' : self._prepare_dmiji,
-
-            'DEQATN' : self._prepare_dequatn,
-
             #'PVISC' : self._prepare_pvisc,
             #'PELAS' : self._prepare_pelas,
             #'PDAMP' : self._prepare_pdamp,
@@ -2042,26 +1904,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #self.add_damper(CDAMP4.add_card(card_obj, 1, comment=''))
         #return card_obj
 
-    def _prepare_convm(self, card, card_obj, comment=''):
-        """adds a CONVM"""
-        boundary_condition = CONVM.add_card(card_obj, comment=comment)
-        self._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
-
-    def _prepare_conv(self, card, card_obj, comment=''):
-        """adds a CONV"""
-        boundary_condition = CONV.add_card(card_obj, comment=comment)
-        self._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
-
-    def _prepare_radm(self, card, card_obj, comment=''):
-        """adds a RADM"""
-        boundary_condition = RADM.add_card(card, comment=comment)
-        self._add_thermal_bc_object(boundary_condition, boundary_condition.radmid)
-
-    def _prepare_radbc(self, card, card_obj, comment=''):
-        """adds a RADBC"""
-        boundary_condition = RADBC(card_obj, comment=comment)
-        self._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
-
     def _prepare_tempd(self, card, card_obj, comment=''):
         """adds a TEMPD"""
         self.add_tempd(TEMPD.add_card(card_obj, 0, comment=comment))
@@ -2071,65 +1913,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 self.add_tempd(TEMPD.add_card(card_obj, 2, comment=''))
                 if card_obj.field(7):
                     self.add_tempd(TEMPD.add_card(card_obj, 3, comment=''))
-
-    def _add_doptprm(self, doptprm, comment=''):
-        """adds a DOPTPRM"""
-        self.doptprm = doptprm
-
-    def _prepare_dequatn(self, card, card_obj, comment=''):
-        """adds a DEQATN"""
-        if hasattr(self, 'test_deqatn') or 1:
-            self.add_deqatn(DEQATN.add_card(card_obj, comment=comment))
-        else:
-            if comment:
-                self.rejects.append([comment])
-            self.rejects.append(card)
-
-    def _prepare_dmig(self, card, card_obj, comment=''):
-        """adds a DMIG"""
-        name = string(card_obj, 1, 'name')
-        field2 = integer_or_string(card_obj, 2, 'flag')
-        #print('name=%r field2=%r' % (name, field2))
-
-        if name == 'UACCEL':  # special DMIG card
-            if field2 == 0:
-                card = DMIG_UACCEL.add_card(card_obj, comment=comment)
-                self.add_dmig(card)
-            else:
-                self._dmig_temp[name].append((card_obj, comment))
-        else:
-            field2 = integer_or_string(card_obj, 2, 'flag')
-            if field2 == 0:
-                card = DMIG(card_obj, comment=comment)
-                self.add_dmig(card)
-            else:
-                self._dmig_temp[name].append((card_obj, comment))
-
-    def _prepare_dmix(self, class_obj, add_method, card_obj, comment=''):
-        """adds a DMIx"""
-        #elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
-        field2 = integer(card_obj, 2, 'flag')
-        if field2 == 0:
-            add_method(class_obj(card_obj, comment=comment))
-        else:
-            name = string(card_obj, 1, 'name')
-            self._dmig_temp[name].append((card_obj, comment))
-
-    def _prepare_dmi(self, card, card_obj, comment=''):
-        """adds a DMI"""
-        self._prepare_dmix(DMI, self._add_dmi_object, card_obj, comment=comment)
-
-    def _prepare_dmij(self, card, card_obj, comment=''):
-        """adds a DMIJ"""
-        self._prepare_dmix(DMIJ, self._add_dmij_object, card_obj, comment=comment)
-
-    def _prepare_dmik(self, card, card_obj, comment=''):
-        """adds a DMIK"""
-        self._prepare_dmix(DMIK, self._add_dmik_object, card_obj, comment=comment)
-
-    def _prepare_dmiji(self, card, card_obj, comment=''):
-        """adds a DMIJI"""
-        self._prepare_dmix(DMIJI, self._add_dmiji_object, card_obj, comment=comment)
 
     #def _prepare_cmass4(self, card, card_obj, comment=''):
         #"""adds a CMASS4"""
@@ -2484,44 +2267,19 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         return ''
         card_stats = [
             'params', 'nodes', 'points', 'elements', 'rigid_elements',
-            'properties', 'materials', 'creep_materials',
+            'properties', 'materials',
             'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
             'MATS1', 'MATS3', 'MATT8',
             'coords', 'mpcs', 'mpcadds',
-
-            # dynamic cards
-            'dareas', 'dphases', 'nlparms', 'nlpcis', 'tsteps', 'tstepnls',
-
-            # direct matrix input - DMIG - dict
-            'dmi', 'dmig', 'dmij', 'dmiji', 'dmik',
-            'dequations',
-
-            # frequencies - dict
-            'frequencies',
-
-            # optimization - dict
-            'dconadds', 'dconstrs', 'desvars', 'ddvals', 'dlinks', 'dresps',
-            'dvcrels', 'dvmrels', 'dvprels', 'dvgrids',
 
             # SESETx - dict
             'suport1',
             'se_sets',
             'se_usets',
 
-            # tables
-            'tables', 'tables_d', 'tables_m', 'random_tables',
-
             # methods
             'methods', 'cMethods',
-
-            # aero
-            'caeros', 'paeros', 'aecomps', 'aefacts', 'aelinks',
-            'aelists', 'aeparams', 'aesurfs', 'aestats', 'gusts', 'flfacts',
-            'flutters', 'splines', 'trims',
-
-            # thermal
-            'bcs', 'thermal_materials', 'phbdys',
-            'convection_properties', ]
+        ]
 
         # These are ignored because they're lists
         ignored_types = set([
@@ -2531,7 +2289,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'spcs',
 
             'suport', 'se_suport', # suport, suport1 - list
-            'doptprm',  # singleton
 
             # SETx - list
             'sets', 'asets', 'bsets', 'csets', 'qsets',
@@ -2550,7 +2307,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             # not cards
             'debug', 'executive_control_lines',
             'case_control_lines', 'cards_to_read', 'card_count',
-            'is_structured', 'uniqueBulkDataCards',
+            'is_structured',
             'model_type', 'include_dir',
             'sol_method', 'log',
             'sol_iline',
@@ -2594,21 +2351,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
-
-        # aero
-        if self.aero:
-            msg.append('bdf:aero')
-            msg.append('  %-8s %s' % ('AERO:', 1))
-
-        # aeros
-        if self.aeros:
-            msg.append('bdf:aeros')
-            msg.append('  %-8s %s' % ('AEROS:', 1))
-
-        #mkaeros
-        if self.mkaeros:
-            msg.append('bdf:mkaeros')
-            msg.append('  %-8s %s' % ('MKAERO:', len(self.mkaeros)))
 
         for card_group_name in card_stats:
             card_group = getattr(self, card_group_name)
@@ -3270,10 +3012,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 'CMASS4' : self._parse_cmass4,
                 'PMASS' : self._parse_pmass,
 
-                #'CDAMP1' : self._parse_cdamp1,
-                #'CDAMP2' : self._parse_cdamp2,
-                #'CDAMP3' : self._parse_cdamp3,
-                #'CDAMP4' : self._parse_cdamp4,
+                # 'CDAMP1' : self._parse_cdamp1,
+                # 'CDAMP2' : self._parse_cdamp2,
+                # 'CDAMP3' : self._parse_cdamp3,
+                'CDAMP4' : self._parse_cdamp4,
             }
             # self._is_cards_dict = True
             # this is the loop that hits...
