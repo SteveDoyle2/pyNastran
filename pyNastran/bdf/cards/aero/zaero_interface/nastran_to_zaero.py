@@ -30,7 +30,7 @@ from pyNastran.bdf.cards.aero.zaero_cards.cards import (
     # MLDPRNT, MLDSTAT, MINSTAT, MLDTRIM, MLDCOMD, MLDTIME,
     AEROZ, ACOORD, #ATTACH,
 )
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, SPLINE1, AEFACT, AELIST, AEROS
 
 

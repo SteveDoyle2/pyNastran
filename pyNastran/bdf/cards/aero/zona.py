@@ -1338,8 +1338,8 @@ def get_dicts(zaero: ZAERO, method: str) -> tuple[dict[int, list],
         zaero.dse,
         zaero.dmil,
         # plotting
-        zaero.pltvg,
-        zaero.pltbode,
+        zaero.pltvg, zaero.pltbode,
+        zaero.pltcp, zaero.plttrim, zaero.pltaero,
     ]
     dict_lists = [
         zaero.pltflut, zaero.plttime,

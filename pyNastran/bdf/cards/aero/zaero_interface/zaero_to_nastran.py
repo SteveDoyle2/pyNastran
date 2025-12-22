@@ -1,18 +1,22 @@
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING
-# import numpy as np
-if TYPE_CHECKING:
+from pyNastran.utils import PathLike
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.cards.aero.zona import ZAERO
 
 
-def zaero_to_nastran(zaero: ZAERO, save: bool = True):
+def zaero_to_nastran(zaero_filename: PathLike | ZAERO | BDF,
+                     save: bool=True) -> tuple[dict, list, bool]:
     """Converts a ZAERO model to Nastran"""
-    if zaero.model.nastran_format not in ['zona', 'zaero']:
+    model = get_zaero_bdf_model(zaero_filename)
+    if model.nastran_format not in ['zona', 'zaero']:
         caeros = {}
         caero2s = []
         make_paero1 = False
         return caeros, caero2s, make_paero1
 
+    zaero = model.zaero
     caeros, caero2s, make_paero1 = _convert_caeros(zaero)
     splines = _convert_splines(zaero)
     aesurf, aelists = _convert_aesurf_aelist(zaero)
@@ -32,6 +36,26 @@ def zaero_to_nastran(zaero: ZAERO, save: bool = True):
         zaero.model.aeros = aeros
         zaero.model.aero = aero
     return caeros, caero2s, make_paero1
+
+
+def get_zaero_bdf_model(zaero_filename: PathLike | ZAERO | BDF) -> BDF:
+    from pyNastran.bdf.cards.aero.zona import ZAERO
+    if isinstance(zaero_filename, ZAERO):
+        model = zaero_filename.model
+        return model
+
+    if isinstance(zaero_filename, PathLike):
+        from pyNastran.bdf.bdf import read_bdf
+        model = read_bdf(zaero_filename, mode='zaero')
+        return model
+
+    from pyNastran.bdf.bdf import BDF
+    if isinstance(zaero_filename, BDF):
+        model = zaero_filename
+        return model
+    # else:  # pragma: no cover
+    raise TypeError(type(zaero_filename))
+    # return model
 
 
 def _convert_caeros(zaero: ZAERO) -> dict[int, Any]:
