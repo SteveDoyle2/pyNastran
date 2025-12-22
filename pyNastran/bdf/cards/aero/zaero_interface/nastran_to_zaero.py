@@ -142,6 +142,12 @@ def _convert_flutter(model: BDF, model2: BDF,
 
         machs = mach_ref.factors
         mach = machs[0]
+        if model.mkaeros:
+            for makero in mkaeros:
+                freqs = mkaero.reduced_freqs.tolist()
+                break
+        else:
+            freqs = [1.0]
         filename = f'MK{mkaeroz_id}_{mach:g}.out'
         mkaeroz = MKAEROZ(
             mkaeroz_id, mach, flt_id, filename, print_flag,
