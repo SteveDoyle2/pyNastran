@@ -2,13 +2,12 @@
 # pylint: disable=W0212,C0103
 from __future__ import annotations
 
-import copy
 from collections import defaultdict
 from typing import TextIO, Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils import (
-    PathLike, object_attributes, object_methods)
+    object_attributes, object_methods)
 
 from typing import Any
 from pyNastran.bdf.bdf_interface.utils import sorteddict
@@ -20,7 +19,7 @@ from .zona_cards.zona_sets import (
 from pyNastran.bdf.cards.aero.zona_cards.atm import (
     ATMOS, FIXMATM, FIXHATM, FIXMACH, FIXMDEN)
 from pyNastran.bdf.cards.aero.zona_cards.spline import (
-    SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA,)
+    SPLINE1_ZAERO, SPLINE2_ZAERO, SPLINE3_ZAERO,)
 from pyNastran.bdf.cards.aero.zona_cards.geometry import (
     PANLST1, PANLST2, PANLST3, SEGMESH,
     CAERO7, BODY7, PAFOIL7, PAFOIL8, AESURFZ, AESLINK)
@@ -28,9 +27,9 @@ from pyNastran.bdf.cards.aero.zona_cards.plot import (
     PLTAERO, PLTMODE, PLTVG, PLTFLUT, PLTTIME,
     PLTCP, PLTMIST, PLTSURF, PLTBODE, PLTTRIM)
 from pyNastran.bdf.cards.aero.zona_cards.flutter import (
-    FLUTTER_ZONA, MKAEROZ)
+    FLUTTER_ZAERO, MKAEROZ)
 from pyNastran.bdf.cards.aero.zona_cards.trim import (
-    TRIM_ZONA, TRIMVAR, TRIMLNK,)
+    TRIM_ZAERO, TRIMVAR, TRIMLNK,)
 from pyNastran.bdf.cards.aero.zona_cards.manuever import (
     MLOADS, EXTINP, EXTOUT, TRIMFNC, ACTU, LOADMOD, RBRED,)
 from pyNastran.bdf.cards.aero.zona_cards.gust import (
@@ -43,17 +42,20 @@ from pyNastran.bdf.cards.aero.zona_cards.ase import (
     AEROLAG,
 )
 from pyNastran.bdf.cards.aero.zona_cards.bdf_tables import (
-    TABLED1_ZONA, TABDMP1_ZONA)
+    TABLED1_ZAERO, TABDMP1_ZAERO)
 from pyNastran.bdf.cards.aero.zona_cards.dmi import DMIL
 from pyNastran.bdf.cards.aero.zona_cards.cards import (
     MLDPRNT, MLDSTAT, MINSTAT, MLDTRIM, MLDCOMD, MLDTIME,
     AEROZ, ACOORD, ATTACH, EXTFILE,
 )
+from pyNastran.bdf.cards.aero.zona_interface.nastran_to_zaero import nastran_to_zaero
+from pyNastran.bdf.cards.aero.zona_interface.zaero_to_nastran import zaero_to_nastran
+
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF, AELIST
+    from pyNastran.bdf.bdf import BDF
 
-ZONA_CARDS = [
+ZAERO_CARDS = [
     # atmosphere
     'ATMOS',
     'FIXHATM', 'FIXMATM', 'FIXMACH', 'FIXMDEN',
@@ -118,7 +120,7 @@ class AddMethods:
 
     @property
     def zona(self):
-        return self.model.zona
+        return self.model.zaero
 
     def add_mldprnt_object(self, mldprnt: MLDPRNT) -> None:
         """adds an MLDPRNT object"""
@@ -131,188 +133,188 @@ class AddMethods:
     def add_mldcomd_object(self, mldcomd: MLDCOMD) -> None:
         """adds an MLDTRIM object"""
         key = mldcomd.mldcomd_id
-        assert key not in self.model.zona.mldcomd, key
+        assert key not in self.model.zaero.mldcomd, key
         assert key > 0, key
-        self.model.zona.mldcomd[key] = mldcomd
+        self.model.zaero.mldcomd[key] = mldcomd
         self.model._type_to_id_map[mldcomd.type].append(key)
 
     def add_extfile_object(self, extfile: EXTFILE) -> None:
         """adds an EXTFILE object"""
         key = extfile.extfile_id
-        assert key not in self.model.zona.extfile, key
+        assert key not in self.model.zaero.extfile, key
         assert key > 0, key
-        self.model.zona.extfile[key] = extfile
+        self.model.zaero.extfile[key] = extfile
         self.model._type_to_id_map[extfile.type].append(key)
 
     def add_dmil_object(self, dmil: DMIL) -> None:
         """adds an DMIL object"""
         name = dmil.name
         key = (name, dmil.row, dmil.col)
-        assert key not in self.model.zona.dmil, key
-        self.model.zona.dmil[key] = dmil
+        assert key not in self.model.zaero.dmil, key
+        self.model.zaero.dmil[key] = dmil
         self.model._type_to_id_map[dmil.type].append(name)
 
     def add_mldtime_object(self, mldtime: MLDTIME) -> None:
         """adds an MLDTRIM object"""
         key = mldtime.mldtime_id
-        assert key not in self.model.zona.mldtime, key
+        assert key not in self.model.zaero.mldtime, key
         assert key > 0, key
-        self.model.zona.mldtime[key] = mldtime
+        self.model.zaero.mldtime[key] = mldtime
         self.model._type_to_id_map[mldtime.type].append(key)
 
     def add_mldprnt_object(self, mldprnt: MLDPRNT) -> None:
         """adds an MLDPRNT object"""
         key = mldprnt.mldprnt_id
-        if key in self.model.zona.mldprnt:
+        if key in self.model.zaero.mldprnt:
             self.model.log.warning(f'skipping MLDPRNT\n{str(mldprnt)}')
             return
-        assert key not in self.model.zona.mldprnt, key
+        assert key not in self.model.zaero.mldprnt, key
         assert key > 0, key
-        self.model.zona.mldprnt[key] = mldprnt
+        self.model.zaero.mldprnt[key] = mldprnt
         self.model._type_to_id_map[mldprnt.type].append(key)
 
     def add_mldtrim_object(self, mldtrim: MLDTRIM) -> None:
         """adds an MLDTRIM object"""
         key = mldtrim.mldtrim_id
-        assert key not in self.model.zona.mldtrim, key
+        assert key not in self.model.zaero.mldtrim, key
         assert key > 0, key
-        self.model.zona.mldtrim[key] = mldtrim
+        self.model.zaero.mldtrim[key] = mldtrim
         self.model._type_to_id_map[mldtrim.type].append(key)
 
     def add_mldstat_object(self, mldstat: MLDSTAT) -> None:
         """adds an MLDSTAT object"""
         key = mldstat.mldstat_id
         assert key > 0, key
-        zona = self.model.zona
-        assert key not in zona.mldstat, key
-        zona.mldstat[key] = mldstat
+        zaero = self.model.zaero
+        assert key not in zaero.mldstat, key
+        zaero.mldstat[key] = mldstat
         self.model._type_to_id_map[mldstat.type].append(key)
 
     def add_minstat_object(self, minstat: MINSTAT) -> None:
         """adds an MINSTAT object"""
         key = minstat.minstat_id
-        assert key not in self.model.zona.minstat, key
+        assert key not in self.model.zaero.minstat, key
         assert key > 0, key
-        self.model.zona.minstat[key] = minstat
+        self.model.zaero.minstat[key] = minstat
         self.model._type_to_id_map[minstat.type].append(key)
 
     def add_extinp_object(self, extinp: EXTINP) -> None:
         """adds an EXTINP object"""
         key = extinp.extinp_id
-        assert key not in self.model.zona.extinp, key
+        assert key not in self.model.zaero.extinp, key
         assert key > 0, key
-        self.model.zona.extinp[key] = extinp
+        self.model.zaero.extinp[key] = extinp
         self.model._type_to_id_map[extinp.type].append(key)
 
     def add_extout_object(self, extout: EXTOUT) -> None:
         """adds an EXTOUT object"""
         key = extout.extout_id
-        assert key not in self.model.zona.extout, key
+        assert key not in self.model.zaero.extout, key
         assert key > 0, key
-        self.model.zona.extout[key] = extout
+        self.model.zaero.extout[key] = extout
         self.model._type_to_id_map[extout.type].append(key)
 
     def add_trimfnc_object(self, trimfnc: TRIMFNC) -> None:
         """adds an TRIMFNC object"""
         key = trimfnc.trimfnc_id
-        assert key not in self.model.zona.trimfnc, key
+        assert key not in self.model.zaero.trimfnc, key
         assert key > 0, key
-        self.model.zona.trimfnc[key] = trimfnc
+        self.model.zaero.trimfnc[key] = trimfnc
         self.model._type_to_id_map[trimfnc.type].append(key)
 
     def add_mimoss_object(self, mimoss: MIMOSS) -> None:
         """adds an MIMOSS object"""
         key = mimoss.mimoss_id
-        assert key not in self.model.zona.mimoss, key
+        assert key not in self.model.zaero.mimoss, key
         assert key > 0, key
-        self.model.zona.mimoss[key] = mimoss
+        self.model.zaero.mimoss[key] = mimoss
         self.model._type_to_id_map[mimoss.type].append(key)
 
 
     def add_sisotf_object(self, sisotf: SISOTF) -> None:
         """adds an SISOTF object"""
         key = sisotf.sisotf_id
-        assert key not in self.model.zona.sisotf, key
+        assert key not in self.model.zaero.sisotf, key
         assert key > 0, key
-        self.model.zona.sisotf[key] = sisotf
+        self.model.zaero.sisotf[key] = sisotf
         self.model._type_to_id_map[sisotf.type].append(key)
 
     def add_tfset_object(self, tfset: TFSET) -> None:
         """adds an TFSET object"""
         key = tfset.tfset_id
-        assert key not in self.model.zona.tfset, key
+        assert key not in self.model.zaero.tfset, key
         assert key > 0, key
-        self.model.zona.tfset[key] = tfset
+        self.model.zaero.tfset[key] = tfset
         self.model._type_to_id_map[tfset.type].append(key)
 
     def add_setadd_object(self, setadd: SETADD) -> None:
         """adds an SETADD object"""
         key = setadd.setadd_id
-        assert key not in self.model.zona.setadd, key
+        assert key not in self.model.zaero.setadd, key
         assert key > 0, key
-        self.model.zona.setadd[key] = setadd
+        self.model.zaero.setadd[key] = setadd
         self.model._type_to_id_map[setadd.type].append(key)
 
     def add_senset_object(self, senset: SENSET) -> None:
         """adds an SENSET object"""
         key = senset.senset_id
-        assert key not in self.model.zona.senset, key
+        assert key not in self.model.zaero.senset, key
         assert key > 0, key
-        self.model.zona.senset[key] = senset
+        self.model.zaero.senset[key] = senset
         self.model._type_to_id_map[senset.type].append(key)
 
     def add_cnctset_object(self, cnctset: CNCTSET) -> None:
         """adds an CNCTSET object"""
         key = cnctset.cnctset_id
-        assert key not in self.model.zona.cnctset, key
+        assert key not in self.model.zaero.cnctset, key
         assert key > 0, key
-        self.model.zona.cnctset[key] = cnctset
+        self.model.zaero.cnctset[key] = cnctset
         self.model._type_to_id_map[cnctset.type].append(key)
 
     def add_surfset_object(self, surfset: SURFSET) -> None:
         """adds an SURFSET object"""
         key = surfset.surfset_id
-        assert key not in self.model.zona.surfset, key
+        assert key not in self.model.zaero.surfset, key
         assert key > 0, key
-        self.model.zona.surfset[key] = surfset
+        self.model.zaero.surfset[key] = surfset
         self.model._type_to_id_map[surfset.type].append(key)
 
     def add_loadmod_object(self, loadmod: LOADMOD) -> None:
         """adds an LOADMOD object"""
         key = loadmod.loadmod_id
-        assert key not in self.model.zona.loadmod, key
+        assert key not in self.model.zaero.loadmod, key
         assert key > 0, key
-        self.model.zona.loadmod[key] = loadmod
+        self.model.zaero.loadmod[key] = loadmod
         self.model._type_to_id_map[loadmod.type].append(key)
 
     def add_rbred_object(self, rbred: RBRED) -> None:
         """adds an LOADMOD object"""
         key = rbred.sid
-        assert key not in self.model.zona.rbred, key
+        assert key not in self.model.zaero.rbred, key
         assert key > 0, key
-        self.model.zona.rbred[key] = rbred
+        self.model.zaero.rbred[key] = rbred
         self.model._type_to_id_map[rbred.type].append(key)
 
     def add_panlst_object(self, panlst: PANLST1 | PANLST2 | PANLST3) -> None:
         """adds an PANLST1/PANLST2/PANLST3 object"""
         key = panlst.eid
         assert key > 0, key
-        zona = self.model.zona
-        # assert key not in zona.panlsts, '\npanlst=\n%s old=\n%s' % (
-        #     panlst, zona.panlsts[key])
-        if key not in zona.panlsts:
-            zona.panlsts[key] = []
-        zona.panlsts[key].append(panlst)
+        zaero = self.model.zaero
+        # assert key not in zaero.panlsts, '\npanlst=\n%s old=\n%s' % (
+        #     panlst, zaero.panlsts[key])
+        if key not in zaero.panlsts:
+            zaero.panlsts[key] = []
+        zaero.panlsts[key].append(panlst)
         self.model._type_to_id_map[panlst.type].append(key)
 
     def add_pafoil_object(self, pafoil: PAFOIL7 | PAFOIL8) -> None:
         """adds an PAFOIL7/PAFOIL8 object"""
         key = pafoil.pid
         assert pafoil.pid > 0
-        zona = self.model.zona
-        assert key not in zona.pafoil, '\npafoil7=\n%s old=\n%s' % (
-            pafoil, zona.pafoil[key])
-        zona.pafoil[key] = pafoil
+        zaero = self.model.zaero
+        assert key not in zaero.pafoil, '\npafoil7=\n%s old=\n%s' % (
+            pafoil, zaero.pafoil[key])
+        zaero.pafoil[key] = pafoil
         self.model._type_to_id_map[pafoil.type].append(key)
 
     def add_aesurfz_object(self, aesurf: AESURFZ) -> None:
@@ -328,299 +330,300 @@ class AddMethods:
         """adds an AESLINK object"""
         key = aeslink.label
         model = self.model
-        zona = model.zona
-        assert key not in zona.aeslink, '\naeslink=\n%s old=\n%s' % (
-            aeslink, zona.aeslink[key])
-        zona.aeslink[key] = aeslink
+        zaero = model.zaero
+        assert key not in zaero.aeslink, '\naeslink=\n%s old=\n%s' % (
+            aeslink, zaero.aeslink[key])
+        zaero.aeslink[key] = aeslink
         model._type_to_id_map[aeslink.type].append(key)
 
     def add_mloads_object(self, mloads: MLOADS) -> None:
         """adds an MLOADS object"""
         key = mloads.mloads_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.mloads, '\nmloads=\n%s old=\n%s' % (
-            mloads, zona.mloads[key])
-        zona.mloads[key] = mloads
+        zaero = model.zaero
+        assert key not in zaero.mloads, '\nmloads=\n%s old=\n%s' % (
+            mloads, zaero.mloads[key])
+        zaero.mloads[key] = mloads
         model._type_to_id_map[mloads.type].append(key)
 
     def add_gloads_object(self, gloads: GLOADS) -> None:
         """adds an GLOADS object"""
         key = gloads.gloads_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.gloads, '\ngloads=\n%s old=\n%s' % (
+        zaero = model.zaero
+        assert key not in zaero.gloads, '\ngloads=\n%s old=\n%s' % (
             gloads, model.gloads[key])
-        zona.gloads[key] = gloads
+        zaero.gloads[key] = gloads
         model._type_to_id_map[gloads.type].append(key)
 
     def add_dgust_object(self, dgust: DGUST) -> None:
         """adds an DGUST object"""
         key = dgust.dgust_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.dgust, '\ndgust=\n%s old=\n%s' % (
-            dgust, zona.dgust[key])
-        zona.dgust[key] = dgust
+        zaero = model.zaero
+        assert key not in zaero.dgust, '\ndgust=\n%s old=\n%s' % (
+            dgust, zaero.dgust[key])
+        zaero.dgust[key] = dgust
         model._type_to_id_map[dgust.type].append(key)
 
     def add_cgust_object(self, cgust: CGUST) -> None:
         """adds an CGUST object"""
         key = cgust.cgust_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.cgust, '\ncgust=\n%s old=\n%s' % (
-            cgust, zona.cgust[key])
-        zona.cgust[key] = cgust
+        zaero = model.zaero
+        assert key not in zaero.cgust, '\ncgust=\n%s old=\n%s' % (
+            cgust, zaero.cgust[key])
+        zaero.cgust[key] = cgust
         model._type_to_id_map[cgust.type].append(key)
 
     def add_ase_object(self, ase: ASE) -> None:
         """adds an ASE object"""
         key = ase.ase_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.ase, '\nase=\n%s old=\n%s' % (
-            ase, zona.ase[key])
-        zona.ase[key] = ase
+        zaero = model.zaero
+        assert key not in zaero.ase, '\nase=\n%s old=\n%s' % (
+            ase, zaero.ase[key])
+        zaero.ase[key] = ase
         model._type_to_id_map[ase.type].append(key)
 
     def add_asecont_object(self, asecont: ASECONT) -> None:
         """adds an ASECONT object"""
         key = asecont.asecont_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.asecont, '\nasecont=\n%s old=\n%s' % (
-            asecont, zona.asecont[key])
-        zona.asecont[key] = asecont
+        zaero = model.zaero
+        assert key not in zaero.asecont, '\nasecont=\n%s old=\n%s' % (
+            asecont, zaero.asecont[key])
+        zaero.asecont[key] = asecont
         model._type_to_id_map[asecont.type].append(key)
 
     def add_asegain_object(self, asegain: ASEGAIN) -> None:
         """adds an ASEGAIN object"""
         key = asegain.asegain_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.asegain, '\nasegain=\n%s old=\n%s' % (
-            asegain, zona.asegain[key])
-        zona.asegain[key] = asegain
+        zaero = model.zaero
+        assert key not in zaero.asegain, '\nasegain=\n%s old=\n%s' % (
+            asegain, zaero.asegain[key])
+        zaero.asegain[key] = asegain
         model._type_to_id_map[asegain.type].append(key)
 
     def add_asesnsr_object(self, asesnsr: ASESNSR) -> None:
         """adds an ASESNSR object"""
         key = asesnsr.asesnsr_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.asesnsr, '\nasesnsr=\n%s old=\n%s' % (
-            asesnsr, zona.asesnsr[key])
-        zona.asesnsr[key] = asesnsr
+        zaero = model.zaero
+        assert key not in zaero.asesnsr, '\nasesnsr=\n%s old=\n%s' % (
+            asesnsr, zaero.asesnsr[key])
+        zaero.asesnsr[key] = asesnsr
         model._type_to_id_map[asesnsr.type].append(key)
 
     def add_asesns1_object(self, asesns1: ASESNS1) -> None:
         """adds an ASESNS1 object"""
         key = asesns1.asesns1_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.asesns1, '\nasesns1=\n%s old=\n%s' % (
-            asesns1, zona.asesns1[key])
-        zona.asesns1[key] = asesns1
+        zaero = model.zaero
+        assert key not in zaero.asesns1, '\nasesns1=\n%s old=\n%s' % (
+            asesns1, zaero.asesns1[key])
+        zaero.asesns1[key] = asesns1
         model._type_to_id_map[asesns1.type].append(key)
 
     def add_gainset_object(self, gainset: GAINSET) -> None:
         """adds an GAINSET object"""
         key = gainset.gainset_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.gainset, '\ngainset=\n%s old=\n%s' % (
-            gainset, zona.gainset[key])
-        zona.asecont[key] = gainset
+        zaero = model.zaero
+        assert key not in zaero.gainset, '\ngainset=\n%s old=\n%s' % (
+            gainset, zaero.gainset[key])
+        zaero.asecont[key] = gainset
         model._type_to_id_map[gainset.type].append(key)
 
     def add_pltbode_object(self, pltbode: PLTBODE) -> None:
         """adds an PLTBODE object"""
         key = pltbode.set_id
         model = self.model
-        zona = model.zona
-        if key in zona.pltbode:
+        zaero = model.zaero
+        if key in zaero.pltbode:
             model.log.warning(f'skipping duplicate PLTBODE\n{str(pltbode)}')
             return
-        assert key not in zona.pltbode, '\npltbode=\n%s old=\n%s' % (
-            pltbode, zona.pltbode[key])
-        zona.pltbode[key] = pltbode
+        assert key not in zaero.pltbode, '\npltbode=\n%s old=\n%s' % (
+            pltbode, zaero.pltbode[key])
+        zaero.pltbode[key] = pltbode
         model._type_to_id_map[pltbode.type].append(key)
 
     def add_cjunct_object(self, cjunct: CJUNCT) -> None:
         """adds an CJUNCT object"""
         key = cjunct.cjunct_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.cjunct, '\ncjunct=\n%s old=\n%s' % (
-            cjunct, zona.cjunct[key])
-        zona.cjunct[key] = cjunct
+        zaero = model.zaero
+        assert key not in zaero.cjunct, '\ncjunct=\n%s old=\n%s' % (
+            cjunct, zaero.cjunct[key])
+        zaero.cjunct[key] = cjunct
         model._type_to_id_map[cjunct.type].append(key)
 
     def add_conct_object(self, conct: CONCT) -> None:
         """adds an CONCT object"""
         key = conct.conct_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.conct, '\nconct=\n%s old=\n%s' % (
-            conct, zona.conct[key])
-        zona.conct[key] = conct
+        zaero = model.zaero
+        assert key not in zaero.conct, '\nconct=\n%s old=\n%s' % (
+            conct, zaero.conct[key])
+        zaero.conct[key] = conct
         model._type_to_id_map[conct.type].append(key)
 
     def add_aerolag_object(self, aerolag: AEROLAG) -> None:
         """adds an CONCT object"""
         key = aerolag.aerolag_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.conct, '\naerolag=\n%s old=\n%s' % (
-            aerolag, zona.aerolag[key])
-        zona.aerolag[key] = aerolag
+        zaero = model.zaero
+        assert key not in zaero.conct, '\naerolag=\n%s old=\n%s' % (
+            aerolag, zaero.aerolag[key])
+        zaero.aerolag[key] = aerolag
         model._type_to_id_map[aerolag.type].append(key)
 
     def add_actu_object(self, actu: ACTU) -> None:
         """adds an AESURFZ object"""
         key = actu.actu_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.actu, '\nactu=\n%s old=\n%s' % (
-            actu, zona.actu[key])
-        zona.actu[key] = actu
+        zaero = model.zaero
+        assert key not in zaero.actu, '\nactu=\n%s old=\n%s' % (
+            actu, zaero.actu[key])
+        zaero.actu[key] = actu
         model._type_to_id_map[actu.type].append(key)
 
     def add_mkaeroz_object(self, mkaeroz: MKAEROZ) -> None:
         """adds an MKAEROZ object"""
-        assert mkaeroz.sid not in self.model.zona.mkaeroz
+        assert mkaeroz.sid not in self.model.zaero.mkaeroz
         assert mkaeroz.sid > 0
         key = mkaeroz.sid
-        self.model.zona.mkaeroz[key] = mkaeroz
+        self.model.zaero.mkaeroz[key] = mkaeroz
         self.model._type_to_id_map[mkaeroz.type].append(key)
 
     def add_trimvar_object(self, trimvar: TRIMVAR) -> None:
         """adds an TRIMVAR object"""
         key = trimvar.var_id
-        assert trimvar.var_id not in self.model.zona.trimvar, '\ntrimvar=\n%s old=\n%s' % (
-            trimvar, self.model.zona.trimvar[key])
+        assert trimvar.var_id not in self.model.zaero.trimvar, '\ntrimvar=\n%s old=\n%s' % (
+            trimvar, self.model.zaero.trimvar[key])
         assert trimvar.var_id > 0
-        self.model.zona.trimvar[key] = trimvar
+        self.model.zaero.trimvar[key] = trimvar
         self.model._type_to_id_map[trimvar.type].append(key)
 
     def add_trimlnk_object(self, trimlnk: TRIMLNK) -> None:
         """adds an TRIMLNK object"""
-        assert trimlnk.link_id not in self.model.zona.trimlnk
+        assert trimlnk.link_id not in self.model.zaero.trimlnk
         assert trimlnk.link_id > 0
         key = trimlnk.link_id
-        self.model.zona.trimlnk[key] = trimlnk
+        self.model.zaero.trimlnk[key] = trimlnk
         self.model._type_to_id_map[trimlnk.type].append(key)
 
     def add_attach_object(self, attach: ATTACH) -> None:
         """adds an ATTACH object"""
-        assert attach.attach_id not in self.model.zona.attach
+        assert attach.attach_id not in self.model.zaero.attach
         assert attach.attach_id > 0
         key = attach.attach_id
-        self.model.zona.attach[key] = attach
+        self.model.zaero.attach[key] = attach
         self.model._type_to_id_map[attach.type].append(key)
 
     def add_pltmode_object(self, plot: PLTMODE) -> None:
         """adds an PLTMODE object"""
-        assert plot.set_id not in self.model.zona.pltmode, str(plot)
+        assert plot.set_id not in self.model.zaero.pltmode, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
-        self.model.zona.pltmode[key] = plot
+        self.model.zaero.pltmode[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
     def add_pltaero_object(self, plot: PLTAERO) -> None:
         """adds an PLTAERO object"""
-        assert plot.set_id not in self.model.zona.pltaero, str(plot)
+        assert plot.set_id not in self.model.zaero.pltaero, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
-        self.model.zona.pltaero[key] = plot
+        self.model.zaero.pltaero[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
     def add_pltvg_object(self, plot: PLTVG) -> None:
         """adds an PLTVG object"""
-        assert plot.set_id not in self.model.zona.pltvg, str(plot)
+        assert plot.set_id not in self.model.zaero.pltvg, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
-        self.model.zona.pltvg[key] = plot
+        self.model.zaero.pltvg[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
     def add_pltsurf_object(self, plot: PLTSURF) -> None:
         """adds an PLTSURF object"""
-        assert plot.set_id not in self.model.zona.pltsurf, str(plot)
+        assert plot.set_id not in self.model.zaero.pltsurf, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
-        self.model.zona.pltsurf[key] = plot
+        self.model.zaero.pltsurf[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
     def add_pltcp_object(self, plot: PLTCP) -> None:
         """adds an PLTCP object"""
-        # assert plot.set_id not in self.model.zona.pltcp, str(plot)
+        # assert plot.set_id not in self.model.zaero.pltcp, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
-        if key not in self.model.zona.pltcp:
-            self.model.zona.pltcp[key] = []
-        self.model.zona.pltcp[key].append(plot)
+        if key not in self.model.zaero.pltcp:
+            self.model.zaero.pltcp[key] = []
+        self.model.zaero.pltcp[key].append(plot)
         self.model._type_to_id_map[plot.type].append(key)
 
     def add_plttrim_object(self, plot: PLTTRIM) -> None:
         """adds an PLTTRIM object"""
-        # assert plot.set_id not in self.model.zona.plttrim, str(plot)
+        # assert plot.set_id not in self.model.zaero.plttrim, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
-        if key not in self.model.zona.plttrim:
-            self.model.zona.plttrim[key] = []
-        self.model.zona.plttrim[key].append(plot)
+        if key not in self.model.zaero.plttrim:
+            self.model.zaero.plttrim[key] = []
+        self.model.zaero.plttrim[key].append(plot)
         self.model._type_to_id_map[plot.type].append(key)
 
     def add_plttime_object(self, plot: PLTTIME) -> None:
         """adds an PLTTIME object"""
-        # assert plot.set_id not in self.model.zona.pltcp, str(plot)
+        # assert plot.set_id not in self.model.zaero.pltcp, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
-        if key not in self.model.zona.plttime:
-            self.model.zona.plttime[key] = []
-        self.model.zona.plttime[key].append(plot)
+        if key not in self.model.zaero.plttime:
+            self.model.zaero.plttime[key] = []
+        self.model.zaero.plttime[key].append(plot)
         self.model._type_to_id_map[plot.type].append(key)
 
     def add_pltflut_object(self, plot: PLTFLUT) -> None:
         """adds an PLTFLUT object"""
-        # assert plot.set_id not in self.model.zona.pltcp, str(plot)
+        # assert plot.set_id not in self.model.zaero.pltcp, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
-        if key not in self.model.zona.pltflut:
-            self.model.zona.pltflut[key] = []
-        self.model.zona.pltflut[key].append(plot)
+        if key not in self.model.zaero.pltflut:
+            self.model.zaero.pltflut[key] = []
+        self.model.zaero.pltflut[key].append(plot)
         self.model._type_to_id_map[plot.type].append(key)
 
     def add_pltmist_object(self, plot: PLTMIST) -> None:
         """adds an PLTMIST object"""
-        assert plot.set_id not in self.model.zona.pltmist, str(plot)
+        assert plot.set_id not in self.model.zaero.pltmist, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
-        self.model.zona.pltmist[key] = plot
+        self.model.zaero.pltmist[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
 
     def add_flutter_table_object(self, flutter_table: FIXHATM | FIXMATM | FIXMDEN | FIXMACH) -> None:
         """adds an FIXMATM object"""
         key = flutter_table.sid
         model = self.model
-        zona = model.zona
-        assert key not in zona.flutter_table, '\nflutter_table=\n%s old=\n%s' % (
-            flutter_table, zona.flutter_table[key])
-        zona.flutter_table[key] = flutter_table
+        zaero = model.zaero
+        assert key not in zaero.flutter_table, '\nflutter_table=\n%s old=\n%s' % (
+            flutter_table, zaero.flutter_table[key])
+        zaero.flutter_table[key] = flutter_table
         model._type_to_id_map[flutter_table.type].append(key)
 
     def add_atmos_object(self, atmos: ATMOS) -> None:
         """adds an ATMOS object"""
         key = atmos.atmos_id
         model = self.model
-        zona = model.zona
-        assert key not in zona.atmos, '\natmos=\n%s old=\n%s' % (
-            atmos, zona.atm[key])
-        zona.atmos[key] = atmos
+        zaero = model.zaero
+        assert key not in zaero.atmos, '\natmos=\n%s old=\n%s' % (
+            atmos, zaero.atm[key])
+        zaero.atmos[key] = atmos
         model._type_to_id_map[atmos.type].append(key)
 
-class ZONA:
+
+class ZAERO:
     def __init__(self, model):
         self.model = model
         self.caero_to_name_map = {}
@@ -725,7 +728,7 @@ class ZONA:
         return cls(model)
 
     def clear(self):
-        """clears out the ZONA object"""
+        """clears out the ZAERO object"""
         self.panlsts = {}
         self.mkaeroz = {}
         self.trimvar = {}
@@ -796,7 +799,7 @@ class ZONA:
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def verify(self, xref):
-        if self.model.nastran_format != 'zona':
+        if self.model.nastran_format not in {'zona', 'zaero'}:
             return
         for panlst in self.panlsts.values():
             panlst._verify(xref)
@@ -812,7 +815,7 @@ class ZONA:
             attach._verify(xref)
 
     def validate(self):
-        if self.model.nastran_format != 'zona':
+        if self.model.nastran_format not in {'zona', 'zaero'}:
             return
         for panlst in self.panlsts.values():
             for panlsti in panlst:
@@ -842,109 +845,109 @@ class ZONA:
             pafoils = np.unique(list(self.pafoil.keys()))
             raise KeyError(f'pid={pid} not found{msg}.  Allowed pafoils={pafoils}')
 
-    def update_for_zona(self):
-        """updates for zona"""
+    def update_for_zaero(self):
+        """updates for zaero"""
         card_parser = self.model._card_parser
         add_methods = self.model._add_methods
-        zona_add = self._add_methods
+        zaero_add = self._add_methods
         card_parser2 = {
             # aero models
             'AEROZ': (AEROZ, add_methods.add_aeros_object),
-            'ATMOS': (ATMOS, zona_add.add_atmos_object),
-            'FIXMATM': (FIXMATM, zona_add.add_flutter_table_object),
-            'FIXHATM': (FIXHATM, zona_add.add_flutter_table_object),
-            'FIXMACH': (FIXMACH, zona_add.add_flutter_table_object),
-            'FIXMDEN': (FIXMDEN, zona_add.add_flutter_table_object),
+            'ATMOS': (ATMOS, zaero_add.add_atmos_object),
+            'FIXMATM': (FIXMATM, zaero_add.add_flutter_table_object),
+            'FIXHATM': (FIXHATM, zaero_add.add_flutter_table_object),
+            'FIXMACH': (FIXMACH, zaero_add.add_flutter_table_object),
+            'FIXMDEN': (FIXMDEN, zaero_add.add_flutter_table_object),
             # trim
-            'TRIM': (TRIM_ZONA, add_methods.add_trim_object),
-            'TABLED1': (TABLED1_ZONA, add_methods.add_tabled_object),
-            'TABDMP1': (TABDMP1_ZONA, add_methods.add_table_sdamping_object),
-            'TRIMFNC': (TRIMFNC, zona_add.add_trimfnc_object),
-            'PLTTIME': (PLTTIME, zona_add.add_plttime_object),
-            'TRIMVAR': (TRIMVAR, zona_add.add_trimvar_object),
-            'TRIMLNK': (TRIMLNK, zona_add.add_trimlnk_object),
+            'TRIM': (TRIM_ZAERO, add_methods.add_trim_object),
+            'TABLED1': (TABLED1_ZAERO, add_methods.add_tabled_object),
+            'TABDMP1': (TABDMP1_ZAERO, add_methods.add_table_sdamping_object),
+            'TRIMFNC': (TRIMFNC, zaero_add.add_trimfnc_object),
+            'PLTTIME': (PLTTIME, zaero_add.add_plttime_object),
+            'TRIMVAR': (TRIMVAR, zaero_add.add_trimvar_object),
+            'TRIMLNK': (TRIMLNK, zaero_add.add_trimlnk_object),
             # geometry
-            'SPLINE1': (SPLINE1_ZONA, add_methods.add_spline_object),
-            'SPLINE2': (SPLINE2_ZONA, add_methods.add_spline_object),
-            'SPLINE3': (SPLINE3_ZONA, add_methods.add_spline_object),
-            'PANLST1': (PANLST1, zona_add.add_panlst_object),
-            'PANLST2': (PANLST2, zona_add.add_panlst_object),
-            'PANLST3': (PANLST3, zona_add.add_panlst_object),
-            'PAFOIL7': (PAFOIL7, zona_add.add_pafoil_object),
-            'PAFOIL8': (PAFOIL8, zona_add.add_pafoil_object),
-            'MKAEROZ': (MKAEROZ, zona_add.add_mkaeroz_object),
+            'SPLINE1': (SPLINE1_ZAERO, add_methods.add_spline_object),
+            'SPLINE2': (SPLINE2_ZAERO, add_methods.add_spline_object),
+            'SPLINE3': (SPLINE3_ZAERO, add_methods.add_spline_object),
+            'PANLST1': (PANLST1, zaero_add.add_panlst_object),
+            'PANLST2': (PANLST2, zaero_add.add_panlst_object),
+            'PANLST3': (PANLST3, zaero_add.add_panlst_object),
+            'PAFOIL7': (PAFOIL7, zaero_add.add_pafoil_object),
+            'PAFOIL8': (PAFOIL8, zaero_add.add_pafoil_object),
+            'MKAEROZ': (MKAEROZ, zaero_add.add_mkaeroz_object),
             'SEGMESH': (SEGMESH, add_methods.add_paero_object),
             'BODY7': (BODY7, add_methods.add_caero_object),
             'CAERO7': (CAERO7, add_methods.add_caero_object),
             'ACOORD': (ACOORD, add_methods.add_coord_object),
-            'AESURFZ': (AESURFZ, zona_add.add_aesurfz_object),
-            'AESLINK': (AESLINK, zona_add.add_aeslink_object),
+            'AESURFZ': (AESURFZ, zaero_add.add_aesurfz_object),
+            'AESLINK': (AESLINK, zaero_add.add_aeslink_object),
             # flutter
-            'FLUTTER': (FLUTTER_ZONA, add_methods.add_flutter_object),
-            'PLTVG': (PLTVG, zona_add.add_pltvg_object),
-            'PLTFLUT': (PLTFLUT, zona_add.add_pltflut_object),
+            'FLUTTER': (FLUTTER_ZAERO, add_methods.add_flutter_object),
+            'PLTVG': (PLTVG, zaero_add.add_pltvg_object),
+            'PLTFLUT': (PLTFLUT, zaero_add.add_pltflut_object),
             # mloads
-            'MLOADS': (MLOADS, zona_add.add_mloads_object),
+            'MLOADS': (MLOADS, zaero_add.add_mloads_object),
             # gust
-            'GLOADS': (GLOADS, zona_add.add_gloads_object),
-            'DGUST': (DGUST, zona_add.add_dgust_object),
-            'CGUST': (CGUST, zona_add.add_cgust_object),
+            'GLOADS': (GLOADS, zaero_add.add_gloads_object),
+            'DGUST': (DGUST, zaero_add.add_dgust_object),
+            'CGUST': (CGUST, zaero_add.add_cgust_object),
             # ase
-            'ASE': (ASE, zona_add.add_ase_object),
-            'ASECONT': (ASECONT, zona_add.add_asecont_object),
-            'ASESNSR': (ASESNSR, zona_add.add_asesnsr_object),
-            'ASESNS1': (ASESNS1, zona_add.add_asesns1_object),
-            'ASEGAIN': (ASEGAIN, zona_add.add_asegain_object),
-            'GAINSET': (GAINSET, zona_add.add_gainset_object),
-            'PLTBODE': (PLTBODE, zona_add.add_pltbode_object),
-            'MIMOSS': (MIMOSS, zona_add.add_mimoss_object),
-            'SISOTF': (SISOTF, zona_add.add_sisotf_object),
-            'CJUNCT': (CJUNCT, zona_add.add_cjunct_object),
-            'CONCT': (CONCT, zona_add.add_conct_object),
-            'AEROLAG': (AEROLAG, zona_add.add_aerolag_object),
+            'ASE': (ASE, zaero_add.add_ase_object),
+            'ASECONT': (ASECONT, zaero_add.add_asecont_object),
+            'ASESNSR': (ASESNSR, zaero_add.add_asesnsr_object),
+            'ASESNS1': (ASESNS1, zaero_add.add_asesns1_object),
+            'ASEGAIN': (ASEGAIN, zaero_add.add_asegain_object),
+            'GAINSET': (GAINSET, zaero_add.add_gainset_object),
+            'PLTBODE': (PLTBODE, zaero_add.add_pltbode_object),
+            'MIMOSS': (MIMOSS, zaero_add.add_mimoss_object),
+            'SISOTF': (SISOTF, zaero_add.add_sisotf_object),
+            'CJUNCT': (CJUNCT, zaero_add.add_cjunct_object),
+            'CONCT': (CONCT, zaero_add.add_conct_object),
+            'AEROLAG': (AEROLAG, zaero_add.add_aerolag_object),
             # other
-            'SETADD': (SETADD, zona_add.add_setadd_object),
-            'SENSET': (SENSET, zona_add.add_senset_object),
-            'CNCTSET': (CNCTSET, zona_add.add_cnctset_object),
-            'SURFSET': (SURFSET, zona_add.add_surfset_object),
-            'ACTU': (ACTU, zona_add.add_actu_object),
-            'LOADMOD': (LOADMOD, zona_add.add_loadmod_object),
-            'RBRED': (RBRED, zona_add.add_rbred_object),
-            'ATTACH': (ATTACH, zona_add.add_attach_object),
-            'PLTMODE': (PLTMODE, zona_add.add_pltmode_object),
-            'PLTAERO': (PLTAERO, zona_add.add_pltaero_object),
-            'PLTCP': (PLTCP, zona_add.add_pltcp_object),
-            'PLTTRIM': (PLTTRIM, zona_add.add_plttrim_object),
-            'PLTSURF': (PLTSURF, zona_add.add_pltsurf_object),
-            'PLTMIST': (PLTMIST, zona_add.add_pltmist_object),
-            'EXTINP': (EXTINP, zona_add.add_extinp_object),
-            'EXTOUT': (EXTOUT, zona_add.add_extout_object),
-            'TFSET': (TFSET, zona_add.add_tfset_object),
-            'MLDSTAT': (MLDSTAT, zona_add.add_mldstat_object),
-            'MINSTAT': (MINSTAT, zona_add.add_minstat_object),
-            'MLDTRIM': (MLDTRIM, zona_add.add_mldtrim_object),
-            'MLDCOMD': (MLDCOMD, zona_add.add_mldcomd_object),
-            'MLDTIME': (MLDTIME, zona_add.add_mldtime_object),
-            'DMIL': (DMIL, zona_add.add_dmil_object),
-            'EXTFILE': (EXTFILE, zona_add.add_extfile_object),
-            'MLDPRNT': (MLDPRNT, zona_add.add_mldprnt_object),
+            'SETADD': (SETADD, zaero_add.add_setadd_object),
+            'SENSET': (SENSET, zaero_add.add_senset_object),
+            'CNCTSET': (CNCTSET, zaero_add.add_cnctset_object),
+            'SURFSET': (SURFSET, zaero_add.add_surfset_object),
+            'ACTU': (ACTU, zaero_add.add_actu_object),
+            'LOADMOD': (LOADMOD, zaero_add.add_loadmod_object),
+            'RBRED': (RBRED, zaero_add.add_rbred_object),
+            'ATTACH': (ATTACH, zaero_add.add_attach_object),
+            'PLTMODE': (PLTMODE, zaero_add.add_pltmode_object),
+            'PLTAERO': (PLTAERO, zaero_add.add_pltaero_object),
+            'PLTCP': (PLTCP, zaero_add.add_pltcp_object),
+            'PLTTRIM': (PLTTRIM, zaero_add.add_plttrim_object),
+            'PLTSURF': (PLTSURF, zaero_add.add_pltsurf_object),
+            'PLTMIST': (PLTMIST, zaero_add.add_pltmist_object),
+            'EXTINP': (EXTINP, zaero_add.add_extinp_object),
+            'EXTOUT': (EXTOUT, zaero_add.add_extout_object),
+            'TFSET': (TFSET, zaero_add.add_tfset_object),
+            'MLDSTAT': (MLDSTAT, zaero_add.add_mldstat_object),
+            'MINSTAT': (MINSTAT, zaero_add.add_minstat_object),
+            'MLDTRIM': (MLDTRIM, zaero_add.add_mldtrim_object),
+            'MLDCOMD': (MLDCOMD, zaero_add.add_mldcomd_object),
+            'MLDTIME': (MLDTIME, zaero_add.add_mldtime_object),
+            'DMIL': (DMIL, zaero_add.add_dmil_object),
+            'EXTFILE': (EXTFILE, zaero_add.add_extfile_object),
+            'MLDPRNT': (MLDPRNT, zaero_add.add_mldprnt_object),
         }
         skip_keys = [
             'TRIM', 'TABLED1', 'TABDMP1',
             'SPLINE1', 'SPLINE2', 'SPLINE3',
         ]
         for key in card_parser2:
-            assert key in ZONA_CARDS or key in skip_keys, f'add key={key!r} to zona card_parser2'
+            assert key in ZAERO_CARDS or key in skip_keys, f'add key={key!r} to zaero card_parser2'
         skip_cards = ['AEFACT', 'CORD2R', 'SET1']
-        for key in ZONA_CARDS:
+        for key in ZAERO_CARDS:
             assert key in card_parser2 or key in skip_cards, f'add key={key!r} to card_parser2'
         card_parser.update(card_parser2)
-        self.model.cards_to_read.update(set(ZONA_CARDS))
+        self.model.cards_to_read.update(set(ZAERO_CARDS))
         # print('update for zona!!!!!!!!!!!')
 
     def cross_reference(self):
         model = self.model
-        if model.nastran_format != 'zona':
+        if model.nastran_format not in {'zona', 'zaero'}:
             return
 
         # these will be xref'd twice
@@ -1017,7 +1020,7 @@ class ZONA:
 
     def safe_cross_reference(self, xref_errors=None):
         model = self.model
-        if model.nastran_format != 'zona':
+        if model.nastran_format not in {'zona', 'zaero'}:
             return
         if xref_errors is None:
             xref_errors = defaultdict(list)
@@ -1042,9 +1045,9 @@ class ZONA:
                 panlsti.safe_cross_reference(model, xref_errors)
         self._check_cntcset()
 
-    def uncross_reference(zona: ZONA):
-        dicts, dicts_list = get_dicts(zona, 'write')
-        for panlsts in zona.panlsts.values():
+    def uncross_reference(zaero: ZONA):
+        dicts, dicts_list = get_dicts(zaero, 'write')
+        for panlsts in zaero.panlsts.values():
             for panlst in panlsts:
                 panlst.uncross_reference()
 
@@ -1091,33 +1094,9 @@ class ZONA:
             for key, value in sorteddict(items, sort_cards):
                 bdf_file.write(value.write_card(size=size, is_double=is_double))
 
-    def convert_to_nastran(self, save=True):
-        """Converts a ZONA model to Nastran"""
-        if self.model.nastran_format != 'zona':
-            caeros = {}
-            caero2s = []
-            make_paero1 = False
-            return caeros, caero2s, make_paero1
-
-        caeros, caero2s, make_paero1 = _convert_caeros(self)
-        splines = _convert_splines(self)
-        aesurf, aelists = _convert_aesurf_aelist(self)
-
-        trims = _convert_trim(self)
-        aeros, aero = self.model.aeros.convert_to_zona(self.model)
-
-        aelinks = _convert_trimlnk(self)
-
-        if save:
-            self.clear()
-            self.model.splines = splines
-            self.model.aesurf = aesurf
-            self.model.aelists = aelists
-            self.model.aelinks = aelinks
-            self.model.trims = trims
-            self.model.aeros = aeros
-            self.model.aero = aero
-        return caeros, caero2s, make_paero1
+    def convert_to_nastran(self, save: bool=True):
+        """Converts a ZAERO model to Nastran"""
+        return zaero_to_nastran(self, save=save)
 
     def add_caero2s(self, caero2s, add=False):
         """Converts ZONA BODY7 to CAERO2/PAERO2/AEFACT"""
@@ -1139,7 +1118,7 @@ class ZONA:
         return
 
     def __repr__(self):
-        msg = '<ZONA>; nPANLSTs=%s nmkaeroz=%s' % (
+        msg = '<ZAERO>; nPANLSTs=%s nmkaeroz=%s' % (
             len(self.panlsts), len(self.mkaeroz),
         )
         return msg
@@ -1196,7 +1175,7 @@ class ZONA:
             if card_name and card_name[0] not in ['+', '*']:
                 if old_card_name:
                     # multiline card is finished
-                    if card_name not in ZONA_CARDS:
+                    if card_name not in ZAERO_CARDS:
                         pass
                     elif not allow_tabs and '\t' in (joined_lines_n := '\n'.join(card_lines)):
                         joined_lines_n2 = '\n'.join((f'{line!r}' for line in card_lines))
@@ -1319,403 +1298,55 @@ def fix_card_list(cards_list, cards_dict, card_count):
         cards_list2.append((card_name, comment, card_lines, ifile_iline))
     return cards_list2, cards_dict, dict(card_count)
 
-
-def nastran_to_zaero(model: BDF, zero_inp_filename: PathLike):
-    from typing import cast
-    from pyNastran.bdf.bdf import BDF, SPLINE1, AEFACT, AELIST, AEROS
-    model2 = BDF(mode='zaero')
-    zaero = model2.zona
-    zaero_add = zaero._add_methods
-
-    aeros: AEROS = model.aeros
-    # print(aeros.get_stats())
-    length_unit = 'IN'
-    mass_unit = 'SLIN'
-
-    model2.coords[aeros.acsid] = aeros.acsid_ref
-    model2.coords[aeros.rcsid] = aeros.rcsid_ref
-    model2.aeros = AEROZ(
-        mass_unit, length_unit,
-        aeros.cref, aeros.bref, aeros.sref,
-        acsid=aeros.acsid, rcsid=aeros.rcsid, xyz_ref=None,
-        sym_xz='NO', #sym_xy='NO',
-    )
-    # (aeroz.acsid, aeroz.bref, aeroz.sref, aeroz.sym_xy, aeroz.sym_xz))
-    icaero = 11
-    for caero_id, caero in model.caeros.items():
-        label = f'caero{icaero}'
-        comment = f'{caero.comment}\n{str(caero)}'
-        model2.coords[caero.cp] = caero.cp_ref
-        caero7 = CAERO7(caero.eid, label,
-                        caero.p1, caero.x12, caero.p4, caero.x43,
-                        caero.cp, caero.nspan, caero.nchord, caero.lspan,
-                        comment=comment)
-        panlst_id = caero_id + 1
-        model2.caeros[caero_id] = caero7
-        icaero += 1
-
-    cp = 950
-    for spline_id, spline in model.splines.items():
-        assert spline.type == 'SPLINE1', spline
-        # model_str = ''
-        if spline.type == 'SPLINE1':
-            caero_id = spline.caero
-            caero = model2.caeros[caero_id]
-            comment = str(spline.comment)
-            model_str = caero.label
-
-            spline = cast(SPLINE1, spline)
-            setg = int(spline.setg)
-            set_card = model.sets[setg]
-            set_ids = set_card.ids
-
-            xyz_list = [model.nodes[nid].get_position() for nid in set_ids]
-            xyzs = np.vstack(xyz_list)
-            origin, zaxis, xzplane = fit_plane_to_point_cloud(xyzs)
-            origin = np.zeros(3)
-            model2.add_cord2r(cp, origin, origin+zaxis, origin+xzplane)
-
-            cp2 = None
-            model2.sets[setg] = set_card
-            splinez = SPLINE1_ZONA(
-                spline_id, panlst_id, setg, model_str, cp2,
-                spline.dz, eps=0.01, comment=comment)
-            model2.splines[spline_id] = splinez
-            cp += 1
-
-    for aefact_id, aefact in model.aefacts.items():
-        print(aefact.get_stats())
-        print(aefact.factors)
-        asdf
-    # TODO: only does cid1
-    surface_type = 'SYM' # assumed
-    setg = 0
-    aesurf_dict = {}
-    # aesurf_names = []
-    for aesurf_id, aesurf in model.aesurf.items():
-        # aesurf_names.append('FREE')
-        actu_id = aesurf_id
-        panlst_id = aesurf.aelist_id1
-
-        label = aesurf.label
-        aesurf_dict[label] = aesurf_id
-        cid = aesurf.cid1
-        cid_ref = aesurf.cid1_ref
-        cid_ref.comment = f'AESURF label={label!r}'
-        model2.coords[cid] = cid_ref
-        aesurfz = AESURFZ(label, surface_type, cid, panlst_id, setg, actu_id)
-        model2.aesurf[label] = aesurfz
-
-        # bag of panels
-        aelist: AELIST = aesurf.aelist_id1_ref
-        boxes = aelist.elements
-        panlst = PANLST2(panlst_id, panlst_id, boxes)
-        zaero_add.add_panlst_object(panlst)
-
-        # actuator
-        actu = ACTU(actu_id, None, None, None)
-        zaero_add.add_actu_object(actu)
-
-        trimobj_id = 0
-        trimcon_id = 0
-        weight = 1000.
-        dcg = [0.1, 0.2, 0.3]
-        inertia = [0.4, 0.5, 0.6,
-                   0.7, 0.8, 0.9]
-
-        true_g = 'G'
-        loadset = 0
-
-        trimvar_dict = {}
-        nxyz_root = ['NONE', 'NONE', 'NONE']
-        pqr_dot_root = ['NONE', 'NONE', 'NONE']
-        for aestat_id, aestat in model.aestats.items():
-            label = aestat.label
-            if label in ['URDD1', 'URDD2', 'URDD3']:
-                iurdd = int(label[-1]) - 1  # 1->0
-                nxyz_root[iurdd] = 'FREE'
-            elif label in ['URDD4', 'URDD5', 'URDD6']:
-                iurdd = int(label[-1]) - 4  # 4->0
-                pqr_dot_root[iurdd] = 'FREE'
-            else:
-                # ALPHA, BETA
-                trimvar_dict[label] = aestat_id
-
-        lower = ''
-        upper = ''
-        trimlnk = ''
-        dmi = None
-        sym = 'SYM'
-        print('trimvar_dict = ', trimvar_dict)
-        for label, aestat_id in trimvar_dict.items():
-            trimvar = TRIMVAR(aestat_id, label,
-                              lower, upper, trimlnk,
-                              dmi, sym)
-            zaero_add.add_trimvar_object(trimvar)
-            # zaero.trimvar[aestat_id] = trimvar
-        assert len(model.trims) == 1, len(model.trims)
-        wtmass = model.wtmass
-
-        for trim_id, trim in model.trims.items():
-            mkaeroz_id = trim_id+1
-            flt_id = trim_id+2
-
-            nxyz = copy.deepcopy(nxyz_root)
-            pqr_dot = copy.deepcopy(pqr_dot_root)
-            trimvar_ids = []
-            uxs = []
-
-            print_flag = 0
-            freqs = [0.]
-            filename = ''
-            mkaeroz = MKAEROZ(
-                mkaeroz_id, trim.mach, flt_id,
-                 filename, print_flag, freqs,
-                 method=0, save=None)
-
-            zaero.mkaeroz[mkaeroz_id] = mkaeroz
-            commenti = ''
-            for label, ux in zip(trim.labels, trim.uxs):
-                if label in ['URDD1', 'URDD2', 'URDD3']:
-                    iurddt = int(label[-1]) - 1  # 1->0
-                    nxyz[iurddt] = ux
-                elif label in ['URDD4', 'URDD5', 'URDD6']:
-                    iurddr = int(label[-1]) - 4  # 4->0
-                    pqr_dot[iurddr] = ux
-                else:
-                    aestat_id = trimvar_dict[label]
-                    trimvar_ids.append(aestat_id)
-                    # trimvar_dict[aestat_id] = label
-                    uxs.append(ux)
-                    commenti += f' {label} = {ux} (TRIMVAR={aestat_id})\n'
-
-            comment = (
-                f' weight={weight} (assumed)\n'
-                f' dref={dcg} (assumed)\n'
-                f' inertia={inertia} (assumed)\n'
-                f' nxyz={nxyz} g\n'
-                f' pqr_dot={pqr_dot} rad/s^2\n'
-                f'{commenti}'
-            )
-            for label, aesurf_id in aesurf_dict.items():
-                if label not in trimvar_dict:
-                    trimvar_ids.append(aesurf_id)
-                    comment += f' {label} = FREE (AESURFZ={aesurf_id})\n'
-                    uxs.append('FREE')
-                    trimvar = TRIMVAR(aesurf_id, label,
-                                      lower, upper, trimlnk,
-                                      dmi, sym)
-                    zaero_add.add_trimvar_object(trimvar)
-
-            trimz = TRIM_ZONA(
-                trim_id, mkaeroz_id, trim.q,
-                trimobj_id, trimcon_id,
-                weight, dcg, inertia,
-                true_g, nxyz, pqr_dot,
-                loadset, trimvar_ids, uxs,
-                wtmass=wtmass, comment=comment)
-            model2.trims[trim_id] = trimz
-    if zero_inp_filename != '':
-        model2.write_bdf(zero_inp_filename)
-    return model2
-
-
-def fit_plane_to_point_cloud(point_cloud: np.ndarray,) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Fits a best-fit plane to a 3D point cloud using SVD.
-
-    Args:
-        point_cloud (numpy.ndarray): An array of shape (N, 3) representing N points (x, y, z).
-
-    Returns:
-        tuple: (normal_vector, centroid) of the best-fit plane.
-               The normal_vector is a unit vector.
-               The plane equation is normal[0]*x + normal[1]*y + normal[2]*z + d = 0,
-               where d = -np.dot(normal, centroid).
-    """
-    # 1. Calculate the centroid (center of mass) of the points
-    centroid = np.mean(point_cloud, axis=0)
-
-    # 2. Translate points to the origin
-    # This centers the data around (0, 0, 0)
-    points_centered = point_cloud - centroid
-
-    # 3. Apply Singular Value Decomposition (SVD)
-    # The normal vector of the best-fit plane corresponds to the left singular vector
-    # (or right singular vector, depending on implementation) associated with the smallest singular value.
-    # In numpy's SVD (np.linalg.svd), the right singular vectors (vh) are returned.
-    # The last row of vh is the normal vector.
-    _, _, vh = np.linalg.svd(points_centered)
-
-    # The normal vector is the last row of vh
-    normal_vector = vh[2, :]
-    orthogonal_v = find_orthogonal_vector_cross(normal_vector)
-    zaxis = normal_vector
-    xzplane = orthogonal_v
-    return centroid, zaxis, xzplane
-
-
-def find_orthogonal_vector_cross(v: np.ndarray) -> np.ndarray:
-    # Convert list to numpy array if it isn't already
-    v = np.array(v)
-
-    # Define a "helper" vector that is not parallel to v
-    # A common way to pick one is to find the smallest component of v,
-    # set it to 1, and the other two to 0, or by some more robust logic.
-    # For general robustness, we can check which standard axis is least aligned.
-
-    if np.abs(v[0]) < np.abs(v[1]) and np.abs(v[0]) < np.abs(v[2]):
-        helper = np.array([1, 0, 0])
-    elif np.abs(v[1]) < np.abs(v[2]):
-        helper = np.array([0, 1, 0])
-    else:
-        helper = np.array([0, 0, 1])
-
-    # Calculate the cross product, which is orthogonal to both v and helper
-    orthogonal_v = np.cross(v, helper)
-
-    # Normalize the resulting vector (optional, but often useful)
-    norm_orthogonal_v = np.linalg.norm(orthogonal_v)
-    if norm_orthogonal_v == 0:
-        # This case is extremely rare and only happens if the helper
-        # vector was perfectly parallel. The logic above prevents this.
-        pass
-    return orthogonal_v
-
-def get_dicts(zona: ZONA, method: str) -> tuple[dict[int, list],
-                                                list[dict]]:
+def get_dicts(zaero: ZAERO, method: str) -> tuple[dict[int, list],
+                                                 list[dict]]:
     assert method in ['xref', 'write'], f'method={method!r}'
     dicts = [
         # --------------general-------------
-        # zona.aeroz,
-        zona.atmos, zona.flutter_table,
+        # zaero.aeroz,
+        zaero.atmos, zaero.flutter_table,
         # -------------geometry-------------
-        # zona.panlsts,  # special-list
-        zona.pafoil,
-        zona.attach,
-        zona.pltsurf, zona.pltmode, zona.pltmist,
-        zona.pltbode,
+        # zaero.panlsts,  # special-list
+        zaero.pafoil,
+        zaero.attach,
+        zaero.pltsurf, zaero.pltmode, zaero.pltmist,
+        zaero.pltbode,
         # -------------transient------------
-        zona.mloads, zona.eloads,
+        zaero.mloads, zaero.eloads,
         # --------------flutter-------------
-        zona.nlfltr, zona.mkaeroz,
+        zaero.nlfltr, zaero.mkaeroz,
         # ---------------trim---------------
-        # zona.trim,  # part of the main BDF
-        zona.aeslink, zona.trimvar, zona.trimlnk,
-        zona.trimfnc, zona.trimobj, zona.trimcon,
+        # zaero.trim,  # part of the main BDF
+        zaero.aeslink, zaero.trimvar, zaero.trimlnk,
+        zaero.trimfnc, zaero.trimobj, zaero.trimcon,
         # ---------------ase---------------
-        zona.cjunct, zona.conct, zona.tfset, zona.cnctset,
-        zona.ase, zona.asecont, zona.asesnsr, zona.asesns1,
-        zona.asegain, zona.gainset,
-        zona.mimoss, zona.sisotf,
+        zaero.cjunct, zaero.conct, zaero.tfset, zaero.cnctset,
+        zaero.ase, zaero.asecont, zaero.asesnsr, zaero.asesns1,
+        zaero.asegain, zaero.gainset,
+        zaero.mimoss, zaero.sisotf,
         #
-        zona.senset, zona.surfset,
-        zona.mldtrim, zona.mldstat, zona.minstat, zona.mldprnt,
-        zona.mldcomd, zona.mldtime,
-        # zona.extinp, zona.extout,
-        zona.loadmod, zona.rbred,
-        zona.aerolag,
+        zaero.senset, zaero.surfset,
+        zaero.mldtrim, zaero.mldstat, zaero.minstat, zaero.mldprnt,
+        zaero.mldcomd, zaero.mldtime,
+        # zaero.extinp, zaero.extout,
+        zaero.loadmod, zaero.rbred,
+        zaero.aerolag,
         # ---------------gust---------------
-        zona.gloads, zona.dgust, zona.cgust,
+        zaero.gloads, zaero.dgust, zaero.cgust,
         # ---------------other--------------
-        zona.extfile,
-        zona.dse,
-        zona.dmil,
+        zaero.extfile,
+        zaero.dse,
+        zaero.dmil,
         # plotting
-        zona.pltvg,
-        zona.pltbode,
+        zaero.pltvg,
+        zaero.pltbode,
     ]
     dict_lists = [
-        zona.pltflut, zona.plttime,
+        zaero.pltflut, zaero.plttime,
     ]
     if method == 'write':
         # these are xref'd by their parent
-        dicts.extend([zona.setadd, zona.extinp, zona.extout])
+        dicts.extend([zaero.setadd, zaero.extinp, zaero.extout])
     return dicts, dict_lists
 
-
-def _convert_caeros(zona: ZONA) -> dict[int, Any]:
-    """Converts ZONA CAERO7/BODY7 to CAERO1/CAERO2"""
-    model = zona.model
-    caeros = {}
-    caero2s = []
-    paero1_id = 1
-    make_paero1 = False
-    for caero_id, caero in sorted(model.caeros.items()):
-        if caero.type == 'CAERO7':
-            caero_new = caero.convert_to_nastran(paero1_id)
-            make_paero1 = True
-        elif caero.type == 'BODY7':
-            caero2s.append(caero)
-            continue
-        else:
-            raise NotImplementedError(caero)
-        caeros[caero_id] = caero_new
-
-    # if make_paero1:
-    #     paero = model.add_paero1(paero_id)
-    zona.add_caero2s(caero2s, add=False)
-    return caeros, caero2s, make_paero1
-
-
-def _convert_aesurf_aelist(zona: ZONA) -> tuple[dict[int, Any], list]:
-    """
-    Converts ZONA AESURFZ to AESURF/AELIST
-
-    +---------+--------+-------+-------+-------+--------+--------+
-    |    1    |   2    |   3   |   4   |   5   |   6    |    7   |
-    +=========+========+=======+=======+=======+========+========+
-    | AESURFZ | LABEL  |  TYPE |  CID  |  SETK |  SETG  |  ACTID |
-    +---------+--------+-------+-------+-------+--------+--------+
-    | AESURFZ | RUDDER |  ASYM |   1   |   10  |   20   |    0   |
-    +---------+--------+-------+-------+-------+--------+--------+
-    """
-    model = zona.model
-    aelist_id = max(model.aelists) + 1 if model.aelists else 1
-    aesurf_id = aelist_id
-    aesurf = {}
-    aelists = {}
-    for unused_aesurf_name, aesurfi in sorted(model.aesurf.items()):
-        aelist, aesurfi2 = aesurfi.convert_to_nastran(model, aesurf_id, aelist_id)
-        aelists[aelist.sid] = aelist
-        aesurf[aesurfi2.aesurf_id] = aesurfi2
-        aesurf_id += 1
-        aelist_id += 1
-    return aesurf, aelists
-
-
-def _convert_splines(zona: ZONA) -> dict[int, Any]:
-    """Converts ZONA splines to splines"""
-    splines = {}
-    model = zona.model
-    for unused_spline_id, spline in model.splines.items():
-        # print(spline)
-        if spline.type == 'SPLINE1_ZONA':
-            splines_new = spline.convert_to_nastran(model)
-        elif spline.type == 'SPLINE3_ZONA':
-            splines_new = spline.convert_to_nastran(model)
-        else:
-            raise NotImplementedError(spline)
-        for spline_new in splines_new:
-            splines[spline.eid] = spline_new
-    return splines
-
-
-def _convert_trim(zona: ZONA) -> dict[int, Any]:
-    """Converts ZONA TRIM to TRIM"""
-    trims = {}
-    model = zona.model
-    for trim_id, trim in sorted(model.trims.items()):
-        trim_new = trim.convert_to_nastran(model)
-        trims[trim_id] = trim_new
-    return trims
-
-def _convert_trimlnk(zona: ZONA) -> dict[int, Any]:
-    """Converts ZONA TRIMLNK to AELINK"""
-    model = zona.model
-    assert isinstance(model.aelinks, dict), model.aelinks
-    aelinks = {}
-    for trim_id, trimlnk in sorted(zona.trimlnk.items()):
-        aelink = trimlnk.convert_to_nastran(model)
-        aelinks[trim_id] = aelink
-    return aelinks
+ZONA = ZAERO

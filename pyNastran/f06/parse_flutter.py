@@ -646,7 +646,7 @@ def plot_flutter_f06(f06_filename: PathLike,
                      nopoints: bool=False,
                      noline: bool=False,
                      export_csv_filename: Optional[str]=None,
-                     export_zona_filename: Optional[str]=None,
+                     export_zaero_filename: Optional[str]=None,
                      export_veas_filename: Optional[str]=None,
                      export_f06_filename: Optional[str]=None,
                      vg_filename: Optional[str]=None,
@@ -749,7 +749,7 @@ def plot_flutter_f06(f06_filename: PathLike,
                            freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                            mag_tol=mag_tol,
                            export_csv_filename=export_csv_filename,
-                           export_zona_filename=export_zona_filename,
+                           export_zaero_filename=export_zaero_filename,
                            export_veas_filename=export_veas_filename,
                            export_f06_filename=export_f06_filename,
                            vg_filename=vg_filename,
@@ -785,7 +785,7 @@ def make_flutter_plots(modes: list[int],
                        ivelocity: Optional[int]=None,
                        mode: Optional[int]=None,
                        export_csv_filename: Optional[str]=None,
-                       export_zona_filename: Optional[str]=None,
+                       export_zaero_filename: Optional[str]=None,
                        export_veas_filename: Optional[str]=None,
                        export_f06_filename: Optional[str]=None,
                        vg_filename: Optional[str]=None,
@@ -839,8 +839,8 @@ def make_flutter_plots(modes: list[int],
 
         if export_csv_filename:
             response.export_to_csv(export_csv_filename, modes=modes)
-        if export_zona_filename:
-            response.export_to_zona(export_zona_filename, modes=modes,
+        if export_zaero_filename:
+            response.export_to_zaero(export_zaero_filename, modes=modes,
                                     xlim=xlim, plot_type=plot_type)
         if export_veas_filename:
             response.export_to_veas(export_veas_filename, modes=modes)

@@ -26,6 +26,8 @@ from pyNastran.bdf.cards.aero.aero import (
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.utils import build_trim_load_cases
+from pyNastran.bdf.cards.aero.zona_interface.nastran_to_zaero import nastran_to_zaero
+
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh  # build_structure_from_caero
 from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
@@ -290,17 +292,17 @@ class TestAero(unittest.TestCase):
         out = aefact98.write_card(8, None)
         self.assertEqual(msg, out)
 
-        #data = ['AEFACT', 99, .3, 0.7, 1.0, None, 'cat']
-        #with self.assertRaises(SyntaxError):
-            #model.add_card(data, data[0], comment_good, is_list=True)
-
-        #data = ['AEFACT', 100, .3, 0.7, 1.0, 'cat']
-        #with self.assertRaises(SyntaxError):
-            #model.add_card(data, data[0], comment_good, is_list=True)
-
-        #data = ['AEFACT', 101, .3, 0.7, 1.0, 2]
-        #with self.assertRaises(SyntaxError):
-            #model.add_card(data, data[0], comment_good, is_list=True)
+        # data = ['AEFACT', 99, .3, 0.7, 1.0, None, 'cat']
+        # with self.assertRaises(SyntaxError):
+        #     model.add_card(data, data[0], comment_good, is_list=True)
+        #
+        # data = ['AEFACT', 100, .3, 0.7, 1.0, 'cat']
+        # with self.assertRaises(SyntaxError):
+        #     model.add_card(data, data[0], comment_good, is_list=True)
+        #
+        # data = ['AEFACT', 101, .3, 0.7, 1.0, 2]
+        # with self.assertRaises(SyntaxError):
+        #     model.add_card(data, data[0], comment_good, is_list=True)
 
         fractions = [1., 2., 3.]
         aefact = AEFACT(200, fractions, comment='')
@@ -742,6 +744,7 @@ class TestAero(unittest.TestCase):
         assert np.allclose(y, span_expected)
         assert npoints_expected == npoints
         assert nelements_expected == nelements
+        nastran_to_zaero(model)
 
     def test_caero1_paneling_nspan_lchord(self):
         """checks the CAERO1/PAERO1/AEFACT card"""
@@ -752,7 +755,8 @@ class TestAero(unittest.TestCase):
         cref = 1.0
         bref = 1.0
         sref = 1.0
-        model.add_aeros(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment='')
+        model.add_aeros(cref, bref, sref, acsid=0, rcsid=0,
+                        sym_xz=0, sym_xy=0, comment='')
 
         pid = 1
         igroup = 1
@@ -784,6 +788,7 @@ class TestAero(unittest.TestCase):
         span_expected = np.array([0., 1 / 3, 2 / 3, 1.])
         assert np.allclose(x, chord_expected)
         assert np.allclose(y, span_expected)
+        nastran_to_zaero(model)
         if IS_MATPLOTLIB:
             caero.plot(ax)
             fig.show()
@@ -930,8 +935,9 @@ class TestAero(unittest.TestCase):
         eid = 1000
         aelist_id = 10
         aesurf_id = 10
-        caero = model.add_caero1(eid, pid, igroup, p1, x12, p4, x43,
-                                 cp=0, nspan=3, lspan=0, nchord=1, lchord=0, comment='')
+        caero = model.add_caero1(
+            eid, pid, igroup, p1, x12, p4, x43,
+            cp=0, nspan=3, lspan=0, nchord=1, lchord=0, comment='')
         x, y = caero.xy
         chord_expected = np.array([0., 1.])
         span_expected = np.array([0., 1 / 3, 2 / 3, 1.])
@@ -950,6 +956,7 @@ class TestAero(unittest.TestCase):
             hmllim=None, hmulim=None, tqllim=None, tqulim=None, comment='')
         model.cross_reference()
         points, elements = caero.panel_points_elements()
+        nastran_to_zaero(model)
         if IS_MATPLOTLIB:
             caero.plot(ax)
             fig.show()
@@ -2527,6 +2534,7 @@ class TestAero(unittest.TestCase):
 
         model.uncross_reference()
         model.safe_cross_reference()
+        nastran_to_zaero(model)
         save_load_deck(model)
 
     def test_flutter_2(self):
@@ -2579,6 +2587,7 @@ class TestAero(unittest.TestCase):
             machs,
             0.1, 1.0, num_k=2, nround=3,
         )
+        nastran_to_zaero(model)
 
     def test_mkaero1(self):
         """checks the MKAERO1 card"""
@@ -2654,9 +2663,9 @@ class TestAero(unittest.TestCase):
         mkaero = model.add_mkaero1(machs_spike, reduced_freqs_spike, comment='mkaero1')
 
         # TODO: this fails...because it's linked to the first card somehow
-        #mkaerod = model.add_mkaero1(machs, [])
-        #with self.assertRaises(ValueError):
-            #mkaerod.write_card()
+        # mkaerod = model.add_mkaero1(machs, [])
+        # with self.assertRaises(ValueError):
+        #     mkaerod.write_card()
         save_load_deck(model)
 
     def test_mkaero2(self):
@@ -2675,6 +2684,7 @@ class TestAero(unittest.TestCase):
         mkaero.validate()
         mkaero.write_card()
         mkaero.raw_fields()
+        nastran_to_zaero(model)
 
         mkaero = MKAERO2.add_card(BDFCard(['MKAERO2'] + machs + reduced_freqs), comment='mkaero2')
         mkaero.validate()
@@ -2708,24 +2718,24 @@ class TestAero(unittest.TestCase):
         mkaero.validate()
         mkaero.write_card()
 
-        mkaerob = model.add_mkaero2([], reduced_freqs)
+        model_fail = BDF(log=log)
+        mkaerob = model_fail.add_mkaero2([], reduced_freqs)
         with self.assertRaises(ValueError):
             mkaerob.validate()
         with self.assertRaises(ValueError):
             mkaerob.write_card()
 
-        mkaeroc = model.add_mkaero2([0.1, 0.2], [])
+        mkaeroc = model_fail.add_mkaero2([0.1, 0.2], [])
         with self.assertRaises(ValueError):
             mkaeroc.validate()
         with self.assertRaises(ValueError):
             mkaeroc.write_card()
 
-        mkaeroc = model.add_mkaero2([], [])
+        mkaeroc = model_fail.add_mkaero2([], [])
         with self.assertRaises(ValueError):
             mkaeroc.validate()
         with self.assertRaises(ValueError):
             mkaeroc.write_card()
-
 
     def test_diverg(self):
         """checks the DIVERG card"""
@@ -2917,7 +2927,6 @@ class TestAero(unittest.TestCase):
         gust2.write_card()
         save_load_deck(model)
 
-
     def test_csschd(self):
         """checks the CSSCHD card"""
         log = SimpleLogger(level='warning')
@@ -2940,7 +2949,6 @@ class TestAero(unittest.TestCase):
             csshcd_bad.validate()
         csshcd_bad.lmach = 5
         csshcd_bad.validate()
-
 
         card = ['CSSCHD', sid, aesid, lalpha, lmach, lschd]
         bdf_card = BDFCard(card, has_none=True)
@@ -2988,6 +2996,7 @@ class TestAero(unittest.TestCase):
         bdf_filename = StringIO()
         model.write_bdf(bdf_filename, close=False)
         model.safe_cross_reference()
+        nastran_to_zaero(model)
 
         model.validate()
         save_load_deck(model)
@@ -3197,14 +3206,16 @@ class TestAero(unittest.TestCase):
         p4 = [0., 10., 0.]
         x12 = 1.0
         x43 = 0.5
-        model.add_caero1(eid, pid, igroup, p1, x12, p4, x43, cp=0, nspan=10, lspan=0, nchord=10, lchord=0, comment='')
+        model.add_caero1(
+            eid, pid, igroup, p1, x12, p4, x43,
+            cp=0, nspan=10, lspan=0, nchord=10, lchord=0, comment='')
         model.add_paero1(pid)
         caero_bdf_filename = TEST_PATH / 'caero.bdf'
         build_structure_from_caero(model, caero_bdf_filename)
 
         trim_load_cases = [
-                # subcase, name, trim_id, mach, q, label: value
-                (10, 'alpha=1', 10, 0.8, 1., {'ANGLEA': 1.,}),
+            # subcase, name, trim_id, mach, q, label: value
+            (10, 'alpha=1', 10, 0.8, 1., {'ANGLEA': 1.,}),
         ]
         build_trim_load_cases(model, trim_load_cases, aeqr=1.0)
 
@@ -3223,6 +3234,7 @@ def build_structure_from_caero(model: BDF,
     os.remove(caero_bdf_filename)
     return model
 
+
 def _setup_aero_plot(fig_id: Optional[int]=None) -> tuple[Any, Any]:
     """helper for plotting aero panels"""
     fig = None
@@ -3234,6 +3246,7 @@ def _setup_aero_plot(fig_id: Optional[int]=None) -> tuple[Any, Any]:
         ax.set_xlabel('X')
         ax.grid()
     return fig, ax
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

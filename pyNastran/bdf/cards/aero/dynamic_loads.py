@@ -350,7 +350,8 @@ class FLFACT(BaseCard):
         factors = [1.]
         return FLFACT(sid, factors, comment='')
 
-    def __init__(self, sid, factors, comment=''):
+    def __init__(self, sid: int, factors: np.ndarray,
+                 comment: str=''):
         """
         Creates an FLFACT card, which defines factors used for flutter
         analysis.  These factors define either:
@@ -456,10 +457,10 @@ class FLFACT(BaseCard):
         factors = data[1:]
         return FLFACT(sid, factors, comment=comment)
 
-    def max(self):
+    def max(self) -> float:
         return self.factors.max()
 
-    def min(self):
+    def min(self) -> float:
         return self.factors.min()
 
     #def uncross_reference(self) -> None:

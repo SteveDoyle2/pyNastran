@@ -70,7 +70,7 @@ class SETADD(BaseCard):
         assert method == 'Node'
         ids_ref = []
         log = model.log
-        zona = model.zona
+        zaero = model.zaero
         for idi in self.ids:
             if idi in model.sets:
                 id_ref = model.sets[idi]

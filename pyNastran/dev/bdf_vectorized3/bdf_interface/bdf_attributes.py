@@ -1289,7 +1289,7 @@ class BDFAttributes:
         self.is_msc = True
         self.is_optistruct = False
         self.is_mystran = False
-        self.is_zona = False
+        self.is_zaero = False
 
     def set_as_nx(self) -> None:
         self._nastran_format = 'nx'
@@ -1297,7 +1297,7 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = False
         self.is_mystran = False
-        self.is_zona = False
+        self.is_zaero = False
 
     def set_as_optistruct(self):
         self._nastran_format = 'optistruct'
@@ -1305,7 +1305,7 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = True
         self.is_mystran = False
-        self.is_zona = False
+        self.is_zaero = False
 
     def set_as_zaero(self):
         self._nastran_format = 'zona'
@@ -1313,7 +1313,7 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = False
         self.is_mystran = False
-        self.is_zona = True
+        self.is_zaero = True
 
     def set_as_mystran(self) -> None:
         self._nastran_format = 'mystran'
@@ -1321,7 +1321,7 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = False
         self.is_mystran = True
-        self.is_zona = False
+        self.is_zaero = False
         self._update_for_mystran()
 
     # ------------------------------------------------------------------------

@@ -2895,7 +2895,7 @@ def get_dmi_matrix(matrix: DMI,
         assert matrix.GCi.ndim == 1, matrix.GCi.ndim
         assert matrix.GCj.ndim == 1, matrix.GCj.ndim
     else:
-        # TestAero.test_zona_2
+        # TestAero.test_zaero_2
         warnings.warn(f'matrix={matrix.name!r} GCi is not a numpy array...type={type(matrix.GCi)}')
         #print(matrix)
         #print('GCi =', matrix.GCi)

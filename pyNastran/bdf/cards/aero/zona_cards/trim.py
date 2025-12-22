@@ -18,12 +18,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.aero.zona import AEROZ
 
 
-class TRIM_ZONA(BaseCard):
+class TRIM_ZAERO(BaseCard):
     """
     Specifies constraints for aeroelastic trim variables.
 
     """
-    type = 'TRIM_ZONA'
+    type = 'TRIM_ZAERO'
     _field_map = {
         1: 'sid', 2: 'mkaeroz', 3: 'q',
         9: 'wtmass', 10: 'weight',
@@ -180,11 +180,11 @@ class TRIM_ZONA(BaseCard):
         assert len(card) >= 25, f'len(TRIM card) = {len(card):d}\ncard={card}'
         assert len(trimvar_ids) > 0, trimvar_ids
         assert len(uxs) > 0, uxs
-        return TRIM_ZONA(sid, mkaeroz, qinf,
-                         trimobj_id, trimcon_id,
-                         weight, dcg, inertia,
-                         true_g, nxyz, pqr_dot, loadset,
-                         trimvar_ids, uxs, wtmass=wtmass, comment=comment)
+        return TRIM_ZAERO(sid, mkaeroz, qinf,
+                          trimobj_id, trimcon_id,
+                          weight, dcg, inertia,
+                          true_g, nxyz, pqr_dot, loadset,
+                          trimvar_ids, uxs, wtmass=wtmass, comment=comment)
 
     def validate(self):
         assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
@@ -207,8 +207,8 @@ class TRIM_ZONA(BaseCard):
             raise RuntimeError(msg)
 
     def cross_reference(self, model: BDF) -> None:
-        zona = model.zona
-        self.mkaeroz_ref = zona.mkaeroz[self.mkaeroz]
+        zaero = model.zaero
+        self.mkaeroz_ref = zaero.mkaeroz[self.mkaeroz]
 
         assert self.trimobj_id == 0, self.trimobj_id
         assert self.trimcon_id == 0, self.trimcon_id
@@ -394,7 +394,7 @@ class TRIM_ZONA(BaseCard):
 
     def convert_to_nastran(self, model: BDF):
         mkaeroz_id = self.mkaeroz
-        mkaeroz = model.zona.mkaeroz[mkaeroz_id]
+        mkaeroz = model.zaero.mkaeroz[mkaeroz_id]
         #print(mkaeroz)
         mach = mkaeroz.mach
         labels = []
@@ -403,7 +403,7 @@ class TRIM_ZONA(BaseCard):
         assert len(self.trimvar_ids) == len(self.uxs)
         for trimvar_id, ux in zip(self.trimvar_ids, self.uxs):
             if ux != 'FREE':
-                trimvar = model.zona.trimvar[trimvar_id]
+                trimvar = model.zaero.trimvar[trimvar_id]
                 label = trimvar.label
                 assert isinstance(label, str), 'label=%r' % label
                 comment += str(trimvar)
@@ -531,10 +531,10 @@ class TRIMLNK(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         trimvar_refs = []
-        zona = model.zona
+        zaero = model.zaero
         for var_id in self.var_ids:
-            if var_id in zona.trimvar:
-                ref_id = zona.trimvar[var_id]
+            if var_id in zaero.trimvar:
+                ref_id = zaero.trimvar[var_id]
             else:
                 raise RuntimeError(f'var_id {var_id} not in trimvar')
             trimvar_refs.append(ref_id)
@@ -555,7 +555,7 @@ class TRIMLNK(BaseCard):
 
     def convert_to_nastran(self, model):
         label = 'LNK_%s' % self.link_id
-        trimvars = model.zona.trimvar
+        trimvars = model.zaero.trimvar
 
         comment = str(self)
         independent_labels = []
@@ -669,7 +669,7 @@ class TRIMVAR(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         if self.trimlnk_id:
-            self.trimlnk_ref = model.zona.trimlnk[self.trimlnk_id]
+            self.trimlnk_ref = model.zaero.trimlnk[self.trimlnk_id]
         #self.suport = model.suport
         #self.suport1 = model.suport1
         #self.aestats = model.aestats
@@ -687,13 +687,13 @@ class TRIMVAR(BaseCard):
     def convert_to_nastran(self, model: BDF):
         raise NotImplementedError()
         #mkaeroz_id = self.mkaeroz
-        #mkaeroz = model.zona.mkaeroz[mkaeroz_id]
+        #mkaeroz = model.zaero.mkaeroz[mkaeroz_id]
         #mach = mkaeroz.mach
         #labels = []
         #uxs = []
         #for label_id, ux in zip(self.labels, self.uxs):
             #if ux != 'FREE':
-                #label = model.zona.trimvar[label_id]
+                #label = model.zaero.trimvar[label_id]
                 #labels.append(label)
                 #uxs.append(ux)
         #trim = TRIM(self.sid, mach, self.q, labels, uxs,
@@ -727,7 +727,7 @@ def get_trimvars(model: BDF, trimvar_ids) -> list[TRIMVAR]:
     trimvar_refs = []
     for trimvar_id in trimvar_ids:
         try:
-            trimvar_ref = model.zona.trimvar[trimvar_id]
+            trimvar_ref = model.zaero.trimvar[trimvar_id]
         except KeyError as error:
             trimvar_refs.append(None)
             continue

@@ -103,8 +103,8 @@ if TYPE_CHECKING:  # pragma: no cover
         MKAERO1, MKAERO2)
     # from pyNastran.bdf.cards.aero.zona import (
     #     ACOORD, AEROZ, AESURFZ, BODY7, CAERO7, MKAEROZ, PAFOIL7, PANLST1, PANLST3,
-    #     SEGMESH, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA, TRIMLNK, TRIMVAR, TRIM_ZONA,
-    #     ZONA)
+    #     SEGMESH, SPLINE1_ZAERO, SPLINE2_ZAERO, SPLINE3_ZAERO, TRIMLNK, TRIMVAR, TRIM_ZAERO,
+    #     ZAERO)
 
     from pyNastran.bdf.cards.optimization import (
         DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
@@ -1148,7 +1148,7 @@ class AddMethods:
     #     """adds an AEROZ object"""
     #     key = aeroz.sid
     #     if key in self.model.aeroz and not allow_overwrites:
-    #         if not aeroz == self.model.zona.aeroz[key]:
+    #         if not aeroz == self.model.zaero.aeroz[key]:
     #             assert key not in self.model.aeroz, 'AEROZ.sid=%s\nold=\n%snew=\n%s' % (key, self.model.aeroz[key], aeroz)
     #     else:
     #         assert key > 0, 'sid=%s method=\n%s' % (key, aefact)

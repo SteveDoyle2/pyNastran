@@ -5069,7 +5069,8 @@ class AddAero:
         self._add_methods.add_aelist_object(aelist)
         return aelist
 
-    def add_aefact(self, sid, fractions, comment='') -> AEFACT:
+    def add_aefact(self, sid: int, fractions: np.ndarray,
+                   comment: str='') -> AEFACT:
         """
         Creates an AEFACT card, which is used by the CAEROx / PAEROx card
         to adjust the spacing of the sub-paneleing (and grid point
@@ -5080,7 +5081,7 @@ class AddAero:
         sid : int
             unique id
         fractions : list[float, ..., float]
-            list of percentages
+            list of percentages ranging from 0-1
         comment : str; default=''
             a comment for the card
 
@@ -5137,14 +5138,17 @@ class AddAero:
         self._add_methods.add_csschd_object(csschd)
         return csschd
 
-    def add_aesurf(self, aesid, label, cid1, aelist_id1, cid2=None, aelist_id2=None,
-                   eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
-                   pllim=-np.pi/2., pulim=np.pi/2.,
+    def add_aesurf(self, aesid: int, label: str,
+                   cid1: int, aelist_id1: int,
+                   cid2: Optional[int]=None, aelist_id2: Optional[int]=None,
+                   eff: float=1.0, ldw: str='LDW',
+                   crefc: float=1.0, crefs: float=1.0,
+                   pllim: float=-np.pi/2., pulim: float=np.pi/2.,
                    # hinge moment lower/upper limits
                    hmllim: Optional[float]=None, hmulim: Optional[float]=None,
                    # TABLEDi deflection limits vs. dynamic pressure
-                   tqllim: int=None, tqulim: int=0,
-                   comment='') -> AESURF:
+                   tqllim: Optional[int]=None, tqulim: int=0,
+                   comment: str='') -> AESURF:
         """
         Creates an AESURF card, which defines a control surface
 

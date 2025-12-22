@@ -216,7 +216,7 @@ class CrossReference:
         """
         model = self.model
         model.log
-        model.zona.cross_reference()
+        model.zaero.cross_reference()
 
         for caero in model.caeros.values():
             caero.cross_reference(model)
@@ -303,7 +303,7 @@ class CrossReference:
         """
         model = self.model
         xref_errors = defaultdict(list)
-        model.zona.safe_cross_reference(xref_errors)
+        model.zaero.safe_cross_reference(xref_errors)
         for caero in model.caeros.values():
             caero.safe_cross_reference(model, xref_errors)
         self._show_safe_xref_errors('caeros', xref_errors)

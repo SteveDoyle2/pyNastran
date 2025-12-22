@@ -230,7 +230,7 @@ class WriteMeshs(WriteMesh):
             write_bdfs_dict(bdf_files, self.nsmadds, size, is_double, is_long_ids)
             for monitor_point in self.monitor_points:
                 bdf_files[monitor_point.ifile].write(monitor_point.write_card(size, is_double))
-        self.zona.write_bdf(bdf_files[0], size=8, is_double=False)
+        self.zaero.write_bdf(bdf_files[0], size=8, is_double=False)
 
     def _write_aero_control_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
                                  is_long_ids: Optional[bool]=None) -> None:

@@ -480,7 +480,7 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(monitor_point.write_card(size, is_double))
             for (unused_id, group) in sorteddict(self.group, sort_cards):
                 bdf_file.write(group.write_card(size, is_double))
-        self.zona.write_bdf(bdf_file, size=8, is_double=False)
+        self.zaero.write_bdf(bdf_file, size=8, is_double=False)
 
     def _write_aero_control(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                             sort_cards: bool=True,

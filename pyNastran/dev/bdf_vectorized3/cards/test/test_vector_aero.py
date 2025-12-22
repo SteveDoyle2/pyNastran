@@ -3286,7 +3286,7 @@ class TestAero(unittest.TestCase):
                        run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False,
                        run_test_bdf=False, run_op2_writer=False)
         with self.assertRaises(NotImplementedError):
-            model.zona.convert_to_nastran()
+            model.zaero.convert_to_nastran()
 
     def _test_zona_2(self):
         """zona explicit test"""
@@ -3298,7 +3298,7 @@ class TestAero(unittest.TestCase):
                        run_renumber=False, run_convert=False, run_remove_unused=False,
                        run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False,
                        run_test_bdf=False)
-        model.zona.convert_to_nastran()
+        model.zaero.convert_to_nastran()
 
     def _test_zona_3(self):
         """totally fake zona model"""
@@ -3318,7 +3318,7 @@ class TestAero(unittest.TestCase):
         model.clear_attributes()
         model2 = read_bdf('zona.bdf', debug=None)
         os.remove('zona.bdf')
-        model2.zona.convert_to_nastran()
+        model2.zaero.convert_to_nastran()
 
 
 def build_structure_from_caero(model: BDF,

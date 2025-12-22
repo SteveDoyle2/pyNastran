@@ -206,10 +206,10 @@ class FIXHATM(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         if self.atm_id:
-            self.atmos_ref = model.zona.atmos[self.atm_id]
+            self.atmos_ref = model.zaero.atmos[self.atm_id]
         mkaerozs_ref = []
         for mkaeroz_id in self.mkaeroz_ids:
-            mkaeroz_ref = model.zona.mkaeroz[mkaeroz_id]
+            mkaeroz_ref = model.zaero.mkaeroz[mkaeroz_id]
             mkaerozs_ref.append(mkaeroz_ref)
         self.mkaerozs_ref = mkaerozs_ref
 
@@ -323,9 +323,9 @@ class FIXMATM(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         if self.atm_id:
-            self.atmos_ref = model.zona.atmos[self.atm_id]
+            self.atmos_ref = model.zaero.atmos[self.atm_id]
         assert isinstance(self.mkaeroz_id, integer_types), self.get_stats()
-        self.mkaeroz_ref = model.zona.mkaeroz[self.mkaeroz_id]
+        self.mkaeroz_ref = model.zaero.mkaeroz[self.mkaeroz_id]
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -447,7 +447,7 @@ class FIXMACH(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         assert isinstance(self.mkaeroz_id, integer_types), self.get_stats()
-        self.mkaeroz_ref = model.zona.mkaeroz[self.mkaeroz_id]
+        self.mkaeroz_ref = model.zaero.mkaeroz[self.mkaeroz_id]
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -561,7 +561,7 @@ class FIXMDEN(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         assert isinstance(self.mkaeroz_id, integer_types), self.get_stats()
-        self.mkaeroz_ref = model.zona.mkaeroz[self.mkaeroz_id]
+        self.mkaeroz_ref = model.zaero.mkaeroz[self.mkaeroz_id]
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)

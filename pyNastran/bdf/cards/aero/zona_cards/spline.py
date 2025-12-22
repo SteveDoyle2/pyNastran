@@ -20,7 +20,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
-class SPLINE1_ZONA(Spline):
+class SPLINE1_ZAERO(Spline):
     """
     Defines an infinite plate spline method for displacements and loads
     transferal between CAERO7 macroelement and structural grid points.
@@ -44,7 +44,7 @@ class SPLINE1_ZONA(Spline):
     +---------+------+-------+-------+------+------+----+-----+-------+
 
     """
-    type = 'SPLINE1_ZONA'
+    type = 'SPLINE1_ZAERO'
 
     def __init__(self, eid: int, panlst: int, setg: int, model: str='', cp=None,
                  dz=None, eps=0.01, comment=''):
@@ -97,8 +97,8 @@ class SPLINE1_ZONA(Spline):
         setg = integer(card, 5, 'setg')
         dz = double_or_blank(card, 6, 'dz', default=0.0)
         eps = double_or_blank(card, 6, 'eps', default=0.01)
-        return SPLINE1_ZONA(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
-                            comment=comment)
+        return SPLINE1_ZAERO(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
+                             comment=comment)
 
     @classmethod
     def add_card_lax(cls, card, comment=''):
@@ -121,8 +121,8 @@ class SPLINE1_ZONA(Spline):
         setg = integer(card, 5, 'setg')
         dz = force_double_or_blank(card, 6, 'dz', default=0.0)
         eps = force_double_or_blank(card, 6, 'eps', default=0.01)
-        return SPLINE1_ZONA(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
-                            comment=comment)
+        return SPLINE1_ZAERO(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
+                             comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         msg = f'SPLINE1 eid={self.eid}: setg is missing'
@@ -189,7 +189,7 @@ class SPLINE1_ZONA(Spline):
         comment += str(self)
         for panlst in self.panlst_ref:
             for panel_groups in panlst.panel_groups:
-                eid = model.zona.caero_to_name_map[panel_groups]
+                eid = model.zaero.caero_to_name_map[panel_groups]
                 caero = model.caeros[eid]
                 caero_id = eid
                 box1 = caero.eid
@@ -214,7 +214,7 @@ class SPLINE1_ZONA(Spline):
         return self.comment + print_card_8(card)
 
 
-class SPLINE2_ZONA(Spline):
+class SPLINE2_ZAERO(Spline):
     """
     Defines an infinite plate spline method for displacements and loads
     transferal between CAERO7 macroelement and structural grid points.
@@ -228,7 +228,7 @@ class SPLINE2_ZONA(Spline):
     +---------+------+-------+------+------+----+-----+-------+-------+
 
     """
-    type = 'SPLINE2_ZONA'
+    type = 'SPLINE2_ZAERO'
 
     def __init__(self, eid: int, panlst: int,
                  setg: int, model: str='', dz=None,
@@ -284,8 +284,8 @@ class SPLINE2_ZONA(Spline):
         eps = double_or_blank(card, 6, 'eps', default=0.01)
         cp = integer_or_blank(card, 7, 'cp', default=0)
         curvature = double_or_blank(card, 8, 'curvature', default=1.0)
-        return SPLINE2_ZONA(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
-                            curvature=curvature, comment=comment)
+        return SPLINE2_ZAERO(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
+                             curvature=curvature, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
@@ -320,7 +320,7 @@ class SPLINE2_ZONA(Spline):
         return self.comment + print_card_8(card)
 
 
-class SPLINE3_ZONA(Spline):
+class SPLINE3_ZAERO(Spline):
     """
     Defines a 3-D spline for the BODY7 and CAERO7 macroelement.
 
@@ -333,7 +333,7 @@ class SPLINE3_ZONA(Spline):
     +---------+------+-------+-------+------+------+----+-----+-------+
 
     """
-    type = 'SPLINE3_ZONA'
+    type = 'SPLINE3_ZAERO'
 
     def __init__(self, eid, panlst, setg, model=None, cp=None,
                  dz=None, eps=0.01, comment=''):
@@ -386,8 +386,8 @@ class SPLINE3_ZONA(Spline):
         setg = integer(card, 5, 'setg')
         dz = blank(card, 6, 'dz')
         eps = double_or_blank(card, 6, 'eps', 0.01)
-        return SPLINE3_ZONA(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
-                            comment=comment)
+        return SPLINE3_ZAERO(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
+                             comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by SPLINE3 eid=%s' % self.eid
@@ -442,13 +442,13 @@ def cross_reference_set(model: BDF,
                         set_id: int,
                         msg: str='',
                         which_msg: str='') -> tuple:
-    zona = model.zona
-    if set_id in zona.setadd:
-        set_ref = zona.setadd[set_id]
+    zaero = model.zaero
+    if set_id in zaero.setadd:
+        set_ref = zaero.setadd[set_id]
     elif set_id in model.sets:
         set_ref = model.sets[set_id]
     else:
-        setadd = list(zona.setadd)
+        setadd = list(zaero.setadd)
         sets = list(model.sets)
         setadd.sort()
         sets.sort()

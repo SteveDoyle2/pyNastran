@@ -49,7 +49,9 @@ class ACOORD(CoordBase):  # not done
         return None
 
     def __init__(self, cid: int,
-                 origin: np.ndarray, delta: np.ndarray, theta: np.ndarray,
+                 origin: np.ndarray,
+                 delta: float,
+                 theta: float,
                  comment: str=''):
         """
         Defines the ACOORD card
@@ -93,7 +95,8 @@ class ACOORD(CoordBase):  # not done
         origin_x = double(card, 2, 'origin_x')
         origin_y = double(card, 3, 'origin_y')
         origin_z = double(card, 4, 'origin_z')
-        origin = [origin_x, origin_y, origin_z]
+        origin = np.array([
+            origin_x, origin_y, origin_z])
         delta = double(card, 5, 'delta (pitch)')
         theta = double(card, 6, 'theta (roll)')
         dunno = double_or_blank(card, 7, 'zero', default=0.0)
@@ -177,7 +180,7 @@ class ACOORD(CoordBase):  # not done
         return matrix
 
     def raw_fields(self):
-        list_fields = ['ACOORD', self.cid] + self.origin + [self.delta, self.theta]
+        list_fields = ['ACOORD', self.cid] + list(self.origin) + [self.delta, self.theta]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -205,8 +208,10 @@ class AEROZ(Aero):
 
     def __init__(self, fm_mass_unit: str, fm_length_unit: str,
                  cref: float, bref: float, sref: float,
-                 flip: str='NO', acsid: int=0, rcsid: int=0, sym_xz: int=0,
-                 xyz_ref: Optional[list[float]]=None, comment: str=''):
+                 flip: str='NO', acsid: int=0, rcsid: int=0,
+                 sym_xz: str='NO',
+                 xyz_ref: Optional[list[float]]=None,
+                 comment: str=''):
         """
         Creates an AEROZ card
 
@@ -227,7 +232,7 @@ class AEROZ(Aero):
             defines the direction of the wind
         rcsid : int; default=0
             coordinate system for rigid body motions
-        sym_xz : int; default=0
+        sym_xz : str; default='NO'
             xz symmetry flag (+1=symmetry; -1=antisymmetric)
         comment : str; default=''
             a comment for the card
@@ -269,12 +274,22 @@ class AEROZ(Aero):
             self.acsid = 0
         if self.rcsid is None:
             self.rcsid = 0
-        if self.sym_xz is None:
-            self.sym_xz = 0
-        if self.sym_xy is None:
-            self.sym_xy = 0
+        # if self.sym_xz is None:
+        #     self.sym_xz = 0
+        # if self.sym_xy is None:
+        #     self.sym_xy = 0
         self.acsid_ref = None
         self.rcsid_ref = None
+
+        # YES-aero=half,structure=half
+        # NO-aero=full; structure=full
+        # H2F-aero=full; structure=half
+        assert sym_xz in ['YES', 'NO', 'H2F'], 'sym_xz=%r' % flip
+
+        # YES-structure=left,aero=right
+        assert flip in ['YES', 'NO'], f'flip={flip!r}'
+        assert fm_mass_unit in ['SLIN', 'LBM', 'SLUG', 'NONE'], f'fm_mass_unit={fm_mass_unit!r}'
+        assert fm_length_unit in ['IN', 'FT', 'M', 'CM', 'MM', 'NONE'], f'fm_length_unit={fm_length_unit!r}'
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -301,16 +316,6 @@ class AEROZ(Aero):
         fm_mass_unit = string_or_blank(card, 4, 'fm_mass_unit', default='NONE')
         fm_length_unit = string(card, 5, 'fm_length_unit')
 
-        # YES-aero=half,structure=half
-        # NO-aero=full; structure=full
-        # H2F-aero=full; structure=half
-        assert sym_xz in ['YES', 'NO', 'H2F'], 'sym_xz=%r' % flip
-
-        # YES-structure=left,aero=right
-        assert flip in ['YES', 'NO'], f'flip={flip!r}'
-        assert fm_mass_unit in ['SLIN', 'LBM', 'SLUG', 'NONE'], f'fm_mass_unit={fm_mass_unit!r}'
-        assert fm_length_unit in ['IN', 'FT', 'M', 'CM', 'MM', 'NONE'], f'fm_length_unit={fm_length_unit!r}'
-
         #rcsid = integer_or_blank(card, 2, 'rcsid', 0)
 
         cref = double_or_blank(card, 6, 'cRef', default=1.)
@@ -333,7 +338,7 @@ class AEROZ(Aero):
                      comment=comment)
 
     @property
-    def weight_unit(self):
+    def weight_unit(self) -> str:
         if self.fm_mass_unit == 'NONE':
             weight_unit = 'NONE'
         elif self.fm_length_unit in ['IN', 'FT']:
@@ -910,6 +915,8 @@ class MLDCOMD(BaseCard):
         self.mldcomd_id = mldcomd_id
         self.extinp_ids = extinp_ids
         self.table_ids = table_ids
+        self.extinps_ref = None
+        self.tables_ref = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -949,10 +956,10 @@ class MLDCOMD(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         extinps_ref = []
         tables_ref = []
-        zona = model.zona
+        zaero = model.zaero
         msg = f', which is required by MLDCOMD={self.mldcomd_id}\n{str(self)}'
         for extinp_id, tabled_id in zip(self.extinp_ids, self.table_ids):
-            extinp = zona.extinp[extinp_id]
+            extinp = zaero.extinp[extinp_id]
             extinp.cross_reference(model, self)
             tabled = model.TableD(tabled_id, msg)
             extinps_ref.append(extinp)

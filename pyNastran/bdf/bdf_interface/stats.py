@@ -4,7 +4,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
-def get_bdf_stats(model: BDF, return_type: str='string',
+def get_bdf_stats(model: BDF,
+                  return_type: str='string',
                   word: str='') -> str | list[str]:
     """
     Print statistics for the BDF
@@ -139,7 +140,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'model_groups', 'allow_duplicate_element_rbe_mass',
         'active_filename', 'active_filenames', 'debug',  # 'log',
         'reject_lines', 'is_strict_card_parser',
-        'is_nx', 'is_msc', 'is_optistruct', 'is_zona', 'is_mystran',
+        'is_nx', 'is_msc', 'is_optistruct', 'is_zaero', 'is_mystran',
         'is_bdf_vectorized', 'dumplines', 'values_to_skip',
         'replace_includes',
         'system_command_lines', 'executive_control_lines', 'case_control_lines',

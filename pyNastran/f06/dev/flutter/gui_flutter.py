@@ -165,7 +165,7 @@ class FlutterGui(LoggableGui):
         self.export_to_png = True
         self.export_to_csv = False
         self.export_to_f06 = False
-        self.export_to_zona = False
+        self.export_to_zaero = False
 
         self.setup_lists()
         self.setup_widgets()

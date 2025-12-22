@@ -149,21 +149,21 @@ class MLOADS(BaseCard):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
 
     def cross_reference(self, model: BDF) -> None:
-        # zona = model.zona
+        # zaero = model.zaero
         msg = f', which is required by MLOADS={self.mloads_id}\n{str(self)}'
         if self.asecont_id > 0:
-            self.asecont_ref = get_zona_obj(model, self.asecont_id, 'asecont', msg)
+            self.asecont_ref = get_zaero_obj(model, self.asecont_id, 'asecont', msg)
         if self.flutter_id > 0:
             self.flutter_ref = model.Flutter(self.flutter_id, msg)
         if self.minstat_id > 0:
-            self.minstat_ref = get_zona_obj(model, self.minstat_id, 'minstat', msg)
+            self.minstat_ref = get_zaero_obj(model, self.minstat_id, 'minstat', msg)
 
         if self.mldstat_id > 0:
-            self.mldstat_ref = get_zona_obj(model, self.mldstat_id, 'mldstat', msg)
-        self.mldcomd_ref = get_zona_obj(model, self.mldcomd_id, 'mldcomd', msg)
-        self.mldtime_ref = get_zona_obj(model, self.mldtime_id, 'mldtime', msg)
+            self.mldstat_ref = get_zaero_obj(model, self.mldstat_id, 'mldstat', msg)
+        self.mldcomd_ref = get_zaero_obj(model, self.mldcomd_id, 'mldcomd', msg)
+        self.mldtime_ref = get_zaero_obj(model, self.mldtime_id, 'mldtime', msg)
         if self.mldprnt_id:
-            self.mldprnt_ref = get_zona_obj(model, self.mldprnt_id, 'mldprnt', msg)
+            self.mldprnt_ref = get_zaero_obj(model, self.mldprnt_id, 'mldprnt', msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -545,17 +545,17 @@ class TRIMFNC(BaseCard):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
 
     def cross_reference(self, model: BDF) -> None:
-        zona = model.zona
+        zaero = model.zaero
         if self.fcn_type == 'AERO' and self.label == 'TRIMVAR':
-            self.is_set_ref = zona.trimvar[self.is_set]
+            self.is_set_ref = zaero.trimvar[self.is_set]
             # if self.ia_set:
-            #     self.ia_set_ref = zona.trimvar[self.ia_set]
+            #     self.ia_set_ref = zaero.trimvar[self.ia_set]
         elif self.fcn_type == 'AERO' and self.label == 'LOADMOD':
-            self.is_set_ref = zona.loadmod[self.is_set]
+            self.is_set_ref = zaero.loadmod[self.is_set]
             # if self.ia_set:
-            #     self.ia_set_ref = zona.trimvar[self.ia_set]
+            #     self.ia_set_ref = zaero.trimvar[self.ia_set]
         elif self.fcn_type == 'FEM' and self.label in ['LOADMOD', 'LOADMOD1']:
-            self.is_set_ref = zona.loadmod[self.is_set]
+            self.is_set_ref = zaero.loadmod[self.is_set]
         elif self.fcn_type == 'MODAL' and self.label == 'DMI':
             self.is_set_ref = model.dmi[self.is_set]
         elif self.fcn_type == 'AERO' and self.label in {'CP', 'CDL',
@@ -663,9 +663,9 @@ class LOADMOD(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         which_msg = f', which is required by LOADMOD={self.loadmod_id}'
         self.cid_ref = model.Coord(self.cid, which_msg)
-        zona = model.zona
+        zaero = model.zaero
         if self.set_k > 0:
-            self.set_k_ref = zona.panlsts[self.set_k]
+            self.set_k_ref = zaero.panlsts[self.set_k]
         if self.set_g > 0:
             msg = f'LOADMOD={self.loadmod_id}'
             self.set_g_ref = cross_reference_set(model, self.set_g, msg, which_msg)
@@ -751,22 +751,22 @@ class RBRED(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         # msg = f', which is required by RBRED={self.sid}'
         # ASE, MLOADS, ELOADS, GLOADS, DFS, or NLFLTR
-        zona = model.zona
-        if self.id_ase in zona.ase:
-            self.id_ase_ref = zona.ase[self.id_ase]
-        elif self.id_ase in zona.mloads:
-            self.id_ase_ref = zona.mloads[self.id_ase]
-        elif self.id_ase in zona.eloads:
-            self.id_ase_ref = zona.eloads[self.id_ase]
-        elif self.id_ase in zona.gloads:
-            self.id_ase_ref = zona.gloads[self.id_ase]
+        zaero = model.zaero
+        if self.id_ase in zaero.ase:
+            self.id_ase_ref = zaero.ase[self.id_ase]
+        elif self.id_ase in zaero.mloads:
+            self.id_ase_ref = zaero.mloads[self.id_ase]
+        elif self.id_ase in zaero.eloads:
+            self.id_ase_ref = zaero.eloads[self.id_ase]
+        elif self.id_ase in zaero.gloads:
+            self.id_ase_ref = zaero.gloads[self.id_ase]
         else:  # pragma: no cover
-            ase = list(zona.ase)
-            mloads = list(zona.mloads)
-            eloads = list(zona.eloads)
-            gloads = list(zona.gloads)
-            dfs = list(zona.dfs)
-            nlfltr = list(zona.nlfltr)
+            ase = list(zaero.ase)
+            mloads = list(zaero.mloads)
+            eloads = list(zaero.eloads)
+            gloads = list(zaero.gloads)
+            dfs = list(zaero.dfs)
+            nlfltr = list(zaero.nlfltr)
             msg = (
                 f'{self.id_ase} is not in [ASE, MLOADS, ELOADS, GLOADS, DFS, NLFLTR]\n'
                 f' - ase    = {ase}\n'
@@ -817,12 +817,12 @@ def get_external_obj(obj: EXTINP | EXTOUT, model: BDF,
     with aerodynamic control surface) or a SISOTF bulk data card (associated with GRIDFRC bulk
     data card). Also, CI = 1 is required.
     """
-    zona = model.zona
+    zaero = model.zaero
 
-    asecont = list(zona.asecont)
-    actu = list(zona.actu)
-    sisotf = list(zona.sisotf)
-    cjunct = list(zona.cjunct)
+    asecont = list(zaero.asecont)
+    actu = list(zaero.actu)
+    sisotf = list(zaero.sisotf)
+    cjunct = list(zaero.cjunct)
     msg = (
         f'itf_id={itf_id} is not in the model\n'
         f' - asecont = {asecont}\n'
@@ -830,41 +830,41 @@ def get_external_obj(obj: EXTINP | EXTOUT, model: BDF,
         f' - sisotf  = {sisotf}\n'
         f' - cjunct  = {cjunct}\n'
     )
-    if itf_id in zona.asecont:
-        itf_ref = zona.asecont[itf_id]
+    if itf_id in zaero.asecont:
+        itf_ref = zaero.asecont[itf_id]
     elif obj.type == 'EXTINP':
         # If there is:
         #  - no ASECONT card specified
         #  - the EXTINP card is referred to by an MLDCOMD card
         #  -> ITFID entry must refer to an ACTU or SISOTF
-        if parent.type == 'MLDCOMD' and len(zona.asecont) == 0:
-            if itf_id in zona.actu:
-                itf_ref = zona.actu[itf_id]
+        if parent.type == 'MLDCOMD' and len(zaero.asecont) == 0:
+            if itf_id in zaero.actu:
+                itf_ref = zaero.actu[itf_id]
                 assert obj.itf_component == 1, f'component={obj.itf_component}\n{str(obj)}\nparent:\n{str(parent)}'
-            elif itf_id in zona.sisotf:
-                itf_ref = zona.sisotf[itf_id]
+            elif itf_id in zaero.sisotf:
+                itf_ref = zaero.sisotf[itf_id]
             else:
                 raise RuntimeError(msg)
-        elif itf_id in zona.cjunct:
-            itf_ref = zona.cjunct[itf_id]
+        elif itf_id in zaero.cjunct:
+            itf_ref = zaero.cjunct[itf_id]
         else:
             raise RuntimeError(msg)
     else:
         assert parent.type in ['ASECONT', 'MLDCOMD'], parent
-        # if itf_id in zona.actu:
-        #     itf_ref = zona.actu[itf_id]
-        # elif itf_id in zona.sisotf:
-        #     itf_ref = zona.sisotf[itf_id]
-        if itf_id in zona.cjunct:
-            itf_ref = zona.cjunct[itf_id]
+        # if itf_id in zaero.actu:
+        #     itf_ref = zaero.actu[itf_id]
+        # elif itf_id in zaero.sisotf:
+        #     itf_ref = zaero.sisotf[itf_id]
+        if itf_id in zaero.cjunct:
+            itf_ref = zaero.cjunct[itf_id]
         else:
             raise RuntimeError(msg)
     return itf_ref
 
 
-def get_zona_obj(model: BDF, idi: int, attr_name: str, msg='') -> ASECONT:
+def get_zaero_obj(model: BDF, idi: int, attr_name: str, msg='') -> ASECONT:
     card_name = attr_name.upper()
-    objs = getattr(model.zona, attr_name)
+    objs = getattr(model.zaero, attr_name)
     try:
         ref_obj = objs[idi]
     except KeyError:

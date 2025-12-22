@@ -263,7 +263,7 @@ class TestF06Flutter(unittest.TestCase):
             export_csv_filename=dirname/'nastran.csv',
             export_f06_filename=dirname/'nastran.f06',
             export_veas_filename=dirname/'nastran.veas',
-            export_zona_filename=dirname/'zona.f06',
+            export_zaero_filename=dirname/'zaero.f06',
             vg_filename='vg_subcase_%i.png',
             vg_vf_filename='vg_vf_subcase_%i.png',
             kfreq_damping_filename='kfreq_damping_subcase_%i.png',
@@ -290,7 +290,7 @@ class TestF06Flutter(unittest.TestCase):
             os.remove(dirname/'nastran.csv')
             os.remove(dirname/'nastran.f06')
             os.remove(dirname/'nastran.veas')
-            os.remove(dirname/'zona.f06')
+            os.remove(dirname/'zaero.f06')
 
         with self.assertRaises(NotImplementedError):
             plot_flutter_f06(
@@ -365,7 +365,7 @@ class TestF06Flutter(unittest.TestCase):
                                plot_vg=True, plot_vg_vf=True,
                                plot_root_locus=True, plot_kfreq_damping=True,
                                nopoints=True, noline=False,
-                               # export_zona_filename=export_zona_filename,
+                               # export_zaero_filename=export_zaero_filename,
                                # export_veas_filename=export_veas_filename,
                                # export_f06_filename=export_f06_filename,
                                # vg_filename=vg_filename,
@@ -375,7 +375,7 @@ class TestF06Flutter(unittest.TestCase):
                                show=False, clear=True, close=True)
 
             export_csv_filename = os.path.join(DIRNAME, 'csv_%d.csv')
-            export_zona_filename = os.path.join(DIRNAME, 'zona_%d.f06')
+            export_zaero_filename = os.path.join(DIRNAME, 'zaero_%d.f06')
             export_veas_filename = os.path.join(DIRNAME, 'flutter_%d.veas')
             export_f06_filename = os.path.join(DIRNAME, 'flutter_%d.f06')
             make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
@@ -384,7 +384,7 @@ class TestF06Flutter(unittest.TestCase):
                                plot_root_locus=True, plot_kfreq_damping=True,
                                nopoints=True, noline=False,
                                export_csv_filename=export_csv_filename,
-                               export_zona_filename=export_zona_filename,
+                               export_zaero_filename=export_zaero_filename,
                                export_veas_filename=export_veas_filename,
                                export_f06_filename=export_f06_filename,
                                # vg_filename=vg_filename,
@@ -423,7 +423,7 @@ class TestF06Flutter(unittest.TestCase):
         log = SimpleLogger(level='warning')
         dirname = AERO_PATH / '2_mode_flutter'
         f06_filename = dirname / '0012_flutter.f06'
-        zona_filename = dirname / 'junk.zona'
+        zaero_filename = dirname / 'junk.zaero'
         flutters, data = make_flutter_response(f06_filename, f06_units='si', log=log)
         flutter = flutters[1]
         flutter.set_plot_settings(
@@ -456,7 +456,7 @@ class TestF06Flutter(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             flutter.plot_vg_vf(plot_type='eas', mode_switch_method='cat')
         flutter.plot_vg(plot_type='eas')
-        flutter.export_to_zona(zona_filename)
+        flutter.export_to_zaero(zaero_filename)
         str(flutter.object_methods())
 
         flutter.set_symbol_settings(
@@ -710,13 +710,13 @@ def _fix_modes(eigr: np.ndarray,
     return out
 
 
-class TestZonaFlutter(unittest.TestCase):
-    def test_zona_gafa(self):
-        from pyNastran.f06.dev.flutter.read_zona_out import read_zona_out
+class TestZaeroFlutter(unittest.TestCase):
+    def test_zaero_gafa(self):
+        from pyNastran.f06.dev.flutter.read_zona_out import read_zaero_out
         #bdf_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.bdf'
         f06_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.out'
         png_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.png'
-        responses, mass = read_zona_out(f06_filename, debug=False)
+        responses, mass = read_zaero_out(f06_filename, debug=False)
         # plot_sol_200(f06_filename, png_filename=png_filename,
         #              show=True)
         if len(responses) == 1:

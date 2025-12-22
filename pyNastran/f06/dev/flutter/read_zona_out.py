@@ -5,15 +5,15 @@ from cpylog import SimpleLogger, get_logger
 from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.f06.flutter_response import FlutterResponse
 
-def read_zona_out(zona_out_filename: PathLike,
-                  log: Optional[SimpleLogger]=None,
-                  debug: Optional[str|bool]=True) -> tuple[dict, dict]:
+def read_zaero_out(zaero_out_filename: PathLike,
+                   log: Optional[SimpleLogger]=None,
+                   debug: Optional[str|bool]=True) -> tuple[dict, dict]:
     log = get_logger(log, debug)
-    assert os.path.exists(zona_out_filename), print_bad_path(zona_out_filename)
-    with open(zona_out_filename, 'r') as zona_out_file:
-        lines = zona_out_file.readlines()
+    assert os.path.exists(zaero_out_filename), print_bad_path(zaero_out_filename)
+    with open(zaero_out_filename, 'r') as zaero_out_file:
+        lines = zaero_out_file.readlines()
 
-    case_dict, ref_dict = zona_lines_to_out(log, lines)
+    case_dict, ref_dict = zaero_lines_to_out(log, lines)
     for key, data in case_dict.items():
         log.debug(f'{key}:\n{str(data)}')
 
@@ -22,8 +22,8 @@ def read_zona_out(zona_out_filename: PathLike,
 
     # FlutterResponse.from_nx()
     assert isinstance(in_units, dict), in_units
-    resp = FlutterResponse.from_zona(
-        modes, result, in_units, zona_out_filename)
+    resp = FlutterResponse.from_zaero(
+        modes, result, in_units, zaero_out_filename)
     responses = {
         1: resp,
     }
@@ -149,7 +149,7 @@ def out_dict_to_results(out_dict: dict,
     # for mode in out_dict['modes']:
     return modes, result, in_units
 
-def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
+def zaero_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
     out = {}
     nlines = len(lines)
     iline = 0
@@ -309,7 +309,7 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
     log.info('------------------------------------------------')
     log.info(f'{iline}: {lines[iline].rstrip()}')
 
-    raise RuntimeError('end of zona_lines_to_out')
+    raise RuntimeError('end of zaero_lines_to_out')
 
     #  THE FOLLOWING V-G-F TABLE LISTS   49 NUMBER OF STRUCTURAL MODES (  1 - 49 ) AND    0 NUMBER OF AERODYNAMIC LAG ROOTS (  0 -  0 )
     #

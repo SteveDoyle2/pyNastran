@@ -301,9 +301,9 @@ class PANLST3(Spline):
         aero_element_ids = []
         for caero_label in self.panel_groups:
             try:
-                caero_eid = model.zona.caero_to_name_map[caero_label]
+                caero_eid = model.zaero.caero_to_name_map[caero_label]
             except KeyError:
-                keys = list(model.zona.caero_to_name_map)
+                keys = list(model.zaero.caero_to_name_map)
                 keys.sort()
                 caero_labels = [caero.label for caero in model.caeros.values()]
                 caero_labels.sort()
@@ -1442,7 +1442,8 @@ class CAERO7(BaseCard):
                  p1: np.ndarray, x12: float,
                  p4: np.ndarray, x43: float,
                  cp: int=0,
-                 nspan: int=0, nchord: int=0, lspan: int=0,
+                 nspan: int=0, nchord: int=0,
+                 lspan: int=0,
                  p_airfoil: Optional[int]=None,
                  ztaic: Optional[int]=None,
                  lchord_root: int=0, attach_root: int=0, achord_root: int=0,
@@ -1677,7 +1678,7 @@ class CAERO7(BaseCard):
             self.lspan_ref = model.AEFact(self.lspan, msg)
 
         if self.p_airfoil:
-            self.pafoil_ref = model.zona.PAFOIL(self.p_airfoil, msg)
+            self.pafoil_ref = model.zaero.PAFOIL(self.p_airfoil, msg)
         self._init_ids()
 
     def safe_cross_reference(self, model: BDF, xref_errors):
@@ -2530,7 +2531,7 @@ class AESLINK(BaseCard):
         """
         msg = ', which is required by:\n%s' % str(self)
 
-        zona = model.zona
+        zaero = model.zaero
         aesurf_names = {aesurf.label for aesurf in model.aesurf.values()}
         aestat_names = {aestat.label for aestat in model.aestats.values()}
         is_aesurf = self.dependent_label in aesurf_names
@@ -2606,7 +2607,7 @@ class AESLINK(BaseCard):
 def cross_reference_panlst(model: BDF,
                            panlist_id: int) -> tuple[list[PANLST1 | PANLST2 | PANLST3],
                                                      np.ndarray]:
-    panlst_ref = model.zona.panlsts[panlist_id]
+    panlst_ref = model.zaero.panlsts[panlist_id]
     aero_ids_list = []
     for panlst in panlst_ref:
         panlst.cross_reference(model)

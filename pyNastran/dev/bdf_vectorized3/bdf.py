@@ -4952,11 +4952,11 @@ def _bool(value):
 class Zona:
     def __init__(self):
         pass
-    def update_for_zona(self):
+    def update_for_zaero(self):
         pass
 def map_version(fem: BDF, version: str):
     fem.nastran_format = version
-    fem.zona = Zona()
+    fem.zaero = Zona()
 
     version_map = {
         'msc': fem.set_as_msc,
@@ -4974,8 +4974,8 @@ def map_version(fem: BDF, version: str):
     func()
 
 def map_update(fem: BDF, version: str):
-    #if self.nastran_format == 'zona':
-        #self.zona.update_for_zona()
+    #if self.nastran_format == 'zaero':
+        #self.zaero.update_for_zaero()
     #elif self.nastran_format == 'mystran':
         #self._update_for_mystran()
     #else:
@@ -4987,7 +4987,8 @@ def map_update(fem: BDF, version: str):
         'nx': fem._update_for_nastran,
         'optistruct': fem._update_for_optistruct,
         'mystran': fem._update_for_mystran,
-        'zona': fem.zona.update_for_zona,
+        'zona': fem.zaero.update_for_zaero,
+        'zaero': fem.zaero.update_for_zaero,
     }
     try:
         func = version_map[version]

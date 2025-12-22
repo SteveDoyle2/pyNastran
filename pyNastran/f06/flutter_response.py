@@ -110,15 +110,15 @@ class FlutterResponse:
         return f'FlutterResponse(isubcase={self.subcase})'
 
     @classmethod
-    def from_zona(cls,
-                  modes: list[int],
-                  result: np.ndarray,
-                  in_units: dict[str, str],
-                  zona_out_filename: str,
-                  subcase_id: int=1, subtitle: str='', label: str='',
-                  # cref: float=1.0,
-                  # is_xysym: bool=False, is_xzsym: bool=False,
-                  ):
+    def from_zaero(cls,
+                   modes: list[int],
+                   result: np.ndarray,
+                   in_units: dict[str, str],
+                   zaero_out_filename: str,
+                   subcase_id: int=1, subtitle: str='', label: str='',
+                   # cref: float=1.0,
+                   # is_xysym: bool=False, is_xzsym: bool=False,
+                   ):
 
         mach0 = 0.0
         density_ratio = 1.0
@@ -137,7 +137,7 @@ class FlutterResponse:
         # print('in_units', in_units)
         assert isinstance(in_units, dict), in_units
         resp = FlutterResponse(
-            zona_out_filename, subcase_id, configuration, xysym, xzsym, mach0, density_ratio,
+            zaero_out_filename, subcase_id, configuration, xysym, xzsym, mach0, density_ratio,
             method, modes, result, in_units=in_units,
             subtitle=subtitle,
             label=label,
@@ -2187,7 +2187,7 @@ class FlutterResponse:
     def export_to_csv(self, csv_filename: PathLike,
                       modes: Optional[list[int]]=None) -> None:
         """
-        Exports a ZONA .veas file
+        Exports a ZAERO .veas file
 
         Parameters
         ----------
@@ -2235,7 +2235,7 @@ class FlutterResponse:
     def export_to_veas(self, veas_filename: PathLike,
                        modes: Optional[list[int]]=None) -> None:
         """
-        Exports a ZONA .veas file
+        Exports a ZAERO .veas file
 
         Parameters
         ----------
@@ -2330,17 +2330,17 @@ class FlutterResponse:
             page_num += 1
         return page_num
 
-    def export_to_zona(self, zona_filename: PathLike,
-                       modes: Optional[list[int]]=None,
-                       xlim: Optional[list[float]]=None,
-                       plot_type: str='tas',
-                       damping_ratios: Optional[list[float]]=None) -> str:
+    def export_to_zaero(self, zaero_filename: PathLike,
+                        modes: Optional[list[int]]=None,
+                        xlim: Optional[list[float]]=None,
+                        plot_type: str='tas',
+                        damping_ratios: Optional[list[float]]=None) -> str:
         """
-        Writes a custom ZONA flutter file
+        Writes a custom ZAERO flutter file
 
         Parameters
         ----------
-        zona_filename : str
+        zaero_filename : str
             the filename to write
         modes : list[int] / int ndarray; (default=None -> all)
             the modes; typically 1 to N
@@ -2408,9 +2408,9 @@ class FlutterResponse:
                 msg += 'mode, V, damp, freq: (damping ratio=%s)\n%s\n' % (damping_ratio, msgi)
 
         ## TODO: doesn't always have data...
-        zona_filename2 = _apply_subcase_to_filename(zona_filename, self.subcase)
-        with open(zona_filename2, 'w') as zona_file:
-            zona_file.write(msg)
+        zaero_filename2 = _apply_subcase_to_filename(zaero_filename, self.subcase)
+        with open(zaero_filename2, 'w') as zaero_file:
+            zaero_file.write(msg)
         return msg
 
     def _plot_type_to_ix_xlabel(self, plot_type: str) -> tuple[int, str, str]:

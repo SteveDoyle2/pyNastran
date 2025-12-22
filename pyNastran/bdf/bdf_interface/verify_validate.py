@@ -62,7 +62,7 @@ def verify_bdf(model: BDF, xref: bool) -> None:
     for unused_id, gust in sorted(model.gusts.items()):
         gust._verify(model, xref)
     _verify_dict(model.tics, xref)
-    model.zona.verify(xref)
+    model.zaero.verify(xref)
 
     for unused_super_id, superelement in model.superelement_models.items():
         verify_bdf(superelement, xref)
@@ -321,7 +321,7 @@ def validate_bdf(model: BDF) -> None:
     for unused_key, dscreen in sorted(model.dscreen.items()):
         dscreen.validate()
     _validate_dict_list(model, model.dvgrids)
-    model.zona.validate()
+    model.zaero.validate()
 
     for unused_super_id, superelement in model.superelement_models.items():
         validate_bdf(superelement)

@@ -127,21 +127,21 @@ class GLOADS(BaseCard):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
 
     def cross_reference(self, model: BDF) -> None:
-        zona = model.zona
+        zaero = model.zaero
         if self.asecont_id > 0:
-            self.asecont_ref = zona.asecont[self.asecont_id]
+            self.asecont_ref = zaero.asecont[self.asecont_id]
         if self.flutter_id > 0:
             self.flutter_ref = model.flutters[self.flutter_id]
         if self.minstat_id:
-            self.minstat_ref = zona.minstat[abs(self.minstat_id)]
+            self.minstat_ref = zaero.minstat[abs(self.minstat_id)]
 
         if self.mldstat_id > 0:
-            self.mldstat_ref = zona.mldstat[self.mldstat_id]
+            self.mldstat_ref = zaero.mldstat[self.mldstat_id]
 
-        if self.mldcomd_id in zona.dgust:
-            self.mldcomd_ref = zona.dgust[self.mldcomd_id]
-        elif self.mldcomd_id in zona.cgust:
-            self.mldcomd_ref = zona.cgust[self.mldcomd_id]
+        if self.mldcomd_id in zaero.dgust:
+            self.mldcomd_ref = zaero.dgust[self.mldcomd_id]
+        elif self.mldcomd_id in zaero.cgust:
+            self.mldcomd_ref = zaero.cgust[self.mldcomd_id]
         else:
             dgust = list(zona.dgust)
             cgust = list(zona.cgust)
@@ -151,11 +151,11 @@ class GLOADS(BaseCard):
                 f' - cgust = {cgust}')
             raise RuntimeError(msg)
 
-        if self.mldcomd_id in zona.mldcomd:
-            self.mldcomd_ref = zona.mldcomd[self.mldcomd_id]
+        if self.mldcomd_id in zaero.mldcomd:
+            self.mldcomd_ref = zaero.mldcomd[self.mldcomd_id]
         if self.mldtime_id:
-            self.mldtime_ref = zona.mldtime[self.mldtime_id]
-        self.mldprnt_ref = zona.mldprnt[self.mldprnt_id]
+            self.mldtime_ref = zaero.mldtime[self.mldtime_id]
+        self.mldprnt_ref = zaero.mldprnt[self.mldprnt_id]
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)

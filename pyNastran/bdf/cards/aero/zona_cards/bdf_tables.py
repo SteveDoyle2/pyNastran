@@ -13,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
-class TABLED1_ZONA(Table):
+class TABLED1_ZAERO(Table):
     """
     Dynamic Load Tabular Function, Form 1
     Defines a tabular function for use in generating frequency-dependent and
@@ -108,9 +108,9 @@ class TABLED1_ZONA(Table):
         y_scale = double_or_blank(card, 6, 'extrap', default=1.0)
 
         x, y = read_table(card, table_id, 'TABLED1')
-        return TABLED1_ZONA(table_id, x, y, xaxis=xaxis, yaxis=yaxis,
-                            extrap_xl=extrap_xl, extrap_xu=extrap_xu,
-                            y_scale=y_scale, comment=comment)
+        return TABLED1_ZAERO(table_id, x, y, xaxis=xaxis, yaxis=yaxis,
+                             extrap_xl=extrap_xl, extrap_xu=extrap_xu,
+                             y_scale=y_scale, comment=comment)
 
     @classmethod
     def add_card_lax(cls, card: BDFCard, comment: str=''):
@@ -133,9 +133,9 @@ class TABLED1_ZONA(Table):
         y_scale = double_or_blank(card, 6, 'extrap', default=1.0)
 
         x, y = read_table_lax(card, table_id, 'TABLED1')
-        return TABLED1_ZONA(table_id, x, y, xaxis=xaxis, yaxis=yaxis,
-                            extrap_xl=extrap_xl, extrap_xu=extrap_xu,
-                            y_scale=y_scale, comment=comment)
+        return TABLED1_ZAERO(table_id, x, y, xaxis=xaxis, yaxis=yaxis,
+                             extrap_xl=extrap_xl, extrap_xu=extrap_xu,
+                             y_scale=y_scale, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -202,7 +202,7 @@ class TABLED1_ZONA(Table):
         return y
 
 
-class TABDMP1_ZONA(TABDMP1):
+class TABDMP1_ZAERO(TABDMP1):
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
         """
@@ -220,4 +220,3 @@ class TABDMP1_ZONA(TABDMP1):
         Type = string_or_blank(card, 2, 'Type', default='G')
         x, y = read_table_lax(card, table_id, 'TABDMP1')
         return TABDMP1(table_id, x, y, Type=Type, comment=comment)
-

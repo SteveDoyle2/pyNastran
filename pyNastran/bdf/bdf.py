@@ -586,7 +586,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             settings the logging object has
         mode : str; default='msc'
             the type of Nastran
-            valid_modes = {'msc', 'nx', 'mystran', 'zona'}
+            valid_modes = {'msc', 'nx', 'mystran', 'zaero'}
 
         """
         assert debug in [True, False, None], f'debug={debug!r}'
@@ -1604,18 +1604,18 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'se_bsets', 'se_csets', 'se_qsets',
             'mkaeros', 'monitor_points', 'suport',
         ]
-        zona_cards_to_skip = ['STFLOW', 'TRIMVAR', 'AEROZ', 'TRIMFNC', 'LOADMOD', 'EXTFILE']
-        zona_slots_to_skip = ['panlsts', 'pafoils', 'attach']
+        zaero_cards_to_skip = ['STFLOW', 'TRIMVAR', 'AEROZ', 'TRIMFNC', 'LOADMOD', 'EXTFILE']
+        zaero_slots_to_skip = ['panlsts', 'pafoils', 'attach']
         rslot_to_type_map = self.get_rslot_map()
 
         for card_name, cards_list in cards_dict.items():
-            if card_name not in self.cards_to_read or card_name in zona_cards_to_skip:
+            if card_name not in self.cards_to_read or card_name in zaero_cards_to_skip:
                 for (comment, card_lines, ifile_iline) in cards_list:
                     self.reject_lines.append([_format_comment(comment)] + card_lines)
                 continue
 
             slot_name = rslot_to_type_map[card_name]
-            if slot_name in zona_slots_to_skip:
+            if slot_name in zaero_slots_to_skip:
                 for (comment, card_lines, ifile_iline) in cards_list:
                     self.reject_lines.append([_format_comment(comment)] + card_lines)
                 continue
@@ -1880,8 +1880,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                       bulk_data_ilines: Optional[Any]=None,
                       use_dict: bool=True) -> tuple[Any, Any, Any]:
         """Parses the BDF lines into a list of card_lines"""
-        if self._nastran_format == 'zona':
-            cards_list, cards_dict, card_count = self.zona.get_bdf_cards(
+        if self._nastran_format in {'zona', 'zaero'}:
+            cards_list, cards_dict, card_count = self.zaero.get_bdf_cards(
                 bulk_data_lines, bulk_data_ilines, use_dict)
             return cards_list, cards_dict, card_count
 
@@ -4759,7 +4759,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _update_for_nastran(self) -> None:
         """updates for msc/nx/optistruct"""
-        # TODO: undo the changes for zona
+        # TODO: undo the changes for zaero
         card_parser = self._card_parser
         CARD_MAP['PARAM'] = PARAM
         card_parser['PARAM'] = (PARAM, self._add_methods.add_param_object)
@@ -4794,7 +4794,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             # key/value are lowercase
             if key == 'version':
-                assert value.lower() in {'msc', 'nx', 'optistruct', 'zona', 'mystran'}, f'version={value!r} is not supported'
+                assert value.lower() in {'msc', 'nx', 'optistruct', 'zona', 'zaero', 'mystran'}, f'version={value!r} is not supported'
                 assert hasattr(self, 'nastran_format')
                 self.nastran_format = value
             elif key == 'encoding':
@@ -5126,7 +5126,7 @@ class BDF(BDF_):
             settings the logging object has
         mode : str; default='msc'
             the type of Nastran
-            valid_modes = {'msc', 'nx', 'mystran', 'zona'}
+            valid_modes = {'msc', 'nx', 'mystran', 'zaero'}
 
         """
         BDF_.__init__(self, debug=debug, log=log, mode=mode)

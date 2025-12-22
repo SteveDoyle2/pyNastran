@@ -240,8 +240,8 @@ class FlutterPreferencesDialog(PyDialog):
     def on_export_png(self) -> None:
         self.win_parent.export_to_png = self.export_png_checkbox.isChecked()
 
-    def on_export_zona(self) -> None:
-        self.win_parent.export_to_zona = self.export_zona_checkbox.isChecked()
+    def on_export_zaero(self) -> None:
+        self.win_parent.export_to_zaero = self.export_zaero_checkbox.isChecked()
 
     def on_default(self) -> None:
         self.font_size_edit.setValue(FONT_SIZE_DEFAULT)

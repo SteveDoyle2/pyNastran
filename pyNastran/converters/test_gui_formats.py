@@ -1,6 +1,6 @@
 import unittest
 
-from pyNastran.converters.nastran.test_nastran_gui import TestNastranGUI, TestZonaGui
+from pyNastran.converters.nastran.test_nastran_gui import TestNastranGUI, TestZaeroGui
 from pyNastran.converters.avl.test_avl_gui import TestAvlGUI
 from pyNastran.converters.abaqus.test_abaqus_gui import TestAbaqusGui
 from pyNastran.converters.cart3d.test_cart3d_gui import TestCart3dGUI

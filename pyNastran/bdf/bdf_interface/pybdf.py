@@ -169,7 +169,7 @@ class BDFInputPy:
             the character encoding (e.g., utf8, latin1, cp1252)
         nastran_format : str; default='msc'
             'zona' has a special read method
-            {msc, nx, zona}
+            {msc, nx, zaero}
         consider_superelements : bool; default=True
             parse 'begin super=2'
         log : logger(); default=None

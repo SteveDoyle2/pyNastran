@@ -16,9 +16,11 @@ if TYPE_CHECKING:  # pragma: no cover
 class MKAEROZ(BaseCard):
     type = 'MKAEROZ'
 
-    def __init__(self, sid: int, mach: float, flt_id: int, filename: str,
+    def __init__(self, sid: int, mach: float,
+                 flt_id: int, filename: str,
                  print_flag: int, freqs: list[float],
-                 method: int=0, save: Optional[str]=None, comment: str=''):
+                 method: int=0, save: str='SAVE',
+                 comment: str=''):
         """
         Parameters
         ==========
@@ -26,21 +28,20 @@ class MKAEROZ(BaseCard):
             the MKAEROZ id
         mach : float
             the mach number for the TRIM solution
-        save : str
+        freqs : list[float]
+            ???
+        method : int
+            ???
+        filename : str | int; default=''
+            save/acquire filename
+            the length of the file must be at most 56 characters
+        save : str; default='SAVE'
             save the AIC data to the filename
             SAVE    save the AICs
             ACQUIRE load an AIC database
             ADD     append the new acids to the existing AIC database
             RESTART continue an analysis
-        filename : str
-            the length of the file must be at most 56 characters
         print_flag : int
-            ???
-        freqs : list[float]
-            ???
-        method : int
-            ???
-        save : ???
             ???
         comment : str; default=''
              a comment for the card
@@ -57,18 +58,20 @@ class MKAEROZ(BaseCard):
         self.freqs = freqs
         self.filename = filename
         self.print_flag = print_flag
+        if isinstance(self.filename, str):
+            assert len(filename) <= 56, filename
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
         sid = integer(card, 1, 'IDMK')
         mach = double(card, 2, 'MACH')
         method = integer(card, 3, 'METHOD')
-        flt_id = integer_or_blank(card, 4, 'IDFLT')
-        save = string_or_blank(card, 5, 'SAVE')
+        flt_id = integer_or_blank(card, 4, 'IDFLT', default=0)
+        save = string_or_blank(card, 5, 'SAVE/ACQUIRE', default='SAVE')
         #print(f'card = {card}')
         filename = string_multifield_dollar_int_or_blank(
             card, (6, 7), 'filename', default='')
-        print_flag = integer_or_blank(card, 8, 'PRINT_FLAG', 0)
+        print_flag = integer_or_blank(card, 8, 'PRINT_FLAG', default=0)
         freqs = []
         ifreq = 1
         for ifield in range(9, len(card)):
@@ -79,7 +82,7 @@ class MKAEROZ(BaseCard):
                        method=method, save=save, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
-        return
+        self.filename_ref = get_extfile(model, self.filename)
 
     def safe_cross_reference(self, model: BDF, xref_errors) -> None:
         self.cross_reference(model)
@@ -107,7 +110,7 @@ class MKAEROZ(BaseCard):
         return self.comment + print_card_8(card)
 
 
-class FLUTTER_ZONA(BaseCard):
+class FLUTTER_ZAERO(BaseCard):
     """
     Defines data needed to perform flutter, ASE, or a transient response analysis.
 
@@ -128,7 +131,7 @@ class FLUTTER_ZONA(BaseCard):
     +---------+-------+-------+-------+-------+--------+-------+---------+--------+
 
     """
-    type = 'FLUTTER_ZONA'
+    type = 'FLUTTER_ZAERO'
 
     def __init__(self, sid: int, sym: str, fix: int, mlist: int, conmlst: int,
                  nmode: int=0, tabdmp: int=0, nkstep: int=25, comment: str=''):
@@ -222,8 +225,8 @@ class FLUTTER_ZONA(BaseCard):
         conmlst = integer_or_blank(card, 7, 'conmlst')
         nkstep = integer_or_blank(card, 8, 'nkstep', default=25)
         assert len(card) <= 9, f'len(FLUTTER card) = {len(card):d}\ncard={card}'
-        flutter = FLUTTER_ZONA(sid, sym, fix, mlist, conmlst,
-                               nmode=nmode, tabdmp=tabdmp, nkstep=nkstep, comment=comment)
+        flutter = FLUTTER_ZAERO(sid, sym, fix, mlist, conmlst,
+                                nmode=nmode, tabdmp=tabdmp, nkstep=nkstep, comment=comment)
         return flutter
 
     def cross_reference(self, model: BDF) -> None:
@@ -232,7 +235,7 @@ class FLUTTER_ZONA(BaseCard):
         #self.setg_ref = model.Set(self.setg, msg=msg)
         #self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
-        #self.panlst_ref = model.zona.panlsts[self.panlst]
+        #self.panlst_ref = model.zaero.panlsts[self.panlst]
         #self.panlst_ref.cross_reference(model)
         #self.aero_element_ids = self.panlst_ref.aero_element_ids
 
@@ -247,7 +250,7 @@ class FLUTTER_ZONA(BaseCard):
                 #self.setg, msg, np.unique(list(model.sets)))
 
         #try:
-            #self.panlst_ref = model.zona.panlsts[self.panlst]
+            #self.panlst_ref = model.zaero.panlsts[self.panlst]
             #self.panlst_ref.safe_cross_reference(model, xref_errors)
             #self.aero_element_ids = self.panlst_ref.aero_element_ids
         #except KeyError:
@@ -270,3 +273,12 @@ class FLUTTER_ZONA(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+def get_extfile(model: BDF, filename: str | int) -> str | None:
+    if isinstance(filename, str):
+        filename_ref = None
+    elif isinstance(filename, int):
+        filename_ref = model.zaero.extfile[filename]
+    else:
+        raise TypeError(f'filename={filename!r} type={str(filename)}')
+    return filename_ref

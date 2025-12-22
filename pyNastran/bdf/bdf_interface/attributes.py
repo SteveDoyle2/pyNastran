@@ -473,7 +473,7 @@ class BDFAttributes:
         self.is_msc = False
         self.is_mystran = False
         self.is_optistruct = False
-        self.is_zona = False
+        self.is_zaero = False
         self.save_file_structure = False
         self.is_superelements = False
         self._nastran_format = ''
@@ -486,7 +486,7 @@ class BDFAttributes:
         self.is_msc = True
         self.is_optistruct = False
         self.is_mystran = False
-        self.is_zona = False
+        self.is_zaero = False
 
     def set_as_nx(self):
         self._nastran_format = 'nx'
@@ -494,7 +494,7 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = False
         self.is_mystran = False
-        self.is_zona = False
+        self.is_zaero = False
 
     def set_as_optistruct(self):
         self._nastran_format = 'optistruct'
@@ -502,7 +502,7 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = True
         self.is_mystran = False
-        self.is_zona = False
+        self.is_zaero = False
 
     def set_as_zaero(self):
         self._nastran_format = 'zona'
@@ -510,7 +510,7 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = False
         self.is_mystran = False
-        self.is_zona = True
+        self.is_zaero = True
 
     def set_as_mystran(self):
         self._nastran_format = 'mystran'
@@ -518,7 +518,7 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = False
         self.is_mystran = True
-        self.is_zona = False
+        self.is_zaero = False
         self._update_for_mystran()
 
     def __properties__(self):
@@ -1427,8 +1427,8 @@ def map_version(fem: BDF, version: str) -> None:
 
 
 def map_update(fem: BDF, version: str) -> None:
-    # if self.nastran_format == 'zona':
-    #     self.zona.update_for_zona()
+    # if self.nastran_format == 'zaero':
+    #     self.zaero.update_for_zaero()
     # elif self.nastran_format == 'mystran':
     #     self._update_for_mystran()
     # else:
@@ -1441,8 +1441,8 @@ def map_update(fem: BDF, version: str) -> None:
         'nx': fem._update_for_nastran,
         'optistruct': fem._update_for_optistruct,
         'mystran': fem._update_for_mystran,
-        'zona': fem.zona.update_for_zona,
-        'zaero': fem.zona.update_for_zona,
+        'zona': fem.zaero.update_for_zaero,
+        'zaero': fem.zaero.update_for_zaero,
     }
     try:
         func = version_map[version]

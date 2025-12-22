@@ -378,7 +378,8 @@ class AEFACT(BaseCard):
         fractions = [0., 1.,]
         return AEFACT(sid, fractions, comment='')
 
-    def __init__(self, sid, fractions, comment=''):
+    def __init__(self, sid: int, fractions: list[float],
+                 comment: str=''):
         """
         Creates an AEFACT card, which is used by the CAEROx / PAEROx card
         to adjust the spacing of the sub-paneleing (and grid point
@@ -389,7 +390,7 @@ class AEFACT(BaseCard):
         sid : int
             unique id
         fractions : list[float, ..., float]
-            list of percentages
+            list of percentages ranging from 0-1
         comment : str; default=''
             a comment for the card
 

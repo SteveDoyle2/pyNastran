@@ -44,8 +44,8 @@ BDF:
      - added NX extrap flag (default=0) is not used on TABLED1-D3, TABLEM1-M3, and TABLEST
    - new cards:
      - MATT11, CWELD, PWELD
-     - PLOTEL3', PLOTEL4, PLOTEL6, PLOTEL8, PLOTTET, PLOTPYR, PLOTPEN, PLOTHEX
-     - no midside nodes
+     - PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8, PLOTTET, PLOTPYR, PLOTPEN, PLOTHEX
+      - no midside nodes
 
  - changed renames:
    - dmis -> dmi
@@ -95,6 +95,7 @@ OP2:
      - thermal_strain
      - creep_strain
      - kinetic_energy
+     - linear_combination support for limited static results
 
  - changed:
    - stress/strain/force no longer found in model.cquad4_stress, etc.
@@ -967,7 +968,7 @@ BDF (detailed):
     - improved mirroring
     - read_bdf StringIO option now parses pyNastran header
     - subcase copying speedup (helps with SETs)
-    - preliminary ZONA loading
+    - preliminary ZAERO loading
     - added atmosphere2.make_flfacts_eas_sweep, make_flfacts_mach_sweep, and
       make_flfacts_alt_sweep with an EAS (equivalent airspeed) limiter
     - rotate_v_wa_wb for CBAR/CBEAM to determine element vectors

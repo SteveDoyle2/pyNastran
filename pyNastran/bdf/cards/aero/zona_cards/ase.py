@@ -10,7 +10,6 @@ All cards are BaseCard objects.
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from pyNastran.bdf.cards.aero import zona
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -79,16 +78,16 @@ class ASE(BaseCard):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
 
     def cross_reference(self, model: BDF) -> None:
-        zona = model.zona
+        zaero = model.zaero
         if self.asecont_id:
-            self.asecont_ref = zona.asecont[self.asecont_id]
+            self.asecont_ref = zaero.asecont[self.asecont_id]
         self.flutter_ref = model.flutters[self.flutter_id]
         if self.mldstat_id:
-            self.mldstat_ref = zona.mldstat[self.mldstat_id]
+            self.mldstat_ref = zaero.mldstat[self.mldstat_id]
         if self.minstat_id:
-            self.minstat_ref = zona.minstat[self.minstat_id]
+            self.minstat_ref = zaero.minstat[self.minstat_id]
         if self.cmargin_id and 0:
-            self.cmargin_ref = zona.cmargin[self.cmargin_id]
+            self.cmargin_ref = zaero.cmargin[self.cmargin_id]
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -183,7 +182,7 @@ class ASECONT(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         msg = f', which is required by ASECONT={self.asecont_id}'
         # ASE, MLOADS, ELOADS, GLOADS, DFS, or NLFLTR
-        # zona = model.zona
+        # zaero = model.zaero
         # CNCTSET
         # self.conct_ref = model.conct[self.conct_id]
         if self.extinp_set_id:
@@ -203,7 +202,7 @@ class ASECONT(BaseCard):
         """Removes cross-reference links"""
         pass
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         """
         Gets the fields in their unmodified form
 
@@ -284,7 +283,7 @@ class ASEGAIN(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         msg = f', which is required by ASEGAIN={self.asegain_id}'
         # ASE, MLOADS, ELOADS, GLOADS, DFS, or NLFLTR
-        zona = model.zona
+        zaero = model.zaero
         # CNCTSET
         # self.conct_ref = model.conct[self.conct_id]
 
@@ -627,24 +626,24 @@ class CONCT(BaseCard):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
 
     def cross_reference(self, model: BDF) -> None:
-        zona = model.zona
+        zaero = model.zaero
         log = model.log
 
         idi = self.input_tf_id
-        if idi in zona.sisotf:
-            input_ref = zona.sisotf[idi]
-            assert idi not in zona.cjunct, f'idi={idi} in cjunct (already in sisotf)'
-            assert idi not in zona.actu, f'idi={idi} in actu (already in sisotf)'
-        elif idi in zona.cjunct:
-            input_ref = zona.cjunct[idi]
-            assert idi not in zona.actu, f'idi={idi} in actu (already in sisotf)'
-        elif idi in zona.actu:
-            input_ref = zona.actu[idi]
+        if idi in zaero.sisotf:
+            input_ref = zaero.sisotf[idi]
+            assert idi not in zaero.cjunct, f'idi={idi} in cjunct (already in sisotf)'
+            assert idi not in zaero.actu, f'idi={idi} in actu (already in sisotf)'
+        elif idi in zaero.cjunct:
+            input_ref = zaero.cjunct[idi]
+            assert idi not in zaero.actu, f'idi={idi} in actu (already in sisotf)'
+        elif idi in zaero.actu:
+            input_ref = zaero.actu[idi]
         else:
-            cjunct = list(zona.cjunct)
-            mimoss = list(zona.mimoss)
-            sisotf = list(zona.sisotf)
-            actu = list(zona.actu)
+            cjunct = list(zaero.cjunct)
+            mimoss = list(zaero.mimoss)
+            sisotf = list(zaero.sisotf)
+            actu = list(zaero.actu)
             cjunct.sort()
             mimoss.sort()
             sisotf.sort()
@@ -662,19 +661,19 @@ class CONCT(BaseCard):
 
         #-------------
         idi = self.output_tf_id
-        if idi in zona.sisotf:
-            output_ref = zona.sisotf[idi]
-            assert idi not in zona.cjunct, f'idi={idi} in cjunct (already in sisotf)'
-        elif idi in zona.cjunct:
-            output_ref = zona.cjunct[idi]
-            # assert idi not in zona.actu, f'idi={idi} in actu (already in sisotf)'
-        # elif idi in zona.actu:
-        #     output_ref = zona.actu[idi]
+        if idi in zaero.sisotf:
+            output_ref = zaero.sisotf[idi]
+            assert idi not in zaero.cjunct, f'idi={idi} in cjunct (already in sisotf)'
+        elif idi in zaero.cjunct:
+            output_ref = zaero.cjunct[idi]
+            # assert idi not in zaero.actu, f'idi={idi} in actu (already in sisotf)'
+        # elif idi in zaero.actu:
+        #     output_ref = zaero.actu[idi]
         else:
-            cjunct = list(zona.cjunct)
-            mimoss = list(zona.mimoss)
-            sisotf = list(zona.sisotf)
-            actu = list(zona.actu)
+            cjunct = list(zaero.cjunct)
+            mimoss = list(zaero.mimoss)
+            sisotf = list(zaero.sisotf)
+            actu = list(zaero.actu)
             cjunct.sort()
             mimoss.sort()
             sisotf.sort()
@@ -767,18 +766,18 @@ class TFSET(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         ids_ref = []
         log = model.log
-        zona = model.zona
+        zaero = model.zaero
         for idi in self.ids:
-            if idi in zona.cjunct:
-                id_ref = zona.cjunct[idi]
-            elif idi in zona.mimoss:
-                id_ref = zona.mimoss[idi]
-            elif idi in zona.sisotf:
-                id_ref = zona.sisotf[idi]
+            if idi in zaero.cjunct:
+                id_ref = zaero.cjunct[idi]
+            elif idi in zaero.mimoss:
+                id_ref = zaero.mimoss[idi]
+            elif idi in zaero.sisotf:
+                id_ref = zaero.sisotf[idi]
             else:
-                cjunct = list(zona.cjunct)
-                mimoss = list(zona.mimoss)
-                sisotf = list(zona.sisotf)
+                cjunct = list(zaero.cjunct)
+                mimoss = list(zaero.mimoss)
+                sisotf = list(zaero.sisotf)
                 msg = (
                     f'TFSET={self.tfset_id}: id={idi} is not [CJUNCT, MIMOSS, SISOTF]\n'
                     f' - cjunct = {cjunct}\n'
@@ -865,17 +864,17 @@ class SENSET(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         ids_ref = []
         log = model.log
-        zona = model.zona
+        zaero = model.zaero
         for idi in self.ids:
             # ASESNSR or ASESNS1
-            if idi in zona.asesnsr:
-                id_ref = zona.asesnsr[idi]
-            elif idi in zona.asesns1:
-                id_ref = zona.asesns1[idi]
+            if idi in zaero.asesnsr:
+                id_ref = zaero.asesnsr[idi]
+            elif idi in zaero.asesns1:
+                id_ref = zaero.asesns1[idi]
             else:
-                asesnsr = list(zona.asesnsr)
-                asesns1 = list(zona.asesns1)
-                # sisotf = list(zona.sisotf)
+                asesnsr = list(zaero.asesnsr)
+                asesns1 = list(zaero.asesns1)
+                # sisotf = list(zaero.sisotf)
                 msg = (
                     f'SENSET={self.senset_id}: id={idi} is not [ASESNSR, ASESNS1]\n'
                     f' - asesnsr = {asesnsr}\n'
@@ -961,13 +960,13 @@ class GAINSET(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         ids_ref = []
         log = model.log
-        zona = model.zona
+        zaero = model.zaero
         for idi in self.ids:
-            if idi in zona.asegain:
-                id_ref = zona.asegain[idi]
+            if idi in zaero.asegain:
+                id_ref = zaero.asegain[idi]
             else:
-                gainset = list(zona.gainset)
-                asegain = list(zona.asegain)
+                gainset = list(zaero.gainset)
+                asegain = list(zaero.asegain)
                 gainset.sort()
                 asegain.sort()
                 msg = (
@@ -1168,21 +1167,21 @@ class SURFSET(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         ids_ref = []
         log = model.log
-        zona = model.zona
+        zaero = model.zaero
         for idi in self.ids:
             # AESURFZ, AESLINK, PZTMODE or JETFRC
             if idi in model.aesurf:
                 id_ref = model.aesurf[idi]
-            # elif idi in zona.aesurfz:
-            #     id_ref = zona.aesurfz[idi]
-            elif idi in zona.aeslink:
-                id_ref = zona.aeslink[idi]
+            # elif idi in zaero.aesurfz:
+            #     id_ref = zaero.aesurfz[idi]
+            elif idi in zaero.aeslink:
+                id_ref = zaero.aeslink[idi]
             else:
                 aesurf = list(model.aesurf)
-                aeslink = list(zona.aeslink)
-                # aesurfz = list(zona.aesurfz)
-                asesnsr = list(zona.asesnsr)
-                # asesns1 = list(zona.asesns1)
+                aeslink = list(zaero.aeslink)
+                # aesurfz = list(zaero.aesurfz)
+                asesnsr = list(zaero.asesnsr)
+                # asesns1 = list(zaero.asesns1)
                 msg = (
                     f'SURFSET={self.surfset_id}: id={idi} is not [AESURFZ, AESLINK, PZTMODE, JETFRC]\n'
                     f' - aesurf  = {aesurf}\n'
@@ -1266,16 +1265,16 @@ class CNCTSET(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         ids_ref = []
         log = model.log
-        zona = model.zona
+        zaero = model.zaero
         for idi in self.ids:
             # AESURFZ, AESLINK, PZTMODE or JETFRC
-            if idi in zona.cnctset:
-                id_ref = zona.cnctset[idi]
-            elif idi in zona.conct:
-                id_ref = zona.conct[idi]
+            if idi in zaero.cnctset:
+                id_ref = zaero.cnctset[idi]
+            elif idi in zaero.conct:
+                id_ref = zaero.conct[idi]
             else:
-                conct = list(zona.conct)
-                cnctset = list(zona.cnctset)
+                conct = list(zaero.conct)
+                cnctset = list(zaero.cnctset)
                 msg = (
                     f'CNCTSET={self.cnctset_id}: id={idi} is not [CONCT]\n'
                     f' - cnctset = {cnctset}\n'

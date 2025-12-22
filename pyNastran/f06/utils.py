@@ -359,12 +359,12 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
 
     export_f06 = data['--export_f06']
     export_csv = data['--export_csv']
-    export_zona = data['--export_zona']
+    export_zaero = data['--export_zaero']
 
     base = os.path.splitext(os.path.basename(f06_filename))[0]
     export_f06_filename = None if export_f06 is False else 'nastran.f06'
-    export_zona_filename = None if export_zona is False else 'nastran.zona'
-    export_veas_filename = None if export_zona is False else 'nastran.veas'
+    export_zona_filename = None if export_zaero is False else 'nastran.zaero'
+    export_veas_filename = None if export_zaero is False else 'nastran.veas'
 
     # TODO: need a new parameter
     export_csv_filename = None if export_csv is None else base + '.plot_145_subcase_%d.csv'

@@ -828,7 +828,7 @@ class Writer:
             #for (unused_id, spline) in sorted(model.splines.items()):
                 #bdf_file.write(spline.write_card(size, is_double))
         return
-        self.zona.write_bdf(bdf_file, size=8, is_double=False)
+        self.zaero.write_bdf(bdf_file, size=8, is_double=False)
 
     def _write_aero_control(self, bdf_file: TextIOLike,
                             size: int=8, is_double: bool=False) -> None:
