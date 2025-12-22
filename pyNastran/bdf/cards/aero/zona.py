@@ -1339,10 +1339,11 @@ def get_dicts(zaero: ZAERO, method: str) -> tuple[dict[int, list],
         zaero.dmil,
         # plotting
         zaero.pltvg, zaero.pltbode,
-        zaero.pltcp, zaero.plttrim, zaero.pltaero,
+        zaero.pltaero,
     ]
     dict_lists = [
-        zaero.pltflut, zaero.plttime,
+        zaero.pltcp, zaero.pltflut,
+        zaero.plttime, zaero.plttrim,
     ]
     if method == 'write':
         # these are xref'd by their parent

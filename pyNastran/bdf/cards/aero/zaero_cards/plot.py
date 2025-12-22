@@ -178,8 +178,10 @@ class PLTAERO(BaseCard):
           the fields that define the card
 
         """
-        list_fields = ['PLTAERO', self.set_id, self.femgrid, self.offset,
-                       self.out_format, self.filename, self.cell, self.vct]
+        filenamea, filenameb = split_filename_dollar(self.filename)
+        list_fields = [
+            'PLTAERO', self.set_id, self.femgrid, self.offset,
+            self.out_format, filenamea, filenameb, self.cell, self.vct]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -272,8 +274,10 @@ class PLTCP(BaseCard):
     type = 'PLTCP'
     def __init__(self, set_id: int,
                  sym_flag: str,
+                 mkaeroz_id: int, ik: int, mode: int,
                  out_format: str,
                  filename: str | int,
+                 aero_filename: str | int='',
                  comment: str=''):
         BaseCard.__init__(self)
 
@@ -282,8 +286,12 @@ class PLTCP(BaseCard):
 
         self.set_id = set_id
         self.sym_flag = sym_flag
+        self.mkaeroz_id = mkaeroz_id
+        self.ik = ik
+        self.mode = mode
         self.out_format = out_format
         self.filename = filename
+        self.aero_filename = aero_filename
         assert sym_flag in {'SYM', 'ANTI'}, sym_flag
         assert out_format in {'TECPLOT',}, out_format
         # assert vct in {'YES', 'NO'}, vct
@@ -312,8 +320,9 @@ class PLTCP(BaseCard):
             card, (9, 10), 'aero_filename', default='')
         # assert filename == 'CP7.PLT', filename
         assert len(card) <= 9, f'len(PLTCP card) = {len(card):d}\ncard={card}'
-        return PLTCP(set_id, sym_flag, out_format, filename,
-                     comment=comment)
+        return PLTCP(set_id, sym_flag, mkaero_id, ik, mode,
+                     out_format, filename,
+                     aero_filename=aero_filename, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         return
@@ -335,8 +344,12 @@ class PLTCP(BaseCard):
 
         """
         # ['PLTCP', '30', 'SYM', '80', '5', '1', 'TECPLOT', 'CP7.PLT']
-        list_fields = ['PLTCP', self.set_id, self.sym_flag, None,
-                       None, None, self.out_format, self.filename]
+        filenamea, filenameb = split_filename_dollar(self.filename)
+        afilenamea, afilenameb = split_filename_dollar(self.aero_filename)
+        list_fields = ['PLTCP', self.set_id, self.sym_flag,
+                       self.mkaeroz_id, self.ik, self.mode,
+                       self.out_format, filenamea, filenameb,
+                       afilenamea, afilenameb]
         return list_fields
 
     def write_card(self, size: int = 8, is_double: bool = False) -> str:
