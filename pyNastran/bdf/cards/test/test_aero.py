@@ -26,7 +26,7 @@ from pyNastran.bdf.cards.aero.aero import (
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.utils import build_trim_load_cases
-from pyNastran.bdf.cards.aero.zona_interface.nastran_to_zaero import nastran_to_zaero
+from pyNastran.bdf.cards.aero.zaero_interface.nastran_to_zaero import nastran_to_zaero
 
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh  # build_structure_from_caero

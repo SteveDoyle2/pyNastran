@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf_interface.cross_reference_obj import CrossReference
 #from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
-from pyNastran.bdf.cards.aero.zona import ZONA as ZAERO
+from pyNastran.bdf.cards.aero.zona import ZAERO
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -125,7 +125,7 @@ if TYPE_CHECKING:  # pragma: no cover
         DMIG, DMI, DMIJ, DMIK, DMIJI, DMIAX, DTI, DTI_UNITS)
     from pyNastran.bdf.subcase import Subcase
 
-BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona', 'mystran'}
+BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona', 'zaero', 'mystran'}
 SLOT_TO_TYPE_MAP: dict[str, list[str]] = {
     'params': ['PARAM'],
     'mdlprm': ['MDLPRM'],
@@ -1447,7 +1447,7 @@ def map_update(fem: BDF, version: str) -> None:
     try:
         func = version_map[version]
     except KeyError:
-        msg = f'mode={version!r} is not supported; modes=[msc, nx, optistruct, zaero, zona, mystran]'
+        msg = f'mode={version!r} is not supported; modes=[msc, nx, optistruct, zaero, mystran]'
         raise RuntimeError(msg)
     # fem.log.info(f'mapping version={version!r} vfunc={func}')
     func()

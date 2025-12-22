@@ -115,8 +115,8 @@ from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, 
 from pyNastran.bdf.cards.aero.zona import (
     CAERO7, PAFOIL7, BODY7, AESURFZ, ACOORD, MKAEROZ,
     # AEROZ, MKAEROZ, PANLST1, PANLST3,
-    # SEGMESH, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA, TRIMLNK, TRIMVAR, TRIM_ZONA,
-    ZONA)
+    # SEGMESH, SPLINE1_ZAERO, SPLINE2_ZAERO, SPLINE3_ZAERO, TRIMLNK, TRIMVAR, TRIM_ZAERO,
+    ZAERO)
 
 from pyNastran.bdf.cards.optimization import (
     DCONADD, DCONSTR, DESVAR, TOPVAR, DDVAL, DOPTPRM, DLINK,
@@ -757,7 +757,7 @@ CARD_MAP = {
     'DAREA': DAREA,
     'DPHASE': DPHASE,
     'DELAY': DELAY,
-    'ZONA': ZONA,
+    'ZAERO': ZAERO,
 }
 
 

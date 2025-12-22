@@ -712,7 +712,7 @@ def _fix_modes(eigr: np.ndarray,
 
 class TestZaeroFlutter(unittest.TestCase):
     def test_zaero_gafa(self):
-        from pyNastran.f06.dev.flutter.read_zona_out import read_zaero_out
+        from pyNastran.f06.dev.flutter.read_zaero_out import read_zaero_out
         #bdf_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.bdf'
         f06_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.out'
         png_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.png'

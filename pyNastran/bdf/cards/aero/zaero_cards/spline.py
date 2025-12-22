@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
-from pyNastran.bdf.cards.aero.zona_cards.geometry import (
+from pyNastran.bdf.cards.aero.zaero_cards.geometry import (
     PANLST1, PANLST2, PANLST3, cross_reference_panlst)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard

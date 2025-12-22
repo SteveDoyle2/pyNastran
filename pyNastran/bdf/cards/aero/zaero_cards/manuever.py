@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING
 
 from matplotlib import pyplot as plt
 
-from pyNastran.bdf.cards.aero.zona_cards.spline import cross_reference_set
-from pyNastran.bdf.cards.aero.zona_cards.utils import split_filename_dollar
+from pyNastran.bdf.cards.aero.zaero_cards.spline import cross_reference_set
+from pyNastran.bdf.cards.aero.zaero_cards.utils import split_filename_dollar
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
@@ -22,16 +22,14 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, string,
     string_or_blank,
     integer_string_or_blank,
-    string_multifield, parse_components as fcomponent
-,
-)
+    string_multifield, parse_components as fcomponent)
+from pyNastran.bdf.cards.aero.zaero_cards.ase import (
+    ASECONT, CJUNCT, )
+from pyNastran.bdf.cards.aero.zaero_cards.cards import MLDCOMD
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.bdf.cards.aero.zona_cards.ase import (
-    ASECONT, CJUNCT, )
-from pyNastran.bdf.cards.aero.zona_cards.cards import MLDCOMD
 
 
 

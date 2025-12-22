@@ -128,7 +128,7 @@ class TestPyBDF(unittest.TestCase):
         read_includes = True
         dumplines = True
         encoding = None
-        pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
+        pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zaero',
                            consider_superelements=False, log=None, debug=False)
         bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
         #(unused_system_lines,
@@ -153,7 +153,7 @@ class TestPyBDF(unittest.TestCase):
         read_includes = True
         dumplines = True
         encoding = None
-        pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
+        pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zaero',
                            consider_superelements=False, log=None, debug=False)
         bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
         #print('bulk_data_linesB =', bulk_data_lines)
@@ -172,7 +172,7 @@ class TestPyBDF(unittest.TestCase):
         read_includes = True
         dumplines = True
         encoding = None
-        pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zona',
+        pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='zaero',
                            consider_superelements=False, log=None, debug=False)
         bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
         #print('bulk_data_linesC =', bulk_data_lines)

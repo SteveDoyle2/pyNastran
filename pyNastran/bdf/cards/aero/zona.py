@@ -14,42 +14,42 @@ from pyNastran.bdf.bdf_interface.utils import sorteddict
 from pyNastran.bdf.bdf_interface.utils import _prep_comment
 from pyNastran.bdf.bdf_interface.pybdf import _clean_comment
 
-from .zona_cards.zona_sets import (
+from .zaero_cards.zaero_sets import (
     SETADD)
-from pyNastran.bdf.cards.aero.zona_cards.atm import (
+from pyNastran.bdf.cards.aero.zaero_cards.atm import (
     ATMOS, FIXMATM, FIXHATM, FIXMACH, FIXMDEN)
-from pyNastran.bdf.cards.aero.zona_cards.spline import (
+from pyNastran.bdf.cards.aero.zaero_cards.spline import (
     SPLINE1_ZAERO, SPLINE2_ZAERO, SPLINE3_ZAERO,)
-from pyNastran.bdf.cards.aero.zona_cards.geometry import (
+from pyNastran.bdf.cards.aero.zaero_cards.geometry import (
     PANLST1, PANLST2, PANLST3, SEGMESH,
     CAERO7, BODY7, PAFOIL7, PAFOIL8, AESURFZ, AESLINK)
-from pyNastran.bdf.cards.aero.zona_cards.plot import (
+from pyNastran.bdf.cards.aero.zaero_cards.plot import (
     PLTAERO, PLTMODE, PLTVG, PLTFLUT, PLTTIME,
     PLTCP, PLTMIST, PLTSURF, PLTBODE, PLTTRIM)
-from pyNastran.bdf.cards.aero.zona_cards.flutter import (
+from pyNastran.bdf.cards.aero.zaero_cards.flutter import (
     FLUTTER_ZAERO, MKAEROZ)
-from pyNastran.bdf.cards.aero.zona_cards.trim import (
+from pyNastran.bdf.cards.aero.zaero_cards.trim import (
     TRIM_ZAERO, TRIMVAR, TRIMLNK,)
-from pyNastran.bdf.cards.aero.zona_cards.manuever import (
+from pyNastran.bdf.cards.aero.zaero_cards.manuever import (
     MLOADS, EXTINP, EXTOUT, TRIMFNC, ACTU, LOADMOD, RBRED,)
-from pyNastran.bdf.cards.aero.zona_cards.gust import (
+from pyNastran.bdf.cards.aero.zaero_cards.gust import (
     GLOADS, DGUST, CGUST, MFTGUST)
-from pyNastran.bdf.cards.aero.zona_cards.ase import (
+from pyNastran.bdf.cards.aero.zaero_cards.ase import (
     ASE, ASECONT, ASESNSR, ASESNS1,
     CJUNCT, CONCT, TFSET, MIMOSS, SISOTF,
     SENSET, SURFSET, CNCTSET,
     ASEGAIN, GAINSET,
     AEROLAG,
 )
-from pyNastran.bdf.cards.aero.zona_cards.bdf_tables import (
+from pyNastran.bdf.cards.aero.zaero_cards.bdf_tables import (
     TABLED1_ZAERO, TABDMP1_ZAERO)
-from pyNastran.bdf.cards.aero.zona_cards.dmi import DMIL
-from pyNastran.bdf.cards.aero.zona_cards.cards import (
+from pyNastran.bdf.cards.aero.zaero_cards.dmi import DMIL
+from pyNastran.bdf.cards.aero.zaero_cards.cards import (
     MLDPRNT, MLDSTAT, MINSTAT, MLDTRIM, MLDCOMD, MLDTIME,
     AEROZ, ACOORD, ATTACH, EXTFILE,
 )
-from pyNastran.bdf.cards.aero.zona_interface.nastran_to_zaero import nastran_to_zaero
-from pyNastran.bdf.cards.aero.zona_interface.zaero_to_nastran import zaero_to_nastran
+from pyNastran.bdf.cards.aero.zaero_interface.nastran_to_zaero import nastran_to_zaero
+from pyNastran.bdf.cards.aero.zaero_interface.zaero_to_nastran import zaero_to_nastran
 
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -1045,7 +1045,7 @@ class ZAERO:
                 panlsti.safe_cross_reference(model, xref_errors)
         self._check_cntcset()
 
-    def uncross_reference(zaero: ZONA):
+    def uncross_reference(zaero: ZAERO):
         dicts, dicts_list = get_dicts(zaero, 'write')
         for panlsts in zaero.panlsts.values():
             for panlst in panlsts:
@@ -1099,7 +1099,7 @@ class ZAERO:
         return zaero_to_nastran(self, save=save)
 
     def add_caero2s(self, caero2s, add=False):
-        """Converts ZONA BODY7 to CAERO2/PAERO2/AEFACT"""
+        """Converts ZAERO BODY7 to CAERO2/PAERO2/AEFACT"""
         model = self.model
         add_methods = model._add_methods
         caero_body_ids = []

@@ -60,7 +60,7 @@ def load_f06_op2(f06_filename: str, log: SimpleLogger,
             #raise
             return model, responses
     elif ext == '.out':
-        from pyNastran.f06.dev.flutter.read_zona_out import read_zona_out
+        from pyNastran.f06.dev.flutter.read_zaero_out import read_zona_out
         try:
             responses, mass = read_zona_out(f06_filename)
         except Exception as e:

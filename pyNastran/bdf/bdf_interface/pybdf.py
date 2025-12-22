@@ -168,7 +168,7 @@ class BDFInputPy:
         encoding : str
             the character encoding (e.g., utf8, latin1, cp1252)
         nastran_format : str; default='msc'
-            'zona' has a special read method
+            'zaero' has a special read method
             {msc, nx, zaero}
         consider_superelements : bool; default=True
             parse 'begin super=2'
@@ -315,7 +315,7 @@ class BDFInputPy:
         # print('nastran_format', nastran_format)
         if nastran_format in {'msc', 'nx', 'optistruct', 'mystran'}:
             pass
-        elif nastran_format == 'zona':
+        elif nastran_format in {'zona', 'zaero'}:
             bulk_data_lines, bulk_data_ilines, system_lines = self._get_lines_zona(
                 system_lines, bulk_data_lines, bulk_data_ilines, punch)
         else:
@@ -329,11 +329,11 @@ class BDFInputPy:
                 bulk_data_lines, bulk_data_ilines,
                 additional_deck_lines, additional_deck_ilines)
 
-    def _get_lines_zona(self, system_lines: list[str],
-                        bulk_data_lines: list[str],
-                        bulk_data_ilines: NDArrayN2int,
-                        punch: bool) -> tuple[list[str], NDArrayN2int, list[str]]:
-        """load and update the lines for ZONA"""
+    def _get_lines_zaero(self, system_lines: list[str],
+                         bulk_data_lines: list[str],
+                         bulk_data_ilines: NDArrayN2int,
+                         punch: bool) -> tuple[list[str], NDArrayN2int, list[str]]:
+        """load and update the lines for ZAERO"""
         system_lines2 = []
         log = self.log
         for system_line in system_lines:
@@ -1245,7 +1245,7 @@ def _lines_to_decks_main(lines: list[str],
     #---------------------------------------------
     current_lines = executive_control_lines
 
-    if nastran_format in {'msc', 'nx', 'mystran', 'zona'}:
+    if nastran_format in {'msc', 'nx', 'mystran', 'zona', 'zaero'}:
         flag_word = 'executive'
         flag = 1  # start from executive control deck
     elif nastran_format == 'optistruct':

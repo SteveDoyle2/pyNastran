@@ -881,7 +881,7 @@ class Writer:
         model.caero3.write_file(bdf_file, size=size, is_double=is_double)
         model.caero4.write_file(bdf_file, size=size, is_double=is_double)
         model.caero5.write_file(bdf_file, size=size, is_double=is_double)
-        model.caero7.write_file(bdf_file, size=size, is_double=is_double)  # zona
+        model.caero7.write_file(bdf_file, size=size, is_double=is_double)  # zaero
 
         model.spline1.write_file(bdf_file, size=size, is_double=is_double)
         model.spline2.write_file(bdf_file, size=size, is_double=is_double)

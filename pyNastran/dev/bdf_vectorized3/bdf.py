@@ -526,7 +526,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             settings the logging object has
         mode : str; default='msc'
             the type of Nastran
-            valid_modes = {'msc', 'nx', 'mystran', 'zona'}
+            valid_modes = {'msc', 'nx', 'mystran', 'zaero'}
 
         """
         self.log = get_logger(log=log, level=debug)
@@ -2759,7 +2759,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CAERO3': partial(self._prepare_card, self.caero3),
             'CAERO4': partial(self._prepare_card, self.caero4),
             'CAERO5': partial(self._prepare_card, self.caero5),
-            'CAERO7': partial(self._prepare_card, self.caero7), # zona
+            'CAERO7': partial(self._prepare_card, self.caero7), # zaero
 
             'AESURF': partial(self._prepare_card, self.aesurf),
             'AESURFS' : partial(self._prepare_card, self.aesurfs),
@@ -4340,7 +4340,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
     def _update_for_nastran(self):
         """updates for msc/nx/optistruct"""
-        # TODO: undo the changes for zona
+        # TODO: undo the changes for zaero
         card_parser = self._card_parser
         CARD_MAP['PARAM'] = PARAM
         card_parser['PARAM'] = (PARAM, self._add_methods.add_param_object)

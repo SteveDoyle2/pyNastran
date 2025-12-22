@@ -134,7 +134,7 @@ scalar_keys: list[str] = [
     'dumplines', 'echo', 'force_echo_off', 'include_dir',
     'is_msc', 'is_nx', 'punch',
     'read_includes', 'save_file_structure', 'sol', 'sol_iline', 'nastran_format',
-    'is_superelements', 'is_zona', 'sol_method', 'debug',
+    'is_superelements', 'is_zaero', 'sol_method', 'debug',
     #'_unique_bulk_data_cards',
     #'is_bdf_vectorized',
     #'is_long_ids',

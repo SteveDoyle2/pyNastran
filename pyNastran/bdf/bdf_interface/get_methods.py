@@ -54,8 +54,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from pyNastran.bdf.cards.aero.zona import (
         #ACOORD, AEROZ, AESURFZ, BODY7, CAERO7, MKAEROZ, PAFOIL7, PANLST1, PANLST3,
-        #SEGMESH, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA, TRIMLNK, TRIMVAR, TRIM_ZONA,
-        ZONA)
+        #SEGMESH, SPLINE1_ZAERO, SPLINE2_ZAERO, SPLINE3_ZAERO, TRIMLNK, TRIMVAR, TRIM_ZAERO,
+        ZAERO)
 
     from pyNastran.bdf.cards.optimization import (
         DCONADD, DCONSTR, DESVAR, DDVAL,  # DOPTPRM, DLINK,

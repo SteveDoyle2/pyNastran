@@ -12,7 +12,7 @@ import numpy as np
 from cpylog import SimpleLogger
 
 import pyNastran
-from pyNastran.bdf.cards.test.test_zona import get_zona_model
+from pyNastran.bdf.cards.test.test_zaero import get_zaero_model
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, BDFCard, read_bdf # CORD2R, SET1,
 from pyNastran.dev.bdf_vectorized3.bdf_interface.set_methods import SetMethods
 from pyNastran.dev.bdf_vectorized3.test.test_bdf import run_bdf
@@ -3275,9 +3275,9 @@ class TestAero(unittest.TestCase):
         build_trim_load_cases(model, trim_load_cases, aeqr=1.0)
 
 
-    def _test_zona_1(self):
-        """zona explicit test"""
-        log = SimpleLogger(level='error', encoding='utf-8')  # lots of zona errors
+    def _test_zaero_1(self):
+        """zaero explicit test"""
+        log = SimpleLogger(level='error', encoding='utf-8')  # lots of zaero errors
         bdf_filename = AERO_PATH / 'zona' / 'f16_ma41.bdf'
         model = read_bdf(bdf_filename, xref=False, debug=None, log=log)
         model.safe_cross_reference()
@@ -3288,9 +3288,9 @@ class TestAero(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             model.zaero.convert_to_nastran()
 
-    def _test_zona_2(self):
-        """zona explicit test"""
-        log = SimpleLogger(level='error', encoding='utf-8')  # lots of zona errors
+    def _test_zaero_2(self):
+        """zaero explicit test"""
+        log = SimpleLogger(level='error', encoding='utf-8')  # lots of zaero errors
         bdf_filename = AERO_PATH / 'zona' / 'ztran.bdf'
         model = read_bdf(bdf_filename, xref=False, debug=None, log=log)
         model.safe_cross_reference()
@@ -3300,24 +3300,24 @@ class TestAero(unittest.TestCase):
                        run_test_bdf=False)
         model.zaero.convert_to_nastran()
 
-    def _test_zona_3(self):
-        """totally fake zona model"""
-        bdf_file = get_zona_model()
+    def _test_zaero_3(self):
+        """totally fake zaero model"""
+        bdf_file = get_zaero_model()
 
         model = read_bdf(bdf_filename=bdf_file, validate=True, xref=True, punch=False,
                          skip_cards=None, read_cards=None, encoding=None,
-                         log=None, debug=None, mode='zona')
+                         log=None, debug=None, mode='zaero')
         #with self.assertRaises(AttributeError):
 
         model.uncross_reference()
-        model.write_bdf('zona.bdf')
+        model.write_bdf('zaero.bdf')
         model.safe_cross_reference()
-        model.write_bdf('zona.bdf')
+        model.write_bdf('zaero.bdf')
 
         bdf_file.seek(0)
         model.clear_attributes()
-        model2 = read_bdf('zona.bdf', debug=None)
-        os.remove('zona.bdf')
+        model2 = read_bdf('zaero.bdf', debug=None)
+        os.remove('zaero.bdf')
         model2.zaero.convert_to_nastran()
 
 

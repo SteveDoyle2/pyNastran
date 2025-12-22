@@ -7,26 +7,26 @@ from pyNastran.utils import PathLike
 from pyNastran.bdf.cards.aero.aero import (
     CAERO1, SPLINE1, SPLINE2, SPLINE3,)
 
-# from .zona_cards.zona_sets import (
+# from .zona_cards.zaero_sets import (
 #     SETADD)
-from pyNastran.bdf.cards.aero.zona_cards.atm import (
+from pyNastran.bdf.cards.aero.zaero_cards.atm import (
     ATMOS, FIXMATM, FIXHATM, FIXMACH, FIXMDEN)
-from pyNastran.bdf.cards.aero.zona_cards.spline import (
+from pyNastran.bdf.cards.aero.zaero_cards.spline import (
     SPLINE1_ZAERO,
     #SPLINE2_ZAERO, SPLINE3_ZAERO,
 )
-from pyNastran.bdf.cards.aero.zona_cards.geometry import (
+from pyNastran.bdf.cards.aero.zaero_cards.geometry import (
     PANLST2, #PANLST1, PANLST3, SEGMESH,
     CAERO7, AESURFZ, # BODY7, PAFOIL7, PAFOIL8, AESLINK,
 )
-from pyNastran.bdf.cards.aero.zona_cards.flutter import (
+from pyNastran.bdf.cards.aero.zaero_cards.flutter import (
     # FLUTTER_ZAERO,
     MKAEROZ)
-from pyNastran.bdf.cards.aero.zona_cards.trim import (
+from pyNastran.bdf.cards.aero.zaero_cards.trim import (
     TRIM_ZAERO, TRIMVAR, TRIMLNK,)
-from pyNastran.bdf.cards.aero.zona_cards.manuever import (
+from pyNastran.bdf.cards.aero.zaero_cards.manuever import (
     ACTU) # MLOADS, LOADMOD, RBRED,)
-from pyNastran.bdf.cards.aero.zona_cards.cards import (
+from pyNastran.bdf.cards.aero.zaero_cards.cards import (
     # MLDPRNT, MLDSTAT, MINSTAT, MLDTRIM, MLDCOMD, MLDTIME,
     AEROZ, ACOORD, #ATTACH,
 )
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
 
 def nastran_to_zaero(bdf_filename: PathLike | BDF,
-                     zero_inp_filename: PathLike='',
+                     zaero_inp_filename: PathLike='',
                      length_unit: str='IN',
                      mass_unit: str='SLIN',) -> BDF:
     from pyNastran.bdf.bdf import BDF, read_bdf
@@ -94,8 +94,8 @@ def nastran_to_zaero(bdf_filename: PathLike | BDF,
         if ncard:
             model2.card_count[key] = ncard
 
-    if zero_inp_filename != '':
-        model2.write_bdf(zero_inp_filename)
+    if zaero_inp_filename != '':
+        model2.write_bdf(zaero_inp_filename)
     return model2
 
 
@@ -140,6 +140,7 @@ def _convert_flutter(model: BDF, model2: BDF,
         is_density_constant = np.allclose(density_ref.max(), density_ref.min())
         method = flutter.method
 
+        machs = mach_ref.factors
         mach = machs[0]
         filename = f'MK{mkaeroz_id}_{mach:g}.out'
         mkaeroz = MKAEROZ(

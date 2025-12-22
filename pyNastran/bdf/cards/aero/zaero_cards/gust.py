@@ -23,13 +23,13 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     # integer_or_string, integer_string_or_blank,
     string_multifield, # parse_components as fcomponent
 )
+from pyNastran.bdf.cards.aero.zaero_cards.ase import (
+    ASECONT, CJUNCT, )
+from pyNastran.bdf.cards.aero.zaero_cards.cards import MLDCOMD
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.bdf.cards.aero.zona_cards.ase import (
-    ASECONT, CJUNCT, )
-from pyNastran.bdf.cards.aero.zona_cards.cards import MLDCOMD
 
 
 class GLOADS(BaseCard):

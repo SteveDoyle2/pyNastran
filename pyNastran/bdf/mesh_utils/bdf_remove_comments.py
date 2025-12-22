@@ -37,7 +37,7 @@ SKIP_ATTRS = {
     'rsolmap_to_str', 'special_cards', 'system_command_lines',
     'read_includes', 'save_file_structure', 'sol', 'sol_iline',
     'use_new_deck_parser', 'wtmass', 'xref_obj',
-    'zona', 'punch',
+    'zona', 'zaero', 'punch',
 }
 
 def bdf_remove_comments(bdf_filename: PathLike | BDF | StringIO,

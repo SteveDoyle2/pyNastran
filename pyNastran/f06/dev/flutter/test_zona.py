@@ -1,8 +1,8 @@
 from pathlib import Path
 import unittest
 import pyNastran
-from pyNastran.f06.dev.flutter.read_zona_out import read_zaero_out
-from pyNastran.f06.dev.flutter.read_zona_aic import read_zaero_aic
+from pyNastran.f06.dev.flutter.read_zaero_out import read_zaero_out
+from pyNastran.f06.dev.flutter.read_zaero_aic import read_zaero_aic
 
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_DIR = PKG_PATH / 'bdf' / 'cards' / 'aero' / 'examples' / 'flutter'
@@ -25,7 +25,6 @@ except ImportError:
     pass
 
 import pyNastran.f06.dev.flutter.utils
-
 try:
     import pyNastran.f06.dev.flutter.actions_builder
 except ImportError:

@@ -333,7 +333,7 @@ class BDFAttributes:
         self.caero3 = CAERO3(self)
         self.caero4 = CAERO4(self)
         self.caero5 = CAERO5(self)
-        self.caero7 = CAERO7(self)  # zona
+        self.caero7 = CAERO7(self)  # zaero
 
         self.paero1 = PAERO1(self)
         self.paero2 = PAERO2(self)

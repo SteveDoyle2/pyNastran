@@ -141,7 +141,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
 
 PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q|--index]'
 AXES = '[--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
-EXPORTS = '[--export_csv] [--export_zona] [--export_f06]'
+EXPORTS = '[--export_csv] [--export_zaero] [--export_f06]'
 USAGE_145 = (
     'Usage:\n'
     '  f06 plot_145 F06_FILENAME [--modes MODES] [--subcases SUB] '
@@ -216,7 +216,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         "  --nopoints       don't plot the points\n"
         "  --noline         don't plot the lines\n"
         '  --rhoref         use sea level rho0 (density is actually density ratio; rho/rhoSL)'
-        '  --export_zona    export a zona file\n'
+        '  --export_zaero   export a ZAERO file\n'
         '  --export_csv     export a CSV file\n'
         '  --export_f06     export an F06 file (temporary)\n'
         '  --vd_limit VD_LIMIT            add a Vd and 1.15*Vd line\n'
@@ -363,18 +363,18 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
 
     base = os.path.splitext(os.path.basename(f06_filename))[0]
     export_f06_filename = None if export_f06 is False else 'nastran.f06'
-    export_zona_filename = None if export_zaero is False else 'nastran.zaero'
+    export_zaero_filename = None if export_zaero is False else 'nastran.zaero'
     export_veas_filename = None if export_zaero is False else 'nastran.veas'
 
     # TODO: need a new parameter
     export_csv_filename = None if export_csv is None else base + '.plot_145_subcase_%d.csv'
 
     # TODO why does export_zona break this?
-    vg_filename = None if export_zona is None else f'vg_{base}_subcase_%d.png'
-    vg_vf_filename = None if export_zona is None else f'vg_vf_{base}_subcase_%d.png'
-    kfreq_damping_filename = None if export_zona is None else f'kfreq_damping_{base}_subcase_%d.png'
-    root_locus_filename = None if export_zona is None else f'root_locus_{base}_subcase_%d.png'
-    modal_participation_filename = None if export_zona is None else f'modal_participation_{base}_subcase_%d.png'
+    vg_filename = None if export_zaero is None else f'vg_{base}_subcase_%d.png'
+    vg_vf_filename = None if export_zaero is None else f'vg_vf_{base}_subcase_%d.png'
+    kfreq_damping_filename = None if export_zaero is None else f'kfreq_damping_{base}_subcase_%d.png'
+    root_locus_filename = None if export_zaero is None else f'root_locus_{base}_subcase_%d.png'
+    modal_participation_filename = None if export_zaero is None else f'modal_participation_{base}_subcase_%d.png'
     if not plot:
         return
 
@@ -402,7 +402,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         ncol=ncol,
         export_csv_filename=export_csv_filename,
         export_veas_filename=export_veas_filename,
-        export_zona_filename=export_zona_filename,
+        export_zaero_filename=export_zaero_filename,
         export_f06_filename=export_f06_filename,
         vg_filename=vg_filename,
         vg_vf_filename=vg_vf_filename,
