@@ -316,7 +316,7 @@ class BDFInputPy:
         if nastran_format in {'msc', 'nx', 'optistruct', 'mystran'}:
             pass
         elif nastran_format in {'zona', 'zaero'}:
-            bulk_data_lines, bulk_data_ilines, system_lines = self._get_lines_zona(
+            bulk_data_lines, bulk_data_ilines, system_lines = self._get_lines_zaero(
                 system_lines, bulk_data_lines, bulk_data_ilines, punch)
         else:
             mystran = '' # 'mystran, '
