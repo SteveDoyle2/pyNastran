@@ -1,5 +1,6 @@
 """defines various shell element tests"""
 import os
+from pathlib import Path
 import unittest
 from cpylog import SimpleLogger
 
@@ -8,8 +9,8 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_nsm
 import pyNastran
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = PKG_PATH / '..' / 'models'
 
 
 class TestNsm(unittest.TestCase):
