@@ -42,8 +42,8 @@ def get_vrml_format_old():
     #pfloat = pfloat_neg
     #names_dict = Optional(pword) + name_dict
 
-    #name_dict.parseString(simple_shape)
-    #name_class_dict.parseString(simple_shape)
+    # name_dict.parse_string(simple_shape)
+    # name_class_dict.parse_string(simple_shape)
 
     msg = """
       coordIndex [
@@ -62,8 +62,8 @@ def get_vrml_format_old():
        38, 21, 0, -1, 26, 34, 0, -1,
        ]
     """
-    #print(name_int_list.parseString(msg).asList())
-    #print(name_int_list.parseString(msg).asDict())
+    # print(name_int_list.parse_string(msg).asList())
+    # print(name_int_list.parse_string(msg).asDict())
 
 
 def get_vrml_format():
@@ -108,15 +108,15 @@ def get_vrml_format():
     #pword_float = pword + pfloat
 
 
-    #print(pword_float.parseString('1.'))
+    #print(pword_float.parse_string('1.'))
 
     # color    1.000 1.000 1.000
     # direction -0.577 -0.577 -0.577
-    # out = pword_triple.parseString('color    1.000 1.000 1.000', parseAll=False)  # works
-    unused_out = name_float3.parseString('direction -0.577 -0.577 -0.577', parseAll=False)  # works
+    # out = pword_triple.parse_string('color    1.000 1.000 1.000', parseAll=False)  # works
+    unused_out = name_float3.parse_string('direction -0.577 -0.577 -0.577', parseAll=False)  # works
 
     # ambientIntensity 1.0
-    unused_out = name_float.parseString('ambientIntensity 1.0', parseAll=False)
+    unused_out = name_float.parse_string('ambientIntensity 1.0', parseAll=False)
     #print(out, dir(type(out)))  # ParsingResults
     #print(out.asDict())
     #print(out.asList())
@@ -153,32 +153,32 @@ def get_vrml_format():
     data_values = OneOrMore(data_value)
     #name_dict = pword + Group(dict_open + data_value + dict_close)
     name_dict = pword + Group(dict_open.suppress() + data_values + dict_close.suppress())
-    name_float3.parseString('skyColor 0.1 0.3 1')
+    name_float3.parse_string('skyColor 0.1 0.3 1')
 
-    name_dict.parseString("""
+    name_dict.parse_string("""
     Background {
         skyColor 0.1 0.3 1
     }
     """)
 
-    name_str.parseString('''
+    name_str.parse_string('''
         title "Texture-mapped pyramid"
     ''')
 
-    name_dict.parseString("""
+    name_dict.parse_string("""
     WorldInfo {
         title "Texture-mapped pyramid"
     }
     """)
 
-    name_dict.parseString("""
+    name_dict.parse_string("""
     WorldInfo {
         title "Texture-mapped pyramid"
         info  "Gravity: on"
     }
     """)
 
-    name_dict.parseString("""
+    name_dict.parse_string("""
     DirectionalLight {
      direction 0.577 -0.577 -0.577
      color    1.000 1.000 1.000
@@ -186,25 +186,25 @@ def get_vrml_format():
      ambientIntensity 1.0
     }
     """)
-    xyz.parseString("""
+    xyz.parse_string("""
       0 0 -1,
     """)
 
-    xyz_vector.parseString("""
+    xyz_vector.parse_string("""
     [
       0 0 -1,  0 0 -1,  0 0 -1,
       0 0 -1,  0 0 -1,  0 0 -1,
     ]
     """)
 
-    name_xyz_vector.parseString("""
+    name_xyz_vector.parse_string("""
     vector [
       0 0 -1,  0 0 -1,  0 0 -1,
       0 0 -1,  0 0 -1,  0 0 -1,
     ]
     """)
 
-    #print(names_dict.parseString("""
+    #print(names_dict.parse_string("""
     #normal Normal {
      #vector [
       #0 0 -1,  0 0 -1,  0 0 -1,
@@ -213,7 +213,7 @@ def get_vrml_format():
     #}
     #"""))
 
-    shape.parseString("""
+    shape.parse_string("""
     Shape {
         appearance Appearance{
              texture DEF PICBAND PixelTexture {
@@ -288,7 +288,7 @@ def get_vrml_format():
     }
     """
     #print('geometry...')
-    geometry.parseString(geometry_str)
+    geometry.parse_string(geometry_str)
 
     shape_str = """
     Shape{
@@ -375,11 +375,11 @@ def get_vrml_format():
     vrml_format = OneOrMore(
         Group(directional_light) | world_info | background | navigation_info | shape | transform
     )
-    vrml_format.parseString(txt)
+    vrml_format.parse_string(txt)
     #print('shape...')
-    shape.parseString(shape_str)
+    shape.parse_string(shape_str)
     #print('transform...')
-    transform.parseString(transform_str)
+    transform.parse_string(transform_str)
 
 
     if 0:
@@ -389,7 +389,7 @@ def get_vrml_format():
         # t_no_float_regex = 63 sec
         # t_float_regex = 31 sec
         t0 = time.time()
-        vrml_format.parseString(txt, parseAll=True)
+        vrml_format.parse_string(txt, parseAll=True)
         print(time.time() - t0)
 
         #for datai in data:

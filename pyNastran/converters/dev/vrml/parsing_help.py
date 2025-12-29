@@ -231,7 +231,7 @@ point3d = (pp.Literal('point') + list_open + pp.Group(pp.OneOrMore(xyz)) + list_
 point2d = (pp.Literal('point') + list_open + pp.Group(pp.OneOrMore(xy)) + list_close).setName('point')
 coord_values = point3d
 coord = (pp.Literal('coord') + pp.Literal('Coordinate') + dict_open + pp.Group(coord_values) + dict_close).setName('coord')
-coord.parseString("""
+coord.parse_string("""
 coord Coordinate {
     point [
         3.303 -6.738 -16.931,  3.275 -6.738 -16.932,  3.285 -6.821 -17.012,
@@ -245,14 +245,14 @@ vector = (pp.Literal('vector') + list_open + pp.Group(pp.OneOrMore(xyz)) + list_
 normal_values = vector
 normal = (pp.Literal('normal') + pp.Literal('Normal') + dict_open + pp.Group(normal_values) + dict_close).setName('normal')
 
-vector.parseString("""
+vector.parse_string("""
 vector [
     0 -0.697 0.717,  0 -0.697 0.717,  0 -0.697 0.717,
     0 -0.697 0.717,  0 -0.697 0.717,  0 -0.697 0.717,
 ]
 """)
 
-normal.parseString("""
+normal.parse_string("""
 normal Normal {
     vector [
         0 -0.697 0.717,  0 -0.697 0.717,  0 -0.697 0.717,
@@ -287,8 +287,8 @@ else:  # pragma: no cover
     #coord_indicies = pp.pyparsing_common.comma_separated_list # bad...
     #coord_indicies = OneOrMore(comma.suppress() | pint.setParseAction(cvt_int)) + pminus1.setParseAction(cvt_int)))
 
-coord_indicies.parseString("0, 1, 2, -1, 3, 4, 5, -1, 1, 6, 2, -1")
-coord_index.parseString("coordIndex [0, 1, 2, -1, 3, 4, 5, -1, 1, 6, 2, -1]")
+coord_indicies.parse_string("0, 1, 2, -1, 3, 4, 5, -1, 1, 6, 2, -1")
+coord_index.parse_string("coordIndex [0, 1, 2, -1, 3, 4, 5, -1, 1, 6, 2, -1]")
 #aaab
 
 crease_angle = (pp.Literal('creaseAngle') + pfloat).setName('crease_angle')
@@ -310,7 +310,7 @@ geometry = (pp.Literal('geometry') + geometry_values).setName('geometry')
 shape_values = pp.Group(pp.OneOrMore(appearance | geometry))
 shape = (pp.Literal('Shape') + dict_open + shape_values + dict_close).setName('shape')
 
-#print(geometry.parseString("""
+#print(geometry.parse_string("""
 #geometry IndexedFaceSet {
     #creaseAngle 0.1
     #coord Coordinate {
@@ -334,7 +334,7 @@ shape = (pp.Literal('Shape') + dict_open + shape_values + dict_close).setName('s
 
 #print('geometry...')
 # crease_angle + coord + normal + coord_index
-geometry.parseString("""
+geometry.parse_string("""
 geometry IndexedFaceSet {
     coord Coordinate{
         point[
@@ -365,7 +365,7 @@ geometry IndexedFaceSet {
 """)
 
 
-shape.parseString("""
+shape.parse_string("""
 Shape {
     appearance Appearance{
          texture DEF PICBAND PixelTexture {
@@ -379,7 +379,7 @@ Shape {
 """)
 
 # wow...super dead link; google has info from him back in 1994...
-shape.parseString("""
+shape.parse_string("""
 Shape{
     appearance Appearance{
          texture DEF PICBAND ImageTexture {
@@ -391,7 +391,7 @@ Shape{
 }
 """)
 
-appearance.parseString("""
+appearance.parse_string("""
     appearance Appearance {
         material Material {
             ambientIntensity 0.210
@@ -402,7 +402,7 @@ appearance.parseString("""
         }
     }
 """)
-shape.parseString("""
+shape.parse_string("""
 Shape {
     appearance Appearance {
         material Material {
@@ -417,7 +417,7 @@ Shape {
 """)
 
 #---------------------------------------
-shape.parseString("""
+shape.parse_string("""
 Shape {
     appearance Appearance {
         material Material {

@@ -4038,7 +4038,7 @@ class TestOP2Main(Tester):
         assert os.path.exists(debug_file), os.listdir(os.path.dirname(op2_filename))
         os.remove(debug_file)
 
-    def test_cgap_01(self):
+    def test_op2_cgap_01(self):
         """checks cc188b.bdf"""
         log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'cc188b.bdf'
