@@ -45,6 +45,8 @@ from pyNastran.bdf.mesh_utils.cmd_line.merge import cmd_line_merge
 from pyNastran.bdf.mesh_utils.dvxrel import get_dvprel_ndarrays
 from pyNastran.bdf.mesh_utils.rbe_tools import (
     merge_rbe2, rbe3_to_rbe2, rbe2_to_rbe3)
+from pyNastran.bdf.mesh_utils.add_remove_mesh import add_remove_mesh
+from pyNastran.bdf.mesh_utils.normals import get_normals_at_nodes, get_normals_at_elements
 
 import pyNastran.bdf.mesh_utils.add_remove_mesh
 import pyNastran.bdf.mesh_utils.bdf_remove_comments
@@ -139,6 +141,9 @@ class TestMeshUtilsAero(unittest.TestCase):
         bdf_filename_out = BWB_PATH / 'bwb_saero_mapped.bdf'
         log = SimpleLogger(level='warning')
         model_old = read_bdf(bdf_filename, log=log)
+        get_normals_at_nodes(model_old)
+        get_normals_at_elements(model_old)
+
         copy.deepcopy(model_old)
         model_new = read_bdf(bdf_filename, xref=False, log=log)
 
@@ -510,6 +515,17 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
 
 class TestMeshUtils(unittest.TestCase):
     """various mesh_utils tests"""
+    def test_add_remove_mesh(self):
+        bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'
+        # add_bdf_filenames = []
+        add_remove_bdf_filenames = [
+            ('remove', MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'),
+        ]
+        add_remove_mesh(
+            bdf_filename,
+            add_remove_bdf_filenames,
+        )
+
     def test_dvxrel(self):
         model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])

@@ -1466,8 +1466,11 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
             mstr * y * z + nsm * ym * zm,
         ])
         massi = mstr + nsm
-        # mass weighted centroid
-        cgi = (mstr * centroid + nsm * nsm_centroid) / massi
+        if massi == 0.0:
+            cgi = centroid
+        else:
+            # mass weighted centroid
+            cgi = (mstr * centroid + nsm * nsm_centroid) / massi
 
         mass += massi
         cg += mstr * centroid + nsm * nsm_centroid
@@ -1580,12 +1583,17 @@ def _get_cbeam_mass_no_nsm(model: BDF, elem: CBEAM,
         massi * y * z + nsm * ym * zm,
     ])
     massj = massi + nsm
+    if massj == 0.0:
+        cgi = centroid
+    else:
+        # mass weihted centroid
+        cgi = (massi * centroid + nsm * nsm_centroid) / massj
     mass += massj
     cg += massi * centroid + nsm * nsm_centroid
     # Ixx, Iyy, Izz, Ixy, Ixz, Iyz
     inertia += dinertia
     mass_list.append(massj)
-    cg_list.append((massi * centroid + nsm * nsm_centroid)/massj)
+    cg_list.append(cgi)
     inertia_list.append(dinertia)
     return mass
 
@@ -3796,7 +3804,7 @@ def _bar_axes(all_nids: np.ndarray,
               g0: np.ndarray,
               offt: np.ndarray,
               x: np.ndarray,
-              nelements: int) -> np.ndarray:
+              nelements: int) -> np.ndarray:  # pragma: no cover
     ix = np.where(g0 == -1)[0]
     ig0 = np.where(g0 != -1)[0]
 
