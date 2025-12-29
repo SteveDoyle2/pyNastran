@@ -1,5 +1,4 @@
 """defines various shell element tests"""
-import os
 from pathlib import Path
 import unittest
 from cpylog import SimpleLogger
@@ -177,7 +176,8 @@ class TestNsm(unittest.TestCase):
             mass1_expected = expected_dict[nsm_id]
             if mass1_expected == -1.0:
                 with self.assertRaises(RuntimeError):
-                    mass1, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=nsm_id, debug=False)
+                    mass1, unused_cg, unused_inertia = mass_properties_nsm(
+                        model, nsm_id=nsm_id, debug=False)
             else:
                 mass1, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=nsm_id, debug=False)
                 if mass1 != mass1_expected:
@@ -394,20 +394,20 @@ class TestNsm(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
 
-        mass, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=1000)
+        mass, unused_cg, unused_inertia = mass_properties_nsm(model, nsm_id=1000)
         self.assertAlmostEqual(mass, 1.0)
-        mass, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=2000)
+        mass, unused_cg, unused_inertia = mass_properties_nsm(model, nsm_id=2000)
         self.assertAlmostEqual(mass, 1.0)
-        mass, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=3000)
+        mass, unused_cg, unused_inertia = mass_properties_nsm(model, nsm_id=3000)
         self.assertAlmostEqual(mass, 1.0)
-        mass, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=4000)
+        mass, unused_cg, unused_inertia = mass_properties_nsm(model, nsm_id=4000)
         self.assertAlmostEqual(mass, 1.0)
 
-        mass, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=5000)
+        mass, unused_cg, unused_inertia = mass_properties_nsm(model, nsm_id=5000)
         self.assertAlmostEqual(mass, 8.0)
 
         model2 = save_load_deck(model)
-        mass, unused_cg, unused_I = mass_properties_nsm(model2, nsm_id=5000)
+        mass, unused_cg, unused_inertia = mass_properties_nsm(model2, nsm_id=5000)
         save_load_deck(model, run_mass_properties=False)
 
     def test_nsmadd_short(self):
@@ -442,20 +442,20 @@ class TestNsm(unittest.TestCase):
                        run_remove_unused=False, run_convert=False,
                        run_save_load_hdf5=False)
 
-    #def test_nsm(self):
-        #"""tests a complete nsm example"""
-        #bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'nsm.bdf')
-        #bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'TEST_NSM_SOL101.bdf')
-        #model = read_bdf(bdf_filename)
-        #print('    %6s %-9s %s' % ('nsm_id', 'mass', 'nsm'))
-        #mass0 = mass_properties_nsm(model, debug=False)[0]
-        #for nsm_id in sorted(chain(model.nsms, model.nsmadds)):
-            #mass, cg, I = mass_properties_nsm(model, nsm_id=nsm_id, debug=False)
-            #print('    %-6s %-9.4g %.4g' % (nsm_id, mass, mass-mass0))
-
-        #area_breakdown = model.get_area_breakdown()
-        #for pid in [20000, 20010]:
-            #print('pid=%s area=%.3f' % (pid, area_breakdown[pid]))
+    # def test_nsm(self):
+    #     """tests a complete nsm example"""
+    #     bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'nsm.bdf')
+    #     bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'TEST_NSM_SOL101.bdf')
+    #     model = read_bdf(bdf_filename)
+    #     print('    %6s %-9s %s' % ('nsm_id', 'mass', 'nsm'))
+    #     mass0 = mass_properties_nsm(model, debug=False)[0]
+    #     for nsm_id in sorted(chain(model.nsms, model.nsmadds)):
+    #         mass, cg, I = mass_properties_nsm(model, nsm_id=nsm_id, debug=False)
+    #         print('    %-6s %-9.4g %.4g' % (nsm_id, mass, mass-mass0))
+    #
+    #     area_breakdown = model.get_area_breakdown()
+    #     for pid in [20000, 20010]:
+    #         print('pid=%s area=%.3f' % (pid, area_breakdown[pid]))
 
 
 if __name__ == '__main__':  # pragma: no cover
