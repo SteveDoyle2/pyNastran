@@ -249,12 +249,12 @@ def _run_mass_properties(model2: BDF, nnodes: int, nelements: int,
         raise RuntimeError('no nodes exist')
     mass1, cg1, inertia1 = mass_properties(model2, reference_point=None, sym_axis=None)
     mass2, cg2, inertia2 = mass_properties_nsm(model2, reference_point=None, sym_axis=None)
-    #if not quiet:
-        #if model2.wtmass != 1.0:
-            #print('weight = %s' % (mass1 / model2.wtmass))
-        #print('mass = %s' % mass1)
-        #print('cg   = %s' % cg1)
-        #print('Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s' % tuple(inertia1))
+    # if not quiet:
+    #     if model2.wtmass != 1.0:
+    #         print('weight = %s' % (mass1 / model2.wtmass))
+    #     print('mass = %s' % mass1)
+    #     print('cg   = %s' % cg1)
+    #     print('Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s' % tuple(inertia1))
     assert np.allclose(mass1, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
     assert np.allclose(cg1, cg2), 'mass=%s\ncg1=%s cg2=%s' % (mass1, cg1, cg2)
     if not np.allclose(inertia1, inertia2, atol=1e-5):  # pragma: no cover

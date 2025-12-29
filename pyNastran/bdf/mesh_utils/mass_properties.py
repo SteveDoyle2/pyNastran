@@ -20,7 +20,7 @@ import numpy as np
 #from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line
-CHECK_MASS = False  # should additional checks be done
+CHECK_MASS = True  # should additional checks be done
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import (
@@ -189,8 +189,9 @@ def transform_inertia(mass: float,
         [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
 
     """
-    eye = np.eye(3, dtype='float64')
+    assert len(inertia_ref1) == 6, inertia_ref1
 
+    eye = np.eye(3, dtype='float64')
     if coord_cg is not None:
         # the cg location in the basic frame
         xyz_cg = coord_cg.transform_node_to_global(xyz_cg)
@@ -249,14 +250,9 @@ def transform_inertia(mass: float,
 
     if no_transform_required:
         # consistent with mass_properties, not CONM2
-        # assert np.allclose(dx1, 0)
-        # assert np.allclose(dx2, 0)
         dx = dx1**2 - dx2**2
         dy = dy1**2 - dy2**2
         dz = dz1**2 - dz2**2
-        # assert np.allclose(dx, 0)
-        # assert np.allclose(dy, 0)
-        # assert np.allclose(dz, 0)
         ixx2 = ixx_ref - mass * (dy + dz)
         iyy2 = iyy_ref - mass * (dx + dz)
         izz2 = izz_ref - mass * (dx + dy)
@@ -292,8 +288,7 @@ def transform_inertia(mass: float,
             raise RuntimeError(f'coord1 is not supported; icg0={str(icg0)}')
 
         if is_beta2:
-            print(beta2.shape, icg0.shape)
-            assert icg0.shape == (3, 3), icg0.shape
+            # print(beta2.shape, icg0.shape)
             icg2 = beta2 @ icg0 @ beta2.T
             dx = dx2**2
             dy = dy2**2
@@ -727,6 +722,11 @@ def increment_inertia(centroidi: np.ndarray,
         massi * y * z,      # Iyz
     ]
     inertia_list.append(inertiai)
+    # print(f'mass = {mass}')
+    sum_mass_list = sum(mass_list)
+    if not np.allclose(sum_mass_list, mass):
+        cumsum = np.cumsum(mass_list)
+        raise RuntimeError(f'mass={mass} sum(mass_list)={sum_mass_list}\ncumsum={cumsum}')
     return mass
 
 
@@ -904,7 +904,8 @@ def mass_properties_nsm(model: BDF,
     if len(mass_list):
         sum_mass_list = sum(mass_list)
         if not np.allclose(sum_mass_list, mass):
-            raise RuntimeError(f'mass={mass} sum(mass_list)={sum_mass_list}')
+            cumsum = np.cumsum(mass_list)
+            raise RuntimeError(f'mass={mass} sum(mass_list)={sum_mass_list}\ncumsum={cumsum}')
     del mass_list, cg_list, inertia_list
 
     if mass:
@@ -982,6 +983,7 @@ def _get_mass_nsm(model: BDF,
     """helper method for ``mass_properties_nsm``"""
     element_ids_set = set(element_ids)
     mass_ids_set = set(mass_ids)
+    # print(f'etype={etype}; mass0={mass}; masses0={mass_list}')
     if etype in {'CROD', 'CONROD'}:
         eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
@@ -1263,17 +1265,17 @@ def _get_mass_nsm(model: BDF,
                                mass_list, cg_list, inertia_list,
                                reference_xyz)
 
-    #property_nsms[nsm_id][nsm.nsm_type][nsm_idi]
-    #for nsm_id, prop_types in sorted(property_nsms.items()):
-        #for prop_type, prop_id_to_val in sorted(prop_types.items()):
-            #for pid, val in sorted(prop_id_to_val.items()):
-        #TODO: CRAC2D mass not supported...how does this work???
-        #      I know it's an "area" element similar to a CQUAD4
-        #TODO: CCONEAX mass not supported...how does this work???
-        #TODO: CBEND mass not supported...how do I calculate the length?
-
-        #area_eids['PSHELL'].append(eid)
-        #areas['PSHELL'].append(area)
+    # property_nsms[nsm_id][nsm.nsm_type][nsm_idi]
+    # for nsm_id, prop_types in sorted(property_nsms.items()):
+    #     for prop_type, prop_id_to_val in sorted(prop_types.items()):
+    #         for pid, val in sorted(prop_id_to_val.items()):
+    #     TODO: CRAC2D mass not supported...how does this work???
+    #          I know it's an "area" element similar to a CQUAD4
+    #     TODO: CCONEAX mass not supported...how does this work???
+    #     TODO: CBEND mass not supported...how do I calculate the length?
+    #
+    #     area_eids['PSHELL'].append(eid)
+    #     areas['PSHELL'].append(area)
     return mass, cg, inertia
 
 
@@ -1352,7 +1354,10 @@ def _get_cbar_mass(model: BDF, xyz: dict[int, np.ndarray],
 
 def _get_cbeam_mass(model, xyz, element_ids, all_eids,
                     length_eids_pids, lengths, nsm_centroids_length,
-                    eids, mass, cg, inertia,
+                    eids: np.ndarray,
+                    mass: float,
+                    cg: np.ndarray,
+                    inertia: np.ndarray,
                     mass_list: list[float],
                     cg_list: list[np.ndarray],
                     inertia_list: list[np.ndarray],
@@ -1452,15 +1457,24 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
         zm2 = zm * zm
 
         # Ixx, Iyy, Izz, Ixy, Ixz, Iyz
-        inertia[0] += mstr * (y2 + z2) + nsm * (ym2 + zm2)
-        inertia[1] += mstr * (x2 + z2) + nsm * (xm2 + zm2)
-        inertia[2] += mstr * (x2 + y2) + nsm * (xm2 + ym2)
-        inertia[3] += mstr * x * y + nsm * xm * ym
-        inertia[4] += mstr * x * z + nsm * xm * zm
-        inertia[5] += mstr * y * z + nsm * ym * zm
+        dinertia = np.array([
+            mstr * (y2 + z2) + nsm * (ym2 + zm2),
+            mstr * (x2 + z2) + nsm * (xm2 + zm2),
+            mstr * (x2 + y2) + nsm * (xm2 + ym2),
+            mstr * x * y + nsm * xm * ym,
+            mstr * x * z + nsm * xm * zm,
+            mstr * y * z + nsm * ym * zm,
+        ])
         massi = mstr + nsm
+        # mass weighted centroid
+        cgi = (mstr * centroid + nsm * nsm_centroid) / massi
+
         mass += massi
         cg += mstr * centroid + nsm * nsm_centroid
+        inertia += dinertia
+        mass_list.append(mstr + nsm)
+        cg_list.append(cgi)
+        inertia_list.append(dinertia)
         #print('length=%s mass=%s mass_per_length=%s nsm_per_length=%s m=%s nsm=%s centroid=%s nsm_centroid=%s' % (
             #length, mass, mass_per_length, nsm_per_length, massi, nsm, centroid, nsm_centroid))
         if CHECK_MASS and massi != elem.Mass():  # pragma: no cover
@@ -1557,24 +1571,19 @@ def _get_cbeam_mass_no_nsm(model: BDF, elem: CBEAM,
     ym2 = ym * ym
     zm2 = zm * zm
 
-    # Ixx, Iyy, Izz, Ixy, Ixz, Iyz
-    inertia[0] += massi * (y2 + z2) + nsm * (ym2 + zm2)
-    inertia[1] += massi * (x2 + z2) + nsm * (xm2 + zm2)
-    inertia[2] += massi * (x2 + y2) + nsm * (xm2 + ym2)
-    inertia[3] += massi * x * y + nsm * xm * ym
-    inertia[4] += massi * x * z + nsm * xm * zm
-    inertia[5] += massi * y * z + nsm * ym * zm
-    massj = massi + nsm
-    mass += massj
-    cg += massi * centroid + nsm * nsm_centroid
-    dinertia = [
+    dinertia = np.array([
         massi * (y2 + z2) + nsm * (ym2 + zm2),
         massi * (x2 + z2) + nsm * (xm2 + zm2),
         massi * (x2 + y2) + nsm * (xm2 + ym2),
         massi * x * y + nsm * xm * ym,
         massi * x * z + nsm * xm * zm,
         massi * y * z + nsm * ym * zm,
-    ]
+    ])
+    massj = massi + nsm
+    mass += massj
+    cg += massi * centroid + nsm * nsm_centroid
+    # Ixx, Iyy, Izz, Ixy, Ixz, Iyz
+    inertia += dinertia
     mass_list.append(massj)
     cg_list.append((massi * centroid + nsm * nsm_centroid)/massj)
     inertia_list.append(dinertia)

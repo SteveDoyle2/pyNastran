@@ -184,6 +184,9 @@ def _merge_rbe2(model: BDF,
     reference_point = np.zeros(3, dtype='float64')
     mass_cg = np.zeros(3, dtype='float64')
     mass = 0.
+    mass_list = []
+    cg_list = []
+    inertia_list = []
 
     # [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
     inertia = np.zeros(6, dtype='float64')
@@ -196,7 +199,10 @@ def _merge_rbe2(model: BDF,
         centroidi = mass_elem.X + mass_node.get_position()
         log.debug(f'massi={massi}; centroidi={centroidi}')
         I11, I21, I22, I31, I32, I33 = mass_elem.I
-        mass = increment_inertia(centroidi, reference_point, massi, mass, mass_cg, inertia)
+        dinertia = [I11, I22, I33, I21, I31, I32]
+        mass = increment_inertia(centroidi, reference_point, massi,
+                                 mass, mass_cg, inertia,
+                                 mass_list, cg_list, inertia_list)
         log.debug(f'mass_cg={mass_cg}')
         # [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
         inertia[0] += I11  # Ixx
