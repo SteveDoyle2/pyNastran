@@ -191,7 +191,6 @@ class OEF:
             op2.binary_debug.write('  %-14s = %r\n' % ('tCode', op2.tCode))
             op2.binary_debug.write('  %-14s = %r\n' % ('isubcase', op2.isubcase))
 
-
         op2._read_title(data)
         if op2.element_type not in op2.element_mapper:
             msg = 'element_type = %s' % op2.element_type
@@ -368,11 +367,13 @@ class OEF:
             n, nelements, ntotal = self._thermal_conv(data, ndata, dt, prefix, postfix)
 
         elif op2.element_type in [145, 146, 147,  # VUHEXA,VUPENTA,VUTETRA
-                                   189, 190,  # VUQUAD,VUTRIA
-                                   191]:  # VUBEAM
+                                  189, 190,  # VUQUAD,VUTRIA
+                                  191]:  # VUBEAM
             # removed by msc/nx
-            msg = f'{op2.element_name}-{op2.element_type} has been removed'
-            return op2._not_implemented_or_skip(data, ndata, msg)
+            msg = f'{op2.table_name_str} {op2.element_name}-{op2.element_type} has been removed'
+            op2.log.warning(msg)
+            return ndata
+            # return op2._not_implemented_or_skip(data, ndata, msg)
         else:
             msg = 'OEF sort1 thermal Type=%s num=%s' % (op2.element_name, op2.element_type)
             return op2._not_implemented_or_skip(data, ndata, msg)
@@ -977,14 +978,6 @@ class OEF:
             n, nelements, ntotal = oef_cbush(self.op2, data, ndata, dt, is_magnitude_phase,
                                              result_type, prefix, postfix)
 
-        elif element_type in [145, 146, 147]:
-            # 145-VUHEXA
-            # 146-VUPENTA
-            # 147-VUTETRA
-            #if op2.read_mode == 1:
-                #return ndata
-            return ndata
-
         elif element_type == 126 and op2.is_msc:
             # 119-CFAST-MSC
             n, nelements, ntotal = oef_cbush(self.op2, data, ndata, dt, is_magnitude_phase,
@@ -1003,18 +996,28 @@ class OEF:
         elif element_type == 235:
             # 235-CQUADR
             return op2._not_implemented_or_skip(data, ndata, op2.code_information())
-        elif element_type in [189, 190,  # VUQUAD, VTRIA - order?
-                                   191]: # VUBEAM
+
+        elif element_type in [145, 146, 147,
+                              189, 190, 191]:
             # removed from msc/nx
-            #n, nelements, ntotal = self._oef_vu_shell(data, ndata, dt, is_magnitude_phase,
-                                                      #result_type, prefix, postfix)
-            #n, nelements, ntotal = self._oef_vu_beam(data, ndata, dt, is_magnitude_phase,
-                                                     #result_type, prefix, postfix)
-            msg = f'{op2.element_name}-{element_type} has been removed'
-            return op2._not_implemented_or_skip(data, ndata, msg)
+            # 145-VUHEXA
+            # 146-VUPENTA
+            # 147-VUTETRA
+            # 189-VUQUAD
+            # 190-VTRIA
+            # 191-VUBEAM
+            # n, nelements, ntotal = self._oef_vu_shell(data, ndata, dt, is_magnitude_phase,
+            #                                           result_type, prefix, postfix)
+            # n, nelements, ntotal = self._oef_vu_beam(data, ndata, dt, is_magnitude_phase,
+            #                                          result_type, prefix, postfix)
+            if op2.read_mode == 1:
+                msg = f'{op2.table_name_str} {op2.element_name}-{element_type} has been removed'
+                op2.log.warning(msg)
+            return ndata
+            # return op2._not_implemented_or_skip(data, ndata, msg)
         elif op2.is_nx:
             if element_type in [118, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352,
-                                     356, 357, 363]:
+                                356, 357, 363]:
                 # 118 CWELDP
                 # 343 CTRIA6 SOL 401
                 #344 CQUAD8 SOL 401
@@ -1039,6 +1042,12 @@ class OEF:
                 n, nelements, ntotal = oef_cbar_34(
                     self.op2, data, ndata, dt, is_magnitude_phase,
                     result_type, prefix, postfix)
+            elif element_type in [184]:
+                # 184-CBEAM3
+                if op2.read_mode == 1:
+                    msg = f'{op2.table_name_str} {op2.element_name}-{element_type} is not supported'
+                    op2.log.warning(msg)
+                return ndata
             else:
                 #print(op2.code_information())
                 #msc_missing

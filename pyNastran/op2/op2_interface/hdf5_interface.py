@@ -83,7 +83,10 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamS
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexCBushStressArray, ComplexCBushStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexCBush1DStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray  # ComplexLayeredCompositesArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import (
+    ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray,
+    ComplexLayeredCompositeStressArray12, ComplexLayeredCompositeStrainArray12)
+# ComplexLayeredCompositesArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates_vm import ComplexPlateVMStressArray, ComplexPlateVMStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriaxStressArray, ComplexTriaxStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
@@ -709,7 +712,7 @@ TABLE_OBJ_MAP = {
 
     'stress.ctriax_stress': (RealTriaxStressArray, ComplexTriaxStressArray,),
 
-    'stress.cquad4_composite_stress': (RealCompositePlateStressArray, ),
+    'stress.cquad4_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray12),
     'stress.ctria3_composite_stress': (RealCompositePlateStressArray, ),
     'stress.ctria6_composite_stress': (RealCompositePlateStressArray, ),
     'stress.ctriar_composite_stress': (RealCompositePlateStressArray, ),

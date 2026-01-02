@@ -1765,11 +1765,17 @@ class OES(OP2Common2):
             # 232-QUADRLC
             # 235-CQUADR
             return op2._not_implemented_or_skip(data, ndata, op2.code_information())
-        elif op2.element_type in [145, 146, 147, # VU-solid
-                                   189,  # VUQUAD
-                                   191]: # VUBEAM
-            msg = f'{op2.element_name}-{op2.element_type} has been removed'
-            return op2._not_implemented_or_skip(data, ndata, msg)
+        elif op2.element_type in [145, 146, 147, 189, 191]:
+            # 145-VUHEXA
+            # 146-VUPENTA
+            # 147-VUTETRA
+            # 189-VUQUAD
+            # 191-VUBEAM
+            if op2.read_mode == 1:
+                msg = f'{op2.table_name_str} {op2.element_name}-{op2.element_type} has been removed'
+                log.warning(msg)
+            return ndata
+            # return op2._not_implemented_or_skip(data, ndata, msg)
         elif op2.element_type == 118:  # WELDP-MSC
             #'                                S T R E S S E S   I N   W E L D   E L E M E N T S   ( C W E L D P ) '
             #' '
