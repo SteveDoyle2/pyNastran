@@ -220,6 +220,28 @@ This step reduces:
 
 $$ t \rightarrow l+r $$
 
+$$ {u_l} = [D]{u_r} $$
+
+$$ \begin{bmatrix}
+    K_{ll}  &  K_{lr}  \\  
+    K_{rl}  &  K_{rr}  \\
+\end{bmatrix} \begin{Bmatrix}
+    u_{l} \\
+    u_{r} \\
+\end{Bmatrix} = \begin{Bmatrix}
+    0 \\
+    F_{r} \\
+\end{Bmatrix} $$
+
+where
+
+$$ [D] = [K_{ll}]^{-1} {K_{lr}} $$
+
+$$ [\Phi_r] = \begin{Bmatrix}
+    D \\
+    I_{r} \\
+\end{Bmatrix} $$
+
 The statics problem is:
 
 $$ [K_{tt}] {u_t} = {F_t} $$ 
