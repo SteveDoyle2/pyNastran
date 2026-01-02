@@ -312,6 +312,13 @@ class OEF:
         #assert isinstance(op2.nonlinear_factor, int), op2.nonlinear_factor
         #self._check_result_type()
 
+    def _read_oefmc_4(self, data: bytes, ndata: int) -> int:
+        op2 = self.op2
+        # n = 0
+        # log = op2.log
+        raise NotImplementedError(op2.code_information())
+        return n
+
     def _read_oef1_4(self, data: bytes, ndata: int):
         """Table 4 parser for OEF1 table"""
         op2 = self.op2

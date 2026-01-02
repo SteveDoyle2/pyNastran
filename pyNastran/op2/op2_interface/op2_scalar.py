@@ -958,7 +958,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OUGMC1'  : [reader_oug._read_oug1_3, reader_oug._read_ougmc_4, 'NX 2019.2 modal contribution displacement'],  # displacement
             b'OQGMC1'  : [reader_oqg._read_oqg1_3, reader_oug._read_ougmc_4, 'NX 2019.2 modal contribution spc/mpc? force'],  # spc/mpc? force
             b'OESMC1'  : [reader_oes._read_oes1_3, reader_oes._read_oesmc_4, 'NX 2019.2 modal contribution stress'],  # stress
-            b'OEFMC1'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution force'],  # force
+            b'OEFMC1'  : [reader_oef._read_oef1_3, reader_oef._read_oefmc_4, 'NX 2019.2 modal contribution force'],  # force
             b'OSTRMC1' : [reader_oes._read_oes1_3, reader_oes._read_oesmc_4, 'NX 2019.2 modal contribution strain'], # strain
 
             b'OUGMC2'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution displacement; SORT2'],  # displacement
