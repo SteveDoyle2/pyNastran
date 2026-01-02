@@ -1,3 +1,67 @@
+Full M-Set Reduction
+---------------
+This step reduces:
+
+$$ g \rightarrow n+m $$
+
+$$ \begin{bmatrix}
+    M_{mm}       & M_{mn} \\
+    M_{nm}       & M_{nn} \\
+\end{bmatrix} \begin{Bmatrix}
+    \ddot u_{m} \\
+    \ddot u_{n} \\
+\end{Bmatrix} + 
+\begin{bmatrix}
+    K_{mm}       & K_{mn} \\
+    K_{nm}       & K_{nn} \\
+\end{bmatrix} \begin{Bmatrix}
+    u_{m} \\
+    u_{n} \\
+\end{Bmatrix} = \begin{Bmatrix}
+    F_{m} \\
+    F_{n} \\
+\end{Bmatrix} $$
+
+Let:
+
+$$ u_m = [GM]{u_n} $$
+
+$$ \begin{bmatrix}
+    M_{mm}       & M_{mn} \\
+    M_{nm}       & M_{nn} \\
+\end{bmatrix} [GMI] \ddot u_{n} +
+\begin{bmatrix}
+    K_{mm}       & K_{mn} \\
+    K_{nm}       & K_{nn} \\
+\end{bmatrix} [GMI] u_n = \begin{Bmatrix}
+    F_{m} \\
+    F_{n} \\
+\end{Bmatrix} $$
+
+Let:
+
+$$ [GMI] = \begin{bmatrix}
+    [GM] & [0]  \\
+    [0]  & [I]  \\
+\end{bmatrix} $$
+
+$$ [GMI]^{-1} = \begin{Bmatrix}
+    [GM^{-1}] & [0]  \\
+    [0 ]      & [I]  \\
+\end{Bmatrix} $$
+
+$$ [GMI]^{-1} \begin{bmatrix}
+    M_{mm}       & M_{mn} \\
+    M_{nm}       & M_{nn} \\
+\end{bmatrix} [GMI] \ddot u_{n} +
+[GMI]^{-1} \begin{bmatrix}
+    K_{mm}       & K_{mn} \\
+    K_{nm}       & K_{nn} \\
+\end{bmatrix} [GMI] u_n = [GMI]^{-1} \begin{Bmatrix}
+    F_{m} \\
+    F_{n} \\
+\end{Bmatrix} $$
+
 M-Set Reduction
 ---------------
 
@@ -110,6 +174,9 @@ $$ ( M_{nn} + [GM]^T M_{mm} [GM]) \ddot x_n + (K_{nn} + [GM]^T K_{mm} [GM]) x_n 
 
 S-Set Reduction
 ---------------
+This step reduces:
+
+$$ n \rightarrow s+f $$
 
 $$ \begin{bmatrix}
     K_{ss}  &  K_{sf} \\
@@ -137,3 +204,22 @@ $$ u_f = K_{ff}^{-1} (F_f - K_{sf} u_s) $$
 
 O-Set Reduction
 ---------------
+This step reduces:
+
+$$ f \rightarrow a+o $$
+
+A-Set Reduction
+---------------
+This step reduces:
+
+$$ a \rightarrow t+q $$
+
+T-Set Reduction
+---------------
+This step reduces:
+
+$$ t \rightarrow l+r $$
+
+The statics problem is:
+
+$$ [K_{tt}] {u_t} = {F_t} $$ 
