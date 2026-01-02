@@ -1,5 +1,7 @@
 Full M-Set Reduction
 ---------------
+The majority of this section is by following the math myself with a few spot checks. I don't fully understand it, so might be wrong.
+
 This step reduces:
 
 $$ g \rightarrow n+m $$
@@ -22,9 +24,11 @@ $$ \begin{bmatrix}
     F_{n} \\
 \end{Bmatrix} $$
 
-Let:
+Per basic dynamics, let:
 
-$$ u_m = [GM]{u_n} $$
+  $$ u_m = [GM]{u_n} $$
+
+Following:
 
 $$ \begin{bmatrix}
     M_{mm}       & M_{mn} \\
@@ -38,12 +42,14 @@ $$ \begin{bmatrix}
     F_{n} \\
 \end{Bmatrix} $$
 
-Let:
+Per basic dynamics, let:
 
 $$ [GMI] = \begin{bmatrix}
     [GM] & [0]  \\
     [0]  & [I]  \\
 \end{bmatrix} $$
+
+Following
 
 $$ [GMI]^{-1} = \begin{Bmatrix}
     [GM^{-1}] & [0]  \\
@@ -174,7 +180,7 @@ $$ ( M_{nn} + [GM]^T M_{mm} [GM]) \ddot x_n + (K_{nn} + [GM]^T K_{mm} [GM]) x_n 
 
 S-Set Reduction
 ---------------
-This step reduces:
+This step is straightforward, but might not be the best way to do it. It might be better to assume $u_s=0$ to simplify the math and handle $u_s != 0$ using constraints. This step reduces:
 
 $$ n \rightarrow s+f $$
 
@@ -214,11 +220,15 @@ This step reduces:
 
 $$ a \rightarrow t+q $$
 
+q is typically 0, so a=t.
+
 T-Set Reduction
 ---------------
-This step reduces:
+The majority of this section is per basic dynamics (Theoretical Considerations for Using SUPORT). This step reduces:
 
 $$ t \rightarrow l+r $$
+
+Let:
 
 $$ {u_l} = [D]{u_r} $$
 
@@ -241,7 +251,70 @@ $$ [\Phi_r] = \begin{Bmatrix}
     D \\
     I_{r} \\
 \end{Bmatrix} $$
+$$ [\Phi_r]^T = [D^T I_r] $$
+
+$$ [\Phi_r]^T [M] [\Phi_r] > [0]  $$
+$$ [\Phi_r]^T [K] [\Phi_r] = [0]  $$
+
+Internal strain energy (work) is calculated as:
+
+$$ [X] = [\Phi_r]^T \begin{bmatrix}
+    K_{ll}  &  K_{lr}  \\  
+    K_{rl}  &  K_{rr}  \\
+\end{bmatrix} [\Phi_r] = [D]^T [K_{ll}] [D] + [K_{rr}] $$
+
+Rigid body error ratio using the L2-norm is:
+
+$$ e = \frac{| [Krr] + [K_{lr}^T][D] | } {|K_{rr}|} $$
 
 The statics problem is:
 
 $$ [K_{tt}] {u_t} = {F_t} $$ 
+
+The SPC/SPCD Methods in Frequency Response Analysis
+---------------------------------------------------
+Redoing the sets for dynamics...
+
+$$ ( -\omega^2 \begin{bmatrix}
+    K_{ff}  &  K_{fs}  \\  
+    K_{sf}  &  K_{ss}  \\
+\end{bmatrix} +j \omega \begin{bmatrix}
+    B_{ff}  &  B_{fs}  \\  
+    B_{sf}  &  B_{ss}  \\
+\end{bmatrix} + \begin{bmatrix}
+    K_{ff}  &  K_{fs}  \\  
+    K_{sf}  &  K_{ss}  \\
+\end{bmatrix} + \begin{bmatrix}
+    \hat K_{ff}  &  \hat K_{fs}  \\  
+    \hat K_{sf}  &  \hat K_{ss}  \\
+\end{bmatrix} ) \begin{pmatrix}
+    U_f  \\  
+    U_s  \\
+\end{pmatrix} = \begin{Bmatrix}
+    P_{f}  \\  
+    P_{s}+q_s  \\
+\end{Bmatrix} $$
+
+where
+
+$u_f$ is the displacement of the free DOFs
+
+$u_s$ is the applied enforced motion
+
+$q_s$ is the dynamic portion of the solution and doesn't make sense or statics.$M$ is the mass matrix
+
+$B$ is the viscous damping matrix (BAAX?)
+
+$K$ is the stiffness matrix (KAAX?)
+
+$\hat K$ is the structural damping matrix (K4DD?)
+
+$$ \hat K = GK + \sum G_E K_E $$
+
+where
+
+$G$   is the global/uniform structural damping
+
+$G_E$ is the material structural damping
+
+$K_E$ is the element stiffness matrix
