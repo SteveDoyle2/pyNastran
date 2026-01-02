@@ -210,10 +210,120 @@ $$ u_f = K_{ff}^{-1} (F_f - K_{sf} u_s) $$
 
 O-Set Reduction
 ---------------
-This step reduces:
+Per Mystran's docs (Reduction of the F-set to the A-set section), this step reduces:
 
 $$ f \rightarrow a+o $$
 
+$$ \begin{bmatrix}
+    M_{aa}  & M_{ao}  \\
+    M_{ao}^T  & M_{oo} \\
+\end{bmatrix} \begin{Bmatrix}
+    \ddot u_{a} \\
+    \ddot u_{o} \\
+\end{Bmatrix} + \begin{bmatrix}
+    K_{aa}  & K_{ao} \\
+    K_{ao}^T  & K_{oo} \\
+\end{bmatrix} \begin{Bmatrix}
+    u_{a} \\
+    u_{o} \\
+\end{Bmatrix} = \begin{Bmatrix}
+    F_{a} \\
+    F_{o} \\
+\end{Bmatrix} $$
+
+Let's do a Guyan Reduction ($\ddot u=0$):
+
+$$ \begin{bmatrix}
+    K_{aa}  & K_{ao} \\
+    K_{ao}^T  & K_{oo} \\
+\end{bmatrix} \begin{Bmatrix}
+    u_{a} \\
+    u_{o} \\
+\end{Bmatrix} = \begin{Bmatrix}
+    F_{a} \\
+    F_{o} \\
+\end{Bmatrix} $$
+
+Take the 2nd equation and premultiply by $K_{oo}^{-1}$:
+
+$$  K_{ao}^T u_a + K_{oo} u_o = F_o  $$
+$$  K_{oo}^{-1} K_{ao}^T u_a + u_o = K_{oo}^{-1} F_o $$
+
+Let's solve for $u_o$, so let:
+
+$$ G_{oa} = -K_{oo}^{-1} K_{ao}^T $$
+$$ u_o^0 = K_{oo}^{-1} F_o       $$
+
+So:
+
+$$  -G_{oa} u_a + u_o = u_o^0 $$
+$$  u_o = u_o^0 + G_{oa} u_a $$
+
+$$ \begin{Bmatrix}
+    u_{a}  \\
+    u_{o}  \\
+\end{Bmatrix} = \begin{bmatrix}
+    I_{aa}  \\
+    G_{oa}  \\
+\end{bmatrix} u_a + \begin{Bmatrix}
+    0     \\
+    u_o^0 \\
+\end{Bmatrix} = [IG] u_a + \begin{Bmatrix}
+    0     \\
+    u_o^0 \\
+\end{Bmatrix} $$
+
+Dropping the $u_o^0$ part and pre-multiplying by [IG]^T:
+
+$$ \begin{bmatrix}
+    I_{aa}  &  G_{oa}^T  \\
+\end{bmatrix} \begin{bmatrix}
+    M_{aa}  & M_{ao}  \\
+    M_{ao}^T  & M_{oo} \\
+\end{bmatrix} \begin{bmatrix}
+    I_{aa}  \\
+    G_{oa}  \\
+\end{bmatrix} \ddot u_a + \begin{bmatrix}
+    I_{aa}  &  G_{oa}^T  \\
+\end{bmatrix} \begin{bmatrix}
+    K_{aa}  & K_{ao} \\
+    K_{ao}^T  & K_{oo} \\
+\end{bmatrix} \begin{bmatrix}
+    I_{aa}  \\
+    G_{oa}  \\
+\end{bmatrix} u_a = \begin{bmatrix}
+    I_{aa}  &  G_{oa}^T  \\
+\end{bmatrix} \begin{Bmatrix}
+    F_{a} \\
+    F_{o} \\
+\end{Bmatrix} $$
+
+$$ \hat K_aa = \begin{bmatrix}
+    I_{aa}  &  G_{oa}^T  \\
+\end{bmatrix} \begin{bmatrix}
+    K_{aa}    & K_{ao} \\
+    K_{ao}^T  & K_{oo} \\
+\end{bmatrix} \begin{bmatrix}
+    I_{aa}  \\
+    G_{oa}  \\
+\end{bmatrix} = K_{aa} + K_{ao} G_{oa} + G_{oa}^T K_{ao}^T + G_{oa}^T K_{oo} G_{oa} $$
+
+$$ \hat K_{aa} = K_{aa} + K_{ao} G_{oa} + (K_{ao} G_{oa})^T + G_{oa}^T K_{oo} G_{oa} $$
+
+Plugging in $G_{oa}$ and simplifying:
+
+$$ \hat K_{aa} = K_{aa} + K_{ao} G_{oa} $$
+
+$$ \hat M_{aa} = M_{aa} + M_{ao} M_{oa} + (M_{ao} G_{oa})^T + G_{oa}^T M_{oo} G_{oa} $$
+$$ \hat P_{a} = P_{a} + G_{oa} P_o $$
+
+$$ [\hat M_{aa}] \ddot u_a + [\hat K_{aa}] u_a = [\hat P_a] $$
+```
+[I  GT] [aa  ao] [I] = [I GT] [aa*I + ao*G]  = aa+ao*G + GT*(aoT + oo*G) = aa+ao*G + GT*aoT + GT*oo*G
+        [aoT oo] [G]          [aoT*I + oo*G]
+```
+
+        
 A-Set Reduction
 ---------------
 This step reduces:
