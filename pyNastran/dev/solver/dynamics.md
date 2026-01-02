@@ -34,7 +34,7 @@ $$ \ddot x + \frac{b}{m} \dot x + \frac{k}{m} x = \frac{F}{m} $$
 $$ \ddot x + 2 \zeta \omega_n \dot x + \omega_n^2 x = \frac{F}{m} $$
 
 $$ \frac{k}{m} = \omega_n^2 $$
-$$ \zeta = \frac{b}{b_{cr}} $$
+$$ \zeta = \frac{b}{b_{cr}} = \frac{G}{2} $$
 $$ \frac{b}{m} = 2 \zeta \omega_n $$
 $$ b = 2 \zeta \sqrt{km} $$
 
@@ -43,11 +43,15 @@ For zeta=1
 $$ b = b_{cr} $$
 $$ b_{cr} = 2 \sqrt{km} = 2 m \omega_n $$
 
-The solution is:
+The steady-state solution is:
 
 $$ u(t) = p/k \frac{sin(\omega t + \phi)} {\sqrt{(1-\omega^2 / \omega_n^2)^2 + (2 \zeta \omega / \omega_n)^2}} $$
 
 $$ \phi = -tan^{-1}(\frac{2 \zeta \omega / \omega_n}{1 - \omega^2 / \omega_n^2}) $$
+
+where for unit mass:
+
+$$ k = m \omega_n^2 = \omega_n^2 $$
 
 Frequency Response
 ------------------
