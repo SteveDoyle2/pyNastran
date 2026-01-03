@@ -129,7 +129,7 @@ Given \omega and assuming B=0, solve:
 
 $$ ([\hat K] - \omega^2 [I]) {q} = {\hat F} $$
 
-$$ (\omega_n^2 - omega^2) {q} = {\hat F} $$
+$$ (\omega_n^2 - \omega^2) {q} = {\hat F} $$
 
 Reintroducing B:
 
