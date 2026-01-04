@@ -1717,8 +1717,11 @@ class ComplexTableArray(TableArray):
         TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     @classmethod
-    def add_freq_case(cls, table_name, node_gridtype, data, isubcase,
-                      freqs,
+    def add_freq_case(cls, table_name: str,
+                      node_gridtype: np.ndarray,
+                      data: np.ndarray,
+                      isubcase: int,
+                      freqs: np.ndarray,
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
 

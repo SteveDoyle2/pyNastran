@@ -66,9 +66,8 @@ def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
 
     failed_cases_filename = 'failed_cases%s%s.in' % (sys.version_info[:2])
     if regenerate:
-        files2 = get_all_files(folders_file, '.bdf')
-        files2 += get_all_files(folders_file, '.nas')
-        files2 += get_all_files(folders_file, '.dat')
+        file_types = ['.bdf', '.nas', '.dat']
+        files2 = get_all_files(folders_file, file_types)
         files2 = list(set(files2))
         files2.sort()
     else:
