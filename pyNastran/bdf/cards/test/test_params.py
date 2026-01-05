@@ -1,13 +1,47 @@
 import unittest
 
 #import pyNastran
-from pyNastran.bdf.bdf import BDF, PARAM, BDFCard, MDLPRM
+from pyNastran.bdf.bdf import BDF, BDFCard
+from pyNastran.bdf.cards.params import (
+    PARAM, MDLPRM,
+    string_params,
+    int_params, int_params_allowed,
+    float_params, float2_params,)
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 #ROOT_PATH = pyNastran.__path__[0]
 #test_path = os.path.join(ROOT_PATH, 'bdf', 'cards', 'test')
 
 class TestParams(unittest.TestCase):
+    def test_all_params(self):
+        model = BDF(debug=True, log=None, mode='msc')
+
+        for key, (value, allowed) in string_params.items():
+            model.add_param(key, value)
+            add_param_card(model, key, value)
+
+        for key, value in int_params.items():
+            add_param_card(model, key, value)
+            model.add_param(key, value)
+        for key, (value, allowed) in int_params_allowed.items():
+            add_param_card(model, key, value)
+            model.add_param(key, value)
+        for key, value in float_params.items():
+            add_param_card(model, key, value)
+            model.add_param(key, value)
+        for key, values in float2_params.items():
+            add_param_card(model, key, value)
+            model.add_param(key, values)
+        model.pop_parse_errors()
+
+        for key, param in model.params.items():
+            str(param)
+            values = param.values
+            # if len(values) == 1:
+            #     values = values[0]
+            param.update_values(*values)
+            str(param)
+
     def test_mdlprm_1(self):
         model = BDF(debug=True, log=None, mode='msc')
         mdlprm_dict = {'HDF5': 1}
@@ -140,6 +174,15 @@ class TestParams(unittest.TestCase):
         fields = ['PARAM', 'PRTMASS', 1, 3, 3, 3, 3]
         model.add_card(fields, 'PARAM', comment='param', ifile=None, is_list=True, has_none=True)
 
+
+def add_param_card(model: BDF, key: str, value) -> list:
+    if isinstance(value, tuple):
+        card = ['PARAM', key] + list(value)
+    elif isinstance(value, (int, float, str)):
+        card = ['PARAM', key, value]
+    else:  # pragma: no cover
+        raise TypeError(value)
+    model.add_card(card, 'PARAM')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -5,14 +5,15 @@ from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.bdf.bdf import BDF
 
 def add_remove_mesh(bdf_filename: PathLike,
-                    bdf_add_remove_filenames: list[tuple[str, PathLike]]=None,) -> BDF:
+                    bdf_add_remove_filenames: list[tuple[str, PathLike]]=None,
+                    ) -> BDF:
     # check that files exist
     assert os.path.exists(bdf_filename), print_bad_path(bdf_filename)
     for add_remove, bdf_filenamei in bdf_add_remove_filenames:
         assert add_remove in {'add', 'remove'}, (add_remove, bdf_filenamei)
         assert os.path.exists(bdf_filenamei), print_bad_path(bdf_filenamei)
 
-    model_root = BDF()
+    model_root = BDF(debug=False)
     model_root._parse = False
     model_root.read_bdf(bdf_filename, xref=False)
     slot_to_type_map = model_root._slot_to_type_map
@@ -92,23 +93,3 @@ def add_remove_mesh(bdf_filename: PathLike,
                         log.debug(msgi)
                         del root_group[idi]
     #for
-
-def main():
-    import pyNastran
-    pkg_path = Path(pyNastran.__path__[0])
-    print(pkg_path)
-    model_path = pkg_path / '..' / 'models'
-    assert model_path.exists(), print_bad_path(model_path)
-    bdf_filename = model_path / 'solid_bending' / 'solid_bending.bdf'
-    add_bdf_filenames = []
-    add_remove_bdf_filenames = [
-        ('remove', model_path / 'solid_bending' / 'solid_bending.bdf'),
-    ]
-    add_remove_mesh(
-        bdf_filename,
-        add_remove_bdf_filenames,
-    )
-
-
-if __name__ == '__main__':  # pragma: no cover
-    main()

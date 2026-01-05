@@ -2719,6 +2719,35 @@ class TestOP2Main(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
+    def test_bdf_op2_other_32(self):
+        """checks 1-elm--pcomp-mat2-pdistb.op2, which tests ComplexLayeredCompositeStressArray12"""
+        log = get_logger(level='warning')
+        bdf_filename = MODEL_PATH / 'other' / '1-elm--pcomp-mat2-pdistb.bdf'
+        op2_filename = MODEL_PATH / 'other' / '1-elm--pcomp-mat2-pdistb.op2'
+
+        # can't parse replication
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
+
+        # unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        # model.safe_cross_reference()
+
+        # save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude_results=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
     def test_bdf_op2_other_31(self):
         """checks htrussx.bdf, which tests getting rid of the Panel"""
         log = get_logger(level='warning')
@@ -4038,7 +4067,7 @@ class TestOP2Main(Tester):
         assert os.path.exists(debug_file), os.listdir(os.path.dirname(op2_filename))
         os.remove(debug_file)
 
-    def test_cgap_01(self):
+    def test_op2_cgap_01(self):
         """checks cc188b.bdf"""
         log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'cc188b.bdf'

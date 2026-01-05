@@ -9,6 +9,7 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import (
     ComplexLayeredCompositeStrainArray, ComplexLayeredCompositeStressArray,
+    ComplexLayeredCompositeStressArray12, ComplexLayeredCompositeStrainArray12,
     ComplexLayeredCompositesArray)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateStressArray, RealCompositePlateStrainArray
@@ -167,7 +168,9 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
     # obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
     # n += ntotal
     # raise NotImplementedError('this is a really weird case...')
-    elif result_type == 1 and num_wide == 11 and table_name_bytes in [b'OESCP', b'OESTRCP']:  # complex
+    elif (result_type == 1 and num_wide == 11 and
+          table_name_bytes in [b'OESCP', b'OESTRCP']):
+        # complex
         # OESCP - STRAINS IN LAYERED COMPOSITE ELEMENTS (QUAD4)
         ntotal = 44 * factor
         nelements = ndata // ntotal
@@ -311,7 +314,9 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
                f'numwide_real=11 numwide_imag=9 result_type={result_type}')
         return op2._not_implemented_or_skip(data, ndata, msg), None, None
 
-    elif result_type == 1 and num_wide == 12 and op2.is_msc:
+    elif (result_type == 1 and num_wide == 12 and op2.is_msc and
+          table_name_bytes in [b'OES1C']):
+        # complex
         # analysis_code = 5   Frequency
         # table_code    = 5   OES1C-OES - Element Stress
         # format_code   = 2   Real/Imaginary
@@ -330,12 +335,28 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
         # num_wide      = 12
         # freq          = 990.0
         # MSC Nastran
-        msg = (f'etype={op2.element_name} ({op2.element_type}) '
-               f'{op2.table_name_str}-COMP-complex-numwide={num_wide} '
-               # f'numwide_real=11 numwide_imag=9 result_type={result_type}'
-               )
-        # op2.log.warning(f'skipping complex {op2.table_name_str}-PCOMP-12')
-        return op2._not_implemented_or_skip(data, ndata, msg), None, None
+        # assert op2.is_sort1
+        complex_obj = ComplexLayeredCompositeStressArray12 if op2.is_stress else ComplexLayeredCompositeStrainArray12
+
+        ntotal = 48 * factor
+        nelements = ndata // ntotal
+        auto_return, is_vectorized = op2._create_oes_object4(
+            nelements, result_name, slot, complex_obj)
+        if auto_return:
+            return nelements * ntotal, None, None
+
+        obj = op2.obj
+        n = oes_shell_composite_complex_12(
+            op2, data, obj,
+            ntotal, nelements, sort_method,
+            dt, is_magnitude_phase)
+
+        # msg = (f'etype={op2.element_name} ({op2.element_type}) '
+        #        f'{op2.table_name_str}-COMP-complex-numwide={num_wide} '
+        #        # f'numwide_real=11 numwide_imag=9 result_type={result_type}'
+        #        )
+        # # op2.log.warning(f'skipping complex {op2.table_name_str}-PCOMP-12')
+        # return op2._not_implemented_or_skip(data, ndata, msg), None, None
 
     elif result_type == 1 and num_wide == 11:
         # analysis_code = 9   Complex eigenvalues
@@ -513,6 +534,44 @@ def oes_shell_composite_complex_11(op2: OP2,
             #op2.binary_debug.write('%s-%s - (%s) + %s\n' % (op2.element_name, op2.element_type, eid_device, str(out)))
         #add_sort_x(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
         add_sort_x(dt, eid, ply_id, oxx, oyy, txy, txz, tyz, angle, omax, omin, max_shear)
+        n += ntotal
+    return n
+
+
+def oes_shell_composite_complex_12(op2: OP2,
+                                   data: bytes,
+                                   obj: ComplexLayeredCompositeStressArray12 | ComplexLayeredCompositeStrainArray12,
+                                   ntotal: int, nelements: int, sort_method: int,
+                                   dt: Any, is_magnitude_phase: bool) -> int:
+    # if op2.read_mode == 1:
+    #     return ndata, None, None
+    fmt = mapfmt(op2._analysis_code_fmt + b'i 10f', op2.size)  # 12
+    struct1 = Struct(op2._endian + fmt)
+    # sort_method = op2.sort_method
+    n = 0
+    # ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS     INTER-LAMINAR  STRESSES
+    #      ID   ID      NORMAL-1      NORMAL-2      SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT
+    #       1    1  -8.713408E-01 -1.132072E+01 -2.119228E-02   -2.255483E-01  5.870259E-05
+    #                1.307266E-01  1.698439E+00  3.178526E-03    3.383883E-02 -8.803315E-06
+    # ints = (11, 1, -1084288975, -1053482578, -1129473171, -1100548576, 947271533, 1040571696, 1071212149, 995118802, 1024105111, -1223446029)
+    # floats  = (11, 1, -0.871340811252594, -11.320722579956055, -0.02119227685034275, -0.22554826736450195, 5.87025897402782e-05, 0.13072657585144043, 1.6984392404556274, 0.0031785261817276478, 0.03383883461356163, -8.803314813121688e-06)
+    for ielement in range(nelements):
+        datai = data[n:n + ntotal]
+        # op2.show_data(datai)
+        out = struct1.unpack(datai)
+        # print(out)
+        (eid, layer,
+         oxxr, oyyr, txyr, t1zr, t2zr,
+         oxxi, oyyi, txyi, t1zi, t2zi) = out
+        if not is_magnitude_phase:
+            oxx = oxxr + oxxi*1j
+            oyy = oyyr + oyyi*1j
+            txy = txyr + txyi*1j
+            t1z = t1zr + t1zi*1j
+            t2z = t2zr + t2zi*1j
+        else:
+            raise NotImplementedError(is_magnitude_phase)
+        obj.add_sort1(dt, eid, layer, oxx, oyy, txy, t1z, t2z)
         n += ntotal
     return n
 

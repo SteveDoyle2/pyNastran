@@ -111,8 +111,8 @@ class GridPointSurfaceArray(ScalarObject):
         #random_code = self.random_code
         ogs = self.ogs
         if ogs is None:
-            #print(''.join(self.get_stats()))
-            warnings.warn('ogs=0...')
+            # print(''.join(self.get_stats()))
+            # warnings.warn('ogs=0...')
             ogs = 0
 
         format_code = self.format_code

@@ -115,7 +115,6 @@ def oef_cbar_34(op2: OP2, data: bytes, ndata: int, dt: Any,
         # print(msg)
         # print(result_type)
         # raise NotImplementedError(op2.code_information())
-        # aaa
         # return op2._not_implemented_or_skip(data, ndata, msg), None, None
     # print self.barForces
     return n, nelements, ntotal

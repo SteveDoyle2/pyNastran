@@ -283,7 +283,7 @@ class TestElements(unittest.TestCase):
         cbush2.Centroid()
         save_load_deck(model, run_op2_writer=False)
 
-    def test_cgap_01(self):
+    def test_elements_cgap_01(self):
         """tests a CGAP/PGAP"""
         log = get_logger(level='warning')
         model = BDF(log=log)

@@ -29,15 +29,15 @@ float_regex = '[+-]?([0-9]*[.])?[0-9]+'
 pfloat = pp.Regex(float_regex).setName('real').setParseAction(cvt_float)
 #pfloat_lazy = (pfloat1 | pfloat2 | pint_sign).setName('real').setParseAction(cvt_float)
 
-pfloat.parseString('1.0')
-pfloat.parseString('+1.0')
-pfloat.parseString('-1.0')
-pfloat.parseString('1.')
-pfloat.parseString('+1.')
-pfloat.parseString('-1.')
-pfloat.parseString('-1')
-pfloat.parseString('0')
-pfloat.parseString('3')
+pfloat.parse_string('1.0')
+pfloat.parse_string('+1.0')
+pfloat.parse_string('-1.0')
+pfloat.parse_string('1.')
+pfloat.parse_string('+1.')
+pfloat.parse_string('-1.')
+pfloat.parse_string('-1')
+pfloat.parse_string('0')
+pfloat.parse_string('3')
 #------------------------------------------------------
 
 name_str = pword + pp.quotedString
@@ -50,15 +50,15 @@ xy = pp.Group(pfloat * 2 + pp.Optional(comma.suppress())).setName('xy')
 # 0xFFFFFF77
 hexa = pp.Word('0123456789ABCDEFx', min=10, max=10).setName('hex')
 
-hexa.parseString("0xFFFFFF77")
-hexa.parseString("0xFF0000FF")
-hexa.parseString("0xFFCC0077")
-hexa.parseString("0xFFFF00FF")
-hexa.parseString("0x77FF00FF")
-hexa.parseString("0x00FF00FF")
-hexa.parseString("0x00FFFFFF")
-hexa.parseString("0x7700FF77")
-hexa.parseString("0x444444FF")
+hexa.parse_string("0xFFFFFF77")
+hexa.parse_string("0xFF0000FF")
+hexa.parse_string("0xFFCC0077")
+hexa.parse_string("0xFFFF00FF")
+hexa.parse_string("0x77FF00FF")
+hexa.parse_string("0x00FF00FF")
+hexa.parse_string("0x00FFFFFF")
+hexa.parse_string("0x7700FF77")
+hexa.parse_string("0x444444FF")
 
 #0xFF0000FF 0xFFCC0077 0xFFFF00FF
 #0x77FF00FF 0x00FF00FF 0x00FFFFFF 0x0000FFFF
@@ -86,7 +86,7 @@ material = (
     dict_open +
     material_values +
     dict_close)
-material_values.parseString("""
+material_values.parse_string("""
     ambientIntensity 0.210
     diffuseColor 0.596 0.667 0.686
     specularColor 0.500 0.500 0.500
@@ -94,7 +94,7 @@ material_values.parseString("""
     shininess 0.600
 """)
 
-material.parseString("""
+material.parse_string("""
 material Material {
     ambientIntensity 0.210
     diffuseColor 0.596 0.667 0.686
@@ -113,7 +113,7 @@ intensity = pp.Literal('intensity') + pfloat
 directional_light_values = pp.Group(pp.OneOrMore(
     direction | color | intensity | ambient_intensity))
 directional_light = pp.Literal('DirectionalLight') + dict_open + directional_light_values + dict_close
-directional_light.parseString("""
+directional_light.parse_string("""
 DirectionalLight {
  direction 0.577 -0.577 -0.577
  color    1.000 1.000 1.000
@@ -130,7 +130,7 @@ world_info = (
     dict_open +
     pp.Group(world_info_values) +
     dict_close)
-world_info.parseString("""
+world_info.parse_string("""
 WorldInfo {
     title "Texture-mapped pyramid"
     info  "Gravity: on"
@@ -144,7 +144,7 @@ background = (
     dict_open +
     pp.Group(background_values) +
     dict_close).setName('background')
-background.parseString("""
+background.parse_string("""
 Background {
     skyColor 0.1 0.3 1
 }
@@ -158,7 +158,7 @@ navigation_info = (
     dict_open +
     pp.Group(navigation_info_values) +
     dict_close).setName('navigation_info')
-navigation_info.parseString("""
+navigation_info.parse_string("""
 NavigationInfo {
  type "EXAMINE"
     headlight TRUE
@@ -169,7 +169,7 @@ image = pp.Group(
     pp.Literal('image') + pp.Group(pint * 3) +
     pp.Group(pp.OneOrMore(hexa))
 ).setName('image')
-image.parseString("""
+image.parse_string("""
 image 1 10 4 0xFFFFFF77 0xFF0000FF 0xFFCC0077 0xFFFF00FF
              0x77FF00FF 0x00FF00FF 0x00FFFFFF 0x0000FFFF
              0x7700FF77 0x444444FF
@@ -181,7 +181,7 @@ pixel_texturei = (
     image +
     dict_close).setName('pixel_texture')
 
-pixel_texturei.parseString("""
+pixel_texturei.parse_string("""
 PixelTexture {
     image 1 10 4 0xFFFFFF77 0xFF0000FF 0xFFCC0077 0xFFFF00FF
                  0x77FF00FF 0x00FF00FF 0x00FFFFFF 0x0000FFFF
@@ -210,7 +210,7 @@ texture = (
     pp.Literal('texture') + pp.Literal('DEF').suppress() + pword +
     texture_types).setName('texture')
 
-texture.parseString("""
+texture.parse_string("""
 texture DEF PICBAND ImageTexture {
    url "http://www.rt.cs.boeing.com/people/davidk/wrl/geo/colors.jpg"
    repeatS FALSE
@@ -219,7 +219,7 @@ texture DEF PICBAND ImageTexture {
 """)
 
 
-texture.parseString("""
+texture.parse_string("""
 texture DEF PICBAND PixelTexture {
     image 1 10 4 0xFFFFFF77 0xFF0000FF 0xFFCC0077 0xFFFF00FF
                  0x77FF00FF 0x00FF00FF 0x00FFFFFF 0x0000FFFF
@@ -231,7 +231,7 @@ point3d = (pp.Literal('point') + list_open + pp.Group(pp.OneOrMore(xyz)) + list_
 point2d = (pp.Literal('point') + list_open + pp.Group(pp.OneOrMore(xy)) + list_close).setName('point')
 coord_values = point3d
 coord = (pp.Literal('coord') + pp.Literal('Coordinate') + dict_open + pp.Group(coord_values) + dict_close).setName('coord')
-coord.parseString("""
+coord.parse_string("""
 coord Coordinate {
     point [
         3.303 -6.738 -16.931,  3.275 -6.738 -16.932,  3.285 -6.821 -17.012,
@@ -245,14 +245,14 @@ vector = (pp.Literal('vector') + list_open + pp.Group(pp.OneOrMore(xyz)) + list_
 normal_values = vector
 normal = (pp.Literal('normal') + pp.Literal('Normal') + dict_open + pp.Group(normal_values) + dict_close).setName('normal')
 
-vector.parseString("""
+vector.parse_string("""
 vector [
     0 -0.697 0.717,  0 -0.697 0.717,  0 -0.697 0.717,
     0 -0.697 0.717,  0 -0.697 0.717,  0 -0.697 0.717,
 ]
 """)
 
-normal.parseString("""
+normal.parse_string("""
 normal Normal {
     vector [
         0 -0.697 0.717,  0 -0.697 0.717,  0 -0.697 0.717,
@@ -287,8 +287,8 @@ else:  # pragma: no cover
     #coord_indicies = pp.pyparsing_common.comma_separated_list # bad...
     #coord_indicies = OneOrMore(comma.suppress() | pint.setParseAction(cvt_int)) + pminus1.setParseAction(cvt_int)))
 
-coord_indicies.parseString("0, 1, 2, -1, 3, 4, 5, -1, 1, 6, 2, -1")
-coord_index.parseString("coordIndex [0, 1, 2, -1, 3, 4, 5, -1, 1, 6, 2, -1]")
+coord_indicies.parse_string("0, 1, 2, -1, 3, 4, 5, -1, 1, 6, 2, -1")
+coord_index.parse_string("coordIndex [0, 1, 2, -1, 3, 4, 5, -1, 1, 6, 2, -1]")
 #aaab
 
 crease_angle = (pp.Literal('creaseAngle') + pfloat).setName('crease_angle')
@@ -310,7 +310,7 @@ geometry = (pp.Literal('geometry') + geometry_values).setName('geometry')
 shape_values = pp.Group(pp.OneOrMore(appearance | geometry))
 shape = (pp.Literal('Shape') + dict_open + shape_values + dict_close).setName('shape')
 
-#print(geometry.parseString("""
+#print(geometry.parse_string("""
 #geometry IndexedFaceSet {
     #creaseAngle 0.1
     #coord Coordinate {
@@ -334,7 +334,7 @@ shape = (pp.Literal('Shape') + dict_open + shape_values + dict_close).setName('s
 
 #print('geometry...')
 # crease_angle + coord + normal + coord_index
-geometry.parseString("""
+geometry.parse_string("""
 geometry IndexedFaceSet {
     coord Coordinate{
         point[
@@ -365,7 +365,7 @@ geometry IndexedFaceSet {
 """)
 
 
-shape.parseString("""
+shape.parse_string("""
 Shape {
     appearance Appearance{
          texture DEF PICBAND PixelTexture {
@@ -379,7 +379,7 @@ Shape {
 """)
 
 # wow...super dead link; google has info from him back in 1994...
-shape.parseString("""
+shape.parse_string("""
 Shape{
     appearance Appearance{
          texture DEF PICBAND ImageTexture {
@@ -391,7 +391,7 @@ Shape{
 }
 """)
 
-appearance.parseString("""
+appearance.parse_string("""
     appearance Appearance {
         material Material {
             ambientIntensity 0.210
@@ -402,7 +402,7 @@ appearance.parseString("""
         }
     }
 """)
-shape.parseString("""
+shape.parse_string("""
 Shape {
     appearance Appearance {
         material Material {
@@ -417,7 +417,7 @@ Shape {
 """)
 
 #---------------------------------------
-shape.parseString("""
+shape.parse_string("""
 Shape {
     appearance Appearance {
         material Material {

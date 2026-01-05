@@ -48,7 +48,7 @@ from pyNastran.gui.test.all_tests_no_gui import *
 #import pyNastran.gui.gui
 
 import pyNastran.dev
-from pyNastran.dev.tools.test_pressure_map import TestPressureMap
+from pyNastran.dev.tools.all_tests import TestInrel, TestPressureMap
 # try:
 #     from pyNastran.dev.solver.test_springs import *
 # except ImportError:  # pragma: no cover

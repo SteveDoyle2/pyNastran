@@ -343,12 +343,17 @@ class PARAM(BaseCard):
         if comment:
             self.comment = comment
         self.key = key
+
+        if isinstance(values, tuple):
+            values = list(values)
+
         if isinstance(values, list):
             pass
         elif isinstance(values, (integer_types, float_types, str)):
             values = [values]
+
         self.values = values
-        if isinstance(self.values, tuple) or isinstance(self.values[0], (list, tuple)):
+        if isinstance(self.values[0], (list, tuple)):
             raise TypeError((key, self.values))
         #assert not isinstance(values, tuple), values
         #if isinstance(values, list):
@@ -548,11 +553,11 @@ class PARAM(BaseCard):
                 value1 = 0.0
             if value2 is None:
                 value2 = 0.0
-            if not isinstance(value1, float):
-                msg = f'key={self.key} value1={value1!r} must be a float.'
+            if not isinstance(value1, float_types):
+                msg = f'key={self.key} value1={value1!r} must be a float; type={str(type(value1))}'
                 raise TypeError(msg)
-            if isinstance(value2, float):
-                msg = f'key={self.key} value2={value2!r} must be a float.'
+            if not isinstance(value2, float_types):
+                msg = f'key={self.key} value2={value2!r} must be a float; type={str(type(value2))}'
                 raise TypeError(msg)
 
         elif self.key in ['CB1', 'CB2', 'CK1', 'CK2', 'CK3', 'CM1', 'CM2', 'CP1', 'CP2']:
@@ -560,10 +565,10 @@ class PARAM(BaseCard):
                 value1 = 1.0
             if value2 is None:
                 value2 = 0.0
-            if not isinstance(value1, float):
+            if not isinstance(value1, float_types):
                 msg = f'key={self.key} value1={value1!r} must be a float.'
                 raise TypeError(msg)
-            if isinstance(value2, float):
+            if not isinstance(value2, float_types):
                 msg = f'key={self.key} value2={value2!r} must be a float.'
                 raise TypeError(msg)
 

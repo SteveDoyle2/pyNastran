@@ -173,13 +173,13 @@ class RealPlateArray(OES_Object):
             # assert ntimes == 1, ntimes
             #print(self.code_information())
 
-        if self.analysis_code == 1:
-            # ntimes = 1
-            if ntimes != 1:
-                # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\acc002.op2
-                warnings.warn(f'ntimes != 1; {self.element_name}-{self.element_type}\n'
-                              f'ntimes={ntimes} _ntotals={self._ntotals} '
-                              f'sort_method={self.sort_method} nlayers_per_element={nlayers_per_element} nlayers={nlayers}')
+        # if self.analysis_code == 1:
+        #     # ntimes = 1
+        #     if ntimes != 1:
+        #         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\acc002.op2
+        #         warnings.warn(f'ntimes != 1; {self.element_name}-{self.element_type}\n'
+        #                       f'ntimes={ntimes} _ntotals={self._ntotals} '
+        #                       f'sort_method={self.sort_method} nlayers_per_element={nlayers_per_element} nlayers={nlayers}')
 
         assert nlayers >= 2, self.code_information()
         _times = np.zeros(ntimes, dtype=self.analysis_fmt)
