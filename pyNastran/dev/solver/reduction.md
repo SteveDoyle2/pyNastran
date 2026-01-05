@@ -381,13 +381,80 @@ The statics problem is:
 
 $$ [K_{tt}] {u_t} = {F_t} $$ 
 
+The Non-SPCD Methods in Frequency Response Analysis
+---------------------------------------------------
+Redoing the sets for dynamics...
+
+$$ ( -\omega^2 \begin{bmatrix}
+    M_{ff}  &  M_{fs}  \\
+    M_{sf}  &  M_{ss}  \\
+\end{bmatrix} +j \omega \begin{bmatrix}
+    B_{ff}  &  B_{fs}  \\  
+    B_{sf}  &  B_{ss}  \\
+\end{bmatrix} + \begin{bmatrix}
+    K_{ff}  &  K_{fs}  \\  
+    K_{sf}  &  K_{ss}  \\
+\end{bmatrix} + \begin{bmatrix}
+    \hat K_{ff}  &  \hat K_{fs}  \\  
+    \hat K_{sf}  &  \hat K_{ss}  \\
+\end{bmatrix} ) \begin{pmatrix}
+    U_f  \\  
+    U_s  \\
+\end{pmatrix} = \begin{Bmatrix}
+    P_{f}  \\  
+    P_{s}  \\
+\end{Bmatrix} $$
+
+If $u_s=0$:
+
+$$ -\omega^2 M_{ff} \ddot u_f + j \omega B_{ff} \dot u_f + K_{ff} u_f = F_f $$
+$$ F_s = -\omega^2 M_{sf} \ddot u_f + j \omega B_{sf} \dot u_f + K_{sf} u_f $$
+
+If $u_s > 0$:
+
+$$ -\omega^2 M_{ff} \ddot u_f -\omega^2 M_{fs} \ddot u_s + j \omega B_{ff} \dot u_f + j \omega B_{fs} \dot u_s + K_{ff} u_f + K_{fs} u_s  = F_f $$
+$$ -\omega^2 M_{sf} \ddot u_f -\omega^2 M_{ss} \ddot u_s + j \omega B_{sf} \dot u_f + j \omega B_{ss} \dot u_s + K_{sf} u_f + K_{ss} u_s = F_s $$
+
+Move things to the RHS:
+
+$$ -\omega^2 M_{sf} \ddot u_f + j \omega B_{sf} \dot u_f + K_{sf} u_f + K_{ss} u_s = F_s + \omega^2 M_{ss} \ddot u_s - j \omega B_{ss} \dot u_s = \hat F_s $$
+$$ \hat F_s = F_s + \omega^2 M_{ss} \ddot u_s - j \omega B_{ss} \dot u_s $$
+
+Multiply by $K_{ss}^{-1}$:
+
+$$ -\omega^2 K_{ss}^{-1} M_{sf} \ddot u_f + j \omega K_{ss}^{-1} B_{sf} \dot u_f + K_{ss}^{-1} K_{sf} u_f + [I] u_s = K_{ss}^{-1} \hat F_s $$
+
+Move things to the RHS:
+
+$$ u_s = K_{ss}^{-1} \hat F_s + \omega^2 K_{ss}^{-1} M_{sf} \ddot u_f - j \omega K_{ss}^{-1} B_{sf} \dot u_f - K_{ss}^{-1} K_{sf} u_f$$
+$$ u_s = \hat \hat F_s + \hat M_{sf} \ddot u_f - j \hat B_{sf} \dot u_f -\hat K_{sf} u_f$$
+$$ u_s = A + B \ddot u_f + C \dot u_f + D u_f$$
+
+Pluging in:
+$$ -\omega^2 M_{ff} \ddot u_f -\omega^2 M_{fs} \ddot u_s + j \omega B_{ff} \dot u_f + j \omega B_{fs} \dot u_s + K_{ff} u_f + K_{fs} u_s  = F_f $$
+$$ u_s = A + B \ddot u_f + C \dot u_f + D u_f$$
+$$ u_s = \hat \hat F_s + \hat M_{sf} \ddot u_f - j \hat B_{sf} \dot u_f -\hat K_{sf} u_f$$
+
+$$ K_{fs} u_s = K_{fs} \hat \hat F_s + K_{fs} \hat M_{sf} \ddot u_f - j K_{fs} \hat B_{sf} \dot u_f - K_{fs} \hat K_{sf} u_f$$
+$$ = K_{fs} K_{ss}^{-1} \hat F_s + \omega^2 K_{fs} K_{ss}^{-1} M_{sf} \ddot u_f - j \omega K_{fs} K_{ss}^{-1} B_{sf} \dot u_f - K_{fs} K_{ss}^{-1} K_{sf} u_f $$
+
+$$ -\omega^2 M_{ff} \ddot u_f -\omega^2 M_{fs} \ddot u_s + j \omega B_{ff} \dot u_f + j \omega B_{fs} \dot u_s + K_{ff} u_f + K_{fs} (u_s)  = F_f $$
+
+
+$$ -\omega^2 M_{ff} \ddot u_f -\omega^2 M_{fs} \ddot u_s + j \omega B_{ff} \dot u_f + j \omega B_{fs} \dot u_s + K_{ff} u_f + K_{fs} K_{ss}^{-1} \hat F_s + \omega^2 K_{fs} K_{ss}^{-1} M_{sf} \ddot u_f - j \omega K_{fs} K_{ss}^{-1} B_{sf} \dot u_f - K_{fs} K_{ss}^{-1} K_{sf} u_f  = F_f $$
+
+$$ -\omega^2 ( M_{ff} + K_{fs} K_{ss}^{-1} M_{sf}) \ddot u_f -\omega^2 M_{fs} \ddot u_s + j \omega (B_{ff} - K_{fs} K_{ss}^{-1} B_{sf}) \dot u_f + j \omega B_{fs} \dot u_s + (K_{ff} - K_{fs} K_{ss}^{-1} K_{sf} ) u_f = F_f - K_{fs} K_{ss}^{-1} \hat F_s $$
+
+
+
+
 The SPC/SPCD Methods in Frequency Response Analysis
 ---------------------------------------------------
 Redoing the sets for dynamics...
 
 $$ ( -\omega^2 \begin{bmatrix}
-    K_{ff}  &  K_{fs}  \\  
-    K_{sf}  &  K_{ss}  \\
+    M_{ff}  &  M_{fs}  \\
+    M_{sf}  &  M_{ss}  \\
 \end{bmatrix} +j \omega \begin{bmatrix}
     B_{ff}  &  B_{fs}  \\  
     B_{sf}  &  B_{ss}  \\
