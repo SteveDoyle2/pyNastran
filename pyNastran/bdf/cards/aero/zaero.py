@@ -7,7 +7,7 @@ from typing import TextIO, Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils import (
-    object_attributes, object_methods)
+    object_attributes, object_methods, PathLike)
 
 from typing import Any
 from pyNastran.bdf.bdf_interface.utils import sorteddict
@@ -991,16 +991,19 @@ class ZAERO:
         # g = graphviz.Diagram('G', filename='process2.gv', engine='sfdp')
         try:
             import graphviz
+            from graphviz import Digraph, ExecutableNotFound
         except ImportError:
             return
 
+        if not isinstance(self.model.bdf_filename, PathLike):
+            return
         # g = graphviz.Digraph('G', filename='hello2.gv')
         # g.edge('Hello', 'World')
         # g.view()
         # asdf
 
-        filename = self.model.bdf_filename + '_ase'
-        g = graphviz.Digraph('G', filename=filename)
+        filename = str(self.model.bdf_filename) + '_ase'
+        g = Digraph('G', filename=filename)
         # g.attr('node', shape='circle')
 
         mloads_id = 3
@@ -1292,7 +1295,10 @@ class ZAERO:
                        label=f'AESLINK={coeff}*{aeslink_label}')
 
         #-----------------
-        g.view()
+        try:
+            g.view()
+        except ExecutableNotFound:
+            return
 
     def _check_tfset_cjunct(self):  # pragma: no cover
         assert len(self.tfset) == 1, self.tfset
