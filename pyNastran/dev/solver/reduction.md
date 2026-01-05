@@ -375,14 +375,100 @@ $$ [X] = [\Phi_r]^T \begin{bmatrix}
 
 Rigid body error ratio using the L2-norm is:
 
-$$ e = \frac{| [Krr] + [K_{lr}^T][D] | } {|K_{rr}|} $$
+$$ e = \frac{ \begin{Vmatrix}[Krr] + [K_{lr}^T][D] \end{Vmatrix} }{\begin{Vmatrix} K_{rr} \end{Vmatrix} } $$
 
 The statics problem is:
 
 $$ [K_{tt}] {u_t} = {F_t} $$ 
 
-The Non-SPCD Methods in Frequency Response Analysis
----------------------------------------------------
+The Non-SPCD Methods in Frequency Response Analysis (Freq Domain)
+-----------------------------------------------------------------
+Redoing the sets for dynamics...
+
+$$ ( \begin{bmatrix}
+    M_{ff}  &  M_{fs}  \\
+    M_{sf}  &  M_{ss}  \\
+\end{bmatrix} \begin{Bmatrix}
+    \ddot u_{f}  \\
+    \ddot u_{s}  \\
+\end{Bmatrix} + \begin{bmatrix}
+    B_{ff}  &  B_{fs}  \\  
+    B_{sf}  &  B_{ss}  \\
+\end{bmatrix}\begin{Bmatrix}
+    \dot u_{f}  \\
+    \dot u_{s}  \\
+\end{Bmatrix} + \begin{bmatrix}
+    K_{ff}  &  K_{fs}  \\  
+    K_{sf}  &  K_{ss}  \\
+\end{bmatrix} \begin{Bmatrix}
+    U_f  \\  
+    U_s  \\
+\end{Bmatrix} = \begin{Bmatrix}
+    P_{f}  \\  
+    P_{s}  \\
+\end{Bmatrix} $$
+
+If $u_s=0$
+
+$$ M_{ff} \ddot u_f + B_{ff} \dot u_f + K_{ff} u_f = P_f $$
+$$ M_{sf} \ddot u_f + B_{sf} \dot u_f + K_{sf} u_f = P_s $$
+
+Otherwise:
+
+$$ M_{ff} \ddot u_f + B_{ff} \dot u_f + K_{ff} u_f + 
+   M_{fs} \ddot u_s + B_{ff} \dot u_s + K_{fs} u_s = P_f $$
+$$ M_{sf} \ddot u_f + B_{sf} \dot u_f + K_{sf} u_f + 
+   M_{ss} \ddot u_s + B_{ss} \dot u_s + K_{sf} u_s = P_s $$
+
+$u_s$ is given, so $\dot u_s$ and $\ddot u_s$ are given:
+
+$$ M_{sf} \ddot u_f + B_{sf} \dot u_f + K_{sf} u_f = P_s - M_{ss} \ddot u_s - B_{ss} \dot u_s - K_{sf} u_s $$
+
+Converting the RHS to the frequency domain:
+
+$$ M_{sf} \ddot u_f + B_{sf} \dot u_f + K_{sf} u_f = P_s - (-\omega^2 M_{ss} + j \omega B_{ss} + K_{sf}) u_s $$
+
+$$ \hat F_s = P_s - (-\omega^2 M_{ss} + j \omega B_{ss} + K_{sf}) u_s $$
+
+Now we need to transform the LHS into modal space:
+
+$$ M_{sf} \ddot u_f + B_{sf} \dot u_f + K_{sf} u_f = \hat F_s $$
+$$ M_{sf} \Phi_{fq} \ddot q_f + B_{sf} \Phi_{fq} \dot q_f + K_{sf} \Phi_{fh} q_f = \hat F_s $$
+
+Pre-multiplying by $$\Phi_{qs}$$
+
+$$ \Phi_{qs} M_{sf} \Phi_{fq} \ddot q + \Phi_{qs} B_{sf} \Phi_{fq} \dot q + \Phi_{qs} K_{sf} \Phi_{fq} q = \Phi_{qs} \hat F_s $$
+
+where
+
+$$ n = f + s $$
+
+$$ \Phi_{nq} = \begin{bmatrix}
+  \Phi_{fq} \\
+  \Phi_{sq} \\
+\end{bmatrix} $$
+
+
+Now lets deal with $u_f$
+
+$$ M_{ff} \ddot u_f + B_{ff} \dot u_f + K_{ff} u_f + M_{fs} \ddot u_s + B_{ff} \dot u_s + K_{fs} u_s = P_f $$
+
+$$ M_{ff} \ddot u_f + B_{ff} \dot u_f + K_{ff} u_f = P_f - (-\omega^2 M_{fs} + j \omega B_{ff} + K_{fs}) u_s $$
+
+$$ \Phi_{qf} M_{ff} \Phi_{fq} \ddot q + \Phi_{qf} B_{ff} \Phi_{fq} \dot q + \Phi_{qf} K_{ff} \Phi_{fq} q = \Phi_{qf} (P_f - (-\omega^2 M_{fs} + j \omega B_{ff} + K_{fs}) u_s) $$
+
+$$ \Phi_{qf} M_{ff} \Phi_{fq} \ddot q + \Phi_{qf} B_{ff} \Phi_{fq} \dot q + \Phi_{qf} K_{ff} \Phi_{fq} q = \hat P_f $$
+$$ \hat P_f = \Phi_{qf} (P_f - (-\omega^2 M_{fs} + j \omega B_{ff} + K_{fs}) u_s) $$
+
+Finally:
+
+$$ \Phi_{qf} M_{ff} \Phi_{fq} \ddot q + \Phi_{qf} B_{ff} \Phi_{fq} \dot q + \Phi_{qf} K_{ff} \Phi_{fq} q = \hat P_f $$
+$$ \Phi_{qs} M_{sf} \Phi_{fq} \ddot q + \Phi_{qs} B_{sf} \Phi_{fq} \dot q + \Phi_{qs} K_{sf} \Phi_{fq} q = \Phi_{qs} \hat F_s $$
+
+Do I add these?
+
+The Non-SPCD Methods in Frequency Response Analysis v2
+------------------------------------------------------
 Redoing the sets for dynamics...
 
 $$ ( -\omega^2 \begin{bmatrix}
@@ -446,8 +532,6 @@ $$ -\omega^2 M_{ff} \ddot u_f -\omega^2 M_{fs} \ddot u_s + j \omega B_{ff} \dot 
 $$ -\omega^2 ( M_{ff} + K_{fs} K_{ss}^{-1} M_{sf}) \ddot u_f -\omega^2 M_{fs} \ddot u_s + j \omega (B_{ff} - K_{fs} K_{ss}^{-1} B_{sf}) \dot u_f + j \omega B_{fs} \dot u_s + (K_{ff} - K_{fs} K_{ss}^{-1} K_{sf} ) u_f = F_f - K_{fs} K_{ss}^{-1} \hat F_s $$
 
 
-
-
 The SPC/SPCD Methods in Frequency Response Analysis
 ---------------------------------------------------
 Redoing the sets for dynamics...
@@ -468,7 +552,7 @@ $$ ( -\omega^2 \begin{bmatrix}
     U_f  \\  
     U_s  \\
 \end{pmatrix} = \begin{Bmatrix}
-    P_{f}  \\  
+    P_{f}      \\  
     P_{s}+q_s  \\
 \end{Bmatrix} $$
 
