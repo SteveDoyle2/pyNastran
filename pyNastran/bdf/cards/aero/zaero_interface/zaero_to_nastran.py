@@ -1,9 +1,8 @@
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 from pyNastran.utils import PathLike
-if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
-    from pyNastran.bdf.cards.aero.zona import ZAERO
+from pyNastran.bdf.cards.aero.zaero import ZAERO
+from pyNastran.bdf.bdf import BDF, read_bdf
 
 
 def zaero_to_nastran(zaero_filename: PathLike | ZAERO | BDF,
@@ -39,17 +38,14 @@ def zaero_to_nastran(zaero_filename: PathLike | ZAERO | BDF,
 
 
 def get_zaero_bdf_model(zaero_filename: PathLike | ZAERO | BDF) -> BDF:
-    from pyNastran.bdf.cards.aero.zona import ZAERO
     if isinstance(zaero_filename, ZAERO):
         model = zaero_filename.model
         return model
 
     if isinstance(zaero_filename, PathLike):
-        from pyNastran.bdf.bdf import read_bdf
         model = read_bdf(zaero_filename, mode='zaero')
         return model
 
-    from pyNastran.bdf.bdf import BDF
     if isinstance(zaero_filename, BDF):
         model = zaero_filename
         return model

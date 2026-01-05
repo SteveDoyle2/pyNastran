@@ -83,12 +83,13 @@ $ PILOT COMMAND DIRECTLY APPLIED TO EXTINP=100 THAT REMAINS CONSTANT    $
 $ (1.118 DEG) UP TO T=.1 SEC. THIS IS TO   DAMP OUT THE STRUCTURAL      $
 $ OSCILLATION DUE TO THE INITIAL ALPHA                                  $
 $                                                                       $
-$$$$$$$ SETID                                                        
+$$$$$$# SETID                                                        
+$ pitch input
 MLDCOMD 100                                                             +M2
 $$$$$$$ EXTINP  IDTAB   
 +M2     100     100                    
 $ ----------------------------------------------------------------------
-$ EXTINP DEFINES EXTERNAL INPUT TO CJUNCT BULK DATA CARD (ID=500)
+$ #EXTINP DEFINES EXTERNAL INPUT TO CJUNCT BULK DATA CARD (ID=500)
 EXTINP  100             500     2       TEFLAP2
 $-----------------------------------------------------------------------
 $$$$$$$ TID     XAXIS   YAXIS
@@ -364,10 +365,11 @@ $ define the TFs for the system
 $	setid	CONCT1	CONCT2
 CNCTSET 481     471     472     473     671     672     673     674
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-$ DIRECT MATRIX INPUT FOR MIMO SYSTEM                                   $
-$ ABCD IS A MATRIX IMPORTED BY THE ASSIGN MATRIX EXECUTIVE COMMAND      $
+$ #DIRECT MATRIX INPUT FOR MIMO SYSTEM                                   $
+$ #ABCD IS A MATRIX IMPORTED BY THE ASSIGN MATRIX EXECUTIVE COMMAND      $
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-$	mimoss	ntforder nu     ny	label
+$#	mimoss	ntforder nu     ny	label
+$ ABCD
 MIMOSS  330     38      3       3       ABCD
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $  SENSOR CONNECTION                                                    $
@@ -383,11 +385,12 @@ CONCT   672     330     2       1005    1
 CONCT   673     330     3       500     1
 CONCT   674     500     1       1006    1
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-$ CJUNCT COMBINES THE COMMANDS FROM THE PILOT INPUT COMMAND (EXTINP=100)$
-$ AND THE COMMAND FROM THE MIMO CONTROLLER AND PROVIDES A INPUT COMMAND $
-$ TO THE ACTUATOR OF THE CONTROL SURFACE TEFLAP2.                       $
+$# CJUNCT COMBINES THE COMMANDS FROM THE PILOT INPUT COMMAND (EXTINP=100)$
+$# AND THE COMMAND FROM THE MIMO CONTROLLER AND PROVIDES A INPUT COMMAND $
+$# TO THE ACTUATOR OF THE CONTROL SURFACE TEFLAP2.                       $
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-$	cjunct	nu	ny	d1	d2
+$#	cjunct	nu	ny	d1	d2
+$pilot input + mimo -> actuator
 CJUNCT  500     2       1       1.      1.
 $
 ENDDATA

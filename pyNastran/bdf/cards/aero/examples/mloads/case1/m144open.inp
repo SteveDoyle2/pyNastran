@@ -120,7 +120,7 @@ $ STATES  MLDSTAT card specifying airframe states
 $ COMMAND MLDCOMD card specifying pilot’s input commands for the maneuver.
 $ TIME    MLDTIME card specifying time integration for solving the transient response problem
 $ MLDPRN  MLDPRNT card specifying the time history of parameters that are to be printed out
-$$$$$$$ SID     CONID   FLTID   RAAID   STATES  COMMAND TIME    MLDPRN
+$       SID     CONID   FLTID   RAAID   STATES  COMMAND TIME    MLDPRN
 MLOADS  100             10      140     100     100     100     100
 $               .01
 $                                                                       $
@@ -132,7 +132,7 @@ $ THREE RIGID BODY FEM MODES AND 19 ELASTIC MODES                       $
 $ TRANSFORMED TO FOUR AIRFRAME STATES; H, ALPHA, Q AND THETA            $
 $ MLDTRIM CARD IS AUTOMATICALLY DEACTIVATED.                            $
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-$	MLOADS	SID	CONID	FLTID	RAAID	STATES	COMMAND	TIME	MLDPRNT
+$	SID	CONID	FLTID	RAAID	STATES	COMMAND	TIME	MLDPRNT
 $	FMAX	DF	SAVEFRQ	FILEFRQ
 MLOADS  200             10              100     100     100     200
 $               .01

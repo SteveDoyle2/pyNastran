@@ -75,8 +75,8 @@ class MLOADS(BaseCard):
                  flutter_id: int, minstat_id: int,
                  mldstat_id: int, mldcomd_id: int, mldtime_id: int,
                  mldprnt_id: int,
-                 fmax: float, save_freq: str, filename: str,
-                 df: float=0.01, comment: str=''):
+                 fmax: float, save_freq: str,
+                 df: float=0.01, filename: str='', comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -138,16 +138,16 @@ class MLOADS(BaseCard):
         if len(card) > 12:
             filename = string_multifield(card, (12, 13), 'filename')
 
-        assert 7 <= len(card) < 14, f'len(MLOADS card) = {len(card):d}\ncard={card}'
+        assert 7 <= len(card) <= 14, f'len(MLOADS card) = {len(card):d}\ncard={card}'
         return MLOADS(mloads_id, asecont_id, flutter_id, minstat_id,
                       mldstat_id, mldcomd_id, mldtime_id,
-                      mldprnt_id, fmax, save_freq, filename, df=df, comment=comment)
+                      mldprnt_id, fmax, save_freq,
+                      df=df, filename=filename, comment=comment)
 
     # def validate(self):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
 
     def cross_reference(self, model: BDF) -> None:
-        # zaero = model.zaero
         msg = f', which is required by MLOADS={self.mloads_id}\n{str(self)}'
         if self.asecont_id > 0:
             self.asecont_ref = get_zaero_obj(model, self.asecont_id, 'asecont', msg)

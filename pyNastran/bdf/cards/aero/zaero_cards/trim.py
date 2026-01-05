@@ -15,7 +15,7 @@ from pyNastran.bdf.cards.aero.static_loads import TRIM
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-    from pyNastran.bdf.cards.aero.zona import AEROZ
+    from pyNastran.bdf.cards.aero.zaero import AEROZ
 
 
 class TRIM_ZAERO(BaseCard):

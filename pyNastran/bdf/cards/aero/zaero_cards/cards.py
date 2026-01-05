@@ -1224,6 +1224,11 @@ class EXTFILE(BaseCard):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        msg = f'EXTFILE{self.extfile_id:<8d}{self.filename}\n'
+        assert len(str(self.extfile_id)) < 7, self.extfile_id
+        assert len(self.filename) < 55, self.filename
+        msg =  f'EXTFILE {self.extfile_id:<8d}{self.filename}\n'
         card = self.repr_fields()
         return self.comment + msg
+
+    def __repr__(self):
+        return self.write_card(size=8)
