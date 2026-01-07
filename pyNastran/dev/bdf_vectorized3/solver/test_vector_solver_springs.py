@@ -1,17 +1,17 @@
 import os
-import pathlib
+from pathlib import Path
 import unittest
 import numpy as np
 from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.dev.bdf_vectorized3.solver.solver import Solver, BDF, partition_vector2
 from pyNastran.dev.solver.solver import Solver as SolverOld, BDF as BDFold
-#from .solver import Solver, BDF
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
-PKG_PATH = pathlib.Path(pyNastran.__path__[0])
-TEST_DIR = PKG_PATH / 'dev' / 'solver'
-
+PKG_PATH = Path(pyNastran.__path__[0])
+# TEST_DIR = PKG_PATH / 'dev' / 'solver'
+TEST_DIR = Path(__file__).parent
+print(TEST_DIR)
 
 def setup_static_case_control(model: BDF, extra_case_lines=None):
     lines = [
@@ -50,7 +50,6 @@ def setup_modal_case_control(model: BDF, extra_case_lines=None):
         '  LOAD = 2',
         '  SPC = 3',
         '  METHOD = 103',
-        #'  FREQUENCY = 100',
     ]
     if extra_case_lines is not None:
         lines += extra_case_lines
@@ -95,6 +94,7 @@ def setup_frequency_response_case_control(model: BDF, extra_case_lines=None):
         'SPCFORCE(PLOT,PRINT) = ALL',
         # 'MPCFORCE(PLOT,PRINT) = ALL',
         'OLOAD(PLOT,PRINT) = ALL',
+        'FORCE(PLOT,PRINT) = ALL',
         #'ESE(PLOT,PRINT) = ALL',
         'SUBCASE 1',
         '  LOAD = 2',
@@ -1045,7 +1045,8 @@ class TestStaticBar(unittest.TestCase):
         # F = kx
         fmag = 1.0
         dx = fmag / k_axial
-        assert dx == solver.xg[6], f'dx={dx} xg={xg}'
+        xg = solver.xg
+        assert dx == xg[6], f'dx={dx} xg={xg}'
 
     def test_cbar2(self):
         """Tests a CBAR/PBAR"""
@@ -1101,7 +1102,8 @@ class TestStaticBar(unittest.TestCase):
         # F = kx
         fmag = 1.0
         dx = fmag / k_axial
-        assert dx == solver.xg[6*2], f'dx={dx} xg={xg}'
+        xg = solver.xg
+        assert dx == xg[6*2], f'dx={dx} xg={xg}'
 
     def test_cbeam(self):
         """Tests a CBEAM/PBEAM"""
@@ -1160,7 +1162,8 @@ class TestStaticBar(unittest.TestCase):
         k_axial = A * E / L
         fmag = 1.0
         dx = fmag / k_axial
-        assert dx == solver.xg[6], f'dx={dx} xg={xg}'
+        xg = solver.xg
+        assert dx == xg[6], f'dx={dx} xg={xg}'
 
 
     def test_cbeam2(self):
@@ -1236,7 +1239,7 @@ class TestHarmonic(unittest.TestCase):
     def test_spring_mass_damper_direct(self):
         """spring-mass-damper problem"""
         model = BDF(debug=None, log=None, mode='msc')
-        model.bdf_filename = TEST_DIR / 'cquad4_bad_normal.bdf'
+        model.bdf_filename = TEST_DIR / 'freq_direct_response.bdf'
         mid = 3
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -1328,7 +1331,7 @@ class TestHarmonic(unittest.TestCase):
     def test_spring_mass_damper_freq_response(self):
         """spring-mass-damper problem"""
         model = BDF(debug=None, log=None, mode='msc')
-        model.bdf_filename = TEST_DIR / 'cquad4_bad_normal.bdf'
+        model.bdf_filename = TEST_DIR / 'freq_response.bdf'
         # mid = 3
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -1626,5 +1629,5 @@ class TestStaticShell(unittest.TestCase):
         #os.remove(solver.op2_filename)
 
 
-if __name__ == '__main__':   # pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

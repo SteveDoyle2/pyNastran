@@ -530,9 +530,10 @@ def load_complex_element(result_name: str,
                     model.log.warning(f'skipping {result_name} - add_freq_case')
                     continue
                 res = class_obj.add_freq_case(
-                    table_name, elementi, data, isubcase,
-                    freq,
+                    table_name,
                     element_name,
+                    elementi, data, isubcase,
+                    freq,
                     is_sort1=True, is_random=False, is_msc=True,
                     random_code=0, title='', subtitle='', label='')
 

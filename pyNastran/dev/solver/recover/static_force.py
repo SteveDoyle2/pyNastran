@@ -8,7 +8,7 @@ from pyNastran.op2.op2_interface.op2_classes import (
 )
 from pyNastran.dev.solver.build_stiffness import ke_cbar
 from .static_spring import _recover_force_celas
-from .utils import get_plot_request
+from pyNastran.dev.bdf_vectorized3.solver.recover.utils import get_plot_request
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, Subcase, CBAR, PBAR, PBARL

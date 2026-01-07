@@ -51,20 +51,24 @@ from pyNastran.op2.op2_interface.op2_classes import (
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
 #from pyNastran.bdf.mesh_utils.loads import get_ndof
 
-from pyNastran.dev.bdf_vectorized3.solver.recover.static_force import recover_force_101
+from .recover.utils import get_f06_op2_pch_set, get_mag_phase_from_options
+
+from .recover.freq_force import recover_force_freq
+from .recover.modal_force import recover_force_103
+from .recover.static_force import recover_force_101
 #from .recover.static_stress import recover_stress_101
 #from .recover.static_strain import recover_strain_101
 from .recover.strain_energy import recover_strain_energy_101
-from .recover.utils import get_plot_request
 from .build_stiffness import build_Kgg, DOF_MAP, Kbb_to_Kgg
 from .modal_frequency import get_freq_damping
 from .partition import (
     partition_matrix, partition_vector,
     partition_vector2, partition_vector3)
-from .utils_freq import get_frequencies, slice_freq_set
+from .utils_statics import save_static_table
 from .utils_modes import (
     slice_modal_set, get_real_eigenvalue_method,
     apply_phi_normalization)
+from .utils_freq import get_frequencies, slice_freq_set
 from pyNastran.dev.bdf_vectorized3.bdf_interface.breakdowns import NO_MASS # , NO_VOLUME
 
 
@@ -93,6 +97,8 @@ class Solver:
         self._bdf_filename = base_name + '.solver.bdf'
         self.f06_filename = base_name + '.solver.f06'
         self.op2_filename = base_name + '.solver.op2'
+        print(self.f06_filename)
+        print(self.op2_filename)
 
     def run(self):
         page_num = 1
@@ -136,7 +142,7 @@ class Solver:
 
                     runner = solmap[sol]
                     # print(runner)
-                    out, end_options = runner(
+                    out, page_num, end_options = runner(
                         subcase, f06_file, page_stamp,
                         title=title, subtitle=subtitle, label=label,
                         page_num=page_num,
@@ -766,10 +772,9 @@ class Solver:
 
         op2 = self.op2
         page_stamp += '\n'
-        if 'FORCE' in subcase:
-            recover_force_101(f06_file, op2, self.model, dof_map, subcase, xb,
-                              title=title, subtitle=subtitle, label=label,
-                              page_stamp=page_stamp)
+        recover_force_101(f06_file, op2, self.model, dof_map, subcase, xb,
+                          title=title, subtitle=subtitle, label=label,
+                          page_stamp=page_stamp)
 
         #if 'STRAIN' in subcase:
             #recover_strain_101(f06_file, op2, self.model, dof_map, subcase, xb,
@@ -779,16 +784,16 @@ class Solver:
             #recover_stress_101(f06_file, op2, self.model, dof_map, subcase, xb,
                                #title=title, subtitle=subtitle, label=label,
                                #page_stamp=page_stamp)
-        if 'ESE' in subcase:
-            recover_strain_energy_101(f06_file, op2, self.model, dof_map, subcase, xb,
-                                      title=title, subtitle=subtitle, label=label,
-                                      page_stamp=page_stamp)
+        recover_strain_energy_101(f06_file, op2, self.model, dof_map, subcase, xb,
+                                  title=title, subtitle=subtitle, label=label,
+                                  page_stamp=page_stamp)
         #Fg[sz_set] = -1
         #xg[sz_set] = -1
+        # if write_op2:
         op2.write_op2(self.op2_filename, post=-1, endian=b'<', skips=None, nastran_format='nx')
         self.log.info('finished')
         out = {}
-        return out, end_options
+        return out, page_num, end_options
 
     def _save_displacment(self, f06_file: TextIO,
                           subcase: Subcase, itime: int, ntimes: int,
@@ -801,7 +806,7 @@ class Solver:
         f06_request_name = 'DISPLACEMENT'
         table_name = 'OUGV1'
         #self.log.debug(f'xg = {xg}')
-        page_num = self._save_static_table(
+        page_num = save_static_table(
             f06_file,
             subcase, itime, ntimes,
             node_gridtype, xg,
@@ -821,7 +826,7 @@ class Solver:
         f06_request_name = 'SPCFORCES'
         table_name = 'OQG1'
         #self.log.debug(f'Fg = {Fg}')
-        page_num = self._save_static_table(
+        page_num = save_static_table(
             f06_file,
             subcase, itime, ntimes,
             node_gridtype, fspc,
@@ -842,7 +847,7 @@ class Solver:
         f06_request_name = 'OLOAD'
         table_name = 'OPG1'
         #self.log.debug(f'Fg = {Fg}')
-        page_num = self._save_static_table(
+        page_num = save_static_table(
             f06_file,
             subcase, itime, ntimes,
             node_gridtype, Fg,
@@ -852,61 +857,16 @@ class Solver:
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
         return page_num
 
-    def _recast_data(self, idtype: str, fdtype: str):
-        idtype = 'int32'
-        fdtype = 'float32'
-        return idtype, fdtype
-
-    def _save_static_table(self, f06_file: TextIO,
-                           subcase: Subcase, itime: int, ntimes: int,
-                           node_gridtype: NDArrayN2int, Fg: NDArrayNfloat,
-                           obj: RealSPCForcesArray,
-                           f06_request_name: str,
-                           table_name: str, slot: dict[Any, RealSPCForcesArray],
-                           ngrid: int, ndof_per_grid: int,
-                           title: str='', subtitle: str='', label: str='',
-                           idtype: str='int32', fdtype: str='float32',
-                           page_num: int=1, page_stamp: str='PAGE %s') -> int:
-        idtype, fdtype = self._recast_data(idtype, fdtype)
-        isubcase = subcase.id
-        #self.log.debug(f'saving {f06_request_name} -> {table_name}')
-        unused_nids_write, write_f06, write_op2, quick_return = get_plot_request(
-            subcase, f06_request_name)
-        if quick_return:
-            return page_num
-        nnodes = node_gridtype.shape[0]
-        data = np.zeros((ntimes, nnodes, 6), dtype=fdtype)
-        ngrid_dofs = ngrid * ndof_per_grid
-        if ndof_per_grid == 6:
-            _fgi = Fg[:ngrid_dofs].reshape(ngrid, ndof_per_grid)
-            data[itime, :ngrid, :] = _fgi
-        else:
-            raise NotImplementedError(ndof_per_grid)
-        data[itime, ngrid:, 0] = Fg[ngrid_dofs:]
-
-        spc_forces = obj.add_static_case(
-            table_name, node_gridtype, data, isubcase,
-            is_sort1=True, is_random=False, is_msc=True,
-            random_code=0, title=title, subtitle=subtitle, label=label)
-        if write_f06:
-            page_num = spc_forces.write_f06(
-                f06_file, header=None,
-                page_stamp=page_stamp, page_num=page_num,
-                is_mag_phase=False, is_sort1=True)
-            f06_file.write('\n')
-        if write_op2:
-            slot[isubcase] = spc_forces
-        return page_num
-
     def run_sol_103_modes(self, subcase: Subcase,
                           f06_file: TextIO,
                           page_stamp: str,
                           title: str='', subtitle: str='', label: str='',
                           page_num: int=1,
-                          idtype: str='int32', fdtype: str='float64'):
+                          idtype: str='int32', fdtype: str='float64',
+                          write_op2: bool=True):
         """
         [M]{xdd} + [C]{xd} + [K]{x} = {F}
-        [M]{xdd} + [K]{x} = {F}
+        [M]{xdd} + [K]{x} = {0}
         -[M]{xdd}λ^2 + [K]{x} = {0}
         {X}(λ^2 - [M]^-1[K]) = {0}
         λ^2 - [M]^-1[K] = {0}
@@ -920,6 +880,7 @@ class Solver:
         end_options = [
             'SEMR',  # MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES)
             'SEKR',  # STIFFNESS MATRIX REDUCTION STEP
+            'MODES', # run modes
         ]
         op2 = self.op2
         #write_f06 = True
@@ -932,7 +893,7 @@ class Solver:
                          ngrid, ndof_per_grid, ndof,
                          node_gridtype, dof_map,
                          idtype=idtype, fdtype=fdtype)
-        xg_out = out['modes_phig']
+        phig = out['modes_phig']
         eigenvalue = out['modes_eigenvalue']
         Mhh = out['modes_Mhh']
         Khh = out['modes_Khh']
@@ -958,21 +919,22 @@ class Solver:
 
         (write_phi_f06, write_phi_op2,
          write_phi_pch, unused_options, phi_set,
-         ) = get_f06_op2_pch_set(subcase, 'DISPLACMENT')
+         ) = get_f06_op2_pch_set(subcase, 'DISPLACEMENT')
         write_eigenvector = any((write_phi_f06, write_phi_op2))
+
+        modes = np.arange(1, nmode + 1, dtype=idtype)
+        eigenvalue = eigenvalue.astype('float32')
 
         if write_eigenvector:
             nnode = node_gridtype.shape[0]
             # (1,2050,18)
             # print(xg_out.shape)
             node_gridtypei, phi, nnodei = slice_modal_set(
-                node_gridtype, xg_out,
+                node_gridtype, phig,
                 nnode, nmode, phi_set)
 
             data = phi.reshape((nmode, nnodei, 6)).astype('float32')
-            eigenvalue = eigenvalue.astype('float32')
             table_name = 'OUGV1'
-            modes = np.arange(1, nmode + 1, dtype=idtype)
             eigenvector_obj = RealEigenvectorArray.add_modal_case(
                 table_name, node_gridtypei, data, isubcase, modes, eigenvalue, mode_cycle,
                 is_sort1=True, is_random=False, is_msc=True, random_code=0,
@@ -1006,52 +968,48 @@ class Solver:
         #log.debug(f'xg = {xg}')
         #log.debug(f'Fg = {Fg}')
 
+        op2 = self.op2
+        page_stamp += '\n'
+
+        # TODO: add transform (need for rods, quads, etc., but not springs)
+        phib = phig
+        recover_force_103(f06_file, op2, self.model, dof_map, subcase,
+                          phig, phib,
+                          modes, eigenvalue, #freqs,
+                          title=title, subtitle=subtitle, label=label,
+                          page_stamp=page_stamp)
         str(f06_file)
         str(page_stamp)
-        # if write_phi_op2:
-        op2.write_op2(self.op2_filename, post=-1, endian=b'<',
-                      skips=None, nastran_format='nx')
-        return out, end_options
-        #raise NotImplementedError(subcase)
+        if write_op2 and write_phi_op2:
+            op2.write_op2(self.op2_filename, post=-1, endian=b'<',
+                          skips=None, nastran_format='nx')
+        return out, page_num, end_options
 
     def run_sol_111_modal_frequency(self, subcase: Subcase, f06_file: TextIO,
-                                    page_stamp: str, title: str = '', subtitle: str = '', label: str = '',
-                                    page_num: int = 1,
-                                    idtype: str = 'int32', fdtype: str = 'float64'):
+                                    page_stamp: str,
+                                    title: str='', subtitle: str='', label: str='',
+                                    page_num: int=1,
+                                    idtype: str='int32', fdtype: str='float64'):
         model = self.model
         log = model.log
         isubcase = subcase.id
         op2 = self.op2
         # -----------------------------------------------------------------------
-
-        #op2 = self.op2
-        #---------------------------------------------------
-        #title = ''
-        #today = None
-        #page_stamp = self.op2.make_stamp(title, today) # + '\n'
-
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
-        # dof_map, ps = _get_dof_map(model)
-        # ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
-
-        # out = _run_modes(
-        #     model, subcase,
-        #     ngrid, ndof_per_grid, ndof,
-        #     node_gridtype, dof_map,
-        #     idtype=idtype, fdtype=fdtype)
 
         # handles MAX/MASS normalization
-        out, end_options = self.run_sol_103_modes(
+        out, page_num, end_options = self.run_sol_103_modes(
             subcase, f06_file,
             page_stamp=page_stamp,
             title=title, subtitle=subtitle, label=label,
             page_num=page_num,
             idtype=idtype, fdtype=fdtype)
-        aset = out['aset']
+        end_options.append('DYNRED')
+        # aset = out['aset']
         Kgg = out['Kgg']
-        Mgg = out['Mgg']
+        # Mgg = out['Mgg']
         eigenvalue = out['modes_eigenvalue']
-        print(list(out))
+        # print(list(out))
         phit = out['modes_phig']  # phi-gg
 
         nmode = len(eigenvalue)
@@ -1079,7 +1037,7 @@ class Solver:
         #  modal space (h); sometimes called x
         # print(phi.shape, Mgg.shape)
         nmodes, norm_str = get_real_eigenvalue_method(model, subcase)
-        phi = phit.T
+        # phi = phit.T
         Mhh = out['modes_Mhh']
         Khh = out['modes_Khh']
         if norm_str == 'MAX':
@@ -1122,18 +1080,12 @@ class Solver:
         # print(omega2.shape, xg.shape)
         # ag = -omega2[:, np.newaxis] * xg[np.newaxis, :]
 
-        # nnode_g = ndof_g // 6
-        # out['freq_xg'] = xg
-        # out['freq_vg'] = vg
-        # out['freq_ag'] = ag
-        # data = xg_out.reshape(nfreq, nnode_g, 6)
-
         key_to_factor = {
-            'DISPLACMENT': (op2.displacements, ComplexDisplacementArray, False, 1.),
+            'DISPLACEMENT': (op2.displacements, ComplexDisplacementArray, False, 1.),
             'VELOCITY': (op2.velocities, ComplexVelocityArray, True, 1j*omega),
             'ACCELERATION': (op2.accelerations, ComplexAccelerationArray, True, -omega * omega),
         }
-        header = ['', '', '']
+        header = ['\n', '\n', '\n']
         nnode = node_gridtype.shape[0]
         for key, (slot, obj_class, apply_scale, factor) in key_to_factor.items():
             write_f06, write_op2, write_pch, options, set_data = get_f06_op2_pch_set(
@@ -1143,8 +1095,8 @@ class Solver:
                 log.warning(f'skipping {key!r}')
                 continue
             if not apply_scale:  # displacment
-                data = xg
-                assert data.shape == (nfreq, nnode)
+                data = xg.copy()
+                assert data.shape == (nfreq, ndof_g), data.shape
             else:  # velocity, acceleration
                 data = factor[:, np.newaxis] * xg[np.newaxis, :]
                 data = data.reshape(nfreq, ndof_g)
@@ -1166,6 +1118,7 @@ class Solver:
             # obj.nonlinear_factor = 1
             slot[isubcase] = obj
 
+            header = ['', '', '']
             if write_f06:
                 is_mag_phase = get_mag_phase_from_options(options)
                 page_num = obj.write_f06(
@@ -1173,9 +1126,25 @@ class Solver:
                     page_stamp=page_stamp, page_num=page_num,
                     is_mag_phase=is_mag_phase, is_sort1=True)
                 f06_file.write('\n')
-        # Kd = np.diag()
+
         # -w^2 [Mhat]qdd + j*w[Bhat]qd + [Khat]q = F
-        return out, end_options
+
+        #------------------
+        # SPC forces ???
+        # -w^2 [Mhat]qdd + j*w[Bhat]qd + [Khat]q = F
+        # -w^2 [Mhat]q + [Khat]q = 0
+        # TODO: how do I get the modal constraint force?
+
+        #------------------
+        dof_map = None
+        recover_force_freq(
+            f06_file, op2, self.model, dof_map, subcase,
+            xq,
+            # modes, eigenvalue,
+            freq,
+            title=title, subtitle=subtitle, label=label,
+            page_stamp=page_stamp)
+        return out, page_num, end_options
 
     def run_sol_108_direct_frequency(self, subcase: Subcase, f06_file: TextIO,
                                      page_stamp: str, title: str='', subtitle: str='', label: str='',
@@ -2405,42 +2374,3 @@ def _build_xg(model: BDF, dof_map: DOF_MAP,
     spc_set = np.array(spc_set, dtype='int32')
     #print('spc_set =', spc_set, xspc)
     return spc_set, sset, xspc
-
-
-def get_f06_op2_pch_set(subcase: Subcase, key: str,
-                        ) -> tuple[bool, bool, bool,
-                                   list[str], np.ndarray]:
-    """
-    write_f06, write_op2, write_pch, options, set_data = get_f06_op2_pch_set(
-        subcase, 'DISPLACEMENT')
-
-    set_data = -1 -> don't calculate
-    set_data = 0 -> all
-    set_data > 0 -> subset
-    """
-    options = []
-    write_pch = False
-    write_f06 = False
-    write_op2 = False
-    set_data = np.array([-1], dtype='int32')
-    if key in subcase:
-        value, options = subcase[key]
-        write_f06 = 'PRINT' in options
-        write_op2 = 'PLOT' in options
-        if value == 'ALL':
-            set_data = np.array([0], dtype='int32')
-        else:
-            set_id = value
-            set_value, set_options = subcase[f'SET {set_id}']
-            del set_options
-            # set_data = set_value_to_set_data(set_value)
-            set_data = np.array(set_value, dtype='int32')
-            assert isinstance(set_data, np.ndarray), set_value
-    return write_f06, write_op2, write_pch, options, set_data
-
-
-def get_mag_phase_from_options(options: list[str]) -> bool:
-    is_mag_phase = False
-    if 'PHASE' in options:
-        is_mag_phase = True
-    return is_mag_phase

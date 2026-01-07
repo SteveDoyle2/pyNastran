@@ -13,7 +13,9 @@ from scipy.sparse import csc_matrix, lil_matrix
 
 import pyNastran
 from pyNastran.nptyping_interface import (
-    NDArrayNbool, NDArrayNint, NDArrayN2int, NDArrayNfloat, NDArrayNNfloat)
+    NDArrayNbool,
+    NDArrayNint, NDArrayN2int,
+    NDArrayNfloat, NDArrayNNfloat)
 from pyNastran.bdf.bdf import BDF, Subcase
 
 from pyNastran.f06.f06_writer import make_end
@@ -30,15 +32,17 @@ from .recover.static_force import recover_force_101
 from .recover.static_stress import recover_stress_101
 from .recover.static_strain import recover_strain_101
 from .recover.strain_energy import recover_strain_energy_101
-from .recover.utils import get_plot_request
 from .build_stiffness import build_Kgg, DOF_MAP, Kbb_to_Kgg
 from .get_sets import (
     get_aset, get_bset, get_cset, get_rset,
     get_qset, get_omit_set,
 )
-from .partition import (
-    partition_matrix,
-    partition_vector, partition_vector2, partition_vector3)
+
+from pyNastran.dev.bdf_vectorized3.solver.recover.utils import get_plot_request
+from pyNastran.dev.bdf_vectorized3.solver.partition import (
+    partition_matrix, partition_vector,
+    partition_vector2, partition_vector3)
+from pyNastran.dev.bdf_vectorized3.solver.utils import recast_data
 if TYPE_CHECKING:  #  pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 
@@ -792,11 +796,6 @@ class Solver:
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
         return page_num
 
-    def _recast_data(self, idtype: str, fdtype: str):
-        idtype = 'int32'
-        fdtype = 'float32'
-        return idtype, fdtype
-
     def _save_static_table(self, f06_file,
                            subcase: Subcase, itime: int, ntimes: int,
                            node_gridtype: NDArrayN2int, Fg: NDArrayNfloat,
@@ -807,7 +806,7 @@ class Solver:
                            title: str='', subtitle: str='', label: str='',
                            idtype: str='int32', fdtype: str='float32',
                            page_num: int=1, page_stamp: str='PAGE %s') -> int:
-        idtype, fdtype = self._recast_data(idtype, fdtype)
+        idtype, fdtype = recast_data(idtype, fdtype)
         isubcase = subcase.id
         #self.log.debug(f'saving {f06_request_name} -> {table_name}')
         unused_nids_write, write_f06, write_op2, quick_return = get_plot_request(
@@ -905,6 +904,7 @@ class Solver:
 
         str(f06_file)
         str(page_stamp)
+
         op2.write_op2(self.op2_filename, post=-1, endian=b'<', skips=None, nastran_format='nx')
         return end_options
         #raise NotImplementedError(subcase)

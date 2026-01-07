@@ -9,6 +9,7 @@ import sys
 import copy
 import getpass
 import warnings
+from pathlib import Path
 from datetime import date
 from collections import defaultdict, Counter
 from traceback import print_exc
@@ -58,36 +59,38 @@ def make_stamp(title: Optional[str],
 
 
 def make_f06_header() -> str:
-    spaces = ''
-    lines1 = [
-        spaces + '/* -------------------------------------------------------------------  */\n',
-        spaces + '/*                              PYNASTRAN                               */\n',
-        spaces + '/*                      - NASTRAN FILE INTERFACE -                      */\n',
-        spaces + '/*                                                                      */\n',
-        spaces + '/*              A Python reader/editor/writer for the various           */\n',
-        spaces + '/*                        NASTRAN file formats.                         */\n',
-        spaces + '/*                       Copyright (C) 2011-2024                        */\n',
-        spaces + '/*                             Steven Doyle                             */\n',
-        spaces + '/*                                                                      */\n',
-        spaces + '/*    This program is free software; you can redistribute it and/or     */\n',
-        spaces + '/*    modify it under the terms of the GNU Lesser General Public        */\n',
-        spaces + '/*    License as published by the Free Software Foundation;             */\n',
-        spaces + '/*    version 3 of the License.                                         */\n',
-        spaces + '/*                                                                      */\n',
-        spaces + '/*    This program is distributed in the hope that it will be useful,   */\n',
-        spaces + '/*    but WITHOUT ANY WARRANTY; without even the implied warranty of    */\n',
-        spaces + '/*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the      */\n',
-        spaces + '/*    GNU Lesser General Public License for more details.               */\n',
-        spaces + '/*                                                                      */\n',
-        spaces + '/*    You should have received a copy of the GNU Lesser General Public  */\n',
-        spaces + '/*    License along with this program; if not, write to the             */\n',
-        spaces + '/*    Free Software Foundation, Inc.,                                   */\n',
-        spaces + '/*    675 Mass Ave, Cambridge, MA 02139, USA.                           */\n',
-        spaces + '/* -------------------------------------------------------------------  */\n',
-        '\n']
+    pkg_path = Path(pyNastran.__path__[0])
+    license_path = pkg_path / '..' / 'LICENSE.md'
+    assert os.path.exists(license_path), license_path
+    with open(license_path, 'r') as license_file:
+        lines = license_file.readlines()[3:]
 
-    spaces = 46 * ' '
+    spaces = ''
+    dash = spaces + '/* -----------------------------------------------------------------------------  */\n'
+    lines1 = [dash]
+    center_lines = [
+        'PYNASTRAN',
+        '- NASTRAN FILE INTERFACE -',
+        '',
+        'A Python reader/editor/writer for the various',
+        'NASTRAN file formats.',
+        'Copyright (C) 2011-2026',
+        'Steven Doyle',
+        '',
+    ]
+    for line in center_lines:
+        lines1.append(spaces + f'/*  {line.rstrip():^76}  */\n')
+    for line in lines:
+        lines1.append(spaces + f'/*  {line.rstrip():76}  */\n')
+    lines1.extend([dash, '\n'])
+
     version = 'Version %8s' % pyNastran.__version__
+    star = '* * * * * * * * * * * * * * * * * * * *'
+    assert len(star) == 39, len(star)
+    nspaces = (86 - len(star)) // 2
+    # nspaces = 46
+    spaces = nspaces * ' '
+
     lines2 = [
         spaces + '* * * * * * * * * * * * * * * * * * * *\n',
         spaces + '* * * * * * * * * * * * * * * * * * * *\n',
@@ -104,10 +107,10 @@ def make_f06_header() -> str:
         spaces + '* *                                 * *\n',
         spaces + '* *          %15s        * *\n' % pyNastran.__releaseDate2__,
         spaces + '* *                                 * *\n',
-        spaces + '* *            Questions            * *\n',
-        spaces + '* *        mesheb82@gmail.com       * *\n',
-        spaces + '* *                                 * *\n',
-        spaces + '* *                                 * *\n',
+        # spaces + '* *            Questions            * *\n',
+        # spaces + '* *        mesheb82@gmail.com       * *\n',
+        # spaces + '* *                                 * *\n',
+        # spaces + '* *                                 * *\n',
         spaces + '* *                                 * *\n',
         spaces + '* * * * * * * * * * * * * * * * * * * *\n',
         spaces + '* * * * * * * * * * * * * * * * * * * *\n\n\n']
@@ -143,23 +146,24 @@ def make_end(end_flag: bool=False,
         vers = 1
         approach = "'        '"
 
-        SELG = 'T'
-        SEMG = 'T'
-        SEMR = 'F'
-        if 'SEMR' in options:
-            SEMR = 'T'  # modal
-        SEKR = 'T'
-        SELR = 'T'
-        MODES = 'F'
-        DYNRED = 'F'
+        SELG = 'T'  # load generaion
+        SEMG = 'T'  # mass, stiffnessgeneration
+
+        # mass reduction
+        SEMR = 'T' if ('SEMR' in options or 'MODES' in options) else 'F'  # modal
+
+        SEKR = 'T'  # stiffness reduction
+        SELR = 'T'  # load reduction
+        MODES = 'T' if 'MODES' in options else 'F'
+        DYNRED = 'T' if 'DYNRED' in options else 'F'
 
         SOLLIN = 'F'
         if 'SEMR' in options:
-            SOLLIN = 'T'  # p-elements
-        PVALID = 0
-        SOLNL = 'F'
-        LOOPID = -1
-        CYCLE = 0
+            SOLLIN = 'T'  # linear solution
+        PVALID = 0  # p-elements
+        SOLNL = 'F'  # nonlinaer
+        LOOPID = -1  # nonlinear analysis loop
+        CYCLE = 0  # optimization
         SENSITIVITY = 'F'
 
         msg = '     %s     %s    %s    %s %8s    %s    %s    %s    %s    %s     %s      %s      %s      %s     %s     %s            %s           %s' % (

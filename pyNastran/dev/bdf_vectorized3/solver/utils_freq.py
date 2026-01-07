@@ -44,7 +44,9 @@ def slice_freq_set(node_gridtype: np.ndarray,
     assert xg.ndim == 2, xg.shape
     assert node_gridtype.shape == (nnode, 2), node_gridtype.shape
     assert xg.shape == (nfreq, nnode*6), (xg.shape, (nfreq, nnode*6))
-    if node_set[0] != 0:  # 0=all
+    if node_set[0] == 0:  # 0=all
+        xg = xg.reshape(nfreq, nnode, 6)
+    else:  # subset
         assert len(np.unique(node_set)), len(node_set)
         # assert phi.shape == (nnode, nmode), phi.shape
         inode = np.searchsorted(node_gridtype[:, 0], node_set)
@@ -52,5 +54,5 @@ def slice_freq_set(node_gridtype: np.ndarray,
         node_gridtype = node_gridtype[inode, :]
         xg = xg.reshape(nfreq, nnode, 6)[:, inode]
         nnode = len(node_set)
-    assert xg.shape == (nfreq, nnode, 6)
+    assert xg.shape == (nfreq, nnode, 6), xg.shape
     return node_gridtype, xg, nnode
