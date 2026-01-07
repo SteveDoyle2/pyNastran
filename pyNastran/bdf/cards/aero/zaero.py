@@ -7,7 +7,7 @@ from typing import TextIO, Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils import (
-    object_attributes, object_methods)
+    object_attributes, object_methods, PathLike)
 
 from typing import Any
 from pyNastran.bdf.bdf_interface.utils import sorteddict
@@ -19,7 +19,7 @@ from .zaero_cards.zaero_sets import (
 from pyNastran.bdf.cards.aero.zaero_cards.atm import (
     ATMOS, FIXMATM, FIXHATM, FIXMACH, FIXMDEN)
 from pyNastran.bdf.cards.aero.zaero_cards.spline import (
-    SPLINE1_ZAERO, SPLINE2_ZAERO, SPLINE3_ZAERO,)
+    SPLINE1_ZAERO, SPLINE2_ZAERO, SPLINE3_ZAERO, SPLINEM)
 from pyNastran.bdf.cards.aero.zaero_cards.geometry import (
     PANLST1, PANLST2, PANLST3, SEGMESH,
     CAERO7, BODY7, PAFOIL7, PAFOIL8, AESURFZ, AESLINK)
@@ -48,10 +48,6 @@ from pyNastran.bdf.cards.aero.zaero_cards.cards import (
     MLDPRNT, MLDSTAT, MINSTAT, MLDTRIM, MLDCOMD, MLDTIME,
     AEROZ, ACOORD, ATTACH, EXTFILE,
 )
-from pyNastran.bdf.cards.aero.zaero_interface.nastran_to_zaero import nastran_to_zaero
-from pyNastran.bdf.cards.aero.zaero_interface.zaero_to_nastran import zaero_to_nastran
-
-
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
@@ -69,6 +65,7 @@ ZAERO_CARDS = [
     'PANLST1', 'PANLST2', 'PANLST3',
     'PAFOIL7', 'PAFOIL8',
     'SEGMESH', 'BODY7', 'ACOORD', 'MKAEROZ',
+    'SPLINEM',
     # -------------
     # trim
     'PLTCP',
@@ -105,7 +102,8 @@ ZAERO_CARDS = [
     # -------------
     # other
     'SETADD',
-    'DMIL', 'EXTFILE',
+    # 'DMIL',
+    'EXTFILE',
     'MLDTIME', 'MLDCOMD',
     'MINSTAT', #'APCONST',
     'RBRED',
@@ -213,6 +211,12 @@ class AddMethods:
         assert key > 0, key
         self.model.zaero.extout[key] = extout
         self.model._type_to_id_map[extout.type].append(key)
+
+    def add_splinem_object(self, splinem: SPLINEM) -> None:
+        """adds an SPLINEM object"""
+        assert self.model.zaero.splinem is None, self.model.zaero.splinem
+        self.model.zaero.splinem = splinem
+        self.model._type_to_id_map[splinem.type].append(1)
 
     def add_trimfnc_object(self, trimfnc: TRIMFNC) -> None:
         """adds an TRIMFNC object"""
@@ -433,7 +437,7 @@ class AddMethods:
         zaero = model.zaero
         assert key not in zaero.gainset, '\ngainset=\n%s old=\n%s' % (
             gainset, zaero.gainset[key])
-        zaero.asecont[key] = gainset
+        zaero.gainset[key] = gainset
         model._type_to_id_map[gainset.type].append(key)
 
     def add_pltbode_object(self, pltbode: PLTBODE) -> None:
@@ -629,6 +633,9 @@ class ZAERO:
         self.caero_to_name_map = {}
         self._add_methods = AddMethods(model)
 
+        # singletons
+        self.splinem: Optional[SPLINEM] = None
+
         # aero models
         self.atmos: dict[int, ATMOS] = {}
         self.flutter_table: dict[int, FIXHATM | FIXMATM | FIXMDEN | FIXMACH] = {}
@@ -821,7 +828,7 @@ class ZAERO:
             for panlsti in panlst:
                 panlsti.validate()
 
-        dicts, dicts_list = get_dicts(self, 'write')
+        singletons, dicts, dicts_list = get_dicts(self, 'write')
         for items in dicts_list:
             for item in items.values():
                 for itemi in item:
@@ -870,6 +877,7 @@ class ZAERO:
             'SPLINE1': (SPLINE1_ZAERO, add_methods.add_spline_object),
             'SPLINE2': (SPLINE2_ZAERO, add_methods.add_spline_object),
             'SPLINE3': (SPLINE3_ZAERO, add_methods.add_spline_object),
+            'SPLINEM': (SPLINEM, zaero_add.add_splinem_object),
             'PANLST1': (PANLST1, zaero_add.add_panlst_object),
             'PANLST2': (PANLST2, zaero_add.add_panlst_object),
             'PANLST3': (PANLST3, zaero_add.add_panlst_object),
@@ -928,7 +936,7 @@ class ZAERO:
             'MLDTRIM': (MLDTRIM, zaero_add.add_mldtrim_object),
             'MLDCOMD': (MLDCOMD, zaero_add.add_mldcomd_object),
             'MLDTIME': (MLDTIME, zaero_add.add_mldtime_object),
-            'DMIL': (DMIL, zaero_add.add_dmil_object),
+            #'DMIL': (DMIL, zaero_add.add_dmil_object),
             'EXTFILE': (EXTFILE, zaero_add.add_extfile_object),
             'MLDPRNT': (MLDPRNT, zaero_add.add_mldprnt_object),
         }
@@ -955,7 +963,7 @@ class ZAERO:
             caero.cross_reference(model)
             self.caero_to_name_map[caero.label] = caero.eid
 
-        dicts, dicts_list = get_dicts(self, 'xref')
+        singletons, dicts, dicts_list = get_dicts(self, 'xref')
         for items in dicts_list:
             for item in items.values():
                 for itemi in item:
@@ -969,19 +977,352 @@ class ZAERO:
         for unused_id, panlst in self.panlsts.items():
             for panlsti in panlst:
                 panlsti.cross_reference(model)
+        self._checks()
 
-        self._check_cntcset()
 
-    def _check_cntcset(self):
+    def _checks(self):
+        self.build_block()
+        # self._check_tfset_cjunct()
+        # self._check_cntcset_conct()
+
+    def build_block(self):
+        import graphviz
+        # g = graphviz.Graph('G', filename='process2.gv', engine='sfdp')
+        # g = graphviz.Diagram('G', filename='process2.gv', engine='sfdp')
+        try:
+            import graphviz
+            from graphviz import Digraph, ExecutableNotFound
+        except ImportError:
+            return
+
+        if not isinstance(self.model.bdf_filename, PathLike):
+            return
+        # g = graphviz.Digraph('G', filename='hello2.gv')
+        # g.edge('Hello', 'World')
+        # g.view()
+        # asdf
+
+        filename = str(self.model.bdf_filename) + '_ase'
+        g = Digraph('G', filename=filename)
+        # g.attr('node', shape='circle')
+
+        mloads_id = 3
+        # mloads_id = 100
+        ase_id = 0
+        # asecont_id = 100001
+        if mloads_id == 0:
+            subcases = self.model.subcases
+            assert len(subcases) > 0, subcases
+            print(subcases)
+            subcase0 = subcases.pop(0)
+            if 'MLOADS' in subcase0:
+                mloads_id = subcase0['MLOADS'][0]
+            elif 'ASE' in subcase0:
+                ase_id = subcase0['ASE'][0]
+        print(f'mloads_id = {mloads_id}')
+        print(f'ase_id = {ase_id}')
+
+        asecont = None
+        if mloads_id in self.mloads:
+            mloads = self.mloads[mloads_id]
+            # print(mloads)
+            mldcomd_id = mloads.mldcomd_id
+            asecont = mloads.asecont_ref
+        if ase_id in self.ase:
+            ase = self.ase[ase_id]
+            # print(ase)
+            asecont = ase.asecont_ref
+
+        #if mloads_id in self.mloads:
+        if asecont is not None:
+            #asecont_id = mloads.asecont_id
+            tfset_id = asecont.tf_id
+            gainset_id = asecont.gain_id
+            cnctset_id = asecont.conct_id
+            senset_id = asecont.sens_id
+        else:
+            tfset_id = 1000001
+            cnctset_id = 1000001
+            gainset_id = 1000001
+            senset_id = 1000001
+            mldcomd_id = 0
+            # raise RuntimeError('mloads')
+            # mldcomd_id = 401
+        # tfset_id = 0
+        # cnctset_id = 0
+        # senset_id =0
+
+        if mldcomd_id and mldcomd_id in self.mldcomd:
+            g.attr('node', shape='box')
+            mldcomd = self.mldcomd[mldcomd_id]
+            assert mldcomd.extinps_ref is not None, mldcomd
+            for extinp_ref in mldcomd.extinps_ref:
+                # input_type: '2'
+                # itf_component: 3
+                # itf_id: 400006
+                itf_ref = extinp_ref.itf_ref
+                if itf_ref.type == 'CJUNCT':
+                    # output_name = f'{itf_ref.type}={extinp_ref.itf_component}'
+                    output_name = f'{itf_ref.type}={itf_ref.cjunct_id} (in={itf_ref.nu}, out={itf_ref.ny})'
+                    assert itf_ref.ny == 1, itf_ref.get_stats()
+                    valuei = itf_ref.values[extinp_ref.itf_component-1, 0]
+                    # ki = itf_ref.
+                    # nu: 3
+                    # ny: 1
+                    # values: [0.0, 0.0, 1.0]
+                    output_comment = clean_comment(itf_ref.comment)
+                else:
+                    raise RuntimeError(itf_ref)
+
+                input_name = f'EXTINP={extinp_ref.extinp_id}'
+                input_comment = clean_comment(extinp_ref.comment)
+                tag = f'({valuei}*I={extinp_ref.itf_component})'
+                g.edge(input_name + input_comment,
+                       output_name + output_comment,
+                       label=f'MLDCOMD={mldcomd_id} {tag}')
+                # ITFID
+                # CI
+
+        #---------------------------------------------
+        tfset_ids = []
+        conct_ids = []
+        asegain_ids = []
+        asesnsr_ids = []
+
+        if tfset_id in self.tfset: # SISOTF/CJUNCT/MIMOSS
+            tfset = self.tfset[tfset_id]
+            tfset_ids = set(tfset.ids)
+
+        if cnctset_id in self.cnctset: # CONCT
+            cnctset = self.cnctset[cnctset_id]
+            conct_ids = cnctset.ids
+
+        if gainset_id in self.gainset: # ASEGAIN
+            gainset = self.gainset[gainset_id]
+            asegain_ids = gainset.ids
+
+        if senset_id in self.senset: # ASESNSR
+            senset = self.senset[senset_id]
+            asesnsr_ids = senset.ids
+
+        print(f'tfset_ids = {tfset_ids}')
+        print(f'all_conct_ids = {conct_ids}')
+        print(f'asegain_ids = {asegain_ids}')
+        print(f'asesnsr_ids = {asesnsr_ids}')
+
+        log = self.model.log
+        
+        # draw ASESNSRs
+        for idi, card in self.asegain.items():
+            if idi not in asegain_ids:
+                continue
+            output_ref = card.output_ref
+            output_name = f'{output_ref.type}={output_ref.asesnsr_id} ({output_ref.name})'
+            # print(output_ref.get_stats())
+
+            # if output_ref.type in tfset_ids:
+            output_comment = clean_comment(output_ref.comment)
+            if output_ref.asesnsr_id in asesnsr_ids:
+                g.attr('node', shape='ellipse')
+                g.node(output_name+output_comment)
+            else:
+                g.attr('node', shape='box')
+                g.node(output_name+output_comment)
+
+        for actu_id, card in self.actu.items():
+            name = f'{card.type}={actu_id}'
+            comment = clean_comment(card.comment)
+            g.node(name+comment)
+
+        # g.attr('node', shape='diamond')
+        # for cjunct_id, card in self.cjunct.items():
+        #     name = f'{card.type}={cjunct_id} (in={card.nu}, out={card.ny})'
+        #     comment = clean_comment(card.comment)
+        #     g.node(name+comment)
+
+        g.attr('node', shape='box')
+        for idi, card in self.sisotf.items():
+            if idi not in tfset_ids:
+                continue
+            name = f'{card.type}={card.sisotf_id}'
+            comment = clean_comment(card.comment)
+            g.node(name+comment)
+
+        g.attr('node', shape='box')
+        for idi, card in self.asegain.items():
+            if idi not in asegain_ids:
+                continue
+            # c_in: 1
+            # c_out: 1
+            # gain: 4001
+            # gain_type: 'Q'
+            # itf_id: 400001
+            # otf_id: 1096004
+            input_ref = card.input_ref
+            # if input_ref is None:
+            #     log.warning(f'missing input-type for:\n{str(card)}')
+            # elif input_ref.type != 'ASEGAIN':
+            #     input_name = f'{input_ref.type}={input_ref.input_tf_id}'
+            if input_ref.type == 'SISOTF':
+                itag = '' if input_ref.sisotf_id in tfset_ids else 'x'
+                assert itag == '', input_ref
+                input_name = f'{itag}{input_ref.type}={input_ref.sisotf_id}'
+                input_comment = clean_comment(input_ref.comment)
+            else:
+                raise RuntimeError(input_ref)
+
+            output_ref = card.output_ref
+            # if output_ref is None:
+            #     log.warning(f'missing output-type for:\n{str(card)}')
+                # asdf
+            if output_ref.type == 'ASESNSR':
+                otag = '' if output_ref.asesnsr_id in asesnsr_ids else 'x'
+                output_name = f'{otag}{output_ref.type}={output_ref.asesnsr_id} ({output_ref.name})'
+            # else:
+            #     output_name = f'{output_ref.type}={output_ref.input_tf_id}'
+            else:
+                raise RuntimeError(output_ref)
+            output_comment = clean_comment(output_ref.comment)
+            # print(f'{output_comment!r}')
+            # output_comment = ''
+
+            tag = f'\n(I={card.c_in}, O={card.c_out})'
+
+            # e.node('name1', label='name')
+            g.edge(output_name+output_comment,
+                   input_name+input_comment,
+                   label=f'ASEGAIN={idi} {tag}')
+
+        log = self.model.log
+        g.attr('node', shape='box')
+        for idi, card in self.conct.items():
+            if idi not in conct_ids:
+                continue
+
+            # this is a CONCT
+            # 'SISOTF=31004-1', 'ACTU=21001-1', 'ACTU=21002-1
+            sivalue = ''
+            input_ref = card.input_ref
+
+            # CJUNCT, MIMOSS, SISOTF or ACTU
+            if input_ref is None:
+                log.warning(f'missing input-type for:\n{str(card)}')
+                input_name = f'Input CONCT={idi}'
+                input_comment = '\n???'
+            elif input_ref.type == 'CJUNCT':
+                sivalue = f'{input_ref.values[card.input_component-1,0]}*'
+                input_name = f'{input_ref.type}={card.input_tf_id} (in={input_ref.nu}, out={input_ref.ny})'
+                input_comment = clean_comment(input_ref.comment)
+            elif input_ref.type == 'MIMOSS':
+                itag = '' if card.input_tf_id in tfset_ids else 'x'
+                input_name = f'{itag}{input_ref.type}={card.input_tf_id} (in={input_ref.nu}, out={input_ref.ny})'
+                input_comment = clean_comment(input_ref.comment)
+
+            elif input_ref.type == 'SISOTF':
+                itag = '' if card.input_tf_id in tfset_ids else 'x'
+                input_name = f'{itag}{input_ref.type}={card.input_tf_id}'
+                input_comment = clean_comment(input_ref.comment)
+            elif input_ref.type == 'ACTU':
+                input_name = f'{input_ref.type}={card.input_tf_id}'
+                input_comment = clean_comment(input_ref.comment)
+            else:  # pragma: no cover
+                raise RuntimeError(input_ref)
+
+            log.debug(f'found {input_name}')
+            # assert input_name in all_blocks, f'input={input_name!r} not in all_blocks\n{str(card)}'
+
+            # this is a CONCT
+            sovalue = ''
+            output_ref = card.output_ref
+            # CJUNCT, MIMOSS, SISOTF, ASESNSR, or ASESNS1
+            if output_ref is None:
+                log.warning(f'missing output-type for:\n{str(card)}')
+                output_name = f'Output CONCT={idi}'
+                output_comment = '\n???'
+            elif output_ref.type == 'SISOTF':
+                output_name = f'{output_ref.type}={card.output_tf_id}'
+                output_comment = clean_comment(output_ref.comment)
+            elif output_ref.type == 'CJUNCT':
+                # print('output_ref.values', output_ref.values)
+                outputs = output_ref.values[:, card.output_component-1].tolist()
+                # if len(outputs) == 1:
+                #     sovalue = f'{outputs[0]}*'
+                # else:
+                #     sovalue = f'{outputs}*'
+                output_name = f'{output_ref.type}={card.output_tf_id} (in={output_ref.nu}, out={output_ref.ny})'
+                output_comment = clean_comment(output_ref.comment)
+            elif output_ref.type == 'MIMOSS':
+                # print('output_ref.values', output_ref.values)
+                #outputs = output_ref.values[:, card.output_component - 1].tolist()
+                # if len(outputs) == 1:
+                #     sovalue = f'{outputs[0]}*'
+                # else:
+                #     sovalue = f'{outputs}*'
+                output_name = f'{output_ref.type}={card.output_tf_id} (in={output_ref.nu}, out={output_ref.ny})'
+                output_comment = clean_comment(output_ref.comment)
+            elif output_ref.type == 'ASESNSR':
+                output_name = f'{output_ref.type}={card.output_tf_id}'
+                output_comment = clean_comment(output_ref.comment)
+            else:  # pragma: no cover
+                raise RuntimeError(output_ref)
+                output_name = f'{output_ref.type}={card.output_tf_id}'
+                output_comment = '' if output_ref.type != 'ACTU' else clean_comment(output_ref.comment)
+            log.debug(f'found {output_name}')
+
+            tag = f'({sivalue}I={card.input_component}, {sovalue}O={card.output_component})'
+            g.edge(output_name+output_comment,
+                   input_name+input_comment,
+                   label=f'CONCT={idi}\n{tag}')
+
+        #-----------------
+        # aeslinks
+        for aeslink_label, aeslink in self.aeslink.items():
+            actu_ref = aeslink.actu_ref
+            output_name = f'{actu_ref.type}={actu_ref.actu_id}'
+            output_comment = clean_comment(actu_ref.comment)
+
+            # actu_id: int, independent_labels: list[str],
+            # linking_coefficients: list[float],
+
+            for label, label_ref, coeff in zip(aeslink.independent_labels,
+                                               aeslink.independent_labels_ref,
+                                               aeslink.linking_coefficients):
+                # print(label_ref.get_stats())
+                input_name = f'{label_ref.type}={label}'
+                input_comment = clean_comment(label_ref.comment)
+                g.edge(output_name+output_comment,
+                       input_name+input_comment,
+                       label=f'AESLINK={coeff}*{aeslink_label}')
+
+        #-----------------
+        try:
+            g.view()
+        except ExecutableNotFound:
+            return
+
+    def _check_tfset_cjunct(self):  # pragma: no cover
+        assert len(self.tfset) == 1, self.tfset
+        sisotfs = set(list(self.sisotf))
+        cjunct_ids = set(list(self.cjunct))
+        expected_tfs = cjunct_ids.union(sisotfs)
+        for tfset_id, tfset in self.tfset.items():
+            tfset_ids = set(tfset.ids)
+
+        extra = expected_tfs - tfset_ids
+        missing = tfset_ids - expected_tfs
+        assert len(extra) == 0, f'There are more CJUNCTs than values in TFSET; extra={extra}'
+        assert len(missing) == 0, f'There are fewer CJUNCTs than values in TFSET; missing={missing}'
+
+    def _check_cntcset_conct(self):  # pragma: no cover
         # assert len(self.cnctset) in [0, 1], len(self.cnctset)
         cntcset_ids = set()
         for idi, cnctset in self.cnctset.items():
             cntcset_ids.update(cnctset.ids)
-        cntc_ids = set(list(self.conct))
-        extra = cntc_ids - cntcset_ids
-        missing = cntcset_ids - cntc_ids
-        assert len(extra) == 0, f'There are more CNTCs than values in CNTCADD; extra={extra}'
-        assert len(missing) == 0, f'There are fewer CNTCs than values in CNTCADD; missing={missing}'
+        contc_ids = set(list(self.conct))
+        extra = contc_ids - cntcset_ids
+        missing = cntcset_ids - contc_ids
+        assert len(extra) == 0, f'There are more CONTCs than values in CNTCADD; extra={extra}'
+        assert len(missing) == 0, f'There are fewer CONTCs than values in CNTCADD; missing={missing}'
         all_blocks = []
         # assert len(self.mimoss) == 0, self.mimoss
         for idi, card in self.sisotf.items():
@@ -991,19 +1332,26 @@ class ZAERO:
         for idi, card in self.actu.items():
             all_blocks.append(f'{card.type}={idi}-1')
         for idi, card in self.cjunct.items():
-            all_blocks.append(f'{card.type}={idi}-1')
+            # i = 0
+            for i in range(1, card.nu+1):  # inputs
+                all_blocks.append(f'{card.type}={idi}-{i}')
+            # for j in range(i, card.ny+1):
+            #     all_blocks.append(f'{card.type}={idi}-{j}')
+            # nu: 2
+            # ny: 1
 
         log = self.model.log
         print(f'all_blocks = {all_blocks}')
         for idi, card in self.conct.items():
             # 'SISOTF=31004-1', 'ACTU=21001-1', 'ACTU=21002-1
             # print(card)
-            # print(card.get_stats())
             input_ref = card.input_ref
             if input_ref is None:
                 log.warning(f'missing input-type for:\n{str(card)}')
                 continue
+
             input_name = f'{input_ref.type}={card.input_tf_id}-{card.input_component}'
+            log.debug(f'found {input_name}')
             assert input_name in all_blocks, f'input={input_name!r} not in all_blocks\n{str(card)}'
 
             output_ref = card.output_ref
@@ -1013,10 +1361,11 @@ class ZAERO:
             output_name = f'{output_ref.type}={card.output_tf_id}-{card.output_component}'
             if output_name not in all_blocks:
                 log.warning(f'output={output_name!r} not in all_blocks\n{str(card)}')
+                continue
+            log.debug(f'found {output_name}')
             # asdf
         # for
         # asdf
-
 
     def safe_cross_reference(self, xref_errors=None):
         model = self.model
@@ -1029,7 +1378,7 @@ class ZAERO:
             caero.safe_cross_reference(model, xref_errors)
             self.caero_to_name_map[caero.label] = caero.eid
 
-        dicts, dicts_list = get_dicts(self, 'xref')
+        singletons, dicts, dicts_list = get_dicts(self, 'xref')
         for items in dicts_list:
             for item in items.values():
                 for itemi in item:
@@ -1043,10 +1392,10 @@ class ZAERO:
         for unused_id, panlst in self.panlsts.items():
             for panlsti in panlst:
                 panlsti.safe_cross_reference(model, xref_errors)
-        self._check_cntcset()
+        self._checks()
 
     def uncross_reference(zaero: ZAERO):
-        dicts, dicts_list = get_dicts(zaero, 'write')
+        singletons, dicts, dicts_list = get_dicts(zaero, 'write')
         for panlsts in zaero.panlsts.values():
             for panlst in panlsts:
                 panlst.uncross_reference()
@@ -1084,7 +1433,11 @@ class ZAERO:
         # for unused_id, attach in self.attach.items():
         #     bdf_file.write(attach.write_card(size=size, is_double=is_double))
 
-        dicts, dicts_list = get_dicts(self, 'write')
+        singletons, dicts, dicts_list = get_dicts(self, 'write')
+        for item in singletons:
+            if item is not None:
+                bdf_file.write(item.write_card(size=size, is_double=is_double))
+
         for items in dicts_list:
             for item in items.values():
                 for itemi in item:
@@ -1096,6 +1449,7 @@ class ZAERO:
 
     def convert_to_nastran(self, save: bool=True):
         """Converts a ZAERO model to Nastran"""
+        from pyNastran.bdf.cards.aero.zaero_interface.zaero_to_nastran import zaero_to_nastran
         return zaero_to_nastran(self, save=save)
 
     def add_caero2s(self, caero2s, add=False):
@@ -1298,8 +1652,10 @@ def fix_card_list(cards_list, cards_dict, card_count):
         cards_list2.append((card_name, comment, card_lines, ifile_iline))
     return cards_list2, cards_dict, dict(card_count)
 
-def get_dicts(zaero: ZAERO, method: str) -> tuple[dict[int, list],
-                                                 list[dict]]:
+
+def get_dicts(zaero: ZAERO, method: str) -> tuple[list,
+                                                  dict[int, list],
+                                                  list[dict]]:
     assert method in ['xref', 'write'], f'method={method!r}'
     dicts = [
         # --------------general-------------
@@ -1319,6 +1675,7 @@ def get_dicts(zaero: ZAERO, method: str) -> tuple[dict[int, list],
         # zaero.trim,  # part of the main BDF
         zaero.aeslink, zaero.trimvar, zaero.trimlnk,
         zaero.trimfnc, zaero.trimobj, zaero.trimcon,
+        zaero.actu,
         # ---------------ase---------------
         zaero.cjunct, zaero.conct, zaero.tfset, zaero.cnctset,
         zaero.ase, zaero.asecont, zaero.asesnsr, zaero.asesns1,
@@ -1348,6 +1705,20 @@ def get_dicts(zaero: ZAERO, method: str) -> tuple[dict[int, list],
     if method == 'write':
         # these are xref'd by their parent
         dicts.extend([zaero.setadd, zaero.extinp, zaero.extout])
-    return dicts, dict_lists
+    singletons = [zaero.splinem]
+    return singletons, dicts, dict_lists
 
-ZONA = ZAERO
+
+def clean_comment(comment: str) -> str:
+    lines = comment.split('\n')
+    lines2 = []
+    for line in lines:
+        commenti = line.strip('$ -')
+        if commenti.startswith('#'):
+            continue
+        if commenti:
+            lines2.append(commenti)
+    comment2 = '\n'.join(lines2).replace('\r', '').replace(':', '-')
+    if comment2:
+        return '\n' + comment2
+    return comment2

@@ -10,6 +10,7 @@ All cards are BaseCard objects.
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -247,6 +248,8 @@ class ASEGAIN(BaseCard):
         self.c_in = c_in
         self.gain = gain
         self.gain_type = gain_type
+        self.input_ref = None
+        self.output_ref = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -286,6 +289,14 @@ class ASEGAIN(BaseCard):
         zaero = model.zaero
         # CNCTSET
         # self.conct_ref = model.conct[self.conct_id]
+
+        # CJUNCT, MIMOSS, SISOTF or ACTU
+        self.input_ref = zona_cjunct_mimoss_sisotf_actu(
+            'input', self.itf_id, zaero, f'ASEGAIN={self.asegain_id}')
+
+        # CJUNCT, MIMOSS, SISOTF, ASESNSR, or ASESNS1
+        self.output_ref = zona_cjunct_mimoss_sisotf_asesnsr_asesns1(
+            'Output', self.otf_id, zaero, f'ASEGAIN={self.asegain_id}')
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -342,6 +353,26 @@ class ASESNSR(BaseCard):
         self.component = component
         self.factor = factor
         self.sum_method = sum_method
+
+    @property
+    def name(self):
+        # {1-6}
+        mapper = {
+            # sensor_type
+            0: {
+                1: 'x', 2: 'y', 3: 'z',
+                4: 'ϕ', 5: 'θ', 6: 'ψ',
+            },
+            1: {
+                1: 'dx/dt', 2: 'dy/dt', 3: 'dz/dt',
+                4: 'dϕ/dt', 5: 'dθ/dt', 6: 'dψ/dt',
+            },
+            2: {
+                1: 'd²x/dt²', 2: 'd²y/dt²', 3: 'd²z/dt²',
+                4: 'd²ϕ/dt²', 5: 'd²θ/dt²', 6: 'd²ψ/dt²',
+            }
+        }
+        return mapper[self.sensor_type][self.component]
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str = ''):
@@ -505,10 +536,11 @@ class CJUNCT(BaseCard):
         if comment:
             self.comment = comment
 
+        values = np.asarray(values)
         self.cjunct_id = cjunct_id
         self.nu = nu
         self.ny = ny
-        self.values = values
+        self.values = values.reshape(self.nu, self.ny) # (ninput, noutput)
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -564,7 +596,7 @@ class CJUNCT(BaseCard):
         """
         list_fields = [
             'CJUNCT', self.cjunct_id, self.nu,
-            self.ny] + self.values
+            self.ny] + self.values.ravel().tolist()
         return list_fields
 
     def repr_fields(self):
@@ -629,65 +661,17 @@ class CONCT(BaseCard):
         zaero = model.zaero
         log = model.log
 
-        idi = self.input_tf_id
-        if idi in zaero.sisotf:
-            input_ref = zaero.sisotf[idi]
-            assert idi not in zaero.cjunct, f'idi={idi} in cjunct (already in sisotf)'
-            assert idi not in zaero.actu, f'idi={idi} in actu (already in sisotf)'
-        elif idi in zaero.cjunct:
-            input_ref = zaero.cjunct[idi]
-            assert idi not in zaero.actu, f'idi={idi} in actu (already in sisotf)'
-        elif idi in zaero.actu:
-            input_ref = zaero.actu[idi]
-        else:
-            cjunct = list(zaero.cjunct)
-            mimoss = list(zaero.mimoss)
-            sisotf = list(zaero.sisotf)
-            actu = list(zaero.actu)
-            cjunct.sort()
-            mimoss.sort()
-            sisotf.sort()
-            actu.sort()
-            msg = (
-                f'CONCT={self.conct_id}: input={idi} is not [CJUNCT, MIMOSS, SISOTF]\n'
-                f' - cjunct = {cjunct}\n'
-                f' - mimoss = {mimoss} (not supported yet)\n'
-                f' - sisotf = {sisotf}\n'
-                f' - actu = {actu}\n'
-            )
-            log.warning(msg)
-            input_ref = None
-        self.input_ref = input_ref
+        # CJUNCT, MIMOSS, SISOTF or ACTU
+        self.input_ref = zona_cjunct_mimoss_sisotf_actu(
+            'input', self.input_tf_id,
+            zaero, f'CONCT={self.conct_id}')
 
         #-------------
         idi = self.output_tf_id
-        if idi in zaero.sisotf:
-            output_ref = zaero.sisotf[idi]
-            assert idi not in zaero.cjunct, f'idi={idi} in cjunct (already in sisotf)'
-        elif idi in zaero.cjunct:
-            output_ref = zaero.cjunct[idi]
-            # assert idi not in zaero.actu, f'idi={idi} in actu (already in sisotf)'
-        # elif idi in zaero.actu:
-        #     output_ref = zaero.actu[idi]
-        else:
-            cjunct = list(zaero.cjunct)
-            mimoss = list(zaero.mimoss)
-            sisotf = list(zaero.sisotf)
-            actu = list(zaero.actu)
-            cjunct.sort()
-            mimoss.sort()
-            sisotf.sort()
-            actu.sort()
-            msg = (
-                f'CONCT={self.conct_id}: output={idi} is not [CJUNCT, MIMOSS, SISOTF]\n'
-                f' - cjunct = {cjunct}\n'
-                f' - mimoss = {mimoss} (not supported yet)\n'
-                f' - sisotf = {sisotf}\n'
-                f' - actu = {actu}\n'
-            )
-            log.warning(msg)
-            output_ref = None
-        self.output_ref = output_ref
+        # CJUNCT, MIMOSS, SISOTF, ASESNSR, or ASESNS1
+        self.output_ref = zona_cjunct_mimoss_sisotf_asesnsr_asesns1(
+            'output', self.output_tf_id,
+            zaero, f'CONCT={self.conct_id}')
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -1491,3 +1475,83 @@ class AEROLAG(BaseCard):
     def write_card(self, size: int = 8, is_double: bool = False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+
+def zona_cjunct_mimoss_sisotf_asesnsr_asesns1(input_output: str, idi: int, zaero, msg: str):
+    if idi in zaero.sisotf:
+        input_ref = zaero.sisotf[idi]
+        assert idi not in zaero.cjunct, f'idi={idi} in sisotf (already in sisotf)'
+        assert idi not in zaero.mimoss, f'idi={idi} in sisotf (already in mimoss)'
+        assert idi not in zaero.asesnsr, f'idi={idi} in sisotf (already in asesnsr)'
+        assert idi not in zaero.asesns1, f'idi={idi} in sisotf (already in asesns1)'
+    elif idi in zaero.cjunct:
+        input_ref = zaero.cjunct[idi]
+        assert idi not in zaero.mimoss, f'idi={idi} in cjunct (already in mimoss)'
+        assert idi not in zaero.asesnsr, f'idi={idi} in cjunct (already in asesnsr)'
+        assert idi not in zaero.asesns1, f'idi={idi} in cjunct (already in asesns1)'
+    elif idi in zaero.mimoss:
+        input_ref = zaero.mimoss[idi]
+        assert idi not in zaero.asesnsr, f'idi={idi} in mimoss (already in asesnsr)'
+        assert idi not in zaero.asesns1, f'idi={idi} in mimoss (already in asesns1)'
+    elif idi in zaero.asesnsr:
+        input_ref = zaero.asesnsr[idi]
+        assert idi not in zaero.asesns1, f'idi={idi} in asesns1 (already in asesnsr)'
+    elif idi in zaero.asesns1:
+        input_ref = zaero.asesns1[idi]
+    else:
+        cjunct = list(zaero.cjunct)
+        mimoss = list(zaero.mimoss)
+        sisotf = list(zaero.sisotf)
+        asesnsr = list(zaero.asesnsr)
+        asesns1 = list(zaero.asesns1)
+        cjunct.sort()
+        mimoss.sort()
+        sisotf.sort()
+        asesnsr.sort()
+        asesns1.sort()
+        msg = (
+            f'{msg}: {input_output}={idi} is not [CJUNCT, MIMOSS, SISOTF, ASESNSR, ASESNS1]\n'
+            f' - cjunct  = {cjunct}\n'
+            f' - mimoss  = {mimoss}\n'
+            f' - sisotf  = {sisotf}\n'
+            f' - asesnsr = {asesnsr}\n'
+            f' - asesns1 = {asesns1}\n')
+        zaero.model.log.warning(msg)
+        input_ref = None
+    return input_ref
+
+
+def zona_cjunct_mimoss_sisotf_actu(input_output: str, idi: int, zaero, msg: str,
+                                   allow_actu: bool=True):
+    if idi in zaero.sisotf:
+        input_ref = zaero.sisotf[idi]
+        assert idi not in zaero.cjunct, f'idi={idi} in sisotf (already in cjunct)'
+        assert idi not in zaero.mimoss, f'idi={idi} in sisotf (already in mimoss)'
+        assert idi not in zaero.actu, f'idi={idi} in sisotf (already in actu)'
+    elif idi in zaero.cjunct:
+        input_ref = zaero.cjunct[idi]
+        assert idi not in zaero.mimoss, f'idi={idi} in cjunct (already in mimoss)'
+        assert idi not in zaero.actu, f'idi={idi} in cjunct (already in actu)'
+    elif idi in zaero.mimoss:
+        input_ref = zaero.mimoss[idi]
+        assert idi not in zaero.actu, f'idi={idi} in mimoss (already in actu)'
+    elif idi in zaero.actu and allow_actu:
+        input_ref = zaero.actu[idi]
+    else:
+        cjunct = list(zaero.cjunct)
+        mimoss = list(zaero.mimoss)
+        sisotf = list(zaero.sisotf)
+        actu = list(zaero.actu)
+        cjunct.sort()
+        mimoss.sort()
+        sisotf.sort()
+        actu.sort()
+        msg = (
+            f'{msg}: {input_output}={idi} is not [CJUNCT, MIMOSS, SISOTF, ACTU]\n'
+            f' - cjunct = {cjunct}\n'
+            f' - mimoss = {mimoss}\n'
+            f' - sisotf = {sisotf}\n'
+            f' - actu   = {actu}\n')
+        zaero.model.log.warning(msg)
+        input_ref = None
+    return input_ref

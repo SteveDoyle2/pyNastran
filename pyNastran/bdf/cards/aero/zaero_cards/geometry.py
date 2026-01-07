@@ -2530,23 +2530,30 @@ class AESLINK(BaseCard):
         Updating the labels on the AESURFs will NOT propogate to the AELINK
         """
         msg = ', which is required by:\n%s' % str(self)
-
         zaero = model.zaero
+        self.actu_ref = zaero.actu[self.actu_id]
+
+
         aesurf_names = {aesurf.label for aesurf in model.aesurf.values()}
+        #print(f'dependent_label={self.dependent_label}; aesurf_names={aesurf_names}')
         aestat_names = {aestat.label for aestat in model.aestats.values()}
+        aparam_names = []
         is_aesurf = self.dependent_label in aesurf_names
         is_aeparam = False
         # if not (is_aesurf or is_aeparam):
         #     raise RuntimeError(f'dependent_label={self.dependent_label} is an AESURF and AEPARM\n{self}\n'
         #                        f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
-        if is_aesurf:
-            self.dependent_label_ref = model.AESurf(self.dependent_label,
-                                                    msg='dependent_label={self.dependent_label!r}; ' + msg)
-        elif is_aeparam:
-            self.dependent_label_ref = model.AEParam(self.dependent_label, msg=msg)
-        else:
-            return
-            raise RuntimeError(f'dependent_label={self.dependent_label} is not an AESURF or AEPARM\n{self}')
+
+        if 0:
+            if is_aesurf:
+                self.dependent_label_ref = model.AESurf(self.dependent_label,
+                                                        msg=f'dependent_label={self.dependent_label!r}; ' + msg)
+            elif is_aeparam:
+                self.dependent_label_ref = model.AEParam(self.dependent_label, msg=msg)
+            else:
+                asdf
+                return
+                raise RuntimeError(f'dependent_label={self.dependent_label} is not an AESURF or AEPARM\n{self}')
 
         self.independent_labels_ref = []
         for independent_label in self.independent_labels:

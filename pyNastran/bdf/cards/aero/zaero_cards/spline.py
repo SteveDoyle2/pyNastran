@@ -4,12 +4,14 @@ import numpy as np
 
 from pyNastran.bdf.cards.aero.zaero_cards.geometry import (
     PANLST1, PANLST2, PANLST3, cross_reference_panlst)
+from pyNastran.bdf.cards.aero.zaero_cards.utils import split_filename_dollar
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank,
     string_or_blank, blank,
-    integer_string_or_blank,
+    integer_string_or_blank, string_multifield_dollar_int,
+    string,
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import (
     force_double_or_blank,
@@ -431,6 +433,70 @@ class SPLINE3_ZAERO(Spline):
         """
         list_fields = ['SPLINE3', self.eid, self.model, self.cp, self.panlst, self.setg,
                        self.dz, self.eps]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class SPLINEM(Spline):
+    type = 'SPLINEM'
+
+    def __init__(self, save_flag: str, filename: int | str, comment=''):
+        """
+        Creates a SPLINE3 card, which is useful for control surface
+        constraints.
+
+        Parameters
+        ----------
+        save_flag : str
+            ???
+        filename: str
+            ???
+        comment : str; default=''
+            a comment for the card
+
+        """
+        # https://www.zonatech.com/Documentation/ZAERO_9.2_Users_3rd_Ed.pdf
+        Spline.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.save_flag = save_flag
+        self.filename = filename
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a SPLINE3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        save_flag = string(card, 1, 'save')
+        filename = string_multifield_dollar_int(card, (2, 3), 'filename')
+        return SPLINEM(save_flag, filename, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+
+    def raw_fields(self):
+        # SPLINEM SAVE FILENM
+        filenamea, filenameb = split_filename_dollar(self.filename)
+        list_fields = ['SPLINEM', self.save_flag, filenamea, filenameb]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
