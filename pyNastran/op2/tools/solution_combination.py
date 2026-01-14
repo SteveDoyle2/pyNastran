@@ -117,10 +117,23 @@ def _get_combination_lines(combination_filename: PathLike,
               if line.split('#')[0].strip().rstrip(delimiter)]
     return lines2
 
+
+def string_where(op2s_input: list[str], op2_input: str) -> list[int]:
+    """
+    A string capable version for:
+    iop2 = np.where(op2s_input == op2_input)[0]
+    """
+    iop2 = []
+    for i, op2_inputi in enumerate(op2s_input):
+        if op2_inputi == op2_input:
+            iop2.append(i)
+    return iop2
+
 def _load_multi_combination(
         combination_filename: PathLike,
         log: SimpleLogger,
-        delimiter: str=',') -> tuple[list[int], list[MultiCombination]]:
+        delimiter: str=',') -> tuple[np.ndarray,
+                                     tuple[list[int], list[MultiCombination]]]:
     lines = _get_combination_lines(combination_filename, delimiter)
     log.debug(f'lines[0] = {lines[0]!r}')
 
@@ -135,14 +148,16 @@ def _load_multi_combination(
     op2s_input = []
     subcases_input_list = []
     for iop2, subcase in zip(op2s_sline, subcases_sline):
-        op2s_input.append(int(iop2))
+        # iop2 = int(iop2)
+        op2s_input.append(iop2.strip())
         subcases_input_list.append(int(subcase))
 
     subcases_input = np.array(subcases_input_list, dtype=int)
     iop2s = []
     uop2_input = np.unique(op2s_input)
     for op2_input in uop2_input:
-        iop2 = np.where(op2s_input == op2_input)[0]
+        iop2 = string_where(op2s_input, op2_input)
+        # iop2 = np.where(op2s_input == op2_input)[0]
         iop2s.append(iop2)
     nsubcases = len(subcases_input)
     log.debug(f'subcases_input = {subcases_input}')
@@ -268,7 +283,7 @@ def run_load_case_multi_combinations(
 
     Parameters
     ----------
-    op2_filename : PathLike or OP2
+    op2_filenames : list[PathLike | OP2]; dict[int, PathLike | OP2]
         path to input file or a loaded op2
     combination_filenames : list[PathLike]
         list of paths to input file
@@ -322,6 +337,7 @@ def _load_models(op2_filenames: dict[int, PathLike | OP2],
                  log: Optional[SimpleLogger]=None,
                  mode: Optional[str]=None) -> tuple[dict[int, OP2], int]:
     models = {}
+    assert len(op2_filenames) > 0, op2_filenames
     for imodel, op2_filename in op2_filenames.items():
         model = _read_op2(
             op2_filename, mode=mode, log=log,
@@ -369,6 +385,7 @@ def multi_combine(models: dict[int, OP2],
                   mode: str, revision: Optional[str],
                   icombination: int=0, ncombinations: int=0) -> int:
     assert isinstance(models, dict), models
+    models = {str(key).strip(): model for key, model in models.items()}
 
     icombination0 = icombination
     if ncombinations == 0:
@@ -527,7 +544,6 @@ def _results(model: OP2) -> list[dict]:
 
 def main():  # pragma: no cover
     from pathlib import Path
-    import pyNastran
     dirname = Path(__file__).parent
     op2_filename = dirname / 'test load combo-000.op2'
     combination_filename = dirname / 'combination_file_real.txt'

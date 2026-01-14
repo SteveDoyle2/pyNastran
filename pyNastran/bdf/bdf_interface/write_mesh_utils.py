@@ -2,6 +2,7 @@
 """
 This file defines:
   - write_dict(bdf_file, my_dict, size, is_double, is_long_ids)
+  - write_list(bdf_file, my_list, size, is_double, is_long_ids)
   - write_aero_in_flutter, write_aero_in_gust = find_aero_location(model)
   - ptype_to_pid, property_type_to_property_class, ...
         properties_by_class = get_properties_by_element_type(model)
@@ -9,21 +10,47 @@ This file defines:
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import Any, TYPE_CHECKING
+from typing import TextIO, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
-def write_dict(bdf_file, my_dict: dict[int, Any], size: int,
-               is_double: bool, is_long_ids: bool) -> None:
+def write_dict(bdf_file: TextIO, my_dict: dict[int, Any],
+               size: int,
+               is_double: bool, is_long_ids: bool, is_csv: bool) -> None:
     """writes a dictionary that may require long format"""
-    if is_long_ids:
-        for (unused_nid, node) in sorted(my_dict.items()):
-            bdf_file.write(node.write_card_16(is_double))
+    is_csv = True
+    if is_csv:
+        for nid, node in sorted(my_dict.items()):
+            fields = node.raw_fields()
+            fields_str = (str(field) for field in fields)
+            out = ''
+            for i, field in enumerate(fields):
+                if i > 0 and i % 8 == 0:
+                    out += f'\n,{field}'
+                else:
+                    out += f'{field},'
+            out = out.rstrip(',') + '\n'
+            lines = [line.strip(',') for line in out.split('\n')]
+            for line in lines:
+                sline = line.split(',')
+                assert len(sline) <= 8, lines
+            bdf_file.write(node.comment + out)
     else:
-        for (unused_nid, node) in sorted(my_dict.items()):
-            bdf_file.write(node.write_card(size, is_double))
+        if is_long_ids:
+            for (unused_nid, node) in sorted(my_dict.items()):
+                bdf_file.write(node.write_card_16(is_double))
+        else:
+            for (unused_nid, node) in sorted(my_dict.items()):
+                bdf_file.write(node.write_card(size, is_double))
+
+
+def write_list(bdf_file: TextIO, my_list: dict[Any],
+               size: int,
+               is_double: bool, is_long_ids: bool, is_csv: bool):
+    for set_obj in my_list:  # list
+        bdf_file.write(set_obj.write_card(size, is_double))
 
 
 def find_aero_location(model: BDF) -> tuple[bool, bool]:

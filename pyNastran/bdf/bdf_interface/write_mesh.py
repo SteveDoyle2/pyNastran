@@ -14,7 +14,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.bdf_interface.write_mesh_utils import (
-    find_aero_location, write_dict, get_properties_by_element_type)
+    find_aero_location, write_dict, write_list, get_properties_by_element_type)
 from pyNastran.bdf.cards.nodes import write_xpoints
 from pyNastran.bdf.bdf_interface.utils import sorteddict
 try:
@@ -149,6 +149,7 @@ class WriteMesh(BDFAttributes):
                   #table_size: Optional[int]=None,
                   flfact_size: int=0,
                   is_double: bool=False,
+                  is_csv: bool=False,
                   sort_cards: bool=True,
                   interspersed: bool=False, enddata: Optional[bool]=None,
                   write_header: bool=True, close: bool=True) -> None:
@@ -170,6 +171,9 @@ class WriteMesh(BDFAttributes):
         is_double : bool; default=False
             False : small field
             True : large field
+        is_csv : bool; default=False
+            False : write in standard format
+            True ; write in CSV format (currently very limited)
         sort_cards : bool; default=True
             sort the nodes, elements, ... to make finding things easier
         interspersed : bool; default=True
@@ -232,7 +236,8 @@ class WriteMesh(BDFAttributes):
                              nodes_size=nodes_size, elements_size=elements_size, loads_size=loads_size,
                              flfact_size=flfact_size,
                              sort_cards=sort_cards,
-                             is_long_ids=is_long_ids)
+                             is_long_ids=is_long_ids,
+                             is_csv=is_csv)
 
     def write_bulk_data(self, bdf_file,
                         size: int=8, is_double: bool=False,
@@ -243,7 +248,8 @@ class WriteMesh(BDFAttributes):
                         loads_size: Optional[int]=None,
                         flfact_size: Optional[int]=None,
                         sort_cards: bool=True,
-                        is_long_ids: bool=False) -> None:
+                        is_long_ids: bool=False,
+                        is_csv: bool=False) -> None:
         """
         Writes the BDF.
 
@@ -281,7 +287,7 @@ class WriteMesh(BDFAttributes):
 
         self._write_params(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
         self._write_model_groups(bdf_file, sort_cards=sort_cards)
-        self._write_nodes(bdf_file, nodes_size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_nodes(bdf_file, nodes_size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards, is_csv=is_csv)
 
         if interspersed:
             self._write_elements_interspersed(bdf_file, elements_size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
@@ -299,7 +305,7 @@ class WriteMesh(BDFAttributes):
         self._write_masses(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
 
         # split out for write_bdf_symmetric
-        self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards, is_csv=is_csv)
         self._write_aero(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
 
         self._write_common(bdf_file, loads_size, flfact_size,
@@ -593,7 +599,7 @@ class WriteMesh(BDFAttributes):
         self._write_constraints(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
         self._write_optimization(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
         self._write_tables(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
-        self._write_sets(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_sets(bdf_file, size, is_double, is_long_ids=is_long_ids, is_csv=is_csv, sort_cards=sort_cards)
         self._write_superelements(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
         self._write_contact(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
         self._write_parametric(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
@@ -963,7 +969,8 @@ class WriteMesh(BDFAttributes):
 
     def _write_nodes(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                      sort_cards: bool=True,
-                     is_long_ids: Optional[bool]=None) -> None:
+                     is_long_ids: Optional[bool]=None,
+                     is_csv: bool=False) -> None:
         """Writes the NODE-type cards"""
         if self.spoints:
             bdf_file.write('$SPOINTS\n')
@@ -979,7 +986,8 @@ class WriteMesh(BDFAttributes):
         if self.cyax:
             bdf_file.write(self.cyax.write_card(size, is_double))
 
-        self._write_grids(bdf_file, size=size, is_double=is_double, sort_cards=sort_cards)
+        self._write_grids(bdf_file, size=size, is_double=is_double, sort_cards=sort_cards,
+                          is_csv=is_csv)
         if self.seqgp:
             bdf_file.write(self.seqgp.write_card(size, is_double))
 
@@ -989,7 +997,8 @@ class WriteMesh(BDFAttributes):
     def _write_grids(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                      sort_cards: bool=True,
                      is_long_ids: Optional[bool]=None,
-                     write_as_cid0: bool=False) -> None:
+                     write_as_cid0: bool=False,
+                     is_csv: bool=False) -> None:
         """Writes the GRID-type cards"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.nodes or self.grdset:
@@ -1008,7 +1017,7 @@ class WriteMesh(BDFAttributes):
                     else:
                         bdf_file.write(node.write_card(size, is_double))
             else:
-                write_dict(bdf_file, self.nodes, size, is_double, is_long_ids)
+                write_dict(bdf_file, self.nodes, size, is_double, is_long_ids, is_csv)
 
     # def _write_nodes_associated(self, bdf_file, size=8, is_double=False):
     #     """
@@ -1247,7 +1256,8 @@ class WriteMesh(BDFAttributes):
 
     def _write_rigid_elements(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                               sort_cards: bool=True,
-                              is_long_ids: Optional[bool]=None) -> None:
+                              is_long_ids: Optional[bool]=None,
+                              is_csv: bool=False) -> None:
         """Writes the rigid elements in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.rigid_elements:
@@ -1268,9 +1278,10 @@ class WriteMesh(BDFAttributes):
                         raise
         if self.plotels:
             bdf_file.write('$PLOT ELEMENTS\n')
-            write_dict(bdf_file, self.plotels, size, is_double, is_long_ids)
+            write_dict(bdf_file, self.plotels, size, is_double, is_long_ids, is_csv)
 
     def _write_sets(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                    is_csv: bool=False,
                     sort_cards: bool=True,
                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the SETx cards sorted by ID"""
@@ -1280,16 +1291,12 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$SETS\n')
             for (unused_id, set_obj) in sorteddict(self.sets, sort_cards):  # dict
                 bdf_file.write(set_obj.write_card(size, is_double))
-            for set_obj in self.asets:  # list
-                bdf_file.write(set_obj.write_card(size, is_double))
-            for set_obj in self.omits:  # list
-                bdf_file.write(set_obj.write_card(size, is_double))
-            for set_obj in self.bsets:  # list
-                bdf_file.write(set_obj.write_card(size, is_double))
-            for set_obj in self.csets:  # list
-                bdf_file.write(set_obj.write_card(size, is_double))
-            for set_obj in self.qsets:  # list
-                bdf_file.write(set_obj.write_card(size, is_double))
+            write_list(bdf_file, self.aset, size, is_double, is_csv)
+            write_list(bdf_file, self.omits, size, is_double, is_csv)
+            write_list(bdf_file, self.bset, size, is_double, is_csv)
+            write_list(bdf_file, self.cset, size, is_double, is_csv)
+            write_list(bdf_file, self.qset, size, is_double, is_csv)
+
             for unused_name, usets in sorted(self.usets.items()):  # dict
                 for set_obj in usets:  # list
                     bdf_file.write(set_obj.write_card(size, is_double))

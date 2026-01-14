@@ -112,7 +112,7 @@ from pyNastran.bdf.cards.aero.aero import (
 from pyNastran.bdf.cards.aero.static_loads import (
     AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG, UXVEC)
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
-from pyNastran.bdf.cards.aero.zona import (
+from pyNastran.bdf.cards.aero.zaero import (
     CAERO7, PAFOIL7, BODY7, AESURFZ, ACOORD, MKAEROZ,
     # AEROZ, MKAEROZ, PANLST1, PANLST3,
     # SEGMESH, SPLINE1_ZAERO, SPLINE2_ZAERO, SPLINE3_ZAERO, TRIMLNK, TRIMVAR, TRIM_ZAERO,

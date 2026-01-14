@@ -1052,6 +1052,8 @@ class ZAERO:
         # cnctset_id = 0
         # senset_id =0
 
+        nnode = 0
+        nedge = 0
         if mldcomd_id and mldcomd_id in self.mldcomd:
             g.attr('node', shape='box')
             mldcomd = self.mldcomd[mldcomd_id]
@@ -1080,6 +1082,7 @@ class ZAERO:
                 g.edge(input_name + input_comment,
                        output_name + output_comment,
                        label=f'MLDCOMD={mldcomd_id} {tag}')
+                nedge += 1
                 # ITFID
                 # CI
 
@@ -1128,11 +1131,13 @@ class ZAERO:
             else:
                 g.attr('node', shape='box')
                 g.node(output_name+output_comment)
+            nnode += 1
 
         for actu_id, card in self.actu.items():
             name = f'{card.type}={actu_id}'
             comment = clean_comment(card.comment)
             g.node(name+comment)
+            nnode += 1
 
         # g.attr('node', shape='diamond')
         # for cjunct_id, card in self.cjunct.items():
@@ -1147,6 +1152,7 @@ class ZAERO:
             name = f'{card.type}={card.sisotf_id}'
             comment = clean_comment(card.comment)
             g.node(name+comment)
+            nnode += 1
 
         g.attr('node', shape='box')
         for idi, card in self.asegain.items():
@@ -1192,6 +1198,7 @@ class ZAERO:
             g.edge(output_name+output_comment,
                    input_name+input_comment,
                    label=f'ASEGAIN={idi} {tag}')
+            nedge += 1
 
         log = self.model.log
         g.attr('node', shape='box')
@@ -1273,6 +1280,7 @@ class ZAERO:
             g.edge(output_name+output_comment,
                    input_name+input_comment,
                    label=f'CONCT={idi}\n{tag}')
+            nedge += 1
 
         #-----------------
         # aeslinks
@@ -1293,8 +1301,11 @@ class ZAERO:
                 g.edge(output_name+output_comment,
                        input_name+input_comment,
                        label=f'AESLINK={coeff}*{aeslink_label}')
+                nedge += 1
 
         #-----------------
+        if nedge == 0:  # or nnode == 0:
+            return
         try:
             g.view()
         except ExecutableNotFound:
