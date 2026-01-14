@@ -20,22 +20,22 @@ def write_dict(bdf_file: TextIO, my_dict: dict[int, Any],
                size: int,
                is_double: bool, is_long_ids: bool, is_csv: bool) -> None:
     """writes a dictionary that may require long format"""
-    is_csv = True
     if is_csv:
         for nid, node in sorted(my_dict.items()):
             fields = node.raw_fields()
+            # print(fields)
             fields_str = (str(field) for field in fields)
             out = ''
-            for i, field in enumerate(fields):
+            for i, field in enumerate(fields_str):
+                out += f'{field},'
                 if i > 0 and i % 8 == 0:
-                    out += f'\n,{field}'
-                else:
-                    out += f'{field},'
-            out = out.rstrip(',') + '\n'
-            lines = [line.strip(',') for line in out.split('\n')]
+                    out += '\n'
+            lines = [line.strip(',') for line in out.strip(',\n').split('\n')]
+            # print(out.strip(',\n'))
             for line in lines:
                 sline = line.split(',')
-                assert len(sline) <= 8, lines
+                # print(sline, len(sline))
+                assert len(sline) <= 9, lines
             bdf_file.write(node.comment + out)
     else:
         if is_long_ids:

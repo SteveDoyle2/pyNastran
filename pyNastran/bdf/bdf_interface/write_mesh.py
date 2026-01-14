@@ -309,7 +309,8 @@ class WriteMesh(BDFAttributes):
         self._write_aero(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
 
         self._write_common(bdf_file, loads_size, flfact_size,
-                           is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+                           is_double, is_csv=is_csv,
+                           is_long_ids=is_long_ids, sort_cards=sort_cards)
         if (enddata is None and 'ENDDATA' in self.card_count) or enddata:
             bdf_file.write('ENDDATA\n')
         if close:
@@ -566,6 +567,7 @@ class WriteMesh(BDFAttributes):
     def _write_common(self, bdf_file: TextFile,
                       size: int=8, flfact_size: int=8,
                       is_double: bool=False,
+                      is_csv: bool=False,
                       sort_cards: bool=True,
                       is_long_ids: Optional[bool]=None) -> None:
         """
@@ -820,7 +822,7 @@ class WriteMesh(BDFAttributes):
         return size, is_long_ids
 
     def _write_loads(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
-                     sort_cards: bool=True,
+                     is_csv: bool=False, sort_cards: bool=True,
                      is_long_ids: Optional[bool]=None) -> None:
         """Writes the load cards sorted by ID"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
@@ -862,9 +864,10 @@ class WriteMesh(BDFAttributes):
             for unused_key, cyjoin in sorteddict(self.cyjoin, sort_cards):
                 bdf_file.write(cyjoin.write_card(size, is_double))
         self._write_dloads(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids,
-                           sort_cards=sort_cards)
+                           is_csv=is_csv, sort_cards=sort_cards)
 
     def _write_dloads(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                      is_csv: bool=False,
                       sort_cards: bool=True,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the dload cards sorted by ID"""
