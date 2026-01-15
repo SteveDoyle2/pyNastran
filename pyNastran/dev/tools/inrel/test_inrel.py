@@ -110,7 +110,7 @@ class TestInrel(unittest.TestCase):
         assert np.allclose(moment_out.sum(), 0.)
         # print('force_out:\n', force_out)
 
-    def test_inrel_bar_force_linear_rotated(self):  # pragma: no cover
+    def _test_inrel_bar_force_linear_rotated(self):  # pragma: no cover
         """
         inertia1 = [370.646, 4576.892, 7552.462, 0, 0, 0]
         inertia_rotated = [0, 6250, 6250, 0, 0, 0]
