@@ -123,6 +123,8 @@ class OP2Common(Op2Codes, F06Writer):
         self.expected_times = None
 
         self._endian = None
+        #: FEMAP is picky when loading results from versions that didn't have them,
+        #: so we now store the version to help write op2s better
         self._nastran_revision = None
 
         # sets the element mapper
@@ -2151,8 +2153,8 @@ class OP2Common(Op2Codes, F06Writer):
                 try:
                     build_obj(self.obj)
                 except AssertionError:
-                    log.error(str(self.code))
-                    log.error(self.code_information())
+                    self.log.error(str(self.code))
+                    self.log.error(self.code_information())
                     raise
 
             else:  # not vectorized
@@ -2247,8 +2249,8 @@ class OP2Common(Op2Codes, F06Writer):
                 try:
                     build_obj(self.obj)
                 except AssertionError:
-                    log.error(str(self.code))
-                    log.error(self.code_information())
+                    self.log.error(str(self.code))
+                    self.log.error(self.code_information())
                     raise
 
             else:  # not vectorized

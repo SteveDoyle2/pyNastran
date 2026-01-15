@@ -36,10 +36,11 @@ AUTODESK_VERSIONS = [
 ]
 
 
-def parse_nastran_version(data: bytes, version: bytes, encoding: bytes,
+def parse_nastran_version(data: bytes, version: bytes, encoding: str,
                           log: SimpleLogger) -> tuple[str, str]:
     """parses a Nastran version string"""
     version_str = ''
+    assert isinstance(encoding, str), encoding
     if len(data) == 32:
         #self.show_data(data[:16], types='ifsdqlILQ', endian=None)
         #self.show_data(data[16:], types='ifsdqlILQ', endian=None)

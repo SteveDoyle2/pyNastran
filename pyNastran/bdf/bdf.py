@@ -1928,7 +1928,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     # multiline card is finished
 
                     if not self.allow_tabs and '\t' in (joined_lines_n := '\n'.join(card_lines)):
-                        raise RuntimeError(f'There are tabs in:\n{joined_lines_n}')
+                        tag = _get_file_tag(self, ifile_iline)
+                        raise RuntimeError(f'There are tabs in:\n{joined_lines_n}{tag}')
 
                     if self.echo and not self.force_echo_off:
                         self.log.info('Reading %s:\n' %
@@ -5303,6 +5304,24 @@ def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True,
     #     model.get_bdf_stats()
     return model
 
+
+def _get_file_tag(model: BDF, ifile_iline: int) -> str:
+    """get the filename
+
+    ifile_iline = array([194, 1], dtype=int32)
+    """
+    # print(f"ifile_iline = {ifile_iline!r}")
+    ifile, iline = ifile_iline
+    filename = model.active_filenames[ifile-1]
+    # print(f"model.save_file_structure = {model.save_file_structure}")
+    # if not model.save_file_structure:
+    #     return ''
+    # tag = '\nfiles:\n'
+    # for i, fname in enumerate(model.active_filenames):
+    #     tag += f' - {i}: {fname}\n'
+    # tag += f'\nline={iline+1} file={filename}\n'
+    tag = f'\nline={iline+1} file={filename}\n'
+    return tag
 
 def _check_replicated_cards(replicated_cards):
     """helper method for ``parse_cards_list``"""

@@ -1406,7 +1406,7 @@ class GRID(BaseCard):
             the fields that define the card
 
         """
-        list_fields = ['GRID', self.nid, self.Cp()] + list(self.xyz) + \
+        list_fields = ['GRID', self.nid, self.Cp()] + self.xyz.tolist() + \
                       [self.Cd(), self.ps, self.SEid()]
         return list_fields
 
@@ -1423,8 +1423,8 @@ class GRID(BaseCard):
         cp = set_blank_if_default(self.Cp(), 0)
         cd = set_blank_if_default(self.Cd(), 0)
         seid = set_blank_if_default(self.SEid(), 0)
-        list_fields = ['GRID', self.nid, cp] + list(self.xyz) + [cd, self.ps,
-                                                                 seid]
+        list_fields = ['GRID', self.nid, cp] + self.xyz.tolist() + [cd, self.ps,
+                                                                    seid]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

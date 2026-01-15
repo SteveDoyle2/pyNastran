@@ -12,6 +12,8 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck, PARAM
 from pyNastran.bdf.mesh_utils.convert import convert, get_scale_factors, scale_by_terms
 from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
+from pyNastran.bdf.cards.aero.zaero_interface.nastran_to_zaero import nastran_to_zaero
+
 
 pkg_path = Path(pyNastran.__path__[0])
 
@@ -76,7 +78,6 @@ class TestConvert(unittest.TestCase):
         bdf_filename = dirname / 'bwb_saero.bdf'
         zaero_filename = dirname / 'bwb_saero_zaero.inp'
         model = read_bdf(bdf_filename, log=log, validate=False)
-        from pyNastran.bdf.cards.aero.zona import nastran_to_zaero
         zaero_model = nastran_to_zaero(model, zaero_filename)
         zaero = zaero_model.zaero
         # print(zaero_model.get_bdf_stats())

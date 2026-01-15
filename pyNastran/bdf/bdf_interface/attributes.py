@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf_interface.cross_reference_obj import CrossReference
 #from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
-from pyNastran.bdf.cards.aero.zona import ZAERO
+from pyNastran.bdf.cards.aero.zaero import ZAERO
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -19,7 +19,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11
     from pyNastran.bdf.bdf import (
         Element, Property,
-        # BDF,
         CaseControlDeck,
         #params,
         PARAM, MDLPRM,

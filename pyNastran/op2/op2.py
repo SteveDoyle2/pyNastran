@@ -48,6 +48,7 @@ from pyNastran.op2.op2_interface.transforms import (
 from pyNastran.utils import check_path
 if TYPE_CHECKING:  # pragma: no cover
     from h5py import File as H5File
+    from pyNastran.op2.op2_geom import OP2Geom
 
 
 class OP2(OP2_Scalar, OP2Writer):
@@ -1562,7 +1563,7 @@ def read_op2(op2_filename: Optional[PathLike]=None,
              build_dataframe: Optional[bool]=False,
              skip_undefined_matrices: bool=True,
              mode: Optional[str]=None,
-             encoding: Optional[str]=None) -> OP2:
+             encoding: Optional[str]=None) -> OP2 | OP2Geom:
     """
     Creates the OP2 object without calling the OP2 class.
 

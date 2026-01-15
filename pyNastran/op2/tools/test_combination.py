@@ -100,6 +100,34 @@ class TestCombination(unittest.TestCase):
             mode='nx', include_results=['displacements'])
         combination_filename.unlink()
 
+    def test_op2_multi_combination_solid_shell_bar_string(self):
+        log = SimpleLogger(level='warning')
+        lines = """
+        # this is line 0. line 1 has the input subcase ids
+                 , iOP2s,     bending,  bending # op2
+                 , Subcases,  1,  1 # subcases
+        # Subcase, Name,      Scales,
+        10,        case10,    1.0, 2.0,
+        20,        case20,    1.2, 1.,
+        30,        "case 30", 1.2, 0.
+        """
+        op2_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
+        combination_filename = DIRNAME / 'combination_file.txt'
+
+        assert op2_filename.exists(), print_bad_path(op2_filename)
+        with open(combination_filename, 'w') as combination_file:
+            combination_file.write(lines)
+
+        model = read_op2(op2_filename, log=log)
+        run_load_case_multi_combinations(
+            {'bending': model}, combination_filename, log=log,
+            mode='nx')
+
+        run_load_case_multi_combinations(
+            {'bending': op2_filename}, combination_filename, log=log,
+            mode='nx', include_results=['displacements'])
+        combination_filename.unlink()
+
 
 if __name__ == '__main__':
     unittest.main()

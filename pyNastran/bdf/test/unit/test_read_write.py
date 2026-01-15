@@ -146,10 +146,14 @@ class TestReadWrite(unittest.TestCase):
 
         model.write_bdf(MESH_UTILS_PATH / 'test_mass1b.out', size=8, interspersed=False)
         model.write_bdf(MESH_UTILS_PATH / 'test_mass2b.out', size=8, interspersed=True)
+        model.write_bdf(MESH_UTILS_PATH / 'test_mass3b.out', size=8, interspersed=False, is_csv=True)
+        model.write_bdf(MESH_UTILS_PATH / 'test_mass4b.out', size=16, interspersed=False, is_csv=True)
         os.remove(MESH_UTILS_PATH / 'test_mass1a.out')
         os.remove(MESH_UTILS_PATH / 'test_mass2a.out')
         os.remove(os.path.join(MESH_UTILS_PATH, 'test_mass1b.out'))
         os.remove(os.path.join(MESH_UTILS_PATH, 'test_mass2b.out'))
+        os.remove(os.path.join(MESH_UTILS_PATH, 'test_mass3b.out'))
+        os.remove(os.path.join(MESH_UTILS_PATH, 'test_mass4b.out'))
 
     def test_punch_1(self):
         """Tests punch file reading"""

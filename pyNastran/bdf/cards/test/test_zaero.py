@@ -9,7 +9,7 @@ import pyNastran
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.bdf.cards.aero.zona import ZAERO, get_dicts
+from pyNastran.bdf.cards.aero.zaero import ZAERO, get_dicts
 
 
 IS_MATPLOTLIB = False
@@ -349,7 +349,7 @@ def get_zaero_model() -> StringIO:
 
 
 def write_raw_fields(zaero: ZAERO):
-    dicts, dicts_list = get_dicts(zaero, 'write')
+    singletons, dicts, dicts_list = get_dicts(zaero, 'write')
     for panlsts in zaero.panlsts.values():
         for panlst in panlsts:
             panlst.raw_fields()

@@ -385,7 +385,10 @@ class OP2Reader:
         else:  # pragma: no cover
             raise NotImplementedError(markers)
 
-        #print(f'mode = {mode!r} fmt={op2._nastran_format!r}')
+        # print(f'mode = {mode!r} fmt={op2._nastran_format!r} version_str={version_str!r}')
+        if version_str:
+            op2._nastran_revision = version_str
+
         if mode == 'autodesk' or op2._nastran_format == 'autodesk':
             op2.post = -4
             mode = 'autodesk'

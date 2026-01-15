@@ -71,7 +71,7 @@ from pyNastran.bdf.bdf import (BDF,
                                #CQUAD1,
                                )
 from pyNastran.bdf.cards.aero.aero import get_caero_box_grid, build_caero_paneling
-from pyNastran.bdf.cards.aero.zona import CAERO7, BODY7
+from pyNastran.bdf.cards.aero.zaero import CAERO7, BODY7
 # from pyNastran.bdf.cards.elements.shell import (
 #     CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR,
 #     CTRIA3, CTRIA6, CTRIAR,

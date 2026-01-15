@@ -101,7 +101,7 @@ if TYPE_CHECKING:  # pragma: no cover
         AERO, FLFACT, FLUTTER,
         GUST, GUST2,
         MKAERO1, MKAERO2)
-    # from pyNastran.bdf.cards.aero.zona import (
+    # from pyNastran.bdf.cards.aero.zaero import (
     #     ACOORD, AEROZ, AESURFZ, BODY7, CAERO7, MKAEROZ, PAFOIL7, PANLST1, PANLST3,
     #     SEGMESH, SPLINE1_ZAERO, SPLINE2_ZAERO, SPLINE3_ZAERO, TRIMLNK, TRIMVAR, TRIM_ZAERO,
     #     ZAERO)

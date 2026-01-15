@@ -296,6 +296,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             allow_duplicates: bool=False,
             allow_similar_eid: bool=True,
             skip_cards: Optional[list[str]]=None,
+            is_csv: bool=False,
             sort_cards: bool=True,
             stop: bool=False, nastran: str='', post: int=-1,
             dynamic_vars=None,
@@ -405,6 +406,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         is_lax_parser=is_lax_parser,
         allow_similar_eid=allow_similar_eid,
         skip_cards=skip_cards,
+        is_csv=is_csv,
         sort_cards=sort_cards,
         allow_tabs=allow_tabs,
         allow_duplicates=allow_duplicates,
@@ -451,6 +453,7 @@ def run_and_compare_fems(
         allow_duplicates: bool=False,
         allow_similar_eid: bool=True,
         skip_cards: Optional[list[str]] = None,
+        is_csv: bool=False,
         sort_cards: bool=True,
         stop: bool=False,
         nastran: str='',
@@ -537,6 +540,7 @@ def run_and_compare_fems(
             save_file_structure=save_file_structure,
             hdf5=hdf5,
             encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
+            is_csv=is_csv,
             sort_cards=sort_cards,
             limit_mesh_opt=limit_mesh_opt,
             run_pickle=run_pickle, stop=stop, name=name)
@@ -716,6 +720,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              encoding: Optional[str]=None,
              crash_cards: Optional[list[str]]=None,
              limit_mesh_opt: bool=False,
+             is_csv: bool=False,
              sort_cards: bool=True,
              safe_xref: bool=True, run_pickle: bool=False, stop: bool=False,
              name: str='') -> BDF:
@@ -852,6 +857,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
     args = {
         'size': size,
         'is_double': is_double,
+        'is_csv': is_csv,
         'sort_cards': sort_cards,
     }
     if mesh_form is None:
@@ -2298,6 +2304,9 @@ def test_bdf_argparse(argv=None):
         help='Use safe cross-reference (default=False)')
 
     parent_parser.add_argument(
+        '--csv', action='store_true',
+        help='write the BDF as a CSV (default=False)')
+    parent_parser.add_argument(
         '-p', '--punch', action='store_true',
         help='disables reading the executive and case control decks in the BDF\n'
         '(default=False -> reads entire deck)')
@@ -2474,7 +2483,7 @@ def _set_version(args: dict[str, Any]):
 
 def get_test_bdf_usage_args_examples(encoding):
     """helper method"""
-    formats = '--msc|--nx|--optistruct|--zona|--zaero|--mystran'
+    formats = '--msc|--nx|--optistruct|--zaero|--mystran'
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
@@ -2482,11 +2491,11 @@ def get_test_bdf_usage_args_examples(encoding):
     )
     usage = (
         "Usage:\n"
-        '  test_bdf [-x | --safe] [-p] [-c]       BDF_FILENAME [options]\n'
-        '  test_bdf [-x | --safe] [-p] [-c] [-d]  BDF_FILENAME [options]\n'
-        '  test_bdf [-x | --safe] [-p] [-c] [-l]  BDF_FILENAME [options]\n'
-        '  test_bdf               [-p]            BDF_FILENAME [options]\n'
-        '  test_bdf [-x | --safe] [-p] [--stop]   BDF_FILENAME [options]\n'
+        '  test_bdf [-x | --safe] [-p] [-c]             BDF_FILENAME [options]\n'
+        '  test_bdf [-x | --safe] [-p] [-c] [--double]  BDF_FILENAME [options]\n'
+        '  test_bdf [-x | --safe] [-p] [-c] [--large]   BDF_FILENAME [options]\n'
+        '  test_bdf               [-p]                  BDF_FILENAME [options]\n'
+        '  test_bdf [-x | --safe] [-p] [--stop]         BDF_FILENAME [options]\n'
         '  test_bdf -h | --help\n'
         '  test_bdf -v | --version\n' +
         options
@@ -2512,6 +2521,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --duplicate    overwrite duplicate GRIDs\n'
         '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
         '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
+        '  --csv          writes the BDF in CSV format; partial (default=False)\n'
         '  --no_similar_eid   No duplicate eids among elements, rigids, and masses\n'
         #'  --filter       Filters unused cards\n'
         '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
@@ -2577,10 +2587,19 @@ def main(argv=None):
     data['run_mcid'] = not data['skip_mcid']
     allow_similar_eid = not data['no_similar_eid']
     #print(f'allow_similar_eid = {allow_similar_eid}')
-    skip_cards = data['skip_cards']
-    skip_cards_list = [] if skip_cards is None else skip_cards.split(',')
+    if data['skip_cards'] is None:
+        skip_cards_list = []
+    else:
+        skip_cards = ','.join(data['skip_cards'])
+        try:
+            skip_cards_list = [] if skip_cards is None else skip_cards.split(',')
+        except:
+            print(f'skip_cards = {skip_cards!r}')
+            raise
     save_file_structure = data['ifile']
     sort_cards = not data['nosort']
+    is_csv = data['csv']
+    assert is_csv is False, is_csv
 
     is_double = False
     if data['double']:
@@ -2601,7 +2620,6 @@ def main(argv=None):
         debug = None
     if data['profile']:
         import pstats
-
         import cProfile
         prof = cProfile.Profile()
         prof.runcall(
@@ -2631,6 +2649,7 @@ def main(argv=None):
 
             is_lax_parser=data['lax'],
             allow_duplicates=data['duplicate'],
+            is_csv=is_csv,
             sort_cards=sort_cards,
             stop=data['stop'],
             quiet=data['quiet'],
@@ -2691,6 +2710,7 @@ def main(argv=None):
 
             is_lax_parser=data['lax'],
             allow_duplicates=data['duplicate'],
+            is_csv=is_csv,
             sort_cards=sort_cards,
             stop=data['stop'],
             quiet=data['quiet'],
