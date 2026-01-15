@@ -110,7 +110,7 @@ class TestInrel(unittest.TestCase):
         assert np.allclose(moment_out.sum(), 0.)
         # print('force_out:\n', force_out)
 
-    def _test_inrel_bar_force_linear_rotated(self):  # pragma: no cover
+    def test_inrel_bar_force_linear_rotated(self):  # pragma: no cover
         """
         inertia1 = [370.646, 4576.892, 7552.462, 0, 0, 0]
         inertia_rotated = [0, 6250, 6250, 0, 0, 0]
@@ -146,7 +146,7 @@ class TestInrel(unittest.TestCase):
         inertia = np.zeros((nnode, 6), dtype='float64')
         dforce, dmoment = inertia_relief(
             mass, xyz, inertia,
-            force, moment)
+            force, moment, debug=True)
         force_out = force + dforce
         moment_out = moment + dmoment
         # print('df:\n', dforce)
@@ -154,8 +154,8 @@ class TestInrel(unittest.TestCase):
 
         # [16.8622951, 4.21557378, 0, 4.21557378, 16.8622951]
         print(f'dm_norm = {np.linalg.norm(dmoment, axis=1)}')
-        assert np.allclose(force_out.sum(), 0.)
-        assert np.allclose(moment_out.sum(), 0.)
+        assert np.allclose(force_out.sum(), 0.), force_out.sum()
+        assert np.allclose(moment_out.sum(), 0.), moment_out.sum()
         # print('force_out:\n', force_out)
 
 
