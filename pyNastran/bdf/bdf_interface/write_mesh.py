@@ -1020,7 +1020,7 @@ class WriteMesh(BDFAttributes):
                     else:
                         bdf_file.write(node.write_card(size, is_double))
             else:
-                write_dict(bdf_file, self.nodes, size, is_double, is_long_ids, is_csv)
+                write_dict(bdf_file, self.nodes, size, is_double, is_csv, is_long_ids)
 
     # def _write_nodes_associated(self, bdf_file, size=8, is_double=False):
     #     """
@@ -1281,7 +1281,7 @@ class WriteMesh(BDFAttributes):
                         raise
         if self.plotels:
             bdf_file.write('$PLOT ELEMENTS\n')
-            write_dict(bdf_file, self.plotels, size, is_double, is_long_ids, is_csv)
+            write_dict(bdf_file, self.plotels, size, is_double, is_csv, is_long_ids)
 
     def _write_sets(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                     is_csv: bool=False,
@@ -1294,11 +1294,11 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$SETS\n')
             for (unused_id, set_obj) in sorteddict(self.sets, sort_cards):  # dict
                 bdf_file.write(set_obj.write_card(size, is_double))
-            write_list(bdf_file, self.aset, size, is_double, is_csv)
-            write_list(bdf_file, self.omits, size, is_double, is_csv)
-            write_list(bdf_file, self.bset, size, is_double, is_csv)
-            write_list(bdf_file, self.cset, size, is_double, is_csv)
-            write_list(bdf_file, self.qset, size, is_double, is_csv)
+            write_list(bdf_file, self.asets, size, is_double, is_csv, is_long_ids)
+            write_list(bdf_file, self.omits, size, is_double, is_csv, is_long_ids)
+            write_list(bdf_file, self.bsets, size, is_double, is_csv, is_long_ids)
+            write_list(bdf_file, self.csets, size, is_double, is_csv, is_long_ids)
+            write_list(bdf_file, self.qsets, size, is_double, is_csv, is_long_ids)
 
             for unused_name, usets in sorted(self.usets.items()):  # dict
                 for set_obj in usets:  # list
