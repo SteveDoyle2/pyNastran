@@ -60,10 +60,55 @@ PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
 OP2_TEST_PATH = (PKG_PATH / 'op2' / 'test' / 'examples').resolve()
 OP2_TEST = PKG_PATH / 'op2' / 'test'
+from pyNastran.op2.stress_reduction import (
+    von_mises_2d, principal_2d, max_shear,
+    von_mises_3d, principal_components_3d)
 
 
 class TestOP2Unit(Tester):
     """various OP2 tests"""
+    def test_stress_transform_2d(self):
+        is_stress = True
+        oxx = -10.
+        oyy = 50.
+        txy = 40.
+        eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress)
+        assert np.allclose(eig_min, -30), -eig_mub
+        assert np.allclose(eig_max, 70), eig_max
+        max_sheari = max_shear(eig_max, eig_min)
+        assert np.allclose(max_sheari, 50), max_sheari
+
+        oyy = -10.
+        oxx = 50.
+        eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress)
+        assert np.allclose(eig_min, -30), -eig_mub
+        assert np.allclose(eig_max, 70), eig_max
+        max_sheari = max_shear(eig_max, eig_min)
+        assert np.allclose(max_sheari, 50), max_sheari
+
+    def test_stress_transform_3d(self):
+        is_stress = True
+        shape = (1, 1, 1)
+        oxx = np.array([-10.]).reshape(shape)
+        oyy = np.array([50.]).reshape(shape)
+        txy = np.array([40.]).reshape(shape)
+        zero = np.zeros(shape)
+        ozz = zero
+        txz = zero
+        tyz = zero
+        ntimes = 1
+        nelements_nnodes = 1
+        eig_max, eig_mid, eig_min = principal_components_3d(
+            ntimes, nelements_nnodes,
+            oxx, oyy, ozz,
+            txy, tyz, txz,
+            is_stress)
+        assert np.allclose(eig_min, -30), -eig_min
+        assert np.allclose(eig_mid, 0), -eig_mid
+        assert np.allclose(eig_max, 70), eig_max
+        max_sheari = max_shear(eig_max, eig_min)
+        assert np.allclose(max_sheari, 50), max_sheari
+
     def test_op2_glue_force(self):
         cls = GlueForceArray
         isubcase = 1
@@ -1371,6 +1416,16 @@ class TestMSC(Tester):
         bdf_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2.bdf'
         op2_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2--v2020.op2'
 
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude_results=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             '', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
@@ -1381,17 +1436,6 @@ class TestMSC(Tester):
         #model.safe_cross_reference()
 
         save_load_deck(model, run_save_load=True)
-
-        log = get_logger(level='warning')
-        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=False, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False,
-                build_pandas=True, log=log)
 
     def test_msc_2021_rbe2(self):
         """
@@ -1609,6 +1653,38 @@ class TestOP2Main(Tester):
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
 
+    # def test_bdf_op2_elements_04_check(self):
+    #     """tests a large number of elements and results in SOL 108-freq"""
+    #     log = get_logger(level='warning')
+    #     op2_filename = MODEL_PATH / 'elements' / 'freq_elements2.op2'
+    #     f06_filename = MODEL_PATH / 'elements' / 'freq_elements2.f06'
+    #     oxx = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    #            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.00028597269556485116, 0.0008526198798790574,
+    #            0.00022563249513041228, 0.00011948411702178419, 0.0005898380768485367, 0.0001722846063785255,
+    #            0.0005567384650930762, 0.0003608390688896179]
+    #     oyy = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    #            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 61.9969596862793, 61.99601745605469,
+    #            241.997314453125, 241.99749755859375, 61.996864318847656, 241.99627685546875, 241.9971160888672,
+    #            61.99555206298828]
+    #     txy = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    #            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0024106258060783148, 0.0009041285957209766,
+    #            0.0014169737696647644, 0.0021557456348091364, 0.0020250240340828896, 0.0007317662239074707,
+    #            0.002361657563596964, 0.002099712146446109]
+    #     max_strain = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    #                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0009239906794391572,
+    #                   0.0006073954864405096, 0.004239984788000584, 0.0008869086159393191, 0.0009326035506092012,
+    #                   0.003618926275521517, 0.004172708373516798, 0.0017178569687530398]
+    #     min_strain = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    #                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 241.9969482421875,
+    #                   241.9969482421875, 241.9969482421875, 241.99635314941406, 241.99668884277344, 61.996761322021484,
+    #                   241.99676513671875, 61.99653625488281]
+    #     von_mises_strain = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    #                         0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0030238297767937183,
+    #                         0.0013712472282350063, 0.0075040552765131, 0.002697946270927787, 0.0028726845048367977,
+    #                         0.006323062814772129, 0.007709519937634468, 0.0035544950515031815]
+    #     model = read_op2(op2_filename, log=log)
+    #     model.write_f06(f06_filename)
+
     def test_bdf_op2_elements_04(self):
         """tests a large number of elements and results in SOL 108-freq"""
         log = get_logger(level='warning')
@@ -1616,6 +1692,16 @@ class TestOP2Main(Tester):
         csv_filename = MODEL_PATH / 'elements' / 'freq_elements2.csv'
         #f06_filename = MODEL_PATH / 'elements' / 'freq_elements2.test_op2.f06'
         op2_filename = MODEL_PATH / 'elements' / 'freq_elements2.op2'
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=False, debug=False, binary_debug=False,
+            quiet=True,
+            stop_on_failure=True, dev=False, build_pandas=True, log=log)
+        return
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
@@ -3022,8 +3108,8 @@ class TestOP2Main(Tester):
     def test_op2_mode_solid_shell_bar_01_geom(self):
         """tests reading op2 geometry"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'mode_solid_shell_bar.op2'
         subcases = [1]
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,

@@ -45,7 +45,6 @@ from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 NUMPY_INTS = {'int32', 'int64'}
 NUMPY_FLOATS = {'float32', 'float64'}
 
-
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike

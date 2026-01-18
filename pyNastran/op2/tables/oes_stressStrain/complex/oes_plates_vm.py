@@ -29,7 +29,7 @@ class ComplexPlateVMArray(OES_Object):
               -0.5, -0.8152692, 0.0, -1.321874, 0.0, -3.158516, 0.0, 5.591334,
                0.5,  1.7285730, 0.0, -7.103837, 0.0,  2.856039, 0.0, 9.497518)
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code, is_sort1: bool, isubcase: int, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)   ## why???
         self.element_node = None
         #self.code = [self.format_code, self.sort_code, self.s_code]

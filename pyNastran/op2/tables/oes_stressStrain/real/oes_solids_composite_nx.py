@@ -44,39 +44,39 @@ class RealSolidCompositeArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
-    #def update_data_components(self):
-        #ntimes, nelements_nnodes = self.data.shape[:2]
-        ## vm
-        #oxx = self.data[:, :, 0].reshape(ntimes * nelements_nnodes)
-        #oyy = self.data[:, :, 1].reshape(ntimes * nelements_nnodes)
-        #ozz = self.data[:, :, 2].reshape(ntimes * nelements_nnodes)
-        #txy = self.data[:, :, 3].reshape(ntimes * nelements_nnodes)
-        #tyz = self.data[:, :, 4].reshape(ntimes * nelements_nnodes)
-        #txz = self.data[:, :, 5].reshape(ntimes * nelements_nnodes)
-
-        ##I1 = oxx + oyy + ozz
-        ##txyz = txy**2 + tyz**2 + txz ** 2
-        ##I2 = oxx * oyy + oyy * ozz + ozz * oxx - txyz
-        ##I3 = oxx * oyy * ozz + 2 * txy * tyz * txz + oxx * tyz**2 - oyy * txz**2 - ozz * txy
-
-        ## (n_subarrays, nrows, ncols)
-        #o1, o2, o3 = calculate_principal_components(
-            #ntimes, nelements_nnodes,
-            #oxx, oyy, ozz, txy, tyz, txz,
-            #self.is_stress)
-        #ovm_sheari = calculate_ovm_shear(oxx, oyy, ozz, txy, tyz, txz, o1, o3,
-                                         #self.is_von_mises, self.is_stress)
-        #ovm_sheari2 = ovm_sheari.reshape(ntimes, nelements_nnodes)
-
-        #self.data[:, :, 6] = o1.reshape(ntimes, nelements_nnodes)
-        #self.data[:, :, 7] = o2.reshape(ntimes, nelements_nnodes)
-        #self.data[:, :, 8] = o3.reshape(ntimes, nelements_nnodes)
-        #self.data[:, :, 9] = ovm_sheari2
-
-        #A = [[doxx, dtxy, dtxz],
-             #[dtxy, doyy, dtyz],
-             #[dtxz, dtyz, dozz]]
-        #(_lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
+    # def update_data_components(self):
+    #     ntimes, nelements_nnodes = self.data.shape[:2]
+    #     # vm
+    #     oxx = self.data[:, :, 0].reshape(ntimes * nelements_nnodes)
+    #     oyy = self.data[:, :, 1].reshape(ntimes * nelements_nnodes)
+    #     ozz = self.data[:, :, 2].reshape(ntimes * nelements_nnodes)
+    #     txy = self.data[:, :, 3].reshape(ntimes * nelements_nnodes)
+    #     tyz = self.data[:, :, 4].reshape(ntimes * nelements_nnodes)
+    #     txz = self.data[:, :, 5].reshape(ntimes * nelements_nnodes)
+    #
+    #     #I1 = oxx + oyy + ozz
+    #     #txyz = txy**2 + tyz**2 + txz ** 2
+    #     #I2 = oxx * oyy + oyy * ozz + ozz * oxx - txyz
+    #     #I3 = oxx * oyy * ozz + 2 * txy * tyz * txz + oxx * tyz**2 - oyy * txz**2 - ozz * txy
+    #
+    #     # (n_subarrays, nrows, ncols)
+    #     o1, o2, o3 = principal_components_3d(
+    #         ntimes, nelements_nnodes,
+    #         oxx, oyy, ozz, txy, tyz, txz,
+    #         self.is_stress)
+    #     ovm_sheari = ovm_shear_3d(oxx, oyy, ozz, txy, tyz, txz, o1, o3,
+    #                               self.is_von_mises, self.is_stress)
+    #     ovm_sheari2 = ovm_sheari.reshape(ntimes, nelements_nnodes)
+    #
+    #     self.data[:, :, 6] = o1.reshape(ntimes, nelements_nnodes)
+    #     self.data[:, :, 7] = o2.reshape(ntimes, nelements_nnodes)
+    #     self.data[:, :, 8] = o3.reshape(ntimes, nelements_nnodes)
+    #     self.data[:, :, 9] = ovm_sheari2
+    #
+    #     A = [[doxx, dtxy, dtxz],
+    #          [dtxy, doyy, dtyz],
+    #          [dtxz, dtyz, dozz]]
+    #     (_lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
     def build(self):
         """sizes the vectorized attributes of the RealSolidArray"""

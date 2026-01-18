@@ -906,7 +906,8 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
     sort_method = op2.sort_method
     element_name_type = f'{op2.element_name}-{op2.element_type}'
 
-    if op2.format_code in [1, 3] and op2.num_wide == 17:  # real
+    if (op2.format_code in [1, 3] and op2.num_wide == 17 and  # real
+        op2.analysis_code != 5):  # frequency
         ntotal = 68 * factor  # 4*17
         nelements = ndata // ntotal
         nlayers = nelements * 2  # 2 layers per node

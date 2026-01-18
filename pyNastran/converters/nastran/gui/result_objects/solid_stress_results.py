@@ -4,7 +4,7 @@ import numpy as np
 from typing import Optional, Any, TYPE_CHECKING
 
 from pyNastran.utils.mathematics import get_abs_max
-from pyNastran.op2.stress_reduction import von_mises_2d, max_shear
+from pyNastran.op2.stress_reduction import max_shear, von_mises_3d
 
 #from pyNastran.femutils.utils import abs_nan_min_max # , pivot_table,  # abs_min_max
 #from pyNastran.bdf.utils import write_patran_syntax_dict
@@ -517,9 +517,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
         itxz = 5
         imax = 6
         imin = 8
-
         ## nodal_combine == 'Centroid':
-
         centroid_data = self.centroid_data
         if iresult == 'abs_principal': # abs max; should be good
             omax = centroid_data[itime, :, imax]
@@ -535,7 +533,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
             txy = centroid_data[itime, :, itxy]
             txz = centroid_data[itime, :, itxz]
             tyz = centroid_data[itime, :, ityz]
-            data = von_mises_3d(oxx, oyy, ozz, txy, tyz, txz)
+            data = von_mises_3d(oxx, oyy, ozz, txy, tyz, txz, self.is_stress)
         elif iresult == 'max_shear': #  probably wrong
             # not checked for strain
             omax = centroid_data[itime, :, imax]
@@ -581,7 +579,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
             txy = node_data[itime, :, itxy]
             txz = node_data[itime, :, itxz]
             tyz = node_data[itime, :, ityz]
-            datai = von_mises_3d(oxx, oyy, ozz, txy, tyz, txz)
+            datai = von_mises_3d(oxx, oyy, ozz, txy, tyz, txz, self.is_stress)
         elif iresult == 'max_shear':
             omax = node_data[itime, :, imax]
             omin = node_data[itime, :, imin]

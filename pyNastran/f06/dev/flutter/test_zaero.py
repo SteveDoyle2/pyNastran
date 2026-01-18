@@ -16,12 +16,12 @@ except ModuleNotFoundError:  # pragma: no cover
 
 try:
     import pyNastran.f06.dev.flutter.nastran_utils
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 try:
     import pyNastran.f06.dev.flutter.gui_flutter
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 import pyNastran.f06.dev.flutter.utils

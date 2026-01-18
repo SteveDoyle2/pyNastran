@@ -18,7 +18,9 @@ from pyNastran.utils.numpy_utils import float_types
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from .oes_solids import RealSolidStressArray, RealSolidStrainArray, calculate_principal_components, calculate_ovm_shear
+from .oes_solids import RealSolidStressArray, RealSolidStrainArray
+from pyNastran.op2.stress_reduction import principal_components_3d, ovm_shear_3d
+
 
 class RealSolidArrayNx(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -154,13 +156,13 @@ class RealSolidArrayNx(OES_Object):
         if self.is_von_mises:
             o1 = o3 = np.array([])
         else:
-            o1, o2, o3 = calculate_principal_components(
+            o1, o2, o3 = principal_components_3d(
                 ntimes, nelements_nnodes,
                 oxx, oyy, ozz, txy, tyz, txz,
                 self.is_stress)
             del o2
-        ovm_sheari = calculate_ovm_shear(oxx, oyy, ozz, txy, tyz, txz, o1, o3,
-                                         self.is_von_mises, self.is_stress)
+        ovm_sheari = ovm_shear_3d(oxx, oyy, ozz, txy, tyz, txz, o1, o3,
+                                  self.is_von_mises, self.is_stress)
         #ovm = np.sqrt((oxx - oyy)**2 + (oyy - ozz)**2 + (oxx - ozz)**2 +
                       #3. * (txy**2 + tyz**2 + txz ** 2))
         self.data[:, :, 6] = ovm_sheari
