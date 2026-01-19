@@ -61,7 +61,8 @@ MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
 OP2_TEST_PATH = (PKG_PATH / 'op2' / 'test' / 'examples').resolve()
 OP2_TEST = PKG_PATH / 'op2' / 'test'
 from pyNastran.op2.stress_reduction import (
-    von_mises_2d, principal_2d, max_shear,
+    von_mises_2d, principal_2d, max_shear_2d,
+    max_shear,
     von_mises_3d, principal_components_3d)
 
 
@@ -73,18 +74,57 @@ class TestOP2Unit(Tester):
         oyy = 50.
         txy = 40.
         eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress)
-        assert np.allclose(eig_min, -30), -eig_mub
+        max_sheari1 = max_shear_2d(oxx, oyy, txy, is_stress)
+        max_sheari2 = max_shear(eig_max, eig_min, is_stress)
+        assert np.allclose(eig_min, -30), eig_min
         assert np.allclose(eig_max, 70), eig_max
-        max_sheari = max_shear(eig_max, eig_min)
-        assert np.allclose(max_sheari, 50), max_sheari
+        assert np.allclose(max_sheari1, 50), max_sheari1
+        assert np.allclose(max_sheari2, 50), max_sheari2
 
+        # flip the order
         oyy = -10.
         oxx = 50.
         eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress)
-        assert np.allclose(eig_min, -30), -eig_mub
+        max_sheari1 = max_shear_2d(oxx, oyy, txy, is_stress)
+        max_sheari2 = max_shear(eig_max, eig_min, is_stress)
+        assert np.allclose(eig_min, -30), eig_min
         assert np.allclose(eig_max, 70), eig_max
-        max_sheari = max_shear(eig_max, eig_min)
-        assert np.allclose(max_sheari, 50), max_sheari
+        assert np.allclose(max_sheari1, 50), max_sheari1
+        assert np.allclose(max_sheari2, 50), max_sheari2
+
+        oxx = 0.
+        oyy = 0.
+        txy = 40.
+        eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress)
+        max_sheari1 = max_shear_2d(oxx, oyy, txy, is_stress)
+        max_sheari2 = max_shear(eig_max, eig_min, is_stress)
+        assert np.allclose(eig_min, -40.), eig_min
+        assert np.allclose(eig_max, 40.), eig_max
+        assert np.allclose(max_sheari1, 40.), max_sheari1
+        assert np.allclose(max_sheari2, 40.), max_sheari2
+
+    def test_strain_transform_2d(self):
+        oxx = -10.
+        oyy = 50.
+        txy = 40.
+        eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress=False)
+        max_sheari1 = max_shear_2d(oxx, oyy, txy, is_stress=False)
+        max_sheari2 = max_shear(eig_max, eig_min, is_stress=False)
+        assert np.allclose(eig_min, -16.055512754639892), eig_min
+        assert np.allclose(eig_max, 56.05551275463989), eig_max
+        assert np.allclose(max_sheari1, 2*36.05551275463989), max_sheari1
+        assert np.allclose(max_sheari2, 2*36.05551275463989), max_sheari2
+
+        oxx = 0.
+        oyy = 0.
+        txy = 40.
+        eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress=False)
+        max_sheari1 = max_shear_2d(oxx, oyy, txy, is_stress=False)
+        max_sheari2 = max_shear(eig_max, eig_min, is_stress=False)
+        assert np.allclose(eig_min, -20.), eig_min
+        assert np.allclose(eig_max, 20.), eig_max
+        assert np.allclose(max_sheari1, 40.), max_sheari1
+        assert np.allclose(max_sheari2, 40.), max_sheari2
 
     def test_stress_transform_3d(self):
         is_stress = True
@@ -103,10 +143,10 @@ class TestOP2Unit(Tester):
             oxx, oyy, ozz,
             txy, tyz, txz,
             is_stress)
+        max_sheari = max_shear(eig_max, eig_min, is_stress)
         assert np.allclose(eig_min, -30), -eig_min
         assert np.allclose(eig_mid, 0), -eig_mid
         assert np.allclose(eig_max, 70), eig_max
-        max_sheari = max_shear(eig_max, eig_min)
         assert np.allclose(max_sheari, 50), max_sheari
 
     def test_op2_glue_force(self):
@@ -588,9 +628,8 @@ class TestSATKOP2(Tester):
         which tests OUGPK1, OEFPK1 RMS results
         """
         #log = get_logger(level='info')
-        #bdf_filename = os.path.join(MODEL_PATH, 'satk', 'pn_mwe_s-solution_1.dat')
-        op2_filename = os.path.join(MODEL_PATH, 'satk',
-                                    'pn_mwe_s-response_dynamics_1-random_base_excitation_1.op2')
+        #bdf_filename = MODEL_PATH / 'satk' / 'pn_mwe_s-solution_1.dat'
+        op2_filename = MODEL_PATH / 'satk' / 'pn_mwe_s-response_dynamics_1-random_base_excitation_1.op2'
 
         #  can't parse replication
         # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1143,7 +1182,7 @@ class TestNX(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=exclude_results,
                 short_stats=False,
-                compare=False, debug=True, binary_debug=True,
+                compare=True, debug=True, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
@@ -2805,35 +2844,6 @@ class TestOP2Main(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
-    def test_bdf_op2_other_32(self):
-        """checks 1-elm--pcomp-mat2-pdistb.op2, which tests ComplexLayeredCompositeStressArray12"""
-        log = get_logger(level='warning')
-        bdf_filename = MODEL_PATH / 'other' / '1-elm--pcomp-mat2-pdistb.bdf'
-        op2_filename = MODEL_PATH / 'other' / '1-elm--pcomp-mat2-pdistb.op2'
-
-        # can't parse replication
-        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-        #     '', bdf_filename, log=log)
-        # diff_cards2 = list(set(diff_cards))
-        # diff_cards2.sort()
-        # assert len(diff_cards2) == 0, diff_cards2
-
-        # unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
-        # model.safe_cross_reference()
-
-        # save_load_deck(model, run_save_load=False)
-
-        log = get_logger(level='warning')
-        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=False, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False,
-                build_pandas=True, log=log)
-
     def test_bdf_op2_other_31(self):
         """checks htrussx.bdf, which tests getting rid of the Panel"""
         log = get_logger(level='warning')
@@ -2863,14 +2873,130 @@ class TestOP2Main(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
+    def test_bdf_op2_other_32(self):
+        """checks 1-elm--pcomp-mat2-pdistb.op2, which tests ComplexLayeredCompositeStressArray12"""
+        log = get_logger(level='warning')
+        bdf_filename = MODEL_PATH / 'other' / '1-elm--pcomp-mat2-pdistb.bdf'
+        op2_filename = MODEL_PATH / 'other' / '1-elm--pcomp-mat2-pdistb.op2'
+
+        # can't parse replication
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
+
+        # unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        # model.safe_cross_reference()
+
+        # save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude_results=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
+    def test_bdf_op2_other_33(self):
+        """checks real_strain_energy_4"""
+        log = get_logger(level='warning')
+        # bdf_filename = MODEL_PATH / 'other' / 'rs321h.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'rs321h.op2'
+
+        # can't parse replication
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
+
+        # unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        # model.safe_cross_reference()
+
+        # save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude_results=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
+    def test_bdf_op2_other_34(self):
+        """checks oes_weldp_msc_real_8"""
+        log = get_logger(level='warning')
+        # bdf_filename = MODEL_PATH / 'other' / 'swelpt26.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'swelpt26.op2'
+
+        # can't parse replication
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
+
+        # unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        # model.safe_cross_reference()
+
+        # save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude_results=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
+    def test_bdf_op2_other_35(self):
+        """checks ??"""
+        log = get_logger(level='warning')
+        # bdf_filename = MODEL_PATH / 'other' / 'tb5pfstt.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'tb5pfstt.op2'
+
+        # can't parse replication
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
+
+        # unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        # model.safe_cross_reference()
+
+        # save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude_results=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
     def test_bdf_op2_64_bit(self):
         """
         checks d173.bdf, which tests MSC Nastran 64-bit without the
         op2.is_interlaced flag
         """
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'msc', '64_bit', 'd173.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'msc', '64_bit', 'd173.op2')
+        bdf_filename = MODEL_PATH / 'msc' / '64_bit' / 'd173.bdf'
+        op2_filename = MODEL_PATH / 'msc' / '64_bit' / 'd173.op2'
 
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             '', bdf_filename, log=log)
@@ -2931,8 +3057,8 @@ class TestOP2Main(Tester):
         EXTRN
         """
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'extse04c.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'superelements', 'extse04c.op2')
+        bdf_filename = MODEL_PATH / 'superelements' / 'extse04c.bdf'
+        op2_filename = MODEL_PATH / 'superelements' / 'extse04c.op2'
 
         #  can't parse replication
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -3051,8 +3177,8 @@ class TestOP2Main(Tester):
     @unittest.skipIf(not IS_H5PY, "No h5py")
     def test_op2_solid_bending_02(self):
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'solid_bending')
-        op2_filename = os.path.join(folder, 'solid_bending.op2')
+        folder = MODEL_PATH / 'solid_bending'
+        op2_filename = folder / 'solid_bending.op2'
         op2 = OP2(debug=False, log=log, debug_file=None, mode=None)
         op2.load_as_h5 = True
         op2.read_op2(op2_filename=op2_filename, combine=True,
@@ -3090,9 +3216,9 @@ class TestOP2Main(Tester):
     def test_op2_solid_shell_bar_01_geom(self):
         """tests reading op2 geometry"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
-        f06_filename = os.path.join(folder, 'static_solid_shell_bar.test_op2.f06')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'static_solid_shell_bar.op2'
+        f06_filename = folder / 'static_solid_shell_bar.test_op2.f06'
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True,
             write_f06=True, write_op2=False,
@@ -3126,8 +3252,8 @@ class TestOP2Main(Tester):
     def test_op2_buckling_solid_shell_bar_01_geom(self):
         """single subcase buckling"""
         log = SimpleLogger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'buckling_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'buckling_solid_shell_bar.op2'
         subcases = 1
         op2 = read_op2_geom(op2_filename, debug=False, subcases=subcases)
         op2, unused_is_passed = run_op2(
@@ -3139,7 +3265,7 @@ class TestOP2Main(Tester):
             quiet=True, stop_on_failure=True,
             dev=False, log=log)
 
-        f06_filename = os.path.join(folder, 'buckling_solid_shell_bar.test_op2_sort2.f06')
+        f06_filename = folder / 'buckling_solid_shell_bar.test_op2_sort2.f06'
         op2.write_f06(f06_filename, is_mag_phase=False, is_sort1=False,
                       #delete_objects=True,
                       end_flag=False, quiet=True,
@@ -3151,8 +3277,8 @@ class TestOP2Main(Tester):
     def test_op2_buckling_solid_shell_bar_02_geom(self):
         """multi subcase buckling"""
         log = SimpleLogger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'buckling2_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'buckling2_solid_shell_bar.op2'
         unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
         subcases = 1
         op2 = read_op2_geom(op2_filename, debug=False, subcases=subcases, log=log)
@@ -3201,9 +3327,9 @@ class TestOP2Main(Tester):
     def test_op2_transient_solid_shell_bar_01_geom(self):
         """transient test"""
         log = SimpleLogger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
-        f06_filename = os.path.join(folder, 'transient_solid_shell_bar.test_op2.f06')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'transient_solid_shell_bar.op2'
+        f06_filename = folder / 'transient_solid_shell_bar.test_op2.f06'
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=False, write_op2=False,
@@ -3236,10 +3362,10 @@ class TestOP2Main(Tester):
     def test_op2_transfer_function_01(self):
         """tests the transfer function cards work"""
         log = SimpleLogger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'transfer_function')
-        #bdf_filename = os.path.join(folder, 'actuator_tf_modeling.bdf')
-        op2_filename = os.path.join(folder, 'actuator_tf_modeling.op2')
-        f06_filename = os.path.join(folder, 'freq_solid_shell_bar.test_op2.f06')
+        folder = MODEL_PATH / 'transfer_function'
+        #bdf_filename = folder / 'actuator_tf_modeling.bdf'
+        op2_filename = folder / 'actuator_tf_modeling.op2'
+        f06_filename = folder / 'freq_solid_shell_bar.test_op2.f06'
 
         unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
 
@@ -3274,9 +3400,9 @@ class TestOP2Main(Tester):
     def test_monpnt3(self):
         """creates the MONPNT3 table"""
         log = SimpleLogger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'aero', 'monpnt3')
-        op2_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.op2')
-        f06_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.test_op2.f06')
+        folder = MODEL_PATH / 'aero' / 'monpnt3'
+        op2_filename = folder / 'Monitor_Points_data_LINE5000000_10FREQs.op2'
+        f06_filename = folder / 'Monitor_Points_data_LINE5000000_10FREQs.test_op2.f06'
         op2 = OP2Geom(log=log, debug=False, debug_file='temp.debug')
         op2.read_op2(op2_filename)
         monitor3 = op2.op2_results.monitor3
@@ -3289,9 +3415,9 @@ class TestOP2Main(Tester):
     def test_op2_solid_shell_bar_01(self):
         """tests sol_101_elements/static_solid_shell_bar.op2"""
         log = SimpleLogger(level='warning')
-        op2_filename = os.path.join('static_solid_shell_bar.op2')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, op2_filename)
+        op2_filename = 'static_solid_shell_bar.op2'
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / op2_filename
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -3395,9 +3521,9 @@ class TestOP2Main(Tester):
     def test_op2_solid_shell_bar_01_straincurvature(self):
         """tests sol_101_elements/static_solid_shell_bar_straincurve.op2"""
         log = SimpleLogger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        unused_bdf_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve.bdf')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        unused_bdf_filename = folder / 'static_solid_shell_bar_straincurve.bdf'
+        op2_filename = folder / 'static_solid_shell_bar_straincurve.op2'
         make_geom = False
         write_bdf = False
         write_f06 = False
@@ -3446,9 +3572,9 @@ class TestOP2Main(Tester):
     def test_op2_solid_shell_bar_01_fiberdistance(self):
         """tests sol_101_elements/static_solid_shell_bar_fiberdist.op2"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        #bdf_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist.bdf')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        #bdf_filename = folder / 'static_solid_shell_bar_fiberdist.bdf'
+        op2_filename = folder / 'static_solid_shell_bar_fiberdist.op2'
         make_geom = False
         write_bdf = False
         write_f06 = False
@@ -3496,9 +3622,9 @@ class TestOP2Main(Tester):
     def test_op2_solid_shell_bar_01_straincurvature_shear(self):
         """tests sol_101_elements/static_solid_shell_bar_straincurve_shear.op2"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        #bdf_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve_shear.bdf')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve_shear.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        #bdf_filename = folder / 'static_solid_shell_bar_straincurve_shear.bdf'
+        op2_filename = folder / 'static_solid_shell_bar_straincurve_shear.op2'
         make_geom = False
         write_bdf = False
         write_f06 = False
@@ -3545,9 +3671,9 @@ class TestOP2Main(Tester):
     def test_op2_solid_shell_bar_01_fiberdistance_shear(self):
         """tests sol_101_elements/static_solid_shell_bar_fiberdist_shear.op2"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        #bdf_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist_shear.bdf')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist_shear.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        #bdf_filename = folder / 'static_solid_shell_bar_fiberdist_shear.bdf'
+        op2_filename = folder / 'static_solid_shell_bar_fiberdist_shear.op2'
         make_geom = False
         write_bdf = False
         write_f06 = False
@@ -3594,8 +3720,8 @@ class TestOP2Main(Tester):
     def test_op2_solid_shell_bar_mode(self):
         """tests sol_101_elements/mode_solid_shell_bar.op2"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'mode_solid_shell_bar.op2'
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -3664,8 +3790,8 @@ class TestOP2Main(Tester):
     def test_op2_solid_shell_bar_buckling(self):
         """tests sol_101_elements/buckling_solid_shell_bar.op2"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'buckling_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'buckling_solid_shell_bar.op2'
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -3742,8 +3868,8 @@ class TestOP2Main(Tester):
     def test_op2_solid_shell_bar_freq(self):
         """tests sol_101_elements/freq_solid_shell_bar.op2"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'freq_solid_shell_bar.op2'
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -3844,8 +3970,8 @@ class TestOP2Main(Tester):
                        OQG1, OUGV1, OGPFB1, OEF1X, OES1X1, OSTR1X, OPG1
         """
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'transient_solid_shell_bar.op2'
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -3950,7 +4076,7 @@ class TestOP2Main(Tester):
         write_bdf = False
         write_f06 = False
         log = get_logger(level='warning')
-        op2_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.op2')
+        op2_filename = MODEL_PATH / 'plate_py' / 'plate_py.op2'
 
         argv = ['test_op2', op2_filename, '-tgc', '--quiet', '--safe']
         test_op2(argv, show_args=False)
@@ -4009,9 +4135,8 @@ class TestOP2Main(Tester):
 
     def test_op2_good_sine_02(self):
         """tests freq_sine/good_sine.op2"""
-        folder = os.path.abspath(os.path.join(MODEL_PATH))
-        bdf_filename = os.path.join(folder, 'freq_sine', 'good_sine.dat')
-        op2_filename = os.path.join(folder, 'freq_sine', 'good_sine.op2')
+        bdf_filename = MODEL_PATH / 'freq_sine' / 'good_sine.dat'
+        op2_filename = MODEL_PATH / 'freq_sine' / 'good_sine.op2'
         #make_geom = False
         #write_bdf = False
         #write_f06 = True
@@ -4032,9 +4157,8 @@ class TestOP2Main(Tester):
 
     def test_op2_bcell_01(self):
         """tests other/bcell9p0.op2"""
-        folder = os.path.abspath(os.path.join(MODEL_PATH))
-        bdf_filename = os.path.join(folder, 'other', 'bcell9p0.bdf')
-        op2_filename = os.path.join(folder, 'other', 'bcell9p0.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'bcell9p0.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'bcell9p0.op2'
         #make_geom = False
         #write_bdf = False
         #write_f06 = True
@@ -4213,8 +4337,7 @@ class TestOP2Main(Tester):
         # subcase : times
         times = {1: [2, 3]}
         model.set_transient_times(times)
-        op2_filename = os.path.abspath(os.path.join(MODEL_PATH, 'sol_101_elements',
-                                                    'mode_solid_shell_bar.op2'))
+        op2_filename = MODEL_PATH / 'sol_101_elements' / 'mode_solid_shell_bar.op2'
         model.read_op2(op2_filename, combine=True, build_dataframe=False,
                        skip_undefined_matrices=False,
                        encoding=None)
@@ -4294,7 +4417,7 @@ class TestOP2Main(Tester):
         log = get_logger(level='warning')
         folder = MODEL_PATH / 'random'
         op2_filename = folder / 'rms_tri_oesrmx1.op2'
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
         unused_op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True, read_bdf=None, write_f06=True,
@@ -4307,9 +4430,9 @@ class TestOP2Main(Tester):
     def test_aero_cpmopt(self):
         """test optimization with multiple GEOM1 tables and multiple CSTM tables"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'aero')
-        op2_filename = os.path.join(folder, 'cpmopt.op2')
-        bdf_filename = os.path.join(folder, 'cpmopt.bdf')
+        folder = MODEL_PATH / 'aero'
+        op2_filename = folder / 'cpmopt.op2'
+        bdf_filename = folder / 'cpmopt.bdf'
         #unused_op2 = read_op2_geom(op2_filename, debug=False)
         read_bdf(bdf_filename, debug=False)
 
@@ -4324,8 +4447,8 @@ class TestOP2Main(Tester):
     def test_ogs(self):
         """test grid_point_stresses"""
         log = get_logger(level='warning')
-        op2_filename = os.path.join(MODEL_PATH, 'ogs', 'ogs.op2')
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        op2_filename = MODEL_PATH / 'ogs' / 'ogs.op2'
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
@@ -4339,8 +4462,8 @@ class TestOP2Main(Tester):
     def test_ogstr(self):
         """test grid_point_strains"""
         log = get_logger(level='warning')
-        op2_filename = os.path.join(MODEL_PATH, 'ogs', 'nx_ogstr.op2')
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        op2_filename = MODEL_PATH / 'ogs' / 'nx_ogstr.op2'
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
@@ -4354,12 +4477,12 @@ class TestOP2Main(Tester):
     def test_cbeam3_cbend(self):
         """test CBEAM3/CBEND"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'b3bend.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'b3bend.op2'
         model = read_bdf(bdf_filename, debug=False, log=log)
         save_load_deck(model)
 
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
@@ -4373,9 +4496,9 @@ class TestOP2Main(Tester):
     def test_ougv1pat(self):
         """test OUGV1PAT table"""
         log = get_logger(level='warning')
-        op2_filename1 = os.path.join(OP2_TEST_PATH, 'ougv1pat', 'winkel_2005r3_ougcord_basic.op2')
-        op2_filename2 = os.path.join(OP2_TEST_PATH, 'ougv1pat', 'winkel_2013.1_ougcord_basic.op2')
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        op2_filename1 = OP2_TEST_PATH / 'ougv1pat' / 'winkel_2005r3_ougcord_basic.op2'
+        op2_filename2 = OP2_TEST_PATH / 'ougv1pat' / 'winkel_2013.1_ougcord_basic.op2'
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
@@ -4397,10 +4520,10 @@ class TestOP2Main(Tester):
     def test_xsop2dir(self):
         """test NX 2019 XSOP2DIR"""
         log = get_logger(level='warning')
-        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'extse04c_cnv2_0.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'extse04c_cnv2_0.op2')
+        #bdf_filename = MODEL_PATH / 'other' / 'extse04c_cnv2_0.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'extse04c_cnv2_0.op2'
         #model = read_bdf(bdf_filename, encoding='ascii', debug=False, log=log)
-        #bdf_filename_out = os.path.join(MODEL_PATH, 'other', 'extse04c_cnv2_0.bdf')
+        #bdf_filename_out = MODEL_PATH / 'other' / 'extse04c_cnv2_0.bdf'
         #model.write_bdf(bdf_filename_out)
         #os.remove(bdf_filename_out)
 
@@ -4415,8 +4538,8 @@ class TestOP2Main(Tester):
     def test_sol_106(self):
         """tests SOL 106 pandas bug"""
         log = get_logger(level='warning')
-        op2_filename1 = os.path.join(MODEL_PATH, 'bugs', 'sol_106_pandas', 'test.op2')
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        op2_filename1 = MODEL_PATH / 'bugs' / 'sol_106_pandas' / 'test.op2'
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         WRITE_OP2 = False
@@ -4431,8 +4554,8 @@ class TestOP2Main(Tester):
     # def test_bdf_op2_random_small_plate(self):
     #     """checks small_plate.op2, which tests PSD tables"""
     #     log = get_logger(level='info')
-    #     #bdf_filename = os.path.join(MODEL_PATH, 'small_plate', 'small_plate.dat')
-    #     op2_filename = os.path.join(MODEL_PATH, 'small_plate', 'small_plate.op2')
+    #     #bdf_filename = MODEL_PATH / 'small_plate' / 'small_plate.dat'
+    #     op2_filename = MODEL_PATH / 'small_plate' / 'small_plate.op2'
     #
     #     can't parse replication
     #     unused_fem1, unused_fem2, diff_cards = self.run_bdf(

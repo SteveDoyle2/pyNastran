@@ -371,7 +371,7 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
             #return
         set_as_sort1(self)
 
-    def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+    def add_sort1(self, dt, node_id, pressure, s1, s2, s3):
         """unvectorized method for adding SORT1 transient data"""
         assert self.sort_method == 1, self
         assert isinstance(node_id, int) and node_id > 0, 'dt=%s node_id=%s' % (dt, node_id)
@@ -380,11 +380,11 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
 
         # the times/freqs
         self._times[self.itime] = dt
-        self.node_gridtype[self.itotal, :] = [node_id, grid_type]
-        self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
+        self.node_gridtype[self.itotal, 0] = node_id
+        self.data[self.itime, self.itotal, :] = [pressure, s1, s2, s3]
         self.itotal += 1
 
-    def add_sort2(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+    def add_sort2(self, dt, node_id, pressure, s1, s2, s3):
         assert self.is_sort2, self
         #if node_id < 1:
             #msg = self.code_information()
@@ -398,9 +398,8 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
         # itotal - the time/frequency step
         # itime - the node number
         #print('itime=%s' % self.itime)
-        self.node_gridtype[self.itime, :] = [node_id, grid_type]
-        self.data[self.itotal, self.itime, :] = [v1, v2, v3, v4, v5, v6]
-
+        self.node_gridtype[self.itime, :] = [node_id, 0]
+        self.data[self.itotal, self.itime, :] = [pressure, s1, s2, s3]
         self.itotal += 1
         #self.itime += 1
 

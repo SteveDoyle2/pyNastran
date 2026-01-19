@@ -230,7 +230,7 @@ def oes_cplstn6_real_26(op2: OP2, data: bytes,
     name = 'CPLSTN6'
     fmt = op2._analysis_code_fmt + b'4s i5f'
     struct_cen = Struct(op2._endian + fmt)
-    struct_node = Struct(op2._endian + mapfmt(b'i5f', op2.fmt))
+    struct_node = Struct(op2._endian + mapfmt(b'i5f', op2.size))
     ntotal1 = (2 + 6) * op2.size
     ntotal2 = 6 * op2.size
     for unused_i in range(nelements):

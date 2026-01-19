@@ -213,7 +213,7 @@ class OBC:
                 nid_device, pressure, s1, s2, s3 = struct1.unpack(edata)
                 nid = nid_device // 10
                 #out2 = [nid, pressure, s1, s2, s3]
-                #obj.add_sort1(nid, pressure, s1, s2, s3)
+                obj.add_sort1(dt, nid, pressure, s1, s2, s3)
                 #print(nid, pressure, s1, s2, s3)
                 n += ntotal
             #self.show_data(data)

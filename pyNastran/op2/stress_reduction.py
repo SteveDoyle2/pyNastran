@@ -61,17 +61,20 @@ def max_shear_2d(oxx: np.ndarray,
         max_sheari = np.sqrt((oxx - oyy) ** 2 / 4 + txy ** 2)
     else:
         # max_shear = np.sqrt((oxx - oyy) ** 2 + txy ** 2)
-        max_sheari = 0.5 * np.sqrt((oxx - oyy) ** 2 + txy ** 2)
+        max_sheari = np.sqrt((oxx - oyy) ** 2 + txy ** 2)
     return max_sheari
 
 @underflow
 def max_shear(omax: np.ndarray,
-              omin: np.ndarray) -> np.ndarray:
+              omin: np.ndarray, is_stress: bool) -> np.ndarray:
     """
     not verified for stress/strain
     same as Tresca?
     """
-    max_sheari = np.abs(omax - omin) / 2.
+    if is_stress:
+        max_sheari = np.abs(omax - omin) / 2.
+    else:
+        max_sheari = np.abs(omax - omin)
     return max_sheari
 
 
@@ -83,7 +86,6 @@ def von_mises_2d(oxx: np.ndarray,
     """verified for stress/strain"""
     if is_stress:
         ovm = np.sqrt(oxx**2 + oyy**2 - oxx*oyy + 3*(txy**2) )
-        assert np.all(np.isfinite(ovm))
     else:
         # center = (oxx + oyy) / 2
         # radius = np.sqrt((oxx - oyy) ** 2 / 4 + txy ** 2 / 4)
@@ -106,7 +108,6 @@ def ovm_shear_2d(oxx: np.ndarray,
         ovm_shear = von_mises_2d(oxx, oyy, txy, is_stress)
     else:
         # max shear
-        # ovm_shear = (o1 - o2) / 2.
         ovm_shear = max_shear_2d(oxx, oyy, txy, is_stress)
     return ovm_shear
 
@@ -123,7 +124,7 @@ def principal_2d(oxx: np.ndarray,
         radius = np.sqrt((oxx - oyy) ** 2 / 4 + txy ** 2)
     else:
         center = (oxx + oyy) / 2
-        radius = np.sqrt((oxx - oyy) ** 2 / 4 + txy ** 2 / 4)
+        radius = 0.5 * np.sqrt((oxx - oyy) ** 2 + txy ** 2)
     eig_max = center + radius
     eig_min = center - radius
     return eig_max, eig_min
