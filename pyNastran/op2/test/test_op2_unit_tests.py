@@ -4254,7 +4254,7 @@ class TestOP2Main(Tester):
         log = get_logger(level='warning')
         op2_filename = MODEL_PATH / 'plate_py' / 'plate_py.op2'
 
-        argv = ['test_op2', op2_filename, '-tgc', '--quiet', '--safe']
+        argv = ['test_op2', str(op2_filename), '-tgc', '--quiet', '--safe']
         test_op2(argv, show_args=False)
 
         read_op2(op2_filename, log=log)
