@@ -1355,7 +1355,7 @@ class OUG:
         """
         op2 = self.op2
         if op2.thermal == 0:
-            if op2.table_code == 1:
+            if op2.table_code in {1, 701}:
                 result_name = 'ato.displacements'
                 obj = RealDisplacementArray
                 assert op2.table_name in [b'OUGATO1', b'OUGATO2'], 'op2.table_name=%r' % op2.table_name

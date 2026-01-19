@@ -4991,7 +4991,7 @@ class GEOM2:
         141.0, 1.0, 186.0, 71.4000015258789, 141.0, 1.0, 268.0, -15.800000190734863, 223.0, 1.0, 268.0, 63.20000076293945, 223.0, 1.0, 368.0, -13.300000190734863, 323.0, 1.0,
         368.0, 53.20000076293945, 323.0, 1.0, 458.0, -11.050000190734863, 413.0, 1.0, 458.0, 44.20000076293945, 413.0)
         """
-        self.op2.log.info('geom skipping GENEL in GEOM2')
+        self.op2.log.warning('geom skipping GENEL in GEOM2')
         #op2.log.info(f'geom skipping GENEL in GEOM2; len(data)={len(data)-12}')
         #print(n)
         ints = np.frombuffer(data[n:], dtype='int32').copy()
@@ -5007,20 +5007,20 @@ class GEOM2:
             idelta1 = iminus1[1]
             # print('idelta0', idelta0)
             uc = ints[i+1:i+1+idelta0].reshape(idelta0//2, 2)
-            print(uc)
+            # print(uc)
             j = i + 1 + idelta0 + 1
             #2 UI  I Independent grid point identification number
             #3 CI  I Component number
             #Words 2 through 3 repeat until End of Record
 
             nrows = ints[j]
-            print('nrows=', nrows)
+            # print(f'nrows={nrows:d}')
             mucd = ints[j:i+1+idelta1]
             mc = mucd[0]
             nucd = len(mucd) - 1
             ucd = mucd[1:].reshape(nucd//2, 2)
-            print(f'M(c) = {mc}')
-            print(ucd)
+            # print(f'M(c) = {mc}')
+            # print(ucd)
             i = i + 1 + idelta1 + 1
             #4 M(C) I Number of rows and columns in K or Z and rows in S
             #5 UD   I Dependent grid point identification number
@@ -5028,7 +5028,7 @@ class GEOM2:
             #Words 5 through 6 repeat until End of Record
 
             # ---------------
-            print('-----------------')
+            # print('-----------------')
 
             #7 N(C)  I Number of columns in S (4)
             #8 F     I 1 means Z, 2 means K -> Z
@@ -5048,7 +5048,7 @@ class GEOM2:
             nc = ints[i]
             f = ints[i+1]
             i += 2
-            print(f'nc={nc} f={f}')
+            # print(f'nc={nc} f={f}')
             #print(ints[i:].min())
             #print(ints[i+55])
             #print(floats[i:i+55].tolist())

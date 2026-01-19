@@ -204,7 +204,7 @@ class ComplexWeldArray(OES_Object):
                     min_b = self.data[itime, :, 4]
                     max_shear = self.data[itime, :, 5]
                     bearing = self.data[itime, :, 6]
-                    assert len(eids) == len(force_x)
+                    assert len(eids) == len(axial)
                     assert len(axial) > 0, axial
                     for eid, axiali, max_ai, min_ai, max_bi, min_bi, max_sheari, bearingi in zip(eids, axial, max_a, min_a, max_b, min_b, max_shear, bearing):
                         assert isinstance(eid, integer_types), 'eid=%s type=%s' % (eid, type(eid))

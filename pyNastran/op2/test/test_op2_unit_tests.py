@@ -76,10 +76,12 @@ class TestOP2Unit(Tester):
         eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress)
         max_sheari1 = max_shear_2d(oxx, oyy, txy, is_stress)
         max_sheari2 = max_shear(eig_max, eig_min, is_stress)
+        ovm = von_mises_2d(oxx, oyy, txy, is_stress)
         assert np.allclose(eig_min, -30), eig_min
         assert np.allclose(eig_max, 70), eig_max
         assert np.allclose(max_sheari1, 50), max_sheari1
         assert np.allclose(max_sheari2, 50), max_sheari2
+        assert np.allclose(ovm, 88.88194417315589), ovm
 
         # flip the order
         oyy = -10.
@@ -87,10 +89,12 @@ class TestOP2Unit(Tester):
         eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress)
         max_sheari1 = max_shear_2d(oxx, oyy, txy, is_stress)
         max_sheari2 = max_shear(eig_max, eig_min, is_stress)
+        ovm = von_mises_2d(oxx, oyy, txy, is_stress)
         assert np.allclose(eig_min, -30), eig_min
         assert np.allclose(eig_max, 70), eig_max
         assert np.allclose(max_sheari1, 50), max_sheari1
         assert np.allclose(max_sheari2, 50), max_sheari2
+        assert np.allclose(ovm, 88.88194417315589), ovm
 
         oxx = 0.
         oyy = 0.
@@ -98,10 +102,25 @@ class TestOP2Unit(Tester):
         eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress)
         max_sheari1 = max_shear_2d(oxx, oyy, txy, is_stress)
         max_sheari2 = max_shear(eig_max, eig_min, is_stress)
+        ovm = von_mises_2d(oxx, oyy, txy, is_stress)
         assert np.allclose(eig_min, -40.), eig_min
         assert np.allclose(eig_max, 40.), eig_max
         assert np.allclose(max_sheari1, 40.), max_sheari1
         assert np.allclose(max_sheari2, 40.), max_sheari2
+        assert np.allclose(ovm, 69.2820323027551), ovm
+
+        oxx = -20.
+        oyy = -20.
+        txy = 0.
+        eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress)
+        max_sheari1 = max_shear_2d(oxx, oyy, txy, is_stress)
+        max_sheari2 = max_shear(eig_max, eig_min, is_stress)
+        ovm = von_mises_2d(oxx, oyy, txy, is_stress)
+        assert np.allclose(eig_min, -20.), eig_min
+        assert np.allclose(eig_max, -20.), eig_max
+        assert np.allclose(max_sheari1, 0.), max_sheari1
+        assert np.allclose(max_sheari2, 0.), max_sheari2
+        assert np.allclose(ovm, 20.), ovm
 
     def test_strain_transform_2d(self):
         oxx = -10.
@@ -110,10 +129,12 @@ class TestOP2Unit(Tester):
         eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress=False)
         max_sheari1 = max_shear_2d(oxx, oyy, txy, is_stress=False)
         max_sheari2 = max_shear(eig_max, eig_min, is_stress=False)
+        ovm = von_mises_2d(oxx, oyy, txy, is_stress=False)
         assert np.allclose(eig_min, -16.055512754639892), eig_min
         assert np.allclose(eig_max, 56.05551275463989), eig_max
-        assert np.allclose(max_sheari1, 2*36.05551275463989), max_sheari1
-        assert np.allclose(max_sheari2, 2*36.05551275463989), max_sheari2
+        assert np.allclose(max_sheari1, 72.11102550927978), max_sheari1
+        assert np.allclose(max_sheari2, 72.11102550927978), max_sheari2
+        assert np.allclose(ovm, 43.71625682868), ovm
 
         oxx = 0.
         oyy = 0.
@@ -121,10 +142,25 @@ class TestOP2Unit(Tester):
         eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress=False)
         max_sheari1 = max_shear_2d(oxx, oyy, txy, is_stress=False)
         max_sheari2 = max_shear(eig_max, eig_min, is_stress=False)
+        ovm = von_mises_2d(oxx, oyy, txy, is_stress=False)
         assert np.allclose(eig_min, -20.), eig_min
         assert np.allclose(eig_max, 20.), eig_max
         assert np.allclose(max_sheari1, 40.), max_sheari1
         assert np.allclose(max_sheari2, 40.), max_sheari2
+        assert np.allclose(ovm, 23.094010767585033), ovm
+
+        oxx = -20.
+        oyy = -20.
+        txy = 0.
+        eig_max, eig_min = principal_2d(oxx, oyy, txy, is_stress=False)
+        max_sheari1 = max_shear_2d(oxx, oyy, txy, is_stress=False)
+        max_sheari2 = max_shear(eig_max, eig_min, is_stress=False)
+        ovm = von_mises_2d(oxx, oyy, txy, is_stress=False)
+        assert np.allclose(eig_min, -20.), eig_min
+        assert np.allclose(eig_max, -20.), eig_max
+        assert np.allclose(max_sheari1, 0.), max_sheari1
+        assert np.allclose(max_sheari2, 0.), max_sheari2
+        assert np.allclose(ovm, 13.333333333333334), ovm
 
     def test_stress_transform_3d(self):
         is_stress = True
@@ -2989,6 +3025,93 @@ class TestOP2Main(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
+    def test_bdf_op2_other_36(self):
+        """ComplexStrainEnergyArray"""
+        log = get_logger(level='warning')
+        # bdf_filename = MODEL_PATH / 'other' / 'ab4.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'ab4.op2'
+
+        # can't parse replication
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
+
+        # unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        # model.safe_cross_reference()
+
+        # save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude_results=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
+    def test_bdf_op2_other_37(self):
+        """tests oes_weldp_msc_complex_15"""
+        log = get_logger(level='warning')
+        # bdf_filename = MODEL_PATH / 'other' / 'r4_conn_exa.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'r4_conn_exa.op2'
+
+        # can't parse replication
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
+
+        # unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        # model.safe_cross_reference()
+
+        # save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude_results=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
+    def test_bdf_op2_other_38(self):
+        """tests oes_csolid_composite_real"""
+        log = get_logger(level='warning')
+        # bdf_filename = MODEL_PATH / 'other' / 'dmg401ns.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'dmg401ns.op2'
+
+        # can't parse replication
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
+
+        # unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        # model.safe_cross_reference()
+
+        # save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude_results=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
     def test_bdf_op2_64_bit(self):
         """
         checks d173.bdf, which tests MSC Nastran 64-bit without the
@@ -3111,8 +3234,7 @@ class TestOP2Main(Tester):
 
     def test_op2_solid_bending_skip(self):
         log = get_logger(level='warning')
-        folder = MODEL_PATH / 'solid_bending'
-        op2_filename = folder / 'solid_bending.op2'
+        op2_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.op2'
         model = OP2(log=log)
         model.is_nx = False
 
@@ -3177,8 +3299,7 @@ class TestOP2Main(Tester):
     @unittest.skipIf(not IS_H5PY, "No h5py")
     def test_op2_solid_bending_02(self):
         log = get_logger(level='warning')
-        folder = MODEL_PATH / 'solid_bending'
-        op2_filename = folder / 'solid_bending.op2'
+        op2_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.op2'
         op2 = OP2(debug=False, log=log, debug_file=None, mode=None)
         op2.load_as_h5 = True
         op2.read_op2(op2_filename=op2_filename, combine=True,
@@ -3234,8 +3355,7 @@ class TestOP2Main(Tester):
     def test_op2_mode_solid_shell_bar_01_geom(self):
         """tests reading op2 geometry"""
         log = get_logger(level='warning')
-        folder = MODEL_PATH / 'sol_101_elements'
-        op2_filename = folder / 'mode_solid_shell_bar.op2'
+        op2_filename = MODEL_PATH / 'sol_101_elements' / 'mode_solid_shell_bar.op2'
         subcases = [1]
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
@@ -3277,8 +3397,7 @@ class TestOP2Main(Tester):
     def test_op2_buckling_solid_shell_bar_02_geom(self):
         """multi subcase buckling"""
         log = SimpleLogger(level='warning')
-        folder = MODEL_PATH / 'sol_101_elements'
-        op2_filename = folder / 'buckling2_solid_shell_bar.op2'
+        op2_filename = MODEL_PATH / 'sol_101_elements' / 'buckling2_solid_shell_bar.op2'
         unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
         subcases = 1
         op2 = read_op2_geom(op2_filename, debug=False, subcases=subcases, log=log)
@@ -3415,9 +3534,8 @@ class TestOP2Main(Tester):
     def test_op2_solid_shell_bar_01(self):
         """tests sol_101_elements/static_solid_shell_bar.op2"""
         log = SimpleLogger(level='warning')
-        op2_filename = 'static_solid_shell_bar.op2'
         folder = MODEL_PATH / 'sol_101_elements'
-        op2_filename = folder / op2_filename
+        op2_filename = folder / 'static_solid_shell_bar.op2'
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -3522,7 +3640,7 @@ class TestOP2Main(Tester):
         """tests sol_101_elements/static_solid_shell_bar_straincurve.op2"""
         log = SimpleLogger(level='warning')
         folder = MODEL_PATH / 'sol_101_elements'
-        unused_bdf_filename = folder / 'static_solid_shell_bar_straincurve.bdf'
+        # unused_bdf_filename = folder / 'static_solid_shell_bar_straincurve.bdf'
         op2_filename = folder / 'static_solid_shell_bar_straincurve.op2'
         make_geom = False
         write_bdf = False

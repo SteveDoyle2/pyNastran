@@ -41,7 +41,6 @@ def oes_weldp_msc_real_8(op2: OP2, data: bytes,
     #'    ELEMENT          AXIAL         MAX  STRESS      MIN  STRESS      MAX  STRESS      MIN  STRESS        MAXIMUM          BEARING '
     #'      ID             STRESS           END-A            END-A            END-B            END-B        SHEAR  STRESS       STRESS'
     #'        179      -3.153108E+00     8.089753E+02    -8.152815E+02     7.946552E+02    -8.009614E+02     2.852777E+01     1.179798E+01'
-
     n = 0
     fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'7f', op2.size)
     struct1 = Struct(fmt)
