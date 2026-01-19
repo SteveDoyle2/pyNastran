@@ -726,7 +726,7 @@ TABLE_OBJ_MAP = {
                                                RealCompositePlateStressStrengthRatioArray),
     'strength_ratio.cquad8_composite_stress': (RealCompositePlateStressStrengthRatioArray, ),
 
-    'strain.cquad4_composite_strain': (RealCompositePlateStrainArray, ),
+    'strain.cquad4_composite_strain': (RealCompositePlateStrainArray, ComplexLayeredCompositeStrainArray12),
     'strain.ctria3_composite_strain': (RealCompositePlateStrainArray, ),
     'strain.ctria6_composite_strain': (RealCompositePlateStrainArray, ),
     'strain.ctriar_composite_strain': (RealCompositePlateStrainArray, ),

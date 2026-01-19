@@ -18,8 +18,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 
-def oef_shells_composite(op2: OP2, data, ndata, dt, unused_is_magnitude_phase,
-                         result_type, prefix, postfix):
+def oef_shells_composite(op2: OP2,
+                         data: bytes,
+                         ndata: int,
+                         dt,
+                         unused_is_magnitude_phase,
+                         result_type: int, prefix: str, postfix: str):
     """
     95 - CQUAD4
     96 - CQUAD8
@@ -98,59 +102,17 @@ def oef_shells_composite(op2: OP2, data, ndata, dt, unused_is_magnitude_phase,
         msg = (f'etype={op2.element_name} ({op2.element_type}) '
                f'{op2.table_name_str}-COMP-random-numwide={op2.num_wide} '
                f'numwide_real=11 numwide_imag=9 result_type={result_type}')
-        if data is None:
-            return op2._not_implemented_or_skip(data, ndata, msg), None, None
-        '      ELEMENT-ID =      11'
-        '          F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )'
-        '    PLY     FAILURE              FP=FAILURE INDEX FOR PLY    FB=FAILURE INDEX FOR BONDING   FAILURE INDEX FOR ELEMENT      FLAG'
-        '     ID      THEORY      FREQ  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MAX OF FP,FB FOR ALL PLIES  '
-        '         1   HFABRIC  2.0000E+01        0.1217    1 '
-        '                                                                           0.0000                                               '
-        '                      4.0000E+01        0.5472   -1 '
-        '                                                                           0.0001                                               '
-        '                      6.0000E+01        0.2454    1 '
-        '                                                                           0.0000                                               '
-        '                      8.0000E+01        0.3217    1 '
-        '                                                                           0.0000                                               '
-        '                      2.0000E+02        0.7284    1 '
-        '                                                                           0.0000                        0.7284                 '
-        assert op2.sort_method == 1, op2.code_information()
-        ntotal = 36 * factor
+        ntotal = 36 * op2.factor
         nelements = ndata // ntotal
-        sf = Struct(op2._endian + b'i8s if i ff 4s')  # if if i
-        si = Struct(op2._endian + b'i8s if i fi 4s')  # if if f
-        sf2 = Struct(op2._endian + b'f')
-        for unused_i in range(nelements):
-            edata = data[n:n + ntotal]
-            out = si.unpack(edata)
-            (ply_id, failure_theory_bytes,
-             c, d,
-             e, f,
-             g,
-            #ply_fp, failure_index_for_ply,
-            #ply_fb, failure_index_for_bonding,
-            #failure_index_for_element,
-            end) = out
-            failure_theory = failure_theory_bytes.decode(op2._encoding).rstrip()
-            #print(f'ply_id={ply_id} failure_theory={failure_theory!r} ply_fp={ply_fp} failure_index_for_ply={failure_index_for_ply:.3g} '
-                  #f'ply_fb={ply_fb} fi_bonding={failure_index_for_bonding:.3g} fi_for_element={failure_index_for_element:g}')
-            #if failure_index_for_bonding != -1:
-                #failure_index_for_bonding = -1000.
-                #failure_index_for_element = f.unpack(edata[-8:-4])
 
-                #*junk, failure_index_for_bonding, failure_index_for_element, end = sf.unpack(edata)
-                #print(f'ply_id={ply_id} failure_theory={failure_theory!r} ply_fp={ply_fp} fi_ply={failure_index_for_ply:.3g} '
-                      #f'ply_fb={ply_fb} fi_bonding={failure_index_for_bonding:.3g} fi_for_element={failure_index_for_element:g}')
-            #else:
-            if g != -1:
-                g, = sf2.unpack(edata[-8:-4])
-                #op2.show_data(edata)
-                out = (ply_id, failure_theory_bytes, c, d, e, f, g)
-            #print(out)
-            assert end in {b'    ', b'*** '}, end
-            n += ntotal
-        #aaa
-        return op2._not_implemented_or_skip(data, ndata, msg), None, None
+        if data is None:
+            return ndata, None, None
+
+        obj = None
+        n = oef_shells_composite_complex_9(op2, obj, data, nelements, ntotal, dt)
+        op2.log.warning(msg)
+        return ndata, None, None
+        # return op2._not_implemented_or_skip(data, ndata, msg), None, None
     else:  # pragma: no cover
         raise RuntimeError(op2.code_information())
         #msg = op2.code_information()
@@ -291,4 +253,58 @@ def oef_shells_composite_real_9(op2: OP2, data: bytes,
         #else:
             #add_sort_x(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
         #n += ntotal
+    return n
+
+def oef_shells_composite_complex_9(op2: OP2,
+                                   obj,
+                                   data: bytes,
+                                   nelements: int, ntotal: int, dt):
+    n = 0
+    '      ELEMENT-ID =      11'
+    '          F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )'
+    '    PLY     FAILURE              FP=FAILURE INDEX FOR PLY    FB=FAILURE INDEX FOR BONDING   FAILURE INDEX FOR ELEMENT      FLAG'
+    '     ID      THEORY      FREQ  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MAX OF FP,FB FOR ALL PLIES  '
+    '         1   HFABRIC  2.0000E+01        0.1217    1 '
+    '                                                                           0.0000                                               '
+    '                      4.0000E+01        0.5472   -1 '
+    '                                                                           0.0001                                               '
+    '                      6.0000E+01        0.2454    1 '
+    '                                                                           0.0000                                               '
+    '                      8.0000E+01        0.3217    1 '
+    '                                                                           0.0000                                               '
+    '                      2.0000E+02        0.7284    1 '
+    '                                                                           0.0000                        0.7284                 '
+    assert op2.sort_method == 1, op2.code_information()
+    sf = Struct(op2._endian + b'i8s if i ff 4s')  # if if i
+    si = Struct(op2._endian + b'i8s if i fi 4s')  # if if f
+    sf2 = Struct(op2._endian + b'f')
+    for unused_i in range(nelements):
+        edata = data[n:n + ntotal]
+        out = si.unpack(edata)
+        (ply_id, failure_theory_bytes,
+         c, d,
+         e, f,
+         g,
+        #ply_fp, failure_index_for_ply,
+        #ply_fb, failure_index_for_bonding,
+        #failure_index_for_element,
+        end) = out
+        failure_theory = failure_theory_bytes.decode(op2._encoding).rstrip()
+        #print(f'ply_id={ply_id} failure_theory={failure_theory!r} ply_fp={ply_fp} failure_index_for_ply={failure_index_for_ply:.3g} '
+              #f'ply_fb={ply_fb} fi_bonding={failure_index_for_bonding:.3g} fi_for_element={failure_index_for_element:g}')
+        #if failure_index_for_bonding != -1:
+            #failure_index_for_bonding = -1000.
+            #failure_index_for_element = f.unpack(edata[-8:-4])
+
+            #*junk, failure_index_for_bonding, failure_index_for_element, end = sf.unpack(edata)
+            #print(f'ply_id={ply_id} failure_theory={failure_theory!r} ply_fp={ply_fp} fi_ply={failure_index_for_ply:.3g} '
+                  #f'ply_fb={ply_fb} fi_bonding={failure_index_for_bonding:.3g} fi_for_element={failure_index_for_element:g}')
+        #else:
+        if g != -1:
+            g, = sf2.unpack(edata[-8:-4])
+            #op2.show_data(edata)
+            out = (ply_id, failure_theory_bytes, c, d, e, f, g)
+        #print(out)
+        assert end in {b'    ', b'*** '}, end
+        n += ntotal
     return n

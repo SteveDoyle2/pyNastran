@@ -315,7 +315,7 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
         return op2._not_implemented_or_skip(data, ndata, msg), None, None
 
     elif (result_type == 1 and num_wide == 12 and op2.is_msc and
-          table_name_bytes in [b'OES1C']):
+          table_name_bytes in [b'OES1C', b'OSTR1C']):
         # complex
         # analysis_code = 5   Frequency
         # table_code    = 5   OES1C-OES - Element Stress
@@ -445,13 +445,14 @@ def oes_shells_composite_oesrt(op2: OP2, result_name: str, slot: dict[Any, Any],
                 return nelements * ntotal, None, None
 
         is_vectorized = False
-        op2.log.warning(f'OESRT: faking result; {op2.element_name}-{op2.element_type}')
+        log = op2.log
+        log.warning(f'OESRT: faking result; {op2.element_name}-{op2.element_type}')
         if op2.use_vector and is_vectorized and sort_method == 1 and 0:
             n = nelements * op2.num_wide * 4
             asdf
         else:
-            op2.log.warning(f'need to vectorize oes_shell_composite; {op2.element_name}-{op2.element_type} '
-                            f'(numwide={op2.num_wide}) {op2.table_name_str}')
+            log.warning(f'need to vectorize oes_shell_composite; {op2.element_name}-{op2.element_type} '
+                        f'(numwide={op2.num_wide}) {op2.table_name_str}')
 
             structi = Struct(op2._endian + b'i   8s   i      f i f i 4s')
             structf = Struct(op2._endian + b'i   8s   i      f i f f 4s')
@@ -469,9 +470,9 @@ def oes_shells_composite_oesrt(op2: OP2, result_name: str, slot: dict[Any, Any],
                 assert blank in ['', '***'], blank
                 # op2.show_data(edata)
                 if eid != -1:
-                    print(f'eid={eid} hill={hill!r} ply={ply_id} i1={i1} f2={f2:.4e} minus1={minus_1} blank={blank!r}')
+                    log.info(f'eid={eid} hill={hill!r} ply={ply_id} i1={i1} f2={f2:.4e} minus1={minus_1} blank={blank!r}')
                 else:
-                    print(f'    hill={hill!r} ply={ply_id} i1={i1} f2={f2:.4e} minus1={minus_1:.4e} blank={blank!r}')
+                    log.info(f'    hill={hill!r} ply={ply_id} i1={i1} f2={f2:.4e} minus1={minus_1:.4e} blank={blank!r}')
                 n += ntotal
     else:  # pragma: no cover
         raise RuntimeError(op2.code_information())
