@@ -3,10 +3,9 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply_mag_phase
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
-from pyNastran.op2.op2_interface.utils import apply_mag_phase
 
 from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealCBeamForceArray,
@@ -257,22 +256,9 @@ def oef_cbeam_imag_177(op2: OP2, data: bytes,
              bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
              bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi) = out
 
-            if is_magnitude_phase:
-                bm1 = polar_to_real_imag(bm1r, bm1i)
-                bm2 = polar_to_real_imag(bm2r, bm2i)
-                ts1 = polar_to_real_imag(ts1r, ts1i)
-                ts2 = polar_to_real_imag(ts2r, ts2i)
-                af = polar_to_real_imag(afr, afi)
-                ttrq = polar_to_real_imag(ttrqr, ttrqi)
-                wtrq = polar_to_real_imag(wtrqr, wtrqi)
-            else:
-                bm1 = complex(bm1r, bm1i)
-                bm2 = complex(bm2r, bm2i)
-                ts1 = complex(ts1r, ts1i)
-                ts2 = complex(ts2r, ts2i)
-                af = complex(afr, afi)
-                ttrq = complex(ttrqr, ttrqi)
-                wtrq = complex(wtrqr, wtrqi)
+            bm1, bm2, ts1, ts2, af, ttrq, wtrq = real_imag_from_list([
+                bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
+                bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi], is_magnitude_phase)
 
             #if i == 0:
                 #obj.add_new_element_sort1(

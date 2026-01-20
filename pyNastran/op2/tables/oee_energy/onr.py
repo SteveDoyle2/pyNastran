@@ -87,14 +87,6 @@ class ONR:
         #op2.words = None
         #op2.num_wide = None
 
-    @property
-    def size(self) -> int:
-        return self.op2.size
-
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
-
     def get_onr_prefix_postfix(self) -> tuple[str, str]:
         """
         Creates the prefix/postfix that splits off ATO, CRM, PSD, nonlinear,
@@ -272,7 +264,7 @@ class ONR:
         #element_name, = op2.struct_8s.unpack(data[24:32])  # changed on 11/30/2015; was this for a long time...
 
         #self.show_data(data[:28])
-        if self.size == 4:
+        if op2.size == 4:
             element_name, = op2.struct_8s.unpack(data[20:28])
         else:
             element_name, = op2.struct_16s.unpack(data[40:56])

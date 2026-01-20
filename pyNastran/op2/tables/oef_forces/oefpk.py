@@ -9,13 +9,6 @@ class OEFPK:
     def __init__(self, op2: OP2):
         self.op2 = op2
 
-    @property
-    def size(self) -> int:
-        return self.op2.size
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
-
     def _create_oes_object4(self, *args, **kwargs):
         return self.op2._create_oes_object4(*args, **kwargs)
 
