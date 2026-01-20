@@ -3,10 +3,9 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply_mag_phase
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
-from pyNastran.op2.op2_interface.utils import apply_mag_phase
 
 from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealViscForceArray,
@@ -146,13 +145,9 @@ def oef_cvisc_imag_5(self, data: bytes,
         (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
-        if is_magnitude_phase:
-            axial = polar_to_real_imag(axial_real, axial_imag)
-            torque = polar_to_real_imag(torque_real, torque_imag)
-        else:
-            axial = complex(axial_real, axial_imag)
-            torque = complex(torque_real, torque_imag)
-
+        axial, torque = real_imag_from_list([
+            axial_real, torque_real,
+            axial_imag, torque_imag], is_magnitude_phase)
         add_sort_x(dt, eid, axial, torque)
         n += ntotal
     return n

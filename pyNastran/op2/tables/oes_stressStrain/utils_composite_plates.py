@@ -3,7 +3,7 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list
 # from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
@@ -564,14 +564,9 @@ def oes_shell_composite_complex_12(op2: OP2,
         (eid, layer,
          oxxr, oyyr, txyr, t1zr, t2zr,
          oxxi, oyyi, txyi, t1zi, t2zi) = out
-        if not is_magnitude_phase:
-            oxx = oxxr + oxxi*1j
-            oyy = oyyr + oyyi*1j
-            txy = txyr + txyi*1j
-            t1z = t1zr + t1zi*1j
-            t2z = t2zr + t2zi*1j
-        else:
-            raise NotImplementedError(is_magnitude_phase)
+        oxx, oyy, txy, t1z, t2z = real_imag_from_list([
+            oxxr, oyyr, txyr, t1zr, t2zr,
+            oxxi, oyyi, txyi, t1zi, t2zi], is_magnitude_phase)
         obj.add_sort1(dt, eid, layer, oxx, oyy, txy, t1z, t2z)
         n += ntotal
     return n

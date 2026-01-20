@@ -6,7 +6,7 @@ import numpy as np
 from pyNastran.op2.op2_interface.utils import (
     apply_mag_phase,
 )
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.tables.oes_stressStrain.utils import obj_set_element
@@ -166,20 +166,9 @@ def oes_cbush_complex_13(op2: OP2,
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if is_magnitude_phase:
-            tx = polar_to_real_imag(txr, txi)
-            ty = polar_to_real_imag(tyr, tyi)
-            tz = polar_to_real_imag(tzr, tzi)
-            rx = polar_to_real_imag(rxr, rxi)
-            ry = polar_to_real_imag(ryr, ryi)
-            rz = polar_to_real_imag(rzr, rzi)
-        else:
-            tx = complex(txr, txi)
-            ty = complex(tyr, tyi)
-            tz = complex(tzr, tzi)
-            rx = complex(rxr, rxi)
-            ry = complex(ryr, ryi)
-            rz = complex(rzr, rzi)
+        tx, ty, tz, rx, ry, rz = real_imag_from_list([
+            txr, tyr, tzr, rxr, ryr, rzr,
+            txi, tyi, tzi, rxi, ryi, rzi], is_magnitude_phase)
         add_sort_x(dt, eid, tx, ty, tz, rx, ry, rz)
         n += ntotal
     return ntotal

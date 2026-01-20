@@ -3,8 +3,7 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
-from pyNastran.op2.op2_interface.utils import apply_mag_phase
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply_mag_phase
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
@@ -165,40 +164,12 @@ def oef_cshear_imag_33(op2: OP2, data: bytes,
          kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r, # 16
          f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i,
          kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i) = out
-        if is_magnitude_phase:
-            f41 = polar_to_real_imag(f41r, f41i)
-            kf1 = polar_to_real_imag(kf1r, kf1i)
-            f21 = polar_to_real_imag(f21r, f21i)
-            kf2 = polar_to_real_imag(kf2r, kf2i)
-            f12 = polar_to_real_imag(f12r, f12i)
-            kf3 = polar_to_real_imag(kf3r, kf3i)
-            f23 = polar_to_real_imag(f23r, f23i)
-            kf4 = polar_to_real_imag(kf4r, kf4i)
-            f32 = polar_to_real_imag(f32r, f32i)
-            s12 = polar_to_real_imag(s12r, s12i)
-            f43 = polar_to_real_imag(f43r, f43i)
-            s23 = polar_to_real_imag(s23r, s23i)
-            f34 = polar_to_real_imag(f34r, f34i)
-            s34 = polar_to_real_imag(s34r, s34i)
-            f14 = polar_to_real_imag(f14r, f14i)
-            s41 = polar_to_real_imag(s41r, s41i)
-        else:
-            f41 = complex(f41r, f41i)
-            kf1 = complex(kf1r, kf1i)
-            f21 = complex(f21r, f21i)
-            kf2 = complex(kf2r, kf2i)
-            f12 = complex(f12r, f12i)
-            kf3 = complex(kf3r, kf3i)
-            f23 = complex(f23r, f23i)
-            kf4 = complex(kf4r, kf4i)
-            f32 = complex(f32r, f32i)
-            s12 = complex(s12r, s12i)
-            f43 = complex(f43r, f43i)
-            s23 = complex(s23r, s23i)
-            f34 = complex(f34r, f34i)
-            s34 = complex(s34r, s34i)
-            f14 = complex(f14r, f14i)
-            s41 = complex(s41r, s41i)
+        (f41, f21, f12, f32, f23, f43, f34, f14,
+         kf1, s12, kf2, s23, kf3, s34, kf4, s41) = real_imag_from_list([
+            f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r,  # 8
+            kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r,  # 16
+            f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i,
+            kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i], is_magnitude_phase)
 
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)

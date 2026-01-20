@@ -4,10 +4,7 @@ from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
-from pyNastran.op2.op2_interface.utils import (
-    apply_mag_phase,
-)
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply_mag_phase
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
@@ -455,20 +452,9 @@ def oes_csolid(oes: OES,
 
                     sxr, syr, szr, txyr, tyzr, txzr, \
                         sxi, syi, szi, txyi, tyzi, txzi, ovm = out
-                    if is_magnitude_phase:
-                        sx = polar_to_real_imag(sxr, sxi)
-                        sy = polar_to_real_imag(syr, syi)
-                        sz = polar_to_real_imag(szr, szi)
-                        txy = polar_to_real_imag(txyr, txyi)
-                        tyz = polar_to_real_imag(tyzr, tyzi)
-                        txz = polar_to_real_imag(txzr, txzi)
-                    else:
-                        sx = complex(sxr, sxi)
-                        sy = complex(syr, syi)
-                        sz = complex(szr, szi)
-                        txy = complex(txyr, txyi)
-                        tyz = complex(tyzr, tyzi)
-                        txz = complex(txzr, txzi)
+                    sx, sy, sz, txy, tyz, txz = real_imag_from_list([
+                        sxr, syr, szr, txyr, tyzr, txzr,
+                        sxi, syi, szi, txyi, tyzi, txzi], is_magnitude_phase)
                     # del grid, sx, sy, sz, txy, tyz, txz
                     # if eid == 1048:
                     # print(f'grid={grid}', sx, sy, sz, txy, tyz, txz)
@@ -771,22 +757,9 @@ def oes_csolid_complex(op2: OP2, data: bytes,
              exi, eyi, ezi, etxyi, etyzi, etzxi) = out
             #if grid == 0:
                 #grid = 'CENTER'
-
-            if is_magnitude_phase:
-                ex = polar_to_real_imag(exr, exi)
-                ey = polar_to_real_imag(eyr, eyi)
-                ez = polar_to_real_imag(ezr, ezi)
-                etxy = polar_to_real_imag(etxyr, etxyi)
-                etyz = polar_to_real_imag(etyzr, etyzi)
-                etzx = polar_to_real_imag(etzxr, etzxi)
-            else:
-                ex = complex(exr, exi)
-                ey = complex(eyr, eyi)
-                ez = complex(ezr, ezi)
-                etxy = complex(etxyr, etxyi)
-                etyz = complex(etyzr, etyzi)
-                etzx = complex(etzxr, etzxi)
-
+            ex, ey, ez, etxy, etyz, etzx = real_imag_from_list([
+                exr, eyr, ezr, etxyr, etyzr, etzxr,
+                exi, eyi, ezi, etxyi, etyzi, etzxi], is_magnitude_phase)
             if op2.is_debug_file:
                 op2.binary_debug.write('       node%s=[%s]\n' % (
                     grid, ', '.join(['%r' % di for di in out])))

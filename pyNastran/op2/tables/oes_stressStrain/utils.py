@@ -3,7 +3,7 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
@@ -88,24 +88,10 @@ def oes_weldp_msc_complex_15(op2: OP2,
             eid_device, op2.nonlinear_factor, op2.sort_method)
         assert eid > 0
 
-        if is_magnitude_phase:
-            axial = polar_to_real_imag(raxial, iaxial)
-            max_a = polar_to_real_imag(rmax_a, imax_a)
-            min_a = polar_to_real_imag(rmin_a, imin_a)
+        axial, max_a, min_a, max_b, min_b, max_shear, bearing = real_imag_from_list([
+            raxial, rmax_a, rmin_a, rmax_b, rmin_b, rmax_shear, rbearing,
+            iaxial, imax_a, imin_a, imax_b, imin_b, imax_shear, ibearing], is_magnitude_phase)
 
-            max_b = polar_to_real_imag(rmax_b, imax_b)
-            min_b = polar_to_real_imag(rmin_b, imin_b)
-            max_shear = polar_to_real_imag(rmax_shear, imax_shear)
-            bearing = polar_to_real_imag(rbearing, ibearing)
-        else:
-            axial = complex(raxial, iaxial)
-            max_a = complex(rmax_a, imax_a)
-            min_a = complex(rmin_a, imin_a)
-
-            max_b = complex(rmax_b, imax_b)
-            min_b = complex(rmin_b, imin_b)
-            max_shear = complex(rmax_shear, imax_shear)
-            bearing = complex(rbearing, ibearing)
         #print(out)
         add_sort_x(dt, eid, axial, max_a, min_a, max_b, min_b, max_shear, bearing)
         n += ntotal
@@ -162,22 +148,9 @@ def oes_fastp_msc_complex_13(op2: OP2,
             eid_device, op2.nonlinear_factor, op2.sort_method)
         assert eid > 0
 
-        if is_magnitude_phase:
-            force_x = polar_to_real_imag(rforce_x, iforce_x)
-            force_y = polar_to_real_imag(rforce_y, iforce_y)
-            force_z = polar_to_real_imag(rforce_z, iforce_z)
-
-            moment_x = polar_to_real_imag(rmoment_x, imoment_x)
-            moment_y = polar_to_real_imag(rmoment_y, imoment_y)
-            moment_z = polar_to_real_imag(rmoment_z, imoment_z)
-        else:
-            force_x = complex(rforce_x, iforce_x)
-            force_y = complex(rforce_y, iforce_y)
-            force_z = complex(rforce_z, iforce_z)
-
-            moment_x = complex(rmoment_x, imoment_x)
-            moment_y = complex(rmoment_y, imoment_y)
-            moment_z = complex(rmoment_z, imoment_z)
+        force_x, force_y, force_z, moment_x, moment_y, moment_z = real_imag_from_list([
+            rforce_x, rforce_y, rforce_z, rmoment_x, rmoment_y, rmoment_z,
+            iforce_x, iforce_y, iforce_z, imoment_x, imoment_y, imoment_z], is_magnitude_phase)
         add_sort_x(dt, eid, force_x, force_y, force_z, moment_x, moment_y, moment_z)
         n += ntotal
     return n

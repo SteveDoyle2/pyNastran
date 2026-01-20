@@ -3,7 +3,7 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list
 from pyNastran.op2.op2_helper import polar_to_real_imag
 # from pyNastran.op2.op2_interface.utils import reshape_bytes_block_strip
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
@@ -195,20 +195,9 @@ def oef_csolid_imag_16(self, data: bytes,
             eid_device, op2.nonlinear_factor, op2.sort_method)
         ename = ename.decode('utf-8').strip()
 
-        if is_magnitude_phase:
-            ax = polar_to_real_imag(axr, axi)
-            vx = polar_to_real_imag(vxr, vxi)
-            ay = polar_to_real_imag(ayr, ayi)
-            vy = polar_to_real_imag(vyr, vyi)
-            az = polar_to_real_imag(azr, azi)
-            vz = polar_to_real_imag(vzr, vzi)
-        else:
-            ax = complex(axr, axi)
-            vx = complex(vxr, vxi)
-            ay = complex(ayr, ayi)
-            vy = complex(vyr, vyi)
-            az = complex(azr, azi)
-            vz = complex(vzr, vzi)
+        ax, ay, az, vx, vy, vz = real_imag_from_list([
+            axr, ayr, azr, vxr, vyr, vzr,
+            axi, ayi, azi, vxi, vyi, vzi], is_magnitude_phase)
         cpressure = complex(pressure, 0.)
         add_sort_x(dt, eid, ename, ax, ay, az, vx, vy, vz, cpressure)
     return n

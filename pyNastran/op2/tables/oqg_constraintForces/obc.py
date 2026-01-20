@@ -26,13 +26,6 @@ class OBC:
     def __init__(self, op2: OP2):
         self.op2 = op2
 
-    @property
-    def size(self) -> int:
-        return self.op2.size
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
-
     def read_sort1_3(self, data: bytes, ndata: int):
         op2 = self.op2
         op2.to_nx(f' because table_name={op2.table_name} was found')
@@ -158,7 +151,7 @@ class OBC:
         if not is_saved:
             return ndata
 
-        ntotal = 20 * self.factor
+        ntotal = 20 * op2.factor
         nnodes = ndata // ntotal
 
         op2.data_code['_times_dtype'] = 'float32'
@@ -206,19 +199,25 @@ class OBC:
             obj._times[itime] = dt
             obj.itotal = itotal2
         else:
-            n = 0
-            struct1 = Struct(mapfmt(op2._endian + b'i fff f', self.size))
-            for unused_i in range(nnodes):
-                edata = data[n:n+ntotal]
-                nid_device, pressure, s1, s2, s3 = struct1.unpack(edata)
-                nid = nid_device // 10
-                #out2 = [nid, pressure, s1, s2, s3]
-                obj.add_sort1(dt, nid, pressure, s1, s2, s3)
-                #print(nid, pressure, s1, s2, s3)
-                n += ntotal
-            #self.show_data(data)
+            n = obc_real_5(op2, obj, data, ntotal, nnodes, dt)
 
         #if self._table4_count == 0:
         #self._table4_count += 1
         assert n == ndata
         return ndata
+
+
+def obc_real_5(op2: OP2,
+               obj: RealContactTractionAndPressureArray,
+               data: bytes, ntotal: int, nnodes: int, dt) -> int:
+    n = 0
+    struct1 = Struct(mapfmt(op2._endian + b'i fff f', op2.size))
+    for unused_i in range(nnodes):
+        edata = data[n:n+ntotal]
+        nid_device, pressure, s1, s2, s3 = struct1.unpack(edata)
+        nid = nid_device // 10
+        #out2 = [nid, pressure, s1, s2, s3]
+        obj.add_sort1(dt, nid, pressure, s1, s2, s3)
+        #print(nid, pressure, s1, s2, s3)
+        n += ntotal
+    return n

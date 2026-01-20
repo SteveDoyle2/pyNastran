@@ -3,13 +3,10 @@ from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply_mag_phase
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
-from pyNastran.op2.op2_interface.utils import (
-    apply_mag_phase,
-)
 from pyNastran.op2.tables.oes_stressStrain.utils import obj_set_element
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressArray, RealRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
@@ -201,13 +198,9 @@ def oes_crod_complex_5(op2: OP2, data: bytes,
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if is_magnitude_phase:
-            axial = polar_to_real_imag(axial_real, axial_imag)
-            torsion = polar_to_real_imag(torsion_real, torsion_imag)
-        else:
-            axial = complex(axial_real, axial_imag)
-            torsion = complex(torsion_real, torsion_imag)
-
+        axial, torsion = real_imag_from_list([
+            axial_real, torsion_real,
+            axial_imag, torsion_imag], is_magnitude_phase)
         add_sort_x(dt, eid, axial, torsion)
         n += ntotal
     return n
