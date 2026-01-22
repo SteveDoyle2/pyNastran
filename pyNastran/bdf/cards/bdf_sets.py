@@ -119,7 +119,8 @@ class ABCQSet(Set):
         if isinstance(self.components, np.ndarray):
             self.components = self.components.tolist()
 
-    def __init__(self, ids: list[int], components: list[int], comment: str='') -> None:
+    def __init__(self, ids: list[int], components: list[str],
+                 comment: str='') -> None:
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -218,7 +219,8 @@ class SuperABCQSet(Set):
         if isinstance(self.components, np.ndarray):
             self.components = self.components.tolist()
 
-    def __init__(self, seid, ids, components, comment: str=''):
+    def __init__(self, seid, ids: list[int], components: list[str],
+                 comment: str=''):
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -310,7 +312,8 @@ class ASET(ABCQSet):
         components = ['123', '456']
         return ASET(ids, components)
 
-    def __init__(self, ids, components, comment: str=''):
+    def __init__(self, ids: list[int], components: list[str],
+                 comment: str=''):
         """
         Creates an ASET card, which defines the degree of freedoms that
         will be retained during an ASET modal reduction.
@@ -352,7 +355,8 @@ class BSET(ABCQSet):
         components = ['123', '456']
         return BSET(ids, components)
 
-    def __init__(self, ids, components, comment: str=''):
+    def __init__(self, ids: list[int], components: list[str],
+                 comment: str=''):
         """
         Creates an BSET card, which defines the degree of freedoms that
         will be fixed during a generalized dynamic reduction or component
@@ -396,7 +400,8 @@ class CSET(ABCQSet):
         components = ['123', '456']
         return CSET(ids, components)
 
-    def __init__(self, ids, components, comment: str=''):
+    def __init__(self, ids: list[int], components: list[str],
+                 comment: str=''):
         """
         Creates an CSET card, which defines the degree of freedoms that
         will be free during a generalized dynamic reduction or component
@@ -439,7 +444,8 @@ class QSET(ABCQSet):
         components = ['123', '456']
         return QSET(ids, components)
 
-    def __init__(self, ids, components, commen: str=''):
+    def __init__(self, ids: list[int], components: list[str],
+                 comment: str=''):
         """
         Creates a QSET card, which defines generalized degrees of
         freedom (q-set) to be used for dynamic reduction or component
@@ -737,7 +743,8 @@ class OMIT(ABCQSet):
         components = ['123', '456']
         return BSET(ids, components)
 
-    def __init__(self, ids, components, comment: str=''):
+    def __init__(self, ids: list[int], components: list[str],
+                 comment: str=''):
         """
         Creates an BSET card, which defines the degree of freedoms that
         will be fixed during a generalized dynamic reduction or component
@@ -1017,7 +1024,8 @@ class SET1(Set):
         ids = [1]
         return SET1(sid, ids, is_skin=False)
 
-    def __init__(self, sid, ids, is_skin=False, comment: str=''):
+    def __init__(self, sid: int, ids: list[int], is_skin: bool=False,
+                 comment: str=''):
         """
         Creates a SET1 card, which defines a list of structural grid
         points or element identification numbers.
