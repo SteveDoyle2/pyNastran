@@ -315,8 +315,7 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
         return op2._not_implemented_or_skip(data, ndata, msg), None, None
 
     elif (result_type == 1 and num_wide == 12 and op2.is_msc and
-          table_name_bytes in [b'OES1C', b'OSTR1C']):
-        # complex
+          table_name_bytes in [b'OES1C', b'OSTR1C']):  # complex
         # analysis_code = 5   Frequency
         # table_code    = 5   OES1C-OES - Element Stress
         # format_code   = 2   Real/Imaginary
@@ -335,7 +334,6 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
         # num_wide      = 12
         # freq          = 990.0
         # MSC Nastran
-        # assert op2.is_sort1
         complex_obj = ComplexLayeredCompositeStressArray12 if op2.is_stress else ComplexLayeredCompositeStrainArray12
 
         ntotal = 48 * factor
@@ -350,13 +348,6 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
             op2, data, obj,
             ntotal, nelements, sort_method,
             dt, is_magnitude_phase)
-
-        # msg = (f'etype={op2.element_name} ({op2.element_type}) '
-        #        f'{op2.table_name_str}-COMP-complex-numwide={num_wide} '
-        #        # f'numwide_real=11 numwide_imag=9 result_type={result_type}'
-        #        )
-        # # op2.log.warning(f'skipping complex {op2.table_name_str}-PCOMP-12')
-        # return op2._not_implemented_or_skip(data, ndata, msg), None, None
 
     elif result_type == 1 and num_wide == 11:
         # analysis_code = 9   Complex eigenvalues

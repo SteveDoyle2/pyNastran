@@ -3142,7 +3142,10 @@ class TestOP2Main(Tester):
                 build_pandas=True, log=log)
 
     def test_bdf_op2_other_40(self):
-        """tests """
+        """tests:
+         = ComplexLayeredCompositeStressArray12
+         - ComplexLayeredCompositeStrainArray12
+        """
         log = get_logger(level='debug')
         # bdf_filename = MODEL_PATH / 'other' / 'ranco07a.bdf'
         op2_filename = MODEL_PATH / 'other' / 'ranco07a.op2'
@@ -3169,6 +3172,48 @@ class TestOP2Main(Tester):
                 quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
+
+    def test_bdf_op2_other_41(self):
+        """tests:
+         = force.ctria3_force
+         - force.ctria6_force
+         - force.ctriar_force
+         - stress.cquadr_stress
+         - stress.ctria3_composite_stress
+         - stress.ctriar_composite_stress
+         - ato.cquadr_stress
+         - psd.cquadr_stress
+         - rms.cquadr_stress
+         - no.cquadr_stress
+         - crm.cquadr_stress
+        """
+        log = get_logger(level='debug')
+        # bdf_filename = MODEL_PATH / 'other' / 'pmultrand.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'pmultrand.op2'
+
+        # can't parse replication
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
+
+        # unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        # model.safe_cross_reference()
+
+        # save_load_deck(model, run_save_load=False)
+
+        # log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude_results=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
 
     def test_bdf_op2_64_bit(self):
         """

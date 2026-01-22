@@ -713,11 +713,11 @@ TABLE_OBJ_MAP = {
     'stress.ctriax_stress': (RealTriaxStressArray, ComplexTriaxStressArray,),
 
     'stress.cquad4_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray12),
-    'stress.ctria3_composite_stress': (RealCompositePlateStressArray, ),
-    'stress.ctria6_composite_stress': (RealCompositePlateStressArray, ),
-    'stress.ctriar_composite_stress': (RealCompositePlateStressArray, ),
-    'stress.cquad8_composite_stress': (RealCompositePlateStressArray, ),
-    'stress.cquadr_composite_stress': (RealCompositePlateStressArray, ),
+    'stress.ctria3_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray12),
+    'stress.ctria6_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray12),
+    'stress.ctriar_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray12),
+    'stress.cquad8_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray12),
+    'stress.cquadr_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray12),
 
     'strength_ratio.ctria3_composite_stress': (RealCompositePlateStressStrengthRatioArray, ),
     'strength_ratio.ctria6_composite_stress': (RealCompositePlateStressStrengthRatioArray, ),

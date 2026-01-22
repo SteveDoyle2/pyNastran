@@ -342,7 +342,7 @@ def _get_composite_plate_msg(self, is_mag_phase=True, is_sort1=True) -> tuple[li
 
 
 class ComplexLayeredCompositesArray12(OES_Object):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code, is_sort1: bool, isubcase: int, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)   ## why???
         self.element_node = None
         #self.code = [self.format_code, self.sort_code, self.s_code]
@@ -508,10 +508,18 @@ class ComplexLayeredCompositesArray12(OES_Object):
                  1               1   -8.713408E-01 -1.132072E+01 -2.119228E-02   -2.255483E-01  5.870259E-05
                                       1.307266E-01  1.698439E+00  3.178526E-03    3.383883E-02 -8.803315E-06
         """
-        if self.element_type == 95:
-            # CQUAD4
+        element_type = self.element_type
+        if element_type == 95:
             element_name = 'Q U A D 4 '
-        else:
+        elif element_type == 97:
+            element_name = 'T R I A 3 '
+        elif element_type == 98:
+            element_name = 'T R I A 6 '
+        elif element_type == 232:
+            element_name = 'Q U A D R '
+        elif element_type == 233:
+            element_name = 'T R I A R '
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
 
         if self.is_stress:
