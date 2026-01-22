@@ -1,0 +1,61 @@
+$ Example Problem A
+$ id msc, r4_conn_exa.dat $ mdr4 sjf 13-May-2009
+SOL 108
+TIME 60
+CEND
+TITLE= twoelq4t3 distorted
+set 1 = 30
+DISPL= ALL
+FORCE=1
+STRESS=1
+SUBCASE 1
+   SUBTITLE= shear the weld 
+   dload=1
+   method= 400
+   freq=11
+BEGIN BULK
+freq,11,10.,20.0
+rload1,1,301,,,122
+tabled1,122
+ ,0.,1.,100.,1.,endt
+$
+$ Grids of lower shell
+grid, 101, , 0., 0., 0.
+grid, 102, , 2., 0., 0.1
+grid, 104, , 0., 1., 0.0
+$
+$ Grids of upper shell
+grid, 111, , 0.,  0., 0.5
+grid, 112, , 1.8, 0., 0.4
+grid, 113, , 2., 1.2, 0.2 
+grid, 114, , 0., 1. , 0.6
+$
+$ Spot weld grid
+grid, 300, , 1.0, 0.4, 0.5
+$
+$ Shell elements
+ctria3, 10, 10, 101, 102, 104
+cquad4, 11, 10, 111, 112, 113, 114
+$
+eigrl, 400, , , 12
+$
+$ Boundary conditions and loads
+load, 1, 1., 100., 301
+force, 301, 112, 0, 0.5, 1., 0., 0.
+force, 301, 113, 0, 0.5, 1., 0., 0.
+$
+$ Property and material
+pshell, 10, 10, 0.1, 10
+mat1, 10, 1.+7, , 0.3, 1.e-4, , , 0.12
+$
+$ Spot weld
+cweld, 30, 30, 300, elpat, , , , 755, +CW1
++CW1, 11, 10
+pweld, 30, 10, 0.1
+$
+cord2r, 755, , 0., 0., 0., 0., 0., -1.,
+      , 0., 1., 0.
+$
+PARAM,POST,-1
+ENDDATA
+enddata

@@ -12,7 +12,7 @@ from pyNastran.op2.op2_interface.op2_classes import (
     RealRodStressArray,
 )
 from .static_spring import _recover_stress_celas
-from .utils import get_plot_request
+from pyNastran.dev.bdf_vectorized3.solver.recover.utils import get_plot_request
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, Subcase

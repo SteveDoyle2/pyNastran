@@ -22,13 +22,6 @@ class OGS:
     def __init__(self, op2: OP2):
         self.op2 = op2
 
-    # @property
-    # def size(self) -> int:
-    #     return self.op2.size
-    # @property
-    # def factor(self) -> int:
-    #     return self.op2.factor
-
     def _read_ogstr1_3(self, data: bytes, ndata: int):
         """OGSTR1 - grid point strains"""
         self._read_ogs1_3(data, ndata)

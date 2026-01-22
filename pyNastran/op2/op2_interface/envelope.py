@@ -40,7 +40,6 @@ class ResultsEnvelope:
                         key = (result_name, subcase)
                         gres_dict[key].append(resi)
                 # elif isinstance(resi, TableArray):
-                #     asdf
                 #     new_data = []
                 else:
                     raise RuntimeError(result_name)

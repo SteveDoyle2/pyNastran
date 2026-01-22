@@ -4,12 +4,8 @@ from typing import Any, TYPE_CHECKING
 import numpy as np
 
 import pyNastran
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply_mag_phase
 from pyNastran.op2.op2_helper import polar_to_real_imag
-from pyNastran.op2.op2_interface.utils import (
-    # mapfmt, mapfmt8,
-    apply_mag_phase,
-)
 
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_interface.op2_codes import TABLES_BYTES
@@ -331,16 +327,9 @@ def oes_cbeam_complex_111(op2: OP2, data: bytes,
          excr, exdr, exer, exfr,
          exci, exdi, exei, exfi) = out1[1:]
 
-        if is_magnitude_phase:
-            exc = polar_to_real_imag(excr, exci)
-            exd = polar_to_real_imag(exdr, exdi)
-            exe = polar_to_real_imag(exer, exei)
-            exf = polar_to_real_imag(exfr, exfi)
-        else:
-            exc = complex(excr, exci)
-            exd = complex(exdr, exdi)
-            exe = complex(exer, exei)
-            exf = complex(exfr, exfi)
+        exc, exd, exe, exf = real_imag_from_list([
+            excr, exdr, exer, exfr,
+            exci, exdi, exei, exfi], is_magnitude_phase)
 
         add_sort_x(dt, eid, grid, sd,
                    exc, exd, exe, exf)
@@ -353,17 +342,9 @@ def oes_cbeam_complex_111(op2: OP2, data: bytes,
              excr, exdr, exer, exfr,
              exci, exdi, exei, exfi) = out2
 
-            if is_magnitude_phase:
-                exc = polar_to_real_imag(excr, exci)
-                exd = polar_to_real_imag(exdr, exdi)
-                exe = polar_to_real_imag(exer, exei)
-                exf = polar_to_real_imag(exfr, exfi)
-            else:
-                exc = complex(excr, exci)
-                exd = complex(exdr, exdi)
-                exe = complex(exer, exei)
-                exf = complex(exfr, exfi)
-
+            exc, exd, exe, exf = real_imag_from_list([
+                excr, exdr, exer, exfr,
+                exci, exdi, exei, exfi], is_magnitude_phase)
             add_sort_x(dt, eid, grid, sd,
                        exc, exd, exe, exf)
             if op2.is_debug_file:

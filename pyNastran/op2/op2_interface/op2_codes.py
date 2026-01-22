@@ -35,7 +35,7 @@ SORT1_TABLES_BYTES = [
 
     # SATK
     b'OUGPK1', b'OEFPK1',
-    
+
     # doesn't really matter
     b'OAEROP', b'OAEROTV', b'OAERCSHM', b'OAEROSCD', b'OAEROHMD',
 ]
@@ -348,7 +348,6 @@ class Op2Codes:
                 name = 'lsdvmn'
                 self.name = 'lsdvmn'
                 #print(self.object_stats())
-                #asdf
 
             #print(name)
             if name in {'N/A', 'element_id'}:

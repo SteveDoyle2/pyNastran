@@ -3,8 +3,7 @@ from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
-from pyNastran.op2.op2_interface.utils import apply_mag_phase
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply_mag_phase
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
@@ -177,32 +176,12 @@ def oef_cbend_imag_27(op2: OP2, data: bytes,
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if is_magnitude_phase:
-            bm1_a = polar_to_real_imag(bm1_ar, bm1_ai)
-            bm1_b = polar_to_real_imag(bm1_br, bm1_bi)
-            bm2_a = polar_to_real_imag(bm2_ar, bm2_ai)
-            bm2_b = polar_to_real_imag(bm2_br, bm2_bi)
-            ts1_a = polar_to_real_imag(ts1_ar, ts1_ai)
-            ts1_b = polar_to_real_imag(ts1_br, ts1_bi)
-            ts2_a = polar_to_real_imag(ts2_ar, ts2_ai)
-            ts2_b = polar_to_real_imag(ts2_br, ts2_bi)
-            af_a = polar_to_real_imag(af_ar, af_ai)
-            af_b = polar_to_real_imag(af_br, af_bi)
-            trq_a = polar_to_real_imag(trq_ar, trq_ai)
-            trq_b = polar_to_real_imag(trq_br, trq_bi)
-        else:
-            bm1_a = complex(bm1_ar, bm1_ai)
-            bm1_b = complex(bm1_br, bm1_bi)
-            bm2_a = complex(bm2_ar, bm2_ai)
-            bm2_b = complex(bm2_br, bm2_bi)
-            ts1_a = complex(ts1_ar, ts1_ai)
-            ts1_b = complex(ts1_br, ts1_bi)
-            ts2_a = complex(ts2_ar, ts2_ai)
-            ts2_b = complex(ts2_br, ts2_bi)
-            af_a = complex(af_ar, af_ai)
-            af_b = complex(af_br, af_bi)
-            trq_a = complex(trq_ar, trq_ai)
-            trq_b = complex(trq_br, trq_bi)
+        (bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
+         bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b) = real_imag_from_list([
+            bm1_ar, bm2_ar, ts1_ar, ts2_ar, af_ar, trq_ar,
+            bm1_br, bm2_br, ts1_br, ts2_br, af_br, trq_br,
+            bm1_ai, bm2_ai, ts1_ai, ts2_ai, af_ai, trq_ai,
+            bm1_bi, bm2_bi, ts1_bi, ts2_bi, af_bi, trq_bi], is_magnitude_phase)
 
         add_sort_x(dt, eid,
                    nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,

@@ -244,8 +244,8 @@ class ForceObject(BaseElement):
             field5 = self.modes[itime]
             field6 = self.eigns[itime]
             field7 = self.cycles[itime]
-            assert isinstance(field6, float), type(field6)
-            assert isinstance(field7, float), type(field7)
+            assert isinstance(field6, float_types), type(field6)
+            assert isinstance(field7, float_types), type(field7)
             ftable3 = set_table3_field(ftable3, 6, b'f')  # field 6
             ftable3 = set_table3_field(ftable3, 7, b'f')  # field 7
         elif self.analysis_code == 5:
@@ -578,7 +578,8 @@ class RealSpringDamperForceArray(RealForceObject):
         #     raise NotImplementedError('SORT2')
 
     @classmethod
-    def add_static_case(cls, table_name, element_name, element, data, isubcase,
+    def add_static_case(cls, table_name: str, element_name: str,
+                        element, data, isubcase,
                         is_sort1=True, is_random=False, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
 

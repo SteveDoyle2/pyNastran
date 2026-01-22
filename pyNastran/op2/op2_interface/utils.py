@@ -1,3 +1,4 @@
+from math import sin, cos, radians
 from typing import Any
 import numpy as np
 from pyNastran.op2.op2_helper import polar_to_real_imag
@@ -112,7 +113,28 @@ def build_obj(obj):
             #raise RuntimeError(str(obj)) from e
         obj.is_built = True
 
-def apply_mag_phase(floats: Any, is_magnitude_phase: bool,
+def real_imag_from_list(my_floats: list[float],
+                        is_magnitude_phase: bool) -> list:
+    nfloat = len(my_floats)
+    nreal = nfloat // 2
+    assert nfloat % 2 == 0
+    reals = my_floats[:nreal]
+    imags = my_floats[nreal:]
+    complexs = []
+    if is_magnitude_phase:
+        for mag, theta in zip(reals, imags):
+            # value = polar_to_real_imag(mag, theta)
+            rtheta = radians(theta)
+            value = mag * complex(cos(rtheta), sin(rtheta))
+            complexs.append(value)
+    else:
+        for real, imag in zip(reals, imags):
+            complexs.append(complex(real, imag))
+    return complexs
+
+
+def apply_mag_phase(floats: np.ndarray,
+                    is_magnitude_phase: bool,
                     isave_real: list[int], isave_imag: list[int]) -> Any:
     """converts mag/phase data to real/imag"""
     if is_magnitude_phase:

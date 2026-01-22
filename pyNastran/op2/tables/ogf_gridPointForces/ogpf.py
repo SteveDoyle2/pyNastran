@@ -8,7 +8,7 @@ from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import (
@@ -211,21 +211,9 @@ class OGPF:
                         if op2.is_debug_file:
                             op2.binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
 
-                        if is_magnitude_phase:
-                            f1 = polar_to_real_imag(f1r, f1i)
-                            f2 = polar_to_real_imag(f2r, f2i)
-                            f3 = polar_to_real_imag(f3r, f3i)
-                            m1 = polar_to_real_imag(m1r, m1i)
-                            m2 = polar_to_real_imag(m2r, m2i)
-                            m3 = polar_to_real_imag(m3r, m3i)
-                        else:
-                            f1 = complex(f1r, f1i)
-                            f2 = complex(f2r, f2i)
-                            f3 = complex(f3r, f3i)
-                            m1 = complex(m1r, m1i)
-                            m2 = complex(m2r, m2i)
-                            m3 = complex(m3r, m3i)
-
+                        f1, f2, f3, m1, m2, m3 = real_imag_from_list([
+                            f1r, f2r, f3r, m1r, m2r, m3r,
+                            f1i, f2i, f3i, m1i, m2i, m3i], is_magnitude_phase)
                         op2.obj.add_sort1(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
                         n += ntotal
             else:

@@ -342,7 +342,7 @@ def _get_composite_plate_msg(self, is_mag_phase=True, is_sort1=True) -> tuple[li
 
 
 class ComplexLayeredCompositesArray12(OES_Object):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code, is_sort1: bool, isubcase: int, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)   ## why???
         self.element_node = None
         #self.code = [self.format_code, self.sort_code, self.s_code]
@@ -508,20 +508,39 @@ class ComplexLayeredCompositesArray12(OES_Object):
                  1               1   -8.713408E-01 -1.132072E+01 -2.119228E-02   -2.255483E-01  5.870259E-05
                                       1.307266E-01  1.698439E+00  3.178526E-03    3.383883E-02 -8.803315E-06
         """
-        assert self.is_stress
-        if self.element_type == 95:
-            # CQUAD4
-            pass
-        else:
+        element_type = self.element_type
+        if element_type == 95:
+            element_name = 'Q U A D 4 '
+        elif element_type == 97:
+            element_name = 'T R I A 3 '
+        elif element_type == 98:
+            element_name = 'T R I A 6 '
+        elif element_type == 232:
+            element_name = 'Q U A D R '
+        elif element_type == 233:
+            element_name = 'T R I A R '
+        else:  # pragma: no cover
             raise RuntimeError(self.code_information())
-        msg_temp = [
-            '                 C O M P L E X   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   (Q U A D 4 )\n'
-            '                                                          (REAL/IMAGINARY)\n'
-            '   ELEMENT              PLY   STRESSES IN FIBER AND MATRIX DIRECTIONS     INTER-LAMINAR  STRESSES\n'
-            '        ID              ID       NORMAL-1      NORMAL-2      SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT\n'
-            # '         1               1   -8.713408E-01 -1.132072E+01 -2.119228E-02   -2.255483E-01  5.870259E-05'
-            # '                             -8.713408E-01 -1.132072E+01 -2.119228E-02   -2.255483E-01  5.870259E-05'
-        ]
+
+        if self.is_stress:
+            msg_temp = [
+                f'                 C O M P L E X   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ({element_name})\n'
+                '                                                          (REAL/IMAGINARY)\n'
+                '   ELEMENT              PLY   STRESSES IN FIBER AND MATRIX DIRECTIONS     INTER-LAMINAR  STRESSES\n'
+                '        ID              ID       NORMAL-1      NORMAL-2      SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT\n'
+                # '         1               1   -8.713408E-01 -1.132072E+01 -2.119228E-02   -2.255483E-01  5.870259E-05'
+                # '                             -8.713408E-01 -1.132072E+01 -2.119228E-02   -2.255483E-01  5.870259E-05'
+            ]
+        else:
+            msg_temp = [
+                f'                 C O M P L E X   S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ({element_name})\n'
+                '                                                          (REAL/IMAGINARY)\n'
+                '   ELEMENT              PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS      INTER-LAMINAR  STRAINS\n'
+                '        ID              ID       NORMAL-1      NORMAL-2      SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT\n'
+                # '         1               1   -8.713408E-01 -1.132072E+01 -2.119228E-02   -2.255483E-01  5.870259E-05'
+                # '                             -8.713408E-01 -1.132072E+01 -2.119228E-02   -2.255483E-01  5.870259E-05'
+            ]
+
         if header is None:
             header = []
         # msg_temp, nnodes = _get_composite_plate_msg(self, is_mag_phase, is_sort1)

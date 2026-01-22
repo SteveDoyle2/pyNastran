@@ -3,7 +3,7 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list
 from pyNastran.op2.op2_interface.utils import apply_mag_phase
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
@@ -241,27 +241,12 @@ def oes_cbar_complex_19(op2: OP2,
         if op2.is_debug_file:
             op2.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
                 eid, i, ', '.join(['%r' % di for di in out])))
-        if is_magnitude_phase:
-            s1a = polar_to_real_imag(s1ar, s1ai)
-            s1b = polar_to_real_imag(s1br, s1bi)
-            s2a = polar_to_real_imag(s2ar, s2ai)
-            s2b = polar_to_real_imag(s2br, s2bi)
-            s3a = polar_to_real_imag(s3ar, s3ai)
-            s3b = polar_to_real_imag(s3br, s3bi)
-            s4a = polar_to_real_imag(s4ar, s4ai)
-            s4b = polar_to_real_imag(s4br, s4bi)
-            axial = polar_to_real_imag(axialr, axiali)
-        else:
-            s1a = complex(s1ar, s1ai)
-            s1b = complex(s1br, s1bi)
-            s2a = complex(s2ar, s2ai)
-            s2b = complex(s2br, s2bi)
-            s3a = complex(s3ar, s3ai)
-            s3b = complex(s3br, s3bi)
-            s4a = complex(s4ar, s4ai)
-            s4b = complex(s4br, s4bi)
-            axial = complex(axialr, axiali)
-
+        (s1a, s2a, s3a, s4a, axial,
+         s1b, s2b, s3b, s4b) = real_imag_from_list([
+            s1ar, s2ar, s3ar, s4ar, axialr,
+            s1br, s2br, s3br, s4br,
+            s1ai, s2ai, s3ai, s4ai, axiali,
+            s1bi, s2bi, s3bi, s4bi], is_magnitude_phase)
         obj.add_new_eid_sort1(dt, eid,
                               s1a, s2a, s3a, s4a, axial,
                               s1b, s2b, s3b, s4b)

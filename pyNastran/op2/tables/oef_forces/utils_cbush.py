@@ -3,7 +3,7 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
 # from pyNastran.op2.op2_interface.utils import apply_mag_phase
@@ -178,21 +178,9 @@ def oef_cbush_imag_13(self, data: bytes,
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if is_magnitude_phase:
-            fx = polar_to_real_imag(fxr, fxi)
-            mx = polar_to_real_imag(mxr, mxi)
-            fy = polar_to_real_imag(fyr, fyi)
-            my = polar_to_real_imag(myr, myi)
-            fz = polar_to_real_imag(fzr, fzi)
-            mz = polar_to_real_imag(mzr, mzi)
-        else:
-            fx = complex(fxr, fxi)
-            mx = complex(mxr, mxi)
-            fy = complex(fyr, fyi)
-            my = complex(myr, myi)
-            fz = complex(fzr, fzi)
-            mz = complex(mzr, mzi)
-
+        fx, fy, fz, mx, my, mz = real_imag_from_list([
+            fxr, fyr, fzr, mxr, myr, mzr,
+            fxi, fyi, fzi, mxi, myi, mzi], is_magnitude_phase)
         add_sort_x(dt, eid, fx, fy, fz, mx, my, mz)
         n += ntotal
     return n

@@ -34,9 +34,6 @@ class OQG:
         self.op2 = op2
 
     @property
-    def size(self) -> int:
-        return self.op2.size
-    @property
     def factor(self) -> int:
         return self.op2.factor
 

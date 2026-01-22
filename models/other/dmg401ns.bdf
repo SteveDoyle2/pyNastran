@@ -1,0 +1,211 @@
+$ DESCRIPTION -  To test tablem5 for nonlinear shear damage. TABLEM5 is used with ud model.
+$                Here TABLEM5 is defined as "0.01*$U+0.1" 
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* FILE MANAGEMENT
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* EXECUTIVE CONTROL
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+ID,NASTRAN,Siemens
+SOL 401
+CEND
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* CASE CONTROL
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+ECHO = NONE
+RIGID = AUTO
+DLOAD = 300
+DISPLACEMENT(Print,REAL) = ALL
+SPCFORCES(PLOT,REAL) = ALL
+STRESS(PLOT,REAL,VONMISES,CENTER) = ALL
+STRAIN(PLOT,REAL,VONMISES,CENTER) = ALL
+$*  Step: Step - Nonlinear Statics 1
+SPC = 101
+temp(init) = 10
+temp(load) = 100
+SUBCASE 1
+PFRESULTS(DAMAGE,STATUS,energy,Print) = all
+LABEL = Step - Nonlinear Statics 1
+TSTEP = 101
+ANALYSIS = STATICS
+SEQDEP = YES
+SUBCASE 2
+SET 10000=1,3
+PFRESULTS(DAMAGE,Print) = 10000
+LABEL = Step - Nonlinear Statics 2
+TSTEP = 102
+ANALYSIS = STATICS
+SEQDEP = YES
+SUBCASE 3
+LABEL = Step - Mode analysis
+ANALYSIS=MODES
+METHOD=20
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* BULK DATA
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+BEGIN BULK
+$*
+$* SOLUTION CARDS
+$*
+TSTEP1,101,0.05,10,END
+TSTEP1,102,0.1,10,END
+$*
+$* PARAM CARDS
+$*
+EIGRL         20      0.               4
+PARAM     LGDISP       1
+PARAM      MATNL       1
+PARAM     OIBULK     YES
+PARAM    OMACHPR     YES
+PARAM       POST      -1
+PARAM    POSTEXT     YES
+PARAM    UNITSYS   MN-MM
+$*
+$* GRID CARDS
+$*
+GRID*                  1               00.0000000000E+000.0000000000E+00+
+*       0.5000000000E+00               0
+GRID*                  2               01.0000000000E+000.0000000000E+00+
+*       0.5000000000E+00               0
+GRID*                  3               00.0000000000E+001.0000000000E+00+
+*       0.5000000000E+00               0
+GRID*                  4               01.0000000000E+001.0000000000E+00+
+*       0.5000000000E+00               0
+GRID*                  5               00.0000000000E+000.0000000000E+00+
+*       1.0000000000E+00               0
+GRID*                  6               01.0000000000E+000.0000000000E+00+
+*       1.0000000000E+00               0
+GRID*                  7               00.0000000000E+001.0000000000E+00+
+*       1.0000000000E+00               0
+GRID*                  8               01.0000000000E+001.0000000000E+00+
+*       1.0000000000E+00               0
+$
+GRID*                 15               00.0000000000E+000.0000000000E+00+
+*        0.0000000000E+0               0
+GRID*                 16               01.0000000000E+000.0000000000E+00+
+*        0.0000000000E+0               0
+GRID*                 17               00.0000000000E+001.0000000000E+00+
+*        0.0000000000E+0               0
+GRID*                 18               01.0000000000E+001.0000000000E+00+
+*        0.0000000000E+0               0
+$*
+$* ELEMENT CARDS
+$*
+$*  Mesh Collector: Solid_eud
+$*  Mesh: 3d_manual_mesh(1)
+CHEXA          3       2       1       2       4       3      15      16+
++             18      17
+$
+CPENTA         1       2       1       2       4       5       6       8
+CPENTA         2       2       1       3       4       5       7       8
+$
+$*
+$* PROPERTY CARDS
+$*
+$*  Property: Solid Laminate1
+PCOMPS         2       0      23                 20.0000  0.0000        +
++              1       1 .500000  0.0000     PFA             YES     ABS
+$*
+$* MATERIAL CARDS
+$*
+$*  Material: Orthotropic
+MAT11          11.3000+5 9800.00 9800.000.3000000.3000000.300000 5600.00+
++        5600.00 3700.00  0.1000   1.E-5   1.E-5   1.E-5
+$-------$-------$-------$-------$-------$-------$-------$-------$-------$-------
+MATT11         1      10      20      20      30      30      30      40+
++             40      50      60      70      70      70      
+$* 
+TABLEM2       10      0.                                                +
++             0.     1.0    100.     1.0    ENDT
+TABLEM2       20      0.                                                +
++             0.     1.0    100.     1.0    ENDT
+TABLEM2       30      0.                                                +
++             0.     1.0    100.    1.00    ENDT
+TABLEM2       40      0.                                                +
++             0.     1.0    100.    1.00    ENDT
+TABLEM2       50      0.                                                +
++             0.     1.0    100.    1.00    ENDT
+TABLEM2       60      0.                                                +
++             0.     1.0    100.    1.00    ENDT
+TABLEM2       70      0.                                                +
++             0.     1.0    100.    1.00    ENDT
+MATDMG         1      UD                                                +
++                       3.0000000.200000 25.00002.0000003.000000 20.0000+
++       0.6000000.5000000.6000000.100000489.00000.2930001.0000-41.000000+
++              0     108 .4343330.999000       0
+$ 0.01x+0.8
+$-------$-------$-------$-------$-------$-------$-------$-------$-------$-------
+Tablem5      108                                                        +
++           0.00  .10000    5.00  .15000   10.00  .20000   10.01   0.200+
++          1.e4    0.200    endt 
+$-------$-------$-------$-------$-------$-------$-------$-------$-------$-------
+$* LOAD AND CONSTRAINT CARDS
+$*
+$*  Constraint: Fixed_node1_123
+$              sid    g    c      d 
+SPC            7      15  123456  0.0000
+SPC            7       1      12  0.0000
+$*  Constraint: node3_13comp
+SPC            8      17      13  0.0000
+SPC            8       3       1  0.0000
+$*  Constraint: node5_12comp
+SPC            9       5      12  0.0000
+$*  Constraint: node7_1comp
+SPC           10       7       1  0.0000
+$*  Solver Set: Temperature Set - Initial/Stress Free Temperature(1)
+TEMPD          1 20.0000
+$*  Solver Set: Transient Excitation Load Set - Enforced Displacement(1)
+TLOAD1         2       3  0.0000       1       3
+TABLED1        3                       1                                +
++         0.0000  0.0000 10.00000.500000    ENDT
+$*  Load: Enforced Motion_node8
+$*  Solver Set: Static Load Set - Enforced Motion(1)
+$*  Solver Set: Static Load Set - Enforced Motion(1)
+SPCD           3       8       11.000000
+SPC1           3       1       8
+$            sid       c      g
+$*  Load: Enforced Motion_node2
+$*  Solver Set: Static Load Set - Enforced Motion(1)
+SPCD           3      16      23  0.0000
+SPCD           3      16       11.000000
+SPC1           4     123      16
+SPCD           3       2       2  0.0000
+SPCD           3       2       11.000000
+SPC1           4      12       2
+$*  Load: Enforced Motion_node4
+$*  Solver Set: Static Load Set - Enforced Motion(1)
+SPCD           3      18       3  0.0000
+SPCD           3      18       11.000000
+SPC1           5      13      18
+$
+SPCD           3       4       11.000000
+SPC1           5       1       4
+$*  Load: Enforced Motion_node6
+$*  Solver Set: Static Load Set - Enforced Motion(1)
+SPCD           3       6       2  0.0000
+SPCD           3       6       11.000000
+SPC1           6      12       6
+SPCADD       100       7       8       9      10
+$
+DLOAD        3001.0000001.000000       2
+SPCADD       101       3       4       5       6       7       8       9+
++             10
+TEMPD         10     10.
+TEMPD        100     10.
+ENDDATA aa30de75

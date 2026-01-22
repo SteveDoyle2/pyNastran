@@ -47,21 +47,14 @@ class OFCON3D:
     def __init__(self, op2: OP2):
         self.op2 = op2
 
-    @property
-    def size(self) -> int:
-        return self.op2.size
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
-
-    #def update_mode_cycle(self, name):
-        #op2 = self.op2
-        #value = getattr(op2, name)
-        #if value == 0.0:
-            ##print('table_name=%r mode=%s eigr=%s' % (op2.table_name, op2.mode, op2.eigr))
-            #value = np.sqrt(np.abs(op2.eign)) / (2. * np.pi)
-            #setattr(op2, name, value)
-            #op2.data_code[name] = value
+    # def update_mode_cycle(self, name):
+    #     op2 = self.op2
+    #     value = getattr(op2, name)
+    #     if value == 0.0:
+    #         #print('table_name=%r mode=%s eigr=%s' % (op2.table_name, op2.mode, op2.eigr))
+    #         value = np.sqrt(np.abs(op2.eign)) / (2. * np.pi)
+    #         setattr(op2, name, value)
+    #         op2.data_code[name] = value
 
     def read_sort1_3(self, data: bytes, ndata: int):
         """reads table 3 (the header table)"""

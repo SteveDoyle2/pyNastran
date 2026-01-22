@@ -1017,9 +1017,9 @@ class OEF:
             #                                           result_type, prefix, postfix)
             # n, nelements, ntotal = self._oef_vu_beam(data, ndata, dt, is_magnitude_phase,
             #                                          result_type, prefix, postfix)
-            if op2.read_mode == 1:
-                msg = f'{op2.table_name_str} {op2.element_name}-{element_type} has been removed'
-                op2.log.warning(msg)
+            # if op2.read_mode == 1:
+            #     msg = f'{op2.table_name_str} {op2.element_name}-{element_type} has been removed'
+            #     op2.log.warning(msg)
             return ndata
             # return op2._not_implemented_or_skip(data, ndata, msg)
         elif op2.is_nx:

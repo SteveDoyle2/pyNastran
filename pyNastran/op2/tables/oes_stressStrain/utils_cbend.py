@@ -3,7 +3,7 @@ from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
@@ -262,19 +262,13 @@ def oes_cbend_complex_21(op2: OP2, data: bytes,
                 op2.binary_debug.write('BEND-69 - eid=%s %s\n' % (eid, str(out)))
             #print('BEND-69 - eid=%s %s\n' % (eid, str(out)))
 
-            (grid, angle, scr, sdr, ser, sfr,
+            (grid, angle,
+             scr, sdr, ser, sfr,
              sci, sdi, sei, sfi) = out
 
-            if is_magnitude_phase:
-                sc = polar_to_real_imag(scr, sci)
-                sd = polar_to_real_imag(sdr, sdi)
-                se = polar_to_real_imag(ser, sei)
-                sf = polar_to_real_imag(sfr, sfi)
-            else:
-                sc = complex(scr, sci)
-                sd = complex(sdr, sdi)
-                se = complex(ser, sei)
-                sf = complex(sfr, sfi)
+            sc, sd, se, sf = real_imag_from_list([
+                scr, sdr, ser, sfr,
+                sci, sdi, sei, sfi], is_magnitude_phase)
             add_sort_x(dt, eid, grid, angle, sc, sd, se, sf)
             n += ntotal2
     return n

@@ -570,14 +570,19 @@ def get_nnodes(self):
 class RandomPlateVMStressArray(RandomPlateVMArray, StressObject):
     """
     NX
-    2 FD1  RS Z1 = Fibre Distance
-    3 SX1  RS Normal in x at Z1
-    4 SY1  RS Normal in y at Z1
-    5 TXY1 RS Shear in xy at Z1
-    6 FD2  RS Z2 = Fibre Distance
-    7 SX2  RS Normal in x at Z2
-    8 SY2  RS Normal in y at Z2
-    9 TXY2 RS Shear in xy at Z2
+    2  FD1  RS Z1 = Fibre Distance
+    3  SX1  RS Normal in x at Z1
+    4  SY1  RS Normal in y at Z1
+    5  TXY1 RS Shear in xy at Z1
+    6  VM1  RS von mises at Z1
+    7  FD2  RS Z2 = Fibre Distance
+    8  SX2  RS Normal in x at Z2
+    9  SY2  RS Normal in y at Z2
+    10 TXY2 RS Shear in xy at Z2
+    11 VM2 RS von mises at Z1
+    add_sort_x(dt, eid, cen,
+               fd1, ox2, oy2, txy2, vm1,
+               fd2, ox2, oy2, txy2, vm2)
     """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RandomPlateVMArray.__init__(self, data_code, is_sort1, isubcase, dt)

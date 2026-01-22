@@ -20,8 +20,7 @@ MODCON           OSTRMC        Modal contributions
 """
 from __future__ import annotations
 from struct import Struct
-from typing import Any, TYPE_CHECKING
-from numpy import fromstring, frombuffer, vstack, repeat, array
+from typing import TYPE_CHECKING
 import numpy as np
 
 import pyNastran
@@ -107,24 +106,12 @@ IS_DEV = 'dev' in pyNastran.__version__
 NX_TABLES_BYTES = [b'OESVM1', b'OESVM2']
 NASA_TABLES_BYTES = [b'OESC1']
 
-
-class OP2Common2:
-    def __init__(self, op2: OP2):
-        self.op2 = op2
-
-    @property
-    def size(self) -> int:
-        return self.op2.size
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
-
-class OES(OP2Common2):
+class OES:
     """
     Defines  the OES class that is used to read stress/strain data
     """
     def __init__(self, op2: OP2):
-        super().__init__(op2)
+        self.op2 = op2
         self.ntotal = 0
 
     def _read_oes1_3(self, data, unused_ndata):
@@ -1660,13 +1647,13 @@ class OES(OP2Common2):
 
         elif op2.element_type == 86:  # cgap
             # 86-GAPNL
-            n, nelements, ntotal = self._oes_cgap_nonlinear(data, ndata, dt, is_magnitude_phase,
+            n, nelements, ntotal = oes_cgap_nonlinear(op2, data, ndata, dt, is_magnitude_phase,
                                                             result_type, prefix, postfix)
 
         elif op2.element_type == 94:
             # 94-BEAMNL
-            n, nelements, ntotal = self._oes_cbeam_nonlinear(data, ndata, dt, is_magnitude_phase,
-                                                             result_type, prefix, postfix)
+            n, nelements, ntotal = oes_cbeam_nonlinear(op2, data, ndata, dt, is_magnitude_phase,
+                                                       result_type, prefix, postfix)
 
         elif op2.element_type in [85, 91, 93, 256]:
             # 256-PYRAM
@@ -1771,9 +1758,9 @@ class OES(OP2Common2):
             # 147-VUTETRA
             # 189-VUQUAD
             # 191-VUBEAM
-            if op2.read_mode == 1:
-                msg = f'{op2.table_name_str} {op2.element_name}-{op2.element_type} has been removed'
-                log.warning(msg)
+            # if op2.read_mode == 1:
+            #     msg = f'{op2.table_name_str} {op2.element_name}-{op2.element_type} has been removed'
+            #     log.warning(msg)
             return ndata
             # return op2._not_implemented_or_skip(data, ndata, msg)
         elif op2.element_type == 118:  # WELDP-MSC
@@ -2066,7 +2053,7 @@ class OES(OP2Common2):
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
                     # (eid_device, cid, abcd, nnodes)
-                    ints = frombuffer(data, dtype=op2.idtype8).copy()
+                    ints = np.frombuffer(data, dtype=op2.idtype8).copy()
                     try:
                         ints1 = ints.reshape(nelements, numwide_real)
                     except ValueError:
@@ -2079,12 +2066,12 @@ class OES(OP2Common2):
                     cids = ints1[:, 1]
                     #nids = ints1[:, 4]
                     assert eids.min() > 0, eids.min()
-                    obj.element_node[itotal:itotal2, 0] = repeat(eids, nnodes_expected)
+                    obj.element_node[itotal:itotal2, 0] = np.repeat(eids, nnodes_expected)
                     ints2 = ints1[:, 3:].reshape(nelements * nnodes_expected, 8)
                     grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
 
                     #print('%s-grid_device=%s' % (op2.element_name, grid_device))
-                    unused_grid_device2 = repeat(grid_device, nnodes_expected)
+                    unused_grid_device2 = np.repeat(grid_device, nnodes_expected)
                     try:
                         obj.element_node[itotal:itotal2, 1] = grid_device
                     except ValueError:
@@ -2096,7 +2083,7 @@ class OES(OP2Common2):
                     obj.element_cid[itotal:itotali, 0] = eids
                     obj.element_cid[itotal:itotali, 1] = cids
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, numwide_real)[:, 3:]
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, numwide_real)[:, 3:]
                 # 1    2    3    4    5    6    7 - verify...
                 #[oxx, oyy, ozz, txy, tyz, txz, ovm]
                 #isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
@@ -2235,7 +2222,7 @@ class OES(OP2Common2):
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
                     # (eid_device, cid, abcd, nnodes)
-                    ints = frombuffer(data, dtype=op2.idtype).copy()
+                    ints = np.frombuffer(data, dtype=op2.idtype).copy()
                     try:
                         ints1 = ints.reshape(nelements, numwide_real)
                     except ValueError:
@@ -2247,12 +2234,12 @@ class OES(OP2Common2):
                     cids = ints1[:, 1]
                     #nids = ints1[:, 4]
                     assert eids.min() > 0, eids.min()
-                    obj.element_node[itotal:itotal2, 0] = repeat(eids, nnodes_expected)
+                    obj.element_node[itotal:itotal2, 0] = np.repeat(eids, nnodes_expected)
                     ints2 = ints1[:, 4:].reshape(nelements * nnodes_expected, 21)
                     grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
 
                     #print('%s-grid_device=%s' % (op2.element_name, grid_device))
-                    unused_grid_device2 = repeat(grid_device, nnodes_expected)
+                    unused_grid_device2 = np.repeat(grid_device, nnodes_expected)
                     try:
                         obj.element_node[itotal:itotal2, 1] = grid_device
                     except ValueError:
@@ -2264,7 +2251,7 @@ class OES(OP2Common2):
                     obj.element_cid[itotal:itotali, 0] = eids
                     obj.element_cid[itotal:itotali, 1] = cids
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)[:, 4:]
+                floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)[:, 4:]
                 # 1     9    15   2    10   16  3   11  17   8
                 #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
                 #isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
@@ -2451,7 +2438,7 @@ class OES(OP2Common2):
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
                     # (eid_device, cid, abcd, nnodes)
-                    ints = frombuffer(data, dtype=op2.idtype).copy()
+                    ints = np.frombuffer(data, dtype=op2.idtype).copy()
                     try:
                         ints1 = ints.reshape(nelements, numwide_real)
                     except ValueError:
@@ -2463,12 +2450,12 @@ class OES(OP2Common2):
                     cids = ints1[:, 1]
                     #nids = ints1[:, 4]
                     assert eids.min() > 0, eids.min()
-                    obj.element_node[itotal:itotal2, 0] = repeat(eids, nnodes_expected)
+                    obj.element_node[itotal:itotal2, 0] = np.repeat(eids, nnodes_expected)
                     ints2 = ints1[:, 4:].reshape(nelements * nnodes_expected, 21)
                     grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
 
                     #print('%s-grid_device=%s' % (op2.element_name, grid_device))
-                    unused_grid_device2 = repeat(grid_device, nnodes_expected)
+                    unused_grid_device2 = np.repeat(grid_device, nnodes_expected)
                     try:
                         obj.element_node[itotal:itotal2, 1] = grid_device
                     except ValueError:
@@ -2480,7 +2467,7 @@ class OES(OP2Common2):
                     obj.element_cid[itotal:itotali, 0] = eids
                     obj.element_cid[itotal:itotali, 1] = cids
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)[:, 4:]
+                floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)[:, 4:]
                 # 1     9    15   2    10   16  3   11  17   8
                 #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
                 #isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
@@ -2635,7 +2622,7 @@ class OES(OP2Common2):
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
                     # (eid_device, cid, abcd, nnodes)
-                    ints = frombuffer(data, dtype=op2.idtype).copy()
+                    ints = np.frombuffer(data, dtype=op2.idtype).copy()
                     try:
                         ints1 = ints.reshape(nelements, numwide_real)
                     except ValueError:
@@ -2647,12 +2634,12 @@ class OES(OP2Common2):
                     cids = ints1[:, 1]
                     #nids = ints1[:, 4]
                     assert eids.min() > 0, eids.min()
-                    obj.element_node[itotal:itotal2, 0] = repeat(eids, nnodes_expected)
+                    obj.element_node[itotal:itotal2, 0] = np.repeat(eids, nnodes_expected)
                     ints2 = ints1[:, 4:].reshape(nelements * nnodes_expected, 21)
                     grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
 
                     #print('%s-grid_device=%s' % (op2.element_name, grid_device))
-                    unused_grid_device2 = repeat(grid_device, nnodes_expected)
+                    unused_grid_device2 = np.repeat(grid_device, nnodes_expected)
                     try:
                         obj.element_node[itotal:itotal2, 1] = grid_device
                     except ValueError:
@@ -2664,7 +2651,7 @@ class OES(OP2Common2):
                     obj.element_cid[itotal:itotali, 0] = eids
                     obj.element_cid[itotal:itotali, 1] = cids
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)[:, 4:]
+                floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)[:, 4:]
                 # 1     9    15   2    10   16  3   11  17   8
                 #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
                 #isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
@@ -2829,7 +2816,7 @@ class OES(OP2Common2):
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
                     # (eid_device, cid, abcd, nnodes)
-                    ints = frombuffer(data, dtype=op2.idtype).copy()
+                    ints = np.frombuffer(data, dtype=op2.idtype).copy()
                     try:
                         ints1 = ints.reshape(nelements, numwide_real)
                     except ValueError:
@@ -2841,12 +2828,12 @@ class OES(OP2Common2):
                     cids = ints1[:, 1]
                     #nids = ints1[:, 4]
                     assert eids.min() > 0, eids.min()
-                    obj.element_node[itotal:itotal2, 0] = repeat(eids, nnodes_expected)
+                    obj.element_node[itotal:itotal2, 0] = np.repeat(eids, nnodes_expected)
                     ints2 = ints1[:, 4:].reshape(nelements * nnodes_expected, 21)
                     grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
 
                     #print('%s-grid_device=%s' % (op2.element_name, grid_device))
-                    unused_grid_device2 = repeat(grid_device, nnodes_expected)
+                    unused_grid_device2 = np.repeat(grid_device, nnodes_expected)
                     try:
                         obj.element_node[itotal:itotal2, 1] = grid_device
                     except ValueError:
@@ -2858,7 +2845,7 @@ class OES(OP2Common2):
                     obj.element_cid[itotal:itotali, 0] = eids
                     obj.element_cid[itotal:itotali, 1] = cids
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)[:, 4:]
+                floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)[:, 4:]
                 # 1     9    15   2    10   16  3   11  17   8
                 #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
                 #isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
@@ -3098,7 +3085,7 @@ class OES(OP2Common2):
                 obj._times[obj.itime] = dt
                 obj_set_element(op2, obj, ielement, ielement2, data, nelements)
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
 
                 #[axial, maxa, mina, maxb, minb, max_shear, bearing]
                 obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:].copy()
@@ -3141,7 +3128,7 @@ class OES(OP2Common2):
                 obj._times[obj.itime] = dt
                 obj_set_element(op2, obj, ielement, ielement2, data, nelements)
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
 
                 #[axial, maxa, mina, maxb, minb, max_shear, bearing]
                 obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:].copy()
@@ -3219,7 +3206,7 @@ class OES(OP2Common2):
                 obj._times[obj.itime] = dt
                 obj_set_element(op2, obj, ielement, ielement2, data, nelements)
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 7)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 7)
 
                 #[force_x, force_y, force_z, moment_x, moment_y, moment_z]
                 obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:].copy()
@@ -3261,7 +3248,7 @@ class OES(OP2Common2):
                 obj._times[obj.itime] = dt
                 obj_set_element(op2, obj, ielement, ielement2, data, nelements)
 
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 13)# [:, 1:]
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 13)# [:, 1:]
                 isave_real = [1, 2, 3, 4, 5, 6]
                 isave_imag = [7, 8, 9, 10, 11, 12]
                 real_imag = apply_mag_phase(floats, is_magnitude_phase, isave_real, isave_imag)
@@ -3329,7 +3316,7 @@ class OES(OP2Common2):
 
                 obj_set_element(op2, obj, ielement, ielement2, data, nelements)
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 13).copy()
+                floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, 13).copy()
 
                 #[fiber_distance, oxx, oyy, ozz, txy, exx, eyy, ezz, exy, es, eps, ecs]
                 floats[:, 1] = 0
@@ -3380,17 +3367,17 @@ class OES(OP2Common2):
 
                 if obj.itime == 0:
                     try:
-                        ints = fromstring(data, dtype=op2.idtype).reshape(nelements, 25)
+                        ints = np.fromstring(data, dtype=op2.idtype).reshape(nelements, 25)
                     except ValueError:
-                        unused_values = fromstring(data, dtype=op2.idtype)
+                        unused_values = np.fromstring(data, dtype=op2.idtype)
 
                     eids = ints[:, 0] // 10
-                    #eids2 = vstack([eids, eids]).T.ravel()
+                    #eids2 =np. vstack([eids, eids]).T.ravel()
                     #print(eids.tolist())
                     obj.element[ielement:ielement2] = eids  # 150
                      #print(obj.element_node[:10, :])
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 25)[:, 1:]
+                floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, 25)[:, 1:]
 
                 #[fiber_distance, oxx, oyy, ozz, txy, exx, eyy, ezz, exy, es, eps, ecs]
                 #floats[:, 1] = 0
@@ -3465,10 +3452,10 @@ class OES(OP2Common2):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 7).copy()
+                    ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 7).copy()
                     eids = ints[:, 0] // 10
                     obj.element[istart:iend] = eids
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 7)
+                floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 7)
                 #[axial_stress, equiv_stress, total_strain,
                 # eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss]
                 obj.data[obj.itime, istart:iend, :] = floats[:, 1:].copy()
@@ -3545,12 +3532,12 @@ class OES(OP2Common2):
                 ielement2 = obj.ielement + nelements
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, numwide_real).copy()
+                    ints = np.frombuffer(data, dtype=op2.idtype).reshape(nelements, numwide_real).copy()
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[ielement:ielement2] = eids
 
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)
+                floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)
 
                 #[force, stress]
                 obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:].copy()
@@ -3622,10 +3609,10 @@ class OES(OP2Common2):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 19).copy()
+                    ints = np.frombuffer(data, dtype=op2.idtype).reshape(nelements, 19).copy()
                     eids = ints[:, 0] // 10
                     obj.element[istart:iend] = eids
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 19)
+                floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, 19)
                 #[fx, fy, fz, otx, oty, otz, etx, ety, etz,
                 # mx, my, mz, orx, ory, orz, erx, ery, erz]
                 obj.data[obj.itime, istart:iend, :] = floats[:, 1:].copy()
@@ -3764,7 +3751,7 @@ class OES(OP2Common2):
                 assert ntotal == op2.num_wide * 4
                 return nelements * ntotal, None, None
 
-            obj: RealCompositeSolidStressArray = op2.obj
+            obj: RealSolidCompositeStressArray = op2.obj
             n = oes_composite_solid_nx_real_center(op2, data, obj, nelements, ntotal)
 
         elif result_type == 0 and op2.num_wide == 43:  # real; center
@@ -3782,161 +3769,6 @@ class OES(OP2Common2):
             n = oes_composite_solid_nx_real_172(op2, data, obj, nelements, ntotal)
         else:
             raise NotImplementedError(op2.code_information())
-        return n, nelements, ntotal
-
-    def _oes_cgap_nonlinear(self, data, ndata, dt, is_magnitude_phase,
-                            result_type, prefix, postfix):
-        """
-        reads stress/strain for element type:
-         - 86 : GAPNL
-        """
-        op2 = self.op2
-        n = 0
-        stress_strain = 'stress' if op2.is_stress else 'strain'
-        result_name = f'{prefix}cgap_{stress_strain}{postfix}' # nonlinear_
-
-        is_saved, slot = get_is_slot_saved(op2, result_name)
-        if not is_saved:
-            return ndata, None, None
-
-        if result_type == 0 and op2.num_wide == 11:  # real?
-            if op2.is_stress:
-                obj_vector_real = NonlinearGapStressArray
-            else:
-                raise NotImplementedError('NonlinearGapStrain')
-
-            ntotal = 44 * op2.factor # 4*11
-            nelements = ndata // ntotal
-            assert ndata % ntotal == 0
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, obj_vector_real)
-            if auto_return:
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            if op2.use_vector and is_vectorized and op2.sort_method == 1:
-                n = nelements * ntotal
-
-                ielement = obj.ielement
-                ielement2 = ielement + nelements
-                obj._times[obj.itime] = dt
-
-                obj_set_element(op2, obj, ielement, ielement2, data, nelements)
-
-                #if obj.itime == 0:
-                    #ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 11).copy()
-                    #eids = ints[:, 0] // 10
-                    #obj.element[ielement:ielement2] = eids
-
-                #print(data, len(data))
-                if op2.size == 4:
-                    strings = frombuffer(data, dtype='|S4').reshape(nelements, 11)[:, [9, 10]]
-                else:
-                    strings = frombuffer(data, dtype='|S8').reshape(nelements, 11)[:, [9, 10]]
-                form = [reshape_bytes_block_strip(string[0] + string[1], size=op2.size) for string in strings]
-
-                #form = np.concatenate(strings) # strings[:, 0] + strings[:, 1] # np.hstack(strings)
-                #form = np.char.join(strings[:, 0], strings[:, 1]) # np.hstack(strings)
-                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 11)
-                obj.form[ielement:ielement2] = form
-                # skipping [form1, form2]
-                #[cpx, shy, shz, au, shv, shw, slv, slp]
-                obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:9].copy()
-            else:
-                n = oes_cgapnl_real_11(op2, data, obj, nelements, ntotal)
-        else:  # pragma: no cover
-            raise RuntimeError(op2.code_information())
-        return n, nelements, ntotal
-
-    def _oes_cbeam_nonlinear(self, data, ndata, dt, is_magnitude_phase,
-                             result_type, prefix, postfix):
-        """
-        reads stress/strain for element type:
-         - 94 : BEAMNL
-
-        """
-        op2 = self.op2
-        n = 0
-        numwide_real = 51
-        numwide_random = 0
-
-        stress_strain = 'stress' if op2.is_stress else 'strain'
-        result_name = f'{prefix}cbeam_{stress_strain}{postfix}'
-
-        is_saved, slot = get_is_slot_saved(op2, result_name)
-        if not is_saved:
-            return ndata, None, None
-
-        factor = op2.factor
-        if result_type == 0 and op2.num_wide == numwide_real:
-            msg = result_name
-            if op2.is_stress:
-                obj_vector_real = RealNonlinearBeamStressArray
-            else:
-                raise NotImplementedError('Nonlinear CBEAM Strain...this should never happen')
-
-            ntotal = numwide_real * 4 * op2.factor  # 204
-            nelements = ndata // ntotal
-
-            nlayers = nelements * 8
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nlayers, result_name, slot, obj_vector_real)
-            if auto_return:
-                op2._data_factor = 8
-                return ndata, None, None
-            obj = op2.obj
-            if op2.is_debug_file:
-                op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                #op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                #op2.binary_debug.write('  #elementi = [eid_device, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,\n')
-                #op2.binary_debug.write('                           s1b, s2b, s3b, s4b, smaxb, sminb,        MSc]\n')
-                #op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-
-            if op2.size == 4:
-                struct1 = Struct(op2._endian + b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
-            else:
-                assert op2.size == 8, op2.size
-                struct1 = Struct(op2._endian + b'2q 8s5d 8s5d 8s5d 8s5d q 8s5d 8s5d 8s5d 8s5d')  # 2 + 6*8 + 1 = 51
-
-            for unused_i in range(nelements):  # num_wide=51
-                edata = data[n:n + ntotal]
-                out = struct1.unpack(edata)
-
-                if op2.is_debug_file:
-                    op2.binary_debug.write('BEAMNL-94 - %s\n' % str(out))
-
-                #gridA, CA, long_CA, eqS_CA, tE_CA, eps_CA, ecs_CA,
-                #       DA, long_DA, eqS_DA, tE_DA, eps_DA, ecs_DA,
-                #       EA, long_EA, eqS_EA, tE_EA, eps_EA, ecs_EA,
-                #       FA, long_FA, eqS_FA, tE_FA, eps_FA, ecs_FA,
-                #gridB, CB, long_CB, eqS_CB, tE_CB, eps_CB, ecs_CB,
-                #       DB, long_DB, eqS_DB, tE_DB, eps_DB, ecs_DB,
-                #       EB, long_EB, eqS_EB, tE_EB, eps_EB, ecs_EB,
-                #       FB, long_FB, eqS_FB, tE_FB, eps_FB, ecs_FB,
-                # A
-                assert out[3-1].rstrip() == b'   C', out[3-1]
-                assert out[9-1].rstrip() == b'   D', out[9-1]
-                assert out[15-1].rstrip() == b'   E', out[15-1]
-                assert out[21-1].rstrip() == b'   F', out[21-1]
-
-                # B
-                assert out[28-1].rstrip() == b'   C', out[28-1]
-                assert out[34-1].rstrip() == b'   D', out[34-1]
-                assert out[40-1].rstrip() == b'   E', out[40-1]
-                assert out[46-1].rstrip() == b'   F', out[46-1]
-
-                eid_device = out[0]
-                eid, dt = get_eid_dt_from_eid_device(
-                    eid_device, op2.nonlinear_factor, op2.sort_method)
-                obj.add_new_eid_sort1(dt, eid, *out[1:])
-                n += ntotal
-
-        elif result_type == 2 and op2.num_wide == numwide_random:  # random
-            msg = op2.code_information()
-            raise NotImplementedError(msg)
-            #return op2._not_implemented_or_skip(data, ndata, msg)
-        else:  # pragma: no cover
-            raise RuntimeError(op2.code_information())
         return n, nelements, ntotal
 
     def _oes_hyperelastic_quad(self, data, ndata, dt, unused_is_magnitude_phase,
@@ -3999,11 +3831,11 @@ class OES(OP2Common2):
 
                 #if obj.itime == 0:
                 # 30 = 2 + 28 = 2 + 7*4
-                ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, 30).copy()
-                #strs = frombuffer(data, dtype=self.sdtype)
+                ints = np.frombuffer(data, dtype=op2.idtype).reshape(nelements, 30).copy()
+                #strs = np.frombuffer(data, dtype=self.sdtype)
                 ints2 = ints[:, 2:].reshape(nelements * 4, 7)
 
-                #strings = frombuffer(data, dtype=???)
+                #strings = np.frombuffer(data, dtype=???)
                 eids = ints[:, 0] // 10
                 nids = ints2[:, 0]
 
@@ -4013,7 +3845,7 @@ class OES(OP2Common2):
                 #obj.element[istart:iend] = eids
 
                 # dropping off eid and the string word (some kind of Type)
-                floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, 30)[:, 2:].copy()
+                floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, 30)[:, 2:].copy()
                 floats2 = floats.reshape(nelements * 4, 7)
                 #[oxx, oyy, txy, angle, majorp, minorp]
                 obj.data[obj.itime, istart:iend, :] = floats2[:, 1:]
@@ -4107,7 +3939,7 @@ class OES(OP2Common2):
             #obj._times[obj.itime] = dt
 
             #obj_set_element(op2, obj, istart, iend, data, nelements)
-            #floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)
+            #floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real)
             #results = floats[:, 1:].copy()
             ##print('results.shape', results.shape)
 
@@ -4183,11 +4015,11 @@ class OES(OP2Common2):
             #if obj.itime == 0:
                 #print(frombuffer(data, dtype=op2.idtype).size)
                 #print('nelements=%s numwide=%s' % (nelements, numwide_real))
-                #ints = frombuffer(data, dtype=op2.idtype).reshape(nelements, numwide_real)
+                #ints = np.frombuffer(data, dtype=op2.idtype).reshape(nelements, numwide_real)
                 #eids = ints[:, 0] // 10
                 ##obj.element[istart:iend] = eids
 
-            #floats = frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real).copy()
+            #floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, numwide_real).copy()
             #print('floats[:, 2:].shape', floats[:, 2:].shape)
             #print('nnelements=%s nnodes=%s numwide//nodes=%s' % (nelements, nnodes, (numwide_real-2) / nnodes))
             #results = floats[:, 2:].reshape(nelements, nnodes * 6)
@@ -4311,8 +4143,8 @@ def oes_csolidnl_real2(op2: OP2, data: bytes,
         struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i 4s i')
         struct2 = Struct(b'i 15f')
     else:
-        s1 = Struct(op2._endian + mapfmt8(op2._analysis_code_fmt) + b'q 8s q')
-        s2 = Struct(op2._endian + b'q15d')
+        struct1 = Struct(op2._endian + mapfmt8(op2._analysis_code_fmt) + b'q 8s q')
+        struct2 = Struct(op2._endian + b'q15d')
     # ntotal =  148 * op2.factor
     # print(f'factor = {op2.factor}')
 
@@ -4523,3 +4355,160 @@ def oes_csolid_nonlinear_hyperelastic_real(op2: OP2, data: bytes,
                                        sxx, syy, szz, txy, tyz, txz, ovm)
             n += 60
     return n
+
+def oes_cgap_nonlinear(op2: OP2, data, ndata: int, dt,
+                       is_magnitude_phase: bool,
+                       result_type: int, prefix: str, postfix: str,
+                       ) -> tuple[int, int, int]:
+    """
+    reads stress/strain for element type:
+     - 86 : GAPNL
+    """
+    n = 0
+    stress_strain = 'stress' if op2.is_stress else 'strain'
+    result_name = f'{prefix}cgap_{stress_strain}{postfix}' # nonlinear_
+
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
+        return ndata, None, None
+
+    if result_type == 0 and op2.num_wide == 11:  # real?
+        if op2.is_stress:
+            obj_vector_real = NonlinearGapStressArray
+        else:
+            raise NotImplementedError('NonlinearGapStrain')
+
+        ntotal = 44 * op2.factor # 4*11
+        nelements = ndata // ntotal
+        assert ndata % ntotal == 0
+        auto_return, is_vectorized = op2._create_oes_object4(
+            nelements, result_name, slot, obj_vector_real)
+        if auto_return:
+            return nelements * ntotal, None, None
+
+        obj = op2.obj
+        if op2.use_vector and is_vectorized and op2.sort_method == 1:
+            n = nelements * ntotal
+
+            ielement = obj.ielement
+            ielement2 = ielement + nelements
+            obj._times[obj.itime] = dt
+
+            obj_set_element(op2, obj, ielement, ielement2, data, nelements)
+
+            #if obj.itime == 0:
+                #ints = np.frombuffer(data, dtype=op2.idtype).reshape(nelements, 11).copy()
+                #eids = ints[:, 0] // 10
+                #obj.element[ielement:ielement2] = eids
+
+            #print(data, len(data))
+            if op2.size == 4:
+                strings = np.frombuffer(data, dtype='|S4').reshape(nelements, 11)[:, [9, 10]]
+            else:
+                strings = np.frombuffer(data, dtype='|S8').reshape(nelements, 11)[:, [9, 10]]
+            form = [reshape_bytes_block_strip(string[0] + string[1], size=op2.size) for string in strings]
+
+            #form = np.concatenate(strings) # strings[:, 0] + strings[:, 1] # np.hstack(strings)
+            #form = np.char.join(strings[:, 0], strings[:, 1]) # np.hstack(strings)
+            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 11)
+            obj.form[ielement:ielement2] = form
+            # skipping [form1, form2]
+            #[cpx, shy, shz, au, shv, shw, slv, slp]
+            obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:9].copy()
+        else:
+            n = oes_cgapnl_real_11(op2, data, obj, nelements, ntotal)
+    else:  # pragma: no cover
+        raise RuntimeError(op2.code_information())
+    return n, nelements, ntotal
+
+def oes_cbeam_nonlinear(op2: OP2, data, ndata: int, dt,
+                        is_magnitude_phase: bool,
+                        result_type: int, prefix: str, postfix: str,
+                        ) -> tuple[int, int, int]:
+    """
+    reads stress/strain for element type:
+     - 94 : BEAMNL
+
+    """
+    n = 0
+    numwide_real = 51
+    numwide_random = 0
+
+    stress_strain = 'stress' if op2.is_stress else 'strain'
+    result_name = f'{prefix}cbeam_{stress_strain}{postfix}'
+
+    is_saved, slot = get_is_slot_saved(op2, result_name)
+    if not is_saved:
+        return ndata, None, None
+
+    factor = op2.factor
+    if result_type == 0 and op2.num_wide == numwide_real:
+        msg = result_name
+        if op2.is_stress:
+            obj_vector_real = RealNonlinearBeamStressArray
+        else:
+            raise NotImplementedError('Nonlinear CBEAM Strain...this should never happen')
+
+        ntotal = numwide_real * 4 * op2.factor  # 204
+        nelements = ndata // ntotal
+
+        nlayers = nelements * 8
+        auto_return, is_vectorized = op2._create_oes_object4(
+            nlayers, result_name, slot, obj_vector_real)
+        if auto_return:
+            op2._data_factor = 8
+            return ndata, None, None
+        obj = op2.obj
+        if op2.is_debug_file:
+            op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+            #op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+            #op2.binary_debug.write('  #elementi = [eid_device, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,\n')
+            #op2.binary_debug.write('                           s1b, s2b, s3b, s4b, smaxb, sminb,        MSc]\n')
+            #op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+        if op2.size == 4:
+            struct1 = Struct(op2._endian + b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
+        else:
+            assert op2.size == 8, op2.size
+            struct1 = Struct(op2._endian + b'2q 8s5d 8s5d 8s5d 8s5d q 8s5d 8s5d 8s5d 8s5d')  # 2 + 6*8 + 1 = 51
+
+        for unused_i in range(nelements):  # num_wide=51
+            edata = data[n:n + ntotal]
+            out = struct1.unpack(edata)
+
+            if op2.is_debug_file:
+                op2.binary_debug.write('BEAMNL-94 - %s\n' % str(out))
+
+            #gridA, CA, long_CA, eqS_CA, tE_CA, eps_CA, ecs_CA,
+            #       DA, long_DA, eqS_DA, tE_DA, eps_DA, ecs_DA,
+            #       EA, long_EA, eqS_EA, tE_EA, eps_EA, ecs_EA,
+            #       FA, long_FA, eqS_FA, tE_FA, eps_FA, ecs_FA,
+            #gridB, CB, long_CB, eqS_CB, tE_CB, eps_CB, ecs_CB,
+            #       DB, long_DB, eqS_DB, tE_DB, eps_DB, ecs_DB,
+            #       EB, long_EB, eqS_EB, tE_EB, eps_EB, ecs_EB,
+            #       FB, long_FB, eqS_FB, tE_FB, eps_FB, ecs_FB,
+            # A
+            assert out[3-1].rstrip() == b'   C', out[3-1]
+            assert out[9-1].rstrip() == b'   D', out[9-1]
+            assert out[15-1].rstrip() == b'   E', out[15-1]
+            assert out[21-1].rstrip() == b'   F', out[21-1]
+
+            # B
+            assert out[28-1].rstrip() == b'   C', out[28-1]
+            assert out[34-1].rstrip() == b'   D', out[34-1]
+            assert out[40-1].rstrip() == b'   E', out[40-1]
+            assert out[46-1].rstrip() == b'   F', out[46-1]
+
+            eid_device = out[0]
+            eid, dt = get_eid_dt_from_eid_device(
+                eid_device, op2.nonlinear_factor, op2.sort_method)
+            obj.add_new_eid_sort1(dt, eid, *out[1:])
+            n += ntotal
+
+    elif result_type == 2 and op2.num_wide == numwide_random:  # random
+        msg = op2.code_information()
+        raise NotImplementedError(msg)
+        #return op2._not_implemented_or_skip(data, ndata, msg)
+    else:  # pragma: no cover
+        raise RuntimeError(op2.code_information())
+    return n, nelements, ntotal

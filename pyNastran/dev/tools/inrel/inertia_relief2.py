@@ -1,6 +1,17 @@
 """
 The goal of this file is to do inertia relief
 on a nastran model.
+
+Per Nastran QRG for the CONM2, the mass matrix about the
+CG is:
+    [M  0  0                ]
+M = [0  M  0                |
+    |0  0  M                |
+    |0  0  0   I11 -I12 -I13|
+    |0  0  0  -I12  I22 -I23|
+    [0  0  0  -I13 -I23  I33]
+So the inertia matrix has negative signs
+on the off-diagonals.
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING
@@ -72,10 +83,11 @@ def get_eigenvalues(imat: np.ndarray):  # pragma: no cover
     return np.linalg.eigvals(imat2)
     # return np.diag(imat2)
 
+
 def _mass_properties_total(mass: np.ndarray,
                            xyz: np.ndarray,
                            inertia: np.ndarray,
-                           ) -> tuple[float, np.ndarray, np.ndarray,
+                           debug: bool=False) -> tuple[float, np.ndarray, np.ndarray,
                                       np.ndarray, np.ndarray]:
     mass_total = mass.sum()
     # assert np.allclose(mass_total, 5.), mass_total
@@ -100,15 +112,16 @@ def _mass_properties_total(mass: np.ndarray,
     ixz = inertia_totali[4] + (mass * (dx * dz)).sum()
     iyz = inertia_totali[5] + (mass * (dy * dz)).sum()
     inertia_mat = np.array([
-        [ixx, ixy, ixz],
-        [ixy, iyy, iyz],
-        [ixz, iyz, izz],
+        [ixx, -ixy, -ixz],
+        [-ixy, iyy, -iyz],
+        [-ixz, -iyz, izz],
     ])
-    # print(f'inertia_mat:\n{str(inertia_mat)}')
-    # eigenvalues_opt = get_eigenvalues(inertia_mat)
-    # print(f'eigenvalues_opt = {eigenvalues_opt}')
     eigenvalues = np.linalg.eigvals(inertia_mat)
-    # print(f'eigenvalues = {eigenvalues}')
+    if debug and 0:
+        print(f'inertia_mat:\n{str(inertia_mat)}')
+        eigenvalues_opt = get_eigenvalues(inertia_mat)
+        print(f'eigenvalues_opt = {eigenvalues_opt}')
+    print(f'eigenvalues = {eigenvalues}')
     Mtt_ = inertia_mat
     Mtd = np.diag(Mtt_)
     delta = np.linalg.norm(Mtd)
@@ -123,19 +136,20 @@ def _mass_properties_total(mass: np.ndarray,
             f'INCONSISTENT SCALAR MASSES HAVE BEEN USED. EPSILON/DELTA = {epsilon/delta:.7E}\n')
         # model.log.warning(msg)
         print(msg)
+        Mtt = S.T @ Mtt_ @ S  # Mt
     else:
         S = np.eye(3, dtype=Mtt_.dtype)
-    Mtt = S.T @ Mtt_ @ S # Mt
+        Mtt = Mtt_.copy()
     # print(f'S:\n{S}')
 
     # inertia_mat = np.array([
-    #     [ixx, ixy, ixz],
-    #     [ixy, iyy, iyz],
-    #     [ixz, iyz, izz],
+    #     [ixx, -ixy, -ixz],
+    #     [-ixy, iyy, -iyz],
+    #     [-ixz, -iyz, izz],
     # ])
     inertia_total = np.array([
         Mtt[0, 0], Mtt[1, 1], Mtt[2, 2],
-        Mtt[0, 1], Mtt[0, 2], Mtt[1, 2],
+        -Mtt[0, 1], -Mtt[0, 2], -Mtt[1, 2],
     ])
     assert Mtt.shape == (3,3), Mtt.shape
     assert inertia_total.shape == (6,), inertia_total.shape
@@ -158,23 +172,25 @@ def _get_transformed_self_inertia(inertia: np.ndarray,
     inertia_self = inertia.sum(axis=0)
     ixx, iyy, izz, ixy, ixz, iyz = inertia_self
     imat = np.array([
-        [ixx, ixy, ixz],
-        [ixy, iyy, iyz],
-        [ixz, iyz, izz],
+        [ixx, -ixy, -ixz],
+        [-ixy, iyy, -iyz],
+        [-ixz, -iyz, izz],
     ])
     ximat = S.T @ imat @ S  # is this backwards?
     inertia_xform = np.array([
         ximat[0, 0], ximat[1, 1], ximat[2, 2],
-        # ximat[0, 1], ximat[0, 2], ximat[1, 2],
+        # -ximat[0, 1], -ximat[0, 2], -ximat[1, 2],
     ])
     return inertia_xform
+
 
 def inertia_relief(weight: np.ndarray,
                    xyz: np.ndarray,
                    inertia: np.ndarray,
                    force: np.ndarray,
                    moment: np.ndarray,
-                   wtmass: float=1.0) -> tuple[np.ndarray, np.ndarray]:
+                   wtmass: float=1.0,
+                   debug: bool=False) -> tuple[np.ndarray, np.ndarray]:
     """
 
     Parameters
@@ -197,7 +213,7 @@ def inertia_relief(weight: np.ndarray,
     mass = weight * wtmass
     inertia = inertia * wtmass
     mass_total, cg_total, inertia_total, Mtt, S = _mass_properties_total(
-        mass, xyz, inertia)
+        mass, xyz, inertia, debug=debug)
     inertia_self = _get_transformed_self_inertia(
         inertia, S)
     assert inertia_total.shape == (6,), inertia_total.shape
@@ -329,9 +345,15 @@ def inertia_relief(weight: np.ndarray,
     mxyzt_delta = mxyzt_df + mxyzt_delta_self + mxyzt_dm
     # mxyzt_out = mxyzt2 + mxyzt_delta
 
-    St = S.T
+    # wrong
+    St = S.T  # also tried S instead of S.T
     fxyz_delta_out = np.einsum('nij,nj->ni',St[np.newaxis,:], fxyzt_delta)
     mxyz_delta_out = np.einsum('nij,nj->ni',St[np.newaxis,:], mxyzt_delta)
+
+    # St = S.T  # also tried S instead of S.T
+    # fxyz_delta_out = np.einsum('nij,ni->nj',St[np.newaxis,:], fxyzt_delta)
+    # mxyz_delta_out = np.einsum('nij,ni->nj',St[np.newaxis,:], mxyzt_delta)
+
     return fxyz_delta_out, mxyz_delta_out
 
 

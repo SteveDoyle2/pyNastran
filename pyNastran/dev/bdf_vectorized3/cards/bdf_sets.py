@@ -23,7 +23,6 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size, array_str, array_default_int)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
-
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike

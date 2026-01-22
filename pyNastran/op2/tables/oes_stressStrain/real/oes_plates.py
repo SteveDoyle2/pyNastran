@@ -12,7 +12,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_real_data_code, get_scode,
     set_static_case, set_modal_case, set_transient_case)
-from pyNastran.op2.stress_reduction import von_mises_2d, max_shear
+from pyNastran.op2.stress_reduction import von_mises_2d, principal_2d, max_shear, ovm_shear_2d
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype, combination_inplace
 from pyNastran.f06.f06_formatting import write_floats_13e, write_floats_13e_long, _eigenvalue_header
 from pyNastran.op2.errors import SixtyFourBitError
@@ -51,7 +51,7 @@ ELEMENT_NAME_TO_ELEMENT_TYPE = {
 
 
 class RealPlateArray(OES_Object):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code, is_sort1: bool, isubcase: int, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -199,6 +199,7 @@ class RealPlateArray(OES_Object):
             self.element_node = element_node
             self.data = data
         #print(self.element_node.shape, self.data.shape)
+        #print(self.code_information())
 
     def abs_principal(self) -> np.ndarray:
         """hasn't been checked for strain; 2d von mises"""
@@ -211,10 +212,10 @@ class RealPlateArray(OES_Object):
         """hasn't been checked for strain; 2d von mises"""
         if self.is_von_mises:
             return self.data[:, :, -1]
-        σxx = self.data[:, :, 1]
-        σyy = self.data[:, :, 2]
-        τxy = self.data[:, :, 3]
-        ovm = np.sqrt(σxx**2 + σyy**2 - σxx*σyy + 3*(τxy**2))
+        oxx = self.data[:, :, 1]
+        oyy = self.data[:, :, 2]
+        txy = self.data[:, :, 3]
+        ovm = von_mises_2d(oxx, oyy, txy, self.is_stress)
         return ovm
 
     def max_shear(self) -> np.ndarray:
@@ -224,8 +225,8 @@ class RealPlateArray(OES_Object):
         #headers = [fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
         omax = self.data[:, :, 5]
         omin = self.data[:, :, 6]
-        max_shear = (omax - omin) / 2.
-        return max_shear
+        max_sheari = max_shear(omax, omin)
+        return max_sheari
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -524,7 +525,7 @@ class RealPlateArray(OES_Object):
         #     print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_lower={ie_lower} ielement={self.itime} inid={inid} nid={nid} itotal={itotal+1} dt={dt} eid={eid} nid={nid}')
         return itime, ie_upper, ie_lower
 
-    def add_new_eid_sort2(self, dt, eid, node_id,
+    def add_new_eid_sort2(self, dt, eid: int, node_id: int,
                           fiber_dist1, oxx1, oyy1, txy1, angle1, major_principal1, minor_principal1, ovm1,
                           fiber_dist2, oxx2, oyy2, txy2, angle2, major_principal2, minor_principal2, ovm2):
         assert isinstance(eid, integer_types), eid
@@ -552,7 +553,7 @@ class RealPlateArray(OES_Object):
         self.itotal += 2
         #self.ielement += 1
 
-    def add_sort2(self, dt, eid, node_id,
+    def add_sort2(self, dt, eid: int, node_id: int,
                   fiber_dist1, oxx1, oyy1, txy1, angle1, major_principal1, minor_principal1, ovm1,
                   fiber_dist2, oxx2, oyy2, txy2, angle2, major_principal2, minor_principal2, ovm2):
         assert self.is_sort2, self
@@ -632,48 +633,48 @@ class RealPlateArray(OES_Object):
             self.update_data_components()
 
     def update_data_components(self):
-        assert self.is_von_mises
-
         # data = max_shear(omax, omin)
         # [fiber_dist2, oxx2, oyy2, txy2, angle2,
         #  major_principal2, minor_principal2, ovm2]
+        oxx = self.data[:, :, 1].ravel()
+        oyy = self.data[:, :, 2].ravel()
+        txy = self.data[:, :, 3].ravel()  # txy or 2*gxy = exy
         if self.is_stress:
             # principal stresses are good
             # von mises is good
-            oxx = self.data[:, :, 1].ravel()
-            oyy = self.data[:, :, 2].ravel()
-            txy = self.data[:, :, 3].ravel()
-            center = (oxx + oyy) / 2
-            radius = np.sqrt((oxx-oyy)**2/4 + txy**2)
-            eig_max = center + radius
-            eig_min = center - radius
-            ovm = von_mises_2d(oxx, oyy, txy)
+            eig_max, eig_min = principal_2d(oxx, oyy, txy, self.is_stress)
+            ovm = ovm_shear_2d(oxx, oyy, txy,
+                               eig_max, eig_min,
+                               self.is_von_mises, self.is_stress)
 
             # https://en.wikipedia.org/wiki/Mohr%27s_circle
             # tan(2*theta) = 2*txy / (oyy-oxx)
+            # https://www.engapplets.vt.edu/Mohr/java/nsfapplets/MohrCircles2-3D/Theory/theory.htm
+            # tan(2*theta) = 2*txy / (oxx-oyy)
             theta2 = np.degrees(np.atan2(2 * txy, oyy - oxx))
             theta = theta2 / 2
         else:
             # https://www.simscale.com/docs/simwiki/fea-finite-element-analysis/principal-stress-and-principal-strain/
-            oxx = self.data[:, :, 1].ravel()
-            oyy = self.data[:, :, 2].ravel()
-            txy = self.data[:, :, 3].ravel() # 2*gxy = exy
-            center = (oxx + oyy) / 2
-            radius = np.sqrt((oxx-oyy)**2/4 + txy**2/4)
-            eig_max = center + radius
-            eig_min = center - radius
-            # ovm = von_mises_2d(oxx/2, oyy/2, txy/2)
-            ovm = von_mises_2d(eig_max, eig_min, txy*0)
+            eig_max, eig_min = principal_2d(oxx, oyy, txy, self.is_stress)
+            # ovm = von_mises_2d(oxx/2, oyy/2, txy/2, self.is_stress)
+            ovm = ovm_shear_2d(eig_max, eig_min, txy*0,
+                               eig_max, eig_min,
+                               self.is_von_mises, self.is_stress)
 
             # https://en.wikipedia.org/wiki/Mohr%27s_circle
             # https://web1.eng.famu.fsu.edu/~woates/template/Kaushik%20Bhattacharya%27s%20Group_files/teaching/MoMI/Chapter15.pdf
+            # https://users.ox.ac.uk/~kneabz/Stress8_ht08.pdf
             theta2 = np.degrees(np.atan2(txy, oxx - oyy)) # -50 vs -79
+
+            # https://users.ox.ac.uk/~kneabz/Stress8_ht08.pdf
+            # theta2_shear = np.degrees(np.atan2(oxx - oyy, -txy)) # -50 vs -79
             theta = theta2 / 2
 
-        shape = oxx.shape
-        ndata = len(oxx.ravel())
+
+        shape = self.data[:, :, 1].shape
 
         if 0:  # pragma: no cover
+            ndata = len(oxx.ravel())
             # TODO: potentially faster, but currently wrong
             mat = np.zeros((ndata, 2, 2))
             mat[:, 0, 0] = oxx.ravel()
@@ -700,16 +701,14 @@ class RealPlateArray(OES_Object):
 
         import warnings
         if self.is_stress:
-            warnings.warn('verify oes_plates theta. verify von-mises stress')
+            warnings.warn('verify oes_plates theta')
         else:
-            warnings.warn('verify ostr_plates. von-mises strain is wrong')
-        # print(f'theta_mine = {theta}')
-        # print(f'ovm_mine = {ovm}')
+            warnings.warn('verify ostr_plates theta')
+
         self.data[:, :, itheta] = theta.reshape(shape)
         self.data[:, :, imax] = eig_max.reshape(shape)
         self.data[:, :, imin] = eig_min.reshape(shape)
         self.data[:, :, ivm] = ovm.reshape(shape)
-        return
 
     def write_csv(self, csv_file: TextIO,
                   is_exponent_format: bool=False,
@@ -806,8 +805,55 @@ class RealPlateArray(OES_Object):
                     raise NotImplementedError(msg)
         return
 
+    def check_update(self) -> None:  # pragma: no cover
+        stress = 'stress' if self.is_stress else 'strain'
+        von_mises = f'von_mises_{stress}' if self.is_von_mises else f'max_shear_{stress}'
+        checks = [
+            (1, f'oxx_{stress}'),
+            (2, f'oyy_{stress}'),
+            (3, f'txy_{stress}'),
+            (5, f'max_{stress}'),
+            (6, f'min_{stress}'),
+            # (4, f'theta ({stress})'),
+            (7, von_mises),
+        ]
+
+        data_copy = self.data.copy()
+        # oxx1 = data_copy[:,:,1].flatten()
+        # oyy1 = data_copy[:,:,2].flatten()
+        # txy1 = data_copy[:,:,3].flatten()
+        # max1 = data_copy[:,:,5].flatten()
+        # min1 = data_copy[:,:,6].flatten()
+        # ovm1 = data_copy[:,:,7].flatten()
+        # print(f'oxx = {oxx1.tolist()}')
+        # print(f'oyy = {oyy1.tolist()}')
+        # print(f'txy = {txy1.tolist()}')
+        # print(f'max_{stress} = {max1.tolist()}')
+        # print(f'min_{stress} = {min1.tolist()}')
+        # print(f'{von_mises} = {ovm1.tolist()}')
+        self.update_data_components()
+        # oxx2 = self.data[0, :, 1]
+        # oyy2 = self.data[0, :, 2]
+        # txy2 = self.data[0, :, 3]
+        for iovm, name in checks:
+            ovm1 = data_copy[0, :, iovm]
+            ovm2 = self.data[0, :, iovm]
+            # inonzero = (ovm1 != 0)
+            # ratio = np.zeros(ovm1.shape)
+            # ratio[inonzero] = ovm2[inonzero] / ovm1[inonzero]
+            # maxi = np.nanmax(ratio)
+            # mini = np.nanmin(ratio)
+            # imax = np.where(ratio == maxi)[0]
+            # print(oxx1[imax], oxx2[imax])
+            # print(oyy1[imax], oyy2[imax])
+            # print(txy1[imax], txy2[imax])
+            # assert np.allclose(ovm1, ovm2), (type(self), name, imax, maxi, mini, ovm1.ravel(), ovm2.ravel())
+            assert np.allclose(ovm1, ovm2), (type(self), name, ovm1.ravel(), ovm2.ravel())
+
     def write_f06(self, f06_file: TextIO, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
+        # self.check_update()
+
         # print(f'eig_max_correct = {self.data[:, :, 5].ravel()}')
         # print(f'theta_correct = {self.data[:, :, 4].ravel()}')
         # print(f'ovm_correct = {self.data[:, :, 7].ravel()}')

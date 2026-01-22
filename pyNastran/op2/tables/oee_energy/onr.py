@@ -87,14 +87,6 @@ class ONR:
         #op2.words = None
         #op2.num_wide = None
 
-    @property
-    def size(self) -> int:
-        return self.op2.size
-
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
-
     def get_onr_prefix_postfix(self) -> tuple[str, str]:
         """
         Creates the prefix/postfix that splits off ATO, CRM, PSD, nonlinear,
@@ -272,7 +264,7 @@ class ONR:
         #element_name, = op2.struct_8s.unpack(data[24:32])  # changed on 11/30/2015; was this for a long time...
 
         #self.show_data(data[:28])
-        if self.size == 4:
+        if op2.size == 4:
             element_name, = op2.struct_8s.unpack(data[20:28])
         else:
             element_name, = op2.struct_16s.unpack(data[40:56])
@@ -563,7 +555,7 @@ class ONR:
             else:
                 n = real_strain_energy_4(op2, obj, data,
                                          n, ntotal, nelements, dt)
-        elif op2.format_code == 1 and op2.num_wide == 5:
+        elif op2.format_code == 1 and op2.num_wide == 5:  # complex
             assert op2.cvalres in [0, 1, 2], op2.cvalres  # 0??
             ntotal = 20 * factor
             nnodes = ndata // ntotal
@@ -607,7 +599,7 @@ class ONR:
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                n = complex_strain_energy_4(op2, data, op2.sort_method,
+                n = complex_strain_energy_4(op2, obj, data, op2.sort_method,
                                             n, ntotal, nelements, dt)
         elif op2.format_code in [2, 3] and op2.num_wide == 5:
             #ELEMENT-ID   STRAIN-ENERGY (MAG/PHASE)  PERCENT OF TOTAL  STRAIN-ENERGY-DENSITY
@@ -852,10 +844,11 @@ def real_strain_energy_4(op2: OP2,
     return n
 
 
-def complex_strain_energy_4(op2: OP2, data: bytes, sort_method: int,
+def complex_strain_energy_4(op2: OP2,
+                            obj: ComplexStrainEnergyArray,
+                            data: bytes, sort_method: int,
                             n: int,
                             ntotal: int, nnodes: int, dt) -> int:
-    obj: ComplexStrainEnergyArray = op2.obj
     if op2.size == 4:
         structi = Struct(op2._endian + b'8s3f')
     else:

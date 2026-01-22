@@ -2,7 +2,7 @@
 import warnings
 from itertools import count
 from struct import pack
-from typing import TextIO, Optional, Any
+from typing import TextIO, Optional
 
 import numpy as np
 from numpy import zeros, where, searchsorted
@@ -18,6 +18,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     oes_real_data_code, set_static_case, set_modal_case,
     set_transient_case, set_post_buckling_case)
 from pyNastran.op2.op2_interface.write_utils import to_column_bytes
+from pyNastran.op2.stress_reduction import ovm_shear_3d, principal_components_3d
+
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CTETRA' : 39,
@@ -34,12 +36,12 @@ class RealSolidArray(OES_Object):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        #if is_sort1:
-            ##sort1
-            #self.add_node = self.add_node_sort1
-            #self.add_eid = self.add_eid_sort1
-        #else:
-            #raise NotImplementedError('SORT2')
+        # if is_sort1:
+        #     #sort1
+        #     self.add_node = self.add_node_sort1
+        #     self.add_eid = self.add_eid_sort1
+        # else:
+        #     raise NotImplementedError('SORT2')
 
     @property
     def is_real(self) -> bool:
@@ -72,17 +74,17 @@ class RealSolidArray(OES_Object):
         #I3 = oxx * oyy * ozz + 2 * txy * tyz * txz + oxx * tyz**2 - oyy * txz**2 - ozz * txy
 
         # (n_subarrays, nrows, ncols)
-        o1, o2, o3 = calculate_principal_components(
+        o1, o2, o3 = principal_components_3d(
             ntimes, nelements_nnodes,
             oxx, oyy, ozz, txy, tyz, txz,
             self.is_stress)
 
         if self.is_strain:
             import warnings
-            warnings.warn('verify solid principal strains; solid von-mises stress/strain')
+            warnings.warn('verify solid principal stress/strains; solid von-mises stress/strain')
 
-        ovm_sheari = calculate_ovm_shear(oxx, oyy, ozz, txy, tyz, txz, o1, o3,
-                                         self.is_von_mises, self.is_stress)
+        ovm_sheari = ovm_shear_3d(oxx, oyy, ozz, txy, tyz, txz, o1, o3,
+                                  self.is_von_mises, self.is_stress)
         ovm_sheari2 = ovm_sheari.reshape(ntimes, nelements_nnodes)
 
         self.data[:, :, 6] = o1.reshape(ntimes, nelements_nnodes)
@@ -677,8 +679,32 @@ class RealSolidArray(OES_Object):
                                f'{oxxi}, {oyyi}, {ozzi}, {txyi}, {tyzi}, {txzi}\n')
         return
 
+    def check_update(self):  # pragma: no cover
+        i1 = 6
+        i2 = 7
+        i3 = 8
+        iovm = 9
+        ovm1 = self.data[:, :, iovm].copy()
+        # o11 = self.data[:, :, i1].copy()
+        # o21 = self.data[:, :, i2].copy()
+        # o31 = self.data[:, :, i3].copy()
+        self.update_data_components()
+        ovm2 = self.data[:, :, iovm]
+
+        # o12 = self.data[:, :, i1]
+        # o22 = self.data[:, :, i2]
+        # o32 = self.data[:, :, i3]
+        stress = 'stress' if self.is_stress else 'strain'
+        von_mises = f'von_mises_{stress}' if self.is_von_mises else f'max_shear_{stress}'
+        assert np.allclose(ovm1, ovm2), (von_mises, ovm1.ravel(), ovm2.ravel())
+        # assert np.allclose(o11, o12), (f'o1_{stress}', o11.ravel(), o12.ravel(), np.abs(o11-o12).max())
+        # assert np.allclose(o21, o22), (f'o2_{stress}', o21.ravel(), o22.ravel(), np.abs(o21-o22).max())
+        # assert np.allclose(o31, o32), (f'o3_{stress}', o31.ravel(), o32.ravel(), np.abs(o31-o32).max())
+
     def write_f06(self, f06_file: TextIO, header=None, page_stamp: str='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
+        # self.check_update()
+
         calculate_directional_vectors = True
         if header is None:
             header = []
@@ -712,7 +738,7 @@ class RealSolidArray(OES_Object):
                 ntimes, nnodes_total,
                 oxx, oyy, ozz, txy, txz, tyz,
                 fdtype)[1]
-        else:
+        else:  # pragma: no cover
             v = np.zeros((ntimes, nnodes, 3, 3), dtype=fdtype)
 
         for itime in range(ntimes):
@@ -1005,35 +1031,6 @@ def _get_f06_header_nnodes(self: RealSolidArray, is_mag_phase=True):
         raise NotImplementedError(msg)
     return nnodes, msg
 
-def calculate_principal_components(ntimes: int, nelements_nnodes: int,
-                                   oxx, oyy, ozz,
-                                   txy, tyz, txz,
-                                   is_stress: bool) -> tuple[Any, Any, Any]:
-    """
-    TODO: scale by 2 for strain
-    """
-    a_matrix = np.full((ntimes * nelements_nnodes, 3, 3), np.nan)
-    #print(a_matrix.shape, oxx.shape)
-    a_matrix[:, 0, 0] = oxx
-    a_matrix[:, 1, 1] = oyy
-    a_matrix[:, 2, 2] = ozz
-
-    # we're only filling the lower part of the A matrix
-    if is_stress:
-        a_matrix[:, 1, 0] = txy
-        a_matrix[:, 2, 0] = txz
-        a_matrix[:, 2, 1] = tyz
-    else:
-        a_matrix[:, 1, 0] = txy / 2.
-        a_matrix[:, 2, 0] = txz / 2.
-        a_matrix[:, 2, 1] = tyz / 2.
-
-    eigs = np.linalg.eigvalsh(a_matrix)  # array = (..., M, M) array
-
-    o1 = eigs[:, 2]
-    o2 = eigs[:, 1]
-    o3 = eigs[:, 0]
-    return o1, o2, o3
 
 def calculate_principal_eigenvectors5(ntimes: int, nelements: int, nnodes: int,
                                       oxx: np.ndarray, oyy: np.ndarray, ozz: np.ndarray,
@@ -1107,28 +1104,6 @@ def calculate_principal_eigenvectors4(ntimes: int, nnodes: int,
         #eigenvectors = eigenvectors.astype('float32')
     return eigenvalues, eigenvectors
 
-
-def calculate_ovm_shear(oxx, oyy, ozz,
-                        txy, tyz, txz, o1, o3,
-                        is_von_mises: bool,
-                        is_stress: bool):
-    if is_stress:
-        if is_von_mises:
-            # von mises
-            ovm_shear = np.sqrt((oxx - oyy)**2 + (oyy - ozz)**2 + (oxx - ozz)**2 +
-                                3. * (txy**2 + tyz**2 + txz ** 2))
-        else:
-            # max shear
-            ovm_shear = (o1 - o3) / 2.
-    else:
-        if is_von_mises:
-            # von mises
-            ovm_shear = np.sqrt((oxx - oyy)**2 + (oyy - ozz)**2 + (oxx - ozz)**2 +
-                                3. * (txy**2 + tyz**2 + txz ** 2))
-        else:
-            # max shear
-            ovm_shear = (o1 - o3) / 2.
-    return ovm_shear
 
 def set_element_cid_case(cls: RealSolidArray, data_code, is_sort1, isubcase,
                          element_node, element_cid, data, times):

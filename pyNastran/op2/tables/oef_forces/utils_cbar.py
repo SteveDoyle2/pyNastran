@@ -3,7 +3,7 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
@@ -210,24 +210,9 @@ def oef_cbar_imag_17(op2: OP2, data: bytes,
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if is_magnitude_phase:
-            bm1a = polar_to_real_imag(bm1ar, bm1ai)
-            bm2a = polar_to_real_imag(bm2ar, bm2ai)
-            bm1b = polar_to_real_imag(bm1br, bm1bi)
-            bm2b = polar_to_real_imag(bm2br, bm2bi)
-            ts1 = polar_to_real_imag(ts1r, ts1i)
-            ts2 = polar_to_real_imag(ts2r, ts2i)
-            af = polar_to_real_imag(afr, afi)
-            trq = polar_to_real_imag(trqr, trqi)
-        else:
-            bm1a = complex(bm1ar, bm1ai)
-            bm2a = complex(bm2ar, bm2ai)
-            bm1b = complex(bm1br, bm1bi)
-            bm2b = complex(bm2br, bm2bi)
-            ts1 = complex(ts1r, ts1i)
-            ts2 = complex(ts2r, ts2i)
-            af = complex(afr, afi)
-            trq = complex(trqr, trqi)
+        bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq = real_imag_from_list([
+            bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
+            bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi], is_magnitude_phase)
 
         #data_in = [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
         #print("eid_device=%s eid=%s dt=%s %s" % (

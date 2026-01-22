@@ -738,9 +738,9 @@ class MLDSTAT(BaseCard):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
 
     def cross_reference(self, model: BDF) -> None:
-        msg = f', which is required by MLDSTAT={self.mldstat_id}\n{str(self)}'
+        # msg = f', which is required by MLDSTAT={self.mldstat_id}\n{str(self)}'
         if self.mldtrim_id:
-            self.mldtrim_ref = model.Trim(self.mldtrim_id, msg)
+            self.mldtrim_ref = model.zaero.mldtrim[self.mldtrim_id]
         if self.state_space_arr:
             self.ssa_ref = model.dmi[self.state_space_arr]
         if self.state_space_arr:
@@ -751,7 +751,9 @@ class MLDSTAT(BaseCard):
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
-        pass
+        self.mldtrim_ref = None
+        self.ssa_ref = None
+        self.ssb_ref = None
 
     def raw_fields(self):
         """

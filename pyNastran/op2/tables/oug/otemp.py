@@ -22,13 +22,6 @@ class OTEMP:
     def __init__(self, op2: OP2):
         self.op2 = op2
 
-    @property
-    def size(self) -> int:
-        return self.op2.size
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
-
     def _read_otemp1_3(self, data: bytes, ndata: int):
         """SOL 401 table"""
         op2 = self.op2

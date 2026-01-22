@@ -46,16 +46,29 @@ from pyNastran.f06.f06_tables.oload_resultant import Resultant
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.op2_interface.op2_classes import (
     RealDisplacementArray, RealSPCForcesArray, RealLoadVectorArray,
+    ComplexDisplacementArray, ComplexVelocityArray, ComplexAccelerationArray,
     RealEigenvalues, RealEigenvectorArray)
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
 #from pyNastran.bdf.mesh_utils.loads import get_ndof
 
-from pyNastran.dev.bdf_vectorized3.solver.recover.static_force import recover_force_101
+from .recover.utils import get_f06_op2_pch_set, get_mag_phase_from_options
+
+from .recover.freq_force import recover_force_freq
+from .recover.modal_force import recover_force_103
+from .recover.static_force import recover_force_101
 #from .recover.static_stress import recover_stress_101
 #from .recover.static_strain import recover_strain_101
 from .recover.strain_energy import recover_strain_energy_101
-from .recover.utils import get_plot_request
 from .build_stiffness import build_Kgg, DOF_MAP, Kbb_to_Kgg
+from .modal_frequency import get_freq_damping
+from .partition import (
+    partition_matrix, partition_vector,
+    partition_vector2, partition_vector3)
+from .utils_statics import save_static_table
+from .utils_modes import (
+    slice_modal_set, get_real_eigenvalue_method,
+    apply_phi_normalization)
+from .utils_freq import get_frequencies, slice_freq_set
 from pyNastran.dev.bdf_vectorized3.bdf_interface.breakdowns import NO_MASS # , NO_VOLUME
 
 
@@ -84,6 +97,8 @@ class Solver:
         self._bdf_filename = base_name + '.solver.bdf'
         self.f06_filename = base_name + '.solver.f06'
         self.op2_filename = base_name + '.solver.op2'
+        print(self.f06_filename)
+        print(self.op2_filename)
 
     def run(self):
         page_num = 1
@@ -91,14 +106,15 @@ class Solver:
         model.write_bdf(self._bdf_filename)
         sol = model.sol
         solmap = {
-            101 : self.run_sol_101_statics,  # static
-            103 : self.run_sol_103_modes,  # modes
-            111 : self.run_sol_111_harmonic,  # modal frequency response
+            101: self.run_sol_101_statics,
+            103: self.run_sol_103_modes,
+            108: self.run_sol_108_direct_frequency,
+            111: self.run_sol_111_modal_frequency,
         }
         model.cross_reference()
         self._update_card_count()
 
-        title = ''
+        # title = ''
         title = f'pyNastran {pyNastran.__version__}'
         for subcase in model.subcases.values():
             if 'TITLE' in subcase:
@@ -111,7 +127,7 @@ class Solver:
             f06_file.write(self.op2.make_f06_header())
             self.op2._write_summary(f06_file, card_count=model.card_count)
             f06_file.write('\n')
-            if sol in [101, 103, 105, 107, 109, 111, 112]:
+            if sol in [101, 103, 105, 107, 108, 109, 111, 112]:
                 for subcase_id, subcase in sorted(model.subcases.items()):
                     if subcase_id == 0:
                         continue
@@ -125,11 +141,13 @@ class Solver:
                         label = subcase.get_parameter('LABEL')
 
                     runner = solmap[sol]
-                    end_options = runner(
+                    # print(runner)
+                    out, page_num, end_options = runner(
                         subcase, f06_file, page_stamp,
                         title=title, subtitle=subtitle, label=label,
                         page_num=page_num,
                         idtype='int32', fdtype='float64')
+                    del out
             else:
                 raise NotImplementedError(sol)
             end_flag = True
@@ -143,7 +161,8 @@ class Solver:
                  dof_map: DOF_MAP,
                  ndof: int, subcase: Subcase) -> NDArrayNfloat:
         model = self.model
-        model.log.info('starting build_Fb')
+        log = model.log
+        log.info('starting build_Fb')
 
         Fb = np.zeros(ndof, dtype='float32')
         if 'LOAD' not in subcase:
@@ -174,7 +193,7 @@ class Solver:
                 fxyz_myz = load.sum_forces_moments()
                 fxyz = fxyz_myz[:, :3]
                 nids = load.node_id
-                self.log.debug(f'  FORCE nids={nids} Fxyz={fxyz}')
+                log.debug(f'  FORCE nids={nids} Fxyz={fxyz}')
                 for fxyzi, nid in zip(fxyz, nids):
                     assert len(fxyzi) == 3
                     fi = dof_map[(nid, 1)]
@@ -184,7 +203,7 @@ class Solver:
                 fxyz_myz = load.sum_forces_moments()
                 mxyz = fxyz_myz[:, 3:]
                 nids = load.node_id
-                self.log.debug(f'  MOMENT nid={nids} Mxyz={mxyz}')
+                log.debug(f'  MOMENT nid={nids} Mxyz={mxyz}')
                 for mxyzi, nid in zip(mxyz, nids):
                     fi = dof_map[(nid, 4)]
                     assert len(mxyzi) == 3
@@ -202,7 +221,7 @@ class Solver:
                 print(load.get_stats())
                 raise NotImplementedError(load)
         #print(subcase)
-        model.log.info('end of build_Fb')
+        log.info('end of build_Fb')
         return Fb
 
     def get_mpc_constraints(self, subcase: Subcase,
@@ -753,10 +772,9 @@ class Solver:
 
         op2 = self.op2
         page_stamp += '\n'
-        if 'FORCE' in subcase:
-            recover_force_101(f06_file, op2, self.model, dof_map, subcase, xb,
-                              title=title, subtitle=subtitle, label=label,
-                              page_stamp=page_stamp)
+        recover_force_101(f06_file, op2, self.model, dof_map, subcase, xb,
+                          title=title, subtitle=subtitle, label=label,
+                          page_stamp=page_stamp)
 
         #if 'STRAIN' in subcase:
             #recover_strain_101(f06_file, op2, self.model, dof_map, subcase, xb,
@@ -766,15 +784,16 @@ class Solver:
             #recover_stress_101(f06_file, op2, self.model, dof_map, subcase, xb,
                                #title=title, subtitle=subtitle, label=label,
                                #page_stamp=page_stamp)
-        if 'ESE' in subcase:
-            recover_strain_energy_101(f06_file, op2, self.model, dof_map, subcase, xb,
-                                      title=title, subtitle=subtitle, label=label,
-                                      page_stamp=page_stamp)
+        recover_strain_energy_101(f06_file, op2, self.model, dof_map, subcase, xb,
+                                  title=title, subtitle=subtitle, label=label,
+                                  page_stamp=page_stamp)
         #Fg[sz_set] = -1
         #xg[sz_set] = -1
+        # if write_op2:
         op2.write_op2(self.op2_filename, post=-1, endian=b'<', skips=None, nastran_format='nx')
         self.log.info('finished')
-        return end_options
+        out = {}
+        return out, page_num, end_options
 
     def _save_displacment(self, f06_file: TextIO,
                           subcase: Subcase, itime: int, ntimes: int,
@@ -787,7 +806,7 @@ class Solver:
         f06_request_name = 'DISPLACEMENT'
         table_name = 'OUGV1'
         #self.log.debug(f'xg = {xg}')
-        page_num = self._save_static_table(
+        page_num = save_static_table(
             f06_file,
             subcase, itime, ntimes,
             node_gridtype, xg,
@@ -807,7 +826,7 @@ class Solver:
         f06_request_name = 'SPCFORCES'
         table_name = 'OQG1'
         #self.log.debug(f'Fg = {Fg}')
-        page_num = self._save_static_table(
+        page_num = save_static_table(
             f06_file,
             subcase, itime, ntimes,
             node_gridtype, fspc,
@@ -828,7 +847,7 @@ class Solver:
         f06_request_name = 'OLOAD'
         table_name = 'OPG1'
         #self.log.debug(f'Fg = {Fg}')
-        page_num = self._save_static_table(
+        page_num = save_static_table(
             f06_file,
             subcase, itime, ntimes,
             node_gridtype, Fg,
@@ -838,76 +857,32 @@ class Solver:
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
         return page_num
 
-    def _recast_data(self, idtype: str, fdtype: str):
-        idtype = 'int32'
-        fdtype = 'float32'
-        return idtype, fdtype
-
-    def _save_static_table(self, f06_file: TextIO,
-                           subcase: Subcase, itime: int, ntimes: int,
-                           node_gridtype: NDArrayN2int, Fg: NDArrayNfloat,
-                           obj: RealSPCForcesArray,
-                           f06_request_name: str,
-                           table_name: str, slot: dict[Any, RealSPCForcesArray],
-                           ngrid: int, ndof_per_grid: int,
-                           title: str='', subtitle: str='', label: str='',
-                           idtype: str='int32', fdtype: str='float32',
-                           page_num: int=1, page_stamp: str='PAGE %s') -> int:
-        idtype, fdtype = self._recast_data(idtype, fdtype)
-        isubcase = subcase.id
-        #self.log.debug(f'saving {f06_request_name} -> {table_name}')
-        unused_nids_write, write_f06, write_op2, quick_return = get_plot_request(
-            subcase, f06_request_name)
-        if quick_return:
-            return page_num
-        nnodes = node_gridtype.shape[0]
-        data = np.zeros((ntimes, nnodes, 6), dtype=fdtype)
-        ngrid_dofs = ngrid * ndof_per_grid
-        if ndof_per_grid == 6:
-            _fgi = Fg[:ngrid_dofs].reshape(ngrid, ndof_per_grid)
-            data[itime, :ngrid, :] = _fgi
-        else:
-            raise NotImplementedError(ndof_per_grid)
-        data[itime, ngrid:, 0] = Fg[ngrid_dofs:]
-
-        spc_forces = obj.add_static_case(
-            table_name, node_gridtype, data, isubcase,
-            is_sort1=True, is_random=False, is_msc=True,
-            random_code=0, title=title, subtitle=subtitle, label=label)
-        if write_f06:
-            page_num = spc_forces.write_f06(
-                f06_file, header=None,
-                page_stamp=page_stamp, page_num=page_num,
-                is_mag_phase=False, is_sort1=True)
-            f06_file.write('\n')
-        if write_op2:
-            slot[isubcase] = spc_forces
-        return page_num
-
     def run_sol_103_modes(self, subcase: Subcase,
                           f06_file: TextIO,
                           page_stamp: str,
                           title: str='', subtitle: str='', label: str='',
                           page_num: int=1,
-                          idtype: str='int32', fdtype: str='float64'):
+                          idtype: str='int32', fdtype: str='float64',
+                          write_op2: bool=True):
         """
         [M]{xdd} + [C]{xd} + [K]{x} = {F}
-        [M]{xdd} + [K]{x} = {F}
+        [M]{xdd} + [K]{x} = {0}
         -[M]{xdd}λ^2 + [K]{x} = {0}
         {X}(λ^2 - [M]^-1[K]) = {0}
         λ^2 - [M]^-1[K] = {0}
         λ^2 = [M]^-1[K]
         [A][X] = [X]λ^2
         """
-        self.log.debug(f'run_sol_103 (modes)')
         model = self.model
+        log = model.log
+        log.debug(f'run_sol_103 (modes)')
         assert len(model.methods), 'SOL 103 (modes) requires a METHOD and a EIGR/EIGRL card'
         end_options = [
             'SEMR',  # MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES)
             'SEKR',  # STIFFNESS MATRIX REDUCTION STEP
+            'MODES', # run modes
         ]
         op2 = self.op2
-        #log = model.log
         #write_f06 = True
 
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
@@ -918,50 +893,67 @@ class Solver:
                          ngrid, ndof_per_grid, ndof,
                          node_gridtype, dof_map,
                          idtype=idtype, fdtype=fdtype)
-        xg_out = out['xg_out']
-        eigenvalues = out['eigenvalues']
-        nmodes = len(eigenvalues)
+        phig = out['modes_phig']
+        eigenvalue = out['modes_eigenvalue']
+        Mhh = out['modes_Mhh']
+        Khh = out['modes_Khh']
+        # out['modes_phigg'] = xg_out
+        nmode = len(eigenvalue)
 
         isubcase = subcase.id
-        mode_cycles = eigenvalues
-        eigenvalues_obj = RealEigenvalues(title, 'LAMA', nmodes=nmodes)
+        mode_cycle = eigenvalue
+        eigenvalue_obj = RealEigenvalues(title, 'LAMA', nmodes=nmode)
 
-        cycle = np.sqrt(np.abs(eigenvalues)) / (2. * np.pi)
-        radians = np.sqrt(np.abs(eigenvalues))
+        cycle = np.sqrt(np.abs(eigenvalue)) / (2. * np.pi)
+        radian = np.sqrt(np.abs(eigenvalue))
 
-        eigenvalues_obj.mode = np.arange(nmodes, dtype='int32') + 1
-        eigenvalues_obj.extraction_order = np.arange(nmodes, dtype='int32') + 1
-        eigenvalues_obj.eigenvalues = eigenvalues
-        eigenvalues_obj.radians = radians
-        eigenvalues_obj.cycles = cycle
-        eigenvalues_obj.generalized_mass = np.ones(nmodes, dtype='float64')
-        eigenvalues_obj.generalized_stiffness = np.ones(nmodes, dtype='float64')
-
-        op2.eigenvalues[title] = eigenvalues_obj
+        eigenvalue_obj.mode = np.arange(nmode, dtype='int32') + 1
+        eigenvalue_obj.extraction_order = np.arange(nmode, dtype='int32') + 1
+        eigenvalue_obj.eigenvalues = eigenvalue
+        eigenvalue_obj.radians = radian
+        eigenvalue_obj.cycles = cycle
+        eigenvalue_obj.generalized_mass = np.diag(Mhh)
+        eigenvalue_obj.generalized_stiffness = np.diag(Khh)
+        op2.eigenvalues[title] = eigenvalue_obj
         #op2.eigenvalues[isubcase] = eigenvalues_obj
 
-        nnodes = node_gridtype.shape[0]
-        data = xg_out.reshape((nmodes, nnodes, 6)).astype('float32')
-        eigenvalues = eigenvalues.astype('float32')
-        table_name = 'OUGV1'
-        modes = np.arange(1, nmodes + 1, dtype=idtype)
-        eigenvectors_obj = RealEigenvectorArray.add_modal_case(
-            table_name, node_gridtype, data, isubcase, modes, eigenvalues, mode_cycles,
-            is_sort1=True, is_random=False, is_msc=True, random_code=0,
-            title=title, subtitle=subtitle, label=label)
-        eigenvectors_obj.nonlinear_factor = 1
-        op2.eigenvectors[isubcase] = eigenvectors_obj
+        (write_phi_f06, write_phi_op2,
+         write_phi_pch, unused_options, phi_set,
+         ) = get_f06_op2_pch_set(subcase, 'DISPLACEMENT')
+        write_eigenvector = any((write_phi_f06, write_phi_op2))
 
-        write_f06 = True
-        if write_f06:
+        modes = np.arange(1, nmode + 1, dtype=idtype)
+        eigenvalue = eigenvalue.astype('float32')
+
+        if write_eigenvector:
+            nnode = node_gridtype.shape[0]
+            # (1,2050,18)
+            # print(xg_out.shape)
+            node_gridtypei, phi, nnodei = slice_modal_set(
+                node_gridtype, phig,
+                nnode, nmode, phi_set)
+
+            data = phi.reshape((nmode, nnodei, 6)).astype('float32')
+            table_name = 'OUGV1'
+            eigenvector_obj = RealEigenvectorArray.add_modal_case(
+                table_name, node_gridtypei, data, isubcase, modes, eigenvalue, mode_cycle,
+                is_sort1=True, is_random=False, is_msc=True, random_code=0,
+                title=title, subtitle=subtitle, label=label)
+            eigenvector_obj.nonlinear_factor = 1
+            op2.eigenvectors[isubcase] = eigenvector_obj
+
+        write_eigenvalue_f06 = True
+        write_eigenvalue_op2 = True
+        if write_eigenvalue_f06:
             str(page_num)
             header = []
-            page_num = eigenvalues_obj.write_f06(
+            page_num = eigenvalue_obj.write_f06(
                 f06_file, header=header,
                 page_stamp=page_stamp, page_num=page_num)
             f06_file.write('\n')
 
-            page_num = eigenvectors_obj.write_f06(
+        if write_phi_f06:
+            page_num = eigenvector_obj.write_f06(
                 f06_file, header=None,
                 page_stamp=page_stamp, page_num=page_num,
                 is_mag_phase=False, is_sort1=True)
@@ -976,17 +968,191 @@ class Solver:
         #log.debug(f'xg = {xg}')
         #log.debug(f'Fg = {Fg}')
 
+        op2 = self.op2
+        page_stamp += '\n'
+
+        # TODO: add transform (need for rods, quads, etc., but not springs)
+        phib = phig
+        recover_force_103(f06_file, op2, self.model, dof_map, subcase,
+                          phig, phib,
+                          modes, eigenvalue, #freqs,
+                          title=title, subtitle=subtitle, label=label,
+                          page_stamp=page_stamp)
         str(f06_file)
         str(page_stamp)
-        op2.write_op2(self.op2_filename, post=-1, endian=b'<', skips=None, nastran_format='nx')
-        return end_options
-        #raise NotImplementedError(subcase)
+        if write_op2 and write_phi_op2:
+            op2.write_op2(self.op2_filename, post=-1, endian=b'<',
+                          skips=None, nastran_format='nx')
+        return out, page_num, end_options
 
-    def run_sol_111_harmonic(self, subcase: Subcase, f06_file: TextIO,
-                             page_stamp: str, title: str='', subtitle: str='', label: str='',
-                             page_num: int=1,
-                             idtype: str='int32', fdtype: str='float64'):
+    def run_sol_111_modal_frequency(self, subcase: Subcase, f06_file: TextIO,
+                                    page_stamp: str,
+                                    title: str='', subtitle: str='', label: str='',
+                                    page_num: int=1,
+                                    idtype: str='int32', fdtype: str='float64'):
+        model = self.model
+        log = model.log
+        isubcase = subcase.id
+        op2 = self.op2
+        # -----------------------------------------------------------------------
+        node_gridtype = _get_node_gridtype(model, idtype=idtype)
+
+        # handles MAX/MASS normalization
+        out, page_num, end_options = self.run_sol_103_modes(
+            subcase, f06_file,
+            page_stamp=page_stamp,
+            title=title, subtitle=subtitle, label=label,
+            page_num=page_num,
+            idtype=idtype, fdtype=fdtype)
+        end_options.append('DYNRED')
+        # aset = out['aset']
+        Kgg = out['Kgg']
+        # Mgg = out['Mgg']
+        eigenvalue = out['modes_eigenvalue']
+        # print(list(out))
+        phit = out['modes_phig']  # phi-gg
+
+        nmode = len(eigenvalue)
+        ndof_g = Kgg.shape[0]
+        # ndof_a = Kaa.shape[0]
+
+        # natural frequency
+        omegan = np.sqrt(np.abs(eigenvalue))
+
+        # frequency
+        freq = get_frequencies(model, subcase, omegan)
+        nfreq = len(freq)
+        omega = 2 * np.pi * freq
+
+        # TODO: parse inputs for loads
+        Fg = np.ones((ndof_g, 1), dtype='complex64')
+
+        Cstr_gg, zomegan2 = get_freq_damping(
+            model, omegan, ndof_g)
+
+        # nfreq = len(omegas)
+        # shape = (ndof, ndof, nfreq)
+
+        # phiT = phi.T
+        #  modal space (h); sometimes called x
+        # print(phi.shape, Mgg.shape)
+        nmodes, norm_str = get_real_eigenvalue_method(model, subcase)
+        # phi = phit.T
+        Mhh = out['modes_Mhh']
+        Khh = out['modes_Khh']
+        if norm_str == 'MAX':
+            raise RuntimeError('norm_str=MAX and should be MASS '
+                               '(it makes the math harder)')
+        # Mhh = phit @ Mgg @ phi
+        # Chh = phi @ Cgg @ phi.t
+        # Khh = phi @ Kgg @ phi.T
+        # Fh = phi @ Fg
+
+        Fh = phit @ Fg
+        # print('Fh:\n', Fh)
+        omega2 = omega * omega  # frequncy
+        omegan2 = np.diag(Khh)  # natural frequency squared
+        omegan = np.sqrt(omegan2)
+
+        k = np.diag(Khh)  # TODO: this part is weird
+        p = 1.
+        # print(f'ndof_g={ndof_g} phi.shape={phi.shape}')
+        xq = np.zeros((nfreq, nmode), dtype='complex64')
+        for ifreq, omega2i in enumerate(omega2):
+            log.info(f'ifreq={ifreq}')
+            # denom = np.sqrt((1-omega2i/omegan2)**2 + zomegan2**2)
+            # p / (k * denom) * np.sin(omegan)
+
+            # $$ u(t) =
+            tf = np.sqrt((1-omega2i/omegan2)**2 + (zomegan2/omegan)**2)
+            mag = p/k * tf
+            phase = -np.atan2(zomegan2/omegan, 1 - omega2i/omegan2)
+            real = mag * np.cos(phase)
+            imag = mag * np.sin(phase)
+            xq_freq = real + 1j*imag
+            # print(xq_freq.shape)
+            xq[ifreq, :] = xq_freq
+            log.info(xq_freq)
+
+        xg = xq @ phit # (1000,2) * (2,18) = (1000,18)
+        # vg = (1j * omega)[:, np.newaxis] * xg[np.newaxis, :]
+        # ValueError: operands could not be broadcast together with shapes (2050,) (2050,18)
+        # print(omega2.shape, xg.shape)
+        # ag = -omega2[:, np.newaxis] * xg[np.newaxis, :]
+
+        key_to_factor = {
+            'DISPLACEMENT': (op2.displacements, ComplexDisplacementArray, False, 1.),
+            'VELOCITY': (op2.velocities, ComplexVelocityArray, True, 1j*omega),
+            'ACCELERATION': (op2.accelerations, ComplexAccelerationArray, True, -omega * omega),
+        }
+        header = ['\n', '\n', '\n']
+        nnode = node_gridtype.shape[0]
+        for key, (slot, obj_class, apply_scale, factor) in key_to_factor.items():
+            write_f06, write_op2, write_pch, options, set_data = get_f06_op2_pch_set(
+                subcase, key)
+            write_data = np.any((write_f06, write_op2))
+            if not write_data:
+                log.warning(f'skipping {key!r}')
+                continue
+            if not apply_scale:  # displacment
+                data = xg.copy()
+                assert data.shape == (nfreq, ndof_g), data.shape
+            else:  # velocity, acceleration
+                data = factor[:, np.newaxis] * xg[np.newaxis, :]
+                data = data.reshape(nfreq, ndof_g)
+                assert data.shape == (nfreq, ndof_g), (data.shape, (nfreq, ndof_g))
+
+            # print(key, data.shape, (nfreq, nnode))
+            # (2050,18)
+            node_gridtypei, data, nnodei = slice_freq_set(
+                node_gridtype, data,
+                nnode, nfreq, set_data)
+            assert data.shape == (nfreq, nnodei, 6), data.shape
+
+            # eigenvaluef = eigenvalue.astype('float32')
+            table_name = 'OUGV1'
+            obj = obj_class.add_freq_case(
+                table_name, node_gridtypei, data, isubcase, freq,
+                is_sort1=True, is_random=False, is_msc=True, random_code=0,
+                title=title, subtitle=subtitle, label=label)
+            # obj.nonlinear_factor = 1
+            slot[isubcase] = obj
+
+            header = ['', '', '']
+            if write_f06:
+                is_mag_phase = get_mag_phase_from_options(options)
+                page_num = obj.write_f06(
+                    f06_file, header=header,
+                    page_stamp=page_stamp, page_num=page_num,
+                    is_mag_phase=is_mag_phase, is_sort1=True)
+                f06_file.write('\n')
+
+        # -w^2 [Mhat]qdd + j*w[Bhat]qd + [Khat]q = F
+
+        #------------------
+        # SPC forces ???
+        # -w^2 [Mhat]qdd + j*w[Bhat]qd + [Khat]q = F
+        # -w^2 [Mhat]q + [Khat]q = 0
+        # TODO: how do I get the modal constraint force?
+
+        #------------------
+        dof_map = None
+        recover_force_freq(
+            f06_file, op2, self.model, dof_map, subcase,
+            xq,
+            # modes, eigenvalue,
+            freq,
+            title=title, subtitle=subtitle, label=label,
+            page_stamp=page_stamp)
+        return out, page_num, end_options
+
+    def run_sol_108_direct_frequency(self, subcase: Subcase, f06_file: TextIO,
+                                     page_stamp: str, title: str='', subtitle: str='', label: str='',
+                                     page_num: int=1,
+                                     idtype: str='int32', fdtype: str='float64'):
         """
+        Direct frequency response
+
         frequency
         [M]{xdd} + [C]{xd} + [K]{x} = {F}
         {φ} ([M]s^2 + [C]{s} + [K]) = {F}
@@ -1044,8 +1210,8 @@ class Solver:
         aset = out['aset']
         Kaa = out['Kaa']
         Maa = out['Maa']
-        eigenvalues = out['eigenvalues']
-        omegas = np.sqrt(np.abs(eigenvalues))
+        eigenvalue = out['modes_eigenvalue']
+        omegas = np.sqrt(np.abs(eigenvalue))
 
         freqs = get_frequencies(model, subcase, omegas)
         nfreq = len(freqs)
@@ -1072,46 +1238,8 @@ class Solver:
         tf_matrix.ravel()[tf_mask.ravel()] = tf_matrix_a.ravel()
 
         # TODO: save tf_matrix to ACCEL response
-        return tf_matrix
+        return out, tf_matrix
 
-
-def partition_matrix(matrix, sets: list[tuple[str, np.ndarray]]) -> dict[tuple[str, str], NDArrayNNfloat]:
-    """partitions a matrix"""
-    matrices = {}
-    for aname, aset in sets:
-        for bname, bset in sets:
-            matrices[aname + bname] = matrix[aset, :][:, bset]
-    return matrices
-
-def partition_vector(vector, sets, fdtype: str='float64') -> list[NDArrayNfloat]:  # pragma: no cover
-    """partitions a vector"""
-    vectors = []
-    for unused_aname, aset in sets:
-        if len(aset) == 0:
-            vectors.append(np.array([], dtype=fdtype))
-            continue
-        vectori = vector[aset]
-        vectors.append(vectori)
-    return vectors
-
-def partition_vector2(vector, sets,
-                      fdtype: str='float64') -> tuple[NDArrayNfloat, NDArrayNfloat]:
-    """partitions a vector"""
-    assert len(sets) == 2, sets
-    #vectors = partition_vector(vector, sets, fdtype=fdtype)
-    #return tuple(vectors)
-    (unused_name0, set0), (unused_name1, set1) = sets
-    vectors = (vector[set0], vector[set1])
-    return vectors
-
-def partition_vector3(vector, sets,
-                      fdtype: str='float64') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
-    """partitions a vector"""
-    assert len(sets) == 3, sets
-    #vectors = partition_vector(vector, sets, fdtype=fdtype)
-    (unused_name0, set0), (unused_name1, set1), (unused_name2, set2) = sets
-    vectors = (vector[set0], vector[set1], vector[set2])
-    return tuple(vectors)
 
 def remove_rows(Kgg: NDArrayNNfloat, aset: NDArrayNint,
                 idtype: str='int32') -> NDArrayNNfloat:
@@ -1242,7 +1370,10 @@ def remove_rows(Kgg: NDArrayNNfloat, aset: NDArrayNint,
     Kaa = Kgg[ipositive, :][:, ipositive]
     return Kaa, ipositive, inegative, sz_set
 
-def guyan_reduction(matrix, set1, set2):
+
+def guyan_reduction(matrix: np.ndarray,
+                    set1: np.ndarray,
+                    set2: np.ndarray):
     """
     https://en.wikipedia.org/wiki/Guyan_reduction
 
@@ -2012,6 +2143,7 @@ def conm2_fill_Mbb(model: BDF,
         Mbb[i1+3:i1+6, i1+3:i1+6] += I
     return mass_total
 
+
 def _run_modes(model: BDF,
                subcase: Subcase,
                ngrid: int,
@@ -2019,8 +2151,9 @@ def _run_modes(model: BDF,
                ndof: int,
                node_gridtype: np.ndarray,
                dof_map: dict,
-               idtype: str = 'int32',
-               fdtype: str = 'floaat64'):
+               idtype: str= 'int32',
+               fdtype: str='float64'):
+    log = model.log
     out = {}
     Kgg = build_Kgg(model, dof_map,
                     ndof, ngrid,
@@ -2090,39 +2223,47 @@ def _run_modes(model: BDF,
     #na = Kaa_.shape[0]
     ndof_ = Kaa_.shape[0]
 
-    method_id, options = subcase['METHOD']
-    assert isinstance(method_id, int), method_id
-    method = model.methods[method_id]
-    if method.type == 'EIGRL':
-        neigenvalues = method.nd  # nroots
-    #neigenvalues = 10
+    neigenvalue, norm_str = get_real_eigenvalue_method(model, subcase)
 
-    eigenvalues, xa_ = solve_eigenvector(Kaa_, Maa_, ndof, neigenvalues)
-    nmodes = len(eigenvalues)
-    model.log.debug(f'eigenvalues = {eigenvalues}')
-    out['eigenvalues'] = eigenvalues
+    eigenvalue, xa_ = solve_eigenvector(Kaa_, Maa_, ndof, neigenvalue)
+    nmode = len(eigenvalue)
+    log.debug(f'eigenvalue = {eigenvalue}')
+    # log.info(f'eigenvalue = {eigenvalue}')
     #print(f'xa_ = {xa_} {xa_.shape}')
     #xa2 = xa_.reshape(nmodes, na, na)
 
     ndof_a = len(xa)
-    xg_out = np.full((nmodes, ndof), 0., dtype=fdtype)
-    #xa_out = xg_out[:, aset]
-    #assert xa_out.shape == (nmodes, ndof_a)
-    #xa_out = np.full((nmodes, ndof_a), np.nan, dtype=fdtype)
-    xa_out = np.zeros((nmodes, ndof_a), dtype=fdtype)
+    phig = np.full((nmode, ndof), 0., dtype=fdtype)
+    #phia = phig:, aset]
+    #assert phia.shape == (nmodes, ndof_a)
+    #phia = np.full((nmodes, ndof_a), np.nan, dtype=fdtype)
+    phia = np.zeros((nmode, ndof_a), dtype=fdtype)
     #xa[ipositive] = xa_
-    for imode in range(nmodes):
-        xa_out[imode, ipositive] = xa_[:, imode]
-    #xa_out[:, ipositive] = xa_
-    #xg = np.arange(ndof, dtype=fdtype)
-    #xg[aset] = xa
-    #xg[sset] = xs
-    xg_out[:, aset] = xa_out
-    xg_out[:, sset] = xs
+    for imode in range(nmode):
+        phia[imode, ipositive] = xa_[:, imode]
+    #phia[:, ipositive] = xa_
+    #phig = np.arange(ndof, dtype=fdtype)
+    #phig[aset] = xa
+    #phig[sset] = xs
+    phig[:, aset] = phia
+    phig[:, sset] = xs
 
-    assert np.all(np.isfinite(xa_out))
-    assert np.all(np.isfinite(xg_out))
-    out['xg_out'] = xg_out
+    # phit = phig
+    nnode_g = len(node_gridtype)
+    phi, Mhh, Khh = apply_phi_normalization(
+        Mgg, Kgg,
+        eigenvalue, phig,
+        nmode, nnode_g, norm_str)
+    log.info(f'Mhhp_diag: {np.diag(Mhh)}')
+    log.info(f'Khh_diag: {np.diag(Khh)}')
+
+    assert np.all(np.isfinite(phia))
+    assert np.all(np.isfinite(phig))
+    out['modes_eigenvalue'] = eigenvalue
+    out['modes_norm'] = norm_str
+    out['modes_phig'] = phig
+    out['modes_Mhh'] = Mhh
+    out['modes_Khh'] = Khh
     return out
 
 def solve_eigenvector(Kaa: csc_matrix, Maa: np.ndarray,
@@ -2233,33 +2374,3 @@ def _build_xg(model: BDF, dof_map: DOF_MAP,
     spc_set = np.array(spc_set, dtype='int32')
     #print('spc_set =', spc_set, xspc)
     return spc_set, sset, xspc
-
-
-def get_frequencies(model: BDF, subcase: Subcase,
-                    omega_ns: np.ndarray) -> np.ndarray:
-
-    is_freqs = (len(model.frequencies) == 0)
-    is_frequency = ('FREQUENCY' not in subcase)
-    natural_freq = np.unique(omega_ns) / (2 * np.pi)
-    del omega_ns
-
-    if is_freqs or is_frequency:
-        nfreq = 1001
-        #freq_max = 2 * np.pi * omega_max
-        fmax_default = 1.5 * natural_freq.max()
-
-        #freq = np.linspace(0., 1.5*freq_max, num=nfreq)
-        frequencies = np.linspace(1., fmax_default, num=nfreq)
-    else:
-        freq_id, unused_options = subcase['FREQUENCY']
-        frequencies_list = []
-        for freq in model.frequencies[freq_id]:
-            if freq.type in {'FREQ', 'FREQ1', 'FREQ2'}:
-                frequencies_list.append(freq.freqs)
-            elif freq.type in {'FREQ3', 'FREQ4', 'FREQ5'}:
-                freqi = freq.get_frequencies(natural_freq)
-                frequencies_list.append(freqi)
-            else:  # pragma: no cover
-                raise RuntimeError(freq)
-        frequencies = np.unique(np.hstack(frequencies_list))
-    return frequencies

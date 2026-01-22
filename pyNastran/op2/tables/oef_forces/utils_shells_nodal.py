@@ -3,8 +3,7 @@ from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
-from pyNastran.op2.op2_interface.utils import apply_mag_phase
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply_mag_phase
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
@@ -242,24 +241,9 @@ def oef_cquad4_imag_17(op2: OP2, data: bytes, ndata: int,
 
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
-        if is_magnitude_phase:
-            mx = polar_to_real_imag(mxr, mxi)
-            my = polar_to_real_imag(myr, myi)
-            mxy = polar_to_real_imag(mxyr, mxyi)
-            bmx = polar_to_real_imag(bmxr, bmxi)
-            bmy = polar_to_real_imag(bmyr, bmyi)
-            bmxy = polar_to_real_imag(bmxyr, bmxyi)
-            tx = polar_to_real_imag(txr, txi)
-            ty = polar_to_real_imag(tyr, tyi)
-        else:
-            mx = complex(mxr, mxi)
-            my = complex(myr, myi)
-            mxy = complex(mxyr, mxyi)
-            bmx = complex(bmxr, bmxi)
-            bmy = complex(bmyr, bmyi)
-            bmxy = complex(bmxyr, bmxyi)
-            tx = complex(txr, txi)
-            ty = complex(tyr, tyi)
+        mx, my, mxy, bmx, bmy, bmxy, tx, ty = real_imag_from_list([
+            mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
+            mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi], is_magnitude_phase)
         # this nid is just from CEN/4 <---- 4
         nid = 0
         add_new_element_sort_x(dt, eid, term, nid, mx, my, mxy,
@@ -272,24 +256,9 @@ def oef_cquad4_imag_17(op2: OP2, data: bytes, ndata: int,
             (nid,
              mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
              mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
-            if is_magnitude_phase:
-                mx = polar_to_real_imag(mxr, mxi)
-                my = polar_to_real_imag(myr, myi)
-                mxy = polar_to_real_imag(mxyr, mxyi)
-                bmx = polar_to_real_imag(bmxr, bmxi)
-                bmy = polar_to_real_imag(bmyr, bmyi)
-                bmxy = polar_to_real_imag(bmxyr, bmxyi)
-                tx = polar_to_real_imag(txr, txi)
-                ty = polar_to_real_imag(tyr, tyi)
-            else:
-                mx = complex(mxr, mxi)
-                my = complex(myr, myi)
-                mxy = complex(mxyr, mxyi)
-                bmx = complex(bmxr, bmxi)
-                bmy = complex(bmyr, bmyi)
-                bmxy = complex(bmxyr, bmxyi)
-                tx = complex(txr, txi)
-                ty = complex(tyr, tyi)
+            mx, my, mxy, bmx, bmy, bmxy, tx, ty = real_imag_from_list([
+                mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
+                mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi], is_magnitude_phase)
             if op2.is_debug_file:
                 op2.binary_debug.write('OEF_Plate2 - eid=%i nid=%s out=%s\n' % (
                     eid, nid, str(out)))

@@ -986,7 +986,6 @@ class ZAERO:
         # self._check_cntcset_conct()
 
     def build_block(self):
-        import graphviz
         # g = graphviz.Graph('G', filename='process2.gv', engine='sfdp')
         # g = graphviz.Diagram('G', filename='process2.gv', engine='sfdp')
         try:

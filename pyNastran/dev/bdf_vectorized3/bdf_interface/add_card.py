@@ -7288,6 +7288,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             estimate of first flexible mode natural frequency
         norm : str; default=None
             {MAX, MASS}
+            None -> MAX for buckling; MASS for normal modes
         options : ???; default=None -> []
             ???
         values : ???; default=None -> []
@@ -7301,7 +7302,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods.add_method_object(method)
         return method
 
-    def add_eigb(self, sid, method, L1, L2, nep, ndp, ndn, norm, G, C,
+    def add_eigb(self, sid: Int, method, L1, L2, nep, ndp, ndn, norm, G, C,
                  comment: str='') -> EIGB:
         """Creates an EIGB card"""
         method = EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, G, C,

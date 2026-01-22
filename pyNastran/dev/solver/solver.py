@@ -13,7 +13,9 @@ from scipy.sparse import csc_matrix, lil_matrix
 
 import pyNastran
 from pyNastran.nptyping_interface import (
-    NDArrayNbool, NDArrayNint, NDArrayN2int, NDArrayNfloat, NDArrayNNfloat)
+    NDArrayNbool,
+    NDArrayNint, NDArrayN2int,
+    NDArrayNfloat, NDArrayNNfloat)
 from pyNastran.bdf.bdf import BDF, Subcase
 
 from pyNastran.f06.f06_writer import make_end
@@ -30,9 +32,17 @@ from .recover.static_force import recover_force_101
 from .recover.static_stress import recover_stress_101
 from .recover.static_strain import recover_strain_101
 from .recover.strain_energy import recover_strain_energy_101
-from .recover.utils import get_plot_request
 from .build_stiffness import build_Kgg, DOF_MAP, Kbb_to_Kgg
+from .get_sets import (
+    get_aset, get_bset, get_cset, get_rset,
+    get_qset, get_omit_set,
+)
 
+from pyNastran.dev.bdf_vectorized3.solver.recover.utils import get_plot_request
+from pyNastran.dev.bdf_vectorized3.solver.partition import (
+    partition_matrix, partition_vector,
+    partition_vector2, partition_vector3)
+from pyNastran.dev.bdf_vectorized3.solver.utils import recast_data
 if TYPE_CHECKING:  #  pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 
@@ -66,9 +76,9 @@ class Solver:
         model.write_bdf('junk.bdf')
         sol = model.sol
         solmap = {
-            101 : self.run_sol_101,  # static
-            103 : self.run_sol_103,  # modes
-            111 : self.run_sol_111,  # SEMFREQ Modal Frequency Response
+            101: self.run_sol_101,  # static
+            103: self.run_sol_103,  # modes
+            111: self.run_sol_111,  # SEMFREQ Modal Frequency Response
         }
         model.cross_reference()
         self._update_card_count()
@@ -786,11 +796,6 @@ class Solver:
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
         return page_num
 
-    def _recast_data(self, idtype: str, fdtype: str):
-        idtype = 'int32'
-        fdtype = 'float32'
-        return idtype, fdtype
-
     def _save_static_table(self, f06_file,
                            subcase: Subcase, itime: int, ntimes: int,
                            node_gridtype: NDArrayN2int, Fg: NDArrayNfloat,
@@ -801,7 +806,7 @@ class Solver:
                            title: str='', subtitle: str='', label: str='',
                            idtype: str='int32', fdtype: str='float32',
                            page_num: int=1, page_stamp: str='PAGE %s') -> int:
-        idtype, fdtype = self._recast_data(idtype, fdtype)
+        idtype, fdtype = recast_data(idtype, fdtype)
         isubcase = subcase.id
         #self.log.debug(f'saving {f06_request_name} -> {table_name}')
         unused_nids_write, write_f06, write_op2, quick_return = get_plot_request(
@@ -899,6 +904,7 @@ class Solver:
 
         str(f06_file)
         str(page_stamp)
+
         op2.write_op2(self.op2_filename, post=-1, endian=b'<', skips=None, nastran_format='nx')
         return end_options
         #raise NotImplementedError(subcase)
@@ -1004,7 +1010,8 @@ class Solver:
                     page_num: int=1,
                     idtype: str='int32', fdtype: str='float64'):
         """
-        frequency
+        frequency response
+
         [M]{xdd} + [C]{xd} + [K]{x} = {F}
         {φ} ([M]s^2 + [C]{s} + [K]) = {F}
         {φ} ([M]s^2 + [C]{s} + [K]) = {F}
@@ -1054,44 +1061,6 @@ class Solver:
         isubcase = subcase.id
         mode_cycles = eigenvalues
 
-
-def partition_matrix(matrix, sets) -> dict[tuple[str, str], NDArrayNNfloat]:
-    """partitions a matrix"""
-    matrices = {}
-    for aname, aset in sets:
-        for bname, bset in sets:
-            matrices[aname + bname] = matrix[aset, :][:, bset]
-    return matrices
-
-def partition_vector(vector, sets, fdtype: str='float64') -> list[NDArrayNfloat]:  # pragma: no cover
-    """partitions a vector"""
-    vectors = []
-    for unused_aname, aset in sets:
-        if len(aset) == 0:
-            vectors.append(np.array([], dtype=fdtype))
-            continue
-        vectori = vector[aset]
-        vectors.append(vectori)
-    return vectors
-
-def partition_vector2(vector, sets,
-                      fdtype: str='float64') -> tuple[NDArrayNfloat, NDArrayNfloat]:
-    """partitions a vector"""
-    assert len(sets) == 2, sets
-    #vectors = partition_vector(vector, sets, fdtype=fdtype)
-    #return tuple(vectors)
-    (unused_name0, set0), (unused_name1, set1) = sets
-    vectors = (vector[set0], vector[set1])
-    return vectors
-
-def partition_vector3(vector, sets,
-                      fdtype: str='float64') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
-    """partitions a vector"""
-    assert len(sets) == 3, sets
-    #vectors = partition_vector(vector, sets, fdtype=fdtype)
-    (unused_name0, set0), (unused_name1, set1), (unused_name2, set2) = sets
-    vectors = (vector[set0], vector[set1], vector[set2])
-    return tuple(vectors)
 
 def remove_rows(Kgg: NDArrayNNfloat, aset: NDArrayNint, idtype='int32') -> NDArrayNNfloat:
     """
@@ -1268,6 +1237,7 @@ def guyan_reduction(matrix, set1, set2):
     return np.linalg.multi_dot([T.T, A, T])
     #return A11 + A12_A22m1_A21
 
+
 def _get_node_gridtype(model: BDF, idtype: str='int32') -> NDArrayN2int:
     """
     Helper method for results post-processing
@@ -1300,104 +1270,6 @@ def _get_node_gridtype(model: BDF, idtype: str='int32') -> NDArrayN2int:
     node_gridtype_array = np.array(node_gridtype, dtype=idtype)
     return node_gridtype_array
 
-def get_aset(model: BDF) -> set[tuple[int, int]]:
-    aset_map = set()
-    for aset in model.asets:
-        if aset.type == 'ASET1':
-            comp = aset.components
-            for nid in aset.ids:
-                for compi in comp:
-                    aset_map.add((nid, int(compi)))
-        elif aset.type == 'ASET':
-            for nid, comp in zip(aset.ids, aset.components):
-                for compi in comp:
-                    aset_map.add((nid, int(compi)))
-        else:
-            raise NotImplementedError(aset)
-    return aset_map
-
-def get_bset(model: BDF) -> set[tuple[int, int]]:
-    """creates the b-set"""
-    bset_map = set()
-    for bset in model.bsets:
-        if bset.type == 'BSET1':
-            comp = bset.components
-            for nid in bset.ids:
-                for compi in comp:
-                    bset_map.add((nid, int(compi)))
-        elif bset.type == 'BSET':
-            for nid, comp in zip(bset.ids, bset.components):
-                for compi in comp:
-                    bset_map.add((nid, int(compi)))
-        else:
-            raise NotImplementedError(bset)
-    return bset_map
-
-def get_cset(model: BDF) -> set[tuple[int, int]]:
-    """creates the c-set"""
-    cset_map = set()
-    for cset in model.csets:
-        if cset.type == 'CSET1':
-            comp = cset.components
-            for nid in cset.ids:
-                for compi in comp:
-                    cset_map.add((nid, int(compi)))
-        elif cset.type == 'CSET':
-            for nid, comp in zip(cset.ids, cset.components):
-                for compi in comp:
-                    cset_map.add((nid, int(compi)))
-        else:
-            raise NotImplementedError(cset)
-    return cset_map
-
-def get_omit_set(model: BDF) -> set[tuple[int, int]]:
-    """creates the o-set"""
-    omit_set_map = set()
-    for omit in model.omits:
-        if omit.type == 'OMIT1':
-            comp = omit.components
-            for nid in omit.ids:
-                for compi in comp:
-                    omit_set_map.add((nid, int(compi)))
-        elif omit.type == 'OMIT':
-            for nid, comp in zip(omit.ids, omit.components):
-                for compi in comp:
-                    omit_set_map.add((nid, int(compi)))
-        else:
-            raise NotImplementedError(omit)
-    return omit_set_map
-
-def get_rset(model: BDF) -> set[tuple[int, int]]:
-    """creates the r-set"""
-    rset_map = set()
-    for rset in model.suport:
-        for nid, comp in zip(rset.ids, rset.components):
-            for compi in comp:
-                rset_map.add((nid, int(compi)))
-
-    for suport in model.suport1:
-        comp = suport.components
-        for nid in suport.ids:
-            for compi in comp:
-                rset_map.add((nid, int(compi)))
-    return rset_map
-
-def get_qset(model: BDF) -> set[tuple[int, int]]:
-    """creates the q-set"""
-    qset_map = set()
-    for qset in model.qsets:
-        if qset.type == 'QSET1':
-            comp = qset.components
-            for nid in qset.ids:
-                for compi in comp:
-                    qset_map.add((nid, int(compi)))
-        elif qset.type == 'QSET':
-            for nid, comp in zip(qset.ids, qset.components):
-                for compi in comp:
-                    qset_map.add((nid, int(compi)))
-        else:
-            raise NotImplementedError(qset)
-    return qset_map
 
 def get_residual_structure(model: BDF, dof_map: DOF_MAP,
                            fset: NDArrayNbool, idtype: str='int32') -> NDArrayNbool:

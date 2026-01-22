@@ -3,13 +3,10 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply_mag_phase
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
-from pyNastran.op2.op2_interface.utils import (
-    apply_mag_phase,
-)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray, RealPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import (
@@ -25,6 +22,22 @@ from pyNastran.op2.tables.oes_stressStrain.random.oes_plates_vm import RandomPla
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
+ETYPE_QUAD_MAP = {
+    # element_type : (element_base, nnodes_expected, element_name)
+    64: ('cquad8', 4, 'CQUAD8'),
+    70: ('ctriar', 3, 'CTRIAR'),
+    75: ('ctria6', 3, 'CTRIA6'),
+    82: ('cquadr', 4, 'CQUADR'),
+    144: ('cquad4', 4, 'CQUAD4-bilinear'),
+}
+
+ETYPE_TRI_MAP = {
+    # element_type : (element_base, element_name)
+    74: ('ctria3', 'CTRIA3'),
+    83: ('ctria3', 'CTRIA3'),  # NASA-95
+    227: ('ctriar', 'CTRIAR'),
+}
+
 
 def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
                   result_type: int, prefix: str, postfix: str) -> tuple[int, Any, Any]:
@@ -35,15 +48,16 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
      - 228 : CQUADR-centroidal
 
     """
-    # n = 0
     factor = op2.factor
     size = op2.size
+    num_wide = op2.num_wide
+
     # print('_oes_cquad4_33')
     if op2.element_type == 33:
         etype = 'cquad4'
     elif op2.element_type == 228:
         etype = 'cquadr'
-        assert op2.num_wide in [17, 15], op2.code_information()
+        assert num_wide in [17, 15], op2.code_information()
     else:  # pragma: no cover
         raise NotImplementedError(op2.code_information())
 
@@ -62,11 +76,11 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
 
     numwide_real = 17
     sort_method = op2.sort_method
-    if result_type == 0 and op2.num_wide == 17:  # real
-        ntotal = 68 * factor  # 4*17
+    ntotal = num_wide * size
+    if result_type == 0 and num_wide == 17:  # real
         nelements = ndata // ntotal
         nlayers = nelements * 2  # 2 layers per node
-        # op2.log.info(f'CQUAD4-33: len(data)={ndata} numwide={op2.num_wide} nelements={nelements} nlayers={nlayers}')
+        # op2.log.info(f'CQUAD4-33: len(data)={ndata} numwide={num_wide} nelements={nelements} nlayers={nlayers}')
 
         auto_return, is_vectorized = op2._create_oes_object4(
             nlayers, result_name, slot, obj_vector_real)
@@ -102,15 +116,14 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
             if is_vectorized and op2.use_vector:  # pragma: no cover
                 op2.log.debug(f'vectorize centroidal quad: {op2.element_name}-{op2.element_type} real '
                               f'SORT{sort_method}')
-            n = oes_quad4_33_real_17(op2, data, obj, ntotal, nelements, dt)
+            n = quad4_33_real_17(op2, data, obj, ntotal, nelements, dt)
         if op2.is_sort1:
             assert obj.element_node[:, 0].min() > 0, obj.element_node[:, 0].shape
 
-    elif result_type == 1 and op2.num_wide == 15:  # imag
+    elif result_type == 1 and num_wide == 15:  # imag
         # op2.to_nx(f' because CQUAD4-33 (numwide=15) was found')
         # nnodes = 0  # centroid + 4 corner points
-        ntotal = op2.num_wide * size
-        # op2.log.info(f'CQUAD4-33: len(data)={ndata} numwide={op2.num_wide} nelements={nelements} nlayers={nlayers}')
+        # op2.log.info(f'CQUAD4-33: len(data)={ndata} numwide={num_wide} nelements={nelements} nlayers={nlayers}')
 
         nelements = ndata // ntotal
         nlayers = nelements * 2
@@ -157,12 +170,12 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
             if is_vectorized and op2.use_vector:  # pragma: no cover
                 op2.log.debug(f'vectorize CQUAD4-33 imag SORT{sort_method}')
 
-            n = oes_cquad4_33_complex_15(
+            n = cquad4_33_complex_15(
                 op2, data, obj,
                 nelements, ntotal,
                 is_magnitude_phase)
 
-    elif result_type in [1, 2] and op2.num_wide == 9:  # random msc
+    elif result_type in [1, 2] and num_wide == 9:  # random msc
         # _oes_cquad4 is the same as _oes_ctria3
         element_id = op2.nonlinear_factor
         obj_vector_random = RandomPlateStressArray if op2.is_stress else RandomPlateStrainArray
@@ -173,7 +186,6 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
             op2._data_factor = 2
             return ndata, None, None
 
-        ntotal = 36 * factor  # 4*9
         nelements = ndata // ntotal
         nlayers = nelements * 2
         nnodes_expected = 1
@@ -278,9 +290,9 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
         else:
             if is_vectorized and op2.use_vector:  # pragma: no cover
                 op2.log.debug(f'vectorize CQUAD4-33 random numwide=9 SORT{sort_method}')
-            n = oes_cquad4_33_random_9(op2, data, obj, nelements, ntotal)
+            n = cquad4_33_random_9(op2, data, obj, nelements, ntotal)
 
-    elif result_type in [1, 2] and op2.num_wide == 11:  # random
+    elif result_type in [1, 2] and num_wide == 11:  # random
         # 2 FD1 RS Z1 = Fibre Distance
         # 3 SX1 RS Normal in x at Z1
         # 4 SY1 RS Normal in y at Z1
@@ -314,7 +326,7 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
 
         obj = op2.obj
         if op2.use_vector and is_vectorized and 0:  # pragma: no cover
-            n = nelements * 4 * op2.num_wide
+            n = nelements * 4 * num_wide
             ielement = obj.ielement
             ielement2 = ielement + nelements
             itotal = obj.itotal
@@ -333,17 +345,17 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
                 obj.element[itotal:itotal2, 0] = eids
 
             floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nelements, 11)[:, 1:]
-            print(floats.shape)
+            # print(floats.shape)
             # fd, sx, sy, txy,
             floats1 = floats.reshape(nelements * nnodes_expected, 10)
             obj.data[obj.itime, itotal:itotal2, :] = floats1.copy()
             obj.itotal = itotal2
             obj.ielement = ielement2
         else:
-            n = oes_cquad4_33_random_vm_11(op2, data, obj, nelements, ntotal)
+            n = cquad4_33_random_vm_11(op2, data, obj, nelements, ntotal)
 
-    elif result_type == 1 and op2.num_wide == 17 and op2.table_name in [b'OESVM1', b'OESVM2', b'OSTRVM1',
-                                                                        b'OSTRVM2']:  # freq
+    elif result_type == 1 and num_wide == 17 and op2.table_name in [b'OESVM1', b'OSTRVM1',
+                                                                    b'OESVM2', b'OSTRVM2']:  # freq
         # Table of element stresses for frequency response analysis that includes
         # von Mises stress output in SORT1 format.
         element_id = op2.nonlinear_factor
@@ -361,7 +373,7 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
         nelements = ndata // ntotal
         nlayers = nelements * 2
         nnodes_expected = 1
-        # op2.log.info(f'CQUAD4-33: len(data)={ndata} numwide={op2.num_wide} nelements={nelements} nlayers={nlayers}')
+        # op2.log.info(f'CQUAD4-33: len(data)={ndata} numwide={num_wide} nelements={nelements} nlayers={nlayers}')
 
         auto_return, is_vectorized = op2._create_oes_object4(
             nlayers, result_name, slot, obj_vector_complex)
@@ -384,8 +396,8 @@ def oes_cquad4_33(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
             if is_vectorized and op2.use_vector:  # pragma: no cover
                 op2.log.debug('vectorize CQUAD4-33 complex '
                               f'{op2.table_name_str} SORT{op2.sort_method}')
-            n = oes_cquad4_33_complex_vm_17(op2, data, obj, nelements, ntotal,
-                                            is_magnitude_phase)
+            n = cquad4_33_complex_vm_17(op2, data, obj, nelements, ntotal,
+                                        is_magnitude_phase)
 
     else:  # pragma: no cover
         raise RuntimeError(op2.code_information())
@@ -408,15 +420,8 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
     n = 0
     size = op2.size
     factor = op2.factor
+    num_wide = op2.num_wide
 
-    etype_map = {
-        # element_type : (element_base, nnodes_expected, element_name)
-        64: ('cquad8', 4, 'CQUAD8'),
-        70: ('ctriar', 3, 'CTRIAR'),
-        75: ('ctria6', 3, 'CTRIA6'),
-        82: ('cquadr', 4, 'CQUADR'),
-        144: ('cquad4', 4, 'CQUAD4-bilinear'),
-    }
     if op2.is_stress:
         stress_strain = 'stress'
         obj_vector_real = RealPlateStressArray
@@ -429,7 +434,7 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
         obj_vector_random = RandomPlateStrainArray
 
     # centroid not included in nnodes
-    element_base, nnodes, element_name = etype_map[op2.element_type]
+    element_base, nnodes, element_name = ETYPE_QUAD_MAP[op2.element_type]
     # if prefix == '' and postfix == '':
     # prefix = stress_strain + '.'
 
@@ -442,15 +447,15 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
     log = op2.log
 
     nnodes_all = nnodes + 1  # adding the centroid
+    del nnodes
 
     numwide_real = 2 + 17 * nnodes_all
     numwide_imag = 2 + 15 * nnodes_all
     numwide_random = 2 + 9 * nnodes_all
 
     # numwide_imag2 = 2 + 16 * nnodes_all
-    # print('%s real=%s imag=%s imag2=%s random=%s' % (
-    # op2.element_name, numwide_real, numwide_imag, numwide_imag2, numwide_random
-    # ))
+    # print('%s real=%s imag=%s random=%s' % (
+    #     op2.element_name, numwide_real, numwide_imag, numwide_random))
     # etype = op2.element_name
     # grid_center = 'CEN/%i' % nnodes
 
@@ -466,11 +471,13 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
     element_name_type = f'{op2.element_name}-{op2.element_type}'
     # print(op2.code_information())
 
-    # if result_type == 0 and op2.num_wide == numwide_real and op2._nastran_format == 'optistruct' and op2.element_type == 75:  # real
+    # if result_type == 0 and num_wide == numwide_real and op2._nastran_format == 'optistruct' and op2.element_type == 75:  # real
     # could be a quad or tri
     # x = 1
 
-    if result_type == 0 and op2.num_wide == numwide_real:  # real
+    ntotal = num_wide * size
+    nelements = ndata // ntotal
+    if result_type == 0 and num_wide == numwide_real:  # real
         ntotal = 4 * (2 + 17 * nnodes_all) * factor
         nelements = ndata // ntotal
         assert ndata % ntotal == 0
@@ -527,14 +534,15 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
             if is_vectorized and op2.use_vector:  # pragma: no cover
                 log.debug(f'vectorize nodal shell: {element_name_type}... real SORT{sort_method}')
 
-            n = oes_cquad4_144_real(op2, data, ndata, obj,
-                                    nelements, nnodes, dt)
+            n = cquad4_144_real(op2, data, ndata, obj,
+                                nelements, nnodes_all-1, dt)
         if op2.is_sort1:
             assert obj.element_node[:, 0].min() > 0, obj.element_node[:, 0]
 
-    elif result_type == 1 and op2.num_wide == numwide_imag:  # complex
+    # elif result_type == 1 and num_wide == numwide_imag:  # complex
+    elif result_type == 1 and num_wide == (2 + 15 * nnodes_all): # complex
         ntotal = numwide_imag * 4 * factor
-        # assert op2.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (op2.num_wide*4, ntotal)
+        # assert num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (num_wide*4, ntotal)
         nelements = ndata // ntotal
         nlayers = nelements * 2 * nnodes_all
         # print(element_name_type)
@@ -547,8 +555,8 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
             nlayers, result_name, slot, obj_vector_complex)
         if auto_return:
             op2._data_factor = 2 * nnodes_all
-            # if op2.num_wide == 77:
-            # print('ntotal =', ndata, ntotal, op2.num_wide)
+            # if num_wide == 77:
+            # print('ntotal =', ndata, ntotal, num_wide)
             # print('nelements * ntotal =', nelements * ntotal)
             return nelements * ntotal, None, None
         obj = op2.obj
@@ -592,22 +600,37 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
             # nelements = 3
             # nlayers = nelements * nodes_cquad4 * 2 = 3*5*2 = 30
             # ntotal = nlayers
-            n = oes_cquad4_144_complex_77(op2, data, obj,
-                                          nelements, nnodes,
-                                          dt, is_magnitude_phase)
-    # elif op2.format_code == 1 and op2.num_wide == numwide_random: # random
-    # msg = op2.code_information()
-    # msg += '  numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-    # op2.num_wide, numwide_real, numwide_imag, numwide_random)
-    # return op2._not_implemented_or_skip(data, ndata, msg), None, None
-    elif result_type == 2 and op2.num_wide == numwide_random:  # random
+            n = cquad4_144_complex_77(op2, data, obj,
+                                      nelements, nnodes_all-1,
+                                      dt, is_magnitude_phase)
+
+    # elif result_type == 2 and num_wide == (2 + 9*nnodes_all):  # random
+    elif num_wide == (2 + 9 * nnodes_all) and op2.table_name in {  # complex
+        b'OESPSD1', b'OESPSD2',
+        b'OSTRPSD1', b'OSTRPSD2', }:
+        # 47 = 2 + 9*5
+        if data is None:
+            return ndata, None, None
+
+        obj = None
+        n = cquad4_real_vm_17b(
+            op2, data, obj,
+            nelements, nnodes_all)
+        return ndata, None, None
+
+    elif num_wide == (2 + 9 * nnodes_all) and op2.table_name in {  # random
+        # TODO: ATO is transient; others are random, so may need to split...
+        b'OESATO1', b'OESNO1', b'OESCRM1', b'OESRMS1',
+        b'OESATO2', b'OESNO2', b'OESCRM2',
+        b'OSTRATO1', b'OSTRNO1', b'OSTRCRM1', b'OSTRRMS1',
+        b'OSTRATO2', b'OSTRNO2', b'OSTRCRM2'}:
         # 47 - CQUAD8-64
         # 38 - CTRIAR-70
-        ntotal = op2.num_wide * 4 * factor
+        ntotal = num_wide * 4 * factor
         nelements = ndata // ntotal
         assert ndata % ntotal == 0
         nlayers = 2 * nelements * nnodes_all  # 2 layers per node
-        # op2.log.info(f'random quad-144 ntotal={ntotal} ndata={ndata} ntotal={ntotal} numwide={op2.num_wide} -> nelements={nelements}')
+        # op2.log.info(f'random quad-144 ntotal={ntotal} ndata={ndata} ntotal={ntotal} numwide={num_wide} -> nelements={nelements}')
 
         # if op2.read_mode == 1:
         # msg = ''
@@ -663,7 +686,7 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
             if is_vectorized and op2.use_vector:  # pragma: no cover
                 log.debug(f'vectorize CQUAD4-144/{element_name_type}... random SORT{sort_method}')
             # numwide_random = 2 + 9 * nnodes_all
-            n = oes_cquad4_144_random(op2, data, obj, nelements, nnodes, ndata)
+            n = cquad4_144_random(op2, data, obj, nelements, nnodes_all-1, ndata)
 
         # if op2.read_mode == 1:
         # msg = ''
@@ -682,86 +705,75 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
         ## 47 - CQUAD8-64
         ##msg = op2.code_information()
         # msg = '%s-CQUAD4-numwide=%s format_code=%s;\n numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-        # op2.table_name_str, op2.num_wide, op2.format_code,
+        # op2.table_name_str, num_wide, op2.format_code,
         # numwide_real, numwide_imag, numwide_random)
         # return op2._not_implemented_or_skip(data, ndata, msg), None, None
-    elif op2.table_name in [b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2']:
-        # 82  CQUADR -> 87
-        # CQUAD8 sort_method=2 ntotal=348 nelements=3
-        # CTRIA6 sort_method=2 ntotal=348 nelements=2
+    elif num_wide == (2 + 17 * nnodes_all) and op2.table_name in [b'OESVM1', b'OSTRVM1',
+                                                                  b'OESVM2', b'OSTRVM2']:
+        # 2 + 5 * 17 = 87
+        # 82  CQUADR -> 87 = 2 + 11*5 = 57; should be 17...
+        # CQUAD8 sort_method=2 ntotal=348 -> numwide=87, nelements=3
+        # CTRIA6 sort_method=2 ntotal=348 -> numwide=87, nelements=2
 
         msg = op2.code_information()
-        if result_type == 1:  # complex
-            # ndata = 3828
-            # ???
-            #
-            # ndata=1044
-            assert op2.num_wide in [70, 87], op2.code_information()
-            ntotal = op2.num_wide * size  # 87*4
-            nelements = ndata // ntotal
-            nlayers = nelements * 2
-            assert ndata % ntotal == 0
+        assert result_type == 1, op2.code_information() # complex
 
-            obj_vector_complex = ComplexPlateVMStressArray if op2.is_stress else ComplexPlateVMStrainArray
+        # ndata = 3828
+        # ???
+        #
+        # ndata=1044
+        ntotal = num_wide * size  # 87*4
+        nelements = ndata // ntotal
+        nlayers = nelements * 2
+        assert ndata % ntotal == 0
 
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nlayers, result_name, slot, obj_vector_complex)
+        obj_vector_complex = ComplexPlateVMStressArray if op2.is_stress else ComplexPlateVMStrainArray
 
-            if auto_return:
-                op2._data_factor = 2 * nnodes_all  # number of "layers" for an element
-                # op2._data_factor = 2
-                return nelements * ntotal, None, None
-            # if op2.read_mode == 1:
-            # return op2._not_implemented_or_skip(data, ndata, msg), None, None
+        auto_return, is_vectorized = op2._create_oes_object4(
+            nlayers, result_name, slot, obj_vector_complex)
 
-            # self.show_data(data)
-            # print(ndata, ntotal)
-            obj = op2.obj
-            n = oes_cquad4_complex_vm_87(op2, data, obj, nelements, nnodes_all,
-                                         is_magnitude_phase)
-
-        # if result_type == 1 and op2.num_wide in [70, 87]:
-        # 70 - CTRIA6-75
-        # 87 - CQUAD4-144
-        # pass
-        else:
-            # msg = (f'skipping {op2.table_name_str}-{op2.element_name}: numwide={op2.num_wide} '
-            # f'result_type={op2.result_type} (complex);\n numwide_real={numwide_real} '
-            # f'numwide_imag={numwide_imag} numwide_random={numwide_random}')
-            # print(msg)
-            raise NotImplementedError(msg)
+        if auto_return:
+            op2._data_factor = 2 * nnodes_all  # number of "layers" for an element
+            # op2._data_factor = 2
+            return nelements * ntotal, None, None
+        # if op2.read_mode == 1:
         # return op2._not_implemented_or_skip(data, ndata, msg), None, None
 
-    # elif op2.format_code in [2, 3] and op2.num_wide == 70:
+        # self.show_data(data)
+        # print(ndata, ntotal)
+        obj = op2.obj
+        n = cquad4_complex_vm_17(op2, data, obj, nelements, nnodes_all,
+                                 is_magnitude_phase)
+
+        # if result_type == 1 and num_wide in [70, 87]:
+        # 70 - CTRIA6-75
+        # 87 - CQUAD4-144
+        # else:
+        #     # msg = (f'skipping {op2.table_name_str}-{op2.element_name}: numwide={num_wide} '
+        #     # f'result_type={op2.result_type} (complex);\n numwide_real={numwide_real} '
+        #     # f'numwide_imag={numwide_imag} numwide_random={numwide_random}')
+        #     # print(msg)
+        #     raise NotImplementedError(msg)
+        # return op2._not_implemented_or_skip(data, ndata, msg), None, None
+
+    # elif op2.format_code in [2, 3] and num_wide == 70:
     ## 87 - CQUAD4-144
     ##msg = op2.code_information()
     # msg = '%s-CTRIA6-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-    # op2.table_name_str, op2.num_wide, numwide_real, numwide_imag, numwide_random)
+    # op2.table_name_str, num_wide, numwide_real, numwide_imag, numwide_random)
     # return op2._not_implemented_or_skip(data, ndata, msg), None, None
 
-    elif result_type == 2 and op2.table_name in [b'OESXRMS1', b'OESXNO1']:
-        # CTRIA6-75  numwide=46  C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
-        # CQUAD8-64  numwide=64  C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
-
-        # corners + centroid
-        if op2.element_type == 75:  # CTRIA6  (numwide=46)
-            # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
-            nnodes = 4
-        elif op2.element_type in [64, 144]:
-            # CQUAD8     (numwide=57) C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
-            # CQUAD4-144 (numwide=57) C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\plate_111o.op2
-            nnodes = 5
-        else:
-            raise RuntimeError(op2.code_information())
-
-        assert 2 + 11 * nnodes == op2.num_wide, op2.code_information()
+    elif num_wide == (2 + 11 * nnodes_all) and result_type == 2 and op2.table_name in [
+        b'OESXRMS1', b'OESXNO1']:
+        # CTRIA6-75  (numwide=2+4*11=46) C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
+        # CQUAD8-64  (numwide=2+5*11=57) C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
+        # CQUAD4-144 (numwide=2+5*11=57) C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\plate_111o.op2
         obj_vector_random = RandomPlateVMStressArray if op2.is_stress else RandomPlateVMStrainArray
 
-        ntotal = op2.num_wide * size
         nelements = ndata // ntotal
         nlayers = nelements * nnodes_all * 2
         assert ndata % ntotal == 0
-        # print(f'selement_name={op2.element_name} sort_method={op2.sort_method} ntotal={ntotal} num_wide={op2.num_wide} nelements={nelements} ndata={ndata} nlayers={nlayers}')
+        # print(f'selement_name={op2.element_name} sort_method={op2.sort_method} ntotal={ntotal} num_wide={num_wide} nelements={nelements} ndata={ndata} nlayers={nlayers}')
         # print('nnodes_all =', nnodes_all)
         # 57 = 2 + 11 * 5
         # ints    = (64011, 'CEN/',
@@ -836,7 +848,6 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
         #                                   0.025, 87324.3515625, 18848.994140625, 7541.1416015625, 80656.4609375)
         # if op2.read_mode == 2:
         # self.show_data(data)
-        # ddd
         auto_return, is_vectorized = op2._create_oes_object4(
             nlayers, result_name, slot, obj_vector_random)
         if auto_return:
@@ -844,11 +855,10 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
             return nelements * ntotal, None, None
 
         obj = op2.obj
-        n = oes_cquad4_random_vm_57(op2, data, op2.obj, nelements, ntotal, nnodes,
-                                    dt)
-    elif result_type == 1 and op2.table_name in [b'OESPSD1'] and op2.element_type == 82 and op2.num_wide == 47:  # QUADR
-        msg = op2.code_information()
-        return op2._not_implemented_or_skip(data, ndata, msg), None, None
+        n = cquad4_random_vm_57(op2, data, op2.obj, nelements, ntotal, nnodes_all, dt)
+    # elif result_type == 1 and op2.table_name in [b'OESPSD1'] and op2.element_type == 82 and num_wide == 47:  # QUADR
+    #     msg = op2.code_information()
+    #     return op2._not_implemented_or_skip(data, ndata, msg), None, None
     else:  # pragma: no cover
         raise RuntimeError(op2.code_information())
     return n, nelements, ntotal
@@ -866,13 +876,8 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
     # print('_oes_ctria3')
     # n = 0
     factor = op2.factor
+    num_wide = op2.num_wide
 
-    etype_map = {
-        # element_type : (element_base, element_name)
-        74: ('ctria3', 'CTRIA3'),
-        83: ('ctria3', 'CTRIA3'),  # NASA-95
-        227: ('ctriar', 'CTRIAR'),
-    }
     if op2.is_stress:
         stress_strain = 'stress'
         obj_vector_real = RealPlateStressArray
@@ -885,7 +890,7 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
     # if prefix == '' and postfix == '':
     # prefix = stress_strain + '.'
 
-    element_base, element_name = etype_map[op2.element_type]
+    element_base, element_name = ETYPE_TRI_MAP[op2.element_type]
     # stress.ctria3_stress
     result_name = prefix + f'{element_base}_{stress_strain}' + postfix
 
@@ -893,7 +898,7 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
     if not is_saved:
         return ndata, None, None
 
-    # print(op2.element_name, result_name, op2.format_code, op2.num_wide)
+    # print(op2.element_name, result_name, op2.format_code, num_wide)
     # table_names = [
     #    b'OES1', b'OES1X', b'OES1X1', b'OSTR1X',
     #    b'OES2', b'OSTR2',
@@ -906,7 +911,8 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
     sort_method = op2.sort_method
     element_name_type = f'{op2.element_name}-{op2.element_type}'
 
-    if op2.format_code in [1, 3] and op2.num_wide == 17:  # real
+    if (op2.format_code in [1, 3] and num_wide == 17 and  # real
+        op2.analysis_code != 5):  # frequency
         ntotal = 68 * factor  # 4*17
         nelements = ndata // ntotal
         nlayers = nelements * 2  # 2 layers per node
@@ -953,19 +959,19 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
         else:
             if is_vectorized and op2.use_vector:  # pragma: no cover
                 op2.log.debug(f'vectorize centroidal tri: {element_name_type} real SORT{sort_method}')
-            n = oes_ctria3_real_17(op2, data, obj,
-                                   ntotal, nelements, dt)
+            n = ctria3_real_17(op2, data, obj,
+                               ntotal, nelements, dt)
         if op2.is_sort1:
             assert obj.element_node[:, 0].min() > 0, obj.element_node[:, 0]
 
-    elif op2.format_code in [2, 3] and op2.num_wide == 15:  # imag
+    elif op2.format_code in [2, 3] and num_wide == 15:  # imag
         ntotal = 60 * factor  # 4*15
         nelements = ndata // ntotal
         auto_return, is_vectorized = op2._create_oes_object4(
             nelements, result_name, slot, obj_vector_complex)
         if auto_return:
             op2._data_factor = 2
-            # assert ntotal == op2.num_wide * 4
+            # assert ntotal == num_wide * 4
             return nelements * ntotal, None, None
         obj = op2.obj
 
@@ -1005,18 +1011,17 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
             if is_vectorized and op2.use_vector:  # pragma: no cover
                 op2.log.debug(f'vectorize CTRIA3 imag SORT{sort_method}')
 
-            n = oes_ctria3_complex_15(
+            n = ctria3_complex_15(
                 op2, data, obj,
                 nelements, ntotal, is_magnitude_phase,
                 element_name_type)
-    # elif op2.format_code == 1 and op2.num_wide == 9: # random?
+    # elif op2.format_code == 1 and num_wide == 9: # random?
     # msg = op2.code_information()
     # return op2._not_implemented_or_skip(data, ndata, msg), None, None
-    elif op2.format_code in [2, 3] and op2.num_wide == 17 and op2.table_name in [b'OESVM1', b'OESVM2', b'OSTRVM1',
-                                                                                 b'OSTRVM2']:
+    elif op2.format_code in [2, 3] and num_wide == 17 and op2.table_name in [b'OESVM1', b'OSTRVM1',
+                                                                             b'OESVM2', b'OSTRVM2']:
         # freq:
         # # random; CTRIA3
-        assert op2.table_name in [b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2'], op2.code_information()
 
         element_id = op2.nonlinear_factor
         if op2.is_stress:  # TODO: add new complex type
@@ -1052,11 +1057,11 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
         #    ID.        DISTANCE              NORMAL-X                       NORMAL-Y                      SHEAR-XY               VON MISES
         # 0       1  -4.359080E+00  -1.391918E+00 /  2.474756E-03  -1.423926E+00 /  2.530494E-03   2.655153E-02 / -5.158625E-05   1.408948E+00
         #            4.359080E+00   1.391918E+00 / -2.474756E-03   1.423926E+00 / -2.530494E-03  -2.655153E-02 /  5.158625E-05   1.408948E+00
-        n = oes_ctria3_complex_vm_17(op2, data, obj, nelements, ntotal, dt,
-                                     is_magnitude_phase)
+        n = ctria3_complex_vm_17(op2, data, obj, nelements, ntotal, dt,
+                                 is_magnitude_phase)
         assert n is not None, n
 
-    elif op2.format_code in [1, 2, 3] and op2.num_wide == 11:  # random; CTRIA3
+    elif op2.format_code in [1, 2, 3] and num_wide == 11:  # random; CTRIA3
         # 2 FD1 RS Z1 = Fibre Distance
         # 3 SX1 RS Normal in x at Z1
         # 4 SY1 RS Normal in y at Z1
@@ -1090,7 +1095,7 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
 
         obj = op2.obj
         if op2.use_vector and is_vectorized and 0:  # pragma: no cover
-            n = nelements * 4 * op2.num_wide
+            n = nelements * 4 * num_wide
             ielement = obj.ielement
             ielement2 = ielement + nelements
             itotal = obj.itotal
@@ -1118,9 +1123,9 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
         else:
             if is_vectorized and op2.use_vector and obj.itime == 0:  # pragma: no cover
                 op2.log.debug(f'vectorize {element_name_type} random numwide=11 SORT{sort_method}')
-            n = oes_ctria3_random_vm_11(op2, data, obj, nelements, ntotal)
+            n = ctria3_random_vm_11(op2, data, obj, nelements, ntotal)
 
-    elif op2.format_code in [1, 2] and op2.num_wide == 9:  # random MSC stress/strain; CTRIA3
+    elif op2.format_code in [1, 2] and num_wide == 9:  # random MSC stress/strain; CTRIA3
         # _oes_cquad4 is the same as _oes_ctria3
         element_id = op2.nonlinear_factor
         if op2.is_stress:
@@ -1149,7 +1154,7 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
 
         obj = op2.obj
         if op2.use_vector and is_vectorized and 0:  # pragma: no cover
-            n = nelements * 4 * op2.num_wide
+            n = nelements * 4 * num_wide
             ielement = obj.ielement
             ielement2 = ielement + nelements
             itotal = obj.itotal
@@ -1177,7 +1182,7 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
         else:
             if is_vectorized and op2.use_vector:  # pragma: no cover
                 op2.log.debug(f'vectorize {element_name_type} random2 SORT{sort_method}')
-            n = oes_ctria3_random_9(op2, data, obj, nelements, ntotal)
+            n = ctria3_random_9(op2, data, obj, nelements, ntotal)
 
     else:  # pragma: no cover
         raise RuntimeError(op2.code_information())
@@ -1185,9 +1190,42 @@ def oes_ctria3_74(op2: OP2, data, ndata: int, dt, is_magnitude_phase: bool,
     return n, nelements, ntotal
 
 
-def oes_cquad4_33_complex_vm_17(op2: OP2, data: bytes,
-                                obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
-                                nelements: int, ntotal: int,
+def cquad4_real_vm_17b(op2: OP2, data: bytes,
+                       obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
+                       nelements: int, nnodes_all: int) -> int:
+    n = 0
+    size = op2.size
+    ntotal1 = 2 * size
+    ntotal2 = 9 * size
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'4s')
+    struct2 = Struct(op2._endian + b'i 8f')
+
+    for ieid in range(nelements):
+        datai = data[n:n + ntotal1]
+        eid_device, unused_cen = struct1.unpack(datai)
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        # print(eid_device, unused_cen)
+        n += ntotal1
+        for i in range(nnodes_all):
+            datai = data[n:n + ntotal2]
+            # not 100%, but pretty sure
+            (nid, fd1, sx1, sy1, sxy1,
+                  fd2, sx2, sy2, sxy2) = struct2.unpack(datai)
+            #    (4, -0.05, 62233.2109375,      362.6460876464844, 1680.01904296875,
+            #         0.05, 206.27865600585938, 603.8253173828125,  958.7155151367188)
+            # print('  ', eid, dt, nid,
+            #       (fd1, sx1, sy1, sxy1,
+            #        fd2, sx2, sy2, sxy2))
+            n += ntotal2
+        # op2.show_data(datai, types='ifs')
+    op2.log.warning(f'  skipping {op2.table_name_str} {op2.element_name}')
+    assert n == len(data)
+    return n
+
+def cquad4_33_complex_vm_17(op2: OP2, data: bytes,
+                            obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
+                            nelements: int, ntotal: int,
                                 is_magnitude_phase: bool) -> int:
     """
     OESVM1/2 - Table of element stresses or strains with von Mises
@@ -1214,20 +1252,12 @@ def oes_cquad4_33_complex_vm_17(op2: OP2, data: bytes,
             op2.binary_debug.write('  eid=%i C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
 
-        if is_magnitude_phase:
-            sx1 = polar_to_real_imag(sx1r, sx1i)
-            sx2 = polar_to_real_imag(sx2r, sx2i)
-            sy1 = polar_to_real_imag(sy1r, sy1i)
-            sy2 = polar_to_real_imag(sy2r, sy2i)
-            txy1 = polar_to_real_imag(txy1r, txy1i)
-            txy2 = polar_to_real_imag(txy2r, txy2i)
-        else:
-            sx1 = complex(sx1r, sx1i)
-            sx2 = complex(sx2r, sx2i)
-            sy1 = complex(sy1r, sy1i)
-            sy2 = complex(sy2r, sy2i)
-            txy1 = complex(txy1r, txy1i)
-            txy2 = complex(txy2r, txy2i)
+        (sx1, sy1, txy1,
+         sx2, sy2, txy2) = real_imag_from_list([
+            sx1r, sy1r, txy1r,
+            sx2r, sy2r, txy2r,
+            sx1i, sy1i, txy1i,
+            sx2i, sy2i, txy2i], is_magnitude_phase)
         #print(dt, eid, cen, sx1, sy1, txy1, max_shear1)
         #print(dt, eid, cen, sx2, sy2, txy2, max_shear2)
         add_sort_x(dt, eid, cen,
@@ -1237,11 +1267,11 @@ def oes_cquad4_33_complex_vm_17(op2: OP2, data: bytes,
     return n
 
 
-def oes_cquad4_33_complex_15(op2: OP2,
-                             data: bytes,
-                             obj: ComplexPlateStressArray | ComplexPlateStrainArray,
-                             nelements: int, ntotal: int,
-                             is_magnitude_phase: bool) -> int:
+def cquad4_33_complex_15(op2: OP2,
+                         data: bytes,
+                         obj: ComplexPlateStressArray | ComplexPlateStrainArray,
+                         nelements: int, ntotal: int,
+                         is_magnitude_phase: bool) -> int:
     """
     NX/MSC 2018.2
     2 FD1    RS Z1 = Fibre distance
@@ -1277,32 +1307,20 @@ def oes_cquad4_33_complex_15(op2: OP2,
         if op2.is_debug_file:
             op2.binary_debug.write('  eid=%i C=%s\n' % (eid, str(out)))
 
-        if is_magnitude_phase:
-            sx1 = polar_to_real_imag(sx1r, sx1i)
-            sx2 = polar_to_real_imag(sx2r, sx2i)
-            sy1 = polar_to_real_imag(sy1r, sy1i)
-            sy2 = polar_to_real_imag(sy2r, sy2i)
-            txy1 = polar_to_real_imag(txy1r, txy1i)
-            txy2 = polar_to_real_imag(txy2r, txy2i)
-        else:
-            sx1 = complex(sx1r, sx1i)
-            sx2 = complex(sx2r, sx2i)
-            sy1 = complex(sy1r, sy1i)
-            sy2 = complex(sy2r, sy2i)
-            txy1 = complex(txy1r, txy1i)
-            txy2 = complex(txy2r, txy2i)
-
+        sx1, sy1, txy1, sx2, sy2, txy2 = real_imag_from_list([
+            sx1r, sy1r, txy1r, sx2r, sy2r, txy2r,
+            sx1i, sy1i, txy1i, sx2i, sy2i, txy2i], is_magnitude_phase)
         add_sort_x(dt, eid, cen,
                    fd1, sx1, sy1, txy1,
                    fd2, sx2, sy2, txy2)
     return n
 
 
-def oes_cquad4_random_vm_57(op2: OP2,
-                            data: bytes,
-                            obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
-                            nelements: int, ntotal: int, nnodes: int,
-                            dt: Any) -> int:
+def cquad4_random_vm_57(op2: OP2,
+                        data: bytes,
+                        obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
+                        nelements: int, ntotal: int, nnodes: int,
+                        dt: Any) -> int:
     """
     name    ntotal numwide
     CQUAD8  228    57
@@ -1316,10 +1334,10 @@ def oes_cquad4_random_vm_57(op2: OP2,
         struct1 = Struct(op2._endian + b'i4si 10f')
         struct2 = Struct(op2._endian + b'i 10f')
     else:
-        print('ntotal =', ntotal, 228*2)
+        # print('ntotal =', ntotal, 228*2)
         struct1 = Struct(op2._endian + b'i4si 10f')
         struct2 = Struct(op2._endian + b'i 10f')
-        raise NotImplementedError('64-bit')
+        # raise NotImplementedError('64-bit')
 
     nnodes_corners = nnodes - 1
     #print('random-57: nelements =', nelements)
@@ -1369,12 +1387,12 @@ def oes_cquad4_random_vm_57(op2: OP2,
     return n
 
 
-def oes_cquad4_144_complex_77(op2: OP2,
-                              data: bytes,
-                              obj: ComplexPlateStressArray | ComplexPlateStrainArray,
-                              nelements: int, nnodes: int,
-                              dt: Any,
-                              is_magnitude_phase: bool) -> int:
+def cquad4_144_complex_77(op2: OP2,
+                          data: bytes,
+                          obj: ComplexPlateStressArray | ComplexPlateStrainArray,
+                          nelements: int, nnodes: int,
+                          dt: Any,
+                          is_magnitude_phase: bool) -> int:
     #print('nelements =', nelements)
     n = 0
     grid_center = 0
@@ -1404,21 +1422,9 @@ def oes_cquad4_144_complex_77(op2: OP2,
          fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
         #grid_center = 'CEN/%i' % grid   # this is correct, but fails
 
-        if is_magnitude_phase:
-            sx1 = polar_to_real_imag(sx1r, sx1i)
-            sy1 = polar_to_real_imag(sy1r, sy1i)
-            sx2 = polar_to_real_imag(sx2r, sx2i)
-            sy2 = polar_to_real_imag(sy2r, sy2i)
-            txy1 = polar_to_real_imag(txy1r, txy1i)
-            txy2 = polar_to_real_imag(txy2r, txy2i)
-        else:
-            sx1 = complex(sx1r, sx1i)
-            sy1 = complex(sy1r, sy1i)
-            sx2 = complex(sx2r, sx2i)
-            sy2 = complex(sy2r, sy2i)
-            txy1 = complex(txy1r, txy1i)
-            txy2 = complex(txy2r, txy2i)
-
+        sx1, sy1, txy1, sx2, sy2, txy2 = real_imag_from_list([
+            sx1r, sy1r, txy1r, sx2r, sy2r, txy2r,
+            sx1i, sy1i, txy1i, sx2i, sy2i, txy2i], is_magnitude_phase)
         add_sort_x(dt, eid, grid_center,
                    fd1, sx1, sy1, txy1,
                    fd2, sx2, sy2, txy2)
@@ -1433,37 +1439,29 @@ def oes_cquad4_144_complex_77(op2: OP2,
              fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
              fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
 
-            if is_magnitude_phase:
-                sx1 = polar_to_real_imag(sx1r, sx1i)
-                sx2 = polar_to_real_imag(sx2r, sx2i)
-                sy1 = polar_to_real_imag(sy1r, sy1i)
-                sy2 = polar_to_real_imag(sy2r, sy2i)
-                txy1 = polar_to_real_imag(txy1r, txy1i)
-                txy2 = polar_to_real_imag(txy2r, txy2i)
-            else:
-                sx1 = complex(sx1r, sx1i)
-                sx2 = complex(sx2r, sx2i)
-                sy1 = complex(sy1r, sy1i)
-                sy2 = complex(sy2r, sy2i)
-                txy1 = complex(txy1r, txy1i)
-                txy2 = complex(txy2r, txy2i)
-
+            sx1, sy1, txy1, sx2, sy2, txy2 = real_imag_from_list([
+                sx1r, sy1r, txy1r, sx2r, sy2r, txy2r,
+                sx1i, sy1i, txy1i, sx2i, sy2i, txy2i], is_magnitude_phase)
             add_sort_x(dt, eid, grid,
                        fd1, sx1, sy1, txy1,
                        fd2, sx2, sy2, txy2)
     return n
 
 
-def oes_cquad4_complex_vm_87(op2: OP2, data: bytes,
-                             obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
-                             nelements: int, nnodes: int,
-                             is_magnitude_phase: bool) -> int:
+def cquad4_complex_vm_17(op2: OP2, data: bytes,
+                         obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
+                         nelements: int, nnodes: int,
+                         is_magnitude_phase: bool) -> int:
     """
+    (nid,
+     fd1, oxx1r, oxx1i, oyy1r, oyy1i, txy1r, txy1i, ovm1,
+     fd2, oxx2r, oxx2i, oyy2r, oyy2i, txy2r, txy2i, ovm2) = out
+
     etype name      numwide nodes
     33  CQUAD4-33 -> 17      (not in this function)
-    82  CQUADR    -> 87      (1+4 nodes)
-    144 CQUAD144  -> 87      (1+4 nodes)
-    ??? CTRIA6    -> 70?     (1+3 nodes)
+    82  CQUADR    -> 87      (1+4 nodes); 2 + 5*17 = 87
+    144 CQUAD144  -> 87      (1+4 nodes); 2 + 5*17 = 87
+    ??? CTRIA6    -> 70?     (1+3 nodes); 2 + 4*17 = 70
 
     2 TERM    CHAR4
     3 GRID    I
@@ -1605,24 +1603,12 @@ def oes_cquad4_complex_vm_87(op2: OP2, data: bytes,
             (nid,
              fd1, oxx1r, oxx1i, oyy1r, oyy1i, txy1r, txy1i, ovm1,
              fd2, oxx2r, oxx2i, oyy2r, oyy2i, txy2r, txy2i, ovm2) = out
-            fd1, oxx1r, oxx1i, oyy1r, oyy1i, txy1r, txy1i, ovm1,
             if inode == 0:
                 nid = 0
 
-            if is_magnitude_phase:
-                oxx1 = polar_to_real_imag(oxx1r, oxx1i)
-                oxx2 = polar_to_real_imag(oxx2r, oxx2i)
-                oyy1 = polar_to_real_imag(oyy1r, oyy1i)
-                oyy2 = polar_to_real_imag(oyy2r, oyy2i)
-                txy1 = polar_to_real_imag(txy1r, txy1i)
-                txy2 = polar_to_real_imag(txy2r, txy2i)
-            else:
-                oxx1 = complex(oxx1r, oxx1i)
-                oxx2 = complex(oxx2r, oxx2i)
-                oyy1 = complex(oyy1r, oyy1i)
-                oyy2 = complex(oyy2r, oyy2i)
-                txy1 = complex(txy1r, txy1i)
-                txy2 = complex(txy2r, txy2i)
+            oxx1, oyy1, txy1, oxx2, oyy2, txy2 = real_imag_from_list([
+                oxx1r, oyy1r, txy1r, oxx2r, oyy2r, txy2r,
+                oxx1i, oyy1i, txy1i, oxx2i, oyy2i, txy2i], is_magnitude_phase)
 
             #print((eid, dt), nid, f'{fd1:g}, {fd2:g}')
             #print('real', f'{oxx1r:g}, {oxx1i:g}, {oyy1r:g}, {oyy1i:g}, {txy1r:g}, {txy1i:g}, {ovm1:g}')
@@ -1637,9 +1623,9 @@ def oes_cquad4_complex_vm_87(op2: OP2, data: bytes,
     return n
 
 
-def oes_cquad4_33_random_9(op2: OP2, data: bytes,
-                           obj: RandomPlateStressArray | RandomPlateStrainArray,
-                           nelements: int, ntotal: int) -> int:
+def cquad4_33_random_9(op2: OP2, data: bytes,
+                       obj: RandomPlateStressArray | RandomPlateStrainArray,
+                       nelements: int, ntotal: int) -> int:
     n = 0
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     #print('cquad33_9 - SORT1')
@@ -1666,9 +1652,14 @@ def oes_cquad4_33_random_9(op2: OP2, data: bytes,
     return n
 
 
-def oes_ctria3_real_17(op2: OP2, data: bytes,
-                       obj: RealPlateStressArray | RealPlateStrainArray,
-                       ntotal: int, nelements: int, dt: Any) -> int:
+def ctria3_real_17(op2: OP2, data: bytes,
+                   obj: RealPlateStressArray | RealPlateStrainArray,
+                   ntotal: int, nelements: int, dt: Any) -> int:
+    """
+    (eid_device,
+     fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+     fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+    """
     n = 0
     cen = 0  # 'CEN/3'
     #assert op2.sort_method == 1, op2.code_information()
@@ -1698,9 +1689,14 @@ def oes_ctria3_real_17(op2: OP2, data: bytes,
     return n
 
 
-def oes_quad4_33_real_17(op2: OP2, data: bytes,
-                         obj: RealPlateStressArray | RealPlateStrainArray,
-                         ntotal: int, nelements: int, dt: Any) -> int:
+def quad4_33_real_17(op2: OP2, data: bytes,
+                     obj: RealPlateStressArray | RealPlateStrainArray,
+                     ntotal: int, nelements: int, dt: Any) -> int:
+    """
+    (eid_device,
+     fd1, sx1, sy1, txy1, angle1, major1, minor1, max_shear1,
+     fd2, sx2, sy2, txy2, angle2, major2, minor2, max_shear2) = out
+    """
     n = 0
     cen = 0 # CEN/4
     #assert op2.sort_method == 1, op2.code_information()
@@ -1732,13 +1728,16 @@ def oes_quad4_33_real_17(op2: OP2, data: bytes,
         n += ntotal
     return n
 
-def oes_ctria3_complex_vm_17(op2: OP2,
-                             data: bytes,
-                             obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
-                             nelements: int, ntotal: int,
-                             dt,
-                             is_magnitude_phase: bool) -> int:
+def ctria3_complex_vm_17(op2: OP2,
+                         data: bytes,
+                         obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
+                         nelements: int, ntotal: int,
+                         dt: Any,
+                         is_magnitude_phase: bool) -> int:
     """
+    (eid_device, fd1, oxx1r, oxx1i, oyy1r, oyy1i, txy1r, txy1i, ovm1,
+                 fd2, oxx2r, oxx2i, oyy2r, oyy2i, txy2r, txy2i, ovm2,) = out
+
     #                   C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
     #                                                          (REAL/IMAGINARY)
     #
@@ -1757,25 +1756,14 @@ def oes_ctria3_complex_vm_17(op2: OP2,
         edata = data[n:n + ntotal]
         out = struct1.unpack(edata)
         (eid_device, fd1, oxx1r, oxx1i, oyy1r, oyy1i, txy1r, txy1i, ovm1,
-                     fd2, oxx2r, oxx2i, oyy2r, oyy2i, txy2r, txy2i, ovm2, ) = out
+                     fd2, oxx2r, oxx2i, oyy2r, oyy2i, txy2r, txy2i, ovm2,) = out
 
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if is_magnitude_phase:
-            oxx1 = polar_to_real_imag(oxx1r, oxx1i)
-            oxx2 = polar_to_real_imag(oxx2r, oxx2i)
-            oyy1 = polar_to_real_imag(oyy1r, oyy1i)
-            oyy2 = polar_to_real_imag(oyy2r, oyy2i)
-            txy1 = polar_to_real_imag(txy1r, txy1i)
-            txy2 = polar_to_real_imag(txy2r, txy2i)
-        else:
-            oxx1 = complex(oxx1r, oxx1i)
-            oxx2 = complex(oxx2r, oxx2i)
-            oyy1 = complex(oyy1r, oyy1i)
-            oyy2 = complex(oyy2r, oyy2i)
-            txy1 = complex(txy1r, txy1i)
-            txy2 = complex(txy2r, txy2i)
+        oxx1, oyy1, txy1, oxx2, oyy2, txy2 = real_imag_from_list([
+            oxx1r, oyy1r, txy1r, oxx2r, oyy2r, txy2r,
+            oxx1i, oyy1i, txy1i, oxx2i, oyy2i, txy2i], is_magnitude_phase)
         #print(dt, eid, cen, sx1, sy1, txy1, max_shear1)
         #print(dt, eid, cen, sx2, sy2, txy2, max_shear2)
         add_sort_x(dt, eid, cen,
@@ -1789,9 +1777,14 @@ def oes_ctria3_complex_vm_17(op2: OP2,
     return n
 
 
-def oes_ctria3_random_9(op2: OP2, data: bytes,
-                        obj: RandomPlateStressArray | RandomPlateStrainArray,
-                        nelements: int, ntotal: int) -> int:
+def ctria3_random_9(op2: OP2, data: bytes,
+                    obj: RandomPlateStressArray | RandomPlateStrainArray,
+                    nelements: int, ntotal: int) -> int:
+    """
+    (eid_device,
+     fd1, sx1, sy1, txy1,
+     fd2, sx2, sy2, txy2,) = out
+    """
     n = 0
     struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'8f')
     cen = 0 # CEN/4
@@ -1819,9 +1812,14 @@ def oes_ctria3_random_9(op2: OP2, data: bytes,
     return n
 
 
-def oes_cquad4_33_random_vm_11(op2: OP2, data: bytes,
-                               obj: RandomPlateVMStressArray | RandomPlateVMStrainArray,
-                               nelements: int, ntotal: int) -> int:
+def cquad4_33_random_vm_11(op2: OP2, data: bytes,
+                           obj: RandomPlateVMStressArray | RandomPlateVMStrainArray,
+                           nelements: int, ntotal: int) -> int:
+    """
+    (eid_device,
+     fd1, sx1, sy1, txy1, ovm1,
+     fd2, sx2, sy2, txy2, ovm2,) = out
+    """
     struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'10f')
     cen = 0 # CEN/4
     n = 0
@@ -1849,9 +1847,14 @@ def oes_cquad4_33_random_vm_11(op2: OP2, data: bytes,
     return n
 
 
-def oes_ctria3_random_vm_11(op2: OP2, data: bytes,
-                            obj: RandomPlateStressArray | RandomPlateStrainArray,
-                            nelements: int, ntotal: int) -> int:
+def ctria3_random_vm_11(op2: OP2, data: bytes,
+                        obj: RandomPlateStressArray | RandomPlateStrainArray,
+                        nelements: int, ntotal: int) -> int:
+    """
+    (eid_device,
+     fd1, sx1, sy1, txy1, ovm1,
+     fd2, sx2, sy2, txy2, ovm2,) = out
+    """
     n = 0
     struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'10f')
 
@@ -1881,9 +1884,15 @@ def oes_ctria3_random_vm_11(op2: OP2, data: bytes,
     return n
 
 
-def oes_cquad4_144_real(op2: OP2, data: bytes, ndata: int,
-                        obj: RealPlateStrainArray,
-                        nelements: int, nnodes: int, dt: Any) -> int:
+def cquad4_144_real(op2: OP2, data: bytes, ndata: int,
+                    obj: RealPlateStrainArray,
+                    nelements: int, nnodes: int, dt: Any) -> int:
+    """
+    (eid_device, unused_j,
+     grid,
+     fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+     fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+    """
     n = 0
     if op2.size == 4:
         center_format = op2._endian + op2._analysis_code_fmt + b'4si16f'
@@ -1905,7 +1914,7 @@ def oes_cquad4_144_real(op2: OP2, data: bytes, ndata: int,
             '  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n'
             '  #nodeji = [grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n'
             '  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n'
-            '  nelements=%i; nnodes=%i # +1 centroid\n' % (ndata, nelements, nnodes))
+            '  nelements=%d; nnodes=%d # +1 centroid\n' % (ndata, nelements, nnodes))
 
     grid_center = 0
     n76 = 76 * op2.factor
@@ -1951,9 +1960,15 @@ def oes_cquad4_144_real(op2: OP2, data: bytes, ndata: int,
     return n
 
 
-def oes_cquad4_144_random(op2: OP2, data: bytes,
-                          obj: RandomPlateStressArray | RandomPlateStrainArray,
-                          nelements: int, nnodes: int, ndata: int) -> int:
+def cquad4_144_random(op2: OP2, data: bytes,
+                      obj: RandomPlateStressArray | RandomPlateStrainArray,
+                      nelements: int, nnodes: int, ndata: int) -> int:
+    """
+    (eid_device, unused_j,
+     grid,
+     fd1, sx1, sy1, txy1,
+     fd2, sx2, sy2, txy2,) = out
+    """
     n = 0
     center_format = op2._endian + op2._analysis_code_fmt + b'4s i8f'
     node_format = op2._endian + b'i8f'
@@ -2021,11 +2036,16 @@ def oes_cquad4_144_random(op2: OP2, data: bytes,
     return n
 
 
-def oes_ctria3_complex_15(op2: OP2, data: bytes,
-                          obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
-                          nelements: int, ntotal: int,
-                          is_magnitude_phase: bool,
-                          element_name_type: str) -> int:
+def ctria3_complex_15(op2: OP2, data: bytes,
+                      obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
+                      nelements: int, ntotal: int,
+                      is_magnitude_phase: bool,
+                      element_name_type: str) -> int:
+    """
+    (eid_device,
+     fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
+     fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i,) = out
+    """
     struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'14f', op2.size))
     cen = 0  # CEN/3
     n = 0
@@ -2043,20 +2063,9 @@ def oes_ctria3_complex_15(op2: OP2, data: bytes,
                 element_name_type, eid,
                 ', '.join(['%r' % di for di in out])))
 
-        if is_magnitude_phase:
-            sx1 = polar_to_real_imag(sx1r, sx1i)
-            sy1 = polar_to_real_imag(sy1r, sy1i)
-            sx2 = polar_to_real_imag(sx2r, sx2i)
-            sy2 = polar_to_real_imag(sy2r, sy2i)
-            txy1 = polar_to_real_imag(txy1r, txy1i)
-            txy2 = polar_to_real_imag(txy2r, txy2i)
-        else:
-            sx1 = complex(sx1r, sx1i)
-            sy1 = complex(sy1r, sy1i)
-            sx2 = complex(sx2r, sx2i)
-            sy2 = complex(sy2r, sy2i)
-            txy1 = complex(txy1r, txy1i)
-            txy2 = complex(txy2r, txy2i)
+        sx1, sy1, txy1, sx2, sy2, txy2 = real_imag_from_list([
+            sx1r, sy1r, txy1r, sx2r, sy2r, txy2r,
+            sx1i, sy1i, txy1i, sx2i, sy2i, txy2i], is_magnitude_phase)
         obj.add_sort1(dt, eid, cen,
                       fd1, sx1, sy1, txy1,
                       fd2, sx2, sy2, txy2)

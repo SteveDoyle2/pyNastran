@@ -26,13 +26,6 @@ class OBG:
     def __init__(self, op2: OP2):
         self.op2 = op2
 
-    @property
-    def size(self) -> int:
-        return self.op2.size
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
-
     def read_sort1_3(self, data: bytes, ndata: int):
         op2 = self.op2
         op2.to_nx(f' because table_name={op2.table_name} was found')

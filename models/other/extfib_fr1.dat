@@ -1,0 +1,66 @@
+SOL 111
+CEND
+ECHO = NONE
+set 19 =3,4,5
+SUBCASE 1
+   METHOD = 10
+   FREQUENCY=100
+   SPC = 1
+   DLOAD = 500
+   STRESS(SORT1,IMAG) = 19
+BEGIN BULK
+PARAM,PCOMPRM,1
+PARAM,SRCOMPS,YES
+PARAM,NOCOMPS,1
+$11111112222222233333333444444445555555566666666777777778888888899999999
+MAT1           1 210000.            0.33 7.89E-6                         
+MAT2           3 200000.   5000.         120000.                 7.89E-6       
+MAT8           4 3.+7      7.5+5     .25 3.75+5  4.+5    4.+5    .1
+                                   1.5+3 1.+3    6.+1    1.7+2   1.+2                                         
+PSHELL         1       4     0.1       4               3     
+PSHELL         2       3     0.1       3               3             
+PSHELL         3       1     0.1       1               3             
+PCOMP          4                   2500.    HILL                        +       
++              4   0.033     25.     YES       4   0.033     10.     YES+       
++              4   0.034     15.     YES                                
+PCOMPG         5                   2500.    HILL                        +       
++              1       4   0.033     25.     YES                        +       
++              2       4   0.033     10.     YES                        +       
++              3       4   0.034     15.     YES                        
+$
+GRID           1             10.     0.0     0.0        
+GRID           2             10.      2.     0.0        
+GRID           3              8.      2.     0.0        
+GRID           4              8.     0.0     0.0        
+GRID           5              6.      2.     0.0        
+GRID           6              6.     0.0     0.0        
+GRID           7              4.      2.     0.0        
+GRID           8              4.     0.0     0.0        
+GRID           9              2.      2.     0.0        
+GRID          10              2.     0.0     0.0        
+GRID          11             0.0      2.     0.0        
+GRID          12             0.0     0.0     0.0        
+$
+CQUAD4         3       4       6       5       7       8
+CQUAD4         4       4       8       7       9      10
+CQUAD4         5       4      10       9      11      12
+CTRIA3         1       4       2       3       4
+CTRIA3         2       5       4       3       5
+CTRIA3         6       4       4       5       6
+CTRIA3         7       5       2       4       1
+$
+SPC1           1  123456      11      12
+$
+EIGRL, 10, 10.,,4
+RLOAD2,500,600, , ,310,320
+DAREA, 600, 1, 1, 30.
+TABLED1,310,
+,0.,1.,100.,10.,ENDT
+TABLED1,320,
+,0.,1.,100.,150.,ENDT
+$FREQ1,100,20.,20.,2
+FREQ,100,20.
+$
+PARAM,POST,-1
+ENDDATA
+ENDDATA

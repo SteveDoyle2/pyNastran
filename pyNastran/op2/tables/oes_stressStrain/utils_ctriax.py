@@ -3,12 +3,9 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply_mag_phase
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
-from pyNastran.op2.op2_interface.utils import (
-    apply_mag_phase,
-)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStressArray, RealTriaxStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriaxStressArray, ComplexTriaxStrainArray
 
@@ -199,16 +196,9 @@ def oes_ctriax_complex_37(op2: OP2,
             op2.binary_debug.write('CTRIAX6-53 eid=%i\n    %s\n' % (eid, str(out)))
         #print('CTRIAX6-53 eid=%i\n    %s\n' % (eid, str(out)))
 
-        if is_magnitude_phase:
-            rs = polar_to_real_imag(rsr, rsi)
-            azs = polar_to_real_imag(azsr, azsi)
-            As = polar_to_real_imag(Asr, Asi)
-            ss = polar_to_real_imag(ssr, ssi)
-        else:
-            rs = complex(rsr, rsi)
-            azs = complex(azsr, azsi)
-            As = complex(Asr, Asi)
-            ss = complex(ssr, ssi)
+        rs, azs, As, ss = real_imag_from_list([
+            rsr, azsr, Asr, ssr,
+            rsi, azsi, Asi, ssi], is_magnitude_phase)
         obj.add_element_sort1(dt, eid)
         add_sort_x(dt, eid, loc, rs, azs, As, ss)
 
@@ -221,16 +211,9 @@ def oes_ctriax_complex_37(op2: OP2,
             #print("eid=%s loc=%s rs=%s azs=%s as=%s ss=%s" % (
                 #eid, loc, rs, azs, As, ss))
 
-            if is_magnitude_phase:
-                rs = polar_to_real_imag(rsr, rsi)
-                azs = polar_to_real_imag(azsr, azsi)
-                As = polar_to_real_imag(Asr, Asi)
-                ss = polar_to_real_imag(ssr, ssi)
-            else:
-                rs = complex(rsr, rsi)
-                azs = complex(azsr, azsi)
-                As = complex(Asr, Asi)
-                ss = complex(ssr, ssi)
+            rs, azs, As, ss = real_imag_from_list([
+                rsr, azsr, Asr, ssr,
+                rsi, azsi, Asi, ssi], is_magnitude_phase)
             add_sort_x(dt, eid, loc, rs, azs, As, ss)
             n += ntotal2  # 4*8
     return n

@@ -2,8 +2,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF, SUPORT
+
 
 class SetMethods:
     def __init__(self, model: BDF):

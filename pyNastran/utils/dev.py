@@ -101,6 +101,8 @@ def get_files_of_types(dirname: str, extensions: list[str],
         list of all the files with a given extension in the specified directory
 
     """
+    if isinstance(extensions, str):
+        extensions = [extensions]
     assert isinstance(extensions, list), f'extensions={extensions} must be a list'
     fnames = []
     for extension in extensions:

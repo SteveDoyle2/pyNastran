@@ -7,7 +7,6 @@ from pyNastran.op2.op2_interface.op2_classes import (
     RealStrainEnergyArray,
     RealSpringStrainArray, RealSpringStressArray, RealSpringForceArray,
 )
-#from .utils import get_plot_request
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF # , Subcase

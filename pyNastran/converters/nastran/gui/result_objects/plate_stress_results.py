@@ -583,7 +583,7 @@ class PlateStrainStressResults2(VectorResultsCommon):
             oxx = node_data[itime, :, ilayer, 1]
             oyy = node_data[itime, :, ilayer, 2]
             txy = node_data[itime, :, ilayer, 3]
-            data = von_mises_2d(oxx, oyy, txy)
+            data = von_mises_2d(oxx, oyy, txy, self.is_stress)
         elif iresult == 'max_shear':
             omax = node_data[itime, :, ilayer, 5]
             omin = node_data[itime, :, ilayer, 6]
@@ -639,7 +639,7 @@ class PlateStrainStressResults2(VectorResultsCommon):
             oxx = centroid_data[itime, :, ilayer, 1]
             oyy = centroid_data[itime, :, ilayer, 2]
             txy = centroid_data[itime, :, ilayer, 3]
-            data = von_mises_2d(oxx, oyy, txy)
+            data = von_mises_2d(oxx, oyy, txy, self.is_stress)
         elif iresult == 'max_shear':
             # not checked for strain
             omax = centroid_data[itime, :, ilayer, 5]

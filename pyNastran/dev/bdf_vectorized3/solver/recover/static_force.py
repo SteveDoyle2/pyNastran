@@ -24,6 +24,9 @@ def recover_force_101(f06_file: TextIO, op2,
      - FORCE = ALL
 
     """
+    if 'FORCE' not in subcase:
+        return
+
     eid_str = 'ALL'
     unused_eids_write, write_f06, write_op2, quick_return = get_plot_request(
         subcase, 'FORCE')

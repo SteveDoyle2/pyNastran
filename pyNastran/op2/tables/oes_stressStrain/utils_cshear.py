@@ -3,13 +3,10 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply_mag_phase
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
-from pyNastran.op2.op2_interface.utils import (
-    apply_mag_phase,
-)
 from pyNastran.op2.tables.oes_stressStrain.utils import obj_set_element
 from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStrainArray, RealShearStressArray
 
@@ -179,12 +176,9 @@ def oes_cshear_complex_5(op2: OP2,
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if is_magnitude_phase:
-            etmax = polar_to_real_imag(etmaxr, etmaxi)
-            etavg = polar_to_real_imag(etavgr, etavgi)
-        else:
-            etmax = complex(etmaxr, etmaxi)
-            etavg = complex(etavgr, etavgi)
+        etmax, etavg = real_imag_from_list([
+            etmaxr, etavgr,
+            etmaxi, etavgi], is_magnitude_phase)
         add_sort_x(dt, eid, etmax, etavg)
         n += ntotal
     return n

@@ -3,6 +3,7 @@ from copy import deepcopy
 import numpy as np
 from pyNastran.bdf.bdf import BDF, CaseControlDeck
 
+
 def setup_statics(lines=None) -> tuple[BDF, CaseControlDeck]:
     if lines is None:
         lines = []
@@ -319,5 +320,5 @@ def main():
     x = 1
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

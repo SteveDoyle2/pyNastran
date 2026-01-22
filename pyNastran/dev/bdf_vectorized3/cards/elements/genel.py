@@ -12,7 +12,6 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, parse_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import hslice_by_idim, make_idim # , VectorizedBaseCard, searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, get_print_card_size # , array_default_int
 
-
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.bdf import BDF

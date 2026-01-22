@@ -110,9 +110,10 @@ class ComplexRodForceArray(ComplexForceObject):
         self.data_frame = data_frame
 
     @classmethod
-    def add_freq_case(cls, table_name, element, data, isubcase,
-                      freqs,
+    def add_freq_case(cls, table_name: str,
                       element_name: str,
+                      element, data, isubcase,
+                      freqs,
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
         num_wide = 5
@@ -467,9 +468,10 @@ class ComplexCShearForceArray(BaseElement):
             headers, self.element, self.data)
 
     @classmethod
-    def add_freq_case(cls, table_name, element, data, isubcase,
-                      freqs,
+    def add_freq_case(cls, table_name: str,
                       element_name: str,
+                      element, data, isubcase,
+                      freqs,
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
         num_wide = 33
@@ -724,7 +726,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element = zeros(nelements, dtype=idtype)
 
-        #[axial_force, torque]
+        #[axial_force,]
         self.data = zeros((ntimes, ntotal, 1), dtype=cfdtype)
 
     def build_dataframe(self):
@@ -745,9 +747,12 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
             headers, self.element, self.data)
 
     @classmethod
-    def add_freq_case(cls, table_name, element, data, isubcase,
-                      freqs,
+    def add_freq_case(cls, table_name: str,
                       element_name: str,
+                      element: np.ndarray,
+                      data: np.ndarray,
+                      isubcase: int,
+                      freqs: np.ndarray,
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
         num_wide = 3
@@ -758,6 +763,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
             random_code=random_code, title=title, subtitle=subtitle, label=label,
             is_msc=is_msc)
 
+        assert isinstance(element_name, str), element_name
         element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name.upper()]
         data_code['element_name'] = element_name.upper()
         data_code['element_type'] = element_type

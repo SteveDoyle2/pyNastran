@@ -3,7 +3,7 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list
 # from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
@@ -315,8 +315,7 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
         return op2._not_implemented_or_skip(data, ndata, msg), None, None
 
     elif (result_type == 1 and num_wide == 12 and op2.is_msc and
-          table_name_bytes in [b'OES1C']):
-        # complex
+          table_name_bytes in [b'OES1C', b'OSTR1C']):  # complex
         # analysis_code = 5   Frequency
         # table_code    = 5   OES1C-OES - Element Stress
         # format_code   = 2   Real/Imaginary
@@ -335,7 +334,6 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
         # num_wide      = 12
         # freq          = 990.0
         # MSC Nastran
-        # assert op2.is_sort1
         complex_obj = ComplexLayeredCompositeStressArray12 if op2.is_stress else ComplexLayeredCompositeStrainArray12
 
         ntotal = 48 * factor
@@ -350,13 +348,6 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
             op2, data, obj,
             ntotal, nelements, sort_method,
             dt, is_magnitude_phase)
-
-        # msg = (f'etype={op2.element_name} ({op2.element_type}) '
-        #        f'{op2.table_name_str}-COMP-complex-numwide={num_wide} '
-        #        # f'numwide_real=11 numwide_imag=9 result_type={result_type}'
-        #        )
-        # # op2.log.warning(f'skipping complex {op2.table_name_str}-PCOMP-12')
-        # return op2._not_implemented_or_skip(data, ndata, msg), None, None
 
     elif result_type == 1 and num_wide == 11:
         # analysis_code = 9   Complex eigenvalues
@@ -445,13 +436,14 @@ def oes_shells_composite_oesrt(op2: OP2, result_name: str, slot: dict[Any, Any],
                 return nelements * ntotal, None, None
 
         is_vectorized = False
-        op2.log.warning(f'OESRT: faking result; {op2.element_name}-{op2.element_type}')
+        log = op2.log
+        log.warning(f'OESRT: faking result; {op2.element_name}-{op2.element_type}')
         if op2.use_vector and is_vectorized and sort_method == 1 and 0:
             n = nelements * op2.num_wide * 4
             asdf
         else:
-            op2.log.warning(f'need to vectorize oes_shell_composite; {op2.element_name}-{op2.element_type} '
-                            f'(numwide={op2.num_wide}) {op2.table_name_str}')
+            log.warning(f'need to vectorize oes_shell_composite; {op2.element_name}-{op2.element_type} '
+                        f'(numwide={op2.num_wide}) {op2.table_name_str}')
 
             structi = Struct(op2._endian + b'i   8s   i      f i f i 4s')
             structf = Struct(op2._endian + b'i   8s   i      f i f f 4s')
@@ -469,9 +461,9 @@ def oes_shells_composite_oesrt(op2: OP2, result_name: str, slot: dict[Any, Any],
                 assert blank in ['', '***'], blank
                 # op2.show_data(edata)
                 if eid != -1:
-                    print(f'eid={eid} hill={hill!r} ply={ply_id} i1={i1} f2={f2:.4e} minus1={minus_1} blank={blank!r}')
+                    log.info(f'eid={eid} hill={hill!r} ply={ply_id} i1={i1} f2={f2:.4e} minus1={minus_1} blank={blank!r}')
                 else:
-                    print(f'    hill={hill!r} ply={ply_id} i1={i1} f2={f2:.4e} minus1={minus_1:.4e} blank={blank!r}')
+                    log.info(f'    hill={hill!r} ply={ply_id} i1={i1} f2={f2:.4e} minus1={minus_1:.4e} blank={blank!r}')
                 n += ntotal
     else:  # pragma: no cover
         raise RuntimeError(op2.code_information())
@@ -563,14 +555,9 @@ def oes_shell_composite_complex_12(op2: OP2,
         (eid, layer,
          oxxr, oyyr, txyr, t1zr, t2zr,
          oxxi, oyyi, txyi, t1zi, t2zi) = out
-        if not is_magnitude_phase:
-            oxx = oxxr + oxxi*1j
-            oyy = oyyr + oyyi*1j
-            txy = txyr + txyi*1j
-            t1z = t1zr + t1zi*1j
-            t2z = t2zr + t2zi*1j
-        else:
-            raise NotImplementedError(is_magnitude_phase)
+        oxx, oyy, txy, t1z, t2z = real_imag_from_list([
+            oxxr, oyyr, txyr, t1zr, t2zr,
+            oxxi, oyyi, txyi, t1zi, t2zi], is_magnitude_phase)
         obj.add_sort1(dt, eid, layer, oxx, oyy, txy, t1z, t2z)
         n += ntotal
     return n
