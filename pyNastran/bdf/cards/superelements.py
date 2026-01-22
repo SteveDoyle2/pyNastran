@@ -60,9 +60,9 @@ class SEBNDRY(BaseCard):
         seid_a = 1
         seid_b = 2
         ids = [10, 20, 30]
-        return SEBNDRY(seid_a, seid_b, ids, comment='')
+        return SEBNDRY(seid_a, seid_b, ids)
 
-    def __init__(self, seid_a, seid_b, ids, comment=''):
+    def __init__(self, seid_a, seid_b, ids, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -134,9 +134,9 @@ class RELEASE(BaseCard):
         seid = 1
         comp = 1
         nids = [10, 20, 30]
-        return SEBNDRY(seid, comp, nids, comment='')
+        return SEBNDRY(seid, comp, nids)
 
-    def __init__(self, seid, comp, nids, comment=''):
+    def __init__(self, seid, comp, nids, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -194,9 +194,9 @@ class SEELT(BaseCard):
     def _init_from_empty(cls):
         seid = 10
         eids = [1, 2, 3]
-        return SEELT(seid, eids, comment='')
+        return SEELT(seid, eids)
 
-    def __init__(self, seid, eids, comment=''):
+    def __init__(self, seid, eids, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -297,9 +297,9 @@ class SELOAD(BaseCard):
         lid_s0 = 1
         seid = 2
         lid_se = 3
-        return SELOAD(lid_s0, seid, lid_se, comment='')
+        return SELOAD(lid_s0, seid, lid_se)
 
-    def __init__(self, lid_s0, seid, lid_se, comment=''):
+    def __init__(self, lid_s0, seid, lid_se, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -356,9 +356,9 @@ class SEEXCLD(BaseCard):
         seid_a = 1
         seid_b = 2
         nodes = [10, 20, 30]
-        return SEEXCLD(seid_a, seid_b, nodes, comment='')
+        return SEEXCLD(seid_a, seid_b, nodes)
 
-    def __init__(self, seid_a, seid_b, nodes, comment=''):
+    def __init__(self, seid_a, seid_b, nodes, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -429,9 +429,9 @@ class SEMPLN(BaseCard):
         p1 = 2
         p2 = 3
         p3 = 4
-        return SEMPLN(seid, p1, p2, p3, comment='')
+        return SEMPLN(seid, p1, p2, p3)
 
-    def __init__(self, seid, p1, p2, p3, comment=''):
+    def __init__(self, seid, p1, p2, p3, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -513,9 +513,9 @@ class SELABEL(BaseCard):
     def _init_from_empty(cls):
         seid = 1
         label = 'LEFT REAR FENDER'
-        return SELABEL(seid, label, comment='')
+        return SELABEL(seid, label)
 
-    def __init__(self, seid, label, comment=''):
+    def __init__(self, seid, label, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -596,9 +596,9 @@ class SELOC(BaseCard):
         seid = 1
         nodes_seid = [1, 2, 3]
         nodes0 = 42
-        return SELOC(seid, nodes_seid, nodes0, comment='')
+        return SELOC(seid, nodes_seid, nodes0)
 
-    def __init__(self, seid, nodes_seid, nodes0, comment=''):
+    def __init__(self, seid, nodes_seid, nodes0, comment: str=''):
         """
         Creates an SELOC card, which transforms the superelement SEID
         from PA to PB.  Basically, define two CORD1Rs.
@@ -763,9 +763,9 @@ class SETREE(BaseCard):
     def _init_from_empty(cls):
         seid = 10
         superelements = [1, 2, 3]
-        return SETREE(seid, superelements, comment='')
+        return SETREE(seid, superelements)
 
-    def __init__(self, seid, superelements, comment=''):
+    def __init__(self, seid, superelements, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -862,9 +862,9 @@ class CSUPER(BaseCard):
         seid = 1
         psid = 1
         nodes = [1, 2]
-        return CSUPER(seid, psid, nodes, comment='')
+        return CSUPER(seid, psid, nodes)
 
-    def __init__(self, seid, psid, nodes, comment=''):
+    def __init__(self, seid, psid, nodes, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -953,9 +953,9 @@ class CSUPEXT(BaseCard):
     def _init_from_empty(cls):
         seid = 1
         nodes = [1]
-        return CSUPEXT(seid, nodes, comment='')
+        return CSUPEXT(seid, nodes)
 
-    def __init__(self, seid, nodes, comment=''):
+    def __init__(self, seid, nodes, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -1047,11 +1047,11 @@ class SEBULK(BaseCard):
         superelement_type = 'MIRROR'
         rseid = 42
         return SEBULK(seid, superelement_type, rseid,
-                      method='AUTO', tol=1e-5, loc='YES', unitno=None, comment='')
+                      method='AUTO', tol=1e-5, loc='YES', unitno=None)
 
     def __init__(self, seid, superelement_type, rseid,
-                 method='AUTO', tol=1e-5, loc='YES', unitno=None,
-                 comment=''):
+                 method: str='AUTO', tol=1e-5, loc: str='YES', unitno=None,
+                 comment: str=''):
         """
         Parameters
         ----------
@@ -1182,7 +1182,7 @@ class SECONCT(BaseCard):
         loc = 'YES'
         nodes_a = [10, 20, 30]
         nodes_b = [11, 21, 31]
-        return SECONCT(seid_a, seid_b, nodes_a, nodes_b, tol=tol, loc=loc, comment='')
+        return SECONCT(seid_a, seid_b, nodes_a, nodes_b, tol=tol, loc=loc)
 
     def __init__(self, seid_a: int, seid_b: int,
                  nodes_a: list[int], nodes_b: list[int],
@@ -1339,9 +1339,9 @@ class SENQSET(BaseCard):
     def _init_from_empty(cls):
         set_id = 1
         n = 45
-        return SENQSET(set_id, n, comment='')
+        return SENQSET(set_id, n)
 
-    def __init__(self, set_id, n, comment=''):
+    def __init__(self, set_id, n, comment: str=''):
         """
         Parameters
         ----------

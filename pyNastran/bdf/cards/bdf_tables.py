@@ -107,7 +107,7 @@ class DTABLE(BaseCard):
     @classmethod
     def _init_from_empty(cls):
         default_values = {'CAT' : 1}
-        return DTABLE(default_values, comment='')
+        return DTABLE(default_values)
 
     def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
@@ -115,7 +115,7 @@ class DTABLE(BaseCard):
         self.default_values = {key : value if not np.isnan(value) else None
                                for key, value in zip(keys, values)}
 
-    def __init__(self, default_values, comment=''):
+    def __init__(self, default_values, comment: str=''):
         """
         Creates a DTABLE card
 
@@ -225,7 +225,7 @@ class TABLED1(Table):
         tid = 1
         x = [0., 1.]
         y = [0., 1.]
-        return TABLED1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+        return TABLED1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0)
 
     def __init__(self, tid: int, x: np.ndarray, y: np.ndarray,
                  xaxis: str='LINEAR', yaxis: str='LINEAR',
@@ -395,7 +395,7 @@ class TABLED2(Table):
         x1 = 1.
         x = [0., 1.]
         y = [0., 1.]
-        return TABLED2(tid, x1, x, y, extrap=0, comment='')
+        return TABLED2(tid, x1, x, y, extrap=0)
 
     def __init__(self, tid: int, x1: float,
                  x: np.ndarray, y: np.ndarray,
@@ -468,7 +468,7 @@ class TABLED2(Table):
         return TABLED2(table_id, x1, x, y, extrap=extrap, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         table_id = data[0]
         x1 = data[1]
         xy = data[2:]
@@ -541,7 +541,7 @@ class TABLED3(Table):
         x2 = 2.
         x = [0., 1.]
         y = [0., 1.]
-        return TABLED3(tid, x1, x2, x, y, extrap=0, comment='')
+        return TABLED3(tid, x1, x2, x, y, extrap=0)
 
     def __init__(self, tid: int, x1: float, x2: float,
                  x: np.ndarray, y: np.ndarray,
@@ -600,7 +600,7 @@ class TABLED3(Table):
         return TABLED3(table_id, x1, x2, x, y, extrap=extrap, comment=comment)
 
     @classmethod
-    def add_card_lax(cls, card, comment=''):
+    def add_card_lax(cls, card, comment: str=''):
         """
         Adds a TABLED3 card from ``BDF.add_card(...)``
 
@@ -620,7 +620,7 @@ class TABLED3(Table):
         return TABLED3(table_id, x1, x2, x, y, extrap=extrap, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         table_id = data[0]
         x1 = data[1]
         x2 = data[2]
@@ -665,7 +665,7 @@ class TABLED4(Table):
         x3 = 1.
         x4 = 1.
         a = [1., 2.]
-        return TABLED4(tid, x1, x2, x3, x4, a, comment='')
+        return TABLED4(tid, x1, x2, x3, x4, a)
 
     def __init__(self, tid: int,
                  x1: float, x2: float, x3: float, x4: float,
@@ -717,7 +717,7 @@ class TABLED4(Table):
         return TABLED4(table_id, x1, x2, x3, x4, a, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         table_id, x1, x2, x3, x4, a = data
         return TABLED4(table_id, x1, x2, x3, x4, a, comment=comment)
 
@@ -762,7 +762,7 @@ class TABLED5(Table):
 
     """
     type = 'TABLED5'
-    def __init__(self, tid, xs, table_ids, comment=''):
+    def __init__(self, tid, xs, table_ids, comment: str=''):
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -810,7 +810,7 @@ class TABLED5(Table):
         return TABLED5(table_id, xs, table_ids, comment=comment)
 
     #@classmethod
-    #def add_op2_data(cls, data, comment=''):
+    #def add_op2_data(cls, data, comment: str=''):
         #table_id = data[0]
         #x1 = data[1]
         #x2 = data[2]
@@ -861,9 +861,9 @@ class TABDMP1(Table):
     @classmethod
     def _init_from_empty(cls):
         tid = 1
-        x = [0., 1.]
-        y = [0., 1.]
-        return TABDMP1(tid, x, y, Type='G', comment='')
+        x = np.array([0., 1.])
+        y = np.array([0., 1.])
+        return TABDMP1(tid, x, y, Type='G')
 
     def __init__(self, tid: int,
                  x: np.ndarray, y: np.ndarray,
@@ -914,7 +914,7 @@ class TABDMP1(Table):
         return TABDMP1(table_id, x, y, Type=Type, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         table_id = data[0]
         unused_x1 = data[1]
         Type = data[2]
@@ -973,7 +973,7 @@ class TABLEM1(Table):
         tid = 1
         x = [0., 1.]
         y = [0., 1.]
-        return TABLEM1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment='')
+        return TABLEM1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR')
 
     def __init__(self, tid: int, x, y,
                  xaxis: str='LINEAR', yaxis: str='LINEAR',
@@ -1054,7 +1054,7 @@ class TABLEM1(Table):
         return TABLEM1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         table_id, extrap, xcode, ycode, x, y = data
         xaxis = _map_axis(xcode)
         yaxis = _map_axis(ycode)
@@ -1107,9 +1107,9 @@ class TABLEM2(Table):
         x1 = 1.
         x = [0., 1.]
         y = [0., 1.]
-        return TABLEM2(tid, x1, x, y, extrap=0, comment='')
+        return TABLEM2(tid, x1, x, y, extrap=0)
 
-    def __init__(self, tid, x1, x, y, extrap=0, comment=''):
+    def __init__(self, tid, x1, x, y, extrap=0, comment: str=''):
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -1142,7 +1142,7 @@ class TABLEM2(Table):
         return TABLEM2(table_id, x1, x, y, extrap=extrap, comment=comment)
 
     @classmethod
-    def add_card_lax(cls, card, comment=''):
+    def add_card_lax(cls, card, comment: str=''):
         """
         Adds a TABLEM2 card from ``BDF.add_card(...)``
 
@@ -1164,7 +1164,7 @@ class TABLEM2(Table):
         return TABLEM2(table_id, x1, x, y, extrap=extrap, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         table_id = data[0]
         x1 = data[1]
         xy = data[2:]
@@ -1218,9 +1218,9 @@ class TABLEM3(Table):
         x2 = 2.
         x = [0., 1.]
         y = [0., 1.]
-        return TABLEM3(tid, x1, x2, x, y, extrap=0, comment='')
+        return TABLEM3(tid, x1, x2, x, y, extrap=0)
 
-    def __init__(self, tid, x1, x2, x, y, extrap=0, comment=''):
+    def __init__(self, tid, x1, x2, x, y, extrap=0, comment: str=''):
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -1253,7 +1253,7 @@ class TABLEM3(Table):
         return TABLEM3(table_id, x1, x2, x, y, extrap=extrap, comment=comment)
 
     @classmethod
-    def add_card_lax(cls, card, comment=''):
+    def add_card_lax(cls, card, comment: str=''):
         """
         Adds a TABLEM3 card from ``BDF.add_card(...)``
 
@@ -1273,7 +1273,7 @@ class TABLEM3(Table):
         return TABLEM3(table_id, x1, x2, x, y, extrap=extrap, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         table_id = data[0]
         x1 = data[1]
         x2 = data[2]
@@ -1324,9 +1324,9 @@ class TABLEM4(Table):
         x3 = 1.
         x4 = 2.
         a = [1., 2.]
-        return TABLEM4(tid, x1, x2, x3, x4, a, comment='')
+        return TABLEM4(tid, x1, x2, x3, x4, a)
 
-    def __init__(self, tid, x1, x2, x3, x4, a, comment=''):
+    def __init__(self, tid, x1, x2, x3, x4, a, comment: str=''):
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -1373,7 +1373,7 @@ class TABLEM4(Table):
         return TABLEM4(table_id, x1, x2, x3, x4, a, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a TABLEM4 card from the OP2
 
@@ -1418,9 +1418,9 @@ class TABLES1(Table):
         tid = 1
         x = [0., 1.]
         y = [0., 1.]
-        return TABLES1(tid, x, y, Type=1, comment='')
+        return TABLES1(tid, x, y, Type=1)
 
-    def __init__(self, tid, x, y, Type=1, comment=''):
+    def __init__(self, tid, x, y, Type=1, comment: str=''):
         """
         Adds a TABLES1 card, which defines a stress dependent material
 
@@ -1468,7 +1468,7 @@ class TABLES1(Table):
         return TABLES1(table_id, x, y, Type=Type, comment=comment)
 
     @classmethod
-    def add_card_lax(cls, card, comment=''):
+    def add_card_lax(cls, card, comment: str=''):
         """
         Adds a TABLES1 card from ``BDF.add_card(...)``
 
@@ -1486,7 +1486,7 @@ class TABLES1(Table):
         return TABLES1(table_id, x, y, Type=Type, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a TABLES1 card from the OP2
 
@@ -1573,7 +1573,7 @@ class TABLEST(Table):
         return TABLEST(table_id, x, y, extrap=extrap, comment=comment)
 
     @classmethod
-    def add_card_lax(cls, card, comment=''):
+    def add_card_lax(cls, card, comment: str=''):
         """
         Adds a TABLEST card from ``BDF.add_card(...)``
 
@@ -1649,9 +1649,9 @@ class TABLEH1(Table):
         tid = 1
         x = [0., 1.]
         y = [0., 1.]
-        return TABLEH1(tid, x, y, comment='')
+        return TABLEH1(tid, x, y)
 
-    def __init__(self, tid, x, y, comment=''):
+    def __init__(self, tid, x, y, comment: str=''):
         """
         Adds a TABLEH1 card, which defines convection heat transfer coefficient.
         It's referenced by a TABLEHT.
@@ -1691,7 +1691,7 @@ class TABLEH1(Table):
         return TABLEH1(table_id, x, y, comment=comment)
 
     @classmethod
-    def add_card_lax(cls, card, comment=''):
+    def add_card_lax(cls, card, comment: str=''):
         """
         Adds a TABLEH1 card from ``BDF.add_card(...)``
 
@@ -1708,7 +1708,7 @@ class TABLEH1(Table):
         return TABLEH1(table_id, x, y, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a TABLEH1 card from the OP2
 
@@ -1768,9 +1768,9 @@ class TABLEHT(Table):
         tid = 1
         x = [0., 1.]
         y = [0., 1.]
-        return TABLEHT(tid, x, y, comment='')
+        return TABLEHT(tid, x, y)
 
-    def __init__(self, tid: int, x, y, comment=''):
+    def __init__(self, tid: int, x, y, comment: str=''):
         """
         Adds a TABLEHT card, which a function of two variables for
         convection heat transfer coefficient.
@@ -1810,7 +1810,7 @@ class TABLEHT(Table):
         return TABLEHT(table_id, x, y, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a TABLEHT card from the OP2
 
@@ -1852,9 +1852,9 @@ class TABRND1(Table):
         tid = 1
         x = [0., 1.]
         y = [0., 1.]
-        return TABRND1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment='')
+        return TABRND1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR')
 
-    def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
+    def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment: str=''):
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -1887,7 +1887,7 @@ class TABRND1(Table):
         return TABRND1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
 
     @classmethod
-    def add_card_lax(cls, card, comment=''):
+    def add_card_lax(cls, card, comment: str=''):
         """
         Adds a TABRND1 card from ``BDF.add_card(...)``
 
@@ -1906,7 +1906,7 @@ class TABRND1(Table):
         return TABRND1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a TABRND1 card from the OP2
 
@@ -1965,7 +1965,7 @@ class TABRNDG(Table):
         Type = 1
         LU = 1.
         WG = 1.
-        return TABRNDG(tid, Type, LU, WG, comment='')
+        return TABRNDG(tid, Type, LU, WG)
 
     def __init__(self, tid: int, psd_type: int,
                  LU: float, WG: float, comment: str=''):

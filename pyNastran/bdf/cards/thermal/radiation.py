@@ -87,7 +87,7 @@ class RADM(ThermalBC):
         return RADM(radmid, absorb, emissivity, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a RADM card from the OP2
 
@@ -569,23 +569,23 @@ class RADCAV(ThermalBC):
                       shadow=shadow, scale=scale, prtpch=prtpch,
                       nefci=nefci, rmax=rmax, ncomp=ncomp, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #"""
-        #Adds a RADM card from the OP2
+    # @classmethod
+    # def add_op2_data(cls, data, comment: str=''):
+    #     """
+    #     Adds a RADM card from the OP2
+    #
+    #     Parameters
+    #     ----------
+    #     data : list[varies]
+    #         a list of fields defined in OP2 format
+    #     comment : str; default=''
+    #         a comment for the card
+    #     """
+    #     radmid, absorb = data[:2]
+    #     emissivity = data[2:]
 
-        #Parameters
-        #----------
-        #data : list[varies]
-            #a list of fields defined in OP2 format
-        #comment : str; default=''
-            #a comment for the card
-        #"""
-        #radmid, absorb = data[:2]
-        #emissivity = data[2:]
-
-    #def cross_reference(self, model: BDF) -> None:
-        #pass
+    # def cross_reference(self, model: BDF) -> None:
+    #     pass
 
     def raw_fields(self):
         list_fields = ['RADCAV', self.icavity, self.ele_amb, self.shadow, self.scale,

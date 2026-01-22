@@ -93,7 +93,7 @@ class QVOL(ThermalLoad):
         return QVOL(sid, qvol, control_point, elements, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a QVOL card from the OP2
 
@@ -430,7 +430,7 @@ class QBDY1(ThermalLoad):
         return QBDY1(sid, qflux, eids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a QBDY1 card from the OP2
 
@@ -565,7 +565,7 @@ class QBDY2(ThermalLoad):  # not tested
         return QBDY2(sid, eid, qfluxs, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a QBDY2 card from the OP2
 
@@ -707,7 +707,7 @@ class QBDY3(ThermalLoad):
         return QBDY3(sid, q0, control_node, eids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a QBDY3 card from the OP2
 
@@ -895,7 +895,7 @@ class QHBDY(ThermalLoad):
         return QHBDY(sid, flag, q0, grids, af=af, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a QHBDY card from the OP2
 
@@ -1257,7 +1257,7 @@ class TEMP(ThermalLoad):
         return TEMP(sid, temperatures, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a TEMP card from the OP2
 
@@ -1637,7 +1637,7 @@ class TEMPD(BaseCard):
         return TEMPD(sid, temperature, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a TEMPD card from the OP2
 

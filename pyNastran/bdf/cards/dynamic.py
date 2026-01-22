@@ -107,7 +107,7 @@ class DELAY(BaseCard):
         nodes = [1]
         components = [1]
         delays = [1.]
-        return DELAY(sid, nodes, components, delays, comment='')
+        return DELAY(sid, nodes, components, delays)
 
     def __init__(self, sid: int,
                  nodes: list[int], components: list[int], delays: list[float],
@@ -282,9 +282,9 @@ class DPHASE(BaseCard):
         nodes = [1]
         components = [1]
         phase_leads = [1.]
-        return DPHASE(sid, nodes, components, phase_leads, comment='')
+        return DPHASE(sid, nodes, components, phase_leads)
 
-    def __init__(self, sid, nodes, components, phase_leads, comment=''):
+    def __init__(self, sid, nodes, components, phase_leads, comment: str=''):
         """
         Creates a DPHASE card
 
@@ -445,9 +445,9 @@ class FREQ(BaseCard):
     def _init_from_empty(cls):
         sid = 1
         freqs = [1., 2., 3.]
-        return FREQ(sid, freqs, comment='')
+        return FREQ(sid, freqs)
 
-    def __init__(self, sid, freqs, comment=''):
+    def __init__(self, sid, freqs, comment: str=''):
         """
         Creates a FREQ card
 
@@ -547,9 +547,9 @@ class FREQ1(BaseCard):
         sid = 1
         f1 = 1.
         df = 10.
-        return FREQ1(sid, f1, df, ndf=1, comment='')
+        return FREQ1(sid, f1, df, ndf=1)
 
-    def __init__(self, sid, f1, df, ndf=1, comment=''):
+    def __init__(self, sid, f1, df, ndf=1, comment: str=''):
         """
         Creates a FREQ1 card
 
@@ -653,9 +653,9 @@ class FREQ2(BaseCard):
         sid = 1
         f1 = 1.
         f2 = 2.
-        return FREQ2(sid, f1, f2, nf=1, comment='')
+        return FREQ2(sid, f1, f2, nf=1)
 
-    def __init__(self, sid, f1, f2, nf=1, comment=''):
+    def __init__(self, sid, f1, f2, nf=1, comment: str=''):
         """
         Creates a FREQ2 card
 
@@ -737,9 +737,9 @@ class FREQ3(FREQ):
     def _init_from_empty(cls):
         sid = 1
         f1 = 1.
-        return FREQ3(sid, f1, f2=None, freq_type='LINEAR', nef=10, cluster=1.0, comment='')
+        return FREQ3(sid, f1, f2=None, freq_type='LINEAR', nef=10, cluster=1.0)
 
-    def __init__(self, sid, f1, f2=None, freq_type='LINEAR', nef=10, cluster=1.0, comment=''):
+    def __init__(self, sid, f1, f2=None, freq_type='LINEAR', nef=10, cluster=1.0, comment: str=''):
         """
         Creates a FREQ3 card
 
@@ -874,9 +874,9 @@ class FREQ4(FREQ):
     @classmethod
     def _init_from_empty(cls):
         sid = 1
-        return FREQ4(sid, f1=0., f2=1e20, fspread=0.1, nfm=3, comment='')
+        return FREQ4(sid, f1=0., f2=1e20, fspread=0.1, nfm=3)
 
-    def __init__(self, sid, f1=0., f2=1e20, fspread=0.1, nfm=3, comment=''):
+    def __init__(self, sid, f1=0., f2=1e20, fspread=0.1, nfm=3, comment: str=''):
         """
         Creates a FREQ4 card
 
@@ -976,9 +976,9 @@ class FREQ5(FREQ):
     def _init_from_empty(cls):
         sid = 1
         fractions = [0.1, 0.2, 0.3]
-        return FREQ5(sid, fractions, f1=0., f2=1e20, comment='')
+        return FREQ5(sid, fractions, f1=0., f2=1e20)
 
-    def __init__(self, sid, fractions, f1=0., f2=1e20, comment=''):
+    def __init__(self, sid, fractions, f1=0., f2=1e20, comment: str=''):
         """
         Creates a FREQ5 card
 
@@ -1075,12 +1075,12 @@ class NLPARM(BaseCard):
                       max_iter=25, conv='PW', int_out='NO', eps_u=0.01,
                       eps_p=0.01, eps_w=0.01, max_div=3, max_qn=None,
                       max_ls=4, fstress=0.2, ls_tol=0.5, max_bisect=5,
-                      max_r=20., rtol_b=20., comment='')
+                      max_r=20., rtol_b=20.)
 
     def __init__(self, nlparm_id, ninc=None, dt=0.0, kmethod='AUTO', kstep=5,
                  max_iter=25, conv='PW', int_out='NO',
                  eps_u=0.01, eps_p=0.01, eps_w=0.01, max_div=3, max_qn=None, max_ls=4,
-                 fstress=0.2, ls_tol=0.5, max_bisect=5, max_r=20., rtol_b=20., comment=''):
+                 fstress=0.2, ls_tol=0.5, max_bisect=5, max_r=20., rtol_b=20., comment: str=''):
         """
         Creates an NLPARM card
 
@@ -1248,7 +1248,7 @@ class NLPARM(BaseCard):
                       rtol_b, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an NLPARM card from the OP2
 
@@ -1348,10 +1348,10 @@ class NLPCI(BaseCard):
     def _init_from_empty(cls):
         nlpci_id = 1
         return NLPCI(nlpci_id, Type='CRIS', minalr=0.25, maxalr=4.,
-                     scale=0., desiter=12, mxinc=20, comment='')
+                     scale=0., desiter=12, mxinc=20)
 
     def __init__(self, nlpci_id, Type='CRIS', minalr=0.25, maxalr=4.,
-                 scale=0., desiter=12, mxinc=20, comment=''):
+                 scale=0., desiter=12, mxinc=20, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -1476,14 +1476,14 @@ class ROTORD(BaseCard):
         return ROTORD(sid, rstart, rstep, numstep, rids, rsets, rspeeds, rcords, w3s, w4s, rforces,
                       brgsets, refsys='ROT', cmout=0.0, runit='RPM', funit='RPM', zstein='NO',
                       orbeps=1.e-6, roprt=0, sync=1, etype=1, eorder=1.0, threshold=0.02,
-                      maxiter=10, comment='')
+                      maxiter=10)
 
     def __init__(self, sid, rstart, rstep, numstep,
                  rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
-                 refsys='ROT', cmout=0.0, runit='RPM', funit='RPM',
-                 zstein='NO', orbeps=1.e-6, roprt=0, sync=1,
+                 refsys: str='ROT', cmout=0.0, runit: str='RPM', funit: str='RPM',
+                 zstein: str='NO', orbeps=1.e-6, roprt=0, sync=1,
                  etype=1, eorder=1.0, threshold=0.02, maxiter=10,
-                 comment=''):
+                 comment: str=''):
         """
         Adds a ROTORD card
 
@@ -1730,9 +1730,9 @@ class ROTORG(BaseCard):
     def _init_from_empty(cls):
         sid = 1
         nids = [2, 3]
-        return ROTORG(sid, nids, comment='')
+        return ROTORG(sid, nids)
 
-    def __init__(self, sid, nids, comment=''):
+    def __init__(self, sid, nids, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -1744,7 +1744,7 @@ class ROTORG(BaseCard):
         #assert len(self.grids1) > 0, 'ngrids1=%s\n%s' % (len(self.grids1), str(self))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, comment: str=''):
         """
         Adds a ROTORG card from ``BDF.add_card(...)``
 
@@ -1886,9 +1886,9 @@ class TF(BaseCard):
         components = ['4', '5']
         a = []
         #f2 = 2.
-        return TF(sid, nid0, c, b0, b1, b2, nids, components, a, comment='')
+        return TF(sid, nid0, c, b0, b1, b2, nids, components, a)
 
-    def __init__(self, sid, nid0, c, b0, b1, b2, nids, components, a, comment=''):
+    def __init__(self, sid, nid0, c, b0, b1, b2, nids, components, a, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -1910,7 +1910,7 @@ class TF(BaseCard):
         pass
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, comment: str=''):
         """
         Adds a TF card from ``BDF.add_card(...)``
 
@@ -1999,9 +1999,9 @@ class TSTEP(BaseCard):
         N = 4
         DT = 1.
         NO = None
-        return TSTEP(sid, N, DT, NO, comment='')
+        return TSTEP(sid, N, DT, NO)
 
-    def __init__(self, sid, N, DT, NO, comment=''):
+    def __init__(self, sid, N, DT, NO, comment: str=''):
         """
         Creates a TSTEP card
 
@@ -2044,7 +2044,7 @@ class TSTEP(BaseCard):
         assert len(self.N) == len(self.NO), 'N=%s NO=%s' % (self.N, self.NO)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, comment: str=''):
         """
         Adds a TSTEP card from ``BDF.add_card(...)``
 
@@ -2131,9 +2131,9 @@ class TSTEP1(BaseCard):
         ninc = 4
         tend = 1.
         nout = None
-        return TSTEP1(sid, tend, ninc, nout, comment='')
+        return TSTEP1(sid, tend, ninc, nout)
 
-    def __init__(self, sid, tend, ninc, nout, comment=''):
+    def __init__(self, sid, tend, ninc, nout, comment: str=''):
         """
         Creates a TSTEP1 card
 
@@ -2160,7 +2160,7 @@ class TSTEP1(BaseCard):
         self.nout = nout
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, comment: str=''):
         """
         Adds a TSTEP1 card from ``BDF.add_card(...)``
 
@@ -2400,7 +2400,7 @@ class TSTEPNL(BaseCard):
 
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, comment: str=''):
         """
         Adds a TSTEPNL card from ``BDF.add_card(...)``
 
@@ -2476,7 +2476,7 @@ class TSTEPNL(BaseCard):
             comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a TSTEPNL card from the OP2
 
@@ -2693,7 +2693,7 @@ class TIC(BaseCard):
         return TIC(sid, nid, comp, u0=u0, v0=v0, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a TIC card from the OP2
 

@@ -166,7 +166,7 @@ class MATS1(MaterialDependence):
         limit1 = None
         limit2 = None
         strmeas = None
-        return MATS1(mid, nl_type, h, hr, yf, limit1, limit2, strmeas, tid=tid, comment='')
+        return MATS1(mid, nl_type, h, hr, yf, limit1, limit2, strmeas, tid=tid)
 
     def validate(self) -> None:
         if self.nl_type not in ['NLELAST', 'PLASTIC', 'PLSTRN']:
@@ -1409,7 +1409,7 @@ class MATT4(MaterialDependenceThermal):
                      hgen_table, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a MATT4 card from the OP2
 
@@ -2220,7 +2220,7 @@ class MATT11(MaterialDependenceThermal):
                       g12_table=None, g13_table=None, g23_table=None,
                       rho_table=None,
                       a1_table=None, a2_table=None, a3_table=None,
-                      ge_table=None, comment='')
+                      ge_table=None)
 
     def __init__(self, mid: int,
                  e1_table: int=0, e2_table: int=0, e3_table: int=0,

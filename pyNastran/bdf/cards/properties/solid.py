@@ -111,7 +111,7 @@ class PLSOLID(Property):
         return PLSOLID(pid, mid, stress_strain, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PLSOLID card from the OP2
 
@@ -839,7 +839,7 @@ class PSOLID(Property):
                    fctn, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PSOLID card from the OP2
 

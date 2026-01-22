@@ -51,9 +51,9 @@ class EIGB(Method):
         nep = 10
         ndp = 20
         ndn = 30
-        return EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, G, C, comment='')
+        return EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, G, C)
 
-    def __init__(self, sid, method, L1, L2, nep, ndp, ndn, norm, G, C, comment=''):
+    def __init__(self, sid, method, L1, L2, nep, ndp, ndn, norm, G, C, comment: str=''):
         Method.__init__(self)
         if comment:
             self.comment = comment
@@ -196,7 +196,7 @@ class EIGC(Method):
                     norm='MAX', mblkszs=None, iblkszs=None, ksteps=None,
                     NJIs=None, alphaAjs=None, omegaAjs=None, alphaBjs=None,
                     omegaBjs=None, LJs=None, NEJs=None, NDJs=None,
-                    shift_r1=None, shift_i1=None, isrr_flag=None, nd1=None, comment='')
+                    shift_r1=None, shift_i1=None, isrr_flag=None, nd1=None)
 
     def __init__(self, sid, method, grid, component, epsilon, neigenvalues,
                  norm='MAX', # common
@@ -204,7 +204,7 @@ class EIGC(Method):
                  alphaAjs=None, omegaAjs=None, alphaBjs=None, omegaBjs=None, # HESS/INV
                  LJs=None, NEJs=None, NDJs=None, # HESS/INV
                  shift_r1=None, shift_i1=None, isrr_flag=None, nd1=None, # ISRR
-                 comment=''):
+                 comment: str=''):
         """
         Creates a EIGC card, which is required for a SOL 107 analysis
 
@@ -584,9 +584,9 @@ class EIGP(Method):
         alpha2 = 1.
         omega2 = 1.
         m2 = 1.
-        return EIGP(sid, alpha1, omega1, m1, alpha2, omega2, m2, comment='')
+        return EIGP(sid, alpha1, omega1, m1, alpha2, omega2, m2)
 
-    def __init__(self, sid, alpha1, omega1, m1, alpha2, omega2, m2, comment=''):
+    def __init__(self, sid, alpha1, omega1, m1, alpha2, omega2, m2, comment: str=''):
         Method.__init__(self)
         if comment:
             self.comment = comment
@@ -673,10 +673,10 @@ class EIGR(Method):
     def _init_from_empty(cls):
         sid = 1
         return EIGR(sid, method='LAN', f1=None, f2=None, ne=None, nd=None, crit=None,
-                    norm='MASS', G=None, C=None, comment='')
+                    norm='MASS', G=None, C=None)
 
     def __init__(self, sid, method='LAN', f1=None, f2=None, ne=None, nd=None, crit=None,
-                 norm='MASS', G=None, C=None, comment=''):
+                 norm='MASS', G=None, C=None, comment: str=''):
         """
         Adds a EIGR card
 
@@ -877,10 +877,10 @@ class EIGRL(Method):
     def _init_from_empty(cls):
         sid = 1
         return EIGRL(sid, v1=None, v2=None, nd=None, msglvl=0, maxset=None,
-                     shfscl=None, norm=None, options=None, values=None, comment='')
+                     shfscl=None, norm=None, options=None, values=None)
 
     def __init__(self, sid, v1=None, v2=None, nd=None, msglvl=0, maxset=None, shfscl=None,
-                 norm=None, options=None, values=None, comment=''):
+                 norm=None, options=None, values=None, comment: str=''):
         """
         Adds an EIGRL card
 
@@ -1191,7 +1191,7 @@ class MODTRAK(BaseCard):
         low_range = 0
         high_range = 0
         mt_filter = 0.0
-        return MODTRAK(sid, low_range, high_range, mt_filter, comment='')
+        return MODTRAK(sid, low_range, high_range, mt_filter)
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):

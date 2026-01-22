@@ -77,9 +77,9 @@ class SUPORT1(Constraint):
         conid = 1
         nodes = [1]
         components = ['123']
-        return SUPORT1(conid, nodes, components, comment='')
+        return SUPORT1(conid, nodes, components)
 
-    def __init__(self, conid, nodes, components, comment=''):
+    def __init__(self, conid, nodes, components, comment: str=''):
         """
         Creates a SUPORT card, which defines free-body reaction points.
 
@@ -136,7 +136,7 @@ class SUPORT1(Constraint):
         return SUPORT1(conid, nodes, components, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a SUPORT1 card from the OP2
 
@@ -234,9 +234,9 @@ class SUPORT(Constraint):
     def _init_from_empty(cls):
         nodes = [1, 2]
         components = ['123', '456']
-        return SUPORT(nodes, components, comment='')
+        return SUPORT(nodes, components)
 
-    def __init__(self, nodes, components, comment=''):
+    def __init__(self, nodes, components, comment: str=''):
         """
         Creates a SUPORT card, which defines free-body reaction points.
         This is always active.
@@ -295,7 +295,7 @@ class SUPORT(Constraint):
         return SUPORT(nodes, components, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a SUPORT card from the OP2
 
@@ -376,10 +376,10 @@ class SESUP(SUPORT):
     def _init_from_empty(cls):
         nodes = [1, 2]
         components = ['1', '2']
-        return SESUP(nodes, components, comment='')
+        return SESUP(nodes, components)
 
-    def __init__(self, nodes, components, comment=''):
-        SUPORT.__init__(self, nodes, components, comment='')
+    def __init__(self, nodes, components, comment: str=''):
+        SUPORT.__init__(self, nodes, components, comment=comment)
 
 
 class MPC(Constraint):
@@ -459,7 +459,7 @@ class MPC(Constraint):
             assert isinstance(coefficient, float), self.coefficients
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an MPC card from ``BDF.add_card(...)``
 
@@ -507,7 +507,7 @@ class MPC(Constraint):
         return MPC(conid, nodes, components, coefficients, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an MPC card from the OP2
 
@@ -680,7 +680,7 @@ class SPC(Constraint):
         nodes = [1, 2]
         components = ['123', '456']
         enforced = [0., 0.]
-        return SPC(conid, nodes, components, enforced, comment='')
+        return SPC(conid, nodes, components, enforced)
 
     def __init__(self, conid: int,
                  nodes: list[int],
@@ -770,7 +770,7 @@ class SPC(Constraint):
         return SPC(conid, nodes, components, enforced, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an SPC card from the OP2
 
@@ -879,9 +879,9 @@ class GMSPC(Constraint):
         component = 2
         entity = 3
         entity_id = 4
-        return GMSPC(conid, component, entity, entity_id, comment='')
+        return GMSPC(conid, component, entity, entity_id)
 
-    def __init__(self, conid, component, entity, entity_id, comment=''):
+    def __init__(self, conid, component, entity, entity_id, comment: str=''):
         Constraint.__init__(self)
         if comment:
             self.comment = comment
@@ -910,7 +910,7 @@ class GMSPC(Constraint):
         return GMSPC(conid, component, entity, entity_id, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         raise NotImplementedError('GMSPC')
 
     def cross_reference(self, model: BDF) -> None:
@@ -958,9 +958,9 @@ class SPCAX(Constraint):
         hid = 3
         component = 4
         enforced = 0.
-        return SPCAX(conid, ringax, hid, component, enforced, comment='')
+        return SPCAX(conid, ringax, hid, component, enforced)
 
-    def __init__(self, conid, ringax, hid, component, enforced, comment=''):
+    def __init__(self, conid, ringax, hid, component, enforced, comment: str=''):
         """
         Creates an SPCAX card
 
@@ -1016,7 +1016,7 @@ class SPCAX(Constraint):
         return SPCAX(conid, ringax, hid, component, enforced, comment=comment)
 
     #@classmethod
-    #def add_op2_data(cls, data, comment=''):
+    #def add_op2_data(cls, data, comment: str=''):
         #msg = '%s has not implemented data parsing' % cls.type
         #raise NotImplementedError(msg)
 
@@ -1071,7 +1071,7 @@ class SPC1(Constraint):
         conid = 1
         components = '1'
         nodes = [1]
-        return SPC1(conid, components, nodes, comment='')
+        return SPC1(conid, components, nodes)
 
     def __init__(self, conid: int, components: str, nodes: list[int], comment: str=''):
         """
@@ -1128,7 +1128,7 @@ class SPC1(Constraint):
         return SPC1(conid, components, nodes, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an SPC1 card from the OP2
 
@@ -1217,7 +1217,7 @@ class SPCOFF(Constraint):
     def _init_from_empty(cls):
         nodes = [1, 2]
         components = ['1', '2']
-        return SPCOFF(nodes, components, comment='')
+        return SPCOFF(nodes, components)
 
     def __init__(self, nodes, components, comment: str=''):
         Constraint.__init__(self)
@@ -1331,9 +1331,9 @@ class SPCOFF1(Constraint):
     def _init_from_empty(cls):
         components = '1'
         nodes = [1, 2]
-        return SPCOFF1(components, nodes, comment='')
+        return SPCOFF1(components, nodes)
 
-    def __init__(self, components, nodes, comment=''):
+    def __init__(self, components, nodes, comment: str=''):
         Constraint.__init__(self)
         if comment:
             self.comment = comment
@@ -1365,7 +1365,7 @@ class SPCOFF1(Constraint):
         return cls(components, nodes, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an SPCOFF1 card from the OP2
 
@@ -1472,9 +1472,9 @@ class SPCADD(ConstraintAdd):
     def _init_from_empty(cls):
         conid = 1
         sets = [1, 2]
-        return SPCADD(conid, sets, comment='')
+        return SPCADD(conid, sets)
 
-    def __init__(self, conid, sets, comment=''):
+    def __init__(self, conid, sets, comment: str=''):
         ConstraintAdd.__init__(self)
         if comment:
             self.comment = comment
@@ -1505,7 +1505,7 @@ class SPCADD(ConstraintAdd):
         return SPCADD(conid, sets, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an SPCADD card from the OP2
 
@@ -1605,7 +1605,7 @@ class MPCADD(ConstraintAdd):
     def _init_from_empty(cls):
         conid = 1
         sets = [1, 2]
-        return MPCADD(conid, sets, comment='')
+        return MPCADD(conid, sets)
 
     def __init__(self, conid: int, sets: list[str | int], comment: str=''):
         ConstraintAdd.__init__(self)
@@ -1639,7 +1639,7 @@ class MPCADD(ConstraintAdd):
         return MPCADD(conid, sets, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an MPCADD card from the OP2
 

@@ -1891,10 +1891,10 @@ class Cord2x(CoordBase):
         e2 = None
         e3 = None
         rid = 0
-        return cls(cid, e1, e2, e3, rid, comment='')
+        return cls(cid, e1, e2, e3, rid)
 
     @classmethod
-    def _add(cls, cid, origin, zaxis, xzplane, rid=0, comment=''):
+    def _add(cls, cid, origin, zaxis, xzplane, rid=0, comment: str=''):
         assert isinstance(rid, int), rid
         cid = cid
         rid = rid
@@ -2057,7 +2057,7 @@ class Cord2x(CoordBase):
         return cls(cid, e1, e2, e3, rid=rid, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         cid = data[0]
         rid = data[1]
         e1 = np.array(data[2:5], dtype='float64')
@@ -2358,7 +2358,7 @@ class Cord1x(CoordBase):
         return cls(cid, g1, g2, g3, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         cid = data[0]
         g1 = data[1]
         g2 = data[2]
@@ -2602,7 +2602,7 @@ class CORD3G(CoordBase):
         assert len(smethod) == 3, f"method='{self.method_es}{method_int}' must be of the form E123 or S123"
 
     #@classmethod
-    #def add_op2_data(cls, data, comment=''):
+    #def add_op2_data(cls, data, comment: str=''):
         #raise NotImplementedError(data)
 
     @classmethod

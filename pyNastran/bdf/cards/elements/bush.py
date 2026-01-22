@@ -593,14 +593,14 @@ class CBUSH1D(BushElement):
         assert len(card) <= 6, f'len(CBUSH1D card) = {len(card):d}\ncard={card}'
         return CBUSH1D(eid, pid, [ga, gb], cid=cid, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #eid = data[0]
-        #pid = data[1]
-        #ga = data[2]
-        #gb = data[3]
-        #raise NotImplementedError(data)
-        #return CBUSH1D(eid, pid, [ga, gb], cid, comment=comment)
+    # @classmethod
+    # def add_op2_data(cls, data, comment: str=''):
+    #     eid = data[0]
+    #     pid = data[1]
+    #     ga = data[2]
+    #     gb = data[3]
+    #     raise NotImplementedError(data)
+    #     return CBUSH1D(eid, pid, [ga, gb], cid, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -768,7 +768,7 @@ class CBUSH2D(BushElement):
         h5_file.create_dataset('sptid', data=sptid)
 
     # @classmethod
-    # def add_op2_data(cls, data, comment=''):
+    # def add_op2_data(cls, data, comment: str=''):
     #     eid = data[0]
     #     pid = data[1]
     #     ga = data[2]

@@ -50,7 +50,7 @@ class DTI_UNITS(BaseCard):
     def _init_from_empty(cls):
         name = 'UNITS'
         fields = []
-        return DTI_UNITS(name, fields, comment='')
+        return DTI_UNITS(name, fields)
 
     def _finalize_hdf5(self, encoding: str):
         """hdf5 helper function"""
@@ -187,7 +187,7 @@ class DTI(BaseCard):
     def _init_from_empty(cls):
         name = 'name'
         fields = []
-        return DTI(name, fields, comment='')
+        return DTI(name, fields)
 
     def _finalize_hdf5(self, encoding: str) -> None:
         """hdf5 helper function"""
@@ -594,7 +594,7 @@ class NastranMatrix(BaseCard):
             raise NotImplementedError('matrix_form=%s' % self.matrix_form)
         return shape
 
-    def _add_column(self, card, comment=''):
+    def _add_column(self, card, comment: str=''):
         """adds an additional column entry to the matrix"""
         if comment:
             if hasattr(self, '_comment'):
@@ -915,7 +915,7 @@ class DMIG_UACCEL(BaseCard):
     type = 'DMIG'
     name = 'UACCEL'
 
-    def __init__(self, tin, ncol, load_sequences, comment=''):
+    def __init__(self, tin, ncol, load_sequences, comment: str=''):
         if comment:
             self.comment = comment
         self.tin = tin
@@ -944,7 +944,7 @@ class DMIG_UACCEL(BaseCard):
         ncol = integer_or_blank(card, 8, 'ncol')
         return DMIG_UACCEL(tin, ncol, load_sequences={}, comment=comment)
 
-    def _add_column(self, card, comment=''):
+    def _add_column(self, card, comment: str=''):
         if comment:
             if hasattr(self, '_comment'):
                 self.comment += comment
@@ -1050,19 +1050,19 @@ class DMIG(NastranMatrix):
     _properties = ['is_real', 'is_complex', 'is_polar', 'matrix_type', 'shape',
                    'tin_dtype', 'tout_dtype']
 
-    #@classmethod
-    #def _init_from_empty(cls):
-        #name = 'name'
-        #ifo = 1
-        #tin = 1
-        #tout = 1
-        #polar = 0
-        #ncols = 1
-        #GCj = []
-        #GCi = []
-        #Real = []
-        #return DMIG(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real,
-                    #Complex=None, comment='', finalize=True)
+    # @classmethod
+    # def _init_from_empty(cls):
+    #     name = 'name'
+    #     ifo = 1
+    #     tin = 1
+    #     tout = 1
+    #     polar = 0
+    #     ncols = 1
+    #     GCj = []
+    #     GCi = []
+    #     Real = []
+    #     return DMIG(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real,
+    #                 Complex=None,finalize=True)
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, encoding):
@@ -1164,7 +1164,7 @@ class DMIAX(BaseCard):
 
     def __init__(self, name: str, matrix_form: int,
                  tin: int, tout: int, ncols: int,
-                 GCNj, GCNi, Real, Complex=None, comment=''):
+                 GCNj, GCNi, Real, Complex=None, comment: str=''):
         """
         Creates a DMIAX card
 
@@ -1346,7 +1346,7 @@ class DMIAX(BaseCard):
         return DMIAX(name, matrix_form, tin, tout, ncols,
                      GCj, GCi, Real, Complex, comment=comment)
 
-    def _add_column(self, card, comment=''):
+    def _add_column(self, card, comment: str=''):
         if comment:
             if hasattr(self, '_comment'):
                 self.comment += comment
@@ -1537,14 +1537,14 @@ class DMIJ(NastranMatrix):
         GCi = []
         Real = []
         return DMIJ(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real,
-                    Complex=None, comment='', finalize=True)
+                    Complex=None, finalize=True)
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, encoding):
+    def export_to_hdf5(cls, h5_file, model, encoding: str):
         _export_dmig_to_hdf5(h5_file, model, model.dmij, encoding)
 
     def __init__(self, name, matrix_form, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex=None, comment='',
+                 GCj, GCi, Real, Complex=None, comment: str='',
                  finalize=True):
         """
         Creates a DMIJ card
@@ -1611,22 +1611,22 @@ class DMIJI(NastranMatrix):
     _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type',
                    'tin_dtype', 'tout_dtype']
 
-    #@classmethod
-    #def _init_from_empty(cls):
-        #name = 'name'
-        #ifo = 1
-        #tin = 1
-        #tout = 1
-        #polar = 0
-        #ncols = 1
-        #GCj = []
-        #GCi = []
-        #Real = []
-        #return DMIJI(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real,
-                     #Complex=None, comment='', finalize=True)
+    # @classmethod
+    # def _init_from_empty(cls):
+    #     name = 'name'
+    #     ifo = 1
+    #     tin = 1
+    #     tout = 1
+    #     polar = 0
+    #     ncols = 1
+    #     GCj = []
+    #     GCi = []
+    #     Real = []
+    #     return DMIJI(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real,
+    #                  Complex=None, finalize=True)
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, encoding):
+    def export_to_hdf5(cls, h5_file, model, encoding: str):
         _export_dmig_to_hdf5(h5_file, model, model.dmiji, encoding)
 
     def __init__(self, name: str, ifo: int,
@@ -1713,25 +1713,25 @@ class DMIK(NastranMatrix):
                    'tin_dtype', 'tout_dtype']
 
     #@classmethod
-    #def _init_from_empty(cls):
-        #name = 'name'
-        #ifo = 1
-        #tin = 1
-        #tout = 1
-        #polar = 0
-        #ncols = 1
-        #GCj = []
-        #GCi = []
-        #Real = []
-        #return DMIK(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real,
-                    #Complex=None, comment='', finalize=True)
+    # def _init_from_empty(cls):
+    #     name = 'name'
+    #     ifo = 1
+    #     tin = 1
+    #     tout = 1
+    #     polar = 0
+    #     ncols = 1
+    #     GCj = []
+    #     GCi = []
+    #     Real = []
+    #     return DMIK(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real,
+    #                 Complex=None, finalize=True)
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, encoding):
+    def export_to_hdf5(cls, h5_file, model, encoding: str):
         _export_dmig_to_hdf5(h5_file, model, model.dmik, encoding)
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex=None, comment='', finalize=True):
+                 GCj, GCi, Real, Complex=None, comment: str='', finalize=True):
         """
         Creates a DMIK card
 
@@ -1820,10 +1820,10 @@ class DMI(NastranMatrix):
         GCi = []
         Real = []
         return DMI(name, matrix_form, tin, tout, nrows, ncols, GCj, GCi, Real,
-                   Complex=None, comment='', finalize=False)
+                   Complex=None, finalize=False)
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, encoding):
+    def export_to_hdf5(cls, h5_file, model, encoding: str):
         _export_dmig_to_hdf5(h5_file, model, model.dmi, encoding)
 
     def __init__(self, name: str, matrix_form: int | str,
@@ -1857,8 +1857,8 @@ class DMI(NastranMatrix):
             Finish creating the card (set to True if user)
 
         """
-        #NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
-                               #GCj, GCi, Real, Complex, comment='')
+        # NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
+        #                        GCj, GCi, Real, Complex, comment='')
         self.write_header = True
         if comment:
             self.comment = comment

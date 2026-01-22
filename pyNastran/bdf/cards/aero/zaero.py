@@ -1108,10 +1108,10 @@ class ZAERO:
             senset = self.senset[senset_id]
             asesnsr_ids = senset.ids
 
-        print(f'tfset_ids = {tfset_ids}')
-        print(f'all_conct_ids = {conct_ids}')
-        print(f'asegain_ids = {asegain_ids}')
-        print(f'asesnsr_ids = {asesnsr_ids}')
+        # print(f' tfset_ids = {tfset_ids}')
+        # print(f'all_conct_ids = {conct_ids}')
+        # print(f'asegain_ids = {asegain_ids}')
+        # print(f'asesnsr_ids = {asesnsr_ids}')
 
         log = self.model.log
         

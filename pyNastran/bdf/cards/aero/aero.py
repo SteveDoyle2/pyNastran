@@ -91,7 +91,7 @@ class AECOMP(BaseCard):
         name = 'name'
         list_type = 'CAERO'
         lists = [1]
-        return AECOMP(name, list_type, lists, comment='')
+        return AECOMP(name, list_type, lists)
 
     def __init__(self, name: str, list_type: str,
                  lists: int | list[int],
@@ -271,7 +271,7 @@ class AECOMPL(BaseCard):
     def _init_from_empty(cls):
         name = 'HORIZ'
         labels = ['ELEV']
-        return AECOMPL(name, labels, comment='')
+        return AECOMPL(name, labels)
 
     def __init__(self, name: str,
                  labels: list[str],
@@ -376,7 +376,7 @@ class AEFACT(BaseCard):
     def _init_from_empty(cls):
         sid = 1
         fractions = [0., 1.,]
-        return AEFACT(sid, fractions, comment='')
+        return AEFACT(sid, fractions)
 
     def __init__(self, sid: int, fractions: list[float],
                  comment: str=''):
@@ -483,7 +483,7 @@ class AELINK(BaseCard):
         label = 'ELEV'
         independent_labels = ['ELEV1', 'ELEV2']
         linking_coefficients = [1., 2.]
-        return AELINK(aelink_id, label, independent_labels, linking_coefficients, comment='')
+        return AELINK(aelink_id, label, independent_labels, linking_coefficients)
 
     def __init__(self, aelink_id: int | str,
                  label: str, independent_labels: list[str],
@@ -699,7 +699,7 @@ class AELIST(BaseCard):
 
     @classmethod
     def _init_from_empty(cls):
-        return AELIST(1, [1], comment='')
+        return AELIST(1, [1])
 
     def __init__(self, sid: int, elements: list[int], comment: str='') -> None:
         """
@@ -810,7 +810,7 @@ class AEPARM(BaseCard):
         aeparm_id = 1
         label = 'name'
         units = ''
-        return AEPARM(aeparm_id, label, units, comment='')
+        return AEPARM(aeparm_id, label, units)
 
     def __init__(self, aeparm_id: int, label: str, units: str, comment: str='') -> None:
         """
@@ -857,7 +857,7 @@ class AEPARM(BaseCard):
         return AEPARM(aeparm_id, label, units, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an AEPARM card from the OP2
 
@@ -935,7 +935,7 @@ class AESURF(BaseCard):
         return AESURF(aesurf_id, label, cid1, aelist_id1,
                       cid2=None, aelist_id2=None, eff=1.0, ldw='LDW',
                       crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
-                      hmllim=None, hmulim=None, tqllim=0, tqulim=0, comment='')
+                      hmllim=None, hmulim=None, tqllim=0, tqulim=0)
 
     def __init__(self, aesurf_id: int, label: str, cid1: int, aelist_id1: int,
                  cid2: Optional[int]=None, aelist_id2: Optional[int]=None,
@@ -1257,7 +1257,7 @@ class AESURFS(BaseCard):
         label = 'name'
         list1 = 1
         list2 = 2
-        return AESURFS(aesid, label, list1, list2, comment='')
+        return AESURFS(aesid, label, list1, list2)
 
     def __init__(self, aesid: int, label: str,
                  list1: int, list2: int=0,
@@ -1540,7 +1540,7 @@ class CAERO1(BaseCard):
         p4 = [0., 10., 0.]
         x43 = 0.5
         return CAERO1(eid, pid, igroup, p1, x12, p4, x43,
-                      cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment='')
+                      cp=0, nspan=0, lspan=0, nchord=0, lchord=0)
 
     def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
@@ -2736,7 +2736,7 @@ class CAERO2(BaseCard):
         igroup = 1
         p1 = [0., 0., 0.]
         x12 = 10.
-        return CAERO2(eid, pid, igroup, p1, x12, cp=0, nsb=0, nint=0, lsb=0, lint=0, comment='')
+        return CAERO2(eid, pid, igroup, p1, x12, cp=0, nsb=0, nint=0, lsb=0, lint=0)
 
     def __init__(self, eid: int, pid: int, igroup: int,
                  p1: np.ndarray, x12: float,
@@ -6852,7 +6852,7 @@ class SPLINE4(Spline):
                        comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         eid = data[0]
         caero = data[1]
         aelist = data[2]

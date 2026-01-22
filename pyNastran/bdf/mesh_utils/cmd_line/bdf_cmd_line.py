@@ -34,6 +34,7 @@ from .merge_rbe2 import cmd_line_merge_rbe2
 from .collapse_quads import cmd_line_collapse_quads
 from .super import cmd_line_super
 from .flip_shell_normals import cmd_line_flip_shell_normals
+from .nsm_split import cmd_line_nsm_split
 from .dev import cmd_line_bin, cmd_line_filter, cmd_line_transform
 from .utils import filter_no_args
 
@@ -61,6 +62,7 @@ CMD_MAPS = {
     'rbe3_to_rbe2': cmd_line_rbe3_to_rbe2,
     'rbe2_to_rbe3': cmd_line_rbe2_to_rbe3,
     'merge_rbe2': cmd_line_merge_rbe2,
+    'nsm_split': cmd_line_nsm_split,
 
     'delete': cmd_line_delete,
     #'summary': cmd_line_summary,
@@ -108,6 +110,7 @@ def cmd_line(argv=None, log=None, quiet: bool=False) -> None:
        f'  bdf scale                       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] {SCALES}\n'
         '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x | --no_y]\n'
         '  bdf free_faces                  BDF_FILENAME SKIN_FILENAME [-d | -l] [-f] [--encoding ENCODE]\n'
+        '  bdf nsm_split                   BDF_FILENAME NSM_ID NSM_VALUE\n'
         '  bdf flutter                     UNITS eas EAS1 EAS2 SWEEP_UNIT N CONST_TYPE CONST_VAL [-o OUT_BDF_FILENAME] [--size SIZE | --clean]'
         '  bdf flip_shell_normals          IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--zero_zoffset]\n'
         '  bdf transform                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--shift XYZ]\n'

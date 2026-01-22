@@ -303,7 +303,7 @@ class CHEXA8(SolidElement):
         return CHEXA8(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CHEXA8 card from the OP2
 
@@ -622,7 +622,7 @@ class CHEXA20(SolidElement):
         return CHEXA20(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CHEXA20 card from the OP2
 
@@ -886,7 +886,7 @@ class CPENTA6(SolidElement):
         return CPENTA6(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CPENTA6 card from the OP2
 
@@ -1306,7 +1306,7 @@ class CPENTA15(SolidElement):
         return CPENTA15(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CPENTA15 card from the OP2
 
@@ -1538,7 +1538,7 @@ class CPYRAM5(SolidElement):
         return CPYRAM5(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CPYRAM5 card from the OP2
 
@@ -1731,7 +1731,7 @@ class CPYRAM13(SolidElement):
         return CPYRAM13(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CPYRAM13 card from the OP2
 
@@ -1999,7 +1999,7 @@ class CTETRA4(SolidElement):
         return CTETRA4(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CTETRA4 card from the OP2
 
@@ -2244,7 +2244,7 @@ class CTETRA10(SolidElement):
         return CTETRA10(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CTETRA10 card from the OP2
 

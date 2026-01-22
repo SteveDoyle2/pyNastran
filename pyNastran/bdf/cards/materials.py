@@ -108,10 +108,10 @@ class CREEP(Material):
         f = 13.
         g = 14.
         return CREEP(mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
-                     a, b, c, d, e, f, g, comment='')
+                     a, b, c, d, e, f, g)
 
     def __init__(self, mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
-                 a, b, c, d, e, f, g, comment=''):
+                 a, b, c, d, e, f, g, comment: str=''):
         Material.__init__(self)
         if comment:
             self.comment = comment
@@ -168,7 +168,7 @@ class CREEP(Material):
                      a, b, c, d, e, f, g, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CREEP card from the OP2
 
@@ -283,14 +283,14 @@ class NXSTRAT(BaseCard):
     def _init_from_empty(cls):
         sid = 1
         params = {'AUTO' : 1}
-        return NXSTRAT(sid, params, comment='')
+        return NXSTRAT(sid, params)
 
     def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         keys, values = self.params
         self.params = dict(zip(keys, values))
 
-    def __init__(self, sid, params, comment=''):
+    def __init__(self, sid, params, comment: str=''):
         if comment:
             self.comment = comment
         self.sid = sid
@@ -572,7 +572,7 @@ class MAT1(IsotropicMaterial):
                     St=St, Sc=Sc, Ss=Ss, mcsid=mcsid, comment=comment)
 
     @classmethod
-    def add_card_lax(cls, card, comment=''):
+    def add_card_lax(cls, card, comment: str=''):
         """see ``add_card``"""
         mid = integer(card, 1, 'mid')
         E = force_double_or_blank(card, 2, 'E')
@@ -592,7 +592,7 @@ class MAT1(IsotropicMaterial):
                     St, Sc, Ss, mcsid, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a MAT1 card from the OP2
 
@@ -1074,7 +1074,7 @@ class MAT2(AnisotropicMaterial):
                     ge_matrix=ge_matrix, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a MAT2 card from the OP2
 
@@ -1263,7 +1263,7 @@ class MAT3(OrthotropicMaterial):
     }
 
     def __init__(self, mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=0.0, gzx=None,
-                 ax=0., ath=0., az=0., tref=0., ge=0., comment=''):
+                 ax=0., ath=0., az=0., tref=0., ge=0., comment: str=''):
         OrthotropicMaterial.__init__(self)
         if comment:
             self.comment = comment
@@ -1409,7 +1409,7 @@ class MAT3(OrthotropicMaterial):
                     ax=ax, ath=ath, az=az, tref=tref, ge=ge, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a MAT3 card from the OP2
 
@@ -1624,7 +1624,7 @@ class MAT4(ThermalMaterial):
                     qlat=qlat, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a MAT4 card from the OP2
 
@@ -1723,7 +1723,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     def _init_from_empty(cls):
         mid = 1
         return MAT5(mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0., kzz=0.,
-                    cp=0., rho=1., hgen=1., comment='')
+                    cp=0., rho=1., hgen=1.)
 
     def __init__(self, mid: int,
                  kxx: float=0., kxy: float=0., kxz: float=0.,
@@ -1834,7 +1834,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
                     cp, rho, hgen, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a MAT5 card from the OP2
 
@@ -2170,7 +2170,7 @@ class MAT8(OrthotropicMaterial):
                     Xt, Xc, Yt, Yc, S, ge, F12, strn, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a MAT8 card from the OP2
 
@@ -2568,7 +2568,7 @@ class MAT9(AnisotropicMaterial):
                     comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a MAT9 card from the OP2
 
@@ -2737,12 +2737,12 @@ class MAT10(Material):
         c = 20.
         return MAT10(mid, bulk=bulk, rho=None, c=c, ge=0.0, gamma=None,
                      table_bulk=None, table_rho=None, table_ge=None,
-                     table_gamma=None, comment='')
+                     table_gamma=None)
 
     def __init__(self, mid: int,
                  bulk=None, rho=None, c=None, ge: float=0.0, gamma=None,
                  table_bulk=None, table_rho=None, table_ge=None, table_gamma=None,
-                 comment=''):
+                 comment: str=''):
         """
         Creates a MAT10 card
 
@@ -2861,7 +2861,7 @@ class MAT10(Material):
                      comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a MAT10 card from the OP2
 
@@ -3350,7 +3350,7 @@ class MAT11(Material):
         return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=rho,
                      a1=a1, a2=a2, a3=a3, tref=tref, ge=ge, comment=comment)
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a MAT11 card from the OP2
 
@@ -4413,7 +4413,7 @@ class MATEV(ViscoelasticMaterial):
                      shift=shift, c1=c1, c2=c2, tref=tref, comment=comment)
 
     #@classmethod
-    #def add_op2_data(cls, data, comment=''):
+    #def add_op2_data(cls, data, comment: str=''):
         #"""
         #Adds a MAT1 card from the OP2
 

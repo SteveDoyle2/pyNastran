@@ -185,7 +185,7 @@ class CHBDYE(ThermalElement):
                       rad_mid_front, rad_mid_back, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CHBDYE card from the OP2
 
@@ -407,7 +407,7 @@ class CHBDYG(ThermalElement):
                       comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CHBDYG card from the OP2
 
@@ -698,7 +698,7 @@ class CHBDYP(ThermalElement):
                       e1=e1, e2=e2, e3=e3, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CHBDYP card from the OP2
 
@@ -1327,7 +1327,7 @@ class PHBDY(ThermalProperty):
         return PHBDY(pid, af, d1, d2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PHBDY card from the OP2
 
@@ -1483,7 +1483,7 @@ class CONV(ThermalBC):
         return CONV(eid, pconid, ta, film_node, control_node, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CONV card from the OP2
 
@@ -1744,7 +1744,7 @@ class CONVM(ThermalBC):
                      ta2=ta2, mdot=mdot, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CONVM card from the OP2
 

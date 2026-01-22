@@ -135,7 +135,7 @@ class LoadCombination(BaseCard):
         return cls(sid, scale, scale_factors, load_ids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         sid = data[0]
         scale = data[1]
         scale_factors = data[2]
@@ -325,7 +325,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         return LSEQ(sid, excite_id, load_id, tid=temp_id, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an LSEQ card from the OP2
 
@@ -583,7 +583,7 @@ class LOADCYH(BaseCard):
         return LOADCYH(sid, scale, hid, htype, scales, load_ids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an LSEQ card from the OP2
 
@@ -716,7 +716,7 @@ class DAREA(BaseCard):
         return DAREA(sid, [nid], [component], [scale], comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a DAREA card from the OP2
 
@@ -913,7 +913,7 @@ class SPCD(Load):
         return SPCD(sid, nodes, components, enforced, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an SPCD card from the OP2
 
@@ -1042,7 +1042,7 @@ class DEFORM(Load):
         return DEFORM(sid, eid, deformation, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an DEFORM card from the OP2
 
@@ -1186,7 +1186,7 @@ class SLOAD(Load):
         return SLOAD(sid, nodes, mags, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an SLOAD card from the OP2
 

@@ -998,7 +998,7 @@ class PCOMP(CompositeShellProperty):
         return card
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PCOMP card from the OP2
 
@@ -2234,7 +2234,7 @@ class PSHEAR(Property):
         return PSHEAR(pid, mid, t, nsm=nsm, f1=f1, f2=f2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PSHEAR card from the OP2
 
@@ -2571,7 +2571,7 @@ class PSHELL(Property):
                       z1, z2, mid4, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PSHELL card from the OP2
 

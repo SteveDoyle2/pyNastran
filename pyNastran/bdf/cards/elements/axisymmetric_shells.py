@@ -742,7 +742,7 @@ class CTRIAX6(TriShell):
         return CTRIAX6(eid, mid, nids, theta=theta, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         eid, mid, n1, n2, n3, n4, n5, n6, theta, unused_undef1, unused_undef2 = data
         nids = [n1, n2, n3, n4, n5, n6]
         return CTRIAX6(eid, mid, nids, theta=theta, comment=comment)
@@ -1021,7 +1021,7 @@ class CQUADX(AxisymmetricQuad):
         return CQUADX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CQUADX card from the OP2
 

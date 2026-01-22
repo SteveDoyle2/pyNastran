@@ -154,7 +154,7 @@ class PFAST(Property):
                      comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PFAST card from the OP2
 
@@ -533,7 +533,7 @@ class PGAP(Property):
                     comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PGAP card from the OP2
 

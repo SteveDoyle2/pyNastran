@@ -1075,7 +1075,7 @@ class PBEAM(IntegratedLineProperty):
             comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PBEAM card from the OP2
 
@@ -1918,7 +1918,7 @@ class PBEAML(IntegratedLineProperty):
             assert isinstance(mass_per_length, float), 'mass/L=%r\n%s' % (mass_per_length, str(self))
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PBEAML card from the OP2
 
@@ -2386,21 +2386,21 @@ class PBMSECT(LineProperty):
 
         return PBMSECT(pid, mid, form, options, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):  # pragma: no cover
-        #pid = data[0]
-        #mid = data[1]
-        #group = data[2].strip()
-        #Type = data[3].strip()
-        #dim = list(data[4:-1])
-        #nsm = data[-1]
-        #print("group = %r" % group)
-        #print("Type  = %r" % Type)
-        #print("dim = ",dim)
-        #print(str(self))
-        #print("*PBMSECT = ", data)
-        #raise NotImplementedError('PBMSECT not finished...data=%s' % str(data))
-        #return PBMSECT(pid, mid, group, Type, dim, nsm, comment=comment)
+    # @classmethod
+    # def add_op2_data(cls, data, comment: str=''):  # pragma: no cover
+    #     pid = data[0]
+    #     mid = data[1]
+    #     group = data[2].strip()
+    #     Type = data[3].strip()
+    #     dim = list(data[4:-1])
+    #     nsm = data[-1]
+    #     print("group = %r" % group)
+    #     print("Type  = %r" % Type)
+    #     print("dim = ",dim)
+    #     print(str(self))
+    #     print("*PBMSECT = ", data)
+    #     raise NotImplementedError('PBMSECT not finished...data=%s' % str(data))
+    #     return PBMSECT(pid, mid, group, Type, dim, nsm, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -2736,7 +2736,7 @@ class PBCOMP(LineProperty):
                       symopt, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         data1, data2 = data
         (pid, mid, area, i1, i2, i12, j, nsm, k1, k2, m1, m2, n1, n2, unused_nsections) = data1
         y = []

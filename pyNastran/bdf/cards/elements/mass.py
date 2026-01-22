@@ -142,7 +142,7 @@ class CMASS1(PointMassElement):
         return CMASS1(eid, pid, [g1, g2], c1, c2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CMASS1 card from the OP2
 
@@ -389,7 +389,7 @@ class CMASS2(PointMassElement):
         return CMASS2(eid, mass, [g1, g2], c1, c2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CMASS2 card from the OP2
 
@@ -617,7 +617,7 @@ class CMASS3(PointMassElement):
         return CMASS3(eid, pid, [s1, s2], comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CMASS3 card from the OP2
 
@@ -1411,7 +1411,7 @@ class CONM2(PointMassElement):
         return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CONM2 card from the OP2
 

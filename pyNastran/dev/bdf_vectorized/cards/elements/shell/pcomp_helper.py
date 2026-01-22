@@ -669,7 +669,7 @@ class PCOMPi(CompositeShellProperty):
         self.mids = mids2
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         #data_in = [
             #pid, z0, nsm, sb, ft, Tref, ge,
             #is_symmetrical, Mid, T, Theta, Sout]

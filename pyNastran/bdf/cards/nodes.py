@@ -63,9 +63,9 @@ class SEQGP(BaseCard):
     def _init_from_empty(cls):
         nids = 1
         seqids = [2, 3]
-        return SEQGP(nids, seqids, comment='')
+        return SEQGP(nids, seqids)
 
-    def __init__(self, nids, seqids, comment=''):
+    def __init__(self, nids, seqids, comment: str=''):
         """
         Creates the SEQGP card
 
@@ -122,7 +122,7 @@ class SEQGP(BaseCard):
         self.seqids += seqgp.seqids
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a SEQGP card from the OP2
 
@@ -189,9 +189,9 @@ class XPoint(BaseCard):
     @classmethod
     def _init_from_empty(cls):
         nid = 1
-        return cls(nid, comment='')
+        return cls(nid)
 
-    def __init__(self, nid, comment):
+    def __init__(self, nid, comment: str=''):
         #Node.__init__(self)
         if comment:
             self.comment = comment
@@ -275,7 +275,7 @@ class SPOINT(XPoint):
     """defines the SPOINT class"""
     type = 'SPOINT'
 
-    def __init__(self, nid, comment=''):
+    def __init__(self, nid, comment: str=''):
         """
         Creates the SPOINT card
 
@@ -297,7 +297,7 @@ class EPOINT(XPoint):
     """defines the EPOINT class"""
     type = 'EPOINT'
 
-    def __init__(self, nid, comment=''):
+    def __init__(self, nid, comment: str=''):
         """
         Creates the EPOINT card
 
@@ -383,9 +383,9 @@ class XPoints(BaseCard):
     @classmethod
     def _init_from_empty(cls):
         ids = [1]
-        return cls(ids, comment='')
+        return cls(ids)
 
-    def __init__(self, ids, comment=''):
+    def __init__(self, ids, comment: str=''):
         #Node.__init__(self)
         if comment:
             self.comment = comment
@@ -413,7 +413,7 @@ class XPoints(BaseCard):
         return cls(points, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a SPOINT/EPOINT card from the OP2
 
@@ -510,7 +510,7 @@ class SPOINTs(XPoints):
     """
     type = 'SPOINT'
 
-    def __init__(self, ids, comment=''):
+    def __init__(self, ids, comment: str=''):
         """
         Creates the SPOINTs card that contains many SPOINTs
 
@@ -551,7 +551,7 @@ class EPOINTs(XPoints):
     """
     type = 'EPOINT'
 
-    def __init__(self, ids, comment=''):
+    def __init__(self, ids, comment: str=''):
         """
         Creates the EPOINTs card that contains many EPOINTs
 
@@ -595,7 +595,7 @@ class GRDSET(BaseCard):
         cd = 1
         ps = '34'
         seid = 0
-        return GRDSET(cp, cd, ps, seid, comment='')
+        return GRDSET(cp, cd, ps, seid)
 
     def __init__(self, cp: int, cd: int, ps: str, seid: int, comment: str=''):
         """
@@ -1586,7 +1586,7 @@ class POINT(BaseCard):
     def _init_from_empty(cls):
         nid = 1
         xyz = [1., 2., 3.]
-        return POINT(nid, xyz, cp=0, comment='')
+        return POINT(nid, xyz, cp=0)
 
     def __init__(self, nid: int,
                  xyz: np.ndarray | list[float],

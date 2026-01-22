@@ -138,7 +138,7 @@ class ABCQSet(Set):
         return cls(ids, components, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         ids = [data[0]]
         components = [data[1]]
         return cls(ids, components, comment=comment)
@@ -364,7 +364,7 @@ class ABQSet1(Set):
         return cls(components, ids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         components = str(data[0])
         thru_flag = data[1]
         if thru_flag == 0:
@@ -457,7 +457,7 @@ class SuperABQSet1(Set):
         return cls(seid, components, ids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         seid, components, nids = data
         #assert None not in components, 'Type=%s components=%s' % (cls.type, components)
         assert None not in nids, 'Type=%s nids=%s' % (cls.type, nids)

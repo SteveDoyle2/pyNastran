@@ -597,7 +597,7 @@ class CTRIA3(TriShell):
         assert len(set(self.nodes)) == 3, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CTRIA3 card from the OP2
 
@@ -929,7 +929,7 @@ class CPLSTx3(TriShell):
         assert len(set(self.nodes)) == 3, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))
 
     #@classmethod
-    #def add_op2_data(cls, data, comment=''):
+    #def add_op2_data(cls, data, comment: str=''):
         #eid = data[0]
         #pid = data[1]
         #nids = data[2:5]
@@ -1229,7 +1229,7 @@ class CTRIA6(TriShell):
                       tflag, T1, T2, T3, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CTRIA6 card from the OP2
 
@@ -1585,7 +1585,7 @@ class CTRIAR(TriShell):
                       tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CTRIAR card from the OP2
 
@@ -2094,7 +2094,7 @@ class CSHEAR(QuadShell):
         return CSHEAR(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CSHEAR card from the OP2
 
@@ -2466,7 +2466,7 @@ class CQUAD4(QuadShell):
                       tflag, T1, T2, T3, T4, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CQUAD4 card from the OP2
 
@@ -3458,7 +3458,7 @@ class CPLSTx6(TriShell):
         return 0.
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CPLSTN6 card from the OP2
 
@@ -3664,7 +3664,7 @@ class CPLSTx8(QuadShell):
         return cls(eid, pid, nids, theta=theta, comment=comment)
 
     #@classmethod
-    #def add_op2_data(cls, data, comment=''):
+    #def add_op2_data(cls, data, comment: str=''):
         #"""
         #Adds a CPLSTx8 card from the OP2
 
@@ -4002,7 +4002,7 @@ class CQUADR(QuadShell):
                       tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CQUADR card from the OP2
 
@@ -4205,25 +4205,25 @@ class CPLSTS3(TriShell):
     def Mass(self) -> float:
         return 0.
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #eid = data[0]
-        #pid = data[1]
-        #nids = data[2:5]
-
-        #theta = data[5]
-        #tflag = data[7]
-        #T1 = data[8]
-        #T2 = data[9]
-        #T3 = data[10]
-        #if T1 == -1.0:
-            #T1 = 1.0
-        #if T2 == -1.0:
-            #T2 = 1.0
-        #if T3 == -1.0:
-            #T3 = 1.0
-        #return CPLSTS3(eid, pid, nids, zoffset, theta,
-                       #tflag, T1, T2, T3, comment=comment)
+    # @classmethod
+    # def add_op2_data(cls, data, comment: str=''):
+    #     eid = data[0]
+    #     pid = data[1]
+    #     nids = data[2:5]
+    #
+    #     theta = data[5]
+    #     tflag = data[7]
+    #     T1 = data[8]
+    #     T2 = data[9]
+    #     T3 = data[10]
+    #     if T1 == -1.0:
+    #         T1 = 1.0
+    #     if T2 == -1.0:
+    #         T2 = 1.0
+    #     if T3 == -1.0:
+    #         T3 = 1.0
+    #     return CPLSTS3(eid, pid, nids, zoffset, theta,
+    #                    tflag, T1, T2, T3, comment=comment)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -4496,7 +4496,7 @@ class CQUAD(QuadShell):
         return CQUAD(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CQUAD card from the OP2
 
@@ -4758,7 +4758,7 @@ class CQUAD8(QuadShell):
                       comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CQUAD8 card from the OP2
 

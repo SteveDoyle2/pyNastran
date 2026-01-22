@@ -33,9 +33,9 @@ class CYAX(BaseCard):
     @classmethod
     def _init_from_empty(cls):
         nids = [1]
-        return CYAX(nids, comment='')
+        return CYAX(nids)
 
-    def __init__(self, nids, comment=''):
+    def __init__(self, nids, comment: str=''):
         if comment:
             self.comment = comment
         self.nids = nids
@@ -80,7 +80,7 @@ class CYJOIN(BaseCard):
         nids = [1, 2]
         return CYJOIN(side, coord, nids)
 
-    def __init__(self, side, coord, nids, comment=''):
+    def __init__(self, side, coord, nids, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment

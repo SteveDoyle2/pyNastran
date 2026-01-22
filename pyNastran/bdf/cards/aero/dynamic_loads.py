@@ -121,11 +121,11 @@ class AERO(Aero):
         velocity = 1.
         cref = 1.
         rho_ref = 1.
-        return AERO(velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0, comment='')
+        return AERO(velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0)
 
     def __init__(self, velocity: Optional[float], cref: float,
                  rho_ref: float, acsid: int=0,
-                 sym_xz: int=0, sym_xy: int=0, comment=''):
+                 sym_xz: int=0, sym_xy: int=0, comment: str=''):
         """
         Creates an AERO card
 
@@ -241,7 +241,7 @@ class AERO(Aero):
                     comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         acsid = data[0]
         velocity = data[1]
         cref = data[2]
@@ -348,7 +348,7 @@ class FLFACT(BaseCard):
     def _init_from_empty(cls):
         sid = 1
         factors = [1.]
-        return FLFACT(sid, factors, comment='')
+        return FLFACT(sid, factors)
 
     def __init__(self, sid: int, factors: np.ndarray,
                  comment: str=''):
@@ -452,7 +452,7 @@ class FLFACT(BaseCard):
         return FLFACT(sid, factors, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         sid = data[0]
         factors = data[1:]
         return FLFACT(sid, factors, comment=comment)
@@ -521,7 +521,7 @@ class FLUTTER(BaseCard):
         mach = 1
         reduced_freq_velocity = 1
         return FLUTTER(sid, method, density, mach, reduced_freq_velocity,
-                       imethod='L', nvalue=None, omax=None, epsilon=1.0e-3, comment='')
+                       imethod='L', nvalue=None, omax=None, epsilon=1.0e-3)
 
     def _get_field_helper(self, n):
         """
@@ -1009,7 +1009,7 @@ class FLUTTER(BaseCard):
         return headers
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         assert len(data) == 8, 'FLUTTER = %s' % data
         sid = data[0]
         method = data[1]
@@ -1178,7 +1178,7 @@ class GUST(BaseCard):
         dload = 1
         wg = 1.
         x0 = 0.
-        return GUST(sid, dload, wg, x0, V=None, comment='')
+        return GUST(sid, dload, wg, x0, V=None)
 
     def __init__(self, sid: int, dload: int, wg: float, x0: float,
                  V: Optional[float]=None, comment: str=''):
@@ -1238,7 +1238,7 @@ class GUST(BaseCard):
         return GUST(sid, dload, wg, x0, V=V, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         sid = data[0]
         dload = data[1]
         wg = data[2]
@@ -1296,9 +1296,9 @@ class MKAERO1(BaseCard):
     def _init_from_empty(cls):
         machs = [1.]
         reduced_freqs = [1.]
-        return MKAERO1(machs, reduced_freqs, comment='')
+        return MKAERO1(machs, reduced_freqs)
 
-    def __init__(self, machs, reduced_freqs, comment=''):
+    def __init__(self, machs, reduced_freqs, comment: str=''):
         """
         Creates an MKAERO1 card, which defines a set of mach and
         reduced frequencies.
@@ -1452,9 +1452,9 @@ class MKAERO2(BaseCard):
     def _init_from_empty(cls):
         machs = [1.]
         reduced_freqs = [1.]
-        return MKAERO2(machs, reduced_freqs, comment='')
+        return MKAERO2(machs, reduced_freqs)
 
-    def __init__(self, machs, reduced_freqs, comment=''):
+    def __init__(self, machs, reduced_freqs, comment: str=''):
         """
         Creates an MKAERO2 card, which defines a set of mach and
         reduced frequency pairs.
@@ -1488,7 +1488,7 @@ class MKAERO2(BaseCard):
             raise ValueError(msg)
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an MKAERO2 card from ``BDF.add_card(...)``
 

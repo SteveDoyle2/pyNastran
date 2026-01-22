@@ -97,7 +97,7 @@ class PDAMP(DamperProperty):
         return PDAMP(pid, b, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PDAMP card from the OP2
 
@@ -187,7 +187,7 @@ class PDAMP5(DamperProperty):
         return PDAMP5(pid, mid, b, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PDAMP5 card from the OP2
 
@@ -291,7 +291,7 @@ class PDAMPT(DamperProperty):
         return PDAMPT(pid, tbid, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PDAMPT card from the OP2
 
@@ -419,7 +419,7 @@ class PVISC(DamperProperty):
         return PVISC(pid, ce, cr, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PVISC card from the OP2
 

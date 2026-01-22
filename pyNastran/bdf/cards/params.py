@@ -1072,9 +1072,9 @@ class PARAM_MYSTRAN(BaseCard):
     def _init_from_empty(cls):
         key = 'POST'
         values = -1
-        return PARAM(key, values, comment='')
+        return PARAM(key, values)
 
-    def __init__(self, key, values, comment=''):
+    def __init__(self, key: str, values, comment: str=''):
         """
         Creates a PARAM card
 

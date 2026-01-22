@@ -1127,7 +1127,7 @@ class DDVAL(OptConstraint):
     def _init_from_empty(cls):
         oid = 1
         ddvals = [1, 2]
-        return DDVAL(oid, ddvals, comment='')
+        return DDVAL(oid, ddvals)
 
     def __init__(self, oid: int, ddvals: list[int], comment: str=''):
         OptConstraint.__init__(self)
@@ -1294,9 +1294,9 @@ class DOPTPRM(OptConstraint):
     @classmethod
     def _init_from_empty(cls):
         params = {'TCHECK' : -1}
-        return DOPTPRM(params, comment='')
+        return DOPTPRM(params)
 
-    def _finalize_hdf5(self, encoding):
+    def _finalize_hdf5(self, encoding: str):
         """hdf5 helper function"""
         keys, values = self.params
         self.params = {key : value if not np.isnan(value) else None
@@ -1395,7 +1395,7 @@ class DLINK(OptConstraint):
         independent_desvars = [2, 3]
         coeffs = [1., 2.]
         return DLINK(oid, dependent_desvar, independent_desvars, coeffs,
-                     c0=0., cmult=1., comment='')
+                     c0=0., cmult=1.)
 
     def __init__(self, oid: int,
                  dependent_desvar: int,
@@ -3424,7 +3424,7 @@ class DCONADD(OptConstraint):
         return DCONADD(oid, dconstrs, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a DCONADD card from the OP2
 

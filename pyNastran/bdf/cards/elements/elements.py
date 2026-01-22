@@ -700,7 +700,7 @@ class CGAP(Element):
         return CGAP(eid, pid, [ga, gb], x, g0, cid=cid, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CGAP card from the OP2
 
@@ -956,7 +956,7 @@ class CRAC2D(CrackElement):
         return CRAC2D(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CRAC2D card from the OP2
 
@@ -1054,7 +1054,7 @@ class CRAC3D(CrackElement):
         return CRAC3D(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CRAC3D card from the OP2
 

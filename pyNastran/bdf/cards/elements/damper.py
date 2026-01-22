@@ -131,7 +131,7 @@ class CDAMP1(LineDamper):
         return CDAMP1(eid, pid, nids, c1, c2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CDAMP1 card from the OP2
 
@@ -328,7 +328,7 @@ class CDAMP2(LineDamper):
         return CDAMP2(eid, b, nids, c1, c2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CDAMP2 card from the OP2
 
@@ -498,7 +498,7 @@ class CDAMP3(LineDamper):
         return CDAMP3(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CDAMP3 card from the OP2
 
@@ -647,7 +647,7 @@ class CDAMP4(LineDamper):
         return CDAMP4(eid, b, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CDAMP4 card from the OP2
 
@@ -804,7 +804,7 @@ class CDAMP5(LineDamper):
         return CDAMP5(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CDAMP5 card from the OP2
 
@@ -969,7 +969,7 @@ class CVISC(LineDamper):
         return CVISC(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CVISC card from the OP2
 

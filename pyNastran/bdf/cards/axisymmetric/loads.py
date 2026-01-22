@@ -119,7 +119,7 @@ class PLOADX1(BaseCard):
         return PLOADX1(sid, eid, pa, nids, pb=pb, theta=theta, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PLOADX1 card from the OP2
 

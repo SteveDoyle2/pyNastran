@@ -1035,7 +1035,7 @@ class Load0(BaseCard):
         return cls(sid, node, mag, xyz, cid=cid, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a FORCE/MOMENT card from the OP2
 
@@ -1244,7 +1244,7 @@ class Load1(BaseCard):
         return cls(sid, node, mag, g1, g2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a FORCE1/MOMENT1 card from the OP2
 
@@ -1468,7 +1468,7 @@ class Load2(BaseCard):
         return cls(sid, node, mag, g1, g2, g3, g4, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a FORCE2/MOMENT2 card from the OP2
 
@@ -1935,7 +1935,7 @@ class PLOAD(Load):
         return PLOAD(sid, pressure, nodes, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PLOAD card from the OP2
 
@@ -2118,7 +2118,7 @@ class PLOAD1(Load):
         return PLOAD1(sid, eid, load_type, scale, x1, p1, x2, p2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PLOAD1 card from the OP2
 
@@ -2301,7 +2301,7 @@ class PLOAD2(Load):
         return PLOAD2(sid, pressure, eids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PLOAD2 card from the OP2
 
@@ -2619,7 +2619,7 @@ class PLOAD4(Load):
                       surf_or_line, line_load_dir, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PLOAD4 card from the OP2
 

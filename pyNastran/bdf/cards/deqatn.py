@@ -197,7 +197,7 @@ class DEQATN(BaseCard):  # needs work...
     type = 'DEQATN'
     _properties = ['dtable']
 
-    def __init__(self, equation_id: int, eqs: list[str], comment=''):
+    def __init__(self, equation_id: int, eqs: list[str], comment: str=''):
         """
         Creates a DEQATN card
 
@@ -242,7 +242,7 @@ class DEQATN(BaseCard):  # needs work...
     def _init_from_empty(cls):
         equation_id = 1
         eqs = []
-        return DEQATN(equation_id, eqs, comment='')
+        return DEQATN(equation_id, eqs)
 
     @classmethod
     def add_card(cls, card: list[str], comment: str=''):

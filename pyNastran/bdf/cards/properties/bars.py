@@ -1356,7 +1356,7 @@ class PBAR(LineProperty):
                     f1, f2, k1, k2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         pid = data[0]
         mid = data[1]
         A = data[2]
@@ -1807,7 +1807,7 @@ class PBARL(LineProperty):
         return PBARL(pid, mid, Type, dim, group=group, nsm=nsm, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         pid = data[0]
         mid = data[1]
         group = data[2].strip()
@@ -2296,20 +2296,20 @@ class PBRSECT(LineProperty):
         return PBRSECT(pid, mid, form, options, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
-        #pid = data[0]
-        #mid = data[1]
-        #group = data[2].strip()
-        #beam_type = data[3].strip()
-        #dim = list(data[4:-1])
-        #nsm = data[-1]
-        #print("group = %r" % self.group)
-        #print("beam_type  = %r" % self.beam_type)
-        #print("dim = ",self.dim)
-        #print(str(self))
-        #print("*PBARL = ",data)
+    def add_op2_data(cls, data, comment: str=''):
+        # pid = data[0]
+        # mid = data[1]
+        # group = data[2].strip()
+        # beam_type = data[3].strip()
+        # dim = list(data[4:-1])
+        # nsm = data[-1]
+        # print("group = %r" % self.group)
+        # print("beam_type  = %r" % self.beam_type)
+        # print("dim = ",self.dim)
+        # print(str(self))
+        # print("*PBARL = ",data)
         raise NotImplementedError('not finished...')
-        #return PBRSECT(pid, mid, group, beam_type, dim, nsm, comment=comment)
+        # return PBRSECT(pid, mid, group, beam_type, dim, nsm, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         """

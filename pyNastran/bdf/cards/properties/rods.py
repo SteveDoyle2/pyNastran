@@ -120,7 +120,7 @@ class PROD(Property):
         return PROD(pid, mid, A, j, c, nsm, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PROD card from the OP2
 
@@ -346,7 +346,7 @@ class PTUBE(Property):
         return PTUBE(pid, mid, OD1, t, nsm, OD2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PTUBE card from the OP2
 

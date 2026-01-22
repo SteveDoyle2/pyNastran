@@ -105,7 +105,7 @@ class NSMx(Property):
         return cls(sid, nsm_type, pid_eid, value, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an NSM/NSM1 card from the OP2
 
@@ -301,12 +301,13 @@ class NSM1(NSM1x):
         nsm_type = 'PSHELL'
         pid_eid = 42
         value = 1.
-        return NSM1(sid, nsm_type, value, pid_eid, comment='')
+        return NSM1(sid, nsm_type, value, pid_eid)
 
-    def __init__(self, sid, nsm_type, value, pid_eid, comment=''):
+    def __init__(self, sid: int, nsm_type: str, value: float, pid_eid: int,
+                 comment: str=''):
         """See ``NSM1x``"""
         assert isinstance(value, float), f'NSM1; value={value!r} and must be a float'
-        NSM1x.__init__(self, sid, nsm_type, value, pid_eid, comment='')
+        NSM1x.__init__(self, sid, nsm_type, value, pid_eid, comment)
 
 
 class NSM(NSMx):
@@ -328,11 +329,12 @@ class NSM(NSMx):
         nsm_type = 'PSHELL'
         pid_eid = 42
         value = 1.
-        return NSM(sid, nsm_type, pid_eid, value, comment='')
+        return NSM(sid, nsm_type, pid_eid, value)
 
-    def __init__(self, sid, nsm_type, pid_eid, value, comment=''):
+    def __init__(self, sid: int, nsm_type: str, pid_eid: int, value: float,
+                 comment: str=''):
         """See ``NSMx``"""
-        NSMx.__init__(self, sid, nsm_type, pid_eid, value, comment='')
+        NSMx.__init__(self, sid, nsm_type, pid_eid, value, comment=comment)
 
 
 class NSML(NSMx):
@@ -687,7 +689,7 @@ class NSMADD(BaseCard):
         return NSMADD(sid, sets, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds an NSMADD card from the OP2
 
@@ -869,7 +871,7 @@ class PMASS(Property):
         return PMASS(pid, mass, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PMASS card from the OP2
 

@@ -359,7 +359,7 @@ class PBUSH(BushingProperty):
         return ki
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PBUSH card from the OP2
 
@@ -720,11 +720,11 @@ class PBUSH1D(BushingProperty):
         return PBUSH1D(pid, k=k, c=c, m=m, sa=sa, se=se,
                        optional_vars=optional_vars, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #pid = data[0]
-        #b = data[1]
-        #raise NotImplementedError('PBUSH1D data...')
+    # @classmethod
+    # def add_op2_data(cls, data, comment: str=''):
+    #     pid = data[0]
+    #     b = data[1]
+    #     raise NotImplementedError('PBUSH1D data...')
 
     def _verify(self, xref):
         pid = self.Pid()
@@ -1379,7 +1379,7 @@ class PBUSH_OPTISTRUCT(BushingProperty):
         return ki
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PBUSH card from the OP2
 

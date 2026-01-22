@@ -93,7 +93,7 @@ class BFRIC(BaseCard):
         mu1 = 0.2
         return BFRIC(friction_id, mu1)
 
-    def __init__(self, friction_id: int, mu1: float, fstiff=None, comment=''):
+    def __init__(self, friction_id: int, mu1: float, fstiff=None, comment: str=''):
         """
         Creates a BFRIC card, which defines a frictional contact.
 
@@ -121,7 +121,7 @@ class BFRIC(BaseCard):
         fstiff = double_or_blank(card, 2, 'fstiff')
         #
         mu1 = double(card, 4, 'mu1')
-        return BFRIC(friction_id, mu1, fstiff=fstiff, comment='')
+        return BFRIC(friction_id, mu1, fstiff=fstiff, comment=comment)
 
     def raw_fields(self):
         list_fields = [
@@ -153,9 +153,9 @@ class BLSEG(BaseCard):
     def _init_from_empty(cls):
         line_id = 1
         nodes = [1]
-        return BLSEG(line_id, nodes, comment='')
+        return BLSEG(line_id, nodes)
 
-    def __init__(self, line_id, nodes, comment=''):
+    def __init__(self, line_id, nodes, comment: str=''):
         if comment:
             self.comment = comment
 
@@ -251,7 +251,7 @@ class BCBODY(BaseCard):
         idispl = 0
         word_dict = {}
         return BCBODY(contact_id, bsid, word_dict,
-                      dim=dim, behav=behav, istype=istype, fric=fric, idispl=idispl, comment='')
+                      dim=dim, behav=behav, istype=istype, fric=fric, idispl=idispl)
 
     def __init__(self, contact_id: int, bsid: int,
                  word_dict: dict[str, Any],
@@ -607,9 +607,9 @@ class BCONP(BaseCard):
         friction_id = 5
         ptype = 'cat'
         cid = 0
-        return BCONP(contact_id, slave, master, sfac, friction_id, ptype, cid, comment='')
+        return BCONP(contact_id, slave, master, sfac, friction_id, ptype, cid)
 
-    def __init__(self, contact_id, slave, master, sfac, friction_id, ptype, cid, comment=''):
+    def __init__(self, contact_id, slave, master, sfac, friction_id, ptype, cid, comment: str=''):
         if comment:
             self.comment = comment
 
@@ -729,9 +729,9 @@ class BSURF(BaseCard):
     def _init_from_empty(cls):
         sid = 1
         eids = [1]
-        return BSURF(sid, eids, comment='')
+        return BSURF(sid, eids)
 
-    def __init__(self, sid, eids, comment=''):
+    def __init__(self, sid, eids, comment: str=''):
         if comment:
             self.comment = comment
         #: Set identification number. (Unique Integer > 0)
@@ -798,7 +798,7 @@ class BSURFS(BaseCard):
         g1s = [1]
         g2s = [1]
         g3s = [1]
-        return BSURFS(bsurfs_id, eids, g1s, g2s, g3s, comment='')
+        return BSURFS(bsurfs_id, eids, g1s, g2s, g3s)
 
     def __init__(self, bsurfs_id: int,
                  eids: list[int],
@@ -893,10 +893,10 @@ class BCTSET(BaseCard):
         frictions = [0.01]
         min_distances = [0.1]
         max_distances = [1.]
-        return BCTSET(csid, sids, tids, frictions, min_distances, max_distances, comment='', sol=101)
+        return BCTSET(csid, sids, tids, frictions, min_distances, max_distances, sol=101)
 
     def __init__(self, csid, sids, tids, frictions, min_distances, max_distances,
-                 comment='', sol=101):
+                 comment: str='', sol: int=101):
         if comment:
             self.comment = comment
         #: CSID Contact set identification number. (Integer > 0)
@@ -918,7 +918,7 @@ class BCTSET(BaseCard):
         self.max_distances = max_distances
 
     @classmethod
-    def add_card(cls, card, comment='', sol=101):
+    def add_card(cls, card, comment: str='', sol: int=101):
         csid = integer(card, 1, 'csid')
         sids = []
         tids = []
@@ -976,7 +976,7 @@ class BCRPARA(BaseCard):
     @classmethod
     def _init_from_empty(cls):
         crid = 1
-        return BCRPARA(crid, offset=None, surf='TOP', Type='FLEX', grid_point=0, comment='')
+        return BCRPARA(crid, offset=None, surf='TOP', Type='FLEX', grid_point=0)
 
     def __init__(self, crid: int, offset: Optional[float]=None,
                  surf: str='TOP', Type: str='FLEX', grid_point: int=0,
@@ -1084,7 +1084,7 @@ class BCPARA(BaseCard):
     def _init_from_empty(cls):
         csid = 1
         params = {'NBODIES' : 4}
-        return BCTPARM(csid, params, comment='')
+        return BCTPARM(csid, params)
 
     def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
@@ -1395,7 +1395,7 @@ class BCTPARM(BaseCard):
     def _init_from_empty(cls):
         csid = 1
         params = {'CSTIFF' : 1}
-        return BCTPARM(csid, params, comment='')
+        return BCTPARM(csid, params)
 
     def _finalize_hdf5(self, encoding: str):
         """hdf5 helper function"""
@@ -1552,7 +1552,7 @@ class BCTPARA(BaseCard):
     def _init_from_empty(cls):
         csid = 1
         params = {'CSTIFF' : 1}
-        return BCTPARA(csid, params, comment='')
+        return BCTPARA(csid, params)
 
     def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
@@ -1701,9 +1701,9 @@ class BCTADD(BaseCard):
     def _init_from_empty(cls):
         csid = 1
         contact_sets = [1, 2]
-        return BCTADD(csid, contact_sets, comment='')
+        return BCTADD(csid, contact_sets)
 
-    def __init__(self, csid, contact_sets, comment=''):
+    def __init__(self, csid, contact_sets, comment: str=''):
         if comment:
             self.comment = comment
         #: Contact set identification number. (Integer > 0)
@@ -1765,9 +1765,9 @@ class BGADD(BaseCard):
     def _init_from_empty(cls):
         glue_id = 1
         contact_sets = [1, 2]
-        return BGADD(glue_id, contact_sets, comment='')
+        return BGADD(glue_id, contact_sets)
 
-    def __init__(self, glue_id, contact_sets, comment=''):
+    def __init__(self, glue_id, contact_sets, comment: str=''):
         if comment:
             self.comment = comment
         #: Glue identification number. (Integer > 0)
@@ -1831,7 +1831,7 @@ class BGSET(BaseCard):
         tids = [1]
         sdists = [0.01]
         exts = [1.]
-        return BGSET(glue_id, sids, tids, sdists, exts, comment='', sol=101)
+        return BGSET(glue_id, sids, tids, sdists, exts, sol=101)
 
     def __init__(self, glue_id: int,
                  sids: list[int],

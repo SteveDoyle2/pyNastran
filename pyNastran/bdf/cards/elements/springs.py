@@ -130,7 +130,7 @@ class CELAS1(SpringElement):
         return CELAS1(eid, pid, nids, c1, c2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CELAS1 card from the OP2
 
@@ -344,7 +344,7 @@ class CELAS2(SpringElement):
         return CELAS2(eid, k, nids, c1, c2, ge, s, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CELAS2 card from the OP2
 
@@ -533,7 +533,7 @@ class CELAS3(SpringElement):
         return CELAS3(eid, pid, [s1, s2], comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CELAS3 card from the OP2
 
@@ -713,7 +713,7 @@ class CELAS4(SpringElement):
         return CELAS4(eid, k, [s1, s2], comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CELAS4 card from the OP2
 

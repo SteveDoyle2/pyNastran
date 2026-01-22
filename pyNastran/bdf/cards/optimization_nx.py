@@ -64,7 +64,7 @@ class DMNCON(OptConstraint):
     #@classmethod
     #def _init_from_empty(cls):
         #rtype = 'DISP'
-        #return DSCREEN(rtype, trs=-0.5, nstr=20, comment='')
+        #return DSCREEN(rtype, trs=-0.5, nstr=20)
 
     def __init__(self, constraint_id: int, constraint_type: str,
                  xyz=None, normal=None,  # SYMP, ADDM
@@ -323,7 +323,7 @@ class GROUP(OptConstraint):
     #@classmethod
     #def _init_from_empty(cls):
         #rtype = 'DISP'
-        #return DSCREEN(rtype, trs=-0.5, nstr=20, comment='')
+        #return DSCREEN(rtype, trs=-0.5, nstr=20)
 
     def __init__(self, group_id: int,
                  nodes=None, elements=None, properties=None,

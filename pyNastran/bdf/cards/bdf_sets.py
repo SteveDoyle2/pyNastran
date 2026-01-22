@@ -218,7 +218,7 @@ class SuperABCQSet(Set):
         if isinstance(self.components, np.ndarray):
             self.components = self.components.tolist()
 
-    def __init__(self, seid, ids, components, comment=''):
+    def __init__(self, seid, ids, components, comment: str=''):
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -308,9 +308,9 @@ class ASET(ABCQSet):
     def _init_from_empty(cls):
         ids = [1, 2]
         components = ['123', '456']
-        return ASET(ids, components, comment='')
+        return ASET(ids, components)
 
-    def __init__(self, ids, components, comment=''):
+    def __init__(self, ids, components, comment: str=''):
         """
         Creates an ASET card, which defines the degree of freedoms that
         will be retained during an ASET modal reduction.
@@ -350,9 +350,9 @@ class BSET(ABCQSet):
     def _init_from_empty(cls):
         ids = [1, 2]
         components = ['123', '456']
-        return BSET(ids, components, comment='')
+        return BSET(ids, components)
 
-    def __init__(self, ids, components, comment=''):
+    def __init__(self, ids, components, comment: str=''):
         """
         Creates an BSET card, which defines the degree of freedoms that
         will be fixed during a generalized dynamic reduction or component
@@ -394,9 +394,9 @@ class CSET(ABCQSet):
     def _init_from_empty(cls):
         ids = [1, 2]
         components = ['123', '456']
-        return CSET(ids, components, comment='')
+        return CSET(ids, components)
 
-    def __init__(self, ids, components, comment=''):
+    def __init__(self, ids, components, comment: str=''):
         """
         Creates an CSET card, which defines the degree of freedoms that
         will be free during a generalized dynamic reduction or component
@@ -437,9 +437,9 @@ class QSET(ABCQSet):
     def _init_from_empty(cls):
         ids = [1, 2]
         components = ['123', '456']
-        return QSET(ids, components, comment='')
+        return QSET(ids, components)
 
-    def __init__(self, ids, components, comment=''):
+    def __init__(self, ids, components, commen: str=''):
         """
         Creates a QSET card, which defines generalized degrees of
         freedom (q-set) to be used for dynamic reduction or component
@@ -481,7 +481,7 @@ class ABCQSet1(Set):
         if isinstance(self.ids, np.ndarray):
             self.ids = self.ids.tolist()
 
-    def __init__(self, ids, components, comment=''):
+    def __init__(self, ids, components, comment: str=''):
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -512,7 +512,7 @@ class ABCQSet1(Set):
         return cls(ids, components, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """[123456      0      1    101]"""
         components = str(data[0])
         thru_flag = data[1]
@@ -591,7 +591,7 @@ class SuperABCQSet1(Set):
         if isinstance(self.ids, np.ndarray):
             self.ids = self.ids.tolist()
 
-    def __init__(self, seid, ids, components, comment=''):
+    def __init__(self, seid, ids, components, comment: str=''):
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -631,7 +631,7 @@ class SuperABCQSet1(Set):
         return cls(seid, ids, components, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         seid, components, nids = data
         #assert None not in components, 'Type=%s components=%s' % (cls.type, components)
         assert None not in nids, 'Type=%s nids=%s' % (cls.type, nids)
@@ -695,9 +695,9 @@ class ASET1(ABCQSet1):
     def _init_from_empty(cls):
         ids = [1, 2]
         components = '123'
-        return ASET1(ids, components, comment='')
+        return ASET1(ids, components)
 
-    def __init__(self, ids, components, comment=''):
+    def __init__(self, ids, components, comment: str=''):
         """
         Creates an ASET1 card, which defines the degree of freedoms that
         will be retained during an ASET modal reduction.
@@ -735,9 +735,9 @@ class OMIT(ABCQSet):
     def _init_from_empty(cls):
         ids = [1, 2]
         components = ['123', '456']
-        return BSET(ids, components, comment='')
+        return BSET(ids, components)
 
-    def __init__(self, ids, components, comment=''):
+    def __init__(self, ids, components, comment: str=''):
         """
         Creates an BSET card, which defines the degree of freedoms that
         will be fixed during a generalized dynamic reduction or component
@@ -779,9 +779,9 @@ class OMIT1(ABCQSet1):
     def _init_from_empty(cls):
         ids = [1, 2]
         components = '123'
-        return OMIT1(ids, components, comment='')
+        return OMIT1(ids, components)
 
-    def __init__(self, ids, components, comment=''):
+    def __init__(self, ids, components, comment: str=''):
         """
         Creates an OMIT1 card, which defines the degree of freedoms that
         will be excluded (o-set) from the analysis set (a-set).
@@ -822,9 +822,9 @@ class BSET1(ABCQSet1):
     def _init_from_empty(cls):
         ids = [1, 2]
         components = '123'
-        return BSET1(ids, components, comment='')
+        return BSET1(ids, components)
 
-    def __init__(self, ids, components, comment=''):
+    def __init__(self, ids, components, comment: str=''):
         """
         Creates an BSET1 card, which defines the degree of freedoms that
         will be fixed during a generalized dynamic reduction or component
@@ -868,9 +868,9 @@ class CSET1(ABCQSet1):
     def _init_from_empty(cls):
         ids = [1, 2]
         components = '123'
-        return CSET1(ids, components, comment='')
+        return CSET1(ids, components)
 
-    def __init__(self, ids, components, comment=''):
+    def __init__(self, ids, components, comment: str=''):
         """
         Creates an CSET1 card, which defines the degree of freedoms that
         will be free during a generalized dynamic reduction or component
@@ -967,9 +967,9 @@ class QSET1(ABCQSet1):
     def _init_from_empty(cls):
         ids = [1, 2]
         components = '123'
-        return QSET1(ids, components, comment='')
+        return QSET1(ids, components)
 
-    def __init__(self, ids, components, comment=''):
+    def __init__(self, ids, components, comment: str=''):
         """
         Creates a QSET1 card, which defines generalized degrees of
         freedom (q-set) to be used for dynamic reduction or component
@@ -1015,9 +1015,9 @@ class SET1(Set):
     def _init_from_empty(cls):
         sid = 1
         ids = [1]
-        return SET1(sid, ids, is_skin=False, comment='')
+        return SET1(sid, ids, is_skin=False)
 
-    def __init__(self, sid, ids, is_skin=False, comment=''):
+    def __init__(self, sid, ids, is_skin=False, comment: str=''):
         """
         Creates a SET1 card, which defines a list of structural grid
         points or element identification numbers.
@@ -1251,7 +1251,7 @@ class SET2(Set):
         sp2 = 1.
         ch1 = 0.
         ch2 = 1.
-        return SET2(sid, macro, sp1, sp2, ch1, ch2, comment='')
+        return SET2(sid, macro, sp1, sp2, ch1, ch2)
 
     def __init__(self, sid: int, macro: int,
                  sp1: float, sp2: float,
@@ -1417,7 +1417,7 @@ class SET3(Set):
         sid = 1
         desc = 'ELEM'
         ids = [1]
-        return SET3(sid, desc, ids, comment='')
+        return SET3(sid, desc, ids)
 
     def __init__(self, sid: int, desc: str, ids: list[int], comment: str=''):
         Set.__init__(self)
@@ -1585,9 +1585,9 @@ class SESET(SetSuper):
     def _init_from_empty(cls):
         seid = 1
         ids = [1, 2]
-        return SESET(seid, ids, comment='')
+        return SESET(seid, ids)
 
-    def __init__(self, seid, ids, comment=''):
+    def __init__(self, seid, ids, comment: str=''):
         SetSuper.__init__(self)
         if comment:
             self.comment = comment
@@ -1668,9 +1668,9 @@ class SEBSET(SuperABCQSet):
         seid = 1
         ids = [1, 2]
         components = ['123', '456']
-        return SEBSET(seid, ids, components, comment='')
+        return SEBSET(seid, ids, components)
 
-    def __init__(self, seid, ids, components, comment=''):
+    def __init__(self, seid, ids, components, comment: str=''):
         SuperABCQSet.__init__(self, seid, ids, components, comment)
 
 class SEBSET1(SuperABCQSet1):
@@ -1698,9 +1698,9 @@ class SEBSET1(SuperABCQSet1):
         seid = 1
         ids = [1, 2]
         components = '123'
-        return SEBSET1(seid, ids, components, comment='')
+        return SEBSET1(seid, ids, components)
 
-    def __init__(self, seid, ids, components, comment=''):
+    def __init__(self, seid, ids, components, comment: str=''):
         SuperABCQSet1.__init__(self, seid, ids, components, comment)
 
 
@@ -1713,9 +1713,9 @@ class SECSET(SuperABCQSet):
         seid = 1
         ids = [1, 2]
         components = ['123', '456']
-        return SECSET(seid, ids, components, comment='')
+        return SECSET(seid, ids, components)
 
-    def __init__(self, seid, ids, components, comment=''):
+    def __init__(self, seid, ids, components, comment: str=''):
         SuperABCQSet.__init__(self, seid, ids, components, comment)
 
 class SECSET1(SuperABCQSet1):
@@ -1741,9 +1741,9 @@ class SECSET1(SuperABCQSet1):
         seid = 1
         ids = [1, 2]
         components = '123'
-        return SECSET1(seid, ids, components, comment='')
+        return SECSET1(seid, ids, components)
 
-    def __init__(self, seid, ids, components, comment=''):
+    def __init__(self, seid, ids, components, comment: str=''):
         SuperABCQSet1.__init__(self, seid, ids, components, comment)
 
 
@@ -1756,9 +1756,9 @@ class SEQSET(SuperABCQSet):
         seid = 1
         ids = [1, 2]
         components = ['123', '456']
-        return SEQSET(seid, ids, components, comment='')
+        return SEQSET(seid, ids, components)
 
-    def __init__(self, seid, ids, components, comment=''):
+    def __init__(self, seid, ids, components, comment: str=''):
         SuperABCQSet.__init__(self, seid, ids, components, comment)
 
 class SEQSET1(SuperABCQSet1):
@@ -1770,9 +1770,9 @@ class SEQSET1(SuperABCQSet1):
         seid = 1
         ids = [1, 2]
         components = '123'
-        return SEQSET1(seid, ids, components, comment='')
+        return SEQSET1(seid, ids, components)
 
-    def __init__(self, seid, ids, components, comment=''):
+    def __init__(self, seid, ids, components, comment: str=''):
         SuperABCQSet1.__init__(self, seid, ids, components, comment)
 
 
@@ -1785,7 +1785,7 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
     """
     type = 'SEQSEP'
 
-    def __init__(self, ssid, psid, ids, comment=''):
+    def __init__(self, ssid, psid, ids, comment: str=''):
         SetSuper.__init__(self)
         if comment:
             self.comment = comment
@@ -1848,14 +1848,14 @@ class RADSET(ABCQSet1):
     @classmethod
     def _init_from_empty(cls):
         cavities = [1, 2]
-        return RADSET(cavities, comment='')
+        return RADSET(cavities)
 
     def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         if isinstance(self.cavities, np.ndarray):
             self.cavities = self.cavities.tolist()
 
-    def __init__(self, cavities, comment=''):
+    def __init__(self, cavities, comment: str=''):
         """
         Creates a RADSET card
 
@@ -1943,9 +1943,9 @@ class USET(Set):
         #name = 'SNAME'
         ids = [1, 2]
         components = ['123', '456']
-        return QSET(ids, components, comment='')
+        return QSET(ids, components)
 
-    def __init__(self, name, ids, components, comment=''):
+    def __init__(self, name, ids, components, comment: str=''):
         """
         Creates a USET card, which defines a degrees-of-freedom set.
 
@@ -2087,9 +2087,9 @@ class USET1(ABCQSet1):
         name = 'SNAME'
         ids = [1, 2]
         components = '123'
-        return USET1(name, ids, components, comment='')
+        return USET1(name, ids, components)
 
-    def __init__(self, name, ids, components, comment=''):
+    def __init__(self, name, ids, components, comment: str=''):
         """
         Creates a USET1 card, which defines a degrees-of-freedom set.
 
@@ -2147,7 +2147,7 @@ class USET1(ABCQSet1):
         return USET1(name, ids, components, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         tested by gspc1.op2
 

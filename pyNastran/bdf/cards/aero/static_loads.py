@@ -51,7 +51,7 @@ class AEROS(Aero):
         cref = 1.
         bref = 1.
         sref = 1.
-        return AEROS(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment='')
+        return AEROS(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0)
 
     def __init__(self, cref: float, bref: float, sref: float,
                  acsid: int=0, rcsid: int=0,
@@ -212,7 +212,7 @@ class AEROS(Aero):
                      comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         acsid = data[0]
         rcsid = data[1]
         cref = data[2]
@@ -296,7 +296,7 @@ class AESTAT(BaseCard):
 
     @classmethod
     def _init_from_empty(cls):
-        return AESTAT(1, 'name', comment='')
+        return AESTAT(1, 'name')
 
     def __init__(self, aestat_id: int, label: str, comment: str=''):
         """
@@ -319,7 +319,7 @@ class AESTAT(BaseCard):
         self.label = label
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AESTAT card from ``BDF.add_card(...)``
 
@@ -337,7 +337,7 @@ class AESTAT(BaseCard):
         return AESTAT(aestat_id, label, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         aestat_id = data[0]
         label = data[1]
         assert len(data) == 2, 'data = %s' % data
@@ -392,10 +392,10 @@ class CSSCHD(Aero):
         sid = 1
         aesurf_id = 0
         lschd = 2
-        return CSSCHD(sid, aesurf_id, lschd, lalpha=None, lmach=None, comment='')
+        return CSSCHD(sid, aesurf_id, lschd, lalpha=None, lmach=None)
 
     def __init__(self, sid: int, aesurf_id: int, lschd: int,
-                 lalpha=None, lmach=None, comment=''):
+                 lalpha=None, lmach=None, comment: str=''):
         """
         Creates an CSSCHD card, which defines a specified control surface
         deflection as a function of Mach and alpha (used in SOL 144/146).
@@ -575,7 +575,7 @@ class DIVERG(BaseCard):
         sid = 1
         nroots = 10
         machs = [0.5, 0.75]
-        return DIVERG(sid, nroots, machs, comment='')
+        return DIVERG(sid, nroots, machs)
 
     def __init__(self, sid: int, nroots: int, machs: list[float], comment: str=''):
         """
@@ -720,7 +720,7 @@ class TRIM(BaseCard):
         q = 300.
         labels = ['ALPHA']
         uxs = [1.0]
-        return TRIM(sid, mach, q, labels, uxs, aeqr=1.0, comment='')
+        return TRIM(sid, mach, q, labels, uxs, aeqr=1.0)
 
     def __init__(self, sid: int, mach: float, q: float,
                  labels: list[str], uxs: list[float], aeqr: float=1.0,
@@ -1023,7 +1023,7 @@ class TRIM(BaseCard):
         pass
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a TRIM card from ``BDF.add_card(...)``
 
@@ -1124,9 +1124,9 @@ class TRIM2(TRIM):
         q = 300.
         labels = ['ALPHA']
         uxs = [1.0]
-        return TRIM2(sid, mach, q, labels, uxs, aeqr=1.0, comment='')
+        return TRIM2(sid, mach, q, labels, uxs, aeqr=1.0)
 
-    def __init__(self, sid, mach, q, labels, uxs, aeqr=1.0, comment=''):
+    def __init__(self, sid, mach, q, labels, uxs, aeqr=1.0, comment: str=''):
         TRIM.__init__(self, sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
 
     @classmethod
@@ -1223,7 +1223,7 @@ class UXVEC(BaseCard):
         sid = 1
         labels = ['ALPHA']
         uxs = [1.0]
-        return UXVEC(sid, labels, uxs, comment='')
+        return UXVEC(sid, labels, uxs)
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
