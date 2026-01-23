@@ -1,0 +1,77 @@
+$NASTRAN f04=6
+$DIAG 8,15,56
+SOL 111
+$compile xrandom,nolist,noref$
+$include xrandom.dmap $
+CEND
+ECHO = NONE
+SUBCASE 1
+   METHOD = 10
+   FREQUENCY=100
+   SPC = 1
+   DLOAD = 500
+$   STRAIN(SORT1,RALL) = ALL
+   STRESS(SORT2,RALL) = ALL
+   FORCE(SORT1,IMAG) = ALL
+   GPRSORT = ALL
+   RANDOM = 100
+$
+BEGIN BULK
+PARAM,SRCOMPS,YES
+PARAM,NOCOMPS,1
+$11111112222222233333333444444445555555566666666777777778888888899999999
+MAT1           1 210000.            0.33 7.89E-6                         
+MAT2           3 200000.   5000.         120000.                 7.89E-6       
+MAT8           4 3.+7      7.5+5     .25 3.75+5  4.+5    4.+5    .1
+                                   1.5+3 1.+3    6.+1    1.7+2   1.+2  
+PSHELL         1       4     0.1       4               3     
+PCOMP          4                   2500.                                +       
++              4   0.033     25.     YES       4   0.033     10.     YES+       
++              4   0.034     15.     YES                                
+PCOMPG         5                   2500.                                +       
++             11       4   0.033     25.     YES                        +       
++             12       4   0.033     10.     YES                        +       
++             13       4   0.034     15.     YES                        
+$
+GRID           1             10.     0.0     0.0        
+GRID           2             10.      2.     0.0        
+GRID           3              8.      2.     0.0        
+GRID           4              8.     0.0     0.0        
+GRID           5              6.      2.     0.0        
+GRID           6              6.     0.0     0.0        
+GRID           7              4.      2.     0.0        
+GRID           8              4.     0.0     0.0        
+GRID           9              2.      2.     0.0        
+GRID          10              2.     0.0     0.0        
+GRID          11             0.0      2.     0.0        
+GRID          12             0.0     0.0     0.0        
+$
+CQUADR         3       5       6       5       7       8
+CQUADR         4       4       8       7       9      10
+CQUADR         5       1      10       9      11      12
+CTRIAR         8       4      10       9      12
+CTRIAR         9       5       9      11      12
+CTRIA3         1       4       2       3       4
+CTRIA3         2       5       4       3       5
+CTRIA6         6       4       4       5       6
+CTRIA6         7       5       2       4       1
+$
+SPC1           1  123456      11      12
+$
+EIGRL, 10, 10.,,4
+RLOAD2,500,600, , ,310,320
+DAREA, 600, 1, 1, 30.
+TABLED1,310,
+,0.,1.,100.,10.,ENDT
+TABLED1,320,
+,0.,1.,100.,150.,ENDT
+FREQ1,100,20.,20.,2
+$
+RANDPS, 100, 1, 1, 1., 0., 111
+TABRND1, 111,LOG,LOG 
++, 20., 0.1, 30., 1., 100., 1., 500., .1, 
++, 1000., .1, ENDT
+Randt1, 100,  5, 0., 0.10
+PARAM,POST,-1
+ENDDATA
+ENDDATA
