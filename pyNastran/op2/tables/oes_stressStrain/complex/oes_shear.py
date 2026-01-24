@@ -194,8 +194,8 @@ class ComplexShearArray(OES_Object):
                     for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
-                        (tx1, ty1, unused_tz1, unused_rx1, unused_ry1, unused_rz1) = t1
-                        (tx2, ty2, unused_tz2, unused_rx2, unused_ry2, unused_rz2) = t2
+                        (tx1, ty1) = t1
+                        (tx2, ty2) = t2
                         d = t1 - t2
                         if not np.allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
                                            [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
