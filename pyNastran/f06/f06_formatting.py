@@ -92,7 +92,41 @@ def write_floats_13e_long(vals: list[float]) -> list[str]:
     return vals2
 
 
-def write_imag_floats_13e(vals: list[float], is_mag_phase: bool) -> list[str]:
+def write_imag_floats_12e(vals: list[float],
+                          is_mag_phase: bool) -> list[str]:
+    vals2 = []
+
+    if is_mag_phase:
+        for v in vals:
+            v_str = '%12.5E' % abs(v)
+            if v_str in (' 0.00000E+00', '-0.00000E+00'):
+                v_str = ' 0.0'
+            vals2.append(v_str)
+
+        # phase
+        for v in vals:
+            v2 = np.angle(v, deg=True)
+            v_str = '%-12.4f' % v2 if v2 >= 0.0 else '%-13.4f' % (v2 + 360.)
+            if v_str == '0.0000      ':
+                v_str = '   0.0'
+            vals2.append(v_str)
+    else:
+        for v in vals:
+            v_str = '%12.5E' % v.real
+            if v_str in (' 0.00000E+00', '-0.00000E+00'):
+                v_str = ' 0.0'
+            vals2.append(v_str)
+
+        for v in vals:
+            v_str = '%12.5E' % v.imag
+            if v_str in (' 0.00000E+00', '-0.00000E+00'):
+                v_str = ' 0.0'
+            vals2.append(v_str)
+    return vals2
+
+
+def write_imag_floats_13e(vals: list[float],
+                          is_mag_phase: bool) -> list[str]:
     vals2 = []
 
     if is_mag_phase:

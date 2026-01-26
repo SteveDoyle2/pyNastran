@@ -3,7 +3,7 @@ from struct import Struct
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply_mag_phase
 # from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
@@ -109,7 +109,6 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
 
         if op2.use_vector and is_vectorized and sort_method == 1:
             n = nelements * op2.num_wide * 4
-
             istart = obj.itotal
             iend = istart + nelements
             obj._times[obj.itime] = dt
@@ -197,10 +196,8 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
             data, ndata, dt)
 
     elif result_type == 1 and num_wide == 13 and table_name_bytes in [b'OESVM1C', b'OSTRVM1C']:  # complex
-        # op2.log.warning(f'skipping complex {op2.table_name_str}-PCOMP (numwide=13)')
         ntotal = 52 * factor
         nelements = ndata // ntotal
-        # return nelements * ntotal, None, None
         op2.table_name = table_name_bytes
         auto_return, is_vectorized = op2._create_oes_object4(
             nelements, result_name, slot, layered_cls)
@@ -224,17 +221,13 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
                 obj.element_layer[istart:iend, 1] = nids
 
             floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 13)
-            # [o1a, o2a, t12a, o1za, o2za, o1b, o2b, t12b, o1zb, e2zb, ovm]
-            obj.data[obj.itime, istart:iend, :] = floats[:, 2:].copy()
-            # struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i9f ff')
-            # add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-            # for unused_i in range(nelements):
-            #     edata = data[n:n + ntotal]
-            #     out = struct1.unpack(edata)
-            #
-            #     (eid_device, ply_id,
-            #      o1a, o2a, t12a, o1za, o2za,
-            #      o1b, o2b, t12b, o1zb, e2zb, ovm,) = out
+            isave1 = [2, 3, 4, 5,   6]
+            isave2 = [7, 8, 9, 10, 11]
+            real_imag = apply_mag_phase(floats, is_magnitude_phase, isave1, isave2)
+            # [eid, layer, o1r, o2r, t12r, o1zr, o2zr,
+            #              o1i, o2i, t12i, o1zi, o2zi, ovm]
+            obj.data[obj.itime, istart:iend, :-1] = real_imag
+            obj.data[obj.itime, istart:iend, -1] = floats[:, -1]
         else:
             n = oes_shell_composite_complex_13(op2, data, obj,
                                                ntotal, nelements, sort_method,
@@ -338,16 +331,38 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
 
         ntotal = 48 * factor
         nelements = ndata // ntotal
+        assert ndata % ntotal == 0
         auto_return, is_vectorized = op2._create_oes_object4(
             nelements, result_name, slot, complex_obj)
         if auto_return:
             return nelements * ntotal, None, None
 
         obj = op2.obj
-        n = oes_shell_composite_complex_12(
-            op2, data, obj,
-            ntotal, nelements, sort_method,
-            dt, is_magnitude_phase)
+        if is_vectorized and op2.use_vector:
+            n = len(data)
+            istart = obj.itotal
+            iend = istart + nelements
+            obj._times[obj.itime] = dt
+
+            if obj.itime == 0:
+                ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 12).copy()
+                eids = ints[:, 0] // 10
+                nids = ints[:, 1]
+                obj.element_layer[istart:iend, 0] = eids
+                obj.element_layer[istart:iend, 1] = nids
+
+            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 12)
+            isave1 = [2, 3, 4, 5,   6]
+            isave2 = [7, 8, 9, 10, 11]
+            real_imag = apply_mag_phase(floats, is_magnitude_phase, isave1, isave2)
+            # [eid, layer, o1r, o2r, t12r, o1zr, o2zr,
+            #              o1i, o2i, t12i, o1zi, o2zi]
+            obj.data[obj.itime, istart:iend, :] = real_imag
+        else:
+            n = oes_shell_composite_complex_12(
+                op2, data, obj,
+                ntotal, nelements, sort_method,
+                dt, is_magnitude_phase)
 
     elif result_type == 1 and num_wide == 11:
         # analysis_code = 9   Complex eigenvalues
@@ -551,10 +566,11 @@ def oes_shell_composite_complex_12(op2: OP2,
         datai = data[n:n + ntotal]
         # op2.show_data(datai)
         out = struct1.unpack(datai)
-        # print(out)
-        (eid, layer,
+        (eid_device, layer,
          oxxr, oyyr, txyr, t1zr, t2zr,
          oxxi, oyyi, txyi, t1zi, t2zi) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, op2.nonlinear_factor, op2.sort_method)
         oxx, oyy, txy, t1z, t2z = real_imag_from_list([
             oxxr, oyyr, txyr, t1zr, t2zr,
             oxxi, oyyi, txyi, t1zi, t2zi], is_magnitude_phase)
@@ -579,18 +595,20 @@ def oes_shell_composite_complex_13(op2: OP2,
         out = struct1.unpack(edata)
 
         (eid_device, ply_id,
-         o1a, o2a, t12a, o1za, o2za,
-         o1b, o2b, t12b, o1zb, e2zb, ovm,) = out
+         o1r, o2r, t12r, o1zr, o2zr,
+         o1i, o2i, t12i, o1zi, o2zi, ovm,) = out
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, sort_method)
         #print(eid, out)
+        o1, o2, t12, o1z, o2z = real_imag_from_list([
+            o1r, o2r, t12r, o1zr, o2zr,
+            o1i, o2i, t12i, o1zi, o2zi,], is_magnitude_phase)
 
         #print('%s-%s - (%s) + %s\n' % (op2.element_name, op2.element_type, eid_device, str(out)))
         #if op2.is_debug_file:
             #op2.binary_debug.write('%s-%s - (%s) + %s\n' % (op2.element_name, op2.element_type, eid_device, str(out)))
         add_sort_x(dt, eid, ply_id,
-                   o1a, o2a, t12a, o1za, o2za,
-                   o1b, o2b, t12b, o1zb, e2zb, ovm)
+                   o1, o2, t12, o1z, o2z, ovm)
         n += ntotal
     return n
 
