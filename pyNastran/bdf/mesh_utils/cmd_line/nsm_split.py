@@ -52,7 +52,7 @@ def cmd_line_nsm_split(argv=None, quiet: bool=False) -> None:
 
     parser.add_argument(
         'nsm_value',
-        metavar=('nsm_id', 'nsm_value'),
+        metavar='nsm_id nsm_value',
         nargs='*',
         help='nsm id to split',)
     parser.add_argument('-o', '--out', help='path to output Nastran filename')
@@ -92,6 +92,9 @@ def cmd_line_nsm_split(argv=None, quiet: bool=False) -> None:
     log.info(f'nsm_ids = {nsm_ids}')
     log.info(f'nsm_values = {nsm_values}')
     bdf_filename_out = args.out
+    if bdf_filename_out is None:
+        bdf_filename_out = 'nsm.out.bdf'
+    log.info(f'bdf_filename_out = {bdf_filename_out}')
 
     # infile = args.infile
     # print(f'infile = {infile!r}')
@@ -116,8 +119,7 @@ def cmd_line_nsm_split(argv=None, quiet: bool=False) -> None:
     # log.info(f'eids_to_fix = {eids_to_fix}')
 
     model2 = split_nsm(model, nsm_ids, nsm_values, comments=comments)
-    nsm_out = 'nsm.out.bdf'
-    model2.write_bdf(nsm_out, write_header=False)
+    model2.write_bdf(bdf_filename_out, write_header=False)
 
 
 def split_nsm(model: BDF,
@@ -184,6 +186,7 @@ def split_nsm(model: BDF,
                 area_length_flags.add('')
             pids.extend(nsm.ids)
             comment += nsm.comment
+        assert len(pids) > 0, (nsm_id, nsm_value, pids)
         upids = np.unique(pids).tolist()
 
         log.debug(comment)
@@ -214,6 +217,8 @@ def split_nsm(model: BDF,
                 value_by_type[prop.type] += areai
                 pids_by_type[prop.type].append(pid)
                 comment += f'pid={pid} area={areai}\n'
+            assert len(pids_by_type), 'area'
+            assert len(value_by_type), 'area'
 
         elif is_length:
             for pid in upids:
@@ -227,6 +232,8 @@ def split_nsm(model: BDF,
                 comment += f'pid={pid} length={lengthi}\n'
                 value_by_type[prop.type] += lengthi
                 pids_by_type[prop.type].append(pid)
+            assert len(pids_by_type), 'length'
+            assert len(value_by_type), 'length'
         else:
             raise RuntimeError((is_area, is_length))
 
@@ -235,11 +242,14 @@ def split_nsm(model: BDF,
         # nsm_type = 'ELEMENT'
         log.info(f'total = {total}')
         log.info(f'value_by_type = {str(dict(value_by_type))}')
+        assert len(value_by_type)
         for prop_type, valuei in value_by_type.items():
             ids = pids_by_type[prop_type]
             value = (valuei / total) * nsm_value
-            model2.add_nsml1(nsm_id, prop_type, value, ids,
+
+            out = model2.add_nsml1(nsm_id, prop_type, value, ids,
                              comment=comment)
+            print(out)
             comment = ''
 
     # model2.add_nsml1(nsm_id, nsm_type, nsm_value, ids,

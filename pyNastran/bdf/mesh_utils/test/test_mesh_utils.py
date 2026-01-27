@@ -503,6 +503,36 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
                  quiet=True)
         os.remove(skin_filename)
 
+    def test_nsm_split(self):
+        bdf_filename = DIRNAME / 'test_nsm_split.bdf'
+        model = BDF(debug=False)
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [1., 1., 0.])
+        model.add_grid(13, [0., 1., 0.])
+        model.add_cquad4(1, 4, [10, 11, 12, 13])
+        model.add_cquad4(2, 4, [10, 11, 12, 13])
+        model.add_cquad4(3, 4, [10, 11, 12, 13])
+        model.add_pshell(4, 100, 0.1)
+        model.add_mat1(100, 3.0e7, None, 0.3)
+        sid = 42
+        ids = 4
+        nsm_type = 'PSHELL'
+        value = 3.0
+        model.add_nsm1(sid, nsm_type, value, ids)
+        model.cross_reference()
+        model.write_bdf(bdf_filename)
+
+        bdf_filename_out = DIRNAME / 'nsm.out.bdf'
+        args = ['bdf', 'nsm_split', bdf_filename, str(sid), str(3.14),
+                '--out', str(bdf_filename_out)]
+        cmd_line(argv=args, quiet=True)
+        model2 = BDF(debug=False)
+        model2.read_bdf(bdf_filename_out, punch=True)
+        # print(model2.nsms)
+        bdf_filename.unlink()
+        bdf_filename_out.unlink()
+
     def test_exit(self):
         """tests totally failing to run"""
         with self.assertRaises(SystemExit):
@@ -732,7 +762,7 @@ class TestMeshUtils(unittest.TestCase):
             subcase.add('ANALYSIS', 'STATICS', options, param_type)
             subcase.add('DESSUB', dconstr_id, options, param_type)
 
-        bdf_filename = os.path.join(DIRNAME, 'test_structured_chexas.bdf')
+        bdf_filename = DIRNAME / 'test_structured_chexas.bdf'
         model.write_bdf(bdf_filename)
 
     def test_bdf_delete_bad_shells(self):
