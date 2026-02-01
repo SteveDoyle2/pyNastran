@@ -3,6 +3,7 @@ from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -111,7 +112,7 @@ class RandomBeamArray(OES_Object):
         irow = np.where((self.element_node[:, 1] > 0) | (self.xxb > 0))[0]
 
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
             # nelement_node = len(self.element_node)
             # assert self.xxb.shape == (nelement_node,), (nelement_node, self.xxb.shape)
             data = {
@@ -122,8 +123,8 @@ class RandomBeamArray(OES_Object):
             names = list(data.keys()) + ['Item']
             data_list = list(data.values())
 
-            data_frame = self._build_pandas_transient_element_node(
-                column_values, column_names,
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
                 headers, data_list, self.data[:, irow, :],
                 from_tuples=False, from_array=True,
                 names=names,
@@ -131,6 +132,7 @@ class RandomBeamArray(OES_Object):
         else:
             element_node = [self.element_node[irow, 0],
                             self.element_node[irow, 1]]
+            raise RuntimeError('replace pd.Panel')
             data_frame = pd.Panel(self.data[:, irow, :],
                                   major_axis=element_node,
                                   minor_axis=headers).to_frame()

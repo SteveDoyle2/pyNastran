@@ -5,6 +5,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype, combination_inplace
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
@@ -110,9 +111,9 @@ class RealBush1DStressArray(OES_Object):
             #          axial_stress              NaN         NaN         NaN
             #          axial_strain              NaN         NaN         NaN
             #          plastic_strain       0.000000    0.000000    0.000000
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             #Static     element_force  axial_displacement  axial_velocity  axial_stress  axial_strain  plastic_strain

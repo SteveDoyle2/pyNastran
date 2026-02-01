@@ -10,6 +10,9 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import (
+    build_dataframe_transient_header,
+    build_pandas_transient_elements, build_pandas_transient_element_node)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
 from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_11e, write_float_13e
 
@@ -206,15 +209,15 @@ class RealNonlinearPlateArray(OES_Object):
             #          eyy                 6.747639e-06  1.349528e-05
             #          ezz                 0.000000e+00  0.000000e+00
             #          exy                 0.000000e+00  0.000000e+00
-            column_names, column_values = self._build_dataframe_transient_header()
-            #element = np.vstack([self.element, self.element]).T.flatten()
-            #element = self.element
-            #data_frame = self._build_pandas_transient_elements(
-                #column_values, column_names,
-                #headers, element, self.data[:, :, 1:])
+            column_names, column_values = build_dataframe_transient_header(self)
+            # element = np.vstack([self.element, self.element]).T.flatten()
+            # element = self.element
+            # data_frame = build_pandas_transient_elements(
+            #     self, column_values, column_names,
+            #     headers, element, self.data[:, :, 1:])
 
-            data_frame = self._build_pandas_transient_element_node(
-                column_values, column_names,
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
                 headers[iheader:], element_fd, self.data[:, :, iheader:],
                 from_tuples=False, from_array=True,
                 names=names,
@@ -600,7 +603,7 @@ class RealNonlinearSolidArray(OES_Object):
         ##nelements = self.element.shape[0]
 
         #if self.nonlinear_factor not in (None, np.nan):
-            #column_names, column_values = self._build_dataframe_transient_header()
+            #column_names, column_values = build_dataframe_transient_header(self)
             #self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
             #self.data_frame.columns.names = column_names
             #self.data_frame.index.names = ['ElementID', 'Item']

@@ -150,9 +150,9 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
     #        #[(1, 1.4822459136312394e-10, -8.673617379884035e-19, 9.313225746154785e-10)
     #         #(2, 3.353939638127037e-09, 4.440892098500626e-16, 2.1073424255447017e-08)
     #         #(3, 1.4822459136312394e-10, 8.673617379884035e-19, 9.313225746154785e-10)]
-    #        column_names, column_values = self._build_dataframe_transient_header()
-    #        data_frame = self._build_pandas_transient_element_node(
-    #            column_values, column_names,
+    #        column_names, column_values = build_dataframe_transient_header(self)
+    #        data_frame = build_pandas_transient_element_node(
+    #            self, column_values, column_names,
     #            headers, self.element_layer, self.data)
     #    else:
     #        element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]

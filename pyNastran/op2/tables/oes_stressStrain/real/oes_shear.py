@@ -5,6 +5,7 @@ import numpy as np
 from numpy import zeros, allclose
 
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_real_data_code, set_element_case,
@@ -94,9 +95,9 @@ class RealShearArray(OES_Object):
             #22        max_shear  8.050749e-13  5.871460e-07  2.035239e-12
             #         avg_shear -8.050749e-13  5.871460e-07  2.035239e-12
             #         margin     1.401298e-45  1.401298e-45  1.401298e-45
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             #Static     axial           SMa  torsion           SMt

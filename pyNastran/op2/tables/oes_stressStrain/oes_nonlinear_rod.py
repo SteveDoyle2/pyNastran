@@ -3,6 +3,7 @@ from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
@@ -85,9 +86,9 @@ class RealNonlinearRodArray(OES_Object):  # 89-CRODNL, 92-CONRODNL
             #          effective_plastic_creep_strain   0.000000   0.000000
             #          effective_creep_strain           0.000000   0.000000
             #          linear_torsional_stress          0.000000   0.000000
-            column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            self.data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             df1 = pd.DataFrame(self.element).T

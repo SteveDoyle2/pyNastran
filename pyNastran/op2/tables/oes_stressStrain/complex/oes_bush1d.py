@@ -1,6 +1,7 @@
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
 
@@ -53,12 +54,13 @@ class ComplexCBush1DArray(OES_Object):
         """creates a pandas dataframe"""
         import pandas as pd
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
-        #self.data_frame = self._build_pandas_transient_elements(
-            #column_values, column_names,
-            #headers, self.element, self.data)
-        #print(self.data_frame)
-        #aa
+        column_names, column_values = build_dataframe_transient_header(self)
+        # self.data_frame = build_pandas_transient_elements(
+        #     self, column_values, column_names,
+        #     headers, self.element, self.data)
+        # print(self.data_frame)
+
+        raise RuntimeError('replace pd.Panel')
         self.data_frame = pd.Panel(self.data, items=column_values,
                                    major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names

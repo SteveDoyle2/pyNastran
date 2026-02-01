@@ -38,7 +38,7 @@ from pyNastran.op2.result_objects.op2_objects import (
     # GRID_TYPE_INT_TO_STR,
     recast_gridtype_as_string,
 )
-
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long,
     write_imag_floats_13e, write_float_12e)
@@ -424,7 +424,7 @@ class TableArray(ScalarObject):  # displacement style table
             # if not self.is_sort1:
             #     print("skipping %s because it's not SORT1" % self.class_name)
             #     return
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
             #if is_v25:
             #  we start out like this...
             #

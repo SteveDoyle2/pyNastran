@@ -120,7 +120,7 @@ class HyperelasticQuadArray(OES_Object):
         #element_node = [self.element_node[:, 0], self.element_node[:, 1], fd]
 
         #if self.nonlinear_factor not in (None, np.nan):
-            #column_names, column_values = self._build_dataframe_transient_header()
+            #column_names, column_values = build_dataframe_transient_header(self)
             #self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
             #self.data_frame.columns.names = column_names
             #self.data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']

@@ -11,6 +11,7 @@ from numpy import zeros, searchsorted, unique, where, float32
 from numpy import allclose, asarray, vstack
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject, set_as_sort1
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 from pyNastran.op2.result_objects.table_object import append_sort1_sort2
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
@@ -242,7 +243,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
             #8      S    t1     0.0  0.006239
             #99     S    t1     0.0  5.000000
 
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
 
             columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
 

@@ -4,6 +4,7 @@ from numpy import zeros, searchsorted, allclose
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
@@ -67,9 +68,9 @@ class ComplexCBushArray(OES_Object):
         #           rz    0.000000+0.000000j  0.000000+0.000000j
         # 10211     tx   -0.000002+0.000000j -0.000002+0.000000j
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = self._build_pandas_transient_elements(
-            column_values, column_names,
+        column_names, column_values = build_dataframe_transient_header(self)
+        self.data_frame = build_pandas_transient_elements(
+            self, column_values, column_names,
             headers, self.element, self.data)
 
     def __eq__(self, table):  # pragma: no cover

@@ -102,7 +102,7 @@ class RealBendArray(OES_Object):
         #import pandas as pd
         #print(self.data_code)
         #headers = self.headers
-        #column_names, column_values = self._build_dataframe_transient_header()
+        #column_names, column_values = build_dataframe_transient_header(self)
         #self.data_frame = pd.Panel(self.data, items=column_values,
                                    #major_axis=self.element_node, minor_axis=headers).to_frame()
         #self.data_frame.columns.names = column_names

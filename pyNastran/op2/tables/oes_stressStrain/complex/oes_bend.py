@@ -3,6 +3,7 @@ from itertools import cycle
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
@@ -108,9 +109,9 @@ class ComplexBendArray(OES_Object):
         #                 sf      1.757596+0.010251j   1.756053+0.010121j
         #6902      6901   angle   0.000000+0.000000j   0.000000+0.000000j
         headers = self.headers
-        column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = self._build_pandas_transient_element_node(
-            column_values, column_names,
+        column_names, column_values = build_dataframe_transient_header(self)
+        self.data_frame = build_pandas_transient_element_node(
+            self, column_values, column_names,
             headers, self.element_node, self.data)
 
     def __eq__(self, table):  # pragma: no cover

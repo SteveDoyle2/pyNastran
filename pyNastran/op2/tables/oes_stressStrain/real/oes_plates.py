@@ -8,6 +8,7 @@ import numpy as np
 from pyNastran.utils.mathematics import get_abs_max
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 from pyNastran.op2.op2_interface.write_utils import to_column_bytes, view_dtype, view_idtype_as_fdtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_real_data_code, get_scode,
@@ -281,7 +282,7 @@ class RealPlateArray(OES_Object):
             #2033      CEN    Top      omin           -110.334686
             #                 Bottom   von_mises       100.566292
             #
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
             # if self.element_type == 144:  # hacks to see the data
             #     nmode = 2
             #     nelement = 5
@@ -298,12 +299,11 @@ class RealPlateArray(OES_Object):
                 fd,
             ]
             names = ['ElementID', 'NodeID', 'Location', 'Item']
-            data_frame = self._build_pandas_transient_element_node(
-                column_values, column_names,
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
                 headers[:], element_node, self.data[:, :, :],  # 1:
                 from_tuples=False, from_array=True,
-                names=names,
-            )
+                names=names)
             # if self.element_type == 144:
             #     print(data_frame)
             #     asdf

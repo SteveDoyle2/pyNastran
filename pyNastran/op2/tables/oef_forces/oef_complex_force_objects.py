@@ -7,6 +7,7 @@ from numpy import zeros, searchsorted, allclose
 from pyNastran.utils.numpy_utils import integer_types, empty_array
 from pyNastran.op2.result_objects.op2_objects import (
     BaseElement, get_complex_times_dtype, get_sort_element_sizes)
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oef_forces.oef_force_objects import ForceObject, oef_complex_data_code
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     oes_complex_data_code, set_element_case, set_freq_case, set_complex_modes_case)
@@ -100,9 +101,10 @@ class ComplexRodForceArray(ComplexForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
-        data_frame = self._build_pandas_transient_elements(column_values, column_names,
-                                                           headers, self.element, self.data)
+        column_names, column_values = build_dataframe_transient_header(self)
+        data_frame = build_pandas_transient_elements(
+            self, column_values, column_names,
+            headers, self.element, self.data)
         # data_frame = pd.Panel(self.data, items=column_values,
         #                       major_axis=self.element, minor_axis=headers).to_frame()
         # data_frame.columns.names = column_names
@@ -462,9 +464,9 @@ class ComplexCShearForceArray(BaseElement):
         #          shear34     0.000000e+00+0.000000e+00j  0.000000+0.000000j
         #          shear41     0.000000e+00+0.000000e+00j  0.000000+0.000000j
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = self._build_pandas_transient_elements(
-            column_values, column_names,
+        column_names, column_values = build_dataframe_transient_header(self)
+        self.data_frame = build_pandas_transient_elements(
+            self, column_values, column_names,
             headers, self.element, self.data)
 
     @classmethod
@@ -741,9 +743,9 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         #32        spring_force  0.000000+0.000000j  0.000000+0.000000j
         #33        spring_force  0.000000+0.000000j  0.000000+0.000000j
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = self._build_pandas_transient_elements(
-            column_values, column_names,
+        column_names, column_values = build_dataframe_transient_header(self)
+        self.data_frame = build_pandas_transient_elements(
+            self, column_values, column_names,
             headers, self.element, self.data)
 
     @classmethod
@@ -1119,9 +1121,10 @@ class ComplexViscForceArray(BaseElement):
         #51        axial_force  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)
         #          torque            0j  (-0+0j)  (-0+0j)  (-0+0j)
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
-        data_frame = self._build_pandas_transient_elements(column_values, column_names,
-                                                           headers, self.element, self.data)
+        column_names, column_values = build_dataframe_transient_header(self)
+        data_frame = build_pandas_transient_elements(
+            self, column_values, column_names,
+            headers, self.element, self.data)
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
@@ -1351,9 +1354,9 @@ class ComplexPlateForceArray(ComplexForceObject):
         #          tx         0j       0j       0j       0j    (54.14508+101.81919j)       0j       0j
         #          ty         0j       0j       0j       0j   (-61.92162-116.44288j)       0j       0j
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
-        data_frame = self._build_pandas_transient_elements(
-            column_values, column_names,
+        column_names, column_values = build_dataframe_transient_header(self)
+        data_frame = build_pandas_transient_elements(
+            self, column_values, column_names,
             headers, self.element, self.data)
         #data_frame = pd.Panel(self.data, items=column_values,
                                    #major_axis=self.element, minor_axis=headers).to_frame()
@@ -1747,9 +1750,9 @@ class ComplexPlate2ForceArray(ComplexForceObject):
             #                  bmxy       0j       0j       0j       0j   (0.25202343+0.4739271j)       0j       0j
             #                  tx         0j       0j       0j       0j    (14.426779+27.129389j)       0j       0j
             #                  ty         0j       0j       0j       0j     (-199.6823-375.5002j)       0j       0j
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_element_node(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
                 headers, self.element_node, self.data)
 
             #data_frame = pd.Panel(self.data, items=column_values,
@@ -1757,6 +1760,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
             #data_frame.columns.names = column_names
             #data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         else:
+            raise RuntimeError('replace pd.Panel')
             data_frame = pd.Panel(self.data,
                                   major_axis=element_node, minor_axis=headers).to_frame()
             data_frame.columns.names = ['Static']
@@ -2213,9 +2217,10 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
-        data_frame = self._build_pandas_transient_elements(column_values, column_names,
-                                                           headers, self.element, self.data)
+        column_names, column_values = build_dataframe_transient_header(self)
+        data_frame = build_pandas_transient_elements(
+            self, column_values, column_names,
+            headers, self.element, self.data)
         #self.data_frame = pd.Panel(self.data, items=column_values,
                                    #major_axis=self.element, minor_axis=headers).to_frame()
         #self.data_frame.columns.names = column_names
@@ -2615,15 +2620,15 @@ class ComplexCBeamForceArray(ComplexForceObject):
         #                    warping_torque   0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
         import pandas as pd
         headers = self.get_headers()[1:]
-        column_names, column_values = self._build_dataframe_transient_header()
+        column_names, column_values = build_dataframe_transient_header(self)
         location = self.data[0, :, 0].real
         element_location = [
             self.element_node[:, 0],
             location,
         ]
         # wrong type for ElementID
-        data_frame = self._build_pandas_transient_element_node(
-            column_values, column_names,
+        data_frame = build_pandas_transient_element_node(
+            self, column_values, column_names,
             headers, element_location, self.data[:, :, 1:],
             from_tuples=False, from_array=True)
         data_frame.index.names = ['ElementID', 'Location', 'Item']
@@ -3024,12 +3029,12 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
         #          torque_b          -0.242082+0.008069j -0.242077+0.008068j
         #6902      bending_moment_1a -0.931214+0.031037j -0.931519+0.031058j
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
+        column_names, column_values = build_dataframe_transient_header(self)
 
         # element_node is (nelements, 3)
         element = self.element_node[:, 0]
-        self.data_frame = self._build_pandas_transient_elements(
-            column_values, column_names,
+        self.data_frame = build_pandas_transient_elements(
+            self, column_values, column_names,
             headers, element, self.data)
 
     def __eq__(self, table):  # pragma: no cover
@@ -3293,9 +3298,9 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
         #          vz        0.000000e+00+0.000000e+00j  0.000000e+00+0.000000e+00j
         #          pressure  0.000000e+00+0.000000e+00j  0.000000e+00+0.000000e+00j
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = self._build_pandas_transient_elements(
-            column_values, column_names,
+        column_names, column_values = build_dataframe_transient_header(self)
+        self.data_frame = build_pandas_transient_elements(
+            self, column_values, column_names,
             headers, self.element, self.data)
 
     def __eq__(self, table):  # pragma: no cover
@@ -3651,9 +3656,9 @@ class ComplexForceMomentArray(ComplexForceObject):
         #          my      700.000000+0.000000j
         #          mz       70.000000+0.000000j
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = self._build_pandas_transient_elements(
-            column_values, column_names,
+        column_names, column_values = build_dataframe_transient_header(self)
+        self.data_frame = build_pandas_transient_elements(
+            self, column_values, column_names,
             headers, self.element, self.data)
 
     def __eq__(self, table):  # pragma: no cover

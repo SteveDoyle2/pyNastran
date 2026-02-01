@@ -13,6 +13,9 @@ from numpy import zeros, searchsorted, allclose
 from pyNastran.utils.numpy_utils import integer_types, float_types, integer_float_types
 from pyNastran.op2.result_objects.op2_objects import (
     BaseElement, get_times_dtype, get_sort_element_sizes, set_as_sort1)
+from pyNastran.op2.result_objects.utils_pandas import (
+    build_dataframe_transient_header,
+    build_pandas_transient_elements, build_pandas_transient_element_node)
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long,
     write_float_13e, write_float_13e_long,  # write_float_12e,
@@ -465,14 +468,14 @@ class FailureIndicesArray(RealForceObject):
             #           1      failure_index_for_ply (direct stress/strain)      0.0  5.431871e-14
             #           2      failure_index_for_bonding (interlaminar stresss)  NaN           NaN
             #           3      max_value                                         0.0  5.431871e-14
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
             names = ['ElementID', 'Layer', 'Item']
-            data_frame = self._build_pandas_transient_element_node(
-                column_values, column_names, headers,
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names, headers,
                 element_layer, self.data, names=names,
                 from_tuples=False, from_array=True)
 
-            #column_names, column_values = self._build_dataframe_transient_header()
+            #column_names, column_values = build_dataframe_transient_header(self)
             #data_frame = pd.Panel(self.data, items=column_values,
                                   #major_axis=element_layer, minor_axis=headers).to_frame()
             #data_frame.columns.names = column_names
@@ -689,9 +692,9 @@ class RealSpringDamperForceArray(RealForceObject):
             #31        spring_force  2.781767e-19 -3.034770e-11 -4.433221e-19
             #32        spring_force  0.000000e+00  0.000000e+00  0.000000e+00
             #33        spring_force  0.000000e+00  0.000000e+00  0.000000e+00
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             #Static      spring_force
@@ -1182,9 +1185,9 @@ class RealRodForceArray(RealForceObject):
 
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             #Static     axial           SMa  torsion           SMt
@@ -1575,14 +1578,14 @@ class RealCBeamForceArray(RealForceObject):
             #                   axial_force      1.294136e-15 -1.670896e-09  4.759476e-16
             #                   total_torque    -4.240346e-16  2.742446e-09  1.522254e-15
             #                   warping_torque   0.000000e+00  0.000000e+00  0.000000e+00
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
             element_location = [
                 self.element_node[:, 0],
                 self.data[0, :, 0],
             ]
             # TODO: doesn't handle mixed type arrays
-            data_frame = self._build_pandas_transient_element_node(
-                column_values, column_names,
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
                 headers[1:], element_location, self.data[:, :, 1:],
                 from_tuples=False, from_array=True)
             data_frame.index.names = ['ElementID', 'Location', 'Item']
@@ -2166,9 +2169,9 @@ class RealCShearForceArray(RealForceObject):
             #          shear34     -8.050749e-14  5.871460e-08  2.035239e-13
             #          kick_force4 -0.000000e+00  0.000000e+00  0.000000e+00
             #          shear41     -8.050749e-14  5.871460e-08  2.035239e-13
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             #Static     axial           SMa  torsion           SMt
@@ -2634,9 +2637,9 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
             #          torsion           0.0           0.0          -0.0
             #51        axial             0.0          -0.0          -0.0
             #          torsion          -0.0           0.0           0.0
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             #Static     axial  torsion
@@ -2958,9 +2961,9 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             #          tx    2.601638e-13 -9.601510e-08 -3.611116e-13
             #          ty   -5.825233e-14 -7.382687e-09  9.038553e-14
             #9         mx    5.444685e-15 -1.014145e-07 -4.500100e-14
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             #Static     axial           SMa  torsion           SMt
@@ -3420,9 +3423,9 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             #                  tx    1.122732e-13 -5.563460e-08 -1.523176e-13
             #                  ty   -1.164320e-14  4.813929e-09  1.023404e-14
             # 4                mx    3.839208e-13 -4.580973e-07 -4.949736e-13
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_element_node(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
                 headers, element_node, self.data, from_tuples=False, from_array=True)
         else:
             data = {
@@ -3925,9 +3928,9 @@ class RealCBarFastForceArray(RealForceObject):
 
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
@@ -4324,7 +4327,8 @@ class RealConeAxForceArray(RealForceObject):
         import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
+            raise RuntimeError('replace pd.Panel')
+            column_names, column_values = build_dataframe_transient_header(self)
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
@@ -4535,7 +4539,8 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
                 self.element,
                 self.data[0, :, 0],
             ]
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
+            raise RuntimeError('replace pd.Panel')
             self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values,
                                        major_axis=element_location, minor_axis=headers[1:]).to_frame()
             self.data_frame.columns.names = column_names
@@ -4838,9 +4843,9 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
         # 102       fx       -0.000002
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             # Static               fx  sfy  sfz         u         v    w   sv   sw
@@ -5029,9 +5034,9 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         if self.nonlinear_factor not in (None, np.nan):
             # TODO: add NodeA, NodeB
             element = self.element_node[:, 0]
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, element, self.data)
             #data_frame = pd.Panel(self.data, items=column_values,
                                   #major_axis=element, minor_axis=headers).to_frame()
@@ -5539,8 +5544,8 @@ class RealForceMomentArray(RealForceObject):
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
             # data_frame = pd.Panel(self.data, items=column_values,
             #                       major_axis=self.element, minor_axis=headers).to_frame()

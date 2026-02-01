@@ -3,6 +3,7 @@ from numpy import zeros, allclose
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_complex_data_code, get_scode, set_element_case,
@@ -66,7 +67,7 @@ class ComplexRodArray(OES_Object):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
+        column_names, column_values = build_dataframe_transient_header(self)
 
         #Freq              0.00001  10.00000 20.00000 30.00000 40.00000 50.00000 60.00000
         #ElementID Item
@@ -74,8 +75,8 @@ class ComplexRodArray(OES_Object):
         #          torsion       0j       0j       0j       0j       0j       0j       0j
         #15        axial         0j       0j       0j       0j       0j       0j       0j
         #          torsion       0j       0j       0j       0j       0j       0j       0j
-        self.data_frame = self._build_pandas_transient_elements(
-            column_values, column_names,
+        self.data_frame = build_pandas_transient_elements(
+            self, column_values, column_names,
             headers, self.element, self.data)
 
     @classmethod
