@@ -44,9 +44,6 @@ class RealShearArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self):
-        raise NotImplementedError()
-
     def build(self):
         """sizes the vectorized attributes of the RealShearArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
@@ -402,7 +399,8 @@ class RealShearStressArray(RealShearArray, StressObject):
         RealShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['max_shear', 'avg_shear', 'margin']
         return headers
 
@@ -421,7 +419,8 @@ class RealShearStrainArray(RealShearArray, StrainObject):
         RealShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['max_shear', 'avg_shear', 'margin']
         return headers
 

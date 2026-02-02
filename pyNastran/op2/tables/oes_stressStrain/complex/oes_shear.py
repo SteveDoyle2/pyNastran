@@ -326,7 +326,8 @@ class ComplexShearArray(OES_Object):
     def headers(self) -> list[str]:
         return self._get_headers()
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         return self.headers
 
 class ComplexShearStressArray(ComplexShearArray, StressObject):
@@ -334,8 +335,10 @@ class ComplexShearStressArray(ComplexShearArray, StressObject):
         ComplexShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         return ['max_shear', 'avg_shear']
+
 
 class ComplexShearStrainArray(ComplexShearArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -343,7 +346,8 @@ class ComplexShearStrainArray(ComplexShearArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         return ['max_shear', 'avg_shear']
 
 def _get_cshear_msg(is_mag_phase, is_sort1):

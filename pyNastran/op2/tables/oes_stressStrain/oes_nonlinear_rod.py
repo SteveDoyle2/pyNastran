@@ -44,7 +44,8 @@ class RealNonlinearRodArray(OES_Object):  # 89-CRODNL, 92-CONRODNL
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['axial_stress', 'equiv_stress', 'total_strain',
                    'effective_plastic_creep_strain', 'effective_creep_strain',
                    'linear_torsional_stress']

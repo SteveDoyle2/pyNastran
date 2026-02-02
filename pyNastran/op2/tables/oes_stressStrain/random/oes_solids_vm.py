@@ -28,9 +28,6 @@ class RandomSolidVMArray(OES_Object):
     def is_complex(self) -> bool:
         return False
 
-    def get_headers(self):
-        raise NotImplementedError()
-
     def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
@@ -287,7 +284,8 @@ class RandomSolidVMStressArray(RandomSolidVMArray, StressObject):
         RandomSolidVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'ovm']
         return headers
 
@@ -297,7 +295,8 @@ class RandomSolidVMStrainArray(RandomSolidVMArray, StrainObject):
         RandomSolidVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz', 'evm']
         return headers
 

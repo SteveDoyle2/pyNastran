@@ -196,12 +196,6 @@ class GlueForceArray(ScalarObject):  # displacement style table
     def headers(self) -> list[str]:
         return ['pressure', 's1', 's2', 's3']
 
-    def _get_headers(self) -> list[str]:
-        return self.headers
-
-    def get_headers(self) -> list[str]:
-        return self._get_headers()
-
     def _reset_indices(self) -> None:
         self.itotal = 0
 

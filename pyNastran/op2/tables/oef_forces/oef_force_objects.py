@@ -174,9 +174,6 @@ class ForceObject(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
-        raise NotImplementedError()
-
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
         itot = searchsorted(eids, self.element)  # [0]
@@ -493,7 +490,8 @@ class FailureIndicesArray(RealForceObject):
             data_frame.columns.names = ['Static']
         self.data_frame = data_frame
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         # headers = ['eid', 'failure_theory', 'ply', 'failure_index_for_ply (direct stress/strain)',
         #            'failure_index_for_bonding (interlaminar stresss)', 'failure_index_for_element', 'flag']
         headers = ['failure_index_for_ply (direct stress/strain)',
@@ -987,7 +985,8 @@ class RealSpringForceArray(RealSpringDamperForceArray):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['spring_force']
         return headers
 
@@ -1019,7 +1018,8 @@ class RealDamperForceArray(RealSpringDamperForceArray):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['damper_force']
         return headers
 
@@ -1120,7 +1120,8 @@ class RealRodForceArray(RealForceObject):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['axial', 'torsion']
         return headers
 
@@ -1133,10 +1134,6 @@ class RealRodForceArray(RealForceObject):
 
     def update_data_components(self):
         return
-
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
 
     def _get_msgs(self):
         base_msg = ['       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
@@ -1900,7 +1897,8 @@ class RealCBeamForceArray(RealForceObject):
             # assert self.is_sort1 is True, str(self)
         return page_num - 1
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'sd', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2',
             'axial_force', 'total_torque', 'warping_torque', ]
@@ -2103,7 +2101,8 @@ class RealCShearForceArray(RealForceObject):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'force41', 'force21', 'force12', 'force32', 'force23', 'force43',
             'force34', 'force14',
@@ -2111,10 +2110,6 @@ class RealCShearForceArray(RealForceObject):
             'kick_force3', 'shear34', 'kick_force4', 'shear41',
         ]
         return headers
-
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
 
     def build(self):
         """sizes the vectorized attributes of the RealCShearForceArray"""
@@ -2588,13 +2583,10 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['axial', 'torsion']
         return headers
-
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
 
     def build(self):
         """sizes the vectorized attributes of the RealViscForceArray"""
@@ -2884,7 +2876,8 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
 
     def linear_combination(self, factor: integer_float_types,
@@ -3338,7 +3331,8 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
 
     def linear_combination(self, factor: integer_float_types,
@@ -3871,7 +3865,8 @@ class RealCBarFastForceArray(RealForceObject):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'bending_moment_a1', 'bending_moment_a2',
             'bending_moment_b1', 'bending_moment_b2',
@@ -4287,15 +4282,12 @@ class RealConeAxForceArray(RealForceObject):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'hopa', 'bmu', 'bmv', 'tm', 'su', 'sv'
         ]
         return headers
-
-    # def get_headers(self):
-    #     headers = ['axial', 'torque']
-    #     return headers
 
     def build(self):
         """sizes the vectorized attributes of the RealConeAxForceArray"""
@@ -4492,7 +4484,8 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'station', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2', 'axial', 'torque'
         ]
@@ -4796,7 +4789,8 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'fx', 'sfy', 'sfz', 'u', 'v', 'w', 'sv', 'sw'
         ]
@@ -4976,7 +4970,8 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         RealForceObject.__init__(self, data_code, isubcase)
         self.nelements = 0  # result specific
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'bending_moment_1a', 'bending_moment_2a', 'shear_1a', 'shear_2a', 'axial_a', 'torque_a',
             'bending_moment_1b', 'bending_moment_2b', 'shear_1b', 'shear_2b', 'axial_b', 'torque_b',
@@ -5258,15 +5253,12 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'ax', 'ay', 'az', 'vx', 'vy', 'vz', 'pressure'
         ]
         return headers
-
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
 
     def build(self):
         """sizes the vectorized attributes of the RealSolidPressureForceArray"""
@@ -5496,7 +5488,8 @@ class RealForceMomentArray(RealForceObject):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
         return headers
 
@@ -5543,7 +5536,7 @@ class RealForceMomentArray(RealForceObject):
         import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
             data_frame = build_pandas_transient_elements(
                 self, column_values, column_names,
                 headers, self.element, self.data)

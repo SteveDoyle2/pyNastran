@@ -37,10 +37,8 @@ class HyperelasticQuadArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
-    #def get_headers(self):
-        #raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         return ['oxx', 'oyy', 'txy', 'angle', 'majorp', 'minorp']
 
     #def is_bilinear(self):

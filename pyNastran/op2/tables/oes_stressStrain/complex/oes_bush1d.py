@@ -29,9 +29,6 @@ class ComplexCBush1DArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self):
-        raise NotImplementedError()
-
     def build(self):
         """sizes the vectorized attributes of the ComplexCBush1DArray"""
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
@@ -198,7 +195,8 @@ class ComplexCBush1DStressArray(ComplexCBush1DArray, StressObject):
         ComplexCBush1DArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz']
         return headers
 

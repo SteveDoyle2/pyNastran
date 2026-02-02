@@ -51,9 +51,6 @@ class RandomBarArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-
     def build(self):
         """sizes the vectorized attributes of the RealBarArray"""
         #print("self.ielement =", self.ielement)
@@ -282,7 +279,8 @@ class RandomBarStressArray(RandomBarArray, StressObject):
         RandomBarArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['s1a', 's2a', 's3a', 's4a', 'axial',
                    's1b', 's2b', 's3b', 's4b']
         return headers
@@ -320,7 +318,8 @@ class RandomBarStrainArray(RandomBarArray, StrainObject):
         RandomBarArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['e1a', 'e2a', 'e3a', 'e4a', 'axial',
                    'e1b', 'e2b', 'e3b', 'e4b',]
         return headers

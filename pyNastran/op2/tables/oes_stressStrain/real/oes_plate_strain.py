@@ -32,9 +32,6 @@ class RealCPLSTRNPlateArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-
     def is_bilinear(self):
         #if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
             #return False
@@ -227,7 +224,8 @@ class RealCPLSTRNPlateStressArray(RealCPLSTRNPlateArray, StressObject):
         RealCPLSTRNPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'txy', 'von_mises']
         return headers
 
@@ -237,7 +235,8 @@ class RealCPLSTRNPlateStrainArray(RealCPLSTRNPlateArray, StrainObject):
         RealCPLSTRNPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['exx', 'eyy', 'exy', 'von_mises']
         return headers
 

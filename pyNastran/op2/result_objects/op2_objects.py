@@ -180,7 +180,7 @@ class BaseScalarObject(Op2Codes):
         keys_to_skip = simplify_object_keys(keys_to_skip)
 
         my_keys_to_skip = [
-            'object_methods', 'object_attributes', ', object_stats',
+            'object_methods', 'object_attributes', 'object_stats',
         ]
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
                                  filter_properties=filter_properties)
@@ -189,7 +189,7 @@ class BaseScalarObject(Op2Codes):
         keys_to_skip = simplify_object_keys(keys_to_skip)
 
         my_keys_to_skip = [
-            'object_methods', 'object_attributes', ', object_stats',
+            'object_methods', 'object_attributes', 'object_stats',
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
@@ -198,7 +198,7 @@ class BaseScalarObject(Op2Codes):
         keys_to_skip = simplify_object_keys(keys_to_skip)
 
         my_keys_to_skip = [
-            'object_methods', 'object_attributes', ', object_stats',
+            'object_methods', 'object_attributes', 'object_stats',
         ]
         return object_stats(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
                             filter_properties=filter_properties)
@@ -214,8 +214,11 @@ class BaseScalarObject(Op2Codes):
     def class_name(self) -> str:
         return self.__class__.__name__
 
-    def get_headers(self):  # pragma: no cover
-        raise RuntimeError()
+    def _get_headers(self) -> list[str]:
+        return self.headers
+
+    def get_headers(self) -> list[str]:
+        return self.headers
 
     def _get_stats_short(self):  # pragma: no cover
         raise NotImplementedError('_get_stats_short')

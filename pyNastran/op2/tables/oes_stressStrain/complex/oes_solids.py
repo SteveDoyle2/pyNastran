@@ -431,7 +431,8 @@ class ComplexSolidStressArray(ComplexSolidArray, StressObject):
         ComplexSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
         return headers
 
@@ -489,6 +490,7 @@ class ComplexSolidStrainArray(ComplexSolidArray, StrainObject):
         ComplexSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
         return headers

@@ -47,9 +47,6 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-
     def build(self):
         """sizes the vectorized attributes of the RealCompositePlateArray"""
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
@@ -614,7 +611,8 @@ class RealCompositePlateStressStrengthRatioArray(RealCompositePlateStrengthRatio
     def is_strain(self):
         return False
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         #if self.is_von_mises:
             #ovm = 'von_mises'
         #else:
@@ -637,13 +635,14 @@ class RealCompositePlateStressStrengthRatioArray(RealCompositePlateStrengthRatio
     #def is_strain(self) -> bool:
         #return True
 
-    #def get_headers(self) -> list[str]:
-        #if self.is_von_mises:
-            #ovm = 'von_mises'
-        #else:
-            #ovm = 'max_shear'
-        #headers = ['strength_ratio_ply_b', 'strength_ratio_bonding_b']
-        #return headers
+    # @property
+    # def headers(self) -> list[str]:
+    #     if self.is_von_mises:
+    #         ovm = 'von_mises'
+    #     else:
+    #         ovm = 'max_shear'
+    #     headers = ['strength_ratio_ply_b', 'strength_ratio_bonding_b']
+    #     return headers
 
 def nanmin13s(nparray):
     if np.any(np.isfinite(nparray)):

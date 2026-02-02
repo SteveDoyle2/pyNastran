@@ -7,7 +7,9 @@ from numpy import zeros, searchsorted, allclose
 from pyNastran.utils.numpy_utils import integer_types, empty_array
 from pyNastran.op2.result_objects.op2_objects import (
     BaseElement, get_complex_times_dtype, get_sort_element_sizes)
-from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
+from pyNastran.op2.result_objects.utils_pandas import (
+    build_dataframe_transient_header,
+    build_pandas_transient_elements, build_pandas_transient_element_node)
 from pyNastran.op2.tables.oef_forces.oef_force_objects import ForceObject, oef_complex_data_code
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     oes_complex_data_code, set_element_case, set_freq_case, set_complex_modes_case)
@@ -67,13 +69,10 @@ class ComplexRodForceArray(ComplexForceObject):
         else:
             raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['axial_force', 'torque']
         return headers
-
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
 
     def build(self):
         """sizes the vectorized attributes of the ComplexRodForceArray"""
@@ -403,17 +402,14 @@ class ComplexCShearForceArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'force41', 'force14', 'force21', 'force12', 'force32', 'force23',
             'force43', 'force34', 'kickForce1', 'kickForce2', 'kickForce3',
             'kickForce4', 'shear12', 'shear23', 'shear34', 'shear41'
         ]
         return headers
-
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
 
     def build(self):
         """sizes the vectorized attributes of the ComplexCShearForceArray"""
@@ -699,13 +695,10 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['spring_force']
         return headers
-
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
 
     def build(self):
         """sizes the vectorized attributes of the ComplexSpringDamperForceArray"""
@@ -1076,17 +1069,14 @@ class ComplexViscForceArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['axial_force', 'torque']
         return headers
 
     @property
     def nnodes_per_element(self) -> int:
         return 1
-
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
 
     def build(self):
         """sizes the vectorized attributes of the ComplexViscForceArray"""
@@ -1293,7 +1283,8 @@ class ComplexPlateForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
         return headers
 
@@ -1663,7 +1654,8 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
         return headers
 
@@ -2165,7 +2157,8 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['bending_moment_1a', 'bending_moment_2a',
                    'bending_moment_1b', 'bending_moment_2b',
                    'shear1', 'shear2', 'axial', 'torque', ]
@@ -2554,7 +2547,8 @@ class ComplexCBeamForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'sd', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2',
             'axial_force', 'total_torque', 'warping_torque', ]
@@ -2982,7 +2976,8 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'bending_moment_1a', 'bending_moment_2a', 'shear_1a', 'shear_2a', 'axial_a', 'torque_a',
             'bending_moment_1b', 'bending_moment_2b', 'shear_1b', 'shear_2b', 'axial_b', 'torque_b',
@@ -3250,13 +3245,10 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['ax', 'ay', 'az', 'vx', 'vy', 'vz', 'pressure']
         return headers
-
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
 
     def build(self):
         """sizes the vectorized attributes of the ComplexSolidPressureForceArray"""
@@ -3591,7 +3583,8 @@ class ComplexForceMomentArray(ComplexForceObject):
         self.itime = 0
         self.nelements = 0  # result specific
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
         return headers
 

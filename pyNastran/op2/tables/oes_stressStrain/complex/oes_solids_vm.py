@@ -448,9 +448,11 @@ class ComplexSolidStressVMArray(ComplexSolidVMArray, StressObject):
         ComplexSolidVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'ovm']
         return headers
+
 
 def _get_msgs(self, is_mag_phase, is_sort1):
     if is_mag_phase:
@@ -505,6 +507,7 @@ class ComplexSolidStrainVMArray(ComplexSolidVMArray, StrainObject):
         ComplexSolidVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz', 'evm']
         return headers

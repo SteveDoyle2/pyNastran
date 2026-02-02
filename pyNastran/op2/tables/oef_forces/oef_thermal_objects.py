@@ -41,15 +41,12 @@ class Real1DHeatFluxArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'xgrad', 'ygrad', 'zgrad', 'xflux', 'yflux', 'zflux'
         ]
         return headers
-
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
 
     def build(self):
         """sizes the vectorized attributes of the Real1DHeatFluxArray"""
@@ -291,7 +288,8 @@ class RealHeatFlux_2D_3DArray(RealElementTableArray):
         return self._write_f06_block(words, header, page_stamp, page_num, f06_file,
                                      is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         return ['grad1', 'grad2', 'grad3', 'flux1', 'flux2', 'flux3']
 
 
@@ -325,7 +323,8 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'free_conv', 'free_conv_k',
         ]
@@ -544,7 +543,8 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'fapplied', 'free_conv', 'force_conv', 'frad', 'ftotal',
         ]
@@ -806,9 +806,6 @@ class RealHeatFluxVUShellArray(BaseElement):
     @property
     def headers(self):
         return ['xgrad', 'ygrad', 'zgrad', 'xflux', 'yflux', 'zflux']
-
-    def _get_headers(self):
-        return self.headers
 
     def _reset_indices(self) -> None:
         self.itotal = 0

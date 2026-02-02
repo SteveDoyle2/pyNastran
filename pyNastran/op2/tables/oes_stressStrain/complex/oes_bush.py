@@ -35,9 +35,6 @@ class ComplexCBushArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self):
-        raise NotImplementedError()
-
     def build(self):
         """sizes the vectorized attributes of the ComplexCBushArray"""
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
@@ -310,7 +307,8 @@ class ComplexCBushStressArray(ComplexCBushArray, StressObject):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz']
         return headers
 
@@ -349,7 +347,8 @@ class ComplexCBushStrainArray(ComplexCBushArray, StrainObject):
         ComplexCBushArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz'] # tx, ty, tz, rx, ry, rz
         return headers
 

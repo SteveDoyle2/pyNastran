@@ -242,19 +242,14 @@ class ComplexFastArray(OES_Object):
             raise NotImplementedError('ComplexFastArray-sort2')
         return page_num - 1
 
-    @property
-    def headers(self) -> list[str]:
-        return self._get_headers()
-
-    def get_headers(self) -> list[str]:
-        return self.headers
 
 class ComplexFastStressArray(ComplexFastArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexFastArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         """
         '                      C O M P L E X  S T R E S S E S  I N  F A S T E N E R  E L E M E N T S   ( C F A S T )'
         '                                                          (REAL/IMAGINARY)'
@@ -271,7 +266,8 @@ class ComplexFastStrainArray(ComplexFastArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         return ['disp_x', 'disp_y', 'disp_z', 'rotation_x', 'rotation_y', 'rotation_z']
 
 def _get_fast_msg(is_stress: bool, is_mag_phase: bool, is_sort1: bool) -> list[str]:

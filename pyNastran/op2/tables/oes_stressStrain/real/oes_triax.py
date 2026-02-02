@@ -44,10 +44,6 @@ class RealTriaxArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-        #return headers
-
     def build(self):
         """sizes the vectorized attributes of the RealTriaxArray"""
         #print("self.ielement =", self.ielement)
@@ -275,7 +271,8 @@ class RealTriaxStressArray(RealTriaxArray, StressObject):
         RealTriaxArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['radial', 'azimuthal', 'axial', 'shear', 'omax', 'oms', 'ovm']
         return headers
 
@@ -299,7 +296,8 @@ class RealTriaxStrainArray(RealTriaxArray, StrainObject):
         RealTriaxArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['radial', 'azimuthal', 'axial', 'shear', 'omax', 'oms', 'ovm']
         return headers
 

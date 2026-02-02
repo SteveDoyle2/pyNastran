@@ -51,9 +51,6 @@ class RandomBeamArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-
     def build(self):
         """sizes the vectorized attributes of the RealBeamArray"""
         #print("self.ielement =", self.ielement)
@@ -324,7 +321,8 @@ class RandomBeamStressArray(RandomBeamArray, StressObject):
         RandomBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             #'grid', 'xxb',
             'sxc', 'sxd', 'sxe', 'sxf',
@@ -348,7 +346,8 @@ class RandomBeamStrainArray(RandomBeamArray, StrainObject):
         RandomBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             #'grid', 'xxb',
             'sxc', 'sxd', 'sxe', 'sxf',

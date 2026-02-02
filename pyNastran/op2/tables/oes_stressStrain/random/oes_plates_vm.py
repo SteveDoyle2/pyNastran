@@ -589,12 +589,10 @@ class RandomPlateVMStressArray(RandomPlateVMArray, StressObject):
         RandomPlateVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'txy', 'ovm']
         return headers
-
-    def get_headers(self) -> list[str]:
-        return self._get_headers()
 
 
 class RandomPlateVMStrainArray(RandomPlateVMArray, StrainObject):
@@ -603,9 +601,7 @@ class RandomPlateVMStrainArray(RandomPlateVMArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         headers = ['exx', 'eyy', 'exy', 'evm']
         return headers
-
-    def get_headers(self) -> list[str]:
-        return self._get_headers()

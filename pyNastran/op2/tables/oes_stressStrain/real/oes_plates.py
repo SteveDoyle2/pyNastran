@@ -52,6 +52,11 @@ ELEMENT_NAME_TO_ELEMENT_TYPE = {
 
 
 class RealPlateArray(OES_Object):
+    """
+    used for:
+     - RealPlateStressArray
+     - RealPlateStrainArray
+    """
     def __init__(self, data_code, is_sort1: bool, isubcase: int, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
@@ -96,9 +101,6 @@ class RealPlateArray(OES_Object):
     def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
-
-    def get_headers(self):  # pragma: no cover
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def is_bilinear(self):
         if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
@@ -1107,7 +1109,8 @@ class RealPlateStressArray(RealPlateArray, StressObject):
         RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         fiber_dist = 'fiber_distance' if self.is_fiber_distance else 'fiber_curvature'
         ovm = 'von_mises' if self.is_von_mises else 'max_shear'
         headers = [fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
@@ -1115,16 +1118,12 @@ class RealPlateStressArray(RealPlateArray, StressObject):
 
 
 class RealPlateStrainArray(RealPlateArray, StrainObject):
-    """
-    used for:
-     - RealPlateStressArray
-     - RealPlateStrainArray
-    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         fiber_dist = 'fiber_distance' if self.is_fiber_distance else 'fiber_curvature'
         ovm = 'von_mises' if self.is_von_mises else 'max_shear'
         headers = [fiber_dist, 'exx', 'eyy', 'exy', 'angle', 'emax', 'emin', ovm]

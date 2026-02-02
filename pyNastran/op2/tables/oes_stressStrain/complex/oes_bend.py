@@ -201,13 +201,6 @@ class ComplexBendArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    @property
-    def headers(self):
-        return self._get_headers()
-
-    def get_headers(self) -> list[str]:
-        return self.headers
-
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         """
@@ -307,7 +300,8 @@ class ComplexBendStressArray(ComplexBendArray, StressObject):
         ComplexBendArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         return ['angle', 'sc', 'sd', 'se', 'sf']
 
 class ComplexBendStrainArray(ComplexBendArray, StrainObject):
@@ -316,5 +310,6 @@ class ComplexBendStrainArray(ComplexBendArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         return ['angle', 'sc', 'sd', 'se', 'sf']

@@ -223,7 +223,7 @@ class GridPointSurfaceArray(ScalarObject):
         #headers = self.get_headers()
         #element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         #if self.nonlinear_factor not in (None, np.nan):
-            #column_names, column_values = self._build_dataframe_transient_header()
+            #column_names, column_values = build_dataframe_transient_header(self)
             #self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
             #self.data_frame.columns.names = column_names
         #else:
@@ -508,7 +508,8 @@ class GridPointSurfaceArray(ScalarObject):
 
 class GridPointSurfaceStressesArray(GridPointSurfaceArray):
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['nx', 'ny', 'txy', 'angle', 'majorP', 'minorP', 'tmax', 'ovm']
         return headers
 
@@ -527,7 +528,8 @@ class GridPointSurfaceStressesArray(GridPointSurfaceArray):
 
 class GridPointSurfaceStrainsArray(GridPointSurfaceArray):
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['nx', 'ny', 'exy', 'angle', 'majorP', 'minorP', 'emax', 'evm']
         return headers
 
@@ -559,7 +561,8 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         self.itime = None
         self._times = None
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'lxa', 'lxb', 'lxc',
             'lya', 'lyb', 'lyc',
@@ -687,7 +690,8 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         self.itime = None
         self._times = None
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['ox', 'oy', 'oz', 'txy', 'tyz', 'txz', 'pressure', 'ovm']
         return headers
 
@@ -876,7 +880,8 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         #self.node_element = None
         self._times = None
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'pressure']
         return headers
 

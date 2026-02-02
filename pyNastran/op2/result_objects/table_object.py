@@ -320,12 +320,6 @@ class TableArray(ScalarObject):  # displacement style table
     def headers(self) -> list[str]:
         return ['t1', 't2', 't3', 'r1', 'r2', 'r3']
 
-    def _get_headers(self) -> list[str]:
-        return self.headers
-
-    def get_headers(self) -> list[str]:
-        return self._get_headers()
-
     def _reset_indices(self) -> None:
         self.itotal = 0
 

@@ -829,7 +829,8 @@ class RealStrainEnergyArray(RealEnergyArray):
                  13   1.582968E+07        1.6124            1.055312E+02
                  14   6.576075E+07        6.6982            3.288037E+02
     """
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'strain_energy', 'percent', 'strain_energy_density',
         ]
@@ -837,7 +838,8 @@ class RealStrainEnergyArray(RealEnergyArray):
 
 
 class RealKineticEnergyArray(RealEnergyArray):
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'kinetic_energy', 'percent', 'kinetic_energy_density',
         ]
@@ -886,7 +888,8 @@ class ComplexStrainEnergyArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'strain_energy', 'percent', 'strain_energy_density'
         ]

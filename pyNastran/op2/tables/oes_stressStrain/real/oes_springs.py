@@ -134,9 +134,6 @@ class RealSpringArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
-        raise NotImplementedError()
-
     #def __mul__(self, factor):
         #"""in-place multiplication"""
         #assert isinstance(factor, float_types), f'factor={factor} and must be a float'
@@ -574,7 +571,8 @@ class RealSpringStressArray(RealSpringArray, StressObject):
         RealSpringArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['spring_stress']
         return headers
 
@@ -603,7 +601,8 @@ class RealSpringStrainArray(RealSpringArray, StrainObject):
         RealSpringArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['spring_strain']
         return headers
 
@@ -672,7 +671,8 @@ class RealNonlinearSpringStressArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['force', 'stress']
         return headers
 

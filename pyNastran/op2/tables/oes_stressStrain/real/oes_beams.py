@@ -67,9 +67,6 @@ class RealBeamArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-
     def build(self):
         """sizes the vectorized attributes of the RealBeamArray"""
         #print("self.ielement =", self.ielement)
@@ -647,9 +644,6 @@ class RealNonlinearBeamArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-
     def build(self):
         """sizes the vectorized attributes of the RealNonlinearBeamArray"""
         #print("self.ielement =", self.ielement)
@@ -877,7 +871,8 @@ class RealBeamStressArray(RealBeamArray, StressObject):
         RealBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             #'grid', 'xxb',
             'sxc', 'sxd', 'sxe', 'sxf',
@@ -1000,7 +995,8 @@ class RealBeamStrainArray(RealBeamArray, StrainObject):
         RealBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             #'grid', 'xxb',
             'sxc', 'sxd', 'sxe', 'sxf',
@@ -1027,7 +1023,8 @@ class RealNonlinearBeamStressArray(RealNonlinearBeamArray, StressObject):
         RealNonlinearBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'longitudinal_stress', 'equivalent_stress',
             'total_strain', 'equivalent_plastic_strain', 'equivalent_creep_strain'

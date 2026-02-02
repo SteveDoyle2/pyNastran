@@ -113,16 +113,10 @@ class ComplexLayeredCompositesVMArray(OES_Object):
         self.element_layer = np.zeros((nlayers, 2), dtype=idtype)
         # print(self.data.shape, self.element_node.shape)
 
-    # def build_dataframe(self) -> None:
-    #     """creates a pandas dataframe"""
-    #     headers = self.get_headers()
-    #     column_names, column_values = build_dataframe_transient_header(self)
-    #
-    #     data_frame = build_pandas_transient_element_node(
-    #         self, column_values, column_names,
-    #         headers, self.element_node, self.data)
-    #     #print(data_frame)
-    #     self.data_frame = data_frame
+
+    def build_dataframe(self) -> None:
+        """creates a pandas dataframe"""
+        self.data_frame = build_dataframe(self)
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -207,9 +201,9 @@ class ComplexLayeredCompositesVMArray(OES_Object):
         if header is None:
             header = []
         msg_temp, nnodes = _get_composite_plate_msg(self, is_mag_phase, is_sort1)
-        if not self.is_von_mises:
-            warnings.warn(f'{self.class_name} doesnt support writing von Mises')
-            f06_file.write(f'{self.class_name} doesnt support writing von Mises\n')
+        # if not self.is_von_mises:
+        #     warnings.warn(f'{self.class_name} doesnt support writing von Mises')
+        #     f06_file.write(f'{self.class_name} doesnt support writing von Mises\n')
 
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
@@ -276,7 +270,8 @@ class ComplexLayeredCompositesVMArray(OES_Object):
             page_num += 1
         return page_num - 1
 
-def _get_composite_plate_msg(self, is_mag_phase=True, is_sort1=True) -> tuple[list[str], int]:
+def _get_composite_plate_msg(self, is_mag_phase: bool=True,
+                             is_sort1: bool=True) -> tuple[list[str], int]:
     if self.is_von_mises:
         von = 'VON'
         mises = 'MISES'
@@ -434,15 +429,7 @@ class ComplexLayeredCompositesArray(OES_Object):
 
     def build_dataframe(self) -> None:
         """creates a pandas dataframe"""
-        headers = self._get_headers()
-        column_names, column_values = build_dataframe_transient_header(self)
-
-        data_frame = build_pandas_transient_element_node(
-            column_values, column_names,
-            headers, self.element_layer, self.data,
-        names=['ElementID', 'Layer', 'Item'])
-        #print(data_frame)
-        self.data_frame = data_frame
+        self.data_frame = build_dataframe(self)
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -607,22 +594,24 @@ class ComplexLayeredCompositesArray(OES_Object):
 
 class ComplexLayeredCompositeStressVMArray(ComplexLayeredCompositesVMArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexLayeredCompositesVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
+        ComplexLayeredCompositesVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         assert self.is_stress, self.stress_bits
 
-    def _get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['o11', 'o22', 't12', 't1z', 't2z', 'ovm']
         return headers
 
 
 class ComplexLayeredCompositeStrainVMArray(ComplexLayeredCompositesVMArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexLayeredCompositesVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
+        ComplexLayeredCompositesVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['e11', 'e22', 'e12', 'e1z', 'e2z', 'evm']
         return headers
 
@@ -633,7 +622,8 @@ class ComplexLayeredCompositeStressArray(ComplexLayeredCompositesArray, StressOb
         StressObject.__init__(self, data_code, isubcase)
         assert self.is_stress, self.stress_bits
 
-    def _get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['o11', 'o22', 't12', 't1z', 't2z']
         return headers
 
@@ -644,6 +634,20 @@ class ComplexLayeredCompositeStrainArray(ComplexLayeredCompositesArray, StrainOb
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['e11', 'e22', 'e12', 'e1z', 'e2z']
         return headers
+
+
+def build_dataframe(self: (ComplexLayeredCompositeStressArray | ComplexLayeredCompositeStressVMArray |
+                           ComplexLayeredCompositeStrainArray | ComplexLayeredCompositeStrainVMArray)):
+    """creates a pandas dataframe"""
+    headers = self._get_headers()
+    column_names, column_values = build_dataframe_transient_header(self)
+    data_frame = build_pandas_transient_element_node(
+        self, column_values, column_names,
+        headers, self.element_layer, self.data,
+        names=['ElementID', 'Layer', 'Item'])
+    #print(data_frame)
+    return data_frame

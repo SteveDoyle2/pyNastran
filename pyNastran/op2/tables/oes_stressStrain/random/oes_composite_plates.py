@@ -60,9 +60,6 @@ class RandomCompositePlateArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-
     def build(self):
         """sizes the vectorized attributes of the RealCompositePlateArray"""
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
@@ -429,9 +426,6 @@ class RandomCompositePlateVMArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-
     def build(self):
         """sizes the vectorized attributes of the RealCompositePlateArray"""
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
@@ -741,7 +735,8 @@ class RandomCompositePlateStressArray(RandomCompositePlateArray, StressObject):
     def is_strain(self):
         return False
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['o11', 'o22', 'txy']
         return headers
 
@@ -759,7 +754,8 @@ class RandomCompositePlateStrainArray(RandomCompositePlateArray, StrainObject):
     def is_strain(self) -> bool:
         return True
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['e11', 'e22', 'exy']
         return headers
 
@@ -776,7 +772,8 @@ class RandomCompositePlateStressVMArray(RandomCompositePlateVMArray, StressObjec
     def is_strain(self) -> bool:
         return False
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['o11', 'o22', 'txy']
         return headers
 
@@ -794,6 +791,7 @@ class RandomCompositePlateStrainVMArray(RandomCompositePlateVMArray, StrainObjec
     def is_strain(self) -> bool:
         return True
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['e11', 'e22', 'exy']
         return headers

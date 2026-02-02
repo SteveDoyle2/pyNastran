@@ -42,9 +42,6 @@ class ComplexRodArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self):
-        raise NotImplementedError()
-
     def build(self):
         """sizes the vectorized attributes of the ComplexRodArray"""
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
@@ -357,7 +354,8 @@ class ComplexRodStressArray(ComplexRodArray, StressObject):
         ComplexRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['axial', 'torsion']
         return headers
 
@@ -391,7 +389,8 @@ class ComplexRodStrainArray(ComplexRodArray, StrainObject):
         ComplexRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['axial', 'torsion']
         return headers
 

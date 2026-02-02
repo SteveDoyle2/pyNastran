@@ -47,9 +47,6 @@ class RealSolidArrayNx(OES_Object):
     def is_complex(self) -> bool:
         return False
 
-    def get_headers(self):
-        raise NotImplementedError()
-
     def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
@@ -692,7 +689,8 @@ class RealSolidStressArrayNx(RealSolidArrayNx, StressObject):
         RealSolidArrayNx.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         if self.is_von_mises:
             von_mises = 'von_mises'
         else:
@@ -720,7 +718,8 @@ class RealSolidStrainArrayNx(RealSolidArrayNx, StrainObject):
         RealSolidArrayNx.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         if self.is_von_mises:
             von_mises = 'von_mises'
         else:

@@ -382,7 +382,8 @@ class ComplexBarStressArray(ComplexBarArray, StressObject):
         ComplexBarArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['s1a', 's1b', 's1c', 's1d', 'axial',
                    's2a', 's2b', 's2c', 's2d', ]
         #headers = ['s1a', 's1b', 's1c', 's1d', 's1e', 'axial',
@@ -394,7 +395,8 @@ class ComplexBarStrainArray(ComplexBarArray, StrainObject):
         ComplexBarArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['e1a', 'e1b', 'e1c', 'e1d', 'axial',
                    'e2a', 'e2b', 'e2c', 'e2d', ]
         #headers = ['e1a', 'e1b', 'e1c', 'e1d', 'e1e', 'axial',

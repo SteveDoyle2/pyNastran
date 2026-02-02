@@ -45,9 +45,10 @@ class ComplexSpringDamperArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
+    # @property
+    # def headers(self) -> list[str]:
+    #     headers = ['axial', 'torque']
+    #     return headers
 
     def build(self):
         """sizes the vectorized attributes of the ComplexSpringDamperArray"""
@@ -369,7 +370,8 @@ class ComplexSpringStressArray(ComplexSpringDamperArray, StressObject):
         ComplexSpringDamperArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['spring_stress']
         return headers
 
@@ -379,6 +381,7 @@ class ComplexSpringStrainArray(ComplexSpringDamperArray, StrainObject):
         ComplexSpringDamperArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['spring_strain']
         return headers
