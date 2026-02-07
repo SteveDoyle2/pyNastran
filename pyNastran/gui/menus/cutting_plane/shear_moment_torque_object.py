@@ -8,7 +8,7 @@ import os
 from typing import cast, Optional, Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
+from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     get_element_centroids)
 
 from pyNastran.gui.menus.groups_modify.groups import Group

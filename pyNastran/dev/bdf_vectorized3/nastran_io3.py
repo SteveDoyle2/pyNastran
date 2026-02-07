@@ -25,7 +25,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     #LIGHT_GREEN_FLOAT, # GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
     #YELLOW_FLOAT, ORANGE_FLOAT,
 #)
-from pyNastran.op2.result_objects.op2_objects import (
+from pyNastran.op2.result_objects.utils import (
     real_modes_to_omega_freq, complex_damping_frequency)
 
 from pyNastran.gui.utils.vtk.vectorized_geometry import (

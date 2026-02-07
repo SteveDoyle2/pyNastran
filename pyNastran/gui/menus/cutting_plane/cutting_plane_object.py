@@ -19,8 +19,8 @@ if qt_version == 'pyside2':
 import matplotlib.pyplot as plt
 
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import _p1_p2_zaxis_to_cord2r
-from pyNastran.bdf.mesh_utils.cutting_plane_plotter import cut_and_plot_model
+from pyNastran.bdf.mesh_utils.cut.utils import p1_p2_zaxis_to_cord2r
+from pyNastran.bdf.mesh_utils.cut.cutting_plane_plotter import cut_and_plot_model
 
 from pyNastran.gui.menus.cutting_plane.cutting_plane import CuttingPlaneWindow
 from pyNastran.gui.qt_files.colors import PURPLE_FLOAT
@@ -209,7 +209,7 @@ class CuttingPlaneObject(BaseGui):
         izero = np.where(dxyz == 0)
         dxyz[izero] = dim_max
 
-        xyz1, xyz2, unused_z_global, i, k, origin, zaxis, xzplane = _p1_p2_zaxis_to_cord2r(
+        xyz1, xyz2, unused_z_global, i, k, origin, zaxis, xzplane = p1_p2_zaxis_to_cord2r(
             model, p1, p2, zaxis,
             cid_p1=cid_p1, cid_p2=cid_p2, cid_zaxis=cid_zaxis,
             method=method)

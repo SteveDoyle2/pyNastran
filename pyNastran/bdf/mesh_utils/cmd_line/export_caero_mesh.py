@@ -64,7 +64,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
         pid_method = data['--pid']
 
     from pyNastran.bdf.bdf import read_bdf
-    from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
+    from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
     skip_cards = [
         # elements
         'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CONM2',

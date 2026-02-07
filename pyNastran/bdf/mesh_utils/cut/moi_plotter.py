@@ -17,7 +17,7 @@ except ModuleNotFoundError:  # pragma: no cover
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF, read_bdf, CORD2R
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
+from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     cut_face_model_by_coord,
     calculate_area_moi,
 )

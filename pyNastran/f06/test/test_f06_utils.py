@@ -31,7 +31,7 @@ if IS_MATPLOTLIB:
 import pyNastran
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import read_bdf
-from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
+from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
 
 from pyNastran.f06.utils import (
     split_float_colons, split_int_colon,

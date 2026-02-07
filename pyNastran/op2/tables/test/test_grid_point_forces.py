@@ -15,10 +15,9 @@ from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.tables.ogf_gridPointForces.smt import smt_setup, plot_smt, create_shear_moment_torque
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
-    get_element_centroids, _p1_p2_zaxis_to_cord2r,
-    get_stations,
-)
+from pyNastran.bdf.mesh_utils.cut.utils import p1_p2_zaxis_to_cord2r
+from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
+    get_element_centroids,  get_stations)
 
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
@@ -36,7 +35,7 @@ class TestGridPointForcesSMT(unittest.TestCase):
         zaxis = np.array([0., 0., 1.])
         model = BDF(debug=False)
         model.cross_reference()
-        xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = _p1_p2_zaxis_to_cord2r(
+        xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = p1_p2_zaxis_to_cord2r(
             model, p1, p2, zaxis, method='Z-Axis Projection',
             cid_p1=0, cid_p2=0, cid_zaxis=0)
         assert np.array_equal(xyz1, p1), xyz1
@@ -56,7 +55,7 @@ class TestGridPointForcesSMT(unittest.TestCase):
         zaxis = np.array([1., 1., 2.])
         model = BDF(debug=False)
         model.cross_reference()
-        xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = _p1_p2_zaxis_to_cord2r(
+        xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = p1_p2_zaxis_to_cord2r(
             model, p1, p2, zaxis, method='CORD2R',
             cid_p1=0, cid_p2=0, cid_zaxis=0)
         assert np.array_equal(xyz1, p1), xyz1
@@ -152,7 +151,7 @@ class TestGridPointForcesSMT(unittest.TestCase):
         p2 = p1 + np.array([1., 0., 0.]) # xz-plane
         zaxis = np.array([0., 0., 1.])
 
-        xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = _p1_p2_zaxis_to_cord2r(
+        xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = p1_p2_zaxis_to_cord2r(
             model, p1, p2, zaxis, method='Z-Axis Projection',
             cid_p1=0, cid_p2=0, cid_zaxis=0)
         assert np.array_equal(xyz1, p1), xyz1
@@ -174,7 +173,7 @@ class TestGridPointForcesSMT(unittest.TestCase):
 
         p2 = p1 + np.array([1., 0., 0.]) # xz-plane
         zaxis = np.array([0., 0., 1.])
-        #xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = _p1_p2_zaxis_to_cord2r(
+        #xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = p1_p2_zaxis_to_cord2r(
             #model, p1, p2, zaxis, method='Z-Axis Projection',
             #cid_p1=0, cid_p2=0, cid_zaxis=0)
         xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, stations = get_stations(

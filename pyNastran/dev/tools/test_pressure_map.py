@@ -6,7 +6,7 @@ from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
-from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
+from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
 from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 
 from pyNastran.dev.tools.pressure_map import (

@@ -13,7 +13,7 @@ except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
     MPL_VER = None
 
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
+from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     cut_edge_model_by_coord, cut_face_model_by_coord, export_face_cut)
 
 if TYPE_CHECKING:  # pragma: no cover

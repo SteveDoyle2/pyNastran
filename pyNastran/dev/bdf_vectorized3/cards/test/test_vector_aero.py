@@ -35,7 +35,7 @@ from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS # , CSSCHD, TRIM, TRIM2, DIVERG
 #from pyNastran.bdf.cards.aero.utils import build_trim_load_cases
-from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh # build_structure_from_caero
+from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh # build_structure_from_caero
 from pyNastran.f06.dev.flutter.nastran_utils import (
     get_element_table, get_property_table,
     get_material_table,
