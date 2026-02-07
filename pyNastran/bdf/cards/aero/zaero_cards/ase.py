@@ -146,6 +146,8 @@ class ASECONT(BaseCard):
         self.conct_id = conct_id
         self.extinp_set_id = extinp_set_id
         self.extout_set_id = extout_set_id
+        self.extinps_ref = None
+        self.extouts_ref = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -182,18 +184,24 @@ class ASECONT(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         msg = f', which is required by ASECONT={self.asecont_id}'
+        zaero = model.zaero
         # ASE, MLOADS, ELOADS, GLOADS, DFS, or NLFLTR
         # zaero = model.zaero
         # CNCTSET
         # self.conct_ref = model.conct[self.conct_id]
         if self.extinp_set_id:
+            extinps_ref = []
             self.extinp_set_ref = model.Set(self.extinp_set_id, msg)
             for idi in self.extinp_set_ref.ids():
                 asdf
         if self.extout_set_id:
-            self.extout_set_ref = model.Set(self.extout_set_id, msg)
-            for idi in self.extout_set_ref.ids():
-                asdf
+            extouts_ref = []
+            extout_set_ref = model.Set(self.extout_set_id, msg)
+            for extout_id in extout_set_ref.ids:
+                extout = zaero.extout[extout_id]
+                extout.cross_reference(model, self)
+                extouts_ref.append(extout)
+            self.extouts_ref = extouts_ref
 
 
     def safe_cross_reference(self, model: BDF, xref_errors):

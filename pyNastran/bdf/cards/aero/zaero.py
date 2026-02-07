@@ -1040,12 +1040,14 @@ class ZAERO:
             gainset_id = asecont.gain_id
             cnctset_id = asecont.conct_id
             senset_id = asecont.sens_id
+            extout_set_id = asecont.extout_set_id
         else:
             tfset_id = 1000001
             cnctset_id = 1000001
             gainset_id = 1000001
             senset_id = 1000001
             mldcomd_id = 0
+            extout_set_id = 0
             # raise RuntimeError('mloads')
             # mldcomd_id = 401
         # tfset_id = 0
@@ -1054,6 +1056,32 @@ class ZAERO:
 
         nnode = 0
         nedge = 0
+        if extout_set_id:
+            # EXTOUT       501          500007       1  PITCHR
+            # extout_id : 501
+            # input_type : ''
+            # itf_component : 1
+            # itf_id : 500007
+            # label  : 'PITCHR'
+            # itf_ref : $ GAIN CONNECTION FROM PITCH RATE SENSOR TO LOW-PASS FILTER
+            extouts_refs = asecont.extouts_ref
+
+            g.attr('node', shape='box')
+            for extout_ref in extouts_refs:
+                itf_ref = extout_ref.itf_ref
+                input_name = f'{itf_ref.type}={itf_ref.cjunct_id} (in={itf_ref.nu}, out={itf_ref.ny})'
+                input_comment = clean_comment(itf_ref.comment)
+
+                output_name = f'EXTOUT={extout_ref.extout_id} ({extout_ref.label})'
+                output_comment = clean_comment(extout_ref.comment)
+                tag = f'(I={extout_ref.itf_component})'
+
+                g.node(output_name+output_comment)
+                g.edge(input_name + input_comment,
+                       output_name + output_comment)
+                nnode += 1
+                nedge += 1
+
         if mldcomd_id and mldcomd_id in self.mldcomd:
             g.attr('node', shape='box')
             mldcomd = self.mldcomd[mldcomd_id]
@@ -1076,7 +1104,7 @@ class ZAERO:
                 else:
                     raise RuntimeError(itf_ref)
 
-                input_name = f'EXTINP={extinp_ref.extinp_id}'
+                input_name = f'EXTINP={extinp_ref.extinp_id} ({extinp_ref.label})'
                 input_comment = clean_comment(extinp_ref.comment)
                 tag = f'({valuei}*I={extinp_ref.itf_component})'
                 g.edge(input_name + input_comment,
@@ -1107,6 +1135,12 @@ class ZAERO:
         if senset_id in self.senset: # ASESNSR
             senset = self.senset[senset_id]
             asesnsr_ids = senset.ids
+            g.attr('node', shape='ellipse')
+            for asesnsr_id in asesnsr_ids:
+                asesnsr = self.asesnsr[asesnsr_id]
+                output_name = f'{asesnsr.type}={asesnsr.asesnsr_id} ({asesnsr.name})'
+                output_comment = clean_comment(asesnsr.comment)
+                g.node(output_name+output_comment)
 
         # print(f' tfset_ids = {tfset_ids}')
         # print(f'all_conct_ids = {conct_ids}')
@@ -1114,24 +1148,28 @@ class ZAERO:
         # print(f'asesnsr_ids = {asesnsr_ids}')
 
         log = self.model.log
-        
-        # draw ASESNSRs
+        # draw ASESNSRs that link to gains...
         for idi, card in self.asegain.items():
             if idi not in asegain_ids:
                 continue
             output_ref = card.output_ref
-            output_name = f'{output_ref.type}={output_ref.asesnsr_id} ({output_ref.name})'
-            # print(output_ref.get_stats())
+            if output_ref.type == 'CJUNCT':
+                idj = output_ref.cjunct_id
+                output_name = f'{output_ref.type}={output_ref.cjunct_id}'
+            else:
+                idj = output_ref.asesnsr_id
+                output_name = f'{output_ref.type}={output_ref.asesnsr_id} ({output_ref.name})'
 
             # if output_ref.type in tfset_ids:
-            output_comment = clean_comment(output_ref.comment)
-            if output_ref.asesnsr_id in asesnsr_ids:
-                g.attr('node', shape='ellipse')
-                g.node(output_name+output_comment)
-            else:
-                g.attr('node', shape='box')
-                g.node(output_name+output_comment)
-            nnode += 1
+            if output_ref.type == 'ASESNSR':
+                output_comment = clean_comment(output_ref.comment)
+                if idj in asesnsr_ids:
+                    g.attr('node', shape='ellipse')
+                    g.node(output_name+output_comment)
+                else:
+                    g.attr('node', shape='box')
+                    g.node(output_name+output_comment)
+                nnode += 1
 
         for actu_id, card in self.actu.items():
             name = f'{card.type}={actu_id}'
@@ -1184,6 +1222,8 @@ class ZAERO:
             if output_ref.type == 'ASESNSR':
                 otag = '' if output_ref.asesnsr_id in asesnsr_ids else 'x'
                 output_name = f'{otag}{output_ref.type}={output_ref.asesnsr_id} ({output_ref.name})'
+            elif output_ref.type == 'CJUNCT':
+                output_name = f'{otag}{output_ref.type}={output_ref.cjunct_id} (in={output_ref.nu}, out={output_ref.ny})'
             # else:
             #     output_name = f'{output_ref.type}={output_ref.input_tf_id}'
             else:
@@ -1201,7 +1241,6 @@ class ZAERO:
             nedge += 1
 
         log = self.model.log
-        g.attr('node', shape='box')
         for idi, card in self.conct.items():
             if idi not in conct_ids:
                 continue
@@ -1210,6 +1249,7 @@ class ZAERO:
             # 'SISOTF=31004-1', 'ACTU=21001-1', 'ACTU=21002-1
             sivalue = ''
             input_ref = card.input_ref
+            box_type = 'box'
 
             # CJUNCT, MIMOSS, SISOTF or ACTU
             if input_ref is None:
@@ -1268,8 +1308,9 @@ class ZAERO:
                 output_name = f'{output_ref.type}={card.output_tf_id} (in={output_ref.nu}, out={output_ref.ny})'
                 output_comment = clean_comment(output_ref.comment)
             elif output_ref.type == 'ASESNSR':
-                output_name = f'{output_ref.type}={card.output_tf_id}'
+                output_name = f'{output_ref.type}={card.output_tf_id} ({output_ref.name})'
                 output_comment = clean_comment(output_ref.comment)
+                box_type = 'ellipse'
             else:  # pragma: no cover
                 raise RuntimeError(output_ref)
                 output_name = f'{output_ref.type}={card.output_tf_id}'
@@ -1277,6 +1318,7 @@ class ZAERO:
             log.debug(f'found {output_name}')
 
             tag = f'({sivalue}I={card.input_component}, {sovalue}O={card.output_component})'
+            g.attr('node', shape=box_type)
             g.edge(output_name+output_comment,
                    input_name+input_comment,
                    label=f'CONCT={idi}\n{tag}')
