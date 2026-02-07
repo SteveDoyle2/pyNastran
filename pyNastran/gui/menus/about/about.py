@@ -14,8 +14,8 @@ with warnings.catch_warnings():  # avoid an imp module deprecation warning
 
 import numpy
 import scipy
-from pyNastran.gui.vtk_common_core import VTK_VERSION
 import docopt
+from pyNastran.gui.vtk_common_core import VTK_VERSION
 import pyNastran
 
 import qtpy
@@ -87,7 +87,8 @@ class AboutWindow(PyDialog):
     | AboutWindow |
     +-------------+
     """
-    def __init__(self, data, win_parent=None, show_tol: bool=True):
+    def __init__(self, data, win_parent=None,
+                 show_tol: bool=True):
         """
         Saves the data members from data and
         performs type checks

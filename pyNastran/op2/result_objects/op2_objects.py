@@ -2,12 +2,14 @@
 from __future__ import annotations
 import copy
 import warnings
+from getpass import getuser
 from itertools import count
 from struct import pack
 from typing import TYPE_CHECKING
 import numpy as np
 
 from cpylog import SimpleLogger
+from pyNastran import DEV
 from pyNastran.utils import object_attributes, object_methods, object_stats, simplify_object_keys
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 
@@ -225,7 +227,12 @@ class BaseScalarObject(Op2Codes):
 
     def build_dataframe(self) -> None:  # pragma: no cover
         """creates a pandas dataframe"""
-        print('build_dataframe is not implemented in %s' % self.__class__.__name__)
+        msg = 'build_dataframe is not implemented in %s' % self.__class__.__name__
+        is_beam = any((word in self.class_name
+                       for word in ['Beam', 'Bend']))
+        if DEV and getuser() == 'sdoyle' and not is_beam:
+            raise RuntimeError(msg)
+        warnings.warn(msg)
 
     def export_to_hdf5(self, group, log: SimpleLogger) -> None:
         """exports the object to HDF5 format"""
@@ -588,14 +595,6 @@ class ScalarObject(BaseScalarObject):
                 warnings.warn(''.join(self.get_stats()))
             raise RuntimeError(f'grid_type={grid_type!r}')
         return grid_type_str
-
-    def cast_grid_type(self, grid_type_str):
-        """converts a grid_type string to an integer"""
-        try:
-            grid_type = GRID_TYPE_TO_STR_MAP[grid_type_str]
-        except KeyError:
-            raise RuntimeError(f'grid_type={grid_type_str!r}')
-        return grid_type
 
     def update_dt(self, data_code, unused_dt):
         """
@@ -1001,3 +1000,11 @@ def combination_inplace(data: np.ndarray,
             else:
                 raise RuntimeError(f'Floating point error: dtype={dtype!r} factor={factor}')
     return
+
+# def cast_grid_type(grid_type_str: str) -> int:
+#     """converts a grid_type string to an integer"""
+#     try:
+#         grid_type = GRID_TYPE_TO_STR_MAP[grid_type_str]
+#     except KeyError:
+#         raise RuntimeError(f'grid_type={grid_type_str!r}')
+#     return grid_type

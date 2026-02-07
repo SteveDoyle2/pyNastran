@@ -284,9 +284,11 @@ def _setup_faces(bdf_filename: PathLike | BDF,
 
 
 def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
-                            coord: CORD2R, tol: float,
+                            coord: CORD2R,
+                            tol: float,
                             nodal_result: np.ndarray,
-                            plane_atol: float=1e-5, skip_cleanup: bool=True,
+                            plane_atol: float=1e-5,
+                            skip_cleanup: bool=True,
 
                             csv_filename: PathLike='',
                             plane_bdf_filename1: PathLike='plane_face1.bdf',
@@ -304,9 +306,10 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
         model : a properly configurated BDF object
     coord : Coord
         the coordinate system to cut the model with
+        cutting plane is the y-axis
     tol : float
-        the tolerance to filter faces (using some large value) to prevent
-        excessive computations
+        the tolerance to filter faces (using some large value)
+        to prevent excessive computations
     nodal_result : (nelements, ) float np.ndarray
         the result to cut the model with
     plane_atol : float; default=1e-5
@@ -553,10 +556,14 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
     #return NotImplementedError()
 
 
-def _cut_face_model_by_coord(nids, xyz_cid0: np.ndarray,
+def _cut_face_model_by_coord(nids: np.ndarray,
+                             xyz_cid0: np.ndarray,
                              elements: Elements,
-                             coord: Coord, tol: float,
-                             nodal_result, plane_atol: float=1e-5, skip_cleanup: bool=True,
+                             coord: Coord,
+                             tol: float,
+                             nodal_result: np.ndarray,
+                             plane_atol: float=1e-5,
+                             skip_cleanup: bool=True,
                              plane_bdf_filename1: PathLike='plane_face1.bdf',
                              plane_bdf_filename2: PathLike='plane_face2.bdf',
                              plane_bdf_offset: float=0.,
@@ -584,9 +591,10 @@ def _cut_face_model_by_coord(nids, xyz_cid0: np.ndarray,
                 quads are split into two triangles
     coord : Coord
         the coordinate system to cut the model with
+        cutting plane is the y-axis
     tol : float
-        the tolerance to filter faces (using some large value) to prevent
-        excessive computations
+        the tolerance to filter faces (using some large value)
+        to prevent excessive computations
     nodal_result : (nelements, ) float np.ndarray
         the result to cut the model with
     plane_atol : float; default=1e-5
@@ -2148,6 +2156,7 @@ def _write_moi_file(moi_filename: PathLike,
             eidi += 1
             #PID | MID |  A  |  J  |  C  | NSM
             eid_file.write(fmt % (eidi, pidi, areai, thicknessi, Ii[0], Ii[1], Ii[2]))
+
 
 def get_element_inertias(model: BDF,
                          normal_plane: np.ndarray,

@@ -394,11 +394,7 @@ class TableArray(ScalarObject):  # displacement style table
             #ntimes, nnodes, nx, ny, self.ntotal))
 
     def build_dataframe(self):
-        """creates a pandas dataframe
-
-        works: 0.24.2
-        broken: 0.25.0
-        """
+        """creates a pandas dataframe"""
         import pandas as pd
 
         headers = self.get_headers()
@@ -2343,7 +2339,6 @@ def pandas_extract_rows(data_frame, ugridtype_str: np.ndarray, index_names: list
                 except (ValueError):
                     print(f'skipping pandas cleanup due to issue with complex {letter} points')
                     return data_frame
-
         elif dim == 6:
             eig = data_frame.xs(letter, level=1)
         else:

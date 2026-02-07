@@ -222,5 +222,5 @@ class TestPressureMap(unittest.TestCase):
             regions_to_remove=None)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

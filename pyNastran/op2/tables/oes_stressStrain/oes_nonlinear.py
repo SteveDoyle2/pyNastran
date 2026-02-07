@@ -522,7 +522,7 @@ class RealNonlinearSolidArray(OES_Object):
         self.ielement = 0
 
     @property
-    def is_stress(self):
+    def is_stress(self) -> bool:
         return True
 
     @property
@@ -598,26 +598,36 @@ class RealNonlinearSolidArray(OES_Object):
         # ex, ey, ez, exy, eyz, exz]
         self.data = np.full((ntimes, ntotal, 15), np.nan, dtype=fdtype)
 
-    #def build_dataframe(self):
-        #"""creates a pandas dataframe"""
-        #import pandas as pd
-        #headers = self.get_headers()[1:]
-        ##nelements = self.element.shape[0]
+    def build_dataframe(self):
+        """creates a pandas dataframe"""
+        import pandas as pd
+        headers = self.headers
+        #nelements = self.element.shape[0]
 
-        #if self.nonlinear_factor not in (None, np.nan):
-            #column_names, column_values = build_dataframe_transient_header(self)
-            #self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-            #self.data_frame.columns.names = column_names
-            #self.data_frame.index.names = ['ElementID', 'Item']
-        #else:
-            ## option B - nice!
-            #df1 = pd.DataFrame(self.element).T
-            #df1.columns = ['ElementID']
-            #df2 = pd.DataFrame(self.data[0, :, 1:])
-            #df2.columns = headers
-            #self.data_frame = df1.join(df2)
-        #self.data_frame = self.data_frame.reset_index().set_index(['ElementID'])
-        #print(self.data_frame)
+        if self.nonlinear_factor not in (None, np.nan):
+            #             LoadStep                        1.0
+            # ElementID NodeID Item
+            # 1         0      oxx   0.000000e+00
+            #                  oyy   0.000000e+00
+            #                  ozz   0.000000e+00
+            #                  txy   0.000000e+00
+            #                  tyz   0.000000e+00
+            # ...                             ...
+            # 36        11     eyy  -1.491099e-06
+            #                  ezz  -1.503740e-06
+            #
+            column_names, column_values = build_dataframe_transient_header(self)
+            assert len(self.data.shape) == 3, self.data.shape
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
+                headers, self.element_node, self.data)
+        else:
+            index = pd.MultiIndex.from_arrays(self.element_node.T, names=['ElementID', 'NodeID'])
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
+            data_frame.columns.names = ['Static']
+            print(data_frame)
+            raise RuntimeError('verify build_dataframe')
+        self.data_frame = data_frame
 
     def add_sort1(self, dt, eid, grid,
                   sx, sy, sz, sxy, syz, sxz, se, eps, ecs,

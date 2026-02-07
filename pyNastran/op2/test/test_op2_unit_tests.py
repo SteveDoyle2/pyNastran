@@ -2658,7 +2658,6 @@ class TestOP2Main(Tester):
     def test_bdf_op2_other_23(self):
         """checks ehbus69.bdf, which tests RealBush1DStressArray"""
         log = get_logger(level='warning')
-        #log = get_logger(level='debug')
         bdf_filename = MODEL_PATH / 'other' / 'ehbus69.bdf'
         op2_filename = MODEL_PATH / 'other' / 'ehbus69.op2'
 

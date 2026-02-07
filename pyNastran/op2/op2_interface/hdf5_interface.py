@@ -76,7 +76,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates_strength_ra
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
-from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import HyperelasticQuadArray
+from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import HyperelasticQuadStressArray, HyperelasticQuadStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamStressArray, ComplexBeamStrainArray
@@ -1162,8 +1162,8 @@ TABLE_OBJ_MAP = {
     'nonlinear_chexa_stress_strain': (RealNonlinearSolidArray, ),
     'nonlinear_cpyram_stress_strain': (RealNonlinearSolidArray, ),
 
-    'stress.hyperelastic_cquad4_stress': (HyperelasticQuadArray, ),
-    'strain.hyperelastic_cquad4_strain': (HyperelasticQuadArray, ),
+    'stress.hyperelastic_cquad4_stress': (HyperelasticQuadStressArray, ),
+    'strain.hyperelastic_cquad4_strain': (HyperelasticQuadStrainArray, ),
 
     'force.ctetra_pressure_force': (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
     'force.cpenta_pressure_force': (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
@@ -1302,7 +1302,7 @@ def _load_eigenvalue(h5_result, encoding: str,
         return None
 
     assert obj.class_name == class_name, f'class_name={obj.class_name!r} selected; should be {class_name!r}'
-    keys_to_skip = ['class_name', 'is_complex', 'is_real', 'table_name_str']
+    keys_to_skip = ['class_name', 'is_complex', 'is_real', 'table_name_str', 'headers']
     for key in h5_result.keys():
         if key in keys_to_skip:
             continue

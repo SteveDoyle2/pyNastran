@@ -132,8 +132,8 @@ class RealSolidCompositeArray(OES_Object):
 
         ntotal *= nodes_per_element
 
-        element_layer_node = zeros((ntotal, 3), dtype=idtype)
-        data = zeros((ntimes, ntotal, 7), fdtype)
+        element_layer_node = np.zeros((ntotal, 3), dtype=idtype)
+        data = np.zeros((ntimes, ntotal, 7), fdtype)
         #print('RealSolidCompositeArray: data.shape=%s' % str(data.shape))
         #self.nnodes = element_layer.shape[0] // self.nelements
         #self.data = zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
@@ -152,11 +152,11 @@ class RealSolidCompositeArray(OES_Object):
             #self.element_cid = element_cid
             self.data = data
 
-    def _build_dataframe(self):
+    def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
 
-        headers = self.get_headers()
+        headers = self.headers
         # TODO: cid?
         #element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
@@ -167,13 +167,17 @@ class RealSolidCompositeArray(OES_Object):
             #self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
             #self.data_frame.columns.names = column_names
             #self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+            print(data_frame)
+            raise RuntimeError('finish pd.Panel')
         else:
-            # Static            sxc  sxd  sxe  sxf  smax  smin    MS_tension  MS_compression
-            # ElementID NodeID
-            # 12        22      0.0  0.0  0.0  0.0   0.0   0.0  1.401298e-45    1.401298e-45
-            #           26      0.0  0.0  0.0  0.0   0.0   0.0  1.401298e-45    1.401298e-45
+            # Static                     oxx       oyy  ...       t2z  von_mises
+            # ElementID Layer Grid                      ...
+            # 1         1     0     1.060943  0.179359  ...  0.019784   0.885374
+            #           2     0     1.089592  0.183899  ...  0.083607   0.921374
+            # 2         1     0     1.107400  0.044122  ... -0.011024   1.071296
+            #           2     0     1.043136  0.033165  ... -0.038763   1.012717
             index = pd.MultiIndex.from_arrays(self.element_layer_node.T, names=['ElementID', 'Layer', 'Grid'])
-            data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
+            data_frame = pd.DataFrame(self.data[0, :, :], columns=headers, index=index)
             data_frame.columns.names = ['Static']
         self.data_frame = data_frame
 
@@ -394,7 +398,7 @@ class RealSolidCompositeArray(OES_Object):
                        % (self.__class__.__name__, nelements, nlayers, nlayers_max, nnodes))
             ntimes_word = '1'
         msg.append('  eType, cid\n')
-        headers = self.get_headers()
+        headers = self.headers
         n = len(headers)
         msg.append('  data: [%s, nlayers, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append(f'  element_layer_node.shape = {self.element_layer_node.shape}\n')
@@ -651,7 +655,7 @@ class RealSolidCompositeStressArray(RealSolidCompositeArray, StressObject):
             von_mises = 'von_mises'
         else:
             von_mises = 'max_shear'
-        headers = ['oxx', 'oyy','t12', 't1z', 't2z', 'angle', 'omax', 'omin', von_mises]
+        headers = ['oxx', 'oyy', 'ozz', 't12', 't1z', 't2z', von_mises]
         return headers
 
 
@@ -666,7 +670,7 @@ class RealSolidCompositeStrainArray(RealSolidCompositeArray, StrainObject):
             von_mises = 'von_mises'
         else:
             von_mises = 'max_shear'
-        headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz', 'emax', 'emid', 'emin', von_mises]
+        headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz', von_mises]
         return headers
 
 def _get_solid_msgs(self):

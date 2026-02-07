@@ -3,6 +3,7 @@ from numpy import zeros, searchsorted, unique, ravel
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, OES_Object) # StrainObject,
 from pyNastran.f06.f06_formatting import write_float_12e, write_float_13e, _eigenvalue_header
@@ -104,72 +105,47 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
         self.failure_theory_flag = failure_theory_flag
         self.data = data
 
-    #def build_dataframe(self):
-    #    """
-    #    major-axis - the axis
-    #
-    #    mode   1     2   3
-    #    freq  1.0   2.0 3.0
-    #    T1
-    #    T2
-    #    T3
-    #    R1
-    #    R2
-    #    R3
-    #
-    #    major_axis / top = [
-    #        [1, 2, 3],
-    #        [1.0, 2.0, 3.0]
-    #    ]
-    #    minor_axis / headers = [T1, T2, T3, R1, R2, R3]
-    #    name = mode
-    #    """
-    #    import pandas as pd
-    #
-    #    headers = self.get_headers()
-    #    if self.nonlinear_factor not in (None, np.nan):
-    #        #Mode                                  1             2             3
-    #        #Freq                       1.482246e-10  3.353940e-09  1.482246e-10
-    #        #Eigenvalue                -8.673617e-19  4.440892e-16  8.673617e-19
-    #        #Radians                    9.313226e-10  2.107342e-08  9.313226e-10
-    #        #ElementID Layer Item
-    #        #16        1     o11       -1.052490e-13  3.106268e-08  1.121784e-13
-    #        #                o22        4.804592e-13  1.855033e-07 -9.785236e-13
-    #        #                t12        4.436908e-14  4.873383e-09  4.387037e-15
-    #        #                t1z        8.207617e-14  2.501582e-08 -1.056211e-13
-    #        #                t2z       -5.918040e-14 -1.112469e-08  1.255247e-13
-    #        #                angle      8.569244e+01  8.819442e+01  2.304509e-01
-    #        #                major      4.838012e-13  1.856569e-07  1.121961e-13
-    #        #                minor     -1.085910e-13  3.090905e-08 -9.785411e-13
-    #        #                max_shear  2.961961e-13  7.737391e-08  5.453687e-13
-    #        #          2     o11       -6.490381e-14  2.856533e-08  4.105937e-14
-    #        # columns
-    #        #[(1, 1.4822459136312394e-10, -8.673617379884035e-19, 9.313225746154785e-10)
-    #         #(2, 3.353939638127037e-09, 4.440892098500626e-16, 2.1073424255447017e-08)
-    #         #(3, 1.4822459136312394e-10, 8.673617379884035e-19, 9.313225746154785e-10)]
-    #        column_names, column_values = build_dataframe_transient_header(self)
-    #        data_frame = build_pandas_transient_element_node(
-    #            self, column_values, column_names,
-    #            headers, self.element_layer, self.data)
-    #    else:
-    #        element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
-    #        # Static                 o11        o22        t12        t1z  ...     angle       major       minor   max_shear
-    #        # ElementID Layer                                              ...
-    #        # 16        1     -2193.9639   1773.909  -2325.400  5.477e+02  ... -65.32178   284.30176  -326.28027   56.329102
-    #        #           2     -1843.9912   1465.191  -2445.139  1.277e+03  ... -62.41302   276.41992  -314.80713   52.761230
-    #        #           3     -1260.6953    952.560  -2646.621  1.451e+03  ... -56.48576   271.34375  -302.74707   68.154541
-    #        #           4      -444.0792    235.137  -2926.092 -0.000e+00  ... -48.08685   284.21777  -305.24219   46.322998
-    #        # 17        1     -1546.0195   4338.887  -2750.557  3.610e+02  ... -68.65797   542.58496  -263.74561   28.316406
-    #        #           2     -1597.4194   4303.379  -2707.898  9.309e+02  ... -68.34154   535.37598  -265.98535   04.518066
-    #        #           3     -1683.7607   4245.215  -2634.891  1.393e+03  ... -69.88499   524.96875  -268.98779   65.647705
-    #        #           4     -1802.0312   4163.371  -2531.777  1.295e+03  ... -69.39493   509.74609  -273.14307   12.944336
-    #        #           5     -1956.2432   4058.359  -2400.559  2.975e-13  ... -70.02080   489.06738  -279.80811   48.243652
-    #        #
-    #        #element_layer = self.element_layer #???
-    #        index = pd.MultiIndex.from_arrays(element_layer, names=['ElementID', 'Layer'])
-    #        data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
-    #        data_frame.columns.names = ['Static']
-    #        self.data_frame = data_frame
+    def build_dataframe(self):
+       """
+       major-axis - the axis
+
+       mode   1     2   3
+       freq  1.0   2.0 3.0
+       T1
+       T2
+       T3
+       R1
+       R2
+       R3
+
+       major_axis / top = [
+           [1, 2, 3],
+           [1.0, 2.0, 3.0]
+       ]
+       minor_axis / headers = [T1, T2, T3, R1, R2, R3]
+       name = mode
+       """
+       import pandas as pd
+
+       headers = self.headers
+       if self.nonlinear_factor not in (None, np.nan):
+           column_names, column_values = build_dataframe_transient_header(self)
+           data_frame = build_pandas_transient_element_node(
+               self, column_values, column_names,
+               headers, self.element_layer, self.data)
+           print(data_frame)
+           raise RuntimeError('finish pd.Panel')
+       else:
+           element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
+           # Static           strength_ratio_ply  ...  strength_ratio_bonding
+           # ElementID Layer                      ...
+           # 1         1                9.121876  ...              310.244141
+           #           2               11.136878  ...              202.907776
+           index = pd.MultiIndex.from_arrays(element_layer, names=['ElementID', 'Layer'])
+           # strength_ratio_ply, failure_index_bonding, strength_ratio_bonding
+           data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
+           data_frame.columns.names = ['Static']
+       self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -604,21 +580,16 @@ class RealCompositePlateStressStrengthRatioArray(RealCompositePlateStrengthRatio
         return 1
 
     @property
-    def is_stress(self):
+    def is_stress(self) -> bool:
         return True
 
     @property
-    def is_strain(self):
+    def is_strain(self) -> bool:
         return False
 
     @property
     def headers(self) -> list[str]:
-        #if self.is_von_mises:
-            #ovm = 'von_mises'
-        #else:
-            #ovm = 'max_shear'
-        headers = ['strength_ratio_ply', 'strength_ratio_bonding']
-        #headers = ['o11', 'o22', 't12', 't1z', 't2z', 'angle', 'major', 'minor', ovm]
+        headers = ['strength_ratio_ply', 'failure_index_bonding', 'strength_ratio_bonding']
         return headers
 
 

@@ -3,7 +3,10 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object  # StressObject,
+from pyNastran.op2.result_objects.utils_pandas import (
+    build_dataframe_transient_header, build_pandas_transient_element_node)
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    OES_Object, StressObject, StrainObject)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 
@@ -36,10 +39,6 @@ class HyperelasticQuadArray(OES_Object):
     def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
-
-    @property
-    def headers(self) -> list[str]:
-        return ['oxx', 'oyy', 'txy', 'angle', 'majorp', 'minorp']
 
     #def is_bilinear(self):
         #if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
@@ -100,37 +99,63 @@ class HyperelasticQuadArray(OES_Object):
         #self.majorP[dt] = {eid: [majorP]}
         #self.minorP[dt] = {eid: [minorP]}
 
-
         #[oxx, oyy, txy, angle, majorp, minorp]
         self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
+        assert self.is_stress, self.code_information()
 
-    #def build_dataframe(self):
-        #"""creates a pandas dataframe"""
-        #import pandas as pd
-        #headers = self.get_headers()
+    def build_dataframe(self):
+        """creates a pandas dataframe"""
+        import pandas as pd
+        headers = self.headers
 
-        #nelements = self.element_node.shape[0] // 2
-        #if self.is_fiber_distance:
-            #fiber_distance = ['Top', 'Bottom'] * nelements
-        #else:
-            #fiber_distance = ['Mean', 'Curvature'] * nelements
-        #fd = np.array(fiber_distance, dtype='unicode')
-        #element_node = [self.element_node[:, 0], self.element_node[:, 1], fd]
+        nelements = self.element_node.shape[0] // 2
+        if self.is_fiber_distance:
+            fiber_distance = ['Top', 'Bottom'] * nelements
+        else:
+            fiber_distance = ['Mean', 'Curvature'] * nelements
+        fd = np.array(fiber_distance, dtype='unicode')
 
-        #if self.nonlinear_factor not in (None, np.nan):
-            #column_names, column_values = build_dataframe_transient_header(self)
-            #self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
-            #self.data_frame.columns.names = column_names
-            #self.data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']
-        #else:
-            ## option B - nice!
-            #df1 = pd.DataFrame(element_node).T
-            #df1.columns = ['ElementID', 'NodeID', 'Location']
-            #df2 = pd.DataFrame(self.data[0])
-            #df2.columns = headers
-            #self.data_frame = df1.join(df2)
-        #self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
-        #print(self.data_frame)
+        node = pd.Series(data=self.element_node[:, 1])
+        node.replace(to_replace=0, value='CEN', inplace=True)
+
+        if self.nonlinear_factor not in (None, np.nan):
+            # LoadStep                                   1.0
+            # ElementID NodeID Location Item
+            # 101       1      Top      oxx     1.000000e+02
+            #           2      Bottom   oyy     9.803873e+01
+            #           3      Top      txy    -8.639536e-17
+            #           4      Bottom   angle  -2.523925e-15
+            # 102       1      Top      majorp  1.000000e+02
+            column_names, column_values = build_dataframe_transient_header(self)
+            element_node = [
+                self.element_node[:, 0],
+                node,
+                fd,
+            ]
+            names = ['ElementID', 'NodeID', 'Location', 'Item']
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
+                headers, element_node, self.data,
+                from_tuples=False, from_array=True,
+                names=names)
+        else:
+            data = {
+                'ElementID': self.element_node[:, 0],
+                'NodeID': node,
+                'Location': fd,
+            }
+            for i, key in enumerate(headers):
+                data[key] = self.data[0, :, i]
+            # mydata = {key: len(datai) for key, datai in data.items()}
+            # print('mydata', mydata)
+            data_frame = pd.DataFrame(data)
+            # df2 = pd.DataFrame(self.data[0])
+            # df2.columns = headers
+            # data_frame = df1.join(df2)
+            data_frame = data_frame.reset_index().set_index(['ElementID', 'NodeID', 'Location'])
+            print(data_frame)
+            raise RuntimeError('finish build_dataframe')
+        self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -165,14 +190,13 @@ class HyperelasticQuadArray(OES_Object):
     #def _add_new_eid(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #self._add_new_eid_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
-
-    def _add_new_eid_sort1(self, dt, eid, eype, node_id, oxx, oyy, txy, angle, majorP, minorP):
+    def _add_new_eid_sort1(self, dt, eid, eype, node_id, oxx, oyy, txy, angle, major, minor):
         assert isinstance(eid, integer_types), eid
         assert isinstance(node_id, integer_types), node_id
         self._times[self.itime] = dt
         #assert self.itotal == 0, oxx
         self.element_node[self.itotal, :] = [eid, node_id]
-        self.data[self.itime, self.itotal, :] = [oxx, oyy, txy, angle, majorP, minorP]
+        self.data[self.itime, self.itotal, :] = [oxx, oyy, txy, angle, major, minor]
         self.itotal += 1
         self.ielement += 1
 
@@ -187,11 +211,11 @@ class HyperelasticQuadArray(OES_Object):
     #def _add_new_node_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
-    def _add_sort1(self, dt, eid, etype, node_id, oxx, oyy, txy, angle, majorP, minorP):
+    def _add_sort1(self, dt, eid, etype, node_id, oxx, oyy, txy, angle, major, minor):
         assert eid is not None, eid
         assert isinstance(node_id, integer_types), node_id
         self.element_node[self.itotal, :] = [eid, node_id]
-        self.data[self.itime, self.itotal, :] = [oxx, oyy, txy, angle, majorP, minorP]
+        self.data[self.itime, self.itotal, :] = [oxx, oyy, txy, angle, major, minor]
         self.itotal += 1
 
     def get_stats(self, short: bool=False) -> list[str]:
@@ -248,23 +272,27 @@ class HyperelasticQuadArray(OES_Object):
             header = []
         #msg, nnodes, cen = _get_plate_msg(self)
 
+        if self.element_type == 139:  # CQUAD4FD
+            etype_name =  'QUAD4FD'
+        else:  # pragma: no cover
+            raise NotImplementedError(self.code_information())
 
-        msg = ['           S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )\n',
-               '  ELEMENT     GRID/    POINT       ---------CAUCHY STRESSES--------             PRINCIPAL STRESSES (ZERO SHEAR)\n',
-               '     ID       GAUSS      ID      NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR\n', ]
-            #0       1     GAUS         1   7.318995E+00   6.367099E-01  -6.551054E+00   -31.4888    1.133173E+01   -3.376026E+00
-            #                           2   1.097933E+01   4.149028E+00   6.278160E+00    30.7275    1.471111E+01    4.172537E-01
+        if self.is_stress:
+            msg = [f'           S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( {etype_name} )\n',
+                   '  ELEMENT     GRID/    POINT       ---------CAUCHY STRESSES--------             PRINCIPAL STRESSES (ZERO SHEAR)\n',
+                   '     ID       GAUSS      ID      NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR\n', ]
+                #0       1     GAUS         1   7.318995E+00   6.367099E-01  -6.551054E+00   -31.4888    1.133173E+01   -3.376026E+00
+                #                           2   1.097933E+01   4.149028E+00   6.278160E+00    30.7275    1.471111E+01    4.172537E-01
+        else:  # pragma: no cover
+            raise NotImplementedError(self.code_information())
 
-        # write the f06
         ntimes = self.data.shape[0]
-
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f06_file.write(''.join(header + msg))
-
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
             #[oxx, oyy, txy, angle, majorp, minorp]
@@ -272,11 +300,11 @@ class HyperelasticQuadArray(OES_Object):
             oyy = self.data[itime, :, 1]
             txy = self.data[itime, :, 2]
             angle = self.data[itime, :, 3]
-            majorP = self.data[itime, :, 4]
-            minorP = self.data[itime, :, 5]
+            majors = self.data[itime, :, 4]
+            minors = self.data[itime, :, 5]
 
             for (i, eid, nid, oxxi, oyyi, txyi, anglei, major, minor) in zip(
-                 cycle([1, 2, 3, 4]), eids, nids, oxx, oyy, txy, angle, majorP, minorP):
+                 cycle([1, 2, 3, 4]), eids, nids, oxx, oyy, txy, angle, majors, minors):
                 [oxxi, oyyi, txyi, major, minor] = write_floats_13e(
                     [oxxi, oyyi, txyi, major, minor])
 
@@ -318,3 +346,23 @@ class HyperelasticQuadArray(OES_Object):
         #else:
             #raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
         #return nnodes, is_bilinear
+
+
+class HyperelasticQuadStressArray(HyperelasticQuadArray, StressObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        HyperelasticQuadArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        StressObject.__init__(self, data_code, isubcase)
+
+    @property
+    def headers(self) -> list[str]:
+        return ['oxx', 'oyy', 'txy', 'angle', 'majorp', 'minorp']
+
+
+class HyperelasticQuadStrainArray(HyperelasticQuadArray, StrainObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        HyperelasticQuadArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        StrainObject.__init__(self, data_code, isubcase)
+
+    @property
+    def headers(self) -> list[str]:
+        return ['exx', 'eyy', 'exy', 'angle', 'majorp', 'minorp']

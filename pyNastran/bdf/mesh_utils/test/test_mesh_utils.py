@@ -692,7 +692,6 @@ class TestMeshUtils(unittest.TestCase):
         create_structured_chexas(model, pid2,
                                  x, y, z, nx, ny, nz, eid=1)
 
-
         nodes = []
         cm = 1.1
         model.cross_reference()
@@ -954,7 +953,6 @@ class TestMeshUtils(unittest.TestCase):
                                 bdf_filename_out='pin_flags.bdf', debug=False)
         os.remove('pin_flags.csv')
         os.remove('pin_flags.bdf')
-
 
     def test_split_line_elements(self):
         """tests split_line_elements"""

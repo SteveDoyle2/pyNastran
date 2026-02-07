@@ -46,7 +46,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_fast import RealFastStressAr
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
-from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import HyperelasticQuadArray
+from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import HyperelasticQuadStressArray, HyperelasticQuadStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamStressArray, ComplexBeamStrainArray

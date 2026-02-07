@@ -278,6 +278,7 @@ def build_pandas_transient_element_node(self: ScalarObject,
     except ValueError:  # pragma: no cover
         ntotal = ntimes * nelements * nheaders
         print(f'data.shape={data.shape}; ntimes={ntimes} nelements={nelements} nheaders={nheaders}; ntotal={ntotal}')
+        print(f'headers = {headers}')
         raise
     assert ntimes == len(column_values[0]), (ntimes, column_values[0])
 

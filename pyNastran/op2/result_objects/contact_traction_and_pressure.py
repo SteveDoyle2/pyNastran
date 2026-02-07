@@ -1,25 +1,5 @@
 """
 defines:
- - TableObject
- - RealTableArray
- - ComplexTableArray
-
-these are used by:
- - RealDisplacementArray
- - RealVelocityArray
- - RealAccelerationArray
- - RealEigenvaluesArray
- - RealSPCForcesArray
- - RealMPCForcesArray
- - RealAppliedLoadsArray
-
- - ComplexDisplacementArray
- - ComplexVelocityArray
- - ComplexAccelerationArray
- - ComplexEigenvaluesArray
- - ComplexSPCForcesArray
- - ComplexMPCForcesArray
- - ComplexAppliedLoadsArray
 
 """
 from struct import Struct, pack
@@ -29,6 +9,9 @@ import numpy as np
 #from numpy import float32
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject, set_as_sort1
+from pyNastran.op2.result_objects.utils_pandas import (
+    build_dataframe_transient_header)
+from pyNastran.op2.result_objects.table_object import get_gridtype_str, pandas_extract_rows
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e # write_imag_floats_13e
 from pyNastran.op2.errors import SixtyFourBitError
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
@@ -118,11 +101,6 @@ def oug_data_code(table_name, analysis_code,
     return data_code
 
 class RealContactTractionAndPressureArray(ScalarObject):  # displacement style table
-    """
-    Base class for:
-     - RealTableArray
-     - ComplexTableArray
-    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.nonlinear_factor = np.nan
         #self.table_name = None
@@ -170,7 +148,7 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
             if self.is_sort1:
                 for itime in range(ntimes):
                     msg += '(nid, gridtype); itime=%s\n' % itime
-                    msg += '(tx, ty, tz, rx, ry, rz)\n'
+                    msg += '(pressure, s1, s2, s3)\n'
                     for inid, nid_gridtype, in enumerate(self.node_gridtype):
                         (nid, grid_type) = nid_gridtype
                         t1 = self.data[itime, inid, :]
@@ -181,12 +159,12 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
                             atoli = np.abs(t2 - t1).max()
                             rtoli = np.abs(t2[inonzero] / t1[inonzero]).max()
 
-                            (tx1, ty1, tz1, rx1, ry1, rz1) = t1
-                            (tx2, ty2, tz2, rx2, ry2, rz2) = t2
-                            msg += '(%s, %s)\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                            (pressure1, s11, s21, s31) = t1
+                            (pressure2, s12, s22, s32) = t2
+                            msg += '(%s, %s)\n  (%s, %s, %s, %s)\n  (%s, %s, %s, %s)\n' % (
                                 nid, grid_type,
-                                tx1, ty1, tz1, rx1, ry1, rz1,
-                                tx2, ty2, tz2, rx2, ry2, rz2)
+                                pressure1, s11, s21, s31,
+                                pressure2, s12, s22, s32)
                             i += 1
                             atols.append(atoli)
                             rtols.append(rtoli)
@@ -280,7 +258,6 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
     def build(self):
         """sizes the vectorized attributes of the TableArray"""
         #print('_nnodes=%s ntimes=%s sort1?=%s ntotal=%s -> _nnodes=%s' % (self._nnodes, self.ntimes, self.is_sort1,
-                                                                          #self.ntotal, self._nnodes // self.ntimes))
 
         # we have a SORT1 data array that will be (ntimes, nnodes, 6)
         # we start by sizing the total number of entries (_nnodes = ntimes * nnodes)
@@ -358,6 +335,62 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
             i = np.where(gridtypes == ugridtype)
             self.gridtype_str[i] = self.recast_gridtype_as_string(ugridtype)
         #del self.itotal, self.itime
+
+    def build_dataframe(self):
+        """creates a pandas dataframe"""
+        import pandas as pd
+
+        headers = self.headers
+        nheaders = len(headers)
+        ntimes, nnodes = self.data.shape[:2]
+        if self.nonlinear_factor not in (None, np.nan):
+            column_names, column_values = build_dataframe_transient_header(self)
+            columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
+
+            gridtype_str = self.gridtype_str
+            ugridtype_str = np.unique(gridtype_str)
+            if len(ugridtype_str) == 1 and gridtype_str[0] in ['S', 'M', 'E']:
+                nnodes = self.node_gridtype.shape[0]
+                node_gridtype = [self.node_gridtype[:, 0], [gridtype_str[0]] * nnodes]
+
+                names = ['NodeID', 'Item']
+                index = pd.MultiIndex.from_arrays(node_gridtype, names=names)
+                A = self.data[:, :, 0].T
+                data_frame = pd.DataFrame(A, columns=columns, index=index)
+            else:
+                node_gridtype_item = []
+                node_ids = self.node_gridtype[:, 0]
+                for nid, gridtype in zip(node_ids, gridtype_str):
+                    node_gridtype_item.extend([[nid, gridtype, 'pressure']])
+                    node_gridtype_item.extend([[nid, gridtype, 's1']])
+                    node_gridtype_item.extend([[nid, gridtype, 's2']])
+                    node_gridtype_item.extend([[nid, gridtype, 's3']])
+
+                names = ['NodeID', 'Type', 'Item']
+                index = pd.MultiIndex.from_tuples(node_gridtype_item, names=names)
+                # return ['pressure', 's1', 's2', 's3']
+                A = self.data.reshape(ntimes, nnodes*mjeaders).T
+                data_frame = pd.DataFrame(A, columns=columns, index=index)
+                data_frame = pandas_extract_rows(data_frame, ugridtype_str, ['NodeID', 'Item'])
+            print(data_frame)
+            raise RuntimeError('finish pd.Panel')
+        else:
+            #      NodeID Type  pressure   s1   s2   s3
+            # 0         1    H       0.0  0.0  0.0  0.0
+            # 1         6    H       0.0  0.0  0.0  0.0
+            # 2         7    H       0.0  0.0  0.0  0.0
+            nnode = self.node_gridtype.shape[0]
+            gridtype_str = get_gridtype_str(self, self.node_gridtype)
+            data_dict = {
+                'NodeID': self.node_gridtype[:, 0],
+                'Type': gridtype_str,
+            }
+            for i, header in enumerate(headers):
+                datai = self.data[0, :, i]
+                assert len(datai) == nnode, (len(datai), nnode)
+                data_dict[header] = datai
+            data_frame = pd.DataFrame(data_dict)
+        self.data_frame = data_frame
 
     def set_as_sort1(self):
         """changes the table into SORT1"""

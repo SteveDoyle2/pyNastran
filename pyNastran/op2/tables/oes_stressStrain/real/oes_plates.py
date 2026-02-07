@@ -1,7 +1,7 @@
 # coding: utf-8
 #pylint disable=C0103
 from itertools import count
-import warnings
+# import warnings
 from typing import TextIO, Optional
 import numpy as np
 

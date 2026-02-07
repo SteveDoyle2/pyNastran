@@ -26,30 +26,46 @@ from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
 def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      normal_plane: np.ndarray,
                      log: SimpleLogger,
-                     dys: list[float],
+                     dys: list[float] | np.ndarray,
                      coords: list[CORD2R],
                      ytol: float=2.0,
                      face_data=None,
                      dirname: PathLike='',
                      debug_vectorize: bool=True,
                      plot: bool=True,
+                     cut_data_span_filename: PathLike='cut_data_vs_span.csv',
+                     beam_model_bdf_filename: PathLike='equivalent_beam_model.bdf',
                      show: bool=False) -> tuple[Any, Any, Any, Any, Any]: # y, A, I, EI, avg_centroid
     """
+    For a shell structure, cut and plot
+     - moments of inertia
+     - stiffness
+
     Parameters
     ----------
     bdf_filename : PathLike
         the path to the bdf
     normal_plane : (3,) float ndarray
+        the plane normal that defines ???
     log : SimpleLogger
         the logger
-    dys : list[float]
-        ???
+    dys : list[float] or ystations
+        the y-stations to march down
     coords : list[CORD2R]
-        coords to
+        coords to take cuts at; cutting plane normal is the y-axis?
         x:   defines axial direction (E1*A)
         y/z: defines transverse directions (E1*Iy)
     ytol : float; default=2.0
+        ???
     face_data : ???
+        nids : np.ndarray
+            node ids
+        xyz_cid0 : (nnode, 3) np.ndarray
+            xyz values
+        elements = dict[key, value]
+            key = line, shell?
+            value = (eids, ??)
+
     dirname : PathLike; default=''
         directory for output plots/csv/bdfs
     plot : bool; default=True
@@ -78,11 +94,10 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     thetas_csv_filename = dirname / 'thetas.csv'
 
     with open(thetas_csv_filename, 'w') as csv_filename:
-        csv_filename.write('# eid(%i),theta,Ex,Ey,Gxy\n')
-        for eid, (theta, Ex, Ey, Gxy) in sorted(thetas.items()):
-            csv_filename.write('%d,%f,%f,%f,%f\n' % (eid, theta, Ex, Ey, Gxy))
+        csv_filename.write('# eid(%d),theta,Ex,Ey,Gxy\n')
+        for eid, (theta, ex, ey, gxy) in sorted(thetas.items()):
+            csv_filename.write(f'{eid:d},{theta},{ex},{ey},{gxy}\n')
 
-    inid = 1
     avg_centroid[:, 1] = y
 
     # wrong
@@ -107,15 +122,16 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     J = Ix + Iz
     #i1, i2, i12 = Ix, Iy, Ixy
 
-    beam_model_bdf_filename = dirname / 'equivalent_beam_model.bdf'
-    _write_beam_model(
-        avg_centroid,
-        A, Ix, Iz, Ixz,
-        beam_model_bdf_filename,
-    )
+    if beam_model_bdf_filename:
+        beam_model_bdf_filename = dirname / beam_model_bdf_filename
+        _write_beam_model(
+            avg_centroid,
+            A, Ix, Iz, Ixz,
+            beam_model_bdf_filename,
+        )
 
-    cut_data_span_filename = dirname / 'cut_data_vs_span.csv'
     if cut_data_span_filename:
+        cut_data_span_filename = dirname / cut_data_span_filename
         X = np.vstack([y, dx, dz, A, Ix, Iz, Ixz, ExIx, ExIz, ExIxz]).T
         Y = np.hstack([X, avg_centroid])
         header = 'y, dx, dz, A, Ix, Iz, Ixz, Ex*Ix, Ex*Iz, Ex*Ixz, xcentroid, ycentroid, zcentroid'
@@ -199,6 +215,7 @@ def _get_station_data(model: BDF,
     model_static : BDF()
         ???
     dys : list[float]
+        the y values to make cuts at
     coords : list[CORD2R]
     normal_plane :
     ytol : float; default=2.0
@@ -206,6 +223,8 @@ def _get_station_data(model: BDF,
     face_data : ???
         ???
     """
+    log = model.log
+
     # initialize theta
     thetas = {}
     for eid in model.elements:
@@ -241,8 +260,9 @@ def _get_station_data(model: BDF,
         try:
             out = cut_face_model_by_coord(
                 model_static, coord, ytol,
-                nodal_result, plane_atol=1e-5, skip_cleanup=True,
-                 #csv_filename=cut_face_filename,
+                nodal_result, plane_atol=1e-5,
+                skip_cleanup=True,
+                #csv_filename=cut_face_filename,
                 csv_filename=None,
                 #plane_bdf_filename=None)
                 plane_bdf_filename1=plane_bdf_filename1,
@@ -257,7 +277,7 @@ def _get_station_data(model: BDF,
         except RuntimeError:
             # incorrect ivalues=[0, 1, 2]; dy=771. for CRM
             raise
-            continue
+            # continue
         unused_unique_geometry_array, unused_unique_results_array, rods = out
 
         if not os.path.exists(plane_bdf_filename1):
@@ -268,6 +288,7 @@ def _get_station_data(model: BDF,
         #print(unique_geometry_array)
         #moi_filename = 'amoi_%i.bdf' % i
         moi_filename = None
+        log.info(f'calculate_area_moi {icut:d}')
         dxi, dzi, Ai, Ii, EIi, avg_centroidi = calculate_area_moi(
             model, rods, normal_plane, thetas,
             moi_filename=moi_filename)
@@ -298,7 +319,12 @@ def _get_station_data(model: BDF,
 
 def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
                  ifig: int=1, show: bool=True,
-                 dirname: PathLike=''):
+                 dirname: PathLike='',
+                 normalized_inertia_png_filename: PathLike='normalized_inertia_vs_span.png',
+                 area_span_png_filename: PathLike='area_vs_span.png',
+                 amoi_span_png_filename: PathLike = 'amoi_vs_span.png',
+                 e_amoi_span_png_filename: PathLike = 'e_amoi_vs_span.png',
+                 cg_span_png_filename: PathLike = 'cg_vs_span.png') -> None:
     """helper method for test"""
     #plt.plot(y, I[:, 0] / I[:, 0].max(), 'ro-', label='Qxx')
     #plt.plot(y, I[:, 1] / I[:, 1].max(), 'bo-', label='Qyy')
@@ -322,7 +348,7 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
     ax.set_xlabel('Span, y')
     ax.set_ylabel('Normalized Area MOI, I')
     ax.legend()
-    png_filename = os.path.join(dirname, 'normalized_inertia_vs_span.png')
+    png_filename = os.path.join(dirname, normalized_inertia_png_filename)
     fig.savefig(png_filename)
     #-------------------------------------------------------
 
@@ -334,7 +360,7 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
     ax.set_xlabel('Span, y')
     ax.set_ylabel('Area, A')
     ax.legend()
-    png_filename = os.path.join(dirname, 'area_vs_span.png')
+    png_filename = os.path.join(dirname, area_span_png_filename)
     fig.savefig(png_filename)
     #-------------------------------------------------------
 
@@ -347,7 +373,7 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
     ax.set_xlabel('Span, y')
     ax.set_ylabel('Area MOI, I')
     ax.legend()
-    png_filename = os.path.join(dirname, 'amoi_vs_span.png')
+    png_filename = os.path.join(dirname, amoi_span_png_filename)
     fig.savefig(png_filename)
     #-------------------------------------------------------
 
@@ -360,7 +386,7 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
     ax.set_xlabel('Span, y')
     ax.set_ylabel('Exx*Area MOI, Exx*I')
     ax.legend()
-    png_filename = os.path.join(dirname, 'e_amoi_vs_span.png')
+    png_filename = os.path.join(dirname, e_amoi_span_png_filename)
     fig.savefig(png_filename)
     #-------------------------------------------------------
 
@@ -372,7 +398,7 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
     ax.set_xlabel('Span, y')
     ax.set_ylabel('CG')
     ax.legend()
-    png_filename = os.path.join(dirname, 'cg_vs_span.png')
+    png_filename = os.path.join(dirname, cg_span_png_filename)
     fig.savefig(png_filename)
     #-------------------------------------------------------
 
