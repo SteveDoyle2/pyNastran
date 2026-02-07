@@ -689,6 +689,7 @@ class ZAERO:
         self.cgust: dict[int, CGUST] = {}
         self.gengust: dict[int, GENGUST] = {}
         self.gustinp: dict[int, GUSTINP] = {}
+        self.dfs: dict[int, Any] = {}
 
         # ase
         self.ase: dict[int, ASE] = {}

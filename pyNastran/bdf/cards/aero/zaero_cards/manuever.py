@@ -700,6 +700,9 @@ class LOADMOD(BaseCard):
 
 
 class RBRED(BaseCard):
+    """
+    RBRED   23456   6       23456
+    """
     type = 'RBRED'
 
     # _field_map = {
@@ -773,7 +776,8 @@ class RBRED(BaseCard):
                 f' - gloads = {gloads}\n'
                 f' - dfs    = {dfs}\n'
                 f' - nlfltr = {nlfltr}\n')
-            raise RuntimeError(msg)
+            model.log.error(msg)
+            #raise RuntimeError(msg)
         # self.node_ref = model.Node(self.id_ase, msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):

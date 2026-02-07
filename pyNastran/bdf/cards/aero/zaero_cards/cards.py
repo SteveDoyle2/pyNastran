@@ -1094,9 +1094,9 @@ class MLDTRIM(BaseCard):
     #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
     # }
     def __init__(self, mldtrim_id, gravity: float, nz: float,
-                 thkcam: str, modal_dmi: str,
+                 thkcam: str,
                  trim_vars: list[str], values: list[float],
-                 comment: str=''):
+                 modal_dmi: str='', comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -1127,7 +1127,7 @@ class MLDTRIM(BaseCard):
         gravity = double(card, 2, 'gravity')
         nz = double(card, 3, 'nz')
         thkcam = string(card, 4, 'thkcam')
-        modal_dmi = string(card, 5, 'modal_dmi')
+        modal_dmi = string_or_blank(card, 5, 'modal_dmi', default='')
 
         i = 9
         j = 1
@@ -1141,8 +1141,8 @@ class MLDTRIM(BaseCard):
             i += 2
             j += 1
 
-        return MLDTRIM(mldtrim_id, gravity, nz, thkcam, modal_dmi,
-                       trim_vars, values, comment=comment)
+        return MLDTRIM(mldtrim_id, gravity, nz, thkcam,
+                       trim_vars, values, modal_dmi=modal_dmi, comment=comment)
 
     # def validate(self):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
