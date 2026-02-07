@@ -19,7 +19,7 @@ from pyNastran.f06.f06_formatting import (
 #VM_TABLES = {'OESVM1', 'OESVM2',
              #'OSTRVM1', 'OSTRVM2'}
 
-class ComplexLayeredCompositesArray(OES_Object):
+class ComplexLayeredCompositesVMArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)   ## why???
         self.element_node = None
@@ -138,24 +138,25 @@ class ComplexLayeredCompositesArray(OES_Object):
                     (eid, layer) = eid_layer
                     t1 = self.data[itime, ieid, :]
                     t2 = table.data[itime, ieid, :]
-                    (oxx1, oyy1, t121, t131, t231) = t1
-                    (oxx2, oyy2, t122, t132, t232) = t2
-                    if not np.array_equal(t1, t2):
+                    (oxx1, oyy1, t121, t131, t231, ovm1) = t1
+                    (oxx2, oyy2, t122, t132, t232, ovm2) = t2
+                    if not np.allclose(t1, t2):
                         raise RuntimeError((t1, t2))
-            #             msg += (
-            #                 '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s)\n'
-            #                 '%s      (%s, %s, %s, %s, %s, %s, %s)\n' % (
-            #                     eid, nid,
-            #                     oxx1, oyy1, ozz1, txy1, tyz1, txz1, ovm1,
-            #                     ' ' * (len(str(eid)) + len(str(nid)) + 2),
-            #                     oxx2, oyy2, ozz2, txy2, tyz2, txz2, ovm2))
-            #             i += 1
-            #             if i > 10:
-            #                 print(msg)
-            #                 raise ValueError(msg)
-            #     #print(msg)
-            #     if i > 0:
-            #         raise ValueError(msg)
+                        # msg += (
+                        #     # (oxx1, oyy1, t121, t131, t231, ovm1) = t1
+                        # '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s)\n'
+                        #     '%s      (%s, %s, %s, %s, %s, %s, %s)\n' % (
+                        #         eid, nid,
+                        #         oxx1, oyy1, ozz1, txy1, tyz1, txz1, ovm1,
+                        #         ' ' * (len(str(eid)) + len(str(nid)) + 2),
+                        #         oxx2, oyy2, ozz2, txy2, tyz2, txz2, ovm2))
+                        # i += 1
+                        # if i > 10:
+                        #     print(msg)
+                        #     raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
         return True
 
     def add_sort1(self, dt, eid, ply_id,
@@ -358,7 +359,7 @@ def _get_composite_plate_msg(self, is_mag_phase=True, is_sort1=True) -> tuple[li
     return msg, nnodes
 
 
-class ComplexLayeredCompositesArray12(OES_Object):
+class ComplexLayeredCompositesArray(OES_Object):
     """MSC"""
     def __init__(self, data_code, is_sort1: bool, isubcase: int, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)   ## why???
@@ -626,9 +627,9 @@ class ComplexLayeredCompositesArray12(OES_Object):
         return page_num - 1
 
 
-class ComplexLayeredCompositeStressArray(ComplexLayeredCompositesArray, StressObject):
+class ComplexLayeredCompositeStressVMArray(ComplexLayeredCompositesVMArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexLayeredCompositesArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        ComplexLayeredCompositesVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
         assert self.is_stress, self.stress_bits
 
@@ -637,9 +638,9 @@ class ComplexLayeredCompositeStressArray(ComplexLayeredCompositesArray, StressOb
         return headers
 
 
-class ComplexLayeredCompositeStrainArray(ComplexLayeredCompositesArray, StrainObject):
+class ComplexLayeredCompositeStrainVMArray(ComplexLayeredCompositesVMArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexLayeredCompositesArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        ComplexLayeredCompositesVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
@@ -648,9 +649,9 @@ class ComplexLayeredCompositeStrainArray(ComplexLayeredCompositesArray, StrainOb
         return headers
 
 
-class ComplexLayeredCompositeStressArray12(ComplexLayeredCompositesArray12, StressObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexLayeredCompositesArray12.__init__(self, data_code, is_sort1, isubcase, dt)
+class ComplexLayeredCompositeStressArray(ComplexLayeredCompositesArray, StressObject):
+    def __init__(self, data_code, is_sort1: bool, isubcase: int, dt):
+        ComplexLayeredCompositesArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
         assert self.is_stress, self.stress_bits
 
@@ -659,9 +660,9 @@ class ComplexLayeredCompositeStressArray12(ComplexLayeredCompositesArray12, Stre
         return headers
 
 
-class ComplexLayeredCompositeStrainArray12(ComplexLayeredCompositesArray12, StrainObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexLayeredCompositesArray12.__init__(self, data_code, is_sort1, isubcase, dt)
+class ComplexLayeredCompositeStrainArray(ComplexLayeredCompositesArray, StrainObject):
+    def __init__(self, data_code, is_sort1: bool, isubcase: int, dt):
+        ComplexLayeredCompositesArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 

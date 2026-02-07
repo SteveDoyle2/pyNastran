@@ -84,8 +84,8 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexCBushS
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexCBush1DStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import (
-    ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray,
-    ComplexLayeredCompositeStressArray12, ComplexLayeredCompositeStrainArray12)
+    ComplexLayeredCompositeStressVMArray, ComplexLayeredCompositeStrainVMArray,
+    ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray)
 # ComplexLayeredCompositesArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates_vm import ComplexPlateVMStressArray, ComplexPlateVMStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriaxStressArray, ComplexTriaxStrainArray
@@ -712,12 +712,12 @@ TABLE_OBJ_MAP = {
 
     'stress.ctriax_stress': (RealTriaxStressArray, ComplexTriaxStressArray,),
 
-    'stress.cquad4_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray12),
-    'stress.ctria3_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray12),
-    'stress.ctria6_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray12),
-    'stress.ctriar_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray12),
-    'stress.cquad8_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray12),
-    'stress.cquadr_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray12),
+    'stress.cquad4_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray),
+    'stress.ctria3_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray),
+    'stress.ctria6_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray),
+    'stress.ctriar_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray),
+    'stress.cquad8_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray),
+    'stress.cquadr_composite_stress': (RealCompositePlateStressArray, ComplexLayeredCompositeStressArray),
 
     'strength_ratio.ctria3_composite_stress': (RealCompositePlateStressStrengthRatioArray, ),
     'strength_ratio.ctria6_composite_stress': (RealCompositePlateStressStrengthRatioArray, ),
@@ -726,7 +726,7 @@ TABLE_OBJ_MAP = {
                                                RealCompositePlateStressStrengthRatioArray),
     'strength_ratio.cquad8_composite_stress': (RealCompositePlateStressStrengthRatioArray, ),
 
-    'strain.cquad4_composite_strain': (RealCompositePlateStrainArray, ComplexLayeredCompositeStrainArray12),
+    'strain.cquad4_composite_strain': (RealCompositePlateStrainArray, ComplexLayeredCompositeStrainArray),
     'strain.ctria3_composite_strain': (RealCompositePlateStrainArray, ),
     'strain.ctria6_composite_strain': (RealCompositePlateStrainArray, ),
     'strain.ctriar_composite_strain': (RealCompositePlateStrainArray, ),
@@ -755,17 +755,17 @@ TABLE_OBJ_MAP = {
     #'strain.cquadr_composite_strain': (RealCompositePlateStrainArray,),
 
     #'modal_contribution.cquad4_composite_strain': (RealCompositePlateStrainArray, ),
-    'modal_contribution.cquad4_composite_strain': (ComplexLayeredCompositeStrainArray, ),
-    'modal_contribution.cquad4_composite_stress': (ComplexLayeredCompositeStressArray, ),
+    'modal_contribution.cquad4_composite_strain': (ComplexLayeredCompositeStrainVMArray, ),
+    'modal_contribution.cquad4_composite_stress': (ComplexLayeredCompositeStressVMArray, ),
 
-    'modal_contribution.cquadr_composite_strain': (ComplexLayeredCompositeStrainArray, ),
-    'modal_contribution.cquadr_composite_stress': (ComplexLayeredCompositeStressArray, ),
+    'modal_contribution.cquadr_composite_strain': (ComplexLayeredCompositeStrainVMArray, ),
+    'modal_contribution.cquadr_composite_stress': (ComplexLayeredCompositeStressVMArray, ),
 
-    'modal_contribution.ctria3_composite_strain': (ComplexLayeredCompositeStrainArray, ),
-    'modal_contribution.ctria3_composite_stress': (ComplexLayeredCompositeStressArray, ),
+    'modal_contribution.ctria3_composite_strain': (ComplexLayeredCompositeStrainVMArray, ),
+    'modal_contribution.ctria3_composite_stress': (ComplexLayeredCompositeStressVMArray, ),
 
-    'modal_contribution.ctriar_composite_strain': (ComplexLayeredCompositeStrainArray, ),
-    'modal_contribution.ctriar_composite_stress': (ComplexLayeredCompositeStressArray, ),
+    'modal_contribution.ctriar_composite_strain': (ComplexLayeredCompositeStrainVMArray, ),
+    'modal_contribution.ctriar_composite_stress': (ComplexLayeredCompositeStressVMArray, ),
 
     'RAPCONS.cquad4_composite_stress': (RealCompositePlateStressArray, ),
     'RAPCONS.ctria3_composite_stress': (RealCompositePlateStressArray, ),

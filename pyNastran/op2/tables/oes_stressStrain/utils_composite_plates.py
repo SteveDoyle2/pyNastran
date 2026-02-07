@@ -8,9 +8,9 @@ from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply
 
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import (
-    ComplexLayeredCompositeStrainArray, ComplexLayeredCompositeStressArray,
-    ComplexLayeredCompositeStressArray12, ComplexLayeredCompositeStrainArray12,
-    ComplexLayeredCompositesArray)
+    ComplexLayeredCompositeStrainVMArray, ComplexLayeredCompositeStressVMArray,
+    ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray,
+    ComplexLayeredCompositesVMArray)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateStressArray, RealCompositePlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates_strength_ratio import RealCompositePlateStressStrengthRatioArray # , RealCompositePlateStrainStrengthRatioArray
@@ -64,14 +64,14 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
         obj_vector_real = RealCompositePlateStressArray
         obj_vector_strength = RealCompositePlateStressStrengthRatioArray
         # obj_vector_complex = ComplexCompositePlateStressArray
-        layered_cls = ComplexLayeredCompositeStressArray
+        layered_cls = ComplexLayeredCompositeStressVMArray
     else:
         stress_strain = 'strain'
         obj_vector_real = RealCompositePlateStrainArray
         obj_vector_strength = None  # RealCompositePlateStrainStrengthRatioArray
         # obj_vector_complex = ComplexCompositePlateStrainArray
         # obj_vector_random = RandomCompositePlateStrainArray
-        layered_cls = ComplexLayeredCompositeStrainArray
+        layered_cls = ComplexLayeredCompositeStrainVMArray
 
     if op2._results.is_not_saved(prefix.rstrip('.')):
         return ndata, None, None
@@ -175,7 +175,7 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
         nelements = ndata // ntotal
 
         op2.log.warning(f'skipping complex {op2.table_name_str}-PCOMP')
-        complex_obj = ComplexLayeredCompositeStressArray if op2.is_stress else ComplexLayeredCompositeStrainArray
+        complex_obj = ComplexLayeredCompositeStressVMArray if op2.is_stress else ComplexLayeredCompositeStrainVMArray
         return nelements * ntotal, None, None
 
         auto_return, is_vectorized = op2._create_oes_object4(
@@ -327,7 +327,7 @@ def oes_shells_composite(op2: OP2, data, ndata: int, dt, is_magnitude_phase: boo
         # num_wide      = 12
         # freq          = 990.0
         # MSC Nastran
-        complex_obj = ComplexLayeredCompositeStressArray12 if op2.is_stress else ComplexLayeredCompositeStrainArray12
+        complex_obj = ComplexLayeredCompositeStressArray if op2.is_stress else ComplexLayeredCompositeStrainArray
 
         ntotal = 48 * factor
         nelements = ndata // ntotal
@@ -520,7 +520,7 @@ def oes_comp_shell_real_11(op2: OP2, data: bytes, ndata: int,
 
 def oes_shell_composite_complex_11(op2: OP2,
                                    data: bytes,
-                                   obj: ComplexLayeredCompositeStressArray | ComplexLayeredCompositeStrainArray,
+                                   obj: ComplexLayeredCompositeStressVMArray | ComplexLayeredCompositeStrainVMArray,
                                    ntotal: int, nelements: int, sort_method: int,
                                    dt: Any, is_magnitude_phase: bool) -> int:
     """OESCP, OESTRCP"""
@@ -547,7 +547,7 @@ def oes_shell_composite_complex_11(op2: OP2,
 
 def oes_shell_composite_complex_12(op2: OP2,
                                    data: bytes,
-                                   obj: ComplexLayeredCompositeStressArray12 | ComplexLayeredCompositeStrainArray12,
+                                   obj: ComplexLayeredCompositeStressArray | ComplexLayeredCompositeStrainArray,
                                    ntotal: int, nelements: int, sort_method: int,
                                    dt: Any, is_magnitude_phase: bool) -> int:
     # if op2.read_mode == 1:
@@ -581,10 +581,10 @@ def oes_shell_composite_complex_12(op2: OP2,
 
 def oes_shell_composite_complex_13(op2: OP2,
                                    data: bytes,
-                                   obj: ComplexLayeredCompositesArray,
+                                   obj: ComplexLayeredCompositesVMArray,
                                    ntotal: int, nelements: int, sort_method: int,
                                    dt: Any, is_magnitude_phase: bool) -> int:
-    """OESVM1C, OSTRVM1C"""
+    """OESVM1C, OSTRVM1C - NX"""
     # OESCP - STRAINS IN LAYERED COMPOSITE ELEMENTS (QUAD4)
     n = 0
     fmt = mapfmt(op2._analysis_code_fmt + b'i9f ff', op2.size)
