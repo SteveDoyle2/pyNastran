@@ -1651,7 +1651,7 @@ class PCOMP(CompositeProperty):
         Sbar = np.linalg.multi_dot([T.T, S2, T])
         return Sbar
 
-    def get_ABD_matrices(self, theta_offset=0.) -> np.ndarray:
+    def get_ABD_matrices(self, theta_offset: float=0.) -> np.ndarray:
         """
         Gets the ABD matrix
 

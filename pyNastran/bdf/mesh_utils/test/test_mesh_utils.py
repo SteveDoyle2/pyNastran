@@ -10,10 +10,6 @@ from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
-from pyNastran.bdf.mesh_utils.aero.map_pressure_to_caero import map_caero
-from pyNastran.bdf.mesh_utils.aero.deform_aero_spline import (
-    deform_aero_spline, deform_aero_spline_from_files)
-from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
 
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
@@ -37,7 +33,6 @@ from pyNastran.bdf.mesh_utils.breakdowns import (
     get_mass_breakdown, get_area_breakdown, get_length_breakdown,
     get_volume_breakdown, get_thickness_breakdown,
     get_material_mass_breakdown_table, get_property_mass_breakdown_table)
-from pyNastran.bdf.mesh_utils.aero.map_aero_model import map_aero_model
 
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s, create_structured_chexas
 from pyNastran.bdf.mesh_utils.cmd_line.merge import cmd_line_merge
@@ -51,7 +46,6 @@ import pyNastran.bdf.mesh_utils.add_remove_mesh
 import pyNastran.bdf.mesh_utils.bdf_remove_comments
 import pyNastran.bdf.mesh_utils.cleanup_model
 import pyNastran.bdf.mesh_utils.normals
-import pyNastran.bdf.mesh_utils.add_remove_mesh
 
 
 TEST_DIR = (Path(__file__) / '..').resolve()

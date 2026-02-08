@@ -19,7 +19,7 @@ from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF, read_bdf, CORD2R
 from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     cut_face_model_by_coord,
-    calculate_area_moi,
+    calculate_area_moi, fis_tri_cut, _setup_faces,
 )
 
 
@@ -33,6 +33,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      dirname: PathLike='',
                      ifig: int=1,
                      debug_vectorize: bool=True,
+                     stop_on_failure: bool=False,
                      cut_data_span_filename: PathLike='cut_data_vs_span.csv',
                      beam_model_bdf_filename: PathLike='equivalent_beam_model.bdf',
                      thetas_csv_filename: PathLike='thetas.csv',
@@ -96,8 +97,10 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         dys, coords, normal_plane,
         ytol, dirname, face_data=face_data,
         debug_vectorize=debug_vectorize,
+        stop_on_failure=stop_on_failure,
     )
-    thetas, y, dx, dz, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2 = out
+    (thetas, y, dx, dz, A, I, J, EI, GJ, avg_centroid,
+     plane_bdf_filenames, plane_bdf_filenames2) = out
 
     assert len(y) > 0, y
     thetas_csv_filename = dirname / thetas_csv_filename
@@ -211,8 +214,11 @@ def _get_station_data(model: BDF,
                       dys: list[float],
                       coords: list[CORD2R],
                       normal_plane: np.ndarray,
-                      ytol: float, dirname: Path,
+                      ytol: float,
+                      dirname: Path,
+                      plane_atol: float=1e-5,
                       debug_vectorize: bool=True,
+                      stop_on_failure: bool=False,
                       face_data=None) -> tuple[
                          dict[int, tuple[float, float, float, float]],  # thetas
                          #y, dx, dz,
@@ -249,10 +255,17 @@ def _get_station_data(model: BDF,
         #  theta, Ex, Ey, Gxy
         thetas[eid] = (0., 0., 0., 0.)
 
+    if face_data is None:
+        # TODO: could filter out unused nodes
+        _log, *face_data = _setup_faces(model)
+    nodes, xyz_cid0, elements = face_data
+    tri_eids, tri_nodes = elements['tri3']
+    nnode = len(nodes)
+    ntri = len(tri_eids)
+
     #p1 = np.array([466.78845, 735.9053, 0.0])
     #p2 = np.array([624.91345, 639.68896, -0.99763656])
     #dx = p2 - p1
-    nodal_result = None
     plane_bdf_filenames1 = []
     plane_bdf_filenames2 = []
 
@@ -270,39 +283,33 @@ def _get_station_data(model: BDF,
 
     log.debug(f'dys={dys}; n={len(dys):d}')
     assert len(dys) == len(coords), (len(dys), len(coords))
+    ncuts_found = 0
     for icut, dy, coord in zip(count(), dys, coords):
+        itri_nodes = np.searchsorted(nodes, tri_nodes)
+        xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
+        y_cid = xyz_cid[:, 1]
+        is_tri_cut = fis_tri_cut(y_cid, itri_nodes, ntri)
+
         model.coords[1] = coord
         plane_bdf_filename1 = dirname / f'plane_face1_{icut:d}.bdf'
         plane_bdf_filename2 = dirname / f'plane_face2_{icut:d}.bdf'
         cut_face_filename = dirname / f'cut_face_{icut:d}.csv'
         if os.path.exists(cut_face_filename):
             os.remove(cut_face_filename)
-        try:
-            out = cut_face_model_by_coord(
-                model_static, coord, ytol,
-                nodal_result, plane_atol=1e-5,
-                skip_cleanup=True,
-                #csv_filename=cut_face_filename,
-                csv_filename=None,
-                #plane_bdf_filename=None)
-                plane_bdf_filename1=plane_bdf_filename1,
-                plane_bdf_filename2=plane_bdf_filename2,
-                plane_bdf_offset=dy, face_data=face_data,
-                debug_vectorize=debug_vectorize,
-            )
-        except PermissionError:
-            print(f'failed to delete {plane_bdf_filename1}')
-            raise
-            # continue
-        except RuntimeError:
-            # incorrect ivalues=[0, 1, 2]; dy=771. for CRM
-            raise
-            # continue
-        unused_unique_geometry_array, unused_unique_results_array, rods = out
 
-        if not os.path.exists(plane_bdf_filename1):
-            print(coord)
-            log.debug(f'skipping calculate_area_moi {icut:d} (station={dy})')
+        found_cut, rods = _get_station_datai(
+            model, model_static,
+            dy, coord, ytol, plane_atol=plane_atol,
+            debug_vectorize=debug_vectorize,
+            stop_on_failure=stop_on_failure,
+            plane_bdf_filename1=plane_bdf_filename1,
+            plane_bdf_filename2=plane_bdf_filename2,
+            face_data=face_data)
+
+        # if not os.path.exists(plane_bdf_filename1) or len(rods) == 0:
+        if not found_cut:
+            log.debug(coord)
+            log.debug(f'skipping calculate_area_moi {icut:d} (station={dy:g})')
             continue
             # break
         plane_bdf_filenames1.append(plane_bdf_filename1)
@@ -329,7 +336,10 @@ def _get_station_data(model: BDF,
         EI[icut, :] = EIi
         GJ[icut] = GJi
         avg_centroid[icut, :] = avg_centroidi
+        ncuts_found += 1
         #break
+    if ncuts_found == 0:
+        raise RuntimeError('no cuts found...')
 
     out = (
         thetas, y, dx, dz,
@@ -338,6 +348,44 @@ def _get_station_data(model: BDF,
         plane_bdf_filenames1, plane_bdf_filenames2
     )
     return out
+
+
+def _get_station_datai(model: BDF,
+                       model_static: BDF,
+                       dy: float,
+                       coord: CORD2R,
+                       ytol: float,
+                       plane_atol: float=1e-5,
+                       debug_vectorize: bool=True,
+                       stop_on_failure: bool=False,
+                       plane_bdf_filename1: PathLike='',
+                       plane_bdf_filename2: PathLike='',
+                       face_data=None):
+    nodal_result = None
+    try:
+        out = cut_face_model_by_coord(
+            model_static, coord, ytol,
+            nodal_result, plane_atol=plane_atol,
+            skip_cleanup=True,
+            # csv_filename=cut_face_filename,
+            csv_filename=None,
+            # plane_bdf_filename=None)
+            plane_bdf_filename1=plane_bdf_filename1,
+            plane_bdf_filename2=plane_bdf_filename2,
+            plane_bdf_offset=dy, face_data=face_data,
+            debug_vectorize=debug_vectorize,
+            stop_on_failure=stop_on_failure,
+        )
+    except PermissionError:
+        print(f'failed to delete {plane_bdf_filename1}')
+        raise
+        # continue
+    except RuntimeError:
+        # incorrect ivalues=[0, 1, 2]; dy=771. for CRM
+        raise
+        # continue
+    found_cut, unused_unique_geometry_array, unused_unique_results_array, rods = out
+    return found_cut, rods
 
 
 def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
@@ -358,13 +406,18 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
 
     fig = plt.figure(ifig)
     ax = fig.gca()
-    ax.plot(y, I[:, 0] / aI[:, 0].max(), 'ro-', label='Ixx')
-    ax.plot(y, I[:, 1] / aI[:, 1].max(), 'bo-', label='Izz')
-    ax.plot(y, I[:, 2] / aI[:, 2].max(), 'go-', label='Ixz')
+    ai_max = aI[:, :3].max(axis=0)
+    aei_max = aEI[:, :3].max(axis=0)
+    ai_max[ai_max == 0] = 1.
+    aei_max[aei_max == 0] = 1.
+    assert len(ai_max) == 3, (ai_max.shape, aI)
+    ax.plot(y, I[:, 0] / ai_max[0], 'ro-', label='Ixx')
+    ax.plot(y, I[:, 1] / ai_max[1], 'bo-', label='Izz')
+    ax.plot(y, I[:, 2] / ai_max[2], 'go-', label='Ixz')
 
-    ax.plot(y, EI[:, 0] / aEI[:, 0].max(), 'ro', label='EIxx', linestyle='--')
-    ax.plot(y, EI[:, 1] / aEI[:, 1].max(), 'bo', label='EIzz', linestyle='--')
-    ax.plot(y, EI[:, 2] / aEI[:, 2].max(), 'go', label='EIxz', linestyle='--')
+    ax.plot(y, EI[:, 0] / aei_max[0], 'ro', label='EIxx', linestyle='--')
+    ax.plot(y, EI[:, 1] / aei_max[1], 'bo', label='EIzz', linestyle='--')
+    ax.plot(y, EI[:, 2] / aei_max[2], 'go', label='EIxz', linestyle='--')
     #ax.plot(y, GJ / aGJ.max(), 'go-', label='GJ', linestyle='--')
 
     ax.grid(True)

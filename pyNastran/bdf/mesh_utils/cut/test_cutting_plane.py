@@ -225,7 +225,7 @@ class TestCuttingPlane(unittest.TestCase):
         model.coords[1] = coord
         ytol = 2.
 
-        unique_geometry_array, unique_results_array, unused_rods = cut_face_model_by_coord(
+        found_cut, unique_geometry_array, unique_results_array, unused_rods = cut_face_model_by_coord(
             bdf_filename, coord, ytol,
             nodal_result, plane_atol=1e-5, skip_cleanup=True,
             csv_filename='',
@@ -234,7 +234,7 @@ class TestCuttingPlane(unittest.TestCase):
             face_data=None,
             debug_vectorize=False,
         )
-        unique_geometry_array, unique_results_array, unused_rods = cut_face_model_by_coord(
+        found_cut, unique_geometry_array, unique_results_array, unused_rods = cut_face_model_by_coord(
             bdf_filename, coord, ytol,
             nodal_result, plane_atol=1e-5, skip_cleanup=True,
             csv_filename='cut_face.csv',
@@ -286,7 +286,7 @@ class TestCuttingPlane(unittest.TestCase):
         unused_local_points_array, unused_global_points_array, result_array = out
         assert len(result_array) == 16, len(result_array)
 
-        unused_geometry_array, result_array, unused_rods = cut_face_model_by_coord(
+        found_cut, unused_geometry_array, result_array, unused_rods = cut_face_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5,
             face_data=None,
@@ -330,7 +330,7 @@ class TestCuttingPlane(unittest.TestCase):
         unused_local_points_array, unused_global_points_array, result_array = out
         assert len(result_array) == 20, len(result_array)
 
-        unused_geometry_arrays, result_arrays, unused_rods = cut_face_model_by_coord(
+        found_cut, unused_geometry_arrays, result_arrays, unused_rods = cut_face_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5,
             csv_filename='cut_face_2.csv',

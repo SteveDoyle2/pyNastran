@@ -1,6 +1,7 @@
 """defines cutting plane tests"""
 import os
 # import copy
+import time
 from pathlib import Path
 import unittest
 import numpy as np
@@ -16,7 +17,7 @@ if IS_MATPLOTLIB:
     matplotlib.use(matplotlib_backend)
 
 import pyNastran
-from pyNastran.bdf.bdf import read_bdf, CORD2R
+from pyNastran.bdf.bdf import read_bdf, BDF, CORD2R
 from cpylog import SimpleLogger
 
 from pyNastran.bdf.mesh_utils.cut.moi_plotter import (
@@ -25,20 +26,95 @@ from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     _setup_faces)
 
 PKG_PATH = pyNastran.__path__[0]
+TEST_PATH = Path(__file__).parent
 MODEL_PATH = Path(os.path.join(PKG_PATH, '..', 'models'))
 
 
 class TestStiffnessPlot(unittest.TestCase):
-    def test_cut_bwb_y(self):
+    def test_cut_quad(self):
+        """cut_and_plot_moi"""
+        dirname = TEST_PATH
+        log = SimpleLogger(level='debug', encoding='utf-8')
+        model = BDF(log=log)
+        model.add_grid(101, [0., 0., 0.])
+        model.add_grid(102, [3., 0., 0.])
+        model.add_grid(103, [3., 3., 0.])
+        model.add_grid(104, [0., 3., 0.])
+        model.add_cquad4(10, 11, [101, 102, 103, 104])
+        t = 0.1
+        E = 3.0e7
+        model.add_pshell(11, 12, t=t)
+        model.add_mat1(12, E=E, G=None, nu=0.3)
+        dy = 0.5
+        coord = model.add_cord2r(
+            cid=1,
+            origin=[0., dy, 0.],
+            zaxis=[0., dy, 1.],
+            xzplane=[1., dy, 0.])
+        model.cross_reference()
+        coords = [coord]
+        ystations = [0.]
+        normal_plane = np.array([0., 1., 0.])
+
+        moi_data = cut_and_plot_moi(
+            model, normal_plane, log,
+            ystations, coords,
+            ytol=2.0,
+            dirname=dirname,
+            plot=False, show=False, face_data=None,
+            stop_on_failure=True,
+            cut_data_span_filename='',
+            beam_model_bdf_filename='',
+            thetas_csv_filename='y_thetas.csv',
+            # normalized_inertia_png_filename='y_normalized_inertia_vs_span.png',
+            # area_span_png_filename='y_area_vs_span.png',
+            # amoi_span_png_filename='y_amoi_vs_span.png',
+            # e_amoi_span_png_filename='y_e_amoi_vs_span.png',
+            # cg_span_png_filename='y_cg_vs_span.png',
+            debug_vectorize=True,
+        )
+        (y, A, I, J,
+         EI, GJ, avg_centroid,
+         plane_bdf_filenames1, plane_bdf_filenames2) = moi_data
+        # print(f'y = {y.tolist()}')
+        # print(f'A = {A.tolist()}')
+        # print(f'I = {I.tolist()}')
+        # print(f'J = {J.tolist()}')
+        # print(f'EI = {EI.tolist()}')
+        # print(f'GJ = {GJ.tolist()}')
+        print(f'avg_centroid = {avg_centroid.tolist()}')
+        cut_length = 3
+        # skipped this...1/12 * cut_length * t**3
+        i_expected = 0.09375  # A*d^2 of 2 triangles
+        y_expected = [0.0]
+        A_expected = [t*cut_length]
+        I_expected = [[i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]
+        J_expected = [i_expected]
+        EI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
+        GJ_expected = [1.0]
+        centroid_expected = [[1.5, 0.0, 0.0]]
+
+        assert np.allclose(y, y_expected)
+        assert np.allclose(A, A_expected)
+        assert np.allclose(I, I_expected), (I, I_expected)
+        assert np.allclose(J, J_expected)
+        assert np.allclose(EI, EI_expected)
+        assert np.allclose(GJ, GJ_expected)
+
+    def test_cut_bwb(self):
         """cut_and_plot_moi"""
         # show = True
+        t0 = time.time()
         show = False
+        run_y_cuts = True
+        run_x_cuts = False
 
-        # log = SimpleLogger(level='warning', encoding='utf-8')
-        log = SimpleLogger(level='debug', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        # log = SimpleLogger(level='debug', encoding='utf-8')
         dirname = MODEL_PATH / 'bwb'
         bdf_filename = dirname / 'bwb_saero.bdf'  # ymax~=1262.0
         model = read_bdf(bdf_filename, log=log)
+        # model.log.level = 'debug'
 
         ymax = 1401.
         ncut = 10
@@ -62,7 +138,7 @@ class TestStiffnessPlot(unittest.TestCase):
         # normal_plane = np.array([0., 1., 0.])
         # assert np.allclose(normal_plane, normal_plane2)
 
-        face_data = _setup_faces(model)
+        log, *face_data = _setup_faces(model)
         # nids, xyz_cid0, elements = face_data
         # y0, A0, I0, J0, EI0, J0, avg_centroid0, plane_bdf_filenames10, plane_bdf_filenames20 = cut_and_plot_moi(
         #     model, normal_plane, log,
@@ -71,7 +147,6 @@ class TestStiffnessPlot(unittest.TestCase):
         #     dirname=dirname,
         #     plot=False, show=False, face_data=face_data)
 
-        run_y_cuts = False
         if run_y_cuts:
             log.info('working on y-cuts')
             moi_data = cut_and_plot_moi(
@@ -141,59 +216,62 @@ class TestStiffnessPlot(unittest.TestCase):
             if IS_MATPLOTLIB:
                 plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show)
 
-        # xmax = 1001.
-        ncut = 100
-        # dx = (xmax-1.) / ncut
-        i = np.arange(ncut, dtype='int32')
-        xstations = 10 * i
+        if run_x_cuts:
+            # xmax = 1001.
+            ncut = 100
+            # dx = (xmax-1.) / ncut
+            i = np.arange(ncut, dtype='int32')
+            xstations = 10 * i
 
-        # y is outboard
-        origin = np.array([0., 0., 0.])
-        zaxis = np.array([0., 0., 1.])   # z
-        xzplane = np.array([0., 1., 0.]) # y
+            # y is outboard
+            origin = np.array([0., 0., 0.])
+            zaxis = np.array([0., 0., 1.])   # z
+            xzplane = np.array([0., 1., 0.]) # y
 
-        log.info('working on x-cuts')
-        xcoords = get_coords_bwb(
-            xstations, cid=1,
-            origin=origin,
-            zaxis=zaxis,
-            xzplane=xzplane)
+            xcoords = get_coords_bwb(
+                xstations, cid=1,
+                origin=origin,
+                zaxis=zaxis,
+                xzplane=xzplane)
 
-        log.info('working on x-cuts')
-        normal_plane = coords[0].j
-        log.debug(f'normal_plane = {normal_plane}')
-        moi_data = cut_and_plot_moi(
-            bdf_filename, normal_plane, log,
-            xstations, xcoords,
-            ytol=2.0,
-            dirname=dirname, ifig=10,
-            plot=True, show=False, face_data=face_data,
-            cut_data_span_filename='x_cut_data_vs_span.csv',
-            beam_model_bdf_filename='x_equivalent_beam_model.bdf',
-            thetas_csv_filename='x_thetas.csv',
-            normalized_inertia_png_filename='x_normalized_inertia_vs_span.png',
-            area_span_png_filename='x_area_vs_span.png',
-            amoi_span_png_filename='x_amoi_vs_span.png',
-            e_amoi_span_png_filename='x_e_amoi_vs_span.png',
-            cg_span_png_filename='x_cg_vs_span.png',
-            debug_vectorize=True,
-        )
-        (x, A, I, J,
-         EI, GJ, avg_centroid,
-         plane_bdf_filenames1, plane_bdf_filenames2) = moi_data
-        print(f'x = {x.tolist()}')
-        print(f'A = {A.tolist()}')
-        x_expected = []
-        ax_expected = []
-        assert np.allclose(x, x_expected)
-        assert np.allclose(A, ax_expected)
-        log.info('cleanup')
-        for plane_bdf_filename in plane_bdf_filenames1:
-            os.remove(plane_bdf_filename)
-        for plane_bdf_filename in plane_bdf_filenames2:
-            os.remove(plane_bdf_filename)
-        # _cleanup_moi_files(dirname, 'x_')
-        # _cleanup_moi_files(dirname, 'y_')
+            log.info('working on x-cuts')
+            normal_plane = coords[0].j
+            log.debug(f'normal_plane = {normal_plane}')
+            moi_data = cut_and_plot_moi(
+                bdf_filename, normal_plane, log,
+                xstations, xcoords,
+                ytol=2.0,
+                dirname=dirname, ifig=10,
+                plot=True, show=False, face_data=face_data,
+                cut_data_span_filename='x_cut_data_vs_span.csv',
+                beam_model_bdf_filename='x_equivalent_beam_model.bdf',
+                thetas_csv_filename='x_thetas.csv',
+                normalized_inertia_png_filename='x_normalized_inertia_vs_span.png',
+                area_span_png_filename='x_area_vs_span.png',
+                amoi_span_png_filename='x_amoi_vs_span.png',
+                e_amoi_span_png_filename='x_e_amoi_vs_span.png',
+                cg_span_png_filename='x_cg_vs_span.png',
+                debug_vectorize=True,
+            )
+            (x, A, I, J,
+             EI, GJ, avg_centroid,
+             plane_bdf_filenames1, plane_bdf_filenames2) = moi_data
+            print(f'x = {x.tolist()}')
+            print(f'A = {A.tolist()}')
+            x_expected = []
+            ax_expected = []
+            assert np.allclose(x, x_expected)
+            assert np.allclose(A, ax_expected)
+            log.info('cleanup')
+            for plane_bdf_filename in plane_bdf_filenames1:
+                os.remove(plane_bdf_filename)
+            for plane_bdf_filename in plane_bdf_filenames2:
+                os.remove(plane_bdf_filename)
+        if run_x_cuts:
+            _cleanup_moi_files(dirname, 'x_')
+        if run_y_cuts:
+            _cleanup_moi_files(dirname, 'y_')
+        print(f'dt = {time.time() - t0}')
 
 def _cleanup_moi_files(dirname: Path,
                        tag: str):

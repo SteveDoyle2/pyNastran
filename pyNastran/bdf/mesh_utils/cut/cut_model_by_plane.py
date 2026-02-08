@@ -15,6 +15,8 @@ from itertools import count
 from typing import TextIO, Optional, Any, TypedDict, TYPE_CHECKING
 
 import numpy as np
+
+from cpylog import SimpleLogger
 from pyNastran.bdf.cards.coordinate_systems import (
     CORD2R, Coord,
     xyz_to_rtz_array, rtz_to_xyz_array)
@@ -30,10 +32,10 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.coordinate_systems import Coord
     from pyNastran.nptyping_interface import NDArrayNint, NDArray3float, NDArrayNfloat
 
-    class Elements(TypedDict):
-        line2: tuple[np.ndarray, np.ndarray]
-        tri3:  tuple[np.ndarray, np.ndarray]
-    Rods = tuple[np.ndarray, np.ndarray, np.ndarray]
+class Elements(TypedDict):
+    line2: tuple[np.ndarray, np.ndarray]
+    tri3:  tuple[np.ndarray, np.ndarray]
+Rods = tuple[np.ndarray, np.ndarray, np.ndarray]
 
 def get_nid_cd_xyz_cid0(model: BDF) -> tuple[NDArrayNint, NDArrayNint,
                                              dict[int, NDArrayNint], NDArray3float]:
@@ -233,9 +235,13 @@ def get_stations(model: BDF,
 
 
 def _setup_faces(bdf_filename: PathLike | BDF,
-                 ) -> tuple[np.ndarray, np.ndarray, Elements]:
+                 ) -> tuple[SimpleLogger,
+                            np.ndarray, np.ndarray, Elements]:
     """helper method"""
+    # TODO: should filter out unused nodes
     model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
+    log = model.log
+
     out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
     nid_cp_cd, xyz_cid0, unused_xyz_cp, unused_icd_transform, unused_icp_transform = out
     nids = nid_cp_cd[:, 0]
@@ -272,10 +278,10 @@ def _setup_faces(bdf_filename: PathLike | BDF,
         elems = ''.join(elements_skipped)
         model.log.warning(f'skipped\n{elems}')
 
-    out = model._get_maps(
-        eids=None, map_names=None,
-        consider_0d=False, consider_0d_rigid=False,
-        consider_1d=False, consider_2d=True, consider_3d=False)
+    # out = model._get_maps(
+    #     eids=None, map_names=None,
+    #     consider_0d=False, consider_0d_rigid=False,
+    #     consider_1d=False, consider_2d=True, consider_3d=False)
     # edge_to_eid_map = out['edge_to_eid_map']
     elements = {
         'line2': (np.array(line_eids, dtype='int32'),
@@ -283,7 +289,7 @@ def _setup_faces(bdf_filename: PathLike | BDF,
         'tri3': (np.array(face_eids, dtype='int32'),
                  np.array(faces, dtype='int32')),
     }
-    return nids, xyz_cid0, elements
+    return log, nids, xyz_cid0, elements
 
 
 def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
@@ -292,13 +298,15 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
                             nodal_result: np.ndarray,
                             plane_atol: float=1e-5,
                             skip_cleanup: bool=True,
-
                             csv_filename: PathLike='',
                             plane_bdf_filename1: PathLike='plane_face1.bdf',
                             plane_bdf_filename2: PathLike='plane_face2.bdf',
                             plane_bdf_offset: float=0.0,
                             face_data=None,
-                            debug_vectorize: bool=True):
+                            debug_vectorize: bool=True,
+                            stop_on_failure: bool=False) -> tuple[
+                                bool,
+                                np.ndarray, np.ndarray, np.ndarray]:
     """
     Cuts a Nastran model with a cutting plane
 
@@ -317,6 +325,8 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
         the result to cut the model with
     plane_atol : float; default=1e-5
         the tolerance for a line that's located on the y=0 local plane
+    skip_cleanup: bool; default=True
+        ???
     csv_filename : str; default=''
         '' : don't write a csv
         str : write a csv
@@ -328,13 +338,16 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
         verify the vectorization is correct
 
     """
+    log = SimpleLogger()
     assert isinstance(tol, float), tol
     if face_data is None:
-        face_data = _setup_faces(bdf_filename)
+        # TODO: could filter out unused nodes
+        log, *face_data = _setup_faces(bdf_filename)
 
     nids, xyz_cid0, elements = face_data
-    unique_geometry_array, unique_results_array, rods_array = _cut_face_model_by_coord(
-        nids, xyz_cid0,
+    xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
+    found_cut, unique_geometry_array, unique_results_array, rods_array = _cut_face_model_by_coord(
+        log, nids, xyz_cid0, xyz_cid,
         elements,
         coord, tol,
         nodal_result, plane_atol=plane_atol,
@@ -342,12 +355,13 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
         plane_bdf_filename1=plane_bdf_filename1,
         plane_bdf_filename2=plane_bdf_filename2,
         plane_bdf_offset=plane_bdf_offset,
-        debug_vectorize=debug_vectorize)
+        debug_vectorize=debug_vectorize,
+        stop_on_failure=stop_on_failure)
     if csv_filename and unique_geometry_array is not None:
         export_face_cut(csv_filename, unique_geometry_array, unique_results_array)
     #print('unique_geometry_array=%s unique_results_array=%s' % (
         #unique_geometry_array, unique_results_array))
-    return unique_geometry_array, unique_results_array, rods_array
+    return found_cut, unique_geometry_array, unique_results_array, rods_array
 
 
 def export_face_cut(csv_filename: PathLike,
@@ -379,11 +393,11 @@ def export_face_cut(csv_filename: PathLike,
             #max_int = geometry_array.max()
             #len_max_int = len(str(max_int))
             #fmt = ('%%%ii,' % (len_max_int)) * nints + '%19.18e,' * nfloa# ts
-            fmt = '%i,' * nints + '%19.18e,' * nfloats
+            fmt = '%d,' * nints + '%19.18e,' * nfloats
             fmt = fmt.rstrip(',')
             # eid, nid, nid1, nid2 -> eid, nid1, nid2
             curve_data = np.concatenate((geometry_array2, results_array), axis=1)
-            header2 = 'Curve %i\n' % (i+1)
+            header2 = f'Curve {i+1:d}\n'
             header2 += 'eid, nid1, nid2, x, y, z, Cp'
             np.savetxt(csv_file, curve_data, fmt=fmt, newline='\n',
                        header=header2, footer='', comments='# ')
@@ -439,8 +453,10 @@ def _project_vectors(p1: NDArray3float,
     #return NotImplementedError()
 
 
-def _cut_face_model_by_coord(nids: np.ndarray,
+def _cut_face_model_by_coord(log: SimpleLogger,
+                             node_ids: np.ndarray,
                              xyz_cid0: np.ndarray,
+                             xyz_cid: np.ndarray,
                              elements: Elements,
                              coord: Coord,
                              tol: float,
@@ -449,8 +465,11 @@ def _cut_face_model_by_coord(nids: np.ndarray,
                              skip_cleanup: bool=True,
                              plane_bdf_filename1: PathLike='plane_face1.bdf',
                              plane_bdf_filename2: PathLike='plane_face2.bdf',
-                             plane_bdf_offset: float=0.,
-                             debug_vectorize: bool=True) -> tuple[Any, Any, Any]:
+                             plane_bdf_offset: float=0.0,
+                             debug_vectorize: bool=True,
+                             stop_on_failure: bool=False,
+                             ) -> tuple[bool, np.ndarray, np.ndarray,
+                                        tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
     Cuts a Nastran model with a cutting plane
 
@@ -459,7 +478,9 @@ def _cut_face_model_by_coord(nids: np.ndarray,
     nids : (nnodes, ) int ndarray
         the node ids in the model
     xyz_cid0 : (nnodes, 3) float ndarray
-        the node xyzs in the model
+        the node xyzs in global frame
+    xyz_cid : (nnodes, 3) float ndarray
+        the node xyzs in coord frame
     elements : dict['line2'/'tri3', tuple[eids, element_nodes]]
         line2:
             line_eids : (nline,) int ndarray
@@ -489,53 +510,104 @@ def _cut_face_model_by_coord(nids: np.ndarray,
 
     Returns
     -------
+    is_passed : bool
+        was the model cut
     unique_geometry_array : ???
         ???
     unique_results_array : ???
         ???
-    rods_array : ???
-        ???
+    rods:
+        rods_array : ???
+            ???
 
     """
     face_eids, faces = elements['tri3']
-    xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
 
     # y direction is normal to the plane
     # y = xyz_cid[:, 1]
     # abs_y = np.abs(y)
     # abs_y = np.abs(y)
-    abs_y = np.abs(xyz_cid[:, 1])
+    y_cid = xyz_cid[:, 1]
+    is_tri_cut, close_faces, close_face_eids = get_close_faces2(
+        faces, face_eids, node_ids, y_cid, tol, log)
 
-    #print('tol =', tol)
-    iclose = np.where(abs_y <= tol)
-    nids_close = nids[iclose]
-    #print('nids_close =', nids_close.tolist())
+    if len(close_face_eids) == 0 and stop_on_failure:
+        raise RuntimeError(f'y_cid={y_cid}; ntri={ntri}\n'
+                           f'is_tri_cut={is_tri_cut}\n'
+                           f'itri_nodes={itri_nodes.tolist()}')
 
-    close_faces, close_face_eids = get_close_faces(
-        faces, face_eids, nids_close)
+    found_cut = (len(close_face_eids) > 0)
+    # if len(close_face_eids) == 0:
+    #     found_cut = False
+    if not found_cut:
+        assert stop_on_failure is False, 'no cuts found'
+        unique_geometry_array = None
+        unique_results_array = None
+        rods = (None, None, None)
+        log.warning(f'  nclose_faces = {len(close_face_eids):d} -> found_cut={found_cut}')
+        return found_cut, unique_geometry_array, unique_results_array, rods
+    log.debug(f'  nclose_faces = {len(close_face_eids):d} -> found_cut={found_cut}')
 
     # print('close_faces:')
     # for edge in close_faces:
     #     print(face)
     # print(close_faces)
 
-    assert np.array_equal(nids, np.unique(nids)), 'not sorted or unique'
-    iclose_faces = np.searchsorted(nids, close_faces.ravel()).reshape(
+    assert np.array_equal(node_ids, np.unique(node_ids)), 'not sorted or unique'
+    iclose_faces = np.searchsorted(node_ids, close_faces.ravel()).reshape(
         close_faces.shape)
 
     #print('iclose_edges:')
     #print(iclose_edges)
-    unique_geometry_array, unique_results_array, rods_array = cut_faces(
-        nids, xyz_cid0, xyz_cid,
+    unique_geometry_array, unique_results_array, rods = cut_faces(
+        node_ids, xyz_cid0, xyz_cid,
         iclose_faces, close_face_eids,
-        nodal_result, coord, plane_atol=plane_atol, skip_cleanup=skip_cleanup,
+        nodal_result, coord, plane_atol=plane_atol,
+        skip_cleanup=skip_cleanup,
         plane_bdf_filename1=plane_bdf_filename1,
         plane_bdf_filename2=plane_bdf_filename2,
         plane_bdf_offset=plane_bdf_offset,
-        debug_vectorize=debug_vectorize)
-
+        debug_vectorize=debug_vectorize,
+        stop_on_failure=True,
+    )
     #print(coord)
-    return unique_geometry_array, unique_results_array, rods_array
+    assert isinstance(rods, tuple), type(rods)
+    assert isinstance(rods[0], np.ndarray), rods[0]
+    assert isinstance(rods[1], np.ndarray), rods[1]
+    assert isinstance(rods[2], np.ndarray), rods[2]
+    return found_cut, unique_geometry_array, unique_results_array, rods
+
+
+def get_close_faces2(faces: np.ndarray,
+                     face_eids: np.ndarray,
+                     node_ids: np.ndarray,
+                     y_cid: np.ndarray,
+                     tol: float,
+                     log: SimpleLogger) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Comparing the BWB example:
+    old: 42.4s
+    new: 38.3s
+    """
+    if 1:
+        abs_y = np.abs(y_cid)
+        log.debug(f'  ymin={abs_y.min():g} tol={tol:g}')
+
+        # print('tol =', tol)
+        iclose = np.where(abs_y <= tol)
+        nids_close = node_ids[iclose]
+        # log.debug(f'  nids_close={nids_close}')
+        # print('nids_close =', nids_close.tolist())
+        close_faces, close_face_eids = get_close_faces(
+            faces, face_eids, nids_close)
+        is_tri_cut = np.full(len(close_face_eids), True, dtype='bool')
+    else:
+        itri_nodes = np.searchsorted(node_ids, faces)
+        ntri = len(face_eids)
+        is_tri_cut = fis_tri_cut(y_cid, itri_nodes, ntri)
+        close_faces = faces[is_tri_cut]
+        close_face_eids = face_eids[is_tri_cut]
+    return is_tri_cut, close_faces, close_face_eids
 
 
 def get_close_faces(faces: np.ndarray,
@@ -592,7 +664,9 @@ def cut_faces(node_ids: np.ndarray,
               plane_bdf_filename1: PathLike='plane_face1.bdf',
               plane_bdf_filename2: PathLike='plane_face2.bdf',
               plane_bdf_offset: float=0.,
-              debug_vectorize: bool=True):
+              debug_vectorize: bool=True,
+              stop_on_failure: bool=False,
+              ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Cuts the shell elements
 
@@ -623,6 +697,14 @@ def cut_faces(node_ids: np.ndarray,
         ???
     unique_results_array : ???
         ???
+    rods: tuple
+        rods_elements_array : (nedge) int ndarray???
+            ???
+        rod_nids_array : (nedge,2) int ndarray???
+            ???
+        rod_xyzs_array : (nedge,3) float ndarray???
+            ???
+
     """
     assert len(tri_face_eids) > 0, tri_face_eids
 
@@ -647,6 +729,9 @@ def cut_faces(node_ids: np.ndarray,
         xyz_cid, xyz_cid0,
         tri_face_eids, tri_ifaces, plane_atol,
         debug_vectorize=debug_vectorize)
+
+    if stop_on_failure:
+        assert len(tri_face_eids2) > 0, 'no cut faces have been foud...'
 
     # crossings
     nid_new = 1
@@ -719,6 +804,8 @@ def cut_faces(node_ids: np.ndarray,
         os.remove(plane_bdf_filename1)
 
     if len(geometry) == 0:
+        if stop_on_failure:
+            raise RuntimeError('no cut faces found...')
         return None, None, (None, None, None)
     # unused_local_points_array = np.array(local_points)
     # unused_global_points_array = np.array(global_points)
@@ -734,7 +821,8 @@ def cut_faces(node_ids: np.ndarray,
     unique_geometry_array, unique_results_array = _unique_face_rows(
         geometry_array, results_array, node_ids, skip_cleanup=skip_cleanup)
     #print('*unique_results_array', unique_results_array, type(unique_results_array))
-    return unique_geometry_array, unique_results_array, (rods_elements_array, rod_nids_array, rod_xyzs_array)
+    rods = (rods_elements_array, rod_nids_array, rod_xyzs_array)
+    return unique_geometry_array, unique_results_array, rods
 
 
 def _filter_tri_faces(xyz_cid: np.ndarray,
@@ -1876,8 +1964,22 @@ def calculate_area_moi(model: BDF,
                        rods: Rods,
                        normal_plane: np.ndarray,
                        thetas: dict[int, tuple[float, float, float, float]],
-                       moi_filename=None) -> tuple[Any, Any, Any, Any]:
+                       moi_filename: PathLike='',
+                       eid_filename: PathLike='eid_file.csv',
+                       ) -> tuple[Any, Any, Any, Any]:
     """
+    The inertia of a square plate about the midplane is:
+     Ixx = 1/12*b*h^3
+     Iyy = 1/12*h*b^3
+     Izz = 0.
+     Ixy = Ixz = Iyz = 0.
+    These terms are small for a real structure
+    and the math gets harder for odd shapes,
+    so we calculate just the A*d^2 terms.
+
+    TODO: nevermind...this is just a 2d inertial formula
+          of a flat plat that's been rotated
+
     Parameters
     ----------
     model : BDF
@@ -1943,6 +2045,7 @@ def calculate_area_moi(model: BDF,
     x = centroid[:, 0] - avg_centroid[0]
     y = centroid[:, 1] - avg_centroid[1]
     z = centroid[:, 2] - avg_centroid[2]
+
     xmin = x.min()
     xmax = x.max()
     ixmin = np.where(x == xmin)[0][0]
@@ -1991,7 +2094,7 @@ def calculate_area_moi(model: BDF,
 
     if moi_filename is not None:
         dirname = os.path.dirname(moi_filename)
-        eid_filename = os.path.join(dirname, 'eid_file.csv')
+        eid_filename = os.path.join(dirname, eid_filename)
         _write_moi_file(
             moi_filename, eid_filename,
             eids, n1, n2, xyz1, xyz2, length, thickness, area,
@@ -2182,7 +2285,8 @@ def _get_shell_inertia(element: CTRIA3 | CQUAD4,
         nu_xy = 0.
     else:
         Ex, Ey, Gxy, nu_xy = pid_ref.get_Ainv_equivalent_pshell(
-            imat_rotation_angle_deg, thicknessi, degrees=True)
+            imat_rotation_angle_deg, thicknessi, # degrees=True,
+        )
 
         #thicknessi = prop.Thickness()
         areai = thicknessi * lengthi
@@ -2208,3 +2312,18 @@ def _get_shell_inertia(element: CTRIA3 | CQUAD4,
         #Ex0, Ey0, Gxy0, nu_xy0 = pid_ref0.get_Ainv_equivalent_pshell(
             #imat_rotation_angle_deg, thicknessi)
     return thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy
+
+
+def fis_tri_cut(y_cid: np.ndarray,
+                itri_nodes: np.ndarray,
+                ntri: int) -> np.ndarray:
+    """are the triangles cut?"""
+    y_tri = y_cid[itri_nodes]
+    assert y_tri.shape == (ntri, 3), y_tri.shape
+    y_tri_pos = (y_tri > 0)
+    y_tri_neg = ~y_tri_pos
+    is_tri_pos = np.all(y_tri_pos, axis=1)
+    is_tri_neg = np.all(y_tri_neg, axis=1)
+    assert len(is_tri_pos) == ntri, (len(is_tri_pos), ntri)
+    is_tri_cut = ~(is_tri_pos | is_tri_neg)
+    return is_tri_cut

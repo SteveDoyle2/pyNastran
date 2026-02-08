@@ -90,7 +90,7 @@ def cut_and_plot_model(title: str,
         csv_filename_face = None
         if csv_filename:
             csv_filename_face = csv_filename + '_face.csv'
-        geometry_arrays, results_arrays, unused_rods_array = cut_face_model_by_coord(
+        found_cut, geometry_arrays, results_arrays, unused_rods_array = cut_face_model_by_coord(
             model, coord, ytol,
             nodal_result, plane_atol=plane_atol,
             csv_filename=csv_filename_face,
