@@ -123,7 +123,7 @@ class ComplexRodArray(OES_Object):
         return data_code
 
     @classmethod
-    def add_freq_case(cls, table_name, element, data, isubcase,
+    def add_freq_case(cls, table_name: str, element, data, isubcase,
                       freqs,
                       element_name: str,
                       is_sort1=True, is_random=False, is_msc=True,

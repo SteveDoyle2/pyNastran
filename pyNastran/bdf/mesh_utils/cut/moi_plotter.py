@@ -31,11 +31,20 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      ytol: float=2.0,
                      face_data=None,
                      dirname: PathLike='',
+                     ifig: int=1,
                      debug_vectorize: bool=True,
-                     plot: bool=True,
                      cut_data_span_filename: PathLike='cut_data_vs_span.csv',
                      beam_model_bdf_filename: PathLike='equivalent_beam_model.bdf',
-                     show: bool=False) -> tuple[Any, Any, Any, Any, Any]: # y, A, I, EI, avg_centroid
+                     thetas_csv_filename: PathLike='thetas.csv',
+                     normalized_inertia_png_filename: PathLike='normalized_inertia_vs_span.png',
+                     area_span_png_filename: PathLike='area_vs_span.png',
+                     amoi_span_png_filename: PathLike='amoi_vs_span.png',
+                     e_amoi_span_png_filename: PathLike='e_amoi_vs_span.png',
+                     cg_span_png_filename: PathLike='cg_vs_span.png',
+                     plot: bool=True,
+                     show: bool=False) -> tuple[Any, Any, Any, Any,     # y, A, I, J
+                                                Any, Any, Any,          # EI, GJ, avg_centroid,
+                                                list[str], list[str]]:  # plane_bdf_filenames1, plane_bdf_filenames2
     """
     For a shell structure, cut and plot
      - moments of inertia
@@ -91,7 +100,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     thetas, y, dx, dz, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2 = out
 
     assert len(y) > 0, y
-    thetas_csv_filename = dirname / 'thetas.csv'
+    thetas_csv_filename = dirname / thetas_csv_filename
 
     with open(thetas_csv_filename, 'w') as csv_filename:
         csv_filename.write('# eid(%d),theta,Ex,Ey,Gxy\n')
@@ -99,13 +108,6 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
             csv_filename.write(f'{eid:d},{theta},{ex},{ey},{gxy}\n')
 
     avg_centroid[:, 1] = y
-
-    # wrong
-    mid = 1
-    E = 3.0e7
-    G = None
-    nu = 0.3
-    model.add_mat1(mid, E, G, nu, rho=0.1)
 
     #   0    1    2    3    4    5
     # [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
@@ -124,9 +126,14 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
 
     if beam_model_bdf_filename:
         beam_model_bdf_filename = dirname / beam_model_bdf_filename
+
+        # wrong
+        # model.add_mat1(mid=1, E=3.0e7, G=None, nu=0.3, rho=0.1)
+
         _write_beam_model(
             avg_centroid,
-            A, Ix, Iz, Ixz,
+            A, I, J,
+            EI, GJ,
             beam_model_bdf_filename,
         )
 
@@ -137,12 +144,24 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         header = 'y, dx, dz, A, Ix, Iz, Ixz, Ex*Ix, Ex*Iz, Ex*Ixz, xcentroid, ycentroid, zcentroid'
         np.savetxt(cut_data_span_filename, Y, header=header, delimiter=',')
 
-    plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show, dirname=dirname)
+    # if plot:
+    ifig = plot_inertia(
+        y, A, I, J, EI, GJ, avg_centroid, show=show,
+        dirname=dirname, ifig=ifig,
+        normalized_inertia_png_filename=normalized_inertia_png_filename,
+        area_span_png_filename=area_span_png_filename,
+        amoi_span_png_filename=amoi_span_png_filename,
+        e_amoi_span_png_filename=e_amoi_span_png_filename,
+        cg_span_png_filename=cg_span_png_filename,
+    )
     return y, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2
 
 
 def _write_beam_model(avg_centroid: np.ndarray,
-                      A, I, J, EI, GJ,
+                      A: np.ndarray,
+                      I: np.ndarray,
+                      J: np.ndarray,
+                      EI, GJ,
                       bdf_filename: PathLike=''):
     if isinstance(bdf_filename, str) and len(bdf_filename) == 0:
         return
@@ -158,7 +177,6 @@ def _write_beam_model(avg_centroid: np.ndarray,
     ExIy = EI[:, 1]
     ExIz = EI[:, 2]
     ExIxz = EI[:, 5]
-    J = Ix + Iz
 
     mid = 1
     beam_model = BDF(debug=False)
@@ -250,6 +268,8 @@ def _get_station_data(model: BDF,
     GJ = np.full(ny, np.nan, dtype='float64')
     avg_centroid = np.full((ny, 3), np.nan, dtype='float64')
 
+    log.debug(f'dys={dys}; n={len(dys):d}')
+    assert len(dys) == len(coords), (len(dys), len(coords))
     for icut, dy, coord in zip(count(), dys, coords):
         model.coords[1] = coord
         plane_bdf_filename1 = dirname / f'plane_face1_{icut:d}.bdf'
@@ -281,14 +301,17 @@ def _get_station_data(model: BDF,
         unused_unique_geometry_array, unused_unique_results_array, rods = out
 
         if not os.path.exists(plane_bdf_filename1):
-            break
+            print(coord)
+            log.debug(f'skipping calculate_area_moi {icut:d} (station={dy})')
+            continue
+            # break
         plane_bdf_filenames1.append(plane_bdf_filename1)
         plane_bdf_filenames2.append(plane_bdf_filename2)
         # eid, nid, inid1, inid2
         #print(unique_geometry_array)
         #moi_filename = 'amoi_%i.bdf' % i
         moi_filename = None
-        log.info(f'calculate_area_moi {icut:d}')
+        log.info(f'calculate_area_moi {icut:d} (station={dy})')
         dxi, dzi, Ai, Ii, EIi, avg_centroidi = calculate_area_moi(
             model, rods, normal_plane, thetas,
             moi_filename=moi_filename)
@@ -322,9 +345,9 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
                  dirname: PathLike='',
                  normalized_inertia_png_filename: PathLike='normalized_inertia_vs_span.png',
                  area_span_png_filename: PathLike='area_vs_span.png',
-                 amoi_span_png_filename: PathLike = 'amoi_vs_span.png',
-                 e_amoi_span_png_filename: PathLike = 'e_amoi_vs_span.png',
-                 cg_span_png_filename: PathLike = 'cg_vs_span.png') -> None:
+                 amoi_span_png_filename: PathLike='amoi_vs_span.png',
+                 e_amoi_span_png_filename: PathLike='e_amoi_vs_span.png',
+                 cg_span_png_filename: PathLike='cg_vs_span.png') -> int:
     """helper method for test"""
     #plt.plot(y, I[:, 0] / I[:, 0].max(), 'ro-', label='Qxx')
     #plt.plot(y, I[:, 1] / I[:, 1].max(), 'bo-', label='Qyy')

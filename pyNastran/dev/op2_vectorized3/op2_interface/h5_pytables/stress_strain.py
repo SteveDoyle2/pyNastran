@@ -526,14 +526,16 @@ def load_complex_element(result_name: str,
 
             if is_freq:
                 freq = freq_data
+                assert isinstance(element_name, str), element_name
                 if not hasattr(class_obj, 'add_freq_case'):
                     model.log.warning(f'skipping {result_name} - add_freq_case')
                     continue
+
                 res = class_obj.add_freq_case(
                     table_name,
-                    element_name,
                     elementi, data, isubcase,
                     freq,
+                    element_name,
                     is_sort1=True, is_random=False, is_msc=True,
                     random_code=0, title='', subtitle='', label='')
 

@@ -9,14 +9,14 @@ from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
-from pyNastran.bdf.mesh_utils.aero.map_pressure_to_caero import map_caero
 from pyNastran.bdf.mesh_utils.aero.deform_aero_spline import (
     deform_aero_spline, deform_aero_spline_from_files)
 from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
+from pyNastran.bdf.mesh_utils.aero.map_aero_model import map_aero_model
+from pyNastran.bdf.mesh_utils.aero.map_pressure_to_caero import map_caero
 
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.cmd_line.bdf_cmd_line import cmd_line
-from pyNastran.bdf.mesh_utils.aero.map_aero_model import map_aero_model
 
 from pyNastran.bdf.mesh_utils.normals import get_normals_at_nodes, get_normals_at_elements
 import pyNastran.bdf.mesh_utils.add_remove_mesh

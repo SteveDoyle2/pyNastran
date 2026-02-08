@@ -686,6 +686,13 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
                 from_tuples=False, from_array=True,
                 names=names)
         else:
+            #                  index  lxa  lxb  lxc  lya  lyb  ...  lzc   sa   sb   sc  epr  ovm
+            # NodeID Location                                  ...
+            # 0                    0  0.0  0.0  0.0  0.0  0.0  ...  0.0  0.0  0.0  0.0  0.0  0.0
+            #                      1  0.0  0.0  0.0  0.0  0.0  ...  0.0  0.0  0.0  0.0  0.0  0.0
+            #                      2  0.0  0.0  0.0  0.0  0.0  ...  0.0  0.0  0.0  0.0  0.0  0.0
+            #                      3  0.0  0.0  0.0  0.0  0.0  ...  0.0  0.0  0.0  0.0  0.0  0.0
+            #                      4  0.0  0.0  0.0  0.0  0.0  ...  0.0  0.0  0.0  0.0  0.0  0.0
             data = {
                 'NodeID': self.node,
                 'Location': self.location,
@@ -694,8 +701,6 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
                 data[key] = self.data[0, :, i]
             data_frame = pd.DataFrame(data)
             data_frame = data_frame.reset_index().set_index(['NodeID', 'Location'])
-            print(data_frame)
-            raise RuntimeError('finish build_dataframe B')
         self.data_frame = data_frame
 
     def get_stats(self, short: bool=False) -> list[str]:
@@ -815,7 +820,7 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
                 names=names)
         else:
             #                  index        ox            oy  ...       txz  pressure       ovm
-            # NodeID Location                                 ...                              
+            # NodeID Location                                 ...
             # 1                    0 -0.000118 -4.082839e-05  ... -0.674398  0.000063  1.168092
             # 2                    1 -0.000055  1.614241e-07  ... -0.351173  0.000032  0.750128
             # 3                    2 -0.000257 -1.055142e-05  ...  0.040694  0.000065  0.071662

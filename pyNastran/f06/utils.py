@@ -108,7 +108,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
             bdf_filename = base + '.bdf'
         assert os.path.exists(bdf_filename), print_bad_path(bdf_filename)
 
-        from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
+        from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
         base_bdf, ext_bdf = os.path.splitext(bdf_filename)
         aerobox_caero_filename = f'{base_bdf}.aerobox{ext_bdf}'
         export_caero_mesh(

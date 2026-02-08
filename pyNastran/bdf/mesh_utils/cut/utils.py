@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    from pyNastran.bdf import BDF
+    from pyNastran.bdf.bdf import BDF
     from pyNastran.nptyping_interface import NDArray3float
 
 
@@ -118,7 +118,8 @@ def project_z_axis(p1: NDArray3float,
     return i, k, origin, zaxis, xzplane
 
 
-def _determine_cord2r(origin: np.ndarray, zaxis: np.ndarray,
+def _determine_cord2r(origin: np.ndarray,
+                      zaxis: np.ndarray,
                       xzplane: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     k = zaxis / np.linalg.norm(zaxis)
     iprime = xzplane / np.linalg.norm(xzplane)
