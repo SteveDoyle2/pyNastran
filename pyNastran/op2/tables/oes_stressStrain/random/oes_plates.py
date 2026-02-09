@@ -2,6 +2,7 @@ import numpy as np
 from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_float_13e, _eigenvalue_header
@@ -169,7 +170,7 @@ class RandomPlateVMArray(OES_Object):
         """creates a pandas dataframe"""
         import pandas as pd
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
+        column_names, column_values = build_dataframe_transient_header(self)
         #print(f'column_names = {column_names} column_values={column_values}')
 
         #print(self.element_node)
@@ -184,9 +185,9 @@ class RandomPlateVMArray(OES_Object):
         #ipos = np.where(self.element_node[:, 0] > 0)
         ipos = None
 
-        column_names, column_values = self._build_dataframe_transient_header()
-        data_frame = self._build_pandas_transient_element_node(
-            column_values, column_names,
+        column_names, column_values = build_dataframe_transient_header(self)
+        data_frame = build_pandas_transient_element_node(
+            self, column_values, column_names,
             headers, self.element_node, self.data)
         #print(data_frame)
         self.data_frame = data_frame
@@ -660,7 +661,7 @@ class RandomPlateArray(OES_Object):
         """creates a pandas dataframe"""
         import pandas as pd
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
+        column_names, column_values = build_dataframe_transient_header(self)
         #print(f'column_names = {column_names} column_values={column_values}')
 
         #print(self.element_node)
@@ -675,9 +676,9 @@ class RandomPlateArray(OES_Object):
         #ipos = np.where(self.element_node[:, 0] > 0)
         ipos = None
 
-        column_names, column_values = self._build_dataframe_transient_header()
-        data_frame = self._build_pandas_transient_element_node(
-            column_values, column_names,
+        column_names, column_values = build_dataframe_transient_header(self)
+        data_frame = build_pandas_transient_element_node(
+            self, column_values, column_names,
             headers, self.element_node, self.data)
         #print(data_frame)
         self.data_frame = data_frame
@@ -1124,12 +1125,10 @@ class RandomPlateStressArray(RandomPlateArray, StressObject):
         RandomPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'txy']
         return headers
-
-    def get_headers(self) -> list[str]:
-        return self._get_headers()
 
 
 class RandomPlateStrainArray(RandomPlateArray, StrainObject):
@@ -1138,12 +1137,10 @@ class RandomPlateStrainArray(RandomPlateArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         headers = ['exx', 'eyy', 'exy']
         return headers
-
-    def get_headers(self) -> list[str]:
-        return self._get_headers()
 
 class RandomPlateStressVMArray(RandomPlateVMArray, StressObject):
     """
@@ -1161,12 +1158,10 @@ class RandomPlateStressVMArray(RandomPlateVMArray, StressObject):
         RandomPlateVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'txy']
         return headers
-
-    def get_headers(self) -> list[str]:
-        return self._get_headers()
 
 
 class RandomPlateStrainVMArray(RandomPlateVMArray, StrainObject):
@@ -1175,9 +1170,7 @@ class RandomPlateStrainVMArray(RandomPlateVMArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         headers = ['exx', 'eyy', 'exy']
         return headers
-
-    def get_headers(self) -> list[str]:
-        return self._get_headers()

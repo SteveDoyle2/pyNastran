@@ -3,6 +3,7 @@ import numpy as np
 from numpy import zeros, searchsorted
 
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -33,9 +34,6 @@ class RealBar10NodesArray(OES_Object):
 
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
-
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def build(self):
         """sizes the vectorized attributes of the RealBar10NodesArray"""
@@ -100,9 +98,9 @@ class RealBar10NodesArray(OES_Object):
             #          smin   1.000000e-03 -1.001432e-01 -2.200126e-01
             #          MS     1.401298e-45  1.401298e-45  1.401298e-45
             #          sd     5.000000e-01  5.000000e-01  5.000000e-01
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             # >=25.0
@@ -279,7 +277,8 @@ class RealBar10NodesStressArray(RealBar10NodesArray, StressObject):
         RealBar10NodesArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         #if self.is_fiber_distance:
             #fiber_dist = 'fiber_distance'
         #else:
@@ -307,7 +306,8 @@ class RealBar10NodesStrainArray(RealBar10NodesArray, StrainObject):
         RealBar10NodesArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         #if self.is_fiber_distance:
             #fiber_dist = 'fiber_distance'
         #else:

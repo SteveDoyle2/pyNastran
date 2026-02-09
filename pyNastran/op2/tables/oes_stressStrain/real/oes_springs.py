@@ -5,7 +5,9 @@ import numpy as np
 from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
-from pyNastran.op2.result_objects.op2_objects import get_times_dtype, get_sort_element_sizes
+from pyNastran.op2.result_objects.op2_objects import (
+    get_times_dtype, get_sort_element_sizes)
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_real_data_code, set_static_case, set_modal_case,
@@ -131,9 +133,6 @@ class RealSpringArray(OES_Object):
     def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
-
-    def get_headers(self):
-        raise NotImplementedError()
 
     #def __mul__(self, factor):
         #"""in-place multiplication"""
@@ -283,9 +282,9 @@ class RealSpringArray(OES_Object):
             # 31        spring_stress           0.0          -0.0          -0.0
             # 32        spring_stress           0.0           0.0           0.0
             # 33        spring_stress           0.0           0.0           0.0
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             #Static     spring_stress
@@ -572,7 +571,8 @@ class RealSpringStressArray(RealSpringArray, StressObject):
         RealSpringArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['spring_stress']
         return headers
 
@@ -601,7 +601,8 @@ class RealSpringStrainArray(RealSpringArray, StrainObject):
         RealSpringArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['spring_strain']
         return headers
 
@@ -670,7 +671,8 @@ class RealNonlinearSpringStressArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['force', 'stress']
         return headers
 

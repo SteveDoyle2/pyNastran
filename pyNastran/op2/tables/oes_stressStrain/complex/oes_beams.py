@@ -3,6 +3,7 @@ from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
@@ -104,7 +105,8 @@ class ComplexBeamArray(OES_Object):
         """creates a pandas dataframe"""
         import pandas as pd
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
+        column_names, column_values = build_dataframe_transient_header(self)
+        raise RuntimeError('replace pd.Panel')
         self.data_frame = pd.Panel(self.data, items=column_values,
                                    major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
@@ -508,7 +510,8 @@ class ComplexBeamStressArray(ComplexBeamArray, StressObject):
         ComplexBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['sxc', 'sxd', 'sxe', 'sxf']
         return headers
 
@@ -517,6 +520,7 @@ class ComplexBeamStrainArray(ComplexBeamArray, StrainObject):
         ComplexBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['exc', 'exd', 'exe', 'exf']
         return headers

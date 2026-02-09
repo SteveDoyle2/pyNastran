@@ -4,6 +4,7 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_float_types
 from pyNastran.op2.result_objects.op2_objects import (
     get_times_dtype, combination_inplace)
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_real_data_code,
     set_element_case, set_static_case, set_modal_case,
@@ -140,9 +141,6 @@ class RealRodArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self):
-        raise NotImplementedError()
-
     def build(self):
         """sizes the vectorized attributes of the RealRodArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
@@ -201,9 +199,9 @@ class RealRodArray(OES_Object):
         import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             #Static     axial           SMa  torsion           SMt
@@ -510,7 +508,8 @@ class RealBushStressArray(RealRodArray, StressObject):
         RealRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['axial', 'SMa', 'torsion', 'SMt']
         return headers
 
@@ -534,7 +533,8 @@ class RealRodStressArray(RealRodArray, StressObject):
         RealRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['axial', 'SMa', 'torsion', 'SMt']
         return headers
 
@@ -554,7 +554,8 @@ class RealRodStrainArray(RealRodArray, StrainObject):
         RealRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['axial', 'SMa', 'torsion', 'SMt']
         return headers
 

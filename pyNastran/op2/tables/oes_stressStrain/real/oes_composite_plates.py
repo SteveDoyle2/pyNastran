@@ -3,6 +3,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype, combination_inplace
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_real_data_code, get_scode,
     set_static_case, set_modal_case, set_transient_case, set_post_buckling_case,
@@ -48,9 +49,6 @@ class RealCompositePlateArray(OES_Object):
 
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
-
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def build(self):
         """sizes the vectorized attributes of the RealCompositePlateArray"""
@@ -149,9 +147,9 @@ class RealCompositePlateArray(OES_Object):
             #[(1, 1.4822459136312394e-10, -8.673617379884035e-19, 9.313225746154785e-10)
              #(2, 3.353939638127037e-09, 4.440892098500626e-16, 2.1073424255447017e-08)
              #(3, 1.4822459136312394e-10, 8.673617379884035e-19, 9.313225746154785e-10)]
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_element_node(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
                 headers, self.element_layer, self.data)
         else:
             element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
@@ -749,7 +747,8 @@ class RealCompositePlateStressArray(RealCompositePlateArray, StressObject):
     def is_strain(self):
         return False
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         if self.is_von_mises:
             ovm = 'von_mises'
         else:
@@ -771,7 +770,8 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
     def is_strain(self) -> bool:
         return True
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         if self.is_von_mises:
             ovm = 'von_mises'
         else:

@@ -137,9 +137,6 @@ class ElementTableArray(BaseElement):  # displacement style table
     def headers(self):
         return ['t1', 't2', 't3', 'r1', 'r2', 'r3']
 
-    def _get_headers(self):
-        return self.headers
-
     def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0

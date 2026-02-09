@@ -3,6 +3,7 @@ from numpy import zeros, searchsorted, ravel
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
@@ -49,9 +50,6 @@ class RandomBarArray(OES_Object):
 
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
-
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def build(self):
         """sizes the vectorized attributes of the RealBarArray"""
@@ -102,11 +100,13 @@ class RandomBarArray(OES_Object):
         import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
+            raise RuntimeError('replace pd.Panel')
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
         else:
+            raise RuntimeError('replace pd.Panel')
             self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'Item']
@@ -279,7 +279,8 @@ class RandomBarStressArray(RandomBarArray, StressObject):
         RandomBarArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['s1a', 's2a', 's3a', 's4a', 'axial',
                    's1b', 's2b', 's3b', 's4b']
         return headers
@@ -317,7 +318,8 @@ class RandomBarStrainArray(RandomBarArray, StrainObject):
         RandomBarArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['e1a', 'e2a', 'e3a', 'e4a', 'axial',
                    'e1b', 'e2b', 'e3b', 'e4b',]
         return headers

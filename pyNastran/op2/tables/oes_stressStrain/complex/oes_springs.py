@@ -3,6 +3,7 @@ from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, get_scode,
     oes_complex_data_code, set_freq_case, set_complex_modes_case,
@@ -44,9 +45,10 @@ class ComplexSpringDamperArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
+    # @property
+    # def headers(self) -> list[str]:
+    #     headers = ['axial', 'torque']
+    #     return headers
 
     def build(self):
         """sizes the vectorized attributes of the ComplexSpringDamperArray"""
@@ -73,9 +75,9 @@ class ComplexSpringDamperArray(OES_Object):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = self._build_pandas_transient_elements(
-            column_values, column_names,
+        column_names, column_values = build_dataframe_transient_header(self)
+        self.data_frame = build_pandas_transient_elements(
+            self, column_values, column_names,
             headers, self.element, self.data)
 
     @classmethod
@@ -368,7 +370,8 @@ class ComplexSpringStressArray(ComplexSpringDamperArray, StressObject):
         ComplexSpringDamperArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['spring_stress']
         return headers
 
@@ -378,6 +381,7 @@ class ComplexSpringStrainArray(ComplexSpringDamperArray, StrainObject):
         ComplexSpringDamperArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['spring_strain']
         return headers

@@ -1,6 +1,5 @@
 from __future__ import annotations
 from collections import defaultdict
-import numpy as np
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -432,4 +431,5 @@ class OPR:
         if responses.normalized_mass_density is None:
             responses.normalized_mass_density = defaultdict(list)
         responses.normalized_mass_density[key].append(self.obj)
+        asdf
         return ndata

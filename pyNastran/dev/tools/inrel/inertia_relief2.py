@@ -357,5 +357,5 @@ def inertia_relief(weight: np.ndarray,
     return fxyz_delta_out, mxyz_delta_out
 
 
-# if __name__ == '__main__':
-#     inertia_relief_from_model(None)
+if __name__ == '__main__':  # pragma: no cover
+    inertia_relief_from_model(None)

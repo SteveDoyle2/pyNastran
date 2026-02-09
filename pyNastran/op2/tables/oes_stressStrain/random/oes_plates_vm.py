@@ -3,6 +3,7 @@ from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_float_13e, write_float_10e, _eigenvalue_header
@@ -161,7 +162,7 @@ class RandomPlateVMArray(OES_Object):
         """creates a pandas dataframe"""
         #import pandas as pd
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
+        column_names, column_values = build_dataframe_transient_header(self)
         #print(f'column_names = {column_names} column_values={column_values}')
 
         #print(self.element_node)
@@ -183,8 +184,8 @@ class RandomPlateVMArray(OES_Object):
         print(self.data)
         print(element_node)
 
-        data_frame = self._build_pandas_transient_element_node(
-            column_values, column_names,
+        data_frame = build_pandas_transient_element_node(
+            self, column_values, column_names,
             headers, element_node, self.data[:, ipos, :], from_tuples=False, from_array=True,
             names=names,
         )
@@ -588,12 +589,10 @@ class RandomPlateVMStressArray(RandomPlateVMArray, StressObject):
         RandomPlateVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'txy', 'ovm']
         return headers
-
-    def get_headers(self) -> list[str]:
-        return self._get_headers()
 
 
 class RandomPlateVMStrainArray(RandomPlateVMArray, StrainObject):
@@ -602,9 +601,7 @@ class RandomPlateVMStrainArray(RandomPlateVMArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         headers = ['exx', 'eyy', 'exy', 'evm']
         return headers
-
-    def get_headers(self) -> list[str]:
-        return self._get_headers()

@@ -111,6 +111,9 @@ def build_obj(obj):
             raise
         #except Exception as e:
             #raise RuntimeError(str(obj)) from e
+        obj.headers
+        obj._get_headers()
+        obj.get_headers()
         obj.is_built = True
 
 def real_imag_from_list(my_floats: list[float],

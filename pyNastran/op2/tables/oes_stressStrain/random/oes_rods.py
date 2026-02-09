@@ -4,6 +4,7 @@ from numpy import zeros, searchsorted, allclose
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 
 
@@ -35,9 +36,6 @@ class RandomRodArray(OES_Object):
         self.ielement = 0
 
     def _get_msgs(self):
-        raise NotImplementedError()
-
-    def get_headers(self):
         raise NotImplementedError()
 
     def build(self):
@@ -95,16 +93,17 @@ class RandomRodArray(OES_Object):
             #          torsion  7.900725e-06  0.000000e+00
             #          axial    2.928574e-07  1.193838e-11
             #          torsion  6.618416e-13  0.000000e+00
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
-            #column_names, column_values = self._build_dataframe_transient_header()
+            #column_names, column_values = build_dataframe_transient_header(self)
             #self.data_frame = pd.Panel(self.data, items=column_values,
                                        #major_axis=self.element, minor_axis=headers).to_frame()
             #self.data_frame.columns.names = column_names
             #self.data_frame.index.names = ['ElementID', 'Item']
         else:
+            raise RuntimeError('replace pd.Panel')
             data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
             data_frame.columns.names = ['Static']
             data_frame.index.names = ['ElementID', 'Item']
@@ -267,7 +266,8 @@ class RandomBushStressArray(RandomRodArray, StressObject):
         RandomRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['axial', 'SMa', 'torsion', 'SMt']
         return headers
 
@@ -291,7 +291,8 @@ class RandomRodStressArray(RandomRodArray, StressObject):
         RandomRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['axial', 'torsion']
         return headers
 
@@ -311,7 +312,8 @@ class RandomRodStrainArray(RandomRodArray, StrainObject):
         RandomRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['axial', 'torsion']
         return headers
 

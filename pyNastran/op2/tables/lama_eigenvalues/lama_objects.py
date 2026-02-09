@@ -65,7 +65,8 @@ class RealEigenvalues(BaseScalarObject):
         self.generalized_mass[imode] = gen_mass
         self.generalized_stiffness[imode] = gen_stiffness
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['eigenvalue', 'radians', 'cycle', 'generalized_mass', 'generalized_stiffness']
         return headers
 
@@ -425,7 +426,8 @@ class ComplexEigenvalues(BaseScalarObject):
         for imode, line in enumerate(data):
             self.add_op2_line(line, imode)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['eigenvalue', 'frequency', 'damping']
         return headers
 
@@ -723,7 +725,8 @@ class BucklingEigenvalues(BaseScalarObject):
         self.data_frame = pd.DataFrame(data)
         #print(self.data_frame)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['eigenvalue', 'radians', 'cycles', 'generalized_mass', 'generalized_stiffness']
         return headers
 

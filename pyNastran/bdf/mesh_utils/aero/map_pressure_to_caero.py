@@ -2,7 +2,7 @@ import os
 import numpy as np
 from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF, read_bdf
-from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
+from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
 
 
 def map_caero(bdf_filename: PathLike, log=None):

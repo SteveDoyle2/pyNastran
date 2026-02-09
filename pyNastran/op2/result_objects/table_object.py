@@ -38,7 +38,7 @@ from pyNastran.op2.result_objects.op2_objects import (
     # GRID_TYPE_INT_TO_STR,
     recast_gridtype_as_string,
 )
-
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long,
     write_imag_floats_13e, write_float_12e)
@@ -320,12 +320,6 @@ class TableArray(ScalarObject):  # displacement style table
     def headers(self) -> list[str]:
         return ['t1', 't2', 't3', 'r1', 'r2', 'r3']
 
-    def _get_headers(self) -> list[str]:
-        return self.headers
-
-    def get_headers(self) -> list[str]:
-        return self._get_headers()
-
     def _reset_indices(self) -> None:
         self.itotal = 0
 
@@ -400,11 +394,7 @@ class TableArray(ScalarObject):  # displacement style table
             #ntimes, nnodes, nx, ny, self.ntotal))
 
     def build_dataframe(self):
-        """creates a pandas dataframe
-
-        works: 0.24.2
-        broken: 0.25.0
-        """
+        """creates a pandas dataframe"""
         import pandas as pd
 
         headers = self.get_headers()
@@ -424,7 +414,7 @@ class TableArray(ScalarObject):  # displacement style table
             # if not self.is_sort1:
             #     print("skipping %s because it's not SORT1" % self.class_name)
             #     return
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
             #if is_v25:
             #  we start out like this...
             #
@@ -2349,7 +2339,6 @@ def pandas_extract_rows(data_frame, ugridtype_str: np.ndarray, index_names: list
                 except (ValueError):
                     print(f'skipping pandas cleanup due to issue with complex {letter} points')
                     return data_frame
-
         elif dim == 6:
             eig = data_frame.xs(letter, level=1)
         else:

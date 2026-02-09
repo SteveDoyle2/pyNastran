@@ -6,6 +6,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 from pyNastran.f06.f06_formatting import write_floats_12e, _eigenvalue_header
 
 
@@ -58,9 +59,6 @@ class RandomCompositePlateArray(OES_Object):
 
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
-
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def build(self):
         """sizes the vectorized attributes of the RealCompositePlateArray"""
@@ -145,12 +143,14 @@ class RandomCompositePlateArray(OES_Object):
         headers = self.get_headers()
         element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
+            raise RuntimeError('replace pd.Panel')
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_layer, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
         else:
+            raise RuntimeError('replace pd.Panel')
             self.data_frame = pd.Panel(self.data,
                                        major_axis=element_layer, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
@@ -426,9 +426,6 @@ class RandomCompositePlateVMArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-
     def build(self):
         """sizes the vectorized attributes of the RealCompositePlateArray"""
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
@@ -489,12 +486,14 @@ class RandomCompositePlateVMArray(OES_Object):
         headers = self.get_headers()
         element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
+            raise RuntimeError('replace pd.Panel')
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element_layer, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
         else:
+            raise RuntimeError('replace pd.Panel')
             self.data_frame = pd.Panel(self.data,
                                        major_axis=element_layer, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
@@ -736,7 +735,8 @@ class RandomCompositePlateStressArray(RandomCompositePlateArray, StressObject):
     def is_strain(self):
         return False
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['o11', 'o22', 'txy']
         return headers
 
@@ -754,7 +754,8 @@ class RandomCompositePlateStrainArray(RandomCompositePlateArray, StrainObject):
     def is_strain(self) -> bool:
         return True
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['e11', 'e22', 'exy']
         return headers
 
@@ -771,7 +772,8 @@ class RandomCompositePlateStressVMArray(RandomCompositePlateVMArray, StressObjec
     def is_strain(self) -> bool:
         return False
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['o11', 'o22', 'txy']
         return headers
 
@@ -789,6 +791,7 @@ class RandomCompositePlateStrainVMArray(RandomCompositePlateVMArray, StrainObjec
     def is_strain(self) -> bool:
         return True
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['e11', 'e22', 'exy']
         return headers

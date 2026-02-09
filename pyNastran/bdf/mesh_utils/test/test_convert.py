@@ -11,7 +11,7 @@ from pyNastran.bdf.cards.elements.mass import CONM2
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck, PARAM
 from pyNastran.bdf.mesh_utils.convert import convert, get_scale_factors, scale_by_terms
-from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
+from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
 from pyNastran.bdf.cards.aero.zaero_interface.nastran_to_zaero import nastran_to_zaero
 
 

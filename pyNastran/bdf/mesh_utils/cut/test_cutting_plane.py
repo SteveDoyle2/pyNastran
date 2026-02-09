@@ -1,6 +1,5 @@
 """defines cutting plane tests"""
 import os
-import copy
 from pathlib import Path
 import unittest
 import numpy as np
@@ -19,14 +18,10 @@ import pyNastran
 from pyNastran.bdf.bdf import read_bdf, BDF, CORD2R
 from cpylog import SimpleLogger
 
-from pyNastran.bdf.mesh_utils.moi_plotter import (
-    cut_and_plot_moi, plot_inertia)
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
+from pyNastran.bdf.mesh_utils.cut.cutting_plane_plotter import cut_and_plot_model
+from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     cut_edge_model_by_coord, cut_face_model_by_coord,
-    connect_face_rows, split_to_trias,
-    _get_shell_inertia, _setup_faces,
-)
-from pyNastran.bdf.mesh_utils.cutting_plane_plotter import cut_and_plot_model
+    connect_face_rows, split_to_trias)
 #from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.op2.op2_geom import read_op2_geom
 
@@ -36,140 +31,6 @@ MODEL_PATH = Path(os.path.join(PKG_PATH, '..', 'models'))
 
 class TestCuttingPlane(unittest.TestCase):
     """various cutting plane tests"""
-    def test_shell_inertia(self):
-        model = BDF(debug=False, log=None, mode='msc')
-
-        # x-axis is at 0 degrees
-        cid1 = 1
-        origin = [0., 0., 0.]
-        zaxis = [0., 0., 1.]
-        xzplane = [0., 1., 0.]
-        model.add_cord2r(cid1, origin, zaxis, xzplane)
-
-        # x-axis is at 90 degrees
-        cid2 = 2
-        origin = [0., 0., 0.]
-        zaxis = [0., 0., 1.]
-        xzplane = [1., 0., 0.]
-        model.add_cord2r(cid2, origin, zaxis, xzplane)
-
-        # x-axis is at 45 degrees
-        cid3 = 3
-        origin = [0., 0., 0.]
-        zaxis = [0., 0., 1.]
-        xzplane = [1., 1., 0.]
-        model.add_cord2r(cid3, origin, zaxis, xzplane)
-
-
-        tply = 0.007
-        thicknesses = [tply, tply]
-        mids_ud = [1, 1]
-        mids_45 = [1, 1]
-        model.add_pcomp(1, [mids_ud[0]], [thicknesses[0]], thetas=[0.])
-        model.add_pcomp(2, [mids_ud[0]], [thicknesses[0]], thetas=[90.])
-        model.add_pcomp(3, [mids_ud[0]], [thicknesses[0]], thetas=[45.])
-
-        model.add_pcomp(4, mids_ud, thicknesses, thetas=[45., -45.])
-        model.add_pcomp(11, mids_45, thicknesses, thetas=[0., 90.])
-        model.add_pcomp(12, mids_45, thicknesses, thetas=[45., -45.])
-
-        # fibers are in the y direction
-        nids = [1, 2, 3, 4]
-        element1 = model.add_cquad4(1, 1, nids, theta_mcid=cid1)
-        element2 = model.add_cquad4(2, 2, nids, theta_mcid=cid2)
-        element3 = model.add_cquad4(3, 3, nids, theta_mcid=cid3)
-        element4 = model.add_cquad4(4, 4, nids, theta_mcid=cid3)
-
-        element11 = model.add_cquad4(11, 11, nids, theta_mcid=cid1)
-        element12 = model.add_cquad4(12, 12, nids, theta_mcid=cid3)
-
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        model.add_grid(3, [1., 1., 0.])
-        model.add_grid(4, [0., 1., 0.])
-
-        # fabric
-        mid = 1
-        e11 = 7600555.0
-        e22 = 7029000.0
-        nu12 = 0.042
-        g12 = 360471.0
-        model.add_mat8(mid, e11, e22, nu12, g12=g12, g1z=1e8, g2z=1e8,
-                       rho=0., a1=0., a2=0., tref=0., Xt=0., Xc=None, Yt=0., Yc=None,
-                       S=0., ge=0., F12=0., strn=0., comment='')
-        lengthi = 1.
-        normal_plane = np.array([0., 1., 0.])
-        normal_plane_vector = normal_plane.copy().reshape((3, 1))
-
-        model.cross_reference()
-
-        # not rotated: 0 deg
-        thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
-            element1, normal_plane, normal_plane_vector, lengthi)
-        assert np.allclose(thicknessi, tply)
-        assert np.allclose(areai, thicknessi*lengthi)
-        assert np.allclose(imat_rotation_angle_deg, 0.)
-        assert np.allclose(e11, Ex)
-        assert np.allclose(e22, Ey)
-        assert np.allclose(g12, Gxy)
-        assert np.allclose(nu_xy, 0.)
-
-        # rotate by 90 degrees: 90 deg
-        thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
-            element2, normal_plane, normal_plane_vector, lengthi)
-        assert np.allclose(thicknessi, tply)
-        assert np.allclose(areai, thicknessi*lengthi)
-        assert np.allclose(imat_rotation_angle_deg, 90.)
-        #assert np.allclose(e11, Ey)
-        #assert np.allclose(e22, Ex)
-        #assert np.allclose(g12, Gxy)
-        #assert np.allclose(nu_xy, 0.)
-
-        # rotate by 45 degrees: +45 deg
-        thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
-            element3, normal_plane, normal_plane_vector, lengthi)
-        assert np.allclose(thicknessi, tply)
-        assert np.allclose(areai, thicknessi*lengthi)
-        assert np.allclose(imat_rotation_angle_deg, 45.)
-        #assert np.allclose(Ex, 1317118.060260035)
-        #assert np.allclose(Ey, 1317118.0602600349)
-        #assert np.allclose(Gxy, 3510140.123933055)
-        #assert np.allclose(nu_xy, 4.766776571060659e-13)
-
-        # rotate by 45 degrees: +/-45 deg
-        thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
-            element4, normal_plane, normal_plane_vector, lengthi)
-        assert np.allclose(thicknessi, sum(thicknesses))
-        assert np.allclose(areai, thicknessi*lengthi)
-        assert np.allclose(imat_rotation_angle_deg, 45.)
-        #assert np.allclose(Ex, 1317292.3250658484)
-        #assert np.allclose(Ey, 1317292.3250658484)
-        #assert np.allclose(Gxy, 3515514.7806900046)
-        #assert np.allclose(nu_xy, 4.766908439759332e-13)
-
-        # fabric - rotate by 45 degrees: +/- 0/90 deg
-        thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
-            element11, normal_plane, normal_plane_vector, lengthi)
-        assert np.allclose(thicknessi, sum(thicknesses))
-        assert np.allclose(areai, thicknessi*lengthi)
-        assert np.allclose(imat_rotation_angle_deg, 0.)
-        # assert np.allclose(Ex, e11)
-        # assert np.allclose(Ey, e22)
-        # assert np.allclose(Gxy, g12)
-        # assert np.allclose(nu_xy, nu12)
-
-        # fabric - rotate by 45 degrees: +/- 45 deg
-        # thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
-        #     element12, normal_plane, normal_plane_vector, lengthi)
-        # assert np.allclose(thicknessi, sum(thicknesses))
-        # assert np.allclose(areai, thicknessi*lengthi)
-        # assert np.allclose(imat_rotation_angle_deg, 45.)
-        # assert np.allclose(Ex, 1317292.3250658484)
-        # assert np.allclose(Ey, 1317292.3250658484)
-        # assert np.allclose(Gxy, 3515514.7806900046)
-        # assert np.allclose(nu_xy, 4.766908439759332e-13)
-        x = 1
-
     def test_cut_plate(self):
         """mode 10 is a sine wave"""
         log = SimpleLogger(level='warning', encoding='utf-8')
@@ -216,61 +77,6 @@ class TestCuttingPlane(unittest.TestCase):
         dirname = Path('.')
         os.remove(dirname / 'real_result.csv')
         os.remove(dirname / 'complex_result.csv')
-
-    def test_cut_bwb(self):
-        """cut_and_plot_moi"""
-        log = SimpleLogger(level='warning', encoding='utf-8')
-        dirname = MODEL_PATH / 'bwb'
-        bdf_filename = dirname / 'bwb_saero.bdf'  # ymax~=1262.0
-        model = read_bdf(bdf_filename, log=log)
-        dys, coords = get_coords_bwb()
-        normal_plane = np.array([0., 1., 0.])
-
-        face_data = _setup_faces(model)
-        # y0, A0, I0, J0, EI0, J0, avg_centroid0, plane_bdf_filenames10, plane_bdf_filenames20 = cut_and_plot_moi(
-        #     model, normal_plane, log,
-        #     dys, coords,
-        #     ytol=2.0,
-        #     dirname=dirname,
-        #     plot=False, show=False, face_data=face_data)
-
-        y, A, I, J, EI, J, avg_centroid, plane_bdf_filenames1, plane_bdf_filenames2 = cut_and_plot_moi(
-            bdf_filename, normal_plane, log,
-            dys, coords,
-            ytol=2.0,
-            dirname=dirname,
-            plot=True, show=False, face_data=face_data,
-            debug_vectorize=True,
-        )
-        # assert np.allclose(avg_centroid, avg_centroid0)
-
-        # show = True
-        show = False
-        if IS_MATPLOTLIB:
-            GJ = J
-            plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show)
-            os.remove(dirname / 'normalized_inertia_vs_span.png')
-            os.remove(dirname / 'area_vs_span.png')
-            os.remove(dirname / 'amoi_vs_span.png')
-            os.remove(dirname / 'e_amoi_vs_span.png')
-            os.remove(dirname / 'cg_vs_span.png')
-
-        # bdf_merge(plane_bdf_filenames, bdf_filename_out='merge.bdf', renumber=True,
-        #           encoding=None, size=8, is_double=False, cards_to_skip=None,
-        #           log=None, skip_case_control_deck=False)
-        for plane_bdf_filename in plane_bdf_filenames1:
-            os.remove(plane_bdf_filename)
-        os.remove(dirname / 'thetas.csv')
-        # os.remove(dirname / 'equivalent_beam_model.bdf')
-        os.remove(dirname / 'cut_data_vs_span.csv')
-        # os.remove('cut_face.csv')
-        # if IS_MATPLOTLIB:
-        #     os.remove('area_vs_span.png')
-        #     os.remove('amoi_vs_span.png')
-        #     os.remove('normalized_inertia_vs_span.png')
-        #     os.remove('cg_vs_span.png')
-        #     os.remove('e_amoi_vs_span.png')
-
     def test_cut_plate_eids(self):
         """recover element ids"""
         log = SimpleLogger(level='warning', encoding='utf-8')
@@ -282,10 +88,9 @@ class TestCuttingPlane(unittest.TestCase):
         coord = CORD2R(1, rid=0, origin=[0., 0., 0.], zaxis=[0., 0., 1], xzplane=[1., 0., 0.],
                        comment='')
         model.coords[1] = coord
-        ytol = 2.
 
-        unique_geometry_array, unique_results_array, unused_rods = cut_face_model_by_coord(
-            bdf_filename, coord, ytol,
+        found_cut, unique_geometry_array, unique_results_array, unused_rods = cut_face_model_by_coord(
+            bdf_filename, coord,
             nodal_result, plane_atol=1e-5, skip_cleanup=True,
             csv_filename='',
             plane_bdf_filename1='',
@@ -293,8 +98,8 @@ class TestCuttingPlane(unittest.TestCase):
             face_data=None,
             debug_vectorize=False,
         )
-        unique_geometry_array, unique_results_array, unused_rods = cut_face_model_by_coord(
-            bdf_filename, coord, ytol,
+        found_cut, unique_geometry_array, unique_results_array, unused_rods = cut_face_model_by_coord(
+            bdf_filename, coord,
             nodal_result, plane_atol=1e-5, skip_cleanup=True,
             csv_filename='cut_face.csv',
             plane_bdf_filename1='plane_face.bdf',
@@ -332,12 +137,13 @@ class TestCuttingPlane(unittest.TestCase):
         p1 = None
         p2 = None
         zaxis = None
-        cut_and_plot_model(title, p1, p2, zaxis,
-                           model, coord, nodal_result, model.log, tol,
-                           plane_atol=1e-5,
-                           csv_filename=None,
-                           invert_yaxis=False,
-                           cut_type='edge', plot=IS_MATPLOTLIB, show=False)
+        cut_and_plot_model(
+            title, p1, p2, zaxis,
+            model, coord, nodal_result, model.log, tol,
+            plane_atol=1e-5,
+            csv_filename=None,
+            invert_yaxis=False,
+            cut_type='edge', plot=IS_MATPLOTLIB, show=False)
         #=========================================================================
         out = cut_edge_model_by_coord(
             model, coord, tol, nodal_result,
@@ -345,8 +151,8 @@ class TestCuttingPlane(unittest.TestCase):
         unused_local_points_array, unused_global_points_array, result_array = out
         assert len(result_array) == 16, len(result_array)
 
-        unused_geometry_array, result_array, unused_rods = cut_face_model_by_coord(
-            model, coord, tol, nodal_result,
+        found_cut, unused_geometry_array, result_array, unused_rods = cut_face_model_by_coord(
+            model, coord, nodal_result,
             plane_atol=1e-5,
             face_data=None,
         )
@@ -362,7 +168,8 @@ class TestCuttingPlane(unittest.TestCase):
          - cut_face_model_by_coord
         """
         tol = 2.
-        coord = CORD2R(1, rid=0, origin=[0.5, 0., 0.], zaxis=[0.5, 0., 1], xzplane=[1.5, 0., 0.],
+        coord = CORD2R(1, rid=0, origin=[0.5, 0., 0.],
+                       zaxis=[0.5, 0., 1], xzplane=[1.5, 0., 0.],
                        comment='')
         model, nodal_result = _cut_shell_model_quads()
         #-------------------------------------------------------------------------
@@ -376,12 +183,13 @@ class TestCuttingPlane(unittest.TestCase):
         p1 = None
         p2 = None
         zaxis = None
-        cut_and_plot_model(title, p1, p2, zaxis,
-                           model, coord, nodal_result, model.log, tol,
-                           plane_atol=1e-5,
-                           csv_filename=None,
-                           invert_yaxis=False,
-                           cut_type='edge', plot=IS_MATPLOTLIB, show=False)
+        cut_and_plot_model(
+            title, p1, p2, zaxis,
+            model, coord, nodal_result, model.log, tol,
+            plane_atol=1e-5,
+            csv_filename=None,
+            invert_yaxis=False,
+            cut_type='edge', plot=IS_MATPLOTLIB, show=False)
 
         out = cut_edge_model_by_coord(
             model, coord, tol, nodal_result,
@@ -389,8 +197,8 @@ class TestCuttingPlane(unittest.TestCase):
         unused_local_points_array, unused_global_points_array, result_array = out
         assert len(result_array) == 20, len(result_array)
 
-        unused_geometry_arrays, result_arrays, unused_rods = cut_face_model_by_coord(
-            model, coord, tol, nodal_result,
+        found_cut, unused_geometry_arrays, result_arrays, unused_rods = cut_face_model_by_coord(
+            model, coord, nodal_result,
             plane_atol=1e-5,
             csv_filename='cut_face_2.csv',
             face_data=None)
@@ -521,17 +329,6 @@ class TestCuttingPlane(unittest.TestCase):
             geometry_array, results_array, skip_cleanup=False)
         assert np.array_equal(iedges, [[0, 1, 2, 3, 0], [4, 5, 6, 7, 4]]), 'iedges=%s' % iedges
 
-
-def get_coords_bwb(ncuts: int=2000) -> tuple[list[float], list[CORD2R]]:  # pragma: no cover
-    """gets coords from y=0 to y=100*ncuts"""
-    dys = []
-    coords = []
-    for i in range(ncuts):
-        dy = 100. * i + 1.  #  bwb
-        coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
-        dys.append(dy)
-        coords.append(coord)
-    return dys, coords
 
 def _cut_shell_model_quads():
     """helper method"""

@@ -8,12 +8,13 @@ try:
     import matplotlib.pyplot as plt
     import matplotlib
     MPL_VER = int_version('matplotlib', matplotlib.__version__)
+    assert MPL_VER >= [2, 1], MPL_VER
     IS_MATPLOTLIB = True
 except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
     MPL_VER = None
 
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
+from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     cut_edge_model_by_coord, cut_face_model_by_coord, export_face_cut)
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -90,8 +91,8 @@ def cut_and_plot_model(title: str,
         csv_filename_face = None
         if csv_filename:
             csv_filename_face = csv_filename + '_face.csv'
-        geometry_arrays, results_arrays, unused_rods_array = cut_face_model_by_coord(
-            model, coord, ytol,
+        found_cut, geometry_arrays, results_arrays, unused_rods_array = cut_face_model_by_coord(
+            model, coord,
             nodal_result, plane_atol=plane_atol,
             csv_filename=csv_filename_face,
             face_data=None,
@@ -211,7 +212,7 @@ def plot_cutting_plane_edges(title: str,
         fig = plt.figure(1)
         ax = fig.add_subplot(1, 1, 1)
 
-        colors = ['C0<', 'C1>'] if MPL_VER >= [2, 1] else ['b>', 'r<']
+        colors = ['C0<', 'C1>']
         ax.plot(local_x, cp.real, colors[0], label='real')
         if is_complex:
             ax.plot(local_x, cp.imag, colors[0], label='imag')

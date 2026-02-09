@@ -109,5 +109,5 @@ def main():
     solve_wkk_from_bdf_filenames([model])
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

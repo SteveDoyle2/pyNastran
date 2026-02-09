@@ -2,6 +2,8 @@ import warnings
 import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject, get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import (
+    build_dataframe_transient_header, build_pandas_transient_element_node)
 from pyNastran.f06.f06_formatting import (
     write_floats_10e, _eigenvalue_header)
 from pyNastran.op2.writer.utils import fix_table3_types
@@ -65,6 +67,45 @@ class GridPointSurfaceArray(ScalarObject):
         self.location = np.empty(self.ntotal, dtype='U8')
 
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+
+    def build_dataframe(self):
+        """creates a pandas dataframe"""
+        import pandas as pd
+        headers = self.headers
+
+        if self.nonlinear_factor not in (None, np.nan):
+            column_names, column_values = build_dataframe_transient_header(self)
+            element_node = [
+                self.node_element[:, 0],
+                self.node_element[:, 1],
+                self.location,
+            ]
+            names = ['NodeID', 'Element', 'Location', 'Item']
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
+                headers, element_node, self.data,
+                from_tuples=False, from_array=True,
+                names=names)
+            print(data_frame)
+            raise RuntimeError('finish build_dataframe A')
+        else:
+            #                  index  ElementID  ...          tmax           ovm
+            # NodeID Location                    ...
+            # 3301    Z1           0          0  ...  0.000000e+00  0.000000e+00
+            #         Z2           1          0  ...  0.000000e+00  0.000000e+00
+            #        MID           2          0  ...  0.000000e+00  0.000000e+00
+            # 3302    Z1           3          0  ...  0.000000e+00  0.000000e+00
+            #         Z2           4          0  ...  0.000000e+00  0.000000e+00
+            data = {
+                'NodeID': self.node_element[:, 0],
+                'ElementID': self.node_element[:, 1],
+                'Location': self.location,
+            }
+            for i, key in enumerate(headers):
+                data[key] = self.data[0, :, i]
+            data_frame = pd.DataFrame(data)
+            data_frame = data_frame.reset_index().set_index(['NodeID', 'ElementID', 'Location'])
+        self.data_frame = data_frame
 
     def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
         import inspect
@@ -217,20 +258,6 @@ class GridPointSurfaceArray(ScalarObject):
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
         op2_file.write(pack(fmt, *data))
 
-    #def build_dataframe(self):
-        #"""creates a pandas dataframe"""
-        #import pandas as pd
-        #headers = self.get_headers()
-        #element_node = [self.element_node[:, 0], self.element_node[:, 1]]
-        #if self.nonlinear_factor not in (None, np.nan):
-            #column_names, column_values = self._build_dataframe_transient_header()
-            #self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
-            #self.data_frame.columns.names = column_names
-        #else:
-            #self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
-            #self.data_frame.columns.names = ['Static']
-        #self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
-
     def add_sort1(self, dt, nid, eid, fiber, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
         """unvectorized method for adding SORT1 transient data"""
         assert self.sort_method == 1, self
@@ -363,7 +390,6 @@ class GridPointSurfaceArray(ScalarObject):
         ntotali = self.num_wide
         assert ntotali == 11, ntotali
         ntotal = ntotali * nnodes
-
 
         #print('shape = %s' % str(self.data.shape))
         #assert nnodes > 1, nnodes
@@ -508,7 +534,8 @@ class GridPointSurfaceArray(ScalarObject):
 
 class GridPointSurfaceStressesArray(GridPointSurfaceArray):
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['nx', 'ny', 'txy', 'angle', 'majorP', 'minorP', 'tmax', 'ovm']
         return headers
 
@@ -527,7 +554,8 @@ class GridPointSurfaceStressesArray(GridPointSurfaceArray):
 
 class GridPointSurfaceStrainsArray(GridPointSurfaceArray):
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['nx', 'ny', 'exy', 'angle', 'majorP', 'minorP', 'emax', 'evm']
         return headers
 
@@ -559,7 +587,8 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         self.itime = None
         self._times = None
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'lxa', 'lxb', 'lxc',
             'lya', 'lyb', 'lyc',
@@ -632,6 +661,48 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
 
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
 
+    def build_dataframe(self):
+        """creates a pandas dataframe"""
+        import pandas as pd
+        headers = self.headers
+
+        if self.nonlinear_factor not in (None, np.nan):
+            # LoadStep              1.0
+            # NodeID Location Item
+            # 0               lxa   0.0
+            #                 lxb   0.0
+            #                 lxc   0.0
+            #                 lya   0.0
+            #                 lyb   0.0
+            column_names, column_values = build_dataframe_transient_header(self)
+            element_node = [
+                self.node,
+                self.location,
+            ]
+            names = ['NodeID', 'Location', 'Item']
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
+                headers, element_node, self.data,
+                from_tuples=False, from_array=True,
+                names=names)
+        else:
+            #                  index  lxa  lxb  lxc  lya  lyb  ...  lzc   sa   sb   sc  epr  ovm
+            # NodeID Location                                  ...
+            # 0                    0  0.0  0.0  0.0  0.0  0.0  ...  0.0  0.0  0.0  0.0  0.0  0.0
+            #                      1  0.0  0.0  0.0  0.0  0.0  ...  0.0  0.0  0.0  0.0  0.0  0.0
+            #                      2  0.0  0.0  0.0  0.0  0.0  ...  0.0  0.0  0.0  0.0  0.0  0.0
+            #                      3  0.0  0.0  0.0  0.0  0.0  ...  0.0  0.0  0.0  0.0  0.0  0.0
+            #                      4  0.0  0.0  0.0  0.0  0.0  ...  0.0  0.0  0.0  0.0  0.0  0.0
+            data = {
+                'NodeID': self.node,
+                'Location': self.location,
+            }
+            for i, key in enumerate(headers):
+                data[key] = self.data[0, :, i]
+            data_frame = pd.DataFrame(data)
+            data_frame = data_frame.reset_index().set_index(['NodeID', 'Location'])
+        self.data_frame = data_frame
+
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
@@ -687,7 +758,8 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         self.itime = None
         self._times = None
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['ox', 'oy', 'oz', 'txy', 'tyz', 'txz', 'pressure', 'ovm']
         return headers
 
@@ -721,6 +793,48 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         self.data = np.zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
         self.location = np.empty(self.ntotal, dtype='U8')
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+
+    def build_dataframe(self):
+        """creates a pandas dataframe"""
+        import pandas as pd
+        headers = self.headers
+
+        if self.nonlinear_factor not in (None, np.nan):
+            # LoadStep                         1.0
+            # NodeID Location Item
+            # 201             ox        100.000000
+            # 202             oy         98.038734
+            # 203             oz         98.038734
+            # 204             txy         0.000000
+            # 205             tyz         0.000000
+            column_names, column_values = build_dataframe_transient_header(self)
+            element_node = [
+                self.node,
+                self.location,
+            ]
+            names = ['NodeID', 'Location', 'Item']
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
+                headers, element_node, self.data,
+                from_tuples=False, from_array=True,
+                names=names)
+        else:
+            #                  index        ox            oy  ...       txz  pressure       ovm
+            # NodeID Location                                 ...
+            # 1                    0 -0.000118 -4.082839e-05  ... -0.674398  0.000063  1.168092
+            # 2                    1 -0.000055  1.614241e-07  ... -0.351173  0.000032  0.750128
+            # 3                    2 -0.000257 -1.055142e-05  ...  0.040694  0.000065  0.071662
+            # 4                    3 -0.000168 -2.711696e-05  ...  0.158095  0.000103  0.281641
+            # 5                    4 -0.000619 -4.411857e-05  ...  0.234085  0.000184  0.405848
+            data = {
+                'NodeID': self.node,
+                'Location': self.location,
+            }
+            for i, key in enumerate(headers):
+                data[key] = self.data[0, :, i]
+            data_frame = pd.DataFrame(data)
+            data_frame = data_frame.reset_index().set_index(['NodeID', 'Location'])
+        self.data_frame = data_frame
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
@@ -876,7 +990,8 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         #self.node_element = None
         self._times = None
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'pressure']
         return headers
 
@@ -912,6 +1027,43 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+
+    def build_dataframe(self):
+        """creates a pandas dataframe"""
+        import pandas as pd
+        headers = self.headers
+
+        if self.nonlinear_factor not in (None, np.nan):
+            # LoadStep                         1.0
+            # NodeID Location Item
+            # 101             oxx       100.000000
+            # 102             oyy        98.038734
+            # 103             ozz        98.038734
+            # 104             txy         0.000000
+            # 111             pressure   98.692490
+            column_names, column_values = build_dataframe_transient_header(self)
+            element_node = [
+                self.node,
+                self.location,
+            ]
+            names = ['NodeID', 'Location', 'Item']
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
+                headers, element_node, self.data,
+                from_tuples=False, from_array=True,
+                names=names)
+        else:
+            data = {
+                'NodeID': self.node,
+                'Location': self.location,
+            }
+            for i, key in enumerate(headers):
+                data[key] = self.data[0, :, i]
+            data_frame = pd.DataFrame(data)
+            data_frame = data_frame.reset_index().set_index(['NodeID', 'Location'])
+            print(data_frame)
+            raise RuntimeError('finish build_dataframe B')
+        self.data_frame = data_frame
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:

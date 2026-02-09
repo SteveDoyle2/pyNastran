@@ -29,7 +29,7 @@ from pyNastran.bdf.cards.aero.utils import build_trim_load_cases
 from pyNastran.bdf.cards.aero.zaero_interface.nastran_to_zaero import nastran_to_zaero
 
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh  # build_structure_from_caero
+from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh  # build_structure_from_caero
 from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
 
 

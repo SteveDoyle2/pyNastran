@@ -3,6 +3,7 @@ from itertools import cycle
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
@@ -108,9 +109,9 @@ class ComplexBendArray(OES_Object):
         #                 sf      1.757596+0.010251j   1.756053+0.010121j
         #6902      6901   angle   0.000000+0.000000j   0.000000+0.000000j
         headers = self.headers
-        column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = self._build_pandas_transient_element_node(
-            column_values, column_names,
+        column_names, column_values = build_dataframe_transient_header(self)
+        self.data_frame = build_pandas_transient_element_node(
+            self, column_values, column_names,
             headers, self.element_node, self.data)
 
     def __eq__(self, table):  # pragma: no cover
@@ -199,13 +200,6 @@ class ComplexBendArray(OES_Object):
         msg.append('  %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
-
-    @property
-    def headers(self):
-        return self._get_headers()
-
-    def get_headers(self) -> list[str]:
-        return self.headers
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
@@ -306,7 +300,8 @@ class ComplexBendStressArray(ComplexBendArray, StressObject):
         ComplexBendArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         return ['angle', 'sc', 'sd', 'se', 'sf']
 
 class ComplexBendStrainArray(ComplexBendArray, StrainObject):
@@ -315,5 +310,6 @@ class ComplexBendStrainArray(ComplexBendArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         return ['angle', 'sc', 'sd', 'se', 'sf']

@@ -52,7 +52,7 @@ from pyNastran.bdf.mesh_utils.loads import (
     sum_forces_moments, sum_forces_moments_elements,
     get_static_force_vector_from_subcase_id)
 from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
-from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
+from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
 
 from pyNastran.bdf.test.compare import compare
 #from pyNastran.bdf.mesh_utils.convert import convert

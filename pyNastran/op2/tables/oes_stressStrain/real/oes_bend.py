@@ -102,7 +102,7 @@ class RealBendArray(OES_Object):
         #import pandas as pd
         #print(self.data_code)
         #headers = self.headers
-        #column_names, column_values = self._build_dataframe_transient_header()
+        #column_names, column_values = build_dataframe_transient_header(self)
         #self.data_frame = pd.Panel(self.data, items=column_values,
                                    #major_axis=self.element_node, minor_axis=headers).to_frame()
         #self.data_frame.columns.names = column_names
@@ -192,13 +192,6 @@ class RealBendArray(OES_Object):
         msg.append(f'  {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
-
-    @property
-    def headers(self):
-        return self._get_headers()
-
-    def get_headers(self) -> list[str]:
-        return self.headers
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
@@ -317,7 +310,8 @@ class RealBendStressArray(RealBendArray, StressObject):
         RealBendArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         return ['angle', 'sc', 'sd', 'se', 'sf', 'omax', 'omin', 'mst', 'msc']
 
 
@@ -327,5 +321,6 @@ class RealBendStrainArray(RealBendArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         return ['angle', 'sc', 'sd', 'se', 'sf', 'emax', 'emin', 'mst', 'msc']

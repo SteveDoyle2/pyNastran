@@ -8,7 +8,7 @@ import os
 from typing import cast, Optional, Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
+from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     get_element_centroids)
 
 from pyNastran.gui.menus.groups_modify.groups import Group
@@ -25,7 +25,7 @@ from pyNastran.op2.tables.ogf_gridPointForces.smt import (
 from pyNastran.gui.typing import ColorFloat
 from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import (
     set_plane_opacity_color, clear_actors)
-from pyNastran.bdf.mesh_utils.test.test_cutting_plane import cut_and_plot_moi
+from pyNastran.bdf.mesh_utils.cut.moi_plotter import cut_and_plot_moi
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -33,7 +33,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui_objects.settings import Settings
     from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
     from pyNastran.gui.qt_files.vtk_actor_actions import VtkActorActions
-    from vtk import vtkActor, vtkProperty
+    from vtk import vtkActor
 
 PLANE_NAME = 'smt_plane'
 LINE_NAME = 'smt_vector'
@@ -711,7 +711,6 @@ def moment_of_inertia_diagram(
     out = cut_and_plot_moi(
         model, normal_plane, log,
         dys, coords,
-        ytol=2.0,
         plot=True, show=True)
     # y, A, I, J, EI, J, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2 = out
     return out

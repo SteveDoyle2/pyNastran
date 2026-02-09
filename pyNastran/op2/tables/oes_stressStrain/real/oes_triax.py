@@ -3,6 +3,7 @@ from numpy import zeros, searchsorted, ravel
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 
@@ -42,10 +43,6 @@ class RealTriaxArray(OES_Object):
 
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
-
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-        #return headers
 
     def build(self):
         """sizes the vectorized attributes of the RealTriaxArray"""
@@ -102,18 +99,17 @@ class RealTriaxArray(OES_Object):
             #          30021  omax       1.973730e+02
             #          30023  oms        1.973730e+00
             #          30024  ovm        3.947461e+00
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
             names = ['ElementID', 'NodeID', 'Item']
-            data_frame = self._build_pandas_transient_element_node(
-                column_values, column_names,
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
                 headers, element_node, self.data, from_tuples=False, from_array=True,
                 names=names,
             )
-
-            #column_names, column_values = self._build_dataframe_transient_header()
-            #data_frame = self._build_pandas_transient_element_node(
-                #column_values, column_names,
-                #headers, self.element_node, self.data)
+            # column_names, column_values = build_dataframe_transient_header(self)
+            # data_frame = build_pandas_transient_element_node(
+            #     self, column_values, column_names,
+            #     headers, self.element_node, self.data)
         else:
             #                    radial  azimuthal     axial     shear      omax       oms       ovm
             #ElementID NodeID
@@ -275,7 +271,8 @@ class RealTriaxStressArray(RealTriaxArray, StressObject):
         RealTriaxArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['radial', 'azimuthal', 'axial', 'shear', 'omax', 'oms', 'ovm']
         return headers
 
@@ -299,7 +296,8 @@ class RealTriaxStrainArray(RealTriaxArray, StrainObject):
         RealTriaxArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['radial', 'azimuthal', 'axial', 'shear', 'omax', 'oms', 'ovm']
         return headers
 

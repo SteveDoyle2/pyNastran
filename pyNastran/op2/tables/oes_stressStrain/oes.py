@@ -64,7 +64,7 @@ from pyNastran.op2.tables.oes_stressStrain.random.oes_solids_vm import RandomSol
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_bush import RealNonlinearBushArray
 from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
-    HyperelasticQuadArray)
+    HyperelasticQuadStressArray, HyperelasticQuadStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_composite_nx import RealSolidCompositeStressArray, RealSolidCompositeStrainArray
 
@@ -3791,7 +3791,10 @@ class OES:
 
         factor = op2.factor
         if result_type == 0 and op2.num_wide == 30:
-            obj_vector_real = HyperelasticQuadArray
+            if op2.is_stress:
+                obj_vector_real = HyperelasticQuadStressArray
+            else:
+                obj_vector_real = HyperelasticQuadStrainArray
 
             op2._results._found_result(result_name)
             slot = op2.get_result(result_name)

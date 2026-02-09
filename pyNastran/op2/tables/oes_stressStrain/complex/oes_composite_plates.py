@@ -4,6 +4,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import (
     write_float_12e, write_imag_floats_12e,
@@ -112,16 +113,10 @@ class ComplexLayeredCompositesVMArray(OES_Object):
         self.element_layer = np.zeros((nlayers, 2), dtype=idtype)
         # print(self.data.shape, self.element_node.shape)
 
-    # def build_dataframe(self) -> None:
-    #     """creates a pandas dataframe"""
-    #     headers = self.get_headers()
-    #     column_names, column_values = self._build_dataframe_transient_header()
-    #
-    #     data_frame = self._build_pandas_transient_element_node(
-    #         column_values, column_names,
-    #         headers, self.element_node, self.data)
-    #     #print(data_frame)
-    #     self.data_frame = data_frame
+
+    def build_dataframe(self) -> None:
+        """creates a pandas dataframe"""
+        self.data_frame = build_dataframe(self)
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -171,19 +166,6 @@ class ComplexLayeredCompositesVMArray(OES_Object):
         self.element_layer[self.itotal, :] = [eid, ply_id]
         self.itotal += 1
 
-    def add_sort1_real(self, dt, eid, ply_id, oxx, oyy, txy, txz, tyz, angle, omax, omin, max_shear) -> None:  # pragma: no cover
-        assert self.sort_method == 1, self
-        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        self._times[self.itime] = dt
-        #print(self.element_types2, element_type, self.element_types2.dtype)
-        #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
-
-        assert isinstance(ply_id, int), ply_id
-        self.data[self.itime, self.itotal] = [oxx, oyy, txy, txz, tyz, angle, omax, omin, max_shear]
-        self.element_layer[self.itotal, :] = [eid, ply_id]
-        self.itotal += 1
-        #self.ielement += 1
-
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
@@ -219,7 +201,7 @@ class ComplexLayeredCompositesVMArray(OES_Object):
         if header is None:
             header = []
         msg_temp, nnodes = _get_composite_plate_msg(self, is_mag_phase, is_sort1)
-        # if self.is_von_mises:
+        # if not self.is_von_mises:
         #     warnings.warn(f'{self.class_name} doesnt support writing von Mises')
         #     f06_file.write(f'{self.class_name} doesnt support writing von Mises\n')
 
@@ -267,39 +249,29 @@ class ComplexLayeredCompositesVMArray(OES_Object):
 
             eids = self.element_layer[:, 0]
             layers = self.element_layer[:, 1]
-            if self.is_von_mises:
-                ovm = self.data[itime, :, 5].real
-                for (eid, layer,
-                     do11, do22, dt12, dt1z, dt2z, dovm) in zip(eids, layers,
-                                              o11, o22, t12, t1z, t2z, ovm):
-                    ovmr = write_float_12e(dovm)
-                    [o11r, o22r, t12r, t1zr, t2zr,
-                     o11i, o22i, t12i, t1zi, t2zi,] = write_imag_floats_12e([
-                        do11, do22, dt12, dt1z, dt2z,
-                    ], is_mag_phase)
-                    # """
-                    #    ELEMENT      PLY STRESSES IN FIBER AND MATRIX DIRECTIONS   INTER-LAMINAR  STRESSES
-                    #      ID          ID   NORMAL-1     NORMAL-2     SHEAR-12    SHEAR XZ-MAT  SHEAR YZ-MAT  VON MISES
-                    #       1014        1  8.13423E+03  1.75179E+02  1.50284E+03  -1.79942E+00  3.44091E+00
-                    #                     -1.47375E+02 -5.35187E+00 -2.76251E+01   2.44372E-01 -1.24947E-01  8.45992E+03
-                    # """
-                    f06_file.write(f'  {eid:8d} {layer:8d} {o11r:<12s} {o22r:<12s} {t12r:<12s} {t1zr:<12s} {t2zr:<12s}\n'
-                                     f'                    {o11i:<12s} {o22i:<12s} {t12i:<12s} {t1zi:<12s} {t2zi:<12s} {ovmr:s}\n')
-            else:
-                for (eid, layer, do11, do22, dt12, dt1z, dt2z) in zip(
-                     eids, layers, o11, o22, t12, t1z, t2z):
-                    [o11r, o22r, t12r, t1zr, t2zr,
-                     o11i, o22i, t12i, t1zi, t2zi, ] = write_imag_floats_12e([
-                        do11, do22, dt12, dt1z, dt2z,
-                    ], is_mag_phase)
-                    f06_file.write(
-                        f'  {eid:8d} {layer:8d} {o11r:<12s} {o22r:<12s} {t12r:<12s} {t1zr:<12s} {t2zr:<12s}\n'
-                          f'                    {o11i:<12s} {o22i:<12s} {t12i:<12s} {t1zi:<12s} {t2zi:<12s}\n')
+            ovm = self.data[itime, :, 5].real
+            for (eid, layer,
+                 do11, do22, dt12, dt1z, dt2z, dovm) in zip(eids, layers,
+                                          o11, o22, t12, t1z, t2z, ovm):
+                ovmr = write_float_12e(dovm)
+                [o11r, o22r, t12r, t1zr, t2zr,
+                 o11i, o22i, t12i, t1zi, t2zi,] = write_imag_floats_12e([
+                    do11, do22, dt12, dt1z, dt2z,
+                ], is_mag_phase)
+                # """
+                #    ELEMENT      PLY STRESSES IN FIBER AND MATRIX DIRECTIONS   INTER-LAMINAR  STRESSES
+                #      ID          ID   NORMAL-1     NORMAL-2     SHEAR-12    SHEAR XZ-MAT  SHEAR YZ-MAT  VON MISES
+                #       1014        1  8.13423E+03  1.75179E+02  1.50284E+03  -1.79942E+00  3.44091E+00
+                #                     -1.47375E+02 -5.35187E+00 -2.76251E+01   2.44372E-01 -1.24947E-01  8.45992E+03
+                # """
+                f06_file.write(f'  {eid:8d} {layer:8d} {o11r:<12s} {o22r:<12s} {t12r:<12s} {t1zr:<12s} {t2zr:<12s}\n'
+                                 f'                    {o11i:<12s} {o22i:<12s} {t12i:<12s} {t1zi:<12s} {t2zi:<12s} {ovmr:s}\n')
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
-def _get_composite_plate_msg(self, is_mag_phase=True, is_sort1=True) -> tuple[list[str], int]:
+def _get_composite_plate_msg(self, is_mag_phase: bool=True,
+                             is_sort1: bool=True) -> tuple[list[str], int]:
     if self.is_von_mises:
         von = 'VON'
         mises = 'MISES'
@@ -455,16 +427,9 @@ class ComplexLayeredCompositesArray(OES_Object):
         self.element_layer = np.zeros((nlayers, 2), dtype=idtype)
         # print(self.data.shape, self.element_node.shape)
 
-    # def build_dataframe(self) -> None:
-    #     """creates a pandas dataframe"""
-    #     headers = self.get_headers()
-    #     column_names, column_values = self._build_dataframe_transient_header()
-    #
-    #     data_frame = self._build_pandas_transient_element_node(
-    #         column_values, column_names,
-    #         headers, self.element_node, self.data)
-    #     #print(data_frame)
-    #     self.data_frame = data_frame
+    def build_dataframe(self) -> None:
+        """creates a pandas dataframe"""
+        self.data_frame = build_dataframe(self)
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -629,22 +594,24 @@ class ComplexLayeredCompositesArray(OES_Object):
 
 class ComplexLayeredCompositeStressVMArray(ComplexLayeredCompositesVMArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexLayeredCompositesVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
+        ComplexLayeredCompositesVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         assert self.is_stress, self.stress_bits
 
-    def _get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['o11', 'o22', 't12', 't1z', 't2z', 'ovm']
         return headers
 
 
 class ComplexLayeredCompositeStrainVMArray(ComplexLayeredCompositesVMArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexLayeredCompositesVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
+        ComplexLayeredCompositesVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['e11', 'e22', 'e12', 'e1z', 'e2z', 'evm']
         return headers
 
@@ -655,7 +622,8 @@ class ComplexLayeredCompositeStressArray(ComplexLayeredCompositesArray, StressOb
         StressObject.__init__(self, data_code, isubcase)
         assert self.is_stress, self.stress_bits
 
-    def _get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['o11', 'o22', 't12', 't1z', 't2z']
         return headers
 
@@ -666,6 +634,20 @@ class ComplexLayeredCompositeStrainArray(ComplexLayeredCompositesArray, StrainOb
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['e11', 'e22', 'e12', 'e1z', 'e2z']
         return headers
+
+
+def build_dataframe(self: (ComplexLayeredCompositeStressArray | ComplexLayeredCompositeStressVMArray |
+                           ComplexLayeredCompositeStrainArray | ComplexLayeredCompositeStrainVMArray)):
+    """creates a pandas dataframe"""
+    headers = self._get_headers()
+    column_names, column_values = build_dataframe_transient_header(self)
+    data_frame = build_pandas_transient_element_node(
+        self, column_values, column_names,
+        headers, self.element_layer, self.data,
+        names=['ElementID', 'Layer', 'Item'])
+    #print(data_frame)
+    return data_frame

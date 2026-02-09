@@ -10,6 +10,9 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import (
+    build_dataframe_transient_header,
+    build_pandas_transient_elements, build_pandas_transient_element_node)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
 from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_11e, write_float_13e
 
@@ -62,7 +65,8 @@ class RealNonlinearPlateArray(OES_Object):
     def is_stress(self):
         return True
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
             'fiber_distance', 'oxx', 'oyy', 'ozz', 'txy',
@@ -206,15 +210,15 @@ class RealNonlinearPlateArray(OES_Object):
             #          eyy                 6.747639e-06  1.349528e-05
             #          ezz                 0.000000e+00  0.000000e+00
             #          exy                 0.000000e+00  0.000000e+00
-            column_names, column_values = self._build_dataframe_transient_header()
-            #element = np.vstack([self.element, self.element]).T.flatten()
-            #element = self.element
-            #data_frame = self._build_pandas_transient_elements(
-                #column_values, column_names,
-                #headers, element, self.data[:, :, 1:])
+            column_names, column_values = build_dataframe_transient_header(self)
+            # element = np.vstack([self.element, self.element]).T.flatten()
+            # element = self.element
+            # data_frame = build_pandas_transient_elements(
+            #     self, column_values, column_names,
+            #     headers, element, self.data[:, :, 1:])
 
-            data_frame = self._build_pandas_transient_element_node(
-                column_values, column_names,
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
                 headers[iheader:], element_fd, self.data[:, :, iheader:],
                 from_tuples=False, from_array=True,
                 names=names,
@@ -518,10 +522,11 @@ class RealNonlinearSolidArray(OES_Object):
         self.ielement = 0
 
     @property
-    def is_stress(self):
+    def is_stress(self) -> bool:
         return True
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz',
             'eff_plastic_strain', 'eff_plastic_strain', 'eff_creep_strain',
@@ -593,26 +598,36 @@ class RealNonlinearSolidArray(OES_Object):
         # ex, ey, ez, exy, eyz, exz]
         self.data = np.full((ntimes, ntotal, 15), np.nan, dtype=fdtype)
 
-    #def build_dataframe(self):
-        #"""creates a pandas dataframe"""
-        #import pandas as pd
-        #headers = self.get_headers()[1:]
-        ##nelements = self.element.shape[0]
+    def build_dataframe(self):
+        """creates a pandas dataframe"""
+        import pandas as pd
+        headers = self.headers
+        #nelements = self.element.shape[0]
 
-        #if self.nonlinear_factor not in (None, np.nan):
-            #column_names, column_values = self._build_dataframe_transient_header()
-            #self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-            #self.data_frame.columns.names = column_names
-            #self.data_frame.index.names = ['ElementID', 'Item']
-        #else:
-            ## option B - nice!
-            #df1 = pd.DataFrame(self.element).T
-            #df1.columns = ['ElementID']
-            #df2 = pd.DataFrame(self.data[0, :, 1:])
-            #df2.columns = headers
-            #self.data_frame = df1.join(df2)
-        #self.data_frame = self.data_frame.reset_index().set_index(['ElementID'])
-        #print(self.data_frame)
+        if self.nonlinear_factor not in (None, np.nan):
+            #             LoadStep                        1.0
+            # ElementID NodeID Item
+            # 1         0      oxx   0.000000e+00
+            #                  oyy   0.000000e+00
+            #                  ozz   0.000000e+00
+            #                  txy   0.000000e+00
+            #                  tyz   0.000000e+00
+            # ...                             ...
+            # 36        11     eyy  -1.491099e-06
+            #                  ezz  -1.503740e-06
+            #
+            column_names, column_values = build_dataframe_transient_header(self)
+            assert len(self.data.shape) == 3, self.data.shape
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
+                headers, self.element_node, self.data)
+        else:
+            index = pd.MultiIndex.from_arrays(self.element_node.T, names=['ElementID', 'NodeID'])
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
+            data_frame.columns.names = ['Static']
+            print(data_frame)
+            raise RuntimeError('verify build_dataframe')
+        self.data_frame = data_frame
 
     def add_sort1(self, dt, eid, grid,
                   sx, sy, sz, sxy, syz, sxz, se, eps, ecs,

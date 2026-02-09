@@ -36,9 +36,6 @@ class RealCPLSTRNPlateArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
-        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-
     def is_bilinear(self):
         #if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
             #return False
@@ -83,6 +80,27 @@ class RealCPLSTRNPlateArray(OES_Object):
 
         #[oxx, oyy, ozz, txy, ovm]
         self.data = np.zeros((self.ntimes, self.ntotal, 5), dtype=fdtype)
+
+    def build_dataframe(self):
+        """creates a pandas dataframe"""
+        import pandas as pd
+
+        headers = self.get_headers()
+        if self.nonlinear_factor not in (None, np.nan):
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_element_node(
+                self, column_values, column_names,
+                headers, self.element_node, self.data)
+            print(data_frame)
+            raise RuntimeError('finish pd.Panael')
+        else:
+            # Static                     oxx       oyy  ...           txy          ovm
+            # ElementID NodeID                          ...
+            # 36        0      -1.014368e+06 -302265.0  ... -28470.685547  773108.4375
+            index = pd.MultiIndex.from_arrays(self.element_node.T, names=['ElementID', 'NodeID'])
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
+            data_frame.columns.names = ['Static']
+        self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
@@ -243,13 +261,16 @@ class RealCPLSTRNPlateArray(OES_Object):
             page_num += 1
         return page_num - 1
 
+
 class RealCPLSTRNPlateStressNXArray(RealCPLSTRNPlateArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealCPLSTRNPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
-        headers = ['oxx', 'oyy', 'ozz', 'txy', 'von_mises']
+    @property
+    def headers(self) -> list[str]:
+        von_mises = 'ovm' if self.is_von_mises else 'omax_shear'
+        headers = ['oxx', 'oyy', 'ozz', 'txy', von_mises]
         return headers
 
 
@@ -258,8 +279,10 @@ class RealCPLSTRNPlateStrainNXArray(RealCPLSTRNPlateArray, StrainObject):
         RealCPLSTRNPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> list[str]:
-        headers = ['exx', 'eyy', 'ezz', 'exy', 'von_mises']
+    @property
+    def headers(self) -> list[str]:
+        von_mises = 'evm' if self.is_von_mises else 'emax_shear'
+        headers = ['exx', 'eyy', 'ezz', 'exy', von_mises]
         return headers
 
 

@@ -11,6 +11,9 @@ from cpylog import SimpleLogger
 
 from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF, read_bdf, DMIAX
+
+from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
+
 from pyNastran.bdf.mesh_utils.delete_bad_elements import element_quality
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.convert import convert
@@ -19,7 +22,6 @@ from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
 from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm, mass_properties_breakdown)
 from pyNastran.bdf.mesh_utils.forces_moments import get_load_arrays, get_pressure_array
-from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
 
 from pyNastran.bdf.test.test_bdf import run_bdf as test_bdf
 

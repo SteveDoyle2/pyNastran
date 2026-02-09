@@ -3,6 +3,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import BaseElement
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.f06.f06_formatting import (
     write_float_13e, write_floats_13e, _eigenvalue_header)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
@@ -40,15 +41,12 @@ class Real1DHeatFluxArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'xgrad', 'ygrad', 'zgrad', 'xflux', 'yflux', 'zflux'
         ]
         return headers
-
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
 
     def build(self):
         """sizes the vectorized attributes of the Real1DHeatFluxArray"""
@@ -91,9 +89,9 @@ class Real1DHeatFluxArray(BaseElement):
             #          yflux  1.401298e-45
             #          zflux  1.401298e-45
             #15        xgrad -2.842171e-14
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             #    ElementID     xgrad         ygrad  ...     xflux         yflux         zflux
@@ -259,9 +257,9 @@ class RealHeatFlux_2D_3DArray(RealElementTableArray):
             #          flux1  -0.0  3.538836e-16
             #          flux2  -0.0  2.654127e-16
             #          flux3  -0.0 -3.981190e-16
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             data = {
@@ -290,7 +288,8 @@ class RealHeatFlux_2D_3DArray(RealElementTableArray):
         return self._write_f06_block(words, header, page_stamp, page_num, f06_file,
                                      is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         return ['grad1', 'grad2', 'grad3', 'flux1', 'flux2', 'flux3']
 
 
@@ -324,7 +323,8 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'free_conv', 'free_conv_k',
         ]
@@ -363,11 +363,12 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             self.element_node[:, 1],
         ]
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
-            #data_frame = self._build_pandas_transient_elements(
-                #column_values, column_names,
-                #headers, self.element, self.data)
-            #print(data_frame)
+            column_names, column_values = build_dataframe_transient_header(self)
+            # data_frame = build_pandas_transient_elements(
+            #     self, column_values, column_names,
+            #     headers, self.element, self.data)
+            # print(data_frame)
+            raise RuntimeError('replace pd.Panel')
             data_frame = pd.Panel(self.data, items=column_values,
                                   major_axis=element_node,
                                   minor_axis=headers).to_frame()
@@ -542,7 +543,8 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'fapplied', 'free_conv', 'force_conv', 'frad', 'ftotal',
         ]
@@ -588,9 +590,9 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             #          frad         0.0    0.000000
             #          ftotal       0.0  499.376068
             #20        fapplied     0.0    0.000000
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
             # >=25.0
@@ -804,9 +806,6 @@ class RealHeatFluxVUShellArray(BaseElement):
     @property
     def headers(self):
         return ['xgrad', 'ygrad', 'zgrad', 'xflux', 'yflux', 'zflux']
-
-    def _get_headers(self):
-        return self.headers
 
     def _reset_indices(self) -> None:
         self.itotal = 0

@@ -3,6 +3,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 from pyNastran.f06.f06_formatting import (
     write_float_13e, write_floats_13e_long, _eigenvalue_header)
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
@@ -147,7 +148,7 @@ class RealEnergyArray(BaseElement):
 
         #print('ntimes=%s' % ntimes)
         if ntimes == 1:
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
             # Static     strain_energy    percent  strain_energy_density
             # ElementID
             # 6               0.375997   0.878471               1.503990
@@ -166,7 +167,7 @@ class RealEnergyArray(BaseElement):
             #nvalues = ntimes * nelements
 
             #if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
             #column_names = column_names[0]
             #column_values = column_values[0]
 
@@ -828,7 +829,8 @@ class RealStrainEnergyArray(RealEnergyArray):
                  13   1.582968E+07        1.6124            1.055312E+02
                  14   6.576075E+07        6.6982            3.288037E+02
     """
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'strain_energy', 'percent', 'strain_energy_density',
         ]
@@ -836,7 +838,8 @@ class RealStrainEnergyArray(RealEnergyArray):
 
 
 class RealKineticEnergyArray(RealEnergyArray):
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'kinetic_energy', 'percent', 'kinetic_energy_density',
         ]
@@ -885,7 +888,8 @@ class ComplexStrainEnergyArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = [
             'strain_energy', 'percent', 'strain_energy_density'
         ]
@@ -953,7 +957,7 @@ class ComplexStrainEnergyArray(BaseElement):
         #ntimes = self.element.shape[0]
         #nelements = self.element.shape[1]
         #if ntimes == 1:
-            #column_names, column_values = self._build_dataframe_transient_header()
+            #column_names, column_values = build_dataframe_transient_header(self)
             #element = self.element.ravel()
             #self.data_frame = pd.Panel(self.data, items=column_values,
                                        #major_axis=element,
@@ -963,7 +967,7 @@ class ComplexStrainEnergyArray(BaseElement):
             #nvalues = ntimes * nelements
             #element = self.element.ravel()
             #if self.nonlinear_factor not in (None, np.nan):
-                #column_names, column_values = self._build_dataframe_transient_header()
+                #column_names, column_values = build_dataframe_transient_header(self)
                 ##column_names = column_names[0]
                 ##column_values = column_values[0]
 

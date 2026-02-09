@@ -6,7 +6,7 @@ import numpy as np
 from pyNastran.femutils.utils import pivot_table, abs_min_max
 
 from pyNastran.utils.locale import func_str
-from pyNastran.op2.result_objects.op2_objects import (
+from pyNastran.op2.result_objects.utils import (
     real_modes_to_omega_freq, complex_damping_frequency)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx

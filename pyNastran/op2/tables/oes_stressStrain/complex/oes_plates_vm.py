@@ -6,6 +6,7 @@ from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 
@@ -135,10 +136,9 @@ class ComplexPlateVMArray(OES_Object):
     def build_dataframe(self) -> None:
         """creates a pandas dataframe"""
         headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
-
-        data_frame = self._build_pandas_transient_element_node(
-            column_values, column_names,
+        column_names, column_values = build_dataframe_transient_header(self)
+        data_frame = build_pandas_transient_element_node(
+            self, column_values, column_names,
             headers, self.element_node, self.data)
         #print(data_frame)
         self.data_frame = data_frame
@@ -672,12 +672,10 @@ class ComplexPlateVMStressArray(ComplexPlateVMArray, StressObject):
         ComplexPlateVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'txy', 'von_mises']
         return headers
-
-    def get_headers(self) -> list[str]:
-        return self._get_headers()
 
 
 class ComplexPlateVMStrainArray(ComplexPlateVMArray, StrainObject):
@@ -686,9 +684,7 @@ class ComplexPlateVMStrainArray(ComplexPlateVMArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         headers = ['exx', 'eyy', 'exy', 'von_mises']
         return headers
-
-    def get_headers(self) -> list[str]:
-        return self._get_headers()

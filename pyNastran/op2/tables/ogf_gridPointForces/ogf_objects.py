@@ -12,6 +12,7 @@ from cpylog import SimpleLogger
 
 from pyNastran.op2.result_objects.op2_objects import (
     BaseElement, get_times_dtype, combination_inplace)
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long,
     _eigenvalue_header, write_imag_floats_13e)
@@ -341,13 +342,15 @@ class RealGridPointForcesArray(GridPointForces):
             import pandas as pd
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
             if self.nonlinear_factor not in (None, np.nan):
-                column_names, column_values = self._build_dataframe_transient_header()
+                column_names, column_values = build_dataframe_transient_header(self)
+                raise RuntimeError('replace pd.Panel')
                 data_frame = pd.Panel(
                     self.data, items=column_values,
                     major_axis=node_element, minor_axis=headers).to_frame()
                 data_frame.columns.names = column_names
                 data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             else:
+                raise RuntimeError('replace pd.Panel')
                 data_frame = pd.Panel(
                     self.data,
                     major_axis=node_element, minor_axis=headers).to_frame()
@@ -363,7 +366,7 @@ class RealGridPointForcesArray(GridPointForces):
         #nvalues = ntimes * nnodes
         node_element = self.node_element.reshape((ntimes * nnodes, 2))
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
             #column_names = column_names[0]
             #column_values = column_values[0]
 
@@ -1426,7 +1429,8 @@ class RealGridPointForcesArray(GridPointForces):
         ]
         return msg
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3']
         return headers
 
@@ -1648,13 +1652,15 @@ class ComplexGridPointForcesArray(GridPointForces):
         else:
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
             if self.nonlinear_factor not in (None, np.nan):
-                column_names, column_values = self._build_dataframe_transient_header()
+                column_names, column_values = build_dataframe_transient_header(self)
+                raise RuntimeError('replace pd.Panel')
                 data_frame = pd.Panel(
                     self.data, items=column_values,
                     major_axis=node_element, minor_axis=headers).to_frame()
                 data_frame.columns.names = column_names
                 data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             else:
+                raise RuntimeError('replace pd.Panel')
                 data_frame = pd.Panel(
                     self.data,
                     major_axis=node_element, minor_axis=headers).to_frame()
@@ -1670,7 +1676,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         #nvalues = ntimes * nnodes
         node_element = self.node_element.reshape((ntimes * nnodes, 2))
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
+            column_names, column_values = build_dataframe_transient_header(self)
             #column_names = column_names[0]
             #column_values = column_values[0]
 
@@ -1732,13 +1738,14 @@ class ComplexGridPointForcesArray(GridPointForces):
         """
         headers = self.get_headers()
         import pandas as pd
-        column_names, column_values = self._build_dataframe_transient_header()
+        column_names, column_values = build_dataframe_transient_header(self)
         if self.is_unique:
             #node_element = [self.node_element[:, 0], self.node_element[:, 1]]
             ntimes = self.data.shape[0]
             nnodes = self.data.shape[1]
             node_element_temp = self.node_element.reshape((ntimes * nnodes, 2))
             node_element = [node_element_temp[:, 0], node_element_temp[:, 1]]
+            raise RuntimeError('replace pd.Panel')
             self.data_frame = pd.Panel(
                 self.data, items=column_values,
                 major_axis=node_element, minor_axis=headers).to_frame()
@@ -1749,6 +1756,7 @@ class ComplexGridPointForcesArray(GridPointForces):
             #print('column_names =', column_names)
             #for name, values in zip(column_names, column_values):
                 #print('  %s = %s' % (name, values))
+            raise RuntimeError('replace pd.Panel')
             self.data_frame = pd.Panel(
                 self.data, items=column_values,
                 major_axis=node_element, minor_axis=headers).to_frame()
@@ -2058,7 +2066,8 @@ class ComplexGridPointForcesArray(GridPointForces):
 
         return msg
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3']
         return headers
 

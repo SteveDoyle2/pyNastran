@@ -2,6 +2,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_complex_data_code, get_scode,
@@ -94,9 +95,9 @@ class ComplexShearArray(OES_Object):
         #22        max_shear  5.855954e-09+0.000000e+00j  0.000000+0.000000j
         #          avg_shear  5.855954e-09+0.000000e+00j  0.000000+0.000000j
         #import pandas as pd
-        column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = self._build_pandas_transient_elements(
-            column_values, column_names,
+        column_names, column_values = build_dataframe_transient_header(self)
+        self.data_frame = build_pandas_transient_elements(
+            self, column_values, column_names,
             self.headers, self.element, self.data)
 
 
@@ -325,7 +326,8 @@ class ComplexShearArray(OES_Object):
     def headers(self) -> list[str]:
         return self._get_headers()
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         return self.headers
 
 class ComplexShearStressArray(ComplexShearArray, StressObject):
@@ -333,8 +335,10 @@ class ComplexShearStressArray(ComplexShearArray, StressObject):
         ComplexShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         return ['max_shear', 'avg_shear']
+
 
 class ComplexShearStrainArray(ComplexShearArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -342,7 +346,8 @@ class ComplexShearStrainArray(ComplexShearArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-    def _get_headers(self):
+    @property
+    def headers(self) -> list[str]:
         return ['max_shear', 'avg_shear']
 
 def _get_cshear_msg(is_mag_phase, is_sort1):

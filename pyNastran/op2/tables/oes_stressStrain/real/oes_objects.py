@@ -88,9 +88,6 @@ class OES_Object(BaseElement):
     def is_max_shear(self):
         return self.stress_bits[4] == 0
 
-    def _get_headers(self):
-        raise NotImplementedError(f'overwrite this {self.class_name}')
-
     @property
     def is_stress(self):
         raise NotImplementedError(f'overwrite this in {self.class_name}')
@@ -609,4 +606,3 @@ def update_stress_force_time_word(obj) -> None:
         class_name = obj.__class__.__name__
         #assert obj._times.min() != obj._times.max(), f'{class_name}: old_times={old_times} -> times={obj._times}; data.shape={obj.data.shape}\n{obj.code_information()}'
     #print(obj.object_attributes())
-

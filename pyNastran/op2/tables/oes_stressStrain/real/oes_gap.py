@@ -5,6 +5,7 @@ from numpy import zeros, searchsorted, ravel
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
@@ -48,7 +49,8 @@ class NonlinearGapStressArray(OES_Object):
         ]
         return msgs
 
-    def get_headers(self) -> list[str]:
+    @property
+    def headers(self) -> list[str]:
         headers = ['compX', 'shearY', 'shearZ', 'axialU', 'shearV', 'shearW', 'slipV', 'slipW']
         return headers
 
@@ -124,11 +126,12 @@ class NonlinearGapStressArray(OES_Object):
             #          shearW  0.000000  0.000000
             #          slipV   0.000000  0.000000
             #          slipW   0.000000  0.000000
-            column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = self._build_pandas_transient_elements(
-                column_values, column_names,
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
                 headers, self.element, self.data)
         else:
+            raise RuntimeError('replace pd.Panel')
             data_frame = pd.Panel(self.data,
                                   major_axis=self.element, minor_axis=headers).to_frame()
             data_frame.columns.names = ['Static']

@@ -52,7 +52,7 @@ else:
         except Exception:
             # git isn't installed
             ghash = 'no.git.checksum'
-            date_out = ('2025', '5', 'xx')
+            date_out = ('2026', '2', 'xx')
         # 1.5.0+dev.0eccfa918
         return 'dev.%s' % ghash, date_out
 
