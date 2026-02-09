@@ -22,7 +22,7 @@ from pyNastran.bdf.cards.coordinate_systems import (
     xyz_to_rtz_array, rtz_to_xyz_array)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
-from pyNastran.bdf.mesh_utils.cut.utils import p1_p2_zaxis_to_cord2r
+from pyNastran.bdf.mesh_utils.cut.utils import get_stations, p1_p2_zaxis_to_cord2r
 from pyNastran.bdf.mesh_utils.cut.cut_edge_model_by_plane import cut_edge_model_by_coord
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -35,7 +35,6 @@ if TYPE_CHECKING:  # pragma: no cover
 class Elements(TypedDict):
     line2: tuple[np.ndarray, np.ndarray]
     tri3:  tuple[np.ndarray, np.ndarray]
-Rods = tuple[np.ndarray, np.ndarray, np.ndarray]
 
 def get_nid_cd_xyz_cid0(model: BDF) -> tuple[NDArrayNint, NDArrayNint,
                                              dict[int, NDArrayNint], NDArray3float]:
@@ -47,6 +46,7 @@ def get_nid_cd_xyz_cid0(model: BDF) -> tuple[NDArrayNint, NDArrayNint,
         xyz_cp, nids, icp_transform,
         cid=0)
     return nids, nid_cd, icd_transform, xyz_cid0
+
 
 def get_element_centroids(model: BDF,
                           idtype: str='int32',
@@ -81,157 +81,6 @@ def get_element_centroids(model: BDF,
     eids = np.array(eids_list, dtype=idtype)
     element_centroids_cid0 = np.array(element_centroids_cid0_list, dtype=fdtype)
     return eids, element_centroids_cid0
-
-
-def get_stations(model: BDF,
-                 p1: NDArray3float, p2: NDArray3float, p3: NDArray3float,
-                 zaxis: NDArray3float,
-                 method: str='Vector',
-                 cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
-                 nplanes: int=20) -> tuple[NDArray3float, NDArray3float, NDArray3float,
-                                           NDArray3float, NDArray3float,
-                                           CORD2R,
-                                           NDArray3float, NDArrayNfloat]:
-    """
-    Gets the axial stations
-
-    Parameters
-    ----------
-    p1: (3,) float ndarray
-        defines the starting point for the shear, moment, torque plot
-    p3: (3,) float ndarray
-        defines the end point for the shear, moment, torque plot
-    p2: (3,) float ndarray
-        defines the XZ plane for the shears/moments (depends on method)
-        'Vectors':
-           i = p2
-        'Z-Axis Projection':
-           i = p2 - p1
-    zaxis: (3,) float ndarray
-        the direction of the z-axis
-    cid_p1 / cid_p2 / cid_p3 : int
-        the coordinate systems for p1, p2, and p3
-    method : str
-       'CORD2R':
-          zaxis: point on the z-axis
-          p2:     point on the xz-plane
-       'Vector':
-          zaxis:  k vector
-          p2:     xz-plane vector
-        'Z-Axis Projection':
-          zaxis:  point on the z-axis
-          p2:     p2 is a point on the xz-plane
-
-    Returns
-    -------
-    xyz1 / xyz2 / xyz3 : (3,) float ndarray
-        the 1=starting 2=ending, 3=normal coordinates of the
-        coordinate frames to create in the cid=0 frame
-    i / k : (3,) float ndarray
-        the i and k vectors of the coordinate system
-    coord_out : Coord
-        the output coordinate system
-    iaxis_march : (3,) float ndarray
-        the normalized x-axis that defines the direction to march
-    stations : (n,) float ndarray
-        the coordinates in the x-axis that will be marched down
-
-    Example
-    -------
-    For the BWB example, we to calculate an SMT down the global x-axis
-
-    1--------> y
-    |
-    |
-    |
-    2, 3
-    |
-    v x
-
-    # axial
-    p1 = np.array([0., 0., 0.]) # origin
-    p2 = np.array([1600., 0., 0.]) # xaxis
-    p3 = np.array([1600., 0., 0.]) # end
-    zaxis = np.array([0., 0., 1.])
-    method = 'Z-Axis Projection'
-
-    xyz1, xyz2, xyz3, i, k, coord_out, stations = get_stations(
-        model, p1, p2, p3, zaxis,
-        method=method, cid_p1=0, cid_p2=0, cid_p3=0,
-        cid_zaxis=0, nplanes=100)
-    print(stations)
-
-    """
-    p1 = np.asarray(p1).astype('float64') # start
-    p2 = np.asarray(p2).astype('float64') # xz-plane
-    p3 = np.asarray(p3).astype('float64') # end point
-    zaxis = np.asarray(zaxis).astype('float64')
-
-    # define a local coordinate system
-    xyz1, xyz2, unused_z_global, i, k, origin, zaxis2, xzplane = p1_p2_zaxis_to_cord2r(
-        model, p1, p2, zaxis,
-        cid_p1=cid_p1, cid_p2=cid_p2, cid_zaxis=cid_zaxis,
-        method=method)
-    xyz3 = model.coords[cid_p3].transform_node_to_global(p3)
-
-    try:
-        coord_out = CORD2R(-1, origin=origin, zaxis=zaxis2, xzplane=xzplane)
-    except Exception:
-        msg = f'Cannot create ouput coordinate system.  origin={origin} zaxis={zaxis} xzplane={xzplane}\n'
-        #msg += coord_out.get_stats()
-        raise ValueError(msg)
-
-    #coord_march = coord_out
-    xaxis_march = xyz3 - xyz1
-    xaxis_march_norm = np.linalg.norm(xaxis_march)
-    if xaxis_march_norm == 0.:
-        msg = f'Coincident starting and end points.  dx={xaxis_march_norm} xyz1={xyz1} xyz3={xyz3}\n'
-        #msg += coord_out.get_stats()
-        raise ValueError(msg)
-
-    iaxis_march = xaxis_march / xaxis_march_norm
-    # k has been rotated into the output coordinate frame, so we'll maintain that
-    # k is length=1
-    assert np.allclose(np.linalg.norm(k), 1.0)
-    jaxis_march = np.cross(k, iaxis_march)
-    jaxis_march_norm = np.linalg.norm(jaxis_march)
-    if jaxis_march_norm == 0.:
-        msg = f'Equal k axis and iaxis.  k={str(k)} iaxis_march={str(iaxis_march)}\n'
-        #msg += coord_out.get_stats()
-        raise ValueError(msg)
-
-    kaxis_march = np.cross(iaxis_march, jaxis_march)
-    kaxis_march_norm = np.linalg.norm(kaxis_march)
-    if kaxis_march_norm == 0.:
-        msg = f'Equal iaxis and jaxis.  k={str(k)} iaxis_march={str(iaxis_march)} jaxis_march={str(jaxis_march)}\n'
-        #msg += coord_out.get_stats()
-        raise ValueError(msg)
-
-
-    coord_march = CORD2R(-1, origin=origin, zaxis=origin+kaxis_march, xzplane=origin+iaxis_march)
-    #coord_march = CORD2R(None, origin=origin, zaxis=axis_march, xzplane=xzplane)
-    #print(coord_out.get_stats())
-
-    xyz1p = coord_march.transform_node_to_local(xyz1) # start
-    xyz3p = coord_march.transform_node_to_local(xyz3) # end
-    xaxis = xyz3p - xyz1p
-
-    # we want to give the dx the right sign in the coord_out frame
-    #i_abs = np.abs(coord_march.i)
-    #i_abs_max = i_abs.max()
-    #idir = np.where(i_abs == i_abs_max)[0][0]
-    #isign = np.sign(coord_march.i[idir])
-    dx = xaxis[0] # * isign
-
-    if abs(dx) == 0.:
-        msg = f'Coincident starting and end points.  dx={dx} xyz1={xyz1} xyz3={xyz3}\n'
-        msg += coord_out.get_stats()
-        raise ValueError(msg)
-    x_stations_march = np.linspace(0., dx, num=nplanes, endpoint=True)
-    assert x_stations_march.shape == (nplanes, ), x_stations_march.shape
-    #stations.sort()
-
-    return xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, x_stations_march
 
 
 def _setup_faces(bdf_filename: PathLike | BDF,
@@ -294,7 +143,6 @@ def _setup_faces(bdf_filename: PathLike | BDF,
 
 def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
                             coord: CORD2R,
-                            tol: float,
                             nodal_result: np.ndarray,
                             plane_atol: float=1e-5,
                             skip_cleanup: bool=True,
@@ -318,9 +166,6 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
     coord : Coord
         the coordinate system to cut the model with
         cutting plane is the y-axis
-    tol : float
-        the tolerance to filter faces (using some large value)
-        to prevent excessive computations
     nodal_result : (nelements, ) float np.ndarray
         the result to cut the model with
     plane_atol : float; default=1e-5
@@ -339,7 +184,6 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
 
     """
     log = SimpleLogger()
-    assert isinstance(tol, float), tol
     if face_data is None:
         # TODO: could filter out unused nodes
         log, *face_data = _setup_faces(bdf_filename)
@@ -348,8 +192,7 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
     xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
     found_cut, unique_geometry_array, unique_results_array, rods_array = _cut_face_model_by_coord(
         log, nids, xyz_cid0, xyz_cid,
-        elements,
-        coord, tol,
+        elements, coord,
         nodal_result, plane_atol=plane_atol,
         skip_cleanup=skip_cleanup,
         plane_bdf_filename1=plane_bdf_filename1,
@@ -445,12 +288,12 @@ def _project_vectors(p1: NDArray3float,
     return xyz2, i, k, origin, origin_zaxis, origin_xzplane
 
 
-#def _merge_bodies(local_points_array, global_points_array, result_array):
-    #local_points_dict = {}
-    #global_points_dict = {}
-    #result_dict = {}
-    #return local_points_dict, global_points_dict, result_dict
-    #return NotImplementedError()
+# def _merge_bodies(local_points_array, global_points_array, result_array):
+#     local_points_dict = {}
+#     global_points_dict = {}
+#     result_dict = {}
+#     return local_points_dict, global_points_dict, result_dict
+#     return NotImplementedError()
 
 
 def _cut_face_model_by_coord(log: SimpleLogger,
@@ -459,7 +302,6 @@ def _cut_face_model_by_coord(log: SimpleLogger,
                              xyz_cid: np.ndarray,
                              elements: Elements,
                              coord: Coord,
-                             tol: float,
                              nodal_result: np.ndarray,
                              plane_atol: float=1e-5,
                              skip_cleanup: bool=True,
@@ -496,9 +338,6 @@ def _cut_face_model_by_coord(log: SimpleLogger,
     coord : Coord
         the coordinate system to cut the model with
         cutting plane is the y-axis
-    tol : float
-        the tolerance to filter faces (using some large value)
-        to prevent excessive computations
     nodal_result : (nelements, ) float np.ndarray
         the result to cut the model with
     plane_atol : float; default=1e-5
@@ -528,13 +367,15 @@ def _cut_face_model_by_coord(log: SimpleLogger,
     # abs_y = np.abs(y)
     # abs_y = np.abs(y)
     y_cid = xyz_cid[:, 1]
-    is_tri_cut, close_faces, close_face_eids = get_close_faces2(
-        faces, face_eids, node_ids, y_cid, tol, log)
+    is_tri_cut, close_faces, close_face_eids = get_close_faces(
+        faces, face_eids, node_ids, y_cid)
 
     if len(close_face_eids) == 0 and stop_on_failure:
+        ntri = len(face_eids)
         raise RuntimeError(f'y_cid={y_cid}; ntri={ntri}\n'
                            f'is_tri_cut={is_tri_cut}\n'
-                           f'itri_nodes={itri_nodes.tolist()}')
+                           # f'itri_nodes={itri_nodes.tolist()}'
+                           )
 
     found_cut = (len(close_face_eids) > 0)
     # if len(close_face_eids) == 0:
@@ -578,70 +419,34 @@ def _cut_face_model_by_coord(log: SimpleLogger,
     return found_cut, unique_geometry_array, unique_results_array, rods
 
 
-def get_close_faces2(faces: np.ndarray,
-                     face_eids: np.ndarray,
-                     node_ids: np.ndarray,
-                     y_cid: np.ndarray,
-                     tol: float,
-                     log: SimpleLogger) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Comparing the BWB example:
-    old: 42.4s
-    new: 38.3s
-    """
-    if 1:
-        abs_y = np.abs(y_cid)
-        log.debug(f'  ymin={abs_y.min():g} tol={tol:g}')
-
-        # print('tol =', tol)
-        iclose = np.where(abs_y <= tol)
-        nids_close = node_ids[iclose]
-        # log.debug(f'  nids_close={nids_close}')
-        # print('nids_close =', nids_close.tolist())
-        close_faces, close_face_eids = get_close_faces(
-            faces, face_eids, nids_close)
-        is_tri_cut = np.full(len(close_face_eids), True, dtype='bool')
-    else:
-        itri_nodes = np.searchsorted(node_ids, faces)
-        ntri = len(face_eids)
-        is_tri_cut = fis_tri_cut(y_cid, itri_nodes, ntri)
-        close_faces = faces[is_tri_cut]
-        close_face_eids = face_eids[is_tri_cut]
+def get_close_faces(faces: np.ndarray,
+                    face_eids: np.ndarray,
+                    node_ids: np.ndarray,
+                    y_cid: np.ndarray,
+                    ) -> tuple[np.ndarray, np.ndarray]:
+    itri_nodes = np.searchsorted(node_ids, faces)
+    ntri = len(face_eids)
+    is_tri_cut = fis_tri_cut(y_cid, itri_nodes, ntri)
+    close_faces = faces[is_tri_cut]
+    close_face_eids = face_eids[is_tri_cut]
     return is_tri_cut, close_faces, close_face_eids
 
 
-def get_close_faces(faces: np.ndarray,
-                    face_eids: np.ndarray,
-                    unused_nids_close) -> tuple[np.ndarray, np.ndarray]:
-    """this seems like it could be a lot faster"""
-    # who cares?
-    return faces, face_eids
+# def faces_to_tri_faces(face_eids, faces):
+#     """splits quads into tris"""
+#     tri_face_eids = []
+#     tri_faces = []
+#     for eid, face in zip(face_eids, faces):
+#         if len(face) == 4:
+#             n1, n2, n3, n4 = face
+#             tri_face_eids.append(eid)
+#             tri_face_eids.append(-eid)
+#             tri_faces.append((n1, n2, n3))
+#             tri_faces.append((n1, n3, n4))
+#         else:
+#             tri_faces.append(face)
+#     return tri_face_eids, tri_faces
 
-    #n1 = edges[:, 0]
-    #n2 = edges[:, 1]
-    #close_faces = []
-    #close_face_eids = []
-    #for eid, face in zip(face_eids, faces):
-        #if not all((nid in nids_close for nid in face)):
-            #continue
-        #close_faces.append(face)
-        #close_face_eids.append(eid)
-    #return close_faces, close_face_eids
-
-#def faces_to_tri_faces(face_eids, faces):
-    #"""splits quads into tris"""
-    #tri_face_eids = []
-    #tri_faces = []
-    #for eid, face in zip(face_eids, faces):
-        #if len(face) == 4:
-            #n1, n2, n3, n4 = face
-            #tri_face_eids.append(eid)
-            #tri_face_eids.append(-eid)
-            #tri_faces.append((n1, n2, n3))
-            #tri_faces.append((n1, n3, n4))
-        #else:
-            #tri_faces.append(face)
-    #return tri_face_eids, tri_faces
 
 def split_to_trias(model: BDF) -> None:
     elements2 = {}
@@ -1958,360 +1763,6 @@ def _is_dot(ivalues: list[int],
         raise RuntimeError('incorrect ivalues=%s' % ivalues)
     #print('%s; percents=%s is_dot=%s' % (dot_type, percent_array, is_dot))
     return is_dot
-
-
-def calculate_area_moi(model: BDF,
-                       rods: Rods,
-                       normal_plane: np.ndarray,
-                       thetas: dict[int, tuple[float, float, float, float]],
-                       moi_filename: PathLike='',
-                       eid_filename: PathLike='eid_file.csv',
-                       ) -> tuple[Any, Any, Any, Any]:
-    """
-    The inertia of a square plate about the midplane is:
-     Ixx = 1/12*b*h^3
-     Iyy = 1/12*h*b^3
-     Izz = 0.
-     Ixy = Ixz = Iyz = 0.
-    These terms are small for a real structure
-    and the math gets harder for odd shapes,
-    so we calculate just the A*d^2 terms.
-
-    TODO: nevermind...this is just a 2d inertial formula
-          of a flat plat that's been rotated
-
-    Parameters
-    ----------
-    model : BDF
-        the model object
-    rods : (eids, nids, xyzs)
-        eids : (nelements,) int ndarray
-            the element id that was split
-        nids : (nelements, 2) int ndarray
-            the n1, n2 in xyzs that define the cut shell element
-        xyzs : (nnodes, 3) float ndarray
-            the xyz of the nodes
-    normal_plane : (3,) float ndarray
-        the direction of the cut plane
-    thetas : dict[eid] = (thetad, Ex, Ey, Gxy)???
-        thetas[eid] = (thetad, Ex, Ey, Gxy)
-    moi_filename : str; default=None
-        writes a csv file
-
-    Returns
-    -------
-    total_area
-    Isum
-    Jsum
-    EIsum
-    GJsum
-    avg_centroid
-    """
-    assert isinstance(rods, tuple), type(rods)
-    assert isinstance(thetas, dict), type(thetas)
-    rod_elements, rod_nids, rod_xyzs = rods
-    assert isinstance(rod_elements, np.ndarray), type(rod_elements)
-    assert isinstance(rod_nids, np.ndarray), type(rod_nids)
-    assert isinstance(rod_xyzs, np.ndarray), type(rod_xyzs)
-
-    eids = np.abs(rod_elements[:, 0])
-    neids = len(eids)
-    all_nids = rod_nids
-    n1 = rod_elements[:, 1]
-    n2 = rod_elements[:, 2]
-    inid1 = np.searchsorted(all_nids, n1)
-    inid2 = np.searchsorted(all_nids, n2)
-    xyz1 = rod_xyzs[inid1, :]
-    xyz2 = rod_xyzs[inid2, :]
-    centroid = (xyz1 + xyz2) / 2.
-    length = np.linalg.norm(xyz2 - xyz1, axis=1)
-    assert len(length) == neids
-
-    centroid, area, thickness, E = get_element_inertias(
-        model, normal_plane, thetas,
-        eids, length, centroid)
-
-    # [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
-    I: np.ndarray = np.zeros((len(area), 6), dtype='float64')
-
-    # (Ex, Ey, Gxy)
-    Ex = E[:, 0]
-
-    total_area = area.sum()
-    avg_centroid = (centroid * area[:, np.newaxis]) .sum(axis=0) / total_area
-    assert len(avg_centroid) == 3, len(avg_centroid)
-    # y corresponds to the station in the plane of the coordinate system
-    # and is 0. because we're in the local plane
-    x = centroid[:, 0] - avg_centroid[0]
-    y = centroid[:, 1] - avg_centroid[1]
-    z = centroid[:, 2] - avg_centroid[2]
-
-    xmin = x.min()
-    xmax = x.max()
-    ixmin = np.where(x == xmin)[0][0]
-    ixmax = np.where(x == xmax)[0][0]
-    xyz_min = centroid[ixmin, :]
-    xyz_max = centroid[ixmax, :]
-    d = xyz_max - xyz_min
-    dx = d[0]
-    dz = d[2]
-    theta = np.arctan2(dx, dz)
-    thetad = np.degrees(theta)
-
-    nnodes = len(x)
-    delta = np.zeros((nnodes, 3))
-    delta[:, 1] = thetad
-
-    xyz = np.zeros((nnodes, 3))
-    # we're swapping what axes we have to make the transform easier
-    xyz[:, 0] = x
-    xyz[:, 1] = z
-    xyz[:, 2] = 0.
-    rtz = xyz_to_rtz_array(xyz)
-    rtz2 = rtz + delta
-    xyz2 = rtz_to_xyz_array(rtz2)
-    x2 = xyz2[:, 0]
-    y2 = xyz2[:, 1]
-    #z2 = xyz2[:, 2]
-
-    #origin = d
-    #zaxis = np.array([0., 1., 0.])
-    #xzplane = d
-    dxi = x2.max() - x2.min()
-    dyi = y2.max() - y2.min()
-    #dzi = z2.max() - z2.min()  # zero by definition
-
-    I[:, 0] = area * (x * x)  # Ixx
-    I[:, 1] = area * (y * y)  # Iyy
-    I[:, 2] = area * (z * z)  # Izz
-    I[:, 3] = area * (x * y)  # Ixy
-    I[:, 4] = area * (y * z)  # Iyz
-    I[:, 5] = area * (x * z)  # Ixz
-
-    Isum = I.sum(axis=0)
-    ExIsum = (Ex[:, np.newaxis] * I).sum(axis=0)
-    assert len(Isum) == 6, len(Isum)
-
-    if moi_filename is not None:
-        dirname = os.path.dirname(moi_filename)
-        eid_filename = os.path.join(dirname, eid_filename)
-        _write_moi_file(
-            moi_filename, eid_filename,
-            eids, n1, n2, xyz1, xyz2, length, thickness, area,
-            centroid, avg_centroid, I, E
-        )
-    return dxi, dyi, total_area, Isum, ExIsum, avg_centroid
-
-
-def _write_moi_file(moi_filename: PathLike,
-                    eid_filename: PathLike,
-                    eids, n1, n2, xyz1, xyz2,
-                    length, thickness, area,
-                    centroid, avg_centroid, I, E) -> None:
-    eidi = 1
-    mid = 1
-    nid0 = max(n1.max(), n2.max()) + 1
-    with open(moi_filename, 'w') as bdf_file, open(eid_filename, 'w') as eid_file:
-        bdf_file.write('$ pyNastran: punch=True\n')
-        bdf_file.write('MAT1,1,3.0e7,,0.3\n')
-        grid = ['GRID', nid0, 0, avg_centroid[0], avg_centroid[2], 0.]
-        bdf_file.write(print_card_8(grid))
-        bdf_file.write(f'CONM2   {1:8d}{nid0:8d}\n')
-
-        fmt = ('%s,' * 7)[:-1] + '\n'
-        eid_file.write('# eid(%i),pid(%i),area,thickness,Ixx,Izz,Ixz\n')
-        for eid, n1i, n2i, xyz1i, xyz2i, lengthi, thicknessi, areai, centroidi, Ii, Ei in zip(
-                eids, n1, n2, xyz1, xyz2, length, thickness, area, centroid, I, E):
-            actual_eid = abs(eid)
-
-            assert nid0 not in [n1i, n2i], (n1i, n2i)
-            pidi = actual_eid
-            #pid = eidi
-            grid1 = ['GRID', n1i, None] + xyz1i.tolist()
-            grid2 = ['GRID', n2i, None] + xyz2i.tolist()
-            #crod = ['CROD', eidi, pid, n1i, n2i]
-            A, J, nsm = Ii
-            #prod = ['PROD', pid, mid, A, J, 0., nsm]
-            assert eidi > 0, eidi
-            conrod = ['CONROD', eidi, n1i, n2i, mid, A, J, 0., nsm]
-            bdf_file.write(print_card_8(grid1))
-            bdf_file.write(print_card_8(grid2))
-            #bdf_file.write(print_card_8(crod))
-            #bdf_file.write(print_card_8(prod))
-            bdf_file.write(print_card_8(conrod))
-            eidi += 1
-            #PID | MID |  A  |  J  |  C  | NSM
-            eid_file.write(fmt % (eidi, pidi, areai, thicknessi, Ii[0], Ii[1], Ii[2]))
-
-
-def get_element_inertias(model: BDF,
-                         normal_plane: np.ndarray,
-                         thetas: dict[int, tuple[float, float, float, float]],
-                         eids: list[int],
-                         length: list[float],
-                         centroid: list[np.ndarray],
-                         ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    normal_plane_vector = normal_plane.copy().reshape((3, 1))
-    cg_list: list[np.ndarray] = []
-    area_list: list[float] = []
-    thickness_list: list[float] = []
-    E_list: list[tuple[float, float, float]] = []
-
-    log = model.log
-    for eid, lengthi, centroidi in zip(eids, length, centroid):
-        #print(eid, lengthi)
-        element = model.elements[eid]
-        if element.type in ['CTRIA3', 'CQUAD4']:
-            thicknessi, areai, thetad, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
-                element, normal_plane, normal_plane_vector, lengthi)
-            thetas[eid] = (thetad, Ex, Ey, Gxy)
-            thickness_list.append(thicknessi)
-            area_list.append(areai)
-            cg_list.append(centroidi)
-            E_list.append((Ex, Ey, Gxy))
-        else:
-            log.warning(element)
-
-    centroid = np.array(cg_list, dtype='float64')
-    area = np.array(area_list, dtype='float64')
-    thickness = np.array(thickness_list, dtype='float64')
-    E = np.array(E_list, dtype='float64')
-    return centroid, area, thickness, E
-
-def _get_shell_inertia(element: CTRIA3 | CQUAD4,
-                       normal_plane: np.ndarray,
-                       normal_plane_vector: np.ndarray,
-                       lengthi: float,) -> tuple[float, float, float,
-                                                 float, float, float, float]:
-    """
-    Parameters
-    ----------
-    element : CTRIA3 / CQUAD4
-        the object to cut
-    normal_plane : (3,) float ndarray
-        the normal vector of the cutting plane (should be roughly normal to the element face)
-    normal_plane_vector : (3,1) float ndarray
-        the normal vector of the cutting plane (should be roughly normal to the element face)
-    lengthi : float
-        the length the cutting plane makes with the element
-
-    Returns
-    -------
-    thicknessi : float
-        the total thickness of the element
-    areai : float
-        the cut area of the element
-    imat_rotation_angle_deg : float
-        the angle between the cutting plane and the normal_plane / normal_plane_vector
-        this is NOT the angle of the fiber
-    Ex : float
-        the moduli normal to the cut plane
-    Ey : float
-        the moduli parallel to the cut plane (normal to Ex)
-    Gxy : float
-        the inplane shear moduli
-    nu_xy : float
-        the correlary to in-plane nu12
-
-    """
-    pid_ref = element.pid_ref
-    thicknessi = element.Thickness()
-    dxyz, centroid, imat, unused_jmat, element_normal = element.material_coordinate_system()
-    #print('imat = ', imat)
-    #print('normal = ', normal)
-    n1, n2, n3 = element_normal
-    n12 = n1 * n2
-    n13 = n1 * n3
-    n23 = n2 * n3
-    #  http://scipp.ucsc.edu/~haber/ph216/rotation_12.pdf
-    # expanding eq 20 into
-    #  R(n,theta) = R0 + R1*sin(theta) + R2*cos(theta)
-    #R0 = np.array([
-        #[n1 ** 2, n12, n13],
-        #[n12, n2 ** 2, n23],
-        #[n13, n23, n3 ** 2],
-    #], dtype='float64')
-    R1 = np.array([
-        [0., -n3, n2],
-        [n3, 0., -n1],
-        [-n2, n1, 0.],
-    ], dtype='float64')
-    R2 = np.array([
-        [1 - n1 ** 2, -n12, -n13],
-        [-n12, 1 - n2 ** 2, -n23],
-        [-n13, -n23, 1 - n3 ** 2],
-    ])
-    imat = imat.reshape(3, 1)
-    #print(normal_plane.shape, R1.shape, imat.shape)
-    #a = np.linalg.multi_dot([normal_plane.T, R0, imat])
-    b = np.linalg.multi_dot([normal_plane_vector.T, R1, imat])
-    c = np.linalg.multi_dot([normal_plane_vector.T, R2, imat])
-
-    #  maximize m' dot p = p.T dot m
-    # m' = R dot m
-    #    = a + b*sin(theta) + c*cos(theta)
-    #  d/d(theta) = b*cos(theta)*sin(theta) = 0
-    #
-    #  d/d(theta) = b*cos(theta) - c*sin(theta) = 0
-    #  b*cos(theta) = c*sin(theta)
-    #  tan(theta) = b/c
-    #
-    # the theta to rotate by in order to orient imat with the normal
-    #print(b, c)
-    imat_rotation_angle = np.arctan2(b, c).item()
-    imat_rotation_angle_deg = np.degrees(imat_rotation_angle)
-    if imat_rotation_angle_deg <= -90.:
-        imat_rotation_angle_deg += 180.
-    elif imat_rotation_angle_deg > 90.:
-        imat_rotation_angle_deg -= 180.
-
-    #element_normal = element.Normal()
-    # cos(theta) = a o b / (|a| * |b|)
-    # |a| = length of normal vector = 1.0
-    # |b| = length of normal_plane vector = 1.0
-    #
-    # cos(theta) = a o b
-    # then we take the absolute value because we don't care if the element is +/- theta off
-
-    abs_cos_theta = abs(normal_plane @ element_normal)
-    assert isinstance(imat_rotation_angle, float), imat_rotation_angle
-    if abs_cos_theta > 0.9:  # <25.8 degrees
-        # filter out elements that are in-plane
-        thicknessi = 0.
-        areai = 0.
-        Ex = 0.
-        Ey = 0.
-        Gxy = 0.
-        nu_xy = 0.
-    else:
-        Ex, Ey, Gxy, nu_xy = pid_ref.get_Ainv_equivalent_pshell(
-            imat_rotation_angle_deg, thicknessi, # degrees=True,
-        )
-
-        #thicknessi = prop.Thickness()
-        areai = thicknessi * lengthi
-
-    #pid = pid_ref.pid
-    #if pid == 10:
-        #import copy
-        #pid_ref45 = copy.deepcopy(pid_ref)
-        #pid_ref45.mids_ref = [copy.deepcopy(pid_ref.mids_ref[0])]
-        #pid_ref45.thetas = [copy.deepcopy(pid_ref.thetas[0])]
-        #pid_ref45.thicknesses = [copy.deepcopy(pid_ref.thicknesses[0])]
-        #pid_ref45.mids = [copy.deepcopy(pid_ref.mids[0])]
-        #pid_ref45.get_thetas()
-        #Ex45, Ey45, Gxy45, nu_xy45 = pid_ref45.get_Ainv_equivalent_pshell(
-            #imat_rotation_angle_deg, thicknessi)
-
-        #pid_ref0 = copy.deepcopy(pid_ref)
-        #pid_ref0.mids_ref = [copy.deepcopy(pid_ref.mids_ref[1])]
-        #pid_ref0.thetas = [copy.deepcopy(pid_ref.thetas[1])]
-        #pid_ref0.thicknesses = [copy.deepcopy(pid_ref.thicknesses[1])]
-        #pid_ref0.mids = [copy.deepcopy(pid_ref.mids[1])]
-        #pid_ref0.get_thetas()
-        #Ex0, Ey0, Gxy0, nu_xy0 = pid_ref0.get_Ainv_equivalent_pshell(
-            #imat_rotation_angle_deg, thicknessi)
-    return thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy
 
 
 def fis_tri_cut(y_cid: np.ndarray,

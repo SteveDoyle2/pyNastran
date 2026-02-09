@@ -711,7 +711,6 @@ def moment_of_inertia_diagram(
     out = cut_and_plot_moi(
         model, normal_plane, log,
         dys, coords,
-        ytol=2.0,
         plot=True, show=True)
     # y, A, I, J, EI, J, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2 = out
     return out

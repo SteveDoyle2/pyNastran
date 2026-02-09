@@ -21,7 +21,7 @@ from pyNastran.bdf.bdf import read_bdf, BDF, CORD2R
 from cpylog import SimpleLogger
 
 from pyNastran.bdf.mesh_utils.cut.moi_plotter import (
-    cut_and_plot_moi, plot_inertia)
+    cut_and_plot_moi, plot_inertia, _get_shell_inertia)
 from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     _setup_faces)
 
@@ -31,26 +31,150 @@ MODEL_PATH = Path(os.path.join(PKG_PATH, '..', 'models'))
 
 
 class TestStiffnessPlot(unittest.TestCase):
-    def test_cut_quad(self):
+    def test_shell_inertia(self):
+        model = BDF(debug=False, log=None, mode='msc')
+
+        # x-axis is at 0 degrees
+        cid1 = 1
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [0., 1., 0.]
+        model.add_cord2r(cid1, origin, zaxis, xzplane)
+
+        # x-axis is at 90 degrees
+        cid2 = 2
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [1., 0., 0.]
+        model.add_cord2r(cid2, origin, zaxis, xzplane)
+
+        # x-axis is at 45 degrees
+        cid3 = 3
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [1., 1., 0.]
+        model.add_cord2r(cid3, origin, zaxis, xzplane)
+
+
+        tply = 0.007
+        thicknesses = [tply, tply]
+        mids_ud = [1, 1]
+        mids_45 = [1, 1]
+        model.add_pcomp(1, [mids_ud[0]], [thicknesses[0]], thetas=[0.])
+        model.add_pcomp(2, [mids_ud[0]], [thicknesses[0]], thetas=[90.])
+        model.add_pcomp(3, [mids_ud[0]], [thicknesses[0]], thetas=[45.])
+
+        model.add_pcomp(4, mids_ud, thicknesses, thetas=[45., -45.])
+        model.add_pcomp(11, mids_45, thicknesses, thetas=[0., 90.])
+        model.add_pcomp(12, mids_45, thicknesses, thetas=[45., -45.])
+
+        # fibers are in the y direction
+        nids = [1, 2, 3, 4]
+        element1 = model.add_cquad4(1, 1, nids, theta_mcid=cid1)
+        element2 = model.add_cquad4(2, 2, nids, theta_mcid=cid2)
+        element3 = model.add_cquad4(3, 3, nids, theta_mcid=cid3)
+        element4 = model.add_cquad4(4, 4, nids, theta_mcid=cid3)
+
+        element11 = model.add_cquad4(11, 11, nids, theta_mcid=cid1)
+        element12 = model.add_cquad4(12, 12, nids, theta_mcid=cid3)
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        # fabric
+        mid = 1
+        e11 = 7600555.0
+        e22 = 7029000.0
+        nu12 = 0.042
+        g12 = 360471.0
+        model.add_mat8(mid, e11, e22, nu12, g12=g12, g1z=1e8, g2z=1e8,
+                       rho=0., a1=0., a2=0., tref=0., Xt=0., Xc=None, Yt=0., Yc=None,
+                       S=0., ge=0., F12=0., strn=0., comment='')
+        lengthi = 1.
+        normal_plane = np.array([0., 1., 0.])
+        normal_plane_vector = normal_plane.copy().reshape((3, 1))
+
+        model.cross_reference()
+
+        # not rotated: 0 deg
+        thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
+            element1, normal_plane, normal_plane_vector, lengthi)
+        assert np.allclose(thicknessi, tply)
+        assert np.allclose(areai, thicknessi*lengthi)
+        assert np.allclose(imat_rotation_angle_deg, 0.)
+        assert np.allclose(e11, Ex)
+        assert np.allclose(e22, Ey)
+        assert np.allclose(g12, Gxy)
+        assert np.allclose(nu_xy, 0.)
+
+        # rotate by 90 degrees: 90 deg
+        thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
+            element2, normal_plane, normal_plane_vector, lengthi)
+        assert np.allclose(thicknessi, tply)
+        assert np.allclose(areai, thicknessi*lengthi)
+        assert np.allclose(imat_rotation_angle_deg, 90.)
+        #assert np.allclose(e11, Ey)
+        #assert np.allclose(e22, Ex)
+        #assert np.allclose(g12, Gxy)
+        #assert np.allclose(nu_xy, 0.)
+
+        # rotate by 45 degrees: +45 deg
+        thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
+            element3, normal_plane, normal_plane_vector, lengthi)
+        assert np.allclose(thicknessi, tply)
+        assert np.allclose(areai, thicknessi*lengthi)
+        assert np.allclose(imat_rotation_angle_deg, 45.)
+        #assert np.allclose(Ex, 1317118.060260035)
+        #assert np.allclose(Ey, 1317118.0602600349)
+        #assert np.allclose(Gxy, 3510140.123933055)
+        #assert np.allclose(nu_xy, 4.766776571060659e-13)
+
+        # rotate by 45 degrees: +/-45 deg
+        thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
+            element4, normal_plane, normal_plane_vector, lengthi)
+        assert np.allclose(thicknessi, sum(thicknesses))
+        assert np.allclose(areai, thicknessi*lengthi)
+        assert np.allclose(imat_rotation_angle_deg, 45.)
+        #assert np.allclose(Ex, 1317292.3250658484)
+        #assert np.allclose(Ey, 1317292.3250658484)
+        #assert np.allclose(Gxy, 3515514.7806900046)
+        #assert np.allclose(nu_xy, 4.766908439759332e-13)
+
+        # fabric - rotate by 45 degrees: +/- 0/90 deg
+        thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
+            element11, normal_plane, normal_plane_vector, lengthi)
+        assert np.allclose(thicknessi, sum(thicknesses))
+        assert np.allclose(areai, thicknessi*lengthi)
+        assert np.allclose(imat_rotation_angle_deg, 0.)
+        # assert np.allclose(Ex, e11)
+        # assert np.allclose(Ey, e22)
+        # assert np.allclose(Gxy, g12)
+        # assert np.allclose(nu_xy, nu12)
+
+        # fabric - rotate by 45 degrees: +/- 45 deg
+        # thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
+        #     element12, normal_plane, normal_plane_vector, lengthi)
+        # assert np.allclose(thicknessi, sum(thicknesses))
+        # assert np.allclose(areai, thicknessi*lengthi)
+        # assert np.allclose(imat_rotation_angle_deg, 45.)
+        # assert np.allclose(Ex, 1317292.3250658484)
+        # assert np.allclose(Ey, 1317292.3250658484)
+        # assert np.allclose(Gxy, 3515514.7806900046)
+        # assert np.allclose(nu_xy, 4.766908439759332e-13)
+        x = 1
+
+    def test_cut_quad_shell(self):
         """cut_and_plot_moi"""
         dirname = TEST_PATH
         log = SimpleLogger(level='debug', encoding='utf-8')
-        model = BDF(log=log)
-        model.add_grid(101, [0., 0., 0.])
-        model.add_grid(102, [3., 0., 0.])
-        model.add_grid(103, [3., 3., 0.])
-        model.add_grid(104, [0., 3., 0.])
-        model.add_cquad4(10, 11, [101, 102, 103, 104])
+        dy = 0.5
+        model, coord = _build_quad(log, dy)
         t = 0.1
         E = 3.0e7
         model.add_pshell(11, 12, t=t)
         model.add_mat1(12, E=E, G=None, nu=0.3)
-        dy = 0.5
-        coord = model.add_cord2r(
-            cid=1,
-            origin=[0., dy, 0.],
-            zaxis=[0., dy, 1.],
-            xzplane=[1., dy, 0.])
         model.cross_reference()
         coords = [coord]
         ystations = [0.]
@@ -59,7 +183,6 @@ class TestStiffnessPlot(unittest.TestCase):
         moi_data = cut_and_plot_moi(
             model, normal_plane, log,
             ystations, coords,
-            ytol=2.0,
             dirname=dirname,
             plot=False, show=False, face_data=None,
             stop_on_failure=True,
@@ -82,8 +205,8 @@ class TestStiffnessPlot(unittest.TestCase):
         # print(f'J = {J.tolist()}')
         # print(f'EI = {EI.tolist()}')
         # print(f'GJ = {GJ.tolist()}')
-        print(f'avg_centroid = {avg_centroid.tolist()}')
-        cut_length = 3
+        # print(f'avg_centroid = {avg_centroid.tolist()}')
+        cut_length = 3.0
         # skipped this...1/12 * cut_length * t**3
         i_expected = 0.09375  # A*d^2 of 2 triangles
         y_expected = [0.0]
@@ -143,7 +266,6 @@ class TestStiffnessPlot(unittest.TestCase):
         # y0, A0, I0, J0, EI0, J0, avg_centroid0, plane_bdf_filenames10, plane_bdf_filenames20 = cut_and_plot_moi(
         #     model, normal_plane, log,
         #     dys, coords,
-        #     ytol=2.0,
         #     dirname=dirname,
         #     plot=False, show=False, face_data=face_data)
 
@@ -152,7 +274,6 @@ class TestStiffnessPlot(unittest.TestCase):
             moi_data = cut_and_plot_moi(
                 bdf_filename, normal_plane, log,
                 ystations, coords,
-                ytol=2.0,
                 dirname=dirname,
                 plot=True, show=False, face_data=face_data,
                 cut_data_span_filename='y_cut_data_vs_span.csv',
@@ -240,7 +361,6 @@ class TestStiffnessPlot(unittest.TestCase):
             moi_data = cut_and_plot_moi(
                 bdf_filename, normal_plane, log,
                 xstations, xcoords,
-                ytol=2.0,
                 dirname=dirname, ifig=10,
                 plot=True, show=False, face_data=face_data,
                 cut_data_span_filename='x_cut_data_vs_span.csv',
@@ -273,8 +393,8 @@ class TestStiffnessPlot(unittest.TestCase):
             _cleanup_moi_files(dirname, 'y_')
         print(f'dt = {time.time() - t0}')
 
-def _cleanup_moi_files(dirname: Path,
-                       tag: str):
+
+def _cleanup_moi_files(dirname: Path, tag: str) -> None:
     if IS_MATPLOTLIB:
         os.remove(dirname / f'{tag}normalized_inertia_vs_span.png')
         os.remove(dirname / f'{tag}area_vs_span.png')
@@ -324,6 +444,19 @@ def get_coords_bwb(ystations: np.ndarray,
         coords.append(coord)
     return coords
 
+def _build_quad(log: SimpleLogger, dy: float):
+    model = BDF(log=log)
+    model.add_grid(101, [0., 0., 0.])
+    model.add_grid(102, [3., 0., 0.])
+    model.add_grid(103, [3., 3., 0.])
+    model.add_grid(104, [0., 3., 0.])
+    model.add_cquad4(10, 11, [101, 102, 103, 104])
+    coord = model.add_cord2r(
+        cid=1,
+        origin=[0., dy, 0.],
+        zaxis=[0., dy, 1.],
+        xzplane=[1., dy, 0.])
+    return model, coord
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

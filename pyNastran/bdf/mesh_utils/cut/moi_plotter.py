@@ -1,10 +1,11 @@
 """
 Calculate EI(y) and GJ(y)
 """
+from __future__ import annotations
 import os
 import copy
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from itertools import count
 
 import numpy as np
@@ -16,11 +17,18 @@ except ModuleNotFoundError:  # pragma: no cover
 
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
-from pyNastran.bdf.bdf import BDF, read_bdf, CORD2R
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.cards.coordinate_systems import (
+    CORD2R, Coord,
+    xyz_to_rtz_array, rtz_to_xyz_array)
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     cut_face_model_by_coord,
-    calculate_area_moi, fis_tri_cut, _setup_faces,
+    fis_tri_cut, _setup_faces,
 )
+if TYPE_CHECKING:
+    from pyNastran.bdf.cards.elements.shell import CTRIA3, CQUAD4
+Rods = tuple[np.ndarray, np.ndarray, np.ndarray]
 
 
 def cut_and_plot_moi(bdf_filename: PathLike | BDF,
@@ -28,7 +36,6 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      log: SimpleLogger,
                      dys: list[float] | np.ndarray,
                      coords: list[CORD2R],
-                     ytol: float=2.0,
                      face_data=None,
                      dirname: PathLike='',
                      ifig: int=1,
@@ -65,8 +72,6 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         coords to take cuts at; cutting plane normal is the y-axis?
         x:   defines axial direction (E1*A)
         y/z: defines transverse directions (E1*Iy)
-    ytol : float; default=2.0
-        ???
     face_data : ???
         nids : np.ndarray
             node ids
@@ -95,7 +100,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     out = _get_station_data(
         model, model_static,
         dys, coords, normal_plane,
-        ytol, dirname, face_data=face_data,
+        dirname, face_data=face_data,
         debug_vectorize=debug_vectorize,
         stop_on_failure=stop_on_failure,
     )
@@ -214,7 +219,6 @@ def _get_station_data(model: BDF,
                       dys: list[float],
                       coords: list[CORD2R],
                       normal_plane: np.ndarray,
-                      ytol: float,
                       dirname: Path,
                       plane_atol: float=1e-5,
                       debug_vectorize: bool=True,
@@ -242,8 +246,8 @@ def _get_station_data(model: BDF,
         the y values to make cuts at
     coords : list[CORD2R]
     normal_plane :
-    ytol : float; default=2.0
-    dirname :
+    dirname : Path | str
+        base directory for output files/pictures
     face_data : ???
         ???
     """
@@ -288,7 +292,7 @@ def _get_station_data(model: BDF,
         itri_nodes = np.searchsorted(nodes, tri_nodes)
         xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
         y_cid = xyz_cid[:, 1]
-        is_tri_cut = fis_tri_cut(y_cid, itri_nodes, ntri)
+        # is_tri_cut = fis_tri_cut(y_cid, itri_nodes, ntri)
 
         model.coords[1] = coord
         plane_bdf_filename1 = dirname / f'plane_face1_{icut:d}.bdf'
@@ -299,7 +303,7 @@ def _get_station_data(model: BDF,
 
         found_cut, rods = _get_station_datai(
             model, model_static,
-            dy, coord, ytol, plane_atol=plane_atol,
+            dy, coord, plane_atol=plane_atol,
             debug_vectorize=debug_vectorize,
             stop_on_failure=stop_on_failure,
             plane_bdf_filename1=plane_bdf_filename1,
@@ -354,7 +358,6 @@ def _get_station_datai(model: BDF,
                        model_static: BDF,
                        dy: float,
                        coord: CORD2R,
-                       ytol: float,
                        plane_atol: float=1e-5,
                        debug_vectorize: bool=True,
                        stop_on_failure: bool=False,
@@ -364,7 +367,7 @@ def _get_station_datai(model: BDF,
     nodal_result = None
     try:
         out = cut_face_model_by_coord(
-            model_static, coord, ytol,
+            model_static, coord,
             nodal_result, plane_atol=plane_atol,
             skip_cleanup=True,
             # csv_filename=cut_face_filename,
@@ -482,3 +485,357 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
         plt.show()
     ifig += 4
     return ifig
+
+
+def calculate_area_moi(model: BDF,
+                       rods: Rods,
+                       normal_plane: np.ndarray,
+                       thetas: dict[int, tuple[float, float, float, float]],
+                       moi_filename: PathLike='',
+                       eid_filename: PathLike='eid_file.csv',
+                       ) -> tuple[Any, Any, Any, Any]:
+    """
+    The inertia of a square plate about the midplane is:
+     Ixx = 1/12*b*h^3
+     Iyy = 1/12*h*b^3
+     Izz = 0.
+     Ixy = Ixz = Iyz = 0.
+    These terms are small for a real structure
+    and the math gets harder for odd shapes,
+    so we calculate just the A*d^2 terms.
+
+    TODO: nevermind...this is just a 2d inertial formula
+          of a flat plat that's been rotated
+
+    Parameters
+    ----------
+    model : BDF
+        the model object
+    rods : (eids, nids, xyzs)
+        eids : (nelements,) int ndarray
+            the element id that was split
+        nids : (nelements, 2) int ndarray
+            the n1, n2 in xyzs that define the cut shell element
+        xyzs : (nnodes, 3) float ndarray
+            the xyz of the nodes
+    normal_plane : (3,) float ndarray
+        the direction of the cut plane
+    thetas : dict[eid] = (thetad, Ex, Ey, Gxy)???
+        thetas[eid] = (thetad, Ex, Ey, Gxy)
+    moi_filename : str; default=None
+        writes a csv file
+
+    Returns
+    -------
+    total_area
+    Isum
+    Jsum
+    EIsum
+    GJsum
+    avg_centroid
+    """
+    assert isinstance(rods, tuple), type(rods)
+    assert isinstance(thetas, dict), type(thetas)
+    rod_elements, rod_nids, rod_xyzs = rods
+    assert isinstance(rod_elements, np.ndarray), type(rod_elements)
+    assert isinstance(rod_nids, np.ndarray), type(rod_nids)
+    assert isinstance(rod_xyzs, np.ndarray), type(rod_xyzs)
+
+    eids = np.abs(rod_elements[:, 0])
+    neids = len(eids)
+    all_nids = rod_nids
+    n1 = rod_elements[:, 1]
+    n2 = rod_elements[:, 2]
+    inid1 = np.searchsorted(all_nids, n1)
+    inid2 = np.searchsorted(all_nids, n2)
+    xyz1 = rod_xyzs[inid1, :]
+    xyz2 = rod_xyzs[inid2, :]
+    centroid = (xyz1 + xyz2) / 2.
+    length = np.linalg.norm(xyz2 - xyz1, axis=1)
+    assert len(length) == neids
+
+    centroid, area, thickness, E = get_element_inertias(
+        model, normal_plane, thetas,
+        eids, length, centroid)
+
+    # [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
+    I: np.ndarray = np.zeros((len(area), 6), dtype='float64')
+
+    # (Ex, Ey, Gxy)
+    Ex = E[:, 0]
+
+    total_area = area.sum()
+    avg_centroid = (centroid * area[:, np.newaxis]) .sum(axis=0) / total_area
+    assert len(avg_centroid) == 3, len(avg_centroid)
+    # y corresponds to the station in the plane of the coordinate system
+    # and is 0. because we're in the local plane
+    x = centroid[:, 0] - avg_centroid[0]
+    y = centroid[:, 1] - avg_centroid[1]
+    z = centroid[:, 2] - avg_centroid[2]
+
+    xmin = x.min()
+    xmax = x.max()
+    ixmin = np.where(x == xmin)[0][0]
+    ixmax = np.where(x == xmax)[0][0]
+    xyz_min = centroid[ixmin, :]
+    xyz_max = centroid[ixmax, :]
+    d = xyz_max - xyz_min
+    dx = d[0]
+    dz = d[2]
+    theta = np.arctan2(dx, dz)
+    thetad = np.degrees(theta)
+
+    nnodes = len(x)
+    delta = np.zeros((nnodes, 3))
+    delta[:, 1] = thetad
+
+    xyz = np.zeros((nnodes, 3))
+    # we're swapping what axes we have to make the transform easier
+    xyz[:, 0] = x
+    xyz[:, 1] = z
+    xyz[:, 2] = 0.
+    rtz = xyz_to_rtz_array(xyz)
+    rtz2 = rtz + delta
+    xyz2 = rtz_to_xyz_array(rtz2)
+    x2 = xyz2[:, 0]
+    y2 = xyz2[:, 1]
+    #z2 = xyz2[:, 2]
+
+    #origin = d
+    #zaxis = np.array([0., 1., 0.])
+    #xzplane = d
+    dxi = x2.max() - x2.min()
+    dyi = y2.max() - y2.min()
+    #dzi = z2.max() - z2.min()  # zero by definition
+
+    I[:, 0] = area * (x * x)  # Ixx
+    I[:, 1] = area * (y * y)  # Iyy
+    I[:, 2] = area * (z * z)  # Izz
+    I[:, 3] = area * (x * y)  # Ixy
+    I[:, 4] = area * (y * z)  # Iyz
+    I[:, 5] = area * (x * z)  # Ixz
+
+    Isum = I.sum(axis=0)
+    ExIsum = (Ex[:, np.newaxis] * I).sum(axis=0)
+    assert len(Isum) == 6, len(Isum)
+
+    if moi_filename is not None:
+        dirname = os.path.dirname(moi_filename)
+        eid_filename = os.path.join(dirname, eid_filename)
+        _write_moi_file(
+            moi_filename, eid_filename,
+            eids, n1, n2, xyz1, xyz2, length, thickness, area,
+            centroid, avg_centroid, I, E
+        )
+    return dxi, dyi, total_area, Isum, ExIsum, avg_centroid
+
+
+def _write_moi_file(moi_filename: PathLike,
+                    eid_filename: PathLike,
+                    eids, n1, n2, xyz1, xyz2,
+                    length, thickness, area,
+                    centroid, avg_centroid, I, E) -> None:
+    eidi = 1
+    mid = 1
+    nid0 = max(n1.max(), n2.max()) + 1
+    with open(moi_filename, 'w') as bdf_file, open(eid_filename, 'w') as eid_file:
+        bdf_file.write('$ pyNastran: punch=True\n')
+        bdf_file.write('MAT1,1,3.0e7,,0.3\n')
+        grid = ['GRID', nid0, 0, avg_centroid[0], avg_centroid[2], 0.]
+        bdf_file.write(print_card_8(grid))
+        bdf_file.write(f'CONM2   {1:8d}{nid0:8d}\n')
+
+        fmt = ('%s,' * 7)[:-1] + '\n'
+        eid_file.write('# eid(%i),pid(%i),area,thickness,Ixx,Izz,Ixz\n')
+        for eid, n1i, n2i, xyz1i, xyz2i, lengthi, thicknessi, areai, centroidi, Ii, Ei in zip(
+                eids, n1, n2, xyz1, xyz2, length, thickness, area, centroid, I, E):
+            actual_eid = abs(eid)
+
+            assert nid0 not in [n1i, n2i], (n1i, n2i)
+            pidi = actual_eid
+            #pid = eidi
+            grid1 = ['GRID', n1i, None] + xyz1i.tolist()
+            grid2 = ['GRID', n2i, None] + xyz2i.tolist()
+            #crod = ['CROD', eidi, pid, n1i, n2i]
+            A, J, nsm = Ii
+            #prod = ['PROD', pid, mid, A, J, 0., nsm]
+            assert eidi > 0, eidi
+            conrod = ['CONROD', eidi, n1i, n2i, mid, A, J, 0., nsm]
+            bdf_file.write(print_card_8(grid1))
+            bdf_file.write(print_card_8(grid2))
+            #bdf_file.write(print_card_8(crod))
+            #bdf_file.write(print_card_8(prod))
+            bdf_file.write(print_card_8(conrod))
+            eidi += 1
+            #PID | MID |  A  |  J  |  C  | NSM
+            eid_file.write(fmt % (eidi, pidi, areai, thicknessi, Ii[0], Ii[1], Ii[2]))
+
+
+def get_element_inertias(model: BDF,
+                         normal_plane: np.ndarray,
+                         thetas: dict[int, tuple[float, float, float, float]],
+                         eids: list[int],
+                         length: list[float],
+                         centroid: list[np.ndarray],
+                         ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    normal_plane_vector = normal_plane.copy().reshape((3, 1))
+    cg_list: list[np.ndarray] = []
+    area_list: list[float] = []
+    thickness_list: list[float] = []
+    E_list: list[tuple[float, float, float]] = []
+
+    log = model.log
+    for eid, lengthi, centroidi in zip(eids, length, centroid):
+        #print(eid, lengthi)
+        element = model.elements[eid]
+        if element.type in ['CTRIA3', 'CQUAD4']:
+            thicknessi, areai, thetad, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
+                element, normal_plane, normal_plane_vector, lengthi)
+            thetas[eid] = (thetad, Ex, Ey, Gxy)
+            thickness_list.append(thicknessi)
+            area_list.append(areai)
+            cg_list.append(centroidi)
+            E_list.append((Ex, Ey, Gxy))
+        else:
+            log.warning(element)
+
+    centroid = np.array(cg_list, dtype='float64')
+    area = np.array(area_list, dtype='float64')
+    thickness = np.array(thickness_list, dtype='float64')
+    E = np.array(E_list, dtype='float64')
+    return centroid, area, thickness, E
+
+def _get_shell_inertia(element: CTRIA3 | CQUAD4,
+                       normal_plane: np.ndarray,
+                       normal_plane_vector: np.ndarray,
+                       lengthi: float,) -> tuple[float, float, float,
+                                                 float, float, float, float]:
+    """
+    Parameters
+    ----------
+    element : CTRIA3 / CQUAD4
+        the object to cut
+    normal_plane : (3,) float ndarray
+        the normal vector of the cutting plane (should be roughly normal to the element face)
+    normal_plane_vector : (3,1) float ndarray
+        the normal vector of the cutting plane (should be roughly normal to the element face)
+    lengthi : float
+        the length the cutting plane makes with the element
+
+    Returns
+    -------
+    thicknessi : float
+        the total thickness of the element
+    areai : float
+        the cut area of the element
+    imat_rotation_angle_deg : float
+        the angle between the cutting plane and the normal_plane / normal_plane_vector
+        this is NOT the angle of the fiber
+    Ex : float
+        the moduli normal to the cut plane
+    Ey : float
+        the moduli parallel to the cut plane (normal to Ex)
+    Gxy : float
+        the inplane shear moduli
+    nu_xy : float
+        the correlary to in-plane nu12
+
+    """
+    pid_ref = element.pid_ref
+    thicknessi = element.Thickness()
+    dxyz, centroid, imat, unused_jmat, element_normal = element.material_coordinate_system()
+    #print('imat = ', imat)
+    #print('normal = ', normal)
+    n1, n2, n3 = element_normal
+    n12 = n1 * n2
+    n13 = n1 * n3
+    n23 = n2 * n3
+    # http://scipp.ucsc.edu/~haber/ph216/rotation_12.pdf
+    # expanding eq 20 into
+    # R(n,theta) = R0 + R1*sin(theta) + R2*cos(theta)
+    # R0 = np.array([
+    #     [n1 ** 2, n12, n13],
+    #     [n12, n2 ** 2, n23],
+    #     [n13, n23, n3 ** 2],
+    # ], dtype='float64')
+    R1 = np.array([
+        [0., -n3, n2],
+        [n3, 0., -n1],
+        [-n2, n1, 0.],
+    ], dtype='float64')
+    R2 = np.array([
+        [1 - n1 ** 2, -n12, -n13],
+        [-n12, 1 - n2 ** 2, -n23],
+        [-n13, -n23, 1 - n3 ** 2],
+    ])
+    imat = imat.reshape(3, 1)
+    #print(normal_plane.shape, R1.shape, imat.shape)
+    #a = np.linalg.multi_dot([normal_plane.T, R0, imat])
+    b = np.linalg.multi_dot([normal_plane_vector.T, R1, imat])
+    c = np.linalg.multi_dot([normal_plane_vector.T, R2, imat])
+
+    #  maximize m' dot p = p.T dot m
+    # m' = R dot m
+    #    = a + b*sin(theta) + c*cos(theta)
+    #  d/d(theta) = b*cos(theta)*sin(theta) = 0
+    #
+    #  d/d(theta) = b*cos(theta) - c*sin(theta) = 0
+    #  b*cos(theta) = c*sin(theta)
+    #  tan(theta) = b/c
+    #
+    # the theta to rotate by in order to orient imat with the normal
+    #print(b, c)
+    imat_rotation_angle = np.arctan2(b, c).item()
+    imat_rotation_angle_deg = np.degrees(imat_rotation_angle)
+    if imat_rotation_angle_deg <= -90.:
+        imat_rotation_angle_deg += 180.
+    elif imat_rotation_angle_deg > 90.:
+        imat_rotation_angle_deg -= 180.
+
+    #element_normal = element.Normal()
+    # cos(theta) = a o b / (|a| * |b|)
+    # |a| = length of normal vector = 1.0
+    # |b| = length of normal_plane vector = 1.0
+    #
+    # cos(theta) = a o b
+    # then we take the absolute value because we don't care if the element is +/- theta off
+
+    abs_cos_theta = abs(normal_plane @ element_normal)
+    assert isinstance(imat_rotation_angle, float), imat_rotation_angle
+    if abs_cos_theta > 0.9:  # <25.8 degrees
+        # filter out elements that are in-plane
+        thicknessi = 0.
+        areai = 0.
+        Ex = 0.
+        Ey = 0.
+        Gxy = 0.
+        nu_xy = 0.
+    else:
+        Ex, Ey, Gxy, nu_xy = pid_ref.get_Ainv_equivalent_pshell(
+            imat_rotation_angle_deg, thicknessi, # degrees=True,
+        )
+
+        #thicknessi = prop.Thickness()
+        areai = thicknessi * lengthi
+
+    # pid = pid_ref.pid
+    # if pid == 10:
+    #     import copy
+    #     pid_ref45 = copy.deepcopy(pid_ref)
+    #     pid_ref45.mids_ref = [copy.deepcopy(pid_ref.mids_ref[0])]
+    #     pid_ref45.thetas = [copy.deepcopy(pid_ref.thetas[0])]
+    #     pid_ref45.thicknesses = [copy.deepcopy(pid_ref.thicknesses[0])]
+    #     pid_ref45.mids = [copy.deepcopy(pid_ref.mids[0])]
+    #     pid_ref45.get_thetas()
+    #     Ex45, Ey45, Gxy45, nu_xy45 = pid_ref45.get_Ainv_equivalent_pshell(
+    #         imat_rotation_angle_deg, thicknessi)
+    #
+    #     pid_ref0 = copy.deepcopy(pid_ref)
+    #     pid_ref0.mids_ref = [copy.deepcopy(pid_ref.mids_ref[1])]
+    #     pid_ref0.thetas = [copy.deepcopy(pid_ref.thetas[1])]
+    #     pid_ref0.thicknesses = [copy.deepcopy(pid_ref.thicknesses[1])]
+    #     pid_ref0.mids = [copy.deepcopy(pid_ref.mids[1])]
+    #     pid_ref0.get_thetas()
+    #     Ex0, Ey0, Gxy0, nu_xy0 = pid_ref0.get_Ainv_equivalent_pshell(
+    #         imat_rotation_angle_deg, thicknessi)
+    return thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy
