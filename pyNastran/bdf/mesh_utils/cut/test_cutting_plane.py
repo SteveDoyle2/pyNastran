@@ -59,7 +59,6 @@ class TestCuttingPlane(unittest.TestCase):
 
         # real
         nodal_result = op2_model.eigenvectors[1].data[9, :, 2]
-
         cut_and_plot_model(title, p1, p2, zaxis,
                            model, coord, nodal_result, model.log, ytol,
                            plane_atol=1e-5, csv_filename='real_result.csv', invert_yaxis=False,
@@ -77,6 +76,7 @@ class TestCuttingPlane(unittest.TestCase):
         dirname = Path('.')
         os.remove(dirname / 'real_result.csv')
         os.remove(dirname / 'complex_result.csv')
+
     def test_cut_plate_eids(self):
         """recover element ids"""
         log = SimpleLogger(level='warning', encoding='utf-8')
@@ -366,7 +366,6 @@ def _cut_shell_model_quads():
     model.add_cquad4(4, pid, [13, 14, 15, 16])
 
     model.add_pshell(pid, mid1=mid1, t=2.)
-
     E = 1.0
     G = None
     nu = 0.3

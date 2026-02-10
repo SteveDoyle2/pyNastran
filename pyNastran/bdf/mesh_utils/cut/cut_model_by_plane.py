@@ -31,6 +31,8 @@ if TYPE_CHECKING:  # pragma: no cover
 class Elements(TypedDict):
     line2: tuple[np.ndarray, np.ndarray]
     tri3:  tuple[np.ndarray, np.ndarray]
+    tet4:  tuple[np.ndarray, np.ndarray]
+
 
 def get_nid_cd_xyz_cid0(model: BDF) -> tuple[NDArrayNint, NDArrayNint,
                                              dict[int, NDArrayNint], NDArray3float]:
@@ -80,7 +82,8 @@ def get_element_centroids(model: BDF,
 
 
 def _setup_faces(bdf_filename: PathLike | BDF,
-                 ) -> tuple[SimpleLogger,
+                 include_lines: bool=True,
+                 include_solids: bool=False) -> tuple[SimpleLogger,
                             np.ndarray, np.ndarray, Elements]:
     """helper method"""
     # TODO: should filter out unused nodes
@@ -92,9 +95,12 @@ def _setup_faces(bdf_filename: PathLike | BDF,
     nids = nid_cp_cd[:, 0]
     #eid_to_edge_map, nid_to_edge_map, edge_to_eid_map = create_maps(model)
     line_eids = []
-    lines = []
-    face_eids = []
-    faces = []
+    line_nids = []
+    tri_eids = []
+    tri_nids = []
+    tet_eids = []
+    tet_nids = []
+
     # shells = {
     #     'CTRIA3', 'CTRIAX', 'CTRIA6', 'CTRIAX6',
     #     'CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUADX8',
@@ -107,16 +113,19 @@ def _setup_faces(bdf_filename: PathLike | BDF,
         if elem.type == 'CQUAD4':
             # split to 2 faces
             n1, n2, n3, n4 = elem.node_ids
-            face_eids.append(eid)
-            face_eids.append(-eid)
-            faces.append((n1, n2, n3))
-            faces.append((n1, n3, n4))
+            tri_eids.append(eid)
+            tri_eids.append(-eid)
+            tri_nids.append((n1, n2, n3))
+            tri_nids.append((n1, n3, n4))
         elif elem.type == 'CTRIA3':
-            face_eids.append(eid)
-            faces.append(elem.node_ids)
-        elif elem.type in ['CBAR', 'CBEAM', 'CROD', 'CTUBE']:
+            tri_eids.append(eid)
+            tri_nids.append(elem.node_ids)
+        elif elem.type == 'CTETRA' and include_solids:
+            tet_eids.append(eid)
+            tet_nids.append(elem.node_ids)
+        elif elem.type in ['CBAR', 'CBEAM', 'CROD', 'CTUBE'] and include_lines:
             line_eids.append(eid)
-            lines.append(elem.node_ids)
+            line_nids.append(elem.node_ids)
         else:
             elements_skipped.append(str(elem))
     if elements_skipped:
@@ -130,9 +139,11 @@ def _setup_faces(bdf_filename: PathLike | BDF,
     # edge_to_eid_map = out['edge_to_eid_map']
     elements = {
         'line2': (np.array(line_eids, dtype='int32'),
-                  np.array(lines, dtype='int32')),
-        'tri3': (np.array(face_eids, dtype='int32'),
-                 np.array(faces, dtype='int32')),
+                  np.array(line_nids, dtype='int32')),
+        'tri3': (np.array(tri_eids, dtype='int32'),
+                 np.array(tri_nids, dtype='int32')),
+        'tet4': (np.array(tet_eids, dtype='int32'),
+                 np.array(tet_nids, dtype='int32')),
     }
     return log, nids, xyz_cid0, elements
 
@@ -318,7 +329,7 @@ def _cut_face_model_by_coord(log: SimpleLogger,
 
     Parameters
     ----------
-    nids : (nnodes, ) int ndarray
+    node_ids : (nnodes, ) int ndarray
         the node ids in the model
     xyz_cid0 : (nnodes, 3) float ndarray
         the node xyzs in global frame
@@ -356,69 +367,94 @@ def _cut_face_model_by_coord(log: SimpleLogger,
         ???
     unique_results_array : ???
         ???
-    rods:
-        rods_array : ???
+    rods : tuple
+        rods_elements_array : (nedge) int ndarray???
+            ???
+        rod_nids_array : (nedge,2) int ndarray???
+            ???
+        rod_xyzs_array : (nedge,3) float ndarray???
             ???
 
     """
-    face_eids, faces = elements['tri3']
-
     # y direction is normal to the plane
-    # y = xyz_cid[:, 1]
-    # abs_y = np.abs(y)
-    # abs_y = np.abs(y)
     y_cid = xyz_cid[:, 1]
-    is_tri_cut, close_faces, close_face_eids = get_close_faces(
-        faces, face_eids, node_ids, y_cid)
 
-    if len(close_face_eids) == 0 and stop_on_failure:
-        ntri = len(face_eids)
+    tri_eids, tris = elements['tri3']
+    ntri = len(tri_eids)
+
+    tet_eids, tets = elements['tet4']
+    ntet = len(tet_eids)
+
+    close_tri_eids = []
+    close_tet_eids = []
+    is_tri_cut = False
+    is_tet_cut = False
+    if ntri:
+        is_tri_cut, close_tris, close_tri_eids = get_close_faces(
+            tris, tri_eids, node_ids, y_cid)
+        is_tri_cut = True
+    if ntet:
+        is_tet_cut, close_tets, close_tet_eids = get_close_faces(
+            tets, tet_eids, node_ids, y_cid)
+        is_tet_cut = True
+        raise NotImplementedError(f'tets are not supported; only tris; ntet={ntet}')
+
+    found_cut = len(close_tri_eids) >= 0 or len(close_tet_eids) == 0
+    if not found_cut and stop_on_failure:
+        ntri = len(tri_eids)
         raise RuntimeError(f'y_cid={y_cid}; ntri={ntri}\n'
                            f'is_tri_cut={is_tri_cut}\n'
+                           f'is_tet_cut={is_tet_cut}\n'
                            # f'itri_nodes={itri_nodes.tolist()}'
                            )
 
-    found_cut = (len(close_face_eids) > 0)
-    # if len(close_face_eids) == 0:
+    # if len(close_tri_eids) == 0:
     #     found_cut = False
+    unique_geometry_array = None
+    unique_results_array = None
+    rods = (None, None, None)
+    tets = (None, None, None)
     if not found_cut:
         assert stop_on_failure is False, 'no cuts found'
-        unique_geometry_array = None
-        unique_results_array = None
-        rods = (None, None, None)
-        log.warning(f'  nclose_faces = {len(close_face_eids):d}; '
+        # if you're failing here, either:
+        #  - your coordinate system is not defined with roughly y down the axis
+        #  - your plane normal is not roughly pointing in the y direction
+        # check the range of the y values because it'll tell you if you're cutting/marching in the wrong direction
+        log.warning(f'  nclose_faces = {len(close_tri_eids):d}; '
                     f'range=[{y_cid.min():g}, {y_cid.min():g}]')
         return found_cut, unique_geometry_array, unique_results_array, rods
-    log.debug(f'  nclose_faces = {len(close_face_eids):d}; '
+    log.debug(f'  nclose_faces = {len(close_tri_eids):d}; '
               f'range=[{y_cid.min():g}, {y_cid.min()}:g]')
 
-    # print('close_faces:')
-    # for edge in close_faces:
-    #     print(face)
-    # print(close_faces)
-
     assert np.array_equal(node_ids, np.unique(node_ids)), 'not sorted or unique'
-    iclose_faces = np.searchsorted(node_ids, close_faces.ravel()).reshape(
-        close_faces.shape)
+    if ntri:
+        # print('close_faces:')
+        # for edge in close_faces:
+        #     print(face)
+        # print(close_faces)
+        iclose_faces = np.searchsorted(node_ids, close_tris.ravel()).reshape(
+            close_tris.shape)
 
-    #print('iclose_edges:')
-    #print(iclose_edges)
-    unique_geometry_array, unique_results_array, rods = cut_faces(
-        node_ids, xyz_cid0, xyz_cid,
-        iclose_faces, close_face_eids,
-        nodal_result, coord, plane_atol=plane_atol,
-        skip_cleanup=skip_cleanup,
-        plane_bdf_filename1=plane_bdf_filename1,
-        plane_bdf_filename2=plane_bdf_filename2,
-        plane_bdf_offset=plane_bdf_offset,
-        debug_vectorize=debug_vectorize,
-        stop_on_failure=True,
-    )
-    #print(coord)
-    assert isinstance(rods, tuple), type(rods)
-    assert isinstance(rods[0], np.ndarray), rods[0]
-    assert isinstance(rods[1], np.ndarray), rods[1]
-    assert isinstance(rods[2], np.ndarray), rods[2]
+        #print('iclose_edges:')
+        #print(iclose_edges)
+        unique_geometry_array, unique_results_array, rods = cut_faces(
+            node_ids, xyz_cid0, xyz_cid,
+            iclose_faces, close_tri_eids,
+            nodal_result, coord, plane_atol=plane_atol,
+            skip_cleanup=skip_cleanup,
+            plane_bdf_filename1=plane_bdf_filename1,
+            plane_bdf_filename2=plane_bdf_filename2,
+            plane_bdf_offset=plane_bdf_offset,
+            debug_vectorize=debug_vectorize,
+            stop_on_failure=True)
+        #print(coord)
+        assert isinstance(rods, tuple), type(rods)
+        assert isinstance(rods[0], np.ndarray), rods[0]
+        assert isinstance(rods[1], np.ndarray), rods[1]
+        assert isinstance(rods[2], np.ndarray), rods[2]
+
+    if ntet:  # pragma: no cover
+        raise RuntimeError(f'ntet={ntet:d}')
     return found_cut, unique_geometry_array, unique_results_array, rods
 
 
@@ -429,11 +465,23 @@ def get_close_faces(faces: np.ndarray,
                     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     itri_nodes = np.searchsorted(node_ids, faces)
     ntri = len(face_eids)
-    is_tri_cut = fis_tri_cut(y_cid, itri_nodes, ntri)
+    is_tri_cut = is_element_cut(y_cid, itri_nodes, ntri)
     close_faces = faces[is_tri_cut]
     close_face_eids = face_eids[is_tri_cut]
     return is_tri_cut, close_faces, close_face_eids
 
+
+def get_close_tets(faces: np.ndarray,
+                   face_eids: np.ndarray,
+                   node_ids: np.ndarray,
+                   y_cid: np.ndarray,
+                   ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    itri_nodes = np.searchsorted(node_ids, faces)
+    ntri = len(face_eids)
+    is_tri_cut = fis_tri_cut(y_cid, itri_nodes, ntri)
+    close_faces = faces[is_tri_cut]
+    close_face_eids = face_eids[is_tri_cut]
+    return is_tri_cut, close_faces, close_face_eids
 
 # def faces_to_tri_faces(face_eids, faces):
 #     """splits quads into tris"""
@@ -507,7 +555,7 @@ def cut_faces(node_ids: np.ndarray,
         ???
     unique_results_array : ???
         ???
-    rods: tuple
+    rods : tuple
         rods_elements_array : (nedge) int ndarray???
             ???
         rod_nids_array : (nedge,2) int ndarray???
@@ -1770,12 +1818,11 @@ def _is_dot(ivalues: list[int],
     return is_dot
 
 
-def fis_tri_cut(y_cid: np.ndarray,
-                itri_nodes: np.ndarray,
-                ntri: int) -> np.ndarray:
-    """are the triangles cut?"""
+def is_element_cut(y_cid: np.ndarray,
+                   itri_nodes: np.ndarray,
+                   ntri: int) -> np.ndarray:
+    """are the triangles/tets cut?"""
     y_tri = y_cid[itri_nodes]
-    assert y_tri.shape == (ntri, 3), y_tri.shape
     y_tri_pos = (y_tri > 0)
     y_tri_neg = ~y_tri_pos
     is_tri_pos = np.all(y_tri_pos, axis=1)

@@ -24,7 +24,7 @@ from pyNastran.bdf.cards.coordinate_systems import (
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     cut_face_model_by_coord,
-    fis_tri_cut, _setup_faces,
+    is_element_cut, _setup_faces,
 )
 if TYPE_CHECKING:
     from pyNastran.bdf.cards.elements.shell import CTRIA3, CQUAD4
@@ -36,6 +36,8 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      log: SimpleLogger,
                      dys: list[float] | np.ndarray,
                      coords: list[CORD2R],
+                     include_lines: bool=False,
+                     include_solids: bool=False,
                      face_data=None,
                      dirname: PathLike='',
                      ifig: int=1,
@@ -105,10 +107,11 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         model, model_static,
         dys, coords, normal_plane,
         dirname, face_data=face_data,
+        include_lines=include_lines, include_solids=include_solids,
         debug_vectorize=debug_vectorize,
         stop_on_failure=stop_on_failure,
     )
-    (thetas, y, dx, dz, A, I, J, EI, GJ, avg_centroid,
+    (thetas, y, dx, dz, A, I, J, ExI, EyI, GJ, avg_centroid,
      plane_bdf_filenames, plane_bdf_filenames2) = out
 
     assert len(y) > 0, y
@@ -123,14 +126,14 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     #   0    1    2    3    4    5
     # [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
     Ix = I[:, 0]
-    Iy = I[:, 1]
+    # Iy = I[:, 1]
     Iz = I[:, 2]
     Ixz = I[:, 5]
 
-    ExIx = EI[:, 0]
-    ExIy = EI[:, 1]
-    ExIz = EI[:, 2]
-    ExIxz = EI[:, 5]
+    ExIx = ExI[:, 0]
+    ExIy = ExI[:, 1]
+    ExIz = ExI[:, 2]
+    ExIxz = ExI[:, 5]
     J = Ix + Iz
     #i1, i2, i12 = Ix, Iy, Ixy
 
@@ -141,7 +144,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         _write_beam_model(
             avg_centroid,
             A, I, J,
-            EI, GJ,
+            ExI, GJ,
             beam_model_bdf_filename,
         )
 
@@ -154,7 +157,8 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
 
     if plot:
         ifig = plot_inertia(
-            log, y, A, I, J, EI, GJ, avg_centroid, show=show,
+            log, y, A, I, J,
+            ExI, EyI, GJ, avg_centroid, show=show,
             dirname=dirname, ifig=ifig,
             normalized_inertia_png_filename=normalized_inertia_png_filename,
             area_span_png_filename=area_span_png_filename,
@@ -162,14 +166,14 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
             e_amoi_span_png_filename=e_amoi_span_png_filename,
             cg_span_png_filename=cg_span_png_filename,
         )
-    return y, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2
+    return y, A, I, J, ExI, EyI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2
 
 
 def _write_beam_model(avg_centroid: np.ndarray,
                       A: np.ndarray,
                       I: np.ndarray,
                       J: np.ndarray,
-                      EI, GJ,
+                      EI: np.ndarray, GJ: np.ndarray,
                       bdf_filename: PathLike=''):
     if isinstance(bdf_filename, str) and len(bdf_filename) == 0:
         return
@@ -182,8 +186,8 @@ def _write_beam_model(avg_centroid: np.ndarray,
     Ixz = I[:, 5]
 
     ExIx = EI[:, 0]
-    ExIy = EI[:, 1]
-    ExIz = EI[:, 2]
+    # ExIy = EI[:, 1]
+    # ExIz = EI[:, 2]
     ExIxz = EI[:, 5]
 
     mid = 1
@@ -221,18 +225,20 @@ def _get_station_data(model: BDF,
                       normal_plane: np.ndarray,
                       dirname: Path,
                       plane_atol: float=1e-5,
+                      include_lines: bool=False,
+                      include_solids: bool=False,
                       debug_vectorize: bool=True,
                       stop_on_failure: bool=False,
                       face_data=None) -> tuple[
                          dict[int, tuple[float, float, float, float]],  # thetas
                          #y, dx, dz,
+                         Any, Any, Any,
                          #A, I, J,
-                         #EI, GJ, avg_centroid
                          Any, Any, Any,
+                         #ExI, EyI, GJ,
                          Any, Any, Any,
-                         Any, Any, Any,
-                         #plane_bdf_filenames, plane_bdf_filenames2,
-                         list[str], list[str]]:
+                         #avg_centroid, plane_bdf_filenames, plane_bdf_filenames2,
+                         Any, list[str], list[str]]:
     """
     Helper for ``cut_and_plot_moi``
 
@@ -263,11 +269,13 @@ def _get_station_data(model: BDF,
 
     if face_data is None:
         # TODO: could filter out unused nodes
-        _log, *face_data = _setup_faces(model)
+        _log, *face_data = _setup_faces(
+            model,
+            include_lines=include_lines, include_solids=include_solids)
     nodes, xyz_cid0, elements = face_data
     tri_eids, tri_nodes = elements['tri3']
-    nnode = len(nodes)
-    ntri = len(tri_eids)
+    # nnode = len(nodes)
+    # ntri = len(tri_eids)
 
     #p1 = np.array([466.78845, 735.9053, 0.0])
     #p2 = np.array([624.91345, 639.68896, -0.99763656])
@@ -280,10 +288,11 @@ def _get_station_data(model: BDF,
     y = np.full(ny, np.nan, dtype='float64')
     dx = np.full(ny, np.nan, dtype='float64')
     dz = np.full(ny, np.nan, dtype='float64')
-    A = np.full(ny, np.nan, dtype='float64')
-    I = np.full((ny, 6), np.nan, dtype='float64')
+    area = np.full(ny, np.nan, dtype='float64')
+    inertia = np.full((ny, 6), np.nan, dtype='float64')
     J = np.full(ny, np.nan, dtype='float64')
-    EI = np.full((ny, 6), np.nan, dtype='float64')
+    ExI = np.full((ny, 6), np.nan, dtype='float64')
+    EyI = np.full((ny, 6), np.nan, dtype='float64')
     GJ = np.full(ny, np.nan, dtype='float64')
     avg_centroid = np.full((ny, 3), np.nan, dtype='float64')
 
@@ -293,7 +302,7 @@ def _get_station_data(model: BDF,
     for icut, dy, coord in zip(count(), dys, coords):
         itri_nodes = np.searchsorted(nodes, tri_nodes)
         xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
-        y_cid = xyz_cid[:, 1]
+        # y_cid = xyz_cid[:, 1]
         # is_tri_cut = fis_tri_cut(y_cid, itri_nodes, ntri)
 
         model.coords[coord.cid] = coord
@@ -325,21 +334,23 @@ def _get_station_data(model: BDF,
         #moi_filename = 'amoi_%i.bdf' % i
         moi_filename = None
         log.info(f'calculate_area_moi {icut:d} (station={dy})')
-        dxi, dzi, Ai, Ii, EIi, avg_centroidi = calculate_area_moi(
+        (dxi, dzi, areai,
+         inertiai, Ji,
+         ExIi, EyIi, GJi, avg_centroidi) = calculate_area_moi(
             model, rods, normal_plane, thetas,
             moi_filename=moi_filename)
 
         #print(out)
-        Ji = GJi = 1.0
         y[icut] = dy
         dx[icut] = dxi  # length
         dz[icut] = dzi  # height
-        A[icut] = Ai
-        I[icut, :] = Ii
+        area[icut] = areai
+        inertia[icut, :] = inertiai
         # print(Ji, EIi, GJi)
         # print(len(Ji), len(EIi), len(GJi))
         J[icut] = Ji
-        EI[icut, :] = EIi
+        ExI[icut, :] = ExIi
+        EyI[icut, :] = EyIi
         GJ[icut] = GJi
         avg_centroid[icut, :] = avg_centroidi
         ncuts_found += 1
@@ -349,9 +360,9 @@ def _get_station_data(model: BDF,
 
     out = (
         thetas, y, dx, dz,
-        A, I, J, EI, GJ,
-        avg_centroid,
-        plane_bdf_filenames1, plane_bdf_filenames2
+        area, inertia, J,
+        ExI, EyI, GJ,
+        avg_centroid, plane_bdf_filenames1, plane_bdf_filenames2
     )
     return out
 
@@ -394,7 +405,8 @@ def _get_station_datai(model: BDF,
 
 
 def plot_inertia(log: SimpleLogger,
-                 y, A, I, J, EI, GJ, avg_centroid,
+                 y, A, I, J,
+                 ExI, EyI, GJ, avg_centroid,
                  ifig: int=1, show: bool=True,
                  dirname: PathLike='',
                  normalized_inertia_png_filename: PathLike='normalized_inertia_vs_span.png',
@@ -406,24 +418,25 @@ def plot_inertia(log: SimpleLogger,
     #plt.plot(y, I[:, 0] / I[:, 0].max(), 'ro-', label='Qxx')
     #plt.plot(y, I[:, 1] / I[:, 1].max(), 'bo-', label='Qyy')
     #plt.plot(y, I[:, 2] / I[:, 2].max(), 'go-', label='Qxy')
-    aI = np.abs(I)
-    aEI = np.abs(EI)
-    aGJ = np.abs(GJ)
+    absI = np.abs(I)
+    absExI = np.abs(ExI)
+    absGJ = np.abs(GJ)
 
+    assert isinstance(ifig, int), ifig
     fig = plt.figure(ifig)
     ax = fig.gca()
-    ai_max = aI[:, :3].max(axis=0)
-    aei_max = aEI[:, :3].max(axis=0)
+    ai_max = absI[:, :3].max(axis=0)
+    aei_max = absExI[:, :3].max(axis=0)
     ai_max[ai_max == 0] = 1.
     aei_max[aei_max == 0] = 1.
-    assert len(ai_max) == 3, (ai_max.shape, aI)
+    assert len(ai_max) == 3, (ai_max.shape, absI)
     ax.plot(y, I[:, 0] / ai_max[0], 'ro-', label='Ixx')
     ax.plot(y, I[:, 1] / ai_max[1], 'bo-', label='Izz')
     ax.plot(y, I[:, 2] / ai_max[2], 'go-', label='Ixz')
 
-    ax.plot(y, EI[:, 0] / aei_max[0], 'ro', label='EIxx', linestyle='--')
-    ax.plot(y, EI[:, 1] / aei_max[1], 'bo', label='EIzz', linestyle='--')
-    ax.plot(y, EI[:, 2] / aei_max[2], 'go', label='EIxz', linestyle='--')
+    ax.plot(y, ExI[:, 0] / aei_max[0], 'ro', label='ExIxx', linestyle='--')
+    ax.plot(y, ExI[:, 1] / aei_max[1], 'bo', label='ExIzz', linestyle='--')
+    ax.plot(y, ExI[:, 2] / aei_max[2], 'go', label='ExIxz', linestyle='--')
     #ax.plot(y, GJ / aGJ.max(), 'go-', label='GJ', linestyle='--')
 
     ax.grid(True)
@@ -465,7 +478,7 @@ def plot_inertia(log: SimpleLogger,
 
     fig = plt.figure(ifig + 3)
     ax = fig.gca()
-    ax.plot(y, EI[:, 0], 'ro-', label='EIxx')
+    ax.plot(y, ExI[:, 0], 'ro-', label='EIxx')
     #ax.plot(y, I[:, 0], 'bo-', label='Ixx')
     ax.grid(True)
     ax.set_xlabel('Span, y')
@@ -500,7 +513,9 @@ def calculate_area_moi(model: BDF,
                        thetas: dict[int, tuple[float, float, float, float]],
                        moi_filename: PathLike='',
                        eid_filename: PathLike='eid_file.csv',
-                       ) -> tuple[Any, Any, Any, Any]:
+                       ) -> tuple[np.ndarray, np.ndarray, np.ndarray,               # dxi, dyi, total_area,
+                                  np.ndarray, np.ndarray,                           # Isum, Jsum,
+                                  np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # ExIsum, EyIsum, GJsum, avg_centroid
     """
     The inertia of a square plate about the midplane is:
      Ixx = 1/12*b*h^3
@@ -566,10 +581,12 @@ def calculate_area_moi(model: BDF,
         eids, length, centroid)
 
     # [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
-    I: np.ndarray = np.zeros((len(area), 6), dtype='float64')
+    inertia: np.ndarray = np.zeros((len(area), 6), dtype='float64')
 
     # (Ex, Ey, Gxy)
-    Ex = E[:, 0]
+    ex = E[:, 0]
+    ey = E[:, 1]
+    gxy = E[:, 2]
 
     total_area = area.sum()
     avg_centroid = (centroid * area[:, np.newaxis]) .sum(axis=0) / total_area
@@ -615,15 +632,23 @@ def calculate_area_moi(model: BDF,
     dyi = y2.max() - y2.min()
     #dzi = z2.max() - z2.min()  # zero by definition
 
-    I[:, 0] = area * (x * x)  # Ixx
-    I[:, 1] = area * (y * y)  # Iyy
-    I[:, 2] = area * (z * z)  # Izz
-    I[:, 3] = area * (x * y)  # Ixy
-    I[:, 4] = area * (y * z)  # Iyz
-    I[:, 5] = area * (x * z)  # Ixz
+    inertia[:, 0] = area * (x * x)  # Ixx
+    inertia[:, 1] = area * (y * y)  # Iyy
+    inertia[:, 2] = area * (z * z)  # Izz
+    inertia[:, 3] = area * (x * y)  # Ixy
+    inertia[:, 4] = area * (y * z)  # Iyz
+    inertia[:, 5] = area * (x * z)  # Ixz
 
-    Isum = I.sum(axis=0)
-    ExIsum = (Ex[:, np.newaxis] * I).sum(axis=0)
+    # cut is in xz plane
+    ix = inertia[:, 0]
+    iz = inertia[:, 2]
+    J = ix + iz
+
+    Isum = inertia.sum(axis=0)
+    Jsum = J.sum()
+    ExIsum = (ex[:, np.newaxis] * inertia).sum(axis=0)
+    EyIsum = (ey[:, np.newaxis] * inertia).sum(axis=0)
+    GJsum = (gxy * J).sum()
     assert len(Isum) == 6, len(Isum)
 
     if moi_filename is not None:
@@ -632,9 +657,14 @@ def calculate_area_moi(model: BDF,
         _write_moi_file(
             moi_filename, eid_filename,
             eids, n1, n2, xyz1, xyz2, length, thickness, area,
-            centroid, avg_centroid, I, E
+            centroid, avg_centroid, inertia, E,
         )
-    return dxi, dyi, total_area, Isum, ExIsum, avg_centroid
+    out = (
+        dxi, dyi, total_area,
+        Isum, Jsum,
+        ExIsum, EyIsum, GJsum, avg_centroid,
+    )
+    return out
 
 
 def _write_moi_file(moi_filename: PathLike,
