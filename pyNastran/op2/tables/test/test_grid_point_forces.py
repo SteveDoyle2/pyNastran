@@ -15,9 +15,9 @@ from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.tables.ogf_gridPointForces.smt import smt_setup, plot_smt, create_shear_moment_torque
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 
-from pyNastran.bdf.mesh_utils.cut.utils import p1_p2_zaxis_to_cord2r
+from pyNastran.bdf.mesh_utils.cut.utils import p1_p2_zaxis_to_cord2r, get_stations
 from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
-    get_element_centroids,  get_stations)
+    get_element_centroids)
 
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
