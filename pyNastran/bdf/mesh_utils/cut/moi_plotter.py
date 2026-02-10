@@ -72,7 +72,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         coords to take cuts at; cutting plane normal is the y-axis?
         x:   defines axial direction (E1*A)
         y/z: defines transverse directions (E1*Iy)
-    face_data : ???
+    face_data : tuple
         nids : np.ndarray
             node ids
         xyz_cid0 : (nnode, 3) np.ndarray
@@ -87,6 +87,10 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         not used
     show : bool; default=False
         show the plots at the end
+    ifig : int; default=1
+        lets you change the figure ID, useful when you do multiple cuts
+    stop_on_failure : bool; default=False
+        useful for debugging or things you know should be cut
     """
     if isinstance(dirname, str):
         dirname = Path(dirname)
@@ -109,7 +113,6 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
 
     assert len(y) > 0, y
     thetas_csv_filename = dirname / thetas_csv_filename
-
     with open(thetas_csv_filename, 'w') as csv_filename:
         csv_filename.write('# eid(%d),theta,Ex,Ey,Gxy\n')
         for eid, (theta, ex, ey, gxy) in sorted(thetas.items()):
@@ -128,16 +131,13 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     ExIy = EI[:, 1]
     ExIz = EI[:, 2]
     ExIxz = EI[:, 5]
-
     J = Ix + Iz
     #i1, i2, i12 = Ix, Iy, Ixy
 
     if beam_model_bdf_filename:
         beam_model_bdf_filename = dirname / beam_model_bdf_filename
-
         # wrong
         # model.add_mat1(mid=1, E=3.0e7, G=None, nu=0.3, rho=0.1)
-
         _write_beam_model(
             avg_centroid,
             A, I, J,
@@ -152,16 +152,16 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         header = 'y, dx, dz, A, Ix, Iz, Ixz, Ex*Ix, Ex*Iz, Ex*Ixz, xcentroid, ycentroid, zcentroid'
         np.savetxt(cut_data_span_filename, Y, header=header, delimiter=',')
 
-    # if plot:
-    ifig = plot_inertia(
-        y, A, I, J, EI, GJ, avg_centroid, show=show,
-        dirname=dirname, ifig=ifig,
-        normalized_inertia_png_filename=normalized_inertia_png_filename,
-        area_span_png_filename=area_span_png_filename,
-        amoi_span_png_filename=amoi_span_png_filename,
-        e_amoi_span_png_filename=e_amoi_span_png_filename,
-        cg_span_png_filename=cg_span_png_filename,
-    )
+    if plot:
+        ifig = plot_inertia(
+            log, y, A, I, J, EI, GJ, avg_centroid, show=show,
+            dirname=dirname, ifig=ifig,
+            normalized_inertia_png_filename=normalized_inertia_png_filename,
+            area_span_png_filename=area_span_png_filename,
+            amoi_span_png_filename=amoi_span_png_filename,
+            e_amoi_span_png_filename=e_amoi_span_png_filename,
+            cg_span_png_filename=cg_span_png_filename,
+        )
     return y, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2
 
 
@@ -245,11 +245,13 @@ def _get_station_data(model: BDF,
     dys : list[float]
         the y values to make cuts at
     coords : list[CORD2R]
-    normal_plane :
+    normal_plane : np.ndarray
     dirname : Path | str
         base directory for output files/pictures
     face_data : ???
         ???
+    stop_on_failure : bool; default=False
+        useful for debugging or things you know should be cut
     """
     log = model.log
 
@@ -294,7 +296,7 @@ def _get_station_data(model: BDF,
         y_cid = xyz_cid[:, 1]
         # is_tri_cut = fis_tri_cut(y_cid, itri_nodes, ntri)
 
-        model.coords[1] = coord
+        model.coords[coord.cid] = coord
         plane_bdf_filename1 = dirname / f'plane_face1_{icut:d}.bdf'
         plane_bdf_filename2 = dirname / f'plane_face2_{icut:d}.bdf'
         cut_face_filename = dirname / f'cut_face_{icut:d}.csv'
@@ -391,7 +393,8 @@ def _get_station_datai(model: BDF,
     return found_cut, rods
 
 
-def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
+def plot_inertia(log: SimpleLogger,
+                 y, A, I, J, EI, GJ, avg_centroid,
                  ifig: int=1, show: bool=True,
                  dirname: PathLike='',
                  normalized_inertia_png_filename: PathLike='normalized_inertia_vs_span.png',
@@ -428,6 +431,7 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
     ax.set_ylabel('Normalized Area MOI, I')
     ax.legend()
     png_filename = os.path.join(dirname, normalized_inertia_png_filename)
+    log.info(f'saving {png_filename}')
     fig.savefig(png_filename)
     #-------------------------------------------------------
 
@@ -440,6 +444,7 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
     ax.set_ylabel('Area, A')
     ax.legend()
     png_filename = os.path.join(dirname, area_span_png_filename)
+    log.debug(f'saving {png_filename}')
     fig.savefig(png_filename)
     #-------------------------------------------------------
 
@@ -453,6 +458,7 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
     ax.set_ylabel('Area MOI, I')
     ax.legend()
     png_filename = os.path.join(dirname, amoi_span_png_filename)
+    log.debug(f'saving {png_filename}')
     fig.savefig(png_filename)
     #-------------------------------------------------------
 
@@ -478,6 +484,7 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid,
     ax.set_ylabel('CG')
     ax.legend()
     png_filename = os.path.join(dirname, cg_span_png_filename)
+    log.debug(f'saving {png_filename}')
     fig.savefig(png_filename)
     #-------------------------------------------------------
 

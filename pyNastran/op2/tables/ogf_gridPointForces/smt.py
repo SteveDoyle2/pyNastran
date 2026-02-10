@@ -26,7 +26,8 @@ except:
 
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
-    get_nid_cd_xyz_cid0, get_element_centroids, get_stations)
+    get_nid_cd_xyz_cid0, get_element_centroids)
+from pyNastran.bdf.mesh_utils.cut.utils import get_stations
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, CORD2R
     from pyNastran.op2.op2_geom import OP2Geom

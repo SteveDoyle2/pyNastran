@@ -17,20 +17,16 @@ from typing import TextIO, Optional, Any, TypedDict, TYPE_CHECKING
 import numpy as np
 
 from cpylog import SimpleLogger
-from pyNastran.bdf.cards.coordinate_systems import (
-    CORD2R, Coord,
-    xyz_to_rtz_array, rtz_to_xyz_array)
+from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.cards.coordinate_systems import CORD2R, Coord
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
-from pyNastran.bdf.mesh_utils.cut.utils import get_stations, p1_p2_zaxis_to_cord2r
 from pyNastran.bdf.mesh_utils.cut.cut_edge_model_by_plane import cut_edge_model_by_coord
 
 if TYPE_CHECKING:  # pragma: no cover
     from io import StringIO
     from pyNastran.utils import PathLike
-    from pyNastran.bdf.bdf import BDF, CTRIA3, CQUAD4
-    from pyNastran.bdf.cards.coordinate_systems import Coord
-    from pyNastran.nptyping_interface import NDArrayNint, NDArray3float, NDArrayNfloat
+    from pyNastran.nptyping_interface import NDArrayNint, NDArray3float
 
 class Elements(TypedDict):
     line2: tuple[np.ndarray, np.ndarray]
@@ -152,7 +148,8 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
                             plane_bdf_offset: float=0.0,
                             face_data=None,
                             debug_vectorize: bool=True,
-                            stop_on_failure: bool=False) -> tuple[
+                            stop_on_failure: bool=False,
+                            ) -> tuple[
                                 bool,
                                 np.ndarray, np.ndarray, np.ndarray]:
     """
@@ -181,9 +178,13 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
         the path to the simplified conrod model
     debug_vectorize : bool; default=True
         verify the vectorization is correct
+    stop_on_failure : bool; default=False
+        useful for debugging or things you know should be cut
 
     """
     log = SimpleLogger()
+    if isinstance(bdf_filename, BDF):
+        log = bdf_filename.log
     if face_data is None:
         # TODO: could filter out unused nodes
         log, *face_data = _setup_faces(bdf_filename)
@@ -385,9 +386,11 @@ def _cut_face_model_by_coord(log: SimpleLogger,
         unique_geometry_array = None
         unique_results_array = None
         rods = (None, None, None)
-        log.warning(f'  nclose_faces = {len(close_face_eids):d} -> found_cut={found_cut}')
+        log.warning(f'  nclose_faces = {len(close_face_eids):d}; '
+                    f'range=[{y_cid.min():g}, {y_cid.min():g}]')
         return found_cut, unique_geometry_array, unique_results_array, rods
-    log.debug(f'  nclose_faces = {len(close_face_eids):d} -> found_cut={found_cut}')
+    log.debug(f'  nclose_faces = {len(close_face_eids):d}; '
+              f'range=[{y_cid.min():g}, {y_cid.min()}:g]')
 
     # print('close_faces:')
     # for edge in close_faces:
@@ -423,7 +426,7 @@ def get_close_faces(faces: np.ndarray,
                     face_eids: np.ndarray,
                     node_ids: np.ndarray,
                     y_cid: np.ndarray,
-                    ) -> tuple[np.ndarray, np.ndarray]:
+                    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     itri_nodes = np.searchsorted(node_ids, faces)
     ntri = len(face_eids)
     is_tri_cut = fis_tri_cut(y_cid, itri_nodes, ntri)
@@ -495,6 +498,8 @@ def cut_faces(node_ids: np.ndarray,
         cleanup C and O loops
     plane_bdf_offset : float; default=0.
         shifts the plane ylocation...remove...
+    stop_on_failure : bool; default=False
+        useful for debugging or things you know should be cut
 
     Returns
     -------

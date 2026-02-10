@@ -230,7 +230,7 @@ class TestStiffnessPlot(unittest.TestCase):
         t0 = time.time()
         show = False
         run_y_cuts = True
-        run_x_cuts = False
+        run_x_cuts = True
 
         log = SimpleLogger(level='warning', encoding='utf-8')
         # log = SimpleLogger(level='debug', encoding='utf-8')
@@ -240,9 +240,9 @@ class TestStiffnessPlot(unittest.TestCase):
         # model.log.level = 'debug'
 
         ymax = 1401.
-        ncut = 10
-        dy = (ymax-1.) / ncut
-        i = np.arange(ncut, dtype='int32')
+        ncut_y = 10
+        dy = (ymax-1.) / ncut_y
+        i = np.arange(ncut_y, dtype='int32')
         # xstations = 50 * i + 1.
         ystations = dy * i + 1.
 
@@ -251,11 +251,15 @@ class TestStiffnessPlot(unittest.TestCase):
         zaxis = np.array([0., 0., 1.])   # z
         xzplane = np.array([1., 0., 0.]) # x
 
-        coords = get_coords_bwb(
-            ystations, cid=1,
+        cid0, coords = get_coords_bwb(
+            model, ystations, cid0=-1,
             origin=origin,
             zaxis=zaxis,
             xzplane=xzplane)
+        add_coords = True
+        bdf_filename_out = dirname / 'y_bwb_saero.bdf'
+        fadd_coords(model, coords, bdf_filename_out,
+                    add_coords=add_coords)
 
         normal_plane = coords[0].j
         # normal_plane = np.array([0., 1., 0.])
@@ -335,28 +339,32 @@ class TestStiffnessPlot(unittest.TestCase):
                 os.remove(plane_bdf_filename)
 
             if IS_MATPLOTLIB:
-                plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show)
+                plot_inertia(log, y, A, I, J, EI, GJ, avg_centroid, show=show)
 
         if run_x_cuts:
             # xmax = 1001.
-            ncut = 100
+            ncut_x = 21
             # dx = (xmax-1.) / ncut
-            i = np.arange(ncut, dtype='int32')
-            xstations = 10 * i
+            i = np.arange(ncut_x, dtype='int32')
+            # xstations = 10 * i + 1
+            xstations = np.linspace(0.14312, 1614.17, num=ncut_x)[1:-1]
 
             # y is outboard
             origin = np.array([0., 0., 0.])
             zaxis = np.array([0., 0., 1.])   # z
             xzplane = np.array([0., 1., 0.]) # y
 
-            xcoords = get_coords_bwb(
-                xstations, cid=1,
+            cid0, xcoords = get_coords_bwb(
+                model, xstations, axis=0, cid0=-1,
                 origin=origin,
                 zaxis=zaxis,
                 xzplane=xzplane)
 
             log.info('working on x-cuts')
-            normal_plane = coords[0].j
+            # xmin=0.14312  xmax=1614.17 dx=1614.027
+            # ymin=-0.01102 ymax=1262.0  dy=1262.011
+            # zmin=-105.05  zmax=282.209 dz=387.25903
+            normal_plane = coords[0].i
             log.debug(f'normal_plane = {normal_plane}')
             moi_data = cut_and_plot_moi(
                 bdf_filename, normal_plane, log,
@@ -376,12 +384,13 @@ class TestStiffnessPlot(unittest.TestCase):
             (x, A, I, J,
              EI, GJ, avg_centroid,
              plane_bdf_filenames1, plane_bdf_filenames2) = moi_data
-            print(f'x = {x.tolist()}')
-            print(f'A = {A.tolist()}')
+            log.warning(f'x = {x.tolist()}')
+            log.warning(f'A = {A.tolist()}')
             x_expected = []
             ax_expected = []
-            assert np.allclose(x, x_expected)
-            assert np.allclose(A, ax_expected)
+
+            # assert np.allclose(x, x_expected)
+            # assert np.allclose(A, ax_expected)
             log.info('cleanup')
             for plane_bdf_filename in plane_bdf_filenames1:
                 os.remove(plane_bdf_filename)
@@ -417,13 +426,18 @@ def _cleanup_moi_files(dirname: Path, tag: str) -> None:
     #     os.remove('e_amoi_vs_span.png')
 
 
-def get_coords_bwb(ystations: np.ndarray,
-                   cid: int=1,
+def get_coords_bwb(model: BDF,
+                   ystations: np.ndarray,
+                   axis: int=1,
+                   cid0: int=-1,
                    base_coord: CORD2R=None,
                    origin: np.ndarray=None,
                    zaxis: np.ndarray=None,
                    xzplane: np.ndarray=None) -> list[CORD2R]:  # pragma: no cover
     """gets coords from y=0 to y=100*ncuts"""
+    if cid0 == -1:
+        cid0 = max(model.coords) + 1
+
     if base_coord:
         raise NotImplementedError('base_coord is not yet implemented')
     else:
@@ -434,15 +448,16 @@ def get_coords_bwb(ystations: np.ndarray,
     coords = []
     nstation = len(ystations)
     dxyz = np.zeros((nstation, 3), dtype='float64')
-    dxyz[:, 1] = ystations
+    dxyz[:, axis] = ystations
 
-    for dxyzi in dxyz:
-        coord = CORD2R(1, rid=0,
+    for icid, dxyzi in enumerate(dxyz):
+        cid = cid0 + icid
+        coord = CORD2R(cid, rid=0,
                        origin=origin+dxyzi,
                        zaxis=zaxis+dxyzi,
                        xzplane=xzplane+dxyzi)
         coords.append(coord)
-    return coords
+    return cid0, coords
 
 def _build_quad(log: SimpleLogger, dy: float):
     model = BDF(log=log)
@@ -457,6 +472,18 @@ def _build_quad(log: SimpleLogger, dy: float):
         zaxis=[0., dy, 1.],
         xzplane=[1., dy, 0.])
     return model, coord
+
+def fadd_coords(model: BDF, coords: list,
+                bdf_filename_out: Path,
+                add_coords: bool=True) -> None:
+    if not add_coords:
+        return
+    for coord in coords:
+        cid = coord.cid
+        assert cid not in model.coords
+        model.coords[cid] = coord
+    model.write_bdf(bdf_filename_out)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
