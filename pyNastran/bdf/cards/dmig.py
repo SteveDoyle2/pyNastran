@@ -1789,7 +1789,7 @@ DMI_MATRIX_MAP = {
     9: 'identity',
 }
 REVERSE_DMI_MAP = {value: key for key, value in DMI_MATRIX_MAP.items()}
-
+REVERSE_DMI_MAP['column'] = 2
 
 class DMI(NastranMatrix):
     """
@@ -1960,6 +1960,10 @@ class DMI(NastranMatrix):
             assert nrows >= 1
             assert ncols >= 1
         elif str_form == 'diagonal':
+            assert nrows >= 1, (nrows, ncols)
+            assert ncols == 1, (nrows, ncols)
+        elif str_form == 'column':
+            nrows, ncols = max(nrows, ncols), min(nrows, ncols)
             assert nrows >= 1, (nrows, ncols)
             assert ncols == 1, (nrows, ncols)
         else:  # pragma: no cover
