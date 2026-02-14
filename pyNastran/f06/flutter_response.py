@@ -3751,7 +3751,7 @@ def _crossing_label(mode: int, damping0: float, min_damping: float, xunit: str,
 
             label = f'Mode {mode:d}: g={damping_str}; {eas12} {xunit}; {freq12} Hz'
             if iymax != -1:
-                label += f'\nMax={easmax:.0f} {xunit} ({freqmax:.1f} Hz; {_format_damping(dampmax)}%)'
+                label += f'\nMax={easmax:.0f} {xunit} ({freqmax:.1f} Hz; g={_format_damping(dampmax)}%)'
     return label
 
 def in_range(value: float, mini: Optional[float], maxi: Optional[float]) -> bool:

@@ -841,7 +841,7 @@ def make_flutter_plots(modes: list[int],
             response.export_to_csv(export_csv_filename, modes=modes)
         if export_zaero_filename:
             response.export_to_zaero(export_zaero_filename, modes=modes,
-                                    xlim=xlim, plot_type=plot_type)
+                                     xlim=xlim, plot_type=plot_type)
         if export_veas_filename:
             response.export_to_veas(export_veas_filename, modes=modes)
         if export_f06_filename:

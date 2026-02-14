@@ -135,7 +135,7 @@ class GetCard(GetMethods):
 
     def _reset_type_to_id_map(self) -> None:
         type_to_id_map = {}
-        skip_keys = {'ENDDATA'}
+        skip_keys = {'ENDDATA', 'EIGRL', 'NSMADD', 'RBE2', 'RBE3'}
 
         coords = defaultdict(list)
         elements = defaultdict(list)
@@ -147,10 +147,15 @@ class GetCard(GetMethods):
         loads = defaultdict(list)
         mpcs = defaultdict(list)
         spcs = defaultdict(list)
+        nsmadds = defaultdict(list)
+        nsms = defaultdict(list)
+        masses = defaultdict(list)
         for cid, coord in self.coords.items():
             coords[coord.type].append(cid)
         for eid, elem in self.elements.items():
             elements[elem.type].append(eid)
+        for eid, elem in self.masses.items():
+            masses[elem.type].append(eid)
         for eid, elem in self.rigid_elements.items():
             rigid_elements[elem.type].append(eid)
 
@@ -168,6 +173,14 @@ class GetCard(GetMethods):
             for spci in spcsi:
                 spcs[spci.type].append(spc_id)
 
+        for nsm_id, nsmadd in self.nsmadds.items():
+            for nsmaddi in nsmadd:
+                nsmadds[nsmaddi.type].append(nsm_id)
+        for nsm_id, nsmsi in self.nsms.items():
+            for nsmi in nsmsi:
+                nsms[nsmi.type].append(nsm_id)
+
+        log = self.log
         for key in self.card_count:
             if key in skip_keys:
                 continue
@@ -177,6 +190,8 @@ class GetCard(GetMethods):
                 datai = list(coords[key])
             elif key in elements:
                 datai = list(elements[key])
+            elif key in masses:
+                datai = list(masses[key])
             elif key in rigid_elements:
                 datai = list(rigid_elements[key])
             elif key in properties:
@@ -190,6 +205,11 @@ class GetCard(GetMethods):
             elif key in spcs:
                 datai = list(spcs[key])
 
+            elif key in nsms:
+                datai = list(nsms[key])
+            elif key in nsmadds:
+                datai = list(nsmadds[key])
+
             elif key == 'LOAD':
                 datai = list(self.load_combinations)
             elif key == 'NLPARM':
@@ -199,7 +219,10 @@ class GetCard(GetMethods):
             elif key == 'PARAM':
                 datai = list(self.params)
             else:
-                raise NotImplementedError(key)
+                log.warning(f'skipping {key}')
+                continue
+            # else:
+            #     raise NotImplementedError(key)
             datai.sort()
             type_to_id_map[key] = datai
         self._type_to_id_map = type_to_id_map

@@ -1696,6 +1696,8 @@ def _get_quad_mass(model: BDF, xyz: dict[int, np.ndarray], element_ids: set[int]
                    inertia_list: list[np.ndarray],
                    reference_xyz: np.ndarray) -> float:
     """helper method for ``get_mass_new``"""
+    #print(f'all_eids = {all_eids}')
+    #print(f'eids = {eids}')
     eids2 = get_sub_eids(all_eids, eids, 'quad')
     for eid in eids2:
         elem = model.elements[eid]

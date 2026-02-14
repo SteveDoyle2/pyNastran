@@ -160,7 +160,7 @@ def pressure_map(aero_filename: PathLike,
     nastran_filename:  str
         path to output nastran filename
     aero_format: str
-        cart3d
+        cart3d, fluent
     map_type: str
         pressure, force, force_moment
     method : str

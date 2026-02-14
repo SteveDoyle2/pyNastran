@@ -468,6 +468,7 @@ class CompositeShellProperty(Property):
 
         Assume there are 2 plies, each of 1.0 thick, starting from :math:`z=0`.
 
+        >>> pcomp = self
         >>> pcomp.get_z_locations()
         [0., 1., 2.]
 
@@ -1138,7 +1139,7 @@ class PCOMP(CompositeShellProperty):
         )
         return is_balanced, is_symmetric
 
-    def get_z0_z1_zmean(self):
+    def get_z0_z1_zmean(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         thicknesses = self.get_thicknesses()
         csum = np.cumsum(thicknesses)
         z0 = self.z0 + np.hstack([0., csum[:-1]])
@@ -1694,6 +1695,151 @@ class PCOMPG(CompositeShellProperty):
             global_plyi = self.GlobalPlyID(i)
             global_ply[i] = global_plyi
         return global_ply
+
+    def get_z0_z1_zmean(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        thicknesses = self.get_thicknesses()
+        csum = np.cumsum(thicknesses)
+        z0 = self.z0 + np.hstack([0., csum[:-1]])
+        z1 = self.z0 + csum
+        #dz = z1 - z0
+        #dzsquared = z1 ** 2 - z0 ** 2
+        #zcubed = z1 ** 3 - z0 ** 3
+        zmeans = (z0 + z1) / 2.
+        return z0, z1, zmeans
+
+    def get_Ainv_equivalent_pshell(self,
+                                   imat_rotation_angle: float,
+                                   thickness: float,
+                                   degrees: bool=True) -> tuple[float, float, float, float]:
+        """imat_rotation_angle is in degrees
+
+        Parameters
+        ----------
+        imat_rotation_angle_deg : float
+            what angle you want
+
+        """
+        assert isinstance(imat_rotation_angle, float_types), imat_rotation_angle
+        ABD = self.get_ABD_matrices(imat_rotation_angle, degrees=degrees)
+        A = ABD[:3, :3]
+        Ainv = np.linalg.inv(A)
+
+        # equivalent compliance matrix
+        S = thickness * Ainv
+        #print(S[0, 0], S[1, 1], S[2, 2])
+
+        # these are on the main diagonal
+        Ex = 1. / S[0, 0]
+        Ey = 1. / S[1, 1]
+        Gxy = 1. / S[2, 2]
+        # S12 = -nu12 / E1 = -nu21/E2
+        # nu12 = -S12 / E1
+        nu_xy = -S[0, 1] / Ex
+        return Ex, Ey, Gxy, nu_xy
+
+    def get_ABD_matrices(self, theta_offset: float=0.,
+                         degrees: bool=True) -> np.ndarray:
+        """
+        Gets the ABD matrix
+
+        Parameters
+        ----------
+        theta_offset : float
+            rotates the ABD matrix; measured in degrees
+        degrees: bool; default=True
+            True: theta_offset is measured in degrees
+            False: theta_offset is measured in radians
+
+        """
+        A, B, D = self.get_individual_ABD_matrices(theta_offset=theta_offset, degrees=degrees)
+        ABD = np.block([
+            [A, B],
+            [B, D],
+        ])
+        return ABD
+    def get_individual_ABD_matrices(
+            self, theta_offset: float=0.,
+            degrees: bool=True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Gets the ABD matrix
+
+        Parameters
+        ----------
+        theta_offset : float
+            rotates the ABD matrix
+        degrees: bool; default=True
+            True: theta_offset is measured in degrees
+            False: theta_offset is measured in radians
+
+        """
+        assert isinstance(theta_offset, float_types), theta_offset
+        mids = self.get_material_ids()
+        thicknesses = self.get_thicknesses()
+        thetad = self.get_thetas()
+
+        if degrees:
+            theta = np.radians(thetad + theta_offset)
+        else:
+            theta = np.radians(thetad) + theta_offset
+        assert len(mids) == len(thicknesses)
+        assert len(mids) == len(thetad)
+        z0, z1, zmeans = self.get_z0_z1_zmean()
+
+        assert len(z0) == len(z1)
+        # A11 A12 A16
+        # A12 A22 A26
+        # A16 A26 A66
+        A = np.zeros((3, 3), dtype='float64')
+        B = np.zeros((3, 3), dtype='float64')
+        D = np.zeros((3, 3), dtype='float64')
+        #Q = np.zeros((3, 3), dtype='float64')
+
+        mids_ref = self.mids_ref
+        assert mids_ref is not None, f'The following material has not been cross-referenced:\n{self}'
+        if self.is_symmetrical:
+            mids_ref = copy.deepcopy(self.mids_ref)
+            mids_ref += mids_ref[::-1]
+
+        assert len(mids) == len(mids_ref), f'mids={mids} ({len(mids)}) mids_ref:\n{mids_ref}; {len(mids_ref)}'
+        for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip_longest(mids, mids_ref, theta,
+                                                                            thicknesses, zmeans, z0, z1):
+            Qbar = self.get_Qbar_matrix(mid_ref, thetai)
+            A += Qbar * thickness
+            #B += Qbar * thickness * zmean
+            #D += Qbar * thickness * (z1i ** 3 - z0i ** 3)
+            B += Qbar * (z1i ** 2 - z0i ** 2)
+            D += Qbar * (z1i ** 3 - z0i ** 3)
+            #N += Q * alpha * thickness
+            #M += Q * alpha * thickness * zmean
+        B /= 2.
+        D /= 3.
+        #M /= 2.
+        return A, B, D
+
+    def get_Qbar_matrix(self,
+                        mid_ref: MAT1 | MAT8,
+                        theta: float=0.) -> np.ndarray:
+        """theta must be in radians"""
+        assert isinstance(theta, float_types), theta
+        S2, unused_S3 = get_mat_props_S(mid_ref)
+        T = get_2d_plate_transform(theta)
+
+        #R = np.array([
+            #[1., 0., 0.],
+            #[0., 1., 0.],
+            #[0., 0., 2.],
+        #])
+        Tinv = np.linalg.inv(T)
+        Q = np.linalg.inv(S2)
+
+        # [Qbar] = [T^-1][Q][T^-T]
+        # [T^-T] = [R][T][R^-1] = [T^-1].T
+        Qbar = np.linalg.multi_dot([Tinv, Q, Tinv.T])
+
+        # [T.T] = [R][T^-1][R^-1]
+        #Sbar = np.linalg.multi_dot([T.T, S2, T])
+        #Qbar = np.linalg.inv(Sbar)
+        return Qbar
 
     def raw_fields(self):
         list_fields = [
@@ -2390,6 +2536,8 @@ class PSHELL(Property):
         mid4 : int; default=None
             defines membrane-bending coupling material
             (only defined if mid1 > 0 and mid2 > 0; can't be mid1/mid2)
+        t : float; default=None
+            thickness
         twelveIt3 : float; default=1.0
             Bending moment of inertia ratio, 12I/T^3. Ratio of the actual
             bending moment inertia of the shell, I, to the bending
@@ -2786,7 +2934,7 @@ class PSHELL(Property):
             raise
         return mass_per_area
 
-    def get_Qbar_matrix(self, mid_ref, theta=0.):
+    def get_Qbar_matrix(self, mid_ref, theta: float=0.):
         """theta must be in radians"""
         S2, unused_S3 = get_mat_props_S(mid_ref)
         T = get_2d_plate_transform(theta)
@@ -2796,7 +2944,7 @@ class PSHELL(Property):
         Qbar = np.linalg.inv(Sbar)
         return Qbar
 
-    def get_Sbar_matrix(self, mid_ref, theta=0.):
+    def get_Sbar_matrix(self, mid_ref, theta: float=0.):
         """theta must be in radians"""
         # this is the inverse of Sbar
         S2, unused_S3 = get_mat_props_S(mid_ref)
@@ -2806,7 +2954,8 @@ class PSHELL(Property):
         return Sbar
 
     def get_individual_ABD_matrices(
-            self, theta_offset: float=0.) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+            self, theta_offset: float=0.0,
+            degrees: bool=True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Gets the ABD matrix
 
@@ -2820,6 +2969,11 @@ class PSHELL(Property):
         """
         #mids = self.get_material_ids()
         thickness = self.Thickness()
+
+        if degrees:
+            theta = np.radians(theta_offset)
+        else:
+            theta = theta_offset
 
         #z0 = self.z1
         #z1 = self.z2
@@ -2836,16 +2990,16 @@ class PSHELL(Property):
         z0 = self.z1
         z1 = self.z2
 
-        if self.mid1_ref:
-            Qbar1 = self.get_Qbar_matrix(self.mid1_ref, theta=0.)
+        if self.mid1_ref and thickness != 0.0:
+            Qbar1 = self.get_Qbar_matrix(self.mid1_ref, theta=theta)
             A += Qbar1 * thickness
 
-        if self.mid2_ref:
-            Qbar2 = self.get_Qbar_matrix(self.mid2_ref, theta=0.)
+        if self.mid2_ref and self.twelveIt3 != 0.0:
+            Qbar2 = self.get_Qbar_matrix(self.mid2_ref, theta=theta)
             D += Qbar2 * (z1 ** 3 - z0 ** 3) * self.twelveIt3
         #Qbar3 = self.get_Qbar_matrix(self.mid3_ref, theta=0.)
         if self.mid4_ref:
-            Qbar4 = self.get_Qbar_matrix(self.mid4_ref, theta=0.)
+            Qbar4 = self.get_Qbar_matrix(self.mid4_ref, theta=theta)
             B += Qbar4 * (z1 ** 2 - z0 ** 2)
 
         unused_ts = self.tst * thickness
@@ -2865,7 +3019,8 @@ class PSHELL(Property):
         #print(ABD)
         return A, B, D
 
-    def get_ABD_matrices(self, theta_offset=0.) -> np.ndarray:
+    def get_ABD_matrices(self, theta_offset: float=0.,
+                         degrees: bool=True) -> np.ndarray:
         """
         Gets the ABD matrix
 
@@ -2873,9 +3028,12 @@ class PSHELL(Property):
         ----------
         theta_offset : float
             rotates the ABD matrix; measured in degrees
+        degrees: bool; default=True
+            True: theta_offset is measured in degrees
+            False: theta_offset is measured in radians
 
         """
-        A, B, D = self.get_individual_ABD_matrices(theta_offset=theta_offset)
+        A, B, D = self.get_individual_ABD_matrices(theta_offset=theta_offset, degrees=degrees)
         ABD = np.block([
             [A, B],
             [B, D],
@@ -2884,10 +3042,22 @@ class PSHELL(Property):
 
     def get_Ainv_equivalent_pshell(self,
                                    imat_rotation_angle: float,
-                                   thickness: float) -> tuple[float, float, float, float]:
+                                   thickness: float,
+                                   degrees: bool=True) -> tuple[float, float, float, float]:
         """imat_rotation_angle is in degrees...but is specified in radians and unused"""
-        ABD = self.get_ABD_matrices(imat_rotation_angle)
+        if self.t == 0.0:
+            Ex = 0.
+            Ey = 0.
+            Gxy = 0.
+            nu_xy = 0.
+            return Ex, Ey, Gxy, nu_xy
+
+        ABD = self.get_ABD_matrices(imat_rotation_angle, degrees=degrees)
         A = ABD[:3, :3]
+        if np.linalg.det(A) == 0.0:
+            print(ABD)
+            print(self.get_stats())
+            raise RuntimeError(f'singular A matrix...A={A.tolist()}\nABD={ABD.tolist()}')
         Ainv = np.linalg.inv(A)
 
         # equivalent compliance matrix
@@ -2896,16 +3066,20 @@ class PSHELL(Property):
 
         # these are on the main diagonal
         mid_ref = self.mid1_ref
-        Ex = mid_ref.e
-        Ey = Ex
-        Gxy = mid_ref.g
-
-        #Ex = 1. / S[0, 0]
-        #Ey = 1. / S[1, 1]
-        #Gxy = 1. / S[2, 2]
-        # S12 = -nu12 / E1 = -nu21/E2
-        # nu12 = -S12 / E1
-        nu_xy = -S[0, 1] / Ex
+        if mid_ref.type == 'MAT1':
+            Ex = mid_ref.e
+            Ey = Ex
+            Gxy = mid_ref.g
+            nu_xy = -S[0, 1] / Ex  # TODO: this is not just nu???
+        elif mid_ref.type == 'MAT8':
+            Ex = 1. / S[0, 0]
+            Ey = 1. / S[1, 1]
+            Gxy = 1. / S[2, 2]
+            # S12 = -nu12 / E1 = -nu21/E2
+            # nu12 = -S12 / E1
+            nu_xy = -S[0, 1] / Ex
+        else:  # pragma: no cover
+            raise NotImplementedError(mid_ref.get_stats())
         return Ex, Ey, Gxy, nu_xy
 
     def cross_reference(self, model: BDF) -> None:

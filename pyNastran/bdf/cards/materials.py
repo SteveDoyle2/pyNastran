@@ -4563,7 +4563,7 @@ class EQUIV(Material):
                        self.field4, self.field5, self.field6, self.field7]
         return list_fields
 
-def get_mat_props_S(mid_ref):
+def get_mat_props_S(mid_ref: MAT1 | MAT8) -> tuple[np.ndarray, np.ndarray]:
     """
     Gets the material matrix [S] or [C] for plane strain
 
