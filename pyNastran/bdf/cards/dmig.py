@@ -372,10 +372,13 @@ class NastranMatrix(BaseCard):
         self.finalize()
 
     def __init__(self, name: str, matrix_form: int,
-                 tin: int, tout: int, polar: int, ncols: int,
+                 tin: int, ncols: int,
                  GCj: list[tuple[int, int]],
                  GCi: list[tuple[int, int]],
-                 Real: list[float], Complex=None, comment: str='', finalize: bool=True):
+                 Real: list[float], Complex=None,
+                 tout: int=0,
+                 polar: int=0,
+                 comment: str='', finalize: bool=True):
         """
         Creates a NastranMatrix
 
@@ -420,6 +423,7 @@ class NastranMatrix(BaseCard):
             a comment for the card
 
         """
+        assert tout in {1, 2, 3, 4}, tout
         if comment:
             self.comment = comment
         if Complex is None:
@@ -428,7 +432,6 @@ class NastranMatrix(BaseCard):
             tout = 0
 
         polar = _set_polar(polar)
-
         if matrix_form not in {1, 2, 4, 5, 6, 8, 9}:
             msg = (
                 f'matrix_form={matrix_form!r} must be [1, 2, 4, 5, 6, 8, 9]\n'
@@ -483,6 +486,48 @@ class NastranMatrix(BaseCard):
             value = self.__dict__[key]
             setattr(result, key, deepcopy(value, memo))
         return result
+
+    @classmethod
+    def from_array(cls, name: str,
+                   myarray: np.ndarray,
+                   matrix_form: int | str,
+                   tin=None, tout=None,
+                   polar: int=0,
+                   comment: str=''):
+        if tin is None:
+            tin = dtype_to_tin_tout_str(myarray)
+        if tout is None:
+            tout = dtype_to_tin_tout_str(myarray)
+
+        nrows, ncols = myarray.shape
+
+        # GCj = columns
+        # GCi = rows
+        matrix_form, nrows, ncols = map_form(matrix_form, nrows, ncols)
+        # ncols = 2
+        GCi = np.repeat(list(range(1, nrows + 1)), ncols, axis=0).reshape(nrows, ncols).flatten()
+        GCj = np.repeat(list(range(1, ncols + 1)), nrows, axis=0).reshape(nrows, ncols).flatten()
+        # self.log.warning(f'str_form = {str_form}')
+        # self.log.warning(f'GCi = {GCi}')
+        # self.log.warning(f'GCj = {GCj}')
+
+        Real = myarray.real.flatten()
+        assert len(Real) == len(GCi)
+        assert len(Real) == len(GCj)
+
+        Complex = None
+        if tin in {'complex64', 'complex128', 3, 4}:
+            Complex = myarray.imag.flatten()
+
+        tin = tin_str_to_int(tin)
+        tout = tout_str_to_int(tout)
+        matrix_form = matrix_form_str_to_int(matrix_form)
+        dmik = cls(name, matrix_form, tin, ncols,
+                   GCj, GCi,
+                   Real, Complex=Complex,
+                   tout=tout, polar=polar,
+                   comment=comment)
+        return dmik
 
     @property
     def matrix_form_str(self) -> str:
@@ -1119,8 +1164,11 @@ class DMIG(NastranMatrix):
             a comment for the card
 
         """
-        NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
-                               GCj, GCi, Real, Complex, comment=comment,
+        NastranMatrix.__init__(self, name, ifo, tin, ncols,
+                               GCj, GCi,
+                               Real, Complex=Complex,
+                               tout=tout, polar=polar,
+                               comment=comment,
                                finalize=finalize)
 
 
@@ -1543,9 +1591,13 @@ class DMIJ(NastranMatrix):
     def export_to_hdf5(cls, h5_file, model, encoding: str):
         _export_dmig_to_hdf5(h5_file, model, model.dmij, encoding)
 
-    def __init__(self, name, matrix_form, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex=None, comment: str='',
-                 finalize=True):
+    def __init__(self, name: str, matrix_form: int,
+                 tin: int, ncols: int,
+                 GCj: np.ndarray, GCi: np.ndarray,
+                 Real: np.ndarray, Complex=None,
+                 tout: int=0, polar: int=0,
+                 comment: str='',
+                 finalize: bool=True):
         """
         Creates a DMIJ card
 
@@ -1590,8 +1642,11 @@ class DMIJ(NastranMatrix):
             a comment for the card
 
         """
-        NastranMatrix.__init__(self, name, matrix_form, tin, tout, polar, ncols,
-                               GCj, GCi, Real, Complex, comment=comment,
+        NastranMatrix.__init__(self, name, matrix_form,
+                               tin, ncols,
+                               GCj, GCi,
+                               Real, Complex=Complex,
+                               tout=tout, polar=polar, comment=comment,
                                finalize=finalize)
 
 
@@ -1678,8 +1733,10 @@ class DMIJI(NastranMatrix):
             a comment for the card
 
         """
-        NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
-                               GCj, GCi, Real, Complex, comment=comment,
+        NastranMatrix.__init__(self, name, ifo, tin, ncols,
+                               GCj, GCi,
+                               Real, Complex=Complex,
+                               tout=tout, polar=polar, comment=comment,
                                finalize=finalize)
 
 
@@ -1730,8 +1787,12 @@ class DMIK(NastranMatrix):
     def export_to_hdf5(cls, h5_file, model, encoding: str):
         _export_dmig_to_hdf5(h5_file, model, model.dmik, encoding)
 
-    def __init__(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex=None, comment: str='', finalize=True):
+    def __init__(self, name: str, ifo: int,
+                 tin: int, ncols: int,
+                 GCj: np.ndarray, GCi: np.ndarray,
+                 Real: np.ndarray, Complex=None,
+                 tout: int=0, polar: int=0,
+                 comment: str='', finalize=True):
         """
         Creates a DMIK card
 
@@ -1776,8 +1837,11 @@ class DMIK(NastranMatrix):
             a comment for the card
 
         """
-        NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
-                               GCj, GCi, Real, Complex, comment=comment,
+        NastranMatrix.__init__(self, name, ifo, tin, ncols,
+                               GCj, GCi,
+                               Real, Complex=Complex,
+                               tout=tout, polar=polar,
+                               comment=comment,
                                finalize=finalize)
 
 
@@ -1867,34 +1931,9 @@ class DMI(NastranMatrix):
             Complex = []
 
         #-------------------------------------------------------------------------------------
-        if isinstance(tin, str):
-            reverse_tout_map = {value: key for key, value in TOUT_DTYPE_MAP.items()}
-            tin2 = tin.lower().strip()
-            try:
-                tin = reverse_tout_map[tin2]
-            except:
-                keys = list(TOUT_DTYPE_MAP) + list(reverse_tout_map)
-                raise SyntaxError(f'tin={tin!r} is not in allowed={keys}')
-
-        if tout is None:
-            tout = 0
-        if isinstance(tout, str):
-            reverse_tout_map = {value: key for key, value in TOUT_DTYPE_MAP.items()}
-            tout2 = tout.lower().strip()
-            try:
-                tout = reverse_tout_map[tout2]
-            except:
-                keys = list(TOUT_DTYPE_MAP) + list(reverse_tout_map)
-                raise SyntaxError(f'tout={tout!r} is not in allowed={keys}')
-
-        if isinstance(matrix_form, str):
-            matrix_form2 = matrix_form.lower().strip()
-            try:
-                matrix_form = REVERSE_DMI_MAP[matrix_form2]
-            except KeyError:
-                keys = list(DMI_MATRIX_MAP) + list(REVERSE_DMI_MAP)
-                raise SyntaxError(f'matrix_form={matrix_form!r} is not in allowed={keys}')
-
+        tin = tin_str_to_int(tin)
+        tout = tout_str_to_int(tout)
+        matrix_form = matrix_form_str_to_int(matrix_form)
         #-------------------------------------------------------------------------------------
 
         if tout not in {0, 1, 2, 3, 4}:
@@ -1937,7 +1976,6 @@ class DMI(NastranMatrix):
                    comment: str=''):
         if tin is None:
             tin = dtype_to_tin_tout_str(myarray)
-
         if tout is None:
             tout = dtype_to_tin_tout_str(myarray)
 
@@ -1945,29 +1983,7 @@ class DMI(NastranMatrix):
 
         # GCj = columns
         # GCi = rows
-        str_form = form
-        if isinstance(form, integer_types):
-            str_form = REVERSE_DMI_MAP[form]
-
-        if str_form == 'square':
-            # np.repeat(list(range(1, 3)), 4, axis=0).reshape(2, 4)
-            # -> [1, 2] -> [1, 1, 1, 1, 2, 2, 2, 2]
-            # array([[1, 1, 1, 1],
-            #        [2, 2, 2, 2]])
-            assert nrows == ncols
-            assert nrows >= 1, nrows
-        elif str_form == 'rectangular':
-            assert nrows >= 1
-            assert ncols >= 1
-        elif str_form == 'diagonal':
-            assert nrows >= 1, (nrows, ncols)
-            assert ncols == 1, (nrows, ncols)
-        elif str_form == 'column':
-            nrows, ncols = max(nrows, ncols), min(nrows, ncols)
-            assert nrows >= 1, (nrows, ncols)
-            assert ncols == 1, (nrows, ncols)
-        else:  # pragma: no cover
-            raise NotImplementedError(str_form)
+        form, nrows, ncols = map_form(form, nrows, ncols)
 
         # ncols = 2
         GCi = np.repeat(list(range(1, nrows + 1)), ncols, axis=0).reshape(nrows, ncols).flatten()
@@ -2026,8 +2042,11 @@ class DMI(NastranMatrix):
         GCi = []
         Real = []
         Complex = []
-        return DMI(name, matrix_form, tin, tout, nrows, ncols,
-                   GCj, GCi, Real, Complex, comment=comment, finalize=False)
+        return DMI(name, matrix_form, tin, nrows, ncols,
+                   GCj, GCi,
+                   Real, Complex=Complex,
+                   tout=tout,  # polar=0,
+                   comment=comment, finalize=False)
 
     def finalize(self):
         self.GCi = np.asarray(self.GCi)
@@ -3195,3 +3214,70 @@ def dtype_to_tin_tout_str(myarray: np.ndarray) -> str:
     else:  # pragma: no cover
         raise NotImplementedError('dtype_to_tin_tout')
     return tin
+
+
+def map_form(form: int | str,
+             nrows: int, ncols: int, ) -> tuple[str, int, int]:
+    form_str = form
+    if isinstance(form, integer_types):
+        form_str = REVERSE_DMI_MAP[form]
+
+    if form_str == 'square':
+        # np.repeat(list(range(1, 3)), 4, axis=0).reshape(2, 4)
+        # -> [1, 2] -> [1, 1, 1, 1, 2, 2, 2, 2]
+        # array([[1, 1, 1, 1],
+        #        [2, 2, 2, 2]])
+        assert nrows == ncols
+        assert nrows >= 1, nrows
+    elif form_str == 'rectangular':
+        assert nrows >= 1
+        assert ncols >= 1
+    elif form_str == 'diagonal':
+        assert nrows >= 1, (nrows, ncols)
+        assert ncols == 1, (nrows, ncols)
+    elif form_str == 'column':
+        nrows, ncols = max(nrows, ncols), min(nrows, ncols)
+        assert nrows >= 1, (nrows, ncols)
+        assert ncols == 1, (nrows, ncols)
+        form_str = 'rectangular'
+    else:  # pragma: no cover
+        raise NotImplementedError(form_str)
+    # form_int = REVERSE_DMI_MAP[form_str]
+    return form_str, nrows, ncols
+
+
+def tin_str_to_int(tin: str | int) -> int:
+    if isinstance(tin, str):
+        reverse_tout_map = {value: key for key, value in TOUT_DTYPE_MAP.items()}
+        tin2 = tin.lower().strip()
+        try:
+            tin = reverse_tout_map[tin2]
+        except:
+            keys = list(TOUT_DTYPE_MAP) + list(reverse_tout_map)
+            raise SyntaxError(f'tin={tin!r} is not in allowed={keys}')
+    return tin
+
+
+def tout_str_to_int(tout: int | str) -> int:
+    if tout is None:
+        tout = 0
+    if isinstance(tout, str):
+        reverse_tout_map = {value: key for key, value in TOUT_DTYPE_MAP.items()}
+        tout2 = tout.lower().strip()
+        try:
+            tout = reverse_tout_map[tout2]
+        except:
+            keys = list(TOUT_DTYPE_MAP) + list(reverse_tout_map)
+            raise SyntaxError(f'tout={tout!r} is not in allowed={keys}')
+    return tout
+
+
+def matrix_form_str_to_int(matrix_form: str | int) -> int:
+    if isinstance(matrix_form, str):
+        matrix_form2 = matrix_form.lower().strip()
+        try:
+            matrix_form = REVERSE_DMI_MAP[matrix_form2]
+        except KeyError:
+            keys = list(DMI_MATRIX_MAP) + list(REVERSE_DMI_MAP)
+            raise SyntaxError(f'matrix_form={matrix_form!r} is not in allowed={keys}')
+    return matrix_form

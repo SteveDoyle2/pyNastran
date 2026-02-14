@@ -113,7 +113,7 @@ class TestMeshUtilsAero(unittest.TestCase):
                       GCj, GCi,
                       Real, Complex=None, comment='wkk')
 
-    def test_export_caero_mesh_caero1_w2gj(self):
+    def test_export_caero_mesh_caero1_w2gj_dmik(self):
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.bdf_filename = 'caero1_w2gj'
@@ -134,7 +134,8 @@ class TestMeshUtilsAero(unittest.TestCase):
 
         model.add_paero1(pid)
         model.add_aero(velocity=0., cref=1.0, rho_ref=1.0)
-        name = 'W2GJ'
+        # name = 'W2GJ'
+        name = 'FA2J'
         form = 'column'
         #tin = tout = 1
         # nrows = 8
@@ -143,8 +144,13 @@ class TestMeshUtilsAero(unittest.TestCase):
         # GCi = [1, 2, 3, 4, 5, 6, 7, 8]
         Real = [1., 2., 3., 4., 5., 6., 7., 8.]
         real_array = np.ones((len(Real), 1))
-        model.add_dense_dmi(name, real_array, form, validate=True)
-        export_caero_mesh(model, is_aerobox_model=True, )
+        dmij = model.add_dense_dmijk(
+            'DMIJ', name, real_array, form,
+            validate=True)
+        model.dmij[name] = dmij
+        with self.assertRaises(IndexError):
+            export_caero_mesh(model, is_aerobox_model=True)
+        model.log.error('IndexError :(')
         # save_load_deck(model, run_remove_unused=False,
         #                run_mirror=False)
 

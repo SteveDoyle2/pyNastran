@@ -364,6 +364,7 @@ def _write_subcases_loads(model: BDF,
     """writes the DMI, DMIJ, DMIK cards to a series of load cases"""
     # naeroboxes = len(aero_eid_map)
     if len(model.dmi) == 0 and len(model.dmij) == 0 and len(model.dmik) == 0 and len(model.dmiji) == 0:
+        asf
         loads = ''
         subcases = ''
         return subcases, loads
@@ -382,9 +383,9 @@ def _write_subcases_loads(model: BDF,
             assert data.shape[1] == 1, f'name={name}; shape={data.shape}'
             if name == 'W2GJ':
                 data *= 180 / np.pi
-                subtitle = f'DMI {name} (degrees)'
+                subtitle = f'DMIJ {name} (degrees)'
             else:
-                subtitle = f'DMI {name}'
+                subtitle = f'DMIJ {name}'
             subcases += (
                 f'SUBCASE {isubcase}\n'
                 f'  SUBTITLE = {subtitle}\n'
@@ -393,6 +394,8 @@ def _write_subcases_loads(model: BDF,
             loads += '$ PLOAD2 SID P EID1\n'
             # aero_eid_map[iaerobox_ieid] = caero_eid + iaerobox_eid
             # raise NotImplementedError(msg)
+            print(f'rows = {rows}; n={len(rows)}')
+            print(f'data = {data}; n={len(data)}')
             for irow, value in zip(rows, data):
                 row = rows[irow]   # row = (1000,3)
                 idi = row[0]
@@ -450,13 +453,13 @@ def _write_subcases_loads(model: BDF,
             if is_dof3:
                 subcases += (
                     f'SUBCASE {isubcase}\n'
-                    f'  SUBTITLE = DMI {name} - FORCE\n'
+                    f'  SUBTITLE = DMIK {name} - FORCE\n'
                     f'  LOAD = {isubcase}\n'
                 )
             if is_dof5:
                 subcases += (
                     f'SUBCASE {isubcase5}\n'
-                    f'  SUBTITLE = DMI {name} - MOMENT\n'
+                    f'  SUBTITLE = DMIK {name} - MOMENT\n'
                     f'  LOAD = {isubcase5}\n'
                 )
             isubcase += 2
