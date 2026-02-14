@@ -123,7 +123,21 @@ class TestRbeTools(unittest.TestCase):
 
 
 class TestMeshUtilsCmdLine(unittest.TestCase):
-    def test_solid_dof(self):
+    def test_cmdline_mass(self):
+        bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
+        obj_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.obj'
+        if obj_filename.exists():
+            obj_filename.unlink()
+
+        args = ['bdf', 'mass', bdf_filename]
+        cmd_line(args, quiet=True)
+
+        args = ['bdf', 'mass', bdf_filename, '--no_prop_mass', '--obj']
+        cmd_line(args, quiet=True)
+        args = ['bdf', 'mass', bdf_filename, '--no_prop_mass', '--obj']
+        cmd_line(args, quiet=True)
+
+    def test_cmdline_solid_dof(self):
         bdf_filename = TEST_DIR / 'solid_dof.bdf'
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
@@ -158,13 +172,13 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
 
         os.remove(bdf_filename)
 
-    def test_inclzip_bwb(self):
+    def test_cmdline_inclzip_bwb(self):
         """tests ``inclzip``"""
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
         args = ['bdf', 'inclzip', str(bdf_filename)]
         cmd_line(args, quiet=True)
 
-    def test_stats_bwb(self):
+    def test_cmdline_stats_bwb(self):
         """tests ``stats``"""
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
         args = ['bdf', 'stats', str(bdf_filename)]
@@ -176,20 +190,20 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
     #     args = ['bdf', 'free_edges', str(bdf_filename)]
     #     cmd_line(args, quiet=True)
 
-    def test_bdf_stats(self):
+    def test_cmdline_bdf_stats(self):
         """tests ```bdf stats```"""
         bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
         args = ['bdf', 'stats', str(bdf_filename)]
         cmd_line(args, quiet=True)
 
-    def test_bdf_diff(self):
+    def test_cmdline_bdf_diff(self):
         """tests ```bdf diff```"""
         bdf_filename1 = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
         bdf_filename2 = MODEL_PATH / 'sol_101_elements' / 'mode_solid_shell_bar.bdf'
         args = ['bdf', 'diff', str(bdf_filename1), str(bdf_filename2)]
         cmd_line(args, quiet=True)
 
-    def test_free_edges(self):
+    def test_cmdline_free_edges(self):
         """Finds the free_edges
 
         4-----3---5
@@ -264,7 +278,7 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
                  quiet=True)
         os.remove(skin_filename)
 
-    def test_nsm_split(self):
+    def test_cmdline_nsm_split(self):
         bdf_filename = DIRNAME / 'test_nsm_split.bdf'
         model = BDF(debug=False)
         model.add_grid(10, [0., 0., 0.])
@@ -288,6 +302,7 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         args = ['bdf', 'nsm_split', bdf_filename, str(sid), str(3.14),
                 '--out', str(bdf_filename_out)]
         cmd_line(argv=args, quiet=True)
+        cmd_line(['bdf', 'mass', bdf_filename, '--nsm', sid])
         model2 = BDF(debug=False)
         model2.read_bdf(bdf_filename_out, punch=True)
         # print(model2.nsms)

@@ -60,7 +60,7 @@ def read_lax_obj(bdf_filename, obj_filename, is_obj: bool,
             log=log)
     return model
 
-def get_ids(ids_str, default=None):
+def get_ids(ids_str, default=None, dtype: str='int32'):
     """
     Supports FEMAP and CSV format
     FEMAP format:
@@ -71,23 +71,26 @@ def get_ids(ids_str, default=None):
         7100001:7101743:1;1:10:1
 
     """
-    ids = default
-    if ids_str:
-        ids = []
-        if ';' in ids_str:
-            ids_split = ids_str.split(';')
-            for idi in ids_split:
-                if idi.isdigit():
-                    ids.append(int(idi))
-                elif ',' in idi:
-                    spliti = idi.split(',')
-                    if len(spliti) == 3:
-                        start, stop, space = (int(val) for val in spliti)
-                        ids.extend(list(range(start, stop + 1, space)))
-        elif ':' in ids_str:
-            raise NotImplementedError(': is not supported')
-        elif ',' in ids_str:
-            ids.extend(list(int(val) for val in ids_str.split(',')))
-        else:
-            raise NotImplementedError(f'ids_str={ids_str}')
-    return np.array(ids, dtype='int32')
+    ids_str = ids_str.strip(',;')
+    if len(ids_str) == 0:
+        return default
+
+    ids_list = []
+    if ';' in ids_str:
+        ids_split = ids_str.split(';')
+        for idi in ids_split:
+            if idi.isdigit():
+                ids_list.append(int(idi))
+            elif ',' in idi:
+                spliti = idi.split(',')
+                if len(spliti) == 3:
+                    start, stop, space = (int(val) for val in spliti)
+                    ids_list.extend(list(range(start, stop + 1, space)))
+    elif ':' in ids_str:
+        raise NotImplementedError(': is not supported')
+    elif ',' in ids_str:
+        ids_list.extend(list(int(val) for val in ids_str.split(',')))
+    else:
+        raise NotImplementedError(f'ids_str={ids_str}')
+    ids = np.array(ids_list, dtype=dtype)
+    return ids

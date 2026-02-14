@@ -2,11 +2,9 @@ from __future__ import annotations
 import os
 import sys
 
-from pygments.lexer import default
-
 from cpylog import SimpleLogger
 from .utils import add_argparse_arguments
-from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_nsm
+from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_nsm, mass_properties
 # import pyNastran
 
 
@@ -54,8 +52,7 @@ def cmd_line_mass(argv=None, quiet: bool=False) -> None:
     log = SimpleLogger(level=level, encoding='utf-8')
 
     from .utils_bdf import read_lax_obj, get_ids
-    ('7100001,7101743,1;'
-     '')
+    # '7100001,7101743,1;'
     obj_filename = os.path.splitext(bdf_filename)[0] + '.obj'
     element_ids = get_ids(args.element_ids)
     model = read_lax_obj(
@@ -66,8 +63,8 @@ def cmd_line_mass(argv=None, quiet: bool=False) -> None:
         duplicate_cards=duplicate_cards)
 
     model.rigid_elements = {}
-    if len(element_ids):
-        print(element_ids)
+    mass_ids = None
+    if element_ids is not None and len(element_ids):
         set_eids = set(element_ids)
         eids_to_delete = set(list(model.elements)) - set_eids
         for eid in eids_to_delete:
@@ -76,7 +73,7 @@ def cmd_line_mass(argv=None, quiet: bool=False) -> None:
         for eid in eids_to_delete:
             del model.masses[eid]
 
-        # TODO: need to consider coords
+        # TODO: need to consider coords before removing nodes
         # nids_used = set()
         # for eid, elem in model.masses.items():
         #     nids_used.update(elem.node_ids)
@@ -104,8 +101,12 @@ def cmd_line_mass(argv=None, quiet: bool=False) -> None:
     model.cross_reference()
 
     # nsm_id = 7100000 # ailerons
-    mass, cg, inertia = mass_properties_nsm(
-        model, element_ids=element_ids, mass_ids=mass_ids, nsm_id=nsm_id, debug=True)
+    if nsm_id:
+        mass, cg, inertia = mass_properties_nsm(
+            model, element_ids=element_ids, mass_ids=mass_ids, nsm_id=nsm_id, debug=True)
+    else:
+        mass, cg, inertia = mass_properties(
+            model, element_ids=element_ids, mass_ids=mass_ids)
     print(f'mass = {mass}')
     print(f'cg = {cg}')
     print(f'inertia = {inertia}')
