@@ -128,12 +128,12 @@ class FlutterPreferencesDialog(PyDialog):
         self.export_png_checkbox = QCheckBox('Export PNG')
         self.export_csv_checkbox = QCheckBox('Export CSV')
         self.export_f06_checkbox = QCheckBox('Export F06')
-        self.export_zona_checkbox = QCheckBox('Export Zona')
+        self.export_zaero_checkbox = QCheckBox('Export ZAero')
 
         self.export_png_checkbox.setChecked(data['export_to_png'])
         self.export_csv_checkbox.setChecked(data['export_to_csv'])
         self.export_f06_checkbox.setChecked(data['export_to_f06'])
-        self.export_zona_checkbox.setChecked(data['export_to_zona'])
+        self.export_zaero_checkbox.setChecked(data['export_to_zaero'])
 
         self.default_button = QPushButton('Default')
 
@@ -188,7 +188,7 @@ class FlutterPreferencesDialog(PyDialog):
         irow += 1
         grid.addWidget(self.export_csv_checkbox, irow, 0)
         grid.addWidget(self.export_f06_checkbox, irow, 1)
-        grid.addWidget(self.export_zona_checkbox, irow, 2)
+        grid.addWidget(self.export_zaero_checkbox, irow, 2)
         irow += 1
         grid.setColumnStretch(grid.columnCount(), 2)
 
@@ -205,7 +205,7 @@ class FlutterPreferencesDialog(PyDialog):
         self.export_csv_checkbox.clicked.connect(self.on_export_csv)
         self.export_f06_checkbox.clicked.connect(self.on_export_f06)
         self.export_png_checkbox.clicked.connect(self.on_export_png)
-        self.export_zona_checkbox.clicked.connect(self.on_export_zona)
+        self.export_zaero_checkbox.clicked.connect(self.on_export_zaero)
         self.font_size_edit.valueChanged.connect(self.on_font_size)
         self.plot_font_size_edit.valueChanged.connect(self.on_plot_font_size)
         #self.animate_checkbox.clicked.connect(self.on_animate)
@@ -254,7 +254,7 @@ class FlutterPreferencesDialog(PyDialog):
         self.export_png_checkbox.setChecked(True)
         self.export_f06_checkbox.setChecked(False)
         self.export_csv_checkbox.setChecked(False)
-        self.export_zona_checkbox.setChecked(False)
+        self.export_zaero_checkbox.setChecked(False)
         # self.icase_edit
         # self.nphase_edit
         # self.dt_ms_edit

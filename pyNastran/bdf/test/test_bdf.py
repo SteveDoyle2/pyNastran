@@ -316,7 +316,8 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             safe_xref: bool=False, run_pickle: bool=False,
             version: Optional[str]=None,
             validate_case_control: bool=True,
-            stop_on_failure: bool=True, log: Optional[SimpleLogger]=None, name: str=''):
+            stop_on_failure: bool=True,
+            log: Optional[SimpleLogger]=None, name: str=''):
     """
     Runs a single BDF
 
@@ -2352,20 +2353,22 @@ def test_bdf_argparse(argv=None):
     parent_parser.add_argument('--encoding', default=encoding, type=str,
                                help=f'the encoding method (default={encoding!r})\n')
     #parent_parser.add_argument('--skip_nominal', action='store_true',
-                               #help='skip the nominal model comparison (default=False)')
+                               #help='Skip the nominal model comparison (default=False)')
 
     parent_parser.add_argument('--skip_loads', action='store_true',
-                               help='skip loads calcuations (default=False)')
+                               help='Skip loads calcuations (default=False)')
     parent_parser.add_argument('--skip_mass', action='store_true',
-                               help='skip mass calcuations (default=False)')
+                               help='Skip mass calcuations (default=False)')
     parent_parser.add_argument('--skip_aero', action='store_true',
-                               help='skip the processing of the caero mesh (default=False)')
+                               help='Skip the processing of the caero mesh (default=False)')
     parent_parser.add_argument('--skip_skin', action='store_true',
-                               help='skip the solid skinning (default=False)')
-    parent_parser.add_argument('--skip_eid_checks', action='store_true',
-                               help='skip the element checks (default=False)')
+                               help='Skip the solid skinning (default=False)')
     parent_parser.add_argument('--skip_mcid', action='store_true',
-                               help='skip the material coordinate system exporting (default=False)')
+                               help='Skip the material coordinate system exporting (default=False)')
+    parent_parser.add_argument('--skip_eid_checks', action='store_true',
+                               help='Skip the element checks (default=False)')
+    parent_parser.add_argument('--skip_all', action='store_true',
+                               help='Skip all the above flags (loads, mass, aero, etc.; not skip_cards (default=False)')
     parent_parser.add_argument('--no_similar_eid', action='store_true',
                                help='No duplicate eids among elements, rigids, and masses (default=False)')
     parent_parser.add_argument('--lax', action='store_true',
@@ -2487,7 +2490,8 @@ def get_test_bdf_usage_args_examples(encoding):
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
-        '              [--skip_loads] [--skip_mass] [--lax] [--nosort] [--duplicate] [skip_cards CARDS]\n'
+        f'              [--lax] [--nosort] [--duplicate] [skip_cards CARDS] [--ifile]\n'
+        f'              [--skip_all] [--skip_loads] [--skip_mass] [--skip_aero] [--skip_skin] [--skip_mcid] [--skip_eid_checks]\n'
     )
     usage = (
         "Usage:\n"
@@ -2544,13 +2548,15 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --nx          Assume NX Nastran\n'
         '  --optistruct  Assume OptiStruct\n'
         '  --mystran     Assume Mystran\n'
-        '  --skip_loads   skip the loads summation calculations (default=False)\n'
-        '  --skip_mass    skip the mass properties calculations (default=False)\n'
-        '  --skip_aero    skip the processing of the caero mesh (default=False)\n'
-        '  --skip_skin    skip the solid skinning (default=False)\n'
-        '  --skip_eid_checks   skips some element checks (default=False)\n'
-        '  --skip_mcid         skip the material coordinate system exporting (default=False)\n'
+        '  --skip_all    Skip all the above flags (loads, mass, aero, etc.; not skip_cards) (default=False)\n'
+        '  --skip_loads   Skip the loads summation calculations (default=False)\n'
+        '  --skip_mass    Skip the mass properties calculations (default=False)\n'
+        '  --skip_aero    Skip the processing of the caero mesh (default=False)\n'
+        '  --skip_skin    Skip the solid skinning (default=False)\n'
+        '  --skip_mcid         Skip the material coordinate system exporting (default=False)\n'
+        '  --skip_eid_checks   Skip some element checks (default=False)\n'
         "  --skip_cards CARDS  CSV list of cards (e.g., 'DMI,RBE2')\n"
+        "  --ifile        save the file structure for better error messages\n"
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
@@ -2579,12 +2585,13 @@ def main(argv=None):
     time0 = time.time()
 
     #data['run_nominal'] = not data['skip_nominal']
-    data['run_loads'] = not data['skip_loads']
-    data['run_mass'] = not data['skip_mass']
-    data['run_export_caero'] = not data['skip_aero']
-    data['run_skin_solids'] = not data['skip_skin']
-    data['run_eid_checks'] = not data['skip_eid_checks']
-    data['run_mcid'] = not data['skip_mcid']
+    run_all = not data['skip_all']
+    data['run_loads'] = not data['skip_loads'] and run_all
+    data['run_mass'] = not data['skip_mass'] and run_all
+    data['run_export_caero'] = not data['skip_aero'] and run_all
+    data['run_skin_solids'] = not data['skip_skin'] and run_all
+    data['run_eid_checks'] = not data['skip_eid_checks'] and run_all
+    data['run_mcid'] = not data['skip_mcid'] and run_all
     allow_similar_eid = not data['no_similar_eid']
     #print(f'allow_similar_eid = {allow_similar_eid}')
     if data['skip_cards'] is None:

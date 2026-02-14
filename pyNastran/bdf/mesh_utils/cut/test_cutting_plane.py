@@ -376,8 +376,6 @@ def _cut_shell_model_quads():
 
     #xyz_points = [
         #[0.4, 0.6, 0.], [-1., -1, 0.],]
-
-    #tol = 2.
     nodal_result = np.linspace(0., 1., num=16)
     return model, nodal_result
 

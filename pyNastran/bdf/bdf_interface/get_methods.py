@@ -11,6 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import (
         BDF, Element, Property, Material, ThermalMaterial, RigidElement,
         CAEROs, PAEROs, SPLINEs)
+    from pyNastran.bdf.cards.base_card import BaseCard
     from pyNastran.bdf.cards.coordinate_systems import Coord
     from pyNastran.bdf.cards.nodes import POINT, GRID, SPOINT, EPOINT  # , SPOINTs, EPOINTs, SEQGP
     from pyNastran.bdf.cards.aero.aero import (
@@ -430,8 +431,9 @@ class GetMethods(BDFAttributes):
         if len(load) == 0:
             loads_ids = list(self.loads.keys())
             load_combination_ids = list(self.load_combinations.keys())
-            raise KeyError('cannot find LOAD ID=%r%s.\nAllowed loads (e.g., FORCE)=%s; LOAD=%s' % (
-                sid, msg, np.unique(loads_ids), np.unique(load_combination_ids)))
+            tag = _get_tag(self, load)
+            raise KeyError(f'cannot find LOAD ID={sid:d}{msg}{tag}.\n'
+                           f'Allowed loads (e.g., FORCE)={np.unique(loads_ids)}; LOAD={np.unique(load_combination_ids)}')
         return load
 
     def DLoad(self, sid: int,
@@ -1040,3 +1042,26 @@ def get_pid_to_nid_map(model: BDF) -> dict[int, list[int]]:
 def _unique_keys(mydict: dict[int, Any]) -> str:
     """helper method"""
     return np.unique(list(mydict.keys()))
+
+
+import inspect
+from pyNastran.utils import object_stats
+def _get_tag(model: BDF, obj1: BaseCard) -> str:  # pragma: no cover
+    """get a list of files where things are duplicated"""
+    return ''
+    if not model.save_file_structure:
+        return ''
+    # Get the current frame
+    current_frame = inspect.currentframe()
+
+    # Get the frame one level up (the caller's frame)
+    caller_frame = current_frame.f_back
+    print(object_stats(caller_frame))
+
+    ifile1 = obj1.ifile
+    filename1 = model.active_filenames[ifile1]
+    tag = (
+        f'file1: {filename1}'
+    )
+    raise NotImplementedError('add testing')
+    return tag

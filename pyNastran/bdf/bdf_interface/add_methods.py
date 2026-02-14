@@ -908,7 +908,7 @@ class AddMethods:
             model._type_to_id_map[coord.type].append(key)
             return
 
-        tag = _get_tag(model, coord, model.coords[key])
+        tag = _get_add_tag(model, coord, model.coords[key])
         if coord == model.coords[key]:
             model.log.warning(f'replacing equivalent coord {key}:{tag}\n{coord}')
         elif allow_overwrites:
@@ -1885,7 +1885,7 @@ def add_object_to_dict(model: BDF, key: int,
         model._type_to_id_map[obj.type].append(key)
         return
 
-    tag = _get_tag(model, obj, obj_dict[key])
+    tag = _get_add_tag(model, obj, obj_dict[key])
     if obj == obj_dict[key]:
         model.log.warning(f'replacing equivalent {obj_name} {key}:{tag}\n{obj}')
     elif allow_overwrites:
@@ -1944,7 +1944,7 @@ def add_object_to_dict_no_dupes(model: BDF, key: int, obj_name: str,
         model._type_to_id_map[obj.type].append(key)
         return
 
-    tag = _get_tag(model, obj, obj_dict[key])
+    tag = _get_add_tag(model, obj, obj_dict[key])
     if obj == obj_dict[key]:
         model.log.warning(f'replacing equivalent {obj_name} {key}:{tag}\n{obj}')
     elif allow_overwrites:
@@ -1960,7 +1960,7 @@ def add_object_to_dict_no_dupes(model: BDF, key: int, obj_name: str,
         #raise RuntimeError('pid=%s\nold_prop=\n%snew_prop=\n%s' % (prop.pid, model.properties[key], prop))
 
 
-def _get_tag(model: BDF, obj1: BaseCard, obj2: BaseCard) -> str:
+def _get_add_tag(model: BDF, obj1: BaseCard, obj2: BaseCard) -> str:
     """get a list of files where things are duplicated"""
     if not model.save_file_structure:
         return ''

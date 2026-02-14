@@ -67,7 +67,7 @@ class FlutterPreferencesObject:
             'export_to_png': gui.export_to_png,
             'export_to_csv': gui.export_to_csv,
             'export_to_f06': gui.export_to_f06,
-            'export_to_zona': gui.export_to_zona,
+            'export_to_zaero': gui.export_to_zaero,
 
             'divergence_legend_loc': gui.divergence_legend_loc,
             'flutter_bbox_to_anchor_x': gui.flutter_bbox_to_anchor_x,

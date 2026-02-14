@@ -31,7 +31,7 @@ import numpy as np  # type: ignore
 
 from pyNastran.utils import PathLike, object_attributes, check_path, deprecated as _deprecated
 from .utils import parse_patran_syntax
-from .bdf_interface.add_methods import _get_tag
+from .bdf_interface.add_methods import _get_add_tag
 from .bdf_interface.utils import (
     _parse_pynastran_header, to_fields, to_fields_line0,
     parse_executive_control_deck,
@@ -1790,7 +1790,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 for elem, eidi in zip(duplicate_elements, duplicate_eids):
                     if eidi == eid:
                         msg += str(elem)
-                        msg += _get_tag(self, elem, old_obj)
+                        msg += _get_add_tag(self, elem, old_obj)
                 msg += '\n'
                 is_error = True
         return is_error, msg

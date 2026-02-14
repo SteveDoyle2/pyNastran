@@ -2825,10 +2825,12 @@ class Add2dElements:
         self._add_methods.add_normal_object(snorm)
         return snorm
 
-    def add_pshell(self, pid, mid1=None, t=None, mid2=None, twelveIt3=1.0,
-                   mid3=None, tst=0.833333, nsm=0.0,
-                   z1=None, z2=None, mid4=None,
-                   comment='') -> PSHELL:
+    def add_pshell(self, pid: int,mid1: Optional[int]=None, t: Optional[float]=None,
+                   mid2: Optional[int]=None, twelveIt3: float=1.0,
+                   mid3: Optional[int]=None, tst: float=0.833333, nsm: float=0.0,
+                   z1: Optional[float]=None, z2: Optional[float]=None,
+                   mid4: Optional[int]=None,
+                   comment: str='') -> PSHELL:
         """
         Creates a PSHELL card
 
@@ -2846,6 +2848,8 @@ class Add2dElements:
             defines transverse shear material
         mid4 : int; default=None
             defines membrane-bending coupling material
+        t : float; default=None
+            thickness
         twelveIt3 : float; default=1.0
             Bending moment of inertia ratio, 12I/T^3. Ratio of the actual
             bending moment inertia of the shell, I, to the bending
@@ -2916,9 +2920,13 @@ class Add2dElements:
         self._add_methods.add_property_object(prop)
         return prop
 
-    def add_pcompg(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
-                   nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None,
-                   comment='') -> PCOMPG:
+    def add_pcompg(self, pid: int,
+                   global_ply_ids: list[int], mids: list[int], thicknesses: list[float],
+                   thetas=None, souts=None,
+                   nsm: float=0.0, sb: float=0.0, ft: Optional[str]=None,
+                   tref: float=0.0, ge: float=0.0,
+                   lam: Optional[str]=None, z0: Optional[float]=None,
+                   comment: str='') -> PCOMPG:
         """
         Creates a PCOMPG card
 

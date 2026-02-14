@@ -331,7 +331,7 @@ class FlutterGui(LoggableGui):
             'export_to_png': self.export_to_png,
             'export_to_csv': self.export_to_csv,
             'export_to_f06': self.export_to_f06,
-            'export_to_zona': self.export_to_zona,
+            'export_to_zaero': self.export_to_zaero,
             'font_size': self.font_size,
             'plot_font_size': self.plot_font_size,
         }
@@ -384,7 +384,7 @@ class FlutterGui(LoggableGui):
             (bool, ('preferences/export_to_png',
                     'preferences/export_to_f06',
                     'preferences/export_to_csv',
-                    'preferences/export_to_zona')),
+                    'preferences/export_to_zaero')),
         ]
         for value_type, keys in type_names:
             for key in keys:
@@ -1876,7 +1876,7 @@ class FlutterGui(LoggableGui):
         if self.export_to_csv:
             log.debug(f'writing {csv_filename}')
             response.export_to_csv(csv_filename, modes=modes)
-        if self.export_to_zona:
+        if self.export_to_zaero:
             log.debug(f'writing {veas_filename}')
             response.export_to_veas(veas_filename, modes=modes)
         if self.export_to_f06:
