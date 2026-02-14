@@ -163,129 +163,114 @@ class TestStiffnessPlot(unittest.TestCase):
         # assert np.allclose(Ey, 1317292.3250658484)
         # assert np.allclose(Gxy, 3515514.7806900046)
         # assert np.allclose(nu_xy, 4.766908439759332e-13)
-        x = 1
 
-    def test_cut_quad_shell_mat1(self):
+    def test_cut_quad_mat8(self):
         """cut_and_plot_moi"""
         dirname = TEST_PATH
         log = SimpleLogger(level='warning', encoding='utf-8')
         # log = SimpleLogger(level='debug', encoding='utf-8')
         dy = 0.5
-        model, coord = _build_quad(log, dy, zoffset=0.0)
         t = 0.1
-        E = 3.0e7
-        model.add_pshell(11, 12, t=t)
-        model.add_mat1(12, E=E, G=None, nu=0.3)
-        model.cross_reference()
-        coords = [coord]
-        ystations = [0.]
-        normal_plane = np.array([0., 1., 0.])
-
-        cut_data_span_filename = dirname / 'test_cut_quad_shell_mat1.csv'
-        moi_data = cut_and_plot_moi(
-            model, normal_plane, log,
-            ystations, coords,
-            dirname=dirname,
-            plot=False, show=False, face_data=None,
-            stop_on_failure=True,
-            cut_data_span_filename=cut_data_span_filename,
-            beam_model_bdf_filename='',
-            thetas_csv_filename='y_thetas.csv',
-            # normalized_inertia_png_filename='y_normalized_inertia_vs_span.png',
-            # area_span_png_filename='y_area_vs_span.png',
-            # amoi_span_png_filename='y_amoi_vs_span.png',
-            # e_amoi_span_png_filename='y_e_amoi_vs_span.png',
-            # cg_span_png_filename='y_cg_vs_span.png',
-            debug_vectorize=True,
-        )
-        (y, A, I, J,
-         ExI, EyI, GJ, avg_centroid,
-         plane_bdf_filenames1, plane_bdf_filenames2, ifig) = moi_data
-
-        y1, A1, I1, J1, ExI1, EyI1, GJ1, avg_centroid1 = load_moi_data(cut_data_span_filename)
-        assert np.allclose(y, y1)
-        assert np.allclose(A, A1)
-        assert np.allclose(I, I1)
-        assert np.allclose(J, J1)
-        assert np.allclose(ExI, ExI1)
-        assert np.allclose(EyI, EyI1)
-        assert np.allclose(GJ, GJ1)
-        assert np.allclose(avg_centroid, avg_centroid1)
-
-        # print(f'y = {y.tolist()}')
-        # print(f'A = {A.tolist()}')
-        # print(f'I = {I.tolist()}')
-        # print(f'J = {J.tolist()}')
-        # print(f'EI = {EI.tolist()}')
-        # print(f'GJ = {GJ.tolist()}')
-        # print(f'avg_centroid = {avg_centroid.tolist()}')
-        cut_length = 3.0
-        # skipped this...1/12 * cut_length * t**3
-        i_expected = 0.09375  # A*d^2 of 2 triangles
-        y_expected = [0.0]
-        A_expected = [t*cut_length]
-        I_expected = [[i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]
-        J_expected = [i_expected]
-        ExI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        EyI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        GJ_expected = [1081730.7692307692]
-        centroid_expected = [[1.5, 0.0, 0.0]]
-
-        assert np.allclose(y, y_expected)
-        assert np.allclose(A, A_expected)
-        assert np.allclose(I, I_expected), (I, I_expected)
-        assert np.allclose(J, J_expected)
-        assert np.allclose(ExI, ExI_expected)
-        assert np.allclose(EyI, EyI_expected)
-        assert np.allclose(GJ, GJ_expected), GJ.tolist()
-        assert np.allclose(avg_centroid, centroid_expected), avg_centroid.tolist()
-
-    def test_cut_quad_shell_mat8(self):
-        """cut_and_plot_moi"""
-        dirname = TEST_PATH
-        log = SimpleLogger(level='warning', encoding='utf-8')
-        # log = SimpleLogger(level='debug', encoding='utf-8')
-        dy = 0.5
-        model, coord = _build_quad(log, dy, zoffset=0.0)
-        t = 0.1
-        E = 3.0e7
-        model.add_pshell(11, 12, t=t)
         e11 = 100.
         e22 = 300.
         nu12 = 0.3
         g12 = 400.
-        model.add_mat8(12, e11, e22, nu12, g12=g12, g1z=1e8, g2z=1e8)
-        model.cross_reference()
-        coords = [coord]
         ystations = [0.]
         normal_plane = np.array([0., 1., 0.])
 
-        moi_data = cut_and_plot_moi(
-            model, normal_plane, log,
-            ystations, coords,
-            dirname=dirname,
-            plot=False, show=False, face_data=None,
-            stop_on_failure=True,
-            cut_data_span_filename='',
-            beam_model_bdf_filename='',
-            thetas_csv_filename='y_thetas.csv',
-            # normalized_inertia_png_filename='y_normalized_inertia_vs_span.png',
-            # area_span_png_filename='y_area_vs_span.png',
-            # amoi_span_png_filename='y_amoi_vs_span.png',
-            # e_amoi_span_png_filename='y_e_amoi_vs_span.png',
-            # cg_span_png_filename='y_cg_vs_span.png',
-            debug_vectorize=True,
-        )
-        (y, A, I, J,
-         ExI, EyI, GJ, avg_centroid,
-         plane_bdf_filenames1, plane_bdf_filenames2, ifig) = moi_data
-        # print(f'y = {y.tolist()}')
-        # print(f'A = {A.tolist()}')
-        # print(f'I = {I.tolist()}')
-        # print(f'J = {J.tolist()}')
-        # print(f'EI = {EI.tolist()}')
-        # print(f'GJ = {GJ.tolist()}')
-        # print(f'avg_centroid = {avg_centroid.tolist()}')
+        cut_length = 3.0
+        # skipped this...1/12 * cut_length * t**3
+        i_expected = 0.09375  # A*d^2 of 2 triangles
+        y_expected = [0.0]
+        A_expected = [t * cut_length]
+        I_expected = [[i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]
+        J_expected = [i_expected]
+        ExI_expected = [[e22 * i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
+        EyI_expected = [[e11 * i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
+        GJ_expected = [37.5]
+        centroid_expected = [[1.5, 0.0, 0.0]]
+        E_expected = [e11, e22, g12]
+        Ex_expected = [e22]
+        Ey_expected = [e11]
+        G_expected = [g12]
+        pid = 11
+        mid = 12
+        for type in {'PSHELL', 'PCOMP', 'PCOMPG'}:
+            model, coord = _build_quad(log, dy, zoffset=0.0)
+            model.add_mat8(mid, e11, e22, nu12, g12=g12, g1z=1e8, g2z=1e8)
+            coords = [coord]
+            if type == 'PSHELL':
+                prop = model.add_pshell(pid, mid, t=t)
+            elif type == 'PCOMP':
+                prop = model.add_pcomp(pid, mid, [t])
+            elif type == 'PCOMPG':
+                prop = model.add_pcompg(pid, [8], mid, [t])
+            else:  # pragma: no cover
+                raise RuntimeError(type)
+            model.cross_reference()
+            A, B, D = prop.get_individual_ABD_matrices(theta_offset=0.)
+            imat_rotation_angle = 0.0
+            Ex, Ey, Gxy, nu_xy = prop.get_Ainv_equivalent_pshell(imat_rotation_angle, 0.1)
+            assert np.allclose(e11, Ex)
+            assert np.allclose(e22, Ey)
+            assert np.allclose(g12, Gxy)
+            moi_data = cut_and_plot_moi(
+                model, normal_plane, log,
+                ystations, coords,
+                dirname=dirname,
+                plot=False, show=False, face_data=None,
+                stop_on_failure=True,
+                cut_data_span_filename='',
+                beam_model_bdf_filename='',
+                thetas_csv_filename='y_thetas.csv',
+                # normalized_inertia_png_filename='y_normalized_inertia_vs_span.png',
+                # area_span_png_filename='y_area_vs_span.png',
+                # amoi_span_png_filename='y_amoi_vs_span.png',
+                # e_amoi_span_png_filename='y_e_amoi_vs_span.png',
+                # cg_span_png_filename='y_cg_vs_span.png',
+                debug_vectorize=True,
+            )
+            (y, A, I, J,
+             ExI, EyI, GJ, avg_centroid,
+             plane_bdf_filenames1, plane_bdf_filenames2, ifig) = moi_data
+            Ex = ExI[:, 0] / I[:, 0]
+            Ey = EyI[:, 0] / I[:, 0]
+            G = GJ / J
+            # print(f'y = {y.tolist()}')
+            # print(f'A = {A.tolist()}')
+            # print(f'I = {I.tolist()}')
+            # print(f'J = {J.tolist()}')
+            # print(f'EI = {EI.tolist()}')
+            # print(f'GJ = {GJ.tolist()}')
+            # print(f'avg_centroid = {avg_centroid.tolist()}')
+            assert np.allclose(G, G_expected)
+            assert np.allclose(Ex, Ex_expected), (type, Ex, Ex_expected)
+            assert np.allclose(Ey, Ey_expected)
+
+            assert np.allclose(y, y_expected)
+            assert np.allclose(A, A_expected)
+            assert np.allclose(I, I_expected), (I, I_expected)
+            assert np.allclose(J, J_expected)
+            assert np.allclose(ExI, ExI_expected), ExI.tolist()
+            assert np.allclose(EyI, EyI_expected)
+            assert np.allclose(GJ, GJ_expected), GJ.tolist()
+            assert np.allclose(avg_centroid, centroid_expected), avg_centroid.tolist()
+            del model.properties[pid]
+
+    def test_cut_quad_mat1(self):
+        """cut_and_plot_moi"""
+        dirname = TEST_PATH
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        # log = SimpleLogger(level='debug', encoding='utf-8')
+        dy = 0.5
+        t = 0.1
+        E = 3.0e7
+
+        pid = 11
+        mid = 12
+        ystations = [0.]
+        normal_plane = np.array([0., 1., 0.])
+
         cut_length = 3.0
         # skipped this...1/12 * cut_length * t**3
         i_expected = 0.09375  # A*d^2 of 2 triangles
@@ -293,47 +278,26 @@ class TestStiffnessPlot(unittest.TestCase):
         A_expected = [t*cut_length]
         I_expected = [[i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]
         J_expected = [i_expected]
-        ExI_expected = [[e11*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        EyI_expected = [[e22*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        GJ_expected = [37.5]
+        ExI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
+        EyI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
+        GJ_expected = [1081730.7692307692]
         centroid_expected = [[1.5, 0.0, 0.0]]
-        E_expected = [e11, e22, g12]
-        Ex_expected = [e11]
-        Ey_expected = [e22]
-        G_expected = [g12]
-        Ex = ExI[:, 0] / I[:, 0]
-        Ey = EyI[:, 0] / I[:, 0]
-        G = GJ / J
-        assert np.allclose(G, G_expected)
-        assert np.allclose(Ex, Ex_expected)
-        assert np.allclose(Ey, Ey_expected)
-
-        assert np.allclose(y, y_expected)
-        assert np.allclose(A, A_expected)
-        assert np.allclose(I, I_expected), (I, I_expected)
-        assert np.allclose(J, J_expected)
-        assert np.allclose(ExI, ExI_expected), ExI.tolist()
-        assert np.allclose(EyI, EyI_expected)
-        assert np.allclose(GJ, GJ_expected), GJ.tolist()
-        assert np.allclose(avg_centroid, centroid_expected), avg_centroid.tolist()
-
-    def test_cut_quad_pcompg_mat1(self):
-        """cut_and_plot_moi"""
-        dirname = TEST_PATH
-        log = SimpleLogger(level='warning', encoding='utf-8')
-        # log = SimpleLogger(level='debug', encoding='utf-8')
-        dy = 0.5
-        model, coord = _build_quad(log, dy, zoffset=0.0)
-        t = 0.1
-        E = 3.0e7
-        model.add_pcompg(11, 8, 12, 0.1)
-        model.add_mat1(12, E=E, G=None, nu=0.3)
-        model.cross_reference()
-        coords = [coord]
-        ystations = [0.]
-        normal_plane = np.array([0., 1., 0.])
 
         cut_data_span_filename = dirname / 'test_cut_quad_shell_mat1.csv'
+
+        for type in {'PSHELL', 'PCOMP', 'PCOMPG'}:
+            model, coord = _build_quad(log, dy, zoffset=0.0)
+            model.add_mat1(mid, E=E, G=None, nu=0.3)
+            coords = [coord]
+            if type == 'PSHELL':
+                model.add_pshell(pid, mid, t=t)
+            elif type == 'PCOMP':
+                model.add_pcomp(pid, mid, [t])
+            elif type == 'PCOMPG':
+                model.add_pcompg(pid, [8], mid, [t])
+            else:  # pragma: no cover
+                raise RuntimeError(type)
+        model.cross_reference()
         moi_data = cut_and_plot_moi(
             model, normal_plane, log,
             ystations, coords,
@@ -371,17 +335,6 @@ class TestStiffnessPlot(unittest.TestCase):
         # print(f'EI = {EI.tolist()}')
         # print(f'GJ = {GJ.tolist()}')
         # print(f'avg_centroid = {avg_centroid.tolist()}')
-        cut_length = 3.0
-        # skipped this...1/12 * cut_length * t**3
-        i_expected = 0.09375  # A*d^2 of 2 triangles
-        y_expected = [0.0]
-        A_expected = [t*cut_length]
-        I_expected = [[i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]
-        J_expected = [i_expected]
-        ExI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        EyI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        GJ_expected = [1081730.7692307692]
-        centroid_expected = [[1.5, 0.0, 0.0]]
 
         assert np.allclose(y, y_expected)
         assert np.allclose(A, A_expected)
@@ -391,6 +344,7 @@ class TestStiffnessPlot(unittest.TestCase):
         assert np.allclose(EyI, EyI_expected)
         assert np.allclose(GJ, GJ_expected), GJ.tolist()
         assert np.allclose(avg_centroid, centroid_expected), avg_centroid.tolist()
+        del model.properties[pid]
 
     def test_cut_quad_shell_mat1_zoffset(self):
         """cut_and_plot_moi"""
@@ -457,7 +411,6 @@ class TestStiffnessPlot(unittest.TestCase):
             assert np.allclose(avg_centroid, centroid_expected), avg_centroid.tolist()
 
     def test_cut_quad_shell_zoffset(self):
-        """cut_and_plot_moi"""
         """cut_and_plot_moi"""
         dirname = TEST_PATH
         log = SimpleLogger(level='warning', encoding='utf-8')
@@ -923,6 +876,13 @@ def get_coords_bwb(model: BDF,
 def _build_quad(log: SimpleLogger,
                 dy: float,
                 zoffset: float=0.0) -> tuple[BDF, CORD2R]:
+    """
+    ^ y
+    4-----3
+    |     |
+    |     |
+    1-----2--->x
+    """
     model = BDF(log=log)
     model.add_grid(101, [0., 0., 0.])
     model.add_grid(102, [3., 0., 0.])

@@ -11,7 +11,7 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.aero.deform_aero_spline import (
     deform_aero_spline, deform_aero_spline_from_files)
-from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
+from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh, get_skj
 from pyNastran.bdf.mesh_utils.aero.map_aero_model import map_aero_model
 from pyNastran.bdf.mesh_utils.aero.map_pressure_to_caero import map_caero
 
@@ -109,9 +109,9 @@ class TestMeshUtilsAero(unittest.TestCase):
         GCi = [1, 2, 3, 4, 5, 6, 7, 8]
         Real = [1., 2., 3., 4., 5., 6., 7., 8.]
         model.add_dmi(name, form,
-                      tin, tout, nrows, ncols,
+                      tin, nrows, ncols,
                       GCj, GCi,
-                      Real, Complex=None, comment='wkk')
+                      Real, Complex=None, tout=tout, comment='wkk')
 
     def test_export_caero_mesh_caero1_w2gj_dmik(self):
         log = SimpleLogger(level='warning')
@@ -204,11 +204,14 @@ class TestMeshUtilsAero(unittest.TestCase):
         #    'paero' : write the PAERO1 as the property id
         log = SimpleLogger(level='warning')
         model = read_bdf(bdf_filename, log=log)
+        skj = get_skj(model, percent_location=25)
+        # print(skj.tolist())
+        # assert skj
         tin = tout = 'float32'
         nrows = 1
         GCj = [101]
         reals = [np.radians(5.)]
-        model.add_dmi_w2gj(tin, tout, nrows, reals, GCj=GCj)
+        model.add_dmi_w2gj(tin, nrows, reals, tout=tout, GCj=GCj)
         #print(model.caeros)
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf_aeroboxes.bdf',
                 '--pid', 'aesurf', '--aerobox']

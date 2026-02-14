@@ -364,7 +364,6 @@ def _write_subcases_loads(model: BDF,
     """writes the DMI, DMIJ, DMIK cards to a series of load cases"""
     # naeroboxes = len(aero_eid_map)
     if len(model.dmi) == 0 and len(model.dmij) == 0 and len(model.dmik) == 0 and len(model.dmiji) == 0:
-        asf
         loads = ''
         subcases = ''
         return subcases, loads
@@ -732,7 +731,7 @@ def _area_arm_dict_panel(area_arm_dict: dict[int, tuple[float, float]],
         # dz = (p4 - p1)[2]
         chord: float = te[0] - le[0]
         r_arm = chord * percent
-        area_arm_dict[caero_eid+i] = (areai, r_arm)
+        area_arm_dict[caero.eid+i] = (areai, r_arm)
     #print(f'area={area:.1f} total_area={total_area:.1f}')
 
 

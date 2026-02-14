@@ -21,14 +21,14 @@ def empty_array(shape, dtype: str, default_int: int=-1) -> np.ndarray:
       out = np.full(shape, np.nan, dtype=dtype)
    return out
 
-def cast_ints(ints: list[int], dtype='int32') -> np.ndarray:
+def cast_ints(ints: list[int], dtype: str='int32') -> np.ndarray:
    if dtype == 'int32':
       try:
-         int_array = np.array(ints, dtype='int32')
+         int_array = np.array(ints, dtype=dtype)
       except OverflowError:
          int_array = np.array(ints, dtype='int64')
    elif dtype == 'int64':
-      int_array = np.array(ints, dtype='int64')
+      int_array = np.array(ints, dtype=dtype)
    else:
       raise RuntimeError(dtype)
    return int_array

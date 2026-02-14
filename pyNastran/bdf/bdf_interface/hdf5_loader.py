@@ -330,7 +330,7 @@ def _load_minor_attributes(unused_key: str, group, model: BDF,
     return
 
 
-def _load_indexed_list(key, group, unused_encoding):
+def _load_indexed_list(key, group, unused_encoding: str):
     lst = []
     for key in group.keys():
         value = _cast(group[key])
@@ -357,7 +357,7 @@ def _load_indexed_list_str(key, group, encoding):
         assert isinstance(lst[0], str), type(lst[0])
     return lst
 
-def hdf5_load_coords(model, coords_group, encoding):
+def hdf5_load_coords(model: BDF, coords_group, encoding: str):
     """loads the coords from an HDF5 file"""
     for card_type in coords_group.keys():
         coords = coords_group[card_type]
@@ -981,7 +981,7 @@ def _load_dmig_uaccel(model: BDF, sub_group):
     dmig_uaccel = model.add_dmig_uaccel(tin, ncol, load_sequences, comment='')
     str(dmig_uaccel)
 
-def _load_dmi(model: BDF, name, sub_group):
+def _load_dmi(model: BDF, name: str, sub_group):
     """loads the DMI"""
     ncols = _cast(sub_group['ncols'])
     nrows = _cast(sub_group['nrows'])
@@ -998,10 +998,10 @@ def _load_dmi(model: BDF, name, sub_group):
 
     #ifo = matrix_form
     form = matrix_form
-    model.add_dmi(name, form, tin, tout, nrows, ncols, GCj, GCi,
-                  Real, Complex=Complex, comment='')
+    model.add_dmi(name, form, tin, nrows, ncols, GCj, GCi,
+                  Real, Complex=Complex, tout=tout, comment='')
 
-def _load_dmig(model, name, sub_group, class_type):
+def _load_dmig(model: BDF, name: str, sub_group, class_type: str):
     """loads the DMIG, DMIJ, DMIJI, DMIK"""
     class_obj = CARD_MAP[class_type]
     ncols = None
@@ -1027,8 +1027,9 @@ def _load_dmig(model, name, sub_group, class_type):
         Complex = _cast(sub_group['Complex'])
 
     ifo = matrix_form
-    dmig = class_obj(name, ifo, tin, tout, polar, ncols,
-                     GCj, GCi, Real, Complex=Complex, comment='', finalize=True)
+    dmig = class_obj(name, ifo, tin, ncols,
+                     GCj, GCi, Real, Complex=Complex,
+                     tout=tout, polar=polar, comment='', finalize=True)
     assert class_type in ['DMIG', 'DMIK', 'DMIJ', 'DMIJI'], class_type
     slot_name = class_type.lower()
     slot = getattr(model, slot_name)
@@ -1036,7 +1037,7 @@ def _load_dmig(model, name, sub_group, class_type):
     str(dmig)
     #model.dmig[name] = dmig
 
-def _load_dmiax(model, name, sub_group):
+def _load_dmiax(model: BDF, name: str, sub_group):
     """loads the DMIAX"""
     class_obj = CARD_MAP['DMIAX']
     ncols = None
@@ -1082,13 +1083,14 @@ def _load_dmiax(model, name, sub_group):
         Complex = _cast(sub_group['Complex'])
 
     ifo = matrix_form
-    dmiax = DMIAX(name, matrix_form, tin, tout, ncols,
-                  dmiax_GCNj, dmiax_GCNi, Real, Complex=Complex)
+    dmiax = DMIAX(name, matrix_form, tin, ncols,
+                  dmiax_GCNj, dmiax_GCNi, Real, Complex=Complex,
+                  tout=tout)
     model.dmiax[name] = dmiax
     str(dmiax)
     #print(dmiax)
 
-def hdf5_load_dconstrs(model, group, encoding):
+def hdf5_load_dconstrs(model: BDF, group, encoding: str):
     """loads the dconstrs"""
     keys = group.keys()
     if len(keys) == 0:
@@ -1131,7 +1133,7 @@ def hdf5_load_dconstrs(model, group, encoding):
 
         model.card_count[card_type] = len(keys)
 
-def hdf5_load_dti(model, group, encoding):
+def hdf5_load_dti(model: BDF, group, encoding: str):
     """loads the dti"""
     group_keys = group.keys()
     if len(group_keys) == 0:
@@ -1192,7 +1194,7 @@ def hdf5_load_dti(model, group, encoding):
         model.add_dti(name, fields)
     model.card_count['DTI'] = len(names)
 
-def hdf5_load_usets(model, group, encoding):
+def hdf5_load_usets(model: BDF, group, encoding: str):
     """loads the usets"""
     keys = group.keys()
     if len(keys) == 0:
@@ -1217,7 +1219,7 @@ def hdf5_load_usets(model, group, encoding):
             else:
                 model.card_count[card_type] += 1
 
-def hdf5_load_dresps(model, group, encoding):
+def hdf5_load_dresps(model: BDF, group, encoding: str):
     """loads the dresps"""
     keys = list(group.keys())
     if len(keys) == 0:
@@ -1331,7 +1333,7 @@ def hdf5_load_dresps(model, group, encoding):
 
         model.card_count[class_type] = len(dresp_id)
 
-def hdf5_load_generic(model, group, name, encoding):
+def hdf5_load_generic(model: BDF, group, name: str, encoding: str):
     for card_type in group.keys():
         sub_group = group[card_type]
         #if card_type == 'TABLES1':
@@ -1343,7 +1345,7 @@ def hdf5_load_generic(model, group, name, encoding):
         model.card_count[card_type] = len(lkeys)
 
 
-def hdf5_load_properties(model, properties_group, encoding):
+def hdf5_load_properties(model: BDF, properties_group, encoding: str):
     """loads the properties from an HDF5 file"""
     for card_type in properties_group.keys():
         properties = properties_group[card_type]
@@ -1462,7 +1464,8 @@ def hdf5_load_properties(model, properties_group, encoding):
     for prop in model.properties.values():
         write_card(prop)
 
-def _put_keys_values_into_dict(model, name: str, keys, values, cast_int_keys: bool=True) -> None:
+def _put_keys_values_into_dict(model: BDF, name: str, keys, values,
+                               cast_int_keys: bool=True) -> None:
     """add something like an element to a dictionary"""
     for value in values:
         write_card(value)
@@ -1512,7 +1515,7 @@ def _put_keys_values_into_dict(model, name: str, keys, values, cast_int_keys: bo
             card_count[card_type] += 1
             model._type_to_id_map[card_type].append(key)
 
-def _put_keys_values_into_list(model, name, keys, values):
+def _put_keys_values_into_list(model: BDF, name: str, keys, values):
     """add something like an MKAERO1 to a list"""
     for value in values:
         try:
@@ -1532,7 +1535,7 @@ def _put_keys_values_into_list(model, name, keys, values):
         card_count[Type] += 1
         model._type_to_id_map[Type].append(key)
 
-def _put_keys_values_into_dict_list(model: Any, name: str, idi: int,
+def _put_keys_values_into_dict_list(model: BDF, name: str, idi: int,
                                     keys: np.ndarray,
                                     values: list[Any]):
     """add something like an SPC into a dictionary that has a list"""
@@ -1559,7 +1562,8 @@ def _put_keys_values_into_dict_list(model: Any, name: str, idi: int,
         card_count[Type] += 1
         model._type_to_id_map[Type].append(key)
 
-def load_cards_from_keys_values(name, properties, encoding, log):
+def load_cards_from_keys_values(name: str, properties, encoding,
+                                log: SimpleLogger):
     try:
         keys = _cast(properties['keys'])
     except KeyError:  # pragma: no cover
@@ -1575,7 +1579,8 @@ def load_cards_from_keys_values(name, properties, encoding, log):
     value_objs = _load_cards_from_keys_values(name, values, keys, encoding, log)
     return keys, value_objs
 
-def _load_cards_from_keys_values(unused_name, values, keys, encoding, unused_log):
+def _load_cards_from_keys_values(unused_name: str, values, keys,
+                                 encoding: str, unused_log):
     value_objs = []
     for key, keyi in zip(keys, values.keys()):
         #print('%s - %s' % (name, key))
@@ -1764,7 +1769,7 @@ def _load_from_class(value, card_type: str, encoding: str):
     return class_instance
 
 
-def hdf5_load_elements(model, elements_group, encoding):
+def hdf5_load_elements(model: BDF, elements_group, encoding: str):
     """loads the elements from an HDF5 file"""
     for card_type in elements_group.keys():
         elements = elements_group[card_type]

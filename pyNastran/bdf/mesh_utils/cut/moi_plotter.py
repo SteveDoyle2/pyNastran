@@ -1198,7 +1198,7 @@ def plot_compare_inertia(log: SimpleLogger,
         ax.plot(station2, ExI2[:, 2], color='b', linestyle='--', marker=marker, label=f'{tag2}E{y}I{zz}')  # Ey*Izz
         ax2.plot(common_station, ExI_ratio*100, color='k', linestyle='-', marker=marker, label=f'ratio')  # Ey*Izz
         ax.set_ylabel(f'Stiffness ($lb_f*in^2$): E{y}*I{zz}')
-        ax2.set_ylabelf'%Difference')
+        ax2.set_ylabel('%Difference')
         ax.legend()
         ifig += 1
 

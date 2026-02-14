@@ -847,11 +847,7 @@ class PCOMP(CompositeShellProperty):
         if isinstance(thicknesses, float_types):
             thicknesses = [thicknesses] * nplies
 
-        if thetas is None:
-            thetas = [0.] * nplies
-        elif isinstance(thetas, float_types):
-            thetas = [thetas] * nplies
-
+        thetas = _set_default_thetas(thetas, nplies)
         if souts is None:
             souts = ['NO'] * nplies
         #: Property ID
@@ -1151,7 +1147,7 @@ class PCOMP(CompositeShellProperty):
         return z0, z1, zmeans
 
     def get_individual_ABD_matrices(
-            self, theta_offset: float=0.,
+            self, theta_offset: float=0.0,
             degrees: bool=True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Gets the ABD matrix
@@ -1196,7 +1192,7 @@ class PCOMP(CompositeShellProperty):
         assert len(mids) == len(mids_ref), f'mids={mids} ({len(mids)}) mids_ref:\n{mids_ref}; {len(mids_ref)}'
         for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip_longest(mids, mids_ref, theta,
                                                                             thicknesses, zmeans, z0, z1):
-            Qbar = self.get_Qbar_matrix(mid_ref, thetai)
+            Qbar = get_Qbar_matrix(mid_ref, thetai)
             A += Qbar * thickness
             #B += Qbar * thickness * zmean
             #D += Qbar * thickness * (z1i ** 3 - z0i ** 3)
@@ -1262,37 +1258,6 @@ class PCOMP(CompositeShellProperty):
         # nu12 = -S12 / E1
         nu_xy = -S[0, 1] / Ex
         return Ex, Ey, Gxy, nu_xy
-
-    def get_Qbar_matrix(self,
-                        mid_ref: MAT1 | MAT8,
-                        theta: float=0.) -> np.ndarray:
-        """theta must be in radians"""
-        assert isinstance(theta, float_types), theta
-        S2, unused_S3 = get_mat_props_S(mid_ref)
-        T = get_2d_plate_transform(theta)
-
-        #R = np.array([
-            #[1., 0., 0.],
-            #[0., 1., 0.],
-            #[0., 0., 2.],
-        #])
-        Tinv = np.linalg.inv(T)
-        Q = np.linalg.inv(S2)
-
-        # [Qbar] = [T^-1][Q][T^-T]
-        # [T^-T] = [R][T][R^-1] = [T^-1].T
-        Qbar = np.linalg.multi_dot([Tinv, Q, Tinv.T])
-
-        # [T.T] = [R][T^-1][R^-1]
-        #Sbar = np.linalg.multi_dot([T.T, S2, T])
-        #Qbar = np.linalg.inv(Sbar)
-        return Qbar
-
-    def get_Sbar_matrix(self, mid_ref, theta: float) -> np.ndarray:
-        """theta must be in radians"""
-        Qbar = self.get_Qbar_matrix(mid_ref, theta)
-        Sbar = np.linalg.inv(Qbar)
-        return Sbar
 
     def _verify(self, xref: bool) -> None:
         pid = self.Pid()
@@ -1510,9 +1475,14 @@ class PCOMPG(CompositeShellProperty):
         CompositeShellProperty.__init__(self)
         if comment:
             self.comment = comment
-        if thetas is None:
+
+        if isinstance(mids, integer_types):
+            nplies = len(thicknesses)
+            mids = [mids] * nplies
+        else:
             nplies = len(mids)
-            thetas = [0.] * nplies
+
+        thetas = _set_default_thetas(thetas, nplies)
         if souts is None:
             souts = ['NO'] * nplies
 
@@ -1737,7 +1707,7 @@ class PCOMPG(CompositeShellProperty):
         nu_xy = -S[0, 1] / Ex
         return Ex, Ey, Gxy, nu_xy
 
-    def get_ABD_matrices(self, theta_offset: float=0.,
+    def get_ABD_matrices(self, theta_offset: float=0.0,
                          degrees: bool=True) -> np.ndarray:
         """
         Gets the ABD matrix
@@ -1751,14 +1721,15 @@ class PCOMPG(CompositeShellProperty):
             False: theta_offset is measured in radians
 
         """
-        A, B, D = self.get_individual_ABD_matrices(theta_offset=theta_offset, degrees=degrees)
+        A, B, D = self.get_individual_ABD_matrices(
+            theta_offset=theta_offset, degrees=degrees)
         ABD = np.block([
             [A, B],
             [B, D],
         ])
         return ABD
     def get_individual_ABD_matrices(
-            self, theta_offset: float=0.,
+            self, theta_offset: float=0.0,
             degrees: bool=True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Gets the ABD matrix
@@ -1803,7 +1774,7 @@ class PCOMPG(CompositeShellProperty):
         assert len(mids) == len(mids_ref), f'mids={mids} ({len(mids)}) mids_ref:\n{mids_ref}; {len(mids_ref)}'
         for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip_longest(mids, mids_ref, theta,
                                                                             thicknesses, zmeans, z0, z1):
-            Qbar = self.get_Qbar_matrix(mid_ref, thetai)
+            Qbar = get_Qbar_matrix(mid_ref, thetai)
             A += Qbar * thickness
             #B += Qbar * thickness * zmean
             #D += Qbar * thickness * (z1i ** 3 - z0i ** 3)
@@ -1815,31 +1786,6 @@ class PCOMPG(CompositeShellProperty):
         D /= 3.
         #M /= 2.
         return A, B, D
-
-    def get_Qbar_matrix(self,
-                        mid_ref: MAT1 | MAT8,
-                        theta: float=0.) -> np.ndarray:
-        """theta must be in radians"""
-        assert isinstance(theta, float_types), theta
-        S2, unused_S3 = get_mat_props_S(mid_ref)
-        T = get_2d_plate_transform(theta)
-
-        #R = np.array([
-            #[1., 0., 0.],
-            #[0., 1., 0.],
-            #[0., 0., 2.],
-        #])
-        Tinv = np.linalg.inv(T)
-        Q = np.linalg.inv(S2)
-
-        # [Qbar] = [T^-1][Q][T^-T]
-        # [T^-T] = [R][T][R^-1] = [T^-1].T
-        Qbar = np.linalg.multi_dot([Tinv, Q, Tinv.T])
-
-        # [T.T] = [R][T^-1][R^-1]
-        #Sbar = np.linalg.multi_dot([T.T, S2, T])
-        #Qbar = np.linalg.inv(Sbar)
-        return Qbar
 
     def raw_fields(self):
         list_fields = [
@@ -2934,25 +2880,6 @@ class PSHELL(Property):
             raise
         return mass_per_area
 
-    def get_Qbar_matrix(self, mid_ref, theta: float=0.):
-        """theta must be in radians"""
-        S2, unused_S3 = get_mat_props_S(mid_ref)
-        T = get_2d_plate_transform(theta)
-        #Tinv = np.linalg.inv(T)
-        #Qbar = np.linalg.multi_dot([Tinv, Q, Tinv.T])
-        Sbar = np.linalg.multi_dot([T.T, S2, T])
-        Qbar = np.linalg.inv(Sbar)
-        return Qbar
-
-    def get_Sbar_matrix(self, mid_ref, theta: float=0.):
-        """theta must be in radians"""
-        # this is the inverse of Sbar
-        S2, unused_S3 = get_mat_props_S(mid_ref)
-        T = get_2d_plate_transform(theta)
-        #Tinv = np.linalg.inv(T)
-        Sbar = np.linalg.multi_dot([T.T, S2, T])
-        return Sbar
-
     def get_individual_ABD_matrices(
             self, theta_offset: float=0.0,
             degrees: bool=True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -2991,15 +2918,15 @@ class PSHELL(Property):
         z1 = self.z2
 
         if self.mid1_ref and thickness != 0.0:
-            Qbar1 = self.get_Qbar_matrix(self.mid1_ref, theta=theta)
+            Qbar1 = get_Qbar_matrix(self.mid1_ref, theta=theta)
             A += Qbar1 * thickness
 
         if self.mid2_ref and self.twelveIt3 != 0.0:
-            Qbar2 = self.get_Qbar_matrix(self.mid2_ref, theta=theta)
+            Qbar2 = get_Qbar_matrix(self.mid2_ref, theta=theta)
             D += Qbar2 * (z1 ** 3 - z0 ** 3) * self.twelveIt3
-        #Qbar3 = self.get_Qbar_matrix(self.mid3_ref, theta=0.)
+        #Qbar3 = get_Qbar_matrix(self.mid3_ref, theta=0.)
         if self.mid4_ref:
-            Qbar4 = self.get_Qbar_matrix(self.mid4_ref, theta=theta)
+            Qbar4 = get_Qbar_matrix(self.mid4_ref, theta=theta)
             B += Qbar4 * (z1 ** 2 - z0 ** 2)
 
         unused_ts = self.tst * thickness
@@ -3513,3 +3440,54 @@ class PTRSHL(Property):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+def _set_default_thetas(thetas: list[float] | float,
+                        nplies: int) -> list[float]:
+    if thetas is None:
+        thetas = [0.] * nplies
+    elif isinstance(thetas, float_types):
+        thetas = [thetas] * nplies
+    return thetas
+
+
+def get_Qbar_matrix(mid_ref: MAT1 | MAT8,
+                    theta: float=0.) -> np.ndarray:
+    """theta must be in radians"""
+    assert isinstance(theta, float_types), theta
+    S2, unused_S3 = get_mat_props_S(mid_ref)
+    T = get_2d_plate_transform(theta)
+
+    # R = np.array([
+    #     [1., 0., 0.],
+    #     [0., 1., 0.],
+    #     [0., 0., 2.],
+    # ])
+    Tinv = np.linalg.inv(T)  # not T.T
+    Q = np.linalg.inv(S2)
+
+    # [Qbar] = [T^-1][Q][T^-T]
+    # [T^-T] = [R][T][R^-1] = [T^-1].T
+    Qbar = np.linalg.multi_dot([Tinv, Q, Tinv.T])
+
+    # [T.T] = [R][T^-1][R^-1]
+    #Sbar = np.linalg.multi_dot([T.T, S2, T])
+    #Qbar = np.linalg.inv(Sbar)
+    return Qbar
+
+def get_Qbar_matrix_v2(mid_ref: MAT1 | MAT8,
+                       theta: float=0.0):
+    """theta must be in radians (PCOMP)"""
+    S2, unused_S3 = get_mat_props_S(mid_ref)
+    T = get_2d_plate_transform(theta)
+    #Tinv = np.linalg.inv(T)
+    #Qbar = np.linalg.multi_dot([Tinv, Q, Tinv.T])
+    Sbar = np.linalg.multi_dot([T.T, S2, T])
+    Qbar = np.linalg.inv(Sbar)
+    return Qbar
+
+def get_Sbar_matrix(mid_ref: MAT1 | MAT8,
+                    theta: float) -> np.ndarray:
+    """theta must be in radians"""
+    Qbar = get_Qbar_matrix(mid_ref, theta)
+    Sbar = np.linalg.inv(Qbar)
+    return Sbar

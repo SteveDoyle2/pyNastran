@@ -376,8 +376,7 @@ class NastranMatrix(BaseCard):
                  GCj: list[tuple[int, int]],
                  GCi: list[tuple[int, int]],
                  Real: list[float], Complex=None,
-                 tout: int=0,
-                 polar: int=0,
+                 tout: int=0, polar: int=0,
                  comment: str='', finalize: bool=True):
         """
         Creates a NastranMatrix
@@ -423,13 +422,11 @@ class NastranMatrix(BaseCard):
             a comment for the card
 
         """
-        assert tout in {1, 2, 3, 4}, tout
+        assert tout in {0, 1, 2, 3, 4}, tout
         if comment:
             self.comment = comment
         if Complex is None:
             Complex = []
-        if tout is None:
-            tout = 0
 
         polar = _set_polar(polar)
         if matrix_form not in {1, 2, 4, 5, 6, 8, 9}:
@@ -504,20 +501,8 @@ class NastranMatrix(BaseCard):
         # GCj = columns
         # GCi = rows
         matrix_form, nrows, ncols = map_form(matrix_form, nrows, ncols)
-        # ncols = 2
-        GCi = np.repeat(list(range(1, nrows + 1)), ncols, axis=0).reshape(nrows, ncols).flatten()
-        GCj = np.repeat(list(range(1, ncols + 1)), nrows, axis=0).reshape(nrows, ncols).flatten()
-        # self.log.warning(f'str_form = {str_form}')
-        # self.log.warning(f'GCi = {GCi}')
-        # self.log.warning(f'GCj = {GCj}')
-
-        Real = myarray.real.flatten()
-        assert len(Real) == len(GCi)
-        assert len(Real) == len(GCj)
-
-        Complex = None
-        if tin in {'complex64', 'complex128', 3, 4}:
-            Complex = myarray.imag.flatten()
+        GCj, GCi, Real, Complex = _get_gcj_gci_data(
+            myarray, nrows, ncols, tin)
 
         tin = tin_str_to_int(tin)
         tout = tout_str_to_int(tout)
@@ -586,8 +571,10 @@ class NastranMatrix(BaseCard):
         GCi = []
         Real = []
         Complex = []
-        return cls(name, matrix_form, tin, tout, polar, ncols,
-                   GCj, GCi, Real, Complex, comment=comment, finalize=False)
+        obj = cls(name, matrix_form, tin, ncols,
+                  GCj, GCi, Real, Complex=Complex,
+                  tout=tout, polar=polar, comment=comment, finalize=False)
+        return obj
 
     @property
     def matrix_type(self):
@@ -656,7 +643,7 @@ class NastranMatrix(BaseCard):
         # Cj = integer(card, 3, 'Cj')
         Cj = integer_or_blank(card, 3, 'Cj', 0)
         #Cj = parse_components(card, 3, 'Cj')
-        assert 0 <= Cj <= 6, 'C%i must be between [0, 6]; Cj=%s' % (0, Cj)
+        assert 0 <= Cj <= 6, f'C0 must be between [0, 6]; Cj={Cj}'
 
         nfields = len(card)
         #print("nfields = %i" % nfields)
@@ -668,7 +655,7 @@ class NastranMatrix(BaseCard):
             nloops += 1
         #assert nfields <= 8,'nfields=%s' % nfields
         #print("nloops = %i" % nloops)
-        assert nloops > 0, 'nloops=%s' % nloops
+        assert nloops > 0, f'nloops={nloops:d}'
 
         for i in range(nloops):
             self.GCj.append((Gj, Cj))
@@ -679,9 +666,9 @@ class NastranMatrix(BaseCard):
                     n = 5 + 4 * i
                     Gi = integer(card, n, 'Gi')
                     # Ci = integer(card, n + 1, 'Ci')
-                    Ci = integer_or_blank(card, n + 1, 'Ci', 0)
+                    Ci = integer_or_blank(card, n + 1, 'Ci', default=0)
                     #Ci = parse_components(card, n + 1, 'Ci')
-                    assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
+                    assert 0 <= Ci <= 6, f'C{i+1:d} must be between [0, 6]; Ci={Ci:d}'
                     self.GCi.append((Gi, Ci))
                     magi = double(card, n + 2, 'ai')
                     phasei = double(card, n + 3, 'bi')
@@ -694,9 +681,9 @@ class NastranMatrix(BaseCard):
                     n = 5 + 4 * i
                     Gi = integer(card, n, 'Gi')
                     # Ci = integer(card, n + 1, 'Ci')
-                    Ci = integer_or_blank(card, n + 1, 'Ci', 0)
+                    Ci = integer_or_blank(card, n + 1, 'Ci', default=0)
                     #Ci = parse_components(card, n + 1, 'Ci')
-                    assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
+                    assert 0 <= Ci <= 6, f'C{i+1:d} must be between [0, 6]; Ci={Ci}'
                     self.GCi.append((Gi, Ci))
                     reali = double(card, n + 2, 'real')
                     complexi = double(card, n + 3, 'complex')
@@ -708,15 +695,15 @@ class NastranMatrix(BaseCard):
                 n = 5 + 4 * i
                 Gi = integer(card, n, 'Gi')
                 # Ci = integer(card, n + 1, 'Ci')
-                Ci = integer_or_blank(card, n + 1, 'Ci', 0)
+                Ci = integer_or_blank(card, n + 1, 'Ci', default=0)
                 #Ci = parse_components(card, n + 1, 'Ci')
-                assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
+                assert 0 <= Ci <= 6, f'C{i+1:d} must be between [0, 6]; Ci={Ci:d}'
                 reali = double(card, n + 2, 'real')
                 self.GCi.append((Gi, Ci))
                 self.Real.append(reali)
                 #print("GC=%s,%s real=%s" % (Gi, Ci, reali))
 
-        msg = '(len(GCj)=%s len(GCi)=%s' % (len(self.GCj), len(self.GCi))
+        msg = f'(len(GCj)={len(self.GCj):d} len(GCi)={len(self.GCi):d}'
         assert len(self.GCj) == len(self.GCi), msg
         #if self.is_complex:
             #self.Complex(double(card, v, 'complex')
@@ -818,7 +805,7 @@ class NastranMatrix(BaseCard):
                 node = model.nodes[Gi]
                 if node.type == 'GRID':
                     msg = ('Ci on DMIG card must be 1, 2, 3, 4, 5, or 6; '
-                           'Node=%i (GRID); Ci=%s' % (Gi, Ci))
+                           f'Node={Gi:d} (GRID); Ci={Ci:d}')
                     raise RuntimeError(msg)
                 elif node.type in {'SPOINT', 'EPOINT'}:
                     Ci = 0
@@ -831,7 +818,7 @@ class NastranMatrix(BaseCard):
                 node = model.nodes[Gj]
                 if node.type == 'GRID':
                     msg = ('Cj on DMIG card must be 1, 2, 3, 4, 5, or 6; '
-                           'Node=%i (GRID); Cj=%s' % (Gj, Cj))
+                           f'Node={Gj:d} (GRID); Cj={Cj:d}')
                     raise RuntimeError(msg)
                 elif node.type in {'SPOINT', 'EPOINT'}:
                     Cj = 0
@@ -852,7 +839,7 @@ class NastranMatrix(BaseCard):
 
         msg_list = [
             '\n$' + '-' * 80,
-            '\n$ %s Matrix %s\n' % (self.type, self.name),
+            f'\n$ {self.type} Matrix {self.name}\n',
         ]
 
         list_fields = [self.type, self.name, 0, self.matrix_form, self.tin,
@@ -989,7 +976,7 @@ class DMIG_UACCEL(BaseCard):
         ncol = integer_or_blank(card, 8, 'ncol')
         return DMIG_UACCEL(tin, ncol, load_sequences={}, comment=comment)
 
-    def _add_column(self, card, comment: str=''):
+    def _add_column(self, card: BDFCard, comment: str=''):
         if comment:
             if hasattr(self, '_comment'):
                 self.comment += comment
@@ -1002,9 +989,9 @@ class DMIG_UACCEL(BaseCard):
         self.load_sequences[load_seq] = []
         assert len(card) >= 8, 'len=%s card=%s' % (len(card), card)
         while ifield < len(card):
-            g1 = integer(card, ifield, 'nid%d' % i)
-            c1 = parse_components(card, ifield+1, 'c%d' % i)
-            x1 = double(card, ifield+2, 'x%d' % i)
+            g1 = integer(card, ifield, f'nid{i:d}')
+            c1 = parse_components(card, ifield+1, f'c{i:d}')
+            x1 = double(card, ifield+2, f'x{i:d}')
             #assert len(card) <= 8, 'len=%s card=%s' % (len(card), card)
             gcx = [g1, c1, x1]
             self.load_sequences[load_seq].append(gcx)
@@ -1114,10 +1101,11 @@ class DMIG(NastranMatrix):
         _export_dmig_to_hdf5(h5_file, model, model.dmig, encoding)
 
     def __init__(self, name: str, ifo: int,
-                 tin: int, tout: int,
-                 polar: int, ncols: int,
+                 tin: int,
+                 ncols: int,
                  GCj: np.ndarray, GCi: np.ndarray,
                  Real: np.ndarray, Complex: np.ndarray | None=None,
+                 tout: int=0, polar: int=0,
                  comment: str='', finalize: bool=True):
         """
         Creates a DMIG card
@@ -1211,8 +1199,9 @@ class DMIAX(BaseCard):
     type = 'DMIAX'
 
     def __init__(self, name: str, matrix_form: int,
-                 tin: int, tout: int, ncols: int,
-                 GCNj, GCNi, Real, Complex=None, comment: str=''):
+                 tin: int, ncols: int,
+                 GCNj, GCNi, Real, Complex=None,
+                 tout: int=0, comment: str=''):
         """
         Creates a DMIAX card
 
@@ -1254,7 +1243,6 @@ class DMIAX(BaseCard):
 
         if Complex is None:
             Complex = []
-
         if tout is None:
             tout = 0
 
@@ -1271,6 +1259,8 @@ class DMIAX(BaseCard):
         self.tout = tout
 
         self.ncols = ncols
+        assert isinstance(GCNj, list), type(GCNj)
+        assert isinstance(GCNi, list), type(GCNi)
         self.GCNj = GCNj
         self.GCNi = GCNi
 
@@ -1375,7 +1365,7 @@ class DMIAX(BaseCard):
 
         matrix_form = integer(card, 3, 'ifo')
         tin = integer(card, 4, 'tin')
-        tout = integer_or_blank(card, 5, 'tout', 0)
+        tout = integer_or_blank(card, 5, 'tout', default=0)
         if matrix_form == 1:  # square
             ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         elif matrix_form == 6:  # symmetric
@@ -1391,8 +1381,9 @@ class DMIAX(BaseCard):
         GCi = []
         Real = []
         Complex = []
-        return DMIAX(name, matrix_form, tin, tout, ncols,
-                     GCj, GCi, Real, Complex, comment=comment)
+        return DMIAX(name, matrix_form, tin, ncols,
+                     GCj, GCi, Real, Complex=Complex,
+                     tout=tout, comment=comment)
 
     def _add_column(self, card, comment: str=''):
         if comment:
@@ -1584,8 +1575,10 @@ class DMIJ(NastranMatrix):
         GCj = []
         GCi = []
         Real = []
-        return DMIJ(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real,
-                    Complex=None, finalize=True)
+        dmij = DMIJ(name, ifo, tin, ncols, GCj, GCi, Real,
+                    Complex=None, tout=tout, polar=polar,
+                    finalize=True)
+        return dmij
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, encoding: str):
@@ -1685,9 +1678,9 @@ class DMIJI(NastranMatrix):
         _export_dmig_to_hdf5(h5_file, model, model.dmiji, encoding)
 
     def __init__(self, name: str, ifo: int,
-                 tin: int, tout: int, polar: int,
-                 ncols: int,
+                 tin: int, ncols: int,
                  GCj, GCi, Real, Complex=None,
+                 tout: int=0, polar: int=0,
                  comment: str='', finalize: bool=True):
         """
         Creates a DMIJI card
@@ -1883,17 +1876,18 @@ class DMI(NastranMatrix):
         GCj = []
         GCi = []
         Real = []
-        return DMI(name, matrix_form, tin, tout, nrows, ncols, GCj, GCi, Real,
-                   Complex=None, finalize=False)
+        return DMI(name, matrix_form, tin, nrows, ncols, GCj, GCi, Real,
+                   Complex=None, tout=tout, finalize=False)
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, encoding: str):
         _export_dmig_to_hdf5(h5_file, model, model.dmi, encoding)
 
     def __init__(self, name: str, matrix_form: int | str,
-                 tin: int | str, tout: int | str,
+                 tin: int | str,
                  nrows: int, ncols: int,
                  GCj, GCi, Real, Complex=None,
+                 tout: int | str=0,
                  comment: str='', finalize: bool=True):
         """
 
@@ -1984,25 +1978,13 @@ class DMI(NastranMatrix):
         # GCj = columns
         # GCi = rows
         form, nrows, ncols = map_form(form, nrows, ncols)
+        GCj, GCi, Real, Complex = _get_gcj_gci_data(
+            myarray, nrows, ncols, tin)
 
-        # ncols = 2
-        GCi = np.repeat(list(range(1, nrows + 1)), ncols, axis=0).reshape(nrows, ncols).flatten()
-        GCj = np.repeat(list(range(1, ncols + 1)), nrows, axis=0).reshape(nrows, ncols).flatten()
-        # self.log.warning(f'str_form = {str_form}')
-        # self.log.warning(f'GCi = {GCi}')
-        # self.log.warning(f'GCj = {GCj}')
-
-        Real = myarray.real.flatten()
-        assert len(Real) == len(GCi)
-        assert len(Real) == len(GCj)
-
-        Complex = None
-        if tin in {'complex64', 'complex128', 3, 4}:
-            Complex = myarray.imag.flatten()
-
-        dmi = DMI(name, form, tin, tout, nrows, ncols,
+        dmi = DMI(name, form, tin, nrows, ncols,
                   GCj, GCi, Real,
-                  Complex=Complex, comment=comment)
+                  Complex=Complex,
+                  tout=tout, comment=comment)
         return dmi
 
     @classmethod
@@ -3008,8 +2990,15 @@ def get_matrix(self: DMIG,
         dictionary of keys=columnID, values=(Grid,Component) for the matrix
 
     """
+    # from cpylog import SimpleLogger
+    # log = SimpleLogger()
+    # log.info(f'row: GCi={self.GCi}')
+    # log.info(f'col: GCj={self.GCj}')
     nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed = get_row_col_map(
         self, self.GCi, self.GCj, self.matrix_form)
+    # log.info(f'nrows={nrows} ncols={ncols}')
+    # log.info(f'rows = {rows}')
+    # log.info(f'cols = {cols}')
 
     #is_sparse = False
     if is_sparse:
@@ -3244,6 +3233,32 @@ def map_form(form: int | str,
         raise NotImplementedError(form_str)
     # form_int = REVERSE_DMI_MAP[form_str]
     return form_str, nrows, ncols
+
+
+def _get_gcj_gci_data(myarray: np.ndarray,
+                      nrows: int, ncols: int,
+                      tin: str | int) -> tuple[np.ndarray, np.ndarray,
+                                               Optional[np.ndarray]]:
+    """helper for ```from_array```"""
+    # ncols = 2
+    GCi = np.repeat(list(range(1, nrows + 1)), ncols, axis=0).reshape(nrows, ncols).flatten()
+    GCj = np.repeat(list(range(1, ncols + 1)), nrows, axis=0).reshape(nrows, ncols).flatten()
+    # self.log.warning(f'str_form = {str_form}')
+    # self.log.warning(f'GCi = {GCi}')
+    # self.log.warning(f'GCj = {GCj}')
+    # from cpylog import SimpleLogger
+    # log = SimpleLogger(level='debug')
+    # log.info(f'row: GCi = {GCi}')
+    # log.info(f'col: GCj = {GCj}')
+
+    Real = myarray.real.flatten()
+    assert len(Real) == len(GCi)
+    assert len(Real) == len(GCj)
+
+    Complex = None
+    if tin in {'complex64', 'complex128', 3, 4}:
+        Complex = myarray.imag.flatten()
+    return GCj, GCi, Real, Complex
 
 
 def tin_str_to_int(tin: str | int) -> int:

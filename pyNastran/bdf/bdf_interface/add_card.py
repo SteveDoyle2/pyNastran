@@ -2875,7 +2875,7 @@ class Add2dElements:
     def add_pcomp(self, pid: int, mids: list[int], thicknesses: list[float],
                   thetas=None, souts=None,
                   nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None,
-                  z0=None, comment='') -> PCOMP:
+                  z0=None, comment: str='') -> PCOMP:
         """
         Creates a PCOMP card
 
@@ -9425,7 +9425,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
         fields = ['RSPINT', rid, grida, gridb, gr, unit, table_id]
         self.reject_card_lines('RSPINT', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_dti(self, name: str, fields: dict[int, list], comment='') -> DTI | DTI_UNITS:
+    def add_dti(self, name: str, fields: dict[int, list],
+                comment: str='') -> DTI | DTI_UNITS:
         """Creates a DTI card"""
         if name == 'UNITS':
             dti = DTI_UNITS(name, fields, comment=comment)
@@ -9434,14 +9435,18 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_dti_object(dti)
         return dti
 
-    def add_dmig_uaccel(self, tin: int, ncol: int, load_sequences, comment='') -> DMIG_UACCEL:
+    def add_dmig_uaccel(self, tin: int, ncol: int,
+                        load_sequences, comment: str='') -> DMIG_UACCEL:
         """Creates a DMIG,UACCEL card"""
         dmig = DMIG_UACCEL(tin, ncol, load_sequences, comment=comment)
         self._add_methods.add_dmig_object(dmig)
         return dmig
 
-    def add_dmig(self, name, ifo, tin, tout, polar, ncols, GCj, GCi,
-                 Real, Complex=None, comment='') -> DMIG:
+    def add_dmig(self, name: str, ifo: str | int,
+                 tin: int, ncols: int, GCj, GCi,
+                 Real, Complex=None,
+                 tout: int=0, polar: int=0,
+                 comment: str='') -> DMIG:
         """
         Creates a DMIG card
 
@@ -9461,17 +9466,6 @@ class AddCards(AddCoords, AddContact, AddBolts,
             2=Real, Double Precision
             3=Complex, Single Precision
             4=Complex, Double Precision
-        tout : int
-            matrix output precision
-            0=same as tin
-            1=Real, Single Precision
-            2=Real, Double Precision
-            3=Complex, Single Precision
-            4=Complex, Double Precision
-        polar : int; default=0
-            Input format of Ai, Bi
-            Integer=blank or 0 indicates real, imaginary format
-            Integer > 0 indicates amplitude, phase format
         ncols : int
             ???
         GCj  : list[(node, dof)]
@@ -9482,19 +9476,32 @@ class AddCards(AddCoords, AddContact, AddBolts,
             The real values
         Complex : list[float]; default=None
             The complex values (if the matrix is complex)
+        tout : int; default=0
+            matrix output precision
+            0=same as tin
+            1=Real, Single Precision
+            2=Real, Double Precision
+            3=Complex, Single Precision
+            4=Complex, Double Precision
+        polar : int; default=0
+            Input format of Ai, Bi
+            Integer=blank or 0 indicates real, imaginary format
+            Integer > 0 indicates amplitude, phase format
         comment : str; default=''
             a comment for the card
 
         """
-        dmig = DMIG(name, ifo, tin, tout, polar, ncols, GCj, GCi,
-                    Real, Complex, comment=comment)
+        dmig = DMIG(name, ifo, tin, ncols, GCj, GCi,
+                    Real, Complex=Complex,
+                    tout=tout, polar=polar, comment=comment)
         self._add_methods.add_dmig_object(dmig)
         return dmig
 
     def add_dmi_column(self, name: str,
-                       tin: int | str, tout: int | str,
+                       tin: int | str,
                        nrows: int,
                        reals: list[float],  GCj=None,
+                       tout: int | str=0,
                        comment: str='') -> DMI:
         assert isinstance(nrows, integer_types), nrows
         # print(f'GCj={GCj} reals={reals}')
@@ -9506,28 +9513,30 @@ class AddCards(AddCoords, AddContact, AddBolts,
         ncols = 1
         GCi = np.ones(nrows, dtype='int32')
         assert isinstance(reals[0], float_types), reals
-        dmi = DMI(name, form, tin, tout, nrows, ncols, GCj, GCi, reals,
-                  comment=comment)
+        dmi = DMI(name, form, tin, nrows, ncols, GCj, GCi, reals,
+                  tout=tout, comment=comment)
         self._add_methods.add_dmi_object(dmi)
         return dmi
 
-    def add_dmi_w2gj(self, tin: int | str, tout: int | str,
+    def add_dmi_w2gj(self, tin: int | str,
                      nrows: int, reals: list[float],
-                     GCj=None, comment: str='') -> DMI:
+                     GCj=None, tout: int | str=0,
+                     comment: str='') -> DMI:
         """
         Creates a DMI,W2GJ card. The angle in radians is defined at:
          - CAERO1: 1/2 chord, 1/2 span
          - CAERO2: 1/2 chord
         """
         name = 'W2GJ'
-        return self.add_dmi_column(name, tin, tout, nrows, reals,
-                                   GCj=GCj, comment=comment)
+        return self.add_dmi_column(name, tin, nrows, reals,
+                                   GCj=GCj, tout=tout, comment=comment)
 
     def add_dmi(self, name: str, form: int | str,
-                tin: int | str, tout: int | str,
+                tin: int | str,
                 nrows: int, ncols: int,
                 GCj: np.ndarray, GCi: np.ndarray,
                 Real: np.ndarray, Complex=None,
+                tout: int | str=0,
                 comment: str='') -> DMI:
         """Creates a DMI card
 
@@ -9537,8 +9546,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
         6 : 'symmetric',
         9 : 'identity',
         """
-        dmi = DMI(name, form, tin, tout, nrows, ncols, GCj, GCi, Real,
-                  Complex, comment=comment)
+        dmi = DMI(name, form, tin, nrows, ncols, GCj, GCi, Real,
+                  Complex=Complex, tout=tout, comment=comment)
         self._add_methods.add_dmi_object(dmi)
         return dmi
 
@@ -9550,7 +9559,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
                       comment: str='') -> DMI:
         """default for tin/tout = myarray.dtype
 
-        ..warning :: only supports square matrices for the moment
+        ..warning :: only supports square matrices at the moment
         """
         dmi = DMI.from_array(
             name, myarray,
@@ -9558,7 +9567,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
             comment=comment)
         if validate:
             dmi.validate()
-        model.dmi[name] = dmi
+        self.dmi[name] = dmi
         return dmi
 
     def add_dense_dmijk(self,
@@ -9571,7 +9580,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
                         comment: str='') -> DMI:
         """default for tin/tout = myarray.dtype
 
-        ..warning :: only supports square matrices for the moment
+        ..warning :: only supports square matrices at the moment
         """
         dmi_map = {
             'DMIK': (DMIK, self.dmik),
@@ -9588,19 +9597,22 @@ class AddCards(AddCoords, AddContact, AddBolts,
         return dmi
 
     def add_dmiax(self, name: str, matrix_form: int,
-                  tin: int, tout: int, ncols: int,
-                  GCNj, GCNi, Real, Complex=None, comment='') -> DMIAX:
+                  tin: int, ncols: int,
+                  GCNj, GCNi, Real, Complex=None,
+                  tout: int=0, comment: str='') -> DMIAX:
         """Creates a DMIAX card"""
-        dmiax = DMIAX(name, matrix_form, tin, tout, ncols,
-                      GCNj, GCNi, Real, Complex=Complex, comment=comment)
+        dmiax = DMIAX(name, matrix_form, tin, ncols,
+                      GCNj, GCNi, Real, Complex=Complex,
+                      tout=tout, comment=comment)
         self._add_methods.add_dmiax_object(dmiax)
         return dmiax
 
     def add_dmij(self, name: str, form: int,
-                 tin: int, tout: int,
+                 tin: int,
                  nrows: int, ncols: int,
                  GCj: np.ndarray, GCi: np.ndarray,
                  Real: np.ndarray, Complex=None,
+                 tout: int=0,
                  polar: int=0,
                  comment: str='') -> DMIJ:
         """Creates a DMIJ card"""
@@ -9612,14 +9624,14 @@ class AddCards(AddCoords, AddContact, AddBolts,
         return dmij
 
     def add_dmiji(self, name: int, ifo: int,
-                  tin: int, tout: int,
-                  nrows: int, ncols,
+                  tin: int, nrows: int, ncols,
                   GCj: np.ndarray, GCi: np.ndarray,
-                  Real: np.ndarray, Complex=None, comment='') -> DMIJI:
+                  Real: np.ndarray, Complex=None,
+                  tout: int=0, comment: str='') -> DMIJI:
         """
         | DMIJI | NAME | 0 | IFO | TIN | TOUT POLAR | | NCOL |
         """
-        dmiji = DMIJI(name, ifo, tin, nrows, ncols, GCj, GCi,
+        dmiji = DMIJI(name, ifo, tin, ncols, GCj, GCi,
                       Real, Complex=Complex,
                       tout=tout, polar=0, comment=comment)
         self._add_methods.add_dmiji_object(dmiji)
