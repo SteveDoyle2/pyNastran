@@ -15,6 +15,7 @@ from .delete import cmd_line_delete
 from .export_mcids import cmd_line_export_mcids
 from .equivalence import cmd_line_equivalence
 from .merge import cmd_line_merge
+from .mass import cmd_line_mass
 from .renumber import cmd_line_renumber
 from .scale import cmd_line_scale
 from .remove_unused import cmd_line_remove_unused
@@ -52,6 +53,7 @@ CMD_MAPS = {
     'collapse_quads': cmd_line_collapse_quads,
     'scale': cmd_line_scale,
     'list_conm2': cmd_line_list_conm2,
+    'mass': cmd_line_mass,
     'export_mcids': cmd_line_export_mcids,
     'solid_dof': cmd_line_solid_dof,
     'remove_unused': cmd_line_remove_unused,
