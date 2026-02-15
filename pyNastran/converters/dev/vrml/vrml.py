@@ -91,7 +91,7 @@ class VRML:
 
         lines = remove_comments(lines)
         txt = '\n'.join(lines)
-        model = vrml_format.parse_string(txt, parseAll=True)
+        model = vrml_format.parse_string(txt, parse_all=True)
 
         dict_model = todict(model, self.log)
         return dict_model

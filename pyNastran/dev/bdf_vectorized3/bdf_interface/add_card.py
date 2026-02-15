@@ -8234,14 +8234,16 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods.add_dti_object(dti)
         return dti
 
-    def add_dmig_uaccel(self, tin, ncol, load_sequences, comment: str='') -> DMIG_UACCEL:
+    def add_dmig_uaccel(self, tin: str | int, ncol: int,
+                        load_sequences, comment: str='') -> DMIG_UACCEL:
         """Creates a DMIG,UACCEL card"""
         dmig = DMIG_UACCEL(tin, ncol, load_sequences, comment=comment)
         self._add_methods.add_dmig_object(dmig)
         return dmig
 
-    def add_dmig(self, name, ifo, tin, tout, polar, ncols, GCj, GCi,
-                 Real, Complex=None, comment: str='') -> DMIG:
+    def add_dmig(self, name, ifo, tin, ncols, GCj, GCi,
+                 Real, Complex=None,
+                 tout: int=0, polar: int=0, comment: str='') -> DMIG:
         """
         Creates a DMIG card
 
@@ -8261,7 +8263,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             2=Real, Double Precision
             3=Complex, Single Precision
             4=Complex, Double Precision
-        tout : int
+        tout : int; default=0
             matrix output precision
             0=same as tin
             1=Real, Single Precision
@@ -8286,47 +8288,55 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        dmig = DMIG(name, ifo, tin, tout, polar, ncols, GCj, GCi,
-                    Real, Complex, comment=comment)
+        dmig = DMIG(name, ifo, tin, ncols, GCj, GCi,
+                    Real, Complex, tout=tout, polar=polar,
+                    comment=comment)
         self._add_methods.add_dmig_object(dmig)
         return dmig
 
-    def add_dmi(self, name, form, tin, tout, nrows, ncols, GCj, GCi,
-                Real, Complex=None, comment: str='') -> DMI:
+    def add_dmi(self, name, form, tin, nrows, ncols, GCj, GCi,
+                Real, Complex=None, tout: int=0, comment: str='') -> DMI:
         """Creates a DMI card"""
-        dmi = DMI(name, form, tin, tout, nrows, ncols, GCj, GCi, Real,
-                  Complex, comment=comment)
+        dmi = DMI(name, form, tin, nrows, ncols, GCj, GCi, Real,
+                  Complex, tout=tout, comment=comment)
         self._add_methods.add_dmi_object(dmi)
         return dmi
 
-    def add_dmiax(self, name, matrix_form, tin, tout, ncols,
-                  GCNj, GCNi, Real, Complex=None, comment: str='') -> DMIAX:
+    def add_dmiax(self, name: str, matrix_form: str | int,
+                  tin: str | int, ncols,
+                  GCNj: list, GCNi: list, Real, Complex=None,
+                  tout: int=0, comment: str='') -> DMIAX:
         """Creates a DMIAX card"""
-        dmiax = DMIAX(name, matrix_form, tin, tout, ncols,
-                      GCNj, GCNi, Real, Complex=Complex, comment=comment)
+        dmiax = DMIAX(name, matrix_form, tin, ncols,
+                      GCNj, GCNi, Real, Complex=Complex,
+                      tout=tout, comment=comment)
         self._add_methods.add_dmiax_object(dmiax)
         return dmiax
 
-    def add_dmij(self, name, form, tin, tout, nrows, ncols, GCj, GCi,
-                 Real, Complex=None, comment: str='') -> DMIJ:
+    def add_dmij(self, name, form, tin, nrows, ncols, GCj, GCi,
+                 Real, Complex=None, tout: int=0, comment: str='') -> DMIJ:
         """Creates a DMIJ card"""
-        dmij = DMIJ(name, form, tin, tout, nrows, ncols, GCj, GCi,
-                    Real, Complex, comment=comment)
+        dmij = DMIJ(name, form, tin, nrows, ncols, GCj, GCi,
+                    Real, Complex, tout=tout, comment=comment)
         self._add_methods.add_dmij_object(dmij)
         return dmij
 
-    def add_dmiji(self, name, ifo, tin, tout, nrows, ncols, GCj, GCi,
-                  Real, Complex=None, comment: str='') -> DMIJI:
+    def add_dmiji(self, name: str, ifo: str | int,
+                  tin: str | int, nrows: int, ncols,
+                  GCj, GCi,
+                  Real: np.ndarray, Complex=None,
+                  tout: int=0, comment: str='') -> DMIJI:
         """
         | DMIJI | NAME | 0 | IFO | TIN | TOUT POLAR | | NCOL |
         """
-        dmiji = DMIJI(name, ifo, tin, tout, nrows, ncols, GCj, GCi,
-                      Real, Complex, comment=comment)
+        dmiji = DMIJI(name, ifo, tin, ncols, GCj, GCi,
+                      Real, Complex, tout=tout, comment=comment)
         self._add_methods.add_dmiji_object(dmiji)
         return dmiji
 
-    def add_dmik(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex=None, comment: str='') -> DMIK:
+    def add_dmik(self, name, ifo, tin, ncols,
+                 GCj, GCi, Real, Complex=None,
+                 tout: int=0, polar: int=0, comment: str='') -> DMIK:
         """
         Creates a DMIK card
 
@@ -8346,7 +8356,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             2=Real, Double Precision
             3=Complex, Single Precision
             4=Complex, Double Precision
-        tout : int
+        tout : int; default=0
             matrix output precision
             0=same as tin
             1=Real, Single Precision
@@ -8371,8 +8381,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        dmik = DMIK(name, ifo, tin, tout, polar, ncols,
-                    GCj, GCi, Real, Complex, comment=comment)
+        dmik = DMIK(name, ifo, tin, ncols,
+                    GCj, GCi, Real, Complex,
+                    tout=tout, polar=polar, comment=comment)
         self._add_methods.add_dmik_object(dmik)
         return dmik
 
@@ -8413,7 +8424,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         fields = ['RCROSS', sid, rtype1, id1, comp1, rtype2, id2, comp2, curid]
         self.reject_card_lines('RCROSS', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_uxvec(self, idi: int, labels: list[str], uxs: list[float], comment: str='') -> UXVEC:
+    def add_uxvec(self, idi: int, labels: list[str], uxs: list[float],
+                  comment: str='') -> UXVEC:
         uxvec = UXVEC(idi, labels, uxs, comment=comment)
         self._add_methods.add_uxvec_object(uxvec)
         return uxvec

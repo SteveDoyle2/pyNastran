@@ -234,8 +234,8 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
             model.log.warning(f'skipping {nsm.type}')
             asdf
 
-    print('---------')
-    print(f'nsm_id = {nsm_id}')
+    # print('---------')
+    # print(f'nsm_id = {nsm_id}')
     #shell_pids = np.unique(shell_pids)
     mass_list = []
     centroid_list = []
@@ -261,17 +261,17 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
             #ieid_save = np.searchsorted(ueids, eid)
             if len(eid) == 1 and eid[0] == -1:
                 eid2 = card.element_id
-                print(f'{card.type} base: eid={eid}; eid2={eid2}')
+                # print(f'{card.type} base: eid={eid}; eid2={eid2}')
                 card2 = card
             else:
                 eid2 = [eidi for eidi in card.element_id
                         if eidi in eid]
-                print(f'{card.type} base: eid={eid}; eid2={eid2}')
+                # print(f'{card.type} base: eid={eid}; eid2={eid2}')
                 if len(eid2) == 0:
                     continue
                 card2 = card.slice_card_by_element_id(eid2)
             #ieid = np.searchsorted(card.element_id, eid2)
-            print(f'   element_id={card2.element_id}')
+            # print(f'   element_id={card2.element_id}')
             #print(f'  ieid.max={ieid.max()} neids={len(card.element_id)}')
             #ieid = ieid[ieid.max() < len(card.element_id)]
             #print(f'  ieid updated ieid={ieid}')
@@ -473,7 +473,7 @@ def _apply_conrod_mass(conrod_eids, mass_list, centroid_list):
                 else:
                     assert len(eid) == 1
                     ieid = np.where(card1.element_id == eid)[0]
-                    print(f'  card1.type={card1.type} element_id={card1.element_id} eid={eid}')
+                    # print(f'  card1.type={card1.type} element_id={card1.element_id} eid={eid}')
                     card2 = card1.slice_card_by_index(ieid)
                 length = card2.length()
                 total_length += length.sum()
@@ -485,7 +485,7 @@ def _apply_conrod_mass(conrod_eids, mass_list, centroid_list):
                 mass_list.append(massi)
                 centroid_list.append(centroid)
                 del length, card2, centroid, massi
-            print(f'total_length = {total_length}')
+            # print(f'total_length = {total_length}')
 
 
 class TestNsmV3(unittest.TestCase):

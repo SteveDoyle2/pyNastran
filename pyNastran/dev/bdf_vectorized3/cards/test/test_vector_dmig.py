@@ -221,16 +221,18 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         tin = 1 # real
         tout = 1 # real
         dmi_real = model.add_dmi(
-            name, form, tin, tout, nrows, ncols,
-            j, i, reals, Complex=None, comment='dmi_real')
+            name, form, tin, nrows, ncols,
+            j, i, reals, Complex=None,
+            tout=tout, comment='dmi_real')
         str(dmi_real)
 
         name = 'QQQI'
         tin = 3 # complex
         tout = 3 # complex
         dmi_imag = model.add_dmi(
-            name, form, tin, tout, nrows, ncols,
-            j, i, reals, Complex=complexs, comment='dmi_complex')
+            name, form, tin, nrows, ncols,
+            j, i, reals, Complex=complexs,
+            tout=tout, comment='dmi_complex')
         str(dmi_imag)
 
         matrix1r, unused_blank, unused_blank = dmi_real.get_matrix(is_sparse=False, apply_symmetry=False)
@@ -441,8 +443,8 @@ class TestDMIGReal(unittest.TestCase):
         name = 'DMIG_1'
         matrix_form = 6
         tin = 1
-        tout = None
-        polar = None
+        tout = 0
+        polar = 0
         ncols = None
         reals = [1.0, 2.0, 3.0]
         GCj = [[1, 1],  # grid, component
@@ -451,9 +453,9 @@ class TestDMIGReal(unittest.TestCase):
         GCi = [[1, 1],  # grid, component
                [4, 1],
                [5, 1]]
-        dmig = model.add_dmig(name, matrix_form, tin, tout, polar, ncols, GCj, GCi,
+        dmig = model.add_dmig(name, matrix_form, tin, ncols, GCj, GCi,
                               Real=reals, Complex=None,
-                              comment='dmig')
+                              tout=tout, polar=polar, comment='dmig')
         assert dmig.is_real is True, dmig.is_real
         assert dmig.is_complex is False, dmig.is_complex
         assert dmig.is_polar is False, dmig.is_polar
@@ -461,13 +463,13 @@ class TestDMIGReal(unittest.TestCase):
 
         name = 'DMIK_1'
         nrows = None
-        dmik = model.add_dmik(name, matrix_form, tin, tout, polar, ncols, GCj, GCi,
+        dmik = model.add_dmik(name, matrix_form, tin, ncols, GCj, GCi,
                               Real=reals, Complex=None,
-                              comment='dmik')
+                              tout=tout, polar=polar, comment='dmik')
         dmik.get_matrix()
 
-        dmiji = model.add_dmiji(name, matrix_form, tin, tout, nrows, ncols, GCj, GCi,
-                                reals, Complex=None, comment='dmiji')
+        dmiji = model.add_dmiji(name, matrix_form, tin, nrows, ncols, GCj, GCi,
+                                reals, Complex=None, tout=tout, comment='dmiji')
         dmiji.get_matrix()
 
         #dmi = model.add_dmi(name, matrix_form, tin, tout, nrows, ncols, GCj, GCi,
@@ -505,7 +507,8 @@ class TestDMIGReal(unittest.TestCase):
         GCi = [ [1, 1],]  # rows
         GCj = [[1, 2], ]  # cols
         Real = [1.]
-        model.add_dmig(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real, Complex=None, comment='')
+        model.add_dmig(name, ifo, tin, ncols, GCj, GCi, Real, Complex=None,
+                       tout=tout, polar=polar, comment='')
         get_matrices(model)
         kaax = model.dmig[name]
         dense = kaax.get_matrix(is_sparse=False, apply_symmetry=True)[0]
@@ -558,8 +561,9 @@ class TestDMIGReal(unittest.TestCase):
         ifo = 6 # symmetric
 
         name = 'TEST'
-        model.add_dmig(name, ifo, tin, tout, polar, ncols,
-                       GCj, GCi, Real, Complex=None, comment='')
+        model.add_dmig(name, ifo, tin, ncols,
+                       GCj, GCi, Real, Complex=None,
+                       tout=tout, polar=polar, comment='')
         get_matrices(model)
         test = model.dmig[name]
         A1, _, _ = test.get_matrix(is_sparse=False, apply_symmetry=True)
@@ -619,8 +623,9 @@ class TestDMIGReal(unittest.TestCase):
         ifo = 2 # rectangular (also 9...)
 
         name = 'TEST'
-        model.add_dmig(name, ifo, tin, tout, polar, ncols,
-                       GCj, GCi, Real, Complex=None, comment='')
+        model.add_dmig(name, ifo, tin, ncols,
+                       GCj, GCi, Real, Complex=None,
+                       tout=tout, polar=polar, comment='')
         get_matrices(model)
         test = model.dmig[name]
         A1, _, _ = test.get_matrix(is_sparse=False, apply_symmetry=True)
@@ -673,8 +678,9 @@ class TestDMIGReal(unittest.TestCase):
         ifo = 2 # rectangular (also 9...)
 
         name = 'TEST'
-        model.add_dmig(name, ifo, tin, tout, polar, ncols,
-                       GCj, GCi, Real, Complex=None, comment='')
+        model.add_dmig(name, ifo, tin, ncols,
+                       GCj, GCi, Real, Complex=None,
+                       tout=tout, polar=polar, comment='')
         get_matrices(model)
         test = model.dmig[name]
         A1, _, _ = test.get_matrix(is_sparse=False, apply_symmetry=True)
@@ -797,8 +803,8 @@ class TestDMIGImag(unittest.TestCase):
         name = 'DMIG_1'
         ifo = 6
         tin = 3
-        tout = None
-        polar = None
+        tout = 0
+        polar = 0
         ncols = None
         reals = np.array([1.0, 2.0, 3.0])
         #complexs = reals
@@ -808,9 +814,9 @@ class TestDMIGImag(unittest.TestCase):
         GCi = [[1, 1],  # grid, component
                [4, 1],
                [5, 1]]
-        dmig = model.add_dmig(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+        dmig = model.add_dmig(name, ifo, tin, ncols, GCj, GCi,
                               Real=reals, Complex=10*reals,
-                              comment='dmig')
+                              tout=tout, polar=polar, comment='dmig')
         model.pop_parse_errors()
         assert dmig.is_real is False, dmig.is_real
         assert dmig.is_complex is True, dmig.is_complex
@@ -820,9 +826,9 @@ class TestDMIGImag(unittest.TestCase):
         name = 'DMIK_1'
         unused_nrows = None
         unused_form = None
-        dmik = model.add_dmik(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+        dmik = model.add_dmik(name, ifo, tin, ncols, GCj, GCi,
                               Real=reals, Complex=10*reals,
-                              comment='dmik')
+                              tout=tout, polar=polar, comment='dmik')
         dmik.get_matrix()
         save_load_deck(model, run_mass_properties=False)
 
@@ -832,7 +838,7 @@ class TestDMIGImag(unittest.TestCase):
         name = 'DMIG_1'
         ifo = 6
         tin = 3
-        tout = None
+        tout = 0
         polar = True
         ncols = None
         reals = [1.0, 2.0, 3.0]
@@ -843,9 +849,9 @@ class TestDMIGImag(unittest.TestCase):
         GCi = [[1, 1],  # grid, component
                [4, 1],
                [5, 1]]
-        dmig = model.add_dmig(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+        dmig = model.add_dmig(name, ifo, tin, ncols, GCj, GCi,
                               Real=reals, Complex=reals,
-                              comment='dmig')
+                              tout=tout, polar=polar, comment='dmig')
         model.pop_parse_errors()
         assert dmig.is_real is False, dmig.is_real
         assert dmig.is_complex is True, dmig.is_complex
@@ -855,9 +861,9 @@ class TestDMIGImag(unittest.TestCase):
         name = 'DMIK_1'
         unused_nrows = None
         unused_form = None
-        dmik = model.add_dmik(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+        dmik = model.add_dmik(name, ifo, tin, ncols, GCj, GCi,
                               Real=reals, Complex=reals,
-                              comment='dmik')
+                              tout=tout, polar=polar, comment='dmik')
         dmik.get_matrix()
         save_load_deck(model, run_mass_properties=False)
 
@@ -869,7 +875,7 @@ class TestDMIAX(unittest.TestCase):
 
         #ifo = 1  # square
         tin = 1
-        tout = None
+        tout = 0
         #ncol = None
         #gj = 2
         #cj = 8
@@ -900,8 +906,9 @@ class TestDMIAX(unittest.TestCase):
         GCNi = [[(10, 6, 30)]]
         Real = [0.1]
         matrix_form = 1
-        dmiax_real = model.add_dmiax(name, matrix_form, tin, tout, ncols,
-                                     GCNj, GCNi, Real, Complex=None, comment='dmiax')
+        dmiax_real = model.add_dmiax(name, matrix_form, tin, ncols,
+                                     GCNj, GCNi, Real, Complex=None,
+                                     tout=tout, comment='dmiax')
         assert dmiax_real.is_real is True, dmiax_real.is_real
         assert dmiax_real.is_complex is False, dmiax_real.is_complex
         assert dmiax_real.is_polar is False, dmiax_real.is_polar
@@ -909,8 +916,9 @@ class TestDMIAX(unittest.TestCase):
         name = 'AXREAL1'
         tin = 2
         tout = 1
-        dmiax_real = model.add_dmiax(name, matrix_form, tin, tout, ncols,
-                                     GCNj, GCNi, Real, Complex=None, comment='dmiax')
+        dmiax_real = model.add_dmiax(name, matrix_form, tin, ncols,
+                                     GCNj, GCNi, Real, Complex=None,
+                                     tout=tout, comment='dmiax')
         assert dmiax_real.is_real is True, dmiax_real.is_real
         assert dmiax_real.is_complex is False, dmiax_real.is_complex
         assert dmiax_real.is_polar is False, dmiax_real.is_polar
@@ -919,8 +927,9 @@ class TestDMIAX(unittest.TestCase):
         Complex = [0.2]
         tin = 3
         tout = 4
-        dmiax_mag = model.add_dmiax(name, matrix_form, tin, tout, ncols,
-                                    GCNj, GCNi, Real, Complex=Complex, comment='dmiax')
+        dmiax_mag = model.add_dmiax(name, matrix_form, tin, ncols,
+                                    GCNj, GCNi, Real, Complex=Complex,
+                                    tout=tout, comment='dmiax')
         assert dmiax_mag.is_real is False, dmiax_mag.is_real
         assert dmiax_mag.is_complex is True, dmiax_mag.is_complex
         assert dmiax_mag.is_polar is False, dmiax_mag.is_polar
@@ -929,8 +938,9 @@ class TestDMIAX(unittest.TestCase):
         Complex = [0.2]
         tout = 4
         tin = 3
-        dmiax_imag = model.add_dmiax(name, matrix_form, tin, tout, ncols,
-                                     GCNj, GCNi, Real, Complex=Complex, comment='dmiax')
+        dmiax_imag = model.add_dmiax(name, matrix_form, tin, ncols,
+                                     GCNj, GCNi, Real, Complex=Complex,
+                                     tout=tout, comment='dmiax')
         assert dmiax_imag.is_real is False, dmiax_imag.is_real
         assert dmiax_imag.is_complex is True, dmiax_imag.is_complex
         assert dmiax_imag.is_polar is False, dmiax_imag.is_polar

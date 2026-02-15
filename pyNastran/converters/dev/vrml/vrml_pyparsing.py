@@ -112,11 +112,11 @@ def get_vrml_format():
 
     # color    1.000 1.000 1.000
     # direction -0.577 -0.577 -0.577
-    # out = pword_triple.parse_string('color    1.000 1.000 1.000', parseAll=False)  # works
-    unused_out = name_float3.parse_string('direction -0.577 -0.577 -0.577', parseAll=False)  # works
+    # out = pword_triple.parse_string('color    1.000 1.000 1.000', parse_all=False)  # works
+    unused_out = name_float3.parse_string('direction -0.577 -0.577 -0.577', parse_all=False)  # works
 
     # ambientIntensity 1.0
-    unused_out = name_float.parse_string('ambientIntensity 1.0', parseAll=False)
+    unused_out = name_float.parse_string('ambientIntensity 1.0', parse_all=False)
     #print(out, dir(type(out)))  # ParsingResults
     #print(out.asDict())
     #print(out.asList())
@@ -389,7 +389,7 @@ def get_vrml_format():
         # t_no_float_regex = 63 sec
         # t_float_regex = 31 sec
         t0 = time.time()
-        vrml_format.parse_string(txt, parseAll=True)
+        vrml_format.parse_string(txt, parse_all=True)
         print(time.time() - t0)
 
         #for datai in data:
