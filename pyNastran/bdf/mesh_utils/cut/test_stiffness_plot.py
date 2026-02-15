@@ -13,6 +13,12 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
+try:
+    import pandas as pd
+    IS_PANDAS = True
+except ModuleNotFoundError:
+    IS_PANDAS = False
+
 if IS_MATPLOTLIB:
     matplotlib.use(matplotlib_backend)
 
@@ -318,15 +324,16 @@ class TestStiffnessPlot(unittest.TestCase):
          ExI, EyI, GJ, avg_centroid,
          plane_bdf_filenames1, plane_bdf_filenames2, ifig) = moi_data
 
-        y1, A1, I1, J1, ExI1, EyI1, GJ1, avg_centroid1 = load_moi_data(cut_data_span_filename)
-        assert np.allclose(y, y1)
-        assert np.allclose(A, A1)
-        assert np.allclose(I, I1)
-        assert np.allclose(J, J1)
-        assert np.allclose(ExI, ExI1)
-        assert np.allclose(EyI, EyI1)
-        assert np.allclose(GJ, GJ1)
-        assert np.allclose(avg_centroid, avg_centroid1)
+        if IS_PANDAS:
+            y1, A1, I1, J1, ExI1, EyI1, GJ1, avg_centroid1 = load_moi_data(cut_data_span_filename)
+            assert np.allclose(y, y1)
+            assert np.allclose(A, A1)
+            assert np.allclose(I, I1)
+            assert np.allclose(J, J1)
+            assert np.allclose(ExI, ExI1)
+            assert np.allclose(EyI, EyI1)
+            assert np.allclose(GJ, GJ1)
+            assert np.allclose(avg_centroid, avg_centroid1)
 
         # print(f'y = {y.tolist()}')
         # print(f'A = {A.tolist()}')

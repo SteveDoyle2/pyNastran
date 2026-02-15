@@ -104,9 +104,8 @@ class TestAero(unittest.TestCase):
         reals = np.ones(nelements, dtype='float64') * 1.2
         nrow = len(GCj)
         dmi = model.add_dmi_w2gj(
-            tin, tout,
-            nrow, reals, #GCj=GCj,
-            comment='w2gj')
+            tin, nrow, reals, #GCj=GCj,
+            tout= tout, comment='w2gj')
         assert np.array_equal(dmi.GCj, GCj)
 
         bdf_mirror(model)
@@ -148,8 +147,8 @@ class TestAero(unittest.TestCase):
         reals = np.ones(nelements, dtype='float64') * 1.2
         nrow = len(GCj)
         dmi = model.add_dmi_w2gj(
-            tin, tout,
-            nrow, reals, GCj=GCj,
+            tin, nrow,
+            reals, GCj=GCj, tout=tout,
             comment='w2gj')
 
         bdf_mirror(model)

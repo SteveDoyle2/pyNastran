@@ -6,8 +6,9 @@ import numpy as np
 from numpy import array
 
 from cpylog import SimpleLogger
-from pyNastran.bdf.bdf import PCOMP, MAT1, BDF, CTRIA3, CQUAD4
+from pyNastran.bdf.bdf import MAT1, BDF, CTRIA3, CQUAD4
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+from pyNastran.bdf.cards.properties.shell import PCOMP, get_Qbar_matrix
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mass_properties import (
@@ -1665,7 +1666,7 @@ class TestShells(unittest.TestCase):
         pcomp = model.add_pcomp(pid, mids, thicknesses, thetas, souts=None,
                                 nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None, comment='')
         model.cross_reference()
-        Q = pcomp.get_Qbar_matrix(mat, theta=0.)
+        Q = get_Qbar_matrix(mat, theta=0.)
         #print(Q)
 
     def test_lax(self):

@@ -201,8 +201,9 @@ def read_extdb_extdb(op2_reader: OP2Reader,
                 break
 
         dmig = op2_reader.op2.add_dmig(
-            name_str, ifo, tin, tout, polar, ncols, GCj, GCi,
-            reals, Complex=None, comment='')
+            name_str, ifo, tin, ncols, GCj, GCi,
+            reals, Complex=None,
+            tout=tout, polar=polar, comment='')
         if flag == 0:
             print(dmig)
         #print(dmig)

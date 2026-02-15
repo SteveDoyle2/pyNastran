@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from pyNastran.bdf.cards.properties.shell import PCOMP
+from pyNastran.bdf.cards.properties.shell import (
+    PCOMP, get_Qbar_matrix, get_Sbar_matrix)
 from pyNastran.bdf.cards.materials import MAT8
 
 
@@ -22,8 +23,8 @@ def plot_equivalent_lamina_vs_theta(pcomp: PCOMP,
     Q66 = []
     nu_xy = []
     for thetai in theta:
-        Sbar = pcomp.get_Sbar_matrix(mid_ref, thetai)
-        Qbar = pcomp.get_Qbar_matrix(mid_ref, thetai)
+        Sbar = get_Sbar_matrix(mid_ref, thetai)
+        Qbar = get_Qbar_matrix(mid_ref, thetai)
         Sbar = np.linalg.inv(Qbar)
         Exi = 1 / Sbar[0, 0]
         Eyi = 1 / Sbar[1, 1]
