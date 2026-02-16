@@ -563,7 +563,7 @@ class VectorizedBaseCard:
                             # and some aren't
                             assert np.array_equal(value1, value2)
                 except AssertionError:
-                    self.model.log.error(f'{self.type} {attr}={value1}\n{attr}_model={value2}')
+                    self.model.log.error(f'{self.type} {attr}\nold:{value1}\nnew:={value2}')
                     raise
             elif isinstance(value1, dict): # CORD2R mapping dict
                 self.model.log.debug(f'skipping {self.type} {attr} dict')
@@ -572,7 +572,7 @@ class VectorizedBaseCard:
                 try:
                     assert value1 == value2
                 except AssertionError:
-                    self.model.log.error(f'{self.type} {attr}={value1}\n{attr}_model={value2}')
+                    self.model.log.error(f'{self.type} {attr}\nold:{value1}\nnew:{value2}')
                     raise
 
 

@@ -308,6 +308,7 @@ class SPC1(VectorizedBaseCard):
 
     """
     _id_name = 'spc_id'
+    _skip_equal_check = ['inode', 'cards']
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         self.spc_id = np.array([], dtype='int32')

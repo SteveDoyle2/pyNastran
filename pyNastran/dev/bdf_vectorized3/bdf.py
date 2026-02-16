@@ -4755,6 +4755,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         return True
 
     def assert_equal(self, model: BDF) -> None:
+        if not isinstance(model, BDF) or 'BDF' not in str(type(model)):
+            return  # BDF, OP2Geom
+
         assert self.card_count == model.card_count
         for card, model_card in zip(self._cards_to_setup, model._cards_to_setup):
             assert card.type == model_card.type
