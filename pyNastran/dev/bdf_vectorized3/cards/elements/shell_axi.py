@@ -46,6 +46,7 @@ class AxisymmetricShellElement(Element):
     CQUADX4 (NX): PSOLID, PLSOLID, PMIC
     CQUADX8 (NX): PSOLID, PLSOLID
     """
+    _skip_equal_check = ['allowed_properties', 'all_properties']
     @Element.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -188,6 +189,7 @@ class AxiShellElement(Element):
     CQUADX4 (NX): PSOLID, PLSOLID, PMIC
     CQUADX8 (NX): PSOLID, PLSOLID
     """
+    _skip_equal_check = ['allowed_properties', 'all_properties']
     @Element.clear_check
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
@@ -585,6 +587,7 @@ class CTRIAX6(Element):
        /       \
       1----2----3
     """
+    _skip_equal_check = ['allowed_materials', 'all_materials']
     @Element.clear_check
     def clear(self) -> None:
         self.nodes = np.zeros((0, 6), dtype='int32')

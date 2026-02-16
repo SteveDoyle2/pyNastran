@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 # from qtpy.QtWidgets import QMainWindow
 from pyNastran.f06.dev.flutter.preferences import FlutterPreferencesDialog
+from pyNastran.f06.dev.flutter.vtk_data import VtkData
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.f06.dev.flutter.gui_flutter import FlutterGui
 
@@ -45,25 +46,15 @@ class FlutterPreferencesObject:
         #     return
         if hasattr(gui, '_vtk_window_obj'):
             vtk_obj = gui._vtk_window_obj
-            data = {
-                'nphase': vtk_obj.nphase,
-                'icase': vtk_obj.icase,
-                'ncase': vtk_obj.ncase,
-                'animate': vtk_obj.animate,
-                'dt_ms': vtk_obj.dt_ms,
-            }
         else:
-            data = {
-                'nphase': 30,
-                'icase': 0,
-                'ncase': 1,
-                'animate': True,
-                'dt_ms': 100,
-            }
-        data.update({
+            self.vtk_data = VtkData()
+        data = {
             # plotting
             'font_size': gui.font_size,
             'plot_font_size': gui.plot_font_size,
+            'use_vtk': gui.use_vtk,
+            'use_tabs': gui.use_tabs,
+            'vtk': self.vtk_data.to_json(),
             'export_to_png': gui.export_to_png,
             'export_to_csv': gui.export_to_csv,
             'export_to_f06': gui.export_to_f06,
@@ -77,7 +68,7 @@ class FlutterPreferencesObject:
             'auto_update': gui.auto_update,
             'clicked_ok': False,
             'close': False,
-        })
+        }
         if self.window_shown in {True, False}:
             self.window_shown = True
             self.window.activateWindow()

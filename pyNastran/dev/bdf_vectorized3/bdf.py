@@ -4747,6 +4747,19 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 msg += f'{name}: {counti}\n'
         return msg
 
+    def __eq__(self, model):
+        try:
+            self.assert_equal(model)
+        except AssertionError:
+            return False
+        return True
+
+    def assert_equal(self, model: BDF) -> None:
+        assert self.card_count == model.card_count
+        for card, model_card in zip(self._cards_to_setup, model._cards_to_setup):
+            assert card.type == model_card.type
+            card.assert_equal(model_card)
+
 def _echo_card(card, card_obj):
     """echos a card"""
     try:

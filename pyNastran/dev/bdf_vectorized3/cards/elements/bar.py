@@ -229,6 +229,7 @@ def get_bar_vector(elem, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
 
 class CBAR(Element):
+    _skip_equal_check = ['allowed_properties']
     @Element.clear_check
     def clear(self) -> None:
         idtype = self.model.idtype
@@ -840,6 +841,7 @@ class PBAR(Property):
     """
     _show_attributes = ['property_id', 'material_id', 'A', 'J',
                         'c', 'd', 'e', 'f', 'I', 'k', 'nsm']
+    _skip_equal_check = ['allowed_materials']
 
     @Property.clear_check
     def clear(self) -> None:
@@ -1320,6 +1322,7 @@ class PBARL(Property):
     _skip_equality_check = True  # assume unequal
     _show_attributes = ['property_id', 'material_id', 'ndim', 'Type',
                         'group', 'nsm', 'dims']
+    _skip_equal_check = ['allowed_materials']
 
     @Property.clear_check
     def clear(self) -> None:
@@ -1825,6 +1828,7 @@ class CBARAO(Element):
     +--------+------+-------+------+-----+--------+-----+----+----+
 
     """
+    _skip_equal_check = ['allowed_properties']
     @Element.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')

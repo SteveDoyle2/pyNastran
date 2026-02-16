@@ -53,6 +53,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class ShellElement(Element):
+    _skip_equal_check = ['allowed_properties', 'all_properties']
     @Element.clear_check
     def clear(self) -> None:
         self.nodes = np.array([], dtype='int32')
@@ -2722,6 +2723,7 @@ class CAABSF(Element):
     | CAABSF |  EID  |  PID  | N1 | N2 | N3 | N4 |
     +--------+-------+-------+----+----+----+----+
     """
+    _skip_equal_check = ['allowed_properties']
     #type = 'CAABSF'
     @Element.clear_check
     def clear(self) -> None:

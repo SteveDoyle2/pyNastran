@@ -21,11 +21,13 @@ UNITS_IN = ['english_in', 'english_kt', 'english_ft',
 UNITS_OUT = UNITS_IN
 MODE_SWITCH_METHODS = ['None', 'Frequency', 'Damping']
 
-def load_f06_op2(f06_filename: str, log: SimpleLogger,
+def load_f06_op2(f06_filename: PathLike,
+                 log: SimpleLogger,
                  in_units: str,
                  out_units: str,
                  use_rhoref: bool,
-                 make_alt: bool=False) -> tuple[OP2, dict[int, FlutterResponse]]:
+                 make_alt: bool=False,
+                 stop_on_failure: bool=True) -> tuple[OP2, dict[int, FlutterResponse]]:
     """
     load a Vg-Vf plot from:
      - OP2 / F06
@@ -57,14 +59,18 @@ def load_f06_op2(f06_filename: str, log: SimpleLogger,
                 log=log)
         except Exception as e:
             log.error(str(e))
+            if stop_on_failure:
+                raise
             #raise
             return model, responses
     elif ext == '.out':
-        from pyNastran.f06.dev.flutter.read_zaero_out import read_zona_out
+        from pyNastran.f06.dev.flutter.read_zaero_out import read_zaero_out
         try:
-            responses, mass = read_zona_out(f06_filename)
+            responses, mass = read_zaero_out(f06_filename)
         except Exception as e:
             log.error(str(e))
+            if stop_on_failure:
+                raise
             #raise
             return model, responses
     elif ext == '.op2':
@@ -86,6 +92,8 @@ def load_f06_op2(f06_filename: str, log: SimpleLogger,
                 log.error('Could not find OVG table in op2')
         except Exception as e:
             log.error(str(e))
+            if stop_on_failure:
+                raise
             return model, responses
     else:
         log.error(f'Invalid file type; {f06_filename}')
@@ -94,7 +102,6 @@ def load_f06_op2(f06_filename: str, log: SimpleLogger,
     for response in responses.values():
         response.convert_units(out_units_dict)
     return model, responses
-
 
 
 def get_png_filename(base: str, x_plot_type: str, plot_type: str,
@@ -135,7 +142,7 @@ def update_ylog_style(fig: plt.Figure,
 def get_plot_file() -> str:
     home_dirname = Path(os.path.expanduser('~'))
     old_filename = home_dirname / 'plot_flutter.json'
-    new_filename = home_dirname / 'plot_145' / 'settings.json'
+    #new_filename = home_dirname / 'plot_145' / 'settings.json'
     #move_filename(old_filename, new_filename)
     return str(old_filename)
 
@@ -344,3 +351,37 @@ def validate_json(data: dict[str, Any],
             default_value = allowed_values[0]
             data[key] = default_value
     return is_valid
+
+
+def get_vlines(vf: float, vl: float) -> list[tuple[str, float, str, str]]:
+    """creates lines that will show on the Vg-Vf plots"""
+    v_lines = []
+    # log.info(f'vf={self.vf!r}; vl={self.vl!r}\n')
+    if isinstance(vf, float) and vf > 0.:
+        # name, velocity, color, linestyle
+        v_lines.append(('VF', vf, 'r', '-'))
+    # if self.vd:
+    #     # name, velocity, color, linestyle
+    #     x_limits.append(('VD', self.vd, 'k', '--'))
+    #     x_limits.append(('1.15*VD', 1.15*self.vd, 'k', '-'))
+    if isinstance(vl, float) and vl > 0.:
+        # name, velocity, color, linestyle
+        v_lines.append(('VL', vl, 'k', '--'))
+        v_lines.append(('1.15*VL', 1.15*vl, 'k', '-'))
+    return v_lines
+
+
+def get_damping_crossings(damping_required: float,
+                          damping_required_tol: float,
+                          damping_limit: float) -> list:
+    damping_crossings = []
+    if damping_required is not None and damping_required > -0.99:
+        damping_crossings.append((damping_required, damping_required + damping_required_tol))
+    if damping_limit is not None and damping_limit > -0.99:
+        damping_crossings.append((damping_limit, damping_limit))
+    if len(damping_crossings) == 0:
+        damping_crossings = [
+            (0.00, damping_required_tol),
+            (0.03, 0.03),
+        ]
+    return damping_crossings

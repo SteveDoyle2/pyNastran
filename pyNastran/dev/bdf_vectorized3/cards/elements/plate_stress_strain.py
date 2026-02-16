@@ -43,6 +43,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class PlateStressElement(Element):
+    _skip_equal_check = ['allowed_properties', 'all_properties']
     @Element.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -487,6 +488,7 @@ class CPLSTS4(PlateStressElement):
 
 class PPLANE(Property):
     """NX specific card"""
+    _skip_equal_check = ['allowed_materials']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -717,6 +719,7 @@ class PPLANE(Property):
 
 
 class PlateStrainElement(Element):
+    _skip_equal_check = ['allowed_properties', 'all_properties']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')

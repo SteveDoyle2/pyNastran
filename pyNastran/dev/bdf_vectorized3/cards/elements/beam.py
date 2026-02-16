@@ -146,6 +146,7 @@ class CBEAM(Element):
     bit is an MSC specific field
     NX 2020 added offt
     """
+    _skip_equal_check = ['allowed_properties', 'all_properties']
 
     @Element.clear_check
     def clear(self) -> None:
@@ -935,6 +936,7 @@ class PBEAM(Property):
         'm1a', 'm2a', 'm1b', 'm2b', 'n1a', 'n2a', 'n1b', 'n2b',
         'xxb', 'so', 'A', 'J', 'I1', 'I2', 'I12', 'nsm',
     ]
+    _skip_equal_check = ['allowed_materials']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id: np.array = np.array([], dtype='int32')
@@ -1926,6 +1928,7 @@ class PBEAML(Property):
         'property_id', 'material_id', 'Type', 'group',
         '_nsm', 'dims', 'ndim', 'nstation',
     ]
+    _skip_equal_check = ['allowed_materials']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -2412,6 +2415,7 @@ class PBCOMP(Property):
     |        | ...  | ... | ... |      |    |     |        |     |
     +--------+------+-----+-----+------+----+-----+--------+-----+
     """
+    _skip_equal_check = ['allowed_materials']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -2942,6 +2946,7 @@ class CBEAM3(Element):
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
 
     """
+    _skip_equal_check = ['allowed_properties', 'all_properties']
     @Element.clear_check
     def clear(self) -> None:
         self.element_id: np.array = np.array([], dtype='int32')
@@ -3791,6 +3796,7 @@ class PBEAM3(Property):
     """
     # _show_attributes = ['property_id', 'material_id', 't',
     #                     'twelveIt3', 'tst', 'nsm', 'z']
+    _skip_equal_check = ['allowed_materials']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -4480,6 +4486,7 @@ class CBEND(Element):
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
 
     """
+    _skip_equal_check = ['allowed_properties', 'all_properties']
 
     @Element.clear_check
     def clear(self) -> None:
@@ -4925,6 +4932,7 @@ class PBEND(Property):
     |       |  KX  |  KY   | KZ  |    | SY |   SZ   |    |        |
     +-------+------+-------+-----+----+----+--------+----+--------+
     """
+    _skip_equal_check = ['allowed_materials']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id: np.array = np.array([], dtype='int32')

@@ -14,7 +14,7 @@ from pyNastran.dev.bdf_vectorized3.test.test_vector_bdf_unit_tests import *
 from pyNastran.dev.bdf_vectorized3.test.test_vector_numpy_utils import *
 
 from pyNastran.dev.bdf_vectorized3.cards.test.all_tests import *
-#from pyNastran.dev.bdf_vectorized3.solver.test_solver_springs import *
+from pyNastran.dev.bdf_vectorized3.solver.test_vector_solver_springs import *
 from pyNastran.dev.op2_vectorized3.test.test_vector_op2_unit import *
 
 

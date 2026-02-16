@@ -164,6 +164,8 @@ from .breakdowns import (
 
 if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.dev.bdf_vectorized3.bdf import PARAM, MDLPRM, FLUTTER
+    from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+        VectorizedBaseCard)
     from pyNastran.dev.bdf_vectorized3.cards.deqatn import DEQATN
     from pyNastran.bdf.case_control_deck import CaseControlDeck
     from pyNastran.bdf.cards.bdf_tables import (
@@ -765,7 +767,7 @@ class BDFAttributes:
         return coord
 
     @property
-    def plot_element_cards(self) -> list[Any]:
+    def plot_element_cards(self) -> list[VectorizedBaseCard]:
         elements = [
             self.plotel,
             self.plotel3, self.plotel4,
@@ -776,21 +778,21 @@ class BDFAttributes:
         return elements
 
     @property
-    def spring_element_cards(self) -> list[Any]:
+    def spring_element_cards(self) -> list[VectorizedBaseCard]:
         elements = [
             self.celas1, self.celas2, self.celas3, self.celas4,
         ]
         return elements
 
     @property
-    def damper_element_cards(self) -> list[Any]:
+    def damper_element_cards(self) -> list[VectorizedBaseCard]:
         elements = [
             self.cdamp1, self.cdamp2, self.cdamp3, self.cdamp4, self.cdamp5,
         ]
         return elements
 
     @property
-    def shell_element_cards(self) -> list[Any]:
+    def shell_element_cards(self) -> list[VectorizedBaseCard]:
         elements = [
             self.ctria3, self.cquad4, self.ctria6, self.cquad8,
             self.ctriar, self.cquadr, self.cquad,
@@ -798,7 +800,7 @@ class BDFAttributes:
         return elements
 
     @property
-    def solid_element_cards(self) -> list[Any]:
+    def solid_element_cards(self) -> list[VectorizedBaseCard]:
         elements = [
             self.ctetra, self.cpenta, self.chexa, self.cpyram,
             self.cpentcz, self.chexcz,  # nx cohesive zone
@@ -807,7 +809,7 @@ class BDFAttributes:
         return elements
 
     @property
-    def element_cards(self) -> list[Any]:
+    def element_cards(self) -> list[VectorizedBaseCard]:
         axisymmetric_element_cards = [
             self.ctriax,
             self.cquadx, self.cquadx4, self.cquadx8,
@@ -841,21 +843,21 @@ class BDFAttributes:
         return elements
 
     @property
-    def bolt_cards(self) -> list[Any]:
+    def bolt_cards(self) -> list[VectorizedBaseCard]:
         cards = [
             self.bolt, self.boltld, self.boltfor, self.boltfrc, self.boltseq,
         ]
         return cards
 
     @property
-    def bar_property_cards(self) -> list[Any]:
+    def bar_property_cards(self) -> list[VectorizedBaseCard]:
         properties = [
             self.pbar, self.pbarl, self.pbrsect,
         ]
         return properties
 
     @property
-    def beam_property_cards(self) -> list[Any]:
+    def beam_property_cards(self) -> list[VectorizedBaseCard]:
         properties = [
             self.pbeam, self.pbeaml, self.pbcomp,
             self.pbeam3,
@@ -863,12 +865,12 @@ class BDFAttributes:
         return properties
 
     @property
-    def line_property_cards(self) -> list[Any]:
+    def line_property_cards(self) -> list[VectorizedBaseCard]:
         properties = self.bar_property_cards + self.beam_property_cards
         return properties
 
     @property
-    def shell_property_cards(self) -> list[Any]:
+    def shell_property_cards(self) -> list[VectorizedBaseCard]:
         properties = [
             self.pshell, self.pcomp, self.pcompg,
             self.plplane, self.pplane,
@@ -876,14 +878,14 @@ class BDFAttributes:
         ]
         return properties
     @property
-    def nonlinear_shell_property_cards(self) -> list[Any]:
+    def nonlinear_shell_property_cards(self) -> list[VectorizedBaseCard]:
         properties = [
             self.pshln1, self.pshln2,
         ]
         return properties
 
     @property
-    def solid_property_cards(self) -> list[Any]:
+    def solid_property_cards(self) -> list[VectorizedBaseCard]:
         properties = [
             self.psolid, self.plsolid, self.psolcz,
             self.pcomps, self.pcompls,
@@ -891,7 +893,7 @@ class BDFAttributes:
         return properties
 
     @property
-    def property_cards(self) -> list[Any]:
+    def property_cards(self) -> list[VectorizedBaseCard]:
         acoustic_property_cards = [
             self.paabsf, self.pacbar,
         ]
@@ -914,14 +916,14 @@ class BDFAttributes:
         return properties
 
     @property
-    def material_cards(self) -> list[Any]:
+    def material_cards(self) -> list[VectorizedBaseCard]:
         materials = (
             self.structural_material_cards + self.thermal_material_cards +
             self.hyperelastic_material_cards + self.thermal_material_dep_cards)
         return materials
 
     @property
-    def structural_material_cards(self) -> list[Any]:
+    def structural_material_cards(self) -> list[VectorizedBaseCard]:
         materials = [
             self.mat1, self.mat2, self.mat3,
             self.mat8, self.mat9, self.mat10, self.mat11,
@@ -930,7 +932,7 @@ class BDFAttributes:
         return materials
 
     @property
-    def thermal_material_dep_cards(self) -> list[Any]:
+    def thermal_material_dep_cards(self) -> list[VectorizedBaseCard]:
         materials = [
             self.matt1, self.matt8, self.matt9,
             self.mats1,
@@ -938,14 +940,14 @@ class BDFAttributes:
         return materials
 
     @property
-    def thermal_material_cards(self) -> list[Any]:
+    def thermal_material_cards(self) -> list[VectorizedBaseCard]:
         materials = [
             self.mat4, self.mat5,
         ]
         return materials
 
     @property
-    def hyperelastic_material_cards(self) -> list[Any]:
+    def hyperelastic_material_cards(self) -> list[VectorizedBaseCard]:
         materials = [
             self.mathe,
             self.mathp,
@@ -953,7 +955,7 @@ class BDFAttributes:
         return materials
 
     @property
-    def optimization_cards(self) -> list[Any]:
+    def optimization_cards(self) -> list[VectorizedBaseCard]:
         optimization = [
             self.desvar, self.dlink, self.dvgrid, self.ddval,
             self.dresp1, self.dresp2, self.dconstr, self.dconadd,
@@ -967,7 +969,7 @@ class BDFAttributes:
         return optimization
 
     @property
-    def static_load_cards(self) -> list[Any]:
+    def static_load_cards(self) -> list[VectorizedBaseCard]:
         loads = [
             self.force, self.force1, self.force2,
             self.moment, self.moment1, self.moment2,
@@ -982,7 +984,7 @@ class BDFAttributes:
         return loads
 
     @property
-    def load_cards(self) -> list[Any]:
+    def load_cards(self) -> list[VectorizedBaseCard]:
         loads = [
             self.load, self.lseq, self.cload,
 
@@ -993,7 +995,7 @@ class BDFAttributes:
         return loads
 
     @property
-    def dynamic_load_cards(self) -> list[Any]:
+    def dynamic_load_cards(self) -> list[VectorizedBaseCard]:
         loads = [
             self.dload,
             self.darea,
@@ -1009,14 +1011,14 @@ class BDFAttributes:
         return loads
 
     @property
-    def dynamic_cards(self) -> list[Any]:
+    def dynamic_cards(self) -> list[VectorizedBaseCard]:
         cards = [
             self.tic, self.delay, self.dphase, self.tf,
         ]
         return cards
 
     @property
-    def rigid_element_cards(self) -> list[Any]:
+    def rigid_element_cards(self) -> list[VectorizedBaseCard]:
         rigid_elements = [
             self.rbar, self.rbar1,
             self.rrod,
@@ -1026,7 +1028,7 @@ class BDFAttributes:
         return rigid_elements
 
     @property
-    def nonstructural_mass_cards(self) -> list[Any]:
+    def nonstructural_mass_cards(self) -> list[VectorizedBaseCard]:
         cards = [
             self.nsmadd,
             self.nsm, self.nsm1,
@@ -1035,14 +1037,14 @@ class BDFAttributes:
         return cards
 
     @property
-    def thermal_element_cards(self) -> list[Any]:
+    def thermal_element_cards(self) -> list[VectorizedBaseCard]:
         thermal_elements = [
             self.chbdye, self.chbdyg, self.chbdyp, self.phbdy,
         ]
         return thermal_elements
 
     @property
-    def thermal_boundary_condition_cards(self) -> list[Any]:
+    def thermal_boundary_condition_cards(self) -> list[VectorizedBaseCard]:
         boundary_conditions = [
             self.conv, self.pconv,
             self.convm, self.pconvm,
@@ -1053,7 +1055,7 @@ class BDFAttributes:
         return boundary_conditions
 
     @property
-    def setx_cards(self) -> list[Any]:
+    def setx_cards(self) -> list[VectorizedBaseCard]:
         """handles SET1-SET4 cards."""
         sets = [
             self.set1, self.set3,
@@ -1061,7 +1063,7 @@ class BDFAttributes:
         return sets
 
     @property
-    def set_cards(self) -> list[Any]:
+    def set_cards(self) -> list[VectorizedBaseCard]:
         """handles ASET/ASET1, ..."""
         sets = [
             self.aset, self.bset, self.cset, self.qset,
@@ -1070,7 +1072,7 @@ class BDFAttributes:
         return sets
 
     @property
-    def seset_cards(self) -> list[Any]:
+    def seset_cards(self) -> list[VectorizedBaseCard]:
         """handles SEBSET/SEBSET1, ..."""
         sesets = [
             self.sebset, self.secset, self.seqset, self.seuset,
@@ -1079,20 +1081,20 @@ class BDFAttributes:
         return sesets
 
     @property
-    def aero_element_cards(self) -> list[Any]:
+    def aero_element_cards(self) -> list[VectorizedBaseCard]:
         elements = [
             self.caero1, self.caero2, self.caero3, self.caero4, self.caero5,
             self.caero7,
         ]
         return elements
     @property
-    def aero_property_cards(self) -> list[Any]:
+    def aero_property_cards(self) -> list[VectorizedBaseCard]:
         properties = [
             self.paero1, self.paero2, self.paero3, self.paero4, self.paero5,
         ]
         return properties
     @property
-    def aero_spline_cards(self) -> list[Any]:
+    def aero_spline_cards(self) -> list[VectorizedBaseCard]:
         splines = [
             self.spline1, self.spline2, self.spline3,
             self.spline4, self.spline5,
@@ -1100,7 +1102,7 @@ class BDFAttributes:
         return splines
 
     @property
-    def aero_load_cards(self) -> list[Any]:
+    def aero_load_cards(self) -> list[VectorizedBaseCard]:
         loads = [
             self.gust, self.csschd, self.trim, # self.trim2,
             self.diverg,
@@ -1108,7 +1110,7 @@ class BDFAttributes:
         return loads
 
     @property
-    def aero_objects(self) -> list[Any]:
+    def aero_objects(self) -> list[VectorizedBaseCard]:
         aero = [
             self.aecomp, self.aecompl, self.aesurf, self.aesurfs, self.aestat,
             self.aelist, self.aeparm, self.aelink,
@@ -1119,7 +1121,7 @@ class BDFAttributes:
         return aero
 
     @property
-    def monitor_point_cards(self) -> list[Any]:
+    def monitor_point_cards(self) -> list[VectorizedBaseCard]:
         monitor_points = [
             self.monpnt1, self.monpnt2, self.monpnt3, self.mondsp1,
         ]
@@ -1128,30 +1130,30 @@ class BDFAttributes:
     # ------------------------------------------------------------------------
     # constraints
     @property
-    def spc_cards(self) -> list[Any]:
+    def spc_cards(self) -> list[VectorizedBaseCard]:
         return [
             self.spc, self.spc1, self.spcadd, self.spcoff, self.bndfix, self.bndfree,
         ]
     @property
-    def mpc_cards(self) -> list[Any]:
+    def mpc_cards(self) -> list[VectorizedBaseCard]:
         return [
             self.mpc, self.mpcadd, # self.mpcax,
         ]
     @property
-    def nsm_cards(self) -> list[Any]:
+    def nsm_cards(self) -> list[VectorizedBaseCard]:
         return [
             self.nsm, self.nsm1, self.nsml, self.nsml1, self.nsmadd,
         ]
 
     @property
-    def contact_cards(self) -> list[Any]:
+    def contact_cards(self) -> list[VectorizedBaseCard]:
         return [self.bsurf, self.bsurfs, self.bcprop, self.bcprops, self.boutput,
                 self.bgset, self.bctset,
                 self.bgadd, self.bctadd,
                 self.bconp, self.bfric, self.blseg, self.bcrpara, self.bedge,
                 self.bcbody, self.bcbody1]
     @property
-    def _cards_not_setup(self) -> list[Any]:
+    def _cards_not_setup(self) -> list[VectorizedBaseCard]:
         cards = [
             # optimization
             self.dequations, self.dtable, self.doptprm,
@@ -1174,7 +1176,7 @@ class BDFAttributes:
         return cards
 
     @property
-    def _cards_to_setup(self) -> list[Any]:
+    def _cards_to_setup(self) -> list[VectorizedBaseCard]:
         cards = [
             self.grid, self.spoint, self.epoint, self.point,
             self.coord,
@@ -1308,7 +1310,7 @@ class BDFAttributes:
         self.is_zaero = False
 
     def set_as_zaero(self):
-        self._nastran_format = 'zona'
+        self._nastran_format = 'zaero'
         self.is_nx = False
         self.is_msc = False
         self.is_optistruct = False

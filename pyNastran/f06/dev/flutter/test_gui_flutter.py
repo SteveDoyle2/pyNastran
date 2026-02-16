@@ -11,13 +11,13 @@ from pyNastran.f06.dev.flutter.utils import (
     load_f06_op2, get_png_filename, get_plot_file,
     point_removal_str_to_point_removal,
     get_point_removal_str,
-    PLOT_TYPES, X_PLOT_TYPES,
-)
+    PLOT_TYPES, X_PLOT_TYPES,)
 
 IS_DEV = pyNastran.DEV
 if IS_DEV:
     from pyNastran.f06.dev.flutter.nastran_utils import (
-        get_element_table, get_property_table, get_material_table)
+        get_element_table, get_property_table, get_material_table,
+        get_table_trees, read_obj, write_obj)
     from pyNastran.dev.bdf_vectorized3.bdf import read_bdf
 
 PKG_PATH = Path(pyNastran.__path__[0])
@@ -27,18 +27,33 @@ AERO_PATH = MODEL_PATH / 'aero'
 
 class TestGuiFlutter(unittest.TestCase):
     @unittest.skipIf(not IS_DEV, 'no flutter-dev')
-    def test_nastran_utils(self) -> None:
+    def test_flutter_nastran_utils(self) -> None:
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
         model = read_bdf(bdf_filename, debug='warning')
         get_element_table(model)
         get_property_table(model)
         get_material_table(model)
+        get_table_trees(model, model)
 
-    def test_action(self) -> None:
+    @unittest.skipIf(not IS_DEV, 'no flutter-dev')
+    def test_flutter_static_solid_shell_bar(self) -> None:
+        bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
+        obj_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.obj'
+        model = read_bdf(bdf_filename, debug='warning')
+        get_element_table(model)
+        get_property_table(model)
+        get_material_table(model)
+        get_table_trees(model, model)
+        write_obj(model, obj_filename)
+        model2 = read_obj(obj_filename)
+        assert model == model2
+        obj_filename.unlink()
+
+    def test_flutter_action(self) -> None:
         act = Action('cat', 'dog', show=True)
         str(act)
 
-    def test_load_f06_op2(self) -> None:
+    def test_flutter_load_f06_op2(self) -> None:
         f06_filename = MODEL_PATH / 'aero' / '2_mode_flutter' / '0012_flutter.op2'
         log = SimpleLogger(level='warning')
         in_units = 'si'
@@ -108,7 +123,7 @@ class TestGuiFlutter(unittest.TestCase):
         with self.assertRaises(AssertionError):
             get_plot_flags('x-damp-freq???', 'eas')
 
-    def test_point_removal(self):
+    def test_flutter_point_removal(self):
         log = SimpleLogger(level='debug')
         msg = '400:410,450:500'
         point_removal = [[400.0, 410.0], [450.0, 500.0]]
@@ -145,7 +160,7 @@ class TestGuiFlutter(unittest.TestCase):
         out = get_point_removal_str(point_removal_list)
         assert out == msg, f'out={out!r} expected={msg!r}'
 
-    def test_validate_json(self):
+    def test_flutter_validate_json(self):
         log = SimpleLogger(level='debug')
         mydict = {}
         is_valid = validate_json(mydict, log)

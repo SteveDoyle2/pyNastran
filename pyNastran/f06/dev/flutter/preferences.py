@@ -2,20 +2,14 @@
 """
 TODO: change from dt_ms to FPS
 """
+from typing import Any
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout
 from qtpy.QtWidgets import (
-    QLabel,
-    # QWidget,
-    # QApplication, QMenu, QVBoxLayout, QLineEdit,
-    QGridLayout,
-    # QAction,
+    QLabel, QGridLayout,
     QCheckBox, QComboBox,
-    # QRadioButton,
-    # QListWidgetItem, QAbstractItemView,
-    # QListWidget,
     QSpinBox, QDoubleSpinBox,
 )
-from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font
 from pyNastran.gui.utils.qt.qcombobox import set_combo_box_text
 
 FONT_SIZE_DEFAULT = 10
@@ -34,7 +28,8 @@ LEGEND_LOCS = [
 
 
 class FlutterPreferencesDialog(PyDialog):
-    def __init__(self, data, gui_obj, win_parent=None):
+    def __init__(self, data: dict[str, Any],
+                 gui_obj, win_parent=None):
         """
         Saves the data members from data and
         performs type checks
@@ -60,10 +55,12 @@ class FlutterPreferencesDialog(PyDialog):
         self.plot_font_size_edit = QSpinBox()
         self.plot_font_size_edit.setValue(data['plot_font_size'])
 
-        self.auto_update_checkbox = QCheckBox('Auto_Update')
+        self.auto_update_checkbox = QCheckBox('Auto-Update')
+        self.auto_update_checkbox.setToolTip('Changing preferences updates immediately')
         self.auto_update_checkbox.setChecked(data['auto_update'])
 
         self.nphase_label = QLabel('Num Phase:')
+        self.nphase_label = QCheckBox('Number of Phase Angles?')
         self.nphase_edit = QSpinBox()
         self.nphase_edit.setValue(data['nphase'])
         self.nphase_edit.setMinimum(4)
@@ -98,6 +95,7 @@ class FlutterPreferencesDialog(PyDialog):
         set_combo_box_text(self.divergence_legend_loc_combobox, data['divergence_legend_loc'])
 
         self.flutter_bbox_to_anchor_x_label = QLabel('Flutter BBox to Anchor:')
+        self.flutter_bbox_to_anchor_x_label.setToolTip('Shift the Legend')
         self.flutter_bbox_to_anchor_x_spinner = QDoubleSpinBox()
         self.flutter_bbox_to_anchor_x_spinner.setValue(data['flutter_bbox_to_anchor_x'])
         self.flutter_bbox_to_anchor_x_spinner.setMinimum(1.0)
@@ -106,6 +104,7 @@ class FlutterPreferencesDialog(PyDialog):
 
         flutter_ncolumns = _get_dict_value(data, 'flutter_ncolumns', 0)
         self.flutter_ncolumns_label = QLabel('Flutter nColumns:')
+        self.flutter_ncolumns_label = QLabel('Change number of columns because it can get messy')
         self.flutter_ncolumns_spinner = QSpinBox()
         self.flutter_ncolumns_spinner.setMinimum(0)
         self.flutter_ncolumns_spinner.setMaximum(3)
@@ -113,6 +112,7 @@ class FlutterPreferencesDialog(PyDialog):
 
         freq_ndigits = _get_dict_value(data, 'freq_ndigits', FREQ_NDIGITS_DEFAULT)
         self.freq_ndigits_label = QLabel('Freq Digits:')
+        self.flutter_ncolumns_label = QLabel('Set the precision of flutter frequencies')
         self.freq_ndigits_spinner = QSpinBox()
         self.freq_ndigits_spinner.setMinimum(0)
         self.freq_ndigits_spinner.setMaximum(4)
@@ -120,6 +120,7 @@ class FlutterPreferencesDialog(PyDialog):
 
         freq_diveregence_tol = _get_dict_value(data, 'freq_divergernce_tol', str(FREQ_DIVERGENCE_TOL))
         self.freq_divergence_tol_label = QLabel('Divergence Freq Tol (Hz):')
+        self.freq_divergence_tol_label = QLabel('Set the tolerance to identify divergence')
         self.freq_divergence_tol_edit = QFloatEdit('0', self)
         self.freq_divergence_tol_edit.setText(freq_diveregence_tol)
         self.freq_divergence_tol_label.setEnabled(False)
@@ -130,10 +131,17 @@ class FlutterPreferencesDialog(PyDialog):
         self.export_f06_checkbox = QCheckBox('Export F06')
         self.export_zaero_checkbox = QCheckBox('Export ZAero')
 
+        self.use_vtk_checkbox = QCheckBox('Enable GUI (dev)')
+        self.use_vtk_checkbox.setToolTip('Requires a restart')
+        self.use_tabs_checkbox = QCheckBox('Use Tabs (dev)')
+        self.use_tabs_checkbox.setToolTip('Requires a restart')
+
         self.export_png_checkbox.setChecked(data['export_to_png'])
         self.export_csv_checkbox.setChecked(data['export_to_csv'])
         self.export_f06_checkbox.setChecked(data['export_to_f06'])
         self.export_zaero_checkbox.setChecked(data['export_to_zaero'])
+        self.use_vtk_checkbox.setChecked(data['use_vtk'])
+        self.use_tabs_checkbox.setChecked(data['use_tabs'])
 
         self.default_button = QPushButton('Default')
 
@@ -190,6 +198,9 @@ class FlutterPreferencesDialog(PyDialog):
         grid.addWidget(self.export_f06_checkbox, irow, 1)
         grid.addWidget(self.export_zaero_checkbox, irow, 2)
         irow += 1
+        grid.addWidget(self.use_vtk_checkbox, irow, 0)
+        grid.addWidget(self.use_tabs_checkbox, irow, 1)
+        irow += 1
         grid.setColumnStretch(grid.columnCount(), 2)
 
         vbox = QVBoxLayout()
@@ -206,6 +217,8 @@ class FlutterPreferencesDialog(PyDialog):
         self.export_f06_checkbox.clicked.connect(self.on_export_f06)
         self.export_png_checkbox.clicked.connect(self.on_export_png)
         self.export_zaero_checkbox.clicked.connect(self.on_export_zaero)
+        self.use_vtk_checkbox.clicked.connect(self.on_use_vtk)
+        self.use_tabs_checkbox.clicked.connect(self.on_use_tabs)
         self.font_size_edit.valueChanged.connect(self.on_font_size)
         self.plot_font_size_edit.valueChanged.connect(self.on_plot_font_size)
         #self.animate_checkbox.clicked.connect(self.on_animate)
@@ -243,6 +256,16 @@ class FlutterPreferencesDialog(PyDialog):
     def on_export_zaero(self) -> None:
         self.win_parent.export_to_zaero = self.export_zaero_checkbox.isChecked()
 
+    def on_use_vtk(self) -> None:
+        assert isinstance(self.win_parent.use_vtk, bool)
+        self.win_parent.use_vtk = self.use_vtk_checkbox.isChecked()
+        self.win_parent._save(self.win_parent.save_filename)
+
+    def on_use_tabs(self) -> None:
+        assert isinstance(self.win_parent.use_tabs, bool)
+        self.win_parent.use_tabs = self.use_tabs_checkbox.isChecked()
+        self.win_parent._save(self.win_parent.save_filename)
+
     def on_default(self) -> None:
         self.font_size_edit.setValue(FONT_SIZE_DEFAULT)
         self.plot_font_size_edit.setValue(FONT_SIZE_DEFAULT)
@@ -259,7 +282,7 @@ class FlutterPreferencesDialog(PyDialog):
         # self.nphase_edit
         # self.dt_ms_edit
         # self.animate_checkbox
-
+        self.win_parent._save(self.win_parent.save_filename)
 
     def on_dt_ms(self) -> None:
         """TODO: move this behind an apply button"""

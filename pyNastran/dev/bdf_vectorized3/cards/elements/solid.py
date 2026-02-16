@@ -35,6 +35,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class SolidElement(Element):
     nnode = 0
     nnode_base = 0
+    _skip_equal_check = ['allowed_properties']
 
     @Element.clear_check
     def clear(self) -> None:

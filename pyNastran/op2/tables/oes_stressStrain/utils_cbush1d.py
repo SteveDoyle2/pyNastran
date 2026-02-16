@@ -3,11 +3,7 @@ from struct import Struct
 from typing import TYPE_CHECKING
 
 import numpy as np
-from pyNastran.op2.op2_interface.utils import (
-    apply_mag_phase,
-)
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
-# from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply_mag_phase
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.tables.oes_stressStrain.utils import obj_set_element
@@ -159,15 +155,8 @@ def oes_cbush1d_complex_9(op2: OP2, data: bytes,
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if is_magnitude_phase:
-            fe = polar_to_real_imag(fer, fei)
-            ue = polar_to_real_imag(uer, uei)
-            ao = polar_to_real_imag(aor, aoi)
-            ae = polar_to_real_imag(aer, aei)
-        else:
-            fe = complex(fer, fei)
-            ue = complex(uer, uei)
-            ao = complex(aor, aoi)
-            ae = complex(aer, aei)
+        fe, ue, ao, ae = real_imag_from_list([
+            fer, uer, aor, aer,
+            fei, uei, aoi, aei], is_magnitude_phase)
         obj.add_new_eid(op2.element_type, dt, eid, fe, ue, ao, ae)
     return n

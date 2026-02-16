@@ -33,6 +33,7 @@ class CDAMP1(Element):
     | CDAMP1 | EID | PID | G1 | C1 | G2 | C2 |
     +--------+-----+-----+----+----+----+----+
     """
+    _skip_equal_check = ['allowed_properties']
     @Element.clear_check
     def clear(self):
         self.element_id = np.array([], dtype='int32')
@@ -325,6 +326,7 @@ class CDAMP3(Element):
     | CDAMP3 | EID | PID | S1 | S2 |
     +--------+-----+-----+----+----+
     """
+    _skip_equal_check = ['allowed_properties']
     @Element.clear_check
     def clear(self):
         self.element_id = np.array([], dtype='int32')

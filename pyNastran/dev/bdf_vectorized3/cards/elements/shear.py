@@ -38,6 +38,7 @@ class CSHEAR(Element):
     +--------+-------+-------+----+----+----+----+
 
     """
+    _skip_equal_check = ['allowed_properties']
     def add(self, eid: int, pid: int, nids: list[int],
             ifile: int=0, comment: str='') -> int:
         """
@@ -198,6 +199,7 @@ class PSHEAR(Property):
     | PSHEAR | PID | MID | T | NSM | F1 | F2 |
     +--------+-----+-----+---+-----+----+----+
     """
+    _skip_equal_check = ['allowed_materials']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')

@@ -43,6 +43,7 @@ class CBUSH(Element):
     |       |  S  | OCID | S1 | S2 |   S3  |    |    |     |
     +-------+-----+------+----+----+-------+----+----+-----+
     """
+    _skip_equal_check = ['allowed_properties']
     @Element.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -759,16 +760,16 @@ class PBUSH(Property):
                 bdf_file.write(print_card(list_fields))
         return
 
-    @property
-    def all_materials(self) -> list[Any]:
-        return [self.model.mat1]
+    # @property
+    # def all_materials(self) -> list[Any]:
+    #     return [self.model.mat1]
 
-    @property
-    def allowed_materials(self) -> list[Any]:
-        all_materials = self.all_materials
-        materials = [mat for mat in all_materials if mat.n > 0]
-        assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.material_cards}'
-        return materials
+    # @property
+    # def allowed_materials(self) -> list[Any]:
+    #     all_materials = self.all_materials
+    #     materials = [mat for mat in all_materials if mat.n > 0]
+    #     assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.material_cards}'
+    #     return materials
 
     def mass(self) -> np.ndarray:
         mass = self._mass
@@ -1002,6 +1003,7 @@ def _set_fields_pbush(list_fields: list[Any], var: str, fields: list[Any]):
 
 
 class CBUSH1D(Element):
+    _skip_equal_check = ['allowed_properties']
     @Element.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -1463,16 +1465,16 @@ class PBUSH1D(Property):
             bdf_file.write(print_card(list_fields))
         return
 
-    @property
-    def all_materials(self) -> list[Any]:
-        return [self.model.mat1]
+    # @property
+    # def all_materials(self) -> list[Any]:
+    #     return [self.model.mat1]
 
-    @property
-    def allowed_materials(self) -> list[Any]:
-        all_materials = self.all_materials
-        materials = [mat for mat in all_materials if mat.n > 0]
-        assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.material_cards}'
-        return materials
+    # @property
+    # def allowed_materials(self) -> list[Any]:
+    #     all_materials = self.all_materials
+    #     materials = [mat for mat in all_materials if mat.n > 0]
+    #     assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.material_cards}'
+    #     return materials
 
     def mass(self) -> np.ndarray:
         mass = self.mass

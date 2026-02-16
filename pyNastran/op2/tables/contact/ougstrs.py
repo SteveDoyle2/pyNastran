@@ -16,7 +16,6 @@ from __future__ import annotations
 from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
-from pyNastran import DEV
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.tables.utils import get_is_slot_saved
@@ -48,13 +47,6 @@ class OUGSTRS:
      """
     def __init__(self, op2: OP2):
         self.op2 = op2
-
-    @property
-    def size(self) -> int:
-        return self.op2.size
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
 
     #def update_mode_cycle(self, name):
         #op2 = self.op2

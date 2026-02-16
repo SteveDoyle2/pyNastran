@@ -533,6 +533,48 @@ class VectorizedBaseCard:
                             keys_to_skip=keys_to_skip,
                             filter_properties=filter_properties)
 
+    def assert_equal(self, card) -> None:
+        """compares a card"""
+        assert self.n == card.n, f'type={self.type}; n={self.n} card.n={self.n}'
+        if card.n == 0:
+            return
+        attrs = self.get_attributes()
+        skip_equal_check = [] if not hasattr(self, '_skip_equal_check') else getattr(self, '_skip_equal_check')
+
+        # print(self.type, attrs)
+        for attr in attrs:
+            if attr in skip_equal_check:
+                continue
+            value1 = getattr(self, attr)
+            value2 = getattr(card, attr)
+            if isinstance(value1, np.ndarray):
+                try:
+                    if value1.dtype.name.startswith(('int', '<U', 'str')):
+                        # string, int
+                        assert np.array_equal(value1, value2)
+                    else:
+                        # float
+                        ifinite1 = np.isfinite(value1)
+                        ifinite2 = np.isfinite(value2)
+                        assert np.array_equal(ifinite1, ifinite2)
+                        if ifinite1.sum():
+                            # if anything is finite
+                            # doesn't handle case where some rows are nan
+                            # and some aren't
+                            assert np.array_equal(value1, value2)
+                except AssertionError:
+                    self.model.log.error(f'{self.type} {attr}={value1}\n{attr}_model={value2}')
+                    raise
+            elif isinstance(value1, dict): # CORD2R mapping dict
+                self.model.log.debug(f'skipping {self.type} {attr} dict')
+            else:
+                # int, string, ...
+                try:
+                    assert value1 == value2
+                except AssertionError:
+                    self.model.log.error(f'{self.type} {attr}={value1}\n{attr}_model={value2}')
+                    raise
+
 
 class Element(VectorizedBaseCard):
     _id_name = 'element_id'
@@ -557,21 +599,21 @@ class Element(VectorizedBaseCard):
 
     def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
         return 0
-        #element_id_all = used_dict['element_id']
-        #element_id = np.intersect1d(element_id_all, self.element_id)
-
-        #ncards_removed = len(self.element_id) - len(element_id)
-        #if ncards_removed:
-            #if len(element_id) == 0:
-                #self.clear()
-            #else:
-                #try:
-                    #self.slice_card_by_id(element_id, assume_sorted=True, sort_ids=False)
-                #except IndexError:
-                    #raise RuntimeError(self.get_stats())
-                #except ValueError:
-                    #raise RuntimeError(f'{self.type} element_id is empty...n={self.n}')
-        #return ncards_removed
+        # element_id_all = used_dict['element_id']
+        # element_id = np.intersect1d(element_id_all, self.element_id)
+        #
+        # ncards_removed = len(self.element_id) - len(element_id)
+        # if ncards_removed:
+        #     if len(element_id) == 0:
+        #         self.clear()
+        #     else:
+        #         try:
+        #             self.slice_card_by_id(element_id, assume_sorted=True, sort_ids=False)
+        #         except IndexError:
+        #             raise RuntimeError(self.get_stats())
+        #         except ValueError:
+        #             raise RuntimeError(f'{self.type} element_id is empty...n={self.n}')
+        # return ncards_removed
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""

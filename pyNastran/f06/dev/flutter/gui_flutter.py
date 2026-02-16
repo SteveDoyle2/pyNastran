@@ -64,14 +64,13 @@ from pyNastran.f06.dev.flutter.utils import (
     _float_passed_to_default, _to_str,
     get_plot_flags, get_plot_file,
     update_ylog_style, get_png_filename,
-    load_f06_op2,
+    load_f06_op2, get_vlines, get_damping_crossings,
     X_PLOT_TYPES, PLOT_TYPES, UNITS_IN, UNITS_OUT,
     MODE_SWITCH_METHODS,
 )
 
 import pyNastran
 PKG_PATH = Path(pyNastran.__path__[0])
-HOME_FILENAME = get_plot_file()
 
 AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
 if 0:  # pragma: no cover
@@ -85,9 +84,18 @@ else:
     BASE_PATH = AERO_PATH / '2_mode_flutter'
     BDF_FILENAME = BASE_PATH / '0012_flutter.bdf'
     OP2_FILENAME = BASE_PATH / '0012_flutter.op2'
-USE_TABS = False
-USE_VTK = False
 
+JSON_FILENAME = get_plot_file()
+USE_VTK = False
+USE_TABS = False
+if os.path.exists(JSON_FILENAME):
+    with open(JSON_FILENAME, 'r') as json_file:
+        data = json.load(json_file)
+    USE_VTK = data.get('use_vtk', False)
+    USE_TABS = data.get('use_tabs', False)
+    del data
+
+from pyNastran.f06.dev.flutter.vtk_data import VtkData
 if USE_VTK:
     from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
 
@@ -95,10 +103,13 @@ if USE_VTK:
 class FlutterGui(LoggableGui):
     def __init__(self, f06_filename: str=''):
         super().__init__(html_logging=False)
+        self.use_vtk = USE_VTK
+        self.use_tabs = USE_TABS
+        self.vtk_data = VtkData()
 
         self._export_settings_obj = FlutterPreferencesObject(self, USE_VTK)
         if USE_VTK:
-            self._vtk_window_obj = VtkWindowObject(self, ICON_PATH)
+            self._vtk_window_obj = VtkWindowObject(self, self.vtk_data, ICON_PATH)
         self.iwindows = []
 
         self.divergence_legend_loc = LEGEND_LOC_DEFAULT
@@ -124,7 +135,7 @@ class FlutterGui(LoggableGui):
         self.qactions = {}
         self.nrecent_files_max = 20
         self.recent_files = []
-        self.save_filename = HOME_FILENAME
+        self.save_filename = JSON_FILENAME
         self.is_valid = False
 
         self.data = {}
@@ -313,12 +324,14 @@ class FlutterGui(LoggableGui):
 
     def _save(self, json_filename: str) -> None:
         is_valid = self.validate()
-        # self.log.info(f'self.data = {self.data}')
+        # self.log.info(f'self.data = {self.data}; is_valid={is_valid}')
         if json_filename == '' or len(self.data) == 0:
             return
         # print(f'json_filename={json_filename!r} wildcard={wildcard!r}')
         # print(f'self.data = {self.data}')
         out_data = copy.deepcopy(self.data)
+        out_data['use_vtk'] = self.use_vtk
+        out_data['use_tabs'] = self.use_tabs
         if USE_VTK:
             out_data['vtk'] = self._vtk_window_obj.data
         out_data['preferences'] = {
@@ -339,11 +352,13 @@ class FlutterGui(LoggableGui):
             json.dump(out_data, json_file, indent=4)
         # print(f'fname="{fname}"')
         self.log.info(f'finished saving {json_filename!r}\n')
+        # self.log.info(f'out_data = {out_data}; is_valid={is_valid}')
         self.save_filename = json_filename
         self._set_window_title()
 
     def _apply_settings(self, data: dict[str, Any]) -> None:
         if USE_VTK:
+            self.vtk_data.apply_settings(data)
             self._vtk_window_obj.apply_settings(data)
         log = self.log
         font_size0 = self.font_size
@@ -395,6 +410,7 @@ class FlutterGui(LoggableGui):
                     key0, key1 = skey
                     if key0 not in data:
                         log.warning(f'skipping {key!r} because {key0} does not exist')
+                        print(data)
                         continue
                     data0 = data[key0]
                     value = data0[key1]
@@ -995,15 +1011,19 @@ class FlutterGui(LoggableGui):
         self.on_plot_type()
         self.on_enable_bdf()
         self.on_enable_op2()
-        if not USE_VTK:
-            objs = [
-                self.bdf_filename_checkbox, self.bdf_filename_edit, self.bdf_filename_browse,
-                self.op2_filename_checkbox, self.op2_filename_edit, self.op2_filename_browse,
-                self.pop_vtk_gui_button, self.solution_type_label, self.solution_type_pulldown,
-                self.mode2_label, self.mode2_pulldown,
-            ]
-            for obj in objs:
-                obj.setVisible(False)
+        self.on_hide_vtk()
+
+    def on_hide_vtk(self) -> None:
+        if USE_VTK:
+            return
+        objs = [
+            self.bdf_filename_checkbox, self.bdf_filename_edit, self.bdf_filename_browse,
+            self.op2_filename_checkbox, self.op2_filename_edit, self.op2_filename_browse,
+            self.pop_vtk_gui_button, self.solution_type_label, self.solution_type_pulldown,
+            self.mode2_label, self.mode2_pulldown,
+        ]
+        for obj in objs:
+            obj.setVisible(False)
 
     def on_plot_type(self) -> None:
         x_plot_type = self.x_plot_type_pulldown.currentText()
@@ -1499,8 +1519,7 @@ class FlutterGui(LoggableGui):
         model, self.responses = load_f06_op2(
             f06_filename, self.log,
             f06_units, out_units,
-            self.use_rhoref,
-        )
+            self.use_rhoref, stop_on_failure=False)
 
         subcases = list(self.responses.keys())
         if len(subcases) == 0:
@@ -1694,20 +1713,7 @@ class FlutterGui(LoggableGui):
         else:
             assert xlim[0] != '' and xlim[1] != '', (xlim, x_plot_type)
 
-        v_lines = []
-        # log.info(f'vf={self.vf!r}; vl={self.vl!r}\n')
-        if isinstance(self.vf, float) and self.vf > 0.:
-            # name, velocity, color, linestyle
-            v_lines.append(('VF', self.vf, 'r', '-'))
-        # if self.vd:
-        #     # name, velocity, color, linestyle
-        #     x_limits.append(('VD', self.vd, 'k', '--'))
-        #     x_limits.append(('1.15*VD', 1.15*self.vd, 'k', '-'))
-        if isinstance(self.vl, float) and self.vl > 0.:
-            # name, velocity, color, linestyle
-            v_lines.append(('VL', self.vl, 'k', '--'))
-            v_lines.append(('1.15*VL', 1.15*self.vl, 'k', '-'))
-
+        v_lines = get_vlines(self.vf, self.vl)
         # log.info(f'v_lines={v_lines}\n')
         # log.info(f'kfreq_lim={self.kfreq_lim}\n')
         # log.info(f'ydamp_lim={self.ydamp_lim}\n')
@@ -1766,7 +1772,7 @@ class FlutterGui(LoggableGui):
         log_scale_x = self.data['log_scale_x']
         log_scale_y1 = self.data['log_scale_y1']
         log_scale_y2 = self.data['log_scale_y2']
-        print(f'log_scale_x={log_scale_x}; log_scale_y1={log_scale_y1}; log_scale_y2={log_scale_y2}')
+        # print(f'log_scale_x={log_scale_x}; log_scale_y1={log_scale_y1}; log_scale_y2={log_scale_y2}')
         # print(f'export_to_png={self.export_to_png}')
 
         # print(f'point_removal = {self.point_removal}')
@@ -1827,16 +1833,8 @@ class FlutterGui(LoggableGui):
                 # log.info(f'modes={modes!r}')
                 # log.info(f'freq_tol={freq_tol!r}')
                 # log.info(f'v_lines={v_lines!r}')
-                damping_crossings = []
-                if damping_required is not None and damping_required > -0.99:
-                    damping_crossings.append((damping_required, damping_required+damping_required_tol))
-                if damping_limit is not None and damping_limit > -0.99:
-                    damping_crossings.append((damping_limit, damping_limit))
-                if len(damping_crossings) == 0:
-                    damping_crossings = [
-                        (0.00, damping_required_tol),
-                        (0.03, 0.03),
-                    ]
+                damping_crossings = get_damping_crossings(
+                    damping_required, damping_required_tol, damping_limit)
 
                 response.plot_vg_vf(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
@@ -1869,19 +1867,10 @@ class FlutterGui(LoggableGui):
             print(traceback.print_exception(e))
             raise
 
-        base2 = os.path.splitext(png_filename0)[0]
-        csv_filename = base2 + '.export.csv'
-        veas_filename = base2 + '.export.veas'
-        f06_filename = base2 + '.export.f06'
-        if self.export_to_csv:
-            log.debug(f'writing {csv_filename}')
-            response.export_to_csv(csv_filename, modes=modes)
-        if self.export_to_zaero:
-            log.debug(f'writing {veas_filename}')
-            response.export_to_veas(veas_filename, modes=modes)
-        if self.export_to_f06:
-            log.debug(f'writing {f06_filename}')
-            response.export_to_f06(f06_filename, modes=modes)
+        export_flutter_results(
+            response, modes, png_filename0,
+            self.export_to_csv, self.export_to_zaero, self.export_to_f06,
+            log)
         os.chdir(current_directory)
         if png_filename:
             log.info(f'saved {png_filename}')
@@ -2182,7 +2171,8 @@ def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
     return texts
 
 
-def get_list_float_or_none(list_line_edit: list[QLineEdit]) -> tuple[list[Optional[float | str]], bool]:
+def get_list_float_or_none(list_line_edit: list[QLineEdit],
+                           ) -> tuple[list[Optional[float | str]], bool]:
     value_list = []
     is_passed_flags = []
     for line_edit in list_line_edit:
@@ -2221,6 +2211,29 @@ def get_float_or_none(line_edit: QLineEdit) -> tuple[Optional[float | str], bool
     return value, is_passed
 
 
+def export_flutter_results(response: FlutterResponse,
+                           modes: list[int],
+                           png_filename0: str,
+                           export_to_csv: bool,
+                           export_to_zaero: bool,
+                           export_to_f06: bool,
+                           log: SimpleLogger) -> None:
+    base2 = os.path.splitext(png_filename0)[0]
+    csv_filename = base2 + '.export.csv'
+    veas_filename = base2 + '.export.veas'
+    f06_filename = base2 + '.export.f06'
+    if export_to_csv:
+        log.debug(f'writing {csv_filename}')
+        response.export_to_csv(csv_filename, modes=modes)
+    if export_to_zaero:
+        log.debug(f'writing {veas_filename}')
+        response.export_to_veas(veas_filename, modes=modes)
+    if export_to_f06:
+        log.debug(f'writing {f06_filename}')
+        response.export_to_f06(f06_filename, modes=modes)
+    return
+
+
 def main(f06_filename: str='') -> None:  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
@@ -2238,5 +2251,5 @@ def main(f06_filename: str='') -> None:  # pragma: no cover
     app.exec_()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

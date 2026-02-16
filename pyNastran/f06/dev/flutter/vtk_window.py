@@ -75,21 +75,17 @@ TODO: disable rotational modes to have fewer results (are these on?)
 """
 from __future__ import annotations
 import os
-import pickle
 import traceback
-from functools import wraps
+from functools import partial, wraps
 from typing import Callable, Optional, Any, cast, TYPE_CHECKING
 #from pyNastran.dev.op2_vectorized3.op2_hdf5 import OP2, OP2Geom
 import numpy as np
 
 from qtpy.QtWidgets import (
-    QHBoxLayout, QVBoxLayout, QMenu,
-    QMainWindow, QDockWidget, QFrame, QToolBar,
+    QHBoxLayout, QVBoxLayout,
+    QMainWindow, QFrame,
     QTableWidget, QTableWidgetItem,
-    #QListWidget, QListWidgetItem,
-    #QTreeWidget, QTreeWidgetItem,
-    QTreeView
-)
+    QTreeView)
 from qtpy.QtGui import QStandardItemModel, QStandardItem
 from qtpy.QtCore import QTimer, Qt
 
@@ -102,20 +98,20 @@ from pyNastran.f06.dev.flutter.actions_builder import (
     Actions, Action, build_menus)
 from pyNastran.f06.dev.flutter.scalar_bar import ScalarBar
 from pyNastran.f06.dev.flutter.nastran_utils import (
-    get_element_table, get_property_table, get_material_table,)
+    get_element_table, get_property_table, get_material_table,
+    get_table_trees, get_ifile_name_dict, read_obj, write_obj)
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.vtk_rendering_core import (
     vtkActor, vtkDataSetMapper, vtkRenderer,
     vtkRenderWindow, vtkTextActor)
 from pyNastran.gui.utils.qt.qsettings import QSettingsLike2
-from pyNastran.gui.utils.qt.pydialog import QFloatEdit, make_font
+from pyNastran.gui.utils.qt.pydialog import make_font
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points)
 from pyNastran.gui.utils.vtk.gui_utils import numpy_array_to_vtk_array
-from vtkmodules.vtkRenderingCore import vtkCellPicker  # , vtkPointPicker, vtkAreaPicker, vtkDataSetMapper
+from vtkmodules.vtkRenderingCore import vtkCellPicker
 
-import pyNastran
 from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
     EditGeometryPropertiesObject)
 
@@ -133,11 +129,11 @@ from pyNastran.gui.dev.gui2.vtk_interface import VtkInterface, ScalarBar
 from pyNastran.gui import font_file
 
 if TYPE_CHECKING:  # pragma: no cover
-    from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
-    #from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
-    #from pyNastran.gui.menus.results_sidebar import ResultsSidebar
+    from cpylog import SimpleLogger
+    from vtkmodules.vtkCommonDataModel import vtkPointData
     from pyNastran.gui.typing import ColorInt
     from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
+    from pyNastran.f06.dev.flutter.vtk_data import VtkData
 
 
 class VtkWindow(QMainWindow):
@@ -174,7 +170,6 @@ class VtkWindow(QMainWindow):
 
         self.run_vtk = True
         self.global_apply_fringe_plot = True
-        self.global_scale_factor = 1.0
 
         icon_path = self.gui_obj.icon_path
         self._create_menus(icon_path)
@@ -195,7 +190,6 @@ class VtkWindow(QMainWindow):
         self.follower_functions = {}
 
         self.result_cases = {}
-        self.icase = 0
         self.is_deflected = False
 
         self.settings = Settings(self)
@@ -258,7 +252,7 @@ class VtkWindow(QMainWindow):
         if self.load_results:
             # Render again to set the correct view
             self.update_dphases()
-            self.plot_deformation(icase=self.icase, dphase=0.0)
+            self.plot_deformation(icase=self.vtk_data.icase, dphase=0.0)
             self.start_animation_timer()
         self.render()
         self.show()
@@ -350,13 +344,13 @@ class VtkWindow(QMainWindow):
             apply_fringe_plot=self.apply_fringe_plot)
         print('done')
 
-    def set_data(self, data: dict[str, int]) -> None:
-        #print('setting data', data)
-        self.dt_ms = data['dt_ms']
-        self.iphase = 0
-        self.nphase = data['nphase']
-        self.animate = True #data['animate']
-        self.point_size = 2
+    # def set_data(self, data: dict[str, int]) -> None:
+    #     #print('setting data', data)
+    #     self.dt_ms = data['dt_ms']
+    #     self.iphase = 0
+    #     self.nphase = data['nphase']
+    #     self.animate = True #data['animate']
+    #     self.point_size = 2
 
     @property
     def vtk_interactor(self) -> QVTKRenderWindowInteractor:
@@ -388,7 +382,7 @@ class VtkWindow(QMainWindow):
         self.timer.stop()
 
     def update_dphases(self):
-        num = self.nphase + 1
+        num = self.vtk_data.nphase + 1
         self.dphases = np.linspace(0.0, 360.0, num=num)[:-1]
         #print(num, self.dphases)
         self.scales = np.cos(np.radians(self.dphases))
@@ -397,16 +391,17 @@ class VtkWindow(QMainWindow):
         if not hasattr(self, 'timer'):
             self.timer = QTimer()
         self.update_dphases()
+
         def update_vtk():
             nphase = len(self.dphases)
-            if self.iphase == nphase:
-                self.iphase = 0
-            dphase = self.dphases[self.iphase]
-            self.plot_deformation(icase=self.icase, dphase=dphase)
+            if self.vtk_data.iphase == nphase:
+                self.vtk_data.iphase = 0
+            dphase = self.dphases[self.vtk_data.iphase]
+            self.plot_deformation(icase=self.vtk_data.icase, dphase=dphase)
             self.render()
-            self.iphase += 1
+            self.vtk_data.iphase += 1
         self.timer.timeout.connect(update_vtk)
-        self.timer.start(self.dt_ms)
+        self.timer.start(self.vtk_data.dt_ms)
 
     def plot_deformation(self, icase: int, dphase: float) -> None:
         #ncase = max(self.result_cases)
@@ -417,7 +412,7 @@ class VtkWindow(QMainWindow):
         #print('found case')
         case = cast(DisplacementResults, case)
         i, name = case_tuple
-        scale = case.get_scale(i, name) * self.global_scale_factor
+        scale = case.get_scale(i, name) * self.vtk_data.global_scale_factor
         phase = case.get_phase(i, name)
         #print(f'  scale={scale}; phase={phase}')
         if phase is None:
@@ -464,7 +459,10 @@ class VtkWindow(QMainWindow):
             log.debug('checking op2')
             assert os.path.exists(bdf_filename), bdf_filename
 
+        # the gui parser
         self.analysis = Nastran3(self)
+
+        # saves the BDF? object to self.analysis
         self.analysis.save_results_model = True
         self.is_geom = True
 
@@ -523,7 +521,11 @@ class VtkWindow(QMainWindow):
 
     def fill_table_tree(self, model: BDF) -> None:
         out = get_table_trees(model, self.analysis.model)
-        ifile_name_dict, pid_to_type_name, mid_to_type_name = out
+        # ifile_name_dict, pid_to_type_name, mid_to_type_name = out
+        (ifile_name_dict, pid_to_type_name, mid_to_type_name,
+         etypes, element_types,
+         pids, properties,
+         mids, materials) = out
         self.ifile_name_dict = ifile_name_dict
         self.pid_to_type_name = pid_to_type_name
         self.mid_to_type_name = mid_to_type_name
@@ -675,7 +677,7 @@ class VtkWindow(QMainWindow):
         pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
         picker.Pick(pixel_x, pixel_y, 0, self.rend)
         cell_id = picker.GetCellId()
-        print('cell_id = {cell_id}')
+        print(f'cell_id = {cell_id}')
 
         if cell_id != -1:
             i = cell_id
@@ -730,6 +732,7 @@ class VtkWindow(QMainWindow):
 
     def _reload_model(self, bdf_filename: PathLike,
                       use_obj_file: bool=False) -> None:
+        """creates self.analysis_model"""
         log = self.gui.log
         #log.info('start of _reload_model')
         self.is_geom = True
@@ -786,7 +789,8 @@ class VtkWindow(QMainWindow):
             for pid in prop.property_id:
                 self.pid_to_ptype[int(pid)] = str(ptype)
 
-    def _reload_results(self, op2_filename, log):
+    def _reload_results(self, op2_filename: PathLike,
+                        log: SimpleLogger):
         # creates result_cases
         log.level = 'info'
         if not hasattr(self, 'model'):
@@ -1029,21 +1033,25 @@ def set_corner_text(vtk_text_actors: list[vtkTextActor],
     for text, text_actor in zip(texts, vtk_text_actors):
         text_actor.SetInput(text)
 
+
 class VtkTools:
     def __init__(self,
                  gui_obj: VtkWindowObject,
                  vtk_window: VtkWindow):
         self.gui_obj = gui_obj
         self.vtk_window = vtk_window
+    @property
+    def vtk_data(self) -> VtkData:
+        return self.vtk_window.vtk_data
 
     def on_nphase_up(self):
         """changes the number of frames"""
-        nphase = self.vtk_window.nphase + 1
+        nphase = self.vtk_data.nphase + 1
         self.gui_obj.set_preferences(nphase=nphase)
 
     def on_nphase_down(self):
         """changes the number of frames"""
-        nphase = self.vtk_window.nphase - 1
+        nphase = self.vtk_data.nphase - 1
         if nphase == 0:
             return
             #nphase -= 1
@@ -1051,21 +1059,21 @@ class VtkTools:
 
     def on_scale_up(self) -> None:
         """changes the global scale factor"""
-        self.vtk_window.global_scale_factor *= 1.1
+        self.vtk_data.global_scale_factor *= 1.1
     def on_scale_down(self) -> None:
         """changes the global scale factor"""
-        self.vtk_window.global_scale_factor /= 1.1
+        self.vtk_data.global_scale_factor /= 1.1
 
     def on_rcycle_icase(self) -> None:
-        icase = self._check_icase(self.vtk_window.icase - 1)
+        icase = self._check_icase(self.vtk_data.icase - 1)
         self.gui_obj.set_preferences(icase=icase)
 
     def on_point_size_up(self) -> None:
-        point_size = self.vtk_window.point_size + 1
+        point_size = self.vtk_data.point_size + 1
         self.set_point_size(point_size)
 
     def on_point_size_down(self) -> None:
-        point_size = self.vtk_window.point_size - 1
+        point_size = self.vtk_data.point_size - 1
         self.set_point_size(point_size)
 
     def set_point_size(self, point_size: int) -> None:
@@ -1073,7 +1081,7 @@ class VtkTools:
         actor: vtkActor = self.vtk_window.geometry_actors['main']
         prop = actor.GetProperty()
         prop.SetPointSize(point_size)
-        self.vtk_window.point_size = point_size
+        self.vtk_data.point_size = point_size
 
     def on_main_point(self):
         actor: vtkActor = self.vtk_window.geometry_actors['main']
@@ -1082,18 +1090,18 @@ class VtkTools:
         self.vtk_window.render()
 
     def on_cycle_icase(self) -> None:
-        icase = self._check_icase(self.vtk_window.icase+1)
+        icase = self._check_icase(self.vtk_data.icase+1)
         self.gui_obj.set_preferences(icase=icase)
 
     def _check_icase(self, icase: int) -> int:
         ncase = len(self.vtk_window.result_cases)
         if icase >= ncase:
             icase = 0
-            self.vtk_window.icase = 0
+            self.vtk_data.icase = 0
             self.gui_obj.reset_icase_ncase(icase, ncase)
         elif icase < 0:
             icase = ncase + icase
-            self.vtk_window.icase = icase
+            self.vtk_data.icase = icase
             self.gui_obj.reset_icase_ncase(icase, ncase)
         return icase
 
@@ -1252,23 +1260,6 @@ def tree_model_add_items(tree_model: QStandardItemModel,
     return is_single
 
 
-def get_ifile_name_dict(model: BDF) -> dict[int, str]:
-    active_filenames = model.active_filenames
-    ifile_name_dict = {}
-    for ifile, fname in enumerate(active_filenames):
-        ifile_name_dict[ifile] = os.path.basename(fname)
-    return ifile_name_dict
-
-def read_obj(obj_filename: PathLike):
-    with open(obj_filename, 'rb') as obj_file:
-        model = pickle.load(obj_file)
-    return model
-
-def write_obj(obj, obj_filename: PathLike):
-    with open(obj_filename, 'wb') as obj_file:
-        pickle.dump(obj, obj_file)
-
-
 def get_ifile_groups_from_table(table_tree: QTreeView,
                                 model: QStandardItemModel,
                                 level: int=0) -> np.ndarray:
@@ -1304,43 +1295,3 @@ def get_ifile_groups_from_table(table_tree: QTreeView,
     print(f'ifile_groups = {ifile_groups}')
     return ifile_groups
     return np.array(ifile_groups, dtype='int32')
-
-def _qitem_text_to_sline(text: str) -> tuple[str, int, str, str]:
-    """
-    1: PSHELL: t=1.0 mid=[1, 2, 3, -1]
-    2: PBEAML: type=BAR
-    CTRIA3: n=100
-    Shells: n=101
-
-    (2, 'PBEAML', 'type=BAR') = _qitem_text_to_sline('2: PBEAML: type=BAR')
-    (-1, 'CTRIA3', 'n=100') = _qitem_text_to_sline('CTRIA3: n=100')
-
-    """
-    sline = text.split(':', 2)
-    if len(sline) == 2:
-        idi = -1
-        type, comment = sline
-    else:
-        assert len(sline) == 3, sline
-    #print(f'sline = {sline}')
-        idi_str, type, comment = sline
-        idi = int(idi_str)
-    type = type.strip()
-    return text, idi, type, comment
-
-def get_table_trees(model: BDF, analysis_model: BDF):
-    for card in model.element_cards:
-        if card.n == 0:
-            continue
-        if not len(card.ifile) == card.n:
-            model.log.warning(f'{card.type} ifile not created')
-    ifile_name_dict = get_ifile_name_dict(
-        analysis_model)
-    #fill_table_tree(self.table_tree, self.ifile_name_dict)
-
-    #tree = self.tree
-    log = model.log
-    etypes, element_types, etype_to_n = get_element_table(model)
-    pids, properties, pid_to_type_name = get_property_table(model)
-    mids, materials, mid_to_type_name = get_material_table(model)
-    return ifile_name_dict, pid_to_type_name, mid_to_type_name

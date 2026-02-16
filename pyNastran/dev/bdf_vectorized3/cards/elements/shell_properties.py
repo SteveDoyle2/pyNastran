@@ -62,6 +62,7 @@ def shell_materials(model: BDF) -> list[MAT1 | MAT8]:
 class PSHELL(Property):
     _show_attributes = ['property_id', 'material_id', 't',
                         'twelveIt3', 'tst', 'nsm', 'z']
+    _skip_equal_check = ['allowed_materials']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -2199,6 +2200,7 @@ class PLPLANE(Property):
         model = self.model
         all_props = [model.pshln2]
         return all_props
+
     @property
     def allowed_properties(self) -> list[Any]:
         all_props = self.all_properties
@@ -2213,6 +2215,7 @@ class PLPLANE(Property):
         else:
             thickness = self.thickness
         return thickness
+
 
 
 class PSHLN1(Property):

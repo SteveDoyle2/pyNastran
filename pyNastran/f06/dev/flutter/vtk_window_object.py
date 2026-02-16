@@ -5,43 +5,38 @@ defines:
 """
 from __future__ import annotations
 from typing import Any, Optional, TYPE_CHECKING
-from qtpy.QtWidgets import QMainWindow
 from pyNastran.utils import PathLike
+from pyNastran.f06.dev.flutter.vtk_data import (
+    DT_MS_MIN, DT_MS_MAX,
+    apply_vtk_settings, VtkData)
 from pyNastran.f06.dev.flutter.vtk_window import VtkWindow
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.f06.dev.flutter.gui_flutter import FlutterGui
 
-DT_MS_DEFAULT = 100
-NPHASE_DEFAULT = 10
-DT_MS_MIN = 100
-DT_MS_MAX = 5000
-
 
 class VtkWindowObject:
     """defines VtkWindowObject, which is an interface to the PreferencesWindow"""
-    def __init__(self, gui: FlutterGui, icon_path: PathLike):
+    def __init__(self, gui: FlutterGui, vtk_data: VtkData,
+                 icon_path: PathLike):
         self.gui = gui
         self.ncase = 0
         self.icon_path = icon_path
+        self.vtk_data = vtk_data
         self.window_shown = None
         self.window = None
 
-        self.dt_ms = DT_MS_DEFAULT
-        self.nphase = NPHASE_DEFAULT
-        self.icase = 0
-        self.animate = True
+        # self.dt_ms = DT_MS_DEFAULT
+        # self.nphase = NPHASE_DEFAULT
+        # self.icase = 0
+        # self.animate = True
 
         self.apply_settings({})
         # self.dt_ms = DT_MS_DEFAULT
         # self.nphase = NPHASE_DEFAULT
 
     def apply_settings(self, data: dict[str, Any]) -> None:
-        vtk_data = data.get('vtk', {})
-        self.dt_ms = DT_MS_DEFAULT if 'dt_ms' not in vtk_data else int(vtk_data['dt_ms'])
-        self.nphase = NPHASE_DEFAULT if 'nphase' not in vtk_data else int(vtk_data['nphase'])
-        self.icase = 0 if 'icase' not in vtk_data else int(vtk_data['icase'])
-        self.animate = True
+        apply_vtk_settings(self, data)
 
     def set_preferences(self, dt_ms: Optional[int]=None,
                         nphase: Optional[int]=None,
@@ -56,38 +51,34 @@ class VtkWindowObject:
         """
         is_updated = False
         apply_fringe_plot = False
-        if dt_ms is not None and dt_ms != self.dt_ms:
+        if dt_ms is not None and dt_ms != self.vtk_data.dt_ms:
             dt_ms = max(DT_MS_MIN, min(dt_ms, DT_MS_MAX))
-            self.dt_ms = dt_ms
+            self.vtk_data.dt_ms = dt_ms
             if self.window_shown:
                 is_updated = True
                 self.window.timer.stop()  # Pause the timer
-                self.window.dt_ms = self.dt_ms
                 self.window.timer.setInterval(dt_ms)
 
-        if nphase is not None and nphase != self.nphase:
-            self.nphase = nphase
+        if nphase is not None and nphase != self.vtk_data.nphase:
+            self.vtk_data.nphase = nphase
             if self.window_shown:
                 is_updated = True
                 self.window.timer.stop()
-                self.window.nphase = self.nphase
 
-        if icase is not None and icase != self.icase:
-            self.icase = icase
+        if icase is not None and icase != self.vtk_data.icase:
+            self.vtk_data.icase = icase
             if self.window_shown:
                 is_updated = True
                 apply_fringe_plot = True
                 self.window.timer.stop()
-                self.window.icase = self.icase
 
         if animate is None:
-            animate = self.animate
-        elif animate != self.animate:
-            self.animate = animate
+            animate = self.vtk_data.animate
+        elif animate != self.vtk_data.animate:
+            self.vtk_data.animate = animate
             if self.window_shown:
                 is_updated = True
                 self.window.timer.stop()
-                self.window.animate = self.animate
 
         if apply_fringe_plot:
             # avoid redoing the fringe
@@ -96,19 +87,20 @@ class VtkWindowObject:
         if is_updated and animate:
             # only restart the animation if the timer was stopped
             # and we're animating
-            self.window.iphase = 0
+            self.vtk_data.iphase = 0
             self.window.update_dphases()
             self.window.timer.start()
 
     @property
     def data(self) -> dict[str, int]:
-        out = {
-            'icase': self.icase,
-            'dt_ms': self.dt_ms,
-            'nphase': self.nphase,
-            'animate': self.animate,
-        }
-        return out
+        return self.vtk_data.to_json()
+        # out = {
+        #     'icase': self.icase,
+        #     'dt_ms': self.dt_ms,
+        #     'nphase': self.nphase,
+        #     'animate': self.animate,
+        # }
+        # return out
 
     def show_window(self) -> None:
         """shows the window"""
@@ -135,8 +127,8 @@ class VtkWindowObject:
         #     return
 
         data = {
-            'dt_ms': self.dt_ms,
-            'nphase': self.nphase,
+            'dt_ms': self.vtk_data.dt_ms,
+            'nphase': self.vtk_data.nphase,
         }
         #print(f'data = {data}')
         if self.window_shown in {True, False}:
@@ -156,7 +148,7 @@ class VtkWindowObject:
 
     def reset_icase_ncase(self, icase: int, ncase: int) -> None:
         """called by VtkWindow when icase exceeds the min/max"""
-        self.icase = icase
+        self.vtk_data.icase = icase
         self.gui._export_settings_obj.reset_icase_ncase(icase, ncase)
 
     def on_close(self):

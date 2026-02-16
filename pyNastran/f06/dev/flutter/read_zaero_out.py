@@ -5,6 +5,7 @@ from cpylog import SimpleLogger, get_logger
 from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.f06.flutter_response import FlutterResponse
 
+
 def read_zaero_out(zaero_out_filename: PathLike,
                    log: Optional[SimpleLogger]=None,
                    debug: Optional[str|bool]=True) -> tuple[dict, dict]:

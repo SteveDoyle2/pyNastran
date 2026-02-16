@@ -21,6 +21,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class CMASS1(Element):
+    _skip_equal_check = ['allowed_properties']
     @Element.clear_check
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
@@ -334,6 +335,7 @@ class CMASS2(Element):
 
 
 class CMASS3(Element):
+    _skip_equal_check = ['allowed_properties']
     @Element.clear_check
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')

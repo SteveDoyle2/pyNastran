@@ -37,6 +37,7 @@ class CONROD(Element):
     | CONROD | EID | N1  | N2 | MID | A | J | C | NSM |
     +--------+-----+-----+----+-----+---+---+---+-----+
     """
+    _skip_equal_check = ['allowed_materials']
     @Element.clear_check
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
@@ -251,6 +252,7 @@ class CROD(Element):
     | CROD | EID | PID | N1 | N2 |
     +------+-----+-----+----+----+
     """
+    _skip_equal_check = ['allowed_properties']
     @Element.clear_check
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
@@ -445,6 +447,7 @@ class PROD(Property):
     +------+-----+-----+-----+-----+-----+-----+
     """
     _show_attributes = ['property_id', 'material_id', 'A', 'J', 'c', 'nsm']
+    _skip_equal_check = ['allowed_materials']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id: np.ndarray = np.array([], dtype='int32')
@@ -605,6 +608,7 @@ class CTUBE(Element):
     | CTUBE | EID | PID | N1 | N2 |
     +-------+-----+-----+----+----+
     """
+    _skip_equal_check = ['allowed_properties', 'all_properties']
     @Element.clear_check
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
@@ -826,7 +830,9 @@ class PTUBE(Property):
     | PTUBE |  2   |  6  | 6.29 | 0.25 |      |     |
     +-------+------+-----+------+------+------+-----+
     """
-    _show_attributes = ['pid', 'mid', 'diameter', 't', 'nsm']
+    _show_attributes = ['property_id', 'material_id', 'diameter', 't', 'nsm']
+    # _show_attributes = ['pid', 'mid', 'diameter', 't', 'nsm']
+    _skip_equal_check = ['allowed_materials']
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')

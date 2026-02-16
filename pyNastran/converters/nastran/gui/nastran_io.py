@@ -217,7 +217,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
     def get_nastran_wildcard_geometry_results_functions(self):
         """gets the Nastran wildcard loader used in the file load menu"""
         geom_methods_pch = 'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
-        combined_methods_op2 = 'Nastran Geometry + Results - OP2 (*.op2)'
+        combined_methods_op2 = 'Nastran Geometry + Results - OP2 (*.bdf; *.dat; *.nas; *.ecd; *.pch; *.op2)'
         results_fmts = ['Nastran OP2 (*.op2)',]
         if IS_H5PY:
             results_fmts.append('pyNastran H5 (*.h5)')
@@ -245,9 +245,19 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
     def load_nastran_geometry_and_results(self, op2_filename: PathLike,
                                           name: str='main', plot: bool=True):
-        """loads geometry and results, so you don't have to double define the same BDF/OP2"""
-        self.load_nastran_geometry(op2_filename, name='main', plot=False)
-        self.load_nastran_results(self.model)  # name='main', plot=True
+        """
+        loads geometry and results, so you don't have to
+        double define the same BDF/OP2
+        """
+        base, ext = os.path.splitext(op2_filename)
+        if ext.lower() == '.op2':
+            self.load_nastran_geometry(op2_filename, name='main', plot=False)
+            self.load_nastran_results(self.model)  # name='main', plot=True
+        else:
+            bdf_filename = op2_filename
+            op2_filename = bdf_filename + '.op2'
+            self.load_nastran_geometry(bdf_filename, name='main', plot=False)
+            self.load_nastran_results(op2_filename)
 
     def on_create_coord(self) -> None:
         pass

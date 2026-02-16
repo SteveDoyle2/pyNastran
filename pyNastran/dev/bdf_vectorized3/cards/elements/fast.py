@@ -26,6 +26,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class CFAST(Element):
+    _skip_equal_check = ['allowed_properties']
     @Element.clear_check
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
@@ -246,7 +247,7 @@ class PFAST(Property):
             mass: float=0., ge: float=0.,
             ifile: int=0, comment: str='') -> int:
         """
-        Creates a PAST card
+        Creates a PFAST card
 
         Parameters
         ----------
@@ -398,16 +399,16 @@ class PFAST(Property):
             bdf_file.write(print_card(list_fields))
         return
 
-    @property
-    def all_materials(self) -> list[Any]:
-        return [self.model.mat1]
-
-    @property
-    def allowed_materials(self) -> list[Any]:
-        all_materials = self.all_materials
-        materials = [mat for mat in all_materials if mat.n > 0]
-        assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.material_cards}'
-        return materials
+    # # @property
+    # # def all_materials(self) -> list[Any]:
+    # #     return [self.model.mat1]
+    #
+    # @property
+    # def allowed_materials(self) -> list[Any]:
+    #     all_materials = self.all_materials
+    #     materials = [mat for mat in all_materials if mat.n > 0]
+    #     assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.material_cards}'
+    #     return materials
 
     def mass(self) -> np.ndarray:
         mass = self._mass
