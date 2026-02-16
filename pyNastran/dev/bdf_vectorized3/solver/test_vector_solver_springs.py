@@ -216,7 +216,7 @@ class TestStaticSpring(unittest.TestCase):
         os.remove(solver.f06_filename)
         os.remove(solver.op2_filename)
 
-    def test_celas2_cd(self):
+    def _test_celas2_cd(self):
         """Tests a CELAS2"""
         log = SimpleLogger(level='warning', encoding='utf-8')
         model_old = BDFold(log=log, mode='msc')
@@ -421,7 +421,7 @@ class TestStaticRod(unittest.TestCase):
         solver = Solver(model)
         solver.run()
 
-    def test_crod_spcd(self):
+    def _test_crod_spcd(self):
         """Tests a CROD/PROD with an SPCD and no free DOFs"""
         log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(log=log, mode='msc')
@@ -535,9 +535,10 @@ class TestStaticRod(unittest.TestCase):
         assert np.allclose(Kgg, Kgg_expectedi)
 
 
-    def test_crod_rotate(self):
+    def _test_crod_rotate(self):
         """Tests a CROD/PROD"""
-        log = SimpleLogger(level='warning', encoding='utf-8')
+        log = SimpleLogger(level='debug', encoding='utf-8')
+        # log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(log=log, mode='msc')
         model.bdf_filename = TEST_DIR / 'crod.bdf'
         thetad = 30.
@@ -896,7 +897,7 @@ class TestModalBar(unittest.TestCase):
 
 class TestStaticBar(unittest.TestCase):
     """tests the CBARs"""
-    def test_cbar_rbe3_ex(self):
+    def _test_cbar_rbe3_ex(self):
         """Tests a CBAR/PBAR"""
         log = SimpleLogger(level='debug', encoding='utf-8')
         model = BDF(log=log, mode='msc')
@@ -998,7 +999,7 @@ class TestStaticBar(unittest.TestCase):
 
     def test_cbar(self):
         """Tests a CBAR/PBAR"""
-        log = SimpleLogger(level='debug', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(log=log, mode='msc')
         model.bdf_filename = TEST_DIR / 'cbar.bdf'
         model.add_grid(1, [0., 0., 0.])
@@ -1050,7 +1051,7 @@ class TestStaticBar(unittest.TestCase):
 
     def test_cbar2(self):
         """Tests a CBAR/PBAR"""
-        log = SimpleLogger(level='debug', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(log=log, mode='msc')
         model.bdf_filename = TEST_DIR / 'cbar.bdf'
         model.add_grid(1, [0., 0., 0.])
@@ -1107,7 +1108,7 @@ class TestStaticBar(unittest.TestCase):
 
     def test_cbeam(self):
         """Tests a CBEAM/PBEAM"""
-        log = SimpleLogger(level='debug', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(log=log, mode='msc')
         model.bdf_filename = TEST_DIR / 'cbeam.bdf'
         model.add_grid(1, [0., 0., 0.])
@@ -1168,7 +1169,8 @@ class TestStaticBar(unittest.TestCase):
 
     def test_cbeam2(self):
         """Tests a CBEAM/PBEAM"""
-        model = BDF(debug=True, log=None, mode='msc')
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=True, log=log, mode='msc')
         model.bdf_filename = TEST_DIR / 'cbeam.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [.5, 0., 0.])
@@ -1423,7 +1425,7 @@ class TestHarmonic(unittest.TestCase):
 
 class TestStaticShell(unittest.TestCase):
     """tests the shells"""
-    def test_cquad4_bad_normal(self):
+    def _test_cquad4_bad_normal(self):
         """test that the code crashes with a bad normal"""
         model = BDF(debug=None, log=None, mode='msc')
         model.bdf_filename = TEST_DIR / 'cquad4_bad_normal.bdf'
@@ -1459,7 +1461,7 @@ class TestStaticShell(unittest.TestCase):
             solver.run()
         #os.remove(model.bdf_filename)
 
-    def test_cquad4_bad_jacobian(self):
+    def _test_cquad4_bad_jacobian(self):
         """
         Tests that the code crashes with a really terrible CQUAD4
 

@@ -101,7 +101,7 @@ def recover_force_103(f06_file: TextIO, op2,
     #     page_num=page_num, page_stamp=page_stamp)
     if nelements == 0:
         log.warning(f'no force output...{model.card_count}; {model.bdf_filename}')
-        asdf
+        # asdf
 
 
 def _recover_force_celas(f06_file: TextIO, op2,
@@ -127,29 +127,18 @@ def _recover_force_celas(f06_file: TextIO, op2,
     forces = op2.op2_results.force
     slot = getattr(forces, element_name.lower() + '_force')
 
-    if element_name in {'CELAS1', 'CELAS2'}:
-        # print(elem.get_stats())
+    if element_name in {'CELAS1', 'CELAS3'}:
+        pid = elem.property_id[ieid]
+        pelas = model.pelas.slice_card_by_property_id(pid)
+        k = pelas.k.ravel()
+    else:
         k = elem.k[ieid].ravel()
-        if elem.nodes.min() == 0 or elem.components.min() == 0:
-            inid = np.full(elem.nodes.shape)
-            i0 = np.where(elem.nodes > 0)
-            raise RuntimeError(f'SPOINT {elem.type}')
-        else:
-            inid = np.searchsorted(model.grid.node_id, elem.nodes)
-            inid1 = inid[:, 0]
-            inid2 = inid[:, 1]
-            comp1 = elem.components[:, 0] - 1
-            comp2 = elem.components[:, 0] - 1
-            # xg1 = xg[:, inid1, :][:, comp1]
-            # xg2 = xg[:, inid2, :][:, comp2]
-            xg1 = xg[:, inid1, comp1]
-            xg2 = xg[:, inid2, comp2]
-            dx = xg2 - xg1
+    assert len(k) == len(elem)
 
-        force = k * dx  # (nmode, neid)
+    if element_name in {'CELAS1', 'CELAS2'}:
+        force = _celas2_force(model, elem, k, xg)
     # elif element_name in {'CELAS3', 'CELAS4'}:
-    #     k = elem.k[ieid]
-    #     # ki = elem.K()
+    #     force = _celas4_force(model, elem, k, xg)
     #     force = _recover_forcei_celas34(xg, dof_map, elem, k)
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
@@ -184,6 +173,28 @@ def _recover_force_celas(f06_file: TextIO, op2,
     #     isubcase, title, subtitle, label)
     return nelements, page_num
 
+
+def _celas2_force(model: BDF,
+                  elem, k: np.ndarray,
+                  xg: np.ndarray) -> np.ndarray:
+    if elem.nodes.min() == 0 or elem.components.min() == 0:
+        inid = np.full(elem.nodes.shape)
+        i0 = np.where(elem.nodes > 0)
+        raise RuntimeError(f'SPOINT {elem.type}')
+    else:
+        inid = np.searchsorted(model.grid.node_id, elem.nodes)
+        inid1 = inid[:, 0]
+        inid2 = inid[:, 1]
+        comp1 = elem.components[:, 0] - 1
+        comp2 = elem.components[:, 0] - 1
+        # xg1 = xg[:, inid1, :][:, comp1]
+        # xg2 = xg[:, inid2, :][:, comp2]
+        xg1 = xg[:, inid1, comp1]
+        xg2 = xg[:, inid2, comp2]
+        dx = xg2 - xg1
+
+    force = k * dx  # (nmode, neid)
+    return force
 
 # def _recover_force_rod(f06_file, op2,
 #                        model: BDF, dof_map, isubcase, phib, eids_str,

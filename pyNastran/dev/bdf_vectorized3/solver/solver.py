@@ -1238,7 +1238,15 @@ class Solver:
         tf_matrix.ravel()[tf_mask.ravel()] = tf_matrix_a.ravel()
 
         # TODO: save tf_matrix to ACCEL response
-        return out, tf_matrix
+        # return out, tf_matrix
+        end_options = [
+            'SEMG', # STIFFNESS AND MASS MATRIX GENERATION STEP
+            'SEMR', # MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES)
+            'SEKR', # STIFFNESS MATRIX REDUCTION STEP
+            'SELG', # LOAD MATRIX GENERATION STEP
+            'SELR', # LOAD MATRIX REDUCTION STEP
+        ]
+        return out, page_num, end_options
 
 
 def remove_rows(Kgg: NDArrayNNfloat, aset: NDArrayNint,
@@ -1683,6 +1691,7 @@ def solve(Kaa: lil_matrix,
     #print(f'Fa: {Fa}')
 
     Kaa_dense = Kaa_.toarray()
+    np.set_printoptions(precision=0, linewidth=100)
     log.debug(f'  Kaas_:\n{Kaa_dense}')
     log.debug(f'  Kaa_:\n{Kaa_}')
     log.debug(f'  Fa_: {Fa_}')
