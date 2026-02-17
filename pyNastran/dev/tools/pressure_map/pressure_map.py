@@ -16,9 +16,9 @@ from pyNastran.converters.cart3d.cart3d import Cart3D
 #from pyNastran.converters.fluent.fluent import read_fluent
 from pyNastran.converters.tecplot.tecplot import Tecplot
 
-from pyNastran.dev.tools.pressure_map_structure_setup import (
+from pyNastran.dev.tools.pressure_map.pressure_map_structure_setup import (
     get_structural_eids_from_csv_load_id, get_structure_xyz, get_mapped_structure)
-from pyNastran.dev.tools.pressure_map_aero_setup import get_aero_model, get_aero_pressure_centroid
+from pyNastran.dev.tools.pressure_map.pressure_map_aero_setup import get_aero_model, get_aero_pressure_centroid
 
 
 def pressure_filename_to_fa2j(pressure_filename: PathLike,

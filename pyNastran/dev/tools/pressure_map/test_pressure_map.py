@@ -9,9 +9,9 @@ from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
 from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 
-from pyNastran.dev.tools.pressure_map import (
+from pyNastran.dev.tools.pressure_map.pressure_map import (
     pressure_map, pressure_filename_to_fa2j, pressure_filename_to_wkk_diag)
-from pyNastran.dev.tools.pressure_map_aero_setup import (
+from pyNastran.dev.tools.pressure_map.pressure_map_aero_setup import (
     get_aero_model, get_aero_pressure_centroid)
 
 PKG_PATH = Path(pyNastran.__path__[0])

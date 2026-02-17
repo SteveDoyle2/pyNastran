@@ -17,7 +17,7 @@ from pyNastran.gui.utils.qt.checks.qlineedit import (
 from pyNastran.utils import print_bad_path
 from pyNastran.converters.cart3d.cart3d import read_cart3d
 from pyNastran.converters.tecplot.tecplot import read_tecplot
-from pyNastran.dev.tools.pressure_map_aero_setup import get_aero_model
+from pyNastran.dev.tools.pressure_map.pressure_map_aero_setup import get_aero_model
 
 
 PKG_PATH = pyNastran.__path__[0]

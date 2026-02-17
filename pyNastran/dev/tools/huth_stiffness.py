@@ -10,7 +10,7 @@ def cis_ass_to_nab(shear_type: str='single',
                    mat1_type: str='metallic',
                    mat2_type: str='metallic',
                    ) -> tuple[int, float, float]:
-    assert shear_type in {'single', 'double'}, f'shear_type={shear_type!r}'
+    assert shear_type in {'single', 'single_shear', 'double', 'double_shear'}, f'shear_type={shear_type!r}'
     assert connection_type in {'rivet', 'bolt'}, f'connection_type={connection_type!r}'
     assert mat1_type in {'metallic', 'composite'}, f'mat1_type={mat1_type!r}'
     assert mat2_type in {'metallic', 'composite'}, f'mat2_type={mat2_type!r}'
@@ -24,9 +24,10 @@ def cis_ass_to_nab(shear_type: str='single',
     }
     word = words_dict[(connection_type, mat1_type, mat2_type)]
 
-    if shear_type == 'single':
+    if shear_type in {'single', 'single_shear'}:
         n = 1  # single shear
-    else: # shear_type has already been checked
+    else:
+        assert shear_type in {'double', 'double_shear'}, shear_type
         n = 2
 
     if word == 'metallic_metallic_riveted':
