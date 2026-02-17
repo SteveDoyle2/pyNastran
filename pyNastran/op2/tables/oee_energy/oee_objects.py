@@ -496,8 +496,9 @@ class RealEnergyArray(BaseElement):
                     #raise RuntimeError(msg)
         return
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
+    def write_f06(self, f06_file: TextIO, header=None,
+                  page_stamp='PAGE %s', page_num: int=1,
+                  is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         # '      EIGENVALUE =  2.005177E+05'
@@ -533,9 +534,10 @@ class RealEnergyArray(BaseElement):
         #etype = self.element_data_type
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
+            etotpos = self.etotpos[itime].squeeze()
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            total_energy = write_float_13e(self.etotpos)
-            total_set_energy = write_float_13e(self.etotpos)
+            total_energy = write_float_13e(etotpos)
+            total_set_energy = write_float_13e(etotpos)
 
             eids = self.element[itime, :]
             # energy, percent, density

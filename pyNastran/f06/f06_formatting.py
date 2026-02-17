@@ -27,7 +27,7 @@ def write_float_12e(val: float) -> str:
 
 def write_float_13e(val: float) -> str:
     """writes a Nastran formatted 13.6 float"""
-    #assert isinstance(val, (float, np.float32, np.float64)), val
+    # assert isinstance(val, (float, np.float32, np.float64)), (val, type(val))
     val2 = '%13.6E' % val
     if val2 in (' 0.000000E+00', '-0.000000E+00'):
         val2 = ' 0.0'

@@ -40,19 +40,19 @@ from pyNastran.femutils.test.all_tests import *
 # converters
 from pyNastran.converters.test_formats import *
 
-#gui - just tests the imports
+# gui - just tests the imports
 from pyNastran.gui.test.all_tests_no_gui import *
-#on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-#if not on_rtd:
-    #import pyNastran.gui.gui
-#import pyNastran.gui.gui
+# on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+# if not on_rtd:
+#     import pyNastran.gui.gui
+# import pyNastran.gui.gui
 
 import pyNastran.dev
 from pyNastran.dev.tools.all_tests import TestInrel, TestPressureMap
-# try:
-#     from pyNastran.dev.solver.test_springs import *
-# except ImportError:  # pragma: no cover
-#     pass
+try:
+    from pyNastran.dev.solver.test_solver1_springs import *
+except ImportError:  # pragma: no cover
+    pass
 if IS_TABLES:
     from pyNastran.dev.bdf_vectorized3.test.all_tests import *
 
