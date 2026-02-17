@@ -1,13 +1,14 @@
 # import os
 from itertools import count, zip_longest
 from collections import defaultdict
-from typing import cast
+from typing import Optional, cast
 import numpy as np
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import matplotlib.cm as cm
 
+from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
@@ -16,14 +17,15 @@ from pyNastran.converters.cart3d.cart3d import Cart3D
 #from pyNastran.converters.fluent.fluent import read_fluent
 from pyNastran.converters.tecplot.tecplot import Tecplot
 
-from pyNastran.dev.tools.pressure_map.pressure_map_structure_setup import (
+from pyNastran.dev.tools.pressure_map.setup_structure import (
     get_structural_eids_from_csv_load_id, get_structure_xyz, get_mapped_structure)
-from pyNastran.dev.tools.pressure_map.pressure_map_aero_setup import get_aero_model, get_aero_pressure_centroid
+from pyNastran.dev.tools.pressure_map.setup_aero import get_aero_model, get_aero_pressure_centroid
 
 
 def pressure_filename_to_fa2j(pressure_filename: PathLike,
-                              fa2j_filename: PathLike, sid: int=1):
-    model = read_bdf(pressure_filename, xref=False)
+                              fa2j_filename: PathLike, sid: int=1,
+                              log: Optional[SimpleLogger]=None):
+    model = read_bdf(pressure_filename, xref=False, log=log)
     loads = model.loads[sid]
     pressures = []
     for load in loads:
@@ -49,7 +51,8 @@ def pressure_filename_to_wkk_diag(cfd_force_moment_bdf_filename1: PathLike | np.
                                   wkk_filename: PathLike,
                                   dtheta_deg: float=1.,
                                   force_sid1: int=2, moment_sid1: int=3,
-                                  force_sid2: int=2, moment_sid2: int=3):
+                                  force_sid2: int=2, moment_sid2: int=3,
+                                  log: Optional[SimpleLogger]=None):
     """
     TODO: not done
 
@@ -65,8 +68,8 @@ def pressure_filename_to_wkk_diag(cfd_force_moment_bdf_filename1: PathLike | np.
     Wkk = CLA_cfd / CLA_nastran
         = (cfd_force_moment2 - cfd_force_moment1) / (nastran_force_moment2 - nastran_force_moment1)
     """
-    force_moment1 = _get_force_moment(cfd_force_moment_bdf_filename1, force_sid1, moment_sid1)
-    force_moment2 = _get_force_moment(cfd_force_moment_bdf_filename2, force_sid2, moment_sid2)
+    force_moment1 = _get_force_moment(cfd_force_moment_bdf_filename1, force_sid1, moment_sid1, log=log)
+    force_moment2 = _get_force_moment(cfd_force_moment_bdf_filename2, force_sid2, moment_sid2, log=log)
     dtheta = np.radians(dtheta_deg)
     force_moment_per_radian = (force_moment2 - force_moment1) / dtheta
 
@@ -82,7 +85,7 @@ def pressure_filename_to_wkk_diag(cfd_force_moment_bdf_filename1: PathLike | np.
         f'force_range=[{force_per_radian.min():g}, {force_per_radian.max():g}]\n'
         f'moment_range=[{moment_per_radian.min():g}, {moment_per_radian.max():g}]')
 
-    model = BDF()
+    model = BDF(log=log)
     GCj = np.arange(1, nrows+1, dtype='int32')
     GCi = np.arange(1, nrows+1, dtype='int32')
     model.add_dmi('WKK', form='square', tin=1, tout=1,
@@ -93,13 +96,14 @@ def pressure_filename_to_wkk_diag(cfd_force_moment_bdf_filename1: PathLike | np.
 
 
 def _get_force_moment(pressure_filename: PathLike | np.ndarray,
-                      force_sid: int, moment_sid: int) -> np.ndarray:
+                      force_sid: int, moment_sid: int,
+                      log: Optional[SimpleLogger]=None) -> np.ndarray:
     """loads the output of pressure_map"""
     if isinstance(pressure_filename, np.ndarray):
         assert pressure_filename.ndim == 2, pressure_filename.shape
         return pressure_filename
 
-    model = read_bdf(pressure_filename, xref=False)
+    model = read_bdf(pressure_filename, xref=False, log=log)
     force_loads = model.loads[force_sid]
     moment_loads = model.loads[moment_sid]
     forces = []
@@ -139,7 +143,8 @@ def pressure_map(aero_filename: PathLike,
                  bref: float=1.0,
                  reference_point: np.ndarray | None=None,
                  regions_to_include=None,
-                 regions_to_remove=None) -> BDF:
+                 regions_to_remove=None,
+                 log: Optional[SimpleLogger]=None) -> BDF:
     """
     Parameters
     ----------
@@ -229,7 +234,7 @@ def pressure_map(aero_filename: PathLike,
     if isinstance(nastran_filename, BDF):
         structure_model = nastran_filename
     else:
-        structure_model = read_bdf(nastran_filename)
+        structure_model = read_bdf(nastran_filename, log=log)
     assert len(structure_model.elements), structure_model.get_bdf_stats()
     assert len(structure_model.nodes), structure_model.get_bdf_stats()
     structure_eids = get_structural_eids_from_csv_load_id(

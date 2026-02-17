@@ -11,7 +11,7 @@ from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 
 from pyNastran.dev.tools.pressure_map.pressure_map import (
     pressure_map, pressure_filename_to_fa2j, pressure_filename_to_wkk_diag)
-from pyNastran.dev.tools.pressure_map.pressure_map_aero_setup import (
+from pyNastran.dev.tools.pressure_map.setup_aero import (
     get_aero_model, get_aero_pressure_centroid)
 
 PKG_PATH = Path(pyNastran.__path__[0])
@@ -27,7 +27,8 @@ class TestPressureMap(unittest.TestCase):
         caero_bdf_filename = MODEL_DIR / 'bwb' / 'bwb_saero.caero.bdf'
 
         skip_cards = ['CBAR']
-        bdf_model = read_bdf(bdf_filename, skip_cards=skip_cards)
+        log = SimpleLogger(level='warning')
+        bdf_model = read_bdf(bdf_filename, skip_cards=skip_cards, log=log)
         if not caero_bdf_filename.exists():  # pragma: no cover
             export_caero_mesh(
                 bdf_filename, caero_bdf_filename,
@@ -38,7 +39,7 @@ class TestPressureMap(unittest.TestCase):
             cart3d_filename, aero_format,
                    aero_xyz_scale=1.0,
                    xyz_units='in',
-                   stop_on_failure=True)
+                   stop_on_failure=True, log=log)
 
         neids = len(aero_model.elements)
         eids = np.arange(neids)
@@ -65,7 +66,8 @@ class TestPressureMap(unittest.TestCase):
             sref=1.0, cref=1.0, bref=1.0,
             reference_point=None,
             regions_to_include=None,
-            regions_to_remove=None)
+            regions_to_remove=None,
+            log=log)
 
         pressure_map(
             aero_model,
@@ -87,7 +89,8 @@ class TestPressureMap(unittest.TestCase):
             sref=1.0, cref=1.0, bref=1.0,
             reference_point=None,
             regions_to_include=None,
-            regions_to_remove=None)
+            regions_to_remove=None,
+            log=log)
 
         with self.assertRaises(RuntimeError):
             pressure_map(
@@ -110,7 +113,8 @@ class TestPressureMap(unittest.TestCase):
                 sref=1.0, cref=1.0, bref=1.0,
                 reference_point=None,
                 regions_to_include=None,
-                regions_to_remove=None)
+                regions_to_remove=None,
+                log=log)
 
         pressure_filename = DIRNAME / 'cart3d_forcemoment_panelmodel_4.bdf'
         pressure_map(
@@ -133,10 +137,11 @@ class TestPressureMap(unittest.TestCase):
             sref=1.0, cref=1.0, bref=1.0,
             reference_point=None,
             regions_to_include=None,
-            regions_to_remove=None)
+            regions_to_remove=None,
+            log=log)
 
         fa2j_filename = DIRNAME/'cart3d_fa2j_5.bdf'
-        pressure_filename_to_fa2j(pressure_filename, fa2j_filename, sid=1)
+        pressure_filename_to_fa2j(pressure_filename, fa2j_filename, sid=1, log=log)
 
         wkk_filename = DIRNAME/'cart3d_wkk_6.bdf'
         pressure_filename1 = pressure_filename
@@ -148,7 +153,8 @@ class TestPressureMap(unittest.TestCase):
             np.ones(2),
             wkk_filename,
             force_sid1=2, moment_sid1=3,
-            force_sid2=1, moment_sid2=3)
+            force_sid2=1, moment_sid2=3,
+            log=log)
 
     def test_pressure_map_fluent(self):
         aero_format = 'fluent'
@@ -170,7 +176,7 @@ class TestPressureMap(unittest.TestCase):
             vrt_filename, aero_format,
                    aero_xyz_scale=1.0,
                    xyz_units='in',
-                   stop_on_failure=True)
+                   stop_on_failure=True, log=log)
         aero_model.titles = ['ElementID', 'Pressure Coefficient']
         # get_aero_pressure_centroid(
         #     aero_model, aero_format,
@@ -197,7 +203,8 @@ class TestPressureMap(unittest.TestCase):
             sref=1.0, cref=1.0, bref=1.0,
             reference_point=None,
             regions_to_include=None,
-            regions_to_remove=None)
+            regions_to_remove=None,
+            log=log)
 
         pressure_map(
             aero_model, #cart3d_filename,
@@ -219,7 +226,8 @@ class TestPressureMap(unittest.TestCase):
             sref=1.0, cref=1.0, bref=1.0,
             reference_point=None,
             regions_to_include=None,
-            regions_to_remove=None)
+            regions_to_remove=None,
+            log=log)
 
 
 if __name__ == '__main__':  # pragma: no cover
