@@ -534,7 +534,10 @@ class RealEnergyArray(BaseElement):
         #etype = self.element_data_type
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
-            etotpos = self.etotpos[itime].squeeze()
+            if isinstance(self.etotpos, float):
+                etotpos = self.etotpos
+            else:
+                etotpos = self.etotpos[itime].squeeze()
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             total_energy = write_float_13e(etotpos)
             total_set_energy = write_float_13e(etotpos)
