@@ -520,6 +520,36 @@ class CBAR(Element):
         breakdown = np.column_stack([length, rho, area, nsm, mass_per_length, mass])
         return breakdown
 
+    def stiffness_info(self) -> np.ndarray:
+        """
+        [L, rho, A, ]
+        """
+        pid = self.property_id
+        npid = len(pid)
+
+        area = np.full(npid, np.nan, dtype='float64')
+        I = np.full((npid, 3), np.nan, dtype='float64')
+        J = np.full(npid, np.nan, dtype='float64')
+        E = np.full(npid, np.nan, dtype='float64')
+        G = np.full(npid, np.nan, dtype='float64')
+        for prop in self.allowed_properties:
+            i_lookup, i_all = searchsorted_filter(prop.property_id, pid, msg='')
+            if len(i_lookup) == 0:
+                continue
+            # we're at least using some properties
+            breakdowni = prop.stiffness_info() # [area, I, J]
+            area[i_lookup] = breakdowni[i_all, 0]
+            #print(prop.type, i_lookup, i_all, breakdowni.shape)
+            I[i_lookup, :] = breakdowni[i_all, :][:, [1, 2, 3]]
+            J[i_lookup] = breakdowni[i_all, 4]
+
+            mat1 = self.model.mat1.slice_card_by_material_id(prop.material_id)
+            E[i_lookup] = mat1.E
+            G[i_lookup] = mat1.G
+        length = self.length()
+        breakdown = np.column_stack([length, area, I, J, E, G])
+        return breakdown
+
     def area(self) -> np.ndarray:
         pid = self.property_id
         area = np.full(len(pid), np.nan, dtype='float64')
@@ -1050,6 +1080,11 @@ class PBAR(Property):
             raise ValueError('I2=%r must be greater than or equal to 0.0' % self.i2)
         if np.any(self.j < 0.):
             raise ValueError('J=%r must be greater than or equal to 0.0' % self.j)
+
+    def stiffness_info(self) -> np.ndarray:
+        """[area, I, J]"""
+        breakdown = np.column_stack([self.A, self.I, self.J])
+        return breakdown
 
     @property
     def i1(self) -> np.ndarray:
@@ -1633,6 +1668,21 @@ class PBARL(Property):
 
         assert len(mass_per_length) == nproperties
         return mass_per_length
+
+    def stiffness_info(self) -> np.ndarray:
+        """[area, I, J]"""
+        assert isinstance(self.ndim, np.ndarray), self.ndim
+        # nsm = self.nsm
+        # rho = get_density_from_material(self.material_id, self.allowed_materials)
+        # if rho.max() == 0. and rho.min() == 0. and nsm.max() == 0. and nsm.min() == 0.:
+        #     return np.zeros(len(rho), dtype=rho.dtype)
+
+        # nproperties = len(self.property_id)
+        area = self.area()
+        I = self.I()
+        J = self.J()
+        breakdown = np.column_stack([area, I, J])
+        return breakdown
 
     def mass_per_length_breakdown(self) -> np.ndarray:
         """[rho, A, nsm, mpl]"""

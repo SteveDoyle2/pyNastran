@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TextIO, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.dev.solver.utils import get_ieids_eids
@@ -371,11 +371,12 @@ def _recover_stress_celas(f06_file, op2,
         isubcase, title, subtitle, label)
     return neids
 
-def _recover_force_celas(f06_file, op2,
-                         model: BDF, dof_map, isubcase, xg, eids_str,
+def _recover_force_celas(f06_file: TextIO, op2,
+                         model: BDF, dof_map: dict[int, int],
+                         isubcase: int, xg: np.ndarray, eids_str,
                          element_name: str, fdtype='float32',
                          title: str='', subtitle: str='', label: str='',
-                         page_num: int=1, page_stamp='PAGE %s') -> None:
+                         page_num: int=1, page_stamp='PAGE %s') -> int:
     """recovers static spring force"""
     neids, ielas, eids = get_ieids_eids(model, element_name, eids_str)
     if not neids:

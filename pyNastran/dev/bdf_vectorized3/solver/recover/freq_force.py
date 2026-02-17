@@ -120,10 +120,10 @@ def _recover_force_celas(f06_file: TextIO, op2,
                          ) -> tuple[int, int]:
     """recovers static spring force"""
     neid, elem, ieid, element_id = get_ieids_eids(model, element_name, eids_write)
-    nelements += neid
     if not neid:
         return nelements, page_num
 
+    nelements += neid
     forces = op2.op2_results.force
     slot = getattr(forces, element_name.lower() + '_force')
     modal_obj: RealSpringForceArray = slot[isubcase]
@@ -132,7 +132,7 @@ def _recover_force_celas(f06_file: TextIO, op2,
     # nmode = xq.shape[0]
 
     # (2, 2, 1)(2052, 2)
-    print(modal_obj.data.shape, xq.shape)
+    # print(modal_obj.data.shape, xq.shape)
     # force = xq @ modal_obj.data
     # f: frequency
     # h: modal
