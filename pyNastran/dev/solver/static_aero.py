@@ -43,18 +43,18 @@ def pfaero(model: BDF):
     unused_KDJB = D1JK + 1j * K2JK
 
     # SKJ - integration matrix
-    unused_QKK = SKJ @ AJJi @ (D1JK + 1j * D2JK)
+    QKK = SKJ @ AJJi @ (D1JK + 1j * D2JK)
 
     is_strip_theory_or_mach_box = False
     if not is_strip_theory_or_mach_box:
         unused_KJ = AJJi @ SKJ1
         unused_QKK = QKJ @ DJKB
         unused_KK = SKJ1 @ AJJT @ DKJB
-    return SKJ, D1JK, AJJi
+    return SKJ, D1JK, AJJi, QKK
 
 def aestat_rs(model: BDF, Kaa, Maa, TR, TRX):
     """static aero"""
-    SKJ, D1JK, AJJi = pfaero(model)
+    SKJ, D1JK, AJJi, QKK = pfaero(model)
     DJX = np.zeros((3, 3))
     KAA = np.zeros((3, 3))
     unused_KAAX = np.zeros((3, 3))

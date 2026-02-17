@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
-from pyNastran.dev.solver.utils import get_ieids_eids, get_element
+from pyNastran.dev.bdf_vectorized3.solver.utils import get_ieids_eids, get_element
 from pyNastran.op2.op2_interface.op2_classes import (
     RealStrainEnergyArray,
     RealSpringStrainArray, RealSpringStressArray, RealSpringForceArray,

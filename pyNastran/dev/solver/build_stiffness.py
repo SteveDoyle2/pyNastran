@@ -15,8 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover
         BDF,
         CELAS1, CELAS2, CELAS3, CELAS4,
         CBAR, PBAR, PBARL, PBEAM, PBEAML, # , CBEAM
-        MAT1,
-    )
+        MAT1)
 
 
 def build_Kgg(model: BDF, dof_map: DOF_MAP,

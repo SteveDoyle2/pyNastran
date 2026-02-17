@@ -12,12 +12,11 @@ DOF_MAP = dict[tuple[int, int], int]
 def get_ieids_eids(model: BDF, etype: str, eids_str: str,
                    idtype: str='int32') -> tuple[int, Any, Any, Any]:
     """helper for the stress/strain/force/displacment recovery"""
-    # eids = np.array(model._type_to_id_map[etype], dtype=idtype)
-    elem = getattr(model, etype.lower())
-    if len(elem) == 0:
+    eids = np.array(model._type_to_id_map[etype], dtype=idtype)
+    # eids = [eid for eid, elem in model.elements if elem.type == etype]
+    if len(eids) == 0:
         return 0, None, None
 
-    eids = elem.element_id
     if eids_str == 'ALL':
         neids = len(eids)
         ieids = np.arange(neids, dtype=idtype)
@@ -25,15 +24,6 @@ def get_ieids_eids(model: BDF, etype: str, eids_str: str,
         ieids = np.searchsorted(eids_str, eids)
         neids = len(ieids)
     return neids, ieids, eids
-
-
-def get_element(model: BDF, element_name: str,
-                ieids: Optional[np.ndarray],
-                eids: np.ndarray):
-    elem = getattr(model, element_name.lower())
-    if ieids is not None:
-        elem = elem.slice_card_by_element_id(eids)
-    return elem
 
 
 def lambda1d(dxyz, debug=True):

@@ -153,7 +153,7 @@ class TestStaticSpring(unittest.TestCase):
         load_id = 2
         spc_id = 3
         # model.add_sload(load_id, 2, 20.)
-        fxyz = [1., 0., 0.]
+        fxyz = np.array([1., 0., 0.])
         mag = 20.
         model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
 
@@ -183,7 +183,7 @@ class TestStaticSpring(unittest.TestCase):
         spc_id = 3
         model.add_pelas(pid, k, ge=0., s=0., comment='')
         # model.add_sload(load_id, 2, 20.)
-        fxyz = [1., 0., 0.]
+        fxyz = np.array([1., 0., 0.])
         mag = 20.
         model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
 
@@ -239,7 +239,7 @@ class TestStaticSpring(unittest.TestCase):
             load_id = 2
             spc_id = 3
             # model.add_sload(load_id, 2, 20.)
-            fxyz = [1., 0., 0.]
+            fxyz = np.array([1., 0., 0.])
             mag = 20.
             model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
 
@@ -290,7 +290,7 @@ class TestStaticSpring(unittest.TestCase):
         spc_id = 3
         model.add_pelas(pid, k, ge=0., s=0., comment='')
         # model.add_sload(load_id, 2, 20.)
-        #fxyz = [1., 0., 0.]
+        #fxyz = np.array([1., 0., 0.])
         mag = 20.
         # model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
         nids = 2
@@ -335,7 +335,7 @@ class TestStaticSpring(unittest.TestCase):
         load_id = 2
         spc_id = 3
         # model.add_sload(load_id, 2, 20.)
-        #fxyz = [1., 0., 0.]
+        #fxyz = np.array([1., 0., 0.])
         mag = 20.
         model.add_sload(load_id, 2, mag)
 
@@ -377,7 +377,7 @@ class TestStaticRod(unittest.TestCase):
         spc_id = 3
         nid = 2
         mag = 1.
-        fxyz = [1., 0., 0.]
+        fxyz = np.array([1., 0., 0.])
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
         components = 123456
@@ -411,7 +411,7 @@ class TestStaticRod(unittest.TestCase):
         spc_id = 3
         nid = 2
         mag = 1.
-        fxyz = [1., 0., 0.]
+        fxyz = np.array([1., 0., 0.])
         model.add_moment(load_id, nid, mag, fxyz, cid=0)
 
         components = 123456
@@ -444,7 +444,7 @@ class TestStaticRod(unittest.TestCase):
         spc_id = 3
         nid = 2
         mag = 1.
-        fxyz = [0., 0., 0.]
+        fxyz = np.array([0., 0., 0.])
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
         nodes = 1
@@ -506,7 +506,7 @@ class TestStaticRod(unittest.TestCase):
         spc_id = 3
         nid = 2
         mag = 1.
-        fxyz = [1., 0., 0.]
+        fxyz = np.array([1., 0., 0.])
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
         components = 123456
@@ -571,7 +571,7 @@ class TestStaticRod(unittest.TestCase):
         spc_id = 3
         nid = 2
         mag = 1.
-        fxyz = [x, y, 0.]
+        fxyz = np.array([x, y, 0.])
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
         components = 123456
@@ -640,7 +640,7 @@ class TestStaticRod(unittest.TestCase):
         spc_id = 3
         nid = 2
         mag = 1.
-        fxyz = [1., 0., 0.]
+        fxyz = np.array([1., 0., 0.])
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
         components = 123456
@@ -688,7 +688,7 @@ class TestStaticRod(unittest.TestCase):
         spc_id = 3
         nid = 3
         mag = 1.
-        fxyz = [0., 0., 1.]
+        fxyz = np.array([0., 0., 1.])
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
         components = 123456
@@ -723,7 +723,7 @@ class TestStaticRod(unittest.TestCase):
         spc_id = 3
         nid = 2
         mag = 1.
-        fxyz = [1., 0., 0.]
+        fxyz = np.array([1., 0., 0.])
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
         components = 123456
@@ -769,11 +769,11 @@ class TestStaticRod(unittest.TestCase):
         spc_id = 3
         nid = 2
         mag_axial = 10000.
-        fxyz = [1., 0., 0.]
+        fxyz = np.array([1., 0., 0.])
         model.add_force(load_id, nid, mag_axial, fxyz, cid=0)
 
         mag_torsion = 20000.
-        fxyz = [1., 0., 0.]
+        fxyz = np.array([1., 0., 0.])
         model.add_moment(load_id, nid, mag_torsion, fxyz, cid=0)
 
         components = 123456
@@ -932,7 +932,7 @@ class TestStaticBar(unittest.TestCase):
         load_id = 2
         nid = 101
         mag = 1.
-        fxyz = [0., 0., 1.]
+        fxyz = np.array([0., 0., 1.])
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
         spc_id = 3
@@ -1033,7 +1033,7 @@ class TestStaticBar(unittest.TestCase):
         spc_id = 3
         nid = 2
         mag = 1.
-        fxyz = [1., 0., 0.]
+        fxyz = np.array([1., 0., 0.])
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
         components = 123456
@@ -1090,7 +1090,7 @@ class TestStaticBar(unittest.TestCase):
         spc_id = 3
         nid = 3
         mag = 1.
-        fxyz = [1., 0., 0.]
+        fxyz = np.array([1., 0., 0.])
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
         components = 123456
@@ -1149,7 +1149,7 @@ class TestStaticBar(unittest.TestCase):
         spc_id = 3
         nid = 2
         mag = 1.
-        fxyz = [1., 0., 0.]
+        fxyz = np.array([1., 0., 0.])
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
         components = 123456
@@ -1220,7 +1220,7 @@ class TestStaticBar(unittest.TestCase):
         spc_id = 3
         nid = 3
         mag = 1.
-        fxyz = [1., 0., 0.]
+        fxyz = np.array([1., 0., 0.])
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
         components = 123456

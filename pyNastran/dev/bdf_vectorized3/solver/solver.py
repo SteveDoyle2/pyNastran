@@ -97,8 +97,8 @@ class Solver:
         self._bdf_filename = base_name + '.solver.bdf'
         self.f06_filename = base_name + '.solver.f06'
         self.op2_filename = base_name + '.solver.op2'
-        print(self.f06_filename)
-        print(self.op2_filename)
+        # print(self.f06_filename)
+        # print(self.op2_filename)
 
     def run(self):
         page_num = 1

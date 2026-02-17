@@ -1,7 +1,7 @@
 from __future__ import annotations
 import copy
 from itertools import count
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from scipy.sparse._dok import dok_matrix
