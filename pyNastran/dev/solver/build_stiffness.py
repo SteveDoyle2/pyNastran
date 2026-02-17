@@ -419,9 +419,9 @@ def _beami_stiffness(prop: PBAR | PBARL | PBEAM | PBEAML,
     ktorsion = G * J / L
 
     L2 = L * L
-    if k1 is not None:
+    if k1 is not None and k1 > 0.:
         phiy = 12. * E * Iy / (k1 * G * A * L2)
-    if k2 is not None:
+    if k2 is not None and k2 > 0.:
         phiz = 12. * E * Iy / (k2 * G * A * L2)
 
     phiy = 1.0

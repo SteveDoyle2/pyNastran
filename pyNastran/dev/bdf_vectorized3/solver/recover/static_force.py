@@ -294,9 +294,9 @@ def _beami_stiffness(L: float, A: float,
     ktorsion = G * J / L
 
     L2 = L * L
-    if k1 is not None:
+    if k1 is not None and k1 > 0.0:
         phiy = 12. * E * Iy / (k1 * G * A * L2)
-    if k2 is not None:
+    if k2 is not None and k2 > 0.0:
         phiz = 12. * E * Iy / (k2 * G * A * L2)
 
     phiy = 1.0

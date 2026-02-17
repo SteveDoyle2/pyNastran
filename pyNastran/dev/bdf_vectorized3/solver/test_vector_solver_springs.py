@@ -1632,4 +1632,5 @@ class TestStaticShell(unittest.TestCase):
 
 
 if __name__ == '__main__':  # pragma: no cover
+    np.seterr(all='raise')
     unittest.main()
