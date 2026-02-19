@@ -131,10 +131,22 @@ def run_lots_of_files(filenames: list[str], folder: str='',
     dev : bool; default=True
         True : crashes if an Exception occurs
         False : doesn't crash; useful for running many tests
+    allow_similar_eid : bool; default=False
+        overwrites a duplicate element???
     crash_cards : list[str, str, ...]
         list of cards that are invalid and automatically crash the run
+    run_mcid : bool; default=True
+        verify you can calculate the material coordinate systems on each ply
+    run_export_caero : bool; default=True
+        expert CAEROs into a separate mesh (no effect if there is no aero model)
+    run_skin_solids : bool; default=True
+        finds the exposed area of a solid model; no effect for shell/bar models
     run_pickle : bool; default=True
         tests pickling
+    write_hdf5 : bool; default=True
+        test saving and loading a pyNastran HDF5
+    is_lax_parser : bool; default=False
+        allows floats of 1 vs. 1.0
 
     Usage
     -----
@@ -377,10 +389,44 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         False : doesn't crash; useful for running many tests
     run_pickle : bool; default=True
         tests pickling
+    run_dependent_checks : bool; default=True
+        checks:
+         - rigid elements aren't crazy (e.g., weight=0)
+         - sets (S-set, M-set, R-set)
+    run_mcid : bool; default=True
+        verify you can calculate the material coordinate systems on each ply
+    run_export_caero : bool; default=True
+        expert CAEROs into a separate mesh (no effect if there is no aero model)
+    run_skin_solids : bool; default=True
+        finds the exposed area of a solid model; no effect for shell/bar models
+    run_eid_checks : bool; default=True
+        lots of get area/mass/etc. checks for every card
+    save_file_structure : bool; default=False
+        save the ifile parameter on the cards; better error messages
+        and you can write to INCLUDE files
+    is_lax_parser : bool; default=False
+        allows floats of 1 vs. 1.0
+    allow_duplicates : bool; default=False
+        pyNastran treats CBAR/CQUAD4/CTETRA, CONM2s, and RBEs as 3 bags
+        Nastran   treats CBAR, CQUAD4, CTETRA, CONM2s, RBEs as 5 bags
+        FEMAP     treats CBAR/CQUAD4/CTETRA/CONM2s/RBEs as 1 bag
+        True:  pyNastran mode; element ids must be unique in each bag
+        False: FEMAP mode; element ids must be unique regardless of bag
+    allow_similar_eid : bool; default=False
+        overwrites a duplicate element???
+    allow_tabs : bool; default=True
+        tabs can break other parsers and they can be difficult to find
+    sort_cards : bool; default=True
+        sort the cards; can be useful to not sort because
+        1) it's faster, 2) simpler to compare two decks
+    is_csv : bool; default=False
+        hack to write the bdf as a CSV
     crash_cards: list[str]; default=None
         crash on cards to find specific cards
     skip_cards: list[str]; default=None
         don't read specific cards
+    stop_on_failure : bool; default=True
+        stops if an error is encountered (True=single test, False=many tests)
 
     """
     if not quiet:
@@ -761,6 +807,26 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
         the file encoding
     crash_cards : ???
         ???
+    sort_cards : bool; default=True
+        sort the cards; can be useful to not sort because
+        1) it's faster, 2) simpler to compare two decks
+    is_csv : bool; default=False
+        hack to write the bdf as a CSV
+    run_pickle: bool; default=True
+        export model.obj and reload it to test pickle
+    run_export_caero : bool; default=True
+        expert CAEROs into a separate mesh (no effect if there is no aero model)
+    run_skin_solids : bool; default=True
+        finds the exposed area of a solid model; no effect for shell/bar models
+    save_file_structure : bool; default=False
+        save the ifile parameter on the cards; better error messages
+        and you can write to INCLUDE files
+    run_dependent_checks : bool; default=True
+        checks:
+         - rigid elements aren't crazy (e.g., weight=0)
+         - sets (S-set, M-set, R-set)
+    stop : bool; default=True
+        stops after initial read
 
     """
     log = fem1.log
@@ -1154,6 +1220,8 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
         debugs
     quiet : bool
         suppress prints
+    stop_on_failure : bool; default=True
+        stops if an error is encountered (True=single test, False=many tests)
 
     """
     assert os.path.exists(bdf_model), bdf_model
@@ -1276,7 +1344,7 @@ def _validate_case_control(fem: BDF, p0: Any, sol_base: int,
 
 
 def check_for_flag_in_subcases(fem2: BDF, subcase: Any,
-                               parameters: list[str]) -> None:
+                               parameters: list[str] | tuple[str, ...]) -> None:
     """
     For a multi-subcase deck, you can define specific required cards
     (e.g., TSTEP) in secondary cases, but not primary cases.  This
@@ -1311,7 +1379,7 @@ def stop_if_max_error(msg: str, error: Any, ierror: int, nerrors: int) -> int:
     return ierror
 
 
-def check_for_optional_param(keys: list[str], subcase: Subcase,
+def check_for_optional_param(keys: list[str] | tuple[str, ...], subcase: Subcase,
                              msg: str, error: Any, log: SimpleLogger,
                              ierror: int, nerrors: int) -> int:
     """one or more must be True"""
@@ -1643,7 +1711,7 @@ def _check_flutter_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
 
     if len(fem2.caeros) == 0:
-        msg = 'An CAEROx card is required for FLUTTER - SOL {sol:d}'
+        msg = f'An CAEROx card is required for FLUTTER - SOL {sol:d}'
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     if len(fem2.splines) == 0:
@@ -1715,6 +1783,7 @@ def _check_gust_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase,
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     unused_mklist = fem2.get_mklist()
+    del unused_mklist
     return ierror
 
 
@@ -1939,6 +2008,7 @@ def _check_case_parameters(subcase: Subcase,
         cmethod_id = subcase.get_int_parameter('CMETHOD')
         if cmethod_id in fem.cMethods:
             unused_method = fem.cMethods[cmethod_id]
+            del unused_method
         #elif method_id in fem.cMethods:
             #unused_method = fem.cMethods[method_id]
         else:
@@ -1949,6 +2019,7 @@ def _check_case_parameters(subcase: Subcase,
 
     if 'RMETHOD' in subcase:
         unused_rmethod_id = subcase.get_int_parameter('RMETHOD')
+        del unused_rmethod_id
         # if method_id in fem.methods:
         #     method = fem.methods[method_id]
         # elif method_id in fem.cMethods:
@@ -2006,6 +2077,7 @@ def _check_case_parameters(subcase: Subcase,
         # not positive on 107 - complex eigenvalues
         freq_id = subcase.get_int_parameter('FREQUENCY')
         freq = fem.frequencies[freq_id]
+        del freq
         allowed_sols = [26, 68, 76, 78, 88, 108, 101, 107, 111, 112, 118, 146, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'FREQUENCY', log, ierror, nerrors)
 
@@ -2111,6 +2183,7 @@ def _check_case_parameters(subcase: Subcase,
                     if freq.type in {'FREQ', 'FREQ1', 'FREQ2'}:
                         fmax = freq.freqs[-1]
                         force = load2.get_load_at_freq(fmax) * scale_factor
+                        del force
         elif sol in {118}:
             # 118: Cyclic direct frequency response
             for load2, scale_factor in zip(loads, scale_factors):
@@ -2125,6 +2198,7 @@ def _check_case_parameters(subcase: Subcase,
                 # transient
                 for load2, scale_factor in zip(loads, scale_factors):
                     force = load2.get_load_at_time(0.) * scale_factor
+                    del force
         elif sol in {109, 112, 129, 159, 400, 401, 601, 700}:
             # 109: direct transient (time linear)
             # 112: modal transient
@@ -2148,6 +2222,7 @@ def _check_case_parameters(subcase: Subcase,
         ierror = check_sol(sol, subcase, allowed_sols, 'NLPARM', log, ierror, nerrors)
         nlparm_id = subcase.get_int_parameter('NLPARM')
         unused_nlparm = fem.NLParm(nlparm_id, f', which is required for {subcase}')
+        del unused_nlparm
     return ierror
 
 
@@ -2200,6 +2275,7 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDF, sol: int,
         unused_fmethod = fem.flutters[fmethod_id]
         allowed_sols = [145, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'FMETHOD', log, ierror, nerrors)
+        del unused_fmethod
     return ierror
 
 
@@ -2258,7 +2334,7 @@ def compute(cards1: dict[str, int],
         if key in list_keys1:
             value1 = cards1[key]
         else:
-            value2 = 0
+            value1 = 0
 
         if key in list_keys2:
             value2 = cards2[key]

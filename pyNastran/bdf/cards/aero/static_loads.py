@@ -796,7 +796,7 @@ class TRIM(BaseCard):
                     suport: list[SUPORT],
                     suport1: SUPORT1,
                     aestats: dict[int, AESTAT],
-                    aeparms: dict[str, AEPARM],
+                    aeparms: dict[int, AEPARM],
                     aelinks: dict[int, list[AELINK]],
                     aesurf: dict[int, AESURF], xref=True):
         """

@@ -5224,7 +5224,8 @@ class AddAero:
         self._add_methods.add_aesurfs_object(aesurfs)
         return aesurfs
 
-    def add_aeparm(self, aeparm_id, label, units, comment='') -> AEPARM:
+    def add_aeparm(self, aeparm_id: int, label: str, units: str,
+                   comment: str='') -> AEPARM:
         """
         Creates an AEPARM card, which defines a new trim variable.
 
