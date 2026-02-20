@@ -1,6 +1,7 @@
 """defines various GUI unit tests"""
 import os
 import shutil
+from pathlib import Path
 import unittest
 import numpy as np
 
@@ -20,8 +21,8 @@ from pyNastran.gui.menus.legend.write_gif import (
     setup_animation, make_two_sided, make_symmetric, write_gif, IS_IMAGEIO)
 from pyNastran.gui.menus.results_sidebar_utils import get_cases_from_tree, build_pruned_tree
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = PKG_PATH / '..' / 'models'
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.utils import find_next_value_in_sorted_list
 from pyNastran.gui.utils.qt.checks.utils import (check_locale_float, is_ranged_value,
@@ -222,6 +223,11 @@ class GuiUtils(unittest.TestCase):
         """tests custom_geom.csv"""
         csv_filename = os.path.join(MODEL_PATH, 'custom_geom.csv')
         load_user_geom(csv_filename)
+
+
+    def test_gui_custom_geom_02(self):
+        stl_filename = PKG_PATH / 'converters' / 'stl' / 'sphere.stl'
+        load_user_geom(stl_filename)
 
     def test_animation_scale_0(self):
         """0 to scale"""

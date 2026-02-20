@@ -18,6 +18,7 @@ from typing import Any
 import numpy as np
 #import pyNastran
 
+from pyNastran.utils import PathLike
 from pyNastran.femutils.io import loadtxt_nice
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.gui_objects.displacements import DisplacementResults, ForceTableResults
@@ -318,7 +319,25 @@ def _load_format_header(file_obj, ext, force_float=False):
     }
     return names, fmt_dict, dtype, delimiter
 
-def load_user_geom(fname: str, log=None,
+def _load_user_geom_stl(stl_filename: PathLike,
+                        log=None,
+                        ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                   np.ndarray, np.ndarray]:
+    stl = read_stl(stl_filename, log=log)
+    nnodes = stl.nodes.shape[0]
+    ntris = stl.elements.shape[0]
+    grid_ids = np.arange(1, nnodes + 1, dtype='int32')
+    xyz = stl.nodes
+    eids = np.arange(1, ntris + 1, dtype='int32')
+    tris = np.vstack([eids, stl.elements.T + 1]).T
+    # tris = stl.elements + 1
+    # print(tris)
+    quads = np.array([], dtype='int32')
+    bars = np.array([], dtype='int32')
+    return grid_ids, xyz, bars, tris, quads
+
+
+def load_user_geom(fname: PathLike, log=None,
                    encoding: str='latin1') -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                                     np.ndarray, np.ndarray]:
     """
@@ -357,70 +376,61 @@ def load_user_geom(fname: str, log=None,
     QUAD, 3, 1, 5, 3, 4
     QUAD, 4, 1, 2, 3, 4  # this is after a blank line
     """
-    if fname.lower().endswith('.stl'):
-        stl_filename = fname
-        stl = read_stl(stl_filename, log=log)
-        nnodes = stl.nodes.shape[0]
-        ntris = stl.elements.shape[0]
-        grid_ids = np.arange(1, nnodes+1, dtype='int32')
-        xyz = stl.nodes
-        eids = np.arange(1, ntris+1, dtype='int32')
-        tris = np.vstack([eids, stl.elements.T + 1]).T
-        #tris = stl.elements + 1
-        #print(tris)
-        quads = np.array([], dtype='int32')
-        bars = np.array([], dtype='int32')
+    ext = os.path.splitext(fname)[1].lower()
+    if ext == '.stl':
+        grid_ids, xyz, bars, tris, quads = _load_user_geom_stl(
+            fname, log=log, encoding='latin1')
         return grid_ids, xyz, bars, tris, quads
 
     with open(fname, 'r', encoding=encoding) as user_geom:
         lines = user_geom.readlines()
 
-    grid_ids = []
-    xyz = []
-    bars = []
-    tris = []
-    quads = []
-    #lines2 = []
+    grid_list = []
+    xyz_list = []
+    bar_list = []
+    tri_list = []
+    quad_list = []
     for line in lines:
         line2 = line.strip().split('#')[0].upper()
-        if line2:
-            sline = line2.split(',')
-            if line2.startswith('GRID'):
-                assert len(sline) == 5, sline
-                grid_ids.append(sline[1])
-                xyz.append(sline[2:])
-            elif line2.startswith('BAR'):
-                assert len(sline) == 4, sline
-                bars.append(sline[1:])
-            elif line2.startswith('TRI'):
-                assert len(sline) == 5, sline
-                tris.append(sline[1:])
-            elif line2.startswith('QUAD'):
-                assert len(sline) == 6, sline
-                quads.append(sline[1:])
-            else:
-                log.warning(str(sline))
+        if not line2:
+            continue
+        sline = line2.split(',')
+        if line2.startswith('GRID'):
+            assert len(sline) == 5, sline
+            grid_list.append(sline[1])
+            xyz_list.append(sline[2:])
+        elif line2.startswith('BAR'):
+            assert len(sline) == 4, sline
+            bar_list.append(sline[1:])
+        elif line2.startswith('TRI'):
+            assert len(sline) == 5, sline
+            tri_list.append(sline[1:])
+        elif line2.startswith('QUAD'):
+            assert len(sline) == 6, sline
+            quad_list.append(sline[1:])
+        else:
+            log.warning(str(sline))
 
-    grid_ids = np.array(grid_ids, dtype='int32')
-    xyz = np.array(xyz, dtype='float32')
-    tris = np.array(tris, dtype='int32')
-    quads = np.array(quads, dtype='int32')
-    bars = np.array(bars, dtype='int32')
+    grid_ids = np.array(grid_list, dtype='int32')
+    xyz = np.array(xyz_list, dtype='float32')
+    tris = np.array(tri_list, dtype='int32')
+    quads = np.array(quad_list, dtype='int32')
+    bars = np.array(bar_list, dtype='int32')
     return grid_ids, xyz, bars, tris, quads
 
-#def natural_sort(l):
-    #convert = lambda text: int(text) if text.isdigit() else text.lower()
-    #alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
-    #return sorted(l, key=alphanum_key)
-
-#def num_sort():
-    #"""
-    #in_values  = ['anti_main', 'main', 'Family 4', 'Family 3', 'Family 1',
-                  #'Patch 119', 'Patch 118', 'Patch 19', 'Patch 18']
-    #out_values = ['anti_main', 'main', 'Family 1', 'Family 3', 'Family 4',
-                  #'Patch 118', 'Patch 119', 'Patch 18', 'Patch 19']
-
-    #'Patch 19 cat 20' not handled
-    #"""
-    #convert = lambda text: int(text) if text.isdigit() else text.lower()
-    #alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+# def natural_sort(l):
+#     convert = lambda text: int(text) if text.isdigit() else text.lower()
+#     alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+#     return sorted(l, key=alphanum_key)
+#
+# def num_sort():
+#     """
+#     in_values  = ['anti_main', 'main', 'Family 4', 'Family 3', 'Family 1',
+#                   'Patch 119', 'Patch 118', 'Patch 19', 'Patch 18']
+#     out_values = ['anti_main', 'main', 'Family 1', 'Family 3', 'Family 4',
+#                   'Patch 118', 'Patch 119', 'Patch 18', 'Patch 19']
+#
+#     'Patch 19 cat 20' not handled
+#     """
+#     convert = lambda text: int(text) if text.isdigit() else text.lower()
+#     alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
