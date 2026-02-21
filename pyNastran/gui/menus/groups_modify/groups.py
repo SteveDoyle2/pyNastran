@@ -116,11 +116,11 @@ class NodeGroup:
         self.editable = editable
 
     @property
-    def node_ids(self):
+    def node_ids(self) -> np.ndarray:
         return parse_patran_syntax(self.node_str, pound=self.nodes_pound)
 
     @node_ids.setter
-    def node_ids(self, nids):
+    def node_ids(self, nids: np.ndarray):
         assert isinstance(nids, np.ndarray), nids
         self.node_str = _get_collapsed_text(nids).strip()
 

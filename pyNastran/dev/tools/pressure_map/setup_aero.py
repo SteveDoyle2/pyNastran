@@ -1,5 +1,5 @@
 import os
-from typing import cast, Any
+from typing import cast, Any, Optional
 import numpy as np
 
 from pyNastran.utils import PathLike, print_bad_path
@@ -7,12 +7,13 @@ from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.converters.cart3d.cart3d import read_cart3d, Cart3D
 from pyNastran.converters.fluent.fluent import read_fluent, Fluent, filter_by_region
 from pyNastran.converters.tecplot.tecplot import read_tecplot, Tecplot
-
+from cpylog import SimpleLogger
 
 def get_aero_model(aero_filename: PathLike, aero_format: str,
                    aero_xyz_scale: float=1.0,
                    xyz_units: str='???',
-                   stop_on_failure: bool=True) -> tuple[Any, list[str]]:
+                   stop_on_failure: bool=True,
+                   log: Optional[SimpleLogger]=None) -> tuple[Any, list[str]]:
     if isinstance(aero_filename, PathLike):
         assert os.path.exists(aero_filename), print_bad_path(aero_filename)
 
@@ -26,7 +27,7 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
         if isinstance(aero_filename, Cart3D):
             model = aero_filename
         else:
-            model: Cart3D = read_cart3d(aero_filename)
+            model: Cart3D = read_cart3d(aero_filename, log=log)
         log = model.log
         variables = list(model.loads)
         model.points *= aero_xyz_scale
@@ -36,7 +37,7 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
     # elif aero_format == 'Fluent Press':
     #     pass
     elif aero_format == 'tecplot':
-        model: Tecplot = read_tecplot(aero_filename)
+        model: Tecplot = read_tecplot(aero_filename, log=log)
         log = model.log
         #print(model.object_stats())
         variables = model.result_variables
@@ -46,7 +47,7 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
         if isinstance(aero_filename, Fluent):
             model = aero_filename
         else:
-            model: Fluent = read_fluent(aero_filename, debug='debug')
+            model: Fluent = read_fluent(aero_filename, debug='debug', log=log)
         log = model.log
         # print(model.object_stats())
         variables = model.titles[1:]
