@@ -44,6 +44,11 @@ def filter_by_region(model: Fluent,
         itri_regions = np.logical_or.reduce([(tri_regions == regioni) for regioni in regions_to_include])
         iquad_regions = np.logical_or.reduce([(quad_regions == regioni) for regioni in regions_to_include])
 
+    tri_regions_out = tri_regions[itri_regions]
+    quad_regions_out = quad_regions[iquad_regions]
+    model.log.info(f'utri_regions_out = {np.unique(tri_regions_out)}')
+    model.log.info(f'uquad_regions_out = {np.unique(quad_regions_out)}')
+
     quad_results = quad_results0[iquad_regions, :]
     tri_results = tri_results0[itri_regions, :]
 

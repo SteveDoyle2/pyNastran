@@ -155,7 +155,7 @@ def _setup_faces(bdf_filename: PathLike | BDF,
 
 def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
                             coord: CORD2R,
-                            nodal_result: np.ndarray,
+                            nodal_result: Optional[np.ndarray],
                             plane_atol: float=1e-5,
                             skip_cleanup: bool=True,
                             csv_filename: PathLike='',

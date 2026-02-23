@@ -36,6 +36,7 @@ class SETADD(BaseCard):
 
         self.setadd_id = setadd_id
         self.ids = ids
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):

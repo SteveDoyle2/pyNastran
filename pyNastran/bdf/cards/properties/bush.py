@@ -343,7 +343,7 @@ class PBUSH(BushingProperty):
 
     @b.setter
     def b(self, b: list[float]):
-        return self.Bi
+        self.Bi = b
 
     @property
     def ge(self) -> list[float]:
@@ -1046,7 +1046,7 @@ class PBUSHT(BushingProperty):
         elif name == 'TGEID2':
             self.ge_tables[1] = value
         else:  # pragma: no cover
-            raise NotImplementedError('%r has not implemented update_by_pname_fid for %r' % (self.type, name))
+            raise NotImplementedError(f'{self.type!r} has not implemented update_by_pname_fid for {name!r}')
 
     def __init__(self, pid: int,
                  k_tables: Optional[list[int]]=None,
@@ -1374,7 +1374,7 @@ class PBUSH_OPTISTRUCT(BushingProperty):
     @classmethod
     def _read_var(cls, card: BDFCard, var_prefix: str,
                   istart: int, iend: int) -> list[float]:
-        print(card[istart:iend+1])
+        # print(card[istart:iend+1])
         ki = fields(double_string_or_blank, card, var_prefix, istart, iend)
         return ki
 

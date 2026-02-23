@@ -168,11 +168,12 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     if beam_model_bdf_filename:
         beam_model_bdf_filename = dirname / beam_model_bdf_filename
         # wrong
-        # model.add_mat1(mid=1, E=3.0e7, G=None, nu=0.3, rho=0.1)
+        EyIz = ExIz
+        EyIx = ExIx
+        EyIxz = ExIxz
         _write_beam_model(
-            avg_centroid,
-            A, I, J,
-            ExI, GJ,
+            avg_centroid, A,
+            EyIz, EyIx, EyIxz, GJ,
             beam_model_bdf_filename,
         )
 
@@ -235,29 +236,31 @@ def load_moi_data(csv_filename: PathLike) -> tuple[np.ndarray, np.ndarray, np.nd
 
 def _write_beam_model(avg_centroid: np.ndarray,
                       A: np.ndarray,
-                      I: np.ndarray,
-                      J: np.ndarray,
-                      EI: np.ndarray, GJ: np.ndarray,
+                      EyIz: np.ndarray,
+                      EyIx: np.ndarray,
+                      EyIxz: np.ndarray,
+                      GJ: np.ndarray,
                       bdf_filename: PathLike=''):
+    """
+    Assume y is down the axis of the beam
+    The beam cross section is defined in the x-z plane.
+    z
+    |
+    |
+    |
+    ----------> x
+    TODO: it's possible the 1-2 axes are flipped; run a tip bend case
+    """
     if isinstance(bdf_filename, str) and len(bdf_filename) == 0:
         return
 
-    #   0    1    2    3    4    5
-    # [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
-    Ix = I[:, 0]
-    # Iy = I[:, 1]
-    Iz = I[:, 2]
-    Ixz = I[:, 5]
-
-    # ExIx = EI[:, 0]
-    # ExIy = EI[:, 1]
-    # ExIz = EI[:, 2]
-    # ExIxz = EI[:, 5]
-
     mid = 1
+    # TODO: not sure on nu
     beam_model = BDF(debug=False)
+    beam_model.add_mat1(mid=mid, E=1., G=1., nu=0.3, rho=0.1)
     for inid, xyz in enumerate(avg_centroid):
         beam_model.add_grid(inid+1, xyz)
+
     for eid in range(1, len(A)):
         pid = eid
         nids = [eid, eid + 1]
@@ -269,10 +272,10 @@ def _write_beam_model(avg_centroid: np.ndarray,
         so = ['YES', 'YES']
         xxb = [0., 1.]
         area = [A[eid-1], A[eid]]
-        i1 = [Ix[eid-1], Ix[eid]]
-        i2 = [Iz[eid-1], Iz[eid]]
-        i12 = [Ixz[eid-1], Ixz[eid]]
-        j = [J[eid-1], J[eid]]
+        i1 = [EyIx[eid-1], EyIx[eid]]
+        i2 = [EyIz[eid-1], EyIz[eid]]
+        i12 = [EyIxz[eid-1], EyIxz[eid]]
+        j = [GJ[eid-1], GJ[eid]]
         beam_model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
                              c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
                              k1=1., k2=1., s1=0., s2=0., nsia=0., nsib=None, cwa=0., cwb=None,
@@ -448,8 +451,8 @@ def _get_station_datai(model: BDF,
             nodal_result, plane_atol=plane_atol,
             skip_cleanup=True,
             # csv_filename=cut_face_filename,
-            csv_filename=None,
-            # plane_bdf_filename=None)
+            csv_filename='',
+            # plane_bdf_filename='')
             plane_bdf_filename1=plane_bdf_filename1,
             plane_bdf_filename2=plane_bdf_filename2,
             plane_bdf_offset=dy, face_data=face_data,
@@ -964,7 +967,7 @@ def plot_compare_inertia(log: SimpleLogger,
                          z: str='z',
                          yrange=None,
                          span_label = 'Span, y (in)',
-                         dirname='', save: bool=True,
+                         dirname: Path='', save: bool=True,
                          show: bool=True) -> int:
     """helper method for test
 
@@ -1183,8 +1186,9 @@ def plot_compare_inertia(log: SimpleLogger,
         ax.grid()
         ax.legend()
         ax.set_xlabel(span_label)
-        ax.set_ylabel(f'Stiffness ($lb_f*in^2$): E{y}*I{zz}')
+        ax.set_ylabel(f'Stiffness ($lb_f*in^2$): E{y}*A')
         ax2.set_ylabel('%Difference')
+        fig.savefig(dirname / f'compare_E{y}A.png')
 
         ifig += 1
         fig = plt.figure(ifig)
@@ -1200,6 +1204,7 @@ def plot_compare_inertia(log: SimpleLogger,
         ax.set_ylabel(f'Stiffness ($lb_f*in^2$): E{y}*I{zz}')
         ax2.set_ylabel('%Difference')
         ax.legend()
+        fig.savefig(dirname / f'compare_EyIzz.png')
         ifig += 1
 
         fig = plt.figure(ifig)
@@ -1214,6 +1219,7 @@ def plot_compare_inertia(log: SimpleLogger,
         ax2.set_ylabel('%Difference')
         ax.grid()
         ax.legend()
+        fig.savefig(dirname / 'compare_GJ.png')
         plt.show()
     ifig += 1
 

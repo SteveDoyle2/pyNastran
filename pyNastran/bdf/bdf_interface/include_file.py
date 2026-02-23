@@ -114,6 +114,7 @@ def get_include_filename(log: SimpleLogger,
 def parse_include_lines(card_lines: list[str]) -> str:
     """handles splitting out the INCLUDE lines"""
     card_lines2 = []
+    #print(f'card_lines = {card_lines}')
     for line in card_lines:
         line = line.strip('\t\r\n ')
         card_lines2.append(line)
@@ -129,6 +130,7 @@ def parse_include_lines(card_lines: list[str]) -> str:
     # "'/dir123/dir456/dir789/filename.dat'"
     card_lines2[0] = card_lines2[0][7:].strip()  # remove the INCLUDE
     filename = ''.join(card_lines2)
+    #print(f'card_lines2 = {card_lines2}')
 
     # drop the single quotes:
     #     "'path1/path2/model.inc'" to "path1/path2/model.inc"

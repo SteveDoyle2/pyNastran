@@ -11,8 +11,8 @@ if TYPE_CHECKING:  # pragma: no cover
         FREQs,
     )
     from pyNastran.bdf.cards.base_card import BaseCard
-    from pyNastran.bdf.cards.elements.elements import (
-        CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL)
+    # from pyNastran.bdf.cards.elements.elements import (
+    #     CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL)
     from pyNastran.bdf.cards.bolt import BOLT, BOLTSEQ, BOLTFOR, BOLTLD, BOLTFRC
     from pyNastran.bdf.cards.elements.plot import PLOTELs
     #from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
@@ -149,7 +149,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.parametric.geometry import (
         PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF)
     from pyNastran.bdf.cards.elements.acoustic import (
-        PACABS, CAABSF, CHACAB, CHACBR,
+        PACABS, CAABSF, CHACAB, CHACBR, PAABSF,
         ACPLNW, AMLREG, ACMODL, MICPNT)
     MaterialDependence = (
         MATT1 | MATT2 | MATT3 | MATT4 | MATT5 | MATT8 | MATT9 | MATT11 |
@@ -584,7 +584,7 @@ class AddMethods:
         self.model.micpnt[key] = micpnt
         self.model._type_to_id_map[micpnt.type].append(key)
 
-    def add_acoustic_property_object(self, prop: PACABS) -> None:
+    def add_acoustic_property_object(self, prop: PACABS | PAABSF) -> None:
         self.add_property_object(prop)
 
     def add_property_object(self, prop: Property,
