@@ -224,7 +224,6 @@ class GuiUtils(unittest.TestCase):
         csv_filename = os.path.join(MODEL_PATH, 'custom_geom.csv')
         load_user_geom(csv_filename)
 
-
     def test_gui_custom_geom_02(self):
         stl_filename = PKG_PATH / 'converters' / 'stl' / 'sphere.stl'
         load_user_geom(stl_filename)
