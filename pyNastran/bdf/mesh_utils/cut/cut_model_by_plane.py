@@ -165,6 +165,7 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
                             face_data=None,
                             debug_vectorize: bool=True,
                             stop_on_failure: bool=False,
+                            debug_v3: bool=False,
                             ) -> tuple[
                                 bool,
                                 np.ndarray, np.ndarray, np.ndarray]:
@@ -209,7 +210,10 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
     xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
     tri_eids, tri_node_ids, zoffset = elements['tri3']
     ntri = len(tri_eids)
-    if ntri and 0:
+    if ntri and debug_v3:  # pragma: no cover
+        eid0 = 1
+        nid0 = 1
+        rod_nid0 = 1
         # this block is currently unused
 
         # vectorized method for adjusting model for cutting a bag of triangles
@@ -221,7 +225,7 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
         xyz3_cid0 = xyz_cid0[nid3, :]
         if zoffset.max() > 0.0:
             # vectorized method for adjusting model for zoffsets
-            centroid = (xyz1_cid0 + xyz2_cid0 + xyz3_cid0) / 3.
+            #centroid = (xyz1_cid0 + xyz2_cid0 + xyz3_cid0) / 3.
             normals_cid0 = np.cross(xyz2_cid0 - xyz1_cid0, xyz3_cid0 - xyz2_cid0, axis=1)
             assert normals_cid0.shape == (ntri, 3), (normals_cid0.shape, ntri)
             normals_cid =  coord.transform_node_to_local_array(normals_cid0)
@@ -234,64 +238,143 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
         y_tri = np.column_stack([xyz1_cid[:, 1], xyz2_cid[:, 1], xyz3_cid[:, 1]])
         is_tri_cut = _is_element_cut(y_tri, ntri)
 
-        tri_eids = tri_eids[is_tri_cut]
-        xyz1_cid_cut = xyz1_cid[is_tri_cut]
-        xyz2_cid_cut = xyz2_cid[is_tri_cut]
-        xyz3_cid_cut = xyz3_cid[is_tri_cut]
-        ntri = len(xyz1_cid_cut)
-        if ntri:  # there are cuts to be made
+        tri_eids_cut0 = tri_eids[is_tri_cut]
+        tri_nodes_cut = tri_node_ids[is_tri_cut, :]
+        ntri2 = len(tri_eids)
+        if ntri2:
+            # there are cuts to be made
+            xyz1_cid_cut0 = xyz1_cid0[is_tri_cut, :]
+            xyz2_cid_cut0 = xyz2_cid0[is_tri_cut, :]
+            xyz3_cid_cut0 = xyz3_cid0[is_tri_cut, :]
+
+            xyz1_cid_cut = xyz1_cid[is_tri_cut, :]
+            xyz2_cid_cut = xyz2_cid[is_tri_cut, :]
+            xyz3_cid_cut = xyz3_cid[is_tri_cut, :]
             # y = y1 + (y2 - y1) * t
             # 0 = y1 + (y2 - y1) * t
             # t = y1 / (y1 - y2)
             y1 = xyz1_cid_cut[:, 1]
             y2 = xyz2_cid_cut[:, 1]
             y3 = xyz3_cid_cut[:, 1]
-            t1 = y1 / (y1 - y2)  # nodes 1-2 = edge 1
-            t2 = y2 / (y2 - y3)  # nodes 2-3 = edge 2
-            t3 = y3 / (y3 - y1)  # nodes 3-1 = edge 3
+
+            with np.errstate(divide='ignore'):
+                # percent = (y - y1_local) / (y2_local - y1_local)
+                t1 = y1 / (y1 - y2)  # nodes 1-2 = edge 1
+                t2 = y2 / (y2 - y3)  # nodes 2-3 = edge 2
+                t3 = y3 / (y3 - y1)  # nodes 3-1 = edge 3
+
             t = np.column_stack([t1, t2, t3])
-            print(t.shape)
-            print(t)
             is_cut = ((0.0 <= t) & (t <= 1.0))
-            print(is_cut)
+            # print(is_cut)
             # # not_cut = ~is_cut_mat
-            xyz1_cid_cut = xyz1_cid_cut[is_cut]
+            # xyz1_cid_cut = xyz1_cid_cut[is_cut]
+
             # t = t[is_cut_mat]
             # is_cut = ((0.0 <= t) & (t <= 1.0))
             # 3 cases (edge 1/2, 2/3, 3/1)
             # is_cut1 = is_cut[:, 0]
             # is_cut2 = is_cut[:, 1]
             # is_cut3 = is_cut[:, 2]
-            icut12 = np.all(is_cut[:, [0, 1]], axis=1)
-            icut23 = np.all(is_cut[:, [1, 2]], axis=1)
-            icut31 = np.all(is_cut[:, [2, 0]], axis=1)
-            assert len(icut12) == ntri
-            if np.any(icut12):
-                raise RuntimeError('icut12')
+            not_dot = ~np.all(is_cut, axis=1)
+            icut12 = np.all(is_cut[:, [0, 1]], axis=1) & not_dot
+            icut23 = np.all(is_cut[:, [1, 2]], axis=1) & not_dot
+            icut31 = np.all(is_cut[:, [2, 0]], axis=1) & not_dot
+            assert len(icut12) == len(is_cut)
+            assert len(icut23) == len(is_cut)
+            assert len(icut31) == len(is_cut)
+            # assert len(icut12) == ntri  # the 23 case
+            # print(f'icut23 = {icut23}')
+            eids_list = []
+            nids_list = []
+            cut_edges_list = []
+            rod_eids_list = []
+            rod_nids_list = []
+            rod_xyz_global_list = []
+            rod_xyz_local_list = []
 
-            print(f'icut23 = {icut23}')
-            ncuti = icut23.sum()
-            if ncuti:
-                t2 = t[icut23, 1]  # nodes 2-3
-                t3 = t[icut23, 2]  # nodes 3-1
-                # edge 2 and 3 are cut
-                xyz1i = xyz1_cid[icut23, :]
-                xyz2i = xyz2_cid[icut23, :]
-                xyz3i = xyz3_cid[icut23, :]
-                e2 = xyz2i + (xyz3i - xyz2i) * t2[:, np.newaxis]
-                e3 = xyz3i + (xyz1i - xyz3i) * t3[:, np.newaxis]
-                i0 = 0
-                i1 = np.arange(i0, i0 + ncuti + 1)
-                i2 = np.arange(i0 + ncuti, i0 + 2*ncuti + 1)
-                myrods.append((i0, i1, e2, e3))
-                # print(f'e2 = {e2}')
-                # print(f'e3 = {e3}')
-                # print(t[icut23, :])
-                # raise RuntimeError('icut23')
-            if np.any(icut31):
-                raise RuntimeError('icut31')
+            xyz_cid_cut0 = [xyz1_cid_cut0, xyz2_cid_cut0, xyz3_cid_cut0]
+            xyz_cid_cut = [xyz1_cid_cut, xyz2_cid_cut, xyz3_cid_cut]
 
-    found_cut, unique_geometry_array, unique_results_array, rods_array = _cut_face_model_by_coord(
+            assert len(xyz1_cid_cut0) == len(icut12), (len(xyz1_cid_cut0), len(icut12))
+            eid0, nid0, rod_nid0 = _cut_facev(
+                icut12, t, 0, 1,
+                eid0, nid0, rod_nid0,
+                tri_eids_cut0, tri_nodes_cut,
+                # results
+                xyz_cid_cut0, xyz_cid_cut,
+                # geomety
+                eids_list, nids_list, cut_edges_list,
+                # rods
+                rod_eids_list, rod_nids_list,
+                rod_xyz_global_list, rod_xyz_local_list)
+
+            eid0, nid0, rod_nid0 = _cut_facev(
+                icut23, t, 1, 2,
+                eid0, nid0, rod_nid0,
+                tri_eids_cut0, tri_nodes_cut,
+                # results
+                xyz_cid_cut0, xyz_cid_cut,
+                # geomety
+                eids_list, nids_list, cut_edges_list,
+                # rods
+                rod_eids_list, rod_nids_list,
+                rod_xyz_global_list, rod_xyz_local_list)
+
+            eid0, nid0, rod_nid0 = _cut_facev(
+                icut31, t, 2, 0,
+                eid0, nid0, rod_nid0,
+                tri_eids_cut0, tri_nodes_cut,
+                # results
+                xyz_cid_cut0, xyz_cid_cut,
+                # geomety
+                eids_list, nids_list, cut_edges_list,
+                # rods
+                rod_eids_list, rod_nids_list,
+                rod_xyz_global_list, rod_xyz_local_list)
+
+            # out = local_points, global_points, result, geometry
+            rod_eids = np.hstack(rod_eids_list)
+            rod_nids = np.vstack(rod_nids_list)
+            cut_edges = np.vstack(cut_edges_list)
+            # rod_elements.append([eid_new, nid_new, nid_new+1])
+            rod_elements = np.column_stack([rod_eids, cut_edges])
+
+            rod_xyz_global = np.vstack(rod_xyz_global_list)
+            rod_xyz_local = np.vstack(rod_xyz_local_list)
+            results = np.column_stack([rod_xyz_local, rod_xyz_global])
+            found_cut = (len(rod_nids) > 0)
+
+            rods = (rod_nids, rod_xyz_local, rod_elements)
+
+            nelemi = len(rod_elements)
+            # nnodei = len(rod_nids_array)
+            nnodei = 4 * nelemi
+            # assert nelemi * 4 == nnodei, (nelemi, nnodei)
+            # print(nelemi, nnodei)
+
+            assert rod_elements.shape[1] == 3, rod_elements.shape
+
+            # TODO: should be on - buggy
+            # assert rod_nids.ndim == 1, (nelemi, nnodei, rod_nids.shape)
+            # assert len(rod_nids) == nnodei, rod_nids.shape
+
+            # geometry_temp.append([eid, nid_new] + cut_edgei)
+            print(rod_eids.shape, rod_nids.shape, cut_edges.shape)
+            geometry = np.column_stack([
+                rod_eids, rod_nids, cut_edges,
+            ])
+            assert geometry.shape == (2 * nelemi, 4), f'expected=({2*nelemi}, 4); geometry={geometry.shape}'
+            assert rod_xyzs.shape == (nnodei, 3),     f'expected=({nnodei}, 6); rod_xyzs={rod_xyzs.shape}'
+
+            # curve_data = np.concatenate((geometry_array2, results_array), axis=1)
+            # header2 = f'Curve {i+1:d}\n'
+            # header2 += '[eid, nid1, nid2], [x, y, z, Cp']
+
+            # results_temp.append([xl, yl, zl, xg, yg, zg, resulti])
+            # return out, rods
+            return found_cut, geometry, results, rods
+
+    found_cut, unique_geometry_array, unique_results_array, rods = _cut_face_model_by_coord(
         log, node_ids, xyz_cid0, xyz_cid,
         elements, coord,
         nodal_result, plane_atol=plane_atol,
@@ -305,8 +388,85 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
         export_face_cut(csv_filename, unique_geometry_array, unique_results_array)
     #print('unique_geometry_array=%s unique_results_array=%s' % (
         #unique_geometry_array, unique_results_array))
-    return found_cut, unique_geometry_array, unique_results_array, rods_array
+    return found_cut, unique_geometry_array, unique_results_array, rods
 
+
+def _cut_facev(
+        icut: np.ndarray,
+        t: np.ndarray,
+        ia: int, ib: int,
+        eid0: int, nid0: int, rod_nid0: int,
+        tri_eids_cut0, tri_nodes_cut0,
+        xyz_cid0: list[np.ndarray],
+        xyz_cid: list[np.ndarray],
+        eids_list: list[np.ndarray],
+        nids_list: list[np.ndarray],
+        cut_edges_list: list[np.ndarray],
+        rod_eids_list: list[np.ndarray],
+        rod_nids_list: list[np.ndarray],
+        rod_xyz_global_list: list[np.ndarray],
+        rod_xyz_local_list: list[np.ndarray],
+) -> tuple[int, int, int]:
+    neid = icut.sum()
+    if neid == 0:
+        return eid0, nid0, rod_nid0
+
+    xyz1_cid0, xyz2_cid0, xyz3_cid0 = xyz_cid0
+    xyz1_cid, xyz2_cid, xyz3_cid = xyz_cid
+
+    # print(ia, ib)
+    eids_cut = tri_eids_cut0[icut]
+    cut_edge = tri_nodes_cut0[icut, :][:, [ia, ib]]
+    t2 = t[icut, ia]  # nodes 2-3
+    t3 = t[icut, ib]  # nodes 3-1
+    # edge 2 and 3 are cut
+    xyz1_local = xyz1_cid[icut, :]
+    xyz2_local = xyz2_cid[icut, :]
+    xyz3_local = xyz3_cid[icut, :]
+    xyz1_global = xyz1_cid0[icut, :]
+    xyz2_global = xyz2_cid0[icut, :]
+    xyz3_global = xyz3_cid0[icut, :]
+
+    # avg_xyz = xyz2 * percent + xyz1 * (1 - percent)
+    # Then we just crank the formula where we set the value of "y" to 0.0:
+    #   percent = (0. - y1_local) / (y2_local - y1_local)
+    e2_local = xyz2_local + (xyz3_local - xyz2_local) * t2[:, np.newaxis]
+    e3_local = xyz3_local + (xyz1_local - xyz3_local) * t3[:, np.newaxis]
+
+    e2_global = xyz2_global + (xyz3_global - xyz2_global) * t2[:, np.newaxis]
+    e3_global = xyz3_global + (xyz1_global - xyz3_global) * t3[:, np.newaxis]
+
+    # geometry_temp.append([eid, nid_new] + cut_edgei)
+    ncuti = neid
+    eids = np.arange(eid0, eid0 + neid + 1)
+    nid_new = np.arange(nid0, nid0 + neid + 1)
+
+    # source element and two interpolated node ids
+    # rod_elements.append([eid_new, nid_new, nid_new + 1])
+    eids_list.append(eids)
+    cut_edges_list.append(cut_edge)
+
+    nids_list.append(nid_new)
+
+    # i1 = np.arange(rod_nid0, rod_nid0 + neid + 1)
+    # i2 = np.arange(rod_nid0 + neid, rod_nid0 + 2 * neid + 1)
+    # i12 = np.column_stack([i1, i2])
+    i12 = rod_nid0 + np.arange(2*neid).reshape(2,neid).T
+    # myrods.append((i0, i1, e2, e3))
+    # print(f'e2 = {e2}')
+    # print(f'e3 = {e3}')
+    # print(t[icut23, :])
+    # raise RuntimeError('icut23')
+    rod_eids_list.append(eids_cut)
+    rod_nids_list.append(i12)
+    rod_xyz_global_list.append(e2_global)
+    rod_xyz_global_list.append(e3_global)
+    rod_xyz_local_list.append(e2_local)
+    rod_xyz_local_list.append(e3_local)
+    eid0 += neid
+    nid0 += neid
+    rod_nid0 += 2 * ncuti
+    return eid0, nid0, rod_nid0
 
 def export_face_cut(csv_filename: PathLike,
                     geometry_arrays: np.ndarray,
@@ -452,17 +612,19 @@ def _cut_face_model_by_coord(log: SimpleLogger,
     -------
     is_passed : bool
         was the model cut
-    unique_geometry_array : ???
-        ???
-    unique_results_array : ???
-        ???
+    unique_geometry_array : (nelements, 4)
+        the cut_edge part is lets you go back to the source node
+        [eid, nid_new] + [cut_edge_nid1, cut_edge_nid2]
+    unique_results_array : (nelements, 6+nresults)
+        xl, yl, zl, xg, yg, zg, resulti
     rods : tuple
-        rods_elements_array : (nedge) int ndarray???
-            ???
-        rod_nids_array : (nedge,2) int ndarray???
-            ???
-        rod_xyzs_array : (nedge,3) float ndarray???
-            ???
+        rods_elements_array : (nedge) int ndarray
+            [eid_new, nid_new, nid_new + 1]
+        rod_nids_array : (2*nedge,) int ndarray
+            The node ids in rod_xyz that define the cut edge
+        rod_xyzs_array : (2*nedge,3) float ndarray
+            The node ids in the local coord that define the cut edge
+            # xyz1_local, xyz2_local
 
     """
     # y direction is normal to the plane
@@ -645,16 +807,17 @@ def cut_faces(node_ids: np.ndarray,
 
     Returns
     -------
-    unique_geometry_array : ???
-        ???
-    unique_results_array : ???
-        ???
+    unique_geometry_array : (nelements, 4)
+        the cut_edge part is lets you go back to the source node
+        [eid, nid_new] + [cut_edge_nid1, cut_edge_nid2]
+    unique_results_array : (nelements, 6+nresults)
+        xl, yl, zl, xg, yg, zg, resulti
     rods : tuple
-        rods_elements_array : (nedge) int ndarray???
+        rods_elements_array : (nedge) int ndarray
             ???
-        rod_nids_array : (nedge,2) int ndarray???
+        rod_nids_array : (nedge,2) int ndarray
             ???
-        rod_xyzs_array : (nedge,3) float ndarray???
+        rod_xyzs_array : (nedge,3) float ndarray
             ???
 
     """
@@ -764,6 +927,17 @@ def cut_faces(node_ids: np.ndarray,
     rods_elements_array = np.array(rod_elements, dtype='int32')
     rod_nids_array = np.array(rod_nids, dtype='int32')
     rod_xyzs_array = np.array(rod_xyzs, dtype='float64')
+
+    nelemi = len(rods_elements_array)
+    # nnodei = len(rod_nids_array)
+    nnodei = 4 * nelemi
+    # assert nelemi * 4 == nnodei, (nelemi, nnodei)
+    # print(nelemi, nnodei)
+    assert rods_elements_array.shape[1] == 3, rods_elements_array.shape
+    assert rod_nids_array.ndim == 1, rod_nids_array.shape
+    assert len(rod_nids_array) == nnodei, rod_nids_array.shape
+    assert geometry_array.shape == (2*nelemi, 4), geometry_array.shape
+    assert rod_xyzs_array.shape == (nnodei, 3), rod_xyzs_array.shape
 
     unique_geometry_array, unique_results_array = _unique_face_rows(
         geometry_array, results_array, node_ids, skip_cleanup=skip_cleanup)
@@ -1599,6 +1773,10 @@ def _interpolate_face_to_barv(eids: np.ndarray,
     assert len(rod_nids), rod_nids
     assert is_out, is_out
     out = local_points, global_points, result, geometry
+
+    # rod_elements.append([eid_new, nid_new, nid_new + 1])
+    # rod_nids.extend([nid_new, nid_new + 1])
+    # rod_xyzs.append([xyz1_local, xyz2_local])
     rods = (rod_nids, rod_xyzs, rod_elements)
     return out, rods
 
@@ -1729,7 +1907,8 @@ def _interpolate_face_to_bar(eid: int, eid_new: int,
             continue
 
         # the second number is on the top
-        percent = (0. - py1_local) / dy
+        # percent = (0. - py1_local) / dy
+        percent = -py1_local / dy
         abs_percent_shifted = abs(percent - 0.5)
         #print('  percent = %s' % percent)
         #print('  abs_percent_shifted = %s' % abs_percent_shifted)

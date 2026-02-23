@@ -321,6 +321,7 @@ def _load_format_header(file_obj, ext, force_float=False):
 
 def _load_user_geom_stl(stl_filename: PathLike,
                         log=None,
+                        encoding: str='latin1',
                         ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                    np.ndarray, np.ndarray]:
     stl = read_stl(stl_filename, log=log)
