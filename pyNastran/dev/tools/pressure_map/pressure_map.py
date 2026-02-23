@@ -1,7 +1,8 @@
 # import os
+import os
 from itertools import count, zip_longest
 from collections import defaultdict
-from typing import Optional, cast
+from typing import Optional
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -11,7 +12,9 @@ import matplotlib.cm as cm
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.write_path import write_include
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
+
 
 from pyNastran.converters.cart3d.cart3d import Cart3D
 #from pyNastran.converters.fluent.fluent import read_fluent
@@ -234,7 +237,16 @@ def pressure_map(aero_filename: PathLike,
     if isinstance(nastran_filename, BDF):
         structure_model = nastran_filename
     else:
-        structure_model = read_bdf(nastran_filename, log=log)
+        base, ext = os.path.splitext(nastran_filename)
+        obj_filename = base + '.obj'
+        if os.path.exists(obj_filename):
+            structure_model = BDF(log=log)
+            structure_model.bdf_filename = nastran_filename
+            structure_model.load(obj_filename)
+        else:
+            structure_model = read_bdf(nastran_filename, xref=False, log=log)
+            structure_model.save(obj_filename)
+        structure_model.cross_reference()
     assert len(structure_model.elements), structure_model.get_bdf_stats()
     assert len(structure_model.nodes), structure_model.get_bdf_stats()
     structure_eids = get_structural_eids_from_csv_load_id(
@@ -292,9 +304,55 @@ def pressure_map(aero_filename: PathLike,
     else:
         expected = ['panel_model', 'full_model']
         raise RuntimeError(f'method={method}; expected={list(expected)}')
-    if pressure_filename:
-        pressure_model.write_bdf(pressure_filename)
+
+    _write_pressure_file(
+        pressure_model, pressure_filename, nastran_filename, map_type)
     return pressure_model
+
+def _write_pressure_file(model: BDF,
+                         pressure_filename: PathLike,
+                         aero_panel_bdf_filename: PathLike,
+                         map_type: str) -> None:
+    if len(str(pressure_filename)) == 0:
+        return
+    msg = (
+        'SOL 101\n'
+        'CEND\n'
+    )
+    if map_type == 'force_moment':
+        msg += (
+            'SUBCASE 1\n'
+            '  SUBTITLE = Pressure\n'
+            '  LOAD = 1\n'
+            'SUBCASE 2\n'
+            '  SUBTITLE = Force\n'
+            '  LOAD = 2\n'
+            'SUBCASE 3\n'
+            '  SUBTITLE = Moment\n'
+            '  LOAD = 3\n'
+            'BEGIN BULK\n'
+            )
+    else:
+        raise NotImplementedError(map_type)
+    dirname = os.path.dirname(pressure_filename)
+    base_ext = os.path.basename(pressure_filename)
+    base = os.path.splitext(base_ext)[0]
+    model.log.debug(f'dirname  = {dirname}')
+    model.log.debug(f'base_ext = {base_ext}')
+    model.log.debug(f'base     = {base}')
+
+    main_bdf_filename = os.path.join(dirname, f'main_{base}.bdf')
+    rel_main_filename = os.path.relpath(aero_panel_bdf_filename, dirname)
+    msg += write_include(rel_main_filename)
+    msg += write_include(os.path.basename(pressure_filename))
+
+    # print(msg)
+    model.log.debug(f'pressure_filename = {pressure_filename}')
+    model.log.debug(f'aero_panel_bdf_filename = {aero_panel_bdf_filename}')
+    model.log.debug(f'writing {main_bdf_filename}')
+    with open(main_bdf_filename, 'w') as bdf_file:
+        bdf_file.write(msg)
+    model.write_bdf(pressure_filename, write_header=False)
 
 
 def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
@@ -317,7 +375,8 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
                                 pressure_units: str='',
                                 #idtype: str='int32',
                                 fdtype: str='float64') -> BDF:
-    """Maps pressure from an aero model to a structural model. assumes:
+    """
+    Maps pressure from an aero model to a structural model. assumes:
      - 3d aero model
      - 2d structure model panel model
     """
@@ -591,10 +650,20 @@ def _map_pressure_panel_model(structure_model: BDF,
         # if eid_filter > 0, the single eid Will be
         # plotted so you can debug the loads
         eid_filter = 0
+        # eid_filter = 1_101_001  # mcrit
+        eid_filter = 2_202_046  # mcrit tail_-0.78,0.12 -> dCp=0.90
+        log.info(f'eids_z = {eids_z}')
         # eid_filter = 4205006
         #eid_filter = 4_212_002
         # eid_filter = 1_201_035
-        istructure_box_id = np.where(eids_z == eid_filter)[0]
+        # if eid_filter:
+            # , f'missing eid_filter={eid_filter} in eids_z'
+        if eid_filter and eid_filter not in eids_z:
+            log.warning(f'cant find eid={eid_filter} in eids_z')
+            eid_filter = 0
+            istructure_box_id = []
+        else:
+            istructure_box_id = np.where(eids_z == eid_filter)[0]
         plot_special_quad = (eid_filter > 0)
         plot_base_quads = plot_special_quad
         plot_scatter = False
@@ -602,7 +671,8 @@ def _map_pressure_panel_model(structure_model: BDF,
         if plot_base_quads:  # pragma: no cover
             polygons = []
             for i, eid in enumerate(eids_z):
-                if i == istructure_box_id:
+                # print(i, istructure_box_id)
+                if i in istructure_box_id:
                     continue
                 elem0 = structure_model.elements[eid]
                 nodes0 = elem0.nodes
@@ -627,43 +697,58 @@ def _map_pressure_panel_model(structure_model: BDF,
         log.debug(f'iaero_tri = {iaero_tri}')
         show = False
 
-        # if plot_scatter:  # pragma: no cover
-        #     # only the first box
-        #     # istructure_box_id = 0
-        #     iaero0 = np.where(iaero_tri == istructure_box_id)[0]
-        #     aero_centroid_plot = aero_tri_centroid[iaero0, :]
-        #     # scatter = ax.scatter(x, y, z, c=color_values, cmap='viridis', s=50)
-        #     ax.scatter3D(aero_centroid_plot[:, 0], aero_centroid_plot[:, 1], aero_centroid_plot[:, 2],
-        #                  c=aero_cp[iaero0], cmap='viridis')
-        #     show = True
+        if plot_scatter:  # pragma: no cover
+            # plot all the nodes that correspond to the ith structural box
+            # show the aero mesh
+            #
+            # only the first box
+            # istructure_box_id = 0
+            iaero0 = np.where(iaero_tri == istructure_box_id)[0]
+            if len(iaero0):
+                # scatter = ax.scatter(x, y, z, c=color_values, cmap='viridis', s=50)
 
-        if plot_special_quad:  # pragma: no cover
+                # aero_tri_nodes, aero_tri_area, aero_tri_cp, aero_tri_normal, aero_tri_centroid, aero_tri_force_coeff_per_q,
+                # ax.scatter3D(aero_tri_centroid[iaero0:, 0], aero_tri_centroid[iaero0, 1], aero_tri_centroid[iaero0, 2],
+                #              c=aero_tri_cp[iaero0], cmap='viridis')
+                # print(f'iaero0 = {iaero0}')
+                if len(iaero0):
+                    aero_centroid_plot = aero_tri_centroid[iaero0, :]
+                    aero_cp = aero_tri_cp[iaero0]
+                    assert len(aero_centroid_plot) == len(aero_cp), (len(aero_centroid_plot), len(aero_cp))
+                    ax.scatter3D(aero_centroid_plot[:, 0], aero_centroid_plot[:, 1], aero_centroid_plot[:, 2],
+                                 c=aero_cp, cmap='viridis')
+                    del aero_cp
+                    show = True
+
+        if plot_special_quad and len(istructure_box_id):  # pragma: no cover
             # plot all aero elements associated with structure box id=0
+            assert len(iaero_tri), iaero_tri
+            assert len(istructure_box_id), istructure_box_id
             iaero0 = np.where(iaero_tri == istructure_box_id)[0]
             assert len(iaero_tri) == len(aero_tri_nodes), (len(iaero_tri), len(aero_tri_nodes))
+            if len(iaero0):
+                iaero_tri_nodes = np.searchsorted(aero_node_id, aero_tri_nodes[iaero0, :])
+                polygon_tris = aero_xyz[iaero_tri_nodes, :]
 
-            iaero_tri_nodes = np.searchsorted(aero_node_id, aero_tri_nodes[iaero0, :])
-            polygon_tris = aero_xyz[iaero_tri_nodes, :]
+                # works - hard to see colors b/c
+                # tri = Poly3DCollection(polygon_tris, facecolor='blue', edgecolor='black', linewidth=0, alpha=1.0)
 
-            # works - hard to see colors b/c
-            # tri = Poly3DCollection(polygon_tris, facecolor='blue', edgecolor='black', linewidth=0, alpha=1.0)
+                # works - bit transparent tho
+                cmap = cm.get_cmap('viridis')
+                scalar_values = aero_tri_cp[iaero0]
+                norm = plt.Normalize(vmin=scalar_values.min(), vmax=scalar_values.max())
+                facecolor = cmap(norm(scalar_values))
+                tri = Poly3DCollection(polygon_tris, linewidth=0, alpha=1.0, facecolor=facecolor)
+                ax.add_collection3d(tri)
 
-            # works - bit transparent tho
-            cmap = cm.get_cmap('viridis')
-            scalar_values = aero_cp[iaero0]
-            norm = plt.Normalize(vmin=scalar_values.min(), vmax=scalar_values.max())
-            facecolor = cmap(norm(scalar_values))
-            tri = Poly3DCollection(polygon_tris, linewidth=0, alpha=1.0, facecolor=facecolor)
-            ax.add_collection3d(tri)
-
-            elem0 = structure_model.elements[eid_filter]
-            x, y, z = elem0.Centroid()
-            areai = elem0.Area()
-            delta = scalar_values.max() - scalar_values.min()
-            msg = (f'eid={eid_filter}, xyz_centroid=[{x:.3f}, {y:.3f}, {z:.3f}], area_box={areai:.3f}\n'
-                   f'Cp: min={scalar_values.min():.3f}; max={scalar_values.max():.3f}; delta={delta:.3f}')
-            fig.suptitle(msg)
-            show = True
+                elem0 = structure_model.elements[eid_filter]
+                x, y, z = elem0.Centroid()
+                areai = elem0.Area()
+                delta = scalar_values.max() - scalar_values.min()
+                msg = (f'eid={eid_filter}, xyz_centroid=[{x:.3f}, {y:.3f}, {z:.3f}], area_box={areai:.3f}\n'
+                       f'Cp: min={scalar_values.min():.3f}; max={scalar_values.max():.3f}; delta={delta:.3f}')
+                fig.suptitle(msg)
+                show = True
 
         if plot_aero_model:  # pragma: no cover
             # plot the whole aero model
@@ -858,6 +943,7 @@ def map_panel_force_moment_centroid(
     assert len(structure_tri_eids) == len(aero_tri_centroid), (len(structure_tri_eids), len(aero_tri_centroid))
 
     eid_filter = 0
+    eid_filter = 2_202_046  # mcrit tail_-0.78,0.12 -> Cp=0.90
     # eid_filter = 4_212_002
     # eid_filter = 1_201_035
     is_eid_filter = (eid_filter > 0)
@@ -868,12 +954,16 @@ def map_panel_force_moment_centroid(
     structure_eids = structure_eids[isort]
     structure_area = structure_area[isort]
     fdtype = structure_area.dtype
-    for eid in np.unique(structure_eids):
-        if is_eid_filter and eid != eid_filter:
-            continue
-        if eid not in force_tri:
-            force_tri[eid] = np.zeros(3, dtype=fdtype)
-            moment_tri[eid] = np.zeros(3, dtype=fdtype)
+
+    # preallocate
+    if is_eid_filter:
+        force_tri[eid_filter] = np.zeros(3, dtype=fdtype)
+        moment_tri[eid_filter] = np.zeros(3, dtype=fdtype)
+    else:
+        for eid in np.unique(structure_eids):
+            if eid not in force_tri:
+                force_tri[eid] = np.zeros(3, dtype=fdtype)
+                moment_tri[eid] = np.zeros(3, dtype=fdtype)
 
     aero_centroid = np.vstack([aero_tri_centroid, aero_quad_centroid])
     stucture_xyz = np.vstack([structure_tri_xyz, structure_quad_xyz])
@@ -884,16 +974,15 @@ def map_panel_force_moment_centroid(
     aero_force_centroid = aero_moment[isort, :]
     aero_moment = aero_moment[isort, :]
     drs_tri = aero_tri_centroid - structure_tri_xyz
-    # drs_quad = aero_tri_centroid - structure_quad_xyz
     aero_tri_moment = np.cross(drs_tri, aero_tri_force_centroid, axis=1)
+    # drs_quad = aero_quad_centroid - structure_quad_xyz
     # aero_quad_moment = np.cross(drs_quad, aero_quad_force_centroid, axis=1)
     # assert aero_tri_moment.shape == drs_tri.shape, (aero_tri_moment.shape, drs_tri.shape)
     # assert aero_quad_moment.shape == drs_quad.shape, (aero_quad_moment.shape, drs_quad.shape)
 
     if is_eid_filter:  # pragma: no cover
         # TODO: doesn't show quad loads
-        print(f'eid, area, Cp, normal, aforce')
-
+        print('eid, area, Cp, normal, aforce')
         for eid, scentroid, aarea, acp, anormal, acentroid, aforce, amoment in zip_longest(
                 structure_tri_eids, structure_tri_xyz,
                 aero_tri_area, aero_tri_cp, aero_tri_normal,
@@ -925,12 +1014,15 @@ def map_panel_force_moment_centroid(
     comment_p = f'Pressure; qinf={qinf} {pressure_units} (map_panel_force_moment_centroid)'
     comment_f = f'Force; qinf={qinf} {pressure_units} (map_panel_force_moment_centroid)'
     comment_m = f'Moment; qinf={qinf} {pressure_units} (map_panel_force_moment_centroid)'
-    for seid, force in force_tri.items():
-        sarea = structure_area_dict[seid]
-        force = force_tri[seid]
-        moment = moment_tri[seid]
+    for structure_eid, force in force_tri.items():
+        try:
+            structure_area = structure_area_dict[structure_eid]
+        except KeyError:
+            continue
+        force = force_tri[structure_eid]
+        moment = moment_tri[structure_eid]
 
-        pressure = force / sarea
+        pressure = force / structure_area
         if panel_dim == 'z':
             pressurei = pressure[2]
             # force[0] = 0.  # fx
@@ -951,11 +1043,11 @@ def map_panel_force_moment_centroid(
             raise RuntimeError(panel_dim)
 
         if is_eid_filter:
-            print(f'seid={seid:d} force={force} sarea={sarea:.3f}\n'
+            print(f'structure_eid={structure_eid:d} force={force} structure_area={structure_area:.3f}\n'
                   f'  pressure={pressure} pressurei={pressurei}')
-        bdf_model_out.add_pload2(pressure_sid, eids=[seid], pressure=pressurei, comment=comment_p)
-        bdf_model_out.add_pload2(force_sid, eids=[seid], pressure=forcei, comment=comment_f)
-        bdf_model_out.add_pload2(moment_sid, eids=[seid], pressure=momenti, comment=comment_m)
+        bdf_model_out.add_pload2(pressure_sid, eids=[structure_eid], pressure=pressurei, comment=comment_p)
+        bdf_model_out.add_pload2(force_sid, eids=[structure_eid], pressure=forcei, comment=comment_f)
+        bdf_model_out.add_pload2(moment_sid, eids=[structure_eid], pressure=momenti, comment=comment_m)
         comment_p = ''
         comment_f = ''
         comment_m = ''
@@ -997,7 +1089,8 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
                                     regions_to_remove=None,
                                     #idtype: str='int32',
                                     fdtype: str='float64', ) -> BDF:
-    """Maps pressure from an aero model to a structural model. assumes:
+    """
+    Maps pressure from an aero model to a structural model. assumes:
      - 3d aero model
      - 3d structure model
     """

@@ -52,6 +52,7 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
         # print(model.object_stats())
         variables = model.titles[1:]
         model.xyz *= aero_xyz_scale
+        log.info(f'regions (aero_xyz_scale={aero_xyz_scale}):')
         xyz = model.xyz
     else:  # pragma: no cover
         if stop_on_failure:
@@ -132,6 +133,7 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
         xyz_nodal = aero_model.xyz
 
         # if len(regions_to_include) > 0 or len(regions_to_remove) > 0:
+        log.warning(f'regions_to_remove={regions_to_remove} regions_to_include={regions_to_include}')
         element_id, tris, quads, quad_results, tri_results = filter_by_region(
             aero_model, regions_to_remove, regions_to_include)
         tri_eids = tris[:, 0]
