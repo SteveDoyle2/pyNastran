@@ -1422,8 +1422,9 @@ class GRID(BaseCard):
         """
         cp = set_blank_if_default(self.Cp(), 0)
         cd = set_blank_if_default(self.Cd(), 0)
+        ps = set_blank_if_default(self.ps, '')
         seid = set_blank_if_default(self.SEid(), 0)
-        list_fields = ['GRID', self.nid, cp] + self.xyz.tolist() + [cd, self.ps,
+        list_fields = ['GRID', self.nid, cp] + self.xyz.tolist() + [cd, ps,
                                                                     seid]
         return list_fields
 
