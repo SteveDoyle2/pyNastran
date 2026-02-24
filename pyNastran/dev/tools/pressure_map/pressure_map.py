@@ -339,6 +339,7 @@ def _write_pressure_file(model: BDF,
     forces = []
     moments = []
     pressures = []
+    write_header = True
     if map_type == 'force_moment':
         msg += (
             'SUBCASE 1\n'
@@ -357,6 +358,7 @@ def _write_pressure_file(model: BDF,
             )
         forces: list[PLOAD2] = model.loads[force_sid]
         moments: list[PLOAD2] = model.loads[moment_sid]
+        write_header = False
     elif map_type == 'pressure':
         assert len(model.loads) == 1, list(model.loads)
         pressures = model.loads[1]
@@ -402,7 +404,7 @@ def _write_pressure_file(model: BDF,
         bdf_file.write(msg)
     level = log.level
     log.level = 'info'
-    model.write_bdf(pressure_filename, write_header=False)
+    model.write_bdf(pressure_filename, write_header=write_header)
     log.level = level
 
     bdf_filename2 = pressure_filename
