@@ -3,6 +3,7 @@ defines:
  - export_caero_mesh(model, caero_bdf_filename='caero.bdf', is_aerobox_model=True)
 
 """
+import os
 import math
 from typing import TextIO
 import numpy as np
@@ -86,6 +87,7 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
             aero_eid_map[iaerobox_ieid] = caero_eid + iaerobox_eid
             iaerobox_ieid += 1
     log.debug(f'  naeroboxes = {len(aero_eid_map)}')
+    _write_aero_csvs(model)
     subcases, loads = _write_subcases_loads(model, aero_eid_map, is_aerobox_model)
     coords_to_write_dict = _get_coords_to_write_dict(model)
 
@@ -252,6 +254,16 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
     log.debug(f'  ---finished export_caero_mesh of {caero_bdf_filename}---')
     return
 
+
+def _write_aero_csvs(model: BDF):
+    matrix_filenames = ['WKK', 'W2GJ', 'FA2J']
+    bdf_filename = model.bdf_filename
+    base = os.path.splitext(bdf_filename)[0]
+    for obj_dict in (model.dmi, model.dmij, model.dmik, model.dmiji):
+        for name, obj in obj_dict.items():
+            if name in matrix_filenames:
+                csv_filename = base + f'.{name}.csv'
+                obj.write_csv(csv_filename)
 
 def rodriguez_rotate(xyz: np.ndarray,
                      theta: float,

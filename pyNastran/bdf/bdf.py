@@ -29,7 +29,7 @@ from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
 
-from pyNastran.utils import PathLike, object_attributes, check_path, deprecated as _deprecated
+from pyNastran.utils import PathLike, object_attributes, check_path, deprecated as _deprecated  # noqa: E501
 from .utils import parse_patran_syntax
 from .bdf_interface.add_methods import _get_add_tag
 from .bdf_interface.utils import (
@@ -72,7 +72,7 @@ from .cards.elements.solid import (
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
-from .cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON, RigidElement
+from .cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON, RigidElement  # noqa: E501
 from .cards.bolt import BOLT, BOLTLD, BOLTFOR, BOLTSEQ, BOLTFRC, BOLT_MSC
 
 # from .cards.axisymmetric.axisymmetric import (
@@ -227,6 +227,7 @@ Element = (
     CGAP | GENEL |
     CROD | CTUBE | CONROD |
     CBAR | CBEAM | CBEAM3 | CBEND | CSHEAR |
+    CGAP | CBUSH | CBUSH1D | CBUSH2D |
     ShellElement |
     CTRIAX | CTRIAX6 |
     CQUADX | CQUADX4 | CQUADX8 |
@@ -1933,7 +1934,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
                     if self.echo and not self.force_echo_off:
                         self.log.info('Reading %s:\n' %
-                                      old_card_name + full_comment + ''.join(card_lines))
+                                      old_card_name + full_comment + ''.join(card_lines))  # noqa: E501
 
                     # old dictionary version
                     # cards_list[old_card_name].append([full_comment, card_lines, ifile_iline])

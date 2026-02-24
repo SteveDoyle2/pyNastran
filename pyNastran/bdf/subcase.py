@@ -74,7 +74,7 @@ class Subcase:
 
     def __init__(self, id: int=0):
         self.id = id
-        self.params = {}
+        self.params: dict[str, Any] = {}
         self.sol = None
         self.log = None
         #print("\n***adding subcase %s***" % self.id)
@@ -500,7 +500,7 @@ class Subcase:
             return True
         return False
 
-    def has_parameter(self, *param_names: list[str]) -> list[bool]:
+    def has_parameter(self, *param_names: str | list[str]) -> list[bool]:
         """
         Checks to see if one or more parameter names are in the subcase.
 
@@ -918,6 +918,7 @@ class Subcase:
             (value, options, param_type) = param
             #msg = ("  -key=|%s| value=|%s| options=%s param_type=|%s|"
             #    % (key, value, options, param_type))
+            del key, value, options, param_type
 
         thermal = 0
         for (key, param) in self.params.items():
@@ -1437,6 +1438,7 @@ def get_device_code(options: Any, unused_value: Any) -> int:
        5 - PRINT, PUNCH
        6 - PRINT, PLOT, PUNCH
     """
+    del unused_value
     device_code = 0
     if 'PRINT' in options:
         device_code += 1
@@ -1460,16 +1462,19 @@ def get_table_code(sol: int, table_name: str, unused_options) -> int:
 
     Parameters
     ----------
-    options : list[int/float/str]
+    table_name : str
+        DISPLACEMENT, FORCE, STRESS, ...
+    unused_options : list[int/float/str]
         the options for a parameter
-    value : int/float/str
-        the value of the parameter
+    # value : int/float/str
+    #     the value of the parameter
 
     Returns
     -------
     table_code : int
        the OP2 table_code
     """
+    del unused_options
     if table_name in ['VECTOR', 'PRESSURE']:
         table_name = 'DISPLACEMENT'  # equivalent tables...
 
@@ -1688,6 +1693,7 @@ def get_format_code(options: list[str], unused_value: Any) -> int:
 
     .. todo::  not done...only supports REAL, IMAG, PHASE, not RANDOM
     """
+    del unused_value
     format_code = 0
     if 'REAL' in options:
         format_code += 1
@@ -1713,6 +1719,7 @@ def get_stress_code(key: str, options: dict[str, Any], unused_value: Any) -> int
     .. todo:: how does the MATERIAL bit get turned on?  I'm assuming it's
               element dependent...
     """
+    del unused_value
     stress_code = 0
     if 'VONMISES' in options:
         stress_code += 1

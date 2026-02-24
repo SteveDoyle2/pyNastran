@@ -473,11 +473,11 @@ class CoordBase(BaseCard):
             #print("e12 = %s" % e12)
         except TypeError:
             msg = ''
-            msg += "\ntype = %s\n" % (self.type)
-            msg += "\ncid  = %s\n" % (self.Cid())
-            msg += "e1 = %s\n" % str(e1)
-            msg += "e2 = %s\n" % str(e2)
-            msg += "e3 = %s\n" % str(e3)
+            msg += f"\ntype = {self.type}\n"
+            msg += f"\ncid  = {self.Cid()}\n"
+            msg += f"e1 = {e1}\n"
+            msg += f"e2 = {e2}\n"
+            msg += f"e3 = {e3}\n"
             raise TypeError(msg)
 
         try:
@@ -485,15 +485,15 @@ class CoordBase(BaseCard):
             self.k = normalize(e12)
         except RuntimeError:
             print("---InvalidUnitVectorError---")
-            print("Cp  = %s" % (self.Cid()))
-            print("e1  = %s" % (self.e1))
-            print("e2  = %s" % (self.e2))
-            print("e3  = %s" % (self.e3))
-            print("e1* = %s" % (e1))
-            print("e2* = %s" % (e2))
-            print("e3* = %s" % (e3))
-            print("e13 = %s" % (e13))
-            print("e12 = %s" % (e12))
+            print(f"Cp  = {self.Cid()}")
+            print(f"e1  = {self.e1}")
+            print(f"e2  = {self.e2}")
+            print(f"e3  = {self.e3}")
+            print(f"e1* = {e1}")
+            print(f"e2* = {e2}")
+            print(f"e3* = {e3}")
+            print(f"e13 = {e13}")
+            print(f"e12 = {e12}")
             print("k   = normalize(e12)")
             raise
 
@@ -502,19 +502,19 @@ class CoordBase(BaseCard):
             self.j = normalize(np.cross(self.k, e13))
         except RuntimeError:
             print("---InvalidUnitVectorError---")
-            print("Cp  = %s" % (self.Cid()))
-            print("e1  = %s" % (self.e1))
-            print("e2  = %s" % (self.e2))
-            print("e3  = %s" % (self.e3))
-            print("e1* = %s" % (e1))
-            print("e2* = %s" % (e2))
-            print("e3* = %s" % (e3))
-            print("e13 = %s" % (e13))
-            print("e12 = %s" % (e12))
+            print(f"Cp  = {self.Cid()}")
+            print(f"e1  = {self.e1}")
+            print(f"e2  = {self.e2}")
+            print(f"e3  = {self.e3}")
+            print(f"e1* = {e1}")
+            print(f"e2* = {e2}")
+            print(f"e3* = {e3}")
+            print(f"e13 = {e13}")
+            print(f"e12 = {e12}")
             print("k   = norm(e12)")
-            print("k   = %s\n" % (self.k))
+            print(f"k   = {self.k}\n")
             print("j*  = cross(k, e13)")
-            print("j*  = %s" % (np.cross(self.k, e13)))
+            print(f"j*  = {np.cross(self.k, e13)}")
             print("j   = norm(cross(k, e13))\n")
             raise
 
@@ -523,17 +523,17 @@ class CoordBase(BaseCard):
             self.i = np.cross(self.j, self.k)
         except RuntimeError:
             print("---InvalidUnitVectorError---")
-            print("Cp  = %s" % (self.Cid()))
-            print("Rid = %s" % (self.Rid()))
-            print("e1  = %s" % (self.e1))
-            print("e2  = %s" % (self.e2))
-            print("e3  = %s" % (self.e3))
-            print("e13 = %s" % (e13))
-            print("e12 = %s" % (e12))
+            print(f"Cp  = {self.Cid()}")
+            print(f"Rid = {self.Rid()}")
+            print(f"e1  = {self.e1}")
+            print(f"e2  = {self.e2}")
+            print(f"e3  = {self.e3}")
+            print(f"e13 = {e13}")
+            print(f"e12 = {e12}")
             print("k   = normalize(e12)")
-            print("k   = %s\n" % (self.k))
+            print(f"k   = {self.k}\n")
             print("j   = norm(cross(k,e13))")
-            print("j   = %s" % (self.j))
+            print(f"j   = {self.j}")
             raise
         assert self.cid not in self.rid_trace, 'cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
 
@@ -914,12 +914,13 @@ class CoordBase(BaseCard):
         -------
         .. math:: [K] = [T]^T [Ke] [T]
 
-        >>> T = beta_n(1)
+        coord = CORD2R(cid=1, origin=[0.,0.,0.], zaxis=[0.,0.,1.], xzplane=[1.,0.,0.],)
+        >>> T = coord.beta_n(1)
         [a1, a2, a3]
         [b1, b2, b3]
         [c1, c2, c3]
 
-        >>> T2 = beta_n(2)
+        >>> T2 = coord.beta_n(2)
         [a1, a2, a3, 0, 0, 0]
         [b1, b2, b3, 0, 0, 0]
         [c1, c2, c3, 0, 0, 0]
@@ -1127,12 +1128,12 @@ def define_coord_e123(model: BDF, cord2_type: str, cid: int,
 
     # check for overdefined axes
     if xaxis is not None:
-        assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+        assert yaxis is None and zaxis is None, f'yaxis={yaxis} zaxis={zaxis}'
         xaxis = _fix_xyz_shape(xaxis, 'xaxis')
         xaxis = rcoord.transform_node_to_global(xaxis)
 
     elif yaxis is not None:
-        assert zaxis is None, 'zaxis=%s' % (zaxis)
+        assert zaxis is None, f'zaxis={zaxis}'
         yaxis = _fix_xyz_shape(yaxis, 'yaxis')
         yaxis = rcoord.transform_node_to_global(yaxis)
     else:
@@ -1141,13 +1142,13 @@ def define_coord_e123(model: BDF, cord2_type: str, cid: int,
 
     # check for invalid planes
     if xyplane is not None:
-        assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
-        assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
+        assert yzplane is None and xzplane is None, f'yzplane={yzplane} xzplane={xzplane}'
+        assert xaxis is not None or yaxis is not None, f'xaxis={xaxis} yaxis={yaxis}'
         xyplane = _fix_xyz_shape(xyplane, 'xyplane')
         xyplane = rcoord.transform_node_to_global(xyplane)
     elif yzplane is not None:
-        assert xzplane is None, 'xzplane=%s' % (xzplane)
-        assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+        assert xzplane is None, f'xzplane={xzplane}'
+        assert yaxis is not None or zaxis is not None, f'yaxis={yaxis} zaxis={zaxis}'
         yzplane = _fix_xyz_shape(yzplane, 'yzplane')
         yzplane = rcoord.transform_node_to_global(yzplane)
     else:
@@ -1166,6 +1167,8 @@ def define_coord_e123(model: BDF, cord2_type: str, cid: int,
             khat = np.cross(xyplane, j)  # xyplane is "defining" xaxis
             k = khat / norm(khat)
             i = np.cross(j, k)
+        else:  # pragma: no cover
+            raise RuntimeError('for xyplane, xaxis or yaxis must be defined')
 
     elif yzplane is not None:
         if yaxis is not None:
@@ -1178,6 +1181,8 @@ def define_coord_e123(model: BDF, cord2_type: str, cid: int,
             ihat = np.cross(yzplane, zaxis)  # yzplane is "defining" yaxis
             i = ihat / norm(ihat)
             j = np.cross(k, i)
+        else:  # pragma: no cover
+            raise RuntimeError('for yzplane, yaxis or zaxis must be defined')
 
     elif xzplane is not None:
         if xaxis is not None:
@@ -1191,6 +1196,10 @@ def define_coord_e123(model: BDF, cord2_type: str, cid: int,
             jhat = np.cross(k, xzplane)  # xzplane is "defining" xaxis
             j = jhat / norm(jhat)
             i = np.cross(j, k)
+        else:  # pragma: no cover
+            raise RuntimeError('for xzplane, xaxis or zaxis must be defined')
+    # else:  # pragma: no cover
+    #     raise RuntimeError('for xzplane, xyplane, xyplane, xaxis or yaxis must be defined')
     return define_coord_ijk(model, cord2_type, cid, origin, rid, i, j, k, add=add)
 
 
@@ -2063,7 +2072,7 @@ class Cord2x(CoordBase):
         e1 = np.array(data[2:5], dtype='float64')
         e2 = np.array(data[5:8], dtype='float64')
         e3 = np.array(data[8:11], dtype='float64')
-        assert len(data) == 11, 'data = %s' % (data)
+        assert len(data) == 11, f'data = {data}'
         return cls(cid, e1, e2, e3, rid=rid, setup=False, comment=comment)
 
     @classmethod
@@ -2341,7 +2350,7 @@ class Cord1x(CoordBase):
 
         """
         #self.is_resolved = False
-        assert icard in (0, 1), 'icard=%r' % (icard)
+        assert icard in (0, 1), f'icard={icard}'
         ncoord = 4 * icard  # 0 if the 1st coord, 4 if the 2nd
 
         cid = integer(card, 1 + ncoord, 'cid')
@@ -2363,7 +2372,7 @@ class Cord1x(CoordBase):
         g1 = data[1]
         g2 = data[2]
         g3 = data[3]
-        assert len(data) == 4, 'data = %s' % (data)
+        assert len(data) == 4, f'data = {data}'
         return cls(cid, g1, g2, g3, comment=comment)
 
     def to_cord2x(self, model, rid=0):
@@ -2593,7 +2602,7 @@ class CORD3G(CoordBase):
         self.rid_ref = None
 
         assert 0 < self.method_int < 1000
-        assert len(self.thetas) == 3, 'thetas=%s' % (self.thetas)
+        assert len(self.thetas) == 3, f'thetas={self.thetas}'
 
         # EQN for DEQATN, TABLE for TABLE3D
         assert self.form in ['EQN', 'TABLE'], self.form
@@ -2643,7 +2652,7 @@ class CORD3G(CoordBase):
             the BDF object
 
         """
-        msg = ', which is required by CORD3G cid=%s' % (self.cid)
+        msg = f', which is required by CORD3G cid={self.cid:d}'
         self.rid_ref = model.Coord(self.rid, msg=msg)
 
     def uncross_reference(self) -> None:
@@ -2693,19 +2702,19 @@ class CORD3G(CoordBase):
                                f'method_es={self.method_es!r}')
         return p
 
-    def rotation_x(self, ct, st):
+    def rotation_x(self, ct: float, st: float) -> np.ndarray:
         matrix = np.array([[1., 0., 0.],
                            [ct, 0., -st],
                            [-st, 0., ct]])
         return matrix
 
-    def rotation_y(self, ct, st):
+    def rotation_y(self, ct: float, st: float) -> np.ndarray:
         matrix = np.array([[ct, 0., st],
                            [0., 1., 0.],
                            [-st, 0., ct]])
         return matrix
 
-    def rotation_z(self, ct, st):
+    def rotation_z(self, ct: float, st: float) -> np.ndarray:
         matrix = np.array([[ct, st, 0.],
                            [-st, ct, 0.],
                            [0., 0., 1.]])
@@ -3253,11 +3262,11 @@ def setup_add_axes(cid: int, coord_type: str, rid: int=0, origin=None,
 
     # check for overdefined axes
     if xaxis is not None:
-        assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+        assert yaxis is None and zaxis is None, f'yaxis={yaxis} zaxis={zaxis}'
         xaxis = _fix_xyz_shape(xaxis, 'xaxis')
         xaxis = _coord_to_xyz(xaxis, coord_type)
     elif yaxis is not None:
-        assert zaxis is None, 'zaxis=%s' % (zaxis)
+        assert zaxis is None, f'zaxis={zaxis}'
         yaxis = _fix_xyz_shape(yaxis, 'yaxis')
         yaxis = _coord_to_xyz(yaxis, coord_type)
     else:
@@ -3266,17 +3275,17 @@ def setup_add_axes(cid: int, coord_type: str, rid: int=0, origin=None,
 
     # check for invalid planes
     if xyplane is not None:
-        assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
-        assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
+        assert yzplane is None and xzplane is None, f'yzplane={yzplane} xzplane={xzplane}'
+        assert xaxis is not None or yaxis is not None, f'xaxis={xaxis} yaxis={yaxis}'
         xyplane = _fix_xyz_shape(xyplane, 'xyplane')
         xyplane = _coord_to_xyz(xyplane, coord_type)
     elif yzplane is not None:
-        assert xzplane is None, 'xzplane=%s' % (xzplane)
-        assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+        assert xzplane is None, f'xzplane={xzplane}'
+        assert yaxis is not None or zaxis is not None, f'yaxis={yaxis} zaxis={zaxis}'
         yzplane = _fix_xyz_shape(yzplane, 'yzplane')
         yzplane = _coord_to_xyz(yzplane, coord_type)
     else:
-        assert xaxis is not None or zaxis is not None, 'xaxis=%s zaxis=%s' % (xaxis, zaxis)
+        assert xaxis is not None or zaxis is not None, f'xaxis={xaxis} zaxis={zaxis}'
         xzplane = _fix_xyz_shape(xzplane, 'xzplane')
         xzplane = _coord_to_xyz(xzplane, coord_type)
 

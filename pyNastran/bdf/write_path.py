@@ -4,16 +4,18 @@ Defines following useful methods:
 
 """
 import sys
+from pyNastran.utils import PathLike
 from pathlib import PurePosixPath, PureWindowsPath
 
 
-def write_include(filename: str, is_windows: bool=None) -> str:
+def write_include(filename: PathLike,
+                  is_windows: bool=None) -> str:
     """
     Writes a bdf INCLUDE file line given an imported filename.
 
     Parameters
     ----------
-    filename : str
+    filename : PathLike
         the filename to write
     is_windows : bool; default=None
         True/False : Windows has a special format for writing INCLUDE
@@ -38,17 +40,19 @@ def write_include(filename: str, is_windows: bool=None) -> str:
 
     """
     is_windows = is_windows if is_windows is not None else sys.platform in ['win32']
+    filename_str = str(filename)
+    assert isinstance(filename_str, PathLike), f'filename={filename_str} is not a string or Path'
+    del filename
 
-    assert isinstance(filename, str), f'filename={filename} is not a string'
     if is_windows:
         marker = '\\'
     else:
         marker = '/'
 
     # TODO: seems to have an issue when filename uses \ (from os.path.join), but is_windows=True
-    sline = _split_path(filename, is_windows)
+    sline = _split_path(filename_str, is_windows)
 
-    if len(filename) <= 62:
+    if len(filename_str) <= 62:
         # short path
         #
         # 62; 72-10=62
@@ -76,15 +80,40 @@ def write_include(filename: str, is_windows: bool=None) -> str:
             else:
                 pth += '\n'
                 all_paths.append(pth)
-                pth = '        ' + next_term
-                assert len(pth) < 71, pth
+                pth = ' ' + next_term
+                npath = len(pth)
+                if len(pth) >= 71:
+                    pth = _split_pathi(next_term)
+                    # assert len(pth) < 71, f'n={npath}; {pth}'
 
         if len(pth):
             all_paths.append(pth)
         pth = ''.join(all_paths).rstrip('\n \\')
         out = pth.rstrip('\n ' + marker) + "'\n"
+    #print(out)
+
     return out
 
+def _split_pathi(term: str) -> str:
+    #print(f'len(term)={len(term)}')
+    assert len(term) > 70, term
+    assert len(term) < 130, term
+    isplit = 70
+    while isplit > 0:
+        chars = term[isplit-1:isplit+1]
+        print(f'chars = {chars!r}')
+        if ' ' in chars:
+            isplit -= 1
+            continue
+        break
+    else:
+        raise RuntimeError('aasdf')
+    #print(f'isplit = {isplit}')
+    pth = (
+        ' ' + term[:isplit] + '\n'
+        ' ' + term[isplit:] + '\n')
+    #print(pth)
+    return pth
 
 def _split_path(abspath: str, is_windows: bool) -> tuple[str, ...]:
     """

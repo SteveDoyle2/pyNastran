@@ -44,6 +44,7 @@ if CPYLOG_VERSION > '1.6.0':
 else:  # pragma: no cover
     from cpylog import get_logger2 as get_logger
 
+SUPER_TUPLE = tuple[str, int, str]
 
 # these allow spaces
 FILE_MANAGEMENT = (
@@ -204,10 +205,12 @@ class BDFInputPy:
 
     def get_lines(self, bdf_filename: PathLike | StringIO,
                   punch: Optional[bool]=False,
-                  make_ilines: bool=True) -> tuple[list[str], list[str], list[str],
-                                                   list[str], Optional[np.ndarray],
-                                                   dict[tuple[str, str], list[str]],
-                                                   ]:
+                  make_ilines: bool=True,
+                  ) -> tuple[list[str], list[str], list[str],            # system_lines, executive_control_lines, case_control_lines
+                             list[str], Optional[np.ndarray], # bulk_data_lines, bulk_data_ilines
+                             dict[SUPER_TUPLE, list[str]],  # additional_deck_lines
+                             dict[SUPER_TUPLE, np.ndarray], # additional_deck_ilines
+                            ]:
         """
         Opens the bdf and extracts the lines by group
 
@@ -320,11 +323,12 @@ class BDFInputPy:
                 system_lines, bulk_data_lines, bulk_data_ilines, punch)
         else:
             mystran = '' # 'mystran, '
-            msg = f'nastran_format={nastran_format!r} and must be msc, nx, optistruct, {mystran}or zona'
+            msg = f'nastran_format={nastran_format!r} and must be msc, nx, optistruct, {mystran}or zaero'
             raise NotImplementedError(msg)
 
-        #for line in bulk_data_lines:
-            #print(line.rstrip())
+        # for line in bulk_data_lines:
+        #     print(line.rstrip())
+        assert isinstance(bulk_data_ilines, np.ndarray), bulk_data_ilines
         return (system_lines, executive_control_lines, case_control_lines,
                 bulk_data_lines, bulk_data_ilines,
                 additional_deck_lines, additional_deck_ilines)
@@ -433,7 +437,6 @@ class BDFInputPy:
             all the lines packed into a single line stream
 
         """
-        #print('bdf_filename_main =', bdf_filename)
         if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
             bdf_filename = cast(StringIO, bdf_filename)
             lines = bdf_filename.readlines()
@@ -467,7 +470,8 @@ class BDFInputPy:
         active_lines : list[str]
             all the active lines in the deck
         ilines : (nlines, 2) int ndarray
-            the [ifile, iline] pair for each line in the file
+            the [ifile, iline] pair for each line in the file; 0-based
+            TDOO: ifile points to model.active_filenames or model.include_filenames
 
         """
         log = self.log
@@ -497,6 +501,7 @@ class BDFInputPy:
                     print(f'jfile={jfile} jline={jline}')
                     print(f'-> include_line = {line_upper}')
                     print(f'-> source_file  = {source_filename}')
+                    print(f'   source_line={jline+1}')
                     print(f'-> include_dir   = {include_dir}')
                     print(f'-? include_diri  = {self.include_dir}')
                 include_dirs = [include_dir]
@@ -520,9 +525,10 @@ class BDFInputPy:
                     # these are the lines associated with the 1st/2nd include file found
                     self.include_lines[jfile].append((include_lines, bdf_filename2))
 
+                    source_file_line = (source_filename, jline+1)
                     lines, nlines, ilines = self._update_include(
                         lines, nlines, ilines,
-                        include_lines, bdf_filename2, i, j, ifile)
+                        include_lines, bdf_filename2, i, j, ifile, source_file_line)
                     ifile += 1
                 else:
                     bdf_filename2 = parse_include_lines(include_lines)
@@ -558,30 +564,54 @@ class BDFInputPy:
     def _update_include(self, lines: list[str], nlines: int, ilines: np.ndarray,
                         include_lines: list[str], bdf_filename2: str,
                         i: int, j: int, ifile: int,
-                        ) -> tuple[list[str], int, np.ndarray]:
+                        source_file_line: tuple[str, int]) -> tuple[list[str], int, np.ndarray]:
         """incorporates an include file into the lines
+
+        Parameters
+        ----------
+        lines : list[str]
+           lines before applying INCLUDE
+        nlines : int
+           total number of lines before applying INCLUDE
+        ilines : np.ndarray
+           [ifile, iline] array
+        i : int
+            index of line before INCLUDE file
+        j : int
+            index of line after INCLUDE file
+        ifile : int
+            index for the INCLUDE file
+        source_file_line : tuple[source_filename, source_line]
+            source_filename : str
+                the file that called this file
+            source_line : int
+                the corresponding line in the source_filename
 
         Returns
         -------
         lines : list[str]
-           ???
+           lines after applying INCLUDE
         nlines : int
-           ???
-        ilines : np.ndarray
-           ???
+           total number of lines after applying INCLUDE
+        ilines : (nlines, 2) int np.ndarray
+           [ifile, iline] array
         """
         try:
             self._open_file_checks(bdf_filename2)
         except IOError:
             crash_name = os.path.join(self.include_dir, 'pyNastran_include_error.bdf')
             _dump_file(crash_name, lines, j, self.encoding)
-            msg = 'There was an invalid filename found while parsing.\n'
-            msg += 'Check the end of %r\n' % crash_name
-            msg += 'bdf_filename2 = %r\n' % bdf_filename2
-            msg += 'abs_filename2 = %r\n' % os.path.abspath(bdf_filename2)
-            msg += 'include_lines = %s' % include_lines
+            msg = (
+                'There was an invalid filename found while parsing.\n'
+                f'  Check the end of {crash_name!r}\n'
+                f'  bdf_filename2 = {bdf_filename2!r}\n'
+                f'  abs_filename2 = {os.path.abspath(bdf_filename2)!r}\n'
+                f'  source_filename = {source_file_line[0]!r}\n'
+                f'  source_line     = {source_file_line[1]}\n'
+                f'  include_lines = {include_lines}')
+            self.log.error('\n\n'+msg)
             #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
-            print(msg)
+            # print(msg)
             raise
             #raise IOError(msg)
 
@@ -1052,10 +1082,10 @@ def _lines_to_decks(lines: list[str],
                     keep_enddata: bool=True,
                     consider_superelements: bool=False,
                     nastran_format: str='msc') -> tuple[
-                        list[str], list[str], list[str], list[str], NDArrayN2int,
-                        dict[int, list[str]], dict[int, np.ndarray],
-                        dict[int, list[str]],
-                    ]:
+                        list[str], list[str], list[str],  # system_lines, executive_control_lines, case_control_lines
+                        list[str], NDArrayN2int,          # bulk_data_lines, bulk_data_ilines
+                        dict[SUPER_TUPLE, list[str]],     # superelement_lines
+                        dict[SUPER_TUPLE, np.ndarray]]:  # superelement_ilines
     """
     Splits the BDF lines into:
      - system lines
@@ -2078,10 +2108,10 @@ def lines_to_decks2(lines: list[str],
                     ilines: NDArrayN2int,
                     punch: Optional[bool],
                     log: SimpleLogger,
-                    nastran_format: str='msc') -> tuple[list[str],
-                                                        list[str], list[str], list[str],
-                                                        dict[tuple[str, str], list[str]],
-                                                        dict[tuple[str, str], np.ndarray],]:
+                    nastran_format: str='msc') -> tuple[list[str], list[str], list[str],  # system_lines, executive_control_lines, case_control_lines
+                                                        list[str], np.ndarray,            # bulk_data_lines, bulk_data_ilines
+                                                        dict[tuple[str, list[str]]],      # additional_deck_lines
+                                                        dict[tuple[str, np.ndarray]] ]:   # additional_deck_ilines
     """
     Splits the BDF lines into:
      - system lines
@@ -2100,9 +2130,13 @@ def lines_to_decks2(lines: list[str],
         None : guess
         True : starts from the bulk data deck
         False : read the entire deck
-    keep_enddata : bool; default=True
-        True : don't throw away the enddata card
-        False : throw away the enddata card
+    log : SimpleLogger
+        logging object
+    nastran_format : str
+        unused
+    # keep_enddata : bool; default=True
+    #     True : don't throw away the enddata card
+    #     False : throw away the enddata card
 
     Returns
     -------
@@ -2121,10 +2155,8 @@ def lines_to_decks2(lines: list[str],
         ???
     superelement_ilines : list[str]
         ???
-    auxmodel_lines : list[str]
-        ???
-    auxmodel_ilines : dict
-        ???
+
+    .. note:: removed auxmodel_lines, auxmodel_ilines
 
     """
     fake_ilines = ilines is None
@@ -2135,12 +2167,12 @@ def lines_to_decks2(lines: list[str],
         ilines[:, 1] = np.arange(nlines)
     assert ilines is not None, ilines
 
-    system_lines = []
-    executive_control_lines = []   # flag = 1
-    case_control_lines = []        # flag = 2
-    bulk_data_lines = []           # flag = 3
-    additional_deck_lines = {}
-    additional_deck_ilines = {}
+    system_lines: list[str] = []
+    executive_control_lines: list[str] = []   # flag = 1
+    case_control_lines: list[str] = []        # flag = 2
+    bulk_data_lines: list[str] = []           # flag = 3
+    additional_deck_lines: dict[SUPER_TUPLE, list[str]] = {}
+    additional_deck_ilines: dict[SUPER_TUPLE, np.ndarray] = {}
     if punch:  # True
         bulk_data_lines = lines
         bulk_data_ilines = ilines

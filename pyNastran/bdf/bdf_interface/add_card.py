@@ -58,7 +58,8 @@ from pyNastran.bdf.cards.elements.shell import (
 from pyNastran.bdf.cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR,
     ACMODL, ACPLNW, AMLREG, PMIC, MICPNT, MATPOR)
-from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PGPLSN
+from pyNastran.bdf.cards.properties.shell import (
+    PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PGPLSN)
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import (
     PBUSH, PBUSH1D, PBUSHT, PBUSH2D, PBUSH_OPTISTRUCT)
@@ -991,7 +992,8 @@ class Add0dElements:
     def __init__(self, add_methods: AddMethods):
         self._add_methods = add_methods
 
-    def add_conm1(self, eid: int, nid: int, mass_matrix: NDArray66float, cid=0, comment='') -> CONM1:
+    def add_conm1(self, eid: int, nid: int, mass_matrix: NDArray66float,
+                  cid: int=0, comment: str='') -> CONM1:
         """
         Creates a CONM1 card
 
@@ -2015,8 +2017,12 @@ class Add1dElements:
         return elem
 
     def add_pbeam(self, pid: int, mid: int,
-                  xxb: list[float], so: str, area: float,
-                  i1: float, i2: float, i12: float, j: float,
+                  xxb: list[float], so: str | list[str],
+                  area: float | list[float],
+                  i1: float | list[float],
+                  i2: float | list[float],
+                  i12: float | list[float],
+                  j: float | list[float],
                   nsm=None,
                   c1=None, c2=None, d1=None, d2=None,
                   e1=None, e2=None, f1=None, f2=None,
@@ -2040,9 +2046,9 @@ class Add1dElements:
             material id
         xxb : list[float]
             The percentage locations along the beam [0., ..., 1.]
-        so : list[str]
+        so : str | list[str]
             YES, YESA, NO
-        area : list[float]
+        area : float | list[float]
             area
         i1, i2, i12, j : list[float]
             moments of inertia
@@ -2210,7 +2216,8 @@ class Add1dElements:
                            #static_stress_constraints=None,
                            #static_strain_constraints=None,
                            #static_force_constraints=None,
-                           group: str='MSCBML0', comment: str='') -> tuple[PBARL, list[DESVAR], list[DVPREL1]]:
+                           group: str='MSCBML0', comment: str='',
+                           ) -> tuple[PBARL, list[DESVAR], list[DVPREL1]]:
         """
         dim = [0.1, 0.2, 0.3, 0.4]
         dim_constraints = [
@@ -2218,7 +2225,8 @@ class Add1dElements:
             [0.01, 1.0],
             [None, 1.0],
             None,
-        ]"""
+        ]
+        """
         dim_station0 = dims[0]
         assert len(dim_station0) == len(dim_constraints), f'len(dim_station0)={len(dim_station0)} len(dim_constraints)={len(dim_constraints)}'
         pbeaml = self.add_pbeaml(pid, mid, beam_type, xxb, dims,
@@ -3848,7 +3856,7 @@ class AddMaterial:
                   e_table: int=0, g_table: int=0, nu_table: int=0,
                   rho_table: int=0, a_table: int=0, ge_table: int=0,
                   st_table: int=0, sc_table: int=0, ss_table: int=0,
-                  comment: str='') -> int:
+                  comment: str='') -> MATT1:
         """Creates a MATT1 card"""
         mat = MATT1(mid, e_table, g_table, nu_table, rho_table, a_table,
                     ge_table, st_table, sc_table, ss_table,
@@ -4554,8 +4562,10 @@ class AddAero:
             spline id
         caero : int
             CAEROx id that defines the plane of the spline
-        box1 / box2 : int
-            First/last box id that is used by the spline
+        box1 : int
+            First box id that is used by the spline
+        box2 : int
+            Last box id that is used by the spline
         setg : int
             SETx id that defines the list of GRID points that are used
             by the surface spline
@@ -4605,8 +4615,10 @@ class AddAero:
             spline id
         caero : int
             CAEROx id that defines the plane of the spline
-        box1 / box2 : int
-            First/last box/body id that is used by the spline
+        box1 : int
+            First body/box id that is used by the spline
+        box2 : int
+            Last body/box id that is used by the spline
         setg : int
             SETx id that defines the list of GRID points that are used
             by the beam spline
@@ -5224,7 +5236,8 @@ class AddAero:
         self._add_methods.add_aesurfs_object(aesurfs)
         return aesurfs
 
-    def add_aeparm(self, aeparm_id, label, units, comment='') -> AEPARM:
+    def add_aeparm(self, aeparm_id: int, label: str, units: str,
+                   comment: str='') -> AEPARM:
         """
         Creates an AEPARM card, which defines a new trim variable.
 
@@ -5848,6 +5861,8 @@ class AddOptimization:
             'F1(A,B,C,D,R) = A+B *C-(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B - C)',
             'F = A + B - F1 * D',
         ]
+        >>> from pyNastran.bdf.bdf import BDF
+        >>> model = BDF()
         >>> deqatn = model.add_deqatn(41, eqs, comment='')
 
         """
@@ -7674,12 +7689,6 @@ class AddCards(AddCoords, AddContact, AddBolts,
         tb : int/float; default=0
             TABLEDi id that defines B(f) for all degrees of freedom in
             EXCITEID entry
-        tc : int/float; default=0
-            TABLEDi id that defines C(f) for all degrees of freedom in
-            EXCITEID entry
-        td : int/float; default=0
-            TABLEDi id that defines D(f) for all degrees of freedom in
-            EXCITEID entry
         tp : int/float; default=0
             TABLEDi id that defines phi(f) for all degrees of freedom in
             EXCITEID entry
@@ -8886,7 +8895,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
                     xaxis: str='LINEAR', yaxis: str='LINEAR',
                     extrap: int=0, comment: str='') -> TABLEM1:
         """Creates a TABLEM1 card"""
-        table = TABLEM1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+        table = TABLEM1(tid, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
         self._add_methods.add_tablem_object(table)
         return table
 

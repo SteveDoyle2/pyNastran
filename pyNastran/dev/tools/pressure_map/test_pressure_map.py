@@ -140,7 +140,7 @@ class TestPressureMap(unittest.TestCase):
             regions_to_remove=None,
             log=log)
 
-        fa2j_filename = DIRNAME/'cart3d_fa2j_5.bdf'
+        fa2j_filename = DIRNAME/'main_cart3d_fa2j_5.bdf'
         pressure_filename_to_fa2j(pressure_filename, fa2j_filename, sid=1, log=log)
 
         wkk_filename = DIRNAME/'cart3d_wkk_6.bdf'

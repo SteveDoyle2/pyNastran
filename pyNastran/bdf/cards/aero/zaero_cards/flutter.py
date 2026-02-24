@@ -60,6 +60,7 @@ class MKAEROZ(BaseCard):
         self.print_flag = print_flag
         if isinstance(self.filename, str):
             assert len(filename) <= 56, filename
+        self.filename_ref = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):

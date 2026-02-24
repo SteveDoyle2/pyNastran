@@ -8,6 +8,7 @@ from typing import Callable, Optional, Any, TYPE_CHECKING
 import numpy as np
 from scipy.sparse import coo_matrix  # type: ignore
 
+from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.femutils.utils import unique2d
 from pyNastran.bdf.cards.base_card import BaseCard
@@ -23,6 +24,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.bdf.bdf import BDF
+    import scipy
 
 
 class DTI_UNITS(BaseCard):
@@ -44,7 +46,8 @@ class DTI_UNITS(BaseCard):
     NX
     """
     type = 'DTI'
-    #_properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type', 'tin_dtype', 'tout_dtype']
+    # _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type',
+    #                'tin_dtype', 'tout_dtype']
 
     @classmethod
     def _init_from_empty(cls):
@@ -181,7 +184,8 @@ class DTI(BaseCard):
     NX
     """
     type = 'DTI'
-    #_properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type', 'tin_dtype', 'tout_dtype']
+    # _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar',
+    # 'matrix_type', 'tin_dtype', 'tout_dtype']
 
     @classmethod
     def _init_from_empty(cls):
@@ -627,7 +631,7 @@ class NastranMatrix(BaseCard):
         return shape
 
     def _add_column(self, card, comment: str=''):
-        """adds an additional column entry to the matrix"""
+        """adds a column entry to the matrix"""
         if comment:
             if hasattr(self, '_comment'):
                 self.comment += comment
@@ -707,6 +711,65 @@ class NastranMatrix(BaseCard):
         assert len(self.GCj) == len(self.GCi), msg
         #if self.is_complex:
             #self.Complex(double(card, v, 'complex')
+
+    def write_csv(self, csv_filename: PathLike) -> np.ndarray:
+        mat = self.get_matrix(is_sparse=False, apply_symmetry=True)[0]
+        #self.plot_matrix(mat[:20,:20])
+        if 0:  # pragma: no cover
+            fmat = mat[::2,::2]
+            # print(mat[:10,:10].shape)
+            # print(mat[:10,:10])
+            I = np.eye(fmat.shape[0])
+            # self.plot_matrix(np.log(abs(mat)+1e-6))
+            mati = (fmat - I) #[:20,:20]
+            # print(mati.max(), mati.min())
+            # self.plot_matrix(mati)
+            self.plot_matrix(np.abs(mati))
+        # np.savetxt(csv_filename, mat, delimiter='\t')
+        return mat
+
+    def plot_matrix(self, matrix: np.ndarray):  # pragma: no cover
+        """
+        Colormaps and plots a 2D matrix using a specified colormap, defaulting to Red-Blue.
+
+        Parameters:
+        matrix (numpy.ndarray): The 2D matrix (or array-like) to be colormapped.
+        cmap_name (str): The name of the colormap to use (e.g., 'RdBu', 'bwr', 'seismic').
+                         'RdBu' is Red-Blue, typically with white/light gray in the middle.
+        title (str): Title of the plot.
+        xlabel (str): Label for the x-axis.
+        ylabel (str): Label for the y-axis.
+        show_colorbar (bool): Whether to display a colorbar next to the plot.
+        vmin (float, optional): Minimum value for colormap scaling. If None, uses matrix min.
+        vmax (float, optional): Maximum value for colormap scaling. If None, uses matrix max.
+        """
+        import matplotlib.pyplot as plt
+        plt.figure(figsize=(8, 6))  # Adjust figure size as needed
+        cmap_name = 'bwr'
+
+        # Use imshow to display the matrix with the colormap
+        # 'origin='lower'' means the (0,0) index is at the bottom-left,
+        # which is common for mathematical matrices. Use 'upper' if (0,0) is top-left
+        # 'interpolation='nearest'' makes sharp color transitions; 'bilinear'/'bicubic' for smoother
+        vmin = None
+        vmax = None
+        im = plt.imshow(matrix, cmap=cmap_name, origin='upper',
+                        vmin=vmin if vmin is not None else matrix.min(),
+                        vmax=vmax if vmax is not None else matrix.max(),
+                        interpolation='nearest', )
+
+        # Add a colorbar to show the mapping of values to colors
+        show_colorbar = False
+        if show_colorbar:
+            plt.colorbar(im, label="Matrix Value")
+
+        # plt.title(title)
+        plt.xlabel('row')
+        plt.ylabel('col')
+        plt.grid(True, linestyle='--', alpha=0.7)  # Optional: add a subtle grid
+
+        plt.tight_layout()  # Adjust plot to prevent labels from overlapping
+        plt.show()
 
     def get_matrix(self, is_sparse: bool=False,
                    apply_symmetry: bool=True) -> tuple[np.ndarray | scipy.coomatrix,
@@ -2340,7 +2403,7 @@ class DMI(NastranMatrix):
 
 
 def _dmi_get_real_matrix_columns(name: str, GCi, GCj, Real,
-                                 func: Callable[float, str]) -> list[str]:
+                                 func: Callable[[float], str]) -> list[str]:
     msg_list = []
     uGCj = np.unique(GCj)
     #print(f'uGCj={uGCj}')
@@ -2390,7 +2453,7 @@ def _dmi_get_real_matrix_columns(name: str, GCi, GCj, Real,
 
 
 def _dmi_get_complex_matrix_columns(name: str, GCi, GCj, Real, Complex,
-                                    func: Callable[float, str]) -> list[str]:
+                                    func: Callable[[float], str]) -> list[str]:
     msg_list = []
     uGCj = np.unique(GCj)
     #print(f'uGCj={uGCj}')
@@ -2710,6 +2773,8 @@ def _fill_dense_rectangular_matrix_real(matrix: DMIG,
                                         apply_symmetry: bool) -> np.ndarray:
     """helper method for ``_fill_dense_rectangular_matrix``"""
     dense_mat = np.zeros((nrows, ncols), dtype=matrix.tin_dtype)
+    i = -1
+    j = -1
     if matrix.matrix_form == 6 and apply_symmetry:  # symmetric
         is_diagonal, not_diagonal = _get_diagonal_symmetric(matrix)
         try:
@@ -2717,7 +2782,9 @@ def _fill_dense_rectangular_matrix_real(matrix: DMIG,
                 i = rows[tuple(gcj)]
                 dense_mat[i, i] += reali
 
-            for (gcj, gci, reali) in zip(matrix.GCj[not_diagonal], matrix.GCi[not_diagonal], matrix.Real[not_diagonal]):
+            for (gcj, gci, reali) in zip(matrix.GCj[not_diagonal],
+                                         matrix.GCi[not_diagonal],
+                                         matrix.Real[not_diagonal]):
                 i = rows[tuple(gci)]
                 j = cols[tuple(gcj)]
                 dense_mat[i, j] += reali
@@ -3267,7 +3334,7 @@ def tin_str_to_int(tin: str | int) -> int:
         tin2 = tin.lower().strip()
         try:
             tin = reverse_tout_map[tin2]
-        except:
+        except KeyError:
             keys = list(TOUT_DTYPE_MAP) + list(reverse_tout_map)
             raise SyntaxError(f'tin={tin!r} is not in allowed={keys}')
     return tin
@@ -3281,7 +3348,7 @@ def tout_str_to_int(tout: int | str) -> int:
         tout2 = tout.lower().strip()
         try:
             tout = reverse_tout_map[tout2]
-        except:
+        except KeyError:
             keys = list(TOUT_DTYPE_MAP) + list(reverse_tout_map)
             raise SyntaxError(f'tout={tout!r} is not in allowed={keys}')
     return tout

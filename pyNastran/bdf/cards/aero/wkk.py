@@ -1,3 +1,4 @@
+from pathlib import Path
 import argparse
 import numpy as np
 from pyNastran.bdf.bdf import read_bdf, BDF
@@ -16,9 +17,6 @@ def cmd_line_wkk(argv=None):
     ----------
     dirname
 
-    Returns
-    -------
-
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("wkk", help='activates wkk')
@@ -29,7 +27,7 @@ def cmd_line_wkk(argv=None):
     solve_wkk_from_dirname(dirname=dirname)
 
 
-def solve_wkk_from_dirname(dirname: PathLike):
+def solve_wkk_from_dirname(dirname: Path):
     bdf_filenames = dirname.glob('*.bdf')
     solve_wkk_from_bdf_filenames(bdf_filenames)
 
@@ -46,12 +44,13 @@ def solve_wkk_from_bdf_filenames(bdf_filenames: list[PathLike]) -> np.ndarray:
     Wkk = np.zeros((5, 5), dtype='float64')
     return Wkk
 
-def setup_pressures_from_bdf_filenames(bdf_filenames: list[PathLike]) -> np.ndarray:
+def setup_pressures_from_bdf_filenames(bdf_filenames: list[PathLike],
+                                       ) -> tuple[np.ndarray, np.ndarray]:
     if not isinstance(bdf_filenames, list):
         bdf_filenames = [bdf_filenames]
 
-    force_list = []
-    pressure_list = []
+    force_list: list[np.ndarray] = []
+    pressure_list: list[np.ndarray] = []
     for bdf_filename in bdf_filenames:
         if isinstance(bdf_filename, BDF):
             model = bdf_filename
