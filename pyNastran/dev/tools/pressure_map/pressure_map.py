@@ -11,7 +11,7 @@ import matplotlib.cm as cm
 
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
-from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.bdf import BDF, PLOAD2, FORCE, read_bdf
 from pyNastran.bdf.write_path import write_include
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
 
@@ -29,7 +29,13 @@ def pressure_filename_to_fa2j(pressure_filename: PathLike,
                               fa2j_filename: PathLike, sid: int=1,
                               log: Optional[SimpleLogger]=None):
     model = read_bdf(pressure_filename, xref=False, log=log)
-    loads = model.loads[sid]
+    try:
+        loads = model.loads[sid]
+    except KeyError:
+        model.log.error(f'error finding loads in {pressure_filename}')
+        model.log.error(f'LOADs={list(model.loads)}')
+        raise
+
     pressures = []
     for load in loads:
         assert load.type == 'PLOAD2', load
@@ -329,6 +335,10 @@ def _write_pressure_file(model: BDF,
         'SOL 101\n'
         'CEND\n'
     )
+    log = model.log
+    forces = []
+    moments = []
+    pressures = []
     if map_type == 'force_moment':
         msg += (
             'SUBCASE 1\n'
@@ -345,27 +355,111 @@ def _write_pressure_file(model: BDF,
             f'  LOAD = {cp_sid}\n'
             'BEGIN BULK\n'
             )
+        forces: list[PLOAD2] = model.loads[force_sid]
+        moments: list[PLOAD2] = model.loads[moment_sid]
+    elif map_type == 'pressure':
+        assert len(model.loads) == 1, list(model.loads)
+        pressures = model.loads[1]
+        msg += (
+            'SUBCASE 1\n'
+            '  SUBTITLE = Pressure\n'
+            f'  LOAD = {pressure_sid}\n'
+            'BEGIN BULK\n'
+            )
+    elif map_type == 'force':
+        assert len(model.loads) == 1, list(model.loads)
+        forces: list[PLOAD2] = model.loads[1]
+        msg += (
+            'SUBCASE 1\n'
+            '  SUBTITLE = Force\n'
+            f'  LOAD = {force_sid}\n'
+            'BEGIN BULK\n'
+        )
     else:
         raise NotImplementedError(map_type)
     dirname = os.path.dirname(pressure_filename)
     base_ext = os.path.basename(pressure_filename)
     base = os.path.splitext(base_ext)[0]
-    model.log.debug(f'dirname  = {dirname}')
-    model.log.debug(f'base_ext = {base_ext}')
-    model.log.debug(f'base     = {base}')
+    # model.log.debug(f'dirname  = {dirname}')
+    # model.log.debug(f'base_ext = {base_ext}')
+    # model.log.debug(f'base     = {base}')
 
     main_bdf_filename = os.path.join(dirname, f'main_{base}.bdf')
-    rel_main_filename = os.path.relpath(aero_panel_bdf_filename, dirname)
+    if isinstance(aero_panel_bdf_filename, PathLike):
+        rel_main_filename = os.path.relpath(aero_panel_bdf_filename, dirname)
+    elif isinstance(aero_panel_bdf_filename, BDF):
+        rel_main_filename = os.path.relpath(aero_panel_bdf_filename.bdf_filename, dirname)
+    else:
+        log.warning('cant write main pressure file because the wrong type was found...')
     msg += write_include(rel_main_filename)
     msg += write_include(os.path.basename(pressure_filename))
 
     # print(msg)
-    model.log.debug(f'pressure_filename = {pressure_filename}')
-    model.log.debug(f'aero_panel_bdf_filename = {aero_panel_bdf_filename}')
-    model.log.debug(f'writing {main_bdf_filename}')
+    log.debug(f'pressure_filename = {pressure_filename}')
+    log.debug(f'aero_panel_bdf_filename = {aero_panel_bdf_filename}')
+    log.debug(f'writing pressure_file: {main_bdf_filename}')
     with open(main_bdf_filename, 'w') as bdf_file:
         bdf_file.write(msg)
+    level = log.level
+    log.level = 'info'
     model.write_bdf(pressure_filename, write_header=False)
+    log.level = level
+
+    bdf_filename2 = pressure_filename
+    base = os.path.split(bdf_filename2)[0]
+    if len(forces) and len(moments):
+        eid_list: list[int] = []
+        force_moment_list: list[tuple[float, float]] = []
+        for force_obj, moment_obj in zip(forces, moments):
+            fi = force_obj.pressure
+            feid = force_obj.eids[0]
+            meid = moment_obj.eids[0]
+            assert feid == meid, (feid, meid)
+            mi = moment_obj.pressure
+            eid_list.append(feid)
+            force_moment_list.append((fi, mi))
+
+        eids = np.array(eid_list, dtype='int32')
+        force_moment = np.array(force_moment_list, dtype='float64')
+        # Method 1: Using numpy's structured array
+        dtypes = [
+            ('element_id', eids.dtype),
+            ('force', force_moment.dtype),
+            ('moment', force_moment.dtype),
+        ]
+        result = np.empty(len(eids), dtype=dtypes)
+        result['element_id'] = eids
+        result['force'] = force_moment[:, 0]
+        result['moment'] = force_moment[:, 1]
+
+        force_moment_filename = base + '.force_moment.csv'
+        model.log.debug(f'writing {str(force_moment_filename)}')
+        np.savetxt(force_moment_filename, result, header='Element,Force,Moment',
+                   delimiter=',', fmt=['%d', '%.18e', '%.18e'])
+    elif len(forces):
+        eid_force_list = []
+        for force_obj in forces:
+            fi = force_obj.xyz
+            nid = force_obj.node
+            eid_force_list.append((nid, *fi))
+        eid_force_array = np.array(eid_force_list)
+        force_filename = base + '.force.csv'
+        model.log.debug(f'writing {str(force_filename)}')
+        np.savetxt(force_filename, eid_force_array, header='Element,Fx,Fy,Fz',
+                   delimiter=',', fmt=['%d', '%.18e', '%.18e', '%.18e'])
+    elif len(pressures):
+        eid_pressure_list = []
+        for pressure_obj in pressures:
+            fi = pressure_obj.pressure
+            feid = pressure_obj.eids[0]
+            eid_pressure_list.append((feid, fi))
+        eid_pressure_array = np.array(eid_pressure_list)
+        pressure_filenamei = base + '.pressure.csv'
+        model.log.debug(f'writing {str(pressure_filenamei)}')
+        np.savetxt(pressure_filenamei, eid_pressure_array, header='Element,Pressure',
+                   delimiter=',', fmt=['%d', '%.18e'])
+    else:  # pragma: no cover
+        raise NotImplementedError(map_type)
 
 
 def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
@@ -394,6 +488,12 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
     Maps pressure from an aero model to a structural model. assumes:
      - 3d aero model
      - 2d structure model panel model
+
+    Handles:
+     - cruiciform fuselage/vtail
+     - standard wing/tail
+    Doesn't handle:
+     - vtail (should be possible by explicitly defining mapping directions)
     """
     aero_format = aero_model.__class__.__name__.lower()
     assert aero_format in {'cart3d', 'fluent', 'tecplot'}, aero_format
@@ -546,11 +646,14 @@ def _map_pressure_panel_model(structure_model: BDF,
                               # aero nodes
                               aero_node_id, aero_xyz,
                               # aero elements
-                              aero_tri_nodes, aero_tri_area, aero_tri_cp, aero_tri_normal, aero_tri_centroid, aero_tri_force_coeff_per_q,
-                              aero_quad_nodes, aero_quad_area, aero_quad_cp, aero_quad_normal, aero_quad_centroid, aero_quad_force_coeff_per_q,
+                              aero_tri_nodes, aero_tri_area, aero_tri_cp, aero_tri_normal,
+                              aero_tri_centroid, aero_tri_force_coeff_per_q,
+                              aero_quad_nodes, aero_quad_area, aero_quad_cp, aero_quad_normal,
+                              aero_quad_centroid, aero_quad_force_coeff_per_q,
                               # structure
                               structure_nodes, structure_xyz,
-                              structure_eids, structure_area, structure_centroid, iz_structure, z_structure_sign,
+                              structure_eids, structure_area, structure_centroid,
+                              iz_structure, z_structure_sign,
                               qinf: float=1.0, #pressure_units='',
                               pressure_sid: int=1,
                               force_sid: int=2,
@@ -585,7 +688,7 @@ def _map_pressure_panel_model(structure_model: BDF,
         assert elem.type == 'CQUAD4', elem
         inids = np.searchsorted(structure_nodes, elem.nodes)
         quad_xyz = structure_xyz[inids, ]
-        quad_xy = quad_xyz[:, [0, 1]]
+        # quad_xy = quad_xyz[:, [0, 1]]
         p1 = quad_xyz[0, :]
         p2 = quad_xyz[1, :]
         p3 = quad_xyz[2, :]
@@ -618,11 +721,13 @@ def _map_pressure_panel_model(structure_model: BDF,
     aero_quad_centroid_panel = aero_quad_centroid[:, [0, 1]]
     # structure_box_moment_center_panel = structure_box_moment_center[:, [0, 1]]
 
-    neidsi = 10
-    msg = f'structure_box_centroid[:{neidsi},:]; n={len(structure_box_centroid)}\n'
-    for x, y, z in structure_box_centroid[:neidsi, :]:
-        msg += f'    [{x:.3f}, {y:.3f}, {z:.3f}]\n'
-    log.debug(msg)
+    # neidsi = 10
+    neidsi = 0
+    if neidsi:
+        msg = f'structure_box_centroid[:{neidsi},:]; n={len(structure_box_centroid)}\n'
+        for x, y, z in structure_box_centroid[:neidsi, :]:
+            msg += f'    [{x:.3f}, {y:.3f}, {z:.3f}]\n'
+        log.debug(msg)
     # del structure_box_centroid, structure_box_moment_center
     # del aero_centroid
 
@@ -650,8 +755,9 @@ def _map_pressure_panel_model(structure_model: BDF,
     # iaero = slots[0]
     # print(f'slots = {slots}')
     # print(f'slots[1] = {slots[1]}')
-    log.info(f'unique iaero_tri={iaero_tri} n={len(iaero_tri)}')
-    log.info(f'unique iaero_quad={iaero_quad} n={len(iaero_quad)}')
+    if neidsi:
+        log.info(f'unique iaero_tri={iaero_tri} n={len(iaero_tri)}')
+        log.info(f'unique iaero_quad={iaero_quad} n={len(iaero_quad)}')
 
     # istructure = np.arange(len(iz_structure))
     # if map_type == 'pressure':
@@ -670,8 +776,7 @@ def _map_pressure_panel_model(structure_model: BDF,
         # plotted so you can debug the loads
         eid_filter = 0
         # eid_filter = 1_101_001  # mcrit
-        eid_filter = 2_202_046  # mcrit tail_-0.78,0.12 -> dCp=0.90
-        log.info(f'eids_z = {eids_z}')
+        # eid_filter = 2_202_046  # mcrit tail_-0.78,0.12 -> dCp=0.90
         # eid_filter = 4205006
         #eid_filter = 4_212_002
         # eid_filter = 1_201_035
@@ -710,6 +815,7 @@ def _map_pressure_panel_model(structure_model: BDF,
             pressure_sid=pressure_sid,
             force_sid=force_sid, moment_sid=moment_sid,
             pressure_units=pressure_units, cp_sid=cp_sid,
+            #force_units=force_units, moment_units=moment_units,
         )
     else:  # pragma: no cover
         raise RuntimeError(map_type)
@@ -733,6 +839,10 @@ def _plot_panel_model(log: SimpleLogger,
     plot_special_quad = (eid_filter > 0)
     plot_base_quads = plot_special_quad
 
+    if not any([plot_special_quad, plot_base_quads, plot_scatter, plot_aero_model]):
+        return
+
+    log.info(f'eids_z = {eids_z}')
     if plot_base_quads:  # pragma: no cover
         polygons = []
         for i, eid in enumerate(eids_z):
@@ -907,7 +1017,9 @@ def map_panel_force_moment_centroid(
         iaero_tri: np.ndarray,
         iaero_quad: np.ndarray,
         qinf: float, pressure_units: str='',
+        force_units: str='', moment_units: str='',
         pressure_sid: int=1, force_sid: int=2, moment_sid: int=3, cp_sid: int=4,
+        cp_signed_sid: int=4,
     ) -> None:
     """
     Maps forces and moments onto the moment reference point,
@@ -1067,7 +1179,7 @@ def map_panel_force_moment_centroid(
 
     # mapping to a dictionary because not all spots will will be used
     # need to offset it by 1 because indices are 0-based
-    log.debug(f'structure_z_sign_out = {structure_z_sign_out}')
+    # log.debug(f'structure_z_sign_out = {structure_z_sign_out}')
     # zsigns = structure_normal[:, i]
     # structure_area_normal_dict = {eid: (area, zsign) for eid, area, zsign in
     #                               zip_longest(structure_eids, structure_area, )}
@@ -1077,10 +1189,13 @@ def map_panel_force_moment_centroid(
                            zip_longest(structure_eids, structure_area)}
 
     comment_p = f'Pressure; qinf={qinf} {pressure_units} (map_panel_force_moment_centroid)'
-    comment_f = f'Force; qinf={qinf} {pressure_units} (map_panel_force_moment_centroid)'
-    comment_m = f'Moment; qinf={qinf} {pressure_units} (map_panel_force_moment_centroid)'
-    comment_cp = f'Cp, Coefficient of Pressure {pressure_units} (map_panel_force_moment_centroid)'
-    for structure_eid, force in force_dict.items():
+    comment_f = f'Force; qinf={qinf} {force_units} (map_panel_force_moment_centroid)'
+    comment_m = f'Moment; qinf={qinf} {moment_units} (map_panel_force_moment_centroid)'
+    comment_cp = 'Cp, Coefficient of Pressure (map_panel_force_moment_centroid)'
+    comment_cpz = 'Cp, Signed Coefficient of Pressure (map_panel_force_moment_centroid)'
+
+    force_moment_list = []
+    for structure_eid, force in sorted(force_dict.items()):
         try:
             # structure_area = structure_area_dict[structure_eid]
             structure_area, z_sign = structure_area_zsign_dict[structure_eid]
@@ -1108,7 +1223,7 @@ def map_panel_force_moment_centroid(
             # moment[0] = 0.  # mx
             # moment[1] = 0.  # my
             momenti = moment[2]
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(panel_dim)
 
         eids = [structure_eid]
@@ -1119,10 +1234,19 @@ def map_panel_force_moment_centroid(
         bdf_model_out.add_pload2(force_sid, eids=eids, pressure=forcei, comment=comment_f)
         bdf_model_out.add_pload2(moment_sid, eids=eids, pressure=momenti, comment=comment_m)
         bdf_model_out.add_pload2(cp_sid, eids=eids, pressure=pressurei/qinf, comment=comment_cp)
+        bdf_model_out.add_pload2(cp_signed_sid, eids=eids, pressure=z_sign*pressurei/qinf, comment=comment_cpz)
+        force_moment_list.append((structure_eid, forcei, momenti))
         comment_p = ''
         comment_f = ''
         comment_m = ''
         comment_cp = ''
+    # force_moment = np.array(force_moment_list, dtype='float64')
+    # bdf_filename2 = r'C:\work\code\mfile.txt'
+    # base = os.path.splitext(bdf_filename2)[0]
+    # force_moment_filename = base + f'.{panel_dim}.force_moment.csv'
+    # bdf_model_out.log.info(f'write force/moment: {force_moment_filename}')
+    # np.savetxt(force_moment_filename, force_moment, header='Element,Force,Moment',
+    #            delimiter=',', fmt=['%d', '%.18e', '%.18e'])
     return
 
 
@@ -1228,6 +1352,7 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
 
     bdf_model_out = BDF(log=structure_model.log)
     if map_type == 'pressure':
+        # TODO: can only happen with map_location=centroid?
         aero_pressure_centroid = aero_cp_centroid[iaero_elem] * qinf
         # mapped_structure_elements = structure_nodes[istructure]
         assert nstructure_elem == len(aero_pressure_centroid), (nstructure_elem, len(aero_pressure_centroid))
@@ -1250,6 +1375,7 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
     #         qinf=qinf,
     #     )
     elif map_type == 'force':
+        # TODO: can only happen with map_location=node?
         map_force_centroid_tri(
             bdf_model_out,
             aero_area, aero_cp_centroid, iaero,
