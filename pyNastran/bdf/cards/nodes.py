@@ -25,6 +25,7 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 """
 from __future__ import annotations
 from itertools import count
+import warnings
 from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
@@ -38,7 +39,7 @@ from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, write_card
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.internal_get import coord_id
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, blank, integer_or_string,
+    integer, integer_or_blank, double_or_blank, blank, integer_or_string,
     integer_or_double, components_or_blank, parse_components_or_blank)
 from pyNastran.bdf.bdf_interface.assign_type_force import (
     force_double_or_blank)
@@ -1001,9 +1002,9 @@ class GRID(BaseCard):
         self.nid = nid
         self.cp = cp
         if xyz is None:
+            warnings.warn('xyz=None is deprecated')
             xyz = [0., 0., 0.]
         self.xyz = np.asarray(xyz, dtype='float64')
-        assert self.xyz.size == 3, self.xyz.shape
         self.cd = cd
         self.ps = ps
         self.seid = seid
@@ -1043,7 +1044,6 @@ class GRID(BaseCard):
 
             #: SPC constraint
             ps = components_or_blank(card, 7, 'ps', default='')
-            #u(integer_or_blank(card, 7, 'ps', ''))
 
             #: Superelement ID
             seid = integer_or_blank(card, 8, 'seid', default=0)
@@ -1086,7 +1086,6 @@ class GRID(BaseCard):
 
             #: SPC constraint
             ps = components_or_blank(card, 7, 'ps', default='')
-            #u(integer_or_blank(card, 7, 'ps', ''))
 
             #: Superelement ID
             seid = integer_or_blank(card, 8, 'seid', default=0)
@@ -1139,9 +1138,10 @@ class GRID(BaseCard):
             the output coordinate system
 
         """
-        if self.cd_ref is None:
-            return self.cd
-        return self.cd_ref.cid
+        return coord_id(self.cd_ref, self.cd)
+        # if self.cd_ref is None:
+        #     return self.cd
+        # return self.cd_ref.cid
 
     def Cp(self) -> int:
         """
@@ -1185,15 +1185,15 @@ class GRID(BaseCard):
         xyz = self.xyz
         ps = self.Ps()
         seid = self.SEid()
-        assert isinstance(xyz, np.ndarray), 'xyz=%r' % xyz
-        assert isinstance(nid, integer_types), 'nid=%r' % nid
-        assert isinstance(cp, integer_types), 'cp=%r' % cp
-        assert isinstance(cd, integer_types), 'cd=%r' % cd
-        assert isinstance(ps, str), 'ps=%r' % ps
-        assert isinstance(seid, integer_types), 'seid=%r' % seid
+        assert isinstance(xyz, np.ndarray), f'xyz={xyz}'
+        assert isinstance(nid, integer_types), f'nid={nid:d}'
+        assert isinstance(cp, integer_types), f'cp={cp:d}'
+        assert isinstance(cd, integer_types), f'cd={cd:d}'
+        assert isinstance(ps, str), f'ps={ps!r}'
+        assert isinstance(seid, integer_types), f'seid={seid:d}'
         if xref:
             pos_xyz = self.get_position()
-            assert isinstance(pos_xyz, np.ndarray), 'pos_xyz=%r' % pos_xyz
+            assert isinstance(pos_xyz, np.ndarray), f'pos_xyz={pos_xyz}'
 
     def set_position(self, model: BDF, xyz: np.ndarray,
                      cid: int=0, xref: bool=True) -> None:
@@ -1269,7 +1269,7 @@ class GRID(BaseCard):
         """see get_position_wrt"""
         if cid == self.cp:  # same coordinate system
             return self.xyz
-        msg = ', which is required by GRID nid=%s' % self.nid
+        msg = f', which is required by GRID nid={self.nid:d}'
 
         # converting the xyz point arbitrary->global
         cp_ref = model.Coord(self.cp, msg=msg)
@@ -1353,7 +1353,7 @@ class GRID(BaseCard):
                 self.ps_ref = grdset.ps
             if not self.seid:
                 self.seid_ref = grdset.seid
-        msg = ', which is required by GRID nid=%s' % (self.nid)
+        msg = f', which is required by GRID nid={self.nid:d}'
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.cd != -1:
             self.cd_ref = model.Coord(self.cd, msg=msg)
@@ -1457,7 +1457,7 @@ class GRID(BaseCard):
         cps = set_string8_blank_if_default(cp, 0)
         if [cd, self.ps, self.seid] == [0, '', 0]:
             # default
-            msg = 'GRID    %8i%8s%s%s%s\n' % (
+            msg = 'GRID    %8d%8s%s%s%s\n' % (
                 self.nid, cps,
                 print_float_8(xyz[0]),
                 print_float_8(xyz[1]),
@@ -1470,7 +1470,7 @@ class GRID(BaseCard):
         else:
             cds = set_string8_blank_if_default(cd, 0)
             seid = set_string8_blank_if_default(self.SEid(), 0)
-            msg = 'GRID    %8i%8s%s%s%s%s%8s%s\n' % (
+            msg = 'GRID    %8d%8s%s%s%s%s%8s%s\n' % (
                 self.nid, cps,
                 print_float_8(xyz[0]),
                 print_float_8(xyz[1]),
@@ -1487,36 +1487,32 @@ class GRID(BaseCard):
 
         if is_double:
             if [cd, self.ps, self.seid] == [0, '', 0]:
-                msg = ('GRID*   %16i%16s%16s%16s\n'
+                msg = ('GRID*   %16d%16s%16s%16s\n'
                        '*       %16s\n' % (
-                           self.nid,
-                           cp,
+                           self.nid, cp,
                            print_scientific_double(xyz[0]),
                            print_scientific_double(xyz[1]),
                            print_scientific_double(xyz[2])))
             else:
-                msg = ('GRID*   %16i%16s%16s%16s\n'
+                msg = ('GRID*   %16d%16s%16s%16s\n'
                        '*       %16s%16s%16s%16s\n' % (
-                           self.nid,
-                           cp,
+                           self.nid, cp,
                            print_scientific_double(xyz[0]),
                            print_scientific_double(xyz[1]),
                            print_scientific_double(xyz[2]),
                            cd, self.ps, seid))
         else:
             if [cd, self.ps, self.seid] == [0, '', 0]:
-                msg = ('GRID*   %16i%16s%16s%16s\n'
+                msg = ('GRID*   %16d%16s%16s%16s\n'
                        '*       %16s\n' % (
-                           self.nid,
-                           cp,
+                           self.nid, cp,
                            print_float_16(xyz[0]),
                            print_float_16(xyz[1]),
                            print_float_16(xyz[2])))
             else:
-                msg = ('GRID*   %16i%16s%16s%16s\n'
+                msg = ('GRID*   %16d%16s%16s%16s\n'
                        '*       %16s%16s%16s%16s\n' % (
-                           self.nid,
-                           cp,
+                           self.nid, cp,
                            print_float_16(xyz[0]),
                            print_float_16(xyz[1]),
                            print_float_16(xyz[2]),
@@ -1608,8 +1604,8 @@ class POINT(BaseCard):
         """
         if comment:
             self.comment = comment
-        if xyz is None:
-            xyz = [0., 0., 0.]
+        # if xyz is None:
+        #     xyz = [0., 0., 0.]
         #Node.__init__(self)
 
         #: Node ID
@@ -1724,7 +1720,7 @@ class POINT(BaseCard):
         p = self.cp_ref.transform_node_to_global(self.xyz)
 
         # a matrix global->local matrix is found
-        msg = ', which is required by POINT nid=%s' % (self.nid)
+        msg = f', which is required by POINT nid={self.nid:d}'
         coord_b = model.Coord(cid, msg=msg)
         xyz = coord_b.transform_node_to_local(p)
         return xyz

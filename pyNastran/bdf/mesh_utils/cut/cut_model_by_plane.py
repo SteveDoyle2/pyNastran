@@ -341,6 +341,9 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
 
             rod_xyz_global = np.vstack(rod_xyz_global_list)
             rod_xyz_local = np.vstack(rod_xyz_local_list)
+            print(f'rod_eids={rod_eids}')
+            print(f'rod_xyz_global:\n{rod_xyz_global}')
+            print(f'rod_xyz_local:\n{rod_xyz_local}')
             results = np.column_stack([rod_xyz_local, rod_xyz_global])
             found_cut = (len(rod_nids) > 0)
 
@@ -414,9 +417,27 @@ def _cut_facev(
     xyz1_cid0, xyz2_cid0, xyz3_cid0 = xyz_cid0
     xyz1_cid, xyz2_cid, xyz3_cid = xyz_cid
 
-    # print(ia, ib)
-    eids_cut = tri_eids_cut0[icut]
-    cut_edge = tri_nodes_cut0[icut, :][:, [ia, ib]]
+    # the element ids that have been cut
+    # -ids correspond to the tri-version of the parent element
+    source_eids_ = tri_eids_cut0[icut]
+
+    ic_set = {0, 1, 2}
+    ic_set.remove(ia)
+    ic_set.remove(ib)
+    ic = ic_set.pop()
+    # print(f'ic = {ic}')
+
+    # these are the source node ids from eids_cut
+    cut_edge2 = tri_nodes_cut0[icut, :][:, [ia, ib]] # nids=2,3
+    cut_edge3 = tri_nodes_cut0[icut, :][:, [ib, ic]] # nids=3,1
+    if 0:
+        source_eids = source_eids_
+        source_cut_nids = cut_edge2
+        rod_nids = np.arange(rod_nid0, rod_nid0 + neid)
+    else:
+        source_eids = np.column_stack([source_eids_, source_eids_]).reshape(2*neid)
+        source_cut_nids = np.column_stack([cut_edge2, cut_edge3]).reshape(2*neid,2)
+        rod_nids = np.arange(rod_nid0, rod_nid0 + 2 * neid)
     t2 = t[icut, ia]  # nodes 2-3
     t3 = t[icut, ib]  # nodes 3-1
     # edge 2 and 3 are cut
@@ -438,31 +459,41 @@ def _cut_facev(
 
     # geometry_temp.append([eid, nid_new] + cut_edgei)
     ncuti = neid
+    # nnodei = 2 * neid
     eids = np.arange(eid0, eid0 + neid + 1)
     nid_new = np.arange(nid0, nid0 + neid + 1)
 
     # source element and two interpolated node ids
     # rod_elements.append([eid_new, nid_new, nid_new + 1])
     eids_list.append(eids)
-    cut_edges_list.append(cut_edge)
+    cut_edges_list.append(source_cut_nids)
 
-    nids_list.append(nid_new)
+    # nids_list.append(nid_new)
 
     # i1 = np.arange(rod_nid0, rod_nid0 + neid + 1)
     # i2 = np.arange(rod_nid0 + neid, rod_nid0 + 2 * neid + 1)
     # i12 = np.column_stack([i1, i2])
-    i12 = rod_nid0 + np.arange(2*neid).reshape(2,neid).T
+    # i12 = rod_nid0 + np.arange(2*neid).reshape(2,neid).T
+    # rod_nids = i12 # no
+    # assert len(rod_nids) == 2*neid
+    #
     # myrods.append((i0, i1, e2, e3))
     # print(f'e2 = {e2}')
     # print(f'e3 = {e3}')
     # print(t[icut23, :])
     # raise RuntimeError('icut23')
-    rod_eids_list.append(eids_cut)
-    rod_nids_list.append(i12)
+    rod_eids_list.append(source_eids)
+    rod_nids_list.append(rod_nids)
     rod_xyz_global_list.append(e2_global)
     rod_xyz_global_list.append(e3_global)
     rod_xyz_local_list.append(e2_local)
     rod_xyz_local_list.append(e3_local)
+
+    # print(source_eids.shape, rod_nids.shape, source_cut_nids.shape)
+    geometryi = np.column_stack([
+        source_eids, rod_nids, source_cut_nids,
+    ])
+    print(f'geometryi:\n{geometryi}')
     eid0 += neid
     nid0 += neid
     rod_nid0 += 2 * ncuti
@@ -661,8 +692,8 @@ def _cut_face_model_by_coord(log: SimpleLogger,
 
     # if len(close_tri_eids) == 0:
     #     found_cut = False
-    unique_geometry_array = None
-    unique_results_array = None
+    unique_geometry = None
+    unique_results = None
     rods = (None, None, None)
     tets = (None, None, None)
     if not found_cut:
@@ -673,7 +704,7 @@ def _cut_face_model_by_coord(log: SimpleLogger,
         # check the range of the y values because it'll tell you if you're cutting/marching in the wrong direction
         log.warning(f'  nclose_faces = {len(close_tri_eids):d}; '
                     f'range=[{y_cid.min():g}, {y_cid.min():g}]')
-        return found_cut, unique_geometry_array, unique_results_array, rods
+        return found_cut, unique_geometry, unique_results, rods
     log.debug(f'  nclose_faces = {len(close_tri_eids):d}; '
               f'range=[{y_cid.min():g}, {y_cid.min()}:g]')
 
@@ -691,9 +722,9 @@ def _cut_face_model_by_coord(log: SimpleLogger,
         if len(close_tri_eids) == 0:
             found_cut = False
             log.warning(f'close_tri_eids={close_tri_eids}')
-            return found_cut, unique_geometry_array, unique_results_array, rods
+            return found_cut, unique_geometry, unique_results, rods
 
-        unique_geometry_array, unique_results_array, rods = cut_faces(
+        unique_geometry, unique_results, rods = cut_faces(
             node_ids, xyz_cid0, xyz_cid,
             iclose_faces, close_tri_eids,
             nodal_result, coord, plane_atol=plane_atol,
@@ -704,6 +735,12 @@ def _cut_face_model_by_coord(log: SimpleLogger,
             debug_vectorize=debug_vectorize,
             stop_on_failure=True)
         #print(coord)
+        # print(f'geometry:\n{unique_geometry}')
+        # print(f'results={unique_results}')
+
+        # print(f'rod_eids={rods[0]}')
+        # print(f'rod_xyz_global:\n{rods[1]}')
+        # print(f'rod_xyz_local:\n{rods[2]}')
         assert isinstance(rods, tuple), type(rods)
         assert isinstance(rods[0], np.ndarray), rods[0]
         assert isinstance(rods[1], np.ndarray), rods[1]
@@ -711,7 +748,7 @@ def _cut_face_model_by_coord(log: SimpleLogger,
 
     if ntet:  # pragma: no cover
         raise RuntimeError(f'ntet={ntet:d}')
-    return found_cut, unique_geometry_array, unique_results_array, rods
+    return found_cut, unique_geometry, unique_results, rods
 
 
 def get_close_faces(faces: np.ndarray,
@@ -862,14 +899,14 @@ def cut_faces(node_ids: np.ndarray,
         local_points, global_points, result, geometry = out
         rod_nids, rod_xyzs, rod_elements = rods
     else:
-        local_points: list[np.ndarray] = []
-        global_points: list[np.ndarray] = []
-        result: list[np.ndarray] = []
-        geometry: list[np.ndarray] = []
+        local_points_list: list[np.ndarray] = []
+        global_points_list: list[np.ndarray] = []
+        result_list: list[np.ndarray] = []
+        geometry_list: list[np.ndarray] = []
 
-        rod_nids: list[Any] = []
-        rod_xyzs: list[np.ndarray] = []
-        rod_elements: list[tuple[int, int, int]] = []
+        rod_nids_list: list[Any] = []
+        rod_xyzs_list: list[np.ndarray] = []
+        rod_elements_list: list[tuple[int, int, int]] = []
         for eid, iface in zip(tri_face_eids2, tri_ifaces2):
             inid1, inid2, inid3 = iface
             # local element is the triangle in the cut plane
@@ -890,15 +927,15 @@ def cut_faces(node_ids: np.ndarray,
                 xyz1_local, xyz2_local, xyz3_local,
                 xyz1_global, xyz2_global, xyz3_global,
                 nodal_result,
-                local_points, global_points,
-                geometry, result,
-                rod_nids, rod_xyzs, rod_elements,
+                local_points_list, global_points_list,
+                geometry_list, result_list,
+                rod_nids_list, rod_xyzs_list, rod_elements_list,
                 coord, plane_atol,
                 plane_bdf_offset=plane_bdf_offset)
 
-            if len(local_points) != len(result):
+            if len(local_points_list) != len(result_list):
                 msg = 'lengths are not equal; local_points=%s result=%s' % (
-                    len(local_points), len(result))
+                    len(local_points_list), len(result_list))
                 raise RuntimeError(msg)
             if fbdf1 is not None:
                 fbdf1.write('$------\n')
@@ -910,40 +947,40 @@ def cut_faces(node_ids: np.ndarray,
         if fbdf2 is not None:
             fbdf2.close()
 
-    if len(rod_elements) == 0:
+    if len(rod_elements_list) == 0:
         os.remove(plane_bdf_filename1)
 
-    if len(geometry) == 0:
+    if len(geometry_list) == 0:
         if stop_on_failure:
             raise RuntimeError('no cut faces found...')
         return None, None, (None, None, None)
-    # unused_local_points_array = np.array(local_points)
-    # unused_global_points_array = np.array(global_points)
-    results_array = np.array(result)
-    #print('*result', result)
+    # unused_local_points_array = np.array(local_points_list)
+    # unused_global_points_array = np.array(global_points_list)
+    results = np.array(result_list)
+    #print('*result_list', result_list)
     #print('*results_array', results_array, type(results_array))
 
-    geometry_array = np.array(geometry, dtype='int32')
-    rods_elements_array = np.array(rod_elements, dtype='int32')
-    rod_nids_array = np.array(rod_nids, dtype='int32')
-    rod_xyzs_array = np.array(rod_xyzs, dtype='float64')
+    geometry = np.array(geometry_list, dtype='int32')
+    rods_elements = np.array(rod_elements_list, dtype='int32')
+    rod_nids = np.array(rod_nids_list, dtype='int32')
+    rod_xyzs = np.array(rod_xyzs_list, dtype='float64')
+    rods = (rods_elements, rod_nids, rod_xyzs)
 
-    nelemi = len(rods_elements_array)
-    # nnodei = len(rod_nids_array)
+    nelemi = len(rods_elements)
+    # nnodei = len(rod_nids)
     nnodei = 4 * nelemi
     # assert nelemi * 4 == nnodei, (nelemi, nnodei)
     # print(nelemi, nnodei)
-    assert rods_elements_array.shape[1] == 3, rods_elements_array.shape
-    assert rod_nids_array.ndim == 1, rod_nids_array.shape
-    assert len(rod_nids_array) == nnodei, rod_nids_array.shape
-    assert geometry_array.shape == (2*nelemi, 4), geometry_array.shape
-    assert rod_xyzs_array.shape == (nnodei, 3), rod_xyzs_array.shape
+    assert rods_elements.shape[1] == 3, rods_elements.shape
+    assert rod_nids.ndim == 1, rod_nids.shape
+    # assert len(rod_nids) == nnodei, f'nelem={nelemi} nnodei={nnodei} rod_nids={rod_nids.shape}'
+    assert geometry.shape == (2*nelemi, 4), geometry.shape
+    # assert rod_xyzs.shape == (nnodei, 3), rod_xyzs.shape
 
-    unique_geometry_array, unique_results_array = _unique_face_rows(
-        geometry_array, results_array, node_ids, skip_cleanup=skip_cleanup)
-    #print('*unique_results_array', unique_results_array, type(unique_results_array))
-    rods = (rods_elements_array, rod_nids_array, rod_xyzs_array)
-    return unique_geometry_array, unique_results_array, rods
+    unique_geometry, unique_results = _unique_face_rows(
+        geometry, results, node_ids, skip_cleanup=skip_cleanup)
+    #print('*unique_results', unique_results, type(unique_results))
+    return unique_geometry, unique_results, rods
 
 
 def _filter_tri_faces(xyz_cid: np.ndarray,
@@ -1500,10 +1537,6 @@ def _interpolate_face_to_barv(eids: np.ndarray,
     #lengths = []
 
     # we need to prevent dots
-    # results_temp = []
-    # geometry_temp = []
-    # local_points_temp = []
-    # global_points_temp = []
     is_result = nodal_result is not None
 
     sid = 1
@@ -1788,8 +1821,10 @@ def _interpolate_face_to_bar(eid: int, eid_new: int,
                              xyz1_local: np.ndarray, xyz2_local: np.ndarray, xyz3_local: np.ndarray,
                              xyz1_global: np.ndarray, xyz2_global: np.ndarray, xyz3_global: np.ndarray,
                              nodal_result,
-                             local_points, global_points,
-                             geometry, result,
+                             local_points_list: list[np.ndarray],
+                             global_points_list: list[np.ndarray],
+                             geometry_list: list[np.ndarray],
+                             result_list: list[np.ndarray],
                              # eid, nid_a_prime, nid_b_prime
                              rod_nids: list[int],
                              rod_xyzs: list[np.ndarray],
@@ -1926,6 +1961,15 @@ def _interpolate_face_to_bar(eid: int, eid_new: int,
             continue
         cut_edgei = [inid_a, inid_b]
         cut_edgei.sort()
+
+        # [ source_element_id1, 1, 1, 2]
+        # [ source_element_id1, 2, 0, 2]
+        # [-source_element_id1, 5, 1, 2]
+        # [-source_element_id1, 6, 0, 3]
+        geom_tempi = [eid, nid_new] + cut_edgei
+        # print(f'geom_tempi = {geom_tempi}')
+        geometry_temp.append(geom_tempi)
+
         avg_local  = p2_local  * percent + p1_local  * (1 - percent)
         avg_global = p2_global * percent + p1_global * (1 - percent)
         #projected_points.append(avg_global)
@@ -1956,18 +2000,16 @@ def _interpolate_face_to_bar(eid: int, eid_new: int,
         if is_result:
             result1 = nodal_result[inid_a]
             result2 = nodal_result[inid_b]
-            resulti = result2  * percent + result1  * (1 - percent)
+            resulti = result2 * percent + result1 * (1 - percent)
             out_temp = ['TEMP', sid, nid_new, resulti] #+ resulti.tolist()
             msg1s.append(out_temp)
             msg2s.append(out_temp)
             # msg1 += print_card_8(out_temp)
             # msg2 += print_card_8(out_temp)
 
-            geometry_temp.append([eid, nid_new] + cut_edgei)
             # TODO: doesn't handle results of length 2+
             results_temp.append([xl, yl, zl, xg, yg, zg, resulti])
         else:
-            geometry_temp.append([eid, nid_new] + cut_edgei)
             results_temp.append([xl, yl, zl, xg, yg, zg])
         i_values.append(i)
         percent_values.append(percent)
@@ -1986,10 +2028,10 @@ def _interpolate_face_to_bar(eid: int, eid_new: int,
     if fbdf2 is not None:
         msg2 = ''.join(print_card_8(msg) for msg in msg2s)
         fbdf2.write(msg2)
-    local_points.extend(local_points_temp)
-    global_points.extend(global_points_temp)
-    geometry.extend(geometry_temp)
-    result.extend(results_temp)
+    local_points_list.extend(local_points_temp)
+    global_points_list.extend(global_points_temp)
+    geometry_list.extend(geometry_temp)
+    result_list.extend(results_temp)
 
     #projected_points = np.array(projected_points)
     #p1 = projected_points[0, :]

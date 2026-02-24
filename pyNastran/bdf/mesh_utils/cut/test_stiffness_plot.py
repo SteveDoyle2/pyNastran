@@ -220,6 +220,22 @@ class TestStiffnessPlot(unittest.TestCase):
             assert np.allclose(e11, Ex)
             assert np.allclose(e22, Ey)
             assert np.allclose(g12, Gxy)
+            # [source_eid, new_nid, source_nid1, source_nid2]
+            # geometry
+            # array([[ 10,   2, 101, 103],
+            #        [-10,   6, 101, 104],
+            #        [ 10,   1, 102, 103]], dtype=int32)]
+            # rod_eids=[
+            #  [ 10   1   2]
+            #  [-10   5   6]]
+            # rod_xyz_global:
+            # [1 2 5 6]
+            # rod_xyz_local:
+            # [[ 3.00000000e+00 -5.55111512e-17  0.00000000e+00]
+            #  [ 5.00000000e-01 -5.55111512e-17  0.00000000e+00]
+            #  [ 5.00000000e-01 -5.55111512e-17  0.00000000e+00]
+            #  [ 0.00000000e+00 -5.55111512e-17  0.00000000e+00]]
+
             moi_data = cut_and_plot_moi(
                 model, normal_plane, log,
                 ystations, coords,
@@ -235,6 +251,7 @@ class TestStiffnessPlot(unittest.TestCase):
                 # e_amoi_span_png_filename='y_e_amoi_vs_span.png',
                 # cg_span_png_filename='y_cg_vs_span.png',
                 debug_vectorize=True,
+                debug_v3=False,
             )
             (y, A, I, J,
              ExI, EyI, GJ, avg_centroid,

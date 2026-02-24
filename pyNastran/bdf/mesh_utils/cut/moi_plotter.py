@@ -42,6 +42,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      dirname: PathLike='',
                      ifig: int=1,
                      debug_vectorize: bool=True,
+                     debug_v3: bool=False,
                      stop_on_failure: bool=False,
                      cut_data_span_filename: PathLike='cut_data_vs_span.csv',
                      beam_model_bdf_filename: PathLike='equivalent_beam_model.bdf',
@@ -134,6 +135,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         dirname, face_data=face_data,
         include_lines=include_lines, include_solids=include_solids,
         debug_vectorize=debug_vectorize,
+        debug_v3=debug_v3,
         stop_on_failure=stop_on_failure,
     )
     (thetas, stations, dx, dz, A, I, J, ExI, EyI, GJ, avg_centroid,
@@ -292,6 +294,7 @@ def _get_station_data(model: BDF,
                       include_lines: bool=False,
                       include_solids: bool=False,
                       debug_vectorize: bool=True,
+                      debug_v3: bool=False,
                       stop_on_failure: bool=False,
                       face_data=None) -> tuple[
                          dict[int, tuple[float, float, float, float]],  # thetas
@@ -322,6 +325,8 @@ def _get_station_data(model: BDF,
         ???
     stop_on_failure : bool; default=False
         useful for debugging or things you know should be cut
+    debug_v3 : bool; default=False
+        vectorized cutting plane
     """
     log = model.log
 
@@ -380,6 +385,7 @@ def _get_station_data(model: BDF,
             model, model_static,
             dy, coord, plane_atol=plane_atol,
             debug_vectorize=debug_vectorize,
+            debug_v3=debug_v3,
             stop_on_failure=stop_on_failure,
             plane_bdf_filename1=plane_bdf_filename1,
             plane_bdf_filename2=plane_bdf_filename2,
@@ -437,6 +443,7 @@ def _get_station_datai(model: BDF,
                        coord: CORD2R,
                        plane_atol: float=1e-5,
                        debug_vectorize: bool=True,
+                       debug_v3: bool=False,
                        stop_on_failure: bool=False,
                        plane_bdf_filename1: PathLike='',
                        plane_bdf_filename2: PathLike='',
@@ -454,6 +461,7 @@ def _get_station_datai(model: BDF,
             plane_bdf_filename2=plane_bdf_filename2,
             plane_bdf_offset=dy, face_data=face_data,
             debug_vectorize=debug_vectorize,
+            debug_v3=debug_v3,
             stop_on_failure=stop_on_failure,
         )
     except PermissionError:
