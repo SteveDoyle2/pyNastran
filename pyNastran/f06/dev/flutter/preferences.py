@@ -46,6 +46,7 @@ class FlutterPreferencesDialog(PyDialog):
         self.show()
 
     def setup_widgets(self, data: dict[str, bool]) -> None:
+        vtk_data = data['vtk']
         self.font_size_label = QLabel('Font Size')
         self.font_size_edit = QSpinBox()
         self.font_size_edit.setValue(data['font_size'])
@@ -62,13 +63,13 @@ class FlutterPreferencesDialog(PyDialog):
         self.nphase_label = QLabel('Num Phase:')
         self.nphase_label = QCheckBox('Number of Phase Angles?')
         self.nphase_edit = QSpinBox()
-        self.nphase_edit.setValue(data['nphase'])
+        self.nphase_edit.setValue(vtk_data['nphase'])
         self.nphase_edit.setMinimum(4)
         self.nphase_edit.setMaximum(51)
 
         self.icase_label = QLabel('iCase:')
         self.icase_edit = QSpinBox()
-        self.icase_edit.setValue(data['icase'])
+        self.icase_edit.setValue(vtk_data['icase'])
         self.icase_edit.setMinimum(0)
         # self.nphase_edit.setMaximum(51)
 
@@ -81,11 +82,11 @@ class FlutterPreferencesDialog(PyDialog):
         # Update every N milliseconds
         self.dt_ms_label = QLabel('Animation Update Time (ms):')
         self.dt_ms_edit = QSpinBox()
-        self.dt_ms_edit.setValue(data['dt_ms'])
+        self.dt_ms_edit.setValue(vtk_data['dt_ms'])
         self.dt_ms_edit.setMinimum(100)
         self.dt_ms_edit.setMaximum(5000)
         self.animate_checkbox = QCheckBox('Animate')
-        self.animate_checkbox.setChecked(data['animate'])
+        self.animate_checkbox.setChecked(vtk_data['animate'])
         self.animate_checkbox.setEnabled(False)
         # self.dt_ms_edit.setMaximum(2000)
 

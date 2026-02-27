@@ -172,6 +172,8 @@ def get_length_breakdown(model: BDF, property_ids=None,
 
         # welds - not sure
         'PWELD',
+        # sometimes included here
+        'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
     }
     bar_properties = {'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
                       'PROD', 'PTUBE', 'PBRSECT', 'PBMSECT', 'PBCOMP',
@@ -260,6 +262,8 @@ def get_area_breakdown(model: BDF,
 
         # weld
         'PWELD',
+        # sometimes included here
+        'PMASS',
     }
     bar_properties = {
         'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', 'PBEAM3'}
@@ -315,7 +319,10 @@ def get_thickness_breakdown(model: BDF,
                             stop_if_no_thickness: bool=False):
     skip_props = {
         'PBAR', 'PBARL', 'PROD', 'PSOLID', 'PBUSH', 'PBUSH1D',
-        'PGAP', 'PRAC2D', 'PRAC3D', 'PWELD'}
+        'PGAP', 'PRAC2D', 'PRAC3D', 'PWELD',
+        # sometimes included here
+        'PMASS',
+    }
     pid_eids = model.get_element_ids_dict_with_pids(
         property_ids, stop_if_no_eids=stop_if_no_thickness,
         msg=' which is required by get_thickness_breakdown')
@@ -402,6 +409,8 @@ def get_volume_breakdown(model: BDF, property_ids=None,
 
         # weld
         'PWELD',
+        # sometimes included here
+        'PMASS',
     }
     bar_properties = {
         'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE',  # 'PBEAM3'

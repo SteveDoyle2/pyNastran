@@ -8,8 +8,13 @@ import copy
 import warnings
 import traceback
 from pathlib import Path
+from collections import defaultdict
 from functools import wraps
 from typing import Optional, Any
+import natsort
+
+from pyNastran.utils import print_bad_path
+from pyNastran.utils.dev import get_files_of_type
 
 ICON_PATH = Path('')
 try:
@@ -22,6 +27,7 @@ from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 
 from qtpy import QtCore
+Qt = QtCore.Qt
 from qtpy.compat import getopenfilename  # getsavefilename
 # from qtpy.QtGui import QIcon, QPixmap
 from qtpy.QtWidgets import (
@@ -32,7 +38,8 @@ from qtpy.QtWidgets import (
     QCheckBox,
     QListWidgetItem, QAbstractItemView,
     QListWidget, QSpinBox, QTabWidget,  # QToolButton,
-    QTableWidget, QTableWidgetItem,
+    QTableWidget, QTableWidgetItem, QMenu, QInputDialog,
+    QFileDialog, QProgressBar,
 )
 # from qtpy.QtWidgets import (
 #     QMessageBox,
@@ -93,6 +100,375 @@ if os.path.exists(JSON_FILENAME):
 from pyNastran.f06.dev.flutter.vtk_data import VtkData
 import pandas as pd
 import tables
+
+from pyNastran.f06.parse_flutter import make_flutter_response, FlutterResponse
+try:
+    from docx import Document
+    from docx.shared import Inches
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+except ImportError:
+    warnings.warn('>>> pip install python-docx')
+    raise
+
+
+def split_by_pattern(strings: list[str],
+                     delimiter: str='_',
+                     group_common: bool=True):
+    """
+    Main function to split strings based on common pattern.
+    """
+    if not strings:
+        return []
+
+    # Split all strings
+    split_lists = [s.split(delimiter) for s in strings]
+    if not group_common or len(split_lists) < 2:
+        return split_lists
+    split_list0 = split_lists[0]
+    # print(f'split_list0 = {split_list0}')
+
+    # Find common prefix
+    common_prefix_len = 0
+    min_length = min(len(parts) for parts in split_lists)
+
+    for i in range(min_length):
+        if all(parts[i] == split_lists[0][i] for parts in split_lists):
+            common_prefix_len += 1
+            continue
+        break
+    # print(f'common_prefix_len = {common_prefix_len}')
+    prefix = split_list0[:common_prefix_len]
+    # print(f'prefix = {prefix}')
+
+    # Find common suffix
+    common_suffix_len = 0
+    for i in range(1, min_length - common_prefix_len + 1):
+        if all(parts[-i] == split_lists[0][-i] for parts in split_lists):
+            common_suffix_len += 1
+            continue
+        break
+    print(f'common_suffix_len = {common_suffix_len}')
+
+    # Reconstruct
+    result = []
+    for parts in split_lists:
+        new_parts = []
+        if common_prefix_len > 0:
+            new_parts.append(delimiter.join(parts[:common_prefix_len]))
+
+        middle_start = common_prefix_len
+        middle_end = len(parts) - common_suffix_len if common_suffix_len > 0 else len(parts)
+        new_parts.extend(parts[middle_start:middle_end])
+
+        if common_suffix_len > 0:
+            new_parts.append(delimiter.join(parts[-common_suffix_len:]))
+        result.append(new_parts)
+    return result
+
+class QTableWidgetCopy(QTableWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # self.setContextMenuPolicy(Qt.CustomContextMenu)
+        # self.customContextMenuRequested.connect(self.show_context_menu)
+
+        rename_column_support = True
+        add_remove_row_support = True
+
+        if rename_column_support:
+            # Enable custom context menu for horizontal header
+            self.horizontalHeader().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            self.horizontalHeader().customContextMenuRequested.connect(self.show_header_context_menu)
+
+        if add_remove_row_support:
+            # Add/remove rows
+            self.verticalHeader().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            self.verticalHeader().customContextMenuRequested.connect(self.show_row_header_context_menu)
+
+    def load_table_data(self,
+                        headers: list[str],
+                        data: np.ndarray | list[list[int | float | str]]) -> None:
+        # Set row and column counts
+        # print(f'data = {data}')
+        self.clear()
+        self.setRowCount(len(data))
+        self.setColumnCount(len(data[0]) if len(data) else 0)
+
+        # Set headers (optional)
+        # headers = ["Column 1", "Column 2", "Column 3"]  # Replace with your headers
+        self.setHorizontalHeaderLabels(headers)
+
+        # Populate the table
+        for row_idx, row_data in enumerate(data):
+            for col_idx, col_data in enumerate(row_data):
+                item = QTableWidgetItem(str(col_data))
+                self.setItem(row_idx, col_idx, item)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_C and (event.modifiers() & Qt.KeyboardModifier.ControlModifier):
+            self.on_copy_table(event)
+
+    def on_copy_table(self, event):
+        copied_cells = self.selectedIndexes()
+        if not copied_cells:
+            return
+        # Sort to maintain order, handle rows/cols with \t and \n
+        # copied_cells = sorted(copied_cells)
+
+        copy_text = ''
+        max_column = copied_cells[-1].column()
+        for c in copied_cells:
+            copy_text += self.item(c.row(), c.column()).text()
+            if c.column() == max_column:
+                copy_text += '\n'
+            else:
+                copy_text += '\t'
+        QApplication.clipboard().setText(copy_text)
+
+    def show_context_menu(self, pos):
+        if self.rowCount() == 0 or self.columnCount() == 0:
+            return
+        print(f'pos = {pos}')
+        # Get the item at the clicked position
+        item = self.tableWidget.itemAt(pos)
+        print(f'item = {item}')
+        if not item:
+            return
+        # Get global position to display menu correctly
+        global_pos = self.tableWidget.mapToGlobal(pos)
+        print(f'global_pos = {global_pos}')
+
+        # Create the menu
+        contextMenu = QMenu(self)
+        copyAction = contextMenu.addAction('Copy')
+        deleteAction = contextMenu.addAction('Delete Row')
+
+        # Execute the menu and wait for an action selection
+        action = contextMenu.exec_(global_pos)
+
+        if action == copyAction:
+            # Handle copy logic
+            print(f'Copying cell content: {item.text()}')
+        elif action == deleteAction:
+            # Handle delete logic
+            row = item.row()
+            self.tableWidget.removeRow(row)
+            print(f'Deleting row {row}')
+
+    def show_header_context_menu(self, position):
+        """Show context menu when right-clicking on column header"""
+        # Get the column index from the position
+        column = self.horizontalHeader().logicalIndexAt(position)
+        if column < 0:
+            return
+
+        # Create context menu
+        menu = QMenu(self)
+        rename_action = menu.addAction("Rename Column")
+
+        # copyAction = menu.addAction('Copy')
+        delete_action = menu.addAction('Delete Column')
+        insert_left_action = menu.addAction('Insert Column Left')
+        insert_right_action = menu.addAction('Insert Column Right')
+
+        # Show menu and get selected action
+        action = menu.exec(self.horizontalHeader().mapToGlobal(position))
+
+        if action == rename_action:
+            self.rename_column(column)
+        elif action == insert_left_action:
+            col = self.horizontalHeader().logicalIndexAt(position)
+            self.insert_col(col)
+        elif action == insert_right_action:
+            col = self.horizontalHeader().logicalIndexAt(position)
+            self.insert_col(col+1)
+        elif action == delete_action:
+            col = self.horizontalHeader().logicalIndexAt(position)
+            self.delete_col(col)
+
+    def rename_column(self, column: int):
+        """Open dialog to rename column header"""
+        # Get current column name
+        current_name = self.horizontalHeaderItem(column).text() if self.horizontalHeaderItem(
+            column) else f"Column {column}"
+
+        # Show input dialog
+        new_name, ok = QInputDialog.getText(
+            self,
+            "Rename Column",
+            "Enter new column name:",
+            text=current_name
+        )
+
+        if ok and new_name:
+            self.setHorizontalHeaderItem(column, QTableWidgetItem(new_name))
+    #-----------------
+    # def show_col_header_context_menu(self, position):
+    #     """Show context menu when right-clicking on row header (row numbers)"""
+    #     # Get the col index from the position
+    #     col = self.horizontalHeader().logicalIndexAt(position)
+    #
+    #     if col < 0:
+    #         return
+    #
+    #     # Create context menu
+    #     menu = QMenu(self)
+    #     insert_left_action = menu.addAction("Insert Column Left")
+    #     insert_right_action = menu.addAction("Insert Column Right")
+    #     menu.addSeparator()
+    #     delete_action = menu.addAction("Delete Col")
+    #
+    #     # Show menu and get selected action
+    #     action = menu.exec(self.horizontalHeader().mapToGlobal(position))
+    #
+    #     if action == insert_left_action:
+    #         self.insert_col(col)
+    #     elif action == insert_right_action:
+    #         self.insert_col(col + 1)
+    #     elif action == delete_action:
+    #         self.delete_col(col)
+
+    def show_row_header_context_menu(self, position):
+        """Show context menu when right-clicking on row header (row numbers)"""
+        # Get the row index from the position
+        row = self.verticalHeader().logicalIndexAt(position)
+
+        if row < 0:
+            return
+
+        # Create context menu
+        menu = QMenu(self)
+        insert_above_action = menu.addAction("Insert Row Above")
+        insert_below_action = menu.addAction("Insert Row Below")
+        menu.addSeparator()
+        delete_action = menu.addAction("Delete Row")
+
+        # Show menu and get selected action
+        action = menu.exec(self.verticalHeader().mapToGlobal(position))
+
+        if action == insert_above_action:
+            self.insert_row(row)
+        elif action == insert_below_action:
+            self.insert_row(row + 1)
+        elif action == delete_action:
+            self.delete_row(row)
+
+    def insert_row(self, row: int):
+        """Insert a new empty row at the specified position"""
+        self.insertRow(row)
+
+        # Initialize empty cells in the new row
+        for col in range(self.columnCount()):
+            self.setItem(row, col, QTableWidgetItem(""))
+        print(f'Inserted row at position {row}')
+
+    def insert_col(self, col: int):
+        """Insert a new empty col at the specified position"""
+        self.insertColumn(col)
+
+        # Initialize empty cells in the new row
+        for col in range(self.columnCount()):
+            self.setItem(col, col, QTableWidgetItem(""))
+        print(f'Inserted col at position {col}')
+
+    def delete_row(self, row: int):
+        """Delete the specified row"""
+        if self.rowCount() > 0:
+            self.removeRow(row)
+            print(f'Deleted row {row}')
+
+    def delete_col(self, col: int):
+        """Delete the specified col"""
+        if self.columnCount() > 0:
+            self.removeColumn(col)
+            print(f'Deleted col {col}')
+
+    def delete_selected_rows(self):
+        """Delete all selected rows (triggered by Delete key)"""
+        selected_rows = set()
+        for item in self.selectedItems():
+            selected_rows.add(item.row())
+
+        # Delete from highest to lowest to avoid index shifting issues
+        for row in sorted(selected_rows, reverse=True):
+            self.removeRow(row)
+
+        if selected_rows:
+            print(f'Deleted {len(selected_rows)} row(s)')
+
+    def delete_selected_cols(self):
+        """Delete all selected rows (triggered by Delete key)"""
+        selected_cols = set()
+        for item in self.selectedItems():
+            selected_cols.add(item.row())
+
+        # Delete from highest to lowest to avoid index shifting issues
+        for col in sorted(selected_cols, reverse=True):
+            self.removeColumn(col)
+
+        if selected_cols:
+            print(f'Deleted {len(selected_cols)} col(s)')
+
+    def get_data(self,
+                 skip_empty_rows=True,
+                 strip_whitespace=True,
+                 convert_numeric=False):
+            """
+            Extract data from QTableWidget to pandas DataFrame with advanced options
+        
+            Parameters
+            ----------
+            skip_empty_rows : bool
+                If True, skip rows that are entirely empty (default: True)
+            strip_whitespace : bool
+                If True, strip leading/trailing whitespace from all cells (default: True)
+            convert_numeric : bool
+                If True, attempt to convert numeric strings to numbers (default: False)
+
+            Returns
+            -------
+            pandas.DataFrame
+                DataFrame containing the table data
+            """
+            rows = self.rowCount()
+            cols = self.columnCount()
+
+            # Get headers
+            headers = []
+            for col in range(cols):
+                header = self.horizontalHeaderItem(col)
+                if header is not None:
+                    headers.append(header.text())
+                else:
+                    headers.append(f"Column_{col}")
+            print(f'headers = {headers}')
+
+            # Get data
+            data = []
+            for row in range(rows):
+                row_data = []
+                for col in range(cols):
+                    item = self.item(row, col)
+                    if item is not None:
+                        cell_value = item.text()
+                        if strip_whitespace:
+                            cell_value = cell_value.strip()
+                        row_data.append(cell_value)
+                    else:
+                        row_data.append("")
+                print(f'row_data = {row_data}')
+
+                # Check if row is entirely empty
+                if skip_empty_rows:
+                    if any(cell for cell in row_data):  # If any cell has content
+                        data.append(row_data)
+                else:
+                    data.append(row_data)
+
+            # Convert numeric columns if requested
+            df = pd.DataFrame(data, columns=headers)
+            if convert_numeric:
+                df = df.apply(pd.to_numeric, errors='ignore')
+            return df
 
 class FlutterGui(LoggableGui):
     def __init__(self, f06_filename: str=''):
@@ -167,6 +543,7 @@ class FlutterGui(LoggableGui):
         self.mag_tol = -1.0
         self.damping = -1.0
         self.damping_required = -1.0
+        self.damping_required_tol = -1.0
         self.vf = -1.0
         self.vl = -1.0
         self.export_to_png = True
@@ -1125,14 +1502,13 @@ class FlutterGui(LoggableGui):
         self.excel_filename_edit.setText(self.excel_filename)
         self.excel_filename_edit.setToolTip('Must click load button before selecting tab')
         self.excel_filename_browse = QPushButton('Browse...', self)
-        self.excel_filename_browse.setEnabled(False)
 
         self.base_f06_directory = ''
         self.base_f06_directory_label = QLabel('Base F06 Directory:', self)
         self.base_f06_directory_edit = QLineEdit(self)
         # self.base_f06_directory_edit.setText(self.base_f06_directory)
         self.base_f06_directory_browse = QPushButton('Browse...', self)
-        self.base_f06_directory_browse.setEnabled(False)
+        self.base_f06_directory_load = QPushButton('Load...', self)
 
         self.word_filename = 'file.docx'
         self.word_filename_label = QLabel('Word Filename:', self)
@@ -1148,7 +1524,6 @@ class FlutterGui(LoggableGui):
         self.tab_edit = QLineEdit(self)
         self.tab_edit.setVisible(False)
 
-        self.tab_select_pulldown.setEnabled(False)
         # self.tab_select_browse.setEnabled(False)
         # self.tab_select_browse.setToolTip('Must click load button before selecting tab')
 
@@ -1160,9 +1535,24 @@ class FlutterGui(LoggableGui):
         # self.starting_col = QLabel('Starting Col:', self)
         # self.starting_col = QLineEdit(self)
 
+        self.table_widget = QTableWidgetCopy(self)
+        # headers = ['A', 'Col2', 'Col3', 'Col4']
+        #data = np.arange(20).reshape(4,5)
+        #self.table_widget.load_table_data(headers, data)
+
+        self.progress_bar = QProgressBar(self)
+        self.progress_bar.setVisible(False)
+
         #---------------------------------------------------
-        file_row = 1
         grid = QGridLayout()
+
+        file_row = 1
+        grid.addWidget(self.base_f06_directory_label, file_row, 0)
+        grid.addWidget(self.base_f06_directory_edit, file_row, 1)
+        grid.addWidget(self.base_f06_directory_browse, file_row, 2)
+        grid.addWidget(self.base_f06_directory_load, file_row, 3)
+
+        file_row += 1
         grid.addWidget(self.excel_filename_label, file_row, 0)
         grid.addWidget(self.excel_filename_edit, file_row, 1)
         grid.addWidget(self.excel_filename_browse, file_row, 2)
@@ -1173,18 +1563,8 @@ class FlutterGui(LoggableGui):
         # grid.addWidget(self.tab_edit, file_row, 1)
         grid.addWidget(self.tab_select_pulldown, file_row, 1)
 
-        self.table_widget = QTableWidget(self)
-        headers = ['A', 'Col2', 'Col3', 'Col4']
-        data = np.arange(20).reshape(4,5)
-        load_table_data(self.table_widget, headers, data)
-
         grid2 = QGridLayout()
         file_row = 1
-        grid2.addWidget(self.base_f06_directory_label, file_row, 0)
-        grid2.addWidget(self.base_f06_directory_edit, file_row, 1)
-        grid2.addWidget(self.base_f06_directory_browse, file_row, 2)
-
-        file_row += 1
         grid2.addWidget(self.word_filename_label, file_row, 0)
         grid2.addWidget(self.word_filename_edit, file_row, 1)
         grid2.addWidget(self.word_filename_browse, file_row, 2)
@@ -1195,37 +1575,350 @@ class FlutterGui(LoggableGui):
         vbox.addWidget(self.table_widget)
         vbox.addLayout(grid2)
         vbox.addWidget(self.run_organize_button)
+        vbox.addWidget(self.progress_bar)
 
         self.load_excel_button.clicked.connect(self.on_load_excel)
         self.tab_select_pulldown.currentIndexChanged.connect(self.on_select_excel_tab)
 
         # self.excel_filename_browse.clicked.connect(self.on_select_excel_tab)
-        # self.base_f06_directory_browse.clicked.connect(self.on_select_base_f06_directory)
+        self.base_f06_directory_load.clicked.connect(self.on_base_f06_directory_load)
+        self.base_f06_directory_browse.clicked.connect(self.on_base_f06_directory_browse)
+        self.excel_filename_browse.clicked.connect(self.on_load_excel_file)
+        self.word_filename_browse.clicked.connect(self.on_load_word_file)
+
+        # self.base_f06_directory_browse.setEnabled(False)
+        self.tab_select_pulldown.setEnabled(False)
+        # self.run_organize_button.setEnabled(False)
+        # self.excel_filename_browse.setEnabled(False)
+        self.run_organize_button.clicked.connect(self.on_run_organize)
+
+        self.base_f06_directory_edit.setText(r'C:\work\code\pyNastran\models\aero\2_mode_flutter\dev')
         return vbox
 
+    def on_run_organize(self) -> None:
+        is_valid = self.validate()
+        log = self.log
+        if not is_valid:
+            return
+
+        word_filename = self.word_filename_edit.text()
+        # docx_filename = dirname / f'{prefix}flutter.docx'
+        from pyNastran.utils import object_attributes
+        print(object_attributes(self))
+        modes = None if len(self.selected_modes) == 0 else self.selected_modes
+
+        print(f'data = {self.data}')
+        # vl = self.vl
+        # vl = self.data['vl']
+        # data = {
+        #     # 'bdf_filename': self.bdf_filename,
+        #     # 'op2_filename': self.op2_filename,
+        #     'log_scale_x': self.log_xscale_checkbox.isChecked(),
+        #     'log_scale_y1': self.log_yscale1_checkbox.isChecked(),
+        #     'log_scale_y2': self.log_yscale2_checkbox.isChecked(),
+        #     'use_rhoref': self.use_rhoref,
+        #     'show_points': self.show_points,
+        #     'show_mode_number': self.show_mode_number,
+        #     'show_detailed_mode_info': self.show_detailed_mode_info,
+        #     'point_spacing': self.point_spacing,
+        #     'show_lines': self.show_lines,
+        #
+        #     'recent_files': self.recent_files,
+        #     'subcase': subcase,
+        #     # 'modes': modes,
+        #     'selected_modes': selected_modes,
+        #     'x_plot_type': self.x_plot_type,
+        #     'plot_type': self.plot_type,
+        #     'index_lim': index_lim,
+        #     'eas_lim': eas_lim,
+        #     'tas_lim': tas_lim,
+        #     'mach_lim': mach_lim,
+        #     'alt_lim': alt_lim,
+        #     'q_lim': q_lim,
+        #     'rho_lim': rho_lim,
+        #     'ikfreq_lim': ikfreq_lim,
+        #
+        #     'damp_lim': ydamp_lim,
+        #     'freq_lim': freq_lim,
+        #     'kfreq_lim': kfreq_lim,
+        #     'eigr_lim': eigr_lim,
+        #     'eigi_lim': eigi_lim,
+        #     'output_directory': output_directory,
+        #     'units_in': units_in,
+        #     'units_out': units_out,
+        #     'freq_tol': freq_tol,
+        #     'freq_tol_remove': freq_tol_remove,
+        #     'mag_tol': mag_tol,
+        #     'vl': vl,
+        #     'vf': vf,
+        #     'damping': damping,
+        #     'damping_required': damping_required,
+        #     'damping_required_tol': damping_required_tol,
+        #     'eas_flutter_range': eas_flutter_range,
+        #     'point_removal': point_removal,
+        #     'mode_switch_method': self.mode_switch_method,
+        # }
+        # buggy?
+        # noline = self.noline
+        # nopoints = self.nopoints
+        # if noline and nopoints:
+        #     noline = False
+        #     nopoints = True
+
+        # buggy?
+        x_plot_type = 'eas'
+        if x_plot_type == 'index':
+            xlim = self.index_lim
+        elif x_plot_type == 'eas':
+            xlim = self.eas_lim
+        elif x_plot_type == 'tas':
+            xlim = self.tas_lim
+        elif x_plot_type == 'mach':
+            xlim = self.mach_lim
+        elif x_plot_type == 'alt':
+            xlim = self.alt_lim
+        elif x_plot_type == 'q':
+            xlim = self.q_lim
+        elif x_plot_type == 'kfreq':
+            xlim = self.kfreq_lim
+        elif x_plot_type == 'ikfreq':
+            xlim = self.ikfreq_lim
+        else:  # pragma: no cover
+            log.error(f'x_plot_type={x_plot_type!r} is not supported')
+            # raise RuntimeError(x_plot_type)
+            xlim = (None, None)
+
+        def str_limit_to_limit(data: list[str]):
+            data_out = []
+            for value in data:
+                value = value.strip()
+                if len(value) == 0:
+                    data_out.append(None)
+                else:
+                    data_out.append(float(value))
+            return data_out
+
+        print('settings')
+        settings = {
+            'nrigid_body_modes': 0,  # TODO: 6
+            'f06_units': self._units_in,
+            'out_units': self._units_out,
+            'modes': modes,
+            'VL_target': float(self.data['vl']),
+            'VF_target': float(self.data['vf']),
+            # 'xlim_kfreq': str_limit_to_limit(self.kfreq_lim),
+            #'ylim_damping': self.damping_lim,  # NO
+
+            # self.index_lim = index_lim
+            # self.tas_lim = tas_lim
+            # self.mach_lim = mach_lim
+            # self.alt_lim = alt_lim
+            # self.q_lim = q_lim
+            # self.rho_lim = rho_lim
+            # self.ikfreq_lim = ikfreq_lim
+            # self.ydamp_lim = ydamp_lim
+            # self.kfreq_lim = kfreq_lim
+            # self.freq_lim = freq_lim
+            # self.eigi_lim = eigi_lim
+            # self.eigr_lim = eigr_lim
+            'ylim_damping': str_limit_to_limit(self.ydamp_lim),
+            'ylim_freq': str_limit_to_limit(self.freq_lim),
+            'eas_lim': str_limit_to_limit(self.eas_lim),
+            #
+            'freq_tol': float(self.freq_tol),
+            'freq_tol_remove': float(self.freq_tol_remove),
+            'damping_required': float(self.damping_required),
+            'damping_required_tol': float(self.damping_required_tol),
+            'damping_limit': float(self.damping),  # % damping
+            'eas_flutter_range': str_limit_to_limit(self.eas_flutter_range),
+            'plot_font_size': self.plot_font_size,
+            # 'show_lines': self.show_lines,
+            # 'show_points': self.show_points,
+            # 'show_mode_number': self.show_mode_number,
+            # 'show_detailed_mode_info': self.show_detailed_mode_info,
+            'point_spacing': self.point_spacing,
+            'use_rhoref': self.use_rhoref,
+            'flutter_ncolumns': self.flutter_ncolumns,
+            # 'mode_switch_method': None,
+        }
+        print('finished run')
+        # return
+
+        out_table = self.table_widget.get_data()
+        print(f'out_table:\n{out_table}')
+
+        f06_filenames = out_table['Filename'].to_list()
+        print(f'f06_filenames = {f06_filenames}')
+        nfiles = len(f06_filenames)
+        if nfiles == 0:
+            log.error('no files found')
+            return
+
+        # print('make settings')
+        print(f'settings = {settings}')
+
+        # Show progress bar and disable button
+        self.progress_bar.setVisible(True)
+        self.progress_bar.setMaximum(len(f06_filenames))
+        self.progress_bar.setValue(0)
+        self.run_organize_button.setEnabled(False)
+
+        # Process files
+        try:
+            self.log.info(f'Processing {len(f06_filenames)} files...')
+            write_flutter_docx(
+                word_filename,
+                f06_filenames, out_table,
+                self.log, settings,
+                progress_callback=self.update_organize_progress,
+                **settings)
+            self.log.info(f'Successfully created {word_filename}')
+        except Exception as e:
+            self.log.error(f'Failed to create Word document: {str(e)}')
+            self.log.error(traceback.format_exc())
+        finally:
+            # Hide progress bar and re-enable button
+            self.progress_bar.setVisible(False)
+            self.run_organize_button.setEnabled(True)
+
+    def update_organize_progress(self, current: int, total: int):
+        """Update progress bar"""
+        self.progress_bar.setValue(current)
+        QApplication.processEvents()  # Keep GUI responsive
+
+    def on_base_f06_directory_load(self) -> None:
+        is_passed, directory = get_file_edit('base_f06_directory', self.base_f06_directory_edit, self.log)
+        if not is_passed:
+            return
+        filenames = get_files_of_type(directory, '.f06')
+
+        # TODO: parse the filename for floats
+        headers = ['Filename']
+        # filenames2 = [os.path.relpath(pathi, directory) for pathi in natsort.natsorted(filenames)]
+        filenames2 = list(natsort.natsorted(filenames))
+
+        if len(filenames2) == 1:
+            # can't do a trade study
+            data_table = [filenames2]
+        else:
+            # remove the extension
+            base_filenames = [os.path.splitext(os.path.basename(filename))[0] for filename in filenames2]
+            data_table_initial = split_by_pattern(base_filenames)
+            # print(f'base_filenames = {base_filenames}')
+            # print(f'data_table_initial = {data_table_initial}')
+
+            # define the headers
+            data_row0 = data_table_initial[0]
+            print(f'data_row0 = {data_row0}')
+            # headers = [f'Col{icol+1}' for icol in range(len(data_row0))] + ['Filename']
+            headers = [f'{icol+1}' for icol in range(len(data_row0))] + ['Filename']
+            print(f'headers = {headers}')
+
+            # add the filename onto the end
+            data_table = [line + [filename] for line, filename in zip(data_table_initial, filenames2)]
+            print(f'data_table = {data_table}')
+        self.table_widget.load_table_data(headers, data_table)
+
     def on_load_excel(self):
-        excel_filename = self.excel_filename_edit.text()
-        from pyNastran.utils import print_bad_path
-        assert os.path.exists(excel_filename), print_bad_path(excel_filename)
-        print(f'loading {excel_filename}')
+        is_passed, excel_filename = get_file_edit('excel_filename', self.excel_filename_edit, self.log)
+        if not is_passed:
+            return
         self.excel_dict = pd.read_excel(excel_filename, sheet_name=None)
 
         self.table_widget.clear()
         keys = list(self.excel_dict)
+        self.log.debug(f'df keys = {keys}')
+
         if len(keys):
             key0 = keys[0]
+            self.log.debug(f'key0 = {key0!r}')
+            if self.tab_select_pulldown.count() > 0:
+                self.tab_select_pulldown.clear()  # seems to cause crashes...
             self.tab_select_pulldown.addItems(keys)
             self.tab_edit.setText(key0)
             self.tab_select_pulldown.setEnabled(True)
             # self.on_select_excel_tab()
 
-    def on_select_excel_tab(self):
+    def on_base_f06_directory_browse(self):
+        start_path = self.base_f06_directory_edit.text()
+        directory = self._on_load_directory(title='Select F06 Directory', start_path=start_path)
+        if directory:
+            self.base_f06_directory_edit.setText(directory)
+
+    def on_load_excel_file(self) -> None:
+        start_path = self.excel_filename_edit.text()
+        filename = self._on_load_file(title='Select Excel File', start_path=start_path,
+                                       file_filter='Excel File (*.xlsx);;All Files (*)')
+        if filename:
+            self.excel_filename_edit.setText(filename)
+
+    def on_load_word_file(self) -> None:
+        start_path = self.word_filename_edit.text()
+        filename = self._on_load_file(title='Select Word File', start_path=start_path,
+                                       file_filter='Word File (*.docx);;All Files (*)')
+        if filename:
+            self.word_filename_edit.setText(filename)
+
+    def _on_load_file(self,
+                      title: str="Select File",
+                      start_path: str="",
+                      file_filter: str="Text Files (*.txt);;All Files (*)") -> str:
+        """
+        Open a dialog to select a directory
+
+        Parameters
+        ----------
+        title : str
+            Dialog window title
+        start_path : str
+            Initial directory path
+
+        Returns
+        -------
+        file_path : str
+            Selected directory path, or empty string if canceled
+        """
+        file_path, _ = QFileDialog.getOpenFileName(self, title, start_path, file_filter)
+        if not file_path:
+            return ''
+        return file_path
+
+    def _on_load_directory(self,
+                           title: str="Select Directory",
+                           start_path: str="") -> str:
+        """
+        Open a dialog to select a directory
+
+        Parameters
+        ----------
+        title : str
+            Dialog window title
+        start_path : str
+            Initial directory path
+
+        Returns
+        -------
+        directory : str
+            Selected directory path, or empty string if canceled
+        """
+        directory = QFileDialog.getExistingDirectory(
+            self, title, start_path,
+            QFileDialog.Option.ShowDirsOnly)
+        if directory:
+            # print(f"Selected directory: {directory}")
+            return directory
+        else:
+            # print("No directory selected")
+            return ""
+
+    def on_select_excel_tab(self) -> None:
+        if self.tab_select_pulldown.count() == 0:
+            return
         key = self.tab_select_pulldown.currentText()
         df = self.excel_dict[key]
         headers = df.columns
-        data = df.to_numpy()
-        load_table_data(self.table_widget, headers, data)
-
+        data_table = df.to_numpy()
+        self.table_widget.load_table_data(headers, data_table)
 
     def _setup_file_layout(self) -> None:
         ifile = 0
@@ -2189,25 +2882,610 @@ def main(f06_filename: str='') -> None:  # pragma: no cover
     app.exec_()
 
 
-def load_table_data(table_widget: QTableWidget,
-                    headers: list[str],
-                    data):
-    # Set row and column counts
-    print(f'data = {data}')
-    table_widget.clear()
-    table_widget.setRowCount(len(data))
-    table_widget.setColumnCount(len(data[0]) if len(data) else 0)
+def get_file_edit(name: str,
+                  filename_edit: QLineEdit,
+                  log: SimpleLogger) -> tuple[bool, str]:
+    is_passed = False
+    filename = filename_edit.text()
+    if not os.path.exists(filename):
+        log.error(print_bad_path(filename))
+        return is_passed, ''
+    log.info(f'loading {name} {filename}')
+    is_passed = True
+    return is_passed, filename
 
-    # Set headers (optional)
-    # headers = ["Column 1", "Column 2", "Column 3"]  # Replace with your headers
-    table_widget.setHorizontalHeaderLabels(headers)
 
-    # Populate the table
-    for row_idx, row_data in enumerate(data):
-        for col_idx, col_data in enumerate(row_data):
-            item = QTableWidgetItem(str(col_data))
-            table_widget.setItem(row_idx, col_idx, item)
+def write_flutter_docx(docx_filename: str,
+                       f06_filenames: list[str],
+                       table,
+                       log: SimpleLogger,
+                       settings: dict[str, int | float | str],
+                       f06_units: str='english_in',
+                       out_units: str='english_kt',
+                       nrigid_body_modes: int=0,
+                       modes=None,
+                       VL_target=None,
+                       VF_target=None,
+                       # v_lines=None,
+                       # xlim_kfreq=None,
+                       ylim_damping=None,
+                       ylim_freq=None,
+                       eas_lim=None,
+                       freq_tol=None,
+                       freq_tol_remove=None,
+                       damping_required=None,
+                       damping_required_tol=None,
+                       damping_limit=None,
+                       eas_flutter_range=None,
+                       plot_font_size=None,
+                       show_lines: bool=True,
+                       show_points: bool=True,
+                       show_mode_number: bool=False,
+                       show_detailed_mode_info: bool=False,
+                       point_spacing: int=8,
+                       use_rhoref=None,
+                       flutter_ncolumns=None,
+                       progress_callback=None,
+                        ) -> None:
+    #------------------------------
+    x_cutoff = None  # TODO: add me; fixes NaNs?
+    # point_spacing = 8
+    # point_spacing = 8
+    make_pngs = True
+    show_individual = False
+    write_filename = True
+    freq_target = 0.5
+    V_baseline = 1000
+    # VL_target, VF_target
+    #------------------------------
+    eas_range = eas_flutter_range
+    ncol = flutter_ncolumns
+    #------------------------------
+    v_lines = get_vlines(VF_target, VL_target)
+
+    if ncol in [0, 1]:
+        figsize = (15, 12)
+    else:
+        figsize = (24, 12)
+
+    damping_crossings = [
+        (0.00, 0.01),
+        (0.03, 0.03),
+    ]
+
+    #------------------------------
+    damping_crossings2 = {}
+    if isinstance(damping_crossings, list):
+        for key, value in damping_crossings:
+            damping_crossings2[key] = value
+        damping_crossings = damping_crossings2
+        damping_crossings2 = {}
+
+    for key, value in damping_crossings.items():
+        if np.allclose(key, 0.0):
+            damping_crossings2[key] = key + 0.001
+        damping_crossings2[key] = value
+
+    #------------------------------
+    f06_filename0 = f06_filenames[0]
+    dirname = os.path.dirname(f06_filename0)
+    docx_filename = os.path.join(dirname, docx_filename)
+    cases = []
+    nfiles = len(f06_filenames)
+    for ifile, f06_filename in enumerate(f06_filenames):
+        log.info(f'Processing F06 {ifile}/{nfiles}: {f06_filename}')
+        if progress_callback is not None:
+            progress_callback(ifile, nfiles)  # 0-indexed for progress bar
+
+        base = os.path.splitext(f06_filename)[0]
+        png_filename = base + '.png'
+
+        resp_dict, data_dict = make_flutter_response(
+            str(f06_filename),
+            f06_units=f06_units, out_units=out_units,
+            use_rhoref=use_rhoref,
+            log=log)
+        assert len(resp_dict) == 1, resp_dict
+        resp = resp_dict[1]
+
+        # xcutoff doesn't apply for first 6 modes
+        resp.nrigid_body_modes = nrigid_body_modes
+        resp.x_cutoff = x_cutoff
+        resp.set_plot_settings(
+            figsize=figsize,
+            # xtick_major_locator_multiple=[50., 50.],     # WUT
+            # ytick_major_locator_multiple=[0.02, None],   # WUT
+        )
+        resp.set_symbol_settings(
+            nopoints=False, show_mode_number=False, point_spacing=point_spacing,
+            markersize=5,
+        )
+        vl_vf_crossing_dict, vd_crossing_dict = resp.get_flutter_crossings(
+            damping_crossings=damping_crossings2, modes=modes,
+            eas_range=eas_range)
+
+        if make_pngs:
+            print(f"modes in plot_vg_vf = {modes}")
+            fig, (damp_axes, freq_axes) = resp.plot_vg_vf(
+                plot_type='eas', modes=modes,
+                clear=False, close=False, legend=True,
+                xlim=eas_lim, ylim_damping=ylim_damping, ylim_freq=ylim_freq,
+                # ivelocity: Optional[int]=None,
+                v_lines=v_lines,
+                damping_required=0.0,
+                damping_limit=0.03,
+                ncol=ncol, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
+                # plot_freq_tol_filtered_lines=True,
+                damping_crossings=damping_crossings2, filter_damping=True,
+                eas_range=eas_range,
+                png_filename=None,
+                filter_freq=True,
+                show_detailed_mode_info=show_detailed_mode_info,
+                show=False)
+            basename = os.path.basename(png_filename)
+            damp_axes.set_title(basename)
+            # plt.tight_layout()
+            # if show_individual:
+            #     plt.show()
+            fig.savefig(png_filename, bbox_inches='tight')
+            # bbox_to_anchor=(1, 1), borderaxespad=0)
+            # shutil.copyfile(png_filename, png_filename_mach)
+            plt.close()
+        if show_individual:
+            raise RuntimeError('stopping')
+
+        # if show_detailed_mode_info and 0:
+        #     keys = list(filename_base_to_vl_vf_vbase_dict)
+        #     # print('filename_base_to_vl_vf_vbase_dict.keys = ', keys)
+        #     # print(f'f06_filename_base = {f06_filename_base}')
+        #     if len(filename_base_to_vl_vf_vbase_dict):
+        #         v0i, vfi, vbase = filename_base_to_vl_vf_vbase_dict[f06_filename_base]
+        #         print(f'v0i={v0i}, vfi={vfi}, vbase={vbase}')
+        #         vl_array, vf_array = resp.hump_modes_from_VL_VF_dict(
+        #             vl_vf_crossing_dict, v0i, vfi, vbase, log)
+        #         if len(vl_array):
+        #             print('vl:')
+        #             print(vl_array)
+        #         if len(vf_array):
+        #             print('vf:')
+        #             print(vf_array)
+
+        # print(f'modes = {modes}')
+        # print(f'xcrossing_dict = {xcrossing_dict}')
+        hump_message = _get_hump_message(
+            resp, vl_vf_crossing_dict,
+            eas_range, show_detailed_mode_info)
+
+        log.info(f'VL_target = {VL_target}')
+        V0, freq0, V3, freq3, vdiverg, freq_diverg = resp.xcrossing_dict_to_VL_VF_VD(
+            vl_vf_crossing_dict, vd_crossing_dict,
+            log, freq_target, VL_target, VF_target,
+            v_baseline=V_baseline,
+            # is_hump_modes=parse_hump_modes,
+        )
+        # if VL < VL_target:
+        #     log.error(f'VL={VL} KEAS, freq={freqL} Hz; {f06_filename_base}')
+        # if VF < VF_target:
+        #     log.error(f'VF={VF} KEAS, freq={freqF} Hz; {f06_filename_base}')
+        # if VD < VD_target:
+        #     log.error(f'VD={VD} KEAS, freq={freqD} Hz; {f06_filename_base}')
+        mass = -1.0
+        config = ''
+        cg = [0., 0., 0.]
+        inertia = [0., 0., 0., 0., 0., 0.]
+        case = (V0, freq0, V3, freq3, vdiverg, freq_diverg,
+                mass, cg, inertia, config,
+                hump_message,
+                f06_filename, png_filename)
+        cases.append(case)
+
+    document = Document()
+    # _write_2d_table(document, settings, log, 'Settings')
+    _write_name_value_table(document, settings)
+
+    for case in cases:
+        # document.add_heading(f'Config={config0}', heading_level_mach)
+
+        (V0, freq0, V3, freq3, vdiverg, freq_diverg,
+         mass, cg, inertia, config,
+         hump_message,
+         f06_filename, png_filename) = case
+
+        configi = ''
+        if np.isfinite(freq0):
+            V0_text = f'V 0%={V0:.0f} KEAS ({freq0:.1f} Hz)'
+        else:
+            V0_text = f'V 0%={V0:.0f} KEAS (default)'
+
+        if np.isfinite(freq3):
+            V3_text = f'V 3%={V3:.0f} KEAS ({freq3:.1f} Hz)'
+        else:
+            V3_text = f'V 3%={V3:.0f} KEAS (default)'
+
+        text = f'{V0_text}, {V3_text}, VD={vdiverg:.0f} KEAS, {configi}'
+        if hump_message:
+            text += '\n' + hump_message
+
+        freq0_str = f'{freq0:.2f}' if np.isfinite(freq0) else 'N/A'
+        freq3_str = f'{freq3:.2f}' if np.isfinite(freq3) else 'N/A'
+
+        # write the dirname and f06_filename of the file
+        dirname = os.path.basename(os.path.dirname(f06_filename))
+        basename = os.path.basename(f06_filename)
+        path_str0 = os.path.join(dirname, basename)
+        path_str = str(path_str0.replace('\\', '/'))
+
+        if os.path.exists(png_filename):
+            document.add_picture(str(png_filename), width=Inches(6.5))
+        if write_filename:
+            paragraph = document.add_paragraph(path_str)
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        # msg += f'{mach:.3f}, {weight_config}, {v0:.3f}, {freq0_str}, {v3:.3f}, {freq3_str}, {vdiverg:.3f}, {config}, {f06_filename_base}\n'
+    log.info(f'saving docx {docx_filename}')
+    document.save(docx_filename)
+    return
+    # ncol = flutter_ncolumns
+    #
+    # damping_crossings = [
+    #     (0.00, 0.01),
+    #     (0.03, 0.03),
+    # ]
+    #
+    # damping_crossings2 = {}
+    # if isinstance(damping_crossings, list):
+    #     for key, value in damping_crossings:
+    #         damping_crossings2[key] = value
+    #     damping_crossings = damping_crossings2
+    #     damping_crossings2 = {}
+    #
+    # for key, value in damping_crossings.items():
+    #     if np.allclose(key, 0.0):
+    #         damping_crossings2[key] = key + 0.001
+    #     damping_crossings2[key] = value
+    #
+    # if filename_base_to_vl_vf_vbase_dict is None:
+    #     filename_base_to_vl_vf_vbase_dict = {}
+    # assert isinstance(filename_base_to_vl_vf_vbase_dict, dict), filename_base_to_vl_vf_vbase_dict
+    # print(f'filename_base_to_vl_vf_vbase_dict = {filename_base_to_vl_vf_vbase_dict}')
+    #
+    # if case_format == 'func':
+    #     assert case_info_func is not None, case_info_func
+    #
+    # if x_cutoff is None:
+    #     x_cutoff = eas_lim[1]
+    # if ncol in [0, 1]:
+    #     figsize = (15, 12)
+    # else:
+    #     figsize = (24, 12)
+    # # type checking
+    # str(eas_lim[0] + 1)
+    # str(eas_lim[1] + 1)
+    #
+    # if sub_dirnames is None:
+    #     log.warning(f'sub_dirnames = {sub_dirnames}; assuming single folder')
+    #     sub_dirnames = [None]
+    # if skip_extra_cases:
+    #     log.error(f'skip_extra_cases={skip_extra_cases}; should be temporary')
+    #
+    # # ---------------------------------------------------------------------------------
+    # cases = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    # cases2 = defaultdict(list)
+    # for sub_dirname in sub_dirnames:
+    #     sub_dirname2: str = '' if sub_dirname is None else sub_dirname
+    #     # if sub_dirname is None:
+    #     #     dirnamei = dirname
+    #     # else:
+    #     dirnamei = dirname / sub_dirname2
+    #
+    #     dirnamei_pics = dirname / f'pics_{sub_dirname}'
+    #     print(dirnamei_pics)
+    #     # if not dirnamei_pics.exists():
+    #     os.makedirs(dirnamei_pics, exist_ok=True)
+    #
+    #     print(f'directory = {str(dirnamei)}')
+    #     print(f'glob_str = {str(glob_str)}')
+    #     # f06_root_filenames = [fname for fname in os.listdir(dirnamei) if fname.endswith('.f06')]
+    #     f06_root_filenames = dirnamei.glob('*.f06')
+    #     f06_root_filenames = natsorted(f06_root_filenames)
+    #     f06_root_filenames = filter_f06(f06_root_filenames, glob_str)
+    #     # f06_filenames = [dirnamei / fname for fname in f06_root_filenames]
+    #     f06_filenames = f06_root_filenames
+    #
+    #     for f06_filename in f06_filenames:
+    #         print('------------------------------------------------')
+    #         assert os.path.exists(f06_filename), print_bad_path(f06_filename)
+    #
+    #         f06_filename_base = f06_filename.name
+    #
+    #         base1 = os.path.splitext(f06_filename_base)[0]
+    #         png_filename = dirnamei_pics / (base1 + '.png')
+    #         print(f'f06_filename = {str(f06_filename)}')
+    #         # print(f'png_filename = {str(png_filename)}')
+    #         is_failed, out = get_case_info(
+    #             f06_filename_base,
+    #             store_configs,
+    #             weight_configs,
+    #             machs_to_parse, machs_to_skip,
+    #             case_format, case_info_func, skip_extra_cases)
+    #         if is_failed:
+    #             continue
+    #         mach_num_str = out['mach_num_str']
+    #         mach_number = out['mach']
+    #         weight_config = out['weight_config']
+    #         store_config = out['store_config']
+    #         configi = out['config']
+    #         # mach_num_str, mach_number, weight_config, store_config, configi = out
+    #
+    #         is_store_config = False
+    #         for store_configi in store_configs:
+    #             if store_configi in f06_filename_base:
+    #                 is_store_config = True
+    #                 break
+    #         if not is_store_config:
+    #             log.warning(f'skipping store_config={store_config!r} configi={configi!r} for {f06_filename_base}')
+    #             continue
+    #
+    #         log.warning(f'configi={configi!r} Mach={mach_number}')
+    #         dirnamei_pics_mach = dirname / f'pics_{mach_num_str}'
+    #         png_filename_mach = dirnamei_pics_mach / (base1 + '.png')
+    #         os.makedirs(dirnamei_pics_mach, exist_ok=True)
+    #
+    #         # 'newaero_flutter_bdfw_asym' -> 'newaero_flutter_bdfw_asym'
+    #
+    #         log.level = 'debug'
+    #         # print(f'f06_filename_base = {f06_filenme_base}')
+    #         try:
+    #             resp_dict, data_dict = make_flutter_response(
+    #                 str(f06_filename),
+    #                 f06_units='english_in', out_units='english_kt',
+    #                 use_rhoref=use_rhoref,
+    #                 log=log)
+    #             assert len(resp_dict) == 1, resp_dict
+    #         except:
+    #             raise
+    #             if stop_on_failure:
+    #                 raise
+    #             VL = -1.0
+    #             VF = -1.0
+    #             VD = -1.0
+    #             freqL = -1.0
+    #             freqF = -1.0
+    #             # freqD = -1.0
+    #             mass = np.zeros(1)[0]
+    #             cg = np.zeros(3)
+    #             inertia = np.zeros((3, 3))
+    #             png_filename = ''
+    #             case_key = (mach_number, weight_config, store_config)
+    #             case_value = (VL, freqL, VF, freqF, VD,
+    #                           mass, cg, inertia, configi,
+    #                           '',
+    #                           f06_filename_base, f06_filename, png_filename)
+    #             cases2[case_key].append(case_value)
+    #             cases[mach_number][weight_config][store_config].append(case_value)
+    #             continue
+    #
+    #         if 'opgwg' not in data_dict:
+    #             matrices = data_dict['matrices']
+    #             log.warning(f'data_dict_keys={list(data_dict)}; matrices_keys={list(matrices)}')
+    #             # asdf
+    #             mass = np.full(1, np.nan)
+    #             cg = np.full(3, np.nan)
+    #             inertia = np.full((3, 3), np.nan)
+    #         else:
+    #             opgwg = data_dict['opgwg']  # grid point weight
+    #             # matrices = data_dict['matrices']
+    #             # frequencies = matrices['freq']
+    #             mass = opgwg['mass']
+    #             cg = opgwg['cg']
+    #             # print(opgwg)
+    #             # print(f'frequencies = {frequencies.round(3)}')
+    #             inertia = opgwg['I(S)']
+    #
+    #         resp = resp_dict[1]
+    #         modes = resp.modes[6:]
+    #         assert modes[0] == 7, modes
+    #
+    #         # xcutoff doesn't apply for first 6 modes
+    #         resp.nrigid_body_modes = 6
+    #         resp.x_cutoff = x_cutoff
+    #         resp.set_plot_settings(
+    #             figsize=figsize,
+    #             xtick_major_locator_multiple=[50., 50.],
+    #             ytick_major_locator_multiple=[0.02, None],
+    #         )
+    #         resp.set_symbol_settings(
+    #             nopoints=False, show_mode_number=False, point_spacing=8,
+    #             markersize=5,
+    #         )
+    #
+    #         # Crossing = tuple[float, float, float]
+    #         # if parse_hump_modes:
+    #         #     vl_vf_crossing_dict, hump_vd_crossing_dict = resp.get_hump_flutter_crossings(
+    #         #         damping_crossings=damping_crossings, modes=modes,
+    #         #         eas_range=eas_range)
+    #         #     print(hump_vd_crossing_dict)
+    #         #     vl_vf_crossing_dict = hump_vd_crossing_dict
+    #         # else:
+    #         vl_vf_crossing_dict, vd_crossing_dict = resp.get_flutter_crossings(
+    #             damping_crossings=damping_crossings2, modes=modes,
+    #             eas_range=eas_range)
+    #         # print(vl_vf_crossing_dict)
+    #
+    #         if make_pngs:
+    #             fig, (damp_axes, freq_axes) = resp.plot_vg_vf(
+    #                 plot_type='eas', modes=modes,
+    #                 clear=False, close=False, legend=True,
+    #                 xlim=eas_lim, ylim_damping=ylim_damping, ylim_freq=ylim_freq,
+    #                 # ivelocity: Optional[int]=None,
+    #                 v_lines=v_lines,
+    #                 damping_required=0.0,
+    #                 damping_limit=0.03,
+    #                 ncol=ncol, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
+    #                 # plot_freq_tol_filtered_lines=True,
+    #                 damping_crossings=damping_crossings2, filter_damping=True,
+    #                 eas_range=eas_range,
+    #                 png_filename=None,
+    #                 filter_freq=True,
+    #                 show_detailed_mode_info=show_detailed_mode_info,
+    #                 show=False)
+    #             basename = os.path.basename(png_filename)
+    #             damp_axes.set_title(basename)
+    #             # plt.tight_layout()
+    #             # if show_individual:
+    #             #     plt.show()
+    #             fig.savefig(png_filename, bbox_inches='tight')
+    #             # bbox_to_anchor=(1, 1), borderaxespad=0)
+    #             shutil.copyfile(png_filename, png_filename_mach)
+    #             plt.close()
+    #         if show_individual:
+    #             raise RuntimeError('stopping')
+    #
+    #         if show_detailed_mode_info and 0:
+    #             keys = list(filename_base_to_vl_vf_vbase_dict)
+    #             # print('filename_base_to_vl_vf_vbase_dict.keys = ', keys)
+    #             # print(f'f06_filename_base = {f06_filename_base}')
+    #             if len(filename_base_to_vl_vf_vbase_dict):
+    #                 v0i, vfi, vbase = filename_base_to_vl_vf_vbase_dict[f06_filename_base]
+    #                 print(f'v0i={v0i}, vfi={vfi}, vbase={vbase}')
+    #                 vl_array, vf_array = resp.hump_modes_from_VL_VF_dict(
+    #                     vl_vf_crossing_dict, v0i, vfi, vbase, log)
+    #                 if len(vl_array):
+    #                     print('vl:')
+    #                     print(vl_array)
+    #                 if len(vf_array):
+    #                     print('vf:')
+    #                     print(vf_array)
+    #
+    #         # print(f'modes = {modes}')
+    #         # print(f'xcrossing_dict = {xcrossing_dict}')
+    #         hump_message = _get_hump_message(
+    #             resp, vl_vf_crossing_dict,
+    #             eas_range, show_detailed_mode_info)
+    #
+    #         log.info(f'VL_target = {VL_target}')
+    #         VL, freqL, VF, freqF, VD, freqD = resp.xcrossing_dict_to_VL_VF_VD(
+    #             vl_vf_crossing_dict, vd_crossing_dict,
+    #             log, freq_target, VL_target, VF_target,
+    #             v_baseline=V_baseline,
+    #             # is_hump_modes=parse_hump_modes,
+    #         )
+    #         if VL < VL_target:
+    #             log.error(f'VL={VL} KEAS, freq={freqL} Hz; {f06_filename_base}')
+    #         if VF < VF_target:
+    #             log.error(f'VF={VF} KEAS, freq={freqF} Hz; {f06_filename_base}')
+    #         if VD < VD_target:
+    #             log.error(f'VD={VD} KEAS, freq={freqD} Hz; {f06_filename_base}')
+    #
+    #         case_key = (mach_number, weight_config, store_config)
+    #         case_value = (VL, freqL, VF, freqF, VD,
+    #                       mass, cg, inertia, configi,
+    #                       hump_message,
+    #                       f06_filename_base, f06_filename, png_filename)
+    #         cases2[case_key].append(case_value)
+    #         cases[mach_number][weight_config][store_config].append(case_value)
+    #         log.debug(f'mach={mach_number} VL={VL:g} VF={VF:g} VD={VD:g} {f06_filename_base}')
+    #         if hump_message:
+    #             log.warning(hump_message)
+    #             # asdf
+    #         # print(xcrossing_dict)
+    #         # return cases
+    #
+    # names = ['Mach', 'Weight', 'Config']
+    # case_data = CaseData(cases, cases2, names)
+    # return case_data
+
+def _get_hump_message(resp: FlutterResponse,
+                      vl_vf_crossing_dict,
+                      eas_range: tuple[float, float],
+                      show_detailed_mode_info: bool) -> str:
+    hump_message = ''
+    if not show_detailed_mode_info:
+        return hump_message
+
+    hump_message_list = resp.get_hump_mode_messages(
+        vl_vf_crossing_dict,
+        modes=None,
+        eas_range=eas_range,
+        filter_damping=False,
+        plot_type='eas',
+    )
+    if hump_message_list:
+        hump_message_list2 = [line.strip().replace('\n', '; ') for line in hump_message_list]
+        hump_message = '\n'.join(hump_message_list2)
+        # log.warning(f'hump_message = {hump_message!r}')
+    return hump_message
+
+
+def _write_name_value_table(document, records: dict[str, float]) -> None:
+    table = document.add_table(rows=1, cols=2)
+    hdr_cells = table.rows[0].cells
+    hdr_cells[0].text = 'Name'
+    hdr_cells[1].text = 'Value'
+    for name, value in records.items():
+        row_cells = table.add_row().cells
+        row_cells[0].text = str(name)
+        row_cells[1].text = str(value)
+
+def _write_2d_table(document: Document,
+                    records: dict[str, list[list[float]]],
+                    log: SimpleLogger, table_name: str) -> None:
+    """
+    Expects a 2D table (e.g., list of lists)
+
+    Parameters
+    ----------
+    document : Document
+        the word doc
+    records: dict[str, list[float]
+        the data to add
+
+    Returns
+    -------
+
+    mass_table = {
+        'Configuration': ['Clean'],
+        'Mass (in)': [1.0],
+        'XCG (in)': [1.0],
+        'YCG (in)': [1.0],
+        'ZCG (in)': [1.0],
+        'Ixx (slinch-in^2)': [1.0],
+        'Iyy (slinch-in^2)': [1.0],
+        'Izz (slinch-in^2)': [1.0],
+    }
+    """
+    keys = list(records.keys())
+    nkeys = len(keys)
+    assert nkeys > 0, keys
+    key0 = keys[0]
+    column0 = records[key0]
+    ncols = nkeys
+    nrows = len(column0) + 1
+
+    table = document.add_table(rows=nrows, cols=ncols)
+
+    # write the column headers
+    hdr_cells = table.rows[0].cells
+    for ikey, key in enumerate(keys):
+        hdr_cells[ikey].text = key
+
+    # write the rows
+    icol = 0
+    for key, values in records.items():
+        for irow in range(1, nrows):
+            # print(key, irow, nrows, values)
+            try:
+                value = values[irow-1]
+            except IndexError:
+                log.error(f'problem writing {table_name} for irow={irow}')
+                continue
+            row_cells = table.rows[irow].cells
+            row_cells[icol].text = str(value)
+        icol += 1
+    return
 
 
 if __name__ == '__main__':  # pragma: no cover
+    # out = split_by_pattern(['cat_dog_1.0_asdf', 'cat_dog_2.0_qwer'])
+    # print(out)
     main()

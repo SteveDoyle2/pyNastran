@@ -1665,10 +1665,10 @@ class FlutterGui(LoggableGui):
         log = self.log
         log.info(f'plot; modes = {modes}\n')
         if not self.is_valid:
-            log.warning(f'not valid\n')
+            log.warning('not valid\n')
             return
         if len(self.responses) == 0:
-            log.warning(f'no subcases\n')
+            log.warning('no subcases\n')
             return
 
         x_plot_type = self.x_plot_type
@@ -1746,7 +1746,7 @@ class FlutterGui(LoggableGui):
 
         fig = plt.figure(1)
         fig.clear()
-        log.info(f'cleared plot\n')
+        log.info('cleared plot\n')
         if plot_type not in {'root-locus', 'modal-participation', 'zimmerman'}:
             gridspeci = gridspec.GridSpec(2, 4)
             damp_axes = fig.add_subplot(gridspeci[0, :3])
@@ -2135,16 +2135,6 @@ class FlutterGui(LoggableGui):
         op2_filename = self.op2_filename if os.path.exists(self.op2_filename) else ''
         self._vtk_window_obj.show(bdf_filename, op2_filename)
         return
-        try:
-            from pyNastran.f06.dev.flutter.gui_flutter_vtk import VtkWindow
-        except ImportError as e:
-            self.log.error(str(e))
-            # print(traceback.print_tb(e))
-            print(traceback.print_exception(e))
-            self.log.error('cant open window')
-            return
-        self.new_window = VtkWindow(gui, BDF_FILENAME, OP2_FILENAME)
-        self.new_window.show()
 
     def log_debug(self, msg: str) -> None:
         print(f'DEBUG: {msg}')

@@ -243,6 +243,97 @@ def write_pbeam(name: str, pids: np.ndarray, itable: int,
     return itable
 
 
+def write_pbeaml(name: str, pids: np.ndarray, itable: int,
+                 op2_file: BinaryIO, op2_ascii, model: BDF, endian: bytes=b'<',
+                 nastran_format: str='nx') -> int:
+    """writes the PBEAM"""
+
+    """
+    PBEAML(9202,92,53)
+
+    Word Name Type Description
+    1 PID        I   Property identification number
+    2 MID        I   Material identification number
+    3 GROUP(2) CHAR4 Cross-section group name
+    5 TYPE(2)  CHAR4 Cross section type
+    7 VALUE      RS  Cross section values for XXB, SO, NSM, and dimensions
+    Word 7 repeats until (-1) occurs
+    """
+
+    size = 4
+    if size == 4:
+        struct1 = Struct(endian + b'2i 8s 8s')
+    else:
+        struct1 = Struct(endian + b'2q 16s 16s')
+    sm1 = Struct(endian + mapfmt(b'i', size))
+    minus1 = sm1.pack(-1)
+
+    key = (9202, 92, 53)
+
+    nvalues = 0
+    for pid in sorted(pids):
+        prop = model.properties[pid]
+        nstations, ndim = prop.dim.shape
+        nvalues += nstations * (3 + ndim) + 7  # 6 is for [pid, mid, group, type]; +1 for -1
+
+    nbytes = _write_table_header(
+        op2_file, op2_ascii, name, key, nvalues, size)
+
+    nfields = 0
+    for pid in sorted(pids):
+        nfieldsi = 0
+        prop = model.properties[pid]
+        # print(prop.get_stats())
+        nstations, ndim = prop.dim.shape
+
+        #     1 PID        I   Property identification number
+        #     2 MID        I   Material identification number
+        #     3 GROUP(2) CHAR4 Cross-section group name
+        #     5 TYPE(2)  CHAR4 Cross section type
+        group_bytes = f'{prop.group:<8s}'.encode('latin1')
+        beam_type_bytes = f'{prop.beam_type:<8s}'.encode('latin1')
+        data = [pid, prop.mid, group_bytes, beam_type_bytes]
+        assert None not in data, data
+        op2_file.write(struct1.pack(*data))
+
+        nfieldsi += 6  # group/beamtype use 2 fields each
+        assert len(prop.xxb) == nstations
+        # XXB, SO, NSM, and dimensions
+
+        # TODO: the nsms are length 1 for some raisen
+        #       not sure this is right, but it's close...
+        nsms = prop.nsm.tolist()
+        nnsm = len(nsms)
+        if nnsm < nstations:
+            nnew = nstations - nnsm
+            nsms_new = [nsms[0]] * nnew
+            nsms.extend(nsms_new)
+
+        struct2 = Struct(endian + b'f'*(3+ndim))
+        sos = []
+        for so in prop.so:
+            if so == 'YES':
+                sos.append(1.0)
+            elif so == 'NO':
+                sos.append(0.0)
+            else:  # pragma: no cover
+                raise RuntimeError(f'Unknown SO {so!r}')
+
+        for xxb, so, nsm, dims in zip(prop.xxb, sos, nsms, prop.dim):
+            data = [xxb, so, nsm] + dims.tolist()
+            nfieldsi += len(data)  # nstation*(3 + ndim)
+            assert None not in data, data
+            op2_file.write(struct2.pack(*data))
+        op2_file.write(minus1)
+        assert None not in data, data
+        data.append(-1)
+        nfields += nfieldsi + 1
+
+    assert nfields == nvalues, (nfields, nvalues)
+    itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
+    return itable
+
+
 def write_pelast(name: str, pids: np.ndarray, itable: int,
                  op2_file: BinaryIO, op2_ascii, model: BDF, endian: bytes=b'<',
                  nastran_format: str='nx') -> int:
@@ -1792,6 +1883,7 @@ EPT_MAP = {
     'PBAR': write_pbar,
     'PBARL': write_pbarl,
     'PBEAM': write_pbeam,
+    'PBEAML': write_pbeaml,
     'PSHEAR': write_pshear,
     'PSHELL': write_pshell,
     'PCOMP': write_pcomp,

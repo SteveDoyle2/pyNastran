@@ -80,8 +80,8 @@ def read_daten(daten_filename: PathLike,
                scale: float=1.0) -> tuple[np.ndarray, np.ndarray]:
     """
     # Shell Id, Cf Components X, Cf Components Y, Cf Components Z, Pressure Coefficient
-         1       0.00158262927085      -0.00013470219276       0.00033890815696      -0.09045402854837
-   4175456       0.00005536470364      -0.00050913009274       0.00226408640311      -0.44872838534457
+          1       0.00158262927085      -0.00013470219276       0.00033890815696      -0.09045402854837
+    4175456       0.00005536470364      -0.00050913009274       0.00226408640311      -0.44872838534457
 
     """
     with open(daten_filename, 'r') as vrt_file:
@@ -120,10 +120,10 @@ def write_vrt(vrt_filename: PathLike, node_id: str, xyz: np.ndarray) -> None:
 
 def read_vrt(vrt_filename: PathLike, log) -> tuple[np.ndarray, np.ndarray]:
     """
-     PROSTAR_VERTEX
-     4000         0         0         0         0         0         0         0
-             1     10.86546244027553      0.15709716073078      1.16760397346681
-       2118954      8.91578650948743      1.88831278193532      1.27715047467296
+    PROSTAR_VERTEX
+    4000         0         0         0         0         0         0         0
+            1     10.86546244027553      0.15709716073078      1.16760397346681
+      2118954      8.91578650948743      1.88831278193532      1.27715047467296
     """
     with open(vrt_filename, 'r') as vrt_file:
         lines = vrt_file.readlines()
@@ -175,11 +175,11 @@ def read_cell(cell_filename: PathLike, log) -> tuple[tuple[np.ndarray, np.ndarra
     """
     PROSTAR_CELL
      4000         0         0         0         0         0         0         0
-         1          3          3          3          4
-         1          3          4          5
-   ...
-   4175456          3          3         27          4
-   4175456    2118943    2118954    2118941
+          1          3          3          3          4
+          1          3          4          5
+    ...
+    4175456          3          3         27          4
+    4175456    2118943    2118954    2118941
 
     """
     #log.debug(f'reading cell={cell_filename}')

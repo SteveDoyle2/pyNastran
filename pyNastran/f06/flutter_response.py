@@ -1786,6 +1786,7 @@ class FlutterResponse:
         # print(f'modes={modes}')
         nmodes = 0
         for i, imode, mode in zip(count(), imodes, modes):
+            # print(f'ith_mode = {i}, imode = {imode}, mode = {mode}')
             color = colors[jcolor]
             symbol = symbols[jcolor]
 
@@ -1793,6 +1794,7 @@ class FlutterResponse:
             damping = self._result_by_mode(imode, self.idamping).ravel()
             freq = self._result_by_mode(imode, self.ifreq).ravel()
             if mode > self.nrigid_body_modes and self.x_cutoff is not None:
+                # self.log.debug('skipping ')
                 irigid = np.where(vel < self.x_cutoff)[0]
                 vel = vel[irigid]
                 damping = damping[irigid]
@@ -1800,16 +1802,22 @@ class FlutterResponse:
 
             vel, damping, freq = remove_excluded_points(
                 vel, damping, freq, point_removal)
+            if len(freq) == 0:
+                # print('no points after remove_excluded_points')
+                continue
+
             vel_calc, damping_calc, freq_calc = remove_eas_range(
                 vel, damping, freq, eas_range)
 
             if len(freq) == 0:
+                # print('no points after remove_eas_range')
                 continue
             jcolor, color, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
                 freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                 show_mode_number=self.show_mode_number)
             if is_removedi:
+                # print("removed?")
                 continue
 
             if color != 'gray':
@@ -1824,11 +1832,14 @@ class FlutterResponse:
             # freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
             # print(color, symbol, linestyle)
             # dfreq = freq.max() - freq.min()
-            if filter_freq and freq_calc.min() > ylim_freq[1] and damping_calc.max() < 0.0:
+            if filter_freq and (ylim_freq is not None and freq_calc.min() > ylim_freq[1]) and damping_calc.max() < 0.0:
                 # if we're entirely greater than the max, skip line
+                #print(f'greater than the max ylim_freq; filter_freq={filter_freq} ylim_freq={ylim_freq}; '
+                #      f'freq_calc_min={freq_calc.min()} damping_max={damping_calc.max()}')
                 continue
             if filter_freq and freq_calc.max() < ylim_freq[0] and damping_calc.max() < 0.0:
                 # if we're entirely below than the min, skip line
+                #print('below than the min ylim_freq')
                 continue
             label = _get_mode_freq_label(mode, freq[0], freq_ndigits=self.freq_ndigits)
             # print(mode, color, symbol, linestyle, dfreq, freq)
@@ -3118,6 +3129,7 @@ def _increment_jcolor(mode: int,
         linestyle2 = ''
         text = ''
         is_removed = True
+        #print(f'removing due to dfreq={dfreq} freq_tol_remove={freq_tol_remove}')
 
     jcolor += 1
     return jcolor, color, linestyle2, symbol2, text, is_removed

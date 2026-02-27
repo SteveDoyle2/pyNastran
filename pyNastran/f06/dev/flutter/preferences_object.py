@@ -48,13 +48,15 @@ class FlutterPreferencesObject:
             vtk_obj = gui._vtk_window_obj
         else:
             self.vtk_data = VtkData()
+
+        vtk_data = self.vtk_data.to_json()
         data = {
             # plotting
             'font_size': gui.font_size,
             'plot_font_size': gui.plot_font_size,
             'use_vtk': gui.use_vtk,
             'use_tabs': gui.use_tabs,
-            'vtk': self.vtk_data.to_json(),
+            'vtk': vtk_data,
             'export_to_png': gui.export_to_png,
             'export_to_csv': gui.export_to_csv,
             'export_to_f06': gui.export_to_f06,

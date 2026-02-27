@@ -14,6 +14,7 @@ import warnings
 from typing import Optional, TYPE_CHECKING
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf.bdf_interface.get_methods import _get_tag_no_model
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
@@ -323,7 +324,8 @@ class PBUSH(BushingProperty):
                 t_fields = cls._read_var(card, 'Ti', istart + 1, istart + 4)
                 assert len(t_fields) == 3, t_fields
             else:
-                raise RuntimeError(f'unsupported PBUSH type; pname={pname!r}\n{card}')
+                tag = _get_tag_no_model()
+                raise RuntimeError(f'unsupported PBUSH type; pname={pname!r}\n{card}{tag}')
                 #break #  old version...
             istart += 8
         return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields, mass,
@@ -334,15 +336,15 @@ class PBUSH(BushingProperty):
         return self.Ki
 
     @k.setter
-    def k(self, k: list[float]):
-        return self.Ki
+    def k(self, k: list[float]) -> None:
+        self.Ki = k
 
     @property
     def b(self) -> list[float]:
         return self.Bi
 
     @b.setter
-    def b(self, b: list[float]):
+    def b(self, b: list[float]) -> None:
         self.Bi = b
 
     @property
@@ -350,8 +352,8 @@ class PBUSH(BushingProperty):
         return self.GEi
 
     @ge.setter
-    def ge(self, ge: list[float]):
-        return self.GEi
+    def ge(self, ge: list[float]) -> None:
+        self.GEi = ge
 
     @classmethod
     def _read_var(cls, card: BDFCard, var_prefix: str, istart: int, iend: int):

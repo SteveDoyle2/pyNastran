@@ -230,7 +230,7 @@ requires = [
 # Conclusion:
 # - "pip wheel ." pulls the version from setup.py
 # - invents a version if setup.py doesn't exist
-# - version_file doesn't seem to do a whole lot
+# - version_file doesn't seem to do a lot
 # - the version comes from the __init__.py regardless of
 #   setup.py being directly called or not
 [tool.setuptools_scm]
@@ -308,9 +308,13 @@ ignore_missing_imports = true
 # ruff pyproject.toml per:
 # - https://github.com/matplotlib/matplotlib/blob/main/pyproject.toml
 #
+#-------------------------------------------------------------------------------------------
 [tool.ruff]
+#builtins = ["_"]
+
 exclude = [
     ".git",
+    ".venv",
     "build",
     "doc/gallery",
     "doc/tutorials",
@@ -338,7 +342,7 @@ ignore = [
     "E741",
     "F841",
 ]
-line-length = 88
+line-length = 100
 select = [
     "D",
     "E",
