@@ -63,7 +63,7 @@ def print_scientific_8(value: float) -> str:
 
     """
     if value == 0.0:
-        return '%8s' % '0.'
+        return '      0.'  # '%8s' % '0.'
 
     python_value = '%8.11e' % value
     svalue, sexponent = python_value.strip().split('e')
@@ -111,7 +111,7 @@ def print_float_8(value: float) -> str:
     if isnan(value):
         return '        '
     elif value == 0.0:
-        return '%8s' % '0.'
+        return '      0.'  # '%8s' % '0.'
     elif value > 0.:  # positive, not perfect...
         if value < 5e-8:
             field = print_scientific_8(value)
@@ -204,7 +204,7 @@ def print_float_8(value: float) -> str:
                 field = print_scientific_8(value)
             return field
     field = field.strip(' 0')
-    field = '%8s' % field
+    field = f'{field:>8s}'
 
     #assert len(field) == 8, ('value=%r field=%r is not 8 characters '
     #                         'long, its %s' % (value, field, len(field)))
