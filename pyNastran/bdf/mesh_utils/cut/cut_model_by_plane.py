@@ -21,7 +21,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.coordinate_systems import CORD2R, Coord
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
-from pyNastran.bdf.mesh_utils.cut.cut_edge_model_by_plane import cut_edge_model_by_coord
+#from pyNastran.bdf.mesh_utils.cut.cut_edge_model_by_plane import cut_edge_model_by_coord
 
 if TYPE_CHECKING:  # pragma: no cover
     from io import StringIO
@@ -161,7 +161,7 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
                             csv_filename: PathLike='',
                             plane_bdf_filename1: PathLike='plane_face1.bdf',
                             plane_bdf_filename2: PathLike='plane_face2.bdf',
-                            plane_bdf_offset: float=0.0,
+                            plane_y_offset: float=0.0,
                             face_data=None,
                             debug_vectorize: bool=True,
                             stop_on_failure: bool=False,
@@ -197,6 +197,9 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
         verify the vectorization is correct
     stop_on_failure : bool; default=False
         useful for debugging or things you know should be cut
+    plane_atol : float; default=0.
+        A standard parameteric coordinate ranges from [0., 1.].
+        This bumps that so it's [-plane, 1+plane_atol].
 
     """
     log = SimpleLogger()
@@ -258,12 +261,24 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
             y3 = xyz3_cid_cut[:, 1]
 
             with np.errstate(divide='ignore'):
-                # percent = (y - y1_local) / (y2_local - y1_local)
-                t1 = y1 / (y1 - y2)  # nodes 1-2 = edge 1
-                t2 = y2 / (y2 - y3)  # nodes 2-3 = edge 2
-                t3 = y3 / (y3 - y1)  # nodes 3-1 = edge 3
+                # t = percent = (y - y1_local) / (y2_local - y1_local)
+                # t = (0 -y1_local) / (y2_local - y1_local)
+                #
+                # Parameteric coords (n1 -> n2)
+                # y = y1*(1-t) + y2*t
+                # y = y1 + (y2-y1)*t
+                # t = (y-y1) / (y2-y1)
+                # let y=0
+                # t = y1 / (y1-y2)
+
+                # ****t is defined 1 -> 2****
+                # y = y1*(1-t) + y2*t
+                t1 = y1 / (y1 - y2)  # nodes 1->2 = edge 1
+                t2 = y2 / (y2 - y3)  # nodes 2->3 = edge 2
+                t3 = y3 / (y3 - y1)  # nodes 3->1 = edge 3
 
             t = np.column_stack([t1, t2, t3])
+            print(f'percent t:\n{t}')
             is_cut = ((0.0 <= t) & (t <= 1.0))
             # print(is_cut)
             # # not_cut = ~is_cut_mat
@@ -291,6 +306,7 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
             rod_nids_list = []
             rod_xyz_global_list = []
             rod_xyz_local_list = []
+            # rod_xyz_local_interp_list = []
 
             xyz_cid_cut0 = [xyz1_cid_cut0, xyz2_cid_cut0, xyz3_cid_cut0]
             xyz_cid_cut = [xyz1_cid_cut, xyz2_cid_cut, xyz3_cid_cut]
@@ -306,7 +322,9 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
                 eids_list, nids_list, cut_edges_list,
                 # rods
                 rod_eids_list, rod_nids_list,
-                rod_xyz_global_list, rod_xyz_local_list)
+                rod_xyz_global_list, rod_xyz_local_list,
+                # rod_xyz_local_interp_list,
+            )
 
             eid0, nid0, rod_nid0 = _cut_facev(
                 icut23, t, 1, 2,
@@ -334,40 +352,62 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
 
             # out = local_points, global_points, result, geometry
             rod_eids = np.hstack(rod_eids_list)
-            rod_nids = np.vstack(rod_nids_list)
+            rod_nids = np.hstack(rod_nids_list)
+            nnode = len(rod_nids)
+            rod_nids2d = rod_nids.reshape(nnode//2, 2)
+            # print(f'rod_eids = {rod_eids}; n={len(rod_eids)}')
+            # print(f'rod_nids = {rod_nids}; n={len(rod_nids)}')
             cut_edges = np.vstack(cut_edges_list)
             # rod_elements.append([eid_new, nid_new, nid_new+1])
-            rod_elements = np.column_stack([rod_eids, cut_edges])
+            # rod_elements = np.column_stack([rod_eids, cut_edges])
+            # neid = len(rod_eids) // 2
+            # rod_eids_short = rod_eids.reshape(2, neid)[:, 0]
+            rod_eids_short = rod_eids[::2]
+            rod_eid_nodes = np.column_stack([
+                rod_eids_short, rod_nids2d])
 
             rod_xyz_global = np.vstack(rod_xyz_global_list)
             rod_xyz_local = np.vstack(rod_xyz_local_list)
-            print(f'rod_eids={rod_eids}')
-            print(f'rod_xyz_global:\n{rod_xyz_global}')
-            print(f'rod_xyz_local:\n{rod_xyz_local}')
+            # rod_xyz_local_interp = np.vstack(rod_xyz_local_interp_list)
+            print(f'A-rod_eids={rod_eids}')
+            print(f'A-rod_xyz_global:\n{rod_xyz_global}')
+            print(f'A-rod_xyz_local:\n{rod_xyz_local}')
+            print(f'A-rod_elements_short:\n{rod_eids_short}')
+            print(f'A-rod_nodes:\n{rod_nids}')
+
+            print(f'A-rod_eid_nodes:\n{rod_eid_nodes}')
+            # print(f'A-rod_elements:\n{rod_elements}')
             results = np.column_stack([rod_xyz_local, rod_xyz_global])
             found_cut = (len(rod_nids) > 0)
+            # rod_xyzs = rod_xyz_local
 
-            rods = (rod_nids, rod_xyz_local, rod_elements)
+            # rod_nids
+            rods = (rod_eid_nodes, rod_nids, rod_xyz_local)
+            # rods = (rod_eid_nodes, rod_nids, rod_xyzs)
 
-            nelemi = len(rod_elements)
+            nelemi = len(rod_eid_nodes)
+            # print(f'nelemi={nelemi}')
             # nnodei = len(rod_nids_array)
             nnodei = 4 * nelemi
             # assert nelemi * 4 == nnodei, (nelemi, nnodei)
             # print(nelemi, nnodei)
 
-            assert rod_elements.shape[1] == 3, rod_elements.shape
+            assert rod_eid_nodes.shape[1] == 3, rod_eid_nodes.shape
 
             # TODO: should be on - buggy
-            # assert rod_nids.ndim == 1, (nelemi, nnodei, rod_nids.shape)
-            # assert len(rod_nids) == nnodei, rod_nids.shape
+            assert rod_nids.ndim == 1, (nelemi, nnodei, rod_nids.shape)
+            # assert len(rod_nids) == nnodei, (rod_nids.shape, rod_nids)
 
             # geometry_temp.append([eid, nid_new] + cut_edgei)
             print(rod_eids.shape, rod_nids.shape, cut_edges.shape)
+            assert len(rod_eids) == len(rod_nids)
+            assert len(rod_eids) == len(cut_edges)
             geometry = np.column_stack([
                 rod_eids, rod_nids, cut_edges,
             ])
-            assert geometry.shape == (2 * nelemi, 4), f'expected=({2*nelemi}, 4); geometry={geometry.shape}'
-            assert rod_xyzs.shape == (nnodei, 3),     f'expected=({nnodei}, 6); rod_xyzs={rod_xyzs.shape}'
+            print(f'geometry:\n{geometry}')
+            assert geometry.shape == (2 * nelemi, 4), f'expected=({2*nelemi}, 4); geometry={geometry.shape} nelemi={nelemi}'
+            # assert rod_xyzs.shape == (nnodei, 3),     f'expected=({nnodei}, 6); rod_xyzs={rod_xyzs.shape}'
 
             # curve_data = np.concatenate((geometry_array2, results_array), axis=1)
             # header2 = f'Curve {i+1:d}\n'
@@ -384,7 +424,7 @@ def cut_face_model_by_coord(bdf_filename: PathLike | BDF,
         skip_cleanup=skip_cleanup,
         plane_bdf_filename1=plane_bdf_filename1,
         plane_bdf_filename2=plane_bdf_filename2,
-        plane_bdf_offset=plane_bdf_offset,
+        plane_y_offset=plane_y_offset,
         debug_vectorize=debug_vectorize,
         stop_on_failure=stop_on_failure)
     if csv_filename and unique_geometry_array is not None:
@@ -409,7 +449,8 @@ def _cut_facev(
         rod_nids_list: list[np.ndarray],
         rod_xyz_global_list: list[np.ndarray],
         rod_xyz_local_list: list[np.ndarray],
-) -> tuple[int, int, int]:
+        # rod_xyz_local_interp_list: : list[np.ndarray],
+        ) -> tuple[int, int, int]:
     neid = icut.sum()
     if neid == 0:
         return eid0, nid0, rod_nid0
@@ -425,19 +466,19 @@ def _cut_facev(
     ic_set.remove(ia)
     ic_set.remove(ib)
     ic = ic_set.pop()
+    nida = tri_nodes_cut0[0, ia]
+    nidb = tri_nodes_cut0[0, ib]
+    nidc = tri_nodes_cut0[0, ic]
+    print(f'iabc=({ia},{ib},{ic}) -> nids0={nida},{nidb},{nidc}')
     # print(f'ic = {ic}')
 
     # these are the source node ids from eids_cut
     cut_edge2 = tri_nodes_cut0[icut, :][:, [ia, ib]] # nids=2,3
     cut_edge3 = tri_nodes_cut0[icut, :][:, [ib, ic]] # nids=3,1
-    if 0:
-        source_eids = source_eids_
-        source_cut_nids = cut_edge2
-        rod_nids = np.arange(rod_nid0, rod_nid0 + neid)
-    else:
-        source_eids = np.column_stack([source_eids_, source_eids_]).reshape(2*neid)
-        source_cut_nids = np.column_stack([cut_edge2, cut_edge3]).reshape(2*neid,2)
-        rod_nids = np.arange(rod_nid0, rod_nid0 + 2 * neid)
+    source_eids = np.column_stack([source_eids_, source_eids_]).reshape(2*neid)
+    source_cut_nids = np.column_stack([cut_edge2, cut_edge3]).reshape(2*neid,2)
+    rod_nids = np.arange(rod_nid0, rod_nid0 + 2 * neid)
+    assert len(source_eids) == len(rod_nids)
     t2 = t[icut, ia]  # nodes 2-3
     t3 = t[icut, ib]  # nodes 3-1
     # edge 2 and 3 are cut
@@ -451,11 +492,29 @@ def _cut_facev(
     # avg_xyz = xyz2 * percent + xyz1 * (1 - percent)
     # Then we just crank the formula where we set the value of "y" to 0.0:
     #   percent = (0. - y1_local) / (y2_local - y1_local)
-    e2_local = xyz2_local + (xyz3_local - xyz2_local) * t2[:, np.newaxis]
-    e3_local = xyz3_local + (xyz1_local - xyz3_local) * t3[:, np.newaxis]
+    # e2_local = xyz2_local + (xyz3_local - xyz2_local) * t2[:, np.newaxis]
+    # e3_local = xyz3_local + (xyz1_local - xyz3_local) * t3[:, np.newaxis]
 
-    e2_global = xyz2_global + (xyz3_global - xyz2_global) * t2[:, np.newaxis]
-    e3_global = xyz3_global + (xyz1_global - xyz3_global) * t3[:, np.newaxis]
+    # # y = y1*(1-t) + y2*t
+    # t1 = y1 / (y1 - y2)  # nodes 1->2 = edge 1
+    e2_local = xyz3_local * t2[:, np.newaxis] + xyz2_local * (1 - t2)[:, np.newaxis]
+    e3_local = xyz1_local * t3[:, np.newaxis] + xyz3_local * (1 - t3)[:, np.newaxis]
+    length = np.linalg.norm(e2_local - e3_local, axis=1)
+    print(f'length={length}; sum={length.sum()}')
+
+    print(f'e2_local={e2_local}')
+    print(f'  t2={t2}')
+    print(f'  xyz2_local={xyz2_local}')
+    print(f'  xyz3_local={xyz3_local}')
+    print(f'e3_local={e3_local}')
+    print(f'  t3={t3}')
+    print(f'  xyz3_local={xyz3_local}')
+    print(f'  xyz1_local={xyz1_local}')
+
+    # e2_global = xyz2_global + (xyz3_global - xyz2_global) * t2[:, np.newaxis]
+    # e3_global = xyz3_global + (xyz1_global - xyz3_global) * t3[:, np.newaxis]
+    e2_global = xyz3_global * t2[:, np.newaxis] + xyz2_global * (1 - t2)[:, np.newaxis]
+    e3_global = xyz1_global * t3[:, np.newaxis] + xyz3_global * (1 - t3)[:, np.newaxis]
 
     # geometry_temp.append([eid, nid_new] + cut_edgei)
     ncuti = neid
@@ -484,19 +543,25 @@ def _cut_facev(
     # raise RuntimeError('icut23')
     rod_eids_list.append(source_eids)
     rod_nids_list.append(rod_nids)
+    assert len(source_eids) == len(rod_nids)
+    rod_eids_array = np.hstack(rod_eids_list)
+    rod_nids_array = np.hstack(rod_nids_list)
+    assert len(rod_eids_array) == len(rod_nids_array)
     rod_xyz_global_list.append(e2_global)
     rod_xyz_global_list.append(e3_global)
     rod_xyz_local_list.append(e2_local)
     rod_xyz_local_list.append(e3_local)
+    # rod_xyz_local_interp_list.append(e_interp)
 
     # print(source_eids.shape, rod_nids.shape, source_cut_nids.shape)
-    geometryi = np.column_stack([
-        source_eids, rod_nids, source_cut_nids,
-    ])
-    print(f'geometryi:\n{geometryi}')
+    # geometryi = np.column_stack([
+    #     source_eids, rod_nids, source_cut_nids,
+    # ])
+    # print(f'geometryi:\n{geometryi}')
+    print(f'rod_xyz_local:\n{np.vstack(rod_xyz_local_list)}')
     eid0 += neid
     nid0 += neid
-    rod_nid0 += 2 * ncuti
+    rod_nid0 += len(rod_nids)
     return eid0, nid0, rod_nid0
 
 def export_face_cut(csv_filename: PathLike,
@@ -599,7 +664,7 @@ def _cut_face_model_by_coord(log: SimpleLogger,
                              skip_cleanup: bool=True,
                              plane_bdf_filename1: PathLike='plane_face1.bdf',
                              plane_bdf_filename2: PathLike='plane_face2.bdf',
-                             plane_bdf_offset: float=0.0,
+                             plane_y_offset: float=0.0,
                              debug_vectorize: bool=True,
                              stop_on_failure: bool=False,
                              ) -> tuple[bool, np.ndarray, np.ndarray,
@@ -633,9 +698,11 @@ def _cut_face_model_by_coord(log: SimpleLogger,
     nodal_result : (nelements, ) float np.ndarray
         the result to cut the model with
     plane_atol : float; default=1e-5
-        the tolerance for a line that's located on the y=0 local plane
-    plane_bdf_offset : float; default=0.
-        ???
+        A standard parameteric coordinate ranges from [0., 1.].
+        This bumps that so it's [-plane, 1+plane_atol].
+        The tolerance for a line that's located on the y=0 local plane.
+    plane_y_offset : float; default=0.
+        shifts the plane ylocation (used to make many slices)
     debug_vectorize : bool; default=True
         verify the vectorization is correct
 
@@ -731,7 +798,7 @@ def _cut_face_model_by_coord(log: SimpleLogger,
             skip_cleanup=skip_cleanup,
             plane_bdf_filename1=plane_bdf_filename1,
             plane_bdf_filename2=plane_bdf_filename2,
-            plane_bdf_offset=plane_bdf_offset,
+            plane_y_offset=plane_y_offset,
             debug_vectorize=debug_vectorize,
             stop_on_failure=True)
         #print(coord)
@@ -812,7 +879,7 @@ def cut_faces(node_ids: np.ndarray,
               skip_cleanup: bool=True,
               plane_bdf_filename1: PathLike='plane_face1.bdf',
               plane_bdf_filename2: PathLike='plane_face2.bdf',
-              plane_bdf_offset: float=0.,
+              plane_y_offset: float=0.,
               debug_vectorize: bool=True,
               stop_on_failure: bool=False,
               ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -837,8 +904,8 @@ def cut_faces(node_ids: np.ndarray,
         the tolerance for a line that's located on the y=0 local plane
     skip_cleanup : bool; default=True
         cleanup C and O loops
-    plane_bdf_offset : float; default=0.
-        shifts the plane ylocation...remove...
+    plane_y_offset : float; default=0.
+        shifts the plane ylocation (used to make many slices)
     stop_on_failure : bool; default=False
         useful for debugging or things you know should be cut
 
@@ -895,9 +962,9 @@ def cut_faces(node_ids: np.ndarray,
             eid_new, nid_new,
             fbdf1, fbdf2,
             nodal_result,
-            coord, plane_atol, plane_bdf_offset=plane_bdf_offset)
+            coord, plane_atol, plane_y_offset=plane_y_offset)
         local_points, global_points, result, geometry = out
-        rod_nids, rod_xyzs, rod_elements = rods
+        rod_nids, rod_xyzs, rod_eid_nodes = rods
     else:
         local_points_list: list[np.ndarray] = []
         global_points_list: list[np.ndarray] = []
@@ -906,32 +973,32 @@ def cut_faces(node_ids: np.ndarray,
 
         rod_nids_list: list[Any] = []
         rod_xyzs_list: list[np.ndarray] = []
-        rod_elements_list: list[tuple[int, int, int]] = []
+        rod_eid_nodes_list: list[tuple[int, int, int]] = []
         for eid, iface in zip(tri_face_eids2, tri_ifaces2):
             inid1, inid2, inid3 = iface
             # local element is the triangle in the cut plane
-            xyz1_local = xyz_cid[inid1]
-            xyz2_local = xyz_cid[inid2]
-            xyz3_local = xyz_cid[inid3]
+            xyz1_local = xyz_cid[inid1, :]
+            xyz2_local = xyz_cid[inid2, :]
+            xyz3_local = xyz_cid[inid3, :]
 
             # global location of the triangle
-            xyz1_global = xyz_cid0[inid1]
-            xyz2_global = xyz_cid0[inid2]
-            xyz3_global = xyz_cid0[inid3]
+            xyz1_global = xyz_cid0[inid1, :]
+            xyz2_global = xyz_cid0[inid2, :]
+            xyz3_global = xyz_cid0[inid3, :]
 
             #print('  intersection-eid=%s face=%s' % (eid, face))
             eid_new, nid_new = _interpolate_face_to_bar(
                 eid, eid_new, nid_new,
                 fbdf1, fbdf2,
-                inid1, inid2, inid3,
+                node_ids, inid1, inid2, inid3,
                 xyz1_local, xyz2_local, xyz3_local,
                 xyz1_global, xyz2_global, xyz3_global,
                 nodal_result,
                 local_points_list, global_points_list,
                 geometry_list, result_list,
-                rod_nids_list, rod_xyzs_list, rod_elements_list,
+                rod_nids_list, rod_xyzs_list, rod_eid_nodes_list,
                 coord, plane_atol,
-                plane_bdf_offset=plane_bdf_offset)
+                plane_y_offset=plane_y_offset)
 
             if len(local_points_list) != len(result_list):
                 msg = 'lengths are not equal; local_points=%s result=%s' % (
@@ -947,7 +1014,7 @@ def cut_faces(node_ids: np.ndarray,
         if fbdf2 is not None:
             fbdf2.close()
 
-    if len(rod_elements_list) == 0:
+    if len(rod_eid_nodes_list) == 0:
         os.remove(plane_bdf_filename1)
 
     if len(geometry_list) == 0:
@@ -961,17 +1028,21 @@ def cut_faces(node_ids: np.ndarray,
     #print('*results_array', results_array, type(results_array))
 
     geometry = np.array(geometry_list, dtype='int32')
-    rods_elements = np.array(rod_elements_list, dtype='int32')
+    rod_eid_nodes = np.array(rod_eid_nodes_list, dtype='int32')
     rod_nids = np.array(rod_nids_list, dtype='int32')
     rod_xyzs = np.array(rod_xyzs_list, dtype='float64')
-    rods = (rods_elements, rod_nids, rod_xyzs)
+    if 0:
+        print(f'rod_eid_nodes_good:\n{rod_eid_nodes}')
+        print(f'rod_nids_good:\n{rod_nids}')
+        print(f'rod_xyzs_good:\n{rod_xyzs}')
+    rods = (rod_eid_nodes, rod_nids, rod_xyzs)
 
-    nelemi = len(rods_elements)
+    nelemi = len(rod_eid_nodes)
     # nnodei = len(rod_nids)
     nnodei = 4 * nelemi
     # assert nelemi * 4 == nnodei, (nelemi, nnodei)
     # print(nelemi, nnodei)
-    assert rods_elements.shape[1] == 3, rods_elements.shape
+    assert rod_eid_nodes.shape[1] == 3, rod_eid_nodes.shape
     assert rod_nids.ndim == 1, rod_nids.shape
     # assert len(rod_nids) == nnodei, f'nelem={nelemi} nnodei={nnodei} rod_nids={rod_nids.shape}'
     assert geometry.shape == (2*nelemi, 4), geometry.shape
@@ -1415,7 +1486,7 @@ def _face_on_edge(eid: int, eid_new: int,
 # eid_new, nid_new, mid, area, J,
 # fbdf1, fbdf2,
 # nodal_result,
-# coord, plane_atol, plane_bdf_offset = plane_bdf_offset)
+# coord, plane_atol, plane_y_offset = plane_y_offset)
 
 def _interpolate_face_to_barv(eids: np.ndarray,
                               tri_ifaces: np.ndarray,
@@ -1428,18 +1499,18 @@ def _interpolate_face_to_barv(eids: np.ndarray,
                               nodal_result: np.ndarray,
                               coord: CORD2R,
                               plane_atol: float,
-                              plane_bdf_offset: float=0.):
+                              plane_y_offset: float=0.):
     """
     Parameters
     ----------
-    plane_bdf_offset : float; default=0.
-        ???
     fbdf1 : TextIO
         open file for the local element cross section;
         one file per cross section
     fbdf2 : TextIO
         open file for the global element cross section;
         one file for all cross sections?
+    plane_y_offset : float; default=0.
+        shifts the plane ylocation (used to make many slices)
 
     These edges have crossings.  We rework:
      y = m*x + b
@@ -1486,14 +1557,14 @@ def _interpolate_face_to_barv(eids: np.ndarray,
     2    e12, e23    1., 0.
     3    e13, e23    1., 1.
     """
-    local_points: list[np.ndarray] = []
-    global_points: list[np.ndarray] = []
-    result: list[np.ndarray] = []
-    geometry: list[np.ndarray] = []
+    local_points_list: list[np.ndarray] = []
+    global_points_list: list[np.ndarray] = []
+    result_list: list[np.ndarray] = []
+    geometry_list: list[np.ndarray] = []
 
-    rod_nids: list[np.ndarray] = []
-    rod_xyzs: list[np.ndarray] = []
-    rod_elements: list[np.ndarray] = []
+    rod_nids_list: list[np.ndarray] = []
+    rod_xyzs_list: list[np.ndarray] = []
+    rod_elements_list: list[np.ndarray] = []
 
     inid1 = tri_ifaces[:, 0]
     inid2 = tri_ifaces[:, 1]
@@ -1594,6 +1665,9 @@ def _interpolate_face_to_barv(eids: np.ndarray,
         # in_range = abs(b) < 0.5+tol
         #
         in_range = abs_percent_shifted < 0.5 + plane_atol
+        in_range2 = -plane_atol <= percents <= (1 + plane_atol)
+        assert np.assert_equal(in_range, in_range2)
+
         ivalid2 = in_range
         # if not in_range:
         #     #print('  **too big...\n')
@@ -1645,7 +1719,7 @@ def _interpolate_face_to_barv(eids: np.ndarray,
                     out_grid1 = ['GRID', nid_new, None, ] + list(avg_locali)
                     out_grid2 = ['GRID', nid_new, None, ] + list(avg_globali)
                     #rod_elements, rod_nids, rod_xyzs
-                    out_grid1[4] += plane_bdf_offset
+                    out_grid1[4] += plane_y_offset
                     msg1s.append(out_grid1)
                     msg2s.append(out_grid2)
 
@@ -1775,7 +1849,7 @@ def _interpolate_face_to_barv(eids: np.ndarray,
                     out_grid1 = ['GRID', nidi, '', ] + list(avg_locali)
                     out_grid2 = ['GRID', nidi, '', ] + list(avg_globali)
                     # rod_elements, rod_nids, rod_xyzs
-                    out_grid1[4] += plane_bdf_offset
+                    out_grid1[4] += plane_y_offset
                     msg1s.append(out_grid1)
                     msg2s.append(out_grid2)
 
@@ -1817,6 +1891,7 @@ def _interpolate_face_to_barv(eids: np.ndarray,
 def _interpolate_face_to_bar(eid: int, eid_new: int,
                              nid_new: int,
                              fbdf1: TextIO, fbdf2: TextIO,
+                             node_ids : np.ndarray,
                              inid1: int, inid2: int, inid3: int,
                              xyz1_local: np.ndarray, xyz2_local: np.ndarray, xyz3_local: np.ndarray,
                              xyz1_global: np.ndarray, xyz2_global: np.ndarray, xyz3_global: np.ndarray,
@@ -1826,18 +1901,27 @@ def _interpolate_face_to_bar(eid: int, eid_new: int,
                              geometry_list: list[np.ndarray],
                              result_list: list[np.ndarray],
                              # eid, nid_a_prime, nid_b_prime
-                             rod_nids: list[int],
-                             rod_xyzs: list[np.ndarray],
-                             rod_elements: list[tuple[int, int, int]],
+                             rod_nids_list: list[int],
+                             rod_xyzs_list: list[np.ndarray],
+                             rod_eid_nodes_list: list[tuple[int, int, int]],
                              coord: CORD2R,
                              plane_atol: float,
-                             plane_bdf_offset: float=0.,
+                             plane_y_offset: float=0.,
                              mid: int=1, area: float=1.0, J: float=1.0) -> tuple[int, int]:
     """
     Parameters
     ----------
-    plane_bdf_offset : float; default=0.
-        ???
+    inid1 : int
+        node index for nid1
+    inid2 : int
+        node index for nid2
+    inid3 : int
+        node index for nid3
+    plane_y_offset : float; default=0.
+        shifts the plane ylocation (used to make many slices)
+    plane_atol : float; default=1e-5
+        A standard parameteric coordinate ranges from [0., 1.].
+        This bumps that so it's [-plane, 1+plane_atol].
     fbdf1 : TextIO
         open file for the local element cross section;
         one file per cross section
@@ -1972,6 +2056,11 @@ def _interpolate_face_to_bar(eid: int, eid_new: int,
 
         avg_local  = p2_local  * percent + p1_local  * (1 - percent)
         avg_global = p2_global * percent + p1_global * (1 - percent)
+        if 0:
+            print(f'percent={percent} (a,b)=({inid_a},{inid_b}) -> ({node_ids[inid_a]},{node_ids[inid_b]})')
+            print(f'  avg_local = {avg_local}')
+            print(f'  p1_local  = {p1_local}')
+            print(f'  p2_local  = {p2_local}')
         #projected_points.append(avg_global)
 
         xl, yl, zl = avg_local
@@ -1987,9 +2076,9 @@ def _interpolate_face_to_bar(eid: int, eid_new: int,
         out_grid1 = ['GRID', nid_new, None, ] + list(avg_local)
         out_grid2 = ['GRID', nid_new, None, ] + list(avg_global)
         #rod_elements, rod_nids, rod_xyzs
-        rod_nids.append(nid_new)
-        rod_xyzs.append(avg_local)
-        out_grid1[4] += plane_bdf_offset
+        rod_nids_list.append(nid_new)
+        rod_xyzs_list.append(avg_local)
+        out_grid1[4] += plane_y_offset
         msg1s.append(out_grid1)
         msg2s.append(out_grid2)
         # msg1 += print_card_8(out_grid1)
@@ -2060,7 +2149,7 @@ def _interpolate_face_to_bar(eid: int, eid_new: int,
         fbdf1.write(print_card_8(conrod))
     if fbdf2 is not None:
         fbdf2.write(print_card_8(conrod))
-    rod_elements.append([eid, nid_a_prime, nid_b_prime])
+    rod_eid_nodes_list.append([eid, nid_a_prime, nid_b_prime])
 
     eid_new += 1
     nid_new += 2

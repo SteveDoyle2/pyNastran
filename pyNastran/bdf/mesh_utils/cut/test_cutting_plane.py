@@ -20,8 +20,9 @@ from cpylog import SimpleLogger
 
 from pyNastran.bdf.mesh_utils.cut.cutting_plane_plotter import cut_and_plot_model
 from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
-    cut_edge_model_by_coord, cut_face_model_by_coord,
-    connect_face_rows, split_to_trias)
+    cut_face_model_by_coord, connect_face_rows, split_to_trias)
+from pyNastran.bdf.mesh_utils.cut.cut_edge_model_by_plane import (
+    cut_edge_model_by_coord)
 #from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.op2.op2_geom import read_op2_geom
 
