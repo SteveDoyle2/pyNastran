@@ -188,6 +188,7 @@ class TestStiffnessPlot(unittest.TestCase):
         # skipped this...1/12 * cut_length * t**3
         i_expected = 0.09375  # A*d^2 of 2 triangles
         y_expected = [0.0]
+        L_expected = [cut_length]
         A_expected = [t * cut_length]
         I_expected = [[i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]
         J_expected = [i_expected]
@@ -220,8 +221,40 @@ class TestStiffnessPlot(unittest.TestCase):
             assert np.allclose(e11, Ex)
             assert np.allclose(e22, Ey)
             assert np.allclose(g12, Gxy)
+            # expected:
+            # percent=0.16666666666666666 (a,b)=(1,2) -> (102,103)
+            #   avg_local = [ 3.00000000e+00 -5.55111512e-17  0.00000000e+00]
+            #   p1_local  = [ 3.  -0.5  0. ]
+            #   p2_local  = [3.  2.5 0. ]
+            # percent=0.16666666666666666 (a,b)=(0,2) -> (101,103)
+            #   avg_local = [ 5.00000000e-01 -5.55111512e-17  0.00000000e+00]
+            #   p1_local  = [ 0.  -0.5  0. ]
+            #   p2_local  = [3.  2.5 0. ]
+            # percent=0.16666666666666666 (a,b)=(0,2) -> (101,103)
+            #   avg_local = [ 5.00000000e-01 -5.55111512e-17  0.00000000e+00]
+            #   p1_local  = [ 0.  -0.5  0. ]
+            #   p2_local  = [3.  2.5 0. ]
+            # percent=0.16666666666666666 (a,b)=(0,3) -> (101,104)
+            #   avg_local = [ 0.00000000e+00 -5.55111512e-17  0.00000000e+00]
+            #   p1_local  = [ 0.  -0.5  0. ]
+            #   p2_local  = [0.  2.5 0. ]
+            # ------
+            # rods = (rod_eid_nodes, rod_nids, rod_interp_local_xyz)
+            # rod_eid_nodes:
+            # [[ 10   1   2]
+            #  [-10   5   6]]
+            # rod_nids:
+            # [1 2 5 6]
+            # rod_xyzs:
+            # [[ 3.00000000e+00 -5.55111512e-17  0.00000000e+00]
+            #  [ 5.00000000e-01 -5.55111512e-17  0.00000000e+00]
+            #  [ 5.00000000e-01 -5.55111512e-17  0.00000000e+00]
+            #  [ 0.00000000e+00 -5.55111512e-17  0.00000000e+00]]
+            #
+            #--------------------------------------------------------
+            # some stuff seems wrong...
             # [source_eid, new_nid, source_nid1, source_nid2]
-            # geometry
+            # geometry - seems like it's missing a -10 line?
             # array([[ 10,   2, 101, 103],
             #        [-10,   6, 101, 104],
             #        [ 10,   1, 102, 103]], dtype=int32)]
@@ -252,10 +285,12 @@ class TestStiffnessPlot(unittest.TestCase):
                 # cg_span_png_filename='y_cg_vs_span.png',
                 debug_vectorize=True,
                 debug_v3=False,
+                # debug_v3=False,
             )
-            (y, A, I, J,
-             ExI, EyI, GJ, avg_centroid,
-             plane_bdf_filenames1, plane_bdf_filenames2, ifig) = moi_data
+            out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
+            (y, L, A, I, J,
+             ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+
             Ex = ExI[:, 0] / I[:, 0]
             Ey = EyI[:, 0] / I[:, 0]
             G = GJ / J
@@ -271,7 +306,8 @@ class TestStiffnessPlot(unittest.TestCase):
             assert np.allclose(Ey, Ey_expected)
 
             assert np.allclose(y, y_expected)
-            assert np.allclose(A, A_expected)
+            assert np.allclose(L, L_expected), f'L={L} expected={L_expected}'
+            assert np.allclose(A, A_expected), f'A={A} expected={A_expected}'
             assert np.allclose(I, I_expected), (I, I_expected)
             assert np.allclose(J, J_expected)
             assert np.allclose(ExI, ExI_expected), ExI.tolist()
@@ -337,9 +373,9 @@ class TestStiffnessPlot(unittest.TestCase):
             # cg_span_png_filename='y_cg_vs_span.png',
             debug_vectorize=True,
         )
-        (y, A, I, J,
-         ExI, EyI, GJ, avg_centroid,
-         plane_bdf_filenames1, plane_bdf_filenames2, ifig) = moi_data
+        (out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig) = moi_data
+        (y, L, A, I, J,
+         ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
 
         if IS_PANDAS:
             y1, A1, I1, J1, ExI1, EyI1, GJ1, avg_centroid1 = load_moi_data(cut_data_span_filename)
@@ -402,9 +438,9 @@ class TestStiffnessPlot(unittest.TestCase):
             # cg_span_png_filename='y_cg_vs_span.png',
             debug_vectorize=True,
         )
-        (y, A, I, J,
-         ExI, EyI, GJ, avg_centroid,
-         plane_bdf_filenames1, plane_bdf_filenames2, ifig) = moi_data
+        out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
+        (y, L, A, I, J,
+         ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
         # print(f'y = {y.tolist()}')
         # print(f'A = {A.tolist()}')
         # print(f'I = {I.tolist()}')
@@ -466,9 +502,9 @@ class TestStiffnessPlot(unittest.TestCase):
             # cg_span_png_filename='y_cg_vs_span.png',
             debug_vectorize=True,
         )
-        (y, A, I, J,
-         ExI, EyI, GJ, avg_centroid,
-         plane_bdf_filenames1, plane_bdf_filenames2, ifig) = moi_data
+        out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
+        (y, L, A, I, J,
+         ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
         # print(f'y = {y.tolist()}')
         # print(f'A = {A.tolist()}')
         # print(f'I = {I.tolist()}')
@@ -627,11 +663,11 @@ class TestStiffnessPlot(unittest.TestCase):
                 amoi_span_png_filename='y_amoi_vs_span.png',
                 e_amoi_span_png_filename='y_e_amoi_vs_span.png',
                 cg_span_png_filename='y_cg_vs_span.png',
-                debug_vectorize=True,
+                debug_vectorize=False,
             )
-            (y, A, I, J,
-             ExI, EyI, GJ, avg_centroid,
-             plane_bdf_filenames1, plane_bdf_filenames2, ifig) = moi_data
+            out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
+            (y, L, A, I, J,
+             ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
             # assert np.allclose(avg_centroid, avg_centroid0)
             # print(f'y = {y.tolist()}')
             # print(f'A = {A.tolist()}')
@@ -687,8 +723,8 @@ class TestStiffnessPlot(unittest.TestCase):
             assert np.allclose(ExI, ExI_expected)
             assert np.allclose(EyI, EyI_expected), EyI.tolist()
             assert np.allclose(GJ, GJ_expected), GJ.tolist()
-            for plane_bdf_filename in plane_bdf_filenames1:
-                os.remove(plane_bdf_filename)
+            # for plane_bdf_filename in plane_bdf_filenames1:
+            #     os.remove(plane_bdf_filename)
             for plane_bdf_filename in plane_bdf_filenames2:
                 os.remove(plane_bdf_filename)
 
@@ -735,9 +771,9 @@ class TestStiffnessPlot(unittest.TestCase):
                 cg_span_png_filename='x_cg_vs_span.png',
                 debug_vectorize=True,
             )
-            (x, A, I, J,
-             ExI, EyI, GJ, avg_centroid,
-             plane_bdf_filenames1, plane_bdf_filenames2, ifig) = moi_data
+            out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
+            (x, L, A, I, J,
+             ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
             # log.warning(f'x = {x.tolist()}')
             # log.warning(f'A = {A.tolist()}')
             x_expected = [80.844464, 161.54580800000002, 242.24715200000003, 322.94849600000003, 403.64984000000004, 484.35118400000005,
@@ -912,6 +948,8 @@ def _build_quad(log: SimpleLogger,
     model.add_grid(102, [3., 0., 0.])
     model.add_grid(103, [3., 3., 0.])
     model.add_grid(104, [0., 3., 0.])
+    # [101, 102, 103]
+    #
     model.add_cquad4(10, 11, [101, 102, 103, 104], zoffset=zoffset)
     coord = model.add_cord2r(
         cid=1,

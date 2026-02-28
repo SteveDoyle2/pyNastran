@@ -53,8 +53,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      e_amoi_span_png_filename: PathLike='e_amoi_vs_span.png',
                      cg_span_png_filename: PathLike='cg_vs_span.png',
                      plot: bool=True,
-                     show: bool=False) -> tuple[Any, Any, Any, Any,     # y, A, I, J,
-                                                Any, Any, Any, Any,     # ExI, EyI, GJ, avg_centroid,
+                     show: bool=False) -> tuple[dict[str, np.ndarray],       # y, L, A, I, J, ExI, EyI, GJ, avg_centroid,
                                                 list[str], list[str], int]:  # plane_bdf_filenames1, plane_bdf_filenames2, ifig
     """
     For a shell structure, cut and plot
@@ -138,7 +137,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         debug_v3=debug_v3,
         stop_on_failure=stop_on_failure,
     )
-    (thetas, stations, dx, dz, A, I, J, ExI, EyI, GJ, avg_centroid,
+    (thetas, stations, dx, dz, L, A, I, J, ExI, EyI, GJ, avg_centroid,
      plane_bdf_filenames, plane_bdf_filenames2) = out
 
     assert len(stations) > 0, stations
@@ -210,7 +209,11 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
             cg_span_png_filename=cg_span_png_filename,
         )
 
-    return stations, A, I, J, ExI, EyI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2, ifig
+    out_dict = {
+        'stations': stations, 'L': L, 'A': A, 'I': I, 'J': J,
+        'ExI': ExI, 'EyI': EyI, 'GJ': GJ, 'avg_centroid': avg_centroid,
+    }
+    return out_dict, plane_bdf_filenames, plane_bdf_filenames2, ifig
 
 
 def load_moi_data(csv_filename: PathLike) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray,
@@ -360,6 +363,7 @@ def _get_station_data(model: BDF,
     y = np.full(ny, np.nan, dtype='float64')
     dx = np.full(ny, np.nan, dtype='float64')
     dz = np.full(ny, np.nan, dtype='float64')
+    length = np.full(ny, np.nan, dtype='float64')
     area = np.full(ny, np.nan, dtype='float64')
     inertia = np.full((ny, 6), np.nan, dtype='float64')
     J = np.full(ny, np.nan, dtype='float64')
@@ -407,7 +411,7 @@ def _get_station_data(model: BDF,
         #moi_filename = 'amoi_%i.bdf' % i
         moi_filename = None
         log.info(f'calculate_area_moi {icut:d} (station={dy})')
-        (dxi, dzi, areai,
+        (dxi, dzi, lengthi, areai,
          inertiai, Ji,
          ExIi, EyIi, GJi, avg_centroidi) = calculate_area_moi(
             model, rods, normal_plane, thetas,
@@ -417,6 +421,7 @@ def _get_station_data(model: BDF,
         y[icut] = dy
         dx[icut] = dxi  # length
         dz[icut] = dzi  # height
+        length[icut] = lengthi
         area[icut] = areai
         inertia[icut, :] = inertiai
         # print(Ji, EIi, GJi)
@@ -433,7 +438,7 @@ def _get_station_data(model: BDF,
 
     out = (
         thetas, y, dx, dz,
-        area, inertia, J,
+        length, area, inertia, J,
         ExI, EyI, GJ,
         avg_centroid, plane_bdf_filenames1, plane_bdf_filenames2
     )
@@ -462,7 +467,7 @@ def _get_station_datai(model: BDF,
             # plane_bdf_filename='')
             plane_bdf_filename1=plane_bdf_filename1,
             plane_bdf_filename2=plane_bdf_filename2,
-            plane_bdf_offset=dy, face_data=face_data,
+            plane_y_offset=dy, face_data=face_data,
             debug_vectorize=debug_vectorize,
             debug_v3=debug_v3,
             stop_on_failure=stop_on_failure,
@@ -635,16 +640,21 @@ def calculate_area_moi(model: BDF,
     """
     assert isinstance(rods, tuple), type(rods)
     assert isinstance(thetas, dict), type(thetas)
-    rod_elements, rod_nids, rod_xyzs = rods
-    assert isinstance(rod_elements, np.ndarray), type(rod_elements)
+    rod_eid_nodes, rod_nids, rod_xyzs = rods
+    assert isinstance(rod_eid_nodes, np.ndarray), type(rod_eid_nodes)
     assert isinstance(rod_nids, np.ndarray), type(rod_nids)
     assert isinstance(rod_xyzs, np.ndarray), type(rod_xyzs)
 
-    eids = np.abs(rod_elements[:, 0])
+    if 0:
+        print(f'rod_eid_nodes:\n{rod_eid_nodes}')
+        print(f'rod_nids:\n{rod_nids}')
+        print(f'rod_xyzs:\n{rod_xyzs}')
+
+    eids = np.abs(rod_eid_nodes[:, 0])
     neids = len(eids)
     all_nids = rod_nids
-    n1 = rod_elements[:, 1]
-    n2 = rod_elements[:, 2]
+    n1 = rod_eid_nodes[:, 1]
+    n2 = rod_eid_nodes[:, 2]
     inid1 = np.searchsorted(all_nids, n1)
     inid2 = np.searchsorted(all_nids, n2)
     xyz1 = rod_xyzs[inid1, :]
@@ -653,7 +663,7 @@ def calculate_area_moi(model: BDF,
     length = np.linalg.norm(xyz2 - xyz1, axis=1)
     assert len(length) == neids
 
-    centroid, area, thickness, E = get_element_inertias(
+    centroid, length, area, thickness, E = get_element_inertias(
         model, normal_plane, thetas,
         eids, length, centroid)
 
@@ -665,6 +675,7 @@ def calculate_area_moi(model: BDF,
     ey = E[:, 1]
     gxy = E[:, 2]
 
+    total_length = length.sum()
     total_area = area.sum()
     if total_area == 0.0:
         avg_centroid = centroid.mean(axis=0)
@@ -749,7 +760,7 @@ def calculate_area_moi(model: BDF,
             centroid, avg_centroid, inertia, E,
         )
     out = (
-        dxi, dyi, total_area,
+        dxi, dyi, total_length, total_area,
         Isum, Jsum,
         ExIsum, EyIsum, GJsum, avg_centroid,
     )
@@ -807,6 +818,7 @@ def get_element_inertias(model: BDF,
     normal_plane_vector = normal_plane.copy().reshape((3, 1))
     cg_list: list[np.ndarray] = []
     area_list: list[float] = []
+    length_list: list[float] = []
     thickness_list: list[float] = []
     E_list: list[tuple[float, float, float]] = []
 
@@ -819,6 +831,7 @@ def get_element_inertias(model: BDF,
                 element, normal_plane, normal_plane_vector, lengthi)
             thetas[eid] = (thetad, Ex, Ey, Gxy)
             thickness_list.append(thicknessi)
+            length_list.append(lengthi)
             area_list.append(areai)
             cg_list.append(centroidi)
             E_list.append((Ex, Ey, Gxy))
@@ -826,10 +839,12 @@ def get_element_inertias(model: BDF,
             log.warning(element)
 
     centroid = np.array(cg_list, dtype='float64')
+    length2 = np.array(length_list, dtype='float64')
+    assert np.allclose(length, length2)
     area = np.array(area_list, dtype='float64')
     thickness = np.array(thickness_list, dtype='float64')
     E = np.array(E_list, dtype='float64')
-    return centroid, area, thickness, E
+    return centroid, length, area, thickness, E
 
 def _get_shell_inertia(element: CTRIA3 | CQUAD4,
                        normal_plane: np.ndarray,
