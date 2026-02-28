@@ -279,9 +279,9 @@ class TestBDFUnit(Tester):
         msg1_expected = r"INCLUDE 'C:\\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'" + '\n'
         msg2_expected = "INCLUDE '/opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'\n"
         msg3_expected = ("INCLUDE '/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/\n"
-                         "        pyNastran/bdf/writePath.py'\n")
+                         " pyNastran/bdf/writePath.py'\n")
         msg4_expected = (r"INCLUDE 'opt\NASA\test1\test2\test3\test4\formats\pynastran_v0.6" + '\\\n' +
-                         r"        pyNastran\bdf\writePath.py'" + '\n')
+                         r" pyNastran\bdf\writePath.py'" + '\n')
 
         # include_name = r'C:\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'
         # msg1 = write_include(include_name, is_windows=True)
@@ -302,6 +302,25 @@ class TestBDFUnit(Tester):
         msg4 = write_include(include_name, is_windows=True)
         sline4 = _split_path(include_name, is_windows=True)
         assert msg4 == msg4_expected, 'test4 actual:\n%s\nexpected:\n%s\n%s' % (msg4, msg4_expected, str(sline4))
+
+
+        msg5_expected = (
+            "INCLUDE 'C:\\\\NASA\\formats\\pynastran_v0.6\\pyNastran\\bdf\\" + '\n' +
+            " this_is_the_path_that_never_ends_it_goes_on_and_on_my_friends_despite_" + '\n' +
+            " not_needing_to.blk'" + '\n')
+        include_name = r'C:/NASA/formats/pynastran_v0.6/pyNastran/bdf/this_is_the_path_that_never_ends_it_goes_on_and_on_my_friends_despite_not_needing_to.blk'
+        msg5 = write_include(include_name, is_windows=True)
+        sline5 = _split_path(include_name, is_windows=True)
+        assert msg5 == msg5_expected, 'test5 actual:\n%r\nexpected:\n%r\n%s' % (msg5, msg5_expected, str(sline5))
+
+        msg6_expected = (
+            "INCLUDE 'C:\\\\NASA\\formats\\pynastran_v0.6\\pyNastran\\bdf\\" + '\n' +
+            " this_is_the_path_that_never_ends_it_goes_on_and_on_my_friends_despit" + '\n' +
+            " e  not_needing_to.blk'" + '\n')
+        include_name = r'C:/NASA/formats/pynastran_v0.6/pyNastran/bdf/this_is_the_path_that_never_ends_it_goes_on_and_on_my_friends_despite  not_needing_to.blk'
+        msg6 = write_include(include_name, is_windows=True)
+        sline6 = _split_path(include_name, is_windows=True)
+        assert msg6 == msg6_expected, 'test6 actual:\n%r\nexpected:\n%r\n%s' % (msg6, msg6_expected, str(sline6))
 
     def test_object_attributes_01(self):
         """tests getting object attributes"""

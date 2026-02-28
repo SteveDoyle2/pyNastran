@@ -95,13 +95,18 @@ def write_include(filename: PathLike,
     return out
 
 def _split_pathi(term: str) -> str:
+    """
+    If the segment is >72 characters, split it.
+    Nastran ignores whitespace, so split at a place
+    where there's not whitespace.
+    """
     #print(f'len(term)={len(term)}')
     assert len(term) > 70, term
     assert len(term) < 130, term
     isplit = 70
     while isplit > 0:
         chars = term[isplit-1:isplit+1]
-        print(f'chars = {chars!r}')
+        #print(f'chars = {chars!r}')
         if ' ' in chars:
             isplit -= 1
             continue
