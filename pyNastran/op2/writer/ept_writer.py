@@ -320,7 +320,7 @@ def write_pbeaml(name: str, pids: np.ndarray, itable: int,
                 raise RuntimeError(f'Unknown SO {so!r}')
 
         for xxb, so, nsm, dims in zip(prop.xxb, sos, nsms, prop.dim):
-            data = [xxb, so, nsm] + dims.tolist()
+            data = [xxb, so] + dims.tolist() + [nsm]
             nfieldsi += len(data)  # nstation*(3 + ndim)
             assert None not in data, data
             op2_file.write(struct2.pack(*data))

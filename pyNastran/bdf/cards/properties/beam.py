@@ -1932,7 +1932,8 @@ class PBEAML(IntegratedLineProperty):
         TODO: this doesn't work right for the calculation of area
               the card is all messed up
         """
-        pid, mid, beam_type, xxb, dims, group, so, nsm = pbeaml_op2_data_to_init(data, cls.valid_types)
+        pid, mid, beam_type, xxb, dims, group, so, nsm = pbeaml_op2_data_to_init(
+            data, cls.valid_types)
         return PBEAML(pid, mid, beam_type, xxb, dims, group=group,
                       so=so, nsm=nsm, comment=comment)
 
@@ -2141,7 +2142,7 @@ def pbeaml_op2_data_to_init(data, valid_types: dict[str, int]):
     isections = []
     for i, section in enumerate(sections):
         xxbi = section[1]
-        #print('PBEAML - i=%s x/xb=%s' % (i, xxbi))
+        # print('PBEAML - i=%s x/xb=%s' % (i, xxbi))
         if i > 0 and allclose(xxbi, 0.0):
             #print('  PBEAML - skipping i=%s x/xb=%s' % (i, xxbi))
             continue
@@ -2161,7 +2162,7 @@ def pbeaml_op2_data_to_init(data, valid_types: dict[str, int]):
 
         dim = list(section[2:-1])
         nsmi = section[-1]
-        #print(dim, section)
+        # print(dim, section)
         xxb.append(xxbi)
         so.append(so_string)
         dims.append(dim)

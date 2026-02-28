@@ -8,23 +8,22 @@ import copy
 import warnings
 import traceback
 from pathlib import Path
-from collections import defaultdict
 from functools import wraps
 from typing import Optional, Any
 import natsort
 
-from pyNastran.utils import print_bad_path
-from pyNastran.utils.dev import get_files_of_type
-
-ICON_PATH = Path('')
-try:
-    import json5 as json
-except ModuleNotFoundError:
-    warnings.warn('couldnt find json5, using json')
-    import json
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
+
+from pyNastran.utils import print_bad_path, PathLike
+from pyNastran.utils.dev import get_files_of_type
+
+# try:
+import json5 as json
+# except ModuleNotFoundError:
+#     warnings.warn('couldnt find json5, using json')
+#     import json
 
 from qtpy import QtCore
 Qt = QtCore.Qt
@@ -47,8 +46,6 @@ from qtpy.QtWidgets import (
 #     QToolButton, QMenuBar,
 # )
 # from qtpy.QtGui import QIcon
-QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
-QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
 
 from cpylog import SimpleLogger
 from pyNastran.gui.utils.qt.pydialog import QLineEdit, QFloatEdit, make_font
@@ -66,10 +63,9 @@ from pyNastran.f06.dev.flutter.preferences import (
     FLUTTER_BBOX_TO_ANCHOR_DEFAULT, LEGEND_LOC_DEFAULT,
     FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT, FREQ_NDIGITS_DEFAULT, FREQ_DIVERGENCE_TOL)
 
-from pyNastran.f06.flutter_response import FlutterResponse, Limit
+from pyNastran.f06.flutter_response import Limit  # FlutterResponse
 from pyNastran.f06.parse_flutter import get_flutter_units
 
-# FONT_SIZE = 12
 from pyNastran.f06.dev.flutter.utils import (
     validate_json,
     get_point_removal_str,
@@ -109,6 +105,10 @@ try:
 except ImportError:
     warnings.warn('>>> pip install python-docx')
     raise
+
+QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
+QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
+ICON_PATH = Path('')
 
 
 def split_by_pattern(strings: list[str],
@@ -2926,14 +2926,17 @@ def write_flutter_docx(docx_filename: str,
                        use_rhoref=None,
                        flutter_ncolumns=None,
                        progress_callback=None,
-                        ) -> None:
+                       ) -> None:
+    f06_filename0 = f06_filenames[0]
+    dirname = os.path.dirname(f06_filename0)
+    docx_filename = os.path.join(dirname, docx_filename)
+
     #------------------------------
     x_cutoff = None  # TODO: add me; fixes NaNs?
     # point_spacing = 8
     # point_spacing = 8
     make_pngs = True
     show_individual = False
-    write_filename = True
     freq_target = 0.5
     V_baseline = 1000
     # VL_target, VF_target
@@ -2948,10 +2951,14 @@ def write_flutter_docx(docx_filename: str,
     else:
         figsize = (24, 12)
 
+    # damping_required = None,
+    # damping_required_tol = None,
+
     damping_crossings = [
-        (0.00, 0.01),
-        (0.03, 0.03),
+        (damping_limit, damping_limit + damping_required_tol),
+        (damping_required, damping_required),
     ]
+    settings['damping_crossings'] = str(damping_crossings)
 
     #------------------------------
     damping_crossings2 = {}
@@ -2967,9 +2974,6 @@ def write_flutter_docx(docx_filename: str,
         damping_crossings2[key] = value
 
     #------------------------------
-    f06_filename0 = f06_filenames[0]
-    dirname = os.path.dirname(f06_filename0)
-    docx_filename = os.path.join(dirname, docx_filename)
     cases = []
     nfiles = len(f06_filenames)
     for ifile, f06_filename in enumerate(f06_filenames):
@@ -2997,8 +3001,8 @@ def write_flutter_docx(docx_filename: str,
             # ytick_major_locator_multiple=[0.02, None],   # WUT
         )
         resp.set_symbol_settings(
-            nopoints=False, show_mode_number=False, point_spacing=point_spacing,
-            markersize=5,
+            nopoints=False, show_mode_number=show_mode_number,
+            point_spacing=point_spacing, markersize=5,
         )
         vl_vf_crossing_dict, vd_crossing_dict = resp.get_flutter_crossings(
             damping_crossings=damping_crossings2, modes=modes,
@@ -3012,8 +3016,8 @@ def write_flutter_docx(docx_filename: str,
                 xlim=eas_lim, ylim_damping=ylim_damping, ylim_freq=ylim_freq,
                 # ivelocity: Optional[int]=None,
                 v_lines=v_lines,
-                damping_required=0.0,
-                damping_limit=0.03,
+                damping_required=damping_required,
+                damping_limit=damping_limit,
                 ncol=ncol, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                 # plot_freq_tol_filtered_lines=True,
                 damping_crossings=damping_crossings2, filter_damping=True,
@@ -3033,22 +3037,6 @@ def write_flutter_docx(docx_filename: str,
             plt.close()
         if show_individual:
             raise RuntimeError('stopping')
-
-        # if show_detailed_mode_info and 0:
-        #     keys = list(filename_base_to_vl_vf_vbase_dict)
-        #     # print('filename_base_to_vl_vf_vbase_dict.keys = ', keys)
-        #     # print(f'f06_filename_base = {f06_filename_base}')
-        #     if len(filename_base_to_vl_vf_vbase_dict):
-        #         v0i, vfi, vbase = filename_base_to_vl_vf_vbase_dict[f06_filename_base]
-        #         print(f'v0i={v0i}, vfi={vfi}, vbase={vbase}')
-        #         vl_array, vf_array = resp.hump_modes_from_VL_VF_dict(
-        #             vl_vf_crossing_dict, v0i, vfi, vbase, log)
-        #         if len(vl_array):
-        #             print('vl:')
-        #             print(vl_array)
-        #         if len(vf_array):
-        #             print('vf:')
-        #             print(vf_array)
 
         # print(f'modes = {modes}')
         # print(f'xcrossing_dict = {xcrossing_dict}')
@@ -3078,6 +3066,21 @@ def write_flutter_docx(docx_filename: str,
                 hump_message,
                 f06_filename, png_filename)
         cases.append(case)
+    _cases_to_document(log, docx_filename, cases, settings)
+
+
+def _cases_to_document(log: SimpleLogger,
+                       docx_filename: PathLike,
+                       cases: list, settings: dict[str, int | float],
+                       write_filename=True):
+    flutter_table = {
+        'Configuration': [],
+        # label_vg0: [],
+        # label_freq_g0: [],
+        # label_vg3: [],
+        # label_freq_g3: [],
+        # label_vd: [],
+    }
 
     document = Document()
     # _write_2d_table(document, settings, log, 'Settings')
@@ -3427,6 +3430,7 @@ def _write_name_value_table(document, records: dict[str, float]) -> None:
         row_cells[0].text = str(name)
         row_cells[1].text = str(value)
 
+
 def _write_2d_table(document: Document,
                     records: dict[str, list[list[float]]],
                     log: SimpleLogger, table_name: str) -> None:
@@ -3442,7 +3446,6 @@ def _write_2d_table(document: Document,
 
     Returns
     -------
-
     mass_table = {
         'Configuration': ['Clean'],
         'Mass (in)': [1.0],
