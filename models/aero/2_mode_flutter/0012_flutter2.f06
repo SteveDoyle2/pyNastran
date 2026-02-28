@@ -1,0 +1,942 @@
+1
+ 
+ 
+ 
+ 
+                                                             
+                    Unpublished Work. © 2024 Siemens        
+                         All Rights Reserved.                
+                                                             
+               This software and related documentation are   
+                    proprietary to Siemens Industry          
+                             Software Inc.                   
+                                                             
+              Siemens and the Siemens logo are registered    
+             trademarks of Siemens Trademark GmbH & Co. KG.  
+            Simcenter is a trademark, or registered trademark
+                of Siemens Industry Software Inc. or its     
+             subsidiaries in the United States and in other  
+             countries.  Simcenter NASTRAN is a registered   
+               trademark of Siemens Industry Software Inc.   
+            All other trademarks, registered trademarks or   
+               service marks belong to their respective      
+                        holders.                             
+                                                             
+           LIMITATIONS TO U.S. GOVERNMENT RIGHTS. UNPUBLISHED
+           - RIGHTS RESERVED UNDER THE COPYRIGHT LAWS OF THE 
+            UNITED STATES. This computer software and related
+               computer software documentation have been     
+            developed exclusively at private expense and are 
+           provided subject to the following rights:  If this
+               computer software and computer  software      
+            documentation qualify as "commercial items" (as  
+             that term is defined in FAR 2.101), their use,  
+            duplication or disclosure by the U.S. Government 
+           is subject to the protections and restrictions as 
+            set forth in the Siemens commercial license for  
+            software and/or documentation, as prescribed in  
+           FAR 12.212 and FAR 27.405(b)(2)(i) (for civilian  
+             agencies) and in DFARS 227.7202-1(a) and DFARS  
+           227.7202-3(a) (for the Department of Defense), or 
+           any successor or similar regulation, as applicable
+           or as amended from time to time.  If this computer
+           software and computer documentation do not qualify
+            as "commercial items", then they are "restricted 
+           computer software" and are provided with "restric-
+            tive rights", and their use, duplication or dis- 
+            closure by the U.S. Government is subject to the 
+            protections and restrictions as set forth in FAR 
+           27.404(b) and FAR 52-227-14 (for civilian agencies
+           ), and DFARS 227.7203-5(c) and DFARS 252.227-7014 
+           (for the Department of Defense), or any successor 
+           or similar regulation, as applicable or as amended
+           from time to time. Siemens Industry Software Inc. 
+           5800 Granite Parkway, Suite 600, Plano, TX 75024  
+ 
+
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *     Simcenter Nastran 2412      * *
+                * *                                 * *
+                * *       VERSION - 2412.0074       * *
+                * *                                 * *
+                * *          NOV  8, 2024           * *
+                * *                                 * *
+                * *                                 * *
+                * *Intel64 Family 6 Model 170 Stepp * *
+                * *                                 * *
+                * * MODEL Intel(R) Core(TM) Ultra 9 * *
+                * *                                 * *
+                * *           Windows 10            * *
+                * *                                 * *
+                * *       Compiled for X86-64       * *
+                * *                                 * *
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+1                                                                          FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE     1
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     NASTRAN BUFFSIZE=65537 $(C:/SIEMENS/NX2412/NXNASTRAN/CONF/NASTRAN.RCF[25])      
+     NASTRAN BUFFPOOL=399                                                            
+     NASTRAN DIAGA=128 DIAGB=0 $(C:/SIEMENS/NX2412/NXNASTRAN/CONF/NASTRAN.RCF[31])   
+     NASTRAN PARALLEL=12 $(C:/SIEMENS/NX2412/NXNASTRAN/CONF/NASTRAN.RCF[34])         
+     NASTRAN REAL=4220518400 $(MEMORY LIMIT FOR MPI AND OTHER SPECIALIZED MODULES)   
+1                                                                          FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE     2
+                                                                                                                                    
+0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     SOL SEFLUTTR                                                                            
+     CEND                                                                                    
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE     3
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                  1      TITLE = MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                                
+                  2      ECHO = NONE                                                                             
+                  3      SUBCASE 1                                                                               
+                  4         SUBTITLE=DEFAULT                                                                     
+                  5         METHOD = 1                                                                           
+                  6         SPC = 10                                                                             
+                  7         VECTOR(PLOT,SORT1,REAL)=ALL                                                          
+                  8         $SPCFORCES(PRINT,SORT1,REAL)=ALL                                                     
+                  9         $MPCFORCES(PRINT,SORT1,REAL)=ALL                                                     
+                 10         FMETHOD = 50                                                                         
+                 11      BEGIN BULK                                                                              
+ *** USER WARNING MESSAGE 324 (XSORSO)
+     BLANK ENTRIES ENCOUNTERED WILL BE IGNORED.
+0                             INPUT BULK DATA ENTRY COUNT =         370
+0                       TOTAL COUNT=       314
+
+
+                                        M O D E L   S U M M A R Y
+
+                                   NUMBER OF GRID     POINTS   =      117
+ 
+ 
+                                   NUMBER OF CELAS2   ELEMENTS =        2
+                                   NUMBER OF CQUAD4   ELEMENTS =       84
+ 
+                                   NUMBER OF RBE2     ELEMENTS =        1
+ *** USER INFORMATION MESSAGE 4109 (OUTPBN2)
+     THE LABEL IS NX2412   FOR FORTRAN UNIT 12
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        7 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =        8 RECORDS.)
+     (TOTAL DATA WRITTEN FOR TAPE LABEL =       17 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK PVT0     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                14                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       14 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       40 WORDS.)
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE     4
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GPL      WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101               343                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      686 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     1060 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GPDT     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    102               343                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =     2401 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     2427 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK EPT      WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0               512                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       14 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       47 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK MPT      WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101             32768                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       15 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       48 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GEOM2    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101               512                 0                 4              8192                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =     1179 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       34 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     2042 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GEOM4    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    103                 0                 0                 0                64              2048                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      123 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       29 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      168 WORDS.)
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE     5
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GEOM1    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    104                 0              2048                 8                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =     2747 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       29 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     2800 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK BGPDT    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    105               343                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =     1372 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     1398 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK DYNAMICS WRITTEN ON FORTRAN UNIT  12, TRL =
+                    102               256                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       30 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       63 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK CASECC   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    103                 1                 0              1200                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =     1200 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     1226 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK EDT      WRITTEN ON FORTRAN UNIT  12, TRL =
+                    102                 0              1031             42624                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      288 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       64 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      619 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK EQEXIN   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101               343                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      686 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     1402 WORDS.)
+ ^^^ USER INFORMATION MESSAGE (XMCE1)    
+ ^^^ USING ALTERNATE MULTIPOINT CONSTRAINT ELIMINATION   
+ *** USER INFORMATION MESSAGE - SINGULARITIES FOUND USING EIGENVALUE METHOD
+ ***       0 SINGULARITIES FOUND         0 SINGULARITIES ELIMINATED
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: DEFAULT, ORDERING METHOD USED: BEND
+ *** USER INFORMATION MESSAGE 5458 (REIG)
+     QL HOUSEHOLDER METHOD IS AUTOMATICALLY SELECTED .
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: DEFAULT, ORDERING METHOD USED: BEND
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE     6
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ 
+                                              R E A L   E I G E N V A L U E S
+   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+    NO.       ORDER                                                                       MASS              STIFFNESS
+        1         1        2.808246E+02        1.675782E+01        2.667090E+00        1.000000E+00        2.808246E+02
+        2         2        4.459430E+03        6.677897E+01        1.062820E+01        1.000000E+00        4.459430E+03
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE     7
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE     8
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+0                                                  MAXIMUM  DISPLACEMENTS   
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0        1   0.0000000E+00  0.0000000E+00  7.1866502E-02  0.0000000E+00  2.5306659E-02  0.0000000E+00
+0        2   0.0000000E+00  0.0000000E+00  1.0084559E-01  0.0000000E+00  1.8553832E-01  0.0000000E+00
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK LAMA     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      190 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK BOPHIG   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0              5488                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =     2744 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       34 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     5823 WORDS.)
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE     9
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+   ... Loading Local Library libzMumps_nompi_ilp64.dll. 
+
+ *** USER WARNING MESSAGE 3059 (AMP)
+     SET IDENTIFIER  DOES NOT EXIST. ERROR DETECTED IN SUBROUTINE 
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -9.82041E-02    1.72172E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                    3.99053E-03    5.88445E-04
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -2.06665E-01    6.60367E+01
+
+   EIGENVECTOR
+                    2.30294E-02    6.34332E-04
+                    1.00000E+00    0.00000E+00
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -1.16823E+00    2.21548E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                    5.64889E-02    9.31516E-03
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -2.05611E+00    5.83863E+01
+
+   EIGENVECTOR
+                    3.16323E-01   -8.78853E-03
+                    1.00000E+00    0.00000E+00
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -1.52245E+00    2.39600E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                    8.06465E-02    1.32910E-02
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -2.55733E+00    5.57599E+01
+
+   EIGENVECTOR
+                    4.47567E-01   -2.22140E-02
+                    1.00000E+00    0.00000E+00
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    10
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -2.00712E+00    2.67783E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                    1.24750E-01    1.99067E-02
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -3.17760E+00    5.18630E+01
+
+   EIGENVECTOR
+                    6.83453E-01   -5.64405E-02
+                    1.00000E+00    0.00000E+00
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -2.54846E+00    3.26000E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                    2.47143E-01    2.93813E-02
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -4.02460E+00    4.44887E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                    7.32342E-01    1.13398E-01
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -1.56369E+01    3.57838E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                    1.72985E-01    3.83875E-01
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =     5.88686E+00    3.71603E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                    2.89967E-01   -2.41361E-01
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    11
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -2.33113E+01    3.28374E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                   -3.50926E-02    4.19755E-01
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =     1.11047E+01    3.67049E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                    1.61703E-01   -3.36657E-01
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -3.04450E+01    2.85193E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                   -1.97696E-01    3.72195E-01
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =     1.51000E+01    3.60714E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                    5.75701E-02   -3.64645E-01
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =    -3.81940E+01    2.07042E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                   -3.32224E-01    2.57832E-01
+
+
+                                               EIGENVECTOR FROM THE PK METHOD
+   EIGENVALUE =     1.85521E+01    3.52961E+01
+
+   EIGENVECTOR
+                    1.00000E+00    0.00000E+00
+                   -2.49223E-02   -3.63218E-01
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    12
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+ A ZERO FREQUENCY ROOT HAS EMERGED.  WHEN THE MACH NO., DENSITY AND VELOCITY ARE COMPATIBLE
+ IT MAY BE INTERPRETED TWO WAYS DEPENDING ON THE SIGN OF THE REAL PART:
+   1. (-) A MODE IS CRITICALLY DAMPED, OR,
+   2. (+) THE SYSTEM IS DIVERGING.
+ ONLY THE MOST CRITICAL ( I.E., MOST POSITIVE REAL ROOTS )  ARE PRINTED IN THE FLUTTER SUMMARY.
+ FOR INFORMATIONAL PURPOSES, THE REMAINING REAL ROOTS ARE PRINTED HERE.
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   74      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.61775E+02    8.04694E-01
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -4.9565391E-01       -5.5579130E+01        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   75      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.62486E+02    8.35225E-01
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -5.5813531E-01       -6.2860237E+01        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   76      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.63193E+02    8.66633E-01
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -6.0822889E-01       -6.8800299E+01        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   77      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.63898E+02    8.98937E-01
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -6.5297432E-01       -7.4180523E+01        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   78      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.64599E+02    9.32154E-01
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -6.9467159E-01       -7.9255219E+01        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   79      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.65297E+02    9.66303E-01
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -7.3441983E-01       -8.4145628E+01        0.0000000E+00
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    13
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   80      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.65993E+02    1.00140E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -7.7284780E-01       -8.8921038E+01        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   81      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.66685E+02    1.03746E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -8.1035671E-01       -9.3625682E+01        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   82      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.67375E+02    1.07451E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -8.4722243E-01       -9.8290032E+01        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   83      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.68062E+02    1.11257E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -8.8364530E-01       -1.0293631E+02        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   84      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.68746E+02    1.15164E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -9.1977714E-01       -1.0758144E+02        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   85      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.69427E+02    1.19176E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -9.5573696E-01       -1.1223881E+02        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   86      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.70106E+02    1.23294E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -9.9162069E-01       -1.1691930E+02        0.0000000E+00
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    14
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   87      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.70782E+02    1.27520E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -1.0275075E+00       -1.2163198E+02        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   88      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.71455E+02    1.31855E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -1.0634641E+00       -1.2638462E+02        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   89      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.72126E+02    1.36303E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -1.0995477E+00       -1.3118396E+02        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   90      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.72794E+02    1.40864E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -1.1358080E+00       -1.3603596E+02        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   91      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.73459E+02    1.45542E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -1.1722890E+00       -1.4094598E+02        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   92      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.74122E+02    1.50337E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -1.2090299E+00       -1.4591889E+02        0.0000000E+00
+
+      LESS CRITICAL REAL ROOTS FOR LOOP   93      MACH        VELOCITY        DENSITY
+                                              5.00000E-01    1.74782E+02    1.55252E+00
+
+         KFREQ          DAMPING                 COMPLEX EIGENVALUE
+
+        0.0000     -1.2460662E+00       -1.5095918E+02        0.0000000E+00
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    15
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+0                                                       FLUTTER  SUMMARY
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC
+       POINT =    1     METHOD = PKNL
+
+
+    KFREQ          1./KFREQ       DENSITY     MACH NO.      VELOCITY       DAMPING     FREQUENCY      COMPLEX   EIGENVALUE
+   0.0565       1.77012E+01   1.79037E-02   5.00000E-01   1.52383E+02  -1.14076E-02   2.74021E+00  -9.82041E-02   1.72172E+01
+   0.0567       1.76357E+01   1.89409E-02   5.00000E-01   1.52037E+02  -1.20344E-02   2.74415E+00  -1.03748E-01   1.72420E+01
+   0.0569       1.75687E+01   2.00434E-02   5.00000E-01   1.51690E+02  -1.26982E-02   2.74832E+00  -1.09637E-01   1.72682E+01
+   0.0571       1.75003E+01   2.12155E-02   5.00000E-01   1.51342E+02  -1.34014E-02   2.75274E+00  -1.15896E-01   1.72960E+01
+   0.0574       1.74303E+01   2.24621E-02   5.00000E-01   1.50994E+02  -1.41466E-02   2.75743E+00  -1.22548E-01   1.73255E+01
+   0.0576       1.73587E+01   2.37881E-02   5.00000E-01   1.50645E+02  -1.49363E-02   2.76241E+00  -1.29623E-01   1.73567E+01
+   0.0579       1.72853E+01   2.51992E-02   5.00000E-01   1.50295E+02  -1.57735E-02   2.76769E+00  -1.37150E-01   1.73899E+01
+   0.0581       1.72101E+01   2.67012E-02   5.00000E-01   1.49944E+02  -1.66611E-02   2.77330E+00  -1.45161E-01   1.74252E+01
+   0.0584       1.71329E+01   2.83004E-02   5.00000E-01   1.49593E+02  -1.76022E-02   2.77925E+00  -1.53690E-01   1.74626E+01
+   0.0586       1.70538E+01   3.00036E-02   5.00000E-01   1.49240E+02  -1.86004E-02   2.78558E+00  -1.62776E-01   1.75023E+01
+   0.0589       1.69724E+01   3.18181E-02   5.00000E-01   1.48887E+02  -1.96593E-02   2.79231E+00  -1.72458E-01   1.75446E+01
+   0.0592       1.68888E+01   3.37518E-02   5.00000E-01   1.48533E+02  -2.07828E-02   2.79946E+00  -1.82780E-01   1.75895E+01
+   0.0595       1.68027E+01   3.58132E-02   5.00000E-01   1.48178E+02  -2.19750E-02   2.80707E+00  -1.93790E-01   1.76373E+01
+   0.0598       1.67142E+01   3.80112E-02   5.00000E-01   1.47822E+02  -2.32402E-02   2.81517E+00  -2.05539E-01   1.76882E+01
+   0.0601       1.66283E+01   4.03307E-02   5.00000E-01   1.47514E+02  -2.45757E-02   2.82381E+00  -2.18017E-01   1.77425E+01
+   0.0603       1.65741E+01   4.26294E-02   5.00000E-01   1.47514E+02  -2.59386E-02   2.83304E+00  -2.30860E-01   1.78005E+01
+   0.0605       1.65170E+01   4.50593E-02   5.00000E-01   1.47514E+02  -2.73748E-02   2.84283E+00  -2.44485E-01   1.78620E+01
+   0.0608       1.64569E+01   4.76276E-02   5.00000E-01   1.47514E+02  -2.88881E-02   2.85323E+00  -2.58944E-01   1.79273E+01
+   0.0610       1.63935E+01   5.03423E-02   5.00000E-01   1.47514E+02  -3.04824E-02   2.86426E+00  -2.74291E-01   1.79967E+01
+   0.0612       1.63267E+01   5.32117E-02   5.00000E-01   1.47514E+02  -3.21615E-02   2.87598E+00  -2.90585E-01   1.80703E+01
+   0.0615       1.62563E+01   5.62447E-02   5.00000E-01   1.47514E+02  -3.39298E-02   2.88843E+00  -3.07888E-01   1.81486E+01
+   0.0618       1.61822E+01   5.94505E-02   5.00000E-01   1.47514E+02  -3.57914E-02   2.90166E+00  -3.26269E-01   1.82317E+01
+   0.0621       1.61041E+01   6.28391E-02   5.00000E-01   1.47514E+02  -3.77510E-02   2.91573E+00  -3.45801E-01   1.83201E+01
+   0.0624       1.60219E+01   6.64209E-02   5.00000E-01   1.47514E+02  -3.98132E-02   2.93069E+00  -3.66561E-01   1.84141E+01
+   0.0628       1.59353E+01   7.02068E-02   5.00000E-01   1.47514E+02  -4.19827E-02   2.94661E+00  -3.88636E-01   1.85141E+01
+   0.0631       1.58442E+01   7.42084E-02   5.00000E-01   1.47514E+02  -4.42646E-02   2.96355E+00  -4.12116E-01   1.86206E+01
+   0.0635       1.57483E+01   7.84382E-02   5.00000E-01   1.47514E+02  -4.66640E-02   2.98160E+00  -4.37101E-01   1.87340E+01
+   0.0639       1.56474E+01   8.29091E-02   5.00000E-01   1.47514E+02  -4.91862E-02   3.00084E+00  -4.63698E-01   1.88548E+01
+   0.0643       1.55411E+01   8.76347E-02   5.00000E-01   1.47514E+02  -5.18365E-02   3.02135E+00  -4.92024E-01   1.89837E+01
+   0.0648       1.54294E+01   9.26298E-02   5.00000E-01   1.47514E+02  -5.46205E-02   3.04323E+00  -5.22205E-01   1.91212E+01
+   0.0653       1.53118E+01   9.79095E-02   5.00000E-01   1.47514E+02  -5.75438E-02   3.06661E+00  -5.54379E-01   1.92681E+01
+   0.0658       1.51881E+01   1.03490E-01   5.00000E-01   1.47514E+02  -6.06121E-02   3.09158E+00  -5.88695E-01   1.94250E+01
+   0.0664       1.50579E+01   1.09389E-01   5.00000E-01   1.47514E+02  -6.38310E-02   3.11830E+00  -6.25317E-01   1.95929E+01
+   0.0670       1.49210E+01   1.15624E-01   5.00000E-01   1.47514E+02  -6.72064E-02   3.14692E+00  -6.64425E-01   1.97727E+01
+   0.0677       1.47770E+01   1.22214E-01   5.00000E-01   1.47514E+02  -7.07439E-02   3.17758E+00  -7.06213E-01   1.99654E+01
+   0.0684       1.46255E+01   1.29180E-01   5.00000E-01   1.47514E+02  -7.44490E-02   3.21050E+00  -7.50899E-01   2.01722E+01
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    16
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+0                                                       FLUTTER  SUMMARY
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC
+       POINT =    1     METHOD = PKNL
+
+
+    KFREQ          1./KFREQ       DENSITY     MACH NO.      VELOCITY       DAMPING     FREQUENCY      COMPLEX   EIGENVALUE
+   0.0691       1.44661E+01   1.36544E-01   5.00000E-01   1.47514E+02  -7.83270E-02   3.24587E+00  -7.98717E-01   2.03944E+01
+   0.0699       1.42984E+01   1.44326E-01   5.00000E-01   1.47514E+02  -8.23830E-02   3.28394E+00  -8.49930E-01   2.06336E+01
+   0.0708       1.41219E+01   1.52553E-01   5.00000E-01   1.47514E+02  -8.66214E-02   3.32499E+00  -9.04827E-01   2.08915E+01
+   0.0718       1.39361E+01   1.61248E-01   5.00000E-01   1.47514E+02  -9.10462E-02   3.36932E+00  -9.63728E-01   2.11701E+01
+   0.0728       1.37404E+01   1.70439E-01   5.00000E-01   1.47514E+02  -9.56602E-02   3.41731E+00  -1.02699E+00   2.14716E+01
+   0.0739       1.35342E+01   1.80154E-01   5.00000E-01   1.47514E+02  -1.00465E-01   3.46938E+00  -1.09501E+00   2.17988E+01
+   0.0751       1.33167E+01   1.90422E-01   5.00000E-01   1.47514E+02  -1.05461E-01   3.52604E+00  -1.16823E+00   2.21548E+01
+   0.0764       1.30871E+01   2.01276E-01   5.00000E-01   1.47514E+02  -1.10646E-01   3.58789E+00  -1.24716E+00   2.25434E+01
+   0.0779       1.28445E+01   2.12748E-01   5.00000E-01   1.47514E+02  -1.16014E-01   3.65565E+00  -1.33237E+00   2.29691E+01
+   0.0795       1.25861E+01   2.24875E-01   5.00000E-01   1.47514E+02  -1.21426E-01   3.73071E+00  -1.42316E+00   2.34407E+01
+   0.0812       1.23133E+01   2.37692E-01   5.00000E-01   1.47514E+02  -1.27083E-01   3.81336E+00  -1.52245E+00   2.39600E+01
+   0.0832       1.20231E+01   2.51240E-01   5.00000E-01   1.47514E+02  -1.32855E-01   3.90541E+00  -1.63002E+00   2.45384E+01
+   0.0854       1.17132E+01   2.65560E-01   5.00000E-01   1.47514E+02  -1.38696E-01   4.00875E+00  -1.74672E+00   2.51877E+01
+   0.0879       1.13781E+01   2.80697E-01   5.00000E-01   1.47514E+02  -1.44302E-01   4.12682E+00  -1.87084E+00   2.59296E+01
+   0.0908       1.10174E+01   2.96696E-01   5.00000E-01   1.47514E+02  -1.49906E-01   4.26190E+00  -2.00712E+00   2.67783E+01
+   0.0941       1.06229E+01   3.13607E-01   5.00000E-01   1.47514E+02  -1.55110E-01   4.42020E+00  -2.15392E+00   2.77729E+01
+   0.0982       1.01801E+01   3.31483E-01   5.00000E-01   1.47514E+02  -1.59015E-01   4.61243E+00  -2.30419E+00   2.89807E+01
+   0.1034       9.67282E+00   3.50377E-01   5.00000E-01   1.47514E+02  -1.60909E-01   4.85434E+00  -2.45391E+00   3.05007E+01
+   0.1104       9.05684E+00   3.69797E-01   5.00000E-01   1.47627E+02  -1.56347E-01   5.18846E+00  -2.54846E+00   3.26000E+01
+   0.1214       8.23404E+00   3.86688E-01   5.00000E-01   1.48405E+02  -8.12318E-02   5.73701E+00  -1.46407E+00   3.60467E+01
+   0.1242       8.04950E+00   4.04162E-01   5.00000E-01   1.49179E+02   1.03048E-01   5.89916E+00   1.90976E+00   3.70655E+01
+   0.1240       8.06384E+00   4.22234E-01   5.00000E-01   1.49949E+02   2.21675E-01   5.91907E+00   4.12212E+00   3.71906E+01
+   0.1233       8.11165E+00   4.40918E-01   5.00000E-01   1.50716E+02   3.16835E-01   5.91425E+00   5.88686E+00   3.71603E+01
+   0.1224       8.17022E+00   4.60229E-01   5.00000E-01   1.51478E+02   3.98789E-01   5.90156E+00   7.39367E+00   3.70806E+01
+   0.1214       8.23507E+00   4.80179E-01   5.00000E-01   1.52237E+02   4.72583E-01   5.88440E+00   8.73636E+00   3.69728E+01
+   0.1204       8.30437E+00   5.00785E-01   5.00000E-01   1.52992E+02   5.40827E-01   5.86424E+00   9.96368E+00   3.68461E+01
+   0.1194       8.37723E+00   5.22060E-01   5.00000E-01   1.53743E+02   6.05078E-01   5.84177E+00   1.11047E+01   3.67049E+01
+   0.1184       8.44796E+00   5.44020E-01   5.00000E-01   1.54490E+02   6.65547E-01   5.82102E+00   1.21711E+01   3.65746E+01
+   0.1173       8.52576E+00   5.66680E-01   5.00000E-01   1.55234E+02   7.24430E-01   5.79568E+00   1.31902E+01   3.64153E+01
+   0.1162       8.60612E+00   5.90054E-01   5.00000E-01   1.55975E+02   7.81530E-01   5.76894E+00   1.41642E+01   3.62473E+01
+   0.1151       8.68896E+00   6.14160E-01   5.00000E-01   1.56711E+02   8.37231E-01   5.74094E+00   1.51000E+01   3.60714E+01
+   0.1140       8.77421E+00   6.39012E-01   5.00000E-01   1.57445E+02   8.91829E-01   5.71177E+00   1.60030E+01   3.58881E+01
+   0.1128       8.86193E+00   6.64625E-01   5.00000E-01   1.58175E+02   9.45571E-01   5.68145E+00   1.68773E+01   3.56976E+01
+   0.1117       8.95214E+00   6.91017E-01   5.00000E-01   1.58901E+02   9.98650E-01   5.65004E+00   1.77261E+01   3.55002E+01
+   0.1106       9.04489E+00   7.18204E-01   5.00000E-01   1.59625E+02   1.05123E+00   5.61755E+00   1.85521E+01   3.52961E+01
+   0.1094       9.14025E+00   7.46201E-01   5.00000E-01   1.60345E+02   1.10345E+00   5.58402E+00   1.93574E+01   3.50854E+01
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    17
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+0                                                       FLUTTER  SUMMARY
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC
+       POINT =    1     METHOD = PKNL
+
+
+    KFREQ          1./KFREQ       DENSITY     MACH NO.      VELOCITY       DAMPING     FREQUENCY      COMPLEX   EIGENVALUE
+   0.1082       9.23855E+00   7.75026E-01   5.00000E-01   1.61062E+02   1.15545E+00   5.54930E+00   2.01436E+01   3.48673E+01
+   0.1071       9.33944E+00   8.04694E-01   5.00000E-01   1.61775E+02   1.20728E+00   5.51368E+00   2.09123E+01   3.46435E+01
+   0.1059       9.44237E+00   8.35225E-01   5.00000E-01   1.62486E+02   1.25899E+00   5.47753E+00   2.16649E+01   3.44163E+01
+   0.1047       9.54806E+00   8.66633E-01   5.00000E-01   1.63193E+02   1.31070E+00   5.44048E+00   2.24023E+01   3.41836E+01
+   0.1036       9.65658E+00   8.98937E-01   5.00000E-01   1.63898E+02   1.36250E+00   5.40256E+00   2.31253E+01   3.39453E+01
+   0.1024       9.76802E+00   9.32154E-01   5.00000E-01   1.64599E+02   1.41445E+00   5.36378E+00   2.38346E+01   3.37016E+01
+   0.1012       9.88246E+00   9.66303E-01   5.00000E-01   1.65297E+02   1.46659E+00   5.32416E+00   2.45307E+01   3.34527E+01
+   0.1000       9.99997E+00   1.00140E+00   5.00000E-01   1.65993E+02   1.51899E+00   5.28373E+00   2.52142E+01   3.31987E+01
+   0.0988       1.01206E+01   1.03746E+00   5.00000E-01   1.66685E+02   1.57169E+00   5.24252E+00   2.58855E+01   3.29397E+01
+   0.0976       1.02445E+01   1.07451E+00   5.00000E-01   1.67375E+02   1.62473E+00   5.20054E+00   2.65448E+01   3.26760E+01
+   0.0964       1.03718E+01   1.11257E+00   5.00000E-01   1.68062E+02   1.67815E+00   5.15784E+00   2.71924E+01   3.24076E+01
+   0.0952       1.05024E+01   1.15164E+00   5.00000E-01   1.68746E+02   1.73198E+00   5.11443E+00   2.78285E+01   3.21349E+01
+   0.0940       1.06364E+01   1.19176E+00   5.00000E-01   1.69427E+02   1.78626E+00   5.07036E+00   2.84534E+01   3.18580E+01
+   0.0928       1.07740E+01   1.23294E+00   5.00000E-01   1.70106E+02   1.84102E+00   5.02565E+00   2.90670E+01   3.15771E+01
+   0.0916       1.09152E+01   1.27520E+00   5.00000E-01   1.70782E+02   1.89627E+00   4.98036E+00   2.96695E+01   3.12925E+01
+   0.0904       1.10600E+01   1.31855E+00   5.00000E-01   1.71455E+02   1.95204E+00   4.93452E+00   3.02610E+01   3.10045E+01
+   0.0892       1.12085E+01   1.36303E+00   5.00000E-01   1.72126E+02   2.00834E+00   4.88818E+00   3.08414E+01   3.07133E+01
+   0.0880       1.13608E+01   1.40864E+00   5.00000E-01   1.72794E+02   2.06519E+00   4.84138E+00   3.14108E+01   3.04193E+01
+   0.0868       1.15168E+01   1.45542E+00   5.00000E-01   1.73459E+02   2.12259E+00   4.79419E+00   3.19692E+01   3.01228E+01
+   0.0856       1.16766E+01   1.50337E+00   5.00000E-01   1.74122E+02   2.18056E+00   4.74666E+00   3.25166E+01   2.98241E+01
+   0.0845       1.18401E+01   1.55252E+00   5.00000E-01   1.74782E+02   2.23907E+00   4.69885E+00   3.30529E+01   2.95237E+01
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    18
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+0                                                       FLUTTER  SUMMARY
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC
+       POINT =    2     METHOD = PKNL
+
+
+    KFREQ          1./KFREQ       DENSITY     MACH NO.      VELOCITY       DAMPING     FREQUENCY      COMPLEX   EIGENVALUE
+   0.2167       4.61509E+00   1.79037E-02   5.00000E-01   1.52383E+02  -6.25910E-03   1.05101E+01  -2.06665E-01   6.60367E+01
+   0.2170       4.60738E+00   1.89409E-02   5.00000E-01   1.52037E+02  -6.60022E-03   1.05038E+01  -2.17798E-01   6.59970E+01
+   0.2174       4.59980E+00   2.00434E-02   5.00000E-01   1.51690E+02  -6.96185E-03   1.04971E+01  -2.29585E-01   6.59551E+01
+   0.2178       4.59236E+00   2.12155E-02   5.00000E-01   1.51342E+02  -7.34535E-03   1.04900E+01  -2.42068E-01   6.59106E+01
+   0.2181       4.58507E+00   2.24621E-02   5.00000E-01   1.50994E+02  -7.75218E-03   1.04825E+01  -2.55293E-01   6.58634E+01
+   0.2184       4.57794E+00   2.37881E-02   5.00000E-01   1.50645E+02  -8.18391E-03   1.04745E+01  -2.69306E-01   6.58134E+01
+   0.2188       4.57099E+00   2.51992E-02   5.00000E-01   1.50295E+02  -8.64224E-03   1.04661E+01  -2.84159E-01   6.57604E+01
+   0.2191       4.56422E+00   2.67012E-02   5.00000E-01   1.49944E+02  -9.12898E-03   1.04571E+01  -2.99906E-01   6.57042E+01
+   0.2194       4.55766E+00   2.83004E-02   5.00000E-01   1.49593E+02  -9.64609E-03   1.04476E+01  -3.16606E-01   6.56445E+01
+   0.2197       4.55132E+00   3.00036E-02   5.00000E-01   1.49240E+02  -1.01957E-02   1.04376E+01  -3.34322E-01   6.55811E+01
+   0.2200       4.54521E+00   3.18181E-02   5.00000E-01   1.48887E+02  -1.07800E-02   1.04268E+01  -3.53120E-01   6.55137E+01
+   0.2203       4.53936E+00   3.37518E-02   5.00000E-01   1.48533E+02  -1.14016E-02   1.04154E+01  -3.73072E-01   6.54422E+01
+   0.2206       4.53378E+00   3.58132E-02   5.00000E-01   1.48178E+02  -1.20630E-02   1.04033E+01  -3.94255E-01   6.53661E+01
+   0.2208       4.52850E+00   3.80112E-02   5.00000E-01   1.47822E+02  -1.27671E-02   1.03905E+01  -4.16752E-01   6.52852E+01
+   0.2210       4.52505E+00   4.03307E-02   5.00000E-01   1.47514E+02  -1.35164E-02   1.03767E+01  -4.40627E-01   6.51989E+01
+   0.2207       4.53139E+00   4.26294E-02   5.00000E-01   1.47514E+02  -1.42606E-02   1.03622E+01  -4.64237E-01   6.51076E+01
+   0.2204       4.53823E+00   4.50593E-02   5.00000E-01   1.47514E+02  -1.50945E-02   1.03466E+01  -4.90643E-01   6.50095E+01
+   0.2200       4.54550E+00   4.76276E-02   5.00000E-01   1.47514E+02  -1.59785E-02   1.03300E+01  -5.18547E-01   6.49055E+01
+   0.2196       4.55325E+00   5.03423E-02   5.00000E-01   1.47514E+02  -1.69159E-02   1.03125E+01  -5.48034E-01   6.47951E+01
+   0.2192       4.56149E+00   5.32117E-02   5.00000E-01   1.47514E+02  -1.79100E-02   1.02938E+01  -5.79192E-01   6.46780E+01
+   0.2188       4.57027E+00   5.62447E-02   5.00000E-01   1.47514E+02  -1.89646E-02   1.02740E+01  -6.12117E-01   6.45537E+01
+   0.2184       4.57963E+00   5.94505E-02   5.00000E-01   1.47514E+02  -2.00835E-02   1.02530E+01  -6.46907E-01   6.44218E+01
+   0.2179       4.58961E+00   6.28391E-02   5.00000E-01   1.47514E+02  -2.12710E-02   1.02307E+01  -6.83668E-01   6.42816E+01
+   0.2174       4.60027E+00   6.64209E-02   5.00000E-01   1.47514E+02  -2.25316E-02   1.02071E+01  -7.22509E-01   6.41328E+01
+   0.2168       4.61164E+00   7.02068E-02   5.00000E-01   1.47514E+02  -2.38703E-02   1.01819E+01  -7.63548E-01   6.39746E+01
+   0.2163       4.62379E+00   7.42084E-02   5.00000E-01   1.47514E+02  -2.52923E-02   1.01551E+01  -8.06907E-01   6.38065E+01
+   0.2157       4.63679E+00   7.84382E-02   5.00000E-01   1.47514E+02  -2.68033E-02   1.01267E+01  -8.52717E-01   6.36276E+01
+   0.2150       4.65070E+00   8.29091E-02   5.00000E-01   1.47514E+02  -2.84095E-02   1.00964E+01  -9.01114E-01   6.34374E+01
+   0.2143       4.66559E+00   8.76347E-02   5.00000E-01   1.47514E+02  -3.01176E-02   1.00641E+01  -9.52242E-01   6.32349E+01
+   0.2136       4.68156E+00   9.26298E-02   5.00000E-01   1.47514E+02  -3.19348E-02   1.00298E+01  -1.00625E+00   6.30192E+01
+   0.2128       4.69870E+00   9.79095E-02   5.00000E-01   1.47514E+02  -3.38690E-02   9.99323E+00  -1.06331E+00   6.27893E+01
+   0.2120       4.71711E+00   1.03490E-01   5.00000E-01   1.47514E+02  -3.59289E-02   9.95423E+00  -1.12357E+00   6.25443E+01
+   0.2111       4.73691E+00   1.09389E-01   5.00000E-01   1.47514E+02  -3.81237E-02   9.91261E+00  -1.18723E+00   6.22828E+01
+   0.2102       4.75824E+00   1.15624E-01   5.00000E-01   1.47514E+02  -4.04639E-02   9.86818E+00  -1.25445E+00   6.20036E+01
+   0.2092       4.78125E+00   1.22214E-01   5.00000E-01   1.47514E+02  -4.29608E-02   9.82069E+00  -1.32545E+00   6.17052E+01
+   0.2081       4.80611E+00   1.29180E-01   5.00000E-01   1.47514E+02  -4.56269E-02   9.76989E+00  -1.40043E+00   6.13860E+01
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    19
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+0                                                       FLUTTER  SUMMARY
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC
+       POINT =    2     METHOD = PKNL
+
+
+    KFREQ          1./KFREQ       DENSITY     MACH NO.      VELOCITY       DAMPING     FREQUENCY      COMPLEX   EIGENVALUE
+   0.2069       4.83301E+00   1.36544E-01   5.00000E-01   1.47514E+02  -4.84761E-02   9.71551E+00  -1.47960E+00   6.10443E+01
+   0.2057       4.86219E+00   1.44326E-01   5.00000E-01   1.47514E+02  -5.15239E-02   9.65721E+00  -1.56318E+00   6.06780E+01
+   0.2043       4.89390E+00   1.52553E-01   5.00000E-01   1.47514E+02  -5.47874E-02   9.59463E+00  -1.65143E+00   6.02849E+01
+   0.2029       4.92844E+00   1.61248E-01   5.00000E-01   1.47514E+02  -5.82863E-02   9.52738E+00  -1.74457E+00   5.98623E+01
+   0.2014       4.96619E+00   1.70439E-01   5.00000E-01   1.47514E+02  -6.20424E-02   9.45498E+00  -1.84289E+00   5.94074E+01
+   0.1997       5.00755E+00   1.80154E-01   5.00000E-01   1.47514E+02  -6.60810E-02   9.37688E+00  -1.94664E+00   5.89167E+01
+   0.1979       5.05303E+00   1.90422E-01   5.00000E-01   1.47514E+02  -7.04311E-02   9.29247E+00  -2.05611E+00   5.83863E+01
+   0.1960       5.10327E+00   2.01276E-01   5.00000E-01   1.47514E+02  -7.51265E-02   9.20100E+00  -2.17159E+00   5.78116E+01
+   0.1938       5.15900E+00   2.12748E-01   5.00000E-01   1.47514E+02  -8.02070E-02   9.10160E+00  -2.29340E+00   5.71870E+01
+   0.1915       5.22119E+00   2.24875E-01   5.00000E-01   1.47514E+02  -8.57210E-02   8.99319E+00  -2.42187E+00   5.65059E+01
+   0.1890       5.29104E+00   2.37692E-01   5.00000E-01   1.47514E+02  -9.17263E-02   8.87447E+00  -2.55733E+00   5.57599E+01
+   0.1862       5.37012E+00   2.51240E-01   5.00000E-01   1.47514E+02  -9.82966E-02   8.74378E+00  -2.70015E+00   5.49388E+01
+   0.1831       5.46056E+00   2.65560E-01   5.00000E-01   1.47514E+02  -1.05527E-01   8.59897E+00  -2.85075E+00   5.40289E+01
+   0.1797       5.56529E+00   2.80697E-01   5.00000E-01   1.47514E+02  -1.13547E-01   8.43715E+00  -3.00969E+00   5.30122E+01
+   0.1758       5.68861E+00   2.96696E-01   5.00000E-01   1.47514E+02  -1.22538E-01   8.25425E+00  -3.17760E+00   5.18630E+01
+   0.1713       5.83718E+00   3.13607E-01   5.00000E-01   1.47514E+02  -1.32787E-01   8.04415E+00  -3.35573E+00   5.05429E+01
+   0.1660       6.02242E+00   3.31483E-01   5.00000E-01   1.47514E+02  -1.44800E-01   7.79673E+00  -3.54676E+00   4.89883E+01
+   0.1596       6.26688E+00   3.50377E-01   5.00000E-01   1.47514E+02  -1.59655E-01   7.49258E+00  -3.75807E+00   4.70773E+01
+   0.1507       6.63660E+00   3.69797E-01   5.00000E-01   1.47627E+02  -1.80927E-01   7.08059E+00  -4.02460E+00   4.44887E+01
+   0.1317       7.59406E+00   3.86688E-01   5.00000E-01   1.48405E+02  -2.78386E-01   6.22049E+00  -5.44030E+00   3.90845E+01
+   0.1245       8.03192E+00   4.04162E-01   5.00000E-01   1.49179E+02  -5.65006E-01   5.91206E+00  -1.04940E+01   3.71466E+01
+   0.1215       8.23057E+00   4.22234E-01   5.00000E-01   1.49949E+02  -7.30942E-01   5.79916E+00  -1.33167E+01   3.64372E+01
+   0.1187       8.42369E+00   4.40918E-01   5.00000E-01   1.50716E+02  -8.73964E-01   5.69517E+00  -1.56369E+01   3.57838E+01
+   0.1159       8.62674E+00   4.60229E-01   5.00000E-01   1.51478E+02  -1.00871E+00   5.58925E+00  -1.77120E+01   3.51183E+01
+   0.1130       8.84693E+00   4.80179E-01   5.00000E-01   1.52237E+02  -1.14196E+00   5.47743E+00  -1.96507E+01   3.44157E+01
+   0.1100       9.09037E+00   5.00785E-01   5.00000E-01   1.52992E+02  -1.27783E+00   5.35718E+00  -2.15060E+01   3.36601E+01
+   0.1068       9.36387E+00   5.22060E-01   5.00000E-01   1.53743E+02  -1.41980E+00   5.22624E+00  -2.33113E+01   3.28374E+01
+   0.1033       9.67602E+00   5.44020E-01   5.00000E-01   1.54490E+02  -1.57146E+00   5.08223E+00  -2.50904E+01   3.19326E+01
+   0.0996       1.00385E+01   5.66680E-01   5.00000E-01   1.55234E+02  -1.73706E+00   4.92231E+00  -2.68616E+01   3.09278E+01
+   0.0955       1.04680E+01   5.90054E-01   5.00000E-01   1.55975E+02  -1.92223E+00   4.74284E+00  -2.86413E+01   2.98001E+01
+   0.0910       1.09898E+01   6.14160E-01   5.00000E-01   1.56711E+02  -2.13505E+00   4.53899E+00  -3.04450E+01   2.85193E+01
+   0.0860       1.16217E+01   6.39012E-01   5.00000E-01   1.57445E+02  -2.37878E+00   4.31229E+00  -3.22264E+01   2.70949E+01
+   0.0802       1.24619E+01   6.64625E-01   5.00000E-01   1.58175E+02  -2.68755E+00   4.04019E+00  -3.41121E+01   2.53853E+01
+   0.0734       1.36274E+01   6.91017E-01   5.00000E-01   1.58901E+02  -3.09463E+00   3.71162E+00  -3.60846E+01   2.33208E+01
+   0.0649       1.54196E+01   7.18204E-01   5.00000E-01   1.59625E+02  -3.68950E+00   3.29517E+00  -3.81940E+01   2.07042E+01
+   0.0535       1.86759E+01   7.46201E-01   5.00000E-01   1.60345E+02  -4.71517E+00   2.73290E+00  -4.04828E+01   1.71713E+01
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    20
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+0                                                       FLUTTER  SUMMARY
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC
+       POINT =    2     METHOD = PKNL
+
+
+    KFREQ          1./KFREQ       DENSITY     MACH NO.      VELOCITY       DAMPING     FREQUENCY      COMPLEX   EIGENVALUE
+   0.0327       3.06202E+01   7.75026E-01   5.00000E-01   1.61062E+02  -8.25879E+00   1.67430E+00  -4.34411E+01   1.05200E+01
+   0.0000       1.00000E+25   8.04694E-01   5.00000E-01   1.61775E+02  -3.32075E-01   0.00000E+00  -3.72366E+01   0.00000E+00
+   0.0000       1.00000E+25   8.35225E-01   5.00000E-01   1.62486E+02  -2.97587E-01   0.00000E+00  -3.35158E+01   0.00000E+00
+   0.0000       1.00000E+25   8.66633E-01   5.00000E-01   1.63193E+02  -2.75672E-01   0.00000E+00  -3.11829E+01   0.00000E+00
+   0.0000       1.00000E+25   8.98937E-01   5.00000E-01   1.63898E+02  -2.59318E-01   0.00000E+00  -2.94596E+01   0.00000E+00
+   0.0000       1.00000E+25   9.32154E-01   5.00000E-01   1.64599E+02  -2.46248E-01   0.00000E+00  -2.80945E+01   0.00000E+00
+   0.0000       1.00000E+25   9.66303E-01   5.00000E-01   1.65297E+02  -2.35386E-01   0.00000E+00  -2.69692E+01   0.00000E+00
+   0.0000       1.00000E+25   1.00140E+00   5.00000E-01   1.65993E+02  -2.26123E-01   0.00000E+00  -2.60169E+01   0.00000E+00
+   0.0000       1.00000E+25   1.03746E+00   5.00000E-01   1.66685E+02  -2.18079E-01   0.00000E+00  -2.51961E+01   0.00000E+00
+   0.0000       1.00000E+25   1.07451E+00   5.00000E-01   1.67375E+02  -2.10997E-01   0.00000E+00  -2.44787E+01   0.00000E+00
+   0.0000       1.00000E+25   1.11257E+00   5.00000E-01   1.68062E+02  -2.04694E-01   0.00000E+00  -2.38450E+01   0.00000E+00
+   0.0000       1.00000E+25   1.15164E+00   5.00000E-01   1.68746E+02  -1.99037E-01   0.00000E+00  -2.32803E+01   0.00000E+00
+   0.0000       1.00000E+25   1.19176E+00   5.00000E-01   1.69427E+02  -1.93922E-01   0.00000E+00  -2.27736E+01   0.00000E+00
+   0.0000       1.00000E+25   1.23294E+00   5.00000E-01   1.70106E+02  -1.89271E-01   0.00000E+00  -2.23164E+01   0.00000E+00
+   0.0000       1.00000E+25   1.27520E+00   5.00000E-01   1.70782E+02  -1.85019E-01   0.00000E+00  -2.19017E+01   0.00000E+00
+   0.0000       1.00000E+25   1.31855E+00   5.00000E-01   1.71455E+02  -1.81115E-01   0.00000E+00  -2.15242E+01   0.00000E+00
+   0.0000       1.00000E+25   1.36303E+00   5.00000E-01   1.72126E+02  -1.77518E-01   0.00000E+00  -2.11792E+01   0.00000E+00
+   0.0000       1.00000E+25   1.40864E+00   5.00000E-01   1.72794E+02  -1.74192E-01   0.00000E+00  -2.08631E+01   0.00000E+00
+   0.0000       1.00000E+25   1.45542E+00   5.00000E-01   1.73459E+02  -1.71108E-01   0.00000E+00  -2.05726E+01   0.00000E+00
+   0.0000       1.00000E+25   1.50337E+00   5.00000E-01   1.74122E+02  -1.68240E-01   0.00000E+00  -2.03051E+01   0.00000E+00
+   0.0000       1.00000E+25   1.55252E+00   5.00000E-01   1.74782E+02  -1.65568E-01   0.00000E+00  -2.00583E+01   0.00000E+00
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OVG      WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =     1874 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =    29410 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK CLAMA    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                18                18                 6                 3                 2               556
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      284 WORDS.)
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    21
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+0                                                  MAXIMUM  DISPLACEMENTS   
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0        1   0.0000000E+00  0.0000000E+00  7.2204471E-02  0.0000000E+00  2.6047056E-02  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.5934210E-04  0.0000000E+00  0.1091791E-03  0.0000000E+00
+0        2   0.0000000E+00  0.0000000E+00  7.6650705E-02  0.0000000E+00  3.5787523E-02  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.9393926E-03  0.0000000E+00  0.1728319E-02  0.0000000E+00
+0        3   0.0000000E+00  0.0000000E+00  7.8696677E-02  0.0000000E+00  4.0269680E-02  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.1340343E-02  0.0000000E+00  0.2465998E-02  0.0000000E+00
+0        4   0.0000000E+00  0.0000000E+00  8.2431951E-02  0.0000000E+00  4.8452632E-02  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.2007503E-02  0.0000000E+00  0.3693455E-02  0.0000000E+00
+0        5   0.0000000E+00  0.0000000E+00  9.2797759E-02  0.0000000E+00  7.1161248E-02  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.2962977E-02  0.0000000E+00  0.5451362E-02  0.0000000E+00
+0        6   0.0000000E+00  0.0000000E+00  9.6424614E-02  0.0000000E+00  7.9106683E-02  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.2434015E-01  0.0000000E+00  0.4478164E-01  0.0000000E+00
+0        7   0.0000000E+00  0.0000000E+00  8.5561544E-02  0.0000000E+00  5.5308705E-02  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.3395040E-01  0.0000000E+00  0.6246283E-01  0.0000000E+00
+0        8   0.0000000E+00  0.0000000E+00  7.6742269E-02  0.0000000E+00  3.5988114E-02  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.3677289E-01  0.0000000E+00  0.6765571E-01  0.0000000E+00
+0        9   0.0000000E+00  0.0000000E+00  6.9755763E-02  0.0000000E+00  2.0682615E-02  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.3662896E-01  0.0000000E+00  0.6739090E-01  0.0000000E+00
+0       10   0.0000000E+00  0.0000000E+00  9.9773348E-02  0.0000000E+00  1.8612112E-01  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.4558724E-04  0.0000000E+00  0.1605283E-04  0.0000000E+00
+0       11   0.0000000E+00  0.0000000E+00  1.0742579E-01  0.0000000E+00  1.9354341E-01  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.6316012E-03  0.0000000E+00  0.2224084E-03  0.0000000E+00
+0       12   0.0000000E+00  0.0000000E+00  1.1685778E-01  0.0000000E+00  1.9686474E-01  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.1596439E-02  0.0000000E+00  0.5621610E-03  0.0000000E+00
+0       13   0.0000000E+00  0.0000000E+00  1.3381013E-01  0.0000000E+00  2.0283425E-01  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.4056181E-02  0.0000000E+00  0.1428320E-02  0.0000000E+00
+0       14   0.0000000E+00  0.0000000E+00  1.3389056E-01  0.0000000E+00  1.6118420E-01  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.1143571E-01  0.0000000E+00  0.2103971E-01  0.0000000E+00
+0       15   0.0000000E+00  0.0000000E+00  8.6517111E-02  0.0000000E+00  5.7402087E-02  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.3871211E-01  0.0000000E+00  0.7122354E-01  0.0000000E+00
+0       16   0.0000000E+00  0.0000000E+00  6.8894413E-02  0.0000000E+00  1.8795635E-02  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.4233047E-01  0.0000000E+00  0.7788069E-01  0.0000000E+00
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    22
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+0                                                  MAXIMUM  DISPLACEMENTS   
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0       17   0.0000000E+00  0.0000000E+00  6.6496619E-02  0.0000000E+00  1.1373536E-02  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.3753422E-01  0.0000000E+00  0.6905643E-01  0.0000000E+00
+0       18   0.0000000E+00  0.0000000E+00  8.0063122E-02  0.0000000E+00  3.6333537E-02  0.0000000E+00
+             0.0000000E+00  0.0000000E+00  0.2600126E-01  0.0000000E+00  0.4783778E-01  0.0000000E+00
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK BOUGV1   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1             20900                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =   131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =     4802 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =      194 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =    89230 WORDS.)
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    23
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 4110 (OUTPBN2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT 12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1    MSC.NASTRAN JOB CREATED ON 29-NOV-17 AT 14:54:26                      FEBRUARY  27, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    24
+     DEFAULT                                                                                                                        
+0                                                                                                            SUBCASE 1              
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     28
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    F    F     T      F      T      0     F     -1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+1                                        * * * END OF JOB * * *
+ 
+ 
