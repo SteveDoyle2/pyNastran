@@ -62,7 +62,7 @@ from pyNastran.f06.dev.flutter.utils import (
     get_point_removal_str,
     point_removal_str_to_point_removal,
     _float_passed_to_default, _to_str,
-    get_plot_flags, get_plot_file,
+    get_plot_flags, get_raw_json,
     update_ylog_style, get_png_filename,
     load_f06_op2, get_vlines, get_damping_crossings,
     X_PLOT_TYPES, PLOT_TYPES, UNITS_IN, UNITS_OUT,
@@ -85,15 +85,8 @@ else:
     BDF_FILENAME = BASE_PATH / '0012_flutter.bdf'
     OP2_FILENAME = BASE_PATH / '0012_flutter.op2'
 
-JSON_FILENAME = get_plot_file()
-USE_VTK = False
-USE_TABS = False
-if os.path.exists(JSON_FILENAME):
-    with open(JSON_FILENAME, 'r') as json_file:
-        data = json.load(json_file)
-    USE_VTK = data.get('use_vtk', False)
-    USE_TABS = data.get('use_tabs', False)
-    del data
+from pyNastran.f06.dev.flutter.utils import get_raw_json
+JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json()
 
 from pyNastran.f06.dev.flutter.vtk_data import VtkData
 if USE_VTK:
@@ -159,7 +152,8 @@ class FlutterGui(LoggableGui):
         self.eas_flutter_range = [None, None]
         # self.eas_diverg_range = [None, None]
         self.freq_lim = [None, None]
-        self.damping_lim = [None, None]
+        # self.damping_lim = [None, None]
+        self.ydamp_lim = [None, None]
         self.kfreq_lim = [None, None]
         self.eigr_lim = [None, None]
         self.eigi_lim = [None, None]

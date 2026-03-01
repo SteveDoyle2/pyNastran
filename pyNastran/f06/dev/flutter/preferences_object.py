@@ -14,11 +14,13 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class FlutterPreferencesObject:
     """defines PreferencesObject, which is an interface to the PreferencesWindow"""
-    def __init__(self, gui: FlutterGui, use_vtk: bool):
+    def __init__(self, gui: FlutterGui, use_vtk: bool,
+                 hide_vtk: bool=False):
         self.gui = gui
         self.window_shown = None
         self.window = None
         self.use_vtk = use_vtk
+        self.hide_vtk = hide_vtk
 
     # def show_window(self) -> None:
     #     """shows the window"""
@@ -56,6 +58,7 @@ class FlutterPreferencesObject:
             'plot_font_size': gui.plot_font_size,
             'use_vtk': gui.use_vtk,
             'use_tabs': gui.use_tabs,
+            'hide_vtk': self.hide_vtk,
             'vtk': vtk_data,
             'export_to_png': gui.export_to_png,
             'export_to_csv': gui.export_to_csv,

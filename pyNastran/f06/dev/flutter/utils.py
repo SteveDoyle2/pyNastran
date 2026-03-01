@@ -2,8 +2,16 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import shutil
+import warnings
 import traceback
 from typing import Optional, Any, TYPE_CHECKING
+
+try:
+    import json5 as json
+except ModuleNotFoundError:
+    warnings.warn('couldnt find json5, using json')
+    import json
+
 from matplotlib import pyplot as plt
 from pyNastran.f06.parse_flutter import make_flutter_response, get_flutter_units
 
@@ -145,6 +153,20 @@ def get_plot_file() -> str:
     #new_filename = home_dirname / 'plot_145' / 'settings.json'
     #move_filename(old_filename, new_filename)
     return str(old_filename)
+
+def get_raw_json(allow_vtk: bool=True) -> tuple[str, bool, bool]:
+    json_filename = get_plot_file()
+    use_vtk = False
+    use_tabs = False
+    if os.path.exists(json_filename):
+        with open(json_filename, 'r') as json_file:
+            data = json.load(json_file)
+        use_vtk = data.get('use_vtk', False)
+        use_tabs = data.get('use_tabs', False)
+        del data
+    if use_vtk and not allow_vtk:
+        use_vtk = False
+    return json_filename, use_vtk, use_tabs
 
 def move_filename(old_filename: Path,
                   new_filename: Path) -> None:
@@ -373,7 +395,8 @@ def get_vlines(vf: float, vl: float) -> list[tuple[str, float, str, str]]:
 
 def get_damping_crossings(damping_required: float,
                           damping_required_tol: float,
-                          damping_limit: float) -> list:
+                          damping_limit: float,
+                          ) -> list[tuple[float, float]]:
     damping_crossings = []
     if damping_required is not None and damping_required > -0.99:
         damping_crossings.append((damping_required, damping_required + damping_required_tol))

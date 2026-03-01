@@ -37,6 +37,8 @@ class FlutterPreferencesDialog(PyDialog):
         PyDialog.__init__(self, data, win_parent)
         self.gui_obj = gui_obj
         self.use_vtk = gui_obj.use_vtk
+        self.hide_vtk = data['hide_vtk']
+
         # print(f'data = {data}')
         self.setup_widgets(data)
         self.on_font_size()
@@ -96,35 +98,35 @@ class FlutterPreferencesDialog(PyDialog):
         set_combo_box_text(self.divergence_legend_loc_combobox, data['divergence_legend_loc'])
 
         self.flutter_bbox_to_anchor_x_label = QLabel('Flutter BBox to Anchor:')
-        self.flutter_bbox_to_anchor_x_label.setToolTip('Shift the Legend')
         self.flutter_bbox_to_anchor_x_spinner = QDoubleSpinBox()
         self.flutter_bbox_to_anchor_x_spinner.setValue(data['flutter_bbox_to_anchor_x'])
         self.flutter_bbox_to_anchor_x_spinner.setMinimum(1.0)
         self.flutter_bbox_to_anchor_x_spinner.setMaximum(2.0)
         self.flutter_bbox_to_anchor_x_spinner.setSingleStep(0.01)
+        self.flutter_bbox_to_anchor_x_spinner.setToolTip('Shift the Legend')
 
         flutter_ncolumns = _get_dict_value(data, 'flutter_ncolumns', 0)
         self.flutter_ncolumns_label = QLabel('Flutter nColumns:')
-        self.flutter_ncolumns_label = QLabel('Change number of columns because it can get messy')
         self.flutter_ncolumns_spinner = QSpinBox()
         self.flutter_ncolumns_spinner.setMinimum(0)
         self.flutter_ncolumns_spinner.setMaximum(3)
         self.flutter_ncolumns_spinner.setValue(flutter_ncolumns)
+        self.flutter_ncolumns_spinner.setToolTip('Change number of columns because it can get messy')
 
         freq_ndigits = _get_dict_value(data, 'freq_ndigits', FREQ_NDIGITS_DEFAULT)
         self.freq_ndigits_label = QLabel('Freq Digits:')
-        self.flutter_ncolumns_label = QLabel('Set the precision of flutter frequencies')
         self.freq_ndigits_spinner = QSpinBox()
         self.freq_ndigits_spinner.setMinimum(0)
         self.freq_ndigits_spinner.setMaximum(4)
         self.freq_ndigits_spinner.setValue(freq_ndigits)
+        self.freq_ndigits_spinner.setToolTip('Set the precision of flutter frequencies')
 
         freq_diveregence_tol = _get_dict_value(data, 'freq_divergernce_tol', str(FREQ_DIVERGENCE_TOL))
         self.freq_divergence_tol_label = QLabel('Divergence Freq Tol (Hz):')
-        self.freq_divergence_tol_label = QLabel('Set the tolerance to identify divergence')
         self.freq_divergence_tol_edit = QFloatEdit('0', self)
         self.freq_divergence_tol_edit.setText(freq_diveregence_tol)
-        self.freq_divergence_tol_label.setEnabled(False)
+        self.freq_divergence_tol_edit.setToolTip('Set the tolerance to identify divergence')
+        # self.freq_divergence_tol_label.setEnabled(False)
         self.freq_divergence_tol_edit.setEnabled(False)
 
         self.export_png_checkbox = QCheckBox('Export PNG')
@@ -146,10 +148,12 @@ class FlutterPreferencesDialog(PyDialog):
 
         self.default_button = QPushButton('Default')
 
-        if not self.use_vtk:
+        if not self.use_vtk or self.hide_vtk:
             objs = [self.icase_label, self.icase_edit,
                     self.nphase_label, self.nphase_edit,
                     self.dt_ms_label, self.dt_ms_edit, self.animate_checkbox]
+            if self.hide_vtk:
+                objs.extend([self.use_vtk_checkbox, self.use_tabs_checkbox])
             for obj in objs:
                 obj.setVisible(False)
 
@@ -340,7 +344,7 @@ class FlutterPreferencesDialog(PyDialog):
         self.gui_obj.on_close()
 
 
-def _get_dict_value(data: dict, name, default):
+def _get_dict_value(data: dict, name: str, default):
     value = data.get(name, default)
     if value is None:
         return default

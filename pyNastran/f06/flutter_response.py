@@ -730,7 +730,7 @@ class FlutterResponse:
     def get_flutter_crossings(self,
                               damping_crossings: Optional[dict[float, float]]=None,
                               freq_crossings: Optional[list[tuple[float, float]]]=None,
-                              modes=None,
+                              modes: Optional[list[int]]=None,
                               eas_range: Optional[tuple[float, float]]=None,
                               point_removal: Optional[list[tuple[float, float]]]=None,
                               freq_round: int=2,
@@ -1832,12 +1832,15 @@ class FlutterResponse:
             # freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
             # print(color, symbol, linestyle)
             # dfreq = freq.max() - freq.min()
-            if filter_freq and (ylim_freq is not None and freq_calc.min() > ylim_freq[1]) and damping_calc.max() < 0.0:
+            is_freq1 = ylim_freq is not None and ylim_freq[1] is not None
+            if filter_freq and (is_freq1 and freq_calc.min() > ylim_freq[1]) and damping_calc.max() < 0.0:
                 # if we're entirely greater than the max, skip line
                 #print(f'greater than the max ylim_freq; filter_freq={filter_freq} ylim_freq={ylim_freq}; '
                 #      f'freq_calc_min={freq_calc.min()} damping_max={damping_calc.max()}')
                 continue
-            if filter_freq and freq_calc.max() < ylim_freq[0] and damping_calc.max() < 0.0:
+
+            is_freq0 = ylim_freq is not None and ylim_freq[0] is not None
+            if filter_freq and (is_freq0 and freq_calc.max() < ylim_freq[0]) and damping_calc.max() < 0.0:
                 # if we're entirely below than the min, skip line
                 #print('below than the min ylim_freq')
                 continue
