@@ -161,9 +161,14 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         argv = sys.argv
 
     is_gui = '--gui' in argv
+    is_trade = '--trade' in argv
     if is_gui:
         argv.remove('--gui')
         from pyNastran.f06.dev.flutter.gui_flutter import main as gui_flutter
+    elif is_trade:
+        is_gui = True
+        argv.remove('--trade')
+        from pyNastran.f06.dev.flutter.gui_flutter_plot import main as gui_flutter
 
     if len(argv) == 2 and is_gui:
         gui_flutter()
