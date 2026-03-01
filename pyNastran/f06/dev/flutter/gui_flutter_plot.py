@@ -7,7 +7,6 @@ import sys
 import copy
 import warnings
 import traceback
-from itertools import count
 from pathlib import Path
 from functools import wraps
 from typing import Optional, Any
@@ -17,7 +16,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 
-from pyNastran.utils import print_bad_path, PathLike
+from pyNastran.utils import print_bad_path
 from pyNastran.utils.dev import get_files_of_type
 
 try:
@@ -30,20 +29,21 @@ from pyNastran.f06.dev.flutter.utils import get_raw_json
 JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json(allow_vtk=False)
 
 from qtpy import QtCore
-Qt = QtCore.Qt
 from qtpy.compat import getopenfilename  # getsavefilename
 # from qtpy.QtGui import QIcon, QPixmap
 from qtpy.QtWidgets import (
     QLabel, QWidget,
-    QApplication, QVBoxLayout, QComboBox,  # QMenu, QLineEdit,
+    QApplication, QVBoxLayout, QComboBox,
     QHBoxLayout, QPushButton, QGridLayout,
     QAction,
     QCheckBox, QLineEdit,
     QListWidgetItem, QAbstractItemView,
-    QListWidget, QSpinBox, QTabWidget,  # QToolButton,
-    QTableWidget, QTableWidgetItem, QMenu, QInputDialog,
+    QListWidget, QSpinBox, QTabWidget,
     QFileDialog, QProgressBar,
 )
+from pyNastran.f06.dev.flutter.qtablewidgetcopy import QTableWidgetCopy
+from pyNastran.f06.dev.flutter.write_report import write_report
+
 # from qtpy.QtWidgets import (
 #     QMessageBox,
 #     QMainWindow, QDockWidget, QFrame, QToolBar,
@@ -59,8 +59,7 @@ from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
 from pyNastran.f06.dev.flutter.gui_flutter import (
     export_flutter_results, get_list_float_or_none, get_float_or_none,
-    get_selected_items_flat,
-)
+    get_selected_items_flat)
 
 from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_menus
 from pyNastran.f06.dev.flutter.preferences_object import FlutterPreferencesObject
@@ -76,7 +75,7 @@ from pyNastran.f06.dev.flutter.utils import (
     get_point_removal_str,
     point_removal_str_to_point_removal,
     _float_passed_to_default, _to_str,
-    get_plot_flags, get_plot_file,
+    get_plot_flags,
     update_ylog_style, get_png_filename,
     load_f06_op2, get_vlines, get_damping_crossings,
     X_PLOT_TYPES, PLOT_TYPES, UNITS_IN, UNITS_OUT,
@@ -90,14 +89,7 @@ from pyNastran.f06.dev.flutter.vtk_data import VtkData
 import pandas as pd
 import tables
 
-from pyNastran.f06.parse_flutter import make_flutter_response, FlutterResponse
-try:
-    from docx import Document
-    from docx.shared import Inches
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
-except ImportError:
-    warnings.warn('>>> pip install python-docx')
-    raise
+from pyNastran.f06.parse_flutter import FlutterResponse
 
 QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
 QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
@@ -117,7 +109,7 @@ def split_by_pattern(strings: list[str],
     split_lists = [s.split(delimiter) for s in strings]
     if not group_common or len(split_lists) < 2:
         return split_lists
-    split_list0 = split_lists[0]
+    # split_list0 = split_lists[0]
     # print(f'split_list0 = {split_list0}')
 
     # Find common prefix
@@ -130,7 +122,7 @@ def split_by_pattern(strings: list[str],
             continue
         break
     # print(f'common_prefix_len = {common_prefix_len}')
-    prefix = split_list0[:common_prefix_len]
+    # prefix = split_list0[:common_prefix_len]
     # print(f'prefix = {prefix}')
 
     # Find common suffix
@@ -140,7 +132,7 @@ def split_by_pattern(strings: list[str],
             common_suffix_len += 1
             continue
         break
-    print(f'common_suffix_len = {common_suffix_len}')
+    # print(f'common_suffix_len = {common_suffix_len}')
 
     # Reconstruct
     result = []
@@ -157,316 +149,6 @@ def split_by_pattern(strings: list[str],
             new_parts.append(delimiter.join(parts[-common_suffix_len:]))
         result.append(new_parts)
     return result
-
-class QTableWidgetCopy(QTableWidget):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # self.setContextMenuPolicy(Qt.CustomContextMenu)
-        # self.customContextMenuRequested.connect(self.show_context_menu)
-
-        rename_column_support = True
-        add_remove_row_support = True
-
-        if rename_column_support:
-            # Enable custom context menu for horizontal header
-            self.horizontalHeader().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-            self.horizontalHeader().customContextMenuRequested.connect(self.show_header_context_menu)
-
-        if add_remove_row_support:
-            # Add/remove rows
-            self.verticalHeader().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-            self.verticalHeader().customContextMenuRequested.connect(self.show_row_header_context_menu)
-
-    def load_table_data(self,
-                        headers: list[str],
-                        data: np.ndarray | list[list[int | float | str]]) -> None:
-        """
-        headers = ['A', 'Col2', 'Col3', 'Col4']
-        data = np.arange(20).reshape(4,5)
-        self.load_table_data(headers, data)
-        """
-        # Set row and column counts
-        # print(f'data = {data}')
-        self.clear()
-        self.setRowCount(len(data))
-        self.setColumnCount(len(data[0]) if len(data) else 0)
-
-        # Set headers (optional)
-        # headers = ["Column 1", "Column 2", "Column 3"]  # Replace with your headers
-        self.setHorizontalHeaderLabels(headers)
-
-        # Populate the table
-        for row_idx, row_data in enumerate(data):
-            for col_idx, col_data in enumerate(row_data):
-                item = QTableWidgetItem(str(col_data))
-                self.setItem(row_idx, col_idx, item)
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_C and (event.modifiers() & Qt.KeyboardModifier.ControlModifier):
-            self.on_copy_table(event)
-
-    def on_copy_table(self, event):
-        copied_cells = self.selectedIndexes()
-        if not copied_cells:
-            return
-        # Sort to maintain order, handle rows/cols with \t and \n
-        # copied_cells = sorted(copied_cells)
-
-        copy_text = ''
-        max_column = copied_cells[-1].column()
-        for c in copied_cells:
-            copy_text += self.item(c.row(), c.column()).text()
-            if c.column() == max_column:
-                copy_text += '\n'
-            else:
-                copy_text += '\t'
-        QApplication.clipboard().setText(copy_text)
-
-    def show_context_menu(self, pos):
-        if self.rowCount() == 0 or self.columnCount() == 0:
-            return
-        print(f'pos = {pos}')
-        # Get the item at the clicked position
-        item = self.itemAt(pos)
-        print(f'item = {item}')
-        if not item:
-            return
-        # Get global position to display menu correctly
-        global_pos = self.mapToGlobal(pos)
-        print(f'global_pos = {global_pos}')
-
-        # Create the menu
-        context_menu = QMenu(self)
-        copy_action = context_menu.addAction('Copy')
-        delete_action = context_menu.addAction('Delete Row')
-
-        # Execute the menu and wait for an action selection
-        action = context_menu.exec_(global_pos)
-
-        if action == copy_action:
-            # Handle copy logic
-            print(f'Copying cell content: {item.text()}')
-        elif action == delete_action:
-            # Handle delete logic
-            row = item.row()
-            self.removeRow(row)
-            # print(f'Deleting row {row}')
-
-    def show_header_context_menu(self, position):
-        """Show context menu when right-clicking on column header"""
-        # Get the column index from the position
-        column = self.horizontalHeader().logicalIndexAt(position)
-        if column < 0:
-            return
-
-        # Create context menu
-        menu = QMenu(self)
-        rename_action = menu.addAction("Rename Column")
-
-        # copyAction = menu.addAction('Copy')
-        delete_action = menu.addAction('Delete Column')
-        insert_left_action = menu.addAction('Insert Column Left')
-        insert_right_action = menu.addAction('Insert Column Right')
-
-        # Show menu and get selected action
-        action = menu.exec(self.horizontalHeader().mapToGlobal(position))
-
-        if action == rename_action:
-            self.rename_column(column)
-        elif action == insert_left_action:
-            col = self.horizontalHeader().logicalIndexAt(position)
-            self.insert_col(col)
-        elif action == insert_right_action:
-            col = self.horizontalHeader().logicalIndexAt(position)
-            self.insert_col(col+1)
-        elif action == delete_action:
-            col = self.horizontalHeader().logicalIndexAt(position)
-            self.delete_col(col)
-
-    def rename_column(self, column: int):
-        """Open dialog to rename column header"""
-        # Get current column name
-        current_name = self.horizontalHeaderItem(column).text() if self.horizontalHeaderItem(
-            column) else f"Column {column}"
-
-        # Show input dialog
-        new_name, ok = QInputDialog.getText(
-            self,
-            "Rename Column",
-            "Enter new column name:",
-            text=current_name
-        )
-
-        if ok and new_name:
-            self.setHorizontalHeaderItem(column, QTableWidgetItem(new_name))
-    #-----------------
-    # def show_col_header_context_menu(self, position):
-    #     """Show context menu when right-clicking on row header (row numbers)"""
-    #     # Get the col index from the position
-    #     col = self.horizontalHeader().logicalIndexAt(position)
-    #
-    #     if col < 0:
-    #         return
-    #
-    #     # Create context menu
-    #     menu = QMenu(self)
-    #     insert_left_action = menu.addAction("Insert Column Left")
-    #     insert_right_action = menu.addAction("Insert Column Right")
-    #     menu.addSeparator()
-    #     delete_action = menu.addAction("Delete Col")
-    #
-    #     # Show menu and get selected action
-    #     action = menu.exec(self.horizontalHeader().mapToGlobal(position))
-    #
-    #     if action == insert_left_action:
-    #         self.insert_col(col)
-    #     elif action == insert_right_action:
-    #         self.insert_col(col + 1)
-    #     elif action == delete_action:
-    #         self.delete_col(col)
-
-    def show_row_header_context_menu(self, position):
-        """Show context menu when right-clicking on row header (row numbers)"""
-        # Get the row index from the position
-        row = self.verticalHeader().logicalIndexAt(position)
-
-        if row < 0:
-            return
-
-        # Create context menu
-        menu = QMenu(self)
-        insert_above_action = menu.addAction("Insert Row Above")
-        insert_below_action = menu.addAction("Insert Row Below")
-        menu.addSeparator()
-        delete_action = menu.addAction("Delete Row")
-
-        # Show menu and get selected action
-        action = menu.exec(self.verticalHeader().mapToGlobal(position))
-
-        if action == insert_above_action:
-            self.insert_row(row)
-        elif action == insert_below_action:
-            self.insert_row(row + 1)
-        elif action == delete_action:
-            self.delete_row(row)
-
-    def insert_row(self, row: int):
-        """Insert a new empty row at the specified position"""
-        self.insertRow(row)
-
-        # Initialize empty cells in the new row
-        for col in range(self.columnCount()):
-            self.setItem(row, col, QTableWidgetItem(""))
-        # print(f'Inserted row at position {row}')
-
-    def insert_col(self, col: int):
-        """Insert a new empty col at the specified position"""
-        self.insertColumn(col)
-
-        # Initialize empty cells in the new row
-        for col in range(self.columnCount()):
-            self.setItem(col, col, QTableWidgetItem(""))
-        # print(f'Inserted col at position {col}')
-
-    def delete_row(self, row: int):
-        """Delete the specified row"""
-        if self.rowCount() > 0:
-            self.removeRow(row)
-            # print(f'Deleted row {row}')
-
-    def delete_col(self, col: int):
-        """Delete the specified col"""
-        if self.columnCount() > 0:
-            self.removeColumn(col)
-            # print(f'Deleted col {col}')
-
-    def delete_selected_rows(self):
-        """Delete all selected rows (triggered by Delete key)"""
-        selected_rows = set()
-        for item in self.selectedItems():
-            selected_rows.add(item.row())
-
-        # Delete from highest to lowest to avoid index shifting issues
-        for row in sorted(selected_rows, reverse=True):
-            self.removeRow(row)
-
-        if selected_rows:
-            print(f'Deleted {len(selected_rows)} row(s)')
-
-    def delete_selected_cols(self):
-        """Delete all selected rows (triggered by Delete key)"""
-        selected_cols = set()
-        for item in self.selectedItems():
-            selected_cols.add(item.row())
-
-        # Delete from highest to lowest to avoid index shifting issues
-        for col in sorted(selected_cols, reverse=True):
-            self.removeColumn(col)
-
-        if selected_cols:
-            print(f'Deleted {len(selected_cols)} col(s)')
-
-    def get_data(self,
-                 skip_empty_rows=True,
-                 strip_whitespace=True,
-                 convert_numeric=False):
-            """
-            Extract data from QTableWidget to pandas DataFrame with advanced options
-
-            Parameters
-            ----------
-            skip_empty_rows : bool
-                If True, skip rows that are entirely empty (default: True)
-            strip_whitespace : bool
-                If True, strip leading/trailing whitespace from all cells (default: True)
-            convert_numeric : bool
-                If True, attempt to convert numeric strings to numbers (default: False)
-
-            Returns
-            -------
-            pandas.DataFrame
-                DataFrame containing the table data
-            """
-            rows = self.rowCount()
-            cols = self.columnCount()
-
-            # Get headers
-            headers = []
-            for col in range(cols):
-                header = self.horizontalHeaderItem(col)
-                if header is not None:
-                    headers.append(header.text())
-                else:
-                    headers.append(f"Column_{col}")
-            # print(f'headers = {headers}')
-
-            # Get data
-            data = []
-            for row in range(rows):
-                row_data = []
-                for col in range(cols):
-                    item = self.item(row, col)
-                    if item is not None:
-                        cell_value = item.text()
-                        if strip_whitespace:
-                            cell_value = cell_value.strip()
-                        row_data.append(cell_value)
-                    else:
-                        row_data.append("")
-                # print(f'row_data = {row_data}')
-
-                # Check if row is entirely empty
-                if skip_empty_rows:
-                    if any(cell for cell in row_data):  # If any cell has content
-                        data.append(row_data)
-                else:
-                    data.append(row_data)
-
-            # Convert numeric columns if requested
-            df = pd.DataFrame(data, columns=headers)
-            if convert_numeric:
-                df = df.apply(pd.to_numeric, errors='ignore')
-            return df
 
 
 class FlutterGui(LoggableGui):
@@ -559,7 +241,7 @@ class FlutterGui(LoggableGui):
         ifile = -1
         if f06_filename:
             self.f06_filename_edit[ifile].setText(f06_filename)
-            self._set_f06_default_names(f06_filename)
+            # self._set_f06_default_names(f06_filename)
 
         self.setup_toolbar()
         self._update_recent_files_actions()
@@ -856,8 +538,8 @@ class FlutterGui(LoggableGui):
             ('freq_tol', -1, self.freq_tol_edit),
             ('freq_tol_remove', -1, self.freq_tol_remove_edit),
             ('mag_tol', -1, self.mag_tol_edit),
-            ('vl', -1, self.VL_edit),
-            ('vf', -1, self.VF_edit),
+            ('vl', -1, self.vl_edit),
+            ('vf', -1, self.vf_edit),
             ('damping', -1, self.damping_edit),
             ('damping_required', -1, self.damping_required_edit),
             ('damping_required_tol', -1, self.damping_required_tol_edit),
@@ -1075,11 +757,11 @@ class FlutterGui(LoggableGui):
         # self.output_directory_edit = []
         # self.output_directory_browse = []
         #
-        # self.VL_label = []
-        # self.VL_edit = []
+        # self.vl_label = []
+        # self.vl_edit = []
         #
-        # self.VF_label = []
-        # self.VF_edit = []
+        # self.vf_label = []
+        # self.vf_edit = []
         #
         # self.damping_label = []
         # self.damping_edit = []
@@ -1279,13 +961,13 @@ class FlutterGui(LoggableGui):
         self.output_directory_edit.setDisabled(True)
         self.output_directory_browse.setDisabled(True)
 
-        self.VL_label = QLabel('VL, Limit:', self)
-        self.VL_edit = QFloatEdit('', self)
-        self.VL_edit.setToolTip('Makes a vertical line for VL')
+        self.vl_label = QLabel('VL, Limit:', self)
+        self.vl_edit = QFloatEdit('', self)
+        self.vl_edit.setToolTip('Makes a vertical line for VL')
 
-        self.VF_label = QLabel('VF, Flutter:', self)
-        self.VF_edit = QFloatEdit('', self)
-        self.VF_edit.setToolTip('Makes a vertical line for VF')
+        self.vf_label = QLabel('VF, Flutter:', self)
+        self.vf_edit = QFloatEdit('', self)
+        self.vf_edit.setToolTip('Makes a vertical line for VF')
 
         self.damping_required_label = QLabel('Damping Required, g:', self)
         self.damping_required_edit = QFloatEdit('', self)
@@ -1457,10 +1139,10 @@ class FlutterGui(LoggableGui):
         self.eigi_lim_edit_min.setVisible(show_root_locus)
         self.eigi_lim_edit_max.setVisible(show_root_locus)
 
-        self.VL_label.setVisible(show_eas_lim)
-        self.VL_edit.setVisible(show_eas_lim)
-        self.VF_label.setVisible(show_eas_lim)
-        self.VF_edit.setVisible(show_eas_lim)
+        self.vl_label.setVisible(show_eas_lim)
+        self.vl_edit.setVisible(show_eas_lim)
+        self.vf_label.setVisible(show_eas_lim)
+        self.vf_edit.setVisible(show_eas_lim)
         # ifile = self.ifile
         ifile = -1
 
@@ -1490,14 +1172,14 @@ class FlutterGui(LoggableGui):
         iwindow_organize = self.tabs.addTab(tab_org, 'Organize')
         self.iwindows = [iwindow, iwindow_organize]
 
-        vbox_file = self._setup_file_layout()
+        vbox_file = self._setup_file_layout(ifile=0)
         vbox_org = self._setup_organize_layout()
         tab_file.setLayout(vbox_file)
         tab_org.setLayout(vbox_org)
         self.setCentralWidget(self.tabs)
         tab_file.activateWindow()
 
-    def _setup_organize_layout(self) -> None:
+    def _setup_organize_layout(self) -> QVBoxLayout:
         self.excel_filename_label = QLabel('Excel Filename:', self)
         self.excel_filename_edit = QLineEdit(self)
         self.excel_filename_edit.setText(self.excel_filename)
@@ -1706,7 +1388,7 @@ class FlutterGui(LoggableGui):
         #     # raise RuntimeError(x_plot_type)
         #     xlim = (None, None)
 
-        print('settings')
+        # print('settings')
         modes = None if len(self.selected_modes) == 0 else self.selected_modes
         settings = {
             'x_plot_type': 'eas',
@@ -1714,8 +1396,8 @@ class FlutterGui(LoggableGui):
             'f06_units': self._units_in,
             'out_units': self._units_out,
             'modes': modes,
-            'VL_target': float(self.data['vl']),
-            'VF_target': float(self.data['vf']),
+            'vl_target': float(self.data['vl']),
+            'vf_target': float(self.data['vf']),
             #'xlim_kfreq': str_limit_to_limit(self.kfreq_lim),
             #'ylim_damping': self.damping_lim,  # NO
 
@@ -1751,11 +1433,11 @@ class FlutterGui(LoggableGui):
             # 'mode_switch_method': None,
             #------------------
             'divergence_legend_loc': self.divergence_legend_loc,
+            'divergence_freq_tol': self.freq_divergence_tol,
             'flutter_bbox_to_anchor_x': self.flutter_bbox_to_anchor_x,
             'freq_ndigits': self.freq_ndigits,
-            'freq_divergence_tol': self.freq_divergence_tol,
         }
-        print('finished run')
+        # print('finished run')
         # return
 
         f06_filenames = out_table['Filename'].to_list()
@@ -1769,8 +1451,8 @@ class FlutterGui(LoggableGui):
 
         configs, f06_filenames = remove_empty_rows(
             configs, f06_filenames, log)
-        log.info(f'f06_filenames2 = {f06_filenames}')
-        log.info(f'configs2 = {configs}')
+        # log.info(f'f06_filenames2 = {f06_filenames}')
+        # log.info(f'configs2 = {configs}')
 
         nfiles = len(f06_filenames)
         if nfiles == 0:
@@ -1786,7 +1468,7 @@ class FlutterGui(LoggableGui):
         # Process files
         try:
             self.log.info(f'Processing {len(f06_filenames)} files...')
-            write_flutter_docx(
+            write_report(
                 word_filename,
                 f06_filenames, configs, out_table,
                 self.log, settings,
@@ -1947,8 +1629,7 @@ class FlutterGui(LoggableGui):
         data_table = df.to_numpy()
         self.table_widget.load_table_data(headers, data_table)
 
-    def _setup_file_layout(self) -> None:
-        ifile = 0
+    def _setup_file_layout(self, ifile=0) -> QVBoxLayout:
         file_row = 0
         hbox = QGridLayout()
         hbox.addWidget(self.f06_filename_label[ifile], file_row, 0)
@@ -2075,12 +1756,12 @@ class FlutterGui(LoggableGui):
         self.output_directory_browse.setVisible(False)
         irow += 1
 
-        grid.addWidget(self.VL_label, irow, 0)
-        grid.addWidget(self.VL_edit, irow, 1)
+        grid.addWidget(self.vl_label, irow, 0)
+        grid.addWidget(self.vl_edit, irow, 1)
         irow += 1
 
-        grid.addWidget(self.VF_label, irow, 0)
-        grid.addWidget(self.VF_edit, irow, 1)
+        grid.addWidget(self.vf_label, irow, 0)
+        grid.addWidget(self.vf_edit, irow, 1)
         irow += 1
 
         grid.addWidget(self.damping_required_label, irow, 0)
@@ -2239,8 +1920,8 @@ class FlutterGui(LoggableGui):
         self.alt_lim_label.setText(f'Alt Limits ({alt_units}):')
         self.rho_lim_label.setText(f'Rho Limits ({rho_units}):')
         self.q_lim_label.setText(f'Q Limits ({q_units}):')
-        self.VL_label.setText(f'VL, Limit ({eas_units}):')
-        self.VF_label.setText(f'VF, Flutter ({eas_units}):')
+        self.vl_label.setText(f'VL, Limit ({eas_units}):')
+        self.vf_label.setText(f'VF, Flutter ({eas_units}):')
 
     def on_font_size(self) -> None:
         # font_size = self.font_size_edit.value()
@@ -2673,8 +2354,8 @@ class FlutterGui(LoggableGui):
         if is_passed_tol3 and mag_tol is None:
             mag_tol = -1.0
 
-        vl, is_passed_vl = get_float_or_none(self.VL_edit)
-        vf, is_passed_vf = get_float_or_none(self.VF_edit)
+        vl, is_passed_vl = get_float_or_none(self.vl_edit)
+        vf, is_passed_vf = get_float_or_none(self.vf_edit)
         damping_required, is_passed_damping_required = get_float_or_none(self.damping_required_edit)
         damping_required_tol, is_passed_damping_required_tol = get_float_or_none(self.damping_required_tol_edit)
         damping, is_passed_damping = get_float_or_none(self.damping_edit)
@@ -2921,681 +2602,7 @@ def get_file_edit(name: str,
     return is_passed, filename
 
 
-def write_flutter_docx(docx_filename: str,
-                       f06_filenames: list[str],
-                       configs: list[str],
-                       table: pd.DataFrame,
-                       log: SimpleLogger,
-                       settings: dict[str, int | float | str],
-                       x_plot_type: str='eas',
-                       f06_units: str='english_in',
-                       out_units: str='english_kt',
-                       nrigid_body_modes: int=0,
-                       modes=None,
-                       VL_target=None,
-                       VF_target=None,
-                       # v_lines=None,
-                       # xlim_kfreq=None,
-                       ylim_damping=None,
-                       ylim_freq=None,
-                       eas_lim=None,
-                       freq_tol=None,
-                       freq_tol_remove=None,
-                       damping_required=None,
-                       damping_required_tol: float=0.0001,
-                       damping_limit=None,
-                       eas_flutter_range=None,
-                       plot_font_size: int=10,
-                       show_lines: bool=True,
-                       show_points: bool=True,
-                       show_mode_number: bool=False,
-                       show_detailed_mode_info: bool=False,
-                       point_spacing: int=8,
-                       use_rhoref: bool=False,
-                       flutter_ncolumns=None,
-                       divergence_legend_loc=None,
-                       flutter_bbox_to_anchor_x=None,
-                       freq_ndigits=None,
-                       freq_divergence_tol=None,
-                       progress_callback=None,
-                       ) -> None:
-    f06_filename0 = f06_filenames[0]
-    dirname = os.path.dirname(f06_filename0)
-    docx_filename = os.path.join(dirname, docx_filename)
-
-    #------------------------------
-    mode_switch_method = None
-    x_cutoff = None  # TODO: add me; fixes NaNs?
-    # point_spacing = 8
-    make_pngs = True
-    show_individual = False
-    freq_target = 0.5
-    V_baseline = 1000.0
-    # VL_target, VF_target
-    #------------------------------
-    eas_range = eas_flutter_range
-    ncol = flutter_ncolumns
-    #------------------------------
-    v_lines = get_vlines(VF_target, VL_target)
-
-    if ncol in [0, 1]:
-        figsize = (15, 12)
-    else:
-        figsize = (24, 12)
-
-    noline = not show_lines
-    nopoints = not show_points
-    if noline and nopoints:
-        noline = False
-        nopoints = True
-
-    # damping_required = None,
-    # damping_required_tol = None,
-
-    damping_crossings, damping_required_tol = _get_damping_crossings(
-        damping_required, damping_required_tol,
-        damping_limit)
-    settings['damping_required_tol'] = str(damping_required_tol)
-    settings['damping_crossings'] = str(damping_crossings)
-
-    #------------------------------
-    # damping_crossings2 = {}
-    # if isinstance(damping_crossings, list):
-    #     for key, value in damping_crossings:
-    #         damping_crossings2[key] = value
-    #     damping_crossings = damping_crossings2
-    #     damping_crossings2 = {}
-    #
-    # for key, value in damping_crossings.items():
-    #     if np.allclose(key, 0.0):
-    #         damping_crossings2[key] = key + 0.001
-    #     damping_crossings2[key] = value
-
-    #------------------------------
-    cases = []
-
-    nfiles = len(f06_filenames)
-    log.info(f'f06_filenames = {f06_filenames}')
-    log.info(f'configs = {configs}')
-    for ifile, f06_filename, config in zip(count(), f06_filenames, configs):
-        log.info(f'Processing F06 {ifile}/{nfiles}: {f06_filename}')
-        if progress_callback is not None:
-            progress_callback(ifile, nfiles)  # 0-indexed for progress bar
-
-        base = os.path.splitext(f06_filename)[0]
-        png_filename = base + '.png'
-        if config.strip() == '':
-            config = os.path.basename(base)
-
-        resp_dict, data_dict = make_flutter_response(
-            str(f06_filename),
-            f06_units=f06_units, out_units=out_units,
-            use_rhoref=use_rhoref,
-            log=log)
-        assert len(resp_dict) == 1, resp_dict
-        response = resp_dict[1]
-
-        # xcutoff doesn't apply for first 6 modes
-        response.nrigid_body_modes = nrigid_body_modes
-        response.x_cutoff = x_cutoff
-        # response.noline = noline
-        response.freq_ndigits = freq_ndigits
-
-        response.set_plot_settings(
-            figsize=figsize,
-            # the delta spacing for the x/y axis
-            # xtick_major_locator_multiple=[50., 50.],
-            # ytick_major_locator_multiple=[0.02, None],
-        )
-        response.set_symbol_settings(
-            nopoints=False, show_mode_number=show_mode_number,
-            point_spacing=point_spacing, markersize=5,
-        )
-        response.set_font_settings(plot_font_size)
-
-        vl_vf_crossing_dict, vd_crossing_dict = response.get_flutter_crossings(
-            damping_crossings=damping_crossings, modes=modes,
-            eas_range=eas_range)
-
-        if make_pngs:
-            log.info(f"modes in plot_vg_vf = {modes}")
-            fig, (damp_axes, freq_axes) = response.plot_vg_vf(
-                plot_type='eas', modes=modes,
-                clear=False, close=False, legend=True,
-                xlim=eas_lim, ylim_damping=ylim_damping, ylim_freq=ylim_freq,
-                # ivelocity: Optional[int]=None,
-                v_lines=v_lines,
-                damping_required=damping_required,
-                damping_limit=damping_limit,
-                ncol=ncol, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
-                #--------
-                mode_switch_method=mode_switch_method,
-                divergence_legend_loc=divergence_legend_loc,
-                flutter_bbox_to_anchor=(flutter_bbox_to_anchor_x, 1.),
-                # plot_freq_tol_filtered_lines=True,
-                damping_crossings=damping_crossings, filter_damping=True,
-                eas_range=eas_range,
-                png_filename=None,
-                filter_freq=True,
-                show_detailed_mode_info=show_detailed_mode_info,
-                show=False)
-            basename = os.path.basename(png_filename)
-            damp_axes.set_title(basename)
-            # plt.tight_layout()
-            # if show_individual:
-            #     plt.show()
-            fig.savefig(png_filename, bbox_inches='tight')
-            # bbox_to_anchor=(1, 1), borderaxespad=0)
-            # shutil.copyfile(png_filename, png_filename_mach)
-            plt.close()
-        if show_individual:
-            raise RuntimeError('stopping')
-
-        # print(f'modes = {modes}')
-        # print(f'xcrossing_dict = {xcrossing_dict}')
-        hump_message = _get_hump_message(
-            response, vl_vf_crossing_dict,
-            eas_range, show_detailed_mode_info)
-
-        log.info(f'VL_target = {VL_target}')
-        v0, freq0, v3, freq3, vdiverg, freq_diverg = response.xcrossing_dict_to_VL_VF_VD(
-            vl_vf_crossing_dict, vd_crossing_dict,
-            log, freq_target, VL_target, VF_target,
-            v_baseline=V_baseline,
-            # is_hump_modes=parse_hump_modes,
-        )
-        # if VL < VL_target:
-        #     log.error(f'VL={VL} KEAS, freq={freqL} Hz; {f06_filename_base}')
-        # if VF < VF_target:
-        #     log.error(f'VF={VF} KEAS, freq={freqF} Hz; {f06_filename_base}')
-        # if VD < VD_target:
-        #     log.error(f'VD={VD} KEAS, freq={freqD} Hz; {f06_filename_base}')
-        # mass = -1.0
-        # cg = [0., 0., 0.]
-        # inertia = [0., 0., 0., 0., 0., 0.]
-
-        if 'opgwg' not in data_dict:
-            matrices = data_dict['matrices']
-            log.warning(f'data_dict_keys={list(data_dict)}; matrices_keys={list(matrices)}')
-            mass = np.full(1, np.nan)
-            cg = np.full(3, np.nan)
-            inertia = np.full((3, 3), np.nan)
-        else:
-            opgwg = data_dict['opgwg']  # grid point weight
-            # matrices = data_dict['matrices']
-            # frequencies = matrices['freq']
-            mass = opgwg['mass']
-            cg = opgwg['cg']
-            # print(opgwg)
-            # print(f'frequencies = {frequencies.round(3)}')
-            inertia = opgwg['I(S)']
-
-        case = (v0, freq0, v3, freq3, vdiverg, freq_diverg,
-                mass, cg, inertia, config,
-                hump_message,
-                f06_filename, png_filename)
-        eas_units = response.out_units['eas']
-        cases.append(case)
-    _cases_to_document(log, docx_filename, cases, settings,
-                       eas_units=eas_units)
-
-
-def _get_damping_crossings(damping_required: float,
-                           damping_required_tol: Optional[float],
-                           damping_limit: float,
-                           ) -> tuple[dict[float, float], float]:
-    damping_crossings = {}
-    if damping_required_tol is None or damping_required_tol < 0.:
-        damping_required_tol = 0.0
-
-    if damping_required is not None and damping_required > -1.0:
-        # VL
-        damping_required_tol = max(0., damping_required_tol)
-        damping_crossings[damping_required] = damping_required + damping_required_tol
-    if damping_limit is not None and damping_limit > -1.0:
-        # VF
-        damping_crossings[damping_limit] = damping_limit
-    return damping_crossings, damping_required_tol
-
-def _cases_to_document(log: SimpleLogger,
-                       docx_filename: PathLike,
-                       cases: list, settings: dict[str, int | float],
-                       eas_units: str='KEAS',
-                       write_filename: bool=True):
-    percent0 = settings['damping_required'] * 100
-    percent3 = settings['damping_limit'] * 100
-    label_vg0 = f'V,g={percent0:.0f}% ({eas_units})'
-    label_vg3 = f'V,g={percent3:.0f}% ({eas_units})'
-    label_vd = f'VDiverg ({eas_units})'
-
-    label_freq_g0 = f'Freq,g={percent0:.0f}% (Hz)'
-    label_freq_g3 = f'Freq,g={percent3:.0f}% (Hz)'
-
-    configs = []
-    f06_filenames = []
-    # config_file_table = {
-    #     'Config': configs,
-    #     'File': f06_filenames,
-    # }
-
-    flutter_table = {
-        # 'Configuration': [],
-        'Config': configs,
-        'File': f06_filenames,
-        label_vg0: [],
-        label_freq_g0: [],
-        label_vg3: [],
-        label_freq_g3: [],
-        label_vd: [],
-    }
-
-    document = Document()
-    _write_name_value_table(document, settings)
-
-    for case in cases:
-        # document.add_heading(f'Config={config0}', heading_level_mach)
-
-        (v0, freq0, v3, freq3, vdiverg, freq_diverg,
-         mass, cg, inertia, config,
-         hump_message,
-         f06_filename, png_filename) = case
-
-        # could get the config name better
-        basename = os.path.basename(f06_filename)
-
-        configs.append(config)
-        f06_filenames.append(f06_filename)
-        flutter_table[label_vg0].append(v0)
-        flutter_table[label_vg3].append(v3)
-        flutter_table[label_vd].append(vdiverg)
-        flutter_table[label_freq_g0].append(freq0)
-        flutter_table[label_freq_g3].append(freq3)
-
-        # configi = ''
-        if np.isfinite(freq0):
-            v0_text = f'V 0%={v0:.0f} KEAS ({freq0:.1f} Hz)'
-        else:  # TODO: why does this happen?
-            v0_text = f'V 0%={v0:.0f} KEAS (default)'
-
-        if np.isfinite(freq3):
-            v3_text = f'V 3%={v3:.0f} KEAS ({freq3:.1f} Hz)'
-        else:  # TODO: why does this happen?
-            v3_text = f'V 3%={v3:.0f} KEAS (default)'
-
-        text = f'{v0_text}, {v3_text}, VD={vdiverg:.0f} KEAS, {config}'
-        if hump_message:
-            text += '\n' + hump_message
-
-        freq0_str = f'{freq0:.2f}' if np.isfinite(freq0) else 'N/A'
-        freq3_str = f'{freq3:.2f}' if np.isfinite(freq3) else 'N/A'
-
-        # write the dirname and f06_filename of the file
-        dirname = os.path.basename(os.path.dirname(f06_filename))
-        path_str0 = os.path.join(dirname, basename)
-        path_str = str(path_str0.replace('\\', '/'))
-
-        if os.path.exists(png_filename):
-            document.add_picture(str(png_filename), width=Inches(6.5))
-        else:
-            paragraph = document.add_paragraph(f'Missing {f06_filename}')
-            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-        if write_filename:
-            paragraph = document.add_paragraph(path_str)
-            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        # msg += f'{mach:.3f}, {weight_config}, {v0:.3f}, {freq0_str}, {v3:.3f}, {freq3_str}, {vdiverg:.3f}, {config}, {f06_filename_base}\n'
-
-    if percent0 <= -100.0:
-        del flutter_table[label_vg0]
-        del flutter_table[label_freq_g0]
-    if percent3 <= -100.0:
-        del flutter_table[label_vg3]
-        del flutter_table[label_freq_g3]
-    _write_2d_table(document, flutter_table, log, 'Flutter Results')
-    log.info(f'saving docx {docx_filename}')
-    document.save(docx_filename)
-    return
-    # ncol = flutter_ncolumns
-    #
-    # damping_crossings = [
-    #     (0.00, 0.01),
-    #     (0.03, 0.03),
-    # ]
-    #
-    # damping_crossings2 = {}
-    # if isinstance(damping_crossings, list):
-    #     for key, value in damping_crossings:
-    #         damping_crossings2[key] = value
-    #     damping_crossings = damping_crossings2
-    #     damping_crossings2 = {}
-    #
-    # for key, value in damping_crossings.items():
-    #     if np.allclose(key, 0.0):
-    #         damping_crossings2[key] = key + 0.001
-    #     damping_crossings2[key] = value
-    #
-    # if filename_base_to_vl_vf_vbase_dict is None:
-    #     filename_base_to_vl_vf_vbase_dict = {}
-    # assert isinstance(filename_base_to_vl_vf_vbase_dict, dict), filename_base_to_vl_vf_vbase_dict
-    # print(f'filename_base_to_vl_vf_vbase_dict = {filename_base_to_vl_vf_vbase_dict}')
-    #
-    # if case_format == 'func':
-    #     assert case_info_func is not None, case_info_func
-    #
-    # if x_cutoff is None:
-    #     x_cutoff = eas_lim[1]
-    #
-    # # type checking
-    # str(eas_lim[0] + 1)
-    # str(eas_lim[1] + 1)
-    #
-    # if sub_dirnames is None:
-    #     log.warning(f'sub_dirnames = {sub_dirnames}; assuming single folder')
-    #     sub_dirnames = [None]
-    # if skip_extra_cases:
-    #     log.error(f'skip_extra_cases={skip_extra_cases}; should be temporary')
-    #
-    # # ---------------------------------------------------------------------------------
-    # cases = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-    # cases2 = defaultdict(list)
-    # for sub_dirname in sub_dirnames:
-    #     sub_dirname2: str = '' if sub_dirname is None else sub_dirname
-    #     # if sub_dirname is None:
-    #     #     dirnamei = dirname
-    #     # else:
-    #     dirnamei = dirname / sub_dirname2
-    #
-    #     dirnamei_pics = dirname / f'pics_{sub_dirname}'
-    #     print(dirnamei_pics)
-    #     # if not dirnamei_pics.exists():
-    #     os.makedirs(dirnamei_pics, exist_ok=True)
-    #
-    #     print(f'directory = {str(dirnamei)}')
-    #     print(f'glob_str = {str(glob_str)}')
-    #     # f06_root_filenames = [fname for fname in os.listdir(dirnamei) if fname.endswith('.f06')]
-    #     f06_root_filenames = dirnamei.glob('*.f06')
-    #     f06_root_filenames = natsorted(f06_root_filenames)
-    #     f06_root_filenames = filter_f06(f06_root_filenames, glob_str)
-    #     # f06_filenames = [dirnamei / fname for fname in f06_root_filenames]
-    #     f06_filenames = f06_root_filenames
-    #
-    #     for f06_filename in f06_filenames:
-    #         print('------------------------------------------------')
-    #         assert os.path.exists(f06_filename), print_bad_path(f06_filename)
-    #
-    #         f06_filename_base = f06_filename.name
-    #
-    #         base1 = os.path.splitext(f06_filename_base)[0]
-    #         png_filename = dirnamei_pics / (base1 + '.png')
-    #         print(f'f06_filename = {str(f06_filename)}')
-    #         # print(f'png_filename = {str(png_filename)}')
-    #         is_failed, out = get_case_info(
-    #             f06_filename_base,
-    #             store_configs,
-    #             weight_configs,
-    #             machs_to_parse, machs_to_skip,
-    #             case_format, case_info_func, skip_extra_cases)
-    #         if is_failed:
-    #             continue
-    #         mach_num_str = out['mach_num_str']
-    #         mach_number = out['mach']
-    #         weight_config = out['weight_config']
-    #         configi = out['config']
-    #         # mach_num_str, mach_number, weight_config, configi = out
-    #
-    #         log.level = 'debug'
-    #         # print(f'f06_filename_base = {f06_filenme_base}')
-    #         try:
-    #             resp_dict, data_dict = make_flutter_response(
-    #                 str(f06_filename),
-    #                 f06_units='english_in', out_units='english_kt',
-    #                 use_rhoref=use_rhoref,
-    #                 log=log)
-    #             assert len(resp_dict) == 1, resp_dict
-    #         except:
-    #             raise
-    #             if stop_on_failure:
-    #                 raise
-    #             VL = -1.0
-    #             VF = -1.0
-    #             VD = -1.0
-    #             freqL = -1.0
-    #             freqF = -1.0
-    #             # freqD = -1.0
-    #             mass = np.zeros(1)[0]
-    #             cg = np.zeros(3)
-    #             inertia = np.zeros((3, 3))
-    #             png_filename = ''
-    #             case_key = (mach_number, weight_config, store_config)
-    #             case_value = (VL, freqL, VF, freqF, VD,
-    #                           mass, cg, inertia, configi,
-    #                           '',
-    #                           f06_filename_base, f06_filename, png_filename)
-    #             cases2[case_key].append(case_value)
-    #             cases[mach_number][weight_config][store_config].append(case_value)
-    #             continue
-    #
-    #         if 'opgwg' not in data_dict:
-    #             matrices = data_dict['matrices']
-    #             log.warning(f'data_dict_keys={list(data_dict)}; matrices_keys={list(matrices)}')
-    #             # asdf
-    #             mass = np.full(1, np.nan)
-    #             cg = np.full(3, np.nan)
-    #             inertia = np.full((3, 3), np.nan)
-    #         else:
-    #             opgwg = data_dict['opgwg']  # grid point weight
-    #             # matrices = data_dict['matrices']
-    #             # frequencies = matrices['freq']
-    #             mass = opgwg['mass']
-    #             cg = opgwg['cg']
-    #             # print(opgwg)
-    #             # print(f'frequencies = {frequencies.round(3)}')
-    #             inertia = opgwg['I(S)']
-    #
-    #         resp = resp_dict[1]
-    #         modes = resp.modes[6:]
-    #         assert modes[0] == 7, modes
-    #
-    #         # xcutoff doesn't apply for first 6 modes
-    #         resp.nrigid_body_modes = 6
-    #         resp.x_cutoff = x_cutoff
-    #         resp.set_plot_settings(
-    #             figsize=figsize,
-    #             xtick_major_locator_multiple=[50., 50.],
-    #             ytick_major_locator_multiple=[0.02, None],
-    #         )
-    #         resp.set_symbol_settings(
-    #             nopoints=False, show_mode_number=False, point_spacing=8,
-    #             markersize=5,
-    #         )
-    #
-    #         # Crossing = tuple[float, float, float]
-    #         # if parse_hump_modes:
-    #         #     vl_vf_crossing_dict, hump_vd_crossing_dict = resp.get_hump_flutter_crossings(
-    #         #         damping_crossings=damping_crossings, modes=modes,
-    #         #         eas_range=eas_range)
-    #         #     print(hump_vd_crossing_dict)
-    #         #     vl_vf_crossing_dict = hump_vd_crossing_dict
-    #         # else:
-    #         vl_vf_crossing_dict, vd_crossing_dict = resp.get_flutter_crossings(
-    #             damping_crossings=damping_crossings2, modes=modes,
-    #             eas_range=eas_range)
-    #         # print(vl_vf_crossing_dict)
-    #
-    #         if make_pngs:
-    #             fig, (damp_axes, freq_axes) = resp.plot_vg_vf(
-    #                 plot_type='eas', modes=modes,
-    #                 clear=False, close=False, legend=True,
-    #                 xlim=eas_lim, ylim_damping=ylim_damping, ylim_freq=ylim_freq,
-    #                 # ivelocity: Optional[int]=None,
-    #                 v_lines=v_lines,
-    #                 damping_required=0.0,
-    #                 damping_limit=0.03,
-    #                 ncol=ncol, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
-    #                 # plot_freq_tol_filtered_lines=True,
-    #                 damping_crossings=damping_crossings2, filter_damping=True,
-    #                 eas_range=eas_range,
-    #                 png_filename=None,
-    #                 filter_freq=True,
-    #                 show_detailed_mode_info=show_detailed_mode_info,
-    #                 show=False)
-    #             basename = os.path.basename(png_filename)
-    #             damp_axes.set_title(basename)
-    #             # plt.tight_layout()
-    #             # if show_individual:
-    #             #     plt.show()
-    #             fig.savefig(png_filename, bbox_inches='tight')
-    #             # bbox_to_anchor=(1, 1), borderaxespad=0)
-    #             shutil.copyfile(png_filename, png_filename_mach)
-    #             plt.close()
-    #         if show_individual:
-    #             raise RuntimeError('stopping')
-    #
-    #         if show_detailed_mode_info and 0:
-    #             keys = list(filename_base_to_vl_vf_vbase_dict)
-    #             # print('filename_base_to_vl_vf_vbase_dict.keys = ', keys)
-    #             # print(f'f06_filename_base = {f06_filename_base}')
-    #             if len(filename_base_to_vl_vf_vbase_dict):
-    #                 v0i, vfi, vbase = filename_base_to_vl_vf_vbase_dict[f06_filename_base]
-    #                 print(f'v0i={v0i}, vfi={vfi}, vbase={vbase}')
-    #                 vl_array, vf_array = resp.hump_modes_from_VL_VF_dict(
-    #                     vl_vf_crossing_dict, v0i, vfi, vbase, log)
-    #                 if len(vl_array):
-    #                     print('vl:')
-    #                     print(vl_array)
-    #                 if len(vf_array):
-    #                     print('vf:')
-    #                     print(vf_array)
-    #
-    #         # print(f'modes = {modes}')
-    #         # print(f'xcrossing_dict = {xcrossing_dict}')
-    #         hump_message = _get_hump_message(
-    #             resp, vl_vf_crossing_dict,
-    #             eas_range, show_detailed_mode_info)
-    #
-    #         log.info(f'VL_target = {VL_target}')
-    #         VL, freqL, VF, freqF, VD, freqD = resp.xcrossing_dict_to_VL_VF_VD(
-    #             vl_vf_crossing_dict, vd_crossing_dict,
-    #             log, freq_target, VL_target, VF_target,
-    #             v_baseline=V_baseline,
-    #             # is_hump_modes=parse_hump_modes,
-    #         )
-    #         if VL < VL_target:
-    #             log.error(f'VL={VL} KEAS, freq={freqL} Hz; {f06_filename_base}')
-    #         if VF < VF_target:
-    #             log.error(f'VF={VF} KEAS, freq={freqF} Hz; {f06_filename_base}')
-    #         if VD < VD_target:
-    #             log.error(f'VD={VD} KEAS, freq={freqD} Hz; {f06_filename_base}')
-    #
-    #         case_key = (mach_number, weight_config)
-    #         case_value = (VL, freqL, VF, freqF, VD,
-    #                       mass, cg, inertia, configi,
-    #                       hump_message,
-    #                       f06_filename_base, f06_filename, png_filename)
-    #         cases2[case_key].append(case_value)
-    #         cases[mach_number][weight_config].append(case_value)
-    #         log.debug(f'mach={mach_number} VL={VL:g} VF={VF:g} VD={VD:g} {f06_filename_base}')
-    #         if hump_message:
-    #             log.warning(hump_message)
-    #             # asdf
-    #         # print(xcrossing_dict)
-    #         # return cases
-    #
-    # names = ['Mach', 'Weight', 'Config']
-    # case_data = CaseData(cases, cases2, names)
-    # return case_data
-
-def _get_hump_message(resp: FlutterResponse,
-                      vl_vf_crossing_dict,
-                      eas_range: tuple[float, float],
-                      show_detailed_mode_info: bool) -> str:
-    hump_message = ''
-    if not show_detailed_mode_info:
-        return hump_message
-
-    hump_message_list = resp.get_hump_mode_messages(
-        vl_vf_crossing_dict,
-        modes=None,
-        eas_range=eas_range,
-        filter_damping=False,
-        plot_type='eas',
-    )
-    if hump_message_list:
-        hump_message_list2 = [line.strip().replace('\n', '; ') for line in hump_message_list]
-        hump_message = '\n'.join(hump_message_list2)
-        # log.warning(f'hump_message = {hump_message!r}')
-    return hump_message
-
-
-def _write_name_value_table(document, records: dict[str, float]) -> None:
-    table = document.add_table(rows=1, cols=2)
-    hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = 'Name'
-    hdr_cells[1].text = 'Value'
-    for name, value in records.items():
-        row_cells = table.add_row().cells
-        row_cells[0].text = str(name)
-        row_cells[1].text = str(value)
-
-
-def _write_2d_table(document: Document,
-                    records: dict[str, list[list[float]]],
-                    log: SimpleLogger, table_name: str) -> None:
-    """
-    Expects a 2D table (e.g., list of lists)
-
-    Parameters
-    ----------
-    document : Document
-        the word doc
-    records: dict[str, list[float]
-        the data to add
-
-    Returns
-    -------
-    mass_table = {
-        'Configuration': ['Clean'],
-        'Mass (in)': [1.0],
-        'XCG (in)': [1.0],
-        'YCG (in)': [1.0],
-        'ZCG (in)': [1.0],
-        'Ixx (slinch-in^2)': [1.0],
-        'Iyy (slinch-in^2)': [1.0],
-        'Izz (slinch-in^2)': [1.0],
-    }
-    """
-    keys = list(records.keys())
-    nkeys = len(keys)
-    assert nkeys > 0, keys
-    key0 = keys[0]
-    column0 = records[key0]
-    ncols = nkeys
-    nrows = len(column0) + 1
-
-    table = document.add_table(rows=nrows, cols=ncols)
-
-    # write the column headers
-    hdr_cells = table.rows[0].cells
-    for ikey, key in enumerate(keys):
-        hdr_cells[ikey].text = key
-
-    # write the rows
-    icol = 0
-    for key, values in records.items():
-        for irow in range(1, nrows):
-            # print(key, irow, nrows, values)
-            try:
-                value = values[irow-1]
-            except IndexError:
-                log.error(f'problem writing {table_name} for irow={irow}')
-                continue
-            row_cells = table.rows[irow].cells
-            row_cells[icol].text = str(value)
-        icol += 1
-    return
-
-
-def str_limit_to_limit(data: list[str]) -> Limit:
+def str_limit_to_limit(data: list[str | None]) -> Limit:
     data_out = []
     for value in data:
         value = value.strip()

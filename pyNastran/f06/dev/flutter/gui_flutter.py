@@ -85,7 +85,6 @@ else:
     BDF_FILENAME = BASE_PATH / '0012_flutter.bdf'
     OP2_FILENAME = BASE_PATH / '0012_flutter.op2'
 
-from pyNastran.f06.dev.flutter.utils import get_raw_json
 JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json()
 
 from pyNastran.f06.dev.flutter.vtk_data import VtkData
@@ -481,8 +480,8 @@ class FlutterGui(LoggableGui):
             ('freq_tol', -1, self.freq_tol_edit),
             ('freq_tol_remove', -1, self.freq_tol_remove_edit),
             ('mag_tol', -1, self.mag_tol_edit),
-            ('vl', -1, self.VL_edit),
-            ('vf', -1, self.VF_edit),
+            ('vl', -1, self.vl_edit),
+            ('vf', -1, self.vf_edit),
             ('damping', -1, self.damping_edit),
             ('damping_required', -1, self.damping_required_edit),
             ('damping_required_tol', -1, self.damping_required_tol_edit),
@@ -738,11 +737,11 @@ class FlutterGui(LoggableGui):
         # self.output_directory_edit = []
         # self.output_directory_browse = []
         #
-        # self.VL_label = []
-        # self.VL_edit = []
+        # self.vl_label = []
+        # self.vl_edit = []
         #
-        # self.VF_label = []
-        # self.VF_edit = []
+        # self.vf_label = []
+        # self.vf_edit = []
         #
         # self.damping_label = []
         # self.damping_edit = []
@@ -942,13 +941,13 @@ class FlutterGui(LoggableGui):
         self.output_directory_edit.setDisabled(True)
         self.output_directory_browse.setDisabled(True)
 
-        self.VL_label = QLabel('VL, Limit:', self)
-        self.VL_edit = QFloatEdit('', self)
-        self.VL_edit.setToolTip('Makes a vertical line for VL')
+        self.vl_label = QLabel('VL, Limit:', self)
+        self.vl_edit = QFloatEdit('', self)
+        self.vl_edit.setToolTip('Makes a vertical line for VL')
 
-        self.VF_label = QLabel('VF, Flutter:', self)
-        self.VF_edit = QFloatEdit('', self)
-        self.VF_edit.setToolTip('Makes a vertical line for VF')
+        self.vf_label = QLabel('VF, Flutter:', self)
+        self.vf_edit = QFloatEdit('', self)
+        self.vf_edit.setToolTip('Makes a vertical line for VF')
 
         self.damping_required_label = QLabel('Damping Required, g:', self)
         self.damping_required_edit = QFloatEdit('', self)
@@ -1120,10 +1119,10 @@ class FlutterGui(LoggableGui):
         self.eigi_lim_edit_min.setVisible(show_root_locus)
         self.eigi_lim_edit_max.setVisible(show_root_locus)
 
-        self.VL_label.setVisible(show_eas_lim)
-        self.VL_edit.setVisible(show_eas_lim)
-        self.VF_label.setVisible(show_eas_lim)
-        self.VF_edit.setVisible(show_eas_lim)
+        self.vl_label.setVisible(show_eas_lim)
+        self.vl_edit.setVisible(show_eas_lim)
+        self.vf_label.setVisible(show_eas_lim)
+        self.vf_edit.setVisible(show_eas_lim)
         # ifile = self.ifile
         ifile = -1
 
@@ -1309,12 +1308,12 @@ class FlutterGui(LoggableGui):
         self.output_directory_browse.setVisible(False)
         irow += 1
 
-        grid.addWidget(self.VL_label, irow, 0)
-        grid.addWidget(self.VL_edit, irow, 1)
+        grid.addWidget(self.vl_label, irow, 0)
+        grid.addWidget(self.vl_edit, irow, 1)
         irow += 1
 
-        grid.addWidget(self.VF_label, irow, 0)
-        grid.addWidget(self.VF_edit, irow, 1)
+        grid.addWidget(self.vf_label, irow, 0)
+        grid.addWidget(self.vf_edit, irow, 1)
         irow += 1
 
         grid.addWidget(self.damping_required_label, irow, 0)
@@ -1485,8 +1484,8 @@ class FlutterGui(LoggableGui):
         self.alt_lim_label.setText(f'Alt Limits ({alt_units}):')
         self.rho_lim_label.setText(f'Rho Limits ({rho_units}):')
         self.q_lim_label.setText(f'Q Limits ({q_units}):')
-        self.VL_label.setText(f'VL, Limit ({eas_units}):')
-        self.VF_label.setText(f'VF, Flutter ({eas_units}):')
+        self.vl_label.setText(f'VL, Limit ({eas_units}):')
+        self.vf_label.setText(f'VF, Flutter ({eas_units}):')
 
     def on_font_size(self) -> None:
         # font_size = self.font_size_edit.value()
@@ -1920,8 +1919,8 @@ class FlutterGui(LoggableGui):
         if is_passed_tol3 and mag_tol is None:
             mag_tol = -1.0
 
-        vl, is_passed_vl = get_float_or_none(self.VL_edit)
-        vf, is_passed_vf = get_float_or_none(self.VF_edit)
+        vl, is_passed_vl = get_float_or_none(self.vl_edit)
+        vf, is_passed_vf = get_float_or_none(self.vf_edit)
         damping_required, is_passed_damping_required = get_float_or_none(self.damping_required_edit)
         damping_required_tol, is_passed_damping_required_tol = get_float_or_none(self.damping_required_tol_edit)
         damping, is_passed_damping = get_float_or_none(self.damping_edit)

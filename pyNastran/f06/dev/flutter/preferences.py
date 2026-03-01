@@ -2,7 +2,8 @@
 """
 TODO: change from dt_ms to FPS
 """
-from typing import Any
+from __future__ import annotations
+from typing import Any, TYPE_CHECKING
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout
 from qtpy.QtWidgets import (
     QLabel, QGridLayout,
@@ -11,13 +12,16 @@ from qtpy.QtWidgets import (
 )
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font
 from pyNastran.gui.utils.qt.qcombobox import set_combo_box_text
+if TYPE_CHECKING:
+    from pyNastran.f06.dev.flutter.preferences_object import (
+        FlutterPreferencesObject)
 
 FONT_SIZE_DEFAULT = 10
 LEGEND_LOC_DEFAULT = 'best'
 FLUTTER_BBOX_TO_ANCHOR_DEFAULT = 1.02
 FLUTTER_NCOLUMNS_DEFAULT = 0
 FREQ_NDIGITS_DEFAULT = 1
-FREQ_DIVERGENCE_TOL = 0.05
+FREQ_DIVERGENCE_TOL = 0.1
 
 LEGEND_LOCS = [
     'best', 'none',
@@ -29,7 +33,8 @@ LEGEND_LOCS = [
 
 class FlutterPreferencesDialog(PyDialog):
     def __init__(self, data: dict[str, Any],
-                 gui_obj, win_parent=None):
+                 gui_obj: FlutterPreferencesObject,
+                 win_parent=None):
         """
         Saves the data members from data and
         performs type checks
@@ -126,8 +131,6 @@ class FlutterPreferencesDialog(PyDialog):
         self.freq_divergence_tol_edit = QFloatEdit('0', self)
         self.freq_divergence_tol_edit.setText(freq_diveregence_tol)
         self.freq_divergence_tol_edit.setToolTip('Set the tolerance to identify divergence')
-        # self.freq_divergence_tol_label.setEnabled(False)
-        self.freq_divergence_tol_edit.setEnabled(False)
 
         self.export_png_checkbox = QCheckBox('Export PNG')
         self.export_csv_checkbox = QCheckBox('Export CSV')
@@ -278,6 +281,7 @@ class FlutterPreferencesDialog(PyDialog):
         self.flutter_ncolumns_spinner.setValue(FLUTTER_NCOLUMNS_DEFAULT)
         self.freq_ndigits_spinner.setValue(FREQ_NDIGITS_DEFAULT)
         set_combo_box_text(self.divergence_legend_loc_combobox, LEGEND_LOC_DEFAULT)
+        self.freq_divergence_tol_edit.setText(str(FREQ_DIVERGENCE_TOL))
 
         self.export_png_checkbox.setChecked(True)
         self.export_f06_checkbox.setChecked(False)

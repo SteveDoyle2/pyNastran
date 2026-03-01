@@ -735,6 +735,7 @@ class FlutterResponse:
                               point_removal: Optional[list[tuple[float, float]]]=None,
                               freq_round: int=2,
                               eas_round: int=3,
+                              divergence_freq_tol: float=0.1,
                               ) -> tuple[dict[npt.floating, dict[int, list[Crossing]]],
                                          dict[npt.floating, dict[int, list[Crossing]]]]:
         """
@@ -794,6 +795,7 @@ class FlutterResponse:
             imodes, point_removal,
             eas_range,
             eas_round, freq_round,
+            divergence_freq_tol=divergence_freq_tol,
         )
         # ----------------------------------------------
         # preallocate
@@ -3663,7 +3665,8 @@ def _get_divergence(self,
                     imodes: np.ndarray,
                     point_removal: Optional[list[tuple[float, float]]],
                     eas_range: Limit,
-                    eas_round: int, freq_round: int) -> dict[float, dict[int, list[Crossing]]]:
+                    eas_round: int, freq_round: int,
+                    divergence_freq_tol: float=0.1) -> dict[float, dict[int, list[Crossing]]]:
     eas_min0, eas_max0 = eas_range
 
     # preallocate
@@ -3706,8 +3709,9 @@ def _get_divergence(self,
             # ifreqs = np.where(dfreq.min() == dfreq)[0]
             # ifreq = ifreqs[-1] + 1
 
-            # TODO: do a check on divergence to not call it a divergence point if it's "flat" for 2 points before
-            ifreqs = np.where(dfreq < 0.1)[0]
+            # TODO: check divergence to not call it a point
+            #       if it's "flat" for 2 points before
+            ifreqs = np.where(dfreq < divergence_freq_tol)[0]
             if len(ifreqs) == 0:
                 continue
             ifreq = ifreqs[0]
