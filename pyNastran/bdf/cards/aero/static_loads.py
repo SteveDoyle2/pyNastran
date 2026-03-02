@@ -12,7 +12,7 @@ All cards are BaseCard objects.
 """
 from __future__ import annotations
 from itertools import count
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 from pyNastran.bdf.cards.aero.dynamic_loads import Aero
 from pyNastran.utils.numpy_utils import integer_types
@@ -643,13 +643,13 @@ class TRIM(BaseCard):
     """
     Specifies constraints for aeroelastic trim variables.
 
-    +------+--------+------+--------+--------+-----+--------+-----+----------+
-    |   1  |   2    |   3  |    4   |    5   |  6  |    7   |  8  |     9    |
-    +======+========+======+========+========+=====+========+=====+==========+
-    | TRIM |   ID   | MACH |    Q   | LABEL1 | UX1 | LABEL2 | UX2 | IS_RIGID |
-    +------+--------+------+--------+--------+-----+--------+-----+----------+
-    |      | LABEL3 |  UX3 | LABEL4 |   UX4  | ... |        |     |          |
-    +------+--------+------+--------+--------+-----+--------+-----+----------+
+    +------+--------+------+--------+--------+--------+--------+--------+----------+
+    |   1  |   2    |   3  |    4   |    5   |    6   |    7   |    8   |     9    |
+    +======+========+======+========+========+========+========+========+==========+
+    | TRIM |   ID   | MACH |    Q   | LABEL1 |   UX1  | LABEL2 |   UX2  | IS_RIGID |
+    +------+--------+------+--------+--------+--------+--------+--------+----------+
+    |      | LABEL3 |  UX3 | LABEL4 |   UX4  | LABEL5 |   UX5  | LABEL6 |    UX6   |
+    +------+--------+------+--------+--------+--------+--------+--------+----------+
     """
     type = 'TRIM'
     _field_map = {
@@ -794,7 +794,7 @@ class TRIM(BaseCard):
 
     def verify_trim(self,
                     suport: list[SUPORT],
-                    suport1: SUPORT1,
+                    suport1: Optional[SUPORT1],
                     aestats: dict[int, AESTAT],
                     aeparms: dict[int, AEPARM],
                     aelinks: dict[int, list[AELINK]],
@@ -856,67 +856,43 @@ class TRIM(BaseCard):
             equality.
 
         **Doesn't Consider**
-         - AELINK
          - AEPARM
          - AESURFS
 
-        +------------------------------------------------+
-        |                 Default AESTATs                |
-        +--------+---------+-----------------------------+
-        | ANGLEA | ur (R2) | Angle of Attack             |
-        | YAW    | ur (R3) | Yaw Rate                    |
-        | SIDES  | ur (R3) | Angle of Sideslip           |
-        +--------+---------+-----------------------------+
-        | ROLL   | ůr (R1) | Roll Rate                   |
-        | PITCH  | ůr (R2) | Pitch Rate                  |
-        +--------+---------+-----------------------------+
-        | URDD1  | ür (T1) | Longitudinal (See Remark 3) |
-        | URDD2  | ür (T2) | Lateral                     |
-        | URDD3  | ür (T3) | Vertical                    |
-        | URDD4  | ür (R1) | Roll                        |
-        | URDD5  | ür (R2) | Pitch                       |
-        | URDD6  | ür (R3) | Yaw                         |
-        +--------+---------+-----------------------------+
+        +--------------------------------------+
+        |            Default AESTATs           |
+        +--------+---------+-------------------+
+        | ANGLEA | ur (R2) | Angle of Attack   |
+        | YAW    | ur (R3) | Yaw Rate          |
+        | SIDES  | ur (R3) | Angle of Sideslip |
+        +--------------------------------------+
+        | ROLL   | ůr (R1) | Roll Rate         |
+        | PITCH  | ůr (R2) | Pitch Rate        |
+        +--------------------------------------+
+        | URDD1  | ür (T1) | Longitudinal      |
+        | URDD2  | ür (T2) | Lateral           |
+        | URDD3  | ür (T3) | Vertical          |
+        | URDD4  | ür (R1) | Roll              |
+        | URDD5  | ür (R2) | Pitch             |
+        | URDD6  | ür (R3) | Yaw               |
+        +--------------------------------------+
         """
         if not xref:
             return
-        nsuport_dofs = 0
-        nsuport1_dofs = 0
-        suport_dofs = set()
-        assert isinstance(suport, list), type(suport)
-        for suporti in suport:
-            for nid, cs in zip(suporti.node_ids, suporti.Cs):
-                for ci in cs:
-                    #print('  SUPORT: nid=%r C=%r' % (nid, ci))
-                    dof = (nid, ci)
-                    if dof in suport_dofs:
-                        msg = 'Duplicate DOF\n  dof=%s suport_dofs=%s' % (
-                            str(dof), str(suport_dofs))
-                        raise RuntimeError(msg)
-                    suport_dofs.add(dof)
-                    nsuport_dofs += 1
 
-        suport_dof_msg2 = ''
-        if suport1:
-            #unused_conid = suport1.conid
-            nids = suport1.node_ids
-            suport_dof_msg = ''
-            for nid, components in zip(nids, suport1.Cs):
-                for componenti in components:
-                    dof = (nid, componenti)
-                    suport_dof_msg += '    (%s, %s)\n' % (nid, componenti)
-                    if dof in suport_dofs:
-                        msg = ('Duplicate SUPORT DOF\n'
-                               'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs)))
-                        raise RuntimeError(msg)
-                    suport_dofs.add(dof)
-                    nsuport1_dofs += 1
-            suport_dof_msg2 = '\nsuport_dofs (nid, comp):\n%s\n' % suport_dof_msg.rstrip(',')
+        suport_dofs: set[str] = set()
+        suport_nid_dofs: set[tuple[int, str]] = set()
+        nsuport_dofs = get_suport_dofs(
+            suport, suport_nid_dofs, suport_dofs)
+        nsuport1_dofs, suport_dof_msg2 = get_suport1_dofs(
+            suport1, suport_nid_dofs, suport_dofs)
 
         trim_labels = self.labels
         aesurf_names = _fill_label_list(aesurf)
         aestat_labels = _fill_label_list(aestats)
         aeparm_labels = _fill_label_list(aeparms)
+        check_aestats_suport_dofs(suport_dofs, aestat_labels)
+
         naestat = len(aestat_labels)
         ntrim = len(trim_labels)
         trim_aesurf_common = list(set(trim_labels).intersection(set(aesurf_names)))
@@ -926,7 +902,7 @@ class TRIM(BaseCard):
         naeparm = len(aeparm_labels)
 
         aelink_labels = []
-        if 0 in aelinks:
+        if 0 in aelinks:  # not allowed in NX
             aelink_labels += [aelink.label for aelink in aelinks[0]]
         #if 'ALWAYS' in aelinks:
             #aelink_labels += [aelink.label for aelink in aelinks['ALWAYS']]
@@ -1273,3 +1249,69 @@ class UXVEC(BaseCard):
     #     # fixes a Nastran bug
     #     list_fields = self.raw_fields()
     #     return list_fields
+
+def get_suport_dofs(suport: list[SUPORT],
+                    suport_nid_dofs: set[tuple[int, str]],
+                    suport_dofs: set[str]) -> int:
+    nsuport_dofs = 0
+    assert isinstance(suport, list), type(suport)
+    for suporti in suport:
+        for nid, dofs in zip(suporti.node_ids, suporti.Cs):
+            for componenti in dofs:
+                #print('  SUPORT: nid=%r C=%r' % (nid, dofi))
+                nid_dof = (nid, componenti)
+                if nid_dof in suport_nid_dofs:
+                    msg = 'Duplicate DOF\n  dof=%s suport_dofs=%s' % (
+                        str(nid_dof), str(suport_nid_dofs))
+                    raise RuntimeError(msg)
+                suport_nid_dofs.add(nid_dof)
+                suport_dofs.add(componenti)
+                nsuport_dofs += 1
+    return nsuport_dofs
+
+
+def get_suport1_dofs(suport1: Optional[SUPORT1],
+                     suport_nid_dofs: set[tuple[int, str]],
+                     suport_dofs: set[str]) -> tuple[int, str]:
+    nsuport1_dofs = 0
+    suport_dof_msg2 = ''
+    if suport1 is None:
+        return nsuport1_dofs, suport_dof_msg2
+    # unused_conid = suport1.conid
+    nids = suport1.node_ids
+    suport_dof_msg = ''
+    for nid, components in zip(nids, suport1.Cs):
+        for componenti in components:
+            nid_dof = (nid, componenti)
+            suport_dof_msg += '    (%s, %s)\n' % (nid, componenti)
+            if nid_dof in suport_nid_dofs:
+                msg = ('Duplicate SUPORT DOF\n'
+                       'nid,dof=%s suport_dofs=%s' % (str(nid_dof), str(suport_nid_dofs)))
+                raise RuntimeError(msg)
+            suport_nid_dofs.add(nid_dof)
+            suport_dofs.add(componenti)
+            nsuport1_dofs += 1
+    suport_dof_msg2 = '\nsuport_dofs (nid, comp):\n%s\n' % suport_dof_msg.rstrip(',')
+    return nsuport1_dofs, suport_dof_msg2
+
+
+def check_aestats_suport_dofs(suport_dofs: set[str],
+                              aestat_labels: list[str]) -> None:
+    msg = ''
+    suport_dofs_list = list(suport_dofs)
+    suport_dofs_list.sort()
+    for suport_dof in '123':
+        aestat_label = f'URDD{suport_dof}'
+        is_valid = (
+            (aestat_label in aestat_labels and suport_dof in suport_dofs) or
+            (aestat_label not in aestat_labels and suport_dof not in suport_dofs)
+        )
+        if is_valid:
+            continue
+        if aestat_label not in aestat_labels:
+            msg += f'Missing AESTAT={aestat_label!r}; needed for SUPORT dof={suport_dof!r}\n'
+        if suport_dof not in suport_dofs:
+            msg += f'Missing SUPORT dof={suport_dof!r}; needed for AESTAT={aestat_label!r}\n'
+    if msg:
+        raise RuntimeError(f'AESTAT/SUPORT error:\nsuport_dofs={suport_dofs}\n'
+                           f'AESTATs={aestat_labels}\n{msg}')

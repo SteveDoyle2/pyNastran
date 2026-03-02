@@ -2885,15 +2885,15 @@ class TestAero(unittest.TestCase):
 
         # why doesn't this work?
         with self.assertRaises(RuntimeError):
-            trim1a.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+            trim1a.verify_trim(model.suport, None, model.aestats, model.aeparams,
                                model.aelinks, model.aesurf, xref=True)
         with self.assertRaises(RuntimeError):
-            trim2a.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+            trim2a.verify_trim(model.suport, None, model.aestats, model.aeparams,
                                model.aelinks, model.aesurf, xref=True)
 
-        trim1b.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+        trim1b.verify_trim(model.suport, None, model.aestats, model.aeparams,
                            model.aelinks, model.aesurf, xref=True)
-        trim2b.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+        trim2b.verify_trim(model.suport, None, model.aestats, model.aeparams,
                            model.aelinks, model.aesurf, xref=True)
         model.write_bdf('trim.bdf')
         model2 = read_bdf('trim.bdf', debug=None)
@@ -2907,6 +2907,52 @@ class TestAero(unittest.TestCase):
         model2.uncross_reference()
         model2.safe_cross_reference()
         save_load_deck(model)
+
+    def test_trim_04_bad(self):
+        """
+        Nonsense case, but checks that
+        required SUPORT dofs exist
+        """
+        model = BDF(debug=None)
+        sid = 75
+        mach = 0.75
+        q = 100.
+        labels = ['URDD3']
+        uxs = [2.5]
+        trim = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0,
+                              comment='trim')
+
+        model.add_aestat(1, 'URDD3', comment='aestat')
+        model.add_aestat(2, 'URDD5', comment='aestat')
+        model.add_aestat(3, 'ANGLEA', comment='aestat')
+
+        #+--------+---------+-----------------------------+
+        #| ANGLEA | ur (R2) | Angle of Attack             |
+        #| YAW    | ur (R3) | Yaw Rate                    |
+        #| SIDES  | ur (R3) | Angle of Sideslip           |
+        #+--------+---------+-----------------------------+
+        #| ROLL   | ůr (R1) | Roll Rate                   |
+        #| PITCH  | ůr (R2) | Pitch Rate                  |
+        #+--------+---------+-----------------------------+
+        #| URDD1  | ür (T1) | Longitudinal (See Remark 3) |
+        #| URDD2  | ür (T2) | Lateral                     |
+        #| URDD3  | ür (T3) | Vertical                    |
+        #| URDD4  | ür (R1) | Roll                        |
+        #| URDD5  | ür (R2) | Pitch                       |
+        #| URDD6  | ür (R3) | Yaw                         |
+        #+--------+---------+-----------------------------+
+
+        suport = model.add_suport([55, 66], ['1', '3'])
+        str(suport)
+        model.add_grid(55, [0., 0., 0.])
+        model.add_grid(66, [0., 0., 0.])
+        model.validate()
+
+        with self.assertRaises(RuntimeError):
+            trim.verify_trim(
+                model.suport, None,
+                model.aestats, model.aeparams,
+                model.aelinks, model.aesurf)
 
     def test_gust(self):
         """checks the GUST card"""
