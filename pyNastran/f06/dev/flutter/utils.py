@@ -245,14 +245,6 @@ def point_removal_str_to_point_removal(point_removal_str: str,
     return point_removal
 
 
-def _to_str(value: Optional[int | float]) -> str:
-    if value is None:
-        str_value = ''
-    else:
-        str_value = str(value)
-    return str_value
-
-
 def _float_passed_to_default(value: float, is_passed: bool,
                              default: float=-1.0) -> float:
     if is_passed and value is None:

@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
 from qtpy.QtWidgets import (
-    QApplication, QTableWidget, QTableWidgetItem, QMenu)
+    QInputDialog,
+    QApplication, QTableWidget, QTableWidgetItem, QMenu,
+    QAbstractItemView,)
 from qtpy import QtCore
 Qt = QtCore.Qt
 
@@ -14,11 +16,11 @@ class QTableWidgetCopy(QTableWidget):
         rename_column_support = True
         add_remove_row_support = True
 
+        self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         if rename_column_support:
             # Enable custom context menu for horizontal header
             self.horizontalHeader().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
             self.horizontalHeader().customContextMenuRequested.connect(self.show_header_context_menu)
-
         if add_remove_row_support:
             # Add/remove rows
             self.verticalHeader().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -51,6 +53,12 @@ class QTableWidgetCopy(QTableWidget):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_C and (event.modifiers() & Qt.KeyboardModifier.ControlModifier):
             self.on_copy_table(event)
+        # elif event.key() == Qt.Key.Key_X and (event.modifiers() & Qt.KeyboardModifier.ControlModifier):
+        #     self.on_cut_table(event)
+        # elif event.key() == Qt.Key.Key_P and (event.modifiers() & Qt.KeyboardModifier.ControlModifier):
+        #     self.on_paste_table(event)
+        else:
+            super().keyPressEvent(event)
 
     def on_copy_table(self, event):
         copied_cells = self.selectedIndexes()
@@ -67,6 +75,7 @@ class QTableWidgetCopy(QTableWidget):
                 copy_text += '\n'
             else:
                 copy_text += '\t'
+        print(f'text = {copy_text}')
         QApplication.clipboard().setText(copy_text)
 
     def show_context_menu(self, pos):

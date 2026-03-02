@@ -482,23 +482,6 @@ def _cases_to_document(log: SimpleLogger,
     #             cases[mach_number][weight_config][store_config].append(case_value)
     #             continue
     #
-    #         if 'opgwg' not in data_dict:
-    #             matrices = data_dict['matrices']
-    #             log.warning(f'data_dict_keys={list(data_dict)}; matrices_keys={list(matrices)}')
-    #             # asdf
-    #             mass = np.full(1, np.nan)
-    #             cg = np.full(3, np.nan)
-    #             inertia = np.full((3, 3), np.nan)
-    #         else:
-    #             opgwg = data_dict['opgwg']  # grid point weight
-    #             # matrices = data_dict['matrices']
-    #             # frequencies = matrices['freq']
-    #             mass = opgwg['mass']
-    #             cg = opgwg['cg']
-    #             # print(opgwg)
-    #             # print(f'frequencies = {frequencies.round(3)}')
-    #             inertia = opgwg['I(S)']
-    #
     #         resp = resp_dict[1]
     #         modes = resp.modes[6:]
     #         assert modes[0] == 7, modes

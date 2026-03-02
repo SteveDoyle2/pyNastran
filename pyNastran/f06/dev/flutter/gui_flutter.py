@@ -11,7 +11,6 @@ from pathlib import Path
 from functools import wraps
 from typing import Optional, Any
 
-ICON_PATH = Path('')
 try:
     import json5 as json
 except ModuleNotFoundError:
@@ -26,19 +25,13 @@ from qtpy.compat import getopenfilename  # getsavefilename
 # from qtpy.QtGui import QIcon, QPixmap
 from qtpy.QtWidgets import (
     QLabel, QWidget,
-    QApplication, QVBoxLayout, QComboBox,  # QMenu, QLineEdit,
+    QApplication, QVBoxLayout, QComboBox,
     QHBoxLayout, QPushButton, QGridLayout,
     QAction,
     QCheckBox,
     QListWidgetItem, QAbstractItemView,
-    QListWidget, QSpinBox, QTabWidget,  # QToolButton,
-)
-# from qtpy.QtWidgets import (
-#     QMessageBox,
-#     QMainWindow, QDockWidget, QFrame, QToolBar,
-#     QToolButton, QMenuBar,
-# )
-# from qtpy.QtGui import QIcon
+    QListWidget, QSpinBox, QTabWidget,)
+
 QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
 QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
 
@@ -56,18 +49,16 @@ from pyNastran.f06.dev.flutter.preferences import (
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import get_flutter_units
 
-# FONT_SIZE = 12
 from pyNastran.f06.dev.flutter.utils import (
     validate_json,
     get_point_removal_str,
     point_removal_str_to_point_removal,
-    _float_passed_to_default, _to_str,
-    get_plot_flags, get_raw_json,
+    _float_passed_to_default, get_plot_flags,
+    get_raw_json,
     update_ylog_style, get_png_filename,
     load_f06_op2, get_vlines, get_damping_crossings,
     X_PLOT_TYPES, PLOT_TYPES, UNITS_IN, UNITS_OUT,
-    MODE_SWITCH_METHODS,
-)
+    MODE_SWITCH_METHODS)
 
 import pyNastran
 PKG_PATH = Path(pyNastran.__path__[0])
@@ -88,8 +79,17 @@ else:
 JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json()
 
 from pyNastran.f06.dev.flutter.vtk_data import VtkData
+from pyNastran.f06.dev.flutter.utils_qt import (
+    load_lineedits, load_pulldowns, load_min_max_lineedits, _to_str)
 if USE_VTK:
     from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
+
+ICON_PATH = Path('')
+TRADE_KEYS = [
+    'excel_filename',
+    'base_f06_directory',
+    'word_filename',
+]
 
 
 class FlutterGui(LoggableGui):
@@ -98,6 +98,7 @@ class FlutterGui(LoggableGui):
         self.use_vtk = USE_VTK
         self.use_tabs = USE_TABS
         self.vtk_data = VtkData()
+        self.base_settings_dict = {}
 
         self._export_settings_obj = FlutterPreferencesObject(self, USE_VTK)
         if USE_VTK:
@@ -164,6 +165,7 @@ class FlutterGui(LoggableGui):
         self.mag_tol = -1.0
         self.damping = -1.0
         self.damping_required = -1.0
+        self.damping_required_tol = -1.0
         self.vf = -1.0
         self.vl = -1.0
         self.export_to_png = True
@@ -258,7 +260,7 @@ class FlutterGui(LoggableGui):
             # do something before `sum`
             try:
                 result = func(self, *args, **kwargs)
-            except Exception as e:
+            except Exception as error:
                 self.log_error(str(traceback.format_exc()))
                 result = None
             # do something after `sum`
@@ -322,6 +324,8 @@ class FlutterGui(LoggableGui):
             return
         # print(f'json_filename={json_filename!r} wildcard={wildcard!r}')
         # print(f'self.data = {self.data}')
+
+        # we are copying the OG dict so we don't modify that one
         out_data = copy.deepcopy(self.data)
         out_data['use_vtk'] = self.use_vtk
         out_data['use_tabs'] = self.use_tabs
@@ -341,6 +345,13 @@ class FlutterGui(LoggableGui):
             'font_size': self.font_size,
             'plot_font_size': self.plot_font_size,
         }
+
+        trade_dict = {}
+        for key in TRADE_KEYS:
+            if key in self.base_settings_dict:
+                trade_dict[key] = self.base_settings_dict[key]
+        out_data.update(trade_dict)
+
         with open(json_filename, 'w') as json_file:
             json.dump(out_data, json_file, indent=4)
         # print(f'fname="{fname}"')
@@ -355,6 +366,8 @@ class FlutterGui(LoggableGui):
             self._vtk_window_obj.apply_settings(data)
         log = self.log
         font_size0 = self.font_size
+
+        self.base_settings_dict = copy.deepcopy(data)
         # radios = [
         #     ('show_points', self.show_points_radio),
         # ]
@@ -461,15 +474,7 @@ class FlutterGui(LoggableGui):
             ('freq_lim', self.freq_lim_edit_min, self.freq_lim_edit_max),
             ('kfreq_lim', self.kfreq_lim_edit_min, self.kfreq_lim_edit_max),
         ]
-        for key, line_edit_min, line_edit_max in min_max_line_edits:
-            if key not in data:
-                # print(f'apply_settings: skipping key={key!r}')
-                continue
-            values = data[key]
-            value0 = _to_str(values[0])
-            value1 = _to_str(values[1])
-            line_edit_min.setText(value0)
-            line_edit_max.setText(value1)
+        load_min_max_lineedits(self, data, min_max_line_edits)
 
         point_removal = data.get('point_removal', [])
         point_removal_str = get_point_removal_str(point_removal)
@@ -487,25 +492,7 @@ class FlutterGui(LoggableGui):
             ('damping_required_tol', -1, self.damping_required_tol_edit),
             ('output_directory', -1, self.output_directory_edit),
         ]
-        for key, index, line_edit in line_edits:
-            if key not in data:
-                # print(f'apply_settings: skipping key={key!r}')
-                continue
-            values = data[key]
-            if index != -1:
-                value = values[index]
-            else:
-                value = values
-
-            str_value = _to_str(value)
-
-            # print('type(value) =', type(value))
-            # print(f'{key+":":<10} values={values}[{index!r}]={value!r} -> {str_value!r}')
-            try:
-                line_edit.setText(str_value)
-            except AttributeError:  # pragma: no cover
-                print(key)
-                raise
+        load_lineedits(self, data, line_edits)
 
         pulldown_edits = [
             ('x_plot_type', self.x_plot_type_pulldown, X_PLOT_TYPES),
@@ -514,13 +501,7 @@ class FlutterGui(LoggableGui):
             ('units_out', self.units_out_pulldown, UNITS_OUT),
             ('mode_switch_method', self.mode_switch_method_pulldown, MODE_SWITCH_METHODS),
         ]
-        for key, pulldown_edit, values in pulldown_edits:
-            if key not in data:
-                # print(f'apply_settings: skipping key={key!r}')
-                continue
-            value = data[key]
-            index = values.index(value)
-            pulldown_edit.setCurrentIndex(index)
+        load_pulldowns(self, data, pulldown_edits)
 
         self.recent_files = []
         for fname in data['recent_files']:
@@ -554,6 +535,8 @@ class FlutterGui(LoggableGui):
         title = 'Load a Flutter (Nastran F06, Zona Out) File'
         qt_wildcard = 'F06 File (*.f06);; Zona File (*.out)'
         basedir = os.path.dirname(self.f06_filename)
+        if not os.path.exists(basedir):
+            basedir = '.'
         fname, wildcard_level = getopenfilename(
             self, caption=title, basedir=basedir, filters=qt_wildcard,)
         if fname == '':
@@ -1668,13 +1651,12 @@ class FlutterGui(LoggableGui):
         plot_type = self.plot_type
         log.info(f'plot_type = {plot_type}\n')
 
-        noline = not self.show_lines
-        nopoints = not self.show_points
-
         freq_tol = self.freq_tol
         freq_tol_remove = self.freq_tol_remove
         mag_tol = self.mag_tol
         log.info(f'freq_tol = {freq_tol}\n')
+        noline = not self.show_lines
+        nopoints = not self.show_points
         if noline and nopoints:
             noline = False
             nopoints = True
@@ -2092,9 +2074,9 @@ class FlutterGui(LoggableGui):
             'mag_tol': mag_tol,
             'vl': vl,
             'vf': vf,
-            'damping': damping,
-            'damping_required': damping_required,
-            'damping_required_tol': damping_required_tol,
+            'damping': damping, # 0.03
+            'damping_required': damping_required, # 0.0
+            'damping_required_tol': damping_required_tol, # 0.0001
             'eas_flutter_range': eas_flutter_range,
             'point_removal': point_removal,
             'mode_switch_method': self.mode_switch_method,
