@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 # import matplotlib.gridspec as gridspec
 
 from pyNastran.utils import PathLike
-from pyNastran.f06.flutter_response import Limit  # FlutterResponse
+from pyNastran.f06.flutter_response import get_damping_crossings as _get_damping_crossings, Limit  # FlutterResponse
 from pyNastran.f06.parse_flutter import make_flutter_response, FlutterResponse
 from pyNastran.f06.dev.flutter.utils import get_vlines
 
@@ -46,9 +46,9 @@ def write_report(docx_filename: str,
                  eas_lim: Limit=None,
                  freq_tol: float=-1.0,
                  freq_tol_remove: float=-1.0,
-                 damping_required: float=-1.0,
-                 damping_required_tol: float=0.0001,
-                 damping_limit: float=-1.0,
+                 damping_required: float=-1.0,        # VL
+                 damping_required_tol: float=0.0001,  # VL
+                 damping_limit: float=-1.0,           # VF
                  eas_flutter_range: Limit=None,
                  plot_font_size: int=10,
                  show_lines: bool=True,
@@ -64,13 +64,71 @@ def write_report(docx_filename: str,
                  divergence_freq_tol: float=0.1,
                  progress_callback: Optional[Callable]=None,
                  ) -> None:
+    """
+    Parameters
+    ----------
+    docx_filename : str
+    f06_filenames : str
+    configs: list[str]
+    table: pd.DataFrame
+    log : SimpleLogger
+    settings : dict[str, Any]
+    x_plot_type : str
+    f06_units : str
+    out_units : str
+    nrigid_body_modes : int
+    modes : np.ndarray
+    vl_target : float
+    vf_target : float
+    ylim_damping : Limit
+    ylim_freq : Limit
+    eas_lim : Limit
+    freq_tol : float
+        dashed line tolerance
+    freq_tol_remove : float
+        remove line tolerance
+    damping_required : float; default=None
+        the limit crossing
+        for a 0% crossing; damping_required=0.0
+        for a -3% crossing; damping_required=-0.03
+    damping_required_tol : float; default=0.0
+        tolerance for damping_required
+    damping_limit : float; default=None
+        the flutter crossing
+        for a 3% crossing; damping_limit=0.03
+        for a 0% crossing; damping_limit=0.0
+    eas_flutter_range : Limit
+    plot_font_size : int; default=8
+    show_lines : bool; default=True
+        show the lines
+    show_points : bool; default=True
+        show the data points
+    show_mode_number : bool; default=False
+        show mode number instead of point
+    show_detailed_mode_info : bool; default=False
+    point_spacing : int; default=0
+    use_rhoref : bool; default=False
+    flutter_ncolumns : int; default=0
+    flutter_bbox_to_anchor_x : float
+    freq_ndigits : int
+    divergence_legend_loc : str; default='' -> 'best'
+    divergence_freq_tol : 0.05
+        frequency to identify divergence (Hz)
+    progress_callback : function
+        run a callback for the gui
+    """
     f06_filename0 = f06_filenames[0]
     dirname = os.path.dirname(f06_filename0)
     docx_filename = os.path.join(dirname, docx_filename)
 
     #------------------------------
     mode_switch_method = ''  # None
+
+    # The plot gets messy and dfreq_tol doesn't work if you have NaN
+    # points. To hack this, we just chop the plot above some
+    # x value (x_cutoff)
     x_cutoff = None  # TODO: add me; fixes NaNs?
+
     # point_spacing = 8
     make_pngs = True
     show_individual = False
@@ -78,6 +136,7 @@ def write_report(docx_filename: str,
     v_baseline = 1000.0
     # vl_target, vf_target
     #------------------------------
+    eas_units = 'knots'  # baseline
     eas_range = eas_flutter_range
     ncol = flutter_ncolumns
     #------------------------------
@@ -245,24 +304,6 @@ def write_report(docx_filename: str,
         cases.append(case)
     _cases_to_document(log, docx_filename, cases, settings,
                        eas_units=eas_units)
-
-
-def _get_damping_crossings(damping_required: float,
-                           damping_required_tol: Optional[float],
-                           damping_limit: float,
-                           ) -> tuple[dict[float, float], float]:
-    damping_crossings = {}
-    if damping_required_tol is None or damping_required_tol < 0.:
-        damping_required_tol = 0.0
-
-    if damping_required is not None and damping_required > -1.0:
-        # VL
-        damping_required_tol = max(0., damping_required_tol)
-        damping_crossings[damping_required] = damping_required + damping_required_tol
-    if damping_limit is not None and damping_limit > -1.0:
-        # VF
-        damping_crossings[damping_limit] = damping_limit
-    return damping_crossings, damping_required_tol
 
 def _cases_to_document(log: SimpleLogger,
                        docx_filename: PathLike,

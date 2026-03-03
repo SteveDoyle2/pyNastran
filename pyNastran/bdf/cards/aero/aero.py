@@ -586,8 +586,11 @@ class AELINK(BaseCard):
         list_fields = [interpret_value(field, card) for field in card[3:]]
         assert len(list_fields) % 2 == 0, 'list_fields=%s' % list_fields
         for i in range(0, len(list_fields), 2):
-            independent_label = list_fields[i]
-            linking_coefficent = list_fields[i + 1]
+            # independent_label = list_fields[i]
+            # linking_coefficent = list_fields[i + 1]
+            j = i // 2 + 1
+            independent_label = string(card, i + 3, f'independent_label{j:d}')
+            linking_coefficent = double(card, i + 4, f'linking_coefficent{j:d}')
             independent_labels.append(independent_label)
             linking_coefficients.append(linking_coefficent)
         return AELINK(aelink_id, label, independent_labels, linking_coefficients,

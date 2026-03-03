@@ -279,8 +279,8 @@ class TradeLayout(QVBoxLayout):
             'f06_units': parent._units_in,
             'out_units': parent._units_out,
             'modes': modes,
-            'vl_target': float(parent.data['vl']),
-            'vf_target': float(parent.data['vf']),
+            'vl_target': double_or_blank(parent.data['vl'], default=-1.0),
+            'vf_target': double_or_blank(parent.data['vf'], default=-1.0),
             #'xlim_kfreq': str_limit_to_limit(self.kfreq_lim),
             #'ylim_damping': self.damping_lim,  # NO
 
@@ -299,11 +299,11 @@ class TradeLayout(QVBoxLayout):
             'ylim_damping': str_limit_to_limit(parent.ydamp_lim),
             'ylim_freq': str_limit_to_limit(parent.freq_lim),
             'eas_lim': str_limit_to_limit(parent.eas_lim),
-            'freq_tol': float(parent.freq_tol),
-            'freq_tol_remove': float(parent.freq_tol_remove),
-            'damping_required': float(parent.damping_required),
+            'freq_tol': min_double_or_blank(parent.freq_tol, threshold=0.0, default=-1.0),
+            'freq_tol_remove': min_double_or_blank(parent.freq_tol_remove, threshold=0.0, default=-1.0),
+            'damping_required': min_double_or_blank(parent.damping_required, threshold=-1.0, default=-1.0),
             'damping_required_tol': double_or_blank(parent.damping_required_tol, default=0.0),
-            'damping_limit': float(parent.damping),  # % damping
+            'damping_limit': min_double_or_blank(parent.damping, threshold=-1.0, default=-1.0),  # % damping
             'eas_flutter_range': str_limit_to_limit(parent.eas_flutter_range),
             'plot_font_size': parent.plot_font_size,
             'show_lines': parent.show_lines,
@@ -597,8 +597,22 @@ def str_limit_to_limit(data: list[str | None]) -> Limit:
             data_out.append(float(value))
     return data_out
 
+def min_double_or_blank(value: float | str,
+                        threshold: float,
+                        default: float) -> float:
+    if isinstance(value, str):
+        value = value.strip()
+        if len(value) == 0:
+            return default
+        value2 = float(value)
+        return value2
+    value2 = float(value)
+    if value < threshold:
+        value2 = default
+    return value2
+
 def double_or_blank(value: float | str,
-                    default: float=0.0) -> float:
+                    default: float) -> float:
     if isinstance(value, str):
         value = value.strip()
         if len(value) == 0:

@@ -40,7 +40,7 @@ from pyNastran.f06.parse_flutter import (
     plot_flutter_f06, make_flutter_plots, make_flutter_response,
     FlutterResponse,
 )
-from pyNastran.f06.flutter_response import _reshape_eigenvectors
+from pyNastran.f06.flutter_response import _reshape_eigenvectors, get_damping_crossings
 from pyNastran.f06.parse_trim import read_f06_trim
 from pyNastran.f06.f06_matrix_parser import _parse_real_row_lines, _parse_complex_row_lines
 from pyNastran.f06.f06_to_pressure_loads import f06_to_pressure_loads
@@ -150,6 +150,57 @@ class TestF06Flutter(unittest.TestCase):
         assert np.allclose(eigr_eigi_vel2.shape, eigr_eigi_vel_expected.shape)
         assert np.allclose(eigenvectors2, eigenvectors_expected)
         assert np.allclose(eigr_eigi_vel2, eigr_eigi_vel_expected)
+
+    def test_get_damping_crossings_1(self):
+        damping_required = 0.0
+        damping_required_tol_in = 0.01
+        damping_limit = 0.03
+        damping_crossings, damping_required_tol = get_damping_crossings(damping_required,
+                          damping_required_tol_in, damping_limit)
+        assert damping_required_tol == 0.01, damping_required_tol
+        assert damping_crossings == {0.03: 0.03, 0.0: 0.01}, damping_crossings
+
+    def test_get_damping_crossings_2(self):
+        damping_required = 0.0
+        damping_required_tol_in = None
+        damping_limit = 0.03
+        damping_crossings, damping_required_tol = get_damping_crossings(damping_required,
+                          damping_required_tol_in, damping_limit)
+        assert damping_required_tol == 0.0, damping_required_tol
+        assert damping_crossings == {0.03: 0.03, 0.0: 0.0}, damping_crossings
+
+    def test_get_damping_crossings_3(self):
+        damping_required = 0.0
+        damping_required_tol_in = None
+        damping_limit = None
+        damping_crossings, damping_required_tol = get_damping_crossings(damping_required,
+                          damping_required_tol_in, damping_limit)
+        assert damping_required_tol == 0.0, damping_required_tol
+        assert damping_crossings == {0.0: 0.0}, damping_crossings
+
+    def test_get_damping_crossings_3(self):
+        cases = [
+            # ((g_required, g_required_tol_in, g_limit),
+            #  (g_required_tol_expected, g_crossings_expected)),
+            ((None, None, None),
+             (0.0, {})),
+            ((0.0, None, None),
+             (0.0, {0.0: 0.0})),
+            ((0.0, 0.0,  None),
+             (0.0, {0.0: 0.0})),
+            ((0.0, 0.01, None),
+             (0.01, {0.0: 0.01})),
+            ((1.0, 0.02, None),
+             (0.02, {1.0: 1.02})),
+            ((0.0, 0.02, 0.5),
+             (0.02, {0.0: 0.02, 0.5: 0.5})),
+        ]
+        for icase, case in enumerate(cases):
+            (g_required, g_required_tol_in, g_limit), (g_required_tol_expected, g_crossings_expected) = case
+            g_crossings, g_required_tol = get_damping_crossings(g_required,
+                              g_required_tol_in, g_limit)
+            assert g_required_tol == g_required_tol_expected, f'icase={icase} g_required_tol={g_required_tol}, g_required_tol_expected={g_required_tol_expected}'
+            assert g_crossings == g_crossings_expected, (g_crossings, g_crossings_expected)
 
     def test_make_grid_point_singularity_table(self):
         model = OP2()

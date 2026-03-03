@@ -1,8 +1,27 @@
 """
-TODO:
+Supports:
+ - Plotting
+   - Vg/Vf plot
+     - swap out V_EAS for V_TAS, Mach, Q-Dynamic Pressure, Altitude,
+                          K-Reduced Frequency
+   - Vg/Vk plot
+     - same, but Reduced Frequency
+   - Root locus
+ - Limits
+ - Point removal
+ - Mode number or point-style
+ - Mode hiding
+   - dashed lines if frequencies don't change more than 1.0 Hz
+   - remove lines if frequencies don't change more than 0.5 Hz
+ - Flutter Crossings
+   - first crossing only
+   - TODO: add capability for "sine crossings"; a sine wave
+           has multiple crossings and I want all of them
+   - TODO: capaibility to turn off flutter crossings from
+           modes without removing mode from plot (maybe)
+Other:
  - more control of font sizes
  - control over point size / text annotation size
- -
 """
 from __future__ import annotations
 
@@ -236,6 +255,7 @@ class FlutterResponse:
             use_rhoref=False,
             make_alt=False)
         if 0:  # pragma: no cover
+            ncol = 0
             resp.plot_root_locus(modes=None, fig=None, axes=None, xlim=None, ylim=None,
                                  ncol=ncol, show=False,
                                  clear=False, close=False, legend=True, png_filename=None)
@@ -3781,3 +3801,24 @@ def in_range(value: float, mini: Optional[float], maxi: Optional[float]) -> bool
     if mini is not None:
         return mini <= value
     return value <= maxi
+
+
+
+def get_damping_crossings(damping_required: float,
+                          damping_required_tol: Optional[float],
+                          damping_limit: float,
+                          ) -> tuple[dict[float, float], float]:
+    damping_crossings = {}
+    print(f'damping_required={damping_required}, damping_required_tol={damping_required_tol}, damping_limit={damping_limit}')
+    if damping_required_tol is None or damping_required_tol < 0.:
+        damping_required_tol = 0.0
+
+    if damping_required is not None and damping_required > -1.0:
+        # VL
+        damping_required_tol = max(0., damping_required_tol)
+        damping_crossings[damping_required] = damping_required + damping_required_tol
+    if damping_limit is not None and damping_limit > -1.0:
+        # VF
+        damping_crossings[damping_limit] = damping_limit
+    print(f'damping_crossings, damping_required_tol = {damping_crossings}, {damping_required_tol}')
+    return damping_crossings, damping_required_tol
