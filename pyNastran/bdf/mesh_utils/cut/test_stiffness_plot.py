@@ -662,7 +662,7 @@ class TestStiffnessPlot(unittest.TestCase):
                 area_span_png_filename='y_area_vs_span.png',
                 amoi_span_png_filename='y_amoi_vs_span.png',
                 e_amoi_span_png_filename='y_e_amoi_vs_span.png',
-                cg_span_png_filename='y_cg_vs_span.png',
+                centroid_span_png_filename='y_centroid_vs_span.png',
                 debug_vectorize=False,
             )
             out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
@@ -768,7 +768,7 @@ class TestStiffnessPlot(unittest.TestCase):
                 area_span_png_filename='x_area_vs_span.png',
                 amoi_span_png_filename='x_amoi_vs_span.png',
                 e_amoi_span_png_filename='x_e_amoi_vs_span.png',
-                cg_span_png_filename='x_cg_vs_span.png',
+                centroid_span_png_filename='x_centroid_vs_span.png',
                 debug_vectorize=True,
             )
             out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
@@ -883,7 +883,7 @@ def _cleanup_moi_files(dirname: Path, tag: str) -> None:
         os.remove(dirname / f'{tag}area_vs_span.png')
         os.remove(dirname / f'{tag}amoi_vs_span.png')
         os.remove(dirname / f'{tag}e_amoi_vs_span.png')
-        os.remove(dirname / f'{tag}cg_vs_span.png')
+        os.remove(dirname / f'{tag}centroid_vs_span.png')
 
     # bdf_merge(plane_bdf_filenames, bdf_filename_out='merge.bdf', renumber=True,
     #           encoding=None, size=8, is_double=False, cards_to_skip=None,

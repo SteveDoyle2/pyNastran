@@ -1,6 +1,5 @@
 from __future__ import annotations
 import os
-import warnings
 import traceback
 from pathlib import Path
 from functools import wraps
@@ -9,12 +8,6 @@ import natsort
 
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.dev import get_files_of_type
-
-try:
-    import json5 as json
-except ModuleNotFoundError:
-    warnings.warn('couldnt find json5, using json')
-    import json
 
 from pyNastran.f06.dev.flutter.utils import get_raw_json
 JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json(allow_vtk=False)
@@ -143,27 +136,14 @@ class TradeLayout(QVBoxLayout):
             (self.tab_label, self.tab_select_pulldown), # self.tab_edit
         ])
 
-        grid2 = QGridLayout(parent)
-        file_row = 1
-        grid2.addWidget(self.word_filename_label, file_row, 0)
-        grid2.addWidget(self.word_filename_edit, file_row, 1)
-        grid2.addWidget(self.word_filename_browse, file_row, 2)
-
-        #-----------------------------------------------------------
-        # grid3 = create_grid_from_list(parent, [
-        #     (self.base_f06_directory_label, self.base_f06_directory_edit, self.base_f06_directory_browse, self.base_f06_directory_load),
-        # ])
-        grid3 = QGridLayout(parent)
-        file_row = 1
-        grid3.addWidget(self.xaxis_label, file_row, 0)
-        grid3.addWidget(self.xaxis_pulldown, file_row, 1)
-        file_row += 1
-        grid3.addWidget(self.yaxis_label, file_row, 0)
-        grid3.addWidget(self.yaxis_pulldown, file_row, 1)
-        file_row += 1
-        grid3.addWidget(self.config_label, file_row, 0)
-        grid3.addWidget(self.config_edit, file_row, 1)
-        file_row += 1
+        grid2 = create_grid_from_list(parent, [
+            (self.word_filename_label, self.word_filename_edit, self.word_filename_browse),
+        ])
+        grid3 = create_grid_from_list(parent, [
+            (self.xaxis_label, self.xaxis_pulldown),
+            (self.yaxis_label, self.yaxis_pulldown),
+            (self.config_label, self.config_edit),
+        ])
         #-----------------------------------------------------------
 
         # vbox = QVBoxLayout()

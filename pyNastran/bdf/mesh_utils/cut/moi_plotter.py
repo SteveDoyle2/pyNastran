@@ -51,7 +51,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      area_span_png_filename: PathLike='area_vs_span.png',
                      amoi_span_png_filename: PathLike='amoi_vs_span.png',
                      e_amoi_span_png_filename: PathLike='e_amoi_vs_span.png',
-                     cg_span_png_filename: PathLike='cg_vs_span.png',
+                     centroid_span_png_filename: PathLike='centroid_vs_span.png',
                      plot: bool=True,
                      show: bool=False) -> tuple[dict[str, np.ndarray],       # y, L, A, I, J, ExI, EyI, GJ, avg_centroid,
                                                 list[str], list[str], int]:  # plane_bdf_filenames1, plane_bdf_filenames2, ifig
@@ -59,6 +59,27 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     For a shell structure, cut and plot
      - moments of inertia
      - stiffness
+
+    The cutting plane tool works by marching along "y" and defining a cut
+    in the "xz" plane. The cut element is in roughly the xy plane or any
+    z-rotated plane (e.g., a cylinder).
+
+    Thus, the primary inertias are:
+      Ixx = sum of A*dz^2
+      Izz = sum of A*dx^2
+      Ixz = sum of A*dx*dz
+      J = Ixx + Izz
+    with the other terms containing a y (the out of plane dimension) and are 0.
+
+    Due to some messy notation in the code, these names may be flipped.
+    To verify, for an standard aircraft (x-aft, y-right, z-up), on an
+    airfoil section, Izz will be largest. Thus, the bending axis is Ixx.
+
+    There is some additional complexity with the way Ex, Ey, Gxy are flagged.
+    Those definitions are from composites book and are in the element frame
+    (e.g., element is in xy plane). This is consistent for a real wing example,
+    but x is used as the primary "fiber" that is normal to the plane and not y.
+    Thus, for Ey*Ixx, you'd use Ex*Ixx and vice versa.
 
     Parameters
     ----------
@@ -109,13 +130,11 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         changes the filename
      normalized_inertia_png_filename : PathLike; default='normalized_inertia_vs_span.png'
         changes the filename
-     area_span_png_filename : PathLike; default='area_vs_span.png'
-        changes the filename
      amoi_span_png_filename : PathLike; default='amoi_vs_span.png'
         changes the filename
      e_amoi_span_png_filename : PathLike; default='e_amoi_vs_span.png'
         changes the filename
-     cg_span_png_filename : PathLike; default='cg_vs_span.png'
+     cg_span_png_filename : PathLike; default='centroid_vs_span.png'
         changes the filename
 
     """
@@ -203,10 +222,9 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
             ExI, EyI, GJ, avg_centroid, show=show,
             dirname=dirname, ifig=ifig,
             normalized_inertia_png_filename=normalized_inertia_png_filename,
-            area_span_png_filename=area_span_png_filename,
             amoi_span_png_filename=amoi_span_png_filename,
             e_amoi_span_png_filename=e_amoi_span_png_filename,
-            cg_span_png_filename=cg_span_png_filename,
+            centroid_span_png_filename=centroid_span_png_filename,
         )
 
     out_dict = {
@@ -492,13 +510,39 @@ def plot_inertia(log: SimpleLogger,
                  ifig: int=1, show: bool=True,
                  dirname: PathLike='',
                  normalized_inertia_png_filename: PathLike='normalized_inertia_vs_span.png',
-                 area_span_png_filename: PathLike='area_vs_span.png',
                  amoi_span_png_filename: PathLike='amoi_vs_span.png',
                  e_amoi_span_png_filename: PathLike='e_amoi_vs_span.png',
-                 cg_span_png_filename: PathLike='cg_vs_span.png') -> int:
-    """helper method for test
+                 centroid_span_png_filename: PathLike='centroid_vs_span.png') -> int:
+    """
+    The cutting plane tool works by marching along "y" and defining a cut
+    in the "xz" plane. The cut element is in roughly the xy plane or any
+    z-rotated plane (e.g., a cylinder).
+
+    Thus, the primary inertias are:
+    Ixx = sum of A*dz^2
+    Izz = sum of A*dx^2
+    Ixz = sum of A*dx*dz
+    with the other terms containing a y (the out of plane dimension) and are 0.
+
+    Due to some messy notation in the code, these names may be flipped.
+    To verify, for an standard aircraft (x-aft, y-right, z-up), on an
+    airfoil section, Izz will be largest. Thus, the bending axis is Ixx.
+
+    There is some additional complexity with the way Ex, Ey, Gxy are flagged.
+    Those definitions are from composites book and are in the element frame
+    (e.g., element is in xy plane). This is consistent for a real wing example,
+    but x is used as the primary "fiber" that is normal to the plane and not y.
+    Thus, for Ey*Ixx, you'd use Ex*Ixx and vice versa.
+
+    There are a lot of ways to plot the data here. Be careful of the orientations.
 
     inertia: [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
+    Note
+    ----
+    Ex : (nstation,) float np.ndarray
+        normal to the cut plane
+    Ey : (nstation,) float np.ndarray
+        tangential to the cut plane
     """
     absI = np.abs(I)
     absExI = np.abs(ExI)
@@ -527,19 +571,6 @@ def plot_inertia(log: SimpleLogger,
     ax.legend()
     png_filename = os.path.join(dirname, normalized_inertia_png_filename)
     log.info(f'saving {png_filename}')
-    fig.savefig(png_filename)
-    #-------------------------------------------------------
-
-    fig = plt.figure(ifig + 1)
-    ax = fig.gca()
-    ax.plot(y, A, 'ro', label='Area', linestyle='-')
-
-    ax.grid(True)
-    ax.set_xlabel('Span, y')
-    ax.set_ylabel('Area, A')
-    ax.legend()
-    png_filename = os.path.join(dirname, area_span_png_filename)
-    log.debug(f'saving {png_filename}')
     fig.savefig(png_filename)
     #-------------------------------------------------------
 
@@ -576,9 +607,9 @@ def plot_inertia(log: SimpleLogger,
     ax.plot(y, avg_centroid[:, 2], 'bo-', label='zcg')
     ax.grid(True)
     ax.set_xlabel('Span, y')
-    ax.set_ylabel('CG')
+    ax.set_ylabel('Centroid')
     ax.legend()
-    png_filename = os.path.join(dirname, cg_span_png_filename)
+    png_filename = os.path.join(dirname, centroid_span_png_filename)
     log.debug(f'saving {png_filename}')
     fig.savefig(png_filename)
     #-------------------------------------------------------
@@ -732,11 +763,11 @@ def calculate_area_moi(model: BDF,
     dyi = y2.max() - y2.min()
     #dzi = z2.max() - z2.min()  # zero by definition
 
-    inertia[:, 0] = area * (x * x)  # Ixx
-    inertia[:, 1] = area * (y * y)  # Iyy
-    inertia[:, 2] = area * (z * z)  # Izz
-    inertia[:, 3] = area * (x * y)  # Ixy
-    inertia[:, 4] = area * (y * z)  # Iyz
+    inertia[:, 0] = area * (x * x)  # Izz
+    inertia[:, 1] = area * (y * y)  # just 0
+    inertia[:, 2] = area * (z * z)  # Ixx
+    inertia[:, 3] = area * (x * y)  # just 0
+    inertia[:, 4] = area * (y * z)  # just 0
     inertia[:, 5] = area * (x * z)  # Ixz
 
     # cut is in xz plane
@@ -991,17 +1022,19 @@ def plot_compare_inertia(log: SimpleLogger,
                          yrange=None,
                          span_label = 'Span, y (in)',
                          dirname: Path='', save: bool=True,
+                         ylim_GJ_ratio=None,
+                         ylim_EyIzz_ratio=None,
                          show: bool=True) -> int:
     """helper method for test
 
     inertia: [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
     """
     xx = f'{x}{x}'
-    # xy = f'{x}{y}'
+    xy = f'{x}{y}'
     xz = f'{x}{z}'
     # yz = f'{y}{z}'
     zz = f'{z}{z}'
-    yy = f'{y}{y}'
+    # yy = f'{y}{y}'
 
     marker = ''
     # absI = np.abs(I)
@@ -1023,16 +1056,20 @@ def plot_compare_inertia(log: SimpleLogger,
         data.append(datai)
         station, A, I, J, ExI, EyI, GJ, avg_centroid = datai
         # assert station.max() < 2000., station.max()
+
+        # the y-terms are all 0.0
         Ixx = I[:, 0]
-        Iyy = I[:, 1]
+        # Iyy = I[:, 1]
         Izz = I[:, 2]
-        Ixy = I[:, 3]
-        Iyz = I[:, 4]
+        # Ixy = I[:, 3]
+        # Iyz = I[:, 4]
         Ixz = I[:, 5]
-        Ex = ExI[:, 0]/I[:,0]
-        Ey = EyI[:, 0]/I[:,0]
-        G = GJ/J
-        ExA =  Ex * A
+
+        # These are average moduli
+        Ex = ExI[:, 0] / Ixx
+        Ey = EyI[:, 0] / Ixx
+        G = GJ / J
+        EyA =  Ex * A
 
         # assert isinstance(ifig, int), ifig
         #-------------------------------------------------------
@@ -1046,7 +1083,7 @@ def plot_compare_inertia(log: SimpleLogger,
         ax.legend()
 
         if save:
-            png_filename = dirname / 'area_vs_span.png'
+            png_filename = dirname / f'Area{y}_vs_span.png'
             log.debug(f'saving {png_filename}')
             fig.savefig(png_filename)
         ifig += 1
@@ -1064,7 +1101,7 @@ def plot_compare_inertia(log: SimpleLogger,
         ax.set_xlabel(span_label)
         ax.set_ylabel('Area MOI, I ($in^4$)')
         ax.legend()
-        png_filename = dirname / 'Ixx_Izz_Ixz_J_log.png'
+        png_filename = dirname / f'I{xx}_I{zz}_I{xz}_J_log.png'
         log.debug(f'saving {png_filename}')
         fig.savefig(png_filename)
         ifig += 1
@@ -1083,13 +1120,13 @@ def plot_compare_inertia(log: SimpleLogger,
             ax.set_xlabel(span_label)
             ax.set_ylabel('Area MOI, I ($in^4$)')
             ax.legend()
-            png_filename = dirname / 'Ixx_Izz_Ixz_J.png'
+            png_filename = dirname / f'I{xx}_I{zz}_I{xz}_J.png'
             log.debug(f'saving {png_filename}')
             fig.savefig(png_filename)
         ifig += 1
 
         #-------------------------------------------------------
-        ifig_EyIzz = ifig
+        # ifig_EyIzz = ifig
         fig = plt.figure(ifig)
         ax = fig.gca()
         ax.plot(station, ExI[:, 2], color='r', linestyle=linestyle, marker=marker, label=f'{tag}E{y}*I{zz}')  # Ey*Izz
@@ -1097,53 +1134,53 @@ def plot_compare_inertia(log: SimpleLogger,
         if save:
             ax.grid(True)
             ax.set_xlabel(span_label)
-            ax.set_ylabel(f'Stiffness: E{y}*Area')
+            ax.set_ylabel(f'Stiffness: E{y}*I{zz}')
             ax.legend()
             png_filename = dirname / f'stiffness_E{y}I{zz}.png'
             fig.savefig(png_filename)
         ifig += 1
 
         #---------------------------------------------------
-        ifig_GJ = ifig
+        # ifig_GJ = ifig
         fig = plt.figure(ifig)
         ax = fig.gca()
-        ax.plot(station, GJ, color='k', linestyle=linestyle, marker=marker, label=f'{tag}G{xz}*J')
+        ax.plot(station, GJ, color='k', linestyle=linestyle, marker=marker, label=f'{tag}G{xy}*J{xz}')
         #ax.plot(station, I[:, 0], 'b-', marker=marker, label='Ixx')
         if save:
             ax.grid(True)
             ax.set_xlabel(span_label)
-            ax.set_ylabel(f'Stiffness: G{xz}*J')
+            ax.set_ylabel(f'Stiffness: G{xy}*J{xz}')
             ax.legend()
-            png_filename = dirname / 'stiffness_GJ.png'
+            png_filename = dirname / f'stiffness_G{xy}J{xz}.png'
             fig.savefig(png_filename)
         ifig += 1
 
         #---------------------------------------------------
         fig = plt.figure(ifig)
         ax = fig.gca()
-        ax.plot(station, GJ, 'k', linestyle=linestyle, marker=marker, label=f'{tag}G{xz}*J')
+        ax.plot(station, GJ, 'k', linestyle=linestyle, marker=marker, label=f'{tag}G{xy}*J{xz}')
         ax.plot(station, ExI[:, 0], 'r', linestyle=linestyle, marker=marker, label=f'{tag}E{y}*I{xx}')
-        ax.plot(station, ExA, 'b', linestyle=linestyle, marker=marker, label=f'{tag}E{y}*A')
+        ax.plot(station, EyA, 'b', linestyle=linestyle, marker=marker, label=f'{tag}E{y}*A{y}')
         if save:
             ax.grid(True)
             ax.set_xlabel(span_label)
-            ax.set_ylabel(f'Stiffness: G{xz}*J')
+            ax.set_ylabel(f'Stiffness: G{xy}*J{xz}')
             ax.legend()
-            png_filename = dirname / 'stiffness_ExIxx_GJ.png'
+            png_filename = dirname / f'stiffness_E{x}I{xx}_G{xy}J{xz}.png'
             fig.savefig(png_filename)
         ifig += 1
         #---------------------------------------------------
         fig = plt.figure(ifig)
         ax = fig.gca()
-        ax.plot(station, G, color='k', linestyle=linestyle, marker=marker, label=f'G{xz}')
-        ax.plot(station, Ex, color='r', linestyle=linestyle, marker=marker, label=f'E{y}')
-        ax.plot(station, Ey, color='b', linestyle=linestyle, marker=marker, label=f'E{x}')
+        ax.plot(station, G, color='k', linestyle=linestyle, marker=marker, label=f'G{xy}')
+        ax.plot(station, Ex, color='r', linestyle=linestyle, marker=marker, label=f'E{y}')  # this is really flipped
+        ax.plot(station, Ey, color='b', linestyle=linestyle, marker=marker, label=f'E{x}')  # this is really flipped
         if save:
             ax.grid(True)
             ax.set_xlabel(span_label)
-            ax.set_ylabel(f'Effective Modulus: E{x}, E{z}, G{xz}')
+            ax.set_ylabel(f'Effective Modulus: E{x}, E{z}, G{xy}')
             ax.legend()
-            png_filename = dirname / 'stiffness_Ex_Ey_G.png'
+            png_filename = dirname / f'stiffness_E{x}_E{z}_G{xy}.png'
             fig.savefig(png_filename)
         ifig += 1
 
@@ -1155,9 +1192,9 @@ def plot_compare_inertia(log: SimpleLogger,
         if save:
             ax.grid(True)
             ax.set_xlabel(span_label)
-            ax.set_ylabel('CG (in)')
+            ax.set_ylabel('Centroid (in)')
             ax.legend()
-            png_filename = dirname / 'cg_vs_span.png'
+            png_filename = dirname / 'centroid_vs_span.png'
             log.debug(f'saving {png_filename}')
             fig.savefig(png_filename)
         #-------------------------------------------------------
@@ -1202,16 +1239,16 @@ def plot_compare_inertia(log: SimpleLogger,
         ax.set_yscale(ax_yscale)
         ax2 = ax.twinx()
         # 1 / 2 will give us less
-        ExA_ratio = ExA1[istation1]/ExA2[istation2] -1
-        ax.plot(station1, ExA1, color='r', linestyle='-', marker=marker, label=f'{tag1}E{y}*A')  # Ey*Izz
-        ax.plot(station2, ExA2, color='b', linestyle='--', marker=marker, label=f'{tag2}E{y}*A')  # Ey*Izz
-        ax2.plot(common_station, ExA_ratio*100, color='k', linestyle='-', marker=marker, label=f'ratio')  # Ey*Izz
+        ExA_ratio = ExA1[istation1] / ExA2[istation2] - 1
+        ax.plot(station1, ExA1, color='r', linestyle='-', marker=marker, label=f'{tag1}E{y}*A{y}')  # this is really Ey*Ay; just some bad names upstream
+        ax.plot(station2, ExA2, color='b', linestyle='--', marker=marker, label=f'{tag2}E{y}*A{y}')
+        ax2.plot(common_station, ExA_ratio*100, color='k', linestyle='-', marker=marker, label='ratio')  # Ey*A
         ax.grid()
         ax.legend()
         ax.set_xlabel(span_label)
-        ax.set_ylabel(f'Stiffness ($lb_f*in^2$): E{y}*A')
+        ax.set_ylabel(f'Stiffness ($lb_f*in^2$): E{y}*A{y}')
         ax2.set_ylabel('%Difference')
-        fig.savefig(dirname / f'compare_E{y}A.png')
+        fig.savefig(dirname / f'compare_E{y}A{y}.png')
 
         ifig += 1
         fig = plt.figure(ifig)
@@ -1220,29 +1257,36 @@ def plot_compare_inertia(log: SimpleLogger,
         ax2 = ax.twinx()
         # 1 / 2 will give us less
         ax.grid()
-        ExI_ratio = ExI1[istation1, 2]/ExI2[istation2, 2] - 1
-        ax.plot(station1, ExI1[:, 2], color='r', linestyle='-', marker=marker, label=f'{tag1}E{y}I{zz}')  # Ey*Izz
-        ax.plot(station2, ExI2[:, 2], color='b', linestyle='--', marker=marker, label=f'{tag2}E{y}I{zz}')  # Ey*Izz
-        ax2.plot(common_station, ExI_ratio*100, color='k', linestyle='-', marker=marker, label=f'ratio')  # Ey*Izz
-        ax.set_ylabel(f'Stiffness ($lb_f*in^2$): E{y}*I{zz}')
+        ExI_ratio = ExI1[istation1, 2] / ExI2[istation2, 2] - 1
+        ax.plot(station1, ExI1[:, 2], color='r', linestyle='-', marker=marker, label=f'{tag1}E{y}*I{xx}')  # this is really Ey*Ixx; just some bad names upstream
+        ax.plot(station2, ExI2[:, 2], color='b', linestyle='--', marker=marker, label=f'{tag2}E{y}*I{xx}')
+        ax2.plot(common_station, ExI_ratio*100, color='k', linestyle='-', marker=marker, label='ratio')
+        if ylim_EyIzz_ratio:
+            ax2.set_ylim(ylim_EyIzz_ratio)
+        ax.set_xlabel(span_label)
+        ax.set_ylabel(f'Stiffness ($lb_f*in^2$): E{y}*I{xx}')
         ax2.set_ylabel('%Difference')
         ax.legend()
-        fig.savefig(dirname / f'compare_EyIzz.png')
+        fig.savefig(dirname / f'compare_E{y}I{xx}.png')
         ifig += 1
 
         fig = plt.figure(ifig)
         ax = fig.gca()
         ax.set_yscale(ax_yscale)
         ax2 = ax.twinx()
-        GJ_ratio = GJ1[istation1]/GJ2[istation2]-1
-        ax.plot(station1, GJ1, color='r', linestyle='-', marker=marker, label=f'{tag1}GJ')
-        ax.plot(station2, GJ2, color='b', linestyle='--', marker=marker, label=f'{tag2}GJ')
-        ax2.plot(common_station, GJ_ratio*100, color='k', linestyle='-', marker=marker, label=f'ratio')
-        ax.set_ylabel('Stiffness ($lb_f*in^2$): G*J')
+        GJ_ratio = GJ1[istation1] / GJ2[istation2] - 1
+        ax.plot(station1, GJ1, color='r', linestyle='-', marker=marker, label=f'{tag1}G{xy}*J{xz}')
+        ax.plot(station2, GJ2, color='b', linestyle='--', marker=marker, label=f'{tag2}G{xy}*J{xz}')
+        ax2.plot(common_station, GJ_ratio*100, color='k', linestyle='-', marker=marker, label='ratio')
+        if ylim_GJ_ratio:
+            ax2.set_ylim(ylim_GJ_ratio)
+
+        ax.set_xlabel(span_label)
+        ax.set_ylabel(f'Stiffness ($lb_f*in^2$): G{xy}*J{xz}')
         ax2.set_ylabel('%Difference')
         ax.grid()
         ax.legend()
-        fig.savefig(dirname / 'compare_GJ.png')
+        fig.savefig(dirname / f'compare_G{xy}_J{xz}.png')
         plt.show()
     ifig += 1
 

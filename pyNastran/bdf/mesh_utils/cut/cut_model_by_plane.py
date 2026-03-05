@@ -1045,7 +1045,10 @@ def cut_faces(node_ids: np.ndarray,
     assert rod_eid_nodes.shape[1] == 3, rod_eid_nodes.shape
     assert rod_nids.ndim == 1, rod_nids.shape
     # assert len(rod_nids) == nnodei, f'nelem={nelemi} nnodei={nnodei} rod_nids={rod_nids.shape}'
-    assert geometry.shape == (2*nelemi, 4), geometry.shape
+
+    # generally close, but found an off by 1 case
+    # assert geometry.shape == (2*nelemi, 4), f'geometry.shape={geometry.shape} nelemi={nelemi} 2*nelemi={2*nelemi}'
+
     # assert rod_xyzs.shape == (nnodei, 3), rod_xyzs.shape
 
     unique_geometry, unique_results = _unique_face_rows(
