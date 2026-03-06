@@ -441,9 +441,8 @@ def make_flutter_response(f06_filename: PathLike,
 
     assert load_eigenvalues
     #assert len(real_eigenvalues_list)
-    if len(matrices):
-        data['matrices'] = matrices
-    matrices = data['matrices']
+    data['matrices'] = matrices
+    # matrices = data['matrices']
     return flutters, data
 
 

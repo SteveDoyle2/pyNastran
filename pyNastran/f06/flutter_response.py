@@ -788,6 +788,8 @@ class FlutterResponse:
             number of digits for the frequency
         eas_round : int; default=3
             number of digits for the equivalent airspeed
+        divergence_freq_tol : float; default=0.1
+            the definition of divergence in Hz
 
         Returns
         -------
@@ -801,13 +803,17 @@ class FlutterResponse:
         """
         damping_crossings_dict, freq_crossings_dict = _setup_damping_freq_crossings(
             damping_crossings, freq_crossings)
-
+        # print(f'damping_crossings_dict = {damping_crossings_dict}')
+        # print(f'freq_crossings_dict = {freq_crossings_dict}')
         if eas_range is None:
             eas_range = [None, None]
         eas_min0, eas_max0 = eas_range
 
         modes, imodes = _get_modes_imodes(self.modes, modes)
+
+        # TODO: this is weird...
         min_damping = _get_min_damping(damping_crossings_dict)
+        # print(f'min_damping = {min_damping}')
 
         vd_crossing_dict = _get_divergence(
             self,
@@ -827,7 +833,9 @@ class FlutterResponse:
             mode = imode + 1
             dampi = self.results[imode, :, self.idamping].flatten()
             if dampi.max() < min_damping:
+                # print(f'skip damp.max()={dampi.max()} min_damping={min_damping}')
                 continue
+            # print(f'damp.max()={dampi.max()} min_damping={min_damping}')
             easi = self.results[imode, :, self.ieas].flatten()
             freqi = self.results[imode, :, self.ifreq].flatten()
             easi, dampi, freqi = remove_excluded_points(
@@ -840,7 +848,9 @@ class FlutterResponse:
 
             for damping_targeti, damping_requiredi in damping_crossings_dict.items():
                 if dampi.max() < damping_requiredi:
+                    # print(f'skip damp.max()={dampi.max()} damping_requiredi={damping_requiredi}')
                     continue
+                # print(f'damp.max()={dampi.max()} damping_requiredi={damping_requiredi}')
 
                 # target different percent dampings
                 ddamping = dampi - damping_targeti
@@ -853,6 +863,7 @@ class FlutterResponse:
                     # no up-crossing
                     continue
                 # at least has an up-crossing
+                # print(f'damping_targeti={damping_targeti}, p1={p1} p2={p2} pmax={pmax}')
                 vl_vf_crossing_dict[damping_targeti][mode] = [(damping_targeti, p1, p2, pmax)]
 
         # cleanup
@@ -1565,16 +1576,16 @@ class FlutterResponse:
         ----------
         fig : plt.Figure; default=None
             the fig object
-        damp_axes : plt.Axes; default=None
+        axes : plt.Axes; default=None
             the ax object
         plot_type : str; default='tas'
            tas, eas, alt, kfreq, 1/kfreq, freq, damp, eigr, eigi, q, mach
         """
-        print('plot_zimmerman')
+        # print('plot_zimmerman')
         modes, imodes = _get_modes_imodes(self.modes, modes)
         imodes = np.array([0, 1, 0, 1])
         nmodes = len(imodes)
-        print(f'nmodes = {nmodes}')
+        # print(f'nmodes = {nmodes}')
         if nmodes < 2:
             print(f'less than 2 modes specified; modes={modes}')
             return
@@ -1606,7 +1617,7 @@ class FlutterResponse:
                 # if imodei == jmodei:
                 #     continue
                 Fi, Fsi = self.calculate_zimmerman(imodei, jmodei)
-                print(axes)
+                # print(axes)
                 print((i, j), (int(jmodei), int(jmodei)), f'shape={axes.shape}')
                 ax = axes[i, j]
                 ax.plot(xvalues, Fi, label=f'F({modei}, {modej})')
@@ -1620,7 +1631,7 @@ class FlutterResponse:
         if len(modes) == 2:
             # ax = axes[0, 0]
             # axes.plot(xvalues, Fi, label='F')
-            ax.set_ylabel(f'Zimmerman Flutter Margin Criterion')
+            ax.set_ylabel('Zimmerman Flutter Margin Criterion')
             ax.set_xlabel(xlabel)
 
             title = self._get_title(nlines=1)
@@ -1628,7 +1639,7 @@ class FlutterResponse:
             plt.suptitle(title)
 
         else:
-            fig.suptitle(f'Zimmerman Flutter Margin Criterion')
+            fig.suptitle('Zimmerman Flutter Margin Criterion')
             # fig = plt.figure()
             # gs = fig.add_gridspec(2, 2, hspace=0, wspace=0)
             # (ax1, ax2), (ax3, ax4) = gs.subplots(sharex='col', sharey='row')
@@ -1679,7 +1690,7 @@ class FlutterResponse:
                    freq_tol: float=-1.0,
                    freq_tol_remove: float=-1.0,
                    filter_freq: bool=False,
-                   damping_crossings: list[tuple[float, float]]=None,
+                   damping_crossings: list[dict[float, float]]=None,
                    show_detailed_mode_info: bool=False,
                    divergence_legend_loc: str='best',
                    flutter_bbox_to_anchor: Optional[tuple[float, float]]=None,
@@ -1707,7 +1718,7 @@ class FlutterResponse:
            tas, eas, alt, kfreq, 1/kfreq, freq, damp, eigr, eigi, q, mach
         legend : bool; default=True
             should the legend be shown
-        show : bool; default=None???
+        show : bool; default=False
             show/don't show the plot
         filter_freq : bool; default=False
             filter modes entirely outside the plot range
@@ -1764,6 +1775,13 @@ class FlutterResponse:
             should the plot be closed after being saved
 
         """
+        if damping_crossings:
+            assert isinstance(damping_crossings, dict), damping_crossings
+        # print(f'damping_limit = {damping_limit}')
+        # print(f'damping_required = {damping_required}')
+        # print(f'damping_crossings = {damping_crossings}')
+        # print(f'filter_freq = {filter_freq}')
+
         ncol = 0 if ncol is None else ncol
         if flutter_bbox_to_anchor is None:
             flutter_bbox_to_anchor = (1.02, 1.)
@@ -2643,7 +2661,18 @@ class FlutterResponse:
 
         Returns
         -------
-
+        vl : float
+            limit frequency (typically 0% crossing)
+        freql : float
+            limit frequency
+        vf : float
+            flutter speed (typically 3% crossing)
+        freqf : float
+            flutter frequency
+        vd : float
+            divergence speed
+        freqd : float
+            divergence frequency
         """
         # print('mode\tdamping\tfreq\tvel')
         vd_array = _get_vd_array(
@@ -3650,15 +3679,15 @@ def _to_csv(myarray: np.ndarray) -> str:
         msg_list.append(f'{mode:.0f},{vel:.3f},{freq:.3g}')
     return '\n'.join(msg_list)
 
-def _setup_damping_freq_crossings(damping_crossings: Optional[dict[float, float]] = None,
-                                  freq_crossings: Optional[list[tuple[float, float]]] = None) -> tuple[dict[float, float],
-                                                                                                       dict[float, float]]:
+def _setup_damping_freq_crossings(damping_crossings: Optional[dict[float, float]]=None,
+                                  freq_crossings: Optional[list[tuple[float, float]]]=None) -> tuple[dict[float, float],
+                                                                                                     dict[float, float]]:
     if isinstance(damping_crossings, dict):
         damping_crossings_dict = damping_crossings
-    elif isinstance(damping_crossings, list):
-        damping_crossings_dict = {}
-        for target, required in damping_crossings:
-            damping_crossings_dict[target] = required
+    # elif isinstance(damping_crossings, list):
+    #     damping_crossings_dict = {}
+    #     for target, required in damping_crossings:
+    #         damping_crossings_dict[target] = required
     elif damping_crossings is None:
         damping_crossings_dict = {
             0.00: 0.01,
@@ -3809,7 +3838,7 @@ def get_damping_crossings(damping_required: float,
                           damping_limit: float,
                           ) -> tuple[dict[float, float], float]:
     damping_crossings = {}
-    print(f'damping_required={damping_required}, damping_required_tol={damping_required_tol}, damping_limit={damping_limit}')
+    # print(f'damping_required={damping_required}, damping_required_tol={damping_required_tol}, damping_limit={damping_limit}')
     if damping_required_tol is None or damping_required_tol < 0.:
         damping_required_tol = 0.0
 
@@ -3820,5 +3849,5 @@ def get_damping_crossings(damping_required: float,
     if damping_limit is not None and damping_limit > -1.0:
         # VF
         damping_crossings[damping_limit] = damping_limit
-    print(f'damping_crossings, damping_required_tol = {damping_crossings}, {damping_required_tol}')
+    # print(f'damping_crossings, damping_required_tol = {damping_crossings}, {damping_required_tol}')
     return damping_crossings, damping_required_tol

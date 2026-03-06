@@ -108,8 +108,10 @@ def load_f06_op2(f06_filename: PathLike,
         log.error(f'Invalid file type; {f06_filename}')
         return model, responses
 
+    print('responses = ', responses)
     for response in responses.values():
         response.convert_units(out_units_dict)
+    print('sucess')
     return model, responses
 
 
@@ -389,7 +391,7 @@ def get_vlines(vf: float, vl: float) -> list[tuple[str, float, str, str]]:
 def get_damping_crossings(damping_required: float,
                           damping_required_tol: float,
                           damping_limit: float,
-                          ) -> list[tuple[float, float]]:
+                          ) -> dict[float, float]:
     damping_crossings = []
     if damping_required is not None and damping_required > -0.99:
         damping_crossings.append((damping_required, damping_required + damping_required_tol))
@@ -400,4 +402,8 @@ def get_damping_crossings(damping_required: float,
             (0.00, damping_required_tol),
             (0.03, 0.03),
         ]
-    return damping_crossings
+
+    damping_crossings_dict = {}
+    for req, req_tol in damping_crossings:
+        damping_crossings_dict[req] = req_tol
+    return damping_crossings_dict

@@ -89,7 +89,8 @@ def get_include_filename(log: SimpleLogger,
         msg = f'Could not find INCLUDE file:\n{include_lines}\n'
         msg += f'  filename: {os.path.abspath(filename_raw)}\n'
         if source_filename:
-            msg += f'  source file: {os.path.abspath(source_filename)}\n'
+            msg += (f'  source file: {os.path.abspath(source_filename)}\n'\
+                    f'\n{print_bad_path(filename_raw)}\n\n')
         msg += f'  include_dirs:\n - ' + '\n - '.join(repr(val) for val in include_dirs) + '\n'
         if write_env_on_error:
             msg += '  environment:'
