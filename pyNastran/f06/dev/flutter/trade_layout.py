@@ -6,6 +6,7 @@ from functools import wraps
 from typing import Any, TYPE_CHECKING
 import natsort
 
+from pyNastran.gui.utils.qt.pydialog import QFloatEdit
 from pyNastran.utils import print_bad_path
 # from pyNastran.utils.dev import get_files_of_type
 
@@ -120,6 +121,10 @@ class TradeLayout(QVBoxLayout):
         self.python_load_button = QPushButton('Load...', parent)
         self.python_plot_button = QPushButton('Plot...', parent)
 
+        self.eas_max_label = QLabel('EAS Max:', parent)
+        self.eas_max_edit = QFloatEdit(parent)
+        self.eas_max_edit.setToolTip('maximum value for the flutter/divegence table')
+
         self.xaxis_label = QLabel('X-Axis', parent)
         self.yaxis_label = QLabel('Y-Axis', parent)
         self.xaxis_pulldown = QComboBox(parent)
@@ -148,6 +153,7 @@ class TradeLayout(QVBoxLayout):
 
         grid2 = create_grid_from_list(parent, [
             (self.word_filename_label, self.word_filename_edit, self.word_filename_browse),
+            (self.eas_max_label, self.eas_max_edit),
         ])
         grid3 = create_grid_from_list(parent, [
             (self.python_filename_label, self.python_filename_edit, self.python_filename_browse, self.python_load_button, self.python_plot_button),
@@ -266,6 +272,8 @@ class TradeLayout(QVBoxLayout):
         #     xlim = (None, None)
 
         modes = None if len(parent.selected_modes) == 0 else parent.selected_modes
+        eas_max = sdouble_or_blank(self.eas_max_edit.text(), default=1000.0)
+
         settings = {
             'x_plot_type': 'eas',
             'nrigid_body_modes': 6,  # TODO: 6
@@ -312,6 +320,7 @@ class TradeLayout(QVBoxLayout):
             'divergence_freq_tol': parent.freq_divergence_tol,
             'flutter_bbox_to_anchor_x': parent.flutter_bbox_to_anchor_x,
             'freq_ndigits': parent.freq_ndigits,
+            'eas_max' : eas_max,
             'ndir_levels': 1,
         }
         return settings
@@ -406,7 +415,7 @@ class TradeLayout(QVBoxLayout):
             self.log.error(f'{directory!r} is not a directory')
             return
         filenames = [os.path.join(directory, fname)
-                     for fname in os.path.listdir(directory)
+                     for fname in os.listdir(directory)
                      if fname.lower().endswith('.f06')]
         # filenames = get_files_of_type(directory, '.f06')
         if len(filenames) == 0:
@@ -558,20 +567,28 @@ class TradeLayout(QVBoxLayout):
 
     def get_dict(self) -> dict[str, str]:
         excel_filename = self.excel_filename_edit.text().strip()
+        python_filename = self.python_filename_edit.text().strip()
         base_f06_directory = self.base_f06_directory_edit.text().strip()
         word_filename = self.word_filename_edit.text().strip()
+        eas_max = self.eas_max_edit.text().strip()
+        try:
+            eas_max = float(eas_max)
+        except ValueError:
+            eas_max = 1000.
 
         configs = self.config_edit.text().strip(' ,')
         xaxis = self.xaxis_pulldown.currentText()
         yaxis = self.yaxis_pulldown.currentText()
         # self.word_filename = word_filename
         trade = {
-            'excel_filename': excel_filename,
             'base_f06_directory': base_f06_directory,
+            'excel_filename': excel_filename,
+            'python_filename': python_filename,
             'word_filename': word_filename,
             'configs': configs,
             'xaxis': xaxis,
             'yaxis': yaxis,
+            'eas_max': eas_max,
         }
         return trade
 
@@ -583,7 +600,8 @@ class TradeLayout(QVBoxLayout):
                 (f'{prefix}excel_filename', -1, self.excel_filename_edit),
                 (f'{prefix}base_f06_directory', -1, self.base_f06_directory_edit),
                 (f'{prefix}word_filename', -1, self.word_filename_edit),
-                (f'{prefix}configs', -1, self.config_edit)
+                (f'{prefix}configs', -1, self.config_edit),
+                (f'{prefix}eas_max', -1, self.eas_max_edit),
             ]
         elif key == 'combobox':
             out = [

@@ -111,11 +111,13 @@ def get_trades(out_table: pd.DataFrame,
     trade_slines = [val.strip(', ') for val in
                     config_text.strip(';, ').split(';')]
 
+    configs = []
+    trades = []
     if 'File' not in columns:
         log.error('Missing "File" from case table')
         is_passed = False
+        return is_passed, configs, trades
 
-    trades = []
     nrow = len(out_table)
     files = out_table['File'].to_list()
     if len(trade_slines) == 0 or not is_passed:
@@ -140,7 +142,7 @@ def get_trades(out_table: pd.DataFrame,
         log.error(f'Missing names = {missing_names_list}')
 
     configs = [''] * nrow
-    if not is_passed:
+    if not is_passed or len(trades) == 0:
         return is_passed, configs, trades
 
     cols, icase_dict0 = trades[0]

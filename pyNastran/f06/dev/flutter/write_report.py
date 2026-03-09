@@ -66,6 +66,7 @@ def write_report(docx_filename: str,
                  divergence_legend_loc: str='best',
                  divergence_freq_tol: float=0.1,
                  ndir_levels: int=1,
+                 eas_max: float=1000.0,
                  progress_callback: Optional[Callable]=None,
                  ) -> None:
     """
@@ -232,7 +233,6 @@ def write_report(docx_filename: str,
     make_pngs = True
     show_individual = False
     freq_target = 0.5
-    v_baseline = 1000.0
     # vl_target, vf_target
     #------------------------------
     eas_units = 'knots'  # baseline
@@ -267,7 +267,7 @@ def write_report(docx_filename: str,
         if progress_callback is not None:
             progress_callback(ifile, nfiles)  # 0-indexed for progress bar
 
-        basename = os.path.splitext(os.path.basename(f06_filename))
+        basename = os.path.splitext(os.path.basename(f06_filename))[0]
         png_filename = picdir / f'{basename}.png'
         if config.strip() == '':
             config = basename
@@ -349,7 +349,7 @@ def write_report(docx_filename: str,
         v0, freq0, v3, freq3, vdiverg, freq_diverg = response.xcrossing_dict_to_VL_VF_VD(
             vl_vf_crossing_dict, vd_crossing_dict,
             log, freq_target, vl_target, vf_target,
-            v_baseline=v_baseline,
+            v_baseline=eas_max,
             # is_hump_modes=parse_hump_modes,
         )
         # if VL < VL_target:
