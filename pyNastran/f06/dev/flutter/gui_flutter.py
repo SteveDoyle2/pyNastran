@@ -54,7 +54,7 @@ from pyNastran.f06.dev.flutter.utils import (
     get_point_removal_str,
     point_removal_str_to_point_removal,
     _float_passed_to_default, get_plot_flags,
-    get_raw_json,
+    get_raw_json, get_noline_nopoints,
     update_ylog_style, get_png_filename,
     load_f06_op2, get_vlines, get_damping_crossings,
     X_PLOT_TYPES, PLOT_TYPES, UNITS_IN, UNITS_OUT,
@@ -1655,11 +1655,9 @@ class FlutterGui(LoggableGui):
         freq_tol_remove = self.freq_tol_remove
         mag_tol = self.mag_tol
         log.info(f'freq_tol = {freq_tol}\n')
-        noline = not self.show_lines
-        nopoints = not self.show_points
-        if noline and nopoints:
-            noline = False
-            nopoints = True
+
+        noline, nopoints = get_noline_nopoints(
+            self.show_lines, self.show_points)
 
         if x_plot_type == 'index':
             xlim = self.index_lim

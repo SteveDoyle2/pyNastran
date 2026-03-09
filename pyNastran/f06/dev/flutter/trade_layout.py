@@ -34,6 +34,7 @@ AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
 
 import pandas as pd
 import tables
+from pyNastran.f06.dev.flutter.utils_report import get_configs, split_by_pattern
 if TYPE_CHECKING:
     from pyNastran.f06.dev.flutter.gui_flutter_plot import FlutterGui
 
@@ -259,8 +260,8 @@ class TradeLayout(QVBoxLayout):
             'f06_units': parent._units_in,
             'out_units': parent._units_out,
             'modes': modes,
-            'vl_target': double_or_blank(parent.data['vl'], default=-1.0),
-            'vf_target': double_or_blank(parent.data['vf'], default=-1.0),
+            'vl_target': sdouble_or_blank(parent.data['vl'], default=-1.0),
+            'vf_target': sdouble_or_blank(parent.data['vf'], default=-1.0),
             #'xlim_kfreq': str_limit_to_limit(self.kfreq_lim),
             #'ylim_damping': self.damping_lim,  # NO
 
@@ -279,11 +280,11 @@ class TradeLayout(QVBoxLayout):
             'ylim_damping': str_limit_to_limit(parent.ydamp_lim),
             'ylim_freq': str_limit_to_limit(parent.freq_lim),
             'eas_lim': str_limit_to_limit(parent.eas_lim),
-            'freq_tol': min_double_or_blank(parent.freq_tol, threshold=0.0, default=-1.0),
-            'freq_tol_remove': min_double_or_blank(parent.freq_tol_remove, threshold=0.0, default=-1.0),
-            'damping_required': min_double_or_blank(parent.damping_required, threshold=-1.0, default=-1.0),
-            'damping_required_tol': double_or_blank(parent.damping_required_tol, default=0.0),
-            'damping_limit': min_double_or_blank(parent.damping, threshold=-1.0, default=-1.0),  # % damping
+            'freq_tol': min_sdouble_or_blank(parent.freq_tol, threshold=0.0, default=-1.0),
+            'freq_tol_remove': min_sdouble_or_blank(parent.freq_tol_remove, threshold=0.0, default=-1.0),
+            'damping_required': min_sdouble_or_blank(parent.damping_required, threshold=-1.0, default=-1.0),
+            'damping_required_tol': sdouble_or_blank(parent.damping_required_tol, default=0.0),
+            'damping_limit': min_sdouble_or_blank(parent.damping, threshold=-1.0, default=-1.0),  # % damping
             'eas_flutter_range': str_limit_to_limit(parent.eas_flutter_range),
             'plot_font_size': parent.plot_font_size,
             'show_lines': parent.show_lines,
@@ -299,6 +300,7 @@ class TradeLayout(QVBoxLayout):
             'divergence_freq_tol': parent.freq_divergence_tol,
             'flutter_bbox_to_anchor_x': parent.flutter_bbox_to_anchor_x,
             'freq_ndigits': parent.freq_ndigits,
+            'ndir_levels': 1,
         }
         return settings
 
@@ -328,22 +330,17 @@ class TradeLayout(QVBoxLayout):
         if not word_filename.lower().endswith('.docx'):
             word_filename += 'docx'
 
-        # docx_filename = dirname / f'{prefix}flutter.docx'
-        # from pyNastran.utils import object_attributes
-        # print(object_attributes(self))
-
         # print('settings')
         settings = self.get_settings()
 
-        f06_filenames = out_table['Filename'].to_list()
+        f06_filenames = out_table['File'].to_list()
         # print(f'f06_filenames = {f06_filenames}')
         if len(configs) == 0:
             configs = [os.path.splitext(os.path.basename(fname))[0]
                        for fname in f06_filenames]
 
         # print('make settings')
-        print(f'settings = {settings}')
-
+        # print(f'settings = {settings}')
         configs, f06_filenames = remove_empty_rows(
             configs, f06_filenames, log)
         # log.info(f'f06_filenames2 = {f06_filenames}')
@@ -406,16 +403,7 @@ class TradeLayout(QVBoxLayout):
             # can't do a trade study
             data_table = [filenames2]
         else:
-            # remove the extension
-            base_filenames = [os.path.splitext(os.path.basename(filename))[0] for filename in filenames2]
-            data_table_initial = split_by_pattern(base_filenames)
-
-            # define the headers
-            data_row0 = data_table_initial[0]
-            headers = [f'{icol+1:d}' for icol in range(len(data_row0))] + ['Filename']
-
-            # add the filename onto the end
-            data_table = [line + [filename] for line, filename in zip(data_table_initial, filenames2)]
+            headers, data_table = filenames_to_data_table(filenames2)
         self.table_widget.load_table_data(headers, data_table)
 
     @dontcrash
@@ -577,22 +565,23 @@ def str_limit_to_limit(data: list[str | None]) -> Limit:
             data_out.append(float(value))
     return data_out
 
-def min_double_or_blank(value: float | str,
-                        threshold: float,
-                        default: float) -> float:
+def min_sdouble_or_blank(value: float | str,
+                         threshold: float,
+                         default: float) -> float:
     if isinstance(value, str):
         value = value.strip()
         if len(value) == 0:
             return default
         value2 = float(value)
         return value2
+
     value2 = float(value)
     if value < threshold:
         value2 = default
     return value2
 
-def double_or_blank(value: float | str,
-                    default: float) -> float:
+def sdouble_or_blank(value: float | str,
+                     default: float) -> float:
     if isinstance(value, str):
         value = value.strip()
         if len(value) == 0:
@@ -617,94 +606,6 @@ def remove_empty_rows(configs: list[str],
     f06_filenames = f06_filenames2
     return configs, f06_filenames
 
-
-def split_by_pattern(strings: list[str],
-                     delimiter: str='_',
-                     group_common: bool=True):
-    """
-    Main function to split strings based on common pattern.
-    """
-    if not strings:
-        return []
-
-    # Split all strings
-    split_lists = [s.split(delimiter) for s in strings]
-    if not group_common or len(split_lists) < 2:
-        return split_lists
-    # split_list0 = split_lists[0]
-    # print(f'split_list0 = {split_list0}')
-
-    # Find common prefix
-    common_prefix_len = 0
-    min_length = min(len(parts) for parts in split_lists)
-
-    for i in range(min_length):
-        if all(parts[i] == split_lists[0][i] for parts in split_lists):
-            common_prefix_len += 1
-            continue
-        break
-    # print(f'common_prefix_len = {common_prefix_len}')
-    # prefix = split_list0[:common_prefix_len]
-    # print(f'prefix = {prefix}')
-
-    # Find common suffix
-    common_suffix_len = 0
-    for i in range(1, min_length - common_prefix_len + 1):
-        if all(parts[-i] == split_lists[0][-i] for parts in split_lists):
-            common_suffix_len += 1
-            continue
-        break
-    # print(f'common_suffix_len = {common_suffix_len}')
-
-    # Reconstruct
-    result = []
-    for parts in split_lists:
-        new_parts = []
-        if common_prefix_len > 0:
-            new_parts.append(delimiter.join(parts[:common_prefix_len]))
-
-        middle_start = common_prefix_len
-        middle_end = len(parts) - common_suffix_len if common_suffix_len > 0 else len(parts)
-        new_parts.extend(parts[middle_start:middle_end])
-
-        if common_suffix_len > 0:
-            new_parts.append(delimiter.join(parts[-common_suffix_len:]))
-        result.append(new_parts)
-    return result
-
-
-def get_configs(out_table: pd.DataFrame,
-                config_text: str,
-                log: SimpleLogger) -> tuple[bool, list[str]]:
-    is_passed = True
-    columns = out_table.columns
-    config_keys = config_text.strip(', ').split(',')
-    for config_key in config_keys:
-        if config_key not in columns:
-            log.warning(f'key={config_key!r} is not a column in the case table')
-
-    config_headers_lower = [column.lower().strip() for column in columns]
-    config_headers = [column.strip() for column in columns
-                      if 'config' in config_headers_lower]
-
-    if 'Filename' not in columns:
-        log.error('missing Filename from case table')
-        is_passed = False
-
-    configs = []
-    if 'config' in config_headers_lower:
-        iconfig_key = config_headers_lower.index('config')
-        configs = out_table[iconfig_key].to_list()
-        config_headers.remove('config')
-    # elif is_passed:
-    #     filenames = out_table['Filename'].tolist()
-    #     configs = [os.path.splitext(os.path.basename(filenames))[0]
-    #                for filename in filenames]
-    else:
-        log.error('Missing Config from case table')
-        is_passed = False
-
-    return is_passed, configs
 
 def get_file_edit(name: str,
                   filename_edit: QLineEdit,

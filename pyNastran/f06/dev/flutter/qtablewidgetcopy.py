@@ -7,6 +7,9 @@ from qtpy.QtWidgets import (
 from qtpy import QtCore
 Qt = QtCore.Qt
 
+from pyNastran.f06.dev.flutter.utils_report import data_to_dataframe
+
+
 class QTableWidgetCopy(QTableWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -263,9 +266,9 @@ class QTableWidgetCopy(QTableWidget):
             print(f'Deleted {len(selected_cols)} col(s)')
 
     def get_data(self,
-                 skip_empty_rows=True,
-                 strip_whitespace=True,
-                 convert_numeric=False):
+                 skip_empty_rows: bool=True,
+                 strip_whitespace: bool=True,
+                 convert_numeric: bool=False):
             """
             Extract data from QTableWidget to pandas DataFrame with advanced options
 
@@ -317,9 +320,7 @@ class QTableWidgetCopy(QTableWidget):
                         data.append(row_data)
                 else:
                     data.append(row_data)
-
-            # Convert numeric columns if requested
-            df = pd.DataFrame(data, columns=headers)
-            if convert_numeric:
-                df = df.apply(pd.to_numeric, errors='ignore')
+            df = data_to_dataframe(
+                    headers, data,
+                    convert_numeric=convert_numeric)
             return df
