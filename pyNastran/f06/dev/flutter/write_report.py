@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
 import warnings
+from pathlib import Path
 from itertools import count
 from typing import Callable, Optional, TYPE_CHECKING
 
@@ -9,9 +10,10 @@ from matplotlib import pyplot as plt
 # import matplotlib.gridspec as gridspec
 
 from pyNastran.utils import PathLike
-from pyNastran.f06.flutter_response import get_damping_crossings as _get_damping_crossings, Limit  # FlutterResponse
+from pyNastran.f06.flutter_response import get_damping_crossings as _get_damping_crossings, Limit
 from pyNastran.f06.parse_flutter import make_flutter_response, FlutterResponse
-from pyNastran.f06.dev.flutter.utils import get_vlines
+from pyNastran.f06.dev.flutter.utils import get_vlines, get_noline_nopoints
+from pyNastran.f06.dev.flutter.utils_report import write_docx_path
 
 try:
     from docx import Document
@@ -30,6 +32,7 @@ def write_report(docx_filename: str,
                  f06_filenames: list[str],
                  configs: list[str],
                  table: pd.DataFrame,
+                 trades: list[dict],
                  log: SimpleLogger,
                  settings: dict[str, int | float | str],
                  x_plot_type: str='eas',
@@ -62,43 +65,69 @@ def write_report(docx_filename: str,
                  freq_ndigits: int=2,
                  divergence_legend_loc: str='best',
                  divergence_freq_tol: float=0.1,
+                 ndir_levels: int=1,
                  progress_callback: Optional[Callable]=None,
                  ) -> None:
     """
     Parameters
     ----------
     docx_filename : str
+        path to output file
     f06_filenames : str
+        list of f06 files to process
     configs: list[str]
+        label for the f06 file
     table: pd.DataFrame
+        information for trade studies
     log : SimpleLogger
+        logging object
     settings : dict[str, Any]
+        the following parameters as a dictionary
     x_plot_type : str
+        type of plot to make
     f06_units : str
+        input units
     out_units : str
-    nrigid_body_modes : int
-    modes : np.ndarray
-    vl_target : float
-    vf_target : float
+        output units
+    nrigid_body_modes : int; default=0
+        used with x_cutoff
+    modes : np.ndarray; default=None -> all modes
+        modes to consider
+    vl_target : float; default=-1.0
+        required speed for VL
+        adds a solid black line
+        adds a dotted black 1.15*VL line
+        -1.0 is disabled
+    vf_target : float; default=-1.0
+        user red line to indicate flutter
+        typically empty
+        -1.0 is disabled
     ylim_damping : Limit
+        damping range
     ylim_freq : Limit
+        freqeuncy range
     eas_lim : Limit
+        x range in equivalent airspeed
     freq_tol : float
         dashed line tolerance
     freq_tol_remove : float
         remove line tolerance
     damping_required : float; default=None
-        the limit crossing
+        the required damping at VL
         for a 0% crossing; damping_required=0.0
         for a -3% crossing; damping_required=-0.03
     damping_required_tol : float; default=0.0
         tolerance for damping_required
     damping_limit : float; default=None
-        the flutter crossing
+        the required damping at VF
         for a 3% crossing; damping_limit=0.03
         for a 0% crossing; damping_limit=0.0
     eas_flutter_range : Limit
+        the range of speeds to consider for flutter
+        useful for getting rid of severe mode switching
+        or rigid body crossings
     plot_font_size : int; default=8
+        the size of the font
     show_lines : bool; default=True
         show the lines
     show_points : bool; default=True
@@ -106,20 +135,90 @@ def write_report(docx_filename: str,
     show_mode_number : bool; default=False
         show mode number instead of point
     show_detailed_mode_info : bool; default=False
+        annotates hump modes with frequency & velocity range,
+        as well as peak velocity/frequency/damping
     point_spacing : int; default=0
+        1/2 is skip every ohter point
     use_rhoref : bool; default=False
+        adds a sea level density in the user's in_units
+        doesn't work at say 30,000 ft
     flutter_ncolumns : int; default=0
-    flutter_bbox_to_anchor_x : float
-    freq_ndigits : int
+        number of columns for the legend; 0->dynamic
+    flutter_bbox_to_anchor_x : float; default=1.0
+        gap between plot and legend; 1.02 is good
+    freq_ndigits : int; default=2
+        precision on the frequency
     divergence_legend_loc : str; default='' -> 'best'
+        The legend may overlap important info; move it
+        see matplotlib documentation for options
     divergence_freq_tol : 0.05
         frequency to identify divergence (Hz)
+    ndir_levels: int; default=1
+        number of directory levels to write
     progress_callback : function
         run a callback for the gui
+
+    TODO: add trade study support
+
+    There are files of the form:
+     - model_plane_mach_0.5_mgtow_kactuator_100.f06
+     - model_plane_mach_0.5_mgtow_kactuator_50.f06
+     - model_plane_mach_0.5_bdfw_kactuator_100.f06
+     - model_plane_mach_0.5_bdfw_kactuator_50.f06
+     - model_plane_mach_0.5_zfw_kactuator_100.f06
+     - model_plane_mach_0.5_zfw_kactuator_50.f06
+
+     - model_plane_mach_0.2_mgtow_kactuator_100.f06
+     - model_plane_mach_0.2_mgtow_kactuator_50.f06
+     - model_plane_mach_0.2_bdfw_kactuator_100.f06
+     - model_plane_mach_0.2_bdfw_kactuator_50.f06
+     - model_plane_mach_0.2_zfw_kactuator_100.f06
+     - model_plane_mach_0.2_zfw_kactuator_50.f06
+
+    Base              Mach   Fuel       Word   Kact
+    ----------------  ----  -----  ---------   ----
+    model_plane_mach  0.5   mgtow  kactuator    100
+    model_plane_mach  0.5   mgtow  kactuator     50
+    model_plane_mach  0.5    bdfw  kactuator    100
+    model_plane_mach  0.5    bdfw  kactuator     50
+    model_plane_mach  0.5     zfw  kactuator    100
+    model_plane_mach  0.5     zfw  kactuator     50
+    model_plane_mach  0.2   mgtow  kactuator    100
+    model_plane_mach  0.2   mgtow  kactuator     50
+    model_plane_mach  0.2    bdfw  kactuator    100
+    model_plane_mach  0.2    bdfw  kactuator     50
+    model_plane_mach  0.2     zfw  kactuator    100
+    model_plane_mach  0.2     zfw  kactuator     50
+
+    config_headers = ['Mach', 'Config', 'Kact']
+    trades = [
+        ['Config', 'Kact', 'Mach'],  # 1 line per (Config, Kact) with Config first
+        ['Kact', 'Config', 'Mach'],  # 1 line per (Config, Kact) with Kact first
+        ['Kact', 'Mach'],    # min of worst Configs
+        ['Config', 'Mach'],  # min of worst Kacts
+    ]
+    # same as trades, but without the x-axis
+    compressed_axes = [
+        ['Config', 'Kact'],
+        ['Kact', 'Config'],
+    ]
+
+    We want to make trade study plots. Starting with
+    the yaxis, being limit, flutter, and divergence
+    speeds. For the x-axis, we need a float for the
+    x-axis, so options include:
+     - Kact, Mach (floats)
+
+    plot(df, case_dict, xaxis)
     """
+    #-----------------------------------------
     f06_filename0 = f06_filenames[0]
     dirname = os.path.dirname(f06_filename0)
     docx_filename = os.path.join(dirname, docx_filename)
+    docx_dirname = Path(docx_filename).parent
+    picdir = docx_dirname / 'pics'
+    if not picdir.exists():
+        picdir.mkdir()
 
     #------------------------------
     mode_switch_method = ''  # None
@@ -137,6 +236,7 @@ def write_report(docx_filename: str,
     # vl_target, vf_target
     #------------------------------
     eas_units = 'knots'  # baseline
+    eas_report_units = 'KEAS'
     eas_range = eas_flutter_range
     ncol = flutter_ncolumns
     #------------------------------
@@ -147,33 +247,14 @@ def write_report(docx_filename: str,
     else:
         figsize = (24, 12)
 
-    noline = not show_lines
-    nopoints = not show_points
-    if noline and nopoints:
-        noline = False
-        nopoints = True
-
-    # damping_required = None,
-    # damping_required_tol = None,
+    noline, nopoints = get_noline_nopoints(
+        show_lines, show_points)
 
     damping_crossings, damping_required_tol = _get_damping_crossings(
         damping_required, damping_required_tol,
         damping_limit)
     settings['damping_required_tol'] = str(damping_required_tol)
     settings['damping_crossings'] = str(damping_crossings)
-
-    #------------------------------
-    # damping_crossings2 = {}
-    # if isinstance(damping_crossings, list):
-    #     for key, value in damping_crossings:
-    #         damping_crossings2[key] = value
-    #     damping_crossings = damping_crossings2
-    #     damping_crossings2 = {}
-    #
-    # for key, value in damping_crossings.items():
-    #     if np.allclose(key, 0.0):
-    #         damping_crossings2[key] = key + 0.001
-    #     damping_crossings2[key] = value
 
     #------------------------------
     cases = []
@@ -186,10 +267,10 @@ def write_report(docx_filename: str,
         if progress_callback is not None:
             progress_callback(ifile, nfiles)  # 0-indexed for progress bar
 
-        base = os.path.splitext(f06_filename)[0]
-        png_filename = base + '.png'
+        basename = os.path.splitext(os.path.basename(f06_filename))
+        png_filename = picdir / f'{basename}.png'
         if config.strip() == '':
-            config = os.path.basename(base)
+            config = basename
 
         resp_dict, data_dict = make_flutter_response(
             str(f06_filename),
@@ -203,7 +284,7 @@ def write_report(docx_filename: str,
         response.nrigid_body_modes = nrigid_body_modes
         response.x_cutoff = x_cutoff
 
-        # response.noline = noline
+        response.noline = noline
         response.freq_ndigits = freq_ndigits
 
         response.set_plot_settings(
@@ -245,14 +326,15 @@ def write_report(docx_filename: str,
                 filter_freq=True,
                 show_detailed_mode_info=show_detailed_mode_info,
                 show=False)
-            basename = os.path.basename(png_filename)
-            damp_axes.set_title(basename)
+
+            # title = os.path.basename(png_filename)
+            title = write_docx_path(f06_filename, ndir_levels=ndir_levels)
+            damp_axes.set_title(title)
             # plt.tight_layout()
             # if show_individual:
             #     plt.show()
             fig.savefig(png_filename, bbox_inches='tight')
             # bbox_to_anchor=(1, 1), borderaxespad=0)
-            # shutil.copyfile(png_filename, png_filename_mach)
             plt.close()
         if show_individual:
             raise RuntimeError('stopping')
@@ -302,14 +384,19 @@ def write_report(docx_filename: str,
                 f06_filename, png_filename)
         eas_units = response.out_units['eas']
         cases.append(case)
-    _cases_to_document(log, docx_filename, cases, settings,
-                       eas_units=eas_units)
+    _cases_to_document(
+        log, docx_filename, table, cases, trades, settings,
+        eas_units=eas_report_units, ndir_levels=ndir_levels)
 
 def _cases_to_document(log: SimpleLogger,
                        docx_filename: PathLike,
-                       cases: list, settings: dict[str, int | float],
+                       table: pd.DataFrame,
+                       cases: list,
+                       trades: list[dict],
+                       settings: dict[str, int | float],
                        eas_units: str='KEAS',
-                       write_filename: bool=True):
+                       write_filename: bool=True,
+                       ndir_levels: int=1):
     percent0 = settings['damping_required'] * 100
     percent3 = settings['damping_limit'] * 100
     label_vg0 = f'V,g={percent0:.0f}% ({eas_units})'
@@ -348,9 +435,6 @@ def _cases_to_document(log: SimpleLogger,
          hump_message,
          f06_filename, png_filename) = case
 
-        # could get the config name better
-        basename = os.path.basename(f06_filename)
-
         configs.append(config)
         f06_filenames.append(f06_filename)
         flutter_table[label_vg0].append(v0)
@@ -366,22 +450,18 @@ def _cases_to_document(log: SimpleLogger,
             v0_text = f'V 0%={v0:.0f} KEAS (default)'
 
         if np.isfinite(freq3):
-            v3_text = f'V 3%={v3:.0f} KEAS ({freq3:.1f} Hz)'
+            v3_text = f'V 3%={v3:.0f} {eas_units} ({freq3:.1f} Hz)'
         else:  # TODO: why does this happen?
-            v3_text = f'V 3%={v3:.0f} KEAS (default)'
+            v3_text = f'V 3%={v3:.0f} {eas_units} (default)'
 
-        text = f'{v0_text}, {v3_text}, VD={vdiverg:.0f} KEAS, {config}'
+        text = f'{v0_text}, {v3_text}, VD={vdiverg:.0f} {eas_units}, {config}'
         if hump_message:
             text += '\n' + hump_message
 
         freq0_str = f'{freq0:.2f}' if np.isfinite(freq0) else 'N/A'
         freq3_str = f'{freq3:.2f}' if np.isfinite(freq3) else 'N/A'
 
-        # write the dirname and f06_filename of the file
-        dirname = os.path.basename(os.path.dirname(f06_filename))
-        path_str0 = os.path.join(dirname, basename)
-        path_str = str(path_str0.replace('\\', '/'))
-
+        path_str = write_docx_path(f06_filename, ndir_levels=ndir_levels)
         if os.path.exists(png_filename):
             document.add_picture(str(png_filename), width=Inches(6.5))
         else:
@@ -400,6 +480,46 @@ def _cases_to_document(log: SimpleLogger,
         del flutter_table[label_vg3]
         del flutter_table[label_freq_g3]
     _write_2d_table(document, flutter_table, log, 'Flutter Results')
+
+    if len(trades) and 0:
+        codestr = 'from envelope import plot_mach_eas'
+        # module = importlib.import_module(module_name)
+
+        # Then, use getattr to get the specific class/function
+        # DequeClass = getattr(module, class_name)
+
+        # trades_expected = [
+        #     (
+        #         ['3', '5', '2'],
+        #         {('bdfw', 50): [3, 7],
+        #          ('mgtow', 50): [1, 5],
+        #          ('bdfw', 100): [2, 6],
+        #          ('mgtow', 100): [0, 4]},
+        #     )
+        # ]
+        fig = plt.figure()
+        ax = fig.gca()
+        # flutter_table = {
+        #     # 'Configuration': [],
+        #     'Config': configs,
+        #     'File': f06_filenames,
+        #     label_vg0: [],
+        #     label_freq_g0: [],
+        #     label_vg3: [],
+        #     label_freq_g3: [],
+        #     label_vd: [],
+        # }
+        for names, trade_dict in trades:
+            v0s = flutter_table.get(label_vg0, None)
+            vfs = flutter_table.get(label_vg3, None)
+            vds = flutter_table.get(label_vd, None)
+            *dep_vars, ind_var = names
+            ind_values = table[ind_var]
+            def plot(*args):
+                pass
+            plot(ax, trade_dict,
+                 ind_var, ind_values,
+                 v0s, vfs, vds)
     log.info(f'saving docx {docx_filename}')
     document.save(docx_filename)
     return

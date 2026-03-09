@@ -114,6 +114,14 @@ def load_f06_op2(f06_filename: PathLike,
     print('sucess')
     return model, responses
 
+def get_noline_nopoints(show_lines: bool,
+                        show_points: bool) -> tuple[bool, bool]:
+    noline = not show_lines
+    nopoints = not show_points
+    if noline and nopoints:
+        noline = False
+        nopoints = True
+    return noline, nopoints
 
 def get_png_filename(base: str, x_plot_type: str, plot_type: str,
                      export_to_png: bool) -> tuple[str, Optional[str]]:

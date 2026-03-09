@@ -20,12 +20,207 @@ if IS_DEV:
         get_table_trees, read_obj, write_obj)
     from pyNastran.dev.bdf_vectorized3.bdf import read_bdf
 
+try:
+    import pandas as pd
+    IS_PANDAS = True
+except ModuleNotFoundError:
+    IS_PANDAS = False
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = (PKG_PATH / '..' / 'models').absolute()
 AERO_PATH = MODEL_PATH / 'aero'
 
 
 class TestGuiFlutter(unittest.TestCase):
+    @unittest.skipIf(not IS_PANDAS, 'pandas is needed')
+    def test_split_by_pattern(self):
+        from pyNastran.f06.dev.flutter.utils_report import split_by_pattern
+        base_filenames = [
+            'model_plane_mach_0.5_mgtow_kactuator_100',
+            'model_plane_mach_0.2_mgtow_kactuator_50',
+            'model_plane_mach_0.2_bdfw_kactuator_100',
+            'model_plane_mach_0.2_bdfw_kactuator_50',
+        ]
+        expected = [
+            ['model_plane_mach', '0.5', 'mgtow', 'kactuator', '100'],
+            ['model_plane_mach', '0.2', 'mgtow', 'kactuator', '50'],
+            ['model_plane_mach', '0.2', 'bdfw', 'kactuator', '100'],
+            ['model_plane_mach', '0.2', 'bdfw', 'kactuator', '50']]
+        split_paths = split_by_pattern(
+            base_filenames, delimiter='_', group_common=True)
+        assert split_paths == expected
+
+    @unittest.skipIf(not IS_PANDAS, 'pandas is needed')
+    def test_write_docx_path(self):
+        from pyNastran.f06.dev.flutter.utils_report import write_docx_path
+        mypath = 'cat/frog/pig/dog.txt'
+        out = write_docx_path(mypath, ndir_levels=0)
+        assert out == 'dog.txt', out
+
+        out = write_docx_path(mypath, ndir_levels=1)
+        assert out == 'pig/dog.txt', out
+
+        out = write_docx_path(mypath, ndir_levels=2)
+        assert out == 'frog/pig/dog.txt', out
+
+    @unittest.skipIf(not IS_PANDAS, 'pandas is needed')
+    def test_filenames_to_data_table_good(self):
+        from pyNastran.f06.dev.flutter.utils_report import filenames_to_data_table, data_to_dataframe
+        base_filenames = [
+            'model_plane_mach_0.5_mgtow_kactuator_100.f06',
+            'model_plane_mach_0.2_mgtow_kactuator_50.f06',
+            'model_plane_mach_0.2_bdfw_kactuator_100.f06',
+            'model_plane_mach_0.2_bdfw_kactuator_50.f06',
+        ]
+        headers, data_table = filenames_to_data_table(base_filenames)
+        # print(f'headers = {headers}')
+        # print(f'data_table = {data_table}')
+        assert headers == ['1', '2', '3', '4', '5', 'File'], headers
+        expected = [
+            ['model_plane_mach', '0.5', 'mgtow', 'kactuator', '100', 'model_plane_mach_0.5_mgtow_kactuator_100.f06'],
+            ['model_plane_mach', '0.2', 'mgtow', 'kactuator', '50', 'model_plane_mach_0.2_mgtow_kactuator_50.f06'],
+            ['model_plane_mach', '0.2', 'bdfw', 'kactuator', '100', 'model_plane_mach_0.2_bdfw_kactuator_100.f06'],
+            ['model_plane_mach', '0.2', 'bdfw', 'kactuator', '50', 'model_plane_mach_0.2_bdfw_kactuator_50.f06']]
+        assert data_table == expected, data_table
+        df = data_to_dataframe(
+            headers, data_table,
+            convert_numeric=True)
+        print(df)
+
+    @unittest.skipIf(not IS_PANDAS, 'pandas is needed')
+    def test_filenames_to_data_table_good_pformat(self):
+        from pyNastran.f06.dev.flutter.utils_report import (
+            filenames_to_data_table, data_to_dataframe,
+            get_icases)
+        base_filenames = [
+            'model_plane_mach_m0p5_mgtow_kactuator_100.f06',  # 3
+            'model_plane_mach_0p5_mgtow_kactuator_50.f06',   # 0
+            'model_plane_mach_0p2_bdfw_kactuator_100.f06',   # 2
+            'model_plane_mach_0p2_bdfw_kactuator_50.f06',    # 1
+        ]
+        headers, data_table = filenames_to_data_table(base_filenames)
+        # print(f'headers = {headers}')
+        # print(f'data_table = {data_table}')
+        assert headers == ['1', '2', '3', '4', '5', 'File'], headers
+        expected = [
+            ['model_plane_mach', 'm0p5', 'mgtow', 'kactuator', '100', 'model_plane_mach_m0p5_mgtow_kactuator_100.f06'],
+            ['model_plane_mach', '0p5', 'mgtow', 'kactuator', '50', 'model_plane_mach_0p5_mgtow_kactuator_50.f06'],
+            ['model_plane_mach', '0p2', 'bdfw', 'kactuator', '100', 'model_plane_mach_0p2_bdfw_kactuator_100.f06'],
+            ['model_plane_mach', '0p2', 'bdfw', 'kactuator', '50', 'model_plane_mach_0p2_bdfw_kactuator_50.f06']]
+        assert data_table == expected, data_table
+        df = data_to_dataframe(headers, data_table, convert_numeric=True)
+        mach = df['2'].tolist()
+        kact = df['5'].tolist()
+        # print(f'mach = {mach}')
+        assert np.allclose(mach, [0.5, 0.5, 0.2, 0.2]), mach
+        # print(f'fuel = {kact}')
+        assert np.allclose(kact, [100, 50, 100, 50]), kact
+
+        #                     mach   fuel            kact
+        #                   1    2      3          4    5
+        # 3  model_plane_mach  0.2   bdfw  kactuator   50
+        # 2  model_plane_mach  0.2   bdfw  kactuator  100
+        # 1  model_plane_mach  0.2  mgtow  kactuator   50
+        # 0  model_plane_mach  0.5  mgtow  kactuator  100
+        imach = '2'
+        ifuel = '3'
+        ikact = '5'
+        # xaxis = imach
+        cols = [ifuel, ikact]
+        df = df.drop(columns=['File'])
+        #    mach   fuel            kact
+        #       2      3          4    5
+        # 3   0.2   bdfw  kactuator   50
+        # 2   0.2   bdfw  kactuator  100
+        # 1   0.2  mgtow  kactuator   50
+        # 0   0.5  mgtow  kactuator  100
+        # [[3 'bdfw' 50]
+        #  [2 'bdfw' 100]
+        #  [1 'mgtow' 50]
+        #  [0 'mgtow' 100]] 4
+        icases, icase_dict = get_icases(df, cols)
+        assert icases == [[3, 2], [1, 0]], icases
+
+        cols = [ifuel, ikact, imach]
+        icases, icase_dict = get_icases(df, cols)
+        assert icases == [[1], [3], [0], [2]], icases
+        # print(f'icases = {icases}')
+
+
+    @unittest.skipIf(not IS_PANDAS, 'pandas is needed')
+    def test_filenames_to_data_table_icases(self):
+        from pyNastran.f06.dev.flutter.utils_report import (
+            filenames_to_data_table, data_to_dataframe,
+            get_icases, get_trades)
+        base_filenames = [
+            'model_plane_mach_0.2_mgtow_kactuator_100.f06',  # 1
+            'model_plane_mach_0.2_mgtow_kactuator_50.f06',   # 0
+            'model_plane_mach_0.2_bdfw_kactuator_100.f06',   # 3
+            'model_plane_mach_0.2_bdfw_kactuator_50.f06',    # 2
+
+            'model_plane_mach_0.5_mgtow_kactuator_100.f06',  # 5
+            'model_plane_mach_0.5_mgtow_kactuator_50.f06',   # 4
+            'model_plane_mach_0.5_bdfw_kactuator_100.f06',   # 7
+            'model_plane_mach_0.5_bdfw_kactuator_50.f06',    # 6
+        ]
+        headers, data_table = filenames_to_data_table(base_filenames)
+        df = data_to_dataframe(headers, data_table, convert_numeric=True)
+        imach = '2'
+        ifuel = '3'
+        ikact = '5'
+        cols = [ifuel, ikact, imach]
+        # mach = df['2'].tolist()
+        # fuel = df['5'].tolist()
+        icases, icases_dict = get_icases(df, cols)
+        assert icases == [[3, 7], [1, 5], [2, 6], [0, 4]], icases
+
+        log = SimpleLogger(level='debug')
+        trade_str = (
+            # f'{ikact}, {ifuel}, {imach}; '
+            f'{ifuel}, {ikact}, {imach}; '
+        )
+        is_passed, configs, trades = get_trades(df, trade_str, log)
+        assert is_passed, is_passed
+
+        configs_expected = [
+            '3=mgtow, 5=100', '3=mgtow, 5=50',
+            '3=bdfw, 5=100', '3=bdfw, 5=50',
+            '3=mgtow, 5=100', '3=mgtow, 5=50',
+            '3=bdfw, 5=100', '3=bdfw, 5=50']
+        trades_expected = [
+            (
+                ['3', '5', '2'],
+                {('bdfw', 50): [3, 7],
+                 ('mgtow', 50): [1, 5],
+                 ('bdfw', 100): [2, 6],
+                 ('mgtow', 100): [0, 4]},
+            )
+        ]
+        assert configs == configs_expected
+        assert trades == trades_expected
+        # print(f'configs = {configs}')
+        # print(f'trades = {trades}')
+
+    @unittest.skipIf(not IS_PANDAS, 'pandas is needed')
+    def test_filenames_to_data_table_bad(self):
+        """bad split, but good enough"""
+        from pyNastran.f06.dev.flutter.utils_report import filenames_to_data_table
+        base_filenames = [
+            'model_plane_mach_0.5_mgtow_kactuator_100.f06',
+            'model_plane_mach_0.2_mgtow_kactuator_50.f06',
+            'model_plane_mach_0.2_bdfw_kactuator_100.f06',
+            'model_plane_mach_0.2_bdfw_kactuator_50.f06',
+            'cat.f06',
+        ]
+        expected = [
+            ['model', 'plane', 'mach', '0.5', 'mgtow', 'kactuator', '100', 'model_plane_mach_0.5_mgtow_kactuator_100.f06'],
+            ['model', 'plane', 'mach', '0.2', 'mgtow', 'kactuator', '50', 'model_plane_mach_0.2_mgtow_kactuator_50.f06'],
+            ['model', 'plane', 'mach', '0.2', 'bdfw', 'kactuator', '100', 'model_plane_mach_0.2_bdfw_kactuator_100.f06'],
+            ['model', 'plane', 'mach', '0.2', 'bdfw', 'kactuator', '50', 'model_plane_mach_0.2_bdfw_kactuator_50.f06'],
+            ['cat', '', '', '', '', '', '', 'cat.f06'],]
+        headers, data_table = filenames_to_data_table(base_filenames)
+        assert headers == ['1', '2', '3', '4', '5', '6', '7', 'File'], headers
+        assert data_table == expected, data_table
+
     @unittest.skipIf(not IS_DEV, 'no flutter-dev')
     def test_flutter_nastran_utils(self) -> None:
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'

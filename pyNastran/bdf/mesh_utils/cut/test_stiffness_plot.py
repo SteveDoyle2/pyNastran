@@ -723,8 +723,8 @@ class TestStiffnessPlot(unittest.TestCase):
             assert np.allclose(ExI, ExI_expected)
             assert np.allclose(EyI, EyI_expected), EyI.tolist()
             assert np.allclose(GJ, GJ_expected), GJ.tolist()
-            # for plane_bdf_filename in plane_bdf_filenames1:
-            #     os.remove(plane_bdf_filename)
+            for plane_bdf_filename in plane_bdf_filenames1:
+                os.remove(plane_bdf_filename)
             for plane_bdf_filename in plane_bdf_filenames2:
                 os.remove(plane_bdf_filename)
 
@@ -880,10 +880,17 @@ class TestStiffnessPlot(unittest.TestCase):
 def _cleanup_moi_files(dirname: Path, tag: str) -> None:
     if IS_MATPLOTLIB:
         os.remove(dirname / f'{tag}normalized_inertia_vs_span.png')
-        os.remove(dirname / f'{tag}area_vs_span.png')
+        # os.remove(dirname / f'{tag}area_vs_span.png')
         os.remove(dirname / f'{tag}amoi_vs_span.png')
         os.remove(dirname / f'{tag}e_amoi_vs_span.png')
         os.remove(dirname / f'{tag}centroid_vs_span.png')
+        os.remove(dirname / f'{tag}equivalent_beam_model.bdf')
+        # os.remove(dirname / f'{tag}thetas.csv')
+        # 'y_amoi_vs_span.png', 'y_bwb_saero.bdf',
+        #
+        # 'y_centroid_vs_span.png',
+        # 'y_e_amoi_vs_span.png',
+        # 'y_normalized_inertia_vs_span.png',
 
     # bdf_merge(plane_bdf_filenames, bdf_filename_out='merge.bdf', renumber=True,
     #           encoding=None, size=8, is_double=False, cards_to_skip=None,
