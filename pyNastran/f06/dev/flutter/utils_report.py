@@ -103,7 +103,7 @@ def get_configs(out_table: pd.DataFrame,
     -------
     configs : list[str]
         the first name of the output table
-        -> Filename, but split
+        -> File, but split
 
     """
     is_passed = True
@@ -201,43 +201,6 @@ def get_icases(df: pd.DataFrame,
         # print(f'key={key} icase={icase}')
         icases.append(icase)
     return icases, case_dict
-
-def _get_icases(df: pd.DataFrame,
-               cols: list[str]):
-    """"""
-    dfi = df[cols]
-    # print(dfi)
-    data = dfi.to_numpy()
-    nrow = len(data)
-    # print(data)
-    indvar_data = data[:, -1]
-    # print(f'indvar_data = {indvar_data}')
-    # isort1 = np.argsort(indvar_data)
-    isort = _get_isort_2d_array(data, cols)
-    col_data = np.column_stack([np.arange(nrow), data])
-    data2 = col_data[isort, :]
-    # print(data2, len(data2))
-    indvar_data2 = data2[:, -1]
-    # print(f'indvar_data2 = {indvar_data2}; n={len(indvar_data2)}')
-
-    # this block is buggy
-    icases = []
-    icase = [data2[0, 0]]
-    for i in range(nrow-1):
-        irow1, *dep1, ind1 = data2[i, :]
-        irow2, *dep2, ind2 = data2[i+1, :]
-        # print(f'comparing ind1={ind1} ind2={ind2} dep1={dep1} dep2={dep2}')
-        if ind1 < ind2 and dep1 == dep2:
-            icase = [irow2]
-            # print(f' adding to icase = {icase}')
-        else:
-            # print(f' *icase = {icase}')
-            icases.append(icase)
-            icase = [irow2]
-    if len(icase):
-        icases.append(icase)
-    return icases
-
 
 def _get_isort_2d_array(data: np.ndarray,
                         cols: list[str]) -> np.ndarray:
