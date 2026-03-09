@@ -7,15 +7,14 @@ from typing import Any, TYPE_CHECKING
 import natsort
 
 from pyNastran.utils import print_bad_path
-from pyNastran.utils.dev import get_files_of_type
+# from pyNastran.utils.dev import get_files_of_type
 
 from pyNastran.f06.dev.flutter.utils import get_raw_json
 JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json(allow_vtk=False)
 
 from qtpy.QtWidgets import (
-    QLabel,
     QApplication, QVBoxLayout, QComboBox,
-    QPushButton, QGridLayout,
+    QLabel, QPushButton,
     QLineEdit, QFileDialog, QProgressBar,
 )
 from pyNastran.f06.dev.flutter.qtablewidgetcopy import QTableWidgetCopy
@@ -34,7 +33,8 @@ AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
 
 import pandas as pd
 import tables
-from pyNastran.f06.dev.flutter.utils_report import get_configs, split_by_pattern
+from pyNastran.f06.dev.flutter.utils_report import (
+    get_configs, get_trades, filenames_to_data_table)
 if TYPE_CHECKING:
     from pyNastran.f06.dev.flutter.gui_flutter_plot import FlutterGui
 
@@ -314,8 +314,12 @@ class TradeLayout(QVBoxLayout):
         #----------------------------------------------
         out_table = self.table_widget.get_data()
         # print(f'out_table:\n{out_table}')
-        is_passed, configs = get_configs(
+        # is_passed, configs = get_configs(
+        #     out_table, self.config_edit.text(), log)
+        is_passed, configs, trades = get_trades(
             out_table, self.config_edit.text(), log)
+        if not is_passed:
+            return
         # if len(configs) == 0:
         #     log.error('no configs...')
         #     return
@@ -389,7 +393,10 @@ class TradeLayout(QVBoxLayout):
         if not os.path.isdir(directory):
             self.log.error(f'{directory!r} is not a directory')
             return
-        filenames = get_files_of_type(directory, '.f06')
+        filenames = [os.path.join(directory, fname)
+                     for fname in os.path.listdir(directory)
+                     if fname.lower().endswith('.f06')]
+        # filenames = get_files_of_type(directory, '.f06')
         if len(filenames) == 0:
             self.log.error(f'no .f06 files were found in {directory!r}')
             return

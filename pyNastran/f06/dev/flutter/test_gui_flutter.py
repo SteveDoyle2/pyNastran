@@ -145,11 +145,12 @@ class TestGuiFlutter(unittest.TestCase):
         assert icases == [[1], [3], [0], [2]], icases
         # print(f'icases = {icases}')
 
+
     @unittest.skipIf(not IS_PANDAS, 'pandas is needed')
     def test_filenames_to_data_table_icases(self):
         from pyNastran.f06.dev.flutter.utils_report import (
             filenames_to_data_table, data_to_dataframe,
-            get_icases)
+            get_icases, get_trades)
         base_filenames = [
             'model_plane_mach_0.2_mgtow_kactuator_100.f06',  # 1
             'model_plane_mach_0.2_mgtow_kactuator_50.f06',   # 0
@@ -171,6 +172,33 @@ class TestGuiFlutter(unittest.TestCase):
         # fuel = df['5'].tolist()
         icases, icases_dict = get_icases(df, cols)
         assert icases == [[3, 7], [1, 5], [2, 6], [0, 4]], icases
+
+        log = SimpleLogger(level='debug')
+        trade_str = (
+            # f'{ikact}, {ifuel}, {imach}; '
+            f'{ifuel}, {ikact}, {imach}; '
+        )
+        is_passed, configs, trades = get_trades(df, trade_str, log)
+        assert is_passed, is_passed
+
+        configs_expected = [
+            '3=mgtow, 5=100', '3=mgtow, 5=50',
+            '3=bdfw, 5=100', '3=bdfw, 5=50',
+            '3=mgtow, 5=100', '3=mgtow, 5=50',
+            '3=bdfw, 5=100', '3=bdfw, 5=50']
+        trades_expected = [
+            (
+                ['3', '5', '2'],
+                {('bdfw', 50): [3, 7],
+                 ('mgtow', 50): [1, 5],
+                 ('bdfw', 100): [2, 6],
+                 ('mgtow', 100): [0, 4]},
+            )
+        ]
+        assert configs == configs_expected
+        assert trades == trades_expected
+        # print(f'configs = {configs}')
+        # print(f'trades = {trades}')
 
     @unittest.skipIf(not IS_PANDAS, 'pandas is needed')
     def test_filenames_to_data_table_bad(self):

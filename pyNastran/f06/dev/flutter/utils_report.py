@@ -95,6 +95,70 @@ def split_by_pattern(strings: list[str],
     return result
 
 
+def get_trades(out_table: pd.DataFrame,
+               config_text: str,
+               log: SimpleLogger) -> tuple[bool, list[str], dict]:
+    """
+    Returns
+    -------
+    configs : list[str]
+        the first name of the output table
+        -> File, but split
+
+    """
+    is_passed = True
+    columns = out_table.columns
+    trade_slines = [val.strip(', ') for val in
+                    config_text.strip(';, ').split(';')]
+
+    if 'File' not in columns:
+        log.error('Missing "File" from case table')
+        is_passed = False
+
+    trades = []
+    nrow = len(out_table)
+    files = out_table['File'].to_list()
+    if len(trade_slines) == 0 or not is_passed:
+        configs = files
+        return is_passed, configs, trades
+
+    missing_names = set([])
+    for trade in trade_slines:
+        if len(trade) == 0:
+            continue
+        trade_sline = [val.strip() for val in trade.split(',') if val.strip()]
+        for col in trade_sline:
+            if col not in columns:
+                missing_names.add(col)
+        icases, icase_dict = get_icases(out_table, trade_sline)
+        trades.append((trade_sline, icase_dict))
+
+    if len(missing_names):
+        is_passed = False
+        missing_names_list = list(missing_names)
+        missing_names_list.sort()
+        log.error(f'Missing names = {missing_names_list}')
+
+    configs = [''] * nrow
+    if not is_passed:
+        return is_passed, configs, trades
+
+    cols, icase_dict0 = trades[0]
+    depcols = cols[:-1]
+    if len(depcols) == 0:
+        configs = files
+    else:
+        config_table = out_table[depcols]
+        for i in range(nrow):
+            row = config_table.iloc[i, :]
+            config = ''
+            for col, value in zip(depcols, row):
+                config += f'{col}={value}, '
+            config = config.strip(', ')
+            configs[i] = config
+
+    return is_passed, configs, trades
+
 def get_configs(out_table: pd.DataFrame,
                 config_text: str,
                 log: SimpleLogger) -> tuple[bool, list[str]]:
@@ -200,7 +264,7 @@ def get_icases(df: pd.DataFrame,
     for key, icase in case_dict.items():
         # print(f'key={key} icase={icase}')
         icases.append(icase)
-    return icases, case_dict
+    return icases, dict(case_dict)
 
 def _get_isort_2d_array(data: np.ndarray,
                         cols: list[str]) -> np.ndarray:

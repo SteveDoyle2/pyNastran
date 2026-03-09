@@ -64,22 +64,34 @@ def write_report(docx_filename: str,
                  freq_ndigits: int=2,
                  divergence_legend_loc: str='best',
                  divergence_freq_tol: float=0.1,
+                 ndir_levels: int=1,
                  progress_callback: Optional[Callable]=None,
                  ) -> None:
     """
     Parameters
     ----------
     docx_filename : str
+        path to output file
     f06_filenames : str
+        list of f06 files to process
     configs: list[str]
+        label for the f06 file
     table: pd.DataFrame
+        information for trade studies
     log : SimpleLogger
+        logging object
     settings : dict[str, Any]
+        the following parameters as a dictionary
     x_plot_type : str
+        type of plot to make
     f06_units : str
+        input units
     out_units : str
-    nrigid_body_modes : int
-    modes : np.ndarray
+        output units
+    nrigid_body_modes : int; default=0
+        used with x_cutoff
+    modes : np.ndarray; default=None -> all modes
+        modes to consider
     vl_target : float; default=-1.0
         required speed for VL
         adds a solid black line
@@ -131,7 +143,8 @@ def write_report(docx_filename: str,
         doesn't work at say 30,000 ft
     flutter_ncolumns : int; default=0
         number of columns for the legend; 0->dynamic
-    flutter_bbox_to_anchor_x : float
+    flutter_bbox_to_anchor_x : float; default=1.0
+        gap between plot and legend; 1.02 is good
     freq_ndigits : int; default=2
         precision on the frequency
     divergence_legend_loc : str; default='' -> 'best'
@@ -148,11 +161,11 @@ def write_report(docx_filename: str,
 
     There are files of the form:
      - model_plane_mach_0.5_mgtow_kactuator_100.f06
-     - model_plane_mach_0.2_mgtow_kactuator_50.f06
-     - model_plane_mach_0.2_bdfw_kactuator_100.f06
-     - model_plane_mach_0.2_bdfw_kactuator_50.f06
-     - model_plane_mach_0.2_zfw_kactuator_100.f06
-     - model_plane_mach_0.2_zfw_kactuator_50.f06
+     - model_plane_mach_0.5_mgtow_kactuator_50.f06
+     - model_plane_mach_0.5_bdfw_kactuator_100.f06
+     - model_plane_mach_0.5_bdfw_kactuator_50.f06
+     - model_plane_mach_0.5_zfw_kactuator_100.f06
+     - model_plane_mach_0.5_zfw_kactuator_50.f06
 
      - model_plane_mach_0.2_mgtow_kactuator_100.f06
      - model_plane_mach_0.2_mgtow_kactuator_50.f06
@@ -161,14 +174,14 @@ def write_report(docx_filename: str,
      - model_plane_mach_0.2_zfw_kactuator_100.f06
      - model_plane_mach_0.2_zfw_kactuator_50.f06
 
-    Base              Mach  Config    Word     Kact
-    ----              ----  -----  ---------   ----
+    Base              Mach   Fuel       Word   Kact
+    ----------------  ----  -----  ---------   ----
     model_plane_mach  0.5   mgtow  kactuator    100
-    model_plane_mach  0.2   mgtow  kactuator     50
-    model_plane_mach  0.2    bdfw  kactuator    100
-    model_plane_mach  0.2    bdfw  kactuator     50
-    model_plane_mach  0.2     zfw  kactuator    100
-    model_plane_mach  0.2     zfw  kactuator     50
+    model_plane_mach  0.5   mgtow  kactuator     50
+    model_plane_mach  0.5    bdfw  kactuator    100
+    model_plane_mach  0.5    bdfw  kactuator     50
+    model_plane_mach  0.5     zfw  kactuator    100
+    model_plane_mach  0.5     zfw  kactuator     50
     model_plane_mach  0.2   mgtow  kactuator    100
     model_plane_mach  0.2   mgtow  kactuator     50
     model_plane_mach  0.2    bdfw  kactuator    100
@@ -177,13 +190,25 @@ def write_report(docx_filename: str,
     model_plane_mach  0.2     zfw  kactuator     50
 
     config_headers = ['Mach', 'Config', 'Kact']
-    xaxes_headers  = ['Mach', 'Kact']
+    trades = [
+        ['Config', 'Kact', 'Mach'],  # 1 line per (Config, Kact) with Config first
+        ['Kact', 'Config', 'Mach'],  # 1 line per (Config, Kact) with Kact first
+        ['Kact', 'Mach'],    # min of worst Configs
+        ['Config', 'Mach'],  # min of worst Kacts
+    ]
+    # same as trades, but without the x-axis
+    compressed_axes = [
+        ['Config', 'Kact'],
+        ['Kact', 'Config'],
+    ]
 
-    We want to make trad study plots. Starting with
+    We want to make trade study plots. Starting with
     the yaxis, being limit, flutter, and divergence
-    speeds. We can pick only 2/3 xaxes because
-    Config is a string. We could call it fuel with
-    a percentage, but that might not be possible.
+    speeds. For the x-axis, we need a float for the
+    x-axis, so options include:
+     - Kact, Mach (floats)
+
+    plot(df, case_dict, xaxis)
     """
     #-----------------------------------------
     f06_filename0 = f06_filenames[0]
