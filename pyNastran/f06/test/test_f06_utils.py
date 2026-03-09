@@ -283,6 +283,71 @@ class TestF06Flutter(unittest.TestCase):
         #                 subcases=[1, 3],
         #                 log=log)
 
+    def test_get_flutter_crossings(self):
+        """
+        tests plot_flutter_f06
+
+        has issues with writing the subcase...
+        """
+        dirname = AERO_PATH / 'flutter_bug'
+        f06_filename = dirname / 'bad_mode.f06'
+
+        #log = get_logger(log=None, level=None, encoding='utf-8')
+        # log = get_logger(log=None, level=False, encoding='utf-8')
+        log = SimpleLogger(level='warning')
+        resps, data = make_flutter_response(f06_filename, f06_units='english_in', out_units='english_kt', log=log)
+        assert data == {'matrices': {}}, data
+        del data
+        # print(resp)
+        crossing_dict = {
+            0.00: 0.01,
+            0.03: 0.03,
+        }
+        resp = resps[1]
+        vl_vf_crossing_dict, vd_crossing_dict = resp.get_flutter_crossings(crossing_dict)
+
+        vl_vf_crossing_dict_expected = {
+            0.0: {
+                1: [
+                    # damping0, p1, p2, pmax = case
+                    (0.0,
+                    np.array([79., 0.44, 0., 35.6845]),
+                    np.array([176., 2.05, 0.,  35.67288008]),
+                    np.array([114., 0.95, 4.70346e-4, 35.68]))]
+        },
+            0.03: {
+                1: [(0.03,
+                    np.array([192., 2.36, 0.03, 49.4167439]),
+                    np.array([193., 2.38, 0.03, 25.7916703]),
+                    np.array([ 192.,  2.349, -3.451655e-2,  56.36]))]
+            },
+        }
+
+        assert len(vl_vf_crossing_dict) == len(vl_vf_crossing_dict_expected)
+        for damping, data_dict in vl_vf_crossing_dict.items():
+            data_dict_expected = vl_vf_crossing_dict_expected[damping]
+            assert len(data_dict) == len(data_dict_expected)
+            assert isinstance(data_dict, dict), type(data_dict)
+            for mode, crossings_list in data_dict.items():
+                crossings_list_expected = data_dict_expected[mode]
+                assert isinstance(crossings_list, list), type(crossings_list)
+                assert len(crossings_list) == len(crossings_list_expected)
+                assert isinstance(crossings_list, list), type(crossings_list)
+
+                for crossing, crossing_expected in zip(crossings_list, crossings_list_expected):
+                    assert isinstance(crossing, tuple), type(crossing)
+                    assert len(crossing) == len(crossing_expected), (crossing, crossing_expected)
+                    for var, var_expected in zip(crossing, crossing_expected):
+                        if isinstance(var, float):
+                            assert np.allclose(var, var_expected)
+                        else:
+                            assert np.allclose(var, var_expected), f'damping={damping} mode={mode} var={var} var_expected={var_expected}'
+
+        assert vd_crossing_dict == {0.0: {}}, vd_crossing_dict
+
+
+
+
     def test_plot_flutter_0012(self):
         """
         tests plot_flutter_f06

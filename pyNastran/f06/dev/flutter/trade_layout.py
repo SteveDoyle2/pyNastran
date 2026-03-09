@@ -67,6 +67,7 @@ class TradeLayout(QVBoxLayout):
         #------------------------------------------------------------
         self.excel_dict: dict[str, pd.DataFrame] = {}
         self.excel_filename = 'trade_study.xlsx'
+        self.python_filename = 'envelope.py'
         self.base_f06_directory = ''
         self.word_filename = 'flutter_summary.docx'
         #------------------------------------------------------------
@@ -76,6 +77,7 @@ class TradeLayout(QVBoxLayout):
         self.excel_filename_edit.setText(self.excel_filename)
         self.excel_filename_edit.setToolTip('Must click load button before selecting tab')
         self.excel_filename_browse = QPushButton('Browse...', parent)
+        self.excel_load_button = QPushButton('Load...', parent)
 
         self.base_f06_directory_label = QLabel('Base F06 Directory:', parent)
         self.base_f06_directory_edit = QLineEdit(parent)
@@ -88,7 +90,6 @@ class TradeLayout(QVBoxLayout):
         self.word_filename_edit.setText(self.word_filename)
         self.word_filename_browse = QPushButton('Browse...', parent)
 
-        self.load_excel_button = QPushButton('Load...', parent)
         self.tab_select_pulldown = QComboBox(parent)
 
         self.tab_label = QLabel('Tab Name:', parent)
@@ -109,6 +110,14 @@ class TradeLayout(QVBoxLayout):
         self.table_widget = QTableWidgetCopy(parent)
         self.progress_bar = QProgressBar(parent)
         self.progress_bar.setVisible(False)
+
+        self.python_filename_label = QLabel('Python Filename:', parent)
+        self.python_filename_edit = QLineEdit(parent)
+        self.python_filename_edit.setText(self.python_filename)
+        # self.python_filename_edit.setToolTip('Must click load button before selecting tab')
+        self.python_filename_browse = QPushButton('Browse...', parent)
+        self.python_load_button = QPushButton('Load...', parent)
+        self.python_plot_button = QPushButton('Plot...', parent)
 
         self.xaxis_label = QLabel('X-Axis', parent)
         self.yaxis_label = QLabel('Y-Axis', parent)
@@ -132,7 +141,7 @@ class TradeLayout(QVBoxLayout):
 
         grid_load = create_grid_from_list(parent, [
             (self.base_f06_directory_label, self.base_f06_directory_edit, self.base_f06_directory_browse, self.base_f06_directory_load),
-            (self.excel_filename_label, self.excel_filename_edit, self.excel_filename_browse, self.load_excel_button),
+            (self.excel_filename_label, self.excel_filename_edit, self.excel_filename_browse, self.excel_load_button),
             (self.tab_label, self.tab_select_pulldown), # self.tab_edit
         ])
 
@@ -140,6 +149,7 @@ class TradeLayout(QVBoxLayout):
             (self.word_filename_label, self.word_filename_edit, self.word_filename_browse),
         ])
         grid3 = create_grid_from_list(parent, [
+            (self.python_filename_label, self.python_filename_edit, self.python_filename_browse, self.python_load_button, self.python_plot_button),
             (self.xaxis_label, self.xaxis_pulldown),
             (self.yaxis_label, self.yaxis_pulldown),
             (self.config_label, self.config_edit),
@@ -158,7 +168,8 @@ class TradeLayout(QVBoxLayout):
 
     def setup_connections(self) -> None:
         parent = self.parent
-        self.load_excel_button.clicked.connect(self.on_load_excel)
+        self.excel_load_button.clicked.connect(self.on_load_excel)
+        self.python_load_button.clicked.connect(self.on_load_python)
         self.tab_select_pulldown.currentIndexChanged.connect(self.on_select_excel_tab)
 
         # self.excel_filename_browse.clicked.connect(self.on_select_excel_tab)
@@ -166,6 +177,7 @@ class TradeLayout(QVBoxLayout):
         self.base_f06_directory_browse.clicked.connect(self.on_base_f06_directory_browse)
         self.excel_filename_browse.clicked.connect(self.on_load_excel_file)
         self.word_filename_browse.clicked.connect(self.on_load_word_file)
+        self.python_filename_browse.clicked.connect(self.on_load_python_file)
 
         # self.base_f06_directory_browse.setEnabled(False)
         self.tab_select_pulldown.setEnabled(False)
@@ -419,6 +431,18 @@ class TradeLayout(QVBoxLayout):
         self.table_widget.load_table_data(headers, data_table)
 
     @dontcrash
+    def on_load_python(self):
+        is_passed, python_filename = get_file_edit(
+            'python_filename', self.python_filename_edit,
+            self.log)
+        if not is_passed:
+            return
+
+        with open(python_filename, 'r') as py_file:
+            code_string = py_file.read()
+        exec(code_string)
+
+    @dontcrash
     def on_load_excel(self):
         is_passed, excel_filename = get_file_edit(
             'excel_filename', self.excel_filename_edit,
@@ -456,6 +480,15 @@ class TradeLayout(QVBoxLayout):
         if filename:
             self.excel_filename_edit.setText(filename)
             self.excel_filename = filename
+
+    def on_load_python_file(self) -> None:
+        start_path = self.python_filename_edit.text()
+        filename = self._on_load_file(
+            title='Select Python File', start_path=start_path,
+            file_filter='Python File (*.py);;All Files (*)')
+        if filename:
+            self.python_filename_edit.setText(filename)
+            self.python_filename = filename
 
     def on_load_word_file(self) -> None:
         start_path = self.word_filename_edit.text()
