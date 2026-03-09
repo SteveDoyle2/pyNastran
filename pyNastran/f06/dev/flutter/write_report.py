@@ -32,6 +32,7 @@ def write_report(docx_filename: str,
                  f06_filenames: list[str],
                  configs: list[str],
                  table: pd.DataFrame,
+                 trades: list[dict],
                  log: SimpleLogger,
                  settings: dict[str, int | float | str],
                  x_plot_type: str='eas',
@@ -384,12 +385,15 @@ def write_report(docx_filename: str,
         eas_units = response.out_units['eas']
         cases.append(case)
     _cases_to_document(
-        log, docx_filename, cases, settings,
+        log, docx_filename, table, cases, trades, settings,
         eas_units=eas_report_units, ndir_levels=ndir_levels)
 
 def _cases_to_document(log: SimpleLogger,
                        docx_filename: PathLike,
-                       cases: list, settings: dict[str, int | float],
+                       table: pd.DataFrame,
+                       cases: list,
+                       trades: list[dict],
+                       settings: dict[str, int | float],
                        eas_units: str='KEAS',
                        write_filename: bool=True,
                        ndir_levels: int=1):
@@ -476,6 +480,46 @@ def _cases_to_document(log: SimpleLogger,
         del flutter_table[label_vg3]
         del flutter_table[label_freq_g3]
     _write_2d_table(document, flutter_table, log, 'Flutter Results')
+
+    if len(trades) and 0:
+        codestr = 'from envelope import plot_mach_eas'
+        # module = importlib.import_module(module_name)
+
+        # Then, use getattr to get the specific class/function
+        # DequeClass = getattr(module, class_name)
+
+        # trades_expected = [
+        #     (
+        #         ['3', '5', '2'],
+        #         {('bdfw', 50): [3, 7],
+        #          ('mgtow', 50): [1, 5],
+        #          ('bdfw', 100): [2, 6],
+        #          ('mgtow', 100): [0, 4]},
+        #     )
+        # ]
+        fig = plt.figure()
+        ax = fig.gca()
+        # flutter_table = {
+        #     # 'Configuration': [],
+        #     'Config': configs,
+        #     'File': f06_filenames,
+        #     label_vg0: [],
+        #     label_freq_g0: [],
+        #     label_vg3: [],
+        #     label_freq_g3: [],
+        #     label_vd: [],
+        # }
+        for names, trade_dict in trades:
+            v0s = flutter_table.get(label_vg0, None)
+            vfs = flutter_table.get(label_vg3, None)
+            vds = flutter_table.get(label_vd, None)
+            *dep_vars, ind_var = names
+            ind_values = table[ind_var]
+            def plot(*args):
+                pass
+            plot(ax, trade_dict,
+                 ind_var, ind_values,
+                 v0s, vfs, vds)
     log.info(f'saving docx {docx_filename}')
     document.save(docx_filename)
     return

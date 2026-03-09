@@ -366,7 +366,7 @@ class TradeLayout(QVBoxLayout):
             log.info(f'Processing {len(f06_filenames)} files...')
             write_report(
                 word_filename,
-                f06_filenames, configs, out_table,
+                f06_filenames, configs, out_table, trades,
                 log, settings,
                 progress_callback=self.update_organize_progress,
                 **settings)
