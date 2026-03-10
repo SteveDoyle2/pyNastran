@@ -18,10 +18,6 @@ from typing import Optional, Any
 
 import numpy as np
 from cpylog import get_logger, SimpleLogger, WarningRedirector
-#warnings.simplefilter('always')
-warnings.simplefilter('default')
-
-np.seterr(all='raise')
 
 #from pyNastran.gui.qt_version import qt_version
 #import PySide2
@@ -61,6 +57,10 @@ from pyNastran.bdf.test.compare import compare
 import pyNastran.bdf.test
 TEST_PATH = pyNastran.bdf.test.__path__[0]
 #warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+#warnings.simplefilter('always')
+warnings.simplefilter('default')
+np.seterr(all='raise')
 
 MESH_OPT_CARDS = [
     'GRIDG', 'CGEN', 'SPCG', 'FEEDGE', 'FEFACE', 'ADAPT',  # 'EQUIV',
@@ -2567,7 +2567,8 @@ def get_test_bdf_usage_args_examples(encoding):
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
         f'              [--lax] [--nosort] [--duplicate] [skip_cards CARDS] [--ifile]\n'
-        f'              [--skip_all] [--skip_loads] [--skip_mass] [--skip_aero] [--skip_skin] [--skip_mcid] [--skip_eid_checks]\n'
+        f'              [--skip_all] [--skip_loads] [--skip_mass] [--skip_aero] [--skip_skin]\n'
+        f'              [--skip_mcid] [--skip_eid_checks]\n'
     )
     usage = (
         "Usage:\n"

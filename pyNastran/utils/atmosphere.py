@@ -98,7 +98,7 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed: float,
                                        alt_units: str='ft',
                                        nmax: int=20, tol: float=0.1) -> float:
     """
-    Gets the altitude associated with a equivalent airspeed.
+    Gets the altitude associated with an equivalent airspeed.
 
     Parameters
     ----------
@@ -1073,6 +1073,7 @@ def make_flfacts_alt_sweep_constant_tas(tas: float, alts: np.ndarray,
 
 def make_flfacts_mach_sweep_constant_alt(alt: float, machs: list[float],
                                          eas_limit: float=1000.,
+                                         eas_min: float = 0.0,
                                          alt_units: str='m',
                                          velocity_units: str='m/s',
                                          density_units: str='kg/m^3',
@@ -1157,6 +1158,7 @@ def make_flfacts_alt_sweep_constant_mach(mach: float, alts: np.ndarray,
 
 
 def make_flfacts_eas_sweep_constant_alt(alt: float, eass: list[float],
+                                        eas_min: float=0.0,
                                         alt_units: str='m',
                                         velocity_units: str='m/s',
                                         density_units: str='kg/m^3',
@@ -1202,6 +1204,7 @@ def make_flfacts_eas_sweep_constant_alt(alt: float, eass: list[float],
 def make_flfacts_eas_sweep_constant_mach(mach: float,
                                          eass: np.ndarray,
                                          gamma: float=1.4,
+                                         minus_eas: float=0.0,
                                          alt_units: str='ft',
                                          velocity_units: str='ft/s',
                                          density_units: str='slug/ft^3',
@@ -1226,6 +1229,8 @@ def make_flfacts_eas_sweep_constant_mach(mach: float,
         the equivalent airspeed units; ft/s, m/s, in/s, knots
     gamma : float; default=1.4
         the gas constant
+    minus_eas : float; default=0.0
+        tag the velocity with a -1
 
     Veas = Vtas * sqrt(rho/rho0)
     a * mach = Vtas
@@ -1242,7 +1247,12 @@ def make_flfacts_eas_sweep_constant_mach(mach: float,
     nvel = len(eass)
     assert nvel > 0, eass
 
-    eas = np.asarray(eass)
+    eas = np.asarray(eass)  # knots or other
+    ieas_min = -1
+    if minus_eas > 0.0:
+        deas = eas - minus_eas
+        ieas_min = np.argmin(np.abs(deas))
+
     machs = np.ones(nvel, dtype=eas.dtype) * mach
 
     # get eas in ft/s and density in slug/ft^3,
@@ -1283,6 +1293,10 @@ def make_flfacts_eas_sweep_constant_mach(mach: float,
                                       #eas_units=eas_units,)
     assert len(rho) == len(machs)
     assert len(rho) == len(velocity)
+    if ieas_min >= 0:
+        eas[ieas_min] *= -1
+        eas_fts[ieas_min] *= -1
+        velocity[ieas_min] *= -1
     return rho, machs, velocity, alt
 
 
@@ -1440,3 +1454,42 @@ def create_atmosphere_table(quantities: list[str],
 
     out_array = np.column_stack(out_list)
     return out_array
+
+#---------------------------------------------
+def eas_from_alts_machs(alts: list[float] | np.ndarray,
+                        machs: list[float] | np.ndarray,
+                        alt_units: str='ft',
+                        eas_units: str='knots') -> np.ndarray:
+    eas = np.array([
+        atm_equivalent_airspeed(alt, mach, alt_units=alt_units, eas_units=eas_units)
+        for alt, mach in zip(alts, machs)])
+    return eas
+
+#---------------------------------------------
+def constant_mach_line_alt1_alt2(mach: float,
+                                 alt0: float, alt1: np.ndarray,
+                                 num: int=20,
+                                 alt_units: str='ft',
+                                 eas_units: str='knots') -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """creates a constant mach line between two altitutdes"""
+    machs = np.ones(num) * mach
+    alts = np.linspace(alt0, alt1, num=num)
+    eas = eas_from_alts_machs(
+        alts, machs, alt_units=alt_units, eas_units=eas_units)
+    return machs, alts, eas
+
+
+def constant_alt_line_alt_mach(alt: float,
+                               mach0: float, mach1: np.ndarray,
+                               num: int=20,
+                               alt_units: str='ft',
+                               eas_units: str='knots') -> None:
+    """creates a constant altitude line between two mach numbers"""
+    # pressure0 = atm_pressure(0., pressure_units='psf')
+    alts = np.ones(num) * alt
+    # pressure = np.array([atm_pressure(alt, pressure_units='psf')
+    #                      for alt in alts])
+    machs = np.linspace(mach0, mach1, num=num)
+    eas = eas_from_alts_machs(
+        alts, machs, alt_units=alt_units, eas_units=eas_units)
+    return machs, alts, eas

@@ -5,7 +5,7 @@ from vtkmodules.vtkRenderingCore import (
     vtkCamera,
     vtkDataSetMapper, vtkPolyDataMapper,
     vtkProp,
-    vtkColorTransferFunction, vtkProperty,
+    vtkColorTransferFunction, vtkProperty, vtkTextProperty,
 )
 from vtkmodules.vtkRenderingUI import vtkGenericRenderWindowInteractor
 from vtkmodules.vtkRenderingAnnotation import vtkAxesActor

@@ -30,7 +30,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
 
     from docopt import docopt
     import pyNastran
-    options = '[-o OUT_BDF_FILENAME] [--size SIZE | --clean] [--sid SID] [--rhoref]'
+    options = '[-o OUT_BDF_FILENAME] [--size SIZE | --clean] [--sid SID] [--rhoref] [--minus_eas MINUS_EAS]'
     msg = (
         'Usage:\n'
         # SWEEP_UNIT
@@ -106,6 +106,14 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
     if data['--sid']:
         sid = _int(data, '--sid')
 
+    minus_eas = 0.0
+    is_minus_eas = data['--minus_eas']
+    if isinstance(is_minus_eas, bool):
+        if is_minus_eas:
+            minus_eas = _float(data, 'MINUS_EAS')
+    else:
+        raise NotImplementedError(data['--minus_eas'])
+
     units_out = data['UNITS']
     if units_out.lower() not in UNITS_MAP:  # pragma: no cover
         raise NotImplementedError(units_out)
@@ -169,6 +177,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
                    sid=sid,
                    size=size, clean=clean,
                    bdf_filename_out=bdf_filename_out,
+                   minus_eas=minus_eas,
                    comment=cmd)
     if not quiet:
         print(cmd)
@@ -183,6 +192,7 @@ def create_flutter(log: SimpleLogger,
                    rhoref_flag: bool=False,
                    size: int=8,
                    clean: bool=False,
+                   minus_eas: float=0.0,
                    bdf_filename_out: str='flutter_cards.inc',
                    comment: str='') -> tuple[BDF, str, str]:
 
@@ -291,6 +301,7 @@ def create_flutter(log: SimpleLogger,
     if sweep_method == 'eas' and const_type == 'alt':
         flutter.make_flfacts_eas_sweep_constant_alt(
             model, alt, eass,
+            minus_eas=minus_eas,
             alt_units=alt_units,
             velocity_units=velocity_units,
             density_units=density_units,
@@ -300,6 +311,7 @@ def create_flutter(log: SimpleLogger,
         flutter.make_flfacts_eas_sweep_constant_mach(  # TODO: need to test this; seems wrong
             model, mach, eass,
             gamma=gamma,
+            minus_eas=minus_eas,
             alt_units=alt_units,
             velocity_units=velocity_units,
             density_units=density_units,
@@ -309,6 +321,7 @@ def create_flutter(log: SimpleLogger,
     elif sweep_method == 'mach' and const_type == 'alt':
         flutter.make_flfacts_mach_sweep_constant_alt(
             model, alt, machs,
+            minus_eas=minus_eas,
             eas_limit=eas_limit,
             alt_units=alt_unit,
             velocity_units=velocity_units,
@@ -318,6 +331,7 @@ def create_flutter(log: SimpleLogger,
         #alt_units = sweep_unit
         flutter.make_flfacts_alt_sweep_constant_mach(
             model, mach, alts,
+            minus_eas=minus_eas,
             eas_limit=eas_limit,
             alt_units=alt_units,
             velocity_units=velocity_units,
@@ -326,6 +340,7 @@ def create_flutter(log: SimpleLogger,
     elif sweep_method == 'alt' and const_type == 'tas':
         flutter.make_flfacts_alt_sweep_constant_tas(
             model, tas, alts,
+            minus_eas=minus_eas,
             alt_units=alt_units,
             eas_limit=eas_limit,
             velocity_units=velocity_units,
@@ -334,6 +349,7 @@ def create_flutter(log: SimpleLogger,
     elif sweep_method == 'tas' and const_type == 'alt':
         flutter.make_flfacts_tas_sweep_constant_alt(
             model, alt, tass,
+            minus_eas=minus_eas,
             alt_units=alt_units,
             eas_limit=eas_limit,
             velocity_units=velocity_units,
@@ -359,6 +375,7 @@ def create_flutter(log: SimpleLogger,
     elif sweep_method == 'alt' and const_type == 'eas':
         flutter.make_flfacts_alt_sweep_constant_eas(
             model, eas, alts,
+            minus_eas=minus_eas,
             alt_units=alt_units,
             velocity_units=velocity_units,
             density_units=density_units,

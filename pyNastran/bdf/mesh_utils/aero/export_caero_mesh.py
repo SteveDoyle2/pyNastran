@@ -385,6 +385,8 @@ def _write_subcases_loads(model: BDF,
 
     for name, dmij in model.dmij.items():
         data, rows, cols = dmij.get_matrix(is_sparse=False, apply_symmetry=True)
+        if np.abs(data).max() == 0:
+            raise RuntimeError(f'abs max of DMIJ={name} is 0.0')
         log.info(f'  {name}: shape={data.shape}')
         msg = f'{name}:\n'
         msg += str(data)
@@ -418,6 +420,8 @@ def _write_subcases_loads(model: BDF,
 
     for name, dmiji in model.dmiji.items():
         data, rows, cols = dmiji.get_matrix(is_sparse=False, apply_symmetry=True)
+        if np.abs(data).max() == 0:
+            raise RuntimeError(f'abs max of DMIJI={name} is 0.0')
         log.info(f'  {name}: shape={data.shape}')
         msg = f'{name}:\n'
         msg += str(data)
@@ -425,6 +429,8 @@ def _write_subcases_loads(model: BDF,
 
     for name, dmik in model.dmik.items():
         data, rows, cols = dmik.get_matrix(is_sparse=False, apply_symmetry=True)
+        if np.abs(data).max() == 0:
+            raise RuntimeError(f'abs max of DMIK={name} is 0.0')
         log.info(f'  {name}: shape={data.shape}')
         msg = f'{name}:\n'
         msg += str(data)
@@ -515,6 +521,8 @@ def _write_dmi(model: BDF,
     for name, dmi in model.dmi.items():
         form_str = dmi.matrix_form_str
         data, rows, cols = dmi.get_matrix(is_sparse=False, apply_symmetry=True)
+        if np.abs(data).max() == 0:
+            raise RuntimeError(f'abs max of DMI={name} is 0.0')
         log.debug(f'  {name}: shape={data.shape}; form_str={form_str}')
 
         if name == 'WTFACT':

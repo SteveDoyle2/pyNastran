@@ -25,7 +25,7 @@ from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 from pyNastran.gui.vtk_common_core import VTK_FONT_FILE
 from pyNastran.gui.vtk_rendering_core import (
     vtkDataSetMapper, vtkPolyDataMapper,
-    vtkCamera, vtkTextActor, vtkProp, vtkActor, vtkRenderer)
+    vtkCamera, vtkTextActor, vtkProp, vtkTextProperty, vtkActor, vtkRenderer)
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.utils.numpy_utils import integer_types
@@ -641,7 +641,7 @@ class ToolActions:
         return self.gui.vtk_interactor
 
 
-def set_vtk_property_to_unicode(prop: vtkProp, font_filei: str) -> None:
+def set_vtk_property_to_unicode(prop: vtkProp | vtkTextProperty, font_filei: str) -> None:
     prop.SetFontFile(font_filei)
     prop.SetFontFamily(VTK_FONT_FILE)
 
