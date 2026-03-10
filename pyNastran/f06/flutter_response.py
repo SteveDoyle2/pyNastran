@@ -829,8 +829,8 @@ class FlutterResponse:
         for damping_targeti in damping_crossings_dict:
             vl_vf_crossing_dict[damping_targeti] = {}
 
-        for imode in imodes:
-            mode = imode + 1
+        for imode, mode in zip(imodes, modes):
+            # mode = imode + 1
             dampi = self.results[imode, :, self.idamping].flatten()
             if dampi.max() < min_damping:
                 # print(f'skip damp.max()={dampi.max()} min_damping={min_damping}')
@@ -855,7 +855,8 @@ class FlutterResponse:
                 # target different percent dampings
                 ddamping = dampi - damping_targeti
                 p1, p2, pmax = get_zero_crossings_hump(
-                    easi, freqi, ddamping, damping_targeti,
+                    easi, freqi, ddamping,
+                    damping_targeti, damping_requiredi,
                     x_round=eas_round, freq_round=freq_round,
                 )
                 # [i1, x1, 0., f1]
@@ -2855,6 +2856,7 @@ def get_zero_crossings_hump(x: np.ndarray,
                             freq: np.ndarray,
                             y: np.ndarray,
                             ytarget: float,
+                            ytarget_tol: float,
                             x_round: int=-1,
                             freq_round: int=-1) -> tuple[np.ndarray,
                                                          np.ndarray,
@@ -2868,7 +2870,15 @@ def get_zero_crossings_hump(x: np.ndarray,
     freq : (n,) float np.ndarray
         frequency
     y : (n,) float np.ndarray
-        damping
+        damping that's been shifted, so we can compare to 0%
+    ytarget: float
+        0% or 3% typically
+    ytarget_tol : float
+        1% or 3% typically, so ytol is 1% or 0%
+    x_round : int; default=-1
+        eas rounding
+    freq_round : int; default=1
+        frequency rounding
 
     https://stackoverflow.com/questions/3843017/efficiently-detect-sign-changes-in-python
     TODO: handle xmin/xmax
@@ -2897,14 +2907,35 @@ def get_zero_crossings_hump(x: np.ndarray,
         # -> assume f2 is at max velocity
         x2 = x[i2]
         f2 = freq[i2]
-    # iy1, freq1, damp1, eas1
+    # iy1, eas1, damp1, freq1
     p1 = np.array([i1, x1, ytarget, f1])
     p2 = np.array([i2, x2, ytarget, f2])
 
     # print(f'i1={i1}; i2={i2}; len(x)={len(x)} xrange=[{x.min()}, {x.max()}] x2={x2}')
-    xs = x[i1:i2]
     ys = y[i1:i2]
     ymax = ys.max()
+    ytol = ytarget_tol - ytarget
+    if ymax < ytol:
+        # hump mode is les than the tolerance
+        yend = y[i2:]
+        if yend.max() >= ytol:
+            # the end exceeds the tolrance
+            p1, p2, pmax = get_zero_crossings_hump(
+                x[i2:], freq[i2:], y[i2:],
+                ytarget, ytarget_tol,
+                x_round=x_round,
+                freq_round=freq_round)
+            p1[0] += i2
+            p2[0] += i2
+            pmax[0] += i2
+        else:
+            # not a crossing
+            p1 = np.array([-1, np.nan, ytarget, np.nan])
+            p2 = np.array([-1, np.nan, ytarget, np.nan])
+            pmax = np.array([-1, np.nan, ytarget, np.nan])
+        return p1, p2, pmax
+
+    xs = x[i1:i2]
     freqs = freq[i1:i2]
     imaxs = np.where(ys == ymax)[0]
     # print(f'imaxs = {imaxs}')
@@ -2917,15 +2948,16 @@ def get_zero_crossings_hump(x: np.ndarray,
     # print(f'xmax = {xmax}')
     # print(f'fmax = {fmax}')
     if x_round:
-        p1[0] = round(p1[0], x_round)
-        p2[0] = round(p2[0], x_round)
+        # iy, eas, damp, freq
+        p1[1] = round(p1[1], x_round)
+        p2[1] = round(p2[1], x_round)
         xmax = round(xmax, x_round)
     if freq_round:
-        p1[1] = round(p1[1], freq_round)
-        p2[1] = round(p2[1], freq_round)
+        # iy, eas, damp, freq
+        p1[3] = round(p1[3], freq_round)
+        p2[3] = round(p2[3], freq_round)
         fmax = round(fmax, freq_round)
     pmax = np.array([i1 + imax, xmax, ymax, fmax])
-
     return p1, p2, pmax
 
 

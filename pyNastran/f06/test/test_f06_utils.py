@@ -285,9 +285,8 @@ class TestF06Flutter(unittest.TestCase):
 
     def test_get_flutter_crossings(self):
         """
-        tests plot_flutter_f06
-
-        has issues with writing the subcase...
+        Tests that a hump mode below the tolerance (1%)
+        isn't flagged as a crossing
         """
         dirname = AERO_PATH / 'flutter_bug'
         f06_filename = dirname / 'bad_mode.f06'
@@ -304,26 +303,23 @@ class TestF06Flutter(unittest.TestCase):
             0.03: 0.03,
         }
         resp = resps[1]
-        vl_vf_crossing_dict, vd_crossing_dict = resp.get_flutter_crossings(crossing_dict)
+        vl_vf_crossing_dict, vd_crossing_dict = resp.get_flutter_crossings(
+            crossing_dict,
+            freq_round=2, eas_round=2,
+            divergence_freq_tol=0.1)
 
+        # raise RuntimeError(f'vl_vf_crossing_dict = {vl_vf_crossing_dict}')
         vl_vf_crossing_dict_expected = {
-            0.0: {
-                1: [
-                    # damping0, p1, p2, pmax = case
-                    (0.0,
-                    np.array([79., 0.44, 0., 35.6845]),
-                    np.array([176., 2.05, 0.,  35.67288008]),
-                    np.array([114., 0.95, 4.70346e-4, 35.68]))]
-        },
-            0.03: {
-                1: [(0.03,
-                    np.array([192., 2.36, 0.03, 49.4167439]),
-                    np.array([193., 2.38, 0.03, 25.7916703]),
-                    np.array([ 192.,  2.349, -3.451655e-2,  56.36]))]
-            },
-        }
+            0.0: {27:
+                      [(0.0, np.array([193., 2.38, 0., 22.71]),
+                             np.array([199., 2.49, 0., 69.59]),
+                             np.array([193., 2.37, 0.107738, 33.78]))]},
+            0.03: {27:
+                      [(0.03, np.array([193., 2.38, 3.0e-2, 25.79]),
+                              np.array([199., 2.49, 3.0e-2, 69.59]),
+                              np.array([193., 2.37, 7.7738e-02, 33.78]))]}}
 
-        assert len(vl_vf_crossing_dict) == len(vl_vf_crossing_dict_expected)
+        assert len(vl_vf_crossing_dict) == len(vl_vf_crossing_dict_expected), list(vl_vf_crossing_dict.keys())
         for damping, data_dict in vl_vf_crossing_dict.items():
             data_dict_expected = vl_vf_crossing_dict_expected[damping]
             assert len(data_dict) == len(data_dict_expected)
