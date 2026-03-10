@@ -1396,7 +1396,7 @@ class FlutterGui(LoggableGui):
     @dont_crash
     def on_load_f06(self, event) -> None:
         ifile = self.ifile
-        f06_filename = os.path.abspath(self.f06_filename_edit[ifile].text())
+        f06_filename = os.path.abspath(self.f06_filename_edit[ifile].text().strip())
         if not os.path.exists(f06_filename) or not os.path.isfile(f06_filename):
             self.f06_filename_edit[ifile].setStyleSheet(QLINEEDIT_RED)
             self.log.error(f"can't find {f06_filename}")
@@ -1614,10 +1614,14 @@ class FlutterGui(LoggableGui):
         damping_limit = self.damping  # % damping
         eas_flutter_range = self.eas_flutter_range
         # eas_diverg_range = self.eas_diverg_range
-        if damping_required_tol is None:
-            damping_required_tol = 0.01
-        if damping_required_tol < 0.0:
-            damping_required_tol = 0.0
+
+        if plot_type not in {'root-locus'}:  # , 'modal-participation', 'zimmerman'
+            assert isinstance(damping_required, float), damping_required
+            assert isinstance(damping_required_tol, float), damping_required_tol
+            if damping_required_tol is None:
+                damping_required_tol = 0.01
+            if damping_required_tol < 0.0:
+                damping_required_tol = 0.0
 
         # changing directory so we don't make a long filename
         # in the plot header

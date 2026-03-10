@@ -99,7 +99,8 @@ from pyNastran.f06.dev.flutter.actions_builder import (
 from pyNastran.f06.dev.flutter.scalar_bar import ScalarBar
 from pyNastran.f06.dev.flutter.nastran_utils import (
     get_element_table, get_property_table, get_material_table,
-    get_table_trees, get_ifile_name_dict, read_obj, write_obj)
+    get_table_trees, get_ifile_name_dict, read_obj, write_obj,
+    _qitem_text_to_sline)
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.vtk_rendering_core import (
@@ -344,13 +345,13 @@ class VtkWindow(QMainWindow):
             apply_fringe_plot=self.apply_fringe_plot)
         print('done')
 
-    # def set_data(self, data: dict[str, int]) -> None:
-    #     #print('setting data', data)
-    #     self.dt_ms = data['dt_ms']
-    #     self.iphase = 0
-    #     self.nphase = data['nphase']
-    #     self.animate = True #data['animate']
-    #     self.point_size = 2
+    def set_data(self, data: dict[str, int]) -> None:
+        #print('setting data', data)
+        self.dt_ms = data['dt_ms']
+        self.iphase = 0
+        self.nphase = data['nphase']
+        self.animate = True #data['animate']
+        self.point_size = 2
 
     @property
     def vtk_interactor(self) -> QVTKRenderWindowInteractor:
@@ -469,6 +470,9 @@ class VtkWindow(QMainWindow):
         print('reload_model...')
         model = self._reload_model(
             bdf_filename, use_obj_file=False)
+        if len(model.nodes) == 0:
+            # error case
+            return
         self.fill_table_tree(model)
 
         # self.inormal = -1
@@ -761,8 +765,12 @@ class VtkWindow(QMainWindow):
             #geo = self.load_h5_geometry(bdf_filename)
         else:
             self.bdf_filename = bdf_filename
-            model = self.analysis.get_bdf_geometry(
-                bdf_filename, log=log)
+            try:
+                model = self.analysis.get_bdf_geometry(
+                    bdf_filename, log=log)
+            except Exception as error:
+                log.error(str(error))
+                return BDF()
             #model.load_mode = 'bdf'
             #if self.use_obj_file:
             # print(type(model))

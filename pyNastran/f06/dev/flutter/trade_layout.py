@@ -389,7 +389,7 @@ class TradeLayout(QVBoxLayout):
                 word_filename,
                 f06_filenames, configs, out_table, trades,
                 log, settings,
-                progress_callback=self.update_organize_progress,
+                progress_callback=self.update_f06_progress,
                 **settings)
             log.info(f'Successfully created {word_filename}')
         except Exception as e:
@@ -400,10 +400,14 @@ class TradeLayout(QVBoxLayout):
             self.progress_bar.setVisible(False)
             self.run_organize_button.setEnabled(True)
 
-    def update_organize_progress(self, current: int, total: int):
+    def update_f06_progress(self, current: int, total: int, f06_filename: str):
         """Update progress bar"""
         self.progress_bar.setValue(current)
         QApplication.processEvents()  # Keep GUI responsive
+        f06_filename = os.path.abspath(f06_filename)
+        basename = os.path.basename(f06_filename)
+        dirname = os.path.basename(os.path.dirname(f06_filename))
+        self.parent.statusbar.showMessage(f'Processing F06 {current}/{total}: {dirname}/{basename}')
 
     def on_base_f06_directory_load(self) -> None:
         is_passed, directory = get_file_edit(
