@@ -354,6 +354,8 @@ class FlutterResponse:
 
         assert eigr_eigi_velocity.ndim == 2, eigr_eigi_velocity
         assert eigr_eigi_velocity.shape[1] == 3, eigr_eigi_velocity
+
+        self.noffset = 10
         self.freq_ndigits = 1
         self.markevery = 0
         self.eigenvector = eigenvector
@@ -1180,6 +1182,7 @@ class FlutterResponse:
         for i, imode, mode in zip(count(), imodes, modes):
             symbol = symbols[jcolor]
             color = colors[jcolor]
+            eas = self.results[imode, :, self.ieas].ravel()
             freq = self.results[imode, :, self.ifreq].ravel()
             damping = self.results[imode, :, self.idamping].ravel()
             if ix >= 0:
@@ -1190,7 +1193,7 @@ class FlutterResponse:
             # print('freq, xs, ys')
             jcolor, color2, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
-                freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
+                eas, freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                 show_mode_number=self.show_mode_number)
             if is_removedi:
                 continue
@@ -1316,17 +1319,19 @@ class FlutterResponse:
         legend_elements = []
         jcolor = 0
         for i, imode, mode in zip(count(), imodes, modes):
+            ioffset = jcolor % self.noffset
             symbol = symbols[jcolor]
             color = colors[jcolor]
 
             freq = self.results[imode, :, self.ifreq].ravel()
             damping = self.results[imode, :, self.idamping].ravel()
             xs = self.results[imode, :, ix].ravel()
+            eas = self.results[imode, :, self.ieas].ravel()
             y1s = self.results[imode, :, iy1].ravel()
             y2s = self.results[imode, :, iy2].ravel()
             jcolor, color2, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
-                freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
+                eas, freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                 show_mode_number=self.show_mode_number)
             if is_removedi:
                 continue
@@ -1364,7 +1369,7 @@ class FlutterResponse:
                 legend_elementsi = _plot_two_axes(
                     axes1, axes2,
                     xs[iplot], y1s[iplot], y2s[iplot],
-                    color, symbol2, linestyle, label, texti,
+                    color, symbol2, linestyle, label, texti, ioffset,
                     self.markevery, markersize=markersize,
                 )
                 # axes1.plot(xs[iplot], y1s[iplot], marker=symbol2, label=label,
@@ -1827,6 +1832,7 @@ class FlutterResponse:
         # print(f'modes={modes}')
         nmodes = 0
         for i, imode, mode in zip(count(), imodes, modes):
+            ioffset = jcolor % self.noffset
             # print(f'ith_mode = {i}, imode = {imode}, mode = {mode}')
             color = colors[jcolor]
             symbol = symbols[jcolor]
@@ -1855,7 +1861,7 @@ class FlutterResponse:
                 continue
             jcolor, color, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
-                freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
+                vel_calc, freq_calc, damping_calc, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                 show_mode_number=self.show_mode_number)
             if is_removedi:
                 # print("removed?")
@@ -1901,7 +1907,7 @@ class FlutterResponse:
                 damp_axes, freq_axes,
                 vel, damping, freq,
                 color, symbol2, linestyle2,
-                label, texti,
+                label, texti, ioffset,
                 self.markevery,
                 markersize=None)
             legend_elements_damp.extend(legend_elementsi)
@@ -3159,7 +3165,7 @@ def _get_mode_freq_label(mode: int, freq: float,
 def _increment_jcolor(mode: int,
                       jcolor: int, color: str,
                       linestyle: str, symbol: str,
-                      freq: np.ndarray, damping: np.ndarray,
+                      eas: np.ndarray, freq: np.ndarray, damping: np.ndarray,
                       freq_tol: float=-1.0,
                       freq_tol_remove: float=-1.0,
                       show_mode_number: bool=False,
@@ -3198,7 +3204,8 @@ def _increment_jcolor(mode: int,
     assert isinstance(freq_tol_remove, float_types), freq_tol_remove
     is_filtered = False
     dfreq = freq.max() - freq.min()
-    if dfreq <= freq_tol and damping.max() < 0.:
+    #print(f'mode={mode:d} eas_range=[{eas.min():.3f},{eas.max():.3f}] freq_range=[{freq.min():.3f},{freq.max():.3f}] damping.max()={damping.max()} freq_tol={freq_tol}')
+    if dfreq <= freq_tol and damping.max() <= 0.:
         color = 'gray'
         is_filtered = True
         jcolor -= 1
@@ -3336,7 +3343,7 @@ def _get_min_damping(damping_crossings: dict[float, float]) -> float:
 def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
                    vel: np.ndarray, damping: np.ndarray, freq: np.ndarray,
                    color: str, symbol: str, linestyle: str,
-                   label: str, text: str,
+                   label: str, text: str, ioffset: int,
                    markevery: Optional[int]=None,
                    markersize=None) -> list[Line2D]:
     legend_element = Line2D([0], [0], color=color,
@@ -3367,7 +3374,7 @@ def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
             freq_axes.scatter(vel2, freq2, color=color, marker=symbol, s=markersize)
     if text:
         # annotate the mode number
-        for xi, y1i, y2i in zip(vel2, damping2, freq2):
+        for xi, y1i, y2i in zip(vel2[ioffset:], damping2[ioffset:], freq2[ioffset:]):
             damp_axes.text(xi, y1i, text, color=color, clip_on=True)
             freq_axes.text(xi, y2i, text, color=color, clip_on=True)
     return legend_elements

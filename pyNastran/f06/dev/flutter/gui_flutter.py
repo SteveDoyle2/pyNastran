@@ -80,7 +80,7 @@ JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json()
 
 from pyNastran.f06.dev.flutter.vtk_data import VtkData
 from pyNastran.f06.dev.flutter.utils_qt import (
-    load_lineedits, load_pulldowns, load_min_max_lineedits, _to_str)
+    load_lineedits, load_pulldowns, load_min_max_lineedits)
 if USE_VTK:
     from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
 
@@ -1848,7 +1848,7 @@ class FlutterGui(LoggableGui):
         if png_filename:
             log.info(f'saved {png_filename}')
         else:
-            log.info(f'did not write file because export_to_png=False')
+            log.info('did not write file because export_to_png=False')
 
     def get_xlim(self) -> tuple[Limit, Limit, Limit, Limit,
                                 Limit, Limit, Limit, Limit, Limit,
