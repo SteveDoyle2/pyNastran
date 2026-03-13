@@ -274,7 +274,7 @@ def write_report(docx_filename: str,
     for ifile, f06_filename, config in zip(count(), f06_filenames, configs):
         log.info(f'Processing F06 {ifile}/{nfiles}: {f06_filename}')
         if progress_callback is not None:
-            progress_callback(ifile, nfiles)  # 0-indexed for progress bar
+            progress_callback(ifile, nfiles, f06_filename)  # 0-indexed for progress bar
 
         basename = os.path.splitext(os.path.basename(f06_filename))[0]
         png_filename = picdir / f'{basename}.png'
@@ -425,12 +425,12 @@ def _cases_to_document(log: SimpleLogger,
     flutter_table = {
         # 'Configuration': [],
         'Config': configs,
-        'File': f06_filenames,
         label_vg0: [],
         label_freq_g0: [],
         label_vg3: [],
         label_freq_g3: [],
         label_vd: [],
+        'File': f06_filenames,
     }
 
     document = Document()

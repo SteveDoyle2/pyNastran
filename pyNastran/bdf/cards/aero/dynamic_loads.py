@@ -699,6 +699,7 @@ class FLUTTER(BaseCard):
 
     def make_flfacts_eas_sweep_constant_alt(self, model: BDF,
                                             alt: float, eass: list[float],
+                                            minus_eas: float=0.0,
                                             alt_units: str='m',
                                             velocity_units: str='m/s',
                                             density_units: str='kg/m^3',
@@ -756,6 +757,7 @@ class FLUTTER(BaseCard):
                                              model: BDF,
                                              mach: float, alts: np.ndarray,
                                              eas_limit: float=1000.,
+                                             minus_eas: float=0.0,
                                              alt_units: str='m',
                                              velocity_units: str='m/s',
                                              density_units: str='kg/m^3',
@@ -804,6 +806,7 @@ class FLUTTER(BaseCard):
                                             model: BDF,
                                             tas: float, alts: np.ndarray,
                                             eas_limit: float=1000.,
+                                            minus_eas: float=0.0,
                                             alt_units: str='m',
                                             velocity_units: str='m/s',
                                             density_units: str='kg/m^3',
@@ -851,6 +854,7 @@ class FLUTTER(BaseCard):
                                             model: BDF,
                                             alt: float, tass: np.ndarray,
                                             eas_limit: float=1000.,
+                                            minus_eas: float=0.0,
                                             alt_units: str='m',
                                             velocity_units: str='m/s',
                                             density_units: str='kg/m^3',
@@ -898,6 +902,7 @@ class FLUTTER(BaseCard):
     def make_flfacts_eas_sweep_constant_mach(self, model: BDF,
                                              mach: float, eass: np.ndarray,
                                              gamma: float=1.4,
+                                             minus_eas: float=0.0,
                                              alt_units: str='m',
                                              velocity_units: str='m/s',
                                              density_units: str='kg/m^3',
@@ -914,10 +919,10 @@ class FLUTTER(BaseCard):
         """
         neas = len(eass)
         #machs = mach * np.ones(neas)
-
         rho, machs, velocity, alts = make_flfacts_eas_sweep_constant_mach(
             mach, eass,
             gamma=gamma,
+            minus_eas=minus_eas,
             alt_units=alt_units,
             velocity_units=velocity_units,
             density_units=density_units,
@@ -954,7 +959,9 @@ class FLUTTER(BaseCard):
         model.add_flfact(flfact_eas, eas_in_eas_units, comment=comment)
 
     def make_flfacts_mach_sweep_constant_alt(self, model: BDF, alt, machs,
-                                             eas_limit=1000., alt_units='m',
+                                             eas_limit=1000.,
+                                             minus_eas: float=0.0,
+                                             alt_units='m',
                                              velocity_units='m/s',
                                              density_units='kg/m^3',
                                              eas_units='m/s'):

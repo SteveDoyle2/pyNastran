@@ -559,7 +559,7 @@ class FlutterGui(LoggableGui):
     def on_browse_bdf(self) -> None:
         """pops a dialog to select the bdf file"""
         title = 'Load Nastran Flutter BDF/DAT File'
-        qt_wildcard = 'F06 File (*.bdf, *.dat)'
+        qt_wildcard = 'BDF File (*.bdf *.dat);;All Files (*)'
         basedir = os.path.dirname(self.bdf_filename)
         fname, wildcard_level = getopenfilename(
             self, caption=title, basedir=basedir, filters=qt_wildcard,)
@@ -572,7 +572,7 @@ class FlutterGui(LoggableGui):
     def on_browse_op2(self) -> None:
         """pops a dialog to select the op2 file"""
         title = 'Load Nastran Flutter OP2 File'
-        qt_wildcard = 'OP2 File (*.o2p)'
+        qt_wildcard = 'OP2 File (*.op2);;All Files (*)'
         basedir = os.path.dirname(self.op2_filename)
         fname, wildcard_level = getopenfilename(
             self, caption=title, basedir=basedir, filters=qt_wildcard,)

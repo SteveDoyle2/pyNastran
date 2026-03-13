@@ -16,7 +16,7 @@ def write_docx_path(f06_filename: PathLike,
     parts = Path(f06_filename).parts
     write_parts = parts[-nlevels:]
     path_str = '/'.join(write_parts)
-    return path_str
+    return path_str.replace('//', '/').replace('\\', '/')
 
 
 def filenames_to_data_table(filenames2: list[str],
@@ -158,7 +158,6 @@ def get_trades(out_table: pd.DataFrame,
                 config += f'{col}={value}, '
             config = config.strip(', ')
             configs[i] = config
-
     return is_passed, configs, trades
 
 def get_configs(out_table: pd.DataFrame,

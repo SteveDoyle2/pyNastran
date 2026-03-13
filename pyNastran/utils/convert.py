@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def convert_altitude(alt: float, alt_units_in: str, alt_units_out: str) -> float:
     """nominal unit is ft"""
     if alt_units_in == alt_units_out:
