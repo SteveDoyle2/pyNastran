@@ -611,22 +611,35 @@ class FlutterResponse:
 
         rho_in_slug_ft3 = rho_ref * rho
         ft_to_alt_unit = convert_altitude(1., 'ft', altitude_units)
+
         if self.make_alt:
-            nrho = len(rho)
+            # sort the densities from max to min
+            # isort = np.argsort(rho_in_slug_ft3.ravel())[::-1]
+            # rho_slug_ft3 = rho_in_slug_ft3.ravel()[isort]
+            # print(f'rho_slug_ft3 [0]={rho_slug_ft3[0]} [-1]={rho_slug_ft3[-1]}')
+            nrho = rho.size
             alt_ft = []
+
+            # we start near 0 for improved stability and will
+            # march up in altitude as density falls off
+            # alt_fti = -0.01
             for idensity, densityi in enumerate(rho_in_slug_ft3.ravel()):
+                # print(alt_fti, idensity, densityi)
                 try:
-                    alt_fti = get_alt_for_density(densityi, density_units='slug/ft^3',
-                                                  alt_units='ft', nmax=50)
+                    alt_fti = get_alt_for_density(
+                        densityi, density_units='slug/ft^3',
+                        # alt0=alt_fti,
+                        alt_units='ft', nmax=100)
                 except Exception:
                     raise RuntimeError(f'Case {idensity+1}/{nrho}: failed to find altitude for density='
                                        f'{rho.ravel()[idensity]:g}; density_units_in={density_units_in!r} ({densityi:g} slug/ft^3)\n'
                                        '  output_rho_range = rho_ref * input_rho_range\n'
                                        f'  rho_ref:             {rho_ref:g} {density_units_in}\n'
-                                       f'  input_rho_range:     [{rho.min():g}, {rho.max()}]\n'
+                                       f'  input_rho_range:     [{rho.min():g}, {rho.max()}] {density_units_in}\n'
                                        f'  => output_rho_range: [{rho_in_slug_ft3.min():g}, {rho_in_slug_ft3.max()}] slug/ft^3')
                 alt_ft.append(alt_fti)
             alt = np.array(alt_ft, dtype=rho.dtype).reshape(vel.shape) * ft_to_alt_unit
+            #alt = np.array(alt_ft, dtype=rho.dtype)[isort].reshape(vel.shape) * ft_to_alt_unit
         else:
             alt = np.full(vel.shape, np.nan, dtype=vel.dtype)
 

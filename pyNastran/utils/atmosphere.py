@@ -38,7 +38,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def get_alt_for_density(density: float, density_units: str='slug/ft^3',
-                        alt_units: str='ft', nmax: int=20, tol: float=0.1) -> float:
+                        alt0: float=0.0, alt_units: str='ft',
+                        nmax: int=20, tol: float=0.1) -> float:
     """
     Gets the altitude associated with a given air density.
 
@@ -62,9 +63,10 @@ def get_alt_for_density(density: float, density_units: str='slug/ft^3',
 
     """
     tol = convert_altitude(tol, alt_units, 'ft')
+    alt0_ft = convert_altitude(alt0, alt_units, 'ft')
     dalt = 500.  # ft
-    alt_old = 0.
-    alt_final = 5000.
+    alt_old = alt0_ft
+    alt_final = alt0_ft + 5000.
     n = 0
 
     #density_scale = _density_factor(density_units, "slug/ft^3")
