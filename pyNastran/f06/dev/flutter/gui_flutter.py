@@ -80,7 +80,8 @@ JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json()
 
 from pyNastran.f06.dev.flutter.vtk_data import VtkData
 from pyNastran.f06.dev.flutter.utils_qt import (
-    load_lineedits, load_pulldowns, load_min_max_lineedits, _to_str)
+    load_checkboxs, load_lineedits, load_pulldowns,
+    load_min_max_lineedits)
 if USE_VTK:
     from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
 
@@ -447,17 +448,7 @@ class FlutterGui(LoggableGui):
             ('show_detailed_mode_info', self.show_detailed_mode_info_checkbox[ifile]),
             ('show_lines', self.show_lines_checkbox[ifile]),
         ]
-        # attrs aren't stored
-        for (key, checkbox) in checkboxs:
-            if key not in data:
-                continue
-            val = data[key]
-            assert isinstance(val, bool), (key, val)
-            try:
-                checkbox.setChecked(val)
-            except AttributeError:  # pragma: no cover
-                print(key)
-                raise
+        load_checkboxs(data, checkboxs)
 
         min_max_line_edits = [
             ('eas_lim', self.eas_lim_edit_min, self.eas_lim_edit_max),
@@ -474,7 +465,7 @@ class FlutterGui(LoggableGui):
             ('freq_lim', self.freq_lim_edit_min, self.freq_lim_edit_max),
             ('kfreq_lim', self.kfreq_lim_edit_min, self.kfreq_lim_edit_max),
         ]
-        load_min_max_lineedits(self, data, min_max_line_edits)
+        load_min_max_lineedits(data, min_max_line_edits)
 
         point_removal = data.get('point_removal', [])
         point_removal_str = get_point_removal_str(point_removal)
@@ -760,44 +751,45 @@ class FlutterGui(LoggableGui):
         # self.mode_switch_method_pulldown = []
 
     def setup_widgets(self) -> None:
-        self.f06_filename_label.append(QLabel('F06 Filename:', self))
-        self.f06_filename_edit.append(QLineEdit(self))
-        self.f06_filename_browse.append(QPushButton('Browse...', self))
+        parent = self
+        self.f06_filename_label.append(QLabel('F06 Filename:', parent))
+        self.f06_filename_edit.append(QLineEdit(parent))
+        self.f06_filename_browse.append(QPushButton('Browse...', parent))
 
-        self.bdf_filename_checkbox = QCheckBox('BDF Filename:', self)
-        self.bdf_filename_edit = QLineEdit(self)
-        self.bdf_filename_browse = QPushButton('Browse...', self)
+        self.bdf_filename_checkbox = QCheckBox('BDF Filename:', parent)
+        self.bdf_filename_edit = QLineEdit(parent)
+        self.bdf_filename_browse = QPushButton('Browse...', parent)
         self.bdf_filename_checkbox.setChecked(False)
         self.bdf_filename_edit.setEnabled(False)
         self.bdf_filename_browse.setEnabled(False)
         self.bdf_filename_edit.setToolTip('Loads the Nastran Geometry')
 
-        self.op2_filename_checkbox = QCheckBox('OP2 Filename:', self)
-        self.op2_filename_edit = QLineEdit(self)
-        self.op2_filename_browse = QPushButton('Browse...', self)
+        self.op2_filename_checkbox = QCheckBox('OP2 Filename:', parent)
+        self.op2_filename_edit = QLineEdit(parent)
+        self.op2_filename_browse = QPushButton('Browse...', parent)
         self.op2_filename_checkbox.setChecked(False)
         self.op2_filename_edit.setEnabled(False)
         self.op2_filename_browse.setEnabled(False)
         self.op2_filename_edit.setToolTip('Loads the Nastran Results (and geometry if BDF Filename is empty)')
 
-        self.use_rhoref_checkbox = QCheckBox('Sea Level Rho Ref', self)
+        self.use_rhoref_checkbox = QCheckBox('Sea Level Rho Ref', parent)
         self.use_rhoref_checkbox.setChecked(False)
 
-        self.log_xscale_checkbox = QCheckBox('Log Scale x', self)
-        self.log_yscale1_checkbox = QCheckBox('Log Scale y1', self)
-        self.log_yscale2_checkbox = QCheckBox('Log Scale y2', self)
+        self.log_xscale_checkbox = QCheckBox('Log Scale x', parent)
+        self.log_yscale1_checkbox = QCheckBox('Log Scale y1', parent)
+        self.log_yscale2_checkbox = QCheckBox('Log Scale y2', parent)
         self.log_xscale_checkbox.setChecked(False)
         self.log_yscale1_checkbox.setChecked(False)
         self.log_yscale2_checkbox.setChecked(False)
 
-        self.show_points_checkbox.append(QCheckBox('Show Points', self))
-        self.show_mode_number_checkbox.append(QCheckBox('Show Mode Number', self))
-        self.show_detailed_mode_info_checkbox.append(QCheckBox('Show Detailed Mode Info', self))
-        self.point_spacing_label.append(QLabel('Point Spacing', self))
-        self.point_spacing_spinner.append(QSpinBox(self))
-        self.include_rigid_body_modes_checkbox.append(QCheckBox('Include Rigid Body Modes', self))
-        self.number_rigid_body_modes_label.append(QLabel('nRigid Body Modes', self))
-        self.number_rigid_body_modes_spinner.append(QSpinBox(self))
+        self.show_points_checkbox.append(QCheckBox('Show Points', parent))
+        self.show_mode_number_checkbox.append(QCheckBox('Show Mode Number', parent))
+        self.show_detailed_mode_info_checkbox.append(QCheckBox('Show Detailed Mode Info', parent))
+        self.point_spacing_label.append(QLabel('Point Spacing', parent))
+        self.point_spacing_spinner.append(QSpinBox(parent))
+        self.include_rigid_body_modes_checkbox.append(QCheckBox('Include Rigid Body Modes', parent))
+        self.number_rigid_body_modes_label.append(QLabel('nRigid Body Modes', parent))
+        self.number_rigid_body_modes_spinner.append(QSpinBox(parent))
 
         for obj in self.include_rigid_body_modes_checkbox:
             obj.setVisible(False)
@@ -806,7 +798,7 @@ class FlutterGui(LoggableGui):
         for obj in self.number_rigid_body_modes_spinner:
             obj.setVisible(False)
 
-        self.show_lines_checkbox.append(QCheckBox('Show Lines', self))
+        self.show_lines_checkbox.append(QCheckBox('Show Lines', parent))
         self.show_points_checkbox[-1].setChecked(True)
         self.show_lines_checkbox[-1].setChecked(True)
         self.show_points_checkbox[-1].setToolTip('The points are symbols')
@@ -817,73 +809,73 @@ class FlutterGui(LoggableGui):
         self.point_spacing_spinner[-1].setMinimum(0)
         self.point_spacing_spinner[-1].setMaximum(30)
 
-        self.index_lim_label = QLabel('Index Limits:', self)
-        self.index_lim_edit_min = QFloatEdit('0', self)
-        self.index_lim_edit_max = QFloatEdit(self)
+        self.index_lim_label = QLabel('Index Limits:', parent)
+        self.index_lim_edit_min = QFloatEdit('0', parent)
+        self.index_lim_edit_max = QFloatEdit(parent)
 
-        self.eas_lim_label = QLabel('EAS Limits:', self)
-        self.eas_lim_edit_min = QFloatEdit('0', self)
-        self.eas_lim_edit_max = QFloatEdit(self)
+        self.eas_lim_label = QLabel('EAS Limits:', parent)
+        self.eas_lim_edit_min = QFloatEdit('0', parent)
+        self.eas_lim_edit_max = QFloatEdit(parent)
 
-        self.tas_lim_label = QLabel('TAS Limits:', self)
-        self.tas_lim_edit_min = QFloatEdit('0', self)
-        self.tas_lim_edit_max = QFloatEdit(self)
+        self.tas_lim_label = QLabel('TAS Limits:', parent)
+        self.tas_lim_edit_min = QFloatEdit('0', parent)
+        self.tas_lim_edit_max = QFloatEdit(parent)
 
-        self.mach_lim_label = QLabel('Mach Limits:', self)
-        self.mach_lim_edit_min = QFloatEdit(self)
-        self.mach_lim_edit_max = QFloatEdit(self)
+        self.mach_lim_label = QLabel('Mach Limits:', parent)
+        self.mach_lim_edit_min = QFloatEdit(parent)
+        self.mach_lim_edit_max = QFloatEdit(parent)
 
-        self.alt_lim_label = QLabel('Alt Limits:', self)
-        self.alt_lim_edit_min = QFloatEdit(self)
-        self.alt_lim_edit_max = QFloatEdit(self)
+        self.alt_lim_label = QLabel('Alt Limits:', parent)
+        self.alt_lim_edit_min = QFloatEdit(parent)
+        self.alt_lim_edit_max = QFloatEdit(parent)
 
-        self.q_lim_label = QLabel('Q Limits:', self)
-        self.q_lim_edit_min = QFloatEdit(self)
-        self.q_lim_edit_max = QFloatEdit(self)
+        self.q_lim_label = QLabel('Q Limits:', parent)
+        self.q_lim_edit_min = QFloatEdit(parent)
+        self.q_lim_edit_max = QFloatEdit(parent)
 
-        self.rho_lim_label = QLabel('Rho Limits:', self)
-        self.rho_lim_edit_min = QFloatEdit('0', self)
-        self.rho_lim_edit_max = QFloatEdit(self)
+        self.rho_lim_label = QLabel('Rho Limits:', parent)
+        self.rho_lim_edit_min = QFloatEdit('0', parent)
+        self.rho_lim_edit_max = QFloatEdit(parent)
 
-        self.damp_lim_label = QLabel('Damping Limits (g):', self)
-        self.damp_lim_edit_min = QFloatEdit('-0.3', self)
-        self.damp_lim_edit_max = QFloatEdit('0.3', self)
+        self.damp_lim_label = QLabel('Damping Limits (g):', parent)
+        self.damp_lim_edit_min = QFloatEdit('-0.3', parent)
+        self.damp_lim_edit_max = QFloatEdit('0.3', parent)
 
-        self.freq_lim_label = QLabel('Freq Limits (Hz):', self)
-        self.freq_lim_edit_min = QFloatEdit('0', self)
-        self.freq_lim_edit_max = QFloatEdit(self)
+        self.freq_lim_label = QLabel('Freq Limits (Hz):', parent)
+        self.freq_lim_edit_min = QFloatEdit('0', parent)
+        self.freq_lim_edit_max = QFloatEdit(parent)
 
-        self.kfreq_lim_label = QLabel('KFreq Limits:', self)
-        self.kfreq_lim_edit_min = QFloatEdit(self)
-        self.kfreq_lim_edit_max = QFloatEdit(self)
+        self.kfreq_lim_label = QLabel('KFreq Limits:', parent)
+        self.kfreq_lim_edit_min = QFloatEdit(parent)
+        self.kfreq_lim_edit_max = QFloatEdit(parent)
 
-        self.ikfreq_lim_label = QLabel('1/KFreq Limits:', self)
-        self.ikfreq_lim_edit_min = QFloatEdit(self)
-        self.ikfreq_lim_edit_max = QFloatEdit(self)
+        self.ikfreq_lim_label = QLabel('1/KFreq Limits:', parent)
+        self.ikfreq_lim_edit_min = QFloatEdit(parent)
+        self.ikfreq_lim_edit_max = QFloatEdit(parent)
 
-        self.eigr_lim_label = QLabel('Real Eigenvalue:', self)
-        self.eigr_lim_edit_min = QFloatEdit(self)
-        self.eigr_lim_edit_max = QFloatEdit(self)
+        self.eigr_lim_label = QLabel('Real Eigenvalue:', parent)
+        self.eigr_lim_edit_min = QFloatEdit(parent)
+        self.eigr_lim_edit_max = QFloatEdit(parent)
 
-        self.eigi_lim_label = QLabel('Imag Eigenvalue:', self)
-        self.eigi_lim_edit_min = QFloatEdit(self)
-        self.eigi_lim_edit_max = QFloatEdit(self)
+        self.eigi_lim_label = QLabel('Imag Eigenvalue:', parent)
+        self.eigi_lim_edit_min = QFloatEdit(parent)
+        self.eigi_lim_edit_max = QFloatEdit(parent)
 
         # --------------------------------------------
-        self.freq_tol_label = QLabel('dFreq Tol (Hz) Dash:', self)
-        self.freq_tol_edit = QFloatEdit('-1.0', self)
+        self.freq_tol_label = QLabel('dFreq Tol (Hz) Dash:', parent)
+        self.freq_tol_edit = QFloatEdit('-1.0', parent)
         self.freq_tol_edit.setToolTip("Applies a dotted line for modes that don't change by more than some amount")
 
-        self.freq_tol_remove_label = QLabel('dFreq Tol (Hz) Remove:', self)
-        self.freq_tol_remove_edit = QFloatEdit('-1.0', self)
+        self.freq_tol_remove_label = QLabel('dFreq Tol (Hz) Remove:', parent)
+        self.freq_tol_remove_edit = QFloatEdit('-1.0', parent)
         self.freq_tol_remove_edit.setToolTip('Removes a mode if it meets dFreq Tol (Hz) Dash and Remove')
 
-        self.mag_tol_label = QLabel('Magnitude Tol:', self)
-        self.mag_tol_edit = QFloatEdit('-1.0', self)
+        self.mag_tol_label = QLabel('Magnitude Tol:', parent)
+        self.mag_tol_edit = QFloatEdit('-1.0', parent)
         self.mag_tol_edit.setToolTip('Filters modal participation factors based on magnitude')
 
-        self.subcase_label = QLabel('Subcase:', self)
-        self.subcase_edit = QComboBox(self)
+        self.subcase_label = QLabel('Subcase:', parent)
+        self.subcase_edit = QComboBox(parent)
 
         units_msg = (
             "english_in: inch/s, slich/in^3\n"
@@ -892,95 +884,95 @@ class FlutterGui(LoggableGui):
             "si:         m/s,    kg/m^3\n"
             "si-mm:      mm/s,   Mg/mm^3\n"
         )
-        self.x_plot_type_label = QLabel('X-Axis Plot Type:', self)
-        self.x_plot_type_pulldown = QComboBox(self)
+        self.x_plot_type_label = QLabel('X-Axis Plot Type:', parent)
+        self.x_plot_type_pulldown = QComboBox(parent)
         self.x_plot_type_pulldown.addItems(X_PLOT_TYPES)
         self.x_plot_type_pulldown.setToolTip('sets the x-axis')
 
-        self.plot_type_label = QLabel('Plot Type:', self)
-        self.plot_type_pulldown = QComboBox(self)
+        self.plot_type_label = QLabel('Plot Type:', parent)
+        self.plot_type_pulldown = QComboBox(parent)
         self.plot_type_pulldown.addItems(PLOT_TYPES)
         # self.plot_type_pulldown.setToolTip(units_msg)
 
-        self.units_in_label = QLabel('Units In:', self)
-        self.units_in_pulldown = QComboBox(self)
+        self.units_in_label = QLabel('Units In:', parent)
+        self.units_in_pulldown = QComboBox(parent)
         self.units_in_pulldown.addItems(UNITS_IN)
         self.units_in_pulldown.setToolTip(units_msg)
         iunits_in = UNITS_IN.index('english_in')
         self.units_in_pulldown.setCurrentIndex(iunits_in)
         self.units_in_pulldown.setToolTip('Sets the units for the F06/OP2; set when loaded')
 
-        self.units_out_label = QLabel('Units Out:', self)
-        self.units_out_pulldown = QComboBox(self)
+        self.units_out_label = QLabel('Units Out:', parent)
+        self.units_out_pulldown = QComboBox(parent)
         self.units_out_pulldown.addItems(UNITS_OUT)
         self.units_out_pulldown.setToolTip(units_msg)
         iunits_out = UNITS_IN.index('english_kt')
         self.units_out_pulldown.setCurrentIndex(iunits_out)
         self.units_out_pulldown.setToolTip('Sets the units for the plot; may be updated')
 
-        self.output_directory_label = QLabel('Output Directory:', self)
-        self.output_directory_edit = QLineEdit('', self)
-        self.output_directory_browse = QPushButton('Browse...', self)
+        self.output_directory_label = QLabel('Output Directory:', parent)
+        self.output_directory_edit = QLineEdit('', parent)
+        self.output_directory_browse = QPushButton('Browse...', parent)
         self.output_directory_edit.setDisabled(True)
         self.output_directory_browse.setDisabled(True)
 
-        self.vl_label = QLabel('VL, Limit:', self)
-        self.vl_edit = QFloatEdit('', self)
+        self.vl_label = QLabel('VL, Limit:', parent)
+        self.vl_edit = QFloatEdit('', parent)
         self.vl_edit.setToolTip('Makes a vertical line for VL')
 
-        self.vf_label = QLabel('VF, Flutter:', self)
-        self.vf_edit = QFloatEdit('', self)
+        self.vf_label = QLabel('VF, Flutter:', parent)
+        self.vf_edit = QFloatEdit('', parent)
         self.vf_edit.setToolTip('Makes a vertical line for VF')
 
-        self.damping_required_label = QLabel('Damping Required, g:', self)
-        self.damping_required_edit = QFloatEdit('', self)
+        self.damping_required_label = QLabel('Damping Required, g:', parent)
+        self.damping_required_edit = QFloatEdit('', parent)
         self.damping_required_edit.setToolTip('Enables the flutter crossing (e.g., 0.0 for 0%)')
 
-        self.damping_required_tol_label = QLabel('Damping Required Tol, g:', self)
-        self.damping_required_tol_edit = QFloatEdit('', self)
+        self.damping_required_tol_label = QLabel('Damping Required Tol, g:', parent)
+        self.damping_required_tol_edit = QFloatEdit('', parent)
         self.damping_required_tol_edit.setToolTip('Tolerance for Damping Required. The crossing will be reported at the required value')
 
-        self.damping_label = QLabel('Damping, g:', self)
-        self.damping_edit = QFloatEdit('', self)
+        self.damping_label = QLabel('Damping, g:', parent)
+        self.damping_edit = QFloatEdit('', parent)
         self.damping_edit.setToolTip('Enables the flutter crossing (e.g., 0.03 for 3%)')
 
-        self.eas_flutter_range_label = QLabel('EAS Flutter/Diverg Range:', self)
-        self.eas_flutter_range_edit_min = QFloatEdit('', self)
-        self.eas_flutter_range_edit_max = QFloatEdit('', self)
+        self.eas_flutter_range_label = QLabel('EAS Flutter/Diverg Range:', parent)
+        self.eas_flutter_range_edit_min = QFloatEdit('', parent)
+        self.eas_flutter_range_edit_max = QFloatEdit('', parent)
         self.eas_flutter_range_edit_min.setToolTip('Defines the flutter/divergence crossing range')
         self.eas_flutter_range_edit_max.setToolTip('Defines the flutter/divergence crossing range')
 
-        # self.eas_diverg_range_label = QLabel('EAS Diverg Range:', self)
-        # self.eas_diverg_range_edit_min = QFloatEdit('', self)
-        # self.eas_diverg_range_edit_max = QFloatEdit('', self)
+        # self.eas_diverg_range_label = QLabel('EAS Diverg Range:', parent)
+        # self.eas_diverg_range_edit_min = QFloatEdit('', parent)
+        # self.eas_diverg_range_edit_max = QFloatEdit('', parent)
         # self.eas_diverg_range_edit_min.setToolTip('Defines the divergence crossing range')
         # self.eas_diverg_range_edit_max.setToolTip('Defines the divergence crossing range')
 
-        self.point_removal_label = QLabel('Point Removal:', self)
-        self.point_removal_edit = QLineEdit('', self)
+        self.point_removal_label = QLabel('Point Removal:', parent)
+        self.point_removal_edit = QLineEdit('', parent)
         self.point_removal_edit.setToolTip('Remove bad points from a mode; "400:410,450:500"')
 
-        self.mode_label = QLabel('Mode:', self)
-        self.mode_edit = QSpinBox(self)
+        self.mode_label = QLabel('Mode:', parent)
+        self.mode_edit = QSpinBox(parent)
         self.mode_edit.setMinimum(1)
         # self.mode_edit.SetValue(3)
         self.mode_edit.setToolTip('Sets the mode')
 
-        self.velocity_label = QLabel('Velocity Point:', self)
-        self.velocity_edit = QComboBox(self)
+        self.velocity_label = QLabel('Velocity Point:', parent)
+        self.velocity_edit = QComboBox(parent)
         self.velocity_edit.setToolTip('Sets the velocity (input units)')
 
-        self.f06_load_button = QPushButton('Load F06', self)
-        self.run_button = QPushButton('Run', self)
+        self.f06_load_button = QPushButton('Load F06', parent)
+        self.run_button = QPushButton('Run', parent)
 
-        self.pop_vtk_gui_button = QPushButton('Open GUI', self)
-        self.solution_type_label = QLabel('Solution Type:', self)
-        self.solution_type_pulldown = QComboBox(self)
-        self.mode2_label = QLabel('Mode:', self)
-        self.mode2_pulldown = QComboBox(self)
+        self.pop_vtk_gui_button = QPushButton('Open GUI', parent)
+        self.solution_type_label = QLabel('Solution Type:', parent)
+        self.solution_type_pulldown = QComboBox(parent)
+        self.mode2_label = QLabel('Mode:', parent)
+        self.mode2_pulldown = QComboBox(parent)
 
-        self.mode_switch_method_label = QLabel('Mode Switch Method:', self)
-        self.mode_switch_method_pulldown = QComboBox(self)
+        self.mode_switch_method_label = QLabel('Mode Switch Method:', parent)
+        self.mode_switch_method_pulldown = QComboBox(parent)
         self.mode_switch_method_pulldown.addItems(MODE_SWITCH_METHODS)
 
         self.setup_modes()
@@ -1172,116 +1164,44 @@ class FlutterGui(LoggableGui):
             hbox.addWidget(self.op2_filename_browse, file_row, 2)
             file_row += 1
 
-        grid = QGridLayout()
-        irow = 0
-        grid.addWidget(self.units_in_label, irow, 0)
-        grid.addWidget(self.units_in_pulldown, irow, 1)
-        grid.addWidget(self.use_rhoref_checkbox, irow, 2)
-        irow += 1
+        grid = create_grid_from_list(parent, [
+            (self.units_in_label, self.units_in_pulldown, self.use_rhoref_checkbox),
+            (self.units_out_label, self.units_out_pulldown),
+            (self.subcase_label, self.subcase_edit),
+            (self.x_plot_type_label, self.x_plot_type_pulldown),
+            (self.plot_type_label, self.plot_type_pulldown),
+            # x-axis
+            (self.index_lim_label, self.index_lim_edit_min, self.index_lim_edit_max),
+            (self.eas_lim_label, self.eas_lim_edit_min, self.eas_lim_edit_max),
+            (self.tas_lim_label, self.tas_lim_edit_min, self.tas_lim_edit_max),
+            (self.mach_lim_label, self.mach_lim_edit_min, self.mach_lim_edit_max),
+            (self.alt_lim_label, self.alt_lim_edit_min, self.alt_lim_edit_max),
+            (self.q_lim_label, self.q_lim_edit_min, self.q_lim_edit_max),
+            (self.rho_lim_label, self.rho_lim_edit_min, self.rho_lim_edit_max),
+            (self.kfreq_lim_label, self.kfreq_lim_edit_min, self.kfreq_lim_edit_max),
+            (self.ikfreq_lim_label, self.ikfreq_lim_edit_min, self.ikfreq_lim_edit_max),
+            # y-axes
+            (self.damp_lim_label, self.damp_lim_edit_min, self.damp_lim_edit_max),
+            (self.freq_lim_label, self.freq_lim_edit_min, self.freq_lim_edit_max),
+            (self.eigr_lim_label, self.eigr_lim_edit_min, self.eigr_lim_edit_max),
+            (self.eigi_lim_label, self.eigi_lim_edit_min, self.eigi_lim_edit_max),
+            (self.freq_tol_label, self.freq_tol_edit),
+            (self.freq_tol_remove_label, self.freq_tol_remove_edit),
+            (self.mode_label, self.mode_edit),
+            (self.velocity_label, self.velocity_edit),
+            (self.mag_tol_label, self.mag_tol_edit),
+            (self.output_directory_label, self.output_directory_edit, self.output_directory_browse),
 
-        grid.addWidget(self.units_out_label, irow, 0)
-        grid.addWidget(self.units_out_pulldown, irow, 1)
-        irow += 1
-
-        grid.addWidget(self.subcase_label, irow, 0)
-        grid.addWidget(self.subcase_edit, irow, 1)
-        irow += 1
-
-        grid.addWidget(self.x_plot_type_label, irow, 0)
-        grid.addWidget(self.x_plot_type_pulldown, irow, 1)
-        irow += 1
-        grid.addWidget(self.plot_type_label, irow, 0)
-        grid.addWidget(self.plot_type_pulldown, irow, 1)
-        irow += 1
-
-        # --------------------------------------------------
-        # x-axis
-        grid.addWidget(self.index_lim_label, irow, 0)
-        grid.addWidget(self.index_lim_edit_min, irow, 1)
-        grid.addWidget(self.index_lim_edit_max, irow, 2)
-        irow += 1
-
-        grid.addWidget(self.eas_lim_label, irow, 0)
-        grid.addWidget(self.eas_lim_edit_min, irow, 1)
-        grid.addWidget(self.eas_lim_edit_max, irow, 2)
-        irow += 1
-
-        grid.addWidget(self.tas_lim_label, irow, 0)
-        grid.addWidget(self.tas_lim_edit_min, irow, 1)
-        grid.addWidget(self.tas_lim_edit_max, irow, 2)
-        irow += 1
-
-        grid.addWidget(self.mach_lim_label, irow, 0)
-        grid.addWidget(self.mach_lim_edit_min, irow, 1)
-        grid.addWidget(self.mach_lim_edit_max, irow, 2)
-        irow += 1
-
-        grid.addWidget(self.alt_lim_label, irow, 0)
-        grid.addWidget(self.alt_lim_edit_min, irow, 1)
-        grid.addWidget(self.alt_lim_edit_max, irow, 2)
-        irow += 1
-
-        grid.addWidget(self.q_lim_label, irow, 0)
-        grid.addWidget(self.q_lim_edit_min, irow, 1)
-        grid.addWidget(self.q_lim_edit_max, irow, 2)
-        irow += 1
-
-        grid.addWidget(self.rho_lim_label, irow, 0)
-        grid.addWidget(self.rho_lim_edit_min, irow, 1)
-        grid.addWidget(self.rho_lim_edit_max, irow, 2)
-        irow += 1
-
-        grid.addWidget(self.kfreq_lim_label, irow, 0)
-        grid.addWidget(self.kfreq_lim_edit_min, irow, 1)
-        grid.addWidget(self.kfreq_lim_edit_max, irow, 2)
-        irow += 1
-
-        grid.addWidget(self.ikfreq_lim_label, irow, 0)
-        grid.addWidget(self.ikfreq_lim_edit_min, irow, 1)
-        grid.addWidget(self.ikfreq_lim_edit_max, irow, 2)
-        irow += 1
-        # --------------------------------------------------
-        # y-axes
-        grid.addWidget(self.damp_lim_label, irow, 0)
-        grid.addWidget(self.damp_lim_edit_min, irow, 1)
-        grid.addWidget(self.damp_lim_edit_max, irow, 2)
-        irow += 1
-
-        grid.addWidget(self.freq_lim_label, irow, 0)
-        grid.addWidget(self.freq_lim_edit_min, irow, 1)
-        grid.addWidget(self.freq_lim_edit_max, irow, 2)
-        irow += 1
-
-        # --------------------------------------------------
-        grid.addWidget(self.eigr_lim_label, irow, 0)
-        grid.addWidget(self.eigr_lim_edit_min, irow, 1)
-        grid.addWidget(self.eigr_lim_edit_max, irow, 2)
-        irow += 1
-
-        grid.addWidget(self.eigi_lim_label, irow, 0)
-        grid.addWidget(self.eigi_lim_edit_min, irow, 1)
-        grid.addWidget(self.eigi_lim_edit_max, irow, 2)
-        irow += 1
-        # ------------------------------------------
-        grid.addWidget(self.freq_tol_label, irow, 0)
-        grid.addWidget(self.freq_tol_edit, irow, 1)
-        irow += 1
-        grid.addWidget(self.freq_tol_remove_label, irow, 0)
-        grid.addWidget(self.freq_tol_remove_edit, irow, 1)
-        irow += 1
-        grid.addWidget(self.mode_label, irow, 0)
-        grid.addWidget(self.mode_edit, irow, 1)
-        irow += 1
-        grid.addWidget(self.velocity_label, irow, 0)
-        grid.addWidget(self.velocity_edit, irow, 1)
-        irow += 1
-        grid.addWidget(self.mag_tol_label, irow, 0)
-        grid.addWidget(self.mag_tol_edit, irow, 1)
-        irow += 1
-
-        grid.addWidget(self.output_directory_label, irow, 0)
-        grid.addWidget(self.output_directory_edit, irow, 1)
-        grid.addWidget(self.output_directory_browse, irow, 2)
+            (self.vl_label, self.vl_edit),
+            (self.vf_label, self.vf_edit),
+            (self.damping_required_label, self.damping_required_edit),
+            (self.damping_required_tol_label, self.damping_required_tol_edit),
+            (self.damping_label, self.damping_edit),
+            (self.eas_flutter_range_label, self.eas_flutter_range_edit_min, self.eas_flutter_range_edit_max),
+            # (self.eas_diverg_range_label, self.eas_diverg_range_edit_min, self.eas_diverg_range_edit_max),
+            (self.point_removal_label, self.point_removal_edit),
+            (self.mode_switch_method_label, self.mode_switch_method_pulldown),
+        ])
         self.output_directory_label.setDisabled(True)
         self.output_directory_edit.setDisabled(True)
         self.output_directory_browse.setDisabled(True)
@@ -1289,67 +1209,14 @@ class FlutterGui(LoggableGui):
         self.output_directory_label.setVisible(False)
         self.output_directory_edit.setVisible(False)
         self.output_directory_browse.setVisible(False)
-        irow += 1
 
-        grid.addWidget(self.vl_label, irow, 0)
-        grid.addWidget(self.vl_edit, irow, 1)
-        irow += 1
-
-        grid.addWidget(self.vf_label, irow, 0)
-        grid.addWidget(self.vf_edit, irow, 1)
-        irow += 1
-
-        grid.addWidget(self.damping_required_label, irow, 0)
-        grid.addWidget(self.damping_required_edit, irow, 1)
-        irow += 1
-
-        grid.addWidget(self.damping_required_tol_label, irow, 0)
-        grid.addWidget(self.damping_required_tol_edit, irow, 1)
-        irow += 1
-
-        grid.addWidget(self.damping_label, irow, 0)
-        grid.addWidget(self.damping_edit, irow, 1)
-        irow += 1
-
-        grid.addWidget(self.eas_flutter_range_label, irow, 0)
-        grid.addWidget(self.eas_flutter_range_edit_min, irow, 1)
-        grid.addWidget(self.eas_flutter_range_edit_max, irow, 2)
-        irow += 1
-
-        # grid.addWidget(self.eas_diverg_range_label, irow, 0)
-        # grid.addWidget(self.eas_diverg_range_edit_min, irow, 1)
-        # grid.addWidget(self.eas_diverg_range_edit_max, irow, 2)
-        # irow += 1
-
-        grid.addWidget(self.point_removal_label, irow, 0)
-        grid.addWidget(self.point_removal_edit, irow, 1)
-        irow += 1
-
-        grid.addWidget(self.mode_switch_method_label, irow, 0)
-        grid.addWidget(self.mode_switch_method_pulldown, irow, 1)
-        irow += 1
-
-        jrow = 0
-        grid_check = QGridLayout()
-        grid_check.addWidget(self.log_xscale_checkbox, jrow, 0)
-        grid_check.addWidget(self.log_yscale1_checkbox, jrow, 1)
-        grid_check.addWidget(self.log_yscale2_checkbox, jrow, 2)
-        jrow += 1
-
-        grid_check.addWidget(self.show_points_checkbox[ifile], jrow, 0)
-        grid_check.addWidget(self.show_mode_number_checkbox[ifile], jrow, 1)
-        grid_check.addWidget(self.show_detailed_mode_info_checkbox[ifile], jrow, 2)
-        jrow += 1
-        grid_check.addWidget(self.point_spacing_label[ifile], jrow, 0)
-        grid_check.addWidget(self.point_spacing_spinner[ifile], jrow, 1)
-        jrow += 1
-        grid_check.addWidget(self.include_rigid_body_modes_checkbox[ifile], jrow, 0)
-        grid_check.addWidget(self.number_rigid_body_modes_label[ifile], jrow, 1)
-        grid_check.addWidget(self.number_rigid_body_modes_spinner[ifile], jrow, 1)
-        jrow += 1
-        grid_check.addWidget(self.show_lines_checkbox[ifile], jrow, 0)
-        jrow += 1
-
+        grid_check = create_grid_from_list(parent, [
+            (self.log_xscale_checkbox, self.log_yscale1_checkbox, self.log_yscale2_checkbox),
+            (self.show_points_checkbox[ifile], self.show_mode_number_checkbox[ifile], self.show_detailed_mode_info_checkbox[ifile]),
+            (self.point_spacing_label[ifile], self.point_spacing_spinner[ifile]),
+            (self.include_rigid_body_modes_checkbox[ifile], self.number_rigid_body_modes_label[ifile], self.number_rigid_body_modes_spinner[ifile]),
+            (self.show_lines_checkbox[ifile],),
+        ])
         ok_cancel_hbox = QHBoxLayout()
         ok_cancel_hbox.addWidget(self.f06_load_button)
         ok_cancel_hbox.addWidget(self.run_button)
@@ -1701,10 +1568,11 @@ class FlutterGui(LoggableGui):
         damping_limit = self.damping  # % damping
         eas_flutter_range = self.eas_flutter_range
         # eas_diverg_range = self.eas_diverg_range
-        if damping_required_tol is None:
-            damping_required_tol = 0.01
-        if damping_required_tol < 0.0:
-            damping_required_tol = 0.0
+        if plot_type not in {'root-locus'}:
+            if damping_required_tol is None:
+                damping_required_tol = 0.01
+            if damping_required_tol < 0.0:
+                damping_required_tol = 0.0
 
         # changing directory so we don't make a long filename
         # in the plot header
