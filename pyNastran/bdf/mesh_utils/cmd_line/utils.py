@@ -1,3 +1,4 @@
+import sys
 import os
 import sys
 import argparse
@@ -25,7 +26,9 @@ def add_argparse_arguments(parser: argparse.ArgumentParser,
                            args: list[str]) -> None:
     # parent_parser.add_argument('--lax', action='store_false', help='lax card parser')
     for arg in args:
-        if arg == '--punch':
+        if arg == '--obj':
+            parser.add_argument('--obj', action='store_true', help='save the obj for reload')
+        elif arg == '--punch':
             parser.add_argument('--punch', action='store_true', help='assume a punch file')
         elif arg == '--lax':
             parser.add_argument('--lax', action='store_true', help='lax card parser')

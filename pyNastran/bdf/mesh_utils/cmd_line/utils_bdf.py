@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 import os
 import numpy as np
 
-# from cpylog import SimpleLogger
 if TYPE_CHECKING:
+    from pyNastran.utils import PathLike
     from pyNastran.bdf.bdf import BDF
 
 
@@ -31,7 +31,8 @@ def read_lax_bdf(bdf_filename: str,
     return model
 
 
-def read_lax_obj(bdf_filename, obj_filename, is_obj: bool,
+def read_lax_obj(bdf_filename: PathLike,
+                 obj_filename: PathLike, is_obj: bool,
                  xref: bool=True,
                  is_strict_card_parser: bool=True,
                  punch: bool=False,

@@ -26,6 +26,7 @@ from .create_flutter import cmd_line_create_flutter
 from .list_conm2 import cmd_line_list_conm2
 from .mirror import cmd_line_mirror
 from .solid_dof import cmd_line_solid_dof
+from .split_by_file import cmd_line_split_by_file
 from .delete_bad_shells import cmd_line_delete_bad_shells, SHELL_QUALITY
 from .remove_comments import cmd_line_remove_comments
 from .stats import cmd_line_stats
@@ -55,6 +56,7 @@ CMD_MAPS = {
     'list_conm2': cmd_line_list_conm2,
     'mass': cmd_line_mass,
     'export_mcids': cmd_line_export_mcids,
+    'split_by_file': cmd_line_split_by_file,
     'solid_dof': cmd_line_solid_dof,
     'remove_unused': cmd_line_remove_unused,
     'split_cbars_by_pin_flags': cmd_line_split_cbars_by_pin_flag,

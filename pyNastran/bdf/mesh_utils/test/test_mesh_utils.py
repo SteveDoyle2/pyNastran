@@ -11,6 +11,8 @@ from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 
+from pyNastran.bdf.mesh_utils.cmd_line.split_by_file import split_by_file
+
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
@@ -539,6 +541,45 @@ class TestMeshUtils(unittest.TestCase):
 
         bdf_filename = DIRNAME / 'test_structured_chexas.bdf'
         model.write_bdf(bdf_filename)
+
+    def test_bdf_split_by_file(self):
+        """tests ```bdf split_by_file```"""
+        log = SimpleLogger(level='warning')
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        bdf_filename_out = BWB_PATH / 'bwb_saero.split_file.bdf'
+        a_csv = BWB_PATH / 'fileA.csv'
+        b_csv = BWB_PATH / 'fileB.csv'
+        # c_csv = BWB_PATH / 'fileB.csv'
+        a_eids = [5544, 5545, 5546, 5547]
+        b_eids = [5548, 5549, 5550, 5551, 5552, 5553, ]
+        eid_filenames = [a_eids, b_eids]
+        with open(a_csv, 'w') as csv_file:
+            csv_file.write("""5544
+5545
+5546
+5547""")
+            with open(b_csv, 'w') as csv_file:
+                csv_file.write("""5548
+5549
+5550
+5551
+5552
+5553""")
+        args = ['bdf', 'split_by_file', bdf_filename,
+                a_csv, b_csv]
+        cmd_line(args, quiet=True)
+        model = read_bdf(bdf_filename, xref=False, log=log)
+        split_by_file(model, eid_filenames,
+                      # properties_to_skip=properties_to_skip,
+                      bdf_filename_out=bdf_filename_out,)
+
+        # model.log.level = 'info'
+        split_by_file(model, eid_filenames,
+                      properties_to_skip=['PCOMP'],
+                      bdf_filename_out=bdf_filename_out,)
+
+        for fname in [a_csv, b_csv, bdf_filename_out]
+            fname.unlink()
 
     def test_bdf_delete_bad_shells(self):
         """tests ```bdf delete_bad_shells```"""
