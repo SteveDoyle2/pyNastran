@@ -15,7 +15,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     msg = (
         'Usage:\n'
         '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--xref]'
-        ' [--aerobox] [--pid PID]\n'
+        ' [--aerobox] [--pid PID] [--skip_zero_check]\n'
         '  bdf export_caero_mesh -h | --help\n'
         '  bdf export_caero_mesh -v | --version\n'
         '\n'
@@ -30,6 +30,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
         '  -x, --xref                                flag to disable xref (default=False)\n'
         '  --aerobox                                 write the aeroboxes (default=False)\n'
         '  --pid PID                                 sets the pid; {aesurf, caero, paero} [default: aesurf]\n'
+        '  --skip_zero_check                         flag to skip W2GJ, WKK< etc. checks (default=True)\n'
         '\n'
 
         'Info:\n'
@@ -58,6 +59,8 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     if caero_bdf_filename is None:
         caero_bdf_filename = base + '.caero.bdf'
     is_aerobox_model = data['--aerobox']
+    skip_zero_check = data['--skip_zero_check']
+    # assert skip_zero_check, skip_zero_check
 
     pid_method = 'aesurf'
     if data['--pid']:
@@ -98,4 +101,5 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     export_caero_mesh(model, caero_bdf_filename,
                       is_aerobox_model=is_aerobox_model,
                       pid_method=pid_method,
-                      xref=xref)
+                      xref=xref,
+                      skip_zero_check=skip_zero_check)

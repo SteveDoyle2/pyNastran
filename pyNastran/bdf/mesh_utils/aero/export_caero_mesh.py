@@ -5,6 +5,7 @@ defines:
 """
 import os
 import math
+import warnings
 from typing import TextIO
 import numpy as np
 
@@ -21,7 +22,8 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
                       pid_method: str='aesurf',
                       rotate_panel_angle_deg: float=0.0,
                       write_panel_xyz: bool=True,
-                      xref: bool=True) -> None:
+                      xref: bool=True,
+                      skip_zero_check: bool=False) -> None:
     """
     Write the CAERO cards as CQUAD4s that can be visualized
 
@@ -44,6 +46,10 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
         $$  CAEROID      EID       XLE       YLE       ZLE     CHORD      SPAN   XLE+C/4
         $$        1        1    0.0000    0.2500    0.0000    0.0988    0.5000    0.0247
         $$        1        2    0.0988    0.2500    0.0000    0.0988    0.5000    0.1234
+    skip_zero_check : bool; default=False
+        if True, veriffies hat W2GJ, WKK, etc. are not empty
+        an empty WKK will result in no aero load
+        an empty W2GJ is also likely a bug
     """
     rotate_panel_angle = np.radians(rotate_panel_angle_deg)
 
@@ -88,7 +94,8 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
             iaerobox_ieid += 1
     log.debug(f'  naeroboxes = {len(aero_eid_map)}')
     _write_aero_csvs(model)
-    subcases, loads = _write_subcases_loads(model, aero_eid_map, is_aerobox_model)
+    subcases, loads = _write_subcases_loads(
+        model, aero_eid_map, is_aerobox_model, skip_zero_check)
     coords_to_write_dict = _get_coords_to_write_dict(model)
 
     eids_to_rotate_dict = {}
@@ -372,7 +379,8 @@ def _write_caero2_aerobox(bdf_file: TextIO, caero: CAERO2) -> None:
 
 def _write_subcases_loads(model: BDF,
                           aero_eid_map: dict[int, int],
-                          is_aerobox_model: bool) -> tuple[str, str]:
+                          is_aerobox_model: bool,
+                          skip_zero_check: bool) -> tuple[str, str]:
     """writes the DMI, DMIJ, DMIK cards to a series of load cases"""
     # naeroboxes = len(aero_eid_map)
     if len(model.dmi) == 0 and len(model.dmij) == 0 and len(model.dmik) == 0 and len(model.dmiji) == 0:
@@ -381,12 +389,17 @@ def _write_subcases_loads(model: BDF,
         return subcases, loads
 
     log = model.log
-    isubcase, loads, subcases = _write_dmi(model, aero_eid_map)
+    isubcase, loads, subcases = _write_dmi(
+        model, aero_eid_map, skip_zero_check)
 
     for name, dmij in model.dmij.items():
         data, rows, cols = dmij.get_matrix(is_sparse=False, apply_symmetry=True)
         if np.abs(data).max() == 0:
-            raise RuntimeError(f'abs max of DMIJ={name} is 0.0')
+            msg = f'abs max of DMIJ={name} is 0.0'
+            if skip_zero_check:
+                warnings.warn(msg)
+            else:
+                raise RuntimeError(msg)
         log.info(f'  {name}: shape={data.shape}')
         msg = f'{name}:\n'
         msg += str(data)
@@ -421,7 +434,11 @@ def _write_subcases_loads(model: BDF,
     for name, dmiji in model.dmiji.items():
         data, rows, cols = dmiji.get_matrix(is_sparse=False, apply_symmetry=True)
         if np.abs(data).max() == 0:
-            raise RuntimeError(f'abs max of DMIJI={name} is 0.0')
+            msg = f'abs max of DMIJI={name} is 0.0'
+            if skip_zero_check:
+                warnings.warn(msg)
+            else:
+                raise RuntimeError(msg)
         log.info(f'  {name}: shape={data.shape}')
         msg = f'{name}:\n'
         msg += str(data)
@@ -430,7 +447,11 @@ def _write_subcases_loads(model: BDF,
     for name, dmik in model.dmik.items():
         data, rows, cols = dmik.get_matrix(is_sparse=False, apply_symmetry=True)
         if np.abs(data).max() == 0:
-            raise RuntimeError(f'abs max of DMIK={name} is 0.0')
+            msg = f'abs max of DMIK={name} is 0.0'
+            if skip_zero_check:
+                warnings.warn(msg)
+            else:
+                raise RuntimeError(msg)
         log.info(f'  {name}: shape={data.shape}')
         msg = f'{name}:\n'
         msg += str(data)
@@ -511,7 +532,8 @@ def _write_subcases_loads(model: BDF,
 
 
 def _write_dmi(model: BDF,
-               aero_eid_map: dict[int, int]) -> tuple[int, str, str]:
+               aero_eid_map: dict[int, int],
+               skip_zero_check: bool) -> tuple[int, str, str]:
     """writes the DMI cards to a series of load cases"""
     naeroboxes = len(aero_eid_map)
     isubcase = 1
@@ -522,7 +544,11 @@ def _write_dmi(model: BDF,
         form_str = dmi.matrix_form_str
         data, rows, cols = dmi.get_matrix(is_sparse=False, apply_symmetry=True)
         if np.abs(data).max() == 0:
-            raise RuntimeError(f'abs max of DMI={name} is 0.0')
+            msg = f'abs max of DMI={name} is 0.0'
+            if skip_zero_check:
+                warnings.warn(msg)
+            else:
+                raise RuntimeError(msg)
         log.debug(f'  {name}: shape={data.shape}; form_str={form_str}')
 
         if name == 'WTFACT':
@@ -536,6 +562,10 @@ def _write_dmi(model: BDF,
             diag = data.diagonal()
             data = data.copy()
             np.fill_diagonal(data, 0.)
+            # if skip_zero_check:
+            #     warnings.warn(msg)
+            # else:
+            #     raise RuntimeError(msg)
             assert np.abs(data).max() == 0.0, 'WTFACT has cross terms'
 
             loads += f'$ {name} - FORCE\n'

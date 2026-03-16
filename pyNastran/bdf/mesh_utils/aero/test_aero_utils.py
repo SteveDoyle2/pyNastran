@@ -232,11 +232,11 @@ class TestMeshUtilsAero(unittest.TestCase):
         path = MODEL_PATH / 'aero'
         bdf_filename = str(path / 'cpmopt.bdf')
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf',
-                '--pid', 'caero', '--aerobox']
+                '--pid', 'caero', '--aerobox', '--skip_zero_check']
         cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf',
-                '--pid', 'caero']
+                '--pid', 'caero', '--skip_zero_check']
         cmd_line(argv=argv, quiet=True)
 
     def test_export_caero_mesh(self):
