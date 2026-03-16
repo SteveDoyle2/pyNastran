@@ -441,8 +441,8 @@ class Coord(VectorizedCard):
             #e2 = e123[0, :]
             #e3 = e123[1, :]
             #assert array_equal(e1, _e1), "e1=%s\n_e1=%s" % (e1, _e1)
-            #assert allclose(e2, _e2), "\n e2=%s\n_e2=%s\ndiff=%s" % (e2, _e2, e2 - _e2)
-            #assert allclose(e3, _e3), "\n e3=%s\n_e3=%s\ndiff=%s" % (e3, _e3, e3 - _e3)
+            #assert np.allclose(e2, _e2), "\n e2=%s\n_e2=%s\ndiff=%s" % (e2, _e2, e2 - _e2)
+            #assert np.allclose(e3, _e3), "\n e3=%s\n_e3=%s\ndiff=%s" % (e3, _e3, e3 - _e3)
 
             #e1 = (T @ self.spherical_to_rectangular(coord, coord.e1))
             #e2 = (T @ self.spherical_to_rectangular(coord, coord.e2))

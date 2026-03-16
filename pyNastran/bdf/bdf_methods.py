@@ -170,7 +170,7 @@ class BDFMethods(BDFAttributes):
 
         #gravity_i = self.loads[2][0]  ## .. todo:: hardcoded
         #gi = gravity_i.N * gravity_i.scale
-        #p0 = array([0., 0., 0.])  ## .. todo:: hardcoded
+        #p0 = np.array([0., 0., 0.])  ## .. todo:: hardcoded
         #mass, cg, I = mass_properties(self, reference_point=p0, sym_axis=None)
 
     def get_element_faces(self,

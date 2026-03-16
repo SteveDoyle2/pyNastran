@@ -9,6 +9,7 @@ defines:
 
 """
 from collections import defaultdict
+import numpy as np
 from numpy import array, allclose, unique, zeros
 from pyNastran.bdf.bdf import read_bdf
 
@@ -196,10 +197,10 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
         #for nid, xyz in enumerate(xyz_array):
             #for nidi, xyz2 in enumerate(xyz_array[nid+1:, :]):
                 #nid2 = nid + nidi + 1
-                #if not allclose(nid + 1, nid2 + 1):
+                #if not np.allclose(nid + 1, nid2 + 1):
                     #msg = 'nid=%s nid2=%s xyz=%s' % (nid+1, nid2+1, xyz)
                     #raise RuntimeError(msg)
-                #if allclose(xyz, xyz2):
+                #if np.allclose(xyz, xyz2):
                     ##print(nid, nid2, nidi)
                     ##if nid + 1 in node_remaps:
 
@@ -242,7 +243,7 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
             raise RuntimeError('node %i is duplicated (equivalence your nodes)'
                                ' or you have unused nodes' % nid)
 
-        if not allclose(avg_node_flagsi, max_node_flagsi):
+        if not np.allclose(avg_node_flagsi, max_node_flagsi):
             eidsi = unique(nid_to_eid_map[nid])
             pidsi = unique([model.elements[eid].Pid() for eid in eidsi])
             pidsi.sort()

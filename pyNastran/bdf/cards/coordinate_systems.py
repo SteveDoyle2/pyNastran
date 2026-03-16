@@ -49,7 +49,7 @@ if TYPE_CHECKING:  # pragma: no cover
 def global_to_basic_rectangular(coord, unused_xyz_global, dtype='float64'):
     coord_transform = coord.local_to_global
     return coord_transform
-    #transform = array([ex, ey, ez], dtype=dtype)
+    #transform = np.array([ex, ey, ez], dtype=dtype)
     #return transform
 
 
@@ -114,7 +114,7 @@ def normalize(v: np.ndarray) -> np.ndarray:
     .. math:: v_{norm} = \frac{v}{\lvert v \lvert}
 
     """
-    norm_v = norm(v)
+    norm_v = np.linalg.norm(v)
     if not norm_v > 0.:
         raise RuntimeError('v=%s norm(v)=%s' % (v, norm_v))
     return v / norm_v
@@ -388,9 +388,9 @@ class CoordBase(BaseCard):
             #print("e13 = %s" % (e13))
             #print("e12 = %s" % (e12))
             #print('-----')
-            #print("i   = %s len=%s"   % (str(self.i), norm(self.i)))
-            #print("j   = %s len=%s"   % (str(self.j), norm(self.j)))
-            #print("k   = %s len=%s\n" % (str(self.k), norm(self.k)))
+            #print("i   = %s len=%s"   % (str(self.i), np.linalg.norm(self.i)))
+            #print("j   = %s len=%s"   % (str(self.j), np.linalg.norm(self.j)))
+            #print("k   = %s len=%s\n" % (str(self.k), np.linalg.norm(self.k)))
             #print('-----')
         #print('done setting up cid=%s rid=%s' % (self.cid, self.Rid()))
         #print('cid=%s rid_trace=%s' % (self.cid, self.rid_trace))
@@ -1158,43 +1158,43 @@ def define_coord_e123(model: BDF, cord2_type: str, cid: int,
 
     if xyplane is not None:
         if xaxis is not None:
-            i = xaxis / norm(xaxis)
+            i = xaxis / np.linalg.norm(xaxis)
             khat = np.cross(i, xyplane)  # xyplane is "defining" yaxis
-            k = khat / norm(khat)
+            k = khat / np.linalg.norm(khat)
             j = np.cross(k, i)
         elif yaxis is not None:
-            j = yaxis / norm(yaxis)
+            j = yaxis / np.linalg.norm(yaxis)
             khat = np.cross(xyplane, j)  # xyplane is "defining" xaxis
-            k = khat / norm(khat)
+            k = khat / np.linalg.norm(khat)
             i = np.cross(j, k)
         else:  # pragma: no cover
             raise RuntimeError('for xyplane, xaxis or yaxis must be defined')
 
     elif yzplane is not None:
         if yaxis is not None:
-            j = yaxis / norm(yaxis)
+            j = yaxis / np.linalg.norm(yaxis)
             ihat = np.cross(j, yzplane)  # yzplane is "defining" zaxis
-            i = ihat / norm(ihat)
+            i = ihat / np.linalg.norm(ihat)
             k = np.cross(i, j)
         elif zaxis is not None:
-            k = zaxis / norm(zaxis)
+            k = zaxis / np.linalg.norm(zaxis)
             ihat = np.cross(yzplane, zaxis)  # yzplane is "defining" yaxis
-            i = ihat / norm(ihat)
+            i = ihat / np.linalg.norm(ihat)
             j = np.cross(k, i)
         else:  # pragma: no cover
             raise RuntimeError('for yzplane, yaxis or zaxis must be defined')
 
     elif xzplane is not None:
         if xaxis is not None:
-            i = xaxis / norm(xaxis)
+            i = xaxis / np.linalg.norm(xaxis)
             jhat = np.cross(xzplane, i)  # xzplane is "defining" zaxis
-            j = jhat / norm(jhat)
+            j = jhat / np.linalg.norm(jhat)
             k = np.cross(i, j)
         elif zaxis is not None:
             # standard
-            k = zaxis / norm(zaxis)
+            k = zaxis / np.linalg.norm(zaxis)
             jhat = np.cross(k, xzplane)  # xzplane is "defining" xaxis
-            j = jhat / norm(jhat)
+            j = jhat / np.linalg.norm(jhat)
             i = np.cross(j, k)
         else:  # pragma: no cover
             raise RuntimeError('for xzplane, xaxis or zaxis must be defined')
@@ -2003,39 +2003,39 @@ class Cord2x(CoordBase):
         #
         # if xyplane is not None:
         #     if xaxis is not None:
-        #         i = xaxis / norm(xaxis)
+        #         i = xaxis / np.linalg.norm(xaxis)
         #         khat = np.cross(i, xyplane)  # xyplane is "defining" yaxis
-        #         k = khat / norm(khat)
+        #         k = khat / np.linalg.norm(khat)
         #         j = np.cross(k, i)
         #     elif yaxis is not None:
-        #         j = yaxis / norm(yaxis)
+        #         j = yaxis / np.linalg.norm(yaxis)
         #         khat = np.cross(xyplane, j)  # xyplane is "defining" xaxis
-        #         k = khat / norm(khat)
+        #         k = khat / np.linalg.norm(khat)
         #         i = np.cross(j, k)
         #
         # elif yzplane is not None:
         #     if yaxis is not None:
-        #         j = yaxis / norm(yaxis)
+        #         j = yaxis / np.linalg.norm(yaxis)
         #         ihat = np.cross(j, yzplane)  # yzplane is "defining" zaxis
-        #         i = ihat / norm(ihat)
+        #         i = ihat / np.linalg.norm(ihat)
         #         k = np.cross(i, j)
         #     elif zaxis is not None:
-        #         k = zaxis / norm(zaxis)
+        #         k = zaxis / np.linalg.norm(zaxis)
         #         ihat = np.cross(yzplane, zaxis)  # yzplane is "defining" yaxis
-        #         i = ihat / norm(ihat)
+        #         i = ihat / np.linalg.norm(ihat)
         #         j = np.cross(k, i)
         #
         # elif xzplane is not None:
         #     if xaxis is not None:
-        #         i = xaxis / norm(xaxis)
+        #         i = xaxis / np.linalg.norm(xaxis)
         #         jhat = np.cross(xzplane, i)  # xzplane is "defining" zaxis
-        #         j = jhat / norm(jhat)
+        #         j = jhat / np.linalg.norm(jhat)
         #         k = np.cross(i, j)
         #     elif zaxis is not None:
         #         # standard
-        #         k = zaxis / norm(zaxis)
+        #         k = zaxis / np.linalg.norm(zaxis)
         #         jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
-        #         j = jhat / norm(jhat)
+        #         j = jhat / np.linalg.norm(jhat)
         #         i = np.cross(j, k)
         # return cls.add_ijk(cid, origin, i, j, k, rid=rid, comment=comment)
 

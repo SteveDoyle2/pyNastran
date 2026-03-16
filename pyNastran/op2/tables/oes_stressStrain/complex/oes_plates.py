@@ -134,7 +134,7 @@ class ComplexPlateArray(OES_Object):
 
         # TODO: could be more efficient by using nelements for cid
         self.element_node = np.zeros((nelement_nodes, 2), dtype=idtype)
-        #self.element_cid = zeros((self.nelements, 2), 'int32')
+        #self.element_cid = np.zeros((self.nelements, 2), 'int32')
         #print(self.data.shape, self.element_node.shape)
 
     def build_dataframe(self) -> None:

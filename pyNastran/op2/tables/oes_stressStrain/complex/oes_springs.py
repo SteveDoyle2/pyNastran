@@ -66,11 +66,11 @@ class ComplexSpringDamperArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         idtype, cfdtype = get_complex_times_dtype(self.size)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype=idtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(self.nelements, dtype=idtype)
 
         #[spring_stress]
-        self.data = zeros((self.ntimes, self.ntotal, 1), dtype=cfdtype)
+        self.data = np.zeros((self.ntimes, self.ntotal, 1), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -125,9 +125,9 @@ class ComplexSpringDamperArray(OES_Object):
         return data_code
 
     @classmethod
-    def add_freq_case(cls, table_name, element, data, isubcase,
+    def add_freq_case(cls, table_name, element_name: str,
+                      element, data, isubcase,
                       freqs,
-                      element_name: str,
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
         data_code = cls._add_case(

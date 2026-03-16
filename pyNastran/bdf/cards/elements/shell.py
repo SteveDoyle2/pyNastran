@@ -26,7 +26,6 @@ from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
-from numpy import cross, allclose
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -104,7 +103,7 @@ def _triangle_area_centroid_normal(nodes, card):
         msg += '\n  %s\n  %s\n  %s' % (n1.tolist(), n2.tolist(), n3.tolist())
         raise RuntimeError(msg)
 
-    if not allclose(norm(normal), 1.):
+    if not np.allclose(np.linalg.norm(normal), 1.):
         msg = ('function _triangle_area_centroid_normal, check...\n'
                f'a = {n1 - n2}\n'
                f'b = {n1 - n3}\n'
@@ -121,7 +120,7 @@ def _normal(a, b):
     """Finds the unit normal vector of 2 vectors"""
     vector = np.cross(a, b)
     normal = vector / np.linalg.norm(vector)
-    if not allclose(np.linalg.norm(normal), 1.):
+    if not np.allclose(np.linalg.norm(normal), 1.):
         msg = ('function _normal, check...\n'
                f'a = {a}\nb = {b}\nnormal = {normal}\n')
         raise RuntimeError(msg)
@@ -133,8 +132,8 @@ def _normal4(n1, n2, n3, n4, card):
     a = n1 - n3
     b = n2 - n4
     vector = np.cross(a, b)
-    normal = vector / norm(vector)
-    if not allclose(norm(normal), 1.):
+    normal = vector / np.linalg.norm(vector)
+    if not np.allclose(np.linalg.norm(normal), 1.):
         msg = ('function _normal4, check...\n'
                f'a = {a}\nb = {b}\nnormal = {normal}\n{card}')
         raise RuntimeError(msg)
@@ -328,7 +327,7 @@ class TriShell(ShellElement):
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         a = n1 - n2
         b = n1 - n3
-        area = 0.5 * norm(cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         return area
 
     def Normal(self):
@@ -1358,7 +1357,7 @@ class CTRIA6(TriShell):
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         a = n1 - n2
         b = n1 - n3
-        area = 0.5 * norm(cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         return area
 
     def Normal(self):
@@ -1840,7 +1839,7 @@ class QuadShell(ShellElement):
         """
         nodes_ref = self.nodes_ref[:4]
         n1, n2, n3, n4 = self.get_node_positions(nodes=nodes_ref)
-        area = 0.5 * norm(cross(n3-n1, n4-n2))
+        area = 0.5 * np.linalg.norm(np.cross(n3-n1, n4-n2))
         centroid = (n1 + n2 + n3 + n4) / 4.
         return area, centroid
 
@@ -1867,7 +1866,7 @@ class QuadShell(ShellElement):
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
         (n1, n2, n3, n4) = self.get_node_positions(nodes=self.nodes_ref[:4])
-        area = 0.5 * norm(cross(n3-n1, n4-n2))
+        area = 0.5 * np.linalg.norm(np.cross(n3-n1, n4-n2))
         return area
 
     def Area_no_xref(self, model):
@@ -1875,7 +1874,7 @@ class QuadShell(ShellElement):
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
         (n1, n2, n3, n4) = self.get_node_positions_no_xref(model, nodes=self.nodes[:4])
-        area = 0.5 * norm(cross(n3-n1, n4-n2))
+        area = 0.5 * np.linalg.norm(np.cross(n3-n1, n4-n2))
         return area
 
     def flip_normal(self):
@@ -2179,11 +2178,11 @@ class CSHEAR(QuadShell):
         (n1, n2, n3, n4) = self.get_node_positions()
         a = n1 - n2
         b = n2 - n4
-        area1 = 0.5 * norm(cross(a, b))
+        area1 = 0.5 * np.linalg.norm(np.cross(a, b))
 
         a = n2 - n4
         b = n2 - n3
-        area2 = 0.5 * norm(cross(a, b))
+        area2 = 0.5 * np.linalg.norm(np.cross(a, b))
 
         area = area1 + area2
         centroid = (n1 + n2 + n3 + n4) / 4.
@@ -2228,7 +2227,7 @@ class CSHEAR(QuadShell):
         (n1, n2, n3, n4) = self.get_node_positions()
         a = n1 - n3
         b = n2 - n4
-        area = 0.5 * norm(cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         return area
 
     def flip_normal(self):
@@ -3522,7 +3521,7 @@ class CPLSTx6(TriShell):
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         a = n1 - n2
         b = n1 - n3
-        area = 0.5 * norm(cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         return area
 
     def Normal(self):
@@ -3788,12 +3787,12 @@ class CPLSTx8(QuadShell):
         n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
         a = n1 - n2
         b = n2 - n4
-        area1 = 0.5 * norm(cross(a, b))
+        area1 = 0.5 * np.linalg.norm(np.cross(a, b))
         c1 = (n1 + n2 + n4) / 3.
 
         a = n2 - n4
         b = n2 - n3
-        area2 = 0.5 * norm(cross(a, b))
+        area2 = 0.5 * np.linalg.norm(np.cross(a, b))
         c2 = (n2 + n3 + n4) / 3.
 
         area = area1 + area2
@@ -3807,7 +3806,7 @@ class CPLSTx8(QuadShell):
         n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
         a = n1 - n3
         b = n2 - n4
-        area = 0.5 * norm(cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         return area
 
     def Mass(self) -> float:
@@ -4567,7 +4566,7 @@ class CQUAD(QuadShell):
         n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
         a = n1 - n3
         b = n2 - n4
-        area = 0.5 * norm(cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         return area
 
     def Mass(self) -> float:
@@ -4910,12 +4909,12 @@ class CQUAD8(QuadShell):
         n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
         a = n1 - n2
         b = n2 - n4
-        area1 = 0.5 * norm(cross(a, b))
+        area1 = 0.5 * np.linalg.norm(np.cross(a, b))
         c1 = (n1 + n2 + n4) / 3.
 
         a = n2 - n4
         b = n2 - n3
-        area2 = 0.5 * norm(cross(a, b))
+        area2 = 0.5 * np.linalg.norm(np.cross(a, b))
         c2 = (n2 + n3 + n4) / 3.
 
         area = area1 + area2
@@ -4929,7 +4928,7 @@ class CQUAD8(QuadShell):
         n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
         a = n1 - n3
         b = n2 - n4
-        area = 0.5 * norm(cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         return area
 
     @property

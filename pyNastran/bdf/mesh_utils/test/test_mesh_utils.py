@@ -578,7 +578,7 @@ class TestMeshUtils(unittest.TestCase):
                       properties_to_skip=['PCOMP'],
                       bdf_filename_out=bdf_filename_out,)
 
-        for fname in [a_csv, b_csv, bdf_filename_out]
+        for fname in [a_csv, b_csv, bdf_filename_out]:
             fname.unlink()
 
     def test_bdf_delete_bad_shells(self):

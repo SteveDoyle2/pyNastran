@@ -619,7 +619,7 @@ class RealPlateArray(OES_Object):
 
     def eid_to_element_node_index(self, eids):
         ind = np.ravel([np.searchsorted(self.element_node[:, 0] == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
+        #ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind

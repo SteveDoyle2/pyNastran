@@ -3,7 +3,6 @@ import unittest
 from pathlib import Path
 from io import StringIO
 import numpy as np
-from numpy import allclose, array
 from cpylog import SimpleLogger
 
 import pyNastran
@@ -137,7 +136,7 @@ class TestBDFUnit(Tester):
 
         # way harder to prove than the cquad4 version...we're kinda relying on the
         # PLOAD vs. PLOAD2 vs. PLOAD4 comparison
-        expected_forces = array([
+        expected_forces = np.array([
             [0., 0., 0.6666667 ],
             [0., 0., 0.6666667 ],
             [0., 0., 0.16666667],
@@ -216,7 +215,7 @@ class TestBDFUnit(Tester):
         expected_pressures = [2., 1., 0.]
         #expected_moments = []
         #expected_spcd = []
-        expected_forces = array([
+        expected_forces = np.array([
             [0.  , 0.  , 0.5 ],
             [0.  , 0.  , 0.75],
             [0.  , 0.  , 0.25],
@@ -379,10 +378,10 @@ class TestBDFUnit(Tester):
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
         mass, cg, unused_I = mass_properties(fem1)
 
-        assert allclose(mass, 6.0), 'mass = %s' % mass
-        cg_exact = array([0.5, 1., 1.5])
+        assert np.allclose(mass, 6.0), 'mass = %s' % mass
+        cg_exact = np.array([0.5, 1., 1.5])
         for i, (cgi, cgie) in enumerate(zip(cg, cg_exact)):
-            assert allclose(cgi, cgie), 'i=%s cg=%s' % (i, str(cg))
+            assert np.allclose(cgi, cgie), 'i=%s cg=%s' % (i, str(cg))
 
         compare_mass_cg_inertia(fem1)
         compare_mass_cg_inertia(fem1, reference_point=None)

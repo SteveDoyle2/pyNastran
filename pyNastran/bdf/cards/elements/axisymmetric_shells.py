@@ -223,7 +223,7 @@ class CTRAX3(AxisymmetricTri):
         (n1, n2, n3) = self.get_node_positions()
         a = n1 - n2
         b = n1 - n3
-        area = 0.5 * norm(np.cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         return area
 
     def cross_reference(self, model: BDF) -> None:
@@ -401,7 +401,7 @@ class CTRAX6(AxisymmetricTri):
         (n1, n2, n3) = self.get_node_positions(nodes=self.nodes[:3])
         a = n1 - n2
         b = n1 - n3
-        area = 0.5 * norm(np.cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         return area
 
     def cross_reference(self, model: BDF) -> None:
@@ -595,7 +595,7 @@ class CTRIAX(AxisymmetricTri):
         (n1, n2, n3) = self.get_node_positions(nodes=self.nodes_ref[:3])
         a = n1 - n2
         b = n1 - n3
-        area = 0.5 * norm(np.cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         return area
 
     def cross_reference(self, model: BDF) -> None:
@@ -818,7 +818,7 @@ class CTRIAX6(TriShell):
         (n1, unused_n2, n3, unused_n4, n5, unused_n6) = self.get_node_positions()
         a = n1 - n3
         b = n1 - n5
-        area = 0.5 * norm(np.cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         return area
 
     def Centroid(self):

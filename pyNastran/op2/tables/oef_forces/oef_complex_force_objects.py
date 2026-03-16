@@ -91,11 +91,11 @@ class ComplexRodForceArray(ComplexForceObject):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         idtype, cfdtype = get_complex_times_dtype(self.size)
 
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype=idtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(self.nelements, dtype=idtype)
 
         #[axial_force, torque]
-        self.data = zeros((self.ntimes, self.ntotal, 2), dtype=cfdtype)
+        self.data = np.zeros((self.ntimes, self.ntotal, 2), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -118,6 +118,7 @@ class ComplexRodForceArray(ComplexForceObject):
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
         num_wide = 5
+        assert isinstance(element_name, str), f'element_name={element_name} and should be a string; type={str(type(element_name))}'
         data_code = oef_complex_data_code(
             table_name,
             element_name, num_wide,
@@ -169,7 +170,7 @@ class ComplexRodForceArray(ComplexForceObject):
                     (axial1, torque1) = t1
                     (axial2, torque2) = t2
 
-                    if not allclose(t1, t2):
+                    if not np.allclose(t1, t2):
                         msg += '(%s)    (%s, %s)  (%s, %s)\n' % (
                             eid,
                             axial1, torque1,
@@ -253,12 +254,12 @@ class ComplexRodForceArray(ComplexForceObject):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  # [0]
+        itot = np.searchsorted(eids, self.element)  # [0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        ind = searchsorted(eids, self.element)
+        #ind = np.ravel([np.searchsorted(self.element == eid) for eid in eids])
+        ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind
@@ -428,13 +429,13 @@ class ComplexCShearForceArray(BaseElement):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         idtype, cfdtype = get_complex_times_dtype(self.size)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype=idtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(self.nelements, dtype=idtype)
 
         #[force41, force14, force21, force12, force32, force23, force43, force34,
         #kick_force1, kick_force2, kick_force3, kick_force4,
         #shear12, shear23, shear34, shear41]
-        self.data = zeros((self.ntimes, self.ntotal, 16), dtype=cfdtype)
+        self.data = np.zeros((self.ntimes, self.ntotal, 16), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -507,7 +508,7 @@ class ComplexCShearForceArray(BaseElement):
                      kick_force1b, kick_force2b, kick_force3b, kick_force4b,
                      shear12b, shear23b, shear34b, shear41b) = t2
 
-                    if not allclose(t1, t2):
+                    if not np.allclose(t1, t2):
                         msg += (
                             '%s   (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
                             '     (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
@@ -718,11 +719,11 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         idtype, cfdtype = get_complex_times_dtype(self.size)
 
         ntimes, nelements, ntotal = get_sort_element_sizes(self)
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(nelements, dtype=idtype)
 
         #[axial_force,]
-        self.data = zeros((ntimes, ntotal, 1), dtype=cfdtype)
+        self.data = np.zeros((ntimes, ntotal, 1), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -801,7 +802,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
                     t1 = self.data[itime, ielem, 0]
                     t2 = table.data[itime, ielem, 0]
 
-                    if not allclose([t1.real, t1.imag], [t2.real, t2.imag], atol=0.0001):
+                    if not np.allclose([t1.real, t1.imag], [t2.real, t2.imag], atol=0.0001):
                         msg += '%s    (%s, %s)  (%s, %s)\n' % (
                             eid,
                             t1.real, t1.imag,
@@ -913,12 +914,12 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
 
     #def get_element_index(self, eids):
         ## elements are always sorted; nodes are not
-        #itot = searchsorted(eids, self.element)  #[0]
+        #itot = np.searchsorted(eids, self.element)  #[0]
         #return itot
 
     #def eid_to_element_node_index(self, eids):
-        ##ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
+        ##ind = np.ravel([np.searchsorted(self.element == eid) for eid in eids])
+        #ind = np.searchsorted(eids, self.element)
         ##ind = ind.reshape(ind.size)
         ##ind.sort()
         #return ind
@@ -1093,11 +1094,11 @@ class ComplexViscForceArray(BaseElement):
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype='int32')
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(self.nelements, dtype='int32')
 
         #[axial_force, torque]
-        self.data = zeros((self.ntimes, self.ntotal, 2), dtype='complex64')
+        self.data = np.zeros((self.ntimes, self.ntotal, 2), dtype='complex64')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -1131,7 +1132,7 @@ class ComplexViscForceArray(BaseElement):
                     (axial1, torque1) = t1
                     (axial2, torque2) = t2
 
-                    if not allclose(t1, t2):
+                    if not np.allclose(t1, t2):
                         msg += '(%s)    (%s, %s)  (%s, %s)\n' % (
                             eid,
                             axial1, torque1,
@@ -1217,12 +1218,12 @@ class ComplexViscForceArray(BaseElement):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
+        itot = np.searchsorted(eids, self.element)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        ind = searchsorted(eids, self.element)
+        #ind = np.ravel([np.searchsorted(self.element == eid) for eid in eids])
+        ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind
@@ -1318,8 +1319,8 @@ class ComplexPlateForceArray(ComplexForceObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         idtype, cfdtype = get_complex_times_dtype(self.size)
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(nelements, dtype=idtype)
 
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.data = np.full((ntimes, ntotal, 8), np.nan, dtype=cfdtype)
@@ -1369,7 +1370,7 @@ class ComplexPlateForceArray(ComplexForceObject):
                     (mx1, my1, mxy1, bmx1, bmy1, bmxy1, tx1, ty1) = t1
                     (mx2, my2, mxy2, bmx2, bmy2, bmxy2, tx2, ty2) = t2
 
-                    if not allclose(t1, t2):
+                    if not np.allclose(t1, t2):
                     #if not np.array_equal(t1.real, t2.real):
                         msg += ('%-8s (%s, %s, %s, %s, %s, %s, %s, %s)\n'
                                 '%-8s (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
@@ -1494,12 +1495,12 @@ class ComplexPlateForceArray(ComplexForceObject):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
+        itot = np.searchsorted(eids, self.element)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        ind = searchsorted(eids, self.element)
+        #ind = np.ravel([np.searchsorted(self.element == eid) for eid in eids])
+        ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind
@@ -1710,7 +1711,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
 
         self._times = empty_array(ntimes, dtype=self.analysis_fmt)
         self.element = np.full(nelements, -1, dtype=idtype)
-        self.element_node = zeros((ntotal, 2), dtype=idtype)
+        self.element_node = np.zeros((ntotal, 2), dtype=idtype)
 
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.data = np.full((ntimes, ntotal, 8), np.nan, dtype=cfdtype)
@@ -1774,7 +1775,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
                     (mx1, my1, mxy1, bmx1, bmy1, bmxy1, tx1, ty1) = t1
                     (mx2, my2, mxy2, bmx2, bmy2, bmxy2, tx2, ty2) = t2
 
-                    if not allclose(t1, t2):
+                    if not np.allclose(t1, t2):
                         base1 = '(%s, %s)   ' % (eid, nid)
                         base2 = ' ' * len(base1)
                         msg += (
@@ -1961,12 +1962,12 @@ class ComplexPlate2ForceArray(ComplexForceObject):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
+        itot = np.searchsorted(eids, self.element)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        ind = searchsorted(eids, self.element)
+        #ind = np.ravel([np.searchsorted(self.element == eid) for eid in eids])
+        ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind
@@ -2195,7 +2196,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         idtype, cfdtype = get_complex_times_dtype(self.size)
         self._times = empty_array(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(ntotal, dtype=idtype)
+        self.element = np.zeros(ntotal, dtype=idtype)
 
         # the number is messed up because of the offset for the element's properties
 
@@ -2237,7 +2238,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
                         (s1a1, s2a1, s3a1, s4a1, axial1, s2a1, s2b1, s2c1, s2d1) = t1
                         (s1a2, s2a2, s3a2, s4a2, axial2, s2a2, s2b2, s2c2, s2d2) = t2
                         #d = t1 - t2
-                        if not allclose([s1a1.real, s2a1.real, s3a1.real, s4a1.real, axial1.real, s2a1.real, s2b1.real, s2c1.real, s2d1.real],
+                        if not np.allclose([s1a1.real, s2a1.real, s3a1.real, s4a1.real, axial1.real, s2a1.real, s2b1.real, s2c1.real, s2d1.real],
                                         [s1a2.real, s2a2.real, s3a2.real, s4a2.real, axial2.real, s2a2.real, s2b2.real, s2c2.real, s2d2.real], atol=0.0001):
                         #if not np.array_equal(t1, t2):
                             msg += '%-4s  (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n      (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
@@ -2571,9 +2572,9 @@ class ComplexCBeamForceArray(ComplexForceObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         idtype, cfdtype = get_complex_times_dtype(self.size)
-        self._times = zeros(self.ntimes, self.analysis_fmt)
-        self.element = zeros(self.ntotal, idtype)
-        self.element_node = zeros((self.ntotal, 2), idtype)
+        self._times = np.zeros(self.ntimes, self.analysis_fmt)
+        self.element = np.zeros(self.ntotal, idtype)
+        self.element_node = np.zeros((self.ntotal, 2), idtype)
 
         # the number is messed up because of the offset for the element's properties
 
@@ -2582,7 +2583,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
                 #self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
             #raise RuntimeError(msg)
         #[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
-        self.data = zeros((self.ntimes, self.ntotal, 8), cfdtype)
+        self.data = np.zeros((self.ntimes, self.ntotal, 8), cfdtype)
 
     def finalize(self):
         sd = self.data[0, :, 0].real
@@ -2652,7 +2653,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
                         (sd1, bm11, bm21, shear11, shear21, axial1, total_torque1, warp_torque1) = t1
                         (sd2, bm12, bm22, shear12, shear22, axial2, total_torque2, warp_torque2) = t2
                         d = t1 - t2
-                        if not allclose(t1, t2, atol=atol):
+                        if not np.allclose(t1, t2, atol=atol):
                             msg += (
                                 '%-4s  (%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n'
                                 '      (%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n'
@@ -2999,12 +3000,12 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element_node = zeros((self.nelements, 3), dtype='int32')
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        self.element_node = np.zeros((self.nelements, 3), dtype='int32')
 
         #[bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a
         # bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b]
-        self.data = zeros((self.ntimes, self.nelements, 12), dtype='complex64')
+        self.data = np.zeros((self.ntimes, self.nelements, 12), dtype='complex64')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -3057,7 +3058,7 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
                     (bending_moment_1a2, bending_moment_2a2, shear_1a2, shear_2a2, axial_a2, torque_a2,
                      bending_moment_1b2, bending_moment_2b2, shear_1b2, shear_2b2, axial_b2, torque_b2) = t2
 
-                    if not allclose(t1, t2):
+                    if not np.allclose(t1, t2):
                         msg += '(%s)    (%s, %s)  (%s, %s)\n' % (
                             eid,
                             bending_moment_1a1.real,
@@ -3070,7 +3071,7 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
                             print(msg)
                             raise ValueError(msg)
 
-                    #if not allclose(t1, t2):
+                    #if not np.allclose(t1, t2):
                         #msg += '(%s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                             #eid,
                             #bending_moment_1a1, bending_moment_2a1, shear_1a1, shear_2a1, axial_a1, torque_a1,
@@ -3269,11 +3270,11 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         idtype, cfdtype = get_complex_times_dtype(self.size)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype=idtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(self.nelements, dtype=idtype)
 
         #[ax, ay, az, vx, vy, vz, pressure]
-        self.data = zeros((self.ntimes, self.ntotal, 7), dtype=cfdtype)
+        self.data = np.zeros((self.ntimes, self.ntotal, 7), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -3310,7 +3311,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
                     (ax2, ay2, az2, vx2, vy2, vz2, pressure2) = t2
                     #rpressure1 = pressure1.real
                     #rpressure2 = pressure2.real
-                    if not allclose([ax1, ay1, az1, vx1, vy1, vz1],
+                    if not np.allclose([ax1, ay1, az1, vx1, vy1, vz1],
                                     [ax2, ay2, az2, vx2, vy2, vz2]):
                         msg += '%s    (%s, %s)  (%s, %s)\n' % (
                             eid,
@@ -3403,12 +3404,12 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
 
     #def get_element_index(self, eids):
         ## elements are always sorted; nodes are not
-        #itot = searchsorted(eids, self.element)  #[0]
+        #itot = np.searchsorted(eids, self.element)  #[0]
         #return itot
 
     #def eid_to_element_node_index(self, eids):
-        ##ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
+        ##ind = np.ravel([searchsorted(self.element == eid) for eid in eids])
+        #ind = np.searchsorted(eids, self.element)
         ##ind = ind.reshape(ind.size)
         ##ind.sort()
         #return ind
@@ -3627,8 +3628,8 @@ class ComplexForceMomentArray(ComplexForceObject):
             ntotal = self.ntimes
             #print(f'CBUSH SORT2: ntimes={ntimes} ntotal={ntotal}')
         idtype, cfdtype = get_complex_times_dtype(self.size)
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(ntotal, dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(ntotal, dtype=idtype)
 
         # the number is messed up because of the offset for the element's properties
         if self.nelements * nnodes != self.ntotal:
@@ -3636,7 +3637,7 @@ class ComplexForceMomentArray(ComplexForceObject):
                 self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
             raise RuntimeError(msg)
         #[fx, fy, fz, mx, my, mz]
-        self.data = zeros((ntimes, ntotal, 6), dtype=cfdtype)
+        self.data = np.zeros((ntimes, ntotal, 6), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -3671,7 +3672,7 @@ class ComplexForceMomentArray(ComplexForceObject):
                         (tx1, ty1, tz1, rx1, ry1, rz1) = t1
                         (tx2, ty2, tz2, rx2, ry2, rz2) = t2
                         d = t1 - t2
-                        if not allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
+                        if not np.allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
                                         [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
                         #if not np.array_equal(t1, t2):
                             msg += '%-4s  (%s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (

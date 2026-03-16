@@ -192,7 +192,7 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
         self.data = append_sort1_sort2(self.data, result.data)
         #print(self._times)
         #print(result._times)
-        # self._times = hstack([self._times, result._times])
+        # self._times = np.hstack([self._times, result._times])
         self.node_gridtype = np.vstack([self.node_gridtype, result.node_gridtype])
         #print('%s' % ''.join(self.get_stats()))
 

@@ -3,7 +3,6 @@ from pathlib import Path
 import unittest
 
 import numpy as np
-from numpy import allclose
 from cpylog import SimpleLogger
 
 from pyNastran.bdf.cards.elements.mass import CONM2
@@ -199,7 +198,7 @@ class TestConvert(unittest.TestCase):
         assert gravity_scale == 1./12., gravity_scale
         wtmass = 1. / (32.174 * 12.)
         wtmass_expected = 1. / 32.174
-        assert allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass, wtmass_expected)
+        assert np.allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass, wtmass_expected)
 
         xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
             ['mm', 'Mg', 's'], ['m', 'kg', 's'], log)
@@ -214,11 +213,11 @@ class TestConvert(unittest.TestCase):
         assert xyz_scale == 0.3048
         assert mass_scale == 0.45359237, mass_scale
         assert time_scale == 1.
-        assert allclose(weight_scale, 4.4482216526), weight_scale
-        assert allclose(gravity_scale, 1/32.174), 'gravity_scale=%s 1/expected=%s' % (gravity_scale, 1/32.2)
+        assert np.allclose(weight_scale, 4.4482216526), weight_scale
+        assert np.allclose(gravity_scale, 1/32.174), 'gravity_scale=%s 1/expected=%s' % (gravity_scale, 1/32.2)
         wtmass = 1. / 32.174
         wtmass_expected = 1.
-        assert allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass/gravity_scale, wtmass_expected)
+        assert np.allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass/gravity_scale, wtmass_expected)
 
         # both are consistent systems, so wtmass=1.0
         xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
@@ -230,7 +229,7 @@ class TestConvert(unittest.TestCase):
         assert gravity_scale == 1., gravity_scale
         wtmass = 1.
         wtmass_expected = 1.
-        assert allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass, wtmass_expected)
+        assert np.allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass, wtmass_expected)
 
         # both are consistent systems, so wtmass=1.0
         xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
@@ -242,7 +241,7 @@ class TestConvert(unittest.TestCase):
         assert gravity_scale == 1/32.174, 'gravity_scale=%s expected=%s' % (gravity_scale, 1./32.174)
         wtmass = 1. / 32.174
         wtmass_expected = 1.
-        assert allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass, wtmass_expected)
+        assert np.allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass, wtmass_expected)
 
     def test_convert_01(self):
         """converts the CONM2s units"""

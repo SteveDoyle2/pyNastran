@@ -8,7 +8,6 @@ from io import StringIO
 from copy import deepcopy
 import unittest
 import numpy as np
-from numpy import array, allclose, array_equal, cross
 
 from pyNastran.bdf.cards.coordinate_systems import (
     create_coords_along_line, get_nodes_along_axis_in_coords,
@@ -211,11 +210,11 @@ class TestCoords(unittest.TestCase):
         self.assertEqual(cord2r_c.Cid(), 4)
         self.assertEqual(cord2r_c.Rid(), 3)
 
-        self.assertTrue(allclose(cord2r_c.i, array([0., 0., 1.])))
-        delta = cord2r_c.j - array([1., 1., 0.]) / 2**0.5
-        self.assertTrue(allclose(cord2r_c.j, array([1., 1., 0.]) / 2**0.5), str(delta))
-        delta = cord2r_c.k - array([-1., 1., 0.]) / 2**0.5
-        self.assertTrue(allclose(cord2r_c.k, array([-1., 1., 0.]) / 2**0.5), str(delta))
+        self.assertTrue(np.allclose(cord2r_c.i, np.array([0., 0., 1.])))
+        delta = cord2r_c.j - np.array([1., 1., 0.]) / 2**0.5
+        self.assertTrue(np.allclose(cord2r_c.j, np.array([1., 1., 0.]) / 2**0.5), str(delta))
+        delta = cord2r_c.k - np.array([-1., 1., 0.]) / 2**0.5
+        self.assertTrue(np.allclose(cord2r_c.k, np.array([-1., 1., 0.]) / 2**0.5), str(delta))
 
 
     def test_grid_01(self):
@@ -356,26 +355,26 @@ class TestCoords(unittest.TestCase):
         unused_xyz_cid0c = model.get_xyz_in_coord_no_xref(cid=12, fdtype='float64')
         model.cross_reference()
 
-        xyz_cid0_actual = array([
+        xyz_cid0_actual = np.array([
             [30., 40., 50.],
             [30., 40., 50.],
             [30., 40., 50.],
         ], dtype='float64')
         for nid in model.nodes:
             node = model.Node(nid)
-            a = array([30., 40., 50.])
+            a = np.array([30., 40., 50.])
             b = node.get_position()
-            self.assertTrue(allclose(array([30., 40., 50.]),
+            self.assertTrue(np.allclose(np.array([30., 40., 50.]),
                                      node.get_position()), str(a - b))
 
         xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float64')
-        array_equal(xyz_cid0_actual, xyz_cid0)
+        np.array_equal(xyz_cid0_actual, xyz_cid0)
 
         unused_icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
         xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0)
-        array_equal(xyz_cid0_actual, xyz_cid0_xform)
-        assert array_equal(nid_cp_cd[:, 0], array([10, 11, 12]))
+        np.array_equal(xyz_cid0_actual, xyz_cid0_xform)
+        assert np.array_equal(nid_cp_cd[:, 0], np.array([10, 11, 12]))
 
         unused_xyz_cid_10 = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=10)
@@ -426,24 +425,24 @@ class TestCoords(unittest.TestCase):
         unused_xyz_cid0c = model.get_xyz_in_coord_no_xref(cid=22, fdtype='float64')
         model.cross_reference()
 
-        xyz_cid0_actual = array([
+        xyz_cid0_actual = np.array([
             [30., 40., 50.],
             [30., 40., 50.],
             [30., 40., 50.],
         ], dtype='float64')
         for nid in model.nodes:
-            a = array([30., 40., 50.])
+            a = np.array([30., 40., 50.])
             b = model.Node(nid).get_position()
-            self.assertTrue(allclose(array([30., 40., 50.]),
-                                     model.Node(nid).get_position()), str(a - b))
+            self.assertTrue(np.allclose(np.array([30., 40., 50.]),
+                            model.Node(nid).get_position()), str(a - b))
         xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float64')
-        array_equal(xyz_cid0_actual, xyz_cid0)
+        np.array_equal(xyz_cid0_actual, xyz_cid0)
 
         unused_icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
         xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0)
-        array_equal(xyz_cid0_actual, xyz_cid0_xform)
-        assert array_equal(nid_cp_cd[:, 0], array([20, 21, 22]))
+        np.array_equal(xyz_cid0_actual, xyz_cid0_xform)
+        assert np.array_equal(nid_cp_cd[:, 0], np.array([20, 21, 22]))
 
         unused_xyz_cid_20 = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=20)
@@ -502,16 +501,16 @@ class TestCoords(unittest.TestCase):
 
         #-------------------------------------------------
 
-        xyz_cid0_actual = array([
+        xyz_cid0_actual = np.array([
             [30., 40., 50.],
             [30., 40., 50.],
             [30., 40., 50.],
         ], dtype='float64')
         for nid in model.nodes:
             node = model.Node(nid)
-            a = array([30., 40., 50.])
+            a = np.array([30., 40., 50.])
             b = node.get_position()
-            self.assertTrue(allclose(array([30., 40., 50.]),
+            self.assertTrue(np.allclose(np.array([30., 40., 50.]),
                                      node.get_position()), str(a - b))
         xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float64')
         assert np.allclose(xyz_cid0_actual, xyz_cid0), '%s' % (xyz_cid0_actual - xyz_cid0)
@@ -521,8 +520,8 @@ class TestCoords(unittest.TestCase):
         nids = nid_cp_cd[:, 0]
         xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nids, icp_transform, cid=0)
-        array_equal(xyz_cid0_actual, xyz_cid0_xform)
-        assert array_equal(nids, array([30, 31, 32]))
+        np.array_equal(xyz_cid0_actual, xyz_cid0_xform)
+        assert np.array_equal(nids, np.array([30, 31, 32]))
 
         for cid in [30, 31, 32]:
             unused_xyz_cid_a = model.transform_xyzcp_to_xyz_cid(
@@ -533,14 +532,14 @@ class TestCoords(unittest.TestCase):
             #print(xyz_cid_b)
             #print(xyz_cid_a - xyz_cid_b)
             #print('-------------')
-            #assert array_equal(xyz_cid_a, xyz_cid_b), 'error=%s'  % (
+            #assert np.array_equal(xyz_cid_a, xyz_cid_b), 'error=%s'  % (
                 #xyz_cid_a - xyz_cid_b)
 
         #---------------------------------------------
         xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nids, icp_transform,
             cid=0, atol=None)
-        array_equal(xyz_cid0_actual, xyz_cid0)
+        np.array_equal(xyz_cid0_actual, xyz_cid0)
 
         model.write_bdf(bdf_file, close=False)
 
@@ -661,20 +660,20 @@ class TestCoords(unittest.TestCase):
 
         # by running it through Patran...
         #GRID     20143          1.1067  .207647 -.068531
-        expected = array([1.106704, .207647, -0.068531])
+        expected = np.array([1.106704, .207647, -0.068531])
         diff = xyz - expected
 
         msg = '\nexpected=%s \nactual  =%s \ndiff    =%s' % (expected, xyz, diff)
-        assert allclose(diff, 0.), msg
+        assert np.allclose(diff, 0.), msg
         coord = model.Coord(7)
         coord.beta_n(1)
         coord.beta_n(2)
         coord.beta_n(3)
         coord.beta_n(6)
         with self.assertRaises(AttributeError):
-            self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
+            self.assertTrue(np.array_equal(coord.T(), coord.beta_n(2)))
         #with self.assertRaises(NotImplementedError):
-            #self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
+            #self.assertTrue(np.array_equal(coord.T(), coord.beta_n(2)))
 
         model2 = BDF(debug=False)
         cid = 7
@@ -686,17 +685,17 @@ class TestCoords(unittest.TestCase):
         assert coord == coord2, 'coord:\n%r\ncoord2:\n%r' % (str(coord), str(coord2))
 
     def test_coord_xform_a(self):
-        origin = array([0., 0., 0.])
-        zaxis = array([0., 0., 1.])
-        xzplane = array([1., 0., 0.])
+        origin = np.array([0., 0., 0.])
+        zaxis = np.array([0., 0., 1.])
+        xzplane = np.array([1., 0., 0.])
         cid0 = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
         Lx = 2.
         Ly = 0.
         Lz = 3.
         Fy = 1.
-        origin = array([-Lx, 0., -Lz])
-        z_axis = origin + array([0., 0., 1.])
-        xz_plane = origin + array([1., 0., 1.])
+        origin = np.array([-Lx, 0., -Lz])
+        z_axis = origin + np.array([0., 0., 1.])
+        xz_plane = origin + np.array([1., 0., 1.])
         rid = 0
         data = [1, rid] + list(origin) + list(z_axis) + list(xz_plane)
 
@@ -708,25 +707,25 @@ class TestCoords(unittest.TestCase):
         fxyz_local, mxyz_local = transform_load(fxyz, mxyz, cid0, cid_new,
                                                 model)
 
-        r = array([Lx, Ly, Lz])
-        F = array([0., -Fy, 0.])
+        r = np.array([Lx, Ly, Lz])
+        F = np.array([0., -Fy, 0.])
         M = np.cross(r, F)
-        self.assertTrue(array_equal(fxyz_local, F), 'expected=%s actual=%s' % (F, fxyz_local))
-        self.assertTrue(array_equal(mxyz_local, cross(r, F)), 'expected=%s actual=%s' % (M, mxyz_local))
+        self.assertTrue(np.array_equal(fxyz_local, F), 'expected=%s actual=%s' % (F, fxyz_local))
+        self.assertTrue(np.array_equal(mxyz_local, np.cross(r, F)), 'expected=%s actual=%s' % (M, mxyz_local))
 
     def test_coord_xform_b(self):
-        origin = array([0., 0., 0.])
-        zaxis = array([0., 0., 1.])
-        xzplane = array([1., 0., 0.])
+        origin = np.array([0., 0., 0.])
+        zaxis = np.array([0., 0., 1.])
+        xzplane = np.array([1., 0., 0.])
         cid0 = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
 
         Lx = 2.
         Ly = 3.
         Lz = 5.
         Fy = 1.5
-        origin = array([-Lx, -Ly, -Lz])
-        z_axis = origin + array([0., 0., 1.])
-        xz_plane = origin + array([1., 0., 1.])
+        origin = np.array([-Lx, -Ly, -Lz])
+        z_axis = origin + np.array([0., 0., 1.])
+        xz_plane = origin + np.array([1., 0., 1.])
         rid = 0
         data = [1, rid] + list(origin) + list(z_axis) + list(xz_plane)
 
@@ -737,11 +736,11 @@ class TestCoords(unittest.TestCase):
 
         fxyz_local, mxyz_local = transform_load(fxyz, mxyz, cid0, cid_new,
                                                 model)
-        r = array([Lx, Ly, Lz])
-        F = array([0., -Fy, 0.])
+        r = np.array([Lx, Ly, Lz])
+        F = np.array([0., -Fy, 0.])
         M = np.cross(r, F)
-        self.assertTrue(array_equal(fxyz_local, F), 'expected=%s actual=%s' % (F, fxyz_local))
-        self.assertTrue(array_equal(mxyz_local, M), 'expected=%s actual=%s' % (M, mxyz_local))
+        self.assertTrue(np.array_equal(fxyz_local, F), 'expected=%s actual=%s' % (F, fxyz_local))
+        self.assertTrue(np.array_equal(mxyz_local, M), 'expected=%s actual=%s' % (M, mxyz_local))
 
     def test_coord_adding(self):
         origin = [0., 0., 0.]
@@ -1212,20 +1211,20 @@ def get_nodes(grids, grids_expected, coords):
         (nid, cid, x, y, z) = grid
         node = model.Node(nid)
         xyz_actual = node.get_position()
-        xyz = array([x, y, z])
+        xyz = np.array([x, y, z])
 
         msg = 'i=%s expected=%s actual=%s\n' % (i, xyz, xyz_actual)
         msg += 'n=%s grid=\n%s' % (nid, node)
         coord_ref = node.cp_ref
         msg += 'n=%s coord=\n%s' % (node.nid, coord_ref)
 
-        if not allclose(xyz, xyz_actual):
+        if not np.allclose(xyz, xyz_actual):
             # TODO: this used to work, but the changing xref broke it somehow
             #       this block probably needs to be slightly updated
             while coord_ref.rid:
                 msg += 'xyz=%s rcoord=\n%s' % (node.nid, coord_ref.rid)
                 coord_ref = coord_ref.rid
-            assert allclose(xyz, xyz_actual), msg
+            assert np.allclose(xyz, xyz_actual), msg
 
 
 if __name__ == '__main__':  # pragma: no cover

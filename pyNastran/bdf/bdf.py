@@ -5309,7 +5309,7 @@ def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True,
 def _get_file_tag(model: BDF, ifile_iline: int) -> str:
     """get the filename
 
-    ifile_iline = array([194, 1], dtype=int32)
+    ifile_iline = np.array([194, 1], dtype=int32)
     """
     # print(f"ifile_iline = {ifile_iline!r}")
     ifile, iline = ifile_iline

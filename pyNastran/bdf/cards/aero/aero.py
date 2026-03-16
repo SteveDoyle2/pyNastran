@@ -4065,9 +4065,9 @@ class CAERO5(BaseCard):
     def c1_c2(self, mach: float):
         p1, unused_p2, unused_p3, p4 = self.get_points()
         #i = p2 - p1
-        #ihat = i / norm(i)
+        #ihat = i / np.linalg.norm(i)
         #k = np.cross(ihat, p4-p1)
-        #khat = k / norm(k)
+        #khat = k / np.linalg.norm(k)
         #jhat = np.cross(khat, ihat)
         #b = self.p4 - self.p1
         L = np.linalg.norm(p4 - p1)

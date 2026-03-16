@@ -349,18 +349,18 @@ def _write_faces(ugrid, faces_filename):
                 #print('face  = %s' % face)
                 #print('face3 = %s' % faces1_sort[3, :])
 
-                if allclose(face, faces1_sort[0, :]):
+                if np.allclose(face, faces1_sort[0, :]):
                     n1 = 0
-                elif allclose(face, faces1_sort[1, :]):
+                elif np.allclose(face, faces1_sort[1, :]):
                     n1 = 1
-                elif allclose(face, faces1_sort[2, :]):
+                elif np.allclose(face, faces1_sort[2, :]):
                     n1 = 2
-                elif allclose(face, faces1_sort[3, :]):
+                elif np.allclose(face, faces1_sort[3, :]):
                     n1 = 3
                 else:
                     raise RuntimeError('cant find face=%s in faces for eid1=%s' % (face, e1))
 
-                if allclose(face, faces1_unsorted[n1, :]):
+                if np.allclose(face, faces1_unsorted[n1, :]):
                     unused_owner = e1
                     unused_neighbor = e2
                 else:

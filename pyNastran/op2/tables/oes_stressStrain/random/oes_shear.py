@@ -60,11 +60,11 @@ class RandomShearArray(OES_Object):
             nelements = self.ntimes
 
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(nelements, dtype=idtype)
 
         # [max_shear, avg_shear]
-        self.data = zeros((ntimes, nelements, 2), dtype=fdtype)
+        self.data = np.zeros((ntimes, nelements, 2), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -99,7 +99,7 @@ class RandomShearArray(OES_Object):
                         t2 = table.data[itime, ieid, :]
                         (max_shear1, avg_shear1) = t1
                         (max_shear2, avg_shear2) = t2
-                        if not allclose(t1, t2):
+                        if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s)\n  (%s, %s)\n' % (
                                 eid,

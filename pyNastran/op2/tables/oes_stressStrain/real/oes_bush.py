@@ -77,9 +77,9 @@ class RealBushArray(OES_Object):
             print('flipping the order...')
             ntimes, ntotal = ntotal, ntimes
 
-        _times = zeros(ntimes, dtype=self.analysis_fmt)
-        element = zeros(ntotal, dtype=idtype)
-        data = zeros((ntimes, ntotal, 6), dtype=fdtype)
+        _times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        element = np.zeros(ntotal, dtype=idtype)
+        data = np.zeros((ntimes, ntotal, 6), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):

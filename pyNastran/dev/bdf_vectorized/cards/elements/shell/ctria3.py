@@ -333,7 +333,7 @@ class CTRIA3(ShellElement):
             [nu, 1, 0],
             [0, 0, (1-nu)/2.],
         ], dtype='float64')
-        k = np.cross(b.T, cross(D, b))
+        k = np.cross(b.T, np.cross(D, b))
 
         #====
         # bending

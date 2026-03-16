@@ -3372,7 +3372,7 @@ class OES:
                         unused_values = np.fromstring(data, dtype=op2.idtype)
 
                     eids = ints[:, 0] // 10
-                    #eids2 =np. vstack([eids, eids]).T.ravel()
+                    #eids2 = np.vstack([eids, eids]).T.ravel()
                     #print(eids.tolist())
                     obj.element[ielement:ielement2] = eids  # 150
                      #print(obj.element_node[:10, :])

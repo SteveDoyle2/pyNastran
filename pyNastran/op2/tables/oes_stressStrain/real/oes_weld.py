@@ -56,11 +56,11 @@ class RealWeldArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        _times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        element = zeros(self.nelements, dtype=idtype)
+        _times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        element = np.zeros(self.nelements, dtype=idtype)
 
         # [axial, maxa, mina, maxb, minb, max_shear, bearing]
-        data = zeros((self.ntimes, self.ntotal, 7), dtype=fdtype)
+        data = np.zeros((self.ntimes, self.ntotal, 7), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -118,7 +118,7 @@ class RealWeldArray(OES_Object):
                         t2 = table.data[itime, ieid, :]
                         (max_shear, avg_shear, margin) = t1
                         (max_shear2, avg_shear2, margin2) = t2
-                        if not allclose(t1, t2):
+                        if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s)\n  (%s, %s, %s)\n' % (
                                 eid,

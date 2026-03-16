@@ -1,5 +1,4 @@
 import numpy as np
-from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
@@ -67,9 +66,9 @@ class ComplexBeamArray(OES_Object):
             #print(f'complex beam: ntimes={ntimes} ntotal={ntotal}')
 
         # ntotal is nelements
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element_node = zeros((ntotal, 2), idtype)
-        self.sd = zeros(ntotal, 'float32')
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element_node = np.zeros((ntotal, 2), idtype)
+        self.sd = np.zeros(ntotal, 'float32')
 
         # the number is messed up because of the offset for the element's properties
         #if self.nelements * nnodes != self.ntotal:
@@ -80,7 +79,7 @@ class ComplexBeamArray(OES_Object):
             #raise RuntimeError(msg)
 
         #[sxc, sxd, sxe, sxf]
-        self.data = zeros((ntimes, ntotal, 4), cfdtype)
+        self.data = np.zeros((ntimes, ntotal, 4), cfdtype)
 
     def finalize(self):
         #enode_sum = self.element_node.sum(axis=1)

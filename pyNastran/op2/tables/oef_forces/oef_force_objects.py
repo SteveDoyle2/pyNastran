@@ -66,6 +66,7 @@ def oef_complex_data_code(table_name: str,
                           is_sort1: bool=True, is_random: bool=False,
                           random_code=0, title='', subtitle='', label='',
                           is_msc=True):
+    assert isinstance(element_name, str), f'element_name={element_name} and should be a string; type={str(type(element_name))}'
     dtype_code = 1  # complex
     data_code = _oef_data_code(table_name,
                                element_name, num_wide, dtype_code,
@@ -176,12 +177,12 @@ class ForceObject(BaseElement):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  # [0]
+        itot = np.searchsorted(eids, self.element)  # [0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        # ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        ind = searchsorted(eids, self.element)
+        # ind = np.ravel([searchsorted(self.element == eid) for eid in eids])
+        ind = np.searchsorted(eids, self.element)
         # ind = ind.reshape(ind.size)
         # ind.sort()
         return ind
@@ -440,12 +441,12 @@ class FailureIndicesArray(RealForceObject):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         self.failure_theory = np.full(self.nelements, '', dtype='U8')
-        self.element_layer = zeros((self.nelements, 2), dtype=idtype)
+        self.element_layer = np.zeros((self.nelements, 2), dtype=idtype)
 
         #[failure_stress_for_ply, interlaminar_stress, max_value]
-        self.data = zeros((self.ntimes, self.nelements, 3), dtype=fdtype)
+        self.data = np.zeros((self.ntimes, self.nelements, 3), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -669,11 +670,11 @@ class RealSpringDamperForceArray(RealForceObject):
         self.ntimes = ntimes
         self.nelements = nelements
 
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(nelements, dtype=idtype)
 
         #[force]
-        self.data = zeros((ntimes, nelements, 1), dtype=fdtype)
+        self.data = np.zeros((ntimes, nelements, 1), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -742,7 +743,7 @@ class RealSpringDamperForceArray(RealForceObject):
                         t2 = table.data[itime, ieid, :]
                         (force1, stress1) = t1
                         (force2, stress2) = t2
-                        if not allclose(t1, t2):
+                        if not np.allclose(t1, t2):
                             # if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s)\n  (%s, %s)\n' % (
                                 eid,
@@ -1170,11 +1171,11 @@ class RealRodForceArray(RealForceObject):
         self.nelements = nelements
         #self.ntotal = ntimes * nelements
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(nelements, dtype=idtype)
 
         #[axial_force, torque]
-        self.data = zeros((ntimes, nelements, 2), dtype=fdtype)
+        self.data = np.zeros((ntimes, nelements, 2), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -1521,9 +1522,9 @@ class RealCBeamForceArray(RealForceObject):
         dtype, idtype, fdtype = get_times_dtype(
             self.nonlinear_factor, self.size, self.analysis_fmt)
         ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=False)
-        self._times = zeros(ntimes, dtype)
-        self.element = zeros(ntotal, idtype)
-        self.element_node = zeros((ntotal, 2), idtype)
+        self._times = np.zeros(ntimes, dtype)
+        self.element = np.zeros(ntotal, idtype)
+        self.element_node = np.zeros((ntotal, 2), idtype)
 
         # the number is messed up because of the offset for the element's properties
         if not (self.nelements * nnodes) == self.ntotal:
@@ -2128,14 +2129,14 @@ class RealCShearForceArray(RealForceObject):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=False)
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(nelements, dtype=idtype)
 
         #[force41, force21, force12, force32, force23, force43,
         # force34, force14,
         # kick_force1, shear12, kick_force2, shear23,
         # kick_force3, shear34, kick_force4, shear41]
-        self.data = zeros((ntimes, ntotal, 16), dtype=fdtype)
+        self.data = np.zeros((ntimes, ntotal, 16), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -2608,11 +2609,11 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=False)
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(nelements, dtype=idtype)
 
         #[axial_force, torque]
-        self.data = zeros((ntimes, ntotal, 2), dtype=fdtype)
+        self.data = np.zeros((ntimes, ntotal, 2), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -2912,11 +2913,11 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         ntimes, nelements, ntotal = self._get_sort_element_sizes()
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(ntotal, dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(ntotal, dtype=idtype)
 
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-        self.data = zeros((ntimes, ntotal, 8), dtype=fdtype)
+        self.data = np.zeros((ntimes, ntotal, 8), dtype=fdtype)
 
     def _get_sort_element_sizes(self):
         if self.is_sort1:
@@ -3364,14 +3365,14 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             self.nonlinear_factor, self.size, self.analysis_fmt)
         ntimes, nelements, ntotal = self._get_sort_element_sizes(debug=False)
 
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element_node = zeros((ntotal, 2), dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element_node = np.zeros((ntotal, 2), dtype=idtype)
 
         # -MEMBRANE FORCES-   -BENDING MOMENTS- -TRANSVERSE SHEAR FORCES -
         #     FX FY FXY           MX MY MXY            QX QY
         # [fx, fy, fxy,  mx,  my,  mxy, qx, qy]
         # [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-        self.data = zeros((ntimes, ntotal, 8), dtype=fdtype)
+        self.data = np.zeros((ntimes, ntotal, 8), dtype=fdtype)
 
     def _get_sort_element_sizes(self, debug: bool=False):
         if debug:
@@ -3910,8 +3911,8 @@ class RealCBarFastForceArray(RealForceObject):
         self.ntotal = ntotal
         #print(f"*ntimes={ntimes} nelements={nelements} ntotal={ntotal} data_names={self.data_names}")
         unused_dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(nelements, dtype=idtype)
 
         #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
         # shear1, shear2, axial, torque]
@@ -3998,7 +3999,7 @@ class RealCBarFastForceArray(RealForceObject):
         return msg
 
     def eid_to_element_node_index(self, eids):
-        ind = searchsorted(eids, self.element)
+        ind = np.searchsorted(eids, self.element)
         return ind
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
@@ -4308,11 +4309,11 @@ class RealConeAxForceArray(RealForceObject):
 
         # print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype=idtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(self.nelements, dtype=idtype)
 
         # [hopa, bmu, bmv, tm, su, sv]
-        self.data = zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
+        self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -4507,11 +4508,11 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype=idtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(self.nelements, dtype=idtype)
 
         # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
-        self.data = zeros((self.ntimes, self.ntotal, 7), dtype=fdtype)
+        self.data = np.zeros((self.ntimes, self.ntotal, 7), dtype=fdtype)
 
     #def finalize(self):
         #sd = self.data[0, :, 0]
@@ -4595,7 +4596,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         return msg
 
     def eid_to_element_node_index(self, eids):
-        ind = searchsorted(eids, self.element)
+        ind = np.searchsorted(eids, self.element)
         return ind
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
@@ -4815,11 +4816,11 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype=idtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(self.nelements, dtype=idtype)
 
         # [fx, sfy, sfz, u, v, w, sv, sw]
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
+        self.data = np.zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -5015,12 +5016,12 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=False)
         self.ntimes = ntimes
         self.nelements = nelements
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element_node = zeros((nelements, 3), dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element_node = np.zeros((nelements, 3), dtype=idtype)
 
         # [bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a
         #  bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b]
-        self.data = zeros((ntimes, ntotal, 12), dtype=fdtype)
+        self.data = np.zeros((ntimes, ntotal, 12), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -5291,11 +5292,11 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
             #print("-> ntimes=%s nelements=%s ntotal=%s" % (ntimes, nelements, ntotal))
             assert nelements == 1
 
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(nelements, dtype=idtype)
 
         #[ax, ay, az, vx, vy, vz, pressure]
-        self.data = zeros((ntimes, ntotal, 7), dtype=fdtype)
+        self.data = np.zeros((ntimes, ntotal, 7), dtype=fdtype)
 
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
@@ -5525,11 +5526,11 @@ class RealForceMomentArray(RealForceObject):
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         ntimes, nelements, ntotal = get_sort_element_sizes(self)
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(nelements, dtype=idtype)
 
         #[fx, fy, fz, mx, my, mz]
-        self.data = zeros((ntimes, nelements, 6), dtype=fdtype)
+        self.data = np.zeros((ntimes, nelements, 6), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -5604,7 +5605,7 @@ class RealForceMomentArray(RealForceObject):
                         t2 = table.data[itime, ieid, :]
                         (fx1, fy1, fz1, mx1, my1, mz1) = t1
                         (fx2, fy2, fz2, mx2, my2, mz2) = t2
-                        if not allclose(t1, t2):
+                        if not np.allclose(t1, t2):
                             #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
@@ -5678,12 +5679,12 @@ class RealForceMomentArray(RealForceObject):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  # [0]
+        itot = np.searchsorted(eids, self.element)  # [0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        # ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        ind = searchsorted(eids, self.element)
+        # ind = np.ravel([np.searchsorted(self.element == eid) for eid in eids])
+        ind = np.searchsorted(eids, self.element)
         # ind = ind.reshape(ind.size)
         # ind.sort()
         return ind

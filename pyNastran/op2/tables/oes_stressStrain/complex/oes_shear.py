@@ -151,9 +151,9 @@ class ComplexShearArray(OES_Object):
         return data_code
 
     @classmethod
-    def add_freq_case(cls, table_name, element, data, isubcase,
+    def add_freq_case(cls, table_name, element_name: str,
+                      element, data, isubcase,
                       freqs,
-                      element_name: str,
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
         data_code = cls._add_case(

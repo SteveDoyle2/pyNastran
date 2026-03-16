@@ -450,7 +450,7 @@ class TestCoords(unittest.TestCase):
         diff = g.get_position() - array([1.106704, .207647, -0.068531])
 
         msg = 'diff=%s' % diff
-        assert allclose(diff, 0.), msg
+        assert np.allclose(diff, 0.), msg
         coord = model.Coord(7)
         coord.T()
         self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
@@ -481,7 +481,7 @@ class TestCoords(unittest.TestCase):
             while coord.rid:
                 msg += 'n=%s rcoord=\n%s' % (node.nid, coord.rid)
                 coord = coord.rid
-            assert allclose(n, pos), msg
+            assert np.allclose(n, pos), msg
 
 
     def test_A(self):
@@ -506,8 +506,8 @@ class TestCoords(unittest.TestCase):
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = np.cross(r, F)
-        self.assertTrue(array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
-        self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
+        self.assertTrue(np.array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
+        self.assertTrue(np.array_equal(Mxyz_local, np.cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
     def test_B(self):
         cid0 = CORD2R(cid=0, origin=[0., 0., 0.], zaxis=[0., 0., 1.], xzplane=[1., 0., 0.])
@@ -527,11 +527,11 @@ class TestCoords(unittest.TestCase):
         model = None
 
         Fxyz_local, Mxyz_local = transform_load(Fxyz, Mxyz, cid0, cid_new, model)
-        r = array([Lx, Ly, Lz])
-        F = array([0., -Fy, 0.])
+        r = np.array([Lx, Ly, Lz])
+        F = np.array([0., -Fy, 0.])
         M = np.cross(r, F)
-        self.assertTrue(array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
-        self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
+        self.assertTrue(np.array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
+        self.assertTrue(np.array_equal(Mxyz_local, np.cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
 
 if __name__ == '__main__':  # pragma: no cover

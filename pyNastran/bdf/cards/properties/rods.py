@@ -12,7 +12,7 @@ Multi-segment beams are IntegratedLineProperty objects.
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from numpy import pi
+import numpy as np
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
@@ -440,9 +440,9 @@ class PTUBE(Property):
     def J(self):
         Dout = self.OD1
         if self.t == 0.0:
-            return pi / 8. * Dout**4
+            return np.pi / 8. * Dout**4
         Din = Dout - 2 * self.t
-        return pi / 8. * (Dout**4 - Din**2)
+        return np.pi / 8. * (Dout**4 - Din**2)
 
     def Area(self):
         r"""
@@ -476,18 +476,18 @@ class PTUBE(Property):
         """Gets the Area of Section 1 of the CTUBE."""
         Dout = self.OD1
         if self.t == 0:
-            return pi / 4. * Dout**2
+            return np.pi / 4. * Dout**2
         Din = Dout - 2 * self.t
-        A1 = pi / 4. * (Dout * Dout - Din * Din)
+        A1 = np.pi / 4. * (Dout * Dout - Din * Din)
         return A1
 
     def _area2(self):
         """Gets the Area of Section 2 of the CTUBE."""
         Dout = self.OD2
         if self.t == 0:
-            return pi / 4. * Dout**2
+            return np.pi / 4. * Dout**2
         Din = Dout - 2 * self.t
-        A2 = pi / 4. * (Dout * Dout - Din * Din)
+        A2 = np.pi / 4. * (Dout * Dout - Din * Din)
         return A2
 
     #def massMatrix(self):

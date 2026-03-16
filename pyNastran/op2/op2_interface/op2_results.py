@@ -239,7 +239,7 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
                 #txz = 0.
 
             ## 3D
-            #A = array([
+            #A = np.array([
                 #[oxx, txy, txz],
                 #[ 0., oyy, tyz],
                 #[ 0.,  0., ozz],
@@ -251,7 +251,7 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
             #results['minP'][nid] = minP
 
             ## 2D
-            #A2 = array([
+            #A2 = np.array([
                 #[oxx, txy],
                 #[ 0., oyy],
             #])

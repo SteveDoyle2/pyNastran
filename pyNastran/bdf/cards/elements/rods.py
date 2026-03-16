@@ -1,6 +1,7 @@
 # pylint: disable=C0103
 from __future__ import annotations
 from typing import TYPE_CHECKING
+import numpy as np
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -199,7 +200,7 @@ class CROD(RodElement):
         if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
+        L = np.linalg.norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
         return L
 
     def Rho(self):
@@ -442,7 +443,7 @@ class CTUBE(RodElement):
         if self.pid_ref is None:
             msg = 'Element eid=%d has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
+        L = np.linalg.norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
         return L
 
     def Rho(self):
@@ -712,7 +713,7 @@ class CONROD(RodElement):
         if self.mid_ref is None:
             msg = 'Element eid=%d has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
+        L = np.linalg.norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
         return L
 
     def Rho(self):

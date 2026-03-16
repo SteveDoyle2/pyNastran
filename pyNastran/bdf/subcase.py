@@ -2,8 +2,7 @@
 from __future__ import annotations
 import getpass
 from typing import Any, TYPE_CHECKING
-#import numpy as np
-from numpy import ndarray
+import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.utils import deprecated # object_attributes,
@@ -869,7 +868,7 @@ class Subcase:
                 #print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
             if isinstance(value, integer_types) or value is None:
                 pass
-            elif isinstance(value, (list, ndarray)):  # new???
+            elif isinstance(value, (list, np.ndarray)):  # new???
                 msg = f'invalid type for key={key} value; expected an integer; got a list={value}'
                 raise TypeError(msg)
             elif value.isdigit():  # STRESS = ALL

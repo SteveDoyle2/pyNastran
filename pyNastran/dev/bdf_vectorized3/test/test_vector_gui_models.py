@@ -5,6 +5,7 @@ from typing import Optional
 import numpy as np
 
 import pyNastran
+from pyNastran.utils import PathLike
 from pyNastran.op2.op2_geom import read_op2_geom
 from pyNastran.gui.gui_objects.displacement_results import DisplacementResults2
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
@@ -33,7 +34,7 @@ class NastranGUI(Nastran3, FakeGUIMethods):
         #self.stop_on_failure = True
         self.build_fmts(['nastran3'], stop_on_failure=True)
 
-def run_nastran_gui(filename: str,
+def run_nastran_gui(filename: PathLike,
                     debug: Optional[bool],
                     load_results: bool=True):
     assert os.path.exists(filename), filename
@@ -46,8 +47,8 @@ def run_nastran_gui(filename: str,
     test.cycle_results()
     test.on_rcycle_results()
 
-def run_nastran_gui_results(input_filename: str,
-                            output_filename: str):
+def run_nastran_gui_results(input_filename: PathLike,
+                            output_filename: PathLike):
     assert os.path.exists(input_filename), input_filename
     assert os.path.exists(output_filename), output_filename
     input_filename = str(input_filename)

@@ -323,8 +323,8 @@ class RealBush1DStressArray(OES_Object):
             idtype = np.int32(1)
             fdtype = np.float32(1.0)
 
-        #self.element = zeros(self.ntotal, dtype='int32')
-        #self.is_failed = zeros((self.ntimes, self.ntotal, 1), dtype='int32')
+        #self.element = np.zeros(self.ntotal, dtype='int32')
+        #self.is_failed = np.zeros((self.ntimes, self.ntotal, 1), dtype='int32')
 
         # [eid,
         #  element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain,

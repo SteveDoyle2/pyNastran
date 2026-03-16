@@ -572,7 +572,7 @@ class TestGridPointForces(unittest.TestCase):
             stop_on_nan=False,
             debug=False, log=log)
 
-        # array([nan, nan, nan], dtype=float32)
+        # np.array([nan, nan, nan], dtype=float32)
         assert not np.any(np.isfinite(force_out_sum)), force_out_sum
         assert not np.any(np.isfinite(moment_out_sum)), moment_out_sum
         #coord0 = model.coords[0]

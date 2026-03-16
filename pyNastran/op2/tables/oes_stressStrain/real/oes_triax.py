@@ -62,11 +62,11 @@ class RealTriaxArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        _times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        element_node = zeros((self.ntotal, 2), dtype=idtype)
+        _times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        element_node = np.zeros((self.ntotal, 2), dtype=idtype)
 
         # [radial, azimuthal, axial, shear, omax, oms, ovm]
-        data = zeros((self.ntimes, self.ntotal, 7), dtype=fdtype)
+        data = np.zeros((self.ntimes, self.ntotal, 7), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -220,11 +220,11 @@ class RealTriaxArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
+        itot = np.searchsorted(eids, self.element)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsorted(self.element == eid) for eid in eids])
+        ind = np.ravel([np.searchsorted(self.element == eid) for eid in eids])
         return ind
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',

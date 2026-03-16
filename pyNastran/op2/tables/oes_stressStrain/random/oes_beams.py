@@ -84,12 +84,12 @@ class RandomBeamArray(OES_Object):
             ntimes = self.ntotal
             ntotal = self.ntimes
 
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element_node = zeros((ntotal, 2), dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element_node = np.zeros((ntotal, 2), dtype=idtype)
 
         # sxc, sxd, sxe, sxf
-        self.xxb = zeros(ntotal, dtype=fdtype)
-        self.data = zeros((ntimes, ntotal, 4), dtype=fdtype)
+        self.xxb = np.zeros(ntotal, dtype=fdtype)
+        self.data = np.zeros((ntimes, ntotal, 4), dtype=fdtype)
 
     #def finalize(self):
         #sd = self.data[0, :, 0].real
@@ -258,12 +258,12 @@ class RandomBeamArray(OES_Object):
 
     #def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        #itot = searchsorted(eids, self.element_node[:, 0])  #[0]
+        #itot = np.searchsorted(eids, self.element_node[:, 0])  #[0]
         #return itot
 
     #def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
+        #ind = np.ravel([np.searchsorted(self.element_node[:, 0] == eid) for eid in eids])
+        #ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         #return ind

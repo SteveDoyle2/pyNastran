@@ -57,7 +57,7 @@ class ElementTableArray(BaseElement):  # displacement style table
                         t2 = table.data[itime, ieid, :]
                         (tx1, ty1, tz1, rx1, ry1, rz1) = t1
                         (tx2, ty2, tz2, rx2, ry2, rz2) = t2
-                        if not allclose(t1, t2):
+                        if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
@@ -84,8 +84,8 @@ class ElementTableArray(BaseElement):  # displacement style table
         self.data = append_sort1_sort2(self.data, result.data)
         #print(self._times)
         #print(result._times)
-        # self._times = hstack([self._times, result._times])
-        self.node_gridtype = vstack([self.node_gridtype, result.node_gridtype])
+        # self._times = np.hstack([self._times, result._times])
+        self.node_gridtype = np.vstack([self.node_gridtype, result.node_gridtype])
         #print('%s' % ''.join(self.get_stats()))
 
     def _get_msgs(self, is_mag_phase):
@@ -165,14 +165,14 @@ class ElementTableArray(BaseElement):  # displacement style table
             ny = ntimes
             #print("ntotal=%s nelements=%s ntimes=%s" % (ntotal, nelements, ntimes))
 
-        self._times = zeros(ntimes, dtype=self._times_dtype)
-        #self.types = array(self.nelements, dtype='|S1')
+        self._times = np.zeros(ntimes, dtype=self._times_dtype)
+        #self.types = np.array(self.nelements, dtype='|S1')
 
-        self.element = zeros(nelements, dtype='int32')
-        self.element_data_type = empty(nelements, dtype='|U8')
+        self.element = np.zeros(nelements, dtype='int32')
+        self.element_data_type = np.empty(nelements, dtype='|U8')
 
         #[t1, t2, t3, r1, r2, r3]
-        self.data = zeros((nx, ny, 6), self.data_type())
+        self.data = np.zeros((nx, ny, 6), self.data_type())
 
     def add_sort1(self, dt, eid, etype, v1, v2, v3, v4, v5, v6):
         """unvectorized method for adding SORT1 transient data"""
@@ -362,11 +362,11 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         return page_num - 1
 
     def extract_xyplot(self, element_ids, index):
-        element_ids = asarray(element_ids, dtype='int32')
+        element_ids = np.asarray(element_ids, dtype='int32')
         i = index - 1
         assert index in [1, 2, 3, 4, 5, 6], index
         eids = self.element
-        ieids = searchsorted(eids, element_ids)
+        ieids = np.searchsorted(eids, element_ids)
         assert all(eids[ieids] == element_ids), 'nids=%s expected=%s; all=%s'  % (eids[ieids], element_ids, eids)
         return self.data[:, ieids, i]
 
@@ -388,12 +388,12 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         #else:
             #raise ValueError('index_str=%r' % index_str)
 
-        #node_ids = asarray(node_ids, dtype='int32')
+        #node_ids = np.asarray(node_ids, dtype='int32')
         #i = index - 1
         #assert index in [1, 2, 3, 4, 5, 6,
                          #7, 8, 9, 10, 11, 12], index
         #nids = self.node_gridtype[:, 0]
-        #inids = searchsorted(nids, node_ids)
+        #inids = np.searchsorted(nids, node_ids)
         #assert all(nids[inids] == node_ids), 'nids=%s expected=%s; all=%s'  % (nids[inids], node_ids, nids)
         #if j == 1:
             ## real

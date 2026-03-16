@@ -1516,6 +1516,9 @@ class LSEQ(VectorizedBaseCard):  # Requires LOADSET in case control deck
         #dynamic_loads = self.model.dynamic_loads
         #for card in
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
 
 class TIC(VectorizedBaseCard):
     """

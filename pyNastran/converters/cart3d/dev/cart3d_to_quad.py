@@ -203,7 +203,7 @@ def check_normals(eid, elements, normals, cdict, same_normals, rtol=1e-4, atol=1
         eids_alt.pop(eids_alt.index(eid))
         if eids_alt:
             eid_alt = eids_alt[0]
-            if allclose(normals[eid_alt], normals[eid], rtol=rtol, atol=atol):
+            if np.allclose(normals[eid_alt], normals[eid], rtol=rtol, atol=atol):
                 # same normal, adjacent
                 #print("  same", eid, eid_alt, list(normals[eid]), list(normals[eid_alt]))
                 same_normals.append(eid_alt)
@@ -214,7 +214,7 @@ def check_normals(eid, elements, normals, cdict, same_normals, rtol=1e-4, atol=1
         eids_alt.pop(eids_alt.index(eid))
         if eids_alt:
             eid_alt = eids_alt[0]
-            if allclose(normals[eid_alt], normals[eid], rtol=rtol, atol=atol):
+            if np.allclose(normals[eid_alt], normals[eid], rtol=rtol, atol=atol):
                 # same normal, adjacent
                 #print("  same", eid, eid_alt)
                 same_normals.append(eid_alt)
@@ -225,7 +225,7 @@ def check_normals(eid, elements, normals, cdict, same_normals, rtol=1e-4, atol=1
         eids_alt.pop(eids_alt.index(eid))
         if eids_alt:
             eid_alt = eids_alt[0]
-            if allclose(normals[eid_alt], normals[eid], rtol=rtol, atol=atol):
+            if np.allclose(normals[eid_alt], normals[eid], rtol=rtol, atol=atol):
                 # same normal, adjacent
                 #print("  same", eid, eid_alt)
                 same_normals.append(eid_alt)

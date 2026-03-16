@@ -184,12 +184,12 @@ class RealBarArray(OES_Object):
             ntimes = self.ntotal
             #ss
 
-        _times = zeros(ntimes, dtype=self.analysis_fmt)
-        element = zeros(ntotal, dtype=idtype)
+        _times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        element = np.zeros(ntotal, dtype=idtype)
 
         #[s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
         # s1b, s2b, s3b, s4b,        sminb, sminb, MS_compression]
-        data = zeros((ntimes, ntotal, 15), dtype=fdtype)
+        data = np.zeros((ntimes, ntotal, 15), dtype=fdtype)
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
                 #print(key, value)
@@ -326,12 +326,12 @@ class RealBarArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
+        itot = np.searchsorted(eids, self.element)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
+        ind = np.ravel([np.searchsorted(self.element == eid) for eid in eids])
+        #ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind

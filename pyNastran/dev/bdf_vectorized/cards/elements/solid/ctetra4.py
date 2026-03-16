@@ -15,7 +15,7 @@ def volume4(xyz1, xyz2, xyz3, xyz4):
 
     .. math:: V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6}
     """
-    V = -dot((xyz1 - xyz4), cross(xyz2 - xyz4, xyz3 - xyz4)) / 6.
+    V = -np.dot((xyz1 - xyz4), np.cross(xyz2 - xyz4, xyz3 - xyz4)) / 6.
     #V = 1/6. * np.det(
         #np.hstack(
             #[1., 1., 1., 1.],

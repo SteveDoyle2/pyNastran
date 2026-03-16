@@ -11,7 +11,7 @@ def volume4(n1, n2, n3, n4):
 
     .. math:: V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6}
     """
-    V = (n1 - n4) @ cross(n2 - n4, n3 - n4) / -6.
+    V = (n1 - n4) @ np.cross(n2 - n4, n3 - n4) / -6.
     return V
 
 

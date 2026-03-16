@@ -84,11 +84,11 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
             ntimes = self.ntotal
             ntotal = self.ntimes
 
-        _times = zeros(ntimes, dtype=self.analysis_fmt)
-        element_layer = zeros((ntotal, 2), dtype=idtype)
+        _times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        element_layer = np.zeros((ntotal, 2), dtype=idtype)
 
         #[strength_ratio_ply, failure_index_bonding, strength_ratio_bonding]
-        data = zeros((ntimes, ntotal, 3), dtype=fdtype)
+        data = np.zeros((ntimes, ntotal, 3), dtype=fdtype)
         # [failure_theory, flag]
         failure_theory_flag = np.empty((ntotal, 2), dtype='U8')
 
@@ -302,12 +302,12 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element_layer[:, 0])  #[0]
+        itot = np.searchsorted(eids, self.element_layer[:, 0])  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsorted(self.element_layer[:, 0] == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
+        ind = np.ravel([np.searchsorted(self.element_layer[:, 0] == eid) for eid in eids])
+        #ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind

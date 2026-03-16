@@ -5,6 +5,7 @@ import numpy as np
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.op2.op2 import read_op2, OP2
+from pyNastran.op2.op2_interface.op2_scalar import get_logger
 
 # (imodel, subcases, factors)
 # (0, [1, 1], [1.2, 0.0])
@@ -16,6 +17,7 @@ CombinationPairs = list[CombinationPair]
 MultiCombination = tuple[int, str, CombinationPairs]
 
 def load_combinations(combination_filenames: list[PathLike],
+                      log: SimpleLogger,
                       delimiter: str=',') -> list:
     """
 
@@ -38,17 +40,17 @@ def load_combinations(combination_filenames: list[PathLike],
     all_combinations = []
     for combination_filename in combination_filenames:
         subcases_input, combinations = _load_combination(
-            combination_filename, delimiter=delimiter)
+            combination_filename, log, delimiter=delimiter)
         all_combinations.append((subcases_input, combinations))
     assert len(all_combinations)
     return all_combinations
 
 
 def _load_combination(combination_filename: PathLike,
+                      log: SimpleLogger,
                       delimiter: str=',') -> tuple[list[int], list]:
     lines = _get_combination_lines(combination_filename, delimiter)
 
-    log = SimpleLogger(level='debug')
     log.debug(f'lines[0] = {lines[0]!r}')
     subcases_sline = lines[0].split(delimiter)
     log.debug(f'subcases_sline = {subcases_sline!r}')
@@ -217,14 +219,16 @@ def run_load_case_combinations(op2_filename: PathLike | OP2,
         a logger object
 
     """
+    debug = True
+    log = get_logger(log, debug, encoding='utf-8')
     _check_op2_file(op2_filename)
     if not isinstance(combination_filenames, (list, tuple)):
         combination_filenames = [combination_filenames]
 
-    all_combinations = load_combinations(combination_filenames)
+    all_combinations = load_combinations(combination_filenames, log)
     op2_filenames_new = [os.path.splitext(filename)[0] + '.op2'
                          for filename in combination_filenames]
-    print(f'op2_filenames_new = {op2_filenames_new}')
+    log.info(f'op2_filenames_new = {op2_filenames_new}')
 
     # load_geometry: bool = False,
     # combine: bool = True,
@@ -293,7 +297,8 @@ def run_load_case_multi_combinations(
         a logger object
 
     """
-    log = log if log is not None else SimpleLogger(level='info')
+    debug = False
+    log = get_logger(log, debug, encoding='utf-8')
     if isinstance(op2_filenames, (list, tuple)):
         op2_filenames = {i: op2_filename for i, op2_filename in enumerate(op2_filenames)}
     elif isinstance(op2_filenames, dict):

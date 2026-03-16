@@ -63,11 +63,11 @@ class RealBar10NodesArray(OES_Object):
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
-        _times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        element = zeros(self.ntotal, dtype=idtype)
+        _times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        element = np.zeros(self.ntotal, dtype=idtype)
 
         #[sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
-        data = zeros((self.ntimes, self.ntotal, 9), dtype=fdtype)
+        data = np.zeros((self.ntimes, self.ntotal, 9), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -217,12 +217,12 @@ class RealBar10NodesArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element_node[:, 0])  #[0]
+        itot = np.searchsorted(eids, self.element_node[:, 0])  #[0]
         return itot
 
     #def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
-        ##ind = searchsorted(eids, self.element)
+        #ind = np.ravel([np.searchsorted(self.element_node[:, 0] == eid) for eid in eids])
+        ##ind = np.searchsorted(eids, self.element)
         ##ind = ind.reshape(ind.size)
         ##ind.sort()
         #return ind

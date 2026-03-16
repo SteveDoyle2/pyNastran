@@ -13,8 +13,6 @@ from collections import defaultdict
 import warnings
 from typing import cast, Optional, Any, TYPE_CHECKING
 
-from numpy import array, cross, dot
-from numpy.linalg import norm  # type: ignore
 import numpy as np
 
 #from pyNastran.bdf.cards.materials import get_mat_props_S
@@ -502,8 +500,8 @@ def _mass_properties(model: BDF,
     cg_list = []
     inertia_list = []
     mass = 0.
-    cg = array([0., 0., 0.])
-    inertia = array([0., 0., 0., 0., 0., 0., ])
+    cg = np.array([0., 0., 0.])
+    inertia = np.array([0., 0., 0., 0., 0., 0., ])
     no_mass = copy.deepcopy(NO_MASS)
     no_mass.add('CWELD')  # TODO: not sure
     mass_inertia = {'CONM2'}
@@ -614,8 +612,8 @@ def _mass_properties_no_xref(model: BDF,
 
     """
     mass = 0.
-    cg = array([0., 0., 0.])
-    inertia = array([0., 0., 0., 0., 0., 0., ])
+    cg = np.array([0., 0., 0.])
+    inertia = np.array([0., 0., 0., 0., 0., 0., ])
     mass_list = []
     cg_list = []
     inertia_list = []
@@ -810,7 +808,6 @@ def mass_properties_nsm(model: BDF,
     >>> mass, cg, inertia = mass_properties(model)
     >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = inertia
 
-
     **mass properties of model based on Property ID**
     >>> pids = list(model.properties.keys())
     >>> pid_eids = model.get_element_ids_dict_with_pids(pids)
@@ -836,8 +833,8 @@ def mass_properties_nsm(model: BDF,
         model, element_ids, mass_ids)
 
     mass = 0.
-    cg = array([0., 0., 0.])
-    inertia = array([0., 0., 0., 0., 0., 0., ])
+    cg = np.array([0., 0., 0.])
+    inertia = np.array([0., 0., 0., 0., 0., 0., ])
     mass_list = []
     cg_list = []
     inertia_list = []
@@ -989,7 +986,7 @@ def _get_mass_nsm(model: BDF,
         for eid in eids2:
             elem = model.elements[eid]
             n1, n2 = elem.node_ids
-            length = norm(xyz[n2] - xyz[n1])
+            length = np.linalg.norm(xyz[n2] - xyz[n1])
             centroid = (xyz[n1] + xyz[n2]) / 2.
             mpl = elem.MassPerLength()
             if elem.type == 'CONROD':
@@ -1018,7 +1015,7 @@ def _get_mass_nsm(model: BDF,
             elem = model.elements[eid]
             pid = elem.pid
             n1, n2 = elem.node_ids
-            length = norm(xyz[n2] - xyz[n1])
+            length = np.linalg.norm(xyz[n2] - xyz[n1])
             centroid = (xyz[n1] + xyz[n2]) / 2.
             mpl = elem.pid_ref.MassPerLength()
             length_eids_pids['PTUBE'].append((eid, pid))
@@ -1072,7 +1069,7 @@ def _get_mass_nsm(model: BDF,
             n1, n2, n3, n4 = elem.node_ids[:4]
             prop = elem.pid_ref
             centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
-            area = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
+            area = 0.5 * np.linalg.norm(np.cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
 
             if prop.type == 'PSHELL':
                 t = prop.Thickness()
@@ -1137,8 +1134,8 @@ def _get_mass_nsm(model: BDF,
             elem = model.elements[eid]
             n1, n2, n3, n4 = elem.node_ids[:4]
             centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
-            #V = -dot(n1 - n4, cross(n2 - n4, n3 - n4)) / 6.
-            volume = -dot(xyz[n1] - xyz[n4], cross(xyz[n2] - xyz[n4], xyz[n3] - xyz[n4])) / 6.
+            #V = -np.dot(n1 - n4, np.cross(n2 - n4, n3 - n4)) / 6.
+            volume = -np.dot(xyz[n1] - xyz[n4], np.cross(xyz[n2] - xyz[n4], xyz[n3] - xyz[n4])) / 6.
             massi = elem.Rho() * volume
             # if massi != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
             #     msg = 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
@@ -1156,7 +1153,7 @@ def _get_mass_nsm(model: BDF,
             elem = model.elements[eid]
             n1, n2, n3, n4, n5 = elem.node_ids[:5]
             centroid1 = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
-            area1 = 0.5 * norm(cross(xyz[n3]-xyz[n1], xyz[n4]-xyz[n2]))
+            area1 = 0.5 * np.linalg.norm(np.cross(xyz[n3]-xyz[n1], xyz[n4]-xyz[n2]))
             centroid5 = xyz[n5]
 
             #V = (l * w) * h / 3
@@ -1165,8 +1162,8 @@ def _get_mass_nsm(model: BDF,
 
             #(n1, n2, n3, n4, n5) = self.get_node_positions()
             #area1, c1 = area_centroid(n1, n2, n3, n4)
-            #volume = area1 / 3. * norm(c1 - n5)
-            volume = area1 / 3. * norm(centroid1 - centroid5)
+            #volume = area1 / 3. * np.linalg.norm(c1 - n5)
+            volume = area1 / 3. * np.linalg.norm(centroid1 - centroid5)
             massi = elem.Rho() * volume
             if CHECK_MASS and (massi != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
                 msg = 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
@@ -1185,12 +1182,12 @@ def _get_mass_nsm(model: BDF,
         for eid in eids2:
             elem = model.elements[eid]
             n1, n2, n3, n4, n5, n6 = elem.node_ids[:6]
-            area1 = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n2] - xyz[n1]))
-            area2 = 0.5 * norm(cross(xyz[n6] - xyz[n4], xyz[n5] - xyz[n4]))
+            area1 = 0.5 * np.linalg.norm(np.cross(xyz[n3] - xyz[n1], xyz[n2] - xyz[n1]))
+            area2 = 0.5 * np.linalg.norm(np.cross(xyz[n6] - xyz[n4], xyz[n5] - xyz[n4]))
             centroid1 = (xyz[n1] + xyz[n2] + xyz[n3]) / 3.
             centroid2 = (xyz[n4] + xyz[n5] + xyz[n6]) / 3.
             centroid = (centroid1 + centroid2) / 2.
-            volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
+            volume = (area1 + area2) / 2. * np.linalg.norm(centroid1 - centroid2)
             massi = elem.Rho() * volume
             # if massi != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
             #     msg = 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
@@ -1211,12 +1208,12 @@ def _get_mass_nsm(model: BDF,
             n1, n2, n3, n4, n5, n6, n7, n8 = elem.node_ids[:8]
             #(A1, c1) = area_centroid(n1, n2, n3, n4)
             centroid1 = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
-            area1 = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
+            area1 = 0.5 * np.linalg.norm(np.cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
             #(A2, c2) = area_centroid(n5, n6, n7, n8)
             centroid2 = (xyz[n5] + xyz[n6] + xyz[n7] + xyz[n8]) / 4.
-            area2 = 0.5 * norm(cross(xyz[n7] - xyz[n5], xyz[n8] - xyz[n6]))
+            area2 = 0.5 * np.linalg.norm(np.cross(xyz[n7] - xyz[n5], xyz[n8] - xyz[n6]))
 
-            volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
+            volume = (area1 + area2) / 2. * np.linalg.norm(centroid1 - centroid2)
             massi = elem.Rho() * volume
             centroid = (centroid1 + centroid2) / 2.
             # if massi != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
@@ -1225,7 +1222,7 @@ def _get_mass_nsm(model: BDF,
             #         str(centroid), str(elem.Centroid()), str(elem))
             #     raise RuntimeError(msg)
             # print('*centroid1=%s centroid2=%s' % (str(centroid1), str(centroid2)))
-            # print('*area1=%s area2=%s length=%s' % (area1, area2, norm(centroid1 - centroid2)))
+            # print('*area1=%s area2=%s length=%s' % (area1, area2, np.linalg.norm(centroid1 - centroid2)))
             # print('*eid=%s type=%s mass=%s rho=%s V=%s' % (
             #     elem.eid, 'CHEXA', massi, elem.Rho(), volume))
             if eid in element_ids_set:
@@ -1332,7 +1329,7 @@ def _get_cbar_mass(model: BDF, xyz: dict[int, np.ndarray],
         pid = elem.pid
         n1, n2 = elem.node_ids
         centroid = (xyz[n1] + xyz[n2]) / 2.
-        length: float = norm(xyz[n2] - xyz[n1])
+        length: float = np.linalg.norm(xyz[n2] - xyz[n1])
         mpl = elem.pid_ref.MassPerLength()
         length_eids_pids['PBAR'].append((eid, pid))
         lengths['PBAR'].append(length)
@@ -1372,7 +1369,7 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
         xyz1 = xyz[n1]
         xyz2 = xyz[n2]
         centroid = (xyz1 + xyz2) / 2.
-        length = norm(xyz2 - xyz1)
+        length = np.linalg.norm(xyz2 - xyz1)
 
         is_failed, out = elem.get_axes(model)
         if is_failed:
@@ -1500,7 +1497,7 @@ def _get_cbeam_mass_no_nsm(model: BDF, elem: CBEAM,
     prop = elem.pid_ref
     xyz1, xyz2 = elem.get_node_positions()
     centroid = (xyz1 + xyz2) / 2.
-    length = norm(xyz2 - xyz1)
+    length = np.linalg.norm(xyz2 - xyz1)
 
     is_failed, out = elem.get_axes(model)
     if is_failed:
@@ -1622,7 +1619,7 @@ def _get_tri_mass(model: BDF,
         prop = elem.pid_ref
         pid = elem.pid
         centroid = (xyz[n1] + xyz[n2] + xyz[n3]) / 3.
-        area: float = 0.5 * norm(cross(xyz[n1] - xyz[n2], xyz[n1] - xyz[n3]))
+        area: float = 0.5 * np.linalg.norm(np.cross(xyz[n1] - xyz[n2], xyz[n1] - xyz[n3]))
         #areas_prop[pid] += area
         if prop.type == 'PSHELL':
             tflag = elem.tflag
@@ -1707,7 +1704,7 @@ def _get_quad_mass(model: BDF, xyz: dict[int, np.ndarray], element_ids: set[int]
         centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
         x31 = xyz[n3] - xyz[n1]
         x42 = xyz[n4] - xyz[n2]
-        area: float = 0.5 * norm(cross(x31, x42))
+        area: float = 0.5 * np.linalg.norm(np.cross(x31, x42))
 
         if prop.type == 'PSHELL':
             tflag = elem.tflag
@@ -1804,7 +1801,7 @@ def _get_cshear_mass(model: BDF,
         prop = elem.pid_ref
         pid = elem.pid
         centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
-        area: float = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
+        area: float = 0.5 * np.linalg.norm(np.cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
         mpa = prop.MassPerArea()
 
         area_eids_pids['PSHEAR'].append((eid, pid))
@@ -3261,9 +3258,9 @@ def _breakdown_quad(xyz_cid0, nids, nelementsi, etype,
     assert len(area) > 0, area
     assert len(thickness) > 0, thickness
     #tw = thickness[ipids] * np.sqrt(area)
-    #Ax = tw * norm(cross(xaxis, normal), axis=1)
-    #Ay = tw * norm(cross(yaxis, normal), axis=1)
-    #Az = tw * norm(cross(zaxis, normal), axis=1)
+    #Ax = tw * np.linalg.norm(np.cross(xaxis, normal), axis=1)
+    #Ay = tw * np.linalg.norm(np.cross(yaxis, normal), axis=1)
+    #Az = tw * np.linalg.norm(np.cross(zaxis, normal), axis=1)
     return centroid, mass, nsm
 
 
@@ -3316,9 +3313,9 @@ def _breakdown_cshear(xyz_cid0, nids, nelementsi, etype,
     # assume the panel is square to calculate w; then multiply by t to get tw
     tw = thickness[ipids] * np.sqrt(area)
     assert len(tw) > 0, tw
-    #Ax = tw * norm(cross(xaxis, normal), axis=1)
-    #Ay = tw * norm(cross(yaxis, normal), axis=1)
-    #Az = tw * norm(cross(zaxis, normal), axis=1)
+    #Ax = tw * np.linalg.norm(np.cross(xaxis, normal), axis=1)
+    #Ay = tw * np.linalg.norm(np.cross(yaxis, normal), axis=1)
+    #Az = tw * np.linalg.norm(np.cross(zaxis, normal), axis=1)
     return centroid, mass, nsm
 
 
@@ -3415,7 +3412,7 @@ def _breakdown_chexa(xyz_cid0: np.ndarray, nids: np.ndarray,
     area2 = 0.5 * ni
 
     centroid = (c1 + c2) / 2.
-    volume = (area1 + area2) / 2. * norm(c1 - c2, axis=1)
+    volume = (area1 + area2) / 2. * np.linalg.norm(c1 - c2, axis=1)
     assert len(volume) == nelementsi, len(volume)
 
     mass = rho * volume
@@ -3449,9 +3446,9 @@ def _breakdown_cpenta(xyz_cid0: np.ndarray, nids: np.ndarray,
     c2 = (p4 + p5 + p6) / 3.
     centroid = (c1 + c2) / 2.
 
-    area1 = 0.5 * norm(cross(p3 - p1, p2 - p1), axis=1)
-    area2 = 0.5 * norm(cross(p6 - p4, p5 - p4), axis=1)
-    volume = (area1 + area2) / 2. * norm(c1 - c2, axis=1)
+    area1 = 0.5 * np.linalg.norm(np.cross(p3 - p1, p2 - p1), axis=1)
+    area2 = 0.5 * np.linalg.norm(np.cross(p6 - p4, p5 - p4), axis=1)
+    volume = (area1 + area2) / 2. * np.linalg.norm(c1 - c2, axis=1)
     volume = np.abs(volume)
 
     mass = rho * volume
@@ -3489,7 +3486,7 @@ def _breakdown_cpyram(xyz_cid0: np.ndarray, nids: np.ndarray,
 
     centroid = (c1 + p5) / 2.
 
-    volume = area1 / 3. * norm(c1 - p5, axis=1)
+    volume = area1 / 3. * np.linalg.norm(c1 - p5, axis=1)
     #volume = np.abs(volume)
     #return abs(volume)
     mass = rho * volume

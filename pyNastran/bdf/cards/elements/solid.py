@@ -18,7 +18,6 @@ All solid elements are SolidElement and Element objects.
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 import numpy as np
-from numpy import dot, cross
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.cards.elements.elements import Element
@@ -74,7 +73,7 @@ def volume4(n1: Any, n2: Any, n3: Any, n4: Any) -> float:
 
     .. math:: V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6}
     """
-    volume = -dot(n1 - n4, cross(n2 - n4, n3 - n4)) / 6.
+    volume = -np.dot(n1 - n4, np.cross(n2 - n4, n3 - n4)) / 6.
     return volume
 
 def area_centroid(n1: Any, n2: Any, n3: Any, n4: Any) -> tuple[float, float]:
@@ -86,7 +85,7 @@ def area_centroid(n1: Any, n2: Any, n3: Any, n4: Any) -> tuple[float, float]:
       | /   |
       4-----3
     """
-    area = 0.5 * norm(cross(n3 - n1, n4 - n2))
+    area = 0.5 * np.linalg.norm(np.cross(n3 - n1, n4 - n2))
     centroid = (n1 + n2 + n3 + n4) / 4.
     return area, centroid
 
@@ -456,7 +455,7 @@ class CHEXA8(SolidElement):
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
         (area1, c1) = area_centroid(n1, n2, n3, n4)
         (area2, c2) = area_centroid(n5, n6, n7, n8)
-        volume = (area1 + area2) / 2. * norm(c1 - c2)
+        volume = (area1 + area2) / 2. * np.linalg.norm(c1 - c2)
         return abs(volume)
 
     @property
@@ -760,7 +759,7 @@ class CHEXA20(SolidElement):
          n6, n7, n8) = self.get_node_positions()[:8]
         (area1, c1) = area_centroid(n1, n2, n3, n4)
         (area2, c2) = area_centroid(n5, n6, n7, n8)
-        volume = (area1 + area2) / 2. * norm(c1 - c2)
+        volume = (area1 + area2) / 2. * np.linalg.norm(c1 - c2)
         return abs(volume)
 
     @property
@@ -1061,7 +1060,7 @@ class CPENTA6(SolidElement):
             p1 = self.nodes_ref[n1i].get_position()
             p2 = self.nodes_ref[n2i].get_position()
             p3 = self.nodes_ref[n3i].get_position()
-            area = 0.5 * norm(cross(p1 - p2, p1 - p3))
+            area = 0.5 * np.linalg.norm(np.cross(p1 - p2, p1 - p3))
         else:
             (n1, n2, n3, n4) = pack2
             n1i = nids.index(n1 - 1)
@@ -1073,7 +1072,7 @@ class CPENTA6(SolidElement):
             p2 = self.nodes_ref[n2i].get_position()
             p3 = self.nodes_ref[n3i].get_position()
             p4 = self.nodes_ref[n4i].get_position()
-            area = 0.5 * norm(cross(p1 - p3, p2 - p4))
+            area = 0.5 * np.linalg.norm(np.cross(p1 - p3, p2 - p4))
         return [face_node_ids, area]
 
     def _verify(self, xref: bool) -> None:
@@ -1089,11 +1088,11 @@ class CPENTA6(SolidElement):
     def Volume(self):
         """Calculate the volume of the penta"""
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
-        area1 = 0.5 * norm(cross(n3 - n1, n2 - n1))
-        area2 = 0.5 * norm(cross(n6 - n4, n5 - n4))
+        area1 = 0.5 * np.linalg.norm(np.cross(n3 - n1, n2 - n1))
+        area2 = 0.5 * np.linalg.norm(np.cross(n6 - n4, n5 - n4))
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
-        volume = (area1 + area2) / 2. * norm(c1 - c2)
+        volume = (area1 + area2) / 2. * np.linalg.norm(c1 - c2)
         return abs(volume)
         #return volume4(n1, n2, n3, n4) + volume4(n2, n3, n4, n5) + volume4(n2, n4, n5, n6)
 
@@ -1224,7 +1223,7 @@ def chexa_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):
     n4 = nodes_ref[nid4].get_position()
 
     axb = np.cross(n3 - n1, n4 - n2)
-    areai = norm(axb)
+    areai = np.linalg.norm(axb)
     centroid = (n1 + n2 + n3 + n4) / 4.
     area = 0.5 * areai
     normal = axb / areai
@@ -1432,7 +1431,7 @@ class CPENTA15(SolidElement):
         area2 = Area(n6 - n4, n5 - n4)
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
-        volume = (area1 + area2) / 2. * norm(c1 - c2)
+        volume = (area1 + area2) / 2. * np.linalg.norm(c1 - c2)
         return abs(volume)
 
     @property
@@ -1651,7 +1650,7 @@ class CPYRAM5(SolidElement):
         """
         (n1, n2, n3, n4, n5) = self.get_node_positions()
         area1, c1 = area_centroid(n1, n2, n3, n4)
-        volume = area1 / 3. * norm(c1 - n5)
+        volume = area1 / 3. * np.linalg.norm(c1 - n5)
         return abs(volume)
 
     @property
@@ -1849,7 +1848,7 @@ class CPYRAM13(SolidElement):
          n6, n7, n8, n9, n10,
          n11, n12, n13) = self.get_node_positions()
         area1, c1 = area_centroid(n1, n2, n3, n4)
-        volume = area1 / 3. * norm(c1 - n5)
+        volume = area1 / 3. * np.linalg.norm(c1 - n5)
         return abs(volume)
 
     @property
@@ -2145,7 +2144,7 @@ def ctetra_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):
     n3 = nodes_ref[nid3].get_position()
 
     axb = np.cross(n2 - n1, n3 - n1)
-    normi = norm(axb)
+    normi = np.linalg.norm(axb)
     centroid = (n1 + n2 + n3) / 3.
     area = 0.5 * normi
     assert area > 0, area

@@ -196,11 +196,11 @@ class RealSolidArray(OES_Object):
         #self.ntotal = ntotal
         #self.nelements = nelements
 
-        _times = zeros(ntimes, dtype=self.analysis_fmt)
+        _times = np.zeros(ntimes, dtype=self.analysis_fmt)
 
         # TODO: could be more efficient by using nelements for cid
-        element_node = zeros((ntotal, 2), dtype=idtype)
-        element_cid = zeros((nelements, 2), dtype=idtype)
+        element_node = np.zeros((ntotal, 2), dtype=idtype)
+        element_cid = np.zeros((nelements, 2), dtype=idtype)
         #if nelements > 5000:
             #raise RuntimeError(nelements)
 
@@ -210,12 +210,12 @@ class RealSolidArray(OES_Object):
             #nnodes = 6
         #elif self.element_name == 'CHEXA':
             #nnodes = 8
-        #self.element_node = zeros((self.ntotal, nnodes, 2), 'int32')
+        #self.element_node = np.zeros((self.ntotal, nnodes, 2), 'int32')
 
         #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovmShear]
-        data = zeros((ntimes, ntotal, 10), fdtype)
+        data = np.zeros((ntimes, ntotal, 10), fdtype)
         self.nnodes = element_node.shape[0] // self.nelements
-        #self.data = zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
+        #self.data = np.zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -577,12 +577,12 @@ class RealSolidArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element_node[:, 0])  #[0]
+        itot = np.searchsorted(eids, self.element_node[:, 0])  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
-        ind = searchsorted(eids, self.element_node[:, 0])
+        #ind = np.ravel([np.searchsorted(self.element_node[:, 0] == eid) for eid in eids])
+        ind = np.searchsorted(eids, self.element_node[:, 0])
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind

@@ -1923,6 +1923,9 @@ class LOAD(LoadCombination):
         reduced_loads = get_reduced_loads(load)
         return reduced_loads
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
 
 def get_reduced_static_load_from_load_id(model: BDF,
                                          load_id: int,

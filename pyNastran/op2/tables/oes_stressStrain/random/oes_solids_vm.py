@@ -58,11 +58,11 @@ class RandomSolidVMArray(OES_Object):
             ntotal = self.ntotal
             dtype = self._get_analysis_code_dtype()
 
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
 
         # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((ntotal, 2), dtype=idtype)
-        self.element_cid = zeros((nelements, 2), dtype=idtype)
+        self.element_node = np.zeros((ntotal, 2), dtype=idtype)
+        self.element_cid = np.zeros((nelements, 2), dtype=idtype)
 
         #if self.element_name == 'CTETRA':
             #nnodes = 4
@@ -70,12 +70,12 @@ class RandomSolidVMArray(OES_Object):
             #nnodes = 6
         #elif self.element_name == 'CHEXA':
             #nnodes = 8
-        #self.element_node = zeros((self.ntotal, nnodes, 2), 'int32')
+        #self.element_node = np.zeros((self.ntotal, nnodes, 2), 'int32')
 
         #[oxx, oyy, ozz, txy, tyz, txz, vm]
-        self.data = zeros((self.ntimes, self.ntotal, 7), 'float32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 7), 'float32')
         self.nnodes = self.element_node.shape[0] // self.nelements
-        #self.data = zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
+        #self.data = np.zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -213,12 +213,12 @@ class RandomSolidVMArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element_node[:, 0])  #[0]
+        itot = np.searchsorted(eids, self.element_node[:, 0])  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
-        ind = searchsorted(eids, self.element_node[:, 0])
+        #ind = np.ravel([np.searchsorted(self.element_node[:, 0] == eid) for eid in eids])
+        ind = np.searchsorted(eids, self.element_node[:, 0])
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind
