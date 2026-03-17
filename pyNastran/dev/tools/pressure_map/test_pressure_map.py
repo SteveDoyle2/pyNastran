@@ -29,13 +29,13 @@ class TestPressureMap(unittest.TestCase):
         skip_cards = ['CBAR']
         log = SimpleLogger(level='warning')
         bdf_model = read_bdf(bdf_filename, skip_cards=skip_cards, log=log)
-        if not caero_bdf_filename.exists():  # pragma: no cover
-            export_caero_mesh(
-                bdf_filename, caero_bdf_filename,
-                is_aerobox_model=True,
-                write_panel_xyz=False,
-                write_header=False,
-                write_end_data=False)
+        # if not caero_bdf_filename.exists():  # pragma: no cover
+        export_caero_mesh(
+            bdf_filename, caero_bdf_filename,
+            is_aerobox_model=True,
+            write_panel_xyz=False,
+            write_header=False,
+            write_end_data=False)
 
         aero_model, variables = get_aero_model(
             cart3d_filename, aero_format,
@@ -118,7 +118,7 @@ class TestPressureMap(unittest.TestCase):
                 regions_to_remove=None,
                 log=log)
 
-        log = SimpleLogger(level='debug')
+        # log = SimpleLogger(level='debug')
         pressure_filename = DIRNAME / 'cart3d_forcemoment_panelmodel_4.bdf'
         main_pressure_filename = DIRNAME / 'main_cart3d_forcemoment_panelmodel_4.bdf'
         pressure_map(
@@ -168,11 +168,13 @@ class TestPressureMap(unittest.TestCase):
         bdf_filename = MODEL_DIR / 'bwb' / 'bwb_saero.bdf'
         vrt_filename = MODEL_DIR / 'bwb' / 'bwb-saero.vrt'
         caero_bdf_filename = MODEL_DIR / 'bwb' / 'bwb_saero.caero.bdf'
-        if not caero_bdf_filename.exists():  # pragma: no cover
-            export_caero_mesh(
-                bdf_filename, caero_bdf_filename,
-                is_aerobox_model=True,
-                write_panel_xyz=False)
+        # if not caero_bdf_filename.exists():  # pragma: no cover
+        export_caero_mesh(
+            bdf_filename, caero_bdf_filename,
+            is_aerobox_model=True,
+            write_panel_xyz=False,
+            write_header=False,
+            write_end_data=False)
 
         log = SimpleLogger(level='info')
         if not vrt_filename.exists():  # pragma: no cover
