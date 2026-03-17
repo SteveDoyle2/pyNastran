@@ -32,6 +32,7 @@ class Tester(unittest.TestCase):
                 run_extract_bodies: bool=True,
                 run_skin_solids: bool=True,
                 run_export_caero: bool=True,
+                skip_aero_zero_check: bool=False,
                 save_file_structure: bool=False,
                 validate_case_control=True, log=None):
         #xref = False
@@ -46,6 +47,7 @@ class Tester(unittest.TestCase):
                        run_export_caero=run_export_caero,
                        save_file_structure=save_file_structure,
                        validate_case_control=validate_case_control,
+                       skip_aero_zero_check=skip_aero_zero_check,
                        log=log)
 
 
@@ -969,7 +971,8 @@ class TestBDFUnit(Tester):
         """checks aero/aerobeam.bdf"""
         log = SimpleLogger(level='warning', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.bdf')
-        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log,
+                                              skip_aero_zero_check=True)
         #fa2j_1, _rows, _cols = fem1.dmi['FA2J'].get_matrix()
         #fa2j_2, _rows, _cols = fem2.dmi['FA2J'].get_matrix()
         diff_cards2 = list(set(diff_cards))

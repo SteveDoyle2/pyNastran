@@ -395,11 +395,13 @@ def _write_pressure_file(model: BDF,
         log.warning('cant write main pressure file because the wrong type was found...')
     msg += write_include(rel_main_filename)
     msg += write_include(os.path.basename(pressure_filename))
+    msg += 'ENDDATA\n'
 
     # print(msg)
-    log.debug(f'pressure_filename = {pressure_filename}')
-    log.debug(f'aero_panel_bdf_filename = {aero_panel_bdf_filename}')
-    log.debug(f'writing pressure_file: {main_bdf_filename}')
+    log.debug(f'bdf_rel_main_filename = {rel_main_filename}')
+    log.debug(f'bdf_pressure_filename = {pressure_filename}')
+    log.debug(f'bdf_aero_panel_filename = {aero_panel_bdf_filename}')
+    log.debug(f'writing main_bdf_filename: {main_bdf_filename}')
     with open(main_bdf_filename, 'w') as bdf_file:
         bdf_file.write(msg)
     level = log.level
@@ -435,7 +437,7 @@ def _write_pressure_file(model: BDF,
         result['moment'] = force_moment[:, 1]
 
         force_moment_filename = base + '.force_moment.csv'
-        model.log.debug(f'writing {str(force_moment_filename)}')
+        model.log.debug(f'writing csv: {str(force_moment_filename)}')
         np.savetxt(force_moment_filename, result, header='Element,Force,Moment',
                    delimiter=',', fmt=['%d', '%.18e', '%.18e'])
     elif len(forces):

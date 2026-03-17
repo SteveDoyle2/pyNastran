@@ -23,11 +23,15 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
                       rotate_panel_angle_deg: float=0.0,
                       write_panel_xyz: bool=True,
                       xref: bool=True,
-                      skip_zero_check: bool=False) -> None:
+                      skip_zero_check: bool=False,
+                      write_header: bool=True,
+                      write_end_data: bool=True) -> None:
     """
     Write the CAERO cards as CQUAD4s that can be visualized
 
-    model: str | Path | BDF
+    Parameters
+    ----------
+    model : str | Path | BDF
         a valid geometry
     caero_bdf_filename : str
         the file to write
@@ -50,6 +54,10 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
         if True, veriffies hat W2GJ, WKK, etc. are not empty
         an empty WKK will result in no aero load
         an empty W2GJ is also likely a bug
+    write_header : bool; default=True
+        add a CEND and BEGIN BULK at the top
+    write_end_data : bool; default=True
+        add an ENDDATA at the end
     """
     rotate_panel_angle = np.radians(rotate_panel_angle_deg)
 
@@ -121,10 +129,11 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
 
     with open(caero_bdf_filename, 'w') as bdf_file:
         #bdf_file.write('$ pyNastran: punch=True\n')
-        bdf_file.write('SOL 101\n')
-        bdf_file.write('CEND\n')
-        bdf_file.write(subcases)
-        bdf_file.write('BEGIN BULK\n')
+        if write_header:
+            bdf_file.write('SOL 101\n')
+            bdf_file.write('CEND\n')
+            bdf_file.write(subcases)
+            bdf_file.write('BEGIN BULK\n')
 
         bdf_file.write(loads)
         _write_properties(model, bdf_file, pid_method=pid_method)
@@ -257,7 +266,8 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
         nu = 0.3
         rho = 2700.  # 2700 kg/m^3
         bdf_file.write(f'MAT1,{mid},{E},,{nu},{rho}\n')
-        bdf_file.write('ENDDATA\n')
+        if write_end_data:
+            bdf_file.write('ENDDATA\n')
     log.debug(f'  ---finished export_caero_mesh of {caero_bdf_filename}---')
     return
 

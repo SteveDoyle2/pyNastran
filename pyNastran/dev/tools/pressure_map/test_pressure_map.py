@@ -33,7 +33,9 @@ class TestPressureMap(unittest.TestCase):
             export_caero_mesh(
                 bdf_filename, caero_bdf_filename,
                 is_aerobox_model=True,
-                write_panel_xyz=False)
+                write_panel_xyz=False,
+                write_header=False,
+                write_end_data=False)
 
         aero_model, variables = get_aero_model(
             cart3d_filename, aero_format,
@@ -116,7 +118,9 @@ class TestPressureMap(unittest.TestCase):
                 regions_to_remove=None,
                 log=log)
 
+        log = SimpleLogger(level='debug')
         pressure_filename = DIRNAME / 'cart3d_forcemoment_panelmodel_4.bdf'
+        main_pressure_filename = DIRNAME / 'main_cart3d_forcemoment_panelmodel_4.bdf'
         pressure_map(
             aero_model, #cart3d_filename,
             caero_bdf_filename,
@@ -140,12 +144,14 @@ class TestPressureMap(unittest.TestCase):
             regions_to_remove=None,
             log=log)
 
-        fa2j_filename = DIRNAME/'main_cart3d_fa2j_5.bdf'
-        pressure_filename_to_fa2j(pressure_filename, fa2j_filename, sid=1, log=log)
+        fa2j_filename = DIRNAME / 'main_cart3d_fa2j_5.bdf'
+        log.debug('working on fa2j writer')
+        pressure_filename_to_fa2j(main_pressure_filename, fa2j_filename, sid=1, log=log)
 
-        wkk_filename = DIRNAME/'cart3d_wkk_6.bdf'
-        pressure_filename1 = pressure_filename
-        pressure_filename2 = pressure_filename
+        wkk_filename = DIRNAME / 'cart3d_wkk_6.bdf'
+        pressure_filename1 = main_pressure_filename
+        pressure_filename2 = main_pressure_filename
+        log.debug('working on wkk writer')
         pressure_filename_to_wkk_diag(
             pressure_filename1,
             pressure_filename2,
