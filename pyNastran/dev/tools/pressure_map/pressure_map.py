@@ -245,6 +245,7 @@ def pressure_map(aero_filename: PathLike,
     stop_on_failure = True
     if isinstance(nastran_filename, BDF):
         structure_model = nastran_filename
+        _check_model(structure_model)
     else:
         base, ext = os.path.splitext(nastran_filename)
         obj_filename = base + '.obj'
@@ -252,12 +253,12 @@ def pressure_map(aero_filename: PathLike,
             structure_model = BDF(log=log)
             structure_model.bdf_filename = nastran_filename
             structure_model.load(obj_filename)
+            _check_model(structure_model)
         else:
             structure_model = read_bdf(nastran_filename, xref=False, log=log)
+            _check_model(structure_model)
             structure_model.save(obj_filename)
         structure_model.cross_reference()
-    assert len(structure_model.elements), structure_model.get_bdf_stats()
-    assert len(structure_model.nodes), structure_model.get_bdf_stats()
     structure_eids = get_structural_eids_from_csv_load_id(
         structure_model,
         eids_structure, eid_csv_filename, eid_load_id,
@@ -320,6 +321,16 @@ def pressure_map(aero_filename: PathLike,
         cp_sid=cp_sid, pressure_sid=pressure_sid,
         force_sid=force_sid, moment_sid=moment_sid)
     return pressure_model
+
+def _check_model(structure_model: BDF) -> None:
+    nnodes = len(structure_model.nodes)
+    nelements = len(structure_model.elements)
+    if nnodes > 0 and nelements > 0:
+        return
+    msg = (
+        f'BDF file={structure_model.bdf_filename} must have nodes (n={nnodes}) and elements (n={nelements})\n'
+        f'{structure_model.get_bdf_stats()}')
+    raise RuntimeError(msg)
 
 def _write_pressure_file(model: BDF,
                          pressure_filename: PathLike,

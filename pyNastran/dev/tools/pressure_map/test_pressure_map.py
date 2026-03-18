@@ -173,12 +173,13 @@ class TestPressureMap(unittest.TestCase):
             bdf_filename, caero_bdf_filename,
             is_aerobox_model=True,
             write_panel_xyz=False,
-            write_header=False,
-            write_end_data=False)
+            write_header=True,
+            write_end_data=True)
 
-        log = SimpleLogger(level='info')
-        if not vrt_filename.exists():  # pragma: no cover
-            nastran_to_fluent(bdf_filename, vrt_filename, log=log)
+        log = SimpleLogger(level='warning')
+        # log = SimpleLogger(level='info')
+        # if not vrt_filename.exists():  # pragma: no cover
+        nastran_to_fluent(bdf_filename, vrt_filename, log=log)
 
         aero_model, variables = get_aero_model(
             vrt_filename, aero_format,
@@ -191,6 +192,8 @@ class TestPressureMap(unittest.TestCase):
         #     map_type, variable='Cp',
         #     regions_to_include=None,
         #     regions_to_remove=None)
+        log.info('running 1st prssure map')
+        # log.level = 'debug'
         pressure_map(
             aero_model, #cart3d_filename,
             caero_bdf_filename,
@@ -214,6 +217,7 @@ class TestPressureMap(unittest.TestCase):
             regions_to_remove=None,
             log=log)
 
+        log.info('running 2nd prssure map')
         pressure_map(
             aero_model, #cart3d_filename,
             caero_bdf_filename,
