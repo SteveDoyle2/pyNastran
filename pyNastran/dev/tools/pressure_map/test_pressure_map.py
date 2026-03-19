@@ -45,8 +45,8 @@ class TestPressureMap(unittest.TestCase):
 
         neids = len(aero_model.elements)
         eids = np.arange(neids)
-        Cp = np.sin(eids/neids)
-        aero_model.loads['Cp'] = Cp
+        cp = np.sin(eids/neids)
+        aero_model.loads['Cp'] = cp
 
         pressure_map(
             aero_model,
@@ -69,7 +69,7 @@ class TestPressureMap(unittest.TestCase):
             reference_point=None,
             regions_to_include=None,
             regions_to_remove=None,
-            log=log)
+            log=log, is_obj=False)
 
         pressure_map(
             aero_model,
@@ -121,9 +121,11 @@ class TestPressureMap(unittest.TestCase):
         # log = SimpleLogger(level='debug')
         pressure_filename = DIRNAME / 'cart3d_forcemoment_panelmodel_4.bdf'
         main_pressure_filename = DIRNAME / 'main_cart3d_forcemoment_panelmodel_4.bdf'
+        caero_model = read_bdf(caero_bdf_filename,
+                               punch=True, xref=True)
         pressure_map(
             aero_model, #cart3d_filename,
-            caero_bdf_filename,
+            caero_model, #caero_bdf_filename,
             # eids_structure=np.array([]),
             # eid_csv_filename='',
             eid_load_id=-1,
@@ -146,7 +148,8 @@ class TestPressureMap(unittest.TestCase):
 
         fa2j_filename = DIRNAME / 'main_cart3d_fa2j_5.bdf'
         log.debug('working on fa2j writer')
-        pressure_filename_to_fa2j(main_pressure_filename, fa2j_filename, sid=1, log=log)
+        pressure_filename_to_fa2j(
+            main_pressure_filename, fa2j_filename, sid=1, log=log)
 
         wkk_filename = DIRNAME / 'cart3d_wkk_6.bdf'
         pressure_filename1 = main_pressure_filename

@@ -132,6 +132,7 @@ def _get_force_moment(pressure_filename: PathLike | np.ndarray,
 def pressure_map(aero_filename: PathLike,
                  nastran_filename: PathLike | BDF,
                  eids_structure=np.array([]),
+                 is_obj: bool=False,
                  eid_csv_filename: PathLike='',
                  eid_load_id: int=10,
                  aero_format: str='cart3d',
@@ -162,6 +163,9 @@ def pressure_map(aero_filename: PathLike,
         the path to the aero model
     nastran_filename : PathLike
         the path to the nastran model
+    is_obj : bool; default=False
+        save/use the obj_filename that is determined from
+        nastran_filename
     eid_csv_filename : PathLike
         ???
     eids_structure : int np.ndarray
@@ -249,7 +253,7 @@ def pressure_map(aero_filename: PathLike,
     else:
         base, ext = os.path.splitext(nastran_filename)
         obj_filename = base + '.obj'
-        if os.path.exists(obj_filename):
+        if os.path.exists(obj_filename) and is_obj:
             structure_model = BDF(log=log)
             structure_model.bdf_filename = nastran_filename
             structure_model.load(obj_filename)
