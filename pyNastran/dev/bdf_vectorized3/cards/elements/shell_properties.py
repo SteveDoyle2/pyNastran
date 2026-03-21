@@ -358,7 +358,6 @@ class PSHELL(Property):
         theta_offset : float
             rotates the ABD matrix; measured in degrees
 
-        http://www2.me.rochester.edu/courses/ME204/nx_help/index.html#uid:id503291
         Understanding Classical Lamination Theory
         """
         #mids = self.get_material_ids()
@@ -1559,7 +1558,6 @@ class PCOMP(CompositeProperty):
         theta_offset : float
             rotates the ABD matrix; measured in degrees
 
-        http://www2.me.rochester.edu/courses/ME204/nx_help/index.html#uid:id503291
         Understanding Classical Lamination Theory
         """
         #mids = self.get_material_ids()

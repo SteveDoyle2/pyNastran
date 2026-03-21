@@ -21,7 +21,7 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types, float_types, zip_strict
 from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import Property, Material, write_card
+from pyNastran.bdf.cards.base_card import Property, Material  # write_card
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.bdf_interface.internal_get import coord_id, material_id
@@ -74,7 +74,7 @@ class CompositeShellProperty(Property):
     def TRef(self, tref: float) -> None:
         self.tref = tref
 
-    def MassPerArea(self, iply='all', method='nplies', tflag: int=1, tscales=None):
+    def MassPerArea(self, iply: int | str='all', method='nplies', tflag: int=1, tscales=None):
         return self.get_mass_per_area(iply, method)
 
     def MassPerArea_structure(self) -> float:
@@ -88,10 +88,13 @@ class CompositeShellProperty(Property):
         return self.get_nonstructural_mass()
 
     def Rho(self, iply: int) -> float:
+        assert iply >= 0, iply
         return self.get_density(iply)
     def Theta(self, iply: int) -> float:
+        assert iply >= 0, iply
         return self.get_theta(iply)
     def sout(self, iply: int) -> str:
+        assert iply >= 0, iply
         return self.get_sout(iply)
 
     #def Thicknesses(self):
@@ -233,8 +236,8 @@ class CompositeShellProperty(Property):
             Ask for ply 4, return ply 2
 
         """
-        if iply == 'all':
-            return iply
+        if iply in {'all', -1}:
+            return -1
 
         # iply = 5
         # nplies = 3 (sym=6)
@@ -266,6 +269,7 @@ class CompositeShellProperty(Property):
     def get_material_id(self, iply: int) -> int:
         """iply - 0 based"""
         iply = self._adjust_ply_id(iply)
+        assert iply >= 0, iply
         mid = self.Mid(iply) #self.mids[iply]
         return mid
 
@@ -286,13 +290,14 @@ class CompositeShellProperty(Property):
 
         """
         #nplies = len(self.thicknesses)
-        if iply == 'all':  # get all layers
+        if iply in {-1, 'all'}:  # get all layers
             thick = sum(self.thicknesses)
             if self.is_symmetrical:
                 return thick * 2.
             return thick
         else:
             iply = self._adjust_ply_id(iply)
+            assert iply >= 0, iply
             thick = self.thicknesses[iply]
             return thick
 
@@ -301,14 +306,14 @@ class CompositeShellProperty(Property):
         r"""
         Gets the number of plies including the core.
 
-            ::
+        ::
 
-              if Lam=SYM:
-                returns nplies * 2   (even)
-              else:
-                returns nplies
+          if Lam=SYM:
+            returns nplies * 2   (even)
+          else:
+            returns nplies
 
-            """
+        """
         nplies = len(self.thicknesses)
         if self.is_symmetrical:
             return nplies * 2
@@ -368,6 +373,7 @@ class CompositeShellProperty(Property):
 
         """
         iply = self._adjust_ply_id(iply)
+        assert iply >= 0, iply
         if self.mids_ref is not None:
             mid_ref = self.mids_ref[iply]
             if mid_ref is None:
@@ -390,6 +396,7 @@ class CompositeShellProperty(Property):
 
         """
         iply = self._adjust_ply_id(iply)
+        assert iply >= 0, iply
         if self.mids_ref is not None:
             mid = self.mids_ref[iply]
         else:
@@ -407,6 +414,7 @@ class CompositeShellProperty(Property):
 
         """
         iply = self._adjust_ply_id(iply)
+        assert iply >= 0, iply
         theta = self.thetas[iply]
         return theta
 
@@ -422,6 +430,7 @@ class CompositeShellProperty(Property):
 
         """
         iply = self._adjust_ply_id(iply)
+        assert iply >= 0, iply
         sout = self.souts[iply]
         return sout
 
@@ -537,7 +546,7 @@ class CompositeShellProperty(Property):
         return self.get_mass_per_area_rho(rhos, iply, method)
 
     def get_mass_per_area_rho(self, rhos: list[float],
-                              iply='all', method: str='nplies') -> float:
+                              iply: int | str='all', method: str='nplies') -> float:
         r"""
         Gets the Mass/Area for the property.
 
@@ -594,7 +603,7 @@ class CompositeShellProperty(Property):
         assert method in ['nplies', 'rho*t', 't'], 'method=%r is invalid' % method
         nplies = len(self.thicknesses)
         iply = self._adjust_ply_id(iply)
-        if iply == 'all':  # get all layers
+        if iply == -1:  # get all layers
             #mass_per_area_total = m/A = sum(rho*t) + nsm
             #mass_per_area_total = mpa-nsm = sum(rho*t)
             #(m/A)i = rho*t + nsmi
@@ -1259,6 +1268,47 @@ class PCOMP(CompositeShellProperty):
         nu_xy = -S[0, 1] / Ex
         return Ex, Ey, Gxy, nu_xy
 
+    def add_plies_to_beginning_and_end(
+            self,
+            mid_begin: int | list[int],
+            mid_end: int | list[int],
+            t_begin: float | list[float],
+            t_end: float | list[float],
+            theta_begin: list[float],
+            theta_end: list[float],
+            sout_begin: str | list[str],
+            sout_end: str | list[str]) -> None:
+        assert isinstance(theta_begin, list), theta_begin
+        assert isinstance(theta_end, list), theta_end
+
+        assert isinstance(mid_begin, (list, int)), mid_begin
+        assert isinstance(mid_end, (list, int)), mid_end
+
+        assert isinstance(t_begin, (list, float)), t_begin
+        assert isinstance(t_end, (list, float)), t_end
+
+        assert isinstance(sout_begin, (list, str)), sout_begin
+        assert isinstance(sout_end, (list, str)), sout_end
+
+        nply_begin = len(theta_begin)
+        nply_end = len(theta_end)
+
+        # and nplies
+        mid_begin_list = [mid_begin] * nply_begin if isinstance(mid_begin, int) else mid_begin
+        mid_end_list = [mid_end] * nply_end if isinstance(mid_end, int) else mid_end
+
+        t_begin_list = [t_begin] * nply_begin if isinstance(t_begin, float) else t_begin
+        t_end_list = [t_end] * nply_end if isinstance(t_end, float) else t_end
+
+        sout_begin_list = [sout_begin] * nply_begin if isinstance(sout_begin, str) else sout_begin
+        sout_end_list = [sout_end] * nply_end if isinstance(sout_end, str) else sout_end
+
+        self.mids = mid_begin_list + self.mids + mid_end_list
+        self.thetas = theta_begin + self.thetas + theta_end
+        self.thicknesses = t_begin_list + self.thicknesses + t_end_list
+        self.souts = sout_begin_list + self.souts + sout_end_list
+        self.validate()
+
     def _verify(self, xref: bool) -> None:
         pid = self.Pid()
         is_sym = self.is_symmetrical
@@ -1333,6 +1383,7 @@ def map_failure_theory_int(ft: int) -> Optional[str]:
     except KeyError:
         raise NotImplementedError(ft)
     return ft_str
+
 
 class PCOMPG(CompositeShellProperty):
     """
@@ -1518,10 +1569,10 @@ class PCOMPG(CompositeShellProperty):
     def validate(self) -> None:
         assert isinstance(self.global_ply_ids, list), self.global_ply_ids
         sorted_global_ply_ids = sorted(self.global_ply_ids)
-        if not np.array_equal(sorted_global_ply_ids, np.unique(self.global_ply_ids)):
-            msg = 'PCOMPG pid=%s; global_ply_ids=%s must be unique' % (
-                self.pid, self.global_ply_ids)
-            raise ValueError(msg)
+        # if not np.array_equal(sorted_global_ply_ids, np.unique(self.global_ply_ids)):
+        #     msg = 'PCOMPG pid=%s; global_ply_ids=%s must be unique' % (
+        #         self.pid, self.global_ply_ids)
+        #     raise ValueError(msg)
 
         #assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', 0.0, None], 'ft=%r' % self.ft # PCOMP
         assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None], 'ft=%r' % self.ft
@@ -1786,6 +1837,55 @@ class PCOMPG(CompositeShellProperty):
         D /= 3.
         #M /= 2.
         return A, B, D
+
+    def add_plies_to_beginning_and_end(
+            self,
+            gply_begin: list[int],
+            gply_end: list[int],
+            mid_begin: int | list[int],
+            mid_end: int | list[int],
+            t_begin: float | list[float],
+            t_end: float | list[float],
+            theta_begin: list[float],
+            theta_end: list[float],
+            sout_begin: str | list[str],
+            sout_end: str | list[str]) -> None:
+        assert isinstance(gply_begin, (list, int)), gply_begin
+        assert isinstance(gply_end, (list, int)), gply_end
+
+        assert isinstance(mid_begin, (list, int)), mid_begin
+        assert isinstance(mid_end, (list, int)), mid_end
+
+        assert isinstance(theta_begin, list), theta_begin
+        assert isinstance(theta_end, list), theta_end
+
+        assert isinstance(t_begin, (list, float)), t_begin
+        assert isinstance(t_end, (list, float)), t_end
+
+        assert isinstance(sout_begin, (list, str)), sout_begin
+        assert isinstance(sout_end, (list, str)), sout_end
+
+        nply_begin = len(theta_begin)
+        nply_end = len(theta_end)
+        assert len(gply_begin) == nply_begin, (len(gply_begin), nply_begin)
+        assert len(gply_end) == nply_end, (len(gply_end), nply_end)
+
+        # and nplies
+        mid_begin_list = [mid_begin] * nply_begin if isinstance(mid_begin, int) else mid_begin
+        mid_end_list = [mid_end] * nply_end if isinstance(mid_end, int) else mid_end
+
+        t_begin_list = [t_begin] * nply_begin if isinstance(t_begin, float) else t_begin
+        t_end_list = [t_end] * nply_end if isinstance(t_end, float) else t_end
+
+        sout_begin_list = [sout_begin] * nply_begin if isinstance(sout_begin, str) else sout_begin
+        sout_end_list = [sout_end] * nply_end if isinstance(sout_end, str) else sout_end
+
+        self.global_ply_ids = gply_begin + self.global_ply_ids + gply_end
+        self.mids = mid_begin_list + self.mids + mid_end_list
+        self.thetas = theta_begin + self.thetas + theta_end
+        self.thicknesses = t_begin_list + self.thicknesses + t_end_list
+        self.souts = sout_begin_list + self.souts + sout_end_list
+        self.validate()
 
     def raw_fields(self):
         list_fields = [
@@ -2891,7 +2991,6 @@ class PSHELL(Property):
         theta_offset : float
             rotates the ABD matrix; measured in degrees
 
-        http://www2.me.rochester.edu/courses/ME204/nx_help/index.html#uid:id503291
         Understanding Classical Lamination Theory
         """
         #mids = self.get_material_ids()
@@ -3392,7 +3491,8 @@ class PTRSHL(Property):
         """
         Calculates mass per area.
 
-        .. math:: \frac{m}{A} = nsm + \rho t"""
+        .. math:: \frac{m}{A} = nsm + \rho t
+        """
         mid_ref = self.mid_ref
         rho = mid_ref.Rho()  # fails if mid1=None and mid2=None
 

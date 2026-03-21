@@ -1,10 +1,13 @@
 import os
 import copy
 from typing import Optional
+import warnings
+
 import numpy as np
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.op2.op2 import read_op2, OP2
+from pyNastran.utils.numpy_utils import integer_float_types
 
 # (imodel, subcases, factors)
 # (0, [1, 1], [1.2, 0.0])
@@ -14,6 +17,7 @@ CombinationPairs = list[CombinationPair]
 
 # (subcase_out, label, pairs)
 MultiCombination = tuple[int, str, CombinationPairs]
+
 
 def load_combinations(combination_filenames: list[PathLike],
                       delimiter: str=',') -> list:
@@ -46,6 +50,27 @@ def load_combinations(combination_filenames: list[PathLike],
 
 def _load_combination(combination_filename: PathLike,
                       delimiter: str=',') -> tuple[list[int], list]:
+    """
+    Parameters
+    ----------
+    combination_filename : PathLike
+        the path to the combination file
+    delimiter : str; default=','
+        the delimiter used to separate subcases
+
+    Returns
+    -------
+    subcases_input : list[int]
+        the subcases to use to combine
+    combination: tuple[subcase_out, label, factors]
+        subcase_out: int
+            subcase id out
+        label: str
+            name for the new subcase
+        factors: list[float]
+            combination factors
+
+    """
     lines = _get_combination_lines(combination_filename, delimiter)
 
     log = SimpleLogger(level='debug')
@@ -128,6 +153,7 @@ def string_where(op2s_input: list[str], op2_input: str) -> list[int]:
         if op2_inputi == op2_input:
             iop2.append(i)
     return iop2
+
 
 def _load_multi_combination(
         combination_filename: PathLike,
@@ -218,14 +244,27 @@ def run_load_case_combinations(op2_filename: PathLike | OP2,
 
     """
     _check_op2_file(op2_filename)
-    if not isinstance(combination_filenames, (list, tuple)):
-        combination_filenames = [combination_filenames]
-
-    all_combinations = load_combinations(combination_filenames)
+    all_combinations = setup_combinations_single(combination_filenames)
     op2_filenames_new = [os.path.splitext(filename)[0] + '.op2'
                          for filename in combination_filenames]
     print(f'op2_filenames_new = {op2_filenames_new}')
+    run_load_case_combinations_from_data(
+        op2_filename, all_combinations,
+        exclude_results=exclude_results,
+        include_results=include_results,
+        mode=mode, revision=revision,
+        log=log)
+    return
 
+def run_load_case_combinations_from_data(op2_filename: PathLike,
+                                         op2_filenames_new: list[PathLike],
+                                         all_combinations: list,
+                                         exclude_results: Optional[list[str]]=None,
+                                         include_results: Optional[list[str]]=None,
+                                         mode: Optional[str]=None,
+                                         revision: Optional[str]=None,
+                                         log: Optional[SimpleLogger]=None,
+                                         require_cases: bool=True) -> None:
     # load_geometry: bool = False,
     # combine: bool = True,
     # subcases: Optional[list[int]] = None,
@@ -242,17 +281,30 @@ def run_load_case_combinations(op2_filename: PathLike | OP2,
     # check displacements exist
     assert len(all_combinations) == len(op2_filenames_new)
     disp_keys = list(model.displacements)
+    missing_subcases = []
     for op2_filename_new, (subcases_in, combinations) in zip(op2_filenames_new, all_combinations):
         for subcase in subcases_in:
             try:
                 model.displacements[subcase]
             except KeyError:
-                raise KeyError(f'cant find subcase={subcase}; allowed={disp_keys}')
+                missing_subcases.append(subcase)
+    if missing_subcases:
+        missing_subcases.sort()
+        raise RuntimeError(f'cant find subcases={missing_subcases}; allowed={disp_keys}')
 
     # do the combinations
     for op2_filename_new, (subcases_in, combinations) in zip(op2_filenames_new, all_combinations):
         combine(model, op2_filename_new,
-                subcases_in, combinations, model.log, mode_out, revision)
+                subcases_in, combinations, model.log, mode_out, revision,
+                require_cases=require_cases)
+
+
+def setup_combinations_single(combination_filenames: list[PathLike] | PathLike) -> list:
+    if not isinstance(combination_filenames, (list, tuple)):
+        combination_filenames = [combination_filenames]
+
+    all_combinations = load_combinations(combination_filenames)
+    return all_combinations
 
 
 def _read_op2(op2_filename: PathLike | OP2,
@@ -359,7 +411,8 @@ def _load_models(op2_filenames: dict[int, PathLike | OP2],
     return models, imodel
 
 
-def get_local_factors(label: str,
+def get_local_factors(subcase_out: int,
+                      label: str,
                       subcases_in: list[int],
                       factors_in: list[float],
                       require_cases: bool=True) -> tuple[list[int], list[float]]:
@@ -373,8 +426,13 @@ def get_local_factors(label: str,
             continue
         factors_out.append(factor)
         subcases_out.append(subcase)
-    if require_cases:
-        assert len(factors_out) > 0, f'label={label!r} has no factors != 0'
+
+    if len(factors_out) > 0:
+        msg = f'subcase_out={subcase_out} label={label!r} has no factors != 0'
+        if require_cases:
+            assert len(factors_out) > 0, msg
+        else:
+            warnings.warn(msg)
     return subcases_in, factors_out
 
 
@@ -444,7 +502,7 @@ def multi_combine(models: dict[int, OP2],
             for ires, (imodel, subcases_in, factors_in) in enumerate(imodel_subcases_factors):
                 assert len(subcases_in) == len(factors_in), f'subcases_in={subcases_in} factors_in={factors_in}'
                 subcases, factors = get_local_factors(
-                    label, subcases_in, factors_in, require_cases=False)
+                    imodel, label, subcases_in, factors_in, require_cases=False)
                 if len(subcases) == 0:
                     continue
                 subcase0 = subcases[0]
@@ -483,7 +541,8 @@ def combine(model: OP2,
             subcases_in: list[int],
             combinations: list[tuple],
             log: SimpleLogger,
-            mode: str, revision: Optional[str]):
+            mode: str, revision: Optional[str],
+            require_cases: bool=True):
     # assert len(subcases_in) == len(combinations), f'subcases_in={subcases_in} combinations={combinations}'
 
     table_res_types = _results(model)
@@ -492,9 +551,11 @@ def combine(model: OP2,
     model2._nastran_revision = revision
     for combination in combinations:
         (subcase_out, label, factors_in) = combination
+        #print(f'subcase_out={subcase_out} label={label!r} factors_in={factors_in}')
         assert len(subcases_in) == len(factors_in), f'subcases_in={subcases_in} factors_in={factors_in}'
         subcases, factors = get_local_factors(
-            label, subcases_in, factors_in, require_cases=True)
+            subcase_out, label, subcases_in, factors_in, require_cases=require_cases)
+        #print(f'  subcases={subcases} factors={factors}')
         subcase0 = subcases[0]
 
         for table_type, res_type in table_res_types:
@@ -508,14 +569,23 @@ def combine(model: OP2,
             case_new = copy.deepcopy(case0)
             case_new.label = label
 
-            # case.data *= 0
-            case_new.linear_combination(0.0, update=False)
-            for subcase, factor in zip(subcases, factors):
-                casei = res_type[subcase]
-                case_new.linear_combination(factor, casei.data, update=False)
-                #casei = caseii * factor
-                #case.data = casei.data
-
+            try:
+                # case.data *= 0
+                case_new.linear_combination(0.0, update=False)
+                for subcase, factor in zip(subcases, factors):
+                    # assert isinstance(factor, integer_float_types), f'bad factor type (expected float); subcase={subcase} factor={factor}'
+                    casei = res_type[subcase]
+                    assert case_new.data.shape == casei.data.shape, f'bad shapes; case_new.data.shape={case_new.data.shape}; casei.data.shape={casei.data.shape}'
+                    case_new.linear_combination(factor, casei.data, update=False)
+                    #casei = caseii * factor
+                    #case.data = casei.data
+            except AssertionError as error:
+                # ('bad shapes; case_new.data.shape=(1, 124011, 6); casei.data.shape=(1, 124130, 6)',)
+                # bad shapes; case_new.data.shape
+                if case_new.class_name == 'RealGridPointForcesArray' and 'bad shapes; case_new.data.shape' in error.args[0]:
+                    log.error('skipping grid point forces')
+                    continue
+                raise
             if hasattr(case_new, 'update_data_components'):
                 case_new.update_data_components()
             else:

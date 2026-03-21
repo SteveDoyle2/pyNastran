@@ -92,6 +92,38 @@ class XrefMesh(BDFAttributes):
         # for elem in model.elements:
             # elem.check_unique_nodes()
 
+
+    def get_null_cross_reference(self,
+                                 xref: bool=False,
+                                 xref_nodes: bool=False,
+                                 xref_elements: bool=False,
+                                 xref_masses: bool=False,
+                                 xref_rigid_elements: bool=False,
+                                 xref_nodes_with_elements: bool=False,
+                                 xref_properties: bool=False,
+                                 xref_materials: bool=False,
+                                 xref_loads: bool=False,
+                                 xref_constraints: bool=False,
+                                 xref_aero: bool=False,
+                                 xref_sets: bool=False,
+                                 xref_optimization: bool=False) -> None:
+            out = {
+                'xref': xref,
+                'xref_nodes': xref_nodes,
+                'xref_elements': xref_elements,
+                'xref_masses': xref_masses,
+                'xref_rigid_elements': xref_rigid_elements,
+                'xref_nodes_with_elements': xref_nodes_with_elements,
+                'xref_properties': xref_properties,
+                'xref_materials': xref_materials,
+                'xref_loads': xref_loads,
+                'xref_constraints': xref_constraints,
+                'xref_aero': xref_aero,
+                'xref_sets': xref_sets,
+                'xref_optimization': xref_optimization,
+            }
+            return out
+
     def cross_reference(self,
                         xref: bool=True,
                         xref_nodes: bool=True,

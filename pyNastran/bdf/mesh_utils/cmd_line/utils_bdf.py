@@ -37,12 +37,37 @@ def read_lax_obj(bdf_filename, obj_filename, is_obj: bool,
                  punch: bool=False,
                  duplicate_cards=None,
                  log=None) -> BDF:
+    """
+    Parameters
+    ----------
+    bdf_filename : PathLike
+        bdf filename
+    obj_filename : PathLike
+        object filename
+    is_obj : bool; default=True
+        consider the obj_filename to load from
+    xref : bool; default=True
+         cross-references the part
+    is_strict_card_parser : bool; default=True
+        ???
+    punch : bool; default=False
+        define a punch file
+    duplicate_cards : ???
+    log : SimpleLogger
+        a logging object
+
+    Returns
+    -------
+    model : BDF()
+        the model object
+
+    """
     if is_obj:
         from pyNastran.bdf.bdf import BDF
         if os.path.exists(obj_filename):
             model = BDF(log=log)
             model.load(obj_filename)
-            model.cross_reference()
+            model.cross_reference(xref=xref)
         else:
             model = read_lax_bdf(
                 bdf_filename, punch=punch, xref=False,
@@ -51,9 +76,10 @@ def read_lax_obj(bdf_filename, obj_filename, is_obj: bool,
                 duplicate_cards=duplicate_cards,
                 log=log)
             model.save(obj_filename)
+            model.cross_reference(xref=xref)
     else:
         model = read_lax_bdf(
-            bdf_filename, punch=punch, xref=False,
+            bdf_filename, punch=punch, xref=xref,
             validate=False,
             is_strict_card_parser=is_strict_card_parser,
             duplicate_cards=duplicate_cards,

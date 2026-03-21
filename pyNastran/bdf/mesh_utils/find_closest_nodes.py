@@ -4,13 +4,38 @@ defines:
     * ieq = find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol)
 
 """
+from __future__ import annotations
 from itertools import count
-from typing import Optional, Any
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
 
 from pyNastran.nptyping_interface import NDArray3float, NDArrayNint
+
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+
+
+def get_y_mirrored_nodes(model: BDF, nids: np.ndarray,
+                         neq_max: int=10, tol: float=0.0001) -> dict[int, int]:
+    """find the nodes mirrored about the y=0 / xz plane"""
+    out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
+    nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = out
+
+    all_nids = nid_cp_cd[:, 0]
+    assert np.array_equal(all_nids, np.unique(all_nids, ))
+    inid = np.searchsorted(all_nids, nids)
+    xyz_cid0_nids = xyz_cid0[inid, :]
+    xyz_cid0_compare = xyz_cid0_nids.copy()
+    xyz_cid0_compare[:, 1] *= -1.0
+    nids_opposite = find_closest_nodes(xyz_cid0, all_nids, xyz_cid0_compare, neq_max=neq_max, tol=tol)
+
+    nid_dict = {}
+    for nid, nid_opposite in zip(nids, nids_opposite):
+        nid_dict[int(nid)] = int(nid_opposite)
+    return nid_dict
+
 
 def find_closest_nodes(nodes_xyz: NDArray3float, nids: NDArrayNint,
                        xyz_compare: NDArray3float,

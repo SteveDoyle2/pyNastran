@@ -23,12 +23,33 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.coordinate_systems import Coord
 
 
-def split_comment_to_femap_comment(comment: str) -> tuple[bool, str, tuple[str, int, str]]:
+def split_comment_to_femap_comment(comment: str,
+                                   ) -> tuple[bool, str, tuple[str, int, str]]:
     """
-    ['$ Femap Region 12345 : Wing NSM']
-    ['$ Femap Property 100 : Wing Skin 20 Plies\n$\n$ Femap Layup 101 : 20 Ply\n']
-    ['$$ Femap Material 202 : Steel:42\n']
-    ['$ Femap Property 8000007 : Aileron, Steel Pin dia=.375', '$ Femap PropShape 8000007 : 5,0,0.1875,0.,0.,0.,0.,0.', '$ Femap PropMethod 8000007 : 5,0,1,0.', '$ Femap PropOrient 8000007 : 5,0,0.,1.,2.,3.,4.,-1.,0.,0.']
+    Parameters
+    ----------
+    comment : str
+        examples are as follows:
+        ['$ Femap Region 12345 : Wing NSM']
+        ['$ Femap Property 100 : Wing Skin 20 Plies\n$\n$ Femap Layup 101 : 20 Ply\n']
+        ['$$ Femap Material 202 : Steel:42\n']
+        ['$ Femap Property 8000007 : Aileron, Steel Pin dia=.375', '$ Femap PropShape 8000007 : 5,0,0.1875,0.,0.,0.,0.,0.', '$ Femap PropMethod 8000007 : 5,0,1,0.', '$ Femap PropOrient 8000007 : 5,0,0.,1.,2.,3.,4.,-1.,0.,0.']
+
+    Returns
+    -------
+    is_passed : bool
+        was the comment split successfully
+    base_comment
+        TODO: maybe remove this?
+        empty if successful
+        otherwise, just comment
+    word_id_name : tuple[str, int, str]
+        word : str
+            'Femap Property'
+        id : int
+            100
+        name : str
+            'Wing Skin 20 Plies'
     """
     comment = comment.rstrip()
     if 'Femap' not in comment:

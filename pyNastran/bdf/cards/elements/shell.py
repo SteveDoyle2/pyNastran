@@ -147,6 +147,10 @@ class ShellElement(Element):
     def __init__(self):
         Element.__init__(self)
 
+    def update_zoffset_to_oml(self, total_thickness: float) -> None:
+        if self.zoffset > 0:
+            self.zoffset = total_thickness / 2.
+
     def Theta_mcid(self) -> int:
         if self.theta_mcid_ref is None:
             return self.theta_mcid
@@ -5105,9 +5109,28 @@ class SNORM(BaseCard):
 
 
 def transform_shell_material_coordinate_system(cids: list[int],
-                                               iaxes, theta_mcid, normal, p1, p2,
-                                               idtype='int32', fdtype='float64'):
-    """calculate the material transformation matrix"""
+                                               iaxes: np.ndarray,
+                                               theta_mcid: np.ndarray,
+                                               normal: np.ndarray,
+                                               p1: np.ndarray,
+                                               p2: np.ndarray,
+                                               idtype: str='int32',
+                                               fdtype: str='float64'):
+    """
+    Calculate the material transformation matrix
+
+    cids  = []
+    iaxes  = []
+    theta_mcid = [1, 2.0]
+    normal = np.array([
+        [0., 0., 1.],
+        [0., 0., 1.],
+    ])
+    p1 = []
+    p2 = []
+    transform_shell_material_coordinate_system(
+        cids, iaxes, theta_mcid, normal, p1, p2)
+    """
     is_mcid = np.array([isinstance(val, integer_types) for val in theta_mcid], dtype='bool')
     nelements = len(theta_mcid)
     imcid = np.where(is_mcid)[0]
@@ -5183,7 +5206,7 @@ def transform_shell_material_coordinate_system(cids: list[int],
     return telem
 
 
-def _material_coordinate_system(element,
+def _material_coordinate_system(element: CQUAD4 | CTRIA3 | CTRIA6 | CQUAD8 | CQUADR,
                                 normal: np.ndarray,
                                 xyz1: np.ndarray,
                                 xyz2: np.ndarray) -> tuple[np.ndarray,

@@ -2,6 +2,7 @@ import os
 import sys
 from cpylog import SimpleLogger
 
+import numpy as np
 import pyNastran
 from .utils import add_argparse_arguments, get_bdf_outfilename
 
@@ -44,9 +45,9 @@ def cmd_line_rbe3_to_rbe2(argv=None, quiet: bool=False) -> None:
     bdf_filename_out = args.out
     infile = args.infile
 
-    eids = None
+    eids_to_fix = np.array([], dtype='int')
     if infile is None:
-        eids_to_fix = [int(eid) for eid in args.eids.strip(', ').split(',')]
+        eids_to_fix = np.array([int(eid) for eid in args.eids.strip(', ').split(',')])
 
     log = SimpleLogger(level='debug')
     bdf_filename_out = get_bdf_outfilename(

@@ -19,6 +19,8 @@ if TYPE_CHECKING:
         HingeMomentDerivatives,
         ControlSurfacePositionHingeMoment,
         AeroPressure, AeroForce)
+    from pyNastran.op2.tables.oef_forces.oef_force_objects import (
+        RealCBushForceArray, RealPlateForceArray, RealPlateBilinearForceArray)
 
 
 class Results:
@@ -491,7 +493,7 @@ class Force(Load):
         self.cvisc_force = {}
         self.cgap_force = {}
         self.cbear_force = {}
-        self.cbush_force = {}
+        self.cbush_force: dict[Any, RealCBushForceArray] = {}
         self.cfast_force = {}
         self.cweld_force = {}
         self.cvisc_force = {}
