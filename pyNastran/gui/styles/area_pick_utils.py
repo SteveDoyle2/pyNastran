@@ -30,7 +30,7 @@ from pyNastran.gui.menus.highlight.vtk_utils import (
     create_highlighted_ugrids,
     create_highlighted_actors, get_ids_filter)
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from vtkmodules.vtkCommonCore import vtkDataArray, vtkPoints, vtkIdTypeArray
     from vtkmodules.vtkRenderingCore import vtkAreaPicker
     from pyNastran.gui.main_window import MainWindow

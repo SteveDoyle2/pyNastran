@@ -2,8 +2,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from pyNastran.bdf.bdf_interface.safe_cross_reference import SafeXrefMesh
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+
 
 class UnXrefMesh(SafeXrefMesh):
     """

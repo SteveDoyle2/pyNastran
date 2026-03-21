@@ -2405,7 +2405,7 @@ class Add1dElements:
                   b: Optional[list[float]]=None,
                   ge: Optional[list[float]]=None,
                   rcv: Optional[list[float]]=None,
-                  mass: Optional[float]=None, comment: str='') -> PBUSH:
+                  mass: float=0.0, comment: str='') -> PBUSH:
         """
         Creates a PBUSH card, which defines a property for a CBUSH
 
@@ -2426,7 +2426,7 @@ class Add1dElements:
         rcv : list[float]; default=None -> (None, None, None, None)
             [sa, st, ea, et] = rcv
             length(rcv) = 4
-        mass : float; default=None
+        mass : float; default=0.0
             lumped mass of the CBUSH
             This is an MSC only parameter.
         comment : str; default=''
@@ -2468,11 +2468,11 @@ class Add1dElements:
         return elem
 
     def add_pbush1d(self, pid: int,
-                    k: float=0., c: float=0., m: float=0.,
+                    k: float=0., c: float=0., mass: float=0.,
                     sa: float=0., se: float=0., optional_vars=None,
                     comment: str='') -> PBUSH1D:
         """Creates a PBUSH1D card"""
-        prop = PBUSH1D(pid, k=k, c=c, m=m, sa=sa, se=se,
+        prop = PBUSH1D(pid, k=k, c=c, mass=mass, sa=sa, se=se,
                        optional_vars=optional_vars, comment=comment)
         self._add_methods.add_property_object(prop)
         return prop

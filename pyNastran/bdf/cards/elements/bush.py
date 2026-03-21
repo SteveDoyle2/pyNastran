@@ -23,6 +23,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_double_or_blank, double_or_blank,
     string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.cards.coordinate_systems import CORD2R
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.bdf.bdf import BDF
@@ -42,7 +43,7 @@ class BushElement(Element):
         return self.cid_ref.cid
 
     def Mass(self) -> float:
-        return 0.
+        return self.pid_ref.mass
 
     def get_edge_ids(self) -> tuple[int, int]:
         """
@@ -410,8 +411,30 @@ class CBUSH(BushElement):
                                       f'cid={cid}; ocid={ocid}; x={self.x} g0={self.g0}\n'
                                       f'{str(self)}')
 
+    def element_coordinate_system(self) -> CORD2R:
+        if self.cid is not None:
+            assert self.cid_ref is not None, self.get_stats()
+            return self.cid_ref
+        node1, node2 = self.nodes_ref
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
+        origin = xyz1
+        iaxis = xyz2 - xyz1
+        inorm = np.linalg.norm(iaxis)
+        if inorm == 0.0:
+            raise RuntimeError(f'{self.type} nodes are coincident; must use cid\n{str(self)}')
+        # iaxis /= inorm
+        yaxis = self.orientation_vector()
+        ynorm = np.linalg.norm(yaxis)
+        yaxis /= ynorm
+        assert ynorm > 0, ynorm
+        kaxis = np.cross(iaxis, yaxis)
+        knorm = np.linalg.norm(kaxis)
+        assert knorm > 0, knorm
+        knorm /= knorm
+        return CORD2R(-1, origin, origin + kaxis, origin + iaxis)
+
     def orientation_vector(self) -> np.ndarray:
-        # get v
         if self.g0_ref is not None:
             xa = self.nodes_ref[0].get_position()
             x0 = self.g0_ref.get_position()
@@ -672,6 +695,35 @@ class CBUSH1D(BushElement):
     @property
     def node_ids(self) -> list[int]:
         return [self.Ga(), self.Gb()]
+
+
+    def element_coordinate_system(self) -> CORD2R:
+        if self.cid is not None:
+            assert self.cid_ref is not None, self.get_stats()
+            return self.cid_ref
+        node1, node2 = self.nodes_ref
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
+        origin = xyz1
+        iaxis = xyz2 - xyz1
+        inorm = np.linalg.norm(iaxis)
+        if inorm == 0.0:
+            raise RuntimeError(f'{self.type} nodes are coincident; must use cid\n{str(self)}')
+
+        iaxis /= inorm # normalized
+        abs_iaxis = np.abs(iaxis)
+        # [0, 1, 1], [1, 1, 1]
+        imin = np.where(abs_iaxis == abs_iaxis.min())[0]
+        yaxis = iaxis.copy()
+        yaxis[imin] += 1.
+        ynorm = np.linalg.norm(yaxis)
+        yaxis /= ynorm
+        assert ynorm > 0, ynorm
+        kaxis = np.cross(iaxis, yaxis)
+        knorm = np.linalg.norm(kaxis)
+        assert knorm > 0, knorm
+        knorm /= knorm
+        return CORD2R(-1, origin, origin + kaxis, origin + iaxis)
 
     def raw_fields(self) -> list:
         list_fields = ['CBUSH1D', self.eid, self.Pid(), self.Ga(), self.Gb(),

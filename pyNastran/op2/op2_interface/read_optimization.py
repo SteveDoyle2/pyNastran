@@ -27,7 +27,7 @@ from pyNastran.op2.op2_interface.utils import (
 from pyNastran.op2.result_objects.design_response import (
     WeightResponse, DisplacementResponse, StressResponse, StrainResponse, ForceResponse,
     FlutterResponse, FractionalMassResponse, Convergence, Desvars, DSCMCOL)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_interface.op2_reader import OP2Reader
     from pyNastran.op2.op2 import OP2
 

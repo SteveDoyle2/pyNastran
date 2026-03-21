@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Callable, Any, TYPE_CHECKING
 
 from pyNastran.bdf.bdf_interface.cross_reference import XrefMesh
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import (
         BDF,
         Element, Property, Material, PAEROs, CAEROs, Coord,

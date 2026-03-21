@@ -7,7 +7,7 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plate_strain_nx import (
     RealCPLSTRNPlateStressNXArray, RealCPLSTRNPlateStrainNXArray)
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 

@@ -12,7 +12,7 @@ from pyNastran.bdf.cards.dynamic import (
 CONV_NLPARM_MAP = {value: key for key, value in NLPARM_CONV_MAP.items()}
 KMETHOD_NLPARM_MAP = {value: key for key, value in NLPARM_KMETHOD_MAP.items()}
 INT_OUT_NLPARM_MAP = {value: key for key, value in NLPARM_INT_OUT_MAP.items()}
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import BDF, OP2Geom
 
 def write_mpt(op2_file, op2_ascii, model, endian=b'<',

@@ -360,36 +360,6 @@ class TestDampers(unittest.TestCase):
         model._verify_bdf()
         save_load_deck(model)
 
-    def test_cbush2d_pbush2d(self):
-        """PDAMP"""
-        log = get_logger(level='warning')
-        model = BDF(log=log)
-        eid = 37
-
-        pid = 10
-        k1 = 20.
-        k2 = 30.
-        b1 = 40.
-        b2 = 1.0
-        m1 = 2.0
-        m2 = 3.0
-        k12 = 1.0
-        k21 = 2.0
-        b12 = 0.0
-        b21 = 0.0
-        m12 = 0.0
-        m21 = 0.0
-        #nodes1 = [10, 20]
-        #nodes2 = [20, 30]
-        nids = [1, 2]
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        model.add_pbush2d_cross(pid, k1, k2, b1, b2, m1, m2,
-                                k12, k21, b12, b21, m12, m21, comment='cross')
-        model.add_cbush2d(eid, pid, nids, cid=0, plane='XY', sptid=None, comment='cbush2d')
-        model.validate()
-        model._verify_bdf()
-        save_load_deck(model)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

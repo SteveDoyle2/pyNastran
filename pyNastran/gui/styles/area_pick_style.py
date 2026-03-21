@@ -32,7 +32,7 @@ from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui
 from pyNastran.gui.styles.area_pick_utils import (
     get_actors_by_area_picker)
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.typing import Actor
     #from pyNastran.gui.main_window import MainWindow
 

@@ -17,7 +17,7 @@ from pyNastran.op2.op2_interface.utils import (
 )
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.op2.op2_interface.op2_reader import OP2Reader
     from pyNastran.op2.op2 import OP2

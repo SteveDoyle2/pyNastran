@@ -970,44 +970,47 @@ def _convert_pbush(scales: set[str],
     # can be length=0
     #assert len(prop.Ki) == 6, prop.Ki
     #assert len(prop.Bi) == 6, prop.Bi
-    for var in prop.vars:
-        # TODO: I think this needs to consider rotation
-        if var == 'K':
-            scales.update(['stiffness'])
-            prop.k = [ki*stiffness_scale if ki is not None else None
-                      for ki in prop.k]
-        elif var == 'B':
-            scales.update(['velocity'])
-            prop.b = [bi*velocity_scale if bi is not None else None
-                       for bi in prop.b]
-        elif var == 'RCV':
-            # SA Stress recovery coefficient in the translational component numbers 1 through 3. (Real; Default=1.0)
-            # ST Stress recovery coefficient in the rotational component numbers 4 through 6.    (Real; Default=1.0)
-            # Stresses are computed by multiplying the stress coefficients with the element forces.
-            # Strains  are computed by multiplying the strain coefficients with the element displacements.
-            scales.update(['force'])
-            scales.update(['moment'])
-            scales.update(['length'])
-            prop.sa *= force_scale
-            prop.st *= moment_scale
-            prop.ea *= xyz_scale
-            #prop.et *= 1  # units of angular displacement are radians
-        elif var == 'GE':
-            pass
-        else:  # pragma: no cover
-            raise NotImplementedError(prop)
+    # TODO: I think this needs to consider rotation
+    if len(prop.k):
+        scales.update(['stiffness'])
+        prop.k = [ki*stiffness_scale if ki is not None else None
+                  for ki in prop.k]
+    if len(prop.b):
+        scales.update(['velocity'])
+        prop.b = [bi*velocity_scale if bi is not None else None
+                   for bi in prop.b]
+
+    is_pbush = hasattr(prop, 'sa') # vs. PBUSH_OPTISTRUCT
+    if is_pbush and (
+            prop.sa is not None or prop.st is not None or
+            prop.ea is not None or prop.et is not None):
+        # SA Stress recovery coefficient in the translational component numbers 1 through 3. (Real; Default=1.0)
+        # ST Stress recovery coefficient in the rotational component numbers 4 through 6.    (Real; Default=1.0)
+        # Stresses are computed by multiplying the stress coefficients with the element forces.
+        # Strains  are computed by multiplying the strain coefficients with the element displacements.
+        scales.update(['force'])
+        scales.update(['moment'])
+        scales.update(['length'])
+        prop.sa *= force_scale
+        prop.st *= moment_scale
+        prop.ea *= xyz_scale
+        #prop.et *= 1  # units of angular displacement are radians
+
+    # elif var == 'GE':
+    #     pass
+    if is_pbush and (prop.alpha is not None or prop.tref is not None or prop.coincident_length is not None):
+         raise NotImplementedError(prop)
 
     #prop.rcv
-    if prop.mass is not None:
-        scales.update(['mass'])
-        # print(prop.get_stats(), prop.mass)
-        if isinstance(prop.mass, list):
-            # Optistruct
-            prop.mass = [massi*mass_scale for massi in prop.mass]
-        elif isinstance(prop.mass, float_types):
-            prop.mass *= mass_scale
-        else:  # pragma: no cover
-            raise TypeError(f'mass must be a float/list\n{prop.get_stats()}')
+    scales.update(['mass'])
+    # print(prop.get_stats(), prop.mass)
+    if not is_pbush and isinstance(prop.mass, list):
+        # Optistruct
+        prop.mass = [massi*mass_scale for massi in prop.mass]
+    elif isinstance(prop.mass, float_types):
+        prop.mass *= mass_scale
+    else:  # pragma: no cover
+        raise TypeError(f'mass must be a float/list\n{prop.get_stats()}')
     #rcv : list[float]; default=None -> (None, None, None, None)
         #[sa, st, ea, et] = rcv
         #length(mass_fields) = 4
@@ -1029,42 +1032,46 @@ def _convert_pbush1d(model: BDF,
     scales.update(['stiffness', 'mass', 'area', 'length'])
     prop.c *= damping_scale # Viscous damping (force/velocity)
     prop.k *= stiffness_scale
-    prop.m *= mass_scale
+    prop.mass *= mass_scale
     prop.sa /= area_scale  # Stress recovery coefficient [1/area]
     prop.se /= xyz_scale   # Strain recovery coefficient [1/length]
     spring_tables = set([])
     damper_tables = set([])
     damper_table_names = ('damper_idt', 'damper_idc', 'damper_idtdv', 'damper_idcdv')
     spring_table_names = ('spring_idc', 'spring_idcdu', 'spring_idt', 'spring_idtdu')
-    for var in prop.vars:
-        if var == 'SHOCKA':
-            scales.add('damping')
-            print(prop.get_stats())
-             # Viscous damping coefficient (force/velocity)
-            prop.shock_cvc = prop.shock_cvc * damping_scale if prop.shock_cvc is not None else None
-            prop.shock_cvt = prop.shock_cvt * damping_scale if prop.shock_cvt is not None else None
-            #shock_exp_vc : 1.0
-            #shock_exp_vt : 1.0
-            #shock_idecs : None
-            #shock_idecsd : None
-            #shock_idets : None
-            #shock_idetsd : None
-            #shock_idts : None
-            #shock_type : 'TABLE'
-        elif var == 'DAMPER':
-            if prop.damper_type == 'TABLE':
-                _get_pbush1d_tables(prop, damper_table_names, damper_tables)
-            else:
-                print(prop.get_stats())
-                raise NotImplementedError(prop.damper_type)
-        elif var == 'SPRING':
-            if prop.spring_type == 'TABLE':
-                _get_pbush1d_tables(prop, spring_table_names, spring_tables)
-            else:
-                raise NotImplementedError(prop.damper_type)
-        else:
-            print(prop.get_stats())
-            raise RuntimeError('var=%r\n%s' % (var, str(prop)))
+
+    # 'SHOCKA':
+    scales.add('damping')
+    # print(prop.get_stats())
+     # Viscous damping coefficient (force/velocity)
+    prop.shock_cvc = prop.shock_cvc * damping_scale if prop.shock_cvc is not None else None
+    prop.shock_cvt = prop.shock_cvt * damping_scale if prop.shock_cvt is not None else None
+    #shock_exp_vc : 1.0
+    #shock_exp_vt : 1.0
+    #shock_idecs : None
+    #shock_idecsd : None
+    #shock_idets : None
+    #shock_idetsd : None
+    #shock_idts : None
+    #shock_type : 'TABLE'
+
+    # elif var == 'DAMPER':
+    if prop.damper_type is None:
+        pass
+    elif prop.damper_type == 'TABLE':
+        _get_pbush1d_tables(prop, damper_table_names, damper_tables)
+    else:
+        print(prop.get_stats())
+        raise NotImplementedError(prop.damper_type)
+
+    # elif var == 'SPRING':
+    if prop.spring_type is None:
+        pass
+    elif prop.spring_type == 'TABLE':
+        _get_pbush1d_tables(prop, spring_table_names, spring_tables)
+    else:
+        raise NotImplementedError(prop.damper_type)
+
     return spring_tables, damper_tables
 
 

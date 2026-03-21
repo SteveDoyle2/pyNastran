@@ -26,7 +26,7 @@ from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     cut_face_model_by_coord, _setup_faces,
     # is_element_cut,
 )
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.elements.shell import CTRIA3, CQUAD4
 Rods = tuple[np.ndarray, np.ndarray, np.ndarray]
 

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import os
 import numpy as np
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.utils import PathLike
     from pyNastran.bdf.bdf import BDF
 

@@ -9,7 +9,7 @@ from pyNastran.converters.fld.fld import read_fld
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
 class FLD_IO:
@@ -33,7 +33,7 @@ class FLD_IO:
         nodes = model.xyzp[:, :3]
 
         # support multiple results
-        results = model.xyzp[:, 3:] 
+        results = model.xyzp[:, 3:]
         pressure = results[:, -1]
 
         nnodes = len(nodes)

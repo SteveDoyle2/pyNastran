@@ -6,7 +6,7 @@ import numpy as np
 from pyNastran.gui.vtk_common_core import vtkUnsignedCharArray, vtkPoints, VTK_ID_TYPE
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkCellArray, vtkVertex
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 

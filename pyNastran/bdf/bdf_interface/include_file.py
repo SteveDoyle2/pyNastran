@@ -11,7 +11,7 @@ from typing import Optional, TYPE_CHECKING
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from pyNastran.utils import print_bad_path, PathLike
 from pyNastran.bdf.errors import EnvironmentVariableError
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 IS_WINDOWS = 'nt' in os.name

@@ -5,7 +5,7 @@ from pyNastran.gui.gui_objects.settings import (
     Settings, NASTRAN_BOOL_KEYS,
     NastranSettings, OtherSettings)
 from pyNastran.gui.qt_files.base_gui import BaseGui
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
 
