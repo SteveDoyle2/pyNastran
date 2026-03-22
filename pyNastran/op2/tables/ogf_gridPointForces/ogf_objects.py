@@ -6,7 +6,7 @@ import warnings
 from itertools import count
 from copy import deepcopy
 from struct import Struct, pack
-from typing import TextIO, Optional, cast, TYPE_CHECKING
+from typing import TextIO, Optional, Any, cast, TYPE_CHECKING
 
 import numpy as np
 
@@ -24,8 +24,9 @@ from pyNastran.utils.numpy_utils import integer_types, float_types, integer_floa
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.writer.utils import fix_table3_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    set_static_case, set_modal_case, set_transient_case,
-    set_freq_case, set_complex_modes_case)
+    set_static_case, set_transient_case,
+    # set_modal_case, set_freq_case, set_complex_modes_case,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import (
@@ -186,7 +187,7 @@ class RealGridPointForcesArray(GridPointForces):
         self.format_code = 1
 
         _check_element_names(self.element_names)
-        assert self.is_unique, self.get_stats()  # TODO: disable this
+        # assert self.is_unique, self.get_stats()  # TODO: disable this
 
     @classmethod
     def add_static_case(cls,
@@ -214,19 +215,9 @@ class RealGridPointForcesArray(GridPointForces):
                                    random_code=random_code,
                                    title=title, subtitle=subtitle, label=label,
                                    is_msc=is_msc)
-        # node_element: np.ndarray,
-        # element_names: np.ndarray,
-        # data: np.ndarray,
         obj = set_static_case(
             cls, is_sort1, isubcase, data_code,
             set_real_table, ([node_element], [element_names], [data]))
-
-        #data_code['lsdvmns'] = [0] # TODO: ???
-        #data_code['data_names'] = []
-
-        #times = [None]
-        #obj = _set_class(cls, data_code, is_sort1, isubcase, times,
-                         #node_gridtype, data)
         return obj
 
     @classmethod
@@ -394,7 +385,7 @@ class RealGridPointForcesArray(GridPointForces):
             #self.element_names, self.ntimes, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
-        assert len(self._times) == 1, self._times
+        # assert len(self._times) == 1, self._times  # disable this
 
         assert self.ntotal < 2147483647, self.ntotal # max int
         if self.is_unique:
@@ -755,6 +746,8 @@ class RealGridPointForcesArray(GridPointForces):
         assume_sorted : bool; default=False
             sorts the nodes/elements if they're not
             is sorting required?
+        stop_on_nan : bool; default=False
+            if no nodes/elements were found
 
         Returns
         -------
@@ -1370,31 +1363,32 @@ class RealGridPointForcesArray(GridPointForces):
 
         ntimes = self.data.shape[0]
         if self.is_unique:
+            # _ntotals = [5, 4, 2, 5]
             for itime in range(ntimes):
                 dt = self._times[itime]
+                ntotal = self._ntotals[itime]
                 header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 f06_file.write(''.join(header + msg))
 
                 #print("self.data.shape=%s itime=%s ieids=%s" % (
                     #str(self.data.shape), itime, str(ieids)))
                 #[t1, t2, t3, r1, r2, r3]
-                t1 = self.data[itime, :, 0]
-                t2 = self.data[itime, :, 1]
-                t3 = self.data[itime, :, 2]
-                r1 = self.data[itime, :, 3]
-                r2 = self.data[itime, :, 4]
-                r3 = self.data[itime, :, 5]
+                t1 = self.data[itime, :ntotal, 0]
+                t2 = self.data[itime, :ntotal, 1]
+                t3 = self.data[itime, :ntotal, 2]
+                r1 = self.data[itime, :ntotal, 3]
+                r2 = self.data[itime, :ntotal, 4]
+                r3 = self.data[itime, :ntotal, 5]
 
-                nids = self.node_element[itime, :, 0]
-                eids = self.node_element[itime, :, 1]
-                enames = self.element_names[itime, :]
+                # print(f'ntotals = {self._ntotals}; itime={itime:d} ntotal={ntotal:d}')
+                nids = self.node_element[itime, :ntotal, 0]
+                eids = self.node_element[itime, :ntotal, 1]
+                enames = self.element_names[itime, :ntotal]
 
                 zero = ' '
-                ntotal = self._ntotals[itime]
-                #print(self._ntotals)
                 assert len(eids) == len(nids)
-                assert len(enames) == len(nids), 'enames=%s nnids=%s' % (len(enames), len(nids))
-                assert len(t1) == len(nids)
+                assert len(enames) == len(nids), f'enames={len(enames):d} nnids={len(nids):d}'
+                assert len(t1) == len(nids), (t1.shape, nids.shape)
                 assert len(t2) == len(nids)
                 assert len(t3) == len(nids)
                 assert len(r1) == len(nids)
@@ -2244,10 +2238,10 @@ class ComplexGridPointForcesArray(GridPointForces):
             assert len(eids) == len(nids)
             assert len(enames) == len(nids), 'enames=%s nnids=%s' % (len(enames), len(nids))
             assert len(t1) == len(nids)
-            assert len(t2) == len(nids)
-            assert len(t3) == len(nids)
-            assert len(r1) == len(nids)
-            assert len(r2) == len(nids)
+            # assert len(t2) == len(nids)
+            # assert len(t3) == len(nids)
+            # assert len(r1) == len(nids)
+            # assert len(r2) == len(nids)
             assert len(nids) <= ntotal, 'len(nids)=%s ntotal=%s' % (len(nids), ntotal)
 
             for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
@@ -2302,7 +2296,8 @@ def _check_array(x, dtype, dim: int, msg=''):
             raise NotImplementedError(dtype)
     return
 
-def set_3d_data(data: np.ndarray, itime: int, itotal: int, values: list[float], size: int):
+def set_3d_data(data: np.ndarray, itime: int,
+                itotal: int, values: list[float], size: int):
     """annoying way to handle underflow"""
     if size == 4:
         #MIN_FLOAT32 = np.finfo(np.float32).min
@@ -2421,8 +2416,8 @@ def set_real_table(cls,
 
     obj.ntimes = ntimes
     obj.ntotal = max(ntotals)
-    # obj._ntotals = ntotals
-    obj._ntotals = [obj.ntotal] * len(ntotals)
+    obj._ntotals = ntotals
+    # obj._ntotals = [obj.ntotal] * len(ntotals)
     obj._times = times
     assert isinstance(element_names_list[0][0], str), element_names_list[0]
     assert isinstance(node_element_list[0][0,0], integer_types), node_element_list[0]
@@ -2440,68 +2435,6 @@ def set_real_table(cls,
     return obj
 
 
-def _stack_same(node_element_list: list[np.ndarray],
-                element_names_list: list[np.ndarray],
-                data_list: list[np.ndarray],
-                ) -> tuple[bool, np.ndarray, np.ndarray, np.ndarray]:
-    """stacks diffrent grid point force arrays together"""
-    if len(node_element_list) == 1:
-        ntotal = len(element_names_list[0])
-        node_element = node_element_list[0].reshape(1, ntotal, 2)
-        element_names = element_names_list[0].reshape(1, ntotal)
-        data = data_list[0]
-        # print('return single')
-        assert node_element.ndim == 3, (node_element.shape, node_element)
-        assert element_names.ndim == 2, (element_names.shape, element_names)
-        assert data.ndim == 3, data.shape
-        return False, node_element, element_names, data
-
-    ntime = len(node_element_list)
-    ntotals = [len(element_names) for element_names in element_names_list]
-    # print(f'ntotals = {ntotals}')
-    ntotal = max(ntotals)
-    element_names0 = element_names_list[0]
-    node_element0 = node_element_list[0]
-    if max(ntotals) == min(ntotals):
-        # stack
-        for i, element_names, node_element in zip(count(), element_names_list, node_element_list):
-            if element_names.shape != element_names0.shape:
-                # print('shapes are different')
-                break
-            isame = (element_names == element_names0) & (node_element == node_element0).min(axis=1)
-            if not np.all(isame):
-                # print('names/node_element are different')
-                break
-        else:
-            # not broken; same, but different data
-            node_element_out = np.vstack(node_element_list)
-            element_names_out = np.column_stack(element_names_list)
-            data_out = np.dstack(data_list)
-            assert node_element_out.ndim == 3
-            assert element_names_out.ndim == 2
-            assert data_out.ndim == 3
-            # print('return simple stack')
-            return False, node_element_out, element_names_out, data_out
-
-    # hard stack
-    # shapes are different - stacking into max size
-    data0 = data_list[0]
-    node_element_out = np.full((ntime, ntotal, 2), -1, dtype=node_element0.dtype)
-    element_names_out = np.zeros((ntime, ntotal), dtype='U8')
-    data_out = np.full((ntime, ntotal, 6), np.nan, dtype=data0.dtype)
-    for i, node_element, element_names, data in zip(
-            count(), node_element_list, element_names_list, data_list):
-        nval = len(node_element)
-        # print(node_element.shape, nval,
-        #       node_element_out[i, :nval, :].shape)
-        node_element_out[i, :nval, :] = node_element
-        element_names_out[i, :nval] = element_names
-        data_out[i, :nval, :] = data
-    # print('return hard stack')
-    assert node_element_out.ndim == 3
-    assert element_names_out.ndim == 2
-    assert data_out.ndim == 3
-    return True, node_element_out, element_names_out, data_out
 
 def _check_element_names(element_names: np.ndarray) -> None:
     assert element_names.ndim in [1, 2], (element_names.shape, element_names)
@@ -2543,3 +2476,196 @@ def _check_element_names(element_names: np.ndarray) -> None:
     missing_names = np.setdiff1d(element_names, allowed_names)
     if len(missing_names):
         raise ValueError(f'unallowed GridPointForce names={str(missing_names)}; allowed=[{str(allowed_names_stripped.tolist())}]')
+
+
+def _stack_same(node_element_list: list[np.ndarray],
+                element_names_list: list[np.ndarray],
+                data_list: list[np.ndarray],
+                ) -> tuple[bool, np.ndarray, np.ndarray, np.ndarray]:
+    """stacks diffrent grid point force arrays together"""
+    if len(node_element_list) == 1:
+        ntotal = len(element_names_list[0])
+        node_element = node_element_list[0].reshape(1, ntotal, 2)
+        element_names = element_names_list[0].reshape(1, ntotal)
+        data = data_list[0]
+        # print('return single')
+        assert node_element.ndim == 3, (node_element.shape, node_element)
+        assert element_names.ndim == 2, (element_names.shape, element_names)
+        assert data.ndim == 3, data.shape
+        return False, node_element, element_names, data
+
+    ntime = len(node_element_list)
+    ntotals = [len(element_names) for element_names in element_names_list]
+    print(f'ntotals = {ntotals}; ntime={ntime}')
+    ntotal = max(ntotals)
+    element_names0 = element_names_list[0]
+    node_element0 = node_element_list[0]
+    if max(ntotals) == min(ntotals):
+        # stack
+        for i, element_names, node_element in zip(count(), element_names_list, node_element_list):
+            if element_names.shape != element_names0.shape:
+                print('shapes are different')
+                break
+            isame = (node_element == node_element0).min(axis=1) & (element_names == element_names0)
+            if not np.all(isame):
+                print('names/node_element are different')
+                break
+        else:
+            # not broken; same, but different data
+            print(node_element_list[0].shape)
+            node_element_out = np.empty(
+                (ntime, ntotal, 2), dtype=node_element_list[0].dtype)
+            data_out = np.empty(
+                (ntime, ntotal, 6), dtype=data_list[0].dtype)
+            for i, node_element, data in zip(count(), node_element_list, data_list):
+                node_element_out[i, :, :] = node_element
+                data_out[i, :, :] = data
+
+            # goal: (2,4)
+            # col:    (4,2)
+            # vstack: ()
+            # hstack: ()
+            element_names_out = np.vstack(element_names_list)
+            # data_out = np.dstack(data_list)
+            assert node_element_out.ndim == 3, node_element_out.shape
+            assert element_names_out.ndim == 2, element_names_out.shape
+            assert data_out.ndim == 3, data_out.shape
+            assert node_element_out.shape == (ntime, ntotal, 2), node_element_out.shape
+            assert element_names_out.shape == (ntime, ntotal), element_names_out.shape
+            assert data_out.shape == (ntime, ntotal, 6), data_out.shape
+            # print('return simple stack')
+            return False, node_element_out, element_names_out, data_out
+
+    # hard stack
+    # shapes are different - stacking into max size
+    nnodes = np.array([(element_names == '*TOTALS*').sum()
+                       for element_names in element_names_list])
+    assert nnodes.min() == nnodes.max(), nnodes
+
+    if 1:
+        out = _stack_differnt_shapes(
+            node_element_list, element_names_list, data_list,
+            ntime, ntotal)
+        return out
+
+    names_to_keep_list = [
+        'GENEL   ', 'MATK    ',
+        # '*TOTALS*',
+        'APP-LOAD',
+        'F-OF-MPC', 'F-OF-SPC',
+    ]
+    # uall_names = np.unique(np.hstack([np.unique(element_names) for element_names in element_names_list]))
+    names0 = element_names_list[0]
+    all_names = np.hstack(element_names_list[0])
+    uall_names = np.unique(all_names)
+
+    removed_names = np.setdiff1d(uall_names, names_to_keep_list)
+    names_to_keep = np.setdiff1d(uall_names, removed_names)
+
+    # nodes = np.unique(node_element_out[:, :, 0])
+    # nnode = len(nodes)
+    itotal = (element_names_list[0] == '*TOTALS*')
+    nodes = node_element_list[0][itotal, 0]
+    nnode = itotal.sum()
+    assert len(nodes) == nnode
+
+    node_element_out_list1 = []
+    element_names_out_list1 = []
+    data_out_list1 = []
+
+    node_element_out_list2 = []
+    element_names_out_list2 = []
+    element_names_out_list2_full = []
+    data_out_list2 = []
+
+    # fill the common block of data into 1 (so elements)
+    #  - this is fixed size
+    # fill the variable length blocks (F-OF-SPC) into a
+    #   new array of length nnode*nnames
+    #  - this is variable size, so we'll remove nan rows at the end
+    zero = np.zeros(nnode, dtype='int32')
+    for itime, element_names, node_element, data in zip(
+            count(), element_names_list, node_element, data_list):
+        istored_list = []
+        for name in removed_names:  # CQUADs
+            # put CQUAD4 in correct spot
+            iname = np.where(element_names == name)
+            istored_list.append(iname)
+        istored = np.array(istored_list, dtype='int32')
+        node_element_out_list1.append(node_element[itime, istored, :])
+        element_names_out_list1.append(element_names[itime, istored])
+        data_out_list1.append(data[itime, istored, :])
+
+        data0 = data_list[0]
+
+        # put F-OF-SPC at the end
+        for name in names_to_keep:
+            iname = (element_names == name)
+            assert iname.sum() > 0, iname.sum()
+
+            node_elementi = node_element[iname, :]
+            nodei = node_elementi[:, 0]
+            idata = np.searchsorted(nodes, nodei)
+            element_names_out_namei = np.full(nnode, name, dtype='U8')
+            element_names_outi = np.full(nnode, '', dtype='U8')
+            node_element_outi = np.column_stack([nodes, zero])
+            data_outi = np.full((nnode, 6), 0.0, dtype=data0.dtype)
+
+            element_names_outi[idata, :] = name
+            node_element_outi[idata, :] = node_elementi
+            data_outi[idata, :] = data[iname, :]
+
+            node_element_out_list2.append(node_element_outi)
+            element_names_out_list2.append(element_names_outi)
+            element_names_out_list2_full.append(element_names_out_namei)
+            data_out_list2.append(data_outi)
+
+            # iname = np.where(element_names == name)
+
+    node_elment0 = node_element_list[0]
+    node_element_out1 = np.array(node_element_out_list1, dtype=node_elment0.dtype)
+    element_names_out1 = np.array(node_element_out_list1, dtype='U8')
+    data_out1 = np.array(node_element_out_list1, dtype=data0.dtype)
+
+    node_element_out2 = np.array(node_element_out_list2, dtype=node_elment0.dtype)
+    element_names_out2 = np.array(node_element_out_list2, dtype='U8')
+    element_names_out_full = np.array(element_names_out_list2_full, dtype='U8')
+    data_out2 = np.array(node_element_out_list2, dtype=data0.dtype)
+
+    # are there any names across the column
+    # if there were, we have a node with an F-OF-SPC
+    is_name = np.any(element_names_out2, axis=1)  # element_names is 2d
+    element_names_out2[is_name, :] = element_names_out_full[0, is_name]
+    element_names_out2 = element_names_out_full[is_name, 0]
+    node_element_out2 = node_element_out2[:, is_name, :]
+    data_out2 = data_out2[:, is_name, :]
+
+    # print('return hard stack')
+    assert node_element_out.ndim == 3
+    assert element_names_out.ndim == 2
+    assert data_out.ndim == 3
+    return True, node_element_out, element_names_out, data_out
+
+def _stack_differnt_shapes(node_element_list: list[np.ndarray],
+                           element_names_list: list[np.ndarray],
+                           data_list: list[np.ndarray],
+                           ntime: int, ntotal: int,
+                           ) -> tuple[bool, np.ndarray, np.ndarray, np.ndarray]:
+    data0 = data_list[0]
+    node_element0 = node_element_list[0]
+    node_element_out = np.full((ntime, ntotal, 2), -1, dtype=node_element0.dtype)
+    element_names_out = np.zeros((ntime, ntotal), dtype='U8')
+    data_out = np.full((ntime, ntotal, 6), np.nan, dtype=data0.dtype)
+    for i, node_element, element_names, data in zip(
+            count(), node_element_list, element_names_list, data_list):
+        nval = len(node_element)
+        # print(node_element.shape, nval,
+        #       node_element_out[i, :nval, :].shape)
+        node_element_out[i, :nval, :] = node_element
+        element_names_out[i, :nval] = element_names
+        data_out[i, :nval, :] = data
+    # print('return hard stack')
+    assert node_element_out.ndim == 3
+    assert element_names_out.ndim == 2
+    assert data_out.ndim == 3
+    return True, node_element_out, element_names_out, data_out

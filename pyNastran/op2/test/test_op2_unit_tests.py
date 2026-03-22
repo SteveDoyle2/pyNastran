@@ -214,12 +214,15 @@ class TestOP2Unit(Tester):
 
         node_element4 = np.array([
             [1, 10],
-            [1, 11],
+            [1, 0],
             [2, 12],
             [2, 0],
         ])
         element_names4 = np.array([
-            'QUAD4', 'TRIA3', 'QUAD4', 'F-OF-SPC',
+            'QUAD4', 'F-OF-SPC', 'TRIA3', 'F-OF-SPC',
+        ], dtype='U8')
+        element_names4b = np.array([
+            'QUAD4', 'F-OF-SPC', 'TRIA3', 'F-OF-SPC',
         ], dtype='U8')
         data4 = np.array([[
             [10., 2., 3., 4., 5., 6.],
@@ -234,6 +237,16 @@ class TestOP2Unit(Tester):
             isubcase, is_msc=False)
         str(obj)
         str(obj.print_f06())
+
+        times = np.arange(2)
+        obj = cls.add_transient_case(
+            table_name,
+            [node_element4, node_element4],
+            [element_names4, element_names4b],
+            [data4, data4],
+            isubcase, times, is_msc=False)
+        str(obj)
+        print(obj.print_f06())
 
         node_element5 = np.array([
             [1, 10],
@@ -260,7 +273,7 @@ class TestOP2Unit(Tester):
             [data4, data5],
             isubcase, times, is_msc=False)
         str(obj)
-        print(obj.print_f06())
+        str(obj.print_f06())
 
 
     def test_op2_traction(self):
