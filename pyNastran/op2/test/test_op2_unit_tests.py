@@ -48,7 +48,7 @@ from pyNastran.bdf.bdf_interface.compare_card_content import compare_elements
 
 # from pyNastran.op2.tables.oef_forces.oef_force_objects import (
 #     RealPlateBilinearForceArray, RealPlateForceArray)
-#from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
+from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.vector_utils import filter1d, abs_max_min_global, abs_max_min_vector
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 from pyNastran.femutils.test.utils import is_array_close
@@ -204,6 +204,64 @@ class TestOP2Unit(Tester):
             isubcase,
             is_msc=False)
         obj1.assert_equal(obj1, rtol=1.e-5, atol=1.e-8)
+
+    def test_op2_grid_point_forces_add(self):
+        cls = RealGridPointForcesArray
+        table_name = 'OGPFB1'
+        # modes = np.array([1], dtype='int32')
+        # eigenvalues = np.array([2.], dtype='float32')
+        # mode_cycles = np.array([3.], dtype='float32')
+
+        node_element4 = np.array([
+            [1, 10],
+            [1, 11],
+            [2, 12],
+            [2, 0],
+        ])
+        element_names4 = np.array([
+            'QUAD4', 'TRIA3', 'QUAD4', 'F-OF-SPC',
+        ], dtype='U8')
+        data4 = np.array([[
+            [10., 2., 3., 4., 5., 6.],
+            [20., 2., 3., 4., 5., 6.],
+            [30., 2., 3., 4., 5., 6.],
+            [40., 2., 3., 4., 5., 6.],
+        ]])
+
+        isubcase = 1
+        obj = cls.add_static_case(
+            table_name, node_element4, element_names4, data4,
+            isubcase, is_msc=False)
+        str(obj)
+        str(obj.print_f06())
+
+        node_element5 = np.array([
+            [1, 10],
+            [1, 11],
+            [1, 0],
+            [2, 12],
+            [2, 13],
+        ])
+        element_names5 = np.array([
+            'QUAD4', 'TRIA3', 'F-OF-SPC', 'QUAD4', 'HEXA',
+        ], dtype='U8')
+        data5 = np.array([[
+            [100., 2., 3., 4., 5., 6.],
+            [200., 2., 3., 4., 5., 6.],
+            [300., 2., 3., 4., 5., 6.],
+            [400., 2., 3., 4., 5., 6.],
+            [500., 2., 3., 4., 5., 6.],
+        ]])
+        times = np.arange(2)
+        obj = cls.add_transient_case(
+            table_name,
+            [node_element4, node_element5],
+            [element_names4, element_names5],
+            [data4, data5],
+            isubcase, times, is_msc=False)
+        str(obj)
+        print(obj.print_f06())
+
 
     def test_op2_traction(self):
         cls = RealContactTractionAndPressureArray

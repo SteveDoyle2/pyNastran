@@ -1,7 +1,9 @@
 from __future__ import annotations
+import io
 import sys
 import inspect
 import warnings
+from itertools import count
 from copy import deepcopy
 from struct import Struct, pack
 from typing import TextIO, Optional, cast, TYPE_CHECKING
@@ -21,11 +23,22 @@ from pyNastran.op2.vector_utils import (
 from pyNastran.utils.numpy_utils import integer_types, float_types, integer_float_types
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.writer.utils import fix_table3_types
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    set_static_case, set_modal_case, set_transient_case,
+    set_freq_case, set_complex_modes_case)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import (
         NDArrayN3float, NDArray3float, NDArrayN2int, NDArrayNint, NDArrayNfloat)
-    from pyNastran.bdf.bdf import BDF, CORD, SimpleLogger
+    from pyNastran.bdf.bdf import BDF, CORD
+
+
+table_name_to_table_code = {
+    'OGPFB1': 19,
+    'OGPFB2': 19,
+    'RAGEATC': 19,
+    'RAGCONS': 19,
+}
 
 
 class GridPointForces(BaseElement):
@@ -132,6 +145,12 @@ class GridPointForces(BaseElement):
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
         op2_file.write(pack(fmt, *data))
 
+    def print_f06(self) -> str:
+        f06_file = io.StringIO()
+        self.write_f06(f06_file)
+        f06_file.seek(0)
+        msg = f06_file.read()
+        return msg
 
 class RealGridPointForcesArray(GridPointForces):
     """
@@ -152,15 +171,87 @@ class RealGridPointForcesArray(GridPointForces):
 
         # do the element_names/node_element vectors change with the time step
         self.is_unique = False
-        self.element_names = []
+        # self.element_names = []
 
         #self.ielement = 0
         #self.nelements = 0  # result specific
         #self.nnodes = None
+        self.node_element = np.zeros((0, 2), dtype='int32')
+        self.element_names = np.array([], dtype='U8')
+        self.data = np.zeros((0, 0, 6), dtype='float32')
+        self.itime = 0
 
     def finalize(self) -> None:
         """required so the OP2 writer works..."""
         self.format_code = 1
+
+        _check_element_names(self.element_names)
+        assert self.is_unique, self.get_stats()  # TODO: disable this
+
+    @classmethod
+    def add_static_case(cls,
+                        table_name: str,
+                        node_element: np.ndarray,
+                        element_names: np.ndarray,
+                        data: np.ndarray,
+                        isubcase: int,
+                        is_sort1: bool=True, is_random: bool=False,
+                        is_msc: bool=True,
+                        random_code: int=0, title: str='',
+                        subtitle: str='', label: str=''):
+        assert isinstance(element_names[0], str), element_names
+        assert isinstance(node_element[0, 0], integer_types), node_element
+        # self.node_element = np.zeros((self.ntotal, 2), dtype=idtype)
+        # self.element_names = np.empty(self.ntotal, dtype='U8')
+
+        #[t1, t2, t3, r1, r2, r3]
+        # self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
+
+        # table_name = 'OGPFB1'
+        data_code = ogpf_data_code(table_name,
+                                   is_real=True,
+                                   is_sort1=is_sort1, is_random=is_random,
+                                   random_code=random_code,
+                                   title=title, subtitle=subtitle, label=label,
+                                   is_msc=is_msc)
+        # node_element: np.ndarray,
+        # element_names: np.ndarray,
+        # data: np.ndarray,
+        obj = set_static_case(
+            cls, is_sort1, isubcase, data_code,
+            set_real_table, ([node_element], [element_names], [data]))
+
+        #data_code['lsdvmns'] = [0] # TODO: ???
+        #data_code['data_names'] = []
+
+        #times = [None]
+        #obj = _set_class(cls, data_code, is_sort1, isubcase, times,
+                         #node_gridtype, data)
+        return obj
+
+    @classmethod
+    def add_transient_case(cls,
+                           table_name: str,
+                           node_element: np.ndarray,
+                           element_names: np.ndarray,
+                           data: np.ndarray,
+                           isubcase: int,
+                           times: np.ndarray,
+                           is_sort1: bool=True,
+                           is_random: bool=False,
+                           is_msc: bool=True,
+                           random_code: int=0,
+                           title: str='',
+                           subtitle: str='',
+                           label: str=''):
+        data_code = ogpf_data_code(table_name,
+                                   is_real=True,
+                                   is_sort1=is_sort1, is_random=is_random,
+                                   random_code=random_code, title=title, subtitle=subtitle, label=label,
+                                   is_msc=is_msc)
+        obj = set_transient_case(cls, is_sort1, isubcase, data_code,
+                                 set_real_table, (node_element, element_names, data), times)
+        return obj
 
     def __pos__(self) -> RealGridPointForcesArray:
         """positive; +a"""
@@ -303,9 +394,11 @@ class RealGridPointForcesArray(GridPointForces):
             #self.element_names, self.ntimes, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        assert len(self._times) == 1, self._times
 
         assert self.ntotal < 2147483647, self.ntotal # max int
         if self.is_unique:
+            # this is the only path
             assert isinstance(self.ntotal, integer_types), 'ntotal=%r type=%s' % (self.ntotal, type(self.ntotal))
             self.node_element = np.zeros((self.ntimes, self.ntotal, 2), dtype=idtype)
             self.element_names = np.empty((self.ntimes, self.ntotal), dtype='U8')
@@ -1268,8 +1361,9 @@ class RealGridPointForcesArray(GridPointForces):
                                f'{t1i}, {t2i}, {t3i}, {r1i}, {r2i}, {r3i}\n')
         return
 
-    def write_f06(self, f06_file: TextIO, header=None, page_stamp='PAGE %s',
+    def write_f06(self, f06_file: TextIO=None, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
+        _check_element_names(self.element_names)
         if header is None:
             header = []
         msg = self._get_f06_msg()
@@ -1550,6 +1644,10 @@ class ComplexGridPointForcesArray(GridPointForces):
         #self.ielement = 0
         #self.nelements = 0  # result specific
         #self.nnodes = None
+        self.node_element = np.zeros((0, 2), dtype='int32')
+        self.element_names = np.array([], dtype='U8')
+        self.data = np.zeros((0, 0, 6), dtype='complex64')
+        self.itime = 0
 
     @property
     def is_real(self) -> bool:
@@ -2232,3 +2330,216 @@ def set_3d_data(data: np.ndarray, itime: int, itotal: int, values: list[float], 
                         data.imag[itime, itotal, i] = 0.
     else:
         data[itime, itotal, :] = values
+
+def ogpf_data_code(table_name: str,
+                   is_real: bool=False, is_complex:bool=False,
+                   is_sort1=True, is_random=False,
+                   random_code=0, title: str='',
+                   subtitle: str='', label: str='',
+                   is_msc: bool=True):
+    sort1_sort_bit = 0 if is_sort1 else 1
+    random_sort_bit = 1 if is_random else 0
+    sort_method = 1 if is_sort1 else 2
+    #if format_code == 1:
+        #format_word = "Real"
+    #elif format_code == 2:
+        #format_word = "Real/Imaginary"
+    #elif format_code == 3:
+        #format_word = "Magnitude/Phase"
+    #DEVICE_CODE_MAP = {
+        #1 : "Print",
+        #2 : "Plot",
+        #3 : "Print and Plot",
+        #4 : "Punch",
+        #5 : "Print and Punch",
+        #6 : "Plot and Punch",
+        #7 : "Print, Plot, and Punch",
+    #}
+
+    if is_real:
+        num_wide = 8
+    elif is_complex:
+        num_wide = 14
+
+    table_code = table_name_to_table_code[table_name]
+    sort_code = 1 # TODO: what should this be???
+
+    #table_code = tCode % 1000
+    #sort_code = tCode // 1000
+    tCode = table_code * 1000 + sort_code
+
+    device_code = 2  # Plot
+    data_code = {
+        'nonlinear_factor': None,
+        'sort_bits': [0, sort1_sort_bit, random_sort_bit], # real, sort1, random
+        'sort_method' : sort_method,
+        'is_msc': is_msc,
+        'format_code': 1, # real
+        'table_code': table_code,
+        'tCode': tCode,
+        'table_name': table_name, ## TODO: should this be a string?
+        'device_code' : device_code,
+        'random_code' : random_code,
+        'thermal': 0,
+        'title' : title,
+        'subtitle': subtitle,
+        'label': label,
+        'num_wide': num_wide,
+    }
+    return data_code
+
+def set_real_table(cls,
+                   data_code: dict[str, Any],
+                   is_sort1: bool,
+                   isubcase: int,
+                   node_element_list: list[np.ndarray],
+                   element_names_list: list[np.ndarray],
+                   data_list: list[np.ndarray],
+                   times: np.ndarray) -> RealGridPointForcesArray:
+    ntimes = len(times)
+    ntotals = []
+    assert isinstance(element_names_list, list), type(element_names_list)
+    for element_namesi, node_elementi, datai in zip(element_names_list, node_element_list, data_list):
+        ntotal = len(node_elementi)
+        ntotals.append(ntotal)
+        _check_element_names(element_namesi)
+        assert node_elementi.ndim == 2, node_elementi.shape
+        assert node_elementi.shape[1] == 2, node_elementi.shape
+        nelement_node = len(node_elementi)
+        assert datai.ndim == 3, datai.shape
+        assert datai.shape == (1, nelement_node, 6), (datai.shape, (1, nelement_node, 6))
+
+    #         13,   101,         1,     1, 0,   APPLIED, 30.9864, 19.7278, 70.2515, 53.3872, 80.9687, 77.4302
+    #         13,   101,         1,     1, 301, RBE3,    41.9012, 53.6651, 0.09483, 76.041,  67.506,  98.0225
+    #         13,   101,         1,     1, 0,   SPC,     71.6306, 97.0527, 89.8733, 5.89262, 61.0523, 48.9043
+    #         13,   101,         1,     1, 301, CTRIA3,  84.5273, 69.36,   92.3295, 52.7074, 77.9904, 68.905
+    #         13,   101,         1,     1, 302, CQUAD4,  97.7843, 11.7545, 99.3901, 44.9476, 70.818,  7.47876
+
+    dt = times[0]
+    data_code['sort_code'] = 0
+    obj = cls(data_code, is_sort1, isubcase, dt)
+
+    obj.ntimes = ntimes
+    obj.ntotal = max(ntotals)
+    # obj._ntotals = ntotals
+    obj._ntotals = [obj.ntotal] * len(ntotals)
+    obj._times = times
+    assert isinstance(element_names_list[0][0], str), element_names_list[0]
+    assert isinstance(node_element_list[0][0,0], integer_types), node_element_list[0]
+    is_unique, node_element, element_names, data = _stack_same(
+        node_element_list,
+        element_names_list,
+        data_list)
+    assert node_element.ndim == 3, (node_element.shape, node_element)
+    assert element_names.ndim == 2, (element_names.shape, element_names)
+    assert data.ndim == 3, data.shape
+    obj.is_unique = True  # not is_unique
+    obj.node_element = node_element
+    obj.element_names = element_names
+    obj.data = data
+    return obj
+
+
+def _stack_same(node_element_list: list[np.ndarray],
+                element_names_list: list[np.ndarray],
+                data_list: list[np.ndarray],
+                ) -> tuple[bool, np.ndarray, np.ndarray, np.ndarray]:
+    """stacks diffrent grid point force arrays together"""
+    if len(node_element_list) == 1:
+        ntotal = len(element_names_list[0])
+        node_element = node_element_list[0].reshape(1, ntotal, 2)
+        element_names = element_names_list[0].reshape(1, ntotal)
+        data = data_list[0]
+        # print('return single')
+        assert node_element.ndim == 3, (node_element.shape, node_element)
+        assert element_names.ndim == 2, (element_names.shape, element_names)
+        assert data.ndim == 3, data.shape
+        return False, node_element, element_names, data
+
+    ntime = len(node_element_list)
+    ntotals = [len(element_names) for element_names in element_names_list]
+    # print(f'ntotals = {ntotals}')
+    ntotal = max(ntotals)
+    element_names0 = element_names_list[0]
+    node_element0 = node_element_list[0]
+    if max(ntotals) == min(ntotals):
+        # stack
+        for i, element_names, node_element in zip(count(), element_names_list, node_element_list):
+            if element_names.shape != element_names0.shape:
+                # print('shapes are different')
+                break
+            isame = (element_names == element_names0) & (node_element == node_element0).min(axis=1)
+            if not np.all(isame):
+                # print('names/node_element are different')
+                break
+        else:
+            # not broken; same, but different data
+            node_element_out = np.vstack(node_element_list)
+            element_names_out = np.column_stack(element_names_list)
+            data_out = np.dstack(data_list)
+            assert node_element_out.ndim == 3
+            assert element_names_out.ndim == 2
+            assert data_out.ndim == 3
+            # print('return simple stack')
+            return False, node_element_out, element_names_out, data_out
+
+    # hard stack
+    # shapes are different - stacking into max size
+    data0 = data_list[0]
+    node_element_out = np.full((ntime, ntotal, 2), -1, dtype=node_element0.dtype)
+    element_names_out = np.zeros((ntime, ntotal), dtype='U8')
+    data_out = np.full((ntime, ntotal, 6), np.nan, dtype=data0.dtype)
+    for i, node_element, element_names, data in zip(
+            count(), node_element_list, element_names_list, data_list):
+        nval = len(node_element)
+        # print(node_element.shape, nval,
+        #       node_element_out[i, :nval, :].shape)
+        node_element_out[i, :nval, :] = node_element
+        element_names_out[i, :nval] = element_names
+        data_out[i, :nval, :] = data
+    # print('return hard stack')
+    assert node_element_out.ndim == 3
+    assert element_names_out.ndim == 2
+    assert data_out.ndim == 3
+    return True, node_element_out, element_names_out, data_out
+
+def _check_element_names(element_names: np.ndarray) -> None:
+    assert element_names.ndim in [1, 2], (element_names.shape, element_names)
+    allowed_names_half = np.array([
+        # 'APPLIED', 'RBE3', 'SPC',
+        # 'CTRIA3', 'CQUAD4',
+        '*TOTALS*',
+        'APP-LOAD',
+        'F-OF-MPC', 'F-OF-SPC',
+        'ROD     ', 'CONROD  ', 'TUBE    ',
+        'BUSH    ',
+        'ELAS1   ', 'ELAS2   ', 'ELAS3   ', 'ELAS4   ',
+        #-------
+        'BAR     ', 'BEAM    ', 'BEND    ',
+        #-------
+        'SHEAR   ',
+        'TRIA3   ', 'TRIA6   ', 'TRIAR   ',
+        'QUAD4   ', 'QUAD8   ', 'QUADR   ',
+        # -------
+        # fd-elements
+        'QUAD4FD ', 'QUADFD  ',
+        'TRIAFD  ', 'TRIA3FD ',
+        # -------
+        # asymmetric
+        'TRIAX6  ',
+        'TRIAXFD ', 'TRIAX3FD',
+        'QUADXFD ', 'QUADX4FD',
+        #-------
+        'TETRA   ', 'PENTA   ', 'HEXA    ',
+        'TETRAFD ', 'PENTAFD ', 'HEXAFD  ',
+        'TETRA4FD', 'PENTA6FD', 'HEXA8FD ',
+        #--------
+        'GENEL   ', 'MATK    ', '        ',
+    ], dtype='U8')
+    allowed_names_stripped = np.array([
+        name.strip() for name in allowed_names_half], dtype='U8')
+
+    allowed_names = np.hstack([allowed_names_half, allowed_names_stripped])
+    missing_names = np.setdiff1d(element_names, allowed_names)
+    if len(missing_names):
+        raise ValueError(f'unallowed GridPointForce names={str(missing_names)}; allowed=[{str(allowed_names_stripped.tolist())}]')

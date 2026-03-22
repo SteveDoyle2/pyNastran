@@ -1499,7 +1499,7 @@ class RealCBeamForceArray(RealForceObject):
         #     raise NotImplementedError('SORT2')
 
     @property
-    def nnode_per_element(self) -> int:
+    def nnodes_per_element(self) -> int:
         return 2
 
     def build(self):

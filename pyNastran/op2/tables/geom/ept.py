@@ -1962,7 +1962,7 @@ class EPT:
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
-            (pid, k, c, m, unused_alpha, sa, se,
+            (pid, k, c, mass, unused_alpha, sa, se,
              typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
              types, idts, idcs, idtdus, idcdus,
              typed, idtd, idcd, idtdvd, idcdvd,
@@ -1975,8 +1975,7 @@ class EPT:
             #+pb2, damper, table, 206
             #pid=204 k=100000.0 c=1000.0 m=0.0 sa=nan se=nan
 
-
-            msg = f'PBUSH1D pid={pid} k={k} c={c} m={m} sa={sa} se={se}'
+            msg = f'PBUSH1D pid={pid} k={k} c={c} mass={mass} sa={sa} se={se}'
             optional_vars = {}
             typea_str = type_map[typea]
             types_str = type_map[types]
@@ -2022,7 +2021,7 @@ class EPT:
             if op2.is_debug_file:
                 op2.binary_debug.write(msg)
 
-            pbush1d = op2.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
+            pbush1d = op2.add_pbush1d(pid, k=k, c=c, mass=mass, sa=sa, se=se,
                                       optional_vars=optional_vars,)
             str(pbush1d)
             n += ntotal
