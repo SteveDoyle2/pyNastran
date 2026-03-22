@@ -155,20 +155,20 @@ class TestDampers(unittest.TestCase):
         ge = [0.01]
         cbush = model.add_cbush(eid, pid, nids, x, g0, cid=None, s=0.5,
                                 ocid=-1, si=None, comment='cbush')
-        pbush = model.add_pbush(pid, k, b, ge, rcv=None, mass=None,
+        pbush = model.add_pbush(pid, k, b, ge, rcv=None, # mass=None,
                                 comment='pbush')
 
         eid = 9
         pid = 9
         k = 1.
         c = 2.
-        m = 3.
+        mass = 3.
         sa = 4.
         se = 5.
         #optional_vars = None
         cbush1d = model.add_cbush1d(eid, pid, nids, cid=None, comment='cbush1d')
-        pbush1d = model.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
-                                    optional_vars=None, comment='pbush1d')
+        pbush1d = model.add_pbush1d(pid, k=k, c=c, mass=mass,
+                                    sa=sa, se=se, optional_vars=None, comment='pbush1d')
 
         card_lines = [
             'pbush1d, 204, 1.e+5, 1000., , , , , , +pb4',

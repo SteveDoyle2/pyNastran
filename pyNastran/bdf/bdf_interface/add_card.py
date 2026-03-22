@@ -2434,6 +2434,8 @@ class Add1dElements:
 
         """
         t = None
+        if mass is None:
+            mass = 0.0
         prop = PBUSH(pid, k, b, ge, rcv=rcv, mass=mass, t=t,
                      comment=comment)
         self._add_methods.add_property_object(prop)

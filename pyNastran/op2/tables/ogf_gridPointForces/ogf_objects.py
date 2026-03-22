@@ -2444,35 +2444,38 @@ def _check_element_names(element_names: np.ndarray) -> None:
     """
     assert element_names.ndim in [1, 2], (element_names.shape, element_names)
     allowed_names_half = np.array([
-        # 'APPLIED', 'RBE3', 'SPC',
-        # 'CTRIA3', 'CQUAD4',
+        # 'RBE3',
         '*TOTALS*',
         'APP-LOAD',
-        'F-OF-MPC', 'F-OF-SPC',
+        'F-OF-MPC', 'F-OF-SPC', 'F-OF-CNT',
+        # -------
         'ROD     ', 'CONROD  ', 'TUBE    ',
         'BUSH    ', #'BUSH1D  ', 'BUSH2D  ',
         'ELAS1   ', 'ELAS2   ', 'ELAS3   ', 'ELAS4   ',
         #-------
-        'BAR     ', 'BEAM    ', 'BEND    ', #'BEAM3   ',
+        'BAR     ', 'BEAM    ', 'BEND    ', 'BEAM3   ',
         #-------
         'SHEAR   ',
         'TRIA3   ', 'TRIA6   ', 'TRIAR   ',
         'QUAD4   ', 'QUAD8   ', 'QUADR   ', # 'QUAD    ',
-        # -------
-        # fd-elements
+        'TRIAX6  ',
+        # -----------------------------------
+        # fd-elements (Hyperelastic
         'QUAD4FD ', 'QUADFD  ',
         'TRIA3FD ', 'TRIAFD  ',
         # -------
         # asymmetric
-        'TRIAX6  ',
         'TRIAXFD ', 'TRIAX3FD',
         'QUADXFD ', 'QUADX4FD', # 'QUADX8FD',
         #-------
-        'TETRA   ', 'PENTA   ', 'HEXA    ',
-        'TETRAFD ', 'PENTAFD ', 'HEXAFD  ',
-        'TETRA4FD', 'PENTA6FD', 'HEXA8FD ',
+        'TETRA   ', 'PENTA   ', 'HEXA    ', 'PYRA    ',
+        'TETRAFD ', 'PENTAFD ', 'HEXAFD  ', #'PYRAFD  ',
+        'TETRA4FD', 'PENTA6FD', 'HEXA8FD ', #'PYRA5FD ',
         #--------
-        'GENEL   ', 'MATK    ', '        ',
+        'GENEL   ', 'MATK    ',
+        'K11X    ', 'K22X    ', 'K33X    ', 'K44X    ',
+        'SEAMP   ', 'FASTP   ',
+        '        ', # null
     ], dtype='U8')
     allowed_names_stripped = np.array([
         name.strip() for name in allowed_names_half], dtype='U8')
