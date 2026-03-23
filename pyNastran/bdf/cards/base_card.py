@@ -12,7 +12,6 @@ from abc import abstractmethod, abstractproperty, abstractclassmethod
 from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
-#from numpy import nan, empty, unique
 
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.utils import object_attributes, object_methods

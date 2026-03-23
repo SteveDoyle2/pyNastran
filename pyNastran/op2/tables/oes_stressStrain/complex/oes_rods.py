@@ -55,11 +55,11 @@ class ComplexRodArray(OES_Object):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         idtype, cfdtype = get_complex_times_dtype(self.size)
 
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype=idtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(self.nelements, dtype=idtype)
 
         #[axial, torsion]
-        self.data = zeros((self.ntimes, self.nelements, 2), dtype=cfdtype)
+        self.data = np.zeros((self.ntimes, self.nelements, 2), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -123,11 +123,12 @@ class ComplexRodArray(OES_Object):
         return data_code
 
     @classmethod
-    def add_freq_case(cls, table_name: str, element, data, isubcase,
+    def add_freq_case(cls, table_name: str, element_name: str,
+                      element, data, isubcase,
                       freqs,
-                      element_name: str,
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
+        assert isinstance(element_name, str), f'element_name={element_name} and should be a string; type={str(type(element_name))}'
         data_code = cls._add_case(
             table_name, element_name, isubcase,
             is_sort1, is_random, is_msc,
@@ -179,7 +180,7 @@ class ComplexRodArray(OES_Object):
                         (axial1, torsion1) = t1
                         (axial2, torsion2) = t2
                         d = t1 - t2
-                        if not allclose([axial1.real, axial1.imag, torsion1.real, torsion1.imag],
+                        if not np.allclose([axial1.real, axial1.imag, torsion1.real, torsion1.imag],
                                         [axial2.real, axial2.imag, torsion2.real, torsion2.imag], atol=0.0001):
                         #if not np.array_equal(t1, t2):
                             msg += '%-4s  (%s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (

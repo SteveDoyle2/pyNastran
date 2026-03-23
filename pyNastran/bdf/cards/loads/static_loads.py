@@ -1513,18 +1513,18 @@ class Load2(BaseCard):
         v21 = xyz2 - xyz1
 
         try:
-            v21 /= norm(v21)
+            v21 /= np.linalg.norm(v21)
         except FloatingPointError:
-            msg = 'v1=v21=%s norm(v21)=%s\n' % (v21, norm(v21))
+            msg = 'v1=v21=%s norm(v21)=%s\n' % (v21, np.linalg.norm(v21))
             msg += 'g1.get_position()=%s\n' % xyz1
             msg += 'g2.get_position()=%s' % xyz2
             raise FloatingPointError(msg)
 
         v2 = xyz4 - xyz3
         try:
-            v2 /= norm(v2)
+            v2 /= np.linalg.norm(v2)
         except FloatingPointError:
-            msg = 'v2=v43=%s norm(v43)=%s\n' % (v2, norm(v2))
+            msg = 'v2=v43=%s norm(v43)=%s\n' % (v2, np.linalg.norm(v2))
             msg += 'g3.get_position()=%s\n' % xyz3
             msg += 'g4.get_position()=%s' % xyz4
             raise FloatingPointError(msg)
@@ -1584,17 +1584,17 @@ class Load2(BaseCard):
             v43 = xyz4 - xyz3
             #v2 = v43
             try:
-                v21 /= norm(v21)
+                v21 /= np.linalg.norm(v21)
             except FloatingPointError:
-                msg = 'v21=%s norm(v21)=%s\n' % (v21, norm(v21))
+                msg = 'v21=%s norm(v21)=%s\n' % (v21, np.linalg.norm(v21))
                 msg += 'g1.get_position()=%s\n' % xyz1
                 msg += 'g2.get_position()=%s' % xyz2
                 raise FloatingPointError(msg)
 
             try:
-                v43 /= norm(v43)
+                v43 /= np.linalg.norm(v43)
             except FloatingPointError:
-                msg = 'v43=%s norm(v43)=%s\n' % (v43, norm(v43))
+                msg = 'v43=%s norm(v43)=%s\n' % (v43, np.linalg.norm(v43))
                 msg += 'g3.get_position()=%s\n' % xyz3
                 msg += 'g4.get_position()=%s' % xyz4
                 raise FloatingPointError(msg)
@@ -2894,7 +2894,7 @@ def normalize(self, msg: str=''):
     """
     assert abs(self.mag) > 0, 'mag=%s\n%s' % (self.mag, self)
     if abs(self.mag) != 0.0:  # enforced displacement
-        norm_xyz = norm(self.xyz)
+        norm_xyz = np.linalg.norm(self.xyz)
         if norm_xyz == 0.0:
             raise RuntimeError('xyz=%s norm_xyz=%s' % (self.xyz, norm_xyz))
         #mag = self.mag * norm_xyz
@@ -2915,7 +2915,7 @@ def normalize(self, msg: str=''):
     #scale up the magnitude of the vector
     #"""
     #if self.mag != 0.0:  # enforced displacement
-        #norm_xyz = norm(self.xyz)
+        #norm_xyz = np.linalg.norm(self.xyz)
         ##mag = self.mag*norm_xyz
         #self.mag *= norm_xyz
         #self.xyz /= norm_xyz

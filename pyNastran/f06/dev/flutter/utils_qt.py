@@ -1,6 +1,6 @@
 from typing import Optional, Any
 from qtpy.QtWidgets import (
-    QWidget, QComboBox, QLineEdit,
+    QWidget, QComboBox, QLineEdit, QCheckBox,
     # QCheckBox,
     QGridLayout,
 )
@@ -17,8 +17,7 @@ def create_grid_from_list(parent,
                 grid.addWidget(obj, irow, jcol)
     return grid
 
-def load_lineedits(self,
-                   data: dict[str, Any],
+def load_lineedits(data: dict[str, Any],
                    line_edits: list[tuple[str, int, QLineEdit]]):
     for key, index, line_edit in line_edits:
         if key not in data:
@@ -41,8 +40,25 @@ def load_lineedits(self,
             raise
 
 
-def load_pulldowns(self,
-                   data: dict[str, Any],
+def load_checkboxs(data: dict[str, Any],
+                   checkboxs: list[tuple[str, QCheckBox]]) -> None:
+    """
+    checkboxs = [('use_rhoref', self.use_rhoref_checkbox),]
+    """
+    # attrs aren't stored
+    for (key, checkbox) in checkboxs:
+        if key not in data:
+            continue
+        val = data[key]
+        assert isinstance(val, bool), (key, val)
+        try:
+            checkbox.setChecked(val)
+        except AttributeError:  # pragma: no cover
+            print(key)
+            raise
+
+
+def load_pulldowns(data: dict[str, Any],
                    pulldown_edits: list[tuple[str, QComboBox, list[str]]]) -> None:
     for key, pulldown_edit, values in pulldown_edits:
         if key not in data:
@@ -54,8 +70,7 @@ def load_pulldowns(self,
         pulldown_edit.setCurrentIndex(index)
 
 
-def load_min_max_lineedits(self,
-                           data: dict[str, Any],
+def load_min_max_lineedits(data: dict[str, Any],
                            min_max_line_edits: list[tuple[str, QLineEdit, QLineEdit]],
                            ) -> None:
     for key, line_edit_min, line_edit_max in min_max_line_edits:

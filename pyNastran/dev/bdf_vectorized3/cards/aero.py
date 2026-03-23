@@ -3956,6 +3956,9 @@ class AELIST(VectorizedBaseCard):
         self.nelements = np.array([], dtype='int32')
         self.elements = np.array([], dtype='int32')
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
     def add(self, sid: int, elements: list[int],
             ifile: int=0, comment: str='') -> int:
         """
@@ -4463,6 +4466,9 @@ class FLFACT(VectorizedBaseCard):
         cls_obj = self.slice_card_by_index(i)
         assert cls_obj.n > 0, cls_obj
         return cls_obj
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
 
     def add(self, sid: int, factors: list[float],
             ifile: int=0, comment: str='') -> int:

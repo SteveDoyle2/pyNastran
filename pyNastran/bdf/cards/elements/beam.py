@@ -512,7 +512,7 @@ class CBEAM(LineElement):
         xyz2 = node2.get_position()
         #centroid = ( + self.gb_ref.get_position()) / 2.
         centroid = (xyz1 + xyz2) / 2.
-        #length = norm(xyz2 - xyz1)
+        #length = np.linalg.norm(xyz2 - xyz1)
         #cda = model.nodes[n1].cid_ref
         #cdb = model.nodes[n2].cid_ref
 
@@ -683,7 +683,7 @@ class CBEAM(LineElement):
         # wa/wb are not considered in i_offset
         # they are considered in ihat
         i = xyz2 - xyz1
-        ihat_norm = norm(i)
+        ihat_norm = np.linalg.norm(i)
         if ihat_norm == 0.:
             msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
             raise ValueError(msg)
@@ -714,7 +714,7 @@ class CBEAM(LineElement):
         eid = self.eid
         #centroid = (n1 + n2) / 2.
         #i = n2 - n1
-        #Li = norm(i)
+        #Li = np.linalg.norm(i)
         #ihat = i / Li
 
         elem = self
@@ -727,7 +727,7 @@ class CBEAM(LineElement):
         # wa/wb are not considered in i_offset
         # they are considered in ihat
         i = xyz2 - xyz1
-        ihat_norm = norm(i)
+        ihat_norm = np.linalg.norm(i)
         if ihat_norm == 0.:
             msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
             raise ValueError(msg)

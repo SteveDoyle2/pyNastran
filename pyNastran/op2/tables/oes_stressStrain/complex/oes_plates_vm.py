@@ -110,7 +110,7 @@ class ComplexPlateVMArray(OES_Object):
             #print(f'  SORT2: ntimes={ntimes} nelements={nelements} nnodes={nnodes} nlayers={nlayers} {self.element_name}-{self.element_type}')
         #print(f'{self.element_name}-{self.element_type} nelements={nelements} nlayers={nlayers} ntimes={ntimes}')
 
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
         # the number is messed up because of the offset for the element's properties
@@ -121,16 +121,16 @@ class ComplexPlateVMArray(OES_Object):
                 #self.nelements * nnodes, self.ntotal)
             #raise RuntimeError(msg)
 
-        self.fiber_distance = zeros(nlayers, 'float32')
+        self.fiber_distance = np.zeros(nlayers, 'float32')
 
         # [oxx, oyy, txy, ovm]
-        self.data = zeros((ntimes, nlayers, 4), dtype=cfdtype)
+        self.data = np.zeros((ntimes, nlayers, 4), dtype=cfdtype)
 
         # we could use nelements*2 to make it smaller, but it'd be harder
-        self.element_node = zeros((nlayers, 2), dtype=idtype)
+        self.element_node = np.zeros((nlayers, 2), dtype=idtype)
 
         # TODO: could be more efficient by using nelements for cid
-        #self.element_cid = zeros((self.nelements, 2), 'int32')
+        #self.element_cid = np.zeros((self.nelements, 2), 'int32')
         #print(self.data.shape, self.element_node.shape)
 
     def build_dataframe(self) -> None:

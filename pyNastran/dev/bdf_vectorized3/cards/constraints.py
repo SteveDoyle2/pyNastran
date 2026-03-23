@@ -772,6 +772,9 @@ class SPCADD(ADD):
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['spc_id'].append(self.spc_id)
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool = False,
                    write_card_header: bool=False) -> None:

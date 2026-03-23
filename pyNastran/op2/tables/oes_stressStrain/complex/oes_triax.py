@@ -61,14 +61,14 @@ class ComplexTriaxArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = zeros(self.ntimes, 'float32')
+        self._times = np.zeros(self.ntimes, 'float32')
         #self.ntotal = self.nelements * nnodes
 
         # TODO: could be more efficient by using nelements for cid
         idtype, cfdtype = get_complex_times_dtype(self.size)
-        self.eids = zeros(self.ntotal, dtype=idtype)
-        self.element_node = zeros((self.ntotal, 2), idtype)
-        #self.element_cid = zeros((self.nelements, 2), 'int32')
+        self.eids = np.zeros(self.ntotal, dtype=idtype)
+        self.element_node = np.zeros((self.ntotal, 2), idtype)
+        #self.element_cid = np.zeros((self.nelements, 2), 'int32')
 
         # the number is messed up because of the offset for the element's properties
 
@@ -77,9 +77,9 @@ class ComplexTriaxArray(OES_Object):
                 self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
             raise RuntimeError(msg)
 
-        self.fiber_curvature = zeros(self.ntotal, 'float32')
+        self.fiber_curvature = np.zeros(self.ntotal, 'float32')
         # [e_radial, e_azimuthal, e_axial, e_shear]
-        self.data = zeros((self.ntimes, self.ntotal, 4), 'complex64')
+        self.data = np.zeros((self.ntimes, self.ntotal, 4), 'complex64')
 
     @property
     def headers(self) -> list[str]:

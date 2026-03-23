@@ -67,12 +67,12 @@ class RealNonlinearRodArray(OES_Object):  # 89-CRODNL, 92-CONRODNL
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype=idtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(self.nelements, dtype=idtype)
 
         #[axial_stress, equiv_stress, total_strain, effective_plastic_creep_strain,
         # effective_creep_strain, linear_torsional_stress]
-        self.data = zeros((self.ntimes, self.nelements, 6), dtype=fdtype)
+        self.data = np.zeros((self.ntimes, self.nelements, 6), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

@@ -1204,11 +1204,11 @@ class RealGridPointForcesArray(GridPointForces):
         return msg
 
     #def get_element_index(self, eids):
-        #itot = searchsorted(eids, self.node_element[:, 0])
+        #itot = np.searchsorted(eids, self.node_element[:, 0])
         #return itot
 
     #def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.node_element[:, 0] == eid) for eid in eids])
+        #ind = np.ravel([np.searchsorted(self.node_element[:, 0] == eid) for eid in eids])
         #return ind
 
     def write_csv(self, csv_file: TextIO,
@@ -1892,11 +1892,11 @@ class ComplexGridPointForcesArray(GridPointForces):
         return msg
 
     #def get_element_index(self, eids):
-        #itot = searchsorted(eids, self.node_element[:, 0])
+        #itot = np.searchsorted(eids, self.node_element[:, 0])
         #return itot
 
     #def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.node_element[:, 0] == eid) for eid in eids])
+        #ind = np.ravel([np.searchsorted(self.node_element[:, 0] == eid) for eid in eids])
         #return ind
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',

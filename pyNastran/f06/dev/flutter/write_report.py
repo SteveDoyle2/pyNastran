@@ -1,3 +1,8 @@
+"""
+TODO: support trade studies across single or multiple axes
+TODO: x-axis can be mach or kact
+TODO: y-axis can be eas or frequency
+"""
 from __future__ import annotations
 import os
 import warnings
@@ -223,6 +228,10 @@ def write_report(docx_filename: str,
 
     #------------------------------
     mode_switch_method = ''  # None
+    subcase = 1
+    make_alt = False
+    freq_round = 2
+    eas_round = 1
 
     # The plot gets messy and dfreq_tol doesn't work if you have NaN
     # points. To hack this, we just chop the plot above some
@@ -275,10 +284,10 @@ def write_report(docx_filename: str,
         resp_dict, data_dict = make_flutter_response(
             str(f06_filename),
             f06_units=f06_units, out_units=out_units,
-            use_rhoref=use_rhoref,
+            use_rhoref=use_rhoref, make_alt=make_alt,
             log=log)
         assert len(resp_dict) == 1, resp_dict
-        response = resp_dict[1]
+        response = resp_dict[subcase]
 
         # xcutoff doesn't apply for first 6 modes
         response.nrigid_body_modes = nrigid_body_modes
@@ -301,7 +310,7 @@ def write_report(docx_filename: str,
 
         vl_vf_crossing_dict, vd_crossing_dict = response.get_flutter_crossings(
             damping_crossings=damping_crossings, modes=modes,
-            eas_range=eas_range, freq_round=2, eas_round=1,
+            eas_range=eas_range, freq_round=freq_round, eas_round=eas_round,
             divergence_freq_tol=divergence_freq_tol)
 
         if make_pngs:

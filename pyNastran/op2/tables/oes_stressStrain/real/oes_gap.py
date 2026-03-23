@@ -90,12 +90,12 @@ class NonlinearGapStressArray(OES_Object):
             #print("-> ntimes=%s nelements=%s ntotal=%s" % (
                 #ntimes, nelements, ntotal))
 
-        _times = zeros(ntimes, dtype=self.analysis_fmt)
-        element = zeros(ntotal, dtype=idtype)
-        form = zeros(ntotal, dtype='|U8')
+        _times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        element = np.zeros(ntotal, dtype=idtype)
+        form = np.zeros(ntotal, dtype='|U8')
 
         # [comp_x, shear_y, shear_z, axial_u, shear_v, shear_w, slip_v, slip_w]
-        data = zeros((ntimes, ntotal, 8), dtype=fdtype)
+        data = np.zeros((ntimes, ntotal, 8), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -258,11 +258,11 @@ class NonlinearGapStressArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
+        itot = np.searchsorted(eids, self.element)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsorted(self.element == eid) for eid in eids])
+        ind = np.ravel([np.searchsorted(self.element == eid) for eid in eids])
         return ind
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1,

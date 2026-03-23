@@ -58,11 +58,11 @@ class ComplexBarArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         idtype, cfdtype = get_complex_times_dtype(self.size)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         #self.element = array(self.nelements, dtype='|S8')
 
         #self.ntotal = self.nelements * nnodes
-        self.element = zeros(self.ntotal, dtype=idtype)
+        self.element = np.zeros(self.ntotal, dtype=idtype)
 
         # the number is messed up because of the offset for the element's properties
         #if self.nelements * nnodes != self.ntotal:
@@ -73,7 +73,7 @@ class ComplexBarArray(OES_Object):
             #raise RuntimeError(msg)
 
         #[s1a, s2a, s3a, s4a, axial, s2a, s2b, s2c, s2d]
-        self.data = zeros((self.ntimes, self.ntotal, 9), cfdtype)
+        self.data = np.zeros((self.ntimes, self.ntotal, 9), cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

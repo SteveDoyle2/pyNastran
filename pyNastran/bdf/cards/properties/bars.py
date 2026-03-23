@@ -16,7 +16,6 @@ second moment of area on wikipedia
 from __future__ import annotations
 from itertools import count
 from typing import Optional, Any, TYPE_CHECKING
-from numpy import pi, array
 import numpy as np
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -341,7 +340,7 @@ def rod_section(class_name, beam_type, dim, prop):
     #   \_E_/
     #
     R = dim[0]
-    A = pi * R ** 2
+    A = np.pi * R ** 2
     I1 = A * R ** 2 / 4.
     I2 = I1
     I12 = 0.
@@ -351,8 +350,8 @@ def rod_section(class_name, beam_type, dim, prop):
 def tube_section(class_type: str, beam_type: str, dim: np.ndarray, prop):
     r_outer, r_inner = dim
     assert r_outer > r_inner, 'TUBE; r_outer=%s r_inner=%s' % (r_outer, r_inner)
-    A = pi * (r_outer ** 2 - r_inner ** 2)
-    I1 = pi * (r_outer ** 4 - r_inner ** 4) / 4.
+    A = np.pi * (r_outer ** 2 - r_inner ** 2)
+    I1 = np.pi * (r_outer ** 4 - r_inner ** 4) / 4.
     I2 = I1
     I12 = 0.
     return A, I1, I2, I12
@@ -364,8 +363,8 @@ def tube2_section(class_type: str, beam_type: str, dim, prop):
     assert r_outer > r_inner, 'TUBE2; r_outer=%s r_inner=%s' % (r_outer, r_inner)
 
     # same as tube
-    A = pi * (r_outer ** 2 - r_inner ** 2)
-    I1 = pi * (r_outer ** 4 - r_inner ** 4) / 4.
+    A = np.pi * (r_outer ** 2 - r_inner ** 2)
+    I1 = np.pi * (r_outer ** 4 - r_inner ** 4) / 4.
     I2 = I1
     I12 = 0.
     return A, I1, I2, I12
@@ -2063,7 +2062,7 @@ class PBARL(LineProperty):
         else:
             msg = '_points for beam_type=%r dim=%r on PBARL is not supported' % (beam_type, self.dim)
             raise NotImplementedError(msg)
-        return array(points), Area
+        return np.array(points), Area
 
     def J(self) -> float:
         beam_type = self.beam_type

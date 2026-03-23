@@ -88,12 +88,12 @@ class RandomBarArray(OES_Object):
             ntimes = self.ntotal
             #dtype = self._get_analysis_code_dtype()
 
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(nelements, dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(nelements, dtype=idtype)
 
         #[s1a, s2a, s3a, s4a, axial,
         # s1b, s2b, s3b, s4b]
-        self.data = zeros((ntimes, nelements, 9), dtype=fdtype)
+        self.data = np.zeros((ntimes, nelements, 9), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -214,12 +214,12 @@ class RandomBarArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
+        itot = np.searchsorted(eids, self.element)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
+        ind = np.ravel([np.searchsorted(self.element == eid) for eid in eids])
+        #ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind

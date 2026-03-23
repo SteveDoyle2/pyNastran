@@ -59,7 +59,7 @@ class RealEigenvalues(BaseScalarObject):
         self.eigenvalues[imode] = eigenvalue
         self.radians[imode] = radian
         #cyclei = sqrt(abs(eigenvalue)) / (2. * pi)
-        #if not allclose(cycle, cyclei):
+        #if not np.allclose(cycle, cyclei):
             #print('cycle=%s cyclei=%s' % (cycle, cyclei))
         self.cycles[imode] = cycle
         self.generalized_mass[imode] = gen_mass

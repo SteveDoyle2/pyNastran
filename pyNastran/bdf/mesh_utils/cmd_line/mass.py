@@ -31,8 +31,7 @@ def cmd_line_mass(argv=None, quiet: bool=False) -> None:
     parent_parser.add_argument('--element_ids', help='element_ids', type=str, default='')
     #parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str)
     parent_parser.add_argument('--no_prop_mass', action='store_true', help='remove property/material mass')
-    parent_parser.add_argument('--obj', action='store_true', help='save the obj for reload')
-    add_argparse_arguments(parent_parser, ['--punch', '--lax', '--allow_dup'])
+    add_argparse_arguments(parent_parser, ['--obj', '--punch', '--lax', '--allow_dup'])
     args = parent_parser.parse_args(args=argv[1:])
     # if not quiet:  # pragma: no cover
     #     print(args)

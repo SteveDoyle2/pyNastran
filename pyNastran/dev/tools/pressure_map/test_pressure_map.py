@@ -29,11 +29,13 @@ class TestPressureMap(unittest.TestCase):
         skip_cards = ['CBAR']
         log = SimpleLogger(level='warning')
         bdf_model = read_bdf(bdf_filename, skip_cards=skip_cards, log=log)
-        if not caero_bdf_filename.exists():  # pragma: no cover
-            export_caero_mesh(
-                bdf_filename, caero_bdf_filename,
-                is_aerobox_model=True,
-                write_panel_xyz=False)
+        # if not caero_bdf_filename.exists():  # pragma: no cover
+        export_caero_mesh(
+            bdf_filename, caero_bdf_filename,
+            is_aerobox_model=True,
+            write_panel_xyz=False,
+            write_header=False,
+            write_end_data=False)
 
         aero_model, variables = get_aero_model(
             cart3d_filename, aero_format,
@@ -43,8 +45,8 @@ class TestPressureMap(unittest.TestCase):
 
         neids = len(aero_model.elements)
         eids = np.arange(neids)
-        Cp = np.sin(eids/neids)
-        aero_model.loads['Cp'] = Cp
+        cp = np.sin(eids/neids)
+        aero_model.loads['Cp'] = cp
 
         pressure_map(
             aero_model,
@@ -67,7 +69,7 @@ class TestPressureMap(unittest.TestCase):
             reference_point=None,
             regions_to_include=None,
             regions_to_remove=None,
-            log=log)
+            log=log, is_obj=False)
 
         pressure_map(
             aero_model,
@@ -116,10 +118,14 @@ class TestPressureMap(unittest.TestCase):
                 regions_to_remove=None,
                 log=log)
 
+        # log = SimpleLogger(level='debug')
         pressure_filename = DIRNAME / 'cart3d_forcemoment_panelmodel_4.bdf'
+        main_pressure_filename = DIRNAME / 'main_cart3d_forcemoment_panelmodel_4.bdf'
+        caero_model = read_bdf(caero_bdf_filename,
+                               punch=True, xref=True)
         pressure_map(
             aero_model, #cart3d_filename,
-            caero_bdf_filename,
+            caero_model, #caero_bdf_filename,
             # eids_structure=np.array([]),
             # eid_csv_filename='',
             eid_load_id=-1,
@@ -140,12 +146,15 @@ class TestPressureMap(unittest.TestCase):
             regions_to_remove=None,
             log=log)
 
-        fa2j_filename = DIRNAME/'main_cart3d_fa2j_5.bdf'
-        pressure_filename_to_fa2j(pressure_filename, fa2j_filename, sid=1, log=log)
+        fa2j_filename = DIRNAME / 'main_cart3d_fa2j_5.bdf'
+        log.debug('working on fa2j writer')
+        pressure_filename_to_fa2j(
+            main_pressure_filename, fa2j_filename, sid=1, log=log)
 
-        wkk_filename = DIRNAME/'cart3d_wkk_6.bdf'
-        pressure_filename1 = pressure_filename
-        pressure_filename2 = pressure_filename
+        wkk_filename = DIRNAME / 'cart3d_wkk_6.bdf'
+        pressure_filename1 = main_pressure_filename
+        pressure_filename2 = main_pressure_filename
+        log.debug('working on wkk writer')
         pressure_filename_to_wkk_diag(
             pressure_filename1,
             pressure_filename2,
@@ -162,15 +171,18 @@ class TestPressureMap(unittest.TestCase):
         bdf_filename = MODEL_DIR / 'bwb' / 'bwb_saero.bdf'
         vrt_filename = MODEL_DIR / 'bwb' / 'bwb-saero.vrt'
         caero_bdf_filename = MODEL_DIR / 'bwb' / 'bwb_saero.caero.bdf'
-        if not caero_bdf_filename.exists():  # pragma: no cover
-            export_caero_mesh(
-                bdf_filename, caero_bdf_filename,
-                is_aerobox_model=True,
-                write_panel_xyz=False)
+        # if not caero_bdf_filename.exists():  # pragma: no cover
+        export_caero_mesh(
+            bdf_filename, caero_bdf_filename,
+            is_aerobox_model=True,
+            write_panel_xyz=False,
+            write_header=True,
+            write_end_data=True)
 
-        log = SimpleLogger(level='info')
-        if not vrt_filename.exists():  # pragma: no cover
-            nastran_to_fluent(bdf_filename, vrt_filename, log=log)
+        log = SimpleLogger(level='warning')
+        # log = SimpleLogger(level='info')
+        # if not vrt_filename.exists():  # pragma: no cover
+        nastran_to_fluent(bdf_filename, vrt_filename, log=log)
 
         aero_model, variables = get_aero_model(
             vrt_filename, aero_format,
@@ -183,6 +195,8 @@ class TestPressureMap(unittest.TestCase):
         #     map_type, variable='Cp',
         #     regions_to_include=None,
         #     regions_to_remove=None)
+        log.info('running 1st prssure map')
+        # log.level = 'debug'
         pressure_map(
             aero_model, #cart3d_filename,
             caero_bdf_filename,
@@ -206,6 +220,7 @@ class TestPressureMap(unittest.TestCase):
             regions_to_remove=None,
             log=log)
 
+        log.info('running 2nd prssure map')
         pressure_map(
             aero_model, #cart3d_filename,
             caero_bdf_filename,

@@ -661,26 +661,26 @@ class TestLoads(unittest.TestCase):
                 moments1 = moments1[loadcase_id]
                 forces2 = forces2[loadcase_id]
                 moments2 = moments2[loadcase_id]
-                assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
-                assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
+                assert np.allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
+                assert np.allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
                 case = op2.spc_forces[isubcase]
                 fm = -case.data[0, :3, :].sum(axis=0)
                 assert len(fm) == 6, fm
-                if not allclose(forces1[0], fm[0]):
+                if not np.allclose(forces1[0], fm[0]):
                     model.log.error('subcase=%-2i Fx f=%s fexpected=%s face=%s' % (
                         isubcase, forces1.tolist(), fm.tolist(), face))
-                if not allclose(forces1[1], fm[1]):
+                if not np.allclose(forces1[1], fm[1]):
                     model.log.error('subcase=%-2i Fy f=%s fexpected=%s face=%s' % (
                         isubcase, forces1.tolist(), fm.tolist(), face))
-                if not allclose(forces1[2], fm[2]):
+                if not np.allclose(forces1[2], fm[2]):
                     model.log.error('subcase=%-2i Fz f=%s fexpected=%s face=%s' % (
                         isubcase, forces1.tolist(), fm.tolist(), face))
-                # if not allclose(moments1[0], fm[3]):
+                # if not np.allclose(moments1[0], fm[3]):
                     # print('%i Mx m=%s fexpected=%s' % (isubcase, moments1, fm))
-                # if not allclose(moments1[1], fm[4]):
+                # if not np.allclose(moments1[1], fm[4]):
                     # print('%i My m=%s fexpected=%s' % (isubcase, moments1, fm))
-                # if not allclose(moments1[2], fm[5]):
+                # if not np.allclose(moments1[2], fm[5]):
                     # print('%i Mz m=%s fexpected=%s' % (isubcase, moments1, fm))
 
                 #self.assertEqual(forces1[0], fm[0], 'f=%s fexpected=%s' % (forces1, fm[:3]))
@@ -735,21 +735,21 @@ class TestLoads(unittest.TestCase):
             forces2, moments2 = sum_forces_moments_elements(
                 model, p0, loadcase_id, eids, nids, include_grav=False)
             for key in moments1:
-                assert allclose(forces1[key], forces2[key]), 'forces1=%s forces2=%s' % (forces1[key], forces2[key])
-                assert allclose(moments1[key], moments2[key]), 'moments1=%s moments2=%s' % (moments1[key], moments2[key])
+                assert np.allclose(forces1[key], forces2[key]), 'forces1=%s forces2=%s' % (forces1[key], forces2[key])
+                assert np.allclose(moments1[key], moments2[key]), 'moments1=%s moments2=%s' % (moments1[key], moments2[key])
 
             if op2 is None:
                 continue
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
-            if not allclose(forces1[0], fm[0]):
+            if not np.allclose(forces1[0], fm[0]):
                 model.log.error('subcase=%-2i Fx f=%s fm_expected=%s' % (
                     isubcase, forces1.tolist(), fm.tolist()))
-            if not allclose(forces1[1], fm[1]):
+            if not np.allclose(forces1[1], fm[1]):
                 model.log.error('subcase=%-2i Fy f=%s fm_expected=%s' % (
                     isubcase, forces1.tolist(), fm.tolist()))
-            if not allclose(forces1[2], fm[2]):
+            if not np.allclose(forces1[2], fm[2]):
                 model.log.error('subcase=%-2i Fz f=%s fm_expected=%s' % (
                     isubcase, forces1.tolist(), fm.tolist()))
         save_load_deck(model, punch=False)
@@ -808,13 +808,13 @@ class TestLoads(unittest.TestCase):
             #m2 = m2.sum(axis=0)
             if isinstance(f1, dict):
                 for key in f1:
-                    assert allclose(f1[key], f2[key]), 'f1=%s f2=%s' % (f1[key], f2[key])
-                    assert allclose(m1[key], m2[key]), 'm1=%s m2=%s' % (m1[key], m2[key])
+                    assert np.allclose(f1[key], f2[key]), 'f1=%s f2=%s' % (f1[key], f2[key])
+                    assert np.allclose(m1[key], m2[key]), 'm1=%s m2=%s' % (m1[key], m2[key])
 
             else:
                 asdf
-                assert allclose(f1, f2), 'f1=%s f2=%s' % (f1, f2)
-                assert allclose(m1, m2), 'm1=%s m2=%s' % (m1, m2)
+                assert np.allclose(f1, f2), 'f1=%s f2=%s' % (f1, f2)
+                assert np.allclose(m1, m2), 'm1=%s m2=%s' % (m1, m2)
 
             if op2 is None:
                 continue
@@ -822,13 +822,13 @@ class TestLoads(unittest.TestCase):
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
             force = fm[:3]
-            if not allclose(f1[0], force[0]):
+            if not np.allclose(f1[0], force[0]):
                 model.log.error('subcase=%-2i Fx f=%s force_expected=%s' % (
                     isubcase, f1.tolist(), force.tolist()))
-            if not allclose(f1[1], force[1]):
+            if not np.allclose(f1[1], force[1]):
                 model.log.error('subcase=%-2i Fy f=%s force_expected=%s' % (
                     isubcase, f1.tolist(), force.tolist()))
-            if not allclose(f1[2], force[2]):
+            if not np.allclose(f1[2], force[2]):
                 model.log.error('subcase=%-2i Fz f=%s force_expected=%s' % (
                     isubcase, f1.tolist(), force.tolist()))
         save_load_deck(model, punch=False)
@@ -906,9 +906,9 @@ class TestLoads(unittest.TestCase):
             else:
                 assert np.isclose(area, 0.75**0.5), 'slant g1=%s g34=%s face=%s area=%s\n%s' % (g1, g34, face, area, msg)
                 #assert array_equal(centroid, array([1., .5, 1.])), '-Nz g1=%s g34=%s face=%s centroid=%g\n%s' % (g1, g34, face, centroid, msg)
-                normal_expected = array([-0.57735027, -0.57735027, -0.57735027])
+                normal_expected = np.array([-0.57735027, -0.57735027, -0.57735027])
                 diff = normal - normal_expected
-                assert allclose(normal, normal_expected), 'slant g1=%s g34=%s face=%s normal=%s\ndiff=%s\n%s' % (g1, g34, face, normal, diff, msg)
+                assert np.allclose(normal, normal_expected), 'slant g1=%s g34=%s face=%s normal=%s\ndiff=%s\n%s' % (g1, g34, face, normal, diff, msg)
                 #raise RuntimeError('??? g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg))
             #self.assertEqual(f[0], fm[0], 'f=%s fexpected=%s' % (f, fm[:3]))
             #self.assertEqual(f[1], fm[1], 'f=%s fexpected=%s' % (f, fm[:3]))
@@ -926,23 +926,23 @@ class TestLoads(unittest.TestCase):
             moments1 = moments1[loadcase_id]
             forces2 = forces2[loadcase_id]
             moments2 = moments2[loadcase_id]
-            assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
-            assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
+            assert np.allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
+            assert np.allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
             if op2 is None:
                 continue
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
-            if not allclose(forces1[0], fm[0]):
+            if not np.allclose(forces1[0], fm[0]):
                 model.log.error('subcase=%-2i Fx g=(%s,%s) forces1=%s fexpected=%s '
                                 'face=%s normal=%s' % (
                                     isubcase, g1, g34, forces1, fm, face, normal))
-            if not allclose(forces1[1], fm[1]):
+            if not np.allclose(forces1[1], fm[1]):
                 model.log.error('subcase=%-2i Fy g=(%s,%s) forces1=%s fexpected=%s '
                                 'face=%s normal=%s' % (
                                     isubcase, g1, g34, forces1, fm, face, normal))
-            if not allclose(forces1[2], fm[2]):
+            if not np.allclose(forces1[2], fm[2]):
                 model.log.error('subcase=%-2i Fz g=(%s,%s) forces1=%s fexpected=%s '
                                 'face=%s normal=%s' % (
                                     isubcase, g1, g34, forces1, fm, face, normal))
@@ -1067,13 +1067,13 @@ class TestLoads(unittest.TestCase):
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :4, :].sum(axis=0)
             assert len(fm) == 6, fm
-            if not allclose(forces1[0], fm[0]):
+            if not np.allclose(forces1[0], fm[0]):
                 model.log.error('subcase=%-2i Fx forces1=%s fexpected=%s face=%s' % (
                     isubcase, forces1.tolist(), fm.tolist(), face))
-            if not allclose(forces1[1], fm[1]):
+            if not np.allclose(forces1[1], fm[1]):
                 model.log.error('subcase=%-2i Fy forces1=%s fexpected=%s face=%s' % (
                     isubcase, forces1.tolist(), fm.tolist(), face))
-            if not allclose(forces1[2], fm[2]):
+            if not np.allclose(forces1[2], fm[2]):
                 model.log.error('subcase=%-2i Fz forces1=%s fexpected=%s face=%s' % (
                     isubcase, forces1.tolist(), fm.tolist(), face))
 
@@ -1106,34 +1106,34 @@ class TestLoads(unittest.TestCase):
             #nids = None
             #f2, m2 = sum_forces_moments_elements(
                 #model, p0, loadcase_id, eids, nids, include_grav=False)
-            #assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
-            #assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
+            #assert np.allclose(f, f2), 'f=%s f2=%s' % (f, f2)
+            #assert np.allclose(m, m2), 'm=%s m2=%s' % (m, m2)
 
             #case = op2.spc_forces[isubcase]
             #fm = -case.data[0, :, :].sum(axis=0)
             #assert len(fm) == 6, fm
-            #if not allclose(f[0], fm[0]):
+            #if not np.allclose(f[0], fm[0]):
                 #model.log.error('subcase=%-2i Fx f=%s fexpected=%s' % (
                     #isubcase, f.tolist(), fm.tolist()))
                 #fail = True
-            #if not allclose(f[1], fm[1]):
+            #if not np.allclose(f[1], fm[1]):
                 #model.log.error('subcase=%-2i Fy f=%s fexpected=%s' % (
                     #isubcase, f.tolist(), fm.tolist()))
                 #fail = True
-            #if not allclose(f[2], fm[2]):
+            #if not np.allclose(f[2], fm[2]):
                 #model.log.error('subcase=%-2i Fz f=%s fexpected=%s' % (
                     #isubcase, f.tolist(), fm.tolist()))
                 #fail = True
 
-            #if not allclose(m[0], fm[3]):
+            #if not np.allclose(m[0], fm[3]):
                 #model.log.error('subcase=%-2i Mx m=%s fexpected=%s' % (
                     #isubcase, m.tolist(), fm.tolist()))
                 #fail = True
-            #if not allclose(m[1], fm[4]):
+            #if not np.allclose(m[1], fm[4]):
                 #model.log.error('subcase=%-2i My m=%s fexpected=%s' % (
                     #isubcase, m.tolist(), fm.tolist()))
                 #fail = True
-            #if not allclose(m[2], fm[5]):
+            #if not np.allclose(m[2], fm[5]):
                 #model.log.error('subcase=%-2i Mz m=%s fexpected=%s' % (
                     #isubcase, m.tolist(), fm.tolist()))
                 #fail = True
@@ -1455,9 +1455,9 @@ class TestLoads(unittest.TestCase):
         model._verify_bdf(xref=False)
         model.write_bdf('loads.temp')
         model.cross_reference()
-        assert allclose(model.conrod.mass(), 1.4)
-        assert allclose(model.ctria3.mass(), 0.2)
-        assert allclose(model.chexa.mass(), 0.2)
+        assert np.allclose(model.conrod.mass(), 1.4)
+        assert np.allclose(model.ctria3.mass(), 0.2)
+        assert np.allclose(model.chexa.mass(), 0.2)
 
 
         model.write_bdf('loads.temp')
@@ -1488,8 +1488,8 @@ class TestLoads(unittest.TestCase):
             moments1 = moments1[loadcase_id]
             forces2 = forces2[loadcase_id]
             moments2 = moments2[loadcase_id]
-            assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
-            assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
+            assert np.allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
+            assert np.allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
             model2.get_area_breakdown()
             model2.get_volume_breakdown()

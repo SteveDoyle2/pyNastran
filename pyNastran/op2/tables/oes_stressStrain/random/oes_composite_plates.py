@@ -104,15 +104,15 @@ class RandomCompositePlateArray(OES_Object):
             #print("-> ntimes=%s nelements=%s ntotal=%s" % (
                 #ntimes, nelements, ntotal))
 
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
 
-        self.element_layer = zeros((ntotal, 2), dtype=idtype)
+        self.element_layer = np.zeros((ntotal, 2), dtype=idtype)
 
         # [oxx, oyy, txy]
         #nresults = 5
 
         #[o11, o22, t12, t1z, t2z]; 5
-        self.data = zeros((ntimes, ntotal, 5), dtype=fdtype)
+        self.data = np.zeros((ntimes, ntotal, 5), dtype=fdtype)
 
     @property
     def has_von_mises(self) -> bool:
@@ -296,12 +296,12 @@ class RandomCompositePlateArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element_layer[:, 0])  #[0]
+        itot = np.searchsorted(eids, self.element_layer[:, 0])  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsorted(self.element_layer[:, 0] == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
+        ind = np.ravel([np.searchsorted(self.element_layer[:, 0] == eid) for eid in eids])
+        #ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind
@@ -450,12 +450,12 @@ class RandomCompositePlateVMArray(OES_Object):
         self.itotal = 0
 
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
 
-        self.element_layer = zeros((self.ntotal, 2), dtype=idtype)
+        self.element_layer = np.zeros((self.ntotal, 2), dtype=idtype)
 
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]; 9
-        self.data = zeros((self.ntimes, self.ntotal, 9), dtype=fdtype)
+        self.data = np.zeros((self.ntimes, self.ntotal, 9), dtype=fdtype)
 
     @property
     def has_von_mises(self) -> bool:
@@ -633,12 +633,12 @@ class RandomCompositePlateVMArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element_layer[:, 0])  #[0]
+        itot = np.searchsorted(eids, self.element_layer[:, 0])  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsorted(self.element_layer[:, 0] == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
+        ind = np.ravel([np.searchsorted(self.element_layer[:, 0] == eid) for eid in eids])
+        #ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind

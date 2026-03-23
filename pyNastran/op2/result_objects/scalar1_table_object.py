@@ -7,8 +7,6 @@ from struct import Struct, pack
 import warnings
 
 import numpy as np
-from numpy import zeros, searchsorted, float32
-from numpy import allclose, asarray
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject, set_as_sort1
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
@@ -64,7 +62,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
                         (nid, grid_type) = nid_gridtype
                         t1 = self.data[itime, inid, 0]
                         t2 = table.data[itime, inid, 0]
-                        if not allclose(t1, t2):
+                        if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
                             msg += '(%s, %s)\n  (%s, %s)\n' % (
                                 nid, grid_type, t1, t2)
@@ -89,8 +87,8 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         #self.data = append_sort1_sort2(self.data, result.data)
         #print(self._times)
         #print(result._times)
-        # self._times = hstack([self._times, result._times])
-        #self.node_gridtype = vstack([self.node_gridtype, result.node_gridtype])
+        # self._times = np.hstack([self._times, result._times])
+        #self.node_gridtype = np.vstack([self.node_gridtype, result.node_gridtype])
         ##print('%s' % ''.join(self.get_stats()))
 
     def _get_msgs(self, is_mag_phase):
@@ -186,12 +184,12 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         self._nnodes = nnodes
         self.ntotal = ntotal
 
-        _times = zeros(ntimes, dtype=float_fmt)
+        _times = np.zeros(ntimes, dtype=float_fmt)
         #self.types = array(self.nelements, dtype='|S1')
-        node = zeros(nnodes, dtype='int32')
+        node = np.zeros(nnodes, dtype='int32')
 
         #[separation_distance]
-        data = zeros((nx, ny, 1), self.data_type())
+        data = np.zeros((nx, ny, 1), self.data_type())
         if self.load_as_h5:
             group = self._get_result_group()
             self._times = group.create_dataset('_times', data=_times)
@@ -546,7 +544,7 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         for itime in range(self.ntimes):
             dt = self._times[itime]
             t1 = self.data[itime, :, 0]
-            if isinstance(dt, (float, float32)):
+            if isinstance(dt, (float, np.float32)):
                 header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             else:
                 header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
@@ -618,10 +616,10 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         return page_num - 1
 
     def extract_xyplot(self, node_ids, index):
-        node_ids = asarray(node_ids, dtype='int32')
+        node_ids = np.asarray(node_ids, dtype='int32')
         i = index - 1
         assert index in [1, 2, 3, 4, 5, 6], index
         nids = self.node
-        inids = searchsorted(nids, node_ids)
+        inids = np.searchsorted(nids, node_ids)
         assert all(nids[inids] == node_ids), 'nids=%s expected=%s; all=%s'  % (nids[inids], node_ids, nids)
         return self.data[:, inids, i]

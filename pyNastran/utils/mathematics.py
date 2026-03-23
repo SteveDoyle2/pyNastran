@@ -262,10 +262,10 @@ def is_float_ranged(a: float,
     is_ranged : bool
         True/False
     """
-    if (not a < x) and (not allclose(x, a)):
+    if (not a < x) and (not np.allclose(x, a)):
         return False
 
-    if (not x < b) and (not allclose(x, b)):
+    if (not x < b) and (not np.allclose(x, b)):
         return False
     return True
 

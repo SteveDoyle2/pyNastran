@@ -578,7 +578,7 @@ class TestCoords(unittest.TestCase):
         diff = xyz - expected
 
         msg = '\nexpected=%s \nactual  =%s \ndiff    =%s' % (expected, xyz, diff)
-        assert allclose(diff, 0.), msg
+        assert np.allclose(diff, 0.), msg
         coord = model.coords.slice_by_coord_id(7)
         T = coord.T[0, :, :]
         #self.assertTrue(array_equal(T, coord.beta_n(2)))
@@ -608,10 +608,10 @@ class TestCoords(unittest.TestCase):
             nid, cid, x, y, z = grid
             nodes = model.grid
             pos = nodes.get_position_by_node_id([nid])[0]
-            n = array([x, y, z])
+            n = np.array([x, y, z])
             msg = 'i=%s expected=%s actual=%s\n' % (i, n, pos)
             #print(msg)
-            assert allclose(n, pos), msg
+            assert np.allclose(n, pos), msg
 
 
 if __name__ == '__main__':  # pragma: no cover

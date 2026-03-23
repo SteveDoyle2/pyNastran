@@ -322,7 +322,7 @@ def transform_gpforce_to_globali(subcase: Subcase,
         #from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
         #result = RealGridPointForcesArray()
         if result.is_unique: # TODO: doesn't support preload
-            #self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
+            #self.node_element = np.zeros((self.ntimes, self.ntotal, 2), dtype='int32')
             nids_all_gp = result.node_element[0, :, 0]
 
             log.debug('nids_all_gp = %s' % list(nids_all_gp))

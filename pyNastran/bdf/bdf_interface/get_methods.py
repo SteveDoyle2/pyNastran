@@ -1047,9 +1047,25 @@ def _unique_keys(mydict: dict[int, Any]) -> str:
 import inspect
 from pyNastran.utils import object_stats
 def _get_tag_no_model() -> str:  # pragma: no cover
+    return ''
     # ifile1 = obj.ifile
     current_frame = inspect.currentframe()
     print('current_frame', current_frame)
+
+    # get the ifile parameter from the upper scope
+    frame = inspect.currentframe()
+    print(inspect.getmembers(frame))
+    frame = inspect.getframeinfo(frame)
+    # frame = inspect.getframeinfo(frame)
+    # print(frame.f_locals)
+    # sys.exit(0)
+
+    # call_frame = inspect.getouterframes(frame, 2)[3]
+    # from pyNastran.utils import object_stats
+    # print(object_stats(call_frame))
+    # vars = str(call_frame.f_locals)
+    # out_str = str((call_frame.filename, call_frame.lineno, vars))
+    asdf
 
 def _get_tag(model: BDF, obj: BaseCard) -> str:  # pragma: no cover
     """get a list of files where things are duplicated"""

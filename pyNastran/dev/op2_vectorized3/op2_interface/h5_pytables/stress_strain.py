@@ -531,11 +531,11 @@ def load_complex_element(result_name: str,
                     model.log.warning(f'skipping {result_name} - add_freq_case')
                     continue
 
+                assert isinstance(element_name, str), f'element_name={element_name} and should be a string; type={str(type(element_name))}'
                 res = class_obj.add_freq_case(
-                    table_name,
+                    table_name, element_name,
                     elementi, data, isubcase,
                     freq,
-                    element_name,
                     is_sort1=True, is_random=False, is_msc=True,
                     random_code=0, title='', subtitle='', label='')
 
@@ -1711,7 +1711,8 @@ def _complex_composite_shell(result_name: str,
                 model.log.warning(f'skipping {result_name} - add_freq_case')
                 return
                 disp = class_obj.add_freq_case(
-                    table_name, element_name, element_layeri, data, isubcase, freq,
+                    table_name, element_name,
+                    element_layeri, data, isubcase, freq,
                     is_sort1=True, is_random=False, is_msc=True,
                     random_code=0, title='', subtitle='', label='')
             elif is_complex_modes:
@@ -1931,7 +1932,8 @@ def _complex_shell_stress(result_name: str,
                 freq = freq_data
                 #model.log.warning(f'skipping {result_name} - add_freq_case')
                 disp = class_obj.add_freq_case(
-                    table_name, element_name, element_nodei, fiber, data, isubcase, freq,
+                    table_name, element_name,
+                    element_nodei, fiber, data, isubcase, freq,
                     is_sort1=True, is_random=False, is_msc=True,
                     random_code=0, title='', subtitle='', label='')
             elif is_complex_modes:

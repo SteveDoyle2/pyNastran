@@ -1,9 +1,5 @@
 from __future__ import annotations
-#from math import log, exp
 from typing import Optional, TYPE_CHECKING
-
-#import numpy as np
-#from numpy import unique, hstack
 
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default

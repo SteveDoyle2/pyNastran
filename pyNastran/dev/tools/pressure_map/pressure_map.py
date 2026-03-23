@@ -132,6 +132,7 @@ def _get_force_moment(pressure_filename: PathLike | np.ndarray,
 def pressure_map(aero_filename: PathLike,
                  nastran_filename: PathLike | BDF,
                  eids_structure=np.array([]),
+                 is_obj: bool=False,
                  eid_csv_filename: PathLike='',
                  eid_load_id: int=10,
                  aero_format: str='cart3d',
@@ -162,6 +163,9 @@ def pressure_map(aero_filename: PathLike,
         the path to the aero model
     nastran_filename : PathLike
         the path to the nastran model
+    is_obj : bool; default=False
+        save/use the obj_filename that is determined from
+        nastran_filename
     eid_csv_filename : PathLike
         ???
     eids_structure : int np.ndarray
@@ -245,19 +249,20 @@ def pressure_map(aero_filename: PathLike,
     stop_on_failure = True
     if isinstance(nastran_filename, BDF):
         structure_model = nastran_filename
+        _check_model(structure_model)
     else:
         base, ext = os.path.splitext(nastran_filename)
         obj_filename = base + '.obj'
-        if os.path.exists(obj_filename):
+        if os.path.exists(obj_filename) and is_obj:
             structure_model = BDF(log=log)
             structure_model.bdf_filename = nastran_filename
             structure_model.load(obj_filename)
+            _check_model(structure_model)
         else:
             structure_model = read_bdf(nastran_filename, xref=False, log=log)
+            _check_model(structure_model)
             structure_model.save(obj_filename)
         structure_model.cross_reference()
-    assert len(structure_model.elements), structure_model.get_bdf_stats()
-    assert len(structure_model.nodes), structure_model.get_bdf_stats()
     structure_eids = get_structural_eids_from_csv_load_id(
         structure_model,
         eids_structure, eid_csv_filename, eid_load_id,
@@ -320,6 +325,16 @@ def pressure_map(aero_filename: PathLike,
         cp_sid=cp_sid, pressure_sid=pressure_sid,
         force_sid=force_sid, moment_sid=moment_sid)
     return pressure_model
+
+def _check_model(structure_model: BDF) -> None:
+    nnodes = len(structure_model.nodes)
+    nelements = len(structure_model.elements)
+    if nnodes > 0 and nelements > 0:
+        return
+    msg = (
+        f'BDF file={structure_model.bdf_filename} must have nodes (n={nnodes}) and elements (n={nelements})\n'
+        f'{structure_model.get_bdf_stats()}')
+    raise RuntimeError(msg)
 
 def _write_pressure_file(model: BDF,
                          pressure_filename: PathLike,
@@ -395,11 +410,13 @@ def _write_pressure_file(model: BDF,
         log.warning('cant write main pressure file because the wrong type was found...')
     msg += write_include(rel_main_filename)
     msg += write_include(os.path.basename(pressure_filename))
+    msg += 'ENDDATA\n'
 
     # print(msg)
-    log.debug(f'pressure_filename = {pressure_filename}')
-    log.debug(f'aero_panel_bdf_filename = {aero_panel_bdf_filename}')
-    log.debug(f'writing pressure_file: {main_bdf_filename}')
+    log.debug(f'bdf_rel_main_filename = {rel_main_filename}')
+    log.debug(f'bdf_pressure_filename = {pressure_filename}')
+    log.debug(f'bdf_aero_panel_filename = {aero_panel_bdf_filename}')
+    log.debug(f'writing main_bdf_filename: {main_bdf_filename}')
     with open(main_bdf_filename, 'w') as bdf_file:
         bdf_file.write(msg)
     level = log.level
@@ -435,7 +452,7 @@ def _write_pressure_file(model: BDF,
         result['moment'] = force_moment[:, 1]
 
         force_moment_filename = base + '.force_moment.csv'
-        model.log.debug(f'writing {str(force_moment_filename)}')
+        model.log.debug(f'writing csv: {str(force_moment_filename)}')
         np.savetxt(force_moment_filename, result, header='Element,Force,Moment',
                    delimiter=',', fmt=['%d', '%.18e', '%.18e'])
     elif len(forces):

@@ -3,7 +3,7 @@ Demonstrates reading the OpenMDAO syntax
 """
 from __future__ import print_function
 import os
-from numpy import sqrt, searchsorted
+import numpy as np
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
@@ -19,7 +19,7 @@ def calculate_stress(axial, torsion):
     """calculate VM stress"""
     sigma = 2 * axial * axial
     tau = 3 * torsion * torsion
-    val = sqrt(.5 * (sigma + tau))
+    val = np.sqrt(.5 * (sigma + tau))
     return val
 
 def main():
@@ -72,7 +72,7 @@ def main():
     subcase1 = model4.crod_stress[1]
     combined_stress = calculate_stress(subcase1.data[0, :, 0], subcase1.data[0, :, 1])
 
-    search = searchsorted(subcase1.element, eids)
+    search = np.searchsorted(subcase1.element, eids)
 
     print("---op2 vectorized---")
     #[axial, torsion, SMa, SMt]

@@ -472,7 +472,7 @@ def _eq_nodes_final(nid_pairs: list[tuple[int, int]],
 
             xyz1 = node1.get_position()
             xyz2 = node2.get_position()
-            distance = norm(xyz1 - xyz2)
+            distance = np.linalg.norm(xyz1 - xyz2)
             if distance > tol:
                 continue
             _update_grid(node1, node2)
@@ -484,7 +484,7 @@ def _eq_nodes_final(nid_pairs: list[tuple[int, int]],
 
         xyz1 = node1.get_position()
         xyz2 = node2.get_position()
-        distance = norm(xyz1 - xyz2)
+        distance = np.linalg.norm(xyz1 - xyz2)
 
         #print('  irow=%s->n1=%s icol=%s->n2=%s' % (irow, nid1, icol, nid2))
         if distance > tol:

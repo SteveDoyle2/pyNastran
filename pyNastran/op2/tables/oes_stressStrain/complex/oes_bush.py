@@ -47,11 +47,11 @@ class ComplexCBushArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         idtype, cfdtype = get_complex_times_dtype(self.size)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype=idtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        self.element = np.zeros(self.nelements, dtype=idtype)
 
         #[tx, ty, tz, rx, ry, rz]
-        self.data = zeros((self.ntimes, self.nelements, 6), dtype=cfdtype)
+        self.data = np.zeros((self.ntimes, self.nelements, 6), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -87,7 +87,7 @@ class ComplexCBushArray(OES_Object):
                         (tx1, ty1, tz1, rx1, ry1, rz1) = t1
                         (tx2, ty2, tz2, rx2, ry2, rz2) = t2
                         d = t1 - t2
-                        if not allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
+                        if not np.allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
                                         [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
                         #if not np.array_equal(t1, t2):
                             msg += '%-4s  (%s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (
@@ -147,11 +147,11 @@ class ComplexCBushArray(OES_Object):
         return msg
 
     def get_element_index(self, eids):
-        itot = searchsorted(eids, self.element)
+        itot = np.searchsorted(eids, self.element)
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = searchsorted(eids, self.element)
+        ind = np.searchsorted(eids, self.element)
         return ind
 
     def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s', page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):

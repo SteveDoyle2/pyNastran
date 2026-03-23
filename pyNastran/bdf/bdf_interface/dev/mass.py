@@ -152,9 +152,9 @@ def _mass_matrix_rod(model: BDF,
 
     #
     #mi = (rho * A * L + nsm) / 6.
-    #m = array([[2., 1.],
+    #m = np.array([[2., 1.],
                #[1., 2.]])  # 1D rod consistent
-    #m = array([[1., 0.],
+    #m = np.array([[1., 0.],
                #[0., 1.]])  # 1D rod lumped
 
     for eid in eids2:

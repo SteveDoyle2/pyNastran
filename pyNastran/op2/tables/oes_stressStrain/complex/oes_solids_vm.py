@@ -37,7 +37,7 @@ class ComplexSolidVMArray(OES_Object):
     def combine(self, results):
         #print('ComplexSolid combine')
         #print('data.shape1 =', self.data.shape)
-        #self.data = vstack(data)
+        #self.data = np.vstack(data)
 
         data = [self.nelements] + [result.nelements for result in results]
         self.nelements = sum(data)
@@ -98,16 +98,16 @@ class ComplexSolidVMArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         idtype, cfdtype = get_complex_times_dtype(self.size)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        #self.element_types2 = array(self.nelements, dtype='|S8')
-        #self.element_types3 = zeros((self.nelements, 2), dtype='int32')
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        #self.element_types2 = np.array(self.nelements, dtype='|S8')
+        #self.element_types3 = np.zeros((self.nelements, 2), dtype='int32')
 
 
         #self.ntotal = self.nelements * nnodes
 
         # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((self.ntotal, 2), dtype=idtype)
-        self.element_cid = zeros((self.nelements, 2), dtype=idtype)
+        self.element_node = np.zeros((self.ntotal, 2), dtype=idtype)
+        self.element_cid = np.zeros((self.nelements, 2), dtype=idtype)
 
         # the number is messed up because of the offset for the element's properties
 
@@ -119,7 +119,7 @@ class ComplexSolidVMArray(OES_Object):
             #raise RuntimeError(msg)
 
         # [oxx, oyy, ozz, txy, tyz, txz, ovm]
-        self.data = zeros((self.ntimes, self.ntotal, 7), dtype=cfdtype)
+        self.data = np.zeros((self.ntimes, self.ntotal, 7), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

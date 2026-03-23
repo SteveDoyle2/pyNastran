@@ -3,7 +3,6 @@ import os
 from io import StringIO
 import unittest
 import numpy as np
-from numpy import array
 
 from cpylog import SimpleLogger
 from pyNastran.bdf.bdf import MAT1, BDF, CTRIA3, CQUAD4
@@ -453,7 +452,7 @@ class TestShells(unittest.TestCase):
             p.MassPerArea(3, method='nplies')
 
         z = p.get_z_locations()
-        z_expected = array([0., T[0], T[0]+T[1], T[0]+T[1]+T[2]])
+        z_expected = np.array([0., T[0], T[0]+T[1], T[0]+T[1]+T[2]])
         for za, ze in zip(z, z_expected):
             self.assertAlmostEqual(za, ze)
 

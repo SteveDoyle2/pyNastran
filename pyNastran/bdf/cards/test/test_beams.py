@@ -1040,9 +1040,9 @@ class TestBeams(unittest.TestCase):
         assert np.allclose(cbeam.Length(), 1.0), cbeam.Length()
         assert np.allclose(cg[0], 0.5), 'cg=%s' % cg
         assert np.allclose(centroid[0], 0.5), 'centroid=%s' % centroid
-        #assert allclose(cbeam.Mass(), 10.25), cbeam.Mass()
-        #assert allclose(cbeam.MassPerLength(), 10.25), cbeam.MassPerLength()
-        #assert allclose(mass, 10.25), mass
+        #assert np.allclose(cbeam.Mass(), 10.25), cbeam.Mass()
+        #assert np.allclose(cbeam.MassPerLength(), 10.25), cbeam.MassPerLength()
+        #assert np.allclose(mass, 10.25), mass
 
         with open('pbeam12.bdf', 'w') as bdf_file:
             case_control_lines = (
@@ -1077,7 +1077,7 @@ class TestBeams(unittest.TestCase):
             #assert op2_mass == mass, 'op2_mass=%s mass=%s' % (op2_mass, mass)
             #print('op2_mass=%s mass=%s' % (op2_mass, mass))
             #op2_cg = gpw.cg
-            #cg = array([0.5, 0., 0.], dtype='float32')
+            #cg = np.array([0.5, 0., 0.], dtype='float32')
             #print('cg =', op2_cg)
 
     def test_pbeam_nsm(self):

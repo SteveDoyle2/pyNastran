@@ -17,7 +17,6 @@ from itertools import count
 import warnings
 from typing import Optional, TYPE_CHECKING
 import numpy as np
-from numpy import unique, allclose, ndarray
 
 from pyNastran.bdf.bdf_interface.utils import to_fields
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -681,7 +680,7 @@ class PBEAM(IntegratedLineProperty):
         if irow != 0:
             assert min(xxb) == 0.0, 'pid=%s x/xb=%s' % (pid, xxb)
             assert max(xxb) == 1.0, 'pid=%s x/xb=%s' % (pid, xxb)
-            assert len(xxb) == len(unique(xxb)), xxb
+            assert len(xxb) == len(np.unique(xxb)), xxb
 
         # calculate:
         #    k1, k2, s1, s2
@@ -967,7 +966,7 @@ class PBEAM(IntegratedLineProperty):
         if irow != 0:
             assert min(xxb) == 0.0, 'pid=%s x/xb=%s' % (pid, xxb)
             assert max(xxb) == 1.0, 'pid=%s x/xb=%s' % (pid, xxb)
-            assert len(xxb) == len(unique(xxb)), xxb
+            assert len(xxb) == len(np.unique(xxb)), xxb
 
         # calculate:
         #    k1, k2, s1, s2
@@ -1380,10 +1379,10 @@ def pbeam_op2_data_to_init(data):
     for i, pack in enumerate(rows[:-1]):
         (soi, xxbi, areai, i1i, i2i, i12i, ji, nsmi, c1i, c2i,
          d1i, d2i, e1i, e2i, f1i, f2i) = pack
-        if i > 0 and allclose(xxbi, 0.0):
+        if i > 0 and np.allclose(xxbi, 0.0):
             #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
             continue
-        if i > 0 and i != 10 and allclose(xxbi, 1.0):
+        if i > 0 and i != 10 and np.allclose(xxbi, 1.0):
             #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
             continue
         area.append(areai)
@@ -1645,18 +1644,18 @@ class PBEAML(IntegratedLineProperty):
             raise IndexError(f'pid={pid:d}; len(xxb)=0; at least 1 station must be defined')
         if nsm is None:
             nsm = [0.] * nxxb
-        elif not isinstance(nsm, (list, tuple, ndarray)):
+        elif not isinstance(nsm, (list, tuple, np.ndarray)):
             msg = f'pid={pid}; nsm={nsm} and must be a list/tuple/ndarray; type={type(nsm)}'
             raise TypeError(msg)
 
         if so is None:
             so = ['YES'] * nxxb
-        elif not isinstance(so, (list, tuple, ndarray)):
+        elif not isinstance(so, (list, tuple, np.ndarray)):
             msg = f'pid={pid:d}; so={so} and must be a list/tuple/ndarray; type={type(so)}'
             raise TypeError(msg)
 
         for istation, xxbi, nsmi, dim in zip(count(), xxb, nsm, dims):
-            if not isinstance(dim, (list, ndarray)):
+            if not isinstance(dim, (list, np.ndarray)):
                 msg = f'Expected list[list[float]] for dims.  Did you forget [] around dims?\n'
                 msg += 'dims = list[dim]; dim=list[floats]; type(dim)={type(dim)}'
                 raise TypeError(msg)
@@ -2143,7 +2142,7 @@ def pbeaml_op2_data_to_init(data, valid_types: dict[str, int]):
     for i, section in enumerate(sections):
         xxbi = section[1]
         # print('PBEAML - i=%s x/xb=%s' % (i, xxbi))
-        if i > 0 and allclose(xxbi, 0.0):
+        if i > 0 and np.allclose(xxbi, 0.0):
             #print('  PBEAML - skipping i=%s x/xb=%s' % (i, xxbi))
             continue
         if xxbi in xxb:

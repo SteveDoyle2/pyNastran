@@ -27,7 +27,6 @@ from math import log, exp
 from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy import unique, hstack
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -503,7 +502,7 @@ class FREQ(BaseCard):
         """
         #print("self.freqs = ",self.freqs)
         #print("freqs = ",freqs)
-        self.freqs = unique(hstack([self.freqs, freqs]))
+        self.freqs = np.unique(np.hstack([self.freqs, freqs]))
 
     def add_frequency_object(self, freq):
         """
@@ -578,7 +577,7 @@ class FREQ1(BaseCard):
         freqs = []
         for i in range(ndf + 1):
             freqs.append(f1 + i * df)
-        self.freqs = unique(freqs)
+        self.freqs = np.unique(freqs)
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):

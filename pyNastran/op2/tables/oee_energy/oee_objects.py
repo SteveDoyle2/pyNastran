@@ -96,7 +96,7 @@ class RealEnergyArray(BaseElement):
     def build_data(self, dtype, idtype, fdtype):
         """actually performs the build step"""
         self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
-        #self.element = zeros(self.nelements, dtype='int32')
+        #self.element = np.zeros(self.nelements, dtype='int32')
         #if dtype in 'DMIG':
         #print(self.element_name, self.element_type)
         if self.element_name == 'DMIG':

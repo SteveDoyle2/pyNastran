@@ -17,9 +17,6 @@ from functools import reduce
 from typing import Optional
 
 import numpy as np
-#from numpy import array, where, hstack, searchsorted, float32, arccos, degrees
-
-from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF
@@ -32,10 +29,15 @@ from pyNastran.bdf.mesh_utils.find_closest_nodes import (
     find_closest_nodes, find_closest_nodes_index)
 
 
-def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol: float,
-                                     renumber_nodes=False, neq_max=4, xref=True,
-                                     node_set=None, size=8, is_double=False,
-                                     debug=True):
+def create_rbe3s_between_close_nodes(bdf_filename: PathLike,
+                                     bdf_filename_out: PathLike,
+                                     tol: float,
+                                     renumber_nodes: bool=False,
+                                     neq_max: int=4, xref: bool=True,
+                                     node_set: Optional[np.ndarray]=None,
+                                     size: int=8,
+                                     is_double: bool=False,
+                                     debug: bool=True):
     """
     Creates semi-rigid RBE3 elements between two nodes within tolerance.
 
@@ -90,7 +92,7 @@ def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol: float,
         node2 = model.nodes[nid2]
 
         # TODO: doesn't use get position...
-        distance = norm(node1.xyz - node2.xyz)
+        distance = np.linalg.norm(node1.xyz - node2.xyz)
         if distance > tol:
             continue
         refgrid = nid1
@@ -454,7 +456,10 @@ def split_model_by_material_id(bdf_filename: PathLike,
             bdf_file.write('ENDDATA\n')
 
 
-def create_spar_cap(model, eids, nids, width,
+def create_spar_cap(model: BDF,
+                    eids: np.ndarray,
+                    nids: np.ndarray,
+                    width: float,
                     nelements: int=1, symmetric: bool=True,
                     xyz_cid0=None,
                     vector1=None,

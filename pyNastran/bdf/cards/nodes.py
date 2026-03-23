@@ -868,6 +868,8 @@ class GRID(BaseCard):
      node.set_position(model, array([1.,2.,3.]), cid=3)
 
     """
+    # from pyNastran.bdf.bdf_interface.get_methods import _get_tag_no_model
+    # tag = _get_tag_no_model()
     type = 'GRID'
 
     #: allows the get_field method and update_field methods to be used

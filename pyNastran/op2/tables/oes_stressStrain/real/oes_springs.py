@@ -230,13 +230,13 @@ class RealSpringArray(OES_Object):
         """actually performs the build step"""
         self.ntimes = ntimes
         self.nelements = nelements
-        _times = zeros(ntimes, dtype=self.analysis_fmt)
+        _times = np.zeros(ntimes, dtype=self.analysis_fmt)
         dtype, idtype, fdtype = get_times_dtype(
             self.nonlinear_factor, self.size, self.analysis_fmt)
-        element = zeros(nelements, dtype=idtype)
+        element = np.zeros(nelements, dtype=idtype)
 
         #[stress]
-        data = zeros((ntimes, nelements, 1), dtype=fdtype)
+        data = np.zeros((ntimes, nelements, 1), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -390,7 +390,7 @@ class RealSpringArray(OES_Object):
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
+        #ind = np.ravel([np.searchsorted(self.element_node[:, 0] == eid) for eid in eids])
         ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
@@ -692,12 +692,12 @@ class RealNonlinearSpringStressArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        _times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        element = zeros(self.nelements, dtype=idtype)
+        _times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
+        element = np.zeros(self.nelements, dtype=idtype)
 
 
         #[force, stress]
-        data = zeros((self.ntimes, self.nelements, 2), dtype=fdtype)
+        data = np.zeros((self.ntimes, self.nelements, 2), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):

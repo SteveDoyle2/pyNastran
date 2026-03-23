@@ -145,14 +145,14 @@ class RandomPlateVMArray(OES_Object):
         self.nelements = nelements
         #ntotal = nelements * 2
         self.ntotal = nlayers
-        #_times = zeros(ntimes, dtype=self.analysis_fmt)
-        #element = zeros(nelements, dtype=idtype)
+        #_times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        #element = np.zeros(nelements, dtype=idtype)
 
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
         #print(f'***nelements={nelements} nlayers={nlayers} ntimes={ntimes}')
-        self.element_node = zeros((nlayers, 2), 'int32')
+        self.element_node = np.zeros((nlayers, 2), 'int32')
 
         # the number is messed up because of the offset for the element's properties
         #if not self.nelements * 2 == self.ntotal:
@@ -160,11 +160,11 @@ class RandomPlateVMArray(OES_Object):
                 #self.ntimes, self.nelements, self.nelements * 2, self.ntotal)
             #raise RuntimeError(msg)
 
-        self.fiber_distance = zeros(nlayers, 'float32')
+        self.fiber_distance = np.zeros(nlayers, 'float32')
 
         # [oxx, oyy, txy]
         #print(f'ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
-        self.data = zeros((ntimes, nlayers, 3), 'float32')
+        self.data = np.zeros((ntimes, nlayers, 3), 'float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -636,14 +636,14 @@ class RandomPlateArray(OES_Object):
         self.nelements = nelements
         #ntotal = nelements * 2
         self.ntotal = nlayers
-        #_times = zeros(ntimes, dtype=self.analysis_fmt)
-        #element = zeros(nelements, dtype='int32')
+        #_times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        #element = np.zeros(nelements, dtype='int32')
 
-        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
         #print(f'***nelements={nelements} nlayers={nlayers} ntimes={ntimes}')
-        self.element_node = zeros((nlayers, 2), 'int32')
+        self.element_node = np.zeros((nlayers, 2), 'int32')
 
         # the number is messed up because of the offset for the element's properties
         #if not self.nelements * 2 == self.ntotal:
@@ -651,11 +651,11 @@ class RandomPlateArray(OES_Object):
                 #self.ntimes, self.nelements, self.nelements * 2, self.ntotal)
             #raise RuntimeError(msg)
 
-        self.fiber_distance = zeros(nlayers, 'float32')
+        self.fiber_distance = np.zeros(nlayers, 'float32')
 
         # [oxx, oyy, txy]
         #print(f'ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
-        self.data = zeros((ntimes, nlayers, 3), 'float32')
+        self.data = np.zeros((ntimes, nlayers, 3), 'float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

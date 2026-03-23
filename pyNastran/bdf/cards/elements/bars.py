@@ -155,7 +155,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
 
         """
-        L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
+        L = np.linalg.norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
         return L
 
     def get_edge_ids(self) -> list[tuple[int, ...]]:
@@ -722,7 +722,7 @@ class CBAR(LineElement):
 
     def Length(self):
         # TODO: consider w1a and w1b in the length formulation
-        L = norm(self.gb_ref.get_position() - self.ga_ref.get_position())
+        L = np.linalg.norm(self.gb_ref.get_position() - self.ga_ref.get_position())
         assert isinstance(L, float)
         return L
 
@@ -901,7 +901,7 @@ class CBAR(LineElement):
         eid = self.eid
         #centroid = (n1 + n2) / 2.
         #i = n2 - n1
-        #Li = norm(i)
+        #Li = np.linalg.norm(i)
         #ihat = i / Li
 
         elem = self
@@ -966,7 +966,7 @@ class CBAR(LineElement):
         # wa/wb are not considered in i_offset
         # they are considered in ihat
         i = xyz2 - xyz1
-        ihat_norm = norm(i)
+        ihat_norm = np.linalg.norm(i)
         if ihat_norm == 0.0:
             msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
             raise ValueError(msg)
@@ -1489,7 +1489,7 @@ def init_x_g0_cbeam3(card, eid, x1_default, x2_default, x3_default):
         x = np.array([field6,
                       double_or_blank(card, 7, 'x2', x2_default),
                       double_or_blank(card, 8, 'x3', x3_default)], dtype='float64')
-        if norm(x) == 0.0:
+        if np.linalg.norm(x) == 0.0:
             msg = 'G0 vector defining plane 1 is not defined.\n'
             msg += 'G0 = %s\n' % g0
             msg += 'X  = %s\n' % x
@@ -1614,7 +1614,7 @@ class CBEND(LineElement):
             x = np.array([double_or_blank(card, 5, 'x1', 0.0),
                           double_or_blank(card, 6, 'x2', 0.0),
                           double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
-            if norm(x) == 0.0:
+            if np.linalg.norm(x) == 0.0:
                 msg = 'G0 vector defining plane 1 is not defined.\n'
                 msg += 'G0 = %s\n' % g0
                 msg += 'X  = %s\n' % x
@@ -1873,7 +1873,7 @@ class CBEND(LineElement):
 
     def Length(self):
         # TODO: consider w1a and w1b in the length formulation
-        L = norm(self.gb_ref.get_position() - self.ga_ref.get_position())
+        L = np.linalg.norm(self.gb_ref.get_position() - self.ga_ref.get_position())
         assert isinstance(L, float)
         return L
 
@@ -2045,7 +2045,7 @@ def init_x_g0(card, eid, x1_default, x2_default, x3_default):
         x = np.array([field5,
                       double_or_blank(card, 6, 'x2', x2_default),
                       double_or_blank(card, 7, 'x3', x3_default)], dtype='float64')
-        if norm(x) == 0.0:
+        if np.linalg.norm(x) == 0.0:
             msg = 'G0 vector defining plane 1 is not defined.\n'
             msg += 'G0 = %s\n' % g0
             msg += 'X  = %s\n' % x
@@ -2236,7 +2236,7 @@ def rotate_v_wa_wb(model: BDF, elem,
     #i = ib - ia # (xyz2 + wb) - (xyz1 + wa)
     #i = (xyz2 + wb) - (xyz1 + wa)
     i = i_offset
-    Li: float = norm(i)
+    Li: float = np.linalg.norm(i)
     ihat = i / Li
     #msg = f'eid={eid} xyz1={xyz1} xyz2={xyz2}\nv={v} ihat={ihat} L={Li}\n{elem}'
     #model.log.error(msg)
@@ -2290,7 +2290,7 @@ def get_bar_yz_transform(v: np.ndarray, ihat: np.ndarray,
        the CBAR/CBEAM's z-axis
 
     """
-    vhat = v / norm(v)  # j
+    vhat = v / np.linalg.norm(v)  # j
     try:
         z = np.cross(ihat, vhat)  # k
     except ValueError:
@@ -2309,7 +2309,7 @@ def get_bar_yz_transform(v: np.ndarray, ihat: np.ndarray,
         print(msg)
         raise ValueError(msg)
 
-    norm_z = norm(z)
+    norm_z = np.linalg.norm(z)
     #if norm_i == 0.0 or norm_z == 0.0:
         #print('  invalid_orientation - eid=%s v=%s i=%s n%s=%s n%s=%s' % (
             #eid, v, i, nid1, xyz1, nid2, xyz2))
@@ -2323,14 +2323,14 @@ def get_bar_yz_transform(v: np.ndarray, ihat: np.ndarray,
 
     yhat = np.cross(zhat, ihat)  # j
 
-    norm_i = norm(ihat)
-    if norm_i == 0.0 or norm(yhat) == 0.0 or norm_z == 0.0:
+    norm_i = np.linalg.norm(ihat)
+    if norm_i == 0.0 or np.linalg.norm(yhat) == 0.0 or norm_z == 0.0:
         print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
             eid, yhat, zhat, v, i, nid1, xyz1, nid2, xyz2))
-    if not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
+    if not np.allclose(norm(yhat), 1.0) or not np.allclose(np.linalg.norm(zhat), 1.0) or Li == 0.0:
         print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
               ' v=%s i=%s n%s=%s n%s=%s' % (
-                  eid, Li, norm(yhat), norm(zhat), v, i, nid1, xyz1, nid2, xyz2))
+                  eid, Li, np.linalg.norm(yhat), np.linalg.norm(zhat), v, i, nid1, xyz1, nid2, xyz2))
     return yhat, zhat
 
 

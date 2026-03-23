@@ -220,6 +220,12 @@ class CMASS2(Element):
         self.nodes = np.zeros((0, 2), dtype='int32')
         self.components = np.zeros((0, 2), dtype='int32')
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.nodes),)
+
     def add(self, eid: int, mass: float, nids: list[int],
             c1: int, c2: int,
             ifile: int=0, comment: str='') -> int:

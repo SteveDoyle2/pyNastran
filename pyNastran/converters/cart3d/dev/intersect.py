@@ -111,7 +111,7 @@ class Intersect:
 
         sdvi = sign(dvi2)
         sign_range = sdvi.max() - sdvi.min()
-        if allclose(dvi2.min(), 0.) or sign_range == 2.:
+        if np.allclose(dvi2.min(), 0.) or sign_range == 2.:
             print("     element2 = ", element2[0])
             print("     ", pt)
             print("     d2", d2)

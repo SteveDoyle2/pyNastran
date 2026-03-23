@@ -103,7 +103,7 @@ class TestMass(unittest.TestCase):
         # there are two layers of t1
         mpa = (2. * rho1 * t1 + rho10 * t10) + nsm
         mass2 = mpa * area
-        assert allclose(mass, mass2), 'mass=%s mass2=%s diff=%s' % (mass, mass2, abs(mass - mass2))
+        assert np.allclose(mass, mass2), 'mass=%s mass2=%s diff=%s' % (mass, mass2, abs(mass - mass2))
         self.verify_pcomp_element(quad, prop, nsm, thickness, mass, area, centroid, normal)
 
         rho = None
@@ -121,10 +121,10 @@ class TestMass(unittest.TestCase):
         nsm = 0.
         area = 1.
         mass2 = area * (rho * t + nsm)
-        assert allclose(mass, mass2), 'eid=%s pid=%s mass=%s mass2=%s diff=%s\n%s%s%s\nrho=%s A=%s t=%s nsm=%s' % (
+        assert np.llclose(mass, mass2), 'eid=%s pid=%s mass=%s mass2=%s diff=%s\n%s%s%s\nrho=%s A=%s t=%s nsm=%s' % (
             eid, pid, mass, mass2, abs(mass - mass2), quad, prop, mat, rho, area, t, nsm)
-        centroid = array([.5, .5, 0.])
-        normal = array([.0, .0, 1.])
+        centroid = np.array([.5, .5, 0.])
+        normal = np.array([.0, .0, 1.])
         self.verify_pshell_element(quad, prop, mat, rho, mass, area, centroid, normal, nsm)
 
         # quad - pshell, nsm=1

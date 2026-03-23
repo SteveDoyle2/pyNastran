@@ -418,12 +418,12 @@ class RealBeamArray(OES_Object):
 
     #def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        #itot = searchsorted(eids, self.element_node[:, 0])  #[0]
+        #itot = np.searchsorted(eids, self.element_node[:, 0])  #[0]
         #return itot
 
     #def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
+        #ind = np.ravel([np.searchsorted(self.element_node[:, 0] == eid) for eid in eids])
+        #ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         #return ind
@@ -682,7 +682,7 @@ class RealNonlinearBeamArray(OES_Object):
         #       DB, long_DB, eqS_DB, tE_DB, eps_DB, ecs_DB,
         #       EB, long_EB, eqS_EB, tE_EB, eps_EB, ecs_EB,
         #       FB, long_FB, eqS_FB, tE_FB, eps_FB, ecs_FB,
-        #self.xxb = zeros(self.ntotal, dtype=fdtype)
+        #self.xxb = np.zeros(self.ntotal, dtype=fdtype)
         self.data = np.full((self.ntimes, self.ntotal, 5), np.nan, dtype=fdtype)
 
     def get_stats(self, short: bool=False) -> list[str]:
@@ -767,12 +767,12 @@ class RealNonlinearBeamArray(OES_Object):
 
     #def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        #itot = searchsorted(eids, self.element_node[:, 0])  #[0]
+        #itot = np.searchsorted(eids, self.element_node[:, 0])  #[0]
         #return itot
 
     #def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
+        #ind = np.ravel([np.searchsorted(self.element_node[:, 0] == eid) for eid in eids])
+        #ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         #return ind

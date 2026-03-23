@@ -3,7 +3,6 @@ import unittest
 from pathlib import Path
 from io import StringIO
 import numpy as np
-from numpy import allclose, array
 from cpylog import SimpleLogger
 
 import pyNastran
@@ -33,6 +32,7 @@ class Tester(unittest.TestCase):
                 run_extract_bodies: bool=True,
                 run_skin_solids: bool=True,
                 run_export_caero: bool=True,
+                skip_aero_zero_check: bool=False,
                 save_file_structure: bool=False,
                 validate_case_control=True, log=None):
         #xref = False
@@ -47,6 +47,7 @@ class Tester(unittest.TestCase):
                        run_export_caero=run_export_caero,
                        save_file_structure=save_file_structure,
                        validate_case_control=validate_case_control,
+                       skip_aero_zero_check=skip_aero_zero_check,
                        log=log)
 
 
@@ -137,7 +138,7 @@ class TestBDFUnit(Tester):
 
         # way harder to prove than the cquad4 version...we're kinda relying on the
         # PLOAD vs. PLOAD2 vs. PLOAD4 comparison
-        expected_forces = array([
+        expected_forces = np.array([
             [0., 0., 0.6666667 ],
             [0., 0., 0.6666667 ],
             [0., 0., 0.16666667],
@@ -216,7 +217,7 @@ class TestBDFUnit(Tester):
         expected_pressures = [2., 1., 0.]
         #expected_moments = []
         #expected_spcd = []
-        expected_forces = array([
+        expected_forces = np.array([
             [0.  , 0.  , 0.5 ],
             [0.  , 0.  , 0.75],
             [0.  , 0.  , 0.25],
@@ -379,10 +380,10 @@ class TestBDFUnit(Tester):
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
         mass, cg, unused_I = mass_properties(fem1)
 
-        assert allclose(mass, 6.0), 'mass = %s' % mass
-        cg_exact = array([0.5, 1., 1.5])
+        assert np.allclose(mass, 6.0), 'mass = %s' % mass
+        cg_exact = np.array([0.5, 1., 1.5])
         for i, (cgi, cgie) in enumerate(zip(cg, cg_exact)):
-            assert allclose(cgi, cgie), 'i=%s cg=%s' % (i, str(cg))
+            assert np.allclose(cgi, cgie), 'i=%s cg=%s' % (i, str(cg))
 
         compare_mass_cg_inertia(fem1)
         compare_mass_cg_inertia(fem1, reference_point=None)
@@ -970,7 +971,8 @@ class TestBDFUnit(Tester):
         """checks aero/aerobeam.bdf"""
         log = SimpleLogger(level='warning', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.bdf')
-        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log,
+                                              skip_aero_zero_check=True)
         #fa2j_1, _rows, _cols = fem1.dmi['FA2J'].get_matrix()
         #fa2j_2, _rows, _cols = fem2.dmi['FA2J'].get_matrix()
         diff_cards2 = list(set(diff_cards))

@@ -55,7 +55,8 @@ class TradeLayout(QVBoxLayout):
             return result
         return wrapper
 
-    def __init__(self, parent: FlutterGui, *args, **kwargs):
+    def __init__(self, parent: FlutterGui,
+                 *args, **kwargs):
         """
         Parameters
         ----------
@@ -427,7 +428,7 @@ class TradeLayout(QVBoxLayout):
             return
 
         # TODO: parse the filename for floats
-        headers = ['Filename']
+        headers = ['File']
         # filenames2 = [os.path.relpath(pathi, directory) for pathi in natsort.natsorted(filenames)]
         filenames2 = list(natsort.natsorted(filenames))
 
@@ -596,24 +597,22 @@ class TradeLayout(QVBoxLayout):
         }
         return trade
 
-    def get_load_settings(self, key: str,
-                          prefix: str='') -> list[tuple[str, int, QLineEdit]]:
-        if key == 'lineedit':
-            out = [
-                # should be in trade/
-                (f'{prefix}excel_filename', -1, self.excel_filename_edit),
-                (f'{prefix}base_f06_directory', -1, self.base_f06_directory_edit),
-                (f'{prefix}word_filename', -1, self.word_filename_edit),
-                (f'{prefix}configs', -1, self.config_edit),
-                (f'{prefix}eas_max', -1, self.eas_max_edit),
-            ]
-        elif key == 'combobox':
-            out = [
-                ('xaxis', self.xaxis_pulldown, AXIS_VALUES),
-                ('yaxis', self.yaxis_pulldown, AXIS_VALUES),
-            ]
-        else:  # pragma: no cover
-            raise NotImplementedError(key)
+    def get_lineedits(self, prefix: str='') -> list[tuple[str, int, QLineEdit]]:
+        out = [
+            # should be in trade/
+            (f'{prefix}excel_filename', -1, self.excel_filename_edit),
+            (f'{prefix}base_f06_directory', -1, self.base_f06_directory_edit),
+            (f'{prefix}word_filename', -1, self.word_filename_edit),
+            (f'{prefix}configs', -1, self.config_edit),
+            (f'{prefix}eas_max', -1, self.eas_max_edit),
+        ]
+        return out
+
+    def get_comboboxs(self, prefix: str = '') -> list[tuple[str, QComboBox, list[str]]]:
+        out = [
+            ('xaxis', self.xaxis_pulldown, AXIS_VALUES),
+            ('yaxis', self.yaxis_pulldown, AXIS_VALUES),
+        ]
         return out
 
 
