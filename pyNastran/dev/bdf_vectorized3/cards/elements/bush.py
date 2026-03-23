@@ -471,8 +471,8 @@ class PBUSH(Property):
         self.coincident_length = np.array([], dtype='float64')
 
     def add(self, pid: int, k: list[float], b: list[float], ge: list[float],
-            rcv: Optional[list[float]]=None, mass: Optional[float]=None,
-            alpha: float=0., tref: float=0., coincident_length=None,
+            rcv: Optional[list[float]]=None, mass: float=0.0,
+            alpha: float=0.0, tref: float=0.0, coincident_length=None,
             ifile: int=0, comment: str='') -> int:
         """
         Creates a PBUSH card, which defines a property for a PBUSH
@@ -494,7 +494,7 @@ class PBUSH(Property):
         rcv : list[float]; default=None -> (None, None, None, None)
             [sa, st, ea, et] = rcv
             length(rcv) = 4
-        mass : float; default=None
+        mass : float; default=0.0
             lumped mass of the CBUSH
             This is an MSC only parameter.
         comment : str; default=''
@@ -515,7 +515,7 @@ class PBUSH(Property):
         ge_fields = []
         t_fields = [np.nan, np.nan, np.nan]
         rcv_fields = [1., 1., 1., 1.]
-        mass = None
+        mass = 0.0
 
         pid = integer(card, 1, 'pid')
 
@@ -555,7 +555,7 @@ class PBUSH(Property):
                 rcv_fields = read_pbush_rcv(model, card, istart)
             elif pname == 'M':
                 # Lumped mass of the cbush; default=0.0
-                mass = fdouble_or_blank(card, istart + 1, 'mass', default=0.)
+                mass = fdouble_or_blank(card, istart + 1, 'mass', default=0.0)
             elif pname == 'T':
                 t_fields = self._read_var(card, 'Ti', istart + 1, istart + 4)
                 assert len(t_fields) == 3, t_fields
@@ -719,7 +719,7 @@ class PBUSH(Property):
         #T/ALPHA/TREF/COINL was added in MSC 2021
         no_rcv = self.rcv_fields.max() == 1. and self.rcv_fields.min() == 1.
         no_t = np.any(np.isfinite(self.alpha)) | np.any(np.isfinite(self.tref)) | np.any(np.isfinite(self.coincident_length))
-        no_mass = np.any(np.isfinite(self._mass))
+        no_mass = np.any(np.abs(self._mass) > 0.0)
         if no_rcv and no_t and no_mass:
             # MSC 2005r2
             for pid, k_fields, b_fields, ge_fields in zip(self.property_id, self.k_fields, self.b_fields,
@@ -746,8 +746,8 @@ class PBUSH(Property):
                 #self.tref[icard] = tref
                 #self.coinl[icard] = coinl
 
-                mass = None if mass == 0. else mass
-                rcv_fields = [None if rcv == 1. else rcv
+                mass = None if mass == 0.0 else mass
+                rcv_fields = [None if rcv == 1.0 else rcv
                               for rcv in rcv_fields]
                 list_fields = ['PBUSH', pid]
                 _set_fields_pbush(list_fields, 'K', k_fields)
