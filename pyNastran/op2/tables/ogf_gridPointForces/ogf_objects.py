@@ -2444,10 +2444,12 @@ def _check_element_names(element_names: np.ndarray) -> None:
     """
     assert element_names.ndim in [1, 2], (element_names.shape, element_names)
     allowed_names_half = np.array([
-        # 'RBE3',
         '*TOTALS*',
         'APP-LOAD',
         'F-OF-MPC', 'F-OF-SPC', 'F-OF-CNT',
+        # -------
+        'RBAR    ', 'RBE1    ', # 'RBE2    ',
+        'RBE3    ',
         # -------
         'ROD     ', 'CONROD  ', 'TUBE    ',
         'BUSH    ', #'BUSH1D  ', 'BUSH2D  ',
@@ -2474,7 +2476,9 @@ def _check_element_names(element_names: np.ndarray) -> None:
         #--------
         'GENEL   ', 'MATK    ',
         'K11X    ', 'K22X    ', 'K33X    ', 'K44X    ',
-        'SEAMP   ', 'FASTP   ',
+        'SEAMP   ',
+        'FASTP   ',  # 'FASTC   ',
+       #'WELDP   ',  # 'WELDC   ',
         '        ', # null
     ], dtype='U8')
     allowed_names_stripped = np.array([
