@@ -204,10 +204,7 @@ class TestDampers(unittest.TestCase):
         str(prop)
 
         mid = 10
-        E = 3.0e7
-        G = None
-        nu = 0.3
-        model.add_mat1(mid, E, G, nu)
+        model.add_mat1(mid, 3.0e7, None, 0.3)
         model.validate()
 
         #cdamp3.raw_fields()

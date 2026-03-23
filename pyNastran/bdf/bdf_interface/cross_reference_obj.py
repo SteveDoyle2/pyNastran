@@ -9,7 +9,7 @@ import numpy as np
 from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.optimization import DESVAR, DCONSTR
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, GRID
     from pyNastran.bdf.cards.base_card import BaseCard
 

@@ -24,7 +24,7 @@ from pyNastran.gui.utils.qt.pydialog import PyDialog
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.utils.qt.version import Background
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import EditGeometryPropertiesObject
 
 

@@ -8,7 +8,7 @@ if hasattr(vtkmodules.vtkFiltersCore, 'vtkExtractEdges'):
 else:
     from vtkmodules.vtkFiltersExtraction import vtkExtractEdges # 9.0.3 - 9.2.6
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.vtk_rendering_core import (
         # vtkRenderWindow, vtkRenderWindowInteractor,
         #vtkDataSetMapper,

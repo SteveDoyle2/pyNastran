@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.op2.result_objects.op2_results import TRMBD, TRMBU
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_interface.op2_reader import OP2Reader
     from pyNastran.op2.op2 import OP2
 

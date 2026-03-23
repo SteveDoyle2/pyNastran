@@ -2,7 +2,7 @@
 import unittest
 import numpy as np
 
-from cpylog import get_logger
+from cpylog import get_logger, SimpleLogger
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.bdf import CGAP, PGAP, CBUSH, CFAST
 from pyNastran.bdf.cards.test.utils import save_load_deck, read_write_op2_geom
@@ -209,7 +209,7 @@ class TestPlotElements(unittest.TestCase):
             model, xref='standard', punch=True,
             run_op2_writer=False)
 
-class TestElements(unittest.TestCase):
+class TestBushingElements(unittest.TestCase):
     def test_cbush_01(self):
         """tests a CBUSH"""
         log = get_logger(level='warning')
@@ -251,11 +251,15 @@ class TestElements(unittest.TestCase):
             eid, pid, nodes, x, g0,
             cid=1, s=0.5, ocid=1,
             si=[1., 2., 3.])
-        cbush2 = model.add_cbush(eid+1, pid, [1, 2], x, g0)
-        model.add_pbush(pid, k=[1.,], b=[2.])
+        cbush2 = model.add_cbush(eid + 1, pid, [1, 2], x, g0, cid=0)
+        model.add_pbush(pid, k=[1., ], b=[2.])
         model.cross_reference()
         cbush1.Centroid()
         cbush2.Centroid()
+        assert np.isclose(cbush1.Mass(), 0.0)
+        assert np.isclose(cbush2.Mass(), 0.0)
+        coord = cbush1.element_coordinate_system()
+        coord = cbush2.element_coordinate_system()
         save_load_deck(model)
 
     def test_cbush_optistruct(self):
@@ -276,13 +280,99 @@ class TestElements(unittest.TestCase):
             eid, pid, nodes, x, g0,
             cid=1, s=0.5, ocid=1,
             si=[1., 2., 3.])
-        cbush2 = model.add_cbush(eid+1, pid, [1, 2], x, g0)
-        model.add_pbush_optistruct(pid, k=[1.,], b=[2.])
+        cbush2 = model.add_cbush(eid + 1, pid, [1, 2], x, g0, cid=0)
+        pbush = model.add_pbush_optistruct(pid, k=[1., ], b=[2.])
+        cbush1.raw_fields()
+        cbush2.raw_fields()
+        pbush.raw_fields()
+        str(cbush1)
+        str(cbush2)
+        str(pbush)
         model.cross_reference()
         cbush1.Centroid()
         cbush2.Centroid()
+        assert np.allclose(cbush1.Mass(), 0.0)
+        assert np.allclose(cbush2.Mass(), 0.0)
+        coord = cbush1.element_coordinate_system()
+        coord = cbush2.element_coordinate_system()
         save_load_deck(model, run_op2_writer=False)
 
+    def test_cbush1d(self):
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        nids = [2, 3]
+        eid = 10
+        pid = 100
+        cbush1d = model.add_cbush1d(eid, pid, nids, cid=None, comment='cbush1d')
+        pbush1d = model.add_pbush1d(pid, k=0., c=0., mass=0., sa=0., se=0., optional_vars=None,
+                          comment='pbush1d')
+        cbush1d.raw_fields()
+        pbush1d.raw_fields()
+        str(cbush1d)
+        str(pbush1d)
+
+        model.pop_parse_errors()
+        model.cross_reference()
+
+        assert np.isclose(cbush1d.Mass(), 0.0)
+        coord = cbush1d.element_coordinate_system()
+        save_load_deck(model, run_op2_reader=False)
+
+    def test_cbush2d(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        nids = [2, 3]
+        eid = 10
+        pid = 100
+        unused_cbush2d = model.add_cbush2d(eid, pid, nids, cid=0, plane='XY', sptid=None,
+                                           comment='cbush2d')
+        #model.add_pbush2d()
+
+        #model.pop_parse_errors()
+        #model.cross_reference()
+        save_load_deck(model, run_convert=False, xref=False, run_renumber=False, run_test_bdf=False)
+
+
+    def test_cbush2d_pbush2d(self):
+        """PDAMP"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        eid = 37
+
+        pid = 10
+        k1 = 20.
+        k2 = 30.
+        b1 = 40.
+        b2 = 1.0
+        m1 = 2.0
+        m2 = 3.0
+        k12 = 1.0
+        k21 = 2.0
+        b12 = 0.0
+        b21 = 0.0
+        m12 = 0.0
+        m21 = 0.0
+        #nodes1 = [10, 20]
+        #nodes2 = [20, 30]
+        nids = [1, 2]
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_pbush2d_cross(pid, k1, k2, b1, b2, m1, m2,
+                                k12, k21, b12, b21, m12, m21, comment='cross')
+        model.add_cbush2d(eid, pid, nids, cid=0, plane='XY', sptid=None, comment='cbush2d')
+        model.validate()
+        model._verify_bdf()
+        save_load_deck(model)
+
+
+
+class TestElements(unittest.TestCase):
     def test_elements_cgap_01(self):
         """tests a CGAP/PGAP"""
         log = get_logger(level='warning')
@@ -379,10 +469,7 @@ class TestElements(unittest.TestCase):
         mid = 201
         d = 0.1
         model.add_pweld(pid, mid, d, comment='pweld')
-        E = 3.0e7
-        G = None
-        nu = 0.3
-        model.add_mat1(mid, E, G, nu)
+        model.add_mat1(mid, 3.0e7, None, 0.3)
         model.add_grid(31, [0., 0., 0.])
         model.add_grid(32, [1., 0., 0.])
         model.add_grid(33, [2., 0., 0.])
@@ -406,10 +493,7 @@ class TestElements(unittest.TestCase):
         mid = 201
         d = 0.1
         model.add_pweld(pid, mid, d, comment='pweld')
-        E = 3.0e7
-        G = None
-        nu = 0.3
-        model.add_mat1(mid, E, G, nu)
+        model.add_mat1(mid, 3.0e7, None, 0.3)
         model.add_grid(31, [0., 0., 0.])
         model.add_grid(32, [1., 0., 0.])
         model.add_grid(33, [2., 0., 0.])
@@ -433,10 +517,7 @@ class TestElements(unittest.TestCase):
         mid = 201
         d = 0.1
         model.add_pweld(pid, mid, d, comment='pweld')
-        E = 3.0e7
-        G = None
-        nu = 0.3
-        model.add_mat1(mid, E, G, nu)
+        model.add_mat1(mid, 3.0e7, None, 0.3)
         model.add_grid(31, [0., 0., 0.])
         model.add_grid(32, [1., 0., 0.])
         model.add_grid(33, [2., 0., 0.])
@@ -530,39 +611,6 @@ class TestElements(unittest.TestCase):
             model, run_op2_writer=True, run_op2_reader=True,
             nastran_format='msc')
         save_load_deck(model)
-
-    def test_cbush1d(self):
-        model = BDF(debug=False)
-
-        model.add_grid(2, [0., 0., 0.])
-        model.add_grid(3, [1., 0., 0.])
-        nids = [2, 3]
-        eid = 10
-        pid = 100
-        model.add_cbush1d(eid, pid, nids, cid=None, comment='cbush1d')
-        model.add_pbush1d(pid, k=0., c=0., m=0., sa=0., se=0., optional_vars=None,
-                          comment='pbush1d')
-
-        model.pop_parse_errors()
-        model.cross_reference()
-        save_load_deck(model, run_op2_reader=False)
-
-    def test_cbush2d(self):
-        log = get_logger(level='warning')
-        model = BDF(log=log)
-
-        model.add_grid(2, [0., 0., 0.])
-        model.add_grid(3, [1., 0., 0.])
-        nids = [2, 3]
-        eid = 10
-        pid = 100
-        unused_cbush2d = model.add_cbush2d(eid, pid, nids, cid=0, plane='XY', sptid=None,
-                                           comment='cbush2d')
-        #model.add_pbush2d()
-
-        #model.pop_parse_errors()
-        #model.cross_reference()
-        save_load_deck(model, run_convert=False, xref=False, run_renumber=False, run_test_bdf=False)
 
     def test_crac2d(self):
         log = get_logger(level='warning')

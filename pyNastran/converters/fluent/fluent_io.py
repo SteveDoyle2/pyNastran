@@ -13,7 +13,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_types, numpy_to_vtk_points)
 from pyNastran.gui.utils.vtk.vectorized_geometry import (
     create_offset_arrays, build_vtk_geometry)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
     from vtk import vtkUnstructuredGrid
     from pyNastran.gui.gui_objects.settings import (

@@ -6,7 +6,7 @@ from pyNastran.bdf.cards.coordinate_systems import (
     CORD2R, # Coord,
     # xyz_to_rtz_array, rtz_to_xyz_array,
 )
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.nptyping_interface import NDArray3float
 

@@ -96,7 +96,7 @@ def append_sort1_sort2(data1, data2, to_sort1=True):
             data2,])
     return out
 
-def oug_data_code(table_name,
+def oug_data_code(table_name: str,
                   is_real: bool=False, is_complex:bool=False,
                   is_sort1=True, is_random=False,
                   random_code=0, title='', subtitle='', label='', is_msc=True):

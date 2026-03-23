@@ -33,10 +33,6 @@ class OQG:
     def __init__(self, op2: OP2):
         self.op2 = op2
 
-    @property
-    def factor(self) -> int:
-        return self.op2.factor
-
     def _read_opsdi1_3(self, data: bytes, ndata: int) -> None:
         """Initial separation distance"""
         op2 = self.op2
@@ -46,10 +42,11 @@ class OQG:
     def _read_opsdi1_4(self, data: bytes, ndata: int) -> int:
         """Initial separation distance"""
         op2 = self.op2
-        return self._read_opsds1_intial_final_4(data, ndata,
-                                                'separation_initial',
-                                                op2.op2_results.separation_initial,
-                                                SeparationDistanceArray)
+        return self._read_opsds1_intial_final_4(
+            data, ndata,
+            'separation_initial',
+            op2.op2_results.separation_initial,
+            SeparationDistanceArray)
 
     def _read_opsds1_3(self, data: bytes, ndata: int) -> None:
         """Final separation distance"""
@@ -60,10 +57,11 @@ class OQG:
     def _read_opsds1_4(self, data: bytes, ndata: int) -> int:
         """Final separation distance"""
         op2 = self.op2
-        return self._read_opsds1_intial_final_4(data, ndata,
-                                                'separation_final',
-                                                op2.op2_results.separation_final,
-                                                SeparationDistanceArray)
+        return self._read_opsds1_intial_final_4(
+            data, ndata,
+            'separation_final',
+            op2.op2_results.separation_final,
+            SeparationDistanceArray)
 
     def _read_opsds1_intial_final_4(self, data: bytes, ndata: int,
                                     result_name: str,
@@ -82,7 +80,7 @@ class OQG:
             #return ndata
         #op2._results._found_result(result_name)
         #slot = op2.get_result(result_name)
-        ntotal = 2 * 4 * self.factor
+        ntotal = 2 * 4 * op2.factor
         nnodes = ndata // ntotal
 
         auto_return, is_vectorized = op2._create_node_object4(
@@ -102,7 +100,7 @@ class OQG:
         else:
             n = 0
             dt = op2.nonlinear_factor
-            structi = Struct(op2._endian + mapfmt(b'if', self.size))
+            structi = Struct(op2._endian + mapfmt(b'if', op2.size))
             for unused_i in range(nnodes):
                 edata = data[n:n+ntotal]
                 nid_code, distance = structi.unpack(edata)
@@ -418,7 +416,7 @@ class OQG:
         elif op2.table_code == 67:   # Glue Forces
             assert op2.table_name in [b'OQGGF1', b'OQGGF2'], op2.code_information()
             n = self._oqg_read_glue_forces(data, ndata)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         return n
 
@@ -478,7 +476,7 @@ class OQG:
             n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealSPCForcesArray, ComplexSPCForcesArray,
                                            'node', random_code=op2.random_code)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
             #msg = 'thermal=%s' % op2.thermal
             #return self._not_implemented_or_skip(data, ndata, msg)
@@ -514,7 +512,7 @@ class OQG:
             n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealMPCForcesArray, ComplexMPCForcesArray,
                                            'node', random_code=op2.random_code)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
             #msg = 'thermal=%s' % op2.thermal
             #return self._not_implemented_or_skip(data, ndata, msg)
@@ -541,7 +539,7 @@ class OQG:
             n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealContactForcesArray, None,
                                            'node', random_code=op2.random_code)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
             #msg = 'thermal=%s' % op2.thermal
             #return self._not_implemented_or_skip(data, ndata, msg)
@@ -568,7 +566,7 @@ class OQG:
             n = op2._read_table_vectorized(data, ndata, result_name, slot,
                                            RealContactForcesArray, None,
                                            'node', random_code=op2.random_code)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
             #msg = 'thermal=%s' % op2.thermal
             #return self._not_implemented_or_skip(data, ndata, msg)
@@ -583,10 +581,10 @@ class OQG:
         if op2.thermal == 0:
             if op2.table_code in [3, 603]:
                 result_name = 'psd.spc_forces'
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(op2.code_information())
             obj = RealSPCForcesArray
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
 
         is_saved, slot = get_is_slot_saved(op2, result_name)
@@ -612,9 +610,9 @@ class OQG:
                 n = op2._read_random_table(data, ndata, result_name, slot,
                                            RealSPCForcesArray, 'node',
                                            random_code=op2.random_code)
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(op2.code_information())
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         return n
 
@@ -630,7 +628,7 @@ class OQG:
             #elif op2.table_code in [603]:
                 #assert op2.table_name in [b'OQGATO2'], 'op2.table_name=%r' % op2.table_name
                 #result_name = 'psd.mpc_forces'
-            else:
+            else:  # pragma: no cover
                 print(op2.table_code)
                 raise RuntimeError(op2.code_information())
 
@@ -640,7 +638,7 @@ class OQG:
             n = op2._read_random_table(data, ndata, result_name, slot,
                                        RealSPCForcesArray, 'node',
                                        random_code=op2.random_code)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         assert n is not None, n
         return n
@@ -659,9 +657,9 @@ class OQG:
                 n = op2._read_random_table(data, ndata, result_name, slot,
                                            RealSPCForcesArray, 'node',
                                            random_code=op2.random_code)
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(op2.code_information())
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         return n
 
@@ -675,9 +673,9 @@ class OQG:
                 assert op2.table_name in [b'OQGNO1', b'OQGNO2'], f'op2.table_name={op2.table_name!r}'
                 result_name = 'no.spc_forces'
                 obj = RealSPCForcesArray
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(op2.code_information())
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
 
         is_saved, slot = get_is_slot_saved(op2, result_name)
@@ -700,11 +698,11 @@ class OQG:
             elif op2.table_code in [603]:
                 assert op2.table_name in [b'OQMPSD1', b'OQMPSD2'], 'op2.table_name=%r' % op2.table_name
                 result_name = 'psd.mpc_forces'
-            else:
+            else:  # pragma: no cover
                 print(op2.table_code)
                 raise RuntimeError(op2.code_information())
             obj = RealMPCForcesArray
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
 
         is_saved, slot = get_is_slot_saved(op2, result_name)
@@ -731,10 +729,10 @@ class OQG:
             #elif op2.table_code in [603]:
                 #assert op2.table_name in [b''], 'op2.table_name=%r' % op2.table_name
                 #result_name = 'psd.mpc_forces'
-            else:
+            else:  # pragma: no cover
                 print(op2.table_code)
                 raise RuntimeError(op2.code_information())
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
 
         is_saved, slot = get_is_slot_saved(op2, result_name)
@@ -744,7 +742,6 @@ class OQG:
         n = op2._read_random_table(data, ndata, result_name, slot,
                                    obj, 'node',
                                    random_code=op2.random_code)
-
         assert n is not None, n
         return n
 
@@ -761,10 +758,10 @@ class OQG:
             #elif op2.table_code in [603]:
                 #assert op2.table_name in [b''], 'op2.table_name=%r' % op2.table_name
                 #result_name = 'psd.mpc_forces'
-            else:
+            else:  # pragma: no cover
                 print(op2.table_code)
                 raise RuntimeError(op2.code_information())
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
 
         is_saved, slot = get_is_slot_saved(op2, result_name)
@@ -790,9 +787,9 @@ class OQG:
             #elif op2.table_code in [603]:
                 #assert op2.table_name in [b''], 'op2.table_name=%r' % op2.table_name
                 #result_name = 'psd.mpc_forces'
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(op2.code_information())
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
 
         is_saved, slot = get_is_slot_saved(op2, result_name)
@@ -802,7 +799,6 @@ class OQG:
         n = op2._read_random_table(data, ndata, result_name, slot,
                                    obj, 'node',
                                    random_code=op2.random_code)
-
         assert n is not None, n
         return n
 
@@ -819,9 +815,9 @@ class OQG:
             #elif op2.table_code in [603]:
                 #assert op2.table_name in [b''], 'op2.table_name=%r' % op2.table_name
                 #result_name = 'psd.mpc_forces'
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(op2.code_information())
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
 
         is_saved, slot = get_is_slot_saved(op2, result_name)

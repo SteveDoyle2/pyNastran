@@ -741,8 +741,8 @@ class Add0dElements(BDFAttributes):
         return elem
 
     def add_pbush(self, pid: int, k: list[float], b: list[float], ge: list[float],
-                  rcv: Optional[list[float]]=None, mass: Optional[float]=None,
-                  alpha: float=0., tref: float=0., coincident_length=None,
+                  rcv: Optional[list[float]]=None, mass: float=0.0,
+                  alpha: float=0.0, tref: float=0.0, coincident_length=None,
                   comment: str='') -> int:
         """
         Creates a PBUSH card, which defines a property for a PBUSH
@@ -764,7 +764,7 @@ class Add0dElements(BDFAttributes):
         rcv : list[float]; default=None -> (None, None, None, None)
             [sa, st, ea, et] = rcv
             length(rcv) = 4
-        mass : float; default=None
+        mass : float; default=0.0
             lumped mass of the CBUSH
             This is an MSC only parameter.
         comment : str; default=''

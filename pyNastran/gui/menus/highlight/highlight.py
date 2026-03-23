@@ -35,7 +35,7 @@ from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui, remove_actors_f
 from pyNastran.gui.menus.highlight.vtk_utils import (
     create_highlighted_actors, create_node_label_actor, create_cell_label_actor,
     get_ids_filter)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.groups_modify.groups import Group
 
 USE_LINEEDIT = True

@@ -26,7 +26,7 @@ from pyNastran.gui.gui_objects.force_results import ForceResults2
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
 from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
 from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.op2_geom import OP2
 

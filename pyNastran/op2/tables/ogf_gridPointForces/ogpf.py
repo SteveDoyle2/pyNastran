@@ -121,7 +121,6 @@ class OGPF:
                             obj.node_element[istart:iend, 1] = eids
                             obj.element_names[istart:iend] = strings_save
 
-
                     floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nnodes, 10)
                     #[f1, f2, f3, m1, m2, m3]
                     obj.data[itime, istart:iend, :] = floats[:, 4:].copy()
@@ -138,21 +137,12 @@ class OGPF:
                                 floats[i, 4], floats[i, 5], floats[i, 6],
                                 floats[i, 7], floats[i, 8], floats[i, 9], ))
                 else:
-                    if op2.size == 4:
-                        fmt = op2._endian + b'ii8s6f'
-                    else:
-                        fmt = op2._endian + b'qq16s6d'
-                    s = Struct(fmt)
-                    for i in range(nnodes):
-                        edata = data[n:n+ntotal]
-                        out = s.unpack(edata)
-                        (nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3) = out
-                        nid = nid_device // 10
-                        elem_name = elem_name.strip()
-                        if op2.is_debug_file:
-                            op2.binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
-                        op2.obj.add_sort1(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
-                        n += ntotal
+                    n = real_grid_point_forces(
+                        op2.obj, dt, data, nnodes, ntotal,
+                        size=op2.size, endian=op2._endian,
+                        is_debug_file=op2.is_debug_file,
+                        binary_debug=op2.binary_debug)
+
             elif op2.num_wide == 16:
                 # complex
                 ntotal = 64
@@ -191,31 +181,12 @@ class OGPF:
                     #[f1, f2, f3, m1, m2, m3]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 4:].copy()
                 else:
-                    s = Struct(op2._endian + b'ii8s12f')
-
-                    #if op2.is_debug_file:
-                        #op2.binary_debug.write('  GPFORCE\n')
-                        #op2.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
-                        #op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                        #op2.binary_debug.write('  gpforce1 = [nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3]\n')
-                        #op2.binary_debug.write('  nnodes=%i\n' % nnodes)
-
-                    for i in range(nnodes):
-                        edata = data[n:n+ntotal]
-                        out = s.unpack(edata)
-                        (nid_device, eid, elem_name,
-                         f1r, f2r, f3r, m1r, m2r, m3r,
-                         f1i, f2i, f3i, m1i, m2i, m3i) = out
-                        nid = nid_device // 10
-                        elem_name = elem_name.strip()
-                        if op2.is_debug_file:
-                            op2.binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
-
-                        f1, f2, f3, m1, m2, m3 = real_imag_from_list([
-                            f1r, f2r, f3r, m1r, m2r, m3r,
-                            f1i, f2i, f3i, m1i, m2i, m3i], is_magnitude_phase)
-                        op2.obj.add_sort1(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
-                        n += ntotal
+                    n = complex_grid_point_forces(
+                        op2.obj, dt, data, nnodes, ntotal,
+                        size=op2.size, endian=op2._endian,
+                        is_magnitude_phase=is_magnitude_phase,
+                        is_debug_file=op2.is_debug_file,
+                        binary_debug=op2.binary_debug)
             else:
                 raise NotImplementedError(op2.code_information())
         else:
@@ -236,6 +207,7 @@ class OGPF:
         #if op2.thermal == 0:
 
         result_name = prefix + 'grid_point_forces'
+        self.op2.log.warning(f'skipping {result_name} in read_grid_point_forces2')
         #print(op2.code_information())
         is_saved, slot = get_is_slot_saved(result_name)
         if not is_saved:
@@ -256,10 +228,10 @@ class OGPF:
                 fmt = op2._endian + mapfmt(op2._analysis_code_fmt, 8) + b'8s 6d'
 
             eid = op2.nonlinear_factor
-            s = Struct(fmt)
+            structi = Struct(fmt)
             for i in range(nnodes):
                 edata = data[n:n+ntotal]
-                out = s.unpack(edata)
+                out = structi.unpack(edata)
                 #print(out)
                 (dt, word, f1, f2, f3, m1, m2, m3) = out
                 #print(dt, eid, word)
@@ -274,5 +246,64 @@ class OGPF:
                 n += ntotal
         else:
             raise RuntimeError(op2.code_information())
-
         return n
+
+
+def real_grid_point_forces(obj: RealGridPointForcesArray,
+                           dt: int | float,
+                           data: bytes, nnodes: int, ntotal: int,
+                           size: int=4, endian: bytes=b'<',
+                           is_debug_file: bool=False, binary_debug=None):
+    n = 0
+    if size == 4:
+        fmt = endian + b'ii8s6f'
+    else:
+        fmt = endian + b'qq16s6d'
+
+    structi = Struct(fmt)
+    for i in range(nnodes):
+        edata = data[n:n + ntotal]
+        out = structi.unpack(edata)
+        (nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3) = out
+        nid = nid_device // 10
+        elem_name = elem_name.strip()
+        if is_debug_file:
+            binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
+        obj.add_sort1(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
+        n += ntotal
+    return n
+
+
+def complex_grid_point_forces(obj: ComplexGridPointForcesArray,
+                              dt: int | float,
+                              data: bytes, nnodes: int, ntotal: int,
+                              size: int=4, endian: bytes=b'<',
+                              is_magnitude_phase: bool=False,
+                              is_debug_file: bool=False, binary_debug=None):
+    n = 0
+    s = Struct(endian + b'ii8s12f')
+
+    # if op2.is_debug_file:
+    # op2.binary_debug.write('  GPFORCE\n')
+    # op2.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
+    # op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+    # op2.binary_debug.write('  gpforce1 = [nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3]\n')
+    # op2.binary_debug.write('  nnodes=%i\n' % nnodes)
+
+    for i in range(nnodes):
+        edata = data[n:n + ntotal]
+        out = s.unpack(edata)
+        (nid_device, eid, elem_name,
+         f1r, f2r, f3r, m1r, m2r, m3r,
+         f1i, f2i, f3i, m1i, m2i, m3i) = out
+        nid = nid_device // 10
+        elem_name = elem_name.strip()
+        if is_debug_file:
+            binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
+
+        f1, f2, f3, m1, m2, m3 = real_imag_from_list([
+            f1r, f2r, f3r, m1r, m2r, m3r,
+            f1i, f2i, f3i, m1i, m2i, m3i], is_magnitude_phase)
+        obj.add_sort1(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
+        n += ntotal
+    return n

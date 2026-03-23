@@ -12,7 +12,7 @@ from pyNastran.bdf.cards.dynamic import (
 CONV_NLPARM_MAP = {value: key for key, value in NLPARM_CONV_MAP.items()}
 KMETHOD_NLPARM_MAP = {value: key for key, value in NLPARM_KMETHOD_MAP.items()}
 INT_OUT_NLPARM_MAP = {value: key for key, value in NLPARM_INT_OUT_MAP.items()}
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import BDF, OP2Geom
 
 def write_mpt(op2_file, op2_ascii, model, endian=b'<',
@@ -134,7 +134,7 @@ def write_tstepnl(model: BDF, name: str, tstepnl_ids, nmaterials,
     spack = Struct(endian + b'iif5i3f3if3i4f 4if')
     nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for tstepnl_id in sorted(tstepnl_ids):
-        print('tstepnl_id =', tstepnl_id)
+        # print('tstepnl_id =', tstepnl_id)
         tstep = model.tstepnls[tstepnl_id]
         #(sid, ndt, dt, no, method_int, kstep, max_iter, conv_int, eps_u, eps_p, eps_w,
         #     max_div, max_qn, max_ls, fstress, max_bisect,

@@ -9,7 +9,7 @@ from abc import abstractmethod
 from typing import Any, Optional, TYPE_CHECKING
 import numpy as np
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForceArray
 
 REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',

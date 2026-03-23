@@ -610,7 +610,7 @@ class OUG:
         assert op2.data_type == 1, op2.data_type
 
         n = 0
-        ntotal = 16 * self.factor
+        ntotal = 16 * op2.factor
         npanels = ndata // ntotal
         assert ndata % ntotal == 0, f'ndata={ndata} ntotal={ntotal} data_type={op2.data_type}'
         if op2.sort_method == 1:
@@ -656,10 +656,9 @@ class OUG:
         if op2.table_name in [b'OUGMC1', b'OQGMC1']:
             if op2.read_mode == 1:
                 return ndata
-            from struct import Struct
-            ntotal = 16 * self.factor  # 4*4
+            ntotal = 16 * op2.factor  # 4*4
             nnodes = ndata // ntotal
-            fmt = mapfmt(op2._endian + b'i 3f', self.size)
+            fmt = mapfmt(op2._endian + b'i 3f', op2.size)
             struct1 = Struct(fmt)
             for unused_inode in range(nnodes):
                 edata = data[n:n+ntotal]

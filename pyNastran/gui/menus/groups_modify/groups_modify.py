@@ -28,7 +28,7 @@ from pyNastran.gui.menus.groups_modify.groups import Group, _get_collapsed_text
 from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui, remove_actors_from_gui
 from pyNastran.gui.menus.highlight.highlight import create_highlighted_actors
 from pyNastran.gui.menus.groups_modify.utils import get_groups_sorted_by_name
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
     from pyNastran.bdf.bdf import BDF
 

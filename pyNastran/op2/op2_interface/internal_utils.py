@@ -2,7 +2,7 @@ from __future__ import annotations
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.f06_formatting import get_key0
 from typing import TYPE_CHECKING
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 

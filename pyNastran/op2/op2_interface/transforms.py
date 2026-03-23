@@ -18,7 +18,7 @@ from pyNastran.femutils.matrix3d import (
     #dot_n33_n33,
     #dot_33_n33,
     dot_n33_n3)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.subcase import Subcase
     from pyNastran.bdf.cards.coordinate_systems import Coord

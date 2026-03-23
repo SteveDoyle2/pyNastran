@@ -73,7 +73,7 @@ AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
 from pyNastran.f06.dev.flutter.vtk_data import VtkData
 from pyNastran.f06.parse_flutter import FlutterResponse
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.f06.dev.flutter.gui_flutter_plot import FlutterGui
 
 QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'

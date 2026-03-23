@@ -28,7 +28,7 @@ except ImportError:
     warnings.warn('>>> pip install python-docx')
     raise
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
     from cpylog import SimpleLogger
 

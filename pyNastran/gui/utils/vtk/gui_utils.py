@@ -14,7 +14,7 @@ from vtkmodules.vtkCommonCore import vtkTypeFloat32Array
 
 from pyNastran.gui.vtk_common_core import VTK_INT, VTK_FLOAT
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
     from pyNastran.gui.typing import Actor
 

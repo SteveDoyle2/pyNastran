@@ -7,7 +7,7 @@ import numpy as np
 from .geom1_writer import write_geom_header, close_geom_table
 from .geom4_writer import write_spcadd
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
@@ -1699,68 +1699,70 @@ def write_pbush1d(name: str, pids: np.ndarray, itable: int,
          #typef, idtf, idcf,
          #unused_ut, unused_uc) = out
 
-        typea = cvt = cvc = expvt = expvc = idtsu = idtcu = idtsud = idcsud = 0
-        if 'SHOCKA' in prop.vars:
-            #optional_vars['SHOCKA'] = [typea_str, cvt, cvc, expvt, expvc,
-                                       #idts, idets, idtcu, idtsud, idcsud]
-            #shock_cvc : None
-            #shock_cvt : 1000.0
-            #shock_exp_vc : 1.0
-            #shock_exp_vt : 1.0
-            #shock_idecs : None
-            #shock_idecsd : None
-            #shock_idets : None
-            #shock_idetsd : None
-            #shock_idts : None
-            #shock_type : 'TABLE'
-            typea = type_map[prop.shock_type]
-            cvt = prop.shock_cvc if prop.shock_cvc is not None else 0
-            cvc = prop.shock_cvt if prop.shock_cvt is not None else 0
-            expvt = prop.shock_exp_vc if prop.shock_exp_vc is not None else 0
-            expvc = prop.shock_exp_vt if prop.shock_exp_vt is not None else 0
-            idtsu = prop.shock_idts if prop.shock_idts is not None else 0
-            idtcu = prop.shock_idecs if prop.shock_idecs is not None else 0
-            idtsud = prop.shock_idetsd if prop.shock_idetsd is not None else 0
-            idcsud = prop.shock_idecsd if prop.shock_idecsd is not None else 0
+        # if 'SHOCKA' in prop.vars:
+        #optional_vars['SHOCKA'] = [typea_str, cvt, cvc, expvt, expvc,
+                                   #idts, idets, idtcu, idtsud, idcsud]
+        #shock_cvc : None
+        #shock_cvt : 1000.0
+        #shock_exp_vc : 1.0
+        #shock_exp_vt : 1.0
+        #shock_idecs : None
+        #shock_idecsd : None
+        #shock_idets : None
+        #shock_idetsd : None
+        #shock_idts : None
+        #shock_type : 'TABLE'
+        typea = type_map[prop.shock_type]
+        cvt = prop.shock_cvc if prop.shock_cvc is not None else 0
+        cvc = prop.shock_cvt if prop.shock_cvt is not None else 0
+        expvt = prop.shock_exp_vc if prop.shock_exp_vc is not None else 0
+        expvc = prop.shock_exp_vt if prop.shock_exp_vt is not None else 0
+        idtsu = prop.shock_idts if prop.shock_idts is not None else 0
+        idtcu = prop.shock_idecs if prop.shock_idecs is not None else 0
+        idtsud = prop.shock_idetsd if prop.shock_idetsd is not None else 0
+        idcsud = prop.shock_idecsd if prop.shock_idecsd is not None else 0
 
-        types = idts = idcs = idtdus = idcdus = 0
-        if 'SPRING' in prop.vars:
-            #optional_vars['SPRING'] = [types_str, idts, idcs, idtdus, idcdus]
-            #spring_idc : None
-            #spring_idcdu : None
-            #spring_idt : 205
-            #spring_idtc : None
-            #spring_idtdu : None
-            #spring_type : 'TABLE'
-            types = type_map[prop.spring_type]
-            idts = prop.spring_idt if prop.spring_idt is not None else 0
-            idcs = prop.spring_idc if prop.spring_idc is not None else 0
-            idtdus = prop.spring_idtdu if prop.spring_idtdu is not None else 0
-            idcdus = prop.spring_idcdu if prop.spring_idcdu is not None else 0
+        # if 'SPRING' in prop.vars:
+        #optional_vars['SPRING'] = [types_str, idts, idcs, idtdus, idcdus]
+        #spring_idc : None
+        #spring_idcdu : None
+        #spring_idt : 205
+        #spring_idtc : None
+        #spring_idtdu : None
+        #spring_type : 'TABLE'
+        types = type_map[prop.spring_type]
+        idts = prop.spring_idt if prop.spring_idt is not None else 0
+        idcs = prop.spring_idc if prop.spring_idc is not None else 0
+        idtdus = prop.spring_idtdu if prop.spring_idtdu is not None else 0
+        idcdus = prop.spring_idcdu if prop.spring_idcdu is not None else 0
 
-        typed = idtd = idcd = idtdvd = idcdvd = 0
-        if 'DAMPER' in prop.vars:
-            #optional_vars['DAMPER'] = [typed_str, idtd, idcd, idtdvd, idcdvd]
-            #damper_idc : None
-            #damper_idcdv : None
-            #damper_idt : 206
-            #damper_idtdv : None
-            #damper_type : 'TABLE'
-            typed = type_map[prop.damper_type]
-            idtd = prop.damper_idt if prop.damper_idt is not None else 0
-            idcd = prop.damper_idc if prop.damper_idc is not None else 0
-            idtdvd = prop.damper_idtdv if prop.damper_idtdv is not None else 0
-            idcdvd = prop.damper_idcdv if prop.damper_idcdv is not None else 0
+
+        # typed = idtd = idcd = idtdvd = idcdvd = 0
+        # if 'DAMPER' in prop.vars:
+        #optional_vars['DAMPER'] = [typed_str, idtd, idcd, idtdvd, idcdvd]
+        #damper_idc : None
+        #damper_idcdv : None
+        #damper_idt : 206
+        #damper_idtdv : None
+        #damper_type : 'TABLE'
+        typed = type_map[prop.damper_type]
+        idtd = prop.damper_idt if prop.damper_idt is not None else 0
+        idcd = prop.damper_idc if prop.damper_idc is not None else 0
+        idtdvd = prop.damper_idtdv if prop.damper_idtdv is not None else 0
+        idcdvd = prop.damper_idcdv if prop.damper_idcdv is not None else 0
 
         typeg = idtg = idcg = idtdug = idcdug = idtdvg = idcdvg = 0
-        if 'GENER' in prop.vars:
+        geners = [prop.gener_idt, prop.gener_idc,
+                  prop.gener_idtdu, prop.gener_idcdu,
+                  prop.gener_idtdv, prop.gener_idcdv]
+        if any(val is not None for val in geners):
             #typeg = type_map[typeg_str]
             #optional_vars['GENER'] = [idtg, idcg, idtdug, idcdug, idtdvg, idcdvg]
             gener
 
         typef = idtf = idcf = 0  #type_map[typef_str]  # FUSE...what is this???
         ut = uc = 0
-        data = [pid, prop.k, prop.c, prop.m, alpha, prop.sa, prop.se,
+        data = [pid, prop.k, prop.c, prop.mass, alpha, prop.sa, prop.se,
                 typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
                 types, idts, idcs, idtdus, idcdus,
                 typed, idtd, idcd, idtdvd, idcdvd,

@@ -12,7 +12,7 @@ from pyNastran.op2.op2_interface.random_results import (
     PSDObjects,
 )
 from pyNastran.op2.result_objects.design_response import Responses
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.f06.flutter_response import FlutterResponse
     from pyNastran.f06.f06_tables.trim import (
         TrimVaribles, TrimDerivatives,
