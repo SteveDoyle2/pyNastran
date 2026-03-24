@@ -9,6 +9,14 @@ from pyNastran.bdf.cards.elements.rigid import RBE2, RBE3
 from pyNastran.bdf.mesh_utils.mass_properties import increment_inertia, transform_inertia
 
 def rbe3_to_rbe2(model: BDF, eids_to_fix: list[int]) -> None:
+    log = model.log
+    if len(eids_to_fix) == 0:
+        eids_to_fix = list(model.rigid_elements)
+        if len(eids_to_fix):
+            log.warning(f'no eids were specified assuming all rigid elements={eids_to_fix}')
+        else:
+            raise RuntimeError('no eids were specified and none were found...')
+
     rigid_elements2 = {}
     for eid, elem in model.rigid_elements.items():
         if eid not in eids_to_fix:

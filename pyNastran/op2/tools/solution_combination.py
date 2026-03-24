@@ -244,12 +244,23 @@ def run_load_case_combinations(op2_filename: PathLike | OP2,
 
     """
     _check_op2_file(op2_filename)
-    all_combinations = setup_combinations_single(combination_filenames)
+    combination_filenames, all_combinations = setup_combinations_single(
+        combination_filenames)
     op2_filenames_new = [os.path.splitext(filename)[0] + '.op2'
                          for filename in combination_filenames]
     print(f'op2_filenames_new = {op2_filenames_new}')
+
+    # def run_load_case_combinations_from_data(op2_filename: PathLike,
+    #                                          op2_filenames_new: list[PathLike],
+    #                                          all_combinations: list,
+    #                                          exclude_results: Optional[list[str]] = None,
+    #                                          include_results: Optional[list[str]] = None,
+    #                                          mode: Optional[str] = None,
+    #                                          revision: Optional[str] = None,
+    #                                          log: Optional[SimpleLogger] = None,
+    #                                          require_cases: bool = True) -> None:
     run_load_case_combinations_from_data(
-        op2_filename, all_combinations,
+        op2_filename, op2_filenames_new, all_combinations,
         exclude_results=exclude_results,
         include_results=include_results,
         mode=mode, revision=revision,
@@ -299,12 +310,13 @@ def run_load_case_combinations_from_data(op2_filename: PathLike,
                 require_cases=require_cases)
 
 
-def setup_combinations_single(combination_filenames: list[PathLike] | PathLike) -> list:
+def setup_combinations_single(combination_filenames: list[PathLike] | PathLike,
+                              ) -> tuple[list[PathLike], list]:
     if not isinstance(combination_filenames, (list, tuple)):
         combination_filenames = [combination_filenames]
 
     all_combinations = load_combinations(combination_filenames)
-    return all_combinations
+    return combination_filenames, all_combinations
 
 
 def _read_op2(op2_filename: PathLike | OP2,

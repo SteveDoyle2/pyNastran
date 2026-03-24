@@ -40,13 +40,13 @@ def cmd_line_rbe3_to_rbe2(argv=None, quiet: bool=False) -> None:
     args = parser.parse_args(args=argv[1:])
     if not quiet:  # pragma: no cover
         print(args)
-
+    print(args)
     bdf_filename = args.bdf_filename
     bdf_filename_out = args.out
     infile = args.infile
 
     eids_to_fix = np.array([], dtype='int')
-    if infile is None:
+    if infile is None and args.eids is not None:
         eids_to_fix = np.array([int(eid) for eid in args.eids.strip(', ').split(',')])
 
     log = SimpleLogger(level='debug')

@@ -1195,7 +1195,9 @@ class FlutterResponse:
         for i, imode, mode in zip(count(), imodes, modes):
             symbol = symbols[jcolor]
             color = colors[jcolor]
-            eas = self.results[imode, :, self.ieas].ravel()
+            eas = None
+            if hasattr(self, 'ieas'):
+                eas = self.results[imode, :, self.ieas].ravel()
             freq = self.results[imode, :, self.ifreq].ravel()
             damping = self.results[imode, :, self.idamping].ravel()
             if ix >= 0:
@@ -1339,7 +1341,9 @@ class FlutterResponse:
             freq = self.results[imode, :, self.ifreq].ravel()
             damping = self.results[imode, :, self.idamping].ravel()
             xs = self.results[imode, :, ix].ravel()
-            eas = self.results[imode, :, self.ieas].ravel()
+            eas = None
+            if hasattr(self, 'eas'):
+                eas = self.results[imode, :, self.ieas].ravel()
             y1s = self.results[imode, :, iy1].ravel()
             y2s = self.results[imode, :, iy2].ravel()
             jcolor, color2, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(

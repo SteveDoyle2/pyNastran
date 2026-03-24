@@ -88,13 +88,13 @@ class CompositeShellProperty(Property):
         return self.get_nonstructural_mass()
 
     def Rho(self, iply: int) -> float:
-        assert iply >= 0, iply
+        _check_ply_range(self, iply)
         return self.get_density(iply)
     def Theta(self, iply: int) -> float:
-        assert iply >= 0, iply
+        _check_ply_range(self, iply)
         return self.get_theta(iply)
     def sout(self, iply: int) -> str:
-        assert iply >= 0, iply
+        _check_ply_range(self, iply)
         return self.get_sout(iply)
 
     #def Thicknesses(self):
@@ -290,6 +290,7 @@ class CompositeShellProperty(Property):
 
         """
         #nplies = len(self.thicknesses)
+        _check_ply_range(self, iply)
         if iply in {-1, 'all'}:  # get all layers
             thick = sum(self.thicknesses)
             if self.is_symmetrical:
@@ -373,6 +374,7 @@ class CompositeShellProperty(Property):
 
         """
         iply = self._adjust_ply_id(iply)
+        _check_ply_range(self, iply)
         assert iply >= 0, iply
         if self.mids_ref is not None:
             mid_ref = self.mids_ref[iply]
@@ -672,6 +674,10 @@ class CompositeShellProperty(Property):
 
         ksym = 2. if self.is_symmetrical else 1.
         return ksym * mass_per_area
+
+def _check_ply_range(self, iply: int) -> None:
+    if iply == -1:
+        raise IndexError(f'iply must be greater than or equal to iply={iply}; nplies={self.nplies}')
 
 
 class PCOMP(CompositeShellProperty):
