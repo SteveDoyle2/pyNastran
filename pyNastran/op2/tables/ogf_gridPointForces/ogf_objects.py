@@ -2446,7 +2446,7 @@ def _check_element_names(element_names: np.ndarray) -> None:
     allowed_names_half = np.array([
         '*TOTALS*',
         'APP-LOAD',
-        'F-OF-MPC', 'F-OF-SPC', 'F-OF-CNT',
+        'F-OF-MPC', 'F-OF-SPC', 'F-OF-CNT', 'F-OF-FRI',
         # -------
         'RBAR    ', 'RBE1    ', # 'RBE2    ',
         'RBE3    ',
@@ -2479,6 +2479,7 @@ def _check_element_names(element_names: np.ndarray) -> None:
         'SEAMP   ',
         'FASTP   ',  # 'FASTC   ',
        #'WELDP   ',  # 'WELDC   ',
+        'DUM8    ',
         '        ', # null
     ], dtype='U8')
     allowed_names_stripped = np.array([
