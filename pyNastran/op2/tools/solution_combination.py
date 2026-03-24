@@ -7,7 +7,7 @@ import numpy as np
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.op2.op2 import read_op2, OP2
-from pyNastran.utils.numpy_utils import integer_float_types
+# from pyNastran.utils.numpy_utils import integer_float_types
 
 # (imodel, subcases, factors)
 # (0, [1, 1], [1.2, 0.0])
@@ -250,20 +250,11 @@ def run_load_case_combinations(op2_filename: PathLike | OP2,
                          for filename in combination_filenames]
     print(f'op2_filenames_new = {op2_filenames_new}')
 
-    # def run_load_case_combinations_from_data(op2_filename: PathLike,
-    #                                          op2_filenames_new: list[PathLike],
-    #                                          all_combinations: list,
-    #                                          exclude_results: Optional[list[str]] = None,
-    #                                          include_results: Optional[list[str]] = None,
-    #                                          mode: Optional[str] = None,
-    #                                          revision: Optional[str] = None,
-    #                                          log: Optional[SimpleLogger] = None,
-    #                                          require_cases: bool = True) -> None:
     run_load_case_combinations_from_data(
         op2_filename, op2_filenames_new, all_combinations,
         exclude_results=exclude_results,
         include_results=include_results,
-        mode=mode, revision=revision,
+        mode=mode, revision=revision, include_base_cases=False,
         log=log)
     return
 
@@ -275,7 +266,14 @@ def run_load_case_combinations_from_data(op2_filename: PathLike,
                                          mode: Optional[str]=None,
                                          revision: Optional[str]=None,
                                          log: Optional[SimpleLogger]=None,
-                                         require_cases: bool=True) -> None:
+                                         require_cases: bool=True,
+                                         include_base_cases: bool=False,
+                                         ) -> None:
+    base_subcase_ids = np.unique(np.hstack([ids for ids, cases in all_combinations])).tolist()
+    output_subcase_ids = np.unique(np.hstack([caseid
+                                              for ids, cases in all_combinations
+                                              for (caseid, label, factors) in cases])).tolist()
+
     # load_geometry: bool = False,
     # combine: bool = True,
     # subcases: Optional[list[int]] = None,
@@ -289,17 +287,16 @@ def run_load_case_combinations_from_data(op2_filename: PathLike,
     mode_out = model._nastran_format
     model._nastran_revision = revision
 
-    # check displacements exist
+    # check all displacements exist
     assert len(all_combinations) == len(op2_filenames_new)
-    disp_keys = list(model.displacements)
-    missing_subcases = []
-    for op2_filename_new, (subcases_in, combinations) in zip(op2_filenames_new, all_combinations):
-        for subcase in subcases_in:
-            try:
-                model.displacements[subcase]
-            except KeyError:
-                missing_subcases.append(subcase)
-    if missing_subcases:
+    disp_keys = get_subcase_ids(model)
+    common_cases = np.intersect1d(output_subcase_ids, disp_keys)
+    if len(common_cases) and include_base_cases:
+        raise RuntimeError(f'These cases are duplicated and would conflict with the source cases; cases={common_cases}\n'
+                           'Update the linear combination to not repeat subcase ids or set include_base_cases=False')
+
+    missing_subcases = np.intersect1d(output_subcase_ids, disp_keys)
+    if len(missing_subcases):
         missing_subcases.sort()
         raise RuntimeError(f'cant find subcases={missing_subcases}; allowed={disp_keys}')
 
@@ -307,8 +304,15 @@ def run_load_case_combinations_from_data(op2_filename: PathLike,
     for op2_filename_new, (subcases_in, combinations) in zip(op2_filenames_new, all_combinations):
         combine(model, op2_filename_new,
                 subcases_in, combinations, model.log, mode_out, revision,
-                require_cases=require_cases)
+                require_cases=require_cases,
+                include_base_cases=include_base_cases)
 
+def get_subcase_ids(model: OP2):
+    # subcase_ids = list(model.displacements)
+    subcase_ids = list(model.isubcase_name_map.keys())
+    subcase_ids.sort()
+    model.log.info(f'op2 subcase_ids={subcase_ids}')
+    return subcase_ids
 
 def setup_combinations_single(combination_filenames: list[PathLike] | PathLike,
                               ) -> tuple[list[PathLike], list]:
@@ -322,8 +326,8 @@ def setup_combinations_single(combination_filenames: list[PathLike] | PathLike,
 def _read_op2(op2_filename: PathLike | OP2,
               mode: str,
               log: SimpleLogger,
-              exclude_results: Optional[list[str]] = None,
-              include_results: Optional[list[str]] = None,
+              exclude_results: Optional[list[str]]=None,
+              include_results: Optional[list[str]]=None,
               ) -> OP2:
     if isinstance(op2_filename, OP2):
         return op2_filename
@@ -484,6 +488,9 @@ def multi_combine(models: dict[int, OP2],
     # print(f'subcases0 = {subcases0}')
     # print(f'subcase0 = {subcase0}')
 
+    # _add_base_cases(model, model2, table_res_types,
+    #                 include_base_cases=include_base_cases)
+
     for table_type, res_type in table_res_types0:
         if len(res_type) == 0:
             continue
@@ -548,19 +555,41 @@ def multi_combine(models: dict[int, OP2],
     return icombination
 
 
+def _add_base_cases(model: OP2, model2: OP2,
+                    table_res_types,
+                    include_base_cases: bool=False) -> None:
+    if not include_base_cases:
+        return
+    # model2.log.warning(f'subcases_in = {subcases_in}')
+    for table_type, res_type in table_res_types:
+        slot = model2.get_result(table_type)
+        inslot = model.get_result(table_type)
+        if len(inslot) == 0:
+            # model2.log.warning(f'skipping slot = {table_type}')
+            continue
+        for key, value in inslot.items():
+            slot[key] = value
+        # for subcase in subcases_in:
+        #     slot[subcase] = inslot[subcase]
+
 def combine(model: OP2,
             op2_filename_new: PathLike,
             subcases_in: list[int],
             combinations: list[tuple],
             log: SimpleLogger,
             mode: str, revision: Optional[str],
-            require_cases: bool=True):
+            require_cases: bool=True,
+            include_base_cases: bool=False):
     # assert len(subcases_in) == len(combinations), f'subcases_in={subcases_in} combinations={combinations}'
 
     table_res_types = _results(model)
 
     model2 = OP2(log=log, mode=mode)
     model2._nastran_revision = revision
+
+    _add_base_cases(model, model2, table_res_types,
+                    include_base_cases=include_base_cases)
+
     for combination in combinations:
         (subcase_out, label, factors_in) = combination
         #print(f'subcase_out={subcase_out} label={label!r} factors_in={factors_in}')
@@ -573,10 +602,12 @@ def combine(model: OP2,
         for table_type, res_type in table_res_types:
             slot = model2.get_result(table_type)
             if len(res_type) == 0:
+                # print(f'skipping slot={table_type}')
                 continue
             # print(res_type)
 
-            # displacement
+            # model.displacements[subcase0] = RealDisplacementArray(...)
+            # restype = model.displacements
             case0 = res_type[subcase0]
             case_new = copy.deepcopy(case0)
             case_new.label = label
@@ -619,7 +650,7 @@ def _results(model: OP2) -> list[dict]:
         'grid_point_weight', 'psds', 'monitor1', 'monitor3',
         'cstm',
     ]
-    table_res_types = list((table_type, model.get_result(table_type)) for table_type in sorted(model.get_table_types())
+    table_res_types = list((table_type, model.get_result(table_type))for table_type in sorted(model.get_table_types())
                             if table_type not in unallowed_results and not table_type.startswith('responses.'))
     return table_res_types
 
