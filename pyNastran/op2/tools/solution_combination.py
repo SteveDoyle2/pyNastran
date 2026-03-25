@@ -311,6 +311,8 @@ def get_subcase_ids(model: OP2):
     # subcase_ids = list(model.displacements)
     subcase_ids = list(model.isubcase_name_map.keys())
     subcase_ids.sort()
+    if 0 in subcase_ids:
+        subcase_ids.remove(0)
     model.log.info(f'op2 subcase_ids={subcase_ids}')
     return subcase_ids
 
