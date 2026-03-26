@@ -15,7 +15,7 @@ CombinationPair = tuple[int, list[int], list[float]]
 # [(0, [1, 1], [1.2, 0.0])]
 CombinationPairs = list[CombinationPair]
 
-# (subcase_out, label, pairs)
+# (subcase_out, subtitle, pairs)
 MultiCombination = tuple[int, str, CombinationPairs]
 
 
@@ -62,11 +62,11 @@ def _load_combination(combination_filename: PathLike,
     -------
     subcases_input : list[int]
         the subcases to use to combine
-    combination: tuple[subcase_out, label, factors]
+    combination: tuple[subcase_out, subtitle, factors]
         subcase_out: int
             subcase id out
-        label: str
-            name for the new subcase
+        subtitle: str
+            subtitle for the new subcase
         factors: list[float]
             combination factors
 
@@ -78,7 +78,7 @@ def _load_combination(combination_filename: PathLike,
     subcases_sline = lines[0].split(delimiter)
     log.debug(f'subcases_sline = {subcases_sline!r}')
 
-    # chop the output_subcase, label columns
+    # chop the output_subcase, subtitle columns
     subcases_input = []
     for i, subcase in enumerate(subcases_sline[2:]):
         subcases_input.append(int(subcase))
@@ -90,12 +90,12 @@ def _load_combination(combination_filename: PathLike,
         sline = [val.strip() for val in line.split(delimiter)]
         log.debug(f'split line: {sline}')
         subcase_out = int(sline[0])
-        label = sline[1].strip('"\'')
-        # assert len(label) < 20, label
+        subtitle = sline[1].strip('"\'')
+        # assert len(subtitle) < 20, subtitle
         factors = [float(factor) for factor in sline[2:]]
         nfactors = len(factors)
-        assert len(factors) == nsubcases, f'{label} values={factors} nfactors={nfactors} != nsubcases={nsubcases}'
-        combination = (subcase_out, label, factors)
+        assert len(factors) == nsubcases, f'{subtitle} values={factors} nfactors={nfactors} != nsubcases={nsubcases}'
+        combination = (subcase_out, subtitle, factors)
         log.debug(str(combination))
         combinations.append(combination)
     assert len(combinations)
@@ -193,18 +193,18 @@ def _load_multi_combination(
         sline = [val.strip() for val in line.split(delimiter)]
         log.debug(f'split line: {sline}')
         subcase_out = int(sline[0])
-        label = sline[1].strip('"\'')
-        assert len(label) < 20, label
+        subtitle = sline[1].strip('"\'')
+        assert len(subtitle) < 20, subtitle
         factors = np.array([float(factor) for factor in sline[2:]])
         nfactors = len(factors)
-        assert len(factors) == nsubcases, f'{label} values={factors} nfactors={nfactors} != nsubcases={nsubcases}'
+        assert len(factors) == nsubcases, f'{subtitle} values={factors} nfactors={nfactors} != nsubcases={nsubcases}'
         combination_pairs = []
         for op2_input, iop2 in zip(uop2_input.tolist(), iop2s):
             factorsi = factors[iop2].tolist()
             subcasesi = subcases_input[iop2].tolist()
             combination_pairs.append((op2_input, subcasesi, factorsi))
         assert len(combination_pairs), combination_pairs
-        combination = (subcase_out, label, combination_pairs)
+        combination = (subcase_out, subtitle, combination_pairs)
         log.debug(str(combination))
         combinations.append(combination)
     assert len(combinations)
@@ -272,7 +272,7 @@ def run_load_case_combinations_from_data(op2_filename: PathLike,
     base_subcase_ids = np.unique(np.hstack([ids for ids, cases in all_combinations])).tolist()
     output_subcase_ids = np.unique(np.hstack([caseid
                                               for ids, cases in all_combinations
-                                              for (caseid, label, factors) in cases])).tolist()
+                                              for (caseid, subtitle, factors) in cases])).tolist()
 
     # load_geometry: bool = False,
     # combine: bool = True,
@@ -284,8 +284,10 @@ def run_load_case_combinations_from_data(op2_filename: PathLike,
         op2_filename, mode=mode, log=log,
         exclude_results=exclude_results,
         include_results=include_results)
+
     mode_out = model._nastran_format
-    model._nastran_revision = revision
+    if revision:
+        model._nastran_revision = revision
 
     # check all displacements exist
     assert len(all_combinations) == len(op2_filenames_new)
@@ -430,7 +432,7 @@ def _load_models(op2_filenames: dict[int, PathLike | OP2],
 
 
 def get_local_factors(subcase_out: int,
-                      label: str,
+                      subtitle: str,
                       subcases_in: list[int],
                       factors_in: list[float],
                       require_cases: bool=True) -> tuple[list[int], list[float]]:
@@ -438,20 +440,21 @@ def get_local_factors(subcase_out: int,
     subcases_out = []
     nsubcases_in = len(subcases_in)
     nfactors_in = len(factors_in)
-    assert len(subcases_in) == len(factors_in), f'label={label!r} has a different number of subcases ({nsubcases_in}) than factors ({nfactors_in})'
+    assert len(subcases_in) == len(factors_in), f'subtitle={subtitle!r} has a different number of subcases ({nsubcases_in}) than factors ({nfactors_in})'
     for subcase, factor in zip(subcases_in, factors_in):
         if factor == 0.0:
             continue
-        factors_out.append(factor)
+        factors_out.append(float(factor))
         subcases_out.append(subcase)
 
     if len(factors_out) > 0:
-        msg = f'subcase_out={subcase_out} label={label!r} has no factors != 0'
+        msg = f'subcase_out={subcase_out} subtitle={subtitle!r} has no factors != 0'
         if require_cases:
             assert len(factors_out) > 0, msg
         else:
             warnings.warn(msg)
-    return subcases_in, factors_out
+    assert len(subcases_out) == len(factors_out)
+    return subcases_out, factors_out
 
 
 def multi_combine(models: dict[int, OP2],
@@ -480,7 +483,7 @@ def multi_combine(models: dict[int, OP2],
     # (imodel, subcases_in, factors_in) in enumerate(imodel_subcases_factors)
     # (10, 'case10', [(0, [1, 1], [1.0, 2.0])])
     combination0 = combinations[0]
-    (subcase_out0, label0, imodel_subcases_factors0) = combination0
+    (subcase_out0, subtitle0, imodel_subcases_factors0) = combination0
     subcases0 = [isf[1] for isf in imodel_subcases_factors0
                  if isf[0] == imodel0]
     assert len(subcases0), f'cant find imodel={imodel0}'
@@ -501,7 +504,7 @@ def multi_combine(models: dict[int, OP2],
         for icombinationi, combination in enumerate(combinations):
             icombination = icombination0 + icombinationi
             log.info(f'{table_type} {icombination}/{ncombinations} = {combination}')
-            (subcase_out, label, imodel_subcases_factors) = combination
+            (subcase_out, subtitle, imodel_subcases_factors) = combination
 
             ires0 = 0
 
@@ -515,7 +518,7 @@ def multi_combine(models: dict[int, OP2],
             # so not fiber_distance
             case0 = slot[subcase0]
             case_new = copy.deepcopy(case0)
-            case_new.label = label
+            case_new.subtitle = subtitle
 
             # case.data *= 0
             case_new.linear_combination(0.0, update=False)
@@ -523,8 +526,11 @@ def multi_combine(models: dict[int, OP2],
             for ires, (imodel, subcases_in, factors_in) in enumerate(imodel_subcases_factors):
                 assert len(subcases_in) == len(factors_in), f'subcases_in={subcases_in} factors_in={factors_in}'
                 subcases, factors = get_local_factors(
-                    imodel, label, subcases_in, factors_in, require_cases=False)
+                    imodel, subtitle, subcases_in, factors_in, require_cases=False)
+                assert len(subcases) == len(factors)
                 if len(subcases) == 0:
+                    log.debug(f'skipping ires={ires} subtitle={subtitle!r} imodel={imodel} subcases={subcases_in} factors={factors_in} '
+                              'because there are no factors not equal to 0')
                     continue
                 subcase0 = subcases[0]
 
@@ -571,8 +577,7 @@ def _add_base_cases(model: OP2, model2: OP2,
             continue
         for key, value in inslot.items():
             slot[key] = value
-        # for subcase in subcases_in:
-        #     slot[subcase] = inslot[subcase]
+    return
 
 def combine(model: OP2,
             op2_filename_new: PathLike,
@@ -587,17 +592,25 @@ def combine(model: OP2,
     table_res_types = _results(model)
 
     model2 = OP2(log=log, mode=mode)
-    model2._nastran_revision = revision
+    if revision:
+        model2._nastran_revision = revision
+    else:
+        model2._nastran_revision = model._nastran_revision
 
     _add_base_cases(model, model2, table_res_types,
                     include_base_cases=include_base_cases)
 
     for combination in combinations:
-        (subcase_out, label, factors_in) = combination
-        #print(f'subcase_out={subcase_out} label={label!r} factors_in={factors_in}')
+        (subcase_out, subtitle, factors_in) = combination
+        #print(f'subcase_out={subcase_out} subtitle={subtitle!r} factors_in={factors_in}')
         assert len(subcases_in) == len(factors_in), f'subcases_in={subcases_in} factors_in={factors_in}'
         subcases, factors = get_local_factors(
-            subcase_out, label, subcases_in, factors_in, require_cases=require_cases)
+            subcase_out, subtitle, subcases_in, factors_in, require_cases=require_cases)
+        assert len(subcases) == len(factors)
+        if len(factors) == 0:
+            log.debug(f'skipping subcase={subcase_out} subtitle={subtitle!r}; subcases={subcases_in} factors={factors_in} '
+                      'because there are no factors not equal to 0')
+            continue
         #print(f'  subcases={subcases} factors={factors}')
         subcase0 = subcases[0]
 
@@ -612,18 +625,17 @@ def combine(model: OP2,
             # restype = model.displacements
             case0 = res_type[subcase0]
             case_new = copy.deepcopy(case0)
-            case_new.label = label
+            case_new.subtitle = subtitle
+            # log.info(f'working on subcase={subcase_out}: {subtitle!r} {table_type!r}; subcases={subcases} factors={factors}')
+            assert len(subcases) == len(factors)
 
+            case_new.linear_combination(0.0, update=False)
             try:
-                # case.data *= 0
-                case_new.linear_combination(0.0, update=False)
                 for subcase, factor in zip(subcases, factors):
                     # assert isinstance(factor, integer_float_types), f'bad factor type (expected float); subcase={subcase} factor={factor}'
                     casei = res_type[subcase]
                     assert case_new.data.shape == casei.data.shape, f'bad shapes; case_new.data.shape={case_new.data.shape}; casei.data.shape={casei.data.shape}'
                     case_new.linear_combination(factor, casei.data, update=False)
-                    #casei = caseii * factor
-                    #case.data = casei.data
             except AssertionError as error:
                 # ('bad shapes; case_new.data.shape=(1, 124011, 6); casei.data.shape=(1, 124130, 6)',)
                 # bad shapes; case_new.data.shape
@@ -642,6 +654,7 @@ def combine(model: OP2,
     print(f'op2_filename_new = {op2_filename_new}')
     assert mode is not None, mode
     model2._nastran_format = mode
+    model2.log.debug(f'writing {os.path.abspath(op2_filename_new)}')
     model2.write_op2(op2_filename_new)
     return
 

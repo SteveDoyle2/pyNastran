@@ -412,6 +412,11 @@ class CBUSH(BushElement):
                                       f'{str(self)}')
 
     def element_coordinate_system(self) -> CORD2R:
+        """
+        The CBUSH coordinate system uses the:
+          - vy vector: gets tension/compression correct
+          - cid frame: messes up tension/compression. Fx>0 for force in the cid.x vector direction
+        """
         if self.cid is not None:
             assert self.cid_ref is not None, self.get_stats()
             return self.cid_ref

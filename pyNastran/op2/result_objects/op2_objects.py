@@ -979,17 +979,22 @@ def combination_inplace(data: np.ndarray,
                         ires=None) -> None:
     """does a linear combination; deals with underflow bugs"""
     assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
-    if datai is None:
+    if datai is None and factor == 0.0:
+        # zero out the combination
+        # print(f'datai={datai} factor={factor}')
+        # assert datai is not None
         data *= factor
-    elif ires is not None:
-        assert data.ndim == 3, data.shape
-        return combination_inplace(data[:, :, ires], None, factor)
+    # elif datai is None:
+
+    # elif ires is not None:
+    #     assert data.ndim == 3, data.shape
+    #     return combination_inplace(data[:, :, ires], None, factor)
     else:
         try:
             data += datai * factor
         except FloatingPointError as error:
             dtype = data.dtype.name
-            import warnings
+            # import warnings
             if dtype in {'float32'}:
                 # underflow
                 # warnings.warn('upcasting to try and prevent error')

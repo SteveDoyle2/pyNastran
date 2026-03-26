@@ -102,7 +102,7 @@ class RealPlateArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
-    def is_bilinear(self):
+    def is_bilinear(self) -> bool:
         if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
             return False
         elif self.element_type in [144, 64, 82, 70, 75]:  # CQUAD4
@@ -110,7 +110,7 @@ class RealPlateArray(OES_Object):
         else:  # pragma: no cover
             raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
 
-    def build(self):
+    def build(self) -> None:
         """sizes the vectorized attributes of the RealPlateArray"""
         #print("self.ielement = %s" % self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
