@@ -316,7 +316,8 @@ class WriteMesh(BDFAttributes):
         if close:
             bdf_file.close()
 
-    def _write_header(self, bdf_file: TextIO, encoding: str, write_header: bool=True) -> None:
+    def _write_header(self, bdf_file: TextIO, encoding: str,
+                      write_header: bool=True) -> None:
         """Writes the executive and case control decks."""
         self._set_punch()
 
@@ -363,6 +364,15 @@ class WriteMesh(BDFAttributes):
                 msg += str(self.case_control_deck)
                 assert 'BEGIN BULK' in msg, msg
             bdf_file.write(''.join(msg))
+        else:
+            # if you run:
+            #   model.BDF()
+            #   model.sol = 101
+            #   ... # add stuff
+            #   model.write_bdf(...)
+            #
+            #  without this line, you'll get a CEND, but not BEGIN BULK
+            bdf_file.write('BEGIN BULK\n')
 
     def _write_elements(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
                         sort_cards: bool=True,

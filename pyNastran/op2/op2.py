@@ -132,6 +132,12 @@ class OP2(OP2_Scalar, OP2Writer):
         if hasattr(self, 'h5_file') and self.h5_file is not None:
             self.h5_file.close()
 
+    def set_revision_from_model(self, model: OP2, revision: Optional[str]=None) -> None:
+        if revision:
+            self._nastran_revision = revision
+        else:
+            self._nastran_revision = model._nastran_revision
+
     def object_attributes(self, mode: str='public',
                           keys_to_skip: Optional[list[str]]=None,
                           filter_properties: bool=False) -> list[str]:

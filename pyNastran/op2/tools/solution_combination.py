@@ -592,10 +592,7 @@ def combine(model: OP2,
     table_res_types = _results(model)
 
     model2 = OP2(log=log, mode=mode)
-    if revision:
-        model2._nastran_revision = revision
-    else:
-        model2._nastran_revision = model._nastran_revision
+    model2.set_revision_from_model(model, revision)
 
     _add_base_cases(model, model2, table_res_types,
                     include_base_cases=include_base_cases)

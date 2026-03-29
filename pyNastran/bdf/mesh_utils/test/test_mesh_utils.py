@@ -66,6 +66,7 @@ class TestRbeTools(unittest.TestCase):
     def test_rbe2_to_rbe3_to_rbe2(self):
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
+        model.sol = 101
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [0., 0., 0.])
         model.add_grid(3, [0., 0., 0.])
@@ -84,14 +85,35 @@ class TestRbeTools(unittest.TestCase):
         bdf_filename1 = DIRNAME / 'rbe3_test_1.bdf'
         bdf_filename2 = DIRNAME / 'rbe3_test_2.bdf'
         bdf_filename3 = DIRNAME / 'rbe3_test_3.bdf'
-        model.write_bdf(bdf_filename1)
         rbe_eids_to_fix = list(model.rigid_elements)
+        eid0 = rbe_eids_to_fix[0]
+        model.pop_parse_errors()
+        model.write_bdf(bdf_filename1)
+
+        log.debug(f'rbe_eids = {rbe_eids_to_fix}; eid0={eid0}')
+        elem = model.rigid_elements[eid0]
+        assert elem.type == 'RBE2', elem
+
         rbe2_to_rbe3(model, rbe_eids_to_fix)
+        elem = model.rigid_elements[eid0]
+        assert elem.type == 'RBE3', elem
+
         rbe3_to_rbe2(model, rbe_eids_to_fix)
-        args = ['bdf', 'rbe3_to_rbe2', str(bdf_filename1), '-o', str(bdf_filename2)]
-        cmd_line(args, quiet=True)
+        elem = model.rigid_elements[eid0]
+        assert elem.type == 'RBE2', elem
+
+        log.debug('starting cmd_line rbe2_to_rbe3-1')
+        # print(msg)
+        args = ['bdf', 'rbe2_to_rbe3', str(bdf_filename1), '-o', str(bdf_filename2)]
+        model32 = cmd_line(args, quiet=True, log=log)
+        assert len(model32.rigid_elements) == 3, model32.rigid_elements
+        # print(model32.get_bdf_stats())
+
+        log.debug('starting cmd_line rbe3_to_rbe2-2')
         args = ['bdf', 'rbe3_to_rbe2', str(bdf_filename2), '-o', str(bdf_filename3)]
-        cmd_line(args, quiet=True)
+        cmd_line(args, quiet=True, log=log)
+
+        log.debug('finished')
         for fname in [bdf_filename1, bdf_filename2, bdf_filename3]:
             os.remove(fname)
 

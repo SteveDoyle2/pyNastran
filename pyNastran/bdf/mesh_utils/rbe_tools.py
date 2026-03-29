@@ -8,23 +8,20 @@ from pyNastran.bdf.cards.elements.mass import CONM2
 from pyNastran.bdf.cards.elements.rigid import RBE2, RBE3
 from pyNastran.bdf.mesh_utils.mass_properties import increment_inertia, transform_inertia
 
-def rbe3_to_rbe2(model: BDF, eids_to_fix: list[int]) -> None:
+def rbe3_to_rbe2(model: BDF, eids_to_fix: list[int]) -> BDF:
     log = model.log
-    if len(eids_to_fix) == 0:
-        eids_to_fix = list(model.rigid_elements)
-        if len(eids_to_fix):
-            log.warning(f'no eids were specified assuming all rigid elements={eids_to_fix}')
-        else:
-            raise RuntimeError('no eids were specified and none were found...')
+    # log.info(f'RBE3 -> RBE2: eids_to_fix = {eids_to_fix}')
+    if len(eids_to_fix) == 0:  # pragma: no cover
+        raise RuntimeError('no eids were specified...')
 
     rigid_elements2 = {}
     for eid, elem in model.rigid_elements.items():
         if eid not in eids_to_fix:
-            warnings.warn(f'skipping eid={eid} because its not an element to fix\n{str(elem)}')
+            log.warning(f'skipping eid={eid} because its not an element to fix\n{str(elem)}')
             rigid_elements2[eid] = elem
             continue
         if elem.type not in {'RBE3'}:
-            warnings.warn(f'skipping eid={eid} because its not an RBE3\n{str(elem)}')
+            log.warning(f'skipping eid={eid} because its not an RBE3\n{str(elem)}')
             rigid_elements2[eid] = elem
             continue
 
@@ -59,18 +56,26 @@ def rbe3_to_rbe2(model: BDF, eids_to_fix: list[int]) -> None:
                     tref=elem.tref, alpha=elem.alpha,
                     comment=elem.comment.strip())
         rigid_elements2[eid] = elem
+        log.debug(f'adding RBE2:\n{str(elem)}')
     model.rigid_elements = rigid_elements2
+    assert len(model.rigid_elements)
+    return model
 
 
-def rbe2_to_rbe3(model: BDF, eids_to_fix: list[int]) -> None:
+def rbe2_to_rbe3(model: BDF, eids_to_fix: list[int]) -> BDF:
+    if len(eids_to_fix) == 0:  # pragma: no cover
+        raise RuntimeError('no eids were specified...')
     rigid_elements2 = {}
+    log = model.log
+    # log.info(f'RBE2 -> RBE3: eids_to_fix = {eids_to_fix}')
+    assert len(eids_to_fix) > 0, eids_to_fix
     for eid, elem in model.rigid_elements.items():
         if eid not in eids_to_fix:
-            warnings.warn(f'skipping eid={eid} because its not an element to fix\n{str(elem)}')
+            log.warning(f'skipping eid={eid} because its not an element to fix\n{str(elem)}')
             rigid_elements2[eid] = elem
             continue
         if elem.type not in {'RBE2'}:
-            warnings.warn(f'skipping eid={eid} because its not an RBE2\n{str(elem)}')
+            log.warning(f'skipping eid={eid} because its not an RBE2\n{str(elem)}')
             rigid_elements2[eid] = elem
             continue
 
@@ -99,7 +104,9 @@ def rbe2_to_rbe3(model: BDF, eids_to_fix: list[int]) -> None:
             comment=elem.comment)
         #print(elem)
         rigid_elements2[eid] = elem
+        log.debug(f'adding RBE3\n{str(elem)}')
     model.rigid_elements = rigid_elements2
+    return model
 
 
 def merge_rbe2(model: BDF, rbe_eids_to_fix: list[int]) -> None:
