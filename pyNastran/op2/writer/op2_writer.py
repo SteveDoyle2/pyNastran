@@ -168,7 +168,7 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
                skips: set[str],
                post: int=-1, endian: bytes=b'<',
                nastran_format: str='nx',
-               nastran_revision: Optional[str]=None) -> tuple[int, list[str]]:
+               nastran_revision: str='') -> tuple[int, list[str]]:
     """actually writes the op2"""
     date = obj.date
     #op2_ascii.write('writing [3, 7, 0] header\n')
@@ -481,7 +481,7 @@ def _fix_subcase_id(key: int | tuple[Any], res: Any) -> None:
 
 def write_op2_header(model: OP2, op2_file, fop2_ascii,
                      struct_3i: Struct,
-                     nastran_revision=None,
+                     nastran_revision: str='',
                      post: int=-1, endian: bytes=b'<'):
     """writes the op2 header"""
     is_nx = model.is_nx
@@ -499,7 +499,7 @@ def write_op2_header(model: OP2, op2_file, fop2_ascii,
             op2_file.write(pack(endian + b'7i 28s i', *[4, 1, 4,
                                                         4, 7, 4,
                                                         28, tape_code, 28]))
-            if nastran_revision is None:
+            if nastran_revision in {None, ''}:
                 nastran_revision = '8.5'
             nastran_version_str = f'NX{nastran_revision:6s}'
             nastran_version = nastran_version_str.encode('utf8')
@@ -511,7 +511,7 @@ def write_op2_header(model: OP2, op2_file, fop2_ascii,
                                                         12, 4, 7, 4,
                                                         28, tape_code, 28]))
             nastran_version = b'XXXXXXXX'
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(model._nastran_format)
 
         op2_file.write(pack(endian + b'4i 8s i', *[4, 2, 4,
@@ -523,5 +523,5 @@ def write_op2_header(model: OP2, op2_file, fop2_ascii,
                                               4, 0, 4,]))
     elif post == -2:
         _write_markers(op2_file, fop2_ascii, [2, 4])
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(f'post = {post:d}; use -1 or -2')

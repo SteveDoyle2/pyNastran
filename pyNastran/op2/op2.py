@@ -60,7 +60,8 @@ class OP2(OP2_Scalar, OP2Writer):
                  debug: Optional[bool]=True,
                  log: Any=None,
                  debug_file: Optional[str]=None,
-                 mode: Optional[str]=None) -> None:
+                 mode: Optional[str]=None,
+                 revision: str='') -> None:
         """
         Initializes the OP2 object
 
@@ -78,6 +79,8 @@ class OP2(OP2_Scalar, OP2Writer):
             sets the filename that will be written to
         mode : str; default=None -> 'msc'
             {msc, nx}
+        revision : str; default=None
+            the nastran revision (e.g., XXXXXXXX, 2412.5)
 
         """
         # Nastran closes the file properly 99.9% of the time, but when working
@@ -111,6 +114,8 @@ class OP2(OP2_Scalar, OP2Writer):
         self.mode = mode
         if mode is not None:
             self.set_mode(mode)
+        if revision:
+            self._nastran_revision = revision
         make_geom = False
 
         # Interlacing only applies to 64-bit strings
@@ -132,7 +137,7 @@ class OP2(OP2_Scalar, OP2Writer):
         if hasattr(self, 'h5_file') and self.h5_file is not None:
             self.h5_file.close()
 
-    def set_revision_from_model(self, model: OP2, revision: Optional[str]=None) -> None:
+    def set_revision_from_model(self, model: OP2, revision: str='') -> None:
         if revision:
             self._nastran_revision = revision
         else:

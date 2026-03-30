@@ -74,6 +74,19 @@ class GridPointSurfaceArray(ScalarObject):
         headers = self.headers
 
         if self.nonlinear_factor not in (None, np.nan):
+            # Time                           0.000       0.001  ...        0.009        0.010
+            # NodeID Element Location Item                      ...                          
+            # 1      0        Z1      nx       0.0  -41.896107  ...  -601.500427  -697.005737
+            #                 Z2      ny       0.0  -23.229788  ...  -426.088959  -489.507690
+            #                MID      txy      0.0  -58.446316  ...  -922.195618 -1064.819702
+            # 2      0        Z1      angle    0.0  -49.536415  ...   -47.716396   -47.782478
+            #                 Z2      majorP   0.0   26.623873  ...   412.562164   476.605408
+            # ...                              ...         ...  ...          ...          ...
+            # 6      0        Z2      angle    0.0  -32.336449  ...   -28.915054   -28.819374
+            #                MID      majorP   0.0  143.794113  ...  1270.939087  1441.396851
+            # 7      0        Z1      minorP   0.0  -49.340179  ...    39.632576    66.384140
+            #                 Z2      tmax     0.0   96.567146  ...   615.653259   687.506348
+            #                MID      ovm      0.0  173.798813  ...  1251.593506  1409.377808
             column_names, column_values = build_dataframe_transient_header(self)
             element_node = [
                 self.node_element[:, 0],
@@ -86,8 +99,6 @@ class GridPointSurfaceArray(ScalarObject):
                 headers, element_node, self.data,
                 from_tuples=False, from_array=True,
                 names=names)
-            print(data_frame)
-            raise RuntimeError('finish build_dataframe A')
         else:
             #                  index  ElementID  ...          tmax           ovm
             # NodeID Location                    ...

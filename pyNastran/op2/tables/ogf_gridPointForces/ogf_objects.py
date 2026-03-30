@@ -2444,15 +2444,16 @@ def _check_element_names(element_names: np.ndarray) -> None:
     """
     assert element_names.ndim in [1, 2], (element_names.shape, element_names)
     allowed_names_half = np.array([
-        '*TOTALS*',
+        '*TOTALS*', '*SAMCEF*',
         'APP-LOAD',
         'F-OF-MPC', 'F-OF-SPC', 'F-OF-CNT', 'F-OF-FRI',
         # -------
         'RBAR    ', 'RBE1    ', # 'RBE2    ',
-        'RBE3    ',
+        'RBE3    ', 'RJOINT  ',
         # -------
         'ROD     ', 'CONROD  ', 'TUBE    ',
-        'BUSH    ', #'BUSH1D  ', 'BUSH2D  ',
+        'BUSH    ', 'BUSH1D  ',  # 'BUSH2D  ',
+        'GAP     ',
         'ELAS1   ', 'ELAS2   ', 'ELAS3   ', 'ELAS4   ',
         #-------
         'BAR     ', 'BEAM    ', 'BEND    ', 'BEAM3   ',
@@ -2470,7 +2471,7 @@ def _check_element_names(element_names: np.ndarray) -> None:
         'TRIAXFD ', 'TRIAX3FD',
         'QUADXFD ', 'QUADX4FD', # 'QUADX8FD',
         #-------
-        'TETRA   ', 'PENTA   ', 'HEXA    ', 'PYRA    ',
+        'TETRA   ', 'PENTA   ', 'HEXA    ', 'PYRA    ', 'PYRAMID ',
         'TETRAFD ', 'PENTAFD ', 'HEXAFD  ', #'PYRAFD  ',
         'TETRA4FD', 'PENTA6FD', 'HEXA8FD ', #'PYRA5FD ',
         #--------
