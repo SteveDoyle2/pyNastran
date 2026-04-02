@@ -124,6 +124,53 @@ def view_dtype(array_obj: np.ndarray, dtype) -> np.ndarray:
         return array_obj.view(dtype)
     return array_obj.astype(dtype)
 
+
+def get_title_subtitle_label(title: str,
+                             subtitle: str,
+                             label: str) -> tuple[bytes, bytes, bytes]:
+    """
+    TODO: subtitle is missing
+      superelement_adaptivity_index
+    """
+    title_out = b'%-128s' % title.encode('ascii')
+    #subtitle_out = b'%-128s' % subtitle.encode('ascii')
+    subtitle_out = _write_subtitle_adaptivity_index(
+        subtitle, superelement='', adaptivity_index='')
+    label_out = b'%-128s' % label.encode('ascii')
+
+    assert len(title_out) == 128, len(title_out)
+    assert len(subtitle_out) == 128, len(subtitle_out)
+    assert len(label_out) == 128, len(label_out)
+    return title_out, subtitle_out, label_out
+
+
+def _write_subtitle_adaptivity_index(
+        subtitle: str | bytes,
+        superelement: int | str='',
+        adaptivity_index: int | str='') -> bytes:
+    if isinstance(subtitle, str):
+        subtitle_prefix = b'%-67s' % subtitle[:67].encode('ascii')
+    else:
+        assert isinstance(subtitle, bytes), subtitle
+        subtitle_prefix = b'%-67s' % subtitle[:67]
+    assert len(subtitle_prefix) == 67, (len(subtitle_prefix), subtitle_prefix)
+
+    if superelement:
+        if isinstance(superelement, int):
+            super_adapt_bytes = b'SUPERELEMENT %d' % superelement
+        else:
+            assert isinstance(superelement, str), superelement
+            super_adapt_bytes = b'SUPERELEMENT %s' % superelement
+            # title + 'SUPERELEMENT 0, 1'
+            # title + 'SUPERELEMENT 0 (id=2000)'
+    elif adaptivity_index:
+        raise RuntimeError(adaptivity_index)
+        super_adapt_bytes = b'ADAPTIVITY INDEX=%7d' % int(adaptivity_index)
+    else:
+        super_adapt_bytes = b''
+    out = b'%67s%61s' % (subtitle_prefix, super_adapt_bytes)
+    return out
+
 def export_to_hdf5(self, group, log):
     """exports the object to HDF5 format"""
     #headers = self.get_headers()

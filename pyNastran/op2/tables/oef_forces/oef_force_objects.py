@@ -23,7 +23,8 @@ from pyNastran.f06.f06_formatting import (
     _eigenvalue_header,
 )
 from pyNastran.op2.result_objects.op2_objects import combination_inplace
-from pyNastran.op2.op2_interface.write_utils import set_table3_field
+from pyNastran.op2.op2_interface.write_utils import (
+    set_table3_field, get_title_subtitle_label)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     update_stress_force_time_word,
     set_element_case, set_element_node_xxb_case,

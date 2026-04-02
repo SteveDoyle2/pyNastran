@@ -21,7 +21,8 @@ from pyNastran.f06.f06_formatting import (
 from pyNastran.op2.vector_utils import (
     transform_force_moment, transform_force_moment_sum, sortedsum1d)
 from pyNastran.utils.numpy_utils import integer_types, float_types, integer_float_types
-from pyNastran.op2.op2_interface.write_utils import set_table3_field
+from pyNastran.op2.op2_interface.write_utils import (
+    set_table3_field, get_title_subtitle_label)
 from pyNastran.op2.writer.utils import fix_table3_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     set_static_case, set_transient_case,

@@ -342,9 +342,8 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         num_wide = self.num_wide
         acoustic_flag = 0
         thermal = self.thermal
-        title = b'%-128s' % self.title.encode('ascii')
-        subtitle = b'%-128s' % self.subtitle.encode('ascii')
-        label = b'%-128s' % self.label.encode('ascii')
+        title, subtitle, label = get_title_subtitle_label(
+            self.title, self.subtitle, self.label)
         ftable3 = b'i' * 50 + b'128s 128s 128s'
         oCode = 0
 

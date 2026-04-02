@@ -47,6 +47,9 @@ from pyNastran.op2.op2_helper import polar_to_real_imag, real_imag_to_mag_phase
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
 from pyNastran.utils.numpy_utils import integer_types, float_types, integer_float_types
 from pyNastran.op2.writer.utils import fix_table3_types
+from pyNastran.op2.op2_interface.write_utils import (
+    get_title_subtitle_label)
+
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     set_static_case, set_modal_case, set_transient_case,
     set_freq_case, set_complex_modes_case)
@@ -739,9 +742,8 @@ class TableArray(ScalarObject):  # displacement style table
         num_wide = self.num_wide
         acoustic_flag = self.acoustic_flag if hasattr(self, 'acoustic_flag') else 0
         thermal = self.thermal
-        title = b'%-128s' % self.title.encode('ascii')
-        subtitle = b'%-128s' % self.subtitle.encode('ascii')  # missing superelement_adaptivity_index
-        label = b'%-128s' % self.label.encode('ascii')
+        title, subtitle, label = get_title_subtitle_label(
+            self.title, self.subtitle, self.label)
         oCode = 0
 
         ftable3 = b'i' * 50 + b'128s 128s 128s'

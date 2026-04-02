@@ -1,7 +1,8 @@
 from typing import Any
 import numpy as np
 from pyNastran.op2.result_objects.op2_objects import BaseElement, set_as_sort1
-from pyNastran.op2.op2_interface.write_utils import set_table3_field
+from pyNastran.op2.op2_interface.write_utils import (
+    set_table3_field, get_title_subtitle_label)
 from pyNastran.op2.writer.utils import fix_table3_types
 
 TABLE_NAME_TO_TABLE_CODE = {

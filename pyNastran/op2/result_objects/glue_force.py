@@ -30,7 +30,8 @@ import numpy as np
 from pyNastran.op2.result_objects.op2_objects import ScalarObject, set_as_sort1
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e # write_imag_floats_13e
 from pyNastran.op2.errors import SixtyFourBitError
-from pyNastran.op2.op2_interface.write_utils import set_table3_field
+from pyNastran.op2.op2_interface.write_utils import (
+    set_table3_field, get_title_subtitle_label)
 from pyNastran.op2.writer.utils import fix_table3_types
 from pyNastran.op2.result_objects.contact_traction_and_pressure import (
     append_sort1_sort2, oug_data_code, table_name_to_table_code)
@@ -354,9 +355,8 @@ class GlueForceArray(ScalarObject):  # displacement style table
         acoustic_flag = self.acoustic_flag if hasattr(self, 'acoustic_flag') else 0
         #thermal = self.thermal
         thermal = 0
-        title = b'%-128s' % self.title.encode('ascii')
-        subtitle = b'%-128s' % self.subtitle.encode('ascii')  # missing superelement_adaptivity_index
-        label = b'%-128s' % self.label.encode('ascii')
+        title, subtitle, label = get_title_subtitle_label(
+            self.title, self.subtitle, self.label)
         oCode = 0
 
         ftable3 = b'i' * 50 + b'128s 128s 128s'
