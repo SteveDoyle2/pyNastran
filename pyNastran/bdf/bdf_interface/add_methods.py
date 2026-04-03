@@ -877,7 +877,7 @@ class AddMethods:
 
         """
         key = material.mid
-        if key in self.model.thermal_materials and not allow_overwrites:
+        if key in self.model.creep_materials and not allow_overwrites:
             if not material == self.model.creep_materials[key]:
                 assert key not in self.model.creep_materials, 'Material.mid=%s\nold=\n%snew=\n%s' % (key, self.model.creep_materials[key], material)
         else:
@@ -1369,7 +1369,7 @@ class AddMethods:
         """adds an UXVEC object"""
         key = uxvec.sid
         if not allow_overwrites:
-            assert key not in self.model.trims, 'UXVEC=%s  old=\n%snew=\n%s' % (key, self.model.uxvec[key], uxvec)
+            assert key not in self.model.uxvec, 'UXVEC=%s  old=\n%snew=\n%s' % (key, self.model.uxvec[key], uxvec)
         assert key > 0, 'key=%r uxvec=\n%s' % (key, uxvec)
         self.model.uxvec[key] = uxvec
         self.model._type_to_id_map[uxvec.type].append(key)

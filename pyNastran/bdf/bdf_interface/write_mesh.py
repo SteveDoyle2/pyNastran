@@ -542,7 +542,7 @@ class WriteMesh(BDFAttributes):
         """Writes the flutter cards"""
         if (write_aero_in_flutter and self.aero) or self.flfacts or self.flutters or self.mkaeros:
             bdf_file.write('$FLUTTER\n')
-            if write_aero_in_flutter:
+            if write_aero_in_flutter and self.aero is not None:
                 bdf_file.write(self.aero.write_card(size, is_double))
             for (unused_id, flutter) in sorteddict(self.flutters, sort_cards):
                 bdf_file.write(flutter.write_card(size, is_double))

@@ -189,8 +189,7 @@ class CREEP(Material):
         elif form == 1:
             form = 'TABLE'
         else:
-            raise NotImplementedError('CREEP: mid=%s, form=%s, not form: 0=CRLAW, 1=TABLE' % (
-                mid, form))
+            raise NotImplementedError(f'CREEP: mid={mid:d}, form={form!r}, not form: 0=CRLAW, 1=TABLE')
         tidkp = data[4]
         tidcp = data[5]
         tidcs = data[6]
@@ -478,7 +477,7 @@ class MAT1(IsotropicMaterial):
                 e.append(material.e)
 
             if material.g is None:
-                e.append(np.nan)
+                g.append(np.nan)
             else:
                 g.append(material.g)
 
@@ -657,7 +656,7 @@ class MAT1(IsotropicMaterial):
 
     def E_stress(self, stress):
         if self.mats1 is not None:
-            E = self.matt1_ref.E(self.e, stress)
+            E = self.mats1_ref.E(self.e, stress)
         else:
             E = self.e
         return E
@@ -1329,7 +1328,7 @@ class MAT3(OrthotropicMaterial):
 
         h5_file.create_dataset('Ex', data=ex)
         h5_file.create_dataset('Eth', data=eth)
-        h5_file.create_dataset('Ez', data=az)
+        h5_file.create_dataset('Ez', data=ez)
 
         h5_file.create_dataset('Nuxth', data=nuxth)
         h5_file.create_dataset('Nuzx', data=nuzx)
@@ -2906,7 +2905,7 @@ class MAT10(Material):
         if self.table_rho is not None:
             del self.table_rho_ref
         if self.table_ge is not None:
-            del self.table_gamma_ref
+            del self.table_ge_ref
         if self.table_gamma is not None:
             del self.table_gamma_ref
 

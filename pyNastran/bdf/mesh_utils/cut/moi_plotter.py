@@ -1035,6 +1035,8 @@ def plot_compare_inertia(log: SimpleLogger,
     # yz = f'{y}{z}'
     zz = f'{z}{z}'
     # yy = f'{y}{y}'
+    xy = ''.join(sorted(xy))
+    xz = ''.join(sorted(xz))
 
     marker = ''
     # absI = np.abs(I)

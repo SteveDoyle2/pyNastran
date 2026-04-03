@@ -106,7 +106,7 @@ class CaseControlDeck:
             'FLUT': 145,
 
             'DIVERGE': 144,
-            'DIVERG': 145,
+            'DIVERG': 144,
 
             # 'HEAT' : ,
             # 'STRUCTURE' : ,

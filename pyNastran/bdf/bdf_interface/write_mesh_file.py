@@ -265,7 +265,7 @@ class WriteMeshs(WriteMesh):
                             is_long_ids: Optional[bool]=None) -> None:
         """Writes the flutter cards"""
         if (write_aero_in_flutter and self.aero) or self.flfacts or self.flutters or self.mkaeros:
-            if write_aero_in_flutter:
+            if write_aero_in_flutter and self.aero is not None:
                 bdf_files[self.aero.ifile].write(self.aero.write_card(size, is_double))
             write_bdfs_dict(bdf_files, self.flutters, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.flfacts, size, is_double, is_long_ids)

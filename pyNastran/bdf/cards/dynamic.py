@@ -183,7 +183,7 @@ class DELAY(BaseCard):
     def add(self, delay: DELAY):
         assert self.sid == delay.sid, 'sid=%s delay.sid=%s' % (self.sid, delay.sid)
         if delay.comment:
-            if hasattr('_comment'):
+            if hasattr(self, '_comment'):
                 self._comment += delay.comment
             else:
                 self._comment = delay.comment
@@ -348,7 +348,7 @@ class DPHASE(BaseCard):
     def add(self, dphase: DPHASE):
         assert self.sid == dphase.sid, 'sid=%s dphase.sid=%s' % (self.sid, dphase.sid)
         if dphase.comment:
-            if hasattr('_comment'):
+            if hasattr(self, '_comment'):
                 self._comment += dphase.comment
             else:
                 self._comment = dphase.comment
@@ -2724,7 +2724,7 @@ class TIC(BaseCard):
     def add(self, tic):
         assert self.sid == tic.sid, 'sid=%s tic.sid=%s' % (self.sid, tic.sid)
         if tic.comment:
-            if hasattr('_comment'):
+            if hasattr(self, '_comment'):
                 self._comment += tic.comment
             else:
                 self._comment = tic.comment

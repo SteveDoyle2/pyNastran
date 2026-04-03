@@ -265,7 +265,7 @@ REMOVED_CARDS = {
     'PVAL', 'GMCURV', 'GMSURF', 'FEEDGE', 'FEFACE', 'GMSPC', 'GMLOAD',
     #'OUTPUT', 'OUTRCV'
     'GMBNDS', 'GMINTS', 'PINTS',
-    'GMBNDC', 'GMINTC', 'PINTC'
+    'GMBNDC', 'GMINTC', 'PINTC',
     'CGEN', 'EGRID', 'GRIDG', 'SPCG',
 }
 

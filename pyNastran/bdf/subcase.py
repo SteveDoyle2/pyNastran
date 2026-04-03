@@ -472,7 +472,7 @@ class Subcase:
             print(msg)
             print(data_code)
             raise RuntimeError(data_code)
-        log.error(str(data_code))
+        log_error(str(data_code))
         #if USER_NAME == 'sdoyle': # or 'id' in msg:
             #raise RuntimeError(data_code)
 

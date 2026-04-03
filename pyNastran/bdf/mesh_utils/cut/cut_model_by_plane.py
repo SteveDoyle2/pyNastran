@@ -788,7 +788,7 @@ def _cut_face_model_by_coord(log: SimpleLogger,
         #print(iclose_edges)
         if len(close_tri_eids) == 0:
             found_cut = False
-            log.warning(f'close_tri_eids={close_tri_eids}')
+            log.warning(f'station={y_cid} close_tri_eids={close_tri_eids}')
             return found_cut, unique_geometry, unique_results, rods
 
         unique_geometry, unique_results, rods = cut_faces(
