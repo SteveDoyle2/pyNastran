@@ -7,7 +7,8 @@ import numpy as np
 
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.op2.result_objects.op2_objects import _write_table_header, Date
-from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
+from pyNastran.op2.op2_interface.write_utils import (
+    get_title_subtitle_label, export_to_hdf5)
 #from pyNastran.op2.writer.utils import fix_table3_types
 
 # restricted b/c we dont support 64-bit writing
@@ -246,9 +247,8 @@ class GridPointWeight:
         reference_point = self.reference_point
         #reference_point = 22
         #thermal = self.thermal
-        title = b'%-128s' % self.title.encode('ascii')
-        subtitle = b'%-128s' % self.subtitle.encode('ascii')  # missing superelement_adaptivity_index
-        label = b'%-128s' % self.label.encode('ascii')
+        title, subtitle, label = get_title_subtitle_label(
+            self.title, self.subtitle, self.label)
 
         #1, 13, 0, 0, 0, 0, 0, 0, 0, 78, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         ftable3 = b'i' * 50 + b'128s 128s 128s'

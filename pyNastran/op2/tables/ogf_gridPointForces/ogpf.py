@@ -8,7 +8,8 @@ from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
 
-from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list
+from pyNastran.op2.op2_interface.utils import (
+    mapfmt, reshape_bytes_block, real_imag_from_list)
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import (
@@ -130,6 +131,7 @@ class OGPF:
                         if itime != 0:
                             ints = np.frombuffer(data, dtype=op2.idtype).reshape(nnodes, 10)
                             strings = np.frombuffer(data, dtype=op2._uendian + 'S8').reshape(nnodes, 5)
+
                         for i in range(iend - istart):
                             op2.binary_debug.write('  nid=%s - (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                                 ints[i, 0] // 10,
@@ -265,6 +267,8 @@ def real_grid_point_forces(obj: RealGridPointForcesArray,
         edata = data[n:n + ntotal]
         out = structi.unpack(edata)
         (nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3) = out
+        if size == 8:
+            elem_name = reshape_bytes_block(elem_name)  # is_interlaced_block=is_interlaced_block)
         nid = nid_device // 10
         elem_name = elem_name.strip()
         if is_debug_file:

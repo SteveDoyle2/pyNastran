@@ -14,7 +14,8 @@ from pyNastran.op2.result_objects.op2_objects import ScalarObject, set_as_sort1
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 from pyNastran.op2.result_objects.table_object import append_sort1_sort2
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e
-from pyNastran.op2.op2_interface.write_utils import set_table3_field
+from pyNastran.op2.op2_interface.write_utils import (
+    set_table3_field, get_title_subtitle_label)
 from pyNastran.op2.writer.utils import fix_table3_types
 
 float_types = (float, np.float32)
@@ -384,9 +385,8 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         num_wide = self.num_wide
         acoustic_flag = 0
         thermal = self.thermal
-        title = b'%-128s' % self.title.encode('ascii')
-        subtitle = b'%-128s' % self.subtitle.encode('ascii')
-        label = b'%-128s' % self.label.encode('ascii')
+        title, subtitle, label = get_title_subtitle_label(
+            self.title, self.subtitle, self.label)
         ftable3 = b'i' * 50 + b'128s 128s 128s'
         oCode = 0
 

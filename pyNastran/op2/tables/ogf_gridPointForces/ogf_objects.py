@@ -21,7 +21,8 @@ from pyNastran.f06.f06_formatting import (
 from pyNastran.op2.vector_utils import (
     transform_force_moment, transform_force_moment_sum, sortedsum1d)
 from pyNastran.utils.numpy_utils import integer_types, float_types, integer_float_types
-from pyNastran.op2.op2_interface.write_utils import set_table3_field
+from pyNastran.op2.op2_interface.write_utils import (
+    set_table3_field, get_title_subtitle_label)
 from pyNastran.op2.writer.utils import fix_table3_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     set_static_case, set_transient_case,
@@ -2444,15 +2445,16 @@ def _check_element_names(element_names: np.ndarray) -> None:
     """
     assert element_names.ndim in [1, 2], (element_names.shape, element_names)
     allowed_names_half = np.array([
-        '*TOTALS*',
+        '*TOTALS*', '*SAMCEF*',
         'APP-LOAD',
         'F-OF-MPC', 'F-OF-SPC', 'F-OF-CNT', 'F-OF-FRI',
         # -------
         'RBAR    ', 'RBE1    ', # 'RBE2    ',
-        'RBE3    ',
+        'RBE3    ', 'RJOINT  ',
         # -------
         'ROD     ', 'CONROD  ', 'TUBE    ',
-        'BUSH    ', #'BUSH1D  ', 'BUSH2D  ',
+        'BUSH    ', 'BUSH1D  ',  # 'BUSH2D  ',
+        'GAP     ',
         'ELAS1   ', 'ELAS2   ', 'ELAS3   ', 'ELAS4   ',
         #-------
         'BAR     ', 'BEAM    ', 'BEND    ', 'BEAM3   ',
@@ -2470,7 +2472,7 @@ def _check_element_names(element_names: np.ndarray) -> None:
         'TRIAXFD ', 'TRIAX3FD',
         'QUADXFD ', 'QUADX4FD', # 'QUADX8FD',
         #-------
-        'TETRA   ', 'PENTA   ', 'HEXA    ', 'PYRA    ',
+        'TETRA   ', 'PENTA   ', 'HEXA    ', 'PYRA    ', 'PYRAMID ',
         'TETRAFD ', 'PENTAFD ', 'HEXAFD  ', #'PYRAFD  ',
         'TETRA4FD', 'PENTA6FD', 'HEXA8FD ', #'PYRA5FD ',
         #--------

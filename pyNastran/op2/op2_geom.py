@@ -113,7 +113,7 @@ class OP2GeomCommon(OP2, GeomCommon):
     def __init__(self, make_geom: bool=True,
                  debug: bool=False, log: Any=None,
                  debug_file: Optional[str]=None,
-                 mode: Optional[str]=None):
+                 mode: Optional[str]=None, revision: str=''):
         """
         Initializes the OP2 object
 
@@ -130,6 +130,8 @@ class OP2GeomCommon(OP2, GeomCommon):
             sets the filename that will be written to
         mode : str; default=None -> 'msc'
             {msc, nx}
+        revision : str; default=''
+            the nastran revision (e.g., XXXXXXXX, 2412.5)
 
         """
         #self.big_properties = {}
@@ -148,7 +150,8 @@ class OP2GeomCommon(OP2, GeomCommon):
         self.reader_dynamic = DYNAMICS(self)
         self.reader_axic = AXIC(self)
 
-        OP2.__init__(self, debug=debug, log=log, debug_file=debug_file, mode=mode)
+        OP2.__init__(self, debug=debug, log=log, debug_file=debug_file,
+                     mode=mode, revision=revision)
         self.make_geom = True
 
         # F:\work\pyNastran\examples\Dropbox\move_tpl\beamp10.op2
@@ -165,8 +168,8 @@ class OP2GeomCommon(OP2, GeomCommon):
             (14300, 143, 14) : ['TETRAP', self._read_fake],
             #(10500, 105, 14) : ['???', self._read_fake],
             #(10500, 105, 14) : ['???', self._read_fake],
-
         }
+
     def _read_view_hexa(self, data, n):
         """
         Word Name Type Description
@@ -283,7 +286,8 @@ class OP2Geom(BDF, OP2GeomCommon):
     ]
     def __init__(self, make_geom: bool=True,
                  debug: bool=False, log: Any=None,
-                 debug_file: Optional[str]=None, mode: str='msc'):
+                 debug_file: Optional[str]=None,
+                 mode: str='msc', revision: str=''):
         """
         Initializes the OP2 object
 
@@ -300,11 +304,14 @@ class OP2Geom(BDF, OP2GeomCommon):
             sets the filename that will be written to
         mode : str; default='msc'
             {msc, nx}
+        revision : str; default=''
+            the nastran revision (e.g., XXXXXXXX, 2412.5)
 
         """
         BDF.__init__(self, debug=debug, log=log)
         OP2GeomCommon.__init__(self, make_geom=make_geom,
-                               debug=debug, log=log, debug_file=debug_file, mode=mode)
+                               debug=debug, log=log, debug_file=debug_file,
+                               mode=mode, revision=revision)
 
     @property
     def is_geometry(self) -> bool:

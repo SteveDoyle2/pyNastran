@@ -273,7 +273,7 @@ def run_load_case_combinations_from_data(op2_filename: PathLike,
                                          include_results: Optional[list[str]]=None,
                                          subcases: Optional[list[int]]=None,
                                          mode: Optional[str]=None,
-                                         revision: Optional[str]=None,
+                                         revision: str='',
                                          log: Optional[SimpleLogger]=None,
                                          require_cases: bool=True,
                                          write_op2: bool=True,
@@ -372,7 +372,7 @@ def run_load_case_multi_combinations(
         exclude_results: Optional[list[str]]=None,
         include_results: Optional[list[str]]=None,
         mode: Optional[str]=None,
-        revision: Optional[str]=None,
+        revision: str='',
         log: Optional[SimpleLogger]=None) -> None:
     """
 
@@ -487,11 +487,13 @@ def multi_combine(models: dict[int, OP2],
                   op2_filename_new: PathLike,
                   combinations: list[MultiCombination],
                   log_op2: SimpleLogger,
-                  mode: str, revision: Optional[str],
+                  mode: str, revision: str,
                   icombination: int=0, ncombinations: int=0,
                   write_op2: bool=True) -> tuple[OP2, int]:
     assert isinstance(models, dict), models
     models = {str(key).strip(): model for key, model in models.items()}
+    imodel0 = list(models)[0]
+    model0 = models[imodel0]
 
     icombination0 = icombination
     if ncombinations == 0:
@@ -499,11 +501,10 @@ def multi_combine(models: dict[int, OP2],
 
     log = SimpleLogger(level='debug')
     out_model = OP2(log=log_op2, mode=mode)
-    out_model._nastran_revision = revision
+    if revision:
+        out_model.set_revision_from_model(model0, revision)
     # table_res_types = _results(out_model)
 
-    imodel0 = list(models)[0]
-    model0 = models[imodel0]
     table_res_types0 = _results(model0)
 
     # find all subcase associated with model0 (imodel0)

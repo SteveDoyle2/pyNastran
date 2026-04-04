@@ -1,0 +1,167 @@
+NASTRAN SYSTEM(674)=1
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$
+$ DESCRIPTION - TEST INVOLVING CDAMP1 AS WELL AS CELAS1 AND CONM1 ELEMENTS.
+$               2 NODES ARE CONSIDERED. ONE IS FIXED, THE OTHER IS EXCITED.
+$               ONE CONM1 ELEMENT IS DEFINED ON EACH NODE.
+$               ONE CELAS1 ELEMENT AND ONE CDAMP1 ELEMENT ARE DEFINED BETWEEN THE TWO NODES.
+$               CDAMP1 ELEMENT IS NOT GROUNDED.
+$               CELAS1 ELEMENT IS NOT GROUNDED.
+$               THE TRANSLATION CASE IS CONSIDERED, CELAS1 AND CDAMP1 ARE DEFINED BETWEEN THE (GLOBAL) Y COMPONENT OF THE FIXED NODE AND THE (LOCAL) Y COMPONENT OF THE EXCITED NODE.
+$               LOCAL AXES ARE DEFINED ON THE EXCITED NODE ONLY.
+$               THE LOCAL X DIRECTION CORRESPONDS TO THE GLOBAL -Y DIRECTION.
+$               THE LOCAL Y DIRECTION CORRESPONDS TO THE GLOBAL -Z DIRECTION.
+$               THE LOCAL Z DIRECTION CORRESPONDS TO THE GLOBAL  X DIRECTION.
+$               ELEMENT PROPERTIES:
+$               MX = MY = MZ = 1 KG ON BOTH SIDES
+$               STIFFNESS = 100 N/M
+$               VISCOUS DAMPING = 0.5 N.S/M
+$
+$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*
+$*
+$*
+$*
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* FILE MANAGEMENT
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* EXECUTIVE CONTROL
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+
+SOL 402,129
+CEND
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* CASE CONTROL
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+ECHO = NONE
+TSTEP = 100
+OUTPUT
+ACCELERATION(PLOT,REAL) = ALL
+DISPLACEMENT(SORT1,PLOT,REAL) = ALL
+FORCE(PLOT,REAL,CENTER) = ALL
+GPFORCE(PLOT,REAL) = ALL
+OLOAD(PLOT,REAL) = ALL
+SPCFORCES(PLOT,REAL) = ALL
+STRESS(PLOT,REAL,VONMISES,CENTER) = ALL
+VELOCITY(PLOT,REAL) = ALL
+$*  NX Step: Subcase - Nonlinear Implicit
+SUBCASE 1
+LABEL = Subcase - Nonlinear Implicit
+DLOAD = 301
+SPC = 101
+OUTPUT
+ACCELERATION(PLOT,REAL) = ALL
+DISPLACEMENT(SORT1,PLOT,REAL) = ALL
+FORCE(PLOT,REAL,CENTER) = ALL
+GPFORCE(PLOT,REAL) = ALL
+OLOAD(PLOT,REAL) = ALL
+SPCFORCES(PLOT,REAL) = ALL
+STRESS(PLOT,REAL,VONMISES,CENTER) = ALL
+VELOCITY(PLOT,REAL) = ALL
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* BULK DATA
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+BEGIN BULK
+$*
+$* SOLUTION CARDS
+$*
+TSTEP        100      400.025000       1
+$*
+$* PARAM CARDS
+$*
+PARAM     ALPHA1  0.0000  0.0000
+PARAM     ALPHA2  0.0000  0.0000
+PARAM        F56     YES
+PARAM     OIBULK     YES
+PARAM    OMACHPR     YES
+PARAM       POST      -1
+PARAM    POSTEXT     YES
+PARAM    UNITSYS   MN-MM
+$*
+$* GRID CARDS
+$*
+GRID*                  1               00.0000000000E+000.0000000000E+00+
+*       0.0000000000E+00               0
+GRID*                  2               01.0000000000E+020.0000000000E+00+
+*       0.0000000000E+00              44
+$*
+$* ELEMENT CARDS
+$*
+$*  NX Mesh Collector: Celas1 Collector(1)
+$*  NX Mesh: 1d_manual_mesh(1)
+CELAS1         1       1       1       2       2       2
+$*  NX Mesh Collector: Cdamp1 Collector(1)
+$*  NX Mesh: 1d_manual_mesh(2)
+CDAMP1         2       2       1       2       2       2
+$*  NX Mesh Collector: Concentrated Mass Collector(1)
+$*  NX Mesh: 0d_manual_mesh(1)
+CONM1          3       2       01.000000        1.000000                +
++       1.000000
+$*  NX Mesh Collector: Concentrated Mass Collector(1)
+$*  NX Mesh: 0d_manual_mesh(2)
+CONM1          4       1       01.000000        1.000000                +
++       1.000000
+$*
+$* PROPERTY CARDS
+$*
+$*  NX Property: PELAS1
+PELAS          1100.0000
+$*  NX Property: PDAMP1
+PDAMP          20.500000
+$*
+$* LOAD AND CONSTRAINT CARDS
+$*
+$*  NX Load and Constraint: Force(1)
+FORCE          1       2       01.000000  0.0000  0.00001.000000
+TLOAD1         1       1               0       1
+TABLED1        1                                                        +
++       1.0000-91.0000-50.025000247.40400.050000479.42550.075000681.6388+
++       0.100000841.47100.125000948.98460.150000997.49500.175000983.9859+
++       0.200000909.29740.225000778.07320.250000598.47210.275000381.6610+
++       0.300000141.12000.325000-108.1950.350000-350.7830.375000-571.561+
++       0.400000-756.8020.425000-894.9890.450000-977.5300.475000-999.293+
++       0.500000-958.9240.525000-858.9340.550000-705.5400.575000-508.279+
++       0.600000-279.4160.625000 -33.1790.650000215.12000.675000450.0441+
++       0.700000656.98660.725000823.08090.750000938.00000.775000994.5988+
++       0.800000989.35820.825000922.60420.850000798.48710.875000624.7240+
++       0.900000412.11850.925000173.88950.950000 -75.1510.975000-319.519+
++       1.000000-544.021    ENDT
+$*  NX Load and Constraint: Fixed(1)
+SPC            2       1  123456  0.0000
+$*  NX Load and Constraint: UserDefined(1)
+SPC            3       2   13456  0.0000
+SPCADD       101       2       3
+DLOAD        3011.0000001.000000       1
+$*
+$* COORDINATE SYSTEM CARDS
+$*
+$*  NX Coordinate System: csys
+CORD2R*               44               00.0000000000E+000.0000000000E+00+
+*       0.0000000000E+001.0000000000E+00-4.052314040E-150.0000000000E+00+
+*       -4.052314040E-15-1.000000000E+001.3322676296E-15                +
+*
+NLCNTLG  STRMEAS       0  STROUT       0
+ENDDATA 0196de62
