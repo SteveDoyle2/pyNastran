@@ -572,7 +572,8 @@ def _get_bcbody_section_values(card, i: int, word: str) -> tuple[int, list[Any]]
     i0 = i
     values = []
     i += 8
-    valuei = isinstance(string_or_blank(card, i, f'{word}_word'), str)
+    val = string_or_blank(card, i, f'{word}_word')
+    valuei = isinstance(val, str)
     #print('i', i, 1)
     while not isinstance(valuei, str) and i < len(card):
         i += 8
@@ -1084,7 +1085,7 @@ class BCPARA(BaseCard):
     def _init_from_empty(cls):
         csid = 1
         params = {'NBODIES' : 4}
-        return BCTPARM(csid, params)
+        return BCPARA(csid, params)
 
     def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""

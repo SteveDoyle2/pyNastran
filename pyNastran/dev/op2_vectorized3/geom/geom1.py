@@ -587,7 +587,7 @@ class GEOM1:
             coord_method = op2.add_cord2c
         elif coord_name == 'CORD2S':
             coord_method = op2.add_cord2s
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(coord_name)
 
         ntotal = 88 * op2.factor # 22*4
@@ -627,7 +627,7 @@ class GEOM1:
             coord_method = op2.add_cord2c
         elif coord_name == 'CORD2S':
             coord_method = op2.add_cord2s
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(coord_name)
 
         ntotal = 52 * op2.factor # 13*4

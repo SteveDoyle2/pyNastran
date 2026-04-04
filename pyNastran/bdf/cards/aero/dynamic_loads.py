@@ -249,7 +249,8 @@ class AERO(Aero):
         sym_xz = data[4]
         sym_xy = data[5]
         assert len(data) == 6, 'data = %s' % data
-        return AERO(acsid, velocity, cref, rho_ref, sym_xz, sym_xy,
+        return AERO(velocity, cref, rho_ref,
+                    acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy,
                     comment=comment)
 
         # T is the tabular function
@@ -1029,8 +1030,8 @@ class FLUTTER(BaseCard):
         omax = data[8]
         epsilon = None
         return FLUTTER(sid, method, density, mach, reduced_freq_velocity,
-                       imethod, nvalue, omax,
-                       epsilon, comment=comment)
+                       imethod=imethod, nvalue=nvalue, omax=omax,
+                       epsilon=epsilon, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         """

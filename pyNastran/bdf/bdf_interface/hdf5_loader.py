@@ -368,6 +368,8 @@ def hdf5_load_coords(model: BDF, coords_group, encoding: str):
                 func = model.add_cord2c
             elif card_type == 'CORD2S':
                 func = model.add_cord2s
+            else:  # pragma: no cover
+                raise RuntimeError(card_type)
 
             cids = _cast_array(coords['cid'])
             rids = _cast_array(coords['rid'])

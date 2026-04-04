@@ -380,7 +380,8 @@ class CaseControlDeck:
 
         """
         if not self.has_subcase(isubcase):
-            sys.stderr.write('subcase %s doesnt exist...skipping\n' % isubcase)
+            sys.stderr.write(f'subcase {isubcase:d} doesnt exist...skipping\n')
+            return
         del self.subcases[isubcase]
 
     def copy_subcase(self, i_from_subcase: int, i_to_subcase: int,

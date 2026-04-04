@@ -1083,7 +1083,7 @@ def _get_mass_nsm(model: BDF,
                 raise NotImplementedError(prop.type)
             massi = area * mpa
             if CHECK_MASS and (massi != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
-                msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
+                msg = 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
                 msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                     str(centroid), str(elem.Centroid()), str(elem))
                 raise RuntimeError(msg)
@@ -3405,7 +3405,7 @@ def _breakdown_chexa(xyz_cid0: np.ndarray, nids: np.ndarray,
     area1 = 0.5 * ni
 
     v57 = p5 - p7
-    v68 = p6 - p7
+    v68 = p6 - p8
     normal = np.cross(v57, v68)
     ni = np.linalg.norm(normal, axis=1)
     c2 = (p5 + p6 + p7 + p8) / 4.

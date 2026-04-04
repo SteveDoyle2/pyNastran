@@ -926,7 +926,7 @@ class AESURF(BaseCard):
     _field_map = {
         1: 'aesid', 2: 'label', 3: 'cid1', 4: 'alid1', 5: 'cid2', 6: 'alid2',
         7: 'eff', 8: 'ldw', 9: 'crefc', 10: 'crefs', 11: 'pllim', 12: 'pulim',
-        13: 'hmllim', 14: 'hmulim', 15: 'tqllim', '16': 'tqulim',
+        13: 'hmllim', 14: 'hmulim', 15: 'tqllim', 16: 'tqulim',
     }
 
     @classmethod
@@ -2074,7 +2074,7 @@ class CAERO1(BaseCard):
         p3 = p4 + np.array([self.x43, 0., 0.])
         p14: np.ndarray = p1 * (1 - span_percentage) + p4 * span_percentage
         p23: np.ndarray = p2 * (1 - span_percentage) + p3 * span_percentage
-        x14_23: float = p23[0] - p23[0]
+        x14_23: float = p14[0] - p23[0]
 
         nspan_a = max(1, int(self.nspan * span_percentage))
         nspan_b = max(1, int(self.nspan * (1 - span_percentage)))
@@ -4240,7 +4240,7 @@ class MONPNT1(BaseCard):
             self.name, self.label, self.axes,
             self.comp,
             self.xyz.copy(), cp=self.Cp(),
-            cd=self.Cp(), comment=self.comment)
+            cd=self.Cd(), comment=self.comment)
         return card
 
     @classmethod

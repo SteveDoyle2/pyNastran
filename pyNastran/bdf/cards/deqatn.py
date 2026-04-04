@@ -52,9 +52,9 @@ def dim(x, y):
     return x - min(x, y)
 
 
-def db(p, pref):
+def db(p: float | np.ndarray, pref: float):
     """sound pressure in decibels"""
-    return 20. * log(p / pref)
+    return 20. * log10(p / pref)
 
 #def _Log(z):
 
@@ -89,7 +89,7 @@ def atan2h(x, y):
 
 def invdb(dbi: float, pref: float) -> float:
     """inverse Db"""
-    return 10. ** (dbi / 20. + log(pref))
+    return 10. ** (dbi / 20. + log10(pref))
 
 
 def dba(p: float, pref: float, f: float) -> float:
@@ -112,7 +112,7 @@ def dba(p: float, pref: float, f: float) -> float:
 
     """
     ta1, ta2 = _get_ta(f)
-    return 20. * log(p / pref) + 10 * log(ta1) + 10. * log(ta2)
+    return 20. * log10(p / pref) + 10 * log10(ta1) + 10. * log10(ta2)
 
 
 def invdba(dbai: float, pref: float, f: float) -> float:
@@ -136,7 +136,7 @@ def invdba(dbai: float, pref: float, f: float) -> float:
     """
     ta1, ta2 = _get_ta(f)
     #dbai = dba(p, pref, f)
-    return 10. ** ((dbai - 10. * log(ta1) - 10. * log(ta2))/20)
+    return 10. ** ((dbai - 10. * log10(ta1) - 10. * log10(ta2))/20)
 
 
 def _get_ta(f: float) -> tuple[float, float]:

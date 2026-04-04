@@ -265,7 +265,7 @@ REMOVED_CARDS = {
     'PVAL', 'GMCURV', 'GMSURF', 'FEEDGE', 'FEFACE', 'GMSPC', 'GMLOAD',
     #'OUTPUT', 'OUTRCV'
     'GMBNDS', 'GMINTS', 'PINTS',
-    'GMBNDC', 'GMINTC', 'PINTC'
+    'GMBNDC', 'GMINTC', 'PINTC',
     'CGEN', 'EGRID', 'GRIDG', 'SPCG',
 }
 
@@ -5391,7 +5391,7 @@ def _get_coords_to_update(coords: dict[int, Coord],
                 cord2s_to_update_list.append(cp)
         elif coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
             cord1s_to_update_temp.append(cp)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(coord.rstrip())
 
     cord1s_to_update_list = []

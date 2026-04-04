@@ -3844,7 +3844,7 @@ class CPLSTS8(CPLSTx8):
                  theta=0.0, tflag=0,
                  T1=1.0, T2=1.0, T3=1.0, T4=1.0,
                  T5=1.0, T6=1.0, T7=1.0, T8=1.0, comment=''):
-        TriShell.__init__(self)
+        QuadShell.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid

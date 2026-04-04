@@ -2056,6 +2056,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             self._endian = None
             #: the endian in unicode
             self._uendian = None
+            # self.show_ndata(10000, types='ifs', endian='<')
             flag_data = self.f.read(20)
             self.f.seek(0)
 

@@ -741,14 +741,13 @@ class OMIT(ABCQSet):
     def _init_from_empty(cls):
         ids = [1, 2]
         components = ['123', '456']
-        return BSET(ids, components)
+        return OMIT(ids, components)
 
     def __init__(self, ids: list[int], components: list[str],
                  comment: str=''):
         """
-        Creates an BSET card, which defines the degree of freedoms that
-        will be fixed during a generalized dynamic reduction or component
-        model synthesis calculation.
+        Defines degrees-of-freedom to be excluded (o-set) from the
+        analysis set (a-set).
 
         Parameters
         ----------
@@ -767,7 +766,8 @@ class OMIT(ABCQSet):
 
 class OMIT1(ABCQSet1):
     """
-    Defines degrees-of-freedom to be excluded (o-set) from the analysis set (a-set).
+    Defines degrees-of-freedom to be excluded (o-set) from the
+    analysis set (a-set).
 
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     |   1   |  2  |  3  |   4  |  5  |  6  |  7  |  8  |  9  |
@@ -1951,7 +1951,7 @@ class USET(Set):
         #name = 'SNAME'
         ids = [1, 2]
         components = ['123', '456']
-        return QSET(ids, components)
+        return USET(ids, components)
 
     def __init__(self, name, ids, components, comment: str=''):
         """

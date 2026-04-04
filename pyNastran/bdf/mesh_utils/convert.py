@@ -675,7 +675,7 @@ def _convert_properties(model: BDF,
 
         elif prop_type == 'PBUSH':
             _convert_pbush(scales, prop, xyz_scale, velocity_scale,
-                           mass_scale, force_scale, moment_scale, stiffness_scale, log)
+                           mass_scale, force_scale, moment_scale, stiffness_scale, damping_scale, log)
         elif prop_type == 'PBUSH1D':
             _convert_pbush1d(model, scales, prop, xyz_scale, area_scale,
                              mass_scale, damping_scale, stiffness_scale,
@@ -966,6 +966,7 @@ def _convert_pbush(scales: set[str],
                    force_scale: float,
                    moment_scale: float,
                    stiffness_scale: float,
+                   damping_scale: float,
                    log: SimpleLogger) -> None:
     # can be length=0
     #assert len(prop.Ki) == 6, prop.Ki
@@ -973,12 +974,27 @@ def _convert_pbush(scales: set[str],
     # TODO: I think this needs to consider rotation
     if len(prop.k):
         scales.update(['stiffness'])
-        prop.k = [ki*stiffness_scale if ki is not None else None
-                  for ki in prop.k]
+        stiffness = [None] * 6
+        for i, ki in enumerate(prop.k):
+            if ki is None:
+                continue
+            if i < 3:
+                stiffness[i] = ki * stiffness_scale
+            else:
+                stiffness[i] = ki * stiffness_scale * xyz_scale
+        prop.k = stiffness[:len(prop.k)]
+
     if len(prop.b):
-        scales.update(['velocity'])
-        prop.b = [bi*velocity_scale if bi is not None else None
-                   for bi in prop.b]
+        scales.update(['damping'])
+        damping = [None] * 6
+        for i, bi in enumerate(prop.b):
+            if bi is None:
+                continue
+            if i < 3:
+                damping[i] = bi * damping_scale
+            else:
+                damping[i] = bi * damping_scale * xyz_scale
+        prop.b = damping[:len(prop.b)]
 
     is_pbush = hasattr(prop, 'sa') # vs. PBUSH_OPTISTRUCT
     if is_pbush and (
@@ -1250,7 +1266,7 @@ def _convert_materials(model: BDF,
             mat.g12 *= stress_scale
             mat.g13 *= stress_scale
             mat.g23 *= stress_scale
-            mat.rho = density_scale
+            mat.rho *= density_scale
         elif mat.type == 'MAT11':
             scales.update(['stress', 'density', 'temperature'])
             mat.e1 *= stress_scale
@@ -1259,7 +1275,7 @@ def _convert_materials(model: BDF,
             mat.g12 *= stress_scale
             mat.g13 *= stress_scale
             mat.g23 *= stress_scale
-            mat.rho = density_scale
+            mat.rho *= density_scale
             #mat.a1 = a1
             #mat.a2 = a2
             #mat.a3 = a3
@@ -1908,9 +1924,9 @@ def _convert_dconstr(model: BDF, dconstr: DCONSTR, pressure_scale: float) -> Non
         dconstr.uid *= scale
 
         # low end of frequency range (Hz)
-        dconstr.lowfq = scale
+        # dconstr.lowfq = scale
         # high end of frequency range (Hz)
-        dconstr.highfq = scale
+        # dconstr.highfq = scale
     else:
         msg = f'otype={otype!r} is not supported\n{dconstr}'
         print(msg)
@@ -2156,7 +2172,7 @@ def get_scale_factors(units_from, units_to, log):
     return xyz_scale, mass_scale, time_scale, force_scale, gravity_scale
 
 
-def convert_length(length_from, length_to):
+def convert_length(length_from: str, length_to: str) -> tuple[float, float]:
     """
     Determines the length scale factor
 
@@ -2186,7 +2202,7 @@ def convert_length(length_from, length_to):
         xyz_scale /= 1000.
         gravity_scale_length /= 1000.
     else:
-        raise NotImplementedError('length from unit=%r; expected=[in, ft, m, cm, mm]' % length_from)
+        raise NotImplementedError(f'length from unit={length_from!r}; expected=[in, ft, m, cm, mm]')
 
     if length_to == 'in':
         xyz_scale /= 0.0254
@@ -2203,7 +2219,7 @@ def convert_length(length_from, length_to):
         xyz_scale *= 1000.
         gravity_scale_length *= 1000.
     else:
-        raise NotImplementedError('length to unit=%r; expected=[in, ft, m, cm, mm]' % length_to)
+        raise NotImplementedError(f'length to unit={length_to!r}; expected=[in, ft, m, cm, mm]')
     return xyz_scale, gravity_scale_length
 
 

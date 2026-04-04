@@ -226,7 +226,7 @@ class XPoint(BaseCard):
         """dummy method for EPOINT/SPOINT classes"""
         raise NotImplementedError('This method should be overwritten by the parent class')
 
-    def raw_fields(self):
+    def raw_fields(self) -> list[list[str | int]]:
         """
         Gets the fields in their unmodified form
 
@@ -244,6 +244,7 @@ class XPoint(BaseCard):
             singles, doubles = collapse_thru_packs(self.nid)
             if singles:
                 list_fields = [self.type] + singles
+                lists_fields.append(list_fields)
             if doubles:
                 for spoint_double in doubles:
                     list_fields = [self.type] + spoint_double

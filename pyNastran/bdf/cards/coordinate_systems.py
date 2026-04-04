@@ -1856,20 +1856,12 @@ class Cord2x(CoordBase):
         self._finish_setup()
 
     def __deepcopy__(self, memo_dict):
-        if self.type == 'CORD2R':
-            cls = CORD2R
-        elif self.type == 'CORD2C':
-            cls = CORD2C
-        elif self.type == 'CORD2S':
-            cls = CORD2S
-
-        cid = self.cid
-        origin = copy.deepcopy(self.e1)
-        zaxis = copy.deepcopy(self.e2)
-        xzplane = copy.deepcopy(self.e3)
-        new_coood = cls(cid, origin, zaxis, xzplane, rid=self.rid,
-                        setup=True, comment=self.comment)
-        return new_coood
+        result = self.__class__(
+            self.cid,
+            copy.deepcopy(self.e1), copy.deepcopy(self.e2), copy.deepcopy(self.e3),
+            rid=self.rid, comment=self.comment,)
+        memo_dict[id(self)] = result
+        return result
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model: BDF, cids: np.ndarray):
@@ -2389,7 +2381,7 @@ class Cord1x(CoordBase):
         """
         rid1 = self.g1_ref.Cp()
         rid2 = self.g2_ref.Cp()
-        rid3 = self.g2_ref.Cp()
+        rid3 = self.g3_ref.Cp()
 
         # assume the points are in rid
         p1 = self.g1_ref.xyz

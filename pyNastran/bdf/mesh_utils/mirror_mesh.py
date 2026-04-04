@@ -410,7 +410,7 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
         'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
         'CVISC',
     }
-    solids = {'CHEXA', 'CPENTA', 'CTETRA', 'CYPRAM'}
+    solids = {'CHEXA', 'CPENTA', 'CTETRA', 'CPYRAM'}
     generic_types = {
         'CSHEAR',
         'CTRIAX6',

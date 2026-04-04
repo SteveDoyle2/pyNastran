@@ -258,6 +258,7 @@ class DTI(BaseCard):
                         #break
                 #raise
                 bad_attrs.append(key)
+                # continue
             setattr(result, key, memo2)
         if bad_attrs:
             raise RuntimeError(f'failed copying {bad_attrs}')
