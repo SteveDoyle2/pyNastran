@@ -308,7 +308,7 @@ def run_load_case_combinations_from_data(op2_filename: PathLike,
         raise RuntimeError(f'These cases are duplicated and would conflict with the source cases; cases={common_cases}\n'
                            'Update the linear combination to not repeat subcase ids or set include_base_cases=False')
 
-    missing_subcases = np.intersect1d(output_subcase_ids, disp_keys)
+    missing_subcases = np.setdiff1d(base_subcase_ids, disp_keys)
     if len(missing_subcases):
         missing_subcases.sort()
         raise RuntimeError(f'cant find subcases={missing_subcases}; allowed={disp_keys}')
@@ -473,7 +473,7 @@ def get_local_factors(subcase_out: int,
         factors_out.append(float(factor))
         subcases_out.append(subcase)
 
-    if len(factors_out) > 0:
+    if len(factors_out) == 0:
         msg = f'subcase_out={subcase_out} subtitle={subtitle!r} has no factors != 0'
         if require_cases:
             assert len(factors_out) > 0, msg
@@ -489,7 +489,8 @@ def multi_combine(models: dict[int, OP2],
                   log_op2: SimpleLogger,
                   mode: str, revision: str,
                   icombination: int=0, ncombinations: int=0,
-                  write_op2: bool=True) -> tuple[OP2, int]:
+                  write_op2: bool=True,
+                  stop_on_failure: bool=True) -> tuple[OP2, int]:
     assert isinstance(models, dict), models
     models = {str(key).strip(): model for key, model in models.items()}
     imodel0 = list(models)[0]
@@ -570,7 +571,14 @@ def multi_combine(models: dict[int, OP2],
 
                 # add data
                 for subcase, factor in zip(subcases, factors):
-                    casei = res_type[subcase]
+                    try:
+                        casei = res_type[subcase]
+                    except KeyError:
+                        msg = f'cannot find base result_type={table_type!r} subcase={subcase0}'
+                        log.error(msg)
+                        if stop_on_failure:
+                            raise RuntimeError(msg)
+                        continue
                     case_new.linear_combination(factor, casei.data, update=False)
                     #casei = caseii * factor
                     #case.data = casei.data
@@ -685,7 +693,6 @@ def combine(model: OP2,
                         if stop_on_failure:
                             raise RuntimeError(msg)
                         continue
-                        raise RuntimeError(f'cannot find result_type={table_type!r} subcase={subcase}')
 
                     assert case_new.data.shape == casei.data.shape, f'bad shapes; case_new.data.shape={case_new.data.shape}; casei.data.shape={casei.data.shape}'
                     case_new.linear_combination(factor, casei.data, update=False)
