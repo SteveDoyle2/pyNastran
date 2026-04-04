@@ -134,7 +134,7 @@ class RELEASE(BaseCard):
         seid = 1
         comp = 1
         nids = [10, 20, 30]
-        return SEBNDRY(seid, comp, nids)
+        return RELEASE(seid, comp, nids)
 
     def __init__(self, seid, comp, nids, comment: str=''):
         BaseCard.__init__(self)

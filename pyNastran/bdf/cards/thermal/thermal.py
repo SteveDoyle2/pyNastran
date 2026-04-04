@@ -176,13 +176,15 @@ class CHBDYE(ThermalElement):
         eid2 = integer(card, 2, 'eid2')
         side = integer(card, 3, 'side')
 
-        iview_front = integer_or_blank(card, 4, 'iview_front', 0)
-        iview_back = integer_or_blank(card, 5, 'iview_back', 0)
-        rad_mid_front = integer_or_blank(card, 6, 'rad_mid_front', 0)
-        rad_mid_back = integer_or_blank(card, 7, 'rad_mid_back', 0)
+        iview_front = integer_or_blank(card, 4, 'iview_front', default=0)
+        iview_back = integer_or_blank(card, 5, 'iview_back', default=0)
+        rad_mid_front = integer_or_blank(card, 6, 'rad_mid_front', default=0)
+        rad_mid_back = integer_or_blank(card, 7, 'rad_mid_back', default=0)
         assert len(card) <= 8, f'len(CHBDYE card) = {len(card):d}\ncard={card}'
-        return CHBDYE(eid, eid2, side, iview_front, iview_back,
-                      rad_mid_front, rad_mid_back, comment=comment)
+        return CHBDYE(eid, eid2, side,
+                      iview_front=iview_front, iview_back=iview_back,
+                      rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
+                      comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment: str=''):
@@ -197,9 +199,11 @@ class CHBDYE(ThermalElement):
             a comment for the card
 
         """
-        eid, eid2, side, iviewf, iviewb, radmidf, radmidb = data
-        return CHBDYE(eid, eid2, side, iviewf, iviewb,
-                      radmidf, radmidb, comment=comment)
+        eid, eid2, side, iview_front, iview_back, rad_mid_front, rad_mid_back = data
+        return CHBDYE(eid, eid2, side,
+                      iview_front=iview_front, iview_back=iview_back,
+                      rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
+                      comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         pass
@@ -390,7 +394,7 @@ class CHBDYG(ThermalElement):
 
         surface_type = string(card, 3, 'Type')
         iview_front = integer_or_blank(card, 4, 'iview_front', default=0)
-        iview_back = integer_or_blank(card, 8, 'iview_back', default=0)
+        iview_back = integer_or_blank(card, 5, 'iview_back', default=0)
         rad_mid_front = integer_or_blank(card, 6, 'rad_mid_front', default=0)
         rad_mid_back = integer_or_blank(card, 7, 'rad_mid_back', default=0)
         # no field 8

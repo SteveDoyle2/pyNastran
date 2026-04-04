@@ -5913,7 +5913,7 @@ def get_dvprel_key(dvprel, prop=None):
             16 : 'F1',
             17 : 'F2',
             18 : 'K1',
-            19 : 'K1',
+            19 : 'K2',
             20 : 'I12',
         }
         if var_to_change in ['A', 'I1', 'I2', 'J', 'C1', 'C2', 'D1', 'D2',

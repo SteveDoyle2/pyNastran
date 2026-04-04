@@ -4240,7 +4240,7 @@ class MONPNT1(BaseCard):
             self.name, self.label, self.axes,
             self.comp,
             self.xyz.copy(), cp=self.Cp(),
-            cd=self.Cp(), comment=self.comment)
+            cd=self.Cd(), comment=self.comment)
         return card
 
     @classmethod

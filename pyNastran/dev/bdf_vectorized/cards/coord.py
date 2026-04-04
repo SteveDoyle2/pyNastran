@@ -589,7 +589,7 @@ class Coord(VectorizedCard):
             self.add_cord2c(card, comment=comment)
         elif card_name == 'CORD2S':
             self.add_cord2s(card, comment=comment)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(card_name)
 
     def add_cord2c(self, card, comment=''):
