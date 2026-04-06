@@ -266,6 +266,26 @@ def run_load_case_combinations(op2_filename: PathLike | OP2,
         write_op2=True, log=log)
     return nbase_cases_all, op2s_list, ncases_list
 
+def _check_for_missing_subcases_single(all_combinations: list,
+                                       base_subcase_ids: np.ndarray,
+                                       disp_keys: np.ndarray):
+    missing_subcases = np.setdiff1d(base_subcase_ids, disp_keys)
+    if len(missing_subcases):
+        missing_subcases.sort()
+        bad_subcases = []
+        for subcases_in, cases in all_combinations:
+            for (subcase_out, subtitle, factors) in cases:
+                subcases, factors = get_local_factors(
+                    subcase_out, subtitle, subcases_in, factors, require_cases=False)
+                common_missing_subcases = np.intersect1d(subcases, missing_subcases)
+                if len(common_missing_subcases):
+                    bad_subcases.append(subcase_out)
+        bad_subcases.sort()
+        msg = f'Cant find subcases={missing_subcases}\n'
+        msg += f'Allowed subcases={disp_keys}\n\n'
+        msg += f'Missing subcases required for subcase combinations={bad_subcases}\n'
+        raise RuntimeError(msg)
+
 def run_load_case_combinations_from_data(op2_filename: PathLike,
                                          op2_filenames_new: list[PathLike],
                                          all_combinations: list,
@@ -308,13 +328,9 @@ def run_load_case_combinations_from_data(op2_filename: PathLike,
         raise RuntimeError(f'These cases are duplicated and would conflict with the source cases; cases={common_cases}\n'
                            'Update the linear combination to not repeat subcase ids or set include_base_cases=False')
 
-    missing_subcases = np.setdiff1d(base_subcase_ids, disp_keys)
-    if len(missing_subcases):
-        missing_subcases.sort()
-        raise RuntimeError(f'cant find subcases={missing_subcases}; allowed={disp_keys}')
+    _check_for_missing_subcases_single(all_combinations, base_subcase_ids, disp_keys)
 
     # do the combinations
-
     op2s_list = []
     nbase_cases_all = len(disp_keys)
     nbase_cases = nbase_cases_all if include_base_cases else 0
