@@ -1725,7 +1725,7 @@ class CTRIAR(TriShell):
 
     def raw_fields(self):
         list_fields = (['CTRIAR', self.eid, self.Pid()] + self.node_ids +
-                       [self.theta_mcid, self.zoffset, self.tflag,
+                       [self.theta_mcid, self.zoffset, None, None, self.tflag,
                         self.T1, self.T2, self.T3])
         return list_fields
 

@@ -4667,6 +4667,6 @@ def get_mat_props_S(mid_ref: MAT1 | MAT8) -> tuple[np.ndarray, np.ndarray]:
             #[0., 0., g12 * denom],
         #]) / denom
 
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(mid_ref.get_stats())
     return ei2, ei3

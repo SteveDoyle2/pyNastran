@@ -506,7 +506,7 @@ class TestLoads(unittest.TestCase):
             #self.assertEqual(moments1[0], fm[3], 'm=%s mexpected=%s' % (moments1, fm[3:]))
             #self.assertEqual(moments1[1], fm[4], 'm=%s mexpected=%s' % (moments1, fm[3:]))
             #self.assertEqual(moments1[2], fm[5], 'm=%s mexpected=%s' % (moments1, fm[3:]))
-        save_load_deck(model, run_loads=False)
+        save_load_deck(model, run_loads=False, punch=False)
 
     def test_pload4_ctria3(self):
         """tests a PLOAD4 with a CTRIA3"""

@@ -76,6 +76,9 @@ class BOLT_MSC(BaseCard):
         pass
 
     def repr_fields(self) -> list[str]:
+        return self.raw_fields()
+
+    def raw_fields(self) -> list[str]:
         card = ['BOLT', self.bolt_id, self.gridc, None, None, None, None, None, None]
         if len(self.nids_top):
             nextra = 8 - (len(self.nids_top) + 1) % 8
@@ -257,20 +260,24 @@ class BOLT(BaseCard):
             self.nids_ref = model.Nodes(self.nids, msg=msg)
 
     def repr_fields(self) -> list[str]:
-        card = ['BOLT', self.bolt_id, self.element_type]
+        return self.raw_fields()
+
+    def raw_fields(self) -> list[str]:
+        list_fields = ['BOLT', self.bolt_id, self.element_type]
         if self.element_type == 1:
             assert len(self.eids)
-            card.extend(self.eids)
+            list_fields.extend(self.eids)
         elif self.element_type == 2:
             assert len(self.nids)
             assert self.idir is not None
-            card.extend([self.csid, self.idir] + self.nids)
-            assert card[4] is not None
+            list_fields.extend([self.csid, self.idir] + self.nids)
+            assert list_fields[4] is not None
         elif self.element_type == 3:
-            card.extend([self.csid, self.idir, self.nid, None, None, None] + self.eids)
-        else:
+            list_fields.extend([self.csid, self.idir, self.nid, None, None, None] + self.eids)
+        else:  # pragma: no cover
             raise NotImplementedError(self.element_type)
-        return card
+        assert len(list_fields) > 0, list_fields
+        return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
@@ -380,7 +387,9 @@ class BOLTSEQ(BaseCard):
         pass
 
     def repr_fields(self) -> list[str]:
+        return self.raw_fields()
 
+    def raw_fields(self) -> list[str]:
         fields = ['BOLTSEQ', self.sid, None, None, None, None, None, None, None]
         for s_no, b_id, n_inc in zip(self.s_nos, self.b_ids, self.n_incs):
             fields.extend([s_no, b_id, n_inc, None, None, None, None, None])
@@ -453,6 +462,9 @@ class BOLTFOR(BaseCard):
             self.bolt_ids_ref.append(bolts)
 
     def repr_fields(self) -> list[str]:
+        return self.raw_fields()
+
+    def raw_fields(self) -> list[str]:
         fields = ['BOLTFOR', self.sid, self.load_value] + self.bolt_ids
         return fields
 

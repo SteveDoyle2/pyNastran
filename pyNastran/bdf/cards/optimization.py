@@ -1044,6 +1044,35 @@ class TOPVAR(BaseCard):
                       delxv=delxv, power=power, options=options,
                       comment=comment)
 
+    def raw_fields(self) -> list:
+        # power = set_blank_if_default(self.power, 3)
+        # xlb = set_blank_if_default(self.xlb, 0.001)
+        # delxv = set_blank_if_default(self.delxv, 0.2)
+
+        label = self.label.strip()
+        if len(label) <= 6:
+            label = ' %6s ' % label
+        list_fields = [
+            'TOPVAR', self.opt_id, label, self.prop_type,
+            self.xinit, self.xlb, self.delxv, self.power, self.Pid()]
+        for name, option in sorted(self.options.items()):
+            if name == 'STRESS':
+                list_fields += [name, option['allowable'], None, None, None, None, None, None]
+            elif name == 'SYM':
+                list_fields += [
+                    name,
+                    option['cid'],
+                    option['mirror_symmetry1'],
+                    option['mirror_symmetry2'],
+                    option['mirror_symmetry3'],
+                    option['cyclic_symmetry'],
+                    option['num_cyclic_symmetries'],
+                    None,
+                ]
+            else:  # pragma: no cover
+                raise NotImplementedError(name)
+        return list_fields
+
     def repr_fields(self) -> list:
         """
         Gets the fields in their simplified form
@@ -2137,7 +2166,7 @@ class DRESP1(OptConstraint):
                 _dresp_verify_eids(self, model)
             else:
                 _dresp_verify_prop(self, model, property_type)
-        else:
+        else:  # pragma: no cover
             print(self.get_stats())
             raise NotImplementedError(self.response_type)
 
@@ -2549,7 +2578,7 @@ def _dresp_verify_prop(dresp: DRESP1, model: BDF, property_type: str) -> None:
         assert dresp.atti_ref is not None, dresp.get_stats()
         assert len(dresp.atti_ref) > 0, dresp.get_stats()
         props = dresp.atti_ref
-    else:
+    else:  # pragma: no cover
         print(dresp.get_stats())
         raise NotImplementedError(property_type)
 
@@ -6150,7 +6179,7 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
             dresp2s.append(dresp)
         elif dresp.type == 'DRESP3':
             dresp3s.append(dresp)
-        else:
+        else:  # pragma: no cover
             print(key)
             print(dresp.get_stats())
             raise NotImplementedError(dresp.type)
@@ -6282,7 +6311,7 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
             for (j, param_key), values in dresp.params.items():
                 try:
                     param_keys[j] = param_key.encode(encoding)
-                except IndexError:
+                except IndexError:  # pragma: no cover
                     print(dresp.get_stats())
                     print('  DRESP2', (i, j), param_key, values)
                     raise

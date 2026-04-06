@@ -1390,6 +1390,25 @@ class TEMPP1(BaseCard):
         assert isinstance(t_stress, list), str(self)
 
     @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # sid = 1
+        # eid = 1
+        # tbar = 2.0
+        # tprime = 1.0
+        # t_stress = [10.]
+        #     |   1    |   2  |   3  |   4  |    5   |   6  |   7  |   8  |
+        #     | TEMPP1 | SID  | EID1 | TBAR | TPRIME |  T1  |  T2  |      |
+        #     |        | EID2 | EID3 | EID4 | EID5   | EID6 | EID7 | etc. |
+        sid = integer(card, 1, 'sid')
+        eid = integer(card, 2, 'eid')
+        tbar = double(card, 3, 'tbar')
+        tprime = double(card, 4, 'tprime')
+        ts1 = double(card, 5, 't1')
+        ts2 = double_or_blank(card, 6, 't2', default=None)
+        assert len(card) < 7, card
+        return TEMPP1(sid, eid, tbar, tprime, [ts1, ts2], comment=comment)
+
+    @classmethod
     def add_op2_data(cls, data, comment: str=''):
         """
         Adds a TEMPP1 card from the OP2
@@ -1402,8 +1421,8 @@ class TEMPP1(BaseCard):
             a comment for the card
 
         """
-        sid, eid, t, tprime, ts1, ts2 = data
-        return TEMPP1(sid, eid, t, tprime, [ts1, ts2], comment=comment)
+        sid, eid, tbar, tprime, ts1, ts2 = data
+        return TEMPP1(sid, eid, tbar, tprime, [ts1, ts2], comment=comment)
 
     def raw_fields(self):
         """Writes the TEMP card"""

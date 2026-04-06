@@ -38,7 +38,7 @@ class TestSuperelements(unittest.TestCase):
             tol=tol, loc=loc, comment='seconct')
         seconct.raw_fields()
         model.cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, punch=False)
 
     def test_seelt(self):
         model = BDF(debug=None)
@@ -58,7 +58,7 @@ class TestSuperelements(unittest.TestCase):
         super_a.add_mat1(100, 3.0e7, None, 0.3)
         seelt.raw_fields()
         model.cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, punch=False)
 
     def test_setree(self):
         model = BDF(debug=None)
@@ -78,7 +78,7 @@ class TestSuperelements(unittest.TestCase):
         setree = model.add_setree(seid_c, seids, comment='')
         setree.raw_fields()
         model.cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, punch=False)
 
     def test_release(self):
         model = BDF(debug=None)
@@ -97,7 +97,7 @@ class TestSuperelements(unittest.TestCase):
             selabel = model.add_selabel(seid, label, comment=comment)
             comment = ''
 
-        comps = ['A', 'B', 'C']
+        comps = ['1', '3', '6']
         sesup = model.add_sesup(nodes, comps, comment='sesup')
 
         model.add_grid(11, [1., 0., 0.])
@@ -168,7 +168,7 @@ class TestSuperelements(unittest.TestCase):
         model.uncross_reference()
         model.cross_reference()
         os.remove('super_2.bdf')
-        save_load_deck(model)
+        save_load_deck(model, punch=False)
 
     def test_superelement_2(self):
         """
@@ -233,7 +233,7 @@ class TestSuperelements(unittest.TestCase):
         model.cross_reference()
         model.uncross_reference()
         model.safe_cross_reference()
-        save_load_deck(model, run_save_load_hdf5=False)
+        save_load_deck(model, run_save_load_hdf5=False, punch=False)
 
     def test_superelement_setree(self):
         """tests the SETREE"""
@@ -249,7 +249,7 @@ class TestSuperelements(unittest.TestCase):
         setree = model.add_setree(seid, seids, comment='setree')
         setree.raw_fields()
         model.validate()
-        save_load_deck(model)
+        save_load_deck(model, punch=False)
 
     def test_super_sets(self):
         model = BDF(debug=False, log=None, mode='msc')

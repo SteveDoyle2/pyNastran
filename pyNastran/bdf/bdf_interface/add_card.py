@@ -1757,7 +1757,9 @@ class Add1dElements:
         self._add_methods.add_property_object(prop)
         return prop
 
-    def add_baror(self, pid, is_g0, g0, x, offt='GGG', comment: str='') -> BAROR:
+    def add_baror(self, pid: int,
+                  is_g0: bool, g0: int, x: np.ndarray,
+                  offt: str='GGG', comment: str='') -> BAROR:
         baror = BAROR(pid, is_g0, g0, x, offt=offt, comment=comment)
         self._add_methods.add_baror_object(baror)
         return baror
@@ -6585,9 +6587,10 @@ class AddSuperelements:
         self._add_methods.add_seset_object(seset)
         return seset
 
-    def add_sesup(self, nodes, Cs, comment='') -> SESUP:
+    def add_sesup(self, nodes: list[int], components: list[str],
+                  comment: str='') -> SESUP:
         """Creates an SESUP card"""
-        se_suport = SESUP(nodes, Cs, comment=comment)
+        se_suport = SESUP(nodes, components, comment=comment)
         self._add_methods.add_sesuport_object(se_suport)
         return se_suport
 

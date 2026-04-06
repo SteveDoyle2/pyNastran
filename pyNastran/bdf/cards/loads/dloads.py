@@ -16,7 +16,7 @@ from collections import defaultdict
 from typing import Optional, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.internal_get import table_id as ftable_id
@@ -1580,6 +1580,7 @@ class TLOAD2(DynamicLoad):
     def validate(self):
         self.Type = fix_loadtype_tload2(self.Type)
         assert self.sid > 0, self.sid
+        assert isinstance(self.phase, float_types), self.phase
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -1601,7 +1602,7 @@ class TLOAD2(DynamicLoad):
         T1 = double_or_blank(card, 5, 'T1', default=0.0)
         T2 = double_or_blank(card, 6, 'T2', default=T1)
         frequency = double_or_blank(card, 7, 'frequency', default=0.)
-        phase = double_or_blank(card, 8, 'phase', default=0.)
+        phase = integer_double_or_blank(card, 8, 'phase', default=0.)
         c = double_or_blank(card, 9, 'c', default=0.)
         b = double_or_blank(card, 10, 'b', default=0.)
         us0 = double_or_blank(card, 11, 'us0', default=0.)

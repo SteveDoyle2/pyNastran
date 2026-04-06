@@ -311,7 +311,7 @@ class EPOINT(XPoint):
     """defines the EPOINT class"""
     type = 'EPOINT'
 
-    def __init__(self, nid, comment: str=''):
+    def __init__(self, nid: int, comment: str=''):
         """
         Creates the EPOINT card
 
@@ -326,7 +326,9 @@ class EPOINT(XPoint):
         XPoint.__init__(self, nid, comment)
 
 
-def write_xpoints(cardtype: str, points, comment: str='') -> str:
+def write_xpoints(cardtype: str,
+                  points: dict[int, XPoint] | list[int],
+                  comment: str='') -> str:
     """writes SPOINTs/EPOINTs"""
     msg = comment
     if isinstance(points, dict):
@@ -349,7 +351,8 @@ def write_xpoints(cardtype: str, points, comment: str='') -> str:
     return msg
 
 
-def compress_xpoints(point_type: str, xpoints: list[int]) -> list[list[int]]:
+def compress_xpoints(point_type: str,
+                     xpoints: list[int]) -> list[list[int]]:
     """
     Gets the SPOINTs/EPOINTs in sorted, short form.
 

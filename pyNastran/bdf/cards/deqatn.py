@@ -8,6 +8,7 @@ The capitalization of the sub-functions is important.
 from __future__ import annotations
 import re
 import sys
+import copy
 from typing import Any, Optional, TYPE_CHECKING
 import numpy as np
 from numpy import (
@@ -181,7 +182,7 @@ def split_deqatn_line0(card: list[str]) -> tuple[int, str, str, list[str]]:
     return equation_id, name_eqid, line0_eq, eqs_temp
 
 
-class DEQATN(BaseCard):  # needs work...
+class DEQATN(BaseCard):
     """
     Design Equation Definition
     Defines one or more equations for use in design sensitivity analysis.
@@ -196,6 +197,12 @@ class DEQATN(BaseCard):  # needs work...
     """
     type = 'DEQATN'
     _properties = ['dtable']
+
+    def __deepcopy__(self, memo_dict: dict[int, Any]):
+        eqs = copy.deepcopy(self.eqs)
+        card = DEQATN(self.equation_id, eqs, comment=self.comment)
+        memo_dict[id(self)] = card
+        return card
 
     def __init__(self, equation_id: int, eqs: list[str], comment: str=''):
         """

@@ -16,13 +16,12 @@ All superelements are defined in this file.  This includes:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import (
-    BaseCard, expand_thru #, _node_ids
-)
+    BaseCard, expand_thru)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string,
@@ -515,11 +514,15 @@ class SELABEL(BaseCard):
         label = 'LEFT REAR FENDER'
         return SELABEL(seid, label)
 
-    def __init__(self, seid, label, comment: str=''):
+    def __deepcopy__(self, memo_dict: dict[int, Any]):
+        card = SELABEL(self.seid, self.label, comment=self.comment)
+        memo_dict[id(self)] = card
+        return card
+
+    def __init__(self, seid: int, label: str, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
-
         self.seid = seid
         self.label = label
 

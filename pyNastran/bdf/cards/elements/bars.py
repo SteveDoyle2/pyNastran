@@ -186,7 +186,8 @@ class BAROR(BaseCard):
         x = None
         return BAROR(pid, is_g0, g0, x, offt='GGG', comment='')
 
-    def __init__(self, pid: int, is_g0: bool, g0: int, x: Optional[list[float]],
+    def __init__(self, pid: int,
+                 is_g0: bool, g0: int, x: Optional[list[float]],
                  offt: str='GGG', comment: str=''):
         BaseCard.__init__(self)
         if comment:
@@ -229,7 +230,9 @@ class BAROR(BaseCard):
         """
         Gets the fields of the card in their full form
         """
-        list_fields = ['BAROR', None, None] + self.x.tolist() + [self.offt]
+        #     |   1   | 2 |  3  | 4 | 5 |   6   |  7  |   8   |  9   |
+        #     | BAROR |   | PID |   |   | G0/X1 |  X2 |  X3   | OFFT |
+        list_fields = ['BAROR', None, self.pid, None, None] + self.x.tolist() + [self.offt]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

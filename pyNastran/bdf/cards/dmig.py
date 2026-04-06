@@ -1292,9 +1292,9 @@ class DMIAX(BaseCard):
             the jnode, jDOFs
         GCNi  : list[(node, dof, harmonic_number)]???
             the inode, iDOFs
-        Real : list[float]???
+        Real : list[float]
             The real values
-        Complex : list[float]???; default=None
+        Complex : list[float]; default=None
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
@@ -1345,6 +1345,18 @@ class DMIAX(BaseCard):
 
         assert isinstance(matrix_form, integer_types), 'matrix_form=%r type=%s' % (matrix_form, type(matrix_form))
         assert not isinstance(matrix_form, bool), 'matrix_form=%r type=%s' % (matrix_form, type(matrix_form))
+
+    def __deepcopy__(self, memo_dict: dict[int, Any]):
+        GCNj = deepcopy(self.GCNj)
+        GCNi = deepcopy(self.GCNi)
+        Real = deepcopy(self.Real)
+        Complex = None if not hasattr(self, 'Complex') else deepcopy(self.Complex)
+        result = DMIAX(self.name, self.matrix_form,
+                       self.tin, self.ncols,
+                       GCNj, GCNi, Real, Complex=Complex,
+                       tout=self.tout, comment=self.comment)
+        memo_dict[id(self)] = result
+        return result
 
     def finalize(self):
         """converts the lists into numpy arrays"""

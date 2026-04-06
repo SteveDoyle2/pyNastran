@@ -2,6 +2,7 @@ import os
 import unittest
 
 import numpy as np
+from cpylog import SimpleLogger
 
 from pyNastran.bdf.bdf import BDF, BDFCard, CBAR, PBAR, PBARL, GRID, MAT1
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -130,6 +131,7 @@ class TestBars(unittest.TestCase):
 
     def test_pbar_3(self):
         """tests the PBAR validate"""
+        log = SimpleLogger(level='warning')
         pid = 42
         mid = 10
         i1 = -1.
@@ -151,10 +153,13 @@ class TestBars(unittest.TestCase):
             pbar.validate()
 
         pbar.j = 4.
+        with self.assertRaises(ValueError):
+            pbar.validate()
+        pbar.A = 3.14
         pbar.validate()
 
-        model = BDF(debug=False)
-        pbar = model.add_pbar(pid, mid, A=0., i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
+        model = BDF(debug=False, log=log)
+        pbar = model.add_pbar(pid, mid, A=0.1, i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
                               d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
                               k2=1.e8, comment='pbar')
         pbar.validate()
@@ -165,18 +170,16 @@ class TestBars(unittest.TestCase):
         model.add_cbar(eid, pid, nids, x, g0, comment='cbar')
         model.add_grid(100, [0., 0., 0.])
         model.add_grid(101, [1., 0., 0.])
-        E = 3.0e7
-        G = None
-        nu = 0.3
-        model.add_mat1(mid, E, G, nu)
+        model.add_mat1(mid, 3.0e7, None, 0.3)
         save_load_deck(model)
 
     def test_cbar_g0(self):
         """modification of test_cbeam_01"""
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=False, log=log)
         pid = 200
         mid = 6
-        model.add_pbar(pid, mid, A=0., i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
+        model.add_pbar(pid, mid, A=0.1, i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
                        d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
                        k2=1.e8, comment='pbar')
 
@@ -594,7 +597,8 @@ class TestBars(unittest.TestCase):
 
     def test_baror(self):
         """tests a BAROR"""
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=False, log=log)
         n1 = 10
         n2 = 20
         model.add_grid(n1, [0., 0., 0.])
@@ -623,7 +627,8 @@ class TestBars(unittest.TestCase):
         save_load_deck(model)
 
     def test_baror_2(self):
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=False, log=log)
         pid = 12
         is_g0 = True
         g0 = 42

@@ -1244,12 +1244,14 @@ class PBAR(LineProperty):
 
     def validate(self):
         if self.i1 < 0.:
-            raise ValueError('I1=%r must be greater than or equal to 0.0' % self.i1)
+            raise ValueError(f'I1={self.i1:g} must be greater than or equal to 0.0')
         if self.i2 < 0.:
-            raise ValueError('I2=%r must be greater than or equal to 0.0' % self.i2)
+            raise ValueError(f'I2={self.i2:g} must be greater than or equal to 0.0')
         if self.j < 0.:
-            raise ValueError('J=%r must be greater than or equal to 0.0' % self.j)
-
+            raise ValueError(f'J={self.j:g} must be greater than or equal to 0.0')
+        if self.A == 0.0 and (self.k1 is not None or self.k2 is not None):
+            raise ValueError(f'A={self.A:g} must be greater than or equal to 0.0 when '
+                             f'k1={self.k1:g} or k2={self.k2:g} are used')
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
         """

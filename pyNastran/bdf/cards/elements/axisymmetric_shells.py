@@ -668,7 +668,6 @@ class CTRIAX6(TriShell):
     |         | THETA |       |    |    |    |    |    |     |
     +---------+-------+-------+----+----+----+----+----+-----+
 
-
     NX/MSC : Nodes are defined in a non-standard way::
 
            5
@@ -810,7 +809,7 @@ class CTRIAX6(TriShell):
         (n1, unused_n2, n3, unused_n4, n5, unused_n6) = self.get_node_positions()
         return _triangle_area_centroid_normal([n1, n3, n5], self)
 
-    def Area(self):
+    def Area(self) -> float:
         r"""
         Get the normal vector.
 
@@ -821,7 +820,7 @@ class CTRIAX6(TriShell):
         area = 0.5 * np.linalg.norm(np.cross(a, b))
         return area
 
-    def Centroid(self):
+    def Centroid(self) -> np.ndarray:
         r"""
         Get the centroid.
 
@@ -838,14 +837,14 @@ class CTRIAX6(TriShell):
     def MassPerArea(self):
         raise AttributeError('CTRIAX6 does not have a MassPerArea')
 
-    def Mass(self):
+    def Mass(self) -> float:
         #raise NotImplementedError('CTRIAX6 does not have a Mass method yet')
         return 0.
 
     def Mid(self) -> int:
         return material_id(self.mid_ref, self.mid)
 
-    def Normal(self):
+    def Normal(self) -> np.ndarray:
         # () -> np.ndarray
         r"""
         Get the normal vector, :math:`n`.
@@ -873,7 +872,7 @@ class CTRIAX6(TriShell):
             raise RuntimeError(msg)
         return n
 
-    def flip_normal(self):
+    def flip_normal(self) -> None:
         r"""
         ::
 
@@ -887,7 +886,7 @@ class CTRIAX6(TriShell):
         self.nodes = [n1, n6, n5, n4, n3, n2]
 
     @property
-    def node_ids(self):
+    def node_ids(self) -> list[int]:
         """
              5
             / \
@@ -911,7 +910,7 @@ class CTRIAX6(TriShell):
         ]
 
     def raw_fields(self):
-        list_fields = (['CTRIAX6', self.eid, self.Mid(), self.Pid()] +
+        list_fields = (['CTRIAX6', self.eid, self.Mid()] +
                        self.node_ids +  [self.theta])
         return list_fields
 

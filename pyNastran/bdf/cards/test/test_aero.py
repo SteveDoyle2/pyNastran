@@ -3193,7 +3193,7 @@ class TestAero(unittest.TestCase):
         # cid = 225
         # model.add_cord2r(cid, origin, zaxis, xzplane)
         #model.add_monpnt3()
-        save_load_deck(model)
+        save_load_deck(model, punch=True)
 
     def test_bah_plane_bdf(self):
         """tests the bah_plane"""

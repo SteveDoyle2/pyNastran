@@ -76,13 +76,25 @@ class BaseCard:
 
     def __deepcopy__(self, memo_dict):
         raw_fields = self.raw_fields()
-        card = BDFCard(raw_fields)
+        # print(self, type(self))
+        assert len(raw_fields) > 0, (raw_fields, type(self))
+        try:
+            card = BDFCard(raw_fields)
+        except RuntimeError:
+            raise RuntimeError(f'Cant deepcopy; invalid raw_fields={raw_fields}')
         try:
             card2 = self.add_card(card, comment=self.comment)
         except:
             print(self)
             print(type(self))
             print(self.get_stats())
+            print(f'raw_fields = {raw_fields}')
+            raise
+        try:
+            str(card2)
+        except:
+            print(raw_fields)
+            print(card2.raw_fields())
             raise
         return card2
 

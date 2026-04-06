@@ -40,7 +40,8 @@ class RADM(ThermalBC):
         emissivity = 1.0
         return RADM(radmid, absorb, emissivity, comment='')
 
-    def __init__(self, radmid, absorb, emissivity, comment=''):
+    def __init__(self, radmid: int, absorb: float, emissivity: list[float],
+                 comment: str=''):
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment

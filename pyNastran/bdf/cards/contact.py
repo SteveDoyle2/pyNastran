@@ -1090,7 +1090,14 @@ class BCPARA(BaseCard):
     def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         keys, values = self.params
-        self.params = {key : value for key, value in zip(keys, values)}
+
+        self.params = {}
+        for key, value in zip(keys, values):
+            assert isinstance(key, str), (key, value)
+            if isinstance(value, bytes):
+                value = value.decode('ascii')
+            assert isinstance(value, (int, float, str)), (key, value)
+            self.params[key] = value
 
     def __init__(self, csid: int, params: dict[str, Optional[int | float]],
                  comment: str=''):

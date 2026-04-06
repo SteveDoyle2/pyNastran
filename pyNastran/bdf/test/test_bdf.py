@@ -1044,7 +1044,7 @@ def get_dof_map(model: BDF,
                     spc_nid_to_components[nid] = spc.components
             elif spc.type == 'GMSPC':
                 log.warning(f'skipping\n{str(spc)}{spc.get_stats()}')
-            else:
+            else:  # pragma: no cover
                 log.error('skipping\n%s' % spc)
                 raise RuntimeError(spc.get_stats())
 

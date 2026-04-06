@@ -1948,10 +1948,10 @@ class USET(Set):
 
     @classmethod
     def _init_from_empty(cls):
-        #name = 'SNAME'
+        name = 'SNAME'
         ids = [1, 2]
         components = ['123', '456']
-        return USET(ids, components)
+        return USET(name, ids, components)
 
     def __init__(self, name, ids, components, comment: str=''):
         """

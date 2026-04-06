@@ -992,6 +992,9 @@ class PBUSH2D(BushingProperty):
                        k12, k21, b12, b21, m12, m21, comment=comment)
 
     def repr_fields(self) -> list:
+        return self.raw_fields()
+
+    def raw_fields(self) -> list:
         list_fields = ['PBUSH2D', self.pid,
                        self.k11, self.k22,
                        self.b11, self.b22,
@@ -1002,6 +1005,8 @@ class PBUSH2D(BushingProperty):
                                 self.k12, self.k21,
                                 self.b12, self.b21,
                                 self.m12, self.m21])
+        else:  # pragma: no cover
+            raise NotImplementedError(f'cross_flag={self.cross_flag!r} and must be [CROSS]')
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

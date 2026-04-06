@@ -19,6 +19,7 @@ All cards are BaseCard objects.
 """
 from __future__ import annotations
 import math
+import copy
 from itertools import count
 from collections import defaultdict, namedtuple
 import warnings
@@ -4135,6 +4136,13 @@ class CAERO5(BaseCard):
     def LSpan(self) -> int:
         return aefact_id(self.lspan_ref, self.lspan)
 
+    def raw_fields(self):
+        list_fields = (
+            ['CAERO5', self.eid, self.Pid(), self.Cp(), self.nspan, self.LSpan(),
+             self.ntheory, self.nthick, None,] + list(self.p1) + [self.x12] +
+             list(self.p4) + [self.x43])
+        return list_fields
+
     def repr_fields(self):
         """
         Gets the fields in their simplified form
@@ -4148,9 +4156,10 @@ class CAERO5(BaseCard):
         lspan = self.LSpan()
         ntheory = self.ntheory
         cp = set_blank_if_default(self.Cp(), 0)
-        list_fields = (['CAERO5', self.eid, self.Pid(), cp, nspan, lspan,
-                        ntheory, self.nthick, None,] + list(self.p1) + [self.x12] +
-                       list(self.p4) + [self.x43])
+        list_fields = (
+            ['CAERO5', self.eid, self.Pid(), cp, nspan, lspan,
+             ntheory, self.nthick, None,] + list(self.p1) + [self.x12] +
+             list(self.p4) + [self.x43])
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -4339,6 +4348,16 @@ class MONPNT2(BaseCard):
         eid = 2
         return MONPNT2(name, label, table, element_types, nddl_item, eid, comment='')
 
+    def __deepcopy__(self, memo_dict: dict[int, Any]) -> MONPNT3:
+        card = MONPNT2(self.name, self.label,
+                       copy.deepcopy(self.tables),
+                       copy.deepcopy(self.element_types),
+                       copy.deepcopy(self.nddl_items),
+                       copy.deepcopy(self.eids),
+                       comment=self.comment)
+        memo_dict[id(self)] = card
+        return card
+
     def __init__(self, name: str, label: str,
                  tables: list[str],
                  element_types: list[str],
@@ -4488,6 +4507,17 @@ class MONPNT3(BaseCard):
         return MONPNT3(name, label, axes, xyz,
                        node_set_group=grid_set, elem_set_group=elem_set,
                        cp=0, cd=None, xflag='', comment='')
+
+    def __deepcopy__(self, memo_dict: dict[int, Any]) -> MONPNT3:
+        card = MONPNT3(
+            self.name, self.label, self.axes,
+            copy.deepcopy(self.xyz),
+            self.node_set_group, self.elem_set_group,
+            cp=self.Cp(), cd=self.Cd(), xflag=self.xflag,
+            comment=self.comment)
+        memo_dict[id(self)] = card
+        return card
+
 
     def __init__(self, name: str, label: str | int, axes: str,
                  xyz: list[float],

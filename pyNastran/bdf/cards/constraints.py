@@ -378,7 +378,7 @@ class SESUP(SUPORT):
         components = ['1', '2']
         return SESUP(nodes, components)
 
-    def __init__(self, nodes, components, comment: str=''):
+    def __init__(self, nodes: list[int], components: list[str], comment: str=''):
         SUPORT.__init__(self, nodes, components, comment=comment)
 
 

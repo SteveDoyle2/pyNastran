@@ -1,11 +1,13 @@
 import unittest
 import numpy as np
+from cpylog import SimpleLogger
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestBoltMSC(unittest.TestCase):
     def test_bolt_msc_1(self):
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=False, log=log)
         bolt_id = 42
         gridc = 10
         nids_top = [11]

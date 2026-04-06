@@ -1,3 +1,5 @@
+import copy
+from typing import Any
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -217,7 +219,9 @@ class FEFACE(BaseCard):
 
 class GMCURV(BaseCard):
     type = 'GMCURV'
-    def __init__(self, curve_id, group, data, cid_in=0, cid_bc=0, comment=''):
+    def __init__(self, curve_id: int, group: str,
+                 data: list[str],
+                 cid_in: int=0, cid_bc: int=0, comment: str=''):
         """
         | GMCURV | CURVID | GROUP | CIDIN | CIDBC |
         |Evaluator Specific Data and Format |
@@ -239,6 +243,13 @@ class GMCURV(BaseCard):
         data = ['CAT']
         return GMCURV(curve_id, group, data, cid_in=0, cid_bc=0, comment='')
 
+    def __deepcopy__(self, memo_dict: dict[int, Any]):
+        data = copy.deepcopy(self.data)
+        result = GMCURV(self.curve_id, self.group, data,
+                        cid_in=self.cid_in, cid_bc=self.cid_bc, comment=self.comment)
+        memo_dict[id(self)] = result
+        return result
+
     @classmethod
     def add_card(cls, card_lines, comment=''):
         card = BDFCard(to_fields([card_lines[0]], 'GMCURV'))
@@ -250,9 +261,9 @@ class GMCURV(BaseCard):
         return GMCURV(curve_id, group, data, cid_in=cid_in, cid_bc=cid_bc, comment=comment)
 
     def raw_fields(self):
-        return ['GMCURV', self.curve_id, self.group, self.cid_in, self.cid_bc, self.data]
+        return ['GMCURV', self.curve_id, self.group, self.cid_in, self.cid_bc] + self.data
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         #data = self.data.strip()
         #print(repr(data))
         #data_split = ['        %s\n' % data[i:i+64].strip() for i in range(0, len(data), 64)]
@@ -271,7 +282,8 @@ class GMCURV(BaseCard):
 
 class GMSURF(BaseCard):
     type = 'GMSURF'
-    def __init__(self, surf_id, group, data, cid_in=0, cid_bc=0, comment=''):
+    def __init__(self, surf_id: int, group: str, data: list[str],
+                 cid_in: int=0, cid_bc: int=0, comment: str=''):
         """
         | GMSURF | SURFID | GROUP | CIDIN | CIDBC |
         |Evaluator Specific Data and Format |
@@ -294,8 +306,15 @@ class GMSURF(BaseCard):
         data = ['CAT']
         return GMSURF(surf_id, group, data, cid_in=0, cid_bc=0, comment='')
 
+    def __deepcopy__(self, memo_dict: dict[int, Any]):
+        data = copy.deepcopy(self.data)
+        result = GMSURF(self.surf_id, self.group, data,
+                        cid_in=self.cid_in, cid_bc=self.cid_bc, comment=self.comment)
+        memo_dict[id(self)] = result
+        return result
+
     @classmethod
-    def add_card(cls, card_lines, comment=''):
+    def add_card(cls, card_lines, comment: str=''):
         card = BDFCard(to_fields([card_lines[0]], 'GMSURF'))
         surf_id = integer(card, 1, 'surf_id')
         group = string(card, 2, 'group')
@@ -305,9 +324,9 @@ class GMSURF(BaseCard):
         return GMSURF(surf_id, group, data, cid_in=cid_in, cid_bc=cid_bc, comment=comment)
 
     def raw_fields(self):
-        return ['GMSURF', self.surf_id, self.group, self.cid_in, self.cid_bc, self.data]
+        return ['GMSURF', self.surf_id, self.group, self.cid_in, self.cid_bc] + self.data
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         #data = self.data.strip()
         #print(repr(data))
         #data_split = ['        %s\n' % data[i:i+64].strip() for i in range(0, len(data), 64)]
