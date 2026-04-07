@@ -1088,6 +1088,26 @@ class AESURF(BaseCard):
                       crefc, crefs, pllim, pulim, hmllim, hmulim,
                       tqllim, tqulim, comment=comment)
 
+    def _verify(self, xref: bool) -> None:
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+
+        """
+
+        cid1 = self.Cid1()
+        aelist1 = self.Aelist_id1()
+        assert isinstance(cid1, integer_types), f'cid1={cid1!r}'
+        assert isinstance(aelist1, integer_types), f'aelist1={aelist1!r}'
+        cid2 = self.Cid2()
+        aelist2 = self.Aelist_id2()
+        assert cid2 is None or isinstance(cid2, integer_types), f'cid2={cid2!r}'
+        assert aelist2 is None or isinstance(aelist2, integer_types), f'aelist2={aelist2!r}'
+
     def Cid1(self) -> int:
         if self.cid1_ref is not None:
             return self.cid1_ref.cid

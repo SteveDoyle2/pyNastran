@@ -29,6 +29,7 @@ from pyNastran.utils.mathematics import integrate_positive_unit_line
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF, GRID
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class CBEAM(LineElement):

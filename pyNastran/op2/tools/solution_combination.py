@@ -306,7 +306,6 @@ def run_load_case_combinations_from_data(op2_filename: PathLike,
 
     # load_geometry: bool = False,
     # combine: bool = True,
-    # subcases: Optional[list[int]] = None,
     # debug: Optional[bool] = True,
     # build_dataframe: Optional[bool] = False,
     # skip_undefined_matrices: bool = True,

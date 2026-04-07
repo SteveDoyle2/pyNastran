@@ -1518,7 +1518,7 @@ class MATCID(BaseCard):
         """
 
         cid = self.Cid()
-        assert isinstance(cid, integer_types), 'cid=%r' % cid
+        assert isinstance(cid, integer_types), f'cid={cid!r}'
 
 
 class RectangularCoord:
