@@ -227,7 +227,7 @@ def principal_components_3d(ntimes: int, nelements_nnodes: int,
         a_matrix[:, 2, 0] = txz / 2.
         a_matrix[:, 2, 1] = tyz / 2.
 
-    eigs = np.linalg.eigvalsh(a_matrix)  # array = (..., M, M) array
+    eigs = np.linalg.eigvalsh(a_matrix, UPLO='L')  # array = (..., M, M) array
 
     dtype = oxx.dtype
     o1 = eigs[:, 2].astype(dtype)  # max

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Optional
 import numpy as np
 from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
 from pyNastran.f06.f06_formatting import write_floats_13e
@@ -65,7 +66,7 @@ class RealEigenvectorArray(RealTableArray):
         assert np.allclose(data, data2)
         self.data = data
 
-    def get_phi(self) -> np.ndarray:
+    def get_phi(self, common_nodes: Optional[np.ndarray]=None) -> np.ndarray:
         """
         gets the eigenvector matrix
 
@@ -76,9 +77,18 @@ class RealEigenvectorArray(RealTableArray):
 
         TODO: doesn't consider SPOINTs/EPOINTs
         """
-        nmodes, nnodes = self.data.shape[:2]
+        if common_nodes is not None:
+            missing_nodes = np.setdiff1d(common_nodes, self.node_gridtype[:, 0])
+            if len(missing_nodes):
+                raise RuntimeError(f'missing_nodes = {missing_nodes}')
+            inode = np.searchsorted(self.node_gridtype[:, 0], common_nodes)
+            assert np.array_equal(self.node_gridtype[inode, 0], common_nodes)
+            data = self.data[:, inode, :]
+        else:
+            data = self.data
+        nmodes, nnodes = data.shape[:2]
         ndof = nnodes * 6
-        phi_transpose = self.data.reshape(nmodes, ndof)
+        phi_transpose = data.reshape(nmodes, ndof)
         return phi_transpose.T
 
     @classmethod
@@ -95,7 +105,8 @@ class RealEigenvectorArray(RealTableArray):
         """(ndof, nmodes) -> (nmodes, nnodes, 6)"""
         self.data = self.phi_to_data(phi)
 
-    def mac(self, obj: RealEigenvectorArray) -> np.ndarray:
+    def mac(self, obj: RealEigenvectorArray,
+            common_nodes: Optional[np.array]=None) -> np.ndarray:
         """
         Gets the modal assurance criterion (MAC)
 
@@ -114,10 +125,10 @@ class RealEigenvectorArray(RealTableArray):
         freedom (rows) in both mode shape matrices must be the same.
 
         """
-        phi1 = self.get_phi()
-        phi2 = self.get_phi()
-        nmodes1, ndof1 = phi1.shape
-        nmodes2, ndof2 = phi1.shape
+        phi1 = self.get_phi(common_nodes)
+        phi2 = obj.get_phi(common_nodes)
+        ndof1, nmodes1 = phi1.shape
+        ndof2, nmodes2 = phi2.shape
         assert ndof1 == ndof2, (ndof1, ndof2)
         mac_matrix = np.zeros((nmodes1, nmodes2), dtype='float64')
         for i in range(nmodes1):
