@@ -193,7 +193,7 @@ def oes_csolid(oes: OES,
             obj.data[obj.itime, itotal:itotal2, 9] = floats1[:, 8]
             obj.itotal = itotal2
             obj.ielement = itotali
-            #obj.check_stress(obj.itime)
+            obj.check_stress(obj.itime)
         else:
             if is_vectorized and op2.use_vector:  # pragma: no cover
                 log.debug(f'vectorize CSolid real SORT{sort_method} from {op2.table_name}')
