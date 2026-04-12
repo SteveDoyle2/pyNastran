@@ -12,7 +12,7 @@ from pyNastran.op2.result_objects.op2_objects import ScalarObject, set_as_sort1
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 #from pyNastran.op2.result_objects.table_object import append_sort1_sort2
 from pyNastran.f06.f06_formatting import write_float_13e
-from pyNastran.op2.op2_interface.write_utils import set_table3_field
+from pyNastran.op2.op2_interface.write_utils import set_table3_field, get_title_subtitle_label
 from pyNastran.op2.writer.utils import fix_table3_types
 
 float_types = (float, np.float32)

@@ -1,10 +1,11 @@
+from __future__ import annotations
 import numpy as np
 from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
 from pyNastran.f06.f06_formatting import write_floats_13e
 
 
 class ComplexEigenvectorArray(ComplexTableArray):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code, is_sort1: bool, isubcase: int, dt: int):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s',
@@ -94,8 +95,10 @@ class RealEigenvectorArray(RealTableArray):
         """(ndof, nmodes) -> (nmodes, nnodes, 6)"""
         self.data = self.phi_to_data(phi)
 
-    def mac(self, obj) -> np.ndarray:
+    def mac(self, obj: RealEigenvectorArray) -> np.ndarray:
         """
+        Gets the modal assurance criterion (MAC)
+
         Parameters
         ----------
         obj : RealEigenvectorArray

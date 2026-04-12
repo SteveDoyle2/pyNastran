@@ -67,6 +67,11 @@ RESULT_NAME_MAP = {
     'ELAS3': 'celas3',
     'ELAS4': 'celas4',
 
+    'MASS1': 'cmass1',
+    'MASS2': 'cmass2',
+    'MASS3': 'cmass3',
+    'MASS4': 'cmass4',
+
     'DUM8': 'cdum8',
     'DMIG': 'dmig',
     'GENEL': 'genel',
@@ -78,6 +83,16 @@ RESULT_NAME_MAP = {
     'WELD': 'cweld',
     'FASTP': 'cfast',
     'SEAMP': 'cseam',
+
+    'CPLSTN3': 'cplstn3',
+    'CPLSTN4': 'cplstn4',
+    'CPLSTN6': 'cplstn6',
+    'CPLSTN8': 'cplstn8',
+
+    'CPLSTS3': 'cplsts3',
+    'CPLSTS4': 'cplsts4',
+    'CPLSTS6': 'cplsts6',
+    'CPLSTS8': 'cplsts8',
 }
 
 

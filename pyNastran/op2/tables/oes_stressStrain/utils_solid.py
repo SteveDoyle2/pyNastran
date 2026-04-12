@@ -8,7 +8,7 @@ from pyNastran.op2.op2_interface.utils import mapfmt, real_imag_from_list, apply
 from pyNastran.op2.tables.utils import get_is_slot_saved, get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStrainArray, RealSolidStressArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStrainArray, RealSolidStressArray, SOLID_PRINCIPAL_METHOD
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids_vm import ComplexSolidStressVMArray, ComplexSolidStrainVMArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_solids import RandomSolidStressArray, RandomSolidStrainArray
@@ -133,30 +133,67 @@ def oes_csolid(oes: OES,
                 obj.element_cid[itotal:itotali, 1] = cids
 
             floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nelements, numwide_real)[:, 4:]
-            # 1     9    15   2    10   16  3   11  17   8
+            #  1    9    15   2    10   16   3   11  17  8
             # [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
             # isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
-            # (grid_device,
-            # sxx, sxy, s1, a1, a2, a3, pressure, svm,
-            # syy, syz, s2, b1, b2, b3,
-            # szz, sxz, s3, c1, c2, c3)
+            # s1 -
+            # in: [grid_device,
+            #      sxx, sxy, s1, a1, a2, a3, pressure, svm,
+            #      syy, syz, s2, b1, b2, b3,
+            #      szz, sxz, s3, c1, c2, c3]
             floats1 = floats.reshape(nelements * nnodes_expected, 21)  # [:, 1:] # drop grid_device
 
-            # o1/o2/o3 is not max/mid/min.  They are not consistently ordered, so we force it.
-            max_mid_min = np.vstack([
-                floats1[:, 3],
-                floats1[:, 11],
-                floats1[:, 17],
-            ]).T
-            max_mid_min.sort(axis=1)
-            assert max_mid_min.shape == (nelements * nnodes_expected, 3), max_mid_min.shape
-            obj.data[obj.itime, itotal:itotal2, 6:9] = max_mid_min[:, [2, 1, 0]]
+            if SOLID_PRINCIPAL_METHOD == 'og':  # pragma: no cover
+                # old method
+                # o1/o2/o3 is not max/mid/min.  They are not consistently ordered, so we force it.
+                max_mid_min = np.vstack([
+                    floats1[:, 3],
+                    floats1[:, 11],
+                    floats1[:, 17],
+                ]).T
+
+                # becomes mid_min_max after this
+                max_mid_min.sort(axis=1)
+                assert max_mid_min.shape == (nelements * nnodes_expected, 3), max_mid_min.shape
+
+                # data: [~, ~, ~, ~, ~, ~, omax, omid, omin, ~] -> [6, 7, 8]
+                # imax_mid_min = [6, 7, 8]   # raw:  [s1, s2, s3]
+                # [2, 1, 0] reverses the order of [min, mid, max]
+                obj.data[obj.itime, itotal:itotal2, 6:9] = max_mid_min[:, [2, 1, 0]]
+            elif SOLID_PRINCIPAL_METHOD == 'raw':
+                # data: [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm]
+
+                # [~,
+                #  ~, ~, s1, ~, ~, ~, ~, ~,
+                #  ~, ~, s2, ~, ~, ~,
+                #  ~, ~, s3, ~, ~, ~] -> [3, 11, 17]
+                # data: [~, ~, ~, ~, ~, ~, omax, omid, omin, ~] -> [6, 7, 8]
+                # imax_mid_min = [6, 8, 7] # new?  [s1, s3, s1]
+                obj.data[obj.itime, itotal:itotal2, 6:9] = floats1[:, [3, 11, 17]]
+            elif SOLID_PRINCIPAL_METHOD == '132':
+                # omax, omid, omin = o1, o3, o2
+                # [s1, s2, s3] -> [3, 11, 17]
+                obj.data[obj.itime, itotal:itotal2, 6:9] = floats1[:, [3, 17, 11]]
+            else:  ## pragma: no cover
+                raise RuntimeError(SOLID_PRINCIPAL_METHOD)
 
             # obj.data[obj.itime, itotal:itotal2, :] = floats1[:, isave]
+            # [~,
+            #  sxx, sxy, ~, ~, ~, ~, ~, ~,
+            #  syy, syz, ~, ~, ~, ~,
+            #  szz, sxz, ~, ~, ~, ~] -> [1, 9, 15, 2, 10, 16]
+            # data: [oxx, oyy, ozz, txy, tyz, txz, ~, ~, ~, ovm] -> [:6]
             obj.data[obj.itime, itotal:itotal2, :6] = floats1[:, [1, 9, 15, 2, 10, 16]]
+
+            # in: [~,
+            #      ~, ~, ~, ~, ~, ~, ~, svm,
+            #      ~, ~, ~, ~, ~, ~,
+            #      ~, ~, ~, ~, ~, ~]
+            # data: [~, ~, ~, ~, ~, ~, ~, ~, ~, ovm]
             obj.data[obj.itime, itotal:itotal2, 9] = floats1[:, 8]
             obj.itotal = itotal2
             obj.ielement = itotali
+            #obj.check_stress(obj.itime)
         else:
             if is_vectorized and op2.use_vector:  # pragma: no cover
                 log.debug(f'vectorize CSolid real SORT{sort_method} from {op2.table_name}')
@@ -164,6 +201,7 @@ def oes_csolid(oes: OES,
                                 nelements, dt,
                                 element_name, nnodes_expected,
                                 preline1, preline2)
+            obj.check_stress(obj.itime)
 
     elif op2.format_code in [2, 3] and op2.num_wide == numwide_imag:  # complex
         op2.log.debug(f'numwide_imag={numwide_imag}')
@@ -679,7 +717,7 @@ def oes_csolid_real(op2: OP2, data: bytes,
             eid_device, op2.nonlinear_factor, op2.sort_method)
         #print(f'eid_device={eid_device} eid={eid} dt={dt}')
         if op2.is_debug_file:
-            op2.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+            op2.binary_debug.write('%s - eid=%d; %s\n' % (preline1, eid, str(out)))
 
         assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
 

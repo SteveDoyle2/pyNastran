@@ -334,7 +334,9 @@ def main():
         "Usage:  "
         #is_release = False
         #is_dev = 'dev' in ver
-        "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [-x <arg>]... [--safe] [--skip_dataframe] [--nocombine] [--stop_on_skip]\n"
+        'op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] '
+        '[-x <arg>]... [-i <arg>]... '
+        '[--safe] [--skip_dataframe] [--nocombine] [--stop_on_skip]\n'
         '        op2_test -h | --help\n'
         '        op2_test -v | --version\n'
         '\n'
@@ -382,7 +384,7 @@ def main():
     short_stats = data['--short_stats']
     compare = not data['--disablecompare']
     build_pandas = not data['--skip_dataframe']
-    include_results = []  # data['--include']
+    include_results = data['--include']
     exclude_results = data['--exclude']
     xref_safe = data['--safe']
     combine = not data['--nocombine']
