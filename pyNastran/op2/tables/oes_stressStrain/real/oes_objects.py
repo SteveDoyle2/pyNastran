@@ -1,4 +1,4 @@
-from typing import Any
+from typing import BinaryIO, TextIO, Any
 import numpy as np
 from pyNastran.utils.numpy_utils import float_types
 from pyNastran.op2.result_objects.op2_objects import BaseElement, set_as_sort1
@@ -94,7 +94,8 @@ class OES_Object(BaseElement):
     def is_stress(self):
         raise NotImplementedError(f'overwrite this in {self.class_name}')
 
-    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
+    def _write_table_3(self, op2_file: BinaryIO, op2_ascii: TextIO, new_result,
+                       itable: int, itime: int): #, itable=-3, itime=0):
         import inspect
         from struct import pack
         frame = inspect.currentframe()
@@ -143,9 +144,10 @@ class OES_Object(BaseElement):
         num_wide = self.num_wide
         acoustic_flag = 0
         thermal = self.thermal
-        title = b'%-128s' % self.title.encode('ascii')
-        subtitle = b'%-128s' % self.subtitle.encode('ascii')
-        label = b'%-128s' % self.label.encode('ascii')
+
+        title, subtitle, label = get_title_subtitle_label(
+            self.title, self.subtitle, self.label,
+            self.superelement_adaptivity_index)
         # ftable3 = b'50i 128s 128s 128s'
         # unused_oCode = 0
 
@@ -583,10 +585,10 @@ def update_stress_force_time_word(obj) -> None:
     else:
         try:
             name = obj.analysis_method
-        except AttributeError:
+        except AttributeError as error:
             msg = str(obj.get_stats())
             msg += obj.object_stats()
-            raise RuntimeError(msg) from e
+            raise RuntimeError(msg) from error
 
         #print(f'\n{self.class_name}: name = {name}')
         #_analysis_code_fmt

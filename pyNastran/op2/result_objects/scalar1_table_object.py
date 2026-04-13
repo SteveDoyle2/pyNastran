@@ -343,7 +343,8 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         acoustic_flag = 0
         thermal = self.thermal
         title, subtitle, label = get_title_subtitle_label(
-            self.title, self.subtitle, self.label)
+            self.title, self.subtitle, self.label,
+            self.superelement_adaptivity_index)
         ftable3 = b'i' * 50 + b'128s 128s 128s'
         oCode = 0
 

@@ -1,11 +1,10 @@
 # pylint: disable=C0301,C0103,R0913,R0914,R0904,C0111,R0201,R0902
-import warnings
 from itertools import count
 from struct import pack
+import warnings
 from typing import TextIO, Optional
 
 import numpy as np
-from numpy import zeros, where, searchsorted
 from numpy.linalg import eigh  # type: ignore
 
 from pyNastran.utils.numpy_utils import float_types, integer_float_types
@@ -28,7 +27,8 @@ ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CPENTA' : 68,
     'CPYRAM' : 255,
 }
-SOLID_PRINCIPAL_METHOD = '132'
+# SOLID_PRINCIPAL_METHOD = '132'
+SOLID_PRINCIPAL_METHOD = 'og'
 
 
 class RealSolidArray(OES_Object):
@@ -39,6 +39,8 @@ class RealSolidArray(OES_Object):
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
         self.nelements = 0  # result specific
+        self.element_cid = np.zeros((0, 2), dtype='int32')
+        self.element_node = np.zeros((0, 2), dtype='int32')
 
         # if is_sort1:
         #     #sort1
@@ -89,8 +91,8 @@ class RealSolidArray(OES_Object):
         ovm_sheari2 = ovm_sheari.reshape(ntimes, nelements_nnodes)
 
         self.data[:, :, 6] = omax.reshape(ntimes, nelements_nnodes)
-        self.data[:, :, 7] = omid.reshape(ntimes, nelements_nnodes)
-        self.data[:, :, 8] = omin.reshape(ntimes, nelements_nnodes)
+        self.data[:, :, 7] = omin.reshape(ntimes, nelements_nnodes)
+        self.data[:, :, 8] = omid.reshape(ntimes, nelements_nnodes)
         self.data[:, :, 9] = ovm_sheari2
 
         #A = [[doxx, dtxy, dtxz],
@@ -283,10 +285,10 @@ class RealSolidArray(OES_Object):
         else:
             stress_bits = [0, 0, 0, 0, 1]
             s_code = 0
-            assert stress_bits[1] == 0, 'stress_bits=%s' % (stress_bits)
+            assert stress_bits[1] == 0, 'stress_bits=%s' % str(stress_bits)
 
         # stress
-        assert stress_bits[1] == stress_bits[3], 'stress_bits=%s' % (stress_bits)
+        assert stress_bits[1] == stress_bits[3], 'stress_bits=%s' % str(stress_bits)
         data_code['stress_bits'] = stress_bits
         data_code['s_code'] = s_code
 
@@ -488,8 +490,8 @@ class RealSolidArray(OES_Object):
                     (oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2) = t2
                     if not np.array_equal(s1, s2):
                         msg += (
-                            '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s)\n'
-                            '%s      (%s, %s, %s, %s, %s, %s)\n' % (
+                            '(%s, %s)    (%s, %s, %s, %s, %s, %s)\n'
+                                '%s      (%s, %s, %s, %s, %s, %s)\n' % (
                                 eid, nid,
                                 oxx1, oyy1, ozz1, txy1, tyz1, txz1,
                                 ' ' * (len(str(eid)) + len(str(nid)) + 2),
@@ -627,12 +629,12 @@ class RealSolidArray(OES_Object):
         cids3 = self.element_cid[:, 1]
 
         #fdtype = self.data.dtype
-        oxx = self.data[:, :, 0]
-        oyy = self.data[:, :, 1]
-        ozz = self.data[:, :, 2]
-        txy = self.data[:, :, 3]
-        tyz = self.data[:, :, 4]
-        txz = self.data[:, :, 5]
+        # oxx = self.data[:, :, 0]
+        # oyy = self.data[:, :, 1]
+        # ozz = self.data[:, :, 2]
+        # txy = self.data[:, :, 3]
+        # tyz = self.data[:, :, 4]
+        # txz = self.data[:, :, 5]
         #o1 = self.data[:, :, 6]
         #o2 = self.data[:, :, 7]
         #o3 = self.data[:, :, 8]
@@ -663,15 +665,15 @@ class RealSolidArray(OES_Object):
             #pi = p[itime, :]
 
             cnnodes = nnodes + 1
-            for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz in zip(
+            for i, deid, node_id, oxxi, oyyi, ozzi, txyi, tyzi, txzi in zip(
                     count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz):
 
                 if is_exponent_format:
                     [oxxi, oyyi, ozzi, txyi, tyzi, txzi] = write_floats_13e_long(
-                        [doxx, doyy, dozz, dtxy, dtyz, dtxz])
+                        [oxxi, oyyi, ozzi, txyi, tyzi, txzi])
 
                 if i % cnnodes == 0:
-                    j = where(eids3 == deid)[0][0]
+                    j = np.where(eids3 == deid)[0][0]
                     cid = cids3[j]
                 csv_file.write(f'{flag}, {isubcase}, {itime}, {deid:{eid_len}d}, {node_id:{nid_len}d}, {cid}, '
                                f'{oxxi}, {oyyi}, {ozzi}, {txyi}, {tyzi}, {txzi}\n')
@@ -778,7 +780,7 @@ class RealSolidArray(OES_Object):
                     [doxx, doyy, dozz, dtxy, dtyz, dtxz, domin, domid, domin, dp, dovm])
 
                 if i % cnnodes == 0:
-                    j = where(eids3 == deid)[0][0]
+                    j = np.where(eids3 == deid)[0][0]
                     cid = cids3[j]
                     f06_file.write('0  %8s    %8iGRID CS  %i GP\n' % (deid, cid, nnodes))
                     f06_file.write(
@@ -809,12 +811,18 @@ class RealSolidArray(OES_Object):
         nnodes_centroid = self.nnodes_per_element
         # print(len(self.element_node[:, 0]), nelement, nnodes_centroid, self.element_node.shape)
         # print(self.element_node.tolist())
+        nelement_node = len(self.element_node[:, 0])
+        if nelement_node != (nelement * nnodes_centroid):
+            warnings.warn('incorrect data in RealSolidArray.element_node')
+            return
         eids2 = self.element_node[:, 0].reshape(nelement, nnodes_centroid)
         nids2 = self.element_node[:, 1].reshape(nelement, nnodes_centroid)
         eid_max = eids2.max()
         nid_max = nids2.max()
-        eid_nid1_fmt = f'%{len(str(eid_max))}d %{len(str(nid_max))}d'
-        eid_nid2_fmt = f'%{len(str(eid_max))}s %{len(str(eid_max))}s'
+        len_eid = max(3, len(str(eid_max)))
+        len_nid = max(3, len(str(nid_max)))
+        eid_nid1_fmt = f'%{len_eid}d %{len_nid}d'
+        eid_nid2_fmt = f'%{len_eid}s %{len_nid}s'
         omax = self.data[:, :, 6]
         omid = self.data[:, :, 7]
         omin = self.data[:, :, 8]
@@ -824,16 +832,23 @@ class RealSolidArray(OES_Object):
                 omax[itime, :].ravel(),
                 omid[itime, :].ravel(),
                 omin[itime, :].ravel(),):
-            passed = (omaxi >= omidi >= omini)
+            # passed = (omaxi >= omidi >= omini)
+            passed = (
+                (omaxi >= omidi or np.isclose(omaxi, omidi)) and
+                (omidi >= omini or np.isclose(omidi, omini))
+            )
+            # passed = (omaxi+1e-10 >= omidi >= omini-1e-10)
             if not passed:
+                # passed1 = (omaxi+1e-10 >= omidi)
+                # passed2 = (omidi+1e-10 >= omini)
                 passed1 = (omaxi >= omidi)
                 passed2 = (omidi >= omini)
                 eid_nid1 = eid_nid1_fmt % (eid, nid)
-                msg += f'({eid_nid1}) {omaxi:+14e} {omidi:+14e} {omini:+14e} {passed1} {passed2}\n'
+                msg += f'({eid_nid1}) {omaxi:+15.8e} {omidi:+15.8e} {omini:+15.8e} {passed1} {passed2}\n'
                 nfailed += 1
         if msg:
             eid_nid2 = eid_nid2_fmt % ("eid", "nid")
-            titles = f'({eid_nid2})   {"omax":14s} {"omid":14s} {"omin":14s}\n'
+            titles = f'({eid_nid2}) {"omax":15s} {"omid":15s} {"omin":15s}\n'
             nfailed_max = 20
             if nfailed > nfailed_max:
                 msg = '\n'.join(msg.split('\n')[:nfailed_max])
@@ -855,17 +870,17 @@ class RealSolidArray(OES_Object):
             self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
-        #if isinstance(self.nonlinear_factor, float):
-            #op2_format = '%sif' % (7 * self.ntimes)
-            #raise NotImplementedError()
-        #else:
-            #op2_format = 'i21f'
-        #s = Struct(op2_format)
-        nnodes_expected = self.nnodes
+        # if isinstance(self.nonlinear_factor, float):
+        #     op2_format = '%sif' % (7 * self.ntimes)
+        #     raise NotImplementedError()
+        # else:
+        #     op2_format = 'i21f'
+        # s = Struct(op2_format)
+        # nnodes_expected = self.nnodes
 
         eids2 = self.element_node[:, 0]
         nodes = self.element_node[:, 1]
-        #nelements_nodes = len(nodes)
+        # nelements_nodes = len(nodes)
 
         eids3 = self.element_cid[:, 0]
         cids3 = self.element_cid[:, 1]

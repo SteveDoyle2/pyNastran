@@ -2682,6 +2682,7 @@ class TestOP2Main(Tester):
     def test_bdf_op2_other_20(self):
         """checks gpst17.bdf, which tests GridPointStressesVolumeDirectArray"""
         log = get_logger(level='error')
+        # log = get_logger(level='debug')
         bdf_filename = MODEL_PATH / 'other' / 'gpst17.bdf'
         op2_filename = MODEL_PATH / 'other' / 'gpst17.op2'
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)

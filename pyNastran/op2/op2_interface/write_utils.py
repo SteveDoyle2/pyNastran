@@ -127,7 +127,9 @@ def view_dtype(array_obj: np.ndarray, dtype) -> np.ndarray:
 
 def get_title_subtitle_label(title: str,
                              subtitle: str,
-                             label: str) -> tuple[bytes, bytes, bytes]:
+                             label: str,
+                             superelement_adaptivity_index: str='',
+                             ) -> tuple[bytes, bytes, bytes]:
     """
     TODO: subtitle is missing
       superelement_adaptivity_index
@@ -135,7 +137,8 @@ def get_title_subtitle_label(title: str,
     title_out = b'%-128s' % title.encode('ascii')
     #subtitle_out = b'%-128s' % subtitle.encode('ascii')
     subtitle_out = _write_subtitle_adaptivity_index(
-        subtitle, superelement='', adaptivity_index='')
+        subtitle, superelement=superelement_adaptivity_index,
+        adaptivity_index='')
     label_out = b'%-128s' % label.encode('ascii')
 
     assert len(title_out) == 128, len(title_out)
@@ -156,11 +159,15 @@ def _write_subtitle_adaptivity_index(
     assert len(subtitle_prefix) == 67, (len(subtitle_prefix), subtitle_prefix)
 
     if superelement:
+        # if isinstance(superelement, bytes):
+        #     super_adapt_bytes = b'SUPERELEMENT %b' % superelement
         if isinstance(superelement, int):
             super_adapt_bytes = b'SUPERELEMENT %d' % superelement
         else:
             assert isinstance(superelement, str), superelement
-            super_adapt_bytes = b'SUPERELEMENT %s' % superelement
+            if superelement.startswith('SUPERELEMENT '):
+                superelement = superelement[13:]
+            super_adapt_bytes = b'SUPERELEMENT %s' % superelement.encode('ascii')
             # title + 'SUPERELEMENT 0, 1'
             # title + 'SUPERELEMENT 0 (id=2000)'
     elif adaptivity_index:

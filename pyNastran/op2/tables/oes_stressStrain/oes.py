@@ -343,16 +343,20 @@ class OES:
             228,  # CQUADR
             232,  # CQUADR-composite
             243,  # CQUADX4
-            189,  # VUQUAD
-            190,  # VUTRIA
-            191,  # VUBEAM
             256,  # CPYRAM
             227,  # CTRIAR
             233, # CTRIAR-composite
             275,  # CPLSTS3
         ]
+        elements_to_skip = [
+            189,  # VUQUAD
+            190,  # VUTRIA
+            191,  # VUBEAM
+        ]
         if op2.element_type in elements_to_read:
             n = self._read_oes_4_sort(data, ndata)
+        elif op2.element_type in elements_to_skip:
+            n = ndata
         else:
             msg = op2.code_information()
             n = op2._not_implemented_or_skip(data, ndata, msg)

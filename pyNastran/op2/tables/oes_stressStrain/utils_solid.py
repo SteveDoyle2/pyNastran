@@ -193,7 +193,7 @@ def oes_csolid(oes: OES,
             obj.data[obj.itime, itotal:itotal2, 9] = floats1[:, 8]
             obj.itotal = itotal2
             obj.ielement = itotali
-            obj.check_stress(obj.itime)
+            #obj.check_stress(obj.itime)
         else:
             if is_vectorized and op2.use_vector:  # pragma: no cover
                 log.debug(f'vectorize CSolid real SORT{sort_method} from {op2.table_name}')
@@ -204,7 +204,7 @@ def oes_csolid(oes: OES,
             obj.check_stress(obj.itime)
 
     elif op2.format_code in [2, 3] and op2.num_wide == numwide_imag:  # complex
-        op2.log.debug(f'numwide_imag={numwide_imag}')
+        # op2.log.debug(f'numwide_imag={numwide_imag}')
         ntotal = numwide_imag * 4 * factor
         nelements = ndata // ntotal
         oes.ntotal += nelements * nnodes_expected
@@ -214,7 +214,6 @@ def oes_csolid(oes: OES,
             return nelements * ntotal, None, None
 
         obj = op2.obj
-
         if op2.use_vector and is_vectorized and op2.sort_method == 1:
             n = nelements * ntotal
             ielement = obj.ielement

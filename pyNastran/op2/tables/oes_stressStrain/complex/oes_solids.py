@@ -333,18 +333,18 @@ class ComplexSolidArray(OES_Object):
         op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
         eids = self.element_node[:, 0]
-        eids_device = eids * 10 + self.device_code
+        # eids_device = eids * 10 + self.device_code
         eids_device_nelements = eids[::nnodes_centroid] * 10 + self.device_code
         assert len(eids_device_nelements) == nelements, f'neids_device={len(eids_device_nelements)}; nelements={nelements}'
 
         if not self.is_sort1:
             raise NotImplementedError('SORT2')
-        struct1 = Struct(endian + b'2i 4s 2i 12f')
-        struct2 = Struct(endian + b'i 12f')
+        # struct1 = Struct(endian + b'2i 4s 2i 12f')
+        # struct2 = Struct(endian + b'i 12f')
 
         op2_ascii.write(f'nelements={nelements:d}\n')
 
-        eids2 = self.element_node[:, 0]
+        # eids2 = self.element_node[:, 0]
         nodes = self.element_node[:, 1]
         nelements_nodes = len(nodes)
 
@@ -381,8 +381,7 @@ class ComplexSolidArray(OES_Object):
         nodes_view = nodes.view(fdtype).reshape(nelements_nodes, 1)
         #data_out[:, 4] = nodes_view.reshape(nelements_nodes, 1)
 
-        unused_msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1=True)
-
+        # unused_msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1=True)
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
