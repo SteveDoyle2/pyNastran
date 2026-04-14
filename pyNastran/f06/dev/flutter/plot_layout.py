@@ -1,12 +1,10 @@
 from __future__ import annotations
 import os
 import sys
-import copy
 import warnings
 import traceback
 from pathlib import Path
-from functools import wraps
-from typing import Optional, Any, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -20,22 +18,20 @@ except ModuleNotFoundError:
 
 from pyNastran.f06.dev.flutter.utils import get_raw_json
 JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json(allow_vtk=False)
-from pyNastran.f06.dev.flutter.trade_layout import TradeLayout
 from pyNastran.f06.dev.flutter.utils_qt import create_grid_from_list
 
 from qtpy import QtCore
 from qtpy.compat import getopenfilename  # getsavefilename
 # from qtpy.QtGui import QIcon, QPixmap
 from qtpy.QtWidgets import (
-    QLabel, QWidget,
-    QApplication, QVBoxLayout, QComboBox,
+    QLabel,
+    QVBoxLayout, QComboBox,
     QHBoxLayout, QPushButton, QGridLayout,
-    QAction,
     QCheckBox, QLineEdit,
     QListWidgetItem, QAbstractItemView,
-    QListWidget, QSpinBox, QTabWidget,)
+    QListWidget, QSpinBox)
 
-from cpylog import SimpleLogger
+# from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.gui.utils.qt.pydialog import QFloatEdit, make_font
 from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
@@ -45,20 +41,21 @@ from pyNastran.f06.dev.flutter.gui_flutter import (
     export_flutter_results, get_list_float_or_none, get_float_or_none,
     get_selected_items_flat)
 
-from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_menus
-from pyNastran.f06.dev.flutter.preferences_object import FlutterPreferencesObject
-from pyNastran.f06.dev.flutter.preferences import (
-    FLUTTER_BBOX_TO_ANCHOR_DEFAULT, LEGEND_LOC_DEFAULT,
-    FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT, FREQ_NDIGITS_DEFAULT, FREQ_DIVERGENCE_TOL)
+# from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_menus
+# from pyNastran.f06.dev.flutter.preferences_object import FlutterPreferencesObject
+# from pyNastran.f06.dev.flutter.preferences import (
+#     FLUTTER_BBOX_TO_ANCHOR_DEFAULT, LEGEND_LOC_DEFAULT,
+#     FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT, FREQ_NDIGITS_DEFAULT, FREQ_DIVERGENCE_TOL)
 
 from pyNastran.f06.flutter_response import Limit  # FlutterResponse
 from pyNastran.f06.parse_flutter import get_flutter_units
 
-from pyNastran.f06.dev.flutter.utils_qt import (
-    load_lineedits, load_pulldowns, load_min_max_lineedits)
+# from pyNastran.f06.dev.flutter.utils_qt import (
+#     load_lineedits, load_pulldowns, load_min_max_lineedits)
 from pyNastran.f06.dev.flutter.utils import (
-    validate_json,
-    get_point_removal_str, get_noline_nopoints,
+    # validate_json,
+    # get_point_removal_str,
+    get_noline_nopoints,
     point_removal_str_to_point_removal,
     _float_passed_to_default, get_plot_flags,
     update_ylog_style, get_png_filename,
@@ -70,7 +67,7 @@ PKG_PATH = Path(pyNastran.__path__[0])
 
 AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
 
-from pyNastran.f06.dev.flutter.vtk_data import VtkData
+# from pyNastran.f06.dev.flutter.vtk_data import VtkData
 from pyNastran.f06.parse_flutter import FlutterResponse
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -255,7 +252,7 @@ class PlotLayout(QHBoxLayout):
         self.units_out_pulldown = QComboBox(parent)
         self.units_out_pulldown.addItems(UNITS_OUT)
         self.units_out_pulldown.setToolTip(units_msg)
-        iunits_out = UNITS_IN.index('english_kt')
+        iunits_out = UNITS_OUT.index('english_kt')
         self.units_out_pulldown.setCurrentIndex(iunits_out)
         self.units_out_pulldown.setToolTip('Sets the units for the plot; may be updated')
 
@@ -644,8 +641,14 @@ class PlotLayout(QHBoxLayout):
         basedir = os.path.dirname(self.parent.f06_filename)
         if not os.path.exists(basedir):
             basedir = '.'
+        # print('calling qt plot layout')
+        # print(f'title = {title!r}')
+        # print(f'basedir = {basedir!r}')
+        # basedir = '.'
+        # print(f'qt_wildcard = {qt_wildcard!r}')
         fname, wildcard_level = getopenfilename(
-            self, caption=title, basedir=basedir, filters=qt_wildcard,)
+            self.parent, caption=title, basedir=basedir, filters=qt_wildcard,)
+        print('back from qt')
         if fname == '':
             return
         self.f06_filename_edit.setText(fname)
@@ -742,7 +745,7 @@ class PlotLayout(QHBoxLayout):
         # self.plot(self.modes)
 
     def _on_update_mode(self) -> None:
-        if not self.is_valid:
+        if not self.parent.is_valid:
             # self.log.warning('_on_update_mode')
             self.validate()
         self.plot()
@@ -783,7 +786,7 @@ class PlotLayout(QHBoxLayout):
         eigr_lim, is_passed_eigr = get_list_float_or_none(
             [self.eigr_lim_edit_min, self.eigr_lim_edit_max])
         eigi_lim, is_passed_eigi = get_list_float_or_none(
-            [self.eigr_lim_edit_min, self.eigr_lim_edit_max])
+            [self.eigi_lim_edit_min, self.eigi_lim_edit_max])
         is_passed_eig = all([is_passed_eigr, is_passed_eigi])
 
         freq_tol, is_passed_tol1 = get_float_or_none(self.freq_tol_edit)
@@ -1119,10 +1122,10 @@ class PlotLayout(QHBoxLayout):
             xlim = (None, None)
 
         # log.info(f'xlim={xlim}\n')
-        if plot_type == 'zimmerman':
+        if plot_type in {'root-locus', 'zimmerman'}:
             print('skipping xlim check')
         else:
-            assert xlim[0] != '' and xlim[1] != '', (xlim, x_plot_type)
+            assert xlim[0] != '' and xlim[1] != '', (xlim, plot_type, x_plot_type)
 
         v_lines = get_vlines(parent.vf, parent.vl)
         # log.info(f'v_lines={v_lines}\n')
@@ -1241,7 +1244,7 @@ class PlotLayout(QHBoxLayout):
                 )
                 update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
             else:
-                assert plot_type in 'x-damp-freq', plot_type
+                assert plot_type in {'x-damp-freq'}, plot_type
                 # print('plot_vg_vf')
                 # log.info(f'png_filename={png_filename!r}')
                 # log.info(f'modes={modes!r}')

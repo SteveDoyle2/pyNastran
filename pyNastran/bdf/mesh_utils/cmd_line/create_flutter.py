@@ -106,11 +106,11 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
     if data['--sid']:
         sid = _int(data, '--sid')
 
-    minus_eas = 0.0
+    minus_eas = []
     is_minus_eas = data['--minus_eas']
     if isinstance(is_minus_eas, bool):
         if is_minus_eas:
-            minus_eas = _float(data, 'MINUS_EAS')
+            minus_eas = _float_list(data, 'MINUS_EAS')
     else:
         raise NotImplementedError(data['--minus_eas'])
 
@@ -192,9 +192,11 @@ def create_flutter(log: SimpleLogger,
                    rhoref_flag: bool=False,
                    size: int=8,
                    clean: bool=False,
-                   minus_eas: float=0.0,
+                   minus_eas: Optional[list[float]]=None,
                    bdf_filename_out: str='flutter_cards.inc',
                    comment: str='') -> tuple[BDF, str, str]:
+    if minus_eas is None:
+        minus_eas = []
 
     unitsi = UNITS_MAP[units_out.lower()]
     alt_units, velocity_units, density_units, eas_units_default, pressure_units = unitsi
@@ -427,6 +429,22 @@ def _float(data: dict[str, Any], name: str):
     except:
         raise SyntaxError(f'name={name} value={svalue!r} is not a float')
     return value
+
+def _float_list(data: dict[str, Any], name: str) -> list[float]:
+    svalue = data[name]
+    if ',' in svalue:
+        svalues = svalue.strip(',').split(',')
+        try:
+            values = [float(svalue) for svalue in svalues]
+        except:
+            raise SyntaxError(f'name={name} value={svalue!r} is not a float or list of floats (e.g., 2,4,10)')
+    else:
+        try:
+            value = float(svalue)
+        except:
+            raise SyntaxError(f'name={name} value={svalue!r} is not a float or list of floats (e.g., 2,4,10)')
+        values = [value]
+    return values
 
 
 def _int(data: dict[str, Any], name: str):

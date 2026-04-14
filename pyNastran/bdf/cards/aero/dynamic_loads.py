@@ -700,7 +700,7 @@ class FLUTTER(BaseCard):
 
     def make_flfacts_eas_sweep_constant_alt(self, model: BDF,
                                             alt: float, eass: list[float],
-                                            minus_eas: float=0.0,
+                                            minus_eas: Optional[list[float]]=None,
                                             alt_units: str='m',
                                             velocity_units: str='m/s',
                                             density_units: str='kg/m^3',
@@ -726,6 +726,8 @@ class FLUTTER(BaseCard):
             the equivalent airspeed units; ft/s, m/s, in/s, knots
 
         """
+        if minus_eas is None:
+            minus_eas = []
         eass.sort()
         rho, mach, velocity = make_flfacts_eas_sweep_constant_alt(
             alt, eass,
@@ -758,12 +760,14 @@ class FLUTTER(BaseCard):
                                              model: BDF,
                                              mach: float, alts: np.ndarray,
                                              eas_limit: float=1000.,
-                                             minus_eas: float=0.0,
+                                             minus_eas: Optional[list[float]]=None,
                                              alt_units: str='m',
                                              velocity_units: str='m/s',
                                              density_units: str='kg/m^3',
                                              eas_units: str='m/s') -> None:
         """makes an altitude sweep"""
+        if minus_eas is None:
+            minus_eas = []
         alts.sort()
         alts = alts[::-1]
         rho, mach, velocity = make_flfacts_alt_sweep_constant_mach(
@@ -807,12 +811,14 @@ class FLUTTER(BaseCard):
                                             model: BDF,
                                             tas: float, alts: np.ndarray,
                                             eas_limit: float=1000.,
-                                            minus_eas: float=0.0,
+                                            minus_eas: Optional[list[float]]=None,
                                             alt_units: str='m',
                                             velocity_units: str='m/s',
                                             density_units: str='kg/m^3',
                                             eas_units: str='m/s') -> tuple[Any, Any, Any]:
         """untested"""
+        if minus_eas is None:
+            minus_eas = []
         alts.sort()
         alts = alts[::-1]
         rho, mach, velocity = make_flfacts_alt_sweep_constant_tas(
@@ -855,12 +861,14 @@ class FLUTTER(BaseCard):
                                             model: BDF,
                                             alt: float, tass: np.ndarray,
                                             eas_limit: float=1000.,
-                                            minus_eas: float=0.0,
+                                            minus_eas: Optional[list[float]]=None,
                                             alt_units: str='m',
                                             velocity_units: str='m/s',
                                             density_units: str='kg/m^3',
                                             eas_units: str='m/s') -> tuple[Any, Any, Any]:
         """makes an altitude sweep (dev...not validated)"""
+        if minus_eas is None:
+            minus_eas = []
         tass.sort()
         rho, mach, velocity = make_flfacts_tas_sweep_constant_alt(
             alt, tass, eas_limit=eas_limit,
@@ -903,7 +911,7 @@ class FLUTTER(BaseCard):
     def make_flfacts_eas_sweep_constant_mach(self, model: BDF,
                                              mach: float, eass: np.ndarray,
                                              gamma: float=1.4,
-                                             minus_eas: float=0.0,
+                                             minus_eas: Optional[list[float]]=None,
                                              alt_units: str='m',
                                              velocity_units: str='m/s',
                                              density_units: str='kg/m^3',
@@ -918,6 +926,8 @@ class FLUTTER(BaseCard):
             = sqrt(gamma*R*Tinf) * Minf * sqrt(p_inf/(R*T_inf*rho0))
             = Minf * sqrt(gamma*p_inf/rho0)
         """
+        if minus_eas is None:
+            minus_eas = []
         neas = len(eass)
         #machs = mach * np.ones(neas)
         rho, machs, velocity, alts = make_flfacts_eas_sweep_constant_mach(
@@ -961,12 +971,14 @@ class FLUTTER(BaseCard):
 
     def make_flfacts_mach_sweep_constant_alt(self, model: BDF, alt, machs,
                                              eas_limit=1000.,
-                                             minus_eas: float=0.0,
+                                             minus_eas: Optional[list[float]]=None,
                                              alt_units='m',
                                              velocity_units='m/s',
                                              density_units='kg/m^3',
                                              eas_units='m/s'):
         """makes a mach sweep"""
+        if minus_eas is None:
+            minus_eas = []
         machs.sort()
         #machs = machs[::-1]
         rho, mach, velocity = make_flfacts_mach_sweep_constant_alt(

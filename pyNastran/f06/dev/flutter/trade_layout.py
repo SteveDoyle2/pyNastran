@@ -3,8 +3,10 @@ import os
 import traceback
 from pathlib import Path
 from functools import wraps
+import pickle
 from typing import Any, TYPE_CHECKING
 import natsort
+from PyQt5.QtWidgets import QCheckBox
 
 from pyNastran.gui.utils.qt.pydialog import QFloatEdit
 from pyNastran.utils import print_bad_path
@@ -99,10 +101,13 @@ class TradeLayout(QVBoxLayout):
         self.tab_edit = QLineEdit(parent)
         self.tab_edit.setVisible(False)
 
+        self.save_obj_checkbox = QCheckBox('Save Object', parent)
+
         # self.tab_select_browse.setEnabled(False)
         # self.tab_select_browse.setToolTip('Must click load button before selecting tab')
 
         self.run_organize_button = QPushButton('Run', parent)
+        self.plot_from_obj_button = QPushButton('Plot From Object', parent)
 
         # self.starting_row = QLabel('Starting Row:', parent)
         # self.starting_row = QLineEdit(parent)
@@ -157,6 +162,7 @@ class TradeLayout(QVBoxLayout):
             (self.eas_max_label, self.eas_max_edit),
         ])
         grid3 = create_grid_from_list(parent, [
+            (self.save_obj_checkbox),
             (self.python_filename_label, self.python_filename_edit, self.python_filename_browse, self.python_load_button, self.python_plot_button),
             (self.xaxis_label, self.xaxis_pulldown),
             (self.yaxis_label, self.yaxis_pulldown),
@@ -171,6 +177,7 @@ class TradeLayout(QVBoxLayout):
         self.addStretch()
         self.addLayout(grid3)
         self.addLayout(grid2)
+        self.addWidget(self.run_organize_button)
         self.addWidget(self.run_organize_button)
         self.addWidget(self.progress_bar)
 
@@ -192,6 +199,7 @@ class TradeLayout(QVBoxLayout):
         # self.run_organize_button.setEnabled(False)
         # self.excel_filename_browse.setEnabled(False)
         self.run_organize_button.clicked.connect(self.on_run)
+        self.plot_from_obj_button.clicked.connect(self.on_plot_from_object)
         self.base_f06_directory_edit.setText(self.base_f06_directory)
 
     def get_settings(self) -> dict[str, Any]:
@@ -327,6 +335,31 @@ class TradeLayout(QVBoxLayout):
         return settings
 
     @dontcrash
+    def on_plot_from_object(self) -> None:
+        is_valid = self.parent.validate()
+        log = self.log
+        if not is_valid:
+            return
+        word_filename = self.get_word_filename()
+        base, ext = os.path.splitext(word_filename)
+        obj_filename = base + '.obj'
+
+        if not os.path.exists(obj_filename):
+            log.info(f'cannot find obj file: {obj_filename}\n{print_bad_path(obj_filename)}')
+            return
+        log.info(f'loading obj file from {obj_filename}')
+        data = pickle.load(obj_filename)
+        return
+
+    def get_word_filename(self) -> str:
+        word_filename = self.word_filename_edit.text().strip()
+        if len(word_filename) == 0:
+            word_filename = 'flutter_summary.docx'
+        if not word_filename.lower().endswith('.docx'):
+            word_filename += 'docx'
+        return word_filename
+
+    @dontcrash
     def on_run(self) -> None:
         is_valid = self.parent.validate()
         log = self.log
@@ -350,11 +383,9 @@ class TradeLayout(QVBoxLayout):
         #----------------------------------------------
         # configs = [config if config.strip() else for config in ]
 
-        word_filename = self.word_filename_edit.text().strip()
-        if len(word_filename) == 0:
-            word_filename = 'flutter_summary.docx'
-        if not word_filename.lower().endswith('.docx'):
-            word_filename += 'docx'
+        word_filename = self.get_word_filename()
+        base, ext = os.path.splitext(word_filename)
+        obj_filename = base + '.obj'
 
         # print('settings')
         settings = self.get_settings()
@@ -390,8 +421,9 @@ class TradeLayout(QVBoxLayout):
                 word_filename,
                 f06_filenames, configs, out_table, trades,
                 log, settings,
+                obj_filename=obj_filename,
                 progress_callback=self.update_f06_progress,
-                **settings)
+                 **settings)
             log.info(f'Successfully created {word_filename}')
         except Exception as e:
             log.error(f'Failed to create Word document: {str(e)}')

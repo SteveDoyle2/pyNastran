@@ -5,6 +5,7 @@ TODO: y-axis can be eas or frequency
 """
 from __future__ import annotations
 import os
+import pickle
 import warnings
 from pathlib import Path
 from itertools import count
@@ -72,6 +73,7 @@ def write_report(docx_filename: str,
                  divergence_freq_tol: float=0.1,
                  ndir_levels: int=1,
                  eas_max: float=1000.0,
+                 obj_filename: str='',
                  progress_callback: Optional[Callable]=None,
                  ) -> None:
     """
@@ -393,6 +395,16 @@ def write_report(docx_filename: str,
                 f06_filename, png_filename)
         eas_units = response.out_units['eas']
         cases.append(case)
+    out = {
+        'cases': cases,
+        'trades': trades,
+        'settings': settings,
+        'eas_units': eas_units,
+        'ndir_levels': ndir_levels,
+    }
+    with open(obj_filename, 'wb') as obj_file:
+        pickle.dump(out, obj_file)
+
     _cases_to_document(
         log, docx_filename, table, cases, trades, settings,
         eas_units=eas_report_units, ndir_levels=ndir_levels)

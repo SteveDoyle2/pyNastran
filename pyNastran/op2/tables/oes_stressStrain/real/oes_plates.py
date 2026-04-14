@@ -900,7 +900,7 @@ class RealPlateArray(OES_Object):
                 # tria3
                 if is_linear:  # CQUAD4, CTRIA3, CTRIAR linear, CQUADR linear
                     if ilayer == 0:
-                        f06_file.write('0  %6i   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (
+                        f06_file.write('0 %7d   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (
                             eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     else:
                         f06_file.write('   %6s   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (
@@ -909,7 +909,7 @@ class RealPlateArray(OES_Object):
                 elif is_bilinear:  # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
                     # bilinear
                     if nid == 0 and ilayer == 0:  # CEN
-                        f06_file.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (
+                        f06_file.write('0 %8d %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (
                             eid, cen_word, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     elif ilayer == 0:
                         f06_file.write('   %8s %8i  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (

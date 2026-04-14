@@ -40,6 +40,7 @@ from pyNastran.gui.utils.qt.pydialog import QLineEdit, QFloatEdit, make_font
 from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
+from pyNastran.f06.dev.flutter.utils_qt import create_grid_from_list
 from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_menus
 from pyNastran.f06.dev.flutter.preferences_object import FlutterPreferencesObject
 from pyNastran.f06.dev.flutter.preferences import (
@@ -483,7 +484,7 @@ class FlutterGui(LoggableGui):
             ('damping_required_tol', -1, self.damping_required_tol_edit),
             ('output_directory', -1, self.output_directory_edit),
         ]
-        load_lineedits(self, data, line_edits)
+        load_lineedits(data, line_edits)
 
         pulldown_edits = [
             ('x_plot_type', self.x_plot_type_pulldown, X_PLOT_TYPES),
@@ -492,7 +493,7 @@ class FlutterGui(LoggableGui):
             ('units_out', self.units_out_pulldown, UNITS_OUT),
             ('mode_switch_method', self.mode_switch_method_pulldown, MODE_SWITCH_METHODS),
         ]
-        load_pulldowns(self, data, pulldown_edits)
+        load_pulldowns(data, pulldown_edits)
 
         self.recent_files = []
         for fname in data['recent_files']:
@@ -1164,6 +1165,7 @@ class FlutterGui(LoggableGui):
             hbox.addWidget(self.op2_filename_browse, file_row, 2)
             file_row += 1
 
+        parent = self
         grid = create_grid_from_list(parent, [
             (self.units_in_label, self.units_in_pulldown, self.use_rhoref_checkbox),
             (self.units_out_label, self.units_out_pulldown),
@@ -1548,10 +1550,10 @@ class FlutterGui(LoggableGui):
             xlim = (None, None)
 
         # log.info(f'xlim={xlim}\n')
-        if plot_type == 'zimmerman':
+        if plot_type in {'root-locus', 'zimmerman'}:
             print('skipping xlim check')
         else:
-            assert xlim[0] != '' and xlim[1] != '', (xlim, x_plot_type)
+            assert xlim[0] != '' and xlim[1] != '', (xlim, plot_type, x_plot_type)
 
         v_lines = get_vlines(self.vf, self.vl)
         # log.info(f'v_lines={v_lines}\n')

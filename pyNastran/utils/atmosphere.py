@@ -27,7 +27,7 @@ from __future__ import annotations
 import sys
 from math import log, exp
 from itertools import count
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 from pyNastran.utils.convert import (
     convert_altitude, convert_density, convert_pressure, convert_velocity,
@@ -1206,7 +1206,7 @@ def make_flfacts_eas_sweep_constant_alt(alt: float, eass: list[float],
 def make_flfacts_eas_sweep_constant_mach(mach: float,
                                          eass: np.ndarray,
                                          gamma: float=1.4,
-                                         minus_eas: float=0.0,
+                                         minus_eas: Optional[list[float]]=None,
                                          alt_units: str='ft',
                                          velocity_units: str='ft/s',
                                          density_units: str='slug/ft^3',
@@ -1245,15 +1245,18 @@ def make_flfacts_eas_sweep_constant_mach(mach: float,
     Veas^2 / mach^2 = gamma * p / rho0
     p = Veas^2 / mach^2 * rho0/gamma
     """
+    if minus_eas is None:
+        minus_eas = []
     assert isinstance(mach, float), type(mach)
     nvel = len(eass)
     assert nvel > 0, eass
 
     eas = np.asarray(eass)  # knots or other
-    ieas_min = -1
-    if minus_eas > 0.0:
-        deas = eas - minus_eas
+    ieas_mins = []
+    for minus_easi in minus_eas:
+        deas = eas - minus_easi
         ieas_min = np.argmin(np.abs(deas))
+        ieas_mins.append(ieas_min)
 
     machs = np.ones(nvel, dtype=eas.dtype) * mach
 
@@ -1295,7 +1298,7 @@ def make_flfacts_eas_sweep_constant_mach(mach: float,
                                       #eas_units=eas_units,)
     assert len(rho) == len(machs)
     assert len(rho) == len(velocity)
-    if ieas_min >= 0:
+    for ieas_min in ieas_mins:
         eas[ieas_min] *= -1
         eas_fts[ieas_min] *= -1
         velocity[ieas_min] *= -1

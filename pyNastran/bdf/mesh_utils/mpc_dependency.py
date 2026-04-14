@@ -210,6 +210,7 @@ def get_dependent_nid_to_components(model: BDF, mpc_id=None,
 
     if mpc_id is not None and mpc_id != 0:
         mpcs = get_mpcs(model, mpc_id)
+        # mpcs = ([1124, 1101124, 1124, 1101124], ['1', '1', '2', '2'])
         for mpc in mpcs:
             if mpc.type == 'MPC':
                 for nid, component in zip(mpc.node_ids, mpc.components):
