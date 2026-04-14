@@ -2446,6 +2446,7 @@ def read_title_helper(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: by
 
     label_100 = label[100:]
     if 'FBA SUBCASE ' in label_100:
+        # label_100 = '   FBA SUBCASE        1'
         subtitle, label, label2 = parse_fba_subcase(title, subtitle, label, log)
     elif 'FRF SUBCASE ' in label_100:
         subtitle, label, label2 = parse_frf_subcase(
@@ -2471,7 +2472,9 @@ def read_title_helper(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: by
 
 def parse_fba_subcase(title: str, subtitle: str, label: str,
                       log: SimpleLogger) -> tuple[str, str, str]:
-
+    """
+    label='LOAD ON INTERNAL GRID PT. 16377 IN FRF COMPONE                                                         FBA SUBCASE        1'
+    """
     #log.error(f'title={title!r}')
     #log.error(f'subtitle={subtitle!r}')
     #log.error(f'label={label!r}')
@@ -2520,16 +2523,30 @@ def parse_fba_subcase(title: str, subtitle: str, label: str,
             #print(f'label_num={label_num!r} unit_labeli={unit_labeli!r}')
             unit_label = unit_labeli.strip()
             #label_num='        6' unit_labeli='UNIT LOAD ON SPNT'
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(label_base)
 
     elif label_base.startswith('LOAD ON INTERNAL GRID PT. '):
         grid_comp_str = label_base.split('LOAD ON INTERNAL GRID PT. ')[1].strip()
 
-        #'812 IN FRF COMPONENT'
-        grid_str, comp_str = grid_comp_str.split('IN FRF COMPONENT')
+        # 123 IN FRF COMPONENT 4
+        sline = grid_comp_str.split(' ')
+        if len(sline) not in [4, 5]:
+            raise RuntimeError('Expected grid_comp_str in the form of "123 IN FRF COMPONENT 4"\n'
+                               f'label_base={label_base!r}; n={len(label_base)}\n'
+                               f'grid_comp_str={grid_comp_str!r}\n'
+                               f'sline={sline}; n={len(sline)}')
+
+        grid_str = sline[0]
+        comp_str = sline[-1]
+        # try:
+        #     grid_str, comp_str = grid_comp_str.split('IN FRF COMPONENT')
+        # except ValueError as error:
+        #     raise RuntimeError('Expected grid_comp_str in the form of "123 IN FRF COMPONENT 4"\n'
+        #                        f'label_base={label_base!r}; n={len(label_base)}\n'
+        #                        f'grid_comp_str={grid_comp_str!r}\n') from error
         grid_id = int(grid_str)
-        comp_id = int(comp_str)
+        comp_id = int(comp_str) if comp_str.isdigit() else -1
 
         #print(f'sline = {sline}')
         #print(title)
@@ -2551,7 +2568,7 @@ def parse_fba_subcase(title: str, subtitle: str, label: str,
         label = f'Load on connection grid point; grid={grid_id} comp={comp_id}'
         label2 = ''
         return subtitle, label, label_base
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(label_base)
 
     comp_grid_1 = int(comp_grid_1)

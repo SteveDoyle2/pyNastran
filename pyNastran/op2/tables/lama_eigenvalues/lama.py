@@ -14,6 +14,7 @@ from struct import Struct
 from pyNastran.op2.tables.lama_eigenvalues.lama_objects import (
     RealEigenvalues, ComplexEigenvalues, BucklingEigenvalues)
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from pyNastran.op2.tables.utils import get_is_slot_saved
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -183,19 +184,22 @@ class LAMA:
         if op2.read_mode == 1:
             return ndata
 
-        n = 0
-        ntotal = 28 * op2.factor
-        nmodes = ndata // ntotal
-        #assert self.isubcase != 0, self.isubcase
-        lama = RealEigenvalues(op2.title, op2.table_name, nmodes=nmodes)
-
         if op2.table_name in [b'LAMA', b'LAMAS']:
             result_name = 'eigenvalues'
         elif op2.table_name == b'LAMAF':
             result_name = 'eigenvalues_fluid'
         else:  # pragma: no cover
             raise NotImplementedError(op2.table_name)
-        slot = getattr(op2, result_name)
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
+            return ndata
+
+        n = 0
+        ntotal = 28 * op2.factor
+        nmodes = ndata // ntotal
+        #assert self.isubcase != 0, self.isubcase
+        lama = RealEigenvalues(op2.title, op2.table_name, nmodes=nmodes)
+
         #assert self.title not in slot, f'{result_name}: table={self.table_name_str} title={self.title!r} optimization_count={self._count}'
         slot[op2.title] = lama
 
@@ -204,7 +208,7 @@ class LAMA:
             edata = data[n:n+ntotal]
             out = structi.unpack(edata)
             if op2.is_debug_file:
-                op2.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
+                op2.binary_debug.write('  %s%s - %s\n' % (result_name, i, str(out)))
             #(imode, extract_order, eigenvalue, radian, cycle, gen_mass, gen_stiffness) = out
             lama.add_f06_line(out, i)
             n += ntotal

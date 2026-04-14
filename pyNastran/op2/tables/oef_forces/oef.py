@@ -314,10 +314,15 @@ class OEF:
 
     def _read_oefmc_4(self, data: bytes, ndata: int) -> int:
         op2 = self.op2
+        if op2._results.is_not_saved('force'):
+            # self.log.debug('skipping OEF due to force')
+            return ndata
         # n = 0
         # log = op2.log
-        raise NotImplementedError(op2.code_information())
-        return n
+        # op2.log.warning(op2.code_information())
+        op2.log.warning(f'skipping {op2.table_name} with {op2.element_name}-{op2.element_type}')
+        # raise NotImplementedError(op2.code_information())
+        return ndata
 
     def _read_oef1_4(self, data: bytes, ndata: int):
         """Table 4 parser for OEF1 table"""

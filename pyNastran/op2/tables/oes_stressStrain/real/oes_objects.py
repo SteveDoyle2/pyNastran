@@ -1,5 +1,6 @@
-from typing import Any
+from typing import BinaryIO, TextIO, Any
 import numpy as np
+from pyNastran.utils.numpy_utils import float_types
 from pyNastran.op2.result_objects.op2_objects import BaseElement, set_as_sort1
 from pyNastran.op2.op2_interface.write_utils import (
     set_table3_field, get_title_subtitle_label)
@@ -93,7 +94,8 @@ class OES_Object(BaseElement):
     def is_stress(self):
         raise NotImplementedError(f'overwrite this in {self.class_name}')
 
-    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
+    def _write_table_3(self, op2_file: BinaryIO, op2_ascii: TextIO, new_result,
+                       itable: int, itime: int): #, itable=-3, itime=0):
         import inspect
         from struct import pack
         frame = inspect.currentframe()
@@ -142,11 +144,12 @@ class OES_Object(BaseElement):
         num_wide = self.num_wide
         acoustic_flag = 0
         thermal = self.thermal
-        title = b'%-128s' % self.title.encode('ascii')
-        subtitle = b'%-128s' % self.subtitle.encode('ascii')
-        label = b'%-128s' % self.label.encode('ascii')
-        ftable3 = b'50i 128s 128s 128s'
-        unused_oCode = 0
+
+        title, subtitle, label = get_title_subtitle_label(
+            self.title, self.subtitle, self.label,
+            self.superelement_adaptivity_index)
+        # ftable3 = b'50i 128s 128s 128s'
+        # unused_oCode = 0
 
         ftable3 = b'i' * 50 + b'128s 128s 128s'
         field6 = 0
@@ -161,8 +164,8 @@ class OES_Object(BaseElement):
             field5 = self.modes[itime]
             field6 = self.eigns[itime]
             field7 = self.cycles[itime]
-            assert isinstance(field6, float), type(field6)
-            assert isinstance(field7, float), type(field7)
+            assert isinstance(field6, float_types), type(field6)
+            assert isinstance(field7, float_types), type(field7)
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
             ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
 
@@ -170,15 +173,19 @@ class OES_Object(BaseElement):
             #field5 = self.freqs[itime]
         elif self.analysis_code == 5:
             field5 = self.freqs[itime]
+            assert isinstance(field5, float_types), field5
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         elif self.analysis_code == 6:
             field5 = self.dts[itime]
+            assert isinstance(field5, float_types), field5
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         elif self.analysis_code == 7:  # pre-buckling
             field5 = self.lsdvmns[itime] # load set number
         elif self.analysis_code == 8:  # post-buckling
             field5 = self.lsdvmns[itime] # load set number
-            #if hasattr(self, 'eigns'):
+            if isinstance(field5, float_types):
+                ftable3 = set_table3_field(ftable3, 5, b'f')  # field 5
+
             if hasattr(self, 'eigens'):
                 field6 = self.eigns[itime]
             elif hasattr(self, 'eigrs'):
@@ -205,7 +212,7 @@ class OES_Object(BaseElement):
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5; load step
         elif self.analysis_code == 11:  # old geometric nonlinear statics
             field5 = self.lsdvmns[itime] # load set number
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.analysis_code)
 
         table3 = [
@@ -221,10 +228,15 @@ class OES_Object(BaseElement):
         assert table3[22] == thermal
 
         table3 = fix_table3_types(table3, size=4)
+        # try:
+        #     pack(ftable3, *table3)
+        # except:
+        #     print(ftable3)
+        #     print(table3)
+        #     print(f'analysis_code = {self.analysis_code}')
+        #     raise
         data = [584] + table3 + [584]
         fmt = b'i' + ftable3 + b'i'
-        #print(fmt)
-        #print(data)
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
         op2_file.write(pack(fmt, *data))
@@ -573,10 +585,10 @@ def update_stress_force_time_word(obj) -> None:
     else:
         try:
             name = obj.analysis_method
-        except AttributeError:
+        except AttributeError as error:
             msg = str(obj.get_stats())
             msg += obj.object_stats()
-            raise RuntimeError(msg) from e
+            raise RuntimeError(msg) from error
 
         #print(f'\n{self.class_name}: name = {name}')
         #_analysis_code_fmt

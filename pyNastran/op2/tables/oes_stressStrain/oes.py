@@ -343,16 +343,20 @@ class OES:
             228,  # CQUADR
             232,  # CQUADR-composite
             243,  # CQUADX4
-            189,  # VUQUAD
-            190,  # VUTRIA
-            191,  # VUBEAM
             256,  # CPYRAM
             227,  # CTRIAR
             233, # CTRIAR-composite
             275,  # CPLSTS3
         ]
+        elements_to_skip = [
+            189,  # VUQUAD
+            190,  # VUTRIA
+            191,  # VUBEAM
+        ]
         if op2.element_type in elements_to_read:
             n = self._read_oes_4_sort(data, ndata)
+        elif op2.element_type in elements_to_skip:
+            n = ndata
         else:
             msg = op2.code_information()
             n = op2._not_implemented_or_skip(data, ndata, msg)
@@ -363,6 +367,8 @@ class OES:
         Reads the Stress Table 4
         """
         op2 = self.op2
+        # if op2.analysis_code != 1:
+        #     asdf
         if op2.table_name in NX_TABLES_BYTES:
             op2.to_nx(f' because table_name={op2.table_name}')
         #assert self.isubtable == -4, self.isubtable
@@ -2094,7 +2100,6 @@ class OES:
                 floats1 = floats.reshape(nelements * nnodes_expected, 8)[:, 1:] # drop grid_device
 
                 # o1/o2/o3 is not max/mid/min.  They are not consistently ordered, so we force it.
-
                 obj.data[obj.itime, itotal:itotal2, :] = floats1
                 obj.itotal = itotal2
                 obj.ielement = itotali
@@ -3888,12 +3893,19 @@ class OES:
         return n, nelements, ntotal
 
     def _oes_plate_stress_34(self, data, ndata, unused_dt, unused_is_magnitude_phase,
-                             unused_stress_name, unused_prefix, unused_postfix):
+                             unused_stress_name: str, prefix: str, postfix: str):
         """
         271-CPLSTN3
         275-CPLSTS3
         """
         op2 = self.op2
+        stress_strain = 'stress' if op2.is_stress else 'strain'
+        element_name = op2.element_name.lower()
+        result_name = f'{prefix}{element_name}_{stress_strain}{postfix}'
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
+            return ndata, None, None
+
         msg = op2.code_information()
         return op2._not_implemented_or_skip(data, ndata, msg), None, None
         #if op2.element_type == 271:
@@ -3953,11 +3965,18 @@ class OES:
             #return op2._not_implemented_or_skip(data, ndata, msg), None, None
 
     def _oes_plate_stress_68(self, data, ndata, unused_dt, unused_is_magnitude_phase,
-                             unused_stress_name, unused_prefix, unused_postfix):
+                             unused_stress_name: str, prefix: str, postfix: str):
         # 276-CPLSTS4
         # 277-CPLSTS6
         # 278-CPLSTS8
         op2 = self.op2
+        stress_strain = 'stress' if op2.is_stress else 'strain'
+        element_name = op2.element_name.lower()
+        result_name = f'{prefix}{element_name}_{stress_strain}{postfix}'
+        is_saved, slot = get_is_slot_saved(op2, result_name)
+        if not is_saved:
+            return ndata, None, None
+
         msg = op2.code_information()
         return op2._not_implemented_or_skip(data, ndata, msg), None, None
         #if op2.element_type == 276:

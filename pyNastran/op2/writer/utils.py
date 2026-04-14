@@ -17,6 +17,7 @@ def fix_table3_types(table3, size: int=4) -> list[Any]:
             v = v.astype('float32')
             n += 4
         else:
+            assert isinstance(v, bytes), v
             #print('write_table_3', v)
             n += len(v)
         table3_new.append(v)

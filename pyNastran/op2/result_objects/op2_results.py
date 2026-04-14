@@ -678,6 +678,7 @@ class Stress:
         self.cplstn4_stress = {}
         self.cplstn6_stress = {}
         self.cplstn8_stress = {}
+
         self.cplsts3_stress = {}
         self.cplsts4_stress = {}
         self.cplsts6_stress = {}
@@ -795,6 +796,7 @@ class Strain:
         self.cplstn4_strain = {}
         self.cplstn6_strain = {}
         self.cplstn8_strain = {}
+
         self.cplsts3_strain = {}
         self.cplsts4_strain = {}
         self.cplsts6_strain = {}

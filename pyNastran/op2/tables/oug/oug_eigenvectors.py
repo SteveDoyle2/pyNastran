@@ -6,7 +6,7 @@ from pyNastran.f06.f06_formatting import write_floats_13e
 
 
 class ComplexEigenvectorArray(ComplexTableArray):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code, is_sort1: bool, isubcase: int, dt: int):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s',
@@ -108,6 +108,8 @@ class RealEigenvectorArray(RealTableArray):
     def mac(self, obj: RealEigenvectorArray,
             common_nodes: Optional[np.array]=None) -> np.ndarray:
         """
+        Gets the modal assurance criterion (MAC)
+
         Parameters
         ----------
         obj : RealEigenvectorArray

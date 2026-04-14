@@ -248,7 +248,8 @@ class GridPointWeight:
         #reference_point = 22
         #thermal = self.thermal
         title, subtitle, label = get_title_subtitle_label(
-            self.title, self.subtitle, self.label)
+            self.title, self.subtitle, self.label,
+            self.superelement_adaptivity_index)
 
         #1, 13, 0, 0, 0, 0, 0, 0, 0, 78, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         ftable3 = b'i' * 50 + b'128s 128s 128s'

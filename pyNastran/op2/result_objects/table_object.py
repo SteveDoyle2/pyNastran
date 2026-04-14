@@ -743,7 +743,8 @@ class TableArray(ScalarObject):  # displacement style table
         acoustic_flag = self.acoustic_flag if hasattr(self, 'acoustic_flag') else 0
         thermal = self.thermal
         title, subtitle, label = get_title_subtitle_label(
-            self.title, self.subtitle, self.label)
+            self.title, self.subtitle, self.label,
+            self.superelement_adaptivity_index)
         oCode = 0
 
         ftable3 = b'i' * 50 + b'128s 128s 128s'
