@@ -66,8 +66,10 @@ def load_f06_op2(f06_filename: PathLike,
                 use_rhoref=use_rhoref,
                 make_alt=make_alt,
                 log=log)
-        except Exception as e:
-            log.error(str(e))
+        except Exception as error:
+            traceback_str = traceback.format_exc()
+            # log.error(str(error))
+            log.error(traceback_str)
             if stop_on_failure:
                 raise
             #raise
@@ -76,8 +78,10 @@ def load_f06_op2(f06_filename: PathLike,
         from pyNastran.f06.dev.flutter.read_zaero_out import read_zaero_out
         try:
             responses, mass = read_zaero_out(f06_filename)
-        except Exception as e:
-            log.error(str(e))
+        except Exception as error:
+            traceback_str = traceback.format_exc()
+            # log.error(str(error))
+            log.error(traceback_str)
             if stop_on_failure:
                 raise
             #raise
@@ -85,8 +89,10 @@ def load_f06_op2(f06_filename: PathLike,
     elif ext == '.op2':
         try:
             from pyNastran.op2.op2 import OP2
-        except ImportError as e:
-            log.error(str(e))
+        except ImportError as error:
+            traceback_str = traceback.format_exc()
+            # log.error(str(error))
+            log.error(traceback_str)
             return model, responses
 
         assert isinstance(in_units_dict, dict), in_units_dict
@@ -99,8 +105,10 @@ def load_f06_op2(f06_filename: PathLike,
             responses = model.op2_results.vg_vf_response
             if len(responses) == 0:
                 log.error('Could not find OVG table in op2')
-        except Exception as e:
-            log.error(str(e))
+        except Exception as error:
+            traceback_str = traceback.format_exc()
+            # log.error(str(error))
+            log.error(traceback_str)
             if stop_on_failure:
                 raise
             return model, responses

@@ -435,6 +435,8 @@ class FlutterResponse:
         else:  # pragma: no cover
             raise NotImplementedError(self.method)
 
+        # print(f'eigenvector = {self.eigenvector}')
+        # assert len(self.eigenvector), 'no eigenvectors'
         if len(self.eigenvector) > 1:
             # print(f'results.shape = {results.shape}')
             nmodes, nvelocity = results.shape[:2]
@@ -3443,7 +3445,13 @@ def _reshape_eigenvectors(eigenvectors: np.array,
     #         i += 1
 
     # was 1,2
-    eigenvectors3 = eigenvectors.reshape(nmodes1, nvel, nmodes).swapaxes(0, 1).swapaxes(1, 2)
+    try:
+        reshaped_eigenvectors = eigenvectors.reshape(nmodes1, nvel, nmodes)
+    except ValueError:
+        warnings.warn('cannot reshape eigenvectors; expected output shape of '
+                      f'(nmodes1={nmodes1}, nvel={nvel}, nmodes={nmodes}); got {eigenvectors.shape}')
+        raise
+    eigenvectors3 = reshaped_eigenvectors.swapaxes(0, 1).swapaxes(1, 2)
     eigr_eigi_vel3 = eigr_eigi_vel.reshape((nvel, nmodes, 3))
     # assert eigenvectors2.shape == eigenvectors3.shape, (eigenvectors2.shape, eigenvectors3.shape)
     #assert np.allclose(eigenvectors2, eigenvectors3)

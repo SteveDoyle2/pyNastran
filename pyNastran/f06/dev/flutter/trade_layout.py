@@ -162,7 +162,7 @@ class TradeLayout(QVBoxLayout):
             (self.eas_max_label, self.eas_max_edit),
         ])
         grid3 = create_grid_from_list(parent, [
-            (self.save_obj_checkbox),
+            (self.save_obj_checkbox,),
             (self.python_filename_label, self.python_filename_edit, self.python_filename_browse, self.python_load_button, self.python_plot_button),
             (self.xaxis_label, self.xaxis_pulldown),
             (self.yaxis_label, self.yaxis_pulldown),
@@ -178,7 +178,7 @@ class TradeLayout(QVBoxLayout):
         self.addLayout(grid3)
         self.addLayout(grid2)
         self.addWidget(self.run_organize_button)
-        self.addWidget(self.run_organize_button)
+        self.addWidget(self.plot_from_obj_button)
         self.addWidget(self.progress_bar)
 
     def setup_connections(self) -> None:

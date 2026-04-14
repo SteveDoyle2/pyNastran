@@ -1430,6 +1430,7 @@ class FlutterGui(LoggableGui):
     def _update_modal_participation_velocity(self, response: FlutterResponse) -> None:
         nvelocity = len(response.eigr_eigi_velocity)
         self.velocity_edit.clear()
+        # print(f'response.eigr_eigi_velocity = {response.eigr_eigi_velocity}')
         if nvelocity:
             velocity = response.eigr_eigi_velocity[:, -1]
             if np.all(np.isfinite(velocity)):
@@ -1550,7 +1551,7 @@ class FlutterGui(LoggableGui):
             xlim = (None, None)
 
         # log.info(f'xlim={xlim}\n')
-        if plot_type in {'root-locus', 'zimmerman'}:
+        if plot_type in {'root-locus', 'modal-participation', 'zimmerman'}:
             print('skipping xlim check')
         else:
             assert xlim[0] != '' and xlim[1] != '', (xlim, plot_type, x_plot_type)

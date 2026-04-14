@@ -77,6 +77,8 @@ QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
 QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
 ICON_PATH = Path('')
 
+PLOTS_DAMPING_NOT_REQUIRED = {'root-locus', 'modal-participation', 'zimmerman'}
+PLOTS_XLIM_NOT_REQUIRED = {'root-locus', 'modal-participation', 'zimmerman'}
 
 def _set_modes_table(modes_widget: QListWidget,
                      modes: list[int],
@@ -1122,7 +1124,7 @@ class PlotLayout(QHBoxLayout):
             xlim = (None, None)
 
         # log.info(f'xlim={xlim}\n')
-        if plot_type in {'root-locus', 'zimmerman'}:
+        if plot_type in PLOTS_XLIM_NOT_REQUIRED:
             print('skipping xlim check')
         else:
             assert xlim[0] != '' and xlim[1] != '', (xlim, plot_type, x_plot_type)
@@ -1140,10 +1142,10 @@ class PlotLayout(QHBoxLayout):
         damping_limit = parent.damping  # % damping
         eas_flutter_range = parent.eas_flutter_range
         # eas_diverg_range = self.eas_diverg_range
-        if plot_type not in {'root-locus'}:
+        if plot_type not in PLOTS_DAMPING_NOT_REQUIRED:
             damping_required = parent.damping_required
             damping_required_tol = parent.damping_required_tol
-            assert isinstance(damping_required_tol, float), f'damping_required_tol={damping_required_tol}'
+            assert isinstance(damping_required_tol, float), f'damping_required_tol={damping_required_tol}; type={type(damping_required_tol)}'
             if damping_required_tol is None:
                 damping_required_tol = 0.01
             if damping_required_tol < 0.0:

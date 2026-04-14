@@ -8,7 +8,9 @@ from qtpy.QtWidgets import (
 def create_grid_from_list(parent,
                           mylist: list[tuple[QWidget, ...]]) -> QGridLayout:
     grid = QGridLayout(parent)
+    assert isinstance(mylist, list), type(mylist)
     for irow, row in enumerate(mylist):
+        assert isinstance(row, tuple), type(row)
         for jcol, obj in enumerate(row):
             if isinstance(obj, str) and str == '':
                 pass
