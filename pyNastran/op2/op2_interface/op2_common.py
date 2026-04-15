@@ -82,6 +82,15 @@ class OP2Common(Op2Codes, F06Writer):
         self.is_vectorized = None
         self.combine = False
 
+        # local flags that haven't been promoted to official variables
+        # these will change at some point
+        self.flags = {
+            'eigenvectors_real': True,
+            'eigenvectors_complex': True,
+            'real_modes_to_include': None,  # all; unused
+            'complex_modes_to_include': None,  # all; unused
+        }
+
         #: the storage dictionary that is passed to OP2 objects (e.g. RealDisplacementArray)
         #: the key-value pairs are extracted and used to generate dynamic self
         #: variables for the OP2 objects

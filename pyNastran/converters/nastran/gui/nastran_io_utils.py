@@ -1795,50 +1795,50 @@ def map_elements1_no_quality_helper(self,
             point_ids = elem.GetPointIds()
             point_ids.SetId(0, nid_map[node_ids[0]])
             point_ids.SetId(1, nid_map[node_ids[1]])
-        elif isinstance(element, CHEXA1):
-            node_ids = element.node_ids
-            pid = 0
-            #mid = element.Mid()
-            _set_nid_to_pid_map(nid_to_pid_map, pid, node_ids)
-            eid_to_nid_map[eid] = node_ids[:8]
-            elem = vtkHexahedron()
-            point_ids = elem.GetPointIds()
-            point_ids.SetId(0, nid_map[node_ids[0]])
-            point_ids.SetId(1, nid_map[node_ids[1]])
-            point_ids.SetId(2, nid_map[node_ids[2]])
-            point_ids.SetId(3, nid_map[node_ids[3]])
-            point_ids.SetId(4, nid_map[node_ids[4]])
-            point_ids.SetId(5, nid_map[node_ids[5]])
-            point_ids.SetId(6, nid_map[node_ids[6]])
-            point_ids.SetId(7, nid_map[node_ids[7]])
-            grid.InsertNextCell(12, point_ids)
-        elif isinstance(element, CHEXA2):
-            node_ids = element.node_ids
-            pid = 0
-            _set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
-            if None not in node_ids:
-                elem = vtkQuadraticHexahedron()
-                point_ids = elem.GetPointIds()
-                point_ids.SetId(8, nid_map[node_ids[8]])
-                point_ids.SetId(9, nid_map[node_ids[9]])
-                point_ids.SetId(10, nid_map[node_ids[10]])
-                point_ids.SetId(11, nid_map[node_ids[11]])
-
-                # these two blocks are flipped
-                point_ids.SetId(12, nid_map[node_ids[16]])
-                point_ids.SetId(13, nid_map[node_ids[17]])
-                point_ids.SetId(14, nid_map[node_ids[18]])
-                point_ids.SetId(15, nid_map[node_ids[19]])
-
-                point_ids.SetId(16, nid_map[node_ids[12]])
-                point_ids.SetId(17, nid_map[node_ids[13]])
-                point_ids.SetId(18, nid_map[node_ids[14]])
-                point_ids.SetId(19, nid_map[node_ids[15]])
-                eid_to_nid_map[eid] = node_ids
-            else:
-                elem = vtkHexahedron()
-                point_ids = elem.GetPointIds()
-                eid_to_nid_map[eid] = node_ids[:8]
+        # elif isinstance(element, CHEXA1):
+        #     node_ids = element.node_ids
+        #     pid = 0
+        #     #mid = element.Mid()
+        #     _set_nid_to_pid_map(nid_to_pid_map, pid, node_ids)
+        #     eid_to_nid_map[eid] = node_ids[:8]
+        #     elem = vtkHexahedron()
+        #     point_ids = elem.GetPointIds()
+        #     point_ids.SetId(0, nid_map[node_ids[0]])
+        #     point_ids.SetId(1, nid_map[node_ids[1]])
+        #     point_ids.SetId(2, nid_map[node_ids[2]])
+        #     point_ids.SetId(3, nid_map[node_ids[3]])
+        #     point_ids.SetId(4, nid_map[node_ids[4]])
+        #     point_ids.SetId(5, nid_map[node_ids[5]])
+        #     point_ids.SetId(6, nid_map[node_ids[6]])
+        #     point_ids.SetId(7, nid_map[node_ids[7]])
+        #     grid.InsertNextCell(12, point_ids)
+        # elif isinstance(element, CHEXA2):
+        #     node_ids = element.node_ids
+        #     pid = 0
+        #     _set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
+        #     if None not in node_ids:
+        #         elem = vtkQuadraticHexahedron()
+        #         point_ids = elem.GetPointIds()
+        #         point_ids.SetId(8, nid_map[node_ids[8]])
+        #         point_ids.SetId(9, nid_map[node_ids[9]])
+        #         point_ids.SetId(10, nid_map[node_ids[10]])
+        #         point_ids.SetId(11, nid_map[node_ids[11]])
+        #
+        #         # these two blocks are flipped
+        #         point_ids.SetId(12, nid_map[node_ids[16]])
+        #         point_ids.SetId(13, nid_map[node_ids[17]])
+        #         point_ids.SetId(14, nid_map[node_ids[18]])
+        #         point_ids.SetId(15, nid_map[node_ids[19]])
+        #
+        #         point_ids.SetId(16, nid_map[node_ids[12]])
+        #         point_ids.SetId(17, nid_map[node_ids[13]])
+        #         point_ids.SetId(18, nid_map[node_ids[14]])
+        #         point_ids.SetId(19, nid_map[node_ids[15]])
+        #         eid_to_nid_map[eid] = node_ids
+        #     else:
+        #         elem = vtkHexahedron()
+        #         point_ids = elem.GetPointIds()
+        #         eid_to_nid_map[eid] = node_ids[:8]
 
             point_ids.SetId(0, nid_map[node_ids[0]])
             point_ids.SetId(1, nid_map[node_ids[1]])
@@ -2440,10 +2440,17 @@ def create_monpnt(gui: MainWindow,
             raise NotImplementedError(aecomp)
 
 
-def get_results_to_exclude(nastran_settings: NastranSettings) -> set[str]:
+def get_results_to_exclude(nastran_settings: NastranSettings,
+                           ) -> tuple[dict[str, bool], set[str]]:
     exclude_results = set([])
+    eigenvectors_real = True
+    eigenvectors_complex = True
     if not nastran_settings.eigenvector:
-        exclude_results.add('eigenvectors')
+        # exclude_results.add('eigenvectors')
+        eigenvectors_real = False
+        pass
+    if not nastran_settings.eigenvector:
+        eigenvectors_complex = False
     if not nastran_settings.displacement:
         exclude_results.add('displacements')
     if not nastran_settings.velocity:
@@ -2547,7 +2554,12 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> set[str]:
         exclude_results.add('strain_energy*')
     if not nastran_settings.grid_point_force:
         exclude_results.add('grid_point_forces')
-    return exclude_results
+
+    flag_dict = {
+        'eigenvectors_real': eigenvectors_real,
+        'eigenvectors_complex': eigenvectors_complex,
+    }
+    return flag_dict, exclude_results
 
 
 def get_pcomp_nplies(properties: dict[int, PCOMP | PCOMPG | PCOMPS | PCOMPLS],
@@ -3056,8 +3068,7 @@ def get_model_unvectorized(log: SimpleLogger,
         model.load(obj_filename=bdf_filename)
     else:  # read the bdf/punch
         model = BDF(log=log, debug=True)
-
-        skip_cards = ['DMI', 'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMIAX']
+        skip_cards = ['DMI', 'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMIAX', 'FLFACT', 'FLUTTER']
         model.disable_cards(skip_cards)
 
         model.is_strict_card_parser = False

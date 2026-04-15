@@ -126,18 +126,23 @@ def write_patran_syntax_dict(dict_sets: dict[str, np.ndarray]) -> str:
     """
     msg = ''
     for key, dict_set in sorted(dict_sets.items()):
-        singles, doubles = collapse_colon_packs(dict_set, thru_split=4)
-        double_list = (f'{double[0]}:{double[2]}'
-                       if len(double) == 3 else f'{double[0]}:{double[2]}:{double[4]}'
-                       for double in doubles)
-        double_str = ' '.join(double_list)
-        msg += '%s %s %s ' % (
-            key,
-            ' '.join(str(single) for single in singles),
-            double_str,
-        )
+        msgi = write_patran_syntax(dict_set)
+        msg += f'{key} {msgi} '
     assert '%' not in msg, msg
     return msg.strip().replace('  ', ' ')
+
+
+def write_patran_syntax(dict_set: np.ndarray) -> str:
+    singles, doubles = collapse_colon_packs(dict_set, thru_split=4)
+    double_list = (f'{double[0]}:{double[2]}'
+                   if len(double) == 3 else f'{double[0]}:{double[2]}:{double[4]}'
+                   for double in doubles)
+    double_str = ' '.join(double_list)
+    msg = '%s %s' % (
+        ' '.join(str(single) for single in singles),
+        double_str)
+    assert '%' not in msg, msg
+    return msg
 
 
 def parse_patran_syntax_dict(node_sets: str, pound_dict: dict[str, Optional[int]]=None,

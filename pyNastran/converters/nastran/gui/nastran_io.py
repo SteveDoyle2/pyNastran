@@ -2788,12 +2788,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             #             model._results.saved.add(result)
 
             nastran_settings: NastranSettings = gui.settings.nastran_settings
-            exclude_results = get_results_to_exclude(nastran_settings)
+            flag_dict, exclude_results = get_results_to_exclude(nastran_settings)
             model.include_exclude_results(
+                flag_dict=flag_dict,
                 exclude_results=exclude_results,
                 # include_results=include_results,
             )
-
             model.read_op2(op2_filename, combine=False)
 
             if not IS_TESTING or self.is_testing_flag:

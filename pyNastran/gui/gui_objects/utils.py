@@ -5,7 +5,8 @@ from typing import Optional, Callable
 def get_setting(settings, setting_keys: list[str],
                 setting_names: list[str],
                 default: int | float | str | np.ndarray,
-                auto_type: Optional[Callable]=None):
+                auto_type: Optional[Callable]=None,
+                allow_none: bool=False):
     """
     helper method for ``reapply_settings``
 
@@ -13,6 +14,13 @@ def get_setting(settings, setting_keys: list[str],
         screen_shape = settings.value("screen_shape", screen_shape_default)
 
     If the key is not defined, the default is used.
+
+    Parameters
+    ----------
+    auto_type : Callable[str, float | int]
+        cast the data to the appropriate type
+    allow_none : bool
+        needed when we autotype. the value may be None in some cases
     """
     unused_set_name = setting_names[0]
     pull_name = None
@@ -36,6 +44,10 @@ def get_setting(settings, setting_keys: list[str],
     if default is not None:
         assert value is not None, pull_name
 
+    if value is None and allow_none:
+        return default
+
+    # print(f'key={key!r} value={value!r} auto_type={auto_type} default={default!r} allow_none={allow_none}')
     value = autotype_value(value, auto_type)
     return value
 

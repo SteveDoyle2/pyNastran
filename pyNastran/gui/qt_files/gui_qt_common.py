@@ -1624,6 +1624,8 @@ class GuiQtCommon(GuiAttributes):
     def _update_follower_grids(self, nodes: np.ndarray) -> None:
         """updates grids that use the same ids as the parent model"""
         for name, nids in self.follower_nodes.items():
+            if name not in self.alt_grids:
+                continue
             grid: vtkUnstructuredGrid = self.alt_grids[name]
             points: vtkPoints = grid.GetPoints()
             for j, nid in enumerate(nids):
@@ -1634,6 +1636,8 @@ class GuiQtCommon(GuiAttributes):
     def _update_follower_grids_complex(self, nodes: np.ndarray) -> None:
         """updates grids that use a complicated update method"""
         for name, follower_function in self.follower_functions.items():
+            if name not in self.alt_grids:
+                continue
             grid: vtkUnstructuredGrid = self.alt_grids[name]
             points: vtkPoints = grid.GetPoints()
             follower_function(self.nid_map, grid, points, nodes)

@@ -449,6 +449,7 @@ class OP2(OP2_Scalar, OP2Writer):
             self.set_as_msc()
 
     def include_exclude_results(self,
+                                flag_dict: dict[str, bool]=None,
                                 exclude_results: Optional[list[str]]=None,
                                 include_results: Optional[list[str]]=None) -> None:
         """
@@ -456,11 +457,23 @@ class OP2(OP2_Scalar, OP2Writer):
 
         Parameters
         ----------
+        flag_dict : dict[key, value]
+            flags to have finer control over results
+            eigenvectors_real: True
+            eigenvectors_complex: True
         exclude_results / include_results : list[str] / str; default=None
             a list of result types to exclude/include
             one of these must be None
 
         """
+        if flag_dict:
+            # eigenvectors_real: True
+            # eigenvectors_complex: True
+            for key, flag in flag_dict.items():
+                assert key in self.flags, (key, flag)
+                assert isinstance(flag, bool), (key, flag)
+                self.flags[key] = flag
+
         if exclude_results and include_results:
             msg = (
                 'exclude_results or include_results must be None\n'

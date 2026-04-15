@@ -81,6 +81,7 @@ class NastranIO(NastranIO_xref):
             pass
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
+            model.disable_cards(['TRIM', 'FLFACT', 'DMI', 'FLUTTER'])
             self.model_type = model.model_type
             model.read_bdf(bdf_filename, include_dir=dirname, punch=punch, xref=True)
 

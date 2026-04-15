@@ -14,6 +14,7 @@ from math import log10, ceil
 from functools import partial
 from typing import Optional, Any, TYPE_CHECKING
 
+import numpy as np
 from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy.QtWidgets import (
@@ -22,6 +23,7 @@ from qtpy.QtWidgets import (
     QTabWidget, QWidget, QComboBox,
 )
 
+from pyNastran.bdf.patran_utils.colon_syntax import write_patran_syntax, parse_patran_syntax
 from pyNastran.utils.locale import func_str, float_locale
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color
 from pyNastran.gui.utils.qt.qcombobox import make_combo_box, get_combo_box_text
@@ -210,6 +212,7 @@ class PreferencesWindow(PyDialog):
         self._nastran_velocity = data['nastran_velocity']
         self._nastran_acceleration = data['nastran_acceleration']
         self._nastran_eigenvector = data['nastran_eigenvector']
+        self._nastran_eigenvector_complex = data['nastran_eigenvector_complex']
         self._nastran_temperature = data['nastran_temperature']
 
         self._nastran_spc_force = data['nastran_spc_force']
@@ -412,6 +415,12 @@ class PreferencesWindow(PyDialog):
         iversion = nastran_versions_lower.index(self._nastran_version.lower())
         self.nastran_version_pulldown.setItemText(iversion, self._nastran_version)
 
+        self.nastran_real_modes_to_include_label = QLabel('Real Modes')
+        self.nastran_real_modes_to_include_edit = QLineEdit('1:#')
+
+        self.nastran_complex_modes_to_include_label = QLabel('Complex Modes')
+        self.nastran_complex_modes_to_include_edit = QLineEdit('1:#')
+
         self.nastran_is_element_quality_checkbox = QCheckBox('Element Quality')
         self.nastran_is_element_quality_checkbox.setToolTip('Cacluate Aspect Ratio, Skew Angle, Max/Min Interior Angle, etc.')
         self.nastran_is_element_quality_checkbox.setChecked(self._nastran_is_element_quality)
@@ -465,11 +474,13 @@ class PreferencesWindow(PyDialog):
             self.nastran_velocity_checkbox = QCheckBox('Velocity')
             self.nastran_acceleration_checkbox = QCheckBox('Acceleration')
             self.nastran_eigenvector_checkbox = QCheckBox('Eigenvector')
+            self.nastran_eigenvector_complex_checkbox = QCheckBox('Eigenvector (Complex)')
             self.nastran_temperature_checkbox = QCheckBox('Temperature')
             self.nastran_displacement_checkbox.setChecked(self._nastran_displacement)
             self.nastran_velocity_checkbox.setChecked(self._nastran_velocity)
             self.nastran_acceleration_checkbox.setChecked(self._nastran_acceleration)
             self.nastran_eigenvector_checkbox.setChecked(self._nastran_eigenvector)
+            self.nastran_eigenvector_complex_checkbox.setChecked(self._nastran_eigenvector_complex)
             self.nastran_temperature_checkbox.setChecked(self._nastran_temperature)
 
             self.nastran_spc_force_checkbox = QCheckBox('SPC Force')
@@ -880,6 +891,18 @@ class PreferencesWindow(PyDialog):
         vbox_nastran_results.addWidget(self.nastran_results_label)
         vbox_nastran_results.addLayout(grid_nastran_results)
 
+        grid_nastran_lower = QGridLayout()
+        irow_lower = 0
+        grid_nastran_lower.addWidget(self.nastran_real_modes_to_include_label, irow_lower, 0)
+        grid_nastran_lower.addWidget(self.nastran_real_modes_to_include_edit, irow_lower, 1)
+        irow_lower += 1
+        grid_nastran_lower.addWidget(self.nastran_complex_modes_to_include_label, irow_lower, 0)
+        grid_nastran_lower.addWidget(self.nastran_complex_modes_to_include_edit, irow_lower, 1)
+        irow_lower += 1
+
+        vbox_nastran_results.addLayout(grid_nastran_lower)
+
+
         grid_nastran_actors = QGridLayout()
         irow = 1
         grid_nastran_actors.addWidget(self.caero_color_label, irow, 0)
@@ -938,6 +961,7 @@ class PreferencesWindow(PyDialog):
         irow += 1
 
         grid_nastran.addWidget(self.nastran_eigenvector_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_eigenvector_complex_checkbox, irow, 1)
         irow += 1
 
         # ------------------------
@@ -1034,6 +1058,7 @@ class PreferencesWindow(PyDialog):
         self.nastran_velocity_checkbox.clicked.connect(partial(on_nastran, self, 'acceleration'))
         self.nastran_acceleration_checkbox.clicked.connect(partial(on_nastran, self, 'acceleration'))
         self.nastran_eigenvector_checkbox.clicked.connect(partial(on_nastran, self, 'eigenvector'))
+        self.nastran_eigenvector_complex_checkbox.clicked.connect(partial(on_nastran, self, 'eigenvector_complex'))
         self.nastran_temperature_checkbox.clicked.connect(partial(on_nastran, self, 'temperature'))
 
         self.nastran_spc_force_checkbox.clicked.connect(partial(on_nastran, self, 'spc_force'))
@@ -1511,8 +1536,11 @@ class PreferencesWindow(PyDialog):
         yref_value, flag14 = check_float(self.yref_edit)
         zref_value, flag15 = check_float(self.zref_edit)
 
+        nastran_real_modes_include, flag16 = check_tuple_ints(self.nastran_real_modes_to_include_edit)
+        nastran_complex_modes_include, flag17 = check_tuple_ints(self.nastran_complex_modes_to_include_edit)
+
         if all([flag0, flag1, flag2, flag3, flag4, flag5, flag6,
-                flag10, flag11, flag12, flag13, flag14, flag15]):
+                flag10, flag11, flag12, flag13, flag14, flag15, flag16, flag17]):
             self._annotation_size = annotation_size_value
             self._picker_size = picker_size_value
 
@@ -1521,6 +1549,9 @@ class PreferencesWindow(PyDialog):
             self.out_data['max_clip'] = max(clipping_min_value, clipping_max_value)
             self.out_data['cart3d_fluent_include'] = cart3d_fluent_include
             self.out_data['cart3d_fluent_remove'] = cart3d_fluent_remove
+
+            self.out_data['nastran_real_modes_include'] = nastran_real_modes_include
+            self.out_data['nastran_complex_modes_include'] = nastran_complex_modes_include
 
             self.out_data['sref'] = sref_value
             self.out_data['cref'] = cref_value
@@ -1535,9 +1566,7 @@ class PreferencesWindow(PyDialog):
         passed = self.on_validate()
 
         if (passed or force) and self.win_parent is not None:
-            self.settings.on_set_font_size(self.out_data['font_size'])
-            self.settings.other_settings.update(self.out_data)
-            #self.settings.set_annotation_size_color(self._annotation_size)
+            self.settings.update(self.out_data)
             #self.win_parent.element_picker_size = self._picker_size / 100.
         if passed and self.win_parent is not None:
             self.win_parent.clipping_obj.apply_clipping(self.out_data)
@@ -1634,14 +1663,40 @@ def check_label_float(cell) -> tuple[Optional[float], bool]:
         return None, False
 
 
-def check_tuple_ints(cell) -> tuple[tuple[int, ...], bool]:
+def check_tuple_ints(cell: QLineEdit) -> tuple[tuple[int, ...], bool]:
+    """
+    Parameters
+    ----------
+    cell : QLineEdit
+        the cell to pull string data from
+
+    Returns
+    -------
+    tuple[int_values, bool]
+        int_values : tuple[int, ...]
+            the values in the cell
+        success_flag : bool
+            is the output valid
+
+    Example
+    -------
+    '1,2,3,4' -> (1, 2, 3, 4)
+    '1 2 3 4' -> (1, 2, 3, 4)
+    '1:5 14:17' -> (1, 2, 3, 4, 5, 14, 15, 16, 17)
+    '1:#'     -> All
+    ' '       -> All
+    1:10 20:# -> not supported
+    """
     text = cell.text()
     text2 = text.replace(',', ' ').strip()
-    sline = text2.split()
-    try:
-        values = [int(value) for value in sline]
+    if len(text2) == 0 or text2 == "1:#":
         cell.setStyleSheet(QLINEEDIT_GOOD)
-        return tuple(values), True
+        return tuple(), True
+
+    try:
+        values_array = parse_patran_syntax(text2, pound=None)
+        cell.setStyleSheet(QLINEEDIT_GOOD)
+        return tuple(values_array.tolist()), True
     except ValueError:
         cell.setStyleSheet(QLINEEDIT_ERROR)
         return tuple(), False
