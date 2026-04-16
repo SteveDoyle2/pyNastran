@@ -27,7 +27,7 @@ import copy
 from struct import Struct, pack
 from itertools import count
 import warnings
-from typing import TextIO, Optional
+from typing import TextIO, BinaryIO, Optional
 
 import numpy as np
 
@@ -101,7 +101,8 @@ def append_sort1_sort2(data1, data2, to_sort1=True):
 
 def oug_data_code(table_name: str,
                   is_real: bool=False, is_complex:bool=False,
-                  is_sort1=True, is_random=False,
+                  is_sort1: bool=True, is_random: bool=False,
+                  table_code: int=0,
                   random_code=0, title='', subtitle='', label='', is_msc=True):
     sort1_sort_bit = 0 if is_sort1 else 1
     random_sort_bit = 1 if is_random else 0
@@ -124,11 +125,13 @@ def oug_data_code(table_name: str,
 
     if is_real:
         num_wide = 8
+        sort_code = 1  # TODO: what should this be???
     elif is_complex:
         num_wide = 14
+        sort_code = 1 # TODO: what should this be???
 
-    table_code = table_name_to_table_code[table_name]
-    sort_code = 1 # TODO: what should this be???
+    if table_code == 0:
+        table_code = table_name_to_table_code[table_name]
 
     #table_code = tCode % 1000
     #sort_code = tCode // 1000
@@ -317,6 +320,10 @@ class TableArray(ScalarObject):  # displacement style table
         msg.append(f'  node_gridtype.shape = {self.node_gridtype.shape}\n')
         #msg.append('  gridTypes\n  ')
         msg += self.get_data_code()
+        # from pyNastran.utils import object_stats
+        # self.data = np.zeros((0,0,6))
+        # self.node_gridtype = np.zeros((0,2))
+        # print(object_stats(self, 'all'))
         return msg
 
     @property
@@ -798,14 +805,9 @@ class TableArray(ScalarObject):  # displacement style table
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
         elif self.analysis_code == 9:  # complex eigenvalues
             field5 = self.modes[itime]
-            if hasattr(self, 'eigns'):
-                field6 = self.eigns[itime]
-                ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
-            #elif hasattr(self, 'eigrs'):
-                #field6 = self.eigrs[itime]
-                #ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
-            #else:  # pragma: no cover
-                #raise NotImplementedError('cant find eigns or eigrs on analysis_code=9')
+            field6 = self.eigrs[itime]
+            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+
             field7 = self.eigis[itime]
             ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
         elif self.analysis_code == 10:  # nonlinear statics
@@ -1750,22 +1752,26 @@ class ComplexTableArray(TableArray):
         return obj
 
     @classmethod
-    def add_complex_modes_case(cls, table_name, element, data, isubcase,
-                               modes, eigrs, eigis,
-                               is_sort1=True, is_random=False, is_msc=True,
+    def add_complex_modes_case(cls, table_name, node_gridtype, data, isubcase,
+                               modes: np.ndarray,
+                               eigrs: np.ndarray,
+                               eigis: np.ndarray,
+                               is_sort1: bool=True, is_random: bool=False, is_msc: bool=True,
+                               table_code: int=0,
                                random_code=0, title='', subtitle='', label=''):
         #data_code = cls._add_case(
             #table_name, isubcase,
             #is_sort1, is_random, is_msc,
             #random_code, title, subtitle, label)
         data_code = oug_data_code(table_name,
+                                  table_code=table_code,
                                   is_complex=True,
                                   is_sort1=is_sort1, is_random=is_random,
                                   random_code=random_code, title=title, subtitle=subtitle, label=label,
                                   is_msc=is_msc)
 
         obj = set_complex_modes_case(cls, is_sort1, isubcase, data_code,
-                                     set_complex_table, (element, data),
+                                     set_complex_table, (node_gridtype, data),
                                      modes, eigrs, eigis)
         return obj
 
@@ -2032,7 +2038,22 @@ class ComplexTableArray(TableArray):
         #node_gridtype_floats = np.frombuffer(node_gridtype_bytes,
                                              #dtype=fdtype).reshape(nnodes, 2)
 
-        #(2+6) => (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
+        # fdtype = self.data.dtype
+        if self.size != 4:
+            raise RuntimeError('64-bit not supported in complex eigenvectors')
+
+        # if self.size == fdtype.itemsize:
+        #     pass
+        # else:
+            # idtype = np.int32(1)
+        fdtype = np.float32(1.0)
+
+        nodedevice_gridtype = np.column_stack([nnodes_device, gridtype])
+        node_gridtype_floats = view_idtype_as_fdtype(nodedevice_gridtype, fdtype)
+
+        #(2+2*6) => (node_id, gridtypei,
+        #            t1r, t2r, t3r, r1r, r2r, r3r,  # 6
+        #            t1i, t2i, t3i, r1i, r2i, r3i)  # 6
         ntotal = nnodes * (2 + 12)
 
         #print('shape = %s' % str(self.data.shape))
@@ -2068,19 +2089,13 @@ class ComplexTableArray(TableArray):
             #node_gridtype_data_bytes = node_gridtype_data.tobytes()
             #op2_file.write(node_gridtype_data_bytes)
 
-            t1 = self.data[itime, :, 0]
-            t2 = self.data[itime, :, 1]
-            t3 = self.data[itime, :, 2]
-            r1 = self.data[itime, :, 3]
-            r2 = self.data[itime, :, 4]
-            r3 = self.data[itime, :, 5]
-
-            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(nnodes_device, gridtype, t1, t2, t3, r1, r2, r3):
-                data = [node_id, gridtypei,
-                        t1i.real, t2i.real, t3i.real, r1i.real, r2i.real, r3i.real,
-                        t1i.imag, t2i.imag, t3i.imag, r1i.imag, r2i.imag, r3i.imag]
-                fascii.write('  nid, grid_type, dx, dy, dz, rx, ry, rz = %s\n' % data)
-                op2_file.write(s.pack(*data))
+            datar = view_dtype(self.data[itime, :, :].real, fdtype)
+            datai = view_dtype(self.data[itime, :, :].imag, fdtype)
+            # node_gridtype_data = np.hstack([node_gridtype_floats, datai])
+            # print(self.data.shape, ntotal)
+            node_gridtype_data = np.hstack([node_gridtype_floats, datar, datai])
+            op2_file.write(node_gridtype_data)
+            assert ntotal == node_gridtype_data.size
 
             itable -= 1
             header = [4 * ntotal,]

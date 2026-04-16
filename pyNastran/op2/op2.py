@@ -112,6 +112,7 @@ class OP2(OP2_Scalar, OP2Writer):
 
         self.encoding = None
         self.mode = mode
+        self._nastran_format = ''
         if mode is not None:
             self.set_mode(mode)
         if revision:
@@ -131,7 +132,12 @@ class OP2(OP2_Scalar, OP2Writer):
         self.ask = False
         self.post = None
         self.table_count = defaultdict(int)
-        self._set_mode(mode)
+        # self._set_mode(mode)
+
+        # hackery to fix the version
+        if self._nastran_format == '':
+            self._nastran_format = None
+
 
     def __del__(self) -> None:
         if hasattr(self, 'h5_file') and self.h5_file is not None:
@@ -407,10 +413,10 @@ class OP2(OP2_Scalar, OP2Writer):
             return False
         return True
 
-    def _set_mode(self, mode: str):
-        """explicitly set the format"""
-        if mode is None:
-            return
+    # def _set_mode(self, mode: str):
+    #     """explicitly set the format"""
+    #     if mode is None:
+    #         return
         # elif mode == 'msc':
             # self.set_as_msc()
         # elif mode == 'nx':
@@ -424,6 +430,7 @@ class OP2(OP2_Scalar, OP2Writer):
         """
         Sets the mode as 'msc', 'nx', 'autodesk', or 'optistruct'
         """
+        assert isinstance(mode, str), mode
         if mode.lower() == 'msc':
             self.set_as_msc()
         elif mode.lower() == 'nx':

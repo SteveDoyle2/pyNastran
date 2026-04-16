@@ -383,6 +383,7 @@ def _get_nastran_header(case: Any,
     elif dt is None:
         return 'Static'
     else:  # pragma: no cover
+        header = ''
         print(case, dt, type(dt))
 
     # cases:
@@ -395,12 +396,18 @@ def _get_nastran_header(case: Any,
     elif hasattr(case, 'cycles'):
         header += '; freq = %s Hz' % func_str(case.cycles[itime])
     elif hasattr(case, 'eigis'):
-        eigi = np.array(case.eigis)
-        eigr = np.array(case.eigrs)
-        dampings, freqs = complex_damping_frequency(eigr, eigi)
+        eigrs = np.array(case.eigrs)
+        eigis = np.array(case.eigis)
+        dampings, freqs = complex_damping_frequency(eigrs, eigis)
         damping = dampings[itime]
         freq = freqs[itime]
-        header += '; freq = %s Hz; g=%s' % (func_str(freq), func_str(damping))
+        # header += '; freq = %s Hz; g=%s' % (
+        #     func_str(freq), func_str(damping),
+        # )
+        header += '; freq = %s Hz; g=%s lambda=(%s,%sj)' % (
+            func_str(freq), func_str(damping),
+            func_str(eigrs[itime]), func_str(eigis[itime]),
+        )
     elif hasattr(case, 'eigns'):
         unused_omegas, freqs = real_modes_to_omega_freq(case.eigns)
         freq = freqs[itime]

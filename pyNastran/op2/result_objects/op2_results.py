@@ -23,6 +23,27 @@ if TYPE_CHECKING:  # pragma: no cover
         RealCBushForceArray, RealPlateForceArray, RealPlateBilinearForceArray)
 
 
+class GridPointStrain:
+    def __init__(self):
+        # grid_point_strain_discontinuities: {}
+        # grid_point_strains_volume_direct: {}
+        # grid_point_strains_volume_principal: {}
+        # grid_point_surface_strains: {}
+        self.discontinuities = {}
+        self.volume_direct = {}
+        self.volume_principal = {}
+        self.surface = {}
+
+class GridPointStress:
+    def __init__(self):
+        # grid_point_stresses_volume_direct: {}
+        # grid_point_stresses_volume_principal: {}
+        # grid_point_surface_stresses: {}
+        self.volume_direct = {}
+        self.volume_principal = {}
+        self.surface = {}
+
+
 class Results:
     """storage object for even more op2_results (see op2.op2_results)"""
     def __init__(self):
@@ -63,10 +84,18 @@ class Results:
         self.stress = Stress('stress')
         self.stressa = Stress('stressa')
         self.strain = Strain('strain')
+
+        self.nonlinear_stress = Stress('nonlinear_stress')
+        self.nonlinear_strain = Stress('nonlinear_strain')
+        self.nonlinear_force = Stress('nonlinear_strain')
+
         self.elastic_strain = Strain('elastic_strain')
         self.plastic_strain = Strain('plastic_strain')
         self.thermal_strain = Strain('thermal_strain')
         self.creep_strain = Strain('creep_strain')
+
+        self.grid_point_stress = GridPointStrain()
+        self.grid_point_strain = GridPointStress()
 
         self.kinetic_energy = KineticEnergy()
         self.strain_energy = StrainEnergy()

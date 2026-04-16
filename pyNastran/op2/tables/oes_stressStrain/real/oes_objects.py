@@ -511,7 +511,10 @@ def set_freq_case(cls, is_sort1, isubcase,
     return obj
 
 def set_complex_modes_case(cls, is_sort1, isubcase,
-                           data_code, func, args, modes, eigrs, eigis):
+                           data_code, func, args,
+                           modes: np.ndarray,
+                           eigrs: np.ndarray,
+                           eigis: np.ndarray) -> None:
     #data_code['lsdvmns'] = [0] # TODO: ???
     #data_code['data_names'] = ['dt']
     #data_code['load_set'] = 1
@@ -533,8 +536,8 @@ def set_complex_modes_case(cls, is_sort1, isubcase,
     obj.get_stats()
     return obj
 
-def set_element_case(cls, data_code, is_sort1, isubcase,
-                     element, data, times):
+def set_element_case(cls, data_code, is_sort1: bool, isubcase: int,
+                     element: np.ndarray, data: np.ndarray, times: np.ndarray):
     """
     CBAR
     CROD, CONROD, CTUBE

@@ -86,7 +86,10 @@ class FortranFormat:
         self.read_mode = 1
         self._endian = None
         self._table_mapper = {}
-        self._nastran_format = None
+        if hasattr(self, '_nastran_format'):
+            pass
+        else:
+            self._nastran_format = None
         self._data_factor = 1
 
         #: stores if the user entered [] for isubcases

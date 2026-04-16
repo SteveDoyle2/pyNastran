@@ -96,7 +96,7 @@ class RealEigenvectorArray(RealTableArray):
         """(ndof, nmodes) -> (nmodes, nnodes, 6)"""
         ndof, nmodes = phi.shape
         nnodes = ndof // 6
-        assert ndof % 6 == 0
+        assert ndof % 6 == 0, phi.shape
         phi2 = phi.T  # nmodes, ndof
         data = phi2.reshape(nmodes, nnodes, 6)
         return data

@@ -69,6 +69,21 @@ def make_flutter_response(f06_filename: PathLike,
         key : int
            subcase_id
         value : FlutterResponse()
+    data : dict
+        opgwg : dict[str, Any]
+            ref_point : int
+            MO: (6?,6?) float np.ndarray
+            cg : (3,1) float np.ndarray
+            mass : float
+            mass_error: float
+            cg_error: float...why???
+            I(S): (6?,6?) float np.ndarray
+        matrices
+            freq : (nmodes,) float np.ndarray
+            MHH : (nmodes,nmodes) float np.ndarray
+            BHH : (nmodes,nmodes) float np.ndarray
+            KHH : (nmodes,nmodes) float np.ndarray
+
 
     """
     f06_units = get_flutter_units(f06_units)

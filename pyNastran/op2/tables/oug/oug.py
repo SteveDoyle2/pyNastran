@@ -1004,11 +1004,6 @@ class OUG:
                               b'OPHIG', b'BOPHIG', b'OUGV1PAT'}:
             op2._setup_op2_subcase('VECTOR')
             result_name = 'eigenvectors'
-            # print(self.code_information())
-            if op2.analysis_code == 2 and not op2.flags['eigenvectors_real']:
-                return ndata
-            if op2.analysis_code == 9 and not op2.flags['eigenvectors_complex']:
-                return ndata
         elif op2.table_name in {b'OUGF1', b'OUGF2',
                                 b'BOUGF1',
                                 b'BOPHIGF'}:
@@ -1048,6 +1043,12 @@ class OUG:
         is_saved, slot = get_is_slot_saved(op2, result_name)
         if not is_saved:
             return ndata
+
+        if 'eigenvectors' in result_name:
+            if op2.analysis_code == 2 and not op2.flags['eigenvectors_real']:
+                return ndata
+            if op2.analysis_code == 9 and not op2.flags['eigenvectors_complex']:
+                return ndata
 
         # NX THERMAL
         # 1: heat transfer

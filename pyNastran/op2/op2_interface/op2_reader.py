@@ -289,8 +289,8 @@ class OP2Reader:
           4, 2, 4, 8, 1482184792, 1482184792, 8, 4, -1, 4, 4, 0, 4, 4, 2, 4, 8, 1297040711, 538976305, 8, 4, -1
           """
         #try:
-        version_str = ''
         op2: OP2 = self.op2
+        version_str = ''
         read_mode = op2.read_mode
         encoding = self._encoding
         markers = self.get_nmarkers(1, rewind=True)
@@ -397,7 +397,7 @@ class OP2Reader:
             #pass # mode = 'optistruct'
         elif isinstance(op2._nastran_format, str):
             if op2._nastran_format not in {'msc', 'nx', 'optistruct'}:
-                raise RuntimeError(f'nastran_format={op2._nastran_format} mode={mode} and must be "msc", "nx", "optistruct", or "autodesk"')
+                raise RuntimeError(f'nastran_format={op2._nastran_format!r} mode={mode!r} and must be "msc", "nx", "optistruct", or "autodesk"')
             mode = op2._nastran_format
         elif mode is None:
             self.log.warning("No mode was set, assuming 'msc'")
