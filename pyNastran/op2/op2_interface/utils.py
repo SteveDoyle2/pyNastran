@@ -164,6 +164,7 @@ def get_superelement_adaptivity_index(subtitle: str, superelement: str) -> str:
     superelement_adaptivity_index = ''
     if 'SUPERELEMENT' in superelement:
         # 'SUPERELEMENT 0'
+        # 'TESTING OF ROTOR DYNAMICS MATH AND DMAP CAPABILITIES'
 
         # F:\work\pyNastran\examples\Dropbox\move_tpl\opt7.op2
         # 'SUPERELEMENT 0       ,   1'

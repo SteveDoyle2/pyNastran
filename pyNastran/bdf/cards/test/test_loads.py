@@ -256,6 +256,17 @@ class TestLoads(unittest.TestCase):
         assert np.array_equal(moments1, moments2)
         save_load_deck(model)
 
+    def test_pload2(self):
+        """tests a PLOAD4"""
+        log = SimpleLogger(level='debug')
+        model = BDF(log=log)
+        sid = 1
+        pressure = 2.
+        eids = 3
+        pload2 = model.add_pload2(sid, pressure, eids)
+        assert 'THRU' not in str(pload2), str(pload2)
+        # print(pload2)
+
     def test_pload4_01(self):
         """tests a PLOAD4"""
         lines = ['PLOAD4  1000    1       -60.    -60.    60.             1']

@@ -110,7 +110,7 @@ class GridPointWeight:
         self.title = title
         self.subtitle = subtitle
         self.label = label
-        self.superelement_adaptivity_index = subtitle
+        self.superelement_adaptivity_index = superelement_adaptivity_index
         self.approach_code = approach_code
         self.table_code = table_code
 

@@ -11,7 +11,7 @@ import numpy as np
 
 from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import (
-    integer_types, integer_string_types, float_types)
+    integer_types, float_types, integer_string_types)
 
 from pyNastran.nptyping_interface import NDArray3float, NDArray66float
 from pyNastran.bdf.write_path import write_include
@@ -8177,14 +8177,16 @@ class AddCards(AddCoords, AddContact, AddBolts,
             the pressure to apply to the elements
         eids : int / list[int]
             the elements to apply pressure to
-            For NX Nastran and MSC Nastran < 2018 the list must have no more than 6 ids or it must be
-            a continouus monotonic list (e.g., [1, 2, ..., 1000]). If you don't follow this rule, you'll
-            incur in a fatal error. This limitation does not apply to MSC Nastran >= 2018.
         comment : str; default=''
             a comment for the card
 
+        Note: for NX Nastran and MSC Nastran < 2018 the list of element
+              ids must have no more than 6 ids or it must be a continouus
+              monotonic list (e.g., [1, 2, ..., 1000]). If you don't
+              follow this rule, you'll incur in a fatal error. This
+              limitation does not apply to MSC Nastran >= 2018.
         """
-        if isinstance(eids, int):
+        if isinstance(eids, integer_types):
             eids = [eids]
         load = PLOAD2(sid, pressure, eids, comment=comment)
         self._add_methods.add_load_object(load)
