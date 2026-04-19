@@ -1681,9 +1681,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                  icase_fringe_start=None, icase_fringe_end=None, icase_fringe_delta=None,
                  icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
                  icase_vector_start=None, icase_vector_end=None, icase_vector_delta=None,
-                 time: float=2.0,
+                 time: float=2.0, fps: int=30,
                  animation_profile: str='0 to scale',
-                 nrepeat: int=0, fps: int=30, magnify: int=1,
+                 nrepeat: int=0, magnify: int=1,
                  make_images: bool=True, delete_images: bool=False,
                  make_gif: bool=True,
                  stop_animation: bool=False, animate_in_gui: bool=True,
@@ -1701,7 +1701,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             the png file number (let's you pick a subset of images)
             useful for when you press ``Step``
         stop_animation : bool; default=False
-            stops the animation; don't make any images/gif
+            stops the animation immediately; don't make any images/gif
+        stop_animation_after_cycle : bool; default=True
+            stop the animation after doing a single cycle of animation
+            used when making gifs?
         animate_in_gui : bool; default=True
             animates the model; don't make any images/gif
             stop_animation overrides animate_in_gui
@@ -1791,8 +1794,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 icase_fringe_start=icase_fringe_start, icase_fringe_end=icase_fringe_end, icase_fringe_delta=icase_fringe_delta,
                 icase_disp_start=icase_disp_start, icase_disp_end=icase_disp_end, icase_disp_delta=icase_disp_delta,
                 icase_vector_start=icase_vector_start, icase_vector_end=icase_vector_end, icase_vector_delta=icase_vector_delta,
-                time=time, animation_profile=animation_profile,
-                fps=fps, animate_in_gui=animate_in_gui)
+                time=time, fps=fps,
+                animation_profile=animation_profile,
+                animate_in_gui=animate_in_gui) # not used
         except (AssertionError, ValueError, RuntimeError, NotImplementedError) as error:
             self.log_error(str(error))
             self.stop_animation()
@@ -1831,10 +1835,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 f'    animate_time={animate_time},\n{icase_msg}'
                 #'    icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
                 #'    icase_start=%s, icase_end=%s, icase_delta=%s,\n'
-                f'    time={time}, animation_profile={animation_profile!r},\n'
-                f'    nrepeat={nrepeat}, magnify={magnify},\n'
+                f'    time={time}, fps={fps}, nrepeat={nrepeat}, magnify={magnify},\n'
+                f'    animation_profile={animation_profile!r},\n'
                 f'    make_images={make_images}, delete_images={delete_images}, make_gif={make_gif},\n'
-                f'    fps={fps}, stop_animation={stop_animation}, animate_in_gui={animate_in_gui},\n'
+                f'    stop_animation={stop_animation}, animate_in_gui={animate_in_gui},\n'
                 f'    stop_animation_after_cycle={stop_animation_after_cycle})\n'
             )
             self.log_command(msg)
