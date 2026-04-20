@@ -146,7 +146,7 @@ def pivot_table(data, rows, cols, shape: int=0) -> tuple[np.ndarray, np.ndarray]
     # assert data.size <= (nrows * ncols * nresults), f'size={data.size} nrows={nrows} ncols={ncols} nresults={nresults}'
 
     nshape = len(data.shape)
-    if nshape != 0:
+    if shape != 0:
         assert nshape == shape, f'data.shape={data.shape} -> nshape={nshape}; expected={shape}'
     if nshape == 3:
         ntimes = data.shape[0]
