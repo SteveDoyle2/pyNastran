@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf import read_bdf
 from pyNastran.op2.op2 import read_op2
 from pyNastran.op2.tools.solution_combination import (
     run_load_case_combinations, run_load_case_multi_combinations)
-from pyNastran.op2.tools.downselect import envelope
+from pyNastran.op2.tools.envelope import envelope
 
 np.seterr(all='raise')
 DIRNAME = Path(__file__).parent
