@@ -169,16 +169,16 @@ class OP2_F06_Common:
         # rods
         self.op2_results = Results()
 
-        self.nonlinear_ctetra_stress_strain = {}
-        self.nonlinear_cpenta_stress_strain = {}
-        self.nonlinear_chexa_stress_strain = {}
+        # self.nonlinear_ctetra_stress_strain = {}
+        # self.nonlinear_cpenta_stress_strain = {}
+        # self.nonlinear_chexa_stress_strain = {}
 
         #======================================================================
         #: OES - CBEAM 94
-        self.nonlinear_cbeam_stress = {}
+        # self.nonlinear_cbeam_stress = {}
 
-        self.nonlinear_cbush_force_stress_strain = {}  # CBUSH 226
-        self.nonlinear_cbush1d_stress_strain = {}
+        # self.nonlinear_cbush_force_stress_strain = {}  # CBUSH 226
+        # self.nonlinear_cbush1d_stress_strain = {}
 
         #======================================================================
 
@@ -236,33 +236,6 @@ class OP2_F06_Common:
         self.eigenvectors_structure = {}  #  OUG1S
         self.eigenvectors_fluid = {}  #  OUG1F???
 
-        # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
-
-        #: OES - nonlinear CROD/CONROD/CTUBE stress/strain
-        self.nonlinear_crod_stress = {}
-        self.nonlinear_crod_strain = {}
-
-        self.nonlinear_ctube_stress = {}
-        self.nonlinear_ctube_strain = {}
-
-        self.nonlinear_conrod_stress = {}
-        self.nonlinear_conrod_strain = {}
-
-        self.nonlinear_cquad4_stress = {}
-        self.nonlinear_ctria3_stress = {}
-
-        self.nonlinear_cquad4_strain = {}
-        self.nonlinear_ctria3_strain = {}
-
-        #: OES - CELAS1 224, CELAS3 225,
-        self.nonlinear_celas1_stress = {}
-        self.nonlinear_celas3_stress = {}
-
-        #: OES - GAPNL 86
-        self.nonlinear_cgap_stress = {}
-
-        self.nonlinear_cpyram_stress_strain = {}
-
         # OQG - spc/mpc forces
         self.spc_forces = {}  # OQG1, tCode=3?
         self.spc_forces_v = {} # OQGV1
@@ -281,16 +254,16 @@ class OP2_F06_Common:
         self.grid_point_forces = {}  # tCode=19
 
         #: OGS1 - grid point stresses
-        self.grid_point_surface_stresses = {}       # tCode=26
-        self.grid_point_stresses_volume_direct = {}  # tCode=27
-        self.grid_point_stresses_volume_principal = {} # tCode=28
-        self.grid_point_stress_discontinuities = {}  # tCode=35
+        # self.grid_point_surface_stresses = {}       # tCode=26
+        # self.grid_point_stresses_volume_direct = {}  # tCode=27
+        # self.grid_point_stresses_volume_principal = {} # tCode=28
+        # self.grid_point_stress_discontinuities = {}  # tCode=35
 
         # : OGSTR1 - grid point strains
-        self.grid_point_surface_strains = {}       # tCode=26
-        self.grid_point_strains_volume_direct = {}  # tCode=27
-        self.grid_point_strains_volume_principal = {} # tCode=28
-        self.grid_point_strain_discontinuities = {}  # tCode=35
+        # self.grid_point_surface_strains = {}       # tCode=26
+        # self.grid_point_strains_volume_direct = {}  # tCode=27
+        # self.grid_point_strains_volume_principal = {} # tCode=28
+        # self.grid_point_strain_discontinuities = {}  # tCode=35
 
         #: OPG - summation of loads for each element
         self.load_vectors = {}       # OPG1; tCode=2  thermal=0
@@ -344,10 +317,10 @@ class OP2_F06_Common:
             'thermal_load_vectors',
             #'applied_loads',
             'force_vectors',
-            # OES - isotropic CBEAM stress/strain
-            'nonlinear_cbeam_stress',
-            #'nonlinear_cbeam_strain',
-            'nonlinear_cpyram_stress_strain',
+            # # OES - isotropic CBEAM stress/strain
+            # 'nonlinear_cbeam_stress',
+            # #'nonlinear_cbeam_strain',
+            # 'nonlinear_cpyram_stress_strain',
         ]
         utables = unique(table_types)
         if len(table_types) != len(utables):
@@ -380,34 +353,34 @@ class OP2_F06_Common:
             #'cbush1d_stress_strain',
 
             # OES - nonlinear CROD/CONROD/CTUBE stress
-            'nonlinear_crod_stress', 'nonlinear_crod_strain',
-            'nonlinear_ctube_stress', 'nonlinear_ctube_strain',
-            'nonlinear_conrod_stress', 'nonlinear_conrod_strain',
+            # 'nonlinear_crod_stress', 'nonlinear_crod_strain',
+            # 'nonlinear_ctube_stress', 'nonlinear_ctube_strain',
+            # 'nonlinear_conrod_stress', 'nonlinear_conrod_strain',
 
             # OESNLXR - CTRIA3/CQUAD4 stress
-            'nonlinear_cbush_force_stress_strain',
-            'nonlinear_cbush1d_stress_strain',
-            'nonlinear_cgap_stress',
-            'nonlinear_cquad4_stress', 'nonlinear_ctria3_stress',
-            'nonlinear_cquad4_strain', 'nonlinear_ctria3_strain',
+            # 'nonlinear_cbush_force_stress_strain',
+            # 'nonlinear_cbush1d_stress_strain',
+            # 'nonlinear_cgap_stress',
+            # 'nonlinear_cquad4_stress', 'nonlinear_ctria3_stress',
+            # 'nonlinear_cquad4_strain', 'nonlinear_ctria3_strain',
 
             # OESNLXR - solid
-            'nonlinear_ctetra_stress_strain', 'nonlinear_cpenta_stress_strain', 'nonlinear_chexa_stress_strain',
+            # 'nonlinear_ctetra_stress_strain', 'nonlinear_cpenta_stress_strain', 'nonlinear_chexa_stress_strain',
 
             # OES - CEALS1 224, CELAS3 225
-            'nonlinear_celas1_stress',
-            'nonlinear_celas3_stress',
+            # 'nonlinear_celas1_stress',
+            # 'nonlinear_celas3_stress',
 
             # OGS1 - grid point stresses
-            'grid_point_surface_stresses', # tCode=26
-            'grid_point_stresses_volume_direct',  # tCode=27 # volume direct
-            'grid_point_stresses_volume_principal', # tCode =28
-            'grid_point_stress_discontinuities',  # tCode=35,
+            # 'grid_point_surface_stresses', # tCode=26
+            # 'grid_point_stresses_volume_direct',  # tCode=27 # volume direct
+            # 'grid_point_stresses_volume_principal', # tCode =28
+            # 'grid_point_stress_discontinuities',  # tCode=35,
 
-            'grid_point_surface_strains',
-            'grid_point_strains_volume_direct',
-            'grid_point_strains_volume_principal',
-            'grid_point_strain_discontinuities',
+            # 'grid_point_surface_strains',
+            # 'grid_point_strains_volume_direct',
+            # 'grid_point_strains_volume_principal',
+            # 'grid_point_strain_discontinuities',
         ]
         utables = unique(table_types)
         if len(table_types) != len(utables):

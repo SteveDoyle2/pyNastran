@@ -228,7 +228,7 @@ class RealPlateArray(OES_Object):
         #headers = [fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
         omax = self.data[:, :, 5]
         omin = self.data[:, :, 6]
-        max_sheari = max_shear(omax, omin)
+        max_sheari = max_shear(omax, omin, self.is_stress)
         return max_sheari
 
     def build_dataframe(self):
@@ -325,6 +325,69 @@ class RealPlateArray(OES_Object):
             # data_frame = df1.join(df2)
             data_frame = data_frame.reset_index().set_index(['ElementID', 'NodeID', 'Location'])
         self.data_frame = data_frame
+
+    def envelope(self,
+                 eids: np.ndarray,
+                 result_name: str,
+                 consider_corner_nodes: bool=False) -> np.ndarray:
+        is_min = (result_name == 'min')
+        func_name = 'min' if is_min else 'max'
+        max_min_func = getattr(np, func_name)
+
+        # print(''.join(self.get_stats()))
+        element = np.unique(self.element_node[:, 0])
+        # print(f'element = {element}')
+        ielement = np.searchsorted(element, eids)
+        assert np.array_equal(element[ielement], eids)
+
+        # [fiber_dist, oxx, oyy, txy, angle,
+        #  major_principal, minor_principal, ovm]
+        stress_strain_dict_map = {
+            'max': 5,
+            'min': 6,
+        }
+        neid = len(element)
+        ntime, nelement_node_layer, _ = self.data.shape
+        if result_name == 'von_mises':
+            data = self.von_mises()
+        elif result_name == 'max_shear':
+            data = self.max_shear()
+        elif result_name == 'abs_max':
+            # TODO: wrong, but ok...
+            data = np.abs(self.abs_principal())
+            assert data.shape == (ntime, nelement_node_layer), data.shape
+        elif result_name in stress_strain_dict_map:
+            iresult = stress_strain_dict_map[result_name]
+            data = self.data[:, :, iresult]
+        else:  # pragma: No cover
+            raise NotImplementedError(result_name)
+
+        is_corner_nodes = len(self.element_node) > 1 and self.element_node[2, 1] != 0
+        assert data.ndim == 2, data.shape
+        ntime, nelement_nnode = data.shape
+
+        # print(is_corner_nodes, consider_corner_nodes)
+        if is_corner_nodes:
+            data = data.reshape(ntime, neid, self.nnodes_per_element, 2)
+            if consider_corner_nodes:
+                # arr = np.random.rand(3, 4, 5)  # 3 matrices, 4 rows, 5 columns
+                # col_max = arr.max(axis=1)  # Result shape: (3, 5)
+                # eid_data = data[:, :, :].max(axis=(0, 2))
+                eid_data = max_min_func(data, axis=(0, 2, 3))
+                assert eid_data.shape == (neid,), eid_data.shape
+            else:
+                # eid_data = data[:, :, 0].max(axis=0)
+                eid_data = max_min_func(data[:, :, 0, :], axis=(0, 2))
+                assert eid_data.shape == (neid,), eid_data.shape
+        else:
+            # data.shape = (ntime, neid, 2)
+            # print(data.shape)
+            # print(self.element_node)
+            data2 = data.reshape(ntime, neid, 2)
+            # eid_data = data.max(axis=(0,2))
+            eid_data = max_min_func(data2, axis=(0, 2))
+            assert eid_data.shape == (neid, ), eid_data.shape
+        return eid_data[ielement]
 
     @classmethod
     def _add_case(cls,

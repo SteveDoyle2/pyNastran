@@ -109,6 +109,8 @@ class AnimationWindow(PyDialog):
         self._phase = data['phase']
         self._default_phase = data['default_phase']
 
+        self.time = 2.0
+        self.fps = 30
         self._default_dirname = data['dirname']
         self._default_gif_name = os.path.join(self._default_dirname, data['title'] + '.gif')
 
@@ -1028,7 +1030,7 @@ class AnimationWindow(PyDialog):
         grid_scale.addWidget(self.animation_profile_label, 0, 0)
         grid_scale.addWidget(self.animation_profile_edit, 0, 1)
 
-        self.csv_profile = QLabel("CSV profile:")
+        self.csv_profile = QLabel('CSV profile:')
         self.csv_profile_edit = QLineEdit()
         self.csv_profile_button = QPushButton('Browse')
 
@@ -1174,9 +1176,9 @@ class AnimationWindow(PyDialog):
 
     def on_stop(self) -> None:
         """click the Stop button"""
-        #passed, validate_out = self.on_validate()
-        #if passed:
-            #self._make_gif(validate_out, stop_animation=True)
+        # passed, validate_out = self.on_validate()
+        # if passed:
+        #     self._make_gif(validate_out, stop_animation=True)
         if self.is_gui:
             self.gui.stop_animation()
 
@@ -1197,7 +1199,8 @@ class AnimationWindow(PyDialog):
     def _make_gif(self, validate_out, istep=None,
                   stop_animation: bool=False) -> None:
         """interface for making the gif"""
-        (icase_fringe, icase_disp, icase_vector, scale, time, fps, animate_in_gui,
+        (icase_fringe, icase_disp, icase_vector,
+         scale, time, fps, animate_in_gui,
          magnify, output_dir, gifbase,
          min_value, max_value) = validate_out
         fps = int(fps)
@@ -1252,10 +1255,11 @@ class AnimationWindow(PyDialog):
             icase_vector_delta = self.icase_vector_delta_edit.value()
 
         bool_repeat = self.repeat_checkbox.isChecked()  # TODO: change this to an integer
-        if bool_repeat:
-            nrepeat = 0
-        else:
-            nrepeat = 1
+        nrepeat = 0 if bool_repeat else 1
+        # if bool_repeat:
+        #     nrepeat = 0
+        # else:
+        #     nrepeat = 1
         #self.out_data['is_shown'] = self.show_radio.isChecked()
         #icase = self._icase
 
@@ -1274,14 +1278,13 @@ class AnimationWindow(PyDialog):
                 icase_disp_start=icase_disp_start, icase_disp_end=icase_disp_end, icase_disp_delta=icase_disp_delta,
                 icase_vector_start=icase_vector_start, icase_vector_end=icase_vector_end, icase_vector_delta=icase_vector_delta,
 
-                time=time, animation_profile=animation_profile,
-                nrepeat=nrepeat, fps=fps, magnify=magnify,
+                time=time, fps=fps, magnify=magnify, nrepeat=nrepeat,
+                animation_profile=animation_profile,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif,
                 stop_animation=stop_animation, animate_in_gui=animate_in_gui,
                 min_value=min_value, max_value=max_value,
                 stop_animation_after_cycle=stop_animation_after_cycle,
             )
-
         self.out_data['clicked_ok'] = True
         self.out_data['close'] = True
 
@@ -1293,7 +1296,13 @@ class AnimationWindow(PyDialog):
             return 0., 1.0
         return min_value, max_value
 
-    def on_validate(self, wipe: bool=False) -> tuple[bool,
+    def on_validate(self, wipe: bool=False) -> tuple[
+            # passed
+            bool,
+            # (icase_fringe, icase_disp, icase_vector,
+            #  scale, time, fps, animate_in_gui,
+            #  magnify, output_dir, gifbase,
+            #  min_value, max_value)
             tuple[int, int, Optional[int],
                   float, float, int, bool,
                   int, str, str,
@@ -1342,7 +1351,8 @@ class AnimationWindow(PyDialog):
             output_dir, flag7 = check_path(self.browse_folder_edit)
             gifbase, flag8 = check_name_str(self.gif_edit)
             passed = all([flag0, flag1, flag2, flag3, flag4, flag5, flag6, flag7, flag8])
-        return passed, (icase_fringe, icase_disp, icase_vector, scale, time, fps, animate_in_gui,
+        return passed, (icase_fringe, icase_disp, icase_vector,
+                        scale, time, fps, animate_in_gui,
                         magnify, output_dir, gifbase, min_value, max_value)
 
     #def on_ok(self) -> None:
@@ -1355,10 +1365,9 @@ class AnimationWindow(PyDialog):
 
     @property
     def settings(self) -> dict[str, Any]:
+        out = {}
         if self.is_gui:
             out = self.win_parent.settings
-        else:
-            out = {}
         return out
 
     def _set_settings(self) -> None:

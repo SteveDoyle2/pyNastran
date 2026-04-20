@@ -2945,10 +2945,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 log, stop_on_failure=stop_on_failure)
 
             # force
-            icase = self._fill_op2_gpstress(
-                cases, model, times, key, icase,
-                gpstress_dict, header_dict, keys_map,
-                log, stop_on_failure=stop_on_failure)
+            # icase = self._fill_op2_gpstress(
+            #     cases, model, times, key, icase,
+            #     gpstress_dict, header_dict, keys_map,
+            #     log, stop_on_failure=stop_on_failure)
 
             ncases = icase - ncases_old
             #print('ncases=%s icase=%s' % (ncases, icase))

@@ -2,6 +2,7 @@
 import os
 import unittest
 from typing import cast
+from cpylog import SimpleLogger
 
 import numpy as np
 from numpy import array, allclose, array_equal, set_printoptions
@@ -347,6 +348,20 @@ class TestLoads(unittest.TestCase):
         #print("MOMENTS:", model.get_cards_by_card_types(["MOMENT"])["MOMENT"])
 
     def test_pload2_01(self):
+        """tests a PLOAD4"""
+        log = SimpleLogger(level='debug')
+        model = BDF(log=log)
+        sid = 1
+        pressure = 2.
+        eids = 3
+        model.add_pload2(sid, pressure, eids)
+        model.setup(run_geom_check=False)
+        msg = model.pload2.write()
+        assert 'THRU' not in msg, msg
+        assert msg.strip() == 'PLOAD2         1      2.       3', msg
+        # print(msg)
+
+    def test_pload2_02(self):
         """tests a PLOAD2"""
         model = BDF(debug=False)
         pload2 = model.pload2

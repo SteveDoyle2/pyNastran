@@ -1,7 +1,9 @@
 from typing import TextIO, Optional
 import numpy as np
 
+from pyNastran.femutils.utils import pivot_table
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
+from pyNastran.op2.stress_reduction import von_mises_2d, max_shear
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype, combination_inplace
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
@@ -170,6 +172,81 @@ class RealCompositePlateArray(OES_Object):
             data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
             data_frame.columns.names = ['Static']
             self.data_frame = data_frame
+
+    def envelope(self,
+                 eids: np.ndarray,
+                 result_name: str) -> np.ndarray:
+        is_min = (result_name == 'min')
+        func_name = 'nanmin' if is_min else 'nanmax'
+        max_min_func = getattr(np, func_name)
+
+        # self.element_layer = group.create_dataset('element_layer', data=element_layer)
+
+        # print(''.join(self.get_stats()))
+        element = np.unique(self.element_layer[:, 0])
+        ielement = np.searchsorted(element, eids)
+        assert np.array_equal(element[ielement], eids)
+
+        #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
+        stress_strain_dict_map = {
+            'max': 6,
+            'min': 7,
+        }
+        ntime, nelement_node, _ = self.data.shape
+        if result_name == 'von_mises':
+            data = self.von_mises()
+        elif result_name == 'max_shear':
+            data = self.max_shear()
+        elif result_name == 'abs_max':
+            # TODO: wrong, but ok...
+            data = np.abs(self.data[:, :, [6,8]]).max(axis=2)
+            assert data.shape == (ntime, nelement_node), data.shape
+        elif result_name in stress_strain_dict_map:
+            iresult = stress_strain_dict_map[result_name]
+            data = self.data[:, :, iresult]
+        else:  # pragma: No cover
+            raise NotImplementedError(result_name)
+
+        neid = len(element)
+        assert data.ndim == 2, data.shape
+        ntime, nelement_layer = data.shape
+
+        # reshape for the pivot_table
+        data = data.reshape(ntime, nelement_layer, 1)
+
+        row_eids = self.element_layer[:, 0]
+        col_layers = self.element_layer[:, 1]
+        ulayers = np.unique(col_layers)
+        nlayer = len(ulayers)
+        pivot_data, eids_new = pivot_table(data, row_eids, col_layers, shape=3)
+        pivot_data = pivot_data.reshape(ntime, neid, nlayer)
+        assert pivot_data.shape == (ntime, neid, nlayer), pivot_data.shape
+
+        # squash the time and layer axes
+        eid_data = max_min_func(pivot_data, axis=(0, 2))
+        assert eid_data.shape == (neid,), (eid_data.shape, neid)
+
+        return eid_data[ielement]
+
+    def von_mises(self) -> np.ndarray:
+        if self.is_von_mises:
+            return self.data[:, :, -1]
+        #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
+        oxx = self.data[:, :, 0]
+        oyy = self.data[:, :, 1]
+        txy = self.data[:, :, 2]
+        ovm = von_mises_2d(oxx, oyy, txy, self.is_stress)
+        return ovm
+
+    def max_shear(self) -> np.ndarray:
+        """hasn't been checked for strain"""
+        if not self.is_von_mises:
+            return self.data[:, :, -1]
+        #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
+        omax = self.data[:, :, 6]
+        omin = self.data[:, :, 7]
+        max_sheari = max_shear(omax, omin)
+        return max_sheari
 
     @classmethod
     def _add_case(cls,

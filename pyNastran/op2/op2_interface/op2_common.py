@@ -470,11 +470,10 @@ class OP2Common(Op2Codes, F06Writer):
         nsubtitle_break = 67
         adpativity_index = subtitle[nsubtitle_break:99]
         superelement = subtitle[99:].strip()
-        #print(f'superelement={superelement!r}; n={len(superelement)}')
-
-        #print('subtitle = %r' % subtitle)
-        #print('aindex   = %r' % adpativity_index)
-        #print('superele = %r' % superelement)
+        # print(f'superelement={superelement!r}; n={len(superelement)}')
+        # print('subtitle = %r' % subtitle)
+        # print('aindex   = %r' % adpativity_index)
+        # print('superele = %r' % superelement)
 
         #'SUPERELEMENT 0       ,   1'; n=26
         #'SUPERELEMENT 0       ,   10'; n=27
@@ -2484,9 +2483,9 @@ def parse_fba_subcase(title: str, subtitle: str, label: str,
     """
     label='LOAD ON INTERNAL GRID PT. 16377 IN FRF COMPONE                                                         FBA SUBCASE        1'
     """
-    #log.error(f'title={title!r}')
-    #log.error(f'subtitle={subtitle!r}')
-    #log.error(f'label={label!r}')
+    # log.error(f'title={title!r}')
+    # log.error(f'subtitle={subtitle!r}')
+    # log.error(f'label={label!r}')
     subtitle = subtitle[:28]
     # title    = b' FRF PAPER DOF 8 PROBLEM USING GRID POINTS                                                                                      '
     # subtitle = b' SINGLE SHOT RUN VIA GENASM - FRFP1GPS                                     FBA OUTPUT FOR FRF COMPONENT        1 (FRF8    )     '
@@ -2588,11 +2587,12 @@ def parse_fba_subcase(title: str, subtitle: str, label: str,
     comp_num_2, comp_name = num_name.split('/')
     comp_num_2 = int(comp_num_2)
     comp_name = comp_name.strip()
-    #print('label2 = ', label2)
+    # print(f'label2 = {label2!r}')
     #print('unit = ', unit_label, comp_num_1, comp_num_2)
     #print('num_name = ', comp_num_2, comp_name)
     assert comp_num_2 in [1, 2, 7, 8], f'comp_num_2={comp_num_2} label_base={label_base!r}'
     label = f'{unit_label}; grid={comp_grid_1} comp={comp_num_1}'
+    # print(f'label_out = {label!r}')
     label2 = ''
     return subtitle, label, label_base
 
@@ -2605,7 +2605,7 @@ def parse_frf_subcase(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: by
     #subtitle = b' GENERATE FRFS FOR COMPONENT NO. 4                                         FRF OUTPUT FOR FRF COMPONENT        4 (TOP     )     '
     #label    = b'UNIT LOAD ON GRID POINT     5010 - COMPONENT 3                                                         FRF SUBCASE        1     '
     #label = f'{unit_label}; grid={comp_grid_1} comp={comp_num_1}'
-    #print(f'label_bytes = {label_bytes}')
+    # print(f'label_bytes = {label_bytes}')
     if label_base.startswith('UNIT LOAD ON GRID POINT'):
         grid_comp_sline = label_base.split('UNIT LOAD ON GRID POINT')[1].strip()
 
@@ -2623,7 +2623,7 @@ def parse_frf_subcase(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: by
         # subtitle = b' FRF GENERATION FOR COMPONENT NO. 1                                        FRF OUTPUT FOR FRF COMPONENT        1 (LEFTBOT )     '
         # label    = b'LOAD ON INTERNAL GRID PT. 812 IN FRF COMPONENT 1                                                       FRF SUBCASE        1     '
         grid_str = label_base.split('LOAD ON INTERNAL GRID PT.')[1].strip()
-        #print(f'label_base = {label_base!r}')
+        # print(f'label_base = {label_base!r}')
         #'812 IN FRF COMPONENT 1'
         #print(grid_str)
         if 'IN FRF COMPONENT' in grid_str:

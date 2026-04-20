@@ -538,7 +538,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
             # not checked for strain
             omax = centroid_data[itime, :, imax]
             omin = centroid_data[itime, :, imin]
-            data = max_shear(omax, omin)
+            data = max_shear(omax, omin, self.is_stress)
         else:
             data = centroid_data[itime, :, iresult].copy()
         return data
@@ -583,7 +583,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
         elif iresult == 'max_shear':
             omax = node_data[itime, :, imax]
             omin = node_data[itime, :, imin]
-            datai = max_shear(omax, omin)
+            datai = max_shear(omax, omin, self.is_stress)
         elif iresult == 'abs_principal':
             data_max = node_data[itime, :, imax]
             data_min = node_data[itime, :, imin]

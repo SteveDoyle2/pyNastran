@@ -33,6 +33,17 @@ if IS_IMAGEIO:
     assert iver != [7, 1, 0], 'pillow=7.1.0 is not supported'
 
 
+DIV2_PROFILES = {
+    '0 to scale to 0',
+    '-scale to scale to -scale',
+}
+DIV4_PROFILES = {
+    '0 to scale to -scale to 0',
+    'sinusoidal: 0 to scale to -scale to 0',
+    'sinusoidal: scale to -scale to scale',
+}
+
+
 def setup_animation(scale, istep=None,
                     animate_scale: bool=True,
                     animate_phase: bool=False,
@@ -61,6 +72,16 @@ def setup_animation(scale, istep=None,
         the displacement scale factor; true scale
     analysis_time : float
         the time that needs to be simulated for the analysis; not the runtime
+    animation_profile : str; default='0 to scale'
+        profile type
+    time : float; default=2.0
+        total time of the animation
+        time and fps are used to calculate the number of frames
+    fps : int; default=30
+        frames per second
+        time and fps are used to calculate the number of frames
+    animate_in_gui : bool; default=False
+        not used
 
     """
     if animate_scale or animate_phase:
@@ -68,9 +89,9 @@ def setup_animation(scale, istep=None,
         assert isinstance(fps, integer_types), f'fps={fps:d} must be an integer'
 
     phases = None
-    onesided = False
-    is_symmetric = False
-    endpoint = False
+    # onesided = False
+    # is_symmetric = False
+    # endpoint = False
     if animate_scale:
         out = setup_animate_scale(
             scale,
@@ -129,16 +150,6 @@ def fix_nframes(nframes: int, profile: str) -> int:
     make sure we break at the "true scale" max
     should this be in terms of fps or nframes? (I think nframes)
     """
-    DIV2_PROFILES = {
-        '0 to scale to 0',
-        '-scale to scale to -scale',
-    }
-    DIV4_PROFILES = {
-        '0 to scale to -scale to 0',
-        'sinusoidal: 0 to scale to -scale to 0',
-        'sinusoidal: scale to -scale to scale',
-    }
-
     fix_nframes_even = nframes == 1 or nframes % 2 == 0
     fix_nframes_sin = nframes == 1 or nframes % 4 != 1
     is_div_two_profile = profile in DIV2_PROFILES
@@ -423,7 +434,10 @@ def get_analysis_time(time: float, onesided: bool=True) -> float:
     return analysis_time
 
 
-def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
+def update_animation_inputs(phases: Optional[list[float]],
+                            icases_fringe: list[int] | int,
+                            icases_disp: list[int] | int,
+                            icases_vector: list[int] | int,
                             isteps: list[int], scales: list[float],
                             analysis_time: float, fps: int):
     """
@@ -637,6 +651,10 @@ def write_gif(gif_filename: PathLike, png_filenames: list[PathLike], time: float
         was the gif made
 
     """
+    # if isinstance(nrepeat, bool):
+    #     warnings.warn(f'nrepeat={nrepeat} and is not an integer')
+    if nrepeat is True:
+        nrepeat = 0
     if not IS_IMAGEIO:
         return False
 
@@ -662,12 +680,10 @@ def write_gif(gif_filename: PathLike, png_filenames: list[PathLike], time: float
     if make_gif and IS_IMAGEIO:
         images = []
         for png_filename in png_filenames:
-            if not isinstance(png_filename, str) and os.path.exists(png_filename):
+            if not isinstance(png_filename, PathLike) and os.path.exists(png_filename):
                 raise TypeError(f'png_filename={png_filename!r} is invalid')
             imagei = imageio.imread(png_filename)
             images.append(imagei)
-        if nrepeat is True:
-            nrepeat = 0
         try:
             imageio.mimsave(gif_filename, images, duration=duration,
                             loop=nrepeat)

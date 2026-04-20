@@ -1464,7 +1464,7 @@ class Load2(BaseCard):
         g2 = integer(card, 5, 'g2')
         g3 = integer(card, 6, 'g3')
         g4 = integer(card, 7, 'g4')
-        assert len(card) == 8, 'len(%s card) = %i\ncard=%s' % (cls.type, len(card), card)
+        assert len(card) == 8, f'len({cls.type} card) = {len(card):d}\ncard={card}'
         return cls(sid, node, mag, g1, g2, g3, g4, comment=comment)
 
     @classmethod
@@ -2242,8 +2242,8 @@ class PLOAD2(Load):
     def __init__(self, sid: int, pressure: float,
                  eids: list[int], comment: str=''):
         """
-        Creates a PLOAD2 card, which defines a uniform static pressure load applied to CQUAD4,
-        CSHEAR, or CTRIA3 two-dimensional elements
+        Creates a PLOAD2 card, which defines a uniform static pressure
+        load applied to CQUAD4, CSHEAR, or CTRIA3 two-dimensional elements
 
         Parameters
         ----------
@@ -2253,12 +2253,14 @@ class PLOAD2(Load):
             the pressure to apply to the elements
         eids : list[int]
             the elements to apply pressure to
-            For NX Nastran and MSC Nastran < 2018 the list must have no more than 6 ids or it must be
-            a continouus monotonic list (e.g., [1, 2, ..., 1000]). If you don't follow this rule, you'll
-            incur in a fatal error. This limitation does not apply to MSC Nastran >= 2018.
         comment : str; default=''
             a comment for the card
 
+        Note: for NX Nastran and MSC Nastran < 2018 the list of element
+              ids must have no more than 6 ids or it must be a continouus
+              monotonic list (e.g., [1, 2, ..., 1000]). If you don't
+              follow this rule, you'll incur in a fatal error. This
+              limitation does not apply to MSC Nastran >= 2018.
         """
         if comment:
             self.comment = comment
@@ -2281,22 +2283,25 @@ class PLOAD2(Load):
         comment : str; default=''
             a comment for the card
 
-        Note: for NX Nastran and MSC Nastran < 2018 the list of element ids must have no more than 6
-        ids or it must be a continouus monotonic list (e.g., [1, 2, ..., 1000]). If you don't follow
-        this rule, you'll incur in a fatal error. This limitation does not apply to MSC Nastran >= 2018.
+        Note: for NX Nastran and MSC Nastran < 2018 the list of element
+              ids must have no more than 6 ids or it must be a continouus
+              monotonic list (e.g., [1, 2, ..., 1000]). If you don't
+              follow this rule, you'll incur in a fatal error. This
+              limitation does not apply to MSC Nastran >= 2018.
 
         """
         sid = integer(card, 1, 'sid')
-        pressure = double(card, 2, 'p')
+        pressure = double(card, 2, 'pressure')
 
-        # If keyword THRU is used assign first and last element id and check that number of fields is equal to 6
         if integer_string_or_blank(card, 4, 'THRU') == 'THRU':
+            # If keyword THRU is used assign first and last element id
+            # and check that number of fields is equal to 6
             e1 = integer(card, 3, 'Element1')
             e2 = integer(card, 5, 'Element1')
             eids = [i for i in range(e1, e2 + 1)]
             assert len(card) == 6, f'len(PLOAD2 card) = {len(card):d}\ncard={card}'
-        # Otherwise just assign the list of element ids
         else:
+            # Otherwise just assign the list of element ids
             eids = fields(integer, card, 'eid', i=3, j=len(card))
         return PLOAD2(sid, pressure, eids, comment=comment)
 
@@ -2328,11 +2333,11 @@ class PLOAD2(Load):
             the BDF object
 
         """
-        msg = ', which is required by PLOAD2 sid=%s' % self.sid
+        msg = f', which is required by PLOAD2 sid={self.sid:d}'
         self.eids_ref = model.Elements(self.eids, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors: dict[Any, Any]) -> None:
-        msg = ', which is required by PLOAD2 sid=%s' % self.sid
+        msg = f', which is required by PLOAD2 sid={self.sid:d}'
         self.eids_ref = model.safe_elements(self.eids, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
@@ -2348,7 +2353,7 @@ class PLOAD2(Load):
             eids = self.eids
         return eids
 
-    def get_loads(self):
+    def get_loads(self) -> list[PLOAD2]:
         return [self]
 
     def raw_fields_separate(self, model: BDF) -> list[list[Any]]:
@@ -2362,18 +2367,26 @@ class PLOAD2(Load):
 
     def raw_fields(self) -> list:
         list_fields = ['PLOAD2', self.sid, self.pressure]
-        # For NX Nastran and MSC Nastran < 2018 the element ids must be no more than 6 they must be
-        # a continouus monotonic list (e.g., [1, 2, ..., 1000]). If you don't follow this rule, you'll
-        # incur in a fatal error. This limitation does not apply to MSC Nastran >= 2018.
+        # For NX Nastran and MSC Nastran < 2018 the element ids must
+        # be no more than 6 they must be a continouus monotonic list
+        # (e.g., [1, 2, ..., 1000]). If you don't follow this rule,
+        # you'll incur in a fatal error. This limitation does not apply
+        # to MSC Nastran >= 2018.
         eids = self.element_ids
         # Convert list of element ids to numpy array if needed
+        if len(eids) == 1:
+            list_fields.extend(eids)
+            return list_fields
+
         if isinstance(eids, list):
             eids = np.array(eids)
-        # Sort array of element ids and calculate the differences between consecutive elements
+        # Sort array of element ids and calculate the differences
+        # between consecutive elements
         eids.sort()
         diffs = np.diff(eids)
         # If all differences are equal to 1 use keyword THRU,
-        # otherwise just append the list of element ids to the list of fields
+        # otherwise just append the list of element ids to the
+        # list of fields
         if np.all(diffs == 1):
             list_fields += [eids[0], 'THRU', eids[-1]]
         else:
@@ -2558,9 +2571,9 @@ class PLOAD4(Load):
         self.eids_ref = None
 
     def validate(self):
-        if self.surf_or_line not in ['SURF', 'LINE']:
-            raise RuntimeError('PLOAD4; sid=%s surf_or_line=%r' % (self.sid, self.surf_or_line))
-        if self.line_load_dir not in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']:
+        if self.surf_or_line not in {'SURF', 'LINE'}:
+            raise RuntimeError(f'PLOAD4; sid={self.sid:d} surf_or_line={self.surf_or_line!r}')
+        if self.line_load_dir not in {'LINE', 'X', 'Y', 'Z', 'TANG', 'NORM'}:
             raise RuntimeError(self.line_load_dir)
         assert self.g1 != 0, str(self)
         assert self.g34 != 0, str(self)
@@ -2585,7 +2598,7 @@ class PLOAD4(Load):
             p1,
             double_or_blank(card, 4, 'p2'),
             double_or_blank(card, 5, 'p3'),
-            double_or_blank(card, 6, 'p4')]
+            double_or_blank(card, 6, 'p4'),]
 
         eids = [eid]
         g1_thru = integer_string_or_blank(card, 7, 'g1/THRU')
@@ -2682,7 +2695,7 @@ class PLOAD4(Load):
             the BDF object
 
         """
-        msg = ', which is required by PLOAD4 sid=%s' % self.sid
+        msg = f', which is required by PLOAD4 sid={self.sid:d}'
         if self.cid is not None:
             self.cid_ref = model.Coord(self.cid, msg=msg)
         if self.g1 is not None:
@@ -2694,7 +2707,7 @@ class PLOAD4(Load):
 
     def safe_cross_reference(self, model: BDF, xref_errors,
                              debug: bool=True):
-        msg = ', which is required by PLOAD4 sid=%s' % self.sid
+        msg = f', which is required by PLOAD4 sid={self.sid:d}'
         #self.eid = model.Element(self.eid, msg=msg)
         if self.cid is not None:
             self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
@@ -2746,7 +2759,7 @@ class PLOAD4(Load):
         node_ids = [self.G1(), self.G34()]
         return node_ids
 
-    def get_element_ids(self, eid=None):
+    def get_element_ids(self, eid=None) -> list[int]:
         if self.eids_ref is not None:
             try:
                 eids = [eid_ref.eid for eid_ref in self.eids_ref]
@@ -2764,7 +2777,7 @@ class PLOAD4(Load):
         return eids
 
     @property
-    def element_ids(self):
+    def element_ids(self) -> list[int]:
         return self.get_element_ids()
 
     def repr_fields(self) -> list:
@@ -2872,7 +2885,8 @@ class PLOAD4(Load):
         return self.comment + print_card_16(card)
 
 
-def update_pload4_vector(pload4: PLOAD4, normal: np.ndarray, cid: int) -> np.ndarray:
+def update_pload4_vector(pload4: PLOAD4, normal: np.ndarray,
+                         cid: int) -> np.ndarray:
     """helper method"""
     if np.abs(pload4.nvector).max() == 0.:
         # element surface normal
@@ -2907,15 +2921,3 @@ def normalize(self, msg: str=''):
             msgi += 'card =\n%s' % str(self)
             msgi += msg
             raise FloatingPointError(msgi)
-
-
-#def normalize(self):
-    #"""
-    #adjust the vector to a unit length
-    #scale up the magnitude of the vector
-    #"""
-    #if self.mag != 0.0:  # enforced displacement
-        #norm_xyz = np.linalg.norm(self.xyz)
-        ##mag = self.mag*norm_xyz
-        #self.mag *= norm_xyz
-        #self.xyz /= norm_xyz

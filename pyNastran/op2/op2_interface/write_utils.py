@@ -175,8 +175,17 @@ def _write_subtitle_adaptivity_index(
         super_adapt_bytes = b'ADAPTIVITY INDEX=%7d' % int(adaptivity_index)
     else:
         super_adapt_bytes = b''
-    out = b'%67s%61s' % (subtitle_prefix, super_adapt_bytes)
-    return out
+    subtitle_out = b'%67s%61s' % (subtitle_prefix, super_adapt_bytes)
+    if len(subtitle_out) > 128:
+        # subtitle (n=52) = 'TESTING OF ROTOR DYNAMICS MATH AND DMAP CAPABILITIES'
+        # subtitle_OG     = 'TESTING OF ROTOR DYNAMICS MATH AND DMAP CAPABILITIES'
+        raise RuntimeError(
+            f'Too long (n={len(subtitle_out)}\n'
+            f'subtitle    = {subtitle!r}\n'
+            f'subtitle_prefix   (n={len(subtitle_prefix):d} = {subtitle_prefix!r}\n'
+            f'super_adapt_bytes (n={len(super_adapt_bytes):d} = {super_adapt_bytes!r}\n'
+            f'out         = {subtitle_out!r}')
+    return subtitle_out
 
 def export_to_hdf5(self, group, log):
     """exports the object to HDF5 format"""

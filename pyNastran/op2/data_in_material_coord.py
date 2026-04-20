@@ -8,14 +8,14 @@ import copy
 from typing import TYPE_CHECKING
 
 import numpy as np
-# from numpy import cos, sin, cross
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
 
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import (BDF, CTRIA3, CTRIA6, CTRIAR,
+                                   CQUAD4, CQUAD8, CQUADR)
     from pyNastran.op2.op2 import OP2
     from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray, RealPlateStrainArray
     from pyNastran.op2.tables.oef_forces.oef_force_objects import RealPlateForceArray, RealPlateBilinearForceArray
@@ -28,48 +28,48 @@ stress_vectors = ['cquad4_stress', 'cquad8_stress', 'cquadr_stress',
 strain_vectors = ['cquad4_strain', 'cquad8_strain', 'cquadr_strain',
                   'ctria3_strain', 'ctria6_strain', 'ctriar_strain']
 
-def transf_Mohr(Sxx: np.ndarray,
-                Syy: np.ndarray,
-                Sxy: np.ndarray,
+def transform_Mohr(sxx: np.ndarray,
+                   syy: np.ndarray,
+                   sxy: np.ndarray,
                 theta_rad: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Mohr's Circle-based Plane Stress Transformation
 
     Parameters
     ----------
-    Sxx, Syy, Sxy : array-like
-        Sigma_xx, Sigma_yy, Sigma_xy stresses.
+    sxx, syy, sxy : array-like
+        sigma_xx, sigma_yy, sigma_xy stresses.
     theta_rad : array-like
         Array with angles for which the stresses should be transformed.
 
     Returns
     -------
-    Sxx_theta, Syy_theta, Sxy_theta : np.ndarray
+    sxx_theta, syy_theta, sxy_theta : np.ndarray
         Transformed stresses.
 
     """
-    Sxx = np.asarray(Sxx)
-    Syy = np.asarray(Syy)
-    Sxy = np.asarray(Sxy)
+    sxx = np.asarray(sxx)
+    syy = np.asarray(syy)
+    sxy = np.asarray(sxy)
     theta_rad = np.asarray(theta_rad)
-    Scenter = (Sxx + Syy) / 2.
-    R = np.sqrt((Sxx - Scenter)**2 + Sxy**2)
-    theta_rad_Mohr = np.arctan2(-Sxy, Sxx - Scenter) + 2*theta_rad
-    cos_Mohr = np.cos(theta_rad_Mohr)
-    Sxx_theta = Scenter + R*cos_Mohr
-    Syy_theta = Scenter - R*cos_Mohr
-    Sxy_theta = -R*np.sin(theta_rad_Mohr)
-    return Sxx_theta, Syy_theta, Sxy_theta
+    scenter = (sxx + syy) / 2.
+    radius = np.sqrt((sxx - scenter)**2 + sxy**2)
+    theta_rad = np.arctan2(-sxy, sxx - scenter) + 2*theta_rad
+    cos_theta = np.cos(theta_rad)
+    sxx_theta = scenter + radius*cos_theta
+    syy_theta = scenter - radius*cos_theta
+    sxy_theta = -radius*np.sin(theta_rad)
+    return sxx_theta, syy_theta, sxy_theta
 
 
-def theta_deg_to_principal(Sxx: np.ndarray,
-                           Syy: np.ndarray,
-                           Sxy: np.ndarray) -> np.ndarray:
+def theta_deg_to_principal(sxx: np.ndarray,
+                           syy: np.ndarray,
+                           sxy: np.ndarray) -> np.ndarray:
     """Calculate the angle to the principal plane stress state
 
     Parameters
     ----------
-    Sxx, Syy, Sxy : array-like
-        Sigma_xx, Sigma_yy, Sigma_xy stresses.
+    sxx, syy, sxy : array-like
+        sigma_xx, sigma_yy, sigma_xy stresses.
 
     Returns
     -------
@@ -78,8 +78,8 @@ def theta_deg_to_principal(Sxx: np.ndarray,
         principal stress state.
 
     """
-    Scenter = (Sxx + Syy) / 2.
-    thetarad = np.arctan2(Sxy, Scenter - Syy)
+    scenter = (sxx + syy) / 2.
+    thetarad = np.arctan2(sxy, scenter - syy)
     return np.rad2deg(thetarad) / 2.
 
 
@@ -91,10 +91,10 @@ def get_eids_from_op2_vector(vector):
     vector : op2 vector
         An op2 vector obtained, for example, doing::
 
-            vector = op2.cquad4_force[1]
-            vector = op2.cquad8_stress[1]
-            vector = op2.ctriar_force[1]
-            vector = op2.ctria3_stress[1]
+            vector = op2.op2_results.force.cquad4_force[1]
+            vector = op2.op2_results.stress.cquad8_stress[1]
+            vector = op2.op2_results.force.ctriar_force[1]
+            vector = op2.op2_results.stress.ctria3_stress[1]
 
     """
     eids = getattr(vector, 'element', None)
@@ -103,9 +103,12 @@ def get_eids_from_op2_vector(vector):
     return eids
 
 
-def is_mcid(elem):
+def is_mcid(elem: CTRIA3 | CTRIA6 | CTRIAR |
+                  CQUAD4 | CQUAD8 | CQUADR) -> bool:
     """
-    Determines if the element uses theta or the mcid (projected material coordinate system)
+    Determines if the element uses:
+     - theta
+     - mcid (projected material coordinate system)
 
     Parameters
     ----------
@@ -165,7 +168,6 @@ def calc_imat(normals: np.ndarray, csysi: np.ndarray) -> np.ndarray:
     imat = np.cross(jmat, normals)
     return imat
 
-
 def data_in_material_coord(bdf: BDF, op2: OP2,
                            in_place: bool=False,
                            debug: bool=False) -> OP2:
@@ -189,6 +191,8 @@ def data_in_material_coord(bdf: BDF, op2: OP2,
     in_place : bool; default=False
         If true the original op2 object is modified, otherwise a new one
         is created.
+    debug : bool; default=False
+        adds some log messages
 
     Returns
     -------
@@ -260,18 +264,18 @@ def data_in_material_coord(bdf: BDF, op2: OP2,
                 new_vector.build_dataframe()
     return op2_new
 
-def get_eid_to_theta_rad(bdf: BDF, debug: bool) -> dict[int, float]:
-    eids = np.array(list(bdf.elements.keys()))
-    elems = np.array(list(bdf.elements.values()))
-    mcid = np.array([is_mcid(e) for e in elems])
+def get_eid_to_theta_rad(model: BDF, debug: bool) -> dict[int, float]:
+    eids = np.array(list(model.elements.keys()))
+    elems = np.array(list(model.elements.values()))
+    mcid = np.array([is_mcid(elem) for elem in elems])
     elems_mcid = elems[mcid]
     elems_theta = elems[~mcid]
 
     theta_deg = np.full(elems.shape, np.nan, dtype='float64')
-    theta_deg[~mcid] = np.array([check_theta(e) for e in elems_theta])
+    theta_deg[~mcid] = np.array([check_theta(elem) for elem in elems_theta])
 
     theta_rad = np.deg2rad(theta_deg)
-    log = bdf.log
+    log = model.log
     if debug:
         log.info(f'eids = {str(eids)}')
         log.info(f'mcid = {str(mcid)}')
@@ -284,11 +288,11 @@ def get_eid_to_theta_rad(bdf: BDF, debug: bool) -> dict[int, float]:
             #continue
 
         # elems with THETA
-        this_quad = np.array([cquad_type == e.type for e in elems_theta])
+        this_quad = np.array([cquad_type == elem.type for elem in elems_theta])
         if not np.any(this_quad):
             continue
         quad_elems = elems_theta[this_quad]
-        corner = np.array([e.get_node_positions() for e in quad_elems])
+        corner = np.array([elem.get_node_positions() for elem in quad_elems])
         g1 = corner[:, 0, :]
         g2 = corner[:, 1, :]
         g3 = corner[:, 2, :]
@@ -301,20 +305,20 @@ def get_eid_to_theta_rad(bdf: BDF, debug: bool) -> dict[int, float]:
         theta_rad[~mcid] = tmp
 
         # elems with MCID
-        this_quad = np.array([cquad_type in e.type for e in elems_mcid])
+        this_quad = np.array([cquad_type in elem.type for elem in elems_mcid])
         if not np.any(this_quad):
             continue
         quad_elems = elems_mcid[this_quad]
-        corner = np.array([e.get_node_positions() for e in quad_elems])
+        corner = np.array([elem.get_node_positions() for elem in quad_elems])
         g1 = corner[:, 0, :]
         g2 = corner[:, 1, :]
         g3 = corner[:, 2, :]
         g4 = corner[:, 3, :]
-        normals2 = np.array([e.Normal() for e in quad_elems])
+        normals2 = np.array([elem.Normal() for elem in quad_elems])
         normals = _get_normal(g3 - g1, g4 - g2)
         assert np.allclose(normals, normals2)
 
-        csysi = np.array([bdf.coords[e.theta_mcid].i for e in quad_elems])
+        csysi = np.array([model.coords[elem.theta_mcid].i for elem in quad_elems])
         imat = calc_imat(normals, csysi)
         tmp = theta_rad[mcid]
         tmp[this_quad] = angle2vec(g2 - g1, imat)
@@ -332,7 +336,7 @@ def get_eid_to_theta_rad(bdf: BDF, debug: bool) -> dict[int, float]:
         #if ctria_type not in bdf.card_count:
             #continue
         # elems with MCID
-        this_tria = np.array([ctria_type == e.type for e in elems_mcid])
+        this_tria = np.array([ctria_type == elem.type for elem in elems_mcid])
         if debug:
             log.debug(f'found {ctria_type} with thistria={this_tria}')
 
@@ -342,15 +346,15 @@ def get_eid_to_theta_rad(bdf: BDF, debug: bool) -> dict[int, float]:
         #eids = [elem.eid for elem in triaelems]
 
         # corner: (nelments, 6, 3) for a CTRIA6
-        corner = np.array([e.get_node_positions() for e in tria_elems])
+        corner = np.array([elem.get_node_positions() for elem in tria_elems])
         g1 = corner[:, 0, :]
         g2 = corner[:, 1, :]
         g3 = corner[:, 2, :]
-        normals2 = np.array([e.Normal() for e in tria_elems])
+        normals2 = np.array([elem.Normal() for elem in tria_elems])
         normals = _get_normal(g2 - g1, g3 - g1)
         assert np.allclose(normals, normals2)
 
-        csysi = np.array([bdf.coords[e.theta_mcid].i for e in tria_elems])
+        csysi = np.array([model.coords[elem.theta_mcid].i for elem in tria_elems])
         imat = calc_imat(normals, csysi)
         tmp = theta_rad[mcid]
         tmp[this_tria] = angle2vec(g2 - g1, imat)
@@ -441,7 +445,6 @@ def get_eid_to_theta_rad2(model: BDF, debug: bool) -> dict[int, float]:
 
     # put in dictionary form- maybe change later
     #eid_to_theta_rad = {eid: theta for eid, theta in zip(eids, theta_rad)}
-
 
     if len(eid_tri_theta_):
         # the triangle theta is defined from the line g1-g2
@@ -550,68 +553,68 @@ def _transform_shell_force(vec_name: str,
     for start, step in enumerate(steps):
         slicei = slice(start, vector.data.shape[1], step)
         # membrane terms
-        Sxx = vector.data[:, slicei, 0]
-        Syy = vector.data[:, slicei, 1]
-        Sxy = vector.data[:, slicei, 2]
+        sxx = vector.data[:, slicei, 0]
+        syy = vector.data[:, slicei, 1]
+        sxy = vector.data[:, slicei, 2]
         if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
-            Sxx_theta_real, Syy_theta_real, Sxy_theta_real = transf_Mohr(
-                Sxx.real, Syy.real, Sxy.real, vec_theta_rad)
-            new_vector.data[:, slicei, 0].real = Sxx_theta_real
-            new_vector.data[:, slicei, 1].real = Syy_theta_real
-            new_vector.data[:, slicei, 2].real = Sxy_theta_real
-            Sxx_theta_imag, Syy_theta_imag, Sxy_theta_imag = transf_Mohr(
-                Sxx.imag, Syy.imag, Sxy.imag, vec_theta_rad)
-            new_vector.data[:, slicei, 0].imag = Sxx_theta_imag
-            new_vector.data[:, slicei, 1].imag = Syy_theta_imag
-            new_vector.data[:, slicei, 2].imag = Sxy_theta_imag
+            sxx_theta_real, syy_theta_real, sxy_theta_real = transform_Mohr(
+                sxx.real, syy.real, sxy.real, vec_theta_rad)
+            new_vector.data[:, slicei, 0].real = sxx_theta_real
+            new_vector.data[:, slicei, 1].real = syy_theta_real
+            new_vector.data[:, slicei, 2].real = sxy_theta_real
+            sxx_theta_imag, syy_theta_imag, sxy_theta_imag = transform_Mohr(
+                sxx.imag, syy.imag, sxy.imag, vec_theta_rad)
+            new_vector.data[:, slicei, 0].imag = sxx_theta_imag
+            new_vector.data[:, slicei, 1].imag = syy_theta_imag
+            new_vector.data[:, slicei, 2].imag = sxy_theta_imag
         else:
-            Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, vec_theta_rad)
-            new_vector.data[:, slicei, 0] = Sxx_theta
-            new_vector.data[:, slicei, 1] = Syy_theta
-            new_vector.data[:, slicei, 2] = Sxy_theta
+            sxx_theta, syy_theta, sxy_theta = transform_Mohr(sxx, syy, sxy, vec_theta_rad)
+            new_vector.data[:, slicei, 0] = sxx_theta
+            new_vector.data[:, slicei, 1] = syy_theta
+            new_vector.data[:, slicei, 2] = sxy_theta
 
         # bending terms
-        Sxx = vector.data[:, slicei, 3]
-        Syy = vector.data[:, slicei, 4]
-        Sxy = vector.data[:, slicei, 5]
+        sxx = vector.data[:, slicei, 3]
+        syy = vector.data[:, slicei, 4]
+        sxy = vector.data[:, slicei, 5]
         if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
-            Sxx_theta_real, Syy_theta_real, Sxy_theta_real = transf_Mohr(
-                Sxx.real, Syy.real, Sxy.real, vec_theta_rad)
-            new_vector.data[:, slicei, 3].real = Sxx_theta_real
-            new_vector.data[:, slicei, 4].real = Syy_theta_real
-            new_vector.data[:, slicei, 5].real = Sxy_theta_real
-            Sxx_theta_imag, Syy_theta_imag, Sxy_theta_imag = transf_Mohr(
-                Sxx.imag, Syy.imag, Sxy.imag, vec_theta_rad)
-            new_vector.data[:, slicei, 3].imag = Sxx_theta_imag
-            new_vector.data[:, slicei, 4].imag = Syy_theta_imag
-            new_vector.data[:, slicei, 5].imag = Sxy_theta_imag
+            sxx_theta_real, syy_theta_real, sxy_theta_real = transform_Mohr(
+                sxx.real, syy.real, sxy.real, vec_theta_rad)
+            new_vector.data[:, slicei, 3].real = sxx_theta_real
+            new_vector.data[:, slicei, 4].real = syy_theta_real
+            new_vector.data[:, slicei, 5].real = sxy_theta_real
+            sxx_theta_imag, syy_theta_imag, sxy_theta_imag = transform_Mohr(
+                sxx.imag, syy.imag, sxy.imag, vec_theta_rad)
+            new_vector.data[:, slicei, 3].imag = sxx_theta_imag
+            new_vector.data[:, slicei, 4].imag = syy_theta_imag
+            new_vector.data[:, slicei, 5].imag = sxy_theta_imag
 
         else:
-            Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, vec_theta_rad)
-            new_vector.data[:, slicei, 3] = Sxx_theta
-            new_vector.data[:, slicei, 4] = Syy_theta
-            new_vector.data[:, slicei, 5] = Sxy_theta
+            sxx_theta, syy_theta, sxy_theta = transform_Mohr(sxx, syy, sxy, vec_theta_rad)
+            new_vector.data[:, slicei, 3] = sxx_theta
+            new_vector.data[:, slicei, 4] = syy_theta
+            new_vector.data[:, slicei, 5] = sxy_theta
 
         # transverse terms
-        Qx = vector.data[:, slicei, 6]
-        Qy = vector.data[:, slicei, 7]
+        qx = vector.data[:, slicei, 6]
+        qy = vector.data[:, slicei, 7]
         cos_theta = np.cos(vec_theta_rad)
         sin_theta = np.sin(vec_theta_rad)
         if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
-            Qx_new_real = cos_theta*Qx.real + sin_theta*Qy.real
-            Qy_new_real = -sin_theta*Qx.real + cos_theta*Qy.real
-            new_vector.data[:, slicei, 6].real = Qx_new_real
-            new_vector.data[:, slicei, 7].real = Qy_new_real
+            qx_new_real = cos_theta*qx.real + sin_theta*qy.real
+            qy_new_real = -sin_theta*qx.real + cos_theta*qy.real
+            new_vector.data[:, slicei, 6].real = qx_new_real
+            new_vector.data[:, slicei, 7].real = qy_new_real
 
-            Qx_new_imag = cos_theta*Qx.imag + sin_theta*Qy.imag
-            Qy_new_imag = -sin_theta*Qx.imag + cos_theta*Qy.imag
-            new_vector.data[:, slicei, 6].imag = Qx_new_imag
-            new_vector.data[:, slicei, 7].imag = Qy_new_imag
+            qx_new_imag = cos_theta*qx.imag + sin_theta*qy.imag
+            qy_new_imag = -sin_theta*qx.imag + cos_theta*qy.imag
+            new_vector.data[:, slicei, 6].imag = qx_new_imag
+            new_vector.data[:, slicei, 7].imag = qy_new_imag
         else:
-            Qx_new = cos_theta*Qx + sin_theta*Qy
-            Qy_new = -sin_theta*Qx + cos_theta*Qy
-            new_vector.data[:, slicei, 6] = Qx_new
-            new_vector.data[:, slicei, 7] = Qy_new
+            qx_new = cos_theta*qx + sin_theta*qy
+            qy_new = -sin_theta*qx + cos_theta*qy
+            new_vector.data[:, slicei, 6] = qx_new
+            new_vector.data[:, slicei, 7] = qy_new
 
     #TODO implement transformation for corner nodes
     #     for now we just zero the wrong values
@@ -636,32 +639,32 @@ def _transform_shell_stress(
 
     # bottom and top in-plane stresses
     if vector.data.shape[2] > 3:
-        Sxx = vector.data[:, :, 1][:, check]
-        Syy = vector.data[:, :, 2][:, check]
-        Sxy = vector.data[:, :, 3][:, check]
+        sxx = vector.data[:, :, 1][:, check]
+        syy = vector.data[:, :, 2][:, check]
+        sxy = vector.data[:, :, 3][:, check]
     else:
-        Sxx = vector.data[:, :, 0][:, check]
-        Syy = vector.data[:, :, 1][:, check]
-        Sxy = vector.data[:, :, 2][:, check]
+        sxx = vector.data[:, :, 0][:, check]
+        syy = vector.data[:, :, 1][:, check]
+        sxy = vector.data[:, :, 2][:, check]
     if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
-        Sxx_theta_real, Syy_theta_real, Sxy_theta_real = transf_Mohr(Sxx.real, Syy.real, Sxy.real, vec_theta_rad)
-        Sxx_theta_imag, Syy_theta_imag, Sxy_theta_imag = transf_Mohr(Sxx.imag, Syy.imag, Sxy.imag, vec_theta_rad)
+        sxx_theta_real, syy_theta_real, sxy_theta_real = transform_Mohr(sxx.real, syy.real, sxy.real, vec_theta_rad)
+        sxx_theta_imag, syy_theta_imag, sxy_theta_imag = transform_Mohr(sxx.imag, syy.imag, sxy.imag, vec_theta_rad)
         tmp = np.zeros_like(new_vector.data[:, :, 0][:, check])
-        tmp.real = Sxx_theta_real
-        tmp.imag = Sxx_theta_imag
+        tmp.real = sxx_theta_real
+        tmp.imag = sxx_theta_imag
         new_vector.data[:, :, 0][:, check] = tmp
-        tmp.real = Syy_theta_real
-        tmp.imag = Syy_theta_imag
+        tmp.real = syy_theta_real
+        tmp.imag = syy_theta_imag
         new_vector.data[:, :, 1][:, check] = tmp
-        tmp.real = Sxy_theta_real
-        tmp.imag = Sxy_theta_imag
+        tmp.real = sxy_theta_real
+        tmp.imag = sxy_theta_imag
         new_vector.data[:, :, 2][:, check] = tmp
     else:
-        Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, vec_theta_rad)
-        new_vector.data[:, :, 1][:, check] = Sxx_theta
-        new_vector.data[:, :, 2][:, check] = Syy_theta
-        new_vector.data[:, :, 3][:, check] = Sxy_theta
-        theta_deg_new = theta_deg_to_principal(Sxx_theta, Syy_theta, Sxy_theta)
+        sxx_theta, syy_theta, sxy_theta = transform_Mohr(sxx, syy, sxy, vec_theta_rad)
+        new_vector.data[:, :, 1][:, check] = sxx_theta
+        new_vector.data[:, :, 2][:, check] = syy_theta
+        new_vector.data[:, :, 3][:, check] = sxy_theta
+        theta_deg_new = theta_deg_to_principal(sxx_theta, syy_theta, sxy_theta)
         new_vector.data[:, :, 4][:, check] = theta_deg_new
 
     #TODO implement transformation for corner nodes
@@ -696,8 +699,8 @@ def _transform_shell_strain(
         eyy = vector.data[:, :, 1][:, check]
         exy = vector.data[:, :, 2][:, check] / 2.
     if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
-        exx_theta_real, eyy_theta_real, exy_theta_real = transf_Mohr(exx.real, eyy.real, exy.real, theta_rad)
-        exx_theta_imag, eyy_theta_imag, exy_theta_imag = transf_Mohr(exx.imag, eyy.imag, exy.imag, theta_rad)
+        exx_theta_real, eyy_theta_real, exy_theta_real = transform_Mohr(exx.real, eyy.real, exy.real, theta_rad)
+        exx_theta_imag, eyy_theta_imag, exy_theta_imag = transform_Mohr(exx.imag, eyy.imag, exy.imag, theta_rad)
         tmp = np.zeros_like(new_vector.data[:, :, 0][:, check])
         tmp.real = exx_theta_real
         tmp.imag = exx_theta_imag
@@ -709,7 +712,7 @@ def _transform_shell_strain(
         tmp.imag = exy_theta_imag * 2.
         new_vector.data[:, :, 2][:, check] = tmp
     else:
-        exx_theta, eyy_theta, exy_theta = transf_Mohr(exx, eyy, exy, theta_rad)
+        exx_theta, eyy_theta, exy_theta = transform_Mohr(exx, eyy, exy, theta_rad)
         theta_deg_new = theta_deg_to_principal(exx_theta, eyy_theta, exy_theta) # TODO: can we just add dtheta?
         new_vector.data[:, :, 1][:, check] = exx_theta
         new_vector.data[:, :, 2][:, check] = eyy_theta

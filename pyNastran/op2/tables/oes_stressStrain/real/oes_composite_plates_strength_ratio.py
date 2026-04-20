@@ -370,7 +370,7 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
 
         eids = self.element_layer[:, 0]
         layers = self.element_layer[:, 1]
-        element_by_layer, ueids = pivot_table(layers, eids, layers)
+        element_by_layer, ueids = pivot_table(layers, eids, layers, shape=1)
         nlayers = np.nanmax(element_by_layer, axis=1)
         assert len(nlayers) == len(ueids)
 

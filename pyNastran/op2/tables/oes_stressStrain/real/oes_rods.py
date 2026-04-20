@@ -2,9 +2,12 @@ from typing import TextIO, Optional
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_float_types
+from pyNastran.utils.mathematics import get_abs_max
+
 from pyNastran.op2.result_objects.op2_objects import (
     get_times_dtype, combination_inplace)
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
+from pyNastran.op2.stress_reduction import von_mises_2d, max_shear
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_real_data_code,
     set_element_case, set_static_case, set_modal_case,
@@ -180,6 +183,70 @@ class RealRodArray(OES_Object):
             self._times = _times
             self.element = element
             self.data = data
+
+    def envelope(self,
+                 eids: np.ndarray,
+                 result_name: str) -> np.ndarray:
+        is_min = (result_name == 'min')
+        func_name = 'min' if is_min else 'max'
+        max_min_func = getattr(np, func_name)
+
+        # print(''.join(self.get_stats()))
+        element = self.element
+        # print(f'element = {element}')
+        ielement = np.searchsorted(element, eids)
+        assert np.array_equal(element[ielement], eids)
+
+        #[axial, torsion, SMa, SMt]
+        stress_strain_dict_map = {
+            'axial': 0,
+            'torsion': 1,
+            # 'max_shear': 1,
+        }
+        ntime, neid, _ = self.data.shape
+        if result_name == 'von_mises':
+            data = self.von_mises()
+        elif result_name == 'max_shear':
+            data = self.max_shear()
+        elif result_name == 'abs_max':
+            # TODO: wrong, but ok...
+            data = np.abs(self.abs_principal())
+            assert data.shape == (ntime, neid), data.shape
+        elif result_name in stress_strain_dict_map:
+            iresult = stress_strain_dict_map[result_name]
+            data = self.data[:, :, iresult]
+        else:  # pragma: No cover
+            raise NotImplementedError(result_name)
+
+        assert data.ndim == 2, data.shape
+        # ntime, nelement = data.shape
+
+        # data.shape = (ntime, neid)
+        eid_data = max_min_func(data, axis=0)
+        assert eid_data.shape == (neid, ), eid_data.shape
+        return eid_data[ielement]
+
+    def von_mises(self) -> np.ndarray:
+        #[axial, torsion, SMa, SMt]
+        oxx = self.data[:, :, 0]
+        txy = self.data[:, :, 1]
+        oyy = oxx * 0.
+        von_mises = von_mises_2d(oxx, oyy, txy, self.is_stress)
+        return von_mises
+
+    def abs_principal(self) -> np.ndarray:
+        #[axial, torsion, SMa, SMt]
+        oxx = self.data[:, :, 0]
+        txy = np.abs(self.data[:, :, 1])
+        omax = oxx + txy
+        omin = oxx - txy
+        abs_max = get_abs_max(omin, omax, dtype=omax.dtype)
+        return abs_max
+
+    def max_shear(self) -> np.ndarray:
+        #[axial, torsion, SMa, SMt]
+        max_shear = np.abs(self.data[:, :, 1])
+        return max_shear
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,

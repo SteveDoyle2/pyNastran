@@ -161,6 +161,7 @@ def oes_csolid(oes: OES,
                 # [2, 1, 0] reverses the order of [min, mid, max]
                 obj.data[obj.itime, itotal:itotal2, 6:9] = max_mid_min[:, [2, 1, 0]]
             elif SOLID_PRINCIPAL_METHOD == 'raw':
+                asdf
                 # data: [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm]
 
                 # [~,
@@ -171,6 +172,7 @@ def oes_csolid(oes: OES,
                 # imax_mid_min = [6, 8, 7] # new?  [s1, s3, s1]
                 obj.data[obj.itime, itotal:itotal2, 6:9] = floats1[:, [3, 11, 17]]
             elif SOLID_PRINCIPAL_METHOD == '132':
+                asdf
                 # omax, omid, omin = o1, o3, o2
                 # [s1, s2, s3] -> [3, 11, 17]
                 obj.data[obj.itime, itotal:itotal2, 6:9] = floats1[:, [3, 17, 11]]
