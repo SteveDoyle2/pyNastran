@@ -1,3 +1,4 @@
+import getpass
 from pathlib import Path
 import unittest
 
@@ -66,6 +67,7 @@ class TestCombination(unittest.TestCase):
             solid_stress='abs_max',
             consider_solid_nodes=True)
 
+    @unittest.skipIf(getpass.getuser() != 'sdoyle', 'local test')
     def test_envelope_bwb_saero(self):
         # log = SimpleLogger(level='warning')
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
