@@ -7,12 +7,13 @@ from typing import TextIO, Optional
 import numpy as np
 from numpy.linalg import eigh  # type: ignore
 
-from pyNastran.utils.numpy_utils import float_types, integer_float_types
+from pyNastran.utils.numpy_utils import float_types, integer_float_types, type_integer_float
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long, _eigenvalue_header)
 from pyNastran.op2.result_objects.op2_objects import (
     get_times_dtype, combination_inplace)
-from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
+from pyNastran.op2.result_objects.utils_pandas import (
+    build_dataframe_transient_header, build_pandas_transient_element_node)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_real_data_code, set_static_case, set_modal_case,
@@ -91,8 +92,8 @@ class RealSolidArray(OES_Object):
         ovm_sheari2 = ovm_sheari.reshape(ntimes, nelements_nnodes)
 
         self.data[:, :, 6] = omax.reshape(ntimes, nelements_nnodes)
-        self.data[:, :, 7] = omin.reshape(ntimes, nelements_nnodes)
-        self.data[:, :, 8] = omid.reshape(ntimes, nelements_nnodes)
+        self.data[:, :, 7] = omid.reshape(ntimes, nelements_nnodes)
+        self.data[:, :, 8] = omin.reshape(ntimes, nelements_nnodes)
         self.data[:, :, 9] = ovm_sheari2
 
         #A = [[doxx, dtxy, dtxz],
@@ -119,13 +120,13 @@ class RealSolidArray(OES_Object):
             raise TypeError(f'factor={factor} and must be a float')
         self.update_data_components()
 
-    def __imul__(self, factor: integer_float_types):
+    def __imul__(self, factor: type_integer_float):
         """[A] *= b"""
         assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
         self.data[:, :, :6] *= factor
         self.update_data_components()
 
-    def linear_combination(self, factor: integer_float_types,
+    def linear_combination(self, factor: type_integer_float,
                            data: Optional[np.ndarray]=None,
                            update: bool=True):
         """[A] * b"""
@@ -143,7 +144,7 @@ class RealSolidArray(OES_Object):
     #     self.data[:, :, :6] *= factor
     #     self.update_data_components()
 
-    def __idiv__(self, factor: integer_float_types):
+    def __idiv__(self, factor: type_integer_float):
         """[A] *= b"""
         assert isinstance(factor, float_types), f'factor={factor} and must be a float'
         self.data[:, :, :6] *= 1. / factor
@@ -248,9 +249,6 @@ class RealSolidArray(OES_Object):
             data_frame = build_pandas_transient_element_node(
                 self, column_values, column_names,
                 headers, self.element_node, self.data)
-            #self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
-            #self.data_frame.columns.names = column_names
-            #self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         else:
             # Static            sxc  sxd  sxe  sxf  smax  smin    MS_tension  MS_compression
             # ElementID NodeID
@@ -310,10 +308,11 @@ class RealSolidArray(OES_Object):
         return obj
 
     @classmethod
-    def add_modal_case(cls, table_name, element_name: str, element_node, element_cid, data, isubcase,
-                       modes, eigns, cycles,
-                       is_sort1=True, is_random=False, is_msc=True,
-                       random_code=0, title='', subtitle='', label=''):
+    def add_modal_case(cls, table_name, element_name: str, element_node, element_cid, data,
+                       isubcase: int,
+                       modes: np.ndarray, eigns: np.ndarray, cycles: np.ndarray,
+                       is_sort1: bool=True, is_random: bool=False, is_msc: bool=True,
+                       random_code: int=0, title: str='', subtitle: str='', label: str=''):
         data_code = cls._add_case(
             table_name, element_name,
             isubcase, is_sort1, is_random, is_msc,
@@ -338,10 +337,11 @@ class RealSolidArray(OES_Object):
         return obj
 
     @classmethod
-    def add_post_buckling_case(cls, table_name, element_name, element_node, element_cid, data, isubcase,
-                           modes, eigrs, eigis,
-                           is_sort1=True, is_random=False, is_msc=True,
-                           random_code=0, title='', subtitle='', label=''):
+    def add_post_buckling_case(cls, table_name, element_name, element_node, element_cid, data,
+                               isubcase: int,
+                               modes: np.ndarray, eigrs: np.ndarray, eigis: np.ndarray,
+                               is_sort1: bool=True, is_random: bool=False, is_msc: bool=True,
+                               random_code: int=0, title: str='', subtitle: str='', label: str=''):
         data_code = cls._add_case(
             table_name, element_name,
             isubcase, is_sort1, is_random, is_msc,
@@ -354,11 +354,15 @@ class RealSolidArray(OES_Object):
     def add_eid_sort1(self, unused_etype, cid, dt, eid, unused_node_id,
                       oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3,
                       unused_acos, unused_bcos, unused_ccos, unused_pressure, ovm):
-        # See the CHEXA, CPENTA, or CTETRA entry for the definition of the element coordinate systems.
-        # The material coordinate system (CORDM) may be the basic system (0 or blank), any defined system
-        # (Integer > 0), or the standard internal coordinate system of the element designated as:
-        # -1: element coordinate system (-1)
-        # -2: element system based on eigenvalue techniques to insure non bias in the element formulation(-2).
+        # See the CHEXA, CPENTA, or CTETRA entry for the definition of
+        #    the element coordinate systems
+        #   The material coordinate system (CORDM) may be:
+        #    - basic system (0 or blank)
+        #    - any defined system
+        # (Integer > 0), or the standard internal coordinate system of the element:
+        #   -1: element coordinate system (-1)
+        #   -2: element system based on eigenvalue techniques to insure non bias in the
+        #       element formulation
         #     C:\MSC.Software\msc_nastran_runs\ecs-2-rg.op2
         assert cid >= -2, cid
         assert eid >= 0, eid
@@ -373,7 +377,6 @@ class RealSolidArray(OES_Object):
         # passed = (omax >= omid >= omin)
         # assert passed
         self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm]
-        #self.data[self.itime, self.ielement, 0, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
 
         #print('element_cid[%i, :] = [%s, %s]' % (self.ielement, eid, cid))
         if self.ielement == self.nelements:
@@ -393,8 +396,6 @@ class RealSolidArray(OES_Object):
         # assert passed
         self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm]
         #print('data[%s, %s, :] = %s' % (self.itime, self.itotal, str(self.data[self.itime, self.itotal, :])))
-
-        #self.data[self.itime, self.ielement-1, self.inode, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
 
         #print('eid=%i node_id=%i exx=%s' % (eid, node_id, str(oxx)))
         self.element_node[self.itotal, :] = [eid, node_id]
@@ -561,13 +562,14 @@ class RealSolidArray(OES_Object):
                        % (self.__class__.__name__, ntimes, nelements, nnodes, nnodes_per_element))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i nnodes=%i\n  nodes_per_element=%i (including centroid)\n'
+            msg.append('  type=%s nelements=%d nnodes=%d\n  nodes_per_element=%d (including centroid)\n'
                        % (self.__class__.__name__, nelements, nnodes, nnodes_per_element))
             ntimes_word = '1'
         msg.append('  eType, cid\n')
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nnodes, %d] where %d=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append(f'  element_node.shape = {self.element_node.shape}\n')
         msg.append(f'  element_cid.shape = {self.element_cid.shape}\n')
         msg.append(f'  data.shape = {self.data.shape}\n')
@@ -596,21 +598,22 @@ class RealSolidArray(OES_Object):
         """
         Stress Table - Solid CHEXA
         --------------------------
-        Flag,  SubcaseID, iTime, EID, NID,     CID,     Sxx,    Syy,     Szz,    Sxy,     Syz,    Szx
-        10,    1,             0, 309,   0,       0, 142.500, 31.219, 589.597, 676.54, 1138.79, 213.68
-        10,    1,             0, 309, 101,       0, 54.3342, 21.410, 553.325, 354.90, 87.0544, 20.192
-        10,    1,             0, 309, 102,       0, 113.506, 80.846, 53.6931, 29.766, 1033.05, 19.109
-        10,    1,             0, 309, 103,       0, 176.472, 721.43, 17.1733, 301.05, 374.726, 372.35
-        10,    1,             0, 309, 104,       0, 21.1607, 81.748, 66.6382, 21.331, 783.494, 796.67
-        10,    1,             0, 309, 105,       0, 114.81,  833.38, 271.391, 65.490, 1773.04, 74.355
-        10,    1,             0, 309, 106,       0, 90.7118, 84.456, 783.545, 573.50, 1623.11, 08.347
-        10,    1,             0, 309, 107,       0, 46.5565, 97.237, 540.913, 777.87, 1824.50, 13.681
-        10,    1,             0, 309, 108,       0, 87.779,  923.94, 211.281, 4.9608, 1387.49, 945.86
+        Flag,  SubcaseID, iTime, EID, NID,  CID,     Sxx,    Syy,     Szz,    Sxy,     Syz,    Szx
+        10,    1,             0, 309,   0,    0, 142.500, 31.219, 589.597, 676.54, 1138.79, 213.68
+        10,    1,             0, 309, 101,    0, 54.3342, 21.410, 553.325, 354.90, 87.0544, 20.192
+        10,    1,             0, 309, 102,    0, 113.506, 80.846, 53.6931, 29.766, 1033.05, 19.109
+        10,    1,             0, 309, 103,    0, 176.472, 721.43, 17.1733, 301.05, 374.726, 372.35
+        10,    1,             0, 309, 104,    0, 21.1607, 81.748, 66.6382, 21.331, 783.494, 796.67
+        10,    1,             0, 309, 105,    0, 114.81,  833.38, 271.391, 65.490, 1773.04, 74.355
+        10,    1,             0, 309, 106,    0, 90.7118, 84.456, 783.545, 573.50, 1623.11, 08.347
+        10,    1,             0, 309, 107,    0, 46.5565, 97.237, 540.913, 777.87, 1824.50, 13.681
+        10,    1,             0, 309, 108,    0, 87.779,  923.94, 211.281, 4.9608, 1387.49, 945.86
         """
         name = str(self.__class__.__name__)
         if write_header:
             csv_file.write('# %s\n' % name)
-            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'Nid', 'CID', 'Sxx', 'Syy', 'Szz', 'Sxy', 'Syz', 'Sxz']
+            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'Nid', 'CID',
+                       'Sxx', 'Syy', 'Szz', 'Sxy', 'Syz', 'Sxz']
             csv_file.write('# ' + ','.join(headers) + '\n')
 
         # stress vs. strain
@@ -675,12 +678,14 @@ class RealSolidArray(OES_Object):
                 if i % cnnodes == 0:
                     j = np.where(eids3 == deid)[0][0]
                     cid = cids3[j]
-                csv_file.write(f'{flag}, {isubcase}, {itime}, {deid:{eid_len}d}, {node_id:{nid_len}d}, {cid}, '
+                csv_file.write(f'{flag}, {isubcase}, {itime}, {deid:{eid_len}d}, '
+                               f'{node_id:{nid_len}d}, {cid}, '
                                f'{oxxi}, {oyyi}, {ozzi}, {txyi}, {tyzi}, {txzi}\n')
         return
 
-    def check_update(self):  # pragma: no cover
-        return
+    def check_update(self, check_code: bool=False):  # pragma: no cover
+        if not check_code:
+            return
         i1 = 6
         i2 = 7
         i3 = 8
@@ -700,9 +705,9 @@ class RealSolidArray(OES_Object):
         assert np.allclose(ovm1, ovm2), (von_mises, ovm1.ravel(), ovm2.ravel())
 
         for i, o11i, o21i, o31i, o12i, o22i, o32i in zip(count(), o11, o21, o31, o12, o22, o32):
-            assert np.allclose(o11i, o12i), str(i, (o11i, o21i, o31i), (o12i, o22i, o32i))
-            assert np.allclose(o21i, o22i), str(i, (o11i, o21i, o31i), (o12i, o22i, o32i))
-            assert np.allclose(o31i, o32i), str(i, (o11i, o21i, o31i), (o12i, o22i, o32i))
+            assert np.allclose(o11i, o12i), str((i, (o11i, o21i, o31i), (o12i, o22i, o32i)))
+            assert np.allclose(o21i, o22i), str((i, (o11i, o21i, o31i), (o12i, o22i, o32i)))
+            assert np.allclose(o31i, o32i), str((i, (o11i, o21i, o31i), (o12i, o22i, o32i)))
 
         assert np.allclose(o11, o12), (f'o1_{stress}', o11.ravel(), o12.ravel(), np.abs(o11-o12).max())
         assert np.allclose(o21, o22), (f'o2_{stress}', o21.ravel(), o22.ravel(), np.abs(o21-o22).max())
@@ -737,16 +742,27 @@ class RealSolidArray(OES_Object):
         # omid = self.data[:, :, 7]
         # omin = self.data[:, :, 8]
         # ovm = self.data[:, :, 9]
-        # p = (omax + omid + omin) / -3.
 
         nnodes_total = self.data.shape[1]
         if calculate_directional_vectors:
-            v = calculate_principal_eigenvectors4(
+
+            # (1, 930, 3)(1, 930, 3, 3)
+            eigenvalues, v = calculate_principal_eigenvectors4(
                 ntimes, nnodes_total,
-                oxx, oyy, ozz, txy, txz, tyz,
-                fdtype)[1]
+                oxx.ravel(), oyy.ravel(), ozz.ravel(), txy.ravel(), txz.ravel(), tyz.ravel(),
+                self.is_stress, fdtype)
+            assert len(eigenvalues.shape) == 3
+            # print(eigenvalues[0, :, :])
+            omax = eigenvalues[:, :, 2]  # max
+            omid = eigenvalues[:, :, 1]  # mid
+            omin = eigenvalues[:, :, 0]  # min
         else:  # pragma: no cover
             v = np.zeros((ntimes, nnodes, 3, 3), dtype=fdtype)
+            omax = self.data[:, :, 6]
+            omid = self.data[:, :, 7]
+            omin = self.data[:, :, 8]
+        p = (omax + omid + omin) / -3.
+        assert p.shape == omax.shape
 
         for itime in range(ntimes):
             dt = self._times[itime]
@@ -761,24 +777,43 @@ class RealSolidArray(OES_Object):
             tyz = self.data[itime, :, 4]
             txz = self.data[itime, :, 5]
 
-            omax = self.data[itime, :, 6]
-            omid = self.data[itime, :, 7]
-            omin = self.data[itime, :, 8]
+            omaxi1 = omax[itime, :]
+            omidi1 = omid[itime, :]
+            omini1 = omin[itime, :]
+
+            # omaxi1 = self.data[itime, :, 6]
+            # omidi1 = self.data[itime, :, 7]
+            # omini1 = self.data[itime, :, 8]
+            #assert not np.allclose(omaxi1, omidi1)
+            #assert not np.allclose(omidi1, omini1)
+            assert omaxi1.shape == oxx.shape, (omaxi1.shape, oxx.shape)
 
             # assert np.all(omax >= omid), 'omax < omid'
             # assert np.all(omid >= omin), 'omid < omin'
             ovm = self.data[itime, :, 9]
             vi = v[itime, :, :, :]
-            pi = (omax + omid + omin) / -3.
+            # vmaxi = v[itime, :, :, :]
+            # vmidi = v[itime, :, :, :]
+            # vmini = v[itime, :, :, :]
+            # pi = (omax + omid + omin) / -3.
+            pi = p[itime, :]
+
+            # %(node_id, oxxi, txyi, omaxi, dv[0, 1], dv[0, 2], dv[0, 0], pii, ovmi,
+            #        '', oyyi, tyzi, omini, dv[2, 1], dv[2, 2], dv[2, 0],
+            #        '', ozzi, txzi, omidi, dv[1, 1], dv[1, 2], dv[1, 0]))
 
             cnnodes = nnodes + 1
             for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, domax, domid, domin, dp, dv, dovm in zip(
-                    count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, pi, vi, ovm):
+                    count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, omaxi1, omidi1, omini1, pi, vi, ovm):
+                # assert domax >= domid, (domax, domid, domin)
+                # assert domid >= domin, (domax, domid, domin)
 
                 # assert domax >= domid >= domin, 'o1 >= o2 >= o3; eid=%s o1=%e o2=%e o3=%e' % (deid, domax, domid, domin)
                 [oxxi, oyyi, ozzi, txyi, tyzi, txzi, omaxi, omidi, omini, pii, ovmi] = write_floats_13e(
-                    [doxx, doyy, dozz, dtxy, dtyz, dtxz, domin, domid, domin, dp, dovm])
-
+                    [doxx, doyy, dozz, dtxy, dtyz, dtxz, domax, domid, domin, dp, dovm])
+                i0 = 0
+                i1 = 1
+                i2 = 2
                 if i % cnnodes == 0:
                     j = np.where(eids3 == deid)[0][0]
                     cid = cids3[j]
@@ -787,17 +822,17 @@ class RealSolidArray(OES_Object):
                         '0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
                         '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
                         '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
-                        % ('CENTER', oxxi, txyi, omaxi, dv[0, 1], dv[0, 2], dv[0, 0], pii, ovmi,
-                           '', oyyi, tyzi, omini, dv[1, 1], dv[1, 2], dv[1, 0],
-                           '', ozzi, txzi, omidi, dv[2, 1], dv[2, 2], dv[2, 0]))
+                        % ('CENTER', oxxi, txyi, omaxi, dv[0, i0], dv[0, i2], dv[0, i1], pii, ovmi,
+                                 '', oyyi, tyzi, omini, dv[1, i0], dv[1, i2], dv[1, i1],
+                                 '', ozzi, txzi, omidi, dv[2, i0], dv[2, i2], dv[2, i1]))
                 else:
                     f06_file.write(
                         '0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
                         '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
                         '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
-                        % (node_id, oxxi, txyi, omaxi, dv[0, 1], dv[0, 2], dv[0, 0], pii, ovmi,
-                           '', oyyi, tyzi, omini, dv[1, 1], dv[1, 2], dv[1, 0],
-                           '', ozzi, txzi, omidi, dv[2, 1], dv[2, 2], dv[2, 0]))
+                        % (node_id, oxxi, txyi, omaxi, dv[0, i0], dv[0, i2], dv[0, i1], pii, ovmi,
+                                '', oyyi, tyzi, omini, dv[1, i0], dv[1, i2], dv[1, i1],
+                                '', ozzi, txzi, omidi, dv[2, i0], dv[2, i2], dv[2, i1]))
                 i += 1
             f06_file.write(page_stamp % page_num)
             page_num += 1
@@ -942,12 +977,8 @@ class RealSolidArray(OES_Object):
         txy = self.data[:, :, 3]
         tyz = self.data[:, :, 4]
         txz = self.data[:, :, 5]
-        omax = self.data[:, :, 6]
-        omid = self.data[:, :, 7]
-        omin = self.data[:, :, 8]
 
         ovm = self.data[:, :, 9]
-        p = (omax + omin + omid) / -3.
 
         # speed up transient cases, but slightly slows down static cases
         data_out = np.empty((nelements, 4+21*nnodes_centroid), dtype=fdtype)
@@ -969,12 +1000,19 @@ class RealSolidArray(OES_Object):
 
         # v is the (3, 3) eigenvector for every time and every element
         if calculate_directional_vectors:
-            v = calculate_principal_eigenvectors4(
+            eigenvalues, v = calculate_principal_eigenvectors4(
                 ntimes, nnodes,
-                oxx, oyy, ozz, txy, txz, tyz,
-                fdtype)[1]
+                oxx.ravel(), oyy.ravel(), ozz.ravel(), txy.ravel(), txz.ravel(), tyz.ravel(),
+                self.is_stress, fdtype)
+            omax = eigenvalues[:, :, 2]  # max
+            omid = eigenvalues[:, :, 1]  # mid
+            omin = eigenvalues[:, :, 0]  # min
         else:
             v = np.zeros((ntimes, nnodes, 3, 3), dtype=fdtype)
+            omax = self.data[:, :, 6]
+            omid = self.data[:, :, 7]
+            omin = self.data[:, :, 8]
+        p = (omax + omin + omid) / -3.
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
@@ -1074,6 +1112,7 @@ def _get_solid_msgs(self: RealSolidArray):
     tetra_msg += base_msg
     penta_msg += base_msg
     hexa_msg += base_msg
+    pyram_msg += base_msg
     return tetra_msg, penta_msg, hexa_msg, pyram_msg
 
 def _get_f06_header_nnodes(self: RealSolidArray, is_mag_phase=True):
@@ -1124,10 +1163,10 @@ def calculate_principal_eigenvectors5(self,
     return _lambda, v
 
 
-def calculate_principal_eigenvectors4(ntimes: int, nnodes: int,
+def calculate_principal_eigenvectors4(ntimes: int, nelements: int,
                                       oxx: np.ndarray, oyy: np.ndarray, ozz: np.ndarray,
                                       txy: np.ndarray, txz: np.ndarray, tyz: np.ndarray,
-                                      dtype):
+                                      is_stress: bool, dtype):
     """
     For 10 CTETRA elements (5 nodes) with 2 times, the shape would be:
     >>> (ntimes, nelements*nnodes, 3, 3)
@@ -1138,35 +1177,36 @@ def calculate_principal_eigenvectors4(ntimes: int, nnodes: int,
     Parameters
     ----------
     oxx : (ntimes, nnodes) np.ndarray
+
     Returns
     -------
-    eigenvalues : (ntimes, nnodes, 3)
+    eigenvalues : (ntimes*nnodes, 3)
         the eigenvalues
-    eigenvectors : (ntimes, nnodes, 3, 3)
+    eigenvectors : (ntimes*nnodes, 3, 3)
         the eigenvectors
 
     """
-    a_matrix = np.zeros((ntimes, nnodes, 3, 3), dtype=dtype)
+    a_matrix = np.zeros((ntimes*nelements, 3, 3), dtype=dtype)
 
     # we're only filling the lower part of the A matrix
-    try:
-        a_matrix[:, :, 0, 0] = oxx
-        a_matrix[:, :, 1, 1] = oyy
-        a_matrix[:, :, 2, 2] = ozz
-        a_matrix[:, :, 1, 0] = txy
-        a_matrix[:, :, 2, 0] = txz
-        a_matrix[:, :, 2, 1] = tyz
-    except Exception:
-        raise RuntimeError(f'a_matrix.shape={a_matrix.shape} oxx.shape={oxx.shape}')
+    a_matrix[:, 0, 0] = oxx
+    a_matrix[:, 1, 1] = oyy
+    a_matrix[:, 2, 2] = ozz
+    if is_stress:
+        a_matrix[:, 1, 0] = txy
+        a_matrix[:, 2, 0] = txz
+        a_matrix[:, 2, 1] = tyz
+    else:
+        a_matrix[:, 1, 0] = txy / 2.
+        a_matrix[:, 2, 0] = txz / 2.
+        a_matrix[:, 2, 1] = tyz / 2.
 
     # eigenvalues:  ntimes, nnodes, (3)
     # eigenvectors: ntimes, nnodes, (3, 3)
-    #try:
     eigenvalues, eigenvectors = eigh(a_matrix)  # a hermitian matrix is a symmetric-real matrix
-    #except FloatingPointError:
-        #eigenvalues, eigenvectors = eigh(a_matrix.astype('float64'))
-        #eigenvalues = eigenvalues.astype('float32')
-        #eigenvectors = eigenvectors.astype('float32')
+    eigenvalues = eigenvalues.reshape(ntimes, nelements, 3)
+    eigenvectors = eigenvectors.reshape(ntimes, nelements, 3, 3)
+    # eigenvectors[np.where(eigenvectors < 0.1)] = 0.
     return eigenvalues, eigenvectors
 
 
@@ -1209,10 +1249,10 @@ def o123_to_max_mid_min(o1, o2, o3):
         omax_mid_min.remove(omax)
 
         omid = omax_mid_min[0]
-    elif SOLID_PRINCIPAL_METHOD == 'raw':
-        omax = o1
-        omid = o2
-        omin = o3
+    # elif SOLID_PRINCIPAL_METHOD == 'raw':
+    #     omax = o1
+    #     omid = o2
+    #     omin = o3
     elif SOLID_PRINCIPAL_METHOD == '132':
         omax = o1
         omid = o3

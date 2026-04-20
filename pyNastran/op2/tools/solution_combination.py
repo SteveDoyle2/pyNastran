@@ -364,21 +364,26 @@ def setup_combinations_single(combination_filenames: list[PathLike] | PathLike,
 
 
 def _read_op2(op2_filename: PathLike | OP2,
-              mode: str,
+              mode: Optional[str],
               log: SimpleLogger,
               exclude_results: Optional[list[str]]=None,
               include_results: Optional[list[str]]=None,
               subcases: list[int]=None,
-              ) -> OP2:
+              include_complex_modes: bool=True) -> OP2:
     if isinstance(op2_filename, OP2):
         return op2_filename
     assert os.path.exists(op2_filename), print_bad_path(op2_filename)
-    model = read_op2(
-        op2_filename, log=log,
-        subcases=subcases,
-        exclude_results=exclude_results,
-        include_results=include_results,
-        mode=mode, combine=True)
+    assert mode is None or isinstance(mode, str), mode
+    model = OP2(log=log,  mode=mode)
+    model.set_subcases(subcases)
+
+    flag_dict = {
+        'eigenvectors_complex': include_complex_modes,
+    }
+    model.include_exclude_results(exclude_results=exclude_results,
+                                  include_results=include_results,
+                                  flag_dict=flag_dict)
+    model.read_op2(op2_filename=op2_filename, combine=True)
     return model
 
 def run_load_case_multi_combinations(

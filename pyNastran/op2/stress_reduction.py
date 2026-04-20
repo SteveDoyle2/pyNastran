@@ -230,7 +230,7 @@ def principal_components_3d(ntimes: int, nelements_nnodes: int,
     eigs = np.linalg.eigvalsh(a_matrix, UPLO='L')  # array = (..., M, M) array
 
     dtype = oxx.dtype
-    o1 = eigs[:, 2].astype(dtype)  # max
-    o2 = eigs[:, 1].astype(dtype)  # mid
-    o3 = eigs[:, 0].astype(dtype)  # min
-    return o1, o2, o3
+    omax = eigs[:, 2].astype(dtype)  # max
+    omid = eigs[:, 1].astype(dtype)  # mid
+    omin = eigs[:, 0].astype(dtype)  # min
+    return omax, omid, omin

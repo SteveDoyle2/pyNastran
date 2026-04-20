@@ -7,6 +7,8 @@ integer_float_types = (int, np.int32, np.int64, float, np.float32)
 float_types = (float, np.float32, np.float64)
 bytes_type = (bytes, np.bytes_)
 
+type_integer_float = tuple[int, np.int32, np.int64, float, np.float32]
+
 def zip_strict(*arrays):
    lengths = [len(array) for array in arrays]
    assert min(lengths) == max(lengths), f'lengths={lengths} should be the same'

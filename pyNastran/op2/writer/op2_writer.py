@@ -3,8 +3,8 @@ from __future__ import annotations
 import datetime
 from collections import defaultdict
 from struct import pack, Struct
-from typing import Optional, Any, TYPE_CHECKING
-from cpylog import get_logger
+from typing import BinaryIO, TextIO, Optional, Any, TYPE_CHECKING
+from cpylog import get_logger, SimpleLogger
 
 #import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
@@ -63,11 +63,15 @@ class OP2Writer(OP2_F06_Common):
         endian : bytes; default=b'<'
             little endian is strongly recommended
         includes : list[str]; default=None
-            list of results to include; exclusive with skips; default for both includes/skips=None -> all included
+            skips=None -> all included
+            list of results to include; exclusive with skips; default for both includes
         skips : list[str]; default=None
             list of results to skip; exclusive with includes
         nastran_format : str; default=None -> 'msc'
             supported formats: ['msc', 'nx', 'optistruct']
+        nastran_revision : str; default=None -> self._nastran_revision or 'XXXXXXXX'
+            FEMAP won't read in specific results if your OP2 version is too old.
+            Lagely this is automatic, but it might be needed.
         #is_mag_phase : bool; default=False
             #should complex data be written using Magnitude/Phase
             #instead of Real/Imaginary (default=False; Real/Imag)
@@ -90,7 +94,7 @@ class OP2Writer(OP2_F06_Common):
             #print('op2 out = %r' % op2_outname)
             close = True
         else:
-            assert isinstance(op2_out_filename, file), f'type(op2_out_filename) = {op2_out_filename}'
+            assert isinstance(op2_out_filename, file), f'op2_out_filename = {op2_out_filename}'
             op2_file = op2_out_filename
             op2_outname = op2_out_filename.name
             close = False
@@ -121,7 +125,8 @@ def _set_skips(model: OP2Writer,
     Parameters
     ----------
     includes : list[str]; default=None
-        list of results to include; exclusive with skips; default for both includes/skips=None -> all included
+        list of results to include; exclusive with skips
+        default for both includes/skips=None -> all included
     skips : list[str]; default=None
         list of results to skip; exclusive with includes
 
@@ -217,7 +222,8 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
     # nastran puts the tables in order of the Case Control deck,
     # but we're lazy so we just hardcode the order
 
-    case_count, table_names = _write_result_tables(obj, op2_file, fop2_ascii, struct_3i, endian, skips)
+    case_count, table_names = _write_result_tables(
+        obj, op2_file, fop2_ascii, struct_3i, endian, skips)
     return case_count, table_names
 
 
@@ -228,7 +234,6 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     table_names_found = []
     date = obj.date
     log = obj.log
-    res_categories2 = defaultdict(list)
     table_order = [
         'OUGV1', 'BOUGV1',
         'OUGF1', 'OUG1F', 'BOUGF1',
@@ -325,6 +330,10 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'RANCONS', 'RANEATC',
     ]
     skip_results = {'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3', 'cstm'}
+
+    sort_subcases = False
+    subcases_set = set([])
+    res_categories2 = defaultdict(list)
     for table_type in obj.get_table_types():
         if table_type in skip_results or table_type in skips or table_type.startswith('responses.'):
             continue
@@ -333,14 +342,17 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         if not isinstance(res_dict, dict):
             raise TypeError(table_type)
 
-        for key, res in res_dict.items():
-            #print(key)
+        for subcase_key, res in res_dict.items():
+            #print(subcase_key)
             #print(res)
-            _fix_subcase_id(key, res)
-
+            subcase_id = _fix_subcase_id(subcase_key, res)
             if hasattr(res, 'table_name_str') and res.table_name_str not in {'LAMA'}: # params
                 #print(table_type)
-                res_categories2[res.table_name_str].append(res)
+                subcases_set.add(subcase_id)
+                if sort_subcases:
+                    res_categories2[(subcase_id, res.table_name_str)].append(res)
+                else:
+                    res_categories2[res.table_name_str].append(res)
             else:
                 # grid_point
                 #print(table_type, unused_key)
@@ -350,22 +362,38 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                 if class_name not in ['GridPointWeight', 'PARAM',
                                      'RealEigenvalues', 'ComplexEigenvalues']:
                     log.warning(class_name)
+            del subcase_id
 
-    for table_name, results in sorted(res_categories2.items()):
-        assert table_name in table_order, table_name
+    subcases_list = list(subcases_set)
+    if not sort_subcases:
+        for table_name, results in sorted(res_categories2.items()):
+            assert table_name in table_order, table_name
 
     total_case_count = 0
     pretables = ['LAMA', 'BLAMA', ]  # 'CLAMA'
-    if 'eigenvalues' not in skips:
-        for unused_title, eigenvalue in obj.eigenvalues.items():
-            res_categories2[eigenvalue.table_name].append(eigenvalue)
-    if 'eigenvalues_fluid' not in skips:
-        for unused_title, eigenvalue in obj.eigenvalues_fluid.items():
-            res_categories2[eigenvalue.table_name].append(eigenvalue)
+    eigenvalues_list = ['eigenvalues', 'eigenvalues_fluid']
+    if sort_subcases:
+        for key in eigenvalues_list:
+            if key in skips:
+                continue
+            slot_dict = getattr(obj, key)  # obj.eigenvalues
+            for unused_title, eigenvalue in slot_dict.items():
+                subcase_id = eigenvalues_list.isubcase  # TODO: not 100%
+                subcases_set.add(subcase_id)
+                res_categories2[(subcase_id, eigenvalue.table_name)].append(eigenvalue)
+    else:
+        for key in eigenvalues_list:
+            if key in skips:
+                continue
+            slot_dict = getattr(obj, key)  # obj.eigenvalues
+            for unused_title, eigenvalue in slot_dict.items():
+                res_categories2[eigenvalue.table_name].append(eigenvalue)
+        # if 'eigenvalues_structure' not in skips:
+        #     for unused_title, eigenvalue in obj.eigenvalues_structure.items():
+        #         res_categories2[eigenvalue.table_name].append(eigenvalue)
     # res_categories2 is a dictionary:
     #  - key: table_name
     #  - value:  displacment/stress/etc.
-    #assert len(res_categories2['OUGV1']) == 13, (len(res_categories2['OUGV1']), res_categories2['OUGV1'])
 
     skip_tables = [
         'LAMA', 'BLAMA',
@@ -382,79 +410,55 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     footer_bytes = struct_3i.pack(*footer)
 
     struct_9i = Struct(endian + b'9i')
-    for table_name in pretables + table_order:
-        if table_name not in res_categories2:
-            # no LAMA table in a static run
-            continue
-        if table_name in skip_tables:
-            log.warning(f'skipping table={table_name}')
-            continue
-        results = res_categories2[table_name]
-        itable = -1
-        case_count = 0
-        for result in results:
-            element_name = ''
-            new_result = True
-            if hasattr(result, 'element_name'):
-                element_name = ' - ' + result.element_name
-                #print(element_name)
-
-            #print(result.class_name)
-            if hasattr(result, 'write_op2'):
-                if result.table_name not in table_names_found:
-                    table_names_found.append(result.table_name)
-
-                fop2_ascii.write('-' * 60 + '\n')
-                #if hasattr(result, 'is_bilinear') and result.is_bilinear():
-                    #obj.log.warning("  *op2 - %s (%s) not written" % (
-                        #result.__class__.__name__, result.element_name))
-                    #continue
-                isubcase = ''
-                if hasattr(result, 'isubcase'):  # no for eigenvalues
-                    isubcase = result.isubcase
-                    #print(f' {result.__class__.__name__} - isubcase={isubcase}')
-
-                try:
-                    #print(' %-6s - %s - isubcase=%s%s; itable=%s %s' % (
-                        #table_name, result.__class__.__name__,
-                        #isubcase, element_name, itable, new_result))
-                    itable = result.write_op2(op2_file, fop2_ascii, itable, new_result,
-                                              date, is_mag_phase=False, endian=endian)
-                except Exception:
-                    print(f' {result.__class__.__name__} - isubcase={isubcase}{element_name}')
-                    raise
-            elif hasattr(result, 'element_name'):
-                if result.element_name in ['CBAR', 'CBEND']:
-                    log.warning('skipping:\n%s' % result)
+    # print(res_categories2)
+    if sort_subcases:
+        for subcase in subcases_list:
+            for table_name in pretables + table_order:
+                subcase_table_name = (subcase, table_name)
+                if subcase_table_name not in res_categories2:
+                    # no LAMA table in a static run
                     continue
-                #log.warning('????:\n%s' % result)
-            else:
-                raise NotImplementedError(f'  *op2 - {result.__class__.__name__} not written')
-                log.warning(f'  *op2 - {result.__class__.__name__} not written')
-                #continue
+                if table_name in skip_tables:
+                    log.warning(f'skipping table={table_name}')
+                    continue
+                print(subcase_table_name)
+                results = res_categories2[subcase_table_name]
+                case_count = _write_results_for_table(
+                    op2_file, fop2_ascii,
+                    table_name, results,
+                    table_names_found, endian, log,
+                    struct_9i, date)
+                if case_count:
+                    # print(result.table_name, itable)
+                    # print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
+                    # close off the result - [4, 0, 4]
+                    op2_file.write(footer_bytes)
+                    fop2_ascii.write('close_a = %s\n' % footer)
+                    fop2_ascii.write('---------------\n')
+                    total_case_count += case_count
 
-            case_count += 1
-            header = [
-                4, itable, 4,
-                4, 1, 4,
-                4, 0, 4,
-            ]
-            #print('writing itable=%s' % itable)
-            assert itable is not None, '%s itable is None' % result.__class__.__name__
-            op2_file.write(struct_9i.pack(*header))
-            fop2_ascii.write('footer2 = %s\n' % header)
-            new_result = False
-
-        #assert case_count > 0, case_count
-        if case_count:
-            #print(result.table_name, itable)
-            #print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
-            # close off the result - [4, 0, 4]
-            op2_file.write(footer_bytes)
-            fop2_ascii.write('close_a = %s\n' % footer)
-            fop2_ascii.write('---------------\n')
-            total_case_count += case_count
-        total_case_count += case_count
+    else:
+        for table_name in pretables + table_order:
+            if table_name not in res_categories2:
+                # no LAMA table in a static run
+                continue
+            if table_name in skip_tables:
+                log.warning(f'skipping table={table_name}')
+                continue
+            results = res_categories2[table_name]
+            case_count = _write_results_for_table(
+                op2_file, fop2_ascii,
+                table_name, results,
+                table_names_found, endian, log,
+                struct_9i, date)
+            if case_count:
+                # print(result.table_name, itable)
+                # print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
+                # close off the result - [4, 0, 4]
+                op2_file.write(footer_bytes)
+                fop2_ascii.write('close_a = %s\n' % footer)
+                fop2_ascii.write('---------------\n')
+                total_case_count += case_count
 
     #if total_case_count == 0:
         #raise FatalError('total_case_count = 0')
@@ -467,7 +471,72 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     return total_case_count, table_names_found
 
 
-def _fix_subcase_id(key: int | tuple[Any], res: Any) -> None:
+def _write_results_for_table(op2_file: BinaryIO, fop2_ascii: TextIO,
+                             table_name: str, results: list,
+                             table_names_found: list[str],
+                             endian: bytes, log: SimpleLogger,
+                             struct_9i,
+                             date: tuple[int, int, int]) -> None:
+    itable = -1
+    case_count = 0
+    for result in results:
+        # print('  ', result.class_name)
+        element_name = ''
+        new_result = True
+        if hasattr(result, 'element_name'):
+            element_name = ' - ' + result.element_name
+            #print(element_name)
+
+        #print(result.class_name)
+        if hasattr(result, 'write_op2'):
+            if result.table_name not in table_names_found:
+                table_names_found.append(result.table_name)
+
+            fop2_ascii.write('-' * 60 + '\n')
+            #if hasattr(result, 'is_bilinear') and result.is_bilinear():
+                #obj.log.warning("  *op2 - %s (%s) not written" % (
+                    #result.__class__.__name__, result.element_name))
+                #continue
+            isubcase = ''
+            if hasattr(result, 'isubcase'):  # no for eigenvalues
+                isubcase = result.isubcase
+                #print(f' {result.__class__.__name__} - isubcase={isubcase}')
+
+            try:
+                #print(' %-6s - %s - isubcase=%s%s; itable=%s %s' % (
+                    #table_name, result.__class__.__name__,
+                    #isubcase, element_name, itable, new_result))
+                itable = result.write_op2(op2_file, fop2_ascii, itable, new_result,
+                                          date, is_mag_phase=False, endian=endian)
+            except Exception:
+                print(f' {result.__class__.__name__} - isubcase={isubcase}{element_name}')
+                raise
+        elif hasattr(result, 'element_name'):
+            if result.element_name in ['CBAR', 'CBEND']:
+                log.warning('skipping:\n%s' % result)
+                continue
+            #log.warning('????:\n%s' % result)
+        else:
+            raise NotImplementedError(f'  *op2 - {result.__class__.__name__} not written')
+            log.warning(f'  *op2 - {result.__class__.__name__} not written')
+            #continue
+
+        case_count += 1
+        header = [
+            4, itable, 4,
+            4, 1, 4,
+            4, 0, 4,
+        ]
+        #print('writing itable=%s' % itable)
+        assert itable is not None, '%s itable is None' % result.__class__.__name__
+        op2_file.write(struct_9i.pack(*header))
+        fop2_ascii.write('footer2 = %s\n' % header)
+        new_result = False
+
+    #assert case_count > 0, case_count
+    return case_count
+
+def _fix_subcase_id(key: int | tuple[Any], res: Any) -> int:
     """
     The subcase id may be inconsistent between the op2 result object
     and the key. The key takes priority to make doing a load case
@@ -477,6 +546,7 @@ def _fix_subcase_id(key: int | tuple[Any], res: Any) -> None:
     if isinstance(key, tuple):
         subcase_id = key[0]
     res.isubcase = subcase_id
+    return subcase_id
 
 
 def write_op2_header(model: OP2, op2_file, fop2_ascii,
