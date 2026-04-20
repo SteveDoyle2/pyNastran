@@ -44,13 +44,15 @@ from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import OP2, read_op2
+from pyNastran.op2.data_in_material_coord import data_in_material_coord
+
 # from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
 # from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
 # from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2
 
 def envelope(
         bdf_filename: PathLike | BDF,
-        op2_filename: OP2,
+        op2_filename: PathLike | OP2,
         include_results: [list[str]]=None,
         exclude_results: [list[str]]=None,
         # eids=None,
@@ -67,7 +69,7 @@ def envelope(
         # beam_force: str='',
         # cbush_stress: str='',
         # cbush_strain: str='',
-        # cbush_force: str='',
+        bush_force: str='',
         plate_stress: str='',
         plate_strain: str='',
         comp_plate_stress: str='',
@@ -77,6 +79,7 @@ def envelope(
         consider_plate_nodes: bool=True,
         consider_solid_nodes: bool=True,
         element_ids: list[int] | np.ndarray=None,
+        transform_to_material_coord: bool=True,
         percent_eids_target: float=1.00,
     ) -> np.ndarray:
     """
@@ -86,7 +89,8 @@ def envelope(
      - few inputs (it could be much worse)
     The disadvantages of this approach:
      - elements have multiple criterion (e.g., max_shear and max principal)
-       -> TODO: make combined quantities max_shear_principal???
+       -> TODO: make combined quantities max_shear_principal??? -> no
+       -> cbush_force = 'xy_rss'
      - different materials have different allowables
        -> run it multiple times
 
@@ -118,6 +122,10 @@ def envelope(
         see read_op2
     exclude_results list[str] or None
         see read_op2
+    bush_force : str; default=''
+        group1: 'x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz',
+        group2: 'max', 'min', 'rss', 'abs_max'
+        cbush_force = group1_group2 = 'xy_max'
     rod_stress : str; default=''
         'max', 'min', 'abs_max', 'von_mises', 'max_shear'
     rod_strain : str; default=''
@@ -164,7 +172,9 @@ def envelope(
         'max', 'min', 'abs_max',
         'von_mises', 'max_shear',
     ]
-    is_cbush_min = is_cbush1d_min = False
+    is_cbush_min, cbush_force_tuple = _validate_cbush_force(bush_force)
+    # is_cbush1d_min, cbush1d_force_tuple = _validate_cbush_force(cbush1d_force)
+    is_cbush1d_min = False
 
     assert rod_stress == '' or rod_stress in solid_stress_strain_keys, rod_stress
     assert rod_strain == '' or rod_strain in solid_stress_strain_keys, rod_strain
@@ -207,10 +217,13 @@ def envelope(
     check_beam_stress = beam_stress != ''
     check_beam_strain = beam_strain != ''
 
+    check_cbush_force = cbush_force_tuple[0] != ''
+
     # pick one
     is_results = (
-            # check_rod_stress or check_rod_strain or
-            # check_bar_stress or check_bar_strain or
+            check_rod_stress or check_rod_strain or
+            check_bar_stress or check_bar_strain or
+            check_cbush_force or
             check_comp_plate_stress or check_comp_plate_strain or
             check_plate_stress or check_plate_strain or
             check_solid_stress or check_solid_strain)
@@ -260,7 +273,11 @@ def envelope(
             include_results=include_results,
             exclude_results=exclude_results,
             debug=None)
-    dtype = 'float32'
+
+    if transform_to_material_coord:
+        data_in_material_coord(model, model_results, in_place=True)
+
+    dtype = 'float32'  # if model_results.size == 4 else 'float64'
     etype_to_eids, etype_ptype_to_eids = get_elements_dict(model)
 
     crod_eids = np.array(etype_to_eids.get('CROD', []))
@@ -332,10 +349,10 @@ def envelope(
         chexa_eids = np.intersect1d(chexa_eids, element_id)
         cpyram_eids = np.intersect1d(cpyram_eids, element_id)
     all_solid_eids = get_all_eids((ctetra_eids, cpenta_eids, chexa_eids, cpyram_eids))
-    # all_eids = get_all_eids((
-    #     all_rod_eids, all_bar_eids, all_bush_eids,
-    #     all_comp_plate_eids, all_plate_eids,
-    #     all_solid_eids), sort=True)
+    all_eids = get_all_eids((
+        all_rod_eids, all_bar_eids, all_bush_eids,
+        all_comp_plate_eids, all_plate_eids,
+        all_solid_eids), sort=True)
     all_eids = element_id
     # log.info(f'all_eids = {all_eids.tolist()}')
 
@@ -343,13 +360,7 @@ def envelope(
     # print(''.join(model_results.get_op2_stats()))
     assert len(all_eids), 'no elements found'
 
-    # neid_solid = sum([len(mylist) for mylist in solid_eids_tuple])
-    # neid_plate = sum([len(mylist) for mylist in
-    #                  (ctria3_eids, cquad4_eids)])
-    # neid_rod = sum([len(mylist) for mylist in
-    #                (crod_eids, ctube_eids, conrod_eids)])
     # data = np.zeros((nsubcase, neid), dtype='float32')
-
     all_eids_list = []
     all_subcases_list = []
 
@@ -362,6 +373,16 @@ def envelope(
     comp_results = []
     solid_results = []
 
+    if check_cbush_force and len(cbush_eids):
+        bush_force_list = _fill_bush_list(
+            model_results, cbush_eids, is_force=True)
+        assert len(bush_force_list), 'No CBUSH force results found'
+        _envelope_stress_strain(
+            'cbush force', bush_force, bush_force_list,
+            all_eids,
+            all_eids_list, all_subcases_list, cbush_results, dtype=dtype)
+        # log.info('_envelope_stress_strain_end')
+
     if check_rod_stress and len(crod_eids):
         # log.debug('check_rod_stress')
         rod_stress_list = _fill_rod_list(
@@ -371,7 +392,7 @@ def envelope(
         assert len(rod_stress_list), 'No rod stress results found'
         # log.info('_envelope_stress_strain')
         _envelope_stress_strain(
-            rod_stress, rod_stress_list,
+            'rod stress', rod_stress, rod_stress_list,
             all_eids,
             all_eids_list, all_subcases_list, rod_results, dtype=dtype)
         # log.info('_envelope_stress_strain_end')
@@ -384,7 +405,7 @@ def envelope(
             is_stress=True)
         assert len(rod_strain_list), 'No rod strain results found'
         _envelope_stress_strain(
-            rod_strain, rod_strain_list,
+            'rod strain', rod_strain, rod_strain_list,
             all_eids,
             all_eids_list, all_subcases_list, rod_results, dtype=dtype)
 
@@ -393,7 +414,7 @@ def envelope(
             model_results, cbar_eids, is_stress=True)
         assert len(bar_stress_list), 'No bar stress results found'
         _envelope_stress_strain(
-            bar_stress, bar_stress_list,
+            'bar stress', bar_stress, bar_stress_list,
             all_eids,
             all_eids_list, all_subcases_list, cbar_results, dtype=dtype)
 
@@ -402,7 +423,7 @@ def envelope(
             model_results, cbar_eids, is_stress=True)
         assert len(bar_strain_list), 'No bar strain results found'
         _envelope_stress_strain(
-            bar_strain, bar_strain_list,
+            'bar strain', bar_strain, bar_strain_list,
             all_eids,
             all_eids_list, all_subcases_list, cbar_results, dtype=dtype)
 
@@ -411,7 +432,7 @@ def envelope(
             model_results, cbeam_eids, is_stress=True)
         assert len(beam_stress_list), 'No beam stress results found'
         _envelope_stress_strain(
-            beam_stress, beam_stress_list,
+            'beam stress', beam_stress, beam_stress_list,
             all_eids,
             all_eids_list, all_subcases_list, cbeam_results, dtype=dtype)
 
@@ -420,7 +441,7 @@ def envelope(
             model_results, cbar_eids, is_stress=True)
         assert len(beam_strain_list), 'No beam strain results found'
         _envelope_stress_strain(
-            beam_strain, beam_strain_list,
+            'beam strain', beam_strain, beam_strain_list,
             all_eids,
             all_eids_list, all_subcases_list, cbeam_results, dtype=dtype)
 
@@ -434,7 +455,7 @@ def envelope(
             is_stress=True)
         assert len(comp_plate_stress_list), 'No comp plate stress results found'
         _envelope_stress_strain(
-            comp_plate_stress,
+            'composite plate stress', comp_plate_stress,
             comp_plate_stress_list,
             all_eids,
             all_eids_list, all_subcases_list, comp_results, dtype=dtype)
@@ -449,7 +470,7 @@ def envelope(
             is_stress=False)
         assert len(comp_plate_strain_list), 'No comp plate strain results found'
         _envelope_stress_strain(
-            comp_plate_strain,
+            'composite plate strain', comp_plate_strain,
             comp_plate_strain_list,
             all_eids,
             all_eids_list, all_subcases_list, comp_results, dtype=dtype)
@@ -463,7 +484,7 @@ def envelope(
             ctriar_plate_eids, cquadr_plate_eids,
             is_stress=True)
         assert len(plate_stress_list), 'No plate stress results found'
-        _envelope_solid_stress_strain(
+        _envelope_corner_stress_strain(
             plate_stress,
             plate_stress_list,
             all_eids,
@@ -479,7 +500,7 @@ def envelope(
             ctriar_plate_eids, cquadr_plate_eids,
             is_stress=False)
         assert len(plate_strain_list), 'No plate strain results found'
-        _envelope_solid_stress_strain(
+        _envelope_corner_stress_strain(
             plate_strain,
             plate_strain_list,
             all_eids,
@@ -493,7 +514,7 @@ def envelope(
             ctetra_eids, cpenta_eids, chexa_eids, cpyram_eids,
             is_stress=True)
         assert len(solid_stress_list), 'No solid stress results found'
-        _envelope_solid_stress_strain(
+        _envelope_corner_stress_strain(
             solid_stress,
             solid_stress_list,
             all_eids,
@@ -507,7 +528,7 @@ def envelope(
             ctetra_eids, cpenta_eids, chexa_eids, cpyram_eids,
             is_stress=False)
         assert len(solid_strain_list), 'No solid strain results found'
-        _envelope_solid_stress_strain(
+        _envelope_corner_stress_strain(
             solid_strain,
             solid_strain_list,
             all_eids,
@@ -533,6 +554,17 @@ def envelope(
         results,
         percent_eids_target, model, log)
     return out_subcases
+
+def _validate_cbush_force(cbush_force: str) -> tuple[bool, tuple[str, str]]:
+    is_min = False
+    if cbush_force == '':
+        return is_min, ('', '')
+    group1, group2 = cbush_force.lower().split('_', 1)
+    group1 = ''.join(sorted(group1))
+    assert group1 in ['x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'], (group1, group2)
+    assert group2 in ['min', 'max', 'rss', 'abs_max'], (group1, group2)
+    is_min = (group2 == 'min')
+    return is_min, (group1, group2)
 
 def get_all_eids(eids_tuple: tuple[np.ndarray, ...],
                  sort: bool=False) -> np.ndarray:
@@ -561,9 +593,19 @@ def _envelope_post(all_subcases_list: list[int],
     icase_critical_list = []
     icase_critical = np.full(neid_all, -1, dtype='int32')
 
+    bush_results, bush_eid, is_bush_min = results['cbush']
+    if len(bush_results):
+        icase_criticali, data_critical, cbush_combined_data = _get_combined_data(
+            all_subcases, 'cbush', bush_results,
+            nsubcase_all, neid_all, is_bush_min)
+        icase_critical_list.append(icase_criticali)
+        icase = np.where(icase_criticali != -1)[0]
+        icase_critical[icase] = icase_criticali[icase]
+    del bush_results, bush_eid, is_bush_min
+
     rod_results, rod_eid, is_rod_min = results['rod']
     if len(rod_results):
-        icase_criticali, data_critical, comp_plate_combined_data = _get_combined_data(
+        icase_criticali, data_critical, rod_combined_data = _get_combined_data(
             all_subcases, 'rods', rod_results,
             nsubcase_all, neid_all, is_rod_min)
         icase_critical_list.append(icase_criticali)
@@ -573,7 +615,7 @@ def _envelope_post(all_subcases_list: list[int],
 
     plate_results, plate_eid, is_plate_min = results['plate']
     if len(plate_results):
-        icase_criticali, data_critical, comp_plate_combined_data = _get_combined_data(
+        icase_criticali, data_critical, plate_combined_data = _get_combined_data(
             all_subcases, 'plates', plate_results,
             nsubcase_all, neid_all, is_plate_min)
         icase_critical_list.append(icase_criticali)
@@ -762,6 +804,31 @@ def _fill_rod_list(model_results: OP2,
         rod_list.append((conrod_eids, f'conrod_{word}', conrod_obj))
     return rod_list
 
+def _fill_bush_list(model_results: OP2,
+                    cbush_eids: np.ndarray,
+                    is_stress: bool=False,
+                    is_strain: bool=False,
+                    is_force: bool=False) -> list:
+    assert is_stress or is_strain or is_force, (is_stress, is_strain, is_force)
+    assert sum([is_stress, is_strain, is_force]) == 1, (is_stress, is_strain, is_force)
+    if is_stress:
+        word = 'stress'
+        stress = model_results.op2_results.stress
+        cbush_obj = stress.cbush_stress
+    if is_strain:
+        word = 'strain'
+        strain = model_results.op2_results.strain
+        cbush_obj = strain.cbush_strain
+    if is_force:
+        word = 'force'
+        force = model_results.op2_results.force
+        cbush_obj = force.cbush_force
+
+    bush_list = []
+    if len(cbush_eids):
+        bush_list.append((cbush_eids, f'cbush_{word}', cbush_obj))
+    return bush_list
+
 def _fill_bar_list(model_results: OP2,
                    cbar_eids: np.ndarray,
                    is_stress: bool) -> list:
@@ -904,14 +971,14 @@ def _fill_solid_list(model_results: OP2,
         solid_list.append((cpyram_eids, f'cpyram_{word}', cpyram_obj))
     return solid_list
 
-def _envelope_solid_stress_strain(result_name: str,
-                                  solid_stress_list: list[tuple[np.ndarray, Any]],
-                                  all_eids: np.ndarray,
-                                  all_eids_list: list[list[int]],
-                                  all_subcases_list: list[int],
-                                  results: list[np.ndarray],
-                                  consider_corner_nodes: bool=True,
-                                  dtype: str='float32'):
+def _envelope_corner_stress_strain(result_name: str,
+                                   solid_stress_list: list[tuple[np.ndarray, Any]],
+                                   all_eids: np.ndarray,
+                                   all_eids_list: list[list[int]],
+                                   all_subcases_list: list[int],
+                                   results: list[np.ndarray],
+                                   consider_corner_nodes: bool=True,
+                                   dtype: str='float32'):
     for (eids, obj_name, obj_dict) in solid_stress_list:
         subcases = list(obj_dict)
         nsubcase_obj = len(subcases)
@@ -939,7 +1006,8 @@ def _envelope_solid_stress_strain(result_name: str,
         all_eids_list.append(eids)
         all_subcases_list.extend(subcases)
 
-def _envelope_stress_strain(result_name: str,
+def _envelope_stress_strain(group_name: str,
+                            result_name: str,
                             comp_plate_list: list[tuple[np.ndarray, Any]],
                             all_eids: np.ndarray,
                             all_eids_list: list[list[int]],
@@ -965,7 +1033,7 @@ def _envelope_stress_strain(result_name: str,
                 # print(f'  ieid = {ieid}')
                 missing_eids = np.setdiff1d(eids, all_eids)
                 if len(missing_eids):
-                    raise RuntimeError(f'missing composite plate eids={missing_eids.tolist()}')
+                    raise RuntimeError(f'missing {group_name!r} eids={missing_eids.tolist()}')
                 assert np.array_equal(all_eids[ieid], eids)
             datai = obj.envelope(eids, result_name)
             comp_data[isubcase, :] = datai

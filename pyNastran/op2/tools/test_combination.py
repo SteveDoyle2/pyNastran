@@ -38,6 +38,7 @@ class TestCombination(unittest.TestCase):
         envelope(
             model, model_results,
             # rod_strain='max',
+            bush_force='xy_rss',
             bar_strain='max',
             plate_strain='max',
             comp_plate_strain='max',
@@ -66,6 +67,7 @@ class TestCombination(unittest.TestCase):
             plate_strain='abs_max',
             comp_plate_strain='abs_max',
             solid_strain='abs_max',
+            consider_plate_nodes=False,
             consider_solid_nodes=False)
         envelope(
             model, model_results,
@@ -93,12 +95,14 @@ class TestCombination(unittest.TestCase):
             consider_solid_nodes=True)
 
     @unittest.skipIf(getpass.getuser() != 'sdoyle', 'local test')
-    def test_envelope_bwb_saero(self):
+    def test_envelope_bwb_saero(self):  # pragma: no cover
         # log = SimpleLogger(level='warning')
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
         op2_filename = MODEL_PATH / 'bwb' / 'bwb_saero.op2'
         envelope(
             bdf_filename, op2_filename,
+            bush_force='xy_rss',
+            bar_stress='abs_max',
             comp_plate_stress='abs_max',
             consider_solid_nodes=True)
 
