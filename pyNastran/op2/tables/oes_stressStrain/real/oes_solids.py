@@ -319,6 +319,7 @@ class RealSolidArray(OES_Object):
             # eid_data = data.max(axis=0)
             eid_data = max_min_func(data, axis=0)
             assert eid_data.shape == (neid, ), eid_data.shape
+        # TODO: move ielement to earlier
         return eid_data[ielement]
 
     def von_mises(self) -> np.ndarray:

@@ -28,6 +28,15 @@ class TestCombination(unittest.TestCase):
         model_results = read_op2(op2_filename, log=log)
         envelope(
             model, model_results,
+            element_ids=[2],  # 2,3 are CPENTA, so this should make 1 stress
+            # rod_strain='max',
+            bar_strain='max',
+            plate_strain='max',
+            comp_plate_strain='max',
+            solid_strain='max',
+            consider_solid_nodes=True)
+        envelope(
+            model, model_results,
             # rod_strain='max',
             bar_strain='max',
             plate_strain='max',
@@ -61,7 +70,7 @@ class TestCombination(unittest.TestCase):
         envelope(
             model, model_results,
             rod_stress='max_shear',
-            bar_stress='max_shear',
+            # bar_stress='max_shear',
             plate_stress='max_shear',
             comp_plate_stress='max_shear',
             solid_stress='max_shear',
@@ -69,7 +78,7 @@ class TestCombination(unittest.TestCase):
         envelope(
             model, model_results,
             rod_stress='von_mises',
-            bar_stress='von_mises',
+            # bar_stress='von_mises',
             plate_stress='von_mises',
             comp_plate_stress='von_mises',
             solid_stress='von_mises',

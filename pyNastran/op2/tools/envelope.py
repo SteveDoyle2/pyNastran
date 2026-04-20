@@ -58,10 +58,13 @@ def envelope(
         # subcases=None,
         rod_stress: str='',
         rod_strain: str='',
+        # rod_force: str='',
         bar_stress: str='',
         bar_strain: str='',
-        # beam_stress: str='',
-        # beam_strain: str='',
+        # bar_force: str='',
+        beam_stress: str='',
+        beam_strain: str='',
+        # beam_force: str='',
         # cbush_stress: str='',
         # cbush_strain: str='',
         # cbush_force: str='',
@@ -73,17 +76,33 @@ def envelope(
         solid_strain: str='',
         consider_plate_nodes: bool=True,
         consider_solid_nodes: bool=True,
+        element_ids: list[int] | np.ndarray=None,
         percent_eids_target: float=1.00,
     ) -> np.ndarray:
     """
     Pick one (i.e., solid_stress or solid_strain) per group.
+
+    The advantages of this approach:
+     - few inputs (it could be much worse)
+    The disadvantages of this approach:
+     - elements have multiple criterion (e.g., max_shear and max principal)
+       -> TODO: make combined quantities max_shear_principal???
+     - different materials have different allowables
+       -> run it multiple times
+
     Enveloping works on:
+     - rod stress/strain
+     - bar stress/strain (no von_mises or max_shear)
+     - plate stres/strain
+     - comp plate stres/strain
      - solid stress/strain
 
     Everything else is a placeholder
-     - plate stres/strain (CTRIA3, CQUAD4)
-     - comp plate stres/strain (CTRIA3, CQUAD4)
-     - cbar/cbeam/crod/cbush
+     - element force
+     - cbeam/cbush
+     - displacements
+     - spc_forces
+     - mpc_forces
 
     Parameters
     ----------
@@ -91,13 +110,25 @@ def envelope(
         the geometry model
     op2_filename : PathLike or OP2
         the results model
+    element_ids : list[int] or np.ndarray; default=None
+        the elements to consider; default=all
+        TODO: currently doesn't work
+              only disables elements if entire group is disabled
     include_results list[str] or None
         see read_op2
     exclude_results list[str] or None
         see read_op2
+    rod_stress : str; default=''
+        'max', 'min', 'abs_max', 'von_mises', 'max_shear'
+    rod_strain : str; default=''
+        'max', 'min', 'abs_max', 'von_mises', 'max_shear'
     bar_stress : str; default=''
         'max', 'min', 'abs_max', 'von_mises', 'max_shear'
     bar_strain : str; default=''
+        'max', 'min', 'abs_max', 'von_mises', 'max_shear'
+    beam_stress : str; default=''
+        'max', 'min', 'abs_max', 'von_mises', 'max_shear'
+    beam_strain : str; default=''
         'max', 'min', 'abs_max', 'von_mises', 'max_shear'
     plate_stress : str; default=''
         CTRIA3, CQUAD4 only
@@ -133,19 +164,20 @@ def envelope(
         'max', 'min', 'abs_max',
         'von_mises', 'max_shear',
     ]
-    # is_rod_min = False
-    is_cbar_min = False
-    is_cbeam_min = False
     is_cbush_min = is_cbush1d_min = False
 
     assert rod_stress == '' or rod_stress in solid_stress_strain_keys, rod_stress
     assert rod_strain == '' or rod_strain in solid_stress_strain_keys, rod_strain
     is_crod_min = ((rod_stress == 'min') or (rod_strain == 'min'))
-    is_ctube_min = is_conrod_min = is_crod_min
+    # is_ctube_min = is_conrod_min = is_crod_min
 
     assert bar_stress == '' or bar_stress in solid_stress_strain_keys, bar_stress
     assert bar_strain == '' or bar_strain in solid_stress_strain_keys, bar_strain
     is_cbar_min = ((bar_stress == 'min') or (bar_strain == 'min'))
+
+    assert beam_stress == '' or beam_stress in solid_stress_strain_keys, beam_stress
+    assert beam_strain == '' or beam_strain in solid_stress_strain_keys, beam_strain
+    is_cbeam_min = ((beam_stress == 'min') or (beam_strain == 'min'))
     #-----------------------------------------------------------------
     # verify requests
     assert plate_stress == '' or plate_stress in solid_stress_strain_keys, plate_stress
@@ -171,6 +203,9 @@ def envelope(
 
     check_bar_stress = bar_stress != ''
     check_bar_strain = bar_strain != ''
+
+    check_beam_stress = beam_stress != ''
+    check_beam_strain = beam_strain != ''
 
     # pick one
     is_results = (
@@ -206,8 +241,15 @@ def envelope(
         model = read_bdf(bdf_filename, log=log)
     log.level = 'debug'
 
-    element_id = np.array(list(model.elements), dtype='int32')
+    idtype = 'int32'
+    if element_ids is None:
+        element_id = np.array(list(model.elements), dtype=idtype)
+        allow_missing = False
+    else:
+        element_id = np.asarray(element_ids, dtype=idtype)
+        allow_missing = True
     element_id.sort()
+
     if isinstance(op2_filename, OP2):
         model_results = op2_filename
         # print(model_results.get_op2_stats())
@@ -224,15 +266,26 @@ def envelope(
     crod_eids = np.array(etype_to_eids.get('CROD', []))
     ctube_eids = np.array(etype_to_eids.get('CTUBE', []))
     conrod_eids = np.array(etype_to_eids.get('CONROD', []))
+    if allow_missing:
+        crod_eids = np.intersect1d(crod_eids, element_id)
+        conrod_eids = np.intersect1d(conrod_eids, element_id)
+        ctube_eids = np.intersect1d(ctube_eids, element_id)
     all_rod_eids = get_all_eids((crod_eids, ctube_eids, conrod_eids))
 
     cbar_eids = np.array(etype_to_eids.get('CBAR', []))
     cbeam_eids = np.array(etype_to_eids.get('CBEAM', []))
     cbend_eids = np.array(etype_to_eids.get('CBEND', []))
+    if allow_missing:
+        cbar_eids = np.intersect1d(cbar_eids, element_id)
+        cbeam_eids = np.intersect1d(cbeam_eids, element_id)
+        cbend_eids = np.intersect1d(cbend_eids, element_id)
     all_bar_eids = get_all_eids((cbar_eids, cbeam_eids, cbend_eids))
 
     cbush_eids = np.array(etype_to_eids.get('CBUSH', []))
     cbush1d_eids = np.array(etype_to_eids.get('CBUSH1D', []))
+    if allow_missing:
+        cbush_eids = np.intersect1d(cbush_eids, element_id)
+        cbush1d_eids = np.intersect1d(cbush1d_eids, element_id)
     all_bush_eids = get_all_eids((cbush_eids, cbush1d_eids))
 
     cquad4_plate_eids = np.array(etype_ptype_to_eids.get(('CQUAD4', 'PSHELL'), []))
@@ -241,7 +294,16 @@ def envelope(
     ctria6_plate_eids = np.array(etype_ptype_to_eids.get(('CTRIA6', 'PSHELL'), []))
     cquadr_plate_eids = np.array(etype_ptype_to_eids.get(('CQUADR', 'PSHELL'), []))
     ctriar_plate_eids = np.array(etype_ptype_to_eids.get(('CTRIAR', 'PSHELL'), []))
-    all_plate_eids = get_all_eids((ctria3_plate_eids, cquad4_plate_eids))
+    if allow_missing:
+        cquad4_plate_eids = np.intersect1d(cquad4_plate_eids, element_id)
+        ctria3_plate_eids = np.intersect1d(ctria3_plate_eids, element_id)
+        cquad8_plate_eids = np.intersect1d(cquad8_plate_eids, element_id)
+        ctria6_plate_eids = np.intersect1d(ctria6_plate_eids, element_id)
+        cquadr_plate_eids = np.intersect1d(cquadr_plate_eids, element_id)
+        ctriar_plate_eids = np.intersect1d(ctriar_plate_eids, element_id)
+    all_plate_eids = get_all_eids((ctria3_plate_eids, cquad4_plate_eids,
+                                   ctria6_plate_eids, cquad8_plate_eids,
+                                   ctriar_plate_eids, cquadr_plate_eids,))
 
     cquad4_comp_eids = np.array(etype_ptype_to_eids.get(('CQUAD4', 'PCOMP'), []))
     ctria3_comp_eids = np.array(etype_ptype_to_eids.get(('CTRIA3', 'PCOMP'), []))
@@ -249,12 +311,26 @@ def envelope(
     ctria6_comp_eids = np.array(etype_ptype_to_eids.get(('CTRIA6', 'PCOMP'), []))
     cquadr_comp_eids = np.array(etype_ptype_to_eids.get(('CQUADR', 'PCOMP'), []))
     ctriar_comp_eids = np.array(etype_ptype_to_eids.get(('CTRIAR', 'PCOMP'), []))
-    all_comp_plate_eids = get_all_eids((ctria3_comp_eids, cquad4_comp_eids))
+    if allow_missing:
+        cquad4_comp_eids = np.intersect1d(cquad4_comp_eids, element_id)
+        ctria3_comp_eids = np.intersect1d(ctria3_comp_eids, element_id)
+        cquad8_comp_eids = np.intersect1d(cquad8_comp_eids, element_id)
+        ctria6_comp_eids = np.intersect1d(ctria6_comp_eids, element_id)
+        cquadr_comp_eids = np.intersect1d(cquadr_comp_eids, element_id)
+        ctriar_comp_eids = np.intersect1d(ctriar_comp_eids, element_id)
+    all_comp_plate_eids = get_all_eids((ctria3_comp_eids, cquad4_comp_eids,
+                                        ctria6_comp_eids, cquad8_comp_eids,
+                                        ctriar_comp_eids, cquadr_comp_eids,))
 
     ctetra_eids = np.array(etype_to_eids.get('CTETRA', []))
     cpenta_eids = np.array(etype_to_eids.get('CPENTA', []))
     chexa_eids = np.array(etype_to_eids.get('CHEXA', []))
     cpyram_eids = np.array(etype_to_eids.get('CPYRAM', []))
+    if allow_missing:
+        ctetra_eids = np.intersect1d(ctetra_eids, element_id)
+        cpenta_eids = np.intersect1d(cpenta_eids, element_id)
+        chexa_eids = np.intersect1d(chexa_eids, element_id)
+        cpyram_eids = np.intersect1d(cpyram_eids, element_id)
     all_solid_eids = get_all_eids((ctetra_eids, cpenta_eids, chexa_eids, cpyram_eids))
     # all_eids = get_all_eids((
     #     all_rod_eids, all_bar_eids, all_bush_eids,
@@ -265,8 +341,6 @@ def envelope(
 
     # print(''.join(model.get_bdf_stats()))
     # print(''.join(model_results.get_op2_stats()))
-    # all_eids = get_all_eids((all_solid_eids, all_comp_plate_eids), sort=True)
-    # assert len(all_solid_eids), 'only solids are supported'
     assert len(all_eids), 'no elements found'
 
     # neid_solid = sum([len(mylist) for mylist in solid_eids_tuple])
@@ -280,9 +354,6 @@ def envelope(
     all_subcases_list = []
 
     rod_results = []
-    # crod_results = []
-    # ctube_results = []
-    # conrod_results = []
     cbar_results = []
     cbeam_results = []
     cbush_results = []
@@ -291,7 +362,7 @@ def envelope(
     comp_results = []
     solid_results = []
 
-    if check_rod_stress:
+    if check_rod_stress and len(crod_eids):
         # log.debug('check_rod_stress')
         rod_stress_list = _fill_rod_list(
             model_results,
@@ -305,7 +376,7 @@ def envelope(
             all_eids_list, all_subcases_list, rod_results, dtype=dtype)
         # log.info('_envelope_stress_strain_end')
 
-    if check_rod_strain:
+    if check_rod_strain and len(crod_eids):
         # log.debug('check_rod_strain')
         rod_strain_list = _fill_rod_list(
             model_results,
@@ -317,11 +388,49 @@ def envelope(
             all_eids,
             all_eids_list, all_subcases_list, rod_results, dtype=dtype)
 
-    if check_comp_plate_stress:
+    if check_bar_stress and len(cbar_eids):
+        bar_stress_list = _fill_bar_list(
+            model_results, cbar_eids, is_stress=True)
+        assert len(bar_stress_list), 'No bar stress results found'
+        _envelope_stress_strain(
+            bar_stress, bar_stress_list,
+            all_eids,
+            all_eids_list, all_subcases_list, cbar_results, dtype=dtype)
+
+    if check_bar_strain and len(cbar_eids):
+        bar_strain_list = _fill_bar_list(
+            model_results, cbar_eids, is_stress=True)
+        assert len(bar_strain_list), 'No bar strain results found'
+        _envelope_stress_strain(
+            bar_strain, bar_strain_list,
+            all_eids,
+            all_eids_list, all_subcases_list, cbar_results, dtype=dtype)
+
+    if check_beam_stress and len(cbeam_eids):
+        beam_stress_list = _fill_beam_list(
+            model_results, cbeam_eids, is_stress=True)
+        assert len(beam_stress_list), 'No beam stress results found'
+        _envelope_stress_strain(
+            beam_stress, beam_stress_list,
+            all_eids,
+            all_eids_list, all_subcases_list, cbeam_results, dtype=dtype)
+
+    if check_beam_strain and len(cbeam_eids):
+        beam_strain_list = _fill_beam_list(
+            model_results, cbar_eids, is_stress=True)
+        assert len(beam_strain_list), 'No beam strain results found'
+        _envelope_stress_strain(
+            beam_strain, beam_strain_list,
+            all_eids,
+            all_eids_list, all_subcases_list, cbeam_results, dtype=dtype)
+
+    if check_comp_plate_stress and len(all_comp_plate_eids):
         # log.debug('check_comp_plate_stress')
         comp_plate_stress_list = _fill_comp_plate_list(
             model_results,
             ctria3_comp_eids, cquad4_comp_eids,
+            ctria6_comp_eids, cquad8_comp_eids,
+            ctriar_comp_eids, cquadr_comp_eids,
             is_stress=True)
         assert len(comp_plate_stress_list), 'No comp plate stress results found'
         _envelope_stress_strain(
@@ -330,11 +439,13 @@ def envelope(
             all_eids,
             all_eids_list, all_subcases_list, comp_results, dtype=dtype)
 
-    if check_comp_plate_strain:
+    if check_comp_plate_strain and len(all_comp_plate_eids):
         # log.debug('check_comp_plate_strain')
         comp_plate_strain_list = _fill_comp_plate_list(
             model_results,
             ctria3_comp_eids, cquad4_comp_eids,
+            ctria6_comp_eids, cquad8_comp_eids,
+            ctriar_comp_eids, cquadr_comp_eids,
             is_stress=False)
         assert len(comp_plate_strain_list), 'No comp plate strain results found'
         _envelope_stress_strain(
@@ -343,11 +454,14 @@ def envelope(
             all_eids,
             all_eids_list, all_subcases_list, comp_results, dtype=dtype)
 
-    if check_plate_stress:
+    if check_plate_stress and len(all_plate_eids):
         # log.debug('check_plate_stress')
         plate_stress_list = _fill_plate_list(
             model_results,
-            ctria3_plate_eids, cquad4_plate_eids, is_stress=True)
+            ctria3_plate_eids, cquad4_plate_eids,
+            ctria6_plate_eids, cquad8_plate_eids,
+            ctriar_plate_eids, cquadr_plate_eids,
+            is_stress=True)
         assert len(plate_stress_list), 'No plate stress results found'
         _envelope_solid_stress_strain(
             plate_stress,
@@ -356,11 +470,14 @@ def envelope(
             all_eids_list, all_subcases_list, plate_results,
             consider_corner_nodes=consider_plate_nodes, dtype=dtype)
 
-    if check_plate_strain:
+    if check_plate_strain and len(all_plate_eids):
         # log.debug('check_plate_strain')
         plate_strain_list = _fill_plate_list(
             model_results,
-            ctria3_plate_eids, cquad4_plate_eids, is_stress=False)
+            ctria3_plate_eids, cquad4_plate_eids,
+            ctria6_plate_eids, cquad8_plate_eids,
+            ctriar_plate_eids, cquadr_plate_eids,
+            is_stress=False)
         assert len(plate_strain_list), 'No plate strain results found'
         _envelope_solid_stress_strain(
             plate_strain,
@@ -369,7 +486,7 @@ def envelope(
             all_eids_list, all_subcases_list, plate_results,
             consider_corner_nodes=consider_plate_nodes, dtype=dtype)
 
-    if check_solid_stress:
+    if check_solid_stress and len(all_solid_eids):
         # log.debug('check_solid_stress')
         solid_stress_list = _fill_solid_list(
             model_results,
@@ -383,7 +500,7 @@ def envelope(
             all_eids_list, all_subcases_list, solid_results,
             consider_corner_nodes=consider_solid_nodes)
 
-    if check_solid_strain:
+    if check_solid_strain and len(all_solid_eids):
         # log.debug('check_solid_strain')
         solid_strain_list = _fill_solid_list(
             model_results,
@@ -434,7 +551,6 @@ def _envelope_post(all_subcases_list: list[int],
                    model: BDF,
                    log: SimpleLogger) -> tuple[np.ndarray, Any]:
     all_subcases = np.unique(all_subcases_list)
-    # all_eids = np.hstack(all_eids_list)
     nsubcase_all = len(all_subcases)
     neid_all = len(all_eids)
     assert nsubcase_all > 0 and neid_all > 0, (nsubcase_all, neid_all)
@@ -578,18 +694,12 @@ def _get_combined_data(all_subcases: np.ndarray,
         # print('', obj_name, eids, ieid)
         # print(combined_data)
     else:
-        # all_eids_2 = []
-        # all_ieids_2 = []
-        # all_data_2 = []
         assert len(results)
         for obj_name, subcases, eids, ieid, data in results:
             # print('', obj_name, eids, ieid)
             # print(data)
             isubcase = np.searchsorted(all_subcases, subcases)
             combined_data[isubcase, ieid] = data
-            # all_eids_2.append(eids)
-            # all_ieids_2.append(ieid)
-            # all_data_2.append(data)
 
     # find the driving case (and data) for each element
     icase_critical = np.full(neid_all, -1, dtype='int32')
@@ -614,9 +724,6 @@ def get_elements_dict(model: BDF) -> tuple[dict[str, list[int]],
                                            dict[str, list[int]]]:
     log = model.log
     eid_to_nid_map = {}
-    # plate_shell_eids = []
-    # plate_comp_eids = []
-    # solid_eids = []
     etype_to_eids = defaultdict(list)
     etype_ptype_to_eids = defaultdict(list)
     for eid, elem in model.elements.items():
@@ -627,47 +734,7 @@ def get_elements_dict(model: BDF) -> tuple[dict[str, list[int]],
         if prop_type in {'PBARL', 'PBEAML', 'PCOMPG'}:
             prop_type = prop_type[:-1]
         etype_ptype_to_eids[(elem.type, prop_type)].append(eid)
-        continue
-        # if prop.type in {'PSHELL'}:
-        #     plate_shell_eids.append(eid)
-        # elif prop.type in {'PCOMP', 'PCOMPG'}:
-        #     plate_comp_eids.append(eid)
-        # elif prop.type in {'PSOLID'}:
-        #     solid_eids.append(eid)
-        # elif prop.type in {'PBUSH', 'PBUSH1D', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBEND'}:
-        #     log.warning(f'skipping {prop.type}')
-        # else:
-        #     log.error(f'skipping {prop.type}')
     return dict(etype_to_eids), dict(etype_ptype_to_eids)
-
-def _fill_plate_list(model_results: OP2,
-                     ctria3_eids: np.ndarray, cquad4_eids: np.ndarray,
-                     is_stress: bool) -> list:
-    if is_stress:
-        word = 'stress'
-        stress = model_results.op2_results.stress
-        ctria3_obj = stress.ctria3_stress
-        cquad4_obj = stress.cquad4_stress
-        # ctria6_obj = stress.ctria6_stress
-        # cquad8_obj = stress.cquad8_stress
-        # ctriar_obj = stress.ctriar_stress
-        # cquadr_obj = stress.cquadr_stress
-    else:
-        word = 'strain'
-        strain = model_results.op2_results.strain
-        ctria3_obj = strain.ctria3_strain
-        cquad4_obj = strain.cquad4_strain
-        # ctria6_obj = strain.ctria6_strain
-        # cquad8_obj = strain.cquad8_strain
-        # ctriar_obj = strain.ctriar_strain
-        # cquadr_obj = strain.cquadr_strain
-
-    plate_list = []
-    if len(ctria3_eids):
-        plate_list.append((ctria3_eids, f'ctria3_{word}', ctria3_obj))
-    if len(cquad4_eids):
-        plate_list.append((cquad4_eids, f'cquad4_{word}', cquad4_obj))
-    return plate_list
 
 def _fill_rod_list(model_results: OP2,
                    crod_eids: np.ndarray, ctube_eids: np.ndarray, conrod_eids: np.ndarray,
@@ -695,33 +762,116 @@ def _fill_rod_list(model_results: OP2,
         rod_list.append((conrod_eids, f'conrod_{word}', conrod_obj))
     return rod_list
 
-def _fill_comp_plate_list(model_results: OP2,
-                          ctria3_eids: np.ndarray, cquad4_eids: np.ndarray,
-                          is_stress: bool) -> list:
+def _fill_bar_list(model_results: OP2,
+                   cbar_eids: np.ndarray,
+                   is_stress: bool) -> list:
     if is_stress:
         word = 'stress'
         stress = model_results.op2_results.stress
-        ctria3_obj = stress.ctria3_composite_stress
-        cquad4_obj = stress.cquad4_composite_stress
-        # ctria6_obj = stress.ctria6_composite_stress
-        # cquad8_obj = stress.cquad8_composite_stress
-        # ctriar_obj = stress.ctriar_composite_stress
-        # cquadr_obj = stress.cquadr_composite_stress
+        cbar_obj = stress.cbar_stress
     else:
         word = 'strain'
         strain = model_results.op2_results.strain
-        ctria3_obj = strain.ctria3_composite_strain
-        cquad4_obj = strain.cquad4_composite_strain
-        # ctria6_obj = strain.ctria6_composite_strain
-        # cquad8_obj = strain.cquad8_composite_strain
-        # ctriar_obj = strain.ctriar_composite_strain
-        # cquadr_obj = strain.cquadr_composite_strain
+        cbar_obj = strain.cbar_strain
+
+    bar_list = []
+    if len(cbar_eids):
+        bar_list.append((cbar_eids, f'cbar_{word}', cbar_obj))
+    return bar_list
+
+def _fill_beam_list(model_results: OP2,
+                    cbeam_eids: np.ndarray,
+                    is_stress: bool) -> list:
+    if is_stress:
+        word = 'stress'
+        stress = model_results.op2_results.stress
+        cbeam_obj = stress.cbeam_stress
+    else:
+        word = 'strain'
+        strain = model_results.op2_results.strain
+        cbeam_obj = strain.cbeam_strain
+
+    beam_list = []
+    if len(cbeam_eids):
+        beam_list.append((cbeam_eids, f'cbeam_{word}', cbeam_obj))
+    return beam_list
+
+def _fill_plate_list(model_results: OP2,
+                     ctria3_eids: np.ndarray, cquad4_eids: np.ndarray,
+                     ctria6_eids: np.ndarray, cquad8_eids: np.ndarray,
+                     ctriar_eids: np.ndarray, cquadr_eids: np.ndarray,
+                     is_stress: bool) -> list:
+    if is_stress:
+        word = 'stress'
+        stress = model_results.op2_results.stress
+        ctria3_obj = stress.ctria3_stress
+        cquad4_obj = stress.cquad4_stress
+        ctria6_obj = stress.ctria6_stress
+        cquad8_obj = stress.cquad8_stress
+        ctriar_obj = stress.ctriar_stress
+        cquadr_obj = stress.cquadr_stress
+    else:
+        word = 'strain'
+        strain = model_results.op2_results.strain
+        ctria3_obj = strain.ctria3_strain
+        cquad4_obj = strain.cquad4_strain
+        ctria6_obj = strain.ctria6_strain
+        cquad8_obj = strain.cquad8_strain
+        ctriar_obj = strain.ctriar_strain
+        cquadr_obj = strain.cquadr_strain
 
     plate_list = []
     if len(ctria3_eids):
         plate_list.append((ctria3_eids, f'ctria3_{word}', ctria3_obj))
     if len(cquad4_eids):
         plate_list.append((cquad4_eids, f'cquad4_{word}', cquad4_obj))
+    if len(ctria6_eids):
+        plate_list.append((ctria6_eids, f'ctria6_{word}', ctria6_obj))
+    if len(cquad8_eids):
+        plate_list.append((cquad8_eids, f'cquad8_{word}', cquad8_obj))
+    if len(ctriar_eids):
+        plate_list.append((ctriar_eids, f'ctriar_{word}', ctriar_obj))
+    if len(cquadr_eids):
+        plate_list.append((cquadr_eids, f'cquadr_{word}', cquadr_obj))
+    return plate_list
+
+def _fill_comp_plate_list(model_results: OP2,
+                          ctria3_eids: np.ndarray, cquad4_eids: np.ndarray,
+                          ctria6_eids: np.ndarray, cquad8_eids: np.ndarray,
+                          ctriar_eids: np.ndarray, cquadr_eids: np.ndarray,
+                          is_stress: bool) -> list:
+    if is_stress:
+        word = 'stress'
+        stress = model_results.op2_results.stress
+        ctria3_obj = stress.ctria3_composite_stress
+        cquad4_obj = stress.cquad4_composite_stress
+        ctria6_obj = stress.ctria6_composite_stress
+        cquad8_obj = stress.cquad8_composite_stress
+        ctriar_obj = stress.ctriar_composite_stress
+        cquadr_obj = stress.cquadr_composite_stress
+    else:
+        word = 'strain'
+        strain = model_results.op2_results.strain
+        ctria3_obj = strain.ctria3_composite_strain
+        cquad4_obj = strain.cquad4_composite_strain
+        ctria6_obj = strain.ctria6_composite_strain
+        cquad8_obj = strain.cquad8_composite_strain
+        ctriar_obj = strain.ctriar_composite_strain
+        cquadr_obj = strain.cquadr_composite_strain
+
+    plate_list = []
+    if len(ctria3_eids):
+        plate_list.append((ctria3_eids, f'ctria3_{word}', ctria3_obj))
+    if len(cquad4_eids):
+        plate_list.append((cquad4_eids, f'cquad4_{word}', cquad4_obj))
+    if len(ctria6_eids):
+        plate_list.append((ctria6_eids, f'ctria6_{word}', ctria6_obj))
+    if len(cquad8_eids):
+        plate_list.append((cquad8_eids, f'cquad8_{word}', cquad8_obj))
+    if len(ctriar_eids):
+        plate_list.append((ctriar_eids, f'ctriar_{word}', ctriar_obj))
+    if len(cquadr_eids):
+        plate_list.append((cquadr_eids, f'cquadr_{word}', cquadr_obj))
     return plate_list
 
 def _fill_solid_list(model_results: OP2,
@@ -821,7 +971,7 @@ def _envelope_stress_strain(result_name: str,
             comp_data[isubcase, :] = datai
         # print(f'subcases = {subcases}')
 
-        # subcases, eids, ieid, solid_combined_data
+        # subcases, eids, ieid, combined_data
         results.append((obj_name, subcases, eids, ieid, comp_data))
         all_eids_list.append(eids)
         all_subcases_list.extend(subcases)
