@@ -195,6 +195,14 @@ def ovm_shear_3d(oxx: np.ndarray, oyy: np.ndarray, ozz: np.ndarray,
             ovm_shear = (o1 - o3) / 2.
     return ovm_shear
 
+def max_shear_3d(omax: np.ndarray, omin: np.ndarray,
+                 is_stress: bool) -> np.ndarray:
+    if is_stress:
+        ovm_shear = (omax - omin) / 2.
+    else:
+        ovm_shear = (omax - omin) / 2.
+    return ovm_shear
+
 
 def principal_components_3d(ntimes: int, nelements_nnodes: int,
                             oxx: np.ndarray, oyy: np.ndarray, ozz: np.ndarray,

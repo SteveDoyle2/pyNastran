@@ -8,6 +8,8 @@ import numpy as np
 from numpy.linalg import eigh  # type: ignore
 
 from pyNastran.utils.numpy_utils import float_types, integer_float_types
+from pyNastran.utils.mathematics import get_abs_max
+
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long, _eigenvalue_header)
 from pyNastran.op2.result_objects.op2_objects import (
@@ -18,7 +20,9 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     oes_real_data_code, set_static_case, set_modal_case,
     set_transient_case, set_post_buckling_case)
 from pyNastran.op2.op2_interface.write_utils import to_column_bytes
-from pyNastran.op2.stress_reduction import ovm_shear_3d, principal_components_3d
+from pyNastran.op2.stress_reduction import (
+    ovm_shear_3d, principal_components_3d,
+    von_mises_3d, max_shear_3d)
 
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
@@ -260,6 +264,94 @@ class RealSolidArray(OES_Object):
             data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
             data_frame.columns.names = ['Static']
         self.data_frame = data_frame
+
+    def envelope(self,
+                 eids: np.ndarray,
+                 result_name: str,
+                 consider_corner_nodes: bool=False) -> np.ndarray:
+        is_min = (result_name == 'min')
+        func_name = 'min' if is_min else 'max'
+        max_min_func = getattr(np, func_name)
+
+        # print(''.join(self.get_stats()))
+        element = self.element_cid[:, 0]
+        ielement = np.searchsorted(element, eids)
+        assert np.array_equal(element[ielement], eids)
+
+        #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovmShear]
+        solid_stress_strain_dict_map = {
+            'max': 6,
+            'min': 8,
+        }
+        ntime, nelement_node, _ = self.data.shape
+        if result_name == 'von_mises':
+            data = self.von_mises()
+        elif result_name == 'max_shear':
+            data = self.max_shear()
+        elif result_name == 'abs_max':
+            # TODO: wrong, but ok...
+            data = np.abs(self.abs_principal())
+            assert data.shape == (ntime, nelement_node), data.shape
+        elif result_name in solid_stress_strain_dict_map:
+            iresult = solid_stress_strain_dict_map[result_name]
+            data = self.data[:, :, iresult]
+        else:  # pragma: No cover
+            raise NotImplementedError(result_name)
+
+        is_corner_nodes = len(self.element_node) > 1 and self.element_node[1, 1] != 0
+        neid = len(self.element_cid)
+        assert data.ndim == 2, data.shape
+        ntime, nelement_nnode = data.shape
+
+        if is_corner_nodes:
+            data = data.reshape(ntime, neid, self.nnodes_per_element)
+            if consider_corner_nodes:
+                # arr = np.random.rand(3, 4, 5)  # 3 matrices, 4 rows, 5 columns
+                # col_max = arr.max(axis=1)  # Result shape: (3, 5)
+                # eid_data = data[:, :, :].max(axis=(0, 2))
+                eid_data = max_min_func(data, axis=(0, 2))
+                assert eid_data.shape == (neid,), eid_data.shape
+            else:
+                # eid_data = data[:, :, 0].max(axis=0)
+                eid_data = max_min_func(data[:, :, 0], axis=0)
+                assert eid_data.shape == (neid,), eid_data.shape
+        else:
+            # eid_data = data.max(axis=0)
+            eid_data = max_min_func(data, axis=0)
+            assert eid_data.shape == (neid, ), eid_data.shape
+        return eid_data[ielement]
+
+    def von_mises(self) -> np.ndarray:
+        if self.is_von_mises:
+            von_mises = self.data[:, :, 9]
+            return von_mises
+        oxx = self.data[:, :, 0]
+        oyy = self.data[:, :, 1]
+        ozz = self.data[:, :, 2]
+        txy = self.data[:, :, 3]
+        tyz = self.data[:, :, 4]
+        txz = self.data[:, :, 5]
+        von_mises = von_mises_3d(
+            oxx, oyy, ozz, txy, tyz, txz,
+            self.is_stress)
+        return von_mises
+
+    def max_shear(self) -> np.ndarray:
+        if self.is_max_shear:
+            max_shear = self.data[:, :, 9]
+            return max_shear
+
+        omax = self.data[:, :, 6]
+        omin = self.data[:, :, 8]
+        max_shear = max_shear_3d(
+            omax, omin, self.is_stress)
+        return max_shear
+
+    def abs_principal(self) -> np.ndarray:
+        omax = self.data[:, :, 6]
+        omin = self.data[:, :, 8]
+        abs_max = get_abs_max(omin, omax, dtype=omax.dtype)
+        return abs_max
 
     @classmethod
     def _add_case(cls,

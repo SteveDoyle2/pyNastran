@@ -590,7 +590,7 @@ class PlateStrainStressResults2(VectorResultsCommon):
         elif iresult == 'max_shear':
             omax = node_data[itime, :, ilayer, 5]
             omin = node_data[itime, :, ilayer, 6]
-            data = max_shear(omax, omin)
+            data = max_shear(omax, omin, self.is_stress)
         else:  # pragma: no cover
             raise RuntimeError(iresult)
         assert data.ndim == 2, data.shape
@@ -647,7 +647,7 @@ class PlateStrainStressResults2(VectorResultsCommon):
             # not checked for strain
             omax = centroid_data[itime, :, ilayer, 5]
             omin = centroid_data[itime, :, ilayer, 6]
-            data = max_shear(omax, omin)
+            data = max_shear(omax, omin, self.is_stress)
         else:
             raise RuntimeError(iresult)
         return data

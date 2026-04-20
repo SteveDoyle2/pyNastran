@@ -6,9 +6,11 @@ from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.utils import print_bad_path
+from pyNastran.bdf.bdf import read_bdf
 from pyNastran.op2.op2 import read_op2
 from pyNastran.op2.tools.solution_combination import (
     run_load_case_combinations, run_load_case_multi_combinations)
+from pyNastran.op2.tools.downselect import envelope
 
 np.seterr(all='raise')
 DIRNAME = Path(__file__).parent
@@ -17,6 +19,96 @@ MODEL_PATH = PKG_PATH / 'models'
 
 
 class TestCombination(unittest.TestCase):
+    def test_envelope_solid_shell_bar(self):
+        log = SimpleLogger(level='warning')
+        bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
+        op2_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
+        model = read_bdf(bdf_filename, log=log)
+        model_results = read_op2(op2_filename, log=log)
+        envelope(
+            model, model_results,
+            rod_strain='abs_max',
+            bar_strain='abs_max',
+            plate_strain='abs_max',
+            comp_plate_strain='abs_max',
+            solid_strain='abs_max',
+            consider_solid_nodes=True)
+        envelope(
+            model, model_results,
+            rod_strain='abs_max',
+            bar_strain='abs_max',
+            plate_strain='abs_max',
+            comp_plate_strain='abs_max',
+            solid_strain='abs_max',
+            consider_solid_nodes=False)
+        envelope(
+            model, model_results,
+            rod_stress='max_shear',
+            bar_stress='max_shear',
+            plate_stress='max_shear',
+            comp_plate_stress='max_shear',
+            solid_stress='max_shear',
+            consider_solid_nodes=True)
+        envelope(
+            model, model_results,
+            rod_stress='von_mises',
+            bar_stress='von_mises',
+            plate_stress='von_mises',
+            comp_plate_stress='von_mises',
+            solid_stress='von_mises',
+            consider_solid_nodes=True)
+        envelope(
+            model, model_results,
+            rod_stress='abs_max',
+            bar_stress='abs_max',
+            plate_stress='abs_max',
+            comp_plate_stress='abs_max',
+            solid_stress='abs_max',
+            consider_solid_nodes=True)
+
+    def test_envelope_bwb_saero(self):
+        # log = SimpleLogger(level='warning')
+        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
+        op2_filename = MODEL_PATH / 'bwb' / 'bwb_saero.op2'
+        envelope(
+            bdf_filename, op2_filename,
+            comp_plate_stress='abs_max',
+            consider_solid_nodes=True)
+
+    def test_envelope_solid_bending(self):
+        log = SimpleLogger(level='warning')
+        bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'
+        op2_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.op2'
+        # no solid strain
+        # envelope(
+        #     bdf_filename, op2_filename,
+        #     solid_strain='max_shear',
+        #     consider_solid_nodes=True)
+        # return
+
+        model = read_bdf(bdf_filename, log=log)
+        model_results = read_op2(op2_filename, include_results=['stress*'])
+        # solid_stress: str='omax',
+        # solid_strain: str='',
+        # consider_solid_nodes: bool=True,
+        envelope(
+            model, model_results,
+            solid_stress='abs_max',
+            consider_solid_nodes=True)
+        envelope(
+            model, model_results,
+            solid_stress='von_mises',
+            consider_solid_nodes=False)
+        envelope(
+            model, model_results,
+            solid_stress='max',
+            consider_solid_nodes=False)
+        envelope(
+            # model, model_results,
+            bdf_filename, op2_filename,
+            solid_stress='max_shear',
+            consider_solid_nodes=True)
+
     def test_op2_combination_solid_bending(self):
         log = SimpleLogger(level='warning')
         lines = """
