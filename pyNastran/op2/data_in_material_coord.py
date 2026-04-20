@@ -52,12 +52,12 @@ def transform_Mohr(sxx: np.ndarray,
     sxy = np.asarray(sxy)
     theta_rad = np.asarray(theta_rad)
     scenter = (sxx + syy) / 2.
-    R = np.sqrt((sxx - scenter)**2 + sxy**2)
+    radius = np.sqrt((sxx - scenter)**2 + sxy**2)
     theta_rad = np.arctan2(-sxy, sxx - scenter) + 2*theta_rad
     cos_theta = np.cos(theta_rad)
-    sxx_theta = scenter + R*cos_theta
-    syy_theta = scenter - R*cos_theta
-    sxy_theta = -R*np.sin(theta_rad)
+    sxx_theta = scenter + radius*cos_theta
+    syy_theta = scenter - radius*cos_theta
+    sxy_theta = -radius*np.sin(theta_rad)
     return sxx_theta, syy_theta, sxy_theta
 
 
@@ -191,6 +191,8 @@ def data_in_material_coord(bdf: BDF, op2: OP2,
     in_place : bool; default=False
         If true the original op2 object is modified, otherwise a new one
         is created.
+    debug : bool; default=False
+        adds some log messages
 
     Returns
     -------
@@ -443,7 +445,6 @@ def get_eid_to_theta_rad2(model: BDF, debug: bool) -> dict[int, float]:
 
     # put in dictionary form- maybe change later
     #eid_to_theta_rad = {eid: theta for eid, theta in zip(eids, theta_rad)}
-
 
     if len(eid_tri_theta_):
         # the triangle theta is defined from the line g1-g2

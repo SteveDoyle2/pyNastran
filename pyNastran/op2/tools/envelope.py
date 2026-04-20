@@ -37,7 +37,7 @@ SOLID:
 """
 from collections import defaultdict
 import warnings
-from typing import Any
+from typing import cast, Any
 import numpy as np
 
 from cpylog import SimpleLogger
@@ -90,7 +90,7 @@ def envelope(
     The disadvantages of this approach:
      - elements have multiple criterion (e.g., max_shear and max principal)
        -> TODO: make combined quantities max_shear_principal??? -> no
-       -> cbush_force = 'xy_rss'
+       -> cbush_force = 'xy_rss' (this is still one criterion)
      - different materials have different allowables
        -> run it multiple times
 
@@ -139,16 +139,12 @@ def envelope(
     beam_strain : str; default=''
         'max', 'min', 'abs_max', 'von_mises', 'max_shear'
     plate_stress : str; default=''
-        CTRIA3, CQUAD4 only
         'max', 'min', 'abs_max', 'von_mises', 'max_shear'
     plate_strain : str; default=''
-        CTRIA3, CQUAD4 only
         'max', 'min', 'abs_max', 'von_mises', 'max_shear'
     comp_plate_stress : str; default=''
-        CTRIA3, CQUAD4 only
         'max', 'min', 'abs_max', 'von_mises', 'max_shear'
     comp_plate_strain : str; default=''
-        CTRIA3, CQUAD4 only
         'max', 'min', 'abs_max', 'von_mises', 'max_shear'
     solid_stress : str; default=''
         'max', 'min', 'abs_max', 'von_mises', 'max_shear'
@@ -162,12 +158,21 @@ def envelope(
         if there are no solid nodes, False is automatically selected
         True:  take the max/min of all extrapolated solid nodes
         False: take the max/min of only solid centers
+    transform_to_material_coord : bool; default=True
+        transform shell stress/strain/force into the material coordinate frame
+        doesn't transform composites
+    percent_eids_target : float; default=1.00 -> all
+        defines the percentage of critical elements that are considered
 
     Returns
     -------
     subcases : np.ndarray
         The worst subcases
     """
+    # rod_stress_strain_keys = [
+    #     'max', 'min', 'abs_max',
+    #     'von_mises', 'max_shear',
+    # ]
     solid_stress_strain_keys = [
         'max', 'min', 'abs_max',
         'von_mises', 'max_shear',
@@ -188,6 +193,7 @@ def envelope(
     assert beam_stress == '' or beam_stress in solid_stress_strain_keys, beam_stress
     assert beam_strain == '' or beam_strain in solid_stress_strain_keys, beam_strain
     is_cbeam_min = ((beam_stress == 'min') or (beam_strain == 'min'))
+    is_cbend_min = is_cbeam_min
     #-----------------------------------------------------------------
     # verify requests
     assert plate_stress == '' or plate_stress in solid_stress_strain_keys, plate_stress
@@ -296,14 +302,14 @@ def envelope(
         cbar_eids = np.intersect1d(cbar_eids, element_id)
         cbeam_eids = np.intersect1d(cbeam_eids, element_id)
         cbend_eids = np.intersect1d(cbend_eids, element_id)
-    all_bar_eids = get_all_eids((cbar_eids, cbeam_eids, cbend_eids))
+    # all_bar_eids = get_all_eids((cbar_eids, cbeam_eids, cbend_eids))
 
     cbush_eids = np.array(etype_to_eids.get('CBUSH', []))
     cbush1d_eids = np.array(etype_to_eids.get('CBUSH1D', []))
     if allow_missing:
         cbush_eids = np.intersect1d(cbush_eids, element_id)
         cbush1d_eids = np.intersect1d(cbush1d_eids, element_id)
-    all_bush_eids = get_all_eids((cbush_eids, cbush1d_eids))
+    # all_bush_eids = get_all_eids((cbush_eids, cbush1d_eids))
 
     cquad4_plate_eids = np.array(etype_ptype_to_eids.get(('CQUAD4', 'PSHELL'), []))
     ctria3_plate_eids = np.array(etype_ptype_to_eids.get(('CTRIA3', 'PSHELL'), []))
@@ -349,10 +355,10 @@ def envelope(
         chexa_eids = np.intersect1d(chexa_eids, element_id)
         cpyram_eids = np.intersect1d(cpyram_eids, element_id)
     all_solid_eids = get_all_eids((ctetra_eids, cpenta_eids, chexa_eids, cpyram_eids))
-    all_eids = get_all_eids((
-        all_rod_eids, all_bar_eids, all_bush_eids,
-        all_comp_plate_eids, all_plate_eids,
-        all_solid_eids), sort=True)
+    # all_eids = get_all_eids((
+    #     all_rod_eids, all_bar_eids, all_bush_eids,
+    #     all_comp_plate_eids, all_plate_eids,
+    #     all_solid_eids), sort=True)
     all_eids = element_id
     # log.info(f'all_eids = {all_eids.tolist()}')
 
@@ -367,6 +373,7 @@ def envelope(
     rod_results = []
     cbar_results = []
     cbeam_results = []
+    cbend_results = []
     cbush_results = []
     cbush1d_results = []
     plate_results = []
@@ -542,6 +549,7 @@ def envelope(
         # 'conrod': (conrod_results, conrod_eids, is_conrod_min),
         'cbar': (cbar_results, cbar_eids, is_cbar_min),
         'cbeam': (cbeam_results, cbeam_eids, is_cbeam_min),
+        'cbend' : (cbend_results, cbend_eids, is_cbend_min),
         'cbush': (cbush_results, cbush_eids, is_cbush_min),
         'cbush1d': (cbush1d_results, cbush1d_eids, is_cbush1d_min),
 
@@ -578,7 +586,7 @@ def get_all_eids(eids_tuple: tuple[np.ndarray, ...],
 
 def _envelope_post(all_subcases_list: list[int],
                    all_eids: np.ndarray,
-                   results: dict[str, tuple[np.ndarray, np.ndarray, bool]],
+                   results: dict[str, tuple[list, np.ndarray, bool]],
                    percent_eids_target: float,
                    model: BDF,
                    log: SimpleLogger) -> tuple[np.ndarray, Any]:
@@ -719,10 +727,11 @@ def _envelope_post(all_subcases_list: list[int],
     return out_subcases, (comp_plate_combined_data, solid_combined_data)
 
 def _get_combined_data(all_subcases: np.ndarray,
-                       result_group: str, results: list[np.ndarray],
+                       result_group: str,
+                       results: list[tuple[str, np.ndarray, list[int], np.ndarray, np.ndarray]],
                        nsubcase_all: int, neid_all: int,
                        is_min: bool,
-                       dtype: str='float32') -> np.ndarray:
+                       dtype: str='float32') -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     assert len(all_subcases) == len(np.unique(all_subcases))
 
     # print('----------------')
@@ -760,11 +769,12 @@ def _get_combined_data(all_subcases: np.ndarray,
     # print(f'{result_group}_icase_critical = {icase_critical}')
 
     data_critical = combined_data[icase_critical]
+    del result_group
     return icase_critical, data_critical, combined_data
 
 def get_elements_dict(model: BDF) -> tuple[dict[str, list[int]],
                                            dict[str, list[int]]]:
-    log = model.log
+    # log = model.log
     eid_to_nid_map = {}
     etype_to_eids = defaultdict(list)
     etype_ptype_to_eids = defaultdict(list)
@@ -809,7 +819,7 @@ def _fill_bush_list(model_results: OP2,
                     is_stress: bool=False,
                     is_strain: bool=False,
                     is_force: bool=False) -> list:
-    assert is_stress or is_strain or is_force, (is_stress, is_strain, is_force)
+    assert any([is_stress, is_strain, is_force]), (is_stress, is_strain, is_force)
     assert sum([is_stress, is_strain, is_force]) == 1, (is_stress, is_strain, is_force)
     if is_stress:
         word = 'stress'
@@ -972,14 +982,15 @@ def _fill_solid_list(model_results: OP2,
     return solid_list
 
 def _envelope_corner_stress_strain(result_name: str,
-                                   solid_stress_list: list[tuple[np.ndarray, Any]],
+                                   corner_stress_list: list[tuple[np.ndarray, str, dict]],
                                    all_eids: np.ndarray,
                                    all_eids_list: list[list[int]],
                                    all_subcases_list: list[int],
-                                   results: list[np.ndarray],
+                                   #  results.append((obj_name, subcases, eids, ieid, comp_data))
+                                   results: list[tuple[str, list[int], list[int], np.ndarray, np.ndarray]],
                                    consider_corner_nodes: bool=True,
                                    dtype: str='float32'):
-    for (eids, obj_name, obj_dict) in solid_stress_list:
+    for (eids, obj_name, obj_dict) in corner_stress_list:
         subcases = list(obj_dict)
         nsubcase_obj = len(subcases)
         if nsubcase_obj == 0:
@@ -1002,17 +1013,19 @@ def _envelope_corner_stress_strain(result_name: str,
             datai = obj.envelope(eids, result_name, consider_corner_nodes)
             solid_data[isubcase, :] = datai
         # print(f'subcases = {subcases}')
+        obj_name = cast(str, obj_name)
         results.append((obj_name, subcases, eids, ieid, solid_data))
         all_eids_list.append(eids)
         all_subcases_list.extend(subcases)
 
 def _envelope_stress_strain(group_name: str,
                             result_name: str,
-                            comp_plate_list: list[tuple[np.ndarray, Any]],
+                            comp_plate_list: list[tuple[np.ndarray, str, dict]],
                             all_eids: np.ndarray,
                             all_eids_list: list[list[int]],
                             all_subcases_list: list[int],
-                            results: list[np.ndarray],
+                            #  results.append((obj_name, subcases, eids, ieid, comp_data))
+                            results: list[tuple[str, np.ndarray, list[int], np.ndarray, np.ndarray]],
                             dtype: str='float32'):
     """no consideration for corner nodes"""
     for (eids, obj_name, obj_dict) in comp_plate_list:
