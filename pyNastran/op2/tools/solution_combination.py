@@ -225,8 +225,8 @@ def _check_op2_file(op2_filename: PathLike | OP2) -> None:
         assert os.path.exists(op2_filename), print_bad_path(op2_filename)
     elif isinstance(op2_filename, OP2):
         pass
-    else:
-        raise TypeError(type(op2_filename))
+    else:  # pragma: no cover
+        raise TypeError(op2_filename)
 
 
 def run_load_case_combinations(op2_filename: PathLike | OP2,
@@ -408,7 +408,7 @@ def run_load_case_multi_combinations(
         op2_filenames = {i: op2_filename for i, op2_filename in enumerate(op2_filenames)}
     elif isinstance(op2_filenames, dict):
         pass
-    else:
+    else:  # pragma: no cover
         raise TypeError(op2_filenames)
     # log.info(f'op2_filenames (dict) = {op2_filenames}')
 

@@ -28,6 +28,22 @@ class TestCombination(unittest.TestCase):
         model_results = read_op2(op2_filename, log=log)
         envelope(
             model, model_results,
+            # rod_strain='max',
+            bar_strain='max',
+            plate_strain='max',
+            comp_plate_strain='max',
+            solid_strain='max',
+            consider_solid_nodes=True)
+        envelope(
+            model, model_results,
+            # rod_strain='min',
+            bar_strain='min',
+            plate_strain='min',
+            comp_plate_strain='min',
+            solid_strain='min',
+            consider_solid_nodes=True)
+        envelope(
+            model, model_results,
             rod_strain='abs_max',
             bar_strain='abs_max',
             plate_strain='abs_max',
