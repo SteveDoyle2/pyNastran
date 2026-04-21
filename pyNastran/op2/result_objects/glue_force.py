@@ -275,7 +275,7 @@ class GlueForceArray(ScalarObject):  # displacement style table
         self.set_as_sort1()
         gridtypes = self.node_gridtype[:, 1]
         nnodes = len(gridtypes)
-        self.gridtype_str = np.chararray(nnodes, unicode=True)
+        self.gridtype_str = np.zeros(nnodes, dtype='U1')
         ugridtypes = np.unique(gridtypes)
         for ugridtype in ugridtypes:
             i = np.where(gridtypes == ugridtype)

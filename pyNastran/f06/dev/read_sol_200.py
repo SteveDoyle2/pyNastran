@@ -1925,7 +1925,7 @@ def _read_1d_search(i: int, line: str, lines: list[str], nlines: int,
                     log: SimpleLogger) -> int:
     debug = False
     is_constrained_function = False
-    print('-'*80)
+    log.debug('-'*80)
     log.debug(f'read_1d_search {i} {line}')
     i += 1
     line = lines[i].strip()
@@ -1995,7 +1995,7 @@ def _read_1d_search(i: int, line: str, lines: list[str], nlines: int,
             print(line)
             asdf
         i += 1
-    print('-'*80)
+    log.debug('-'*80)
     return i
 
 

@@ -1434,7 +1434,7 @@ class PCOMP(CompositeProperty):
     def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMP:
         """uses a node_ids to extract GRIDs"""
         iprop = self.index(property_id)
-        print(f'iprop = {iprop}')
+        # print(f'iprop = {iprop}')
         assert len(self.ifile) == len(self.property_id)
         #assert len(self.node_id) > 0, self.node_id
         #i = np.searchsorted(self.node_id, node_id)

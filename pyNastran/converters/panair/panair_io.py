@@ -322,7 +322,7 @@ def add_networks(out_networks, out_headers, is_beta0,
         if networks == {}:
             log.info(f'skipping isolution={isolution}')
             continue
-        print('isolution = ', isolution, geom_model.alphas)
+        log.debug(f'isolution = {isolution}; alphas={geom_model.alphas}')
         alpha = geom_model.alphas[isolution-1]
         beta = geom_model.betas[isolution-1]
         case_name = 'alpha=%s' % alpha

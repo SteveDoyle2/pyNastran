@@ -661,7 +661,7 @@ class TableArray(ScalarObject):  # displacement style table
         Calls any OP2 objects that need to do any post matrix calcs
         """
         self.set_as_sort1()
-        #self.gridtype_str2 = np.chararray(nnodes, unicode=True)
+        #self.gridtype_str2 = np.zeros(nnodes, dtype='U1')
         self.gridtype_str = get_gridtype_str(self, self.node_gridtype)
         #print(self.gridtype_str, self.gridtype_str.dtype)
         #print(self.gridtype_str2, self.gridtype_str2.dtype)

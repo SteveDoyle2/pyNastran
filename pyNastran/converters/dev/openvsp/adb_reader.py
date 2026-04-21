@@ -282,12 +282,12 @@ class ADB_Reader:
             data = adb_file.read(n)
             self.show_data(data, types='ifs')
 
-            print('--------')
+            # print('--------')
             data = adb_file.read(npath)
             p = unpack('68s', data)
             print('p = %r' % p)
             self.show_data(data, types='s')
-            print('----------------')
+            # print('----------------')
 
             self.show_ndata(300, types='ifs')
         return

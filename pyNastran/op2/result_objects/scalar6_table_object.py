@@ -7,8 +7,6 @@ from struct import Struct, pack
 import warnings
 
 import numpy as np
-from numpy import zeros, searchsorted, unique, where, float32
-from numpy import allclose, asarray, vstack
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject, set_as_sort1
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
@@ -44,11 +42,13 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.node_gridtype, table.node_gridtype):
-            assert self.node_gridtype.shape == table.node_gridtype.shape, 'shape=%s table.shape=%s' % (self.node_gridtype.shape, table.node_gridtype.shape)
+            assert self.node_gridtype.shape == table.node_gridtype.shape, 'shape=%s table.shape=%s' % (
+                self.node_gridtype.shape, table.node_gridtype.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += 'nid_gridtype:\n'
-            msg += 'gridtype.shape=%s table.gridtype.shape=%s\n' % (str(self.node_gridtype.shape), str(table.node_gridtype.shape))
+            msg += 'gridtype.shape=%s table.gridtype.shape=%s\n' % (
+                str(self.node_gridtype.shape), str(table.node_gridtype.shape))
             for (nid, grid_type), (nid2, grid_type2) in zip(self.node_gridtype, table.node_gridtype):
                 msg += '(%s, %s)    (%s, %s)\n' % (nid, grid_type, nid2, grid_type2)
             print(msg)
@@ -211,7 +211,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         import pandas as pd
         headers = self.get_headers()
         node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]
-        ugridtype_str = unique(self.gridtype_str)
+        ugridtype_str = np.unique(self.gridtype_str)
 
         if self.nonlinear_factor not in (None, np.nan):
             #Time             0.0       10.0
@@ -306,10 +306,10 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         self.set_as_sort1()
         gridtypes = self.node_gridtype[:, 1]
         nnodes = len(gridtypes)
-        self.gridtype_str = np.chararray(nnodes, unicode=True)
-        ugridtypes = unique(gridtypes)
+        self.gridtype_str = np.zeros(nnodes, dtype='U1')
+        ugridtypes = np.unique(gridtypes)
         for ugridtype in ugridtypes:
-            i = where(gridtypes == ugridtype)
+            i = np.where(gridtypes == ugridtype)
             self.gridtype_str[i] = self.recast_gridtype_as_string(ugridtype)
         #del self.itotal, self.itime
 
@@ -458,7 +458,9 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
-        assert self.table_name in {'OPG1', 'OUGV1', 'TOUGV1', 'OUG1', 'OTEMP1'}, self.table_name  # 'OUGV1', 'OQMG1', 'OQG1'
+
+        # 'OUGV1', 'OQMG1', 'OQG1'
+        assert self.table_name in {'OPG1', 'OUGV1', 'TOUGV1', 'OUG1', 'OTEMP1'}, self.table_name
 
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
@@ -592,7 +594,7 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         for itime in range(self.ntimes):
             dt = self._times[itime]
             t1 = self.data[itime, :, 0]
-            if isinstance(dt, (float, float32)):
+            if isinstance(dt, (float, np.float32)):
                 header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             else:
                 header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)

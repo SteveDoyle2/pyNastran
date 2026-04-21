@@ -78,7 +78,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     extensions = ['.dat', '.bdf']
     if args.infile is not None:
         bdf_filename_dirname, all_keywords_list = load_infile(args.infile, extensions)
-        print(f'bdf_filename_dirname = {bdf_filename_dirname}')
+        print(f'bdf_filename_dirname = {[str(fname) for fname in bdf_filename_dirname]}')
     else:
         bdf_filename_dirname = [Path(filenamei) for filenamei in args.bdf_dirname_filename]
         all_keywords_list: list[str] = keywords
@@ -136,7 +136,6 @@ def load_infile(infilename: str,
                 keywords_list.append(arg)
         bdf_filename_dirname.append(Path(name))
         all_keywords_list.append(keywords_list)
-
     return bdf_filename_dirname, all_keywords_list
 
 
