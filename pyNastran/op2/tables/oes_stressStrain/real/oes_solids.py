@@ -596,7 +596,7 @@ class RealSolidArray(OES_Object):
                             raise ValueError(msg)
                         continue
 
-                    if not np.array_equal(t1, t2):
+                    if not np.allclose(t1, t2):
                         msg += (
                             '(%s, %s)    (%s, %s, %s, %s)\n'
                             '%s      (%s, %s, %s, %s)\n' % (

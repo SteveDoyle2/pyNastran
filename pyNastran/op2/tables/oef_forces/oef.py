@@ -208,13 +208,15 @@ class OEF:
 
         """
         op2 = self.op2
+        element_type_int = op2.element_type
         try:
-            op2.element_name = op2.element_mapper[op2.element_type]
+            op2.element_name = op2.element_mapper[element_type_int]
         except KeyError:
-            op2.log.error(op2.code_information())
+            op2.log.error(f'element_type={element_type_int}; nastran_format={op2._nastran_format!r} nastran_revision={op2._nastran_revision!r}')
+            op2.log.error(op2.code_information(stop_on_failure=False))
             raise
 
-        if op2.element_type == 227 and op2.element_name == 'RBAR' and op2.is_msc:
+        if element_type_int == 227 and op2.element_name == 'RBAR' and op2.is_msc:
             op2.to_nx(' because element_type=227 was found')
             op2.element_name = op2.element_mapper[op2.element_type]
         assert op2.element_name != '', op2.code_information()

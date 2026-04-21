@@ -41,6 +41,7 @@ def parse_nastran_version(data: bytes, version: bytes, encoding: str,
     """parses a Nastran version string"""
     version_str = ''
     assert isinstance(encoding, str), encoding
+    # print(data)
     if len(data) == 32:
         #self.show_data(data[:16], types='ifsdqlILQ', endian=None)
         #self.show_data(data[16:], types='ifsdqlILQ', endian=None)

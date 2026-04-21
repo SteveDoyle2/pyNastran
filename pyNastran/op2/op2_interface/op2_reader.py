@@ -387,6 +387,7 @@ class OP2Reader:
 
         # print(f'mode = {mode!r} fmt={op2._nastran_format!r} version_str={version_str!r}')
         if version_str:
+            op2._nastran_format = mode
             op2._nastran_revision = version_str
 
         if mode == 'autodesk' or op2._nastran_format == 'autodesk':

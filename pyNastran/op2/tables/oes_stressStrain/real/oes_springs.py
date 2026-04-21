@@ -695,7 +695,6 @@ class RealNonlinearSpringStressArray(OES_Object):
         _times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         element = np.zeros(self.nelements, dtype=idtype)
 
-
         #[force, stress]
         data = np.zeros((self.ntimes, self.nelements, 2), dtype=fdtype)
 
@@ -710,6 +709,54 @@ class RealNonlinearSpringStressArray(OES_Object):
             self._times = _times
             self.element = element
             self.data = data
+
+    def build_dataframe(self):
+        """creates a pandas dataframe
+
+        v 0.24
+        Static                     0
+        ElementID Item
+        30        spring_stress  0.0
+        31        spring_stress  0.0
+        32        spring_stress  0.0
+        33        spring_stress  0.0
+
+        v 0.25 for test_bdf_op2_elements_01
+        Static  ElementID  spring_stress
+        0              30            0.0
+        1              31            0.0
+        2              32            0.0
+        3              33            0.0
+        ...
+        """
+        import pandas as pd
+
+        headers = self.get_headers()
+        if self.nonlinear_factor not in (None, np.nan):
+            # Mode                                1             2             3
+            # Freq                     1.482246e-10  3.353940e-09  1.482246e-10
+            # Eigenvalue              -8.673617e-19  4.440892e-16  8.673617e-19
+            # Radians                  9.313226e-10  2.107342e-08  9.313226e-10
+            # ElementID Item
+            # 30        spring_stress           0.0          -0.0          -0.0
+            # 31        spring_stress           0.0          -0.0          -0.0
+            # 32        spring_stress           0.0           0.0           0.0
+            # 33        spring_stress           0.0           0.0           0.0
+            column_names, column_values = build_dataframe_transient_header(self)
+            data_frame = build_pandas_transient_elements(
+                self, column_values, column_names,
+                headers, self.element, self.data)
+        else:
+            #Static     spring_stress      spring_force
+            #ElementID
+            #30                   0.0               0.0
+            #31                   0.0               0.0
+            #32                   0.0               0.0
+            #33                   0.0               0.0
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+            data_frame.index.name = 'ElementID'
+            data_frame.columns.names = ['Static']
+        self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)

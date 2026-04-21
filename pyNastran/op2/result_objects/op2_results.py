@@ -22,6 +22,49 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.tables.oef_forces.oef_force_objects import (
         RealCBushForceArray, RealPlateForceArray, RealPlateBilinearForceArray)
 
+class Nonlinear:
+    def __init__(self, word: str):
+        self._word = word
+
+        self.ctetra_stress_strain = {}
+        self.cpenta_stress_strain = {}
+        self.chexa_stress_strain = {}
+        # self.cpyram_stress_strain = {}
+
+        self.celas1_stress = {}
+        self.celas2_stress = {}
+        self.celas3_stress = {}
+        self.celas4_stress = {}
+
+        self.cquad4_stress = {}
+        self.ctria3_stress = {}
+
+        self.cgap_stress = {}
+
+        self.crod_stress = {}
+        self.ctube_stress = {}
+        self.conrod_stress = {}
+
+        #======================================================================
+        #: OES - CBEAM 94
+        self.cbeam_stress = {}
+
+        self.cbush_force_stress_strain = {}  # CBUSH 226
+        self.cbush1d_stress_strain = {}
+
+    def get_table_types(self, include_class: bool=True) -> list[str]:
+        tables = [
+            'celas1_stress', 'celas2_stress', 'celas3_stress', 'celas4_stress',
+            'ctetra_stress_strain', 'cpenta_stress_strain', 'chexa_stress_strain',
+            'cbeam_stress', 'cbush_force_stress_strain', 'cbush1d_stress_strain',
+            'cquad4_stress', 'ctria3_stress',
+            'cgap_stress',
+            'crod_stress', 'ctube_stress', 'conrod_stress',
+        ]
+        if include_class:
+            return [self._word + '.' + table for table in tables]
+        return tables
+
 
 class GridPointStrain:
     def __init__(self):
@@ -34,6 +77,15 @@ class GridPointStrain:
         self.volume_principal = {}
         self.surface = {}
 
+    def get_table_types(self, include_class: bool=True) -> list[str]:
+        tables = [
+            'discontinuities', 'volume_direct', 'volume_principal', 'surface',
+        ]
+        if include_class:
+            return ['grid_point_strain.' + table for table in tables]
+        return tables
+
+
 class GridPointStress:
     def __init__(self):
         # grid_point_stresses_volume_direct: {}
@@ -42,6 +94,15 @@ class GridPointStress:
         self.volume_direct = {}
         self.volume_principal = {}
         self.surface = {}
+
+    def get_table_types(self, include_class: bool=True) -> list[str]:
+        tables = [
+            # 'discontinuities',
+            'volume_direct', 'volume_principal', 'surface',
+        ]
+        if include_class:
+            return ['grid_point_stress.' + table for table in tables]
+        return tables
 
 
 class Results:
@@ -85,17 +146,17 @@ class Results:
         self.stressa = Stress('stressa')
         self.strain = Strain('strain')
 
-        self.nonlinear_stress = Stress('nonlinear_stress')
-        self.nonlinear_strain = Stress('nonlinear_strain')
-        self.nonlinear_force = Stress('nonlinear_strain')
+        self.nonlinear = Nonlinear('nonlinear')
+        # self.nonlinear_strain = NonlinearStress('nonlinear_strain')
+        # self.nonlinear_force = Stress('nonlinear_force')
 
         self.elastic_strain = Strain('elastic_strain')
         self.plastic_strain = Strain('plastic_strain')
         self.thermal_strain = Strain('thermal_strain')
         self.creep_strain = Strain('creep_strain')
 
-        self.grid_point_stress = GridPointStrain()
-        self.grid_point_strain = GridPointStress()
+        self.grid_point_stress = GridPointStress()
+        self.grid_point_strain = GridPointStrain()
 
         self.kinetic_energy = KineticEnergy()
         self.strain_energy = StrainEnergy()
@@ -134,6 +195,7 @@ class Results:
         self.superelement_tables = {}
 
     def _get_sum_objects_map(self):
+        """what is this for?"""
         sum_objs = {
             'acoustic': self.acoustic,
             'responses': self.responses,
@@ -149,6 +211,7 @@ class Results:
             'thermal_strain': self.thermal_strain,
             'creep_strain': self.creep_strain,
             'trim': self.trim,
+            'nolinear': self.nonlinear,
             #self.ato,
             #self.psd,
             #self.rms,
@@ -166,6 +229,7 @@ class Results:
         return sum_objs
 
     def _get_sum_objects(self) -> list[Any]:
+        """these are the things that feed up"""
         sum_objs = [
             self.acoustic,
             self.responses,
@@ -177,6 +241,10 @@ class Results:
             self.ato, self.psd, self.rms, self.no, self.crm,
             self.modal_contribution, self.strength_ratio, self.failure_indices,
             self.solution_set,
+            self.nonlinear,
+            # self.nonlinear_stress, self.nonlinear_strain, self.nonlinear_force,
+            self.grid_point_stress, self.grid_point_strain,
+
             self.ROUGV1, self.ROQGM1,
             self.RADEFFM,
             self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS, self.RARCONS, self.RAQCONS,

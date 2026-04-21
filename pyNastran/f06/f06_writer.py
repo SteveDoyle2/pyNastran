@@ -237,6 +237,7 @@ class F06Writer(OP2_F06_Common):
             'elastic_strain', 'plastic_strain',
             'thermal_strain', 'creep_strain',
             'force', 'constraint_forces', 'thermal_load',
+            'nonlinear',
             # 'vg_vf_response',
             # 'superelement_tables',
             ] + self.get_table_types()

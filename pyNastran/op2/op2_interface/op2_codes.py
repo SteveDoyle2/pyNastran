@@ -272,9 +272,8 @@ class Op2Codes:
         self.set_table_type()
         try:
             etype = self.element_mapper[elem_code]
-        except TypeError:
-            print('elem_code=%r' % elem_code)
-            raise
+        except KeyError as error:
+            raise KeyError(f'elem_code={str(elem_code)}; nastran_format={self._nastran_format!r} nastran_revision={self._nastran_revision!r}') from error
         return etype
 
     def print_table_code(self, table_code: int) -> str:
@@ -372,7 +371,8 @@ class Op2Codes:
         #index = self.size // 4 - 1  # factor is size/4 -> subtract 1
         return fmts[index]
 
-    def code_information(self, include_time: bool=True) -> str:
+    def code_information(self, include_time: bool=True,
+                         stop_on_failure: bool=True) -> str:
         """
         prints the general table information
         DMAP - page 60-63
@@ -499,7 +499,12 @@ class Op2Codes:
             if isinstance(element_type, str):
                 etype = element_type
             else:
-                etype = self.get_element_type(element_type)
+                try:
+                    etype = self.get_element_type(element_type)
+                except KeyError:
+                    if stop_on_failure:
+                        raise
+                    etype = '???'
             msg += "  element_type  = %-3s %s\n" % (element_type, etype)
 
         if s_word:  # stress code

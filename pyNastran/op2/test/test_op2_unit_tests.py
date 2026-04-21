@@ -629,11 +629,12 @@ class TestAutodeskOP2(Tester):
             is_autodesk=True, post=-4)
 
         stress = op2.op2_results.stress
+        nonlinear = op2.op2_results.nonlinear
         strain_energy = op2.op2_results.strain_energy
         assert len(op2.displacements) == 4, len(op2.displacements)
         assert len(op2.spc_forces) == 4, len(op2.spc_forces)
         assert len(stress.ctetra_stress) == 4, len(stress.ctetra_stress)
-        assert len(op2.nonlinear_ctetra_stress_strain) == 4, len(op2.nonlinear_ctetra_stress_strain)
+        assert len(nonlinear.ctetra_stress_strain) == 4, len(nonlinear.ctetra_stress_strain)
 
         # isubcase = 1
         # ctetra_stress = op2.ctetra_stress[isubcase]

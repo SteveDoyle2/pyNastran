@@ -2803,11 +2803,12 @@ class TestOP2(unittest.TestCase):
         #strain = op2.op2_results.strain
         #force = op2.op2_results.force
         strain_energy = op2.op2_results.strain_energy
+        nonlinear = op2.op2_results.nonlinear
 
         assert len(op2.displacements) == 4, len(op2.displacements)
         assert len(op2.spc_forces) == 4, len(op2.spc_forces)
         assert len(stress.ctetra_stress) == 4, len(stress.ctetra_stress)
-        assert len(op2.nonlinear_ctetra_stress_strain) == 4, len(op2.nonlinear_ctetra_stress_strain)
+        assert len(nonlinear.ctetra_stress_strain) == 4, len(nonlinear.ctetra_stress_strain)
 
         #isubcase = 1
         #ctetra_stress = stress.ctetra_stress[isubcase]

@@ -1215,9 +1215,9 @@ class OES:
             assert op2.thermal in {0, 2, 4, 8}, op2.code_information()
             prefix, postfix = get_shock_prefix_postfix(op2.thermal)
         elif table_name_bytes in [b'OESNLXD', b'OESNL1X', b'OESNLXR', b'OESNL2']:
-            prefix = 'nonlinear_'
+            prefix = 'nonlinear.'
         elif table_name_bytes in [b'OESNLXR2']:
-            prefix = 'nonlinear_'
+            prefix = 'nonlinear.'
         elif table_name_bytes == b'OESNLBR':
             prefix = 'sideline_'
         elif table_name_bytes == b'OESRT':
@@ -1463,7 +1463,8 @@ class OES:
         dt = op2.nonlinear_factor
 
         if prefix and prefix.endswith('.') and op2._results.is_not_saved(prefix.strip('.')):
-            #op2.log.debug(f'returning on prefix={prefix}')
+            # op2.log.warning(f'returning on prefix={prefix}')
+            # op2.log.debug(f'returning on prefix={prefix}')
             return ndata
 
         #flag = 'element_id'
@@ -1481,6 +1482,8 @@ class OES:
 
         if op2._results.is_not_saved(result_name):
             return ndata
+
+        # print(f'prefix = {prefix}; element_type={op2.element_type}')
         if op2.element_type in [1, 3, 10]:  # rods
             # 1-CROD
             # 3-CTUBE
@@ -3274,7 +3277,7 @@ class OES:
         return n, nelements, ntotal
 
     def _oes_shells_nonlinear(self, data, ndata, dt, is_magnitude_phase,
-                              result_type, prefix, postfix):
+                              result_type, prefix: str, postfix: str):
         """
         reads stress/strain for element type:
          - 88 : CTRIA3NL
@@ -3505,7 +3508,7 @@ class OES:
             raise NotImplementedError(op2.code_information())
 
         if op2.is_stress:
-            result_name = prefix + f'{prefix}{etype}_stress{postfix}' # nonlinear_
+            result_name = f'{prefix}{etype}{postfix}' # nonlinear.celas3_stress
         else:  # pragma: no cover
             raise NotImplementedError('NonlinearSpringStrain')
 

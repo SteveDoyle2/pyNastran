@@ -165,20 +165,7 @@ class OP2_F06_Common:
         """
         self.matrices = {}
         self.matdicts = {}
-        #======================================================================
-        # rods
         self.op2_results = Results()
-
-        # self.nonlinear_ctetra_stress_strain = {}
-        # self.nonlinear_cpenta_stress_strain = {}
-        # self.nonlinear_chexa_stress_strain = {}
-
-        #======================================================================
-        #: OES - CBEAM 94
-        # self.nonlinear_cbeam_stress = {}
-
-        # self.nonlinear_cbush_force_stress_strain = {}  # CBUSH 226
-        # self.nonlinear_cbush1d_stress_strain = {}
 
         #======================================================================
 
