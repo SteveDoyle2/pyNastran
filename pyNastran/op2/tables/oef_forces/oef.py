@@ -875,7 +875,7 @@ class OEF:
                                              result_type, prefix, postfix)
 
         elif element_type in [11, 12, 13, 14,   # springs
-                                  20, 21, 22, 23]:  # dampers
+                              20, 21, 22, 23]:  # dampers
             # 11-CELAS1
             # 12-CELAS2
             # 13-CELAS3

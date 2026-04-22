@@ -1046,8 +1046,10 @@ class OUG:
 
         if 'eigenvectors' in result_name:
             if op2.analysis_code == 2 and not op2.flags['eigenvectors_real']:
+                op2.log.warning('returning on eigenvectors_real')
                 return ndata
             if op2.analysis_code == 9 and not op2.flags['eigenvectors_complex']:
+                op2.log.warning('returning on eigenvectors_complex')
                 return ndata
 
         # NX THERMAL

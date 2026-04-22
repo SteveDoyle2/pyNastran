@@ -209,14 +209,10 @@ def get_dependent_nid_to_components(model: BDF, mpc_id=None,
     dependent_nid_to_components = {}
 
     if mpc_id is not None and mpc_id != 0:
-        mpcs = get_mpcs(model, mpc_id)
+        node_ids, components = get_mpcs(model, mpc_id)
         # mpcs = ([1124, 1101124, 1124, 1101124], ['1', '1', '2', '2'])
-        for mpc in mpcs:
-            if mpc.type == 'MPC':
-                for nid, component in zip(mpc.node_ids, mpc.components):
-                    dependent_nid_to_components[nid] = component
-            else:
-                raise NotImplementedError(mpc)
+        for nid, component in zip(node_ids, components):
+            dependent_nid_to_components[nid] = component
 
     for unused_eid, rigid_element in model.rigid_elements.items():
         if rigid_element.type == 'RBE2':

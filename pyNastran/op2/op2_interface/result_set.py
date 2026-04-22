@@ -260,8 +260,7 @@ def add_results_of_exact_type(all_results: list[str], result_word: str) -> list[
         all the results to check against
     result_word : str
         'stress', 'strain', ...
-        'stress' lets in stress.cquad4_stress, but not psd.cquad4_stress or grid_point_stress_discontinuities
-        changed in v1.3.5; previously allowed things like displacement in (oops!) as well as the two mentioned cases
+        'stress' lets in stress.cquad4_stress, but not psd.cquad4_stress or grid_point_stress.discontinuities
 
     Returns
     -------

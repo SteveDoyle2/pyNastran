@@ -5,10 +5,9 @@ import copy
 import warnings
 from abc import abstractmethod
 import inspect
-from typing import TextIO, Optional
+from typing import BinaryIO, TextIO, Optional
 
 import numpy as np
-from numpy import zeros, searchsorted, allclose
 
 from pyNastran.utils.numpy_utils import integer_types, float_types, integer_float_types
 from pyNastran.op2.result_objects.op2_objects import (
@@ -3211,9 +3210,11 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2_file, op2_ascii, itable, new_result,
-                  date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO,
+                  itable: int, new_result,
+                  date, is_mag_phase: bool=False, endian: str='>'):
         """writes an OP2"""
+        write_vectorized = False
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
@@ -3273,14 +3274,16 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         else:  # pragma: no cover
             raise NotImplementedError('SORT2')
 
-        fdtype = self.data.dtype
-        if self.size == fdtype.itemsize:
-            pass
-        else:
-            # warnings.warn(f'downcasting {self.class_name}...this is buggy')
-            # idtype = np.int32(1)
-            fdtype = np.float32(1.0)
-        eid_floats = view_idtype_as_fdtype(eids_device, fdtype)
+        eid_floats = np.array([])
+        if write_vectorized:
+            fdtype = self.data.dtype
+            if self.size == fdtype.itemsize:
+                pass
+            else:
+                # warnings.warn(f'downcasting {self.class_name}...this is buggy')
+                # idtype = np.int32(1)
+                fdtype = np.float32(1.0)
+            eid_floats = view_idtype_as_fdtype(eids_device, fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
@@ -3299,11 +3302,11 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            if 0:
+            if write_vectorized:
                 eid_data = np.column_stack([eid_floats, self.data[itime, :, :]])
                 op2_file.write(eid_data)
                 assert ntotal == eid_data.size
-            else: # pragma: no cover
+            else:
                 mx = self.data[itime, :, 0]
                 my = self.data[itime, :, 1]
                 mxy = self.data[itime, :, 2]
@@ -3733,9 +3736,10 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2_file, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
+        write_vectorized = False
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
@@ -3779,7 +3783,8 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         nelements = len(ueids)
 
         eids_device = eids * 10 + self.device_code
-        eids_device_short = ueids * 10 + self.device_code
+        if write_vectorized:
+            eids_device_short = ueids * 10 + self.device_code
 
         #print('nelements =', nelements)
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
@@ -3807,17 +3812,21 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         else:
             raise NotImplementedError('SORT2')
 
-        fdtype = self.data.dtype
-        if self.size == fdtype.itemsize:
-            pass
-        else:
-            # warnings.warn(f'downcasting {self.class_name}...this is buggy')
-            # idtype = np.int32(1)
-            fdtype = np.float32(1.0)
-        # eid_floats = view_idtype_as_fdtype(eids_device, fdtype)
-        nid_floats = view_idtype_as_fdtype(nids, fdtype)
-        eid_short_floats = view_idtype_as_fdtype(eids_device_short, fdtype)
-        cen_words = np.full(nelements, cen_word, dtype='|S4')
+        nid_floats = np.array([])
+        eid_short_floats = np.array([])
+        cen_words = np.array([])
+        if write_vectorized:
+            fdtype = self.data.dtype
+            if self.size == fdtype.itemsize:
+                pass
+            else:
+                # warnings.warn(f'downcasting {self.class_name}...this is buggy')
+                # idtype = np.int32(1)
+                fdtype = np.float32(1.0)
+            # eid_floats = view_idtype_as_fdtype(eids_device, fdtype)
+            nid_floats = view_idtype_as_fdtype(nids, fdtype)
+            eid_short_floats = view_idtype_as_fdtype(eids_device_short, fdtype)
+            cen_words = np.full(nelements, cen_word, dtype='|S4')
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
@@ -3836,9 +3845,9 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            ntime, nelem_nodes, nresult = self.data.shape
-            nnode = self.nnodes_per_element
-            if 0:  # pragma: no cover
+            if write_vectorized:
+                ntime, nelem_nodes, nresult = self.data.shape
+                nnode = self.nnodes_per_element
                 datai = self.data[itime, :, :].reshape(nelements, nnode, nresult)
                 nid_data = np.column_stack([nid_floats, datai]).reshape(nelements, nnode*nresult)
                 eid_data = np.column_stack([eid_short_floats, cen_words, nid_data])
@@ -4103,7 +4112,7 @@ class RealCBarFastForceArray(RealForceObject):
                     raise ValueError(msg)
         return True
 
-    def write_op2(self, op2_file, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         frame = inspect.currentframe()
@@ -4682,7 +4691,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             f06_file.write(page_stamp % page_num)
         return page_num
 
-    def write_op2(self, op2_file, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         frame = inspect.currentframe()
@@ -5760,7 +5769,7 @@ class RealForceMomentArray(RealForceObject):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2_file, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         frame = inspect.currentframe()

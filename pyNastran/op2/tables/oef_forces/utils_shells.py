@@ -17,8 +17,9 @@ from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
-def oef_shells_centroidal(op2: OP2, data, ndata, dt, is_magnitude_phase,
-                          result_type, prefix, postfix):
+def oef_shells_centroidal(op2: OP2, data: bytes, ndata: int,
+                          dt, is_magnitude_phase: bool,
+                          result_type: str, prefix: str, postfix: str):
     """
     33-CQUAD4
     74-CTRIA3
@@ -36,7 +37,7 @@ def oef_shells_centroidal(op2: OP2, data, ndata, dt, is_magnitude_phase,
         result_name = prefix + 'ctriar_force' + postfix
     elif op2.element_type == 228:
         result_name = prefix + 'cquadr_force' + postfix
-    else:
+    else:  # pragma: no cover
         #msg = 'sort1 Type=%s num=%s' % (op2.element_name, op2.element_type)
         #return op2._not_implemented_or_skip(data, ndata, msg)
         raise NotImplementedError(op2.code_information())
