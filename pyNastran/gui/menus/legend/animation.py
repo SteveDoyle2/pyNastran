@@ -27,7 +27,7 @@ from pyNastran.gui.menus.results_sidebar_utils import (
     get_cases_from_tree,  # build_pruned_tree
 )
 
-from pyNastran.gui.menus.legend.write_gif import IS_IMAGEIO
+from pyNastran.gui.menus.legend.write_gif import IS_IMAGEIO, DEBUG_ANIMATION
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
@@ -160,16 +160,17 @@ class AnimationWindow(PyDialog):
                 raise RuntimeError(is_gui)
             assert self.gui is not None, self.gui
 
-        if 0:  # pragma: no cover
-            icase_max = 1000
-            if is_gui_parent:
-                self.is_gui = True
-                #self.gui = self.win_parent
-                icase_max = max(self.gui.result_cases)  # TODO: update 1000
-        else:
-            icase_max = 1000
-            if self.is_gui:
-                icase_max = max(self.gui.result_cases)
+        # if 0:  # pragma: no cover
+        #     icase_max = 1000
+        #     is_gui_parent = False
+        #     if is_gui_parent:
+        #         self.is_gui = True
+        #         #self.gui = self.win_parent
+        #         icase_max = max(self.gui.result_cases)  # TODO: update 1000
+        # else:
+        icase_max = 1000
+        if self.is_gui:
+            icase_max = max(self.gui.result_cases)
         return icase_max
 
     def create_widgets(self, icase_max: int) -> None:
@@ -249,7 +250,7 @@ class AnimationWindow(PyDialog):
 
         self.fps_label = QLabel("Frames/Second:")
         self.fps_edit = QSpinBox(self)
-        self.fps_edit.setRange(1, 60)
+        self.fps_edit.setRange(1, 240)
         self.fps_edit.setSingleStep(1)
 
         self._default_fps = int(self._default_fps)
@@ -1179,6 +1180,8 @@ class AnimationWindow(PyDialog):
         # passed, validate_out = self.on_validate()
         # if passed:
         #     self._make_gif(validate_out, stop_animation=True)
+        if DEBUG_ANIMATION:
+            print('\non_stop')
         if self.is_gui:
             self.gui.stop_animation()
 
@@ -1187,6 +1190,8 @@ class AnimationWindow(PyDialog):
 
     def on_run(self) -> bool:
         """click the Run button"""
+        if DEBUG_ANIMATION:
+            print('\non_run')
         self.istep = 0
         self.wipe_button.setEnabled(False)
         self.stop_button.setEnabled(True)

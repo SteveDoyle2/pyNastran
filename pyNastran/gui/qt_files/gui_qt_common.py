@@ -1248,7 +1248,7 @@ class GuiQtCommon(GuiAttributes):
 
         #location = self.get_case_location(key)
         res_widget.update_method(methods)
-        if explicit:
+        if explicit and show_msg:
             self.log_command(f'self.cycle_results(case={self.icase:d})')
         assert self.icase is not False, self.icase
         return self.icase

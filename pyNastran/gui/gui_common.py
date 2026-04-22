@@ -56,7 +56,8 @@ from .menus.menus import (
     PythonConsoleWidget)
 
 from .menus.legend.write_gif import (
-    setup_animation, update_animation_inputs, write_gif, make_two_sided)
+    setup_animation, update_animation_inputs, write_gif, make_two_sided,
+    DEBUG_ANIMATION)
 from .utils.vtk.animation_callback import AnimationCallback
 from .utils.vtk.base_utils import numpy_to_vtk_idtype
 
@@ -1759,8 +1760,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             cleanup the png files at the end
         make_gif : bool; default=True
             actually make the gif at the end
-        duration : float
-           frame time (seconds)
 
         For one sided data
         ------------------
@@ -1777,16 +1776,29 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
          - set onesided=False
 
         """
+        # duration : float
+        #     frame time (seconds)
+        # stop_ after_cycle        animate  source
+        # ----  ----------------   -------  ------
+        # False ~animate=True      False    on_run
+        # False ~animate=False     True     on_run
+        #
+        call_make_gif = make_gif or make_images
+        if DEBUG_ANIMATION:
+            print(f'  gui.make_gif: make_gif={make_gif} call_make_gif={call_make_gif}; '
+                  f'stop_animation={stop_animation} stop_animation_after_cycle={stop_animation_after_cycle} animate_in_gui={animate_in_gui}')
         if stop_animation:
             self.stop_animation()
             return False
 
         is_failed = True
-        try:
-            if not(animate_fringe or animate_disp or animate_vector):
-                msg = 'Either animate_fringe, animate_disp or animate_vector must be True'
-                raise ValueError(msg)
+        if not(animate_fringe or animate_disp or animate_vector):
+            msg = 'Either animate_fringe, animate_disp or animate_vector must be True'
+            self.log_error(msg)
+            self.stop_animation()
+            return is_failed
 
+        try:
             out = setup_animation(
                 scale, istep=istep,
                 animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
@@ -1805,29 +1817,47 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
          isteps, scales,
          analysis_time, onesided, unused_endpoint) = out
 
-        if animate_time:
-            icase_msg = (
-                '         icase_fringe_start=%s, icase_fringe_end=%s, icase_fringe_delta=%s,\n'
-                '         icase_disp_start=%s, icase_disp_end=%s, icase_disp_delta=%s,\n'
-                '         icase_vector_start=%s, icase_vector_end=%s, icase_vector_delta=%s,\n' % (
-                icase_fringe_start, icase_fringe_end, icase_fringe_delta,
-                icase_disp_start, icase_disp_end, icase_disp_delta,
-                icase_vector_start, icase_vector_end, icase_vector_delta))
-        else:
-            icase_msg = (
-                '         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
-                '         animate_fringe=%s, animate_disp=%s, animate_vector=%s, \n' % (
-                    icase_fringe, icase_disp, icase_vector,
-                    animate_fringe, animate_disp, animate_vector,
-                ))
+        icase_msg = _animation_icase_msg(
+            animate_time,
+            icase_fringe_start, icase_fringe_end, icase_fringe_delta,
+            icase_disp_start, icase_disp_end, icase_disp_delta,
+            icase_vector_start, icase_vector_end, icase_vector_delta,
+            icase_fringe, icase_disp, icase_vector,
+            animate_fringe, animate_disp, animate_vector,
+        )
 
-        #animate_in_gui = True
-        if stop_animation_after_cycle:
-            self.stop_animation()
+        if call_make_gif:
+            try:
+                is_failed = self.make_gif_helper(
+                    gif_filename, icases_fringe, icases_disp, icases_vector, scales,
+                    phases=phases, isteps=isteps,
+                    animate_fringe=animate_fringe, animate_vector=animate_vector,
+                    max_value=max_value, min_value=min_value,
+                    time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
+                    onesided=onesided, nrepeat=nrepeat,
+                    make_images=make_images, delete_images=delete_images, make_gif=make_gif)
+            except Exception as error:
+                self.log_error(str(error))
+                raise
+                # self.log_error(traceback.print_stack(f))
+                # self.log_error('\n' + ''.join(traceback.format_stack()))
+                # traceback.print_exc(file=self.log_error)
+
+
+            #animate_in_gui = False
+            if stop_animation_after_cycle:
+                self.stop_animation()
+                is_failed = False
+                if DEBUG_ANIMATION:
+                    print('returning stop_animation_after_cycle')
+                return is_failed
 
         if len(icases_disp) == 1:
-            pass
-        elif animate_in_gui:
+            if DEBUG_ANIMATION:
+                print('returning len(icases_disp) == 1')
+            return
+
+        if animate_in_gui:
             msg = (
                 f'self.make_gif({gif_filename!r}, scale={scale}, istep={istep},\n'
                 f'    min_value={min_value}, max_value={max_value},\n'
@@ -1852,41 +1882,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 icases_fringe, icases_disp, icases_vector,
                 animate_fringe, animate_vector,
                 fps)
-            is_failed = False
-            return is_failed
+            #is_failed = False
+            #return is_failed
 
-        try:
-            is_failed = self.make_gif_helper(
-                gif_filename, icases_fringe, icases_disp, icases_vector, scales,
-                phases=phases, isteps=isteps,
-                animate_fringe=animate_fringe, animate_vector=animate_vector,
-                max_value=max_value, min_value=min_value,
-                time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
-                onesided=onesided, nrepeat=nrepeat,
-                make_images=make_images, delete_images=delete_images, make_gif=make_gif)
-        except Exception as error:
-            self.log_error(str(error))
-            raise
-            #self.log_error(traceback.print_stack(f))
-            #self.log_error('\n' + ''.join(traceback.format_stack()))
-            #traceback.print_exc(file=self.log_error)
-
-        if not is_failed:
-            msg = (
-                f'self.make_gif({gif_filename!r}, {scale}, istep={istep},\n'
-                f'    min_value={min_value}, max_value={max_value},\n'
-                f'    animate_scale={animate_scale}, animate_phase={animate_phase},\n'
-                f'    animate_time={animate_time},\n{icase_msg}\n'
-                f"    time={time}, animation_profile={animation_profile!r},\n"
-                f'    nrepeat={nrepeat}, fps={fps}, magnify={magnify},\n'
-                f'    make_images={make_images}, delete_images={delete_images},\n'
-                f'    make_gif={make_gif},\n'
-                f'    stop_animation={stop_animation},\n'
-                f'    animate_in_gui={animate_in_gui},'
-                f'    stop_animation_after_cycle={stop_animation_after_cycle})\n'
-            )
-            self.log_command(msg)
-
+        is_failed = False
+        if DEBUG_ANIMATION:
+            print('returning animate_in_gui')
         return is_failed
 
     def _animate_in_gui(self, min_value: float, max_value: float,
@@ -1895,6 +1896,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                         animate_fringe: bool, animate_vector: bool,
                         fps: int):
         """helper method for ``make_gif``"""
+        if hasattr(self, '_animation_timer_id'):
+            self.stop_animation(show_msg=False)
         callback = AnimationCallback(self, scales, phases,
                                      icases_fringe, icases_disp, icases_vector,
                                      animate_fringe, animate_vector,
@@ -1910,11 +1913,24 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         delay = int(1. / fps * 1000)
 
         # time in milliseconds
-        unused_timer_id = self.vtk_interactor.CreateRepeatingTimer(delay)
+        if delay < 100:
+            delay = 100
 
-    def stop_animation(self):
+        if DEBUG_ANIMATION:
+            print(f'delay = {delay}')
+        self._animation_timer_id = self.vtk_interactor.CreateRepeatingTimer(delay)
+        # animation_timer_id = self.vtk_interactor.CreateRepeatingTimer(delay)
+
+    def stop_animation(self, show_msg: bool=True):
         """removes the animation timer"""
         is_failed = False
+        if DEBUG_ANIMATION and show_msg:
+            print('  gui.stop_animation')
+            print(self.observers)
+
+        if hasattr(self, '_animation_timer_id'):
+            self.vtk_interactor._Iren.DestroyTimer(self._animation_timer_id)
+
         if 'TimerEvent' in self.observers:
             observer_name = self.observers['TimerEvent']
             self.vtk_interactor.RemoveObserver(observer_name)
@@ -1940,7 +1956,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             # min/max value is used only for the time plot
             # it's assumed to be a displacement result, so the fringe=displacement
             self.cycle_results_explicit(icase_disp, explicit=True,
-                                        min_value=min_value, max_value=max_value)
+                                        min_value=min_value, max_value=max_value,
+                                        show_msg=False)
 
         #-----------------------------------------------------------------------
         if icase_disp is not None:
@@ -2041,7 +2058,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                         time: float=2.0, analysis_time: float=2.0,
                         fps: int=30, magnify: int=1,
                         onesided: bool=True, nrepeat: int=0,
-                        make_images=True, delete_images=False, make_gif=True) -> bool:
+                        make_images: bool=True, delete_images: bool=False,
+                        make_gif: bool=True) -> bool:
         """
         Makes an animated gif
 
@@ -2125,7 +2143,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 os.makedirs(png_dirname)
 
             png_filenames = []
-            fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
+            fmt = gif_filename[:-4] + '_%%0%dd.png' % (len(str(nframes)))
 
         icase_fringe0 = -1
         icase_disp0 = -1
@@ -2148,7 +2166,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                     return is_failed
                 if gif_filename is not None:
                     png_filename = fmt % istep
-                    self.on_take_screenshot(fname=png_filename, magnify=magnify)
+                    self.on_take_screenshot(fname=png_filename, magnify=magnify,
+                                            show_msg=False)
                     png_filenames.append(png_filename)
         else:
             for istep in isteps:
@@ -2571,3 +2590,26 @@ def tools_to_shortcut_tools(tools) -> list[Tool]:
         else:
             tools2.append(tooli)
     return tools2
+
+def _animation_icase_msg(animate_time: bool,
+                         icase_fringe_start, icase_fringe_end, icase_fringe_delta,
+                         icase_disp_start, icase_disp_end, icase_disp_delta,
+                         icase_vector_start, icase_vector_end, icase_vector_delta,
+                         icase_fringe, icase_disp, icase_vector,
+                         animate_fringe, animate_disp, animate_vector,) -> str:
+    if animate_time:
+        icase_msg = (
+            '    icase_fringe_start=%s, icase_fringe_end=%s, icase_fringe_delta=%s,\n'
+            '    icase_disp_start=%s, icase_disp_end=%s, icase_disp_delta=%s,\n'
+            '    icase_vector_start=%s, icase_vector_end=%s, icase_vector_delta=%s,\n' % (
+            icase_fringe_start, icase_fringe_end, icase_fringe_delta,
+            icase_disp_start, icase_disp_end, icase_disp_delta,
+            icase_vector_start, icase_vector_end, icase_vector_delta))
+    else:
+        icase_msg = (
+            '    icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
+            '    animate_fringe=%s, animate_disp=%s, animate_vector=%s, \n' % (
+                icase_fringe, icase_disp, icase_vector,
+                animate_fringe, animate_disp, animate_vector,
+            ))
+    return icase_msg

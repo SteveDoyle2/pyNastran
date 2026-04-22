@@ -29,6 +29,7 @@ class AnimationCallback:
         self.icase_vector0 = -1
         self.ncases = len(icases_disp)
 
+        # print(f'animation callback: phases={phases}')
         self.scales = scales
         self.phases = phases
         self.icases_fringe = icases_fringe

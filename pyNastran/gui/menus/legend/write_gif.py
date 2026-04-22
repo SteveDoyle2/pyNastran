@@ -13,8 +13,9 @@ from pyNastran.utils import int_version
 try:
     import imageio
     IMAGEIO_VERSION = int_version('imageio', imageio.__version__)
-    if IMAGEIO_VERSION >= [2, 16, 2]:
-        import imageio.v2 as imageio
+    # if IMAGEIO_VERSION >= [2, 16, 2]:
+        # import imageio.v2 as imageio
+    import imageio.v3 as imageio3
     import PIL
     IS_IMAGEIO = True
 except ModuleNotFoundError:
@@ -31,7 +32,7 @@ if IS_IMAGEIO:
     from pyNastran.utils import int_version
     iver = int_version('pillow', PIL.__version__)
     assert iver != [7, 1, 0], 'pillow=7.1.0 is not supported'
-
+DEBUG_ANIMATION = False
 
 DIV2_PROFILES = {
     '0 to scale to 0',
@@ -55,7 +56,11 @@ def setup_animation(scale, istep=None,
                     icase_vector_start=None, icase_vector_end=None, icase_vector_delta=None,
 
                     time: float=2.0, animation_profile: str='0 to scale',
-                    fps: int=30, animate_in_gui: bool=False):
+                    fps: int=30, animate_in_gui: bool=False) -> tuple[
+                    # phases2, icases_fringe2, icases_disp2, icases_vector2,
+                    list[float], list[int], list[int], list[int],
+                    # isteps2, scales2, analysis_time, onesided, endpoint,
+                    list[int], list[float], float, bool, bool]:
     """
     helper method for ``make_gif``
 
@@ -83,6 +88,26 @@ def setup_animation(scale, istep=None,
     animate_in_gui : bool; default=False
         not used
 
+    Returns
+    -------
+    phases2 : list[float]
+        the phases
+    icases_fringe2 : list[int]
+        the fringe cases
+    icases_disp2 : list[int]
+        the displacement cases
+    icases_vector2 : list[int]
+        the arrow/vector cases
+    isteps2 : list[int]
+        ???
+    scales2 : list[float]
+        the displacement scale factors
+    analysis_time : float
+        the time that needs to be simulated for the analysis; not the runtime
+    onesided : bool
+        is the gif symmetric (and therefore we can make fewer images)
+    endpoint : bool
+        should the endpoint be included
     """
     if animate_scale or animate_phase:
         # ignored for time
@@ -142,7 +167,11 @@ def setup_animation(scale, istep=None,
         phases = (phases2[istep],)
         isteps = (istep,)
     #print('scales_final=%s' % scales)
-    return phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2, analysis_time, onesided, endpoint
+    setup_out = (
+        phases2, icases_fringe2, icases_disp2, icases_vector2,
+        isteps2, scales2, analysis_time, onesided, endpoint
+    )
+    return setup_out
 
 
 def fix_nframes(nframes: int, profile: str) -> int:
@@ -337,6 +366,9 @@ def setup_animate_phase(scale: float,
     icases_disp = icase_disp
     icases_vector = icase_vector
     phases = np.linspace(0., 360., num=nframes, endpoint=False)
+    if DEBUG_ANIMATION:
+        print(f'nframes = {nframes}')
+        print(f'phases = {phases}')
     isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
     scales = [scale] * len(isteps)
     assert len(phases) == len(isteps), f'nphases={len(phases):d} nsteps={len(isteps):d}'
@@ -682,11 +714,11 @@ def write_gif(gif_filename: PathLike, png_filenames: list[PathLike], time: float
         for png_filename in png_filenames:
             if not isinstance(png_filename, PathLike) and os.path.exists(png_filename):
                 raise TypeError(f'png_filename={png_filename!r} is invalid')
-            imagei = imageio.imread(png_filename)
+            imagei = imageio3.imread(png_filename)
             images.append(imagei)
         try:
             imageio.mimsave(gif_filename, images, duration=duration,
-                            loop=nrepeat)
+                             loop=nrepeat)
         except IOError:  # file is open
             raise IOError(f'{gif_filename} is likely open')
 
