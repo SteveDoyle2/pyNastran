@@ -37,7 +37,7 @@ SOLID:
 """
 from collections import defaultdict
 import warnings
-from typing import cast, Any
+from typing import cast, Any, Optional
 import numpy as np
 
 from cpylog import SimpleLogger
@@ -251,72 +251,64 @@ def envelope(
         raise RuntimeError('Cannot downselect solid stress and strain')
     #-----------------------------------------------------------------
 
-    # cards_to_skip = None
-    # cards_to_skip = cards_to_skip
-    log = SimpleLogger(level='info')
-    if isinstance(bdf_filename, BDF):
-        model = bdf_filename
-    else:
-        model = read_bdf(bdf_filename, log=log)
-    log.level = 'debug'
-
     idtype = 'int32'
+    fdtype = 'float32'
+
+    log = SimpleLogger(level='info')
+    model, model_results, element_id = _setup_models(
+        bdf_filename, op2_filename,
+        exclude_results=exclude_results,
+        include_results=include_results,
+        transform_to_material_coord=transform_to_material_coord,
+        log=log, idtype=idtype)
+
     if element_ids is None:
-        element_id = np.array(list(model.elements), dtype=idtype)
         allow_missing = False
     else:
         element_id = np.asarray(element_ids, dtype=idtype)
         allow_missing = True
     element_id.sort()
 
-    if isinstance(op2_filename, OP2):
-        model_results = op2_filename
-        # print(model_results.get_op2_stats())
-    else:
-        subcases = None
-        model_results = read_op2(
-            op2_filename, subcases=subcases,
-            include_results=include_results,
-            exclude_results=exclude_results,
-            debug=None)
-
-    if transform_to_material_coord:
-        data_in_material_coord(model, model_results, in_place=True)
-
     dtype = 'float32'  # if model_results.size == 4 else 'float64'
-    etype_to_eids, etype_ptype_to_eids = get_elements_dict(model)
+    out_eids = _get_base_etypes(model)
+    crod_eids, ctube_eids, conrod_eids = out_eids['rod']
+    cbar_eids = out_eids['cbar'][0]
+    cbeam_eids = out_eids['cbeam'][0]
+    cbend_eids = out_eids['cbend'][0]
+    cbush_eids = out_eids['cbush'][0]
+    cbush1d_eids = out_eids['cbush1d'][0]
+    (ctria3_plate_eids, ctria6_plate_eids, ctriar_plate_eids,
+     cquad4_plate_eids, cquad8_plate_eids, cquadr_plate_eids) = out_eids['plate']
+    (ctria3_comp_eids, ctria6_comp_eids, ctriar_comp_eids,
+     cquad4_comp_eids, cquad8_comp_eids, cquadr_comp_eids) = out_eids['comp_plate']
+    (ctetra_eids, cpenta_eids, cpyram_eids, chexa_eids) = out_eids['solid']
 
-    crod_eids = np.array(etype_to_eids.get('CROD', []))
-    ctube_eids = np.array(etype_to_eids.get('CTUBE', []))
-    conrod_eids = np.array(etype_to_eids.get('CONROD', []))
+    # 'rod': (crod_eids, ctube_eids, conrod_eids),
+    # 'cbar': (cbar_eids),
+    # 'cbeam': (cbeam_eids),
+    # 'cbend': (cbend_eids),
+    # 'cbush': (cbush_eids),
+    # 'cbush1d': (cbush1d_eids,),
+    # 'plate': (ctria3_plate_eids, ctria6_plate_eids, ctriar_plate_eids,
+    #           cquad4_plate_eids, cquad8_plate_eids, cquadr_plate_eids)
+
     if allow_missing:
         crod_eids = np.intersect1d(crod_eids, element_id)
         conrod_eids = np.intersect1d(conrod_eids, element_id)
         ctube_eids = np.intersect1d(ctube_eids, element_id)
     all_rod_eids = get_all_eids((crod_eids, ctube_eids, conrod_eids))
 
-    cbar_eids = np.array(etype_to_eids.get('CBAR', []))
-    cbeam_eids = np.array(etype_to_eids.get('CBEAM', []))
-    cbend_eids = np.array(etype_to_eids.get('CBEND', []))
     if allow_missing:
         cbar_eids = np.intersect1d(cbar_eids, element_id)
         cbeam_eids = np.intersect1d(cbeam_eids, element_id)
         cbend_eids = np.intersect1d(cbend_eids, element_id)
     # all_bar_eids = get_all_eids((cbar_eids, cbeam_eids, cbend_eids))
 
-    cbush_eids = np.array(etype_to_eids.get('CBUSH', []))
-    cbush1d_eids = np.array(etype_to_eids.get('CBUSH1D', []))
     if allow_missing:
         cbush_eids = np.intersect1d(cbush_eids, element_id)
         cbush1d_eids = np.intersect1d(cbush1d_eids, element_id)
     # all_bush_eids = get_all_eids((cbush_eids, cbush1d_eids))
 
-    cquad4_plate_eids = np.array(etype_ptype_to_eids.get(('CQUAD4', 'PSHELL'), []))
-    ctria3_plate_eids = np.array(etype_ptype_to_eids.get(('CTRIA3', 'PSHELL'), []))
-    cquad8_plate_eids = np.array(etype_ptype_to_eids.get(('CQUAD8', 'PSHELL'), []))
-    ctria6_plate_eids = np.array(etype_ptype_to_eids.get(('CTRIA6', 'PSHELL'), []))
-    cquadr_plate_eids = np.array(etype_ptype_to_eids.get(('CQUADR', 'PSHELL'), []))
-    ctriar_plate_eids = np.array(etype_ptype_to_eids.get(('CTRIAR', 'PSHELL'), []))
     if allow_missing:
         cquad4_plate_eids = np.intersect1d(cquad4_plate_eids, element_id)
         ctria3_plate_eids = np.intersect1d(ctria3_plate_eids, element_id)
@@ -328,12 +320,6 @@ def envelope(
                                    ctria6_plate_eids, cquad8_plate_eids,
                                    ctriar_plate_eids, cquadr_plate_eids,))
 
-    cquad4_comp_eids = np.array(etype_ptype_to_eids.get(('CQUAD4', 'PCOMP'), []))
-    ctria3_comp_eids = np.array(etype_ptype_to_eids.get(('CTRIA3', 'PCOMP'), []))
-    cquad8_comp_eids = np.array(etype_ptype_to_eids.get(('CQUAD8', 'PCOMP'), []))
-    ctria6_comp_eids = np.array(etype_ptype_to_eids.get(('CTRIA6', 'PCOMP'), []))
-    cquadr_comp_eids = np.array(etype_ptype_to_eids.get(('CQUADR', 'PCOMP'), []))
-    ctriar_comp_eids = np.array(etype_ptype_to_eids.get(('CTRIAR', 'PCOMP'), []))
     if allow_missing:
         cquad4_comp_eids = np.intersect1d(cquad4_comp_eids, element_id)
         ctria3_comp_eids = np.intersect1d(ctria3_comp_eids, element_id)
@@ -345,10 +331,6 @@ def envelope(
                                         ctria6_comp_eids, cquad8_comp_eids,
                                         ctriar_comp_eids, cquadr_comp_eids,))
 
-    ctetra_eids = np.array(etype_to_eids.get('CTETRA', []))
-    cpenta_eids = np.array(etype_to_eids.get('CPENTA', []))
-    chexa_eids = np.array(etype_to_eids.get('CHEXA', []))
-    cpyram_eids = np.array(etype_to_eids.get('CPYRAM', []))
     if allow_missing:
         ctetra_eids = np.intersect1d(ctetra_eids, element_id)
         cpenta_eids = np.intersect1d(cpenta_eids, element_id)
@@ -574,6 +556,94 @@ def _validate_cbush_force(cbush_force: str) -> tuple[bool, tuple[str, str]]:
     is_min = (group2 == 'min')
     return is_min, (group1, group2)
 
+def _setup_models(bdf_filename: PathLike | BDF,
+                  op2_filename: PathLike | OP2,
+                  include_results: [list[str]]=None,
+                  exclude_results: [list[str]]=None,
+                  transform_to_material_coord: bool=True,
+                  log: Optional[SimpleLogger]=None,
+                  idtype: str='int32') -> tuple[BDF, OP2, np.ndarray]:
+    """
+    Parameters
+    ----------
+    include_results list[str] or None
+        see read_op2
+    exclude_results list[str] or None
+        see read_op2
+    """
+    # cards_to_skip = None
+    # cards_to_skip = cards_to_skip
+    if isinstance(bdf_filename, BDF):
+        model = bdf_filename
+    else:
+        model = read_bdf(bdf_filename, log=log)
+    log.level = 'debug'
+
+    element_id = np.array(list(model.elements), dtype=idtype)
+    if isinstance(op2_filename, OP2):
+        model_results = op2_filename
+        # print(model_results.get_op2_stats())
+    else:
+        subcases = None
+        model_results = read_op2(
+            op2_filename, subcases=subcases,
+            include_results=include_results,
+            exclude_results=exclude_results,
+            debug=None)
+
+    if transform_to_material_coord:
+        data_in_material_coord(model, model_results, in_place=True)
+    return model, model_results, element_id
+
+
+def _get_base_etypes(model: BDF) -> dict[str, np.ndarray]:
+    etype_to_eids, etype_ptype_to_eids = get_elements_dict(model)
+    crod_eids = np.array(etype_to_eids.get('CROD', []))
+    ctube_eids = np.array(etype_to_eids.get('CTUBE', []))
+    conrod_eids = np.array(etype_to_eids.get('CONROD', []))
+
+    cbar_eids = np.array(etype_to_eids.get('CBAR', []))
+    cbeam_eids = np.array(etype_to_eids.get('CBEAM', []))
+    cbend_eids = np.array(etype_to_eids.get('CBEND', []))
+    cbush_eids = np.array(etype_to_eids.get('CBUSH', []))
+    cbush1d_eids = np.array(etype_to_eids.get('CBUSH1D', []))
+
+    cquad4_plate_eids = np.array(etype_ptype_to_eids.get(('CQUAD4', 'PSHELL'), []))
+    ctria3_plate_eids = np.array(etype_ptype_to_eids.get(('CTRIA3', 'PSHELL'), []))
+    cquad8_plate_eids = np.array(etype_ptype_to_eids.get(('CQUAD8', 'PSHELL'), []))
+    ctria6_plate_eids = np.array(etype_ptype_to_eids.get(('CTRIA6', 'PSHELL'), []))
+    cquadr_plate_eids = np.array(etype_ptype_to_eids.get(('CQUADR', 'PSHELL'), []))
+    ctriar_plate_eids = np.array(etype_ptype_to_eids.get(('CTRIAR', 'PSHELL'), []))
+
+    cquad4_comp_eids = np.array(etype_ptype_to_eids.get(('CQUAD4', 'PCOMP'), []))
+    ctria3_comp_eids = np.array(etype_ptype_to_eids.get(('CTRIA3', 'PCOMP'), []))
+    cquad8_comp_eids = np.array(etype_ptype_to_eids.get(('CQUAD8', 'PCOMP'), []))
+    ctria6_comp_eids = np.array(etype_ptype_to_eids.get(('CTRIA6', 'PCOMP'), []))
+    cquadr_comp_eids = np.array(etype_ptype_to_eids.get(('CQUADR', 'PCOMP'), []))
+    ctriar_comp_eids = np.array(etype_ptype_to_eids.get(('CTRIAR', 'PCOMP'), []))
+
+    ctetra_eids = np.array(etype_to_eids.get('CTETRA', []))
+    cpenta_eids = np.array(etype_to_eids.get('CPENTA', []))
+    cpyram_eids = np.array(etype_to_eids.get('CPYRAM', []))
+    chexa_eids = np.array(etype_to_eids.get('CHEXA', []))
+    out = {
+        'rod': (crod_eids, ctube_eids, conrod_eids),
+        # 'crod': crod_eids,
+        # 'ctube': ctube_eids,
+        # 'conrod': conrod_eids,
+        'cbar': (cbar_eids, ),
+        'cbeam': (cbeam_eids, ),
+        'cbend': (cbend_eids, ),
+        'cbush': (cbush_eids, ),
+        'cbush1d': (cbush1d_eids, ),
+        'plate': (ctria3_plate_eids, ctria6_plate_eids, ctriar_plate_eids,
+                  cquad4_plate_eids, cquad8_plate_eids, cquadr_plate_eids),
+        'comp_plate': (ctria3_comp_eids, ctria6_comp_eids, ctriar_comp_eids,
+                       cquad4_comp_eids, cquad8_comp_eids, cquadr_comp_eids),
+        'solid': (ctetra_eids, cpenta_eids, cpyram_eids, chexa_eids),
+    }
+    return out
+
 def get_all_eids(eids_tuple: tuple[np.ndarray, ...],
                  sort: bool=False) -> np.ndarray:
     eids_list = [eids for eids in eids_tuple if len(eids)]
@@ -601,55 +671,66 @@ def _envelope_post(all_subcases_list: list[int],
     icase_critical_list = []
     icase_critical = np.full(neid_all, -1, dtype='int32')
 
-    bush_results, bush_eid, is_bush_min = results['cbush']
-    if len(bush_results):
-        icase_criticali, data_critical, cbush_combined_data = _get_combined_data(
-            all_subcases, 'cbush', bush_results,
-            nsubcase_all, neid_all, is_bush_min)
-        icase_critical_list.append(icase_criticali)
-        icase = np.where(icase_criticali != -1)[0]
-        icase_critical[icase] = icase_criticali[icase]
-    del bush_results, bush_eid, is_bush_min
+    for result_group in ['rod', 'cbush', 'plate', 'comp_plate', 'solid']:
+        elem_results, elem_eids, is_elem_min = results[result_group]
+        if len(elem_results):
+            icase_criticali, data_critical, combined_data = _get_combined_data(
+                all_subcases, result_group, elem_results,
+                nsubcase_all, neid_all, is_elem_min)
+            icase_critical_list.append(icase_criticali)
+            icase = np.where(icase_criticali != -1)[0]
+            icase_critical[icase] = icase_criticali[icase]
+        del elem_results, elem_eids, is_elem_min
 
-    rod_results, rod_eid, is_rod_min = results['rod']
-    if len(rod_results):
-        icase_criticali, data_critical, rod_combined_data = _get_combined_data(
-            all_subcases, 'rods', rod_results,
-            nsubcase_all, neid_all, is_rod_min)
-        icase_critical_list.append(icase_criticali)
-        icase = np.where(icase_criticali != -1)[0]
-        icase_critical[icase] = icase_criticali[icase]
-    del rod_results, rod_eid, is_rod_min
+    # bush_results, bush_eid, is_bush_min = results['cbush']
+    # if len(bush_results):
+    #     icase_criticali, data_critical, cbush_combined_data = _get_combined_data(
+    #         all_subcases, 'cbush', bush_results,
+    #         nsubcase_all, neid_all, is_bush_min)
+    #     icase_critical_list.append(icase_criticali)
+    #     icase = np.where(icase_criticali != -1)[0]
+    #     icase_critical[icase] = icase_criticali[icase]
+    # del bush_results, bush_eid, is_bush_min
 
-    plate_results, plate_eid, is_plate_min = results['plate']
-    if len(plate_results):
-        icase_criticali, data_critical, plate_combined_data = _get_combined_data(
-            all_subcases, 'plates', plate_results,
-            nsubcase_all, neid_all, is_plate_min)
-        icase_critical_list.append(icase_criticali)
-        icase = np.where(icase_criticali != -1)[0]
-        icase_critical[icase] = icase_criticali[icase]
-    del plate_results, plate_eid, is_plate_min
+    # rod_results, rod_eid, is_rod_min = results['rod']
+    # if len(rod_results):
+    #     icase_criticali, data_critical, rod_combined_data = _get_combined_data(
+    #         all_subcases, 'rods', rod_results,
+    #         nsubcase_all, neid_all, is_rod_min)
+    #     icase_critical_list.append(icase_criticali)
+    #     icase = np.where(icase_criticali != -1)[0]
+    #     icase_critical[icase] = icase_criticali[icase]
+    # del rod_results, rod_eid, is_rod_min
 
-    comp_results, comp_plate_eid, is_comp_plate_min = results['comp_plate']
-    if len(comp_results):
-        icase_criticali, data_critical, comp_plate_combined_data = _get_combined_data(
-            all_subcases, 'comp_plates', comp_results,
-            nsubcase_all, neid_all, is_comp_plate_min)
-        icase_critical_list.append(icase_criticali)
-        icase = np.where(icase_criticali != -1)[0]
-        icase_critical[icase] = icase_criticali[icase]
-    del comp_results, comp_plate_eid, is_comp_plate_min
+    # plate_results, plate_eid, is_plate_min = results['plate']
+    # if len(plate_results):
+    #     icase_criticali, data_critical, plate_combined_data = _get_combined_data(
+    #         all_subcases, 'plates', plate_results,
+    #         nsubcase_all, neid_all, is_plate_min)
+    #     icase_critical_list.append(icase_criticali)
+    #     icase = np.where(icase_criticali != -1)[0]
+    #     icase_critical[icase] = icase_criticali[icase]
+    # del plate_results, plate_eid, is_plate_min
 
-    solid_results, solid_eids, is_solid_min = results['solid']
-    if len(solid_results):
-        icase_criticali, data_critical, solid_combined_data = _get_combined_data(
-            all_subcases, 'solids', solid_results,
-            nsubcase_all, neid_all, is_solid_min)
-        icase_critical_list.append(icase_criticali)
-        icase = np.where(icase_criticali != -1)[0]
-        icase_critical[icase] = icase_criticali[icase]
-    del solid_results, solid_eids, is_solid_min
+    # comp_results, comp_plate_eid, is_comp_plate_min = results['comp_plate']
+    # if len(comp_results):
+    #     icase_criticali, data_critical, comp_plate_combined_data = _get_combined_data(
+    #         all_subcases, 'comp_plates', comp_results,
+    #         nsubcase_all, neid_all, is_comp_plate_min)
+    #     icase_critical_list.append(icase_criticali)
+    #     icase = np.where(icase_criticali != -1)[0]
+    #     icase_critical[icase] = icase_criticali[icase]
+    # del comp_results, comp_plate_eid, is_comp_plate_min
+
+    # solid_results, solid_eids, is_solid_min = results['solid']
+    # if len(solid_results):
+    #     icase_criticali, data_critical, solid_combined_data = _get_combined_data(
+    #         all_subcases, 'solids', solid_results,
+    #         nsubcase_all, neid_all, is_solid_min)
+    #     icase_critical_list.append(icase_criticali)
+    #     icase = np.where(icase_criticali != -1)[0]
+    #     icase_critical[icase] = icase_criticali[icase]
+    # del solid_results, solid_eids, is_solid_min
 
     # icase_critical = np.vstack(icase_critical_list)
     log.debug(f'icase_critical = {icase_critical}')

@@ -24,6 +24,7 @@ from pyNastran.f06.f06_formatting import (
 )
 from pyNastran.op2.result_objects.op2_objects import combination_inplace
 from pyNastran.op2.op2_interface.write_utils import (
+    view_dtype, view_idtype_as_fdtype,
     set_table3_field, get_title_subtitle_label)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     update_stress_force_time_word,
@@ -3269,8 +3270,17 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
         if self.is_sort1:
             structi = Struct(endian + b'i 8f')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('SORT2')
+
+        fdtype = self.data.dtype
+        if self.size == fdtype.itemsize:
+            pass
+        else:
+            # warnings.warn(f'downcasting {self.class_name}...this is buggy')
+            # idtype = np.int32(1)
+            fdtype = np.float32(1.0)
+        eid_floats = view_idtype_as_fdtype(eids_device, fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
@@ -3289,25 +3299,29 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            mx = self.data[itime, :, 0]
-            my = self.data[itime, :, 1]
-            mxy = self.data[itime, :, 2]
-            bmx = self.data[itime, :, 3]
-            bmy = self.data[itime, :, 4]
-            bmxy = self.data[itime, :, 5]
-            tx = self.data[itime, :, 6]
-            ty = self.data[itime, :, 7]
+            if 0:
+                eid_data = np.column_stack([eid_floats, self.data[itime, :, :]])
+                op2_file.write(eid_data)
+                assert ntotal == eid_data.size
+            else: # pragma: no cover
+                mx = self.data[itime, :, 0]
+                my = self.data[itime, :, 1]
+                mxy = self.data[itime, :, 2]
+                bmx = self.data[itime, :, 3]
+                bmy = self.data[itime, :, 4]
+                bmxy = self.data[itime, :, 5]
+                tx = self.data[itime, :, 6]
+                ty = self.data[itime, :, 7]
 
-            nwide = 0
-            for eid_device, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-                data = [eid_device, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
-                #[mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
-                #    [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
-                op2_file.write(structi.pack(*data))
-                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data[1:])))
-                nwide += len(data)
-
-            assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
+                nwide = 0
+                for eid_device, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                    data = [eid_device, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
+                    #[mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
+                    #    [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                    op2_file.write(structi.pack(*data))
+                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data[1:])))
+                    nwide += len(data)
+                assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1
             header = [4 * ntotal,]
             op2_file.write(pack('i', *header))
@@ -3761,9 +3775,12 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
-        eids_device = eids * 10 + self.device_code
+        ueids = np.unique(eids)
+        nelements = len(ueids)
 
-        nelements = len(np.unique(eids))
+        eids_device = eids * 10 + self.device_code
+        eids_device_short = ueids * 10 + self.device_code
+
         #print('nelements =', nelements)
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
@@ -3790,6 +3807,18 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         else:
             raise NotImplementedError('SORT2')
 
+        fdtype = self.data.dtype
+        if self.size == fdtype.itemsize:
+            pass
+        else:
+            # warnings.warn(f'downcasting {self.class_name}...this is buggy')
+            # idtype = np.int32(1)
+            fdtype = np.float32(1.0)
+        # eid_floats = view_idtype_as_fdtype(eids_device, fdtype)
+        nid_floats = view_idtype_as_fdtype(nids, fdtype)
+        eid_short_floats = view_idtype_as_fdtype(eids_device_short, fdtype)
+        cen_words = np.full(nelements, cen_word, dtype='|S4')
+
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
@@ -3802,42 +3831,50 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2_file.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%dd' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            mx = self.data[itime, :, 0]
-            my = self.data[itime, :, 1]
-            mxy = self.data[itime, :, 2]
-            bmx = self.data[itime, :, 3]
-            bmy = self.data[itime, :, 4]
-            bmxy = self.data[itime, :, 5]
-            tx = self.data[itime, :, 6]
-            ty = self.data[itime, :, 7]
+            ntime, nelem_nodes, nresult = self.data.shape
+            nnode = self.nnodes_per_element
+            if 0:  # pragma: no cover
+                datai = self.data[itime, :, :].reshape(nelements, nnode, nresult)
+                nid_data = np.column_stack([nid_floats, datai]).reshape(nelements, nnode*nresult)
+                eid_data = np.column_stack([eid_short_floats, cen_words, nid_data])
+                op2_file.write(eid_data)
+                assert ntotal == eid_data.size
+                # write_op2_plate2_force
+            else:
+                mx = self.data[itime, :, 0]
+                my = self.data[itime, :, 1]
+                mxy = self.data[itime, :, 2]
+                bmx = self.data[itime, :, 3]
+                bmy = self.data[itime, :, 4]
+                bmxy = self.data[itime, :, 5]
+                tx = self.data[itime, :, 6]
+                ty = self.data[itime, :, 7]
 
-            nwide = 0
-            for i, eid, eid_device, nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(cyc, eids, eids_device, nids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-                #[mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
-                #    [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                nwide = 0
+                for i, eid, eid_device, nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(cyc, eids, eids_device, nids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                    #[mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
+                    #    [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
 
-                if i == 0:
-                    data = [eid_device, cen_word, nnodes, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
-                    op2_file.write(struct1.pack(*data))
-                    op2_ascii.write(
-                        '0  %8i    %s %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
-                            eid, cen_word, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
-                else:
-                    data = [nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
-                    op2_file.write(struct2.pack(*data))
-                    op2_ascii.write(
-                        '            %8i %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
-                            nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
-
-                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
-                nwide += len(data)
-
-            assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
+                    if i == 0:
+                        data = [eid_device, cen_word, nnodes, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
+                        op2_file.write(struct1.pack(*data))
+                        op2_ascii.write(
+                            '0  %8i    %s %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                                eid, cen_word, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+                    else:
+                        data = [nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
+                        op2_file.write(struct2.pack(*data))
+                        op2_ascii.write(
+                            '            %8i %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                                nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                    nwide += len(data)
+                assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1
             header = [4 * ntotal,]
             op2_file.write(pack('i', *header))
