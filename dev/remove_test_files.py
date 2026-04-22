@@ -4,7 +4,7 @@ import pyNastran
 
 def main():
     PKG_PATH = pyNastran.__path__[0]
-    BASE = os.path.join(PKG_PATH, '..')
+    BASE = os.path.abspath(os.path.join(PKG_PATH, '..'))
     test_filename = os.path.join(BASE, 'dev', 'test_files.txt')
     assert os.path.exists(test_filename), test_filename
 
@@ -15,7 +15,11 @@ def main():
     folders = []
     files_folders = [line.rstrip() for line in lines if line.rstrip()]
     for folder_fname0 in files_folders:
+        if os.path.isabs(folder_fname0):
+            continue
         folder_fname = os.path.abspath(os.path.join(BASE, folder_fname0))
+        if os.path.commonpath([BASE, folder_fname]) != BASE:
+            continue
         if not os.path.exists(folder_fname):
             continue
         assert os.path.exists(folder_fname), folder_fname0
@@ -24,19 +28,27 @@ def main():
         else:
             files.append(folder_fname0)
 
-    delete = False
+    delete = '--delete' in os.sys.argv
     for folder0 in folders:
         folder = os.path.abspath(os.path.join(BASE, folder0))
-        if os.path.exists(folder) and not delete:
+        if os.path.commonpath([BASE, folder]) != BASE:
+            print(f'*failed to delete folder: {folder0}')
+        elif os.path.exists(folder) and delete:
             print(f'deleting folder: {folder0}')
             shutil.rmtree(folder)
+        elif os.path.exists(folder):
+            print(f'dry run folder: {folder0}')
         else:
             print(f'*failed to delete folder: {folder0}')
     for fname0 in files:
         fname = os.path.abspath(os.path.join(BASE, fname0))
-        if os.path.exists(fname) and not delete:
+        if os.path.commonpath([BASE, fname]) != BASE:
+            print(f'*failed to delete file: {fname0}')
+        elif os.path.exists(fname) and delete:
             print(f'deleting file: {fname0}')
             os.remove(fname)
+        elif os.path.exists(fname):
+            print(f'dry run file: {fname0}')
         else:
             print(f'*failed to delete file: {fname0}')
     x = 1
