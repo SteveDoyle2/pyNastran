@@ -242,11 +242,12 @@ def make_flutter_response(f06_filename: PathLike,
                         mach, density_ratio, method,
                         modes, results,
                         in_units=f06_units,
+                        out_units=out_units,
                         use_rhoref=use_rhoref,
                         eigenvector=eigenvectors_array,
                         eigr_eigi_velocity=eigr_eigi_velocity,
                         make_alt=make_alt)
-                    response.set_out_units(out_units)
+                    # response.set_out_units(out_units)
                     #_remove_neutrinos(response, log)
                     flutters[subcase] = response
                     modes = []
@@ -447,11 +448,12 @@ def make_flutter_response(f06_filename: PathLike,
                 mach, density_ratio, method,
                 modes, results,
                 in_units=f06_units,
+                out_units=out_units,
                 use_rhoref=use_rhoref,
                 eigenvector=eigenvectors_array,
                 eigr_eigi_velocity=eigr_eigi_velocity,
                 make_alt=make_alt)
-            response.set_out_units(out_units)
+            # response.set_out_units(out_units)
             flutters[subcase] = response
 
     if load_eigenvalues and len(real_eigenvalues_list):

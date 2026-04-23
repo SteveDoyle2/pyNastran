@@ -24,6 +24,7 @@ Other:
  - control over point size / text annotation size
 """
 from __future__ import annotations
+from collections import Counter
 
 import os
 import warnings
@@ -280,6 +281,7 @@ class FlutterResponse:
                  mach: float, density_ratio: float, method: str,
                  modes: list[int] | np.ndarray, results: Any,
                  in_units: None | str | dict[str, str]=None,
+                 out_units: None | str | dict[str, str]=None,
                  subtitle: str='', label: str='',
                  use_rhoref: bool | float=False,
                  make_alt: bool=True,
@@ -435,6 +437,11 @@ class FlutterResponse:
         else:  # pragma: no cover
             raise NotImplementedError(self.method)
 
+        self.results_in = results
+        self.results = self.results_in
+        if out_units is not None:
+            self.set_out_units(out_units)
+
         # print(f'eigenvector = {self.eigenvector}')
         # assert len(self.eigenvector), 'no eigenvectors'
         if len(self.eigenvector) > 1:
@@ -450,6 +457,17 @@ class FlutterResponse:
             if reshape_eigenvectors:
                 eigenvector, eigr_eigi_velocity = _reshape_eigenvectors(
                     self.eigenvector, self.eigr_eigi_velocity)
+
+                eigr = self.results[:, :, self.ieigr].copy()
+                eigi = self.results[:, :, self.ieigi].copy()
+                try:
+                    eigenvector, eigr_eigi_velocity = _sort_eigenvectors(
+                        self, eigenvector, eigr_eigi_velocity, eigr, eigi)
+                except AssertionError:
+                    pass
+                # assert not np.array_equal(eigenvector, eigenvector2)
+                # assert not np.array_equal(eigr_eigi_velocity, eigr_eigi_velocity2)
+
                 self.eigenvector = eigenvector
                 self.eigr_eigi_velocity = eigr_eigi_velocity
                 assert len(self.eigenvector) and len(self.eigr_eigi_velocity), (len(self.eigenvector), len(self.eigr_eigi_velocity))
@@ -457,9 +475,6 @@ class FlutterResponse:
             assert eigr_eigi_velocity.ndim == 3, eigr_eigi_velocity
             assert eigr_eigi_velocity.shape[2] == 3, eigr_eigi_velocity
             nvelocity = results.shape
-
-        self.results_in = results
-        self.results = self.results_in
 
         # c - cyan
         # b - black
@@ -1634,7 +1649,7 @@ class FlutterResponse:
         ix, xlabel, xunit = self._plot_type_to_ix_xlabel(plot_type)
         ix = self.ieas
         xvalues = self.results[0, :, ix]
-        print(f'imodes = {imodes}')
+        print(f'zimmerman imodes={imodes}')
         for i, imodei, modei in zip(count(), imodes, modes):
             for j, jmodei, modej in zip(count(), imodes[i+1:], modes[i+1:]):
                 if modei == modej:
@@ -3470,7 +3485,6 @@ def _reshape_eigenvectors(eigenvectors: np.array,
     # print(eigenvectors.shape)
     # mpf = eigenvectors[:, imode, ivel]
     # eig.scale(mpf)
-    # asdf
     return eigenvectors3, eigr_eigi_vel3
 
 
@@ -3915,3 +3929,314 @@ def get_damping_crossings(damping_required: float,
         damping_crossings[damping_limit] = damping_limit
     # print(f'damping_crossings, damping_required_tol = {damping_crossings}, {damping_required_tol}')
     return damping_crossings, damping_required_tol
+
+
+def _sort_eigenvectors(self,
+                       eigenvector, eigr_eigi_velocity,
+                       eigr, eigi):
+    """
+    eigenvectors/eigr_eigi_velocity is unsorted, which causes havoc when doing MPFs
+
+    Parameters
+    ----------
+    eigenvector : (nvel_request, nmodes, nmodes)
+        The modal participation factors
+        corresponding to the -1 velocities
+    eigr_eigi_velocity : (nvel_request, nmodes, 3)
+        the [eigr, eigi, velocity] table (velocity is nan for NX)
+        corresponding to the -1 velocities
+    eigr : (nmodes, nvel)
+        real eigenvalues for all points
+    eigi : (nmodes, nvel)
+        imag eigenvalues for all points
+    """
+    # return eigenvector, eigr_eigi_velocity
+    debug = False
+    eigenvectors_out = eigenvector.copy()
+    eigr_eigi_velocity_out = eigr_eigi_velocity.copy()
+    # eigenvector.shape       =(nvel_request, nmodes, nmodes)
+    # eigr_eigi_velocity.shape=(nvel_request, nmodes, 3)
+    # eigr.shape=(nmodes, nvel)
+
+    # eigenvector.shape       =(2, 81, 81)
+    # eigr_eigi_velocity.shape=(2, 81, 3)
+    # eigr.shape=(81, 201)
+
+    # eigenvector.shape       =(4, 40, 40)
+    # eigr_eigi_velocity.shape=(4, 40, 3)
+    # eigr.shape=(40, 7)
+
+    # mode "1" factors
+    # eigrs = eigrs_eigis[:, 0]
+    # for ivel in range(nvel):
+    #     log.warning(f'creating ivel={ivel}')
+    #     # (nmodes, nmodes) where each column is a complex mode shape
+    #     eigenvector = response.eigenvector[ivel, :nmodes_to_keep, :].T
+
+    nvel_request, nmodes = eigenvector.shape[:2] # (2, 81, 81)
+    # nmodes2 = nmodes * 2
+
+    if debug:
+        print(f'eigenvector.shape={eigenvector.shape}')
+        print(f'eigr_eigi_velocity.shape={eigr_eigi_velocity.shape}')
+
+        #self.results[imode, :, self.ieigr]
+        print(f'eigr.shape={eigr.shape}')
+
+        # print(f'eigr_eigi_velocity={eigr_eigi_velocity}')
+        # print(f'eigr={eigr}')
+        print(f'nmodes={nmodes}')
+
+    eigr_eigi = eigr_eigi_velocity[:, :, [0, 1]]
+    ivels_out, vels_out = _get_velocity_sort(
+        self, eigr_eigi_velocity,
+        eigr, eigi,
+        nvel_request, nmodes)
+
+    # velocities are identified now
+    #------------------------------------------------------------
+
+    debug = False
+    irow0 = 0
+    if debug:
+        print(f'vels_out (KEAS) = {vels_out}')
+        print('sort_the_modes')
+        print(f'ivels_out = {ivels_out}')
+
+    # sort the modes
+    for ivel_request, ivel0 in enumerate(ivels_out):
+        if debug:
+            print(f'ivel_request={ivel_request}; ivel0={ivel0}')
+            print(f'eigr.shape = {eigr.shape}')
+
+        eig_data = eigr_eigi[ivel_request, :, :]
+        if debug:
+            print(f'eig_data.shape = {eig_data.shape}')
+        # print(eigr.shape)  # (81, 201)
+        # eigr_vel = eigr[:, ivel0]
+        # eigi_vel = eigi[:, ivel0]
+
+        eigr_vel = self.results[:, ivel0, self.ieigr]
+        eigi_vel = self.results[:, ivel0, self.ieigi]
+        if debug:
+            print(f'eigr_vel = {eigr_vel}')
+
+        row_map = _get_modal_sort(
+            eigr_vel, eigi_vel,
+            eig_data, irow0, debug=False)
+
+        # print(f'row_map[{ivel_request}]:')
+        # for irow, imode_full in sorted(row_map.items()):
+        #     if irow != imode_full:
+        #         print(f' *{irow}: {imode_full}')
+        #     else:
+        #         print(f'  {irow}: {imode_full}')
+
+        # eigenvectors_array = np.column_stack(eigenvectors)
+        # eigenvector = response.eigenvector[ivel, :nmodes_to_keep, :].T
+
+        eigenvectors_in = eigenvector[ivel_request, :, :]
+        eigr_eigi_velocity_in = eigr_eigi_velocity[ivel_request, :, :]
+        if debug:
+            print(f'eigenvector.shape = {eigenvector.shape}')
+            print(f'eigenvectors_in.shape = {eigenvectors_in.shape}')
+            print(f'eigr_eigi_velocity.shape = {eigr_eigi_velocity.shape}')
+            print(f'eigr_eigi_velocity_in.shape = {eigr_eigi_velocity_in.shape}')
+            print('----------')
+        eigenvector_outi, eigr_eigi_velocity_outi = _post_eigenvectors(
+            eigenvectors_in, eigr_eigi_velocity_in, row_map)
+        eigenvectors_out[ivel_request, :, :] = eigenvector_outi
+        eigr_eigi_velocity_out[ivel_request, :, :] = eigr_eigi_velocity_outi
+        if debug:
+            print('back..')
+
+        irow = nmodes
+        irow0 += irow
+
+    # imodes: nmodes that trigger the eigr/eigi check
+        # counts_imode = Counter(imodes)
+        # print(f'counts_imode = {counts_imode}')
+
+    # print(f'eigrs:\n{eigr_eigi_velocity[:, :, 0]}')
+    # print(f'eigis:\n{eigr_eigi_velocity[:, :, 1]}')
+    # print(f'eigen_velocity:\n{eigr_eigi_velocity[:, :, 2]}')
+
+    # aaaa
+    return eigenvectors_out, eigr_eigi_velocity_out
+
+def _post_eigenvectors(eigenvectors_in: np.ndarray,
+                       eigr_eigi_velocity_in: np.ndarray,
+                       row_map: dict[int, int]) -> np.ndarray:
+    debug = False
+    if debug:
+        print(f'_post_eigenvectors: eigenvectors_in.shape = {eigenvectors_in.shape}')
+        print(f'_post_eigenvectors: eigr_eigi_velocity_in.shape = {eigr_eigi_velocity_in.shape}')
+
+    # eigenvector.shape       =(nvel_request, nmodes, nmodes)
+    # eigr_eigi_velocity.shape=(nvel_request, nmodes, 3)
+    # eigr.shape=(nmodes, nvel)
+    reverse_row_map = {value: key for key, value in row_map.items()}
+
+    assert eigenvectors_in.ndim == 2, eigenvectors_in.shape
+    nmodes_a, nmodes_b = eigenvectors_in.shape
+    assert nmodes_a == nmodes_b, (nmodes_a, nmodes_b)
+
+    # debugging to check that we produce the same result with the same sort
+    # should be false
+    is_same = False
+
+    eigenvector_out_list = []
+    eigr_eigi_velocity_out_list = []
+    for imode_in in range(nmodes_a):
+        imode_out = reverse_row_map[imode_in]
+        if is_same:
+            imode_out = imode_in
+        # eigenvector = response.eigenvector[ivel, :nmodes_to_keep, :].T
+        eigenvector_out = eigenvectors_in[:, imode_out]
+        eigr_eigi_velocityi = eigr_eigi_velocity_in[imode_out]
+        eigr_eigi_velocity_out_list.append(eigr_eigi_velocityi)
+        eigenvector_out_list.append(eigenvector_out)
+
+    eigenvector_out = np.column_stack(eigenvector_out_list)
+    eigr_eigi_velocity_out = np.array(eigr_eigi_velocity_out_list)
+    if is_same:
+        assert np.array_equal(eigenvectors_in, eigenvector_out)
+
+    assert eigenvector_out.shape == eigenvectors_in.shape, (eigenvector_out.shape, eigenvectors_in.shape)
+    assert eigr_eigi_velocity_out.shape == eigr_eigi_velocity_in.shape, (eigr_eigi_velocity_out.shape, eigr_eigi_velocity_in.shape)
+    return eigenvector_out, eigr_eigi_velocity_out
+
+
+def _get_velocity_sort(self,
+                       eigr_eigi_velocity,
+                       eigr, eigi,
+                       nvel_request: int,
+                       nmodes: int):
+    debug = False
+    nmodes2 = 2 * nmodes
+    eigr_eigi = eigr_eigi_velocity[:, :, [0, 1]]
+    eigen_velocity = eigr_eigi_velocity[:, :, 2]
+    nvel_requestb, nmodes_, two = eigr_eigi.shape
+    # print(eigr_eigi_velocity)
+    assert nvel_request == nvel_requestb
+    assert two == 2, two
+
+    irow_target = 10
+    irow0 = 0
+    ivels_out = []
+    vels_out = []
+    for ivel_request in range(nvel_request):
+        irow = 0
+        if debug:
+            print(f'ivel = {ivel_request}/{nvel_request}')
+            # print(f'  eigr_eigi_velocity={eigr_eigi_velocity[ivel, :, :]}')
+        imodes = []
+        ivels = []
+
+        # neigr = 2; eigr_eigi.shape=(2, 81, 2) eig_data.shape=(81, 2)
+        eig_data = eigr_eigi[ivel_request, :, :]
+        if debug:
+            print(f'  eigr_eigi.shape={eigr_eigi.shape} eig_data.shape={eig_data.shape}')
+        for irow, (eigri, eigii) in enumerate(eig_data):
+            ieigr_mode, ieigr_vel = np.where(eigr == eigri)
+            ieigi_mode, ieigi_vel = np.where(eigi == eigii)
+            imode = np.hstack([ieigr_mode, ieigi_mode]).flatten()
+            ivel = np.hstack([ieigr_vel, ieigi_vel]).flatten()
+            if debug:
+                if irow0+irow == irow_target:
+                    print('    ', irow0+irow, eigri, eigii, (imode, ivel))
+                # else:
+                #     print('    ', irow0 + irow, eigri, eigii)
+            # imodes.extend(imode.tolist())
+            ivels.extend(ivel.tolist())
+
+        # ivel: nmodes that trigger the eigr/eigi check
+        counts_ivel = Counter(ivels)
+
+        # nmodes2: 2*nmodes; we have eigr and eigi checks
+        # print(f'counts = {counts}')
+        # print(f'nmodes2 = {nmodes2}')
+        counts2_ivel = {key: value for key, value in counts_ivel.items() if value >= nmodes}
+        if debug:
+            print(f'  counts2_ivel = {counts2_ivel}')
+
+        if len(counts2_ivel) == 1:
+            pass
+        elif len(counts2_ivel) > 1:
+            counts2_ivel = {key: value for key, value in counts2_ivel.items() if value == nmodes2}
+            if debug:
+                print(f'  counts2_ivel = {counts2_ivel}')
+        else:
+            warnings.warn(f'  Invalid Velocity Sort (length != 1); counts2_ivel={counts2_ivel}; n={len(counts2_ivel)}')
+
+        assert len(counts2_ivel) == 1, counts2_ivel
+        ivel0 = list(counts2_ivel)[0]
+        # veli = results_velocity[0, ivel0]
+        veli = self.results[0, ivel0, self.ieas]
+        if debug:
+            print(f'  ivel_request={ivel_request} ivel0={ivel0}; veli (KEAS)={veli}')  #, {self.out_units}')
+            print(eigen_velocity.shape)  # (nvel_request, nmodes)
+        eigen_velocity[ivel_request, :] = veli
+        # print(counts)
+        # print(counts2)
+
+        # imodes_count = np.hstack()
+        # break
+        irow0 = irow
+        ivels_out.append(ivel0)
+        vels_out.append(veli)
+    return ivels_out, vels_out
+
+def _get_modal_sort(eigr_vel, eigi_vel,
+                    eig_data, irow0, debug=False):
+    # print(len(eigi_vel))
+    imodes = []
+    irow_map = {}
+    irow_map_bad = {}
+    for irow, (eigri, eigii) in enumerate(eig_data):
+        # print('    ', irow0 + irow, eigri, eigii)
+        deigr = np.abs(eigr_vel - eigri)
+        deigi = np.abs(eigi_vel - eigii)
+        ieigr_mode = np.where(deigr == deigr.min())
+        ieigi_mode = np.where(deigi == deigi.min())
+        imode = np.hstack([ieigr_mode, ieigi_mode]).flatten()
+        # ivel = np.hstack([ieigr_vel, ieigi_vel]).flatten()
+        # print('    ', irow0+irow, eigri, eigii)
+        # if irow0+irow == irow_target:
+        # print('    ', irow0+irow, eigri, eigii, imode)
+        # else:
+        #     print('    ', irow0 + irow, eigri, eigii)
+        # print('    ', irow0+irow, eigri, eigii, (imode, ivel))
+        imodes.extend(imode.tolist())
+        # ivels.extend(ivel.tolist())
+        if len(imode) == 2:
+            imode0 = int(imode[0])
+            if debug:
+                print('    ', irow0 + irow, eigri, eigii, [imode0])
+            irow_map[irow] = imode0
+        else:
+            irow_map_bad[irow] = imode
+            if debug:
+                print('    ', irow0 + irow, eigri, eigii, imode.tolist())
+    if debug:
+        print(f'irow_map = {irow_map}')
+        print(f'irow_map_bad = {irow_map_bad}')
+
+    imap_values = list(irow_map.values())
+    for irow, imode_full in irow_map_bad.items():
+        imode_filtered = [int(imode) for imode in imode_full if imode not in imap_values]
+        counts_imode = Counter(imode_filtered)
+        if debug:
+            print(f'irow={irow} imode_full={imode_full}')
+            print(f'  imode_filtered = {imode_filtered}')
+            print(f'  counts_imode = {counts_imode}')
+
+        for key, value in counts_imode.items():
+            if value == 2:
+                imode0 = key
+                irow_map[irow] = imode0
+                print(f'  -> imode0 = {imode0}')
+                break
+        else:
+            raise RuntimeError('bad')
+    return irow_map

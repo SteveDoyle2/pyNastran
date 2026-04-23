@@ -96,8 +96,13 @@ class TestOP2Writer(unittest.TestCase):
         os.remove(op2_filename_debug_out)
 
     def test_write_5(self):
-        """tests basic op2 writing"""
+        """
+        tests basic op2 writing
+         - this test has issues with grid_point_forces and cquad4_force
+         - FEMAP does not...
+        """
         log = SimpleLogger(level='warning', encoding='utf-8')
+        # log = SimpleLogger(level='debug', encoding='utf-8')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
         op2_filename_debug = os.path.join(folder, 'mode_solid_shell_bar.debug.out')
@@ -110,10 +115,12 @@ class TestOP2Writer(unittest.TestCase):
         exclude_results = [
             #'*_strain_energy',
             'grid_point_forces',
+            # 'force.cquad4_force',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results,
                             log=log, )
+        # print(op2.get_op2_stats())
 
         op2.write_op2(op2_filename_out) #is_mag_phase=False)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out, log=log)
