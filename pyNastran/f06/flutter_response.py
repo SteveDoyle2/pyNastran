@@ -689,11 +689,26 @@ class FlutterResponse:
             imethod=1: loop over colors and then symbols
 
         """
-        # rgbkm - max of 35 combinations
-        # C0-10 - max of 70 combinations
+        # import matplotlib as mpl
+        # print(mpl.rcParams['image.cmap'])
+
+        # Get the cycle as a list of colors
+        cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
+        # print(f'cycle1 = {cycle}')
+        import matplotlib as mpl
+        # mpl.set_prop_cycle('color', plt.cm.tab20.colors)
+        # plt.rcParams['axes.prop_cycle'] = plt.cycler('color', ['black'])
+        # plt.rcParams['axes.prop_cycle'] = plt.cycler('color', plt.cm.tab10.colors)  # default
+        # plt.rcParams['axes.prop_cycle'] = plt.cycler('color', plt.cm.tab20.colors)
+
+        # cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+        # plt.set_cmap('jet')
         if colors is None:
             # colors = ['r', 'g', 'b', 'k', 'm']  # 5
             colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']  # 10
+            # colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9',
+            #           'C10', 'C11', 'C12', 'C13', 'C14', 'C15', 'C16', 'C17', 'C18', 'C19',]  # 20
 
         if symbols is None:
             symbols = ['o', '*', 'x', 'v', '>', '<', '^']  # 7
@@ -1036,10 +1051,22 @@ class FlutterResponse:
         legend_kwargs = get_legend_kwargs(self.font_size, legend_kwargs)
         if fig is None:
             fig = plt.figure()
-            axes = fig.add_subplot(111)
+            # ax1 = fig.add_subplot(2, 1, 1)                      # Left subplot  (2 row, 1 columns, index 1)
+            # ax2 = fig.add_subplot(2, 1, 2, projection='polar')  # Right subplot (2 row, 1 columns, index 2)
+            # gs = fig.add_gridspec(2, 1, height_ratios=[1, 0.7])
+            # ax1 = fig.add_subplot(gs[0])
+            # ax2 = fig.add_subplot(gs[1], projection='polar')
+        else:
+            fig.clear()
+            # ax1 = fig.add_subplot(2, 1, 1)                      # Left subplot  (2 row, 1 columns, index 1)
+            # ax2 = fig.add_subplot(2, 1, 2, projection='polar')  # Right subplot (2 row, 1 columns, index 2)
+        gs = fig.add_gridspec(2, 1, height_ratios=[1, 0.5])
+        ax1 = fig.add_subplot(gs[0])
+        ax2 = fig.add_subplot(gs[1], projection='polar')
 
-        xlabel = r'Eigenvalue (Real); $\omega \zeta$'
-        ylabel = r'Eigenvalue (Imaginary); $\omega$'
+
+        xlabel = r'Modal Participation (Real)'
+        ylabel = r'Modal Participation (Imaginary)'
         # ix = self.ieigr
         # iy = self.ieigi
         # scatter = True
@@ -1082,15 +1109,19 @@ class FlutterResponse:
         title = self._get_title(nlines=1)
         title += f'\nModal Participation Factors of Mode {mode}\n'
         title += rf'$\omega$={omega:.2f}; freq={freq:.2f} Hz; g={damping_g:.3g}'
-        if np.isfinite(velocityi):
-            title += f' V={velocityi:.1f}'
-        # print(title)
-        axes.set_title(title)  # , fontsize=self.font_size)
-        axes.grid(True)
-        axes.set_xlabel(xlabel)  # , fontsize=self.font_size)
-        axes.set_ylabel(ylabel)  # , fontsize=self.font_size)
 
-        _set_ticks(self, axes, 0)
+        eas_units = self.out_units['eas']
+        if np.isfinite(velocityi):
+            title += f' V={velocityi:.1f} ({eas_units})'
+        # print(title)
+        fig.suptitle(title)  # , fontsize=self.font_size)
+        ax1.grid(True)
+        ax2.grid(True)
+        ax1.set_xlabel(xlabel)  # , fontsize=self.font_size)
+        ax1.set_ylabel(ylabel)  # , fontsize=self.font_size)
+
+        # TODO: this was on...what does it do???
+        # _set_ticks(self, ax1, 0)
 
         # print(f'eigr_eigi_velocity:\n{self.eigr_eigi_velocity}')
         # print(f'eigenvector:\n{self.eigenvector}')
@@ -1106,6 +1137,8 @@ class FlutterResponse:
         # if abs_eigi == 0.0:
         #     abs_eigi = 1.0
         mag = np.sqrt(eigr**2 + eigi**2)
+        phase = np.arctan2(eigi, eigr)
+        isort = np.argsort(mag)[::-1]
         # print(f'eigr = {eigr}')
         # print(f'mag = {mag}')
 
@@ -1134,33 +1167,114 @@ class FlutterResponse:
         # reals = eigr / abs_eigr
         # imags = eigi / abs_eigi
 
-        reals = eigr / abs_eigr
-        imags = eigi / abs_eigi
-        # print(f'reals = {reals}')
+        real_sort = eigr[isort] / abs_eigr
+        imag_sort = eigi[isort] / abs_eigi
+        # print(f'real_sort = {real_sort}')
+
+        mag_sort = mag[isort]
+        phase_sort = phase[isort]
+        modes = modes[isort]
+        imodes = imodes[isort]
 
         symbols, colors = self._get_symbols_colors_from_modes(modes)
         jcolor = 0
+        line_text_mags = []
+        min_max_list = []
         for i, imodei, mode in zip(count(), imodes, modes):
             symbol = symbols[jcolor]
             color = colors[jcolor]
 
-            reali = reals[i]
-            imagi = imags[i]
-            magi = mag[i]
+            reali = real_sort[i]
+            imagi = imag_sort[i]
+            magi = mag_sort[i]
+            phasei = phase_sort[i]
             if magi < mag_tol:
                 continue
             text = str(mode)
             eig_str = f'{reali:.2g}+{imagi:.2g}j; A={magi:.2g}'.replace('+-', '-')
             label = f'Mode {mode:d}; {eig_str}'
             # print(label)
-            axes.scatter(reali, imagi, label=label, alpha=0.7)
             # print(f'{i}: {reali}, {imagi}, {text!r}')
-            axes.text(reali, imagi, text, ha='center', va='center')
+            ax1.scatter(reali, imagi, label=label, alpha=0.7)
+            text1 = ax1.text(reali, imagi, text, ha='center', va='center')
                       # fontsize=self.font_size)
+
+            ax2.plot([0, phasei], [0, magi], label=label, alpha=0.7)
+            ax2.scatter(magi, phasei, label=label, alpha=0.7)
+            text2 = ax2.text(phasei, magi, text, ha='center', va='center')  # (theta, r, text)
+            line_text_mags.append((text1, text2, magi))
+            min_max_list.append((reali, imagi))
+        min_max = np.array(min_max_list)
+        xmin = min_max[:, 0].min()
+        xmax = min_max[:, 0].max()
+        ymin = min_max[:, 1].min()
+        ymax = min_max[:, 1].max()
+        xmin = -0.5 if xmin > -0.5 else None
+        ymin = -0.5 if ymin > -0.5 else None
+        xmax = 0.5 if xmax < 0.5 else None
+        ymax = 0.5 if ymax < 0.5 else None
+
+        ax1.set_xlim(xmin, xmax)
+        ax1.set_ylim(ymin, ymax)
+
+
+        ax2.set_rlim(0, 1.1)
+
+        if 0:  # pragma: no cover
+            from matplotlib.widgets import TextBox
+            ax_box = fig.add_axes([0.7, 0.01, 0.1, 0.04])
+            text_box = TextBox(ax_box, 'Filter: ', initial='0')
+            def on_submit(text: str) -> float:
+                print('---------------')
+                print('on_submit')
+                try:
+                    filter_value = float(text)
+                except ValueError:
+                    filter_value = 0.
+                print(f'filter_value = {filter_value}')
+                is_visibles = []
+
+                print(f'nlines1 = {len(ax1.get_lines())}')
+                print(f'nlines2 = {len(ax2.get_lines())}')
+                for line in ax1.get_lines():
+                    reali = line.get_xdata()  # theta (radians)
+                    imagi = line.get_ydata()  # r (magnitude)
+                    mag = np.sqrt(reali**2 + imagi**2).max()
+                    is_visible = (mag > filter_value)
+                    line.set_visible(is_visible)
+                    is_visibles.append(is_visible)
+
+                nlines = len(ax2.get_lines())
+                print(f'is_visibles = {is_visibles}; nlines={nlines}')
+                for i, line in enumerate(ax2.get_lines()):
+                    xdata = line.get_xdata()  # theta (radians)
+                    ydata = line.get_ydata()  # r (magnitude)
+                    r = max(ydata)
+                    # print(f'r = {r}')
+                    is_visible = (r > filter_value)
+                    # is_visible = is_visibles[i]
+                    line.set_visible(is_visible)
+
+                for text1, text2, mag in line_text_mags:
+                    is_visible = (mag >= filter_value)
+                    text1.set_visible(is_visible)
+                    text2.set_visible(is_visible)
+
+                handles, labels = ax1.get_legend_handles_labels()
+                handles2 = []
+                labels2 = []
+                for is_visible, handle, label in zip(is_visibles, handles, labels):
+                    if not is_visible:
+                        continue
+                    handles.append(handle)
+                    labels.append(label)
+                ax1.legend(handles2, labels2)
+                fig.canvas.draw_idle()
+            text_box.on_submit(on_submit)
 
         if legend:
             # bbox_to_anchor=(1.125, 1.), ncol=ncol,
-            axes.legend(**legend_kwargs)
+            ax1.legend(**legend_kwargs)
 
         _show_save_clear_close(
             fig, show, png_filename, clear, close)

@@ -705,7 +705,7 @@ class PlotLayout(QHBoxLayout):
         nvelocity = len(response.eigr_eigi_velocity)
         self.velocity_edit.clear()
         if nvelocity:
-            velocity = response.eigr_eigi_velocity[:, -1]
+            velocity = response.eigr_eigi_velocity[:, 0, -1].round(1)
             if np.all(np.isfinite(velocity)):
                 items = [f'V{ipoint+1}={vel}' for ipoint, vel in enumerate(velocity)]
             else:
