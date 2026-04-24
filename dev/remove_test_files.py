@@ -42,7 +42,7 @@ def main():
             print(f'deleting folder: {folder0}')
             shutil.rmtree(folder)
             if os.path.exists(folder):
-                print(f'*skipped folder due to incorrect path: {folder0}')
+                print(f'*failed to delete folder: {folder0}')
         elif os.path.exists(folder):
             print(f'dry run folder: {folder0}')
         else:
@@ -55,7 +55,7 @@ def main():
             print(f'deleting file: {fname0}')
             os.remove(fname)
             if os.path.exists(fname):
-                print(f'*skipped file due to incorrect path: {fname0}')
+                print(f'*failed to delete file: {fname0}')
         elif os.path.exists(fname):
             print(f'dry run file: {fname0}')
         else:
