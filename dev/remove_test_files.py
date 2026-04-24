@@ -16,9 +16,11 @@ def main():
     files_folders = [line.rstrip() for line in lines if line.rstrip()]
     for folder_fname0 in files_folders:
         if os.path.isabs(folder_fname0):
+            print(f'*skipped absolute path: {folder_fname0}')
             continue
         folder_fname = os.path.abspath(os.path.join(BASE, folder_fname0))
         if os.path.commonpath([BASE, folder_fname]) != BASE:
+            print(f'*skipped path outside base: {folder_fname0}')
             continue
         if not os.path.exists(folder_fname):
             print(f'*skipped missing path: {folder_fname0}')
