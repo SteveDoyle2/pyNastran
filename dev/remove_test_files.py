@@ -21,6 +21,7 @@ def main():
         if os.path.commonpath([BASE, folder_fname]) != BASE:
             continue
         if not os.path.exists(folder_fname):
+            print(f'*skipped missing path: {folder_fname0}')
             continue
         assert os.path.exists(folder_fname), folder_fname0
         if os.path.isdir(folder_fname):
