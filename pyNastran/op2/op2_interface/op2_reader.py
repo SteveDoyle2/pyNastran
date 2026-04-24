@@ -289,6 +289,7 @@ class OP2Reader:
           4, 2, 4, 8, 1482184792, 1482184792, 8, 4, -1, 4, 4, 0, 4, 4, 2, 4, 8, 1297040711, 538976305, 8, 4, -1
           """
         #try:
+        # print(f'mode = {mode}')
         op2: OP2 = self.op2
         version_str = ''
         read_mode = op2.read_mode
@@ -358,6 +359,7 @@ class OP2Reader:
             #version_str = version.decode(encoding)
             #print('version = %r' % version_str)
 
+            # print(data)
             if macro_version == 'nastran':
                 mode, version_str = parse_nastran_version(
                     data, version, encoding, op2.log)

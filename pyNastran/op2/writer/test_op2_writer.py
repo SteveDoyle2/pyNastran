@@ -8,7 +8,7 @@ import pyNastran
 #from pyNastran.op2.op2 import FatalError
 #from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import read_op2_geom
-from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2 import OP2, read_op2
 #from pyNastran.op2.test.test_op2 import run_op2
 #from pyNastran.op2.writer.op2_writer import OP2Writer
 
@@ -17,7 +17,7 @@ MODEL_PATH = Path(os.path.abspath(os.path.join(PKG_PATH, '..', 'models')))
 
 
 class TestOP2Writer(unittest.TestCase):
-    def test_write_1(self):
+    def test_write_solid_bending1(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
         folder = MODEL_PATH / 'solid_bending'
@@ -36,7 +36,7 @@ class TestOP2Writer(unittest.TestCase):
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out, log=log)
         assert op2 == op2b
 
-    def test_write_2(self):
+    def test_write_solid_bending2(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
         folder = MODEL_PATH / 'solid_bending'
@@ -56,7 +56,43 @@ class TestOP2Writer(unittest.TestCase):
         assert op2 == op2b
         os.remove(op2_filename_debug_out)
 
-    def test_write_3(self):
+    def test_write_solid_shell_bar_static_basic(self):
+        """tests basic op2 writing"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'static_solid_shell_bar.op2'
+        op2_filename_debug = folder / 'static_solid_shell_bar.debug.out'
+
+        exclude_results = [
+            'bgpdt', 'eqexin',
+            'displacements', 'spc_forces', 'mpc_forces', 'load_vectors',
+            'grid_point_forces',
+            '*crod_force',
+            '*cbar_force', '*cbeam_force',
+            '*ctria3_force', # problematic
+            # '*cquad4_force', # problematic
+            'stress*', 'strain*',
+        ]
+        log = SimpleLogger(level='debug', encoding='utf-8')
+        model = OP2(log=log, debug_file=op2_filename_debug)
+        model.include_exclude_results(exclude_results=exclude_results)
+        model.read_op2(op2_filename)
+        # model = read_op2(op2_filename, # debug_file=op2_filename_debug,
+        #                  exclude_results=exclude_results,
+        #                  log=log)
+        print(model.get_op2_stats())
+
+        op2_filename_out = folder / 'static_solid_shell_bar_out.op2'
+        model.write_op2(op2_filename_out) #, is_mag_phase=False)
+
+        op2_filename_debug_out = folder / 'static_solid_shell_bar_out.debug.out'
+        op2b = OP2(debug_file=op2_filename_debug_out)
+        op2b.read_op2(op2_filename_out)
+        assert model == op2b
+        os.remove(op2_filename_debug_out)
+
+    def test_write_solid_shell_bar_static1(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
         folder = MODEL_PATH / 'sol_101_elements'
@@ -71,10 +107,11 @@ class TestOP2Writer(unittest.TestCase):
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, log=log)
 
         op2.write_op2(op2_filename_out) #, is_mag_phase=False)
+        # unused_op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
         unused_op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
         os.remove(op2_filename_debug_out)
 
-    def test_write_4(self):
+    def test_write_solid_shell_bar_static2(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
         folder = MODEL_PATH / 'sol_101_elements'
@@ -95,7 +132,7 @@ class TestOP2Writer(unittest.TestCase):
                              stop_on_failure=True, debug=False)
         os.remove(op2_filename_debug_out)
 
-    def test_write_5(self):
+    def test_write_modal(self):
         """
         tests basic op2 writing
          - this test has issues with grid_point_forces and cquad4_force
@@ -103,11 +140,11 @@ class TestOP2Writer(unittest.TestCase):
         """
         log = SimpleLogger(level='warning', encoding='utf-8')
         # log = SimpleLogger(level='debug', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
-        op2_filename_debug = os.path.join(folder, 'mode_solid_shell_bar.debug.out')
-        op2_filename_out = os.path.join(folder, 'mode_solid_shell_bar_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'mode_solid_shell_bar_out.debug.out')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'mode_solid_shell_bar.op2'
+        op2_filename_debug = folder / 'mode_solid_shell_bar.debug.out'
+        op2_filename_out = folder / 'mode_solid_shell_bar_out.op2'
+        op2_filename_debug_out = folder / 'mode_solid_shell_bar_out.debug.out'
         #debug_file = 'solid_bending.debug.out'
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
@@ -129,14 +166,14 @@ class TestOP2Writer(unittest.TestCase):
                              stop_on_failure=True, debug=False)
         os.remove(op2_filename_debug_out)
 
-    def test_write_6(self):
+    def test_write_transient(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
-        op2_filename_debug = os.path.join(folder, 'transient_solid_shell_bar.debug.out')
-        op2_filename_out = os.path.join(folder, 'transient_solid_shell_bar_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'transient_solid_shell_bar_out.debug.out')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'transient_solid_shell_bar.op2'
+        op2_filename_debug = folder / 'transient_solid_shell_bar.debug.out'
+        op2_filename_out = folder / 'transient_solid_shell_bar_out.op2'
+        op2_filename_debug_out = folder / 'transient_solid_shell_bar_out.debug.out'
         #debug_file = 'solid_bending.debug.out'
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
@@ -152,14 +189,14 @@ class TestOP2Writer(unittest.TestCase):
                              stop_on_failure=True, debug=False)
         os.remove(op2_filename_debug_out)
 
-    def test_write_7(self):
+    def test_write_solid_shell_bar_freq(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
-        op2_filename_debug = os.path.join(folder, 'freq_solid_shell_bar.debug.out')
-        op2_filename_out = os.path.join(folder, 'freq_solid_shell_bar_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'freq_solid_shell_bar_out.debug.out')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'freq_solid_shell_bar.op2'
+        op2_filename_debug = folder / 'freq_solid_shell_bar.debug.out'
+        op2_filename_out = folder / 'freq_solid_shell_bar_out.op2'
+        op2_filename_debug_out = folder / 'freq_solid_shell_bar_out.debug.out'
         #debug_file = 'solid_bending.debug.out'
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
@@ -173,14 +210,14 @@ class TestOP2Writer(unittest.TestCase):
                              stop_on_failure=True, debug=False)
         os.remove(op2_filename_debug_out)
 
-    def test_write_elements_1(self):
+    def test_write_elements_freq1(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'elements')
-        op2_filename = os.path.join(folder, 'freq_elements.op2')
-        op2_filename_debug = os.path.join(folder, 'freq_elements.debug.out')
-        op2_filename_out = os.path.join(folder, 'freq_elements_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'freq_elements_out.debug.out')
+        folder = MODEL_PATH / 'elements'
+        op2_filename = folder / 'freq_elements.op2'
+        op2_filename_debug = folder / 'freq_elements.debug.out'
+        op2_filename_out = folder / 'freq_elements_out.op2'
+        op2_filename_debug_out = folder / 'freq_elements_out.debug.out'
 
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, log=log)
 
@@ -191,14 +228,14 @@ class TestOP2Writer(unittest.TestCase):
                              stop_on_failure=True, debug=False)
         os.remove(op2_filename_debug_out)
 
-    def test_write_elements_2(self):
+    def test_write_elements_freq2(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'elements')
-        op2_filename = os.path.join(folder, 'freq_elements2.op2')
-        op2_filename_debug = os.path.join(folder, 'freq_elements2.debug.out')
-        op2_filename_out = os.path.join(folder, 'freq_elements_out2.op2')
-        op2_filename_debug_out = os.path.join(folder, 'freq_elements_out2.debug.out')
+        folder = MODEL_PATH / 'elements'
+        op2_filename = folder / 'freq_elements2.op2'
+        op2_filename_debug = folder / 'freq_elements2.debug.out'
+        op2_filename_out = folder / 'freq_elements_out2.op2'
+        op2_filename_debug_out = folder / 'freq_elements_out2.debug.out'
 
         exclude_results = [
             'force.ctria6_force', 'force.ctriar_force', 'force.cshear_force',
@@ -252,14 +289,14 @@ class TestOP2Writer(unittest.TestCase):
                              #stop_on_failure=True, debug=False)
         os.remove(op2_filename_debug_out)
 
-    def test_write_elements_3(self):
+    def test_write_elements_freq_random(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
         folder = MODEL_PATH / 'elements'
-        op2_filename = os.path.join(folder, 'freq_random_elements.op2')
-        op2_filename_debug = os.path.join(folder, 'freq_random_elements.debug.out')
-        op2_filename_out = os.path.join(folder, 'freq_random_elements_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'freq_random_elements_out.debug.out')
+        op2_filename = folder / 'freq_random_elements.op2'
+        op2_filename_debug = folder / 'freq_random_elements.debug.out'
+        op2_filename_out = folder / 'freq_random_elements_out.op2'
+        op2_filename_debug_out = folder / 'freq_random_elements_out.debug.out'
 
         exclude_results = [
             'force.ctria6_force', 'force.ctriar_force', 'force.cshear_force',
@@ -280,14 +317,14 @@ class TestOP2Writer(unittest.TestCase):
                              stop_on_failure=True, debug=False)
         os.remove(op2_filename_debug_out)
 
-    def test_write_elements_4(self):
+    def test_write_elements_modes_complex(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'elements')
-        op2_filename = os.path.join(folder, 'modes_complex_elements.op2')
-        op2_filename_debug = os.path.join(folder, 'modes_complex_elements.debug.out')
-        op2_filename_out = os.path.join(folder, 'modes_complex_elements_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'modes_complex_elements_out.debug.out')
+        folder = MODEL_PATH / 'elements'
+        op2_filename = folder / 'modes_complex_elements.op2'
+        op2_filename_debug = folder / 'modes_complex_elements.debug.out'
+        op2_filename_out = folder / 'modes_complex_elements_out.op2'
+        op2_filename_debug_out = folder / 'modes_complex_elements_out.debug.out'
 
         exclude_results = [
             'force.ctria6_force', 'force.ctriar_force', 'force.cshear_force',
@@ -304,14 +341,14 @@ class TestOP2Writer(unittest.TestCase):
                              stop_on_failure=True, debug=False)
         os.remove(op2_filename_debug_out)
 
-    def test_write_elements_5(self):
+    def test_write_elements_time_elements(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
         folder = MODEL_PATH / 'elements'
-        op2_filename = os.path.join(folder, 'time_elements.op2')
-        op2_filename_debug = os.path.join(folder, 'time_elements.debug.out')
-        op2_filename_out = os.path.join(folder, 'time_elements_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'time_elements_out.debug.out')
+        op2_filename = folder / 'time_elements.op2'
+        op2_filename_debug = folder / 'time_elements.debug.out'
+        op2_filename_out = folder / 'time_elements_out.op2'
+        op2_filename_debug_out = folder / 'time_elements_out.debug.out'
         #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
@@ -328,14 +365,14 @@ class TestOP2Writer(unittest.TestCase):
                              stop_on_failure=True, debug=False)
         os.remove(op2_filename_debug_out)
 
-    def test_thermal_1(self):
+    def test_thermal_time_elements(self):
         """tests basic op2 thermal writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'elements')
-        op2_filename = os.path.join(folder, 'time_thermal_elements.op2')
-        op2_filename_debug = os.path.join(folder, 'time_thermal_elements.debug.out')
-        op2_filename_out = os.path.join(folder, 'time_thermal_elements_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'time_thermal_elements.debug.out')
+        folder = MODEL_PATH / 'elements'
+        op2_filename = folder / 'time_thermal_elements.op2'
+        op2_filename_debug = folder / 'time_thermal_elements.debug.out'
+        op2_filename_out = folder / 'time_thermal_elements_out.op2'
+        op2_filename_debug_out = folder / 'time_thermal_elements.debug.out'
         #debug_file = 'solid_bending.debug.out'
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
@@ -356,11 +393,11 @@ class TestOP2Writer(unittest.TestCase):
     def test_thermal_2(self):
         """tests basic op2 thermal writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'other')
-        op2_filename = os.path.join(folder, 'hd15306.op2')
-        op2_filename_debug = os.path.join(folder, 'hd15306.debug.out')
-        op2_filename_out = os.path.join(folder, 'hd15306_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'hd15306_out.debug.out')
+        folder = MODEL_PATH / 'other'
+        op2_filename = folder / 'hd15306.op2'
+        op2_filename_debug = folder / 'hd15306.debug.out'
+        op2_filename_out = folder / 'hd15306_out.op2'
+        op2_filename_debug_out = folder / 'hd15306_out.debug.out'
         #debug_file = 'solid_bending.debug.out'
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
@@ -380,16 +417,16 @@ class TestOP2Writer(unittest.TestCase):
                              stop_on_failure=True, debug=False)
         os.remove(op2_filename_debug_out)
 
-    #def test_thermal_3(self):
-        #"""tests basic op2 thermal writing"""
-        #folder = os.path.join(MODEL_PATH, 'other')
-        #op2_filename = os.path.join(folder, 'ofprand1.op2')
-        #op2_filename_debug = os.path.join(folder, 'ofprand1.debug.out')
-        #op2_filename_out = os.path.join(folder, 'ofprand1_out.op2')
-        #op2_filename_debug_out = os.path.join(folder, 'ofprand1.debug.out')
-        #debug_file = 'solid_bending.debug.out'
-        #model = os.path.splitext(op2_filename)[0]
-        #debug_file = model + '.debug.out'
+    # def test_thermal_3(self):
+    #     """tests basic op2 thermal writing"""
+    #     folder = MODEL_PATH / 'other'
+    #     op2_filename = folder / 'ofprand1.op2'
+    #     op2_filename_debug = folder / 'ofprand1.debug.out'
+    #     op2_filename_out = folder / 'ofprand1_out.op2'
+    #     op2_filename_debug_out = folder / 'ofprand1.debug.out'
+    #     debug_file = 'solid_bending.debug.out'
+    #     model = os.path.splitext(op2_filename)[0]
+    #     debug_file = model + '.debug.out'
 
         #exclude_results = [
             #'thermal_load.chbdyg_thermal_load',

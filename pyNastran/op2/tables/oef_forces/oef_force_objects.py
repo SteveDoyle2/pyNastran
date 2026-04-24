@@ -30,7 +30,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     set_element_case, set_element_node_xxb_case,
     set_static_case, set_modal_case, set_transient_case,
     set_post_buckling_case)
-from pyNastran.op2.writer.utils import fix_table3_types
+from pyNastran.op2.writer.utils import fix_table3_types, op2_stringify
 
 
 TABLE_NAME_TO_TABLE_CODE = {
@@ -3322,7 +3322,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
                     #[mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
                     #    [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
                     op2_file.write(structi.pack(*data))
-                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data[1:])))
+                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data[1:])))
                     nwide += len(data)
                 assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1
@@ -3872,16 +3872,16 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
                     if i == 0:
                         data = [eid_device, cen_word, nnodes, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
                         op2_file.write(struct1.pack(*data))
-                        op2_ascii.write(
-                            '0  %8i    %s %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
-                                eid, cen_word, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+                        # op2_ascii.write(
+                        #     '0  %8i    %s %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                        #         eid, cen_word, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
                     else:
                         data = [nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
                         op2_file.write(struct2.pack(*data))
-                        op2_ascii.write(
-                            '            %8i %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
-                                nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
-                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                        # op2_ascii.write(
+                        #     '            %8i %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                        #         nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
                     nwide += len(data)
                 assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1

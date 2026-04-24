@@ -35,10 +35,11 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError, FortranMarkerError
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.utils import PathLike
     from cpylog import SimpleLogger
 
 
-def read_op2_geom(op2_filename: Optional[str | PurePath]=None,
+def read_op2_geom(op2_filename: Optional[PathLike]=None,
                   combine: bool=True,
                   subcases: Optional[list[int]]=None,
                   exclude_results: Optional[list[str]]=None,
@@ -46,7 +47,7 @@ def read_op2_geom(op2_filename: Optional[str | PurePath]=None,
                   validate: bool=True, xref: bool=True,
                   build_dataframe: bool=False, skip_undefined_matrices: bool=True,
                   mode: str='msc', log: SimpleLogger=None, debug: bool=True,
-                  debug_file: Optional[str]=None,
+                  debug_file: Optional[PathLike]=None,
                   encoding: Optional[str]=None):
     """
     Creates the OP2 object without calling the OP2 class.

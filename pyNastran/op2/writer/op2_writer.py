@@ -89,8 +89,12 @@ class OP2Writer(OP2_F06_Common):
 
         if isinstance(op2_out_filename, (str, PurePath)):
             op2_file = open(op2_out_filename, 'wb')
-            #fop2_ascii = open(op2_outname + '.txt', 'w')
-            fop2_ascii = TrashWriter()
+            if 0:  # pragma: no cover
+                import os
+                op2_outname = os.path.splitext(op2_out_filename)[0]
+                fop2_ascii = open(op2_outname + '.txt', 'w')
+            else:
+                fop2_ascii = TrashWriter()
             #print('op2 out = %r' % op2_outname)
             close = True
         else:
@@ -428,7 +432,9 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                     table_name, results,
                     table_names_found, endian, log,
                     struct_9i, date)
+                #print(f'op2_writer close? case_count={case_count} table_name={table_name}')
                 if case_count:
+                    #print(f'closing table_name={table_name}')
                     # print(result.table_name, itable)
                     # print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
                     # close off the result - [4, 0, 4]
@@ -451,7 +457,9 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                 table_name, results,
                 table_names_found, endian, log,
                 struct_9i, date)
+            # print(f'op2_writer close? case_count={case_count} table_name={table_name}')
             if case_count:
+                # print(f'closing table_name={table_name}')
                 # print(result.table_name, itable)
                 # print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
                 # close off the result - [4, 0, 4]
@@ -477,6 +485,7 @@ def _write_results_for_table(op2_file: BinaryIO, fop2_ascii: TextIO,
                              endian: bytes, log: SimpleLogger,
                              struct_9i,
                              date: tuple[int, int, int]) -> None:
+    print(f'op2_writer: nresults = {len(results)}')
     itable = -1
     case_count = 0
     for result in results:
@@ -534,6 +543,7 @@ def _write_results_for_table(op2_file: BinaryIO, fop2_ascii: TextIO,
         new_result = False
 
     #assert case_count > 0, case_count
+    print(f'op2_writer: itable={itable}; case_count={case_count}')
     return case_count
 
 def _fix_subcase_id(key: int | tuple[Any], res: Any) -> int:
