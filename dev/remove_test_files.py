@@ -34,6 +34,8 @@ def main():
     delete = '--delete' in os.sys.argv
     if not delete:
         print('dry run mode; pass --delete to actually remove files/folders')
+    else:
+        print('delete mode enabled; files/folders will be removed')
     for folder0 in folders:
         folder = os.path.abspath(os.path.join(BASE, folder0))
         if os.path.commonpath([BASE, folder]) != BASE:
