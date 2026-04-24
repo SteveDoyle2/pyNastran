@@ -43,7 +43,7 @@ def main():
         elif os.path.exists(folder):
             print(f'dry run folder: {folder0}')
         else:
-            print(f'*failed to delete folder: {folder0}')
+            print(f'*skipped folder due to incorrect path: {folder0}')
     for fname0 in files:
         fname = os.path.abspath(os.path.join(BASE, fname0))
         if os.path.commonpath([BASE, fname]) != BASE:
@@ -56,7 +56,7 @@ def main():
         elif os.path.exists(fname):
             print(f'dry run file: {fname0}')
         else:
-            print(f'*failed to delete file: {fname0}')
+            print(f'*skipped file due to incorrect path: {fname0}')
     x = 1
 
 if __name__ == '__main__':
