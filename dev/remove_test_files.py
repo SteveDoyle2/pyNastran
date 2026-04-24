@@ -32,7 +32,7 @@ def main():
     for folder0 in folders:
         folder = os.path.abspath(os.path.join(BASE, folder0))
         if os.path.commonpath([BASE, folder]) != BASE:
-            print(f'*failed to delete folder: {folder0}')
+            print(f'*skipped folder due to incorrect path: {folder0}')
         elif os.path.exists(folder) and delete:
             print(f'deleting folder: {folder0}')
             shutil.rmtree(folder)
@@ -43,7 +43,7 @@ def main():
     for fname0 in files:
         fname = os.path.abspath(os.path.join(BASE, fname0))
         if os.path.commonpath([BASE, fname]) != BASE:
-            print(f'*failed to delete file: {fname0}')
+            print(f'*skipped file due to incorrect path: {fname0}')
         elif os.path.exists(fname) and delete:
             print(f'deleting file: {fname0}')
             os.remove(fname)
