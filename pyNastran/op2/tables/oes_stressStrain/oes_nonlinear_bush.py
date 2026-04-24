@@ -5,6 +5,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.f06.f06_formatting import write_floats_12e, _eigenvalue_header  # write_floats_13e,
+from pyNastran.op2.writer.utils import op2_stringify
 
 
 class RealNonlinearBushArray(OES_Object):  # 226-CBUSHNL
@@ -347,7 +348,7 @@ class RealNonlinearBushArray(OES_Object):  # 226-CBUSHNL
                 data = [eid_device,
                         fxi, fyi, fzi, otxi, otyi, otzi, etxi, etyi, etzi,
                         mxi, myi, mzi, orxi, oryi, orzi, erxi, eryi, erzi]
-                op2_ascii.write('  eid=%s data=%s\n' % (eid_device, str(data)))
+                op2_ascii.write('  eid=%s data=%s\n' % (eid_device, op2_stringify(data)))
                 op2_file.write(struct1.pack(*data))
 
             itable -= 1

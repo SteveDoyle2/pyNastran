@@ -1106,6 +1106,19 @@ class FlutterResponse:
         iomega = (omega != 0.0)
         damping_g[iomega] = 2 * omega_damping[iomega] / omega[iomega]
 
+        # standard eigenvalue (not flutter)
+        #
+        # For a complex eigenvalue λ = σ ± jω:
+        #   Natural frequency: ωₙ = |λ| = √(σ² + ω²)
+        #   Frequency in Hz: f = ωₙ / (2π)
+        #   Damping ratio: ζ = −σ / ωₙ
+        #   Damped frequency: ωd = ω (the imaginary part)
+        #
+        # eigenvalue = complex(-0.5, 10.0)  # example: σ + jω
+        # omega_n = abs(eigenvalue)  # natural frequency (rad/s)
+        # freq_hz = omega_n / (2 * np.pi)  # frequency (Hz)
+        # damping_ratio = -eigenvalue.real / omega_n  # ζ
+
         title = self._get_title(nlines=1)
         title += f'\nModal Participation Factors of Mode {mode}\n'
         title += rf'$\omega$={omega:.2f}; freq={freq:.2f} Hz; g={damping_g:.3g}'

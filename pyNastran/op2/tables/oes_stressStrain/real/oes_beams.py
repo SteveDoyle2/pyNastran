@@ -15,6 +15,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
 )
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.op2.result_objects.op2_objects import set_as_sort1
+from pyNastran.op2.writer.utils import op2_stringify
 
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
@@ -601,7 +602,7 @@ class RealBeamArray(OES_Object):
                 #else:  # pragma: no cover
                     #raise RuntimeError(f'OES-CBEAM op2 writer; nid={nid} xxb={xxb} icount={icount}')
 
-                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
                 nwide += len(data)
 
             assert ntotal == nwide, 'ntotal=%s nwide=%s' % (ntotal, nwide)

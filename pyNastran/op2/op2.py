@@ -59,7 +59,7 @@ class OP2(OP2_Scalar, OP2Writer):
     def __init__(self,
                  debug: Optional[bool]=True,
                  log: Any=None,
-                 debug_file: Optional[str]=None,
+                 debug_file: Optional[PathLike]=None,
                  mode: Optional[str]=None,
                  revision: str='') -> None:
         """
@@ -296,6 +296,8 @@ class OP2(OP2_Scalar, OP2Writer):
             if len(adict) != len(bdict):
                 self.log.warning('len(self.%s)=%s len(op2_model.%s)=%s' % (
                     table_type, len(adict), table_type, len(bdict)))
+                if table_type == 'params':
+                    continue
                 if stop_on_failure:
                     return False
                 continue

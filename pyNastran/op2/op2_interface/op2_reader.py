@@ -3429,6 +3429,7 @@ class OP2Reader:
         op2: OP2 = self.op2
         if self.is_debug_file:
             self.binary_debug.write('_get_record_length\n')
+            # op2.show_file(self.binary_debug, 1000)
         len_record = 0
         n0 = op2.n
         markers0 = self.get_nmarkers(1, rewind=False)
@@ -3543,6 +3544,7 @@ class OP2Reader:
         self.read_3_markers([-2, 1, 0])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-2, 1, 0]---\n')
+            # op2.show_file(self.binary_debug, 100)
         data, ndata = self._read_record_ndata4()
 
         subtable_name = self.get_subtable_name4(op2, data, ndata)
@@ -3882,6 +3884,10 @@ class OP2Reader:
         # if table_name == b'GEOM2':
         #     self.show(100)
         # this is the length of the current record inside table3/table4
+        if self.is_debug_file:
+            self.binary_debug.write(f'_read_subtable_3_4:\n')
+            # op2.show_file(self.binary_debug, 1000)
+
         record_len = self._get_record_length()
         if self.is_debug_file:
             self.binary_debug.write(f'record_length = {record_len:d}\n')

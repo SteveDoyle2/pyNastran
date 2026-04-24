@@ -5,14 +5,14 @@ def op2_stringify(values: list) -> str:  # pragma: no cover
     out = []
     for value in values:
         if isinstance(value, (float, np.float32, np.float64)):
-            out.append('%.3f' % float(value))
+            out.append('%.1f' % float(value))
         elif isinstance(value, (int, np.int32, np.int64)):
-            out.append(int(value))
+            out.append(str(int(value)))
         elif isinstance(value, (bytes, str)):
-            out.append(value)
+            out.append(str(value))
         else:
             raise NotImplementedError(value)
-    return str(out)
+    return '[' + ', '.join(out) + ']'
 
 def fix_table3_types(table3, size: int=4) -> list[Any]:
     assert size == 4, size

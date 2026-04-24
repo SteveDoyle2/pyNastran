@@ -13,9 +13,10 @@ from pyNastran.op2.result_objects.utils_pandas import (
 from pyNastran.op2.tables.oef_forces.oef_force_objects import ForceObject, oef_complex_data_code
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     oes_complex_data_code, set_element_case, set_freq_case, set_complex_modes_case)
+from pyNastran.op2.writer.utils import op2_stringify
 
-from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_12e # get_key0,
-from pyNastran.f06.f06_formatting import _eigenvalue_header
+from pyNastran.f06.f06_formatting import (
+    write_imag_floats_13e, write_float_12e, _eigenvalue_header) # get_key0,
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CELAS1': 11,
@@ -1628,7 +1629,7 @@ class ComplexPlateForceArray(ComplexForceObject):
                 data = [eid_device,
                         mxi.real, myi.real, mxyi.real, bmxi.real, bmyi.real, bmxyi.real, txi.real, tyi.real,
                         mxi.imag, myi.imag, mxyi.imag, bmxi.imag, bmyi.imag, bmxyi.imag, txi.imag, tyi.imag]
-                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
                 op2_file.write(struct1.pack(*data))
 
             itable -= 1
@@ -2117,7 +2118,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
                     data = [eid_device, b'CEN/', nid,
                             mxi.real, myi.real, mxyi.real, bmxi.real, bmyi.real, bmxyi.real, txi.real, tyi.real,
                             mxi.imag, myi.imag, mxyi.imag, bmxi.imag, bmyi.imag, bmxyi.imag, txi.imag, tyi.imag]
-                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
                     op2_file.write(struct1.pack(*data))
                 else:
                     data = [nid,
@@ -2508,7 +2509,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
                 data = [eid_device,
                         bm1ai.real, bm2ai.real, bm1bi.real, bm2bi.real, ts1i.real, ts2i.real, afi.real, trqi.real,
                         bm1ai.imag, bm2ai.imag, bm1bi.imag, bm2bi.imag, ts1i.imag, ts2i.imag, afi.imag, trqi.imag]
-                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
                 op2_file.write(struct1.pack(*data))
 
             itable -= 1
@@ -2934,7 +2935,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
                     #op2_file.write(struct2.pack(*data))
                     #icount += 1
 
-                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
                 nwide += len(data)
 
             assert ntotal == nwide, 'ntotal=%s nwide=%s' % (ntotal, nwide)

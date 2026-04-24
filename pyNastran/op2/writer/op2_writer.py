@@ -92,6 +92,7 @@ class OP2Writer(OP2_F06_Common):
             if 0:  # pragma: no cover
                 import os
                 op2_outname = os.path.splitext(op2_out_filename)[0]
+                print(f'op2_outname = {op2_outname}')
                 fop2_ascii = open(op2_outname + '.txt', 'w')
             else:
                 fop2_ascii = TrashWriter()
@@ -117,6 +118,9 @@ class OP2Writer(OP2_F06_Common):
                 op2_file.close()
                 fop2_ascii.close()
             raise
+        assert total_case_count > 0, (table_names, total_case_count)
+        assert len(table_names) > 0, table_names
+        # print(f'table_names = {table_names}')
         return total_case_count
 
 
@@ -485,7 +489,7 @@ def _write_results_for_table(op2_file: BinaryIO, fop2_ascii: TextIO,
                              endian: bytes, log: SimpleLogger,
                              struct_9i,
                              date: tuple[int, int, int]) -> None:
-    print(f'op2_writer: nresults = {len(results)}')
+    # print(f'op2_writer: nresults = {len(results)}')
     itable = -1
     case_count = 0
     for result in results:
@@ -543,7 +547,7 @@ def _write_results_for_table(op2_file: BinaryIO, fop2_ascii: TextIO,
         new_result = False
 
     #assert case_count > 0, case_count
-    print(f'op2_writer: itable={itable}; case_count={case_count}')
+    # print(f'op2_writer: itable={itable}; case_count={case_count}')
     return case_count
 
 def _fix_subcase_id(key: int | tuple[Any], res: Any) -> int:

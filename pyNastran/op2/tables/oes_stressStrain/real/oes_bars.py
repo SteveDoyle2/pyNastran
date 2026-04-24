@@ -17,6 +17,8 @@ from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long, _eigenvalue_header)
 from pyNastran.op2.op2_interface.write_utils import (
     to_column_bytes, view_dtype, view_idtype_as_fdtype)
+from pyNastran.op2.writer.utils import op2_stringify
+
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CBAR' : 34,
@@ -644,7 +646,7 @@ class RealBarArray(OES_Object):
                     data = [eid_device,
                             s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
                             s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci]
-                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
                     op2_file.write(struct1.pack(*data))
 
             itable -= 1

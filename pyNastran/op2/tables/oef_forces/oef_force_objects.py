@@ -949,6 +949,7 @@ class RealSpringDamperForceArray(RealForceObject):
             raise NotImplementedError('SORT2')
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
+        struct_13i = Struct(endian + b'13i')
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
@@ -959,7 +960,7 @@ class RealSpringDamperForceArray(RealForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2_file.write(pack('%ii' % len(header), *header))
+            op2_file.write(struct_13i.pack(*header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -1448,6 +1449,7 @@ class RealRodForceArray(RealForceObject):
             raise NotImplementedError('SORT2')
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
+        struct_13i = Struct(endian + b'13i')
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
@@ -1459,7 +1461,7 @@ class RealRodForceArray(RealForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2_file.write(pack('%ii' % len(header), *header))
+            op2_file.write(struct_13i.pack(*header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -2004,7 +2006,7 @@ class RealCBeamForceArray(RealForceObject):
         struct2 = Struct(endian + b'i 8f')
 
         op2_ascii.write(f'nelements={nelements:d}\n')
-        struct_13i = Struct('13i')
+        struct_13i = Struct(endian + b'13i')
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
@@ -2069,7 +2071,7 @@ class RealCBeamForceArray(RealForceObject):
                     raise RuntimeError('OEF-CBEAM op2 writer')
                 else:
                     raise RuntimeError('OEF-CBEAM op2 writer')
-                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
                 nwide += len(data)
 
             assert ntotal == nwide, 'ntotal=%s nwide=%s' % (ntotal, nwide)
@@ -2500,7 +2502,7 @@ class RealCShearForceArray(RealForceObject):
             raise NotImplementedError('SORT2')
 
         op2_ascii.write(f'nelements={nelements:d}\n')
-
+        struct_13i = Struct(endian + b'13i')
         for itime in range(self.ntimes):
             #print('3, %s' % itable)
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
@@ -2514,7 +2516,7 @@ class RealCShearForceArray(RealForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2_file.write(pack('%ii' % len(header), *header))
+            op2_file.write(struct_13i.pack(*header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -3286,6 +3288,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             eid_floats = view_idtype_as_fdtype(eids_device, fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
+        struct_13i = Struct(endian + b'13i')
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
@@ -3297,7 +3300,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2_file.write(pack('%ii' % len(header), *header))
+            op2_file.write(struct_13i.pack(*header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -3829,18 +3832,18 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             cen_words = np.full(nelements, cen_word, dtype='|S4')
 
         op2_ascii.write(f'nelements={nelements:d}\n')
+        struct_13i = Struct(endian + b'13i')
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
-            #print('stress itable = %s' % itable)
             itable -= 1
             header = [4, itable, 4,
                       4, 1, 4,
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2_file.write(pack('%dd' % len(header), *header))
+            op2_file.write(struct_13i.pack(*header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -4159,6 +4162,7 @@ class RealCBarFastForceArray(RealForceObject):
             raise NotImplementedError('SORT2')
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
+        struct_13i = Struct(endian + b'13i')
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
@@ -4170,7 +4174,7 @@ class RealCBarFastForceArray(RealForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2_file.write(pack('%ii' % len(header), *header))
+            op2_file.write(struct_13i.pack(*header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -4187,7 +4191,7 @@ class RealCBarFastForceArray(RealForceObject):
                     eids_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
 
                 data = [eid_device, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi]
-                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
                 op2_file.write(struct1.pack(*data))
 
             itable -= 1
@@ -4745,6 +4749,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
 
         # ntimes = self.data.shape[0]
         struct1 = Struct(endian + b'i7f')
+        struct_13i = Struct(endian + b'13i')
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
@@ -4756,7 +4761,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2_file.write(pack('%ii' % len(header), *header))
+            op2_file.write(struct_13i.pack(*header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -5818,6 +5823,7 @@ class RealForceMomentArray(RealForceObject):
             raise NotImplementedError('SORT2')
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
+        struct_13i = Struct(endian + b'13i')
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
@@ -5828,7 +5834,7 @@ class RealForceMomentArray(RealForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2_file.write(pack('%ii' % len(header), *header))
+            op2_file.write(struct_13i.pack(*header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')

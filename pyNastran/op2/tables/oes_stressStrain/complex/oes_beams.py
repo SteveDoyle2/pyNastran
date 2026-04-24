@@ -6,6 +6,7 @@ from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
+from pyNastran.op2.writer.utils import op2_stringify
 
 
 class ComplexBeamArray(OES_Object):
@@ -492,7 +493,7 @@ class ComplexBeamArray(OES_Object):
                     ielement += 1
                     icount += 1
 
-                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
                 nwide += len(data)
 
             assert ntotal == nwide, 'ntotal=%s nwide=%s' % (ntotal, nwide)

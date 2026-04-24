@@ -1,3 +1,10 @@
+"""
+TODO: MPF plot
+ - cleanup gui to not have so many buttons that do nothing for the plot
+ - change mode spinner to mode pulldown so it's faster
+   -> what about using the selected modes and making N plots?
+
+"""
 from __future__ import annotations
 import os
 import sys

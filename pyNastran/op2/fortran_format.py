@@ -100,6 +100,13 @@ class FortranFormat:
 
         self._op2_readers = Op2Tables(self)
 
+    def show_file(self, file, n: int, types: str='ifs', endian=None, force: bool=False):
+        nold = self.n
+        data_out = self.f.read(n)
+        self.n = nold
+        self.f.seek(self.n)
+        msg = self.op2_reader._write_data(file, data_out, types='ifs', endian=endian, force=force)
+
     def show(self, n: int, types: str='ifs', endian=None, force: bool=False):  # pragma: no cover
         """Shows binary data"""
         return self.op2_reader.show(n, types=types, endian=endian, force=force)

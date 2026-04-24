@@ -6,6 +6,7 @@ from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
+from pyNastran.op2.writer.utils import op2_stringify
 
 
 class ComplexBarArray(OES_Object):
@@ -367,7 +368,7 @@ class ComplexBarArray(OES_Object):
                 data = [eid_device,
                         s1ai.real, s2ai.real, s3ai.real, s4ai.real, axiali.real, s2ai.real, s2bi.real, s2ci.real, s2di.real,
                         s1ai.imag, s2ai.imag, s3ai.imag, s4ai.imag, axiali.imag, s2ai.imag, s2bi.imag, s2ci.imag, s2di.imag]
-                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
                 op2_file.write(struct1.pack(*data))
 
             itable -= 1

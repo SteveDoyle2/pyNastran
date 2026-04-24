@@ -614,7 +614,18 @@ class ScalarObject(BaseScalarObject):
     def _write_table_header(self, op2_file, fascii,
                             date: tuple[int, int, int],
                             include_date: bool=True,
-                            subtable_name_default: bytes=b'OUG1    ') -> None:
+                            subtable_name_default: bytes=b'OUG1    '):
+                            #subtable_name_default=None) -> None:
+
+        # subtable_name_default = None
+        # print(f'self.table_name[:4] = {self.table_name[:4]!r}')
+        if subtable_name_default is None and 0:
+            if self.table_name[:4] in {'OUG1', 'OEF1', 'OES1'}: # , 'OSTR1'
+                subtable_name_default = self.table_name[:4].encode('latin1') + b'    '
+            # else:
+            #     raise RuntimeError(self.table_name)
+            #     subtable_name_default: bytes = b'OUG1    '
+
         try:
             subtable_name = self.subtable_name
         except AttributeError:
