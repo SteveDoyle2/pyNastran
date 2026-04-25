@@ -6,7 +6,8 @@ from typing import Optional
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
 from pyNastran.op2.op2 import OP2
-from pyNastran.op2.tools.solution_combination import _check_op2_file, _read_op2, _add_base_cases, _results
+from pyNastran.op2.tools.solution_combination import (
+    _check_op2_file, _read_op2, _add_base_cases, _results)
 
 #--------------------------
 # multi-combinations
@@ -79,13 +80,16 @@ def _add_cases(model: OP2, model2: OP2, table_res_types) -> None:
             inslot[key] = value
     return
 
-def cmd_line_merge(quiet: bool=False):
+def cmd_line_merge(argv=None, quiet: bool=False):
+    if argv is None:  # pragma: no cover
+        argv = sys.argv
+
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('op2_filenames', help='input op2s', nargs='+')
     parser.add_argument('-o', '--out', help='output op2s', default=None)
 
-    args = parser.parse_args()
+    args = parser.parse_args(args=argv[1:])
     if not quiet:  # pragma: no cover
         print(args)
     op2_filenames = args.op2_filenames
