@@ -268,14 +268,7 @@ class RealWeldArray(OES_Object):
             raise NotImplementedError('SORT2')
         struct1 = Struct(endian + b'i 7f')
 
-        fdtype = self.data.dtype
-        if self.size == fdtype.itemsize:
-            pass
-        else:
-            # print(f'downcasting {self.class_name}...')
-            #idtype = np.int32(1)
-            fdtype = np.float32(1.0)
-
+        fdtype = fdtype_from_data(self.data, self.size)
         # [eid, axial, maxa, mina, maxb, minb, max_shear, bearing]
         data_out = np.empty((nelements, 7), dtype=fdtype)
         data_out[:, 0] = eids_device.view(fdtype)

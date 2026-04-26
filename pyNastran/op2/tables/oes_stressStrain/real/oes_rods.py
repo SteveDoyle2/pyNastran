@@ -16,6 +16,7 @@ from pyNastran.op2.op2_interface.write_utils import view_dtype, view_idtype_as_f
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long,
     _eigenvalue_header) #, get_key0
+from pyNastran.op2.writer.utils import fdtype_from_data
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CROD' : 1,
@@ -526,14 +527,7 @@ class RealRodArray(OES_Object):
             raise NotImplementedError('SORT2')
         #struct1 = Struct(endian + b'i4f')
 
-        fdtype = self.data.dtype
-        if self.size == fdtype.itemsize:
-            pass
-        else:
-            # print(f'downcasting {self.class_name}...')
-            #idtype = np.int32(1)
-            fdtype = np.float32(1.0)
-
+        fdtype = fdtype_from_data(self.data, self.size)
         # [eid, axial, SMa, torsion, SMt]
         data_out = np.empty((nelements, 5), dtype=fdtype)
         data_out[:, 0] = view_idtype_as_fdtype(eids_device, fdtype)

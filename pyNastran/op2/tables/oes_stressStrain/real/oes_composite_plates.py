@@ -12,6 +12,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
 )
 from pyNastran.f06.f06_formatting import write_floats_12e, write_floats_12e_long, _eigenvalue_header
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
+from pyNastran.op2.writer.utils import fdtype_from_data
 
 
 class RealCompositePlateArray(OES_Object):
@@ -762,14 +763,7 @@ class RealCompositePlateArray(OES_Object):
         if not self.is_sort1:
             raise NotImplementedError('SORT2')
 
-        fdtype = self.data.dtype
-        if self.size == fdtype.itemsize:
-            pass
-        else:
-            # print(f'downcasting {self.class_name}...')
-            #idtype = np.int32(1)
-            fdtype = np.float32(1.0)
-
+        fdtype = fdtype_from_data(self.data, self.size)
         data_out = np.empty((nlayers, 11), dtype=fdtype)
         data_out[:, 0] = view_idtype_as_fdtype(eids_device, fdtype)
         data_out[:, 1] = view_idtype_as_fdtype(layers, fdtype)

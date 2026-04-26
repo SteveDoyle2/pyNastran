@@ -14,6 +14,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     set_transient_case, set_post_buckling_case, set_element_case)
 from pyNastran.f06.f06_formatting import write_float_13e, write_float_13e_long, _eigenvalue_header
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
+from pyNastran.op2.writer.utils import fdtype_from_data
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CELAS1': 11,
@@ -526,14 +527,7 @@ class RealSpringArray(OES_Object):
             raise NotImplementedError('SORT2')
         #struct1 = Struct(endian + b'if')
 
-        fdtype = self.data.dtype
-        if self.size == fdtype.itemsize:
-            pass
-        else:
-            # print(f'downcasting {self.class_name}...')
-            #idtype = np.int32(1)
-            fdtype = np.float32(1.0)
-
+        fdtype = fdtype_from_data(self.data, self.size)
         # [eid, stress]
         data_out = np.empty((nelements, 2), dtype=fdtype)
         data_out[:, 0] = view_idtype_as_fdtype(eids_device, fdtype)
