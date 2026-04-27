@@ -11,7 +11,7 @@
 5.  build wheel:
   a) Update pyNastran/../dev/test_files.txt
   b) Manually remove test files and gui/images (it's large)
-    >>> remove_test_files.py
+    >>> python remove_test_files.py
   c) build wheel
     --no-deps just speeds this up
     >>> pip wheel . --no-deps
