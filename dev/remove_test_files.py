@@ -1,13 +1,18 @@
 import os
+import sys
 import shutil
 import pyNastran
 
 def main():
     PKG_PATH = pyNastran.__path__[0]
     BASE = os.path.abspath(os.path.join(PKG_PATH, '..'))
+    BASE = r'C:\work\code\pyNastran-release'
+    del PKG_PATH
+
     test_filename = os.path.join(BASE, 'dev', 'test_files.txt')
     assert os.path.exists(test_filename), test_filename
 
+    delete = '--delete' in sys.argv
     with open(test_filename, 'r') as test_file:
         lines = test_file.readlines()
 
@@ -23,15 +28,17 @@ def main():
             print(f'*skipped path outside base: {folder_fname0}')
             continue
         if not os.path.exists(folder_fname):
-            print(f'*skipped missing path: {folder_fname0}')
+            # already deleted
+            # print(f'*skipped missing path: {folder_fname0}')
             continue
         assert os.path.exists(folder_fname), folder_fname0
         if os.path.isdir(folder_fname):
+            #print('folder', folder_fname0)
             folders.append(folder_fname0)
         else:
+            #print('file', folder_fname0)
             files.append(folder_fname0)
 
-    delete = '--delete' in os.sys.argv
     if not delete:
         print('dry run mode; pass --delete to actually remove files/folders')
     else:
@@ -39,7 +46,7 @@ def main():
     for folder0 in folders:
         folder = os.path.abspath(os.path.join(BASE, folder0))
         if os.path.commonpath([BASE, folder]) != BASE:
-            print(f'*skipped folder due to incorrect path: {folder0}')
+            print(f'*skipped folder due to absolute path: {folder0}')
         elif os.path.exists(folder) and delete:
             print(f'deleting folder: {folder0}')
             shutil.rmtree(folder)
@@ -52,7 +59,7 @@ def main():
     for fname0 in files:
         fname = os.path.abspath(os.path.join(BASE, fname0))
         if os.path.commonpath([BASE, fname]) != BASE:
-            print(f'*skipped file due to incorrect path: {fname0}')
+            print(f'*skipped file due to absolute path: {fname0}')
         elif os.path.exists(fname) and delete:
             print(f'deleting file: {fname0}')
             os.remove(fname)
@@ -61,7 +68,7 @@ def main():
         elif os.path.exists(fname):
             print(f'dry run file: {fname0}')
         else:
-            print(f'*skipped file due to incorrect path: {fname0}')
+            print(f'*skipped file due to incorrect path: {fname}')
     x = 1
 
 if __name__ == '__main__':

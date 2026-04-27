@@ -4,13 +4,20 @@ pyNastran/bdf/test/test_openmdao.py
 pyNastran/bdf/test/test_utils.py
 pyNastran/bdf/test/unit
 pyNastran/bdf/test/tests
+pyNastran/bdf/test/all_tests.py
+pyNastran/bdf/test/bdf_test.py
 
 pyNastran/bdf/cards/test
-pyNastran/bdf/mesh_utils/test
+pyNastran/bdf/cards/aero/examples
 pyNastran/bdf/patran_utils/test_patran.py
 pyNastran/bdf/bdf_interface/dev
 pyNastran/bdf/bdf_interface/test
 
+pyNastran/bdf/mesh_utils/test
+pyNastran/bdf/mesh_utils/aero/test_aero_utils.py
+pyNastran/bdf/mesh_utils/aero/test_flutter.py
+pyNastran/bdf/mesh_utils/cut/test_cutting_plane.py
+pyNastran/bdf/mesh_utils/cut/test_stiffness_plot.py
 
 pyNastran/op2/dev
 pyNastran/op2/op2_interface/test
@@ -20,23 +27,62 @@ pyNastran/op2/test/op2_test.py
 pyNastran/op2/test/plot_memory.py
 pyNastran/op2/test/plot_op2_memory.py
 pyNastran/op2/test/test_op2_unit_tests.py
+pyNastran/op2/writer/test_op2_writer.py
+pyNastran/op2/tools/test_combination.py
+pyNastran/op2/tables/geom/test
+pyNastran/op2/test/matrices
+pyNastran/op2/test/examples
+pyNastran/op2/test/folders_read.txt
 
-pyNastran/op4/test
+pyNastran/gui/images
+pyNastran/gui/dev
+pyNastran/gui/test
+pyNastran/gui/doc_features.txt
+pyNastran/gui/doc_formats.txt
+pyNastran/gui/doc_todo.txt
+pyNastran/gui/test/all_tests.py
+pyNastran/gui/test/all_tests_gui.py
+pyNastran/gui/test/all_tests_no_gui.py
+pyNastran/gui/test/test_parsing.py
+pyNastran/gui/test/test_utils.py
+pyNastran/gui/menus/test
+pyNastran/gui/menus/calculator
+
+pyNastran/f06/csv_writer.py
+pyNastran/f06/dev
+pyNastran/f06/test
+
+pyNastran/femutils/test
+pyNastran/utils/test
+pyNastran/utils/plot/test_plot.py
+
+pyNastran/all_tests_no_gui.py
+pyNastran/all_tests.py
+pyNastran/todo.txt
+pyNastran/latex
+pyNastran/dev
 
 pyNastran/converters/dev
 pyNastran/converters/test_formats.py
 pyNastran/converters/test_gui_formats.py
 pyNastran/converters/gmsh
 
+pyNastran/converters/abaqus/models
 pyNastran/converters/abaqus/test_abaqus.py
 pyNastran/converters/abaqus/test_unit_abaqus.py
 pyNastran/converters/abaqus/test_abaqus_gui.py
 
+pyNastran/converters/aflr/aflr2/test_bedge.py
+pyNastran/converters/aflr/aflr2/test_bedge_gui.py
 pyNastran/converters/aflr/aflr2/m3.bedge
+pyNastran/converters/aflr/surf/test_surf.py
+pyNastran/converters/aflr/surf/test_surf_gui.py
+pyNastran/converters/aflr/ugrid/test_ugrid.py
+pyNastran/converters/aflr/ugrid/test_ugrid_gui.py
 pyNastran/converters/aflr/ugrid/models
-pyNastran/converters/aflr/aflr2/m3.bedge
 
 pyNastran/converters/avl/examples
+pyNastran/converters/avl/test_avl_gui.py
 
 pyNastran/converters/cart3d/dev
 pyNastran/converters/cart3d/gui
@@ -44,9 +90,20 @@ pyNastran/converters/cart3d/models
 pyNastran/converters/cart3d/test_cart3d.py
 pyNastran/converters/cart3d/test_cart3d_gui.py
 
+pyNastran/converters/fld/test_fld.py
+pyNastran/converters/fld/test_fld_gui.py
+pyNastran/converters/fld/test.fld
+pyNastran/converters/fluent/test_fluent.py
+pyNastran/converters/fluent/test_fluent_gui.py
+
 pyNastran/converters/fast/demo1
+pyNastran/converters/fast/flow_demo1
 pyNastran/converters/fast/test_fast.py
 pyNastran/converters/fast/test_fast_gui.py
+
+pyNastran/converters/lawgs/tmx1242.wgs
+pyNastran/converters/lawgs/tnd6480.wgs
+pyNastran/converters/lawgs/test_wgs_gui.py
 
 pyNastran/converters/nastran/models
 pyNastran/converters/nastran/gui/menus
@@ -54,6 +111,8 @@ pyNastran/converters/nastran/test_nastran.py
 pyNastran/converters/nastran/test_nastran_gui.py
 pyNastran/converters/nastran/dev_results.py
 
+pyNastran/converters/neu/all_elem_test_giv_eb.neu
+pyNastran/converters/neu/test_neu.py
 
 pyNastran/converters/panair/M100
 pyNastran/converters/panair/naca0012
@@ -85,32 +144,13 @@ pyNastran/converters/tetgen/sav.smesh
 pyNastran/converters/tetgen/socket.off
 pyNastran/converters/tetgen/socket1.off
 pyNastran/converters/tetgen/gear.node
+pyNastran/converters/tetgen/gear.smesh
 
 pyNastran/converters/tetgen/tetgen_test.1.ele
 pyNastran/converters/tetgen/tetgen_test.1.node
 pyNastran/converters/tetgen/tetgen_test.1.smesh
 pyNastran/converters/tetgen/test_tetgen_gui.py
 
-pyNastran/converters/lawgs/tmx1242.wgs
-pyNastran/converters/lawgs/tnd6480.wgs
-pyNastran/converters/lawgs/test_wgs_gui.py
-
 pyNastran/converters/usm3d/box
 pyNastran/converters/usm3d/test_usm3d.py
 pyNastran/converters/usm3d/test_usm3d_gui.py
-
-pyNastran/gui/images
-pyNastran/gui/test/all_tests.py
-pyNastran/gui/test/all_tests_gui.py
-pyNastran/gui/test/all_tests_no_gui.py
-pyNastran/gui/test/test_parsing.py
-pyNastran/gui/test/test_utils.py
-
-pyNastran/femutils/test
-
-pyNastran/latex
-pyNastran/dev
-
-pyNastran/f06/csv_writer.py
-pyNastran/f06/dev
-pyNastran/f06/test
