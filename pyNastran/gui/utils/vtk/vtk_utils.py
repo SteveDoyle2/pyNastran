@@ -9,6 +9,17 @@ from collections import defaultdict
 from typing import Optional, TYPE_CHECKING
 
 import numpy as np
+
+from pyNastran.gui.vtk_common_core import vtkVersion, VTK_VERSION as vtk_version
+_VTK_VERSION = vtkVersion.GetVTKVersion()
+VTK_VERSION_SPLIT = [int(val) for val in _VTK_VERSION.split('.')]
+_VTK_ERROR_MESSAGE = f'VTK version={vtk_version!r} is not supported (use 9.3<=vtk<9.6)'
+if VTK_VERSION_SPLIT[0] == 9:
+    if not(3 <= VTK_VERSION_SPLIT[1] < 6):
+        raise NotImplementedError(_VTK_ERROR_MESSAGE)
+else:  # pragma: no cover
+    raise NotImplementedError(_VTK_ERROR_MESSAGE)
+
 #from vtk import vtkSelectionNode, vtkExtractSelection, vtkSelection, vtkAxes, vtkIdFilter, VTK_ID_TYPE
 #from vtk import vtkCellData, vtkPointData
 from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData, vtkSelectionNode, vtkSelection
