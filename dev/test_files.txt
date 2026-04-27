@@ -106,7 +106,6 @@ pyNastran/converters/lawgs/tnd6480.wgs
 pyNastran/converters/lawgs/test_wgs_gui.py
 
 pyNastran/converters/nastran/models
-pyNastran/converters/nastran/gui/menus
 pyNastran/converters/nastran/test_nastran.py
 pyNastran/converters/nastran/test_nastran_gui.py
 pyNastran/converters/nastran/dev_results.py
