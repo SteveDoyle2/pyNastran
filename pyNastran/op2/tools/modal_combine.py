@@ -37,7 +37,7 @@ def run_flutter_combination(op2_filename: PathLike | OP2,
     #     print(''.join(obj.get_stats()))
 
     model_out = None
-    base, ext = os.path.splitext(str(f06_filename))
+    # base, ext = os.path.splitext(str(f06_filename))
     dirname = os.path.dirname(str(f06_filename))
 
     for ivel in range(nvel):
@@ -57,7 +57,8 @@ def run_flutter_combination(op2_filename: PathLike | OP2,
         # print(eigrs_eigis.shape)
         # print(eigenvector)
         model_out = run_modal_combination(
-            model, eigenvector, eigrs, eigis, subcase0=subcase0,
+            model, eigenvector, eigrs, eigis,
+            subcase0=subcase0,
             log=log, model_out=model_out)
     assert model_out is not None, model_out
     model_out.log.info(f'writing {str(op2_filename_out)}')
@@ -156,6 +157,12 @@ def run_modal_combination(op2_filename: PathLike | OP2,
         the op2 filename
     combination_factors : np.ndarray or file
         the (nmodes, nmodes) combinations
+    eigrs : np.ndarray
+        the real eigenvalues for the new modes
+    eigis : np.ndarray
+        the imaginary eigenvalues for the new modes
+    model_out : OP2; default=None -> OP2
+        lets you create a combined op2
     mode : str | None; default=None
         msc, nx, optistruct
     subcase0 : int; default=0 -> first subcase
@@ -167,16 +174,16 @@ def run_modal_combination(op2_filename: PathLike | OP2,
     include_results = ['eigenvectors']
 
     if isinstance(combination_factors, PathLike):
-        A = np.loadtxt(combination_factors, delimiter=',')
+        mpfs = np.loadtxt(combination_factors, delimiter=',')
     else:
         # nmodes, 2
         assert isinstance(combination_factors, np.ndarray), combination_factors
-        A = combination_factors
-    assert len(A.shape) == 2, A.shape
+        mpfs = combination_factors
+    assert len(mpfs.shape) == 2, mpfs.shape
 
-    # assert A.shape[1] == 1, A.shape
-    nmodes_source, nmodes_out = A.shape
-    assert A.dtype == np.complex128, A.dtype
+    # assert A.shape[1] == 1, mpfs.shape
+    nmodes_source, nmodes_out = mpfs.shape
+    assert mpfs.dtype == np.complex128, mpfs.dtype
     #-----------------------------------------------
 
     model = _read_op2(op2_filename,
@@ -220,7 +227,7 @@ def run_modal_combination(op2_filename: PathLike | OP2,
 
     # nmodes
     modes_out = np.arange(nmodes_out, dtype='int32')
-    modal_disp = phi @ A
+    modal_disp = phi @ mpfs
     data = obj0.phi_to_data(modal_disp)
     assert isinstance(data[0, 0, 0], np.complex128), data.dtype
 
@@ -239,3 +246,37 @@ def run_modal_combination(op2_filename: PathLike | OP2,
     # print(''.join(obj.get_stats()))
     model_out.eigenvectors[subcase_out] = obj
     return model_out
+
+def cmd_line_flutter_combine(argv=None, quiet: bool=False):
+    if argv is None:
+        argv = sys.argv
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('op2_filename', help='input op2')
+    parser.add_argument('f06_filename', help='input f06', default=None)
+    parser.add_argument('-o', '--out', help='output op2', default=None)
+    parser.add_argument('--in_units', help='input units (english_in, english_ft, english_kt, si, si_mm)', default='si')
+    parser.add_argument('--nmodes', help='number of modes to keep', default=None)
+    # parser.add_argument('--out_units', help='output units (english_in, english_ft, english_kt, , si, si_mm)', default='si')
+
+    args = parser.parse_args(args=argv[1:])
+    if not quiet:  # pragma: no cover
+        print(args)
+    op2_filename = args.op2_filename
+    f06_filename = args.f06_filename
+    op2_filename_out = args.out
+    f06_in_units = args.in_units
+    nmodes_to_keep = args.nmodes
+
+    base, ext = os.path.splitext(op2_filename)
+    if f06_filename is None:
+        f06_filename = f'{base}.f06'
+    if op2_filename_out is None:
+        op2_filename_out = f'{base}.flutter_combined{ext}'
+
+    print(op2_filename, op2_filename_out)
+
+    run_flutter_combination(
+        op2_filename, f06_filename,
+        f06_in_units, op2_filename_out,
+        nmodes_to_keep=nmodes_to_keep)

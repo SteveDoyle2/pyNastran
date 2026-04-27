@@ -23,10 +23,11 @@ from pyNastran.f06.f06_formatting import (
 )
 from pyNastran.op2.result_objects.op2_objects import combination_inplace
 from pyNastran.op2.op2_interface.write_utils import (
-    view_dtype, view_idtype_as_fdtype,
-    set_table3_field, get_title_subtitle_label)
+    # view_dtype, get_title_subtitle_label,
+    view_idtype_as_fdtype,
+    set_table3_field, )
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    update_stress_force_time_word,
+    # update_stress_force_time_word,
     set_element_case, set_element_node_xxb_case,
     set_static_case, set_modal_case, set_transient_case,
     set_post_buckling_case)
@@ -128,7 +129,7 @@ def _oef_data_code(table_name: str,
 
     # table_code = tCode % 1000
     # sort_code = tCode // 1000
-    tCode = table_code * 1000 + sort_code
+    tcode = table_code * 1000 + sort_code
 
     device_code = 2  # Plot
     # print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
@@ -139,7 +140,7 @@ def _oef_data_code(table_name: str,
         'is_msc': is_msc,
         'format_code': 1,  # real
         'table_code': table_code,
-        'tCode': tCode,
+        'tCode': tcode,
         'table_name': table_name,  ## TODO: should this be a string?
         'device_code': device_code,
         'random_code': random_code,
@@ -3225,16 +3226,16 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
-        #if 'CTRIA3' in self.element_name:
-            #nnodes = 3
-        #elif 'CQUAD4' in self.element_name:
-            #nnodes = 4
-        #elif 'CTRIAR' in self.element_name:
-            #nnodes = 4 # ???
-        #elif 'CQUADR' in self.element_name:
-            #nnodes = 5 # ???
-        #else:  # pragma: no cover
-            #raise NotImplementedError(self.code_information())
+        # if 'CTRIA3' in self.element_name:
+        #     nnodes = 3
+        # elif 'CQUAD4' in self.element_name:
+        #     nnodes = 4
+        # elif 'CTRIAR' in self.element_name:
+        #     nnodes = 4 # ???
+        # elif 'CQUADR' in self.element_name:
+        #     nnodes = 5 # ???
+        # else:  # pragma: no cover
+        #     raise NotImplementedError(self.code_information())
 
         #print("nnodes_all =", nnodes_all)
         #cen_word_ascii = 'CEN/%i' % nnodes
@@ -3270,7 +3271,6 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         #assert ntotal == 193, ntotal
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
-
         if self.is_sort1:
             structi = Struct(endian + b'i 8f')
         else:  # pragma: no cover
@@ -3766,7 +3766,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             cyci = [0, 1, 2, 3]
             #cyc = cycle([0, 1, 2, 3])  # TODO: this is totally broken...
             nnodes_per_eid = 4
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.element_type)
 
         # TODO: this shouldn't be necessary
@@ -3780,8 +3780,8 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         #msg.append(f'  element_node.shape = {self.element_node.shape}\n')
         #msg.append(f'  data.shape={self.data.shape}\n')
 
-        eids = self.element_node[:, 0]
-        nids = self.element_node[:, 1]
+        # eids = self.element_node[:, 0]
+        # nids = self.element_node[:, 1]
         ueids = np.unique(eids)
         nelements = len(ueids)
 
@@ -3812,11 +3812,11 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         if self.is_sort1:
             struct1 = Struct(endian + b'i4s i 8f')
             struct2 = Struct(endian + b'i 8f')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('SORT2')
 
         nid_floats = np.array([])
-        eid_short_floats = np.array([])
+        eid_device_floats = np.array([])
         cen_words = np.array([])
         if write_vectorized:
             fdtype = self.data.dtype
@@ -3828,7 +3828,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
                 fdtype = np.float32(1.0)
             # eid_floats = view_idtype_as_fdtype(eids_device, fdtype)
             nid_floats = view_idtype_as_fdtype(nids, fdtype)
-            eid_short_floats = view_idtype_as_fdtype(eids_device_short, fdtype)
+            eid_device_floats = view_idtype_as_fdtype(eids_device_short, fdtype)
             cen_words = np.full(nelements, cen_word, dtype='|S4')
 
         op2_ascii.write(f'nelements={nelements:d}\n')
@@ -3851,10 +3851,16 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             if write_vectorized:
                 ntime, nelem_nodes, nresult = self.data.shape
                 nnode = self.nnodes_per_element
-                datai = self.data[itime, :, :].reshape(nelements, nnode, nresult)
-                nid_data = np.column_stack([nid_floats, datai]).reshape(nelements, nnode*nresult)
-                eid_data = np.column_stack([eid_short_floats, cen_words, nid_data])
+                datai = self.data[itime, :, :].reshape(nelements*nnode, nresult)
+                assert len(datai) == len(nids)
+                assert len(nids) == nelements*nnode
+                assert len(datai) == nelements*nnode, datai.shape
+                nid_data = np.column_stack([nid_floats, datai])
+                assert nid_data.shape == (nelements*nnode, 1+nresult), nid_data.shape
+                nid_data2 = nid_data.reshape(nelements, nnode*(1+nresult))
+                eid_data = np.column_stack([eid_device_floats, cen_words, nid_data2])
                 op2_file.write(eid_data)
+                assert ntotal == nelements*(2+nnode*(1+nresult))
                 assert ntotal == eid_data.size
                 # write_op2_plate2_force
             else:
@@ -5937,7 +5943,7 @@ def oef_data_code(table_name: str,
 
     # table_code = tCode % 1000
     # sort_code = tCode // 1000
-    tCode = table_code * 1000 + sort_code
+    tcode = table_code * 1000 + sort_code
 
     device_code = 2  # Plot
     # print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
@@ -5948,7 +5954,7 @@ def oef_data_code(table_name: str,
         'is_msc': is_msc,
         'format_code': 1,  # real
         'table_code': table_code,
-        'tCode': tCode,
+        'tCode': tcode,
         'table_name': table_name,  ## TODO: should this be a string?
         'device_code': device_code,
         'random_code': random_code,
