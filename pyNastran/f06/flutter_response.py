@@ -692,23 +692,22 @@ class FlutterResponse:
         # import matplotlib as mpl
         # print(mpl.rcParams['image.cmap'])
 
-        # Get the cycle as a list of colors
-        cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
-        # print(f'cycle1 = {cycle}')
-        import matplotlib as mpl
-        # mpl.set_prop_cycle('color', plt.cm.tab20.colors)
-        # plt.rcParams['axes.prop_cycle'] = plt.cycler('color', ['black'])
-        # plt.rcParams['axes.prop_cycle'] = plt.cycler('color', plt.cm.tab10.colors)  # default
-        # plt.rcParams['axes.prop_cycle'] = plt.cycler('color', plt.cm.tab20.colors)
+        cmap_name = 'tab10'
+        # cmap_name = 'tab20'
+        # cmap_name = 'tab20b'
+        # cmap_name = 'flag'
+        # cmap_name = 'black'
+        # cmap_name = 'viridis'
+        # cmap_name = 'jet'
+        setup_colormap(cmap_name, n=30)
+        colors_hex = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-        # cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
-
-        # plt.set_cmap('jet')
         if colors is None:
             # colors = ['r', 'g', 'b', 'k', 'm']  # 5
-            colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']  # 10
-            # colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9',
-            #           'C10', 'C11', 'C12', 'C13', 'C14', 'C15', 'C16', 'C17', 'C18', 'C19',]  # 20
+            if len(colors_hex) > 0:
+                colors = [f'C{d}' for d in range(len(colors_hex))]
+            else:
+                colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']  # 10
 
         if symbols is None:
             symbols = ['o', '*', 'x', 'v', '>', '<', '^']  # 7
@@ -1287,8 +1286,15 @@ class FlutterResponse:
 
         if legend:
             # bbox_to_anchor=(1.125, 1.), ncol=ncol,
+            if 'bbox_to_anchor' not in legend_kwargs:
+                legend_kwargs['bbox_to_anchor'] = (1.02, 1)
+            if 'loc' not in legend_kwargs:
+                legend_kwargs['loc'] = 'upper left'
+            # if 'borderaxespad' not in legend_kwargs:
+            #     legend_kwargs['borderaxespad'] = 0
             ax1.legend(**legend_kwargs)
-
+            # ax1.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize='x-small', borderaxespad=0)
+            fig.subplots_adjust(right=0.7)
         _show_save_clear_close(
             fig, show, png_filename, clear, close)
     # for imode1 in range(nmodes1):
@@ -4367,3 +4373,38 @@ def _get_modal_sort(eigr_vel, eigi_vel,
         else:
             raise RuntimeError('bad')
     return irow_map
+
+def setup_colormap(cmap_name: str, n: int=30) -> None:
+    """
+    import matplotlib as mpl
+    # mpl.set_prop_cycle('color', plt.cm.tab20.colors)
+    # plt.rcParams['axes.prop_cycle'] = plt.cycler('color', ['black'])
+    # plt.rcParams['axes.prop_cycle'] = plt.cycler('color', plt.cm.viridis.colors)
+    plt.rcParams['axes.prop_cycle'] = plt.cycler('color', plt.cm.tab10.colors)  # default
+
+    # Get the cycle as a list of colors
+    cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    """
+    if cmap_name == 'black':
+        plt.rcParams['axes.prop_cycle'] = plt.cycler('color', [cmap_name])
+    else:
+        cmap = getattr(plt.cm, cmap_name)
+
+        # prevent viridis/flag from making 255 colors...
+        mode = 2 if cmap_name in ['viridis', 'flag'] else 1
+
+        if hasattr(cmap, 'colors') and mode == 1:
+            # tab10, tab20, tab20b
+            colors_list = cmap.colors
+            if cmap_name == 'tab20':
+                # cut out 15,16
+                colors_list = colors_list[:14] + colors_list[16:]
+
+            # plt.rcParams['axes.prop_cycle'] = plt.cycler('color', plt.cm.tab20.colors)
+            plt.rcParams['axes.prop_cycle'] = plt.cycler('color', colors_list)
+        else:
+            # viridis, flag
+            colors_list = cmap(np.linspace(0, 1, n))
+            # plt.rc('axes', prop_cycle=cycler(color=custom_colors))
+            plt.rcParams['axes.prop_cycle'] = plt.cycler('color', colors_list)
+

@@ -12,12 +12,14 @@ def read_lax_bdf(bdf_filename: str,
                  punch: bool=False,
                  validate: bool=True,
                  xref: bool=True,
+                 read_includes: bool=True,
                  is_strict_card_parser: bool=False,
                  cards_to_read: list[str]=None,
                  duplicate_cards: list[str]=None,
                  log=None) -> BDF:
     from pyNastran.bdf.bdf import BDF
     model = BDF(log=log)
+    model.read_includes = read_includes
     if not is_strict_card_parser:
         log.warning('using lax card parser')
         model.is_strict_card_parser = is_strict_card_parser
@@ -34,6 +36,7 @@ def read_lax_bdf(bdf_filename: str,
 def read_lax_obj(bdf_filename: PathLike,
                  obj_filename: PathLike, is_obj: bool,
                  xref: bool=True,
+                 read_includes: bool=True,
                  is_strict_card_parser: bool=True,
                  punch: bool=False,
                  duplicate_cards=None,
@@ -73,6 +76,7 @@ def read_lax_obj(bdf_filename: PathLike,
             model = read_lax_bdf(
                 bdf_filename, punch=punch, xref=False,
                 validate=False,
+                read_includes=read_includes,
                 is_strict_card_parser=is_strict_card_parser,
                 duplicate_cards=duplicate_cards,
                 log=log)
@@ -82,6 +86,7 @@ def read_lax_obj(bdf_filename: PathLike,
         model = read_lax_bdf(
             bdf_filename, punch=punch, xref=xref,
             validate=False,
+            read_includes=read_includes,
             is_strict_card_parser=is_strict_card_parser,
             duplicate_cards=duplicate_cards,
             log=log)

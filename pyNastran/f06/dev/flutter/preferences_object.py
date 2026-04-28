@@ -21,6 +21,7 @@ class FlutterPreferencesObject:
         self.window = None
         self.use_vtk = use_vtk
         self.hide_vtk = hide_vtk
+        assert hasattr(self.gui, 'on_run'), type(self.gui)
 
     # def show_window(self) -> None:
     #     """shows the window"""

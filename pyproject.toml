@@ -138,7 +138,7 @@ gui_pyqt5 = [
     'pandas>=1.4,<3.0',
     'h5py',     # hdf5
     'PyQt5',    # gui library
-    'vtk>=9.0', # rendering library
+    'vtk>=9.0,<9.6', # rendering library
     #'qtpy',
     'imageio < 3.0',
     'pillow >= 8.4.0',  # 2021/10

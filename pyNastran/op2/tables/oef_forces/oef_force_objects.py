@@ -3797,7 +3797,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         ntotal = ntotali * nelements
 
         #print('shape = %s' % str(self.data.shape))
-        assert nnodes > 1, nnodes
+        assert 1 < nnodes < 9, nnodes
         #assert self.ntimes == 1, self.ntimes
 
         #device_code = self.device_code
@@ -3817,7 +3817,8 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
         nid_floats = np.array([])
         eid_device_floats = np.array([])
-        cen_words = np.array([])
+        cen_word_floats = np.array([])
+        nnode_floats = np.array([])
         if write_vectorized:
             fdtype = self.data.dtype
             if self.size == fdtype.itemsize:
@@ -3830,6 +3831,9 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             nid_floats = view_idtype_as_fdtype(nids, fdtype)
             eid_device_floats = view_idtype_as_fdtype(eids_device_short, fdtype)
             cen_words = np.full(nelements, cen_word, dtype='|S4')
+            cen_word_floats = view_idtype_as_fdtype(cen_words, fdtype)
+            nnodes_array = np.full(nelements, nnodes, dtype='int32')
+            nnode_floats = view_idtype_as_fdtype(nnodes_array, fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         struct_13i = Struct(endian + b'13i')
@@ -3857,8 +3861,11 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
                 assert len(datai) == nelements*nnode, datai.shape
                 nid_data = np.column_stack([nid_floats, datai])
                 assert nid_data.shape == (nelements*nnode, 1+nresult), nid_data.shape
-                nid_data2 = nid_data.reshape(nelements, nnode*(1+nresult))
-                eid_data = np.column_stack([eid_device_floats, cen_words, nid_data2])
+
+                # reshape and then chop off the nid=0 column
+                nid_data2 = nid_data.reshape(nelements, nnode*(1+nresult))[:, 1:]
+
+                eid_data = np.column_stack([eid_device_floats, cen_word_floats, nnode_floats, nid_data2])
                 op2_file.write(eid_data)
                 assert ntotal == nelements*(2+nnode*(1+nresult))
                 assert ntotal == eid_data.size
