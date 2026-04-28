@@ -4,7 +4,7 @@ dfeines:
  - SHABP(log=None, debug=False)
 
 """
-from numpy import array, zeros, arange, ones, cross
+import numpy as np
 from numpy.linalg import norm  # type: ignore
 from cpylog import __version__ as CPYLOG_VERSION
 if CPYLOG_VERSION > '1.6.0':
@@ -81,7 +81,7 @@ class SHABP(ShabpOut):
                 nrows, ncols = X.shape
 
                 npoints = nrows * ncols
-                xyz = zeros((npoints, 3), dtype='float32')
+                xyz = np.zeros((npoints, 3), dtype='float32')
                 xyz[:, 0] = self.X[ipatch-1].ravel()
                 xyz[:, 1] = self.Y[ipatch-1].ravel()
                 xyz[:, 2] = self.Z[ipatch-1].ravel()
@@ -102,7 +102,7 @@ class SHABP(ShabpOut):
                         i4 = irow*ncols +(jcol+1),
                         a = xyz[i3, :] - xyz[i1, :]
                         b = xyz[i4, :] - xyz[i2, :]
-                        area += 0.5 * norm(cross(a, b))
+                        area += 0.5 * norm(np.cross(a, b))
 
             areas[name] = area
             lengths[name] = xmax - xmin
@@ -127,15 +127,15 @@ class SHABP(ShabpOut):
         """gets the area of a set of patches"""
         if ipatches is None:
             npatches = len(self.X)
-            ipatches = arange(npatches)
+            ipatches = np.arange(npatches)
 
-        areas = zeros(len(ipatches), dtype='float32')
+        areas = np.zeros(len(ipatches), dtype='float32')
         for i, ipatch in enumerate(ipatches):
             X = self.X[ipatch-1]
             nrows, ncols = X.shape
 
             npoints = nrows * ncols
-            xyz = zeros((npoints, 3), dtype='float32')
+            xyz = np.zeros((npoints, 3), dtype='float32')
             xyz[:, 0] = self.X[ipatch-1].ravel()
             xyz[:, 1] = self.Y[ipatch-1].ravel()
             xyz[:, 2] = self.Z[ipatch-1].ravel()
@@ -150,7 +150,7 @@ class SHABP(ShabpOut):
                     i4 = irow*ncols + (jcol+1),
                     a = xyz[i3, :] - xyz[i1, :]
                     b = xyz[i4, :] - xyz[i2, :]
-                    area += 0.5 * norm(cross(a, b))
+                    area += 0.5 * norm(np.cross(a, b))
             areas[i] = area
         return areas
 
@@ -274,7 +274,7 @@ class SHABP(ShabpOut):
                     raise RuntimeError()
 
             try:
-                patchi = array(patch, dtype='float32')
+                patchi = np.array(patch, dtype='float32')
             except Exception:
                 print('patch =', patch)
                 for i, patchi in enumerate(patch):
@@ -303,9 +303,9 @@ class SHABP(ShabpOut):
             nrows = len(patch)
             ncols = len(patch[0])
             #xyz = zeros((nrows, ncols, 3), dtype='float32')
-            x = zeros((nrows, ncols), dtype='float32')
-            y = zeros((nrows, ncols), dtype='float32')
-            z = zeros((nrows, ncols), dtype='float32')
+            x = np.zeros((nrows, ncols), dtype='float32')
+            y = np.zeros((nrows, ncols), dtype='float32')
+            z = np.zeros((nrows, ncols), dtype='float32')
             for irow, row in enumerate(patch):
                 for icol, col in enumerate(row):
                     x[irow, icol] = col[0]
@@ -333,12 +333,12 @@ class SHABP(ShabpOut):
 
         ipoint = 0
         ielement = 0
-        xyz = zeros((npoints, 3), dtype='float32')
-        elements2 = zeros((nelements, 4), dtype='int32')
-        components = ones(nelements, dtype='int32')
-        patches = ones(nelements, dtype='int32')
-        impact = ones(nelements, dtype='int32')
-        shadow = ones(nelements, dtype='int32')
+        xyz = np.zeros((npoints, 3), dtype='float32')
+        elements2 = np.zeros((nelements, 4), dtype='int32')
+        components = np.ones(nelements, dtype='int32')
+        patches = np.ones(nelements, dtype='int32')
+        impact = np.ones(nelements, dtype='int32')
+        shadow = np.ones(nelements, dtype='int32')
 
         for ipatch in range(npatches):
             comp_num, impact_val, shadow_val = self.get_impact_shadow(ipatch)
@@ -363,7 +363,7 @@ class SHABP(ShabpOut):
                         irow*ncols + (jcol+1),
                     ]
                     elements.append(element)
-            elements = array(elements, dtype='int32')
+            elements = np.array(elements, dtype='int32')
 
             patches[ielement:ielement+nelementsi] *= (ipatch+1)
             components[ielement:ielement+nelementsi] *= comp_num
@@ -675,9 +675,11 @@ def parse_viscous(lines, line, i):
         #print(line)
         unused_a, unused_b = line.split()
         unused_icomp = int(line[:3])
-        # 0=skin friction method cards will be read for each alpha/beta
-        # 1=read only one skin friction method card and assume it applies to all alpha/betas for this component
-        # 2=use the same skin friction data as for the prepvious component (skip reading data)
+        # 0: skin friction method cards will be read for each alpha/beta
+        # 1: read only one skin friction method card and assume it
+        #    applies to all alpha/betas for this component
+        # 2: use the same skin friction data as for the previous
+        #    component (skip reading data)
         unused_isk = line[3]
 
         unused_nskin_friction_elements = line[4:7]

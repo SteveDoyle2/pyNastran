@@ -1,5 +1,4 @@
 from typing import Optional
-from numpy import vstack
 from pyNastran.converters.tecplot.tecplot import Tecplot
 
 

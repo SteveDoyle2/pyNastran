@@ -7,7 +7,7 @@ defines:
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 
-from numpy import array, hstack
+import numpy as np
 
 def nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
                      check_shells=True, check_solids=True, log=None):
@@ -79,36 +79,36 @@ def nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
 
     nodes = bdf_model.nodes
     elements = bdf_model.elements
-    xyz_cid0 = array([nodes[nid].xyz for nid in node_ids], dtype='float64')
+    xyz_cid0 = np.array([nodes[nid].xyz for nid in node_ids], dtype='float64')
 
     pids = []
     model = UGRID(log=log)
     model.nodes = xyz_cid0
     if ntris:
-        model.tris = array([elements[eid].node_ids for eid in ctria3], dtype='int32')
-        ptris = array([elements[eid].Pid() for eid in ctria3], dtype='int32')
+        model.tris = np.array([elements[eid].node_ids for eid in ctria3], dtype='int32')
+        ptris = np.array([elements[eid].Pid() for eid in ctria3], dtype='int32')
         pids.append(ptris)
     if nquads:
-        model.quads = array([elements[eid].node_ids for eid in cquad4], dtype='int32')
-        pquads = array([elements[eid].Pid() for eid in cquad4], dtype='int32')
+        model.quads = np.array([elements[eid].node_ids for eid in cquad4], dtype='int32')
+        pquads = np.array([elements[eid].Pid() for eid in cquad4], dtype='int32')
         pids.append(pquads)
 
     if check_shells:
         if len(pids) == 1:
             model.pids = pids[0]
         elif len(pids) == 2:
-            model.pids = hstack(pids)
+            model.pids = np.hstack(pids)
         else:
             raise RuntimeError(pids)
 
     if ntetra:
-        model.tets = array([elements[eid].node_ids for eid in ctetra], dtype='int32')
+        model.tets = np.array([elements[eid].node_ids for eid in ctetra], dtype='int32')
     if npyram:
-        model.penta5s = array([elements[eid].node_ids for eid in cpyram], dtype='int32')
+        model.penta5s = np.array([elements[eid].node_ids for eid in cpyram], dtype='int32')
     if nhexa:
-        model.penta6s = array([elements[eid].node_ids for eid in cpenta], dtype='int32')
+        model.penta6s = np.array([elements[eid].node_ids for eid in cpenta], dtype='int32')
     if nhexa:
-        model.hexas = array([elements[eid].node_ids for eid in chexa], dtype='int32')
+        model.hexas = np.array([elements[eid].node_ids for eid in chexa], dtype='int32')
 
     model.log.debug('ugrid_filename_out = %r' % ugrid_filename_out)
     if ugrid_filename_out is not None:
