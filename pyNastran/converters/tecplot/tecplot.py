@@ -346,7 +346,7 @@ class Tecplot(TecplotBinary):
             ntetsi = len(tetsi)
             nhexasi = len(hexasi)
             nelementsi = nquadsi + ntrisi + ntetsi + nhexasi
-            print(f'nquad={nquadsi} ntrisi={ntrisi} ntetsi={ntetsi} nhexasi={nhexasi}')
+            # print(f'nquad={nquadsi} ntrisi={ntrisi} ntetsi={ntetsi} nhexasi={nhexasi}')
             assert nelementsi > 0, str(zone)
             if nquadsi:
                 quads.append(inode + quadsi)

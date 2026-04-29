@@ -3168,7 +3168,17 @@ def _asarray(results: list[list[str]],
                     row2.append(row_entry2)
                 mode_result2.append(row2)
             results2.append(mode_result2)
-        results = np.array(results2, dtype='float64')
+        try:
+            results = np.array(results2, dtype='float64')
+        except ValueError:  # pragma: no cover
+            for imode, resi in enumerate(results2):
+                try:
+                    resi_array = np.array(resi, dtype='float64')
+                    # print(resi_array.shape)
+                except ValueError:
+                    # print(resi)
+                    raise RuntimeError(f'check your file for an incomplete download on mode={imode+1:d}')
+            raise
 
         if fix_kfreq:
             # inan = np.isnan(results[:, :, :])

@@ -3228,7 +3228,7 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_39(self):
         """tests oef_shells_composite_complex_9 OESRT"""
-        log = get_logger(level='debug')
+        log = get_logger(level='info')
         # bdf_filename = MODEL_PATH / 'other' / 'extfib_fr1.bdf'
         op2_filename = MODEL_PATH / 'other' / 'extfib_fr1.op2'
 
@@ -3260,7 +3260,7 @@ class TestOP2Main(Tester):
          = ComplexLayeredCompositeStressArray12
          - ComplexLayeredCompositeStrainArray12
         """
-        log = get_logger(level='debug')
+        log = get_logger(level='warning')
         # bdf_filename = MODEL_PATH / 'other' / 'ranco07a.bdf'
         op2_filename = MODEL_PATH / 'other' / 'ranco07a.op2'
 
