@@ -12,6 +12,7 @@ from itertools import count
 from typing import Callable, Optional, TYPE_CHECKING
 
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 # import matplotlib.gridspec as gridspec
 

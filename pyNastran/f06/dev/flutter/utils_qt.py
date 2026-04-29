@@ -22,6 +22,11 @@ def create_grid_from_list(parent,
 def load_lineedits(data: dict[str, Any],
                    line_edits: list[tuple[str, int, QLineEdit]]):
     for key, index, line_edit in line_edits:
+        #if not isinstance(line_edit, QLineEdit):
+        #    print(f'*lineedit; key={key!r} index={index!r} line_edit={line_edit!r}')
+        #else:
+        #    print(f' lineedit; key={key!r} index={index!r} line_edit={line_edit!r}')
+
         if key not in data:
             # print(f'apply_settings: skipping key={key!r}')
             continue

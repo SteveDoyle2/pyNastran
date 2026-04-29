@@ -4378,7 +4378,7 @@ def _get_modal_sort(eigr_vel, eigi_vel,
             if value == 2:
                 imode0 = key
                 irow_map[irow] = imode0
-                print(f'  -> imode0 = {imode0}')
+                # print(f'  -> imode0 = {imode0}')
                 break
         else:
             raise RuntimeError('bad')
