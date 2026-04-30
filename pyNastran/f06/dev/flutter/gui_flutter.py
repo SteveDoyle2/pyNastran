@@ -159,6 +159,7 @@ class FlutterGui(LoggableGui):
         self.kfreq_lim = [None, None]
         self.eigr_lim = [None, None]
         self.eigi_lim = [None, None]
+        self._mode_switch_method_old = 'None'
         self.responses = {}
         self.modes = []
         self.selected_modes = []
@@ -1597,6 +1598,12 @@ class FlutterGui(LoggableGui):
             freq_axes = fig.add_subplot(gridspeci[1, :3], sharex=damp_axes)
 
         response = self.responses[self.subcase]
+
+        if self.mode_switch_method != self._mode_switch_method_old:
+            log.info(f'  mode_switch_method prep={self.mode_switch_method!r}')
+            response.results = response.results_in.copy()
+            self._units_out = ''  # force unit conversion
+            self._mode_switch_method_old = self.mode_switch_method
 
         # you can change the output units without reloading
         if self._units_out != self.units_out:

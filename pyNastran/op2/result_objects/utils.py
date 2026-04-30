@@ -28,9 +28,10 @@ def complex_damping_frequency(eigr: np.ndarray,
         abs_freqs = np.sqrt(np.abs(eigi)) / (2 * np.pi)
     else:
         # flutter
-        # eig = omega*zeta + omega*1j = eigr + eigi*1j
+        # eig = omega*gamma + omega*1j = eigr + eigi*1j
         # freq = eigi/(2*pi)
-        # zeta = 2*eigr/eigi
+        # g = 2*eigr/eigi
+        # is g=2*gamma=eigr/ln(2) * L/V when eigi=0?
         abs_freqs = abs(eigi) / (2 * np.pi)
         inonzero = np.where(eigi != 0)[0]
         if len(inonzero):

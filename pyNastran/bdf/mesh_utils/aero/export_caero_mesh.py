@@ -51,7 +51,7 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
         $$        1        1    0.0000    0.2500    0.0000    0.0988    0.5000    0.0247
         $$        1        2    0.0988    0.2500    0.0000    0.0988    0.5000    0.1234
     skip_zero_check : bool; default=False
-        if True, veriffies hat W2GJ, WKK, etc. are not empty
+        if True, verifies that W2GJ, WKK, etc. are not empty
         an empty WKK will result in no aero load
         an empty W2GJ is also likely a bug
     write_header : bool; default=True
