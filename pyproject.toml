@@ -138,7 +138,7 @@ gui_pyqt5 = [
     'pandas>=1.4,<3.0',
     'h5py',     # hdf5
     'PyQt5',    # gui library
-    'vtk>=9.0', # rendering library
+    'vtk>=9.0,<9.6', # rendering library
     #'qtpy',
     'imageio < 3.0',
     'pillow >= 8.4.0',  # 2021/10
@@ -189,6 +189,7 @@ test_op4  = 'pyNastran.op4.test.test_op4:main'
 #pynastrangui = 'pyNastran.gui.gui:cmd_line'
 pyNastranGUI = 'pyNastran.gui.gui:cmd_line'
 bdf = 'pyNastran.bdf.mesh_utils.utils:cmd_line'
+op2 = 'pyNastran.op2.tools.utils:cmd_line'
 f06 = 'pyNastran.f06.utils:cmd_line'
 format_converter = 'pyNastran.converters.format_converter:cmd_line_format_converter'
 abaqus_to_nastran = 'pyNastran.converters.abaqus.abaqus_to_nastran:cmd_abaqus_to_nastran'

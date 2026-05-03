@@ -12,6 +12,7 @@ from itertools import count
 from typing import Callable, Optional, TYPE_CHECKING
 
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 # import matplotlib.gridspec as gridspec
 
@@ -224,6 +225,21 @@ def write_report(docx_filename: str,
     dirname = os.path.dirname(f06_filename0)
     docx_filename = os.path.join(dirname, docx_filename)
     docx_dirname = Path(docx_filename).parent
+    base, ext = os.path.splitext(docx_filename)
+    excel_filename = base + '.xlsx'
+    try:
+        assert ext.lower() == '.docx'
+    except AssertionError:
+        log.error(f'{str(docx_filename)!r} is not a docx file')
+        return
+
+    try:
+        with open(excel_filename, 'w') as excel_file:
+            pass
+    except PermissionError:
+        log.error(f'close the Excel file {excel_filename!r}')
+        return
+
     picdir = docx_dirname / 'pics'
     if not picdir.exists():
         picdir.mkdir()
@@ -406,11 +422,13 @@ def write_report(docx_filename: str,
         pickle.dump(out, obj_file)
 
     _cases_to_document(
-        log, docx_filename, table, cases, trades, settings,
+        log, docx_filename, excel_filename,
+        table, cases, trades, settings,
         eas_units=eas_report_units, ndir_levels=ndir_levels)
 
 def _cases_to_document(log: SimpleLogger,
                        docx_filename: PathLike,
+                       excel_filename: PathLike,
                        table: pd.DataFrame,
                        cases: list,
                        trades: list[dict],
@@ -494,6 +512,10 @@ def _cases_to_document(log: SimpleLogger,
             paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
         # msg += f'{mach:.3f}, {weight_config}, {v0:.3f}, {freq0_str}, {v3:.3f}, {freq3_str}, {vdiverg:.3f}, {config}, {f06_filename_base}\n'
 
+    df = pd.DataFrame.from_dict(flutter_table)
+    df.to_excel(excel_filename, index=True)
+
+    # if the 0% requirement is not defined, remove the response
     if percent0 <= -100.0:
         del flutter_table[label_vg0]
         del flutter_table[label_freq_g0]

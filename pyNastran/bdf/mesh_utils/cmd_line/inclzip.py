@@ -25,7 +25,7 @@ def cmd_line_inclzip(argv=None, quiet: bool=False) -> None:
     # positional arguments
     parent_parser.add_argument('inclzip', type=str)
     parent_parser.add_argument('INPUT', help='path to output BDF/DAT/NAS file', type=str)
-    parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str)
+    parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str, default='')
     add_argparse_arguments(parent_parser, ['--punch', '--lax', '--allow_dup'])
     args = parent_parser.parse_args(args=argv[1:])
     if not quiet:  # pragma: no cover
@@ -34,13 +34,13 @@ def cmd_line_inclzip(argv=None, quiet: bool=False) -> None:
     bdf_filename = args.INPUT
     bdf_filename_out = args.OUTPUT
     is_strict_card_parser = not args.lax
-    punch = args.punch
+    # punch = args.punch
     duplicate_cards = args.allow_dup.split(',') if args.allow_dup else []
 
-    bdf_filename_out = ''
-    if bdf_filename_out is None:
+    if bdf_filename_out in [None, '']:
         bdf_filename_base, ext = os.path.splitext(bdf_filename)
         bdf_filename_out = f'{bdf_filename_base}.zip{ext}'
+    assert bdf_filename_out != '', f'bdf_filename_out={bdf_filename_out!r}'
 
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8')

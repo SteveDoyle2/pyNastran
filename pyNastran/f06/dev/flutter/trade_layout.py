@@ -10,7 +10,6 @@ from PyQt5.QtWidgets import QCheckBox
 
 from pyNastran.gui.utils.qt.pydialog import QFloatEdit
 from pyNastran.utils import print_bad_path
-# from pyNastran.utils.dev import get_files_of_type
 
 from pyNastran.f06.dev.flutter.utils import get_raw_json
 JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json(allow_vtk=False)
@@ -18,12 +17,10 @@ JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json(allow_vtk=False)
 from qtpy.QtWidgets import (
     QApplication, QVBoxLayout, QComboBox,
     QLabel, QPushButton,
-    QLineEdit, QFileDialog, QProgressBar,
-)
+    QLineEdit, QFileDialog, QProgressBar,)
 from pyNastran.f06.dev.flutter.qtablewidgetcopy import QTableWidgetCopy
 from pyNastran.f06.dev.flutter.utils_qt import create_grid_from_list
 from pyNastran.f06.dev.flutter.write_report import write_report
-
 
 from cpylog import SimpleLogger
 import pyNastran
@@ -72,7 +69,7 @@ class TradeLayout(QVBoxLayout):
         #------------------------------------------------------------
         self.excel_dict: dict[str, pd.DataFrame] = {}
         self.excel_filename = 'trade_study.xlsx'
-        self.python_filename = 'envelope.py'
+        self.python_envelope_filename = 'envelope.py'
         self.base_f06_directory = ''
         self.word_filename = 'flutter_summary.docx'
         #------------------------------------------------------------
@@ -119,13 +116,13 @@ class TradeLayout(QVBoxLayout):
         self.progress_bar = QProgressBar(parent)
         self.progress_bar.setVisible(False)
 
-        self.python_filename_label = QLabel('Python Filename:', parent)
-        self.python_filename_edit = QLineEdit(parent)
-        self.python_filename_edit.setText(self.python_filename)
+        self.python_envelope_filename_label = QLabel('Python Filename:', parent)
+        self.python_envelope_filename_edit = QLineEdit(parent)
+        self.python_envelope_filename_edit.setText(self.python_envelope_filename)
         # self.python_filename_edit.setToolTip('Must click load button before selecting tab')
-        self.python_filename_browse = QPushButton('Browse...', parent)
-        self.python_load_button = QPushButton('Load...', parent)
-        self.python_plot_button = QPushButton('Plot...', parent)
+        self.python_envelope_filename_browse = QPushButton('Browse...', parent)
+        self.python_envelope_load_button = QPushButton('Load...', parent)
+        self.python_envelope_plot_button = QPushButton('Plot...', parent)
 
         self.eas_max_label = QLabel('EAS Max:', parent)
         self.eas_max_edit = QFloatEdit(parent)
@@ -163,7 +160,8 @@ class TradeLayout(QVBoxLayout):
         ])
         grid3 = create_grid_from_list(parent, [
             (self.save_obj_checkbox,),
-            (self.python_filename_label, self.python_filename_edit, self.python_filename_browse, self.python_load_button, self.python_plot_button),
+            (self.python_envelope_filename_label, self.python_envelope_filename_edit, self.python_envelope_filename_browse,
+             self.python_envelope_load_button, self.python_envelope_plot_button),
             (self.xaxis_label, self.xaxis_pulldown),
             (self.yaxis_label, self.yaxis_pulldown),
             (self.config_label, self.config_edit),
@@ -184,7 +182,7 @@ class TradeLayout(QVBoxLayout):
     def setup_connections(self) -> None:
         parent = self.parent
         self.excel_load_button.clicked.connect(self.on_load_excel)
-        self.python_load_button.clicked.connect(self.on_load_python)
+        self.python_envelope_load_button.clicked.connect(self.on_load_python_envelope)
         self.tab_select_pulldown.currentIndexChanged.connect(self.on_select_excel_tab)
 
         # self.excel_filename_browse.clicked.connect(self.on_select_excel_tab)
@@ -192,7 +190,7 @@ class TradeLayout(QVBoxLayout):
         self.base_f06_directory_browse.clicked.connect(self.on_base_f06_directory_browse)
         self.excel_filename_browse.clicked.connect(self.on_load_excel_file)
         self.word_filename_browse.clicked.connect(self.on_load_word_file)
-        self.python_filename_browse.clicked.connect(self.on_load_python_file)
+        self.python_envelope_filename_browse.clicked.connect(self.on_load_python_envelope_file)
 
         # self.base_f06_directory_browse.setEnabled(False)
         self.tab_select_pulldown.setEnabled(False)
@@ -472,14 +470,14 @@ class TradeLayout(QVBoxLayout):
         self.table_widget.load_table_data(headers, data_table)
 
     @dontcrash
-    def on_load_python(self):
-        is_passed, python_filename = get_file_edit(
-            'python_filename', self.python_filename_edit,
+    def on_load_python_envelope(self):
+        is_passed, python_envelope_filename = get_file_edit(
+            'python_envelope_filename', self.python_envelope_filename_edit,
             self.log)
         if not is_passed:
             return
 
-        with open(python_filename, 'r') as py_file:
+        with open(python_envelope_filename, 'r') as py_file:
             code_string = py_file.read()
         exec(code_string)
 
@@ -522,14 +520,14 @@ class TradeLayout(QVBoxLayout):
             self.excel_filename_edit.setText(filename)
             self.excel_filename = filename
 
-    def on_load_python_file(self) -> None:
-        start_path = self.python_filename_edit.text()
+    def on_load_python_envelope_file(self) -> None:
+        start_path = self.python_envelope_filename_edit.text()
         filename = self._on_load_file(
-            title='Select Python File', start_path=start_path,
+            title='Select Python Envelope File', start_path=start_path,
             file_filter='Python File (*.py);;All Files (*)')
         if filename:
-            self.python_filename_edit.setText(filename)
-            self.python_filename = filename
+            self.python_envelope_filename_edit.setText(filename)
+            self.python_envelope_filename = filename
 
     def on_load_word_file(self) -> None:
         start_path = self.word_filename_edit.text()
@@ -604,7 +602,7 @@ class TradeLayout(QVBoxLayout):
 
     def get_dict(self) -> dict[str, str]:
         excel_filename = self.excel_filename_edit.text().strip()
-        python_filename = self.python_filename_edit.text().strip()
+        python_envelope_filename = self.python_envelope_filename_edit.text().strip()
         base_f06_directory = self.base_f06_directory_edit.text().strip()
         word_filename = self.word_filename_edit.text().strip()
         eas_max = self.eas_max_edit.text().strip()
@@ -620,7 +618,7 @@ class TradeLayout(QVBoxLayout):
         trade = {
             'base_f06_directory': base_f06_directory,
             'excel_filename': excel_filename,
-            'python_filename': python_filename,
+            'python_envelope_filename': python_envelope_filename,
             'word_filename': word_filename,
             'configs': configs,
             'xaxis': xaxis,
@@ -634,6 +632,7 @@ class TradeLayout(QVBoxLayout):
             # should be in trade/
             (f'{prefix}excel_filename', -1, self.excel_filename_edit),
             (f'{prefix}base_f06_directory', -1, self.base_f06_directory_edit),
+            (f'{prefix}python_envelope_filename', -1, self.python_envelope_filename_edit),
             (f'{prefix}word_filename', -1, self.word_filename_edit),
             (f'{prefix}configs', -1, self.config_edit),
             (f'{prefix}eas_max', -1, self.eas_max_edit),

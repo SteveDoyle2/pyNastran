@@ -574,6 +574,20 @@ def run_and_compare_fems(
     fem2 = None
     diff_cards = []
 
+    if stop:
+        # Disable all these extra checks because saying
+        #   "stop after inital read/write" implies we won't run these things
+        # In practice, we're just inclizip'ing the deck.
+        run_extract_bodies = False
+        run_skin_solids = False
+        run_export_caero = False
+        run_dependent_checks = False
+        run_eid_checks = False
+        run_mcid = False
+        skip_aero_zero_check = True
+        hdf5 = False
+        run_pickle = False
+
     #nastran_cmd = 'nastran scr=yes bat=no old=no news=no '
     nastran_cmd = ''
     try:
@@ -832,6 +846,10 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
          - sets (S-set, M-set, R-set)
     stop : bool; default=True
         stops after initial read
+    skip_aero_zero_check : bool; default=False
+        if True, verifies that W2GJ, WKK, etc. are not empty
+        an empty WKK will result in no aero load
+        an empty W2GJ is also likely a bug
 
     """
     log = fem1.log

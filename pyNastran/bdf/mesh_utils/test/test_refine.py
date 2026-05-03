@@ -4,6 +4,7 @@ import unittest
 import numpy as np
 
 import pyNastran
+from cpylog import SimpleLogger
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.refine import (
     refine_model, _quad_nids_to_node_ids, _hexa_nids_to_node_ids,
@@ -144,7 +145,8 @@ class TestRefine(unittest.TestCase):
     def test_tri(self):
         bdf_filename_out = os.path.join(DIRNAME, 'tri.bdf')
 
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -165,7 +167,8 @@ class TestRefine(unittest.TestCase):
     def test_quad_bar(self):
         bdf_filename_out = os.path.join(DIRNAME, 'quad_bar.bdf')
 
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -193,7 +196,8 @@ class TestRefine(unittest.TestCase):
     def test_quad(self):
         bdf_filename_out = os.path.join(DIRNAME, 'quad.bdf')
 
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -213,7 +217,8 @@ class TestRefine(unittest.TestCase):
     def test_hexa(self):
         bdf_filename_out = os.path.join(DIRNAME, 'hexa.bdf')
 
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -239,7 +244,8 @@ class TestRefine(unittest.TestCase):
     def test_hexa_quad(self):
         bdf_filename_out = os.path.join(DIRNAME, 'hexa_quad.bdf')
 
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -276,7 +282,8 @@ class TestRefine(unittest.TestCase):
     def _test_tri_penta(self):
         bdf_filename_out = os.path.join(DIRNAME, 'penta_tri.bdf')
 
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -312,7 +319,8 @@ class TestRefine(unittest.TestCase):
     def test_hexa2(self):
         bdf_filename_out = os.path.join(DIRNAME, 'hexa2.bdf')
 
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -351,7 +359,8 @@ class TestRefine(unittest.TestCase):
     def test_quad2(self):
         bdf_filename_out = os.path.join(DIRNAME, 'quad2.bdf')
 
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -377,8 +386,6 @@ class TestRefine(unittest.TestCase):
             [10, 14, 8],
             [4, 9, 3], ], dtype='int32')
         n1, n2, n3, n4 = _quad_nids_to_node_ids(nids_array)
-        x = 1
-
 
     def test_refine_bwb(self):
         model_path = pkg_path / '..' / 'models'

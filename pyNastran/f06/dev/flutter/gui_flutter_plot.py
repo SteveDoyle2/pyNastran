@@ -547,6 +547,11 @@ class FlutterGui(LoggableGui):
                     text = relative_fname
                 action.setText(text)
 
+    def on_run(self):
+        # tab_id = self.tabs
+        # if tab_id == 0:
+        self.plot_layout[self.ifile].on_run()
+
     def log_debug(self, msg: str) -> None:
         print(f'DEBUG: {msg}')
 

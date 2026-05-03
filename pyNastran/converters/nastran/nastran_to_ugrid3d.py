@@ -11,7 +11,7 @@ defines:
 from __future__ import annotations
 import os
 from struct import Struct
-from numpy import array, unique
+import numpy as np
 from typing import Optional, TYPE_CHECKING
 
 from cpylog import SimpleLogger, get_logger
@@ -111,8 +111,8 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename: str,
     #pentas = zeros((npyramids, 6), dtype='int32')
     #hexas = zeros((nhexas, 6), dtype='int32')
 
-    xyz = array([model.nodes[nid].xyz for nid in sorted(nids)],
-                dtype=ndarray_float)
+    xyz = np.array([model.nodes[nid].xyz for nid in sorted(nids)],
+                    dtype=ndarray_float)
 
     # get the pshells
     #pshells = out['PSHELL']
@@ -177,8 +177,8 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename: str,
                     element0 = model.elements[eid0]
                     nnodes_per_element = len(element0.nodes)
 
-                    node_ids = array([model.elements[eid].node_ids for eid in sorted(eids)],
-                                     dtype='int32')
+                    node_ids = np.array([model.elements[eid].node_ids for eid in sorted(eids)],
+                                         dtype='int32')
 
                     # '%8i'
                     fmt = endian + '%ii' % (nelements * nnodes_per_element)
@@ -197,8 +197,8 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename: str,
                     element0 = model.elements[eid0]
                     nnodes_per_element = len(element0.nodes)
 
-                    node_ids = array([model.elements[eid].node_ids for eid in sorted(eids)],
-                                     dtype='int32')
+                    node_ids = np.array([model.elements[eid].node_ids for eid in sorted(eids)],
+                                         dtype='int32')
                     # '%8i'
                     fmt = endian + '%ii' % (nelements * nnodes_per_element)
                     structi = Struct(fmt)
@@ -296,7 +296,7 @@ def _update_merge(ugrid_filename: str,
     pid_solid = 100
     mid = 1
 
-    pids = unique(ugrid_model.pids)
+    pids = np.unique(ugrid_model.pids)
     for pidi in pids:
         if pidi not in pshell_pids_to_remove:
             card = ['PSHELL', pidi, mid, 0.1]

@@ -1,6 +1,5 @@
 import os
 import unittest
-from numpy import array_equal, allclose
 from cpylog import get_logger
 
 import pyNastran
