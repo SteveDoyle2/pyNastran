@@ -2223,7 +2223,12 @@ class TestOP2Main(Tester):
         #os.remove(f06_filename)
 
     def test_bdf_op2_other_02(self):
-        """checks ac10707a.bdf, which is an acoustic problem"""
+        """
+        checks ac10707a.bdf, which is an acoustic problem
+         - ComplexSolidPressureForceArray
+         - ComplexSpringForceArray
+         - ComplexDamperForceArray
+        """
         log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'ac10707a.bdf'
         op2_filename = MODEL_PATH / 'other' / 'ac10707a.op2'
@@ -2237,7 +2242,7 @@ class TestOP2Main(Tester):
         save_load_deck(model)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
-                write_f06=True, write_op2=False,
+                write_f06=True, write_op2=True,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=None, short_stats=False,
@@ -2394,7 +2399,11 @@ class TestOP2Main(Tester):
                 build_pandas=IS_PANDAS, log=log)
 
     def test_bdf_op2_other_09(self):
-        """checks sdbush10.bdf, which is a ??? problem"""
+        """
+        checks sdbush10.bdf, which is a ??? problem
+         - RealCShearForceArray
+         - ComplexCBushForceArray
+        """
         log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'sdbush10.bdf'
         op2_filename = MODEL_PATH / 'other' / 'sdbush10.op2'
@@ -2408,7 +2417,7 @@ class TestOP2Main(Tester):
         save_load_deck(model, run_convert=False, run_renumber=False)  # excite_id
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
-                write_f06=True, write_op2=False,
+                write_f06=True, write_op2=True,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=None, short_stats=False,
@@ -3678,7 +3687,13 @@ class TestOP2Main(Tester):
         os.remove(f06_filename)
 
     def test_op2_frequency_solid_shell_bar_01_geom(self):
-        """frequency test"""
+        """
+        frequency test
+         - ComplexRodForceArray
+         - ComplexCBarWeldForceArray
+         - ComplexPlateForceArray
+         - ComplexPlate2ForceArray (not enabled)
+        """
         log = SimpleLogger(level='warning')
         folder = MODEL_PATH / 'sol_101_elements'
         op2_filename = folder / 'freq_solid_shell_bar.op2'

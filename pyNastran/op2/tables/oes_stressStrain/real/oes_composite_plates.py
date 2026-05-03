@@ -12,7 +12,6 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
 )
 from pyNastran.f06.f06_formatting import write_floats_12e, write_floats_12e_long, _eigenvalue_header
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
-from pyNastran.op2.writer.utils import fdtype_from_data
 
 
 class RealCompositePlateArray(OES_Object):

@@ -177,45 +177,82 @@ def envelope(
         'max', 'min', 'abs_max',
         'von_mises', 'max_shear',
     ]
+    rod_stress_strain_keys = solid_stress_strain_keys
+    bar_stress_strain_keys = solid_stress_strain_keys
+    beam_stress_strain_keys = solid_stress_strain_keys
+    bend_stress_strain_keys = solid_stress_strain_keys
+    plate_stress_strain_keys = solid_stress_strain_keys
+    comp_plate_stress_strain_keys = solid_stress_strain_keys
+
     is_cbush_min, cbush_force_tuple = _validate_cbush_force(bush_force)
     # is_cbush1d_min, cbush1d_force_tuple = _validate_cbush_force(cbush1d_force)
     is_cbush1d_min = False
 
-    assert rod_stress == '' or rod_stress in solid_stress_strain_keys, rod_stress
-    assert rod_strain == '' or rod_strain in solid_stress_strain_keys, rod_strain
-    is_crod_min = ((rod_stress == 'min') or (rod_strain == 'min'))
     # is_ctube_min = is_conrod_min = is_crod_min
-
-    assert bar_stress == '' or bar_stress in solid_stress_strain_keys, bar_stress
-    assert bar_strain == '' or bar_strain in solid_stress_strain_keys, bar_strain
+    rod_stress = _str_to_list(rod_stress)
+    rod_strain = _str_to_list(rod_strain)
+    assert bar_stress == '' or bar_stress in bar_stress_strain_keys, bar_stress
+    assert bar_strain == '' or bar_strain in bar_stress_strain_keys, bar_strain
     is_cbar_min = ((bar_stress == 'min') or (bar_strain == 'min'))
 
-    assert beam_stress == '' or beam_stress in solid_stress_strain_keys, beam_stress
-    assert beam_strain == '' or beam_strain in solid_stress_strain_keys, beam_strain
+    assert beam_stress == '' or beam_stress in beam_stress_strain_keys, beam_stress
+    assert beam_strain == '' or beam_strain in beam_stress_strain_keys, beam_strain
     is_cbeam_min = ((beam_stress == 'min') or (beam_strain == 'min'))
     is_cbend_min = is_cbeam_min
     #-----------------------------------------------------------------
     # verify requests
-    assert plate_stress == '' or plate_stress in solid_stress_strain_keys, plate_stress
-    assert plate_strain == '' or plate_strain in solid_stress_strain_keys, plate_strain
-    is_plate_min = ((plate_stress == 'min') or (plate_strain == 'min'))
+    # assert plate_stress == '' or plate_stress in plate_stress_strain_keys, plate_stress
+    # assert plate_strain == '' or plate_strain in plate_stress_strain_keys, plate_strain
+    # is_plate_min = ((plate_stress == 'min') or (plate_strain == 'min'))
 
-    assert comp_plate_stress == '' or comp_plate_stress in solid_stress_strain_keys, comp_plate_stress
-    assert comp_plate_strain == '' or comp_plate_strain in solid_stress_strain_keys, comp_plate_strain
-    is_comp_plate_min = ((comp_plate_stress == 'min') or (comp_plate_strain == 'min'))
+    # assert comp_plate_stress == '' or comp_plate_stress in solid_stress_strain_keys, comp_plate_stress
+    # assert comp_plate_strain == '' or comp_plate_strain in solid_stress_strain_keys, comp_plate_strain
+    # is_comp_plate_min = ((comp_plate_stress == 'min') or (comp_plate_strain == 'min'))
 
-    assert solid_stress == '' or solid_stress in solid_stress_strain_keys, solid_stress
-    assert solid_strain == '' or solid_strain in solid_stress_strain_keys, solid_strain
-    is_solid_min = ((solid_stress == 'min') or (solid_strain == 'min'))
-    check_solid_stress = solid_stress != ''
-    check_solid_strain = solid_strain != ''
-    check_plate_stress = plate_stress != ''
-    check_plate_strain = plate_strain != ''
-    check_comp_plate_stress = comp_plate_stress != ''
-    check_comp_plate_strain = comp_plate_strain != ''
+    # is_comp_plate = False
+    # comp_plate_stress = _str_to_list(comp_plate_stress)
+    # comp_plate_strain = _str_to_list(comp_plate_strain)
 
-    check_rod_stress = rod_stress != ''
-    check_rod_strain = rod_strain != ''
+    plate_stress = _str_to_list(plate_stress)
+    plate_strain = _str_to_list(plate_strain)
+
+    comp_plate_stress = _str_to_list(comp_plate_stress)
+    comp_plate_strain = _str_to_list(comp_plate_strain)
+
+    solid_stress = _str_to_list(solid_stress)
+    solid_strain = _str_to_list(solid_strain)
+
+    is_rod = False
+    for rod_stressi in rod_stress:
+        assert rod_stressi in rod_stress_strain_keys, rod_stressi
+        is_rod = True
+    for rod_straini in rod_strain:
+        assert rod_straini in rod_stress_strain_keys, rod_straini
+        is_rod = True
+
+    is_plate = False
+    for plate_stressi in plate_stress:
+        assert plate_stressi in plate_stress_strain_keys, plate_stressi
+        is_plate = True
+    for plate_straini in plate_strain:
+        assert plate_straini in plate_stress_strain_keys, plate_straini
+        is_plate = True
+
+    is_comp_plate = False
+    for comp_plate_stressi in comp_plate_stress:
+        assert comp_plate_stressi in comp_plate_stress_strain_keys, comp_plate_stressi
+        is_comp_plate = True
+    for comp_plate_straini in comp_plate_strain:
+        assert comp_plate_straini in comp_plate_stress_strain_keys, comp_plate_straini
+        is_comp_plate = True
+
+    is_solid = False
+    for solid_stressi in solid_stress:
+        assert solid_stressi in solid_stress_strain_keys, solid_stressi
+        is_solid = True
+    for solid_straini in solid_strain:
+        assert solid_straini in solid_stress_strain_keys, solid_straini
+        is_solid = True
 
     check_bar_stress = bar_stress != ''
     check_bar_strain = bar_strain != ''
@@ -227,28 +264,19 @@ def envelope(
 
     # pick one
     is_results = (
-            check_rod_stress or check_rod_strain or
+            is_rod or
             check_bar_stress or check_bar_strain or
             check_cbush_force or
-            check_comp_plate_stress or check_comp_plate_strain or
-            check_plate_stress or check_plate_strain or
-            check_solid_stress or check_solid_strain)
+            is_comp_plate or
+            is_plate or
+            is_solid)
     if not is_results:
         raise RuntimeError('no plate/solid results were selected')
 
-    if check_rod_stress and check_rod_strain:
-        raise RuntimeError('Cannot downselect rod stress and strain')
     if check_bar_stress and check_bar_strain:
         raise RuntimeError('Cannot downselect bar stress and strain')
     # if check_bush_stress and check_bush_strain:
     #     raise RuntimeError('Cannot downselect bush stress and strain')
-
-    if check_comp_plate_stress and check_comp_plate_strain:
-        raise RuntimeError('Cannot downselect comp plate stress and strain')
-    if check_plate_stress and check_plate_strain:
-        raise RuntimeError('Cannot downselect plate stress and strain')
-    if check_solid_stress and check_solid_strain:
-        raise RuntimeError('Cannot downselect solid stress and strain')
     #-----------------------------------------------------------------
 
     idtype = 'int32'
@@ -352,15 +380,11 @@ def envelope(
     all_eids_list = []
     all_subcases_list = []
 
-    rod_results = []
     cbar_results = []
     cbeam_results = []
     cbend_results = []
     cbush_results = []
     cbush1d_results = []
-    plate_results = []
-    comp_results = []
-    solid_results = []
 
     if check_cbush_force and len(cbush_eids):
         bush_force_list = _fill_bush_list(
@@ -371,32 +395,6 @@ def envelope(
             all_eids,
             all_eids_list, all_subcases_list, cbush_results, dtype=dtype)
         # log.info('_envelope_stress_strain_end')
-
-    if check_rod_stress and len(crod_eids):
-        # log.debug('check_rod_stress')
-        rod_stress_list = _fill_rod_list(
-            model_results,
-            crod_eids, ctube_eids, conrod_eids,
-            is_stress=True)
-        assert len(rod_stress_list), 'No rod stress results found'
-        # log.info('_envelope_stress_strain')
-        _envelope_stress_strain(
-            'rod stress', rod_stress, rod_stress_list,
-            all_eids,
-            all_eids_list, all_subcases_list, rod_results, dtype=dtype)
-        # log.info('_envelope_stress_strain_end')
-
-    if check_rod_strain and len(crod_eids):
-        # log.debug('check_rod_strain')
-        rod_strain_list = _fill_rod_list(
-            model_results,
-            crod_eids, ctube_eids, conrod_eids,
-            is_stress=True)
-        assert len(rod_strain_list), 'No rod strain results found'
-        _envelope_stress_strain(
-            'rod strain', rod_strain, rod_strain_list,
-            all_eids,
-            all_eids_list, all_subcases_list, rod_results, dtype=dtype)
 
     if check_bar_stress and len(cbar_eids):
         bar_stress_list = _fill_bar_list(
@@ -434,98 +432,9 @@ def envelope(
             all_eids,
             all_eids_list, all_subcases_list, cbeam_results, dtype=dtype)
 
-    if check_comp_plate_stress and len(all_comp_plate_eids):
-        # log.debug('check_comp_plate_stress')
-        comp_plate_stress_list = _fill_comp_plate_list(
-            model_results,
-            ctria3_comp_eids, cquad4_comp_eids,
-            ctria6_comp_eids, cquad8_comp_eids,
-            ctriar_comp_eids, cquadr_comp_eids,
-            is_stress=True)
-        assert len(comp_plate_stress_list), 'No comp plate stress results found'
-        _envelope_stress_strain(
-            'composite plate stress', comp_plate_stress,
-            comp_plate_stress_list,
-            all_eids,
-            all_eids_list, all_subcases_list, comp_results, dtype=dtype)
-
-    if check_comp_plate_strain and len(all_comp_plate_eids):
-        # log.debug('check_comp_plate_strain')
-        comp_plate_strain_list = _fill_comp_plate_list(
-            model_results,
-            ctria3_comp_eids, cquad4_comp_eids,
-            ctria6_comp_eids, cquad8_comp_eids,
-            ctriar_comp_eids, cquadr_comp_eids,
-            is_stress=False)
-        assert len(comp_plate_strain_list), 'No comp plate strain results found'
-        _envelope_stress_strain(
-            'composite plate strain', comp_plate_strain,
-            comp_plate_strain_list,
-            all_eids,
-            all_eids_list, all_subcases_list, comp_results, dtype=dtype)
-
-    if check_plate_stress and len(all_plate_eids):
-        # log.debug('check_plate_stress')
-        plate_stress_list = _fill_plate_list(
-            model_results,
-            ctria3_plate_eids, cquad4_plate_eids,
-            ctria6_plate_eids, cquad8_plate_eids,
-            ctriar_plate_eids, cquadr_plate_eids,
-            is_stress=True)
-        assert len(plate_stress_list), 'No plate stress results found'
-        _envelope_corner_stress_strain(
-            plate_stress,
-            plate_stress_list,
-            all_eids,
-            all_eids_list, all_subcases_list, plate_results,
-            consider_corner_nodes=consider_plate_nodes, dtype=dtype)
-
-    if check_plate_strain and len(all_plate_eids):
-        # log.debug('check_plate_strain')
-        plate_strain_list = _fill_plate_list(
-            model_results,
-            ctria3_plate_eids, cquad4_plate_eids,
-            ctria6_plate_eids, cquad8_plate_eids,
-            ctriar_plate_eids, cquadr_plate_eids,
-            is_stress=False)
-        assert len(plate_strain_list), 'No plate strain results found'
-        _envelope_corner_stress_strain(
-            plate_strain,
-            plate_strain_list,
-            all_eids,
-            all_eids_list, all_subcases_list, plate_results,
-            consider_corner_nodes=consider_plate_nodes, dtype=dtype)
-
-    if check_solid_stress and len(all_solid_eids):
-        # log.debug('check_solid_stress')
-        solid_stress_list = _fill_solid_list(
-            model_results,
-            ctetra_eids, cpenta_eids, chexa_eids, cpyram_eids,
-            is_stress=True)
-        assert len(solid_stress_list), 'No solid stress results found'
-        _envelope_corner_stress_strain(
-            solid_stress,
-            solid_stress_list,
-            all_eids,
-            all_eids_list, all_subcases_list, solid_results,
-            consider_corner_nodes=consider_solid_nodes)
-
-    if check_solid_strain and len(all_solid_eids):
-        # log.debug('check_solid_strain')
-        solid_strain_list = _fill_solid_list(
-            model_results,
-            ctetra_eids, cpenta_eids, chexa_eids, cpyram_eids,
-            is_stress=False)
-        assert len(solid_strain_list), 'No solid strain results found'
-        _envelope_corner_stress_strain(
-            solid_strain,
-            solid_strain_list,
-            all_eids,
-            all_eids_list, all_subcases_list, solid_results,
-            consider_corner_nodes=consider_solid_nodes)
 
     results = {
-        'rod': (rod_results, all_rod_eids, is_crod_min),
+        # 'rod': (rod_results, all_rod_eids, is_crod_min),
         # 'crod': (crod_results, crod_eids, is_crod_min),
         # 'ctube': (ctube_results, ctube_eids, is_ctube_min),
         # 'conrod': (conrod_results, conrod_eids, is_conrod_min),
@@ -534,11 +443,171 @@ def envelope(
         'cbend' : (cbend_results, cbend_eids, is_cbend_min),
         'cbush': (cbush_results, cbush_eids, is_cbush_min),
         'cbush1d': (cbush1d_results, cbush1d_eids, is_cbush1d_min),
-
-        'plate': (plate_results, all_plate_eids, is_plate_min),
-        'comp_plate': (comp_results, all_comp_plate_eids, is_comp_plate_min),
-        'solid': (solid_results, all_solid_eids, is_solid_min),
     }
+    #---------------------------------------------------
+    is_rod_stress = (len(rod_stress) > 0)
+    is_rod_strain = (len(rod_strain) > 0)
+    if len(crod_eids):
+        if is_rod_stress:
+            # log.debug('check_rod_stress')
+            rod_stress_list = _fill_rod_list(
+                model_results,
+                crod_eids, ctube_eids, conrod_eids,
+                is_stress=True)
+            assert len(rod_stress_list), 'No rod stress results found'
+            # log.info('_envelope_stress_strain')
+            for rod_stressi in rod_stress:
+                rod_results = []
+                _envelope_stress_strain(
+                    'rod stress', rod_stressi, rod_stress_list,
+                    all_eids,
+                    all_eids_list, all_subcases_list, rod_results, dtype=dtype)
+            is_rod_min = 'min' in rod_stressi
+            results[('rod', rod_stressi)] = (rod_results, all_rod_eids, is_rod_min)
+            # log.info('_envelope_stress_strain_end')
+
+        if is_rod_strain:
+            # log.debug('check_rod_strain')
+            rod_strain_list = _fill_rod_list(
+                model_results,
+                crod_eids, ctube_eids, conrod_eids,
+                is_stress=True)
+            assert len(rod_strain_list), 'No rod strain results found'
+            for rod_straini in rod_strain:
+                rod_results = []
+                _envelope_stress_strain(
+                    'rod strain', rod_straini, rod_strain_list,
+                    all_eids,
+                    all_eids_list, all_subcases_list, rod_results, dtype=dtype)
+                is_rod_min = 'min' in rod_straini
+                results[('rod', rod_straini)] = (rod_results, all_rod_eids, is_rod_min)
+
+    is_comp_plate_stress = (len(comp_plate_stress) > 0)
+    is_comp_plate_strain = (len(comp_plate_strain) > 0)
+    if len(all_comp_plate_eids):
+        if is_comp_plate_stress:
+            # log.debug('check_comp_plate_stress')
+            comp_plate_stress_list = _fill_comp_plate_list(
+                model_results,
+                ctria3_comp_eids, cquad4_comp_eids,
+                ctria6_comp_eids, cquad8_comp_eids,
+                ctriar_comp_eids, cquadr_comp_eids,
+                is_stress=True)
+            assert len(comp_plate_stress_list), 'No comp plate stress results found'
+            for comp_plate_stressi in comp_plate_stress:
+                comp_results = []
+                _envelope_stress_strain(
+                    'composite plate stress', comp_plate_stressi,
+                    comp_plate_stress_list,
+                    all_eids,
+                    all_eids_list, all_subcases_list, comp_results, dtype=dtype)
+                is_comp_plate_min = 'min' in comp_plate_stressi
+                results[('comp_plate', comp_plate_stressi)] = (comp_results, all_comp_plate_eids, is_comp_plate_min)
+
+        if is_comp_plate_strain:
+            # log.debug('check_comp_plate_strain')
+            comp_plate_strain_list = _fill_comp_plate_list(
+                model_results,
+                ctria3_comp_eids, cquad4_comp_eids,
+                ctria6_comp_eids, cquad8_comp_eids,
+                ctriar_comp_eids, cquadr_comp_eids,
+                is_stress=False)
+            assert len(comp_plate_strain_list), 'No comp plate strain results found'
+            for comp_plate_straini in comp_plate_strain:
+                comp_results = []
+                _envelope_stress_strain(
+                    'composite plate strain', comp_plate_straini,
+                    comp_plate_strain_list,
+                    all_eids,
+                    all_eids_list, all_subcases_list, comp_results, dtype=dtype)
+                is_comp_plate_min = 'min' in comp_plate_straini
+                results[('comp_plate', comp_plate_straini)] = (comp_results, all_comp_plate_eids, is_comp_plate_min)
+
+    is_plate_stress = (len(plate_stress) > 0)
+    is_plate_strain = (len(plate_strain) > 0)
+    if len(all_plate_eids):
+        if is_plate_stress:
+            # log.debug('check_plate_stress')
+            plate_stress_list = _fill_plate_list(
+                model_results,
+                ctria3_plate_eids, cquad4_plate_eids,
+                ctria6_plate_eids, cquad8_plate_eids,
+                ctriar_plate_eids, cquadr_plate_eids,
+                is_stress=True)
+            assert len(plate_stress_list), 'No plate stress results found'
+
+            for plate_stressi in plate_stress:
+                plate_results = []
+                _envelope_corner_stress_strain(
+                    plate_stressi,
+                    plate_stress_list,
+                    all_eids,
+                    all_eids_list, all_subcases_list, plate_results,
+                    consider_corner_nodes=consider_plate_nodes, dtype=dtype)
+                is_plate_min = 'min' in plate_stressi
+                results[('plate', plate_stressi)] = (plate_results, all_plate_eids, is_plate_min)
+
+        if is_plate_strain:
+            # log.debug('check_plate_strain')
+            plate_strain_list = _fill_plate_list(
+                model_results,
+                ctria3_plate_eids, cquad4_plate_eids,
+                ctria6_plate_eids, cquad8_plate_eids,
+                ctriar_plate_eids, cquadr_plate_eids,
+                is_stress=False)
+            assert len(plate_strain_list), 'No plate strain results found'
+            for plate_straini in plate_strain:
+                plate_results = []
+                _envelope_corner_stress_strain(
+                    plate_straini,
+                    plate_strain_list,
+                    all_eids,
+                    all_eids_list, all_subcases_list, plate_results,
+                    consider_corner_nodes=consider_plate_nodes, dtype=dtype)
+                is_plate_min = 'min' in plate_straini
+                results[('plate', plate_straini)] = (plate_results, all_plate_eids, is_plate_min)
+
+    is_solid_stress = (len(solid_stress) > 0)
+    is_solid_strain = (len(solid_strain) > 0)
+    if len(all_solid_eids):
+        if is_solid_stress:
+            solid_stress_list = _fill_solid_list(
+                model_results,
+                ctetra_eids, cpenta_eids, chexa_eids, cpyram_eids,
+                is_stress=True)
+            assert len(solid_stress_list), 'No solid stress results found'
+
+            for solid_stressi in solid_stress:
+                # log.debug('check_solid_stress')
+                solid_results = []
+                is_solid_min = 'min' in solid_stressi
+                _envelope_corner_stress_strain(
+                    solid_stressi,
+                    solid_stress_list,
+                    all_eids,
+                    all_eids_list, all_subcases_list, solid_results,
+                    consider_corner_nodes=consider_solid_nodes)
+                results[('solid', solid_stressi)] = (solid_results, all_solid_eids, is_solid_min)
+
+        # 'solid': (solid_results, all_solid_eids, is_solid_min),
+        if is_solid_strain:
+            solid_strain_list = _fill_solid_list(
+                model_results,
+                ctetra_eids, cpenta_eids, chexa_eids, cpyram_eids,
+                is_stress=False)
+            assert len(solid_strain_list), 'No solid strain results found'
+            for solid_straini in solid_strain:
+                # log.debug('check_solid_strain')
+                solid_results = []
+                is_solid_min = 'min' in solid_straini
+                _envelope_corner_stress_strain(
+                    solid_straini,
+                    solid_strain_list,
+                    all_eids,
+                    all_eids_list, all_subcases_list, solid_results,
+                    consider_corner_nodes=consider_solid_nodes)
+                results[('solid', solid_straini)] = (solid_results, all_solid_eids, is_solid_min)
+
     out_subcases, combined_data = _envelope_post(
         all_subcases_list, all_eids,
         results,
@@ -555,6 +624,13 @@ def _validate_cbush_force(cbush_force: str) -> tuple[bool, tuple[str, str]]:
     assert group2 in ['min', 'max', 'rss', 'abs_max'], (group1, group2)
     is_min = (group2 == 'min')
     return is_min, (group1, group2)
+
+def _str_to_list(solid_stress: list[str] | str) -> list[str]:
+    if solid_stress:
+        solid_stress = [solid_stress] if isinstance(solid_stress, str) else solid_stress
+    else:
+        solid_stress = []
+    return solid_stress
 
 def _setup_models(bdf_filename: PathLike | BDF,
                   op2_filename: PathLike | OP2,
@@ -671,8 +747,11 @@ def _envelope_post(all_subcases_list: list[int],
     icase_critical_list = []
     icase_critical = np.full(neid_all, -1, dtype='int32')
 
-    for result_group in ['rod', 'cbush', 'plate', 'comp_plate', 'solid']:
-        elem_results, elem_eids, is_elem_min = results[result_group]
+    # result_groups = ['rod', 'cbush', 'plate', 'comp_plate', 'solid']
+    # for result_group in result_groups:
+    #     result_data = results[result_group]
+    for result_group, result_data in results.items():
+        elem_results, elem_eids, is_elem_min = result_data
         if len(elem_results):
             icase_criticali, data_critical, combined_data = _get_combined_data(
                 all_subcases, result_group, elem_results,
@@ -1109,6 +1188,7 @@ def _envelope_stress_strain(group_name: str,
                             results: list[tuple[str, np.ndarray, list[int], np.ndarray, np.ndarray]],
                             dtype: str='float32'):
     """no consideration for corner nodes"""
+    assert isinstance(result_name, str), result_name
     for (eids, obj_name, obj_dict) in comp_plate_list:
         subcases = list(obj_dict)
         nsubcase_obj = len(subcases)
