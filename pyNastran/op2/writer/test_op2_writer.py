@@ -58,7 +58,7 @@ class TestOP2Writer(unittest.TestCase):
 
     def _test_write_solid_shell_bar_static_basic(self):  # pragma: no cover
         """tests basic op2 writing"""
-        log = SimpleLogger(level='warning', encoding='utf-8')
+        # log = SimpleLogger(level='warning', encoding='utf-8')
         log = SimpleLogger(level='info', encoding='utf-8')
         folder = MODEL_PATH / 'sol_101_elements'
         op2_filename = folder / 'static_solid_shell_bar.op2'

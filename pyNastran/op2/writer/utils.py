@@ -1,6 +1,17 @@
 from typing import Any
 import numpy as np
 
+def fdtype_from_data(data: np.ndarray, size: int):
+    """float dtype"""
+    fdtype = data.dtype
+    if size == fdtype.itemsize:
+        pass
+    else:
+        # warnings.warn(f'downcasting {self.class_name}...this is buggy')
+        # idtype = np.int32(1)
+        fdtype = np.float32(1.0)
+    return fdtype
+
 def op2_stringify(values: list) -> str:  # pragma: no cover
     out = []
     for value in values:

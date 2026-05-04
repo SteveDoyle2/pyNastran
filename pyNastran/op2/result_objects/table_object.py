@@ -46,7 +46,7 @@ from pyNastran.op2.errors import SixtyFourBitError
 from pyNastran.op2.op2_helper import polar_to_real_imag, real_imag_to_mag_phase
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
 from pyNastran.utils.numpy_utils import integer_types, float_types, integer_float_types
-from pyNastran.op2.writer.utils import fix_table3_types
+from pyNastran.op2.writer.utils import fix_table3_types, fdtype_from_data
 from pyNastran.op2.op2_interface.write_utils import (
     get_title_subtitle_label)
 
@@ -1123,14 +1123,7 @@ class RealTableArray(TableArray):
         if max_id > MAX_32_BIT_INT:
             raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max id={max_id}')
 
-        fdtype = self.data.dtype
-        if self.size == fdtype.itemsize:
-            pass
-        else:
-            # warnings.warn(f'downcasting {self.class_name}...this is buggy')
-            #idtype = np.int32(1)
-            fdtype = np.float32(1.0)
-
+        fdtype = fdtype_from_data(self.data, self.size)
         nodedevice_gridtype = np.column_stack([nnodes_device, gridtype])
         node_gridtype_floats = view_idtype_as_fdtype(nodedevice_gridtype, fdtype)
 
@@ -2042,12 +2035,7 @@ class ComplexTableArray(TableArray):
         if self.size != 4:
             raise RuntimeError('64-bit not supported in complex eigenvectors')
 
-        # if self.size == fdtype.itemsize:
-        #     pass
-        # else:
-            # idtype = np.int32(1)
-        fdtype = np.float32(1.0)
-
+        fdtype = fdtype_from_data(self.data, self.size)
         nodedevice_gridtype = np.column_stack([nnodes_device, gridtype])
         node_gridtype_floats = view_idtype_as_fdtype(nodedevice_gridtype, fdtype)
 
