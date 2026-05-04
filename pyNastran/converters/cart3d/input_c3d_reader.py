@@ -1,5 +1,5 @@
 from collections import defaultdict
-from numpy import array, linspace, vstack
+import numpy as np
 from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
 from cpylog import __version__ as CPYLOG_VERSION
 if CPYLOG_VERSION > '1.6.0':
@@ -59,9 +59,9 @@ class InputC3dReader:
         """helper for ``read_input_c3d``"""
         xmin, xmax, ymin, ymax, zmin, zmax = xyz_size
         xdim, ydim, zdim = xyz_dim
-        x = linspace(0., 1., num=xdim)
-        y = linspace(0., 1., num=ydim)
-        z = linspace(0., 1., num=zdim)
+        x = np.linspace(0., 1., num=xdim)
+        y = np.linspace(0., 1., num=ydim)
+        z = np.linspace(0., 1., num=zdim)
         self.log.debug(str(x))
 
         # organized in x, y, z planes order
@@ -86,10 +86,10 @@ class InputC3dReader:
         nnodes = 0
         for plane in planes:
             p1, p2, p3, p4, xi, yi = plane
-            p1 = array(p1, dtype='float32')
-            p2 = array(p2, dtype='float32')
-            p3 = array(p3, dtype='float32')
-            p4 = array(p4, dtype='float32')
+            p1 = np.array(p1, dtype='float32')
+            p2 = np.array(p2, dtype='float32')
+            p3 = np.array(p3, dtype='float32')
+            p4 = np.array(p4, dtype='float32')
             self.log.debug(str(plane[:1]))
 
             pointsi, elementsi = points_elements_from_quad_points(p1, p2, p3, p4, xi, yi)
@@ -103,8 +103,8 @@ class InputC3dReader:
             #print(points)
 
         if stack:
-            points = vstack(points)
-            elements = vstack(elements)
+            points = np.vstack(points)
+            elements = np.vstack(elements)
         return points, elements
 
 def read_input_c3d(input_c3d_filename, log=None, debug=False, stack=True) -> InputC3dReader:

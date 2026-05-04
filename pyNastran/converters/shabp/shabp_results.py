@@ -1,4 +1,4 @@
-from numpy import zeros
+import numpy as np
 
 class ShabpOut:
     def __init__(self, model, log=None, debug=False):
@@ -22,7 +22,7 @@ class ShabpOut:
 
     def read_shabp_out(self, out_filename):
         #npatches = len(self.X)
-        istart = zeros(self.npatches, dtype='int32')
+        istart = np.zeros(self.npatches, dtype='int32')
         nelements = 0
         for ipatch in range(self.npatches):
             X = self.X[ipatch]
@@ -42,8 +42,8 @@ class ShabpOut:
         components = self.model.component_name_to_patch.keys()
         for icase in range(ncases):
             #print(f'ncases={ncases} components={components} nelements={nelements}')
-            Cp = zeros(nelements, dtype='float32')
-            delta = zeros(nelements, dtype='float32')
+            Cp = np.zeros(nelements, dtype='float32')
+            delta = np.zeros(nelements, dtype='float32')
             for name in sorted(components):
                 icomp = self.model.component_name_to_num[name]
                 patches = self.model.component_name_to_patch[name]

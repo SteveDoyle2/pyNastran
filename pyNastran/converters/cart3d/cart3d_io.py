@@ -2,7 +2,6 @@
 import os
 import collections
 
-from numpy import arange, mean, vstack, unique, where, sqrt
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -137,7 +136,7 @@ class Cart3dIO:
 
         assert loads is not None
         if 'Mach' in loads:
-            avg_mach = mean(loads['Mach'])
+            avg_mach = np.mean(loads['Mach'])
             note = ':  avg(Mach)=%g' % avg_mach
         else:
             note = ''
@@ -208,7 +207,7 @@ class Cart3dIO:
                 #vel = np.full(nelements, np.nan, dtype='float32')
                 pressure = np.full(nelements, np.nan, dtype='float32')
 
-                uregions = set(unique(regions))
+                uregions = set(np.unique(regions))
                 surf_bc_regions = set(surfbcs.keys())
                 invalid_regions = surf_bc_regions - uregions
                 if len(invalid_regions) != 0:
@@ -216,7 +215,7 @@ class Cart3dIO:
 
                 for bc_id, bc_values in sorted(surfbcs.items()):
                     rhoi, xveli, yveli, zveli, pressi = bc_values
-                    i = where(regions == bc_id)[0]
+                    i = np.where(regions == bc_id)[0]
                     rho[i] = rhoi
                     xvel[i] = xveli
                     yvel[i] = yveli
@@ -231,7 +230,7 @@ class Cart3dIO:
                 #vel[inan] = np.nan
                 pressure[inan] = np.nan
 
-                mach = sqrt(xvel ** 2 + yvel ** 2 + zvel ** 2)
+                mach = np.sqrt(xvel ** 2 + yvel ** 2 + zvel ** 2)
 
                 rho_res = GuiResult(ID, header='Rho', title='Rho',
                                     location='centroid', scalar=rho)
@@ -350,29 +349,29 @@ class Cart3dIO:
                     raise NotImplementedError(msg)
 
             if ifarfield:
-                nodes = vstack(farfield_nodes)
-                elements = vstack(farfield_elements)
+                nodes = np.vstack(farfield_nodes)
+                elements = np.vstack(farfield_elements)
                 name = get_name('farfield', self.gui.name)
                 gui.set_quad_grid(name, nodes, elements, color=BLUE_FLOAT,
                                   line_width=1, opacity=1.)
 
             if isymmetry:
-                nodes = vstack(symmetry_nodes)
-                elements = vstack(symmetry_elements)
+                nodes = np.vstack(symmetry_nodes)
+                elements = np.vstack(symmetry_elements)
                 name = get_name('symmetry', self.gui.name)
                 gui.set_quad_grid(name, nodes, elements, color=GREEN_FLOAT,
                                   line_width=1, opacity=1.)
 
             if iinflow:
-                nodes = vstack(inflow_nodes)
-                elements = vstack(inflow_elements)
+                nodes = np.vstack(inflow_nodes)
+                elements = np.vstack(inflow_elements)
                 name = get_name('inflow', self.gui.name)
                 gui.set_quad_grid(name, nodes, elements, color=RED_FLOAT,
                                   line_width=1, opacity=1.)
 
             if ioutflow:
-                nodes = vstack(outflow_nodes)
-                elements = vstack(outflow_elements)
+                nodes = np.vstack(outflow_nodes)
+                elements = np.vstack(outflow_elements)
                 name = get_name('outflow', self.gui.name)
                 gui.set_quad_grid(name, nodes, elements, color=YELLOW_FLOAT,
                                   line_width=1, opacity=1.)
@@ -433,8 +432,8 @@ def _fill_cart3d_geometry_objects(cases, unused_id, nodes, elements, regions, mo
     nelements = elements.shape[0]
     nnodes = nodes.shape[0]
 
-    eids = arange(1, nelements + 1)
-    nids = arange(1, nnodes + 1)
+    eids = np.arange(1, nelements + 1)
+    nids = np.arange(1, nnodes + 1)
     area = model.get_area()
     cnormals = model.get_normals()
     cnnodes = cnormals.shape[0]

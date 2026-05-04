@@ -1,7 +1,6 @@
 from collections import defaultdict
 
-#import numpy as np
-from numpy import array
+import numpy as np
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -82,9 +81,9 @@ class SPC:
     def build(self):
         self.n = len(self.components)
         if self.n:
-            self.grid_id = array(self.grid_id)
+            self.grid_id = np.array(self.grid_id)
             for dof, nodes in self.components.items():
-                self.components[dof] = array(nodes)
+                self.components[dof] = np.array(nodes)
 
     def update(self, maps):
         """

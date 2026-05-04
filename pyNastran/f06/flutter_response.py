@@ -3168,7 +3168,17 @@ def _asarray(results: list[list[str]],
                     row2.append(row_entry2)
                 mode_result2.append(row2)
             results2.append(mode_result2)
-        results = np.array(results2, dtype='float64')
+        try:
+            results = np.array(results2, dtype='float64')
+        except ValueError:  # pragma: no cover
+            for imode, resi in enumerate(results2):
+                try:
+                    resi_array = np.array(resi, dtype='float64')
+                    # print(resi_array.shape)
+                except ValueError:
+                    # print(resi)
+                    raise RuntimeError(f'check your file for an incomplete download on mode={imode+1:d}')
+            raise
 
         if fix_kfreq:
             # inan = np.isnan(results[:, :, :])
@@ -4368,7 +4378,7 @@ def _get_modal_sort(eigr_vel, eigi_vel,
             if value == 2:
                 imode0 = key
                 irow_map[irow] = imode0
-                print(f'  -> imode0 = {imode0}')
+                # print(f'  -> imode0 = {imode0}')
                 break
         else:
             raise RuntimeError('bad')

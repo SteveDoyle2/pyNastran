@@ -13,10 +13,13 @@ from .solution_combination import _read_op2
 def run_flutter_combination(op2_filename: PathLike | OP2,
                             f06_filename: PathLike,
                             f06_units: str,
+                            out_units: str,
                             op2_filename_out: PathLike,
+                            save_individual: bool=False,
                             nmodes_to_keep: Optional[int]=None) -> None:
+
     responses, mass_lama = make_flutter_response(
-        f06_filename, f06_units=f06_units, out_units=None,
+        f06_filename, f06_units=f06_units, out_units=out_units,
         use_rhoref=False, read_flutter=True, make_alt=True, log=None)
     # print(responses)
 
@@ -25,14 +28,27 @@ def run_flutter_combination(op2_filename: PathLike | OP2,
     subcase0 = subcases[0]
     response: FlutterResponse = responses[subcase0]
     nvel = response.eigenvector.shape[0] # (2, 81, 81)
-
     log = SimpleLogger(level='info')
+
+    # log.info(f'response.eigenvector={response.eigenvector}')
+    if len(response.eigenvector) == 0:
+        raise RuntimeError(f'f06={str(f06_filename)} has no eigenvectors')
+
+    # print('response.eigr_eigi_velocity.shape = ', response.eigr_eigi_velocity.shape)
+    vels_out = response.eigr_eigi_velocity[:, 0, 2]
+    vel_units_out = response.out_units['eas']
+    vels_out = vels_out.round()
+    log.info(f'nvel={nvel}; vel={vels_out} {vel_units_out}')
+    log.info(f'nmodes_to_keep = {nmodes_to_keep}')
+    assert nvel > 0, nvel
+
     mode = None
     model = _read_op2(op2_filename,
                       mode, log,
                       include_results=['eigenvectors'],
                       include_complex_modes=False,
                       subcases=subcases)
+    mode = model._nastran_format
     # for obj in model.eigenvectors.values():
     #     print(''.join(obj.get_stats()))
 
@@ -40,8 +56,10 @@ def run_flutter_combination(op2_filename: PathLike | OP2,
     # base, ext = os.path.splitext(str(f06_filename))
     dirname = os.path.dirname(str(f06_filename))
 
-    for ivel in range(nvel):
-        log.warning(f'creating ivel={ivel}')
+    base, ext = os.path.splitext(op2_filename_out)
+
+    for ivel, vel in enumerate(vels_out):
+        log.info(f'creating ivel={ivel}/{nvel}; vel={vels_out} {vel_units_out}')
         # (nmodes, nmodes) where each column is a complex mode shape
         eigenvector = response.eigenvector[ivel, :nmodes_to_keep, :].T
 
@@ -56,14 +74,26 @@ def run_flutter_combination(op2_filename: PathLike | OP2,
         eigis = eigrs_eigis[:, 1]
         # print(eigrs_eigis.shape)
         # print(eigenvector)
+        if save_individual:
+            # print('creating model_out')
+            model_out = OP2(mode=mode)
+            model_out._nastran_format = mode
+            model_out.set_revision_from_model(model)
         model_out = run_modal_combination(
             model, eigenvector, eigrs, eigis,
             subcase0=subcase0,
             log=log, model_out=model_out)
+        log.debug(f'ivel={ivel} vel={vel} {vel_units_out}')
+        if save_individual:
+            op2_filename_outi = f'{base}_ivel{ivel}_{vel:.0f}_{vel_units_out}{ext}'
+            model_out.log.info(f'writing {str(op2_filename_outi)}')
+            model_out.write_op2(op2_filename_outi)
+
     assert model_out is not None, model_out
-    model_out.log.info(f'writing {str(op2_filename_out)}')
-    model_out.set_revision_from_model(model)
-    model_out.write_op2(op2_filename_out)
+    if not save_individual:
+        model_out.log.info(f'writing {str(op2_filename_out)}')
+        model_out.set_revision_from_model(model)
+        model_out.write_op2(op2_filename_out)
 
 
 def run_modal_combination(op2_filename: PathLike | OP2,
@@ -247,16 +277,20 @@ def run_modal_combination(op2_filename: PathLike | OP2,
     model_out.eigenvectors[subcase_out] = obj
     return model_out
 
-def cmd_line_flutter_combine(argv=None, quiet: bool=False):
+def cmd_line_flutter_combine(argv=None, quiet: bool=False, log=None):
     if argv is None:
         argv = sys.argv
+
     import argparse
     parser = argparse.ArgumentParser()
+    parser.add_argument('modal_combine', help='')
     parser.add_argument('op2_filename', help='input op2')
     parser.add_argument('f06_filename', help='input f06', default=None)
     parser.add_argument('-o', '--out', help='output op2', default=None)
     parser.add_argument('--in_units', help='input units (english_in, english_ft, english_kt, si, si_mm)', default='si')
+    parser.add_argument('--out_units', help='output units (english_in, english_ft, english_kt, si, si_mm)', default='si')
     parser.add_argument('--nmodes', help='number of modes to keep', default=None)
+    parser.add_argument('--split', help='split the op2 into separate files to reduce RAM usage', action='store_true')
     # parser.add_argument('--out_units', help='output units (english_in, english_ft, english_kt, , si, si_mm)', default='si')
 
     args = parser.parse_args(args=argv[1:])
@@ -266,7 +300,10 @@ def cmd_line_flutter_combine(argv=None, quiet: bool=False):
     f06_filename = args.f06_filename
     op2_filename_out = args.out
     f06_in_units = args.in_units
-    nmodes_to_keep = args.nmodes
+    out_units = args.out_units
+    save_individual = args.split
+    if args.nmodes is not None:
+        nmodes_to_keep = int(args.nmodes)
 
     base, ext = os.path.splitext(op2_filename)
     if f06_filename is None:
@@ -278,5 +315,7 @@ def cmd_line_flutter_combine(argv=None, quiet: bool=False):
 
     run_flutter_combination(
         op2_filename, f06_filename,
-        f06_in_units, op2_filename_out,
-        nmodes_to_keep=nmodes_to_keep)
+        f06_in_units, out_units, op2_filename_out,
+        nmodes_to_keep=nmodes_to_keep,
+        save_individual=save_individual,
+    )

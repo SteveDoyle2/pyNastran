@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
-from numpy import unique
+import numpy as np
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.cart3d.cart3d import Cart3D, read_cart3d
@@ -67,7 +67,7 @@ def cart3d_to_nastran_model(cart3d_filename: str,
     E = 1e7
     G = None
     nu = 0.3
-    for pid in unique(regions):
+    for pid in np.unique(regions):
         mid = pid
         model.add_pshell(pid, mid1=mid, t=t)
         model.add_mat1(mid, E, G, nu)
@@ -150,7 +150,7 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
         E = 1e7
         nu = 0.3
         bdf_file.write('$Properties\n')
-        for pid in unique(regions):
+        for pid in np.unique(regions):
             mid = pid
             card = print_card_8(['PSHELL', pid, mid, t])
             bdf_file.write(card)

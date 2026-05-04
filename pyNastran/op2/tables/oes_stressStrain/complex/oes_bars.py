@@ -1,5 +1,4 @@
 import numpy as np
-from numpy import zeros
 
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements

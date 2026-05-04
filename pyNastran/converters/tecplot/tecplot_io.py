@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-#from numpy import arange, mean, amax, amin, array
 from pyNastran.gui.vtk_interface import vtkTriangle, vtkQuad, vtkTetra, vtkHexahedron
 
 from pyNastran.converters.tecplot.tecplot import read_tecplot, Tecplot

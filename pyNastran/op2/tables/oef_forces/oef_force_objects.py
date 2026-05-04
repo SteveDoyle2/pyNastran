@@ -3,6 +3,7 @@ from __future__ import annotations
 from struct import Struct, pack
 import copy
 import warnings
+from struct import Struct, pack
 from abc import abstractmethod
 import inspect
 from typing import BinaryIO, TextIO, Optional
@@ -22,16 +23,17 @@ from pyNastran.f06.f06_formatting import (
     _eigenvalue_header,
 )
 from pyNastran.op2.result_objects.op2_objects import combination_inplace
-from pyNastran.op2.op2_interface.write_utils import (
-    # view_dtype, get_title_subtitle_label,
-    view_idtype_as_fdtype,
-    set_table3_field, )
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     # update_stress_force_time_word,
     set_element_case, set_element_node_xxb_case,
     set_static_case, set_modal_case, set_transient_case,
     set_post_buckling_case)
-from pyNastran.op2.writer.utils import fix_table3_types, op2_stringify
+from pyNastran.op2.op2_interface.write_utils import (
+    # view_dtype, get_title_subtitle_label,
+    view_idtype_as_fdtype,
+    set_table3_field, )
+from pyNastran.op2.writer.utils import (
+    fix_table3_types, fdtype_from_data, op2_stringify)
 
 
 TABLE_NAME_TO_TABLE_CODE = {
@@ -189,9 +191,8 @@ class ForceObject(BaseElement):
         # ind.sort()
         return ind
 
-    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime):  # itable=-3, itime=0):
-        import inspect
-        from struct import pack
+    def _write_table_3(self, op2_file: BinaryIO, op2_ascii: TextIO,
+                       new_result: bool, itable: int, itime: int):  # itable=-3, itime=0):
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
@@ -907,11 +908,10 @@ class RealSpringDamperForceArray(RealForceObject):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2_file, op2_ascii, itable, new_result,
-                  date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO,
+                  itable: int, new_result: bool,
+                  date, is_mag_phase: bool=False, endian: bytes=b'>'):
         """writes an OP2"""
-        import inspect
-        from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
@@ -946,8 +946,14 @@ class RealSpringDamperForceArray(RealForceObject):
 
         if self.is_sort1:
             struct1 = Struct(endian + b'if')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('SORT2')
+
+        write_vectorized = False
+        eid_device_floats = np.array([])
+        if write_vectorized:
+            fdtype = fdtype_from_data(self.data, self.size)
+            eid_device_floats = view_idtype_as_fdtype(eids_device, fdtype)
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         struct_13i = Struct(endian + b'13i')
@@ -962,16 +968,20 @@ class RealSpringDamperForceArray(RealForceObject):
                       4, ntotal, 4,
                       4 * ntotal]
             op2_file.write(struct_13i.pack(*header))
-            op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
-            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
+            op2_ascii.write('r4 [4, 0, 4]\n'
+                            f'r4 [4, {itable:d}, 4]\n'
+                            f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            force = self.data[itime, :, 0]
-
-            for eid, forcei in zip(eids_device, force):
-                data = [eid, forcei]
-                op2_ascii.write('  eid=%s force=%s\n' % tuple(data))
-                op2_file.write(struct1.pack(*data))
+            if write_vectorized:
+                datai = np.column_stack([eid_device_floats, self.data[itime, :, :]])
+                op2_file.write(datai)
+                assert ntotal == datai.size
+            else:  # pragma: no cover
+                force = self.data[itime, :, 0]
+                for eid, forcei in zip(eids_device, force):
+                    data = [eid, forcei]
+                    op2_ascii.write('  eid=%s force=%s\n' % tuple(data))
+                    op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
@@ -1401,8 +1411,9 @@ class RealRodForceArray(RealForceObject):
                     raise ValueError(msg)
         return True
 
-    def write_op2(self, op2_file, op2_ascii, itable, new_result,
-                  date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO,
+                  itable: int, new_result: bool,
+                  date, is_mag_phase: bool=False, endian: bytes=b'>'):
         """writes an OP2"""
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
@@ -1446,8 +1457,14 @@ class RealRodForceArray(RealForceObject):
 
         if self.is_sort1:
             struct1 = Struct(endian + b'i2f')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('SORT2')
+
+        write_vectorized = False
+        eid_device_floats = np.array([])
+        if write_vectorized:
+            fdtype = fdtype_from_data(self.data, self.size)
+            eid_device_floats = view_idtype_as_fdtype(eids_device, fdtype)
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         struct_13i = Struct(endian + b'13i')
@@ -1463,18 +1480,22 @@ class RealRodForceArray(RealForceObject):
                       4, ntotal, 4,
                       4 * ntotal]
             op2_file.write(struct_13i.pack(*header))
-            op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
-            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
+            op2_ascii.write('r4 [4, 0, 4]\n'
+                            f'r4 [4, {itable:d}, 4]\n'
+                            f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            axial = self.data[itime, :, 0]
-            torsion = self.data[itime, :, 1]
-
-            #print('eids3', eids3)
-            for eid, axiali, torsioni in zip(eids_device, axial, torsion):
-                data = [eid, axiali, torsioni]
-                op2_ascii.write('  eid=%s axial=%s torsion=%s\n' % tuple(data))
-                op2_file.write(struct1.pack(*data))
+            if write_vectorized:
+                datai = np.column_stack([eid_device_floats, self.data[itime, :, :]])
+                op2_file.write(datai)
+                assert ntotal == datai.size
+            else:  # pragma: no cover
+                axial = self.data[itime, :, 0]
+                torsion = self.data[itime, :, 1]
+                #print('eids3', eids3)
+                for eid, axiali, torsioni in zip(eids_device, axial, torsion):
+                    data = [eid, axiali, torsioni]
+                    op2_ascii.write('  eid=%s axial=%s torsion=%s\n' % tuple(data))
+                    op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
@@ -1959,8 +1980,9 @@ class RealCBeamForceArray(RealForceObject):
             page_num += 1
         return page_num
 
-    def write_op2(self, op2_file, op2_ascii, itable, new_result,
-                  date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO,
+                  itable: int, new_result: bool,
+                  date, is_mag_phase: bool=False, endian: bytes=b'>'):
         """writes an OP2"""
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
@@ -2001,10 +2023,19 @@ class RealCBeamForceArray(RealForceObject):
 
         op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
-        if not self.is_sort1:
+        if not self.is_sort1:  # pragma: no cover
             raise NotImplementedError('SORT2')
         struct1 = Struct(endian + b'2i 8f')
         struct2 = Struct(endian + b'i 8f')
+
+        is_nid_positive = (nids.min() > 0)
+        write_vectorized = False and is_nid_positive
+        eid_device_floats = np.array([])
+        nid_floats = np.array([])
+        if write_vectorized:
+            fdtype = fdtype_from_data(self.data, self.size)
+            eid_device_floats = view_idtype_as_fdtype(eids_device, fdtype)
+            nid_floats = view_idtype_as_fdtype(nids, fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         struct_13i = Struct(endian + b'13i')
@@ -2019,61 +2050,82 @@ class RealCBeamForceArray(RealForceObject):
                       4, ntotal, 4,
                       4 * ntotal]
             op2_file.write(struct_13i.pack(*header))
-            op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
-            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
+            op2_ascii.write('r4 [4, 0, 4]\n'
+                            f'r4 [4, {itable:d}, 4]\n'
+                            f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            sd = self.data[itime, :, 0]
-            bm1 = self.data[itime, :, 1]
-            bm2 = self.data[itime, :, 2]
-            ts1 = self.data[itime, :, 3]
-            ts2 = self.data[itime, :, 4]
-            af = self.data[itime, :, 5]
-            ttrq = self.data[itime, :, 6]
-            wtrq = self.data[itime, :, 7]
+            if write_vectorized:
+                isd0 = np.arange(0, nelements, 2)
+                isd1 = isd0 + 10
+                data = np.zeros((nelements, 189), dtype=fdtype)
+                data[:, 0] = eid_device_floats
+                data[:, 1] = nid_floats[:, 0]
+                if is_nid_positive:
+                    asdf
+                    print(f'sd1: data[itime, isd1, 1].shape={self.data[itime, isd1, 1].shape}')
+                    print(f'out: data[itime, isd0, :].shape={self.data[itime, isd0, :].shape}')
+                    print(f'in0: data[:, 2:18].shape={data[:, 2:18].shape}')
+                    print(f'in1: data[:, -18:].shape={data[:, -18:].shape}')
+                    data[:, 2:18] = self.data[itime, isd0, :]
+                    data[:, -18:] = self.data[itime, isd1, :]
+                    # data1 = self.data[itime, :, :]
+                    # data2 = np.column_stack([eid_device_floats, data1])
+                else:  # pragma: no cover
+                    raise RuntimeError((write_vectorized, is_nid_positive))
+                op2_file.write(data)
+            else:
+                sd = self.data[itime, :, 0]
+                bm1 = self.data[itime, :, 1]
+                bm2 = self.data[itime, :, 2]
+                ts1 = self.data[itime, :, 3]
+                ts2 = self.data[itime, :, 4]
+                af = self.data[itime, :, 5]
+                ttrq = self.data[itime, :, 6]
+                wtrq = self.data[itime, :, 7]
 
-            icount = 0
-            nwide = 0
-            ielement = 0
-            assert len(eids) == len(sd)
-            for eid, nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi in zip(eids, nids, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
-                if icount == 0:
-                    eid_device = eids_device[ielement]
-                    nid = nids[ielement]
-                    data = [eid_device, nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]  # 10
-                    op2_file.write(struct1.pack(*data))
-                    ielement += 1
-                    icount = 1
-                elif nid > 0 and icount > 0:
-                    # 11 total nodes, with 1, 11 getting an nid; the other 9 being
-                    # xxb sections
-                    data = [0, 0., 0., 0., 0., 0., 0., 0., 0.]
-                    # print('***adding %s\n' % (10-icount))
-                    for unused_i in range(10 - icount):
+                icount = 0
+                nwide = 0
+                ielement = 0
+                assert len(eids) == len(sd)
+                for eid, nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi in zip(
+                        eids, nids, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+                    if icount == 0:
+                        eid_device = eids_device[ielement]
+                        nid = nids[ielement]
+                        data = [eid_device, nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]  # 10
+                        op2_file.write(struct1.pack(*data))
+                        ielement += 1
+                        icount = 1
+                    elif nid > 0 and icount > 0:
+                        # 11 total nodes, with 1, 11 getting an nid; the other 9 being
+                        # xxb sections
+                        data = [0, 0., 0., 0., 0., 0., 0., 0., 0.]
+                        # print('***adding %s\n' % (10-icount))
+                        for unused_i in range(10 - icount):
+                            op2_file.write(struct2.pack(*data))
+                            nwide += len(data)
+
+                        eid_device2 = eids_device[ielement]
+                        assert eid_device == eid_device2
+                        nid = nids[ielement]
+                        data = [nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]  # 9
                         op2_file.write(struct2.pack(*data))
-                        nwide += len(data)
-
-                    eid_device2 = eids_device[ielement]
-                    assert eid_device == eid_device2
-                    nid = nids[ielement]
-                    data = [nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]  # 9
-                    op2_file.write(struct2.pack(*data))
-                    ielement += 1
-                    icount = 0
-                elif nid == 0 and icount > 0:
-                    eid_device2 = eids_device[ielement]
-                    data = [nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]  # 9
-                    op2_file.write(struct2.pack(*data))
-                    ielement += 1
-                    # data = [0, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc]  # 10
-                    # op2_file.write(struct2.pack(*data))
-                    icount += 1
-                elif nid == 0 and icount > 0:  # pragma: no cover
-                    raise RuntimeError('OEF-CBEAM op2 writer')
-                else:
-                    raise RuntimeError('OEF-CBEAM op2 writer')
-                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
-                nwide += len(data)
+                        ielement += 1
+                        icount = 0
+                    elif nid == 0 and icount > 0:
+                        eid_device2 = eids_device[ielement]
+                        data = [nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]  # 9
+                        op2_file.write(struct2.pack(*data))
+                        ielement += 1
+                        # data = [0, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc]  # 10
+                        # op2_file.write(struct2.pack(*data))
+                        icount += 1
+                    elif nid == 0 and icount > 0:  # pragma: no cover
+                        raise RuntimeError('OEF-CBEAM op2 writer')
+                    else:
+                        raise RuntimeError('OEF-CBEAM op2 writer')
+                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
+                    nwide += len(data)
 
             assert ntotal == nwide, 'ntotal=%s nwide=%s' % (ntotal, nwide)
 
@@ -2454,8 +2506,9 @@ class RealCShearForceArray(RealForceObject):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
-                  is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO,
+                  itable: int, new_result: bool,
+                  date, is_mag_phase: bool=False, endian: bytes=b'>'):
         """writes an OP2"""
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
@@ -2499,8 +2552,15 @@ class RealCShearForceArray(RealForceObject):
 
         if self.is_sort1:
             struct1 = Struct(endian + b'i 16f')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('SORT2')
+
+        write_vectorized = False
+        eid_device_floats = np.array([])
+        if write_vectorized:
+            fdtype = fdtype_from_data(self.data, self.size)
+            # eid_floats = view_idtype_as_fdtype(eids_device, fdtype)
+            eid_device_floats = view_idtype_as_fdtype(eids_device, fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         struct_13i = Struct(endian + b'13i')
@@ -2518,52 +2578,57 @@ class RealCShearForceArray(RealForceObject):
                       4, ntotal, 4,
                       4 * ntotal]
             op2_file.write(struct_13i.pack(*header))
-            op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
-            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
+            op2_ascii.write('r4 [4, 0, 4]\n'
+                            f'r4 [4, {itable:d}, 4]\n'
+                            f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            f14 = self.data[itime, :, 0]
-            f12 = self.data[itime, :, 1]
-            f21 = self.data[itime, :, 2]
-            f23 = self.data[itime, :, 3]
-            f32 = self.data[itime, :, 4]
-            f34 = self.data[itime, :, 5]
-            f43 = self.data[itime, :, 6]
-            f41 = self.data[itime, :, 7]
+            if write_vectorized:
+                datai = np.column_stack([eid_device_floats, self.data[itime, :, :]])
+                op2_file.write(datai)
+                assert ntotal == datai.size
+            else:  # pragma: no cover
+                f14 = self.data[itime, :, 0]
+                f12 = self.data[itime, :, 1]
+                f21 = self.data[itime, :, 2]
+                f23 = self.data[itime, :, 3]
+                f32 = self.data[itime, :, 4]
+                f34 = self.data[itime, :, 5]
+                f43 = self.data[itime, :, 6]
+                f41 = self.data[itime, :, 7]
 
-            kick1 = self.data[itime, :, 8]
-            tau12 = self.data[itime, :, 9]
-            kick2 = self.data[itime, :, 10]
-            tau23 = self.data[itime, :, 11]
-            kick3 = self.data[itime, :, 12]
-            tau34 = self.data[itime, :, 13]
-            kick4 = self.data[itime, :, 14]
-            tau41 = self.data[itime, :, 15]
+                kick1 = self.data[itime, :, 8]
+                tau12 = self.data[itime, :, 9]
+                kick2 = self.data[itime, :, 10]
+                tau23 = self.data[itime, :, 11]
+                kick3 = self.data[itime, :, 12]
+                tau34 = self.data[itime, :, 13]
+                kick4 = self.data[itime, :, 14]
+                tau41 = self.data[itime, :, 15]
 
-            for (eid, eid_device, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
-                 kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i) in zip(
-                    eids, eids_device, f14, f12, f21, f23, f32, f34, f43, f41,
-                    kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41):
-                op2_file.write(struct1.pack(
-                            eid_device, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
-                            kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i))
+                for (eid, eid_device, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
+                     kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i) in zip(
+                        eids, eids_device, f14, f12, f21, f23, f32, f34, f43, f41,
+                        kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41):
+                    op2_file.write(struct1.pack(
+                                eid_device, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
+                                kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i))
 
-                vals2 = write_floats_12e([
-                    f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
-                    kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i])
-                [
-                    f14i, f12i,
-                    f21i, f23i,
-                    f32i, f34i,
-                    f43i, f41i,
-                    kick1i, tau12i, kick2i, tau23i,
-                    kick3i, tau34i, kick4i, tau41i
-                ] = vals2
-                op2_ascii.write(
-                    '0%13i%-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n'
-                    '                     %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
-                            eid, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
-                            kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i))
+                    vals2 = write_floats_12e([
+                        f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
+                        kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i])
+                    [
+                        f14i, f12i,
+                        f21i, f23i,
+                        f32i, f34i,
+                        f43i, f41i,
+                        kick1i, tau12i, kick2i, tau23i,
+                        kick3i, tau34i, kick4i, tau41i
+                    ] = vals2
+                    op2_ascii.write(
+                        '0%13i%-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n'
+                        '                     %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                                eid, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
+                                kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i))
 
             itable -= 1
             header = [4 * ntotal,]
@@ -3214,10 +3279,9 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         return page_num - 1
 
     def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO,
-                  itable: int, new_result,
-                  date, is_mag_phase: bool=False, endian: str='>'):
+                  itable: int, new_result: bool,
+                  date, is_mag_phase: bool=False, endian: bytes=b'>'):
         """writes an OP2"""
-        write_vectorized = False
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
@@ -3276,15 +3340,10 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         else:  # pragma: no cover
             raise NotImplementedError('SORT2')
 
+        write_vectorized = False
         eid_floats = np.array([])
         if write_vectorized:
-            fdtype = self.data.dtype
-            if self.size == fdtype.itemsize:
-                pass
-            else:
-                # warnings.warn(f'downcasting {self.class_name}...this is buggy')
-                # idtype = np.int32(1)
-                fdtype = np.float32(1.0)
+            fdtype = fdtype_from_data(self.data, self.size)
             eid_floats = view_idtype_as_fdtype(eids_device, fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
@@ -3301,15 +3360,15 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
                       4, ntotal, 4,
                       4 * ntotal]
             op2_file.write(struct_13i.pack(*header))
-            op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
-            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
+            op2_ascii.write('r4 [4, 0, 4]\n'
+                            f'r4 [4, {itable:d}, 4]\n'
+                            f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             if write_vectorized:
                 eid_data = np.column_stack([eid_floats, self.data[itime, :, :]])
                 op2_file.write(eid_data)
                 assert ntotal == eid_data.size
-            else:
+            else:  # pragma: no cover
                 mx = self.data[itime, :, 0]
                 my = self.data[itime, :, 1]
                 mxy = self.data[itime, :, 2]
@@ -3739,10 +3798,10 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO, itable, new_result,
-                  date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO,
+                  itable: int, new_result: bool,
+                  date, is_mag_phase: bool=False, endian: bytes=b'>'):
         """writes an OP2"""
-        write_vectorized = False
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
@@ -3786,8 +3845,6 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         nelements = len(ueids)
 
         eids_device = eids * 10 + self.device_code
-        if write_vectorized:
-            eids_device_short = ueids * 10 + self.device_code
 
         #print('nelements =', nelements)
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
@@ -3819,14 +3876,10 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         eid_device_floats = np.array([])
         cen_word_floats = np.array([])
         nnode_floats = np.array([])
+        write_vectorized = False
         if write_vectorized:
-            fdtype = self.data.dtype
-            if self.size == fdtype.itemsize:
-                pass
-            else:
-                # warnings.warn(f'downcasting {self.class_name}...this is buggy')
-                # idtype = np.int32(1)
-                fdtype = np.float32(1.0)
+            eids_device_short = ueids * 10 + self.device_code
+            fdtype = fdtype_from_data(self.data, self.size)
             # eid_floats = view_idtype_as_fdtype(eids_device, fdtype)
             nid_floats = view_idtype_as_fdtype(nids, fdtype)
             eid_device_floats = view_idtype_as_fdtype(eids_device_short, fdtype)
@@ -3848,9 +3901,9 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
                       4, ntotal, 4,
                       4 * ntotal]
             op2_file.write(struct_13i.pack(*header))
-            op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
-            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
+            op2_ascii.write('r4 [4, 0, 4]\n'
+                            f'r4 [4, {itable:d}, 4]\n'
+                            f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             if write_vectorized:
                 ntime, nelem_nodes, nresult = self.data.shape
@@ -3870,7 +3923,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
                 assert ntotal == nelements*(2+nnode*(1+nresult))
                 assert ntotal == eid_data.size
                 # write_op2_plate2_force
-            else:
+            else:  # pragma: no cover
                 mx = self.data[itime, :, 0]
                 my = self.data[itime, :, 1]
                 mxy = self.data[itime, :, 2]
@@ -4094,8 +4147,8 @@ class RealCBarFastForceArray(RealForceObject):
                     eids, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
                 [bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = write_floats_13e([
                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi])
-            f06_file.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (
-                eid, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi))
+                f06_file.write('     %8d    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (
+                    eid, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi))
             f06_file.write(page_stamp % page_num)
         return page_num
 
@@ -4128,8 +4181,9 @@ class RealCBarFastForceArray(RealForceObject):
                     raise ValueError(msg)
         return True
 
-    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO, itable, new_result,
-                  date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO,
+                  itable: int, new_result: bool,
+                  date, is_mag_phase: bool=False, endian: bytes=b'>'):
         """writes an OP2"""
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
@@ -4174,6 +4228,11 @@ class RealCBarFastForceArray(RealForceObject):
         else:
             raise NotImplementedError('SORT2')
 
+        write_vectorized = False
+        if write_vectorized:
+            fdtype = fdtype_from_data(self.data, self.size)
+            eid_device_floats = view_idtype_as_fdtype(eids_device, fdtype)
+
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         struct_13i = Struct(endian + b'13i')
         for itime in range(self.ntimes):
@@ -4188,24 +4247,28 @@ class RealCBarFastForceArray(RealForceObject):
                       4, ntotal, 4,
                       4 * ntotal]
             op2_file.write(struct_13i.pack(*header))
-            op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
-            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
+            op2_ascii.write('r4 [4, 0, 4]\n'
+                            f'r4 [4, {itable:d}, 4]\n'
+                            f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            bm1a = self.data[itime, :, 0]
-            bm2a = self.data[itime, :, 1]
-            bm1b = self.data[itime, :, 2]
-            bm2b = self.data[itime, :, 3]
-            ts1 = self.data[itime, :, 4]
-            ts2 = self.data[itime, :, 5]
-            af = self.data[itime, :, 6]
-            trq = self.data[itime, :, 7]
-            for eid_device, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(
-                    eids_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
-
-                data = [eid_device, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi]
-                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
-                op2_file.write(struct1.pack(*data))
+            if write_vectorized:
+                datai = np.column_stack([eid_device_floats, self.data[itime, :, :]])
+                op2_file.write(datai)
+                assert ntotal == datai.size
+            else:  # pragma: no cover
+                bm1a = self.data[itime, :, 0]
+                bm2a = self.data[itime, :, 1]
+                bm1b = self.data[itime, :, 2]
+                bm2b = self.data[itime, :, 3]
+                ts1 = self.data[itime, :, 4]
+                ts2 = self.data[itime, :, 5]
+                af = self.data[itime, :, 6]
+                trq = self.data[itime, :, 7]
+                for eid_device, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(
+                        eids_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
+                    data = [eid_device, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi]
+                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
+                    op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
@@ -4708,8 +4771,9 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             f06_file.write(page_stamp % page_num)
         return page_num
 
-    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO, itable, new_result,
-                  date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO,
+                  itable: int, new_result: bool,
+                  date, is_mag_phase: bool=False, endian: bytes=b'>'):
         """writes an OP2"""
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
@@ -4775,9 +4839,9 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
                       4, ntotal, 4,
                       4 * ntotal]
             op2_file.write(struct_13i.pack(*header))
-            op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
-            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
+            op2_ascii.write('r4 [4, 0, 4]\n'
+                            f'r4 [4, {itable:d}, 4]\n'
+                            f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             # sd, bm1, bm2, ts1, ts2, af, trq
             sd = self.data[itime, :, 0]
@@ -5534,6 +5598,11 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
 
 
 class RealForceMomentArray(RealForceObject):
+    """
+    CBushForceArray
+    CBearForceArray
+    RealCFastForceArrayMSC
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
@@ -5787,8 +5856,9 @@ class RealForceMomentArray(RealForceObject):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO, itable, new_result,
-                  date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file: BinaryIO, op2_ascii: TextIO,
+                  itable: int, new_result: bool,
+                  date, is_mag_phase: bool=False, endian: bytes=b'>'):
         """writes an OP2"""
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
@@ -5832,10 +5902,15 @@ class RealForceMomentArray(RealForceObject):
 
         if self.is_sort1:
             struct1 = Struct(endian + b'i6f')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('SORT2')
 
-        op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
+        write_vectorized = False
+        if write_vectorized:
+            fdtype = fdtype_from_data(self.data, self.size)
+            eid_device_floats = view_idtype_as_fdtype(eids_device, fdtype)
+
+        op2_ascii.write('%s-nelements=%d\n' % (self.element_name, nelements))
         struct_13i = Struct(endian + b'13i')
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
@@ -5848,21 +5923,25 @@ class RealForceMomentArray(RealForceObject):
                       4, ntotal, 4,
                       4 * ntotal]
             op2_file.write(struct_13i.pack(*header))
-            op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
-            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
+            op2_ascii.write('r4 [4, 0, 4]\n'
+                            f'r4 [4, {itable:d}, 4]\n'
+                            f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            fx = self.data[itime, :, 0]
-            fy = self.data[itime, :, 1]
-            fz = self.data[itime, :, 2]
-            mx = self.data[itime, :, 3]
-            my = self.data[itime, :, 4]
-            mz = self.data[itime, :, 5]
-
-            for eid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids_device, fx, fy, fz, mx, my, mz):
-                data = [eid, fxi, fyi, fzi, mxi, myi, mzi]
-                op2_ascii.write('  eid=%s data=%s\n' % (eid, str(data[1:])))
-                op2_file.write(struct1.pack(*data))
+            if write_vectorized:
+                datai = np.column_stack([eid_device_floats, self.data[itime, :, :]])
+                op2_file.write(datai)
+                assert ntotal == datai.size
+            else:  # pragma: no cover
+                fx = self.data[itime, :, 0]
+                fy = self.data[itime, :, 1]
+                fz = self.data[itime, :, 2]
+                mx = self.data[itime, :, 3]
+                my = self.data[itime, :, 4]
+                mz = self.data[itime, :, 5]
+                for eid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids_device, fx, fy, fz, mx, my, mz):
+                    data = [eid, fxi, fyi, fzi, mxi, myi, mzi]
+                    op2_ascii.write('  eid=%s data=%s\n' % (eid, str(data[1:])))
+                    op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
@@ -5876,7 +5955,8 @@ class RealCBushForceArray(RealForceMomentArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def get_f06_header(self):
+    @staticmethod
+    def get_f06_header():
         msg = [
             '                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
             ' \n'
@@ -5890,20 +5970,14 @@ class RealCBearForceArray(RealForceMomentArray):
         RealForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def get_f06_header(self):
-        if self.element_type == 0:  # 'CBUSH':
-            msg = [
-                '                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
-                ' \n'
-                '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
-                # '0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
-        elif self.element_type == 280:  # 'CBEAR':
+        if self.element_type == 280:  # 'CBEAR':
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\rotbr60f.op2
             msg = [
                 '                              F O R C E S   I N   B E A R I N G   E L E M E N T S        ( C B E A R )\n'
                 ' \n'
                 '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
                 # '0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
-        else:
+        else:  # prgma: no cover
             msg = f'element_name={self.element_name} self.element_type={self.element_type}'
             raise NotImplementedError(msg)
         return msg
@@ -5914,7 +5988,8 @@ class RealCFastForceArrayMSC(RealForceMomentArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def get_f06_header(self):
+    @staticmethod
+    def get_f06_header():
         msg = [
             '                               F O R C E S   I N   F A S T E N E R   E L E M E N T S   ( C F A S T )\n'
             ' \n'

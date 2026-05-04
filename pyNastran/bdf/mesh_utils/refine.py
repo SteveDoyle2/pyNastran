@@ -631,7 +631,7 @@ def _setup_refine(model: BDF,
     log = model.log
     nodes = model.nodes
     edges_to_center = {}
-    log.info('building edges_to_center map')
+    log.debug('building edges_to_center map')
     elements_skip = elements_0d
     if skip_solids:
         elements_skip = elements_skip | elements_solid
@@ -648,7 +648,7 @@ def _setup_refine(model: BDF,
         else:
             log.warning(elem.rstrip())
 
-    log.info('building faces_to_center map')
+    log.debug('building faces_to_center map')
     elements_skip = elements_0d | elements_1d
     if skip_solids:
         elements_skip = elements_skip | elements_solid

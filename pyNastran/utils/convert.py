@@ -165,7 +165,8 @@ def _pressure_factor(pressure_units_in: str, pressure_units_out: str) -> float:
     return factor
 
 
-def convert_velocity(velocity: float, velocity_units_in: str,
+def convert_velocity(velocity: float | np.ndarray,
+                     velocity_units_in: str,
                      velocity_units_out: str) -> float:
     """nominal unit is ft/s"""
     if velocity_units_in == velocity_units_out:
