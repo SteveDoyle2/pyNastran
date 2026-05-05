@@ -38,7 +38,7 @@ class TestCombination(unittest.TestCase):
         envelope(
             model, model_results,
             # rod_strain='max',
-            bush_force='xy_rss',
+            bush_force='mxy_rss',
             bar_strain='max',
             plate_strain='max',
             comp_plate_strain='max',
@@ -101,7 +101,7 @@ class TestCombination(unittest.TestCase):
         op2_filename = MODEL_PATH / 'bwb' / 'bwb_saero.op2'
         envelope(
             bdf_filename, op2_filename,
-            bush_force='xy_rss',
+            bush_force='fxy_rss',
             bar_stress='abs_max',
             comp_plate_stress='abs_max',
             consider_solid_nodes=True)

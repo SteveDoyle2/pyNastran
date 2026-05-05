@@ -76,6 +76,9 @@ def envelope(
         comp_plate_strain: str='',
         solid_stress: str='',
         solid_strain: str='',
+        displacement: str='',
+        spc_force: str='',
+        mpc_force: str='',
         consider_plate_nodes: bool=True,
         consider_solid_nodes: bool=True,
         element_ids: list[int] | np.ndarray=None,
@@ -90,20 +93,21 @@ def envelope(
     The disadvantages of this approach:
      - elements have multiple criterion (e.g., max_shear and max principal)
        -> TODO: make combined quantities max_shear_principal??? -> no
-       -> cbush_force = 'xy_rss' (this is still one criterion)
+       -> cbush_force = 'fxy_rss' (this is one criterion)
      - different materials have different allowables
        -> run it multiple times
 
     Enveloping works on:
      - rod stress/strain
      - bar stress/strain (no von_mises or max_shear)
-     - plate stres/strain
-     - comp plate stres/strain
+     - plate stress/strain
+     - comp plate stress/strain
      - solid stress/strain
+     - cbush_force?
 
     Everything else is a placeholder
      - element force
-     - cbeam/cbush
+     - cbeam
      - displacements
      - spc_forces
      - mpc_forces
@@ -123,9 +127,10 @@ def envelope(
     exclude_results list[str] or None
         see read_op2
     bush_force : str; default=''
+        group0: 'f', 'm'
         group1: 'x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz',
         group2: 'max', 'min', 'rss', 'abs_max'
-        cbush_force = group1_group2 = 'xy_max'
+        cbush_force = {group0}{group1}_{group2} = 'fxy_max'
     rod_stress : str; default=''
         'max', 'min', 'abs_max', 'von_mises', 'max_shear'
     rod_strain : str; default=''
@@ -150,6 +155,15 @@ def envelope(
         'max', 'min', 'abs_max', 'von_mises', 'max_shear'
     solid_strain : str; default=''
         'max', 'min', 'abs_max', 'von_mises', 'max_shear'
+    displacement; default=''
+        see cbush_force except f->t, m->r
+        TODO: add coordinate system support?
+    spc_force; default=''
+        see cbush_force
+        TODO: add coordinate system support?
+    mpc_force; default=''
+        see cbush_force
+        TODO: add coordinate system support?
     consider_plate_nodes : bool=True
         if there are no plate nodes, False is automatically selected
         True:  take the max/min of all extrapolated plate nodes
@@ -160,7 +174,7 @@ def envelope(
         False: take the max/min of only solid centers
     transform_to_material_coord : bool; default=True
         transform shell stress/strain/force into the material coordinate frame
-        doesn't transform composites
+        doesn't transform composites or solids
     percent_eids_target : float; default=1.00 -> all
         defines the percentage of critical elements that are considered
 
@@ -184,35 +198,24 @@ def envelope(
     plate_stress_strain_keys = solid_stress_strain_keys
     comp_plate_stress_strain_keys = solid_stress_strain_keys
 
-    is_cbush_min, cbush_force_tuple = _validate_cbush_force(bush_force)
     # is_cbush1d_min, cbush1d_force_tuple = _validate_cbush_force(cbush1d_force)
     is_cbush1d_min = False
 
     # is_ctube_min = is_conrod_min = is_crod_min
+    displacement = _str_to_list(displacement)
+    spc_force = _str_to_list(spc_force)
+    mpc_force = _str_to_list(mpc_force)
+
     rod_stress = _str_to_list(rod_stress)
     rod_strain = _str_to_list(rod_strain)
-    assert bar_stress == '' or bar_stress in bar_stress_strain_keys, bar_stress
-    assert bar_strain == '' or bar_strain in bar_stress_strain_keys, bar_strain
-    is_cbar_min = ((bar_stress == 'min') or (bar_strain == 'min'))
+    bar_stress = _str_to_list(bar_stress)
+    bar_strain = _str_to_list(bar_strain)
 
-    assert beam_stress == '' or beam_stress in beam_stress_strain_keys, beam_stress
-    assert beam_strain == '' or beam_strain in beam_stress_strain_keys, beam_strain
-    is_cbeam_min = ((beam_stress == 'min') or (beam_strain == 'min'))
-    is_cbend_min = is_cbeam_min
+    beam_stress = _str_to_list(beam_stress)
+    beam_strain = _str_to_list(beam_strain)
+    is_cbend_min = False
     #-----------------------------------------------------------------
     # verify requests
-    # assert plate_stress == '' or plate_stress in plate_stress_strain_keys, plate_stress
-    # assert plate_strain == '' or plate_strain in plate_stress_strain_keys, plate_strain
-    # is_plate_min = ((plate_stress == 'min') or (plate_strain == 'min'))
-
-    # assert comp_plate_stress == '' or comp_plate_stress in solid_stress_strain_keys, comp_plate_stress
-    # assert comp_plate_strain == '' or comp_plate_strain in solid_stress_strain_keys, comp_plate_strain
-    # is_comp_plate_min = ((comp_plate_stress == 'min') or (comp_plate_strain == 'min'))
-
-    # is_comp_plate = False
-    # comp_plate_stress = _str_to_list(comp_plate_stress)
-    # comp_plate_strain = _str_to_list(comp_plate_strain)
-
     plate_stress = _str_to_list(plate_stress)
     plate_strain = _str_to_list(plate_strain)
 
@@ -222,63 +225,44 @@ def envelope(
     solid_stress = _str_to_list(solid_stress)
     solid_strain = _str_to_list(solid_strain)
 
-    is_rod = False
-    for rod_stressi in rod_stress:
-        assert rod_stressi in rod_stress_strain_keys, rod_stressi
-        is_rod = True
-    for rod_straini in rod_strain:
-        assert rod_straini in rod_stress_strain_keys, rod_straini
-        is_rod = True
+    bush_force = _str_to_list(bush_force)
+    is_cbush = False
+    for cbush_forcei in bush_force:
+        is_cbush_min, cbush_force_tuple = _validate_force_moment(cbush_forcei)
+        is_cbush = True
+    # is_bush = _check_force('bush', bush_force, bush_force_keys)
 
-    is_plate = False
-    for plate_stressi in plate_stress:
-        assert plate_stressi in plate_stress_strain_keys, plate_stressi
-        is_plate = True
-    for plate_straini in plate_strain:
-        assert plate_straini in plate_stress_strain_keys, plate_straini
-        is_plate = True
+    is_disp = False
+    is_spc_force = False
+    is_mpc_force = False
+    for displacementi in displacement:
+        _validate_disp(displacementi)
+        is_disp = True
+    for spc_forcei in spc_force:
+        _validate_force_moment(spc_forcei)
+        is_disp = True
+    for mpc_forcei in mpc_force:
+        _validate_force_moment(mpc_forcei)
+        is_disp = True
 
-    is_comp_plate = False
-    for comp_plate_stressi in comp_plate_stress:
-        assert comp_plate_stressi in comp_plate_stress_strain_keys, comp_plate_stressi
-        is_comp_plate = True
-    for comp_plate_straini in comp_plate_strain:
-        assert comp_plate_straini in comp_plate_stress_strain_keys, comp_plate_straini
-        is_comp_plate = True
+    is_rod = _check_stress_strain('rod', rod_stress, rod_strain, rod_stress_strain_keys)
+    is_bar = _check_stress_strain('bar', bar_stress, bar_strain, bar_stress_strain_keys)
+    is_beam = _check_stress_strain('beam', beam_stress, beam_strain, beam_stress_strain_keys)
+    is_plate = _check_stress_strain('plate', plate_stress, plate_strain, plate_stress_strain_keys)
+    is_comp_plate = _check_stress_strain('comp_plate', comp_plate_stress, comp_plate_strain, comp_plate_stress_strain_keys)
+    is_solid = _check_stress_strain('solid', solid_stress, solid_strain, solid_stress_strain_keys)
 
-    is_solid = False
-    for solid_stressi in solid_stress:
-        assert solid_stressi in solid_stress_strain_keys, solid_stressi
-        is_solid = True
-    for solid_straini in solid_strain:
-        assert solid_straini in solid_stress_strain_keys, solid_straini
-        is_solid = True
-
-    check_bar_stress = bar_stress != ''
-    check_bar_strain = bar_strain != ''
-
-    check_beam_stress = beam_stress != ''
-    check_beam_strain = beam_strain != ''
-
-    check_cbush_force = cbush_force_tuple[0] != ''
-
-    # pick one
+    # pick at least one
     is_results = (
-            is_rod or
-            check_bar_stress or check_bar_strain or
-            check_cbush_force or
-            is_comp_plate or
-            is_plate or
-            is_solid)
+        is_rod or is_bar or is_beam or
+        is_cbush or
+        is_comp_plate or is_plate or is_solid or
+        is_disp or is_spc_force or is_mpc_force
+    )
     if not is_results:
         raise RuntimeError('no plate/solid results were selected')
 
-    if check_bar_stress and check_bar_strain:
-        raise RuntimeError('Cannot downselect bar stress and strain')
-    # if check_bush_stress and check_bush_strain:
-    #     raise RuntimeError('Cannot downselect bush stress and strain')
     #-----------------------------------------------------------------
-
     idtype = 'int32'
     fdtype = 'float32'
 
@@ -380,68 +364,11 @@ def envelope(
     all_eids_list = []
     all_subcases_list = []
 
-    cbar_results = []
-    cbeam_results = []
     cbend_results = []
-    cbush_results = []
     cbush1d_results = []
 
-    if check_cbush_force and len(cbush_eids):
-        bush_force_list = _fill_bush_list(
-            model_results, cbush_eids, is_force=True)
-        assert len(bush_force_list), 'No CBUSH force results found'
-        _envelope_stress_strain(
-            'cbush force', bush_force, bush_force_list,
-            all_eids,
-            all_eids_list, all_subcases_list, cbush_results, dtype=dtype)
-        # log.info('_envelope_stress_strain_end')
-
-    if check_bar_stress and len(cbar_eids):
-        bar_stress_list = _fill_bar_list(
-            model_results, cbar_eids, is_stress=True)
-        assert len(bar_stress_list), 'No bar stress results found'
-        _envelope_stress_strain(
-            'bar stress', bar_stress, bar_stress_list,
-            all_eids,
-            all_eids_list, all_subcases_list, cbar_results, dtype=dtype)
-
-    if check_bar_strain and len(cbar_eids):
-        bar_strain_list = _fill_bar_list(
-            model_results, cbar_eids, is_stress=True)
-        assert len(bar_strain_list), 'No bar strain results found'
-        _envelope_stress_strain(
-            'bar strain', bar_strain, bar_strain_list,
-            all_eids,
-            all_eids_list, all_subcases_list, cbar_results, dtype=dtype)
-
-    if check_beam_stress and len(cbeam_eids):
-        beam_stress_list = _fill_beam_list(
-            model_results, cbeam_eids, is_stress=True)
-        assert len(beam_stress_list), 'No beam stress results found'
-        _envelope_stress_strain(
-            'beam stress', beam_stress, beam_stress_list,
-            all_eids,
-            all_eids_list, all_subcases_list, cbeam_results, dtype=dtype)
-
-    if check_beam_strain and len(cbeam_eids):
-        beam_strain_list = _fill_beam_list(
-            model_results, cbar_eids, is_stress=True)
-        assert len(beam_strain_list), 'No beam strain results found'
-        _envelope_stress_strain(
-            'beam strain', beam_strain, beam_strain_list,
-            all_eids,
-            all_eids_list, all_subcases_list, cbeam_results, dtype=dtype)
-
-
     results = {
-        # 'rod': (rod_results, all_rod_eids, is_crod_min),
-        # 'crod': (crod_results, crod_eids, is_crod_min),
-        # 'ctube': (ctube_results, ctube_eids, is_ctube_min),
-        # 'conrod': (conrod_results, conrod_eids, is_conrod_min),
-        'cbar': (cbar_results, cbar_eids, is_cbar_min),
-        'cbeam': (cbeam_results, cbeam_eids, is_cbeam_min),
         'cbend' : (cbend_results, cbend_eids, is_cbend_min),
-        'cbush': (cbush_results, cbush_eids, is_cbush_min),
         'cbush1d': (cbush1d_results, cbush1d_eids, is_cbush1d_min),
     }
     #---------------------------------------------------
@@ -462,8 +389,8 @@ def envelope(
                     'rod stress', rod_stressi, rod_stress_list,
                     all_eids,
                     all_eids_list, all_subcases_list, rod_results, dtype=dtype)
-            is_rod_min = 'min' in rod_stressi
-            results[('rod', rod_stressi)] = (rod_results, all_rod_eids, is_rod_min)
+                is_rod_min = 'min' in rod_stressi
+                results[('rod', rod_stressi)] = (rod_results, all_rod_eids, is_rod_min)
             # log.info('_envelope_stress_strain_end')
 
         if is_rod_strain:
@@ -481,6 +408,81 @@ def envelope(
                     all_eids_list, all_subcases_list, rod_results, dtype=dtype)
                 is_rod_min = 'min' in rod_straini
                 results[('rod', rod_straini)] = (rod_results, all_rod_eids, is_rod_min)
+
+    is_bar_stress = (len(bar_stress) > 0)
+    is_bar_strain = (len(bar_strain) > 0)
+    if len(cbar_eids):
+        if is_bar_stress:
+            bar_stress_list = _fill_bar_list(
+                model_results, cbar_eids, is_stress=True)
+            assert len(bar_stress_list), 'No bar stress results found'
+            for bar_stressi in bar_stress:
+                cbar_results = []
+                _envelope_stress_strain(
+                    'bar stress', bar_stressi, bar_stress_list,
+                    all_eids,
+                    all_eids_list, all_subcases_list,  cbar_results, dtype=dtype)
+                is_bar_min = 'min' in bar_stressi
+                results[('bar', bar_stressi)] = (cbar_results, cbar_eids, is_bar_min)
+
+        if is_bar_strain:
+            bar_strain_list = _fill_bar_list(
+                model_results, cbar_eids, is_stress=True)
+            assert len(bar_strain_list), 'No bar strain results found'
+            for bar_straini in bar_strain:
+                cbar_results = []
+                _envelope_stress_strain(
+                    'bar strain', bar_straini, bar_strain_list,
+                    all_eids,
+                    all_eids_list, all_subcases_list, cbar_results, dtype=dtype)
+                is_bar_min = 'min' in bar_straini
+                results[('bar', bar_straini)] = (cbar_results, cbar_eids, is_bar_min)
+
+    is_beam_stress = (len(beam_stress) > 0)
+    is_beam_strain = (len(beam_strain) > 0)
+    if len(cbeam_eids):
+        if is_beam_stress:
+            beam_stress_list = _fill_beam_list(
+                model_results, cbeam_eids, is_stress=True)
+            assert len(beam_stress_list), 'No beam stress results found'
+            for beam_stressi in beam_stress:
+                cbeam_results = []
+                _envelope_stress_strain(
+                    'beam stress', beam_stressi, beam_stress_list,
+                    all_eids,
+                    all_eids_list, all_subcases_list, cbeam_results, dtype=dtype)
+                is_beam_min = 'min' in beam_stressi
+                results[('beam', beam_stressi)] = (cbeam_results, cbeam_eids, is_beam_min)
+
+        if is_beam_strain:
+            beam_strain_list = _fill_beam_list(
+                model_results, cbar_eids, is_stress=True)
+            assert len(beam_strain_list), 'No beam strain results found'
+            for beam_straini in beam_strain:
+                cbeam_results = []
+                _envelope_stress_strain(
+                    'beam strain', beam_straini, beam_strain_list,
+                    all_eids,
+                    all_eids_list, all_subcases_list, cbeam_results, dtype=dtype)
+                is_beam_min = 'min' in beam_straini
+                results[('beam', beam_straini)] = (cbeam_results, cbeam_eids, is_beam_min)
+
+    is_cbush_force = (len(bush_force) > 0)
+    if len(cbush_eids):
+        if is_cbush_force:
+            bush_force_list = _fill_bush_list(
+                model_results, cbush_eids, is_force=True)
+            assert len(bush_force_list), 'No CBUSH force results found'
+            for cbush_forcei in bush_force:
+                # is_cbush_min, cbush_force_tuple = _validate_cbush_force(cbush_forcei)
+                cbush_results = []
+                _envelope_stress_strain(
+                    'cbush force', cbush_forcei, bush_force_list,
+                    all_eids,
+                    all_eids_list, all_subcases_list, cbush_results, dtype=dtype)
+                is_bush_min = 'min' in cbush_forcei
+                results[('bush', cbush_forcei)] = (cbush_results, cbush_eids, is_bush_min)
+                # log.info('_envelope_stress_strain_end')
 
     is_comp_plate_stress = (len(comp_plate_stress) > 0)
     is_comp_plate_strain = (len(comp_plate_strain) > 0)
@@ -614,11 +616,33 @@ def envelope(
         percent_eids_target, model, log)
     return out_subcases
 
-def _validate_cbush_force(cbush_force: str) -> tuple[bool, tuple[str, str]]:
+def _validate_force_moment(force_moment: str) -> tuple[bool, tuple[str, str]]:
+    """
+    works on CBUSH and SPC/MPC force
+    fx_min, fxy_abs, fxy_rss, mxyz_abs_max
+    """
     is_min = False
-    if cbush_force == '':
+    if force_moment == '':
         return is_min, ('', '')
-    group1, group2 = cbush_force.lower().split('_', 1)
+    group1, group2 = force_moment.lower().split('_', 1)
+    group0, group1 = group1[0], group1[1:]
+    assert group0 in ['f', 'm'], (group0, group1, group2)
+    group1 = ''.join(sorted(group1))
+    assert group1 in ['x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'], (group1, group2)
+    assert group2 in ['min', 'max', 'rss', 'abs_max'], (group1, group2)
+    is_min = (group2 == 'min')
+    return is_min, (group1, group2)
+
+def _validate_disp(displacement: str) -> tuple[bool, tuple[str, str]]:
+    """
+    tx_min, txy_abs, txy_rss, rxyz_abs_max
+    """
+    is_min = False
+    if displacement == '':
+        return is_min, ('', '')
+    group1, group2 = displacement.lower().split('_', 1)
+    group0, group1 = group1[0], group1[1:]
+    assert group0 in ['t', 'r'], (group0, group1, group2)
     group1 = ''.join(sorted(group1))
     assert group1 in ['x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'], (group1, group2)
     assert group2 in ['min', 'max', 'rss', 'abs_max'], (group1, group2)
@@ -631,6 +655,36 @@ def _str_to_list(solid_stress: list[str] | str) -> list[str]:
     else:
         solid_stress = []
     return solid_stress
+
+def _check_stress_strain(name: str,
+                         rod_stress: list[str],
+                         rod_strain: list[str],
+                         rod_stress_strain_keys: list[str]) -> bool:
+    is_rod = False
+    for rod_stressi in rod_stress:
+        assert rod_stressi in rod_stress_strain_keys, rod_stressi
+        is_rod = True
+    for rod_straini in rod_strain:
+        assert rod_straini in rod_stress_strain_keys, rod_straini
+        is_rod = True
+    return is_rod
+
+def _check_force(name: str,
+                 # rod_stress: list[str],
+                 # rod_strain: list[str],
+                 rod_force: list[str],
+                 rod_force_keys: list[str]) -> bool:
+    is_rod = False
+    # for rod_stressi in rod_stress:
+    #     assert rod_stressi in rod_stress_strain_keys, rod_stressi
+    #     is_rod = True
+    # for rod_straini in rod_strain:
+    #     assert rod_straini in rod_stress_strain_keys, rod_straini
+    #     is_rod = True
+    for rod_forcei in rod_force:
+        assert rod_force in rod_force_keys, rod_forcei
+        is_rod = True
+    return is_rod
 
 def _setup_models(bdf_filename: PathLike | BDF,
                   op2_filename: PathLike | OP2,
@@ -753,6 +807,8 @@ def _envelope_post(all_subcases_list: list[int],
     for result_group, result_data in results.items():
         elem_results, elem_eids, is_elem_min = result_data
         if len(elem_results):
+            log.info(f'result_group={result_group!r}')
+            assert 'bush' not in result_group, result_group
             icase_criticali, data_critical, combined_data = _get_combined_data(
                 all_subcases, result_group, elem_results,
                 nsubcase_all, neid_all, is_elem_min)
@@ -761,57 +817,6 @@ def _envelope_post(all_subcases_list: list[int],
             icase_critical[icase] = icase_criticali[icase]
         del elem_results, elem_eids, is_elem_min
 
-    # bush_results, bush_eid, is_bush_min = results['cbush']
-    # if len(bush_results):
-    #     icase_criticali, data_critical, cbush_combined_data = _get_combined_data(
-    #         all_subcases, 'cbush', bush_results,
-    #         nsubcase_all, neid_all, is_bush_min)
-    #     icase_critical_list.append(icase_criticali)
-    #     icase = np.where(icase_criticali != -1)[0]
-    #     icase_critical[icase] = icase_criticali[icase]
-    # del bush_results, bush_eid, is_bush_min
-
-    # rod_results, rod_eid, is_rod_min = results['rod']
-    # if len(rod_results):
-    #     icase_criticali, data_critical, rod_combined_data = _get_combined_data(
-    #         all_subcases, 'rods', rod_results,
-    #         nsubcase_all, neid_all, is_rod_min)
-    #     icase_critical_list.append(icase_criticali)
-    #     icase = np.where(icase_criticali != -1)[0]
-    #     icase_critical[icase] = icase_criticali[icase]
-    # del rod_results, rod_eid, is_rod_min
-
-    # plate_results, plate_eid, is_plate_min = results['plate']
-    # if len(plate_results):
-    #     icase_criticali, data_critical, plate_combined_data = _get_combined_data(
-    #         all_subcases, 'plates', plate_results,
-    #         nsubcase_all, neid_all, is_plate_min)
-    #     icase_critical_list.append(icase_criticali)
-    #     icase = np.where(icase_criticali != -1)[0]
-    #     icase_critical[icase] = icase_criticali[icase]
-    # del plate_results, plate_eid, is_plate_min
-
-    # comp_results, comp_plate_eid, is_comp_plate_min = results['comp_plate']
-    # if len(comp_results):
-    #     icase_criticali, data_critical, comp_plate_combined_data = _get_combined_data(
-    #         all_subcases, 'comp_plates', comp_results,
-    #         nsubcase_all, neid_all, is_comp_plate_min)
-    #     icase_critical_list.append(icase_criticali)
-    #     icase = np.where(icase_criticali != -1)[0]
-    #     icase_critical[icase] = icase_criticali[icase]
-    # del comp_results, comp_plate_eid, is_comp_plate_min
-
-    # solid_results, solid_eids, is_solid_min = results['solid']
-    # if len(solid_results):
-    #     icase_criticali, data_critical, solid_combined_data = _get_combined_data(
-    #         all_subcases, 'solids', solid_results,
-    #         nsubcase_all, neid_all, is_solid_min)
-    #     icase_critical_list.append(icase_criticali)
-    #     icase = np.where(icase_criticali != -1)[0]
-    #     icase_critical[icase] = icase_criticali[icase]
-    # del solid_results, solid_eids, is_solid_min
-
-    # icase_critical = np.vstack(icase_critical_list)
     log.debug(f'icase_critical = {icase_critical}')
     ncritical_cases = len(icase_critical)
     assert ncritical_cases == neid_all, (ncritical_cases, neid_all)
