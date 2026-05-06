@@ -348,11 +348,8 @@ def print_int_card(fields: list[Optional[int | float | str]]) -> str:
         raise
 
     nfields = len(fields)
-    i0 = 1
     if nfields > 8:
-        niter = nfields // 8
-        i0 += 8 * niter
-        for i in range(1, i0, 8):
+        for i in range(1, nfields - 7, 8):
             field1, field2, field3, field4, field5, field6, field7, field8 = fields[i:i+8]
             try:
                 # balks if you have None or string fields
@@ -362,6 +359,7 @@ def print_int_card(fields: list[Optional[int | float | str]]) -> str:
                 warnings.warn('bad fields = %s' % fields)
                 raise
 
+    i0 = 1 + 8 * ((nfields - 1) // 8)   # first remainder index
     for i in range(i0, nfields):
         field = fields[i]
         try:
