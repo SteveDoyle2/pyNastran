@@ -405,7 +405,7 @@ def _get_nastran_header(case: Any,
         #     func_str(freq), func_str(damping),
         # )
         header += '; freq = %s Hz; g=%s lambda=(%s,%sj)' % (
-            func_str(freq), func_str(damping),
+            func_str(freq), func_str(damping, '%.4f'),
             func_str(eigrs[itime]), func_str(eigis[itime]),
         )
     elif hasattr(case, 'eigns'):

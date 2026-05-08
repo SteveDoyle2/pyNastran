@@ -114,8 +114,8 @@ class FlutterPreferencesObject:
         self.gui.freq_divergence_tol = value
         self._on_run()
 
-    def on_auto_update(self, value: bool) -> None:
-        self.gui.auto_update = value
+    def on_auto_update(self, is_checked: bool) -> None:
+        self.gui.auto_update = is_checked
         self._on_run()
 
     def on_flutter_bbox_to_anchor_x(self, value: float) -> None:

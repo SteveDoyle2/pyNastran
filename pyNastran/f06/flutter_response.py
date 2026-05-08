@@ -205,6 +205,10 @@ class FlutterResponse:
         """
         if in_units is None:
             in_units = get_flutter_units('english_in')
+
+        if cref == 1.0:
+            warnings.warn(f'cref = {cref}')
+
         b = cref / 2.0
         configuration = 'AEROSG2D'  # TODO: what is this?
         xysym = '???'
@@ -229,7 +233,6 @@ class FlutterResponse:
         freqs = fdata[:, :, 4]
         omegas = 2 * np.pi * freqs
         kfreqs = omegas * b / vels
-        # print(f'b = {b}')
         # print('omega:\n', omegas)
         # print('V:\n', vels)
         # print('kfreq:\n', kfreqs)
@@ -237,6 +240,13 @@ class FlutterResponse:
         # lambda = omega*(zeta + 1j)
         eigr = omegas * damps / 2
         eigc = omegas
+
+        izero = (freqs == 0.)
+        if izero.sum():
+            # Re = g * V / L * ln(2)
+            ln2 = np.log(2)
+            eigri = ln2 * damps[izero] * vels[izero] / cref
+            eigr[izero] = eigri
 
         one_over_kfreq = np.full(kfreqs.shape, np.nan, dtype=kfreqs.dtype)
         ikfreq = np.where(kfreqs != 0)
