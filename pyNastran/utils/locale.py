@@ -21,7 +21,7 @@ def func_str_or_none(value: Optional[float]) -> str:
         return ''
     return func_str(value)
 
-def func_str(value: float) -> str:
+def func_str(value: float, format: str='%g') -> str:
     """
     converts a float to a locale-formatted string,
     so basically ``str(value)``
@@ -34,7 +34,7 @@ def func_str(value: float) -> str:
         return value
 
     try:
-        text = locale.format_string('%g', value)
+        text = locale.format_string(format, value)
     except Exception:
         print('value = %r' % value)
         raise

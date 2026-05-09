@@ -12,7 +12,7 @@ def cmd_line_renumber(argv=None, quiet: bool=False) -> None:
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    options = '[--nid NID] [--eid EID] [--pid PID] [--mid MID] [--punch]'
+    options = '[--nid NID] [--eid EID] [--pid PID] [--mid MID] [--punch] [-x]'
     # TODO: add punch?
     msg = (
         "Usage:\n"
@@ -34,6 +34,7 @@ def cmd_line_renumber(argv=None, quiet: bool=False) -> None:
         '--mid MID       starting material id\n'
         '--superelement  calls superelement_renumber\n'
         '--punch         flag to identify a *.pch/*.inc file\n'
+        '-x, --xref      flag to disable cross-referencing\n'
         '--size SIZE     set the field size (default=16)\n\n'
 
         'Info:\n'
@@ -64,6 +65,7 @@ def cmd_line_renumber(argv=None, quiet: bool=False) -> None:
             size_str = data['--size']
         size = int(size_str)
 
+    xref = not data['--xref']
     assert size in [8, 16], f'size={size} args={argv}'
     #punch = data['--punch']
     # cards_to_skip = [
@@ -81,12 +83,16 @@ def cmd_line_renumber(argv=None, quiet: bool=False) -> None:
     else:
         log.debug(f'starting_id_dict = {starting_id_dict}')
 
-    from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_renumber
+    from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_renumber, _get_bdf_model
+
+    model = _get_bdf_model(
+        bdf_filename, punch=punch, xref=xref,
+        cards_to_skip=cards_to_skip, log=log, debug=True)
     if data['--superelement']:
-        superelement_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False,
+        superelement_renumber(model, bdf_filename_out, size=size, is_double=False,
                               starting_id_dict=starting_id_dict,  #round_ids=False,
-                              cards_to_skip=cards_to_skip, log=log)
+                              log=log)
     else:
-        bdf_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False, punch=punch,
+        bdf_renumber(model, bdf_filename_out, size=size, is_double=False,
                      starting_id_dict=starting_id_dict, round_ids=False,
-                     cards_to_skip=cards_to_skip, log=log)
+                     log=log)

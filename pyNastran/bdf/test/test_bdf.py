@@ -304,6 +304,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             size: int=8, is_double: bool=False,
             allow_tabs: bool=True,
             hdf5: bool=False,
+            write_obj: bool=False,
             is_lax_parser: bool=False,
             allow_duplicates: bool=False,
             allow_similar_eid: bool=True,
@@ -459,7 +460,8 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         sort_cards=sort_cards,
         allow_tabs=allow_tabs,
         allow_duplicates=allow_duplicates,
-        stop=stop, nastran=nastran, post=post, hdf5=hdf5,
+        stop=stop, nastran=nastran, post=post,
+        hdf5=hdf5, write_obj=write_obj,
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
         nerrors=nerrors, dev=dev,
@@ -509,6 +511,7 @@ def run_and_compare_fems(
         nastran: str='',
         post: int=-1,
         hdf5: bool=False,
+        write_obj: bool=False,
         dynamic_vars=None,
         quiet: bool=False,
         dumplines: bool=False,
@@ -603,7 +606,7 @@ def run_and_compare_fems(
             run_eid_checks=run_eid_checks, run_mcid=run_mcid,
             skip_aero_zero_check=skip_aero_zero_check,
             save_file_structure=save_file_structure,
-            hdf5=hdf5,
+            hdf5=hdf5, write_obj=write_obj,
             encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
             is_csv=is_csv,
             sort_cards=sort_cards,
@@ -781,7 +784,8 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              run_export_caero: bool=True,
              run_dependent_checks: bool=True,
              run_eid_checks: bool=True, run_mcid: bool=True,
-             save_file_structure: bool=False, hdf5: bool=False,
+             save_file_structure: bool=False,
+             hdf5: bool=False, write_obj: bool=False,
              encoding: Optional[str]=None,
              crash_cards: Optional[list[str]]=None,
              limit_mesh_opt: bool=False,
@@ -869,13 +873,17 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
             fem1.read_bdf(bdf_filename, xref=False, punch=punch, encoding=encoding,
                           save_file_structure=save_file_structure)
 
+            if write_obj:
+                obj_filename = base + f'{name}.obj'
+                fem1.save(obj_filename)
+
             for card in crash_cards:
                 if card in fem1.card_count:
                     raise DisabledCardError(f'card={card!r} has been disabled')
             #fem1.geom_check(geom_check=True, xref=False)
 
             if not stop and run_export_caero and len(fem1.caeros):
-                caero_bdf_filename = base + '.caero.bdf'
+                caero_bdf_filename = base + f'{name}.caero.bdf'
                 export_caero_mesh(fem1, caero_bdf_filename,
                                   is_aerobox_model=True,
                                   pid_method='caero', write_panel_xyz=True,
@@ -2480,7 +2488,7 @@ def test_bdf_argparse(argv=None):
     parent_parser.add_argument('--duplicate', action='store_true',
                                help='overwrite duplicates; takes the later card (default=False)')
     parent_parser.add_argument('--ifile', action='store_true',
-                               help='skip loads calcuations (default=False)')
+                               help='gives you better log messages when things are bad (default=False)')
     parent_parser.add_argument('-q', '--quiet', action='store_true',
                                help='prints debug messages (default=False)')
     # --------------------------------------------------------------------------
@@ -2502,6 +2510,8 @@ def test_bdf_argparse(argv=None):
                                help='Pickles the data objects (default=False)\n')
     parent_parser.add_argument('--hdf5', action='store_true',
                                help='Save/load the BDF in HDF5 format')
+    parent_parser.add_argument('--obj', action='store_true',
+                               help='Write an obj file')
 
     usage, args, examples = get_test_bdf_usage_args_examples(encoding)
 
@@ -2589,7 +2599,7 @@ def get_test_bdf_usage_args_examples(encoding):
     formats = '--msc|--nx|--optistruct|--zaero|--mystran'
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
-        f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
+        f'              [--crash C] [--pickle] [--profile] [--hdf5] [--obj] [{formats}] [--filter]\n'
         f'              [--lax] [--nosort] [--duplicate] [skip_cards CARDS] [--ifile]\n'
         f'              [--skip_all] [--skip_loads] [--skip_mass] [--skip_aero] [--skip_skin]\n'
         f'              [--skip_mcid] [--skip_eid_checks]\n'
@@ -2624,6 +2634,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '                 card is fully not supported (default=False)\n'
         '  --lax          dont be strict on float parsing\n'
         '  --duplicate    overwrite duplicate GRIDs\n'
+        '  --ifile        gives you better log messages when things are bad\n'
         '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
         '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
         '  --csv          writes the BDF in CSV format; partial (default=False)\n'
@@ -2645,6 +2656,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --profile     Profiles the code (default=False)\n'
         '  --pickle      Pickles the data objects (default=False)\n'
         '  --hdf5        Save/load the BDF in HDF5 format\n'
+        '  --obj         Write an obj file (default=False)\n'
         '  --msc         Assume MSC Nastran\n'
         '  --nx          Assume NX Nastran\n'
         '  --optistruct  Assume OptiStruct\n'
@@ -2769,6 +2781,7 @@ def main(argv=None):
             run_pickle=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],
+            write_obj=data['obj'],
             version=data['version'],
             print_stats=True,
             stop_on_failure=False,
@@ -2830,6 +2843,7 @@ def main(argv=None):
             run_pickle=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],
+            write_obj=data['obj'],
             version=data['version'],
             print_stats=True,
             stop_on_failure=False,

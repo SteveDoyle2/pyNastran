@@ -21,6 +21,7 @@ defines:
 from __future__ import annotations
 import os
 import copy
+import warnings
 from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 from qtpy import QtGui
@@ -303,12 +304,18 @@ class NastranSettings:
 
     def update(self, out_data: dict[str, Any]) -> None:
         """from preferences"""
-        if len(out_data['nastran_real_modes_to_include']) == 0:
+        keys = list(out_data)
+        keys.sort()
+        if 'nastran_real_modes_to_include' not in out_data:
+            warnings.warn(f'missing nastran_real_modes_to_include; allowed={keys}')
+        elif len(out_data['nastran_real_modes_to_include']) == 0:
             self.real_modes_to_include = None
         else:
             self.real_modes_to_include = out_data['nastran_real_modes_to_include']
 
-        if len(out_data['nastran_complex_modes_to_include']) == 0:
+        if 'nastran_complex_modes_to_include' not in out_data:
+            warnings.warn(f'missing nastran_complex_modes_to_include; allowed={keys}')
+        elif len(out_data['nastran_complex_modes_to_include']) == 0:
             self.complex_modes_to_include = None
         else:
             self.complex_modes_to_include = out_data['nastran_complex_modes_to_include']

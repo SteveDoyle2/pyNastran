@@ -330,8 +330,8 @@ class FlutterPreferencesDialog(PyDialog):
         self.gui_obj.on_freq_divergence_tol(value)
 
     def on_auto_update(self) -> None:
-        value = self.auto_update_checkbox.value()
-        self.gui_obj.on_auto_update(value)
+        is_checked = self.auto_update_checkbox.isChecked()
+        self.gui_obj.on_auto_update(is_checked)
 
     def on_flutter_bbox_to_anchor_x(self) -> None:
         """TODO: move this behind an apply button"""

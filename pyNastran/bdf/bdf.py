@@ -88,7 +88,7 @@ from pyNastran.bdf.cards.elements.shell import (
     CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
     SNORM,)
 
-from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PGPLSN, PTRSHL
+from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PGPLSN #, PTRSHL
 from .cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR,
     ACMODL, PMIC, ACPLNW, AMLREG, MATPOR, MICPNT)
@@ -1681,7 +1681,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                         raise ValueError(f'Cant parse {fields[1]!r} to an integer\n' +
                                          ''.join(card_lines))
                     if idi in slot:
-                        raise RuntimeError(f'Cannot replace duplicate card:\n' +
+                        raise RuntimeError('Cannot replace duplicate card:\n' +
                                            ''.join(slot[idi][1]) + 'with:\n'
                                            ''.join(card_lines))
                     slot[idi] = (comment, card_lines)
@@ -1777,11 +1777,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def _pop_error(self, is_error: bool, msg: str,
                    element_word: str,
                    elements_dict_word: str,
+                   eid_namei: str,
                    #duplicate_elements,
                    elements_dict: dict[int, Any]) -> tuple[bool, str]:
         duplicate_elements = self._duplicate[elements_dict_word]
         if duplicate_elements:
-            duplicate_eids = [elem.eid for elem in duplicate_elements]
+            duplicate_eids = [getattr(elem, eid_namei) for elem in duplicate_elements]
             uduplicate_eids = np.unique(duplicate_eids)
             msg += f'self.{elements_dict_word} IDs are not unique={str(uduplicate_eids)}\n'
             for eid in uduplicate_eids:
@@ -1806,32 +1807,32 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             is_error, msg = self._pop_error(
                 is_error, msg,
-                'element', 'elements',
+                'element', 'elements', 'eid',
                 self.elements)
 
             is_error, msg = self._pop_error(
                 is_error, msg,
-                'property', 'properties',
+                'property', 'properties', 'pid',
                 self.properties)
 
             is_error, msg = self._pop_error(
                 is_error, msg,
-                'mass', 'masses',
+                'mass', 'masses', 'eid',
                 self.masses)
 
             is_error, msg = self._pop_error(
                 is_error, msg,
-                'material', 'materials',
+                'material', 'materials', 'mid',
                 self.materials)
 
             is_error, msg = self._pop_error(
                 is_error, msg,
-                'material', 'thermal_materials',
+                'material', 'thermal_materials', 'mid',
                 self.thermal_materials)
 
             is_error, msg = self._pop_error(
                 is_error, msg,
-                'coord', 'coords',
+                'coord', 'coords', 'cid',
                 self.coords)
 
             if is_error:
@@ -3104,7 +3105,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return bolt
 
     def _prepare_plotel(self, unused_card: list[str], card_obj: BDFCard,
-                        comment: str='') -> list[PLOTEL]:
+                        comment: str='') -> list[PLOTELs]:
         """adds a PLOTEL"""
         #['PLOTEL', '3101', '3101', '3102', None, '3102', '3102', '3103']
         plotels = [PLOTEL.add_card(card_obj, 0, comment=comment)]
@@ -4836,6 +4837,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 self.units = [value.strip() for value in value.upper().split(',')]
             elif key in {'code-block', 'code_block'}:
                 value = line.split('=', 1)[1]
+                indent = 0
                 if not hasattr(self, 'code_block'):
                     self.code_block = ''
                     char0 = value.lstrip()[0]
@@ -5348,8 +5350,8 @@ def _set_nodes(model: BDF,
                idtype: str, fdtype: str):
     """helper method for ``get_displacement_index_xyz_cp_cd``"""
     i = 0
-    nids_cd_transform: dict[int, np.ndarray] = defaultdict(list)
-    nids_cp_transform: dict[int, np.ndarray] = defaultdict(list)
+    nids_cd_transform: defaultdict[int, list[int]] = defaultdict(list)
+    nids_cp_transform: defaultdict[int, list[int]] = defaultdict(list)
     nxyz = nnodes + nspoints + nepoints
     xyz_cp = np.zeros((nxyz, 3), dtype=fdtype)
     nid_cp_cd = np.zeros((nxyz, 3), dtype=idtype)
@@ -5404,7 +5406,7 @@ def _get_coords_to_update(coords: dict[int, Coord],
         else:
             nids_checked = [np.hstack(nids_checked)]
 
-        nids_checkedi = nids_checked[0]
+        nids_checkedi: np.ndarray = nids_checked[0]
         if len(nids_checkedi) != 0:
             # check the CORD1x cards
             #

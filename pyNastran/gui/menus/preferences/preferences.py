@@ -1536,8 +1536,8 @@ class PreferencesWindow(PyDialog):
         yref_value, flag14 = check_float(self.yref_edit)
         zref_value, flag15 = check_float(self.zref_edit)
 
-        nastran_real_modes_include, flag16 = check_tuple_ints(self.nastran_real_modes_to_include_edit)
-        nastran_complex_modes_include, flag17 = check_tuple_ints(self.nastran_complex_modes_to_include_edit)
+        nastran_real_modes_to_include, flag16 = check_tuple_ints(self.nastran_real_modes_to_include_edit)
+        nastran_complex_modes_to_include, flag17 = check_tuple_ints(self.nastran_complex_modes_to_include_edit)
 
         if all([flag0, flag1, flag2, flag3, flag4, flag5, flag6,
                 flag10, flag11, flag12, flag13, flag14, flag15, flag16, flag17]):
@@ -1550,8 +1550,8 @@ class PreferencesWindow(PyDialog):
             self.out_data['cart3d_fluent_include'] = cart3d_fluent_include
             self.out_data['cart3d_fluent_remove'] = cart3d_fluent_remove
 
-            self.out_data['nastran_real_modes_include'] = nastran_real_modes_include
-            self.out_data['nastran_complex_modes_include'] = nastran_complex_modes_include
+            self.out_data['nastran_real_modes_to_include'] = nastran_real_modes_to_include
+            self.out_data['nastran_complex_modes_to_include'] = nastran_complex_modes_to_include
 
             self.out_data['sref'] = sref_value
             self.out_data['cref'] = cref_value

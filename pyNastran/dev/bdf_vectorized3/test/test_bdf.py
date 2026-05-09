@@ -282,6 +282,7 @@ def run_bdf(folder: str, bdf_filename: str,
             encoding=None, sum_load: bool=True,
             size: int=8, is_double: bool=False,
             hdf5: bool=False,
+            write_obj: bool=False,
             stop: bool=False, nastran: str='',
             post: int=-1, dynamic_vars=None,
             quiet: bool=False,
@@ -385,7 +386,8 @@ def run_bdf(folder: str, bdf_filename: str,
         punch=punch, mesh_form=mesh_form,
         print_stats=print_stats, encoding=encoding,
         sum_load=sum_load, size=size, is_double=is_double,
-        stop=stop, nastran=nastran, post=post, hdf5=hdf5,
+        stop=stop, nastran=nastran, post=post,
+        hdf5=hdf5, write_obj=write_obj,
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
         nerrors=nerrors, dev=dev, crash_cards=crash_cards,
@@ -429,6 +431,7 @@ def run_and_compare_fems(
         nastran: str='',
         post: int=-1,
         hdf5: bool=False,
+        write_obj: bool=False,
         dynamic_vars=None,
         quiet: bool=False,
         dumplines: bool=False,
@@ -2802,6 +2805,8 @@ def test_bdf_argparse(argv=None):
                                help='skip nodal equivalencing (default=False)')
     parent_parser.add_argument('--ifile', action='store_true',
                                help='skip loads calcuations (default=False)')
+    parent_parser.add_argument('--obj', action='store_true',
+                               help='writes an obj file (default=False)')
 
     parent_parser.add_argument('-q', '--quiet', action='store_true',
                                help='prints debug messages (default=False)')
@@ -2906,7 +2911,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}]\n'
         '              [--skip_nominal] [--skip_loads] [--skip_mass] [--skip_equivalence]\n'
-        '              [--lax] [--duplicate] [skip_cards CARDS]\n'
+        '              [--lax] [--duplicate] [--obj] [skip_cards CARDS]\n'
     )
     usage = (
         "Usage:\n"
@@ -2939,13 +2944,13 @@ def get_test_bdf_usage_args_examples(encoding):
         '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
         '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
         '  -L, --loads    Disables forces/moments summation for the different subcases (default=True)\n'
-        '  --skip_nominal  skip all the nominal model comparison checks (default=False)\n'
+        '  --skip_nominal       skip all the nominal model comparison checks (default=False)\n'
         '  --skip_nominal_bar  skip the nominal model bar comparison (default=False)\n'
-        '  --skip_loads   skip the loads summation calculations (default=False)\n'
-        '  --skip_mass    skip the mass properties calculations (default=False)\n'
+        '  --skip_loads        skip the loads summation calculations (default=False)\n'
+        '  --skip_mass         skip the mass properties calculations (default=False)\n'
+        '  --skip_equivalence  skips the nodal equivalencing (default=False)\n'
         '  --lax          dont be strict on float parsing\n'
         '  --duplicate    overwrite duplicate GRIDs\n'
-        '  --skip_equivalence  skips the nodal equivalencing (default=False)\n'
         '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
         f'  --encoding ENCODE  the encoding method (default=None -> {encoding!r})\n'
         '  -q, --quiet        prints debug messages (default=False)\n'
@@ -2962,6 +2967,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --profile     Profiles the code (default=False)\n'
         '  --pickle      Pickles the data objects (default=False)\n'
         '  --hdf5        Save/load the BDF in HDF5 format\n'
+        '  --obj          writes an obj file (default=False)\n'
         '  --msc         Assume MSC Nastran\n'
         '  --nx          Assume NX Nastran\n'
         #'  --optistruct  Assume OptiStruct\n'
@@ -3050,6 +3056,7 @@ def main(argv=None, show_args: bool=True) -> None:
             run_pickle=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],
+            write_obj=data['obj'],
             version=data['version'],
             print_stats=True,
             stop_on_failure=False,
@@ -3101,6 +3108,7 @@ def main(argv=None, show_args: bool=True) -> None:
             run_pickle=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],
+            write_obj=data['obj'],
             version=data['version'],
             print_stats=True,
             stop_on_failure=False,
