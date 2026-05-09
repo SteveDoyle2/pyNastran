@@ -125,8 +125,6 @@ except ModuleNotFoundError:  # pragma: no cover
 
 try:
     import tables
-
-
     IS_TABLES = True
 except ModuleNotFoundError:
     IS_TABLES = False

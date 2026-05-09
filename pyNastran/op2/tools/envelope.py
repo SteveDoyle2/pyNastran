@@ -37,7 +37,7 @@ SOLID:
 """
 from collections import defaultdict
 import warnings
-from typing import cast, Any, Optional
+from typing import cast, Any, Optional, Callable
 import numpy as np
 
 from cpylog import SimpleLogger
@@ -50,13 +50,40 @@ from pyNastran.op2.data_in_material_coord import data_in_material_coord
 # from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
 # from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2
 
+BASE_STRESS_STRAIN = [
+    'max', 'min', 'abs_max',
+    'von_mises', 'max_shear',
+]
+SOLID_STRESS_STRAIN_KEYS = [
+    'xx', 'yy', 'zz', 'xy', 'xz', 'yz',
+    'max', 'min', 'abs_max',
+    'von_mises', 'max_shear',
+]
+ROD_STRESS_STRAIN_KEYS = [
+    'xx', 'xy',
+    'max', 'min', 'abs_max',
+    'von_mises', 'max_shear',
+]
+BAR_STRESS_STRAIN_KEYS = [
+    'xx', 'xy',
+    'max', 'min', 'abs_max',
+    'von_mises', 'max_shear',
+]
+BEAM_STRESS_STRAIN_KEYS = BAR_STRESS_STRAIN_KEYS
+BEND_STRESS_STRAIN_KEYS = BAR_STRESS_STRAIN_KEYS
+PLATE_STRESS_STRAIN_KEYS = [
+    'xx', 'yy', 'xy',
+    'max', 'min', 'abs_max',
+    'von_mises', 'max_shear',
+]
+COMP_PLATE_STRESS_STRAIN_KEYS = BASE_STRESS_STRAIN
+
+
 def envelope(
         bdf_filename: PathLike | BDF,
         op2_filename: PathLike | OP2,
         include_results: [list[str]]=None,
         exclude_results: [list[str]]=None,
-        # eids=None,
-        # nids=None,
         # subcases=None,
         rod_stress: str='',
         rod_strain: str='',
@@ -81,8 +108,11 @@ def envelope(
         mpc_force: str='',
         consider_plate_nodes: bool=True,
         consider_solid_nodes: bool=True,
+        node_ids: list[int] | np.ndarray=None,
         element_ids: list[int] | np.ndarray=None,
+        transform_to_global_coord: bool=False,
         transform_to_material_coord: bool=True,
+        percent_nids_target: float=1.00,
         percent_eids_target: float=1.00,
     ) -> np.ndarray:
     """
@@ -118,6 +148,9 @@ def envelope(
         the geometry model
     op2_filename : PathLike or OP2
         the results model
+    node_ids : list[int] or np.ndarray; default=None
+        the nodes to consider; default=all
+        TODO: currently doesn't work
     element_ids : list[int] or np.ndarray; default=None
         the elements to consider; default=all
         TODO: currently doesn't work
@@ -172,8 +205,12 @@ def envelope(
         if there are no solid nodes, False is automatically selected
         True:  take the max/min of all extrapolated solid nodes
         False: take the max/min of only solid centers
+    transform_to_global : bool; default=False
+        Transform displacement/spc_force/mpc_force to the
+        global (cid=0) coordinate frame.
     transform_to_material_coord : bool; default=True
-        transform shell stress/strain/force into the material coordinate frame
+        Transform shell stress/strain/force into the
+        material coordinate frame.
         doesn't transform composites or solids
     percent_eids_target : float; default=1.00 -> all
         defines the percentage of critical elements that are considered
@@ -187,17 +224,6 @@ def envelope(
     #     'max', 'min', 'abs_max',
     #     'von_mises', 'max_shear',
     # ]
-    solid_stress_strain_keys = [
-        'max', 'min', 'abs_max',
-        'von_mises', 'max_shear',
-    ]
-    rod_stress_strain_keys = solid_stress_strain_keys
-    bar_stress_strain_keys = solid_stress_strain_keys
-    beam_stress_strain_keys = solid_stress_strain_keys
-    bend_stress_strain_keys = solid_stress_strain_keys
-    plate_stress_strain_keys = solid_stress_strain_keys
-    comp_plate_stress_strain_keys = solid_stress_strain_keys
-
     # is_cbush1d_min, cbush1d_force_tuple = _validate_cbush_force(cbush1d_force)
     is_cbush1d_min = False
 
@@ -232,32 +258,24 @@ def envelope(
         is_cbush = True
     # is_bush = _check_force('bush', bush_force, bush_force_keys)
 
-    is_disp = False
-    is_spc_force = False
-    is_mpc_force = False
-    for displacementi in displacement:
-        _validate_disp(displacementi)
-        is_disp = True
-    for spc_forcei in spc_force:
-        _validate_force_moment(spc_forcei)
-        is_disp = True
-    for mpc_forcei in mpc_force:
-        _validate_force_moment(mpc_forcei)
-        is_disp = True
+    is_disp, is_spc_force, is_mpc_force = is_oug(
+        displacement, spc_force, mpc_force)
+    is_ougi = is_disp or is_spc_force or is_mpc_force
 
-    is_rod = _check_stress_strain('rod', rod_stress, rod_strain, rod_stress_strain_keys)
-    is_bar = _check_stress_strain('bar', bar_stress, bar_strain, bar_stress_strain_keys)
-    is_beam = _check_stress_strain('beam', beam_stress, beam_strain, beam_stress_strain_keys)
-    is_plate = _check_stress_strain('plate', plate_stress, plate_strain, plate_stress_strain_keys)
-    is_comp_plate = _check_stress_strain('comp_plate', comp_plate_stress, comp_plate_strain, comp_plate_stress_strain_keys)
-    is_solid = _check_stress_strain('solid', solid_stress, solid_strain, solid_stress_strain_keys)
+    is_rod = _check_stress_strain('rod', rod_stress, rod_strain, ROD_STRESS_STRAIN_KEYS)
+    is_bar = _check_stress_strain('bar', bar_stress, bar_strain, BAR_STRESS_STRAIN_KEYS)
+    is_beam = _check_stress_strain('beam', beam_stress, beam_strain, BEAM_STRESS_STRAIN_KEYS)
+    is_plate = _check_stress_strain('plate', plate_stress, plate_strain, PLATE_STRESS_STRAIN_KEYS)
+    is_comp_plate = _check_stress_strain('comp_plate', comp_plate_stress, comp_plate_strain, COMP_PLATE_STRESS_STRAIN_KEYS)
+    is_solid = _check_stress_strain('solid', solid_stress, solid_strain, SOLID_STRESS_STRAIN_KEYS)
 
     # pick at least one
     is_results = (
         is_rod or is_bar or is_beam or
         is_cbush or
         is_comp_plate or is_plate or is_solid or
-        is_disp or is_spc_force or is_mpc_force
+        is_disp or is_spc_force or is_mpc_force or
+        is_ougi
     )
     if not is_results:
         raise RuntimeError('no plate/solid results were selected')
@@ -267,18 +285,26 @@ def envelope(
     fdtype = 'float32'
 
     log = SimpleLogger(level='info')
-    model, model_results, element_id = _setup_models(
+    model, model_results, node_id, element_id = _setup_models(
         bdf_filename, op2_filename,
         exclude_results=exclude_results,
         include_results=include_results,
-        transform_to_material_coord=transform_to_material_coord,
+        transform_to_global_coord=transform_to_global_coord,
+    transform_to_material_coord=transform_to_material_coord,
         log=log, idtype=idtype)
 
+    if node_ids is None:
+        allow_missing_nid = False
+    else:
+        node_id = np.asarray(node_ids, dtype=idtype)
+        allow_missing_nid = True
+    node_id.sort()
+
     if element_ids is None:
-        allow_missing = False
+        allow_missing_eid = False
     else:
         element_id = np.asarray(element_ids, dtype=idtype)
-        allow_missing = True
+        allow_missing_eid = True
     element_id.sort()
 
     dtype = 'float32'  # if model_results.size == 4 else 'float64'
@@ -304,56 +330,56 @@ def envelope(
     # 'plate': (ctria3_plate_eids, ctria6_plate_eids, ctriar_plate_eids,
     #           cquad4_plate_eids, cquad8_plate_eids, cquadr_plate_eids)
 
-    if allow_missing:
+    if allow_missing_eid:
         crod_eids = np.intersect1d(crod_eids, element_id)
         conrod_eids = np.intersect1d(conrod_eids, element_id)
         ctube_eids = np.intersect1d(ctube_eids, element_id)
-    all_rod_eids = get_all_eids((crod_eids, ctube_eids, conrod_eids))
 
-    if allow_missing:
+    if allow_missing_eid:
         cbar_eids = np.intersect1d(cbar_eids, element_id)
         cbeam_eids = np.intersect1d(cbeam_eids, element_id)
         cbend_eids = np.intersect1d(cbend_eids, element_id)
     # all_bar_eids = get_all_eids((cbar_eids, cbeam_eids, cbend_eids))
 
-    if allow_missing:
+    if allow_missing_eid:
         cbush_eids = np.intersect1d(cbush_eids, element_id)
         cbush1d_eids = np.intersect1d(cbush1d_eids, element_id)
     # all_bush_eids = get_all_eids((cbush_eids, cbush1d_eids))
 
-    if allow_missing:
+    if allow_missing_eid:
         cquad4_plate_eids = np.intersect1d(cquad4_plate_eids, element_id)
         ctria3_plate_eids = np.intersect1d(ctria3_plate_eids, element_id)
         cquad8_plate_eids = np.intersect1d(cquad8_plate_eids, element_id)
         ctria6_plate_eids = np.intersect1d(ctria6_plate_eids, element_id)
         cquadr_plate_eids = np.intersect1d(cquadr_plate_eids, element_id)
         ctriar_plate_eids = np.intersect1d(ctriar_plate_eids, element_id)
-    all_plate_eids = get_all_eids((ctria3_plate_eids, cquad4_plate_eids,
-                                   ctria6_plate_eids, cquad8_plate_eids,
-                                   ctriar_plate_eids, cquadr_plate_eids,))
+    # all_plate_eids = get_all_eids((ctria3_plate_eids, cquad4_plate_eids,
+    #                                ctria6_plate_eids, cquad8_plate_eids,
+    #                                ctriar_plate_eids, cquadr_plate_eids,))
 
-    if allow_missing:
+    if allow_missing_eid:
         cquad4_comp_eids = np.intersect1d(cquad4_comp_eids, element_id)
         ctria3_comp_eids = np.intersect1d(ctria3_comp_eids, element_id)
         cquad8_comp_eids = np.intersect1d(cquad8_comp_eids, element_id)
         ctria6_comp_eids = np.intersect1d(ctria6_comp_eids, element_id)
         cquadr_comp_eids = np.intersect1d(cquadr_comp_eids, element_id)
         ctriar_comp_eids = np.intersect1d(ctriar_comp_eids, element_id)
-    all_comp_plate_eids = get_all_eids((ctria3_comp_eids, cquad4_comp_eids,
-                                        ctria6_comp_eids, cquad8_comp_eids,
-                                        ctriar_comp_eids, cquadr_comp_eids,))
+    # all_comp_plate_eids = get_all_eids((ctria3_comp_eids, cquad4_comp_eids,
+    #                                     ctria6_comp_eids, cquad8_comp_eids,
+    #                                     ctriar_comp_eids, cquadr_comp_eids,))
 
-    if allow_missing:
+    if allow_missing_eid:
         ctetra_eids = np.intersect1d(ctetra_eids, element_id)
         cpenta_eids = np.intersect1d(cpenta_eids, element_id)
         chexa_eids = np.intersect1d(chexa_eids, element_id)
         cpyram_eids = np.intersect1d(cpyram_eids, element_id)
-    all_solid_eids = get_all_eids((ctetra_eids, cpenta_eids, chexa_eids, cpyram_eids))
+    # all_solid_eids = get_all_eids((ctetra_eids, cpenta_eids, chexa_eids, cpyram_eids))
     # all_eids = get_all_eids((
     #     all_rod_eids, all_bar_eids, all_bush_eids,
     #     all_comp_plate_eids, all_plate_eids,
     #     all_solid_eids), sort=True)
     all_eids = element_id
+    all_nids = node_id
     # log.info(f'all_eids = {all_eids.tolist()}')
 
     # print(''.join(model.get_bdf_stats()))
@@ -366,106 +392,61 @@ def envelope(
 
     cbend_results = []
     cbush1d_results = []
-
-    results = {
+    results_dict = {
         'cbend' : (cbend_results, cbend_eids, is_cbend_min),
         'cbush1d': (cbush1d_results, cbush1d_eids, is_cbush1d_min),
     }
-    #---------------------------------------------------
-    is_rod_stress = (len(rod_stress) > 0)
-    is_rod_strain = (len(rod_strain) > 0)
-    if len(crod_eids):
-        if is_rod_stress:
-            # log.debug('check_rod_stress')
-            rod_stress_list = _fill_rod_list(
-                model_results,
-                crod_eids, ctube_eids, conrod_eids,
-                is_stress=True)
-            assert len(rod_stress_list), 'No rod stress results found'
-            # log.info('_envelope_stress_strain')
-            for rod_stressi in rod_stress:
-                rod_results = []
-                _envelope_stress_strain(
-                    'rod stress', rod_stressi, rod_stress_list,
-                    all_eids,
-                    all_eids_list, all_subcases_list, rod_results, dtype=dtype)
-                is_rod_min = 'min' in rod_stressi
-                results[('rod', rod_stressi)] = (rod_results, all_rod_eids, is_rod_min)
-            # log.info('_envelope_stress_strain_end')
 
-        if is_rod_strain:
-            # log.debug('check_rod_strain')
-            rod_strain_list = _fill_rod_list(
-                model_results,
-                crod_eids, ctube_eids, conrod_eids,
-                is_stress=True)
-            assert len(rod_strain_list), 'No rod strain results found'
-            for rod_straini in rod_strain:
-                rod_results = []
-                _envelope_stress_strain(
-                    'rod strain', rod_straini, rod_strain_list,
-                    all_eids,
-                    all_eids_list, all_subcases_list, rod_results, dtype=dtype)
-                is_rod_min = 'min' in rod_straini
-                results[('rod', rod_straini)] = (rod_results, all_rod_eids, is_rod_min)
+    node_results_dict = {}
+    all_nids_list = []
+    _fill_results_disp_spc_mpc_force(
+        log, 'displacements',
+        node_results_dict,
+        model_results.displacements,
+        displacement,
+        node_id, all_nids, all_nids_list,
+        all_subcases_list, dtype=dtype)
 
-    is_bar_stress = (len(bar_stress) > 0)
-    is_bar_strain = (len(bar_strain) > 0)
-    if len(cbar_eids):
-        if is_bar_stress:
-            bar_stress_list = _fill_bar_list(
-                model_results, cbar_eids, is_stress=True)
-            assert len(bar_stress_list), 'No bar stress results found'
-            for bar_stressi in bar_stress:
-                cbar_results = []
-                _envelope_stress_strain(
-                    'bar stress', bar_stressi, bar_stress_list,
-                    all_eids,
-                    all_eids_list, all_subcases_list,  cbar_results, dtype=dtype)
-                is_bar_min = 'min' in bar_stressi
-                results[('bar', bar_stressi)] = (cbar_results, cbar_eids, is_bar_min)
+    _fill_results_disp_spc_mpc_force(
+        log, 'spc_forces',
+        node_results_dict,
+        model_results.spc_forces, spc_force,
+        node_id, all_nids, all_nids_list,
+        all_subcases_list, dtype=dtype)
 
-        if is_bar_strain:
-            bar_strain_list = _fill_bar_list(
-                model_results, cbar_eids, is_stress=True)
-            assert len(bar_strain_list), 'No bar strain results found'
-            for bar_straini in bar_strain:
-                cbar_results = []
-                _envelope_stress_strain(
-                    'bar strain', bar_straini, bar_strain_list,
-                    all_eids,
-                    all_eids_list, all_subcases_list, cbar_results, dtype=dtype)
-                is_bar_min = 'min' in bar_straini
-                results[('bar', bar_straini)] = (cbar_results, cbar_eids, is_bar_min)
+    _fill_results_disp_spc_mpc_force(
+        log, 'mpc_forces',
+        node_results_dict,
+        model_results.mpc_forces, mpc_force,
+        node_id, all_nids, all_nids_list,
+        all_subcases_list, dtype=dtype)
 
-    is_beam_stress = (len(beam_stress) > 0)
-    is_beam_strain = (len(beam_strain) > 0)
-    if len(cbeam_eids):
-        if is_beam_stress:
-            beam_stress_list = _fill_beam_list(
-                model_results, cbeam_eids, is_stress=True)
-            assert len(beam_stress_list), 'No beam stress results found'
-            for beam_stressi in beam_stress:
-                cbeam_results = []
-                _envelope_stress_strain(
-                    'beam stress', beam_stressi, beam_stress_list,
-                    all_eids,
-                    all_eids_list, all_subcases_list, cbeam_results, dtype=dtype)
-                is_beam_min = 'min' in beam_stressi
-                results[('beam', beam_stressi)] = (cbeam_results, cbeam_eids, is_beam_min)
+    _fill_results_stress_strain(
+        'rod',
+        model_results, results_dict,
+        (crod_eids, ctube_eids, conrod_eids),
+        _fill_rod_list,
+        rod_stress, rod_strain,
+        all_eids, all_eids_list,
+        all_subcases_list, dtype=dtype)
 
-        if is_beam_strain:
-            beam_strain_list = _fill_beam_list(
-                model_results, cbar_eids, is_stress=True)
-            assert len(beam_strain_list), 'No beam strain results found'
-            for beam_straini in beam_strain:
-                cbeam_results = []
-                _envelope_stress_strain(
-                    'beam strain', beam_straini, beam_strain_list,
-                    all_eids,
-                    all_eids_list, all_subcases_list, cbeam_results, dtype=dtype)
-                is_beam_min = 'min' in beam_straini
-                results[('beam', beam_straini)] = (cbeam_results, cbeam_eids, is_beam_min)
+    _fill_results_stress_strain(
+        'bar',
+        model_results, results_dict,
+        (cbar_eids,),
+        _fill_bar_list,
+        bar_stress, bar_strain,
+        all_eids, all_eids_list,
+        all_subcases_list, dtype=dtype)
+
+    _fill_results_stress_strain(
+        'beam',
+        model_results, results_dict,
+        (cbeam_eids,),
+        _fill_beam_list,
+        beam_stress, beam_strain,
+        all_eids, all_eids_list,
+        all_subcases_list, dtype=dtype)
 
     is_cbush_force = (len(bush_force) > 0)
     if len(cbush_eids):
@@ -481,140 +462,164 @@ def envelope(
                     all_eids,
                     all_eids_list, all_subcases_list, cbush_results, dtype=dtype)
                 is_bush_min = 'min' in cbush_forcei
-                results[('bush', cbush_forcei)] = (cbush_results, cbush_eids, is_bush_min)
+                results_dict[('bush', cbush_forcei)] = (cbush_results, cbush_eids, is_bush_min)
                 # log.info('_envelope_stress_strain_end')
 
-    is_comp_plate_stress = (len(comp_plate_stress) > 0)
-    is_comp_plate_strain = (len(comp_plate_strain) > 0)
-    if len(all_comp_plate_eids):
-        if is_comp_plate_stress:
-            # log.debug('check_comp_plate_stress')
-            comp_plate_stress_list = _fill_comp_plate_list(
-                model_results,
-                ctria3_comp_eids, cquad4_comp_eids,
-                ctria6_comp_eids, cquad8_comp_eids,
-                ctriar_comp_eids, cquadr_comp_eids,
-                is_stress=True)
-            assert len(comp_plate_stress_list), 'No comp plate stress results found'
-            for comp_plate_stressi in comp_plate_stress:
-                comp_results = []
-                _envelope_stress_strain(
-                    'composite plate stress', comp_plate_stressi,
-                    comp_plate_stress_list,
-                    all_eids,
-                    all_eids_list, all_subcases_list, comp_results, dtype=dtype)
-                is_comp_plate_min = 'min' in comp_plate_stressi
-                results[('comp_plate', comp_plate_stressi)] = (comp_results, all_comp_plate_eids, is_comp_plate_min)
+    _fill_results_stress_strain(
+        'plate',
+        model_results, results_dict,
+        (ctria3_plate_eids, cquad4_plate_eids,
+         ctria6_plate_eids, cquad8_plate_eids,
+         ctriar_plate_eids, cquadr_plate_eids,),
+        _fill_plate_list,
+        plate_stress, plate_strain,
+        all_eids, all_eids_list,
+        all_subcases_list,
+        consider_corner_nodes=consider_plate_nodes,
+        dtype=dtype)
 
-        if is_comp_plate_strain:
-            # log.debug('check_comp_plate_strain')
-            comp_plate_strain_list = _fill_comp_plate_list(
-                model_results,
-                ctria3_comp_eids, cquad4_comp_eids,
-                ctria6_comp_eids, cquad8_comp_eids,
-                ctriar_comp_eids, cquadr_comp_eids,
-                is_stress=False)
-            assert len(comp_plate_strain_list), 'No comp plate strain results found'
-            for comp_plate_straini in comp_plate_strain:
-                comp_results = []
-                _envelope_stress_strain(
-                    'composite plate strain', comp_plate_straini,
-                    comp_plate_strain_list,
-                    all_eids,
-                    all_eids_list, all_subcases_list, comp_results, dtype=dtype)
-                is_comp_plate_min = 'min' in comp_plate_straini
-                results[('comp_plate', comp_plate_straini)] = (comp_results, all_comp_plate_eids, is_comp_plate_min)
+    _fill_results_stress_strain(
+        'comp_plate',
+        model_results, results_dict,
+        (ctria3_comp_eids, ctria6_comp_eids, ctriar_comp_eids,
+               cquad4_comp_eids, cquad8_comp_eids, cquadr_comp_eids),
+        _fill_comp_plate_list,
+        comp_plate_stress, comp_plate_strain,
+        all_eids, all_eids_list,
+        all_subcases_list, dtype=dtype)
 
-    is_plate_stress = (len(plate_stress) > 0)
-    is_plate_strain = (len(plate_strain) > 0)
-    if len(all_plate_eids):
-        if is_plate_stress:
-            # log.debug('check_plate_stress')
-            plate_stress_list = _fill_plate_list(
-                model_results,
-                ctria3_plate_eids, cquad4_plate_eids,
-                ctria6_plate_eids, cquad8_plate_eids,
-                ctriar_plate_eids, cquadr_plate_eids,
-                is_stress=True)
-            assert len(plate_stress_list), 'No plate stress results found'
+    _fill_results_stress_strain(
+        'solid',
+        model_results, results_dict,
+        (ctetra_eids, cpenta_eids,
+         chexa_eids, cpyram_eids),
+        _fill_solid_list,
+        solid_stress, solid_strain,
+        all_eids, all_eids_list,
+        all_subcases_list, dtype=dtype,
+        consider_corner_nodes=consider_solid_nodes)
 
-            for plate_stressi in plate_stress:
-                plate_results = []
-                _envelope_corner_stress_strain(
-                    plate_stressi,
-                    plate_stress_list,
-                    all_eids,
-                    all_eids_list, all_subcases_list, plate_results,
-                    consider_corner_nodes=consider_plate_nodes, dtype=dtype)
-                is_plate_min = 'min' in plate_stressi
-                results[('plate', plate_stressi)] = (plate_results, all_plate_eids, is_plate_min)
-
-        if is_plate_strain:
-            # log.debug('check_plate_strain')
-            plate_strain_list = _fill_plate_list(
-                model_results,
-                ctria3_plate_eids, cquad4_plate_eids,
-                ctria6_plate_eids, cquad8_plate_eids,
-                ctriar_plate_eids, cquadr_plate_eids,
-                is_stress=False)
-            assert len(plate_strain_list), 'No plate strain results found'
-            for plate_straini in plate_strain:
-                plate_results = []
-                _envelope_corner_stress_strain(
-                    plate_straini,
-                    plate_strain_list,
-                    all_eids,
-                    all_eids_list, all_subcases_list, plate_results,
-                    consider_corner_nodes=consider_plate_nodes, dtype=dtype)
-                is_plate_min = 'min' in plate_straini
-                results[('plate', plate_straini)] = (plate_results, all_plate_eids, is_plate_min)
-
-    is_solid_stress = (len(solid_stress) > 0)
-    is_solid_strain = (len(solid_strain) > 0)
-    if len(all_solid_eids):
-        if is_solid_stress:
-            solid_stress_list = _fill_solid_list(
-                model_results,
-                ctetra_eids, cpenta_eids, chexa_eids, cpyram_eids,
-                is_stress=True)
-            assert len(solid_stress_list), 'No solid stress results found'
-
-            for solid_stressi in solid_stress:
-                # log.debug('check_solid_stress')
-                solid_results = []
-                is_solid_min = 'min' in solid_stressi
-                _envelope_corner_stress_strain(
-                    solid_stressi,
-                    solid_stress_list,
-                    all_eids,
-                    all_eids_list, all_subcases_list, solid_results,
-                    consider_corner_nodes=consider_solid_nodes)
-                results[('solid', solid_stressi)] = (solid_results, all_solid_eids, is_solid_min)
-
-        # 'solid': (solid_results, all_solid_eids, is_solid_min),
-        if is_solid_strain:
-            solid_strain_list = _fill_solid_list(
-                model_results,
-                ctetra_eids, cpenta_eids, chexa_eids, cpyram_eids,
-                is_stress=False)
-            assert len(solid_strain_list), 'No solid strain results found'
-            for solid_straini in solid_strain:
-                # log.debug('check_solid_strain')
-                solid_results = []
-                is_solid_min = 'min' in solid_straini
-                _envelope_corner_stress_strain(
-                    solid_straini,
-                    solid_strain_list,
-                    all_eids,
-                    all_eids_list, all_subcases_list, solid_results,
-                    consider_corner_nodes=consider_solid_nodes)
-                results[('solid', solid_straini)] = (solid_results, all_solid_eids, is_solid_min)
-
-    out_subcases, combined_data = _envelope_post(
-        all_subcases_list, all_eids,
-        results,
+    all_subcases = np.unique(all_subcases_list)
+    out_subcases, eid_combined_data = _envelope_post(
+        all_subcases, all_eids,
+        results_dict,
         percent_eids_target, model, log)
+
+    if len(node_results_dict):
+        out_subcases_nid, nid_combined_data = _envelope_post(
+            all_subcases, all_nids,
+            node_results_dict,
+            percent_nids_target, model, log)
     return out_subcases
+
+def _fill_results_stress_strain(
+        name: str,
+        model_results: OP2,
+        results_dict: dict,
+        eids_in: tuple[np.ndarray, ...],
+        fill_element_list: Callable,
+        stress_request_list: list[str],
+        strain_request_list: list[str],
+        all_eids: np.ndarray,
+        all_eids_list: list[int],
+        all_subcases_list: list[int],
+        dtype: str='float64',
+        consider_corner_nodes: Optional[bool]=None) -> None:
+    is_stress = (len(stress_request_list) > 0)
+    is_strain = (len(strain_request_list) > 0)
+    if len(eids_in) > 1:
+        eids = np.hstack(eids_in)
+    else:
+        eids = eids_in[0]
+        assert isinstance(eids, np.ndarray)
+    if not len(eids):
+        return
+    if is_stress:
+        # log.debug(f'check_{name}_stress')
+        group_name = f'{name} stress'
+        stress_list = fill_element_list(
+            model_results, *eids_in,
+            is_stress=True)
+        assert len(stress_list), f'No {name} stress results found'
+        # log.info('_envelope_stress_strain')
+        for stressi in stress_request_list:
+            results_list = []
+            if consider_corner_nodes:
+                _envelope_corner_stress_strain(
+                    group_name, stressi, stress_list,
+                    all_eids, all_eids_list,
+                    all_subcases_list, results_list,
+                    consider_corner_nodes=consider_corner_nodes,
+                    dtype=dtype)
+            else:
+                _envelope_stress_strain(
+                    group_name, stressi,
+                    stress_list,
+                    all_eids, all_eids_list,
+                    all_subcases_list, results_list,
+                    dtype=dtype)
+            is_min = 'min' in stressi
+            results_dict[(name, stressi)] = (results_list, eids, is_min)
+        # log.info('_envelope_stress_strain_end')
+
+    if is_strain:
+        # log.debug(f'check_{name}_strain')
+        group_name = f'{name} strain'
+        strain_list = fill_element_list(
+            model_results, *eids_in, is_stress=False)
+        assert len(strain_list), f'No {name} strain results found'
+        for straini in strain_request_list:
+            results_list = []
+            if consider_corner_nodes:
+                _envelope_corner_stress_strain(
+                    group_name, straini, strain_list,
+                    all_eids, all_eids_list,
+                    all_subcases_list, results_list,
+                    consider_corner_nodes=consider_corner_nodes,
+                    dtype=dtype)
+            else:
+                _envelope_stress_strain(
+                    group_name, straini, strain_list,
+                    all_eids, all_eids_list,
+                    all_subcases_list, results_list,
+                    dtype=dtype)
+            is_min = 'min' in straini
+            results_dict[(name, straini)] = (results_list, eids, is_min)
+
+def _fill_results_disp_spc_mpc_force(
+        log: SimpleLogger,
+        group_name: str,
+        results_dict: dict,
+        obj_dict: dict,
+        request_list: list[str],
+        nids: np.ndarray,
+        all_nids: np.ndarray,
+        nids_list: list[int],
+        all_subcases_list: list[int],
+        dtype: str='float64') -> None:
+    is_request = (len(request_list) > 0)
+    assert isinstance(nids, np.ndarray)
+    is_not_nodes = (len(nids) == 0)
+    if is_not_nodes or not is_request:
+        log.debug(f'{group_name!r}: is_not_nodes={is_not_nodes} request_list={request_list}')
+        return
+
+    request_data_list = [(nids, group_name, obj_dict)]
+    assert len(request_data_list), f'No {group_name} results found'
+    # log.info('_fill_results_disp_spc_mpc_force')
+    for requesti in request_list:
+        results_list = []
+        _envelope_stress_strain(
+            group_name, requesti,
+            request_data_list,
+            nids, nids_list,
+            all_subcases_list, results_list,
+            dtype=dtype)
+        is_min = 'min' in requesti
+        print(requesti)
+        results_dict[(group_name, requesti)] = (results_list, nids, is_min)
+        # log.info('_envelope_stress_strain_end')
+    assert len(results_dict) > 0, results_dict
 
 def _validate_force_moment(force_moment: str) -> tuple[bool, tuple[str, str]]:
     """
@@ -631,7 +636,24 @@ def _validate_force_moment(force_moment: str) -> tuple[bool, tuple[str, str]]:
     assert group1 in ['x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'], (group1, group2)
     assert group2 in ['min', 'max', 'rss', 'abs_max'], (group1, group2)
     is_min = (group2 == 'min')
-    return is_min, (group1, group2)
+    return is_min, (group0, group1, group2)
+
+def is_oug(displacement: list[str],
+           spc_force: list[str],
+           mpc_force: list[str]) -> tuple[bool, bool, bool]:
+    is_disp = False
+    is_spc_force = False
+    is_mpc_force = False
+    for displacementi in displacement:
+        _validate_disp(displacementi)
+        is_disp = True
+    for spc_forcei in spc_force:
+        _validate_force_moment(spc_forcei)
+        is_spc_force = True
+    for mpc_forcei in mpc_force:
+        _validate_force_moment(mpc_forcei)
+        is_mpc_force = True
+    return is_disp, is_spc_force, is_mpc_force
 
 def _validate_disp(displacement: str) -> tuple[bool, tuple[str, str]]:
     """
@@ -647,7 +669,7 @@ def _validate_disp(displacement: str) -> tuple[bool, tuple[str, str]]:
     assert group1 in ['x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'], (group1, group2)
     assert group2 in ['min', 'max', 'rss', 'abs_max'], (group1, group2)
     is_min = (group2 == 'min')
-    return is_min, (group1, group2)
+    return is_min, (group0, group1, group2)
 
 def _str_to_list(solid_stress: list[str] | str) -> list[str]:
     if solid_stress:
@@ -690,9 +712,11 @@ def _setup_models(bdf_filename: PathLike | BDF,
                   op2_filename: PathLike | OP2,
                   include_results: [list[str]]=None,
                   exclude_results: [list[str]]=None,
+                  transform_to_global_coord: bool=False,
                   transform_to_material_coord: bool=True,
                   log: Optional[SimpleLogger]=None,
-                  idtype: str='int32') -> tuple[BDF, OP2, np.ndarray]:
+                  idtype: str='int32',
+                  ) -> tuple[BDF, OP2, np.ndarray, np.ndarray]:
     """
     Parameters
     ----------
@@ -709,7 +733,12 @@ def _setup_models(bdf_filename: PathLike | BDF,
         model = read_bdf(bdf_filename, log=log)
     log.level = 'debug'
 
+    node_id = np.array(list(model.nodes), dtype=idtype)
+    assert node_id is not None, node_id
+
     element_id = np.array(list(model.elements), dtype=idtype)
+    assert element_id is not None, element_id
+
     if isinstance(op2_filename, OP2):
         model_results = op2_filename
         # print(model_results.get_op2_stats())
@@ -721,9 +750,11 @@ def _setup_models(bdf_filename: PathLike | BDF,
             exclude_results=exclude_results,
             debug=None)
 
+    if transform_to_global_coord:
+        raise NotImplementedError(transform_to_global_coord)
     if transform_to_material_coord:
         data_in_material_coord(model, model_results, in_place=True)
-    return model, model_results, element_id
+    return model, model_results, node_id, element_id
 
 
 def _get_base_etypes(model: BDF) -> dict[str, np.ndarray]:
@@ -784,13 +815,13 @@ def get_all_eids(eids_tuple: tuple[np.ndarray, ...],
         all_eids.sort()
     return all_eids
 
-def _envelope_post(all_subcases_list: list[int],
+def _envelope_post(all_subcases: np.ndarray,
                    all_eids: np.ndarray,
                    results: dict[str, tuple[list, np.ndarray, bool]],
                    percent_eids_target: float,
                    model: BDF,
-                   log: SimpleLogger) -> tuple[np.ndarray, Any]:
-    all_subcases = np.unique(all_subcases_list)
+                   log: SimpleLogger,
+                   debug: bool=False) -> tuple[np.ndarray, Any]:
     nsubcase_all = len(all_subcases)
     neid_all = len(all_eids)
     assert nsubcase_all > 0 and neid_all > 0, (nsubcase_all, neid_all)
@@ -815,9 +846,13 @@ def _envelope_post(all_subcases_list: list[int],
             icase_critical_list.append(icase_criticali)
             icase = np.where(icase_criticali != -1)[0]
             icase_critical[icase] = icase_criticali[icase]
+        else:
+            log.debug(f'***NO result_group={result_group!r}?')
+            print(elem_results)
         del elem_results, elem_eids, is_elem_min
 
-    log.debug(f'icase_critical = {icase_critical}')
+    if debug:
+        log.debug(f'icase_critical = {icase_critical}')
     ncritical_cases = len(icase_critical)
     assert ncritical_cases == neid_all, (ncritical_cases, neid_all)
 
@@ -832,7 +867,8 @@ def _envelope_post(all_subcases_list: list[int],
 
     icase_reduced = np.where(~imissing_eids)[0]
     icase_critical = icase_critical[icase_reduced]
-    log.info(f'icase_critical (reduced) = {icase_critical}')
+    if debug:
+        log.info(f'icase_critical (reduced) = {icase_critical}')
     assert len(icase_critical) > 0, 'No results'
 
     # get the critical subcases
@@ -1146,16 +1182,17 @@ def _fill_solid_list(model_results: OP2,
         solid_list.append((cpyram_eids, f'cpyram_{word}', cpyram_obj))
     return solid_list
 
-def _envelope_corner_stress_strain(result_name: str,
-                                   corner_stress_list: list[tuple[np.ndarray, str, dict]],
+def _envelope_corner_stress_strain(result_group: str,
+                                   result_name: str,
+                                   stress_list: list[tuple[np.ndarray, str, dict]],
                                    all_eids: np.ndarray,
                                    all_eids_list: list[list[int]],
                                    all_subcases_list: list[int],
                                    #  results.append((obj_name, subcases, eids, ieid, comp_data))
-                                   results: list[tuple[str, list[int], list[int], np.ndarray, np.ndarray]],
+                                   results_list: list[tuple[str, list[int], list[int], np.ndarray, np.ndarray]],
                                    consider_corner_nodes: bool=True,
                                    dtype: str='float32'):
-    for (eids, obj_name, obj_dict) in corner_stress_list:
+    for (eids, obj_name, obj_dict) in stress_list:
         subcases = list(obj_dict)
         nsubcase_obj = len(subcases)
         if nsubcase_obj == 0:
@@ -1179,7 +1216,7 @@ def _envelope_corner_stress_strain(result_name: str,
             solid_data[isubcase, :] = datai
         # print(f'subcases = {subcases}')
         obj_name = cast(str, obj_name)
-        results.append((obj_name, subcases, eids, ieid, solid_data))
+        results_list.append((obj_name, subcases, eids, ieid, solid_data))
         all_eids_list.append(eids)
         all_subcases_list.extend(subcases)
 
@@ -1214,6 +1251,11 @@ def _envelope_stress_strain(group_name: str,
                 if len(missing_eids):
                     raise RuntimeError(f'missing {group_name!r} eids={missing_eids.tolist()}')
                 assert np.array_equal(all_eids[ieid], eids)
+
+            print(group_name)
+            if group_name == 'displacements':
+                is_min, (group0, group1, group2) = _validate_disp(result_name)
+                result_name = (group0, group1, group2)
             datai = obj.envelope(eids, result_name)
             comp_data[isubcase, :] = datai
         # print(f'subcases = {subcases}')

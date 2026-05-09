@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_8 import (print_field_8, print_float_8,
-                                          set_default_if_blank,
+                                          set_default_if_blank, print_int_card,
                                           set_blank_if_default, is_same, print_card_8,
                                           print_scientific_8)
 from pyNastran.bdf.field_writer_16 import print_field_16, print_card_16, print_float_16, print_scientific_16
@@ -15,6 +15,34 @@ from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 
 
 class Testfield_writer_8(unittest.TestCase):
+
+    def test_print_int_card(self):
+        card = ['SET1', 1, 2, 3, 4, 5, 6, 7]
+        outa = print_int_card(card)
+        outb = print_card_8(card)
+        # print(f'outa = {outa!r}')
+        # print(f'outb = {outb!r}')
+        expected = 'SET1           1       2       3       4       5       6       7\n'
+        assert outa == expected
+        assert outb == expected
+
+        card = ['SET1', 1, 2, 3, 4, 5, 6, 7, 8]
+        outc = print_int_card(card)
+        outd = print_card_8(card)
+        # print(f'outc = {outd!r}')
+        # print(f'outd = {outc!r}')
+        expected = 'SET1           1       2       3       4       5       6       7       8\n'
+        assert outc == expected
+        assert outd == expected
+
+        card = ['SET1', 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        outc = print_int_card(card)
+        outd = print_card_8(card)
+        # print(f'outc = {outc!r}')
+        # print(f'outd = {outd!r}')
+        expected = 'SET1           1       2       3       4       5       6       7       8\n               9\n'
+        assert outc == expected
+        assert outd == expected
 
     def test_field_vals_8_edge_cases(self):
         self.assertEqual(print_field_8(-999999.56), '  -10.+5',

@@ -135,7 +135,7 @@ def oug_data_code(table_name: str,
 
     #table_code = tCode % 1000
     #sort_code = tCode // 1000
-    tCode = table_code * 1000 + sort_code
+    tcode = table_code * 1000 + sort_code
 
     device_code = 2  # Plot
     data_code = {
@@ -145,7 +145,7 @@ def oug_data_code(table_name: str,
         'is_msc': is_msc,
         'format_code': 1, # real
         'table_code': table_code,
-        'tCode': tCode,
+        'tCode': tcode,
         'table_name': table_name, ## TODO: should this be a string?
         'device_code' : device_code,
         'random_code' : random_code,
@@ -477,8 +477,8 @@ class TableArray(ScalarObject):  # displacement style table
 
                 names = ['NodeID', 'Item']
                 index = pd.MultiIndex.from_arrays(node_gridtype, names=names)
-                A = self.data[:, :, 0].T
-                data_frame = pd.DataFrame(A, columns=columns, index=index)
+                mat_data = self.data[:, :, 0].T
+                data_frame = pd.DataFrame(mat_data, columns=columns, index=index)
             else:
                 node_gridtype_item = []
                 node_ids = self.node_gridtype[:, 0]
@@ -961,6 +961,54 @@ class RealTableArray(TableArray):
         #obj.mode_cycles = mode_cycles
         return obj
 
+    def envelope(self,
+                 nids: np.ndarray,
+                 result_name_tuple: tuple[str, str, str]) -> np.ndarray:
+        print(result_name_tuple)
+        tf_rm_flag, keys, func_name = result_name_tuple
+        tf_rm_flag = tf_rm_flag.lower()
+        func_name = func_name.lower()
+        is_min = (func_name == 'min')
+        func_name = 'min' if is_min else 'max'
+        max_min_func = getattr(np, func_name)
+
+        # print(''.join(self.get_stats()))
+        node_actual = self.node_gridtype[:, 0]
+        inid = np.searchsorted(node_actual, nids)
+        assert np.array_equal(node_actual[inid], nids)
+
+        ntime, nnode, _ = self.data.shape
+        if tf_rm_flag in {'t', 'f'}:
+            data = self.data[:, :, :3]
+        else:
+            assert tf_rm_flag in {'r', 'm'},tf_rm_flag
+            data = self.data[:, :, 3:]
+
+        assert len(keys), keys
+        ikeys = []
+        key_map = {'x': 0, 'y': 1, 'z': 2,}
+        for key in keys:
+            ikey = key_map[key]
+            ikeys.append(ikey)
+        data = data[:, :, ikeys]
+
+        if func_name == 'abs_max':
+            # TODO: wrong, but ok...
+            data = np.abs(data).max(axis=2)
+            assert data.shape == (ntime, nnode), data.shape
+        elif func_name == 'rss':
+            data = np.linalg.norm(data, axis=2)
+            assert data.shape == (ntime, nnode), data.shape
+        else:
+            data = max_min_func(data, axis=2)
+            assert data.shape == (ntime, nnode), data.shape
+
+        assert data.ndim == 2, (result_name_tuple, data.shape)
+
+        # eid_data = data.max(axis=0)
+        nid_data = max_min_func(data, axis=0)
+        assert nid_data.shape == (nnode, ), nid_data.shape
+        return nid_data[inid]
 
     def __pos__(self) -> RealTableArray:
         """positive; +a"""
@@ -1599,7 +1647,7 @@ class RealTableArray(TableArray):
             if isinstance(dt, float_types):
                 header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             else:
-                header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
+                header[1] = ' %s = %10d\n' % (self.data_code['name'], dt)
             f06_file.write(''.join(header + words))
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(nodes, gridtypes, t1, t2, t3, r1, r2, r3):
                 sgridtype = recast_gridtype_as_string(self, gridtypei)
@@ -2004,11 +2052,10 @@ class ComplexTableArray(TableArray):
             itable = -3
 
         #print('nonlinear_factor =', self.nonlinear_factor)
-        if self.is_sort1:
-            op2_format = endian + b'2i 12f'
-        else:
+        if not self.is_sort1:
             raise NotImplementedError('SORT2')
-        s = Struct(op2_format)
+        # op2_format = endian + b'2i 12f'
+        # s = Struct(op2_format)
 
         node = self.node_gridtype[:, 0]
         max_id = node.max()

@@ -118,12 +118,16 @@ class TestCombination(unittest.TestCase):
         # return
 
         model = read_bdf(bdf_filename, log=log)
-        model_results = read_op2(op2_filename, include_results=['stress*'])
+        model_results = read_op2(
+            op2_filename,
+            # include_results=['stress*', 'displacements'],
+        )
         # solid_stress: str='omax',
         # solid_strain: str='',
         # consider_solid_nodes: bool=True,
         envelope(
             model, model_results,
+            displacement=['tx_max', 'tx_abs_max', 'txyz_max', 'txyz_abs_max'],
             solid_stress='abs_max',
             consider_solid_nodes=True)
         envelope(
