@@ -36,13 +36,26 @@ class Testfield_writer_8(unittest.TestCase):
         assert outd == expected
 
         card = ['SET1', 1, 2, 3, 4, 5, 6, 7, 8, 9]
-        outc = print_int_card(card)
-        outd = print_card_8(card)
-        # print(f'outc = {outc!r}')
-        # print(f'outd = {outd!r}')
+        oute = print_int_card(card)
+        outf = print_card_8(card)
+        # print(f'oute = {oute!r}')
+        # print(f'outf = {outf!r}')
         expected = 'SET1           1       2       3       4       5       6       7       8\n               9\n'
-        assert outc == expected
-        assert outd == expected
+        assert oute == expected
+        assert outf == expected
+
+        card = ['SET1', 1, 2, 3, 4, 5, 6, 7, 8,
+                9, 10, 11, 12, 13, 14, 15]
+        assert len(card) % 8 == 0
+        outg = print_int_card(card)
+        outh = print_card_8(card)
+        # print(f'outg = {outc!r}')
+        # print(f'outh = {outh!r}')
+        expected = (
+            'SET1           1       2       3       4       5       6       7       8\n'
+            '               9      10      11      12      13      14      15\n')
+        assert outg == expected
+        assert outh == expected
 
     def test_field_vals_8_edge_cases(self):
         self.assertEqual(print_field_8(-999999.56), '  -10.+5',
