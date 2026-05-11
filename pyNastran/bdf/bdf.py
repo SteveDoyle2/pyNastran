@@ -255,9 +255,9 @@ Property = (
     PSOLID | PLSOLID | PCOMPS | PCOMPLS |
     PWELD
 )
-Material = (
+Material = tuple[
         MAT1 | MAT2 | MAT3 | MAT8 | MAT9 | MAT10 | MAT11 |
-        MAT3D | EQUIV | MATG)
+        MAT3D | EQUIV | MATG]
 ThermalMaterial = MAT4 | MAT5
 
 REMOVED_CARDS = {

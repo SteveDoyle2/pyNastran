@@ -429,7 +429,7 @@ def remove_unused(bdf_filename: PathLike,
 
         elif card_type in {'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5'}:
             _store_splines(model, card_type, ids,
-                           nids_used, sets_used, spline_set_nodes)
+                           nids_used, cids_used, sets_used, spline_set_nodes)
 
         elif card_type == 'CAERO1':
             for eid in ids:
@@ -701,12 +701,18 @@ def remove_unused(bdf_filename: PathLike,
 
 def _store_splines(model: BDF, card_type: str, ids: np.ndarray,
                    nids_used: set[int],
+                   cids_used: set[int],
                    sets_used: set[int],
                    spline_set_nodes: set[int]):
     for spline_id in ids:
         spline = model.splines[spline_id]
-        if card_type in ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5']:
+        if card_type in ['SPLINE1', 'SPLINE4', 'SPLINE5']:
             set_id = spline.Set()
+            sets_used.add(set_id)
+            spline_set_nodes.add(set_id)
+        elif card_type in 'SPLINE2':
+            set_id = spline.Set()
+            cids_used.add(spline.cid)
             sets_used.add(set_id)
             spline_set_nodes.add(set_id)
         else:
@@ -1126,12 +1132,27 @@ def _remove(model: BDF,
             out_dict['properties'] = np.array(pids_to_remove, dtype='int64')
 
     if remove_mids and mids_to_remove:
+        mids_to_remove2 = []
         for mid in mids_to_remove:
-            del model.materials[mid]
-        mids_to_remove.sort()
-        if mids_to_remove:
-            model.log.debug('removing materials %s' % mids_to_remove)
-            out_dict['materials'] = np.array(mids_to_remove, dtype='int64')
+            if mid in model.materials:
+                mids_to_remove2.append(mid)
+                del model.materials[mid]
+        mids_to_remove2.sort()
+
+        thermal_mids_to_remove2 = []
+        for mid in mids_to_remove:
+            if mid in model.thermal_materials:
+                thermal_mids_to_remove2.append(mid)
+                del model.thermal_materials[mid]
+        thermal_mids_to_remove2.sort()
+        if mids_to_remove2:
+            model.log.debug('removing materials %s' % mids_to_remove2)
+            mids_array = np.array(mids_to_remove2, dtype='int64')
+            out_dict['materials'] = mids_array
+        if thermal_mids_to_remove2:
+            model.log.debug('removing thermal_materials %s' % thermal_mids_to_remove2)
+            mids_array = np.array(thermal_mids_to_remove2, dtype='int64')
+            out_dict['thermal_materials'] = mids_array
 
     #if remove_spcs and spcs_to_remove:
     #    for spc_id in spcs_to_remove:

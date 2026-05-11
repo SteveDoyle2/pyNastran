@@ -15,7 +15,7 @@ from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, Material
 from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import roundup
@@ -235,29 +235,35 @@ def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
             if key not in starting_id_dict:
                 starting_id_dict[key] = value
 
+    # basic
     nid = None
     cid = None
     eid = None
     pid = None
     mid = None
-    nsm_id = None
     spc_id = None
     mpc_id = None
     load_id = None
+    suport_id = None
+    suport1_id = None
+    nsm_id = None
+
+    # freq/transient/nonlinear dynamics
+    table_id = None
+    freq_id = None
     dload_id = None
     method_id = None
     cmethod_id = None
+    tf_id = None
+    tstep_id = None
+    tstepnl_id = None
+
+    # aero
+    set_id = None
+    caero_id = None
     spline_id = None
-    table_id = None
     flfact_id = None
     flutter_id = None
-    freq_id = None
-    ##tstep_id = None
-    tstepnl_id = None
-    set_id = None
-    suport_id = None
-    suport1_id = None
-    tf_id = None
 
     # turn them into variables
     for key, value in sorted(starting_id_dict.items()):
@@ -416,10 +422,10 @@ def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
             set_map[sidi] = set_id
             set_id += 1
 
+    delta_box1_map = {}
+    delta_box2_map = {}
     if 'spline_id' in starting_id_dict and spline_id is not None:
         # set up spline1 box mapping
-        delta_box1_map = {}
-        delta_box2_map = {}
         for sidi, spline in sorted(model.splines.items()):
             if spline.type in ['SPLINE1', 'SPLINE2']:
                 delta_box1_map[sidi] = spline.box1 - spline.caero
@@ -890,7 +896,9 @@ def _create_nid_maps(model: BDF,
     return nid_map, reverse_nid_map
 
 
-def _create_mid_map(model, mid):
+def _create_mid_map(model: BDF, mid: int,
+                    ) -> tuple[ dict[int, int],
+                                tuple[dict[int, Material], ...], ]:
     """builds the mid_map"""
     mid_map = {}
     all_materials = (
@@ -1019,7 +1027,7 @@ def _update_elements(model: BDF,
 def _update_materials(model: BDF,
                       starting_id_dict: dict[str, int], mid: int,
                       mid_map: dict[int, int],
-                      all_materials: list[Material]) -> None:
+                      all_materials: tuple[dict[int, Material], ...]) -> None:
     del model
     if 'mid' in starting_id_dict and mid is not None:
         #mid = 1
@@ -1284,8 +1292,10 @@ def _update_case_control(model: BDF,
 
 
 def _update_case_key(key, elemental_quantities, seti2, eid_map, nid_map):
-    """Updates a Case Control SET card.  A set may have an elemental result
-    or a nodal result."""
+    """
+    Updates a Case Control SET card.  A set may have an elemental result
+    or a nodal result.
+    """
     values2 = []
     eids_missing = []
     nids_missing = []

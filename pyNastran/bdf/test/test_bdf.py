@@ -77,7 +77,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                       debug: bool=False,
                       xref: bool=True,
                       check: bool=True,
-                      write_hdf5: bool=True,
+                      hdf5: bool=True,
                       punch: bool=False,
                       nastran: str='',
                       encoding: Optional[str]=None,
@@ -234,7 +234,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                         crash_cards=crash_cards,
                         limit_mesh_opt=True,
                         run_pickle=run_pickle,
-                        hdf5=write_hdf5, quiet=quiet, log=log)
+                        write_hdf5=hdf5, quiet=quiet, log=log)
                     del fem1
                     del fem2
                 diff_cards += diff_cards
@@ -303,7 +303,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             encoding=None,
             size: int=8, is_double: bool=False,
             allow_tabs: bool=True,
-            hdf5: bool=False,
+            write_hdf5: bool=False,
             write_obj: bool=False,
             is_lax_parser: bool=False,
             allow_duplicates: bool=False,
@@ -461,7 +461,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         allow_tabs=allow_tabs,
         allow_duplicates=allow_duplicates,
         stop=stop, nastran=nastran, post=post,
-        hdf5=hdf5, write_obj=write_obj,
+        write_hdf5=write_hdf5, write_obj=write_obj,
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
         nerrors=nerrors, dev=dev,
@@ -510,7 +510,7 @@ def run_and_compare_fems(
         stop: bool=False,
         nastran: str='',
         post: int=-1,
-        hdf5: bool=False,
+        write_hdf5: bool=False,
         write_obj: bool=False,
         dynamic_vars=None,
         quiet: bool=False,
@@ -606,7 +606,7 @@ def run_and_compare_fems(
             run_eid_checks=run_eid_checks, run_mcid=run_mcid,
             skip_aero_zero_check=skip_aero_zero_check,
             save_file_structure=save_file_structure,
-            hdf5=hdf5, write_obj=write_obj,
+            write_hdf5=write_hdf5, write_obj=write_obj,
             encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
             is_csv=is_csv,
             sort_cards=sort_cards,
@@ -785,7 +785,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              run_dependent_checks: bool=True,
              run_eid_checks: bool=True, run_mcid: bool=True,
              save_file_structure: bool=False,
-             hdf5: bool=False, write_obj: bool=False,
+             write_hdf5: bool=False, write_obj: bool=False,
              encoding: Optional[str]=None,
              crash_cards: Optional[list[str]]=None,
              limit_mesh_opt: bool=False,
@@ -864,7 +864,9 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
         out_model = str(out_model)
     if isinstance(bdf_filename, PurePath):
         bdf_filename = str(bdf_filename)
+    dirname = os.path.dirname(out_model)
     base, ext = os.path.splitext(out_model)
+    include_error_filename = os.path.join(dirname, 'pyNastran_include_error.bdf')
     try:
         if '.pch' in bdf_filename:
             fem1.read_bdf(bdf_filename, xref=False, punch=True, encoding=encoding,
@@ -872,6 +874,9 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
         else:
             fem1.read_bdf(bdf_filename, xref=False, punch=punch, encoding=encoding,
                           save_file_structure=save_file_structure)
+
+            if os.path.exists(include_error_filename):
+                os.remove(include_error_filename)
 
             if write_obj:
                 obj_filename = base + f'{name}.obj'
@@ -949,7 +954,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
     #if cid is not None and xref:
         #fem1.resolve_grids(cid=cid)
 
-    if hdf5:
+    if write_hdf5:
         hdf5_filename = f'{out_model}{name}.h5'
         _test_hdf5(fem1, hdf5_filename)
 
@@ -998,7 +1003,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
     return fem1
 
 
-def limit_mesh_optimization(model: BDF):
+def limit_mesh_optimization(model: BDF) -> None:
     is_mesh_opt = [card_name in model.card_count for card_name in MESH_OPT_CARDS]
     mesh_opt_cards = [card_name for is_mesh_opti, card_name in zip(is_mesh_opt, MESH_OPT_CARDS)
                       if is_mesh_opti]
@@ -2599,7 +2604,8 @@ def get_test_bdf_usage_args_examples(encoding):
     formats = '--msc|--nx|--optistruct|--zaero|--mystran'
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
-        f'              [--crash C] [--pickle] [--profile] [--hdf5] [--obj] [{formats}] [--filter]\n'
+        f'              [--crash C] [--pickle] [--profile] [--hdf5] [--obj] [{formats}]\n'
+        #  [--filter_unused]
         f'              [--lax] [--nosort] [--duplicate] [skip_cards CARDS] [--ifile]\n'
         f'              [--skip_all] [--skip_loads] [--skip_mass] [--skip_aero] [--skip_skin]\n'
         f'              [--skip_mcid] [--skip_eid_checks]\n'
@@ -2639,7 +2645,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
         '  --csv          writes the BDF in CSV format; partial (default=False)\n'
         '  --no_similar_eid   No duplicate eids among elements, rigids, and masses\n'
-        #'  --filter       Filters unused cards\n'
+        #'  --filter_unused       Filters unused cards\n'
         '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
         f'  --encoding ENCODE  the encoding method (default=None -> {encoding!r})\n' +
         '  -q, --quiet        prints debug messages (default=False)\n'
@@ -2748,7 +2754,7 @@ def main(argv=None):
             data['BDF_FILENAME'],
             debug=debug,
             xref=data['xref'],
-            #filter_unused=data['filter'],
+            #filter_unused=data['filter_unused'],
             check=not data['check'],
             punch=data['punch'],
             size=size,
@@ -2780,7 +2786,7 @@ def main(argv=None):
             crash_cards=crash_cards,
             run_pickle=data['pickle'],
             safe_xref=data['safe'],
-            hdf5=data['hdf5'],
+            write_hdf5=data['hdf5'],
             write_obj=data['obj'],
             version=data['version'],
             print_stats=True,
@@ -2810,7 +2816,7 @@ def main(argv=None):
             '.',
             data['BDF_FILENAME'],
             debug=debug,
-            # filter_unused=data['filter'],
+            # filter_unused=data['filter_unused'],
             xref=data['xref'],
             # xref_safe=data['xref_safe'],
             check=not data['check'],
@@ -2842,7 +2848,7 @@ def main(argv=None):
             crash_cards=crash_cards,
             run_pickle=data['pickle'],
             safe_xref=data['safe'],
-            hdf5=data['hdf5'],
+            write_hdf5=data['hdf5'],
             write_obj=data['obj'],
             version=data['version'],
             print_stats=True,

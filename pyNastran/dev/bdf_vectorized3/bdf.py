@@ -1236,11 +1236,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         pass
         #self.setup()
         #validate_bdf(self)
-        self.log.warning(f'no validate for bdf3')
+        self.log.warning('no validate for bdf3')
     def _get_rigid(self):
-        self.log.warning(f'no _get_rigid for bdf3')
+        self.log.warning('no _get_rigid for bdf3')
     def get_rigid_elements_with_node_ids(self, node_ids: list[int]):
-        self.log.warning(f'no get_rigid_elements_with_node_ids for bdf3')
+        self.log.warning('no get_rigid_elements_with_node_ids for bdf3')
     #def get_rigid_elements_with_node_ids(self, node_ids: list[int]):
         #self.log.warning('no get_rigid_elements_with_node_ids')
     #def get_rigid_elements_with_node_ids(self, node_ids: list[int]):
@@ -1847,7 +1847,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         Parameters
         ----------
         sol : int
-            the solution type (101, 103, etc)
+            the solution type (101, 103, etc.)
         method : str
             the solution method (only for SOL=600)
         sol_iline : int
@@ -1930,7 +1930,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         #ifield = 5   # Z
         #values = [0.1, 0.2, 0.3]
         card.update_field(ifield, ids, values)
-        return obj
+        return card
 
     def set_dynamic_syntax(self, dict_of_vars: dict[str, int | float | str]) -> None:
         """

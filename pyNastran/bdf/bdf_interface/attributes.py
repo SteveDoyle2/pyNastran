@@ -504,7 +504,7 @@ class BDFAttributes:
         self.is_zaero = False
 
     def set_as_zaero(self):
-        self._nastran_format = 'zona'
+        self._nastran_format = 'zaero'
         self.is_nx = False
         self.is_msc = False
         self.is_optistruct = False

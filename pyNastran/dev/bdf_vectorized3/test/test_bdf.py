@@ -1101,15 +1101,15 @@ def run_nastran(bdf_model: str, nastran: str, post: int=-1,
     #bdf.idtype = 'int64'
     #bdf.read_bdf(bdf_model)
     #bdf = read_bdfv(bdf_model, debug=False)
-    if 'POST' in bdf.params:
-        param_post = bdf.params['POST']
+    if 'POST' in bdf_model.params:
+        param_post = bdf_model.params['POST']
         #print('post = %s' % post)
         param_post.update_values(value1=post)
         #print('post = %s' % post)
     else:
         card = ['PARAM', 'POST', post]
-        bdf.add_card(card, 'PARAM', is_list=True)
-    bdf.write_bdf(bdf_model2, size=size, is_double=is_double)
+        bdf_model.add_card(card, 'PARAM', is_list=True)
+    bdf_model.write_bdf(bdf_model2, size=size, is_double=is_double)
 
     #os.rename(outModel, outModel2)
     if not os.path.exists(f06_model):

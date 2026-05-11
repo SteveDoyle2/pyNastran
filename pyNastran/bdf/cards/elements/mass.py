@@ -1173,7 +1173,7 @@ class CONM2(PointMassElement):
     _field_map = {
         1: 'eid', 2:'nid', 3:'cid', 4:'mass',
     }
-    def update_by_cp_name(self, name, value):
+    def update_by_cp_name(self, name: str, value: float):
         if name == 'M':
             self.mass = value
         elif name == 'X1':
@@ -1196,8 +1196,9 @@ class CONM2(PointMassElement):
         elif name == 'I33':
             self.I[5] = value
         else:
-            raise NotImplementedError('element_type=%r has not implemented %r in cp_name_map' % (
-                self.type, name))
+            allowed = ', '.join(['M', 'X1', 'X2', 'X3', 'I11', 'I21', 'I22', 'I31', 'I32', 'I33'])
+            raise NotImplementedError(f'element_type={self.type} has not implemented {name!r}'
+                                      f' in cp_name_map; allowed=[{allowed}]')
 
     def _update_field_helper(self, n, value):
         if n == 5:
