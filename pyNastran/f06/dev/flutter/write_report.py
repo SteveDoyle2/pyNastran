@@ -5,8 +5,10 @@ TODO: y-axis can be eas or frequency
 """
 from __future__ import annotations
 import os
+import io
 import pickle
 import warnings
+import traceback
 from pathlib import Path
 from itertools import count
 from typing import Callable, Optional, TYPE_CHECKING
@@ -78,6 +80,8 @@ def write_report(docx_filename: str,
                  progress_callback: Optional[Callable]=None,
                  ) -> None:
     """
+    Writes a flutter report
+
     Parameters
     ----------
     docx_filename : str
@@ -299,11 +303,29 @@ def write_report(docx_filename: str,
         if config.strip() == '':
             config = basename
 
-        resp_dict, data_dict = make_flutter_response(
-            str(f06_filename),
-            f06_units=f06_units, out_units=out_units,
-            use_rhoref=use_rhoref, make_alt=make_alt,
-            log=log)
+        try:
+            resp_dict, data_dict = make_flutter_response(
+                str(f06_filename),
+                f06_units=f06_units, out_units=out_units,
+                use_rhoref=use_rhoref, make_alt=make_alt,
+                log=log)
+        except Exception:
+            string_io = io.StringIO()
+            traceback.print_exc(file=string_io)
+            sout = string_io.getvalue()
+            log.error(sout)
+            v0 = freq0 = v3 = freq3 = vdiverg = freq_diverg = np.nan
+            mass = np.full(1, np.nan)
+            cg = np.full(3, np.nan)
+            inertia = np.full((3, 3), np.nan)
+            hump_message = ''
+            case = (v0, freq0, v3, freq3, vdiverg, freq_diverg,
+                    mass, cg, inertia, config,
+                    hump_message,
+                    f06_filename, png_filename)
+            cases.append(case)
+            continue
+
         assert len(resp_dict) == 1, resp_dict
         response = resp_dict[subcase]
 
@@ -510,7 +532,8 @@ def _cases_to_document(log: SimpleLogger,
         if write_filename:
             paragraph = document.add_paragraph(path_str)
             paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        # msg += f'{mach:.3f}, {weight_config}, {v0:.3f}, {freq0_str}, {v3:.3f}, {freq3_str}, {vdiverg:.3f}, {config}, {f06_filename_base}\n'
+        # msg += (f'{mach:.3f}, {weight_config}, {v0:.3f}, {freq0_str}, {v3:.3f}, {freq3_str}, '
+        #         f'{vdiverg:.3f}, {config}, {f06_filename_base}\n')
 
     df = pd.DataFrame.from_dict(flutter_table)
     df.to_excel(excel_filename, index=True)
