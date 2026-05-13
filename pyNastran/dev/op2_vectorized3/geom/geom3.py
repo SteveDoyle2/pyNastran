@@ -802,8 +802,12 @@ class GEOM3:
         g1_34 = ints[:, [6, 7]]
         coord_id = ints[:, 8]
         nvector = floats[:, [9, 10, 11]]
-        surf_or_line = np.core.defchararray.decode(
-            np.core.defchararray.add(strings[:, 12], strings[:, 13]),
+
+        # surf_or_line = np.core.defchararray.decode(
+        #     np.core.defchararray.add(strings[:, 12], strings[:, 13]),
+        #     'latin1')
+        surf_or_line = np.char.decode(
+            np.char.add(strings[:, 12], strings[:, 13]),
             'latin1')
         line_load_dir = strings[:, [12, 13]]
 

@@ -1019,8 +1019,8 @@ class ZAERO:
                 mloads_id = subcase0['MLOADS'][0]
             elif 'ASE' in subcase0:
                 ase_id = subcase0['ASE'][0]
-        print(f'mloads_id = {mloads_id}')
-        print(f'ase_id = {ase_id}')
+        # print(f'mloads_id = {mloads_id}')
+        # print(f'ase_id = {ase_id}')
 
         asecont = None
         if mloads_id in self.mloads:

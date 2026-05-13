@@ -79,7 +79,7 @@ def read_f06_trim(f06_filename: str,
             subcase, *aero_force, metadata)
 
     naero_results = len(stacked_aero_force) + len(stacked_aero_pressure)
-    assert naero_results > 0, 'no AEROF or APRESS found; make sure to include LINE=100000?'
+    # assert naero_results > 0, 'no AEROF or APRESS found; make sure to include LINE=100000?'
     out = {
         'trim_results': trim_results,
     }
