@@ -66,7 +66,7 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
         'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
         'SET1', 'SET2', 'SET3',
         'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',
-        'AELIST', 'AESURF',
+        'AELIST', 'AESURF', 'AEFACT',
         # for aero ooord
         'AEROS', 'AERO',
         'CORD1R', 'CORD1S', 'CORD1C',

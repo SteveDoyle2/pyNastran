@@ -4,34 +4,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
-def get_bdf_stats(model: BDF,
-                  return_type: str='string',
-                  word: str='') -> str | list[str]:
-    """
-    Print statistics for the BDF
-
-    Parameters
-    ----------
-    model : BDF
-        the model object
-    return_type : str (default='string')
-        the output type ('list', 'string')
-            'list' : list of strings
-            'string' : single, joined string
-    word : str; default=''
-        model flag
-
-    Returns
-    -------
-    return_data : str, optional
-        the output data
-
-    .. note:: if a card is not supported and not added to the proper
-              lists, this method will fail
-
-    .. todo:: RBE3s from OP2s can show up as ???s
-
-    """
+def get_stats_groups():
     card_dict_groups = [
         'params', 'nodes', 'spoints', 'epoints', 'points',
         #'gridb', # (removed)
@@ -136,6 +109,52 @@ def get_bdf_stats(model: BDF,
         'suport', 'se_suport',
         'monitor_points',
     ]
+    special_cards = [
+        # handled below
+        'mpcadds', 'mpcs', 'spcadds', 'spcs',
+        'loads', 'load_combinations',
+        'dloads', 'dload_entries',
+        'mkaeros',
+        'nsmadds', 'nsms',
+        'seqgp',
+
+        # unhandled
+        'radset',
+        'dmig', 'dmiji', 'dmij', 'dmik', 'dmi',
+    ]
+    return card_dict_groups, list_attrs, scalar_attrs, special_cards
+
+def get_bdf_stats(model: BDF,
+                  return_type: str='string',
+                  word: str='') -> str | list[str]:
+    """
+    Print statistics for the BDF
+
+    Parameters
+    ----------
+    model : BDF
+        the model object
+    return_type : str (default='string')
+        the output type ('list', 'string')
+            'list' : list of strings
+            'string' : single, joined string
+    word : str; default=''
+        model flag
+
+    Returns
+    -------
+    return_data : str, optional
+        the output data
+
+    .. note:: if a card is not supported and not added to the proper
+              lists, this method will fail
+
+    .. todo:: RBE3s from OP2s can show up as ???s
+
+    """
+    card_dict_groups, list_attrs, scalar_attrs, special_cards = get_stats_groups()
+    special_cards.extend(['aero', 'aeros'])
+
     skip_attrs = [
         'model_groups', 'allow_duplicate_element_rbe_mass',
         'active_filename', 'active_filenames', 'debug',  # 'log',
@@ -154,18 +173,6 @@ def get_bdf_stats(model: BDF,
         'initial_superelement_models',
         'type_slot_str', 'dict_of_vars', 'code_block',
         'xref_obj',
-
-        # handled below
-        'mpcadds', 'mpcs', 'spcadds', 'spcs',
-        'loads', 'load_combinations',
-        'dloads', 'dload_entries',
-        'aero', 'aeros', 'mkaeros',
-        'nsmadds', 'nsms',
-        'seqgp',
-
-        # unhandled
-        'radset',
-        'dmig', 'dmiji', 'dmij', 'dmik', 'dmi',
 
         # vector
         'cbar', 'cbeam', 'cbush',
@@ -197,7 +204,7 @@ def get_bdf_stats(model: BDF,
 
         # to remove
         'zaero',
-    ] + list_attrs + card_dict_groups + scalar_attrs
+    ] + list_attrs + card_dict_groups + scalar_attrs + special_cards
     missed_attrs = []
     for attr in model.object_attributes(filter_properties=True,
                                         keys_to_skip=skip_attrs):

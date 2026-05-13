@@ -38,6 +38,8 @@ from pyNastran.bdf.subcase import Subcase
 from pyNastran.bdf.bdf import (
     BDF, read_bdf, map_version, CaseControlDeck,
     FREQ1, FREQ2, FREQ3, FREQ4, FREQ5)
+from pyNastran.bdf.bdf_interface.stats import get_stats_groups
+
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids, export_mcids_all
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.mesh_utils.forces_moments import get_temperatures_array
@@ -326,6 +328,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             run_export_caero: bool=True,
             save_file_structure: bool=False,
             nerrors: int=0, dev: bool=False,
+            nocomments: bool=False,
             crash_cards=None,
             safe_xref: bool=False, run_pickle: bool=False,
             version: Optional[str]=None,
@@ -475,6 +478,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         run_mass=run_mass,
         run_dependent_checks=run_dependent_checks,
         run_eid_checks=run_eid_checks, run_mcid=run_mcid,
+        nocomments=nocomments,
         save_file_structure=save_file_structure,
         run_pickle=run_pickle,
         validate_case_control=validate_case_control,
@@ -529,6 +533,7 @@ def run_and_compare_fems(
         run_dependent_checks: bool=True,
         run_eid_checks: bool=True,
         run_mcid: bool=True,
+        nocomments: bool=False,
         run_pickle: bool=False,
         validate_case_control: bool=True,
         stop_on_failure: bool=True,
@@ -606,6 +611,7 @@ def run_and_compare_fems(
             run_eid_checks=run_eid_checks, run_mcid=run_mcid,
             skip_aero_zero_check=skip_aero_zero_check,
             save_file_structure=save_file_structure,
+            nocomments=nocomments,
             write_hdf5=write_hdf5, write_obj=write_obj,
             encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
             is_csv=is_csv,
@@ -777,6 +783,58 @@ def run_nastran(bdf_model: str, nastran: str, post: int=-1,
         print(op2.get_op2_stats())
 
 
+def clean_comments(model: BDF) -> None:
+    card_dict_groups, list_attrs, scalar_attrs, special_cards = get_stats_groups()
+    for group in card_dict_groups:
+        obj_dict = getattr(model, group)
+        for key, obj in obj_dict.items():
+            if hasattr(obj, '_comment'):
+                del obj._comment
+    for group in list_attrs:
+        obj_list = getattr(model, group)
+        for obj in obj_list:
+            if hasattr(obj, '_comment'):
+                del obj._comment
+
+    for group in scalar_attrs:
+        obj = getattr(model, group)
+        if obj is None:
+            continue
+        if hasattr(obj, '_comment'):
+            del obj._comment
+
+    for group in special_cards:
+        obj = getattr(model, group)
+        if obj is None:
+            continue
+        elif isinstance(obj, dict):
+            obj_dict = obj
+            for key, obj in obj_dict.items():
+                if isinstance(obj, list):
+                    # spcadds
+                    obj_list = obj
+                    for obj in obj_list:
+                        if hasattr(obj, '_comment'):
+                            del obj._comment
+                else:
+                    # spcs
+                    if hasattr(obj, '_comment'):
+                        del obj._comment
+
+
+        elif isinstance(obj, list):
+            obj_list = obj
+            for obj in obj_list:
+                if hasattr(obj, '_comment'):
+                    del obj._comment
+            # obj = getattr(model, group)
+            # if obj is None:
+            #     continue
+            # if hasattr(obj, '_comment'):
+            #     del obj._comment
+        else:
+            raise NotImplementedError((group, type(obj)))
+
 def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              xref: bool, punch: bool, sum_load: bool,
              size: int, is_double: bool,
@@ -785,6 +843,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              run_dependent_checks: bool=True,
              run_eid_checks: bool=True, run_mcid: bool=True,
              save_file_structure: bool=False,
+             nocomments: bool=False,
              write_hdf5: bool=False, write_obj: bool=False,
              encoding: Optional[str]=None,
              crash_cards: Optional[list[str]]=None,
@@ -874,6 +933,8 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
         else:
             fem1.read_bdf(bdf_filename, xref=False, punch=punch, encoding=encoding,
                           save_file_structure=save_file_structure)
+            if nocomments:
+                clean_comments(fem1)
 
             if os.path.exists(include_error_filename):
                 os.remove(include_error_filename)
@@ -2487,13 +2548,15 @@ def test_bdf_argparse(argv=None):
     parent_parser.add_argument('--lax', action='store_true',
                                help='use the lax card parser (default=False)')
     parent_parser.add_argument(
-        '--nosort', action='store_false',
+        '--nosort', action='store_true',
         help='Dont sort the nodes, elements, ... (default=False -> sort)')
 
     parent_parser.add_argument('--duplicate', action='store_true',
                                help='overwrite duplicates; takes the later card (default=False)')
     parent_parser.add_argument('--ifile', action='store_true',
                                help='gives you better log messages when things are bad (default=False)')
+    parent_parser.add_argument('--nocomments', action='store_true',
+                               help='removes the comments (default=False)')
     parent_parser.add_argument('-q', '--quiet', action='store_true',
                                help='prints debug messages (default=False)')
     # --------------------------------------------------------------------------
@@ -2724,6 +2787,7 @@ def main(argv=None):
             raise
     save_file_structure = data['ifile']
     sort_cards = not data['nosort']
+    nocomments = data['nocomments']
     is_csv = data['csv']
     assert is_csv is False, is_csv
 
@@ -2840,6 +2904,7 @@ def main(argv=None):
             is_csv=is_csv,
             sort_cards=sort_cards,
             stop=data['stop'],
+            nocomments=data['nocomments'],
             quiet=data['quiet'],
             dumplines=data['dumplines'],
             dictsort=data['dictsort'],

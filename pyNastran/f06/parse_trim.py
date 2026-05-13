@@ -7,6 +7,7 @@ from pyNastran.utils import print_bad_path
 from pyNastran.f06.f06_tables.trim import (
     MonitorLoads, TrimResults, ControllerState,
     AeroPressure, AeroForce, TrimVariables, TrimVariable)
+from pyNastran.f06.f06_matrix_parser import _read_matrix, _read_intermediate_matrix
 
 from cpylog import __version__ as CPYLOG_VERSION
 if CPYLOG_VERSION > '1.6.0':
@@ -45,6 +46,9 @@ SKIP_FLAGS = [
     'FLUTTER  SUMMARY',
     #'* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',  # causes a crash
 ]
+TRIM_MATRICES = [
+    'INTERMEDIATE MATRIX ... HP',
+]
 
 
 def read_f06_trim(f06_filename: str,
@@ -74,6 +78,8 @@ def read_f06_trim(f06_filename: str,
         trim_results.aero_force[subcase] = AeroForce.from_f06(
             subcase, *aero_force, metadata)
 
+    naero_results = len(stacked_aero_force) + len(stacked_aero_pressure)
+    assert naero_results > 0, 'no AEROF or APRESS found; make sure to include LINE=100000?'
     out = {
         'trim_results': trim_results,
     }
@@ -168,19 +174,28 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
             iblank_count = 0
             flag = SKIP_FLAGS[iflags.index(True)]
             if debug:
-                log.info(f'******* found skip flag: {flag}')
+                log.info(f'******* found skip flag: {flag!r}')
             #print('skip', line)
             line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
             if 'trademark' not in line:
                 line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
+            if debug:
+                log.info(f'******* finished skip flag: {line[1:].strip()!r}')
             continue
         elif line.startswith('0      MATRIX '):
             iblank_count = 0
-            line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
-            line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
-            #matrix_name, matrix, line, i = _read_matrix(f06_file, line, i, log, debug)
-            #matrices[matrix_name] = matrix
-            #del matrix_name, matrix
+            # line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
+            # line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
+            matrix_name, matrix, line, i = _read_matrix(f06_file, line, i, log, debug)
+            matrices[matrix_name] = matrix
+            del matrix_name, matrix
+        elif 'INTERMEDIATE MATRIX' in line:
+            iblank_count = 0
+            # line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
+            # line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
+            matrix_name, matrix, line, i = _read_intermediate_matrix(f06_file, line, i, log, debug)
+            matrices[matrix_name] = matrix
+            del matrix_name, matrix
         elif 'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S' in line:
             log.debug('reading aero static data recovery tables')
             iblank_count = 0
@@ -195,6 +210,14 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
             line, i = _read_structural_monitor_point_integrated_loads(
                 f06_file, line, i, nlines_max, trim_results,
                 title, subtitle, subcase, log)
+        elif 'N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S' in line:
+            log.warning('skipping non-dimensional hinge moment derivative coeffs')
+            line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
+            # if 'trademark' not in line:
+            #     line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
+            if debug:
+                log.warning(f'******* finished skipping flag: {line[1:].strip()!r}')
+
         elif 'PAGE' in line and any(month in line for month in MONTHS):
             line, i, title, subtitle, subcase = _get_title_subtitle_subcase(
                 f06_file, line, i, nlines_max)
@@ -265,7 +288,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     '        CONTROLLER STATE:'
     '        ANGLEA   =   1.0000E-01'
     '
-    '        MONITOR POINT NAME = AEROSG2D          COMPONENT =                   CLASS = COEFFICIENT               '
+    '        MONITOR POINT NAME = AEROSG2D          COMPONENT =                   CLASS = COEFFICIENT'
     '        LABEL = Full Vehicle Integrated Loads                           '
     '        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
     '
@@ -278,7 +301,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     '           CMY   -1.767277E+03    -1.767277E+03     0.000000E+00     0.000000E+00'
     '           CMZ   -1.948738E+02    -1.948738E+02     0.000000E+00     0.000000E+00'
     ''
-    '        MONITOR POINT NAME = AE01              COMPONENT = AE01              CLASS = GENERAL                   '
+    '        MONITOR POINT NAME = AE01              COMPONENT = AE01              CLASS = GENERAL'
     """
     header_lines = []
     i0 = i
@@ -606,7 +629,7 @@ def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
     ux = float(ux_str)
     assert trim_type in {'RIGID BODY', 'CONTROL SURFACE'}, trim_type
     assert trim_status in {'FIXED', 'FREE', 'LINKED'}, trim_status
-    assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE', 'RAD/S/S PER G'}, ux_unit
+    assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE', 'LENGTH/S/S', 'RAD/S/S PER G'}, ux_unit
 
     return int_id, name, trim_type, trim_status, ux, ux_unit
 

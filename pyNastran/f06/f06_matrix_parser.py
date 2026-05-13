@@ -199,6 +199,74 @@ def read_real_eigenvalues(f06_file: TextIO,
     return out
 
 
+def _read_intermediate_matrix(f06_file: TextIO,
+                              line: str, i: int, log: SimpleLogger,
+                              debug: bool) -> tuple[str, np.ndarray, str, int]:
+    """
+    #                                                   INTERMEDIATE MATRIX ... HP
+    #
+    #
+    #                                                             COLUMN      1
+    #      1        -2.191702E-18       7.758670E-17       7.162560E-18       2.993680E-18       4.282609E-18       9.579713E-18        6
+    #
+    #                                                             COLUMN      2
+    #      1        -3.461280E-03       2.578705E-03      -5.004902E-02       8.190803E-03       2.574263E-03       5.180945E-04        6
+    #
+    # 1                                                                               MAY  12, 2026  SIMCENTER NASTRAN 11/ 8/24   PAGE    15
+
+    #-----------------
+    #                                                   INTERMEDIATE MATRIX ... UX
+    #
+    #
+    #                                                             COLUMN      1
+    #      1         1.000000E+00       0.000000E+00       5.000000E+00       0.000000E+00       0.000000E+00       0.000000E+00        6
+    #      7        -2.257025E+02       0.000000E+00      -1.932297E+00       0.000000E+00       5.376152E+04       0.000000E+00       12
+    #     13         1.711067E+01      -1.050999E+01       0.000000E+00       5.474871E-02                                             16
+    """
+    name = line.strip().split()[-1]
+    # log.info(f'intermediate_name = {line!r}')
+    log.info(f'  intermediate_name = {name!r}')
+    cols_dict = {}
+    max_i1 = -1
+    while 'PAGE' not in line and i < 1_000_000:
+        line = f06_file.readline().strip()
+        if 'PAGE' in line:
+            break
+        i += 1
+        if len(line) == 0:
+            continue
+        if 'COLUMN' in line:
+            sline = line.split()
+            assert len(sline) == 2, sline
+            column_id = int(sline[1])
+            cols_dict[column_id] = []
+            continue
+        sline = line.split()
+        #log.info(str(sline))
+        i0 = int(sline[0])
+        i1 = int(sline[-1])
+        values = sline[1:-1]
+        cols_dict[column_id].append((i0, i1, values))
+        max_i1 = max(i1, max_i1)
+    assert max_i1 > 0
+    ncol = max(cols_dict)
+    nrow = max_i1
+    mat = np.zeros((nrow, ncol), dtype='float64')
+    # print(mat.shape)
+    for column_id, i_values_list in cols_dict.items():
+        j = column_id - 1
+        # print(f'j = {j}')
+        for (i0, i1, values) in i_values_list:
+            irange = np.arange(i0-1, i1)
+            # print(values)
+            # print(j, irange)
+            # mat[:, j]
+            # mat[irange, :]
+            mat[irange, j] = values
+            # mat[i0-1:i1, j] = values
+    log.debug(mat)
+    return name, mat, line, i
+
 def _read_matrix(f06_file: TextIO,
                  line: str, i: int, log: SimpleLogger,
                  debug: bool) -> tuple[str, np.ndarray, str, int]:

@@ -26,12 +26,23 @@ def f06_to_pressure_loads(f06_filename: PathLike,
         for nid in elem.nodes:
             nid_to_eid_map[nid].append(eid)
 
-    trim_results = read_f06_trim(
+    out_dict = read_f06_trim(
         f06_filename, nlines_max=nlines_max,
-        log=log, debug=debug)['trim_results']
+        log=log, debug=debug)
+    trim_results = out_dict['trim_results']
 
     metadata = trim_results.metadata
     #print('trim_results.aero_pressure', trim_results.aero_pressure)
+
+    log.info('trim_results:')
+    log.info(trim_results)
+    # print(list(out_dict))
+    if 'tables' in out_dict:
+        tables = list(out_dict['tables'])
+        log.info(f'tables: {tables}')
+    if 'matrices' in out_dict:
+        matrices = list(out_dict['matrices'])
+        log.info(f'matrices: {matrices}')
 
     element_pressure_dict = {}
     for subcase, apress in trim_results.aero_pressure.items():
@@ -43,6 +54,10 @@ def f06_to_pressure_loads(f06_filename: PathLike,
             for eidi, pressurei in zip(apress.elements, apress.pressure):
                 element_pressure[eidi] = pressurei
         element_pressure_dict[subcase] = element_pressure
+
+    for subcase, element_pressure in element_pressure_dict.items():
+        apress = trim_results.aero_pressure[subcase]
+        break
 
     if loads_filename is not None:
         with open(loads_filename, 'w') as loads_file:

@@ -59,9 +59,13 @@ def remove_unused(bdf_filename: PathLike,
 
     mpcs_used = set()
     spcs_used = set()
-    #nsms_used = set()
+    nsms_used = set()
 
+    # splines_used = set()
     aecomps_used = set()
+    trims_used = set()
+    flfacts_used = set()
+    flutters_used = set()
 
     # card_types = list(model.card_count.keys())
     # card_map = model.get_card_ids_by_card_types(
@@ -93,8 +97,8 @@ def remove_unused(bdf_filename: PathLike,
         'PGAP', 'PBUSH1D', 'PFAST', 'PVISC', 'PMASS',
     }
 
-    # ureferenced types aren't referenced by any card
-    # (but may be referenced by the case control deck)
+    # ureferenced types don't referenced any card
+    # but may be referenced
     unreferenced_types = {
         'SPOINT', 'EPOINT', 'DESVAR',
         'ROTORG', 'ROTORD',
@@ -116,6 +120,7 @@ def remove_unused(bdf_filename: PathLike,
     } | unreferenced_properties
 
     # this haven't been referenced yet
+    # TODO: AELIST
     not_implemented_types = {
         # not checked------------------------------------------
         'PHBDY', 'CHBDYG', 'CHBDYP', 'CHBDYE', 'RADBC', 'CONVM',  # 'CONV',
@@ -126,8 +131,9 @@ def remove_unused(bdf_filename: PathLike,
         #'PBCOMP', 'PDAMP5', 'CFAST',
         'CWELD',
         #'GMCORD',
-        'MONPNT1', 'MONPNT2', 'MONPNT3',
-        'DTI', 'NSMADD',
+        # 'MONPNT1', 'MONPNT2', 'MONPNT3',
+        'DTI',
+        # 'NSMADD',
         'NXSTRAT',
 
         # removed
@@ -143,7 +149,8 @@ def remove_unused(bdf_filename: PathLike,
 
         # aero
         'AESURFS', 'CSSCHD', 'AECOMP',
-        'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+        # 'CAERO2',
+        'CAERO3', 'CAERO4', 'CAERO5',
         'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
 
         # axisymmetric
@@ -232,13 +239,22 @@ def remove_unused(bdf_filename: PathLike,
     log = model.log
     for key, subcase in model.subcases.items():
         #print(key)
-        #print(subcase)
+        # print(subcase)
         if 'SPC' in subcase:
             spc_id, options = subcase['SPC']
             spcs_used.add(spc_id)
         if 'MPC' in subcase:
             mpc_id, options = subcase['MPC']
             mpcs_used.add(mpc_id)
+        if 'MPC' in subcase:
+            nsm_id, options = subcase['NSM']
+            nsms_used.add(nsm_id)
+        if 'MPC' in subcase:
+            trim_id, options = subcase['TRIM']
+            trims_used.add(trim_id)
+        if 'FMETHOD' in subcase:
+            flutter_id, options = subcase['FMETHOD']
+            flutters_used.add(flutter_id)
         if 'DESSUB' in subcase:
             dconstr_id, options = subcase['DESSUB']
             #dconstrs_used.add(dconstr_id)
@@ -435,6 +451,7 @@ def remove_unused(bdf_filename: PathLike,
             for eid in ids:
                 caero = model.caeros[eid]
                 # PID, LSPAN, LCHORD
+                #splines_used.add(caero.)
                 cids_used.add(caero.Cp())
 
         elif card_type in set_types_simple:
@@ -442,6 +459,18 @@ def remove_unused(bdf_filename: PathLike,
             pass
         elif card_type in unreferenced_types_quiet:
             pass
+        elif card_type == 'NSMADD':
+            for idi in ids:
+                nsmadds = model.nsmadds[idi]
+                for nsmadd in nsmadds:
+                    nsms_used.update(nsmadd.nsm_ids)
+        elif card_type == 'FLUTTER':
+            for idi in ids:
+                flutter = model.flutters[idi]
+                flfacts_used.add(flutter.density)
+                flfacts_used.add(flutter.mach)
+                flfacts_used.add(flutter.reduced_freq_velocity)
+
         elif card_type in unreferenced_types_case_control:
             log.debug(f'{card_type} (case control) is unreferenced')
         elif card_type in unreferenced_types:
@@ -686,7 +715,9 @@ def remove_unused(bdf_filename: PathLike,
         nids_used, cids_used,
         pids_used, pids_mass_used,
         mids_used,
-        spcs_used, mpcs_used,
+        spcs_used, mpcs_used, nsms_used,
+        aecomps_used, trims_used,
+        flutters_used, flfacts_used,
         pconv_used, tableht_used, tableh1_used,
         desvars_used, dresps_used,
         remove_nids=remove_nids,
@@ -1021,7 +1052,8 @@ def _store_dresp1(model: BDF, ids: np.ndarray,
             raise NotImplementedError(msg)
 
 
-def _store_masses(card_type: str, model: BDF, ids: np.ndarray,
+def _store_masses(card_type: str, model: BDF,
+                  ids: np.ndarray,
                   nids_used: set[int],
                   pids_mass_used: set[int],
                   cids_used: set[int]) -> None:
@@ -1052,6 +1084,14 @@ def _remove(model: BDF,
             mids_used: set[int],
             spcs_used: set[int],
             mpcs_used: set[int],
+            nsms_used: set[int],
+            # aero
+            # splines_used: set[int],
+            aecomps_used: set[int],
+            trims_used: set[int],
+            flutters_used: set[int],
+            flfacts_used: set[int],
+            # thermal
             pconv_used: set[int],
             tableht_used: set[int],
             tableh1_used: set[int],
@@ -1070,6 +1110,16 @@ def _remove(model: BDF,
     mids = set(model.materials.keys())
     spcs = set(model.spcs.keys())  # spcadds?
     mpcs = set(model.mpcs.keys())  # mpcadds?
+    nsms = set(model.nsms.keys())  # nsmadds?
+
+    # aero
+    trims = set(model.trims.keys())
+    flutters = set(model.flutters.keys())
+    flfacts = set(model.flfacts.keys())
+    splines = set(model.splines.keys())
+    caeros = set(model.caeros.keys())
+
+    # optimization
     dresps = set(model.dresps.keys())
     desvars = set(model.desvars.keys())
 
@@ -1092,6 +1142,19 @@ def _remove(model: BDF,
 
     spcs_to_remove = list(spcs - spcs_used)
     mpcs_to_remove = list(mpcs - mpcs_used)
+    nsms_to_remove = list(nsms - nsms_used)
+
+    # aero
+    trims_to_remove = list(trims - trims_used)
+    flutters_to_remove = list(flutters - flutters_used)
+    flfact_to_remove = list(flfacts - flfacts_used)
+
+    # log = model.log
+    # log.info(f'flutters = {flutters}')
+    # log.info(f'flutters_used = {flutters_used}')
+    # log.info(f'flutters_to_remove = {flutters_to_remove}')
+
+    # optimization
     desvars_to_remove = list(desvars - desvars_used)
     dresps_to_remove = list(dresps - dresps_used)
 
@@ -1154,6 +1217,7 @@ def _remove(model: BDF,
             mids_array = np.array(thermal_mids_to_remove2, dtype='int64')
             out_dict['thermal_materials'] = mids_array
 
+    # should consider spcadds
     #if remove_spcs and spcs_to_remove:
     #    for spc_id in spcs_to_remove:
     #        del model.spcs[spc_id]
@@ -1164,6 +1228,30 @@ def _remove(model: BDF,
     #        del model.mpcs[mpc_id]
     #    mpcs_to_remove.sort()
     #    model.log.debug('removed mpcs %s' % mpcs_to_remove)
+    # if remove_nsms and nsms_to_remove:
+    #    for nsm_id in nsms_to_remove:
+    #        del model.nsms[nsm_id]
+    #    nsms_to_remove.sort()
+    #    model.log.debug('removed nsms %s' % nsms_to_remove)
+
+    if trims_to_remove:
+        for trim_id in trims_to_remove:
+            del model.trims[trim_id]
+        trims_to_remove.sort()
+        model.log.debug('removed trims %s' % trims_to_remove)
+
+    if flutters_to_remove:
+        for flutter_id in flutters_to_remove:
+            del model.flutters[flutter_id]
+        flutters_to_remove.sort()
+        model.log.debug('removed flutters %s' % flutters_to_remove)
+
+    if flfact_to_remove:
+        for flfact_id in flfact_to_remove:
+            del model.flfacts[flfact_id]
+        flfact_to_remove.sort()
+        model.log.debug('removed flfacts %s' % flfact_to_remove)
+
     _remove_thermal(model, pconv_used, tableht_used, tableh1_used)
     if remove_optimization:
         _remove_optimization(model, pids_to_remove, desvars_to_remove, dresps_to_remove)
@@ -1190,7 +1278,8 @@ def _remove_optimization(model: BDF,
         pid = dvprel.Pid()
         if pid in pids_to_remove:
             dvprels_ids_to_remove.append(dvprel_id)
-            dvprels_to_remove.append((dvprel_id, f'removing DVPRELx={dvprel_id} because pid={pid} does not exist'))
+            dvprels_to_remove.append(
+                (dvprel_id, f'removing DVPRELx={dvprel_id} because pid={pid} does not exist'))
     if dvprels_ids_to_remove:
         model.log.debug('removing DVPRELx %s' % dvprels_ids_to_remove)
     _remove_dict(model.dvprels, dvprels_to_remove, model.log)

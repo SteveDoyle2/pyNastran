@@ -125,15 +125,17 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
     if f06_filename.lower().endswith(('.bdf', '.op2')):
         f06_filename = base + '.f06'
 
+    from cpylog import SimpleLogger
     from pyNastran.f06.f06_to_pressure_loads import f06_to_pressure_loads
     nid_csv_filename = os.path.join(dirname, 'nid_pyNastran.csv')
     eid_csv_filename = os.path.join(dirname, 'eid_pyNastran.csv')
+    log = SimpleLogger(level='debug')
     loads = f06_to_pressure_loads(f06_filename,
                                   aerobox_caero_filename,
                                   loads_filename,
                                   nid_csv_filename=nid_csv_filename,
                                   eid_csv_filename=eid_csv_filename,
-                                  log=None,
+                                  log=log,
                                   nlines_max=1_000_000,
                                   debug=False)
     return loads
