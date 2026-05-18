@@ -1414,10 +1414,10 @@ class PBEAM(Property):
             c2i = listify(c2i, nstations)
             d1i = listify(d1i, nstations)
             d2i = listify(d2i, nstations)
-            e1i = listify(d2i, nstations)
-            e2i = listify(d2i, nstations)
-            f1i = listify(d2i, nstations)
-            f2i = listify(d2i, nstations)
+            e1i = listify(e1i, nstations)
+            e2i = listify(e2i, nstations)
+            f1i = listify(f1i, nstations)
+            f2i = listify(f2i, nstations)
             d2i = listify(d2i, nstations)
 
             if m1ai is None:
