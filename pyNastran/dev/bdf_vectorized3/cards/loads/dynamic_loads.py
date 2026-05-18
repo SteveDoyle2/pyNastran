@@ -1032,6 +1032,14 @@ class RLOAD1(VectorizedBaseCard):
             tabled = table[table > 0]
             used_dict['tabled_id'].append(tabled)
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        delay_id = self.model.delay.delay_id
+        dphase_id = self.model.dphase.dphase_id
+        geom_check(self,
+                   missing,
+                   delay=(delay_id, self.delay_int),
+                   dphase=(dphase_id, self.dphase_int))
+
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(), self.excite_id.max(),
@@ -2049,6 +2057,12 @@ class DELAY(VectorizedBaseCard):
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.node_id)
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id))
+
     def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
         delay_id = used_dict['delay_id']
         ncards_removed = remove_unused_duplicate(
@@ -2245,6 +2259,12 @@ class DPHASE(VectorizedBaseCard):
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.node_id)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id))
 
     def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
         dphase_id = used_dict['dphase_id']
@@ -2679,6 +2699,14 @@ class ACSRCE(VectorizedBaseCard):
         #used_dict['???'].append(self.excite_id)
         used_dict['delay_id'].append(self.delay_int[self.delay_int > 0])
         used_dict['dphase_id'].append(self.dphase_int[self.dphase_int > 0])
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        delay_id = self.model.delay.delay_id
+        dphase_id = self.model.dphase.dphase_id
+        geom_check(self,
+                   missing,
+                   delay=(delay_id, self.delay_int),
+                   dphase=(dphase_id, self.dphase_int))
 
     def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
         load_id = used_dict['load_id']

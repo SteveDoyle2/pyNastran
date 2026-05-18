@@ -15,6 +15,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, parse_check, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, get_print_card_size,)
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
 #from .rod import line_length, line_centroid, line_centroid_with_spoints
 #from .utils import get_mass_from_property
@@ -161,6 +162,14 @@ class CFAST(Element):
         used_dict['property_id'].append(self.property_id)
         used_dict['node_id'].append(self.nodes.ravel())
         used_dict['node_id'].append(self.fastener_node)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        pids = self.model.pfast.property_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.nodes),
+                   property_id=(pids, self.property_id))
 
     def set_from_op2(self, element_id, property_id, gs, elem_grid_flag, nodes):
         assert element_id.min() > 0, element_id
@@ -377,6 +386,12 @@ class PFAST(Property):
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['coord_id'].append(self.coord_id)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        cid = self.model.coord.coord_id
+        geom_check(self,
+                   missing,
+                   coord=(cid, self.coord_id))
 
     @property
     def max_id(self) -> int:

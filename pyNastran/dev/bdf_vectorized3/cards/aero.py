@@ -4262,6 +4262,9 @@ class AELINK(VectorizedBaseCard):
         assert cls_obj.n > 0, cls_obj
         return cls_obj
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
     @property
     def max_id(self) -> int:
         return self.aelink_id.max()

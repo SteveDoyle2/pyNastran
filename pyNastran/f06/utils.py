@@ -28,7 +28,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 USAGE_144 = (
     'Usage:\n'
-    '  f06 plot_144 F06_FILENAME [--aerobox AEROBOX_CAERO_FILENAME] | [--bdf BDF_FILENAME]\n'
+    '  f06 plot_144 F06_FILENAME [--aerobox AEROBOX_CAERO_FILENAME] | [--bdf BDF_FILENAME] [--plot]\n'
 )
 
 
@@ -40,13 +40,13 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
         '  f06 plot_144 -h | --help\n'
         '  f06 plot_144 -v | --version\n'
         '\n'
-
         'Positional Arguments:\n'
         '  F06_FILENAME            path to input F06 file\n'
-        
+        '\n'
         'Options:\n'
         '  --aerobox AEROBOX_CAERO_FILENAME  path to exported CAERO file\n'
         '  --bdf     BDF_FILENAME            path to input BDF file containing CAEROs\n'
+        '  --plot                            show the plot (default=False)\n'
         '\n'
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -79,6 +79,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
         bdf_aero_group = parent_parser.add_mutually_exclusive_group()
         bdf_aero_group.add_argument('--bdf', type=str, help='path to input BDF file containing CAEROs')
         bdf_aero_group.add_argument('--aerobox', type=str, help='path to exported CAERO file')
+        bdf_aero_group.add_argument('--plot', help='show the plot', action='store_true')
         #bdf_aero_group.add_argument('--encoding', help=f'the encoding method (default=None -> {repr(encoding)})', type=str)
         parent_parser.add_argument('-v', '--version', action='version', version=ver)
         args = parent_parser.parse_args(args=argv[1:])
@@ -86,6 +87,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
         f06_filename = args.F06_FILENAME
         aerobox_caero_filename = args.aerobox
         bdf_filename = args.bdf
+        plot = args.plot
     else:  # pragma: no cover
         if argv is None:  # pragma: no cover
             argv = sys.argv
@@ -137,7 +139,8 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
                                   eid_csv_filename=eid_csv_filename,
                                   log=log,
                                   nlines_max=1_000_000,
-                                  debug=False)
+                                  debug=False,
+                                  show=plot)
     return loads
 
 

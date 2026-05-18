@@ -33,6 +33,7 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size,)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.constraints import ADD
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import find_missing
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
@@ -694,6 +695,9 @@ class DLINK(VectorizedBaseCard):
         used_dict['desvar_id'].append(self.dependent_desvar)
         used_dict['desvar_id'].append(self.independent_desvars)
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
     @property
     def idesvar(self) -> np.ndarray:
         return make_idim(self.n, self.nindependent_desvars)
@@ -1276,6 +1280,35 @@ class DRESP1(VectorizedBaseCard):
                     nid2 = nid_old_to_new.get(nid1, nid1)
                     nodes[i] = nid2
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        node_response_types = {
+            'DISP', 'TDISP', 'TVELO', 'TACCL',
+            'FRDISP', 'FRVELO', 'FRACCL', 'FRSPCF', 'TSPCF',
+            'PSDDISP', 'PSDVELO', 'PSDACCL',
+            'RMSDISP', 'RMSVELO', 'RMSACCL',
+            'SPCFORCE',
+        }
+        elem_response_types = {'STRESS', 'STRAIN', 'FORCE', 'ESE',
+                               'CSTRESS', 'CSTRAIN', 'CFAILURE'}
+        nid = self.model.grid.node_id
+        for response_type, property_type, atti_type, (iatti0, iatti1) in zip(
+                self.response_type, self.property_type,
+                self.atti_type, self.iatti):
+            if iatti0 == iatti1:
+                continue
+            if atti_type != 'i':
+                continue
+            atti = self.atti_int[iatti0:iatti1]
+            if response_type in node_response_types:
+                geom_check(self, missing, node=(nid, atti))
+            elif property_type == 'ELEM' or response_type in elem_response_types:
+                pass
+            elif response_type in {'WEIGHT', 'VOLUME', 'EIGN', 'FREQ',
+                                   'LAMA', 'CEIG', 'STABDER', 'FLUTTER',
+                                   'DIVERG', 'TOTSE', 'COMP', 'COMPLIAN',
+                                   'DWEIGHT', 'TRIM', 'ERP'}:
+                pass
+
     @property
     def max_id(self) -> int:
         atti_max = 0 if len(self.atti_int) == 0 else self.atti_int.max()
@@ -1718,6 +1751,37 @@ class DRESP2(VectorizedBaseCard):
     #def iparam_value(self, iparam: int) -> np.ndarray:
         #return make_idim(self.n, self.nparam_values[iparam])
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        desvar_ids = np.unique(self.model.desvar.desvar_id)
+        dresp_ids = np.unique(self.model.dresp_ids)
+
+        iparam_value = 0
+        for iparam in self.iparam:
+            iparam0, iparam1 = iparam
+            param_types = self.param_type[iparam0:iparam1]
+            nparam_values = self.nparam_values[iparam0:iparam1]
+
+            for param_type, nvalues in zip(param_types, nparam_values):
+                values = self.param_values[iparam_value:iparam_value + nvalues]
+                if param_type == 'DESVAR':
+                    if len(desvar_ids) and len(values):
+                        _inode, umissing = find_missing(desvar_ids, values.astype('int64'), 'desvars')
+                        if len(umissing):
+                            missing['desvar_id'] = umissing
+                elif param_type in ('DRESP1', 'DRESP2'):
+                    if len(dresp_ids) and len(values):
+                        _inode, umissing = find_missing(dresp_ids, values.astype('int64'), 'dresps')
+                        if len(umissing):
+                            missing['dresp_id'] = umissing
+                elif param_type == 'DNODE':
+                    nid = self.model.grid.node_id
+                    node_ids = values[::2].astype('int64')
+                    if len(nid) and len(node_ids):
+                        geom_check(self, missing, node=(nid, node_ids))
+                else:  # pragma: no cover
+                    raise NotImplementedError(param_type)
+                iparam_value += nvalues
+
     @property
     def max_id(self) -> int:
         # TODO: support self.param_values which can be DTABLE
@@ -1891,6 +1955,13 @@ class DCONSTR(VectorizedBaseCard):
         used_dict['tabled_id'].append(self.lower_table)
         used_dict['tabled_id'].append(self.upper_table)
         used_dict['dresp_id'].append(self.dresp_id)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        dresp_ids = np.unique(self.model.dresp_ids)
+        if len(dresp_ids) and len(self.dresp_id):
+            _inode, umissing = find_missing(dresp_ids, self.dresp_id, 'dresps')
+            if len(umissing):
+                missing['dresp_id'] = umissing
 
     @property
     def max_id(self) -> int:
@@ -3750,8 +3821,8 @@ class DSCREEN(VectorizedBaseCard):
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         pass
 
-    #def geom_check(self, missing: dict[str, np.ndarray]):
-        #pass
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
 
     #def index(self, desvar_id: np.ndarray) -> np.ndarray:
         #assert len(self.desvar_id) > 0, self.desvar_id
