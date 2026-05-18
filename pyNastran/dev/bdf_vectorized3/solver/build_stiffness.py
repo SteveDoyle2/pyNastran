@@ -4,8 +4,7 @@ from itertools import count
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
-from scipy.sparse._dok import dok_matrix
-from scipy.sparse.csc import csc_matrix
+from pyNastran.utils.scipy_utils import dok_matrix, csc_matrix
 
 #from pyNastran.dev.solver.stiffness.shells import build_kbb_cquad4, build_kbb_cquad8
 from pyNastran.dev.solver.utils import lambda1d, DOF_MAP
@@ -32,7 +31,7 @@ def build_Kgg(model: BDF,
               ndof_per_grid: int,
               idtype: str='int32', fdtype: str='float32') -> tuple[NDArrayNNfloat, Any]:
     """[K] = d{P}/dx"""
-    model.log.debug(f'starting build_Kgg')
+    model.log.debug('starting build_Kgg')
     Kbb = dok_matrix((ndof, ndof), dtype=fdtype)
     #print(dof_map)
 

@@ -444,7 +444,7 @@ class ShellElement(Element):
         self.n = ncards
         self.check_types()
 
-    def geom_check(self, missing: dict[str, np.ndarray]):
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
         nid = self.model.grid.node_id
         pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
                           msg=f'no shell properties for {self.type}')
@@ -803,6 +803,7 @@ class CTRIA3(ShellElement):
     @property
     def base_nodes(self) -> np.ndarray:
         return self.nodes
+
     @property
     def midside_nodes(self):
         return None
@@ -1092,6 +1093,7 @@ class CTRIAR(ShellElement):
     @property
     def base_nodes(self) -> np.ndarray:
         return self.nodes
+
     @property
     def midside_nodes(self):
         return None
@@ -1545,6 +1547,7 @@ class CQUAD4(ShellElement):
     @property
     def base_nodes(self) -> np.ndarray:
         return self.nodes
+
     @property
     def midside_nodes(self):
         return None
@@ -1819,6 +1822,7 @@ class CQUADR(ShellElement):
     @property
     def base_nodes(self) -> np.ndarray:
         return self.nodes
+
     @property
     def midside_nodes(self):
         return None
@@ -2125,6 +2129,7 @@ class CTRIA6(ShellElement):
     @property
     def base_nodes(self):
         return self.nodes[:, :3]
+
     @property
     def midside_nodes(self):
         return self.nodes[:, 3:]
@@ -2482,6 +2487,7 @@ class CQUAD8(ShellElement):
     @property
     def base_nodes(self):
         return self.nodes[:, :4]
+
     @property
     def midside_nodes(self):
         return self.nodes[:, 4:]
@@ -2687,6 +2693,7 @@ class CQUAD(ShellElement):
     @property
     def base_nodes(self):
         return self.nodes[:, :4]
+
     @property
     def midside_nodes(self):
         return self.nodes[:, 4:]

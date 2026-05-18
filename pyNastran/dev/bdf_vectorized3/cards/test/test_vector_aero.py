@@ -62,6 +62,7 @@ def build_caero_paneling(model: BDF) -> tuple[None, None, None]:
     out = None
     return all_control_surface_name, caero_control_surfaces, out
 
+
 class TestAero(unittest.TestCase):
     """
     The Aero cards are:

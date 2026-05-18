@@ -158,9 +158,7 @@ class FlutterGui(LoggableGui):
         self.setup_toolbar()
         self._update_recent_files_actions()
         self._set_window_title()
-        self.on_font_size()
-        for plot_layout in self.plot_layout:
-            plot_layout.on_plot_type()
+        self.on_flutter_font_size()
         self.setAcceptDrops(True)
         # self.on_open_new_window()
         self.show()
@@ -497,13 +495,15 @@ class FlutterGui(LoggableGui):
         self.iwindows.append(iwindow)
         self.tabs.setTabText(iwindow_file2, f'File {ifile}')
 
-    def on_font_size(self) -> None:
+    def on_flutter_font_size(self) -> None:
         # font_size = self.font_size_edit.value()
-        self.on_set_font_size(self.font_size)
+        self.on_set_flutter_font_size(self.font_size)
 
-    def on_set_font_size(self, font_size: int) -> None:
+    def on_set_flutter_font_size(self, font_size: int) -> None:
         self.font_size = font_size
         font = make_font(font_size, is_bold=False)
+        # for plot_layout in self.plot_layout:
+        #     plot_layout.setFont(font)
         self.setFont(font)
 
     def validate(self) -> bool:

@@ -11,6 +11,7 @@ This file defines:
 from __future__ import annotations
 from collections import defaultdict
 from typing import TextIO, Any, TYPE_CHECKING
+from pyNastran.bdf.bdf_interface.utils import sorteddict
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -44,7 +45,6 @@ def csv_card_16(bdf_file: TextIO, card: BaseCard) -> None:
             out += '\n,*,'
     n = len(fields) - 1
 
-
     if n % 8 == 0:
         # full card; no blank line
         out = out.strip('\n*,') + '\n'
@@ -64,21 +64,21 @@ def csv_card_16(bdf_file: TextIO, card: BaseCard) -> None:
 
 def write_dict(bdf_file: TextIO, my_dict: dict[int, BaseCard],
                size: int, is_double: bool, is_csv: bool,
-               is_long_ids: bool) -> None:
+               is_long_ids: bool, sort_cards: bool) -> None:
     """writes a dictionary that may require long format"""
     if is_csv:
         if size == 16 or is_long_ids:
-            for nid, node in sorted(my_dict.items()):
+            for nid, node in sorteddict(my_dict, sort_cards):
                 csv_card_16(bdf_file, node)
         else:
-            for nid, node in sorted(my_dict.items()):
+            for nid, node in sorteddict(my_dict, sort_cards):
                 csv_card_8(bdf_file, node)
     else:
         if is_long_ids:
-            for (unused_nid, node) in sorted(my_dict.items()):
+            for (unused_nid, node) in sorteddict(my_dict, sort_cards):
                 bdf_file.write(node.write_card_16(is_double))
         else:
-            for (unused_nid, node) in sorted(my_dict.items()):
+            for (unused_nid, node) in sorteddict(my_dict, sort_cards):
                 bdf_file.write(node.write_card(size, is_double))
 
 
@@ -126,7 +126,6 @@ def get_properties_by_element_type(model: BDF) -> tuple[dict[str, list[str]],
         'shell': ['PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG'],
         'solid': ['PSOLID', 'PLSOLID'],
     }
-
     property_type_to_property_class = {
         #'other' : [],
     }

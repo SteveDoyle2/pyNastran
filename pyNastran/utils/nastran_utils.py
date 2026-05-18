@@ -102,7 +102,11 @@ def run_nastran(bdf_filename: PathLike,
             print(msg2)
     return_code = None
     if run:
-        return_code = subprocess.call(call_args)
+        try:
+            return_code = subprocess.call(call_args)
+        except FileNotFoundError: # pragma: no cover
+            print(call_args)
+            raise
 
     if run and cleanup:
         base = os.path.basename(bdf_filename)[0]

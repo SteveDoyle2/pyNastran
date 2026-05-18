@@ -3,7 +3,7 @@
 TODO: change from dt_ms to FPS
 """
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout
 from qtpy.QtWidgets import (
     QLabel, QGridLayout,
@@ -34,7 +34,7 @@ LEGEND_LOCS = [
 class FlutterPreferencesDialog(PyDialog):
     def __init__(self, data: dict[str, Any],
                  gui_obj: FlutterPreferencesObject,
-                 win_parent=None):
+                 win_parent: Optional[FlutterPreferencesObject]=None):
         """
         Saves the data members from data and
         performs type checks
@@ -246,7 +246,7 @@ class FlutterPreferencesDialog(PyDialog):
         assert font_size > 0, font_size
         font = make_font(font_size, is_bold=False)
         self.setFont(font)
-        self.win_parent.on_set_font_size(font_size)
+        self.win_parent.on_set_flutter_font_size(font_size)
 
     def on_plot_font_size(self) -> None:
         plot_font_size = self.plot_font_size_edit.value()

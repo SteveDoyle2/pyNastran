@@ -1433,8 +1433,8 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
         mstr = mass_per_length * length
         nsm = nsm_per_length * length
 
-        if CHECK_MASS and ((mstr + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
-            msg = 'CBEAM; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
+        if CHECK_MASS and (not np.isclose(mstr + nsm, elem.Mass()) or not np.allclose(centroid, elem.Centroid())):  # pragma: no cover
+            msg = 'CBEAM-1; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
                 eid, pid, prop.type, mass_per_length, nsm_per_length, length)
             msg += 'mass_new=%s mass_old=%s\n' % (mstr, elem.Mass())
             msg += 'centroid_new=%s centroid_old=%s\n%s' % (
@@ -1477,7 +1477,7 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
         inertia_list.append(dinertia)
         #print('length=%s mass=%s mass_per_length=%s nsm_per_length=%s m=%s nsm=%s centroid=%s nsm_centroid=%s' % (
             #length, mass, mass_per_length, nsm_per_length, massi, nsm, centroid, nsm_centroid))
-        if CHECK_MASS and massi != elem.Mass():  # pragma: no cover
+        if CHECK_MASS and (not np.isclose(massi, elem.Mass()) or not np.allclose(centroid, elem.Centroid())):  # pragma: no cover
             msg = 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
             msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                 str(centroid), str(elem.Centroid()), str(elem))
@@ -1553,8 +1553,8 @@ def _get_cbeam_mass_no_nsm(model: BDF, elem: CBEAM,
 
     massi = mass_per_length * length
     nsm = nsm_per_length * length
-    if CHECK_MASS and ((massi + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
-        msg = 'CBEAM; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
+    if CHECK_MASS and (not np.isclose(massi + nsm, elem.Mass()) or not np.allclose(centroid, elem.Centroid())):  # pragma: no cover
+        msg = 'CBEAM-2; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
             elem.eid, elem.pid, prop.type, mass_per_length, nsm_per_length, length)
         msg += 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
         msg += 'centroid_new=%s centroid_old=%s\n%s' % (

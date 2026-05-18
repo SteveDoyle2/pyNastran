@@ -238,9 +238,16 @@ def write_report(docx_filename: str,
         return
 
     try:
+        with open(docx_filename, 'w') as excel_file:
+            pass
+    except PermissionError:  # pragma: no cover
+        log.error(f'close the Word document {docx_filename!r}')
+        return
+
+    try:
         with open(excel_filename, 'w') as excel_file:
             pass
-    except PermissionError:
+    except PermissionError:  # pragma: no cover
         log.error(f'close the Excel file {excel_filename!r}')
         return
 
@@ -313,7 +320,7 @@ def write_report(docx_filename: str,
             string_io = io.StringIO()
             traceback.print_exc(file=string_io)
             sout = string_io.getvalue()
-            log.error(sout)
+            log.error(f'Problem parsing flutter result from: {f06_filename}\n{sout}')
             v0 = freq0 = v3 = freq3 = vdiverg = freq_diverg = np.nan
             mass = np.full(1, np.nan)
             cg = np.full(3, np.nan)
@@ -462,6 +469,7 @@ def _cases_to_document(log: SimpleLogger,
     percent3 = settings['damping_limit'] * 100
     label_vg0 = f'V,g={percent0:.0f}% ({eas_units})'
     label_vg3 = f'V,g={percent3:.0f}% ({eas_units})'
+    assert label_vg0 != label_vg3, f'label_vg0={label_vg0!r} label_vg3={label_vg3!r}'
     label_vd = f'VDiverg ({eas_units})'
 
     label_freq_g0 = f'Freq,g={percent0:.0f}% (Hz)'
@@ -484,7 +492,6 @@ def _cases_to_document(log: SimpleLogger,
         label_vd: [],
         'File': f06_filenames,
     }
-
     document = Document()
     _write_name_value_table(document, settings)
 
@@ -535,7 +542,14 @@ def _cases_to_document(log: SimpleLogger,
         # msg += (f'{mach:.3f}, {weight_config}, {v0:.3f}, {freq0_str}, {v3:.3f}, {freq3_str}, '
         #         f'{vdiverg:.3f}, {config}, {f06_filename_base}\n')
 
-    df = pd.DataFrame.from_dict(flutter_table)
+    try:
+        df = pd.DataFrame.from_dict(flutter_table)
+    except ValueError as error:  # pragma: no cover
+        msg = 'Invalid Flutter Table size:\n'
+        msg += 'Key: ndata\n'
+        for key, data in flutter_table.items():
+            msg += f'{key}: {len(data)}\n'
+        raise ValueError(msg) from error
     df.to_excel(excel_filename, index=True)
 
     # if the 0% requirement is not defined, remove the response

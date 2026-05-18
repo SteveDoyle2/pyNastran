@@ -465,8 +465,9 @@ class GROUP(OptConstraint):
                      description=description, meta=meta, comment=comment)
 
     def raw_fields(self):
-        list_fields = ['GROUP', self.group_id]
-        return list_fields
+        return self.repr_fields()
+        # list_fields = ['GROUP', self.group_id]
+        # return list_fields
 
     def _write_groupi(self, name: str, elem: list[int], list_fields):
         if isinstance(elem, list):
@@ -522,6 +523,8 @@ class GROUP(OptConstraint):
                     self._write_groupi('PROP', prop, list_fields)
             else:
                 self._write_groupi('PROP', self.properties, list_fields)
+        # print('elements = ', self.elements)
+        # print(list_fields)
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

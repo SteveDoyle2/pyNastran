@@ -35,6 +35,10 @@ class RealBar10NodesArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1  # TODO: probably wrong
+
     def build(self):
         """sizes the vectorized attributes of the RealBar10NodesArray"""
         #print("self.ielement =", self.ielement)
@@ -46,7 +50,7 @@ class RealBar10NodesArray(OES_Object):
         #self.names = []
         if self.element_type == 100:
             nnodes_per_element = 1
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.element_type)
 
         self.nnodes = nnodes_per_element

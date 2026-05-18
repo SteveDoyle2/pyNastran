@@ -414,14 +414,18 @@ class SPC1(VectorizedBaseCard):
         ncards = len(node_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
-        if len(self.spc_id):
-            asdf
         #save_ifile_comment(self, ifile, comment)
+        if len(self.spc_id):
+            spc_id = np.hstack([self.spc_id, spc_id])
+            node_id = np.hstack([self.node_id, node_id])
+            components = np.hstack([self.components, components])
+            nnodes = np.hstack([self.nnodes, nnodes])
+
         self.spc_id = spc_id
         self.node_id = node_id
         self.components = components
         self.nnodes = nnodes
-        self.n = nspcs
+        self.n = len(spc_id)
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""

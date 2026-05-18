@@ -162,12 +162,14 @@ class Writer:
                         size: int=8, is_double: bool=False,
                         interspersed: bool=False,
                         enddata: Optional[bool]=None, close: bool=True,
+                        coords_size: Optional[int]=None,
                         nodes_size: Optional[int]=None,
                         elements_size: Optional[int]=None,
                         loads_size: Optional[int]=None,
+                        table_size: Optional[int]=None,
                         flfact_size: Optional[int]=None) -> None:
-        size, nodes_size, elements_size, loads_size, flfact_size = _fix_sizes(
-            size, nodes_size, elements_size, loads_size, flfact_size)
+        size, coords_size, nodes_size, elements_size, loads_size, table_size, flfact_size = _fix_sizes(
+            size, coords_size, nodes_size, elements_size, loads_size, table_size, flfact_size)
 
         model = self.model
 

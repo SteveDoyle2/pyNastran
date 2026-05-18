@@ -30,8 +30,8 @@ from typing import TextIO, Any
 import numpy as np
 import scipy as sp
 import scipy.sparse as sci_sparse
-from scipy.sparse import csc_matrix, lil_matrix
-from scipy.sparse.dok import dok_matrix
+from scipy.sparse import csc_matrix, lil_matrix, dok_matrix
+# from scipy.sparse.dok import dok_matrix  # <1.16
 
 from cpylog import SimpleLogger
 import pyNastran

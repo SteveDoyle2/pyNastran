@@ -3162,6 +3162,7 @@ class TestAero(unittest.TestCase):
         group = model.add_group(group_id, nodes, elements, properties,
                                 description='LABEL x=1, y=2, z=3.3',
                                 meta='meta attribute X=1')
+
         # card_lines = [
         #     'MONPNT3 MP3A    MP3 at node 11 CP=225 CD=225',
         #     '        123456  1       2       225     0.	0.	0.',

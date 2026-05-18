@@ -357,6 +357,36 @@ class CBEAM(Element):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max(), self.g0.max())
 
+    def stiffness_info(self) -> np.ndarray:
+        """
+        [L, rho, A, ]
+        """
+        pid = self.property_id
+        npid = len(pid)
+
+        area = np.full(npid, np.nan, dtype='float64')
+        I = np.full((npid, 3), np.nan, dtype='float64')
+        J = np.full(npid, np.nan, dtype='float64')
+        E = np.full(npid, np.nan, dtype='float64')
+        G = np.full(npid, np.nan, dtype='float64')
+        for prop in self.allowed_properties:
+            i_lookup, i_all = searchsorted_filter(prop.property_id, pid, msg='')
+            if len(i_lookup) == 0:
+                continue
+            # we're at least using some properties
+            breakdowni = prop.stiffness_info() # [area, I, J]
+            area[i_lookup] = breakdowni[i_all, 0]
+            #print(prop.type, i_lookup, i_all, breakdowni.shape)
+            I[i_lookup, :] = breakdowni[i_all, :][:, [1, 2, 3]]
+            J[i_lookup] = breakdowni[i_all, 4]
+
+            mat1 = self.model.mat1.slice_card_by_material_id(prop.material_id)
+            E[i_lookup] = mat1.E
+            G[i_lookup] = mat1.G
+        length = self.length()
+        breakdown = np.column_stack([length, area, I, J, E, G])
+        return breakdown
+
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -374,10 +404,12 @@ class CBEAM(Element):
         pbs = array_default_int(self.pb, default=0, size=size)
         was = array_default_float(self.wa, default=0, size=size, is_double=False)
         wbs = array_default_float(self.wb, default=0, size=size, is_double=False)
-        for eid, pid, nodes, g0, x, is_g0, offt, pa, pb, wa, wb in zip_longest(
+        sas = array_default_int(self.sa, default=0, size=size)
+        sbs = array_default_int(self.sb, default=0, size=size)
+        for eid, pid, nodes, g0, x, is_g0, offt, pa, pb, wa, wb, sa, sb in zip_longest(
             element_ids, property_ids, nodes_,
             self.g0, self.x, self.is_g0, offts,
-            pas, pbs, was, wbs):
+            pas, pbs, was, wbs, sas, sbs):
 
             n1, n2 = nodes
             w1a, w2a, w3a = wa
@@ -393,7 +425,8 @@ class CBEAM(Element):
             #offt = set_blank_if_default(offt, 'GGG')
 
             list_fields = ['CBEAM', eid, pid, n1, n2,
-                           x1, x2, x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
+                           x1, x2, x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b,
+                           sa, sb]
             bdf_file.write(print_card(list_fields))
         return
 
@@ -1358,27 +1391,34 @@ class PBEAM(Property):
              m1ai, m2ai, m1bi, m2bi,
              n1ai, n2ai, n1bi, n2bi,
              ifilei, commenti) = card
+            # nstations = len(xxbi)
             nstations = len(areai)
-            if nsmi is None:
-                nsmi = np.zeros(nstations)
-            if c1i is None:
-                c1i = np.zeros(nstations)
-            if c2i is None:
-                c2i = np.zeros(nstations)
-            if d1i is None:
-                d1i = np.zeros(nstations)
-            if d2i is None:
-                d2i = np.zeros(nstations)
-            if e1i is None:
-                e1i = np.zeros(nstations)
-            if e2i is None:
-                e2i = np.zeros(nstations)
-            if f1i is None:
-                f1i = np.zeros(nstations)
-            if f2i is None:
-                f2i = np.zeros(nstations)
-            #if nsmi is None:
-                #nsmi = np.zeros(nstations)
+            # print(f'nstations = {nstations}')
+            # if areai is None:
+            #     areai = np.zeros(nstations)
+            nstationi = len(xxbi)
+            if soi is None:
+                soi = np.full(nstations, 'YES')
+            elif isinstance(soi, str):
+                soi = np.full(nstations, soi)
+            elif isinstance(soi, (list, tuple, np.ndarray)):
+                soi = np.asarray(soi)
+            else:  # pragma: no cover
+                raise TypeError(f'soi={soi} type={type(soi)}')
+            ji = listify(ji, nstations)
+            i1i = listify(i1i, nstations)
+            i2i = listify(i2i, nstations)
+            i12i = listify(i12i, nstations)
+            nsmi = listify(nsmi, nstations)
+            c1i = listify(c1i, nstations)
+            c2i = listify(c2i, nstations)
+            d1i = listify(d1i, nstations)
+            d2i = listify(d2i, nstations)
+            e1i = listify(d2i, nstations)
+            e2i = listify(d2i, nstations)
+            f1i = listify(d2i, nstations)
+            f2i = listify(d2i, nstations)
+            d2i = listify(d2i, nstations)
 
             if m1ai is None:
                 m1ai = 0.0
@@ -1400,7 +1440,6 @@ class PBEAM(Property):
             if n2bi is None:
                 n2bi = n2ai
 
-            nstationi = len(xxbi)
             ifile[icard] = ifilei
             if commenti:
                 comment[pid] = commenti
@@ -1413,6 +1452,7 @@ class PBEAM(Property):
             k1[icard] = k1i
             k2[icard] = k2i
 
+            # print(xxbi, soi, areai)
             xxb_list.extend(xxbi)
             so_list.extend(soi)
             A_list.extend(areai)
@@ -5745,3 +5785,16 @@ class PBEND(Property):
         ibeamtype1 = (self.beam_type == 1)
         area[ibeamtype1] = self.A[ibeamtype1]
         return area
+
+def listify(ji, nstations: int) -> np.ndarray:
+    if ji is None:
+        j = np.zeros(nstations)
+    elif isinstance(ji, np.ndarray):
+        j = ji
+    elif isinstance(ji, float_types):
+        j = np.full(nstations, ji)
+    elif isinstance(ji, (tuple, list)):
+        j = np.asarray(ji)
+    else:  # pragma: no cover
+        raise TypeError(type(ji))
+    return j

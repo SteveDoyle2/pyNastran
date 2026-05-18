@@ -33,10 +33,10 @@ class FlutterPreferencesObject:
     #     if self.window_shown:
     #         self.window.hide()
 
-    def set_font_size(self, font_size: int) -> None:
+    def set_flutter_font_size(self, font_size: int) -> None:
         """sets the font size for the legend window"""
         if self.window_shown:
-            self.window.set_font_size(font_size)
+            self.window.set_flutter_font_size(font_size)
         # if self._animation_window_shown:
         #     self._animation_window.set_font_size(font_size)
         self.gui.on_run()

@@ -62,6 +62,8 @@ def remove_unused(bdf_filename: PathLike,
     nsms_used = set()
 
     # splines_used = set()
+    aefacts_used = set([])
+    paeros_used = set([])
     aecomps_used = set()
     trims_used = set()
     flfacts_used = set()
@@ -453,6 +455,25 @@ def remove_unused(bdf_filename: PathLike,
                 # PID, LSPAN, LCHORD
                 #splines_used.add(caero.)
                 cids_used.add(caero.Cp())
+                paeros_used.add(caero.Pid())
+                for aefact in caero.aefact_ids:
+                    assert aefact > 0, caero.get_stats()
+                    aefacts_used.add(aefact)
+        elif card_type == 'CAERO2':
+            for eid in ids:
+                caero = model.caeros[eid]
+                # print(caero.get_stats())
+                # PID, LSPAN, LCHORD
+                # TODO: nint, nsb?
+                #splines_used.add(caero.)
+                cids_used.add(caero.Cp())
+                paeros_used.add(caero.Pid())
+
+                # AEFACTs
+                if caero.lsb > 0:
+                    aefacts_used.add(caero.lsb)
+                if caero.lint > 0:
+                    aefacts_used.add(caero.lint)
 
         elif card_type in set_types_simple:
             # handled based on context in other blocks
@@ -651,6 +672,48 @@ def remove_unused(bdf_filename: PathLike,
                 cids_used.add(monpnt.cp)
                 aecomp_name = monpnt.comp
                 aecomps_used.add(aecomp_name)
+        elif card_type == 'MONPNT2':
+            for idi in ids:
+                monpnt = model.monitor_points[idi]
+                print(monpnt.get_stats())
+                eids = []
+                for eidsi in monpnt.eids:
+                    eids.extend(eidsi)
+                print(f'eids = {eids}')
+                eids_used.update(eids)
+                # cids_used.add(monpnt.cp)
+                # aecomp_name = monpnt.comp
+                # aecomps_used.add(aecomp_name)
+                # asdf
+                del eids
+        elif card_type == 'MONPNT3':
+            for idi in ids:
+                monpnt = model.monitor_points[idi]
+                print(monpnt.get_stats())
+                cids_used.add(monpnt.cd)
+                cids_used.add(monpnt.cp)
+                if model.is_msc:
+                    if monpnt.elem_set_group:
+                        elem_set = model.sets[monpnt.elem_set_group]
+                        eids_used.update(elem_set.ids)
+                        del elem_set
+                    if monpnt.node_set_group:
+                        nid_set = model.sets[monpnt.node_set_group]
+                        nids_used.update(nid_set.ids)
+                        del nid_set
+                else:
+                    if monpnt.elem_set_group:
+                        group = model.Group(monpnt.elem_set_group)
+                        # print(group.get_stats())
+                        # assert len(group.elements) > 0, group
+                        eids_used.update(group.elements)
+                        del group
+                    if monpnt.node_set_group:
+                        group = model.Group(monpnt.node_set_group)
+                        # print(group.get_stats())
+                        # assert len(group.nodes) > 0, group
+                        nids_used.update(group.nodes)
+                        del group
 
         elif card_type == 'AECOMP':
             for aecomp_name in ids:
