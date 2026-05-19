@@ -20,6 +20,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, # array_default_float,
     array_float, get_print_card_size)
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -535,6 +536,11 @@ class VIEW(VectorizedBaseCard):
             list_fields = ['VIEW', iview, icavity, shade, nbeta, ngamma, dislin]
             bdf_file.write(print_card(list_fields))
         return
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        radcav = self.model.radcav
+        geom_check(self, missing,
+                   icavity=(np.unique(radcav.icavity), self.icavity) if radcav.n else None)
 
 
 class VIEW3D(VectorizedBaseCard):

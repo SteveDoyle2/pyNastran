@@ -1778,6 +1778,8 @@ class DRESP2(VectorizedBaseCard):
                     node_ids = values[::2].astype('int64')
                     if len(nid) and len(node_ids):
                         geom_check(self, missing, node=(nid, node_ids))
+                elif param_type == 'DTABLE':
+                    pass
                 else:  # pragma: no cover
                     raise NotImplementedError(param_type)
                 iparam_value += nvalues
