@@ -28,7 +28,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 USAGE_144 = (
     'Usage:\n'
-    '  f06 plot_144 F06_FILENAME [--aerobox AEROBOX_CAERO_FILENAME] | [--bdf BDF_FILENAME] [--plot] [--force]\n'
+    '  f06 plot_144 F06_FILENAME [--aerobox AEROBOX_CAERO_FILENAME] | [--bdf BDF_FILENAME] [--cp] [--force] [--moment]\n'
 )
 
 
@@ -46,7 +46,9 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
         'Options:\n'
         '  --aerobox AEROBOX_CAERO_FILENAME  path to exported CAERO file\n'
         '  --bdf     BDF_FILENAME            path to input BDF file containing CAEROs\n'
-        '  --plot                            show the plot (default=False)\n'
+        '  --cp                              plot Cp (pressure coefficients)\n'
+        '  --force                           plot aerodynamic forces (Fz)\n'
+        '  --moment                          plot aerodynamic moments (My)\n'
         '\n'
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -81,16 +83,18 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
         bdf_aero_group.add_argument('--aerobox', type=str, help='path to exported CAERO file')
         #bdf_aero_group.add_argument('--encoding', help=f'the encoding method (default=None -> {repr(encoding)})', type=str)
 
-        parent_parser.add_argument('--plot', help='show the plot', action='store_true')
-        parent_parser.add_argument('--force', help='use aerodynamic forces instead of Cp', action='store_true')
+        parent_parser.add_argument('--cp', help='plot Cp (pressure coefficients)', action='store_true')
+        parent_parser.add_argument('--force', help='plot aerodynamic forces (Fz)', action='store_true')
+        parent_parser.add_argument('--moment', help='plot aerodynamic moments (My)', action='store_true')
         parent_parser.add_argument('-v', '--version', action='version', version=ver)
         args = parent_parser.parse_args(args=argv[1:])
 
         f06_filename = args.F06_FILENAME
         aerobox_caero_filename = args.aerobox
         bdf_filename = args.bdf
-        plot = args.plot
-        use_force = args.force
+        plot_cp = args.cp
+        plot_force = args.force
+        plot_moment = args.moment
     else:  # pragma: no cover
         if argv is None:  # pragma: no cover
             argv = sys.argv
@@ -143,7 +147,9 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
                                   log=log,
                                   nlines_max=1_000_000,
                                   debug=False,
-                                  show=plot)
+                                  plot_cp=plot_cp,
+                                  plot_force=plot_force,
+                                  plot_moment=plot_moment)
     return loads
 
 

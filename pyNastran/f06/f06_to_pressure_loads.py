@@ -16,8 +16,9 @@ def f06_to_pressure_loads(f06_filename: PathLike,
                           eid_csv_filename: PathLike='',
                           nlines_max: int=1_000_000,
                           log: Optional[SimpleLogger]=None,
-                          #show: bool=False,
-                          show: bool=True,
+                          plot_cp: bool=False,
+                          plot_force: bool=False,
+                          plot_moment: bool=False,
                           debug: bool=False) -> dict:
     caero_model = read_bdf(aerobox_caero_filename, log=log,
                            xref=False, validate=False, debug=debug)
@@ -46,120 +47,237 @@ def f06_to_pressure_loads(f06_filename: PathLike,
         matrices = list(out_dict['matrices'])
         log.info(f'matrices: {matrices}')
 
+    has_pressure = len(trim_results.aero_pressure) > 0
+    has_force = len(trim_results.aero_force) > 0
+
+    # --- Cp processing ---
     element_pressure_dict = {}
-    for subcase, apress in trim_results.aero_pressure.items():
-        is_eid_default = apress.elements.max() == -1
-        if is_eid_default:
-            element_pressure = apress.get_element_pressure(nid_to_eid_map)
-        else:
-            element_pressure = {}
-            for eidi, pressurei in zip(apress.elements, apress.pressure):
-                element_pressure[eidi] = pressurei
-        element_pressure_dict[subcase] = element_pressure
+    if has_pressure:
+        for subcase, apress in trim_results.aero_pressure.items():
+            is_eid_default = apress.elements.max() == -1
+            if is_eid_default:
+                element_pressure = apress.get_element_pressure(nid_to_eid_map)
+            else:
+                element_pressure = {}
+                for eidi, pressurei in zip(apress.elements, apress.pressure):
+                    element_pressure[eidi] = pressurei
+            element_pressure_dict[subcase] = element_pressure
 
-    for subcase, element_pressure in element_pressure_dict.items():
-        apress = trim_results.aero_pressure[subcase]
-        break
+    # --- Force processing ---
+    # Force GRID IDs are the k-set DOFs at the 1/4 chord of each box.
+    # Each force grid maps 1:1 to an element (GRID ID = element/box ID).
+    element_force_dict = {}
+    if has_force:
+        for subcase, aforce in trim_results.aero_force.items():
+            element_forces = {}
+            for eid, force in zip(aforce.nodes, aforce.force):
+                element_forces[eid] = force
+            element_force_dict[subcase] = element_forces
 
+    # --- Write loads file (PLOAD2 for Cp, FORCE for aero forces) ---
     if loads_filename is not None:
         with open(loads_filename, 'w') as loads_file:
-            for subcase, element_pressure in element_pressure_dict.items():
-                apress = trim_results.aero_pressure[subcase]
-                # if 0:  # pragma: no cover
-                #     metadatai = metadata[subcase]
-                #     subtitle = metadatai.get('subtitle', '')
-                #     mach = metadatai['mach']
-                #     q = metadatai['q']
-                #     cref = metadatai['cref']
-                #     bref = metadatai['bref']
-                #     sref = metadatai['sref']
-                # else:
-                # print(element_pressure)
-                subtitle = apress.subtitle
-                mach = apress.mach
-                q = apress.q
-                cref = apress.cref
-                bref = apress.bref
-                sref = apress.sref
+            if has_pressure:
+                for subcase, element_pressure in element_pressure_dict.items():
+                    apress = trim_results.aero_pressure[subcase]
+                    subtitle = apress.subtitle
+                    mach = apress.mach
+                    q = apress.q
+                    cref = apress.cref
+                    bref = apress.bref
+                    sref = apress.sref
 
-                comment = f'$ subtitle={subtitle!r}\n'
-                comment += f'$ mach={mach:g} q={q:g}\n'
-                comment += f'$ bref={cref:g} bref{bref:g} sref={sref:g}\n'
-                loads_file.write(comment)
-                for eid, cps in element_pressure.items():
-                    cp = np.mean(cps)
-                    card = ['PLOAD2', subcase, eid, cp]
-                    loads_file.write(print_card_8(card))
+                    comment = f'$ subtitle={subtitle!r}\n'
+                    comment += f'$ mach={mach:g} q={q:g}\n'
+                    comment += f'$ cref={cref:g} bref={bref:g} sref={sref:g}\n'
+                    loads_file.write(comment)
+                    for eid, cps in element_pressure.items():
+                        cp = np.mean(cps)
+                        card = ['PLOAD2', subcase, eid, cp]
+                        loads_file.write(print_card_8(card))
+
+            if has_force:
+                for subcase, element_forces in element_force_dict.items():
+                    aforce = trim_results.aero_force[subcase]
+                    subtitle = aforce.subtitle
+                    mach = aforce.mach
+                    q = aforce.q
+                    cref = aforce.cref
+                    bref = aforce.bref
+                    sref = aforce.sref
+
+                    comment = f'$ Force (Fz) + Moment (My): subtitle={subtitle!r}\n'
+                    comment += f'$ mach={mach:g} q={q:g}\n'
+                    comment += f'$ cref={cref:g} bref={bref:g} sref={sref:g}\n'
+                    loads_file.write(comment)
+                    for eid, force in element_forces.items():
+                        t3 = force[2]
+                        card = ['FORCE', subcase, eid, 0, 1.0, 0., 0., t3]
+                        loads_file.write(print_card_8(card))
+                        r2 = force[4]
+                        card = ['MOMENT', subcase, eid, 0, 1.0, 0., r2, 0.]
+                        loads_file.write(print_card_8(card))
         log.info(f'finished writing {loads_filename}')
 
+    # --- Write node CSV ---
     nsubcases = 0
     if nid_csv_filename:
         node_line0 = '# Nid,'
-        for subcase, element_pressure in element_pressure_dict.items():
-            node_line0 += f'CpSubcase{subcase:d}(f),'
-            eids = list(element_pressure)
-        node_line0 += '\n'
+        if has_pressure:
+            for subcase in trim_results.aero_pressure:
+                node_line0 += f'Cp_Sub{subcase:d},'
+        if has_force:
+            for subcase in trim_results.aero_force:
+                node_line0 += f'Fz_Sub{subcase:d},My_Sub{subcase:d},'
+        node_line0 = node_line0.rstrip(',') + '\n'
 
-        nodes = apress.nodes
+        if has_pressure:
+            first_apress = next(iter(trim_results.aero_pressure.values()))
+            nodes = first_apress.nodes
+        else:
+            first_aforce = next(iter(trim_results.aero_force.values()))
+            nodes = first_aforce.nodes
         nnodes = len(nodes)
-        nsubcases = len(element_pressure_dict)
-        isubcase = 0
-        node_cp_array = np.zeros((nnodes, nsubcases))
-        for subcase, apress in trim_results.aero_pressure.items():
-            node_cp_array[:, isubcase] = apress.cp
-            isubcase += 1
 
+        columns = []
+        if has_pressure:
+            nsubcases = len(trim_results.aero_pressure)
+            node_cp_array = np.zeros((nnodes, nsubcases))
+            isubcase = 0
+            for subcase, apress in trim_results.aero_pressure.items():
+                node_cp_array[:, isubcase] = apress.cp
+                isubcase += 1
+            columns.append(node_cp_array)
+
+        if has_force:
+            nforce_subcases = len(trim_results.aero_force)
+            node_force_array = np.zeros((nnodes, nforce_subcases * 2))
+            isubcase = 0
+            for subcase, aforce in trim_results.aero_force.items():
+                node_force_array[:, isubcase*2] = aforce.force[:, 2]    # Fz
+                node_force_array[:, isubcase*2+1] = aforce.force[:, 4]  # My
+                isubcase += 1
+            columns.append(node_force_array)
+
+        node_data = np.column_stack(columns)
         with open(nid_csv_filename, 'w') as csv_file:
             csv_file.write(node_line0)
-            for nid, cp_arrayi in zip(nodes, node_cp_array):
-                data = [nid] + list(cp_arrayi)
+            for nid, row in zip(nodes, node_data):
+                data = [nid] + list(row)
                 strs = ','.join(map(str, data))
                 csv_file.write(strs + '\n')
         log.info(f'finished writing {nid_csv_filename}')
 
+    # --- Write element CSV ---
     if eid_csv_filename:
         line0 = '# Eid,'
-        cps_list = []
+        columns = []
+        eids = []
         neids = 0
-        for subcase, element_pressure in element_pressure_dict.items():
-            line0 += f'CpSubcase{subcase:d}(f),'
-            eids = list(element_pressure)
-            neids = len(eids)
-            cp_list = []
-            for eid, cps in element_pressure.items():
-                cpi = np.mean(cps)
-                cp_list.append(cpi)
-            cps_list.append(cp_list)
+
+        if has_pressure:
+            nsubcases = len(element_pressure_dict)
+            for subcase in element_pressure_dict:
+                line0 += f'Cp_Sub{subcase:d},'
+            cps_list = []
+            for subcase, element_pressure in element_pressure_dict.items():
+                eids = list(element_pressure)
+                neids = len(eids)
+                cp_list = []
+                for eid, cps in element_pressure.items():
+                    cpi = np.mean(cps)
+                    cp_list.append(cpi)
+                cps_list.append(cp_list)
+            columns.append(np.column_stack(cps_list))
+
+        if has_force:
+            for subcase in element_force_dict:
+                line0 += f'Fz_Sub{subcase:d},My_Sub{subcase:d},'
+            force_columns = []
+            for subcase, element_forces in element_force_dict.items():
+                if not eids:
+                    eids = list(element_forces)
+                    neids = len(eids)
+                col = []
+                for eid in eids:
+                    force = element_forces[eid]
+                    col.append([force[2], force[4]])
+                force_columns.append(np.array(col))
+            columns.append(np.column_stack(force_columns))
 
         line0 = line0.rstrip(',') + '\n'
-        cp_array = np.column_stack(cps_list)
-        assert cp_array.shape == (neids, nsubcases), f'actual_shape={cp_array.shape} expected=({neids},{nsubcases})'
+        eid_data = np.column_stack(columns)
 
         with open(eid_csv_filename, 'w') as csv_file:
             csv_file.write(line0)
-            for eid, cp_arrayi in zip(eids, cp_array):
-                data = [eid] + list(cp_arrayi)
+            for eid, row in zip(eids, eid_data):
+                data = [eid] + list(row)
                 strs = ','.join(map(str, data))
                 csv_file.write(strs + '\n')
         log.info(f'finished writing {eid_csv_filename}')
-    #print(out)
-    #tables = out['tables']
-    if show:
+
+    # --- Plotting ---
+    if plot_cp or plot_force or plot_moment:
         import matplotlib.pyplot as plt
-        for subcase, element_pressure in element_pressure_dict.items():
-            apress = trim_results.aero_pressure[subcase]
-            plot_element_pressure(
-                caero_model, element_pressure,
-                title=f'Subcase {subcase}: {apress.subtitle}',
-                result_type='cp',
-                show=False,
-            )
+        if plot_cp and has_pressure:
+            for subcase, element_pressure in element_pressure_dict.items():
+                apress = trim_results.aero_pressure[subcase]
+                title = _build_plot_title(subcase, apress.mach, apress.title, apress.subtitle, 'Cp')
+                plot_element_pressure(
+                    caero_model, element_pressure,
+                    title=title,
+                    result_type='cp',
+                    show=False,
+                )
+        if plot_force and has_force:
+            for subcase, element_forces in element_force_dict.items():
+                aforce = trim_results.aero_force[subcase]
+                title = _build_plot_title(subcase, aforce.mach, aforce.title, aforce.subtitle, 'Fz', q=aforce.q)
+                element_t3 = {eid: [force[2]]
+                              for eid, force in element_forces.items()}
+                plot_element_pressure(
+                    caero_model, element_t3,
+                    title=title,
+                    result_type='pressure',
+                    colorbar_label='Fz Force',
+                    show=False,
+                )
+        if plot_moment and has_force:
+            for subcase, element_forces in element_force_dict.items():
+                aforce = trim_results.aero_force[subcase]
+                title = _build_plot_title(subcase, aforce.mach, aforce.title, aforce.subtitle, 'My', q=aforce.q)
+                element_r2 = {eid: [force[4]]
+                              for eid, force in element_forces.items()}
+                plot_element_pressure(
+                    caero_model, element_r2,
+                    title=title,
+                    result_type='pressure',
+                    colorbar_label='My Moment',
+                    show=False,
+                )
         plt.show()
 
     out_loads = {
         #'eid_cp': (eids, cp_array),
     }
     return out_loads
+
+
+def _build_plot_title(subcase: int, mach: float,
+                      title: str, subtitle: str,
+                      result_label: str,
+                      q: float=None) -> str:
+    parts = [f'Subcase {subcase}']
+    if title.strip():
+        parts.append(title.strip())
+    if subtitle.strip():
+        parts.append(subtitle.strip())
+    mach_str = f'Mach={mach:g}'
+    if q is not None:
+        mach_str += f'  q={q:g}'
+    parts.append(mach_str)
+    parts.append(result_label)
+    return '\n'.join(parts)
 
 
 def plot_element_pressure(caero_model,
