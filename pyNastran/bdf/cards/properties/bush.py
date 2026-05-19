@@ -188,28 +188,29 @@ class PBUSH(BushingProperty):
         BushingProperty.__init__(self)
         if comment:
             self.comment = comment
-        if k is None:
+        if k is None or len(k) == 0:
             k = [0., 0., 0., 0., 0., 0.]
-        if b is None:
+        if b is None or len(b) == 0:
             b = [0., 0., 0., 0., 0., 0.]
-        if ge is None:
+        if ge is None or len(ge) == 0:
             ge = [0., 0., 0., 0., 0., 0.]
 
         #: Property ID
         self.pid = pid
 
         # K parameter
-        self.Ki = k
         if k:
             nk = len(k)
             if nk < 6:
                 k.extend([0.] * (6 - nk))
+        self.Ki = k
+
         # B parameter
-        self.Bi = b
         if b:
             nb = len(b)
             if nb < 6:
                 b.extend([0.] * (6 - nb))
+        self.Bi = b
 
         # GE parameter
         self.GEi = ge
@@ -239,6 +240,9 @@ class PBUSH(BushingProperty):
         self.alpha = alpha
         self.tref = tref
         self.coincident_length = coincident_length
+        assert len(self.Ki) == 6, self.Ki
+        assert len(self.Bi) == 6, self.Bi
+        assert len(self.GEi) == 6, self.GEi
 
     @classmethod
     def _init_from_empty(cls):

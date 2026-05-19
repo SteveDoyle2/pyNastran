@@ -28,7 +28,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 USAGE_144 = (
     'Usage:\n'
-    '  f06 plot_144 F06_FILENAME [--aerobox AEROBOX_CAERO_FILENAME] | [--bdf BDF_FILENAME] [--plot]\n'
+    '  f06 plot_144 F06_FILENAME [--aerobox AEROBOX_CAERO_FILENAME] | [--bdf BDF_FILENAME] [--plot] [--force]\n'
 )
 
 
@@ -79,8 +79,10 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
         bdf_aero_group = parent_parser.add_mutually_exclusive_group()
         bdf_aero_group.add_argument('--bdf', type=str, help='path to input BDF file containing CAEROs')
         bdf_aero_group.add_argument('--aerobox', type=str, help='path to exported CAERO file')
-        bdf_aero_group.add_argument('--plot', help='show the plot', action='store_true')
         #bdf_aero_group.add_argument('--encoding', help=f'the encoding method (default=None -> {repr(encoding)})', type=str)
+
+        parent_parser.add_argument('--plot', help='show the plot', action='store_true')
+        parent_parser.add_argument('--force', help='use aerodynamic forces instead of Cp', action='store_true')
         parent_parser.add_argument('-v', '--version', action='version', version=ver)
         args = parent_parser.parse_args(args=argv[1:])
 
@@ -88,6 +90,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
         aerobox_caero_filename = args.aerobox
         bdf_filename = args.bdf
         plot = args.plot
+        use_force = args.force
     else:  # pragma: no cover
         if argv is None:  # pragma: no cover
             argv = sys.argv

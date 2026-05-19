@@ -1236,7 +1236,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         pass
         #self.setup()
         #validate_bdf(self)
-        self.log.warning('no validate for bdf3')
+        # self.log.warning('no validate for bdf3')
     def _get_rigid(self):
         self.log.warning('no _get_rigid for bdf3')
     def get_rigid_elements_with_node_ids(self, node_ids: list[int]):
