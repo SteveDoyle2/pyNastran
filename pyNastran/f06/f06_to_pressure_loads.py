@@ -50,6 +50,11 @@ def f06_to_pressure_loads(f06_filename: PathLike,
     has_pressure = len(trim_results.aero_pressure) > 0
     has_force = len(trim_results.aero_force) > 0
 
+    if plot_cp and not has_pressure:
+        log.warning('--cp requested but no aero pressure data found in f06')
+    if (plot_force or plot_moment) and not has_force:
+        log.warning('--force/--moment requested but no aero force data found in f06')
+
     # --- Cp processing ---
     element_pressure_dict = {}
     if has_pressure:
@@ -233,10 +238,10 @@ def f06_to_pressure_loads(f06_filename: PathLike,
             for subcase, element_forces in element_force_dict.items():
                 aforce = trim_results.aero_force[subcase]
                 title = _build_plot_title(subcase, aforce.mach, aforce.title, aforce.subtitle, 'Fz', q=aforce.q)
-                element_t3 = {eid: [force[2]]
+                element_fz = {eid: [force[2]]
                               for eid, force in element_forces.items()}
                 plot_element_pressure(
-                    caero_model, element_t3,
+                    caero_model, element_fz,
                     title=title,
                     result_type='pressure',
                     colorbar_label='Fz Force',
@@ -246,10 +251,10 @@ def f06_to_pressure_loads(f06_filename: PathLike,
             for subcase, element_forces in element_force_dict.items():
                 aforce = trim_results.aero_force[subcase]
                 title = _build_plot_title(subcase, aforce.mach, aforce.title, aforce.subtitle, 'My', q=aforce.q)
-                element_r2 = {eid: [force[4]]
+                element_my = {eid: [force[4]]
                               for eid, force in element_forces.items()}
                 plot_element_pressure(
-                    caero_model, element_r2,
+                    caero_model, element_my,
                     title=title,
                     result_type='pressure',
                     colorbar_label='My Moment',

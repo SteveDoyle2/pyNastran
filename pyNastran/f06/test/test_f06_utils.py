@@ -908,6 +908,48 @@ class TestF06Utils(unittest.TestCase):
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB,
                      show=False, log=log)
 
+    def test_f06_trim_bwb_force(self):
+        """tests f06_to_pressure_loads force/moment path"""
+        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.bdf'
+        aerobox_caero_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.caero.bdf'
+        f06_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.f06'
+        loads_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim_force.blk'
+        nid_csv_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim_force.nid'
+        eid_csv_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim_force.eid'
+        log = SimpleLogger(level='warning')
+        model = read_bdf(bdf_filename, log=log)
+        export_caero_mesh(
+            model,
+            caero_bdf_filename=aerobox_caero_filename,
+            is_aerobox_model=True,
+            pid_method='caero',
+            write_panel_xyz=False)
+
+        trim_results = f06_to_pressure_loads(
+            f06_filename, aerobox_caero_filename,
+            loads_filename,
+            nid_csv_filename=nid_csv_filename,
+            eid_csv_filename=eid_csv_filename,
+            log=log, nlines_max=1_000_000)
+
+        # verify force data was written
+        assert loads_filename.exists(), f'{loads_filename} not found'
+        with open(loads_filename) as f:
+            loads_text = f.read()
+        assert 'FORCE' in loads_text, 'no FORCE cards in loads file'
+        assert 'MOMENT' in loads_text, 'no MOMENT cards in loads file'
+
+        # verify CSV has Fz/My columns
+        with open(nid_csv_filename) as f:
+            header = f.readline()
+        assert 'Fz_Sub' in header, f'Fz not in nid csv header: {header}'
+        assert 'My_Sub' in header, f'My not in nid csv header: {header}'
+
+        with open(eid_csv_filename) as f:
+            header = f.readline()
+        assert 'Fz_Sub' in header, f'Fz not in eid csv header: {header}'
+        assert 'My_Sub' in header, f'My not in eid csv header: {header}'
+
     def test_f06_trim_freedlm(self):
         """tests read_f06_trim"""
         bdf_filename = AERO_PATH / 'freedlm' / 'freedlm.bdf'
