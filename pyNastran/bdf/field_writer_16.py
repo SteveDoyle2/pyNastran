@@ -2,6 +2,7 @@
 Defines functions for single precision 16 character field writing.
 """
 import sys
+import math
 import warnings
 from typing import Optional, Any
 from numpy import float32, isnan  # type: ignore
@@ -29,31 +30,26 @@ def print_scientific_16(value: float) -> str:
     if value == 0.0:
         return '%16s' % '0.'
 
-    python_value = '%16.14e' % value  # -1.e-2
-    svalue, sexponent = python_value.strip().split('e')
-    exponent = int(sexponent)  # removes 0s
+    abs_val = abs(value)
+    exponent = int(math.floor(math.log10(abs_val)))
+    mantissa = value / 10.0 ** exponent
+    if abs(mantissa) >= 9.9999999999:
+        mantissa /= 10.0
+        exponent += 1
 
-    if abs(value) < 1.:
-        sign = '-'
-    else:
-        sign = '+'
+    sexp2 = str(abs(exponent))
+    sign = '-' if exponent < 0 else '+'
 
-    # the exponent will be added later...
-    sexp2 = str(exponent).strip('-+')
-    value2 = float(svalue)
-
-    # the plus 1 is for the sign
     len_sexp = len(sexp2) + 1
     leftover = 16 - len_sexp
-
     if value < 0:
-        fmt = "%%1.%sf" % (leftover - 3)
+        leftover -= 3
     else:
-        fmt = "%%1.%sf" % (leftover - 2)
+        leftover -= 2
 
-    svalue3 = fmt % value2
-    svalue4 = svalue3.strip('0')
-    field = "%16s" % (svalue4 + sign + sexp2)
+    svalue3 = ('%1.' + str(leftover) + 'f') % mantissa
+    svalue4 = svalue3.rstrip('0')
+    field = '%16s' % (svalue4 + sign + sexp2)
     return field
 
 

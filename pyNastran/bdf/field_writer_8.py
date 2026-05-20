@@ -1,5 +1,6 @@
 """Defines functions for single precision 8 character field writing."""
 import sys
+import math
 import warnings
 from typing import Optional, Any
 from numpy import float32, float64, isnan
@@ -63,28 +64,26 @@ def print_scientific_8(value: float) -> str:
 
     """
     if value == 0.0:
-        return '      0.'  # '%8s' % '0.'
+        return '      0.'
 
-    python_value = '%8.11e' % value
-    svalue, sexponent = python_value.strip().split('e')
-    exponent = int(sexponent)  # removes 0s
+    abs_val = abs(value)
+    exponent = int(math.floor(math.log10(abs_val)))
+    mantissa = value / 10.0 ** exponent
+    # Fix floating point edge case where mantissa rounds to 10
+    if abs(mantissa) >= 9.9999999999:
+        mantissa /= 10.0
+        exponent += 1
 
-    sign = '-' if abs(value) < 1. else '+'
-
-    # the exponent will be added later...
-    exp2 = str(exponent).strip('-+')
-    value2 = float(svalue)
+    exp2 = str(abs(exponent))
+    sign = '-' if exponent < 0 else '+'
 
     leftover = 5 - len(exp2)
-
     if value < 0:
-        fmt = "%%1.%df" % (leftover - 1)
-    else:
-        fmt = "%%1.%df" % leftover
+        leftover -= 1
 
-    svalue3 = fmt % value2
-    svalue4 = svalue3.strip('0')
-    field = "%8s" % (svalue4 + sign + exp2)
+    svalue3 = ('%1.' + str(leftover) + 'f') % mantissa
+    svalue4 = svalue3.rstrip('0')
+    field = '%8s' % (svalue4 + sign + exp2)
     return field
 
 
@@ -146,12 +145,13 @@ def print_float_8(value: float) -> str:
             field = "%8.1f" % value
         else:  # big value
             field = "%8.1f" % value
-            if field.index('.') < 8:
+            if '.' not in field or field.index('.') >= 8:
+                field = print_scientific_8(value)
+            else:
                 field = '%8.1f' % round(value)
                 field = field[0:8]
-                #assert '.' != field[0], field
-            else:
-                field = print_scientific_8(value)
+                if '.' not in field:
+                    field = print_scientific_8(value)
             return field
     else:
         if value > -5e-7:

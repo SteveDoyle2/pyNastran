@@ -431,7 +431,7 @@ class FlutterGui(LoggableGui):
                 self.recent_files.append(abs_path)
         self.f06_filename = self.recent_files[0]
         if self.font_size != font_size0:
-            self.on_set_font_size(self.font_size)
+            self.set_flutter_font_size(self.font_size)
 
     def on_load_settings(self) -> None:
         json_filename = self.save_filename

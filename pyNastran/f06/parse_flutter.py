@@ -282,8 +282,8 @@ def make_flutter_response(f06_filename: PathLike,
                     eigenvectors, ieigenvector,
                     load_eigenvalues, log, real_eigenvalues_list)
 
-                short_line = line.strip().replace('   ', ' ')
                 if is_heavy_debug:  # pragma: no cover
+                    short_line = line.strip().replace('   ', ' ')
                     log.debug(f'i={iline} {short_line!r}')
                     if iline > imax:
                         raise RuntimeError(f'iline > imax; {iline:d}')

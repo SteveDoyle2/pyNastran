@@ -189,6 +189,9 @@ class RADCAV(VectorizedBaseCard):
             bdf_file.write(print_card(list_fields))
         return
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
 
 class RADLST(VectorizedBaseCard):
     """
@@ -303,6 +306,11 @@ class RADLST(VectorizedBaseCard):
             list_fields = ['RADLST', icavity, matrix_type] + eids
             bdf_file.write(print_card(list_fields))
         return
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        radcav = self.model.radcav
+        geom_check(self, missing,
+                   icavity=(np.unique(radcav.icavity), self.icavity) if radcav.n else None)
 
 
 class RADMTX(VectorizedBaseCard):

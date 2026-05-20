@@ -454,6 +454,93 @@ class TestBeams(unittest.TestCase):
             msg += 'expected = %r' % expected
             self.assertEqual(actual, expected, msg)
 
+    def test_pbeam_two_station_n1n2(self):
+        """Two-station PBEAM with same section props but different N1(A)/N1(B).
+
+        Regression test: the writer must output both stations when N1/N2
+        vary between ends, even if section properties are identical.
+        Without this fix, the writer skips the second station and Nastran
+        ignores N1(B)/N2(B).
+        """
+        model = BDF(debug=False)
+        model.add_mat1(1, E=200e9, G=None, nu=0.3)
+        model.add_pbeam(1, 1, xxb=[0., 1.], so=['YES', 'YES'],
+                        area=[0.02, 0.02],
+                        i1=[1.667e-5, 1.667e-5],
+                        i2=[6.667e-5, 6.667e-5],
+                        i12=[0., 0.],
+                        j=[8.333e-5, 8.333e-5],
+                        nsm=0.1,
+                        k1=5/6, k2=5/6,
+                        n1a=0.01, n2a=0.0, n1b=0.03, n2b=0.0)
+        model.setup(run_geom_check=False)
+        prop = model.pbeam
+        msg = prop.write(size=8)
+        # The second station must be present (YES keyword)
+        assert 'YES' in msg, (
+            f'Two-station PBEAM with varying N1 must write second station:\n{msg}')
+        # N1(A) and N1(B) must both be in the output
+        assert '.01' in msg, f'N1(A)=0.01 not found:\n{msg}'
+        assert '.03' in msg, f'N1(B)=0.03 not found:\n{msg}'
+
+        # Also verify round-trip: read back and check N1 values
+        import io
+        from pathlib import Path
+        bdf_text = (
+            'SOL 101\nCEND\nBEGIN BULK\n'
+            + model.mat1.write(size=8)
+            + msg
+            + 'ENDDATA\n'
+        )
+        model2 = BDF(debug=False)
+        model2.read_bdf(io.StringIO(bdf_text))
+        pb2 = model2.pbeam
+        self.assertAlmostEqual(pb2.n1a[0], 0.01, places=5)
+        self.assertAlmostEqual(pb2.n1b[0], 0.03, places=5)
+        self.assertAlmostEqual(pb2.n2a[0], 0.0, places=5)
+        self.assertAlmostEqual(pb2.n2b[0], 0.0, places=5)
+
+    def test_pbeam_two_station_m1m2(self):
+        """Two-station PBEAM with same section props but different M1(A)/M1(B).
+
+        Regression test: the writer must output both stations when M1/M2
+        vary between ends, even if section properties are identical.
+        """
+        model = BDF(debug=False)
+        model.add_mat1(1, E=200e9, G=None, nu=0.3)
+        model.add_pbeam(1, 1, xxb=[0., 1.], so=['YES', 'YES'],
+                        area=[0.02, 0.02],
+                        i1=[1.667e-5, 1.667e-5],
+                        i2=[6.667e-5, 6.667e-5],
+                        i12=[0., 0.],
+                        j=[8.333e-5, 8.333e-5],
+                        nsm=0.1,
+                        k1=5/6, k2=5/6,
+                        m1a=0.02, m2a=0.0, m1b=0.05, m2b=0.0)
+        model.setup(run_geom_check=False)
+        prop = model.pbeam
+        msg = prop.write(size=8)
+        assert 'YES' in msg, (
+            f'Two-station PBEAM with varying M1 must write second station:\n{msg}')
+        assert '.02' in msg, f'M1(A)=0.02 not found:\n{msg}'
+        assert '.05' in msg, f'M1(B)=0.05 not found:\n{msg}'
+
+        # Round-trip verification
+        import io
+        bdf_text = (
+            'SOL 101\nCEND\nBEGIN BULK\n'
+            + model.mat1.write(size=8)
+            + msg
+            + 'ENDDATA\n'
+        )
+        model2 = BDF(debug=False)
+        model2.read_bdf(io.StringIO(bdf_text))
+        pb2 = model2.pbeam
+        self.assertAlmostEqual(pb2.m1a[0], 0.02, places=5)
+        self.assertAlmostEqual(pb2.m1b[0], 0.05, places=5)
+        self.assertAlmostEqual(pb2.m2a[0], 0.0, places=5)
+        self.assertAlmostEqual(pb2.m2b[0], 0.0, places=5)
+
     def test_pbeaml_01(self):
         model = BDF(debug=False)
         model.validate()

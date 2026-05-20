@@ -270,6 +270,65 @@ class Testfield_writer_8(unittest.TestCase):
         self.assertEqual(print_field_8(-1e-20), '  -1.-20',
                          'N|%s|' % print_field_8(-1e-20))
 
+    def test_float_8_edge_cases(self):
+        """Test print_float_8 at notation boundaries and precision limits."""
+        expected_value = [
+            # Boundary between fixed and scientific (positive)
+            ('999999.9', 999999.9),
+            ('1000000.', 1000000.0),
+            ('9999999.', 9999999.0),
+            # Boundary between fixed and scientific (negative)
+            ('  -10.+5', -999999.9),
+            ('   -1.+6', -1000000.0),
+            ('  -10.+6', -9999999.0),
+            # Near-zero threshold (5e-8 boundary)
+            ('    5.-8', 5e-8),
+            ('   4.9-8', 4.9e-8),
+            ('   -5.-8', -5e-8),
+            ('   -5.-7', -5e-7),
+            # NaN and zero
+            ('        ', float('nan')),
+            ('      0.', 0.0),
+            ('      0.', -0.0),
+            # Powers of 10 (notation transitions)
+            ('    .001', 0.001),
+            ('   .0001', 0.0001),
+            ('     .01', 0.01),
+            ('      .1', 0.1),
+            ('      1.', 1.0),
+            ('     10.', 10.0),
+            ('    100.', 100.0),
+            ('   1000.', 1000.0),
+            ('  10000.', 10000.0),
+            (' 100000.', 100000.0),
+            ('   -.001', -0.001),
+            ('  -.0001', -0.0001),
+            ('    -.01', -0.01),
+            ('     -.1', -0.1),
+            ('     -1.', -1.0),
+            ('    -10.', -10.0),
+            ('   -100.', -100.0),
+            ('  -1000.', -1000.0),
+            (' -10000.', -10000.0),
+            ('-100000.', -100000.0),
+            # Max precision at each magnitude
+            ('9.999999', 9.999999),
+            ('99.99999', 99.99999),
+            # Rounding at field boundary
+            ('1234568.', 1234567.5),
+            ('-1.235+6', -1234567.5),
+            ('  -10.+6', -9999999.5),
+            # Rounding overflow: must not lose decimal point
+            ('   10.+6', 9999999.5),
+            ('   10.+6', 9999999.9),
+        ]
+        for expected, value in expected_value:
+            actual = print_float_8(value)
+            self.assertEqual(len(actual), 8,
+                             f'len={len(actual)} for value={value}: |{actual}|')
+            self.assertEqual(actual, expected,
+                             f'value={value}: actual=|{actual}| expected=|{expected}|')
+
     def test_print_card_8(self):
         self.assertEqual(print_card_8(['GRID', 1]), 'GRID           1\n')
         self.assertEqual(print_card_8(['GRID', 1, None, None, None, None, None,
@@ -433,11 +492,59 @@ class Testfield_writer_8(unittest.TestCase):
             ('   1.1-1', 0.11),
             ('1.2345-1', 0.123451),
             ('1.2346-1', 0.123459),
+            # positive values with positive exponent
+            ('   1.5+3', 1.5e3),
+            ('  1.25+7', 1.25e7),
+            ('   1.+20', 1e20),
+            ('    1.+0', 1.0),
+            ('    1.+1', 10.0),
+            # negative values
+            ('  -1.5+3', -1.5e3),
+            (' -9.31-4', -9.31e-4),
+            ('-5.007-3', -5.007e-3),
+            ('  -10.+5', -999999.56),
+            ('  -1.+20', -1e20),
+            # small positive values
+            ('    1.-9', 1e-9),
+            ('    5.-8', 5e-8),
+            (' 5.007-3', 5.007e-3),
+            # large exponents (2+ digits)
+            ('1.235-10', 1.23456e-10),
+            (' 1.23+10', 1.23e10),
+            ('-1.23+10', -1.23e10),
+            ('-1.23-10', -1.23e-10),
+            # exact powers of 10
+            ('    1.+2', 100.0),
+            ('    1.-2', 0.01),
+            ('    1.-5', 1e-5),
+            ('    1.+9', 1e9),
         ]
         for expected, num in expected_num:
             actual = print_scientific_8(num)
-            assert len(actual) == 8, actual
-            assert actual == expected, f'actual={actual} expected={expected} num={num}'
+            assert len(actual) == 8, f'len={len(actual)} actual={actual!r} num={num}'
+            assert actual == expected, f'actual={actual!r} expected={expected!r} num={num}'
+
+    def test_scientific_16_edge_cases(self):
+        expected_num = [
+            ('              0.', 0.),
+            ('           1.5+3', 1.5e3),
+            ('          -1.5+3', -1.5e3),
+            ('           1.+20', 1e20),
+            ('          -1.+20', -1e20),
+            ('            1.+0', 1.0),
+            ('            1.-1', 0.1),
+            ('            1.-9', 1e-9),
+            ('       1.2345-10', 1.2345e-10),
+            ('      -1.2345-10', -1.2345e-10),
+            ('         1.23+10', 1.23e10),
+            ('        -1.23+10', -1.23e10),
+            ('            1.+2', 100.0),
+            ('            1.-2', 0.01),
+        ]
+        for expected, num in expected_num:
+            actual = print_scientific_16(num)
+            assert len(actual) == 16, f'len={len(actual)} actual={actual!r} num={num}'
+            assert actual == expected, f'actual={actual!r} expected={expected!r} num={num}'
 
     def test_scientific_16(self):
         small_exponent = -17
@@ -522,6 +629,48 @@ class Testfield_writer_8(unittest.TestCase):
         nums = [0.99999999999999 * 10**x for x in range(small_exponent, large_exponent+1)]
         unused_positive_output = [print_float_16(x) for x in nums]
         unused_negative_output = [print_float_16(-x) for x in nums]
+
+    def test_float_16_edge_cases(self):
+        """Test print_float_16 at notation boundaries and precision limits."""
+        expected_value = [
+            # Zero / NaN
+            ('              0.', 0.0),
+            ('              0.', -0.0),
+            ('                ', float('nan')),
+            # Small values near scientific threshold (5e-16)
+            ('           1.-16', 1e-16),
+            ('          -1.-16', -1e-16),
+            ('           5.-16', 5e-16),
+            ('          -5.-16', -5e-16),
+            # Fixed-point small values
+            ('          .00001', 1e-5),
+            ('         -.00001', -1e-5),
+            ('            .001', 0.001),
+            ('           -.001', -0.001),
+            ('         .000034', 0.000034),
+            ('        -.000034', -0.000034),
+            # Fixed-point values at various magnitudes
+            ('              1.', 1.0),
+            ('             -1.', -1.0),
+            ('         100000.', 1e5),
+            ('        -100000.', -1e5),
+            # Max fixed-point before scientific
+            ('999999999999999.', 999999999999999.),
+            # Scientific notation (large)
+            ('           1.+15', 1e15),
+            ('          -1.+15', -1e15),
+            ('           1.+16', 1e16),
+            ('          -1.+16', -1e16),
+            # Full precision
+            ('1.23456789012345', 1.23456789012345),
+            ('-1.2345678901235', -1.23456789012345),
+        ]
+        for expected, value in expected_value:
+            actual = print_float_16(value)
+            self.assertEqual(len(actual), 16,
+                             f'len={len(actual)} for value={value}: |{actual}|')
+            self.assertEqual(actual, expected,
+                             f'value={value}: actual=|{actual}| expected=|{expected}|')
 
 
 def compare(value_in):

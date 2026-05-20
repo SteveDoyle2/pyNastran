@@ -11,7 +11,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     blank,
     integer_or_blank, double_or_blank, string_or_blank,
 )
-from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check, find_missing
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 #from pyNastran.bdf.cards.properties.bars import _bar_areaL # PBARL as pbarl, A_I1_I2_I12
@@ -1574,15 +1574,12 @@ class PCONV(VectorizedBaseCard):
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
-        geom_check(self, missing,
-                   node=(nid, self.grid_inlet), filter_node0=True)
         mat_ids = self.material_id[self.material_id > 0]
-        if self.allowed_materials and len(mat_ids):
-            all_mat_ids = np.unique(np.hstack([
-                mat.material_id for mat in self.allowed_materials]))
-            _i, umissing = find_missing(all_mat_ids, mat_ids, 'materials')
-            if len(umissing):
-                missing['material_id'] = umissing
+        all_mat_ids = np.unique(np.hstack([
+            mat.material_id for mat in self.allowed_materials])) if self.allowed_materials else np.array([], dtype='int32')
+        geom_check(self, missing,
+                   node=(nid, self.grid_inlet), filter_node0=True,
+                   material_id=(all_mat_ids, mat_ids) if len(all_mat_ids) else None)
 
 
 class CONVM(VectorizedBaseCard):
@@ -1782,11 +1779,8 @@ class CONVM(VectorizedBaseCard):
         nid = model.grid.node_id
         node_ids = np.hstack([self.film_node, self.temp_ambient.ravel()])
         geom_check(self, missing,
-                   node=(nid, node_ids), filter_node0=True)
-        if model.pconvm.n and len(self.pconvm_id):
-            _i, umissing = find_missing(model.pconvm.pconvm_id, self.pconvm_id, 'pconvm')
-            if len(umissing):
-                missing['pconvm_id'] = umissing
+                   node=(nid, node_ids), filter_node0=True,
+                   pconvm_id=(model.pconvm.pconvm_id, self.pconvm_id) if model.pconvm.n else None)
 
 
 class PCONVM(VectorizedBaseCard):
@@ -1974,9 +1968,7 @@ class PCONVM(VectorizedBaseCard):
                 if mat.n > 0]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        if self.allowed_materials and len(self.material_id):
-            all_mat_ids = np.unique(np.hstack([
-                mat.material_id for mat in self.allowed_materials]))
-            _i, umissing = find_missing(all_mat_ids, self.material_id, 'materials')
-            if len(umissing):
-                missing['material_id'] = umissing
+        all_mat_ids = np.unique(np.hstack([
+            mat.material_id for mat in self.allowed_materials])) if self.allowed_materials else np.array([], dtype='int32')
+        geom_check(self, missing,
+                   material_id=(all_mat_ids, self.material_id) if len(all_mat_ids) else None)

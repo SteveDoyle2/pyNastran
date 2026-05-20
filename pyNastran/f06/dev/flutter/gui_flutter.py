@@ -503,7 +503,7 @@ class FlutterGui(LoggableGui):
                 self.recent_files.append(abs_path)
         self.f06_filename = self.recent_files[0]
         if self.font_size != font_size0:
-            self.on_set_font_size(self.font_size)
+            self.set_flutter_font_size(self.font_size)
 
     def on_enable_bdf(self) -> None:
         state = self.bdf_filename_checkbox.isChecked()
@@ -1342,9 +1342,9 @@ class FlutterGui(LoggableGui):
 
     def on_font_size(self) -> None:
         # font_size = self.font_size_edit.value()
-        self.on_set_font_size(self.font_size)
+        self.set_flutter_font_size(self.font_size)
 
-    def on_set_font_size(self, font_size: int) -> None:
+    def set_flutter_font_size(self, font_size: int) -> None:
         self.font_size = font_size
         font = make_font(font_size, is_bold=False)
         self.setFont(font)
