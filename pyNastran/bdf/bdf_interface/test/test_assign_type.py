@@ -3,7 +3,8 @@ import unittest
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank,
-    double, double_or_blank, integer_or_double, integer_double_or_blank,
+    double, double_or_blank, double_from_str,
+    integer_or_double, integer_double_or_blank,
     string, string_or_blank, double_or_string, double_string_or_blank,
     integer_or_string, integer_string_or_blank, integer_double_or_string,
     blank, parse_components, components_or_blank, integer_double_string_or_blank,
@@ -363,9 +364,18 @@ class TestAssignType(unittest.TestCase):
             double(BDFCard([1]), 0, 'field')
         with self.assertRaises(SyntaxError):
             double(BDFCard(['1']), 0, 'field')
+        # signed integer strings
+        with self.assertRaises(SyntaxError):
+            double(BDFCard(['-400510']), 0, 'field')
+        with self.assertRaises(SyntaxError):
+            double(BDFCard(['+123']), 0, 'field')
 
         self.assertEqual(1.e-9, double(BDFCard(['1-9']), 0, 'field'))
         self.assertEqual(1.e+9, double(BDFCard(['1+9']), 0, 'field'))
+
+        # D/E-notation without explicit sign on exponent (no decimal point)
+        self.assertEqual(1.e3, double(BDFCard(['1D3']), 0, 'field'))
+        self.assertEqual(1.e3, double(BDFCard(['1E3']), 0, 'field'))
 
         # float
         self.check_double(double)
@@ -391,6 +401,22 @@ class TestAssignType(unittest.TestCase):
         card = [1.0, '2.0', '3.', 'C', None, '']
         exact = [1.0, 2.0, 3.0, SyntaxError, SyntaxError, SyntaxError]
         self.run_function(double, card, exact)
+
+    def test_double_from_str(self):
+        """tests the double_from_str function"""
+        self.assertEqual(1.0, double_from_str('1.0'))
+        self.assertEqual(-3.14, double_from_str('-3.14'))
+        self.assertEqual(1.e-9, double_from_str('1-9'))
+        self.assertEqual(1.e+9, double_from_str('1+9'))
+        self.assertEqual(1.e3, double_from_str('1D3'))
+        self.assertEqual(1.e3, double_from_str('1E3'))
+        # integers must be rejected
+        with self.assertRaises(SyntaxError):
+            double_from_str('400510')
+        with self.assertRaises(SyntaxError):
+            double_from_str('-400510')
+        with self.assertRaises(SyntaxError):
+            double_from_str('+123')
 
     def test_integer(self):
         """
@@ -574,6 +600,19 @@ class TestAssignType(unittest.TestCase):
         self.assertEqual(1.e-9, method(BDFCard(['1.D-9']), 0, 'field'))
         self.assertEqual(1.e+9, method(BDFCard(['1.D+9']), 0, 'field'))
 
+        # D-notation without explicit sign on exponent
+        self.assertEqual(1.e3, method(BDFCard(['1.D3']), 0, 'field'))
+        self.assertEqual(1.e3, method(BDFCard(['1.d3']), 0, 'field'))
+        self.assertEqual(5.e2, method(BDFCard(['.5D3']), 0, 'field'))
+
+        # E-notation without explicit sign on exponent
+        self.assertEqual(1.e3, method(BDFCard(['1.E3']), 0, 'field'))
+
+        # implicit exponent with leading dot
+        self.assertEqual(5.e2, method(BDFCard(['.5+3']), 0, 'field'))
+        self.assertEqual(-5.e2, method(BDFCard(['-.5+3']), 0, 'field'))
+        self.assertEqual(5.e-4, method(BDFCard(['+.5-3']), 0, 'field'))
+
         #if check_space:
         if is_strict:
             with self.assertRaises(SyntaxError):
@@ -616,6 +655,11 @@ class TestAssignType(unittest.TestCase):
         card = BDFCard(['2'])
         with self.assertRaises(SyntaxError):
             double_or_blank(card, 0, 'field')
+        # signed integer strings must also be rejected
+        with self.assertRaises(SyntaxError):
+            double_or_blank(BDFCard(['-400510']), 0, 'field')
+        with self.assertRaises(SyntaxError):
+            double_or_blank(BDFCard(['+400510']), 0, 'field')
 
         self.check_double(double_or_blank)
 

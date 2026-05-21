@@ -12,6 +12,45 @@ from pyNastran.bdf.field_writer import print_card
 #$       - end of string
 RE_INT = re.compile('^[-+]?[0-9]+$', flags=0)
 
+# Translation table for D->E (Nastran uses 'D' as exponent marker)
+_D_TO_E = str.maketrans('dD', 'eE')
+
+
+def _nastran_str_to_float(svalue: str) -> float:
+    """Fast conversion of a Nastran field string to float.
+
+    Handles standard floats, E-notation (1.0E+3), D-notation (1.0D+3),
+    and implicit exponent notation (1.0+3, 1.0-3, 1+3, 1-3).
+    """
+    # Fast path: look for an internal +/- sign (after position 0) which
+    # indicates either E/D-notation or implicit exponent. Plain floats
+    # like "1.5", "-3.14" have no internal sign so we skip all checks.
+    start = 1 if svalue[0] in '+-' else 0
+    idx_plus = svalue.find('+', start + 1)
+    idx_minus = svalue.find('-', start + 1)
+
+    if idx_plus < 0 and idx_minus < 0:
+        # No internal sign — plain float (most common case)
+        # But check for D-notation without sign (e.g., "1.0D3")
+        if 'd' in svalue or 'D' in svalue:
+            return float(svalue.translate(_D_TO_E))
+        return float(svalue)
+
+    # Has internal sign — check notation type
+    # E-notation: let Python handle it directly
+    if 'e' in svalue or 'E' in svalue:
+        return float(svalue)
+
+    # Implicit exponent (most common Nastran exponent form): "1.0+3", "-9.31-4", "1+9"
+    if 'd' not in svalue and 'D' not in svalue:
+        idx = idx_plus if idx_plus > 0 else idx_minus
+        if idx_plus > 0 and idx_minus > 0:
+            idx = min(idx_plus, idx_minus)
+        return float(svalue[:idx] + 'E' + svalue[idx:])
+
+    # D-notation: translate D->E and parse
+    return float(svalue.translate(_D_TO_E))
+
 
 #[-+]?      - an optional (this is what ? means) minus or plus sign
 # \.        - period
@@ -474,43 +513,16 @@ def double(card: BDFCard, ifield: int, fieldname: str,
         raise SyntaxError(f'{fieldname} = {svalue!r} (field #{ifield:d}) on card must be a float (not {dtype}).{end}\n'
                           'card=%s\n%s' % (card, print_card(card)))
 
-    if svalue.isdigit():  # 1, not +1, or -1
-        # if only int
+    if svalue.lstrip('+-').isdigit():
         raise SyntaxError(f'{fieldname} = {svalue!r} (field #{ifield:d}) on card must be a float (not an integer).{end}\n'
                           'card=%s\n%s' % (card, print_card(card)))
 
     try:
-        # 1.0, 1.0E+3, 1.0E-3
-        value = float(svalue)
-    except TypeError:
+        return _nastran_str_to_float(svalue)
+    except (ValueError, TypeError):
         dtype = _get_dtype(svalue)
         raise SyntaxError(f'{fieldname} = {svalue!r} (field #{ifield:d}) on card must be a float (not {dtype}).{end}\n'
                           'card=%s\n%s' % (card, print_card(card)))
-    except ValueError:
-        # 1D+3, 1D-3, 1-3
-        try:
-            svalue = svalue.upper()
-            if 'D' in svalue:
-                # 1.0D+3, 1.0D-3
-                svalue2 = svalue.replace('D', 'E')
-                return float(svalue2)
-
-            # 1.0+3, 1.0-3
-            sign = ''
-            if svalue[0] in ('+', '-'):
-                sign = svalue[0]
-                svalue = svalue[1:]
-            if '+' in svalue:
-                svalue = sign + svalue.replace('+', 'E+')
-            elif '-' in svalue:
-                svalue = sign + svalue.replace('-', 'E-')
-
-            value = float(svalue)
-        except ValueError:
-            dtype = _get_dtype(svalue)
-            raise SyntaxError(f'{fieldname} = {svalue!r} (field #{ifield:d}) on card must be a float (not {dtype}).{end}\n'
-                              'card=%s\n%s' % (card, print_card(card)))
-    return value
 
 
 def double_from_str(svalue: str) -> float:
@@ -528,36 +540,14 @@ def double_from_str(svalue: str) -> float:
         the value from the desired field
 
     """
-    try:
-        # 1.0, 1.0E+3, 1.0E-3
-        value = float(svalue)
-    except TypeError:
+    if svalue.lstrip('+-').isdigit():
         dtype = _get_dtype(svalue)
         raise SyntaxError(f'field = {svalue} on card must be a float (not {dtype}).')
-    except ValueError:
-        # 1D+3, 1D-3, 1-3
-        try:
-            svalue = svalue.upper()
-            if 'D' in svalue:
-                # 1.0D+3, 1.0D-3
-                svalue2 = svalue.replace('D', 'E')
-                return float(svalue2)
-
-            # 1.0+3, 1.0-3
-            sign = ''
-            if svalue[0] in ('+', '-'):
-                sign = svalue[0]
-                svalue = svalue[1:]
-            if '+' in svalue:
-                svalue = sign + svalue.replace('+', 'E+')
-            elif '-' in svalue:
-                svalue = sign + svalue.replace('-', 'E-')
-
-            value = float(svalue)
-        except ValueError:
-            dtype = _get_dtype(svalue)
-            raise SyntaxError(f'field = {svalue} on card must be a float (not {dtype}).')
-    return value
+    try:
+        return _nastran_str_to_float(svalue)
+    except (ValueError, TypeError):
+        dtype = _get_dtype(svalue)
+        raise SyntaxError(f'field = {svalue} on card must be a float (not {dtype}).')
 
 
 def double_or_blank(card: BDFCard, ifield: int, fieldname: str,
@@ -587,14 +577,19 @@ def double_or_blank(card: BDFCard, ifield: int, fieldname: str,
         raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
                           'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
     elif isinstance(svalue, str):
-        svalue = svalue.strip().upper()
-        if not svalue:
+        svalue_stripped = svalue.strip()
+        if not svalue_stripped:
             return default
+        if svalue_stripped == '.':
+            return 0.
+        # reject pure integers (same check as double())
+        if svalue_stripped.lstrip('+-').isdigit():
+            dtype = _get_dtype(svalue)
+            raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
+                              'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
         try:
-            return double(card, ifield, fieldname, end)
-        except Exception:
-            if svalue == '.':
-                return 0.
+            return _nastran_str_to_float(svalue_stripped)
+        except (ValueError, TypeError):
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
@@ -967,6 +962,10 @@ def integer_double_or_string(card: BDFCard, ifield: int, fieldname: str) -> int 
     svalue = str(svalue.strip())
     if svalue:  # integer/float/string
         if '.' in svalue or '-' in svalue or '+' in svalue:
+            if svalue.lstrip('+-').isdigit():
+                # signed integer: -1, +1
+                value = int(svalue)
+                return value
             # float
             value = double(card, ifield, fieldname)
         elif svalue.isdigit():  # 1, not +1, or -1
