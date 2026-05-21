@@ -3,7 +3,7 @@ import sys
 import math
 import warnings
 from typing import Optional, Any
-from numpy import float32, float64, isnan
+from numpy import int32, int64, float32, float64, isnan
 
 
 def set_string8_blank_if_default(value: Any, default: Any) -> str:
@@ -250,7 +250,7 @@ def print_field_8(value: Optional[int | float | str]) -> str:
         an 8-character string
 
     """
-    if isinstance(value, int):
+    if isinstance(value, (int, int32, int64)):
         field = '%8d' % value
     elif isinstance(value, (float, float32, float64)):
         field = print_float_8(value)

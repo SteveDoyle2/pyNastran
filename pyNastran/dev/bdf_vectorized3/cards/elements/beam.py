@@ -1780,10 +1780,7 @@ class PBEAM(Property):
                 is_same = all([value[0] == value[1] for value in (
                     A_, j_, i1_, i2_, i12_, nsm_,
                     c1_, c2_, d1_, d2_, e1_, e2_, f1_, f2_)])
-                # Must write both stations if N1/N2 or M1/M2 vary
-                # (interpolation requires Nastran to see two stations)
-                nm_varies = (n1a != n1b) or (n2a != n2b) or (m1a != m1b) or (m2a != m2b)
-                write_so = not is_same or nm_varies
+                write_so = not is_same
 
             # still need to save these
             #nsia = nsib = 0.

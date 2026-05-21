@@ -323,7 +323,7 @@ def get_zaero_model() -> StringIO:
         'TRIMVAR,17,VAR\n'
         '$\n'
         '$trimlnk,id,sym, ?,  ?\n'
-        'TRIMLNK,10,SYM, -1, 17\n'
+        'TRIMLNK,10,SYM, -1., 17\n'
         'ACOORD, 2, 0.,0.,0., 1.0,0.\n'
         '$       ID,    MODEL, CP, PANLST, SETG, DZ, EPS\n'
         'SPLINE1,100,        ,   ,    422, 423,\n'

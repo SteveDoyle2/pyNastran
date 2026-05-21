@@ -457,10 +457,8 @@ class TestBeams(unittest.TestCase):
     def test_pbeam_two_station_n1n2(self):
         """Two-station PBEAM with same section props but different N1(A)/N1(B).
 
-        Regression test: the writer must output both stations when N1/N2
-        vary between ends, even if section properties are identical.
-        Without this fix, the writer skips the second station and Nastran
-        ignores N1(B)/N2(B).
+        N/M values live in the footer, so the writer can collapse duplicate
+        stations even when N1/N2 vary between ends.  Verify round-trip.
         """
         model = BDF(debug=False)
         model.add_mat1(1, E=200e9, G=None, nu=0.3)
@@ -476,16 +474,12 @@ class TestBeams(unittest.TestCase):
         model.setup(run_geom_check=False)
         prop = model.pbeam
         msg = prop.write(size=8)
-        # The second station must be present (YES keyword)
-        assert 'YES' in msg, (
-            f'Two-station PBEAM with varying N1 must write second station:\n{msg}')
-        # N1(A) and N1(B) must both be in the output
+        # N1(A) and N1(B) must both be in the footer
         assert '.01' in msg, f'N1(A)=0.01 not found:\n{msg}'
         assert '.03' in msg, f'N1(B)=0.03 not found:\n{msg}'
 
-        # Also verify round-trip: read back and check N1 values
+        # Round-trip: read back and check N1 values
         import io
-        from pathlib import Path
         bdf_text = (
             'SOL 101\nCEND\nBEGIN BULK\n'
             + model.mat1.write(size=8)
@@ -503,8 +497,8 @@ class TestBeams(unittest.TestCase):
     def test_pbeam_two_station_m1m2(self):
         """Two-station PBEAM with same section props but different M1(A)/M1(B).
 
-        Regression test: the writer must output both stations when M1/M2
-        vary between ends, even if section properties are identical.
+        M/N values live in the footer, so the writer can collapse duplicate
+        stations even when M1/M2 vary between ends.  Verify round-trip.
         """
         model = BDF(debug=False)
         model.add_mat1(1, E=200e9, G=None, nu=0.3)
@@ -520,8 +514,7 @@ class TestBeams(unittest.TestCase):
         model.setup(run_geom_check=False)
         prop = model.pbeam
         msg = prop.write(size=8)
-        assert 'YES' in msg, (
-            f'Two-station PBEAM with varying M1 must write second station:\n{msg}')
+        # M1(A) and M1(B) must both be in the footer
         assert '.02' in msg, f'M1(A)=0.02 not found:\n{msg}'
         assert '.05' in msg, f'M1(B)=0.05 not found:\n{msg}'
 

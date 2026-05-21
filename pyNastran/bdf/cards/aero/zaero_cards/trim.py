@@ -10,6 +10,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     string_or_blank, double_or_string,
     double_string_or_blank,
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double
 from pyNastran.bdf.cards.aero.aero import AELINK
 from pyNastran.bdf.cards.aero.static_loads import TRIM
 if TYPE_CHECKING:  # pragma: no cover
@@ -522,6 +523,25 @@ class TRIMLNK(BaseCard):
         var_ids = []
         for ifield in range(3, len(card), 2):
             coeff = double(card, ifield, 'coeff_%i' % icoeff)
+            var_id = integer(card, ifield + 1, 'var_%i' % icoeff)
+            coeffs.append(coeff)
+            var_ids.append(var_id)
+            icoeff += 1
+        assert len(card) >= 5, f'len(TRIMLNK card) = {len(card):d}\ncard={card}'
+        return TRIMLNK(link_id, sym, coeffs, var_ids, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card: BDFCard, comment: str=''):
+        link_id = integer(card, 1, 'var_id')
+        sym = string_or_blank(card, 2, 'sym')
+
+        nfields = len(card) - 3
+        assert nfields % 2 == 0, card
+        icoeff = 1
+        coeffs = []
+        var_ids = []
+        for ifield in range(3, len(card), 2):
+            coeff = force_double(card, ifield, 'coeff_%i' % icoeff)
             var_id = integer(card, ifield + 1, 'var_%i' % icoeff)
             coeffs.append(coeff)
             var_ids.append(var_id)
