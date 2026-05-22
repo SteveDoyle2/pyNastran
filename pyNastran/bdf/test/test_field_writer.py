@@ -6,9 +6,12 @@ from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_8 import (print_field_8, print_float_8,
                                           set_default_if_blank, print_int_card,
                                           set_blank_if_default, is_same, print_card_8,
-                                          print_scientific_8)
-from pyNastran.bdf.field_writer_16 import print_field_16, print_card_16, print_float_16, print_scientific_16
-from pyNastran.bdf.field_writer_double import print_card_double
+                                          print_scientific_8,
+                                          print_int_default_8, print_float_default_8,
+                                          set_string8_blank_if_default)
+from pyNastran.bdf.field_writer_16 import (print_field_16, print_card_16, print_float_16,
+                                           print_scientific_16, set_string16_blank_if_default)
+from pyNastran.bdf.field_writer_double import print_card_double, print_field_double, print_scientific_double
 
 
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
@@ -671,6 +674,228 @@ class Testfield_writer_8(unittest.TestCase):
                              f'len={len(actual)} for value={value}: |{actual}|')
             self.assertEqual(actual, expected,
                              f'value={value}: actual=|{actual}| expected=|{expected}|')
+
+
+    def test_print_int_default_8(self):
+        """Test print_int_default_8: returns blank when value==default, else 8-char int."""
+        # value == default -> blank
+        self.assertEqual(print_int_default_8(0, 0), '        ')
+        self.assertEqual(print_int_default_8(5, 5), '        ')
+        self.assertEqual(print_int_default_8(-1, -1), '        ')
+        # value != default -> formatted int
+        self.assertEqual(print_int_default_8(1, 0), '       1')
+        self.assertEqual(print_int_default_8(0, 1), '       0')
+        self.assertEqual(print_int_default_8(-42, 0), '     -42')
+        self.assertEqual(print_int_default_8(12345678, 0), '12345678')
+
+    def test_print_float_default_8(self):
+        """Test print_float_default_8: returns blank when value==default, else print_float_8."""
+        # value == default -> blank
+        self.assertEqual(print_float_default_8(0.0, 0.0), '        ')
+        self.assertEqual(print_float_default_8(1.5, 1.5), '        ')
+        self.assertEqual(print_float_default_8(-3.0, -3.0), '        ')
+        # value != default -> formatted float
+        self.assertEqual(print_float_default_8(1.5, 0.0), '     1.5')
+        self.assertEqual(print_float_default_8(0.0, 1.0), '      0.')
+        self.assertEqual(print_float_default_8(-0.5, 0.0), '     -.5')
+
+    def test_set_string8_blank_if_default(self):
+        """Test set_string8_blank_if_default: returns 8-char blank or formatted value."""
+        # value == default -> 8 spaces
+        self.assertEqual(set_string8_blank_if_default(0.0, 0.0), '        ')
+        self.assertEqual(set_string8_blank_if_default(1, 1), '        ')
+        # value != default -> 8-char formatted
+        self.assertEqual(set_string8_blank_if_default(5.0, 0.0), '     5.0')
+        self.assertEqual(set_string8_blank_if_default(42, 0), '      42')
+        self.assertEqual(set_string8_blank_if_default('ABC', 'DEF'), '     ABC')
+
+    def test_set_string16_blank_if_default(self):
+        """Test set_string16_blank_if_default: returns 16-char blank or formatted value."""
+        # value == default -> 16 spaces
+        self.assertEqual(set_string16_blank_if_default(0.0, 0.0), '                ')
+        self.assertEqual(set_string16_blank_if_default(1, 1), '                ')
+        # value != default -> 16-char formatted
+        self.assertEqual(set_string16_blank_if_default(5.0, 0.0), '             5.0')
+        self.assertEqual(set_string16_blank_if_default(42, 0), '              42')
+        self.assertEqual(set_string16_blank_if_default('ABC', 'DEF'), '             ABC')
+
+    def test_print_field_8_numpy_types(self):
+        """Test print_field_8 with numpy int32, int64, float32, float64."""
+        # numpy integers
+        self.assertEqual(print_field_8(np.int32(7)), '       7')
+        self.assertEqual(print_field_8(np.int64(-100)), '    -100')
+        self.assertEqual(print_field_8(np.int32(12345678)), '12345678')
+        # numpy floats
+        self.assertEqual(len(print_field_8(np.float32(1.5))), 8)
+        self.assertEqual(print_field_8(np.float64(0.0)), '      0.')
+        self.assertEqual(print_field_8(np.float64(125000.)), ' 125000.')
+        # numpy float32 precision is lower, just verify length
+        field = print_field_8(np.float32(3.14))
+        self.assertEqual(len(field), 8)
+
+    def test_print_field_16_numpy_types(self):
+        """Test print_field_16 with numpy int32, int64, float32."""
+        # numpy integers
+        self.assertEqual(print_field_16(np.int32(7)), '               7')
+        self.assertEqual(print_field_16(np.int64(-100)), '            -100')
+        self.assertEqual(print_field_16(np.int64(1234567890123456)), '1234567890123456')
+        # numpy floats
+        self.assertEqual(print_field_16(np.float32(0.0)), '              0.')
+        field = print_field_16(np.float32(3.14))
+        self.assertEqual(len(field), 16)
+
+    def test_print_card_8_empty_string_field(self):
+        """Test that '' fields are treated as blanks in print_card_8."""
+        # '' should produce same result as None (blank field)
+        card_none = print_card_8(['GRID', 1, None, 0.0])
+        card_empty = print_card_8(['GRID', 1, '', 0.0])
+        self.assertEqual(card_none, card_empty)
+
+    def test_print_card_8_mixed_types(self):
+        """Test print_card_8 with floats, strings, ints, and None together."""
+        # GRID card: name, nid, cp, x1, x2, x3, cd, ps, seid
+        card = ['GRID', 1, None, 1.5, -2.0, 3.0, None, None, None]
+        result = print_card_8(card)
+        self.assertIn('GRID', result)
+        self.assertIn('1.5', result)
+        self.assertIn('-2.', result)
+        self.assertIn('3.', result)
+        # Verify field widths by checking total line length (80 chars with newline)
+        lines = result.strip('\n').split('\n')
+        for line in lines:
+            self.assertLessEqual(len(line), 80)
+
+        # MAT1 card: mixed ints and floats
+        card = ['MAT1', 1, 3.0e7, None, 0.3, 0.1, None, None, None, 100.0]
+        result = print_card_8(card)
+        lines = result.strip('\n').split('\n')
+        for line in lines:
+            self.assertLessEqual(len(line), 80)
+
+    def test_print_card_16_dedicated(self):
+        """Dedicated tests for print_card_16 with is_double=False."""
+        # Simple card: 1 continuation line
+        card = ['GRID', 1, None, 1.0, 2.0, 3.0]
+        result = print_card_16(card)
+        self.assertTrue(result.startswith('GRID*'))
+        lines = result.strip('\n').split('\n')
+        for line in lines:
+            self.assertLessEqual(len(line), 80)
+        # Must contain continuation markers
+        self.assertIn('*', result)
+
+        # Card with multiple continuation lines
+        card = ['CTETRA', 6437, 1, 14533, 5598, 1577, 9976, 42364, 5599, 42365, 42363, 30022, 12904]
+        result = print_card_16(card)
+        self.assertTrue(result.startswith('CTETRA*'))
+        lines = result.strip('\n').split('\n')
+        for line in lines:
+            self.assertLessEqual(len(line), 80)
+
+    def test_print_card_16_wipe_fields_false(self):
+        """Test print_card_16 with wipe_fields=False preserves trailing blanks."""
+        # With wipe_fields=True (default), trailing Nones are removed
+        card = ['GRID', 1, None, 0.0, 0.0, 0.0, None, None, None]
+        result_wipe = print_card_16(card, wipe_fields=True)
+        result_no_wipe = print_card_16(card, wipe_fields=False)
+        # wipe_fields=False should produce output at least as long
+        # (trailing Nones remain as blank fields)
+        self.assertGreaterEqual(len(result_no_wipe), len(result_wipe))
+
+    def test_float_16_many(self):
+        """Brute-force sweep for print_float_16 verifying 16-char width (analogous to test_float_8_many)."""
+        for istart in np.arange(-13, 13):
+            nums = np.logspace(istart, istart + 1, num=1000, endpoint=True, base=10.0)
+            for num in nums:
+                output = print_float_16(num)
+                self.assertEqual(len(output), 16,
+                                 msg='output=%r len(output)=%i num=%s' % (output, len(output), num))
+                output_neg = print_float_16(-num)
+                self.assertEqual(len(output_neg), 16,
+                                 msg='output=%r len(output)=%i num=%s' % (output_neg, len(output_neg), -num))
+                output_sci = print_scientific_16(num)
+                self.assertEqual(len(output_sci), 16,
+                                 msg='output=%r len(output)=%i num=%s' % (output_sci, len(output_sci), num))
+
+    def test_print_scientific_double(self):
+        """Test print_scientific_double produces 16-char D-notation fields."""
+        expected_value = [
+            # zero
+            ('0.0000000000D+00', 0.0),
+            # negative zero normalizes to positive
+            ('0.0000000000D+00', -0.0),
+            # positive values
+            ('1.0000000000D+00', 1.0),
+            ('1.2500000000D+02', 125.0),
+            ('5.0000000000D-08', 5e-8),
+            ('1.0000000000D+20', 1e20),
+            ('9.9999999000D+00', 9.9999999),
+            # negative values (1 fewer mantissa digit due to sign)
+            ('-1.000000000D+00', -1.0),
+            ('-1.250000000D+02', -125.0),
+            ('-5.000000000D-08', -5e-8),
+            ('-1.000000000D+20', -1e20),
+            ('-9.999999900D+00', -9.9999999),
+        ]
+        for expected, value in expected_value:
+            actual = print_scientific_double(value)
+            self.assertEqual(len(actual), 16,
+                             f'len={len(actual)} for value={value}: |{actual}|')
+            self.assertEqual(actual, expected,
+                             f'value={value}: actual=|{actual}| expected=|{expected}|')
+
+    def test_print_scientific_double_many(self):
+        """Brute-force sweep for print_scientific_double verifying 16-char width and D-notation."""
+        for istart in np.arange(-13, 13):
+            nums = np.logspace(istart, istart + 1, num=200, endpoint=True, base=10.0)
+            for num in nums:
+                output = print_scientific_double(num)
+                self.assertEqual(len(output), 16,
+                                 msg='output=%r len=%i num=%s' % (output, len(output), num))
+                self.assertIn('D', output,
+                              msg='output=%r num=%s missing D-notation' % (output, num))
+                output_neg = print_scientific_double(-num)
+                self.assertEqual(len(output_neg), 16,
+                                 msg='output=%r len=%i num=%s' % (output_neg, len(output_neg), -num))
+                self.assertIn('D', output_neg)
+
+    def test_print_field_double(self):
+        """Test print_field_double for int, float, None, and string inputs."""
+        # integers -> right-justified 16-char
+        self.assertEqual(print_field_double(1), '               1')
+        self.assertEqual(print_field_double(12345678), '        12345678')
+        # None -> 16 spaces
+        self.assertEqual(print_field_double(None), '                ')
+        # string -> right-justified 16-char
+        self.assertEqual(print_field_double('THRU'), '            THRU')
+        # floats -> scientific D-notation
+        self.assertEqual(print_field_double(0.0), '0.0000000000D+00')
+        self.assertEqual(print_field_double(1.0), '1.0000000000D+00')
+        self.assertEqual(print_field_double(-1.0), '-1.000000000D+00')
+        # all results must be 16 chars
+        for val in [0.0, 1.0, -1.0, 1e-10, -1e-10, 1e20, -1e20, 3.14159, -0.001]:
+            field = print_field_double(val)
+            self.assertEqual(len(field), 16, f'value={val} field=|{field}|')
+
+    def test_print_card_double_multi_continuation(self):
+        """Test print_card_double with many fields producing multiple continuation lines."""
+        # CHEXA: 2 continuation lines of data
+        card = ['CHEXA', 1, 2, 10, 20, 30, 40, 50, 60, 70, 80]
+        result = print_card_double(card)
+        self.assertTrue(result.startswith('CHEXA*'))
+        lines = result.strip('\n').split('\n')
+        for line in lines:
+            self.assertLessEqual(len(line), 80)
+        # should have continuation markers
+        cont_lines = [l for l in lines if l.startswith('*')]
+        self.assertGreaterEqual(len(cont_lines), 1)
+
+    def test_print_card_double_wipe_fields_false(self):
+        """Test print_card_double with wipe_fields=False."""
+        card = ['GRID', 1, None, 0.0, 0.0, 0.0, None, None, None]
+        result_wipe = print_card_double(card, wipe_fields=True)
+        result_no_wipe = print_card_double(card, wipe_fields=False)
+        self.assertGreaterEqual(len(result_no_wipe), len(result_wipe))
 
 
 def compare(value_in):

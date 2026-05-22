@@ -329,6 +329,99 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         dmi = model_out.dmi['WKK']
         str(dmi)
 
+    def test_dmi_real_with_zeros(self):
+        """Tests DMI read/write round-trip with zero values interspersed.
+
+        Verifies THRU compression on write:
+        - rows 1-5 all have value 1.0 -> written as "1 1.0 THRU 5"
+        - rows 6-8 have 0.0 -> filtered (zeros not written)
+        - rows 9-10 have 2.0 -> written as "9 2.0 THRU 10"
+        - row 11 has 3.0 -> written as "11 3.0"
+
+        Also tests that int(0) in the field stream raises an assertion
+        (0 is an invalid row id, so "0" without decimal is malformed).
+
+        Tolerances: exact float equality (values are simple floats).
+        Interactions tested: zero filtering on write, THRU collapse,
+        assertion on invalid row id.
+        """
+        # column 1: rows 1-5=1.0, rows 6-8=0.0, rows 9-10=2.0, row 11=3.0
+        # use "0." (float) not "0" (int) for zero values
+        data = (
+            'DMI,ZRO,0,2,1,0,,11,1\n'
+            'DMI,ZRO,1,1,1.0,1.0,1.0,1.0,1.0,0.,0.\n'
+            ',0.,9,2.0,2.0,11,3.0\n'
+        )
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.bdf',
+                                         delete=False) as f:
+            f.write(data)
+            fname = f.name
+        try:
+            model = BDF(debug=False)
+            model.read_bdf(fname, punch=True)
+            dmi = model.dmi['ZRO']
+
+            # verify all 11 entries were read
+            mat = dmi.get_matrix(is_sparse=False)[0]
+            assert mat.shape == (11, 1), mat.shape
+            expected = np.array([1., 1., 1., 1., 1., 0., 0., 0., 2., 2., 3.])
+            assert np.array_equal(mat.flatten(), expected), (
+                f'mat={mat.flatten()}\nexpected={expected}')
+
+            # write and re-read: verify round-trip
+            card_str = dmi.write_card(size=8)
+
+            # THRU compression: "1 1.0 THRU 5"
+            # (zeros filtered, so rows 6-8 are not written)
+            assert 'THRU' in card_str, f'expected THRU compression:\n{card_str}'
+
+            # count DMI data lines (excluding the header "DMI ZRO 0 ..." line)
+            dmi_lines = [l for l in card_str.split('\n')
+                         if l.strip().startswith('DMI') and ',0,' not in l
+                         and '       0' not in l]
+            # with THRU: should be 1 data card
+            assert len(dmi_lines) == 1, (
+                f'expected 1 DMI data card with THRU, got {len(dmi_lines)}:\n{card_str}')
+
+            # re-read the written card
+            model2 = BDF(debug=False)
+            from io import StringIO
+            bdf_str = 'CEND\nBEGIN BULK\n' + card_str + '\nENDDATA\n'
+            model2.read_bdf(StringIO(bdf_str), punch=False)
+            fill_dmigs(model2)
+            dmi2 = model2.dmi['ZRO']
+            mat2 = dmi2.get_matrix(is_sparse=False)[0]
+            # zeros are filtered on write, so re-read should still give the
+            # same non-zero structure (zeros become 0 from matrix init)
+            assert np.array_equal(mat2.flatten(), expected), (
+                f'round-trip failed:\nmat2={mat2.flatten()}\nexpected={expected}')
+        finally:
+            os.remove(fname)
+
+    def test_dmi_real_int_zero_raises(self):
+        """Tests that "0" (parsed as int) in a DMI value field raises AssertionError.
+
+        "0" without a decimal point is parsed by interpret_value as int(0).
+        Since 0 is an invalid row id and we don't support casting int to float,
+        this is a malformed card and should assert.
+        """
+        data = (
+            'DMI,BAD,0,2,1,0,,5,1\n'
+            'DMI,BAD,1,1,1.0,0,3.0\n'
+        )
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.bdf',
+                                         delete=False) as f:
+            f.write(data)
+            fname = f.name
+        try:
+            model = BDF(debug=False)
+            with self.assertRaises(AssertionError):
+                model.read_bdf(fname, punch=True)
+        finally:
+            os.remove(fname)
+
     def test_dmi_complex(self):
         """tests a complex DMI"""
         #DMI QQQ 0 2 3 3 4 2

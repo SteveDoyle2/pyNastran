@@ -18,9 +18,10 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank,  # blank,
+    integer, integer_or_blank, integer_or_double,  # blank,
     double, string, string_or_blank,
-    parse_components, interpret_value, integer_double_string_or_blank)
+    parse_components, interpret_value, integer_double_string_or_blank,
+    _nastran_str_to_float)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.bdf.bdf import BDF
@@ -2189,104 +2190,156 @@ class DMI(NastranMatrix):
             self._read_real(card)
 
     def _read_real(self, card: BDFCard):
-        """reads a real DMI column"""
-        # column number
+        """Reads a real DMI column card and appends to GCi, GCj, Real.
+
+        Card format:
+            DMI  NAME  J  I1  A(I1,J)  A(I1+1,J)  ...  I2  A(I2,J)  ...
+
+        Fields after position 2 (J) alternate between:
+          - unsigned integer row indices (start a new contiguous run)
+          - float values (consecutive entries in the column)
+          - 'THRU' keyword (repeats the last value through a row range)
+
+        Floats are identified by containing '.', or an internal +/- sign
+        (Nastran implicit exponent, e.g. '9.906-1' = 9.906e-1).
+        Row indices are unsigned digit-only strings.
+
+        GCj is populated in bulk at the end (single extend) rather than
+        per-value to reduce append overhead on large matrices.
+        """
         j = integer(card, 2, 'icol')
 
-        # counter
-        i = 0
+        fields = card.card
+        nfields = len(fields)
+        ifield = 3
+        GCi = self.GCi
+        Real = self.Real
+        n_added = 0
+        _to_float = _nastran_str_to_float
 
-        # TODO: speed this up
-        fields = [interpret_value(field, card) for field in card[3:]]
+        while ifield < nfields:
+            i1 = int(fields[ifield])
+            assert i1 > 0, f'row index={i1} should be > 0; 0 is an invalid row id'
+            ifield += 1
+            while ifield < nfields:
+                svalue = fields[ifield]
+                if svalue is None or svalue == '':
+                    ifield += 1
+                    continue
+                if isinstance(svalue, (int, float)):
+                    if isinstance(svalue, int):
+                        assert svalue > 0, f'row index={svalue} should be > 0; 0 is an invalid row id'
+                        break
+                    GCi.append(i1)
+                    Real.append(svalue)
+                    n_added += 1
+                    ifield += 1
+                    i1 += 1
+                    continue
+                # string field — check for int vs float vs THRU
+                if '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
+                    GCi.append(i1)
+                    Real.append(_to_float(svalue))
+                    n_added += 1
+                    ifield += 1
+                    i1 += 1
+                elif svalue.lstrip('+-').isdigit():
+                    assert '+' not in svalue and '-' not in svalue, f'row index={svalue!r} must not be signed'
+                    ival = int(svalue)
+                    assert ival > 0, f'row index={ival} should be > 0; 0 is an invalid row id'
+                    break
+                else:
+                    # THRU
+                    real_value = Real[-1]
+                    end_i = int(fields[ifield + 1])
+                    for ii in range(i1, end_i + 1):
+                        GCi.append(ii)
+                        Real.append(real_value)
+                        n_added += 1
+                    ifield += 2
+                    break
 
-        # Real, starts at A(i1,j), goes to A(i2,j) in a column
-        while i < len(fields):
-            i1 = fields[i]
-            if isinstance(i1, integer_types):
-                i += 1
-                is_done_reading_floats = False
-                while not is_done_reading_floats and i < len(fields):
-                    real_value = fields[i]
-                    if isinstance(real_value, integer_types):
-                        is_done_reading_floats = True
-                    elif isinstance(real_value, float):
-                        #print('adding j=%s i1=%s val=%s' % (j, i1, real_value))
-                        self.GCj.append(j)
-                        self.GCi.append(i1)
-                        self.Real.append(real_value)
-                        i += 1
-                        i1 += 1
-                    else:
-                        assert real_value == 'THRU', real_value
-                        real_value = self.Real[-1]
-                        end_i = fields[i + 1]
-                        for ii in range(i1, end_i + 1):
-                            #print('THRU adding j=%s i1=%s val=%s' % (j, ii, real_value))
-                            self.GCj.append(j)
-                            self.GCi.append(ii)
-                            self.Real.append(real_value)
-                        i += 1
-                        is_done_reading_floats = True
-        #print(self.GCi)
-        #print(self.GCj)
+        self.GCj.extend([j] * n_added)
 
     def _read_complex(self, card: BDFCard):
-        """reads a complex DMI column"""
-        #msg = 'complex matrices not supported in the DMI reader...'
-        #raise NotImplementedError(msg)
-        # column number
+        """Reads a complex DMI column card and appends to GCi, GCj, Real, Complex.
+
+        Card format:
+            DMI  NAME  J  I1  A_real(I1,J)  A_imag(I1,J)  A_real(I1+1,J)  A_imag(I1+1,J)  ...
+
+        Fields after position 2 (J) alternate between:
+          - unsigned integer row indices (start a new contiguous run)
+          - pairs of float values (real, imaginary) for consecutive entries
+          - 'THRU' keyword (repeats the last real+imag pair through a row range)
+
+        GCj is populated in bulk at the end (single extend) rather than
+        per-value to reduce append overhead on large matrices.
+        """
         j = integer(card, 2, 'icol')
-        # counter
-        i = 0
 
-        # TODO: speed this up
-        fields = [interpret_value(field, card) for field in card[3:]]
-        # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
+        fields = card.card
+        nfields = len(fields)
+        ifield = 3
+        GCi = self.GCi
+        Real = self.Real
+        Complex = self.Complex
+        n_added = 0
+        _to_float = _nastran_str_to_float
 
-        while i < len(fields):
-            #print(f'fields = {fields[i:]}')
-            #print(f' - GCj  = {self.GCj}')
-            #print(f' - GCi  = {self.GCi}')
-            #print(f' - Real = {self.Real}')
-            #print(f' - Imag = {self.Complex}')
-            i1 = fields[i]
-            assert isinstance(i1, int), card
-            i += 1
-            is_done_reading_floats = False
-            while not is_done_reading_floats and i < len(fields):
-                #print(f'fields = {fields[i:]}')
-                #print(f' - GCj  = {self.GCj}')
-                #print(f' - GCi  = {self.GCi}')
-                #print(f' - Real = {self.Real}')
-                #print(f' - Imag = {self.Complex}')
-                value = fields[i]
-                #print(f"i={i} len(fields)={len(fields)} value={value}")
-                if isinstance(value, integer_types):
-                    is_done_reading_floats = True
-                elif isinstance(value, float):
-                    real_value = value
-                    complex_value = fields[i + 1]
-                    #print(f'complex_value = {complex_value}')
-                    assert isinstance(complex_value, float), card
-                    self.GCj.append(j)
-                    self.GCi.append(i1)
-                    self.Real.append(value)
-                    self.Complex.append(complex_value)
-                    i += 2
+        while ifield < nfields:
+            i1 = int(fields[ifield])
+            ifield += 1
+            while ifield < nfields:
+                svalue = fields[ifield]
+                if svalue is None or svalue == '':
+                    ifield += 1
+                    continue
+                if isinstance(svalue, (int, float)):
+                    if isinstance(svalue, int):
+                        break
+                    # already a float
+                    svalue2 = fields[ifield + 1]
+                    if isinstance(svalue2, float):
+                        cval = svalue2
+                    else:
+                        cval = _to_float(svalue2)
+                    GCi.append(i1)
+                    Real.append(svalue)
+                    Complex.append(cval)
+                    n_added += 1
+                    ifield += 2
                     i1 += 1
+                    continue
+                # string field
+                if '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
+                    real_val = _to_float(svalue)
+                    svalue2 = fields[ifield + 1]
+                    if isinstance(svalue2, float):
+                        cval = svalue2
+                    else:
+                        cval = _to_float(svalue2)
+                    GCi.append(i1)
+                    Real.append(real_val)
+                    Complex.append(cval)
+                    n_added += 1
+                    ifield += 2
+                    i1 += 1
+                elif svalue.lstrip('+-').isdigit():
+                    break
                 else:
-                    #print(f'value = {value}')
-                    assert value == 'THRU', (value, real_value, complex_value)
-                    end_i = fields[i + 1]
-                    #print(f'end_i = {end_i}')
+                    # THRU
+                    real_value = Real[-1]
+                    complex_value = Complex[-1]
+                    end_i = int(fields[ifield + 1])
                     for ii in range(i1, end_i + 1):
-                        #print(f'  THRU adding j={j} i1={ii} val={real_value}+{complex_value}j')
-                        self.GCj.append(j)
-                        self.GCi.append(ii)
-                        self.Real.append(real_value)
-                        self.Complex.append(complex_value)
-                    i += 1
-                    is_done_reading_floats = True
+                        GCi.append(ii)
+                        Real.append(real_value)
+                        Complex.append(complex_value)
+                        n_added += 1
+                    ifield += 2
+                    break
+
+        self.GCj.extend([j] * n_added)
 
     @property
     def is_real(self) -> bool:

@@ -2034,7 +2034,8 @@ class RealCBeamForceArray(RealForceObject):
         nid_floats = np.array([])
         if write_vectorized:
             fdtype = fdtype_from_data(self.data, self.size)
-            eid_device_floats = view_idtype_as_fdtype(eids_device, fdtype)
+            ueids_device = ueids * 10 + self.device_code
+            eid_device_floats = view_idtype_as_fdtype(ueids_device, fdtype)
             nid_floats = view_idtype_as_fdtype(nids, fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
@@ -2055,24 +2056,30 @@ class RealCBeamForceArray(RealForceObject):
                             f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             if write_vectorized:
-                isd0 = np.arange(0, nelements, 2)
-                isd1 = isd0 + 10
-                data = np.zeros((nelements, 189), dtype=fdtype)
-                data[:, 0] = eid_device_floats
-                data[:, 1] = nid_floats[:, 0]
-                if is_nid_positive:
-                    asdf
-                    print(f'sd1: data[itime, isd1, 1].shape={self.data[itime, isd1, 1].shape}')
-                    print(f'out: data[itime, isd0, :].shape={self.data[itime, isd0, :].shape}')
-                    print(f'in0: data[:, 2:18].shape={data[:, 2:18].shape}')
-                    print(f'in1: data[:, -18:].shape={data[:, -18:].shape}')
-                    data[:, 2:18] = self.data[itime, isd0, :]
-                    data[:, -18:] = self.data[itime, isd1, :]
-                    # data1 = self.data[itime, :, :]
-                    # data2 = np.column_stack([eid_device_floats, data1])
-                else:  # pragma: no cover
-                    raise RuntimeError((write_vectorized, is_nid_positive))
-                op2_file.write(data)
+                # After finalize with is_nid_positive, data has 2 rows per element
+                # (start node and end node). We need to reconstruct the full
+                # 11-station OP2 layout (100 words per element):
+                #   [eid_device, nid1, data1(8)...  9 zero rows(9 each)...  nid2, data2(8)]
+                #   = 1 + 9 + 81 + 9 = 100
+                nrows = len(nids)
+                assert nrows == nelements * 2, (nrows, nelements)
+                i_node1 = np.arange(0, nrows, 2)
+                i_node2 = np.arange(1, nrows, 2)
+
+                eid_data = np.zeros((nelements, 100), dtype=fdtype)
+                # col 0: eid_device
+                eid_data[:, 0] = eid_device_floats
+                # cols 1-9: [nid1, sd1, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
+                eid_data[:, 1] = nid_floats[i_node1]
+                eid_data[:, 2:10] = self.data[itime, i_node1, :]
+                # cols 10-90: zero (9 intermediate stations × 9 words each)
+                # cols 91-99: [nid2, sd2, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
+                eid_data[:, 91] = nid_floats[i_node2]
+                eid_data[:, 92:100] = self.data[itime, i_node2, :]
+
+                op2_file.write(eid_data)
+                nwide = eid_data.size
+                assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             else:
                 sd = self.data[itime, :, 0]
                 bm1 = self.data[itime, :, 1]
@@ -3363,7 +3370,8 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
                 datai = datai.astype(fdtype)
             eid_data = np.column_stack([eid_floats, datai])
             op2_file.write(eid_data)
-            assert ntotal == eid_data.size
+            nwide = eid_data.size
+            assert ntotal == nwide
             assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1
             header = [4 * ntotal,]
@@ -3879,7 +3887,8 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
             eid_data = np.column_stack([eid_device_floats, cen_word_floats, nnode_floats, nid_data2])
             op2_file.write(eid_data)
-            assert ntotal == eid_data.size
+            nwide = eid_data.size
+            assert ntotal == nwide
             assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1
             header = [4 * ntotal,]
