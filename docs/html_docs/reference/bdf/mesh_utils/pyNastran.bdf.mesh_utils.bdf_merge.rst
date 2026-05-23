@@ -4,6 +4,5 @@
 
 .. automodule:: pyNastran.bdf.mesh_utils.bdf_merge
     :members:
-    :private-members:
     :undoc-members:
 

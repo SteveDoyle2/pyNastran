@@ -4,5 +4,4 @@
 
 .. automodule:: pyNastran.bdf.mesh_utils.find_coplanar_elements
     :members:
-    :private-members:
     :undoc-members:

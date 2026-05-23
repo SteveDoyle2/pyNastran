@@ -5,7 +5,6 @@
 
 .. automodule:: pyNastran.bdf.bdf_interface.write_mesh
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

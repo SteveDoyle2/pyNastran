@@ -5,6 +5,5 @@
 
 .. automodule:: pyNastran.bdf.bdf_interface.replication
     :members:
-    :private-members:
     :undoc-members:
 

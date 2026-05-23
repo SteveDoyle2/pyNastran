@@ -473,7 +473,7 @@ class FlutterResponse:
                 try:
                     eigenvector, eigr_eigi_velocity = _sort_eigenvectors(
                         self, eigenvector, eigr_eigi_velocity, eigr, eigi)
-                except AssertionError:
+                except (AssertionError, KeyError, RuntimeError):
                     pass
                 # assert not np.array_equal(eigenvector, eigenvector2)
                 # assert not np.array_equal(eigr_eigi_velocity, eigr_eigi_velocity2)
@@ -1608,7 +1608,7 @@ class FlutterResponse:
         ylabel1 = r'Structural Damping; $g = 2 \gamma $'
         ylabel2 = r'KFreq [rad]; $ \omega c / (2 V)$'
 
-        ix, xlabel, unused_xunit = self._plot_type_to_ix_xlabel(plot_type)
+        ix, xlabel, xunit = self._plot_type_to_ix_xlabel(plot_type)
         iy1 = self.idamping
         iy2 = self.ikfreq
         scatter = True
@@ -1622,6 +1622,10 @@ class FlutterResponse:
             freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
             png_filename=png_filename,
             **kwargs)
+
+        ax_damp, ax_kfreq = axes2
+        _add_damping_limit(plot_type, ax_damp, None, damping_limit)
+        _add_vertical_lines([ax_damp, ax_kfreq], v_lines, plot_type, xunit)
         return fig, axes2
 
     def plot_kfreq_damping2(self, modes=None,
@@ -3999,6 +4003,11 @@ def _get_divergence(self,
                 raise RuntimeError(f'ifreq={ifreq!r} and must be an integer; type={str(type(ifreq))}')
 
             if ifreq >= len(freqi):
+                continue
+
+            # Divergence requires g >= 0 (static instability).
+            # freq -> 0 with g < 0 is stable overdamped (supercritical damping).
+            if dampi[ifreq] < 0:
                 continue
             freq0 = freqi[ifreq]
             eas0 = easi[ifreq]

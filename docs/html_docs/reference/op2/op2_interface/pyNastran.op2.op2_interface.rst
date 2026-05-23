@@ -41,3 +41,12 @@ op2_interface Package
     :undoc-members:
     :show-inheritance:
 
+Submodules
+----------
+
+.. toctree::
+
+   pyNastran.op2.op2_interface.op2_common
+   pyNastran.op2.op2_interface.op2_reader
+   pyNastran.op2.op2_interface.op2_scalar
+

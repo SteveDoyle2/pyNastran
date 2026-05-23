@@ -5,6 +5,5 @@
 
 .. automodule:: pyNastran.bdf.bdf_interface.stats
     :members:
-    :private-members:
     :undoc-members:
 
