@@ -5329,11 +5329,6 @@ class AddThermal:
         self._add_methods.add_thermal_load_object(temp)
         return temp
 
-    #def add_tempp1(self) -> TEMPP1:
-        #temp = TEMPP1()
-        #self._add_thermal_load_object(temp)
-        #return temp
-
     def add_tempd(self, sid: int, temperature: float, comment: str='') -> TEMPD:
         """
         Creates a TEMPD card

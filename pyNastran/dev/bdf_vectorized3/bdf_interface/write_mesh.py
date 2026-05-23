@@ -951,6 +951,8 @@ class Writer:
             # static thermal loads
             model.tempd.write_file(bdf_file, size=size, is_double=is_double)  # default temp
             model.temp.write_file(bdf_file, size=size, is_double=is_double)
+            model.tempp1.write_file(bdf_file, size=size, is_double=is_double)
+            model.temprb.write_file(bdf_file, size=size, is_double=is_double)
 
             # dynamic thermal loads
             #bdf_file.write(model.dtemp.write(size=size))  # has nodes

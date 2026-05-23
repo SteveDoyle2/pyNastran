@@ -10,10 +10,12 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     blank, parse_components, components_or_blank, integer_double_string_or_blank,
     _get_dtype, interpret_value, modal_components,
     parse_components_or_blank,
+    modal_components_or_blank, string_choice_or_blank,
+    exact_string_or_blank, filename_or_blank, check_string, loose_string,
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import (
     force_integer, force_double, force_integer_or_blank,
-    force_double_or_string,
+    force_double_or_string, force_double_or_blank, lax_double_or_blank,
     parse_components as force_components
 )
 
@@ -1107,6 +1109,321 @@ class TestAssignType(unittest.TestCase):
         self.assertEqual(modal_components(BDFCard(['6']), 0, 'field'), 6)
         with self.assertRaises(SyntaxError):
             self.assertEqual(modal_components(BDFCard(['7']), 0, 'field'), 7)
+
+    def test_interpret_value(self):
+        """Test interpret_value covers all parsing branches:
+        None, blank, int, float, string, D-notation, implicit exponent, special chars.
+        """
+        # None input
+        self.assertIsNone(interpret_value(None))
+
+        # blank / whitespace
+        self.assertIsNone(interpret_value(''))
+        self.assertIsNone(interpret_value('   '))
+        self.assertIsNone(interpret_value('  *'))
+
+        # integers
+        self.assertEqual(interpret_value('1'), 1)
+        self.assertEqual(interpret_value('-1'), -1)
+        self.assertEqual(interpret_value('+42'), 42)
+        self.assertEqual(interpret_value('  100  '), 100)
+        self.assertEqual(interpret_value('0'), 0)
+
+        # floats (standard notation)
+        self.assertEqual(interpret_value('1.0'), 1.0)
+        self.assertEqual(interpret_value('-3.14'), -3.14)
+        self.assertEqual(interpret_value('1.5E+3'), 1500.0)
+        self.assertEqual(interpret_value('1.5E-3'), 0.0015)
+        self.assertEqual(interpret_value('.5'), 0.5)
+
+        # D-notation (Nastran double precision)
+        self.assertEqual(interpret_value('1.000000000D+00'), 1.0)
+        self.assertEqual(interpret_value('2.5D+3'), 2500.0)
+        self.assertEqual(interpret_value('-1.5D-2'), -0.015)
+        self.assertEqual(interpret_value('1.D+0'), 1.0)
+
+        # implicit exponent notation (Nastran shorthand: 1.5+3 means 1.5e3)
+        self.assertEqual(interpret_value('1.5+3'), 1500.0)
+        self.assertEqual(interpret_value('1.5-3'), 0.0015)
+        self.assertAlmostEqual(interpret_value('-5.007-3') / -5.007e-3, 1.0, places=10)
+        self.assertAlmostEqual(interpret_value('8.182-18') / 8.182e-18, 1.0, places=10)
+        self.assertEqual(interpret_value('+3.0+2'), 300.0)
+
+        # strings (start with alpha)
+        self.assertEqual(interpret_value('GRID'), 'GRID')
+        self.assertEqual(interpret_value('  mat1  '), 'MAT1')
+
+        # special characters (=, (, *) returned as-is stripped
+        self.assertEqual(interpret_value('='), '=')
+        self.assertEqual(interpret_value('(1.0)'), '(1.0)')
+        self.assertEqual(interpret_value('2*3.0'), '2*3.0')
+
+        # already numeric input (int/float pass-through)
+        self.assertEqual(interpret_value(42), 42)
+        self.assertEqual(interpret_value(3.14), 3.14)
+
+        # error case: can't find exponent sign
+        with self.assertRaises(SyntaxError):
+            interpret_value('1.5X3')
+
+    def test_bdf_card_field(self):
+        """Test BDFCard.field(i, default) for in-range, out-of-range, blank, and None fields."""
+        card = BDFCard(['GRID', '1', '', '1.0', '2.0', '3.0'], has_none=False)
+
+        # in-range, populated field
+        self.assertEqual(card.field(0), 'GRID')
+        self.assertEqual(card.field(1), '1')
+        self.assertEqual(card.field(3), '1.0')
+
+        # in-range, blank field -> returns default
+        self.assertEqual(card.field(2), None)
+        self.assertEqual(card.field(2, 'mydefault'), 'mydefault')
+
+        # out-of-range -> returns default
+        self.assertEqual(card.field(99), None)
+        self.assertEqual(card.field(99, 42), 42)
+        self.assertEqual(card.field(-100, 'fallback'), 'fallback')
+
+        # None field (has_none=True path)
+        card2 = BDFCard(['GRID', '1', None, '1.0'], has_none=True)
+        self.assertEqual(card2.field(2), None)
+        self.assertEqual(card2.field(2, 0), 0)
+
+    def test_bdf_card_repr(self):
+        """Test BDFCard.__repr__ returns a parseable list representation."""
+        card = BDFCard(['GRID', '1', None, '1.0'], has_none=True)
+        result = repr(card)
+        # repr uses %r formatting of the internal card list
+        self.assertIn('GRID', result)
+        self.assertIn('1.0', result)
+        # should be a valid Python list literal
+        self.assertTrue(result.startswith('['))
+        self.assertTrue(result.endswith(']'))
+
+    def test_bdf_card_fields(self):
+        """Test BDFCard.fields(i, j) for slicing subsets of card fields."""
+        card = BDFCard(['GRID', '1', '', '10.0', '20.0', '30.0'], has_none=False)
+
+        # fields(0) -> all fields
+        all_fields = card.fields(0)
+        self.assertEqual(len(all_fields), 6)
+        self.assertEqual(all_fields[0], 'GRID')
+        self.assertEqual(all_fields[5], '30.0')
+
+        # fields(i, j) -> subset [i, j)
+        subset = card.fields(3, 6)
+        self.assertEqual(subset, ['10.0', '20.0', '30.0'])
+
+        # fields(1, 3) -> indices 1 and 2
+        subset2 = card.fields(1, 3)
+        self.assertEqual(subset2[0], '1')
+        # index 2 is blank ('') -> field() returns None
+        self.assertEqual(subset2[1], None)
+
+        # fields starting past end -> all None (default)
+        subset3 = card.fields(10, 12)
+        self.assertEqual(subset3, [None, None])
+
+        # fields with j=None -> to end of card
+        subset4 = card.fields(4)
+        self.assertEqual(len(subset4), 2)
+        self.assertEqual(subset4, ['20.0', '30.0'])
+
+
+    def test_force_double_or_blank(self):
+        """Test force_double_or_blank: coerces ints to floats with warning, parses Nastran floats."""
+        import warnings
+
+        # float passthrough
+        self.assertEqual(force_double_or_blank(BDFCard([3.14]), 0, 'f'), 3.14)
+
+        # integer coerced to float (with warning)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            self.assertEqual(force_double_or_blank(BDFCard([5]), 0, 'f'), 5.0)
+
+        # string integer coerced to float (with warning)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            self.assertEqual(force_double_or_blank(BDFCard(['10']), 0, 'f'), 10.0)
+
+        # Nastran float notation
+        self.assertEqual(force_double_or_blank(BDFCard(['1.5']), 0, 'f'), 1.5)
+        self.assertEqual(force_double_or_blank(BDFCard(['1.-3']), 0, 'f'), 1.0e-3)
+        self.assertEqual(force_double_or_blank(BDFCard(['1.+3']), 0, 'f'), 1.0e3)
+
+        # blank -> default
+        self.assertIsNone(force_double_or_blank(BDFCard(['']), 0, 'f'))
+        self.assertIsNone(force_double_or_blank(BDFCard([None]), 0, 'f'))
+        self.assertEqual(force_double_or_blank(BDFCard(['']), 0, 'f', default=99.0), 99.0)
+
+        # '.' -> 0.0
+        self.assertEqual(force_double_or_blank(BDFCard(['.']), 0, 'f'), 0.0)
+
+        # out of range -> default
+        self.assertIsNone(force_double_or_blank(BDFCard([1.0]), 5, 'f'))
+        self.assertEqual(force_double_or_blank(BDFCard([1.0]), 5, 'f', default=7.0), 7.0)
+
+        # invalid string -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            force_double_or_blank(BDFCard(['abc']), 0, 'f')
+
+    def test_lax_double_or_blank(self):
+        """Test lax_double_or_blank: wraps integer_double_or_blank, coerces int to float."""
+        # float passthrough
+        self.assertEqual(lax_double_or_blank(BDFCard([3.14]), 0, 'f'), 3.14)
+
+        # integer coerced to float
+        self.assertEqual(lax_double_or_blank(BDFCard([5]), 0, 'f'), 5.0)
+        self.assertIsInstance(lax_double_or_blank(BDFCard([5]), 0, 'f'), float)
+
+        # string float
+        self.assertEqual(lax_double_or_blank(BDFCard(['1.5']), 0, 'f'), 1.5)
+
+        # string integer -> int -> float
+        self.assertEqual(lax_double_or_blank(BDFCard(['10']), 0, 'f'), 10.0)
+        self.assertIsInstance(lax_double_or_blank(BDFCard(['10']), 0, 'f'), float)
+
+        # blank -> default
+        self.assertIsNone(lax_double_or_blank(BDFCard([None]), 0, 'f'))
+        self.assertEqual(lax_double_or_blank(BDFCard([None]), 0, 'f', default=2.0), 2.0)
+
+        # Nastran notation
+        self.assertEqual(lax_double_or_blank(BDFCard(['1.-3']), 0, 'f'), 1e-3)
+
+    def test_string_choice_or_blank(self):
+        """Test string_choice_or_blank: validates string is in allowed set."""
+        choices = ('YES', 'NO', 'MAYBE')
+
+        # valid choice
+        self.assertEqual(string_choice_or_blank(BDFCard(['yes']), 0, 'f', choices), 'YES')
+        self.assertEqual(string_choice_or_blank(BDFCard(['NO']), 0, 'f', choices), 'NO')
+
+        # blank -> default
+        self.assertIsNone(string_choice_or_blank(BDFCard([None]), 0, 'f', choices))
+        self.assertEqual(string_choice_or_blank(BDFCard([None]), 0, 'f', choices, default='YES'), 'YES')
+        self.assertIsNone(string_choice_or_blank(BDFCard(['']), 0, 'f', choices))
+
+        # invalid choice -> RuntimeError
+        with self.assertRaises(RuntimeError):
+            string_choice_or_blank(BDFCard(['INVALID']), 0, 'f', choices)
+
+        # non-string input -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            string_choice_or_blank(BDFCard([1.0], has_none=False), 0, 'f', choices)
+
+    def test_modal_components_or_blank(self):
+        """Test modal_components_or_blank: integer -1 to 6, or blank."""
+        # valid values
+        self.assertEqual(modal_components_or_blank(BDFCard(['-1']), 0, 'f', 0), -1)
+        self.assertEqual(modal_components_or_blank(BDFCard(['0']), 0, 'f', 0), 0)
+        self.assertEqual(modal_components_or_blank(BDFCard(['3']), 0, 'f', 0), 3)
+        self.assertEqual(modal_components_or_blank(BDFCard(['6']), 0, 'f', 0), 6)
+
+        # blank -> default
+        self.assertEqual(modal_components_or_blank(BDFCard([None]), 0, 'f', 0), 0)
+        self.assertEqual(modal_components_or_blank(BDFCard(['']), 0, 'f', 3), 3)
+
+        # out of range -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            modal_components_or_blank(BDFCard(['7']), 0, 'f', 0)
+        with self.assertRaises(SyntaxError):
+            modal_components_or_blank(BDFCard(['-2']), 0, 'f', 0)
+
+    def test_exact_string_or_blank(self):
+        """Test exact_string_or_blank: returns left-justified 8-char string or default."""
+        # populated field -> 8-char left-justified
+        result = exact_string_or_blank(BDFCard(['GRID'], has_none=False), 0, 'f')
+        self.assertEqual(result, 'GRID    ')
+        self.assertEqual(len(result), 8)
+
+        # blank -> default
+        self.assertIsNone(exact_string_or_blank(BDFCard([None]), 0, 'f'))
+        self.assertEqual(exact_string_or_blank(BDFCard([None]), 0, 'f', default='DEF'), 'DEF')
+
+        # short string -> padded to 8
+        result = exact_string_or_blank(BDFCard(['AB'], has_none=False), 0, 'f')
+        self.assertEqual(result, 'AB      ')
+        self.assertEqual(len(result), 8)
+
+    def test_filename_or_blank(self):
+        """Test filename_or_blank: validates string as filename (no digits first, no +/- first)."""
+        # valid filename
+        self.assertEqual(filename_or_blank(BDFCard(['MYFILE'], has_none=False), 0, 'f'), 'MYFILE')
+        self.assertEqual(filename_or_blank(BDFCard(['model'], has_none=False), 0, 'f'), 'MODEL')
+
+        # blank -> default
+        self.assertIsNone(filename_or_blank(BDFCard([None]), 0, 'f'))
+        self.assertEqual(filename_or_blank(BDFCard([None]), 0, 'f', default='X'), 'X')
+
+        # starts with digit -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            filename_or_blank(BDFCard(['1FILE'], has_none=False), 0, 'f')
+
+        # contains + -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            filename_or_blank(BDFCard(['A+B'], has_none=False), 0, 'f')
+
+        # starts with - -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            filename_or_blank(BDFCard(['-FILE'], has_none=False), 0, 'f')
+
+        # non-string -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            filename_or_blank(BDFCard([1.0], has_none=False), 0, 'f')
+
+        # space in string -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            filename_or_blank(BDFCard(['MY FILE'], has_none=False), 0, 'f')
+
+    def test_check_string(self):
+        """Test check_string: validates string (no spaces, can't start with digit/./+/-)."""
+        # valid strings
+        self.assertEqual(check_string('GRID', 0, 'f'), 'GRID')
+        self.assertEqual(check_string('mat1', 0, 'f'), 'MAT1')
+        self.assertEqual(check_string('ABC', 0, 'f'), 'ABC')
+
+        # space in string -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            check_string('AB CD', 0, 'f')
+
+        # starts with digit -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            check_string('1ABC', 0, 'f')
+
+        # starts with - -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            check_string('-ABC', 0, 'f')
+
+        # starts with + -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            check_string('+ABC', 0, 'f')
+
+        # contains . -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            check_string('A.B', 0, 'f')
+
+        # non-string input -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            check_string(1.0, 0, 'f')
+
+    def test_loose_string(self):
+        """Test loose_string: lenient string check, only rejects leading digit."""
+        # valid (starts with alpha) -> returns uppercased string
+        result = loose_string(BDFCard(['LABEL'], has_none=False), 0, 'f')
+        self.assertEqual(result, 'LABEL')
+
+        result = loose_string(BDFCard(['myLabel'], has_none=False), 0, 'f')
+        self.assertEqual(result, 'MYLABEL')
+
+        # blank -> default
+        self.assertIsNone(loose_string(BDFCard([None]), 0, 'f'))
+        self.assertEqual(loose_string(BDFCard([None]), 0, 'f', default='X'), 'X')
+
+        # starts with digit -> SyntaxError
+        with self.assertRaises(SyntaxError):
+            loose_string(BDFCard(['1LABEL'], has_none=False), 0, 'f')
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

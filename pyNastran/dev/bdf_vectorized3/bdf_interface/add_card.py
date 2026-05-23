@@ -4922,10 +4922,26 @@ class AddThermal(BDFAttributes):
         temp = self.temp.add(load_id, temperature_dict, comment=comment)
         return temp
 
-    # def add_tempp1(self) -> TEMPP1:
-    #     temp = TEMPP1()
-    #     self._add_thermal_load_object(temp)
-    #     return temp
+    def add_tempp1(self, sid: int, eid: int,
+                   tbar: float, tprime: float, t_stress: list[float],
+                   comment: str='') -> int:
+        """Creates a TEMPP1 card for beam element temperature loads."""
+        return self.tempp1.add(sid, eid, tbar, tprime, t_stress, comment=comment)
+
+    def add_temprb(self, sid: int, eids: list[int],
+                   ta: float, tb: float,
+                   tp1a: float=0.0, tp1b: float=0.0,
+                   tp2a: float=0.0, tp2b: float=0.0,
+                   tca: float=0.0, tda: float=0.0,
+                   tea: float=0.0, tfa: float=0.0,
+                   tcb: float=0.0, tdb: float=0.0,
+                   teb: float=0.0, tfb: float=0.0,
+                   comment: str='') -> int:
+        """Creates a TEMPRB card for beam element temperature loads with
+        linearly-varying axial temperature and two-plane gradients."""
+        return self.temprb.add(sid, eids, ta, tb, tp1a, tp1b, tp2a, tp2b,
+                               tca, tda, tea, tfa, tcb, tdb, teb, tfb,
+                               comment=comment)
 
     def add_tempd(self, sid: int, temperature: float, comment: str='') -> int:
         """

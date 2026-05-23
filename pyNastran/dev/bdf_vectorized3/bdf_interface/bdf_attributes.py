@@ -77,7 +77,7 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
     LOAD, SLOAD,
     FORCE, FORCE1, FORCE2,
     MOMENT, MOMENT1, MOMENT2,
-    TEMP, TEMPD, # DTEMP, DTEMP,
+    TEMP, TEMPD, TEMPP1, TEMPRB, # DTEMP, DTEMP,
     SPCD, DEFORM,
     RFORCE, RFORCE1,
     GRAV, ACCEL, ACCEL1,
@@ -560,6 +560,8 @@ class BDFAttributes:
         self.accel1 = ACCEL1(self)
         self.temp = TEMP(self)
         self.tempd = TEMPD(self)  # default temp
+        self.tempp1 = TEMPP1(self)
+        self.temprb = TEMPRB(self)
         #self.dtemp = DTEMP(self)  # has nodes
         self.lseq = LSEQ(self)    # static load sequence
         self.spcd = SPCD(self)   # enforced displacment; load
@@ -976,7 +978,7 @@ class BDFAttributes:
             self.pload, self.pload1, self.pload2, self.pload4,
             self.grav, self.accel, self.accel1,
             self.sload,
-            self.temp, self.tempd,
+            self.temp, self.tempd, self.tempp1, self.temprb,
             self.spcd, self.deform,
             self.rforce, self.rforce1,
             #self.ploadx1,

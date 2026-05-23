@@ -348,7 +348,7 @@ MISSING_CARDS = {
 
     ## loads
     'FORCDST', 'PLOADX', 'PLOADB3', 'PLOADG', 'QBDY4', 'SLOADN1',
-    'TEMPP1', 'TTEMP', 'RGYRO', 'PLOADE1', 'RCROSSC', 'LOADCYT',
+    'TTEMP', 'RGYRO', 'PLOADE1', 'RCROSSC', 'LOADCYT',
     'TEMPN1',
 
     ## boundaries
@@ -931,8 +931,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'TEMPBC',
             #'RADMT',
             'RADLST', # 'RADMTX', 'RADBND',
-            #'TEMPP1',
-            #'TEMPRB',
+            'TEMPP1', 'TEMPRB',
             'CONVM',
             ## ???
             #'PANEL', 'SWLDPRM',
@@ -2572,6 +2571,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'SLOAD': partial(self._prepare_card, self.sload),
             'TEMP': partial(self._prepare_card, self.temp),
             'TEMPD': partial(self._prepare_card, self.tempd),
+            'TEMPP1': partial(self._prepare_card, self.tempp1),
+            'TEMPRB': partial(self._prepare_card, self.temprb),
             #'DTEMP': partial(self._prepare_card, self.dtemp),
             'LSEQ': partial(self._prepare_card, self.lseq),
             'SPCD' : partial(self._prepare_card, self.spcd), # enforced displacement; load

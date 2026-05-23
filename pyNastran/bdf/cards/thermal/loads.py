@@ -1425,12 +1425,15 @@ class TEMPP1(BaseCard):
         return TEMPP1(sid, eid, tbar, tprime, [ts1, ts2], comment=comment)
 
     def raw_fields(self):
-        """Writes the TEMP card"""
-        list_fields = ['TEMPP1', self.sid, self.eid, self.tbar] + self.t_stress
+        list_fields = ['TEMPP1', self.sid, self.eid, self.tbar,
+                       self.tprime] + self.t_stress
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        list_fields = ['TEMPP1', self.sid, self.eid, self.tbar] + self.t_stress
+        list_fields = ['TEMPP1', self.sid, self.eid, self.tbar,
+                       self.tprime] + self.t_stress
+        if size == 16:
+            return print_card_16(list_fields)
         return print_card_8(list_fields)
 
 

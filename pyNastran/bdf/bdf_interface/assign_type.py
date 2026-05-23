@@ -1249,9 +1249,9 @@ def loose_string(card: BDFCard, ifield: int, fieldname: str, default=None):
         #raise SyntaxError('%s = %r (field #%s) on card must be a string or blank (not %s).\n'
                           #'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-    #if svalue is None:
-    #    # TODO: should blank fields be allowed, or should this raise?
-    #    return default
+    if svalue is None:
+        # TODO: should blank fields be allowed, or should this raise?
+        return default
     svalue = str(svalue).upper()
     if svalue[0].isdigit():
         raise SyntaxError('%s = %r (field #%s) on card must not have an integer as the first character.\n'
