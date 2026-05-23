@@ -590,7 +590,7 @@ def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
             assert hasattr(transfer_function, 'sid')
             transfer_function.sid = tf_id
         tranfer_function_map[tf_idi] = tf_id
-        load_id += 1
+        tf_id += 1
 
     lseq_map = load_map  # wrong???
     temp_map = load_map  # wrong???

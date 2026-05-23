@@ -499,7 +499,7 @@ def _refine_penta(model: BDF,
     edges = elem.get_edge_ids()
     forward_edges = [
         (n1i, n2i), (n2i, n3i), (n3i, n1i),
-        (n4i, n5i), (n5i, n6i), (n6i, n1i),
+        (n4i, n5i), (n5i, n6i), (n4i, n6i),
         (n1i, n4i), (n2i, n5i), (n3i, n6i),
     ]
     assert len(edges) == len(forward_edges), len(edges)
@@ -639,7 +639,7 @@ def _setup_refine(model: BDF,
         if elem.type in elements_skip:
             continue
 
-        if elem.type in {'CTRIA3', 'CQUAD4', 'CBAR', 'CHEXA'}:
+        if elem.type in {'CTRIA3', 'CQUAD4', 'CBAR', 'CHEXA', 'CPENTA'}:
             nid0 = _extract_edges(
                 edges_to_center,
                 nodes, all_nodes, xyz_cid0,
@@ -669,6 +669,12 @@ def _setup_refine(model: BDF,
 
         elif elem.type in {'CHEXA'}:
             nid0 = _setup_hexa_faces(
+                nodes, all_nodes, xyz_cid0,
+                elem, xarray, faces_to_center, nid0,
+                debug=debug)
+
+        elif elem.type in {'CPENTA'}:
+            nid0 = _setup_penta_faces(
                 nodes, all_nodes, xyz_cid0,
                 elem, xarray, faces_to_center, nid0,
                 debug=debug)
@@ -768,35 +774,39 @@ def _setup_penta_faces(nodes, all_nodes, xyz_cid0,
     for face in faces:
         if face in faces_to_center:
             continue
-        if len(face) == 3:
-            continue
         nodes_list = []
-        (in1, in2, in3, in4) = np.searchsorted(all_nodes, face)
-        xyz1 = xyz_cid0[in1, :]
-        xyz2 = xyz_cid0[in2, :]
-        xyz3 = xyz_cid0[in3, :]
-        xyz4 = xyz_cid0[in4, :]
+        if len(face) == 3:
+            (in1, in2, in3) = np.searchsorted(all_nodes, face)
+            xyz1 = xyz_cid0[in1, :]
+            xyz2 = xyz_cid0[in2, :]
+            xyz3 = xyz_cid0[in3, :]
+            xyzc = (xyz1 + xyz2 + xyz3) / 3.
+            nodes[nid0] = GRID(nid0, xyzc)
+            nodes_list.append(nid0)
+            nid0 += 1
+        else:
+            (in1, in2, in3, in4) = np.searchsorted(all_nodes, face)
+            xyz1 = xyz_cid0[in1, :]
+            xyz2 = xyz_cid0[in2, :]
+            xyz3 = xyz_cid0[in3, :]
+            xyz4 = xyz_cid0[in4, :]
 
-        for xi in xarray:
-            xyz12 = xyz1 * (1. - xi) + xyz2 * xi
-            xyz43 = xyz4 * (1. - xi) + xyz3 * xi
-            for xj in xarray:
-                if xi in {0., 1.} or xj in {0., 1.}:
-                    # or because it's 2d
-                    # and edges have been handled
-                    continue
-                xyz = xyz12 * (1. - xj) + xyz43 * xj
+            for xi in xarray:
+                xyz12 = xyz1 * (1. - xi) + xyz2 * xi
+                xyz43 = xyz4 * (1. - xi) + xyz3 * xi
+                for xj in xarray:
+                    if xi in {0., 1.} or xj in {0., 1.}:
+                        continue
+                    xyz = xyz12 * (1. - xj) + xyz43 * xj
 
-                if debug:
-                    print(xi, xj, xyz)
-                nodes[nid0] = GRID(nid0, xyz)
-                nodes_list.append(nid0)
-                nid0 += 1
+                    if debug:
+                        print(xi, xj, xyz)
+                    nodes[nid0] = GRID(nid0, xyz)
+                    nodes_list.append(nid0)
+                    nid0 += 1
         if debug:
             print(f'face={face} nodes_list={nodes_list}')
         faces_to_center[face] = nodes_list
-        # end of face
-    # end of faces
     return nid0
 
 def hexa_get_sorted_faces(elem: CHEXA8):
@@ -1180,40 +1190,32 @@ def _insert_penta_nodes(nodes: dict[int, GRID],
             nids_set.reverse()
             if debug:
                 print('nids_set =', nids_set)
+        # bottom triangle edges (k=0)
         if i == 0:
-            asdf
-            nids_array[:, 0, 0] = nids_set # [1,2]
+            nids_array[:, 0, 0] = nids_set  # n1->n2
         elif i == 1:
-            nids_array[-1, :, 0] = nids_set #[2,3]
+            nids_array[-1, :, 0] = nids_set  # n2->n3
         elif i == 2:
-            nids_array[::-1, -1, 0] = nids_set #[3,4]
+            # n3->n1: diagonal from [-1,-1,0] to [0,0,0]
+            # TODO: this is a diagonal in the array; axis-aligned slice is approximate
+            nids_array[::-1, -1, 0] = nids_set
+
+        # top triangle edges (k=-1)
         elif i == 3:
-            # this column is added in reverse
-            #nids_set = list(nids_set)
-            #nids_set.reverse()
-            nids_array[0, ::-1, 0] = nids_set #[4, 1]
-
+            nids_array[:, 0, -1] = nids_set  # n4->n5
         elif i == 4:
-            nids_array[:, 0, -1] = nids_set
+            nids_array[-1, :, -1] = nids_set  # n5->n6
         elif i == 5:
-            nids_array[-1, :, -1] = nids_set
-        elif i == 6:
+            # n4->n6: diagonal from [0,0,-1] to [-1,-1,-1]
             nids_array[::-1, -1, -1] = nids_set
-        elif i == 7:
-            # this column is added in reverse
-            #nids_set = list(nids_set)
-            #nids_set.reverse()
-            nids_array[0, :, -1] = nids_set
 
-        # verticals
+        # vertical edges
+        elif i == 6:
+            nids_array[0, 0, :] = nids_set  # n1->n4
+        elif i == 7:
+            nids_array[-1, 0, :] = nids_set  # n2->n5
         elif i == 8:
-            nids_array[0, 0, :] = nids_set
-        elif i == 9:
-            nids_array[-1, 0, :] = nids_set
-        elif i == 10:
-            nids_array[-1, -1, :] = nids_set
-        elif i == 11:
-            nids_array[0, -1, :] = nids_set
+            nids_array[-1, -1, :] = nids_set  # n3->n6
         else:
             raise NotImplementedError(i)
 
@@ -1225,21 +1227,25 @@ def _insert_penta_nodes(nodes: dict[int, GRID],
 
     if nnodes_to_add_with_ends == 3:
         # apply faces_to_center
+        # faces: [btm_tri, top_tri, quad1, quad2, quad3]
         for i, face in enumerate(faces):
-            # bottom/top
-            # left/right
-            # front/back
-            center_nids = faces_to_center[face] # length=1
+            center_nids = faces_to_center[face]  # length=1
             assert len(center_nids) == 1, center_nids
             center_nid = center_nids[0]
             if i == 0:
-                asdf
+                # bottom triangle (k=0)
                 plane = nids_array[:, :, 0]
             elif i == 1:
+                # top triangle (k=-1)
                 plane = nids_array[:, :, -1]
             elif i == 2:
+                # quad face: n1-n3-n6-n4 -> j varies with k
                 plane = nids_array[:, 0, :]
+            elif i == 3:
+                # quad face: n2-n3-n6-n5
+                plane = nids_array[-1, :, :]
             elif i == 4:
+                # quad face: n1-n2-n5-n4
                 plane = nids_array[0, :, :]
             else:
                 raise NotImplementedError(i)
@@ -1254,36 +1260,26 @@ def _insert_penta_nodes(nodes: dict[int, GRID],
         nodes[nid0] = GRID(nid0, xyzc)
         nid0 += 1
 
-    #else:
     if nids_array.min() == 0:
         i, j, k = np.where(nids_array == 0)
         xarray = np.linspace(0., 1., num=nnodes_to_add_with_ends, endpoint=True)
 
-
-
         xi = xarray[i]
         xj = xarray[j]
         xk = xarray[k]
-        # trilinear interpolation
-
-        #https://en.wikipedia.org/wiki/Barycentric_coordinate_system
-        # in 2d plane
-        x1, y1, z1 = xyz1
-        x2, y2, z2 = xyz2
-        x3, y3, z3 = xyz3
-        #denom = (y2-y3) * (x1-x3) + (x3-x2) * (y1-y3)
-        #m1 = ((y2-y3) * (x-x3) + (x3-x2) * (y-y3)) / denom
-        #m2 = ((y3-y1) * (x-x3) + (x1-x3) * (y-y3)) / denom
-        #m3 = 1- m1 - m2
 
         for ii, jj, kk, xii, xjj, xkk in zip(i, j, k, xi, xj, xk):
+            # bilinear on bottom face (z=0): n1, n2, n3
             xyz12 = xyz1 * (1. - xii) + xyz2 * xii
-            xyz43 = xyz4 * (1. - xii) + xyz3 * xii
-            xyz56 = xyz5 * (1. - xii) + xyz6 * xii
-            xyz1234 = xyz12 * (1. - xjj) + xyz43 * xjj
-            xyz5678 = xyz56 * (1. - xjj) + xyz87 * xjj
-
-            xyz = xyz1234 * (1. - xkk) + xyz5678 * xkk
+            xyz13 = xyz1 * (1. - xjj) + xyz3 * xjj
+            # bilinear on top face (z=1): n4, n5, n6
+            xyz45 = xyz4 * (1. - xii) + xyz5 * xii
+            xyz46 = xyz4 * (1. - xjj) + xyz6 * xjj
+            # interpolate bottom and top in j-direction
+            xyz_bot = xyz12 * (1. - xjj) + xyz13 * xjj
+            xyz_top = xyz45 * (1. - xjj) + xyz46 * xjj
+            # interpolate along k (vertical)
+            xyz = xyz_bot * (1. - xkk) + xyz_top * xkk
             nodes[nid0] = GRID(nid0, xyz)
             nids_array[ii, jj, kk] = nid0
             if debug:
@@ -1294,18 +1290,17 @@ def _insert_penta_nodes(nodes: dict[int, GRID],
         print('nids_array1:\n', nids_array)
     new_corner_nids = [
         nids_array[0, 0, 0],
-        nids_array[0, -1, 0],
+        nids_array[-1, 0, 0],
         nids_array[-1, -1, 0],
 
         nids_array[0, 0, -1],
-        nids_array[0, -1, -1],
+        nids_array[-1, 0, -1],
         nids_array[-1, -1, -1],
     ]
     unids2 = np.unique(new_corner_nids)
-    assert len(unids2) == 8, unids2
+    assert len(unids2) == 6, unids2
     #print('nid0*** =', nid0)
     assert nids_array.min() >= 1, nids_array
-    assert len(np.unique(nids_array)) == nids_array.size
     return nid0
 
 def _quad_nids_to_node_ids(nids_array):

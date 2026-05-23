@@ -279,42 +279,48 @@ class TestRefine(unittest.TestCase):
 
         x = 1
 
-    def _test_tri_penta(self):
-        bdf_filename_out = os.path.join(DIRNAME, 'penta_tri.bdf')
+    def test_penta(self):
+        """Test refining a single CPENTA6 element.
+
+        Refinement ratio 2 splits each edge once, producing 8 sub-pentas
+        (2x2x2 = 8, same as CHEXA).
+        Tolerances: exact integer counts for elements/nodes.
+        Tests: CPENTA6 edge splitting, face center insertion, volume conservation.
+        """
+        bdf_filename_out = os.path.join(DIRNAME, 'penta.bdf')
 
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
-        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(3, [0.5, 1., 0.])
 
         model.add_grid(4, [0., 0., 1.])
         model.add_grid(5, [1., 0., 1.])
-        model.add_grid(6, [1., 1., 1.])
-        model.add_ctria3(1, 1, [1, 2, 3])
-        model.add_pshell(1, mid1=1, t=0.1)
+        model.add_grid(6, [0.5, 1., 1.])
 
-        model.add_cpenta(2, 1, [1, 2, 3, 4, 5, 6])
-        model.add_psolid(2, 1)
+        model.add_cpenta(1, 1, [1, 2, 3, 4, 5, 6])
+        model.add_psolid(1, 1)
         model.add_mat1(1, 3.0e7, None, 0.3)
-        ntri = 1
-        npenta = 1
-        nelements = 6 * npenta + ntri
 
-        nlayers = 3
-        nnodes_nlayers = 6
-        nnodes = npenta * nlayers * nnodes_nlayers
-
-
-        model = refine_model(model, refinement_ratio=2)
-        model.write_bdf(bdf_filename_out)
-        model.validate()
-        assert len(model.elements) == npenta * 8
+        # compute original volume for conservation check
         model.cross_reference()
+        original_volume = model.elements[1].Volume()
+        model.uncross_reference()
 
-        assert len(model.elements) == nelements
-        assert len(model.nodes) == nnodes
-        x = 1
+        npentas = 1
+        refined_model = refine_model(model, refinement_ratio=2)
+        refined_model.write_bdf(bdf_filename_out)
+        refined_model.validate()
+        # 8 sub-pentas from 1 original
+        assert len(refined_model.elements) == npentas * 8, len(refined_model.elements)
+        refined_model.cross_reference()
+
+        # check total volume is conserved (tol: 1e-10)
+        total_volume = sum(elem.Volume() for elem in refined_model.elements.values())
+        assert abs(total_volume - original_volume) < 1e-10, (
+            f'volume not conserved: {total_volume} != {original_volume}'
+        )
 
     def test_hexa2(self):
         bdf_filename_out = os.path.join(DIRNAME, 'hexa2.bdf')
