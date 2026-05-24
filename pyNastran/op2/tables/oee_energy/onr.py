@@ -462,12 +462,12 @@ class ONR:
         """
         op2 = self.op2
         if op2.table_code == 18:  # element strain energy
-            if op2.table_name not in op2.table_name in [b'ONRGY', b'ONRGY1']:
+            if op2.table_name not in [b'ONRGY', b'ONRGY1']:
                 msg = f'table_name={op2.table_name} table_code={op2.table_code}'
                 raise NotImplementedError(msg)
             n = self._read_element_strain_energy(data, ndata, result_name_suffix='_strain_energy')
         elif op2.table_code == 36:  # element kinetic energy
-            if op2.table_name not in op2.table_name in [b'OEKE1']:
+            if op2.table_name not in [b'OEKE1']:
                 msg = f'table_name={op2.table_name} table_code={op2.table_code}'
                 raise NotImplementedError(msg)
             n = self._read_element_strain_energy(data, ndata, result_name_suffix='_kinetic_energy')

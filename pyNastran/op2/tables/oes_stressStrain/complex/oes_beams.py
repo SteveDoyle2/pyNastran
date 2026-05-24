@@ -205,7 +205,7 @@ class ComplexBeamArray(OES_Object):
         ntimes = self.ntimes
         #ntotal = self.ntotal
         nelements2 = self.element_node.shape[0]
-        assert nelements, nelements2
+        assert nelements == nelements2, f'nelements={nelements} nelements2={nelements2}'
         msg = []
 
         if self.nonlinear_factor not in (None, np.nan):  # transient

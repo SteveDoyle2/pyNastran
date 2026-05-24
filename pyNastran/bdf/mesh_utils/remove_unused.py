@@ -248,10 +248,10 @@ def remove_unused(bdf_filename: PathLike,
         if 'MPC' in subcase:
             mpc_id, options = subcase['MPC']
             mpcs_used.add(mpc_id)
-        if 'MPC' in subcase:
+        if 'NSM' in subcase:
             nsm_id, options = subcase['NSM']
             nsms_used.add(nsm_id)
-        if 'MPC' in subcase:
+        if 'TRIM' in subcase:
             trim_id, options = subcase['TRIM']
             trims_used.add(trim_id)
         if 'FMETHOD' in subcase:

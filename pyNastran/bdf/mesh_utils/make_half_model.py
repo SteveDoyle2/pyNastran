@@ -129,9 +129,9 @@ def make_half_model(bdf_filename: PathLike,
 
     for unused_trim_id, trim in model.trims.items():
         labels = trim.labels
-        ilabels_to_remove = [labels.index(label) for label in labels_to_remove
-                             if label in labels]
+        ilabels_to_remove = set(labels.index(label) for label in labels_to_remove
+                                if label in labels)
         #print("ilabels_to_remove =", ilabels_to_remove)
-        trim.uxz = [trim.uxs[ilabel] for ilabel in ilabels_to_remove]
-        trim.labels = [trim.labels[ilabel] for ilabel in ilabels_to_remove]
+        trim.uxs = [trim.uxs[i] for i in range(len(labels)) if i not in ilabels_to_remove]
+        trim.labels = [trim.labels[i] for i in range(len(labels)) if i not in ilabels_to_remove]
     return model

@@ -3293,7 +3293,7 @@ class OP2Reader:
             if self.is_debug_file:
                 desc = self.desc_map.get(op2.table_name, '???')
                 #assert desc != '???', self.table_name
-                msgi = "skipping table_name = %r ({desc})".rstrip('(?)')
+                msgi = f"skipping table_name = {op2.table_name!r} ({desc})"
                 self.log.debug(msgi)
             #if len(data) == 584:
                 #self._parse_results_table3(data)

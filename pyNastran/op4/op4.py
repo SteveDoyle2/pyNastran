@@ -19,6 +19,10 @@ else:  # pragma: no cover
     from cpylog import get_logger2 as get_logger
 
 
+class EmptyMatrixError(RuntimeError):
+    """Raised when an OP4 matrix header has nrows=0 (empty/uninitialized)."""
+
+
 class OP4:
     """
     todo:: add endian checking
@@ -100,7 +104,10 @@ class OP4:
         ncols_str, nrows_str, form_str, matrix_type_str = line[0:32].split()
         nrows = int(nrows_str)
 
-        is_big_mat, nrows = get_big_mat_nrows(nrows)
+        try:
+            is_big_mat, nrows = get_big_mat_nrows(nrows)
+        except EmptyMatrixError:
+            return None, None
         if self.debug:
             self.log.info('is_big_matrix = %s' % is_big_mat)
 
@@ -628,6 +635,8 @@ class OP4:
                 #self.show(f, 60)
 
                 (name, amat) = self._read_matrix_binary(op4, precision, matrix_names)
+                if name is None:
+                    break
                 #print(print_matrix(amat.matrix))
                 if is_saved_matrix(name, matrix_names):
                     _save_matrix(matrices, name, amat)
@@ -717,7 +726,10 @@ class OP4:
             elif matrix_type == 4:
                 log.info("matrix_type = Complex, Double Precision")
 
-        is_big_mat, nrows = get_big_mat_nrows(nrows)
+        try:
+            is_big_mat, nrows = get_big_mat_nrows(nrows)
+        except EmptyMatrixError:
+            return None, None
 
         if self.debug:
             log.info('is_big_matrix = %s' % is_big_mat)
@@ -2005,7 +2017,10 @@ def get_big_mat_nrows(nrows: int) -> tuple[bool, int]:
             is_big_mat = True
             nrows = abs(nrows)
     else:
-        raise RuntimeError('unknown BIGMAT.  nrows=%s' % nrows)
+        # nrows=0 indicates an empty/uninitialized matrix (e.g., from ASSIGN
+        # with no OUTPUT4 data written, or a null matrix like BHH with no
+        # structural damping)
+        raise EmptyMatrixError('nrows=0')
     return is_big_mat, nrows
 
 
@@ -2291,7 +2306,10 @@ def _read_op4_fast_ascii(op4_filename: PathLike,
             continue
         name = line[32:40].strip()
 
-        is_big_mat, nrows = get_big_mat_nrows(nrows_raw)
+        try:
+            is_big_mat, nrows = get_big_mat_nrows(nrows_raw)
+        except EmptyMatrixError:
+            break
 
         # Parse format spec: e.g. "1P,3E23.16" or "1P,5E16.9"
         size_str = line[40:].strip()
