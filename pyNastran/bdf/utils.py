@@ -221,16 +221,17 @@ def transform_load(F: np.ndarray, M: np.ndarray,
     # Fglobal = Flocal1 * beta1
     # Flocal2 = (Flocal1 * beta1) * beta2.T
 
-    Fxyz_global = Fxyz_local_1 @ cp_ref.beta()
-    Fxyz_local_2 = (Fxyz_local_1 @ cp_ref.beta()) @ coord_to_ref.beta().T
+    # rotate force and moment from coord1 to coord2
+    beta1 = cp_ref.beta()
+    beta2 = coord_to_ref.beta()
+    Fxyz_local_2 = (Fxyz_local_1 @ beta1) @ beta2.T
+    Mxyz_local_2 = (Mxyz_local_1 @ beta1) @ beta2.T
 
-    # find the moment about the new origin due to the force
-    unused_Mxyz_global = np.cross(r, Fxyz_global)
-    dMxyz_local_2 = np.cross(r, Fxyz_local_2)
-    Mxyz_local_2 = Mxyz_local_1 + dMxyz_local_2
-
-    # rotate the delta moment into the local frame
-    unused_M_local = coord_to_ref.xyz_to_coord(Mxyz_local_2)
+    # moment contribution from force at new origin: dM = r x F
+    # r and F must be in the same frame — use coord2's local frame
+    r_local_2 = r @ beta2.T
+    dMxyz_local_2 = np.cross(r_local_2, Fxyz_local_2)
+    Mxyz_local_2 = Mxyz_local_2 + dMxyz_local_2
 
     return Fxyz_local_2, Mxyz_local_2
 

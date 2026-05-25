@@ -40,6 +40,7 @@ from pyNastran.bdf.cards.aero.zaero_cards.ase import (
     SENSET, SURFSET, CNCTSET,
     ASEGAIN, GAINSET,
     AEROLAG,
+    MIMOTF, SENSR, GAIN, SUMBLK, DEADBN, DELAY_ZAERO, FILTFL, LIMTR,
 )
 from pyNastran.bdf.cards.aero.zaero_cards.bdf_tables import (
     TABLED1_ZAERO, TABDMP1_ZAERO)
@@ -98,6 +99,8 @@ ZAERO_CARDS = [
     'ACTU',
     'MIMOSS', 'SISOTF',
     'ASEGAIN', 'GAINSET',
+    'MIMOTF', 'SENSR', 'GAIN', 'SUMBLK',
+    'DEADBN', 'DELAY', 'FILTFL', 'LIMTR',
     'PLTBODE', 'AEROLAG',
     # -------------
     # other
@@ -234,6 +237,69 @@ class AddMethods:
         self.model.zaero.mimoss[key] = mimoss
         self.model._type_to_id_map[mimoss.type].append(key)
 
+    def add_mimotf_object(self, mimotf: MIMOTF) -> None:
+        """adds a MIMOTF object"""
+        key = mimotf.mimotf_id
+        assert key not in self.model.zaero.mimotf, key
+        assert key > 0, key
+        self.model.zaero.mimotf[key] = mimotf
+        self.model._type_to_id_map[mimotf.type].append(key)
+
+    def add_sensr_object(self, sensr: SENSR) -> None:
+        """adds a SENSR object"""
+        key = sensr.sensr_id
+        assert key not in self.model.zaero.sensr, key
+        assert key > 0, key
+        self.model.zaero.sensr[key] = sensr
+        self.model._type_to_id_map[sensr.type].append(key)
+
+    def add_gain_object(self, gain: GAIN) -> None:
+        """adds a GAIN object"""
+        key = gain.gain_id
+        assert key not in self.model.zaero.gain, key
+        assert key > 0, key
+        self.model.zaero.gain[key] = gain
+        self.model._type_to_id_map[gain.type].append(key)
+
+    def add_sumblk_object(self, sumblk: SUMBLK) -> None:
+        """adds a SUMBLK object"""
+        key = sumblk.sumblk_id
+        assert key not in self.model.zaero.sumblk, key
+        assert key > 0, key
+        self.model.zaero.sumblk[key] = sumblk
+        self.model._type_to_id_map[sumblk.type].append(key)
+
+    def add_deadbn_object(self, deadbn: DEADBN) -> None:
+        """adds a DEADBN object"""
+        key = deadbn.deadbn_id
+        assert key not in self.model.zaero.deadbn, key
+        assert key > 0, key
+        self.model.zaero.deadbn[key] = deadbn
+        self.model._type_to_id_map[deadbn.type].append(key)
+
+    def add_delay_zaero_object(self, delay: DELAY_ZAERO) -> None:
+        """adds a DELAY (ZAERO) object"""
+        key = delay.delay_id
+        assert key not in self.model.zaero.delay_zaero, key
+        assert key > 0, key
+        self.model.zaero.delay_zaero[key] = delay
+        self.model._type_to_id_map[delay.type].append(key)
+
+    def add_filtfl_object(self, filtfl: FILTFL) -> None:
+        """adds a FILTFL object"""
+        key = filtfl.filtfl_id
+        assert key not in self.model.zaero.filtfl, key
+        assert key > 0, key
+        self.model.zaero.filtfl[key] = filtfl
+        self.model._type_to_id_map[filtfl.type].append(key)
+
+    def add_limtr_object(self, limtr: LIMTR) -> None:
+        """adds a LIMTR object"""
+        key = limtr.limtr_id
+        assert key not in self.model.zaero.limtr, key
+        assert key > 0, key
+        self.model.zaero.limtr[key] = limtr
+        self.model._type_to_id_map[limtr.type].append(key)
 
     def add_sisotf_object(self, sisotf: SISOTF) -> None:
         """adds an SISOTF object"""
@@ -703,9 +769,17 @@ class ZAERO:
         self.apcnsnd: dict[int, APCNSND] = {}
         self.apcnscp: dict[int, APCNSCP] = {}
         self.mimoss: dict[int, MIMOSS] = {}
+        self.mimotf: dict[int, MIMOTF] = {}
         self.sisotf: dict[int, SISOTF] = {}
         self.cmargin: dict[int, CMARGIN] = {}
         self.aerolag: dict[int, AEROLAG] = {}
+        self.sensr: dict[int, SENSR] = {}
+        self.gain: dict[int, GAIN] = {}
+        self.sumblk: dict[int, SUMBLK] = {}
+        self.deadbn: dict[int, DEADBN] = {}
+        self.delay_zaero: dict[int, DELAY_ZAERO] = {}
+        self.filtfl: dict[int, FILTFL] = {}
+        self.limtr: dict[int, LIMTR] = {}
 
         # other
         self.extinp: dict[int, EXTINP] = {}
@@ -914,6 +988,14 @@ class ZAERO:
             'CJUNCT': (CJUNCT, zaero_add.add_cjunct_object),
             'CONCT': (CONCT, zaero_add.add_conct_object),
             'AEROLAG': (AEROLAG, zaero_add.add_aerolag_object),
+            'MIMOTF': (MIMOTF, zaero_add.add_mimotf_object),
+            'SENSR': (SENSR, zaero_add.add_sensr_object),
+            'GAIN': (GAIN, zaero_add.add_gain_object),
+            'SUMBLK': (SUMBLK, zaero_add.add_sumblk_object),
+            'DEADBN': (DEADBN, zaero_add.add_deadbn_object),
+            'DELAY': (DELAY_ZAERO, zaero_add.add_delay_zaero_object),
+            'FILTFL': (FILTFL, zaero_add.add_filtfl_object),
+            'LIMTR': (LIMTR, zaero_add.add_limtr_object),
             # other
             'SETADD': (SETADD, zaero_add.add_setadd_object),
             'SENSET': (SENSET, zaero_add.add_senset_object),
@@ -1733,7 +1815,9 @@ def get_dicts(zaero: ZAERO, method: str) -> tuple[list,
         zaero.cjunct, zaero.conct, zaero.tfset, zaero.cnctset,
         zaero.ase, zaero.asecont, zaero.asesnsr, zaero.asesns1,
         zaero.asegain, zaero.gainset,
-        zaero.mimoss, zaero.sisotf,
+        zaero.mimoss, zaero.mimotf, zaero.sisotf,
+        zaero.sensr, zaero.gain, zaero.sumblk,
+        zaero.deadbn, zaero.delay_zaero, zaero.filtfl, zaero.limtr,
         #
         zaero.senset, zaero.surfset,
         zaero.mldtrim, zaero.mldstat, zaero.minstat, zaero.mldprnt,

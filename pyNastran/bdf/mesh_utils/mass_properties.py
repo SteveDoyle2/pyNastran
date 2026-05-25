@@ -282,7 +282,7 @@ def transform_inertia(mass: float,
             # in coord1
             # beta is global to local
             print(beta1.shape, icg1.shape)
-            icg0 = beta1.T @ icg1 * beta1
+            icg0 = beta1.T @ icg1 @ beta1
             raise RuntimeError(f'coord1 is not supported; icg0={str(icg0)}')
 
         if is_beta2:

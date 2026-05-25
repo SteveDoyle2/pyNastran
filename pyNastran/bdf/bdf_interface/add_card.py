@@ -5458,7 +5458,7 @@ class AddThermal:
         return load
 
     def add_tempp1(self, sid: int, eid: int,
-                   tbar: float, tprime: float, t_stress: float,
+                   tbar: float, tprime: float, t_stress: Optional[list[float]]=None,
                    comment: str='') -> TEMPP1:
         tempp1 = TEMPP1(sid, eid, tbar, tprime, t_stress, comment=comment)
         self._add_methods.add_load_object(tempp1)

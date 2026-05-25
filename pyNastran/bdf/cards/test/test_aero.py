@@ -960,6 +960,71 @@ class TestAero(unittest.TestCase):
             caero.plot(ax)
             fig.show()
 
+    def test_caero1_get_box_quarter_chord_center(self):
+        """Regression test for _get_box_x_chord_center index swap fix.
+
+        On a swept panel (p4.x != p1.x) with nchord > 1, the old code
+        swapped ispan/ichord from get_box_index, producing y-coordinates
+        outside the panel bounds.
+        """
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+
+        pid = 1
+        igroup = 1
+        # Swept panel: LE sweeps from x=0 at y=0 to x=5 at y=10
+        p1 = [0., 0., 0.]
+        p4 = [5., 10., 0.]
+        x12 = 4.0  # chord at root
+        x43 = 2.0  # chord at tip
+        nspan = 3
+        nchord = 4
+        model.add_paero1(pid, caero_body_ids=None)
+
+        eid = 100
+        caero = model.add_caero1(
+            eid, pid, igroup, p1, x12, p4, x43,
+            cp=0, nspan=nspan, lspan=0, nchord=nchord, lchord=0)
+        model.cross_reference()
+
+        # Panel y-bounds
+        y_min = p1[1]  # 0
+        y_max = p4[1]  # 10
+
+        # Panel x-bounds (conservative: LE to TE across full span)
+        x_le_min = min(p1[0], p4[0])        # 0
+        x_te_max = max(p1[0] + x12, p4[0] + x43)  # 7
+
+        for box_id in caero.box_ids.ravel():
+            xyz_qc = caero.get_box_quarter_chord_center(box_id)
+            xyz_mc = caero.get_box_mid_chord_center(box_id)
+
+            # y must be within panel span
+            assert y_min <= xyz_qc[1] <= y_max, (
+                f"box {box_id}: quarter-chord y={xyz_qc[1]:.4f} "
+                f"outside [{y_min}, {y_max}]")
+            assert y_min <= xyz_mc[1] <= y_max, (
+                f"box {box_id}: mid-chord y={xyz_mc[1]:.4f} "
+                f"outside [{y_min}, {y_max}]")
+
+            # x must be within panel envelope
+            assert x_le_min <= xyz_qc[0] <= x_te_max, (
+                f"box {box_id}: quarter-chord x={xyz_qc[0]:.4f} "
+                f"outside [{x_le_min}, {x_te_max}]")
+
+        # Spot-check: first box (ispan=0, ichord=0) quarter-chord
+        # At spanfrac = 0.5/3, chord = (0.5/3)*(2-4)+4 = 3.667
+        # x_le = 0 + (0.5/3)*5 = 0.833, x_qc = 0.833 + (0+0.25)/4 * 3.667 = 0.833 + 0.229 = 1.063
+        # y = 0 + (0.5/3)*10 = 1.667
+        xyz_first = caero.get_box_quarter_chord_center(eid)
+        span_frac = 0.5 / nspan
+        chord_at_span = span_frac * (x43 - x12) + x12  # 3.667
+        x_le_at_span = p1[0] + span_frac * (p4[0] - p1[0])  # 0.833
+        x_expected = x_le_at_span + (0 + 0.25) / nchord * chord_at_span
+        y_expected = p1[1] + span_frac * (p4[1] - p1[1])
+        assert np.allclose(xyz_first[0], x_expected, atol=1e-10)
+        assert np.allclose(xyz_first[1], y_expected, atol=1e-10)
+
     def test_caero3_paneling(self):
         """checks the CAERO3/PAERO1/AEFACT card"""
         fig, ax = _setup_aero_plot()
@@ -2907,6 +2972,30 @@ class TestAero(unittest.TestCase):
         model2.uncross_reference()
         model2.safe_cross_reference()
         save_load_deck(model)
+
+    def test_trim_continuation_marker(self):
+        """Checks that a TRIM card with a '+' continuation marker in cols 65-72
+        parses correctly (the marker is not treated as the aeqr field).
+        Tests: continuation marker stripping in fixed-field format, field 9 data
+        appears on continuation line.
+        """
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        card_lines = [
+            'TRIM    1       0.789   1.5     PITCH   0.0     URDD3   2.5     +',
+            '+       URDD5   0.0',
+        ]
+        model.add_card(card_lines, 'TRIM', is_list=False, has_none=False)
+        model.pop_parse_errors()
+        trim = model.trims[1]
+        self.assertEqual(trim.sid, 1)
+        self.assertAlmostEqual(trim.mach, 0.789)
+        self.assertAlmostEqual(trim.q, 1.5)
+        self.assertIn('PITCH', trim.labels)
+        self.assertIn('URDD3', trim.labels)
+        self.assertIn('URDD5', trim.labels)
+        # aeqr defaults to 1.0 when not specified (it was in the continuation marker position)
+        self.assertAlmostEqual(trim.aeqr, 1.0)
 
     def test_trim_04_bad(self):
         """

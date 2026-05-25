@@ -1378,8 +1378,10 @@ class TEMPP1(BaseCard):
         return TEMPP1(sid, eid, tbar, tprime, t_stress, comment='')
 
     def __init__(self, sid: int, eid: int,
-                 tbar: float, tprime: float, t_stress: list[float],
+                 tbar: float, tprime: float, t_stress: Optional[list[float]]=None,
                  comment: str=''):
+        if t_stress is None:
+            t_stress = [None, None]
         BaseCard.__init__(self)
         self.comment = comment
         self.sid = sid
@@ -1405,7 +1407,7 @@ class TEMPP1(BaseCard):
         tprime = double(card, 4, 'tprime')
         ts1 = double(card, 5, 't1')
         ts2 = double_or_blank(card, 6, 't2', default=None)
-        assert len(card) < 7, card
+        assert len(card) <= 7, f'n-{len(card)} card={card}'
         return TEMPP1(sid, eid, tbar, tprime, [ts1, ts2], comment=comment)
 
     @classmethod

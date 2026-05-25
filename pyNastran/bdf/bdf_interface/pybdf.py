@@ -480,7 +480,8 @@ class BDFInputPy:
         #bdf_filenames = [self.bdf_filename]
 
         make_ilines = True
-        ilines = _make_ilines(nlines, ifile=0)
+        # use a Python list during include-resolution to avoid O(n^2) np.vstack
+        ilines = [[0, iline] for iline in range(nlines)]
 
         i = 0
         ifile = 1
@@ -493,8 +494,8 @@ class BDFInputPy:
             if line_upper.startswith('INCLUDE'):
                 j, include_lines = self._get_include_lines(lines, line, i, nlines)
 
-                jfile = ilines[i, 0]
-                jline = ilines[i, 1]
+                jfile = ilines[i][0]
+                jline = ilines[i][1]
                 source_filename = os.path.abspath(self.loaded_filenames[jfile])
                 include_dir = os.path.abspath(os.path.dirname(source_filename))
                 if self.debug and 0:  # pragma: no cover
@@ -536,14 +537,10 @@ class BDFInputPy:
                     # these are the lines associated with the 1st/2nd include file found
                     self.include_lines[jfile].append((include_lines, bdf_filename2))
 
-                    # remove the include lines
-                    lines = lines[:i] + lines[j:]
+                    # remove the include lines (in-place splice)
+                    del lines[i:j]
                     if make_ilines:
-                        ilines = np.vstack([
-                            ilines[:i, :],
-                            ilines[j:, :],
-                        ])
-                        #assert len(ilines[:, 1]) == len(np.unique(ilines[:, 1]))
+                        del ilines[i:j]
                     # we have to reprocess the line just in case there is
                     # an include on the current line
                     i -= 1
@@ -556,15 +553,14 @@ class BDFInputPy:
             _dump_file(bdf_dump_filename, lines, i, self.encoding)
 
         #print(bdf_filenames)
-        #if make_ilines:
-            #nilines = ilines.shape[0]
-            #assert nlines == ilines.shape[0], 'nlines=%s nilines=%s' % (nlines, nilines)
+        # convert list-based ilines back to numpy array for downstream consumers
+        ilines = np.array(ilines, dtype='int32')
         return lines, ilines
 
-    def _update_include(self, lines: list[str], nlines: int, ilines: np.ndarray,
+    def _update_include(self, lines: list[str], nlines: int, ilines: list,
                         include_lines: list[str], bdf_filename2: str,
                         i: int, j: int, ifile: int,
-                        source_file_line: tuple[str, int]) -> tuple[list[str], int, np.ndarray]:
+                        source_file_line: tuple[str, int]) -> tuple[list[str], int, list]:
         """incorporates an include file into the lines
 
         Parameters
@@ -678,39 +674,14 @@ class BDFInputPy:
 
         nlines2 = len(lines2)
         if 1:  # make_ilines:
-            ilines2 = _make_ilines(nlines2, ifile)
-            #n_ilines = ilines.shape[0]
-            #print(ilines[j:, :])
-            #assert len(lines[:i]) == ilines[:i+1, :].shape[0] - ifile, 'A: nlines=%s nilines=%s' % (len(lines[:i]), ilines[:i+1, :].shape[0])
-            #assert len(lines[j:]) == ilines[j:, :].shape[0],           'B: nlines=%s nilines=%s' % (len(lines[j:]), ilines[j:, :].shape[0])
-            #assert len(lines2) == ilines2.shape[0],                    'C: nlines=%s nilines=%s' % (len(lines2),    ilines2.shape[0])
-            #assert nlines == ilines.shape[0], 'B: nlines=%s nilines=%s' % (nlines, nilines)
-            #assert nlines == ilines.shape[0], 'C: nlines=%s nilines=%s' % (nlines, nilines)
-
-            #print(nlines-ifile+1, nlines2)
-            #print(
-                #len(lines[:i]),
-                #len([include_comment]),
-                #len(lines2),
-                #len(lines[j:]),
-            #)
-            #print(
-                #ilines[:i+1, :].shape[0],
-                #ilines2.shape[0],
-                #ilines[j:, :].shape[0],
-            #)
-            #print('ilines:\n%s' % ilines)
-            #print('ilines2:\n%s' % ilines2)
-            #print('lines2:\n%s' % ''.join(lines2))
-            ilines = np.vstack([
-                ilines[:i+1, :],
-                ilines2,
-                ilines[j:, :],
-            ])
+            ilines2_list = [[ifile, iline] for iline in range(nlines2)]
+            # in-place splice of ilines list
+            ilines[i+1:j] = ilines2_list
             #dij = j - i
 
         nlines += nlines2
-        lines = lines[:i] + [include_comment] + lines2 + lines[j:]
+        # in-place splice: replace lines[i:j] with [include_comment] + lines2
+        lines[i:j] = [include_comment] + lines2
         #print('*lines:\n%s' % ''.join(lines))
         #for ifile_iline, line in zip(ilines, lines):
             #print(ifile_iline, line.rstrip())
@@ -2166,6 +2137,7 @@ def lines_to_decks2(lines: list[str],
         ilines = np.zeros((nlines, 2), dtype='int32')
         ilines[:, 1] = np.arange(nlines)
     assert ilines is not None, ilines
+    ilines_list = ilines.tolist() if isinstance(ilines, np.ndarray) else ilines
 
     system_lines: list[str] = []
     executive_control_lines: list[str] = []   # flag = 1
@@ -2219,7 +2191,7 @@ def lines_to_decks2(lines: list[str],
     save_comment_flag = False
     for i, line in enumerate(lines):
         # handle empty comments
-        file_iline = ilines[i]
+        file_iline = ilines_list[i]
         line = line.rstrip()
         if '$' in line:
             idollar = line.index('$')
@@ -2339,7 +2311,7 @@ def lines_to_decks2(lines: list[str],
 
     bulk_data_ilines = np.zeros((0, 2), dtype='int32')
     if len(bulk_data_ilines_list):
-        bulk_data_ilines = np.vstack(bulk_data_ilines_list)
+        bulk_data_ilines = np.array(bulk_data_ilines_list, dtype='int32')
         assert len(bulk_data_lines) == len(bulk_data_ilines)
         del bulk_data_ilines_list
 

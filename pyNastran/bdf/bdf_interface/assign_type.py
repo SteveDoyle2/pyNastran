@@ -4,7 +4,7 @@ from typing import Optional, Any
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.utils.numpy_utils import (
     integer_types, integer_float_types, float_types)
-from pyNastran.bdf.field_writer import print_card
+
 
 #^       - start of string
 #[-+]?   - an optional (this is what ? means) minus or plus sign
@@ -424,11 +424,12 @@ def integer(card: BDFCard, ifield: int, fieldname: str) -> int:
 
     """
     svalue = card.field(ifield)
+    if isinstance(svalue, integer_types):
+        return svalue
     if isinstance(svalue, float_types):
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
-
     try:
         return int(svalue)
     except (ValueError, TypeError):
@@ -456,15 +457,15 @@ def integer_or_blank(card: BDFCard, ifield: int, fieldname: str,
     """
     svalue = card.field(ifield)
 
+    if svalue is None:
+        return default
     if isinstance(svalue, integer_types):
         return svalue
-    elif svalue is None:
-        return default
-    elif isinstance(svalue, str):
+    if isinstance(svalue, str):
         svalue = svalue.strip()
-        if len(svalue) == 0:
+        if not svalue:
             return default
-        elif '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
+        if '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
@@ -570,30 +571,29 @@ def double_or_blank(card: BDFCard, ifield: int, fieldname: str,
     """
     svalue = card.field(ifield)
 
-    if isinstance(svalue, float_types):
-        return svalue
-    elif isinstance(svalue, integer_types):
-        dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
-                          'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
-    elif isinstance(svalue, str):
-        svalue_stripped = svalue.strip()
-        if not svalue_stripped:
+    if svalue is None:
+        return default
+    if isinstance(svalue, str):
+        svalue = svalue.strip()
+        if not svalue:
             return default
-        if svalue_stripped == '.':
+        if svalue == '.':
             return 0.
-        # reject pure integers (same check as double())
-        if svalue_stripped.lstrip('+-').isdigit():
+        if svalue.lstrip('+-').isdigit():
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
                               'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
         try:
-            return _nastran_str_to_float(svalue_stripped)
+            return _nastran_str_to_float(svalue)
         except (ValueError, TypeError):
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
-    return default
+    if isinstance(svalue, float_types):
+        return svalue
+    dtype = _get_dtype(svalue)
+    raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
+                      'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
 
 
 def double_or_string(card: BDFCard, ifield: int, fieldname: str,
@@ -781,24 +781,21 @@ def integer_double_or_blank(card: BDFCard, ifield: int, fieldname: str, default=
     """
     svalue = card.field(ifield)
 
+    if svalue is None:
+        return default
     if isinstance(svalue, integer_float_types):
         return svalue
-    elif svalue is None:
-        return default
-
-    if svalue:
+    if isinstance(svalue, str):
         svalue = svalue.strip()
-        if svalue == '':
+        if not svalue:
             return default
-        # integer/float
-        try:
-            return integer_or_double(card, ifield, fieldname)
-        except Exception:
-            dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or '
-                              'blank (not %s).\n'
-                              'card=%s' % (fieldname, svalue, ifield, dtype, card))
-    return default
+    try:
+        return integer_or_double(card, ifield, fieldname)
+    except Exception:
+        dtype = _get_dtype(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or '
+                          'blank (not %s).\n'
+                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
 
 def integer_or_string(card: BDFCard, ifield: int, fieldname: str) -> int | str:

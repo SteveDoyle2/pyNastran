@@ -11,7 +11,7 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.aero.deform_aero_spline import (
     deform_aero_spline, deform_aero_spline_from_files)
-from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh, get_skj
+from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh, get_skj, rodriguez_rotate
 from pyNastran.bdf.mesh_utils.aero.map_aero_model import map_aero_model
 from pyNastran.bdf.mesh_utils.aero.map_pressure_to_caero import map_caero
 
@@ -307,6 +307,89 @@ class TestMeshUtilsAero(unittest.TestCase):
         os.remove('caero_caero.bdf')
         os.remove('caero_paero.bdf')
         os.remove('caero_no_sub.bdf')
+
+
+class TestRodriguezRotate(unittest.TestCase):
+    """Tests for rodriguez_rotate: Rodrigues' rotation about a coord axis through coord.origin."""
+
+    def _make_coord(self, origin, zaxis, xzplane):
+        """Create a CORD2R and cross-reference it."""
+        model = BDF(debug=False)
+        model.add_cord2r(1, origin=origin, zaxis=zaxis, xzplane=xzplane)
+        model.cross_reference()
+        return model.coords[1]
+
+    def test_rotate_90_about_z_at_origin(self):
+        """Rotate (1,0,0) by 90 deg about z-axis at (0,0,0) -> (0,1,0)."""
+        coord = self._make_coord([0., 0., 0.], [0., 0., 1.], [1., 0., 0.])
+        xyz = np.array([[1., 0., 0.]])
+        # iaxis=2 -> k-axis = z
+        result = rodriguez_rotate(xyz, np.pi / 2, coord, iaxis=2)
+        np.testing.assert_allclose(result, [[0., 1., 0.]], atol=1e-14)
+
+    def test_rotate_180_about_y_at_origin(self):
+        """Rotate (1,0,0) by 180 deg about y-axis at (0,0,0) -> (-1,0,0)."""
+        coord = self._make_coord([0., 0., 0.], [0., 0., 1.], [1., 0., 0.])
+        xyz = np.array([[1., 0., 0.]])
+        # iaxis=1 -> j-axis = y
+        result = rodriguez_rotate(xyz, np.pi, coord, iaxis=1)
+        np.testing.assert_allclose(result, [[-1., 0., 0.]], atol=1e-14)
+
+    def test_rotate_about_offset_origin(self):
+        """Rotate about z-axis at (1,0,0): point (2,0,0) rotated 90 deg -> (1,1,0).
+
+        The point is 1 unit from the axis in the x-direction. After 90 deg
+        rotation about z through (1,0,0), it should move to (1,1,0).
+        """
+        coord = self._make_coord([1., 0., 0.], [1., 0., 1.], [2., 0., 0.])
+        xyz = np.array([[2., 0., 0.]])
+        result = rodriguez_rotate(xyz, np.pi / 2, coord, iaxis=2)
+        np.testing.assert_allclose(result, [[1., 1., 0.]], atol=1e-14)
+
+    def test_rotate_point_on_axis_unchanged(self):
+        """Point on the rotation axis should not move."""
+        coord = self._make_coord([1., 2., 3.], [1., 2., 4.], [2., 2., 3.])
+        xyz = np.array([[1., 2., 5.]])  # on z-axis through origin
+        result = rodriguez_rotate(xyz, np.radians(45), coord, iaxis=2)
+        np.testing.assert_allclose(result, [[1., 2., 5.]], atol=1e-14)
+
+    def test_rotate_multiple_points(self):
+        """Vectorized rotation of multiple points about x-axis at origin."""
+        coord = self._make_coord([0., 0., 0.], [0., 0., 1.], [1., 0., 0.])
+        xyz = np.array([
+            [0., 1., 0.],
+            [0., 0., 1.],
+            [5., 1., 0.],
+        ])
+        # 90 deg about x: (0,1,0)->(0,0,1), (0,0,1)->(0,-1,0), (5,1,0)->(5,0,1)
+        result = rodriguez_rotate(xyz, np.pi / 2, coord, iaxis=0)
+        expected = np.array([
+            [0., 0., 1.],
+            [0., -1., 0.],
+            [5., 0., 1.],
+        ])
+        np.testing.assert_allclose(result, expected, atol=1e-14)
+
+    def test_zero_angle_identity(self):
+        """Zero rotation angle should return the original points."""
+        coord = self._make_coord([3., 4., 5.], [3., 4., 6.], [4., 4., 5.])
+        xyz = np.array([[10., 20., 30.], [1., 2., 3.]])
+        result = rodriguez_rotate(xyz, 0.0, coord, iaxis=1)
+        np.testing.assert_allclose(result, xyz, atol=1e-14)
+
+    def test_full_rotation_returns_to_start(self):
+        """360 deg rotation should return to the starting point."""
+        coord = self._make_coord([1., 1., 1.], [1., 1., 2.], [2., 1., 1.])
+        xyz = np.array([[3., 4., 5.], [-1., 2., 7.]])
+        result = rodriguez_rotate(xyz, 2 * np.pi, coord, iaxis=2)
+        np.testing.assert_allclose(result, xyz, atol=1e-13)
+
+    def test_invalid_iaxis_raises(self):
+        """Invalid iaxis should raise RuntimeError."""
+        coord = self._make_coord([0., 0., 0.], [0., 0., 1.], [1., 0., 0.])
+        xyz = np.array([[1., 0., 0.]])
+        with self.assertRaises(RuntimeError):
+            rodriguez_rotate(xyz, 0.5, coord, iaxis=3)
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -491,10 +491,8 @@ def _refine_penta(model: BDF,
     xyz2 = xyz_cid0[in2, :]
     xyz3 = xyz_cid0[in3, :]
     xyz4 = xyz_cid0[in4, :]
-
     xyz5 = xyz_cid0[in5, :]
     xyz6 = xyz_cid0[in6, :]
-
 
     edges = elem.get_edge_ids()
     forward_edges = [
@@ -503,61 +501,74 @@ def _refine_penta(model: BDF,
         (n1i, n4i), (n2i, n5i), (n3i, n6i),
     ]
     assert len(edges) == len(forward_edges), len(edges)
-    nids_array = np.zeros(
-        (nnodes_to_add_with_ends, nnodes_to_add_with_ends, nnodes_to_add_with_ends),
-        dtype='int32')
-    nids_array[0, 0, 0] = n1i
-    nids_array[-1, 0, 0] = n2i
-    nids_array[-1, -1, 0] = n3i
 
-    nids_array[0, 0, -1] = n4i
-    nids_array[-1, 0, -1] = n5i
-    nids_array[-1, -1, -1] = n6i
+    # get 9 edge midpoint node IDs from edges_to_center
+    # edges_to_center stores (n1, mid1, ..., midn, n2)
+    def _get_edge_mid(na, nb):
+        edge = tuple(sorted([na, nb]))
+        nids_seq = edges_to_center[edge]
+        return nids_seq[len(nids_seq) // 2]
 
-    assert nids_array[0, 0, 0] == n1i
-    assert nids_array[-1, 0, 0] == n2i
-    assert nids_array[-1, -1, 0] == n3i
+    m12 = _get_edge_mid(n1i, n2i)  # bottom tri edges
+    m23 = _get_edge_mid(n2i, n3i)
+    m31 = _get_edge_mid(n3i, n1i)
+    m45 = _get_edge_mid(n4i, n5i)  # top tri edges
+    m56 = _get_edge_mid(n5i, n6i)
+    m64 = _get_edge_mid(n4i, n6i)
+    m14 = _get_edge_mid(n1i, n4i)  # vertical edges
+    m25 = _get_edge_mid(n2i, n5i)
+    m36 = _get_edge_mid(n3i, n6i)
 
-    assert nids_array[0, 0, -1] == n4i
-    assert nids_array[-1, 0, -1] == n5i
-    assert nids_array[-1, -1, -1] == n6i
+    # create 3 quad-face center nodes at midpoints of vertical edge midpoints
+    # quad n1-n2-n5-n4: center = mid(m14, m25) = mid(mid(n1,n4), mid(n2,n5))
+    xyz_fc12 = (nodes[m14].xyz + nodes[m25].xyz) / 2.
+    fc12 = nid0
+    nodes[nid0] = GRID(nid0, xyz_fc12)
+    nid0 += 1
 
-    debug = False
-    if debug:
-        print('nids_array0:\n', nids_array)
-    faces = penta_get_sorted_faces(elem)
-    nid0 = _insert_penta_nodes(
-        nodes, nids_array, nid0,
-        edges, forward_edges,
-        edges_to_center, faces_to_center, faces,
-        nnodes_to_add_with_ends,
-        xyz1, xyz2, xyz3,
-        xyz4, xyz5, xyz6,
-        debug=debug,
-    )
-    unids1 = np.unique([n1i, n2i, n3i, n4i, n5i, n6i])
-    assert len(unids1) == 6, unids1
-    assert nids_array[0, 0, 0] == n1i
-    assert nids_array[-1, 0, 0] == n2i
-    assert nids_array[-1, -1, 0] == n3i
+    # quad n2-n3-n6-n5: center = mid(m25, m36)
+    xyz_fc23 = (nodes[m25].xyz + nodes[m36].xyz) / 2.
+    fc23 = nid0
+    nodes[nid0] = GRID(nid0, xyz_fc23)
+    nid0 += 1
 
-    assert nids_array[0, 0, -1] == n4i
-    assert nids_array[-1, 0, -1] == n5i
-    assert nids_array[-1, -1, -1] == n6i
-    #assert unids1 == unids2
+    # quad n3-n1-n4-n6: center = mid(m36, m14)
+    xyz_fc31 = (nodes[m36].xyz + nodes[m14].xyz) / 2.
+    fc31 = nid0
+    nodes[nid0] = GRID(nid0, xyz_fc31)
+    nid0 += 1
 
-    nodes_hexas = _penta_nids_to_node_ids(nids_array)
+    # 8 sub-pentas: 4 sub-triangles x 2 layers (bottom/top half)
+    #
+    # Triangle subdivision (4 sub-triangles of bottom face):
+    #   T1: (n1, m12, m31)   - corner at n1
+    #   T2: (m12, n2, m23)   - corner at n2
+    #   T3: (m31, m23, n3)   - corner at n3
+    #   T4: (m12, m23, m31)  - inverted center
+    #
+    # Mid-layer nodes above each bottom-face node:
+    #   n1->m14, n2->m25, n3->m36, m12->fc12, m23->fc23, m31->fc31
+    # Top-layer nodes above each mid-layer node:
+    #   m14->n4, m25->n5, m36->n6, fc12->m45, fc23->m56, fc31->m64
+    nodes_pentas = np.array([
+        # bottom half (bottom face -> mid-layer)
+        [n1i, m12, m31, m14, fc12, fc31],  # T1
+        [m12, n2i, m23, fc12, m25, fc23],  # T2
+        [m31, m23, n3i, fc31, fc23, m36],  # T3
+        [m12, m23, m31, fc12, fc23, fc31], # T4
+        # top half (mid-layer -> top face)
+        [m14, fc12, fc31, n4i, m45, m64],  # T1
+        [fc12, m25, fc23, m45, n5i, m56],  # T2
+        [fc31, fc23, m36, m64, m56, n6i],  # T3
+        [fc12, fc23, fc31, m45, m56, m64], # T4
+    ], dtype='int32')
 
-    nelementsi = nodes_hexas.shape[0] - 1
+    nelementsi = nodes_pentas.shape[0] - 1
     eids = [eid] + [eid0 + i for i in range(nelementsi)]
 
-    debug = False
     pid = elem.pid
-    for eidi, nidsi in zip_strict(eids, nodes_hexas):
-        if debug:
-            print('penta', eidi, nidsi)
+    for eidi, nidsi in zip_strict(eids, nodes_pentas):
         elem1 = CPENTA6(eidi, pid, nidsi, comment='')
-        #print(elem1)
         elem1.validate()
         elem1.cross_reference(model)
         try:
@@ -569,28 +580,6 @@ def _refine_penta(model: BDF,
         nelements += 1
     eid0 += nelementsi
 
-    #xyz5 = (xyz1 + xyz2) / 2.
-    #xyz6 = (xyz2 + xyz3) / 2.
-    #xyz7 = (xyz3 + xyz4) / 2.
-    #xyz8 = (xyz4 + xyz1) / 2.
-    #nodes.update({
-        #n5: GRID(n5, xyz5, cp=0, cd=0, ps='', seid=0, comment=''),
-        #n6: GRID(n6, xyz6, cp=0, cd=0, ps='', seid=0, comment=''),
-        #n7: GRID(n7, xyz7, cp=0, cd=0, ps='', seid=0, comment=''),
-        #n8: GRID(n8, xyz8, cp=0, cd=0, ps='', seid=0, comment=''),
-        #n9: GRID(n9, centroid, cp=0, cd=0, ps='', seid=0, comment=''),
-    #})
-    #nodes_new.extend([n5, n6, n7, n8, n9])
-    #xyz_new.extend([xyz5, xyz6, xyz7, xyz8, centroid])
-
-    #elem1.cross_reference(model)
-    #elem2.cross_reference(model)
-    #elem3.cross_reference(model)
-    #elem4.cross_reference(model)
-    #elem1.Normal()
-    #elem2.Normal()
-    #elem3.Normal()
-    #elem4.Normal()
     assert len(elements) == nelements
     return nid0, eid0, nelements
 
@@ -1166,142 +1155,6 @@ def _insert_hexa_nodes(nodes: dict[int, GRID],
     assert len(np.unique(nids_array)) == nids_array.size
     return nid0
 
-def _insert_penta_nodes(nodes: dict[int, GRID],
-                        nids_array, nid0: int,
-                        edges, forward_edges,
-                        edges_to_center,
-                        faces_to_center, faces,
-                        nnodes_to_add_with_ends: int,
-                        xyz1, xyz2, xyz3,
-                        xyz4, xyz5, xyz6,
-                        debug=False):
-
-    # apply edges_to_center
-    for i, edge, fwd_edge in zip(count(), edges, forward_edges):
-        nids_center = edges_to_center[edge]
-        if debug:
-            print('nids_center =', nids_center)
-        flag = ' '
-        if edge == fwd_edge:
-            nids_set = nids_center
-        else:
-            #flag = '*'
-            nids_set = list(nids_center)
-            nids_set.reverse()
-            if debug:
-                print('nids_set =', nids_set)
-        # bottom triangle edges (k=0)
-        if i == 0:
-            nids_array[:, 0, 0] = nids_set  # n1->n2
-        elif i == 1:
-            nids_array[-1, :, 0] = nids_set  # n2->n3
-        elif i == 2:
-            # n3->n1: diagonal from [-1,-1,0] to [0,0,0]
-            # TODO: this is a diagonal in the array; axis-aligned slice is approximate
-            nids_array[::-1, -1, 0] = nids_set
-
-        # top triangle edges (k=-1)
-        elif i == 3:
-            nids_array[:, 0, -1] = nids_set  # n4->n5
-        elif i == 4:
-            nids_array[-1, :, -1] = nids_set  # n5->n6
-        elif i == 5:
-            # n4->n6: diagonal from [0,0,-1] to [-1,-1,-1]
-            nids_array[::-1, -1, -1] = nids_set
-
-        # vertical edges
-        elif i == 6:
-            nids_array[0, 0, :] = nids_set  # n1->n4
-        elif i == 7:
-            nids_array[-1, 0, :] = nids_set  # n2->n5
-        elif i == 8:
-            nids_array[-1, -1, :] = nids_set  # n3->n6
-        else:
-            raise NotImplementedError(i)
-
-        if debug:
-            print(f'{flag}i={i} nids={nids_set} edge={edge} fwd_edge={fwd_edge}')
-            print(nids_array)
-            print('---------')
-
-
-    if nnodes_to_add_with_ends == 3:
-        # apply faces_to_center
-        # faces: [btm_tri, top_tri, quad1, quad2, quad3]
-        for i, face in enumerate(faces):
-            center_nids = faces_to_center[face]  # length=1
-            assert len(center_nids) == 1, center_nids
-            center_nid = center_nids[0]
-            if i == 0:
-                # bottom triangle (k=0)
-                plane = nids_array[:, :, 0]
-            elif i == 1:
-                # top triangle (k=-1)
-                plane = nids_array[:, :, -1]
-            elif i == 2:
-                # quad face: n1-n3-n6-n4 -> j varies with k
-                plane = nids_array[:, 0, :]
-            elif i == 3:
-                # quad face: n2-n3-n6-n5
-                plane = nids_array[-1, :, :]
-            elif i == 4:
-                # quad face: n1-n2-n5-n4
-                plane = nids_array[0, :, :]
-            else:
-                raise NotImplementedError(i)
-            plane[1, 1] = center_nid
-
-    else:
-        raise NotImplementedError(nnodes_to_add_with_ends)
-
-    if nnodes_to_add_with_ends == 3:
-        #nids_array[1, 1] = nid0
-        xyzc = (xyz1 + xyz2 + xyz3 + xyz4 + xyz5 + xyz6) / 6.
-        nodes[nid0] = GRID(nid0, xyzc)
-        nid0 += 1
-
-    if nids_array.min() == 0:
-        i, j, k = np.where(nids_array == 0)
-        xarray = np.linspace(0., 1., num=nnodes_to_add_with_ends, endpoint=True)
-
-        xi = xarray[i]
-        xj = xarray[j]
-        xk = xarray[k]
-
-        for ii, jj, kk, xii, xjj, xkk in zip(i, j, k, xi, xj, xk):
-            # bilinear on bottom face (z=0): n1, n2, n3
-            xyz12 = xyz1 * (1. - xii) + xyz2 * xii
-            xyz13 = xyz1 * (1. - xjj) + xyz3 * xjj
-            # bilinear on top face (z=1): n4, n5, n6
-            xyz45 = xyz4 * (1. - xii) + xyz5 * xii
-            xyz46 = xyz4 * (1. - xjj) + xyz6 * xjj
-            # interpolate bottom and top in j-direction
-            xyz_bot = xyz12 * (1. - xjj) + xyz13 * xjj
-            xyz_top = xyz45 * (1. - xjj) + xyz46 * xjj
-            # interpolate along k (vertical)
-            xyz = xyz_bot * (1. - xkk) + xyz_top * xkk
-            nodes[nid0] = GRID(nid0, xyz)
-            nids_array[ii, jj, kk] = nid0
-            if debug:
-                print(f'ijk=({ii},{jj},{kk}) nid={nid0} xyz={xyz}')
-            nid0 += 1
-
-    if debug:
-        print('nids_array1:\n', nids_array)
-    new_corner_nids = [
-        nids_array[0, 0, 0],
-        nids_array[-1, 0, 0],
-        nids_array[-1, -1, 0],
-
-        nids_array[0, 0, -1],
-        nids_array[-1, 0, -1],
-        nids_array[-1, -1, -1],
-    ]
-    unids2 = np.unique(new_corner_nids)
-    assert len(unids2) == 6, unids2
-    #print('nid0*** =', nid0)
-    assert nids_array.min() >= 1, nids_array
-    return nid0
 
 def _quad_nids_to_node_ids(nids_array):
     assert nids_array.min() >= 1, nids_array
@@ -1348,28 +1201,6 @@ def _hexa_nids_to_node_ids(nids_array):
     nodes[:, 7] = n8
     return nodes
 
-def _penta_nids_to_node_ids(nids_array):
-    assert nids_array.min() >= 1, nids_array
-    n1 = nids_array[:-1, :-1, :-1].ravel()
-    n2 = nids_array[1:, :-1,  :-1].ravel()
-    n3 = nids_array[1:, 1:,   :-1].ravel()
-
-    n4 = nids_array[:-1, :-1, 1:].ravel()
-    n5 = nids_array[1:, :-1,  1:].ravel()
-    n6 = nids_array[1:, 1:,   1:].ravel()
-
-    nodes = np.stack([n1, n2, n3, n4, n5, n6], axis=1)
-    nnodes = len(n1)
-    assert nodes.shape == (nnodes, 6), nodes.shape
-    nodes = np.zeros((nnodes, 6), dtype=nids_array.dtype)
-    nodes[:, 0] = n1
-    nodes[:, 1] = n2
-    nodes[:, 2] = n3
-    nodes[:, 3] = n4
-
-    nodes[:, 4] = n5
-    nodes[:, 5] = n6
-    return nodes
 
 
 #if __name__ == '__main__':  # pragma: no cover

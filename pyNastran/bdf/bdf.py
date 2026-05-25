@@ -48,7 +48,7 @@ from .field_writer_8 import print_card_8
 from .field_writer_16 import print_card_16, print_field_16
 
 from .cards.base_card import _format_comment
-from .cards.utils import wipe_empty_fields
+from .cards.utils import wipe_empty_fields, wipe_empty_fields_str
 
 #from .write_path import write_include
 from .bdf_interface.assign_type import (
@@ -1891,6 +1891,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
 
+        # convert numpy array to list for faster per-row access in the loop
+        bulk_data_ilines_list = bulk_data_ilines.tolist()
+
         cards_list: list[Any] = []
         cards_dict: dict[str, list[Any]] = defaultdict(list)
         dict_cards = ['BAROR', 'BEAMOR']
@@ -1908,7 +1911,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # self.force_echo_off = False
 
         for iline_bulk, line in enumerate(bulk_data_lines):
-            ifile_iline = bulk_data_ilines[iline_bulk, :]
+            ifile_iline = bulk_data_ilines_list[iline_bulk]
             # print(iline_bulk, ifile_iline)
             # print(iline_bulk, ifile_iline, line)
             # print('    backup={backup_comment!r}')
@@ -2026,6 +2029,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
 
+        # convert numpy array to list for faster per-row access in the loop
+        bulk_data_ilines_list = bulk_data_ilines.tolist()
+
         cards_dict = defaultdict(list)
         card_count = defaultdict(int)
         full_comment = ''
@@ -2034,7 +2040,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         backup_comment = ''
         nlines = len(bulk_data_lines)
         for iline_bulk, line in enumerate(bulk_data_lines):
-            ifile_iline = bulk_data_ilines[iline_bulk, :]
+            ifile_iline = bulk_data_ilines_list[iline_bulk]
             #print('    backup=%r' % backup_comment)
             comment = ''
             if '$' in line:
@@ -2317,7 +2323,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 print_field_16(_parse_dynamic_syntax(field, self.dict_of_vars, self.log))
                 if '%' in field[0:1] else field
                 for field in fields]
-        card = wipe_empty_fields(fields)
+            card = wipe_empty_fields(fields)
+        else:
+            card = wipe_empty_fields_str(fields)
         card[0] = card_name
         return card
 
@@ -2370,8 +2378,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             if has_none:
                 card = wipe_empty_fields([print_field_16(field) for field in fields])
+            elif not is_list and not self._is_dynamic_syntax:
+                card = wipe_empty_fields_str(fields)
             else:
-                #card = remove_trailing_fields(fields)
                 card = wipe_empty_fields(fields)
             card_obj = BDFCard(card, has_none=False)
         return card_obj, card
@@ -4235,15 +4244,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             return xyz_cid0
 
         # transform the grids to the local coordinate system
-        # is_beta = np.diagonal(beta2).min() != 1.
-        # is_origin = np.abs(coord2.origin).max() != 0.
-        # if is_beta and is_origin:
         xyz_cid = coord2.transform_node_to_local_array(xyz_cid0)
-        # xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0 - coord2.origin, beta2.T))
-        # elif is_beta:
-        #     xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 @ beta2.T)
-        # else:
-        #     xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
 
         if atol is not None:
             xyz_cid_correct = self.get_xyz_in_coord(cid=cid)
