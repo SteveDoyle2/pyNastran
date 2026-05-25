@@ -32,6 +32,7 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_float_nan, get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.femutils.utils import hstack_lists
+from pyNastran.bdf.cards.aero.dynamic_loads import von_karman_psd, dryden_psd
 
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -6114,6 +6115,82 @@ class GUST(VectorizedBaseCard):
             list_fields = ['GUST', gust_id, dload, wg, x0, V]
             bdf_file.write(print_card(list_fields))
         return
+
+    @staticmethod
+    def von_karman_psd(omega: np.ndarray, sigma: float, L: float,
+                       V: float) -> np.ndarray:
+        """Von Karman vertical turbulence PSD.
+
+        Parameters
+        ----------
+        omega : (N,) ndarray
+            Circular frequency [rad/s].
+        sigma : float
+            RMS gust velocity.
+        L : float
+            Turbulence scale length.
+        V : float
+            True airspeed.
+
+        Returns
+        -------
+        (N,) ndarray
+            PSD [velocity^2 / (rad/s)].
+        """
+        return von_karman_psd(omega, sigma, L, V)
+
+    @staticmethod
+    def dryden_psd(omega: np.ndarray, sigma: float, L: float,
+                   V: float) -> np.ndarray:
+        """Dryden vertical turbulence PSD.
+
+        Parameters
+        ----------
+        omega : (N,) ndarray
+            Circular frequency [rad/s].
+        sigma : float
+            RMS gust velocity.
+        L : float
+            Turbulence scale length.
+        V : float
+            True airspeed.
+
+        Returns
+        -------
+        (N,) ndarray
+            PSD [velocity^2 / (rad/s)].
+        """
+        return dryden_psd(omega, sigma, L, V)
+
+    @staticmethod
+    def gust_psd(omega: np.ndarray, sigma: float, L: float, V: float,
+                 gust_model: str = 'von_karman') -> np.ndarray:
+        """Compute gust PSD using the specified turbulence model.
+
+        Parameters
+        ----------
+        omega : (N,) ndarray
+            Circular frequency [rad/s].
+        sigma : float
+            RMS gust velocity.
+        L : float
+            Turbulence scale length.
+        V : float
+            True airspeed.
+        gust_model : str
+            'von_karman' or 'dryden'.
+
+        Returns
+        -------
+        (N,) ndarray
+            PSD [velocity^2 / (rad/s)].
+        """
+        if gust_model == 'von_karman':
+            return von_karman_psd(omega, sigma, L, V)
+        elif gust_model == 'dryden':
+            return dryden_psd(omega, sigma, L, V)
+        raise ValueError(f"Unknown gust model: '{gust_model}'. "
+                         f"Use 'von_karman' or 'dryden'.")
 
 
 FLUTTER_METHODS = {'K', 'KE', 'PK', 'PKS', 'PKNL', 'PKNLS'}

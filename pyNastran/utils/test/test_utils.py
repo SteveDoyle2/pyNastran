@@ -13,10 +13,11 @@ from pyNastran.utils import (
 from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import (
     get_abs_max, get_max_index, get_min_index, get_abs_index,
-    is_list_ranged, gauss,
+    is_list_ranged, gauss, grms,
     list_print, print_annotated_matrix,
 )
 from pyNastran.utils.dev import get_files_of_type
+from pyNastran.bdf.cards.aero.dynamic_loads import von_karman_psd, dryden_psd
 
 
 PKG_PATH = pyNastran.__path__[0]
@@ -243,6 +244,87 @@ class TestUtils(unittest.TestCase):
         sorted_attributes = list(sorted(expected))
         msg = f'attributes={sorted_attributes} missing={missing}'
         assert len(missing) == 0, msg
+
+
+class TestGrms(unittest.TestCase):
+    """Tests for grms, von_karman_psd, and dryden_psd."""
+
+    def test_grms_flat_psd(self):
+        """Flat PSD from 10-1000 Hz: integral = PSD*(1000-10), GRMS = sqrt(990)."""
+        freq = np.logspace(1, 3, 200)
+        psd = np.ones_like(freq)
+        result = grms(freq, psd)
+        expected = np.sqrt(990.0)
+        np.testing.assert_allclose(result, expected, rtol=1e-10)
+
+    def test_grms_power_law_slope(self):
+        """PSD = f^2 from 1-10 Hz: integral = (10^3 - 1)/3 = 333."""
+        freq = np.logspace(0, 1, 100)
+        psd = freq**2
+        result = grms(freq, psd)
+        expected = np.sqrt(333.0)
+        np.testing.assert_allclose(result, expected, rtol=1e-10)
+
+    def test_grms_negative_slope(self):
+        """PSD = 1/f^2 from 1-100 Hz: integral = 1 - 0.01 = 0.99."""
+        freq = np.logspace(0, 2, 200)
+        psd = 1.0 / freq**2
+        result = grms(freq, psd)
+        expected = np.sqrt(0.99)
+        np.testing.assert_allclose(result, expected, rtol=1e-10)
+
+    def test_grms_slope_minus_one(self):
+        """PSD = 1/f (m=-1 special case): integral = ln(100)."""
+        freq = np.logspace(0, 2, 200)
+        psd = 1.0 / freq
+        result = grms(freq, psd)
+        expected = np.sqrt(np.log(100.0))
+        np.testing.assert_allclose(result, expected, rtol=1e-10)
+
+    def test_grms_2d_input(self):
+        """2D PSD array: each row integrated independently."""
+        freq = np.logspace(0, 2, 100)
+        psd_row1 = np.ones_like(freq)  # integral = 99
+        psd_row2 = 2.0 * np.ones_like(freq)  # integral = 198
+        psd = np.vstack([psd_row1, psd_row2])
+        result = grms(freq, psd)
+        np.testing.assert_allclose(result[0], np.sqrt(99.0), rtol=1e-10)
+        np.testing.assert_allclose(result[1], np.sqrt(198.0), rtol=1e-10)
+
+    def test_von_karman_psd_positive(self):
+        """Von Karman PSD should be positive for all positive omega."""
+        omega = np.logspace(-2, 3, 500)
+        psd = von_karman_psd(omega, sigma=10.0, L=2500.0, V=800.0)
+        assert np.all(psd > 0)
+
+    def test_von_karman_psd_integrates_to_sigma_squared(self):
+        """Integral of Von Karman PSD over all omega should equal sigma^2.
+
+        Tolerance: rtol=0.01 because we truncate the integral at finite bounds.
+        """
+        sigma = 10.0
+        L = 2500.0
+        V = 800.0
+        omega = np.logspace(-4, 4, 5000)
+        psd = von_karman_psd(omega, sigma, L, V)
+        rms = grms(omega, psd)
+        np.testing.assert_allclose(rms**2, sigma**2, rtol=0.01)
+
+    def test_dryden_psd_positive(self):
+        """Dryden PSD should be positive for all positive omega."""
+        omega = np.logspace(-2, 3, 500)
+        psd = dryden_psd(omega, sigma=10.0, L=2500.0, V=800.0)
+        assert np.all(psd > 0)
+
+    def test_dryden_psd_integrates_to_sigma_squared(self):
+        """Integral of Dryden PSD over all omega should equal sigma^2."""
+        sigma = 10.0
+        L = 2500.0
+        V = 800.0
+        omega = np.logspace(-4, 4, 5000)
+        psd = dryden_psd(omega, sigma, L, V)
+        rms = grms(omega, psd)
+        np.testing.assert_allclose(rms**2, sigma**2, rtol=0.01)
 
 
 if __name__ == '__main__':  # pragma: no cover

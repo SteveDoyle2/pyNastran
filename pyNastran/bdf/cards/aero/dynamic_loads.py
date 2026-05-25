@@ -1145,33 +1145,109 @@ class FLUTTER(BaseCard):
         return self.comment + print_card_8(card)
 
 
-def gust_function(gust_model: str='von_karman', V: float=1.0):
-    """
+def gust_function(omega: np.ndarray, L: float, V: float,
+                  gust_model: str = 'von_karman') -> np.ndarray:
+    """Normalized gust PSD shape function.
+
+    Returns the dimensionless shape factor S(omega) such that:
+        Phi_g(omega) = sigma_g^2 * (L / (pi*V)) * S(omega)
 
     Parameters
     ----------
-    gust_model
-    V
+    omega : ndarray
+        Circular frequency [rad/s].
+    L : float
+        Turbulence scale length [length units].
+    V : float
+        True airspeed [length/time].
+    gust_model : str
+        'von_karman' or 'dryden'.
 
     Returns
     -------
-
-    Sa(omega) = 2 * wg^2 * (L/V) * gust_function(gust_model, V=V)
-
+    ndarray
+        Dimensionless PSD shape factor at each omega.
     """
+    omega = np.asarray(omega, dtype=float)
     if gust_model == 'von_karman':
-        k = 1.399
-        p = 1/3
+        k = 1.339
+        p = 1.0 / 3.0
     elif gust_model == 'dryden':
         k = 1.0
         p = 0.5
-    else:  # pragma: no cover
+    else:
         raise NotImplementedError(gust_model)
     q = (k * L * omega / V) ** 2
-    num = 1 + 2 * (p + 1) * q
-    denom = 1 + q ** (p + 1.5)
-    out = num / denom
-    return out
+    num = 1.0 + 2.0 * (p + 1.0) * q
+    denom = (1.0 + q) ** (p + 1.5)
+    return num / denom
+
+
+def von_karman_psd(omega: np.ndarray, sigma: float, L: float,
+                   V: float) -> np.ndarray:
+    """Von Karman vertical turbulence power spectral density.
+
+    Phi_g(omega) = sigma^2 * L / (pi*V)
+                   * (1 + (8/3)*(1.339*L*omega/V)^2)
+                   / (1 + (1.339*L*omega/V)^2)^(11/6)
+
+    One-sided PSD (omega >= 0) per MIL-STD-1797 / FAR 25.
+
+    Parameters
+    ----------
+    omega : (N,) ndarray
+        Circular frequency [rad/s].
+    sigma : float
+        RMS gust velocity [length/time].
+    L : float
+        Turbulence scale length [length].
+    V : float
+        True airspeed [length/time].
+
+    Returns
+    -------
+    (N,) ndarray
+        PSD [velocity^2 / (rad/s)].
+    """
+    omega = np.asarray(omega, dtype=float)
+    c = 1.339
+    Omega_bar = c * L * omega / V
+    return (sigma**2 * L / (np.pi * V)
+            * (1.0 + (8.0 / 3.0) * Omega_bar**2)
+            / (1.0 + Omega_bar**2) ** (11.0 / 6.0))
+
+
+def dryden_psd(omega: np.ndarray, sigma: float, L: float,
+               V: float) -> np.ndarray:
+    """Dryden vertical turbulence power spectral density.
+
+    Phi_g(omega) = sigma^2 * L / (pi*V)
+                   * (1 + 3*(L*omega/V)^2)
+                   / (1 + (L*omega/V)^2)^2
+
+    Rational form suitable for state-space coloring filter representation.
+
+    Parameters
+    ----------
+    omega : (N,) ndarray
+        Circular frequency [rad/s].
+    sigma : float
+        RMS gust velocity [length/time].
+    L : float
+        Turbulence scale length [length].
+    V : float
+        True airspeed [length/time].
+
+    Returns
+    -------
+    (N,) ndarray
+        PSD [velocity^2 / (rad/s)].
+    """
+    omega = np.asarray(omega, dtype=float)
+    Omega_bar = L * omega / V
+    return (sigma**2 * L / (np.pi * V)
+            * (1.0 + 3.0 * Omega_bar**2)
+            / (1.0 + Omega_bar**2) ** 2)
 
 
 class GUST(BaseCard):
@@ -1295,6 +1371,18 @@ class GUST(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+    @staticmethod
+    def get_von_karman_psd(omega: np.ndarray, sigma: float, L: float,
+                           V: float) -> np.ndarray:
+        """Von Karman vertical turbulence PSD. See ``von_karman_psd``."""
+        return von_karman_psd(omega, sigma, L, V)
+
+    @staticmethod
+    def get_dryden_psd(omega: np.ndarray, sigma: float, L: float,
+                       V: float) -> np.ndarray:
+        """Dryden vertical turbulence PSD. See ``dryden_psd``."""
+        return dryden_psd(omega, sigma, L, V)
 
 
 class MKAERO1(BaseCard):
