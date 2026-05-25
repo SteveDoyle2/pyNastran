@@ -7994,3 +7994,28 @@ class TRIM(VectorizedBaseCard):
                 list_fields += [None, None, aeqr]
             bdf_file.write(print_card(list_fields))
         return
+
+
+def get_mklist(mkaeros: list) -> np.ndarray:
+    """Gets the (nmk, 2) array of [mach, reduced_freq] pairs from MKAERO1/MKAERO2 cards.
+
+    Parameters
+    ----------
+    mkaeros : list[MKAERO1 | MKAERO2]
+        list of MKAERO1/MKAERO2 card objects
+
+    Returns
+    -------
+    mk_array : (nmk, 2) float ndarray
+        sorted unique [mach, reduced_freq] pairs;
+        empty (0,) array if no MKAERO cards
+
+    """
+    mklist = []
+    for mkaero in mkaeros:
+        mklist += mkaero.mklist()
+    if not mklist:
+        return np.array([])
+    mk_array = np.array(mklist, dtype='float64')
+    mk_array = np.unique(mk_array, axis=0)
+    return mk_array

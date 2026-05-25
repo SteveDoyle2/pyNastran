@@ -583,6 +583,8 @@ class GuiQtCommon(GuiAttributes):
         self.icase_fringe = icase
         self.grid.Modified()
         self.grid_selected.Modified()
+        if len(self.groups):
+            self.post_group_by_name(self.group_active)
         self._update_min_max_actors(location, icase_fringe,
                                     imin, min_value,
                                     imax, max_value)
@@ -778,6 +780,8 @@ class GuiQtCommon(GuiAttributes):
 
             grid.Modified()
             self.grid_selected.Modified()
+            if len(self.groups):
+                self.post_group_by_name(self.group_active)
             self.icase_disp = icase
         else:
             self.icase_vector = icase

@@ -47,29 +47,55 @@ class Group:
             node_str = ' '.join(str(s) for s in node_str)
         else:
             assert isinstance(node_str, str), 'node_str=%r type=%s' % (node_str, type(node_str))
-        self.element_str = element_str
+        self._element_str = element_str
         self.elements_pound = elements_pound
-        self.node_str = node_str
+        self._node_str = node_str
         self.nodes_pound = nodes_pound
         self.editable = editable
+        self._element_ids_cache: np.ndarray | None = None
+        self._node_ids_cache: np.ndarray | None = None
+
+    @property
+    def element_str(self) -> str:
+        return self._element_str
+
+    @element_str.setter
+    def element_str(self, value: str) -> None:
+        self._element_str = value
+        self._element_ids_cache = None
+
+    @property
+    def node_str(self) -> str:
+        return self._node_str
+
+    @node_str.setter
+    def node_str(self, value: str) -> None:
+        self._node_str = value
+        self._node_ids_cache = None
 
     @property
     def element_ids(self) -> np.ndarray:
-        return parse_patran_syntax(self.element_str, pound=self.elements_pound)
+        if self._element_ids_cache is None:
+            self._element_ids_cache = parse_patran_syntax(self._element_str, pound=self.elements_pound)
+        return self._element_ids_cache
 
     @element_ids.setter
     def element_ids(self, eids: np.ndarray) -> None:
         assert isinstance(eids, np.ndarray), eids
-        self.element_str = _get_collapsed_text(eids).strip()
+        self._element_str = _get_collapsed_text(eids).strip()
+        self._element_ids_cache = eids
 
     @property
     def node_ids(self) -> np.ndarray:
-        return parse_patran_syntax(self.node_str, pound=self.nodes_pound)
+        if self._node_ids_cache is None:
+            self._node_ids_cache = parse_patran_syntax(self._node_str, pound=self.nodes_pound)
+        return self._node_ids_cache
 
     @node_ids.setter
     def node_ids(self, nids: np.ndarray) -> None:
         assert isinstance(nids, np.ndarray), nids
-        self.node_str = _get_collapsed_text(nids).strip()
+        self._node_str = _get_collapsed_text(nids).strip()
+        self._node_ids_cache = nids
 
     def __repr__(self) -> str:
         msg = 'Group:\n'
@@ -111,18 +137,31 @@ class NodeGroup:
             node_str = ' '.join(str(s) for s in node_str)
         else:
             assert isinstance(node_str, str), 'node_str=%r type=%s' % (node_str, type(node_str))
-        self.node_str = node_str
+        self._node_str = node_str
         self.nodes_pound = nodes_pound
         self.editable = editable
+        self._node_ids_cache: np.ndarray | None = None
+
+    @property
+    def node_str(self) -> str:
+        return self._node_str
+
+    @node_str.setter
+    def node_str(self, value: str) -> None:
+        self._node_str = value
+        self._node_ids_cache = None
 
     @property
     def node_ids(self) -> np.ndarray:
-        return parse_patran_syntax(self.node_str, pound=self.nodes_pound)
+        if self._node_ids_cache is None:
+            self._node_ids_cache = parse_patran_syntax(self._node_str, pound=self.nodes_pound)
+        return self._node_ids_cache
 
     @node_ids.setter
     def node_ids(self, nids: np.ndarray):
         assert isinstance(nids, np.ndarray), nids
-        self.node_str = _get_collapsed_text(nids).strip()
+        self._node_str = _get_collapsed_text(nids).strip()
+        self._node_ids_cache = nids
 
     def __repr__(self) -> str:
         msg = 'NodeGroup:\n'

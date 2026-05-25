@@ -120,8 +120,194 @@ def get_elements_nelements_unvectorized(model: BDF) -> tuple[Any, int, list[dict
     return elements, nelements, superelements
 
 
+def _vectorized_shell_normals(model: BDF, eid_map: dict[int, int],
+                              nid_map: dict[int, int],
+                              xyz_cid0: np.ndarray,
+                              normals: np.ndarray) -> None:
+    """Compute shell element normals vectorized using cross products on bulk arrays."""
+    tri_types = {'CTRIA3', 'CTRIAR', 'CTRAX3', 'CPLSTN3', 'CPLSTS3',
+                 'CTRIA6', 'CTRIAX', 'CTRIAX6', 'CTRAX6', 'CPLSTN6', 'CPLSTS6'}
+    quad_types = {'CQUAD4', 'CQUADR', 'CSHEAR', 'CQUADX4', 'CPLSTN4', 'CPLSTS4',
+                  'CQUAD8', 'CQUADX8', 'CPLSTN8', 'CPLSTS8', 'CQUAD', 'CQUADX'}
+
+    tri_ieids = []
+    tri_n1 = []
+    tri_n2 = []
+    tri_n3 = []
+    quad_ieids = []
+    quad_n1 = []
+    quad_n2 = []
+    quad_n3 = []
+    quad_n4 = []
+
+    for eid, elem in model.elements.items():
+        etype = elem.type
+        ieid = eid_map.get(eid, -1)
+        if ieid == -1:
+            continue
+        if etype in tri_types:
+            nids = elem.node_ids
+            tri_ieids.append(ieid)
+            tri_n1.append(nid_map[nids[0]])
+            tri_n2.append(nid_map[nids[1]])
+            tri_n3.append(nid_map[nids[2]])
+        elif etype in quad_types:
+            nids = elem.node_ids
+            quad_ieids.append(ieid)
+            quad_n1.append(nid_map[nids[0]])
+            quad_n2.append(nid_map[nids[1]])
+            quad_n3.append(nid_map[nids[2]])
+            quad_n4.append(nid_map[nids[3]])
+
+    if tri_ieids:
+        tri_ieids = np.array(tri_ieids, dtype='int32')
+        p1 = xyz_cid0[tri_n1]
+        p2 = xyz_cid0[tri_n2]
+        p3 = xyz_cid0[tri_n3]
+        v = np.cross(p2 - p1, p3 - p1)
+        norms = np.linalg.norm(v, axis=1, keepdims=True)
+        norms[norms == 0.0] = 1.0
+        normals[tri_ieids] = (v / norms).astype('float32')
+
+    if quad_ieids:
+        quad_ieids = np.array(quad_ieids, dtype='int32')
+        p1 = xyz_cid0[quad_n1]
+        p2 = xyz_cid0[quad_n2]
+        p3 = xyz_cid0[quad_n3]
+        p4 = xyz_cid0[quad_n4]
+        # average of two triangle normals (diagonal cross)
+        v = np.cross(p3 - p1, p4 - p2)
+        norms = np.linalg.norm(v, axis=1, keepdims=True)
+        norms[norms == 0.0] = 1.0
+        normals[quad_ieids] = (v / norms).astype('float32')
+
+
+def _vectorized_element_dims_offsets(model: BDF, eid_map: dict[int, int],
+                                     normals: np.ndarray,
+                                     element_dim: np.ndarray,
+                                     nnodes_array: np.ndarray,
+                                     offset: np.ndarray,
+                                     xoffset: np.ndarray,
+                                     yoffset: np.ndarray,
+                                     zoffset: np.ndarray,
+                                     has_normals: bool=False) -> set[int]:
+    """Vectorized computation of element_dim, nnodes, and offsets.
+
+    Returns the set of eids that were handled (so the fallback loop can skip them).
+    """
+    etype_dim_nnodes = {
+        'CTETRA': (3, 4), 'CPENTA': (3, 6), 'CPYRAM': (3, 5), 'CHEXA': (3, 8),
+        'CROD': (1, 2), 'CONROD': (1, 2), 'CBEND': (1, 2),
+        'CBAR': (1, 2), 'CBEAM': (1, 2), 'CGAP': (1, 2), 'CTUBE': (1, 2),
+        'CBUSH': (0, 2), 'CBUSH1D': (0, 2), 'CBUSH2D': (0, 2),
+        'CFAST': (0, 2), 'CVISC': (0, 2),
+        'CELAS1': (0, 2), 'CELAS2': (0, 2), 'CELAS3': (0, 2), 'CELAS4': (0, 2),
+        'CDAMP1': (0, 2), 'CDAMP2': (0, 2), 'CDAMP3': (0, 2), 'CDAMP4': (0, 2), 'CDAMP5': (0, 2),
+    }
+    shell_nnodes = {
+        'CTRIA3': 3, 'CTRIAR': 3, 'CTRAX3': 3,
+        'CTRIA6': 6, 'CTRIAX': 6, 'CTRIAX6': 6, 'CTRAX6': 6,
+        'CQUAD4': 4, 'CQUADR': 4, 'CSHEAR': 4, 'CQUADX4': 4,
+        'CQUAD8': 8, 'CQUADX8': 8,
+        'CQUAD': 9, 'CQUADX': 9,
+        'CPLSTN3': 3, 'CPLSTN4': 4, 'CPLSTN6': 6, 'CPLSTN8': 8,
+        'CPLSTS3': 3, 'CPLSTS4': 4, 'CPLSTS6': 6, 'CPLSTS8': 8,
+    }
+    skip_types = {'CHBDYP', 'CAABSF'}
+    plane_strain_types = {'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8'}
+
+    # collect non-shell elements for bulk assignment
+    dim_groups: dict[tuple[int, int], list[int]] = {}
+    # collect shell elements for offset computation
+    shell_ieids = []
+    shell_z0s = []
+    handled_eids: set[int] = set()
+
+    for eid, element in model.elements.items():
+        etype = element.type
+        if etype in skip_types:
+            handled_eids.add(eid)
+            continue
+
+        ieid = eid_map.get(eid, -1)
+        if ieid == -1:
+            handled_eids.add(eid)
+            continue
+
+        if etype in etype_dim_nnodes:
+            dim_val, nnodes_val = etype_dim_nnodes[etype]
+            key = (dim_val, nnodes_val)
+            if key not in dim_groups:
+                dim_groups[key] = []
+            dim_groups[key].append(ieid)
+            handled_eids.add(eid)
+        elif has_normals and etype in shell_nnodes:
+            nnodesi = shell_nnodes[etype]
+            element_dim[ieid] = 2
+            nnodes_array[ieid] = nnodesi
+
+            if etype in plane_strain_types:
+                handled_eids.add(eid)
+                continue
+
+            # extract z0
+            prop = element.pid_ref
+            if prop is None:
+                z0 = np.nan
+            else:
+                ptype = prop.type
+                if ptype == 'PSHELL':
+                    z0 = prop.z1
+                elif ptype in {'PCOMP', 'PCOMPG'}:
+                    z0 = prop.z0
+                elif ptype == 'PLPLANE':
+                    z0 = 0.
+                elif ptype in {'PSHEAR', 'PSOLID', 'PLSOLID', 'PPLANE', 'PMIC'}:
+                    z0 = np.nan
+                else:
+                    raise NotImplementedError(f'prop={prop}\n ptype={ptype!r}')
+
+            if z0 is None:
+                if etype in {'CTRIA3', 'CTRIAR'}:
+                    z0 = (element.T1 + element.T2 + element.T3) / 3.
+                elif etype == 'CTRIA6':
+                    z0 = (element.T1 + element.T2 + element.T3) / 3.
+                elif etype in {'CQUAD4', 'CQUADR'}:
+                    z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
+                elif etype in {'CQUAD8', 'CQUAD'}:
+                    z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
+                elif etype in {'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
+                               'CQUADX', 'CQUADX4', 'CQUADX8', 'CSHEAR'}:
+                    z0 = np.nan
+                else:  # pragma: no cover
+                    raise NotImplementedError(element)
+
+            shell_ieids.append(ieid)
+            shell_z0s.append(z0)
+            handled_eids.add(eid)
+
+    # bulk assign dim/nnodes for non-shell elements
+    for (dim_val, nnodes_val), ieids in dim_groups.items():
+        idx = np.array(ieids, dtype='int32')
+        element_dim[idx] = dim_val
+        nnodes_array[idx] = nnodes_val
+
+    # bulk compute offsets for shell elements
+    if shell_ieids:
+        idx = np.array(shell_ieids, dtype='int32')
+        z0_arr = np.array(shell_z0s, dtype='float32')
+        offset[idx] = z0_arr
+        xoffset[idx] = z0_arr * normals[idx, 0]
+        yoffset[idx] = z0_arr * normals[idx, 1]
+        zoffset[idx] = z0_arr * normals[idx, 2]
+
+    return handled_eids
+
+
 def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
-                              nelements: int):
+                              nelements: int,
+                              xyz_cid0: np.ndarray=None,
+                              nid_map: dict[int, int]=None):
     normals = np.full((nelements, 3), np.nan, dtype='float32')
     offset = np.full(nelements, np.nan, dtype='float32')
     xoffset = np.full(nelements, np.nan, dtype='float32')
@@ -131,53 +317,33 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
     nnodes_array = np.full(nelements, -1, dtype='int32')
     log = model.log
 
-    #eid_map = self.gui.eid_map
     assert eid_map is not None
+
+    # vectorized shell normal computation
+    if xyz_cid0 is not None and nid_map is not None:
+        _vectorized_shell_normals(model, eid_map, nid_map, xyz_cid0, normals)
+
+    # vectorized element_dim, nnodes, and offset computation
+    has_normals = xyz_cid0 is not None and nid_map is not None
+    handled_eids = _vectorized_element_dims_offsets(
+        model, eid_map, normals, element_dim, nnodes_array,
+        offset, xoffset, yoffset, zoffset, has_normals=has_normals)
+
+    # fallback loop for unhandled elements (CHBDYG, unknown types)
     etype_to_nnodes_map = {
         'CTRIA3': 3, 'CTRIAR': 3, 'CTRAX3': 3,
-        # no a CTRIAX really has 6 nodes because reasons...
         'CTRIA6': 6, 'CTRIAX': 6, 'CTRIAX6': 6, 'CTRAX6': 6,
         'CQUAD4': 4, 'CQUADR': 4, 'CSHEAR': 4, 'CQUADX4': 4,
         'CQUAD8': 8, 'CQUADX8': 8,
         'CQUAD': 9, 'CQUADX': 9,
         'CPLSTN3': 3, 'CPLSTN4': 4, 'CPLSTN6': 6, 'CPLSTN8': 8,
         'CPLSTS3': 3, 'CPLSTS4': 4, 'CPLSTS6': 6, 'CPLSTS8': 8,
-        #
-        # # nastran95
-        # 'CQUAD1': 4,
-        # 'CTRSHL': 6,
     }
-    for eid, element in sorted(model.elements.items()):
+    for eid, element in model.elements.items():
+        if eid in handled_eids:
+            continue
         etype = element.type
-        if etype == 'CTETRA':
-            ieid = eid_map.get(eid, -1)
-            element_dimi = 3
-            nnodesi = 4
-        elif etype == 'CPENTA':
-            ieid = eid_map.get(eid, -1)
-            element_dimi = 3
-            nnodesi = 6
-        elif etype == 'CPYRAM':
-            ieid = eid_map.get(eid, -1)
-            element_dimi = 3
-            nnodesi = 5
-        elif etype == 'CHEXA':
-            ieid = eid_map.get(eid, -1)
-            element_dimi = 3
-            nnodesi = 8
-
-        elif etype in {'CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP', 'CTUBE'}:
-            ieid = eid_map.get(eid, -1)
-            element_dimi = 1
-            nnodesi = 2
-        elif etype in {'CBUSH', 'CBUSH1D', 'CBUSH2D',
-                       'CFAST', 'CVISC',
-                       'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'}:
-            ieid = eid_map.get(eid, -1)
-            element_dimi = 0
-            nnodesi = 2
-        elif etype == 'CHBDYG':
+        if etype == 'CHBDYG':
             ieid = eid_map[eid]
             surface_type = element.surface_type
             if surface_type == 'AREA3':
@@ -204,27 +370,31 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
         elif isinstance(element, ShellElement):
             if etype not in etype_to_nnodes_map:
                 log.warning(f'unexpected element ({etype}) in etype_to_nnodes_map\n{str(element)}')
-            #ieid = None
             element_dimi = 2
-            #assert element.nodes_ref is not None, element.nodes_ref
-            try:
-                normali = element.Normal()
-            except AttributeError:
-                msg += (
-                    f'{element}'
-                    f'nodes_ref = {element}\n'
-                    f'nodes = {element.node_ids}'
-                )
-                raise AttributeError(msg)
-            except RuntimeError:
-                # this happens when you have a degenerate tri
-                msg = (
-                    f'eid={eid:d} normal=NaN...\n'
-                    f'{element}'
-                    f'nodes = {element.nodes}')
-                log.error(msg)
-                normali = np.ones(3) * np.nan
-                #raise
+            ieid = eid_map.get(eid, -1)
+            if ieid == -1:
+                log.warning(f'failed to find shell element {element.type}={eid}\n{str(element)}')
+                continue
+            if not np.isnan(normals[ieid, 0]):
+                normali = normals[ieid]
+            else:
+                try:
+                    normali = element.Normal()
+                except AttributeError:
+                    msg += (
+                        f'{element}'
+                        f'nodes_ref = {element}\n'
+                        f'nodes = {element.node_ids}'
+                    )
+                    raise AttributeError(msg)
+                except RuntimeError:
+                    # degenerate tri
+                    msg = (
+                        f'eid={eid:d} normal=NaN...\n'
+                        f'{element}'
+                        f'nodes = {element.nodes}')
+                    log.error(msg)
+                    normali = np.ones(3) * np.nan
 
             prop = element.pid_ref
             if prop is None:
@@ -247,76 +417,42 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
 
             if z0 is None:
                 if etype in {'CTRIA3', 'CTRIAR'}:
-                    #node_ids = self.nodes[3:]
                     z0 = (element.T1 + element.T2 + element.T3) / 3.
                     nnodesi = 3
                 elif etype == 'CTRIA6':
-                    #node_ids = self.nodes[3:]
                     z0 = (element.T1 + element.T2 + element.T3) / 3.
                     nnodesi = 6
                 elif etype in {'CQUAD4', 'CQUADR'}:
-                    #node_ids = self.nodes[4:]
                     z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
                     nnodesi = 4
                 elif etype == 'CQUAD8':
-                    #node_ids = self.nodes[4:]
                     z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
                     nnodesi = 8
                 elif etype == 'CQUAD':
-                    #node_ids = self.nodes[4:]
                     z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
                     nnodesi = 9
-
-                # axisymmetric
-                elif etype == 'CTRAX3':
-                    #node_ids = self.nodes[3:]
-                    nnodesi = 3
+                elif etype in {'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
+                               'CQUADX', 'CQUADX4', 'CQUADX8'}:
                     z0 = np.nan
-                elif etype == 'CTRAX6':
-                    #node_ids = self.nodes[3:]
-                    nnodesi = 6
-                    z0 = np.nan
-                elif etype in {'CTRIAX', 'CTRIAX6'}:
-                    # the CTRIAX6 uses a non-standard node orientation
-                    #node_ids = self.nodes[3:]
-                    z0 = np.nan
-                    nnodesi = 6
-                elif etype == 'CQUADX':
-                    #node_ids = self.nodes[4:]
-                    nnodesi = 9
-                    z0 = np.nan
-                elif etype == 'CQUADX4':
-                    #node_ids = self.nodes[4:]
-                    nnodesi = 4
-                    z0 = np.nan
-                # elif etype in 'CQUAD1':
-                #     nnodesi = 4
-                #     z0 = np.nan
-                elif etype == 'CQUADX8':
-                    #node_ids = self.nodes[4:]
-                    nnodesi = 8
-                    z0 = np.nan
+                    nnodesi = etype_to_nnodes_map[etype]
                 else:  # pragma: no cover
                     raise NotImplementedError(element)
             else:
                 nnodesi = etype_to_nnodes_map[etype]
 
-            try:
-                ieid = eid_map[eid]
-            except:
-                log.warning(f'failed to find shell element {element.type}={eid}\n{str(element)}')
-                continue
             normals[ieid, :] = normali
             if element.type in {'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8'}:
                 element_dim[ieid] = element_dimi
                 nnodes_array[ieid] = nnodesi
-                log.debug('continue...element.type=%r' % element.type)
                 continue
 
             offset[ieid] = z0
             xoffset[ieid] = z0 * normali[0]
             yoffset[ieid] = z0 * normali[1]
             zoffset[ieid] = z0 * normali[2]
+            element_dim[ieid] = element_dimi
+            nnodes_array[ieid] = nnodesi
+            continue
         else:
             try:
                 ieid = eid_map[eid]
@@ -327,13 +463,8 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
             element_dimi = -1
             nnodesi = -1
             log.warning(f'shell element.type={etype} doesnt have a dimension')
-        assert ieid is not None
-        if ieid == -1:
-            # bad element; should have been filtered on an earlier step
-            continue
         element_dim[ieid] = element_dimi
         nnodes_array[ieid] = nnodesi
-        #ielement += 1
     return normals, offset, xoffset, yoffset, zoffset, element_dim, nnodes_array
 
 
@@ -450,12 +581,21 @@ def _build_map_centroidal_result(model: BDF, nid_map: dict[int, int]) -> None:
     node_count[izero] = 1.
     inv_node_count = 1. / node_count
 
-    # build the centroidal mapper
+    # build flat arrays for vectorized scatter-add
+    # elem_indices[k] = which element index this entry came from
+    # node_indices[k] = which node index to accumulate into
+    elem_indices_list = []
+    node_indices_list = []
+    for i, node_idsi in enumerate(mapped_node_ids):
+        for nid in node_idsi:
+            elem_indices_list.append(i)
+            node_indices_list.append(nid)
+    elem_indices_arr = np.array(elem_indices_list, dtype='int32')
+    node_indices_arr = np.array(node_indices_list, dtype='int32')
+
     def map_centroidal_result(centroidal_data):
-        """maps centroidal data onto nodal data"""
+        """maps centroidal data onto nodal data via np.add.at"""
         nodal_data = np.zeros(nnodes, dtype=centroidal_data.dtype)
-        for unused_eid, datai, node_idsi in zip(eids, centroidal_data, mapped_node_ids):
-            for nid in node_idsi:
-                nodal_data[nid] += datai
+        np.add.at(nodal_data, node_indices_arr, centroidal_data[elem_indices_arr])
         return nodal_data * inv_node_count
     model.map_centroidal_result = map_centroidal_result

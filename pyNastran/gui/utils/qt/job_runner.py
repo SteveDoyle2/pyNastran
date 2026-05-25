@@ -3,6 +3,7 @@ import os
 import time
 
 from qtpy.QtCore import QProcess
+from qtpy.QtGui import QTextCursor
 from qtpy.QtWidgets import (
     QWidget, QLineEdit, QPushButton, QVBoxLayout,
     QApplication, QProgressBar, QTextEdit, QLabel, QHBoxLayout)
@@ -108,7 +109,7 @@ class JobRunner(QWidget):
 
     def append(self, text):
         cursor = self._text_edit.textCursor()
-        cursor.movePosition(cursor.End)
+        cursor.movePosition(QTextCursor.MoveOperation.End)
         cursor.insertText(text)
         #self.output.ensureCursorVisible()
 
@@ -136,7 +137,7 @@ class JobRunner(QWidget):
         text_edit = self._text_edit
 
         text_cursor = text_edit.textCursor()
-        end = text_cursor.End  # end of text_edit
+        end = QTextCursor.MoveOperation.End
         text_cursor.movePosition(end)
         text_edit.setTextCursor(text_cursor)
         text_edit.insertHtml(msg)
