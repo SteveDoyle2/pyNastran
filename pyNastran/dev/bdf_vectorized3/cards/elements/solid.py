@@ -24,7 +24,23 @@ from .utils import get_density_from_material, get_density_from_property, basic_m
 
 from .solid_quality import chexa_quality, tetra_quality, penta_quality, pyram_quality, Quality
 from .solid_utils import chexa_centroid
-from .solid_volume import volume_ctetra, volume_cpenta, volume_cpyram, volume_chexa
+from .solid_volume import (
+    volume_ctetra, volume_cpenta, volume_cpyram, volume_chexa,
+    volume_ctetra10, volume_cpenta15, volume_cpyram13, volume_chexa20,
+)
+from .solid_coords import (
+    chexa_element_coordinate_system,
+    cpenta_element_coordinate_system,
+    cpyram_element_coordinate_system,
+    ctetra_element_coordinate_system,
+    solid_material_coordinate_system,
+)
+from .solid_mass import (
+    consistent_mass_ctetra4, consistent_mass_ctetra10,
+    consistent_mass_cpenta6, consistent_mass_cpenta15,
+    consistent_mass_chexa8, consistent_mass_chexa20,
+    consistent_mass_cpyram5, consistent_mass_cpyram13,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -100,6 +116,13 @@ class SolidElement(Element):
         mass = rho * volume
         return mass
 
+    def consistent_mass_matrix(self) -> np.ndarray:
+        """Consistent mass matrix via Gauss quadrature.
+
+        Returns (nelements, ndof, ndof) where ndof = 3 * nnodes_per_element.
+        """
+        raise RuntimeError(f'consistent_mass_matrix is not implemented for {self.type}')
+
     def mass_material_id(self) -> np.ndarray:
         material_id = basic_mass_material_id(self.property_id, self.allowed_properties, self.type)
         return material_id
@@ -158,11 +181,46 @@ class SolidElement(Element):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max())
 
-    #def write_8(self) -> str:
-        #return self.write(size=8, is_double=False)
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        midside_nodes = self.midside_nodes
+        if midside_nodes.shape[1] != 0 or self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, is_double=False,
+                            write_card_header=write_card_header)
+            return
 
-    #def write_16(self, is_double: bool=False) -> str:
-        #return self.write(size=16, is_double=False)
+        card_name = f'{self.type:<8s}'
+        eids = np.char.rjust(array_str(self.element_id, size=8), 8)
+        pids = np.char.rjust(array_str(self.property_id, size=8), 8)
+        nodes_str = np.char.rjust(array_str(self.base_nodes, size=8), 8)
+        nbase = self.nnode_base
+
+        if nbase <= 6:
+            # CTETRA(4), CPYRAM(5), CPENTA(6) — single line
+            eid_list = eids.tolist()
+            pid_list = pids.tolist()
+            node_cols = [nodes_str[:, j].tolist() for j in range(nbase)]
+            lines = []
+            for row in zip(eid_list, pid_list, *node_cols):
+                lines.append(card_name + ''.join(row) + '\n')
+            bdf_file.write(''.join(lines))
+        else:
+            # CHEXA(8) — continuation line for nodes 7-8
+            eid_list = eids.tolist()
+            pid_list = pids.tolist()
+            n1 = nodes_str[:, 0].tolist()
+            n2 = nodes_str[:, 1].tolist()
+            n3 = nodes_str[:, 2].tolist()
+            n4 = nodes_str[:, 3].tolist()
+            n5 = nodes_str[:, 4].tolist()
+            n6 = nodes_str[:, 5].tolist()
+            n7 = nodes_str[:, 6].tolist()
+            n8 = nodes_str[:, 7].tolist()
+            lines = [f'{card_name}{eid}{pid}{a}{b}{c}{d}{e}{f}\n        {g}{h}\n'
+                     for eid, pid, a, b, c, d, e, f, g, h in
+                     zip(eid_list, pid_list, n1, n2, n3, n4, n5, n6, n7, n8)]
+            bdf_file.write(''.join(lines))
 
 
 class CTETRA(SolidElement):
@@ -240,23 +298,40 @@ class CTETRA(SolidElement):
         return
 
     def volume(self) -> np.ndarray:
-        """is this signed volume?"""
         xyz = self.model.grid.xyz_cid0()
         nid = self.model.grid.node_id
-        nodes = self.base_nodes
-        nelements = nodes.shape[0]
+        midside_nodes = self.midside_nodes
+        has_midside = midside_nodes.shape[1] > 0 and midside_nodes.max() > 0
 
+        if has_midside:
+            inode = np.searchsorted(nid, self.nodes)
+            all_xyz = xyz[inode]  # (nelements, 10, 3)
+            return volume_ctetra10(all_xyz)
+
+        nodes = self.base_nodes
         inode = np.searchsorted(nid, nodes)
         n1 = xyz[inode[:, 0], :]
         n2 = xyz[inode[:, 1], :]
         n3 = xyz[inode[:, 2], :]
         n4 = xyz[inode[:, 3], :]
-        volume = volume_ctetra(n1, n2, n3, n4)
-        assert len(volume) == nelements
-        #for n1i, n2i, n3i, n4i in zip(n1, n2, n3, n4):
-            #v = volume4(n1i, n2i, n3i, n4i)
-            #print(v)
-        return volume
+        return volume_ctetra(n1, n2, n3, n4)
+
+    def consistent_mass_matrix(self) -> np.ndarray:
+        """Returns (nelements, ndof, ndof) consistent mass matrix."""
+        xyz = self.model.grid.xyz_cid0()
+        nid = self.model.grid.node_id
+        rho = self.rho()
+        midside_nodes = self.midside_nodes
+        has_midside = midside_nodes.shape[1] > 0 and midside_nodes.max() > 0
+
+        if has_midside:
+            inode = np.searchsorted(nid, self.nodes)
+            all_xyz = xyz[inode]
+            return consistent_mass_ctetra10(all_xyz, rho)
+
+        inode = np.searchsorted(nid, self.base_nodes)
+        all_xyz = xyz[inode]
+        return consistent_mass_ctetra4(all_xyz, rho)
 
     def centroid(self) -> np.ndarray:
         xyz = self.model.grid.xyz_cid0()
@@ -274,6 +349,28 @@ class CTETRA(SolidElement):
 
     def center_of_mass(self) -> np.ndarray:
         return self.centroid()
+
+    def element_coordinate_system(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Returns (centroid, xe, ye, ze) each (nelements, 3)."""
+        xyz = self.model.grid.xyz_cid0()
+        nid = self.model.grid.node_id
+        inode = np.searchsorted(nid, self.base_nodes)
+        n1 = xyz[inode[:, 0], :]
+        n2 = xyz[inode[:, 1], :]
+        n3 = xyz[inode[:, 2], :]
+        n4 = xyz[inode[:, 3], :]
+        return ctetra_element_coordinate_system(n1, n2, n3, n4)
+
+    def material_coordinate_system(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Returns (centroid, xm, ym, zm) each (nelements, 3).
+
+        Uses PSOLID CORDM to determine the material coordinate system.
+        """
+        centroid, xe, ye, ze = self.element_coordinate_system()
+        xm, ym, zm = solid_material_coordinate_system(
+            self.model, self.element_id, self.property_id,
+            centroid, xe, ye, ze)
+        return centroid, xm, ym, zm
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -474,10 +571,15 @@ class SolidPenta(SolidElement):
     def volume(self):
         xyz = self.model.grid.xyz_cid0()
         nid = self.model.grid.node_id
-        nodes = self.base_nodes
-        #assert len(nid) > 0, nid
-        #assert len(nodes) > 0, nodes
+        midside_nodes = self.midside_nodes
+        has_midside = midside_nodes.shape[1] > 0 and midside_nodes.max() > 0
 
+        if has_midside:
+            inode = np.searchsorted(nid, self.nodes)
+            all_xyz = xyz[inode]  # (nelements, 15, 3)
+            return volume_cpenta15(all_xyz)
+
+        nodes = self.base_nodes
         inode = np.searchsorted(nid, nodes)
         n1 = xyz[inode[:, 0], :]
         n2 = xyz[inode[:, 1], :]
@@ -485,8 +587,24 @@ class SolidPenta(SolidElement):
         n4 = xyz[inode[:, 3], :]
         n5 = xyz[inode[:, 4], :]
         n6 = xyz[inode[:, 5], :]
-        volume = volume_cpenta(n1, n2, n3, n4, n5, n6)
-        return volume
+        return volume_cpenta(n1, n2, n3, n4, n5, n6)
+
+    def consistent_mass_matrix(self) -> np.ndarray:
+        """Returns (nelements, ndof, ndof) consistent mass matrix."""
+        xyz = self.model.grid.xyz_cid0()
+        nid = self.model.grid.node_id
+        rho = self.rho()
+        midside_nodes = self.midside_nodes
+        has_midside = midside_nodes.shape[1] > 0 and midside_nodes.max() > 0
+
+        if has_midside:
+            inode = np.searchsorted(nid, self.nodes)
+            all_xyz = xyz[inode]
+            return consistent_mass_cpenta15(all_xyz, rho)
+
+        inode = np.searchsorted(nid, self.base_nodes)
+        all_xyz = xyz[inode]
+        return consistent_mass_cpenta6(all_xyz, rho)
 
     def centroid(self) -> np.ndarray:
         xyz = self.model.grid.xyz_cid0()
@@ -506,6 +624,30 @@ class SolidPenta(SolidElement):
 
     def center_of_mass(self) -> np.ndarray:
         return self.centroid()
+
+    def element_coordinate_system(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Returns (centroid, xe, ye, ze) each (nelements, 3)."""
+        xyz = self.model.grid.xyz_cid0()
+        nid = self.model.grid.node_id
+        inode = np.searchsorted(nid, self.base_nodes)
+        n1 = xyz[inode[:, 0], :]
+        n2 = xyz[inode[:, 1], :]
+        n3 = xyz[inode[:, 2], :]
+        n4 = xyz[inode[:, 3], :]
+        n5 = xyz[inode[:, 4], :]
+        n6 = xyz[inode[:, 5], :]
+        return cpenta_element_coordinate_system(n1, n2, n3, n4, n5, n6)
+
+    def material_coordinate_system(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Returns (centroid, xm, ym, zm) each (nelements, 3).
+
+        Uses PSOLID CORDM to determine the material coordinate system.
+        """
+        centroid, xe, ye, ze = self.element_coordinate_system()
+        xm, ym, zm = solid_material_coordinate_system(
+            self.model, self.element_id, self.property_id,
+            centroid, xe, ye, ze)
+        return centroid, xm, ym, zm
 
     def quality(self) -> Quality:
         out = penta_quality(self)
@@ -593,17 +735,39 @@ class CPYRAM(SolidElement):
     def volume(self):
         xyz = self.model.grid.xyz_cid0()
         nid = self.model.grid.node_id
-        nodes = self.base_nodes
-        #nelements = nodes.shape[0]
+        midside_nodes = self.midside_nodes
+        has_midside = midside_nodes.shape[1] > 0 and midside_nodes.max() > 0
 
+        if has_midside:
+            inode = np.searchsorted(nid, self.nodes)
+            all_xyz = xyz[inode]  # (nelements, 13, 3)
+            return volume_cpyram13(all_xyz)
+
+        nodes = self.base_nodes
         inode = np.searchsorted(nid, nodes)
         n1 = xyz[inode[:, 0], :]
         n2 = xyz[inode[:, 1], :]
         n3 = xyz[inode[:, 2], :]
         n4 = xyz[inode[:, 3], :]
         n5 = xyz[inode[:, 4], :]
-        volume = volume_cpyram(n1, n2, n3, n4, n5)
-        return volume
+        return volume_cpyram(n1, n2, n3, n4, n5)
+
+    def consistent_mass_matrix(self) -> np.ndarray:
+        """Returns (nelements, ndof, ndof) consistent mass matrix."""
+        xyz = self.model.grid.xyz_cid0()
+        nid = self.model.grid.node_id
+        rho = self.rho()
+        midside_nodes = self.midside_nodes
+        has_midside = midside_nodes.shape[1] > 0 and midside_nodes.max() > 0
+
+        if has_midside:
+            inode = np.searchsorted(nid, self.nodes)
+            all_xyz = xyz[inode]
+            return consistent_mass_cpyram13(all_xyz, rho)
+
+        inode = np.searchsorted(nid, self.base_nodes)
+        all_xyz = xyz[inode]
+        return consistent_mass_cpyram5(all_xyz, rho)
 
     def centroid(self) -> np.ndarray:
         xyz = self.model.grid.xyz_cid0()
@@ -622,6 +786,29 @@ class CPYRAM(SolidElement):
 
     def center_of_mass(self) -> np.ndarray:
         return self.centroid()
+
+    def element_coordinate_system(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Returns (centroid, xe, ye, ze) each (nelements, 3)."""
+        xyz = self.model.grid.xyz_cid0()
+        nid = self.model.grid.node_id
+        inode = np.searchsorted(nid, self.base_nodes)
+        n1 = xyz[inode[:, 0], :]
+        n2 = xyz[inode[:, 1], :]
+        n3 = xyz[inode[:, 2], :]
+        n4 = xyz[inode[:, 3], :]
+        n5 = xyz[inode[:, 4], :]
+        return cpyram_element_coordinate_system(n1, n2, n3, n4, n5)
+
+    def material_coordinate_system(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Returns (centroid, xm, ym, zm) each (nelements, 3).
+
+        Uses PSOLID CORDM to determine the material coordinate system.
+        """
+        centroid, xe, ye, ze = self.element_coordinate_system()
+        xm, ym, zm = solid_material_coordinate_system(
+            self.model, self.element_id, self.property_id,
+            centroid, xe, ye, ze)
+        return centroid, xm, ym, zm
 
     def quality(self) -> Quality:
         out = pyram_quality(self)
@@ -756,8 +943,15 @@ class SolidHex(SolidElement):
     def volume(self) -> np.ndarray:
         xyz = self.model.grid.xyz_cid0()
         nid = self.model.grid.node_id
-        nodes = self.base_nodes
+        midside_nodes = self.midside_nodes
+        has_midside = midside_nodes.shape[1] > 0 and midside_nodes.max() > 0
 
+        if has_midside:
+            inode = np.searchsorted(nid, self.nodes)
+            all_xyz = xyz[inode]  # (nelements, 20, 3)
+            return volume_chexa20(all_xyz)
+
+        nodes = self.base_nodes
         inode = np.searchsorted(nid, nodes)
         n1 = xyz[inode[:, 0], :]
         n2 = xyz[inode[:, 1], :]
@@ -767,8 +961,50 @@ class SolidHex(SolidElement):
         n6 = xyz[inode[:, 5], :]
         n7 = xyz[inode[:, 6], :]
         n8 = xyz[inode[:, 7], :]
-        volume = volume_chexa(n1, n2, n3, n4, n5, n6, n7, n8)
-        return volume
+        return volume_chexa(n1, n2, n3, n4, n5, n6, n7, n8)
+
+    def consistent_mass_matrix(self) -> np.ndarray:
+        """Returns (nelements, ndof, ndof) consistent mass matrix."""
+        xyz = self.model.grid.xyz_cid0()
+        nid = self.model.grid.node_id
+        rho = self.rho()
+        midside_nodes = self.midside_nodes
+        has_midside = midside_nodes.shape[1] > 0 and midside_nodes.max() > 0
+
+        if has_midside:
+            inode = np.searchsorted(nid, self.nodes)
+            all_xyz = xyz[inode]
+            return consistent_mass_chexa20(all_xyz, rho)
+
+        inode = np.searchsorted(nid, self.base_nodes)
+        all_xyz = xyz[inode]
+        return consistent_mass_chexa8(all_xyz, rho)
+
+    def element_coordinate_system(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Returns (centroid, xe, ye, ze) each (nelements, 3)."""
+        xyz = self.model.grid.xyz_cid0()
+        nid = self.model.grid.node_id
+        inode = np.searchsorted(nid, self.base_nodes)
+        n1 = xyz[inode[:, 0], :]
+        n2 = xyz[inode[:, 1], :]
+        n3 = xyz[inode[:, 2], :]
+        n4 = xyz[inode[:, 3], :]
+        n5 = xyz[inode[:, 4], :]
+        n6 = xyz[inode[:, 5], :]
+        n7 = xyz[inode[:, 6], :]
+        n8 = xyz[inode[:, 7], :]
+        return chexa_element_coordinate_system(n1, n2, n3, n4, n5, n6, n7, n8)
+
+    def material_coordinate_system(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Returns (centroid, xm, ym, zm) each (nelements, 3).
+
+        Uses PSOLID CORDM to determine the material coordinate system.
+        """
+        centroid, xe, ye, ze = self.element_coordinate_system()
+        xm, ym, zm = solid_material_coordinate_system(
+            self.model, self.element_id, self.property_id,
+            centroid, xe, ye, ze)
+        return centroid, xm, ym, zm
 
     def quality(self) -> Quality:
         out = chexa_quality(self)
@@ -1501,7 +1737,22 @@ class PCOMPS(Property):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            property_id = np.hstack([self.property_id, property_id])
+            global_ply_id = np.hstack([self.global_ply_id, global_ply_id])
+            material_id = np.hstack([self.material_id, material_id])
+            thickness = np.hstack([self.thickness, thickness])
+            theta = np.hstack([self.theta, theta])
+            nlayer = np.hstack([self.nlayer, nlayer])
+            failure_theory = np.hstack([self.failure_theory, failure_theory])
+            interlaminar_failure_theory = np.hstack([self.interlaminar_failure_theory, interlaminar_failure_theory])
+            sout = np.hstack([self.sout, sout])
+            sb = np.hstack([self.sb, sb])
+            nb = np.hstack([self.nb, nb])
+            psdir = np.hstack([self.psdir, psdir])
+            tref = np.hstack([self.tref, tref])
+            ge = np.hstack([self.ge, ge])
+            coord_id = np.hstack([self.coord_id, coord_id])
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.global_ply_id = global_ply_id
@@ -1522,11 +1773,11 @@ class PCOMPS(Property):
         self.coord_id = coord_id
         self.n = len(ifile)
 
-    #def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMPS:
-        #"""uses a node_ids to extract PCOMPSs"""
-        #iprop = self.index(property_id)
-        #prop = self.slice_card_by_index(iprop)
-        #return prop
+    def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMPS:
+        """uses a property_id to extract PCOMPSs"""
+        iprop = self.index(property_id)
+        prop = self.slice_card_by_index(iprop)
+        return prop
 
     def __apply_slice__(self, prop: PCOMPS, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
@@ -1860,7 +2111,18 @@ class PCOMPLS(Property):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            property_id = np.hstack([self.property_id, property_id])
+            material_id = np.hstack([self.material_id, material_id])
+            global_ply_id = np.hstack([self.global_ply_id, global_ply_id])
+            theta = np.hstack([self.theta, theta])
+            thickness = np.hstack([self.thickness, thickness])
+            coord_id = np.hstack([self.coord_id, coord_id])
+            direct = np.hstack([self.direct, direct])
+            analysis = np.hstack([self.analysis, analysis])
+            sb = np.hstack([self.sb, sb])
+            c8 = np.vstack([self.c8, c8])
+            c20 = np.vstack([self.c20, c20])
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
@@ -1879,11 +2141,11 @@ class PCOMPLS(Property):
         assert len(self.material_id) > 0, self.material_id
         self.n = len(ifile)
 
-    #def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMPLS:
-        #"""uses a node_ids to extract PCOMPLSs"""
-        #iprop = self.index(property_id)
-        #prop = self.slice_card_by_index(iprop)
-        #return prop
+    def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMPLS:
+        """uses a property_id to extract PCOMPLSs"""
+        iprop = self.index(property_id)
+        prop = self.slice_card_by_index(iprop)
+        return prop
 
     def __apply_slice__(self, prop: PCOMPLS, i: np.ndarray) -> None:
         prop.n = len(i)

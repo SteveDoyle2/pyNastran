@@ -71,6 +71,11 @@ def array_float(ndarray: np.ndarray, size: int=8, is_double: bool=False,
     if nan_check and np.any(np.isnan(ndarray)):
         raise RuntimeError('nans found')
 
+    if size == 8 and not is_double:
+        return array_float_8(ndarray)
+    if size == 16 and not is_double:
+        return array_float_16(ndarray)
+
     if size == 8:
         str_array = np.zeros(ndarray.shape, dtype='|U8')
         print_float = print_float_8
@@ -91,10 +96,175 @@ def array_float(ndarray: np.ndarray, size: int=8, is_double: bool=False,
         raise NotImplementedError(ndarray.shape)
     return str_array
 
+
+def array_float_8(ndarray: np.ndarray) -> np.ndarray:
+    """Vectorized print_float_8 for arrays — bins values by magnitude
+    and formats in batches to avoid per-element Python call overhead."""
+    shape = ndarray.shape
+    flat = ndarray.ravel()
+    n = len(flat)
+    result = np.empty(n, dtype='|U8')
+    abs_val = np.abs(flat)
+    processed = np.zeros(n, dtype=bool)
+
+    izero = flat == 0.0
+    result[izero] = '      0.'
+    processed |= izero
+
+    pos = flat > 0
+    neg = flat < 0
+
+    for lo, hi, fmt in _POS_BINS_8:
+        mask = pos & (flat >= lo) & (flat < hi)
+        if not np.any(mask):
+            continue
+        indices = np.where(mask)[0]
+        result[indices] = [((fmt % v).strip(' 0') or '0.').rjust(8)
+                           for v in flat[indices]]
+        processed[indices] = True
+
+    for lo, hi, fmt in _NEG_BINS_8:
+        mask = neg & (abs_val >= lo) & (abs_val < hi)
+        if not np.any(mask):
+            continue
+        indices = np.where(mask)[0]
+        result[indices] = [((fmt % v).replace('-0.', '-.').strip(' 0') or '-.').rjust(8)
+                           for v in flat[indices]]
+        processed[indices] = True
+
+    remaining = np.where(~processed)[0]
+    for idx in remaining:
+        result[idx] = print_float_8(flat[idx])
+
+    return result.reshape(shape)
+
+
+_POS_BINS_8 = [
+    (0.1, 1.0, '%8.7f'),
+    (1.0, 10.0, '%8.6f'),
+    (10.0, 100.0, '%8.5f'),
+    (100.0, 1000.0, '%8.4f'),
+    (1000.0, 10000.0, '%8.3f'),
+    (10000.0, 100000.0, '%8.2f'),
+    (100000.0, 1000000.0, '%8.1f'),
+]
+
+_NEG_BINS_8 = [
+    (0.1, 1.0, '%8.6f'),
+    (1.0, 10.0, '%8.5f'),
+    (10.0, 100.0, '%8.4f'),
+    (100.0, 1000.0, '%8.3f'),
+    (1000.0, 10000.0, '%8.2f'),
+    (10000.0, 100000.0, '%8.1f'),
+]
+
+
+def array_float_16(ndarray: np.ndarray) -> np.ndarray:
+    """Vectorized print_float_16 for arrays — bins values by magnitude
+    and formats in batches to avoid per-element Python call overhead."""
+    shape = ndarray.shape
+    flat = ndarray.ravel()
+    n = len(flat)
+    result = np.empty(n, dtype='|U16')
+    abs_val = np.abs(flat)
+    processed = np.zeros(n, dtype=bool)
+
+    izero = flat == 0.0
+    result[izero] = '              0.'
+    processed |= izero
+
+    pos = flat > 0
+    neg = flat < 0
+
+    for lo, hi, fmt in _POS_BINS_16:
+        mask = pos & (flat >= lo) & (flat < hi)
+        if not np.any(mask):
+            continue
+        indices = np.where(mask)[0]
+        result[indices] = [((fmt % v).strip(' 0') or '0.').rjust(16)
+                           for v in flat[indices]]
+        processed[indices] = True
+
+    for lo, hi, fmt in _NEG_BINS_16:
+        mask = neg & (abs_val >= lo) & (abs_val < hi)
+        if not np.any(mask):
+            continue
+        indices = np.where(mask)[0]
+        result[indices] = [((fmt % v).replace('-0.', '-.').strip(' 0') or '-.').rjust(16)
+                           for v in flat[indices]]
+        processed[indices] = True
+
+    remaining = np.where(~processed)[0]
+    for idx in remaining:
+        result[idx] = print_float_16(flat[idx])
+
+    return result.reshape(shape)
+
+
+_POS_BINS_16 = [
+    (0.001, 1.0, '%16.15f'),
+    (1.0, 10.0, '%16.14f'),
+    (10.0, 100.0, '%16.13f'),
+    (100.0, 1000.0, '%16.12f'),
+    (1000.0, 10000.0, '%16.11f'),
+    (10000.0, 100000.0, '%16.10f'),
+    (100000.0, 1000000.0, '%16.9f'),
+    (1000000.0, 10000000.0, '%16.8f'),
+    (10000000.0, 100000000.0, '%16.7f'),
+    (100000000.0, 1000000000.0, '%16.6f'),
+    (1000000000.0, 10000000000.0, '%16.5f'),
+    (10000000000.0, 100000000000.0, '%16.4f'),
+    (100000000000.0, 1000000000000.0, '%16.3f'),
+    (1000000000000.0, 10000000000000.0, '%16.2f'),
+    (10000000000000.0, 100000000000000.0, '%16.1f'),
+]
+
+_NEG_BINS_16 = [
+    (0.01, 1.0, '%16.14f'),
+    (1.0, 10.0, '%16.13f'),
+    (10.0, 100.0, '%16.12f'),
+    (100.0, 1000.0, '%16.11f'),
+    (1000.0, 10000.0, '%16.10f'),
+    (10000.0, 100000.0, '%16.9f'),
+    (100000.0, 1000000.0, '%16.8f'),
+    (1000000.0, 10000000.0, '%16.7f'),
+    (10000000.0, 100000000.0, '%16.6f'),
+    (100000000.0, 1000000000.0, '%16.5f'),
+    (1000000000.0, 10000000000.0, '%16.4f'),
+    (10000000000.0, 100000000000.0, '%16.3f'),
+    (100000000000.0, 1000000000000.0, '%16.2f'),
+    (1000000000000.0, 10000000000000.0, '%16.1f'),
+]
+
 def array_float_nan(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
     assert ndarray.dtype.name in {'float32', 'float64'}, ndarray.dtype.name
     inan = np.isnan(ndarray)
+
+    if size == 8 and not is_double:
+        ivalue = ~inan
+        if np.all(ivalue):
+            return array_float_8(ndarray)
+        str_array = np.zeros(ndarray.shape, dtype='|U8')
+        if np.any(ivalue):
+            flat = ndarray.ravel()
+            flat_result = array_float_8(flat[ivalue.ravel()])
+            str_array.ravel()[ivalue.ravel()] = flat_result
+        str_array[inan] = ''
+        return str_array
+
+    if size == 16 and not is_double:
+        ivalue = ~inan
+        if np.all(ivalue):
+            return array_float_16(ndarray)
+        str_array = np.zeros(ndarray.shape, dtype='|U16')
+        if np.any(ivalue):
+            flat = ndarray.ravel()
+            flat_result = array_float_16(flat[ivalue.ravel()])
+            str_array.ravel()[ivalue.ravel()] = flat_result
+        str_array[inan] = ''
+        return str_array
+
     ivalue = ~inan
     if size == 8:
         str_array = np.zeros(ndarray.shape, dtype='|U8')

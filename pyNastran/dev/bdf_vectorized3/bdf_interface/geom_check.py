@@ -5,6 +5,13 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.base_card import VectorizedBaseCard
 
 
+def _is_sorted_unique(arr: np.ndarray) -> bool:
+    """Check if array is sorted and unique using O(n) diff instead of O(n log n) np.unique."""
+    if len(arr) <= 1:
+        return True
+    return bool(np.all(np.diff(arr) > 0))
+
+
 def geom_check(self: VectorizedBaseCard,
                missing: dict[str, np.ndarray],
                node=None, filter_node0: bool=False,
@@ -113,10 +120,7 @@ def find_missing(all_nodes_sorted: np.ndarray, my_nodes: np.ndarray,
                  name: str) -> tuple[np.ndarray, np.ndarray]:
     assert isinstance(all_nodes_sorted, np.ndarray), all_nodes_sorted
     assert isinstance(my_nodes, (np.ndarray, list)), my_nodes
-
-    unids = np.unique(all_nodes_sorted)
-    if not np.array_equal(unids, all_nodes_sorted):
-        raise RuntimeError(f'all_{name}_sorted={all_nodes_sorted} is not unique')
+    assert _is_sorted_unique(all_nodes_sorted), f'all_{name}_sorted is not sorted/unique'
     inode = np.searchsorted(all_nodes_sorted, my_nodes)
     if my_nodes.ndim == 1:
         nnodes = len(all_nodes_sorted)

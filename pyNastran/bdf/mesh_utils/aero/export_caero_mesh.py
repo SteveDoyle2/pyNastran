@@ -286,7 +286,12 @@ def rodriguez_rotate(xyz: np.ndarray,
                      theta: float,
                      coord: Coord,
                      iaxis: int=0) -> np.ndarray:
-    """
+    """Rotate points about the axis of a coordinate system using Rodrigues' formula.
+
+    The rotation axis passes through coord.origin in the direction of
+    coord.i/j/k (selected by iaxis). Points are translated to the origin,
+    rotated, and translated back.
+
     v_rotated = v * cos(θ) + (k x v) * sin(θ) + k * (k · v) * (1 - cos(θ))
     Where:
       v is the vector to be rotated.
@@ -307,29 +312,20 @@ def rodriguez_rotate(xyz: np.ndarray,
         raise RuntimeError(f'iaxis={iaxis!r} and must be [0, 1, 2] for [x, y, z]')
     assert xyz.ndim == 2, f'xyz.shape={str(xyz.shape)} and must be 2d'
 
-    nxyz = len(xyz)
-    # thetas = np.full(nxyz, theta, dtype='float64')
+    origin = coord.origin
+    v = xyz - origin
+
+    nxyz = len(v)
     kmat = np.vstack([k] * nxyz, dtype='float64')
-    # print(f'k; shape={str(k.shape)} = {k}')
-    # kxv = np.cross(k[np.newaxis, :], xyz, axis=0)
-    # kov = np.dot(k[np.newaxis, :], xyz, axis=0)
-    try:
-        kxv = np.cross(kmat, xyz, axis=1)
-    except ValueError:  # pragma: no cover
-        print(f'xyz; shape={str(xyz.shape)}:\n{xyz}')
-        print(f'kmat; shape={str(kmat.shape)}:\n{kmat}')
-        raise
+    kxv = np.cross(kmat, v, axis=1)
     assert kxv.shape == (nxyz, 3), (kxv.shape, nxyz)
-    # kov = np.dot(kmat, xyz, axis=0)
-    kov = np.einsum('ij,ij->i', kmat, xyz)
-    kov2 = kov.reshape(nxyz, 1)
-    assert len(kov) == nxyz, (len(kov), nxyz)
-    xyz_rotated = (
-        xyz * np.cos(theta) +
+    kov = np.einsum('ij,ij->i', kmat, v).reshape(nxyz, 1)
+    v_rotated = (
+        v * np.cos(theta) +
         kxv * np.sin(theta) +
-        kmat * kov2 * (1 - np.cos(theta))
+        kmat * kov * (1 - np.cos(theta))
     )
-    return xyz_rotated
+    return v_rotated + origin
 
 
 def _get_coords_to_write_dict(model: BDF) -> dict[int, Coord]:

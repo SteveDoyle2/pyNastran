@@ -485,7 +485,7 @@ class TLOAD1(VectorizedBaseCard):
         self.cards = []
 
     def _save(self, load_id, excite_id, delay_int, delay_float, load_type, tabled_id, us0, vs0):
-        if len(self.load_id) == 0:
+        if len(self.load_id) != 0:
             load_id = np.hstack([self.load_id, load_id])
             excite_id = np.hstack([self.excite_id, excite_id])
             delay_int = np.hstack([self.delay_int, delay_int])
@@ -1474,7 +1474,7 @@ class LSEQ(VectorizedBaseCard):  # Requires LOADSET in case control deck
         self.cards = []
 
     def _save(self, lseq_id, excite_id, load_id, temperature_id):
-        if len(self.lseq_id) == 0:
+        if len(self.lseq_id) != 0:
             lseq_id = np.hstack([self.lseq_id, lseq_id])
             excite_id = np.hstack([self.excite_id, excite_id])
             load_id = np.hstack([self.load_id, load_id])

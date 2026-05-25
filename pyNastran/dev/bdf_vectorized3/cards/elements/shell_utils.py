@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from .solid_volume import volume_chexa, volume_cpenta
+from .shell_quality import _cross3, _norm3, _cross_norm, _fast_searchsorted
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     searchsorted_filter)
 
@@ -18,9 +19,7 @@ def tri_area(grid: GRID, nodes: np.ndarray) -> np.ndarray:
     nid = grid.node_id
     nelements, nnodes = nodes.shape
     assert nnodes == 3, nodes.shape
-    inode = np.searchsorted(nid, nodes)
-    actual_nodes = nid[inode]
-    assert np.array_equal(actual_nodes, nodes)
+    inode = _fast_searchsorted(nid, nodes)
     in1 = inode[:, 0]
     in2 = inode[:, 1]
     in3 = inode[:, 2]
@@ -29,15 +28,14 @@ def tri_area(grid: GRID, nodes: np.ndarray) -> np.ndarray:
     xyz3 = xyz[in3, :]
     a = xyz1 - xyz2
     b = xyz1 - xyz3
-    area = 0.5 * np.linalg.norm(np.cross(a, b), axis=1)
+    area = 0.5 * _cross_norm(a, b)
     assert len(area) == nelements
     return area
 
 def tri_centroid(grid: GRID, nodes: np.ndarray) -> np.ndarray:
     xyz = grid.xyz_cid0()
     nid = grid.node_id
-    inode = np.searchsorted(nid, nodes)
-    assert np.array_equal(nid[inode], nodes)
+    inode = _fast_searchsorted(nid, nodes)
     in1 = inode[:, 0]
     in2 = inode[:, 1]
     in3 = inode[:, 2]
@@ -52,9 +50,7 @@ def tri_area_centroid_normal(grid: GRID, nodes: np.ndarray) -> tuple[np.ndarray,
     nid = grid.node_id
     nelements, nnodes = nodes.shape
     assert nnodes == 3, nodes.shape
-    inode = np.searchsorted(nid, nodes)
-    actual_nodes = nid[inode]
-    assert np.array_equal(actual_nodes, nodes)
+    inode = _fast_searchsorted(nid, nodes)
     in1 = inode[:, 0]
     in2 = inode[:, 1]
     in3 = inode[:, 2]
@@ -101,8 +97,7 @@ def quad_area(grid: GRID, nodes: np.ndarray) -> np.ndarray:
     assert nnodes == 4, nnodes
     nid = grid.node_id
     xyz = grid.xyz_cid0()
-    inode = np.searchsorted(nid, nodes)
-    assert np.array_equal(nid[inode], nodes)
+    inode = _fast_searchsorted(nid, nodes)
     in1 = inode[:, 0]
     in2 = inode[:, 1]
     in3 = inode[:, 2]
@@ -111,10 +106,9 @@ def quad_area(grid: GRID, nodes: np.ndarray) -> np.ndarray:
     xyz2 = xyz[in2, :]
     xyz3 = xyz[in3, :]
     xyz4 = xyz[in4, :]
-    #area = 0.5 * norm(cross(n3-n1, n4-n2))
     a = xyz3 - xyz1
     b = xyz4 - xyz2
-    area = 0.5 * np.linalg.norm(np.cross(a, b), axis=1)
+    area = 0.5 * _cross_norm(a, b)
     assert len(area) == nelements
     return area
 
@@ -123,8 +117,7 @@ def quad_centroid(grid: GRID, nodes: np.ndarray) -> np.ndarray:
     assert nnodes == 4, nnodes
     xyz = grid.xyz_cid0()
     nid = grid.node_id
-    inode = np.searchsorted(nid, nodes)
-    assert np.array_equal(nid[inode], nodes)
+    inode = _fast_searchsorted(nid, nodes)
     in1 = inode[:, 0]
     in2 = inode[:, 1]
     in3 = inode[:, 2]
@@ -142,8 +135,7 @@ def quad_area_centroid_normal(grid: GRID, nodes: np.ndarray) -> tuple[np.ndarray
     assert nnodes == 4, nnodes
     nid = grid.node_id
     xyz = grid.xyz_cid0()
-    inode = np.searchsorted(nid, nodes)
-    assert np.array_equal(nid[inode], nodes)
+    inode = _fast_searchsorted(nid, nodes)
     in1 = inode[:, 0]
     in2 = inode[:, 1]
     in3 = inode[:, 2]
@@ -152,22 +144,17 @@ def quad_area_centroid_normal(grid: GRID, nodes: np.ndarray) -> tuple[np.ndarray
     xyz2 = xyz[in2, :]
     xyz3 = xyz[in3, :]
     xyz4 = xyz[in4, :]
-    #area = 0.5 * norm(cross(n3-n1, n4-n2))
     a = xyz3 - xyz1
     b = xyz4 - xyz2
-    normal = np.cross(a, b)
-    assert normal.shape[0] == nelements
-
-    norm = np.linalg.norm(normal, axis=1)
+    nx, ny, nz = _cross3(a, b)
+    norm = _norm3(nx, ny, nz)
     area = 0.5 * norm
     assert len(area) == nelements
 
     centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
     assert centroid.shape[0] == nelements
 
-    assert normal.shape == (nelements, 3)
-    unit_normal = normal / norm[:, np.newaxis]
-
+    unit_normal = np.column_stack([nx, ny, nz]) / norm[:, np.newaxis]
     assert unit_normal.shape == (nelements, 3)
     return area, centroid, unit_normal
 
@@ -188,8 +175,7 @@ def tri_volume(grid: GRID,
     assert nnodes == 3, nnodes
     nid = grid.node_id
     xyz = grid.xyz_cid0()
-    inode = np.searchsorted(nid, nodes)
-    assert np.array_equal(nid[inode], nodes)
+    inode = _fast_searchsorted(nid, nodes)
     in1 = inode[:, 0]
     in2 = inode[:, 1]
     in3 = inode[:, 2]
@@ -246,8 +232,7 @@ def quad_volume(grid: GRID,
     assert nnodes == 4, nnodes
     nid = grid.node_id
     xyz = grid.xyz_cid0()
-    inode = np.searchsorted(nid, nodes)
-    assert np.array_equal(nid[inode], nodes)
+    inode = _fast_searchsorted(nid, nodes)
     in1 = inode[:, 0]
     in2 = inode[:, 1]
     in3 = inode[:, 2]

@@ -48,7 +48,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
 
 from pyNastran.bdf.cards.base_card import _format_comment
-from pyNastran.bdf.cards.utils import wipe_empty_fields
+from pyNastran.bdf.cards.utils import wipe_empty_fields, wipe_empty_fields_str
 
 #from .write_path import write_include
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -2085,8 +2085,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             if has_none:
                 card = wipe_empty_fields([print_field_16(field) for field in fields])
+            elif not is_list and not self._is_dynamic_syntax:
+                card = wipe_empty_fields_str(fields)
             else:
-                #card = remove_trailing_fields(fields)
                 card = wipe_empty_fields(fields)
             card_obj = BDFCard(card, has_none=False)
         return card_obj, card
@@ -3871,15 +3872,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             return xyz_cid0
 
         # transform the grids to the local coordinate system
-        #is_beta = np.diagonal(beta2).min() != 1.
-        #is_origin = np.abs(coord2.origin).max() != 0.
-        #if is_beta and is_origin:
         xyz_cid = coord2.transform_node_to_local_array(xyz_cid0)
-        #xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0 - coord2.origin, beta2.T))
-        #elif is_beta:
-            #xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 @ beta2.T)
-        #else:
-            #xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
 
         if atol is not None:
             xyz_cid_correct = self.get_xyz_in_coord(cid=cid)

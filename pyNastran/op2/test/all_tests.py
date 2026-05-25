@@ -12,6 +12,7 @@ from pyNastran.op2.tables.test.test_oug import TestOUG
 from pyNastran.op2.writer.test_op2_writer import TestOP2Writer
 from pyNastran.op2.op2_interface.test.test_results_set import TestResultSet
 from pyNastran.op2.tools.test_combination import TestCombination
+from pyNastran.op2.test.test_op2_bugfixes import *
 
 
 if __name__ == "__main__":  # pragma: no cover

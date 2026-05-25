@@ -114,7 +114,9 @@ class PLOAD(Load):
 
     def _save(self, load_id, pressure, node_id):
         if len(self.load_id) != 0:
-            raise NotImplementedError()
+            load_id = np.hstack([self.load_id, load_id])
+            pressure = np.hstack([self.pressure, pressure])
+            node_id = np.vstack([self.node_id, node_id])
         nloads = len(load_id)
         self.load_id = load_id
         self.pressure = pressure
@@ -153,6 +155,24 @@ class PLOAD(Load):
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max())
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        sids = np.char.rjust(array_default_int(self.load_id, size=8), 8).tolist()
+        pressures = np.char.rjust(array_float(self.pressure, size=8, is_double=False), 8).tolist()
+        nodes_str = np.char.rjust(array_default_int(self.node_id, default=0, size=8), 8)
+        n1s = nodes_str[:, 0].tolist()
+        n2s = nodes_str[:, 1].tolist()
+        n3s = nodes_str[:, 2].tolist()
+        n4s = nodes_str[:, 3].tolist()
+        lines = [f'PLOAD   {sid}{p}{n1}{n2}{n3}{n4}\n'
+                 for sid, p, n1, n2, n3, n4
+                 in zip(sids, pressures, n1s, n2s, n3s, n4s)]
+        bdf_file.write(''.join(lines))
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -311,7 +331,12 @@ class PLOAD1(Load):
 
     def _save(self, load_id, element_id, load_type, scale, x, pressure):
         if len(self.load_id) != 0:
-            raise NotImplementedError()
+            load_id = np.hstack([self.load_id, load_id])
+            element_id = np.hstack([self.element_id, element_id])
+            load_type = np.hstack([self.load_type, load_type])
+            scale = np.hstack([self.scale, scale])
+            x = np.vstack([self.x, x])
+            pressure = np.vstack([self.pressure, pressure])
         nloads = len(load_id)
         self.load_id = load_id
         self.element_id = element_id
@@ -1080,6 +1105,44 @@ class PLOAD4(Load):
                    self.element_ids.max(),
                    self.coord_id.max(),
                    self.nodes_g1_g34.max())
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+
+        # Fast path: shell loads with single element, uniform pressure,
+        # no nvector, default SURF/NORM
+        all_single_eid = np.all(self.nelement == 1)
+        all_shell = np.all(self.nodes_g1_g34 == -1)
+        no_nvector = np.all(self.nvector == 0.)
+        all_surf = np.all((self.surf_or_line == 'SURF') | (self.surf_or_line == ''))
+        all_norm = np.all((self.line_load_dir == 'NORM') | (self.line_load_dir == ''))
+
+        p = self.pressure
+        uniform_pressure = np.all(
+            (p[:, 1] == p[:, 0]) | np.isnan(p[:, 1])) and np.all(
+            (p[:, 2] == p[:, 0]) | np.isnan(p[:, 2])) and np.all(
+            (p[:, 3] == p[:, 0]) | np.isnan(p[:, 3]))
+
+        no_cid = np.all(self.coord_id == -1)
+        is_basic = all_single_eid and all_shell and no_nvector and all_surf and all_norm and uniform_pressure
+        if is_basic:
+            sids = np.char.rjust(array_str(self.load_id, size=8), 8).tolist()
+            eids = np.char.rjust(array_str(self.element_ids, size=8), 8).tolist()
+            p1s = np.char.rjust(array_float(p[:, 0], size=8, is_double=False), 8).tolist()
+            if no_cid:
+                lines = [f'PLOAD4  {sid}{eid}{p1}\n'
+                         for sid, eid, p1 in zip(sids, eids, p1s)]
+            else:
+                cids = np.char.rjust(array_str(self.coord_id, size=8), 8).tolist()
+                lines = [f'PLOAD4  {sid}{eid}{p1}\n        {cid}      0.      0.      0.\n'
+                         for sid, eid, p1, cid in zip(sids, eids, p1s, cids)]
+            bdf_file.write(''.join(lines))
+        else:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,

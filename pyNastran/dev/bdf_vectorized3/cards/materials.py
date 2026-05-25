@@ -13,7 +13,7 @@ from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_check, save_ifile_comment
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    get_print_card_size, array_str,
+    get_print_card_size, array_str, array_float,
     array_default_int, array_default_float)
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -302,6 +302,10 @@ class MAT1(Material):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
+        if size == 8:
+            self.write_file_8(bdf_file, write_card_header=write_card_header)
+            return
+
         for mid, e, g, nu, rho, alpha, tref, ge, Ss, St, Sc, \
             mcsid in zip_longest(self.material_id, self.E, self.G, self.nu, self.rho,
                                  self.alpha, self.tref, self.ge,
@@ -325,6 +329,72 @@ class MAT1(Material):
                                St, Sc, Ss, mcsid]
             bdf_file.write(print_card(list_fields))
         return
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=16, write_card_header=write_card_header)
+            return
+
+        # fast path: no stress limits, no mcsid
+        has_stress_limits = (
+            np.any(self.St != 0.) or np.any(self.Sc != 0.) or
+            np.any(self.Ss != 0.) or np.any(self.mcsid != 0)
+        )
+        if has_stress_limits:
+            # per-element fallback
+            from pyNastran.bdf.field_writer_8 import print_card_8
+            for mid, e, g, nu, rho, alpha, tref, ge, Ss, St, Sc, \
+                mcsid in zip_longest(self.material_id, self.E, self.G, self.nu, self.rho,
+                                     self.alpha, self.tref, self.ge,
+                                     self.Ss, self.St, self.Sc, self.mcsid):
+                g_default = get_G_default(e, g, nu)
+                G = set_blank_if_default(g, g_default)
+                rho = set_blank_if_default(rho, 0.)
+                a = set_blank_if_default(alpha, 0.)
+                tref = set_blank_if_default(tref, 0.)
+                ge = set_blank_if_default(ge, 0.)
+                if [St, Sc, Ss, mcsid] == [0., 0., 0., 0]:
+                    list_fields = ['MAT1', mid, e, G, nu, rho, a, tref, ge]
+                else:
+                    St = set_blank_if_default(St, 0.)
+                    Sc = set_blank_if_default(Sc, 0.)
+                    Ss = set_blank_if_default(Ss, 0.)
+                    mcsid = set_blank_if_default(mcsid, 0)
+                    list_fields = ['MAT1', mid, e, G, nu, rho, a, tref, ge,
+                                   St, Sc, Ss, mcsid]
+                bdf_file.write(print_card_8(list_fields))
+            return
+
+        mids = np.char.rjust(array_str(self.material_id, size=8), 8).tolist()
+        es = np.char.rjust(array_float(self.E, size=8, is_double=False), 8).tolist()
+        nus = np.char.rjust(array_float(self.nu, size=8, is_double=False), 8).tolist()
+
+        # G field: blank if g == default
+        # default is: g itself when g==0 or nu==0, else e/(2*(1+nu))
+        g_arr = self.G
+        e_arr = self.E
+        nu_arr = self.nu
+        g_default = np.where(
+            (g_arr == 0.0) | (nu_arr == 0.0),
+            g_arr,
+            e_arr / 2.0 / (1.0 + nu_arr)
+        )
+        g_is_default = np.isclose(g_arr, g_default, rtol=1e-12)
+        g_strs = np.char.rjust(array_float(g_arr, size=8, is_double=False), 8)
+        blank8 = ' ' * 8
+        g_list = [blank8 if is_def else gs for gs, is_def in zip(g_strs.tolist(), g_is_default)]
+
+        rhos = np.char.rjust(array_default_float(self.rho, default=0., size=8, is_double=False), 8).tolist()
+        alphas = np.char.rjust(array_default_float(self.alpha, default=0., size=8, is_double=False), 8).tolist()
+        trefs = np.char.rjust(array_default_float(self.tref, default=0., size=8, is_double=False), 8).tolist()
+        ges = np.char.rjust(array_default_float(self.ge, default=0., size=8, is_double=False), 8).tolist()
+
+        lines = [f'MAT1    {mid}{e}{G}{nu}{rho}{a}{tref}{ge}'.rstrip() + '\n'
+                 for mid, e, G, nu, rho, a, tref, ge
+                 in zip(mids, es, g_list, nus, rhos, alphas, trefs, ges)]
+        bdf_file.write(''.join(lines))
 
     def s66(self) -> np.ndarray:
         nmaterial = len(self.material_id)
@@ -687,12 +757,14 @@ class MAT2(Material):
         #print(self.mcsid)
         for mid, G11, G12, G13, G22, G23, G33, \
             rho, (a1, a2, a3), tref, \
-            ge, Ss, St, Sc, mcsid in zip_longest(self.material_id,
-                                                 self.G11, self.G12, self.G13,
-                                                 self.G22, self.G23, self.G33,
-                                                 self.rho,
-                                                 self.alpha, self.tref, self.ge,
-                                                 self.Ss, self.St, self.Sc, self.mcsid):
+            ge, Ss, St, Sc, mcsid, ge_matrix in zip_longest(
+                self.material_id,
+                self.G11, self.G12, self.G13,
+                self.G22, self.G23, self.G33,
+                self.rho,
+                self.alpha, self.tref, self.ge,
+                self.Ss, self.St, self.Sc, self.mcsid,
+                self.ge_matrix):
             G11 = set_blank_if_default(G11, 0.0)
             G12 = set_blank_if_default(G12, 0.0)
             G13 = set_blank_if_default(G13, 0.0)
@@ -706,14 +778,14 @@ class MAT2(Material):
                 'MAT2', mid, G11, G12, G13, G22, G23, G33, rho,
                 a1, a2, a3, tref, ge,
                 St, Sc, Ss, mcsid]
-            #if ge_matrix != [0., 0., 0., 0., 0., 0.]:
-                #ge11 = set_blank_if_default(ge_matrix[0], 0.0)
-                #ge12 = set_blank_if_default(ge_matrix[1], 0.0)
-                #ge13 = set_blank_if_default(ge_matrix[2], 0.0)
-                #ge22 = set_blank_if_default(ge_matrix[3], 0.0)
-                #ge23 = set_blank_if_default(ge_matrix[4], 0.0)
-                #ge33 = set_blank_if_default(ge_matrix[5], 0.0)
-                #list_fields += [ge11, ge12, ge13, ge22, ge23, ge33]
+            if not np.allclose(ge_matrix, 0.):
+                ge11 = set_blank_if_default(ge_matrix[0], 0.0)
+                ge12 = set_blank_if_default(ge_matrix[1], 0.0)
+                ge13 = set_blank_if_default(ge_matrix[2], 0.0)
+                ge22 = set_blank_if_default(ge_matrix[3], 0.0)
+                ge23 = set_blank_if_default(ge_matrix[4], 0.0)
+                ge33 = set_blank_if_default(ge_matrix[5], 0.0)
+                list_fields += [ge11, ge12, ge13, ge22, ge23, ge33]
             bdf_file.write(print_card(list_fields))
         return
 
@@ -1548,10 +1620,26 @@ class MAT8(Material):
         if len(self.material_id) != 0:
             ifile = np.hstack([self.ifile, ifile])
             material_id = np.hstack([self.material_id, material_id])
+            E11 = np.hstack([self.E11, E11])
+            E22 = np.hstack([self.E22, E22])
+            G12 = np.hstack([self.G12, G12])
+            G13 = np.hstack([self.G13, G13])
+            G23 = np.hstack([self.G23, G23])
+            nu12 = np.hstack([self.nu12, nu12])
+            rho = np.hstack([self.rho, rho])
+            alpha = np.vstack([self.alpha, alpha])
+            tref = np.hstack([self.tref, tref])
+            ge = np.hstack([self.ge, ge])
+            Xt = np.hstack([self.Xt, Xt])
+            Xc = np.hstack([self.Xc, Xc])
+            Yt = np.hstack([self.Yt, Yt])
+            Yc = np.hstack([self.Yc, Yc])
+            S = np.hstack([self.S, S])
+            f12 = np.hstack([self.f12, f12])
+            strn = np.hstack([self.strn, strn])
             hf = np.vstack([self.hf, hf])
             ht = np.vstack([self.ht, ht])
             hfb = np.vstack([self.hfb, hfb])
-            raise NotImplementedError()
 
         save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
@@ -1922,7 +2010,35 @@ class MAT9(Material):
               ifile=None, comment: Optional[dict[int, str]]=None,
               force: bool=False):
         if len(self.material_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile]) if ifile is not None else None
+            material_id = np.hstack([self.material_id, material_id])
+            G11 = np.hstack([self.G11, G11])
+            G12 = np.hstack([self.G12, G12])
+            G13 = np.hstack([self.G13, G13])
+            G14 = np.hstack([self.G14, G14])
+            G15 = np.hstack([self.G15, G15])
+            G16 = np.hstack([self.G16, G16])
+            G22 = np.hstack([self.G22, G22])
+            G23 = np.hstack([self.G23, G23])
+            G24 = np.hstack([self.G24, G24])
+            G25 = np.hstack([self.G25, G25])
+            G26 = np.hstack([self.G26, G26])
+            G33 = np.hstack([self.G33, G33])
+            G34 = np.hstack([self.G34, G34])
+            G35 = np.hstack([self.G35, G35])
+            G36 = np.hstack([self.G36, G36])
+            G44 = np.hstack([self.G44, G44])
+            G45 = np.hstack([self.G45, G45])
+            G46 = np.hstack([self.G46, G46])
+            G55 = np.hstack([self.G55, G55])
+            G56 = np.hstack([self.G56, G56])
+            G66 = np.hstack([self.G66, G66])
+            rho = np.hstack([self.rho, rho])
+            alpha = np.vstack([self.alpha, alpha])
+            tref = np.hstack([self.tref, tref])
+            ge = np.hstack([self.ge, ge])
+            if ge_list is not None:
+                ge_list = np.vstack([self.ge_list, ge_list])
         ncards = len(material_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
@@ -2249,7 +2365,17 @@ class MAT10(Material):
               force: bool=False):
         """is_alpha=True for MSC otherwise False"""
         if len(self.material_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile]) if ifile is not None else None
+            material_id = np.hstack([self.material_id, material_id])
+            bulk = np.hstack([self.bulk, bulk])
+            rho = np.hstack([self.rho, rho])
+            c = np.hstack([self.c, c])
+            ge = np.hstack([self.ge, ge])
+            alpha_gamma = np.hstack([self.alpha_gamma, alpha_gamma])
+            table_id_bulk = np.hstack([self.table_id_bulk, table_id_bulk])
+            table_id_rho = np.hstack([self.table_id_rho, table_id_rho])
+            table_id_ge = np.hstack([self.table_id_ge, table_id_ge])
+            table_id_gamma = np.hstack([self.table_id_gamma, table_id_gamma])
         ncards = len(material_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')

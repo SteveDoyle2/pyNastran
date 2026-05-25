@@ -379,6 +379,7 @@ class PFAST(Property):
         prop.diameter = self.diameter[i]
         prop.kt = self.kt[i]
         prop.kr = self.kr[i]
+        prop._mass = self._mass[i]
         prop.coord_id = self.coord_id[i]
         prop.mflag = self.mflag[i]
         prop.ge = self.ge[i]

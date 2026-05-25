@@ -273,7 +273,18 @@ class GENEL(Element):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            ns = np.hstack([self.ns, ns])
+            nud = np.hstack([self.nud, nud])
+            nul = np.hstack([self.nul, nul])
+            nz = np.hstack([self.nz, nz])
+            nk = np.hstack([self.nk, nk])
+            k = np.hstack([self.k, k])
+            z = np.hstack([self.z, z])
+            s = np.hstack([self.s, s])
+            ul = np.hstack([self.ul, ul])
+            ud = np.hstack([self.ud, ud])
         self.ifile = ifile
         self.element_id = element_id
         self.ns = ns

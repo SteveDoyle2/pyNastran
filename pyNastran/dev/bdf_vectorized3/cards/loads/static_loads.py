@@ -436,7 +436,7 @@ class Load0(Load):
         self.cards = []
 
     def _save(self, load_id, node_id, coord_id, mag, xyz):
-        if len(self.load_id) == 0:
+        if len(self.load_id) != 0:
             load_id = np.hstack([self.load_id, load_id])
             node_id = np.hstack([self.node_id, node_id])
             coord_id = np.hstack([self.coord_id, coord_id])
@@ -481,6 +481,26 @@ class Load0(Load):
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max(), self.coord_id.max())
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        card_name = f'{self.type:<8s}'
+        sids = np.char.rjust(array_str(self.load_id, size=8), 8).tolist()
+        nids = np.char.rjust(array_default_int(self.node_id, default=0, size=8), 8).tolist()
+        cids = np.char.rjust(array_default_int(self.coord_id, default=0, size=8), 8).tolist()
+        mags = np.char.rjust(array_float(self.mag, size=8, is_double=False), 8).tolist()
+        xyz_str = np.char.rjust(array_float(self.xyz, size=8, is_double=False), 8)
+        x1s = xyz_str[:, 0].tolist()
+        x2s = xyz_str[:, 1].tolist()
+        x3s = xyz_str[:, 2].tolist()
+        lines = [f'{card_name}{sid}{nid}{cid}{mag}{x1}{x2}{x3}\n'
+                 for sid, nid, cid, mag, x1, x2, x3
+                 in zip(sids, nids, cids, mags, x1s, x2s, x3s)]
+        bdf_file.write(''.join(lines))
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -569,7 +589,10 @@ class Load1(Load):
 
     def _save(self, load_id, node_id, mag, nodes):
         if len(self.load_id) != 0:
-            raise NotImplementedError()
+            load_id = np.hstack([self.load_id, load_id])
+            node_id = np.hstack([self.node_id, node_id])
+            mag = np.hstack([self.mag, mag])
+            nodes = np.vstack([self.nodes, nodes])
         nloads = len(load_id)
         self.load_id = load_id
         self.node_id = node_id
@@ -600,6 +623,24 @@ class Load1(Load):
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max())
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        card_name = f'{self.type:<8s}'
+        sids = np.char.rjust(array_str(self.load_id, size=8), 8).tolist()
+        nids = np.char.rjust(array_default_int(self.node_id, default=0, size=8), 8).tolist()
+        mags = np.char.rjust(array_float(self.mag, size=8, is_double=False), 8).tolist()
+        nodes_str = np.char.rjust(array_default_int(self.nodes, default=0, size=8), 8)
+        g1s = nodes_str[:, 0].tolist()
+        g2s = nodes_str[:, 1].tolist()
+        lines = [f'{card_name}{sid}{nid}{mag}{g1}{g2}\n'
+                 for sid, nid, mag, g1, g2
+                 in zip(sids, nids, mags, g1s, g2s)]
+        bdf_file.write(''.join(lines))
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -690,7 +731,10 @@ class Load2(Load):
 
     def _save(self, load_id, node_id, mag, nodes):
         if len(self.load_id) != 0:
-            raise NotImplementedError()
+            load_id = np.hstack([self.load_id, load_id])
+            node_id = np.hstack([self.node_id, node_id])
+            mag = np.hstack([self.mag, mag])
+            nodes = np.vstack([self.nodes, nodes])
         nloads = len(load_id)
         self.load_id = load_id
         self.node_id = node_id
@@ -724,6 +768,26 @@ class Load2(Load):
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max())
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        card_name = f'{self.type:<8s}'
+        sids = np.char.rjust(array_str(self.load_id, size=8), 8).tolist()
+        nids = np.char.rjust(array_str(self.node_id, size=8), 8).tolist()
+        mags = np.char.rjust(array_float(self.mag, size=8, is_double=False), 8).tolist()
+        nodes_str = np.char.rjust(array_default_int(self.nodes, default=0, size=8), 8)
+        g1s = nodes_str[:, 0].tolist()
+        g2s = nodes_str[:, 1].tolist()
+        g3s = nodes_str[:, 2].tolist()
+        g4s = nodes_str[:, 3].tolist()
+        lines = [f'{card_name}{sid}{nid}{mag}{g1}{g3}{g2}{g4}\n'
+                 for sid, nid, mag, g1, g2, g3, g4
+                 in zip(sids, nids, mags, g1s, g2s, g3s, g4s)]
+        bdf_file.write(''.join(lines))
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -1193,6 +1257,30 @@ class GRAV(Load):
         return max(self.load_id.max(), self.coord_id.max())
 
     @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        sids = np.char.rjust(array_default_int(self.load_id, size=8), 8).tolist()
+        cids = np.char.rjust(array_default_int(self.coord_id, default=0, size=8), 8).tolist()
+        scales = np.char.rjust(array_float(self.scale, size=8, is_double=False), 8).tolist()
+        n_str = np.char.rjust(array_float(self.N, size=8, is_double=False), 8)
+        n1s = n_str[:, 0].tolist()
+        n2s = n_str[:, 1].tolist()
+        n3s = n_str[:, 2].tolist()
+        if np.any(self.main_bulk != 0):
+            mbs = np.char.rjust(array_default_int(self.main_bulk, default=0, size=8), 8).tolist()
+            lines = [f'GRAV    {sid}{cid}{scale}{n1}{n2}{n3}{mb}\n'
+                     for sid, cid, scale, n1, n2, n3, mb
+                     in zip(sids, cids, scales, n1s, n2s, n3s, mbs)]
+        else:
+            lines = [f'GRAV    {sid}{cid}{scale}{n1}{n2}{n3}\n'
+                     for sid, cid, scale, n1, n2, n3
+                     in zip(sids, cids, scales, n1s, n2s, n3s)]
+        bdf_file.write(''.join(lines))
+
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1353,7 +1441,13 @@ class ACCEL(Load):
 
     def _save(self, load_id, coord_id, nloc, locs, vals, direction, N):
         if len(self.load_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            load_id = np.hstack([self.load_id, load_id])
+            coord_id = np.hstack([self.coord_id, coord_id])
+            nloc = np.hstack([self.nloc, nloc])
+            locs = np.hstack([self.locs, locs])
+            vals = np.hstack([self.vals, vals])
+            direction = np.hstack([self.direction, direction])
+            N = np.vstack([self.N, N])
         nloads = len(load_id)
         self.load_id = load_id
         self.coord_id = coord_id
@@ -1520,12 +1614,16 @@ class ACCEL1(Load):
 
     def _save(self, load_id, coord_id, scale, nnodes, nodes, N):
         if len(self.load_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            load_id = np.hstack([self.load_id, load_id])
+            coord_id = np.hstack([self.coord_id, coord_id])
+            scale = np.hstack([self.scale, scale])
+            nnodes = np.hstack([self.nnodes, nnodes])
+            nodes = np.hstack([self.nodes, nodes])
+            N = np.vstack([self.N, N])
         nloads = len(load_id)
         self.load_id = load_id
         self.coord_id = coord_id
         self.nnodes = nnodes
-        #assert isinstance(self.nnodes.tolist()[0], int), self.nnodes[0]
         self.nodes = nodes
         self.scale = scale
         self.N = N
@@ -2955,7 +3053,15 @@ class RFORCE(Load):
 
     def _save(self, load_id, node_id, coord_id, scale, r, method, racc, main_bulk, idrf):
         if len(self.load_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            load_id = np.hstack([self.load_id, load_id])
+            node_id = np.hstack([self.node_id, node_id])
+            coord_id = np.hstack([self.coord_id, coord_id])
+            scale = np.hstack([self.scale, scale])
+            r = np.vstack([self.r, r])
+            method = np.hstack([self.method, method])
+            racc = np.hstack([self.racc, racc])
+            main_bulk = np.hstack([self.main_bulk, main_bulk])
+            idrf = np.hstack([self.idrf, idrf])
         self.load_id = load_id
         self.node_id = node_id
         self.coord_id = coord_id

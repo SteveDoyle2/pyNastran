@@ -913,5 +913,62 @@ class TestBars(unittest.TestCase):
         save_load_deck(model)
 
 
+    def test_pbarl_slice_card_by_property_id(self):
+        """Tests PBARL.slice_card_by_property_id with different bar types (varying dim counts)."""
+        model = BDF(debug=False)
+        mid = 1
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        # ROD: 1 dim
+        model.add_pbarl(pid=1, mid=mid, bar_type='ROD', dim=[1.0])
+        # BOX: 4 dims
+        model.add_pbarl(pid=2, mid=mid, bar_type='BOX', dim=[2.0, 1.0, 0.1, 0.1])
+        # I: 6 dims
+        model.add_pbarl(pid=3, mid=mid, bar_type='I', dim=[6.0, 3.0, 3.0, 0.5, 0.5, 0.5])
+
+        model.setup()
+        pbarl = model.pbarl
+        assert len(pbarl.property_id) == 3
+
+        # Slice single ROD
+        p1 = pbarl.slice_card_by_property_id(np.array([1]))
+        assert len(p1.property_id) == 1
+        assert p1.property_id[0] == 1
+        assert p1.ndim[0] == 1
+        assert len(p1.dims) == 1
+        assert np.allclose(p1.dims, [1.0])
+
+        # Slice single BOX
+        p2 = pbarl.slice_card_by_property_id(np.array([2]))
+        assert len(p2.property_id) == 1
+        assert p2.ndim[0] == 4
+        assert len(p2.dims) == 4
+        assert np.allclose(p2.dims, [2.0, 1.0, 0.1, 0.1])
+
+        # Slice single I-beam
+        p3 = pbarl.slice_card_by_property_id(np.array([3]))
+        assert len(p3.property_id) == 1
+        assert p3.ndim[0] == 6
+        assert len(p3.dims) == 6
+        assert np.allclose(p3.dims, [6.0, 3.0, 3.0, 0.5, 0.5, 0.5])
+
+        # Slice multiple
+        p12 = pbarl.slice_card_by_property_id(np.array([1, 2]))
+        assert len(p12.property_id) == 2
+        assert p12.ndim.sum() == 5
+        assert len(p12.dims) == 5
+
+        # area() should work on sliced cards
+        a1 = p1.area()
+        a2 = p2.area()
+        a3 = p3.area()
+        assert a1[0] > 0
+        assert a2[0] > 0
+        assert a3[0] > 0
+
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

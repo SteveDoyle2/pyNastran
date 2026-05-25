@@ -31,7 +31,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.rod import (
 from pyNastran.dev.bdf_vectorized3.cards.elements.utils import (
     get_density_from_material, basic_mass_material_id)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_default_int, array_default_str, array_default_float,
+    array_str, array_float, array_default_int, array_default_str, array_default_float,
     array_default_float_nan, get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -469,6 +469,53 @@ class CBAR(Element):
             # print(list_fields)
             bdf_file.write(print_card(list_fields))
         return
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+
+        no_pa_pb = np.all(self.pa == 0) and np.all(self.pb == 0)
+        no_wa_wb = np.all(self.wa == 0.) and np.all(self.wb == 0.)
+        all_g0 = np.all(self.g0 > 0)
+        all_offt_ggg = np.all(self.offt == 'GGG')
+        is_basic = no_pa_pb and no_wa_wb and all_offt_ggg
+
+        eids = np.char.rjust(array_str(self.element_id, size=8), 8)
+        pids = np.char.rjust(array_str(self.property_id, size=8), 8)
+        nodes_str = np.char.rjust(array_str(self.nodes, size=8), 8)
+
+        if is_basic and all_g0:
+            g0s = np.char.rjust(array_str(self.g0, size=8), 8)
+            eid_list = eids.tolist()
+            pid_list = pids.tolist()
+            n1_list = nodes_str[:, 0].tolist()
+            n2_list = nodes_str[:, 1].tolist()
+            g0_list = g0s.tolist()
+            lines = [f'CBAR    {eid}{pid}{n1}{n2}{g0}\n'
+                     for eid, pid, n1, n2, g0 in
+                     zip(eid_list, pid_list, n1_list, n2_list, g0_list)]
+            bdf_file.write(''.join(lines))
+        elif is_basic:
+            g0s = np.char.rjust(array_str(self.g0, size=8), 8)
+            xs = np.char.rjust(array_float(self.x, size=8, nan_check=False), 8)
+            eid_list = eids.tolist()
+            pid_list = pids.tolist()
+            n1_list = nodes_str[:, 0].tolist()
+            n2_list = nodes_str[:, 1].tolist()
+            lines = []
+            for eid, pid, n1, n2, g0, x, g0_val in zip(
+                    eid_list, pid_list, n1_list, n2_list,
+                    g0s.tolist(), xs.tolist(), self.g0):
+                if g0_val > 0:
+                    lines.append(f'CBAR    {eid}{pid}{n1}{n2}{g0}\n')
+                else:
+                    lines.append(f'CBAR    {eid}{pid}{n1}{n2}{x[0]}{x[1]}{x[2]}\n')
+            bdf_file.write(''.join(lines))
+        else:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
 
     @property
     def allowed_properties(self):
@@ -1369,11 +1416,11 @@ class PBARL(Property):
         self.nsm = np.array([], dtype='float64')
         self.dims = np.array([], dtype='float64')
 
-    # def slice_card_by_property_id(self, property_id: np.ndarray) -> PBARL:
-    #     """uses a node_ids to extract PBARLs"""
-    #     iprop = self.index(property_id)
-    #     prop = self.slice_card_by_index(iprop)
-    #     return prop
+    def slice_card_by_property_id(self, property_id: np.ndarray) -> PBARL:
+        """uses a property_id to extract PBARLs"""
+        iprop = self.index(property_id)
+        prop = self.slice_card_by_index(iprop)
+        return prop
 
     def validate(self) -> None:
         utypes = np.unique(self.Type)
@@ -2016,7 +2063,11 @@ class CBARAO(Element):
               ifile=None, comment=None) -> None:
         ifile = ifile if ifile is not None else np.zeros(len(element_id), dtype='int32')
         if len(self.element_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            scale = np.hstack([self.scale, scale])
+            nstation = np.hstack([self.nstation, nstation])
+            station = np.hstack([self.station, station]).tolist()
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.scale = scale

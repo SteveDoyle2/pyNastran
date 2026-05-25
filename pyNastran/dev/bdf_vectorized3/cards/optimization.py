@@ -824,7 +824,11 @@ class DVGRID(VectorizedBaseCard):
     def _save(self, desvar_id, node_id, coord_id,
               coefficient, dxyz) -> None:
         if len(self.desvar_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            desvar_id = np.hstack([self.desvar_id, desvar_id])
+            node_id = np.hstack([self.node_id, node_id])
+            coord_id = np.hstack([self.coord_id, coord_id])
+            coefficient = np.hstack([self.coefficient, coefficient])
+            dxyz = np.vstack([self.dxyz, dxyz])
         self.desvar_id = desvar_id
         self.node_id = node_id
         self.coord_id = coord_id
@@ -2508,7 +2512,18 @@ class DVPREL2(VectorizedBaseCard):
     def _save(self, dvprel_id, property_id, property_type, property_name, field_num,
               deqatn_id, p_min, p_max, ndesvar, ndtable, desvar_ids, labels):
         if len(self.dvprel_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            dvprel_id = np.hstack([self.dvprel_id, dvprel_id])
+            property_id = np.hstack([self.property_id, property_id])
+            property_type = np.hstack([self.property_type, property_type])
+            property_name = np.hstack([self.property_name, property_name])
+            field_num = np.hstack([self.field_num, field_num])
+            deqatn_id = np.hstack([self.deqatn_id, deqatn_id])
+            p_min = np.hstack([self.p_min, p_min])
+            p_max = np.hstack([self.p_max, p_max])
+            ndesvar = np.hstack([self.ndesvar, ndesvar])
+            ndtable = np.hstack([self.ndtable, ndtable])
+            desvar_ids = np.hstack([self.desvar_ids, desvar_ids])
+            labels = np.hstack([self.labels, labels])
         self.dvprel_id = dvprel_id
         self.property_id = property_id
         self.property_type = property_type
@@ -2517,7 +2532,6 @@ class DVPREL2(VectorizedBaseCard):
         self.deqatn_id = deqatn_id
         self.p_min = p_min
         self.p_max = p_max
-        #self.c0 = np.zeros(ncards, dtype='float64')
         self.ndesvar = ndesvar
         self.ndtable = ndtable
         self.desvar_ids = desvar_ids
@@ -3805,7 +3819,10 @@ class DSCREEN(VectorizedBaseCard):
 
     def _save(self, dscreen_id, response_type, trs, nstr):
         if len(self.dscreen_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            dscreen_id = np.hstack([self.dscreen_id, dscreen_id])
+            response_type = np.hstack([self.response_type, response_type])
+            trs = np.hstack([self.trs, trs])
+            nstr = np.hstack([self.nstr, nstr])
         self.dscreen_id = dscreen_id
         self.response_type = response_type
         self.trs = trs

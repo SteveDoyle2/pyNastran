@@ -29,7 +29,7 @@ from .bar import (apply_bar_default, init_x_g0, get_bar_vector, split_offt_vecto
                   e_g_nu_from_isotropic_material, check_offt)
 from .utils import get_density_from_material
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_default_int, array_default_float, array_default_str,
+    array_str, array_float, array_default_int, array_default_float, array_default_str,
     array_default_float_nan, get_print_card_size,)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
@@ -285,7 +285,20 @@ class CBEAM(Element):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
+            offt = np.hstack([self.offt, offt])
+            bit = np.hstack([self.bit, bit])
+            g0 = np.hstack([self.g0, g0])
+            x = np.vstack([self.x, x])
+            pa = np.hstack([self.pa, pa])
+            pb = np.hstack([self.pb, pb])
+            wa = np.vstack([self.wa, wa])
+            wb = np.vstack([self.wb, wb])
+            sa = np.hstack([self.sa, sa])
+            sb = np.hstack([self.sb, sb])
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
@@ -338,6 +351,8 @@ class CBEAM(Element):
         elem.x = self.x[i, :]
         elem.pa = self.pa[i]
         elem.pb = self.pb[i]
+        elem.sa = self.sa[i]
+        elem.sb = self.sb[i]
         elem.wa = self.wa[i, :]
         elem.wb = self.wb[i, :]
         elem.n = len(i)
@@ -429,6 +444,54 @@ class CBEAM(Element):
                            sa, sb]
             bdf_file.write(print_card(list_fields))
         return
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+
+        no_pa_pb = np.all(self.pa == 0) and np.all(self.pb == 0)
+        no_wa_wb = np.all(self.wa == 0.) and np.all(self.wb == 0.)
+        no_sa_sb = np.all(self.sa == 0) and np.all(self.sb == 0)
+        all_g0 = np.all(self.g0 > 0)
+        all_offt_ggg = np.all(self.offt == 'GGG') and np.all(self.bit == -1)
+        is_basic = no_pa_pb and no_wa_wb and no_sa_sb and all_offt_ggg
+
+        eids = np.char.rjust(array_str(self.element_id, size=8), 8)
+        pids = np.char.rjust(array_str(self.property_id, size=8), 8)
+        nodes_str = np.char.rjust(array_str(self.nodes, size=8), 8)
+
+        if is_basic and all_g0:
+            g0s = np.char.rjust(array_str(self.g0, size=8), 8)
+            eid_list = eids.tolist()
+            pid_list = pids.tolist()
+            n1_list = nodes_str[:, 0].tolist()
+            n2_list = nodes_str[:, 1].tolist()
+            g0_list = g0s.tolist()
+            lines = [f'CBEAM   {eid}{pid}{n1}{n2}{g0}\n'
+                     for eid, pid, n1, n2, g0 in
+                     zip(eid_list, pid_list, n1_list, n2_list, g0_list)]
+            bdf_file.write(''.join(lines))
+        elif is_basic:
+            g0s = np.char.rjust(array_str(self.g0, size=8), 8)
+            xs = np.char.rjust(array_float(self.x, size=8, nan_check=False), 8)
+            eid_list = eids.tolist()
+            pid_list = pids.tolist()
+            n1_list = nodes_str[:, 0].tolist()
+            n2_list = nodes_str[:, 1].tolist()
+            lines = []
+            for eid, pid, n1, n2, g0, x, g0_val in zip(
+                    eid_list, pid_list, n1_list, n2_list,
+                    g0s.tolist(), xs.tolist(), self.g0):
+                if g0_val > 0:
+                    lines.append(f'CBEAM   {eid}{pid}{n1}{n2}{g0}\n')
+                else:
+                    lines.append(f'CBEAM   {eid}{pid}{n1}{n2}{x[0]}{x[1]}{x[2]}\n')
+            bdf_file.write(''.join(lines))
+        else:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
 
     @property
     def is_x(self) -> np.ndarray:
@@ -3124,7 +3187,17 @@ class CBEAM3(Element):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
+            g0 = np.hstack([self.g0, g0])
+            x = np.vstack([self.x, x])
+            wa = np.vstack([self.wa, wa])
+            wb = np.vstack([self.wb, wb])
+            wc = np.vstack([self.wc, wc])
+            tw = np.vstack([self.tw, tw])
+            s = np.vstack([self.s, s])
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
@@ -4252,7 +4325,30 @@ class PBEAM3(Property):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            property_id = np.hstack([self.property_id, property_id])
+            material_id = np.hstack([self.material_id, material_id])
+            area = np.vstack([self._area, area])
+            iy = np.vstack([self.iy, iy])
+            iz = np.vstack([self.iz, iz])
+            iyz = np.vstack([self.iyz, iyz])
+            j = np.vstack([self.j, j])
+            nsm = np.vstack([self._nsm, nsm])
+            ky = np.hstack([self.ky, ky])
+            kz = np.hstack([self.kz, kz])
+            sout = np.vstack([self.sout, sout])
+            ny = np.vstack([self.ny, ny])
+            nz = np.vstack([self.nz, nz])
+            my = np.vstack([self.my, my])
+            mz = np.vstack([self.mz, mz])
+            nsiy = np.vstack([self.nsiy, nsiy])
+            nsiz = np.vstack([self.nsiz, nsiz])
+            nsiyz = np.vstack([self.nsiyz, nsiyz])
+            cw = np.vstack([self.cw, cw])
+            stress = np.hstack([self.stress, stress])
+            w = np.vstack([self.w, w])
+            wy = np.vstack([self.wy, wy])
+            wz = np.vstack([self.wz, wz])
 
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
@@ -4627,7 +4723,13 @@ class CBEND(Element):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
+            g0 = np.hstack([self.g0, g0])
+            x = np.vstack([self.x, x])
+            geom_flag = np.hstack([self.geom_flag, geom_flag])
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id

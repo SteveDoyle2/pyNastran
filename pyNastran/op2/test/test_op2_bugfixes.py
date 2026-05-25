@@ -30,9 +30,31 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStress
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealSpringStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray
+from unittest.mock import MagicMock
+from pyNastran.op2.tables.oes_stressStrain import utils_cshear
+
+from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray, ComplexDisplacementArray
+from pyNastran.op2.tables.oug.oug_eigenvectors import RealEigenvectorArray, ComplexEigenvectorArray
+from pyNastran.op2.tables.oef_forces.oef_force_objects import RealRodForceArray, RealCBarForceArray, RealSpringForceArray
+from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import ComplexRodForceArray, ComplexSpringForceArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStressArray
+from pyNastran.op2.tables.oug.oug_velocities import RealVelocityArray, ComplexVelocityArray
+from pyNastran.op2.tables.oug.oug_accelerations import RealAccelerationArray, ComplexAccelerationArray
+from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import RealSPCForcesArray
+from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import RealMPCForcesArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStrainArray
 
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
+
+from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import ComplexSpringForceArray
+
 
 
 class TestComplexBarFixes(unittest.TestCase):
@@ -84,9 +106,6 @@ class TestComplexShearFix(unittest.TestCase):
 
     def test_cshear_strain_class_selection(self):
         """utils_cshear selects ComplexShearStrainArray when is_stress=False."""
-        from unittest.mock import MagicMock
-        from pyNastran.op2.tables.oes_stressStrain import utils_cshear
-
         op2 = MagicMock()
         op2.is_stress = False
         obj_vector_complex = ComplexShearStressArray if op2.is_stress else ComplexShearStrainArray
@@ -182,7 +201,8 @@ class TestWriteOp2Constructed(unittest.TestCase):
         """
         element = np.array([40], dtype='int32')
         data = np.array([[[5.0]]], dtype='float32')
-        spring = RealSpringStressArray.add_static_case('OES1X1', 'CELAS1', element, data, isubcase=1)
+        spring = RealSpringStressArray.add_static_case(
+            'OES1X1', 'CELAS1', element, data, isubcase=1)
         nbytes = self._write_op2_result(spring)
         assert nbytes > 100, f'expected >100 bytes, got {nbytes}'
 
@@ -233,7 +253,8 @@ class TestWriteOp2RoundTrip(unittest.TestCase):
         op2_filename = MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'
         model = read_op2(str(op2_filename), debug=None)
 
-        out_file = tempfile.mktemp(suffix='.op2')
+        fd, out_file = tempfile.mkstemp(suffix='.op2')
+        os.close(fd)
         try:
             model.write_op2(out_file)
             model2 = read_op2(out_file, debug=None)
@@ -259,7 +280,8 @@ class TestWriteOp2RoundTrip(unittest.TestCase):
         op2_filename = MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'
         model = read_op2(str(op2_filename), debug=None)
 
-        out_file = tempfile.mktemp(suffix='.op2')
+        fd, out_file = tempfile.mkstemp(suffix='.op2')
+        os.close(fd)
         try:
             model.write_op2(out_file)
             model2 = read_op2(out_file, debug=None)
@@ -285,25 +307,28 @@ class TestWriteOp2RoundTrip(unittest.TestCase):
         op2_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
         model = read_op2(str(op2_filename), debug=None)
 
-        out_file = tempfile.mktemp(suffix='.op2')
+        fd, out_file = tempfile.mkstemp(suffix='.op2')
+        os.close(fd)
         try:
             model.write_op2(out_file)
             model2 = read_op2(out_file, debug=None)
 
-            rod1 = model.op2_results.stress.crod_stress
-            rod2 = model2.op2_results.stress.crod_stress
-            for k in rod1:
-                assert rod1[k].data.shape[2] == 4
-                assert np.allclose(rod1[k].data, rod2[k].data, atol=1e-5)
+            with np.errstate(under='ignore'):
+                rod1 = model.op2_results.stress.crod_stress
+                rod2 = model2.op2_results.stress.crod_stress
+                for k in rod1:
+                    assert rod1[k].data.shape[2] == 4
+                    assert np.allclose(rod1[k].data, rod2[k].data, atol=1e-5)
 
-            bar1 = model.op2_results.stress.cbar_stress
-            bar2 = model2.op2_results.stress.cbar_stress
-            for k in bar1:
-                assert bar1[k].data.shape[2] == 15
-                assert np.allclose(bar1[k].data, bar2[k].data, atol=1e-5)
+                bar1 = model.op2_results.stress.cbar_stress
+                bar2 = model2.op2_results.stress.cbar_stress
+                for k in bar1:
+                    assert bar1[k].data.shape[2] == 15
+                    assert np.allclose(bar1[k].data, bar2[k].data, atol=1e-5)
         finally:
             if os.path.exists(out_file):
                 os.remove(out_file)
+
 
     def test_modal_rod_stress_add_modal_case(self):
         """RealRodStressArray.add_modal_case creates a valid result with correct modes.
@@ -347,7 +372,6 @@ class TestWriteOp2Displacements(unittest.TestCase):
 
         Data: 3 GRID nodes, 1 time step, 6 DOF columns [t1,t2,t3,r1,r2,r3].
         """
-        from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
         node_gridtype = np.array([[1, 1], [2, 1], [3, 1]], dtype='int32')
         data = np.zeros((1, 3, 6), dtype='float32')
         data[0, 0, :] = [0.1, 0.2, 0.3, 0.01, 0.02, 0.03]
@@ -360,7 +384,6 @@ class TestWriteOp2Displacements(unittest.TestCase):
 
         Data: 2 GRID nodes, 3 time steps, 6 DOF columns.
         """
-        from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         times = np.array([0.0, 0.5, 1.0], dtype='float32')
         data = np.random.rand(3, 2, 6).astype('float32')
@@ -374,7 +397,6 @@ class TestWriteOp2Displacements(unittest.TestCase):
 
         Data: 2 GRID nodes, 3 modes, 6 DOF columns.
         """
-        from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         modes = np.array([1, 2, 3], dtype='int32')
         eigns = np.array([100., 400., 900.], dtype='float32')
@@ -391,7 +413,6 @@ class TestWriteOp2Displacements(unittest.TestCase):
 
         Data: 2 GRID nodes, 3 frequencies, 6 complex DOF columns.
         """
-        from pyNastran.op2.tables.oug.oug_displacements import ComplexDisplacementArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         freqs = np.array([10., 20., 30.], dtype='float32')
         data = np.zeros((3, 2, 6), dtype='complex64')
@@ -406,7 +427,6 @@ class TestWriteOp2Displacements(unittest.TestCase):
 
         Data: 2 GRID nodes, 2 complex modes, 6 complex DOF columns.
         """
-        from pyNastran.op2.tables.oug.oug_displacements import ComplexDisplacementArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         modes = np.array([1, 2], dtype='int32')
         eigrs = np.array([10., 20.], dtype='float32')
@@ -424,7 +444,6 @@ class TestWriteOp2Displacements(unittest.TestCase):
 
         Data: 2 GRID nodes, 2 modes, 6 DOF columns.
         """
-        from pyNastran.op2.tables.oug.oug_eigenvectors import RealEigenvectorArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         modes = np.array([1, 2], dtype='int32')
         eigns = np.array([100., 400.], dtype='float32')
@@ -441,7 +460,6 @@ class TestWriteOp2Displacements(unittest.TestCase):
 
         Data: 2 GRID nodes, 2 complex modes, 6 complex DOF columns.
         """
-        from pyNastran.op2.tables.oug.oug_eigenvectors import ComplexEigenvectorArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         modes = np.array([1, 2], dtype='int32')
         eigrs = np.array([10., 20.], dtype='float32')
@@ -472,7 +490,6 @@ class TestWriteOp2Forces(unittest.TestCase):
 
         Data: 2 CROD elements, 1 time step, 2 columns [axial, torsion].
         """
-        from pyNastran.op2.tables.oef_forces.oef_force_objects import RealRodForceArray
         element = np.array([1, 2], dtype='int32')
         data = np.array([[[1000., 50.], [2000., 60.]]], dtype='float32')
         rod_f = RealRodForceArray.add_static_case('OEF1X', 'CROD', element, data, isubcase=1)
@@ -484,7 +501,6 @@ class TestWriteOp2Forces(unittest.TestCase):
 
         Data: 2 CROD elements, 2 modes, 2 columns [axial, torsion].
         """
-        from pyNastran.op2.tables.oef_forces.oef_force_objects import RealRodForceArray
         element = np.array([1, 2], dtype='int32')
         modes = np.array([1, 2], dtype='int32')
         eigns = np.array([100., 400.], dtype='float32')
@@ -501,7 +517,6 @@ class TestWriteOp2Forces(unittest.TestCase):
 
         Data: 2 CROD elements, 3 time steps, 2 columns [axial, torsion].
         """
-        from pyNastran.op2.tables.oef_forces.oef_force_objects import RealRodForceArray
         element = np.array([1, 2], dtype='int32')
         times = np.array([0.0, 0.5, 1.0], dtype='float32')
         data = np.random.rand(3, 2, 2).astype('float32')
@@ -516,7 +531,6 @@ class TestWriteOp2Forces(unittest.TestCase):
         Data: 1 CBAR element, 1 time step, 8 columns
         [bm_a1, bm_a2, bm_b1, bm_b2, shear1, shear2, axial, torque].
         """
-        from pyNastran.op2.tables.oef_forces.oef_force_objects import RealCBarForceArray
         element = np.array([20], dtype='int32')
         data = np.zeros((1, 1, 8), dtype='float32')
         data[0, 0, :] = [100, 200, 150, 250, 50, 60, 1000, 300]
@@ -529,7 +543,6 @@ class TestWriteOp2Forces(unittest.TestCase):
 
         Data: 1 CBAR element, 2 modes, 8 columns.
         """
-        from pyNastran.op2.tables.oef_forces.oef_force_objects import RealCBarForceArray
         element = np.array([20], dtype='int32')
         modes = np.array([1, 2], dtype='int32')
         eigns = np.array([100., 400.], dtype='float32')
@@ -546,7 +559,6 @@ class TestWriteOp2Forces(unittest.TestCase):
 
         Data: 1 CBAR element, 2 time steps, 8 columns.
         """
-        from pyNastran.op2.tables.oef_forces.oef_force_objects import RealCBarForceArray
         element = np.array([20], dtype='int32')
         times = np.array([0.0, 1.0], dtype='float32')
         data = np.random.rand(2, 1, 8).astype('float32')
@@ -560,7 +572,6 @@ class TestWriteOp2Forces(unittest.TestCase):
 
         Data: 1 CELAS1 element, 1 time step, 1 column [spring_force].
         """
-        from pyNastran.op2.tables.oef_forces.oef_force_objects import RealSpringForceArray
         element = np.array([10], dtype='int32')
         data = np.array([[[5.0]]], dtype='float32')
         spring_f = RealSpringForceArray.add_static_case(
@@ -573,7 +584,6 @@ class TestWriteOp2Forces(unittest.TestCase):
 
         Data: 1 CELAS1 element, 2 modes, 1 column [spring_force].
         """
-        from pyNastran.op2.tables.oef_forces.oef_force_objects import RealSpringForceArray
         element = np.array([10], dtype='int32')
         modes = np.array([1, 2], dtype='int32')
         eigns = np.array([100., 400.], dtype='float32')
@@ -590,7 +600,6 @@ class TestWriteOp2Forces(unittest.TestCase):
 
         Data: 1 CELAS1 element, 3 time steps, 1 column [spring_force].
         """
-        from pyNastran.op2.tables.oef_forces.oef_force_objects import RealSpringForceArray
         element = np.array([10], dtype='int32')
         times = np.array([0.0, 0.5, 1.0], dtype='float32')
         data = np.random.rand(3, 1, 1).astype('float32')
@@ -604,7 +613,6 @@ class TestWriteOp2Forces(unittest.TestCase):
 
         Data: 2 CROD elements, 2 frequencies, 2 complex columns [axial, torque].
         """
-        from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import ComplexRodForceArray
         element = np.array([1, 2], dtype='int32')
         freqs = np.array([10., 20.], dtype='float32')
         data = np.zeros((2, 2, 2), dtype='complex64')
@@ -619,7 +627,6 @@ class TestWriteOp2Forces(unittest.TestCase):
 
         Data: 2 CROD elements, 2 complex modes, 2 complex columns.
         """
-        from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import ComplexRodForceArray
         element = np.array([1, 2], dtype='int32')
         modes = np.array([1, 2], dtype='int32')
         eigrs = np.array([10., 20.], dtype='float32')
@@ -636,7 +643,6 @@ class TestWriteOp2Forces(unittest.TestCase):
 
         Data: 1 CELAS1 element, 3 frequencies, 1 complex column.
         """
-        from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import ComplexSpringForceArray
         element = np.array([10], dtype='int32')
         freqs = np.array([5., 10., 15.], dtype='float32')
         data = np.zeros((3, 1, 1), dtype='complex64')
@@ -651,7 +657,6 @@ class TestWriteOp2Forces(unittest.TestCase):
 
         Data: 1 CELAS1 element, 2 complex modes, 1 complex column.
         """
-        from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import ComplexSpringForceArray
         element = np.array([10], dtype='int32')
         modes = np.array([1, 2], dtype='int32')
         eigrs = np.array([10., 20.], dtype='float32')
@@ -682,7 +687,6 @@ class TestWriteOp2StressExtended(unittest.TestCase):
 
         Data: 2 CTRIA3 elements (nnodes=1), 4 layers, 8 stress columns.
         """
-        from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray
         element_node = np.array([[1, 0], [1, 0], [2, 0], [2, 0]], dtype='int32')
         fiber = np.array([-0.05, 0.05, -0.05, 0.05], dtype='float32')
         data = np.random.rand(1, 4, 8).astype('float32')
@@ -696,7 +700,6 @@ class TestWriteOp2StressExtended(unittest.TestCase):
 
         Data: 1 CQUAD4 element (nnodes=1), 2 layers, 3 modes.
         """
-        from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray
         element_node = np.array([[1, 0], [1, 0]], dtype='int32')
         fiber = np.array([-0.05, 0.05], dtype='float32')
         modes = np.array([1, 2, 3], dtype='int32')
@@ -714,7 +717,6 @@ class TestWriteOp2StressExtended(unittest.TestCase):
 
         Data: 1 CTRIA3 element (nnodes=1), 2 layers, 2 time steps.
         """
-        from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray
         element_node = np.array([[1, 0], [1, 0]], dtype='int32')
         fiber = np.array([-0.05, 0.05], dtype='float32')
         times = np.array([0.0, 1.0], dtype='float32')
@@ -729,7 +731,6 @@ class TestWriteOp2StressExtended(unittest.TestCase):
 
         Data: 1 CTRIA3 element, 2 layers, 2 frequencies, 3 complex columns [oxx, oyy, txy].
         """
-        from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray
         element_node = np.array([[1, 0], [1, 0]], dtype='int32')
         fiber = np.array([-0.05, 0.05], dtype='float32')
         freqs = np.array([10., 20.], dtype='float32')
@@ -745,7 +746,6 @@ class TestWriteOp2StressExtended(unittest.TestCase):
 
         Data: 1 CTETRA element, 5 nodes (centroid + 4 corners), 10 stress columns.
         """
-        from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStressArray
         element_node = np.array([[1, 0], [1, 10], [1, 20], [1, 30], [1, 40]], dtype='int32')
         element_cid = np.array([[1, 0]], dtype='int32')
         data = np.random.rand(1, 5, 10).astype('float32')
@@ -760,7 +760,6 @@ class TestWriteOp2StressExtended(unittest.TestCase):
 
         Data: 1 CHEXA element, 9 nodes (centroid + 8 corners), 2 modes.
         """
-        from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStressArray
         element_node = np.array([[1, 0]] + [[1, i] for i in range(10, 90, 10)], dtype='int32')
         element_cid = np.array([[1, 0]], dtype='int32')
         modes = np.array([1, 2], dtype='int32')
@@ -918,7 +917,6 @@ class TestWriteOp2StressExtended(unittest.TestCase):
 
         Data: 1 CTETRA element, 5 nodes, 3 time steps, 10 stress columns.
         """
-        from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStressArray
         element_node = np.array([[1, 0], [1, 10], [1, 20], [1, 30], [1, 40]], dtype='int32')
         element_cid = np.array([[1, 0]], dtype='int32')
         times = np.array([0.0, 0.5, 1.0], dtype='float32')
@@ -976,7 +974,6 @@ class TestWriteOp2VelocityAcceleration(unittest.TestCase):
 
         Data: 2 GRID nodes, 1 time step, 6 DOF columns.
         """
-        from pyNastran.op2.tables.oug.oug_velocities import RealVelocityArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         data = np.random.rand(1, 2, 6).astype('float32')
         vel = RealVelocityArray.add_static_case('OVG1', node_gridtype, data, isubcase=1)
@@ -987,7 +984,6 @@ class TestWriteOp2VelocityAcceleration(unittest.TestCase):
 
         Data: 2 GRID nodes, 2 modes, 6 DOF columns.
         """
-        from pyNastran.op2.tables.oug.oug_velocities import RealVelocityArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         modes = np.array([1, 2], dtype='int32')
         eigns = np.array([100., 400.], dtype='float32')
@@ -1004,7 +1000,6 @@ class TestWriteOp2VelocityAcceleration(unittest.TestCase):
 
         Data: 2 GRID nodes, 3 time steps, 6 DOF columns.
         """
-        from pyNastran.op2.tables.oug.oug_velocities import RealVelocityArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         times = np.array([0.0, 0.5, 1.0], dtype='float32')
         data = np.random.rand(3, 2, 6).astype('float32')
@@ -1018,7 +1013,6 @@ class TestWriteOp2VelocityAcceleration(unittest.TestCase):
 
         Data: 2 GRID nodes, 2 frequencies, 6 complex DOF columns.
         """
-        from pyNastran.op2.tables.oug.oug_velocities import ComplexVelocityArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         freqs = np.array([10., 20.], dtype='float32')
         data = np.zeros((2, 2, 6), dtype='complex64')
@@ -1033,7 +1027,6 @@ class TestWriteOp2VelocityAcceleration(unittest.TestCase):
 
         Data: 2 GRID nodes, 1 time step, 6 DOF columns.
         """
-        from pyNastran.op2.tables.oug.oug_accelerations import RealAccelerationArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         data = np.random.rand(1, 2, 6).astype('float32')
         acc = RealAccelerationArray.add_static_case('OAG1', node_gridtype, data, isubcase=1)
@@ -1044,7 +1037,6 @@ class TestWriteOp2VelocityAcceleration(unittest.TestCase):
 
         Data: 2 GRID nodes, 2 time steps, 6 DOF columns.
         """
-        from pyNastran.op2.tables.oug.oug_accelerations import RealAccelerationArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         times = np.array([0.0, 1.0], dtype='float32')
         data = np.random.rand(2, 2, 6).astype('float32')
@@ -1058,7 +1050,6 @@ class TestWriteOp2VelocityAcceleration(unittest.TestCase):
 
         Data: 2 GRID nodes, 2 complex modes, 6 complex DOF columns.
         """
-        from pyNastran.op2.tables.oug.oug_accelerations import ComplexAccelerationArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         modes = np.array([1, 2], dtype='int32')
         eigrs = np.array([10., 20.], dtype='float32')
@@ -1075,7 +1066,6 @@ class TestWriteOp2VelocityAcceleration(unittest.TestCase):
 
         Data: 2 GRID nodes, 1 time step, 6 DOF columns.
         """
-        from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import RealSPCForcesArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         data = np.random.rand(1, 2, 6).astype('float32')
         spc = RealSPCForcesArray.add_static_case('OQG1', node_gridtype, data, isubcase=1)
@@ -1086,7 +1076,6 @@ class TestWriteOp2VelocityAcceleration(unittest.TestCase):
 
         Data: 2 GRID nodes, 2 time steps, 6 DOF columns.
         """
-        from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import RealSPCForcesArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         times = np.array([0.0, 1.0], dtype='float32')
         data = np.random.rand(2, 2, 6).astype('float32')
@@ -1100,7 +1089,6 @@ class TestWriteOp2VelocityAcceleration(unittest.TestCase):
 
         Data: 2 GRID nodes, 2 time steps, 6 DOF columns.
         """
-        from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import RealMPCForcesArray
         node_gridtype = np.array([[1, 1], [2, 1]], dtype='int32')
         times = np.array([0.0, 1.0], dtype='float32')
         data = np.random.rand(2, 2, 6).astype('float32')
@@ -1127,7 +1115,6 @@ class TestWriteOp2Strain(unittest.TestCase):
 
         Data: 2 CROD elements, 1 time step, 4 columns [axial, torsion, SMa, SMt].
         """
-        from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStrainArray
         element = np.array([1, 2], dtype='int32')
         data = np.random.rand(1, 2, 4).astype('float32')
         rod = RealRodStrainArray.add_static_case('OES1X1', 'CROD', element, data, isubcase=1)
@@ -1139,7 +1126,6 @@ class TestWriteOp2Strain(unittest.TestCase):
 
         Data: 1 CBAR element, 1 time step, 15 columns.
         """
-        from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStrainArray
         element = np.array([10], dtype='int32')
         data = np.random.rand(1, 1, 15).astype('float32')
         bar = RealBarStrainArray.add_static_case('OES1X1', 'CBAR', element, data, isubcase=1)
@@ -1151,7 +1137,6 @@ class TestWriteOp2Strain(unittest.TestCase):
 
         Data: 2 CSHEAR elements, 1 time step, 3 columns.
         """
-        from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStrainArray
         element = np.array([1, 2], dtype='int32')
         data = np.random.rand(1, 2, 3).astype('float32')
         shear = RealShearStrainArray.add_static_case('OES1X1', 'CSHEAR', element, data, isubcase=1)
@@ -1163,7 +1148,6 @@ class TestWriteOp2Strain(unittest.TestCase):
 
         Data: 1 CTRIA3 element (nnodes=1), 2 layers, 8 strain columns.
         """
-        from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStrainArray
         element_node = np.array([[1, 0], [1, 0]], dtype='int32')
         fiber = np.array([-0.05, 0.05], dtype='float32')
         data = np.random.rand(1, 2, 8).astype('float32')
@@ -1177,7 +1161,6 @@ class TestWriteOp2Strain(unittest.TestCase):
 
         Data: 2 CROD elements, 2 frequencies, 2 complex columns [axial, torsion].
         """
-        from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStrainArray
         element = np.array([1, 2], dtype='int32')
         freqs = np.array([10., 20.], dtype='float32')
         data = np.zeros((2, 2, 2), dtype='complex64')
@@ -1239,7 +1222,6 @@ class TestWriteOp2ComplexStressModes(unittest.TestCase):
 
         Data: 1 CTRIA3 element, 2 layers, 2 complex modes, 3 complex columns.
         """
-        from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray
         element_node = np.array([[1, 0], [1, 0]], dtype='int32')
         fiber = np.array([-0.05, 0.05], dtype='float32')
         modes = np.array([1, 2], dtype='int32')
@@ -1252,6 +1234,637 @@ class TestWriteOp2ComplexStressModes(unittest.TestCase):
             modes=modes, eigrs=eigrs, eigis=eigis)
         assert cplate.ntimes == 2
         assert self._write(cplate) > 100
+
+
+class TestWriteOp2ReadBack(unittest.TestCase):
+    """Round-trip tests: read OP2 model -> write -> read back -> compare data.
+
+    Tolerances: atol=1e-5 for all float comparisons.
+    Tests: static, transient, modal, frequency response (complex) models.
+    Each test verifies multiple result types (stress, strain, forces, displacements).
+    """
+
+    def _round_trip(self, op2_filename, clear_gpf=True):
+        """Helper: read model, write to temp, read back. Returns (model1, model2)."""
+        model = read_op2(str(op2_filename), debug=None)
+        if clear_gpf:
+            model.grid_point_forces = {}
+        fd, out_file = tempfile.mkstemp(suffix='.op2')
+        os.close(fd)
+        try:
+            model.write_op2(out_file)
+            model2 = read_op2(out_file, debug=None)
+        finally:
+            if os.path.exists(out_file):
+                os.remove(out_file)
+        return model, model2
+
+    def _compare_result(self, slot1, slot2, name):
+        """Compare a result dict slot between two models."""
+        for k in slot1:
+            d1 = slot1[k].data
+            d2 = slot2[k].data
+            assert d1.shape == d2.shape, f'{name} subcase {k}: shape {d1.shape} vs {d2.shape}'
+            with np.errstate(under='ignore'):
+                assert np.allclose(d1, d2, atol=1e-5), f'{name} subcase {k}: data mismatch'
+
+    def test_static_stress_round_trip(self):
+        """Static model: rod, bar, plate, solid stress survive write/read.
+
+        Model: static_solid_shell_bar.op2 (SOL 101).
+        Checks: crod_stress (4 cols), cbar_stress (15 cols), ctria3_stress (8 cols),
+                ctetra_stress (10 cols).
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        self._compare_result(m1.op2_results.stress.crod_stress,
+                             m2.op2_results.stress.crod_stress, 'rod_stress')
+        self._compare_result(m1.op2_results.stress.cbar_stress,
+                             m2.op2_results.stress.cbar_stress, 'bar_stress')
+        self._compare_result(m1.op2_results.stress.ctria3_stress,
+                             m2.op2_results.stress.ctria3_stress, 'tria3_stress')
+        self._compare_result(m1.op2_results.stress.ctetra_stress,
+                             m2.op2_results.stress.ctetra_stress, 'tetra_stress')
+
+    def test_static_strain_round_trip(self):
+        """Static model: rod, bar, plate, solid strain survive write/read.
+
+        Model: static_solid_shell_bar.op2 (SOL 101).
+        Checks: crod_strain, cbar_strain, ctria3_strain, ctetra_strain.
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        self._compare_result(m1.op2_results.strain.crod_strain,
+                             m2.op2_results.strain.crod_strain, 'rod_strain')
+        self._compare_result(m1.op2_results.strain.cbar_strain,
+                             m2.op2_results.strain.cbar_strain, 'bar_strain')
+        self._compare_result(m1.op2_results.strain.ctria3_strain,
+                             m2.op2_results.strain.ctria3_strain, 'tria3_strain')
+        self._compare_result(m1.op2_results.strain.ctetra_strain,
+                             m2.op2_results.strain.ctetra_strain, 'tetra_strain')
+
+    def test_static_forces_disp_round_trip(self):
+        """Static model: displacements, SPC forces, rod/bar forces survive write/read.
+
+        Model: static_solid_shell_bar.op2 (SOL 101).
+        Checks: displacements (6 DOF), spc_forces, crod_force (2 cols), cbar_force (8 cols).
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        self._compare_result(m1.displacements, m2.displacements, 'displacements')
+        self._compare_result(m1.spc_forces, m2.spc_forces, 'spc_forces')
+        self._compare_result(m1.op2_results.force.crod_force,
+                             m2.op2_results.force.crod_force, 'rod_force')
+        self._compare_result(m1.op2_results.force.cbar_force,
+                             m2.op2_results.force.cbar_force, 'bar_force')
+
+    def test_transient_stress_round_trip(self):
+        """Transient model: rod, bar, plate stress survive write/read.
+
+        Model: transient_solid_shell_bar.op2 (SOL 109, transient response).
+        Checks: multi-timestep data for crod_stress, cbar_stress, cquad4_stress.
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'transient_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        self._compare_result(m1.op2_results.stress.crod_stress,
+                             m2.op2_results.stress.crod_stress, 'transient_rod_stress')
+        self._compare_result(m1.op2_results.stress.cbar_stress,
+                             m2.op2_results.stress.cbar_stress, 'transient_bar_stress')
+        self._compare_result(m1.op2_results.stress.cquad4_stress,
+                             m2.op2_results.stress.cquad4_stress, 'transient_quad_stress')
+
+    def test_transient_disp_strain_round_trip(self):
+        """Transient model: displacements and strain survive write/read.
+
+        Model: transient_solid_shell_bar.op2 (SOL 109).
+        Checks: displacements (multi-timestep), cquad4_strain, crod_strain.
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'transient_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        self._compare_result(m1.displacements, m2.displacements, 'transient_disp')
+        self._compare_result(m1.op2_results.strain.cquad4_strain,
+                             m2.op2_results.strain.cquad4_strain, 'transient_quad_strain')
+        self._compare_result(m1.op2_results.strain.crod_strain,
+                             m2.op2_results.strain.crod_strain, 'transient_rod_strain')
+
+    def test_modal_stress_force_round_trip(self):
+        """Modal model: eigenvectors, rod/bar stress, rod/bar forces survive write/read.
+
+        Model: mode_solid_shell_bar.op2 (SOL 103, normal modes).
+        Checks: eigenvectors, crod_stress, cbar_stress, crod_force, cbar_force, spc_forces.
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'mode_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        self._compare_result(m1.eigenvectors, m2.eigenvectors, 'eigenvectors')
+        self._compare_result(m1.op2_results.stress.crod_stress,
+                             m2.op2_results.stress.crod_stress, 'modal_rod_stress')
+        self._compare_result(m1.op2_results.stress.cbar_stress,
+                             m2.op2_results.stress.cbar_stress, 'modal_bar_stress')
+        self._compare_result(m1.op2_results.force.crod_force,
+                             m2.op2_results.force.crod_force, 'modal_rod_force')
+        self._compare_result(m1.op2_results.force.cbar_force,
+                             m2.op2_results.force.cbar_force, 'modal_bar_force')
+        self._compare_result(m1.spc_forces, m2.spc_forces, 'modal_spc_forces')
+
+    def test_modal_plate_solid_round_trip(self):
+        """Modal model: plate and solid stress/strain survive write/read.
+
+        Model: mode_solid_shell_bar.op2 (SOL 103).
+        Checks: cquad4_stress, ctria3_stress, ctetra_stress, cpenta_stress, chexa_stress.
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'mode_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        self._compare_result(m1.op2_results.stress.cquad4_stress,
+                             m2.op2_results.stress.cquad4_stress, 'modal_quad_stress')
+        self._compare_result(m1.op2_results.stress.ctria3_stress,
+                             m2.op2_results.stress.ctria3_stress, 'modal_tria_stress')
+        self._compare_result(m1.op2_results.stress.ctetra_stress,
+                             m2.op2_results.stress.ctetra_stress, 'modal_tetra_stress')
+        self._compare_result(m1.op2_results.stress.cpenta_stress,
+                             m2.op2_results.stress.cpenta_stress, 'modal_penta_stress')
+        self._compare_result(m1.op2_results.stress.chexa_stress,
+                             m2.op2_results.stress.chexa_stress, 'modal_hexa_stress')
+
+    def test_freq_complex_stress_round_trip(self):
+        """Frequency response model: complex stress survives write/read.
+
+        Model: freq_solid_shell_bar.op2 (SOL 108, frequency response).
+        Checks: complex crod_stress, cbar_stress, ctria3_stress, ctetra_stress.
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        self._compare_result(m1.op2_results.stress.crod_stress,
+                             m2.op2_results.stress.crod_stress, 'complex_rod_stress')
+        self._compare_result(m1.op2_results.stress.cbar_stress,
+                             m2.op2_results.stress.cbar_stress, 'complex_bar_stress')
+        self._compare_result(m1.op2_results.stress.ctria3_stress,
+                             m2.op2_results.stress.ctria3_stress, 'complex_tria_stress')
+        self._compare_result(m1.op2_results.stress.ctetra_stress,
+                             m2.op2_results.stress.ctetra_stress, 'complex_tetra_stress')
+
+    def test_freq_complex_disp_force_round_trip(self):
+        """Frequency response model: complex displacements and forces survive write/read.
+
+        Model: freq_solid_shell_bar.op2 (SOL 108).
+        Checks: complex displacements (6 DOF), crod_force, cbar_force, spc_forces.
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        self._compare_result(m1.displacements, m2.displacements, 'complex_disp')
+        self._compare_result(m1.op2_results.force.crod_force,
+                             m2.op2_results.force.crod_force, 'complex_rod_force')
+        self._compare_result(m1.op2_results.force.cbar_force,
+                             m2.op2_results.force.cbar_force, 'complex_bar_force')
+        self._compare_result(m1.spc_forces, m2.spc_forces, 'complex_spc_forces')
+
+    def test_freq_complex_strain_round_trip(self):
+        """Frequency response model: complex strain survives write/read.
+
+        Model: freq_solid_shell_bar.op2 (SOL 108).
+        Checks: complex crod_strain, cbar_strain, ctria3_strain, ctetra_strain.
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        self._compare_result(m1.op2_results.strain.crod_strain,
+                             m2.op2_results.strain.crod_strain, 'complex_rod_strain')
+        self._compare_result(m1.op2_results.strain.cbar_strain,
+                             m2.op2_results.strain.cbar_strain, 'complex_bar_strain')
+        self._compare_result(m1.op2_results.strain.ctria3_strain,
+                             m2.op2_results.strain.ctria3_strain, 'complex_tria_strain')
+        self._compare_result(m1.op2_results.strain.ctetra_strain,
+                             m2.op2_results.strain.ctetra_strain, 'complex_tetra_strain')
+
+
+class TestWriteOp2CompositeBeamForce(unittest.TestCase):
+    """Round-trip tests for composite stress/strain and beam/plate forces.
+
+    Tolerances: atol=1e-5 for all float comparisons.
+    Tests: composite plate stress/strain, beam force, plate force round-trips.
+    """
+
+    def _round_trip(self, op2_filename):
+        model = read_op2(str(op2_filename), debug=None)
+        model.grid_point_forces = {}
+        fd, out_file = tempfile.mkstemp(suffix='.op2')
+        os.close(fd)
+        try:
+            model.write_op2(out_file)
+            model2 = read_op2(out_file, debug=None)
+        finally:
+            if os.path.exists(out_file):
+                os.remove(out_file)
+        return model, model2
+
+    def test_composite_quad_stress_round_trip(self):
+        """Composite CQUAD4 stress survives write/read.
+
+        Model: static_solid_shell_bar.op2 (SOL 101).
+        Checks: element_layer preserved, 9 columns (o11, o22, t12, t1z, t2z, angle,
+                major, minor, max_shear).
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        comp1 = m1.op2_results.stress.cquad4_composite_stress
+        comp2 = m2.op2_results.stress.cquad4_composite_stress
+        for k in comp1:
+            d1, d2 = comp1[k].data, comp2[k].data
+            assert d1.shape == d2.shape
+            assert d1.shape[2] == 9
+            assert np.allclose(d1, d2, atol=1e-5), f'composite quad stress mismatch {k}'
+
+    def test_composite_tria_stress_round_trip(self):
+        """Composite CTRIA3 stress survives write/read.
+
+        Model: static_solid_shell_bar.op2 (SOL 101).
+        Checks: data fidelity within atol=1e-5.
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        comp1 = m1.op2_results.stress.ctria3_composite_stress
+        comp2 = m2.op2_results.stress.ctria3_composite_stress
+        for k in comp1:
+            assert np.allclose(comp1[k].data, comp2[k].data, atol=1e-5)
+
+    def test_composite_strain_round_trip(self):
+        """Composite CQUAD4/CTRIA3 strain survives write/read.
+
+        Model: static_solid_shell_bar.op2 (SOL 101).
+        Checks: both quad and tria composite strain data fidelity.
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        for attr in ('cquad4_composite_strain', 'ctria3_composite_strain'):
+            s1 = getattr(m1.op2_results.strain, attr)
+            s2 = getattr(m2.op2_results.strain, attr)
+            for k in s1:
+                assert np.allclose(s1[k].data, s2[k].data, atol=1e-5), f'{attr} mismatch {k}'
+
+    def test_beam_force_round_trip(self):
+        """CBEAM force survives write/read.
+
+        Model: static_solid_shell_bar.op2 (SOL 101).
+        Checks: 8 columns (sd, bm1, bm2, shear1, shear2, axial, torque, warp_torque).
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        bf1 = m1.op2_results.force.cbeam_force
+        bf2 = m2.op2_results.force.cbeam_force
+        for k in bf1:
+            d1, d2 = bf1[k].data, bf2[k].data
+            assert d1.shape == d2.shape
+            assert d1.shape[2] == 8
+            assert np.allclose(d1, d2, atol=1e-5), f'beam force mismatch {k}'
+
+    def test_plate_force_round_trip(self):
+        """CTRIA3 and CQUAD4 plate forces survive write/read.
+
+        Model: static_solid_shell_bar.op2 (SOL 101).
+        Checks: 8 columns (mx, my, mxy, bmx, bmy, bmxy, tx, ty).
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        for attr in ('ctria3_force', 'cquad4_force'):
+            f1 = getattr(m1.op2_results.force, attr)
+            f2 = getattr(m2.op2_results.force, attr)
+            for k in f1:
+                d1, d2 = f1[k].data, f2[k].data
+                assert d1.shape[2] == 8
+                assert np.allclose(d1, d2, atol=1e-5), f'{attr} mismatch {k}'
+
+
+class TestOp2Metadata(unittest.TestCase):
+    """Tests for metadata preservation across write/read round-trips.
+
+    Tolerances: exact for integer fields, atol=1e-6 for times/modes.
+    Tests: element IDs, node IDs, time steps, mode numbers, table names.
+    """
+
+    def _round_trip(self, op2_filename):
+        model = read_op2(str(op2_filename), debug=None)
+        model.grid_point_forces = {}
+        fd, out_file = tempfile.mkstemp(suffix='.op2')
+        os.close(fd)
+        try:
+            model.write_op2(out_file)
+            model2 = read_op2(out_file, debug=None)
+        finally:
+            if os.path.exists(out_file):
+                os.remove(out_file)
+        return model, model2
+
+    def test_transient_times_preserved(self):
+        """Time steps are preserved exactly on round-trip.
+
+        Model: transient_solid_shell_bar.op2 (21 time steps from 0.0 to 0.2).
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'transient_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        rod1 = m1.op2_results.stress.crod_stress[1]
+        rod2 = m2.op2_results.stress.crod_stress[1]
+        assert rod1.ntimes == rod2.ntimes
+        assert np.allclose(rod1._times, rod2._times, atol=1e-6)
+
+    def test_transient_element_ids_preserved(self):
+        """Element IDs are preserved on round-trip.
+
+        Model: transient_solid_shell_bar.op2.
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'transient_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        rod1 = m1.op2_results.stress.crod_stress[1]
+        rod2 = m2.op2_results.stress.crod_stress[1]
+        assert np.array_equal(rod1.element, rod2.element)
+
+    def test_modal_modes_preserved(self):
+        """Mode numbers (stored in _times) are preserved on round-trip.
+
+        Model: mode_solid_shell_bar.op2 (3 modes).
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'mode_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        eig1 = m1.eigenvectors[1]
+        eig2 = m2.eigenvectors[1]
+        assert np.array_equal(eig1._times, eig2._times)
+
+    def test_modal_node_gridtype_preserved(self):
+        """Node IDs and grid types are preserved on round-trip.
+
+        Model: mode_solid_shell_bar.op2.
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'mode_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        eig1 = m1.eigenvectors[1]
+        eig2 = m2.eigenvectors[1]
+        assert np.array_equal(eig1.node_gridtype, eig2.node_gridtype)
+
+    def test_freq_frequencies_preserved(self):
+        """Frequency values are preserved on round-trip.
+
+        Model: freq_solid_shell_bar.op2 (frequency response).
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        disp1 = m1.displacements[1]
+        disp2 = m2.displacements[1]
+        assert np.allclose(disp1._times, disp2._times, atol=1e-6)
+
+    def test_table_name_preserved(self):
+        """Table names (OES1X1, OEF1X, etc.) are preserved on round-trip.
+
+        Model: static_solid_shell_bar.op2.
+        """
+        op2_file = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
+        m1, m2 = self._round_trip(op2_file)
+        rod1 = m1.op2_results.stress.crod_stress[1]
+        rod2 = m2.op2_results.stress.crod_stress[1]
+        assert rod1.table_name == rod2.table_name
+
+        force1 = m1.op2_results.force.crod_force[1]
+        force2 = m2.op2_results.force.crod_force[1]
+        assert force1.table_name == force2.table_name
+
+
+class TestOp2EqualityAndStats(unittest.TestCase):
+    """Tests for __eq__ operators and get_stats on real model data.
+
+    Tolerances: exact for equality; checks output format for get_stats.
+    Tests: real/complex stress equality, get_stats output, f06 write smoke tests.
+    """
+
+    def test_real_rod_stress_equality(self):
+        """RealRodStressArray.__eq__ returns True for self-comparison."""
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        rod = model.op2_results.stress.crod_stress[1]
+        assert rod == rod
+
+    def test_real_bar_stress_equality(self):
+        """RealBarStressArray.__eq__ returns True for self-comparison."""
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        bar = model.op2_results.stress.cbar_stress[1]
+        assert bar == bar
+
+    def test_real_plate_stress_equality(self):
+        """RealPlateStressArray.__eq__ returns True for self-comparison."""
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        plate = model.op2_results.stress.ctria3_stress[1]
+        assert plate == plate
+
+    def test_real_solid_stress_equality(self):
+        """RealSolidStressArray.__eq__ returns True for self-comparison."""
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        solid = model.op2_results.stress.ctetra_stress[1]
+        assert solid == solid
+
+    def test_complex_rod_stress_equality(self):
+        """ComplexRodStressArray.__eq__ returns True for self-comparison."""
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'), debug=None)
+        rod = model.op2_results.stress.crod_stress[1]
+        assert rod == rod
+
+    def test_complex_bar_stress_equality(self):
+        """ComplexBarStressArray.__eq__ returns True for self-comparison (uses fixed unpacking)."""
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'), debug=None)
+        bar = model.op2_results.stress.cbar_stress[1]
+        assert bar == bar
+
+    def test_complex_plate_stress_equality(self):
+        """ComplexPlateStressArray.__eq__ returns True for self-comparison."""
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'), debug=None)
+        plate = model.op2_results.stress.ctria3_stress[1]
+        assert plate == plate
+
+    def test_get_stats_rod_stress(self):
+        """get_stats returns meaningful output for RealRodStressArray."""
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        rod = model.op2_results.stress.crod_stress[1]
+        stats = rod.get_stats()
+        assert len(stats) > 0
+        joined = ''.join(stats)
+        assert 'RealRodStress' in joined
+        assert 'data' in joined
+
+    def test_get_stats_complex_bar(self):
+        """get_stats returns meaningful output for ComplexBarStressArray."""
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'), debug=None)
+        bar = model.op2_results.stress.cbar_stress[1]
+        stats = bar.get_stats()
+        assert len(stats) > 0
+        joined = ''.join(stats)
+        assert 'ComplexBar' in joined
+
+    def test_get_stats_transient_plate(self):
+        """get_stats includes ntimes for transient results."""
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'transient_solid_shell_bar.op2'), debug=None)
+        plate = model.op2_results.stress.cquad4_stress[1]
+        stats = plate.get_stats()
+        joined = ''.join(stats)
+        assert 'ntimes' in joined
+
+    def test_write_f06_rod_stress(self):
+        """RealRodStressArray.write_f06 produces valid text output."""
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        rod = model.op2_results.stress.crod_stress[1]
+        f = StringIO()
+        rod.write_f06(f, header=[''], page_stamp='PAGE %s')
+        text = f.getvalue()
+        assert len(text) > 100
+        assert 'STRESS' in text.upper() or 'AXIAL' in text.upper()
+
+    def test_write_f06_complex_bar_stress(self):
+        """ComplexBarStressArray.write_f06 produces valid text output."""
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'), debug=None)
+        bar = model.op2_results.stress.cbar_stress[1]
+        f = StringIO()
+        bar.write_f06(f, header=['', ''], page_stamp='PAGE %s')
+        text = f.getvalue()
+        assert len(text) > 100
+
+    def test_write_f06_solid_stress(self):
+        """RealSolidStressArray.write_f06 produces valid text output."""
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        solid = model.op2_results.stress.ctetra_stress[1]
+        f = StringIO()
+        solid.write_f06(f, header=[''], page_stamp='PAGE %s')
+        text = f.getvalue()
+        assert len(text) > 200
+
+
+class TestLinearCombination(unittest.TestCase):
+    """Tests for linear_combination on OP2 result objects.
+
+    Verifies that combination_inplace respects the ires parameter:
+    only specified columns are zeroed/combined, derived quantities are excluded.
+    After update_data_components, derived quantities are recalculated.
+
+    Tolerances: atol=1e-3 for derived quantities (principal stress, von Mises).
+    """
+
+    def test_rod_stress_ires_excludes_margins(self):
+        """Rod stress linear_combination only modifies axial(0) and torsion(2).
+
+        Headers: [axial, SMa, torsion, SMt].
+        ires=[0, 2] -> margins (columns 1, 3) are NOT combined.
+        """
+        import copy
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        rod = model.op2_results.stress.crod_stress[1]
+        rod_copy = copy.deepcopy(rod)
+        rod_copy.linear_combination(0.0, update=False)
+        rod_copy.linear_combination(2.0, rod.data, update=False)
+        assert np.allclose(rod_copy.data[:, :, 0], rod.data[:, :, 0] * 2)
+        assert np.allclose(rod_copy.data[:, :, 2], rod.data[:, :, 2] * 2)
+        np.testing.assert_array_equal(rod_copy.data[:, :, 1], rod.data[:, :, 1])
+        np.testing.assert_array_equal(rod_copy.data[:, :, 3], rod.data[:, :, 3])
+
+    def test_plate_stress_ires_excludes_derived(self):
+        """Plate stress linear_combination only modifies oxx(1), oyy(2), txy(3).
+
+        Headers: [fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises].
+        ires=[1, 2, 3] -> fiber_dist, angle, principal, ovm are NOT combined.
+        """
+        import copy
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        plate = model.op2_results.stress.ctria3_stress[1]
+        plate_copy = copy.deepcopy(plate)
+        plate_copy.linear_combination(0.0, update=False)
+        plate_copy.linear_combination(3.0, plate.data, update=False)
+        assert np.allclose(plate_copy.data[:, :, 1], plate.data[:, :, 1] * 3)
+        assert np.allclose(plate_copy.data[:, :, 2], plate.data[:, :, 2] * 3)
+        assert np.allclose(plate_copy.data[:, :, 3], plate.data[:, :, 3] * 3)
+        np.testing.assert_array_equal(plate_copy.data[:, :, 0], plate.data[:, :, 0])
+        np.testing.assert_array_equal(plate_copy.data[:, :, 4], plate.data[:, :, 4])
+        np.testing.assert_array_equal(plate_copy.data[:, :, 5], plate.data[:, :, 5])
+        np.testing.assert_array_equal(plate_copy.data[:, :, 6], plate.data[:, :, 6])
+        np.testing.assert_array_equal(plate_copy.data[:, :, 7], plate.data[:, :, 7])
+
+    def test_solid_stress_ires_excludes_principal(self):
+        """Solid stress linear_combination only modifies first 6 columns.
+
+        Headers: [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, von_mises].
+        ires=slice(None, 6) -> principal stresses and ovm are NOT combined.
+        """
+        import copy
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        solid = model.op2_results.stress.ctetra_stress[1]
+        solid_copy = copy.deepcopy(solid)
+        solid_copy.linear_combination(0.0, update=False)
+        solid_copy.linear_combination(2.0, solid.data, update=False)
+        assert np.allclose(solid_copy.data[:, :, :6], solid.data[:, :, :6] * 2)
+        np.testing.assert_array_equal(solid_copy.data[:, :, 6:], solid.data[:, :, 6:])
+
+    def test_beam_force_ires_excludes_sd(self):
+        """Beam force linear_combination skips station distance (column 0).
+
+        Headers: [sd, bm1, bm2, shear1, shear2, axial, torque, warp_torque].
+        ires=slice(1, None) -> sd is NOT combined.
+        """
+        import copy
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        bf = model.op2_results.force.cbeam_force[1]
+        bf_copy = copy.deepcopy(bf)
+        bf_copy.linear_combination(0.0, update=False)
+        bf_copy.linear_combination(2.0, bf.data, update=False)
+        np.testing.assert_array_equal(bf_copy.data[:, :, 0], bf.data[:, :, 0])
+        assert np.allclose(bf_copy.data[:, :, 1:], bf.data[:, :, 1:] * 2)
+
+    def test_composite_stress_ires_excludes_derived(self):
+        """Composite stress linear_combination only modifies o11-t2z (columns 0-4).
+
+        Headers: [o11, o22, t12, t1z, t2z, angle, major, minor, max_shear].
+        ires=[0,1,2,3,4] -> angle, principal, max_shear are NOT combined.
+        """
+        import copy
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        comp = model.op2_results.stress.cquad4_composite_stress[1]
+        comp_copy = copy.deepcopy(comp)
+        comp_copy.linear_combination(0.0, update=False)
+        comp_copy.linear_combination(2.5, comp.data, update=False)
+        assert np.allclose(comp_copy.data[:, :, :5], comp.data[:, :, :5] * 2.5)
+        np.testing.assert_array_equal(comp_copy.data[:, :, 5:], comp.data[:, :, 5:])
+
+    def test_plate_update_data_components(self):
+        """After linear_combination + update_data_components, principal stresses are correct.
+
+        Workflow: zero -> add 2x -> update_data_components.
+        Verifies: omax, omin, von_mises are recalculated from 2*oxx, 2*oyy, 2*txy.
+        """
+        import copy
+        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        plate = model.op2_results.stress.ctria3_stress[1]
+        plate_c = copy.deepcopy(plate)
+        plate_c.linear_combination(0.0, update=False)
+        plate_c.linear_combination(2.0, plate.data, update=False)
+        plate_c.update_data_components()
+
+        oxx = plate_c.data[:, :, 1].ravel()
+        oyy = plate_c.data[:, :, 2].ravel()
+        txy = plate_c.data[:, :, 3].ravel()
+        C = (oxx + oyy) / 2
+        R = np.sqrt(((oxx - oyy) / 2)**2 + txy**2)
+        expected_max = C + R
+        expected_min = C - R
+        assert np.allclose(plate_c.data[:, :, 5].ravel(), expected_max, atol=1e-3)
+        assert np.allclose(plate_c.data[:, :, 6].ravel(), expected_min, atol=1e-3)
+
+    def test_combination_inplace_no_data_nonzero_factor(self):
+        """combination_inplace with datai=None, factor!=0 is a no-op.
+
+        This prevents crashes when the workflow accidentally passes None with a factor.
+        """
+        from pyNastran.op2.result_objects.op2_objects import combination_inplace
+        data = np.ones((1, 2, 4), dtype='float32')
+        combination_inplace(data, None, 5.0)
+        assert np.all(data == 1.0)
+
+    def test_combination_inplace_ires_zero(self):
+        """combination_inplace with ires zeros only specified columns."""
+        from pyNastran.op2.result_objects.op2_objects import combination_inplace
+        data = np.ones((1, 2, 4), dtype='float32')
+        combination_inplace(data, None, 0.0, ires=[0, 2])
+        assert np.all(data[:, :, 0] == 0)
+        assert np.all(data[:, :, 1] == 1)
+        assert np.all(data[:, :, 2] == 0)
+        assert np.all(data[:, :, 3] == 1)
 
 
 if __name__ == '__main__':

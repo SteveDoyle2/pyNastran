@@ -281,6 +281,33 @@ class CBUSH(Element):
                    self.g0.max(), self.coord_id.max(), self.ocid.max())
 
     @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+
+        all_g0 = np.all(self.g0 > 0)
+        no_cid = np.all(self.coord_id == -1)
+        no_ocid = np.all(self.ocid == -1)
+        all_s_default = np.allclose(self.s, 0.5)
+        is_basic = all_g0 and no_cid and no_ocid and all_s_default
+
+        if is_basic:
+            eids = np.char.rjust(array_str(self.element_id, size=8), 8).tolist()
+            pids = np.char.rjust(array_str(self.property_id, size=8), 8).tolist()
+            nodes_str = np.char.rjust(array_str(self.nodes, size=8), 8)
+            n1s = nodes_str[:, 0].tolist()
+            n2s = nodes_str[:, 1].tolist()
+            g0s = np.char.rjust(array_str(self.g0, size=8), 8).tolist()
+            lines = [f'CBUSH   {eid}{pid}{n1}{n2}{g0}\n'
+                     for eid, pid, n1, n2, g0
+                     in zip(eids, pids, n1s, n2s, g0s)]
+            bdf_file.write(''.join(lines))
+        else:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+
+    @parse_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1052,7 +1079,11 @@ class CBUSH1D(Element):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
+            coord_id = np.hstack([self.coord_id, coord_id])
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
@@ -1353,7 +1384,23 @@ class PBUSH1D(Property):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            ifile = np.hstack([self.ifile, ifile])
+            property_id = np.hstack([self.property_id, property_id])
+            k = np.hstack([self.k, k])
+            c = np.hstack([self.c, c])
+            sa = np.hstack([self.sa, sa])
+            se = np.hstack([self.se, se])
+            mass = np.hstack([self.mass, mass])
+            spring_type = np.hstack([self.spring_type, spring_type])
+            spring_table = np.hstack([self.spring_table, spring_table])
+            spring_equation = np.hstack([self.spring_equation, spring_equation])
+            damper_type = np.hstack([self.damper_type, damper_type])
+            damper_table = np.hstack([self.damper_table, damper_table])
+            damper_equation = np.hstack([self.damper_equation, damper_equation])
+            shock_type = np.hstack([self.shock_type, shock_type])
+            shock_table = np.hstack([self.shock_table, shock_table])
+            shock_equation = np.hstack([self.shock_equation, shock_equation])
+            gener_equation = np.hstack([self.gener_equation, gener_equation])
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.k = k

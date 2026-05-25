@@ -2427,7 +2427,7 @@ class CAERO1(BaseCard):
         """
         if self.lchord != 0 or self.lspan != 0:
             raise NotImplementedError()
-        ichord, ispan = self.get_box_index(box_id)
+        ispan, ichord = self.get_box_index(box_id)
 
         le_vector = self.p4 - self.p1
         delta_xyz = le_vector * ((ispan + 0.5)/self.nspan)

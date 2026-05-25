@@ -144,6 +144,9 @@ class CELAS1(Element):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
+        if size == 8:
+            self.write_file_8(bdf_file, write_card_header=write_card_header)
+            return
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -155,6 +158,25 @@ class CELAS1(Element):
                            nodes[1], components[1]]
             bdf_file.write(print_card(list_fields))
         return
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=16, write_card_header=write_card_header)
+            return
+        eids = np.char.rjust(array_str(self.element_id, size=8), 8).tolist()
+        pids = np.char.rjust(array_str(self.property_id, size=8), 8).tolist()
+        nodes_ = np.char.rjust(array_default_int(self.nodes, default=0, size=8), 8)
+        comps_ = np.char.rjust(array_default_int(self.components, default=0, size=8), 8)
+        g1s = nodes_[:, 0].tolist()
+        c1s = comps_[:, 0].tolist()
+        g2s = nodes_[:, 1].tolist()
+        c2s = comps_[:, 1].tolist()
+        lines = [f'CELAS1  {eid}{pid}{g1}{c1}{g2}{c2}'.rstrip() + '\n'
+                 for eid, pid, g1, c1, g2, c2
+                 in zip(eids, pids, g1s, c1s, g2s, c2s)]
+        bdf_file.write(''.join(lines))
 
     @property
     def allowed_properties(self):
@@ -301,6 +323,9 @@ class CELAS2(Element):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
+        if size == 8:
+            self.write_file_8(bdf_file, write_card_header=write_card_header)
+            return
 
         element_id = array_str(self.element_id, size=size)
         nodes_ = array_default_int(self.nodes, default=0, size=size)
@@ -310,13 +335,47 @@ class CELAS2(Element):
         ss = array_default_float(self.s, size=size, is_double=False)
         for eid, k, nodes, components, ge, s in zip(element_id, ks,
                                                     nodes_, components_, ges, ss):
-            #ge = set_blank_if_default(ge, 0.)
-            #s = set_blank_if_default(s, 0.)
             list_fields = ['CELAS2', eid, k,
                            nodes[0], components[0],
                            nodes[1], components[1], ge, s]
             bdf_file.write(print_card(list_fields))
         return
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=16, write_card_header=write_card_header)
+            return
+        has_ge_or_s = np.any(self.ge != 0.) or np.any(self.s != 0.)
+        if has_ge_or_s:
+            # per-element fallback for trailing blank trimming
+            from pyNastran.bdf.field_writer_8 import print_card_8
+            element_id = array_str(self.element_id, size=8)
+            nodes_ = array_default_int(self.nodes, default=0, size=8)
+            components_ = array_default_int(self.components, default=0, size=8)
+            ks = array_float(self.k, size=8, is_double=False)
+            ges = array_default_float(self.ge, size=8, is_double=False)
+            ss = array_default_float(self.s, size=8, is_double=False)
+            for eid, k, nodes, components, ge, s in zip(element_id, ks,
+                                                        nodes_, components_, ges, ss):
+                list_fields = ['CELAS2', eid, k,
+                               nodes[0], components[0],
+                               nodes[1], components[1], ge, s]
+                bdf_file.write(print_card_8(list_fields))
+            return
+        eids = np.char.rjust(array_str(self.element_id, size=8), 8).tolist()
+        ks = np.char.rjust(array_float(self.k, size=8, is_double=False), 8).tolist()
+        nodes_ = np.char.rjust(array_default_int(self.nodes, default=0, size=8), 8)
+        comps_ = np.char.rjust(array_default_int(self.components, default=0, size=8), 8)
+        g1s = nodes_[:, 0].tolist()
+        c1s = comps_[:, 0].tolist()
+        g2s = nodes_[:, 1].tolist()
+        c2s = comps_[:, 1].tolist()
+        lines = [f'CELAS2  {eid}{k}{g1}{c1}{g2}{c2}'.rstrip() + '\n'
+                 for eid, k, g1, c1, g2, c2
+                 in zip(eids, ks, g1s, c1s, g2s, c2s)]
+        bdf_file.write(''.join(lines))
 
 
 class CELAS3(Element):

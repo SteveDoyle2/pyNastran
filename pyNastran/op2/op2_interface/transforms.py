@@ -12,7 +12,8 @@ import sys
 from typing import Optional, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.femutils.coord_transforms import cylindrical_rotation_matrix
+from pyNastran.femutils.coord_transforms import (
+    cylindrical_rotation_matrix, spherical_rotation_matrix)
 from pyNastran.femutils.matrix3d import (
     dot_n33_33,
     #dot_n33_n33,
@@ -188,104 +189,72 @@ def _transform_cylindrical_displacement(inode: np.ndarray,
                                         xyz_cid0: np.ndarray,
                                         cid_transform: np.ndarray,
                                         is_global_cid: bool) -> None:
-    """helper method for transform_displacement_to_global"""
+    """helper method for transform_displacement_to_global
+
+    Transforms displacement/velocity/acceleration from cylindrical CD
+    to global. The theta for each node is computed via
+    coord.transform_node_to_local_array (global → coord-local).
+
+    Full transform (column-vector): v_global = beta^T @ R_theta @ v_cyl
+
+    """
     xyzi = xyz_cid0[inode, :]
-    rtz_cid = coord.xyz_to_coord_array(xyzi)
+    rtz_cid = coord.transform_node_to_local_array(xyzi)
 
     thetad = rtz_cid[:, 1]
     thetar = np.radians(thetad)
-    #print('thetad[cid=%s] = %s' % (coord.cid, thetad))
-    #print('thetar = ', thetar)
-    #self.log.debug('thetad = %s' % list(thetad))
 
-    #np.set_printoptions(precision=None, threshold=None, edgeitems=None, linewidth=None, suppress=True,
-                        #nanstr=None, infstr=None, formatter=None, sign=None, floatmode=None)
     xforms = cylindrical_rotation_matrix(thetar, dtype='float64')
-    #print('xforms.shape = %s' % str(xforms.shape))
+
+    # Full transform (column-vector): v_global = beta^T @ R_theta @ v_cyl
+    # combined[i] = beta^T @ R_theta[i]
+    if is_global_cid:
+        xforms_combined = xforms
+    else:
+        beta_T = cid_transform.T
+        xforms_combined = np.einsum('ij,njk->nik', beta_T, xforms)
 
     for itime in range(data.shape[0]):
         translation = data[itime, inode, :3]
         rotation = data[itime, inode, 3:]
-        #theta_max1 = translation[:, 1].max()
-        #theta_max2 = rotation[:, 1].max()
-        #print('theta_max = ', max(theta_max1, theta_max2))
-
-        if is_global_cid:
-            translation2 = dot_n33_n3(xforms, translation)
-            rotation2 = dot_n33_n3(xforms, rotation)
-        else:
-            #print('cid_transform[cid=%s]:\n%s' % (coord.cid, cid_transform))
-            #print('xforms:\n%s' % (xforms))
-            #xforms2 = dot_33_n33(xforms, cid_transform)  # wrong shape
-            #xforms2a = dot_33_n33(cid_transform, xforms)
-            #xforms2b = dot_n33_33(xforms, cid_transform)
-            #xforms2b = xforms
-            # triple products
-            #xforms2c = dot_33_n33(cid_transform.T, dot_n33_33(xforms, cid_transform))
-            #xforms2d = dot_33_n33(cid_transform, dot_n33_33(xforms, cid_transform.T))
-
-            #print('xform A:\n%s'  % xforms2a)
-            #print('xform B:\n%s'  % xforms2b)
-            #translation2 = dot_n33_n3(xforms2a, translation)
-            #xforms2 = xforms2b
-            if 1:
-                xforms2b = dot_n33_33(xforms, cid_transform)
-                translation2 = dot_n33_n3(xforms2b, translation)
-                rotation2 = dot_n33_n3(xforms2b, rotation)
-            elif 0:  # pragma: no cover
-                xforms2b = dot_n33_33(xforms, cid_transform)
-                translation2a = dot_n33_n3(xforms2b, translation)
-                rotation2a = dot_n33_n3(xforms2b, rotation)
-                print('translation2a.shape =', translation2a.shape)
-                assert translation.shape == translation2a.shape
-
-                translation2 = translation2a @ cid_transform
-                rotation2 = rotation2a @ cid_transform
-
-            elif 0:  # pragma: no cover
-                # bad shape
-                translation2a = dot_n33_n3(xforms, translation)
-                rotation2a = dot_n33_n3(xforms, rotation)
-                print('translation2a.shape =', translation2a.shape)
-                assert translation.shape == translation2a.shape
-
-                translation2 = cid_transform @ translation2a @ cid_transform
-                rotation2 = cid_transform @ rotation2a @ cid_transform
-            else:  # pragma: no cover
-                raise NotImplementedError('pick an option...')
-        #print('translation.shape', translation.shape)
-        #print('translation2.shape', translation2.shape)
-        data[itime, inode, :3] = translation2
-        data[itime, inode, 3:] = rotation2
+        data[itime, inode, :3] = dot_n33_n3(xforms_combined, translation)
+        data[itime, inode, 3:] = dot_n33_n3(xforms_combined, rotation)
 
 def _transform_spherical_displacement(inode: np.ndarray,
                                       data: np.ndarray,
                                       coord: Coord,
                                       xyz_cid0: np.ndarray,
-                                      cid_transform: dict[int, np.ndarray],
+                                      cid_transform: np.ndarray,
                                       is_global_cid: bool) -> None:
-    """helper method for transform_displacement_to_global"""
-    #xyzi = xyz_cid0[inode, :]
-    #_transform_spherical_displacement_func
-    #rtp_cid = coord.xyz_to_coord_array(xyzi)
-    #theta = rtp_cid[:, 1]
-    #phi = rtp_cid[:, 2]
+    """helper method for transform_displacement_to_global
+
+    Transforms displacement/velocity/acceleration from spherical CD
+    to global. The rotation matrix depends on each node's (theta, phi)
+    in the coord's local frame.
+
+    Full transform (column-vector): v_global = beta^T @ R_sph @ v_sph
+
+    """
+    xyzi = xyz_cid0[inode, :]
+    rtp_cid = coord.transform_node_to_local_array(xyzi)
+
+    thetar = np.radians(rtp_cid[:, 1])
+    phir = np.radians(rtp_cid[:, 2])
+
+    xforms = spherical_rotation_matrix(thetar, phir, dtype='float64')
+
+    # Full transform (column-vector): v_global = beta^T @ R_sph @ v_sph
+    if is_global_cid:
+        xforms_combined = xforms
+    else:
+        beta_T = cid_transform.T
+        xforms_combined = np.einsum('ij,njk->nik', beta_T, xforms)
+
     for itime in range(data.shape[0]):
         translation = data[itime, inode, :3]
         rotation = data[itime, inode, 3:]
-        #if 0:
-            #translation[:, 1] += theta
-            #translation[:, 2] += phi
-            #rotation[:, 1] += theta
-            #rotation[:, 2] += phi
-        translation = coord.coord_to_xyz_array(translation)
-        rotation = coord.coord_to_xyz_array(rotation)
-        if is_global_cid:
-            data[itime, inode, :3] = translation
-            data[itime, inode, 3:] = rotation
-            return
-        data[itime, inode, :3] = translation @ cid_transform
-        data[itime, inode, 3:] = rotation @ cid_transform
+        data[itime, inode, :3] = dot_n33_n3(xforms_combined, translation)
+        data[itime, inode, 3:] = dot_n33_n3(xforms_combined, rotation)
 
 def transform_gpforce_to_globali(subcase: Subcase,
                                  result: RealGridPointForces,
@@ -366,8 +335,7 @@ def transform_gpforce_to_globali(subcase: Subcase,
                 msg = ('xyz_cid is required for cylindrical '
                        'coordinate transforms')
                 raise RuntimeError(msg)
-            #_transform_cylindrical_displacement(inode, data, coord, xyz_cid0, cid_transform)
-            _transform_cylindrical_gpforce(inode_xyz, inode_gp, data,
+            _transform_cylindrical_gpforce(inode_gp_xyz, inode_gp, data,
                                            cid_transform, coord,
                                            xyz_cid0, log)
 
@@ -378,117 +346,83 @@ def transform_gpforce_to_globali(subcase: Subcase,
                        'coordinate transforms')
                 raise RuntimeError(msg)
 
-            _transform_spherical_gpforce(inode_xyz, inode_gp, data,
+            _transform_spherical_gpforce(inode_gp_xyz, inode_gp, data,
                                          cid_transform, coord,
                                          xyz_cid0, log)
         else:  # pragma: no cover
             raise RuntimeError(coord)
     return
 
-def _transform_cylindrical_gpforce(unused_inode_xyz: np.ndarray,
+def _transform_cylindrical_gpforce(inode_xyz: np.ndarray,
                                    inode_gp: np.ndarray,
                                    data: np.ndarray,
                                    cid_transform: np.ndarray,
                                    coord: Coord,
                                    xyz_cid0: np.ndarray,
                                    log: SimpleLogger) -> None:
-    """helper method for transform_gpforce_to_globali"""
-    #xyzi = xyz_cid0[inode_xyz, :]s
-    #rtz_cid = coord.xyz_to_coord_array(xyzi)
-    #theta_xyz = rtz_cid[inode_xyz, 1]
-    #theta = rtz_cid[inode_gp_xyz, 1]
-    log.debug('coord\n%s' % coord)
-    log.debug(str(cid_transform))
-    #print('theta_xyz = %s' % list(theta_xyz))
-    #print('theta     = %s' % list(theta))
+    """Transform grid point forces from cylindrical CD to global.
+
+    In a cylindrical coordinate system, the radial/tangential directions
+    are position-dependent (vary with theta). Each GPF entry must be rotated
+    by the theta of its grid point before applying the coord-to-global transform.
+
+    Full transform (column-vector): v_global = beta^T @ R_theta @ v_cyl
+
+    """
+    xyz_indices = inode_xyz[inode_gp]
+    xyzi = xyz_cid0[xyz_indices, :]
+    rtz_cid = coord.transform_node_to_local_array(xyzi)
+    thetad = rtz_cid[:, 1]
+    thetar = np.radians(thetad)
+
+    # R_theta: (n, 3, 3) — rotates cylindrical (r,t,z) to coord rectangular
+    xforms = cylindrical_rotation_matrix(thetar, dtype='float64')
+
+    # Full transform (column-vector): v_global = beta^T @ R_theta @ v_cyl
+    # combined[i] = beta^T @ R_theta[i]
+    is_global_cid = np.array_equal([1., 1., 1.], np.diagonal(cid_transform))
+    if is_global_cid:
+        xforms_combined = xforms
+    else:
+        beta_T = cid_transform.T
+        xforms_combined = np.einsum('ij,njk->nik', beta_T, xforms)
 
     for itime in range(data.shape[0]):
-        #inode = np.where(np.isin(nids_all, 2))[0]
-        #print('start', data[itime, inode_gp, :3])
         translation = data[itime, inode_gp, :3]
         rotation = data[itime, inode_gp, 3:]
-        if 0:  # pragma: no cover
-            # horrible
-            translation = coord.coord_to_xyz_array(data[itime, inode_gp, :3])
-            rotation = coord.coord_to_xyz_array(data[itime, inode_gp, 3:])
-            data[itime, inode_gp, :3] = translation @ cid_transform
-            data[itime, inode_gp, 3:] = rotation @ cid_transform
-        #elif 0:
-            ## expectedly horrible
-            #translation[:, 1] += theta
-            #rotation[:, 1] += theta
-            #translation = coord.coord_to_xyz_array(data[itime, inode_gp, :3])
-            #rotation = coord.coord_to_xyz_array(data[itime, inode_gp, 3:])
-            #data[itime, inode_gp, :3] = translation.dot(cid_transform)
-            #data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
-        #elif 0:
-            ## actually not bad...
-            #translation = coord.xyz_to_coord_array(translation)
-            #rotation = coord.xyz_to_coord_array(rotation)
-            #translation[:, 1] += theta
-            #rotation[:, 1] += theta
-            #translation = coord.coord_to_xyz_array(translation)
-            #rotation = coord.coord_to_xyz_array(rotation)
-            #data[itime, inode_gp, :3] = translation.dot(cid_transform)
-            #data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
-        #elif 0:
-            ## not that bad, worse than previous
-            #translation = coord.xyz_to_coord_array(translation)
-            #rotation = coord.xyz_to_coord_array(rotation)
-            #translation[:, 1] += theta
-            #rotation[:, 1] += theta
-            #translation = coord.coord_to_xyz_array(translation)
-            #rotation = coord.coord_to_xyz_array(rotation)
-            #data[itime, inode_gp, :3] = translation.dot(cid_transform.T)
-            #data[itime, inode_gp, 3:] = rotation.dot(cid_transform.T)
-        elif 1:
-            # doesn't work...actually pretty close
-            data[itime, inode_gp, :3] = translation @ cid_transform
-            data[itime, inode_gp, 3:] = rotation @ cid_transform
-        #elif 0:
-            ## very, very close
-            #data[itime, inode_gp, :3] = translation.dot(cid_transform.T)
-            #data[itime, inode_gp, 3:] = rotation.dot(cid_transform.T)
-        #elif 0:
-            ## is this just the same as one of the previous?
-            #data[itime, inode_gp, :3] = cid_transform.T.dot(translation.T).T
-            #data[itime, inode_gp, 3:] = cid_transform.T.dot(rotation.T).T
-        else:  # pragma: no cover
-            raise RuntimeError('no option selected...')
-
-        #if is_global_cid:
-            #data[itime, inode, :3] = translation
-            #data[itime, inode, 3:] = rotation
-            #continue
-        #data[itime, inode_gp, :3] = translation.dot(cid_transform)
-        #data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
-        #print('end', data[itime, inode_gp, :3])
+        data[itime, inode_gp, :3] = dot_n33_n3(xforms_combined, translation)
+        data[itime, inode_gp, 3:] = dot_n33_n3(xforms_combined, rotation)
 
 def _transform_spherical_gpforce(inode_xyz: np.ndarray,
-                                 unused_inode_gp: np.ndarray,
+                                 inode_gp: np.ndarray,
                                  data: np.ndarray,
                                  cid_transform: np.ndarray,
                                  coord: Coord,
-                                 unused_xyz_cid0: np.ndarray,
-                                 unused_log: SimpleLogger):
-    """helper method for transform_gpforce_to_globali"""
-    #xyzi = xyz_cid0[inode_xyz, :]
-    #rtp_cid = coord.xyz_to_coord_array(xyzi)
-    #theta = rtp_cid[:, 1]
-    #phi = rtp_cid[:, 2]
+                                 xyz_cid0: np.ndarray,
+                                 log: SimpleLogger) -> None:
+    """Transform grid point forces from spherical CD to global.
+
+    Full transform (column-vector): v_global = beta^T @ R_sph @ v_sph
+
+    """
+    xyz_indices = inode_xyz[inode_gp]
+    xyzi = xyz_cid0[xyz_indices, :]
+    rtp_cid = coord.transform_node_to_local_array(xyzi)
+
+    thetar = np.radians(rtp_cid[:, 1])
+    phir = np.radians(rtp_cid[:, 2])
+
+    xforms = spherical_rotation_matrix(thetar, phir, dtype='float64')
+
+    is_global_cid = np.array_equal([1., 1., 1.], np.diagonal(cid_transform))
+    if is_global_cid:
+        xforms_combined = xforms
+    else:
+        beta_T = cid_transform.T
+        xforms_combined = np.einsum('ij,njk->nik', beta_T, xforms)
+
     for itime in range(data.shape[0]):
-        #translation = data[itime, inode_xyz, :3]
-        #rotation = data[itime, inode_xyz, 3:]
-        #if 0:
-            #translation[:, 1] += theta
-            #translation[:, 2] += phi
-            #rotation[:, 1] += theta
-            #rotation[:, 2] += phi
-        translation = coord.coord_to_xyz_array(data[itime, inode_xyz, :3])
-        rotation = coord.coord_to_xyz_array(data[itime, inode_xyz, 3:])
-        #if is_global_cid:
-            #data[itime, inode_xyz, :3] = translation
-            #data[itime, inode_xyz, 3:] = rotation
-            #continue
-        data[itime, inode_xyz, :3] = translation.dot(cid_transform)
-        data[itime, inode_xyz, 3:] = rotation.dot(cid_transform)
+        translation = data[itime, inode_gp, :3]
+        rotation = data[itime, inode_gp, 3:]
+        data[itime, inode_gp, :3] = dot_n33_n3(xforms_combined, translation)
+        data[itime, inode_gp, 3:] = dot_n33_n3(xforms_combined, rotation)

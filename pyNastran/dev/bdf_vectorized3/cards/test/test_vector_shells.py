@@ -1921,6 +1921,62 @@ class TestShellsV3(unittest.TestCase):
         vol = quad_volume(model.grid, nodes, dthickness2)
         assert np.allclose(vol, expected_volume2), (vol, expected_volume2)
 
+    def test_pcompg_slice_card_by_property_id(self):
+        """Tests PCOMPG.slice_card_by_property_id with multiple properties and varying layers."""
+        model = BDF(debug=False)
+        mid = 1
+        E = 1e7
+        G = None
+        nu = 0.3
+        rho = 0.1
+        model.add_mat1(mid, E, G, nu, rho=rho)
+
+        # PCOMPG with 2 layers
+        model.add_pcompg(
+            pid=10,
+            global_ply_ids=[101, 102],
+            mids=[mid, mid],
+            thicknesses=[0.1, 0.2],
+            thetas=[0., 45.],
+            souts=['YES', 'NO'],
+        )
+        # PCOMPG with 3 layers
+        model.add_pcompg(
+            pid=20,
+            global_ply_ids=[201, 202, 203],
+            mids=[mid, mid, mid],
+            thicknesses=[0.05, 0.1, 0.05],
+            thetas=[0., 90., 0.],
+            souts=['NO', 'YES', 'NO'],
+        )
+        model.setup()
+
+        pcompg = model.pcompg
+        assert len(pcompg.property_id) == 2
+
+        # Slice single property
+        p10 = pcompg.slice_card_by_property_id(np.array([10]))
+        assert len(p10.property_id) == 1
+        assert p10.property_id[0] == 10
+        assert p10.nlayer[0] == 2
+        assert len(p10.material_id) == 2
+        assert len(p10.thickness) == 2
+        assert np.allclose(p10.thickness, [0.1, 0.2])
+        assert np.array_equal(p10.global_ply_id, [101, 102])
+
+        p20 = pcompg.slice_card_by_property_id(np.array([20]))
+        assert len(p20.property_id) == 1
+        assert p20.property_id[0] == 20
+        assert p20.nlayer[0] == 3
+        assert len(p20.material_id) == 3
+        assert np.allclose(p20.thickness, [0.05, 0.1, 0.05])
+        assert np.array_equal(p20.global_ply_id, [201, 202, 203])
+
+        # Slice both properties
+        p_both = pcompg.slice_card_by_property_id(np.array([10, 20]))
+        assert len(p_both.property_id) == 2
+        assert p_both.nlayer.sum() == 5
+
 
 class TestAxisymmetricShellsV3(unittest.TestCase):
     def test_cquadx4(self):
@@ -2248,6 +2304,106 @@ def make_dvmrel_optimization(model: BDF, params, material_type: str, mid: int,
                           comment='')
         model.add_desvar(j, 'v%s' % name, desvar_value)
     return j + 1
+
+
+class TestShellConsistentMassMatrix(unittest.TestCase):
+    """Tests for consistent mass matrix of shell elements.
+
+    Verifies:
+    - Total mass conservation: sum of scalar mass block = mass_per_area * area (tol=1e-10)
+    - Symmetry: M = M^T
+    - Positive semi-definiteness: all eigenvalues >= 0
+    - Quadratic shell mass matches linear for straight-sided geometry
+    """
+
+    def _check_mass_matrix(self, M: np.ndarray, nnodes: int, expected_mass: float,
+                           atol: float = 1e-10):
+        ndof = 3 * nnodes
+        assert M.shape == (1, ndof, ndof), f'shape {M.shape}'
+        assert np.allclose(M[0], M[0].T, atol=1e-14), 'not symmetric'
+        M_scalar = np.zeros((nnodes, nnodes))
+        for i in range(nnodes):
+            for j in range(nnodes):
+                M_scalar[i, j] = M[0, 3*i, 3*j]
+        total_mass = M_scalar.sum()
+        assert np.isclose(total_mass, expected_mass, atol=atol), \
+            f'total mass {total_mass} != expected {expected_mass}'
+        eigvals = np.linalg.eigvalsh(M[0])
+        assert eigvals.min() >= -1e-14, f'negative eigenvalue: {eigvals.min()}'
+
+    def test_ctria3_mass_matrix(self):
+        """CTRIA3: total mass = mpa * area = 2.0 * 0.5 = 1.0."""
+        from pyNastran.dev.bdf_vectorized3.cards.elements.shell_mass import consistent_mass_ctria3
+        nodes = np.array([[0,0,0],[1,0,0],[0,1,0]], dtype=float)[np.newaxis]
+        mpa = np.array([2.0])
+        M = consistent_mass_ctria3(nodes, mpa)
+        self._check_mass_matrix(M, 3, 1.0)
+
+    def test_cquad4_mass_matrix(self):
+        """CQUAD4: total mass = mpa * area = 3.0 * 1.0 = 3.0."""
+        from pyNastran.dev.bdf_vectorized3.cards.elements.shell_mass import consistent_mass_cquad4
+        nodes = np.array([[0,0,0],[1,0,0],[1,1,0],[0,1,0]], dtype=float)[np.newaxis]
+        mpa = np.array([3.0])
+        M = consistent_mass_cquad4(nodes, mpa)
+        self._check_mass_matrix(M, 4, 3.0)
+
+    def test_ctria6_mass_matrix(self):
+        """CTRIA6: straight-sided, total mass = mpa * area = 4.0 * 0.5 = 2.0."""
+        from pyNastran.dev.bdf_vectorized3.cards.elements.shell_mass import consistent_mass_ctria6
+        corners = np.array([[0,0,0],[1,0,0],[0,1,0]], dtype=float)
+        edges = [(0,1),(1,2),(2,0)]
+        mids = np.array([(corners[i]+corners[j])/2 for i,j in edges])
+        nodes = np.vstack([corners, mids])[np.newaxis]
+        mpa = np.array([4.0])
+        M = consistent_mass_ctria6(nodes, mpa)
+        self._check_mass_matrix(M, 6, 2.0)
+
+    def test_cquad8_mass_matrix(self):
+        """CQUAD8: straight-sided, total mass = mpa * area = 5.0 * 1.0 = 5.0."""
+        from pyNastran.dev.bdf_vectorized3.cards.elements.shell_mass import consistent_mass_cquad8
+        corners = np.array([[0,0,0],[1,0,0],[1,1,0],[0,1,0]], dtype=float)
+        edges = [(0,1),(1,2),(2,3),(3,0)]
+        mids = np.array([(corners[i]+corners[j])/2 for i,j in edges])
+        nodes = np.vstack([corners, mids])[np.newaxis]
+        mpa = np.array([5.0])
+        M = consistent_mass_cquad8(nodes, mpa)
+        self._check_mass_matrix(M, 8, 5.0)
+
+    def test_ctria6_mass_matches_ctria3(self):
+        """CTRIA6 straight-sided total mass matches CTRIA3."""
+        from pyNastran.dev.bdf_vectorized3.cards.elements.shell_mass import (
+            consistent_mass_ctria3, consistent_mass_ctria6,
+        )
+        corners = np.array([[0,0,0],[1,0,0],[0,1,0]], dtype=float)
+        edges = [(0,1),(1,2),(2,0)]
+        mids = np.array([(corners[i]+corners[j])/2 for i,j in edges])
+        mpa = np.array([7.0])
+        M3 = consistent_mass_ctria3(corners[np.newaxis], mpa)
+        M6 = consistent_mass_ctria6(np.vstack([corners, mids])[np.newaxis], mpa)
+        mass3 = sum(M3[0, 3*i, 3*j] for i in range(3) for j in range(3))
+        mass6 = sum(M6[0, 3*i, 3*j] for i in range(6) for j in range(6))
+        assert np.isclose(mass3, mass6, atol=1e-10), f'{mass3} != {mass6}'
+
+    def test_mass_matrix_via_model(self):
+        """consistent_mass_matrix() works through element class interface."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0,0,0])
+        model.add_grid(2, [1,0,0])
+        model.add_grid(3, [1,1,0])
+        model.add_grid(4, [0,1,0])
+        model.add_cquad4(1, 1, [1,2,3,4])
+        model.add_pshell(1, mid1=1, t=0.1)
+        model.add_mat1(1, 3e7, None, 0.3, rho=7800.)
+        model.setup()
+
+        M = model.cquad4.consistent_mass_matrix()
+        # mpa = 7800*0.1 = 780, area = 1.0, total = 780
+        M_scalar = np.zeros((4, 4))
+        for i in range(4):
+            for j in range(4):
+                M_scalar[i, j] = M[0, 3*i, 3*j]
+        total = M_scalar.sum()
+        assert np.isclose(total, 780.0, atol=1e-8), f'{total} != 780.0'
 
 
 if __name__ == '__main__':  # pragma: no cover

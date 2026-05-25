@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from .shell_quality import tri_quality_xyz, quad_quality_xyz, Quality # tri_quality_xyz0,
+from .shell_quality import tri_quality_xyz, quad_quality_xyz, Quality, _fast_searchsorted
 if TYPE_CHECKING:  # pragma: no cover
     from .solid import CTETRA, CHEXA, CPENTA, CPYRAM
 
@@ -17,9 +17,7 @@ def penta_quality(self: CPENTA) -> Quality:
 
     xyz = grid.xyz_cid0()
     nid = grid.node_id
-    inode = np.searchsorted(nid, nodes)
-    actual_nodes = nid[inode]
-    assert np.array_equal(actual_nodes, nodes)
+    inode = _fast_searchsorted(nid, nodes)
 
     tri_faces = [
         (3, 4, 5),
@@ -45,9 +43,7 @@ def pyram_quality(self: CPYRAM) -> Quality:
 
     xyz = grid.xyz_cid0()
     nid = grid.node_id
-    inode = np.searchsorted(nid, nodes)
-    actual_nodes = nid[inode]
-    assert np.array_equal(actual_nodes, nodes)
+    inode = _fast_searchsorted(nid, nodes)
 
     tri_faces = [
         (0, 1, 4),
@@ -65,9 +61,7 @@ def tetra_quality(self: CTETRA) -> Quality:
 
     xyz = grid.xyz_cid0()
     nid = grid.node_id
-    inode = np.searchsorted(nid, nodes)
-    actual_nodes = nid[inode]
-    assert np.array_equal(actual_nodes, nodes)
+    inode = _fast_searchsorted(nid, nodes)
     faces = [
         (0, 1, 2),
         (0, 1, 3),
@@ -123,9 +117,7 @@ def chexa_quality(self: CHEXA) -> Quality:
 
     xyz = grid.xyz_cid0()
     nid = grid.node_id
-    inode = np.searchsorted(nid, nodes)
-    actual_nodes = nid[inode]
-    assert np.array_equal(actual_nodes, nodes)
+    inode = _fast_searchsorted(nid, nodes)
 
     quad_faces = [
         (0, 1, 2, 3),  # 1, 2, 3, 4 # inward

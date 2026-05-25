@@ -145,6 +145,9 @@ class CDAMP1(Element):
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
+        if size == 8:
+            self.write_file_8(bdf_file, write_card_header=write_card_header)
+            return
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -156,6 +159,25 @@ class CDAMP1(Element):
                            nodes[1], components[1]]
             bdf_file.write(print_card(list_fields))
         return
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=16, write_card_header=write_card_header)
+            return
+        eids = np.char.rjust(array_str(self.element_id, size=8), 8).tolist()
+        pids = np.char.rjust(array_str(self.property_id, size=8), 8).tolist()
+        nodes_ = np.char.rjust(array_default_int(self.nodes, default=0, size=8), 8)
+        comps_ = np.char.rjust(array_default_int(self.components, default=0, size=8), 8)
+        g1s = nodes_[:, 0].tolist()
+        c1s = comps_[:, 0].tolist()
+        g2s = nodes_[:, 1].tolist()
+        c2s = comps_[:, 1].tolist()
+        lines = [f'CDAMP1  {eid}{pid}{g1}{c1}{g2}{c2}'.rstrip() + '\n'
+                 for eid, pid, g1, c1, g2, c2
+                 in zip(eids, pids, g1s, c1s, g2s, c2s)]
+        bdf_file.write(''.join(lines))
 
     @property
     def allowed_properties(self):
@@ -304,6 +326,9 @@ class CDAMP2(Element):
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
+        if size == 8:
+            self.write_file_8(bdf_file, write_card_header=write_card_header)
+            return
 
         element_id = array_str(self.element_id, size=size)
         bs = array_float(self.b, size=size, is_double=False)
@@ -316,6 +341,25 @@ class CDAMP2(Element):
                            nodes[1], components[1]]
             bdf_file.write(print_card(list_fields))
         return
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=16, write_card_header=write_card_header)
+            return
+        eids = np.char.rjust(array_str(self.element_id, size=8), 8).tolist()
+        bs = np.char.rjust(array_float(self.b, size=8, is_double=False), 8).tolist()
+        nodes_ = np.char.rjust(array_default_int(self.nodes, default=0, size=8), 8)
+        comps_ = np.char.rjust(array_default_int(self.components, default=0, size=8), 8)
+        g1s = nodes_[:, 0].tolist()
+        c1s = comps_[:, 0].tolist()
+        g2s = nodes_[:, 1].tolist()
+        c2s = comps_[:, 1].tolist()
+        lines = [f'CDAMP2  {eid}{b}{g1}{c1}{g2}{c2}'.rstrip() + '\n'
+                 for eid, b, g1, c1, g2, c2
+                 in zip(eids, bs, g1s, c1s, g2s, c2s)]
+        bdf_file.write(''.join(lines))
 
 
 class CDAMP3(Element):
@@ -1697,7 +1741,18 @@ class PGAP(Property):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            ifile = np.hstack([self.ifile, ifile])
+            property_id = np.hstack([self.property_id, property_id])
+            u0 = np.hstack([self.u0, u0])
+            f0 = np.hstack([self.f0, f0])
+            ka = np.hstack([self.ka, ka])
+            kb = np.hstack([self.kb, kb])
+            kt = np.hstack([self.kt, kt])
+            mu1 = np.hstack([self.mu1, mu1])
+            mu2 = np.hstack([self.mu2, mu2])
+            tmax = np.hstack([self.tmax, tmax])
+            mar = np.hstack([self.mar, mar])
+            trmin = np.hstack([self.trmin, trmin])
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.u0 = u0

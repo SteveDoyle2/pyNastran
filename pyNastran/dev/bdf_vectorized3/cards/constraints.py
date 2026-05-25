@@ -20,7 +20,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     #array_default_str,
-    array_str, array_default_int,
+    array_str, array_default_int, array_float,
     get_print_card_size)
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -255,6 +255,26 @@ class SPC(VectorizedBaseCard):
     @property
     def max_id(self) -> int:
         return max(self.spc_id.max(), self.node_id.max())
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        sids = np.char.rjust(array_str(self.spc_id, size=8), 8).tolist()
+        nids = np.char.rjust(array_str(self.node_id, size=8), 8).tolist()
+        comps = np.char.rjust(array_default_int(self.components, default=0, size=8), 8).tolist()
+
+        no_enforced = self.enforced.max() == 0. and self.enforced.min() == 0.
+        if no_enforced:
+            lines = [f'SPC     {sid}{nid}{comp}\n'
+                     for sid, nid, comp in zip(sids, nids, comps)]
+        else:
+            enfs = np.char.rjust(array_float(self.enforced, size=8, is_double=False), 8).tolist()
+            lines = [f'SPC     {sid}{nid}{comp}{enf}\n'
+                     for sid, nid, comp, enf in zip(sids, nids, comps, enfs)]
+        bdf_file.write(''.join(lines))
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -573,7 +593,12 @@ class MPC(VectorizedBaseCard):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.mpc_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            ifile = np.hstack([self.ifile, ifile])
+            mpc_id = np.hstack([self.mpc_id, mpc_id])
+            nnode = np.hstack([self.nnode, nnode])
+            node_id = np.hstack([self.node_id, node_id])
+            components = np.hstack([self.components, components])
+            coefficients = np.hstack([self.coefficients, coefficients])
         save_ifile_comment(self, ifile, comment)
         self.mpc_id = mpc_id
         self.nnode = nnode

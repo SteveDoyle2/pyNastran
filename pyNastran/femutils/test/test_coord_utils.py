@@ -10,6 +10,7 @@ from pyNastran.femutils.coord_transforms import (
     rtz_to_xyz_array, rtp_to_xyz_array,
     rtz_to_rtp_array, rtp_to_rtz_array,
     cylindrical_rotation_matrix,
+    spherical_rotation_matrix,
 )
 from pyNastran.femutils.coord_utils import (
     coords_from_vector_1d,
@@ -112,14 +113,68 @@ class TestCoordUtils(unittest.TestCase):
     #---------------------------------------------------------------------------
 
     def test_cylindrical_rotation_matrix(self):
-        """tests cylindrical_rotation_matrix"""
-        theta = [0., 0.]
-        coords = cylindrical_rotation_matrix(theta, dtype='float64')
+        """tests cylindrical_rotation_matrix
 
-        theta = np.radians([0., 45., 90.])
-        coords = cylindrical_rotation_matrix(theta, dtype='float64')
-        #print(coords)
-        ## TODO: not compared
+        Verifies:
+        - Orthogonality (R @ R.T = I)
+        - det = 1 (proper rotation)
+        - Known angle values:
+          theta=0: [[1,0,0],[0,1,0],[0,0,1]] (identity)
+          theta=90: [[0,-1,0],[1,0,0],[0,0,1]]
+        """
+        theta = np.radians([0., 45., 90., 180., 270.])
+        R = cylindrical_rotation_matrix(theta, dtype='float64')
+        assert R.shape == (5, 3, 3)
+
+        for i in range(5):
+            assert np.allclose(R[i] @ R[i].T, np.eye(3), atol=1e-15)
+            assert np.isclose(np.linalg.det(R[i]), 1.0)
+
+        # theta=0: identity
+        assert np.allclose(R[0], np.eye(3), atol=1e-15)
+        # theta=90: [[0,-1,0],[1,0,0],[0,0,1]]
+        expected_90 = np.array([[0., -1., 0.], [1., 0., 0.], [0., 0., 1.]])
+        assert np.allclose(R[2], expected_90, atol=1e-15)
+        # theta=180: [[-1,0,0],[0,-1,0],[0,0,1]]
+        expected_180 = np.array([[-1., 0., 0.], [0., -1., 0.], [0., 0., 1.]])
+        assert np.allclose(R[3], expected_180, atol=1e-15)
+
+    def test_spherical_rotation_matrix(self):
+        """tests spherical_rotation_matrix
+
+        Verifies:
+        - Orthogonality (R @ R.T = I) at multiple angles
+        - det = 1 (proper rotation, not reflection)
+        - Known angle values:
+          (theta=0, phi=0): e_r=[0,0,1], e_theta=[1,0,0], e_phi=[0,1,0]
+          (theta=90, phi=0): e_r=[1,0,0], e_theta=[0,0,-1], e_phi=[0,1,0]
+          (theta=90, phi=90): e_r=[0,1,0], e_theta=[0,0,-1], e_phi=[-1,0,0]
+        """
+        thetar = np.radians([0., 90., 90., 45., 135., 60.])
+        phir = np.radians([0., 0., 90., 45., 270., 30.])
+        R = spherical_rotation_matrix(thetar, phir)
+        assert R.shape == (6, 3, 3)
+
+        for i in range(6):
+            assert np.allclose(R[i] @ R[i].T, np.eye(3), atol=1e-14), (
+                f'not orthogonal at i={i}')
+            assert np.isclose(np.linalg.det(R[i]), 1.0), (
+                f'det != 1 at i={i}: {np.linalg.det(R[i])}')
+
+        # (theta=0, phi=0): pole
+        assert np.allclose(R[0, :, 0], [0., 0., 1.], atol=1e-15)  # e_r
+        assert np.allclose(R[0, :, 1], [1., 0., 0.], atol=1e-15)  # e_theta
+        assert np.allclose(R[0, :, 2], [0., 1., 0.], atol=1e-15)  # e_phi
+
+        # (theta=90, phi=0): +x axis
+        assert np.allclose(R[1, :, 0], [1., 0., 0.], atol=1e-15)
+        assert np.allclose(R[1, :, 1], [0., 0., -1.], atol=1e-15)
+        assert np.allclose(R[1, :, 2], [0., 1., 0.], atol=1e-15)
+
+        # (theta=90, phi=90): +y axis
+        assert np.allclose(R[2, :, 0], [0., 1., 0.], atol=1e-15)
+        assert np.allclose(R[2, :, 1], [0., 0., -1.], atol=1e-15)
+        assert np.allclose(R[2, :, 2], [-1., 0., 0.], atol=1e-15)
 
     def test_coords_from_vector_1d(self):
         """tests coords_from_vector_1d"""

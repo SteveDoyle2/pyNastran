@@ -11,7 +11,7 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property,
     parse_check, searchsorted_filter, save_ifile_comment)
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, get_print_card_size # , array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float, get_print_card_size # , array_default_int
 from .utils import get_density_from_material, basic_mass_material_id
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -199,6 +199,38 @@ class CONROD(Element):
             bdf_file.write(print_card(list_fields))
         return
 
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        no_jcnsm = (np.all(self.J == 0.) and np.all(self.c == 0.) and np.all(self.nsm == 0.))
+        eids = np.char.rjust(array_str(self.element_id, size=8), 8)
+        mids = np.char.rjust(array_str(self.material_id, size=8), 8)
+        nodes_str = np.char.rjust(array_str(self.nodes, size=8), 8)
+        areas = np.char.rjust(array_float(self.A, size=8), 8)
+        n1_list = nodes_str[:, 0].tolist()
+        n2_list = nodes_str[:, 1].tolist()
+        eid_list = eids.tolist()
+        mid_list = mids.tolist()
+        a_list = areas.tolist()
+        if no_jcnsm:
+            lines = [f'CONROD  {eid}{n1}{n2}{mid}{a}\n'
+                     for eid, n1, n2, mid, a in
+                     zip(eid_list, n1_list, n2_list, mid_list, a_list)]
+        else:
+            js = np.char.rjust(array_float(self.J, size=8), 8)
+            cs = np.char.rjust(array_float(self.c, size=8), 8)
+            nsms = np.char.rjust(array_float(self.nsm, size=8), 8)
+            j_list = js.tolist()
+            c_list = cs.tolist()
+            nsm_list = nsms.tolist()
+            lines = [f'CONROD  {eid}{n1}{n2}{mid}{a}{j}{c}{nsm}\n'
+                     for eid, n1, n2, mid, a, j, c, nsm in
+                     zip(eid_list, n1_list, n2_list, mid_list, a_list, j_list, c_list, nsm_list)]
+        bdf_file.write(''.join(lines))
+
     @property
     def allowed_materials(self) -> list[MAT1]:
         return [prop for prop in rod_materials(self.model) if prop.n > 0]
@@ -320,7 +352,10 @@ class CROD(Element):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
         nelements = len(element_id)
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
@@ -358,6 +393,23 @@ class CROD(Element):
             list_fields = ['CROD', eid, pid, n1, n2]
             bdf_file.write(print_card(list_fields))
         return
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        eids = np.char.rjust(array_str(self.element_id, size=8), 8)
+        pids = np.char.rjust(array_str(self.property_id, size=8), 8)
+        nodes_str = np.char.rjust(array_str(self.nodes, size=8), 8)
+        eid_list = eids.tolist()
+        pid_list = pids.tolist()
+        n1_list = nodes_str[:, 0].tolist()
+        n2_list = nodes_str[:, 1].tolist()
+        lines = [f'CROD    {eid}{pid}{n1}{n2}\n'
+                 for eid, pid, n1, n2 in zip(eid_list, pid_list, n1_list, n2_list)]
+        bdf_file.write(''.join(lines))
 
     @property
     def allowed_properties(self):
@@ -543,7 +595,13 @@ class PROD(Property):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            property_id = np.hstack([self.property_id, property_id])
+            material_id = np.hstack([self.material_id, material_id])
+            A = np.hstack([self.A, A])
+            J = np.hstack([self.J, J])
+            c = np.hstack([self.c, c])
+            nsm = np.hstack([self.nsm, nsm])
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
@@ -676,8 +734,11 @@ class CTUBE(Element):
         ncards = len(element_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
-        if len(self.element_id):
-            raise NotImplementedError()
+        if len(self.element_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
         nelements = len(element_id)
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
@@ -715,6 +776,23 @@ class CTUBE(Element):
             list_fields = ['CTUBE', eid, pid, n1, n2]
             bdf_file.write(print_card(list_fields))
         return
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        eids = np.char.rjust(array_str(self.element_id, size=8), 8)
+        pids = np.char.rjust(array_str(self.property_id, size=8), 8)
+        nodes_str = np.char.rjust(array_str(self.nodes, size=8), 8)
+        eid_list = eids.tolist()
+        pid_list = pids.tolist()
+        n1_list = nodes_str[:, 0].tolist()
+        n2_list = nodes_str[:, 1].tolist()
+        lines = [f'CTUBE   {eid}{pid}{n1}{n2}\n'
+                 for eid, pid, n1, n2 in zip(eid_list, pid_list, n1_list, n2_list)]
+        bdf_file.write(''.join(lines))
 
     @property
     def all_properties(self):
@@ -909,8 +987,13 @@ class PTUBE(Property):
         ncards = len(property_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
-        if len(self.property_id):
-            raise NotImplementedError()
+        if len(self.property_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
+            property_id = np.hstack([self.property_id, property_id])
+            material_id = np.hstack([self.material_id, material_id])
+            diameter = np.vstack([self.diameter, diameter])
+            t = np.hstack([self.t, t])
+            nsm = np.hstack([self.nsm, nsm])
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
@@ -918,7 +1001,7 @@ class PTUBE(Property):
         self.t = t
         self.nsm = nsm
         assert self.diameter.ndim == 2, self.diameter.shape
-        self.n = len(ifile)
+        self.n = len(property_id)
 
     def __apply_slice__(self, prop: PTUBE, i: np.ndarray) -> None:  # ignore[override]
         assert self.diameter.ndim == 2, self.diameter.shape

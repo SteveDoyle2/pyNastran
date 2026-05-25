@@ -988,7 +988,19 @@ def combination_inplace(data: np.ndarray,
                         datai: np.ndarray,
                         factor: integer_float_types,
                         ires=None) -> None:
-    """does a linear combination; deals with underflow bugs"""
+    """does a linear combination; deals with underflow bugs
+
+    Parameters
+    ----------
+    data : np.ndarray
+        the output array to modify in place (shape: ntimes x nnodes x ncols)
+    datai : np.ndarray or None
+        the input array to add; None means what???
+    factor : int/float
+        scale factor applied to datai before adding
+    ires : slice, list[int], or None
+        column indices to operate on; None means all columns
+    """
     assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
     if datai is None and factor == 0.0:
         # zero out the combination
@@ -1008,11 +1020,8 @@ def combination_inplace(data: np.ndarray,
             # import warnings
             if dtype in {'float32'}:
                 # underflow
-                # warnings.warn('upcasting to try and prevent error')
                 with np.errstate(under='ignore'):
-                    data32 = (datai.astype('float64') * factor).astype('float32')
-                data += data32
-                # data += datai * factor
+                    data += (datai.astype('float64') * factor).astype('float32')
             else:
                 raise RuntimeError(f'Floating point error: dtype={dtype!r} factor={factor}')
     return

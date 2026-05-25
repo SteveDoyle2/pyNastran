@@ -1,3 +1,282 @@
+"""
+DMAP ALTER utilities for pyNastran.
+
+Provides functions to generate DMAP ALTER cards for exporting Nastran
+datablocks (matrices) like KGG, MGG, KDICT, etc.
+
+"""
+from __future__ import annotations
+from typing import Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+
+
+# Known matrix datablocks available at various solution stages
+STIFFNESS_MATRICES = {'KGG', 'KAA', 'KNN', 'KFF', 'KOO', 'KELM'}
+MASS_MATRICES = {'MGG', 'MAA', 'MNN', 'MFF', 'MOO', 'MELM'}
+DAMPING_MATRICES = {'BGG', 'BAA', 'BNN', 'BFF', 'BOO', 'BELM'}
+LOAD_MATRICES = {'PG', 'PA', 'PL'}
+GEOMETRY_TABLES = {'GPDT', 'EQEXIN', 'CSTM', 'GPL'}
+DICT_TABLES = {'KDICT', 'MDICT', 'BDICT', 'KDICTP', 'KELMP'}
+
+# DMAP compile targets and alter locations for matrix export.
+# Used only for COMPILE/ALTER approach (MSC Nastran style).
+_COMPILE_MODULE = {
+    101: 'SESTATIC',   # SOL 101 static
+    103: 'SEMODES',    # SOL 103 modal
+    108: 'SEFREQR',    # SOL 108 frequency response
+    111: 'SEMFREQR',   # SOL 111 modal frequency response
+    200: 'DESOPT',     # SOL 200 optimization
+}
+
+
+# Predefined MALTER labels in NX Nastran DMAP source.
+# Each label is a known insertion point — you cannot create custom ones.
+MALTER_LABELS = {
+    'KGG': "MALTER:(KGG, BGG, MGG, K4GG, PG)",
+    'KAA': "MALTER:AFTER SUPERELEMENT MATRIX AND LOAD REDUCTION TO A-SET,",
+    'OUGV1': "MALTER:(OUGV1, OES1, OEF1, ETC.)",
+    'OUGV2': "MALTER:(OUGV2, OES2, OEF2, ETC.)",
+    'PHASE1_TOP': "MALTER:TOP OF PHASE 1 SUPERELEMENT LOOP AFTER PARAMETERS AND",
+    'PHASE1_BOTTOM': "MALTER:BOTTOM OF PHASE 1 SUPERELEMENT LOOP",
+    'PREFACE': "MALTER:AFTER PREFACE MODULES",
+}
+
+
+def make_matrix_export_malter(
+    matrices: list[str],
+    malter_label: str = 'KGG',
+    output_unit: int = -12,
+) -> list[str]:
+    """Generate NX Nastran MALTER lines for matrix export to the .op2 file.
+
+    This is the simplest and most reliable approach for NX Nastran.
+    Uses MALTER which inserts OUTPUT2 at a predefined DMAP location.
+    Requires PARAM,POST,-1 in bulk data for the .op2 file to be created.
+
+    Parameters
+    ----------
+    matrices : list[str]
+        Matrix names to export (e.g., ['KGG', 'MGG', 'KELM', 'KDICT'])
+    malter_label : str
+        Predefined MALTER insertion point. Options:
+          'KGG' - after global stiffness/mass assembly (KGG, MGG available)
+          'KAA' - after A-set reduction (KAA, MAA available)
+          'OUGV1' - after data recovery sort1
+        Or pass a full custom label string.
+    output_unit : int
+        Fortran unit for output. -12 means the standard .op2 file (default).
+        Negative unit means binary, positive means formatted.
+
+    Returns
+    -------
+    exec_lines : list[str]
+        Executive control lines (MALTER + OUTPUT2 statements)
+
+    """
+    if not matrices:
+        raise ValueError("matrices list cannot be empty")
+
+    matrices_upper = [m.upper() for m in matrices]
+
+    # resolve label
+    if malter_label in MALTER_LABELS:
+        label = MALTER_LABELS[malter_label]
+    else:
+        label = malter_label
+
+    exec_lines = []
+    exec_lines.append(f"MALTER '{label}' $")
+
+    for name in matrices_upper:
+        exec_lines.append(f'OUTPUT2 {name}//-3/{output_unit}/{name}// $')
+
+    return exec_lines
+
+
+def add_matrix_export_malter(
+    model: BDF,
+    matrices: list[str],
+    malter_label: str = 'KGG',
+    output_unit: int = -12,
+) -> None:
+    """Add NX Nastran MALTER to a BDF model for matrix export.
+
+    Modifies model.executive_control_lines in-place. Matrices are
+    exported to the standard .op2 output file.
+
+    Requires PARAM,POST,-1 in bulk data for the .op2 file to be created.
+
+    Parameters
+    ----------
+    model : BDF
+        The BDF model to modify
+    matrices : list[str]
+        Matrix names to export (e.g., ['KGG', 'MGG', 'KELM', 'KDICT'])
+    malter_label : str
+        Predefined MALTER insertion point (see make_matrix_export_malter)
+    output_unit : int
+        Fortran unit for output. -12 means the standard .op2 file.
+
+    """
+    exec_lines = make_matrix_export_malter(matrices, malter_label, output_unit)
+    model.executive_control_lines.extend(exec_lines)
+
+
+def make_matrix_export_alter(
+    matrices: list[str],
+    output_filename: str = 'matrices.op4',
+    output_format: str = 'op4',
+    sol: int = 101,
+    unit: int = 51,
+    form: str = 'FORMATTED',
+    compile_module: Optional[str] = None,
+    alter_location: Optional[str] = None,
+) -> tuple[list[str], list[str]]:
+    """Generate DMAP ALTER lines to export matrix datablocks.
+
+    Parameters
+    ----------
+    matrices : list[str]
+        Matrix names to export (e.g., ['KGG', 'MGG', 'KDICT'])
+    output_filename : str
+        Output filename (e.g., 'kgg.op4' or 'kgg.op2')
+    output_format : str
+        'op4' for OUTPUT4 or 'op2' for OUTPUT2
+    sol : int
+        Solution sequence (101, 103, 108)
+    unit : int
+        Fortran unit number for the output file (default 51)
+    form : str
+        For op4: 'FORMATTED' (text) or 'UNFORMATTED' (binary)
+        For op2: ignored
+    compile_module : str, optional
+        Override the COMPILE subdmap name (e.g., 'PHASE1A', 'SESTATIC').
+        Default is SOL-dependent.
+    alter_location : str, optional
+        Override the ALTER location string (e.g., 'END', 'BEGIN', '240').
+        Default is 'END'.
+
+    Returns
+    -------
+    system_lines : list[str]
+        ASSIGN statements (go before SOL line)
+    exec_lines : list[str]
+        COMPILE/ALTER/OUTPUT lines (go after SOL line, before CEND)
+
+    """
+    if output_format not in ('op4', 'op2'):
+        raise ValueError(f"output_format must be 'op4' or 'op2', got {output_format!r}")
+    if sol not in _COMPILE_MODULE and compile_module is None:
+        raise ValueError(
+            f"SOL {sol} not supported for automatic ALTER. "
+            f"Supported: {sorted(_COMPILE_MODULE.keys())}")
+    if not matrices:
+        raise ValueError("matrices list cannot be empty")
+
+    matrices_upper = [m.upper() for m in matrices]
+    if compile_module is None:
+        compile_module = _COMPILE_MODULE[sol]
+    if alter_location is None:
+        alter_location = 'END'
+
+    system_lines = []
+    exec_lines = []
+
+    if output_format == 'op4':
+        system_lines.append(
+            f"ASSIGN OUTPUT4='{output_filename}', UNIT={unit}, "
+            f"FORM={form}, STATUS=NEW")
+        exec_lines.append(f'COMPILE {compile_module}')
+        exec_lines.append(f"ALTER '{alter_location}'")
+
+        # OUTPUT4 exports up to 5 matrices per statement
+        for i in range(0, len(matrices_upper), 5):
+            chunk = matrices_upper[i:i+5]
+            # pad to 5 slots with empty
+            padded = ','.join(chunk) + ',' * (5 - len(chunk))
+            exec_lines.append(f'OUTPUT4 {padded}//0/{unit} $')
+
+    else:  # op2
+        system_lines.append(
+            f"ASSIGN OUTPUT2='{output_filename}', UNIT={unit}, STATUS=NEW")
+        exec_lines.append(f'COMPILE {compile_module}')
+        exec_lines.append(f"ALTER '{alter_location}'")
+
+        # OUTPUT2 exports up to 5 matrices per statement
+        for i in range(0, len(matrices_upper), 5):
+            chunk = matrices_upper[i:i+5]
+            padded = ','.join(chunk) + ',' * (5 - len(chunk))
+            exec_lines.append(f'OUTPUT2 {padded}//{unit} $')
+
+    return system_lines, exec_lines
+
+
+def add_matrix_export_alter(
+    model: BDF,
+    matrices: list[str],
+    output_filename: str = 'matrices.op4',
+    output_format: str = 'op4',
+    unit: int = 51,
+    form: str = 'FORMATTED',
+    compile_module: Optional[str] = None,
+    alter_location: Optional[str] = None,
+) -> None:
+    """Add DMAP ALTER to a BDF model for exporting matrix datablocks.
+
+    Modifies model.system_command_lines and model.executive_control_lines
+    in-place.
+
+    Parameters
+    ----------
+    model : BDF
+        The BDF model to modify
+    matrices : list[str]
+        Matrix names to export (e.g., ['KGG', 'MGG', 'KDICT'])
+    output_filename : str
+        Output filename (e.g., 'kgg.op4' or 'kgg.op2')
+    output_format : str
+        'op4' for OUTPUT4 or 'op2' for OUTPUT2
+    unit : int
+        Fortran unit number for the output file (default 51)
+    form : str
+        For op4: 'FORMATTED' (text) or 'UNFORMATTED' (binary)
+    compile_module : str, optional
+        Override the COMPILE subdmap name
+    alter_location : str, optional
+        Override the ALTER location string
+
+    """
+    sol = model.sol
+    if sol is None:
+        raise RuntimeError("model.sol must be set before adding ALTER")
+
+    system_lines, exec_lines = make_matrix_export_alter(
+        matrices, output_filename, output_format, sol, unit, form,
+        compile_module=compile_module, alter_location=alter_location)
+
+    # Add ASSIGN lines to system_command_lines
+    for line in system_lines:
+        if line not in model.system_command_lines:
+            model.system_command_lines.append(line)
+
+    # Insert ALTER lines before CEND in executive_control_lines
+    # Find CEND and insert before it
+    cend_idx = None
+    for i, line in enumerate(model.executive_control_lines):
+        if line.strip().upper() == 'CEND':
+            cend_idx = i
+            break
+
+    if cend_idx is not None:
+        for j, exec_line in enumerate(exec_lines):
+            model.executive_control_lines.insert(cend_idx + j, exec_line)
+    else:
+        # No CEND found, just append
+        model.executive_control_lines.extend(exec_lines)
+        model.executive_control_lines.append('CEND')
+
+
 def read_dmap(lines):
     lines2 = []
     append_flag = False

@@ -1272,7 +1272,6 @@ class RealTableArray(TableArray):
             r3 = self.data[itime, :, 5]
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
                 #unused_sgridtype = self.recast_gridtype_as_string(gridtypei)
-                assert is_exponent_format
                 if is_exponent_format:
                     vals2 = write_floats_13e_long([t1i, t2i, t3i, r1i, r2i, r3i])
                     (t1i, t2i, t3i, r1i, r2i, r3i) = vals2

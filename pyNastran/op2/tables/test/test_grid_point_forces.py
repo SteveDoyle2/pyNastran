@@ -867,8 +867,7 @@ class TestGridPointForces(unittest.TestCase):
                 np.abs(total_moment_local_expected - total_moment_local))
             self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg)
 
-    @unittest.expectedFailure
-    def test_broken_op2_solid_shell_bar_01_gpforce_radial_global_cd(self):
+    def test_op2_solid_shell_bar_01_gpforce_radial_global_cd(self):
         warning_log = SimpleLogger(level='warning')
         debug_log = SimpleLogger(level='debug')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
@@ -1048,20 +1047,11 @@ class TestGridPointForces(unittest.TestCase):
         #print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
         #print("gpf_goal =\n", op2_2.grid_point_forces[1].data[0, :2, :])
 
-        return
-        msg = 'displacements baseline=\n%s\ndisplacements xyz=\n%s' % (
-            op2_1.displacements[1].data[0, :, :], op2_2.displacements[1].data[0, :, :])
-        #print(msg)
         assert op2_1.displacements[1].assert_equal(op2_2.displacements[1])
+        assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123)
 
-        msg = 'grid_point_forces baseline=\n%s\ngrid_point_forces xyz=\n%s' % (
-            op2_1.grid_point_forces[1].data[0, :, :], op2_2.grid_point_forces[1].data[0, :, :])
-        #print(msg)
-
-        assert op2_1.spc_forces[1].assert_equal(op2_2.spc_forces[1], atol=4.4341e-04), msg
-        assert op2_1.mpc_forces[1].assert_equal(op2_2.mpc_forces[1]), msg
-        assert op2_1.load_vectors[1].assert_equal(op2_2.load_vectors[1]), msg
-        assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
+        # TODO: _extract_interface_loads has a separate bug with cylindrical coords
+        return
         #-----------------------------------------------------------------------
         gpforce = op2_1.grid_point_forces[1]
         data = _get_gpforce_data()
@@ -1091,6 +1081,752 @@ class TestGridPointForces(unittest.TestCase):
                 case, total_moment_local_expected, total_moment_local,
                 np.abs(total_moment_local_expected - total_moment_local))
             self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg)
+
+    def test_spherical_displacement_and_gpforce_transform(self):
+        """Tests spherical coordinate transforms for displacements and GPF.
+
+        Constructs a CORD2S at the global origin with identity beta, and one
+        with a rotated beta. Places nodes at known spherical positions and
+        verifies that vectors in spherical components (v_r, v_theta, v_phi)
+        transform correctly to global rectangular (v_x, v_y, v_z).
+
+        Tests:
+        - Node on +z axis (theta=0): e_r=[0,0,1], e_theta=[1,0,0], e_phi=[0,1,0]
+        - Node on +x axis (theta=90, phi=0): e_r=[1,0,0], e_theta=[0,0,-1], e_phi=[0,1,0]
+        - Node on +y axis (theta=90, phi=90): e_r=[0,1,0], e_theta=[0,0,-1], e_phi=[-1,0,0]
+        - Node at theta=90, phi=45: e_r=[c,c,0], e_theta=[0,0,-1], e_phi=[-c,c,0] (c=1/sqrt2)
+        - Non-identity beta (90° rotation about z)
+        """
+        from pyNastran.op2.op2_interface.transforms import (
+            _transform_spherical_displacement, _transform_spherical_gpforce)
+        from pyNastran.bdf.cards.coordinate_systems import CORD2S
+
+        # --- Case 1: identity beta (coord aligned with global) ---
+        # CORD2S at origin with axes aligned to global
+        cord2s = CORD2S(cid=10, rid=0,
+                        origin=[0., 0., 0.],
+                        zaxis=[0., 0., 1.],
+                        xzplane=[1., 0., 0.])
+        cord2s.setup()
+        beta = cord2s.beta()
+        assert np.allclose(beta, np.eye(3)), f'expected identity beta, got:\n{beta}'
+
+        # 4 nodes at known spherical positions
+        # Node 0: on +z axis (theta=0, phi=0) at r=1 -> xyz=(0, 0, 1)
+        # Node 1: on +x axis (theta=90, phi=0) at r=1 -> xyz=(1, 0, 0)
+        # Node 2: on +y axis (theta=90, phi=90) at r=1 -> xyz=(0, 1, 0)
+        # Node 3: at theta=90, phi=45, r=1 -> xyz=(1/sqrt2, 1/sqrt2, 0)
+        c = 1.0 / np.sqrt(2.0)
+        xyz_cid0 = np.array([
+            [0., 0., 1.],
+            [1., 0., 0.],
+            [0., 1., 0.],
+            [c, c, 0.],
+        ])
+        inode = np.arange(4)
+
+        # Displacement data: unit vector in e_r direction at each node
+        # (1, 0, 0) in spherical = pure radial
+        # ntimes=1, nnodes=4, 6 dof
+        data = np.zeros((1, 4, 6), dtype='float64')
+        data[0, :, 0] = 1.0  # v_r = 1 at all nodes
+
+        _transform_spherical_displacement(
+            inode, data, cord2s, xyz_cid0, beta, is_global_cid=True)
+
+        # Expected: e_r in global for each node
+        # Node 0 (theta=0, phi=0): e_r = [sin0*cos0, sin0*sin0, cos0] = [0, 0, 1]
+        # Node 1 (theta=90, phi=0): e_r = [sin90*cos0, sin90*sin0, cos90] = [1, 0, 0]
+        # Node 2 (theta=90, phi=90): e_r = [sin90*cos90, sin90*sin90, cos90] = [0, 1, 0]
+        # Node 3 (theta=90, phi=45): e_r = [sin90*cos45, sin90*sin45, cos90] = [c, c, 0]
+        expected_er = np.array([
+            [0., 0., 1.],
+            [1., 0., 0.],
+            [0., 1., 0.],
+            [c, c, 0.],
+        ])
+        assert np.allclose(data[0, :, :3], expected_er, atol=1e-14), (
+            f'e_r transform failed:\n{data[0, :, :3]}\nexpected:\n{expected_er}')
+
+        # Test e_theta: unit vector in theta direction
+        data[:] = 0.
+        data[0, :, 1] = 1.0  # v_theta = 1
+        _transform_spherical_displacement(
+            inode, data, cord2s, xyz_cid0, beta, is_global_cid=True)
+
+        # Expected: e_theta in global
+        # Node 0 (theta=0, phi=0): e_theta = [cos0*cos0, cos0*sin0, -sin0] = [1, 0, 0]
+        # Node 1 (theta=90, phi=0): e_theta = [cos90*cos0, cos90*sin0, -sin90] = [0, 0, -1]
+        # Node 2 (theta=90, phi=90): e_theta = [cos90*cos90, cos90*sin90, -sin90] = [0, 0, -1]
+        # Node 3 (theta=90, phi=45): e_theta = [cos90*cos45, cos90*sin45, -sin90] = [0, 0, -1]
+        expected_etheta = np.array([
+            [1., 0., 0.],
+            [0., 0., -1.],
+            [0., 0., -1.],
+            [0., 0., -1.],
+        ])
+        assert np.allclose(data[0, :, :3], expected_etheta, atol=1e-14), (
+            f'e_theta transform failed:\n{data[0, :, :3]}\nexpected:\n{expected_etheta}')
+
+        # Test e_phi: unit vector in phi direction
+        data[:] = 0.
+        data[0, :, 2] = 1.0  # v_phi = 1
+        _transform_spherical_displacement(
+            inode, data, cord2s, xyz_cid0, beta, is_global_cid=True)
+
+        # Expected: e_phi in global
+        # Node 0 (theta=0, phi=0): e_phi = [-sin0, cos0, 0] = [0, 1, 0]
+        # Node 1 (theta=90, phi=0): e_phi = [-sin0, cos0, 0] = [0, 1, 0]
+        # Node 2 (theta=90, phi=90): e_phi = [-sin90, cos90, 0] = [-1, 0, 0]
+        # Node 3 (theta=90, phi=45): e_phi = [-sin45, cos45, 0] = [-c, c, 0]
+        expected_ephi = np.array([
+            [0., 1., 0.],
+            [0., 1., 0.],
+            [-1., 0., 0.],
+            [-c, c, 0.],
+        ])
+        assert np.allclose(data[0, :, :3], expected_ephi, atol=1e-14), (
+            f'e_phi transform failed:\n{data[0, :, :3]}\nexpected:\n{expected_ephi}')
+
+        # --- Case 2: non-identity beta (coord rotated 90° about z) ---
+        # x_coord = y_global, y_coord = -x_global, z_coord = z_global
+        cord2s_rot = CORD2S(cid=11, rid=0,
+                            origin=[0., 0., 0.],
+                            zaxis=[0., 0., 1.],
+                            xzplane=[0., 1., 0.])
+        cord2s_rot.setup()
+        beta_rot = cord2s_rot.beta()
+        # beta should be [[0,1,0],[-1,0,0],[0,0,1]]
+        expected_beta = np.array([[0., 1., 0.], [-1., 0., 0.], [0., 0., 1.]])
+        assert np.allclose(beta_rot, expected_beta, atol=1e-14), (
+            f'unexpected beta:\n{beta_rot}')
+
+        # Node on +x axis in global: xyz=(1,0,0)
+        # In coord-local rectangular: (1,0,0) @ beta.T = (0,-1,0)
+        # In coord-local spherical: theta=90, phi=270 (or -90)
+        # e_r at this point in coord-local rect = (0,-1,0) (unit vector toward the point)
+        # e_r in global = beta.T @ (0,-1,0) = (0,-1,0) @ [[0,-1,0],[1,0,0],[0,0,1]] -> let's compute
+        # Actually e_r in global: the point is at +x global, so radial = +x = (1,0,0)
+        # Let's just verify the full transform numerically:
+        xyz_single = np.array([[1., 0., 0.]])
+        data_rot = np.zeros((1, 1, 6), dtype='float64')
+        data_rot[0, 0, 0] = 1.0  # pure radial
+        inode_single = np.array([0])
+        _transform_spherical_displacement(
+            inode_single, data_rot, cord2s_rot, xyz_single,
+            beta_rot, is_global_cid=False)
+
+        # The radial direction at (1,0,0) should point in +x global
+        expected_rot = np.array([1., 0., 0.])
+        assert np.allclose(data_rot[0, 0, :3], expected_rot, atol=1e-14), (
+            f'rotated beta e_r failed: {data_rot[0, 0, :3]}, expected {expected_rot}')
+
+        # --- Case 3: GPF transform (same math, different indexing) ---
+        # Use identity beta case with inode_xyz mapping
+        inode_xyz = np.arange(4)  # 1:1 mapping
+        inode_gp = np.arange(4)
+        data_gpf = np.zeros((1, 4, 6), dtype='float64')
+        data_gpf[0, :, 0] = 1.0  # radial force = 1
+
+        _transform_spherical_gpforce(
+            inode_xyz, inode_gp, data_gpf, beta,
+            cord2s, xyz_cid0, SimpleLogger(level='warning'))
+
+        # Same expected as displacement e_r case
+        assert np.allclose(data_gpf[0, :, :3], expected_er, atol=1e-14), (
+            f'GPF spherical transform failed:\n{data_gpf[0, :, :3]}\nexpected:\n{expected_er}')
+
+    def test_spherical_pressure_vessel(self):
+        """Thin-walled pressure vessel: constant radial displacement.
+
+        A constant internal pressure on a sphere produces uniform radial
+        deformation. Every node has v_r=0.1, v_theta=0, v_phi=0 in spherical.
+        After transform to global, each displacement should be 0.1 * r_hat,
+        where r_hat = xyz / |xyz|.
+
+        Uses 8 nodes distributed over the sphere (octants) with both
+        identity beta and a rotated coord (offset origin + rotated axes).
+        """
+        from pyNastran.op2.op2_interface.transforms import _transform_spherical_displacement
+        from pyNastran.bdf.cards.coordinate_systems import CORD2S
+
+        # --- Case 1: identity beta, origin at global origin ---
+        cord2s = CORD2S(cid=20, rid=0,
+                        origin=[0., 0., 0.],
+                        zaxis=[0., 0., 1.],
+                        xzplane=[1., 0., 0.])
+        beta = cord2s.beta()
+
+        # 8 nodes at various positions on a unit sphere
+        c = 1.0 / np.sqrt(3.0)
+        xyz_cid0 = np.array([
+            [1., 0., 0.],
+            [0., 1., 0.],
+            [0., 0., 1.],
+            [-1., 0., 0.],
+            [0., -1., 0.],
+            [0., 0., -1.],
+            [c, c, c],
+            [-c, c, -c],
+        ])
+        nnodes = len(xyz_cid0)
+        inode = np.arange(nnodes)
+
+        # Constant radial displacement = 0.1
+        radial_disp = 0.1
+        data = np.zeros((1, nnodes, 6), dtype='float64')
+        data[0, :, 0] = radial_disp  # v_r = 0.1
+
+        _transform_spherical_displacement(
+            inode, data, cord2s, xyz_cid0, beta, is_global_cid=True)
+
+        # Expected: 0.1 * unit_radial_vector at each node
+        norms = np.linalg.norm(xyz_cid0, axis=1, keepdims=True)
+        expected = radial_disp * xyz_cid0 / norms
+        assert np.allclose(data[0, :, :3], expected, atol=1e-14), (
+            f'pressure vessel (identity) failed:\n{data[0, :, :3]}\nexpected:\n{expected}')
+        # Rotational DOFs should be zero
+        assert np.allclose(data[0, :, 3:], 0., atol=1e-14)
+
+        # --- Case 2: offset origin + rotated axes ---
+        # Coord centered at (10, 5, 3) with z along global y
+        cord2s_off = CORD2S(cid=21, rid=0,
+                            origin=[10., 5., 3.],
+                            zaxis=[10., 6., 3.],   # z = +y global
+                            xzplane=[11., 5., 3.]) # x on xz-plane -> +x global
+        beta_off = cord2s_off.beta()
+
+        # Nodes on a sphere of radius 2 centered at (10, 5, 3)
+        r = 2.0
+        xyz_off = np.array([
+            [10. + r, 5., 3.],
+            [10. - r, 5., 3.],
+            [10., 5. + r, 3.],
+            [10., 5. - r, 3.],
+            [10., 5., 3. + r],
+            [10., 5., 3. - r],
+            [10. + r*c, 5. + r*c, 3. + r*c],
+            [10. - r*c, 5. - r*c, 3. + r*c],
+        ])
+        nnodes_off = len(xyz_off)
+        inode_off = np.arange(nnodes_off)
+
+        data_off = np.zeros((1, nnodes_off, 6), dtype='float64')
+        data_off[0, :, 0] = radial_disp
+
+        _transform_spherical_displacement(
+            inode_off, data_off, cord2s_off, xyz_off,
+            beta_off, is_global_cid=False)
+
+        # Expected: 0.1 * radial direction from the coord origin
+        radial_vecs = xyz_off - cord2s_off.origin
+        norms_off = np.linalg.norm(radial_vecs, axis=1, keepdims=True)
+        expected_off = radial_disp * radial_vecs / norms_off
+        assert np.allclose(data_off[0, :, :3], expected_off, atol=1e-14), (
+            f'pressure vessel (offset) failed:\n{data_off[0, :, :3]}\nexpected:\n{expected_off}')
+        assert np.allclose(data_off[0, :, 3:], 0., atol=1e-14)
+
+    def test_spherical_gpforce_offset_rotated(self):
+        """GPF transform for spherical coord with offset origin and rotated axes.
+
+        Simulates uniform radial pressure on a sphere: each node has
+        force = (F_r, 0, 0) in spherical. After transform to global,
+        force at each node should be F_r * r_hat (pointing radially from
+        the coord origin).
+
+        Uses CORD2S with:
+          - origin at (5, -3, 2)
+          - z-axis along global (1, 1, 0)/sqrt(2) (45° tilt)
+          - x on the xz-plane defined by a point
+
+        This exercises origin subtraction, non-trivial beta, and the
+        full GPF indexing path (inode_xyz -> inode_gp mapping).
+
+        Tolerances: exact to machine precision (1e-14).
+        """
+        from pyNastran.op2.op2_interface.transforms import _transform_spherical_gpforce
+        from pyNastran.bdf.cards.coordinate_systems import CORD2S
+
+        # CORD2S with offset origin and tilted z-axis
+        origin = np.array([5., -3., 2.])
+        zaxis = origin + np.array([1., 1., 0.]) / np.sqrt(2.)
+        xzplane = origin + np.array([1., 0., 0.])  # defines x in the xz-plane
+        cord2s = CORD2S(cid=30, rid=0,
+                        origin=origin.tolist(),
+                        zaxis=zaxis.tolist(),
+                        xzplane=xzplane.tolist())
+        beta = cord2s.beta()
+
+        # Verify beta is non-trivial
+        assert not np.allclose(beta, np.eye(3)), 'beta should not be identity'
+
+        # 6 nodes on a sphere of radius 3 centered at the coord origin
+        r = 3.0
+        c = 1.0 / np.sqrt(3.0)
+        # Use directions that aren't aligned with coord axes
+        directions = np.array([
+            [1., 0., 0.],
+            [0., 1., 0.],
+            [0., 0., 1.],
+            [-1., 0., 0.],
+            [c, c, c],
+            [-c, -c, c],
+        ])
+        xyz_cid0 = origin + r * directions
+        nnodes = len(xyz_cid0)
+
+        # GPF data: radial force = 100.0 at each node, 1 GPF entry per node
+        # In a real model, multiple entries per node exist (one per element),
+        # but this tests the core transform math.
+        F_r = 100.0
+        data = np.zeros((1, nnodes, 6), dtype='float64')
+        data[0, :, 0] = F_r  # force in r-direction
+        data[0, :, 4] = 50.0  # moment in theta-direction (arbitrary)
+
+        # Index arrays: 1:1 mapping (each GPF row corresponds to one unique node)
+        inode_xyz = np.arange(nnodes)
+        inode_gp = np.arange(nnodes)
+
+        _transform_spherical_gpforce(
+            inode_xyz, inode_gp, data, beta,
+            cord2s, xyz_cid0, SimpleLogger(level='warning'))
+
+        # Expected forces: F_r * radial unit vector from coord origin
+        radial_vecs = xyz_cid0 - origin
+        norms = np.linalg.norm(radial_vecs, axis=1, keepdims=True)
+        r_hat = radial_vecs / norms
+        expected_force = F_r * r_hat
+        assert np.allclose(data[0, :, :3], expected_force, atol=1e-13), (
+            f'GPF radial force failed:\n{data[0, :, :3]}\nexpected:\n{expected_force}')
+
+        # Expected moments: 50.0 in e_theta direction at each node
+        # e_theta = [cos(theta)*cos(phi), cos(theta)*sin(phi), -sin(theta)]
+        # in coord-local, then rotated to global via beta^T
+        # Verify magnitude is preserved (50.0 at each node)
+        moment_mags = np.linalg.norm(data[0, :, 3:], axis=1)
+        assert np.allclose(moment_mags, 50.0, atol=1e-13), (
+            f'moment magnitude not preserved: {moment_mags}')
+
+        # Verify moments are perpendicular to radial direction
+        # (e_theta is always perpendicular to e_r)
+        dots = np.sum(data[0, :, 3:] * r_hat, axis=1)
+        assert np.allclose(dots, 0., atol=1e-13), (
+            f'moments not perpendicular to radial: dots={dots}')
+
+    def test_spherical_gpforce_repeated_nodes(self):
+        """GPF spherical transform with multiple entries per node.
+
+        In a real model, each node has multiple GPF entries (one per
+        connected element + SPC + total). All entries for the same node
+        get the same rotation matrix. Verifies correct index handling.
+
+        Uses CORD2S offset and rotated, 3 physical nodes, 2-3 GPF entries each.
+        Tolerance: 1e-14 (exact math).
+        """
+        from pyNastran.op2.op2_interface.transforms import _transform_spherical_gpforce
+        from pyNastran.bdf.cards.coordinate_systems import CORD2S
+
+        origin = np.array([1., 2., 3.])
+        cord2s = CORD2S(cid=31, rid=0,
+                        origin=origin.tolist(),
+                        zaxis=(origin + np.array([0., 0., 1.])).tolist(),
+                        xzplane=(origin + np.array([1., 0., 0.])).tolist())
+        beta = cord2s.beta()
+
+        # 3 physical nodes
+        r = 5.0
+        xyz_cid0 = np.array([
+            origin + [r, 0., 0.],
+            origin + [0., r, 0.],
+            origin + [0., 0., r],
+        ])
+
+        # GPF has 8 entries total: node0 has 3, node1 has 3, node2 has 2
+        # Simulates: node0 (elem1, elem2, total), node1 (elem1, spc, total), node2 (elem1, total)
+        ngpf = 8
+
+        # inode_gp_xyz: maps each GPF row -> xyz_cid0 index (length = ngpf)
+        # This is what searchsorted(nids_all, nids_all_gp) produces
+        inode_gp_xyz = np.array([0, 0, 0, 1, 1, 1, 2, 2])
+
+        # inode_gp: which GPF rows to transform (all of them in this case)
+        inode_gp = np.arange(ngpf)
+
+        # All entries get radial force = 1.0
+        data = np.zeros((1, ngpf, 6), dtype='float64')
+        data[0, :, 0] = 1.0  # F_r = 1.0
+
+        _transform_spherical_gpforce(
+            inode_gp_xyz, inode_gp, data, beta,
+            cord2s, xyz_cid0, SimpleLogger(level='warning'))
+
+        # Expected: all entries for node i get the same radial direction
+        radial_vecs = xyz_cid0 - origin
+        norms = np.linalg.norm(radial_vecs, axis=1, keepdims=True)
+        r_hats = radial_vecs / norms
+
+        # Check each GPF entry matches its node's radial direction
+        node_map = [0, 0, 0, 1, 1, 1, 2, 2]
+        for igpf, inode_phys in enumerate(node_map):
+            assert np.allclose(data[0, igpf, :3], r_hats[inode_phys], atol=1e-14), (
+                f'GPF entry {igpf} (node {inode_phys}): '
+                f'{data[0, igpf, :3]} != {r_hats[inode_phys]}')
+
+    def test_transform_displacement_full_pipeline(self):
+        """Full pipeline test through transform_displacement_to_global.
+
+        Exercises the full dispatch path:
+          transform_displacement_to_global -> _transform_coord_nids
+            -> _transform_cylindrical_displacement / _transform_spherical_displacement
+
+        Tests:
+        - Multiple time steps (ntimes=3)
+        - Spherical coord with offset origin
+        - Cylindrical coord with offset origin
+        - Mixed: some nodes in cid=0 (no transform), others in cylindrical/spherical
+        - Verifies each timestep independently
+
+        Tolerance: 1e-13 (numerical precision).
+        """
+        from pyNastran.op2.op2_interface.transforms import transform_displacement_to_global
+        from pyNastran.bdf.cards.coordinate_systems import CORD2C, CORD2S
+
+        # --- Setup coords ---
+        # cid=0: global (identity, no transform)
+        coord0 = CORD2R(cid=0, origin=None, zaxis=None, xzplane=None)
+
+        # cid=10: cylindrical, offset origin at (5, 0, 0), axis along global z
+        origin_cyl = np.array([5., 0., 0.])
+        cord2c = CORD2C(cid=10, rid=0,
+                        origin=origin_cyl.tolist(),
+                        zaxis=(origin_cyl + [0., 0., 1.]).tolist(),
+                        xzplane=(origin_cyl + [1., 0., 0.]).tolist())
+
+        # cid=20: spherical, offset origin at (-2, 3, 1), z along global (0,0,1)
+        origin_sph = np.array([-2., 3., 1.])
+        cord2s = CORD2S(cid=20, rid=0,
+                        origin=origin_sph.tolist(),
+                        zaxis=(origin_sph + [0., 0., 1.]).tolist(),
+                        xzplane=(origin_sph + [1., 0., 0.]).tolist())
+
+        coords = {0: coord0, 10: cord2c, 20: cord2s}
+
+        # --- Setup nodes ---
+        # 8 nodes total:
+        #   nodes 0-1: cid=0 (no transform)
+        #   nodes 2-4: cid=10 (cylindrical, around offset origin)
+        #   nodes 5-7: cid=20 (spherical, around offset origin)
+        r_cyl = 3.0
+        angles_cyl = np.array([0., np.pi/3, 2*np.pi/3])
+        xyz_cid0 = np.array([
+            # cid=0 nodes
+            [1., 2., 3.],
+            [4., 5., 6.],
+            # cid=10 nodes (r=3 around (5,0,0), z-axis = global z)
+            [origin_cyl[0] + r_cyl, origin_cyl[1], origin_cyl[2]],  # theta=0
+            [origin_cyl[0] + r_cyl*np.cos(angles_cyl[1]), origin_cyl[1] + r_cyl*np.sin(angles_cyl[1]), origin_cyl[2] + 1.],
+            [origin_cyl[0] + r_cyl*np.cos(angles_cyl[2]), origin_cyl[1] + r_cyl*np.sin(angles_cyl[2]), origin_cyl[2] - 1.],
+            # cid=20 nodes (on sphere of r=4 around (-2,3,1))
+            [origin_sph[0] + 4., origin_sph[1], origin_sph[2]],  # theta=90, phi=0
+            [origin_sph[0], origin_sph[1] + 4., origin_sph[2]],  # theta=90, phi=90
+            [origin_sph[0], origin_sph[1], origin_sph[2] + 4.],  # theta=0
+        ])
+        nnodes = len(xyz_cid0)
+
+        # icd_transform: maps cid -> node indices
+        icd_transform = {
+            0: np.array([0, 1]),
+            10: np.array([2, 3, 4]),
+            20: np.array([5, 6, 7]),
+        }
+
+        # --- Setup mock result data ---
+        ntimes = 3
+
+        # Create a mock result with .data attribute
+        class MockResult:
+            def __init__(self, data):
+                self.data = data
+                self.table_name = 'OUGV1'
+
+        # All nodes get v_r (or v_x for rect) = 1.0 * (itime+1) as a scaling test
+        data = np.zeros((ntimes, nnodes, 6), dtype='float64')
+        for itime in range(ntimes):
+            scale = float(itime + 1)
+            # cid=0 nodes: displacement in x (stays as-is)
+            data[itime, 0, 0] = 7.0 * scale
+            data[itime, 1, 1] = -3.0 * scale
+            # cid=10 nodes: radial displacement
+            data[itime, 2, 0] = 0.1 * scale
+            data[itime, 3, 0] = 0.1 * scale
+            data[itime, 4, 0] = 0.1 * scale
+            # cid=20 nodes: radial displacement
+            data[itime, 5, 0] = 0.2 * scale
+            data[itime, 6, 0] = 0.2 * scale
+            data[itime, 7, 0] = 0.2 * scale
+
+        result = MockResult(data)
+        log = SimpleLogger(level='warning')
+
+        # --- Run full transform ---
+        transform_displacement_to_global(
+            None, result, icd_transform, coords, xyz_cid0, log)
+
+        # --- Verify ---
+        for itime in range(ntimes):
+            scale = float(itime + 1)
+
+            # cid=0 nodes: unchanged
+            assert np.isclose(data[itime, 0, 0], 7.0 * scale)
+            assert np.isclose(data[itime, 1, 1], -3.0 * scale)
+
+            # cid=10 nodes: radial displacement 0.1*scale in r -> global radial from cyl origin
+            for i, a in zip([2, 3, 4], angles_cyl):
+                r_hat = np.array([np.cos(a), np.sin(a), 0.])
+                expected = 0.1 * scale * r_hat
+                assert np.allclose(data[itime, i, :3], expected, atol=1e-13), (
+                    f'itime={itime} node={i}: {data[itime, i, :3]} != {expected}')
+
+            # cid=20 nodes: radial displacement 0.2*scale in r -> global radial from sph origin
+            for i in [5, 6, 7]:
+                r_vec = xyz_cid0[i] - origin_sph
+                r_hat = r_vec / np.linalg.norm(r_vec)
+                expected = 0.2 * scale * r_hat
+                assert np.allclose(data[itime, i, :3], expected, atol=1e-13), (
+                    f'itime={itime} node={i}: {data[itime, i, :3]} != {expected}')
+
+    def test_cylindrical_pressure_vessel(self):
+        """Cylindrical pressure vessel: constant radial displacement.
+
+        Internal pressure on a cylinder produces uniform radial deformation
+        in the r-direction. Every node has v_r=0.1, v_theta=0, v_z=0.
+        After transform to global, each displacement should be
+        0.1 * r_hat_xy, where r_hat_xy is the radial unit vector in the
+        x-y plane (perpendicular to the cylinder axis).
+
+        Tests identity beta, then offset + rotated coord.
+        Tolerance: 1e-14 (exact math).
+        """
+        from pyNastran.op2.op2_interface.transforms import _transform_cylindrical_displacement
+        from pyNastran.bdf.cards.coordinate_systems import CORD2C
+
+        # --- Case 1: identity beta, origin at global origin ---
+        cord2c = CORD2C(cid=40, rid=0,
+                        origin=[0., 0., 0.],
+                        zaxis=[0., 0., 1.],
+                        xzplane=[1., 0., 0.])
+        beta = cord2c.beta()
+        assert np.allclose(beta, np.eye(3)), f'expected identity beta:\n{beta}'
+
+        # 6 nodes around a cylinder of radius 2 at various z heights
+        r = 2.0
+        angles_deg = [0., 45., 90., 135., 225., 315.]
+        angles_rad = np.radians(angles_deg)
+        xyz_cid0 = np.array([
+            [r * np.cos(a), r * np.sin(a), z]
+            for a, z in zip(angles_rad, [0., 1., -1., 2., 0.5, -0.5])
+        ])
+        nnodes = len(xyz_cid0)
+        inode = np.arange(nnodes)
+
+        # Constant radial displacement = 0.1
+        radial_disp = 0.1
+        data = np.zeros((1, nnodes, 6), dtype='float64')
+        data[0, :, 0] = radial_disp  # v_r = 0.1
+
+        _transform_cylindrical_displacement(
+            inode, data, cord2c, xyz_cid0, beta, is_global_cid=True)
+
+        # Expected: 0.1 * radial unit vector in x-y plane
+        xy = xyz_cid0[:, :2]
+        r_xy = np.linalg.norm(xy, axis=1, keepdims=True)
+        r_hat_xy = xy / r_xy
+        expected = np.zeros((nnodes, 3))
+        expected[:, :2] = radial_disp * r_hat_xy
+        assert np.allclose(data[0, :, :3], expected, atol=1e-14), (
+            f'cylinder (identity) failed:\n{data[0, :, :3]}\nexpected:\n{expected}')
+        assert np.allclose(data[0, :, 3:], 0., atol=1e-14)
+
+        # --- Case 2: tangential displacement (hoop stress) ---
+        # v_theta = 0.05 at all nodes -> should be tangential (perpendicular to r_hat in x-y)
+        data[:] = 0.
+        data[0, :, 1] = 0.05  # v_theta
+
+        _transform_cylindrical_displacement(
+            inode, data, cord2c, xyz_cid0, beta, is_global_cid=True)
+
+        # Expected: 0.05 * theta_hat, where theta_hat = [-sin(theta), cos(theta), 0]
+        theta_hat = np.zeros((nnodes, 3))
+        theta_hat[:, 0] = -np.sin(angles_rad)
+        theta_hat[:, 1] = np.cos(angles_rad)
+        expected_theta = 0.05 * theta_hat
+        assert np.allclose(data[0, :, :3], expected_theta, atol=1e-14), (
+            f'tangential (identity) failed:\n{data[0, :, :3]}\nexpected:\n{expected_theta}')
+
+        # --- Case 3: axial displacement ---
+        # v_z = 0.2 at all nodes -> should remain purely in z
+        data[:] = 0.
+        data[0, :, 2] = 0.2  # v_z
+
+        _transform_cylindrical_displacement(
+            inode, data, cord2c, xyz_cid0, beta, is_global_cid=True)
+
+        expected_z = np.zeros((nnodes, 3))
+        expected_z[:, 2] = 0.2
+        assert np.allclose(data[0, :, :3], expected_z, atol=1e-14), (
+            f'axial (identity) failed:\n{data[0, :, :3]}\nexpected:\n{expected_z}')
+
+        # --- Case 4: offset origin + rotated axes ---
+        # Cylinder axis along global x, centered at (3, -1, 5)
+        origin = np.array([3., -1., 5.])
+        cord2c_rot = CORD2C(cid=41, rid=0,
+                            origin=origin.tolist(),
+                            zaxis=(origin + np.array([1., 0., 0.])).tolist(),
+                            xzplane=(origin + np.array([0., 0., 1.])).tolist())
+        beta_rot = cord2c_rot.beta()
+        assert not np.allclose(beta_rot, np.eye(3))
+
+        # Nodes around the cylinder (axis = local z = global x)
+        # In local frame: r=2, z varies along global x
+        # local x -> global z, local y -> global y, local z -> global x
+        r = 2.0
+        local_angles_rad = np.array([0., np.pi/3, 2*np.pi/3, np.pi, 4*np.pi/3, 5*np.pi/3])
+        # local coords: (r*cos(a), r*sin(a), z_local) -> transform to global via beta^T + origin
+        z_locals = np.array([0., 1., 2., -1., 0.5, -0.5])
+        xyz_local_rect = np.column_stack([
+            r * np.cos(local_angles_rad),
+            r * np.sin(local_angles_rad),
+            z_locals
+        ])
+        # global = local_rect @ beta + origin
+        xyz_rot = xyz_local_rect @ beta_rot + origin
+        nnodes_rot = len(xyz_rot)
+        inode_rot = np.arange(nnodes_rot)
+
+        # Radial displacement = 0.1
+        data_rot = np.zeros((1, nnodes_rot, 6), dtype='float64')
+        data_rot[0, :, 0] = radial_disp
+
+        _transform_cylindrical_displacement(
+            inode_rot, data_rot, cord2c_rot, xyz_rot,
+            beta_rot, is_global_cid=False)
+
+        # Expected: 0.1 * radial direction in global
+        # Radial direction in local rect = (cos(a), sin(a), 0), transform to global via beta^T
+        r_hat_local = np.column_stack([
+            np.cos(local_angles_rad),
+            np.sin(local_angles_rad),
+            np.zeros(nnodes_rot)
+        ])
+        r_hat_global = r_hat_local @ beta_rot  # local rect -> global
+        expected_rot = radial_disp * r_hat_global
+        assert np.allclose(data_rot[0, :, :3], expected_rot, atol=1e-14), (
+            f'cylinder (offset/rotated) failed:\n{data_rot[0, :, :3]}\nexpected:\n{expected_rot}')
+
+    def test_cylindrical_gpforce_offset_rotated(self):
+        """GPF transform for cylindrical coord with offset origin and rotated axes.
+
+        Simulates radial pressure on a cylinder: each node has force = (F_r, 0, 0)
+        in cylindrical. After transform to global, force should point radially
+        outward from the cylinder axis (perpendicular to the coord z-axis).
+
+        Also tests tangential forces and the repeated-node indexing path.
+
+        Tolerance: 1e-13.
+        """
+        from pyNastran.op2.op2_interface.transforms import _transform_cylindrical_gpforce
+        from pyNastran.bdf.cards.coordinate_systems import CORD2C
+
+        # Cylinder axis along global (1,1,0)/sqrt(2), centered at (2, 3, -1)
+        origin = np.array([2., 3., -1.])
+        z_dir = np.array([1., 1., 0.]) / np.sqrt(2.)
+        cord2c = CORD2C(cid=42, rid=0,
+                        origin=origin.tolist(),
+                        zaxis=(origin + z_dir).tolist(),
+                        xzplane=(origin + np.array([0., 0., 1.])).tolist())
+        beta = cord2c.beta()
+        assert not np.allclose(beta, np.eye(3))
+
+        # 6 nodes around the cylinder
+        r = 4.0
+        local_angles_rad = np.linspace(0, 2*np.pi, 6, endpoint=False)
+        z_locals = np.array([0., 1., -1., 2., -2., 0.5])
+        xyz_local_rect = np.column_stack([
+            r * np.cos(local_angles_rad),
+            r * np.sin(local_angles_rad),
+            z_locals
+        ])
+        xyz_cid0 = xyz_local_rect @ beta + origin
+        nnodes = len(xyz_cid0)
+
+        # GPF: 10 entries total (some nodes have multiple entries)
+        # node 0: 3 entries, node 1: 2, node 2: 1, node 3: 2, node 4: 1, node 5: 1
+        ngpf = 10
+        inode_gp_xyz = np.array([0, 0, 0, 1, 1, 2, 3, 3, 4, 5])
+        inode_gp = np.arange(ngpf)
+
+        # Radial force = 100
+        F_r = 100.0
+        data = np.zeros((1, ngpf, 6), dtype='float64')
+        data[0, :, 0] = F_r
+
+        _transform_cylindrical_gpforce(
+            inode_gp_xyz, inode_gp, data, beta,
+            cord2c, xyz_cid0, SimpleLogger(level='warning'))
+
+        # Expected: F_r * radial unit vector in global
+        # Radial in local rect = (cos(a), sin(a), 0)
+        r_hat_local = np.column_stack([
+            np.cos(local_angles_rad),
+            np.sin(local_angles_rad),
+            np.zeros(nnodes)
+        ])
+        r_hat_global = r_hat_local @ beta
+
+        # Map GPF entries to their node's expected direction
+        node_map = [0, 0, 0, 1, 1, 2, 3, 3, 4, 5]
+        for igpf, inode_phys in enumerate(node_map):
+            expected_f = F_r * r_hat_global[inode_phys]
+            assert np.allclose(data[0, igpf, :3], expected_f, atol=1e-13), (
+                f'GPF entry {igpf} (node {inode_phys}): '
+                f'{data[0, igpf, :3]} != {expected_f}')
+
+        # --- Also test tangential force ---
+        data[:] = 0.
+        data[0, :, 1] = F_r  # F_theta
+
+        _transform_cylindrical_gpforce(
+            inode_gp_xyz, inode_gp, data, beta,
+            cord2c, xyz_cid0, SimpleLogger(level='warning'))
+
+        # theta_hat in local rect = (-sin(a), cos(a), 0)
+        t_hat_local = np.column_stack([
+            -np.sin(local_angles_rad),
+            np.cos(local_angles_rad),
+            np.zeros(nnodes)
+        ])
+        t_hat_global = t_hat_local @ beta
+
+        for igpf, inode_phys in enumerate(node_map):
+            expected_t = F_r * t_hat_global[inode_phys]
+            assert np.allclose(data[0, igpf, :3], expected_t, atol=1e-13), (
+                f'GPF tangential entry {igpf} (node {inode_phys}): '
+                f'{data[0, igpf, :3]} != {expected_t}')
+
+        # --- Axial force should align with coord z = global z_dir ---
+        data[:] = 0.
+        data[0, :, 2] = F_r  # F_z
+
+        _transform_cylindrical_gpforce(
+            inode_gp_xyz, inode_gp, data, beta,
+            cord2c, xyz_cid0, SimpleLogger(level='warning'))
+
+        # z_hat in local = (0, 0, 1), in global = (0,0,1) @ beta = beta[2,:]
+        z_hat_global = beta[2, :]  # 3rd row of beta
+        expected_axial = F_r * z_hat_global
+        for igpf in range(ngpf):
+            assert np.allclose(data[0, igpf, :3], expected_axial, atol=1e-13), (
+                f'GPF axial entry {igpf}: {data[0, igpf, :3]} != {expected_axial}')
 
 def _get_gpforce_data():
     data = [

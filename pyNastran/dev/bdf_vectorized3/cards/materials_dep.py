@@ -168,7 +168,7 @@ class MATT1(Material):
         table0 = np.hstack([
             self.e_table, self.g_table, self.nu_table,
             self.rho_table, self.alpha_table,
-            self.ge_table, self.st_table, self.ss_table, ])
+            self.ge_table, self.st_table, self.sc_table, self.ss_table, ])
         utable0 = np.unique(table0)
         table = np.setdiff1d(utable0, [0])
         used_dict['tablem_id'].append(table)
