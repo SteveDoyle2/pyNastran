@@ -1048,4 +1048,3 @@ def combination_inplace(data: np.ndarray,
 #     except KeyError:
 #         raise RuntimeError(f'grid_type={grid_type_str!r}')
 #     return grid_type
-`
