@@ -29,6 +29,9 @@ DENSE_MATRICES = [
 
     b'EFMASSS', b'EFMFACS', b'EFMFSMS',
     b'MEFMASS', b'MEFWTS', b'MPFACS', b'RBMASSS',
+
+    b'QHJL', b'QHJA', b'QHJ',
+    b'QHHL', b'QHHA',
 ]
 def read_matrix_mat(op2_reader: OP2Reader) -> None:
     """

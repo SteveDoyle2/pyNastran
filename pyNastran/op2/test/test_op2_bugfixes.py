@@ -1847,14 +1847,11 @@ class TestLinearCombination(unittest.TestCase):
         assert np.allclose(plate_c.data[:, :, 6].ravel(), expected_min, atol=1e-3)
 
     def test_combination_inplace_no_data_nonzero_factor(self):
-        """combination_inplace with datai=None, factor!=0 is a no-op.
-
-        This prevents crashes when the workflow accidentally passes None with a factor.
-        """
+        """combination_inplace with datai=None, factor!=0 raises RuntimeError."""
         from pyNastran.op2.result_objects.op2_objects import combination_inplace
         data = np.ones((1, 2, 4), dtype='float32')
-        combination_inplace(data, None, 5.0)
-        assert np.all(data == 1.0)
+        with self.assertRaises(RuntimeError):
+            combination_inplace(data, None, 5.0)
 
     def test_combination_inplace_ires_zero(self):
         """combination_inplace with ires zeros only specified columns."""

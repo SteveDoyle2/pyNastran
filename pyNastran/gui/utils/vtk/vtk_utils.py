@@ -13,9 +13,9 @@ import numpy as np
 from pyNastran.gui.vtk_common_core import vtkVersion, VTK_VERSION as vtk_version
 _VTK_VERSION = vtkVersion.GetVTKVersion()
 VTK_VERSION_SPLIT = [int(val) for val in _VTK_VERSION.split('.')]
-_VTK_ERROR_MESSAGE = f'VTK version={vtk_version!r} is not supported (use 9.3<=vtk<9.6)'
+_VTK_ERROR_MESSAGE = f'VTK version={vtk_version!r} is not supported (use 9.3<=vtk<9.7)'
 if VTK_VERSION_SPLIT[0] == 9:
-    if not(3 <= VTK_VERSION_SPLIT[1] < 6):
+    if not(3 <= VTK_VERSION_SPLIT[1] < 7):
         raise NotImplementedError(_VTK_ERROR_MESSAGE)
 else:  # pragma: no cover
     raise NotImplementedError(_VTK_ERROR_MESSAGE)
@@ -24,7 +24,11 @@ else:  # pragma: no cover
 #from vtk import vtkCellData, vtkPointData
 from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData, vtkSelectionNode, vtkSelection
 from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
-from vtkmodules.vtkFiltersCore import vtkIdFilter
+try:
+    from vtkmodules.vtkFiltersCore import vtkIdFilter
+except ImportError:
+    # VTK 9.6+ renamed vtkIdFilter to vtkGenerateIds
+    from vtkmodules.vtkFiltersCore import vtkGenerateIds as vtkIdFilter
 from vtkmodules.util.vtkConstants import VTK_ID_TYPE
 
 from pyNastran.gui.vtk_common_core import (
@@ -37,6 +41,8 @@ from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkSelectionNode
 from pyNastran.gui.utils.vtk.base_utils import (
     numpy_to_vtk, numpy_to_vtkIdTypeArray,
     get_numpy_idtype_for_vtk, VTK_VERSION_SPLIT)
+
+_USE_LEGACY_SET_CELLS = (VTK_VERSION_SPLIT[0] == 9 and VTK_VERSION_SPLIT[1] < 6)
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     #from vtkmodules.vtkFiltersGeneral import vtkAxes
@@ -268,7 +274,6 @@ def create_vtk_cells_of_constant_element_type(grid: vtkUnstructuredGrid,
     elements_vtk[:, 1:] = elements
 
     cells_id_type = numpy_to_vtkIdTypeArray(elements_vtk.ravel(), deep=1)
-    vtk_cells.SetCells(nelements, cells_id_type)
 
     # Cell types
     # 5 = vtkTriangle().GetCellType()
@@ -277,10 +282,14 @@ def create_vtk_cells_of_constant_element_type(grid: vtkUnstructuredGrid,
         cell_types, deep=0,
         array_type=vtkUnsignedCharArray().GetDataType())
 
-    vtk_cell_offsets = numpy_to_vtk(cell_offsets, deep=0,
-                                    array_type=VTK_ID_TYPE)
-
-    grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
+    if _USE_LEGACY_SET_CELLS:
+        vtk_cells.SetCells(nelements, cells_id_type)
+        vtk_cell_offsets = numpy_to_vtk(cell_offsets, deep=0,
+                                        array_type=VTK_ID_TYPE)
+        grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
+    else:
+        vtk_cells.ImportLegacyFormat(cells_id_type)
+        grid.SetCells(vtk_cell_types, vtk_cells)
 
 def create_vtk_cells_of_constant_element_types(grid: vtkUnstructuredGrid,
                                                elements_list: list[np.ndarray],
@@ -341,17 +350,20 @@ def create_vtk_cells_of_constant_element_types(grid: vtkUnstructuredGrid,
     # Create the array of cells
     cells_id_type = numpy_to_vtkIdTypeArray(elements_array.ravel(), deep=1)
     vtk_cells = vtkCellArray()
-    vtk_cells.SetCells(nelements, cells_id_type)
 
     # Cell types
     vtk_cell_types = numpy_to_vtk(
         cell_types_array, deep=0,
         array_type=vtkUnsignedCharArray().GetDataType())
 
-    vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=0,
-                                    array_type=VTK_ID_TYPE)
-
-    grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
+    if _USE_LEGACY_SET_CELLS:
+        vtk_cells.SetCells(nelements, cells_id_type)
+        vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=0,
+                                        array_type=VTK_ID_TYPE)
+        grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
+    else:
+        vtk_cells.ImportLegacyFormat(cells_id_type)
+        grid.SetCells(vtk_cell_types, vtk_cells)
 
 def create_unstructured_point_grid(points: vtkPoints,
                                    npoints: int) -> vtkUnstructuredGrid:
@@ -406,19 +418,13 @@ def create_vtk_selection_node_by_cell_ids(cell_ids: np.ndarray) -> vtkSelectionN
     selection_node.SetSelectionList(id_type_array)
     return selection_node
 
-def _convert_ids_to_vtk_idtypearray(ids: np.ndarray) -> vtkIdTypeArray:
-    """TODO: speed this up"""
+def _convert_ids_to_vtk_idtypearray(ids) -> vtkIdTypeArray:
     if isinstance(ids, int):
-        ids = [ids]
-    #else:
-        #for idi in ids:
-            #assert isinstance(idi, int), type(idi)
-
-    id_type_array = vtkIdTypeArray()
-    id_type_array.SetNumberOfComponents(1)
-    for idi in ids:
-        id_type_array.InsertNextValue(idi)
-    return id_type_array
+        ids = np.array([ids], dtype='int64')
+    elif not isinstance(ids, np.ndarray):
+        ids = np.asarray(ids, dtype='int64')
+    ids = np.ascontiguousarray(ids.ravel().astype('int64'))
+    return numpy_to_vtkIdTypeArray(ids, deep=1)
 
 def find_point_id_closest_to_xyz(grid: vtkUnstructuredGrid,
                                  cell_id: int,

@@ -988,42 +988,57 @@ def combination_inplace(data: np.ndarray,
                         datai: np.ndarray,
                         factor: integer_float_types,
                         ires=None) -> None:
-    """does a linear combination; deals with underflow bugs
+    """Accumulate a scaled result into data: ``data[..., ires] += datai[..., ires] * factor``.
+
+    Used by solution_combination to build linear combinations of load cases.
+    The typical two-step pattern is:
+        1. combination_inplace(data, None, 0.0, ires)  -- zero the columns to reset for accumulation
+        2. combination_inplace(data, casei.data, factor, ires)  -- accumulate each scaled case
 
     Parameters
     ----------
     data : np.ndarray
-        the output array to modify in place (shape: ntimes x nnodes x ncols)
+        the output array to modify in place (shape: ntimes x nelements x ncols)
     datai : np.ndarray or None
-        the input array to add; None means what???
+        the input array to add scaled.
+        None is only valid with factor=0.0 (zeros data, step 1 above).
+        None with factor!=0.0 raises RuntimeError.
     factor : int/float
         scale factor applied to datai before adding
     ires : slice, list[int], or None
-        column indices to operate on; None means all columns
+        column indices to operate on; None means all columns.
+        Used to skip derived quantities (e.g., safety margins, principal stresses)
+        that should not be linearly combined.
     """
     assert isinstance(factor, integer_float_types), f'factor={factor} and must be a float'
     if datai is None and factor == 0.0:
-        # zero out the combination
-        # print(f'datai={datai} factor={factor}')
-        # assert datai is not None
-        data *= factor
-    # elif datai is None:
-
-    # elif ires is not None:
-    #     assert data.ndim == 3, data.shape
-    #     return combination_inplace(data[:, :, ires], None, factor)
+        if ires is not None and data.ndim == 3:
+            data[:, :, ires] *= factor
+        else:
+            data *= factor
+    elif datai is None:
+        raise RuntimeError(f'datai is None with factor={factor}; datai is only allowed to be None when factor=0.0')
     else:
-        try:
-            data += datai * factor
-        except FloatingPointError as error:
-            dtype = data.dtype.name
-            # import warnings
-            if dtype in {'float32'}:
-                # underflow
-                with np.errstate(under='ignore'):
-                    data += (datai.astype('float64') * factor).astype('float32')
-            else:
-                raise RuntimeError(f'Floating point error: dtype={dtype!r} factor={factor}')
+        if ires is not None and data.ndim == 3:
+            try:
+                data[:, :, ires] += datai[:, :, ires] * factor
+            except FloatingPointError:
+                dtype = data.dtype.name
+                if dtype in {'float32'}:
+                    with np.errstate(under='ignore'):
+                        data[:, :, ires] += (datai[:, :, ires].astype('float64') * factor).astype('float32')
+                else:
+                    raise RuntimeError(f'Floating point error: dtype={dtype!r} factor={factor}')
+        else:
+            try:
+                data += datai * factor
+            except FloatingPointError:
+                dtype = data.dtype.name
+                if dtype in {'float32'}:
+                    with np.errstate(under='ignore'):
+                        data += (datai.astype('float64') * factor).astype('float32')
+                else:
+                    raise RuntimeError(f'Floating point error: dtype={dtype!r} factor={factor}')
     return
 
 # def cast_grid_type(grid_type_str: str) -> int:
@@ -1033,3 +1048,4 @@ def combination_inplace(data: np.ndarray,
 #     except KeyError:
 #         raise RuntimeError(f'grid_type={grid_type_str!r}')
 #     return grid_type
+`

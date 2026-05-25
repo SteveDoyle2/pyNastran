@@ -228,32 +228,32 @@ class RealRodArray(OES_Object):
         return eid_data[ielement]
 
     def von_mises(self) -> np.ndarray:
-        #[axial, torsion, SMa, SMt]
+        #[axial, SMa, torsion, SMt]
         oxx = self.data[:, :, 0]
-        txy = self.data[:, :, 1]
+        txy = self.data[:, :, 2]
         oyy = oxx * 0.
         von_mises = von_mises_2d(oxx, oyy, txy, self.is_stress)
         return von_mises
 
     def abs_principal(self) -> np.ndarray:
-        #[axial, torsion, SMa, SMt]
+        #[axial, SMa, torsion, SMt]
         oxx = self.data[:, :, 0]
-        txy = np.abs(self.data[:, :, 1])
+        txy = np.abs(self.data[:, :, 2])
         omax = oxx + txy
         omin = oxx - txy
         abs_max = get_abs_max(omin, omax, dtype=omax.dtype)
         return abs_max
 
     def max_shear(self) -> np.ndarray:
-        #[axial, torsion, SMa, SMt]
-        max_shear = np.abs(self.data[:, :, 1])
+        #[axial, SMa, torsion, SMt]
+        max_shear = np.abs(self.data[:, :, 2])
         return max_shear
 
     def linear_combination(self, factor: integer_float_types,
                            data: Optional[np.ndarray]=None,
                            update: bool=True) -> None:
-        #[axial, torsion, SMa, SMt]
-        ires = [0, 1] # axial, torsion
+        #[axial, SMa, torsion, SMt]
+        ires = [0, 2]  # axial, torsion
         combination_inplace(self.data, data, factor, ires=ires)
         if update:
             self.update_data_components()
