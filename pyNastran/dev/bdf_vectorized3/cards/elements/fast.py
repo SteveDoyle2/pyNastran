@@ -385,6 +385,14 @@ class PFAST(Property):
         prop.ge = self.ge[i]
         prop.n = len(i)
 
+    def convert(self, xyz_scale: float=1.0, mass_scale: float=1.0,
+                linear_stiffness_scale: float=1.0,
+                rotational_stiffness_scale: float=1.0, **kwargs) -> None:
+        self.diameter *= xyz_scale
+        self.kt *= linear_stiffness_scale
+        self.kr *= rotational_stiffness_scale
+        self._mass *= mass_scale
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['coord_id'].append(self.coord_id)
 

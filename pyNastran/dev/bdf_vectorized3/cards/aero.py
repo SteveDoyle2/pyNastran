@@ -683,6 +683,12 @@ class CAERO1(VectorizedBaseCard):
         elem.nchord = self.nchord[i]
         elem.lchord = self.lchord[i]
 
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        self.p1 *= xyz_scale
+        self.p4 *= xyz_scale
+        self.x12 *= xyz_scale
+        self.x43 *= xyz_scale
+
     def validate(self):
         msg = ''
         is_failed = False
@@ -1147,6 +1153,10 @@ class CAERO2(VectorizedBaseCard):
         elem.nint = self.nint[i]
         elem.lint = self.lint[i]
 
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        self.p1 *= xyz_scale
+        self.x12 *= xyz_scale
+
     def validate(self) -> None:
         #print('nsb=%s lsb=%s' % (self.nsb, self.lsb))
         #print('nint=%s lint=%s' % (self.nint, self.lint))
@@ -1527,6 +1537,12 @@ class CAERO3(VectorizedBaseCard):
         elem.list_c1 = self.list_c1[i]
         elem.list_c2 = self.list_c2[i]
 
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        self.p1 *= xyz_scale
+        self.p4 *= xyz_scale
+        self.x12 *= xyz_scale
+        self.x43 *= xyz_scale
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         model = self.model
         #mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
@@ -1900,6 +1916,12 @@ class CAERO4(VectorizedBaseCard):
         elem.cp = self.cp[i]
         elem.nspan = self.nspan[i]
         elem.lspan = self.lspan[i]
+
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        self.p1 *= xyz_scale
+        self.p4 *= xyz_scale
+        self.x12 *= xyz_scale
+        self.x43 *= xyz_scale
 
     def validate(self):
         msg = ''
@@ -2303,6 +2325,12 @@ class CAERO5(VectorizedBaseCard):
         elem.lspan = self.lspan[i]
         elem.ntheory = self.ntheory[i]
         elem.nthick = self.nthick[i]
+
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        self.p1 *= xyz_scale
+        self.p4 *= xyz_scale
+        self.x12 *= xyz_scale
+        self.x43 *= xyz_scale
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         model = self.model
@@ -6084,7 +6112,13 @@ class GUST(VectorizedBaseCard):
         gust.dload_id = self.dload_id[i]
         gust.wg = self.wg[i]
         gust.x0 = self.x0[i]
+        gust.V = self.V[i]
         gust.n = len(i)
+
+    def convert(self, xyz_scale: float=1.0,
+                velocity_scale: float=1.0, **kwargs) -> None:
+        self.x0 *= xyz_scale
+        self.V *= velocity_scale
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         #mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
@@ -7786,6 +7820,9 @@ class TRIM(VectorizedBaseCard):
         load.ux = hslice_by_idim(i, ilabel, self.ux)
         load.nlabel = self.nlabel[i]
 
+    def convert(self, pressure_scale: float=1.0, **kwargs) -> None:
+        self.q *= pressure_scale
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         model = self.model
         #mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
@@ -8069,6 +8106,437 @@ class TRIM(VectorizedBaseCard):
                     list_fields += [aeqr]
             if nlabels == 1:
                 list_fields += [None, None, aeqr]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class TRIM2(VectorizedBaseCard):
+    """
+    Defines the state of the aerodynamic extra points for a trim analysis.
+    All undefined extra points will be set to zero.
+
+    +-------+--------+------+--------+--------+-----+--------+-----+----------+
+    |   1   |   2    |   3  |    4   |    5   |  6  |    7   |  8  |     9    |
+    +=======+========+======+========+========+=====+========+=====+==========+
+    | TRIM2 |   ID   | MACH |    Q   |        |     |        |     | IS_RIGID |
+    +-------+--------+------+--------+--------+-----+--------+-----+----------+
+    |       | LABEL1 |  UX1 | LABEL2 |   UX2  | ... |        |     |          |
+    +-------+--------+------+--------+--------+-----+--------+-----+----------+
+    """
+    _id_name = 'trim_id'
+    @VectorizedBaseCard.clear_check
+    def clear(self) -> None:
+        self.trim_id = np.array([], dtype='int32')
+        self.mach = np.array([], dtype='float64')
+        self.q = np.array([], dtype='float64')
+        self.aeqr = np.array([], dtype='float64')
+        self.nlabel = np.array([], dtype='int32')
+        self.label = np.array([], dtype='|U8')
+        self.ux = np.array([], dtype='float64')
+
+    def add(self, sid: int, mach: float, q: float,
+            labels: list[str], uxs: list[float], aeqr: float=1.0,
+            ifile: int=0, comment: str='') -> int:
+        assert len(labels) == len(uxs)
+        card = (sid, mach, q, labels, uxs, aeqr, ifile, comment)
+        self.cards.append(card)
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+        sid = integer(card, 1, 'sid')
+        mach = double(card, 2, 'mach')
+        q = double(card, 3, 'q')
+        aeqr = double_or_blank(card, 8, 'aeqr', default=1.0)
+
+        i = 9
+        n = 1
+        labels = []
+        uxs = []
+        while i < len(card):
+            label = string(card, i, 'label%d' % n)
+            ux = double(card, i + 1, 'ux%d' % n)
+            labels.append(label)
+            uxs.append(ux)
+            i += 2
+            n += 1
+        self.cards.append((sid, mach, q, labels, uxs, aeqr, ifile, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
+        trim_id = np.zeros(ncards, dtype='int32')
+        mach = np.zeros(ncards, dtype='float64')
+        q = np.zeros(ncards, dtype='float64')
+        aeqr = np.zeros(ncards, dtype='float64')
+        nlabel = np.zeros(ncards, dtype='int32')
+        label = []
+        ux = []
+        comment = {}
+        for icard, card in enumerate(self.cards):
+            (sid, machi, qi, labelsi, uxsi, aeqri, ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[sid] = commenti
+            trim_id[icard] = sid
+            mach[icard] = machi
+            q[icard] = qi
+            aeqr[icard] = aeqri
+            nlabel[icard] = len(labelsi)
+            label.extend(labelsi)
+            ux.extend(uxsi)
+        label = np.array(label, dtype='|U8')
+        ux = np.array(ux, dtype='float64')
+        self._save(trim_id, mach, q, aeqr, nlabel, label, ux,
+                   ifile=ifile, comment=comment)
+        self.sort()
+        self.cards = []
+
+    def _save(self, trim_id, mach, q, aeqr, nlabel, label, ux,
+              ifile=None, comment=None):
+        ncards = len(trim_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if len(self.trim_id):
+            trim_id = np.hstack([self.trim_id, trim_id])
+            mach = np.hstack([self.mach, mach])
+            q = np.hstack([self.q, q])
+            aeqr = np.hstack([self.aeqr, aeqr])
+            nlabel = np.hstack([self.nlabel, nlabel])
+            label = np.hstack([self.label, label])
+            ux = np.hstack([self.ux, ux])
+        save_ifile_comment(self, ifile, comment)
+        self.trim_id = trim_id
+        self.mach = mach
+        self.q = q
+        self.aeqr = aeqr
+        self.nlabel = nlabel
+        self.label = label
+        self.ux = ux
+        self.n = len(trim_id)
+
+    @property
+    def ilabel(self) -> np.ndarray:
+        return make_idim(self.n, self.nlabel)
+
+    def __apply_slice__(self, load: TRIM2, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.trim_id = self.trim_id[i]
+        load.mach = self.mach[i]
+        load.q = self.q[i]
+        load.aeqr = self.aeqr[i]
+        ilabel = self.ilabel
+        load.label = hslice_by_idim(i, ilabel, self.label)
+        load.ux = hslice_by_idim(i, ilabel, self.ux)
+        load.nlabel = self.nlabel[i]
+
+    def convert(self, pressure_scale: float=1.0, **kwargs) -> None:
+        self.q *= pressure_scale
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        geom_check(self, missing)
+
+    @property
+    def max_id(self) -> int:
+        return self.trim_id.max()
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        trim_ids = array_str(self.trim_id, size=size)
+
+        for trim_id, mach, q, aeqr, (ilabel0, ilabel1) in zip_longest(
+                trim_ids, self.mach, self.q, self.aeqr, self.ilabel):
+
+            labels = self.label[ilabel0:ilabel1]
+            uxs = self.ux[ilabel0:ilabel1]
+            list_fields = ['TRIM2', trim_id, mach, q, None, None, None, None, aeqr]
+            nlabels = len(labels)
+            assert nlabels > 0, labels
+            for label, ux in zip(labels, uxs):
+                list_fields += [label, ux]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class AEFORCE(VectorizedBaseCard):
+    """
+    Defines an aerodynamic force vector for static aeroelastic trim.
+
+    +---------+------+-------+-------+------+------+-------+------+------+
+    |    1    |   2  |   3   |   4   |   5  |   6  |   7   |   8  |   9  |
+    +=========+======+=======+=======+======+======+=======+======+======+
+    | AEFORCE | MACH | SYMXZ | SYMXY | UXID | MESH | FORCE | DMIK | PERQ |
+    +---------+------+-------+-------+------+------+-------+------+------+
+    """
+    _id_name = 'ux_id'
+    @VectorizedBaseCard.clear_check
+    def clear(self) -> None:
+        self.mach = np.array([], dtype='float64')
+        self.sym_xz = np.array([], dtype='|U8')
+        self.sym_xy = np.array([], dtype='|U8')
+        self.ux_id = np.array([], dtype='int32')
+        self.mesh = np.array([], dtype='|U8')
+        self.force = np.array([], dtype='int32')
+        self.dmik = np.array([], dtype='|U8')
+        self.perq = np.array([], dtype='|U8')
+
+    def add(self, mach: float, sym_xz: str, sym_xy: str, ux_id: int,
+            mesh: str, force: int, dmik: str, perq: str='',
+            ifile: int=0, comment: str='') -> int:
+        card = (mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq, ifile, comment)
+        self.cards.append(card)
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+        mach = double(card, 1, 'mach')
+        sym_xz = string_or_blank(card, 2, 'sym_xz', default='')
+        sym_xy = string_or_blank(card, 3, 'sym_xy', default='')
+        ux_id = integer(card, 4, 'ux_id')
+        mesh = string_or_blank(card, 5, 'mesh', default='')
+        force = integer_or_blank(card, 6, 'force', default=0)
+        dmik = string_or_blank(card, 7, 'dmik', default='')
+        perq = string_or_blank(card, 8, 'perq', default='')
+        self.cards.append((mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq, ifile, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
+        mach = np.zeros(ncards, dtype='float64')
+        sym_xz = np.empty(ncards, dtype='|U8')
+        sym_xy = np.empty(ncards, dtype='|U8')
+        ux_id = np.zeros(ncards, dtype='int32')
+        mesh = np.empty(ncards, dtype='|U8')
+        force = np.zeros(ncards, dtype='int32')
+        dmik = np.empty(ncards, dtype='|U8')
+        perq = np.empty(ncards, dtype='|U8')
+        comment = {}
+        for icard, card in enumerate(self.cards):
+            (machi, sym_xzi, sym_xyi, ux_idi, meshi, forcei, dmiki, perqi, ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[icard] = commenti
+            mach[icard] = machi
+            sym_xz[icard] = sym_xzi
+            sym_xy[icard] = sym_xyi
+            ux_id[icard] = ux_idi
+            mesh[icard] = meshi
+            force[icard] = forcei
+            dmik[icard] = dmiki
+            perq[icard] = perqi
+        self._save(mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq,
+                   ifile=ifile, comment=comment)
+        self.cards = []
+
+    def _save(self, mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq,
+              ifile=None, comment=None):
+        ncards = len(ux_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if len(self.ux_id):
+            mach = np.hstack([self.mach, mach])
+            sym_xz = np.hstack([self.sym_xz, sym_xz])
+            sym_xy = np.hstack([self.sym_xy, sym_xy])
+            ux_id = np.hstack([self.ux_id, ux_id])
+            mesh = np.hstack([self.mesh, mesh])
+            force = np.hstack([self.force, force])
+            dmik = np.hstack([self.dmik, dmik])
+            perq = np.hstack([self.perq, perq])
+        save_ifile_comment(self, ifile, comment)
+        self.mach = mach
+        self.sym_xz = sym_xz
+        self.sym_xy = sym_xy
+        self.ux_id = ux_id
+        self.mesh = mesh
+        self.force = force
+        self.dmik = dmik
+        self.perq = perq
+        self.n = len(ux_id)
+
+    def __apply_slice__(self, load: AEFORCE, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.mach = self.mach[i]
+        load.sym_xz = self.sym_xz[i]
+        load.sym_xy = self.sym_xy[i]
+        load.ux_id = self.ux_id[i]
+        load.mesh = self.mesh[i]
+        load.force = self.force[i]
+        load.dmik = self.dmik[i]
+        load.perq = self.perq[i]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        geom_check(self, missing)
+
+    @property
+    def max_id(self) -> int:
+        return self.ux_id.max()
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        for mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq in zip(
+                self.mach, self.sym_xz, self.sym_xy, self.ux_id,
+                self.mesh, self.force, self.dmik, self.perq):
+            list_fields = ['AEFORCE', mach,
+                           sym_xz if sym_xz else None,
+                           sym_xy if sym_xy else None,
+                           ux_id,
+                           mesh if mesh else None,
+                           force if force else None,
+                           dmik if dmik else None,
+                           perq if perq else None]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class UXVEC(VectorizedBaseCard):
+    """
+    Defines the state of the aerodynamic extra points for a trim analysis.
+    All undefined extra points will be set to zero.
+
+    +-------+--------+------+--------+--------+-----+--------+-----+----------+
+    |   1   |   2    |   3  |    4   |    5   |  6  |    7   |  8  |     9    |
+    +=======+========+======+========+========+=====+========+=====+==========+
+    | UXVEC |   ID   |      |        |        |     |        |     |          |
+    +-------+--------+------+--------+--------+-----+--------+-----+----------+
+    |       | LABEL1 |  UX1 | LABEL2 |   UX2  | ... |        |     |          |
+    +-------+--------+------+--------+--------+-----+--------+-----+----------+
+    """
+    _id_name = 'uxvec_id'
+    @VectorizedBaseCard.clear_check
+    def clear(self) -> None:
+        self.uxvec_id = np.array([], dtype='int32')
+        self.nlabel = np.array([], dtype='int32')
+        self.label = np.array([], dtype='|U8')
+        self.ux = np.array([], dtype='float64')
+
+    def add(self, sid: int, labels: list[str], uxs: list[float],
+            ifile: int=0, comment: str='') -> int:
+        assert len(labels) == len(uxs)
+        card = (sid, labels, uxs, ifile, comment)
+        self.cards.append(card)
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+        sid = integer(card, 1, 'sid')
+
+        i = 9
+        n = 1
+        labels = []
+        uxs = []
+        while i < len(card):
+            label = string(card, i, 'label%d' % n)
+            ux = double(card, i + 1, 'ux%d' % n)
+            labels.append(label)
+            uxs.append(ux)
+            i += 2
+            n += 1
+        self.cards.append((sid, labels, uxs, ifile, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
+        uxvec_id = np.zeros(ncards, dtype='int32')
+        nlabel = np.zeros(ncards, dtype='int32')
+        label = []
+        ux = []
+        comment = {}
+        for icard, card in enumerate(self.cards):
+            (sid, labelsi, uxsi, ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[sid] = commenti
+            uxvec_id[icard] = sid
+            nlabel[icard] = len(labelsi)
+            label.extend(labelsi)
+            ux.extend(uxsi)
+        label = np.array(label, dtype='|U8')
+        ux = np.array(ux, dtype='float64')
+        self._save(uxvec_id, nlabel, label, ux,
+                   ifile=ifile, comment=comment)
+        self.sort()
+        self.cards = []
+
+    def _save(self, uxvec_id, nlabel, label, ux,
+              ifile=None, comment=None):
+        ncards = len(uxvec_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if len(self.uxvec_id):
+            uxvec_id = np.hstack([self.uxvec_id, uxvec_id])
+            nlabel = np.hstack([self.nlabel, nlabel])
+            label = np.hstack([self.label, label])
+            ux = np.hstack([self.ux, ux])
+        save_ifile_comment(self, ifile, comment)
+        self.uxvec_id = uxvec_id
+        self.nlabel = nlabel
+        self.label = label
+        self.ux = ux
+        self.n = len(uxvec_id)
+
+    @property
+    def ilabel(self) -> np.ndarray:
+        return make_idim(self.n, self.nlabel)
+
+    def __apply_slice__(self, load: UXVEC, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.uxvec_id = self.uxvec_id[i]
+        ilabel = self.ilabel
+        load.label = hslice_by_idim(i, ilabel, self.label)
+        load.ux = hslice_by_idim(i, ilabel, self.ux)
+        load.nlabel = self.nlabel[i]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        geom_check(self, missing)
+
+    @property
+    def max_id(self) -> int:
+        return self.uxvec_id.max()
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        uxvec_ids = array_str(self.uxvec_id, size=size)
+
+        for uxvec_id, (ilabel0, ilabel1) in zip_longest(
+                uxvec_ids, self.ilabel):
+
+            labels = self.label[ilabel0:ilabel1]
+            uxs = self.ux[ilabel0:ilabel1]
+            list_fields = ['UXVEC', uxvec_id, None, None, None, None, None, None, None]
+            nlabels = len(labels)
+            assert nlabels > 0, labels
+            for label, ux in zip(labels, uxs):
+                list_fields += [label, ux]
             bdf_file.write(print_card(list_fields))
         return
 

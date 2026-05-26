@@ -3028,11 +3028,11 @@ class PSHELL(Property):
 
         if self.mid2_ref and self.twelveIt3 != 0.0:
             Qbar2 = get_Qbar_matrix(self.mid2_ref, theta=theta)
-            D += Qbar2 * (z1 ** 3 - z0 ** 3) * self.twelveIt3
+            D += Qbar2 * (z1 ** 3 - z0 ** 3) / 3. * self.twelveIt3
         #Qbar3 = get_Qbar_matrix(self.mid3_ref, theta=0.)
         if self.mid4_ref:
             Qbar4 = get_Qbar_matrix(self.mid4_ref, theta=theta)
-            B += Qbar4 * (z1 ** 2 - z0 ** 2)
+            B += Qbar4 * (z1 ** 2 - z0 ** 2) / 2.
 
         unused_ts = self.tst * thickness
 

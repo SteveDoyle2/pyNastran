@@ -541,7 +541,6 @@ class CONM2(Element):
                    self.coord_id.max())
 
     @parse_check
-    @parse_check
     def write_file_8(self, bdf_file: TextIOLike,
                      write_card_header: bool=False) -> None:
         if self.max_id >= 100_000_000:
@@ -573,6 +572,7 @@ class CONM2(Element):
                      for eid, nid, cid, m in zip(eids, nids, cids, masses)]
         bdf_file.write(''.join(lines))
 
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

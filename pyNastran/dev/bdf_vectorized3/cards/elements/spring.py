@@ -303,6 +303,9 @@ class CELAS2(Element):
         elem.s = self.s[i]
         elem.n = len(i)
 
+    def convert(self, linear_stiffness_scale: float=1.0, **kwargs) -> None:
+        self.k *= linear_stiffness_scale
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         nodes = self.nodes.ravel()
         nodes = nodes[nodes > 0]
@@ -581,6 +584,9 @@ class CELAS4(Element):
         elem.k = self.k[i]
         elem.n = len(i)
 
+    def convert(self, linear_stiffness_scale: float=1.0, **kwargs) -> None:
+        self.k *= linear_stiffness_scale
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         spoints = self.spoints.ravel()
         spoints = spoints[spoints > 0]
@@ -707,6 +713,9 @@ class PELAS(Property):
         prop.ge = self.ge[i]
         prop.s = self.s[i]
         prop.n = len(i)
+
+    def convert(self, linear_stiffness_scale: float=1.0, **kwargs) -> None:
+        self.k *= linear_stiffness_scale
 
     def validate(self) -> None:
         return
@@ -838,7 +847,14 @@ class PELAST(Property):
         pass
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        pass
+        model = self.model
+        tabled_ids = np.array(list(model.tables_d.keys()), dtype='int32')
+        table0 = np.hstack([self.table_k, self.table_ge, self.table_k_nonlinear])
+        table_ids = np.setdiff1d(np.unique(table0), [0])
+        if len(table_ids) and len(tabled_ids):
+            umissing = np.setdiff1d(table_ids, tabled_ids)
+            if len(umissing):
+                missing['tabled_id'] = umissing
 
     @property
     def max_id(self) -> int:

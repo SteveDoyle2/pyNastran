@@ -1861,3 +1861,125 @@ def _solid_quad_area(nids: np.ndarray,
     area = 0.5 * norm
     assert len(area) == len(xyz1)
     return area, centroid, normal
+
+
+class PLOADX1(Load):
+    """
+    Pressure Load on Axisymmetric Element
+
+    +---------+-----+-----+----+----+----+----+-------+
+    |    1    |  2  |  3  |  4 |  5 |  6 |  7 |   8   |
+    +=========+=====+=====+====+====+====+====+=======+
+    | PLOADX1 | SID | EID | PA | PB | GA | GB | THETA |
+    +---------+-----+-----+----+----+----+----+-------+
+    """
+    _id_name = 'load_id'
+
+    @Load.clear_check
+    def clear(self) -> None:
+        self.load_id = np.array([], dtype='int32')
+        self.element_id = np.array([], dtype='int32')
+        self.pa = np.array([], dtype='float64')
+        self.pb = np.array([], dtype='float64')
+        self.ga = np.array([], dtype='int32')
+        self.gb = np.array([], dtype='int32')
+        self.theta = np.array([], dtype='float64')
+
+    def add(self, sid: int, eid: int, pa: float, pb: float,
+            ga: int, gb: int, theta: float=0.0,
+            comment: str='') -> int:
+        if pb is None:
+            pb = pa
+        self.cards.append((sid, eid, pa, pb, ga, gb, theta, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+        sid = integer(card, 1, 'sid')
+        eid = integer(card, 2, 'eid')
+        pa = double(card, 3, 'pa')
+        pb = double_or_blank(card, 4, 'pb', default=pa)
+        ga = integer(card, 5, 'ga')
+        gb = integer(card, 6, 'gb')
+        theta = double_or_blank(card, 7, 'theta', default=0.0)
+        assert len(card) <= 8, f'len(PLOADX1 card) = {len(card):d}\ncard={card}'
+        self.cards.append((sid, eid, pa, pb, ga, gb, theta, comment))
+        self.n += 1
+        return self.n - 1
+
+    @Load.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        load_id = np.zeros(ncards, dtype='int32')
+        element_id = np.zeros(ncards, dtype=idtype)
+        pa = np.zeros(ncards, dtype='float64')
+        pb = np.zeros(ncards, dtype='float64')
+        ga = np.zeros(ncards, dtype=idtype)
+        gb = np.zeros(ncards, dtype=idtype)
+        theta = np.zeros(ncards, dtype='float64')
+        for icard, card in enumerate(self.cards):
+            (sid, eid, pai, pbi, gai, gbi, thetai, comment) = card
+            load_id[icard] = sid
+            element_id[icard] = eid
+            pa[icard] = pai
+            pb[icard] = pbi
+            ga[icard] = gai
+            gb[icard] = gbi
+            theta[icard] = thetai
+        self._save(load_id, element_id, pa, pb, ga, gb, theta)
+        self.cards = []
+
+    def _save(self, load_id, element_id, pa, pb, ga, gb, theta):
+        if len(self.load_id) != 0:
+            load_id = np.hstack([self.load_id, load_id])
+            element_id = np.hstack([self.element_id, element_id])
+            pa = np.hstack([self.pa, pa])
+            pb = np.hstack([self.pb, pb])
+            ga = np.hstack([self.ga, ga])
+            gb = np.hstack([self.gb, gb])
+            theta = np.hstack([self.theta, theta])
+        self.load_id = load_id
+        self.element_id = element_id
+        self.pa = pa
+        self.pb = pb
+        self.ga = ga
+        self.gb = gb
+        self.theta = theta
+        self.n = len(load_id)
+
+    def __apply_slice__(self, load: PLOADX1, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.element_id = self.element_id[i]
+        load.pa = self.pa[i]
+        load.pb = self.pb[i]
+        load.ga = self.ga[i]
+        load.gb = self.gb[i]
+        load.theta = self.theta[i]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['element_id'].append(self.element_id)
+        used_dict['node_id'].append(self.ga)
+        used_dict['node_id'].append(self.gb)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        all_nodes = np.hstack([self.ga, self.gb])
+        geom_check(self, missing, node=(nid, all_nodes))
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.element_id.max(),
+                   self.ga.max(), self.gb.max())
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+        for load_id, eid, pa, pb, ga, gb, theta in zip(
+                self.load_id, self.element_id, self.pa, self.pb,
+                self.ga, self.gb, self.theta):
+            list_fields = ['PLOADX1', load_id, eid, pa, pb, ga, gb, theta]
+            bdf_file.write(print_card(list_fields))

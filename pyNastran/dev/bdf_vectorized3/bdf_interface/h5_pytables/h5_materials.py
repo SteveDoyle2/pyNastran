@@ -29,6 +29,7 @@ def load_h5_material(model: BDF, input_group: Group):
             mat.rho = data['RHO']
             mat.alpha = data['A']
             mat.tref = data['TREF']
+            mat.ge = data['GE']
             mat.St = data['ST']
             mat.Sc = data['SC']
             mat.Ss = data['SS']

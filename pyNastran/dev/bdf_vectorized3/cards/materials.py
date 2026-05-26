@@ -2455,7 +2455,16 @@ class MAT10(Material):
         mat.table_id_gamma = self.table_id_gamma[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        pass
+        model = self.model
+        tabled_ids = np.array(list(model.tables_d.keys()), dtype='int32')
+        table0 = np.hstack([
+            self.table_id_bulk, self.table_id_rho,
+            self.table_id_ge, self.table_id_gamma])
+        table_ids = np.setdiff1d(np.unique(table0), [0])
+        if len(table_ids) and len(tabled_ids):
+            umissing = np.setdiff1d(table_ids, tabled_ids)
+            if len(umissing):
+                missing['tabled_id'] = umissing
 
     @property
     def max_id(self) -> int:

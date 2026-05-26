@@ -2943,3 +2943,381 @@ def array_int_float(delay_int: np.ndarray,
     idelay_int = (delay_int > 0)
     delay_floats[idelay_int] = delay_ids[idelay_int]
     return delay_floats
+
+
+class RANDT1(VectorizedBaseCard):
+    """
+    Random Analysis Parameters
+
+    +--------+-----+---+----+------+
+    |    1   |  2  | 3 |  4 |   5  |
+    +========+=====+===+====+======+
+    | RANDT1 | SID | N | T0 | TMAX |
+    +--------+-----+---+----+------+
+    """
+    _id_name = 'load_id'
+
+    def clear(self) -> None:
+        self.n = 0
+        self.load_id = np.array([], dtype='int32')
+        self.n_val = np.array([], dtype='int32')
+        self.t0 = np.array([], dtype='float64')
+        self.tmax = np.array([], dtype='float64')
+
+    def add(self, sid: int, n: int, t0: float, tmax: float,
+            comment: str='') -> int:
+        self.cards.append((sid, n, t0, tmax, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+        sid = integer(card, 1, 'sid')
+        n = integer(card, 2, 'n')
+        t0 = double(card, 3, 't0')
+        tmax = double(card, 4, 'tmax')
+        assert len(card) <= 5, f'len(RANDT1 card) = {len(card):d}\ncard={card}'
+        self.cards.append((sid, n, t0, tmax, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        load_id = np.zeros(ncards, dtype='int32')
+        n_val = np.zeros(ncards, dtype='int32')
+        t0 = np.zeros(ncards, dtype='float64')
+        tmax = np.zeros(ncards, dtype='float64')
+        for icard, card in enumerate(self.cards):
+            (sid, ni, t0i, tmaxi, comment) = card
+            load_id[icard] = sid
+            n_val[icard] = ni
+            t0[icard] = t0i
+            tmax[icard] = tmaxi
+        self._save(load_id, n_val, t0, tmax)
+        self.cards = []
+
+    def _save(self, load_id, n_val, t0, tmax):
+        if len(self.load_id) != 0:
+            load_id = np.hstack([self.load_id, load_id])
+            n_val = np.hstack([self.n_val, n_val])
+            t0 = np.hstack([self.t0, t0])
+            tmax = np.hstack([self.tmax, tmax])
+        self.load_id = load_id
+        self.n_val = n_val
+        self.t0 = t0
+        self.tmax = tmax
+        self.n = len(load_id)
+
+    def __apply_slice__(self, load: RANDT1, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.n_val = self.n_val[i]
+        load.t0 = self.t0[i]
+        load.tmax = self.tmax[i]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        pass
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @property
+    def max_id(self) -> int:
+        return self.load_id.max()
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+        for load_id, n, t0, tmax in zip(
+                self.load_id, self.n_val, self.t0, self.tmax):
+            list_fields = ['RANDT1', load_id, n, t0, tmax]
+            bdf_file.write(print_card(list_fields))
+
+
+class LOADCYN(VectorizedBaseCard):
+    """
+    Load for Cyclic Symmetry (by Segment)
+
+    +---------+-----+-------+-----+------+----+----+----+----+
+    |    1    |  2  |   3   |  4  |   5  |  6 |  7 |  8 |  9 |
+    +=========+=====+=======+=====+======+====+====+====+====+
+    | LOADCYN | SID | SCALE | SEG | TYPE | S1 | L1 | S2 | L2 |
+    +---------+-----+-------+-----+------+----+----+----+----+
+    """
+    _id_name = 'load_id'
+
+    def clear(self) -> None:
+        self.n = 0
+        self.load_id = np.array([], dtype='int32')
+        self.scale = np.array([], dtype='float64')
+        self.segment_id = np.array([], dtype='int32')
+        self.segment_type = np.array([], dtype='|U8')
+        self.scales = np.array([], dtype='float64')
+        self.load_ids = np.array([], dtype='int32')
+        self.nloads = np.array([], dtype='int32')
+
+    def add(self, sid: int, scale: float, segment_id: int,
+            segment_type: str, scales: list[float],
+            load_ids: list[int], comment: str='') -> int:
+        if segment_type is None:
+            segment_type = ''
+        self.cards.append((sid, scale, segment_id, segment_type,
+                           scales, load_ids, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+        sid = integer(card, 1, 'sid')
+        scale = double(card, 2, 'scale')
+        segment_id = integer(card, 3, 'segment_id')
+        segment_type = integer_string_or_blank(card, 4, 'segment_type')
+        if segment_type is None:
+            segment_type = ''
+        else:
+            segment_type = str(segment_type)
+
+        scalei = double(card, 5, 'scale1')
+        loadi = integer(card, 6, 'load1')
+        scales = [scalei]
+        load_ids_list = [loadi]
+
+        scalei = double_or_blank(card, 7, 'scale2')
+        if scalei is not None:
+            loadi = integer(card, 8, 'load2')
+            scales.append(scalei)
+            load_ids_list.append(loadi)
+
+        self.cards.append((sid, scale, segment_id, segment_type,
+                           scales, load_ids_list, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        load_id = np.zeros(ncards, dtype='int32')
+        scale = np.zeros(ncards, dtype='float64')
+        segment_id = np.zeros(ncards, dtype='int32')
+        segment_type = np.full(ncards, '', dtype='|U8')
+        nloads = np.zeros(ncards, dtype='int32')
+        all_scales = []
+        all_load_ids = []
+        for icard, card in enumerate(self.cards):
+            (sid, scalei, seg_id, seg_type, scalesi, load_idsi, comment) = card
+            load_id[icard] = sid
+            scale[icard] = scalei
+            segment_id[icard] = seg_id
+            segment_type[icard] = seg_type
+            nloads[icard] = len(scalesi)
+            all_scales.extend(scalesi)
+            all_load_ids.extend(load_idsi)
+        scales = np.array(all_scales, dtype='float64')
+        load_ids = np.array(all_load_ids, dtype='int32')
+        self._save(load_id, scale, segment_id, segment_type,
+                   scales, load_ids, nloads)
+        self.cards = []
+
+    def _save(self, load_id, scale, segment_id, segment_type,
+              scales, load_ids, nloads):
+        if len(self.load_id) != 0:
+            load_id = np.hstack([self.load_id, load_id])
+            scale = np.hstack([self.scale, scale])
+            segment_id = np.hstack([self.segment_id, segment_id])
+            segment_type = np.hstack([self.segment_type, segment_type])
+            scales = np.hstack([self.scales, scales])
+            load_ids = np.hstack([self.load_ids, load_ids])
+            nloads = np.hstack([self.nloads, nloads])
+        self.load_id = load_id
+        self.scale = scale
+        self.segment_id = segment_id
+        self.segment_type = segment_type
+        self.scales = scales
+        self.load_ids = load_ids
+        self.nloads = nloads
+        self.n = len(load_id)
+
+    def __apply_slice__(self, load: LOADCYN, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.scale = self.scale[i]
+        load.segment_id = self.segment_id[i]
+        load.segment_type = self.segment_type[i]
+        idim = self.idim
+        load.scales = hslice_by_idim(i, idim, self.scales)
+        load.load_ids = hslice_by_idim(i, idim, self.load_ids)
+        load.nloads = self.nloads[i]
+
+    @property
+    def idim(self) -> np.ndarray:
+        return make_idim(self.n, self.nloads)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.load_ids.max())
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+        for load_id, scale, seg_id, seg_type, (idim0, idim1) in zip(
+                self.load_id, self.scale, self.segment_id,
+                self.segment_type, self.idim):
+            scales = self.scales[idim0:idim1]
+            load_ids = self.load_ids[idim0:idim1]
+            seg_type_val = seg_type if seg_type != '' else None
+            list_fields = ['LOADCYN', load_id, scale, seg_id, seg_type_val]
+            for s, lid in zip(scales, load_ids):
+                list_fields += [s, lid]
+            bdf_file.write(print_card(list_fields))
+
+
+class LOADCYH(VectorizedBaseCard):
+    """
+    Harmonic Load Input for Cyclic Symmetry
+
+    +---------+-----+---+-----+-------+----+----+----+----+
+    |    1    |  2  | 3 |  4  |   5   |  6 |  7 |  8 |  9 |
+    +=========+=====+===+=====+=======+====+====+====+====+
+    | LOADCYH | SID | S | HID | HTYPE | S1 | L1 | S2 | L2 |
+    +---------+-----+---+-----+-------+----+----+----+----+
+    """
+    _id_name = 'load_id'
+
+    def clear(self) -> None:
+        self.n = 0
+        self.load_id = np.array([], dtype='int32')
+        self.scale = np.array([], dtype='float64')
+        self.hid = np.array([], dtype='int32')
+        self.htype = np.array([], dtype='|U8')
+        self.scales = np.array([], dtype='float64')
+        self.load_ids = np.array([], dtype='int32')
+        self.nloads = np.array([], dtype='int32')
+
+    def add(self, sid: int, scale: float, hid: int,
+            htype: str, scales: list[float],
+            load_ids: list[int], comment: str='') -> int:
+        if htype is None:
+            htype = ''
+        self.cards.append((sid, scale, hid, htype, scales, load_ids, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+        sid = integer(card, 1, 'sid')
+        scale = double(card, 2, 's')
+        hid = integer(card, 3, 'hid')
+        htype = integer_string_or_blank(card, 4, 'htype')
+        if htype is None:
+            htype = ''
+        else:
+            htype = str(htype)
+
+        scale1 = double(card, 5, 'scale1')
+        load1 = integer(card, 6, 'load1')
+        scales = [scale1]
+        load_ids_list = [load1]
+
+        scale2 = double_or_blank(card, 7, 'scale2')
+        if scale2 is not None:
+            load2 = integer(card, 8, 'load2')
+            scales.append(scale2)
+            load_ids_list.append(load2)
+
+        self.cards.append((sid, scale, hid, htype, scales, load_ids_list, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        load_id = np.zeros(ncards, dtype='int32')
+        scale = np.zeros(ncards, dtype='float64')
+        hid = np.zeros(ncards, dtype='int32')
+        htype = np.full(ncards, '', dtype='|U8')
+        nloads = np.zeros(ncards, dtype='int32')
+        all_scales = []
+        all_load_ids = []
+        for icard, card in enumerate(self.cards):
+            (sid, scalei, hidi, htypei, scalesi, load_idsi, comment) = card
+            load_id[icard] = sid
+            scale[icard] = scalei
+            hid[icard] = hidi
+            htype[icard] = htypei
+            nloads[icard] = len(scalesi)
+            all_scales.extend(scalesi)
+            all_load_ids.extend(load_idsi)
+        scales = np.array(all_scales, dtype='float64')
+        load_ids = np.array(all_load_ids, dtype='int32')
+        self._save(load_id, scale, hid, htype, scales, load_ids, nloads)
+        self.cards = []
+
+    def _save(self, load_id, scale, hid, htype, scales, load_ids, nloads):
+        if len(self.load_id) != 0:
+            load_id = np.hstack([self.load_id, load_id])
+            scale = np.hstack([self.scale, scale])
+            hid = np.hstack([self.hid, hid])
+            htype = np.hstack([self.htype, htype])
+            scales = np.hstack([self.scales, scales])
+            load_ids = np.hstack([self.load_ids, load_ids])
+            nloads = np.hstack([self.nloads, nloads])
+        self.load_id = load_id
+        self.scale = scale
+        self.hid = hid
+        self.htype = htype
+        self.scales = scales
+        self.load_ids = load_ids
+        self.nloads = nloads
+        self.n = len(load_id)
+
+    def __apply_slice__(self, load: LOADCYH, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.scale = self.scale[i]
+        load.hid = self.hid[i]
+        load.htype = self.htype[i]
+        idim = self.idim
+        load.scales = hslice_by_idim(i, idim, self.scales)
+        load.load_ids = hslice_by_idim(i, idim, self.load_ids)
+        load.nloads = self.nloads[i]
+
+    @property
+    def idim(self) -> np.ndarray:
+        return make_idim(self.n, self.nloads)
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        pass
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.load_ids.max())
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+        for load_id, scale, hid, htype, (idim0, idim1) in zip(
+                self.load_id, self.scale, self.hid,
+                self.htype, self.idim):
+            scales = self.scales[idim0:idim1]
+            load_ids = self.load_ids[idim0:idim1]
+            htype_val = htype if htype != '' else None
+            list_fields = ['LOADCYH', load_id, scale, hid, htype_val]
+            for s, lid in zip(scales, load_ids):
+                list_fields += [s, lid]
+            bdf_file.write(print_card(list_fields))

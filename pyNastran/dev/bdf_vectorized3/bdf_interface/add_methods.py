@@ -278,6 +278,15 @@ class AddMethods:
         self.model.tables_sdamping[key] = table
         self.model._type_to_id_map[table.type].append(key)
 
+    def add_random_table_object(self, table) -> None:
+        """adds a TABRND1/TABRNDG object"""
+        key = table.tid
+        assert key not in self.model.random_tables, '\nrandom_table=\n%s old_random_table=\n%s' % (
+            table, self.model.random_tables[key])
+        assert key > 0
+        self.model.random_tables[key] = table
+        self.model._type_to_id_map[table.type].append(key)
+
     #-----------------------------------------------------------
     # optimization
     def add_deqatn_object(self, deqatn: DEQATN, allow_overwrites: bool=False) -> None:
