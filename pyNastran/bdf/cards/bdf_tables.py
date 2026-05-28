@@ -36,7 +36,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string, string_or_blank,
     double_or_string, double_or_blank, integer_or_string)
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_string
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_float_8
+from pyNastran.bdf.field_writer_8 import array_float_8
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF

@@ -3,6 +3,8 @@ import sys
 import math
 import warnings
 from typing import Optional, Any
+
+import numpy as np
 from numpy import int32, int64, float32, float64, isnan
 
 
@@ -434,3 +436,65 @@ def print_int_card_blocks(fields_blocks: list[Any]) -> str:
             raise SyntaxError('is_all_ints must be a boolean.  is_all_ints=%r' % is_all_ints)
     out = out.rstrip(' \n') + '\n'  # removes blank lines at the end of cards
     return out
+
+
+_POS_BINS_8 = [
+    (0.1, 1.0, '%8.7f'),
+    (1.0, 10.0, '%8.6f'),
+    (10.0, 100.0, '%8.5f'),
+    (100.0, 1000.0, '%8.4f'),
+    (1000.0, 10000.0, '%8.3f'),
+    (10000.0, 100000.0, '%8.2f'),
+    (100000.0, 1000000.0, '%8.1f'),
+]
+
+_NEG_BINS_8 = [
+    (0.1, 1.0, '%8.6f'),
+    (1.0, 10.0, '%8.5f'),
+    (10.0, 100.0, '%8.4f'),
+    (100.0, 1000.0, '%8.3f'),
+    (1000.0, 10000.0, '%8.2f'),
+    (10000.0, 100000.0, '%8.1f'),
+]
+
+
+def array_float_8(ndarray: np.ndarray) -> np.ndarray:
+    """Vectorized print_float_8 for arrays — bins values by magnitude
+    and formats in batches to avoid per-element Python call overhead."""
+    shape = ndarray.shape
+    flat = ndarray.ravel()
+    n = len(flat)
+    result = np.empty(n, dtype='|U8')
+    abs_val = np.abs(flat)
+    processed = np.zeros(n, dtype=bool)
+
+    izero = flat == 0.0
+    result[izero] = '      0.'
+    processed |= izero
+
+    pos = flat > 0
+    neg = flat < 0
+
+    for lo, hi, fmt in _POS_BINS_8:
+        mask = pos & (flat >= lo) & (flat < hi)
+        if not np.any(mask):
+            continue
+        indices = np.where(mask)[0]
+        result[indices] = [((fmt % v).strip(' 0') or '0.').rjust(8)
+                           for v in flat[indices]]
+        processed[indices] = True
+
+    for lo, hi, fmt in _NEG_BINS_8:
+        mask = neg & (abs_val >= lo) & (abs_val < hi)
+        if not np.any(mask):
+            continue
+        indices = np.where(mask)[0]
+        result[indices] = [((fmt % v).replace('-0.', '-.').strip(' 0') or '-.').rjust(8)
+                           for v in flat[indices]]
+        processed[indices] = True
+
+    remaining = np.where(~processed)[0]
+    for idx in remaining:
+        result[idx] = print_float_8(flat[idx])
+
+    return result.reshape(shape)

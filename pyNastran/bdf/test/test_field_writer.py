@@ -15,7 +15,8 @@ from pyNastran.bdf.field_writer_double import print_card_double, print_field_dou
 
 
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_float_8, array_float_16
+from pyNastran.bdf.field_writer_8 import array_float_8
+from pyNastran.bdf.field_writer_16 import array_float_16
 
 
 class Testfield_writer_8(unittest.TestCase):

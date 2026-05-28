@@ -421,12 +421,13 @@ def get_area_breakdown(model: BDF,
                     continue
                 else:
                     for eid in typed_eids:
-                    try:
-                        total_area += model.elements[eid].Area()
-                    except AttributeError:  # pragma: no cover
-                        print(prop)
-                        print(elem)
-                        raise
+                        elem = model.elements[eid]
+                        try:
+                            total_area += elem.Area()
+                        except AttributeError:  # pragma: no cover
+                            print(prop)
+                            print(elem)
+                            raise
             if total_area > 0.0:
                 pids_to_area[pid] = total_area
         elif prop.type in bar_properties:
