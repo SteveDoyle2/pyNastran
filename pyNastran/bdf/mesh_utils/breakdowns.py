@@ -431,6 +431,8 @@ def get_area_breakdown(model: BDF,
             if total_area > 0.0:
                 pids_to_area[pid] = total_area
         elif prop.type in bar_properties:
+            if not eids:
+                continue
             elem = model.elements[eids[0]]
             area = elem.Area()
             if sum_bar_area:
