@@ -1,6 +1,6 @@
 """Tests for pyNastran.bdf.cards.utils (wipe_empty_fields, build_table_lines)."""
 import unittest
-from pyNastran.bdf.cards.utils import wipe_empty_fields, build_table_lines
+from pyNastran.bdf.cards.utils import wipe_empty_fields, wipe_empty_fields_str, build_table_lines
 
 
 class TestWipeEmptyFields(unittest.TestCase):
@@ -94,6 +94,44 @@ class TestWipeEmptyFields(unittest.TestCase):
         card = ['CARD', None, ' VALUE ']
         result = wipe_empty_fields(card)
         self.assertEqual(result, ['CARD', None, 'VALUE'])
+
+    def test_single_blank_string_returns_one_none(self):
+        """A single blank string must return [None], not [].
+
+        BDFCard relies on this to keep card.card non-empty so that
+        print_card(card) doesn't crash with an IndexError.
+        Do not change this behavior.
+        """
+        self.assertEqual(wipe_empty_fields(['']), [None])
+        self.assertEqual(wipe_empty_fields(['  ']), [None])
+
+    def test_single_none_returns_one_none(self):
+        """A single None field must return [None], not [].
+
+        Same rationale as test_single_blank_string_returns_one_none.
+        Do not change this behavior.
+        """
+        self.assertEqual(wipe_empty_fields([None]), [None])
+
+
+class TestWipeEmptyFieldsStr(unittest.TestCase):
+    """Tests wipe_empty_fields_str: fast path for all-string inputs."""
+
+    def test_single_blank_string_returns_one_none(self):
+        """A single blank string must return [None], not [].
+
+        Do not change this behavior.
+        """
+        self.assertEqual(wipe_empty_fields_str(['']), [None])
+        self.assertEqual(wipe_empty_fields_str(['  ']), [None])
+
+    def test_trailing_blanks_removed(self):
+        result = wipe_empty_fields_str(['GRID', '1', '', '1.0', '', ''])
+        self.assertEqual(result, ['GRID', '1', None, '1.0'])
+
+    def test_all_blanks_after_first(self):
+        result = wipe_empty_fields_str(['SET1', '', '  ', ''])
+        self.assertEqual(result, ['SET1'])
 
 
 class TestBuildTableLines(unittest.TestCase):

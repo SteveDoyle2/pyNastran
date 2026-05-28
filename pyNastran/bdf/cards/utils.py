@@ -81,7 +81,7 @@ def wipe_empty_fields(card: list[str | int | float | None]) -> list[str | int | 
         for field in card
     ]
     # find last non-None index
-    imax = -1
+    imax = 0
     for i in range(len(short_card) - 1, -1, -1):
         if short_card[i] is not None:
             imax = i
@@ -94,7 +94,7 @@ def wipe_empty_fields_str(card: list[str]) -> list[str | None]:
     (e.g., from _to_fields_standard during BDF reading)."""
     short_card = [(field.strip() or None) for field in card]
     # find last non-None index
-    imax = -1
+    imax = 0
     for i in range(len(short_card) - 1, -1, -1):
         if short_card[i] is not None:
             imax = i
