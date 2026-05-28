@@ -83,7 +83,7 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
     GRAV, ACCEL, ACCEL1,
 )
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_pressure_loads import (
-    PLOAD, PLOAD1, PLOAD2, PLOAD4, # PLOADX1,
+    PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
 )
 from pyNastran.dev.bdf_vectorized3.cards.loads.types import Loads as StaticLoad
 
@@ -91,6 +91,7 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
     LSEQ, DLOAD,
     DAREA, TLOAD1, TLOAD2, RLOAD1, RLOAD2, TIC, QVECT,
     RANDPS, DELAY, DPHASE, TF, ACSRCE,
+    RANDT1, LOADCYN, LOADCYH,
 )
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.thermal_loads import (
@@ -115,6 +116,10 @@ from pyNastran.dev.bdf_vectorized3.cards.contact import (
     BCONP, BFRIC, BLSEG, BCRPARA, BEDGE,
     BCBODY, BCBODY1,
     BOUTPUT,
+)
+from pyNastran.dev.bdf_vectorized3.cards.superelements import (
+    SETREE, SENQSET, SEBULK, SEBNDRY, SECONCT, SEELT, SEEXCLD,
+    SELABEL, SELOAD, SELOC, SEMPLN, CSUPER, CSUPEXT,
 )
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
 from pyNastran.dev.bdf_vectorized3.cards.rotor import (
@@ -141,7 +146,7 @@ from pyNastran.dev.bdf_vectorized3.cards.aero import (
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
     AECOMP, AECOMPL, AELIST, AEFACT, FLFACT, FLUTTER,
     AEPARM, AELINK, AESTAT,
-    GUST, AESURF, AESURFS, CSSCHD, DIVERG, TRIM)
+    GUST, AESURF, AESURFS, CSSCHD, DIVERG, TRIM, TRIM2, UXVEC, AEFORCE)
 from pyNastran.dev.bdf_vectorized3.cards.optimization import (
     DESVAR, DLINK, DVGRID,
     DRESP1, DRESP2, DCONSTR,
@@ -173,7 +178,7 @@ if TYPE_CHECKING:  # pragma: no cover
         TABLED1, TABLED2, TABLED3, TABLED4, # TABLED5,
         TABLEM1, TABLEM2, TABLEM3, TABLEM4,
         TABLES1, TABLEST, TABLEH1, TABLEHT,
-        TABDMP1, # TABRND1, TABRNDG
+        TABDMP1, TABRND1, TABRNDG,
     )
 
 class BDFAttributes:
@@ -570,7 +575,7 @@ class BDFAttributes:
         self.rforce1 = RFORCE1(self)  # rotational force
 
         # axisymmetric loads
-        #self.ploadx1 = PLOADX1(self)
+        self.ploadx1 = PLOADX1(self)
 
         # other thermal...
         self.qvect = QVECT(self)
@@ -603,6 +608,11 @@ class BDFAttributes:
         # random loads
         self.randps = RANDPS(self)
         self.acsrce = ACSRCE(self)
+        self.randt1 = RANDT1(self)
+
+        # cyclic loads
+        self.loadcyn = LOADCYN(self)
+        self.loadcyh = LOADCYH(self)
 
         self.mat1 = MAT1(self)
         self.mat2 = MAT2(self)
@@ -701,7 +711,9 @@ class BDFAttributes:
         self.csschd = CSSCHD(self)
         self.diverg = DIVERG(self)
         self.trim = TRIM(self)
-        #self.trim2 = TRIM(self)
+        self.trim2 = TRIM2(self)
+        self.uxvec = UXVEC(self)
+        self.aeforce = AEFORCE(self)
 
         # static aero
         self.aeros = None
@@ -716,6 +728,7 @@ class BDFAttributes:
         self.tables_d: dict[int, TABLED1 | TABLED2 | TABLED3 | TABLED4] = {}
         self.tables_m: dict[int, TABLEM1 | TABLEM2 | TABLEM3 | TABLEM4] = {}
         self.tables_sdamping: dict[int, TABDMP1] = {}
+        self.random_tables: dict[int, TABRND1 | TABRNDG] = {}
 
         # matrices
         #: direct matrix input - DMIG
@@ -728,6 +741,21 @@ class BDFAttributes:
         self.dti: dict[str, DMI] = {}
         self._dmig_temp = defaultdict(list)  # type: dict[str, list[str]]
         # ----------------------------------------
+
+        # superelements
+        self.setree = SETREE(self)
+        self.senqset = SENQSET(self)
+        self.sebulk = SEBULK(self)
+        self.sebndry = SEBNDRY(self)
+        self.seconct = SECONCT(self)
+        self.seelt = SEELT(self)
+        self.seloc = SELOC(self)
+        self.sempln = SEMPLN(self)
+        self.selabel = SELABEL(self)
+        self.seexcld = SEEXCLD(self)
+        self.csuper = CSUPER(self)
+        self.csupext = CSUPEXT(self)
+        self.seload = SELOAD(self)
 
         self.system_command_lines: list[str] = []
         self.executive_control_lines: list[str] = []
@@ -981,7 +1009,7 @@ class BDFAttributes:
             self.temp, self.tempd, self.tempp1, self.temprb,
             self.spcd, self.deform,
             self.rforce, self.rforce1,
-            #self.ploadx1,
+            self.ploadx1,
         ]
         return loads
 
@@ -1008,7 +1036,10 @@ class BDFAttributes:
             self.rotorg,
 
             # random loads
-            self.randps, self.acsrce,
+            self.randps, self.acsrce, self.randt1,
+
+            # cyclic loads
+            self.loadcyn, self.loadcyh,
         ]
         return loads
 
@@ -1079,6 +1110,12 @@ class BDFAttributes:
         sesets = [
             self.sebset, self.secset, self.seqset, self.seuset,
             self.release, self.seset,
+            # superelements
+            self.setree, self.senqset, self.sebulk,
+            self.sebndry, self.seconct, self.seelt,
+            self.seloc, self.sempln, self.selabel,
+            self.seexcld, self.csuper, self.csupext,
+            self.seload,
         ]
         return sesets
 
@@ -1106,8 +1143,8 @@ class BDFAttributes:
     @property
     def aero_load_cards(self) -> list[VectorizedBaseCard]:
         loads = [
-            self.gust, self.csschd, self.trim, # self.trim2,
-            self.diverg,
+            self.gust, self.csschd, self.trim, self.trim2,
+            self.uxvec, self.aeforce, self.diverg,
         ]
         return loads
 

@@ -15,6 +15,7 @@ from pyNastran.bdf.field_writer_double import print_card_double, print_field_dou
 
 
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_float_8, array_float_16
 
 
 class Testfield_writer_8(unittest.TestCase):
@@ -896,6 +897,151 @@ class Testfield_writer_8(unittest.TestCase):
         result_wipe = print_card_double(card, wipe_fields=True)
         result_no_wipe = print_card_double(card, wipe_fields=False)
         self.assertGreaterEqual(len(result_no_wipe), len(result_wipe))
+
+
+class TestArrayFloat8(unittest.TestCase):
+    """Verify array_float_8 matches print_float_8 for all values tested in Testfield_writer_8."""
+
+    def _check_match_8(self, values: list[float]):
+        """Helper: runs values through array_float_8 and compares to print_float_8."""
+        arr = np.array(values, dtype=np.float64)
+        result = array_float_8(arr)
+        for i, val in enumerate(values):
+            expected = print_float_8(val)
+            self.assertEqual(result[i], expected,
+                             f'index={i} value={val}: array_float_8=|{result[i]}| print_float_8=|{expected}|')
+
+    def test_array_float_8_positive(self):
+        """Match test_floats_positive_8 values."""
+        values = [
+            -.003607,
+            1.2, 0.5, -0.5,
+            1.2, 1.23456789, 12.234568, 123.23457, 1234.23468,
+            12345.238, 123456.28, 1234567.25, 12345678., 123456789.,
+            0.1, 0.0001, 0.00001, 0.000001, 0.0000001,
+            0.00000012, 0.000748519, 0.12345678, 0.00012349, 0.000012349,
+            5e-08, 1e-20, 0.0, 1.0,
+        ]
+        self._check_match_8(values)
+
+    def test_array_float_8_negative(self):
+        """Match test_floats_negative_8 values."""
+        values = [
+            -1.2, -1.23456789, -12.234568, -123.23457, -1234.23468,
+            -12345.238, -123456.28, -1234567.25, -12345678., -123456789.,
+            -0.1, -0.0001, -0.00001, -0.000001, -0.0000001,
+            -0.00000012, -0.000748519, -0.12345678, -0.00012349, -0.000012349,
+            -1e-5, -1e-6, -1e-7, -1e-20,
+        ]
+        self._check_match_8(values)
+
+    def test_array_float_8_edge_cases(self):
+        """Match test_float_8_edge_cases values (excluding NaN which array_float_8 doesn't handle)."""
+        values = [
+            999999.9, 1000000.0, 9999999.0,
+            -999999.9, -1000000.0, -9999999.0,
+            5e-8, 4.9e-8, -5e-8, -5e-7,
+            0.0, -0.0,
+            0.001, 0.0001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0,
+            -0.001, -0.0001, -0.01, -0.1, -1.0, -10.0, -100.0, -1000.0, -10000.0, -100000.0,
+            9.999999, 99.99999,
+            1234567.5, -1234567.5, -9999999.5,
+            9999999.5, 9999999.9,
+        ]
+        self._check_match_8(values)
+
+    def test_array_float_8_sweep(self):
+        """Match test_float_8 sweep (9/11 * 10^x for x in -17..17)."""
+        small_exponent = -17
+        large_exponent = 17
+        values = (
+            [0., 0.000034, -0.000034] +
+            [9./11 * 10**x for x in range(small_exponent, large_exponent+1)] +
+            [-9./11 * 10**x for x in range(small_exponent, large_exponent+1)])
+        self._check_match_8(values)
+
+    def test_array_float_8_many(self):
+        """Match test_float_8_many logspace sweep."""
+        for istart in np.arange(-13, 13):
+            nums = np.logspace(istart, istart+1, num=1000, endpoint=True, base=10.0)
+            all_vals = np.concatenate([nums, -nums])
+            result = array_float_8(all_vals)
+            for i, val in enumerate(all_vals):
+                expected = print_float_8(val)
+                self.assertEqual(result[i], expected,
+                                 f'istart={istart} value={val}: '
+                                 f'array=|{result[i]}| scalar=|{expected}|')
+
+    def test_array_float_8_2d(self):
+        """Verify array_float_8 works on 2D arrays."""
+        values = np.array([[1.0, -2.5, 100.0],
+                           [0.001, -0.001, 0.0]], dtype=np.float64)
+        result = array_float_8(values)
+        self.assertEqual(result.shape, (2, 3))
+        for i in range(2):
+            for j in range(3):
+                expected = print_float_8(values[i, j])
+                self.assertEqual(result[i, j], expected)
+
+
+class TestArrayFloat16(unittest.TestCase):
+    """Verify array_float_16 matches print_float_16 for all values tested in Testfield_writer_8."""
+
+    def _check_match_16(self, values: list[float]):
+        """Helper: runs values through array_float_16 and compares to print_float_16."""
+        arr = np.array(values, dtype=np.float64)
+        result = array_float_16(arr)
+        for i, val in enumerate(values):
+            expected = print_float_16(val)
+            self.assertEqual(result[i], expected,
+                             f'index={i} value={val}: array_float_16=|{result[i]}| print_float_16=|{expected}|')
+
+    def test_array_float_16_sweep(self):
+        """Match test_float_16 sweep (9/11 * 10^x for x in -17..17)."""
+        small_exponent = -17
+        large_exponent = 17
+        values = (
+            [0., 0.000034, -0.000034,
+             0.000000000000000000000001, -0.000000000000000000000001] +
+            [9./11 * 10**x for x in range(small_exponent, large_exponent+1)] +
+            [-9./11 * 10**x for x in range(small_exponent, large_exponent+1)])
+        self._check_match_16(values)
+
+    def test_array_float_16_edge_cases(self):
+        """Match test_float_16_edge_cases values (excluding NaN)."""
+        values = [
+            0.0, -0.0,
+            1e-16, -1e-16, 5e-16, -5e-16,
+            1e-5, -1e-5, 0.001, -0.001, 0.000034, -0.000034,
+            1.0, -1.0, 1e5, -1e5,
+            999999999999999.,
+            1e15, -1e15, 1e16, -1e16,
+            1.23456789012345, -1.23456789012345,
+        ]
+        self._check_match_16(values)
+
+    def test_array_float_16_many(self):
+        """Match test_float_16_many logspace sweep."""
+        for istart in np.arange(-13, 13):
+            nums = np.logspace(istart, istart+1, num=1000, endpoint=True, base=10.0)
+            all_vals = np.concatenate([nums, -nums])
+            result = array_float_16(all_vals)
+            for i, val in enumerate(all_vals):
+                expected = print_float_16(val)
+                self.assertEqual(result[i], expected,
+                                 f'istart={istart} value={val}: '
+                                 f'array=|{result[i]}| scalar=|{expected}|')
+
+    def test_array_float_16_2d(self):
+        """Verify array_float_16 works on 2D arrays."""
+        values = np.array([[1.0, -2.5, 100.0],
+                           [0.001, -0.001, 0.0]], dtype=np.float64)
+        result = array_float_16(values)
+        self.assertEqual(result.shape, (2, 3))
+        for i in range(2):
+            for j in range(3):
+                expected = print_float_16(values[i, j])
+                self.assertEqual(result[i, j], expected)
 
 
 def compare(value_in):

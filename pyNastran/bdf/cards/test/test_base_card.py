@@ -1,5 +1,5 @@
 import unittest
-from pyNastran.bdf.cards.collpase_card import collapse_thru_by
+from pyNastran.bdf.cards.collpase_card import collapse_thru_by, collapse_thru_ipacks
 from pyNastran.bdf.bdf_interface.subcase.utils import expand_thru_case_control
 from pyNastran.bdf.cards.expand_card import expand_thru, expand_thru_by
 
@@ -149,6 +149,77 @@ class TestBaseCard(unittest.TestCase):
         data = [1, 2, 3, 4, 5, 6, 7, 8]
         expected = [1, 'THRU', 8]
         self.assertEqual(collapse_thru_by(data), expected, collapse_thru_by(data))
+
+
+    def test_collapse_thru_ipacks(self):
+        """tests collapse_thru_ipacks with non-unit GCi deltas (DMI use case).
+
+        When GCi values have delta > 1 (e.g. [1,3,5]), the returned
+        singles must still be valid array indices — not extrapolated
+        using the field delta as a step over indices.
+        """
+        # indices [5,6] with GCi values [1,3] -> field delta=2
+        # singles must be [5,6], not [5,7]
+        singles, doubles = collapse_thru_ipacks([5, 6], [1, 3])
+        self.assertEqual(singles, [5, 6])
+        self.assertEqual(doubles, [])
+
+        # indices [10,11,12] with GCi values [1,3,5] -> field delta=2
+        # singles must be [10,11,12], not [10,12,14]
+        singles, doubles = collapse_thru_ipacks([10, 11, 12], [1, 3, 5])
+        self.assertEqual(singles, [10, 11, 12])
+        self.assertEqual(doubles, [])
+
+        # consecutive GCi (delta=1) still works: long enough for THRU
+        i = list(range(10, 21))
+        fields = list(range(1, 12))
+        singles, doubles = collapse_thru_ipacks(i, fields)
+        self.assertEqual(singles, [])
+        self.assertEqual(doubles, [[10, 'THRU', 20]])
+
+        # large field delta (10) — must not step by 10 over indices
+        singles, doubles = collapse_thru_ipacks([100, 101, 102, 103], [10, 20, 30, 40])
+        self.assertEqual(singles, [100, 101, 102, 103])
+        self.assertEqual(doubles, [])
+
+        # single element
+        singles, doubles = collapse_thru_ipacks([42], [7])
+        self.assertEqual(singles, [42])
+        self.assertEqual(doubles, [])
+
+        # alternating deltas: [1,3,4,6,7,9] -> packs break at each delta change
+        # indices 0..5, fields have deltas 2,1,2,1,2
+        i3 = [0, 1, 2, 3, 4, 5]
+        fields3 = [1, 3, 4, 6, 7, 9]
+        singles3, doubles3 = collapse_thru_ipacks(i3, fields3)
+        all_indices = set(singles3)
+        for d in doubles3:
+            all_indices.add(d[0])
+            all_indices.add(d[2])
+            for idx in range(d[0], d[2] + 1):
+                all_indices.add(idx)
+        self.assertTrue(all_indices.issubset(set(i3)))
+
+        # boundary: last index at array edge (the original WKK bug pattern)
+        # 5 contiguous indices ending at 99, GCi stride=2
+        i4 = [95, 96, 97, 98, 99]
+        fields4 = [1, 3, 5, 7, 9]
+        singles4, doubles4 = collapse_thru_ipacks(i4, fields4)
+        self.assertEqual(doubles4, [])
+        self.assertEqual(singles4, [95, 96, 97, 98, 99])
+        self.assertTrue(max(singles4) <= 99)
+
+        # mixed: consecutive block then a gap
+        # indices [0,1,2,3,4, 6,7] with GCi [1,2,3,4,5, 10,12]
+        i2 = [0, 1, 2, 3, 4, 6, 7]
+        fields2 = [1, 2, 3, 4, 5, 10, 12]
+        singles2, doubles2 = collapse_thru_ipacks(i2, fields2)
+        for s in singles2:
+            self.assertIn(s, i2)
+        for d in doubles2:
+            start, thru, end = d
+            self.assertIn(start, i2)
+            self.assertIn(end, i2)
 
 
 if __name__ == '__main__':   # pragma: no cover

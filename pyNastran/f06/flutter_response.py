@@ -2822,7 +2822,8 @@ class FlutterResponse:
                                    v_baseline: float=1000.,
                                    ) -> tuple[npt.floating, npt.floating,
                                               npt.floating, npt.floating,
-                                              npt.floating, npt.floating]:
+                                              npt.floating, npt.floating,
+                                              npt.floating, npt.floating, npt.floating]:
         """
         Parameters
         ----------
@@ -2850,7 +2851,7 @@ class FlutterResponse:
         Returns
         -------
         vl : float
-            limit frequency (typically 0% crossing)
+            limit speed (typically 0% crossing)
         freql : float
             limit frequency
         vf : float
@@ -2861,6 +2862,12 @@ class FlutterResponse:
             divergence speed
         freqd : float
             divergence frequency
+        mode0 : int
+            critical mode number for VL
+        mode3 : int
+            critical mode number for VF
+        moded : int
+            critical mode number for VD
         """
         # print('mode\tdamping\tfreq\tvel')
         vd_array = _get_vd_array(
@@ -2871,9 +2878,10 @@ class FlutterResponse:
             v_baseline, log)
 
         # find minimum velocity in [mode, velocity, frequency] table
-        ivl = np.where(vl_array[:, 1] == vl_array[:, 1].min())[0]
-        ivf = np.where(vf_array[:, 1] == vf_array[:, 1].min())[0]
-        ivd = np.where(vd_array[:, 1] == vd_array[:, 1].min())[0]
+        # skip sentinel row (index 0) which has mode=-1
+        vl_real = vl_array[1:]
+        vf_real = vf_array[1:]
+        vd_real = vd_array[1:]
 
         # if the array is not empty, pull the lowest value
         vl = v_baseline
@@ -2882,17 +2890,20 @@ class FlutterResponse:
         freql = np.nan
         freqf = np.nan
         freqd = np.nan
-        if len(ivl):
-            ivl = ivl[0]
-            mode0, vl, freql = vl_array[ivl, :]  # limit
-        if len(ivf):
-            ivf = ivf[0]
-            mode3, vf, freqf = vf_array[ivf, :]  # flutter
-        if len(ivd):
-            ivd = ivd[0]
-            moded, vd, freqd = vd_array[ivd, :]  # divergence
+        mode0 = -1
+        mode3 = -1
+        moded = -1
+        if len(vl_real):
+            ivl = np.argmin(vl_real[:, 1])
+            mode0, vl, freql = vl_real[ivl, :]  # limit
+        if len(vf_real):
+            ivf = np.argmin(vf_real[:, 1])
+            mode3, vf, freqf = vf_real[ivf, :]  # flutter
+        if len(vd_real):
+            ivd = np.argmin(vd_real[:, 1])
+            moded, vd, freqd = vd_real[ivd, :]  # divergence
 
-        return vl, freql, vf, freqf, vd, freqd
+        return vl, freql, vf, freqf, vd, freqd, mode0, mode3, moded
 
 
 def _imodes(results_shape: tuple[int, int],

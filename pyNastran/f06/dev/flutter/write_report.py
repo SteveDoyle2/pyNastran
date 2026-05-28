@@ -402,12 +402,13 @@ def write_report(docx_filename: str,
             eas_range, show_detailed_mode_info)
 
         log.info(f'VL_target = {vl_target}')
-        v0, freq0, v3, freq3, vdiverg, freq_diverg = response.xcrossing_dict_to_VL_VF_VD(
-            vl_vf_crossing_dict, vd_crossing_dict,
-            log, freq_target, vl_target, vf_target,
-            v_baseline=eas_max,
-            # is_hump_modes=parse_hump_modes,
-        )
+        v0, freq0, v3, freq3, vdiverg, freq_diverg, mode0, mode3, moded = \
+            response.xcrossing_dict_to_VL_VF_VD(
+                vl_vf_crossing_dict, vd_crossing_dict,
+                log, freq_target, vl_target, vf_target,
+                v_baseline=eas_max,
+                # is_hump_modes=parse_hump_modes,
+            )
         # if VL < VL_target:
         #     log.error(f'VL={VL} KEAS, freq={freqL} Hz; {f06_filename_base}')
         # if VF < VF_target:

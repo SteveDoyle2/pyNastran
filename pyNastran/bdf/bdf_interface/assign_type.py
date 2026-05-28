@@ -2,6 +2,7 @@
 import re
 from typing import Optional, Any
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+from pyNastran.bdf.field_writer import print_card
 from pyNastran.utils.numpy_utils import (
     integer_types, integer_float_types, float_types)
 

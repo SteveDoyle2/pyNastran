@@ -309,6 +309,9 @@ class CDAMP2(Element):
         elem.b = self.b[i]
         elem.n = len(i)
 
+    def convert(self, linear_damping_scale: float=1.0, **kwargs) -> None:
+        self.b *= linear_damping_scale
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['node_id'].append(self.nodes.ravel())
 
@@ -575,6 +578,9 @@ class CDAMP4(Element):
         elem.spoints = self.spoints[i, :]
         elem.n = len(i)
 
+    def convert(self, linear_damping_scale: float=1.0, **kwargs) -> None:
+        self.b *= linear_damping_scale
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['spoint_id'].append(self.spoints.ravel())
 
@@ -811,6 +817,9 @@ class PDAMP(Property):
         prop.property_id = self.property_id[i]
         prop.b = self.b[i]
         prop.n = len(i)
+
+    def convert(self, linear_damping_scale: float=1.0, **kwargs) -> None:
+        self.b *= linear_damping_scale
 
     def validate(self) -> None:
         return
@@ -1283,6 +1292,11 @@ class PVISC(Property):
         prop.cr = self.cr[i]
         prop.ce = self.ce[i]
         prop.n = len(i)
+
+    def convert(self, linear_damping_scale: float=1.0,
+                rotational_damping_scale: float=1.0, **kwargs) -> None:
+        self.ce *= linear_damping_scale
+        self.cr *= rotational_damping_scale
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         pass

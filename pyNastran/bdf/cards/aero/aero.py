@@ -2593,6 +2593,76 @@ class CAERO1(BaseCard):
         int_pt[:, 0] += chord * 0.75
         return int_pt
 
+    def get_dlm_box_properties(self) -> dict:
+        """Get DLM box geometric properties for all panels in this CAERO1.
+
+        Returns a dict with arrays indexed per panel:
+        - box_ids: (npanel,) int, Nastran element IDs
+        - chords: (npanel,) float, box chord lengths
+        - spans: (npanel,) float, box span widths
+        - areas: (npanel,) float, box areas
+        - normals: (npanel, 3) float, outward panel normals
+        - receiving_points: (npanel, 3) float, 3/4-chord collocation points
+        - sending_points: (npanel, 3) float, 1/4-chord doublet points
+        """
+        points, elements = self.panel_points_elements()
+        npanel = len(elements)
+
+        # Corner node indices per element (pyNastran ordering: p1, p4, p2, p3)
+        n1 = elements[:, 0]  # inboard LE
+        n2 = elements[:, 1]  # outboard LE
+        n3 = elements[:, 2]  # outboard TE
+        n4 = elements[:, 3]  # inboard TE
+
+        p_ile = points[n1]  # inboard leading edge
+        p_ole = points[n2]  # outboard leading edge
+        p_ote = points[n3]  # outboard trailing edge
+        p_ite = points[n4]  # inboard trailing edge
+
+        # Leading and trailing edge midpoints
+        le_mid = 0.5 * (p_ile + p_ole)
+        te_mid = 0.5 * (p_ite + p_ote)
+
+        # Chord vector and length
+        chord_vec = te_mid - le_mid
+        chords = np.linalg.norm(chord_vec, axis=1)
+
+        # Span vector and width
+        span_vec_le = p_ole - p_ile
+        spans = np.linalg.norm(span_vec_le, axis=1)
+
+        # Area (cross product magnitude of diagonals / 2, or average chord * span)
+        diag1 = p_ote - p_ile
+        diag2 = p_ite - p_ole
+        cross = np.cross(diag1, diag2)
+        areas = 0.5 * np.linalg.norm(cross, axis=1)
+
+        # Normal (unit normal from cross product)
+        normals = cross / np.linalg.norm(cross, axis=1, keepdims=True)
+
+        # Receiving point: 3/4-chord, mid-span (DLM collocation point)
+        receiving_points = le_mid + 0.75 * chord_vec
+
+        # Sending point: 1/4-chord, mid-span (DLM doublet line)
+        sending_points = le_mid + 0.25 * chord_vec
+
+        # Centroids (average of 4 corners)
+        centroids = 0.25 * (p_ile + p_ole + p_ote + p_ite)
+
+        # Box IDs: sequential from this CAERO1's EID
+        box_ids = np.arange(self.eid, self.eid + npanel, dtype=np.int32)
+
+        return {
+            'box_ids': box_ids,
+            'chords': chords,
+            'spans': spans,
+            'areas': areas,
+            'normals': normals,
+            'centroids': centroids,
+            'receiving_points': receiving_points,
+            'sending_points': sending_points,
+        }
+
     def shift(self, dxyz: np.ndarray) -> None:
         """shifts the aero panel"""
         self.p1 += dxyz

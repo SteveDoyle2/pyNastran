@@ -3606,15 +3606,9 @@ class AddAero(BDFAttributes):
         self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
 
     def add_aeforce(self, mach: float, sym_xz: str, sym_xy: str, ux_id: int,
-                    mesh: str, force: int, dmik: str, perq: str) -> None:
-        """adds an AEPRESS card"""
-        assert isinstance(mesh, str), mesh
-        assert isinstance(sym_xz, str), sym_xz
-        assert isinstance(sym_xy, str), sym_xy
-        assert isinstance(dmik, str), dmik
-        assert isinstance(perq, str), perq
-        fields = ['AEFORCE', mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq]
-        self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
+                    mesh: str, force: int, dmik: str, perq: str='') -> None:
+        """adds an AEFORCE card"""
+        self.aeforce.add(mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq)
 
 
 class AddOptimization(BDFAttributes):

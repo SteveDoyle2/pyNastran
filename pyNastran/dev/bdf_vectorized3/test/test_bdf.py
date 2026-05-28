@@ -543,7 +543,7 @@ def run_and_compare_fems(
         diff_cards = compare(fem1, fem2, xref=xref, check=check,
                              print_stats=print_stats, quiet=quiet)
         check_setup_flag(fem1)
-        test_get_cards_by_card_types(fem2)
+        _test_get_cards_by_card_types(fem2)
 
         #fem2.update_model_by_desvars(xref)
         #except Exception:
@@ -2575,7 +2575,7 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
     return ierror
 
 
-def test_get_cards_by_card_types(model: BDFs) -> None:
+def _test_get_cards_by_card_types(model: BDFs) -> None:
     """Verifies the ``model.get_cards_by_card_types`` method works"""
     # setup to remove hackish cards
     card_types = list(model.card_count.keys())
