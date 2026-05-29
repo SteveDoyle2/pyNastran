@@ -6,7 +6,7 @@ from typing import Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.utils.scipy_utils import dok_matrix, csc_matrix
 
-#from pyNastran.dev.solver.stiffness.shells import build_kbb_cquad4, build_kbb_cquad8
+from pyNastran.dev.bdf_vectorized3.solver.shells import build_kbb_cquad4
 from pyNastran.dev.solver.utils import lambda1d, DOF_MAP
 #from pyNastran.bdf.cards.elements.bars import get_bar_vector, get_bar_yz_transform
 if TYPE_CHECKING:  # pragma: no cover
@@ -55,8 +55,8 @@ def build_Kgg(model: BDF,
     nelements += _build_kbb_cbar(model, Kbb, dof_map)
     nelements += _build_kbb_cbeam(model, Kbb, dof_map,
                                   all_nids, xyz_cid0, idtype='int32', fdtype='float64')
-    #nelements += build_kbb_cquad4(model, Kbb, dof_map,
-                                  #all_nids, xyz_cid0, idtype='int32', fdtype='float64')
+    nelements += build_kbb_cquad4(model, Kbb, dof_map,
+                                  all_nids, xyz_cid0, idtype='int32', fdtype='float64')
     #nelements += build_kbb_cquad8(model, Kbb, dof_map,
                                   #all_nids, xyz_cid0, idtype='int32', fdtype='float64')
     assert nelements > 0, [elem for elem in model.element_cards if elem.n]

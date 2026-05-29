@@ -27,7 +27,6 @@ def recover_force_101(f06_file: TextIO, op2: OP2,
 
     """
     if 'FORCE' not in subcase:
-        asdf
         return
 
     eid_str = 'ALL'

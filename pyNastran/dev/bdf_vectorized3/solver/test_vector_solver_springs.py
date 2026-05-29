@@ -1425,7 +1425,7 @@ class TestHarmonic(unittest.TestCase):
 
 class TestStaticShell(unittest.TestCase):
     """tests the shells"""
-    def _test_cquad4_bad_normal(self):
+    def test_cquad4_bad_normal(self):
         """test that the code crashes with a bad normal"""
         model = BDF(debug=None, log=None, mode='msc')
         model.bdf_filename = TEST_DIR / 'cquad4_bad_normal.bdf'
@@ -1461,19 +1461,19 @@ class TestStaticShell(unittest.TestCase):
             solver.run()
         #os.remove(model.bdf_filename)
 
-    def _test_cquad4_bad_jacobian(self):
+    def test_cquad4_bad_jacobian(self):
         """
-        Tests that the code crashes with a really terrible CQUAD4
-
-        The Jacobian is defined between [-1, 1]
+        Tests that the code crashes with a degenerate CQUAD4
+        (crossed/bowtie element with negative Jacobian).
         """
         model = BDF(debug=None, log=None, mode='msc')
         model.bdf_filename = TEST_DIR / 'cquad4_bad_jacobian.bdf'
         mid = 3
+        # Bowtie element: nodes 2 and 4 are swapped to create negative Jacobian
         model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [0.5, 100., 0.])
-        model.add_grid(3, [1., 0., 0.])
-        model.add_grid(4, [0.5, 1., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [0., 1., 0.])
+        model.add_grid(4, [1., 1., 0.])
         nids = [1, 2, 3, 4]
         model.add_cquad4(5, 5, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                          T1=None, T2=None, T3=None, T4=None, comment='')
@@ -1499,47 +1499,77 @@ class TestStaticShell(unittest.TestCase):
             solver.run()
         #os.remove(model.bdf_filename)
 
-    def _test_cquad4_pshell_mat1(self):
-        """Tests a CQUAD4/PSHELL/MAT1"""
+    def test_cquad4_pshell_mat1(self):
+        """Tests CQUAD4/PSHELL/MAT1 with CROD, CONROD, and CONM2."""
         model = BDF(debug=None, log=None, mode='msc')
         model.bdf_filename = TEST_DIR / 'cquad4_pshell_mat1.bdf'
-        model.add_grid(1, [0., 0., 0., ])
-        model.add_grid(2, [1., 0., 0., ])
-        model.add_grid(3, [1., 0., 2., ])
-        model.add_grid(4, [0., 0., 2., ])
-        area = 2.0
-        nsm_area = 0.0
+        # 6---5---4
+        # |       |
+        # |       |
+        # 1---2---3
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [2., 0., 0.])
+        model.add_grid(4, [2., 0., 2.])
+        model.add_grid(5, [1., 0., 2.])
+        model.add_grid(6, [0., 0., 2.])
         thickness = 0.3
-        rho = 0.1
-        mass = area * (thickness * rho + nsm_area)
+        mid = 3
+        E = 1.0E7
+        G = None
+        nu = 0.3
+
+        # --- CQUAD4 elements ---
+        model.add_cquad4(1, 1, [1, 2, 5, 6], theta_mcid=0.0, zoffset=0.,
+                         tflag=0, T1=None, T2=None, T3=None, T4=None)
+        model.add_cquad4(2, 1, [2, 3, 4, 5], theta_mcid=0.0, zoffset=0.,
+                         tflag=0, T1=None, T2=None, T3=None, T4=None)
+        model.add_pshell(1, mid1=mid, t=thickness, mid2=mid, twelveIt3=1.0,
+                         mid3=mid, tst=0.833333, nsm=0.0, z1=None, z2=None,
+                         mid4=None)
+
+        # --- CROD element (node 5 to node 6, stiffening bar) ---
+        model.add_crod(10, 10, [5, 6])
+        model.add_prod(10, mid, A=0.5, j=0.01)
+
+        # --- CONROD element (node 4 to node 6, diagonal brace) ---
+        model.add_conrod(20, mid, [4, 6], A=0.3, j=0.005)
+
+        # --- CONM2 (point mass at node 5) ---
+        model.add_conm2(30, 5, mass=2.0, cid=0, X=None, I=None)
+
+        model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0)
+
+        # BC/loads: fix nodes 1, 2, 3; load nodes 4, 5, 6
+        spc_id = 3
+        load_id = 2
+        model.add_spc1(spc_id, '123456', [1, 2, 3])
+        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0)
+        model.add_force(load_id, 5, 1.0, [0., 0., 1.], cid=0)
+        model.add_force(load_id, 6, 1.0, [0., 0., 1.], cid=0)
+
+        setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_cquad4_macneal(self):
+        """Tests CQUAD4 with PARAM,MYQUAD,MACN (MacNeal formulation)."""
+        from pyNastran.bdf.cards.params import PARAM
+        model = BDF(debug=None, log=None, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cquad4_macneal.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 0., 2.])
+        model.add_grid(4, [0., 0., 2.])
+        thickness = 0.3
         mid = 3
         nids = [1, 2, 3, 4]
         model.add_cquad4(1, 1, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                          T1=None, T2=None, T3=None, T4=None, comment='')
-        model.add_cquad4(2, 2, nids, theta_mcid=0.0, zoffset=0., tflag=0,
-                         T1=None, T2=None, T3=None, T4=None, comment='')
-        model.add_cquad4(3, 3, nids, theta_mcid=0.0, zoffset=0., tflag=0,
-                         T1=None, T2=None, T3=None, T4=None, comment='')
-        model.add_cquad4(4, 4, nids, theta_mcid=0.0, zoffset=0., tflag=0,
-                         T1=None, T2=None, T3=None, T4=None, comment='')
-        model.add_cquad4(5, 5, nids, theta_mcid=0.0, zoffset=0., tflag=0,
-                         T1=None, T2=None, T3=None, T4=None, comment='')
-
-        model.add_pshell(1, mid1=mid, t=thickness, mid2=None, twelveIt3=1.0,
-                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None,
-                         mid4=None, comment='')
-        model.add_pshell(2, mid1=None, t=thickness, mid2=mid, twelveIt3=1.0,
-                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None,
-                         mid4=None, comment='')
-        model.add_pshell(3, mid1=None, t=thickness, mid2=None, twelveIt3=1.0,
+        model.add_pshell(1, mid1=mid, t=thickness, mid2=mid, twelveIt3=1.0,
                          mid3=mid, tst=0.833333, nsm=0.0, z1=None, z2=None,
                          mid4=None, comment='')
-        model.add_pshell(4, mid1=None, t=thickness, mid2=None, twelveIt3=1.0,
-                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None,
-                         mid4=mid, comment='')
-        model.add_pcomp(5, [mid], [thickness], thetas=None,
-                        souts=None, nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None, comment='')
-
         E = 1.0E7
         G = None
         nu = 0.3
@@ -1547,20 +1577,94 @@ class TestStaticShell(unittest.TestCase):
                        St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
         spc_id = 3
         load_id = 2
-        components = '123456'
-        nodes = [1, 2]
-        model.add_spc1(spc_id, components, nodes, comment='')
+        model.add_spc1(spc_id, '123456', [1, 2], comment='')
         model.add_force(load_id, 3, 1.0, [0., 0., 1.], cid=0, comment='')
         model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
 
+        # Set PARAM,MYQUAD,MACN
+        model.params['MYQUAD'] = PARAM('MYQUAD', ['MACN'])
+
         setup_static_case_control(model)
         solver = Solver(model)
-        #with self.assertRaises(RuntimeError):
         solver.run()
-        #print('total_mass =', mass * 5)
-        #os.remove(model.bdf_filename)
-        #os.remove(solver.f06_filename)
-        #os.remove(solver.op2_filename)
+
+    def test_cquad4_allman_drilling(self):
+        """Tests CQUAD4 with PARAM,MYQDRIL,ALLMAN."""
+        from pyNastran.bdf.cards.params import PARAM
+        model = BDF(debug=None, log=None, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cquad4_allman.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 0., 2.])
+        model.add_grid(4, [0., 0., 2.])
+        mid = 3
+        nids = [1, 2, 3, 4]
+        model.add_cquad4(1, 1, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None)
+        model.add_pshell(1, mid1=mid, t=0.3, mid2=mid, twelveIt3=1.0,
+                         mid3=mid, tst=0.833333, nsm=0.0, z1=None, z2=None,
+                         mid4=None)
+        model.add_mat1(mid, 1.0E7, None, 0.3, rho=1.0)
+        model.add_spc1(3, '123456', [1, 2])
+        model.add_force(2, 3, 1.0, [0., 0., 1.], cid=0)
+        model.add_force(2, 4, 1.0, [0., 0., 1.], cid=0)
+        model.params['MYQDRIL'] = PARAM('MYQDRIL', ['ALLMAN'])
+        setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_cquad4_hb_drilling(self):
+        """Tests CQUAD4 with PARAM,MYQDRIL,HB (Hughes-Brezzi)."""
+        from pyNastran.bdf.cards.params import PARAM
+        model = BDF(debug=None, log=None, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cquad4_hb.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 0., 2.])
+        model.add_grid(4, [0., 0., 2.])
+        mid = 3
+        nids = [1, 2, 3, 4]
+        model.add_cquad4(1, 1, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None)
+        model.add_pshell(1, mid1=mid, t=0.3, mid2=mid, twelveIt3=1.0,
+                         mid3=mid, tst=0.833333, nsm=0.0, z1=None, z2=None,
+                         mid4=None)
+        model.add_mat1(mid, 1.0E7, None, 0.3, rho=1.0)
+        model.add_spc1(3, '123456', [1, 2])
+        model.add_force(2, 3, 1.0, [0., 0., 1.], cid=0)
+        model.add_force(2, 4, 1.0, [0., 0., 1.], cid=0)
+        model.params['MYQDRIL'] = PARAM('MYQDRIL', ['HB'])
+        setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_cquad4_pshell_mat8(self):
+        """Tests CQUAD4/PSHELL/MAT8 (orthotropic) with all quad types."""
+        from pyNastran.bdf.cards.params import PARAM
+        for quad_type in ['MITC4', 'MACN', 'MACN2']:
+            model = BDF(debug=None, log=None, mode='msc')
+            model.bdf_filename = TEST_DIR / f'cquad4_mat8_{quad_type}.bdf'
+            model.add_grid(1, [0., 0., 0.])
+            model.add_grid(2, [1., 0., 0.])
+            model.add_grid(3, [1., 0., 2.])
+            model.add_grid(4, [0., 0., 2.])
+            mid = 3
+            nids = [1, 2, 3, 4]
+            model.add_cquad4(1, 1, nids, theta_mcid=0.0, zoffset=0.,
+                             tflag=0, T1=None, T2=None, T3=None, T4=None)
+            model.add_pshell(1, mid1=mid, t=0.3, mid2=mid, twelveIt3=1.0,
+                             mid3=mid, tst=0.833333, nsm=0.0, z1=None,
+                             z2=None, mid4=None)
+            # Orthotropic: carbon/epoxy-like
+            model.add_mat8(mid, e11=1.4e7, e22=1.0e6, nu12=0.3,
+                           g12=5.0e5, g1z=5.0e5, g2z=3.0e5, rho=1.0)
+            model.add_spc1(3, '123456', [1, 2])
+            model.add_force(2, 3, 1.0, [0., 0., 1.], cid=0)
+            model.add_force(2, 4, 1.0, [0., 0., 1.], cid=0)
+            model.params['MYQUAD'] = PARAM('MYQUAD', [quad_type])
+            setup_static_case_control(model)
+            solver = Solver(model)
+            solver.run()
 
     def _test_cquad8_pshell_mat1(self):
         """Tests a CQUAD8/PSHELL/MAT1"""

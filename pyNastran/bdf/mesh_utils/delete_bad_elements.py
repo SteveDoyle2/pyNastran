@@ -984,6 +984,98 @@ def quad_quality(element, p1, p2, p3, p4):
            min_theta, max_theta, dideal_theta, min_edge_length, max_warp)
     return out
 
+def quad_quality_nastran(p1: np.ndarray, p2: np.ndarray,
+                         p3: np.ndarray, p4: np.ndarray
+                         ) -> tuple[float, float, float]:
+    """Compute CQUAD4 quality metrics using NX Nastran GEOMCHECK definitions.
+
+    Parameters
+    ----------
+    p1, p2, p3, p4 : (3,) float ndarray
+        Corner node coordinates in order.
+
+    Returns
+    -------
+    skew : float
+        Skew angle in radians (NX: angle between midpoint-joining vectors).
+        Ideal = pi/2. Nastran fails if skew < 30 deg.
+    taper : float
+        Taper ratio (NX: (A_max - Q) / Q).
+        Ideal = 0.0. Nastran fails if taper > 0.5.
+    warp : float
+        Surface warping factor (NX: HH / (D_AC + D_BD)).
+        Ideal = 0.0. Nastran fails if warp > 0.05.
+
+    Notes
+    -----
+    These formulas match NX Nastran User's Guide Ch. 15
+    "User Controlled Element Checks" (Simcenter Nastran 2506).
+
+    The existing ``quad_quality`` function uses Altair/HyperMesh definitions
+    which differ for taper (average deviation) and warp (angle-based).
+    """
+    # --- Skew (Q4_SKEW) ---
+    # Angle between vectors joining opposite side midpoints
+    p12 = (p1 + p2) / 2.0
+    p23 = (p2 + p3) / 2.0
+    p34 = (p3 + p4) / 2.0
+    p41 = (p4 + p1) / 2.0
+
+    pq = p34 - p12  # midpoint(3,4) - midpoint(1,2)
+    rs = p23 - p41  # midpoint(2,3) - midpoint(4,1)
+
+    npq = np.linalg.norm(pq)
+    nrs = np.linalg.norm(rs)
+    if npq == 0.0 or nrs == 0.0:
+        skew = 0.0
+    else:
+        cos_theta = np.clip((pq @ rs) / (npq * nrs), -1.0, 1.0)
+        theta = np.arccos(np.abs(cos_theta))
+        skew = min(theta, np.pi - theta)
+
+    # --- Taper (Q4_TAPER) ---
+    # (A_max - Q) / Q where A_max is the largest corner triangle area
+    # Corner triangles: ABD, BCA, CDB, DAC (each skips one vertex)
+    area_abd = 0.5 * np.linalg.norm(np.cross(p2 - p1, p4 - p1))
+    area_bca = 0.5 * np.linalg.norm(np.cross(p3 - p2, p1 - p2))
+    area_cdb = 0.5 * np.linalg.norm(np.cross(p4 - p3, p2 - p3))
+    area_dac = 0.5 * np.linalg.norm(np.cross(p1 - p4, p3 - p4))
+
+    v31 = p3 - p1
+    v42 = p4 - p2
+    quad_area = 0.5 * np.linalg.norm(np.cross(v31, v42))
+    q = 0.5 * quad_area
+
+    if q == 0.0:
+        taper = np.nan
+    else:
+        a_max = max(area_abd, area_bca, area_cdb, area_dac)
+        taper = (a_max - q) / q
+
+    # --- Warp (Q4_WARP) ---
+    # W = HH / (D_AC + D_BD)
+    # PK = (AC x BD) / |AC x BD|  (out-of-plane unit vector)
+    # HH = AB . PK
+    ac = p3 - p1
+    bd = p4 - p2
+    pk_raw = np.cross(ac, bd)
+    pk_norm = np.linalg.norm(pk_raw)
+
+    d_ac = np.linalg.norm(ac)
+    d_bd = np.linalg.norm(bd)
+    denom = d_ac + d_bd
+
+    if pk_norm == 0.0 or denom == 0.0:
+        warp = 0.0
+    else:
+        pk = pk_raw / pk_norm
+        ab = p2 - p1
+        hh = ab @ pk
+        warp = abs(hh) / denom
+
+    return skew, taper, warp
+
+
 def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
     """get the min/max thetas for CTETRA, CPENTA, CHEXA, CPYRAM"""
     cos_thetas = []

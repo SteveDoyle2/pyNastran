@@ -1845,6 +1845,9 @@ class BDFAttributes:
         dideal_theta = np.full(nelements, np.nan, dtype='float64')
         min_edge_length = np.full(nelements, np.nan, dtype='float64')
         max_warp = np.full(nelements, np.nan, dtype='float64')
+        nastran_skew = np.full(nelements, np.nan, dtype='float64')
+        nastran_taper = np.full(nelements, np.nan, dtype='float64')
+        nastran_warp = np.full(nelements, np.nan, dtype='float64')
         icard_type = np.full(nelements, np.nan, dtype='float64')
 
         i0 = 0
@@ -1879,7 +1882,8 @@ class BDFAttributes:
                 continue
             qualityi = card.quality()
             (areai, taper_ratioi, area_ratioi, max_skewi, aspect_ratioi,
-             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warpi) = qualityi
+             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warpi,
+             nastran_skewi, nastran_taperi, nastran_warpi) = qualityi
             taper_ratio[i0:i0+n] = taper_ratioi
             area_ratio[i0:i0+n] = area_ratioi
             max_skew[i0:i0+n] = max_skewi
@@ -1889,6 +1893,9 @@ class BDFAttributes:
             dideal_theta[i0:i0+n] = dideal_thetai
             min_edge_length[i0:i0+n] = min_edge_lengthi
             max_warp[i0:i0+n] = max_warpi
+            nastran_skew[i0:i0+n] = nastran_skewi
+            nastran_taper[i0:i0+n] = nastran_taperi
+            nastran_warp[i0:i0+n] = nastran_warpi
             icard_type[i0:i0+n] = icard
             i0 += n
             icard += 1
@@ -1902,6 +1909,7 @@ class BDFAttributes:
         out = (
             element_ids, taper_ratio, area_ratio, max_skew, aspect_ratio,
             min_theta, max_theta, dideal_theta, min_edge_length, max_warp,
+            nastran_skew, nastran_taper, nastran_warp,
             #icard_type,
         )
         return out

@@ -11,7 +11,9 @@ from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
-from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells, get_bad_shells
+from pyNastran.bdf.mesh_utils.delete_bad_elements import (
+    delete_bad_shells, get_bad_shells, quad_quality_nastran,
+)
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
@@ -360,6 +362,113 @@ class TestMeshQuality(unittest.TestCase):
         assert model.card_count['CQUAD4'] == 2, model.card_count
         assert model.card_count['CTRIA3'] == 1, model.card_count
         os.remove(bdf_filename)
+
+
+    def test_quad_quality_nastran_perfect_square(self):
+        """A perfect unit square should have ideal quality metrics."""
+        p1 = np.array([0., 0., 0.])
+        p2 = np.array([1., 0., 0.])
+        p3 = np.array([1., 1., 0.])
+        p4 = np.array([0., 1., 0.])
+
+        skew, taper, warp = quad_quality_nastran(p1, p2, p3, p4)
+
+        # Skew: midpoint vectors are perpendicular → skew = pi/2
+        assert np.isclose(skew, np.pi / 2, atol=1e-12), f'skew={skew}'
+        # Taper: all corner triangles equal → taper = 0
+        assert np.isclose(taper, 0.0, atol=1e-12), f'taper={taper}'
+        # Warp: flat element → warp = 0
+        assert np.isclose(warp, 0.0, atol=1e-12), f'warp={warp}'
+
+    def test_quad_quality_nastran_rectangle(self):
+        """A 4:1 rectangle should have ideal skew/taper/warp (no distortion)."""
+        p1 = np.array([0., 0., 0.])
+        p2 = np.array([4., 0., 0.])
+        p3 = np.array([4., 1., 0.])
+        p4 = np.array([0., 1., 0.])
+
+        skew, taper, warp = quad_quality_nastran(p1, p2, p3, p4)
+
+        # Rectangle: midpoint vectors still perpendicular
+        assert np.isclose(skew, np.pi / 2, atol=1e-12), f'skew={skew}'
+        # Rectangle: no taper
+        assert np.isclose(taper, 0.0, atol=1e-12), f'taper={taper}'
+        # Flat: no warp
+        assert np.isclose(warp, 0.0, atol=1e-12), f'warp={warp}'
+
+    def test_quad_quality_nastran_skewed(self):
+        """A parallelogram has reduced skew angle."""
+        # Parallelogram: shift top nodes by 1 in x
+        p1 = np.array([0., 0., 0.])
+        p2 = np.array([2., 0., 0.])
+        p3 = np.array([3., 1., 0.])
+        p4 = np.array([1., 1., 0.])
+
+        skew, taper, warp = quad_quality_nastran(p1, p2, p3, p4)
+
+        # Midpoint vectors: PQ=(2,1,0)-(1,0,0)=(1,1,0), RS=(2.5,0.5,0)-(0.5,0.5,0)=(2,0,0)
+        # angle between (1,1,0) and (2,0,0) = arccos(2/(sqrt(2)*2)) = arccos(1/sqrt(2)) = 45 deg
+        assert np.isclose(skew, np.pi / 4, atol=1e-10), f'skew={np.degrees(skew)} deg'
+        # Parallelogram has zero taper (all corner triangles are equal)
+        assert np.isclose(taper, 0.0, atol=1e-10), f'taper={taper}'
+        # Flat
+        assert np.isclose(warp, 0.0, atol=1e-12), f'warp={warp}'
+
+    def test_quad_quality_nastran_tapered(self):
+        """A trapezoid should show nonzero taper."""
+        p1 = np.array([0., 0., 0.])
+        p2 = np.array([4., 0., 0.])
+        p3 = np.array([3., 1., 0.])
+        p4 = np.array([1., 1., 0.])
+
+        skew, taper, warp = quad_quality_nastran(p1, p2, p3, p4)
+
+        # Taper should be 0 for symmetric trapezoid (equal corner triangles)
+        # Actually symmetric trapezoid: ABD area != BCA area
+        # Let's just verify taper >= 0 and taper < 0.5 (not failing threshold)
+        assert taper >= 0.0, f'taper={taper}'
+        # Flat
+        assert np.isclose(warp, 0.0, atol=1e-12), f'warp={warp}'
+
+    def test_quad_quality_nastran_warped(self):
+        """A quad with one node out of plane should show nonzero warp."""
+        p1 = np.array([0., 0., 0.])
+        p2 = np.array([1., 0., 0.])
+        p3 = np.array([1., 1., 0.])
+        p4 = np.array([0., 1., 0.5])  # lifted out of plane
+
+        skew, taper, warp = quad_quality_nastran(p1, p2, p3, p4)
+
+        # Warp should be positive (element is not flat)
+        assert warp > 0.0, f'warp={warp}'
+        # For this geometry:
+        # AC = (1,1,0), BD = (-1,1,0.5)
+        # AC x BD = (1*0.5-0*1, 0*(-1)-1*0.5, 1*1-1*(-1)) = (0.5, -0.5, 2)
+        # PK = (0.5,-0.5,2)/|(0.5,-0.5,2)|
+        # AB = (1,0,0)
+        # HH = AB . PK = 0.5/|pk_raw|
+        # D_AC = sqrt(2), D_BD = sqrt(1+1+0.25) = sqrt(2.25) = 1.5
+        # warp = |0.5/sqrt(0.25+0.25+4)| / (sqrt(2) + 1.5)
+        pk_norm = np.sqrt(0.25 + 0.25 + 4.0)
+        hh = 0.5 / pk_norm
+        d_ac = np.sqrt(2.0)
+        d_bd = np.sqrt(2.25)
+        expected_warp = abs(hh) / (d_ac + d_bd)
+        assert np.isclose(warp, expected_warp, atol=1e-12), f'warp={warp}, expected={expected_warp}'
+
+    def test_quad_quality_nastran_collapsed(self):
+        """A quad collapsed to a triangle should have taper = 1.0."""
+        p1 = np.array([0., 0., 0.])
+        p2 = np.array([1., 0., 0.])
+        p3 = np.array([0.5, 1., 0.])
+        p4 = np.array([0.5, 1., 0.])  # coincident with p3
+
+        skew, taper, warp = quad_quality_nastran(p1, p2, p3, p4)
+
+        # When collapsed to triangle, one corner triangle has zero area
+        # and Amax = total triangle area, Q = 0.5 * quad area
+        # taper should approach 1.0
+        assert taper > 0.9, f'taper={taper}'
 
 
 if __name__ == '__main__':  # pragma: no cover

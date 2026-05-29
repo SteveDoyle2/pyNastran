@@ -10,7 +10,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 Quality = tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,
-                np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+                np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,
+                np.ndarray, np.ndarray, np.ndarray]
 
 
 def _cross3(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -165,9 +166,13 @@ def tri_quality_xyz0(p1: np.ndarray, p2: np.ndarray, p3: np.ndarray) -> Quality:
     taper_ratio = np.full(nelements, np.nan, dtype=area.dtype)
     area_ratio = np.full(nelements, np.nan, dtype=area.dtype)
     max_warp = np.full(nelements, np.nan, dtype=area.dtype)
+    nastran_skew = np.degrees(min_theta)
+    nastran_taper = np.full(nelements, np.nan, dtype=area.dtype)
+    nastran_warp = np.full(nelements, np.nan, dtype=area.dtype)
     out = (area, taper_ratio, area_ratio, np.degrees(max_skew), aspect_ratio,
            np.degrees(min_theta), np.degrees(max_theta), np.degrees(dideal_theta),
-           min_edge_length, np.degrees(max_warp))
+           min_edge_length, np.degrees(max_warp),
+           nastran_skew, nastran_taper, nastran_warp)
     return out
 
 
@@ -362,7 +367,45 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
     warps = np.abs(np.arccos(np.clip([cos_warp1, cos_warp2], -1., 1.)))
     max_warp = warps.max(axis=0)
 
+    # --- NX Nastran GEOMCHECK metrics ---
+    # Skew (Q4_SKEW): angle between midpoint vectors (same geometry as Altair skew)
+    # Already computed above as max_skew — convert to NX convention (the angle itself)
+    nastran_skew = np.pi / 2.0 - max_skew  # Altair: pi/2 - min_angle; NX reports the angle
+
+    # Taper (Q4_TAPER): (A_max - Q) / Q
+    # Corner triangles: ABD, BCA, CDB, DAC (skip one vertex each)
+    area_abd = 0.5 * _cross_norm(p2 - p1, p4 - p1)
+    area_bca = 0.5 * _cross_norm(p3 - p2, p1 - p2)
+    area_cdb = 0.5 * _cross_norm(p4 - p3, p2 - p3)
+    area_dac = 0.5 * _cross_norm(p1 - p4, p3 - p4)
+    corner_areas = np.array([area_abd, area_bca, area_cdb, area_dac])  # (4, n)
+    a_max = corner_areas.max(axis=0)
+    q_half = 0.5 * area  # Q = 0.5 * total quad area
+    nastran_taper = np.full(nelement, np.nan, dtype=area.dtype)
+    iq = (q_half > 0.0)
+    nastran_taper[iq] = (a_max[iq] - q_half[iq]) / q_half[iq]
+
+    # Warp (Q4_WARP): W = |AB . PK| / (D_AC + D_BD)
+    # PK = (AC x BD) / |AC x BD|  (out-of-plane unit vector from diagonals)
+    # AC = v31, BD = v42 (already computed)
+    pk_x, pk_y, pk_z = _cross3(v31, v42)
+    pk_norm = _norm3(pk_x, pk_y, pk_z)
+    d_ac = _vec_norm(v31)
+    d_bd = _vec_norm(v42)
+    denom_warp = d_ac + d_bd
+
+    nastran_warp = np.zeros(nelement, dtype=area.dtype)
+    iwarp_nx = (pk_norm > 0.0) & (denom_warp > 0.0)
+    if iwarp_nx.any():
+        pk_unit_x = pk_x[iwarp_nx] / pk_norm[iwarp_nx]
+        pk_unit_y = pk_y[iwarp_nx] / pk_norm[iwarp_nx]
+        pk_unit_z = pk_z[iwarp_nx] / pk_norm[iwarp_nx]
+        ab = v21[iwarp_nx]
+        hh = ab[:, 0]*pk_unit_x + ab[:, 1]*pk_unit_y + ab[:, 2]*pk_unit_z
+        nastran_warp[iwarp_nx] = np.abs(hh) / denom_warp[iwarp_nx]
+
     out = (area, taper_ratio, area_ratio, np.degrees(max_skew), aspect_ratio,
            np.degrees(min_theta), np.degrees(max_theta), np.degrees(dideal_theta),
-           min_edge_length, np.degrees(max_warp))
+           min_edge_length, np.degrees(max_warp),
+           np.degrees(nastran_skew), nastran_taper, nastran_warp)
     return out

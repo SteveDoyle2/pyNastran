@@ -44,7 +44,8 @@ def get_bad_shells(model: BDF,
         'CQUAD4', 'CQUAD8', 'CQUADR',
     }
     (element_ids, taper_ratio, area_ratio, max_skew_arr, aspect_ratio,
-     min_theta_arr, max_theta_arr, dideal_theta, min_edge_length, max_warp_arr) = model.quality()
+     min_theta_arr, max_theta_arr, dideal_theta, min_edge_length, max_warp_arr,
+     _nastran_skew, _nastran_taper, _nastran_warp) = model.quality()
 
     shell_mask = np.zeros(len(element_ids), dtype=bool)
     for card in model.element_cards:

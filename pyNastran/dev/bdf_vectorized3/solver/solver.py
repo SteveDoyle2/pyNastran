@@ -31,9 +31,10 @@ import numpy as np
 import scipy as sp
 import scipy.sparse as sci_sparse
 from scipy.sparse import csc_matrix, lil_matrix, dok_matrix
-# from scipy.sparse.dok import dok_matrix  # <1.16
 
 from cpylog import SimpleLogger
+
+from pyNastran.utils.solver_utils import get_solver_backend
 import pyNastran
 from pyNastran.nptyping_interface import (
     NDArrayNbool, NDArrayNint, NDArrayN2int, NDArrayNfloat, NDArrayNNfloat)
@@ -1229,9 +1230,10 @@ class Solver:
         tf_mask[:, ~aset, :] = 0
         tf_matrix_a = np.ones((ndof_a, ndof_a, nfreq), dtype='complex128')
         #tf_matrix_a = np.ma.masked_array(tf_matrix, tf_mask)
+        backend = get_solver_backend()
         for i, omegai in enumerate(omegas):
             mat = -omegai**2*Maa + 1j*omegai*Caa + Kaa
-            res = sp.linalg.inv(mat)
+            res = backend.inv(mat)
             tf_matrix_a[:,:,i] = res
 
         tf_matrix = np.zeros(shape, dtype='complex128')  # full system 3x3 TF matrix
@@ -1695,9 +1697,11 @@ def solve(Kaa: lil_matrix,
     log.debug(f'  Kaas_:\n{Kaa_dense}')
     log.debug(f'  Kaa_:\n{Kaa_}')
     log.debug(f'  Fa_: {Fa_}')
+
+    backend = get_solver_backend()
+    log.debug(f'  solver backend: {backend.name}')
     xa_ = np.linalg.solve(Kaa_dense, Fa_)
-    xas_ = sci_sparse.linalg.spsolve(Kaa_, Fa_)
-    #xas_ = np.linalg.solve(Kaas_.toarray(), Fa_)
+    xas_ = backend.spsolve(Kaa_, Fa_)
     sparse_error = np.linalg.norm(xa_ - xas_)
     if sparse_error > 1e-12:
         log.warning(f'  sparse_error = {sparse_error}')
@@ -1850,45 +1854,26 @@ def build_Mbb(model: BDF,
             #Mbb[i2, i2] = Mbb[i2+1, i2+1] = Mbb[i2+2, i2+2] = \
             #Mbb[i3, i3] = Mbb[i3+1, i3+1] = Mbb[i3+2, i3+2] = mass / 3
         elif etype == 'CQUAD4':
-            # TODO: verify
             # TODO: add rotary inertia
-            try:
-                mass = elem.Mass()
-            except AttributeError:
-                pid_ref = elem.pid_ref
-                if pid_ref.mid1 is None and pid_ref.mid2 is None:
-                    log.warning(f'  no mass for CQUAD4 eid={eid}')
+            masses = elem.mass()
+            if masses.sum() == 0.0:
+                log.warning(f'  no mass for CQUAD4 eid={elem.element_id}')
+                continue
+            for (nid1, nid2, nid3, nid4), massi in zip(elem.nodes, masses):
+                if massi == 0.0:
                     continue
-                #raise
-                #mid_ref = elem.mid_ref
-                #rho = mid_ref.Rho()
-            nid1, nid2, nid3, nid4 = elem.nodes
-            i1 = dof_map[(nid1, 1)]
-            i2 = dof_map[(nid2, 1)]
-            i3 = dof_map[(nid3, 1)]
-            i4 = dof_map[(nid4, 1)]
-            if mass == 0.:
-                pid_ref = elem.pid_ref
-                ptype = pid_ref.type
-                if ptype == 'PSHELL':
-                    mid_ref = pid_ref.mid_ref
-                    rho = mid_ref.rho
-                    log.warning(f'  no mass for CQUAD4 eid={eid} ptype={ptype} rho={rho}')
-                else:
-                    log.warning(f'  no mass for CQUAD4 eid={eid} ptype={ptype}')
-            else:
-                pid_ref = elem.pid_ref
-                ptype = pid_ref.type
-                log.info(f'  mass={mass} for CQUAD4 eid={eid} ptype={ptype}')
-
-            ii = [
-                i1, i1 + 1,
-                i2, i2 + 1,
-                i3, i3 + 1,
-                i4, i4 + 1,
-            ]
-            iii, jjj = np.meshgrid(ii, ii)
-            Mbb[iii, jjj] += mass_quad_2x2 * mass
+                i1 = dof_map[(nid1, 1)]
+                i2 = dof_map[(nid2, 1)]
+                i3 = dof_map[(nid3, 1)]
+                i4 = dof_map[(nid4, 1)]
+                ii = [
+                    i1, i1 + 1,
+                    i2, i2 + 1,
+                    i3, i3 + 1,
+                    i4, i4 + 1,
+                ]
+                iii, jjj = np.meshgrid(ii, ii)
+                Mbb[iii, jjj] += mass_quad_2x2 * massi
             #if 0:  # pragma: no cover
                 #mass4 = mass / 9. # 4/36
                 #mass2 = mass / 18. # 2/36
@@ -2276,10 +2261,23 @@ def _run_modes(model: BDF,
     return out
 
 def solve_eigenvector(Kaa: csc_matrix, Maa: np.ndarray,
-                      ndof: int, neigenvalues: int) -> tuple[np.ndarray, np.ndarray]:
+                      ndof: int, neigenvalues: int,
+                      use_lobpcg: bool = False,
+                      X0: np.ndarray | None = None,
+                      ) -> tuple[np.ndarray, np.ndarray]:
+    """Solve the generalized eigenproblem K*x = lambda*M*x.
+
+    Parameters
+    ----------
+    use_lobpcg : bool
+        If True, use LOBPCG instead of ARPACK (eigsh). Requires pyamg
+        for preconditioning (optional but recommended).
+    X0 : ndarray, optional
+        Initial eigenvector guess for LOBPCG warm-start, shape (ndof, k).
+        Pass previous converged modes for fast re-solves.
+    """
     Kaa_dense = Kaa.toarray()
     assert isinstance(Maa, np.ndarray), type(Maa)
-    #Maa_dense = Maa.toarray()
 
     # reduce the size of the matrix going into the solver
     # by removing empty rows/columns
@@ -2296,16 +2294,23 @@ def solve_eigenvector(Kaa: csc_matrix, Maa: np.ndarray,
     Maa2 = Maa[is_modes, :][:, is_modes]
 
     ndof2 = Maa.shape[0]
+    backend = get_solver_backend()
     if ndof2 <= neigenvalues:
         Kaa2_dense = Kaa2.todense()
         eigenvalues, xa = sp.linalg.eigh(Kaa2_dense, Maa2)
+    elif use_lobpcg:
+        X0_reduced = None
+        if X0 is not None:
+            X0_reduced = X0[is_modes, :]
+        eigenvalues, xa_ = backend.lobpcg(
+            Kaa2, k=neigenvalues, M=Maa2, X0=X0_reduced)
+        xa = np.full((ndof, neigenvalues), np.nan, dtype=xa_.dtype)
+        xa[no_modes, :] = 0
+        xa[is_modes, :] = xa_
     else:
-        #If M is specified, solves ``A * x[i] = w[i] * M * x[i]``
-        # which = SM (smallest magnitude eigenvalues)
-        eigenvalues, xa_ = sp.sparse.linalg.eigsh(
+        eigenvalues, xa_ = backend.eigsh(
             Kaa2, k=neigenvalues, M=Maa2,
-            sigma=None, which='SM', v0=None, ncv=None, maxiter=None, tol=0,
-            return_eigenvectors=True, Minv=None, OPinv=None, mode='normal')
+            which='SM', return_eigenvectors=True)
         xa = np.full((ndof, neigenvalues), np.nan, dtype=xa_.dtype)
         xa[no_modes, :] = 0
         xa[is_modes, :] = xa_

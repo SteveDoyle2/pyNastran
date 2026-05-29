@@ -236,5 +236,62 @@ class TestConvertBadQuadsToTris(unittest.TestCase):
         assert nconverted == 0
 
 
+class TestNastranQualityMetrics(unittest.TestCase):
+    """Tests for the NX Nastran GEOMCHECK quality metrics (vectorized)."""
+
+    def test_nastran_metrics_perfect_square(self):
+        """Perfect square: skew=90, taper=0, warp=0."""
+        from pyNastran.dev.bdf_vectorized3.cards.elements.shell_quality import quad_quality_xyz
+        p1 = np.array([[0., 0., 0.]])
+        p2 = np.array([[1., 0., 0.]])
+        p3 = np.array([[1., 1., 0.]])
+        p4 = np.array([[0., 1., 0.]])
+        out = quad_quality_xyz(p1, p2, p3, p4)
+        nastran_skew = out[10][0]
+        nastran_taper = out[11][0]
+        nastran_warp = out[12][0]
+        assert np.isclose(nastran_skew, 90.0, atol=1e-10), f'skew={nastran_skew}'
+        assert np.isclose(nastran_taper, 0.0, atol=1e-10), f'taper={nastran_taper}'
+        assert np.isclose(nastran_warp, 0.0, atol=1e-10), f'warp={nastran_warp}'
+
+    def test_nastran_metrics_warped(self):
+        """Warped quad should have warp > 0."""
+        from pyNastran.dev.bdf_vectorized3.cards.elements.shell_quality import quad_quality_xyz
+        p1 = np.array([[0., 0., 0.]])
+        p2 = np.array([[1., 0., 0.]])
+        p3 = np.array([[1., 1., 0.]])
+        p4 = np.array([[0., 1., 0.5]])
+        out = quad_quality_xyz(p1, p2, p3, p4)
+        nastran_warp = out[12][0]
+        assert nastran_warp > 0.0, f'warp={nastran_warp}'
+
+    def test_nastran_metrics_matches_scalar(self):
+        """Vectorized NX metrics should match the scalar implementation."""
+        from pyNastran.dev.bdf_vectorized3.cards.elements.shell_quality import quad_quality_xyz
+        from pyNastran.bdf.mesh_utils.delete_bad_elements import quad_quality_nastran
+
+        p1s = np.array([0., 0., 0.])
+        p2s = np.array([2., 0., 0.])
+        p3s = np.array([3., 1., 0.])
+        p4s = np.array([1., 1., 0.])
+        skew_s, taper_s, warp_s = quad_quality_nastran(p1s, p2s, p3s, p4s)
+
+        p1v = p1s.reshape(1, 3)
+        p2v = p2s.reshape(1, 3)
+        p3v = p3s.reshape(1, 3)
+        p4v = p4s.reshape(1, 3)
+        out = quad_quality_xyz(p1v, p2v, p3v, p4v)
+        skew_v = out[10][0]
+        taper_v = out[11][0]
+        warp_v = out[12][0]
+
+        assert np.isclose(np.degrees(skew_s), skew_v, atol=1e-10), \
+            f'skew: scalar={np.degrees(skew_s)}, vec={skew_v}'
+        assert np.isclose(taper_s, taper_v, atol=1e-10), \
+            f'taper: scalar={taper_s}, vec={taper_v}'
+        assert np.isclose(warp_s, warp_v, atol=1e-10), \
+            f'warp: scalar={warp_s}, vec={warp_v}'
+
+
 if __name__ == '__main__':
     unittest.main()
