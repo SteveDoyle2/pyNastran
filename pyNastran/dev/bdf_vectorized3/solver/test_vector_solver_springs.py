@@ -5,6 +5,7 @@ import numpy as np
 from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.dev.bdf_vectorized3.solver.solver import Solver, BDF, partition_vector2
+from pyNastran.f06.errors import FatalError
 from pyNastran.dev.solver.solver import Solver as SolverOld, BDF as BDFold
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
@@ -1154,8 +1155,8 @@ class TestModalBar(unittest.TestCase):
         model.setup()
         assert len(model.cbar)
         solver = Solver(model)
-        solver.run()
-        x = 1
+        with self.assertRaises(FatalError):
+            solver.run()
 
 
 class TestStaticBar(unittest.TestCase):

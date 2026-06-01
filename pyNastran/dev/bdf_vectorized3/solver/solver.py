@@ -839,33 +839,32 @@ class Solver:
         else:
             Kgg = build_Kgg(model, dof_map, ndof, ngrid, ndof_per_grid, idtype="int32", fdtype=fdtype)
         Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
-        # print(self.op2.grid_point_weight)
-        reference_point, MO = grid_point_weight(model, Mbb, dof_map, ndof)
-        weight = make_grid_point_weight(
-            reference_point,
-            MO,
-            approach_code=1,
-            table_code=13,
-            title=title,
-            subtitle=subtitle,
-            label=label,
-            superelement_adaptivity_index="",
-        )
-        self.op2.grid_point_weight[label] = weight
-        page_num = weight.write_f06(f06_file, page_stamp, page_num)
+        if Mbb is not None:
+            reference_point, MO = grid_point_weight(model, Mbb, dof_map, ndof)
+            weight = make_grid_point_weight(
+                reference_point,
+                MO,
+                approach_code=1,
+                table_code=13,
+                title=title,
+                subtitle=subtitle,
+                label=label,
+                superelement_adaptivity_index="",
+            )
+            self.op2.grid_point_weight[label] = weight
+            page_num = weight.write_f06(f06_file, page_stamp, page_num)
 
         # ----------------------MPC reduction (g -> n)----------------------
         GMN, mset = self.build_GMN(subcase, dof_map, ndof, fdtype=fdtype)
         self.GMN = GMN
         self.mset = mset
 
-        Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid, inplace=False)
-        del Mbb
+        Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid, inplace=False) if Mbb is not None else None
 
         if GMN is not None:
             # Transform to n-set: Knn = GMN^T @ Kgg @ GMN, Mnn = GMN^T @ Mgg @ GMN
             Knn = GMN.T @ Kgg @ GMN
-            Mnn = GMN.T @ Mgg @ GMN
+            Mnn = GMN.T @ Mgg @ GMN if Mgg is not None else None
 
             # AUTOSPC on N-set: detect singular DOFs after MPC reduction
             n_ndof_temp = Knn.shape[0]
@@ -3086,7 +3085,9 @@ def build_Mbb(
             k_arr = elem.k()
             e_g_nus = elem.e_g_nu()
 
-            mass_per_length_total = elem.mass() / lengths
+            elem_masses = elem.mass()
+            mass_total += elem_masses.sum()
+            mass_per_length_total = elem_masses / lengths
 
             for (nid1, nid2), areai, inertiai, lengthi, ki, e_g_nu, ihati, jhati, khati, mpl in zip(
                 elem.nodes, area, inertia, lengths, k_arr, e_g_nus,
@@ -3269,8 +3270,7 @@ def build_Mbb(
         massi = sum(Mbb[ii, ii] for ii in i)
         log.info(f"finished build_Mbb; M={massi:.6g}; mass_total={mass_total:.6g}")
     else:
-        Mbb = sp.sparse.eye(ndof, dtype=fdtype, format='csc')
-        log.error(f"finished build_Mbb; faking mass; ndof={ndof}")
+        return None
     return Mbb
 
 
@@ -3910,6 +3910,10 @@ def solve_eigenvector(
     Kaa_dense = Kaa.toarray()
     assert isinstance(Maa, np.ndarray), type(Maa)
 
+    if not np.any(Maa):
+        from pyNastran.f06.errors import FatalError
+        raise FatalError('mass matrix is zero; check that elements have material density')
+
     # reduce the size of the matrix going into the solver
     # by removing empty rows/columns
     Kaai = Kaa_dense
@@ -3938,9 +3942,16 @@ def solve_eigenvector(
         xa[no_modes, :] = 0
         xa[is_modes, :] = xa_
     else:
-        eigenvalues, xa_ = backend.eigsh(
-            Kaa2, k=neigenvalues, M=Maa2, which="SM", return_eigenvectors=True
-        )
+        from scipy.sparse.linalg import ArpackNoConvergence
+        try:
+            eigenvalues, xa_ = backend.eigsh(
+                Kaa2, k=neigenvalues, M=Maa2, which="SM", return_eigenvectors=True
+            )
+        except ArpackNoConvergence as e:
+            from pyNastran.f06.errors import FatalError
+            raise FatalError(
+                f'eigensolver did not converge: {e.args[0]}'
+            ) from e
         xa = np.full((ndof, neigenvalues), np.nan, dtype=xa_.dtype)
         xa[no_modes, :] = 0
         xa[is_modes, :] = xa_

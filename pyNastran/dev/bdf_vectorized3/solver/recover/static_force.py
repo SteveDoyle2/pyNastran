@@ -222,11 +222,12 @@ def _recover_force_cbar(f06_file: TextIO, op2,
     #     J = prop.J
 
     AIJEG = elem.stiffness_info()
-    A = AIJEG[:, 0]
-    I = AIJEG[:, [1, 2, 3]]
-    J = AIJEG[:, 4]
-    E = AIJEG[:, 5]
-    G = AIJEG[:, 6]
+    # columns: [length, area, I1, I2, I12, J, E, G]
+    A = AIJEG[:, 1]
+    I = AIJEG[:, [2, 3, 4]]
+    J = AIJEG[:, 5]
+    E = AIJEG[:, 6]
+    G = AIJEG[:, 7]
     assert isinstance(J, np.ndarray), (elem.type, J)
     assert isinstance(A, np.ndarray), (elem.type, A)
     assert isinstance(E, np.ndarray), (elem.type, E)

@@ -187,11 +187,12 @@ def _recover_strain_energy_beam(
     xyz2 = model.grid.get_position_by_node_id(elem.nodes[:, 1])
 
     AIJEG = elem.stiffness_info()
-    Avec = AIJEG[:, 0]
-    Ivec = AIJEG[:, [1, 2, 3]]
-    Jvec = AIJEG[:, 4]
-    Evec = AIJEG[:, 5]
-    Gvec = AIJEG[:, 6]
+    # columns: [length, area, I1, I2, I12, J, E, G]
+    Avec = AIJEG[:, 1]
+    Ivec = AIJEG[:, [2, 3, 4]]
+    Jvec = AIJEG[:, 5]
+    Evec = AIJEG[:, 6]
+    Gvec = AIJEG[:, 7]
 
     v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
     k_arr = elem.k()
