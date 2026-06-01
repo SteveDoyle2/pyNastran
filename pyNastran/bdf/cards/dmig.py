@@ -2588,15 +2588,13 @@ def _dmi_write_real_columns_8(name: str, GCi, GCj, Real,
                 fields_8.append('%8d' % GCi[idx])
                 fields_8.append(Real_str[idx])
 
-        # Assemble into 80-char lines (10 fields per line: 1 card name + 9 data)
-        # First line has the card name in fields_8[0], so 9 more fields fit
-        nfields = len(fields_8) - 1  # subtract card name
+        # Assemble into 72-char lines (9 fields per line: 1 card name + 8 data)
         lines = []
         pos = 1  # skip card name field
-        # First line: up to 9 fields after the card name
+        # First line: up to 8 fields after the card name
         line_fields = fields_8[0]
         count = 0
-        while pos < len(fields_8) and count < 9:
+        while pos < len(fields_8) and count < 8:
             line_fields += fields_8[pos]
             pos += 1
             count += 1
@@ -2722,12 +2720,12 @@ def _dmi_write_complex_columns_8(name: str, GCi, GCj, Real, Complex,
                 fields_8.append(Real_str[idx])
                 fields_8.append(Complex_str[idx])
 
-        # Assemble into 80-char lines
+        # Assemble into 72-char lines (9 fields per line: 1 card name + 8 data)
         lines = []
         pos = 1
         line_fields = fields_8[0]
         count = 0
-        while pos < len(fields_8) and count < 9:
+        while pos < len(fields_8) and count < 8:
             line_fields += fields_8[pos]
             pos += 1
             count += 1
