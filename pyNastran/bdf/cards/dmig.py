@@ -20,9 +20,8 @@ from pyNastran.bdf.field_writer_8 import array_float_8
 from pyNastran.bdf.field_writer_16 import array_float_16
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, integer_or_double,  # blank,
-    double, string, string_or_blank,
-    parse_components, interpret_value, integer_double_string_or_blank,
+    integer, integer_or_blank, double, string, string_or_blank,
+    parse_components, integer_double_string_or_blank,
     _nastran_str_to_float)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -736,7 +735,8 @@ class NastranMatrix(BaseCard):
         """
         Colormaps and plots a 2D matrix using a specified colormap, defaulting to Red-Blue.
 
-        Parameters:
+        Parameters
+        ----------
         matrix (numpy.ndarray): The 2D matrix (or array-like) to be colormapped.
         cmap_name (str): The name of the colormap to use (e.g., 'RdBu', 'bwr', 'seismic').
                          'RdBu' is Red-Blue, typically with white/light gray in the middle.
@@ -2557,7 +2557,8 @@ def _dmi_get_real_matrix_columns(name: str, GCi, GCj, Real,
 def _dmi_write_real_columns_8(name: str, GCi, GCj, Real,
                                   Real_str: list[str]) -> list[str]:
     """Build DMI column card strings directly for size=8,
-    bypassing print_card_8/print_field_8 per-field dispatch."""
+    bypassing print_card_8/print_field_8 per-field dispatch.
+    """
     msg_list = []
     uGCj = np.unique(GCj)
     name8 = '%8s' % name

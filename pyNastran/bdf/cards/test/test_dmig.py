@@ -1474,5 +1474,153 @@ class TestDMIAX(unittest.TestCase):
         save_load_deck(model)
 
 
+class TestMatrixLineLength(unittest.TestCase):
+    """Validates that all matrix card write methods respect the 72-char line limit."""
+
+    def _check_line_length(self, card_str: str, card_type: str, tin: int,
+                           is_large_field: bool) -> None:
+        """Assert every line in card_str is <= 72 chars with correct field size."""
+        for i, line in enumerate(card_str.split("\n"), 1):
+            if not line or line.startswith("$"):
+                continue
+            assert len(line) <= 72, (
+                f"{card_type} (tin={tin}) line {i} has {len(line)} chars "
+                f"(>72): {line!r}"
+            )
+            is_header = "       0" in line[:24]
+            if is_header:
+                continue
+            if is_large_field:
+                assert "*" in line, (
+                    f"{card_type} (tin={tin}) line {i} missing '*' for "
+                    f"large field: {line!r}"
+                )
+            else:
+                assert "*" not in line, (
+                    f"{card_type} (tin={tin}) line {i} has unexpected '*' "
+                    f"in small field: {line!r}"
+                )
+
+    def _make_gc_pairs(self, nrows: int, ncols: int):
+        """Build GCi/GCj as list of (grid, component) tuples for NastranMatrix cards."""
+        GCj = []
+        GCi = []
+        for col in range(1, ncols + 1):
+            for row in range(1, nrows + 1):
+                GCj.append((col, 1))
+                GCi.append((row, 1))
+        return GCj, GCi
+
+    def test_dmig_line_length(self):
+        """DMIG write_card must not exceed 72 chars per line for all TIN values."""
+        rng = np.random.default_rng(43)
+        nrows = 20
+        ncols = 5
+        GCj, GCi = self._make_gc_pairs(nrows, ncols)
+        Real = rng.standard_normal(len(GCi)).tolist()
+        Complex = rng.standard_normal(len(GCi)).tolist()
+
+        cases = [
+            (1, None, False),
+            (2, None, True),
+            (3, Complex, False),
+            (4, Complex, True),
+        ]
+        for tin, cplx, is_large_field in cases:
+            model = BDF(debug=False)
+            model.add_dmig(f"DMIG{tin}", 1, tin, ncols, GCj, GCi, Real,
+                           Complex=cplx)
+            card_str = str(model.dmig[f"DMIG{tin}"])
+            self._check_line_length(card_str, "DMIG", tin, is_large_field)
+
+    def test_dmij_line_length(self):
+        """DMIJ write_card must not exceed 72 chars per line for all TIN values."""
+        from pyNastran.bdf.cards.dmig import DMIJ
+        rng = np.random.default_rng(44)
+        nrows = 20
+        ncols = 5
+        GCj, GCi = self._make_gc_pairs(nrows, ncols)
+        Real = rng.standard_normal(len(GCi)).tolist()
+        Complex = rng.standard_normal(len(GCi)).tolist()
+
+        cases = [
+            (1, None, False),
+            (2, None, True),
+            (3, Complex, False),
+            (4, Complex, True),
+        ]
+        for tin, cplx, is_large_field in cases:
+            dmij = DMIJ(f"DMIJ{tin}", 1, tin, ncols, GCj, GCi, Real,
+                        Complex=cplx)
+            card_str = str(dmij)
+            self._check_line_length(card_str, "DMIJ", tin, is_large_field)
+
+    def test_dmik_line_length(self):
+        """DMIK write_card must not exceed 72 chars per line for all TIN values."""
+        rng = np.random.default_rng(45)
+        nrows = 20
+        ncols = 5
+        GCj, GCi = self._make_gc_pairs(nrows, ncols)
+        Real = rng.standard_normal(len(GCi)).tolist()
+        Complex = rng.standard_normal(len(GCi)).tolist()
+
+        cases = [
+            (1, None, False),
+            (2, None, True),
+            (3, Complex, False),
+            (4, Complex, True),
+        ]
+        for tin, cplx, is_large_field in cases:
+            model = BDF(debug=False)
+            model.add_dmik(f"DMIK{tin}", 1, tin, ncols, GCj, GCi, Real,
+                           Complex=cplx)
+            card_str = str(model.dmik[f"DMIK{tin}"])
+            self._check_line_length(card_str, "DMIK", tin, is_large_field)
+
+    def test_dmiji_line_length(self):
+        """DMIJI write_card must not exceed 72 chars per line for all TIN values."""
+        rng = np.random.default_rng(46)
+        nrows = 20
+        ncols = 5
+        GCj, GCi = self._make_gc_pairs(nrows, ncols)
+        Real = rng.standard_normal(len(GCi)).tolist()
+        Complex = rng.standard_normal(len(GCi)).tolist()
+
+        cases = [
+            (1, None, False),
+            (2, None, True),
+            (3, Complex, False),
+            (4, Complex, True),
+        ]
+        for tin, cplx, is_large_field in cases:
+            model = BDF(debug=False)
+            model.add_dmiji(f"DMIJI{tin}", 1, tin, nrows, ncols, GCj, GCi, Real,
+                            Complex=cplx)
+            card_str = str(model.dmiji[f"DMIJI{tin}"])
+            self._check_line_length(card_str, "DMIJI", tin, is_large_field)
+
+    def test_dmiax_line_length(self):
+        """DMIAX write_card must not exceed 72 chars per line for all TIN values."""
+        rng = np.random.default_rng(47)
+        nentries = 10
+        GCNj = [(col, 1, 0) for col in range(1, nentries + 1)]
+        GCNi = [[(row, 1, 0)] for row in range(1, nentries + 1)]
+        Real = rng.standard_normal(nentries).tolist()
+        Complex = rng.standard_normal(nentries).tolist()
+
+        cases = [
+            (1, None, False),
+            (2, None, True),
+            (3, Complex, False),
+            (4, Complex, True),
+        ]
+        for tin, cplx, is_large_field in cases:
+            model = BDF(debug=False)
+            model.add_dmiax(f"DMIAX{tin}", 1, tin, nentries,
+                            GCNj, GCNi, Real, Complex=cplx)
+            card_str = str(model.dmiax[f"DMIAX{tin}"])
+            self._check_line_length(card_str, "DMIAX", tin, is_large_field)
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
