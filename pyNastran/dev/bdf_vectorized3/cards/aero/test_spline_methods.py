@@ -246,12 +246,16 @@ class TestNearestSpline(unittest.TestCase):
 
     def test_partition_of_unity(self):
         """Normalized weights sum to 1. atol=1e-14."""
-        G = nearest_spline(self.struct_pts, self.aero_pts, n_nearest=4, weighting="inverse_distance")
+        G = nearest_spline(
+            self.struct_pts, self.aero_pts, n_nearest=4, weighting="inverse_distance"
+        )
         npt.assert_allclose(G.sum(axis=1), 1.0, atol=1e-14)
 
     def test_n_nearest_1(self):
         """n_nearest=1: exactly one non-zero per row."""
-        G = nearest_spline(self.struct_pts, self.aero_pts, n_nearest=1, weighting="inverse_distance")
+        G = nearest_spline(
+            self.struct_pts, self.aero_pts, n_nearest=1, weighting="inverse_distance"
+        )
         for i in range(G.shape[0]):
             nonzero = np.count_nonzero(G[i])
             assert nonzero == 1, f"Row {i} has {nonzero} nonzeros, expected 1"
@@ -293,6 +297,69 @@ class TestBeamSpline(unittest.TestCase):
         u_struct = struct[:, 0]  # u = x
         u_aero = G @ u_struct
         npt.assert_allclose(u_aero, aero[:, 0], atol=1e-10)
+
+    def test_quadratic_yz_from_three_control_points(self):
+        """Beam spline reproduces quadratic deflection in y and z planes.
+
+        Setup:
+        - 11 nodes on a straight line along x (x = 0, 1, ..., 10)
+        - Quadratic deflections: dy = 0.3*x*(10-x), dz = 0.5*x*(10-x)
+        - Only 3 control points given to spline (x=0, 5, 10)
+        - Spline interpolates deflections at the other 8 intermediate nodes
+
+        A cubic Hermite spline with natural slopes from np.gradient on 3
+        equally-spaced points reproduces a quadratic exactly because:
+        - The quadratic has zero cubic coefficient
+        - np.gradient gives the exact derivative at interior points for quadratics
+        - End-point slopes from np.gradient use forward/backward differences
+          which are also exact for quadratics on uniform grids
+
+        Tolerances:
+        - y deflection: atol=1e-10
+        - z deflection: atol=1e-10
+        """
+        # --- Define the full set of nodes on a straight line ---
+        n_total = 11
+        x_all = np.linspace(0.0, 10.0, n_total)
+        nodes_all = np.column_stack([x_all, np.zeros(n_total), np.zeros(n_total)])
+
+        # --- Hidden quadratic deflection functions ---
+        def dy_exact(x):
+            return 0.3 * x * (10.0 - x)
+
+        def dz_exact(x):
+            return 0.5 * x * (10.0 - x)
+
+        # --- 3 control points: first (0), middle (5), last (10) ---
+        ctrl_idx = [0, 5, 10]
+        struct_ctrl = nodes_all[ctrl_idx]
+
+        # --- The "aero" points are the 8 intermediate nodes ---
+        interp_idx = [i for i in range(n_total) if i not in ctrl_idx]
+        aero_interp = nodes_all[interp_idx]
+
+        # --- Build beam spline G matrix (3 control -> 8 interp) ---
+        G = beam_spline(struct_ctrl, aero_interp, beam_axis="x")
+
+        # --- Apply known deflections at control points ---
+        dy_ctrl = dy_exact(struct_ctrl[:, 0])
+        dz_ctrl = dz_exact(struct_ctrl[:, 0])
+
+        # --- Interpolate to intermediate points ---
+        dy_interp = G @ dy_ctrl
+        dz_interp = G @ dz_ctrl
+
+        # --- Expected values from the quadratic ---
+        dy_expected = dy_exact(aero_interp[:, 0])
+        dz_expected = dz_exact(aero_interp[:, 0])
+
+        # --- Check ---
+        npt.assert_allclose(
+            dy_interp, dy_expected, atol=1e-10, err_msg="y-deflection quadratic not reproduced"
+        )
+        npt.assert_allclose(
+            dz_interp, dz_expected, atol=1e-10, err_msg="z-deflection quadratic not reproduced"
+        )
 
 
 # =============================================================================
@@ -376,5 +443,5 @@ class TestFpsSpline(unittest.TestCase):
         npt.assert_allclose(G.sum(axis=1), 1.0, atol=1e-10)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -310,8 +310,20 @@ class PSHELL(Property):
             mid2b = None if mid2 == -1 else mid2
             mid3b = None if mid3 == -1 else mid3
             mid4b = None if mid4 == -1 else mid4
+
+            # If MID4 is present, the 3rd line (z1, z2, mid4) must be written.
+            # If the 2nd line (twelveIt3, mid3, tst, nsm) would be all blank,
+            # force twelveIt3 to be written so the continuation isn't dropped.
+            if mid4b is not None:
+                if twelveIt3 is None and mid3b is None and tst is None and nsm is None:
+                    twelveIt3 = 1.0
+                if z1b is None and z2b is None:
+                    z1b = z1
+
             list_fields = ['PSHELL', pid, mid1b, t, mid2b,
                            twelveIt3, mid3b, tst, nsm, z1b, z2b, mid4b]
+            while list_fields[-1] is None:
+                list_fields.pop()
             msg = print_card(list_fields)
             bdf_file.write(msg)
         return
@@ -374,8 +386,17 @@ class PSHELL(Property):
                 mid2b = None if mid2i == -1 else mid2i
                 mid3b = None if mid3i == -1 else mid3i
                 mid4b = None if mid4i == -1 else mid4i
+
+                if mid4b is not None:
+                    if twelveIt3 is None and mid3b is None and tst is None and nsm is None:
+                        twelveIt3 = 1.0
+                    if z1b is None and z2b is None:
+                        z1b = z1i
+
                 list_fields = ['PSHELL', pid, mid1b, ti, mid2b,
                                twelveIt3, mid3b, tst, nsm, z1b, z2b, mid4b]
+                while list_fields[-1] is None:
+                    list_fields.pop()
                 bdf_file.write(print_card_8(list_fields))
             return
 
@@ -1685,11 +1706,11 @@ class PCOMP(CompositeProperty):
         #assert len(mids) == len(mids_ref), f'mids={mids} ({len(mids)}) mids_ref:\n{mids_ref}; {len(mids_ref)}'
         for lam, z0, (ilayer0, ilayer1) in zip(self.lam, self.z0, self.ilayer):
             mids = self.material_id[ilayer0:ilayer1]
-            thetas = self.theta[ilayer0:ilayer1]
+            thetas = np.radians(self.theta[ilayer0:ilayer1])
             thicknesses = self.thickness[ilayer0:ilayer1]
             csum = np.cumsum(thicknesses)
             z0 = z0 + np.hstack([0., csum[:-1]])
-            z1 = z0 + csum
+            z1 = z0 + thicknesses
             zmeans = (z0 + z1) / 2
 
             Qbar = self.get_Qbar_matrix(mids, thetas)
@@ -3025,7 +3046,7 @@ def get_2d_plate_transform(theta: np.ndarray) -> np.ndarray:
 
     T126 = np.zeros((ntheta, 3, 3), dtype='float64')
     T126[:, 0, 0] = T126[:, 1, 1] = ct2
-    T126[:, 0, 1] = T126[:, 0, 1] = st2
+    T126[:, 0, 1] = T126[:, 1, 0] = st2
     T126[:, 0, 2] = 2 * cst
     T126[:, 1, 2] = -2 * cst
     T126[:, 2, 0] = -cst

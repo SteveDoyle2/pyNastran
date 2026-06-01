@@ -351,6 +351,192 @@ class TestStaticSpring(unittest.TestCase):
         d = mag / k
         assert np.allclose(solver.xa_[0], d)
 
+    def test_ese_all_springs(self):
+        """Tests ESE for all spring types in one model.
+
+        4 springs in series (one of each type), all with k=1000:
+          SPOINT 1 --[CELAS4]-- SPOINT 2 --[CELAS3]-- SPOINT 3
+                   --[CELAS2]-- SPOINT 4 --[CELAS1]-- SPOINT 5
+
+        SPCs at endpoints (1, 5), force at the middle junction (3).
+        MPC ties SPOINT 2 to SPOINT 4 (making it one continuous chain).
+
+        Equivalent: 4 springs in series, k_eq = k/4 = 250.
+        But with both ends fixed and force at mid-chain junction (node 3):
+          Left side: 2 springs in series from node 1 to node 3: k_left = k/2
+          Right side: 2 springs in series from node 3 to node 5: k_right = k/2
+          Combined at node 3: k_total = k_left + k_right = k
+          u3 = F / k_total = F / k
+
+        Per-element energies depend on individual dx values.
+        Total SE = 0.5 * F * u3
+        """
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'test_ese_all_springs.bdf'
+        model.add_spoint([1, 2, 3, 4, 5])
+
+        k = 1000.
+        # CELAS4: SPOINT 1 -- SPOINT 2 (k on card, no property)
+        model.add_celas4(1, k, [1, 2])
+        # CELAS3: SPOINT 2 -- SPOINT 3 (uses PELAS)
+        model.add_pelas(10, k)
+        model.add_celas3(2, 10, [2, 3])
+        # CELAS2: SPOINT 3 -- SPOINT 4 (k on card, GRID-like with comp=0)
+        model.add_celas2(3, k, [3, 4], c1=0, c2=0)
+        # CELAS1: SPOINT 4 -- SPOINT 5 (uses PELAS)
+        model.add_pelas(20, k)
+        model.add_celas1(4, 20, [4, 5], c1=0, c2=0)
+
+        F = 2.0
+        model.add_sload(2, 3, F)
+        model.add_spc1(3, 0, [1, 5])
+
+        lines = [
+            'DISP(PLOT,PRINT) = ALL',
+            'SPCFORCE(PLOT,PRINT) = ALL',
+            'ESE(PLOT,PRINT) = ALL',
+            'SUBCASE 1',
+            '  LOAD = 2',
+            '  SPC = 3',
+        ]
+        cc = CaseControlDeck(lines, log=model.log)
+        model.sol = 101
+        model.case_control_deck = cc
+        solver = Solver(model)
+        solver.run()
+
+        # Analytical solution:
+        # Chain: 1--[k]--2--[k]--3--[k]--4--[k]--5
+        # SPC at 1 and 5, force F at 3.
+        # Left pair (springs 1,2): k_left = k/2, carries force F_left
+        # Right pair (springs 3,4): k_right = k/2, carries force F_right
+        # Equilibrium at node 3: F = k_left*u3 + k_right*u3 = k*u3
+        # u3 = F/k
+        u3 = F / k
+        # Left pair: u2 = u3/2 (symmetric sub-chain with equal springs)
+        u2 = u3 / 2
+        # Right pair: u4 = u3/2
+        u4 = u3 / 2
+
+        # Verify displacements (SPOINT indices: 1->0, 2->1, 3->2, 4->3, 5->4)
+        assert np.allclose(solver.xg[2], u3, rtol=1e-10), \
+            f"u3={solver.xg[2]}, expected={u3}"
+
+        # Per-element strain energies
+        # Spring 1 (1-2): dx = u2 - 0 = u3/2
+        # Spring 2 (2-3): dx = u3 - u2 = u3/2
+        # Spring 3 (3-4): dx = u4 - u3 = -(u3/2)
+        # Spring 4 (4-5): dx = 0 - u4 = -(u3/2)
+        se_each = 0.5 * k * (u3 / 2) ** 2
+        total_expected = 4 * se_each
+        # Also check: total = 0.5 * F * u3
+        assert np.allclose(total_expected, 0.5 * F * u3, rtol=1e-10)
+
+        ese_results = solver.op2.op2_results.strain_energy
+        all_energies = []
+        for attr in ['celas4_strain_energy', 'celas3_strain_energy',
+                     'celas2_strain_energy', 'celas1_strain_energy']:
+            ese_dict = getattr(ese_results, attr)
+            if 1 in ese_dict:
+                ese = ese_dict[1]
+                energies = ese.data[0, :-1, 0]
+                all_energies.extend(energies.tolist())
+                for e in energies:
+                    assert np.allclose(e, se_each, rtol=1e-10), \
+                        f"{attr}: SE={e}, expected={se_each}"
+
+        assert len(all_energies) == 4, f"Expected 4 elements, got {len(all_energies)}"
+        assert np.allclose(sum(all_energies), total_expected, rtol=1e-10), \
+            f"Total SE={sum(all_energies)}, expected={total_expected}"
+
+
+    def test_ese_all_springs_cantilever(self):
+        """4 springs in series (one of each type), cantilevered.
+
+        SPOINT 1 --[CELAS4,k=1000]-- 2 --[CELAS3,k=500]-- 3
+                 --[CELAS2,k=2000]-- 4 --[CELAS1,k=800]-- 5
+        SPC at node 1 only. Force F=10 at node 5.
+        k_series = 1/(1/k1 + 1/k2 + 1/k3 + 1/k4)
+        u5 = F / k_series
+        Total SE = 0.5 * F * u5
+        Per-element: SE_i = 0.5 * k_i * dx_i^2, where dx_i = F / k_i
+        """
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'test_ese_cantilever.bdf'
+        model.add_spoint([1, 2, 3, 4, 5])
+
+        k1, k2, k3, k4 = 1000., 500., 2000., 800.
+        model.add_celas4(1, k1, [1, 2])
+        model.add_pelas(10, k2)
+        model.add_celas3(2, 10, [2, 3])
+        model.add_celas2(3, k3, [3, 4], c1=0, c2=0)
+        model.add_pelas(20, k4)
+        model.add_celas1(4, 20, [4, 5], c1=0, c2=0)
+
+        F = 10.0
+        model.add_sload(2, 5, F)
+        model.add_spc1(3, 0, [1])
+
+        lines = [
+            'DISP(PLOT,PRINT) = ALL',
+            'SPCFORCE(PLOT,PRINT) = ALL',
+            'ESE(PLOT,PRINT) = ALL',
+            'SUBCASE 1',
+            '  LOAD = 2',
+            '  SPC = 3',
+        ]
+        cc = CaseControlDeck(lines, log=model.log)
+        model.sol = 101
+        model.case_control_deck = cc
+        solver = Solver(model)
+        solver.run()
+
+        # All springs carry the same force F (series chain, one free end)
+        ks = [k1, k2, k3, k4]
+        k_series = 1.0 / sum(1.0 / ki for ki in ks)
+        u5_expected = F / k_series
+
+        # Intermediate displacements: u_i = sum(F/k_j for j=1..i)
+        u2 = F / k1
+        u3 = u2 + F / k2
+        u4 = u3 + F / k3
+        u5 = u4 + F / k4
+        assert np.allclose(u5, u5_expected, rtol=1e-10)
+
+        # Check solver displacements (SPOINT order: 1->0, 2->1, ..., 5->4)
+        assert np.allclose(solver.xg[1], u2, rtol=1e-10), \
+            f"u2={solver.xg[1]}, expected={u2}"
+        assert np.allclose(solver.xg[4], u5, rtol=1e-10), \
+            f"u5={solver.xg[4]}, expected={u5}"
+
+        # Per-element SE: each spring stretches by dx_i = F/k_i
+        se_expected = [0.5 * ki * (F / ki)**2 for ki in ks]  # = 0.5*F^2/k_i
+        total_expected = sum(se_expected)
+        assert np.allclose(total_expected, 0.5 * F * u5, rtol=1e-10)
+
+        # Verify from op2 ESE tables
+        ese_results = solver.op2.op2_results.strain_energy
+        ese_attrs = [
+            ('celas4_strain_energy', se_expected[0]),
+            ('celas3_strain_energy', se_expected[1]),
+            ('celas2_strain_energy', se_expected[2]),
+            ('celas1_strain_energy', se_expected[3]),
+        ]
+        total_from_op2 = 0.0
+        for attr, se_ref in ese_attrs:
+            ese_dict = getattr(ese_results, attr)
+            assert 1 in ese_dict, f"{attr} not found in ESE results"
+            ese = ese_dict[1]
+            energy = float(ese.data[0, 0, 0])  # single element per type
+            assert np.allclose(energy, se_ref, rtol=1e-6), \
+                f"{attr}: SE={energy}, expected={se_ref}"
+            total_from_op2 += energy
+
+        assert np.allclose(total_from_op2, total_expected, rtol=1e-6), \
+            f"Total SE={total_from_op2}, expected={total_expected}"
+
 
 class TestStaticRod(unittest.TestCase):
     """tests the rods"""
@@ -531,7 +717,7 @@ class TestStaticRod(unittest.TestCase):
 
         dof = [0, 3, 6, 9]
         Kgg_expectedi = Kgg_expected[dof, :][:, dof]
-        Kgg = solver.Kgg[dof, :][:, dof]
+        Kgg = solver.Kgg[dof, :][:, dof].toarray()
         assert np.allclose(Kgg, Kgg_expectedi)
 
 
@@ -660,7 +846,12 @@ class TestStaticRod(unittest.TestCase):
         solver.run()
 
     def test_crod_mpc(self):
-        """Tests a CROD/PROD"""
+        """Tests a CROD/PROD with MPC tying node 2 DOF 1 to node 3 DOF 3.
+
+        MPC: 1.0*u2_1 + (-1.0)*u3_3 = 0  =>  u2_x = u3_z
+        Rod from node 1 to 2 (axial along X), force at node 3 in Z.
+        Expected: u2_x = u3_z = F / (EA/L) = 1.0 / 3e7
+        """
         log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(log=log, mode='msc')
         model.bdf_filename = TEST_DIR / 'crod_mpc.bdf'
@@ -697,6 +888,78 @@ class TestStaticRod(unittest.TestCase):
         setup_static_case_control(model, extra_case_lines=['MPC=10'])
         solver = Solver(model)
         solver.run()
+
+        # Verify MPC result
+        # Rod: K = EA/L = 3e7 * 1.0 / 1.0 = 3e7
+        # u2_x = F/K = 1.0 / 3e7
+        # MPC: u2_x = u3_z
+        A = 1.0
+        L = 1.0
+        F = 1.0
+        expected_disp = F / (E * A / L)
+        # DOF indices: node 2 DOF 1 = index 6, node 3 DOF 3 = index 14
+        u2_x = solver.xg[6]
+        u3_z = solver.xg[14]
+        assert np.allclose(u2_x, expected_disp, rtol=1e-10), \
+            f"u2_x={u2_x}, expected={expected_disp}"
+        assert np.allclose(u3_z, expected_disp, rtol=1e-10), \
+            f"u3_z={u3_z}, expected={expected_disp}"
+        assert np.allclose(u2_x, u3_z, rtol=1e-10), \
+            f"MPC violated: u2_x={u2_x} != u3_z={u3_z}"
+
+    def test_celas_mpc_series(self):
+        """Two springs in series connected by an MPC.
+
+        Node 1 (fixed) --[k1=1000]-- Node2 == Node3 --[k2=1000]-- Node4 (fixed)
+        MPC: u2_1 = u3_1
+        Force F=1.0 at node 2.
+        Expected: u_mid = F / (k1 + k2) = 0.0005
+        """
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'celas_mpc_series.bdf'
+        model.add_spoint([1, 2, 3, 4])
+
+        k1 = 1000.
+        k2 = 1000.
+        model.add_celas4(1, k1, [1, 2])
+        model.add_celas4(2, k2, [3, 4])
+
+        # MPC: 1.0*u2 + (-1.0)*u3 = 0  =>  u2 = u3
+        model.add_mpc(10, [2, 3], [0, 0], [1., -1.])
+
+        F = 1.0
+        model.add_sload(2, 2, F)
+
+        model.add_spc1(3, 0, [1, 4])
+
+        lines = [
+            'DISP(PLOT,PRINT) = ALL',
+            'SPCFORCE(PLOT,PRINT) = ALL',
+            'SUBCASE 1',
+            '  LOAD = 2',
+            '  SPC = 3',
+            'MPC=10',
+        ]
+        cc = CaseControlDeck(lines, log=model.log)
+        model.sol = 101
+        model.case_control_deck = cc
+
+        solver = Solver(model)
+        solver.run()
+
+        # u_mid = F / (k1 + k2) for force at the junction with both ends fixed
+        expected = F / (k1 + k2)
+        # SPOINTs: DOF indices are 0-based by SPOINT ID order
+        # SPOINT 1 -> idx 0, SPOINT 2 -> idx 1, SPOINT 3 -> idx 2, SPOINT 4 -> idx 3
+        u2 = solver.xg[1]
+        u3 = solver.xg[2]
+        assert np.allclose(u2, expected, rtol=1e-10), \
+            f"u2={u2}, expected={expected}"
+        assert np.allclose(u3, expected, rtol=1e-10), \
+            f"u3={u3}, expected={expected}"
+        assert np.allclose(u2, u3, rtol=1e-10), \
+            f"MPC violated: u2={u2} != u3={u3}"
 
     def test_ctube(self):
         """Tests a CTUBE/PTUBE"""
@@ -1637,6 +1900,34 @@ class TestStaticShell(unittest.TestCase):
         setup_static_case_control(model)
         solver = Solver(model)
         solver.run()
+
+    def test_cquad4_pcomp_mat8(self):
+        """Tests CQUAD4/PCOMP/MAT8 (orthotropic composite) with all quad types."""
+        from pyNastran.bdf.cards.params import PARAM
+        for quad_type in ['MITC4', 'MACN', 'MACN2']:
+            model = BDF(debug=None, log=None, mode='msc')
+            model.bdf_filename = TEST_DIR / f'cquad4_pcomp_mat8_{quad_type}.bdf'
+            model.add_grid(1, [0., 0., 0.])
+            model.add_grid(2, [1., 0., 0.])
+            model.add_grid(3, [1., 0., 2.])
+            model.add_grid(4, [0., 0., 2.])
+            mid = 3
+            nids = [1, 2, 3, 4]
+            model.add_cquad4(1, 1, nids, theta_mcid=0.0, zoffset=0.,
+                             tflag=0, T1=None, T2=None, T3=None, T4=None)
+            # 4-ply quasi-isotropic: [0/45/-45/90]
+            model.add_pcomp(1, [mid, mid, mid, mid],
+                            [0.075, 0.075, 0.075, 0.075],
+                            thetas=[0., 45., -45., 90.])
+            model.add_mat8(mid, e11=1.4e7, e22=1.0e6, nu12=0.3,
+                           g12=5.0e5, g1z=5.0e5, g2z=3.0e5, rho=1.0)
+            model.add_spc1(3, '123456', [1, 2])
+            model.add_force(2, 3, 1.0, [0., 0., 1.], cid=0)
+            model.add_force(2, 4, 1.0, [0., 0., 1.], cid=0)
+            model.params['MYQUAD'] = PARAM('MYQUAD', [quad_type])
+            setup_static_case_control(model)
+            solver = Solver(model)
+            solver.run()
 
     def test_cquad4_pshell_mat8(self):
         """Tests CQUAD4/PSHELL/MAT8 (orthotropic) with all quad types."""

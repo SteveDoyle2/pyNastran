@@ -87,7 +87,10 @@ class ASE(BaseCard):
             self.mldstat_ref = zaero.mldstat[self.mldstat_id]
         if self.minstat_id:
             self.minstat_ref = zaero.minstat[self.minstat_id]
-        if self.cmargin_id and 0:
+        if self.cmargin_id:
+            assert self.cmargin_id in zaero.cmargin, (
+                f"ASE {self.ase_id} references CMARGIN {self.cmargin_id} which does not exist"
+            )
             self.cmargin_ref = zaero.cmargin[self.cmargin_id]
 
     def safe_cross_reference(self, model: BDF, xref_errors):

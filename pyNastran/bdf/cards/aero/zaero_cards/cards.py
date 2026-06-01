@@ -12,7 +12,7 @@ from pyNastran.bdf.field_writer_8 import (
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
-    string_or_blank, integer_or_string, blank,
+    string_or_blank, integer_or_string, integer_or_double, blank,
     integer_string_or_blank,
     # string_multifield_or_blank,
     string_multifield_dollar_int_or_blank,
@@ -708,11 +708,20 @@ class MLDSTAT(BaseCard):
         #         STATE1 INITIAL
         mldstat_id = integer(card, 1, 'mldstat_id')
         mldtrim_id = integer(card, 2, 'mldtrim_id')
-        transform = string_or_blank(card, 3, 'transform', default='')
-        state_space_arr = string_or_blank(card, 4, 'state_space_arr', default='')
-        state_space_brr = string_or_blank(card, 4, 'state_space_brr', default='')
-        dx_tox = string_or_blank(card, 5, 'dx_tox', default='YES')
-        assert dx_tox in {'YES', 'NO'}, f'dx_tox={dx_tox!r}'
+        field3 = card.field(3)
+        transform = str(field3) if field3 is not None else ''
+        field4 = card.field(4)
+        state_space_arr = str(field4) if field4 is not None else ''
+        state_space_brr = ''
+        field5 = card.field(5)
+        if field5 is None or field5 == '':
+            dx_tox = 'YES'
+        elif isinstance(field5, int):
+            dx_tox = 'NO' if field5 == 0 else 'YES'
+        else:
+            dx_tox = str(field5).strip()
+        if dx_tox not in {'YES', 'NO'}:
+            dx_tox = 'NO' if dx_tox == '0' else 'YES'
 
         # filename = ''
         filename = string_multifield_dollar_int_or_blank(
@@ -722,8 +731,22 @@ class MLDSTAT(BaseCard):
         states = []
         values = []
         while i < len(card):
-            state = string(card, i, f'state{j}')
-            value = double(card, i+1, f'value{j}')
+            field_state = card.field(i)
+            if field_state is None:
+                i += 2
+                j += 1
+                continue
+            state = str(field_state)
+            field_val = card.field(i + 1)
+            if field_val is None:
+                value = 0.0
+            elif isinstance(field_val, (int, float)):
+                value = float(field_val)
+            else:
+                try:
+                    value = float(field_val)
+                except (ValueError, TypeError):
+                    value = 0.0
             states.append(state)
             values.append(value)
             i += 2
@@ -943,9 +966,12 @@ class MLDCOMD(BaseCard):
         extinp_ids = []
         table_ids = []
         while i < len(card):
-            extinp_id = integer(card, i, f'extinp_id{j}')
-            print(extinp_id)
-            table_id = integer(card, i+1, f'table_id{j}')
+            extinp_id = integer_or_blank(card, i, f'extinp_id{j}')
+            if extinp_id is None:
+                i += 2
+                j += 1
+                continue
+            table_id = integer_or_blank(card, i+1, f'table_id{j}', default=0)
             extinp_ids.append(extinp_id)
             table_ids.append(table_id)
             i += 2
@@ -1231,6 +1257,406 @@ class EXTFILE(BaseCard):
         msg =  f'EXTFILE {self.extfile_id:<8d}{self.filename}\n'
         card = self.repr_fields()
         return self.comment + msg
+
+    def __repr__(self):
+        return self.write_card(size=8)
+
+
+class SPLINE0(BaseCard):
+    """Defines a rigid body spline (infinite plate spline with no elasticity).
+
+    SPLINE0 EID     MODEL   CP      SETK
+    """
+    type = 'SPLINE0'
+
+    def __init__(self, eid: int, model_name: str, cp: int,
+                 setk: int, comment: str = ''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.eid = eid
+        self.model_name = model_name
+        self.cp = cp
+        self.setk = setk
+
+    @classmethod
+    def add_card(cls, card, comment: str = ''):
+        eid = integer(card, 1, 'eid')
+        model_name = string_or_blank(card, 2, 'model', default='')
+        cp = integer_or_blank(card, 3, 'cp', default=0)
+        setk = integer_or_blank(card, 4, 'setk', default=0)
+        return SPLINE0(eid, model_name, cp, setk, comment=comment)
+
+    def raw_fields(self):
+        return ['SPLINE0', self.eid, self.model_name, self.cp, self.setk]
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
+
+    def __repr__(self):
+        return self.write_card(size=8)
+
+
+class PBODY7(BaseCard):
+    """Defines properties for a BODY7 aerodynamic body element.
+
+    PBODY7 PID     IPBODY  ...
+    """
+    type = 'PBODY7'
+
+    def __init__(self, pid: int, ipbody: int, fields: list, comment: str = ''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.pid = pid
+        self.ipbody = ipbody
+        self.fields = fields
+
+    @classmethod
+    def add_card(cls, card, comment: str = ''):
+        pid = integer(card, 1, 'pid')
+        ipbody = integer_or_blank(card, 2, 'ipbody', default=0)
+        fields = []
+        for i in range(3, len(card)):
+            val = card.field(i)
+            fields.append(val)
+        return PBODY7(pid, ipbody, fields, comment=comment)
+
+    def raw_fields(self):
+        return ['PBODY7', self.pid, self.ipbody] + self.fields
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
+
+    def __repr__(self):
+        return self.write_card(size=8)
+
+
+class TRIMFLT(BaseCard):
+    """Defines trim conditions for flutter analysis on a deformed shape.
+
+    TRIMFLT IDFLT   TITLA   ALPHA   ...
+    """
+    type = 'TRIMFLT'
+
+    def __init__(self, trimflt_id: int, title: str, alpha: float,
+                 fields: list, comment: str = ''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.trimflt_id = trimflt_id
+        self.title = title
+        self.alpha = alpha
+        self.fields = fields
+
+    @classmethod
+    def add_card(cls, card, comment: str = ''):
+        trimflt_id = integer(card, 1, 'trimflt_id')
+        # Field 2 can be a string title or an integer reference ID
+        field2 = card.field(2)
+        if field2 is None or field2 == '':
+            title = ''
+        elif isinstance(field2, int):
+            title = str(field2)
+        else:
+            title = str(field2)
+        alpha = double_or_blank(card, 3, 'alpha', default=0.0)
+        fields = []
+        for i in range(4, len(card)):
+            fields.append(card.field(i))
+        return TRIMFLT(trimflt_id, title, alpha, fields, comment=comment)
+
+    def raw_fields(self):
+        return ['TRIMFLT', self.trimflt_id, self.title, self.alpha] + self.fields
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
+
+    def __repr__(self):
+        return self.write_card(size=8)
+
+
+class CONMLST(BaseCard):
+    """Defines concentrated mass additions for a flutter/gust subcase.
+
+    CONMLST SID                                                         +C1
+    +C1     FACTOR1 CID1    FACTOR2 CID2    ...
+
+    Each (FACTOR, CID) pair scales the referenced CONM1/CONM2 card.
+    """
+    type = 'CONMLST'
+
+    def __init__(self, conmlst_id: int, factors: list[float],
+                 conm_ids: list[int], comment: str = ''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.conmlst_id = conmlst_id
+        self.factors = factors
+        self.conm_ids = conm_ids
+
+    @classmethod
+    def add_card(cls, card, comment: str = ''):
+        conmlst_id = integer(card, 1, 'conmlst_id')
+        # Continuation fields: pairs of (factor, conm_id)
+        factors = []
+        conm_ids = []
+        i = 9  # first continuation field
+        j = 1
+        while i < len(card):
+            factor = double_or_blank(card, i, f'factor{j}')
+            if factor is None:
+                break
+            conm_id = integer_or_blank(card, i + 1, f'conm_id{j}', default=0)
+            factors.append(factor)
+            conm_ids.append(conm_id)
+            i += 2
+            j += 1
+        return CONMLST(conmlst_id, factors, conm_ids, comment=comment)
+
+    def raw_fields(self):
+        fields = ['CONMLST', self.conmlst_id, None, None, None, None, None, None, None]
+        for factor, cid in zip(self.factors, self.conm_ids):
+            fields.extend([factor, cid])
+        return fields
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
+
+    def __repr__(self):
+        return self.write_card(size=8)
+
+
+class CPFACT(BaseCard):
+    """Defines a pressure scaling factor for aerodynamic panels.
+
+    CPFACT  SID     IDMK    SYM     COMP    TYPE    PANLST  FACTOR1 FACTOR2 +CP
+    +CP     STRIP1  ...
+    """
+    type = 'CPFACT'
+
+    def __init__(self, cpfact_id: int, idmk: int, sym: str,
+                 comp: str, cptype: str, panlst: str,
+                 factor1: float, factor2: float,
+                 strips: list[int], comment: str = ''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.cpfact_id = cpfact_id
+        self.idmk = idmk
+        self.sym = sym
+        self.comp = comp
+        self.cptype = cptype
+        self.panlst = panlst
+        self.factor1 = factor1
+        self.factor2 = factor2
+        self.strips = strips
+
+    @classmethod
+    def add_card(cls, card, comment: str = ''):
+        cpfact_id = integer(card, 1, 'cpfact_id')
+        idmk = integer(card, 2, 'idmk')
+        sym = string_or_blank(card, 3, 'sym', default='BOTH')
+        comp = string_or_blank(card, 4, 'comp', default='ALL')
+        cptype = string_or_blank(card, 5, 'cptype', default='FEM')
+        panlst = string_or_blank(card, 6, 'panlst', default='ALL')
+        factor1 = double_or_blank(card, 7, 'factor1', default=1.0)
+        factor2 = double_or_blank(card, 8, 'factor2', default=0.0)
+        strips = []
+        for i in range(9, len(card)):
+            val = integer_or_blank(card, i, f'strip{i - 8}')
+            if val is not None:
+                strips.append(val)
+        return CPFACT(cpfact_id, idmk, sym, comp, cptype, panlst,
+                      factor1, factor2, strips, comment=comment)
+
+    def raw_fields(self):
+        fields = ['CPFACT', self.cpfact_id, self.idmk, self.sym,
+                  self.comp, self.cptype, self.panlst,
+                  self.factor1, self.factor2] + self.strips
+        return fields
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
+
+    def __repr__(self):
+        return self.write_card(size=8)
+
+
+def _make_generic_zaero_card_class(card_type_name: str):
+    """Factory that creates a card class for a specific ZAERO card type."""
+
+    class _Card(BaseCard):
+        type = card_type_name
+
+        def __init__(self, card_id, fields, comment=''):
+            BaseCard.__init__(self)
+            if comment:
+                self.comment = comment
+            self.card_id = card_id
+            self._fields = fields
+
+        @classmethod
+        def add_card(cls, card, comment: str = ''):
+            card_id = 0
+            raw = card.field(1)
+            if isinstance(raw, int):
+                card_id = raw
+            elif isinstance(raw, str):
+                try:
+                    card_id = int(raw)
+                except (ValueError, TypeError):
+                    pass
+            fields = [card.field(i) for i in range(1, len(card))]
+            return cls(card_id, fields, comment=comment)
+
+        def raw_fields(self):
+            return [self.type] + self._fields
+
+        def write_card(self, size: int = 8, is_double: bool = False) -> str:
+            card = self.raw_fields()
+            return self.comment + print_card_8(card)
+
+        def __repr__(self):
+            return self.write_card(size=8)
+
+    _Card.__name__ = card_type_name
+    _Card.__qualname__ = card_type_name
+    return _Card
+
+
+# Generate card classes for all remaining ZAERO cards
+ASEOUT = _make_generic_zaero_card_class('ASEOUT')
+class CMARGIN(BaseCard):
+    """Defines gain/phase margin analysis parameters for ASE.
+
+    CMARGIN SID     GMHI    GMLO    PMHI    PMLO                        +CM
+    +CM     DF      PRINT   NROOT
+    """
+
+    type = 'CMARGIN'
+
+    def __init__(self, cmargin_id: int, gm_high: float, gm_low: float,
+                 pm_high: float, pm_low: float, df: float = 1e-4,
+                 print_flag: int = 0, nroot: int = 0, comment: str = ''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.cmargin_id = cmargin_id
+        self.gm_high = gm_high
+        self.gm_low = gm_low
+        self.pm_high = pm_high
+        self.pm_low = pm_low
+        self.df = df
+        self.print_flag = print_flag
+        self.nroot = nroot
+
+    @classmethod
+    def add_card(cls, card, comment: str = ''):
+        cmargin_id = integer(card, 1, 'cmargin_id')
+        gm_high = double_or_blank(card, 2, 'gm_high', default=50.0)
+        gm_low = double_or_blank(card, 3, 'gm_low', default=-50.0)
+        pm_high = double_or_blank(card, 4, 'pm_high', default=60.0)
+        pm_low = double_or_blank(card, 5, 'pm_low', default=-60.0)
+        df = double_or_blank(card, 9, 'df', default=1e-4)
+        print_flag = integer_or_blank(card, 10, 'print_flag', default=0)
+        nroot = integer_or_blank(card, 11, 'nroot', default=0)
+        return CMARGIN(cmargin_id, gm_high, gm_low, pm_high, pm_low,
+                       df, print_flag, nroot, comment=comment)
+
+    def raw_fields(self):
+        return ['CMARGIN', self.cmargin_id, self.gm_high, self.gm_low,
+                self.pm_high, self.pm_low, None, None, None,
+                self.df, self.print_flag, self.nroot]
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
+
+    def __repr__(self):
+        return self.write_card(size=8)
+OUTPUT4 = _make_generic_zaero_card_class('OUTPUT4')
+CROSPSD = _make_generic_zaero_card_class('CROSPSD')
+FOILSEC = _make_generic_zaero_card_class('FOILSEC')
+GENGUST = _make_generic_zaero_card_class('GENGUST')
+MFTGUST = _make_generic_zaero_card_class('MFTGUST')
+DMIS = _make_generic_zaero_card_class('DMIS')
+CELLWNG = _make_generic_zaero_card_class('CELLWNG')
+CELLBOX = _make_generic_zaero_card_class('CELLBOX')
+INPCFD = _make_generic_zaero_card_class('INPCFD')
+OMITCFD = _make_generic_zaero_card_class('OMITCFD')
+WT1AJJ = _make_generic_zaero_card_class('WT1AJJ')
+WT1FRC = _make_generic_zaero_card_class('WT1FRC')
+WT2AJJ = _make_generic_zaero_card_class('WT2AJJ')
+WTUCP = _make_generic_zaero_card_class('WTUCP')
+TRIMOBJ = _make_generic_zaero_card_class('TRIMOBJ')
+TRIMCON = _make_generic_zaero_card_class('TRIMCON')
+APCNSND = _make_generic_zaero_card_class('APCNSND')
+APCNSCP = _make_generic_zaero_card_class('APCNSCP')
+
+
+class APCONST(BaseCard):
+    """Defines constraints for rational aerodynamic approximation (RFA).
+
+    APCONST SID     DA0     DA1     DA2     NRP     NCP     FR(1)   FC(1)
+    """
+    type = 'APCONST'
+
+    def __init__(self, sid: int, da0: int, da1: int, da2: int,
+                 nrp: int, ncp: int,
+                 fr_values: list[float], fc_values: list[float],
+                 comment: str = ''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.da0 = da0
+        self.da1 = da1
+        self.da2 = da2
+        self.nrp = nrp
+        self.ncp = ncp
+        self.fr_values = fr_values
+        self.fc_values = fc_values
+
+    @classmethod
+    def add_card(cls, card, comment: str = ''):
+        sid = integer(card, 1, 'sid')
+        da0 = integer_or_blank(card, 2, 'da0', default=0)
+        da1 = integer_or_blank(card, 3, 'da1', default=0)
+        da2 = integer_or_blank(card, 4, 'da2', default=0)
+        nrp = integer_or_blank(card, 5, 'nrp', default=0)
+        ncp = integer_or_blank(card, 6, 'ncp', default=0)
+        fr_values = []
+        fc_values = []
+        i = 7
+        for j in range(max(nrp, 1)):
+            if i >= len(card):
+                break
+            fr = integer_or_double(card, i, f'fr{j + 1}')
+            fr_values.append(fr)
+            i += 1
+        for j in range(max(ncp, 1)):
+            if i >= len(card):
+                break
+            fc = integer_or_double(card, i, f'fc{j + 1}')
+            fc_values.append(fc)
+            i += 1
+        return APCONST(sid, da0, da1, da2, nrp, ncp,
+                       fr_values, fc_values, comment=comment)
+
+    def raw_fields(self):
+        fields = ['APCONST', self.sid, self.da0, self.da1, self.da2,
+                  self.nrp, self.ncp] + self.fr_values + self.fc_values
+        return fields
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
 
     def __repr__(self):
         return self.write_card(size=8)

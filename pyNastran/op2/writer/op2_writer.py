@@ -386,7 +386,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                 continue
             slot_dict = getattr(obj, key)  # obj.eigenvalues
             for unused_title, eigenvalue in slot_dict.items():
-                subcase_id = eigenvalues_list.isubcase  # TODO: not 100%
+                subcase_id = eigenvalue.isubcase  # TODO: not 100%
                 subcases_set.add(subcase_id)
                 res_categories2[(subcase_id, eigenvalue.table_name)].append(eigenvalue)
     else:

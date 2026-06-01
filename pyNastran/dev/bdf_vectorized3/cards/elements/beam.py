@@ -1982,6 +1982,13 @@ class PBEAM(Property):
         assert len(inertias) == nproperties
         return inertias
 
+    def stiffness_info(self) -> np.ndarray:
+        """[area, I1, I2, I12, J]"""
+        area = self.area()
+        inertia = self.inertia()
+        breakdown = np.column_stack([area, inertia])
+        return breakdown
+
     def to_old_card(self) -> list[Any]:
         from pyNastran.bdf.bdf import BDF
         model = BDF()

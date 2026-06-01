@@ -532,29 +532,27 @@ def _recover_strain_energyi_celas12(xg: np.ndarray,
                                     dof_map: dict[tuple[int, int], int],
                                     ki: float,
                                     nodes: np.ndarray, components: np.narray):
-    """get the static spring force"""
-    # F = kx
+    """get the static spring strain energy: SE = 0.5 * k * dx^2"""
     nid1, nid2 = nodes
     c1, c2 = components
     i = dof_map[(nid1, c1)]
     j = dof_map[(nid2, c2)]
-    strain = xg[j] - xg[i]  # the sign doesn't matter
-    force = ki * strain ** 2
-    return force
+    dx = xg[j] - xg[i]
+    se = 0.5 * ki * dx ** 2
+    return se
 
 
 def _recover_strain_energyi_celas34(xg: np.ndarray,
                                     dof_map: dict[tuple[int, int], int],
                                     ki: float,
                                     nodes: np.ndarray):
-    """get the static spring force"""
-    # F = kx
+    """get the static spring strain energy: SE = 0.5 * k * dx^2"""
     nid1, nid2 = nodes
     i = dof_map[(nid1, 0)]
     j = dof_map[(nid2, 0)]
-    strain = xg[j] - xg[i]  # the sign doesn't matter
-    force = ki * strain ** 2
-    return force
+    dx = xg[j] - xg[i]
+    se = 0.5 * ki * dx ** 2
+    return se
 
 
 def _save_spring_force(op2: OP2, f06_file: TextIO, page_num: int, page_stamp: str,
@@ -591,6 +589,8 @@ def _save_spring_strain_energy(op2, f06_file, page_num, page_stamp,
                                strain_energy, eids, write_f06_ese: bool,
                                isubcase: int, title: str, subtitle: str, label: str) -> None:
     if strain_energy is None:
+        return
+    if strain_energy.sum() == 0.0:
         return
     data = strain_energy.reshape(1, *strain_energy.shape)
     table_name = 'ONRGY1'

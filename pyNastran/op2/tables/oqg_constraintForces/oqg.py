@@ -406,9 +406,9 @@ class OQG:
         elif op2.table_code == 39:  # MPC Forces
             assert op2.table_name in [b'OQMG1', b'OQMG2'], op2.code_information() # , b'OQMPSD1', b'OQMPSD2'
             n = self._read_oqg_mpc_forces(data, ndata)
-        elif op2.table_name in [b'RAQEATC', b'RAQCONS']:
-            # op2.table_code == 5 and
-            n = self._read_oqg_mpc_forces(data, ndata)
+        #elif op2.table_name in [b'RAQEATC', b'RAQCONS']:
+        #    # RAQCONS/RAQEATC are ply strains, not MPC forces (now routed through OES reader)
+        #    n = self._read_oqg_mpc_forces(data, ndata)
         elif op2.table_code == 63:   # Contact Forces
             op2.to_nx(f' because table_name={op2.table_name} was found')
             assert op2.table_name in [b'OQGCF1', b'OQGCF2'], op2.code_information()
@@ -497,10 +497,10 @@ class OQG:
             #result_name = 'mpc_forces_RAQCONS'
         elif op2.table_name == b'ROQGM1':
             result_name = 'ROQGM1.mpc_forces'
-        elif op2.table_name == b'RAQCONS':
-            result_name = 'RAQCONS.mpc_forces'
-        elif op2.table_name == b'RAQEATC':
-            result_name = 'RAQEATC.mpc_forces'
+        #elif op2.table_name == b'RAQCONS':
+        #    result_name = 'RAQCONS.mpc_forces'  # wrong: RAQCONS is ply strains, not MPC forces
+        #elif op2.table_name == b'RAQEATC':
+        #    result_name = 'RAQEATC.mpc_forces'  # wrong: RAQEATC is ply strains, not MPC forces
         else:  # pragma: no cover
             msg = 'mpc_forces; table_name=%s' % op2.table_name
             raise NotImplementedError(msg)

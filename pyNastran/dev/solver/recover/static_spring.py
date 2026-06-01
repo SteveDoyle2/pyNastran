@@ -567,6 +567,8 @@ def _save_spring_strain_energy(op2, f06_file, page_num, page_stamp,
                                isubcase: int, title: str, subtitle: str, label: str) -> None:
     if strain_energy is None:
         return
+    if strain_energy.sum() == 0.0:
+        return
     data = strain_energy.reshape(1, *strain_energy.shape)
     table_name = 'ONRGY1'
     spring_strain_energy = RealStrainEnergyArray.add_static_case(
