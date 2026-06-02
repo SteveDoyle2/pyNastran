@@ -189,16 +189,20 @@ class Matrix:
 
     def __repr__(self) -> str:
         header = f'Matrix[{self.name!r}];'
+        end = ''
         if self.data is None:
             shape = 'data=None; '
             class_name = '<NoneType>'
             dtype = '<NoneType>; '
         else:
             class_name = str(type(self.data)).replace('<class ', '').replace('>', '').replace("'", '') + ';'
+            if 'sparse' in class_name:
+                density = self.data.count_nonzero() / self.data.size
+                end = '(density=%.2f)' % density
             shape = ' shape=%s;' % str(self.data.shape).replace('L', '')
             dtype = '%s;' % self.data.dtype
-        msg = '%-18s %-18s type=%-33s dtype=%-10s desc=%s' % (
-            header, shape, class_name, dtype, self.shape_str)
+        msg = '%-18s %-18s type=%-33s dtype=%-10s desc=%s%s' % (
+            header, shape, class_name, dtype, self.shape_str, end)
         return msg
 
     @property
@@ -286,12 +290,12 @@ class Matrix:
         col_nidj = self.col_nid[jcols]
         col_dofj = self.col_dof[jcols]
         GCj = np.vstack([col_nidj, col_dofj]).ravel(ncol, 2).T
-        print(f'GCj = {GCj}')
+        #print(f'GCj = {GCj}')
 
         GCi_out = []
         GCj_out = []
         for j, gcj in zip(jcols, GCj):
-            print(f'gcj = {gcj}')
+            # print(f'gcj = {gcj}')
             dataj = self.data[:, j]
             abs_dataj = np.abs(dataj.real) + np.abs(dataj.imag)
             irows = np.where(abs_dataj > 0)[0]
@@ -300,7 +304,7 @@ class Matrix:
             row_nidi = self.row_nid[irows]
             row_dofi = self.row_dof[irows]
             GCi = np.vstack([row_nidi, row_dofi]).ravel(nrow, 2).T
-            print(f'GCi = {GCi}')
+            # print(f'GCi = {GCi}')
             GCj_out.append([gcj] * nrow)
             GCi_out.append(GCi)
         GCi_out_array = np.array(GCi_out, dtype='int32')
@@ -336,6 +340,7 @@ class Matrix:
     @property
     def is_sparse(self) -> bool:
         return scipy.sparse.issparse(self.data)
+
     @property
     def is_dense(self) -> bool:
         return not self.is_sparse
@@ -372,6 +377,7 @@ class Matrix:
 
     @property
     def shape(self) -> tuple[int, int]:
+        print(f'data = {self.data}')
         return self.data.shape
 
     def write_dmi(self, size: int=8) -> str:

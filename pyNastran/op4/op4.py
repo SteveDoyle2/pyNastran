@@ -1436,7 +1436,7 @@ class OP4:
             msg += "record_length_big=%s record_length_little=%s" % (
                 record_length_big, record_length_little)
             op4.seek(0) # types = 'ifdlqILQ'
-            self._show_ndata(op4, 40, types='ifdlqILQs')
+            self._show_ndata(op4, 80, types='ifdlqILQs')
             raise RuntimeError(msg)
         op4.seek(0)
         return endian
