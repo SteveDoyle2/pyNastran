@@ -84,7 +84,6 @@ def make_flutter_response(f06_filename: PathLike,
             BHH : (nmodes,nmodes) float np.ndarray
             KHH : (nmodes,nmodes) float np.ndarray
 
-
     """
     f06_units = get_flutter_units(f06_units)
     out_units = get_flutter_units(out_units)

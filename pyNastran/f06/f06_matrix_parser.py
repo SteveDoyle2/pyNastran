@@ -9,10 +9,13 @@ from cpylog import SimpleLogger, get_logger
 TABLES_2D = {'MKLIST'}
 MATRICES_DENSE = {'QHHA', 'AJJT'}
 SKIP_FLAGS = [
+    'All Rights Reserved.',
     'This software and related documentation are',
+    'THE USER SUPPLIED PCOMP BULK DATA CARDS ARE REPLACED BY THE FOLLOWING PSHELL AND MAT2 CARDS.',
     'LIMITATIONS TO U.S. GOVERNMENT RIGHTS. UNPUBLISHED',
     'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O',
     'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O',
+    'S O R T E D   B U L K   D A T A   E C H O',
     'N A S T R A N   S O U R C E   P R O G R A M   C O M P I L A T I O N',
     'M O D E L   S U M M A R Y',
     'C A S E    C O N T R O L    E C H O',
@@ -28,27 +31,42 @@ SKIP_FLAGS = [
     #'R E A L   E I G E N V A L U E S',
     'MAXIMUM  DISPLACEMENTS',
     'FLUTTER  SUMMARY',
+    'LESS CRITICAL REAL ROOTS FOR LOOP',
+    'EIGENVECTOR FROM THE PK METHOD',
     #'* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',  # causes a crash
 ]
 def read_f06_matrices(f06_filename: str,
                       log: Optional[SimpleLogger]=None,
                       nlines_max: int=1_000_000,
-                      load_eigenvalues: bool=True) -> tuple[dict[str, np.ndarray],
+                      load_eigenvalues: bool=True) -> tuple[Optional[np.ndarray],
+                                                            dict[str, np.ndarray],
                                                             dict[str, np.ndarray]]:
     """TODO: doesn't handle extra PAGE headers; requires LINE=1000000"""
     log = get_logger(log=log, level='debug', encoding='utf-8')
+    real_eigenvalues = None
+    real_eigenvalues_list = []
     with open(f06_filename, 'r') as f06_file:
-        tables, matrices = _read_f06_matrices(f06_file, log, nlines_max, load_eigenvalues)
+        real_eigenvalues_list, tables, matrices = _read_f06_matrices(
+            f06_file, log, nlines_max,
+            load_eigenvalues, real_eigenvalues_list)
+
+    if real_eigenvalues_list:
+        if len(real_eigenvalues_list) == 1:
+            real_eigenvalues = real_eigenvalues_list[0]
+        else:
+            real_eigenvalues = np.vstack(real_eigenvalues_list)
     if len(tables):
         log.info('found the following tables in the f06: %s' % (list(tables)))
     if len(matrices):
         log.info('found the following matrices in the f06: %s' % (list(matrices)))
-    return tables, matrices
+    return real_eigenvalues, tables, matrices
+
 
 def _read_f06_matrices(f06_file: TextIO,
                        log: SimpleLogger,
                        nlines_max: int,
-                       load_eigenvalues: bool) -> dict[str, np.ndarray]:
+                       load_eigenvalues: bool,
+                       real_eigenvalues_list: list) -> dict[str, np.ndarray]:
     i = 0
     debug = False
     tables = {}
@@ -80,17 +98,22 @@ def _read_f06_matrices(f06_file: TextIO,
             #log.debug(f'line = {line.rstrip()}')
             continue
 
+        # if debug:
+        # log.debug(f'i={i} {line.strip()}')
         if 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
+            log.info('found real eigenvalues')
             real_eigenvaluesi = read_real_eigenvalues(f06_file, log, line, i)
             real_eigenvalues_list.append(real_eigenvaluesi)
 
         if line.startswith('0    TABLE'):
             table_name, table, line, i = _read_table(f06_file, line, i, log)
+            log.info(f'found table={table_name}')
             tables[table_name] = table
             del table_name, table
             debug = False
         elif line.startswith('0      MATRIX '):
             matrix_name, matrix, line, i = _read_matrix(f06_file, line, i, log, debug)
+            log.info(f'found matrix={matrix_name}')
             assert isinstance(matrix, (np.ndarray, scipy.sparse.coo_matrix))
 
             if matrix_name not in matrices:
@@ -113,7 +136,7 @@ def _read_f06_matrices(f06_file: TextIO,
             log.debug(f'i={i}')
 
     matrices2 = _compress_matrices(matrices)
-    return tables, matrices2
+    return real_eigenvalues_list, tables, matrices2
 
 def _compress_matrices(matrices: dict[str, list[np.ndarray]]) -> dict[str, np.ndarray]:
     matrices2 = {}
@@ -556,7 +579,7 @@ def main():  # pragma: no cover
     import sys
     print(sys.argv)
     f06_filename = sys.argv[1]
-    tables, matrices = read_f06_matrices(
+    real_eigenvalues, tables, matrices = read_f06_matrices(
         f06_filename, log=None, nlines_max=1_000_000)
     for key, mat in matrices.items():
         print(f'{key}:')
