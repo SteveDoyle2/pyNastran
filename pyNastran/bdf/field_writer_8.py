@@ -325,8 +325,8 @@ def print_int_card(fields: list[Optional[int | str]]) -> str:
 
     Parameters
     ----------
-    fields : list[int/float/str/None]
-      The list of fields to write to a nastran card.
+    fields : list[int | str]
+        The list of fields to write to a nastran card.
 
     .. warning::
       Blanks are not allowed!
@@ -418,7 +418,7 @@ def print_int_card_blocks(fields_blocks: list[Any]) -> str:
         (fields, is_all_ints) = block
         if is_all_ints is True:
             for field in fields:
-                out += "%8i" % field
+                out += "%8d" % field
                 i += 1
                 if i == 8:  # allow 1+8 fields per line
                     out += '\n        '
