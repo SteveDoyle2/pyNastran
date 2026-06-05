@@ -62,6 +62,7 @@ def build_caero_paneling(model: BDF) -> tuple[None, None, None]:
     out = None
     return all_control_surface_name, caero_control_surfaces, out
 
+
 class TestAero(unittest.TestCase):
     """
     The Aero cards are:
@@ -3081,6 +3082,27 @@ class TestAero(unittest.TestCase):
         #model2.uncross_reference()
         #model2.safe_cross_reference()
         save_load_deck(model)
+
+    def test_trim_continuation_marker(self):
+        """Checks that a TRIM card with a '+' continuation marker in cols 65-72
+        parses correctly in vectorized3.
+        Tests: continuation marker stripping, correct label/ux parsing across
+        continuation boundary.
+        """
+        model = BDF(debug=None)
+        card_lines = [
+            'TRIM    1       0.789   1.5     PITCH   0.0     URDD3   2.5     +',
+            '+       URDD5   0.0',
+        ]
+        model.add_card(card_lines, 'TRIM', is_list=False, has_none=False)
+        model.setup()
+        trim = model.trim
+        assert trim.n == 1, trim.n
+        assert trim.trim_id[0] == 1
+        assert abs(trim.mach[0] - 0.789) < 1e-10
+        assert abs(trim.q[0] - 1.5) < 1e-10
+        # aeqr defaults to 1.0 (the '+' was stripped, not parsed as aeqr)
+        assert abs(trim.aeqr[0] - 1.0) < 1e-10
 
     def test_gust(self):
         """checks the GUST card"""

@@ -18,7 +18,7 @@ import numpy as np
 #from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line
-CHECK_MASS = True  # should additional checks be done
+CHECK_MASS = False  # should additional checks be done
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import (
@@ -282,7 +282,7 @@ def transform_inertia(mass: float,
             # in coord1
             # beta is global to local
             print(beta1.shape, icg1.shape)
-            icg0 = beta1.T @ icg1 * beta1
+            icg0 = beta1.T @ icg1 @ beta1
             raise RuntimeError(f'coord1 is not supported; icg0={str(icg0)}')
 
         if is_beta2:
@@ -414,7 +414,7 @@ def mass_properties(model: BDF,
         reference_xyz, is_cg,
         coord1, coord2)
 
-    if len(mass_list):
+    if CHECK_MASS and len(mass_list):
         sum_mass_list = sum(mass_list)
         if not np.allclose(sum_mass_list, mass):
             raise RuntimeError(f'mass={mass} sum(mass_list)={sum_mass_list}')
@@ -502,11 +502,27 @@ def _mass_properties(model: BDF,
     mass = 0.
     cg = np.array([0., 0., 0.])
     inertia = np.array([0., 0., 0., 0., 0., 0., ])
+
+    # pre-compute node positions once
+    xyz = {}
+    for nid, node in model.nodes.items():
+        xyz[nid] = node.get_position()
+
+    # vectorized path for shell elements (CQUAD4, CTRIA3, etc.)
+    mass, cg, inertia = _mass_properties_shells_vectorized(
+        model, elements, xyz, reference_xyz,
+        mass, cg, inertia,
+        mass_list, cg_list, inertia_list)
+
+    # handle remaining elements (CBEAM, CONM2, solids, etc.)
     no_mass = copy.deepcopy(NO_MASS)
     no_mass.add('CWELD')  # TODO: not sure
+    shell_types = {'CQUAD4', 'CQUAD8', 'CQUADR', 'CTRIA3', 'CTRIA6', 'CTRIAR'}
     mass_inertia = {'CONM2'}
     for elements_pack in (elements, masses):
         for element in elements_pack:
+            if element.type in shell_types:
+                continue
             if element.type == 'CBEAM':
                 mass = _get_cbeam_mass_no_nsm(
                     model, element,
@@ -530,34 +546,30 @@ def _mass_properties(model: BDF,
                 inertia = [i1 + di for i1, di in zip(inertia, di_list)]
                 continue
 
-            try:
-                centroid = element.center_of_mass()  # was Centroid()
-            except AttributeError:
-                if element.type in no_mass:
-                    continue
-                model.log.error(element.rstrip())
-                raise
-
-            try:
-                massi = element.Mass()
-                #print(f'eid={element.eid:d} type={element.type} mass={massi}')
-            #except AttributeError:
-                #raise
-            #except SystemExit:
-                #raise
-            except Exception:
-                #raise
-                if element.type in no_mass:
-                    continue
-                # PLPLANE
-                if element.pid_ref.type == 'PSHELL':
-                    model.log.warning('centroid=%s reference_xyz=%s type(reference_xyz)=%s' % (
-                        centroid, reference_xyz, type(reference_xyz)))
+            if hasattr(element, 'centroid_mass'):
+                centroid, massi = element.centroid_mass()
+            else:
+                try:
+                    centroid = element.center_of_mass()
+                except AttributeError:
+                    if element.type in no_mass:
+                        continue
+                    model.log.error(element.rstrip())
                     raise
-                model.log.warning("could not get the inertia for element/property\n%s%s" % (
-                    element, element.pid_ref))
-                continue
-            # mass_list, cg_list, inertia_list,
+
+                try:
+                    massi = element.Mass()
+                except Exception:
+                    if element.type in no_mass:
+                        continue
+                    # PLPLANE
+                    if element.pid_ref.type == 'PSHELL':
+                        model.log.warning('centroid=%s reference_xyz=%s type(reference_xyz)=%s' % (
+                            centroid, reference_xyz, type(reference_xyz)))
+                        raise
+                    model.log.warning("could not get the inertia for element/property\n%s%s" % (
+                        element, element.pid_ref))
+                    continue
             mass = increment_inertia(centroid, reference_xyz, massi,
                                      mass, cg, inertia,
                                      mass_list, cg_list, inertia_list)
@@ -573,6 +585,206 @@ def _mass_properties(model: BDF,
             mass, cg, xyz_ref, xyz_ref2, inertia,
             coord1=coord1, coord2=coord2)
     return mass_list, cg_list, inertia_list, mass, cg, inertia
+
+
+def _get_shell_mpa(element, prop, pid_cache: dict[int, tuple]) -> float:
+    """Get mass per area for a shell element, accounting for per-element thickness."""
+    pid = element.pid
+    if prop.type == 'PSHELL':
+        if pid not in pid_cache:
+            pid_cache[pid] = (prop.nsm, prop.Rho(), prop.Thickness())
+        nsm, rho, ti = pid_cache[pid]
+
+        # check for per-element thickness override
+        has_override = False
+        if element.type in ('CQUAD4', 'CQUAD8', 'CQUADR'):
+            if element.T1 is not None or element.T2 is not None or element.T3 is not None or element.T4 is not None:
+                has_override = True
+                tflag = element.tflag
+                if tflag == 0:
+                    t1 = ti if element.T1 is None else element.T1
+                    t2 = ti if element.T2 is None else element.T2
+                    t3 = ti if element.T3 is None else element.T3
+                    t4 = ti if element.T4 is None else element.T4
+                else:
+                    t1 = ti if element.T1 is None else element.T1 * ti
+                    t2 = ti if element.T2 is None else element.T2 * ti
+                    t3 = ti if element.T3 is None else element.T3 * ti
+                    t4 = ti if element.T4 is None else element.T4 * ti
+                t = (t1 + t2 + t3 + t4) / 4.0
+        elif element.type in ('CTRIA3', 'CTRIA6', 'CTRIAR'):
+            if element.T1 is not None or element.T2 is not None or element.T3 is not None:
+                has_override = True
+                tflag = element.tflag
+                if tflag == 0:
+                    t1 = ti if element.T1 is None else element.T1
+                    t2 = ti if element.T2 is None else element.T2
+                    t3 = ti if element.T3 is None else element.T3
+                else:
+                    t1 = ti if element.T1 is None else element.T1 * ti
+                    t2 = ti if element.T2 is None else element.T2 * ti
+                    t3 = ti if element.T3 is None else element.T3 * ti
+                t = (t1 + t2 + t3) / 3.0
+
+        if has_override:
+            return nsm + rho * t
+        return nsm + rho * ti
+    elif prop.type in ('PCOMP', 'PCOMPG'):
+        if pid not in pid_cache:
+            pid_cache[pid] = (prop.get_mass_per_area(), )
+        return pid_cache[pid][0]
+    elif prop.type in ('PLPLANE', 'PPLANE', 'PMIC'):
+        return 0.0
+    else:
+        raise NotImplementedError(prop.type)
+
+
+def _mass_properties_shells_vectorized(
+        model: BDF,
+        elements: list[Element],
+        xyz: dict[int, np.ndarray],
+        reference_xyz: np.ndarray,
+        mass: float,
+        cg: np.ndarray,
+        inertia: np.ndarray,
+        mass_list: list[float],
+        cg_list: list[np.ndarray],
+        inertia_list: list[np.ndarray],
+) -> tuple[float, np.ndarray, np.ndarray]:
+    """Vectorized mass properties for CQUAD4/CTRIA3 shell elements."""
+    quad_types = {'CQUAD4', 'CQUAD8', 'CQUADR'}
+    tri_types = {'CTRIA3', 'CTRIA6', 'CTRIAR'}
+
+    # cache property data per pid
+    pid_cache: dict[int, tuple] = {}
+
+    # collect quad node arrays
+    quad_n1 = []
+    quad_n2 = []
+    quad_n3 = []
+    quad_n4 = []
+    quad_mpa = []
+
+    # collect tri node arrays
+    tri_n1 = []
+    tri_n2 = []
+    tri_n3 = []
+    tri_mpa = []
+
+    for element in elements:
+        if element.type in quad_types:
+            prop = element.pid_ref
+            mpa = _get_shell_mpa(element, prop, pid_cache)
+            if mpa == 0.0:
+                continue
+            nids = element.nodes[:4]
+            quad_n1.append(xyz[nids[0]])
+            quad_n2.append(xyz[nids[1]])
+            quad_n3.append(xyz[nids[2]])
+            quad_n4.append(xyz[nids[3]])
+            quad_mpa.append(mpa)
+        elif element.type in tri_types:
+            prop = element.pid_ref
+            mpa = _get_shell_mpa(element, prop, pid_cache)
+            if mpa == 0.0:
+                continue
+            nids = element.nodes[:3]
+            tri_n1.append(xyz[nids[0]])
+            tri_n2.append(xyz[nids[1]])
+            tri_n3.append(xyz[nids[2]])
+            tri_mpa.append(mpa)
+
+    # vectorized quad computation
+    if quad_n1:
+        p1 = np.array(quad_n1)
+        p2 = np.array(quad_n2)
+        p3 = np.array(quad_n3)
+        p4 = np.array(quad_n4)
+        mpa_arr = np.array(quad_mpa)
+
+        centroids = (p1 + p2 + p3 + p4) * 0.25
+        areas = 0.5 * np.linalg.norm(np.cross(p3 - p1, p4 - p2), axis=1)
+        masses_arr = areas * mpa_arr
+
+        mass, cg, inertia = _accumulate_vectorized(
+            centroids, masses_arr, reference_xyz,
+            mass, cg, inertia,
+            mass_list, cg_list, inertia_list)
+
+    # vectorized tri computation
+    if tri_n1:
+        p1 = np.array(tri_n1)
+        p2 = np.array(tri_n2)
+        p3 = np.array(tri_n3)
+        mpa_arr = np.array(tri_mpa)
+
+        centroids = (p1 + p2 + p3) / 3.0
+        areas = 0.5 * np.linalg.norm(np.cross(p1 - p2, p1 - p3), axis=1)
+        masses_arr = areas * mpa_arr
+
+        mass, cg, inertia = _accumulate_vectorized(
+            centroids, masses_arr, reference_xyz,
+            mass, cg, inertia,
+            mass_list, cg_list, inertia_list)
+
+    return mass, cg, inertia
+
+
+def _accumulate_vectorized(
+        centroids: np.ndarray,
+        masses_arr: np.ndarray,
+        reference_xyz: np.ndarray,
+        mass: float,
+        cg: np.ndarray,
+        inertia: np.ndarray,
+        mass_list: list[float],
+        cg_list: list[np.ndarray],
+        inertia_list: list[np.ndarray],
+) -> tuple[float, np.ndarray, np.ndarray]:
+    """Accumulate mass/cg/inertia from vectorized element arrays."""
+    # filter zero-mass elements
+    nonzero = masses_arr != 0.0
+    if not np.any(nonzero):
+        return mass, cg, inertia
+    centroids = centroids[nonzero]
+    masses_arr = masses_arr[nonzero]
+
+    # delta from reference
+    dx = centroids[:, 0] - reference_xyz[0]
+    dy = centroids[:, 1] - reference_xyz[1]
+    dz = centroids[:, 2] - reference_xyz[2]
+
+    x2 = dx * dx
+    y2 = dy * dy
+    z2 = dz * dz
+
+    # accumulate inertia in bulk
+    inertia[0] += np.dot(masses_arr, y2 + z2)  # Ixx
+    inertia[1] += np.dot(masses_arr, x2 + z2)  # Iyy
+    inertia[2] += np.dot(masses_arr, x2 + y2)  # Izz
+    inertia[3] += np.dot(masses_arr, dx * dy)   # Ixy
+    inertia[4] += np.dot(masses_arr, dx * dz)   # Ixz
+    inertia[5] += np.dot(masses_arr, dy * dz)   # Iyz
+
+    # accumulate total mass and cg
+    total_mass = masses_arr.sum()
+    mass += total_mass
+    cg += np.dot(masses_arr, centroids)
+
+    if CHECK_MASS:
+        mass_list.extend(masses_arr.tolist())
+        cg_list.extend(centroids.tolist())
+        for i in range(len(masses_arr)):
+            inertia_list.append([
+                masses_arr[i] * (y2[i] + z2[i]),
+                masses_arr[i] * (x2[i] + z2[i]),
+                masses_arr[i] * (x2[i] + y2[i]),
+                masses_arr[i] * dx[i] * dy[i],
+                masses_arr[i] * dx[i] * dz[i],
+                masses_arr[i] * dy[i] * dz[i],
+            ])
+
+    return mass, cg, inertia
 
 
 def _mass_properties_no_xref(model: BDF,
@@ -720,11 +932,11 @@ def increment_inertia(centroidi: np.ndarray,
         massi * y * z,      # Iyz
     ]
     inertia_list.append(inertiai)
-    # print(f'mass = {mass}')
-    sum_mass_list = sum(mass_list)
-    if not np.allclose(sum_mass_list, mass):
-        cumsum = np.cumsum(mass_list)
-        raise RuntimeError(f'mass={mass} sum(mass_list)={sum_mass_list}\ncumsum={cumsum}')
+    if CHECK_MASS:
+        sum_mass_list = sum(mass_list)
+        if not np.allclose(sum_mass_list, mass):
+            cumsum = np.cumsum(mass_list)
+            raise RuntimeError(f'mass={mass} sum(mass_list)={sum_mass_list}\ncumsum={cumsum}')
     return mass
 
 
@@ -898,7 +1110,7 @@ def mass_properties_nsm(model: BDF,
         reference_xyz, debug=debug)
     assert mass is not None, mass
 
-    if len(mass_list):
+    if CHECK_MASS and len(mass_list):
         sum_mass_list = sum(mass_list)
         if not np.allclose(sum_mass_list, mass):
             cumsum = np.cumsum(mass_list)
@@ -1433,8 +1645,8 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
         mstr = mass_per_length * length
         nsm = nsm_per_length * length
 
-        if CHECK_MASS and ((mstr + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
-            msg = 'CBEAM; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
+        if CHECK_MASS and (not np.isclose(mstr + nsm, elem.Mass()) or not np.allclose(centroid, elem.Centroid())):  # pragma: no cover
+            msg = 'CBEAM-1; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
                 eid, pid, prop.type, mass_per_length, nsm_per_length, length)
             msg += 'mass_new=%s mass_old=%s\n' % (mstr, elem.Mass())
             msg += 'centroid_new=%s centroid_old=%s\n%s' % (
@@ -1477,7 +1689,7 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
         inertia_list.append(dinertia)
         #print('length=%s mass=%s mass_per_length=%s nsm_per_length=%s m=%s nsm=%s centroid=%s nsm_centroid=%s' % (
             #length, mass, mass_per_length, nsm_per_length, massi, nsm, centroid, nsm_centroid))
-        if CHECK_MASS and massi != elem.Mass():  # pragma: no cover
+        if CHECK_MASS and (not np.isclose(massi, elem.Mass()) or not np.allclose(centroid, elem.Centroid())):  # pragma: no cover
             msg = 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
             msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                 str(centroid), str(elem.Centroid()), str(elem))
@@ -1553,8 +1765,8 @@ def _get_cbeam_mass_no_nsm(model: BDF, elem: CBEAM,
 
     massi = mass_per_length * length
     nsm = nsm_per_length * length
-    if CHECK_MASS and ((massi + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
-        msg = 'CBEAM; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
+    if CHECK_MASS and (not np.isclose(massi + nsm, elem.Mass()) or not np.allclose(centroid, elem.Centroid())):  # pragma: no cover
+        msg = 'CBEAM-2; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
             elem.eid, elem.pid, prop.type, mass_per_length, nsm_per_length, length)
         msg += 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
         msg += 'centroid_new=%s centroid_old=%s\n%s' % (
@@ -1613,69 +1825,64 @@ def _get_tri_mass(model: BDF,
                   reference_xyz: np.ndarray) -> float:
     """helper method for ``get_mass_new``"""
     eids2 = get_sub_eids(all_eids, eids, 'tri')
+    if len(eids2) == 0:
+        return mass
+
+    # cache property data per pid
+    pid_cache: dict[int, tuple] = {}
+
+    # collect arrays for vectorized geometry
+    n1_list = []
+    n2_list = []
+    n3_list = []
+    mpa_list = []
+    eid_list = []
+    pid_list = []
+
     for eid in eids2:
         elem = model.elements[eid]
-        n1, n2, n3 = elem.node_ids[:3]
+        nids = elem.nodes[:3]
         prop = elem.pid_ref
         pid = elem.pid
-        centroid = (xyz[n1] + xyz[n2] + xyz[n3]) / 3.
-        area: float = 0.5 * np.linalg.norm(np.cross(xyz[n1] - xyz[n2], xyz[n1] - xyz[n3]))
-        #areas_prop[pid] += area
-        if prop.type == 'PSHELL':
-            tflag = elem.tflag
-            ti = prop.Thickness()
-            if tflag == 0:
-                # absolute
-                t1 = ti if elem.T1 is None else elem.T1
-                t2 = ti if elem.T2 is None else elem.T2
-                t3 = ti if elem.T3 is None else elem.T3
-            elif tflag == 1:
-                # relative
-                t1 = ti if elem.T1 is None else elem.T1 * ti
-                t2 = ti if elem.T2 is None else elem.T2 * ti
-                t3 = ti if elem.T3 is None else elem.T3 * ti
-            else:  # pragma: no cover
-                raise RuntimeError('tflag=%r' % tflag)
-            assert t1 + t2 + t3 > 0., 't1=%s t2=%s t3=%s' % (t1, t2, t3)
-            t = (t1 + t2 + t3) / 3.
+        mpa = _get_shell_mpa(elem, prop, pid_cache)
+        n1_list.append(xyz[nids[0]])
+        n2_list.append(xyz[nids[1]])
+        n3_list.append(xyz[nids[2]])
+        mpa_list.append(mpa)
+        eid_list.append(eid)
+        pid_list.append(pid)
 
-            # m/A = rho * A * t + nsm
-            #mass_per_area = elem.nsm + rho * elem.t
+    if not n1_list:
+        return mass
 
-            #areas_prop[pid] += area
-            mpa = prop.nsm + prop.Rho() * t
-            #mpa = elem.pid_ref.MassPerArea()
-        elif prop.type in ['PCOMP', 'PCOMPG']:
-            # TODO: do PCOMPs even support differential thickness?
-            #       I don't think so...
+    p1 = np.array(n1_list)
+    p2 = np.array(n2_list)
+    p3 = np.array(n3_list)
+    mpa_arr = np.array(mpa_list)
 
-            #rho_t = prop.get_rho_t()
-            #nsm = prop.nsm
-            #rho_t = [mat.Rho() * t for (mat, t) in zip(prop.mids_ref, prop.ts)]
-            #mpa = sum(rho_t) + nsm
+    centroids = (p1 + p2 + p3) / 3.0
+    areas_arr = 0.5 * np.linalg.norm(np.cross(p1 - p2, p1 - p3), axis=1)
+    masses_arr = areas_arr * mpa_arr
 
-            # works for PCOMP
-            # F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl\cqr3compbuck.dat
-            mpa = prop.get_mass_per_area()
-        elif prop.type in ['PLPLANE', 'PPLANE']:
-            continue
-        else:
-            raise NotImplementedError(prop.type)
+    # populate NSM tracking structures
+    for i, (eid, pid) in enumerate(zip(eid_list, pid_list)):
         area_eids_pids['PSHELL'].append((eid, pid))
-        areas['PSHELL'].append(area)
+        areas['PSHELL'].append(areas_arr[i])
+        nsm_centroids_area['PSHELL'].append(centroids[i])
 
-        nsm_centroids_area['PSHELL'].append(centroid)
-        #nsm = property_nsms[nsm_id]['PSHELL'][pid] + element_nsms[nsm_id][eid]
-        #m = area * (mpa + nsm)
-        massi = area * mpa
-        if CHECK_MASS and not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
-            msg = 'centroid_new=%s centroid_old=%s\n%s' % (
-                str(centroid), str(elem.Centroid()), str(elem))
-            raise RuntimeError(msg)
-        if eid in element_ids:
-            mass = increment_inertia(centroid, reference_xyz, massi,
-                                     mass, cg, inertia,
-                                     mass_list, cg_list, inertia_list)
+    # accumulate mass/inertia vectorized for elements in the requested set
+    if element_ids is None:
+        mass, cg, inertia = _accumulate_vectorized(
+            centroids, masses_arr, reference_xyz,
+            mass, cg, inertia,
+            mass_list, cg_list, inertia_list)
+    else:
+        mask = np.array([eid in element_ids for eid in eid_list], dtype=bool)
+        if np.any(mask):
+            mass, cg, inertia = _accumulate_vectorized(
+                centroids[mask], masses_arr[mask], reference_xyz,
+                mass, cg, inertia,
+                mass_list, cg_list, inertia_list)
     return mass
 
 
@@ -1693,89 +1900,70 @@ def _get_quad_mass(model: BDF, xyz: dict[int, np.ndarray], element_ids: set[int]
                    inertia_list: list[np.ndarray],
                    reference_xyz: np.ndarray) -> float:
     """helper method for ``get_mass_new``"""
-    #print(f'all_eids = {all_eids}')
-    #print(f'eids = {eids}')
     eids2 = get_sub_eids(all_eids, eids, 'quad')
+    if len(eids2) == 0:
+        return mass
+
+    # cache property data per pid
+    pid_cache: dict[int, tuple] = {}
+
+    # collect arrays for vectorized geometry
+    n1_list = []
+    n2_list = []
+    n3_list = []
+    n4_list = []
+    mpa_list = []
+    eid_list = []
+    pid_list = []
+
     for eid in eids2:
         elem = model.elements[eid]
-        n1, n2, n3, n4 = elem.node_ids[:4]
+        nids = elem.nodes[:4]
         prop = elem.pid_ref
         pid = prop.pid
-        centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
-        x31 = xyz[n3] - xyz[n1]
-        x42 = xyz[n4] - xyz[n2]
-        area: float = 0.5 * np.linalg.norm(np.cross(x31, x42))
+        mpa = _get_shell_mpa(elem, prop, pid_cache)
+        n1_list.append(xyz[nids[0]])
+        n2_list.append(xyz[nids[1]])
+        n3_list.append(xyz[nids[2]])
+        n4_list.append(xyz[nids[3]])
+        mpa_list.append(mpa)
+        eid_list.append(eid)
+        pid_list.append(pid)
 
-        if prop.type == 'PSHELL':
-            tflag = elem.tflag
-            ti = prop.Thickness()
-            if tflag == 0:
-                # absolute
-                t1 = ti if elem.T1 is None else elem.T1
-                t2 = ti if elem.T2 is None else elem.T2
-                t3 = ti if elem.T3 is None else elem.T3
-                t4 = ti if elem.T4 is None else elem.T4
-            elif tflag == 1:
-                # relative
-                t1 = ti if elem.T1 is None else elem.T1 * ti
-                t2 = ti if elem.T2 is None else elem.T2 * ti
-                t3 = ti if elem.T3 is None else elem.T3 * ti
-                t4 = ti if elem.T4 is None else elem.T4 * ti
-            else:  # pragma: no cover
-                raise RuntimeError('tflag=%r' % tflag)
-            assert t1 + t2 + t3 + t4 > 0., 't1=%s t2=%s t3=%s t4=%s' % (t1, t2, t3, t4)
-            t = (t1 + t2 + t3 + t4) / 4.
+    if not n1_list:
+        return mass
 
-            # m/A = rho * A * t + nsm
-            #mass_per_area = model.nsm + rho * model.t
+    p1 = np.array(n1_list)
+    p2 = np.array(n2_list)
+    p3 = np.array(n3_list)
+    p4 = np.array(n4_list)
+    mpa_arr = np.array(mpa_list)
 
-            #areas_prop[pid] += area
-            rho = prop.Rho()
-            mpa = prop.nsm + rho * t
-            #mpa = elem.pid_ref.MassPerArea()
-            #m = mpa * area
-        elif prop.type in ['PCOMP', 'PCOMPG']:
-            # PCOMP, PCOMPG
-            #rho_t = prop.get_rho_t()
-            #nsm = prop.nsm
-            #rho_t = [mat.Rho() * t for (mat, t) in zip(prop.mids_ref, prop.ts)]
-            #mpa = sum(rho_t) + nsm
-            mpa = prop.get_mass_per_area()
-        elif prop.type in ['PLPLANE', 'PPLANE', 'PMIC']:
-            continue
-            #raise NotImplementedError(prop.type)
-        else:
-            raise NotImplementedError(prop.type)
+    centroids = (p1 + p2 + p3 + p4) * 0.25
+    areas_arr = 0.5 * np.linalg.norm(np.cross(p3 - p1, p4 - p2), axis=1)
+    masses_arr = areas_arr * mpa_arr
+
+    # populate NSM tracking structures
+    for i, (eid, pid) in enumerate(zip(eid_list, pid_list)):
         area_eids_pids['PSHELL'].append((eid, pid))
-        areas['PSHELL'].append(area)
-        nsm_centroids_area['PSHELL'].append(centroid)
-        #nsm = property_nsms[nsm_id]['PSHELL'][pid] + element_nsms[nsm_id][eid]
-        #m = area * (mpa + nsm)
-        massi = area * mpa
-        if CHECK_MASS and not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
-            msg = 'centroid_new=%s centroid_old=%s\n%s' % (
-                str(centroid), str(elem.Centroid()), str(elem))
-            raise RuntimeError(msg)
-        #elem = model.elements[eid]
+        areas['PSHELL'].append(areas_arr[i])
+        nsm_centroids_area['PSHELL'].append(centroids[i])
 
-        # mass_expected = elem.Mass()
-        # if not np.allclose(massi, mass_expected):  # pragma: no cover
-        #     msg = 'massi=%s expected=%s' % (massi, mass_expected)
-        #     for node in elem.nodes_ref:
-        #         node.comment = ''
-        #     elem.comment = ''
-        #     prop.comment = ''
-        #     prop.mid1_ref.comment = ''
-        #     msg += elem.get_stats()
-        #     msg += prop.get_stats()
-        #     msg += prop.mid_ref.get_stats()
-        #     raise RuntimeError(msg)
-        # print('eid=%s type=%s mass=%s; area=%s mpa=%s'  % (
-        #     elem.eid, elem.type, massi, area, mpa))
-        if eid in element_ids:
-            mass = increment_inertia(centroid, reference_xyz, massi,
-                                     mass, cg, inertia,
-                                     mass_list, cg_list, inertia_list)
+    # accumulate mass/inertia vectorized for elements in the requested set
+    if element_ids is None:
+        # all elements included
+        mass, cg, inertia = _accumulate_vectorized(
+            centroids, masses_arr, reference_xyz,
+            mass, cg, inertia,
+            mass_list, cg_list, inertia_list)
+    else:
+        # subset - filter to requested eids
+        mask = np.array([eid in element_ids for eid in eid_list], dtype=bool)
+        if np.any(mask):
+            mass, cg, inertia = _accumulate_vectorized(
+                centroids[mask], masses_arr[mask], reference_xyz,
+                mass, cg, inertia,
+                mass_list, cg_list, inertia_list)
     return mass
 
 

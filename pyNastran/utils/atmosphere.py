@@ -136,6 +136,9 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed: float,
     T0 = atm_temperature(z0)
     p0 = atm_pressure(z0)
     k = np.sqrt(T0 / p0)
+    # print(f'T0 = {T0}')
+    # print(f'p0 = {p0}')
+    # print(f'k = {k}')
     #eas = a * mach * sqrt((p * T0) / (T * p0)) = a * mach * sqrt(p / T) * k
 
     log_eas = np.log(equivalent_airspeed)
@@ -152,6 +155,11 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed: float,
         sos2 = np.sqrt(1.4 * R * T2)
         eas1 = sos1 * mach * np.sqrt(press1 / T1) * k
         eas2 = sos2 * mach * np.sqrt(press2 / T2) * k
+        # print(f'alt1 = {alt1}')
+        # print(f'alt2 = {alt2}')
+        # print(f'eas1 = {eas1}')
+        # print(f'eas2 = {eas2}')
+        # print('-------')
         log_eas1 = np.log(eas1)
         log_eas2 = np.log(eas2)
         m = dalt / (log_eas2 - log_eas1)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import abstractmethod
 from itertools import zip_longest
-from typing import Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -151,6 +151,28 @@ class PlateStressElement(Element):
     # def center_of_mass(self) -> np.ndarray:
     #     ...
 
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
+        nid = self.model.grid.node_id
+        pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
+                          msg=f'no shell properties for {self.type}')
+        #for prop in self.allowed_properties:
+            #print(prop.write(size=8))
+        assert len(pids) > 0, self.allowed_properties
+        pids.sort()
+
+        base_nodes = self.base_nodes
+        midside_nodes = self.midside_nodes
+        assert base_nodes is not None
+        #print(self.base_nodes)
+        geom_check(self,
+                   missing,
+                   node=(nid, base_nodes), filter_node0=False,
+                   property_id=(pids, self.property_id))
+        if midside_nodes is not None:
+            geom_check(self,
+                       missing,
+                       node=(nid, midside_nodes), filter_node0=True)
+
 
 class CPLSTS3(PlateStressElement):
     """
@@ -265,7 +287,14 @@ class CPLSTS3(PlateStressElement):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
+            theta = np.hstack([self.theta, theta])
+            tflag = np.hstack([self.tflag, tflag])
+            T = np.vstack([self.T, T])
+        ncards = len(element_id)
         assert ncards > 0, element_id
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
@@ -288,6 +317,14 @@ class CPLSTS3(PlateStressElement):
         element.theta = self.theta[i]
         element.T = self.T[i, :]
         element.n = len(self.element_id)
+
+    @property
+    def base_nodes(self):
+        return self.nodes[:, :3]
+
+    @property
+    def midside_nodes(self):
+        return None
 
     def area(self) -> np.ndarray:
         area = tri_area(self.model.grid, self.nodes)
@@ -431,7 +468,14 @@ class CPLSTS4(PlateStressElement):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
+            theta = np.hstack([self.theta, theta])
+            tflag = np.hstack([self.tflag, tflag])
+            T = np.vstack([self.T, T])
+        ncards = len(element_id)
         assert ncards > 0, element_id
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
@@ -452,6 +496,14 @@ class CPLSTS4(PlateStressElement):
         element.theta = self.theta[i]
         element.T = self.T[i, :]
         element.n = len(self.element_id)
+
+    @property
+    def base_nodes(self):
+        return self.nodes[:, :4]
+
+    @property
+    def midside_nodes(self):
+        return None
 
     def area(self) -> np.ndarray:
         area = quad_area(self.model.grid, self.nodes)
@@ -743,12 +795,35 @@ class PlateStrainElement(Element):
         model = self.model
         all_props = [model.pplane]
         return all_props
+
     @property
     def allowed_properties(self) -> list[Any]:
         all_props = self.all_properties
         props = [prop for prop in all_props if prop.n > 0]
         assert len(props) > 0, f'{self.type}: all_props={all_props}'
         return props
+
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
+        nid = self.model.grid.node_id
+        pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
+                          msg=f'no shell properties for {self.type}')
+        #for prop in self.allowed_properties:
+            #print(prop.write(size=8))
+        assert len(pids) > 0, self.allowed_properties
+        pids.sort()
+
+        base_nodes = self.base_nodes
+        midside_nodes = self.midside_nodes
+        assert base_nodes is not None
+        #print(self.base_nodes)
+        geom_check(self,
+                   missing,
+                   node=(nid, base_nodes), filter_node0=False,
+                   property_id=(pids, self.property_id))
+        if midside_nodes is not None:
+            geom_check(self,
+                       missing,
+                       node=(nid, midside_nodes), filter_node0=True)
 
     @abstractmethod
     def area(self):
@@ -898,15 +973,26 @@ class CPLSTN3(PlateStrainElement):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
+            theta = np.hstack([self.theta, theta])
         assert ncards > 0, element_id
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
-        assert nodes.shape == (ncards, 3), nodes.shape
         self.n = len(ifile)
+
+    @property
+    def base_nodes(self):
+        return self.nodes[:, :3]
+
+    @property
+    def midside_nodes(self):
+        return None
 
     def area(self) -> np.ndarray:
         area = tri_area(self.model.grid, self.nodes)
@@ -1039,7 +1125,11 @@ class CPLSTN4(PlateStrainElement):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
+            theta = np.hstack([self.theta, theta])
         assert ncards > 0, element_id
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
@@ -1047,6 +1137,14 @@ class CPLSTN4(PlateStrainElement):
         self.nodes = nodes
         self.theta = theta
         self.n = len(ifile)
+
+    @property
+    def base_nodes(self):
+        return self.nodes[:, :4]
+
+    @property
+    def midside_nodes(self):
+        return None
 
     def area(self) -> np.ndarray:
         area = quad_area(self.model.grid, self.nodes)
@@ -1172,14 +1270,17 @@ class CPLSTN6(PlateStrainElement):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
+            theta = np.hstack([self.theta, theta])
         assert ncards > 0, element_id
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
-        assert nodes.shape == (ncards, 6), nodes.shape
         self.n = len(ifile)
 
     def area(self) -> np.ndarray:
@@ -1199,6 +1300,7 @@ class CPLSTN6(PlateStrainElement):
     @property
     def base_nodes(self):
         return self.nodes[:, :3]
+
     @property
     def midside_nodes(self):
         return self.nodes[:, 3:]
@@ -1305,14 +1407,17 @@ class CPLSTN8(PlateStrainElement):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
+            theta = np.hstack([self.theta, theta])
         assert ncards > 0, element_id
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
-        assert nodes.shape == (ncards, 8), nodes.shape
         self.n = len(ifile)
 
     def area(self) -> np.ndarray:
@@ -1332,6 +1437,7 @@ class CPLSTN8(PlateStrainElement):
     @property
     def base_nodes(self):
         return self.nodes[:, :4]
+
     @property
     def midside_nodes(self):
         return self.nodes[:, 4:]
@@ -1462,7 +1568,13 @@ class CPLSTS6(PlateStrainElement):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id):
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
+            theta = np.hstack([self.theta, theta])
+            tflag = np.hstack([self.tflag, tflag])
+            thickness = np.vstack([self.thickness, thickness])
         assert ncards > 0, element_id
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
@@ -1471,7 +1583,6 @@ class CPLSTS6(PlateStrainElement):
         self.theta = theta
         self.tflag = tflag
         self.thickness = thickness
-        assert nodes.shape == (ncards, 6), nodes.shape
         self.n = len(ifile)
 
     def area(self) -> np.ndarray:
@@ -1491,6 +1602,7 @@ class CPLSTS6(PlateStrainElement):
     @property
     def base_nodes(self):
         return self.nodes[:, :3]
+
     @property
     def midside_nodes(self):
         return self.nodes[:, 3:]
@@ -1627,7 +1739,13 @@ class CPLSTS8(PlateStrainElement):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            element_id = np.hstack([self.element_id, element_id])
+            property_id = np.hstack([self.property_id, property_id])
+            nodes = np.vstack([self.nodes, nodes])
+            theta = np.hstack([self.theta, theta])
+            tflag = np.hstack([self.tflag, tflag])
+            thickness = np.vstack([self.thickness, thickness])
         assert ncards > 0, element_id
         save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
@@ -1636,8 +1754,7 @@ class CPLSTS8(PlateStrainElement):
         self.theta = theta
         self.tflag = tflag
         self.thickness = thickness
-        assert nodes.shape == (ncards, 8), nodes.shape
-        self.n = ncards
+        self.n = len(ifile)
 
     def area(self) -> np.ndarray:
         area = quad_area(self.model.grid, self.base_nodes)
@@ -1656,6 +1773,7 @@ class CPLSTS8(PlateStrainElement):
     @property
     def base_nodes(self):
         return self.nodes[:, :4]
+
     @property
     def midside_nodes(self):
         return self.nodes[:, 4:]

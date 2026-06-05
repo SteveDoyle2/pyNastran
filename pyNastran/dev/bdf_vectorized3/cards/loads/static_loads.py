@@ -436,7 +436,7 @@ class Load0(Load):
         self.cards = []
 
     def _save(self, load_id, node_id, coord_id, mag, xyz):
-        if len(self.load_id) == 0:
+        if len(self.load_id) != 0:
             load_id = np.hstack([self.load_id, load_id])
             node_id = np.hstack([self.node_id, node_id])
             coord_id = np.hstack([self.coord_id, coord_id])
@@ -481,6 +481,26 @@ class Load0(Load):
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max(), self.coord_id.max())
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        card_name = f'{self.type:<8s}'
+        sids = np.char.rjust(array_str(self.load_id, size=8), 8).tolist()
+        nids = np.char.rjust(array_default_int(self.node_id, default=0, size=8), 8).tolist()
+        cids = np.char.rjust(array_default_int(self.coord_id, default=0, size=8), 8).tolist()
+        mags = np.char.rjust(array_float(self.mag, size=8, is_double=False), 8).tolist()
+        xyz_str = np.char.rjust(array_float(self.xyz, size=8, is_double=False), 8)
+        x1s = xyz_str[:, 0].tolist()
+        x2s = xyz_str[:, 1].tolist()
+        x3s = xyz_str[:, 2].tolist()
+        lines = [f'{card_name}{sid}{nid}{cid}{mag}{x1}{x2}{x3}\n'
+                 for sid, nid, cid, mag, x1, x2, x3
+                 in zip(sids, nids, cids, mags, x1s, x2s, x3s)]
+        bdf_file.write(''.join(lines))
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -569,7 +589,10 @@ class Load1(Load):
 
     def _save(self, load_id, node_id, mag, nodes):
         if len(self.load_id) != 0:
-            raise NotImplementedError()
+            load_id = np.hstack([self.load_id, load_id])
+            node_id = np.hstack([self.node_id, node_id])
+            mag = np.hstack([self.mag, mag])
+            nodes = np.vstack([self.nodes, nodes])
         nloads = len(load_id)
         self.load_id = load_id
         self.node_id = node_id
@@ -600,6 +623,24 @@ class Load1(Load):
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max())
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        card_name = f'{self.type:<8s}'
+        sids = np.char.rjust(array_str(self.load_id, size=8), 8).tolist()
+        nids = np.char.rjust(array_default_int(self.node_id, default=0, size=8), 8).tolist()
+        mags = np.char.rjust(array_float(self.mag, size=8, is_double=False), 8).tolist()
+        nodes_str = np.char.rjust(array_default_int(self.nodes, default=0, size=8), 8)
+        g1s = nodes_str[:, 0].tolist()
+        g2s = nodes_str[:, 1].tolist()
+        lines = [f'{card_name}{sid}{nid}{mag}{g1}{g2}\n'
+                 for sid, nid, mag, g1, g2
+                 in zip(sids, nids, mags, g1s, g2s)]
+        bdf_file.write(''.join(lines))
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -690,7 +731,10 @@ class Load2(Load):
 
     def _save(self, load_id, node_id, mag, nodes):
         if len(self.load_id) != 0:
-            raise NotImplementedError()
+            load_id = np.hstack([self.load_id, load_id])
+            node_id = np.hstack([self.node_id, node_id])
+            mag = np.hstack([self.mag, mag])
+            nodes = np.vstack([self.nodes, nodes])
         nloads = len(load_id)
         self.load_id = load_id
         self.node_id = node_id
@@ -724,6 +768,26 @@ class Load2(Load):
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max())
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        card_name = f'{self.type:<8s}'
+        sids = np.char.rjust(array_str(self.load_id, size=8), 8).tolist()
+        nids = np.char.rjust(array_str(self.node_id, size=8), 8).tolist()
+        mags = np.char.rjust(array_float(self.mag, size=8, is_double=False), 8).tolist()
+        nodes_str = np.char.rjust(array_default_int(self.nodes, default=0, size=8), 8)
+        g1s = nodes_str[:, 0].tolist()
+        g2s = nodes_str[:, 1].tolist()
+        g3s = nodes_str[:, 2].tolist()
+        g4s = nodes_str[:, 3].tolist()
+        lines = [f'{card_name}{sid}{nid}{mag}{g1}{g3}{g2}{g4}\n'
+                 for sid, nid, mag, g1, g2, g3, g4
+                 in zip(sids, nids, mags, g1s, g2s, g3s, g4s)]
+        bdf_file.write(''.join(lines))
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -1193,6 +1257,30 @@ class GRAV(Load):
         return max(self.load_id.max(), self.coord_id.max())
 
     @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        sids = np.char.rjust(array_default_int(self.load_id, size=8), 8).tolist()
+        cids = np.char.rjust(array_default_int(self.coord_id, default=0, size=8), 8).tolist()
+        scales = np.char.rjust(array_float(self.scale, size=8, is_double=False), 8).tolist()
+        n_str = np.char.rjust(array_float(self.N, size=8, is_double=False), 8)
+        n1s = n_str[:, 0].tolist()
+        n2s = n_str[:, 1].tolist()
+        n3s = n_str[:, 2].tolist()
+        if np.any(self.main_bulk != 0):
+            mbs = np.char.rjust(array_default_int(self.main_bulk, default=0, size=8), 8).tolist()
+            lines = [f'GRAV    {sid}{cid}{scale}{n1}{n2}{n3}{mb}\n'
+                     for sid, cid, scale, n1, n2, n3, mb
+                     in zip(sids, cids, scales, n1s, n2s, n3s, mbs)]
+        else:
+            lines = [f'GRAV    {sid}{cid}{scale}{n1}{n2}{n3}\n'
+                     for sid, cid, scale, n1, n2, n3
+                     in zip(sids, cids, scales, n1s, n2s, n3s)]
+        bdf_file.write(''.join(lines))
+
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1353,7 +1441,13 @@ class ACCEL(Load):
 
     def _save(self, load_id, coord_id, nloc, locs, vals, direction, N):
         if len(self.load_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            load_id = np.hstack([self.load_id, load_id])
+            coord_id = np.hstack([self.coord_id, coord_id])
+            nloc = np.hstack([self.nloc, nloc])
+            locs = np.hstack([self.locs, locs])
+            vals = np.hstack([self.vals, vals])
+            direction = np.hstack([self.direction, direction])
+            N = np.vstack([self.N, N])
         nloads = len(load_id)
         self.load_id = load_id
         self.coord_id = coord_id
@@ -1520,12 +1614,16 @@ class ACCEL1(Load):
 
     def _save(self, load_id, coord_id, scale, nnodes, nodes, N):
         if len(self.load_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            load_id = np.hstack([self.load_id, load_id])
+            coord_id = np.hstack([self.coord_id, coord_id])
+            scale = np.hstack([self.scale, scale])
+            nnodes = np.hstack([self.nnodes, nnodes])
+            nodes = np.hstack([self.nodes, nodes])
+            N = np.vstack([self.N, N])
         nloads = len(load_id)
         self.load_id = load_id
         self.coord_id = coord_id
         self.nnodes = nnodes
-        #assert isinstance(self.nnodes.tolist()[0], int), self.nnodes[0]
         self.nodes = nodes
         self.scale = scale
         self.N = N
@@ -2312,6 +2410,327 @@ class TEMPD(Load):
         return
 
 
+class TEMPP1(Load):
+    """
+    Defines element temperature for one-dimensional elements (CBAR/CBEAM).
+
+    +--------+------+------+------+--------+------+------+
+    |   1    |   2  |   3  |   4  |    5   |   6  |   7  |
+    +========+======+======+======+========+======+======+
+    | TEMPP1 | SID  | EID1 | TBAR | TPRIME |  T1  |  T2  |
+    +--------+------+------+------+--------+------+------+
+
+    """
+    def clear(self) -> None:
+        self.n = 0
+        self.load_id = np.array([], dtype='int32')
+        self.element_id = np.array([], dtype='int32')
+        self.tbar = np.array([], dtype='float64')
+        self.tprime = np.array([], dtype='float64')
+        self.t1 = np.array([], dtype='float64')
+        self.t2 = np.array([], dtype='float64')
+
+    def add(self, sid: int, eid: int, tbar: float, tprime: float,
+            t_stress: list[float], comment: str='') -> int:
+        t1 = t_stress[0] if len(t_stress) > 0 else 0.0
+        t2 = t_stress[1] if len(t_stress) > 1 and t_stress[1] is not None else 0.0
+        self.cards.append((sid, eid, tbar, tprime, t1, t2, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+        sid = integer(card, 1, 'sid')
+        eid = integer(card, 2, 'eid')
+        tbar = double(card, 3, 'tbar')
+        tprime = double(card, 4, 'tprime')
+        t1 = double_or_blank(card, 5, 't1', default=0.0)
+        t2 = double_or_blank(card, 6, 't2', default=0.0)
+        self.cards.append((sid, eid, tbar, tprime, t1, t2, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        load_id = np.zeros(ncards, dtype='int32')
+        element_id = np.zeros(ncards, dtype='int32')
+        tbar = np.zeros(ncards, dtype='float64')
+        tprime = np.zeros(ncards, dtype='float64')
+        t1 = np.zeros(ncards, dtype='float64')
+        t2 = np.zeros(ncards, dtype='float64')
+        for icard, card in enumerate(self.cards):
+            sid, eid, tbari, tprimei, t1i, t2i, comment = card
+            load_id[icard] = sid
+            element_id[icard] = eid
+            tbar[icard] = tbari
+            tprime[icard] = tprimei
+            t1[icard] = t1i
+            t2[icard] = t2i
+        self._save(load_id, element_id, tbar, tprime, t1, t2)
+        assert len(self.load_id) == self.n
+        self.sort()
+        self.cards = []
+
+    def _save(self, load_id, element_id, tbar, tprime, t1, t2) -> None:
+        nloads = len(load_id)
+        assert len(self.load_id) == 0
+        self.load_id = load_id
+        self.element_id = element_id
+        self.tbar = tbar
+        self.tprime = tprime
+        self.t1 = t1
+        self.t2 = t2
+        self.n = nloads
+
+    def __apply_slice__(self, load: TEMPP1, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.element_id = self.element_id[i]
+        load.tbar = self.tbar[i]
+        load.tprime = self.tprime[i]
+        load.t1 = self.t1[i]
+        load.t2 = self.t2[i]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['element_id'].append(self.element_id)
+
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
+        pass
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.element_id.max())
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        # TEMPP1 always uses 8-char format (7 fields, fits on one line)
+        from pyNastran.bdf.field_writer_8 import print_card_8
+        load_ids = array_str(self.load_id, size=8)
+        element_ids = array_str(self.element_id, size=8)
+        for sid, eid, tbar, tprime, t1, t2 in zip(
+                load_ids, element_ids, self.tbar, self.tprime,
+                self.t1, self.t2):
+            list_fields = ['TEMPP1', sid, eid, tbar, tprime, t1, t2]
+            bdf_file.write(print_card_8(list_fields))
+        return
+
+
+class TEMPRB(Load):
+    """
+    Defines element temperature for beam elements (CBAR/CBEAM).
+    Supports linearly-varying axial temperature and two-plane gradients.
+
+    +--------+------+------+------+------+------+------+------+------+
+    |    1   |   2  |   3  |   4  |   5  |   6  |   7  |   8  |  9   |
+    +========+======+======+======+======+======+======+======+======+
+    | TEMPRB | SID  | EID1 |   TA |  TB  | TP1A | TP1B | TP2A | TP2B |
+    +--------+------+------+------+------+------+------+------+------+
+    |        | TCA  |  TDA |  TEA |  TFA |  TCB |  TDB |  TEB | TFB  |
+    +--------+------+------+------+------+------+------+------+------+
+    |        | EID2 | EID3 | EID4 | EID5 | EID6 | EID7 | etc. |      |
+    +--------+------+------+------+------+------+------+------+------+
+
+    """
+    def clear(self) -> None:
+        self.n = 0
+        self.load_id = np.array([], dtype='int32')
+        self.element_id = np.array([], dtype='int32')
+        self.ta = np.array([], dtype='float64')
+        self.tb = np.array([], dtype='float64')
+        self.tp1a = np.array([], dtype='float64')
+        self.tp1b = np.array([], dtype='float64')
+        self.tp2a = np.array([], dtype='float64')
+        self.tp2b = np.array([], dtype='float64')
+        self.tca = np.array([], dtype='float64')
+        self.tda = np.array([], dtype='float64')
+        self.tea = np.array([], dtype='float64')
+        self.tfa = np.array([], dtype='float64')
+        self.tcb = np.array([], dtype='float64')
+        self.tdb = np.array([], dtype='float64')
+        self.teb = np.array([], dtype='float64')
+        self.tfb = np.array([], dtype='float64')
+
+    def add(self, sid: int, eids: list[int],
+            ta: float, tb: float,
+            tp1a: float=0.0, tp1b: float=0.0,
+            tp2a: float=0.0, tp2b: float=0.0,
+            tca: float=0.0, tda: float=0.0, tea: float=0.0, tfa: float=0.0,
+            tcb: float=0.0, tdb: float=0.0, teb: float=0.0, tfb: float=0.0,
+            comment: str='') -> int:
+        self.cards.append((sid, eids, ta, tb, tp1a, tp1b, tp2a, tp2b,
+                           tca, tda, tea, tfa, tcb, tdb, teb, tfb, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+        sid = integer(card, 1, 'sid')
+        eid1 = integer(card, 2, 'EID1')
+        ta = double(card, 3, 'TA')
+        tb = double(card, 4, 'TB')
+        tp1a = double_or_blank(card, 5, 'TP1A', default=0.0)
+        tp1b = double_or_blank(card, 6, 'TP1B', default=0.0)
+        tp2a = double_or_blank(card, 7, 'TP2A', default=0.0)
+        tp2b = double_or_blank(card, 8, 'TP2B', default=0.0)
+        tca = double_or_blank(card, 9, 'TCA', default=0.0)
+        tda = double_or_blank(card, 10, 'TDA', default=0.0)
+        tea = double_or_blank(card, 11, 'TEA', default=0.0)
+        tfa = double_or_blank(card, 12, 'TFA', default=0.0)
+        tcb = double_or_blank(card, 13, 'TCB', default=0.0)
+        tdb = double_or_blank(card, 14, 'TDB', default=0.0)
+        teb = double_or_blank(card, 15, 'TEB', default=0.0)
+        tfb = double_or_blank(card, 16, 'TFB', default=0.0)
+
+        eids = [eid1]
+        nfields = len(card)
+        for ifield in range(17, nfields):
+            eid = integer(card, ifield, f'eid{ifield - 15}')
+            eids.append(eid)
+
+        self.cards.append((sid, eids, ta, tb, tp1a, tp1b, tp2a, tp2b,
+                           tca, tda, tea, tfa, tcb, tdb, teb, tfb, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        # Expand: each card can reference multiple EIDs sharing the same temps
+        ncards = len(self.cards)
+        all_load_id = []
+        all_eid = []
+        all_ta = []
+        all_tb = []
+        all_tp1a = []
+        all_tp1b = []
+        all_tp2a = []
+        all_tp2b = []
+        all_tca = []
+        all_tda = []
+        all_tea = []
+        all_tfa = []
+        all_tcb = []
+        all_tdb = []
+        all_teb = []
+        all_tfb = []
+        for card in self.cards:
+            (sid, eids, ta, tb, tp1a, tp1b, tp2a, tp2b,
+             tca, tda, tea, tfa, tcb, tdb, teb, tfb, comment) = card
+            for eid in eids:
+                all_load_id.append(sid)
+                all_eid.append(eid)
+                all_ta.append(ta)
+                all_tb.append(tb)
+                all_tp1a.append(tp1a)
+                all_tp1b.append(tp1b)
+                all_tp2a.append(tp2a)
+                all_tp2b.append(tp2b)
+                all_tca.append(tca)
+                all_tda.append(tda)
+                all_tea.append(tea)
+                all_tfa.append(tfa)
+                all_tcb.append(tcb)
+                all_tdb.append(tdb)
+                all_teb.append(teb)
+                all_tfb.append(tfb)
+
+        nloads = len(all_load_id)
+        self._save(
+            np.array(all_load_id, dtype='int32'),
+            np.array(all_eid, dtype='int32'),
+            np.array(all_ta, dtype='float64'),
+            np.array(all_tb, dtype='float64'),
+            np.array(all_tp1a, dtype='float64'),
+            np.array(all_tp1b, dtype='float64'),
+            np.array(all_tp2a, dtype='float64'),
+            np.array(all_tp2b, dtype='float64'),
+            np.array(all_tca, dtype='float64'),
+            np.array(all_tda, dtype='float64'),
+            np.array(all_tea, dtype='float64'),
+            np.array(all_tfa, dtype='float64'),
+            np.array(all_tcb, dtype='float64'),
+            np.array(all_tdb, dtype='float64'),
+            np.array(all_teb, dtype='float64'),
+            np.array(all_tfb, dtype='float64'),
+        )
+        self.n = nloads
+        self.sort()
+        self.cards = []
+
+    def _save(self, load_id, element_id, ta, tb,
+              tp1a, tp1b, tp2a, tp2b,
+              tca, tda, tea, tfa, tcb, tdb, teb, tfb) -> None:
+        nloads = len(load_id)
+        assert len(self.load_id) == 0
+        self.load_id = load_id
+        self.element_id = element_id
+        self.ta = ta
+        self.tb = tb
+        self.tp1a = tp1a
+        self.tp1b = tp1b
+        self.tp2a = tp2a
+        self.tp2b = tp2b
+        self.tca = tca
+        self.tda = tda
+        self.tea = tea
+        self.tfa = tfa
+        self.tcb = tcb
+        self.tdb = tdb
+        self.teb = teb
+        self.tfb = tfb
+        self.n = nloads
+
+    def __apply_slice__(self, load: 'TEMPRB', i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.element_id = self.element_id[i]
+        load.ta = self.ta[i]
+        load.tb = self.tb[i]
+        load.tp1a = self.tp1a[i]
+        load.tp1b = self.tp1b[i]
+        load.tp2a = self.tp2a[i]
+        load.tp2b = self.tp2b[i]
+        load.tca = self.tca[i]
+        load.tda = self.tda[i]
+        load.tea = self.tea[i]
+        load.tfa = self.tfa[i]
+        load.tcb = self.tcb[i]
+        load.tdb = self.tdb[i]
+        load.teb = self.teb[i]
+        load.tfb = self.tfb[i]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['element_id'].append(self.element_id)
+
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
+        pass
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.element_id.max())
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        from pyNastran.bdf.field_writer_8 import print_card_8
+        from pyNastran.bdf.field_writer_16 import print_card_16
+        print_card = print_card_16 if size == 16 else print_card_8
+
+        # Group by (load_id, ta, tb, tp1a, tp1b, tp2a, tp2b, tca..tfb)
+        # to reconstruct the multi-EID card format
+        for i in range(self.n):
+            list_fields = [
+                'TEMPRB', self.load_id[i], self.element_id[i],
+                self.ta[i], self.tb[i],
+                self.tp1a[i], self.tp1b[i], self.tp2a[i], self.tp2b[i],
+                self.tca[i], self.tda[i], self.tea[i], self.tfa[i],
+                self.tcb[i], self.tdb[i], self.teb[i], self.tfb[i],
+            ]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
 class SLOAD(Load):
     """
     Static Scalar Load
@@ -2634,7 +3053,15 @@ class RFORCE(Load):
 
     def _save(self, load_id, node_id, coord_id, scale, r, method, racc, main_bulk, idrf):
         if len(self.load_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            load_id = np.hstack([self.load_id, load_id])
+            node_id = np.hstack([self.node_id, node_id])
+            coord_id = np.hstack([self.coord_id, coord_id])
+            scale = np.hstack([self.scale, scale])
+            r = np.vstack([self.r, r])
+            method = np.hstack([self.method, method])
+            racc = np.hstack([self.racc, racc])
+            main_bulk = np.hstack([self.main_bulk, main_bulk])
+            idrf = np.hstack([self.idrf, idrf])
         self.load_id = load_id
         self.node_id = node_id
         self.coord_id = coord_id

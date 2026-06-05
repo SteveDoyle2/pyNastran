@@ -76,20 +76,27 @@ def wipe_empty_fields(card: list[str | int | float | None]) -> list[str | int | 
         the card with no trailing blank fields
 
     """
-    short_card: list[str | int | float | None] = []
-    for field in card:
-        if isinstance(field, str):
-            field = field.strip()
-            if field == '':
-                short_card.append(None)
-            else:
-                short_card.append(field)
-        else:
-            short_card.append(field)
-
+    short_card = [
+        (field.strip() or None) if isinstance(field, str) else field
+        for field in card
+    ]
+    # find last non-None index
     imax = 0
-    for i, field in enumerate(card):
+    for i in range(len(short_card) - 1, -1, -1):
         if short_card[i] is not None:
             imax = i
-    out = short_card[:imax + 1]
-    return out
+            break
+    return short_card[:imax + 1]
+
+
+def wipe_empty_fields_str(card: list[str]) -> list[str | None]:
+    """Fast path for wipe_empty_fields when all fields are known to be strings
+    (e.g., from _to_fields_standard during BDF reading)."""
+    short_card = [(field.strip() or None) for field in card]
+    # find last non-None index
+    imax = 0
+    for i in range(len(short_card) - 1, -1, -1):
+        if short_card[i] is not None:
+            imax = i
+            break
+    return short_card[:imax + 1]

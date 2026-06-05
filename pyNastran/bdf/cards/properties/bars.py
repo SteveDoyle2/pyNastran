@@ -241,6 +241,8 @@ def A_I1_I2_I12(prop, beam_type: str,
         A, I1, I2, I12 = box_section(prop.type, beam_type, dim, prop)
     elif beam_type == 'L':
         A, I1, I2, I12 = l_section(prop.type, beam_type, dim, prop)
+    elif beam_type == 'T':
+        A, I1, I2, I12 = t_section(prop.type, beam_type, dim, prop)
     else:  # pragma: no cover
         msg = 'A_I1_I2_I12; beam_type=%s is not supported for %s class...' % (
             beam_type, prop.type)

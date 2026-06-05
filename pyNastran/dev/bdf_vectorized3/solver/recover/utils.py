@@ -15,13 +15,13 @@ def get_plot_request(subcase: Subcase,
         return '', False, False, True
 
     value, options = subcase.get_parameter(request)
-    # write_f06 = False
     write_f06 = True
+    write_op2 = False
     if 'PRINT' in options:
         write_f06 = True
     if 'PLOT' in options:
         write_op2 = True
-    if not(write_f06 or write_op2):
+    if not (write_f06 or write_op2):
         write_op2 = True
 
     write_results = any((write_f06, write_op2))

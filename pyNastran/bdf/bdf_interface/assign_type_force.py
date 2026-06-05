@@ -1,6 +1,6 @@
 import warnings
 from typing import Optional
-from .assign_type import double, _get_dtype
+from .assign_type import double, _get_dtype, _nastran_str_to_float
 from .bdf_card import BDFCard
 from pyNastran.utils.numpy_utils import (
     integer_types, float_types)
@@ -63,43 +63,12 @@ def force_double(card: BDFCard, ifield: int, fieldname: str,
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
                           'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
 
-    #if svalue.isdigit():  # 1, not +1, or -1
-        ## if only int
-        #raise SyntaxError('%s = %r (field #%s) on card must be a float (not an integer).\n'
-                          #'card=%s' % (fieldname, svalue, ifield, card))
-
     try:
-        # 1.0, 1.0E+3, 1.0E-3
-        value = float(svalue)
-    except TypeError:
+        return _nastran_str_to_float(svalue)
+    except (ValueError, TypeError):
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
                           'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
-    except ValueError:
-        # 1D+3, 1D-3, 1-3
-        try:
-            svalue = svalue.upper()
-            if 'D' in svalue:
-                # 1.0D+3, 1.0D-3
-                svalue2 = svalue.replace('D', 'E')
-                return float(svalue2)
-
-            # 1.0+3, 1.0-3
-            sign = ''
-            if svalue[0] in ('+', '-'):
-                sign = svalue[0]
-                svalue = svalue[1:]
-            if '+' in svalue:
-                svalue = sign + svalue.replace('+', 'E+')
-            elif '-' in svalue:
-                svalue = sign + svalue.replace('-', 'E-')
-
-            value = float(svalue)
-        except ValueError:
-            dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
-                              'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
-    return value
 
 def force_integer_or_blank(card: BDFCard, ifield: int, fieldname: str,
                            default: Optional[int]=None) -> Optional[int]:
@@ -149,25 +118,23 @@ def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str,
         return fvalue
     elif isinstance(svalue, str):
         try:
-            # if it casts as an integer, it's not typed right
             ivalue = int(svalue)
             fvalue = float(ivalue)
             warnings.warn('%s = %r (field #%s) on card must be a float or blank (not an integer) -> %s.\n'
                           'card=%s' % (fieldname, svalue, ifield, fvalue, card))
             return fvalue
-        except Exception:
-            svalue = svalue.strip().upper()
-            if not svalue:
-                out = default
+        except (ValueError, TypeError):
+            svalue_stripped = svalue.strip()
+            if not svalue_stripped:
+                return default
+            if svalue_stripped == '.':
+                return 0.
             try:
-                out = double(card, ifield, fieldname)
-            except Exception:
-                if svalue == '.':
-                    return 0.
+                return _nastran_str_to_float(svalue_stripped)
+            except (ValueError, TypeError):
                 dtype = _get_dtype(svalue)
                 raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
                                   'card=%s' % (fieldname, svalue, ifield, dtype, card))
-            return out
     return default
 
 def force_double_or_string(card: BDFCard, ifield: int, fieldname: str,

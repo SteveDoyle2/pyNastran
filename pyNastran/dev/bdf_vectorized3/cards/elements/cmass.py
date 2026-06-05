@@ -310,6 +310,9 @@ class CMASS2(Element):
         elem.components = self.components[i, :]
         elem.n = len(i)
 
+    def convert(self, mass_scale: float=1.0, **kwargs) -> None:
+        self._mass *= mass_scale
+
     @property
     def max_id(self) -> int:
         return max(self.element_id.max(), self.nodes.max())
@@ -567,8 +570,17 @@ class CMASS4(Element):
         elem.spoints = self.spoints[i, :]
         elem.n = len(i)
 
+    def convert(self, mass_scale: float=1.0, **kwargs) -> None:
+        self._mass *= mass_scale
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['spoint_id'].append(self.spoints.ravel())
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        spoint = self.model.spoint
+        geom_check(self,
+                   missing,
+                   spoint=(spoint, self.spoints), filter_node0=True)
 
     def mass(self) -> np.ndarray:
         return np.zeros(len(self.element_id), dtype='float64')

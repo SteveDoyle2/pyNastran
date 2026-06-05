@@ -1,6 +1,6 @@
 import numpy as np
-from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
-from pyNastran.bdf.field_writer_16 import print_card_16, print_float_16
+from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, array_float_8
+from pyNastran.bdf.field_writer_16 import print_card_16, print_float_16, array_float_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
 from typing import Callable
 
@@ -71,6 +71,11 @@ def array_float(ndarray: np.ndarray, size: int=8, is_double: bool=False,
     if nan_check and np.any(np.isnan(ndarray)):
         raise RuntimeError('nans found')
 
+    if size == 8 and not is_double:
+        return array_float_8(ndarray)
+    if size == 16 and not is_double:
+        return array_float_16(ndarray)
+
     if size == 8:
         str_array = np.zeros(ndarray.shape, dtype='|U8')
         print_float = print_float_8
@@ -91,10 +96,36 @@ def array_float(ndarray: np.ndarray, size: int=8, is_double: bool=False,
         raise NotImplementedError(ndarray.shape)
     return str_array
 
+
 def array_float_nan(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
     assert ndarray.dtype.name in {'float32', 'float64'}, ndarray.dtype.name
     inan = np.isnan(ndarray)
+
+    if size == 8 and not is_double:
+        ivalue = ~inan
+        if np.all(ivalue):
+            return array_float_8(ndarray)
+        str_array = np.zeros(ndarray.shape, dtype='|U8')
+        if np.any(ivalue):
+            flat = ndarray.ravel()
+            flat_result = array_float_8(flat[ivalue.ravel()])
+            str_array.ravel()[ivalue.ravel()] = flat_result
+        str_array[inan] = ''
+        return str_array
+
+    if size == 16 and not is_double:
+        ivalue = ~inan
+        if np.all(ivalue):
+            return array_float_16(ndarray)
+        str_array = np.zeros(ndarray.shape, dtype='|U16')
+        if np.any(ivalue):
+            flat = ndarray.ravel()
+            flat_result = array_float_16(flat[ivalue.ravel()])
+            str_array.ravel()[ivalue.ravel()] = flat_result
+        str_array[inan] = ''
+        return str_array
+
     ivalue = ~inan
     if size == 8:
         str_array = np.zeros(ndarray.shape, dtype='|U8')

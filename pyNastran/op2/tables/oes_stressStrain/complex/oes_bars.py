@@ -113,17 +113,17 @@ class ComplexBarArray(OES_Object):
                     for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
-                        (s1a1, s2a1, s3a1, s4a1, axial1, s2a1, s2b1, s2c1, s2d1) = t1
-                        (s1a2, s2a2, s3a2, s4a2, axial2, s2a2, s2b2, s2c2, s2d2) = t2
+                        (s1a1, s2a1, s3a1, s4a1, axial1, s1b1, s2b1, s3b1, s4b1) = t1
+                        (s1a2, s2a2, s3a2, s4a2, axial2, s1b2, s2b2, s3b2, s4b2) = t2
                         #d = t1 - t2
                         if not np.allclose(
-                            [s1a1.real, s2a1.real, s3a1.real, s4a1.real, axial1.real, s2a1.real, s2b1.real, s2c1.real, s2d1.real],
-                            [s1a2.real, s2a2.real, s3a2.real, s4a2.real, axial2.real, s2a2.real, s2b2.real, s2c2.real, s2d2.real], atol=0.0001):
+                            [s1a1.real, s2a1.real, s3a1.real, s4a1.real, axial1.real, s1b1.real, s2b1.real, s3b1.real, s4b1.real],
+                            [s1a2.real, s2a2.real, s3a2.real, s4a2.real, axial2.real, s1b2.real, s2b2.real, s3b2.real, s4b2.real], atol=0.0001):
                         #if not np.array_equal(t1, t2):
                             msg += '%-4s  (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n      (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
-                                s1a1.real, s2a1.real, s3a1.real, s4a1.real, axial1.real, s2a1.real, s2b1.real, s2c1.real, s2d1.real,
-                                s1a2.real, s2a2.real, s3a2.real, s4a2.real, axial2.real, s2a2.real, s2b2.real, s2c2.real, s2d2.real,
+                                s1a1.real, s2a1.real, s3a1.real, s4a1.real, axial1.real, s1b1.real, s2b1.real, s3b1.real, s4b1.real,
+                                s1a2.real, s2a2.real, s3a2.real, s4a2.real, axial2.real, s1b2.real, s2b2.real, s3b2.real, s4b2.real,
                                 )
                             i += 1
                         if i > 10:
@@ -163,7 +163,7 @@ class ComplexBarArray(OES_Object):
         ntimes = self.ntimes
         #ntotal = self.ntotal
         nelements2 = self.element.shape[0]
-        assert nelements, nelements2
+        assert nelements == nelements2, f'nelements={nelements} nelements2={nelements2}'
         msg = []
 
         if self.nonlinear_factor not in (None, np.nan):  # transient
@@ -261,9 +261,9 @@ class ComplexBarArray(OES_Object):
             #[sa1, sa2, sa3, sa4, axial, sb1, sb2, sb3, sb4]
 
             eids = self.element
-            for eid, s1ai, s2ai, s3ai, s4ai, axiali, s2ai, s2bi, s2ci, s2di in zip(eids, sa1, sa2, sa3, sa4, axial, sb1, sb2, sb3, sb4):
+            for eid, s1ai, s2ai, s3ai, s4ai, axiali, s1bi, s2bi, s3bi, s4bi in zip(eids, sa1, sa2, sa3, sa4, axial, sb1, sb2, sb3, sb4):
                 vals = (s1ai, s2ai, s3ai, s4ai, axiali,
-                        s2ai, s2bi, s2ci, s2di)
+                        s1bi, s2bi, s3bi, s4bi)
                 vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 (s1ar, s2ar, s3ar, s4ar, axialr,
                  s1br, s2br, s3br, s4br,
@@ -362,11 +362,11 @@ class ComplexBarArray(OES_Object):
             #[sa1, sa2, sa3, sa4, axial, sb1, sb2, sb3, sb4]
 
             eids = self.element
-            for eid_device, s1ai, s2ai, s3ai, s4ai, axiali, s2ai, s2bi, s2ci, s2di in zip(eids_device, sa1, sa2, sa3, sa4, axial, sb1, sb2, sb3, sb4):
+            for eid_device, s1ai, s2ai, s3ai, s4ai, axiali, s1bi, s2bi, s3bi, s4bi in zip(eids_device, sa1, sa2, sa3, sa4, axial, sb1, sb2, sb3, sb4):
 
                 data = [eid_device,
-                        s1ai.real, s2ai.real, s3ai.real, s4ai.real, axiali.real, s2ai.real, s2bi.real, s2ci.real, s2di.real,
-                        s1ai.imag, s2ai.imag, s3ai.imag, s4ai.imag, axiali.imag, s2ai.imag, s2bi.imag, s2ci.imag, s2di.imag]
+                        s1ai.real, s2ai.real, s3ai.real, s4ai.real, axiali.real, s1bi.real, s2bi.real, s3bi.real, s4bi.real,
+                        s1ai.imag, s2ai.imag, s3ai.imag, s4ai.imag, axiali.imag, s1bi.imag, s2bi.imag, s3bi.imag, s4bi.imag]
                 op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, op2_stringify(data)))
                 op2_file.write(struct1.pack(*data))
 

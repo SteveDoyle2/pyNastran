@@ -74,7 +74,7 @@ def oes_crod(op2: OP2, data, ndata, dt, is_magnitude_phase,
             obj._times[obj.itime] = dt
             obj_set_element(op2, obj, itotal, itotal2, data, nelements)
 
-            # [axial, torsion, SMa, SMt]
+            # [axial, SMa, torsion, SMt]
             obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:].copy()
             obj.itotal = itotal2
             obj.ielement = ielement2
@@ -148,7 +148,7 @@ def oes_crod(op2: OP2, data, ndata, dt, is_magnitude_phase,
             obj._times[obj.itime] = dt
             obj_set_element(op2, obj, itotal, itotal2, data, nelements)
 
-            # [axial, torsion, SMa, SMt]
+            # [axial, torsion]
             obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:].copy()
             obj.itotal = itotal2
             obj.ielement = ielement2

@@ -1558,11 +1558,22 @@ class RectangularCoord:
 
     @staticmethod
     def xyz_to_coord_array(p):
-        """
+        """Convert local rectangular to local coordinate components.
+
+        This is a pure math operation with no frame awareness.
+        Input must already be in the coord's local rectangular frame.
+        For global-to-local, use transform_node_to_local_array() which
+        applies (xyz_global - origin) @ beta.T before calling this.
+
+        Parameters
+        ----------
+        p : (n, 3) ndarray
+            points in the coord's local rectangular frame
+
         Returns
         -------
         xyz : (n, 3) ndarray
-            the delta xyz point in the local coordinate system
+            the point in the local coordinate system (identity for rectangular)
 
         """
         return p
@@ -1672,7 +1683,13 @@ class CylindricalCoord:
 
     @staticmethod
     def xyz_to_coord_array(p):
-        r"""
+        r"""Convert local rectangular to cylindrical (r, theta, z).
+
+        This is a pure math operation with no frame awareness.
+        Input must already be in the coord's local rectangular frame.
+        For global-to-local, use transform_node_to_local_array() which
+        applies (xyz_global - origin) @ beta.T before calling this.
+
         ::
 
           y       R
@@ -1684,10 +1701,15 @@ class CylindricalCoord:
         .. math:: x = R \cos(\theta)
         .. math:: y = R \sin(\theta)
 
+        Parameters
+        ----------
+        p : (n, 3) ndarray
+            points in the coord's local rectangular frame
+
         Returns
         -------
-        rtp : (3,) float ndarray
-            the point in the local coordinate system
+        rtz : (n, 3) float ndarray
+            the point as (r, theta_deg, z)
 
         """
         return xyz_to_rtz_array(p)
@@ -1739,11 +1761,22 @@ class SphericalCoord:
 
     @staticmethod
     def xyz_to_coord_array(p):
-        r"""
+        r"""Convert local rectangular to spherical (r, theta, phi).
+
+        This is a pure math operation with no frame awareness.
+        Input must already be in the coord's local rectangular frame.
+        For global-to-local, use transform_node_to_local_array() which
+        applies (xyz_global - origin) @ beta.T before calling this.
+
+        Parameters
+        ----------
+        p : (n, 3) ndarray
+            points in the coord's local rectangular frame
+
         Returns
         -------
-        xyz : (3, ) float ndarray
-            the local XYZ point in the R, \theta, \phi coordinate system
+        rtp : (n, 3) float ndarray
+            the point as (r, theta_deg, phi_deg)
 
         """
         return xyz_to_rtp_array(p)

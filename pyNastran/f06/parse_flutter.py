@@ -84,7 +84,6 @@ def make_flutter_response(f06_filename: PathLike,
             BHH : (nmodes,nmodes) float np.ndarray
             KHH : (nmodes,nmodes) float np.ndarray
 
-
     """
     f06_units = get_flutter_units(f06_units)
     out_units = get_flutter_units(out_units)
@@ -282,8 +281,8 @@ def make_flutter_response(f06_filename: PathLike,
                     eigenvectors, ieigenvector,
                     load_eigenvalues, log, real_eigenvalues_list)
 
-                short_line = line.strip().replace('   ', ' ')
                 if is_heavy_debug:  # pragma: no cover
+                    short_line = line.strip().replace('   ', ' ')
                     log.debug(f'i={iline} {short_line!r}')
                     if iline > imax:
                         raise RuntimeError(f'iline > imax; {iline:d}')

@@ -1370,6 +1370,10 @@ class OES:
             op2.format_code = 1
             op2.sort_bits[0] = 0 # real
             prefix = 'RAPCONS.'
+        elif table_name_bytes in [b'RAQCONS']:
+            op2.format_code = 1
+            op2.sort_bits[0] = 0 # real
+            prefix = 'RAQCONS.'
 
         elif table_name_bytes in [b'RASEATC']: #, b'OSTRMS1C']:
             self._set_as_real()
@@ -1380,6 +1384,9 @@ class OES:
         elif table_name_bytes in [b'RAPEATC']: #, b'OSTRMS1C']:
             self._set_as_real()
             prefix = 'RAPEATC.'
+        elif table_name_bytes in [b'RAQEATC']:
+            self._set_as_real()
+            prefix = 'RAQEATC.'
         elif table_name_bytes in [b'OESMC1', b'OSTRMC1']:
             prefix = 'modal_contribution.'
         elif table_name_bytes in [b'OESC1']:  # NX

@@ -291,6 +291,9 @@ class TrimResults:
         # trim_variables[name] = [idi, Type, trim_status, ux, ux_unit]
         self.trim_variables: dict[int, TrimVariables] = {}
 
+        # hinge_moment_derivatives[(subcase, cs_name)] = HingeMomentDerivatives(...)
+        self.hinge_moment_derivatives: dict[tuple[int, str], HingeMomentDerivatives] = {}
+
     def __repr__(self) -> str:
         msg = (
             'TrimResults:'

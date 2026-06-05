@@ -400,6 +400,33 @@ def to_fields(card_lines: list[str], card_name: str,
     return _to_fields_standard(card_lines, card_name)
 
 
+def _strip_continuation_marker(new_fields: list[str]) -> None:
+    """Strip the continuation marker from the last field (field 10 / field 5).
+
+    The last field of a fixed-format card line can contain a continuation
+    marker (e.g., '+ABC' or just '+'). This marker is not data — it links
+    to the next continuation line. Strip it so it doesn't pollute field parsing.
+
+    A continuation marker is '+' or '*' optionally followed by alphanumeric
+    characters (e.g., '+G1', '+AB'). It is NOT a numeric value like '+1.5'.
+    """
+    last = new_fields[-1].strip()
+    if not last:
+        return
+    if last[0] not in ('+', '*'):
+        return
+    # bare '+' or '*' is always a continuation marker
+    if len(last) == 1:
+        new_fields[-1] = ''
+        return
+    # '+1.5', '+3E5', '+.5' are numeric values, not markers
+    remainder = last[1:]
+    if remainder[0].isdigit() or remainder[0] == '.':
+        return
+    # '+ABC', '+G1' etc. are continuation markers
+    new_fields[-1] = ''
+
+
 def _to_fields_standard(card_lines: list[str], card_name: str) -> list[str]:
     fields: list[str] = []
     # first line
@@ -431,6 +458,7 @@ def _to_fields_standard(card_lines: list[str], card_name: str) -> list[str]:
             new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
                           line[32:40], line[40:48], line[48:56], line[56:64],
                           line[64:72]]
+            _strip_continuation_marker(new_fields)
         fields += new_fields
 
     for line in card_lines[1:]:  # continuation lines
@@ -457,6 +485,7 @@ def _to_fields_standard(card_lines: list[str], card_name: str) -> list[str]:
                 new_fields = [line[8:16], line[16:24], line[24:32],
                               line[32:40], line[40:48], line[48:56],
                               line[56:64], line[64:72]]
+                _strip_continuation_marker(new_fields)
             if len(new_fields) != 8:
                 nfields = len(new_fields)
                 msg = 'nfields=%s new_fields=%s' % (nfields, new_fields)

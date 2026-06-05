@@ -845,9 +845,8 @@ class EIGR(Method):
         return list_fields
 
     def repr_fields(self):
-        method = set_blank_if_default(self.method, 'LAN')
         norm = set_blank_if_default(self.norm, 'MASS')
-        list_fields = ['EIGR', self.sid, method, self.f1, self.f2, self.ne,
+        list_fields = ['EIGR', self.sid, self.method, self.f1, self.f2, self.ne,
                        self.nd, None, None, norm, self.G, self.C]
         return list_fields
 

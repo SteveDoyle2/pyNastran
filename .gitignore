@@ -24,6 +24,7 @@ htmlcov
 *.pdf
 *.h5
 *.gz
+tmp*
 
 # pyInstaller building
 #*.qm

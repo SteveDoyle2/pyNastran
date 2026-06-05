@@ -563,6 +563,7 @@ class CTRIAX(AxisymmetricShellElement):
     @property
     def base_nodes(self):
         return self.nodes[:, :3]
+
     @property
     def midside_nodes(self):
         return self.nodes[:, 3:]
@@ -1084,6 +1085,7 @@ class CQUADX4(AxisymmetricShellElement):
     @property
     def base_nodes(self) -> np.ndarray:
         return self.nodes
+
     @property
     def midside_nodes(self):
         return None
@@ -1221,6 +1223,7 @@ class CQUADX8(AxisymmetricShellElement):
     @property
     def base_nodes(self):
         return self.nodes[:, :4]
+
     @property
     def midside_nodes(self):
         return self.nodes[:, 4:]

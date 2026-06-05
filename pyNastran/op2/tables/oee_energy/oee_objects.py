@@ -220,11 +220,12 @@ class RealEnergyArray(BaseElement):
                                   is_msc=is_msc)
         #data_code['loadIDs'] = [0] # TODO: ???
         nmodes = data.shape[0]
-        etot = data.sum(axis=0)
         assert data.ndim == 3, data.shape
-        assert len(etot) == nmodes, etot
         assert nmodes == 1, data.shape
-        data_code['etotpos'] = etot  # TODO: is this the right axis?
+        # etot: total strain energy per time step (sum over elements)
+        etot = data.sum(axis=1).ravel()
+        assert len(etot) == nmodes, etot
+        data_code['etotpos'] = etot
         data_code['etotneg'] = etot * 0.
         data_code['lsdvmns'] = [0]  # TODO: ???
         data_code['data_names'] = []
@@ -251,21 +252,16 @@ class RealEnergyArray(BaseElement):
 
         # [energy, percent, density]
         ntimes = 1
-        data += 1
         obj.data = np.full((ntimes, nelements+1, 3), np.nan, dtype=data.dtype)
-        totals = data.sum(axis=0)
-        #print(obj.data[0, :, :])
-        #print('totals =', totals)
-        obj.data[:, :-1, 0] = data
-        percent = data / totals
+        # Squeeze trailing axis: (ntimes, neids, 1) -> (ntimes, neids)
+        energy = data[:, :, 0]
+        energy = data[:, :, 0]
+        total = energy.sum()
+        obj.data[:, :-1, 0] = energy
+        percent = energy / total
         obj.data[:, :-1, 1] = percent
-        #obj.data[:, :-1, 2] = data / totals  # density???
-        obj.data[:, -1, 0] = np.nansum(data, axis=0)
-        obj.data[:, -1, 1] = np.nansum(percent, axis=0)
-        #print(obj.data[0, :, :])
-
-        ntotals = len(totals)
-        assert ntimes == ntotals, ntotals
+        obj.data[:, -1, 0] = total
+        obj.data[:, -1, 1] = percent.sum(axis=1)
 
         obj.ntimes = ntimes
         obj.ntotal = nnodes

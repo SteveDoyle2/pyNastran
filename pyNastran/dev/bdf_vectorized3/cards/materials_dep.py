@@ -14,6 +14,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Material, parse_check, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size, array_str, array_default_int, array_float_nan)
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -168,7 +169,7 @@ class MATT1(Material):
         table0 = np.hstack([
             self.e_table, self.g_table, self.nu_table,
             self.rho_table, self.alpha_table,
-            self.ge_table, self.st_table, self.ss_table, ])
+            self.ge_table, self.st_table, self.sc_table, self.ss_table, ])
         utable0 = np.unique(table0)
         table = np.setdiff1d(utable0, [0])
         used_dict['tablem_id'].append(table)
@@ -211,7 +212,21 @@ class MATT1(Material):
         mat.ss_table = self.ss_table[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        pass
+        model = self.model
+        mids = np.hstack([mat.material_id for mat in model.structural_material_cards])
+        tablem_ids = np.array(list(model.tables_m.keys()), dtype='int32')
+        table0 = np.hstack([
+            self.e_table, self.g_table, self.nu_table,
+            self.rho_table, self.alpha_table,
+            self.ge_table, self.st_table, self.sc_table, self.ss_table])
+        table_ids = np.setdiff1d(np.unique(table0), [0])
+        geom_check(self, missing,
+                   material_id=(mids, self.material_id))
+        if len(table_ids) and len(tablem_ids):
+            umissing = np.setdiff1d(table_ids, tablem_ids)
+            if len(umissing):
+                missing['tablem_id'] = umissing
+
     @property
     def max_id(self) -> int:
         tables = np.hstack([self.material_id,
@@ -479,7 +494,16 @@ class MATS1(Material):
         mat.stress_strain_measure = self.stress_strain_measure[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        pass
+        model = self.model
+        mids = np.hstack([mat.material_id for mat in model.structural_material_cards])
+        table_ids = np.setdiff1d(np.unique(self.table_id), [0])
+        tables_ids = np.array(list(model.tables.keys()), dtype='int32')
+        geom_check(self, missing,
+                   material_id=(mids, self.material_id))
+        if len(table_ids) and len(tables_ids):
+            umissing = np.setdiff1d(table_ids, tables_ids)
+            if len(umissing):
+                missing['tables_id'] = umissing
 
     @property
     def max_id(self) -> int:
@@ -767,7 +791,22 @@ class MATT2(Material):
         mat.ge_table = self.ge_table[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        pass
+        model = self.model
+        mids = np.hstack([mat.material_id for mat in model.structural_material_cards])
+        tablem_ids = np.array(list(model.tables_m.keys()), dtype='int32')
+        table0 = np.hstack([
+            self.g11_table, self.g22_table, self.g33_table,
+            self.g12_table, self.g13_table, self.g23_table,
+            self.rho_table,
+            self.a1_table, self.a2_table, self.a3_table,
+            self.ge_table, self.st_table, self.sc_table, self.ss_table])
+        table_ids = np.setdiff1d(np.unique(table0), [0])
+        geom_check(self, missing,
+                   material_id=(mids, self.material_id))
+        if len(table_ids) and len(tablem_ids):
+            umissing = np.setdiff1d(table_ids, tablem_ids)
+            if len(umissing):
+                missing['tablem_id'] = umissing
 
     @property
     def max_id(self) -> int:
@@ -1027,7 +1066,22 @@ class MATT3(Material):
         mat.ge_table = self.ge_table[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        pass
+        model = self.model
+        mids = np.hstack([mat.material_id for mat in model.structural_material_cards])
+        tablem_ids = np.array(list(model.tables_m.keys()), dtype='int32')
+        table0 = np.hstack([
+            self.ex_table, self.eth_table, self.ez_table,
+            self.nuth_table, self.nuxz_table,
+            self.gzx_table, self.rho_table,
+            self.ax_table, self.ath_table, self.az_table,
+            self.ge_table])
+        table_ids = np.setdiff1d(np.unique(table0), [0])
+        geom_check(self, missing,
+                   material_id=(mids, self.material_id))
+        if len(table_ids) and len(tablem_ids):
+            umissing = np.setdiff1d(table_ids, tablem_ids)
+            if len(umissing):
+                missing['tablem_id'] = umissing
 
     @property
     def max_id(self) -> int:
@@ -1223,7 +1277,20 @@ class MATT4(Material):
         mat.hgen_table = self.hgen_table[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        pass
+        model = self.model
+        mids = np.hstack([mat.material_id for mat in
+                          model.thermal_material_cards + model.structural_material_cards])
+        tablem_ids = np.array(list(model.tables_m.keys()), dtype='int32')
+        table0 = np.hstack([
+            self.k_table, self.cp_table, self.h_table,
+            self.mu_table, self.hgen_table])
+        table_ids = np.setdiff1d(np.unique(table0), [0])
+        geom_check(self, missing,
+                   material_id=(mids, self.material_id))
+        if len(table_ids) and len(tablem_ids):
+            umissing = np.setdiff1d(table_ids, tablem_ids)
+            if len(umissing):
+                missing['tablem_id'] = umissing
 
     @property
     def max_id(self) -> int:
@@ -1447,7 +1514,21 @@ class MATT5(Material):
         mat.hgen_table = self.hgen_table[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        pass
+        model = self.model
+        mids = np.hstack([mat.material_id for mat in
+                          model.thermal_material_cards + model.structural_material_cards])
+        tablem_ids = np.array(list(model.tables_m.keys()), dtype='int32')
+        table0 = np.hstack([
+            self.kxx_table, self.kxy_table, self.kxz_table,
+            self.kyy_table, self.kyz_table, self.kzz_table,
+            self.cp_table, self.hgen_table])
+        table_ids = np.setdiff1d(np.unique(table0), [0])
+        geom_check(self, missing,
+                   material_id=(mids, self.material_id))
+        if len(table_ids) and len(tablem_ids):
+            umissing = np.setdiff1d(table_ids, tablem_ids)
+            if len(umissing):
+                missing['tablem_id'] = umissing
 
     @property
     def max_id(self) -> int:
@@ -1721,7 +1802,22 @@ class MATT8(Material):
         mat.f12_table = self.f12_table[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        pass
+        model = self.model
+        mids = np.hstack([mat.material_id for mat in model.structural_material_cards])
+        tablem_ids = np.array(list(model.tables_m.keys()), dtype='int32')
+        table0 = np.hstack([
+            self.e1_table, self.e2_table, self.nu12_table,
+            self.g12_table, self.g1z_table, self.g2z_table,
+            self.rho_table, self.a1_table, self.a2_table,
+            self.xt_table, self.xc_table, self.yt_table, self.yc_table,
+            self.s_table, self.ge_table, self.f12_table])
+        table_ids = np.setdiff1d(np.unique(table0), [0])
+        geom_check(self, missing,
+                   material_id=(mids, self.material_id))
+        if len(table_ids) and len(tablem_ids):
+            umissing = np.setdiff1d(table_ids, tablem_ids)
+            if len(umissing):
+                missing['tablem_id'] = umissing
 
     #def convert(self, stiffness_scale: float=1.0, **kwargs) -> dict[int, np.ndarray]:
         #scale[('tablem', stiffness_scale)] = self.e1_table
@@ -2199,7 +2295,28 @@ class MATT9(Material):
         mat.ges_table = self.ges_table[i, :]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        pass
+        model = self.model
+        mids = np.hstack([mat.material_id for mat in model.structural_material_cards])
+        tablem_ids = np.array(list(model.tables_m.keys()), dtype='int32')
+        table0 = np.hstack([
+            self.g11_table, self.g12_table, self.g13_table,
+            self.g14_table, self.g15_table, self.g16_table,
+            self.g22_table, self.g23_table, self.g24_table,
+            self.g25_table, self.g26_table,
+            self.g33_table, self.g34_table, self.g35_table, self.g36_table,
+            self.g44_table, self.g45_table, self.g46_table,
+            self.g55_table, self.g56_table, self.g66_table,
+            self.rho_table,
+            self.a1_table, self.a2_table, self.a3_table,
+            self.a4_table, self.a5_table, self.a6_table,
+            self.ge_table])
+        table_ids = np.setdiff1d(np.unique(table0), [0])
+        geom_check(self, missing,
+                   material_id=(mids, self.material_id))
+        if len(table_ids) and len(tablem_ids):
+            umissing = np.setdiff1d(table_ids, tablem_ids)
+            if len(umissing):
+                missing['tablem_id'] = umissing
 
     @property
     def max_id(self) -> int:

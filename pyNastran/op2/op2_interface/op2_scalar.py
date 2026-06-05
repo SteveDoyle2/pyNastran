@@ -107,10 +107,10 @@ OES1C	OES	Modal Element Stress Table
 OES1X	OES	Modal Element Stress Table
 OSTR1C	OES	Modal Element Strain Table
 OSTR1X	OSTR	Modal Element Strain Table
-RAQCONS	OUG	Constraint mode MPC force table
+RAQCONS	OES	Constraint mode ply strain table
 RADCONS	OUG	Constraint mode displacement table
 RADEFFM	OUG	Effective inertia displacement table
-RAQEATC	OUG	Attachment mode  MPC force table
+RAQEATC	OES	Attachment mode ply strain table
 RADEATC	OUG	Attachment mode displacement table
 OUGV1	OUG	Eigenvector Table
 RAFCONS	OEF	Constraint mode element force table
@@ -750,14 +750,15 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'RADEATC': [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'Displacement Equivalent Inertia Attachment mode'], # Displacement Equivalent Inertia Attachment mode (OUG)
 
             # broken - isat_launch_100hz.op2 - wrong numwide
-            # spc forces
-            b'RAQCONS': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'Constraint mode MPC force'], # Constraint mode MPC force table (OQG)
-            b'RAQEATC': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'Attachment mode MPC force'], # Attachment mode MPC force table (OQG)
+            # ply strains (per NX DMAP: Q = ply strains)
+            b'RAQCONS': [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'Constraint mode ply strain'], # Constraint mode ply strain table (OES)
+            b'RAQEATC': [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'Attachment mode ply strain'], # Attachment mode ply strain table (OES)
             #b'RAQCONS': [self._table_passer, self._table_passer], # temporary
             #b'RAQEATC': [self._table_passer, self._table_passer], # temporary
 
-            b'RAREATC': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'spc forces?'], # spc forces?
-            b'RARCONS': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'spc forces?'], # spc forces?
+            # reaction forces (SPC forces)
+            b'RAREATC': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'Reaction Force Equivalent Inertia Attachment mode'], # Reaction Force Attachment Mode (OQG)
+            b'RARCONS': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'Reaction Force Constraint Mode'], # Reaction Force Constraint Mode (OQG)
 
             # element forces
             b'RAFCONS': [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'Element Force Constraint Mode'], # Element Force Constraint Mode (OEF)
@@ -767,9 +768,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             # grid point forces
             b'RAGCONS': [reader_ogpf._read_ogpf1_3, reader_ogpf._read_ogpf1_4, 'Grid Point Force Constraint Mode'], # Grid Point Forces Constraint Mode (OGPFB)
-            b'RAGEATC': [reader_ogpf._read_ogpf1_3, reader_ogpf._read_ogpf1_4, 'Grid Point Force Equivalent Inertia Attachment mode'], # Grid Point Forces Equivalent Inertia Attachment mode (OEF)
+            b'RAGEATC': [reader_ogpf._read_ogpf1_3, reader_ogpf._read_ogpf1_4, 'Grid Point Force Equivalent Inertia Attachment mode'], # Grid Point Forces Equivalent Inertia Attachment mode (OGPFB)
             #b'RAGCONS': [self._table_passer, self._table_passer], # Grid Point Forces Constraint Mode (OGPFB)
-            #b'RAGEATC': [self._table_passer, self._table_passer], # Grid Point Forces Equivalent Inertia Attachment mode (OEF)
+            #b'RAGEATC': [self._table_passer, self._table_passer], # Grid Point Forces Equivalent Inertia Attachment mode (OGPFB)
 
             # stress
             b'RAPCONS': [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'Constraint mode ply stress'], # Constraint mode ply stress table (OES)

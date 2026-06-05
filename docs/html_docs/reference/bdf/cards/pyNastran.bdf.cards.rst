@@ -21,7 +21,7 @@ cards Package
    pyNastran.bdf.cards.params
    pyNastran.bdf.cards.superelements
    pyNastran.bdf.cards.utils
-#   pyNastran.bdf.cards.deqatn
+   pyNastran.bdf.cards.deqatn
 
 aero Package
 ------------

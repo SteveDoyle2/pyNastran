@@ -21,12 +21,22 @@ result_objects Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`scalar_table_object` Module
----------------------------------
+:mod:`scalar1_table_object` Module
+----------------------------------
 
-.. inheritance-diagram:: pyNastran.op2.result_objects.scalar_table_object
+.. inheritance-diagram:: pyNastran.op2.result_objects.scalar1_table_object
 
-.. automodule:: pyNastran.op2.result_objects.scalar_table_object
+.. automodule:: pyNastran.op2.result_objects.scalar1_table_object
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`scalar6_table_object` Module
+----------------------------------
+
+.. inheritance-diagram:: pyNastran.op2.result_objects.scalar6_table_object
+
+.. automodule:: pyNastran.op2.result_objects.scalar6_table_object
     :members:
     :undoc-members:
     :show-inheritance:

@@ -370,5 +370,78 @@ class TestTables(unittest.TestCase):
         #print('interp =', interp, type(interp))
         #assert np.allclose(interp, [5.5]), interp
 
+    def test_tabdmp1_interpolate_type_g(self):
+        """TABDMP1 Type=G: interpolate returns g directly."""
+        freqs = np.array([1.0, 10.0, 50.0, 100.0])
+        g_vals = np.array([0.01, 0.02, 0.05, 0.03])
+        card = TABDMP1(tid=10, x=freqs, y=g_vals, Type='G')
+
+        # At breakpoints: exact values
+        for f, g_expected in zip(freqs, g_vals):
+            g = card.interpolate(f)
+            assert np.isclose(g, g_expected), f'At {f} Hz: {g} != {g_expected}'
+
+        # Linear interpolation at midpoint: (10+50)/2=30 Hz → g=(0.02+0.05)/2=0.035
+        g_mid = card.interpolate(30.0)
+        assert np.isclose(g_mid, 0.035), f'At 30 Hz: {g_mid} != 0.035'
+
+    def test_tabdmp1_interpolate_type_crit(self):
+        """TABDMP1 Type=CRIT: interpolate converts ζ to g=2ζ."""
+        freqs = np.array([0.0, 100.0])
+        zeta_vals = np.array([0.01, 0.05])
+        card = TABDMP1(tid=11, x=freqs, y=zeta_vals, Type='CRIT')
+
+        # g = 2*zeta
+        g_0 = card.interpolate(0.0)
+        assert np.isclose(g_0, 0.02), f'At 0 Hz: g={g_0}, expected 0.02'
+
+        g_100 = card.interpolate(100.0)
+        assert np.isclose(g_100, 0.10), f'At 100 Hz: g={g_100}, expected 0.10'
+
+        # Midpoint: ζ=0.03, g=0.06
+        g_50 = card.interpolate(50.0)
+        assert np.isclose(g_50, 0.06), f'At 50 Hz: g={g_50}, expected 0.06'
+
+    def test_tabdmp1_interpolate_type_q(self):
+        """TABDMP1 Type=Q: interpolate converts Q-factor to g=1/Q."""
+        freqs = np.array([1.0, 100.0])
+        q_vals = np.array([50.0, 20.0])  # Q=50 → g=0.02, Q=20 → g=0.05
+        card = TABDMP1(tid=12, x=freqs, y=q_vals, Type='Q')
+
+        g_1 = card.interpolate(1.0)
+        assert np.isclose(g_1, 0.02), f'At 1 Hz: g={g_1}, expected 0.02'
+
+        g_100 = card.interpolate(100.0)
+        assert np.isclose(g_100, 0.05), f'At 100 Hz: g={g_100}, expected 0.05'
+
+    def test_tabdmp1_interpolate_array(self):
+        """interpolate_array matches element-wise interpolate calls."""
+        freqs = np.array([0.0, 50.0, 100.0])
+        g_vals = np.array([0.01, 0.04, 0.02])
+        card = TABDMP1(tid=13, x=freqs, y=g_vals, Type='G')
+
+        query = np.array([0.0, 10.0, 25.0, 50.0, 75.0, 100.0])
+        g_arr = card.interpolate_array(query)
+
+        for i, f in enumerate(query):
+            g_scalar = card.interpolate(f)
+            assert np.isclose(g_arr[i], g_scalar), (
+                f'Mismatch at {f} Hz: array={g_arr[i]}, scalar={g_scalar}')
+
+    def test_tabdmp1_interpolate_extrapolation(self):
+        """Values outside table range are clamped (np.interp behavior)."""
+        freqs = np.array([10.0, 100.0])
+        g_vals = np.array([0.02, 0.05])
+        card = TABDMP1(tid=14, x=freqs, y=g_vals, Type='G')
+
+        # Below table: clamps to first value
+        g_below = card.interpolate(0.0)
+        assert np.isclose(g_below, 0.02), f'Below table: {g_below}'
+
+        # Above table: clamps to last value
+        g_above = card.interpolate(200.0)
+        assert np.isclose(g_above, 0.05), f'Above table: {g_above}'
+
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

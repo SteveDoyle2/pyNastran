@@ -48,7 +48,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
 
 from pyNastran.bdf.cards.base_card import _format_comment
-from pyNastran.bdf.cards.utils import wipe_empty_fields
+from pyNastran.bdf.cards.utils import wipe_empty_fields, wipe_empty_fields_str
 
 #from .write_path import write_include
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -156,8 +156,8 @@ from pyNastran.bdf.cards.bdf_tables import (
     TABLED1, TABLED2, TABLED3, TABLED4,
     TABLEM1, TABLEM2, TABLEM3, TABLEM4,
     TABLES1, TABDMP1,
-    TABLEST, TABLEH1, # TABLEHT,
-    TABRND1, # TABRNDG,
+    TABLEST, TABLEH1, TABLEHT,
+    TABRND1, TABRNDG,
     DTABLE,
 )
 from pyNastran.bdf.cards.contact import (
@@ -348,7 +348,7 @@ MISSING_CARDS = {
 
     ## loads
     'FORCDST', 'PLOADX', 'PLOADB3', 'PLOADG', 'QBDY4', 'SLOADN1',
-    'TEMPP1', 'TTEMP', 'RGYRO', 'PLOADE1', 'RCROSSC', 'LOADCYT',
+    'TTEMP', 'RGYRO', 'PLOADE1', 'RCROSSC', 'LOADCYT',
     'TEMPN1',
 
     ## boundaries
@@ -480,6 +480,7 @@ OBJ_CARDS = {
     'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
     'TABLES1', 'TABLEST', 'TABLEH1', 'TABLEHT',
     'TABDMP1',
+    'TABRND1', 'TABRNDG',
     'DTABLE',
 }
 
@@ -719,11 +720,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             ## dload_entries
             'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
             'QVECT',
-            'ACSRCE', 'RANDPS', # 'RANDT1', # random
+            'ACSRCE', 'RANDPS', 'RANDT1', # random
 
             ## loads
             'LOAD', 'CLOAD',
-            'LSEQ', # 'LOADCYN', 'LOADCYH',
+            'LSEQ', 'LOADCYN', 'LOADCYH',
             'SLOAD',
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
@@ -752,11 +753,13 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'AESURFS', ## aesurfs
             'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', ## caeros
             'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', ## paeros
-            #'AEFORCE', 'UXVEC', 'GUST2',
+            'AEFORCE',
+            #'GUST2',
 
             'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  ## splines
             #'SPLINE6', 'SPLINE7',
-            'TRIM', # 'TRIM2',  ## trims
+            'TRIM', 'TRIM2',  ## trims
+            'UXVEC',
             'CSSCHD',  ## csschd
             'DIVERG',  ## diverg
 
@@ -822,9 +825,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'RADSET',  # radset
 
             # superelements
-            #'SETREE', 'SENQSET', 'SEBULK', 'SEBNDRY', 'SEELT', 'SELOC', 'SEMPLN',
-            #'SECONCT', 'SELABEL', 'SEEXCLD', 'CSUPER', 'CSUPEXT',
-            #'SELOAD',
+            'SETREE', 'SENQSET', 'SEBULK', 'SEBNDRY', 'SEELT', 'SELOC', 'SEMPLN',
+            'SECONCT', 'SELABEL', 'SEEXCLD', 'CSUPER', 'CSUPEXT',
+            'SELOAD',
 
             # super-element sets
             'SESET',  ## se_set
@@ -845,7 +848,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             #'FORCEAX', # loads (removed)
             #'PRESAX', # loads (removed)
-            #'PLOADX1',
+            'PLOADX1',
             #'SPCAX', # spcs (removed)
 
             #------------------------------------------------------------------
@@ -877,12 +880,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             ## random_tables
             # PSD=func(freq); used by RANDPS card
-            #'TABRND1',
+            'TABRND1',
             # gust for aeroelastic response; used by RANDPS card
-            #'TABRNDG',
+            'TABRNDG',
 
-            # ???
-            #'TABLEHT',
+            # convection heat transfer coefficient table
+            'TABLEHT',
             'TABLEH1',
 
             #------------------------------------------------------------------
@@ -931,8 +934,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'TEMPBC',
             #'RADMT',
             'RADLST', # 'RADMTX', 'RADBND',
-            #'TEMPP1',
-            #'TEMPRB',
+            'TEMPP1', 'TEMPRB',
             'CONVM',
             ## ???
             #'PANEL', 'SWLDPRM',
@@ -1236,11 +1238,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         pass
         #self.setup()
         #validate_bdf(self)
-        self.log.warning(f'no validate for bdf3')
+        # self.log.warning('no validate for bdf3')
     def _get_rigid(self):
-        self.log.warning(f'no _get_rigid for bdf3')
+        self.log.warning('no _get_rigid for bdf3')
     def get_rigid_elements_with_node_ids(self, node_ids: list[int]):
-        self.log.warning(f'no get_rigid_elements_with_node_ids for bdf3')
+        self.log.warning('no get_rigid_elements_with_node_ids for bdf3')
     #def get_rigid_elements_with_node_ids(self, node_ids: list[int]):
         #self.log.warning('no get_rigid_elements_with_node_ids')
     #def get_rigid_elements_with_node_ids(self, node_ids: list[int]):
@@ -1847,7 +1849,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         Parameters
         ----------
         sol : int
-            the solution type (101, 103, etc)
+            the solution type (101, 103, etc.)
         method : str
             the solution method (only for SOL=600)
         sol_iline : int
@@ -1930,7 +1932,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         #ifield = 5   # Z
         #values = [0.1, 0.2, 0.3]
         card.update_field(ifield, ids, values)
-        return obj
+        return card
 
     def set_dynamic_syntax(self, dict_of_vars: dict[str, int | float | str]) -> None:
         """
@@ -2086,8 +2088,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             if has_none:
                 card = wipe_empty_fields([print_field_16(field) for field in fields])
+            elif not is_list and not self._is_dynamic_syntax:
+                card = wipe_empty_fields_str(fields)
             else:
-                #card = remove_trailing_fields(fields)
                 card = wipe_empty_fields(fields)
             card_obj = BDFCard(card, has_none=False)
         return card_obj, card
@@ -2139,20 +2142,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'=' : (Crash, None),
             '/' : (Crash, None),
 
-            #'SETREE' : (SETREE, add_methods.add_setree_object),
-            #'SENQSET' : (SENQSET, add_methods.add_senqset_object),
-            #'SEBULK' : (SEBULK, add_methods.add_sebulk_object),
-            #'RELEASE': (RELEASE, add_methods.add_release_object),
-            #'SEBNDRY' : (SEBNDRY, add_methods.add_sebndry_object),
-            #'SEELT' : (SEELT, add_methods.add_seelt_object),
-            #'SELOC' : (SELOC, add_methods.add_seloc_object),
-            #'SEMPLN' : (SEMPLN, add_methods.add_sempln_object),
-            #'SECONCT' : (SECONCT, add_methods.add_seconct_object),
-            #'SELABEL' : (SELABEL, add_methods.add_selabel_object),
-            #'SEEXCLD' : (SEEXCLD, add_methods.add_seexcld_object),
-            #'CSUPER' : (CSUPER, add_methods.add_csuper_object),
-            #'CSUPEXT' : (CSUPEXT, add_methods.add_csupext_object),
-            #'SELOAD' : (SELOAD, add_methods.add_seload_object),
+            # superelements are handled in _card_parser_prepare
 
             #'PANEL' : (Crash, None),
 
@@ -2244,8 +2234,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'SESUP' : (SESUP, add_methods.add_sesuport_object), # pseudo-constraint
 
             #'CLOAD' : (CLOAD, add_methods.add_load_combination_object),
-            #'LOADCYN' : (LOADCYN, add_methods.add_load_object),
-            #'LOADCYH' : (LOADCYH, add_methods.add_load_object),
+            # LOADCYN, LOADCYH handled in _card_parser_prepare
 
             'FREQ' : (FREQ, add_methods.add_freq_object),
             'FREQ1' : (FREQ1, add_methods.add_freq_object),
@@ -2281,8 +2270,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # tables
             'TABLES1' : (TABLES1, add_methods.add_table_object),
             'TABLEST' : (TABLEST, add_methods.add_table_object),
-            'TABLEHT' : (RuntimeCrash, None),
-            #'TABLEHT' : (TABLEHT, add_methods.add_table_object),
+            'TABLEHT' : (TABLEHT, add_methods.add_table_object),
             'TABLEH1' : (TABLEH1, add_methods.add_table_object),
 
             # dynamic tables
@@ -2299,8 +2287,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # other tables
             'TABDMP1' : (TABDMP1, add_methods.add_table_sdamping_object),
-            #'TABRND1' : (TABRND1, add_methods.add_random_table_object),
-            #'TABRNDG' : (TABRNDG, add_methods.add_random_table_object),
+            'TABRND1' : (TABRND1, add_methods.add_random_table_object),
+            'TABRNDG' : (TABRNDG, add_methods.add_random_table_object),
 
             'EIGB' : (EIGB, add_methods.add_method_object),
             'EIGR' : (EIGR, add_methods.add_method_object),
@@ -2553,6 +2541,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # cyclic loads
             'CLOAD' : partial(self._prepare_card, self.cload),
+            'LOADCYN' : partial(self._prepare_card, self.loadcyn),
+            'LOADCYH' : partial(self._prepare_card, self.loadcyh),
 
             # static loads
             'LOAD' : partial(self._prepare_card, self.load),
@@ -2560,6 +2550,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PLOAD1' : partial(self._prepare_card, self.pload1),
             'PLOAD2' : partial(self._prepare_card, self.pload2),
             'PLOAD4' : partial(self._prepare_card, self.pload4),
+            'PLOADX1' : partial(self._prepare_card, self.ploadx1),
             'FORCE' : partial(self._prepare_card, self.force),
             'FORCE1' : partial(self._prepare_card, self.force1),
             'FORCE2' : partial(self._prepare_card, self.force2),
@@ -2572,6 +2563,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'SLOAD': partial(self._prepare_card, self.sload),
             'TEMP': partial(self._prepare_card, self.temp),
             'TEMPD': partial(self._prepare_card, self.tempd),
+            'TEMPP1': partial(self._prepare_card, self.tempp1),
+            'TEMPRB': partial(self._prepare_card, self.temprb),
             #'DTEMP': partial(self._prepare_card, self.dtemp),
             'LSEQ': partial(self._prepare_card, self.lseq),
             'SPCD' : partial(self._prepare_card, self.spcd), # enforced displacement; load
@@ -2607,10 +2600,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DPHASE': partial(self._prepare_card, self.dphase),
             'DELAY': partial(self._prepare_card, self.delay),
 
-            # random laods
+            # random loads
             'RANDPS': partial(self._prepare_card, self.randps),
             'ACSRCE': partial(self._prepare_card, self.acsrce),
-            #'RANDT1' : (RANDT1, add_methods.add_dload_entry), # random
+            'RANDT1' : partial(self._prepare_card, self.randt1),
 
             # materials
             'MAT1': partial(self._prepare_card, self.mat1),
@@ -2753,6 +2746,21 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             'RELEASE': partial(self._prepare_card, self.release),
 
+            # superelements
+            'SETREE': partial(self._prepare_card, self.setree),
+            'SENQSET': partial(self._prepare_card, self.senqset),
+            'SEBULK': partial(self._prepare_card, self.sebulk),
+            'SEBNDRY': partial(self._prepare_card, self.sebndry),
+            'SECONCT': partial(self._prepare_card, self.seconct),
+            'SEELT': partial(self._prepare_card, self.seelt),
+            'SELOC': partial(self._prepare_card, self.seloc),
+            'SEMPLN': partial(self._prepare_card, self.sempln),
+            'SELABEL': partial(self._prepare_card, self.selabel),
+            'SEEXCLD': partial(self._prepare_card, self.seexcld),
+            'CSUPER': partial(self._prepare_card, self.csuper),
+            'CSUPEXT': partial(self._prepare_card, self.csupext),
+            'SELOAD': partial(self._prepare_card, self.seload),
+
             # aero
             'CAERO1': partial(self._prepare_card, self.caero1),
             'CAERO2': partial(self._prepare_card, self.caero2),
@@ -2788,8 +2796,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # sol 144 - trim/divergence
             'CSSCHD': partial(self._prepare_card, self.csschd),
             'TRIM': partial(self._prepare_card, self.trim),
+            'TRIM2': partial(self._prepare_card, self.trim2),
+            'UXVEC': partial(self._prepare_card, self.uxvec),
+            'AEFORCE': partial(self._prepare_card, self.aeforce),
             'DIVERG': partial(self._prepare_card, self.diverg),
-            #'TRIM2': partial(self._prepare_card, self.trim2),
             # diverg
 
             # sol 145 - flutter
@@ -3870,15 +3880,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             return xyz_cid0
 
         # transform the grids to the local coordinate system
-        #is_beta = np.diagonal(beta2).min() != 1.
-        #is_origin = np.abs(coord2.origin).max() != 0.
-        #if is_beta and is_origin:
         xyz_cid = coord2.transform_node_to_local_array(xyz_cid0)
-        #xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0 - coord2.origin, beta2.T))
-        #elif is_beta:
-            #xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 @ beta2.T)
-        #else:
-            #xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
 
         if atol is not None:
             xyz_cid_correct = self.get_xyz_in_coord(cid=cid)

@@ -505,7 +505,7 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
                     n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15 = nodes2
                     nodes3 = [n3, n2, n1,
                               n6, n5, n4,
-                              n9, n8, n9,
+                              n7, n8, n9,
                               n12, n11, n10,
                               n15, n14, n13]
             elif etype == 'CPYRAM':

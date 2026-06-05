@@ -215,7 +215,7 @@ class RBAR(RigidElement):
         dep_nodes = array_default_int(self.dependent_dof, default=-1, size=size)
 
         alphas = array_default_float(self.alpha, default=0., size=size, is_double=is_double)
-        trefs = array_default_float(self.alpha, default=0., size=size, is_double=is_double)
+        trefs = array_default_float(self.tref, default=0., size=size, is_double=is_double)
         for eid, nodes, independent_dof, dependent_dof, alpha, tref in zip(eids, nodes, ind_nodes, dep_nodes, alphas, trefs):
             ga, gb = nodes
             cna, cnb = independent_dof
@@ -897,6 +897,40 @@ class RBE2(RigidElement):
                    self.dependent_nodes.max())
 
     @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+
+        no_alpha = self.alpha.max() == 0. and self.alpha.min() == 0.
+        no_tref = self.tref.max() == 0. and self.tref.min() == 0.
+        if not (no_alpha and no_tref):
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+
+        eid_str = np.char.rjust(array_str(self.element_id, size=8), 8)
+        ind_node_str = np.char.rjust(array_str(self.independent_node, size=8), 8)
+        ind_comp_str = np.char.rjust(array_default_int(self.independent_dof, default=0, size=8), 8)
+        dep_node_str = np.char.rjust(array_str(self.dependent_nodes, size=8), 8)
+
+        lines = []
+        for eid, ind_node, ind_comp, idim in zip(eid_str, ind_node_str, ind_comp_str, self.idim):
+            idim0, idim1 = idim
+            dep = dep_node_str[idim0:idim1]
+            ndep = len(dep)
+            # first line: RBE2 + eid + gn + cm + up to 5 dep nodes
+            nfirst = min(ndep, 5)
+            line = f'RBE2    {eid}{ind_node}{ind_comp}' + ''.join(dep[:nfirst].tolist())
+            idx = nfirst
+            while idx < ndep:
+                ncont = min(ndep - idx, 8)
+                line += '\n        ' + ''.join(dep[idx:idx+ncont].tolist())
+                idx += ncont
+            lines.append(line + '\n')
+        bdf_file.write(''.join(lines))
+
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -928,7 +962,7 @@ class RBE2(RigidElement):
                 bdf_file.write(print_card(list_fields))
         else:
             alphas = array_default_float(self.alpha, default=0., size=size, is_double=is_double)
-            trefs = array_default_float(self.alpha, default=0., size=size, is_double=is_double)
+            trefs = array_default_float(self.tref, default=0., size=size, is_double=is_double)
             for eid, ind_node, ind_component, idim, alpha, tref in zip_longest(eid_str, ind_node_str, ind_components_str,
                                                                                self.idim, alphas, trefs):
                 idim0, idim1 = idim

@@ -2,13 +2,12 @@ import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 
 
-def slice_modal_set(node_gridtype: np.ndarray,
-                    phi: np.ndarray,
-                    nnode: int, nmode: int,
-                    node_set: np.ndarray) -> np.ndarray:
+def slice_modal_set(
+    node_gridtype: np.ndarray, phi: np.ndarray, nnode: int, nmode: int, node_set: np.ndarray
+) -> np.ndarray:
     assert phi.ndim == 2, phi.shape
     assert node_gridtype.shape == (nnode, 2), node_gridtype.shape
-    assert phi.shape == (nmode, nnode*6), (phi.shape, (nmode, nnode*6))
+    assert phi.shape == (nmode, nnode * 6), (phi.shape, (nmode, nnode * 6))
     if node_set[0] == 0:  # 0=all
         phi = phi.copy().reshape(nmode, nnode, 6)
     else:  # subset
@@ -23,27 +22,28 @@ def slice_modal_set(node_gridtype: np.ndarray,
     return node_gridtype, phi, nnode
 
 
-def get_real_eigenvalue_method(model: BDF,
-                               subcase: Subcase) -> [int, str]:
-    method_id, options = subcase['METHOD']
+def get_real_eigenvalue_method(model: BDF, subcase: Subcase) -> [int, str]:
+    method_id, options = subcase["METHOD"]
     assert isinstance(method_id, int), method_id
     method = model.methods[method_id]
-    if method.type == 'EIGRL':
+    if method.type == "EIGRL":
         neigenvalue = method.nd  # nroots
-        norm_str = 'MASS' if method.norm is None else method.norm
+        norm_str = "MASS" if method.norm is None else method.norm
     else:
         raise RuntimeError(method)
-    #neigenvalues = 10
+    # neigenvalues = 10
     return neigenvalue, norm_str
 
 
-def apply_phi_normalization(Mgg: np.ndarray,
-                            Kgg: np.ndarray,
-                            eigenvalue: np.ndarray,
-                            phit: np.ndarray,
-                            nmode: int,
-                            nnode_g: int,
-                            norm_str: str):
+def apply_phi_normalization(
+    Mgg: np.ndarray,
+    Kgg: np.ndarray,
+    eigenvalue: np.ndarray,
+    phit: np.ndarray,
+    nmode: int,
+    nnode_g: int,
+    norm_str: str,
+):
     """
     Applies eigenvalue/eigevenctor normalization
     for norm_str:
@@ -51,14 +51,14 @@ def apply_phi_normalization(Mgg: np.ndarray,
      - MAX
     """
     # print(phit)
-    assert phit.shape == (nmode, nnode_g*6)
+    assert phit.shape == (nmode, nnode_g * 6)
     # print('phit = ', phit)
     # phit6 = phit.reshape(nmode, nnode_g, 6)
     # print(f'norm_max1 = {np.max(np.linalg.norm(phit6,axis=2), axis=1)}')
     # phit *= 2
     # phit6 = phit.reshape(nmode, nnode_g, 6)
     # print(f'norm_max2 = {np.max(np.linalg.norm(phit6,axis=2), axis=1)}')
-    if norm_str == 'MAX':
+    if norm_str == "MAX":
         phit6 = phit.reshape(nmode, nnode_g, 6)
 
         normi = np.linalg.norm(phit6, axis=2)
@@ -68,7 +68,7 @@ def apply_phi_normalization(Mgg: np.ndarray,
         phit /= norm_scale[:, np.newaxis]
         eigenvalue /= norm_scale**2
 
-    elif norm_str == 'MASS':
+    elif norm_str == "MASS":
         phi = phit.T
         Mhh = phit @ Mgg @ phi
         # Khh = phit @ Kgg @ phi
@@ -81,8 +81,80 @@ def apply_phi_normalization(Mgg: np.ndarray,
             phit /= norm_scale[:, np.newaxis]
             eigenvalue /= massh
     else:
-        raise RuntimeError(f'norm_str={norm_str!r} and must be [MASS, MAX]')
+        raise RuntimeError(f"norm_str={norm_str!r} and must be [MASS, MAX]")
     phi = phit.T
     Mhh = phit @ Mgg @ phi
     Khh = phit @ Kgg @ phi
     return phit, Mhh, Khh
+
+
+def compute_mass_participation(
+    phig: np.ndarray, Mgg: np.ndarray, nnode_g: int, nmode: int
+) -> dict[str, np.ndarray]:
+    """Compute modal mass participation factors and effective mass.
+
+    Assumes mass-normalized eigenvectors (phi.T @ M @ phi = I).
+
+    Parameters
+    ----------
+    phig : ndarray, shape (nmode, nnode_g*6)
+        Mass-normalized eigenvectors (rows = modes).
+    Mgg : ndarray, shape (nnode_g*6, nnode_g*6)
+        Global mass matrix.
+    nnode_g : int
+        Number of grid points in the g-set.
+    nmode : int
+        Number of modes.
+
+    Returns
+    -------
+    dict with keys:
+        participation : ndarray, shape (nmode, 6)
+            Modal participation factors per direction (Tx, Ty, Tz, Rx, Ry, Rz).
+        effective_mass : ndarray, shape (nmode, 6)
+            Effective mass per mode per direction.
+        effective_mass_ratio : ndarray, shape (nmode, 6)
+            Effective mass as fraction of total mass per direction.
+        total_mass : ndarray, shape (6,)
+            Total mass per direction (diagonal of r.T @ M @ r).
+        cumulative_ratio : ndarray, shape (nmode, 6)
+            Cumulative effective mass ratio.
+    """
+    ndof = nnode_g * 6
+    assert phig.shape == (nmode, ndof), (phig.shape, (nmode, ndof))
+
+    # Build rigid-body direction vectors: one per DOF direction (Tx,Ty,Tz,Rx,Ry,Rz)
+    # Each column of R selects DOF i at every node
+    R = np.zeros((ndof, 6), dtype=phig.dtype)
+    for i in range(6):
+        R[i::6, i] = 1.0
+
+    # Total mass per direction: r_j.T @ M @ r_j
+    if hasattr(Mgg, "toarray"):
+        Mgg_dense = Mgg.toarray()
+    else:
+        Mgg_dense = np.asarray(Mgg)
+    total_mass = np.einsum("ij,ik,jk->k", R, Mgg_dense @ R, np.eye(6))
+    # Simpler: total_mass[j] = R[:,j].T @ M @ R[:,j]
+    total_mass = np.array([R[:, j] @ Mgg_dense @ R[:, j] for j in range(6)])
+
+    # Participation factors: gamma_ij = phi_i @ M @ r_j
+    # phig is (nmode, ndof), Mgg is (ndof, ndof), R is (ndof, 6)
+    MR = Mgg_dense @ R  # (ndof, 6)
+    participation = phig @ MR  # (nmode, 6)
+
+    effective_mass = participation**2
+
+    effective_mass_ratio = np.zeros_like(effective_mass)
+    nonzero = total_mass > 0.0
+    effective_mass_ratio[:, nonzero] = effective_mass[:, nonzero] / total_mass[nonzero]
+
+    cumulative_ratio = np.cumsum(effective_mass_ratio, axis=0)
+
+    return {
+        "participation": participation,
+        "effective_mass": effective_mass,
+        "effective_mass_ratio": effective_mass_ratio,
+        "total_mass": total_mass,
+        "cumulative_ratio": cumulative_ratio,
+    }

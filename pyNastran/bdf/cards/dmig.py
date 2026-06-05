@@ -13,14 +13,16 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.femutils.utils import unique2d
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.cards.collpase_card import collapse_thru_ipacks
-from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.field_writer_double import print_card_double
+from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
+from pyNastran.bdf.field_writer_16 import print_card_16, print_float_16
+from pyNastran.bdf.field_writer_double import print_card_double, print_scientific_double
+from pyNastran.bdf.field_writer_8 import array_float_8
+from pyNastran.bdf.field_writer_16 import array_float_16
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank,  # blank,
-    double, string, string_or_blank,
-    parse_components, interpret_value, integer_double_string_or_blank)
+    integer, integer_or_blank, double, string, string_or_blank,
+    parse_components, integer_double_string_or_blank,
+    _nastran_str_to_float)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.bdf.bdf import BDF
@@ -733,7 +735,8 @@ class NastranMatrix(BaseCard):
         """
         Colormaps and plots a 2D matrix using a specified colormap, defaulting to Red-Blue.
 
-        Parameters:
+        Parameters
+        ----------
         matrix (numpy.ndarray): The 2D matrix (or array-like) to be colormapped.
         cmap_name (str): The name of the colormap to use (e.g., 'RdBu', 'bwr', 'seismic').
                          'RdBu' is Red-Blue, typically with white/light gray in the middle.
@@ -920,42 +923,66 @@ class NastranMatrix(BaseCard):
                 size = 16
             del Gi, Gj
 
-        if self.is_complex:
-            if self.is_polar:
-                for (GCi, GCj, reali, complexi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
-                    magi = sqrt(reali**2 + complexi**2)
-                    if reali == 0.0:
-                        phasei = 0.0
-                    else:
-                        phasei = degrees(atan2(complexi, reali))
-                    list_fields = [self.type, self.name, GCj[0], GCj[1],
-                                   None, GCi[0], GCi[1], magi, phasei]
-                    if size == 8:
-                        msg_list.append(print_card_8(list_fields))
-                    elif is_double:
-                        msg_list.append(print_card_double(list_fields))
-                    else:
-                        msg_list.append(print_card_16(list_fields))
-            else:
-                for (GCi, GCj, reali, complexi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
-                    list_fields = [self.type, self.name, GCj[0], GCj[1],
-                                   None, GCi[0], GCi[1], reali, complexi]
-                    if size == 8:
-                        msg_list.append(print_card_8(list_fields))
-                    elif is_double:
-                        msg_list.append(print_card_double(list_fields))
-                    else:
-                        msg_list.append(print_card_16(list_fields))
+        # Pre-format floats in bulk to avoid per-element print_float_8/16 overhead
+        Real_arr = np.asarray(self.Real, dtype=float)
+        if size == 8:
+            Real_str = array_float_8(Real_arr).tolist()
+        elif is_double:
+            Real_str = [print_scientific_double(v) for v in self.Real]
         else:
-            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
-                list_fields = [self.type, self.name, GCj[0], GCj[1],
-                               None, GCi[0], GCi[1], reali, None]
+            Real_str = array_float_16(Real_arr).tolist()
+
+        if self.is_complex:
+            Complex_arr = np.asarray(self.Complex, dtype=float)
+            if self.is_polar:
+                _fmt = print_float_8 if size == 8 else (
+                    print_scientific_double if is_double else print_float_16)
+                Real_str = []
+                Complex_str = []
+                for reali, complexi in zip(self.Real, self.Complex):
+                    magi = sqrt(reali**2 + complexi**2)
+                    phasei = 0.0 if reali == 0.0 else degrees(atan2(complexi, reali))
+                    Real_str.append(_fmt(magi))
+                    Complex_str.append(_fmt(phasei))
+            else:
                 if size == 8:
-                    msg_list.append(print_card_8(list_fields))
+                    Complex_str = array_float_8(Complex_arr).tolist()
                 elif is_double:
-                    msg_list.append(print_card_double(list_fields))
+                    Complex_str = [print_scientific_double(v) for v in self.Complex]
                 else:
-                    msg_list.append(print_card_16(list_fields))
+                    Complex_str = array_float_16(Complex_arr).tolist()
+
+            if size == 8:
+                # Direct string building — bypasses print_card_8 dispatch
+                type8 = '%-8s' % self.type
+                name8 = '%8s' % self.name
+                for idx, (GCi, GCj) in enumerate(zip(self.GCi, self.GCj)):
+                    msg_list.append(
+                        '%s%s%8d%8d        %8d%8d%s%s\n' % (
+                            type8, name8, GCj[0], GCj[1],
+                            GCi[0], GCi[1], Real_str[idx], Complex_str[idx]))
+            else:
+                _print_card = print_card_double if is_double else print_card_16
+                for idx, (GCi, GCj) in enumerate(zip(self.GCi, self.GCj)):
+                    list_fields = [self.type, self.name, GCj[0], GCj[1],
+                                   None, GCi[0], GCi[1], Real_str[idx], Complex_str[idx]]
+                    msg_list.append(_print_card(list_fields))
+        else:
+            if size == 8:
+                # Direct string building — bypasses print_card_8 dispatch
+                type8 = '%-8s' % self.type
+                name8 = '%8s' % self.name
+                for idx, (GCi, GCj) in enumerate(zip(self.GCi, self.GCj)):
+                    msg_list.append(
+                        '%s%s%8d%8d        %8d%8d%s\n' % (
+                            type8, name8, GCj[0], GCj[1],
+                            GCi[0], GCi[1], Real_str[idx]))
+            else:
+                _print_card = print_card_double if is_double else print_card_16
+                for idx, (GCi, GCj) in enumerate(zip(self.GCi, self.GCj)):
+                    list_fields = [self.type, self.name, GCj[0], GCj[1],
+                                   None, GCi[0], GCi[1], Real_str[idx], None]
+                    msg_list.append(_print_card(list_fields))
 
         #msg += '\n\nGCi[0]=%s\n' % self.GCi[0]
         #msg += 'GCj[0]=%s\n' % self.GCj[0]
@@ -2189,104 +2216,156 @@ class DMI(NastranMatrix):
             self._read_real(card)
 
     def _read_real(self, card: BDFCard):
-        """reads a real DMI column"""
-        # column number
+        """Reads a real DMI column card and appends to GCi, GCj, Real.
+
+        Card format:
+            DMI  NAME  J  I1  A(I1,J)  A(I1+1,J)  ...  I2  A(I2,J)  ...
+
+        Fields after position 2 (J) alternate between:
+          - unsigned integer row indices (start a new contiguous run)
+          - float values (consecutive entries in the column)
+          - 'THRU' keyword (repeats the last value through a row range)
+
+        Floats are identified by containing '.', or an internal +/- sign
+        (Nastran implicit exponent, e.g. '9.906-1' = 9.906e-1).
+        Row indices are unsigned digit-only strings.
+
+        GCj is populated in bulk at the end (single extend) rather than
+        per-value to reduce append overhead on large matrices.
+        """
         j = integer(card, 2, 'icol')
 
-        # counter
-        i = 0
+        fields = card.card
+        nfields = len(fields)
+        ifield = 3
+        GCi = self.GCi
+        Real = self.Real
+        n_added = 0
+        _to_float = _nastran_str_to_float
 
-        # TODO: speed this up
-        fields = [interpret_value(field, card) for field in card[3:]]
+        while ifield < nfields:
+            i1 = int(fields[ifield])
+            assert i1 > 0, f'row index={i1} should be > 0; 0 is an invalid row id'
+            ifield += 1
+            while ifield < nfields:
+                svalue = fields[ifield]
+                if svalue is None or svalue == '':
+                    ifield += 1
+                    continue
+                if isinstance(svalue, (int, float)):
+                    if isinstance(svalue, int):
+                        assert svalue > 0, f'row index={svalue} should be > 0; 0 is an invalid row id'
+                        break
+                    GCi.append(i1)
+                    Real.append(svalue)
+                    n_added += 1
+                    ifield += 1
+                    i1 += 1
+                    continue
+                # string field — check for int vs float vs THRU
+                if '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
+                    GCi.append(i1)
+                    Real.append(_to_float(svalue))
+                    n_added += 1
+                    ifield += 1
+                    i1 += 1
+                elif svalue.lstrip('+-').isdigit():
+                    assert '+' not in svalue and '-' not in svalue, f'row index={svalue!r} must not be signed'
+                    ival = int(svalue)
+                    assert ival > 0, f'row index={ival} should be > 0; 0 is an invalid row id'
+                    break
+                else:
+                    # THRU
+                    real_value = Real[-1]
+                    end_i = int(fields[ifield + 1])
+                    for ii in range(i1, end_i + 1):
+                        GCi.append(ii)
+                        Real.append(real_value)
+                        n_added += 1
+                    ifield += 2
+                    break
 
-        # Real, starts at A(i1,j), goes to A(i2,j) in a column
-        while i < len(fields):
-            i1 = fields[i]
-            if isinstance(i1, integer_types):
-                i += 1
-                is_done_reading_floats = False
-                while not is_done_reading_floats and i < len(fields):
-                    real_value = fields[i]
-                    if isinstance(real_value, integer_types):
-                        is_done_reading_floats = True
-                    elif isinstance(real_value, float):
-                        #print('adding j=%s i1=%s val=%s' % (j, i1, real_value))
-                        self.GCj.append(j)
-                        self.GCi.append(i1)
-                        self.Real.append(real_value)
-                        i += 1
-                        i1 += 1
-                    else:
-                        assert real_value == 'THRU', real_value
-                        real_value = self.Real[-1]
-                        end_i = fields[i + 1]
-                        for ii in range(i1, end_i + 1):
-                            #print('THRU adding j=%s i1=%s val=%s' % (j, ii, real_value))
-                            self.GCj.append(j)
-                            self.GCi.append(ii)
-                            self.Real.append(real_value)
-                        i += 1
-                        is_done_reading_floats = True
-        #print(self.GCi)
-        #print(self.GCj)
+        self.GCj.extend([j] * n_added)
 
     def _read_complex(self, card: BDFCard):
-        """reads a complex DMI column"""
-        #msg = 'complex matrices not supported in the DMI reader...'
-        #raise NotImplementedError(msg)
-        # column number
+        """Reads a complex DMI column card and appends to GCi, GCj, Real, Complex.
+
+        Card format:
+            DMI  NAME  J  I1  A_real(I1,J)  A_imag(I1,J)  A_real(I1+1,J)  A_imag(I1+1,J)  ...
+
+        Fields after position 2 (J) alternate between:
+          - unsigned integer row indices (start a new contiguous run)
+          - pairs of float values (real, imaginary) for consecutive entries
+          - 'THRU' keyword (repeats the last real+imag pair through a row range)
+
+        GCj is populated in bulk at the end (single extend) rather than
+        per-value to reduce append overhead on large matrices.
+        """
         j = integer(card, 2, 'icol')
-        # counter
-        i = 0
 
-        # TODO: speed this up
-        fields = [interpret_value(field, card) for field in card[3:]]
-        # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
+        fields = card.card
+        nfields = len(fields)
+        ifield = 3
+        GCi = self.GCi
+        Real = self.Real
+        Complex = self.Complex
+        n_added = 0
+        _to_float = _nastran_str_to_float
 
-        while i < len(fields):
-            #print(f'fields = {fields[i:]}')
-            #print(f' - GCj  = {self.GCj}')
-            #print(f' - GCi  = {self.GCi}')
-            #print(f' - Real = {self.Real}')
-            #print(f' - Imag = {self.Complex}')
-            i1 = fields[i]
-            assert isinstance(i1, int), card
-            i += 1
-            is_done_reading_floats = False
-            while not is_done_reading_floats and i < len(fields):
-                #print(f'fields = {fields[i:]}')
-                #print(f' - GCj  = {self.GCj}')
-                #print(f' - GCi  = {self.GCi}')
-                #print(f' - Real = {self.Real}')
-                #print(f' - Imag = {self.Complex}')
-                value = fields[i]
-                #print(f"i={i} len(fields)={len(fields)} value={value}")
-                if isinstance(value, integer_types):
-                    is_done_reading_floats = True
-                elif isinstance(value, float):
-                    real_value = value
-                    complex_value = fields[i + 1]
-                    #print(f'complex_value = {complex_value}')
-                    assert isinstance(complex_value, float), card
-                    self.GCj.append(j)
-                    self.GCi.append(i1)
-                    self.Real.append(value)
-                    self.Complex.append(complex_value)
-                    i += 2
+        while ifield < nfields:
+            i1 = int(fields[ifield])
+            ifield += 1
+            while ifield < nfields:
+                svalue = fields[ifield]
+                if svalue is None or svalue == '':
+                    ifield += 1
+                    continue
+                if isinstance(svalue, (int, float)):
+                    if isinstance(svalue, int):
+                        break
+                    # already a float
+                    svalue2 = fields[ifield + 1]
+                    if isinstance(svalue2, float):
+                        cval = svalue2
+                    else:
+                        cval = _to_float(svalue2)
+                    GCi.append(i1)
+                    Real.append(svalue)
+                    Complex.append(cval)
+                    n_added += 1
+                    ifield += 2
                     i1 += 1
+                    continue
+                # string field
+                if '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
+                    real_val = _to_float(svalue)
+                    svalue2 = fields[ifield + 1]
+                    if isinstance(svalue2, float):
+                        cval = svalue2
+                    else:
+                        cval = _to_float(svalue2)
+                    GCi.append(i1)
+                    Real.append(real_val)
+                    Complex.append(cval)
+                    n_added += 1
+                    ifield += 2
+                    i1 += 1
+                elif svalue.lstrip('+-').isdigit():
+                    break
                 else:
-                    #print(f'value = {value}')
-                    assert value == 'THRU', (value, real_value, complex_value)
-                    end_i = fields[i + 1]
-                    #print(f'end_i = {end_i}')
+                    # THRU
+                    real_value = Real[-1]
+                    complex_value = Complex[-1]
+                    end_i = int(fields[ifield + 1])
                     for ii in range(i1, end_i + 1):
-                        #print(f'  THRU adding j={j} i1={ii} val={real_value}+{complex_value}j')
-                        self.GCj.append(j)
-                        self.GCi.append(ii)
-                        self.Real.append(real_value)
-                        self.Complex.append(complex_value)
-                    i += 1
-                    is_done_reading_floats = True
+                        GCi.append(ii)
+                        Real.append(real_value)
+                        Complex.append(complex_value)
+                        n_added += 1
+                    ifield += 2
+                    break
+
+        self.GCj.extend([j] * n_added)
 
     @property
     def is_real(self) -> bool:
@@ -2417,11 +2496,22 @@ class DMI(NastranMatrix):
 
 def _dmi_get_real_matrix_columns(name: str, GCi, GCj, Real,
                                  func: Callable[[float], str]) -> list[str]:
+    # Pre-format all float values in bulk, then build card strings directly
+    # to bypass per-field isinstance dispatch in print_field_8/print_card_8.
+    Real_arr = np.asarray(Real)
+    if func is print_card_8:
+        Real_str = array_float_8(Real_arr).tolist()
+        return _dmi_write_real_columns_8(name, GCi, GCj, Real, Real_str)
+    elif func is print_card_16:
+        Real_str = array_float_16(Real_arr).tolist()
+    elif func is print_card_double:
+        Real_str = [print_scientific_double(v) for v in Real]
+    else:
+        Real_str = None
+
     msg_list = []
     uGCj = np.unique(GCj)
-    #print(f'uGCj={uGCj}')
     for gcj in uGCj:
-        # get a single column and filter 0 values
         i = np.where((gcj == GCj) & (Real != 0.))[0]
         if len(i) == 0:
             list_fields = ['DMI', name, gcj, 1, 0.0]
@@ -2430,49 +2520,125 @@ def _dmi_get_real_matrix_columns(name: str, GCi, GCj, Real,
         assert len(i) > 0, i
         singles, doubles = collapse_thru_ipacks(i, GCi[i].tolist())
         assert len(singles) + len(doubles) > 0, (singles, doubles)
-        # if singles:
-        #     gcis = GCi[singles]
-        #     reals = Real[singles]
-        #     list_fields = ['DMI', name, gcj]
-        #     for gci, real in zip(gcis, reals):
-        #         list_fields.extend([gci, real])
-        #     msg += func(list_fields)
 
-        list_fields = ['DMI', name, gcj]
-        for (start, thru, end) in doubles:
-            i2 = slice(start, end+1)
-            gcis2 = GCi[i2]
-            reals2 = Real[i2]
-            if reals2.max() == reals2.min():
-                gci1 = gcis2[0]
-                gci2 = gcis2[-1]
-                real = reals2[0]
-                list_fields.extend([gci1, real, 'THRU', gci2])
-            else:
-                for gci, real in zip(gcis2, reals2):
+        if Real_str is not None:
+            pairs = []
+            for (start, thru, end) in doubles:
+                reals2 = Real[slice(start, end+1)]
+                if reals2.max() == reals2.min():
+                    pairs.extend([GCi[start], Real_str[start], 'THRU', GCi[end]])
+                else:
+                    for k in range(start, end+1):
+                        pairs.append(GCi[k])
+                        pairs.append(Real_str[k])
+            if singles:
+                for idx in singles:
+                    pairs.append(GCi[idx])
+                    pairs.append(Real_str[idx])
+            list_fields = ['DMI', name, gcj] + pairs
+        else:
+            list_fields = ['DMI', name, gcj]
+            for (start, thru, end) in doubles:
+                gcis2 = GCi[slice(start, end+1)]
+                reals2 = Real[slice(start, end+1)]
+                if reals2.max() == reals2.min():
+                    list_fields.extend([gcis2[0], reals2[0], 'THRU', gcis2[-1]])
+                else:
+                    for gci, real in zip(gcis2, reals2):
+                        list_fields.extend([gci, real])
+            if singles:
+                for gci, real in zip(GCi[singles], Real[singles]):
                     list_fields.extend([gci, real])
-                #list_fields.extend([gci, 'THRU', real])
-                #print(double)
-            assert len(list_fields) > 3, list_fields
-        #print(list_fields)
-        if singles:
-            gcis1 = GCi[singles]
-            reals1 = Real[singles]
-            for gci, real in zip(gcis1, reals1):
-                list_fields.extend([gci, real])
         assert len(list_fields) > 3, list_fields
         msg_list.append(func(list_fields))
     return msg_list
 
 
-def _dmi_get_complex_matrix_columns(name: str, GCi, GCj, Real, Complex,
-                                    func: Callable[[float], str]) -> list[str]:
+def _dmi_write_real_columns_8(name: str, GCi, GCj, Real,
+                                  Real_str: list[str]) -> list[str]:
+    """Build DMI column card strings directly for size=8,
+    bypassing print_card_8/print_field_8 per-field dispatch.
+    """
     msg_list = []
     uGCj = np.unique(GCj)
-    #print(f'uGCj={uGCj}')
+    name8 = '%8s' % name
+
     for gcj in uGCj:
-        # get a single column and filter 0 values
-        i = np.where((gcj == GCj) & ((Real != 0.0) | (Complex != 0.0)))[0]
+        i = np.where((gcj == GCj) & (Real != 0.))[0]
+        if len(i) == 0:
+            msg_list.append(
+                'DMI     %s%8d%8d%s\n' % (name8, gcj, 1, print_float_8(0.0)))
+            continue
+        assert len(i) > 0, i
+        singles, doubles = collapse_thru_ipacks(i, GCi[i].tolist())
+        assert len(singles) + len(doubles) > 0, (singles, doubles)
+
+        # Build flat list of 8-char field strings
+        fields_8 = ['DMI     ', name8, '%8d' % gcj]
+        for (start, thru, end) in doubles:
+            reals2 = Real[start:end+1]
+            if reals2.max() == reals2.min():
+                fields_8.extend(['%8d' % GCi[start], Real_str[start],
+                                 '    THRU', '%8d' % GCi[end]])
+            else:
+                for k in range(start, end+1):
+                    fields_8.append('%8d' % GCi[k])
+                    fields_8.append(Real_str[k])
+        if singles:
+            for idx in singles:
+                fields_8.append('%8d' % GCi[idx])
+                fields_8.append(Real_str[idx])
+
+        # Assemble into 72-char lines (9 fields per line: 1 card name + 8 data)
+        lines = []
+        pos = 1  # skip card name field
+        # First line: up to 8 fields after the card name
+        line_fields = fields_8[0]
+        count = 0
+        while pos < len(fields_8) and count < 8:
+            line_fields += fields_8[pos]
+            pos += 1
+            count += 1
+        lines.append(line_fields.rstrip())
+
+        # Continuation lines: 8 fields each
+        while pos < len(fields_8):
+            line_fields = '        '  # 8 spaces for continuation
+            count = 0
+            while pos < len(fields_8) and count < 8:
+                line_fields += fields_8[pos]
+                pos += 1
+                count += 1
+            lines.append(line_fields.rstrip())
+
+        msg_list.append('\n'.join(lines) + '\n')
+    return msg_list
+
+
+def _dmi_get_complex_matrix_columns(name: str, GCi, GCj, Real, Complex,
+                                    func: Callable[[float], str]) -> list[str]:
+    # Pre-format all floats in bulk (keep as numpy arrays for fancy indexing)
+    Real_arr = np.asarray(Real)
+    Complex_arr = np.asarray(Complex)
+    if func is print_card_8:
+        Real_str = array_float_8(Real_arr).tolist()
+        Complex_str = array_float_8(Complex_arr).tolist()
+        return _dmi_write_complex_columns_8(name, GCi, GCj, Real_arr, Complex_arr,
+                                            Real_str, Complex_str)
+    elif func is print_card_16:
+        Real_str = array_float_16(Real_arr)
+        Complex_str = array_float_16(Complex_arr)
+    elif func is print_card_double:
+        Real_str = np.array([print_scientific_double(v) for v in Real], dtype='U16')
+        Complex_str = np.array([print_scientific_double(v) for v in Complex], dtype='U16')
+    else:
+        Real_str = None
+        Complex_str = None
+
+    msg_list = []
+    uGCj = np.unique(GCj)
+    for gcj in uGCj:
+        i = np.where((gcj == GCj) & ((Real_arr != 0.0) | (Complex_arr != 0.0)))[0]
         if len(i) == 0:
             list_fields = ['DMI', name, gcj, 1, 0.0, 0.0]
             msg_list.append(func(list_fields))
@@ -2480,41 +2646,102 @@ def _dmi_get_complex_matrix_columns(name: str, GCi, GCj, Real, Complex,
         assert len(i) > 0, i
         singles, doubles = collapse_thru_ipacks(i, GCi[i].tolist())
         assert len(singles) + len(doubles) > 0, (singles, doubles)
-        # if singles:
-        #     gcis = GCi[singles]
-        #     reals = Real[singles]
-        #     list_fields = ['DMI', name, gcj]
-        #     for gci, real in zip(gcis, reals):
-        #         list_fields.extend([gci, real])
-        #     msg += func(list_fields)
 
         list_fields = ['DMI', name, gcj]
-        for (start, thru, end) in doubles:
-            i2 = slice(start, end+1)
-            gcis2 = GCi[i2]
-            reals2 = Real[i2]
-            complexs2 = Complex[i2]
-            if reals2.max() == reals2.min() and complexs2.max() == complexs2.min():
-                gci1 = gcis2[0]
-                gci2 = gcis2[-1]
-                real = reals2[0]
-                complex = complexs2[0]
-                list_fields.extend([gci1, real, complex, 'THRU', gci2])
-            else:
-                for gci, real, complex in zip(gcis2, reals2, complexs2):
-                    list_fields.extend([gci, real, complex])
-                #list_fields.extend([gci, 'THRU', real])
-                #print(double)
-            assert len(list_fields) > 3, list_fields
-        #print(list_fields)
-        if singles:
-            gcis1 = GCi[singles]
-            reals1 = Real[singles]
-            complex1 = Complex[singles]
-            for gci, real, complex in zip(gcis1, reals1, complex1):
-                list_fields.extend([gci, real, complex])
+        if Real_str is not None:
+            for (start, thru, end) in doubles:
+                i2 = slice(start, end+1)
+                gcis2 = GCi[i2]
+                reals2 = Real_arr[i2]
+                complexs2 = Complex_arr[i2]
+                if reals2.max() == reals2.min() and complexs2.max() == complexs2.min():
+                    list_fields.extend([gcis2[0], Real_str[start], Complex_str[start],
+                                        'THRU', gcis2[-1]])
+                else:
+                    for gci, real_s, cplx_s in zip(gcis2, Real_str[i2], Complex_str[i2]):
+                        list_fields.extend([gci, real_s, cplx_s])
+                assert len(list_fields) > 3, list_fields
+            if singles:
+                for gci, real_s, cplx_s in zip(GCi[singles], Real_str[singles], Complex_str[singles]):
+                    list_fields.extend([gci, real_s, cplx_s])
+        else:
+            for (start, thru, end) in doubles:
+                i2 = slice(start, end+1)
+                gcis2 = GCi[i2]
+                reals2 = Real_arr[i2]
+                complexs2 = Complex_arr[i2]
+                if reals2.max() == reals2.min() and complexs2.max() == complexs2.min():
+                    list_fields.extend([gcis2[0], reals2[0], complexs2[0], 'THRU', gcis2[-1]])
+                else:
+                    for gci, real, complx in zip(gcis2, reals2, complexs2):
+                        list_fields.extend([gci, real, complx])
+                assert len(list_fields) > 3, list_fields
+            if singles:
+                for gci, real, complx in zip(GCi[singles], Real_arr[singles], Complex_arr[singles]):
+                    list_fields.extend([gci, real, complx])
         assert len(list_fields) > 3, list_fields
         msg_list.append(func(list_fields))
+    return msg_list
+
+
+def _dmi_write_complex_columns_8(name: str, GCi, GCj, Real, Complex,
+                                  Real_str: list[str],
+                                  Complex_str: list[str]) -> list[str]:
+    """Build DMI complex column card strings directly for size=8."""
+    msg_list = []
+    uGCj = np.unique(GCj)
+    name8 = '%8s' % name
+
+    for gcj in uGCj:
+        i = np.where((gcj == GCj) & ((Real != 0.0) | (Complex != 0.0)))[0]
+        if len(i) == 0:
+            msg_list.append(
+                'DMI     %s%8d%8d%s%s\n' % (name8, gcj, 1,
+                                             print_float_8(0.0), print_float_8(0.0)))
+            continue
+        assert len(i) > 0, i
+        singles, doubles = collapse_thru_ipacks(i, GCi[i].tolist())
+        assert len(singles) + len(doubles) > 0, (singles, doubles)
+
+        fields_8 = ['DMI     ', name8, '%8d' % gcj]
+        for (start, thru, end) in doubles:
+            reals2 = Real[start:end+1]
+            complexs2 = Complex[start:end+1]
+            if reals2.max() == reals2.min() and complexs2.max() == complexs2.min():
+                fields_8.extend(['%8d' % GCi[start], Real_str[start], Complex_str[start],
+                                 '    THRU', '%8d' % GCi[end]])
+            else:
+                for k in range(start, end+1):
+                    fields_8.append('%8d' % GCi[k])
+                    fields_8.append(Real_str[k])
+                    fields_8.append(Complex_str[k])
+        if singles:
+            for idx in singles:
+                fields_8.append('%8d' % GCi[idx])
+                fields_8.append(Real_str[idx])
+                fields_8.append(Complex_str[idx])
+
+        # Assemble into 72-char lines (9 fields per line: 1 card name + 8 data)
+        lines = []
+        pos = 1
+        line_fields = fields_8[0]
+        count = 0
+        while pos < len(fields_8) and count < 8:
+            line_fields += fields_8[pos]
+            pos += 1
+            count += 1
+        lines.append(line_fields.rstrip())
+
+        while pos < len(fields_8):
+            line_fields = '        '
+            count = 0
+            while pos < len(fields_8) and count < 8:
+                line_fields += fields_8[pos]
+                pos += 1
+                count += 1
+            lines.append(line_fields.rstrip())
+
+        msg_list.append('\n'.join(lines) + '\n')
     return msg_list
 
 

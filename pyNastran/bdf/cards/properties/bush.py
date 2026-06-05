@@ -12,6 +12,7 @@ All bush properties are BushingProperty and Property objects.
 from __future__ import annotations
 import warnings
 from typing import Optional, TYPE_CHECKING
+import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf_interface.get_methods import _get_tag_no_model
@@ -187,28 +188,29 @@ class PBUSH(BushingProperty):
         BushingProperty.__init__(self)
         if comment:
             self.comment = comment
-        if k is None:
-            k = []
-        if b is None:
-            b = []
-        if ge is None:
-            ge = []
+        if k is None or len(k) == 0:
+            k = [0., 0., 0., 0., 0., 0.]
+        if b is None or len(b) == 0:
+            b = [0., 0., 0., 0., 0., 0.]
+        if ge is None or len(ge) == 0:
+            ge = [0., 0., 0., 0., 0., 0.]
 
         #: Property ID
         self.pid = pid
 
         # K parameter
-        self.Ki = k
         if k:
             nk = len(k)
             if nk < 6:
                 k.extend([0.] * (6 - nk))
+        self.Ki = k
+
         # B parameter
-        self.Bi = b
         if b:
             nb = len(b)
             if nb < 6:
                 b.extend([0.] * (6 - nb))
+        self.Bi = b
 
         # GE parameter
         self.GEi = ge
@@ -238,6 +240,9 @@ class PBUSH(BushingProperty):
         self.alpha = alpha
         self.tref = tref
         self.coincident_length = coincident_length
+        assert len(self.Ki) == 6, self.Ki
+        assert len(self.Bi) == 6, self.Bi
+        assert len(self.GEi) == 6, self.GEi
 
     @classmethod
     def _init_from_empty(cls):
@@ -346,8 +351,9 @@ class PBUSH(BushingProperty):
         self.GEi = ge
 
     @classmethod
-    def _read_var(cls, card: BDFCard, var_prefix: str, istart: int, iend: int):
+    def _read_var(cls, card: BDFCard, var_prefix: str, istart: int, iend: int) -> list[float]:
         ki = fields(double_or_blank, card, var_prefix, istart, iend)
+        ki = [0.0 if val is None else val for val in ki]
         return ki
 
     @classmethod
@@ -392,7 +398,7 @@ class PBUSH(BushingProperty):
 
     def _verify(self, xref):
         pid = self.Pid()
-        assert isinstance(pid, integer_types), 'pid=%r' % pid
+        assert isinstance(pid, integer_types), f'pid={pid!r}'
 
     @classmethod
     def _read_rcv(cls, card: BDFCard, istart: int):
@@ -407,13 +413,13 @@ class PBUSH(BushingProperty):
 
     def raw_fields(self):
         list_fields = ['PBUSH', self.pid]
-        if len(self.Ki):
+        if len(self.Ki) and np.abs(self.Ki).max() > 0.0:
             list_fields += ['K'] + self.Ki
             _finish_list_fields_row(list_fields)
-        if len(self.Bi):
+        if len(self.Bi) and np.abs(self.Bi).max() > 0.0:
             list_fields += ['B'] + self.Bi
             _finish_list_fields_row(list_fields)
-        if len(self.GEi):
+        if len(self.GEi) and np.abs(self.GEi).max() > 0.0:
             list_fields += ['GE'] + self.GEi
             _finish_list_fields_row(list_fields)
         if (self.sa is not None or self.st is not None or
@@ -429,7 +435,30 @@ class PBUSH(BushingProperty):
         return list_fields
 
     def repr_fields(self):
-        return self.raw_fields()
+        list_fields = ['PBUSH', self.pid]
+        if len(self.Ki) and np.abs(self.Ki).max() > 0.0:
+            ki = ['' if val == 0.0 else val for val in self.Ki]
+            list_fields += ['K'] + ki
+            _finish_list_fields_row(list_fields)
+        if len(self.Bi) and np.abs(self.Bi).max() > 0.0:
+            bi = ['' if val == 0.0 else val for val in self.Bi]
+            list_fields += ['B'] + bi
+            _finish_list_fields_row(list_fields)
+        if len(self.GEi) and np.abs(self.GEi).max() > 0.0:
+            ge = ['' if val == 0.0 else val for val in self.GEi]
+            list_fields += ['GE'] + ge
+            _finish_list_fields_row(list_fields)
+        if (self.sa is not None or self.st is not None or
+            self.ea is not None or self.et is not None):
+            list_fields += ['RCV', self.sa, self.st, self.ea, self.et]
+            _finish_list_fields_row(list_fields)
+        if self.mass != 0.0:
+            list_fields += ['M', self.mass]
+            _finish_list_fields_row(list_fields)
+        if self.alpha is not None and self.tref is not None and self.coincident_length is not None:
+            list_fields += ['T', self.alpha, self.tref, self.coincident_length]
+            _finish_list_fields_row(list_fields)
+        return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()

@@ -6,7 +6,9 @@ from cpylog import SimpleLogger  # get_logger
 from pyNastran.utils import print_bad_path
 from pyNastran.f06.f06_tables.trim import (
     MonitorLoads, TrimResults, ControllerState,
-    AeroPressure, AeroForce, TrimVariables, TrimVariable)
+    AeroPressure, AeroForce, TrimVariables, TrimVariable,
+    HingeMomentDerivatives)
+from pyNastran.f06.f06_matrix_parser import _read_matrix, _read_intermediate_matrix
 
 from cpylog import __version__ as CPYLOG_VERSION
 if CPYLOG_VERSION > '1.6.0':
@@ -45,6 +47,9 @@ SKIP_FLAGS = [
     'FLUTTER  SUMMARY',
     #'* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',  # causes a crash
 ]
+TRIM_MATRICES = [
+    'INTERMEDIATE MATRIX ... HP',
+]
 
 
 def read_f06_trim(f06_filename: str,
@@ -74,6 +79,8 @@ def read_f06_trim(f06_filename: str,
         trim_results.aero_force[subcase] = AeroForce.from_f06(
             subcase, *aero_force, metadata)
 
+    naero_results = len(stacked_aero_force) + len(stacked_aero_pressure)
+    # assert naero_results > 0, 'no AEROF or APRESS found; make sure to include LINE=100000?'
     out = {
         'trim_results': trim_results,
     }
@@ -81,6 +88,14 @@ def read_f06_trim(f06_filename: str,
         out['tables'] = tables
         log.info('found the following tables in the f06: %s' % (list(tables)))
     if len(matrices):
+        # UX: (nvars, 1) column vector of converged trim variable values
+        #     (same order/values as TrimVariables.data; redundant with trim_variables)
+        # UXIFV: (nvars, 1) initial free values used in the trim solution
+        # HP: (2, nvars) nondimensional stability and control derivative
+        #     coefficient matrix. Row 0 is beta_m (mean axis pitch rotation
+        #     due to elastic deformation), row 1 is gamma_m (mean axis yaw
+        #     rotation). Angular acceleration derivatives and rotations are
+        #     divided by b/2.
         out['matrices'] = matrices
         log.info('found the following matrices in the f06: %s' % (list(matrices)))
     str(trim_results)
@@ -168,19 +183,28 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
             iblank_count = 0
             flag = SKIP_FLAGS[iflags.index(True)]
             if debug:
-                log.info(f'******* found skip flag: {flag}')
+                log.info(f'******* found skip flag: {flag!r}')
             #print('skip', line)
             line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
             if 'trademark' not in line:
                 line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
+            if debug:
+                log.info(f'******* finished skip flag: {line[1:].strip()!r}')
             continue
         elif line.startswith('0      MATRIX '):
             iblank_count = 0
-            line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
-            line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
-            #matrix_name, matrix, line, i = _read_matrix(f06_file, line, i, log, debug)
-            #matrices[matrix_name] = matrix
-            #del matrix_name, matrix
+            # line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
+            # line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
+            matrix_name, matrix, line, i = _read_matrix(f06_file, line, i, log, debug)
+            matrices[matrix_name] = matrix
+            del matrix_name, matrix
+        elif 'INTERMEDIATE MATRIX' in line:
+            iblank_count = 0
+            # line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
+            # line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
+            matrix_name, matrix, line, i = _read_intermediate_matrix(f06_file, line, i, log, debug)
+            matrices[matrix_name] = matrix
+            del matrix_name, matrix
         elif 'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S' in line:
             log.debug('reading aero static data recovery tables')
             iblank_count = 0
@@ -195,6 +219,13 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
             line, i = _read_structural_monitor_point_integrated_loads(
                 f06_file, line, i, nlines_max, trim_results,
                 title, subtitle, subcase, log)
+        elif 'N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S' in line:
+            log.debug('reading non-dimensional hinge moment derivative coefficients')
+            isubcase = int(subcase)
+            line, i = _read_hinge_moment_derivatives(
+                f06_file, line, i, nlines_max, trim_results,
+                isubcase, title, subtitle, log)
+
         elif 'PAGE' in line and any(month in line for month in MONTHS):
             line, i, title, subtitle, subcase = _get_title_subtitle_subcase(
                 f06_file, line, i, nlines_max)
@@ -230,7 +261,8 @@ def _get_title_subtitle_subcase(f06_file: TextIO,
     0                                                                                                            SUBCASE 42
     """
     n = f06_file.tell()
-    title = ''
+    # title is between column 5 and the date on the page stamp line
+    title = line[4:72].strip()
     subtitle_line = f06_file.readline()
     subcase_line = f06_file.readline()
 
@@ -265,7 +297,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     '        CONTROLLER STATE:'
     '        ANGLEA   =   1.0000E-01'
     '
-    '        MONITOR POINT NAME = AEROSG2D          COMPONENT =                   CLASS = COEFFICIENT               '
+    '        MONITOR POINT NAME = AEROSG2D          COMPONENT =                   CLASS = COEFFICIENT'
     '        LABEL = Full Vehicle Integrated Loads                           '
     '        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
     '
@@ -278,7 +310,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     '           CMY   -1.767277E+03    -1.767277E+03     0.000000E+00     0.000000E+00'
     '           CMZ   -1.948738E+02    -1.948738E+02     0.000000E+00     0.000000E+00'
     ''
-    '        MONITOR POINT NAME = AE01              COMPONENT = AE01              CLASS = GENERAL                   '
+    '        MONITOR POINT NAME = AE01              COMPONENT = AE01              CLASS = GENERAL'
     """
     header_lines = []
     i0 = i
@@ -606,7 +638,7 @@ def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
     ux = float(ux_str)
     assert trim_type in {'RIGID BODY', 'CONTROL SURFACE'}, trim_type
     assert trim_status in {'FIXED', 'FREE', 'LINKED'}, trim_status
-    assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE', 'RAD/S/S PER G'}, ux_unit
+    assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE', 'LENGTH/S/S', 'RAD/S/S PER G'}, ux_unit
 
     return int_id, name, trim_type, trim_status, ux, ux_unit
 
@@ -849,3 +881,114 @@ def _read_aerostatic_data_recover_output_table_force(f06_file: TextIO,
         loads[i] = force_moment_float
         labels.append(label)
     return line, i, grid_id, loads, labels
+
+
+def _read_hinge_moment_derivatives(f06_file: TextIO,
+                                   line: str, i: int, nlines_max: int,
+                                   trim_results: TrimResults,
+                                   isubcase: int,
+                                   title: str, subtitle: str,
+                                   log: SimpleLogger) -> tuple[str, int]:
+    """
+    Parses:
+      N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S   <-- you are here
+
+
+
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                         MACH = 7.8900E-01                    Q = 1.5000E+00
+
+          CONTROL SURFACE = TFLAP        REFERENCE CHORD LENGTH =  1.000000E+00     REFERENCE AREA =  1.000000E+00
+
+              TRIM VARIABLE               RIGID                             ELASTIC                            INERTIAL
+                                                                 RESTRAINED      UNRESTRAINED         RESTRAINED      UNRESTRAINED
+              AT REFERENCE        -1.755193E-08                -1.012858E-08   -3.274050E-08         0.000000E+00    0.000000E+00
+              ANGLEA              -1.182591E+06                 1.878529E+05   -3.780457E+06         0.000000E+00    0.000000E+00
+    """
+    log.debug(' - reading hinge moment derivatives')
+
+    # skip blank lines to CONFIGURATION
+    line = f06_file.readline()
+    i += 1
+    while line.strip() == '':
+        line = f06_file.readline()
+        i += 1
+
+    # CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+    sline = line.strip().split()
+    assert sline[0] == 'CONFIGURATION', f'expected CONFIGURATION, got {line.strip()!r}'
+
+    # MACH = 7.8900E-01                    Q = 1.5000E+00
+    line = f06_file.readline()
+    i += 1
+    sline = line.strip().split()
+    assert sline[0] == 'MACH', f'expected MACH, got {line.strip()!r}'
+    mach = float(sline[2])
+    q = float(sline[5])
+
+    # blank line
+    line = f06_file.readline()
+    i += 1
+
+    # CONTROL SURFACE = TFLAP        REFERENCE CHORD LENGTH =  1.000000E+00     REFERENCE AREA =  1.000000E+00
+    line = f06_file.readline()
+    i += 1
+    assert 'CONTROL SURFACE' in line, f'expected CONTROL SURFACE, got {line.strip()!r}'
+    sline = line.strip().split()
+    # ['CONTROL', 'SURFACE', '=', 'TFLAP', 'REFERENCE', 'CHORD', 'LENGTH', '=', '1.000000E+00', 'REFERENCE', 'AREA', '=', '1.000000E+00']
+    cs_name = sline[3]
+    cref = float(sline[8])
+    sref = float(sline[12])
+
+    # blank line
+    line = f06_file.readline()
+    i += 1
+
+    # TRIM VARIABLE               RIGID ...
+    line = f06_file.readline()
+    i += 1
+    assert 'TRIM VARIABLE' in line, f'expected TRIM VARIABLE header, got {line.strip()!r}'
+
+    # RESTRAINED      UNRESTRAINED ...
+    line = f06_file.readline()
+    i += 1
+
+    # data rows — stop at blank line or page stamp (starts with '1' in column 1)
+    data_lines = []
+    line = f06_file.readline()
+    i += 1
+    line_strip = line.strip()
+    while line_strip != '' and 'PAGE' not in line:
+        data_lines.append(line_strip)
+        line = f06_file.readline()
+        i += 1
+        line_strip = line.strip()
+
+    names = []
+    deriv_rows = []
+    for data_line in data_lines:
+        sline = data_line.split()
+        # ['AT', 'REFERENCE', '-1.755193E-08', '-1.012858E-08', '-3.274050E-08', '0.000000E+00', '0.000000E+00']
+        # or
+        # ['ANGLEA', '-1.182591E+06', '1.878529E+05', '-3.780457E+06', '0.000000E+00', '0.000000E+00']
+        if sline[0] == 'AT' and sline[1] == 'REFERENCE':
+            # skip the intercept row
+            continue
+        name = sline[0]
+        values = sline[1:]
+        assert len(values) == 5, f'expected 5 values for {name!r}, got {values}'
+        names.append(name)
+        deriv_rows.append([float(v) for v in values])
+
+    names_array = np.array(names, dtype='U16')
+    derivatives = np.array(deriv_rows, dtype='float64')
+
+    # bref is not in this table; use 0.0 as placeholder
+    bref = 0.0
+    label = ''
+    hm = HingeMomentDerivatives(
+        mach, q, cref, bref, sref,
+        cs_name, names_array, derivatives,
+        subcase=isubcase, title=title, subtitle=subtitle, label=label)
+    trim_results.hinge_moment_derivatives[(isubcase, cs_name)] = hm
+    return line, i

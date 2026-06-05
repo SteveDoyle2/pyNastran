@@ -25,7 +25,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     #vslice_by_idim,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str,
+    array_str, array_float,
     array_default_int, array_default_float,
     get_print_card_size,
     #print_card_8_comment, print_card_16_comment,
@@ -190,7 +190,14 @@ class PSHELL(Property):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            property_id = np.hstack([self.property_id, property_id])
+            material_id = np.vstack([self.material_id, material_id])
+            t = np.hstack([self.t, t])
+            twelveIt3 = np.hstack([self.twelveIt3, twelveIt3])
+            tst = np.hstack([self.tst, tst])
+            nsm = np.hstack([self.nsm, nsm])
+            z = np.vstack([self.z, z])
 
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
@@ -200,7 +207,7 @@ class PSHELL(Property):
         self.tst = tst
         self.nsm = nsm
         self.z = z
-        self.n = ncards
+        self.n = len(property_id)
 
     def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
         material_id = np.unique(self.material_id.flatten())
@@ -277,6 +284,9 @@ class PSHELL(Property):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
+        if size == 8:
+            self.write_file_8(bdf_file, write_card_header=write_card_header)
+            return
 
         for pid, mids, t, twelveIt3, tst, nsm, z in zip_longest(self.property_id, self.material_id, self.t,
                                                                 self.twelveIt3, self.tst, self.nsm, self.z):
@@ -300,11 +310,106 @@ class PSHELL(Property):
             mid2b = None if mid2 == -1 else mid2
             mid3b = None if mid3 == -1 else mid3
             mid4b = None if mid4 == -1 else mid4
+
+            # If MID4 is present, the 3rd line (z1, z2, mid4) must be written.
+            # If the 2nd line (twelveIt3, mid3, tst, nsm) would be all blank,
+            # force twelveIt3 to be written so the continuation isn't dropped.
+            if mid4b is not None:
+                if twelveIt3 is None and mid3b is None and tst is None and nsm is None:
+                    twelveIt3 = 1.0
+                if z1b is None and z2b is None:
+                    z1b = z1
+
             list_fields = ['PSHELL', pid, mid1b, t, mid2b,
                            twelveIt3, mid3b, tst, nsm, z1b, z2b, mid4b]
+            while list_fields[-1] is None:
+                list_fields.pop()
             msg = print_card(list_fields)
             bdf_file.write(msg)
         return
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=16, write_card_header=write_card_header)
+            return
+
+        mid1 = self.material_id[:, 0]
+        mid2 = self.material_id[:, 1]
+        mid3 = self.material_id[:, 2]
+        mid4 = self.material_id[:, 3]
+        t = self.t
+        z1 = self.z[:, 0]
+        z2 = self.z[:, 1]
+
+        # fast path: all defaults (12It3=1, tst=0.833333, nsm=0, z=+-t/2, no mid3/mid4)
+        all_defaults = (
+            np.all(self.twelveIt3 == 1.0) and
+            np.all((self.tst > 0.83332) & (self.tst < 0.83334)) and
+            np.all(self.nsm == 0.0) and
+            np.all(mid3 == -1) and
+            np.all(mid4 == -1)
+        )
+        # check z defaults: z1==-t/2, z2==t/2
+        if all_defaults:
+            t_valid = (t != 0.0) & ~np.isnan(t)
+            if np.any(t_valid):
+                t_half = t[t_valid] / 2.0
+                all_defaults = (
+                    np.allclose(z1[t_valid], -t_half) and
+                    np.allclose(z2[t_valid], t_half)
+                )
+
+        if not all_defaults:
+            # per-element fallback with full default logic
+            from pyNastran.bdf.field_writer_8 import print_card_8
+            for pid, mids, ti, twelveIt3, tst, nsm, z in zip_longest(
+                    self.property_id, self.material_id, self.t,
+                    self.twelveIt3, self.tst, self.nsm, self.z):
+                mid1i, mid2i, mid3i, mid4i = mids
+                z1i, z2i = z
+                twelveIt3 = set_blank_if_default(twelveIt3, 1.0)
+                tst = set_blank_if_default(tst, 0.833333)
+                tst2 = set_blank_if_default(tst, 0.83333)
+                if tst is None or tst2 is None:
+                    tst = None
+                nsm = set_blank_if_default(nsm, 0.0)
+                if ti is not None:
+                    t_over_2 = ti / 2.
+                    z1b = set_blank_if_default(z1i, -t_over_2)
+                    z2b = set_blank_if_default(z2i, t_over_2)
+                else:
+                    z1b = z1i
+                    z2b = z2i
+                mid1b = None if mid1i == -1 else mid1i
+                mid2b = None if mid2i == -1 else mid2i
+                mid3b = None if mid3i == -1 else mid3i
+                mid4b = None if mid4i == -1 else mid4i
+
+                if mid4b is not None:
+                    if twelveIt3 is None and mid3b is None and tst is None and nsm is None:
+                        twelveIt3 = 1.0
+                    if z1b is None and z2b is None:
+                        z1b = z1i
+
+                list_fields = ['PSHELL', pid, mid1b, ti, mid2b,
+                               twelveIt3, mid3b, tst, nsm, z1b, z2b, mid4b]
+                while list_fields[-1] is None:
+                    list_fields.pop()
+                bdf_file.write(print_card_8(list_fields))
+            return
+
+        pids = np.char.rjust(array_str(self.property_id, size=8), 8).tolist()
+        ts = np.char.rjust(array_float(t, size=8, is_double=False), 8).tolist()
+
+        # mid1/mid2: -1 means blank
+        mid1_str = np.char.rjust(array_default_int(mid1, default=-1, size=8), 8).tolist()
+        mid2_str = np.char.rjust(array_default_int(mid2, default=-1, size=8), 8).tolist()
+        lines = [f'PSHELL  {pid}{m1}{th}{m2}'.rstrip() + '\n'
+                 for pid, m1, th, m2
+                 in zip(pids, mid1_str, ts, mid2_str)]
+        bdf_file.write(''.join(lines))
 
     @property
     def allowed_materials(self) -> list[Any]:
@@ -390,11 +495,11 @@ class PSHELL(Property):
 
         #if self.mid2_ref:
         Qbar2 = self.get_Qbar_matrix(mid2, theta=theta)
-        D += Qbar2 * (z1 ** 3 - z0 ** 3) * self.twelveIt3
+        D += Qbar2 * (z1 ** 3 - z0 ** 3) / 3. * self.twelveIt3
         #Qbar3 = self.get_Qbar_matrix(self.mid3_ref, theta=0.)
         #if self.mid4_ref:
         Qbar4 = self.get_Qbar_matrix(mid4, theta=theta)
-        B += Qbar4 * (z1 ** 2 - z0 ** 2)
+        B += Qbar4 * (z1 ** 2 - z0 ** 2) / 2.
 
         unused_ts = self.tst * thickness
 
@@ -610,7 +715,15 @@ class PAABSF(Property):
             ifile = np.zeros(ncards, dtype='int32')
 
         if len(self.property_id) != 0:
-            raise NotImplementedError()
+            ifile = np.hstack([self.ifile, ifile])
+            property_id = np.hstack([self.property_id, property_id])
+            table_reactance_real = np.hstack([self.table_reactance_real, table_reactance_real])
+            table_reactance_imag = np.hstack([self.table_reactance_imag, table_reactance_imag])
+            s = np.hstack([self.s, s])
+            a = np.hstack([self.a, a])
+            b = np.hstack([self.b, b])
+            k = np.hstack([self.k, k])
+            rho_c = np.hstack([self.rho_c, rho_c])
 
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
@@ -621,7 +734,7 @@ class PAABSF(Property):
         self.b = b
         self.k = k
         self.rho_c = rho_c
-        self.n = ncards
+        self.n = len(property_id)
 
     def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
         tableds = np.unique(np.hstack([
@@ -1593,11 +1706,11 @@ class PCOMP(CompositeProperty):
         #assert len(mids) == len(mids_ref), f'mids={mids} ({len(mids)}) mids_ref:\n{mids_ref}; {len(mids_ref)}'
         for lam, z0, (ilayer0, ilayer1) in zip(self.lam, self.z0, self.ilayer):
             mids = self.material_id[ilayer0:ilayer1]
-            thetas = self.theta[ilayer0:ilayer1]
+            thetas = np.radians(self.theta[ilayer0:ilayer1])
             thicknesses = self.thickness[ilayer0:ilayer1]
             csum = np.cumsum(thicknesses)
             z0 = z0 + np.hstack([0., csum[:-1]])
-            z1 = z0 + csum
+            z1 = z0 + thicknesses
             zmeans = (z0 + z1) / 2
 
             Qbar = self.get_Qbar_matrix(mids, thetas)
@@ -1888,7 +2001,21 @@ class PCOMPG(CompositeProperty):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            ifile = np.hstack([self.ifile, ifile])
+            property_id = np.hstack([self.property_id, property_id])
+            nsm = np.hstack([self.nsm, nsm])
+            shear_bonding = np.hstack([self.shear_bonding, shear_bonding])
+            failure_theory = np.hstack([self.failure_theory, failure_theory])
+            tref = np.hstack([self.tref, tref])
+            lam = np.hstack([self.lam, lam])
+            z0 = np.hstack([self.z0, z0])
+            ge = np.hstack([self.ge, ge])
+            nlayer = np.hstack([self.nlayer, nlayer])
+            global_ply_id = np.hstack([self.global_ply_id, global_ply_id])
+            material_id = np.hstack([self.material_id, material_id])
+            thickness = np.hstack([self.thickness, thickness])
+            sout = np.hstack([self.sout, sout])
+            theta = np.hstack([self.theta, theta])
 
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
@@ -1908,6 +2035,12 @@ class PCOMPG(CompositeProperty):
         self.thickness = thickness
         self.sout = sout
         self.theta = theta
+
+    def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMPG:
+        """uses a property_id to extract PCOMPGs"""
+        iprop = self.index(property_id)
+        prop = self.slice_card_by_index(iprop)
+        return prop
 
     def __apply_slice__(self, prop: PCOMPG, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
@@ -2460,7 +2593,14 @@ class PSHLN1(Property):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+            ifile = np.hstack([self.ifile, ifile])
+            property_id = np.hstack([self.property_id, property_id])
+            material_id = np.vstack([self.material_id, material_id])
+            analysis = np.hstack([self.analysis, analysis])
+            beh = np.vstack([self.beh, beh])
+            beh_h = np.vstack([self.beh_h, beh_h])
+            integration = np.vstack([self.integration, integration])
+            integration_h = np.vstack([self.integration_h, integration_h])
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
@@ -2906,7 +3046,7 @@ def get_2d_plate_transform(theta: np.ndarray) -> np.ndarray:
 
     T126 = np.zeros((ntheta, 3, 3), dtype='float64')
     T126[:, 0, 0] = T126[:, 1, 1] = ct2
-    T126[:, 0, 1] = T126[:, 0, 1] = st2
+    T126[:, 0, 1] = T126[:, 1, 0] = st2
     T126[:, 0, 2] = 2 * cst
     T126[:, 1, 2] = -2 * cst
     T126[:, 2, 0] = -cst

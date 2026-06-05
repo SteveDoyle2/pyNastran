@@ -908,6 +908,86 @@ class TestF06Utils(unittest.TestCase):
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB,
                      show=False, log=log)
 
+        # --- hinge moment derivatives ---
+        out_dict = read_f06_trim(f06_filename, log=log, nlines_max=1_000_000, debug=None)
+        hmd = out_dict['trim_results'].hinge_moment_derivatives
+        assert len(hmd) == 1, f'expected 1 hinge moment entry, got {len(hmd)}'
+        assert (1, 'TFLAP') in hmd
+
+        hm = hmd[(1, 'TFLAP')]
+        assert hm.cs_name == 'TFLAP'
+        assert hm.subcase == 1
+        assert hm.mach == 0.789
+        assert hm.q == 1.5
+        assert hm.cref == 1.0
+        assert hm.sref == 1.0
+
+        expected_names = ['ANGLEA', 'PITCH', 'URDD3', 'URDD5', 'TFLAP']
+        assert list(hm.names) == expected_names, f'names mismatch: {list(hm.names)}'
+        assert hm.data.shape == (5, 5), f'data shape {hm.data.shape} != (5, 5)'
+
+        # columns: rigid, elastic_restrained, elastic_unrestrained,
+        #          inertial_restrained, inertial_unrestrained
+        assert np.isclose(hm.data[0, 0], -1.182591e+06, rtol=1e-5)
+        assert np.isclose(hm.data[4, 2], -3.332897e+06, rtol=1e-5)
+        assert np.allclose(hm.data[:, 3], 0.0)
+        assert np.allclose(hm.data[:, 4], 0.0)
+
+        # test get_stats and write_f06
+        stats = hm.get_stats()
+        assert 'TFLAP' in stats
+
+        import io
+        f06_out = io.StringIO()
+        hm.write_f06(f06_out, header=[], page_stamp='PAGE %d\n', page_num=1)
+        written = f06_out.getvalue()
+        assert 'H I N G E' in written
+        assert 'TFLAP' in written
+        assert 'ANGLEA' in written
+        assert 'AT REFERENCE' not in written
+
+    def test_f06_trim_bwb_force(self):
+        """tests f06_to_pressure_loads force/moment path"""
+        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.bdf'
+        aerobox_caero_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.caero.bdf'
+        f06_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.f06'
+        loads_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim_force.blk'
+        nid_csv_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim_force.nid'
+        eid_csv_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim_force.eid'
+        log = SimpleLogger(level='warning')
+        model = read_bdf(bdf_filename, log=log)
+        export_caero_mesh(
+            model,
+            caero_bdf_filename=aerobox_caero_filename,
+            is_aerobox_model=True,
+            pid_method='caero',
+            write_panel_xyz=False)
+
+        trim_results = f06_to_pressure_loads(
+            f06_filename, aerobox_caero_filename,
+            loads_filename,
+            nid_csv_filename=nid_csv_filename,
+            eid_csv_filename=eid_csv_filename,
+            log=log, nlines_max=1_000_000)
+
+        # verify force data was written
+        assert loads_filename.exists(), f'{loads_filename} not found'
+        with open(loads_filename) as f:
+            loads_text = f.read()
+        assert 'FORCE' in loads_text, 'no FORCE cards in loads file'
+        assert 'MOMENT' in loads_text, 'no MOMENT cards in loads file'
+
+        # verify CSV has Fz/My columns
+        with open(nid_csv_filename) as f:
+            header = f.readline()
+        assert 'Fz_Sub' in header, f'Fz not in nid csv header: {header}'
+        assert 'My_Sub' in header, f'My not in nid csv header: {header}'
+
+        with open(eid_csv_filename) as f:
+            header = f.readline()
+        assert 'Fz_Sub' in header, f'Fz not in eid csv header: {header}'
+        assert 'My_Sub' in header, f'My not in eid csv header: {header}'
+
     def test_f06_trim_freedlm(self):
         """tests read_f06_trim"""
         bdf_filename = AERO_PATH / 'freedlm' / 'freedlm.bdf'
@@ -943,10 +1023,36 @@ class TestF06Utils(unittest.TestCase):
         aforce = trim_results.aero_force[key0]
         nids = aforce.nodes
         force = aforce.force
-        #print(eids)
-        #print(press)
-        #print(f'npressure = {len(press)}')
-        #print(f'nforce = {len(force)}')
+
+        # --- hinge moment derivatives (2 subcases, 1 control surface) ---
+        hmd = trim_results.hinge_moment_derivatives
+        assert len(hmd) == 2, f'expected 2 hinge moment entries, got {len(hmd)}'
+        assert (1, 'ELEV_L') in hmd
+        assert (2, 'ELEV_L') in hmd
+
+        hm1 = hmd[(1, 'ELEV_L')]
+        assert hm1.cs_name == 'ELEV_L'
+        assert hm1.subcase == 1
+        assert hm1.mach == 0.4
+        assert hm1.q == 1.65
+
+        assert len(hm1.names) == 16
+        assert hm1.data.shape == (16, 5)
+        assert 'ELEV_L' in list(hm1.names)
+        assert 'ANGLEA' in list(hm1.names)
+        assert 'URDD3' in list(hm1.names)
+
+        # ELEV_L rigid derivative
+        assert np.isclose(hm1.data[0, 0], -9.655379e+02, rtol=1e-5)
+        # PITCH elastic_restrained
+        pitch_idx = list(hm1.names).index('PITCH')
+        assert np.isclose(hm1.data[pitch_idx, 1], 3.824662e+03, rtol=1e-5)
+
+        # subcase 2 should have same structure
+        hm2 = hmd[(2, 'ELEV_L')]
+        assert hm2.subcase == 2
+        assert hm2.data.shape == hm1.data.shape
+        assert list(hm2.names) == list(hm1.names)
 
     def test_f06_trim_aerobeam(self):
         """tests read_f06_trim"""

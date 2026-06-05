@@ -2656,7 +2656,8 @@ def build_normals_quality(settings: Settings,
                           max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio,
                           make_offset_normals_dim: bool=True,
                           make_xyz: bool=False, make_nnodes_result: bool=False,
-                          is_testing: bool=False) -> tuple[int, Any]:
+                          is_testing: bool=False,
+                          nid_map: dict[int, int] | None=None) -> tuple[int, Any]:
     """
     Creates some nastran specific results
 
@@ -2687,7 +2688,8 @@ def build_normals_quality(settings: Settings,
     nnodes_array = None
     if make_offset_normals_dim:
         try:
-            out = build_offset_normals_dims(model, eid_map, nelements)
+            out = build_offset_normals_dims(model, eid_map, nelements,
+                                                xyz_cid0=xyz_cid0, nid_map=nid_map)
             normals, offset, xoffset, yoffset, zoffset, element_dim, nnodes_array = out
         except KeyError as error:
             exc_type, exc_value, exc_traceback = sys.exc_info()

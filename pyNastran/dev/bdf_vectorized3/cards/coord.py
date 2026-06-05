@@ -913,6 +913,9 @@ class COORD(VectorizedBaseCard):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
+        if size == 8 and not is_double:
+            self.write_file_8(bdf_file, write_card_header=write_card_header)
+            return
 
         class_name = self.type
         nodes = array_str(self.nodes, size=size)
@@ -962,6 +965,54 @@ class COORD(VectorizedBaseCard):
                     assert rid != '-1'
                 bdf_file.write(print_card(fields))
         return
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=16, write_card_header=write_card_header)
+            return
+
+        is_cord2 = (self.icoord == 2)
+        is_cord1 = (self.icoord == 1)
+        non_zero = (self.coord_id != 0)
+
+        # batch CORD2x cards
+        mask2 = is_cord2 & non_zero
+        if np.any(mask2):
+            cids = np.char.rjust(array_str(self.coord_id[mask2], size=8), 8).tolist()
+            rids = np.char.rjust(array_default_int(self.ref_coord_id[mask2], default=0, size=8), 8).tolist()
+            e1 = np.char.rjust(array_float(self.e1[mask2], size=8, is_double=False), 8)
+            e2 = np.char.rjust(array_float(self.e2[mask2], size=8, is_double=False), 8)
+            e3 = np.char.rjust(array_float(self.e3[mask2], size=8, is_double=False), 8)
+            o1 = e1[:, 0].tolist()
+            o2 = e1[:, 1].tolist()
+            o3 = e1[:, 2].tolist()
+            z1 = e2[:, 0].tolist()
+            z2 = e2[:, 1].tolist()
+            z3 = e2[:, 2].tolist()
+            x1 = e3[:, 0].tolist()
+            x2 = e3[:, 1].tolist()
+            x3 = e3[:, 2].tolist()
+            ctypes = self.coord_type[mask2]
+            lines = [f'CORD2{ct}  {cid}{rid}{a1}{a2}{a3}{b1}{b2}{b3}\n        {c1}{c2}{c3}\n'
+                     for ct, cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3
+                     in zip(ctypes.tolist(), cids, rids, o1, o2, o3, z1, z2, z3, x1, x2, x3)]
+            bdf_file.write(''.join(lines))
+
+        # batch CORD1x cards
+        mask1 = is_cord1 & non_zero
+        if np.any(mask1):
+            cids = np.char.rjust(array_str(self.coord_id[mask1], size=8), 8).tolist()
+            nodes_ = np.char.rjust(array_str(self.nodes[mask1], size=8), 8)
+            n1s = nodes_[:, 0].tolist()
+            n2s = nodes_[:, 1].tolist()
+            n3s = nodes_[:, 2].tolist()
+            ctypes = self.coord_type[mask1]
+            lines = [f'CORD1{ct}  {cid}{n1}{n2}{n3}\n'
+                     for ct, cid, n1, n2, n3
+                     in zip(ctypes.tolist(), cids, n1s, n2s, n3s)]
+            bdf_file.write(''.join(lines))
 
     def transform_force_local_to_global(self, force: np.ndarray, local_coord_id: int=0) -> np.ndarray:
         force2 = np.full(force.shape, np.nan, dtype=force.dtype)

@@ -17,7 +17,11 @@ from vtkmodules.vtkRenderingCore import (
     vtkPolyDataMapper, vtkRenderer)
 from vtkmodules.vtkRenderingLOD import vtkLODActor
 from vtkmodules.vtkRenderingLabel import vtkLabeledDataMapper
-from vtkmodules.vtkFiltersCore import vtkCellCenters, vtkIdFilter
+try:
+    from vtkmodules.vtkFiltersCore import vtkCellCenters, vtkIdFilter
+except ImportError:
+    # VTK 9.6+ renamed vtkIdFilter to vtkGenerateIds
+    from vtkmodules.vtkFiltersCore import vtkCellCenters, vtkGenerateIds as vtkIdFilter
 from vtkmodules.vtkFiltersGeometry import vtkUnstructuredGridGeometryFilter
 from vtkmodules.vtkFiltersGeneral import vtkVertexGlyphFilter
 

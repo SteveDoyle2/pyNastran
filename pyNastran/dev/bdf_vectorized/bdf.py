@@ -2553,11 +2553,14 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             is_origin = np.abs(coord.origin).max() == 0.
             xyzi = coord.coord_to_xyz_array(xyz_cp[inode, :])
             if is_beta and is_origin:
-                xyz_cid0[inode, :] = xyzi @ beta + coord.origin
+                # identity rotation and zero origin — pass through
+                xyz_cid0[inode, :] = xyzi
             elif is_beta:
-                xyz_cid0[inode, :] = xyzi @ beta
-            else:
+                # identity rotation, non-zero origin — add origin only
                 xyz_cid0[inode, :] = xyzi + coord.origin
+            else:
+                # non-identity rotation — full transform
+                xyz_cid0[inode, :] = xyzi @ beta + coord.origin
 
         if cid == 0:
             return xyz_cid0
@@ -2565,13 +2568,16 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         is_beta = np.abs(np.diagonal(beta2)).min() == 1.
         is_origin = np.abs(coord2.origin).max() == 0.
         if is_beta and is_origin:
-            xyzi = (xyz_cid0 - coord2.origin) @ beta2.T
+            # identity rotation and zero origin — pass through
+            xyzi = xyz_cid0
             xyz_cid = coord2.xyz_to_coord_array(xyzi)
         elif is_beta:
-            xyzi = xyz_cid0 @ beta2.T
+            # identity rotation, non-zero origin — subtract origin only
+            xyzi = xyz_cid0 - coord2.origin
             xyz_cid = coord2.xyz_to_coord_array(xyzi)
         else:
-            xyzi = xyz_cid0 - coord2.origin
+            # non-identity rotation — full transform
+            xyzi = (xyz_cid0 - coord2.origin) @ beta2.T
             xyz_cid = coord2.xyz_to_coord_array(xyzi)
 
         return xyz_cid

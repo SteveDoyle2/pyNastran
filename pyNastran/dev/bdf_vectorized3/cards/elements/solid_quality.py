@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from .shell_quality import tri_quality_xyz, quad_quality_xyz, Quality # tri_quality_xyz0,
+from .shell_quality import tri_quality_xyz, quad_quality_xyz, Quality, _fast_searchsorted
 if TYPE_CHECKING:  # pragma: no cover
     from .solid import CTETRA, CHEXA, CPENTA, CPYRAM
 
@@ -17,9 +17,7 @@ def penta_quality(self: CPENTA) -> Quality:
 
     xyz = grid.xyz_cid0()
     nid = grid.node_id
-    inode = np.searchsorted(nid, nodes)
-    actual_nodes = nid[inode]
-    assert np.array_equal(actual_nodes, nodes)
+    inode = _fast_searchsorted(nid, nodes)
 
     tri_faces = [
         (3, 4, 5),
@@ -45,9 +43,7 @@ def pyram_quality(self: CPYRAM) -> Quality:
 
     xyz = grid.xyz_cid0()
     nid = grid.node_id
-    inode = np.searchsorted(nid, nodes)
-    actual_nodes = nid[inode]
-    assert np.array_equal(actual_nodes, nodes)
+    inode = _fast_searchsorted(nid, nodes)
 
     tri_faces = [
         (0, 1, 4),
@@ -65,9 +61,7 @@ def tetra_quality(self: CTETRA) -> Quality:
 
     xyz = grid.xyz_cid0()
     nid = grid.node_id
-    inode = np.searchsorted(nid, nodes)
-    actual_nodes = nid[inode]
-    assert np.array_equal(actual_nodes, nodes)
+    inode = _fast_searchsorted(nid, nodes)
     faces = [
         (0, 1, 2),
         (0, 1, 3),
@@ -87,10 +81,14 @@ def tetra_quality(self: CTETRA) -> Quality:
     dideal_theta = np.full((nelements, 4), np.nan, dtype='float64')
     min_edge_length = np.full((nelements, 4), np.nan, dtype='float64')
     max_warp = np.full((nelements, 4), np.nan, dtype='float64')
+    nastran_skew = np.full((nelements, 4), np.nan, dtype='float64')
+    nastran_taper = np.full((nelements, 4), np.nan, dtype='float64')
+    nastran_warp = np.full((nelements, 4), np.nan, dtype='float64')
     for i, face in enumerate(faces):
         qualityi = tri_quality_xyz(xyz, inode[:, face])
         (areai, taper_ratioi, area_ratioi, max_skewi, aspect_ratioi,
-         min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warpi) = qualityi
+         min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warpi,
+         nastran_skewi, nastran_taperi, nastran_warpi) = qualityi
         taper_ratio[:, i] = taper_ratioi
         area_ratio[:, i] = area_ratioi
         max_skew[:, i] = max_skewi
@@ -100,6 +98,9 @@ def tetra_quality(self: CTETRA) -> Quality:
         dideal_theta[:, i] = dideal_thetai
         min_edge_length[:, i] = min_edge_lengthi
         max_warp[:, i] = max_warpi
+        nastran_skew[:, i] = nastran_skewi
+        nastran_taper[:, i] = nastran_taperi
+        nastran_warp[:, i] = nastran_warpi
 
     taper_ratio = np.max(taper_ratio, axis=1)
     area_ratio = np.max(area_ratio, axis=1)
@@ -110,10 +111,14 @@ def tetra_quality(self: CTETRA) -> Quality:
     dideal_theta = np.max(dideal_theta, axis=1)
     min_edge_length = np.max(min_edge_length, axis=1)
     max_warp = np.max(max_warp, axis=1)
+    nastran_skew = np.min(nastran_skew, axis=1)
+    nastran_taper = np.max(nastran_taper, axis=1)
+    nastran_warp = np.max(nastran_warp, axis=1)
     assert len(taper_ratio) == nelements
 
     out = (area, taper_ratio, area_ratio, max_skew, aspect_ratio,
-           min_theta, max_theta, dideal_theta, min_edge_length, max_warp)
+           min_theta, max_theta, dideal_theta, min_edge_length, max_warp,
+           nastran_skew, nastran_taper, nastran_warp)
     return out
 
 
@@ -123,9 +128,7 @@ def chexa_quality(self: CHEXA) -> Quality:
 
     xyz = grid.xyz_cid0()
     nid = grid.node_id
-    inode = np.searchsorted(nid, nodes)
-    actual_nodes = nid[inode]
-    assert np.array_equal(actual_nodes, nodes)
+    inode = _fast_searchsorted(nid, nodes)
 
     quad_faces = [
         (0, 1, 2, 3),  # 1, 2, 3, 4 # inward
@@ -192,9 +195,11 @@ def _tri_quad_quality(tri_faces: list[tuple[int, int, int]],
     quality3 = _tri_quality(tri_faces, inode, xyz)
     quality4 = _quad_quality(quad_faces, inode, xyz)
     (area3, taper_ratio3, area_ratio3, max_skew3, aspect_ratio3,
-     min_theta3, max_theta3, dideal_theta3, min_edge_length3, unused_max_warp3) = quality3
+     min_theta3, max_theta3, dideal_theta3, min_edge_length3, unused_max_warp3,
+     nastran_skew3, nastran_taper3, nastran_warp3) = quality3
     (area4, taper_ratio4, area_ratio4, max_skew4, aspect_ratio4,
-     min_theta4, max_theta4, dideal_theta4, min_edge_length4, max_warp4) = quality4
+     min_theta4, max_theta4, dideal_theta4, min_edge_length4, max_warp4,
+     nastran_skew4, nastran_taper4, nastran_warp4) = quality4
     area = (area3 + area4) / 2
     taper_ratio     = np.column_stack([taper_ratio3, taper_ratio4]).max(axis=1)
     area_ratio      = np.column_stack([area_ratio3, area_ratio4]).max(axis=1)
@@ -205,10 +210,14 @@ def _tri_quad_quality(tri_faces: list[tuple[int, int, int]],
     dideal_theta    = np.column_stack([dideal_theta3, dideal_theta4]).max(axis=1)
     min_edge_length = np.column_stack([min_edge_length3, min_edge_length4]).max(axis=1)
     max_warp = max_warp4
+    nastran_skew    = np.column_stack([nastran_skew3, nastran_skew4]).min(axis=1)
+    nastran_taper   = np.column_stack([nastran_taper3, nastran_taper4]).max(axis=1)
+    nastran_warp    = np.column_stack([nastran_warp3, nastran_warp4]).max(axis=1)
     assert len(min_edge_length) == len(min_edge_length3)
 
     out = (area, taper_ratio, area_ratio, max_skew, aspect_ratio,
-           min_theta, max_theta, dideal_theta, min_edge_length, max_warp)
+           min_theta, max_theta, dideal_theta, min_edge_length, max_warp,
+           nastran_skew, nastran_taper, nastran_warp)
     return out
 
 
@@ -228,18 +237,15 @@ def _tri_quality(tri_faces: list[tuple[int, int, int]],
     dideal_theta = np.full((nelements, nfaces), np.nan, dtype='float64')
     min_edge_length = np.full((nelements, nfaces), np.nan, dtype='float64')
     max_warp = np.full((nelements, nfaces), np.nan, dtype='float64')
+    nastran_skew = np.full((nelements, nfaces), np.nan, dtype='float64')
+    nastran_taper = np.full((nelements, nfaces), np.nan, dtype='float64')
+    nastran_warp = np.full((nelements, nfaces), np.nan, dtype='float64')
 
     for i, face in enumerate(tri_faces):
-        #in1 = inode[:, face[0]]
-        #in2 = inode[:, face[1]]
-        #in3 = inode[:, face[2]]
-        #n1 = xyz[in1, :]
-        #n2 = xyz[in2, :]
-        #n3 = xyz[in3, :]
-        #qualityi = tri_quality_xyz(n1, n2, n3)
         qualityi = tri_quality_xyz(xyz, inode[:, face])
         (areai, taper_ratioi, area_ratioi, max_skewi, aspect_ratioi,
-         min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warpi) = qualityi
+         min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warpi,
+         nastran_skewi, nastran_taperi, nastran_warpi) = qualityi
         taper_ratio[:, i] = taper_ratioi
         area_ratio[:, i] = area_ratioi
         max_skew[:, i] = max_skewi
@@ -249,6 +255,9 @@ def _tri_quality(tri_faces: list[tuple[int, int, int]],
         dideal_theta[:, i] = dideal_thetai
         min_edge_length[:, i] = min_edge_lengthi
         max_warp[:, i] = max_warpi
+        nastran_skew[:, i] = nastran_skewi
+        nastran_taper[:, i] = nastran_taperi
+        nastran_warp[:, i] = nastran_warpi
 
     taper_ratio = np.max(taper_ratio, axis=1)
     area_ratio = np.max(area_ratio, axis=1)
@@ -259,10 +268,14 @@ def _tri_quality(tri_faces: list[tuple[int, int, int]],
     dideal_theta = np.max(dideal_theta, axis=1)
     min_edge_length = np.max(min_edge_length, axis=1)
     max_warp = np.max(max_warp, axis=1)
+    nastran_skew = np.min(nastran_skew, axis=1)
+    nastran_taper = np.max(nastran_taper, axis=1)
+    nastran_warp = np.max(nastran_warp, axis=1)
     assert len(taper_ratio) == nelements
 
     out = (area, taper_ratio, area_ratio, max_skew, aspect_ratio,
-           min_theta, max_theta, dideal_theta, min_edge_length, max_warp)
+           min_theta, max_theta, dideal_theta, min_edge_length, max_warp,
+           nastran_skew, nastran_taper, nastran_warp)
     return out
 
 def _quad_quality(quad_faces: list[tuple[int, int, int, int]],
@@ -281,6 +294,9 @@ def _quad_quality(quad_faces: list[tuple[int, int, int, int]],
     dideal_theta = np.full((nelements, nfaces), np.nan, dtype='float64')
     min_edge_length = np.full((nelements, nfaces), np.nan, dtype='float64')
     max_warp = np.full((nelements, nfaces), np.nan, dtype='float64')
+    nastran_skew = np.full((nelements, nfaces), np.nan, dtype='float64')
+    nastran_taper = np.full((nelements, nfaces), np.nan, dtype='float64')
+    nastran_warp = np.full((nelements, nfaces), np.nan, dtype='float64')
 
     for i, face in enumerate(quad_faces):
         in1 = inode[:, face[0]]
@@ -293,7 +309,8 @@ def _quad_quality(quad_faces: list[tuple[int, int, int, int]],
         n4 = xyz[in4, :]
         qualityi = quad_quality_xyz(n1, n2, n3, n4)
         (areai, taper_ratioi, area_ratioi, max_skewi, aspect_ratioi,
-             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warpi) = qualityi
+         min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warpi,
+         nastran_skewi, nastran_taperi, nastran_warpi) = qualityi
         taper_ratio[:, i] = taper_ratioi
         area_ratio[:, i] = area_ratioi
         max_skew[:, i] = max_skewi
@@ -303,6 +320,9 @@ def _quad_quality(quad_faces: list[tuple[int, int, int, int]],
         dideal_theta[:, i] = dideal_thetai
         min_edge_length[:, i] = min_edge_lengthi
         max_warp[:, i] = max_warpi
+        nastran_skew[:, i] = nastran_skewi
+        nastran_taper[:, i] = nastran_taperi
+        nastran_warp[:, i] = nastran_warpi
 
     taper_ratio = np.max(taper_ratio, axis=1)
     area_ratio = np.max(area_ratio, axis=1)
@@ -313,8 +333,12 @@ def _quad_quality(quad_faces: list[tuple[int, int, int, int]],
     dideal_theta = np.max(dideal_theta, axis=1)
     min_edge_length = np.max(min_edge_length, axis=1)
     max_warp = np.max(max_warp, axis=1)
+    nastran_skew = np.min(nastran_skew, axis=1)
+    nastran_taper = np.max(nastran_taper, axis=1)
+    nastran_warp = np.max(nastran_warp, axis=1)
     assert len(taper_ratio) == nelements
 
     out = (area, taper_ratio, area_ratio, max_skew, aspect_ratio,
-           min_theta, max_theta, dideal_theta, min_edge_length, max_warp)
+           min_theta, max_theta, dideal_theta, min_edge_length, max_warp,
+           nastran_skew, nastran_taper, nastran_warp)
     return out

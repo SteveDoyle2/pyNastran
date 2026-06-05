@@ -4,6 +4,5 @@
 
 .. automodule:: pyNastran.bdf.mesh_utils.mirror_mesh
     :members:
-    :private-members:
     :undoc-members:
 

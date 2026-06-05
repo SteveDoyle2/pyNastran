@@ -5,6 +5,5 @@
 
 .. automodule:: pyNastran.bdf.bdf_interface.verify_validate
     :members:
-    :private-members:
     :undoc-members:
 

@@ -1,8 +1,11 @@
 """Defines functions for single precision 8 character field writing."""
 import sys
+import math
 import warnings
 from typing import Optional, Any
-from numpy import float32, float64, isnan
+
+import numpy as np
+from numpy import int32, int64, float32, float64, isnan
 
 
 def set_string8_blank_if_default(value: Any, default: Any) -> str:
@@ -63,28 +66,26 @@ def print_scientific_8(value: float) -> str:
 
     """
     if value == 0.0:
-        return '      0.'  # '%8s' % '0.'
+        return '      0.'
 
-    python_value = '%8.11e' % value
-    svalue, sexponent = python_value.strip().split('e')
-    exponent = int(sexponent)  # removes 0s
+    abs_val = abs(value)
+    exponent = int(math.floor(math.log10(abs_val)))
+    mantissa = value / 10.0 ** exponent
+    # Fix floating point edge case where mantissa rounds to 10
+    if abs(mantissa) >= 9.9999999999:
+        mantissa /= 10.0
+        exponent += 1
 
-    sign = '-' if abs(value) < 1. else '+'
-
-    # the exponent will be added later...
-    exp2 = str(exponent).strip('-+')
-    value2 = float(svalue)
+    exp2 = str(abs(exponent))
+    sign = '-' if exponent < 0 else '+'
 
     leftover = 5 - len(exp2)
-
     if value < 0:
-        fmt = "%%1.%df" % (leftover - 1)
-    else:
-        fmt = "%%1.%df" % leftover
+        leftover -= 1
 
-    svalue3 = fmt % value2
-    svalue4 = svalue3.strip('0')
-    field = "%8s" % (svalue4 + sign + exp2)
+    svalue3 = ('%1.' + str(leftover) + 'f') % mantissa
+    svalue4 = svalue3.rstrip('0')
+    field = '%8s' % (svalue4 + sign + exp2)
     return field
 
 
@@ -146,12 +147,13 @@ def print_float_8(value: float) -> str:
             field = "%8.1f" % value
         else:  # big value
             field = "%8.1f" % value
-            if field.index('.') < 8:
+            if '.' not in field or field.index('.') >= 8:
+                field = print_scientific_8(value)
+            else:
                 field = '%8.1f' % round(value)
                 field = field[0:8]
-                #assert '.' != field[0], field
-            else:
-                field = print_scientific_8(value)
+                if '.' not in field:
+                    field = print_scientific_8(value)
             return field
     else:
         if value > -5e-7:
@@ -250,7 +252,7 @@ def print_field_8(value: Optional[int | float | str]) -> str:
         an 8-character string
 
     """
-    if isinstance(value, int):
+    if isinstance(value, (int, int32, int64)):
         field = '%8d' % value
     elif isinstance(value, (float, float32, float64)):
         field = print_float_8(value)
@@ -434,3 +436,65 @@ def print_int_card_blocks(fields_blocks: list[Any]) -> str:
             raise SyntaxError('is_all_ints must be a boolean.  is_all_ints=%r' % is_all_ints)
     out = out.rstrip(' \n') + '\n'  # removes blank lines at the end of cards
     return out
+
+
+_POS_BINS_8 = [
+    (0.1, 1.0, '%8.7f'),
+    (1.0, 10.0, '%8.6f'),
+    (10.0, 100.0, '%8.5f'),
+    (100.0, 1000.0, '%8.4f'),
+    (1000.0, 10000.0, '%8.3f'),
+    (10000.0, 100000.0, '%8.2f'),
+    (100000.0, 1000000.0, '%8.1f'),
+]
+
+_NEG_BINS_8 = [
+    (0.1, 1.0, '%8.6f'),
+    (1.0, 10.0, '%8.5f'),
+    (10.0, 100.0, '%8.4f'),
+    (100.0, 1000.0, '%8.3f'),
+    (1000.0, 10000.0, '%8.2f'),
+    (10000.0, 100000.0, '%8.1f'),
+]
+
+
+def array_float_8(ndarray: np.ndarray) -> np.ndarray:
+    """Vectorized print_float_8 for arrays — bins values by magnitude
+    and formats in batches to avoid per-element Python call overhead."""
+    shape = ndarray.shape
+    flat = ndarray.ravel()
+    n = len(flat)
+    result = np.empty(n, dtype='|U8')
+    abs_val = np.abs(flat)
+    processed = np.zeros(n, dtype=bool)
+
+    izero = flat == 0.0
+    result[izero] = '      0.'
+    processed |= izero
+
+    pos = flat > 0
+    neg = flat < 0
+
+    for lo, hi, fmt in _POS_BINS_8:
+        mask = pos & (flat >= lo) & (flat < hi)
+        if not np.any(mask):
+            continue
+        indices = np.where(mask)[0]
+        result[indices] = [((fmt % v).strip(' 0') or '0.').rjust(8)
+                           for v in flat[indices]]
+        processed[indices] = True
+
+    for lo, hi, fmt in _NEG_BINS_8:
+        mask = neg & (abs_val >= lo) & (abs_val < hi)
+        if not np.any(mask):
+            continue
+        indices = np.where(mask)[0]
+        result[indices] = [((fmt % v).replace('-0.', '-.').strip(' 0') or '-.').rjust(8)
+                           for v in flat[indices]]
+        processed[indices] = True
+
+    remaining = np.where(~processed)[0]
+    for idx in remaining:
+        result[idx] = print_float_8(flat[idx])
+
+    return result.reshape(shape)

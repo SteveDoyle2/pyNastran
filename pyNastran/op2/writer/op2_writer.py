@@ -339,7 +339,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     ]
     skip_results = {'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3', 'cstm'}
 
-    sort_subcases = False
+    sort_subcases = True
     subcases_set = set([])
     res_categories2 = defaultdict(list)
     for table_type in obj.get_table_types():
@@ -386,7 +386,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                 continue
             slot_dict = getattr(obj, key)  # obj.eigenvalues
             for unused_title, eigenvalue in slot_dict.items():
-                subcase_id = eigenvalues_list.isubcase  # TODO: not 100%
+                subcase_id = eigenvalue.isubcase  # TODO: not 100%
                 subcases_set.add(subcase_id)
                 res_categories2[(subcase_id, eigenvalue.table_name)].append(eigenvalue)
     else:
@@ -429,7 +429,6 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                 if table_name in skip_tables:
                     log.warning(f'skipping table={table_name}')
                     continue
-                print(subcase_table_name)
                 results = res_categories2[subcase_table_name]
                 case_count = _write_results_for_table(
                     op2_file, fop2_ascii,
@@ -488,7 +487,7 @@ def _write_results_for_table(op2_file: BinaryIO, fop2_ascii: TextIO,
                              table_names_found: list[str],
                              endian: bytes, log: SimpleLogger,
                              struct_9i,
-                             date: tuple[int, int, int]) -> None:
+                             date: tuple[int, int, int]) -> int:
     # print(f'op2_writer: nresults = {len(results)}')
     itable = -1
     case_count = 0

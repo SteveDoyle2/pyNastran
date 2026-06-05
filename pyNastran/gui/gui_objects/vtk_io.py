@@ -17,6 +17,9 @@ from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
 
 from pyNastran.gui.vtk_common_core import vtkPoints, vtkTypeFloat32Array, VTK_ID_TYPE
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
+
+_USE_LEGACY_SET_CELLS = (VTK_VERSION_SPLIT[0] == 9 and VTK_VERSION_SPLIT[1] < 6)
 from pyNastran.gui.gui_objects.types import Cases, Form, Formi
 from pyNastran.gui.gui_objects.gui_result import GuiResult, INT_TYPES as INT_DTYPES, REAL_TYPES as REAL_DTYPES
 from pyNastran.gui.gui_objects.displacements import (
@@ -138,15 +141,18 @@ class VtkIO:
         cell_types = vtk_to_numpy(vtk_cell_types)
         #vtk_cell_offsets = ugrid.GetC
 
-        ucell_types = np.unique(cell_types)
-        cell_offsets = np.zeros(nelements, dtype='int32')
-        for cell_type in ucell_types:
-            i = np.where(cell_type == cell_types)[0]
-            offset_size = cell_type_to_offset_size[cell_type]
-            cell_offsets[i] = offset_size
-        vtk_cell_offsets = numpy_to_vtk(cell_offsets, deep=0,
-                                        array_type=VTK_ID_TYPE)
-        grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
+        if _USE_LEGACY_SET_CELLS:
+            ucell_types = np.unique(cell_types)
+            cell_offsets = np.zeros(nelements, dtype='int32')
+            for cell_type in ucell_types:
+                i = np.where(cell_type == cell_types)[0]
+                offset_size = cell_type_to_offset_size[cell_type]
+                cell_offsets[i] = offset_size
+            vtk_cell_offsets = numpy_to_vtk(cell_offsets, deep=0,
+                                            array_type=VTK_ID_TYPE)
+            grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
+        else:
+            grid.SetCells(vtk_cell_types, vtk_cells)
 
         #grid.Allocate(self.gui.nelements, 1000)
 

@@ -32,7 +32,7 @@ PKG_PATH = Path(pyNastran.__path__[0])
 AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
 
 import pandas as pd
-import tables
+#import tables  # required for ???
 from pyNastran.f06.dev.flutter.utils_report import (
     get_configs, get_trades, filenames_to_data_table)
 if TYPE_CHECKING:  # pragma: no cover

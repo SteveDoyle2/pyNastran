@@ -11,7 +11,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     blank,
     integer_or_blank, double_or_blank, string_or_blank,
 )
-from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check, find_missing
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 #from pyNastran.bdf.cards.properties.bars import _bar_areaL # PBARL as pbarl, A_I1_I2_I12
@@ -339,6 +339,17 @@ class CHBDYE(ThermalElement):
                            rad_mid_back]
             bdf_file.write(print_card(list_fields))
         return
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        model = self.model
+        eid2 = self.element_id[:, 1]
+        all_eids = model.shell_element_ids
+        iview_ids = self.iview[self.iview != 0].ravel()
+        rad_mid_ids = self.rad_mid[self.rad_mid != 0].ravel()
+        geom_check(self, missing,
+                   element_id=(all_eids, eid2),
+                   iview=(model.view.iview, iview_ids) if model.view.n else None,
+                   rad_mid=(model.radm.rad_mid, rad_mid_ids) if model.radm.n else None)
 
     @property
     def allowed_properties(self):
@@ -699,6 +710,16 @@ class CHBDYG(ThermalElement):
             bdf_file.write(print_card(list_fields))
         return
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        model = self.model
+        nid = model.grid.node_id
+        iview_ids = self.iview[self.iview != 0].ravel()
+        rad_mid_ids = self.rad_mid[self.rad_mid != 0].ravel()
+        geom_check(self, missing,
+                   node=(nid, self.grid), filter_node0=True,
+                   iview=(model.view.iview, iview_ids) if model.view.n else None,
+                   rad_mid=(model.radm.rad_mid, rad_mid_ids) if model.radm.n else None)
+
 
 class CHBDYP(ThermalElement):
     """
@@ -961,6 +982,18 @@ class CHBDYP(ThermalElement):
             bdf_file.write(print_card(list_fields))
         return
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        model = self.model
+        nid = model.grid.node_id
+        node_ids = self.nodes[self.nodes > 0]
+        iview_ids = self.iview[self.iview != 0].ravel()
+        rad_mid_ids = self.rad_mid[self.rad_mid != 0].ravel()
+        geom_check(self, missing,
+                   node=(nid, node_ids), filter_node0=True,
+                   property_id=(model.phbdy.property_id, self.property_id),
+                   iview=(model.view.iview, iview_ids) if model.view.n else None,
+                   rad_mid=(model.radm.rad_mid, rad_mid_ids) if model.radm.n else None)
+
 
 def apply_bydor_default(chbdyx: CHBDYE | CHBDYG | CHBDYP) -> None:
     card_type = chbdyx.type
@@ -1175,16 +1208,8 @@ class PHBDY(VectorizedBaseCard):
             bdf_file.write(print_card(list_fields))
         return
 
-    # @property
-    # def allowed_materials(self) -> list[Any]:
-    #     return [mat for mat in [self.model.mat1] if mat.n > 0]
-    #
-    # def mass_per_length(self) -> np.ndarray:
-    #     return line_mid_mass_per_length(self.material_id, self.nsm, self.A,
-    #                                     self.allowed_materials)
-    #
-    # def area(self) -> np.ndarray:
-    #     return self.A
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
 
 
 # class CONV(VectorizedBaseCard):
@@ -1542,16 +1567,19 @@ class PCONV(VectorizedBaseCard):
             bdf_file.write(print_card(list_fields))
         return
 
-    # @property
-    # def allowed_materials(self) -> list[Any]:
-    #     return [mat for mat in [self.model.mat1] if mat.n > 0]
-    #
-    # def mass_per_length(self) -> np.ndarray:
-    #     return line_mid_mass_per_length(self.material_id, self.nsm, self.A,
-    #                                     self.allowed_materials)
-    #
-    # def area(self) -> np.ndarray:
-    #     return self.A
+    @property
+    def allowed_materials(self):
+        return [mat for mat in [self.model.mat4, self.model.mat5]
+                if mat.n > 0]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        mat_ids = self.material_id[self.material_id > 0]
+        all_mat_ids = np.unique(np.hstack([
+            mat.material_id for mat in self.allowed_materials])) if self.allowed_materials else np.array([], dtype='int32')
+        geom_check(self, missing,
+                   node=(nid, self.grid_inlet), filter_node0=True,
+                   material_id=(all_mat_ids, mat_ids) if len(all_mat_ids) else None)
 
 
 class CONVM(VectorizedBaseCard):
@@ -1746,6 +1774,14 @@ class CONVM(VectorizedBaseCard):
             bdf_file.write(print_card(list_fields))
         return
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        model = self.model
+        nid = model.grid.node_id
+        node_ids = np.hstack([self.film_node, self.temp_ambient.ravel()])
+        geom_check(self, missing,
+                   node=(nid, node_ids), filter_node0=True,
+                   pconvm_id=(model.pconvm.pconvm_id, self.pconvm_id) if model.pconvm.n else None)
+
 
 class PCONVM(VectorizedBaseCard):
     """
@@ -1925,3 +1961,14 @@ class PCONVM(VectorizedBaseCard):
                            coeff, expr, exppi, exppo]
             bdf_file.write(print_card(list_fields))
         return
+
+    @property
+    def allowed_materials(self):
+        return [mat for mat in [self.model.mat4, self.model.mat5]
+                if mat.n > 0]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        all_mat_ids = np.unique(np.hstack([
+            mat.material_id for mat in self.allowed_materials])) if self.allowed_materials else np.array([], dtype='int32')
+        geom_check(self, missing,
+                   material_id=(all_mat_ids, self.material_id) if len(all_mat_ids) else None)

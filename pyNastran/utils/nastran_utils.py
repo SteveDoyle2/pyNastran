@@ -30,6 +30,7 @@ def run_nastran(bdf_filename: PathLike,
                 nastran_cmd: PathLike='nastran',
                 keywords: Optional[str | list[str] | dict[str, str]]=None,
                 run: bool=True,
+                run_if_op2_exists: bool=True,
                 run_in_bdf_dir: bool=True,
                 cleanup: bool=False,
                 debug: bool=False,
@@ -76,6 +77,9 @@ def run_nastran(bdf_filename: PathLike,
     """
     keywords_list = _get_keywords_list(
         keywords=keywords, log=log)
+    assert os.path.exists(bdf_filename), bdf_filename
+    base = os.path.basename(bdf_filename)[0]
+    op2_filename = os.path.splitext(bdf_filename)[0] + '.op2'
 
     pwd = os.getcwd()
     bdf_directory = os.path.dirname(bdf_filename)
@@ -83,7 +87,6 @@ def run_nastran(bdf_filename: PathLike,
     if switch_dir:
         os.chdir(bdf_directory)
 
-    assert os.path.exists(bdf_filename), bdf_filename
     if nastran_cmd != 'nastran':
         assert os.path.exists(nastran_cmd), nastran_cmd
     nastran_cmd_str = str(nastran_cmd)
@@ -101,11 +104,14 @@ def run_nastran(bdf_filename: PathLike,
         else:
             print(msg2)
     return_code = None
-    if run:
-        return_code = subprocess.call(call_args)
+    if run and (not os.path.exists(op2_filename) or run_if_op2_exists):
+        try:
+            return_code = subprocess.call(call_args)
+        except FileNotFoundError: # pragma: no cover
+            print(call_args)
+            raise
 
     if run and cleanup:
-        base = os.path.basename(bdf_filename)[0]
         fnames = [
             base + '.asg',
             base + '.asm',

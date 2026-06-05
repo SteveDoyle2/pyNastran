@@ -7,6 +7,7 @@ tests:
 import os
 import unittest
 from itertools import count
+from typing import Any
 
 import numpy as np
 
@@ -452,6 +453,86 @@ class TestBeams(unittest.TestCase):
             msg = msg_a + '\nactual   = %r\n' % actual
             msg += 'expected = %r' % expected
             self.assertEqual(actual, expected, msg)
+
+    def test_pbeam_two_station_n1n2(self):
+        """Two-station PBEAM with same section props but different N1(A)/N1(B).
+
+        N/M values live in the footer, so the writer can collapse duplicate
+        stations even when N1/N2 vary between ends.  Verify round-trip.
+        """
+        model = BDF(debug=False)
+        model.add_mat1(1, E=200e9, G=None, nu=0.3)
+        model.add_pbeam(1, 1, xxb=[0., 1.], so=['YES', 'YES'],
+                        area=[0.02, 0.02],
+                        i1=[1.667e-5, 1.667e-5],
+                        i2=[6.667e-5, 6.667e-5],
+                        i12=[0., 0.],
+                        j=[8.333e-5, 8.333e-5],
+                        nsm=0.1,
+                        k1=5/6, k2=5/6,
+                        n1a=0.01, n2a=0.0, n1b=0.03, n2b=0.0)
+        model.setup(run_geom_check=False)
+        prop = model.pbeam
+        msg = prop.write(size=8)
+        # N1(A) and N1(B) must both be in the footer
+        assert '.01' in msg, f'N1(A)=0.01 not found:\n{msg}'
+        assert '.03' in msg, f'N1(B)=0.03 not found:\n{msg}'
+
+        # Round-trip: read back and check N1 values
+        import io
+        bdf_text = (
+            'SOL 101\nCEND\nBEGIN BULK\n'
+            + model.mat1.write(size=8)
+            + msg
+            + 'ENDDATA\n'
+        )
+        model2 = BDF(debug=False)
+        model2.read_bdf(io.StringIO(bdf_text))
+        pb2 = model2.pbeam
+        self.assertAlmostEqual(pb2.n1a[0], 0.01, places=5)
+        self.assertAlmostEqual(pb2.n1b[0], 0.03, places=5)
+        self.assertAlmostEqual(pb2.n2a[0], 0.0, places=5)
+        self.assertAlmostEqual(pb2.n2b[0], 0.0, places=5)
+
+    def test_pbeam_two_station_m1m2(self):
+        """Two-station PBEAM with same section props but different M1(A)/M1(B).
+
+        M/N values live in the footer, so the writer can collapse duplicate
+        stations even when M1/M2 vary between ends.  Verify round-trip.
+        """
+        model = BDF(debug=False)
+        model.add_mat1(1, E=200e9, G=None, nu=0.3)
+        model.add_pbeam(1, 1, xxb=[0., 1.], so=['YES', 'YES'],
+                        area=[0.02, 0.02],
+                        i1=[1.667e-5, 1.667e-5],
+                        i2=[6.667e-5, 6.667e-5],
+                        i12=[0., 0.],
+                        j=[8.333e-5, 8.333e-5],
+                        nsm=0.1,
+                        k1=5/6, k2=5/6,
+                        m1a=0.02, m2a=0.0, m1b=0.05, m2b=0.0)
+        model.setup(run_geom_check=False)
+        prop = model.pbeam
+        msg = prop.write(size=8)
+        # M1(A) and M1(B) must both be in the footer
+        assert '.02' in msg, f'M1(A)=0.02 not found:\n{msg}'
+        assert '.05' in msg, f'M1(B)=0.05 not found:\n{msg}'
+
+        # Round-trip verification
+        import io
+        bdf_text = (
+            'SOL 101\nCEND\nBEGIN BULK\n'
+            + model.mat1.write(size=8)
+            + msg
+            + 'ENDDATA\n'
+        )
+        model2 = BDF(debug=False)
+        model2.read_bdf(io.StringIO(bdf_text))
+        pb2 = model2.pbeam
+        self.assertAlmostEqual(pb2.m1a[0], 0.02, places=5)
+        self.assertAlmostEqual(pb2.m1b[0], 0.05, places=5)
+        self.assertAlmostEqual(pb2.m2a[0], 0.0, places=5)
+        self.assertAlmostEqual(pb2.m2b[0], 0.0, places=5)
 
     def test_pbeaml_01(self):
         model = BDF(debug=False)
@@ -2065,6 +2146,121 @@ class TestBeams(unittest.TestCase):
         assert cbeam.get_field(16) == -9.
 
         #print(cbeam)
+
+    def test_short_cbeam_mass_properties(self):
+        """run_bdf raises RuntimeError for CBEAM with Le < h (Le/h=1).
+
+        pyNastran's mass_properties check compares old vs new mass calculation
+        and fails when element length is short relative to cross-section depth.
+        Valid Nastran models should not trigger this error.
+        """
+        n_elements = 50
+        Le = 0.2  # 10m / 50 elements
+        h = 0.2   # Le/h = 1.0
+        b = 0.1
+        E = 200e9
+        nu = 0.3
+        G = E / (2 * (1 + nu))
+        rho = 7850.0
+        nsm = 0.1
+        A = b * h
+        Iy = b * h**3 / 12
+        Iz = h * b**3 / 12
+        J = b * h * (b**2 + h**2) / 12
+
+        nodes = np.array([[i * Le, 0.0, 0.0] for i in range(n_elements + 1)])
+        model, node_ids, eids, bar = build_cantilever_beam(
+            nodes, E, G, nu, nsm,
+            A=A, Iy=Iy, Iz=Iz, J=J,
+            timoshenko=True, rho=rho)
+
+        from pathlib import Path
+        from pyNastran.bdf.test.test_bdf import run_bdf
+        bdf_filename = Path(__file__).resolve().parent / 'test_short_cbeam.bdf'
+        model.write_bdf(bdf_filename)
+        run_bdf('', bdf_filename)
+
+def build_cantilever_beam(nodes,
+                          E, G, nu, nsm,
+                          A=None, Iy=None, Iz=None, Iyz=0., J=None,
+                          cx=0.0, cy=0.0, Cw=0.0,
+                          section_props=None, node_heights=None,
+                          timoshenko: bool=True,
+                          x_vec=None,
+                          rho: float=0.0) -> tuple[BDF, np.ndarray, Any]:
+    pid = 1
+    mid = 1
+    x = x_vec if x_vec is not None else [0., 0., 1.]
+
+    model = BDF()
+    model.add_param('POST', -1)
+    nnode = len(nodes)
+    node_ids = np.arange(0, nnode) + 1
+    for node_id, node in zip(node_ids, nodes):
+        model.add_grid(node_id, node)
+
+    model.punch = True
+
+    model.add_mat1(mid, E=E, G=G, nu=nu, rho=rho)
+
+    nids1 = node_ids[:-1]
+    nids2 = node_ids[1:]
+    nelement = len(nids1)
+    eids = np.arange(0, nelement) + 1
+    if timoshenko:
+        # def add_pbeam(self, pid: int, mid: int,
+        #               xxb: list[float], so: str | list[str],
+        #               area: float | list[float],
+        #               i1: float | list[float],
+        #               i2: float | list[float],
+        #               i12: float | list[float],
+        #               j: float | list[float],
+        so = 'YES'
+        #xxb = [0., 1.]
+        if A is not None:
+            xxb = [0.]
+            area = [A]
+            model.add_pbeam(pid, mid, xxb=xxb, so=so,
+                            area=area, i1=Iz, i2=Iy, i12=Iyz, j=J, nsm=nsm,
+                            c1=cx, c2=cy)
+            for eid, nid1, nid2 in zip(eids, nids1, nids2):
+                model.add_cbeam(eid, pid, [nid1, nid2], x=x, g0=None)
+        else:
+            pids = eids
+            for i, eid, pid, nid1, nid2 in zip(count(), eids, pids, nids1, nids2):
+                height1 = node_heights[i]
+                height2 = node_heights[i+1]
+                # print(section_props)
+                # {'A': np.float64(0.020000000000000004), 'Iy': np.float64(6.666666666666668e-05),
+                #  'Iz': np.float64(1.666666666666667e-05), 'J': np.float64(8.333333333333337e-05)}
+                prop1 = section_props(height1)
+                prop2 = section_props(height2)
+                xxb = [0., 1.]
+                A = [prop1['A'], prop2['A']]
+                Iy = [prop1['Iy'], prop2['Iy']]
+                Iz = [prop1['Iz'], prop2['Iz']]
+                J = [prop1['J'], prop2['J']]
+                Iyz = None
+                #print(props)
+                model.add_pbeam(pid, mid, xxb=xxb, so=so,
+                                area=A, i1=Iz, i2=Iy, i12=Iyz, j=J,
+                                c1=cx, c2=cy,
+                                nsm=nsm, cwa=Cw, cwb=Cw,)
+                model.add_cbeam(eid, pid, [nid1, nid2], x=x, g0=None)
+    else:
+        assert A is not None, A
+        model.add_pbar(pid, mid, area=A, i1=Iz, i2=Iy, i12=Iyz, j=J, nsm=nsm,
+                       c1=cx, c2=cy,)
+        for eid, nid1, nid2 in zip(eids, nids1, nids2):
+            model.add_cbar(eid, pid, [nid1, nid2], x=x, g0=None)
+    model.setup()
+    #print(model)
+
+    if timoshenko:
+        bar = model.cbeam
+    else:
+        bar = model.cbar
+    return model, node_ids, eids, bar
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

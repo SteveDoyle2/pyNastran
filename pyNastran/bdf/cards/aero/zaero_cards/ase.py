@@ -87,7 +87,10 @@ class ASE(BaseCard):
             self.mldstat_ref = zaero.mldstat[self.mldstat_id]
         if self.minstat_id:
             self.minstat_ref = zaero.minstat[self.minstat_id]
-        if self.cmargin_id and 0:
+        if self.cmargin_id:
+            assert self.cmargin_id in zaero.cmargin, (
+                f"ASE {self.ase_id} references CMARGIN {self.cmargin_id} which does not exist"
+            )
             self.cmargin_ref = zaero.cmargin[self.cmargin_id]
 
     def safe_cross_reference(self, model: BDF, xref_errors):
@@ -193,7 +196,10 @@ class ASECONT(BaseCard):
             extinps_ref = []
             self.extinp_set_ref = model.Set(self.extinp_set_id, msg)
             for idi in self.extinp_set_ref.ids():
-                asdf
+                # TODO: resolve EXTINP references by ID
+                extinp = zaero.extinp.get(idi)
+                extinps_ref.append(extinp)
+            self.extinps_ref = extinps_ref
         if self.extout_set_id:
             extouts_ref = []
             extout_set_ref = model.Set(self.extout_set_id, msg)
@@ -283,7 +289,7 @@ class ASEGAIN(BaseCard):
         gain = integer_or_double(card, 6, 'gain')
         gain_type = string_or_blank(card, 7, 'gain_type', default='Q')
 
-        assert len(card) < 9, f'len(ASECONT card) = {len(card):d}\ncard={card}'
+        assert len(card) < 9, f'len(ASEGAIN card) = {len(card):d}\ncard={card}'
         asecont = ASEGAIN(asegain_id, otf_id, c_out, itf_id, c_in,
                           gain, gain_type, comment=comment)
         return asecont
@@ -405,7 +411,7 @@ class ASESNSR(BaseCard):
         factor = double_or_blank(card, 5, 'factor', default=1.0)
         sum_method = string_or_blank(card, 6, 'conct_id', default='NO')
 
-        assert len(card) <= 7, f'len(ASECONT card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 7, f'len(ASESNSR card) = {len(card):d}\ncard={card}'
         asecont = ASESNSR(asesnsr_id, sensor_type, sgid, component, factor,
                           sum_method, comment=comment)
         return asecont
@@ -486,10 +492,10 @@ class ASESNS1(BaseCard):
         asesns1_id = integer(card, 1, 'asesns1_id')
         label = string(card, 2, 'label')
         ikey = integer_or_string(card, 3, 'ikey')
-        sum_method = string_or_blank(card, 6, 'sum_method', default='NO')
+        sum_method = string_or_blank(card, 4, 'sum_method', default='NO')
         factor = double_or_blank(card, 5, 'factor', default=1.0)
 
-        assert len(card) < 7, f'len(ASECONT card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 6, f'len(ASESNS1 card) = {len(card):d}\ncard={card}'
         asecont = ASESNS1(asesns1_id, label, ikey, factor,
                           sum_method=sum_method, comment=comment)
         return asecont
@@ -659,7 +665,7 @@ class CONCT(BaseCard):
         # CJUNCT, MIMOSS, SISOTF or ACTU
         input_tf_id = integer(card, 4, 'ITFID, input_tf_id')
         input_component = integer(card, 5, 'CI, input_component')
-        assert len(card) == 6, f'len(CJUNCT card) = {len(card):d}\ncard={card}'
+        assert len(card) == 6, f'len(CONCT card) = {len(card):d}\ncard={card}'
         return CONCT(conct_id, output_tf_id, output_component, input_tf_id, input_component, comment=comment)
 
     # def validate(self):
@@ -1009,7 +1015,7 @@ class MIMOSS(BaseCard):
 
     def __init__(self, mimoss_id: int,
                  ntf: int, nu: int, ny: int,
-                 dmi_label: str, print_flag: int,
+                 dmi_label: str, mimoss_type: str, print_flag: int,
                  values: list[float], labels: list[str],
                  comment: str=''):
         BaseCard.__init__(self)
@@ -1021,6 +1027,7 @@ class MIMOSS(BaseCard):
         self.nu = nu
         self.ny = ny
         self.dmi_label = dmi_label
+        self.mimoss_type = mimoss_type
         self.print_flag = print_flag
         self.values = values
         self.labels = labels
@@ -1061,7 +1068,7 @@ class MIMOSS(BaseCard):
         else:
             # print(f'dmi_label = {dmi_label}')
             dfields = len(card) - 8
-            assert dfields // 2 == 0, dfields
+            assert dfields % 2 == 0, dfields
             assert dfields > 0, dfields
             for ifield in range(8, len(card), 2):
                 di = double(card, ifield, 'di')
@@ -1072,7 +1079,7 @@ class MIMOSS(BaseCard):
         # nexpected = nu * ny
         # assert len(values) == nexpected, f'len(values) ={len(values):d}; expected={nu}*{ny}={nexpected}'
         return MIMOSS(mimoss_id, ntf, nu, ny,
-                      dmi_label, print_flag,
+                      dmi_label, mimoss_type, print_flag,
                       values, labels, comment=comment)
 
     # def validate(self):
@@ -1099,8 +1106,8 @@ class MIMOSS(BaseCard):
 
         """
         list_fields = [
-            'CJUNCT', self.mimoss_id, self.ntf, self.nu, self.ny,
-            self.dmi_label, self.print_flag]
+            'MIMOSS', self.mimoss_id, self.ntf, self.nu, self.ny,
+            self.dmi_label, self.mimoss_type, self.print_flag]
         assert len(self.values) == len(self.labels)
         for value, label in zip(self.values, self.labels):
             list_fields.append(value)
@@ -1147,7 +1154,7 @@ class SURFSET(BaseCard):
         ids = []
         j = 1
         for ifield in range(2, len(card)):
-            idi = string(card, ifield, 'SURF, id{j}')
+            idi = string(card, ifield, f'SURF, id{j}')
             ids.append(idi)
             j += 1
         assert len(card) >= 3, f'len(SURFSET card) = {len(card):d}\ncard={card}'
@@ -1440,7 +1447,7 @@ class AEROLAG(BaseCard):
         #         R7  R8   -etc-
         # AEROLAG 10  4  -0.2    -0.5 -1.0 -2.0
         aerolag_id = integer(card, 1, 'aerolag_id')
-        nlag = integer(card, 1, 'nlag')
+        nlag = integer(card, 2, 'nlag')
 
         lag_values = []
         for ifield in range(3, len(card)):
@@ -1479,6 +1486,419 @@ class AEROLAG(BaseCard):
     def repr_fields(self):
         list_fields = self.raw_fields()
         return list_fields
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class MIMOTF(BaseCard):
+    """MIMO Transfer Function Matrix.
+
+    Defines a MIMO transfer function as a matrix of SISOTF references.
+    Each element H(i,j) of the transfer matrix is a SISOTF card.
+
+    MIMOTF ID NI NO TF11 TF21 ... TF(NO,1) TF12 ... TF(NO,NI)
+    """
+    type = 'MIMOTF'
+
+    def __init__(self, mimotf_id: int, n_input: int, n_output: int,
+                 tf_ids: list[int], comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.mimotf_id = mimotf_id
+        self.n_input = n_input
+        self.n_output = n_output
+        self.tf_ids = tf_ids
+        assert len(tf_ids) == n_input * n_output, (
+            f'len(tf_ids)={len(tf_ids)}; expected={n_input}*{n_output}={n_input*n_output}')
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        mimotf_id = integer(card, 1, 'mimotf_id')
+        n_input = integer(card, 2, 'NI')
+        n_output = integer(card, 3, 'NO')
+        tf_ids = []
+        for ifield in range(4, len(card)):
+            tf_id = integer(card, ifield, f'TF{ifield-3}')
+            tf_ids.append(tf_id)
+        nexpected = n_input * n_output
+        assert len(tf_ids) == nexpected, (
+            f'len(tf_ids)={len(tf_ids)}; expected={n_input}*{n_output}={nexpected}\ncard={card}')
+        return MIMOTF(mimotf_id, n_input, n_output, tf_ids, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        zaero = model.zaero
+        self.tf_ids_ref = []
+        for tf_id in self.tf_ids:
+            if tf_id in zaero.sisotf:
+                self.tf_ids_ref.append(zaero.sisotf[tf_id])
+            else:
+                model.log.warning(
+                    f'MIMOTF={self.mimotf_id}: SISOTF={tf_id} not found')
+                self.tf_ids_ref.append(None)
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        list_fields = ['MIMOTF', self.mimotf_id, self.n_input, self.n_output] + self.tf_ids
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class SENSR(BaseCard):
+    """Sensor definition.
+
+    Defines a sensor measuring structural response (displacement,
+    velocity, or acceleration) at a grid point DOF.
+
+    SENSR ID TYPE SGID SC FACTOR SOF
+    """
+    type = 'SENSR'
+
+    def __init__(self, sensr_id: int, sensor_type: int,
+                 sgid: int, component: int,
+                 factor: float, sum_method: str, comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.sensr_id = sensr_id
+        self.sensor_type = sensor_type
+        self.sgid = sgid
+        self.component = component
+        self.factor = factor
+        self.sum_method = sum_method
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # SENSR ID TYPE SGID SC FACTOR SOF
+        sensr_id = integer(card, 1, 'sensr_id')
+        sensor_type = integer(card, 2, 'sensor_type')
+        sgid = integer(card, 3, 'sgid')
+        component = integer(card, 4, 'component')
+        factor = double_or_blank(card, 5, 'factor', default=1.0)
+        sum_method = string_or_blank(card, 6, 'sum_method', default='NO')
+        assert len(card) <= 7, f'len(SENSR card) = {len(card):d}\ncard={card}'
+        return SENSR(sensr_id, sensor_type, sgid, component, factor,
+                     sum_method, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        list_fields = [
+            'SENSR', self.sensr_id, self.sensor_type,
+            self.sgid, self.component, self.factor, self.sum_method]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class GAIN(BaseCard):
+    """Static gain block.
+
+    Applies a scalar multiplier to the signal.
+
+    GAIN ID K
+    """
+    type = 'GAIN'
+
+    def __init__(self, gain_id: int, k: float, comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.gain_id = gain_id
+        self.k = k
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # GAIN ID K
+        gain_id = integer(card, 1, 'gain_id')
+        k = double(card, 2, 'K')
+        assert len(card) <= 3, f'len(GAIN card) = {len(card):d}\ncard={card}'
+        return GAIN(gain_id, k, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        list_fields = ['GAIN', self.gain_id, self.k]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class SUMBLK(BaseCard):
+    """Summing junction.
+
+    Sums N input signals with specified signs (+1 or -1).
+
+    SUMBLK ID NSIGNAL S1 S2 ... S(NSIGNAL)
+    """
+    type = 'SUMBLK'
+
+    def __init__(self, sumblk_id: int, nsignal: int,
+                 signs: list[float], comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.sumblk_id = sumblk_id
+        self.nsignal = nsignal
+        self.signs = signs
+        assert len(signs) == nsignal, f'len(signs)={len(signs)}; nsignal={nsignal}'
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # SUMBLK ID NSIGNAL S1 S2 ... S(NSIGNAL)
+        sumblk_id = integer(card, 1, 'sumblk_id')
+        nsignal = integer(card, 2, 'NSIGNAL')
+        signs = []
+        for ifield in range(3, 3 + nsignal):
+            si = double(card, ifield, f'S{ifield-2}')
+            signs.append(si)
+        assert len(card) >= 4, f'len(SUMBLK card) = {len(card):d}\ncard={card}'
+        return SUMBLK(sumblk_id, nsignal, signs, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        list_fields = ['SUMBLK', self.sumblk_id, self.nsignal] + self.signs
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class DEADBN(BaseCard):
+    """Deadband nonlinearity.
+
+    Output is zero for input magnitudes below the threshold.
+
+    DEADBN ID THRESHOLD
+    """
+    type = 'DEADBN'
+
+    def __init__(self, deadbn_id: int, threshold: float, comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.deadbn_id = deadbn_id
+        self.threshold = threshold
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # DEADBN ID THRESHOLD
+        deadbn_id = integer(card, 1, 'deadbn_id')
+        threshold = double(card, 2, 'THRESHOLD')
+        assert len(card) <= 3, f'len(DEADBN card) = {len(card):d}\ncard={card}'
+        return DEADBN(deadbn_id, threshold, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        list_fields = ['DEADBN', self.deadbn_id, self.threshold]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class DELAY_ZAERO(BaseCard):
+    """Pure time delay via Pade approximation.
+
+    Approximates e^(-s*tau) using a rational function of specified order.
+
+    DELAY ID TAU ORDER
+    """
+    type = 'DELAY'
+
+    def __init__(self, delay_id: int, tau: float, order: int, comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.delay_id = delay_id
+        self.tau = tau
+        self.order = order
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # DELAY ID TAU ORDER
+        delay_id = integer(card, 1, 'delay_id')
+        tau = double(card, 2, 'TAU')
+        order = integer_or_blank(card, 3, 'ORDER', default=3)
+        assert len(card) <= 4, f'len(DELAY card) = {len(card):d}\ncard={card}'
+        return DELAY_ZAERO(delay_id, tau, order, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        list_fields = ['DELAY', self.delay_id, self.tau, self.order]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class FILTFL(BaseCard):
+    """Frequency filter (low-pass, high-pass, band-pass, notch).
+
+    FILTFL ID TYPE FREQ ORDER ZETA
+    TYPE: 1=LOWPASS, 2=HIGHPASS, 3=BANDPASS, 4=NOTCH
+    """
+    type = 'FILTFL'
+
+    def __init__(self, filtfl_id: int, filter_type: int,
+                 freq: float, order: int, zeta: float, comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.filtfl_id = filtfl_id
+        self.filter_type = filter_type
+        self.freq = freq
+        self.order = order
+        self.zeta = zeta
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # FILTFL ID TYPE FREQ ORDER ZETA
+        filtfl_id = integer(card, 1, 'filtfl_id')
+        filter_type = integer(card, 2, 'TYPE')
+        freq = double(card, 3, 'FREQ')
+        order = integer_or_blank(card, 4, 'ORDER', default=2)
+        zeta = double_or_blank(card, 5, 'ZETA', default=0.707)
+        assert len(card) <= 6, f'len(FILTFL card) = {len(card):d}\ncard={card}'
+        return FILTFL(filtfl_id, filter_type, freq, order, zeta, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        list_fields = [
+            'FILTFL', self.filtfl_id, self.filter_type,
+            self.freq, self.order, self.zeta]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class LIMTR(BaseCard):
+    """Signal limiter (saturation).
+
+    Clamps the output between lower and upper bounds.
+
+    LIMTR ID LOWER UPPER
+    """
+    type = 'LIMTR'
+
+    def __init__(self, limtr_id: int, lower: float, upper: float, comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.limtr_id = limtr_id
+        self.lower = lower
+        self.upper = upper
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # LIMTR ID LOWER UPPER
+        limtr_id = integer(card, 1, 'limtr_id')
+        lower = double(card, 2, 'LOWER')
+        upper = double(card, 3, 'UPPER')
+        assert len(card) <= 4, f'len(LIMTR card) = {len(card):d}\ncard={card}'
+        return LIMTR(limtr_id, lower, upper, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        list_fields = ['LIMTR', self.limtr_id, self.lower, self.upper]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
 
     def write_card(self, size: int = 8, is_double: bool = False) -> str:
         card = self.repr_fields()

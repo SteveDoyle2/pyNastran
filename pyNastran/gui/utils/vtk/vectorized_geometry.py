@@ -5,7 +5,9 @@ import numpy as np
 
 from pyNastran.gui.vtk_common_core import vtkUnsignedCharArray, vtkPoints, VTK_ID_TYPE
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkCellArray, vtkVertex
-from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
+from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray, VTK_VERSION_SPLIT
+
+_USE_LEGACY_SET_CELLS = (VTK_VERSION_SPLIT[0] == 9 and VTK_VERSION_SPLIT[1] < 6)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
@@ -44,18 +46,20 @@ def build_vtk_geometry(nelement: int,
         raise NotImplementedError(cells.dtype.name)
     cell_id_type = numpy_to_vtkIdTypeArray(cells, deep=1)
     vtk_cell = vtkCellArray()
-    vtk_cell.SetCells(nelement, cell_id_type)
 
     # Cell types
     vtk_cell_type = numpy_to_vtk(
         cell_type, deep=deep,
         array_type=vtkUnsignedCharArray().GetDataType())
 
-    vtk_cell_offset = numpy_to_vtk(cell_offset, deep=1,
-                                   array_type=VTK_ID_TYPE)
-
-    #ugrid = vtkUnstructuredGrid()
-    ugrid.SetCells(vtk_cell_type, vtk_cell_offset, vtk_cell)
+    if _USE_LEGACY_SET_CELLS:
+        vtk_cell.SetCells(nelement, cell_id_type)
+        vtk_cell_offset = numpy_to_vtk(cell_offset, deep=1,
+                                       array_type=VTK_ID_TYPE)
+        ugrid.SetCells(vtk_cell_type, vtk_cell_offset, vtk_cell)
+    else:
+        vtk_cell.ImportLegacyFormat(cell_id_type)
+        ugrid.SetCells(vtk_cell_type, vtk_cell)
     #settings = {}
 
 def create_offset_arrays(all_grid_id: np.ndarray,

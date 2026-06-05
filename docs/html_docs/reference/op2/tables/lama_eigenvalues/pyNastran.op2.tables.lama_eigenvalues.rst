@@ -1,7 +1,5 @@
-lama/lama_eigenvalues Package
-=====#####===================
-
-This is the pyNastran.op2.tables.lama_eigenvalues.rst file.
+lama_eigenvalues Package
+========================
 
 .. toctree::
 

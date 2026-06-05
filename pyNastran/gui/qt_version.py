@@ -9,9 +9,8 @@ Figures out the "optimal" Qt version to use in a way that:
 import os
 import sys
 
-# there's a bug with the keyboard shortcuts K and L
-ALLOW_PYSIDE6 = False
-ALLOW_PYQT6 = False
+ALLOW_PYSIDE6 = True
+ALLOW_PYQT6 = True
 
 #if ALLOW_PYQT6 and ALLOW_PYSIDE6:  # pragma: no cover
     #_msg = f'PyQt5/6 or PySide2/6 is required'
@@ -21,7 +20,7 @@ ALLOW_PYQT6 = False
     #_msg = f'PyQt5/6 or PySide2 is required'
 #else:
 _msg = f'PyQt5 or PySide2 is required'
-
+_msg = 'PyQt5/6 or PySide2/6 is required'
 
 API = os.environ.get('QT_API', '').lower()
 if API:

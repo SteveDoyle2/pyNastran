@@ -214,6 +214,15 @@ class SolidElement(Element):
     def center_of_mass(self):
         return self.Centroid()
 
+    def centroid_mass(self) -> tuple[np.ndarray, float]:
+        """Returns (centroid, mass) with a single get_node_positions() call."""
+        rho = self.Rho()
+        centroid = self.Centroid()
+        if rho == 0.0:
+            return centroid, 0.0
+        volume = self.Volume()
+        return centroid, rho * volume
+
 
 def _get_nodes_array(model: BDF, shape, eids, dtype='int32'):
     pids = []
@@ -430,33 +439,21 @@ class CHEXA8(SolidElement):
 
     def Volume(self):
         """Calculate the volume of the hex"""
-        # https://www.osti.gov/servlets/purl/632793/
-        #volume = (
-            #det3(x7 - x0, x1 - x0, x3 - x5) +
-            #det3(x7 - x0, x4 - x0, x5 - x6) +
-            #det3(x7 - x0, x2 - x0, x6 - x3)
-        #) / 6.
-        #  swap points
-        # x2 / x3
-        # x6 / x7
-        #def det3(a, b, c):
-            #return np.det(np.vstack(a, b, c))
-        #volume = (
-            #det3(x6 - x0, x1 - x0, x2 - x5) +
-            #det3(x6 - x0, x4 - x0, x5 - x7) +
-            #det3(x6 - x0, x3 - x0, x7 - x2)
-        #) / 6.
-        # add 1
-        #volume = (
-            #det3(x7 - x1, x2 - x1, x3 - x6) +
-            #det3(x7 - x1, x5 - x1, x6 - x8) +
-            #det3(x7 - x1, x4 - x1, x8 - x3)
-        #) / 6.
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
         (area1, c1) = area_centroid(n1, n2, n3, n4)
         (area2, c2) = area_centroid(n5, n6, n7, n8)
         volume = (area1 + area2) / 2. * np.linalg.norm(c1 - c2)
         return abs(volume)
+
+    def centroid_mass(self) -> tuple[np.ndarray, float]:
+        """Returns (centroid, mass) with a single get_node_positions() call."""
+        rho = self.Rho()
+        (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
+        (area1, c1) = area_centroid(n1, n2, n3, n4)
+        (area2, c2) = area_centroid(n5, n6, n7, n8)
+        centroid = (c1 + c2) / 2.
+        volume = abs((area1 + area2) / 2. * np.linalg.norm(c1 - c2))
+        return centroid, rho * volume
 
     @property
     def node_ids(self):
@@ -1094,7 +1091,18 @@ class CPENTA6(SolidElement):
         c2 = (n4 + n5 + n6) / 3.
         volume = (area1 + area2) / 2. * np.linalg.norm(c1 - c2)
         return abs(volume)
-        #return volume4(n1, n2, n3, n4) + volume4(n2, n3, n4, n5) + volume4(n2, n4, n5, n6)
+
+    def centroid_mass(self) -> tuple[np.ndarray, float]:
+        """Returns (centroid, mass) with a single get_node_positions() call."""
+        rho = self.Rho()
+        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        c1 = (n1 + n2 + n3) / 3.
+        c2 = (n4 + n5 + n6) / 3.
+        centroid = (c1 + c2) / 2.
+        area1 = 0.5 * np.linalg.norm(np.cross(n3 - n1, n2 - n1))
+        area2 = 0.5 * np.linalg.norm(np.cross(n6 - n4, n5 - n4))
+        volume = abs((area1 + area2) / 2. * np.linalg.norm(c1 - c2))
+        return centroid, rho * volume
 
     def raw_fields(self):
         list_fields = ['CPENTA', self.eid, self.Pid()] + self.node_ids
@@ -2082,6 +2090,14 @@ class CTETRA4(SolidElement):
     def Centroid(self):
         (n1, n2, n3, n4) = self.get_node_positions()
         return (n1 + n2 + n3 + n4) / 4.
+
+    def centroid_mass(self) -> tuple[np.ndarray, float]:
+        """Returns (centroid, mass) with a single get_node_positions() call."""
+        rho = self.Rho()
+        (n1, n2, n3, n4) = self.get_node_positions()
+        centroid = (n1 + n2 + n3 + n4) / 4.
+        volume = volume4(n1, n2, n3, n4)
+        return centroid, rho * volume
 
     def get_face_nodes(self, nid_opposite, nid=None):
         assert nid is None, nid

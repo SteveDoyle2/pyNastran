@@ -614,42 +614,73 @@ class GRID(VectorizedBaseCard):
     def write_file_8(self, bdf_file: TextIOLike,
                      write_card_header: bool=False) -> None:
         coord_basic, extra_basic, is_basic = self._write_flags()
-        node_id = array_str(self.node_id, size=8)
+        node_id_str = np.char.rjust(array_str(self.node_id, size=8), 8)
         xyzs = array_float(self.xyz, size=8)
+        has_comments = bool(self.comment)
+
         if is_basic:
-            cps = ''
-            for nid, xyz in zip_longest(node_id, xyzs):
-                #x, y, z = xyz
-                comment = self.comment.get(nid, '')
-                bdf_file.write(comment)
-                msg = 'GRID    %8s%8s%8s%8s%8s\n' % (
-                    nid, cps, xyz[0], xyz[1], xyz[2])
-                bdf_file.write(comment)
-                bdf_file.write(msg)
-        elif extra_basic: # cp=cd != 0, but seid=ps=0
-            cps = array_default_int(self.cp, size=8, default=0)
-            cds = array_default_int(self.cd, size=8, default=0)
-            for nid, cp, cd, xyz in zip_longest(node_id, cps, cds, xyzs):
-                #x, y, z = xyz
-                #msg = print_card_8(['GRID', nid, cp, x, y, z, cd])
-                comment = self.comment.get(nid, '')
-                msg = 'GRID    %8s%8s%8s%8s%8s%8s\n' % (
-                    nid, cp, xyz[0], xyz[1], xyz[2], cd)
-                bdf_file.write(comment)
-                bdf_file.write(msg)
+            nid_list = node_id_str.tolist()
+            x_list = xyzs[:, 0].tolist()
+            y_list = xyzs[:, 1].tolist()
+            z_list = xyzs[:, 2].tolist()
+            if has_comments:
+                lines = []
+                for nid, x, y, z in zip(nid_list, x_list, y_list, z_list):
+                    comment = self.comment.get(nid, '')
+                    if comment:
+                        lines.append(comment)
+                    lines.append(f'GRID    {nid}        {x}{y}{z}\n')
+            else:
+                lines = [f'GRID    {nid}        {x}{y}{z}\n'
+                         for nid, x, y, z in zip(nid_list, x_list, y_list, z_list)]
+            bdf_file.write(''.join(lines))
+        elif extra_basic:  # cp=cd != 0, but seid=ps=0
+            cps = np.char.rjust(array_default_int(self.cp, size=8, default=0), 8)
+            cds = np.char.rjust(array_default_int(self.cd, size=8, default=0), 8)
+            nid_list = node_id_str.tolist()
+            cp_list = cps.tolist()
+            cd_list = cds.tolist()
+            x_list = xyzs[:, 0].tolist()
+            y_list = xyzs[:, 1].tolist()
+            z_list = xyzs[:, 2].tolist()
+            if has_comments:
+                lines = []
+                for nid, cp, cd, x, y, z in zip(nid_list, cp_list, cd_list, x_list, y_list, z_list):
+                    comment = self.comment.get(nid, '')
+                    if comment:
+                        lines.append(comment)
+                    lines.append(f'GRID    {nid}{cp}{x}{y}{z}{cd}\n')
+            else:
+                lines = [f'GRID    {nid}{cp}{x}{y}{z}{cd}\n'
+                         for nid, cp, cd, x, y, z in zip(nid_list, cp_list, cd_list, x_list, y_list, z_list)]
+            bdf_file.write(''.join(lines))
         else:
             # ps=seid != 0
-            cps = array_default_int(self.cp, size=8, default=0)
-            cds = array_default_int(self.cd, size=8, default=0)
-            pss = array_default_int(self.ps, size=8, default=0)
-            seids = array_default_int(self.seid, size=8, default=0)
-            for nid, cp, cd, xyz, ps, seid in zip_longest(node_id, cps, cds, xyzs, pss, seids):
-                #msg = print_card_8(['GRID', nid, cp, x, y, z, cd])
-                comment = self.comment.get(nid, '')
-                msg = 'GRID    %8s%8s%8s%8s%8s%8s%8s%8s\n' % (
-                    nid, cp, xyz[0], xyz[1], xyz[2], cd, ps, seid)
-                bdf_file.write(comment)
-                bdf_file.write(msg)
+            cps = np.char.rjust(array_default_int(self.cp, size=8, default=0), 8)
+            cds = np.char.rjust(array_default_int(self.cd, size=8, default=0), 8)
+            pss = np.char.rjust(array_default_int(self.ps, size=8, default=0), 8)
+            seids = np.char.rjust(array_default_int(self.seid, size=8, default=0), 8)
+            nid_list = node_id_str.tolist()
+            cp_list = cps.tolist()
+            cd_list = cds.tolist()
+            ps_list = pss.tolist()
+            seid_list = seids.tolist()
+            x_list = xyzs[:, 0].tolist()
+            y_list = xyzs[:, 1].tolist()
+            z_list = xyzs[:, 2].tolist()
+            if has_comments:
+                lines = []
+                for nid, cp, cd, x, y, z, ps, seid in zip(
+                        nid_list, cp_list, cd_list, x_list, y_list, z_list, ps_list, seid_list):
+                    comment = self.comment.get(nid, '')
+                    if comment:
+                        lines.append(comment)
+                    lines.append(f'GRID    {nid}{cp}{x}{y}{z}{cd}{ps}{seid}\n')
+            else:
+                lines = [f'GRID    {nid}{cp}{x}{y}{z}{cd}{ps}{seid}\n'
+                         for nid, cp, cd, x, y, z, ps, seid in zip(
+                             nid_list, cp_list, cd_list, x_list, y_list, z_list, ps_list, seid_list)]
+            bdf_file.write(''.join(lines))
         return
 
     def _write_flags(self):

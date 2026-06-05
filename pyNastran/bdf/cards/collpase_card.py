@@ -251,13 +251,12 @@ def condensei(value_ilist: list[int],
     packs = []
 
     dv_old = None
+    dvi_old = None
     first_vali = value_ilist[0]
     last_vali = first_vali
     first_val = value_list[0]
     last_val = first_val
 
-    #print(f'value_ilist = {value_ilist}')
-    #print(f'value_list  = {value_list}')
     for vali, val in zip(value_ilist[1:], value_list[1:], strict=True):
         try:
             dv = val - last_val
@@ -265,31 +264,34 @@ def condensei(value_ilist: list[int],
             print("last_val=%r val=%r" % (last_val, val))
             print("value_list=%r" % value_list)
             raise
+        dvi = vali - last_vali
 
         # sets up the first item of the pack
         if dv_old is None:
             dv_old = dv
+            dvi_old = dvi
 
-        # fill up the pack
-        if dv_old == dv:
+        # group when both field delta and index delta are consistent
+        # and field delta is 1 (THRU on DMI requires consecutive GCi)
+        if dv_old == dv and dvi_old == dvi and dv == 1:
             last_val = val
             last_vali = vali
         else:
-            #assert dv_old > 0, (first_vali, last_vali, dv_old)
-            packs.append([first_vali, last_vali, dv_old])
+            packs.append([first_vali, last_vali, dvi_old])
             last_val = val
             last_vali = vali
             dv_old = None
+            dvi_old = None
             first_val = val
             first_vali = vali
 
     # fills the last pack
-    if dv_old == dv:
-        #assert dv > 0, (first_vali, last_vali, dv)
-        packs.append([first_vali, vali, dv])
+    if dvi_old is not None and dv_old == dv and dvi_old == dvi and dv == 1:
+        packs.append([first_vali, vali, dvi])
+    elif dvi_old is not None:
+        packs.append([first_vali, vali, dvi_old])
     else:
-        #assert dv_old > 0, (first_vali, last_vali, dv_old)
-        packs.append([first_vali, vali, dv_old])
+        packs.append([first_vali, vali, dvi])
     return packs
 
 

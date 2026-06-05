@@ -28,7 +28,7 @@ def oes_cshear_4(op2: OP2, data, ndata, dt, is_magnitude_phase,
     factor = op2.factor
     # 4-CSHEAR
     obj_vector_real = RealShearStressArray if op2.is_stress else RealShearStrainArray
-    obj_vector_complex = ComplexShearStressArray if op2.is_stress else ComplexShearStressArray
+    obj_vector_complex = ComplexShearStressArray if op2.is_stress else ComplexShearStrainArray
     obj_vector_random = RandomShearStressArray if op2.is_stress else RandomShearStrainArray
     stress_strain = 'stress' if op2.is_stress else 'strain'
     result_name = f'{prefix}cshear_{stress_strain}{postfix}'

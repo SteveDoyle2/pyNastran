@@ -176,6 +176,9 @@ class MONPNT1(VectorizedBaseCard):
         monitor.xyz = self.xyz[i, :]
         monitor.cd = self.cd[i]
 
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        self.xyz *= xyz_scale
+
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         # comp
         used_dict['coord_id'].append(self.cp)

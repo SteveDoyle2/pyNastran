@@ -1086,7 +1086,7 @@ def _convert_pbush1d(model: BDF,
     elif prop.spring_type == 'TABLE':
         _get_pbush1d_tables(prop, spring_table_names, spring_tables)
     else:
-        raise NotImplementedError(prop.damper_type)
+        raise NotImplementedError(prop.spring_type)
 
     return spring_tables, damper_tables
 

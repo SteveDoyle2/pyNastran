@@ -173,7 +173,7 @@ class Results:
         self.RAPCONS = RAPCONS()  # composite stress
         self.RANCONS = RANCONS()  # strain energy
         self.RARCONS = RARCONS()  # spc force
-        self.RAQCONS = RAQCONS()  # mpc force
+        self.RAQCONS = RAQCONS()  # composite strain
 
         self.RADEATC = RADEATC()  # eigenvectors
         self.RAFEATC = RAFEATC()  # force
@@ -183,7 +183,7 @@ class Results:
         self.RAPEATC = RAPEATC()  # composite stress
         self.RANEATC = RANEATC()  # strain energy
         self.RAREATC = RAREATC()  # spc force
-        self.RAQEATC = RAQEATC()  # mpcforce
+        self.RAQEATC = RAQEATC()  # composite strain
         self.srss = SRSS()
         self.abs = ABS()
         self.nrl = NRL()

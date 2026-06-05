@@ -114,7 +114,9 @@ class PLOAD(Load):
 
     def _save(self, load_id, pressure, node_id):
         if len(self.load_id) != 0:
-            raise NotImplementedError()
+            load_id = np.hstack([self.load_id, load_id])
+            pressure = np.hstack([self.pressure, pressure])
+            node_id = np.vstack([self.node_id, node_id])
         nloads = len(load_id)
         self.load_id = load_id
         self.pressure = pressure
@@ -153,6 +155,24 @@ class PLOAD(Load):
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max())
+
+    @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+        sids = np.char.rjust(array_default_int(self.load_id, size=8), 8).tolist()
+        pressures = np.char.rjust(array_float(self.pressure, size=8, is_double=False), 8).tolist()
+        nodes_str = np.char.rjust(array_default_int(self.node_id, default=0, size=8), 8)
+        n1s = nodes_str[:, 0].tolist()
+        n2s = nodes_str[:, 1].tolist()
+        n3s = nodes_str[:, 2].tolist()
+        n4s = nodes_str[:, 3].tolist()
+        lines = [f'PLOAD   {sid}{p}{n1}{n2}{n3}{n4}\n'
+                 for sid, p, n1, n2, n3, n4
+                 in zip(sids, pressures, n1s, n2s, n3s, n4s)]
+        bdf_file.write(''.join(lines))
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -311,7 +331,12 @@ class PLOAD1(Load):
 
     def _save(self, load_id, element_id, load_type, scale, x, pressure):
         if len(self.load_id) != 0:
-            raise NotImplementedError()
+            load_id = np.hstack([self.load_id, load_id])
+            element_id = np.hstack([self.element_id, element_id])
+            load_type = np.hstack([self.load_type, load_type])
+            scale = np.hstack([self.scale, scale])
+            x = np.vstack([self.x, x])
+            pressure = np.vstack([self.pressure, pressure])
         nloads = len(load_id)
         self.load_id = load_id
         self.element_id = element_id
@@ -1082,6 +1107,44 @@ class PLOAD4(Load):
                    self.nodes_g1_g34.max())
 
     @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+
+        # Fast path: shell loads with single element, uniform pressure,
+        # no nvector, default SURF/NORM
+        all_single_eid = np.all(self.nelement == 1)
+        all_shell = np.all(self.nodes_g1_g34 == -1)
+        no_nvector = np.all(self.nvector == 0.)
+        all_surf = np.all((self.surf_or_line == 'SURF') | (self.surf_or_line == ''))
+        all_norm = np.all((self.line_load_dir == 'NORM') | (self.line_load_dir == ''))
+
+        p = self.pressure
+        uniform_pressure = np.all(
+            (p[:, 1] == p[:, 0]) | np.isnan(p[:, 1])) and np.all(
+            (p[:, 2] == p[:, 0]) | np.isnan(p[:, 2])) and np.all(
+            (p[:, 3] == p[:, 0]) | np.isnan(p[:, 3]))
+
+        no_cid = np.all(self.coord_id == -1)
+        is_basic = all_single_eid and all_shell and no_nvector and all_surf and all_norm and uniform_pressure
+        if is_basic:
+            sids = np.char.rjust(array_str(self.load_id, size=8), 8).tolist()
+            eids = np.char.rjust(array_str(self.element_ids, size=8), 8).tolist()
+            p1s = np.char.rjust(array_float(p[:, 0], size=8, is_double=False), 8).tolist()
+            if no_cid:
+                lines = [f'PLOAD4  {sid}{eid}{p1}\n'
+                         for sid, eid, p1 in zip(sids, eids, p1s)]
+            else:
+                cids = np.char.rjust(array_str(self.coord_id, size=8), 8).tolist()
+                lines = [f'PLOAD4  {sid}{eid}{p1}\n        {cid}      0.      0.      0.\n'
+                         for sid, eid, p1, cid in zip(sids, eids, p1s, cids)]
+            bdf_file.write(''.join(lines))
+        else:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1798,3 +1861,121 @@ def _solid_quad_area(nids: np.ndarray,
     area = 0.5 * norm
     assert len(area) == len(xyz1)
     return area, centroid, normal
+
+
+class PLOADX1(Load):
+    """
+    Pressure Load on Axisymmetric Element
+
+    +---------+-----+-----+----+----+----+----+-------+
+    |    1    |  2  |  3  |  4 |  5 |  6 |  7 |   8   |
+    +=========+=====+=====+====+====+====+====+=======+
+    | PLOADX1 | SID | EID | PA | PB | GA | GB | THETA |
+    +---------+-----+-----+----+----+----+----+-------+
+    """
+    _id_name = 'load_id'
+
+    @Load.clear_check
+    def clear(self) -> None:
+        self.load_id = np.array([], dtype='int32')
+        self.element_id = np.array([], dtype='int32')
+        self.surface_traction = np.zeros((0, 2), dtype='float64')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+        self.theta = np.array([], dtype='float64')
+
+    def add(self, sid: int, eid: int, pa: float, pb: float,
+            ga: int, gb: int, theta: float=0.0,
+            comment: str='') -> int:
+        if pb is None:
+            pb = pa
+        self.cards.append((sid, eid, pa, pb, ga, gb, theta, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+        sid = integer(card, 1, 'sid')
+        eid = integer(card, 2, 'eid')
+        pa = double(card, 3, 'pa')
+        pb = double_or_blank(card, 4, 'pb', default=pa)
+        ga = integer(card, 5, 'ga')
+        gb = integer(card, 6, 'gb')
+        theta = double_or_blank(card, 7, 'theta', default=0.0)
+        assert len(card) <= 8, f'len(PLOADX1 card) = {len(card):d}\ncard={card}'
+        self.cards.append((sid, eid, pa, pb, ga, gb, theta, comment))
+        self.n += 1
+        return self.n - 1
+
+    @Load.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        load_id = np.zeros(ncards, dtype='int32')
+        element_id = np.zeros(ncards, dtype=idtype)
+        surface_traction = np.zeros((ncards, 2), dtype='float64')
+        nodes = np.zeros((ncards, 2), dtype=idtype)
+        theta = np.zeros(ncards, dtype='float64')
+        for icard, card in enumerate(self.cards):
+            (sid, eid, pai, pbi, gai, gbi, thetai, comment) = card
+            load_id[icard] = sid
+            element_id[icard] = eid
+            surface_traction[icard, :] = [pai, pbi]
+            nodes[icard, :] = [gai, gbi]
+            theta[icard] = thetai
+        self._save(load_id, element_id, nodes, surface_traction, theta)
+        self.cards = []
+
+    def _save(self, load_id, element_id, nodes, surface_traction, theta):
+        nodes = np.asarray(nodes)
+        surface_traction = np.asarray(surface_traction)
+        if len(self.load_id) != 0:
+            load_id = np.hstack([self.load_id, load_id])
+            element_id = np.hstack([self.element_id, element_id])
+            surface_traction = np.vstack([self.surface_traction, surface_traction])
+            nodes = np.vstack([self.nodes, nodes])
+            theta = np.hstack([self.theta, theta])
+        self.load_id = load_id
+        self.element_id = element_id
+        self.surface_traction = surface_traction
+        self.nodes = nodes
+        self.theta = theta
+        self.n = len(load_id)
+
+
+    def __apply_slice__(self, load: PLOADX1, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.element_id = self.element_id[i]
+        load.surface_traction = self.surface_traction[i, :]
+        load.nodes = self.nodes[i, :]
+        load.theta = self.theta[i]
+
+    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+        used_dict['element_id'].append(self.element_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.nodes.ravel()
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self, missing, node=(nid, self.nodes.ravel()))
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.element_id.max(),
+                   self.nodes.max())
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+        for load_id, eid, (pa, pb), (ga, gb), theta in zip(
+                self.load_id, self.element_id, self.surface_traction,
+                self.nodes, self.theta):
+            list_fields = ['PLOADX1', load_id, eid, pa, pb, ga, gb, theta]
+            bdf_file.write(print_card(list_fields))

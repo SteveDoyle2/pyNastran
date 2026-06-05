@@ -1031,6 +1031,9 @@ class RADM(VectorizedBaseCard):
             bdf_file.write(print_card(list_fields))
         return
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
 
 class RADBC(VectorizedBaseCard):
     """

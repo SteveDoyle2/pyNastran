@@ -1968,7 +1968,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 area, max_skew_angle, taper_ratio,
                 max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio,
                 make_offset_normals_dim=self.make_offset_normals_dim,
-                is_testing=IS_TESTING)
+                is_testing=IS_TESTING,
+                nid_map=self.gui.nid_map)
             self.normals = normals
         return nid_to_pid_map, icase, cases, form
 
@@ -2883,6 +2884,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         key_itimes = []
 
         icase, form_optimization = fill_responses(cases, model, icase)
+
+        eid_to_nid_map = {eid: elem.nodes for eid, elem in self.model.elements.items()}
+
         for key in keys:
             unused_is_data, unused_is_static, unused_is_real, times = _get_times(model, key)
             if times is None:
@@ -2901,10 +2905,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             unused_form_time = []
 
             ncases_old = icase
-
-            eid_to_nid_map = {}
-            for eid, elem in self.model.elements.items():
-                eid_to_nid_map[eid] = elem.nodes
 
             stop_on_failure = self.stop_on_failure
             icase = self._fill_op2_oug_oqg(

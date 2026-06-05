@@ -1,4 +1,5 @@
 from qtpy import QtCore
+from qtpy.QtGui import QTextCursor
 from qtpy.QtWidgets import QMainWindow
 
 from cpylog import SimpleLogger
@@ -56,7 +57,7 @@ class LoggableGui(QMainWindow):
         """prints an HTML log message"""
         self.log_mutex.lockForWrite()
         text_cursor = self.log_widget.textCursor()
-        end = text_cursor.End
+        end = QTextCursor.MoveOperation.End
         text_cursor.movePosition(end)
         text_cursor.insertHtml(msg)
         self.log_widget.ensureCursorVisible() # new message will be visible

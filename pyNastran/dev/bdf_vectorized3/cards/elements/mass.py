@@ -541,6 +541,38 @@ class CONM2(Element):
                    self.coord_id.max())
 
     @parse_check
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if self.max_id >= 100_000_000:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+
+        is_xyz = self.xyz_offset.max() != 0. or self.xyz_offset.min() != 0.
+        is_inertia = self.inertia.max() != 0. or self.inertia.min() != 0.
+
+        if is_inertia:
+            self.write_file(bdf_file, size=8, write_card_header=write_card_header)
+            return
+
+        eids = np.char.rjust(array_str(self.element_id, size=8), 8).tolist()
+        nids = np.char.rjust(array_str(self.node_id, size=8), 8).tolist()
+        cids = np.char.rjust(array_str(self.coord_id, size=8), 8).tolist()
+        masses = np.char.rjust(array_float(self._mass, size=8, is_double=False), 8).tolist()
+
+        if is_xyz:
+            xyz_str = np.char.rjust(array_float(self.xyz_offset, size=8, is_double=False), 8)
+            x1s = xyz_str[:, 0].tolist()
+            x2s = xyz_str[:, 1].tolist()
+            x3s = xyz_str[:, 2].tolist()
+            lines = [f'CONM2   {eid}{nid}{cid}{m}{x1}{x2}{x3}\n'
+                     for eid, nid, cid, m, x1, x2, x3
+                     in zip(eids, nids, cids, masses, x1s, x2s, x3s)]
+        else:
+            lines = [f'CONM2   {eid}{nid}{cid}{m}\n'
+                     for eid, nid, cid, m in zip(eids, nids, cids, masses)]
+        bdf_file.write(''.join(lines))
+
+    @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

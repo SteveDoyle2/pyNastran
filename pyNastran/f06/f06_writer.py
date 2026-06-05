@@ -223,7 +223,7 @@ class F06Writer(OP2_F06_Common):
             'strength_ratio', 'failure_indices',
             'strain_energy', 'kinetic_energy',
             'RADEFFM', 'ROQGM1', 'ROUGV1',
-            'RAECONS', 'RASCONS', 'RAFCONS', 'RADCONS'
+            'RAECONS', 'RASCONS', 'RAFCONS', 'RADCONS',
             'RARCONS', 'RANCONS', 'RAPCONS', 'RAGCONS',
             'RAFEATC', 'RADEATC', 'RAQCONS',
             'RAGEATC', 'RAEEATC', 'RASEATC',

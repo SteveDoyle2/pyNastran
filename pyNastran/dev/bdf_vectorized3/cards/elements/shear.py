@@ -306,6 +306,11 @@ class PSHEAR(Property):
         prop.f2 = self.f2[i]
         prop.n = len(i)
 
+    def convert(self, xyz_scale: float=1.0,
+                nsm_per_area_scale: float=1.0, **kwargs) -> None:
+        self.t *= xyz_scale
+        self.nsm *= nsm_per_area_scale
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
 

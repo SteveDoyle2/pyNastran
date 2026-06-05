@@ -16,6 +16,7 @@ from pyNastran.gui.qt_version import qt_int, qt_version
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 from qtpy import QtCore, QtGui #, API
+from qtpy.QtGui import QTextCursor
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QToolBar,
@@ -707,6 +708,13 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                         self.log.error(str(keysi))
                         raise
                     menu.addAction(action)
+
+            # In Qt6, actions in a hidden menu don't have their shortcuts
+            # active. Register them at the window level so shortcuts work.
+            if isinstance(menu, QMenu) and not menu.menuAction().isVisible():
+                for item in items:
+                    if item and isinstance(item, str) and item in self.actions:
+                        self.addAction(self.actions[item])
         #self._create_plane_from_points(None)
 
     def _update_menu(self, menu_items: dict[str, tuple[QMenu, Any]]):
@@ -888,7 +896,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         """prints an HTML log message"""
         self.log_mutex.lockForWrite()
         text_cursor = self.log_widget.textCursor()
-        end = text_cursor.End
+        end = QTextCursor.MoveOperation.End
         text_cursor.movePosition(end)
         text_cursor.insertHtml(msg)
         self.log_widget.ensureCursorVisible() # new message will be visible

@@ -543,7 +543,7 @@ def run_and_compare_fems(
         diff_cards = compare(fem1, fem2, xref=xref, check=check,
                              print_stats=print_stats, quiet=quiet)
         check_setup_flag(fem1)
-        test_get_cards_by_card_types(fem2)
+        _test_get_cards_by_card_types(fem2)
 
         #fem2.update_model_by_desvars(xref)
         #except Exception:
@@ -1101,15 +1101,15 @@ def run_nastran(bdf_model: str, nastran: str, post: int=-1,
     #bdf.idtype = 'int64'
     #bdf.read_bdf(bdf_model)
     #bdf = read_bdfv(bdf_model, debug=False)
-    if 'POST' in bdf.params:
-        param_post = bdf.params['POST']
+    if 'POST' in bdf_model.params:
+        param_post = bdf_model.params['POST']
         #print('post = %s' % post)
         param_post.update_values(value1=post)
         #print('post = %s' % post)
     else:
         card = ['PARAM', 'POST', post]
-        bdf.add_card(card, 'PARAM', is_list=True)
-    bdf.write_bdf(bdf_model2, size=size, is_double=is_double)
+        bdf_model.add_card(card, 'PARAM', is_list=True)
+    bdf_model.write_bdf(bdf_model2, size=size, is_double=is_double)
 
     #os.rename(outModel, outModel2)
     if not os.path.exists(f06_model):
@@ -2575,7 +2575,7 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
     return ierror
 
 
-def test_get_cards_by_card_types(model: BDFs) -> None:
+def _test_get_cards_by_card_types(model: BDFs) -> None:
     """Verifies the ``model.get_cards_by_card_types`` method works"""
     # setup to remove hackish cards
     card_types = list(model.card_count.keys())

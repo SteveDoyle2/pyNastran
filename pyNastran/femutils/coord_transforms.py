@@ -10,6 +10,7 @@ Defines general coordinate system related functions including:
  - rtp_to_rtz_array(xyz)
 
  - coords = cylindrical_rotation_matrix(thetar, dtype='float64')
+ - coords = spherical_rotation_matrix(thetar, phir, dtype='float64')
 
 """
 # pylint: disable=C0103
@@ -194,4 +195,56 @@ def cylindrical_rotation_matrix(thetar: np.ndarray, dtype: str='float64') -> np.
     #for rot in rotation:
         #print(np.squeeze(rot))
         #print('---------')
+    return rotation
+
+
+def spherical_rotation_matrix(thetar: np.ndarray, phir: np.ndarray,
+                              dtype: str='float64') -> np.ndarray:
+    """Creates rotation matrices from spherical (r, theta, phi) to rectangular.
+
+    For a node at spherical position (r, theta, phi), this builds the matrix
+    that transforms a vector in spherical basis (e_r, e_theta, e_phi) to
+    the local rectangular basis (e_x, e_y, e_z).
+
+    Nastran convention: theta is the polar angle from +z, phi is the
+    azimuthal angle from +x in the x-y plane.
+
+    Parameters
+    ----------
+    thetar : (n,) float ndarray
+        polar angle theta in radians (from +z axis)
+    phir : (n,) float ndarray
+        azimuthal angle phi in radians (from +x axis in x-y plane)
+    dtype : str
+        output dtype
+
+    Returns
+    -------
+    rotation : (n, 3, 3) float ndarray
+        rotation[i] @ [v_r, v_theta, v_phi] = [v_x, v_y, v_z]
+
+    """
+    theta = np.asarray(thetar, dtype=dtype)
+    phi = np.asarray(phir, dtype=dtype)
+    n = len(theta)
+
+    sin_t = np.sin(theta)
+    cos_t = np.cos(theta)
+    sin_p = np.sin(phi)
+    cos_p = np.cos(phi)
+
+    # columns are e_r, e_theta, e_phi expressed in rectangular
+    rotation = np.zeros((n, 3, 3), dtype=dtype)
+    # e_r
+    rotation[:, 0, 0] = sin_t * cos_p
+    rotation[:, 1, 0] = sin_t * sin_p
+    rotation[:, 2, 0] = cos_t
+    # e_theta
+    rotation[:, 0, 1] = cos_t * cos_p
+    rotation[:, 1, 1] = cos_t * sin_p
+    rotation[:, 2, 1] = -sin_t
+    # e_phi
+    rotation[:, 0, 2] = -sin_p
+    rotation[:, 1, 2] = cos_p
+    rotation[:, 2, 2] = 0.
     return rotation

@@ -40,6 +40,7 @@ from pyNastran.bdf.cards.aero.zaero_cards.ase import (
     SENSET, SURFSET, CNCTSET,
     ASEGAIN, GAINSET,
     AEROLAG,
+    MIMOTF, SENSR, GAIN, SUMBLK, DEADBN, DELAY_ZAERO, FILTFL, LIMTR,
 )
 from pyNastran.bdf.cards.aero.zaero_cards.bdf_tables import (
     TABLED1_ZAERO, TABDMP1_ZAERO)
@@ -47,6 +48,10 @@ from pyNastran.bdf.cards.aero.zaero_cards.dmi import DMIL
 from pyNastran.bdf.cards.aero.zaero_cards.cards import (
     MLDPRNT, MLDSTAT, MINSTAT, MLDTRIM, MLDCOMD, MLDTIME,
     AEROZ, ACOORD, ATTACH, EXTFILE,
+    CONMLST, CPFACT, APCONST, SPLINE0, PBODY7, TRIMFLT,
+    ASEOUT, CMARGIN, OUTPUT4, CROSPSD, FOILSEC, GENGUST, MFTGUST, DMIS,
+    CELLWNG, CELLBOX, INPCFD, OMITCFD, WT1AJJ, WT1FRC, WT2AJJ, WTUCP,
+    TRIMOBJ, TRIMCON, APCNSND, APCNSCP,
 )
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -98,16 +103,25 @@ ZAERO_CARDS = [
     'ACTU',
     'MIMOSS', 'SISOTF',
     'ASEGAIN', 'GAINSET',
+    'MIMOTF', 'SENSR', 'GAIN', 'SUMBLK',
+    'DEADBN', 'DELAY', 'FILTFL', 'LIMTR',
     'PLTBODE', 'AEROLAG',
     # -------------
     # other
     'SETADD',
-    # 'DMIL',
+    'DMIL',
     'EXTFILE',
     'MLDTIME', 'MLDCOMD',
-    'MINSTAT', #'APCONST',
+    'MINSTAT', 'APCONST',
+    'CONMLST', 'CPFACT',
+    'SPLINE0', 'PBODY7', 'TRIMFLT',
+    'ASEOUT', 'CMARGIN', 'OUTPUT4', 'CROSPSD',
+    'FOILSEC', 'GENGUST', 'MFTGUST', 'DMIS',
+    'CELLWNG', 'CELLBOX', 'INPCFD', 'OMITCFD',
+    'WT1AJJ', 'WT1FRC', 'WT2AJJ', 'WTUCP',
+    'TRIMOBJ', 'TRIMCON', 'APCNSND', 'APCNSCP',
     'RBRED',
-    # 'SPLINE0', 'PBODY7',
+    # (SPLINE0 and PBODY7 moved to supported list above)
     'CNCTSET', 'SURFSET',
 ]
 
@@ -196,6 +210,129 @@ class AddMethods:
         self.model.zaero.minstat[key] = minstat
         self.model._type_to_id_map[minstat.type].append(key)
 
+    def add_conmlst_object(self, conmlst: 'CONMLST') -> None:
+        """adds a CONMLST object"""
+        key = conmlst.conmlst_id
+        assert key > 0, key
+        assert key not in self.model.zaero.conmlst, key
+        self.model.zaero.conmlst[key] = conmlst
+        self.model._type_to_id_map[conmlst.type].append(key)
+
+    def add_cpfact_object(self, cpfact: 'CPFACT') -> None:
+        """adds a CPFACT object"""
+        key = cpfact.cpfact_id
+        assert key > 0, key
+        assert key not in self.model.zaero.cpfact, key
+        self.model.zaero.cpfact[key] = cpfact
+        self.model._type_to_id_map[cpfact.type].append(key)
+
+    def add_apconst_object(self, apconst: 'APCONST') -> None:
+        """adds an APCONST object"""
+        key = apconst.sid
+        assert key > 0, key
+        assert key not in self.model.zaero.apconst, key
+        self.model.zaero.apconst[key] = apconst
+        self.model._type_to_id_map[apconst.type].append(key)
+
+    def add_spline0_object(self, spline0: 'SPLINE0') -> None:
+        """adds a SPLINE0 object"""
+        key = spline0.eid
+        assert key > 0, key
+        assert key not in self.model.zaero.spline0, key
+        self.model.zaero.spline0[key] = spline0
+        self.model._type_to_id_map[spline0.type].append(key)
+
+    def add_pbody7_object(self, pbody7: 'PBODY7') -> None:
+        """adds a PBODY7 object"""
+        key = pbody7.pid
+        assert key > 0, key
+        assert key not in self.model.zaero.pbody7, key
+        self.model.zaero.pbody7[key] = pbody7
+        self.model._type_to_id_map[pbody7.type].append(key)
+
+    def add_trimflt_object(self, trimflt: 'TRIMFLT') -> None:
+        """adds a TRIMFLT object"""
+        key = trimflt.trimflt_id
+        assert key > 0, key
+        assert key not in self.model.zaero.trimflt, key
+        self.model.zaero.trimflt[key] = trimflt
+        self.model._type_to_id_map[trimflt.type].append(key)
+
+    def _add_generic_card(self, card, storage_attr: str) -> None:
+        """Add a generic ZAERO card to the specified storage dict."""
+        key = card.card_id
+        storage = getattr(self.model.zaero, storage_attr)
+        if key in storage:
+            # Allow duplicate ID=0 by using a counter
+            key = len(storage) + 1
+        storage[key] = card
+        self.model._type_to_id_map[card.type].append(key)
+
+    def add_aseout_object(self, card) -> None:
+        self._add_generic_card(card, 'aseout')
+
+    def add_cmargin_object(self, card) -> None:
+        """adds a CMARGIN object"""
+        key = card.cmargin_id
+        assert key > 0, key
+        assert key not in self.model.zaero.cmargin, key
+        self.model.zaero.cmargin[key] = card
+        self.model._type_to_id_map[card.type].append(key)
+
+    def add_output4_object(self, card) -> None:
+        self._add_generic_card(card, 'output4')
+
+    def add_crospsd_object(self, card) -> None:
+        self._add_generic_card(card, 'crospsd')
+
+    def add_foilsec_object(self, card) -> None:
+        self._add_generic_card(card, 'foilsec')
+
+    def add_gengust_card_object(self, card) -> None:
+        self._add_generic_card(card, 'gengust_card')
+
+    def add_mftgust_object(self, card) -> None:
+        self._add_generic_card(card, 'mftgust')
+
+    def add_dmis_object(self, card) -> None:
+        self._add_generic_card(card, 'dmis')
+
+    def add_cellwng_object(self, card) -> None:
+        self._add_generic_card(card, 'cellwng')
+
+    def add_cellbox_object(self, card) -> None:
+        self._add_generic_card(card, 'cellbox')
+
+    def add_inpcfd_object(self, card) -> None:
+        self._add_generic_card(card, 'inpcfd')
+
+    def add_omitcfd_object(self, card) -> None:
+        self._add_generic_card(card, 'omitcfd')
+
+    def add_wt1ajj_object(self, card) -> None:
+        self._add_generic_card(card, 'wt1ajj')
+
+    def add_wt1frc_object(self, card) -> None:
+        self._add_generic_card(card, 'wt1frc')
+
+    def add_wt2ajj_object(self, card) -> None:
+        self._add_generic_card(card, 'wt2ajj')
+
+    def add_wtucp_object(self, card) -> None:
+        self._add_generic_card(card, 'wtucp')
+
+    def add_trimobj_object(self, card) -> None:
+        self._add_generic_card(card, 'trimobj_card')
+
+    def add_trimcon_object(self, card) -> None:
+        self._add_generic_card(card, 'trimcon_card')
+
+    def add_apcnsnd_object(self, card) -> None:
+        self._add_generic_card(card, 'apcnsnd')
+
+    def add_apcnscp_object(self, card) -> None:
+        self._add_generic_card(card, 'apcnscp')
+
     def add_extinp_object(self, extinp: EXTINP) -> None:
         """adds an EXTINP object"""
         key = extinp.extinp_id
@@ -234,6 +371,69 @@ class AddMethods:
         self.model.zaero.mimoss[key] = mimoss
         self.model._type_to_id_map[mimoss.type].append(key)
 
+    def add_mimotf_object(self, mimotf: MIMOTF) -> None:
+        """adds a MIMOTF object"""
+        key = mimotf.mimotf_id
+        assert key not in self.model.zaero.mimotf, key
+        assert key > 0, key
+        self.model.zaero.mimotf[key] = mimotf
+        self.model._type_to_id_map[mimotf.type].append(key)
+
+    def add_sensr_object(self, sensr: SENSR) -> None:
+        """adds a SENSR object"""
+        key = sensr.sensr_id
+        assert key not in self.model.zaero.sensr, key
+        assert key > 0, key
+        self.model.zaero.sensr[key] = sensr
+        self.model._type_to_id_map[sensr.type].append(key)
+
+    def add_gain_object(self, gain: GAIN) -> None:
+        """adds a GAIN object"""
+        key = gain.gain_id
+        assert key not in self.model.zaero.gain, key
+        assert key > 0, key
+        self.model.zaero.gain[key] = gain
+        self.model._type_to_id_map[gain.type].append(key)
+
+    def add_sumblk_object(self, sumblk: SUMBLK) -> None:
+        """adds a SUMBLK object"""
+        key = sumblk.sumblk_id
+        assert key not in self.model.zaero.sumblk, key
+        assert key > 0, key
+        self.model.zaero.sumblk[key] = sumblk
+        self.model._type_to_id_map[sumblk.type].append(key)
+
+    def add_deadbn_object(self, deadbn: DEADBN) -> None:
+        """adds a DEADBN object"""
+        key = deadbn.deadbn_id
+        assert key not in self.model.zaero.deadbn, key
+        assert key > 0, key
+        self.model.zaero.deadbn[key] = deadbn
+        self.model._type_to_id_map[deadbn.type].append(key)
+
+    def add_delay_zaero_object(self, delay: DELAY_ZAERO) -> None:
+        """adds a DELAY (ZAERO) object"""
+        key = delay.delay_id
+        assert key not in self.model.zaero.delay_zaero, key
+        assert key > 0, key
+        self.model.zaero.delay_zaero[key] = delay
+        self.model._type_to_id_map[delay.type].append(key)
+
+    def add_filtfl_object(self, filtfl: FILTFL) -> None:
+        """adds a FILTFL object"""
+        key = filtfl.filtfl_id
+        assert key not in self.model.zaero.filtfl, key
+        assert key > 0, key
+        self.model.zaero.filtfl[key] = filtfl
+        self.model._type_to_id_map[filtfl.type].append(key)
+
+    def add_limtr_object(self, limtr: LIMTR) -> None:
+        """adds a LIMTR object"""
+        key = limtr.limtr_id
+        assert key not in self.model.zaero.limtr, key
+        assert key > 0, key
+        self.model.zaero.limtr[key] = limtr
+        self.model._type_to_id_map[limtr.type].append(key)
 
     def add_sisotf_object(self, sisotf: SISOTF) -> None:
         """adds an SISOTF object"""
@@ -655,8 +855,29 @@ class ZAERO:
         # TODO: add me
         self.dse: dict[int, DSE] = {}
         self.extfile: dict[int, EXTFILE] = {}
+        self.conmlst: dict[int, CONMLST] = {}
+        self.cpfact: dict[int, CPFACT] = {}
+        self.apconst: dict[int, APCONST] = {}
+        self.spline0: dict[int, SPLINE0] = {}
+        self.pbody7: dict[int, PBODY7] = {}
+        self.trimflt: dict[int, TRIMFLT] = {}
+        self.output4: dict[int, OUTPUT4] = {}
+        self.crospsd: dict[int, CROSPSD] = {}
+        self.foilsec: dict[int, FOILSEC] = {}
+        self.gengust_card: dict[int, GENGUST] = {}
+        self.mftgust: dict[int, MFTGUST] = {}
+        self.dmis: dict[int, DMIS] = {}
+        self.cellwng: dict[int, CELLWNG] = {}
+        self.cellbox: dict[int, CELLBOX] = {}
+        self.inpcfd: dict[int, INPCFD] = {}
+        self.omitcfd: dict[int, OMITCFD] = {}
+        self.wt1ajj: dict[int, WT1AJJ] = {}
+        self.wt1frc: dict[int, WT1FRC] = {}
+        self.wt2ajj: dict[int, WT2AJJ] = {}
+        self.wtucp: dict[int, WTUCP] = {}
+        self.trimobj_card: dict[int, TRIMOBJ] = {}
+        self.trimcon_card: dict[int, TRIMCON] = {}
         # FOILSEC
-        # CPFACT
         # TRIMFLT
 
         # transient
@@ -703,9 +924,17 @@ class ZAERO:
         self.apcnsnd: dict[int, APCNSND] = {}
         self.apcnscp: dict[int, APCNSCP] = {}
         self.mimoss: dict[int, MIMOSS] = {}
+        self.mimotf: dict[int, MIMOTF] = {}
         self.sisotf: dict[int, SISOTF] = {}
         self.cmargin: dict[int, CMARGIN] = {}
         self.aerolag: dict[int, AEROLAG] = {}
+        self.sensr: dict[int, SENSR] = {}
+        self.gain: dict[int, GAIN] = {}
+        self.sumblk: dict[int, SUMBLK] = {}
+        self.deadbn: dict[int, DEADBN] = {}
+        self.delay_zaero: dict[int, DELAY_ZAERO] = {}
+        self.filtfl: dict[int, FILTFL] = {}
+        self.limtr: dict[int, LIMTR] = {}
 
         # other
         self.extinp: dict[int, EXTINP] = {}
@@ -914,6 +1143,14 @@ class ZAERO:
             'CJUNCT': (CJUNCT, zaero_add.add_cjunct_object),
             'CONCT': (CONCT, zaero_add.add_conct_object),
             'AEROLAG': (AEROLAG, zaero_add.add_aerolag_object),
+            'MIMOTF': (MIMOTF, zaero_add.add_mimotf_object),
+            'SENSR': (SENSR, zaero_add.add_sensr_object),
+            'GAIN': (GAIN, zaero_add.add_gain_object),
+            'SUMBLK': (SUMBLK, zaero_add.add_sumblk_object),
+            'DEADBN': (DEADBN, zaero_add.add_deadbn_object),
+            'DELAY': (DELAY_ZAERO, zaero_add.add_delay_zaero_object),
+            'FILTFL': (FILTFL, zaero_add.add_filtfl_object),
+            'LIMTR': (LIMTR, zaero_add.add_limtr_object),
             # other
             'SETADD': (SETADD, zaero_add.add_setadd_object),
             'SENSET': (SENSET, zaero_add.add_senset_object),
@@ -934,10 +1171,36 @@ class ZAERO:
             'TFSET': (TFSET, zaero_add.add_tfset_object),
             'MLDSTAT': (MLDSTAT, zaero_add.add_mldstat_object),
             'MINSTAT': (MINSTAT, zaero_add.add_minstat_object),
+            'CONMLST': (CONMLST, zaero_add.add_conmlst_object),
+            'CPFACT': (CPFACT, zaero_add.add_cpfact_object),
+            'APCONST': (APCONST, zaero_add.add_apconst_object),
+            'SPLINE0': (SPLINE0, zaero_add.add_spline0_object),
+            'PBODY7': (PBODY7, zaero_add.add_pbody7_object),
+            'TRIMFLT': (TRIMFLT, zaero_add.add_trimflt_object),
+            'ASEOUT': (ASEOUT, zaero_add.add_aseout_object),
+            'CMARGIN': (CMARGIN, zaero_add.add_cmargin_object),
+            'OUTPUT4': (OUTPUT4, zaero_add.add_output4_object),
+            'CROSPSD': (CROSPSD, zaero_add.add_crospsd_object),
+            'FOILSEC': (FOILSEC, zaero_add.add_foilsec_object),
+            'GENGUST': (GENGUST, zaero_add.add_gengust_card_object),
+            'MFTGUST': (MFTGUST, zaero_add.add_mftgust_object),
+            'DMIS': (DMIS, zaero_add.add_dmis_object),
+            'CELLWNG': (CELLWNG, zaero_add.add_cellwng_object),
+            'CELLBOX': (CELLBOX, zaero_add.add_cellbox_object),
+            'INPCFD': (INPCFD, zaero_add.add_inpcfd_object),
+            'OMITCFD': (OMITCFD, zaero_add.add_omitcfd_object),
+            'WT1AJJ': (WT1AJJ, zaero_add.add_wt1ajj_object),
+            'WT1FRC': (WT1FRC, zaero_add.add_wt1frc_object),
+            'WT2AJJ': (WT2AJJ, zaero_add.add_wt2ajj_object),
+            'WTUCP': (WTUCP, zaero_add.add_wtucp_object),
+            'TRIMOBJ': (TRIMOBJ, zaero_add.add_trimobj_object),
+            'TRIMCON': (TRIMCON, zaero_add.add_trimcon_object),
+            'APCNSND': (APCNSND, zaero_add.add_apcnsnd_object),
+            'APCNSCP': (APCNSCP, zaero_add.add_apcnscp_object),
             'MLDTRIM': (MLDTRIM, zaero_add.add_mldtrim_object),
             'MLDCOMD': (MLDCOMD, zaero_add.add_mldcomd_object),
             'MLDTIME': (MLDTIME, zaero_add.add_mldtime_object),
-            #'DMIL': (DMIL, zaero_add.add_dmil_object),
+            'DMIL': (DMIL, zaero_add.add_dmil_object),
             'EXTFILE': (EXTFILE, zaero_add.add_extfile_object),
             'MLDPRNT': (MLDPRNT, zaero_add.add_mldprnt_object),
         }
@@ -1019,8 +1282,8 @@ class ZAERO:
                 mloads_id = subcase0['MLOADS'][0]
             elif 'ASE' in subcase0:
                 ase_id = subcase0['ASE'][0]
-        print(f'mloads_id = {mloads_id}')
-        print(f'ase_id = {ase_id}')
+        # print(f'mloads_id = {mloads_id}')
+        # print(f'ase_id = {ase_id}')
 
         asecont = None
         if mloads_id in self.mloads:
@@ -1733,7 +1996,9 @@ def get_dicts(zaero: ZAERO, method: str) -> tuple[list,
         zaero.cjunct, zaero.conct, zaero.tfset, zaero.cnctset,
         zaero.ase, zaero.asecont, zaero.asesnsr, zaero.asesns1,
         zaero.asegain, zaero.gainset,
-        zaero.mimoss, zaero.sisotf,
+        zaero.mimoss, zaero.mimotf, zaero.sisotf,
+        zaero.sensr, zaero.gain, zaero.sumblk,
+        zaero.deadbn, zaero.delay_zaero, zaero.filtfl, zaero.limtr,
         #
         zaero.senset, zaero.surfset,
         zaero.mldtrim, zaero.mldstat, zaero.minstat, zaero.mldprnt,

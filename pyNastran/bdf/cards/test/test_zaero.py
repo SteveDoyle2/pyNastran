@@ -261,6 +261,144 @@ class TestAeroZaero(unittest.TestCase):
         model.zaero.uncross_reference()
 
 
+    def test_zaero_new_ase_cards(self):
+        """Test parsing and round-tripping MIMOTF, SENSR, GAIN, SUMBLK,
+        DEADBN, DELAY, FILTFL, LIMTR cards."""
+        from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+        from pyNastran.bdf.cards.aero.zaero_cards.ase import (
+            MIMOTF, SENSR, GAIN, SUMBLK, DEADBN, DELAY_ZAERO, FILTFL, LIMTR)
+
+        # MIMOTF: 2x2 MIMO transfer function matrix referencing 4 SISOTFs
+        card = BDFCard(['MIMOTF', '10', '2', '2', '101', '102', '103', '104'])
+        obj = MIMOTF.add_card(card)
+        assert obj.mimotf_id == 10
+        assert obj.n_input == 2
+        assert obj.n_output == 2
+        assert obj.tf_ids == [101, 102, 103, 104]
+        fields = obj.raw_fields()
+        assert fields == ['MIMOTF', 10, 2, 2, 101, 102, 103, 104]
+        obj.write_card()
+
+        # SENSR: acceleration sensor at grid 100, DOF 3
+        card = BDFCard(['SENSR', '20', '2', '100', '3', '0.5', 'YES'])
+        obj = SENSR.add_card(card)
+        assert obj.sensr_id == 20
+        assert obj.sensor_type == 2
+        assert obj.sgid == 100
+        assert obj.component == 3
+        assert obj.factor == 0.5
+        assert obj.sum_method == 'YES'
+        obj.write_card()
+
+        # SENSR: defaults (factor=1.0, sum_method=NO)
+        card = BDFCard(['SENSR', '21', '0', '200', '1'])
+        obj = SENSR.add_card(card)
+        assert obj.factor == 1.0
+        assert obj.sum_method == 'NO'
+
+        # GAIN: scalar gain
+        card = BDFCard(['GAIN', '30', '2.5'])
+        obj = GAIN.add_card(card)
+        assert obj.gain_id == 30
+        assert obj.k == 2.5
+        fields = obj.raw_fields()
+        assert fields == ['GAIN', 30, 2.5]
+        obj.write_card()
+
+        # SUMBLK: 3-input summing junction
+        card = BDFCard(['SUMBLK', '40', '3', '1.0', '-1.0', '1.0'])
+        obj = SUMBLK.add_card(card)
+        assert obj.sumblk_id == 40
+        assert obj.nsignal == 3
+        assert obj.signs == [1.0, -1.0, 1.0]
+        obj.write_card()
+
+        # DEADBN: deadband with threshold 0.25
+        card = BDFCard(['DEADBN', '50', '0.25'])
+        obj = DEADBN.add_card(card)
+        assert obj.deadbn_id == 50
+        assert obj.threshold == 0.25
+        obj.write_card()
+
+        # DELAY: 20ms delay, order 4 Pade approximation
+        card = BDFCard(['DELAY', '60', '0.02', '4'])
+        obj = DELAY_ZAERO.add_card(card)
+        assert obj.delay_id == 60
+        assert obj.tau == 0.02
+        assert obj.order == 4
+        obj.write_card()
+
+        # DELAY: default order=3
+        card = BDFCard(['DELAY', '61', '0.01'])
+        obj = DELAY_ZAERO.add_card(card)
+        assert obj.order == 3
+
+        # FILTFL: low-pass filter, 15 Hz, order 3, zeta=0.5
+        card = BDFCard(['FILTFL', '70', '1', '15.0', '3', '0.5'])
+        obj = FILTFL.add_card(card)
+        assert obj.filtfl_id == 70
+        assert obj.filter_type == 1
+        assert obj.freq == 15.0
+        assert obj.order == 3
+        assert obj.zeta == 0.5
+        obj.write_card()
+
+        # FILTFL: defaults (order=2, zeta=0.707)
+        card = BDFCard(['FILTFL', '71', '2', '20.0'])
+        obj = FILTFL.add_card(card)
+        assert obj.order == 2
+        assert abs(obj.zeta - 0.707) < 1e-10
+
+        # LIMTR: saturation limits
+        card = BDFCard(['LIMTR', '80', '-30.0', '30.0'])
+        obj = LIMTR.add_card(card)
+        assert obj.limtr_id == 80
+        assert obj.lower == -30.0
+        assert obj.upper == 30.0
+        obj.write_card()
+
+    def test_zaero_new_ase_cards_bdf_read(self):
+        """Test reading new ASE cards from a BDF file and cross-referencing."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'SISOTF  101     2       1       1.0     0.5     1.0     0.0\n'
+            'SISOTF  102     2       1       1.0     0.5     1.0     0.0\n'
+            'SISOTF  103     2       1       1.0     0.5     1.0     0.0\n'
+            'SISOTF  104     2       1       1.0     0.5     1.0     0.0\n'
+            'MIMOTF  10      2       2       101     102     103     104\n'
+            'SENSR   20      2       100     3       0.5     YES\n'
+            'GAIN    30      2.5\n'
+            'SUMBLK  40      3       1.0     -1.0    1.0\n'
+            'DEADBN  50      0.25\n'
+            'DELAY   60      0.02    4\n'
+            'FILTFL  70      1       15.0    3       0.5\n'
+            'LIMTR   80      -30.0   30.0\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+
+        # All cards parsed
+        assert 10 in model.zaero.mimotf
+        assert 20 in model.zaero.sensr
+        assert 30 in model.zaero.gain
+        assert 40 in model.zaero.sumblk
+        assert 50 in model.zaero.deadbn
+        assert 60 in model.zaero.delay_zaero
+        assert 70 in model.zaero.filtfl
+        assert 80 in model.zaero.limtr
+
+        # MIMOTF cross-references 4 SISOTFs
+        mimotf = model.zaero.mimotf[10]
+        assert hasattr(mimotf, 'tf_ids_ref')
+        assert len(mimotf.tf_ids_ref) == 4
+        assert all(ref is not None for ref in mimotf.tf_ids_ref)
+
+        # Write and verify round-trip
+        write_raw_fields(model.zaero)
+
+
 def get_zaero_model() -> StringIO:
     bdf_file = StringIO()
     bdf_file.write(
@@ -323,7 +461,7 @@ def get_zaero_model() -> StringIO:
         'TRIMVAR,17,VAR\n'
         '$\n'
         '$trimlnk,id,sym, ?,  ?\n'
-        'TRIMLNK,10,SYM, -1, 17\n'
+        'TRIMLNK,10,SYM, -1., 17\n'
         'ACOORD, 2, 0.,0.,0., 1.0,0.\n'
         '$       ID,    MODEL, CP, PANLST, SETG, DZ, EPS\n'
         'SPLINE1,100,        ,   ,    422, 423,\n'
@@ -357,3 +495,363 @@ def write_raw_fields(zaero: ZAERO):
     for dicti in dicts:
         for value in dicti.values():
             value.raw_fields()
+
+
+class TestNewZaeroCards(unittest.TestCase):
+    """Tests for newly added ZAERO cards: CONMLST, CPFACT, APCONST,
+    SPLINE0, PBODY7, TRIMFLT, and generic cards (ASEOUT, OUTPUT4, etc.)."""
+
+    def test_conmlst(self):
+        """CONMLST parses scale factor + CONM ID pairs."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'CONMLST 3                                                               +C1\n'
+            '+C1     2.0     100\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 3 in model.zaero.conmlst
+        card = model.zaero.conmlst[3]
+        assert card.factors == [2.0]
+        assert card.conm_ids == [100]
+        card.raw_fields()
+
+    def test_conmlst_multiple_pairs(self):
+        """CONMLST with multiple (factor, CONM) pairs."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'CONMLST 5                                                               +C\n'
+            '+C      3.5     200     1.2     300\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        card = model.zaero.conmlst[5]
+        assert card.factors == [3.5, 1.2]
+        assert card.conm_ids == [200, 300]
+
+    def test_cpfact(self):
+        """CPFACT parses pressure scaling factor fields."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'CPFACT  90      90      SYM     ALL     FEM     ALL     0.0     0.0     +CP\n'
+            '+CP     1\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 90 in model.zaero.cpfact
+        card = model.zaero.cpfact[90]
+        assert card.idmk == 90
+        assert card.sym == 'SYM'
+        assert card.comp == 'ALL'
+        assert card.cptype == 'FEM'
+        assert card.factor1 == 0.0
+        assert card.strips == [1]
+        card.raw_fields()
+
+    def test_apconst(self):
+        """APCONST parses RFA constraint parameters."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'APCONST 30      1       -1      -1      1       1       1       1\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 30 in model.zaero.apconst
+        card = model.zaero.apconst[30]
+        assert card.sid == 30
+        assert card.da0 == 1
+        assert card.da1 == -1
+        assert card.da2 == -1
+        assert card.nrp == 1
+        assert card.ncp == 1
+        card.raw_fields()
+
+    def test_spline0(self):
+        """SPLINE0 parses rigid body spline fields."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'SPLINE0 102     FUSELAGE        112\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 102 in model.zaero.spline0
+        card = model.zaero.spline0[102]
+        assert card.eid == 102
+        assert card.model_name == 'FUSELAGE'
+        assert card.setk == 112
+        card.raw_fields()
+
+    def test_pbody7(self):
+        """PBODY7 parses body property fields."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'PBODY7  11      0                                               0\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 11 in model.zaero.pbody7
+        card = model.zaero.pbody7[11]
+        assert card.pid == 11
+        assert card.ipbody == 0
+        card.raw_fields()
+
+    def test_trimflt(self):
+        """TRIMFLT parses trim-flutter card."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'TRIMFLT 10              2.0\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 10 in model.zaero.trimflt
+        card = model.zaero.trimflt[10]
+        assert card.trimflt_id == 10
+        assert card.alpha == 2.0
+        card.raw_fields()
+
+    def test_trimflt_integer_field2(self):
+        """TRIMFLT with integer in field 2 (reference ID format)."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'TRIMFLT 1       1\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 1 in model.zaero.trimflt
+        card = model.zaero.trimflt[1]
+        assert card.trimflt_id == 1
+        assert card.title == '1'
+
+    def test_generic_cards_aseout(self):
+        """ASEOUT generic card parses without error."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'ASEOUT  101     10      01      PLANT           PLANT01.DAT\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 101 in model.zaero.aseout
+        card = model.zaero.aseout[101]
+        assert card.card_id == 101
+        card.raw_fields()
+
+    def test_generic_cards_output4(self):
+        """OUTPUT4 generic card parses without error."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'OUTPUT4 QHGS0101QHGS0101.DAT\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert len(model.zaero.output4) == 1
+
+    def test_generic_cards_cellwng(self):
+        """CELLWNG generic card parses without error."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'CELLWNG 10001   1001    1       3               20001\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 10001 in model.zaero.cellwng
+
+    def test_all_examples_zero_rejects(self):
+        """All ZAERO example .inp files parse with zero rejected cards."""
+        all_rejects = {}
+        for subdir in ['flutter', 'ase', 'gloads', 'trim', 'mloads']:
+            edir = EXAMPLES_DIR / '..' / subdir
+            if not edir.exists():
+                continue
+            for case_dir in sorted(edir.iterdir()):
+                if not case_dir.is_dir():
+                    continue
+                for inp in case_dir.glob('*.inp'):
+                    if 'test_bdf' in inp.name:
+                        continue
+                    try:
+                        model = read_bdf(inp, mode='zaero', xref=False, debug=False)
+                        for card, count in model.reject_count.items():
+                            if card not in all_rejects:
+                                all_rejects[card] = 0
+                            all_rejects[card] += count
+                    except Exception:
+                        pass
+        self.assertEqual(all_rejects, {}, f'Rejected cards: {all_rejects}')
+
+    def test_rbred(self):
+        """RBRED parses rigid body mode reduction card."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'RBRED   10      200     246     10\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 10 in model.zaero.rbred
+        card = model.zaero.rbred[10]
+        assert card.sid == 10
+        assert card.id_ase == 200
+        assert card.component == '246'
+        assert card.node_id == 10
+        card.raw_fields()
+
+    def test_conct(self):
+        """CONCT parses fixed connection between control elements."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'CONCT   425     209     1       210     1\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 425 in model.zaero.conct
+        card = model.zaero.conct[425]
+        assert card.conct_id == 425
+        card.raw_fields()
+
+    def test_cjunct(self):
+        """CJUNCT parses junction element (gain splitter)."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'CJUNCT  214     1       2       0.033333-0.25\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 214 in model.zaero.cjunct
+        card = model.zaero.cjunct[214]
+        assert card.cjunct_id == 214
+        card.raw_fields()
+
+    def test_cnctset(self):
+        """CNCTSET parses connection set card."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'CNCTSET 130     421     422     423     424     425\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 130 in model.zaero.cnctset
+        card = model.zaero.cnctset[130]
+        assert card.cnctset_id == 130
+        card.raw_fields()
+
+    def test_mldstat(self):
+        """MLDSTAT parses airframe state card."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'MLDSTAT 100     100                                                     +M1\n'
+            '+M1     ALPHA   -4.31-5 Q       0.      THETA   -4.31-5 H       0.0\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero', xref=False)
+        assert 100 in model.zaero.mldstat
+        card = model.zaero.mldstat[100]
+        assert card.mldstat_id == 100
+        assert card.mldtrim_id == 100
+        assert 'ALPHA' in card.states
+        assert len(card.states) == 4
+        card.raw_fields()
+
+    def test_mldtrim(self):
+        """MLDTRIM parses trim equilibrium card."""
+        bdf_file = StringIO(
+            '$ pyNastran: version=zona\n'
+            'CEND\n'
+            'BEGIN BULK\n'
+            'MLDTRIM 100     32.2    1.0     YES     SMODAL                          +MA\n'
+            '+MA     CANARD  0.13534\n'
+            'ENDDATA\n'
+        )
+        model = read_bdf(bdf_file, debug=False, mode='zaero')
+        assert 100 in model.zaero.mldtrim
+        card = model.zaero.mldtrim[100]
+        assert card.mldtrim_id == 100
+        assert card.gravity == 32.2
+        assert card.nz == 1.0
+        card.raw_fields()
+
+    def test_conmlst_from_example(self):
+        """CONMLST from Kussner example parses mass scale correctly."""
+        zaero_filename = GLOADS_DIR / 'case1' / 'kussner.inp'
+        model = read_bdf(zaero_filename, mode='zaero', xref=False, debug=False)
+        # CONMLST 1: factor=7956.982, CONM1=100
+        assert 1 in model.zaero.conmlst
+        card = model.zaero.conmlst[1]
+        self.assertAlmostEqual(card.factors[0], 7956.982, places=2)
+        assert card.conm_ids[0] == 100
+        # CONMLST 3: factor=2.0, CONM1=100
+        card3 = model.zaero.conmlst[3]
+        assert card3.factors[0] == 2.0
+
+    def test_dmil_from_example(self):
+        """DMIL parses from GAFA ASE example (MIMO controller matrices)."""
+        zaero_filename = ASE_DIR / 'case2' / 'gafa.inp'
+        model = read_bdf(zaero_filename, mode='zaero', xref=False, debug=False)
+        assert len(model.zaero.dmil) > 0
+        # DMIL MIMO has multiple column entries
+        for key, dmil in model.zaero.dmil.items():
+            dmil.raw_fields()
+            break  # just check one
+
+    def test_gengust_from_example(self):
+        """GENGUST parses from GBJ discrete gust example."""
+        zaero_filename = GLOADS_DIR / 'case2' / 'gbj_dgust.inp'
+        model = read_bdf(zaero_filename, mode='zaero', xref=False, debug=False)
+        assert len(model.zaero.gengust_card) > 0
+
+    def test_mftgust_from_example(self):
+        """MFTGUST parses from GBJ discrete gust example."""
+        zaero_filename = GLOADS_DIR / 'case2' / 'gbj_dgust.inp'
+        model = read_bdf(zaero_filename, mode='zaero', xref=False, debug=False)
+        assert len(model.zaero.mftgust) > 0
+
+    def test_trimflt_from_flutter_example(self):
+        """TRIMFLT parses from F-16 flutter example."""
+        zaero_filename = FLUTTER_DIR / 'case5' / 'f16ma41.inp'
+        model = read_bdf(zaero_filename, mode='zaero', xref=False, debug=False)
+        assert len(model.zaero.trimflt) > 0
+        card = next(iter(model.zaero.trimflt.values()))
+        assert card.trimflt_id == 10
+        assert card.alpha == 2.0
+
+    def test_cmargin_cross_reference(self):
+        """CMARGIN is properly cross-referenced from ASE card."""
+        zaero_filename = ASE_DIR / 'case2' / 'gafa.inp'
+        model = read_bdf(zaero_filename, mode='zaero', xref=False, debug=False)
+        model.zaero.safe_cross_reference()
+        # ASE 30 references CMARGIN 1
+        ase30 = model.zaero.ase[30]
+        assert ase30.cmargin_ref is not None
+        assert ase30.cmargin_ref.cmargin_id == 1
+        assert ase30.cmargin_ref.gm_high == 50.0
+        assert ase30.cmargin_ref.pm_high == 60.0

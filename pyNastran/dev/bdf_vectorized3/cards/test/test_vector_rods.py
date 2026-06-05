@@ -425,5 +425,45 @@ class TestRods(unittest.TestCase):
         if 0:
             model.update_model_by_desvars()
 
+    def test_ctube_ptube_multi_pass_save(self):
+        """Tests that CTUBE and PTUBE _save() can append cards in multiple passes."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [2., 0., 0.])
+
+        mid = 1
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        rho = 0.1
+        model.add_mat1(mid, E, G, nu, rho=rho)
+
+        # Add two PTUBE cards in separate passes
+        model.add_ptube(1, mid, OD1=2.0, t=0.1, nsm=0.0)
+        model.setup()
+        model.add_ptube(2, mid, OD1=3.0, t=0.2, nsm=1.0)
+        model.setup()
+
+        assert len(model.ptube.property_id) == 2
+        assert np.array_equal(model.ptube.property_id, [1, 2])
+
+        # Add two CTUBE cards in separate passes
+        model.add_ctube(10, 1, [1, 2])
+        model.setup()
+        model.add_ctube(20, 2, [2, 3])
+        model.setup()
+
+        assert len(model.ctube.element_id) == 2
+        assert np.array_equal(model.ctube.element_id, [10, 20])
+        assert np.array_equal(model.ctube.property_id, [1, 2])
+
+        # Verify mass computation still works after multi-pass append
+        model.cross_reference()
+        masses = model.ctube.mass()
+        assert len(masses) == 2
+        assert all(m > 0 for m in masses)
+
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

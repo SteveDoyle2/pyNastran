@@ -162,12 +162,14 @@ class Writer:
                         size: int=8, is_double: bool=False,
                         interspersed: bool=False,
                         enddata: Optional[bool]=None, close: bool=True,
+                        coords_size: Optional[int]=None,
                         nodes_size: Optional[int]=None,
                         elements_size: Optional[int]=None,
                         loads_size: Optional[int]=None,
+                        table_size: Optional[int]=None,
                         flfact_size: Optional[int]=None) -> None:
-        size, nodes_size, elements_size, loads_size, flfact_size = _fix_sizes(
-            size, nodes_size, elements_size, loads_size, flfact_size)
+        size, coords_size, nodes_size, elements_size, loads_size, table_size, flfact_size = _fix_sizes(
+            size, coords_size, nodes_size, elements_size, loads_size, table_size, flfact_size)
 
         model = self.model
 
@@ -243,7 +245,7 @@ class Writer:
         self._write_optimization(bdf_file, size, is_double)
         self._write_tables(bdf_file, size, is_double)
         self._write_sets(bdf_file, size, is_double)
-        #self._write_superelements(bdf_file, size, is_double)
+        self._write_superelements(bdf_file, size, is_double)
         self._write_contact(bdf_file, size, is_double)
         #self._write_parametric(bdf_file, size, is_double)
         self._write_rejects(bdf_file, size, is_double)
@@ -746,16 +748,19 @@ class Writer:
 
     def _write_superelements(self, bdf_file: TextIOLike,
                              size: int=8, is_double: bool=False) -> None:
-        """
-        Writes the Superelement cards
-
-        Parameters
-        ----------
-        size : int
-            large field (16) or small field (8)
-
-        """
-        pass
+        """Writes the Superelement cards"""
+        model = self.model
+        se_cards = [
+            model.setree, model.senqset, model.sebulk,
+            model.sebndry, model.seconct, model.seelt,
+            model.seloc, model.sempln, model.selabel,
+            model.seexcld, model.csuper, model.csupext,
+            model.seload,
+        ]
+        if any(card.n > 0 for card in se_cards):
+            bdf_file.write('$SUPERELEMENTS\n')
+            for card in se_cards:
+                card.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
     def _write_tables(self, bdf_file: TextIOLike,
                       size: int=8, is_double: bool=False) -> None:
@@ -772,10 +777,10 @@ class Writer:
             for (unused_id, table) in sorted(model.tables_sdamping.items()):
                 bdf_file.write(table.write_card(size, is_double))
 
-        #if model.random_tables:
-            #bdf_file.write('$RANDOM TABLES\n')
-            #for (unused_id, table) in sorted(model.random_tables.items()):
-                #bdf_file.write(table.write_card(size, is_double))
+        if model.random_tables:
+            bdf_file.write('$RANDOM TABLES\n')
+            for (unused_id, table) in sorted(model.random_tables.items()):
+                bdf_file.write(table.write_card(size, is_double))
 
     def _write_thermal(self, bdf_file: TextIOLike,
                        size: int=8, is_double: bool=False) -> None:
@@ -852,10 +857,12 @@ class Writer:
                            size: int=8, is_double: bool=False) -> None:
         """Writes the static aero cards"""
         model = self.model
-        if model.aeros or len(model.trim) or len(model.diverg) or len(model.csschd):
+        if model.aeros or len(model.trim) or len(model.trim2) or len(model.uxvec) or len(model.aeforce) or len(model.diverg) or len(model.csschd):
             bdf_file.write('$STATIC AERO\n')
             model.trim.write_file(bdf_file, size=size, is_double=is_double)
-            #model.trim2.write_file(bdf_file, size=size, is_double=is_double)
+            model.trim2.write_file(bdf_file, size=size, is_double=is_double)
+            model.uxvec.write_file(bdf_file, size=size, is_double=is_double)
+            model.aeforce.write_file(bdf_file, size=size, is_double=is_double)
             model.csschd.write_file(bdf_file, size=size, is_double=is_double)
             model.diverg.write_file(bdf_file, size=size, is_double=is_double)
 
@@ -944,11 +951,13 @@ class Writer:
             model.deform.write_file(bdf_file, size=size, is_double=is_double)
 
             # axisymmetric loads
-            #bdf_file.write(model.ploadx1.write(size=size))
+            model.ploadx1.write_file(bdf_file, size=size, is_double=is_double)
 
             # static thermal loads
             model.tempd.write_file(bdf_file, size=size, is_double=is_double)  # default temp
             model.temp.write_file(bdf_file, size=size, is_double=is_double)
+            model.tempp1.write_file(bdf_file, size=size, is_double=is_double)
+            model.temprb.write_file(bdf_file, size=size, is_double=is_double)
 
             # dynamic thermal loads
             #bdf_file.write(model.dtemp.write(size=size))  # has nodes
@@ -986,6 +995,11 @@ class Writer:
             # random loads
             model.randps.write_file(bdf_file, size=size, is_double=is_double)
             model.acsrce.write_file(bdf_file, size=size, is_double=is_double)
+            model.randt1.write_file(bdf_file, size=size, is_double=is_double)
+
+            # cyclic loads
+            model.loadcyn.write_file(bdf_file, size=size, is_double=is_double)
+            model.loadcyh.write_file(bdf_file, size=size, is_double=is_double)
 
             #for (key, load_combinations) in sorted(self.load_combinations.items()):
                 #for load_combination in load_combinations:

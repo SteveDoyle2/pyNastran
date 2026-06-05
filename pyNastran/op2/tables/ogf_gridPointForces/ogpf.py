@@ -111,7 +111,8 @@ class OGPF:
                             strings_save = strings[:, 1]
                         else:
                             strings = np.frombuffer(data, dtype=op2._uendian + 'S4').reshape(nnodes, 20).copy()
-                            strings_save = np.core.defchararray.add(strings[:, 4], strings[:, 6])
+                            # strings_save = np.core.defchararray.add(strings[:, 4], strings[:, 6])
+                            strings_save = np.char.add(strings[:, 4], strings[:, 6])
 
                         if obj.is_unique:
                             obj.node_element[itime, istart:iend, 0] = nids

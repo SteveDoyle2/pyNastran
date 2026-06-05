@@ -100,10 +100,10 @@ def check_path(filename: PathLike, name: str='file') -> None:
     try:
         exists = os.path.exists(filename)
     except TypeError:
-        msg = 'cannot find %s=%r\n' % (name, filename)
+        msg = f'cannot find {name}={str(filename)!r}\n'
         raise TypeError(msg)
     if not exists:
-        msg = 'cannot find %s=%r\n%s' % (name, filename, print_bad_path(filename))
+        msg = f'cannot find {name}={str(filename)!r}\n{print_bad_path(filename)}'
         raise FileNotFoundError(msg)
 
 

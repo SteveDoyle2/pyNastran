@@ -952,5 +952,196 @@ class TestDMIAX(unittest.TestCase):
         save_load_deck(model, run_mass_properties=False)
 
 
+class TestDMIWritePerformance(unittest.TestCase):
+    """Tests for DMI/DMIG write_card correctness after fast-path optimization.
+    Verifies round-trip (write → re-read → values match) and exact output
+    equivalence with the per-element formatting path.
+    """
+
+    def test_dmi_write_roundtrip_real(self):
+        """DMI real matrix: write and re-read via get_matrix.
+        Tests various float magnitudes to exercise all formatting bins.
+        Tolerances: 8-char field precision (rtol=1e-4, limited by field width).
+        Interactions: DMI write with THRU, zero-filtering, various magnitudes.
+        """
+        model = BDF(debug=False)
+        nrows = 100
+        ncols = 3
+        GCj = []
+        GCi = []
+        Real = []
+        np.random.seed(123)
+        for j in range(1, ncols + 1):
+            for i in range(1, nrows + 1):
+                GCj.append(j)
+                GCi.append(i)
+                Real.append(np.random.uniform(-1e5, 1e5))
+        # Add edge-case magnitudes (avoid 0.0, which is filtered on write)
+        Real[1] = 1e-4
+        Real[2] = -1e-4
+        Real[3] = 9.99e6
+        Real[4] = -9.99e6
+
+        model.add_dmi('TESTMAT', 2, 1, nrows, ncols, GCj, GCi, Real, tout=1)
+        mat_orig, _, _ = model.dmi['TESTMAT'].get_matrix()
+        card_str = model.dmi['TESTMAT'].write_card(size=8)
+        assert 'TESTMAT' in card_str
+        assert len(card_str) > 1000
+
+        # Round-trip: write to file, read back, compare dense matrices
+        import tempfile, os
+        fname = tempfile.mktemp(suffix='.bdf')
+        try:
+            with open(fname, 'w') as f:
+                f.write(card_str)
+            model2 = BDF(debug=False)
+            model2.read_bdf(fname, punch=True)
+            dmi2 = model2.dmi['TESTMAT']
+            assert dmi2.shape == (nrows, ncols), dmi2.shape
+            mat_read, _, _ = dmi2.get_matrix()
+            assert np.allclose(mat_orig, mat_read, rtol=1e-4)
+        finally:
+            os.remove(fname)
+
+    def test_dmi_write_roundtrip_complex(self):
+        """DMI complex matrix: write and re-read, values must match.
+        Tolerances: 8-char field precision (rtol=1e-4).
+        """
+        model = BDF(debug=False)
+        nrows = 50
+        ncols = 2
+        GCj = []
+        GCi = []
+        Real = []
+        Complex = []
+        np.random.seed(456)
+        for j in range(1, ncols + 1):
+            for i in range(1, nrows + 1):
+                GCj.append(j)
+                GCi.append(i)
+                Real.append(np.random.uniform(-100, 100))
+                Complex.append(np.random.uniform(-100, 100))
+
+        model.add_dmi('CPLXMAT', 2, 3, nrows, ncols, GCj, GCi, Real,
+                      Complex=Complex, tout=3)
+        card_str = model.dmi['CPLXMAT'].write_card(size=8)
+        assert 'CPLXMAT' in card_str
+
+        import tempfile, os
+        fname = tempfile.mktemp(suffix='.bdf')
+        try:
+            with open(fname, 'w') as f:
+                f.write(card_str)
+            model2 = BDF(debug=False)
+            model2.read_bdf(fname, punch=True)
+            dmi2 = model2.dmi['CPLXMAT']
+            assert dmi2.shape == (nrows, ncols), dmi2.shape
+            assert np.allclose(model.dmi['CPLXMAT'].Real, dmi2.Real, rtol=1e-4)
+            assert np.allclose(model.dmi['CPLXMAT'].Complex, dmi2.Complex, rtol=1e-4)
+        finally:
+            os.remove(fname)
+
+    def test_dmi_write_thru_compression(self):
+        """DMI with constant-value consecutive rows triggers THRU compression.
+        Verifies THRU keyword appears in output and round-trip is correct.
+        Tolerances: exact float match for constant values.
+        """
+        model = BDF(debug=False)
+        nrows = 200
+        ncols = 1
+        GCj = [1] * nrows
+        GCi = list(range(1, nrows + 1))
+        # All same value => THRU compression
+        Real = [5.0] * nrows
+
+        model.add_dmi('THRUMAT', 2, 1, nrows, ncols, GCj, GCi, Real, tout=1)
+        card_str = model.dmi['THRUMAT'].write_card(size=8)
+        assert 'THRU' in card_str, 'Expected THRU compression for constant values'
+
+        import tempfile, os
+        fname = tempfile.mktemp(suffix='.bdf')
+        try:
+            with open(fname, 'w') as f:
+                f.write(card_str)
+            model2 = BDF(debug=False)
+            model2.read_bdf(fname, punch=True)
+            dmi2 = model2.dmi['THRUMAT']
+            assert dmi2.shape == (nrows, ncols), dmi2.shape
+            assert np.allclose(dmi2.Real, 5.0)
+        finally:
+            os.remove(fname)
+
+    def test_dmig_write_roundtrip_real(self):
+        """DMIG real matrix: write and re-read, values must match.
+        Tolerances: 8-char field precision (rtol=1e-4).
+        """
+        model = BDF(debug=False)
+        nentries = 60
+        np.random.seed(789)
+        GCj = [[1, 1]] * 20 + [[2, 1]] * 20 + [[3, 1]] * 20
+        GCi = ([[i, 1] for i in range(1, 21)] +
+               [[i, 1] for i in range(1, 21)] +
+               [[i, 1] for i in range(1, 21)])
+        Real = list(np.random.uniform(-1e4, 1e4, nentries))
+
+        model.add_dmig('TESTDMIG', 6, 1, None, GCj, GCi,
+                       Real=Real, tout=0, polar=0)
+        card_str = model.dmig['TESTDMIG'].write_card(size=8)
+        assert 'TESTDMIG' in card_str
+
+        import tempfile, os
+        fname = tempfile.mktemp(suffix='.bdf')
+        try:
+            with open(fname, 'w') as f:
+                f.write(card_str)
+            model2 = BDF(debug=False)
+            model2.read_bdf(fname, punch=True)
+            fill_dmigs(model2)
+            dmig2 = model2.dmig['TESTDMIG']
+            assert np.allclose(
+                np.array(model.dmig['TESTDMIG'].Real),
+                np.array(dmig2.Real), rtol=1e-4)
+        finally:
+            os.remove(fname)
+
+    def test_dmi_write_size_16(self):
+        """DMI with tin=2 (double) writes 16-char fields.
+        Round-trip must preserve double precision values.
+        Tolerances: 16-char scientific notation (rtol=1e-9, ~10 sig figs).
+        Interactions: DMI double-precision write, zero-filtering.
+        """
+        model = BDF(debug=False)
+        nrows = 30
+        ncols = 2
+        GCj = []
+        GCi = []
+        Real = []
+        np.random.seed(321)
+        for j in range(1, ncols + 1):
+            for i in range(1, nrows + 1):
+                GCj.append(j)
+                GCi.append(i)
+                Real.append(np.random.uniform(-1e3, 1e3))
+
+        model.add_dmi('DBL_MAT', 2, 2, nrows, ncols, GCj, GCi, Real, tout=2)
+        mat_orig, _, _ = model.dmi['DBL_MAT'].get_matrix()
+        card_str = model.dmi['DBL_MAT'].write_card(size=16)
+        assert 'DBL_MAT' in card_str
+
+        import tempfile, os
+        fname = tempfile.mktemp(suffix='.bdf')
+        try:
+            with open(fname, 'w') as f:
+                f.write(card_str)
+            model2 = BDF(debug=False)
+            model2.read_bdf(fname, punch=True)
+            dmi2 = model2.dmi['DBL_MAT']
+            assert dmi2.shape == (nrows, ncols), dmi2.shape
+            mat_read, _, _ = dmi2.get_matrix()
+            assert np.allclose(mat_orig, mat_read, rtol=1e-9)
+        finally:
+            os.remove(fname)
+
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

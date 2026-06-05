@@ -49,10 +49,12 @@ class BDFCard:
 
     def __getslice__(self, i: int, j: int) -> list[str]:
         """card[1:10]"""
+        # TODO: dead code in Python 3 — __getslice__ is not called by slice syntax; remove or replace with __getitem__ slice handling
         return self.card.__getslice__(i, j)
 
     def __setslice__(self, i: int, j: int, sequence: Any) -> Any:
         """card[1:10] = 2"""
+        # TODO: dead code in Python 3 — __setslice__ is not called by slice syntax; remove or replace with __setitem__ slice handling
         self.card.__setslice__(i, j, sequence)
 
     def index(self, value: str) -> int:

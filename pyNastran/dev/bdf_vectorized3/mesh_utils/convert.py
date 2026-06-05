@@ -64,13 +64,21 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
     CARDS_TO_SKIP = {
         'SPOINT', 'EPOINT',
         # elements/properties
-        'CTUBE', 'CROD',
-        'CELAS1', 'CELAS3', 'CDAMP1', 'CDAMP3', 'CBUSH1D',
+        'CTUBE', 'CROD', 'CSHEAR',
+        'CELAS1', 'CELAS3', 'PELAST',
+        'CDAMP1', 'CDAMP3', 'CVISC', 'PDAMPT', 'PDAMP5', 'CBUSH1D',
+        'CMASS1', 'CMASS3', 'CFAST',
         'CQUAD', 'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'PSOLID', 'PLSOLID',
         'CPENTCZ', 'CHEXCZ', 'CIFPENT', 'CIFHEX',
         # sets
         'SET1', 'ASET', 'BSET', 'CSET', 'OMIT', 'QSET', 'USET', 'SUPORT',
         'SEBSET', 'SECSET', 'SEQSET', 'RELEASE',
+        # aero (no dimensional data)
+        'AECOMP', 'AECOMPL', 'AELIST', 'AELINK', 'AEFACT', 'AESTAT', 'AEPARM',
+        'AESURF', 'AESURFS', 'AEFORCE', 'UXVEC',
+        'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
+        'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',
+        'FLFACT', 'FLUTTER', 'CSSCHD', 'DIVERG', 'CAERO7',
         # plotting
         'PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
         'PLOTTET', 'PLOTPEN', 'PLOTPYR', 'PLOTHEX',
@@ -94,6 +102,10 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
     SUPPORTED_CARDS = {
         'GRID',  'POINT', 'CONM1', 'CONM2',
         'CBUSH', 'CBUSH1D', 'CGAP', 'PBUSH', 'PGAP',
+        'CELAS2', 'CELAS4', 'PELAS',
+        'CDAMP2', 'CDAMP4', 'PDAMP', 'PVISC',
+        'CMASS2', 'CMASS4',
+        'PFAST', 'PSHEAR',
         'PROD', 'PTUBE', 'CONROD',
         'CBAR', 'PBAR', 'PBARL', 'CBARAO',
         'CBEAM', 'PBEAM', 'PBEAML',
@@ -111,6 +123,9 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
         'FORCE', 'FORCE1', 'FORCE2',
         'MOMENT', 'MOMENT1', 'MOMENT2',
         'TEMP', 'TEMPD',
+        # aero
+        'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+        'TRIM', 'TRIM2', 'GUST', 'MONPNT1',
         # optimization
         'DVGRID',
         # contact

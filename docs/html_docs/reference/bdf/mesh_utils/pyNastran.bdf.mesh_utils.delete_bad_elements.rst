@@ -4,6 +4,5 @@
 
 .. automodule:: pyNastran.bdf.mesh_utils.delete_bad_elements
     :members:
-    :private-members:
     :undoc-members:
 

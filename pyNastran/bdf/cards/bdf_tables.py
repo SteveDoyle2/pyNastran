@@ -36,6 +36,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string, string_or_blank,
     double_or_string, double_or_blank, integer_or_string)
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_string
+from pyNastran.bdf.field_writer_8 import array_float_8
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -81,7 +83,15 @@ class Table(BaseCard):
         ax.grid(True)
         return fig, ax
 
+    def _write_header_fields(self) -> list:
+        """Returns the header fields (first line) for write_card_8.
+        Subclasses override this to provide the correct header."""
+        return self.repr_fields()[:8]
+
     def write_card(self, size: int=8, is_double: bool=False) -> str:
+        y_arr = np.asarray(self.y)
+        if size == 8 and not is_double and self.tid <= MAX_INT and y_arr.dtype.kind == 'f':
+            return self.write_card_8()
         card = self.repr_fields()
         if size == 8:
             if self.tid > MAX_INT:
@@ -90,6 +100,40 @@ class Table(BaseCard):
         if is_double:
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
+
+    def write_card_8(self) -> str:
+        """Fast size=8 writer using vectorized float formatting for xy data."""
+        header = self._write_header_fields()
+        header_str = print_card_8(header).rstrip('\n')
+
+        x = np.asarray(self.x, dtype='float64')
+        y = np.asarray(self.y, dtype='float64')
+        x_str = array_float_8(x)
+        y_str = array_float_8(y)
+        npts = len(x)
+
+        lines = [header_str]
+        line = '\n        '
+        col = 0
+        for i in range(npts):
+            line += x_str[i]
+            col += 1
+            if col == 8:
+                lines.append(line)
+                line = '\n        '
+                col = 0
+            line += y_str[i]
+            col += 1
+            if col == 8:
+                lines.append(line)
+                line = '\n        '
+                col = 0
+        # ENDT
+        line += '    ENDT'
+        col += 1
+        lines.append(line)
+        result = ''.join(lines).rstrip(' ') + '\n'
+        return self.comment + result
 
     #cxy = np.array(self.tc.table.table)
     #fc = cxy[:, 0]
@@ -934,6 +978,55 @@ class TABDMP1(Table):
 
     def repr_fields(self):
         return self.raw_fields()
+
+    def interpolate(self, freq_hz: float) -> float:
+        """Interpolate damping at a given frequency.
+
+        Returns the structural damping coefficient g (hysteretic).
+        Converts from CRIT (ζ) or Q as needed:
+            - Type='G': returns g directly
+            - Type='CRIT': returns g = 2*ζ
+            - Type='Q': returns g = 1/Q
+
+        Parameters
+        ----------
+        freq_hz : float
+            Frequency [Hz] at which to interpolate.
+
+        Returns
+        -------
+        g : float
+            Structural damping coefficient at freq_hz.
+        """
+        val = float(np.interp(freq_hz, self.x, self.y))
+        if self.Type == 'CRIT':
+            return 2.0 * val
+        elif self.Type == 'Q':
+            return 1.0 / val if val > 0 else 0.0
+        return val
+
+    def interpolate_array(self, freqs_hz) -> np.ndarray:
+        """Interpolate damping at an array of frequencies.
+
+        Returns structural damping coefficient g at each frequency.
+
+        Parameters
+        ----------
+        freqs_hz : array-like
+            Frequencies [Hz].
+
+        Returns
+        -------
+        g : ndarray
+            Structural damping coefficients.
+        """
+        freqs_hz = np.asarray(freqs_hz, dtype='float64')
+        vals = np.interp(freqs_hz, self.x, self.y)
+        if self.Type == 'CRIT':
+            return 2.0 * vals
+        elif self.Type == 'Q':
+            return np.where(vals > 0, 1.0 / vals, 0.0)
+        return vals
 
 
 class TABLEM1(Table):

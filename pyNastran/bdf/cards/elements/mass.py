@@ -1173,7 +1173,7 @@ class CONM2(PointMassElement):
     _field_map = {
         1: 'eid', 2:'nid', 3:'cid', 4:'mass',
     }
-    def update_by_cp_name(self, name, value):
+    def update_by_cp_name(self, name: str, value: float):
         if name == 'M':
             self.mass = value
         elif name == 'X1':
@@ -1196,8 +1196,9 @@ class CONM2(PointMassElement):
         elif name == 'I33':
             self.I[5] = value
         else:
-            raise NotImplementedError('element_type=%r has not implemented %r in cp_name_map' % (
-                self.type, name))
+            allowed = ', '.join(['M', 'X1', 'X2', 'X3', 'I11', 'I21', 'I22', 'I31', 'I32', 'I33'])
+            raise NotImplementedError(f'element_type={self.type} has not implemented {name!r}'
+                                      f' in cp_name_map; allowed=[{allowed}]')
 
     def _update_field_helper(self, n, value):
         if n == 5:
@@ -1448,27 +1449,37 @@ class CONM2(PointMassElement):
     def Mass(self):
         return self.mass
 
-    def Inertia(self):
+    def Inertia(self) -> np.ndarray:
         """
         Returns the 3x3 inertia matrix
         .. warning:: doesnt handle offsets or coordinate systems
 
         """
         I = self.I
-        inertia = [
+        inertia = np.array([
             [I[0], -I[1], -I[3]],
             [-I[1], I[2], -I[4]],
-            [-I[3], -I[4], I[5]]]
-        if self.Cid() in [0, -1]:
+            [-I[3], -I[4], I[5]],
+        ])
+        cid = self.Cid()
+        if cid in [0, -1]:
             return inertia
         else:
             # transform to global
             #dx = self.cid_ref.transform_node_to_global(self.X)
-            #matrix = self.cid_ref.beta()
-            warnings.warn(f'CONM2 (eid={self.eid}) inertia method for CID != 0 is not implemented')
-            return np.zeros((3, 3))
-            #A2 = A * matrix
-            #return A2  # correct for offset using dx???
+            coord_type = self.cid_ref.type
+            if coord_type not in ['CORD1R', 'CORD2R']:
+                warnings.warn(f'CONM2 (eid={self.eid}) inertia method for {coord_type} CID = {cid} is not implemented')
+                return np.zeros((3, 3))
+            else:
+                # about CG matches FEMAP (outside of the flipped signs I applied above)
+                # TODO: hasn't been verified about the origin, but should be ok
+                xform = self.cid_ref.beta()  # T_LG: transform (local to global)
+                # T_GL = T_LG.T
+                inertia2 = xform.T @ inertia @ xform  # M_GG = T_GL @ M_LL @ T_LG
+                # warnings.warn(f'CONM2 (eid={self.eid}) inertia method for {coord_type} cid={self.cid} is not validated\n'
+                #               f'inertia={inertia} xform(local->global)={xform} inertia2={inertia2}')
+            return inertia2  # correct for offset using dx; I don't think so???
 
     def offset(self, xyz_nid: np.ndarray) -> np.ndarray:
         cid = self.Cid()
