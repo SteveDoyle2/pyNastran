@@ -96,7 +96,10 @@ if TYPE_CHECKING:  # pragma: no cover
         MONPNT1, MONPNT2, MONPNT3,
         #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
     )
-    from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG, UXVEC
+    from pyNastran.bdf.cards.aero.static_loads import (
+        AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG, UXVEC,
+        AEDW, AEFORCE, AEPRESS)
+
     from pyNastran.bdf.cards.aero.dynamic_loads import (
         AERO, FLFACT, FLUTTER,
         GUST, GUST2,
@@ -1373,6 +1376,24 @@ class AddMethods:
         assert key > 0, 'key=%r uxvec=\n%s' % (key, uxvec)
         self.model.uxvec[key] = uxvec
         self.model._type_to_id_map[uxvec.type].append(key)
+
+    def add_aedw_object(self, aedw: AEDW,
+                       allow_overwrites: bool=False) -> None:
+        """adds an AEDW object"""
+        self.model.aedw.append(aedw)
+        self.model._type_to_id_map['AEDW'].append(len(self.model.aedw))
+
+    def add_aeforce_object(self, aeforce: AEFORCE,
+                           allow_overwrites: bool=False) -> None:
+        """adds an AEFORCE object"""
+        self.model.aeforce.append(aeforce)
+        self.model._type_to_id_map['AEFORCE'].append(len(self.model.aeforce))
+
+    def add_aepress_object(self, aepress: AEPRESS,
+                           allow_overwrites: bool=False) -> None:
+        """adds an AEPRESS object"""
+        self.model.aepress.append(aepress)
+        self.model._type_to_id_map['AEPRESS'].append(len(self.model.aepress))
 
     def add_flutter_object(self, flutter: FLUTTER, allow_overwrites: bool=False) -> None:
         """adds an FLUTTER object"""

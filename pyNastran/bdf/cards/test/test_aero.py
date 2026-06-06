@@ -446,6 +446,32 @@ class TestAero(unittest.TestCase):
 
         save_load_deck(model, run_renumber=False, run_test_bdf=False)
 
+    def test_aelink_aeparm(self):
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        #AELINK ,ALWAYS,CS1,ASYM,1.0,SYM,-1.0
+        idi = 'ALWAYS'
+        label = 'CS1'
+        independent_labels = ['ASYM', 'SYM']
+        linking_coefficients = [1.0, -1.0]
+        model.add_aelink(idi, label, independent_labels, linking_coefficients)
+        model.add_aeparm(512, 'ASYM', 'RAD')
+        model.add_aeparm(513, 'SYM', 'RAD')
+
+        aesid = 600
+        label = 'CS1'
+        cid = 0
+        aelist_id1 = 7000
+        aesurf = model.add_aesurf(aesid, label, cid, aelist_id1)
+        caero_box_elements = [1001, 1002, 1003, 1004]
+        aelist = model.add_aelist(aelist_id1, caero_box_elements)
+
+        model.add_set1(6003, [11, 12, 13])
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [0., 0., 0.])
+        model.add_grid(13, [0., 0., 0.])
+        save_load_deck(model, run_renumber=False, run_test_bdf=False)
+
     def test_aelist_1(self):
         """checks the AELIST card"""
         log = SimpleLogger(level='warning')

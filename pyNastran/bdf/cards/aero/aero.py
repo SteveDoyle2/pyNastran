@@ -607,39 +607,53 @@ class AELINK(BaseCard):
             trim_ref = model.Trim(self.aelink_id, msg=msg)
 
         aesurf_names = {aesurf.label for aesurf in model.aesurf.values()}
-        aparam_names = {aeparam.label for aeparam in model.aeparams.values()}
+        aeparam_names = {aeparam.label for aeparam in model.aeparams.values()}
         aestat_names = {aestat.label for aestat in model.aestats.values()}
+
+        #aesurf_names = list(model.aesurf.keys())
+        #aesurf_names = list(model.aestat.keys())
+        #aesurf_names = list(model.aeparams.keys())
+
+        msg = ''
+        is_missing_dep_label = False
         is_aesurf = self.dependent_label in aesurf_names
-        is_aeparam = self.dependent_label in aparam_names
-        if not (is_aesurf or is_aeparam):
-            raise RuntimeError(f'dependent_label={self.dependent_label} is an AESURF and AEPARM\n{self}\n'
-                               f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
-        elif is_aesurf:
+        is_aeparam = self.dependent_label in aeparam_names
+        if is_aesurf:
             self.dependent_label_ref = model.AESurf(self.dependent_label,
-                                                    msg='dependent_label={self.dependent_label!r}; ' + msg)
+                                                    msg=f'dependent_label={self.dependent_label!r}; ' + msg)
         elif is_aeparam:
             self.dependent_label_ref = model.AEParam(self.dependent_label, msg=msg)
         else:
-            raise RuntimeError(f'dependent_label={self.dependent_label} is not an AESURF or AEPARM\n{self}')
+            is_missing_dep_label = True
+            msg += f' - dependent_label={self.dependent_label!r} (must be an AESURF or AEPARM)\n'
+            #raise RuntimeError(f'dependent_label={self.dependent_label} is not an #AESURF or AEPARM\n{self}')
 
         self.independent_labels_ref = []
+        
+        missing_indep_labels = []
         for independent_label in self.independent_labels:
             is_aesurf = independent_label in aesurf_names
-            is_aeparam = independent_label in aparam_names
+            is_aeparam = independent_label in aeparam_names
             is_aestat = independent_label in aestat_names
-            if not (is_aesurf or is_aeparam or is_aestat):
-                raise RuntimeError(f'independent_label={independent_label} is an AESURF and AEPARM\n{self}\n'
-                                   f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
-            elif is_aesurf:
+            if is_aesurf:
                 independent_aelink = model.AESurf(independent_label, msg=msg)
-            #elif is_aeparam:
-                #independent_aelink = model.AEParam(independent_label, msg=msg)
+            elif is_aeparam:
+                independent_aelink = model.AEParam(independent_label, msg=msg)
             elif is_aestat:
                 independent_aelink = model.AEStat(independent_label, msg=msg)
             else:
-                raise RuntimeError(f'independent_label={independent_label} is an AESURF and AEPARM\n{self}\n'
-                                   f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
+                missing_indep_labels.append(independent_label)
+                continue
             self.independent_labels_ref.append(independent_aelink)
+
+        if missing_indep_labels:
+            msg += f' - independent_labels={missing_indep_labels} (must be an AESURF, AESTAT, or AEPARM)\n'
+        if msg: #is_missing_dep_label or len(missing_indep_labels):
+            raise RuntimeError(f'missing:\n{msg}'
+                               f'{self}\n'
+                               f'aesurf={aesurf_names} '
+                               f'aestat={aestat_names} '
+                               f'aeparm={aeparam_names}')
 
     #def uncross_reference(self) -> None:
         #"""Removes cross-reference links"""

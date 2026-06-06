@@ -111,7 +111,8 @@ from pyNastran.bdf.cards.aero.aero import (
     MONPNT1, MONPNT2, MONPNT3, MONDSP1,
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
 from pyNastran.bdf.cards.aero.static_loads import (
-    AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG, UXVEC)
+    AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG, UXVEC,
+    AEDW, AEFORCE, AEPRESS)
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.aero.zaero import (
     CAERO7, PAFOIL7, BODY7, AESURFZ, ACOORD, MKAEROZ,
@@ -592,6 +593,8 @@ CARD_MAP = {
     'TRIM2': TRIM2,
     'DIVERG': DIVERG,
     'UXVEC': UXVEC,
+    'AEFORCE': AEFORCE,
+    'AEPRESS': AEPRESS,
 
     # SOL 145
     'AERO': AERO,
@@ -5114,7 +5117,8 @@ class AddAero:
         self._add_methods.add_aefact_object(aefact)
         return aefact
 
-    def add_diverg(self, sid: int, nroots: int, machs: list[float], comment: str='') -> DIVERG:
+    def add_diverg(self, sid: int, nroots: int, machs: list[float],
+                   comment: str='') -> DIVERG:
         """
         Creates an DIVERG card, which is used in divergence
         analysis (SOL 144).
@@ -5162,6 +5166,12 @@ class AddAero:
         self._add_methods.add_csschd_object(csschd)
         return csschd
 
+    def add_uxvec(self, idi: int, labels: list[str], uxs: list[float],
+                  comment: str='') -> UXVEC:
+        uxvec = UXVEC(idi, labels, uxs, comment=comment)
+        self._add_methods.add_uxvec_object(uxvec)
+        return uxvec
+       
     def add_aesurf(self, aesid: int, label: str,
                    cid1: int, aelist_id1: int,
                    cid2: Optional[int]=None, aelist_id2: Optional[int]=None,
@@ -5261,8 +5271,20 @@ class AddAero:
         self._add_methods.add_aeparm_object(aeparm)
         return aeparm
 
+    def add_aedw(self, mach, sym_xz: str, sym_xy: str, ux_id: int,
+                 dmij: str='', dmiji: str='', comment: str='') -> AEDW:
+        """adds an AEDW card"""
+        assert isinstance(sym_xz, str), sym_xz
+        assert isinstance(sym_xy, str), sym_xy
+        assert isinstance(dmij, str), dmij
+        assert isinstance(dmiji, str), dmiji
+        aedw = AEDW(mach, sym_xz, sym_xy, ux_id, mesh,
+                          dmij=dmij, dmiji=dmiji, comment=comment)
+        self._add_methods.add_aedw_object(aedw)
+        return aedw
+
     def add_aepress(self, mach, sym_xz: str, sym_xy: str, ux_id: int,
-                    dmij: str, dmiji: str) -> None:
+                    dmij: str='', dmiji: str='', comment: str='') -> None:
         #AEPRESS MACH SYMXZ SYMXY UXID DMIJ DMIJI
         """adds an AEPRESS card"""
         assert isinstance(sym_xz, str), sym_xz
@@ -5271,9 +5293,14 @@ class AddAero:
         assert isinstance(dmiji, str), dmiji
         fields = ['AEPRESS', mach, sym_xz, sym_xy, ux_id, dmij, dmiji]
         self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
+        #aepress = AEPRESS(mach, sym_xz, sym_xy, ux_id, mesh,
+        #                  dmij=dmij, dmiji=dmiji, comment=comment)
+        #self._add_methods.add_aepress_object(aepress)
+        #return aepress
 
-    def add_aeforce(self, mach: float, sym_xz: str, sym_xy: str, ux_id: int,
-                    mesh: str, force: int, dmik: str, perq: str='') -> None:
+    def add_aeforce(self, mach: float, sym_xz: str, sym_xy: str,
+                    ux_id: int, mesh: str, force: int=0,
+                    dmik: str='', perq: str='', comment: str='') -> None:
         """adds an AEFORCE card
 
         Parameters
@@ -5287,6 +5314,10 @@ class AddAero:
         assert isinstance(perq, str), perq
         fields = ['AEFORCE', mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq]
         self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
+        #aeforce = AEFORCE(mach, sym_xz, sym_xy, ux_id, mesh,
+        #                  force=force, dmik=dmik, perq=perq, comment=comment)
+        #self._add_methods.add_aeforce_object(aeforce)
+        #return aeforce
 
     def add_sblnd1(self, eid, eid1, eid2, option_bytes, w1, aero_grid, d1, d2, x, cid):
         fields = ['SBLND1', eid, eid1, eid2, option_bytes, w1, aero_grid, d1, d2] + x + [cid]
@@ -9740,11 +9771,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         fields = ['RCROSS', sid, rtype1, id1, comp1, rtype2, id2, comp2, curid]
         self.reject_card_lines('RCROSS', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_uxvec(self, idi: int, labels: list[str], uxs: list[float], comment: str='') -> UXVEC:
-        uxvec = UXVEC(idi, labels, uxs, comment=comment)
-        self._add_methods.add_uxvec_object(uxvec)
-        return uxvec
-    #----------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
     # parametric
     def add_pset(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment='') -> PSET:
         """PSET ID POLY1 POLY2 POLY3 CID SETTYP ID"""
