@@ -648,7 +648,7 @@ class AELINK(BaseCard):
 
         if missing_indep_labels:
             msg += f' - independent_labels={missing_indep_labels} (must be an AESURF, AESTAT, or AEPARM)\n'
-        if msg: #is_missing_dep_label or len(missing_indep_labels):
+        if msg:
             raise RuntimeError(f'missing:\n{msg}'
                                f'{self}\n'
                                f'aesurf={aesurf_names} '

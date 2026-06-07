@@ -466,6 +466,15 @@ class TestAero(unittest.TestCase):
         caero_box_elements = [1001, 1002, 1003, 1004]
         aelist = model.add_aelist(aelist_id1, caero_box_elements)
 
+        mach = 0.8
+        sym_xy = 'ANTI'
+        sym_xz = 'ANTI'
+        uxid = 102
+        mesh = 'STRUCT'
+        labels = ['A', 'B']
+        uxs = [1., 2.,]
+        model.add_aeforce(mach, sym_xz, sym_xy, uxid, mesh, force=0, dmik='', comment='aeforce')
+        #model.add_uxvec(uxid, labels, uxs, comment='uxvec')
         model.add_set1(6003, [11, 12, 13])
         model.add_grid(11, [0., 0., 0.])
         model.add_grid(12, [0., 0., 0.])
