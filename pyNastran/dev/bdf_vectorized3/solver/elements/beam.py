@@ -12,6 +12,7 @@ References
 - NX Nastran Theoretical Manual, Sections 3.1 (BAR/BEAM).
 - Bathe, "Finite Element Procedures", 2014, Section 5.4.
 """
+from itertools import count
 import numpy as np
 from numpy.polynomial.legendre import leggauss
 from pyNastran.f06.errors import FatalError
@@ -166,7 +167,7 @@ def timoshenko_stiffness(
     bxy = [1, 5, 7, 11]
     bxz = [2, 4, 8, 10]
     for i_local, i1_global, i2_global in zip(count(), bxy, bxz):
-        for j_local, j1_global, j2_global in enumerate(bxy):
+        for j_local, j1_global, j2_global in zip(count(), bxy, bxz):
             K[i1_global, j1_global] = K_bxy[i_local, j_local]
             K[i2_global, j2_global] = K_bxz[i_local, j_local]
 
