@@ -28,8 +28,9 @@ from typing import TextIO, Any
 
 import numpy as np
 import scipy as sp
-import scipy.sparse as sci_sparse
+from scipy.linalg import eigh, eig
 from scipy.sparse import csc_matrix, lil_matrix, dok_matrix, issparse
+from scipy.sparse.linalg import ArpackNoConvergence
 
 from cpylog import SimpleLogger
 
@@ -47,6 +48,7 @@ from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 
 from pyNastran.f06.f06_writer import make_end
 from pyNastran.f06.f06_tables.oload_resultant import Resultant
+from pyNastran.f06.errors import FatalError
 
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.op2_interface.op2_classes import (
@@ -60,6 +62,10 @@ from pyNastran.op2.op2_interface.op2_classes import (
     RealEigenvectorArray,
 )
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
+from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import (
+    RealMPCForcesArray,)
+from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import (
+    RealGridPointForcesArray,)
 # from pyNastran.bdf.mesh_utils.loads import get_ndof
 
 from .recover.utils import get_f06_op2_pch_set, get_mag_phase_from_options
@@ -82,258 +88,34 @@ from .utils_modes import (
 from .utils_freq import get_frequencies, slice_freq_set
 from pyNastran.dev.bdf_vectorized3.bdf_interface.breakdowns import NO_MASS  # , NO_VOLUME
 
+#-----------------------------------------------
+from .build_stiffness import (
+    _COOAccumulator,
+    build_Kgg, Kbb_to_Kgg,
+    build_KDgg_beam,
+    build_thermal_load_beam)
+from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
+    beam_pg_distributed, beam_pg_point,
+    consistent_mass, lumped_mass,
+    beam_transform,)
+from .elements.shells import (
+    build_KDgg_cquad4, build_KDgg_ctria3,
+    build_pload4_cquad4, build_pload4_ctria3,
+    build_thermal_load_cquad4, build_thermal_load_ctria3,
+)
+from .elements.solids import build_KDgg_solids, build_mbb_solids
+#--------------------------------------------------------
+from .recover.utils import get_plot_request
+from .utils import recast_data
 
-def _apply_grav(model, load, scale, Fb, dof_map, ndof, log):
-    """Apply GRAV load (gravity) to Fb using grid-level mass approach.
+from .craig_bampton import run_craig_bampton, write_cb_to_op4, write_cb_to_h5
+from .loads.pload1 import apply_pload1
+from .loads.grav_rforce import apply_rforce, apply_grav
 
-    Following MYSTRAN's approach: F_i = M_grid_i * acceleration.
-    The assembled mass matrix is used to compute forces at each grid.
-    """
-    from .build_stiffness import _COOAccumulator, Kbb_to_Kgg
+from pyNastran.dev.bdf_vectorized3.mesh_utils.inertia_relief import (
+    build_rigid_body_modes, compute_inertia_relief,
+)
 
-    for i_load in range(load.n):
-        sid = int(load.load_id[i_load])
-        N_vec = load.N[i_load]  # direction vector (3,)
-        mag = float(load.scale_factor[i_load])  # scale factor (acceleration magnitude)
-        cid = int(load.coord_id[i_load])
-
-        # Acceleration vector in basic frame
-        norm_N = np.linalg.norm(N_vec)
-        if norm_N == 0.0:
-            continue
-        accel_basic = mag * N_vec / norm_N
-
-        # Transform from CID to basic if needed
-        if cid != 0:
-            coord = model.coord
-            beta = coord.xyz_to_global_transform[cid]
-            accel_basic = beta.T @ accel_basic
-
-        accel_basic *= scale
-
-        log.debug(f"  GRAV: accel_basic={accel_basic}")
-
-        # Build lumped mass matrix and apply F = M * a at each grid
-        # Use the assembled Mbb to get per-grid mass (6x6 diagonal blocks)
-        # More efficient: iterate grids, get diagonal mass, apply accel
-        grid = model.grid
-        for nid in grid.node_id:
-            nid_int = int(nid)
-            i1 = dof_map[(nid_int, 1)]
-            # Get translational mass from Mbb diagonal (will be assembled later)
-            # Instead, apply accel to the force vector; the mass contribution
-            # is handled by assembling F = rho*V*a for each element
-
-        # Grid-level approach: we need the assembled mass matrix.
-        # Build a temporary Mbb for this calculation.
-        # For efficiency, use the same Mbb that will be built for the analysis.
-        # The caller (build_Fb) is called AFTER Mbb is built in SOL 101.
-        # However, build_Fb is called before Mbb->Mgg transform in the flow.
-        # We must build our own mass here.
-        from pyNastran.dev.bdf_vectorized3.bdf import Subcase
-        temp_subcase = Subcase(id=0)
-        Mbb_temp = build_Mbb(model, temp_subcase, dof_map, ndof, fdtype="float64")
-
-        # Apply F = M * a for each grid (translational DOFs only)
-        for nid in grid.node_id:
-            nid_int = int(nid)
-            i1 = dof_map[(nid_int, 1)]
-            # Extract the 3x3 translational mass block for this grid
-            m_diag = np.array([
-                Mbb_temp[i1, i1],
-                Mbb_temp[i1 + 1, i1 + 1],
-                Mbb_temp[i1 + 2, i1 + 2],
-            ])
-            Fb[i1: i1 + 3] += m_diag * accel_basic
-
-
-def _apply_rforce(model, load, scale, Fb, dof_map, ndof, log):
-    """Apply RFORCE load (centrifugal/rotational force) to Fb.
-
-    Following MYSTRAN's approach:
-    F_i = M_i * [omega x (omega x r_i) + alpha x r_i]
-    where r_i = position of grid i relative to the reference grid.
-    """
-    from pyNastran.dev.bdf_vectorized3.bdf import Subcase
-
-    for i_load in range(load.n):
-        nid_ref = int(load.node_id[i_load])
-        cid = int(load.coord_id[i_load])
-        a_scale = float(load.scale_factor[i_load])
-        r1, r2, r3 = load.r123[i_load]
-        method = int(load.method[i_load]) if hasattr(load, 'method') else 1
-        racc = float(load.racc[i_load]) if hasattr(load, 'racc') else 0.0
-
-        # Angular velocity vector
-        omega = a_scale * np.array([r1, r2, r3])
-
-        # Transform from CID to basic if needed
-        if cid != 0:
-            coord = model.coord
-            beta = coord.xyz_to_global_transform[cid]
-            omega = beta.T @ omega
-
-        # Angular acceleration (for tangential component)
-        alpha = racc * np.array([r1, r2, r3])
-        if cid != 0:
-            alpha = beta.T @ alpha
-
-        omega *= scale
-        alpha *= scale
-
-        log.debug(f"  RFORCE: omega={omega}, alpha={alpha}, nid_ref={nid_ref}")
-
-        # Reference point position
-        grid = model.grid
-        all_nids = grid.node_id
-        xyz_cid0 = grid.xyz_cid0()
-
-        if nid_ref > 0:
-            iref = np.searchsorted(all_nids, nid_ref)
-            xyz_ref = xyz_cid0[iref]
-        else:
-            xyz_ref = np.zeros(3)
-
-        # Build temporary Mbb for force computation
-        temp_subcase = Subcase(id=0)
-        Mbb_temp = build_Mbb(model, temp_subcase, dof_map, ndof, fdtype="float64")
-
-        # Apply F = M * a_centrifugal at each grid
-        for nid, xyz_i in zip(all_nids, xyz_cid0):
-            nid_int = int(nid)
-            i1 = dof_map[(nid_int, 1)]
-
-            # Relative position
-            r_i = xyz_i - xyz_ref
-
-            # Centripetal: omega x (omega x r_i)
-            omega_cross_r = np.cross(omega, r_i)
-            accel_centripetal = np.cross(omega, omega_cross_r)
-
-            # Tangential: alpha x r_i
-            accel_tangential = np.cross(alpha, r_i)
-
-            # Total acceleration (negative for inertial force direction in Nastran)
-            accel_total = -(accel_centripetal + accel_tangential)
-
-            # Mass at this grid
-            m_diag = np.array([
-                Mbb_temp[i1, i1],
-                Mbb_temp[i1 + 1, i1 + 1],
-                Mbb_temp[i1 + 2, i1 + 2],
-            ])
-            Fb[i1: i1 + 3] += m_diag * accel_total
-
-
-def _apply_pload1(model, load, scale, Fb, dof_map, log):
-    """Apply PLOAD1 (distributed/concentrated loads on CBAR/CBEAM) to Fb."""
-    from pyNastran.dev.bdf_vectorized3.solver.beam import (
-        beam_pg_distributed,
-        beam_pg_point,
-        beam_transform,
-    )
-
-    for i_load in range(load.n):
-        eid = load.element_id[i_load]
-        load_type = str(load.load_type[i_load]).strip()
-        scale_type = str(load.scale[i_load]).strip()
-        x1, x2 = load.x[i_load]
-        p1, p2 = load.pressure[i_load]
-
-        # Find the element (CBAR or CBEAM)
-        elem = None
-        for e in [model.cbar, model.cbeam]:
-            if e.n == 0:
-                continue
-            idx = np.where(e.element_id == eid)[0]
-            if len(idx) > 0:
-                elem = e.slice_card_by_index(idx)
-                break
-        if elem is None:
-            log.warning(f"  PLOAD1: element {eid} not found")
-            continue
-
-        # Get element properties
-        xyz1, xyz2 = elem.get_xyz()
-        xyz1i = xyz1[0]
-        xyz2i = xyz2[0]
-        L = np.linalg.norm(xyz2i - xyz1i)
-        v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
-        e_g_nus = elem.e_g_nu()
-        E_val, G_val, nu_val = e_g_nus[0]
-        inertia = elem.inertia()
-        I1, I2, I12, J_val = inertia[0]
-        area = elem.area()[0]
-        k_arr = elem.k()
-        k1, k2 = k_arr[0]
-
-        # Convert scale type to actual x positions
-        if scale_type in ("FR", "FRPR"):
-            xa = x1 * L
-            xb = x2 * L
-        else:
-            xa = x1
-            xb = x2
-
-        # Determine load direction in element local coords
-        # FX/FY/FZ = basic coord; FXE/FYE/FZE = element coord
-        is_element = load_type.endswith("E")
-        base_type = load_type.rstrip("E")
-
-        qx = qy = qz = 0.0
-        qx_end = qy_end = qz_end = 0.0
-        is_force = base_type.startswith("F")
-
-        if is_force:
-            direction = base_type[1]  # X, Y, or Z
-            if is_element:
-                if direction == "X":
-                    qx, qx_end = p1, p2
-                elif direction == "Y":
-                    qy, qy_end = p1, p2
-                else:
-                    qz, qz_end = p1, p2
-            else:
-                # Basic coord -> element local via rotation
-                T = np.vstack([ihat[0], yhat[0], zhat[0]])
-                if direction == "X":
-                    q_basic = np.array([1.0, 0.0, 0.0])
-                elif direction == "Y":
-                    q_basic = np.array([0.0, 1.0, 0.0])
-                else:
-                    q_basic = np.array([0.0, 0.0, 1.0])
-                q_local = T @ q_basic
-                qx, qy, qz = p1 * q_local
-                qx_end, qy_end, qz_end = p2 * q_local
-        else:
-            # Moment loads (MX, MY, MZ) — not yet supported
-            log.warning(f"  PLOAD1: moment load type {load_type} not yet supported")
-            continue
-
-        # Point load vs distributed
-        is_point = abs(xa - xb) < 1e-14 * L
-        if is_point:
-            fe = beam_pg_point(
-                qx * scale, qy * scale, qz * scale,
-                xa, L, E_val, G_val, area, I1, I2, k1, k2,
-            )
-        else:
-            fe = beam_pg_distributed(
-                qx * scale, qy * scale, qz * scale,
-                L, E_val, G_val, area, I1, I2, k1, k2,
-                x_start=xa, x_end=xb,
-                qx_end=qx_end * scale, qy_end=qy_end * scale, qz_end=qz_end * scale,
-            )
-
-        # Transform to basic and assemble
-        Teb = beam_transform(ihat[0], yhat[0], zhat[0])
-        PG = Teb.T @ fe
-
-        nid1, nid2 = elem.nodes[0]
-        gi1 = dof_map[(nid1, 1)]
-        gi2 = dof_map[(nid2, 1)]
-        Fb[gi1:gi1 + 6] += PG[:6]
-        Fb[gi2:gi2 + 6] += PG[6:]
 
 
 class Solver:
@@ -502,16 +284,14 @@ class Solver:
                             Fb[fi] = np.nan
                             sset_b[fi] = True
                 elif load.type == "PLOAD1":
-                    _apply_pload1(model, load, scale, Fb, dof_map, log)
+                    apply_pload1(model, load, scale, Fb, dof_map, log)
                 elif load.type == "PLOAD4":
-                    from .shells import build_pload4_cquad4, build_pload4_ctria3
-
                     build_pload4_cquad4(model, Fb, dof_map, load_id)
                     build_pload4_ctria3(model, Fb, dof_map, load_id)
                 elif load.type == "GRAV":
-                    _apply_grav(model, load, scale, Fb, dof_map, ndof, log)
+                    apply_grav(model, load, scale, Fb, dof_map, ndof, log)
                 elif load.type == "RFORCE":
-                    _apply_rforce(model, load, scale, Fb, dof_map, ndof, log)
+                    apply_rforce(model, load, scale, Fb, dof_map, ndof, log)
                 else:
                     print(load.get_stats())
                     raise NotImplementedError(load)
@@ -525,9 +305,6 @@ class Solver:
             node_temperatures = self._get_node_temperatures(temp_load_id)
             if node_temperatures:
                 log.debug(f"  Thermal load: {len(node_temperatures)} nodes with dT")
-                from .shells import build_thermal_load_cquad4, build_thermal_load_ctria3
-                from .build_stiffness import build_thermal_load_beam
-
                 build_thermal_load_cquad4(model, Fb, dof_map, node_temperatures)
                 build_thermal_load_ctria3(model, Fb, dof_map, node_temperatures)
                 build_thermal_load_beam(model, Fb, dof_map, node_temperatures)
@@ -1084,9 +861,6 @@ class Solver:
 
         if has_suport and inrel == -2 and is_aset:
             # Inertia relief: partition a = l + r, apply inertia relief
-            from pyNastran.dev.bdf_vectorized3.mesh_utils.inertia_relief import (
-                build_rigid_body_modes, compute_inertia_relief,
-            )
             a_indices = np.where(aset)[0]
             r_in_a = rset_b[a_indices]
             lset_local = np.where(~r_in_a)[0]
@@ -1464,12 +1238,6 @@ class Solver:
         page_stamp: str = "PAGE %s",
     ) -> int:
         """Save MPC forces to F06 and OP2."""
-        from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import (
-            RealMPCForcesArray,
-        )
-        from .recover.utils import get_plot_request
-        from .utils import recast_data
-
         f06_request_name = "MPCFORCES"
         unused_nids_write, write_f06, write_op2, quick_return = get_plot_request(
             subcase, f06_request_name)
@@ -1974,8 +1742,6 @@ class Solver:
         dof_map, ps = _get_dof_map(model)
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
 
-        from .build_stiffness import build_Kgg
-
         if self.Kgg_override is not None:
             Kgg_arr = self.Kgg_override
             if issparse(Kgg_arr):
@@ -2000,10 +1766,6 @@ class Solver:
         log.debug("  static preload solved")
 
         # Build geometric stiffness from preload stress state
-        from .shells import build_KDgg_cquad4, build_KDgg_ctria3
-        from .build_stiffness import build_KDgg_beam
-        from .solids import build_KDgg_solids
-
         KDgg = dok_matrix((ndof, ndof))
         build_KDgg_cquad4(model, KDgg, dof_map, u_global)
         build_KDgg_ctria3(model, KDgg, dof_map, u_global)
@@ -2017,8 +1779,6 @@ class Solver:
         # Solve buckling eigenproblem: (K + lambda*KD)*x = 0
         # => K*x = -lambda*KD*x
         # Use scipy generalized eigenvalue: Kff @ x = lambda * (-KDff) @ x
-        from scipy.linalg import eigh
-
         neigenvalue, _ = get_real_eigenvalue_method(model, subcase)
         neg_KDff = -KDff
 
@@ -2027,7 +1787,6 @@ class Solver:
         try:
             eigenvalues_all, eigvecs_all = eigh(Kff, neg_KDff)
         except np.linalg.LinAlgError:
-            from scipy.linalg import eig
             eigenvalues_all, eigvecs_all = eig(Kff, neg_KDff)
             eigenvalues_all = eigenvalues_all.real
             eigvecs_all = eigvecs_all.real
@@ -2073,8 +1832,6 @@ class Solver:
         Boundary DOFs defined by SUPORT/SUPORT1 cards.
         Number of modes from METHOD (EIGRL/EIGR).
         """
-        from .craig_bampton import run_craig_bampton
-
         model = self.model
         log = model.log
         log.debug("run_sol_31 (Craig-Bampton)")
@@ -2087,9 +1844,8 @@ class Solver:
 
         # Build global matrices
         if self.Kgg_override is not None:
-            from scipy.sparse import issparse as _issparse
             Kgg_in = self.Kgg_override
-            if _issparse(Kgg_in):
+            if issparse(Kgg_in):
                 Kgg = Kgg_in[:ndof, :ndof].tocsc()
             else:
                 Kgg = csc_matrix(Kgg_in[:ndof, :ndof])
@@ -2098,7 +1854,6 @@ class Solver:
                             idtype=idtype, fdtype=fdtype)
 
         Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
-        from .build_stiffness import Kbb_to_Kgg
         Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid, inplace=False)
 
         # Apply SPC constraints — reduce to free (f) set
@@ -2186,7 +1941,6 @@ class Solver:
         self.cb_result = cb_result
 
         # Write CB matrices to OP4 and HDF5
-        from .craig_bampton import write_cb_to_op4, write_cb_to_h5
         base_name = os.path.splitext(model.bdf_filename)[0]
         op4_filename = base_name + ".cb.op4"
         h5_filename = base_name + ".cb.h5"
@@ -2924,7 +2678,6 @@ def build_Mbb(
     log = model.log
     log.info("starting build_Mbb")
     wtmass = 1.0
-    from pyNastran.dev.bdf_vectorized3.solver.build_stiffness import _COOAccumulator
     _coo_m = _COOAccumulator(ndof)
     str(model)
     str(subcase)
@@ -3065,11 +2818,6 @@ def build_Mbb(
                 ii = [i1, i1 + 1, j1, j1 + 1]
                 _coo_m.add_matrix(ii, mass_rod_2x2 * mass)
         elif etype in {"CBAR", "CBEAM"}:
-            from pyNastran.dev.bdf_vectorized3.solver.beam import (
-                consistent_mass,
-                lumped_mass,
-                beam_transform,
-            )
             # PARAM,COUPMASS,1 => consistent; default (0 or absent) => lumped
             use_consistent = False
             if hasattr(model, 'params') and 'COUPMASS' in model.params:
@@ -3253,7 +3001,6 @@ def build_Mbb(
             raise NotImplementedError(elem)
 
     # Solid elements (CHEXA, CTETRA, CPENTA) — consistent mass
-    from pyNastran.dev.bdf_vectorized3.solver.solids import build_mbb_solids
     mass_total += build_mbb_solids(model, _coo_m, dof_map)
 
     # Convert COO accumulator to sparse CSC
@@ -3816,10 +3563,6 @@ def _write_gpforce_balance(
     For each grid, reports: applied load, SPC force, and the total
     (should be ~0 at equilibrium).
     """
-    from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import (
-        RealGridPointForcesArray,
-    )
-
     # Internal forces: F_int = K @ x (at each DOF)
     if hasattr(Kgg, 'dot'):
         f_internal = Kgg.dot(xg)
@@ -3911,7 +3654,6 @@ def solve_eigenvector(
     assert isinstance(Maa, np.ndarray), type(Maa)
 
     if not np.any(Maa):
-        from pyNastran.f06.errors import FatalError
         raise FatalError('mass matrix is zero; check that elements have material density')
 
     # reduce the size of the matrix going into the solver
@@ -3942,13 +3684,11 @@ def solve_eigenvector(
         xa[no_modes, :] = 0
         xa[is_modes, :] = xa_
     else:
-        from scipy.sparse.linalg import ArpackNoConvergence
         try:
             eigenvalues, xa_ = backend.eigsh(
                 Kaa2, k=neigenvalues, M=Maa2, which="SM", return_eigenvectors=True
             )
         except ArpackNoConvergence as e:
-            from pyNastran.f06.errors import FatalError
             raise FatalError(
                 f'eigensolver did not converge: {e.args[0]}'
             ) from e

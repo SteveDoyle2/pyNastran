@@ -5,6 +5,8 @@ import numpy as np
 from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.dev.bdf_vectorized3.solver.solver import Solver, BDF, partition_vector2
+
+from pyNastran.bdf.cards.params import PARAM
 from pyNastran.f06.errors import FatalError
 from pyNastran.dev.solver.solver import Solver as SolverOld, BDF as BDFold
 from pyNastran.bdf.case_control_deck import CaseControlDeck
@@ -12,7 +14,7 @@ from pyNastran.bdf.case_control_deck import CaseControlDeck
 PKG_PATH = Path(pyNastran.__path__[0])
 # TEST_DIR = PKG_PATH / 'dev' / 'solver'
 TEST_DIR = Path(__file__).parent
-print(TEST_DIR)
+
 
 def setup_static_case_control(model: BDF, extra_case_lines=None):
     lines = [
@@ -818,7 +820,8 @@ class TestStaticRod(unittest.TestCase):
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.1, alpha=0.0, tref=0.0, ge=0.0, St=0.0,
+        model.add_mat1(mid, E, G, nu,
+                       rho=0.1, alpha=0.0, tref=0.0, ge=0.0, St=0.0,
                        Sc=0.0, Ss=0.0, mcsid=0)
         model.add_crod(eid, pid, nids)
         model.add_prod(pid, mid, A=1.0, j=2., c=0., nsm=0.)
@@ -1819,7 +1822,6 @@ class TestStaticShell(unittest.TestCase):
 
     def test_cquad4_macneal(self):
         """Tests CQUAD4 with PARAM,MYQUAD,MACN (MacNeal formulation)."""
-        from pyNastran.bdf.cards.params import PARAM
         model = BDF(debug=None, log=None, mode='msc')
         model.bdf_filename = TEST_DIR / 'cquad4_macneal.bdf'
         model.add_grid(1, [0., 0., 0.])
@@ -1854,7 +1856,6 @@ class TestStaticShell(unittest.TestCase):
 
     def test_cquad4_allman_drilling(self):
         """Tests CQUAD4 with PARAM,MYQDRIL,ALLMAN."""
-        from pyNastran.bdf.cards.params import PARAM
         model = BDF(debug=None, log=None, mode='msc')
         model.bdf_filename = TEST_DIR / 'cquad4_allman.bdf'
         model.add_grid(1, [0., 0., 0.])
@@ -1879,7 +1880,6 @@ class TestStaticShell(unittest.TestCase):
 
     def test_cquad4_hb_drilling(self):
         """Tests CQUAD4 with PARAM,MYQDRIL,HB (Hughes-Brezzi)."""
-        from pyNastran.bdf.cards.params import PARAM
         model = BDF(debug=None, log=None, mode='msc')
         model.bdf_filename = TEST_DIR / 'cquad4_hb.bdf'
         model.add_grid(1, [0., 0., 0.])
@@ -1904,7 +1904,6 @@ class TestStaticShell(unittest.TestCase):
 
     def test_cquad4_pcomp_mat8(self):
         """Tests CQUAD4/PCOMP/MAT8 (orthotropic composite) with all quad types."""
-        from pyNastran.bdf.cards.params import PARAM
         for quad_type in ['MITC4', 'MACN', 'MACN2']:
             model = BDF(debug=None, log=None, mode='msc')
             model.bdf_filename = TEST_DIR / f'cquad4_pcomp_mat8_{quad_type}.bdf'
@@ -1932,7 +1931,6 @@ class TestStaticShell(unittest.TestCase):
 
     def test_cquad4_pshell_mat8(self):
         """Tests CQUAD4/PSHELL/MAT8 (orthotropic) with all quad types."""
-        from pyNastran.bdf.cards.params import PARAM
         for quad_type in ['MITC4', 'MACN', 'MACN2']:
             model = BDF(debug=None, log=None, mode='msc')
             model.bdf_filename = TEST_DIR / f'cquad4_mat8_{quad_type}.bdf'

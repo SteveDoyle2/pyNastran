@@ -6,12 +6,19 @@ from typing import Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.utils.scipy_utils import dok_matrix, csc_matrix
 
-from pyNastran.dev.bdf_vectorized3.solver.shells import build_kbb_cquad4, build_kbb_ctria3
-from pyNastran.dev.bdf_vectorized3.solver.beam import (
+from pyNastran.dev.bdf_vectorized3.solver.elements.solids import (
+    build_kbb_chexa, build_kbb_ctetra, build_kbb_cpenta)
+from pyNastran.dev.bdf_vectorized3.cards.base_card import searchsorted_filter
+
+from pyNastran.dev.bdf_vectorized3.solver.elements.shells import build_kbb_cquad4, build_kbb_ctria3
+from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     timoshenko_stiffness,
     beam_transform,
+    thermal_load_beam,
+    geometric_stiffness,
 )
 from pyNastran.dev.solver.utils import lambda1d, DOF_MAP
+
 
 # from pyNastran.bdf.cards.elements.bars import get_bar_vector, get_bar_yz_transform
 if TYPE_CHECKING:  # pragma: no cover
@@ -115,7 +122,6 @@ def build_Kgg(
     nelements += _build_kbb_cshear(model, Kbb, dof_map)
 
     # Solid elements (CHEXA, CTETRA, CPENTA)
-    from .solids import build_kbb_chexa, build_kbb_ctetra, build_kbb_cpenta
     nelements += build_kbb_chexa(model, coo, dof_map)
     nelements += build_kbb_ctetra(model, coo, dof_map)
     nelements += build_kbb_cpenta(model, coo, dof_map)
@@ -830,12 +836,6 @@ def build_KDgg_beam(
     nelements : int
         Number of elements processed.
     """
-    from pyNastran.dev.bdf_vectorized3.solver.beam import (
-        geometric_stiffness,
-        timoshenko_stiffness as _ts,
-        beam_transform as _bt,
-    )
-
     ndof = len(xb)
     coo = _COOAccumulator(ndof)
 
@@ -860,8 +860,8 @@ def build_KDgg_beam(
             e, g, nu = e_g_nu
             k1, k2 = ki
 
-            Ke_local = _ts(areai, e, g, lengthi, i1, i2, j, k1, k2)
-            Teb = _bt(ihati, jhati, khati)
+            Ke_local = timoshenko_stiffness(areai, e, g, lengthi, i1, i2, j, k1, k2)
+            Teb = beam_transform(ihati, jhati, khati)
 
             gi1 = dof_map[(nid1, 1)]
             gi2 = dof_map[(nid2, 1)]
@@ -914,8 +914,6 @@ def build_thermal_load_beam(
     node_temperatures : dict[int, float]
         Node temperatures.
     """
-    from pyNastran.dev.bdf_vectorized3.solver.beam import thermal_load_beam
-
     for elem in [model.cbar, model.cbeam]:
         if elem.n == 0:
             continue
@@ -930,7 +928,6 @@ def build_thermal_load_beam(
         mat = model.mat1
         pids = elem.property_id
         for prop in elem.allowed_properties:
-            from pyNastran.dev.bdf_vectorized3.cards.base_card import searchsorted_filter
             i_lookup, i_all = searchsorted_filter(prop.property_id, pids, msg='')
             if len(i_lookup) == 0:
                 continue

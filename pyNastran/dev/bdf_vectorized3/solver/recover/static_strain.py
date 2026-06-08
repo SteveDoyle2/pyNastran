@@ -4,7 +4,7 @@ import numpy as np
 
 from pyNastran.dev.solver.utils import lambda1d
 from pyNastran.dev.bdf_vectorized3.solver.utils import get_ieids_eids, get_element
-from pyNastran.dev.bdf_vectorized3.solver.beam import (
+from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     timoshenko_stiffness,
     beam_transform,
     recover_beam_force,

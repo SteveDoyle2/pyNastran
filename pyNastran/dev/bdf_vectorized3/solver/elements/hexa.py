@@ -15,6 +15,8 @@ MYSTRAN Source: EMG5/HEXA.f90, EMG7/SHP3DH.f90
 from __future__ import annotations
 
 import numpy as np
+from .tetra import _solid_B_matrix
+
 
 
 def _hexa8_shape_functions(
@@ -384,8 +386,6 @@ def hexa20_stiffness(coords: np.ndarray, D: np.ndarray) -> np.ndarray:
     -------
     Ke : (60, 60) element stiffness matrix
     """
-    from .tetra import _solid_B_matrix
-
     k = np.sqrt(3.0 / 5.0)
     pts_1d = np.array([-k, 0.0, k])
     wts_1d = np.array([5.0 / 9.0, 8.0 / 9.0, 5.0 / 9.0])

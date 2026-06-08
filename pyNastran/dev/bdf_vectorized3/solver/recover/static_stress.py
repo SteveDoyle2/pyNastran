@@ -9,8 +9,9 @@ from typing import TextIO, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.dev.solver.utils import lambda1d
+from pyNastran.dev.bdf_vectorized3.cards.base_card import searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.solver.utils import get_ieids_eids, get_element
-from pyNastran.dev.bdf_vectorized3.solver.beam import (
+from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     timoshenko_stiffness,
     beam_transform,
     recover_beam_force,
@@ -20,13 +21,17 @@ from pyNastran.op2.op2_interface.op2_classes import (
     RealRodStressArray,
     RealBarStressArray,
     RealSpringStressArray,
+    RealPlateStressArray,
+    RealPlateStrainArray,
 )
 from .utils import get_plot_request
+
 from .static_force import ke_cbar
+from .static_shell import recover_shell_stress_cquad4, recover_shell_stress_ctria3
+
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, Subcase
-
     DOF_MAP = dict[tuple[int, int], int]
 
 
@@ -440,8 +445,6 @@ def _get_bar_recovery_points(model: BDF, elem) -> np.ndarray:
     cdef : np.ndarray, shape (neids, 8)
         [C1, C2, D1, D2, E1, E2, F1, F2] per element.
     """
-    from pyNastran.dev.bdf_vectorized3.cards.base_card import searchsorted_filter
-
     neids = elem.n
     cdef = np.zeros((neids, 8), dtype="float64")
     pids = elem.property_id
@@ -604,12 +607,6 @@ def _recover_stress_shell(
     page_stamp: str = "PAGE %s",
 ) -> int:
     """Recover CQUAD4/CTRIA3 shell stresses and store in op2."""
-    from .static_shell import recover_shell_stress_cquad4, recover_shell_stress_ctria3
-    from pyNastran.op2.op2_interface.op2_classes import (
-        RealPlateStressArray,
-        RealPlateStrainArray,
-    )
-
     nelements = 0
     quad_results = recover_shell_stress_cquad4(model, dof_map, xb)
     tri_results = recover_shell_stress_ctria3(model, dof_map, xb)
@@ -696,9 +693,6 @@ def recover_modal_stress_shell(
     eigenvalues : (nmodes,) float — eigenvalues (omega^2)
     mode_shapes : (ndof, nmodes) — displacement per mode
     """
-    from .static_shell import recover_shell_stress_cquad4, recover_shell_stress_ctria3
-    from pyNastran.op2.op2_interface.op2_classes import RealPlateStressArray
-
     nmodes = len(modes)
     cycles = np.sqrt(np.abs(eigenvalues)) / (2.0 * np.pi)
 

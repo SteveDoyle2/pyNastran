@@ -11,6 +11,10 @@ from pyNastran.op2.op2_interface.op2_classes import (
 from .static_spring import _recover_force_celas
 from .utils import get_plot_request
 
+from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
+    timoshenko_stiffness, beam_transform, recover_beam_force,
+)
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, Subcase, CBAR, PBAR, PBARL
     DOF_MAP = dict[tuple[int, int], int]
@@ -263,7 +267,6 @@ def ke_cbar(xyz1, xyz2,
             ihat, jhat, khat, wa, wb,
             fdtype: str='float64'):
     """Get the elemental stiffness matrix in the basic frame."""
-    from pyNastran.dev.bdf_vectorized3.solver.beam import timoshenko_stiffness, beam_transform
     I1, I2, I12 = I
     dxyz = xyz2 - xyz1
     L = np.linalg.norm(dxyz)
@@ -283,9 +286,6 @@ def _recover_forcei_cbar(model: BDF,
                          v, ihat, jhat, khat, wa, wb,
                          fdtype: str='float64'):
     """Get the static CBAR force."""
-    from pyNastran.dev.bdf_vectorized3.solver.beam import (
-        timoshenko_stiffness, beam_transform, recover_beam_force,
-    )
     nid1, nid2 = nodes
     I1, I2, I12 = I
 

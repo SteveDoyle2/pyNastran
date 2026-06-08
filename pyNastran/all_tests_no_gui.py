@@ -49,10 +49,6 @@ from pyNastran.gui.test.all_tests_no_gui import *
 
 import pyNastran.dev
 from pyNastran.dev.tools.all_tests import TestInrel, TestPressureMap
-try:
-    from pyNastran.dev.solver.test_solver1_springs import *
-except ImportError:  # pragma: no cover
-    pass
 if IS_TABLES:
     from pyNastran.dev.bdf_vectorized3.test.all_tests import *
 

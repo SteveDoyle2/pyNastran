@@ -18,15 +18,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.polynomial.legendre import leggauss as _leggauss
+from numpy.polynomial.legendre import leggauss
 
+ 
 from pyNastran.f06.errors import FatalError
 
 if TYPE_CHECKING:
     pass
 
 # Cache 3-point Gauss-Legendre quadrature (used by every element)
-_GAUSS3_XI, _GAUSS3_W = _leggauss(3)
+_GAUSS3_XI, _GAUSS3_W = leggauss(3)
 _GAUSS3_S = (1.0 + _GAUSS3_XI) / 2.0  # mapped to [0, 1]
 
 
@@ -761,8 +762,6 @@ def beam_pg_distributed(
     fe : np.ndarray, shape (12,)
         Equivalent nodal force vector in element local coordinates.
     """
-    from numpy.polynomial.legendre import leggauss
-
     if x_end is None:
         x_end = L
     if qx_end is None:

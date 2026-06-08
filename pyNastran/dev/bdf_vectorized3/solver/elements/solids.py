@@ -10,16 +10,11 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from .hexa import (
-    _isotropic_constitutive,
-    hexa8_stiffness,
-    hexa8_mass,
-    hexa8_geometric_stiffness,
-    hexa20_stiffness,
-    hexa20_mass,
-    hexa20_geometric_stiffness,
-)
 from .tetra import (
+    _tetra4_shape_functions,
+    _tetra10_shape_functions,
+    _TETRA4_GAUSS,
+    _TETRA10_GAUSS,
     tetra4_stiffness,
     tetra4_mass,
     tetra4_geometric_stiffness,
@@ -28,12 +23,27 @@ from .tetra import (
     tetra10_geometric_stiffness,
 )
 from .penta import (
+    _penta6_shape_functions,
+    _penta15_shape_functions,
+    _PENTA6_FULL_GAUSS,
+    _PENTA15_GAUSS,
     penta6_stiffness,
     penta6_mass,
     penta6_geometric_stiffness,
     penta15_stiffness,
     penta15_mass,
     penta15_geometric_stiffness,
+)
+from .hexa import (
+    _hexa8_shape_functions,
+    _hexa20_shape_functions,
+    _isotropic_constitutive,
+    hexa8_stiffness,
+    hexa8_mass,
+    hexa8_geometric_stiffness,
+    hexa20_stiffness,
+    hexa20_mass,
+    hexa20_geometric_stiffness,
 )
 
 if TYPE_CHECKING:
@@ -468,8 +478,6 @@ def _compute_element_stress(
 
 def _build_KDgg_chexa(model: BDF, KDgg, dof_map, u_global):
     """Assemble CHEXA geometric stiffness."""
-    from .hexa import _hexa8_shape_functions
-
     elem = model.chexa
     if elem.n == 0:
         return
@@ -507,8 +515,6 @@ def _build_KDgg_chexa(model: BDF, KDgg, dof_map, u_global):
             # HEXA20 geometric stiffness
             active_nodes = all_nodes[all_nodes > 0]
             coords = _get_element_coords(model, active_nodes)
-            from .hexa import _hexa20_shape_functions
-
             k3 = np.sqrt(3.0 / 5.0)
             pts_1d = np.array([-k3, 0.0, k3])
             wts_1d = np.array([5.0 / 9.0, 8.0 / 9.0, 5.0 / 9.0])
@@ -561,13 +567,6 @@ def _build_KDgg_chexa(model: BDF, KDgg, dof_map, u_global):
 
 def _build_KDgg_ctetra(model: BDF, KDgg, dof_map, u_global):
     """Assemble CTETRA geometric stiffness."""
-    from .tetra import (
-        _tetra4_shape_functions,
-        _tetra10_shape_functions,
-        _TETRA4_GAUSS,
-        _TETRA10_GAUSS,
-    )
-
     elem = model.ctetra
     if elem.n == 0:
         return
@@ -622,13 +621,6 @@ def _build_KDgg_ctetra(model: BDF, KDgg, dof_map, u_global):
 
 def _build_KDgg_cpenta(model: BDF, KDgg, dof_map, u_global):
     """Assemble CPENTA geometric stiffness."""
-    from .penta import (
-        _penta6_shape_functions,
-        _penta15_shape_functions,
-        _PENTA6_FULL_GAUSS,
-        _PENTA15_GAUSS,
-    )
-
     elem = model.cpenta
     if elem.n == 0:
         return

@@ -830,7 +830,8 @@ class AEPARM(BaseCard):
         units = ''
         return AEPARM(aeparm_id, label, units)
 
-    def __init__(self, aeparm_id: int, label: str, units: str, comment: str='') -> None:
+    def __init__(self, aeparm_id: int, label: str,
+                 units: str='', comment: str='') -> None:
         """
         Creates an AEPARM card, which defines a new trim variable.
 
@@ -872,7 +873,7 @@ class AEPARM(BaseCard):
         units = '' if units is None else units
 
         assert len(card) <= 4, f'len(AEPARM card) = {len(card):d}\ncard={card}'
-        return AEPARM(aeparm_id, label, units, comment=comment)
+        return AEPARM(aeparm_id, label, units=units, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment: str=''):
@@ -891,7 +892,7 @@ class AEPARM(BaseCard):
         label = data[1]
         units = data[2]
         assert len(data) == 3, 'data = %s' % data
-        return AEPARM(aeparm_id, label, units, comment=comment)
+        return AEPARM(aeparm_id, label, units=units, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         pass
@@ -929,13 +930,13 @@ class AESURF(BaseCard):
     line(s) and from AEDW, AEFORCE and AEPRESS input data. The mass properties
     of the control surface can be specified using an AESURFS entry.
 
-    +--------+--------+-------+-------+-------+--------+--------+--------+--------+
-    |    1   |   2    |   3   |   4   |   5   |   6    |    7   |   8    |   9    |
-    +========+========+=======+=======+=======+========+========+========+========+
-    | AESURF |   ID   | LABEL | CID1  | ALID1 |  CID2  | ALID2  |  EFF   |  LDW   |
-    +--------+--------+-------+-------+-------+--------+--------+--------+--------+
-    |        |  CREFC | CREFS | PLLIM | PULIM | HMLLIM | HMULIM | TQLLIM | TQULIM |
-    +--------+--------+-------+-------+-------+--------+--------+--------+--------+
+    +--------+-------+-------+-------+-------+--------+--------+--------+--------+
+    |    1   |   2   |   3   |   4   |   5   |   6    |    7   |   8    |   9    |
+    +========+=======+=======+=======+=======+========+========+========+========+
+    | AESURF |   ID  | LABEL | CID1  | ALID1 |  CID2  | ALID2  |  EFF   |  LDW   |
+    +--------+-------+-------+-------+-------+--------+--------+--------+--------+
+    |        | CREFC | CREFS | PLLIM | PULIM | HMLLIM | HMULIM | TQLLIM | TQULIM |
+    +--------+-------+-------+-------+-------+--------+--------+--------+--------+
     """
     type = 'AESURF'
     _field_map = {
@@ -1112,7 +1113,6 @@ class AESURF(BaseCard):
             has this model been cross referenced
 
         """
-
         cid1 = self.Cid1()
         aelist1 = self.Aelist_id1()
         assert isinstance(cid1, integer_types), f'cid1={cid1!r}'
@@ -1243,10 +1243,10 @@ class AESURF(BaseCard):
         tqllim = set_blank_if_default(self.tqllim, 0)
         tqulim = set_blank_if_default(self.tqulim, 0)
 
-        list_fields = ['AESURF', self.aesurf_id, self.label, self.Cid1(), self.Aelist_id1(),
-                       self.Cid2(), self.Aelist_id2(), eff, ldw, crefc, crefs,
-                       pllim, pulim, self.hmllim, self.hmulim, tqllim,
-                       tqulim]
+        list_fields = [
+            'AESURF', self.aesurf_id, self.label, self.Cid1(), self.Aelist_id1(),
+            self.Cid2(), self.Aelist_id2(), eff, ldw, crefc, crefs,
+            pllim, pulim, self.hmllim, self.hmulim, tqllim, tqulim]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

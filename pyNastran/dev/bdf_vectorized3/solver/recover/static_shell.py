@@ -12,7 +12,7 @@ from typing import TextIO, TYPE_CHECKING
 
 import numpy as np
 
-from pyNastran.dev.bdf_vectorized3.solver.shells import (
+from pyNastran.dev.bdf_vectorized3.solver.elements.shells import (
     _dshape_quad4,
     _jacobian,
     _jacobian_inv,
@@ -22,11 +22,13 @@ from pyNastran.dev.bdf_vectorized3.solver.shells import (
     _get_ABD_for_element,
     _GAUSS_2x2_PTS,
     _GAUSS_2x2_WTS,
+    macn2_stiffness,
+    _apply_shell_offset,
 )
+
 
 if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
-
     DOF_MAP = dict[tuple[int, int], int]
 
 
@@ -446,11 +448,6 @@ def recover_shell_strain_energy_cquad4(
     -------
     results : dict[eid, float]
     """
-    from pyNastran.dev.bdf_vectorized3.solver.shells import (
-        macn2_stiffness,
-        _apply_shell_offset,
-    )
-
     cquad4 = model.cquad4
     if cquad4.n == 0:
         return {}
