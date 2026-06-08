@@ -205,7 +205,7 @@ class TestReducePg(unittest.TestCase):
         assert np.allclose(Pa, Pa_expected, atol=1e-12), f"Full chain: Pa={Pa}, expected={Pa_expected}"
 
 
-    def test_multiple_load_vectors():
+    def test_multiple_load_vectors(self):
         """Reduction works for multiple load columns simultaneously."""
         ndof = 6
         sset_b = np.zeros(ndof, dtype="bool")

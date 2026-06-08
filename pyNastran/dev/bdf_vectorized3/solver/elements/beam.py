@@ -12,19 +12,10 @@ References
 - NX Nastran Theoretical Manual, Sections 3.1 (BAR/BEAM).
 - Bathe, "Finite Element Procedures", 2014, Section 5.4.
 """
-
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 import numpy as np
 from numpy.polynomial.legendre import leggauss
-
- 
 from pyNastran.f06.errors import FatalError
 
-if TYPE_CHECKING:
-    pass
 
 # Cache 3-point Gauss-Legendre quadrature (used by every element)
 _GAUSS3_XI, _GAUSS3_W = leggauss(3)
@@ -174,12 +165,10 @@ def timoshenko_stiffness(
 
     bxy = [1, 5, 7, 11]
     bxz = [2, 4, 8, 10]
-    for i_local, i_global in enumerate(bxy):
-        for j_local, j_global in enumerate(bxy):
-            K[i_global, j_global] = K_bxy[i_local, j_local]
-    for i_local, i_global in enumerate(bxz):
-        for j_local, j_global in enumerate(bxz):
-            K[i_global, j_global] = K_bxz[i_local, j_local]
+    for i_local, i1_global, i2_global in zip(count(), bxy, bxz):
+        for j_local, j1_global, j2_global in enumerate(bxy):
+            K[i1_global, j1_global] = K_bxy[i_local, j_local]
+            K[i2_global, j2_global] = K_bxz[i_local, j_local]
 
     # Pin flags
     if pa != 0:
@@ -192,7 +181,6 @@ def timoshenko_stiffness(
             i = int(ch) + 5
             K[i, :] = 0.0
             K[:, i] = 0.0
-
     return K
 
 
@@ -485,14 +473,12 @@ def thermal_load_beam(
     # Transform to basic
     T = np.vstack([ihat, jhat, khat])
     z = np.zeros((3, 3), dtype="float64")
-    Teb = np.block(
-        [
-            [T, z, z, z],
-            [z, T, z, z],
-            [z, z, T, z],
-            [z, z, z, T],
-        ]
-    )
+    Teb = np.block([
+        [T, z, z, z],
+        [z, T, z, z],
+        [z, z, T, z],
+        [z, z, z, T],
+    ])
     PG = Teb.T @ Fe
     return PG
 
@@ -612,14 +598,12 @@ def beam_stress_at_points(
     # where I1=Iy (bending about y, uses z-coord) and I2=Iz (bending about z, uses y-coord)
     # NX convention: sigma = P/A - M1*c1/I1 + M2*c2/I2
     # where M1=Mz (plane 1), M2=My (plane 2)
-    force2stress = np.array(
-        [
-            [1.0 / A, 0.0, 0.0, 0.0, c2 * inv_I1, -c1 * inv_I2],
-            [1.0 / A, 0.0, 0.0, 0.0, d2 * inv_I1, -d1 * inv_I2],
-            [1.0 / A, 0.0, 0.0, 0.0, e2 * inv_I1, -e1 * inv_I2],
-            [1.0 / A, 0.0, 0.0, 0.0, f2 * inv_I1, -f1 * inv_I2],
-        ]
-    )
+    force2stress = np.array([
+        [1.0 / A, 0.0, 0.0, 0.0, c2 * inv_I1, -c1 * inv_I2],
+        [1.0 / A, 0.0, 0.0, 0.0, d2 * inv_I1, -d1 * inv_I2],
+        [1.0 / A, 0.0, 0.0, 0.0, e2 * inv_I1, -e1 * inv_I2],
+        [1.0 / A, 0.0, 0.0, 0.0, f2 * inv_I1, -f1 * inv_I2],
+    ])
 
     stress_a = -force2stress @ Fe[:6]
     stress_b = force2stress @ Fe[6:]
