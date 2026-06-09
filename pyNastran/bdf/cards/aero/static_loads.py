@@ -1247,6 +1247,10 @@ class UXVEC(BaseCard):
             list_fields += [label, ux]
         return list_fields
 
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
     # def repr_fields(self):
     #     # fixes a Nastran bug
     #     list_fields = self.raw_fields()

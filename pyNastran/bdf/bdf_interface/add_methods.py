@@ -466,7 +466,8 @@ class AddMethods:
             model.elements[key] = elem
             model._type_to_id_map[elem.type].append(key)
         elif elem == model.elements[key]:
-            model.log.warning(f'replacing equivalent element:\n{elem}')
+            tag = _get_add_tag(model, elem, model.elements[key])
+            model.log.warning(f'replacing equivalent element:\n{elem}{tag}')
         elif allow_overwrites:
             model.log.warning(f'replacing elements:\n{model.elements[key]}with:\n{elem}')
             model.elements[key] = elem

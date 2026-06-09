@@ -57,7 +57,8 @@ def get_stats_groups():
         # aero
         'caeros', 'paeros', 'aecomps', 'aefacts', 'aelinks',
         'aelists', 'aeparams', 'aesurf', 'aesurfs', 'aestats', 'gusts', 'flfacts',
-        'flutters', 'splines', 'trims', 'divergs', 'csschds', 'uxvec',
+        'flutters', 'splines', 'trims', 'divergs', 'csschds',
+        'uxvec', 'aeforce', 'aepress',
 
         # thermal
         'bcs', 'thermal_materials', 'phbdys', 'views', 'view3ds',

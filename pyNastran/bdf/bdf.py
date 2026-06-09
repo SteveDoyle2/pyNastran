@@ -1145,7 +1145,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'nnodes', 'npoints', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros', 'nid_map',
             'is_bdf_vectorized', 'type_slot_str',
-            #'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
 
             'point_ids', 'subcases',
             '_card_parser', '_card_parser_prepare',

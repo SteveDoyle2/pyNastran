@@ -9,6 +9,45 @@ class ComplexEigenvectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1: bool, isubcase: int, dt: int):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+    def get_phi(self, common_nodes: Optional[np.ndarray]=None) -> np.ndarray:
+        """
+        gets the eigenvector matrix
+
+        Returns
+        -------
+        phi : (ndof, nmodes)
+            the eigenvector matrix
+
+        TODO: doesn't consider SPOINTs/EPOINTs
+        """
+        if common_nodes is not None:
+            missing_nodes = np.setdiff1d(common_nodes, self.node_gridtype[:, 0])
+            if len(missing_nodes):
+                raise RuntimeError(f'missing_nodes = {missing_nodes}')
+            inode = np.searchsorted(self.node_gridtype[:, 0], common_nodes)
+            assert np.array_equal(self.node_gridtype[inode, 0], common_nodes)
+            data = self.data[:, inode, :]
+        else:
+            data = self.data
+        nmodes, nnodes = data.shape[:2]
+        ndof = nnodes * 6
+        phi_transpose = data.reshape(nmodes, ndof)
+        return phi_transpose.T
+
+    @classmethod
+    def phi_to_data(cls, phi: np.ndarray) -> np.ndarray:
+        """(ndof, nmodes) -> (nmodes, nnodes, 6)"""
+        ndof, nmodes = phi.shape
+        nnodes = ndof // 6
+        assert ndof % 6 == 0, phi.shape
+        phi2 = phi.T  # nmodes, ndof
+        data = phi2.reshape(nmodes, nnodes, 6)
+        return data
+
+    def set_phi(self, phi: np.ndarray) -> None:
+        """(ndof, nmodes) -> (nmodes, nnodes, 6)"""
+        self.data = self.phi_to_data(phi)
+
     def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:

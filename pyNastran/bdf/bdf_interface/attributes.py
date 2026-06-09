@@ -69,6 +69,7 @@ if TYPE_CHECKING:  # pragma: no cover
         #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
         FLUTTER, MKAERO1, MKAERO2, FLFACT,
         TRIM, TRIM2, GUST, GUST2, DIVERG, CSSCHD, UXVEC,
+        AEFORCE, AEPRESS,
         # roter
         ROTORD, ROTORG,
         # modal
@@ -310,6 +311,7 @@ SLOT_TO_TYPE_MAP: dict[str, list[str]] = {
     'csschds': ['CSSCHD',],
     'trims': ['TRIM', 'TRIM2'],
     'divergs': ['DIVERG'],
+    'uxvec': ['UXVEC'],
 
     # coords
     'coords': ['CORD1R', 'CORD1C', 'CORD1S',
@@ -1077,6 +1079,9 @@ class BDFAttributes:
 
         #: stores UXVEC
         self.uxvec: dict[int, UXVEC] = {}
+        self.aeforce: dict[int, AEFORCE] = {}
+        self.aepress: dict[int, AEPRESS] = {}
+        # self.aeload: dict[int, Any] = {}
 
         # ------ SOL 145 ------
         #: stores AERO

@@ -225,6 +225,13 @@ class TestNsm(unittest.TestCase):
         """tests the NSMADD and all NSM cards using the prepare methods"""
         model = BDF(debug=None)
         nsm_id = 100
+        mid = 1000
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 1., 0.])
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.1)
+        model.add_conrod(1, mid, [1, 2])
+        model.add_conrod(2, mid, [1, 2])
+        model.add_conrod(3, mid, [1, 2])
         fields = ['NSM', nsm_id, 'ELEMENT',
                   1, 1.0,
                   2, 2.0,
