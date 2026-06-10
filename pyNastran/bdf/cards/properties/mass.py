@@ -932,6 +932,7 @@ def xref_nsm(self, model: BDF) -> None:
         ids = self.ids
         if ids == ['ALL']:
             ids = list(model.elements)
+        assert len(ids) > 0, ids
 
         elements = []
         for eid in ids:
@@ -946,6 +947,7 @@ def xref_nsm(self, model: BDF) -> None:
             element_ids = np.array(list(model.elements), dtype='int32')
             element_ids.sort()
             raise KeyError(f'Missing elements on {self.type}={self.sid}: {missing_ids}; element_ids={element_ids}')
+        assert len(elements) > 0, elements
         self.ids_ref = elements
 
     elif self.nsm_type in {'PSHELL', 'PCOMP', 'PBAR', 'PBEAM', 'PBUSH', 'PTUBE', 'PROD'}:
@@ -953,6 +955,7 @@ def xref_nsm(self, model: BDF) -> None:
         ids = self.ids
         if ids == ['ALL']:
             ids = list(model.properties)
+        assert len(ids) > 0, ids
 
         for pid in ids:
             try:
@@ -964,6 +967,7 @@ def xref_nsm(self, model: BDF) -> None:
         if missing_ids:
             missing_ids.sort()
             raise KeyError(f'Missing properties on {self.type}={self.sid}: {missing_ids}')
+        assert len(properties) > 0, properties
         self.ids_ref = properties
     else:  # pragma: no cover
         model.log.error(f'nsm_type={self.nsm_type!r} is not supported for {self.type}={self.sid}')
@@ -974,10 +978,13 @@ def safe_xref_nsm(self, model: BDF) -> None:
     msg = f', which is required by {self.type}={self.sid}'
     log = model.log
     missing_ids = []
+    # if self.nsm_type in {'CROD', 'CONROD'}:
+    #     return
+    ids = self.ids
     if self.nsm_type == 'ELEMENT':
-        ids = self.ids
         if ids == ['ALL']:
             ids = list(model.elements)
+        assert len(ids) > 0, ids
 
         elements = []
         for eid in ids:
@@ -985,6 +992,7 @@ def safe_xref_nsm(self, model: BDF) -> None:
                 elem = model.Element(eid, msg=msg)
             except KeyError:
                 missing_ids.append(eid)
+                elements.append(eid)
                 continue
             elements.append(elem)
         if missing_ids:
@@ -992,32 +1000,38 @@ def safe_xref_nsm(self, model: BDF) -> None:
             element_ids = np.array(list(model.elements), dtype='int32')
             element_ids.sort()
             log.warning(f'Missing elements on {self.type}={self.sid}: {missing_ids}; element_ids={element_ids}')
+        assert len(elements) > 0, elements
         self.ids_ref = elements
 
-    elif self.nsm_type in {'PSHELL', 'PCOMP', 'PBAR', 'PBEAM', 'PBUSH', 'PTUBE', 'PROD'}:
+    elif self.nsm_type in {'PSHELL', 'PCOMP', 'PBAR', 'PBEAM', 'PBUSH', 'PTUBE', 'PROD',
+                           'PBARL', 'PBEAML'}:
         properties = []
-        ids = self.ids
         if ids == ['ALL']:
             ids = list(model.properties)
+        assert len(ids) > 0, ids
 
         for pid in ids:
             try:
                 prop = model.Property(pid, msg=msg)
             except KeyError:
                 missing_ids.append(pid)
+                properties.append(pid)
                 continue
             properties.append(prop)
         if missing_ids:
             missing_ids.sort()
             log.warning(f'Missing properties on {self.type}={self.sid}: {missing_ids}')
+        assert len(properties) > 0, properties
         self.ids_ref = properties
     else:  # pragma: no cover
         log.error(f'nsm_type={self.nsm_type!r} is not supported for {self.type}={self.sid}')
+        return
     assert len(self.ids_ref) > 0, self.ids_ref
 
 def nsm_ids(self) -> list[int]:
     if self.ids_ref is None:
         return self.ids
+    assert len(self.ids_ref) > 0, self.ids_ref
     ids = []
     for id_ref in self.ids_ref:
         if isinstance(id_ref, integer_types):

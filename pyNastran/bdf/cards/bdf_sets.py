@@ -1089,9 +1089,7 @@ class SET1(Set):
             is_skin = True
             i += 1
             ids2 = ids[i:]
-            print('ids2b', len(ids), len(ids2), None in ids2)
-        
-        print('ids2', len(ids), len(ids2), None in ids2)
+
         if None in ids2:
             ids2 = [idi for idi in ids if idi is not None]
         assert len(ids2) > 0, card

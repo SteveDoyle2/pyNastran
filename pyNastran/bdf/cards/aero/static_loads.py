@@ -1294,7 +1294,7 @@ class AEFORCE(BaseCard):
     def __init__(self, mach: float, sym_xz: str, sym_xy: str,
                  uxid: int, mesh: str,
                  force: int=0,
-                 dmik: int=0, comment: str=''):
+                 dmik: int=0, perq: str='', comment: str=''):
         """
         Creates an AEFORCE card.
 

@@ -1079,8 +1079,9 @@ class BDFAttributes:
 
         #: stores UXVEC
         self.uxvec: dict[int, UXVEC] = {}
-        self.aeforce: dict[int, AEFORCE] = {}
-        self.aepress: dict[int, AEPRESS] = {}
+        self.aeforce: list[AEFORCE] = []
+        self.aepress: list[AEPRESS] = []
+		self.aedw: list[AEDW] = []
         # self.aeload: dict[int, Any] = {}
 
         # ------ SOL 145 ------

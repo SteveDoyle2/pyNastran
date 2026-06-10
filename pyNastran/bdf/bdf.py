@@ -142,7 +142,8 @@ from .cards.aero.aero import (
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5, PAEROs,
     MONPNT1, MONPNT2, MONPNT3, MONDSP1,
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5, SPLINEs)
-from .cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG, UXVEC
+from .cards.aero.static_loads import (
+    AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG, UXVEC, AEDW, AEPRESS, AEFORCE)
 from .cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from .cards.optimization import (
     DCONADD, DCONSTR, DESVAR, TOPVAR, DDVAL, DOPTPRM, DLINK,
@@ -972,7 +973,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'PANEL', 'SWLDPRM',
             # 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP',
             # 'CYSYM', 'CYJOIN', 'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
-            # 'AEFORCE', 'UXVEC', 'GUST2',
+            # 'GUST2',
 
             # 'BNDGRID',
             # 'BNDFREE', 'BNDFREE1',
@@ -2508,8 +2509,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'BNDFIX': (Crash, None),
             #'BNDFIX1': (Crash, None),
 
-            #'AEFORCE': (Crash, None),
-            #'UXVEC': (Crash, None),
             'GUST2': (Crash, None),
 
             #'RADBND': (Crash, None),
@@ -2831,6 +2830,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'TRIM': (TRIM, add_methods.add_trim_object),
             'TRIM2': (TRIM2, add_methods.add_trim_object),
             'UXVEC': (UXVEC, add_methods.add_uxvec_object),
+            'AEDW': (AEDW, add_methods.add_aedw_object),
+            'AEPRESS': (AEPRESS, add_methods.add_aepress_object),
+            'AEFORCE': (AEFORCE, add_methods.add_aeforce_object),
             'DIVERG': (DIVERG, add_methods.add_diverg_object),
 
             # SOL 145

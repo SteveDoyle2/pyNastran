@@ -58,7 +58,7 @@ def get_stats_groups():
         'caeros', 'paeros', 'aecomps', 'aefacts', 'aelinks',
         'aelists', 'aeparams', 'aesurf', 'aesurfs', 'aestats', 'gusts', 'flfacts',
         'flutters', 'splines', 'trims', 'divergs', 'csschds',
-        'uxvec', 'aeforce', 'aepress',
+        'uxvec',
 
         # thermal
         'bcs', 'thermal_materials', 'phbdys', 'views', 'view3ds',
@@ -106,6 +106,7 @@ def get_stats_groups():
 
     list_attrs = [
         'asets', 'bsets', 'csets', 'omits', 'qsets',
+        'aeforce', 'aepress', 'aedw',
         'se_bsets', 'se_csets', 'se_qsets',
         'suport', 'se_suport',
         'monitor_points',

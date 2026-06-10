@@ -265,6 +265,7 @@ class TestNsm(unittest.TestCase):
 
         model.add_conrod(eid_conrod, mid, [1, 4])
         model.add_mat1(mid, E, G, nu, rho=0.0)
+        model.add_pshell(1, mid, t=0.1)
         # if 0:
         model.add_nsml1(1000, 'ELEMENT', 1.0, eid_conrod)  # ???
         model.add_nsml1(1000, 'PSHELL', 1.0, 'ALL')  # ???
@@ -274,6 +275,11 @@ class TestNsm(unittest.TestCase):
         model.add_nsm1(1001, 'ELEMENT', 1.0, eid_conrod)  # ???
         model.add_nsm(1000, 'ELEMENT', [eid_conrod], 1.0)  # ???
         model.add_nsm(1001, 'CONROD', [eid_conrod], 1.0)  # ???
+        model.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
+                                nxref_errors=0, stop_on_xref_error=True)
+        # model.cross_reference()
+        model.safe_cross_reference()
+
         save_load_deck(model, run_mass_properties=False)
 
     def test_nsml1_mass_by_element(self):
