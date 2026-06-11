@@ -69,7 +69,7 @@ if TYPE_CHECKING:  # pragma: no cover
         #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
         FLUTTER, MKAERO1, MKAERO2, FLFACT,
         TRIM, TRIM2, GUST, GUST2, DIVERG, CSSCHD, UXVEC,
-        AEFORCE, AEPRESS,
+        AEFORCE, AEPRESS, AEDW,
         # roter
         ROTORD, ROTORG,
         # modal
@@ -1081,7 +1081,7 @@ class BDFAttributes:
         self.uxvec: dict[int, UXVEC] = {}
         self.aeforce: list[AEFORCE] = []
         self.aepress: list[AEPRESS] = []
-		self.aedw: list[AEDW] = []
+        self.aedw: list[AEDW] = []
         # self.aeload: dict[int, Any] = {}
 
         # ------ SOL 145 ------

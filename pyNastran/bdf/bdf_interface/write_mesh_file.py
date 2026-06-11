@@ -5,6 +5,7 @@ This file defines:
 
 """
 import os
+import warnings
 from collections import defaultdict
 from typing import Optional, Any
 
@@ -15,6 +16,19 @@ from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh, _output_helper
 from pyNastran.bdf.bdf_interface.write_mesh_utils import find_aero_location
 from pyNastran.bdf.write_path import write_include
 from pyNastran.utils import PathLike
+
+
+class TrashWriter:
+    def __init__(self, log, filename: PathLike=''):
+        self.log = log
+        self.filename = str(filename)
+
+    def write(self, msg):
+        if self.filename:
+            self.log.warning(f'trying to write to {self.filename}\n{str(msg)}')
+
+    def close(self):
+        pass
 
 
 class WriteMeshs(WriteMesh):
@@ -70,6 +84,7 @@ class WriteMeshs(WriteMesh):
                 Windows is different.
             None : Check the platform
 
+        out_files_map = {}
         out_files_map[fem.active_filenames[0]] = bdf_filename[:-4] + "_NEW" + bdf_filename[-4:]
         for ifile, include_filenames in model.include_filenames.items():
             for include_filename in include_filenames:
@@ -78,6 +93,7 @@ class WriteMeshs(WriteMesh):
                 out_files_map[include_filename] = new_filename
 
         """
+        log = self.log
         assert isinstance(out_files_map, dict), out_files_map
         for key, value in out_files_map.items():
             assert isinstance(key, PathLike), type(key)
@@ -90,7 +106,17 @@ class WriteMeshs(WriteMesh):
 
         ifile_out_filenames = _map_filenames_to_ifile_filname_dict(
             out_files_map, self.active_filenames)
-        ifile0 = list(sorted(ifile_out_filenames))[0]
+        if len(ifile_out_filenames) == 0:
+            log.warning(f'active_filenames = {self.active_filenames}')
+            log.warning(f'ifile_out_filenames = {ifile_out_filenames}')
+            raise RuntimeError(ifile_out_filenames)
+            # bdf_filename = 'temp.bdf'
+            # self.write_bdf(bdf_filename, size=size, is_double=is_double, encoding=encoding,
+            #                close=close)
+            return
+        ifiles = list(sorted(ifile_out_filenames))
+        #print(f'ifiles = {ifiles}')
+        ifile0 = ifiles[0]
         #print('ifile_out_filenames =', ifile_out_filenames)
 
         out_filename0 = ifile_out_filenames[ifile0]
@@ -107,7 +133,8 @@ class WriteMeshs(WriteMesh):
         #         pass
         # devnull = DevNull()
 
-        bdf_files, bdf_file0 = _open_bdf_files(ifile_out_filenames, self.active_filenames, encoding)
+        bdf_files, bdf_file0 = _open_bdf_files(ifile_out_filenames, self.active_filenames, encoding, self.log)
+        bdf_files[-1] = bdf_file0 # TrashWriter()
 
         if bdf_file0 is not None:
             self._write_header(bdf_file0, encoding)
@@ -217,17 +244,17 @@ class WriteMeshs(WriteMesh):
         Writes the nsm in a sorted order
         """
         if self.nsms or self.nsmadds:
-            write_bdfs_dict(bdf_files, self.nsmadds, size, is_double, is_long_ids)
-            write_bdfs_dict(bdf_files, self.nsms, size, is_double, is_long_ids)
+            # write_bdfs_dict(bdf_files, self.nsmadds, size, is_double, is_long_ids)  # TODO: is this right?
+            write_bdfs_dict_list(bdf_files, self.nsmadds, size, is_double, is_long_ids)
+            write_bdfs_dict_list(bdf_files, self.nsms, size, is_double, is_long_ids)
 
     def _write_aero_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
                          is_long_ids: Optional[bool]=None) -> None:
         """Writes the aero cards"""
         if self.caeros or self.paeros or self.monitor_points or self.splines:
             write_bdfs_dict(bdf_files, self.caeros, size, is_double, is_long_ids)
+            write_bdfs_dict(bdf_files, self.paeros, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.splines, size, is_double, is_long_ids)
-            write_bdfs_dict(bdf_files, self.nsmadds, size, is_double, is_long_ids)
-            write_bdfs_dict(bdf_files, self.nsmadds, size, is_double, is_long_ids)
             for monitor_point in self.monitor_points:
                 bdf_files[monitor_point.ifile].write(monitor_point.write_card(size, is_double))
         self.zaero.write_bdf(bdf_files[0], size=8, is_double=False)
@@ -266,7 +293,8 @@ class WriteMeshs(WriteMesh):
         """Writes the flutter cards"""
         if (write_aero_in_flutter and self.aero) or self.flfacts or self.flutters or self.mkaeros:
             if write_aero_in_flutter and self.aero is not None:
-                bdf_files[self.aero.ifile].write(self.aero.write_card(size, is_double))
+                file_obj = bdf_files[_ifile(self.aero)]
+                file_obj.write(self.aero.write_card(size, is_double))
             write_bdfs_dict(bdf_files, self.flutters, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.flfacts, size, is_double, is_long_ids)
             write_bdfs_list(bdf_files, self.mkaeros, size, is_double, is_long_ids)
@@ -277,7 +305,7 @@ class WriteMeshs(WriteMesh):
         if (write_aero_in_gust and self.aero) or self.gusts:
             if write_aero_in_gust:
                 for (unused_id, aero) in sorted(self.aero.items()):
-                    bdf_files[aero.ifile].write(aero.write_card(size, is_double))
+                    bdf_files[_ifile(aero)].write(aero.write_card(size, is_double))
             write_bdfs_dict(bdf_files, self.gusts, size, is_double, is_long_ids)
 
     def _write_common_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
@@ -771,10 +799,10 @@ def write_bdfs_list(bdf_files, cards, size, is_double, is_long_ids):
     assert isinstance(cards, list), cards
     if is_long_ids:
         for card in cards:
-            bdf_files[card.ifile].write_card_16(size, is_double)
+            bdf_files[card.ifile].write(card.write_card_16(size, is_double))
     else:
         for card in cards:
-            bdf_files[card.ifile].write_card(size, is_double)
+            bdf_files[card.ifile].write(card.write_card(size, is_double))
 
 
 def _map_filenames_to_ifile_filname_dict(out_filenames: dict[str, str],
@@ -802,10 +830,11 @@ def _map_filenames_to_ifile_filname_dict(out_filenames: dict[str, str],
     return ifile_out_filenames
 
 
-def _open_bdf_files(ifile_out_filenames, active_filenames, encoding):
+def _open_bdf_files(ifile_out_filenames, active_filenames, encoding, log):
     """opens N bdf files"""
-    bdf_files = {i: None for i in range(len(active_filenames))}
+    bdf_files = {i: TrashWriter(log, fname) for i, fname in enumerate(active_filenames)}
     for ifile, out_filename in ifile_out_filenames.items():
+        log.debug('opening {str(out_filename)}')
         if hasattr(out_filename, 'read') and hasattr(out_filename, 'write'):
             bdf_file = out_filename
         else:
@@ -822,3 +851,12 @@ def write_xpoints_file(bdf_files, cardtype: str,
     assert isinstance(points, dict), points
     for point_id, point in points.items():
         bdf_files[point.ifile].write(point.write_card())
+
+
+def _ifile(card) -> int:
+    try:
+        ifile = card.ifile
+    except AttributeError:
+        warnings.warn(f'cant find ifile in\n{str(card)}')
+        ifile = -1
+    return ifile

@@ -2,6 +2,26 @@ from __future__ import annotations
 import sys
 
 
+def cmd_line_apply_diff(argv=None, quiet: bool=False) -> None:
+    if argv is None:  # pragma: no cover
+        argv = sys.argv[1:]
+    print(f'argv = {argv}')
+
+    import pyNastran
+    import argparse
+    from pyNastran.bdf.mesh_utils.bdf_diff_remove import apply_diff
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("diff", type=str)
+    parser.add_argument("bdf_filename", help='path to main BDF/DAT/NAS file', type=str)
+    parser.add_argument("diff_filename", help='path to diff BDF/DAT/NAS file', type=str)
+    args = parser.parse_args()
+    print(f'args = {args}')
+    bdf_filename = args.bdf_filename
+    diff_filename = args.diff_filename
+    apply_diff(bdf_filename, diff_filename)
+
+
 def cmd_line_diff(argv=None, quiet: bool=False) -> None:
     """command line interface to bdf_diff"""
     if argv is None:  # pragma: no cover
