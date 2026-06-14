@@ -4,6 +4,7 @@ from itertools import count
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
+from cpylog import SimpleLogger
 from pyNastran.utils.scipy_utils import dok_matrix, csc_matrix
 
 from pyNastran.dev.bdf_vectorized3.solver.elements.solids import (
@@ -617,7 +618,7 @@ def _build_kbbi_conrod_crod(
     # print(f'A = {A}')
     # k_axial = A * E / L
     # k_torsion = G * J / L
-
+    log = SimpleLogger(level='debug')
     assert isinstance(k_axial, float), k_axial
     assert isinstance(k_torsion, float), k_torsion
     k = np.array([[1.0, -1.0], [-1.0, 1.0]])  # 1D rod; element coordinate system
@@ -707,7 +708,8 @@ def _build_kbbi_conrod_crod(
         for dof2, i2 in zip(idofs, n_ijv):
             ki = Ka[dof1, dof2]
             if abs(ki) > 0.0:
-                print("a", ni1, nj2, f"({dof1}, {dof2});", (dof1, dof2), ki)
+                log.debug(f"axial {ni1} {nj2} dof1/2=({dof1}, {dof2}); k={ki}")
+                #print("a", ni1, nj2, f"({dof1}, {dof2});", (dof1, dof2), ki)
                 Kbb[i1, i2] += ki
     # print(Kbb.todense())
 
@@ -718,10 +720,10 @@ def _build_kbbi_conrod_crod(
         for dof2, i2 in zip(idofs, n_ijv):
             ki = Kt[dof1, dof2]
             if abs(ki) > 0.0:
-                print("t", ni1, nj2, f"({i1}, {i2});", (dof1, dof2), ki)
+                log.debug(f"torsion {ni1} {nj2} i1/2=({i1}, {i2}); dof1/2=({dof1}, {dof2}); k={ki}")
                 Kbb[i1, i2] += ki
         # print(K2)
-    print(Kbb.todense())
+    #print(Kbb.todense())
     return
 
 
@@ -732,8 +734,7 @@ def _build_kbb_cbeam(
     all_nids: np.ndarray,
     xyz_cid0: np.ndarray,
     idtype: str = "int32",
-    fdtype: str = "float64",
-) -> int:
+    fdtype: str = "float64",) -> int:
     """Fill the CBEAM Kbb matrix using a Timoshenko beam."""
     str(all_nids)
     str(xyz_cid0)
@@ -1068,26 +1069,6 @@ def _build_kbb_cshear(model: BDF, Kbb: dok_matrix, dof_map: DOF_MAP) -> int:
     return elem.n
 
 
-def build_Bbb_cdamp2(model: BDF, Bbb: dok_matrix, dof_map: DOF_MAP) -> int:
-    """Fill CDAMP2 damping matrix."""
-    elem = model.cdamp2
-    if elem.n == 0:
-        return 0
-    nids1 = elem.nodes[:, 0]
-    nids2 = elem.nodes[:, 1]
-    c1s = elem.components[:, 0]
-    c2s = elem.components[:, 1]
-    bs = elem.b
-    for nid1, nid2, c1, c2, bi in zip(nids1, nids2, c1s, c2s, bs):
-        i = dof_map[(nid1, c1)]
-        j = dof_map[(nid2, c2)]
-        Bbb[i, i] += bi
-        Bbb[j, j] += bi
-        Bbb[i, j] -= bi
-        Bbb[j, i] -= bi
-    return elem.n
-
-
 def Kbb_to_Kgg(
     model: BDF, Kbb: np.ndarray | csc_matrix, ngrid: int, ndof_per_grid: int, inplace=True
 ) -> NDArrayNNfloat:
@@ -1099,6 +1080,7 @@ def Kbb_to_Kgg(
     Vectorized: builds all T6 matrices at once, then applies per unique CD.
     """
     assert isinstance(Kbb, (np.ndarray, csc_matrix)), type(Kbb)
+    #Kbb = tolil(Kbb)
     if not isinstance(Kbb, np.ndarray):
         Kbb = Kbb.tolil()
 
@@ -1128,7 +1110,7 @@ def Kbb_to_Kgg(
         T6 = np.zeros((6, 6))
         T6[0:3, 0:3] = R
         T6[3:6, 3:6] = R
-        T6_map[int(cd)] = T6
+        T6_map[cd] = T6
 
     # Find all grid indices with CD != 0
     icd_nonzero = np.where(cd_array != 0)[0]

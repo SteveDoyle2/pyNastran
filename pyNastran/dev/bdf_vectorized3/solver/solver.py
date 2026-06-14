@@ -394,6 +394,7 @@ class Solver:
 
         gset_b = ps_to_sg_set(ndof, ps)
         idtype = 'int32'
+        log.warning('creating Kgg')
         Kgg = get_Kgg(
             model, dof_map, ndof, ngrid, ndof_per_grid,
             idtype=idtype, fdtype=fdtype,
@@ -406,6 +407,7 @@ class Solver:
         is_mass_load = len(model.grav) > 0 or len(model.rforce) > 0
         is_param_grdpnt = 'GRDPNT' in model.params
         if is_mass_load or is_param_grdpnt or has_suport:
+            log.warning('creating Mbb')
             Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
             page_num = write_grid_point_weight(
                 model, Mbb, dof_map, ndof,
@@ -414,10 +416,12 @@ class Solver:
                 page_stamp=page_stamp, page_num=page_num)
 
         # ----------------------MPC reduction (g -> n)----------------------
+        log.warning('creating Gmn')
         GMN, mset = self.build_GMN(subcase, dof_map, ndof, fdtype=fdtype)
         self.GMN = GMN
         self.mset = mset
 
+        log.warning('creating Mgg')
         Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid, inplace=False) if Mbb is not None else None
 
         if GMN is not None:
@@ -440,9 +444,12 @@ class Solver:
             self._autospc_n_dofs = np.array([], dtype="int32")
 
         gset = np.arange(ndof, dtype=idtype)
+        log.warning('creating xg')
         sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
+
+        log.warning('creating Fb')
         Fb = self.build_Fb(xg, sset_b, dof_map, ndof, subcase)
-        Fg = Fb
+        Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
 
         # Save g-set force for oload output before MPC transform
         Fg_gset = np.where(np.isnan(Fg), 0.0, Fg.copy())
@@ -640,6 +647,7 @@ class Solver:
 
         if has_suport and inrel == -2 and is_aset:
             # Inertia relief: partition a = l + r, apply inertia relief
+            log.warning('a = r + l')
             a_indices = np.where(aset)[0]
             r_in_a = rset_b[a_indices]
             lset_local = np.where(~r_in_a)[0]
@@ -696,6 +704,7 @@ class Solver:
                 'D_a': D_a,
             }
         elif is_aset:
+            log.warning('a set')
             xa_, ipositive, inegative = solve(Kaa, Fa_solve, aset, log, idtype=idtype)
             Fa_ = Fa[ipositive]
 
@@ -708,9 +717,9 @@ class Solver:
             self.xa_ = xa_
             self.Fa_ = Fa_
         else:
-            self.log.warning("A-set is empty; all DOFs are constrained")
-            self.xa_ = []
-            self.Fa_ = []
+            FatalError("A-set is empty; all DOFs are constrained")
+            #self.xa_ = []
+            #self.Fa_ = []
 
         # Assemble solution in the working DOF set (n-set if GMN, else g-set)
         xn_full = np.full(ndof_solve, np.nan, dtype=fdtype)
@@ -743,16 +752,18 @@ class Solver:
             fspc[set0] = fspc_0
 
         # ----------------------MPC recovery (n -> g)----------------------
-        _, _, _, is_mpc_request = get_plot_request(subcase, 'MPCFORCES')
-        _, _, _, is_spc_request = get_plot_request(subcase, 'SPCFORCES')
-        _, _, _, is_gpforce_request = get_plot_request(subcase, 'GPFORCE')
-        _, _, _, is_oload_request = get_plot_request(subcase, 'OLOAD')
-        is_load_recovery_request = (
-            is_spc_request or is_mpc_request or
-            is_gpforce_request # or is_oload_request
-        )
+        is_mpc_request = get_plot_request(subcase, 'MPCFORCES')[-1]
+        is_spc_request = get_plot_request(subcase, 'SPCFORCES')[-1]
+        is_gpforce_request = get_plot_request(subcase, 'GPFORCE')[-1]
+        is_oload_request = get_plot_request(subcase, 'OLOAD')[-1]
+        #is_load_recovery_request = (
+        #    is_spc_request or is_mpc_request or
+        #    is_gpforce_request # or is_oload_request
+        #    or 1
+        #)
 
-        if is_load_recovery_request and GMN is not None:
+        if GMN is not None:
+            log.warning('recover SPC/MPC forces')
             # Expand n-set solution to g-set: xg = GMN @ xn
             xn_solve = np.where(np.isnan(xn_full), 0.0, xn_full)
             xg = np.asarray(GMN @ xn_solve).ravel()
@@ -768,6 +779,7 @@ class Solver:
             Fg_out = Fg_g
             fspc = fspc_g
             ndof_out = ndof
+            #log.warning(f'ndof_out={ndof_out}; fspc.shape={fspc.shape}')
 
             # MPC forces: F_mpc = Kgg @ xg - Fg_applied at dependent DOFs
             # The MPC force is the reaction needed to enforce the constraint
@@ -801,6 +813,7 @@ class Solver:
 
         # SPCFORCE resultant
         #if 'SPCFORCES' in subcase:
+        ndofi = ngrid * ndof_per_grid
         page_num = _write_spcforce_resultant(
             f06_file, fspc, ngrid, ndof_per_grid, isubcase,
             page_stamp, page_num, log)
@@ -1347,6 +1360,7 @@ class Solver:
         # Static preload solve
         sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
         Fb = self.build_Fb(xg, sset_b, dof_map, ndof, subcase)
+        Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
 
         free_dofs = np.where(~sset_b)[0]
         Kff = Kgg.tocsc()[np.ix_(free_dofs, free_dofs)].toarray()
@@ -1618,7 +1632,7 @@ class Solver:
 
         page_num, out = _run_modes(
             model, subcase,
-            op2, f06_file,
+            self.op2, f06_file,
             ngrid,
             ndof_per_grid,
             ndof,
@@ -2142,8 +2156,10 @@ def apply_dof_map_to_set(
 
 
 def xg_to_xb(
-    model, xg: NDArrayNfloat, ngrid: int, ndof_per_grid: int, inplace: bool = True
-) -> NDArrayNfloat:
+    model: BDF,
+    xg: NDArrayNfloat,
+    ngrid: int, ndof_per_grid: int,
+    inplace: bool = True) -> NDArrayNfloat:
     assert isinstance(xg, np.ndarray)
     str(ngrid)
 
@@ -2163,6 +2179,31 @@ def xg_to_xb(
             xi = xg[i1:i2]
             xb[i1:i2] = xi @ T  # TODO: verify the transform; I think it's right
     return xb
+
+def xb_to_xg(
+    model: BDF,
+    xb: NDArrayNfloat,
+    ngrid: int, ndof_per_grid: int,
+    inplace: bool = True) -> NDArrayNfloat:
+    assert isinstance(xb, np.ndarray)
+    str(ngrid)
+
+    xg = xb
+    if not inplace:
+        xg = copy.deepcopy(xg)
+
+    nids = model._type_to_id_map["GRID"]
+    for i, nid in enumerate(nids):
+        node = model.nodes[nid]
+        if node.cd:
+            model.log.debug(f"node {nid} has a CD={node.cd}")
+            cd_ref = node.cd_ref
+            T = cd_ref.beta_n(n=2)
+            i1 = i * ndof_per_grid
+            i2 = (i + 1) * ndof_per_grid
+            xi = xb[i1:i2]
+            xg[i1:i2] = xi @ T.T  # TODO: verify the transform; I think it's right
+    return xg
 
 
 def write_oload_resultant(
@@ -2203,6 +2244,8 @@ def _write_spcforce_resultant(
     page_num: int,
     log: SimpleLogger,) -> int:
     """Write SPCFORCE RESULTANT table to F06."""
+    ndof = ngrid * ndof_per_grid
+    assert fspc.shape == (ndof,), (f'fspc.shape={fspc.shape}, ngrid={ngrid}, ngrid*6={ngrid*6}')
     fxyz_mxyz = fspc[:ngrid * ndof_per_grid].reshape(ngrid, ndof_per_grid)
     fxyz_mxyz_sum = fxyz_mxyz.sum(axis=0)
     spc_resultant = Resultant("SPCFORCE", fxyz_mxyz_sum, isubcase)
@@ -2660,8 +2703,7 @@ def _write_mass_participation_f06(f06_file: TextIO,
     eff_ratio = mpf['effective_mass_ratio']
     cum_ratio = mpf['cumulative_ratio']
 
-    f06_file.write('\n')
-    f06_file.write('                              M O D A L   E F F E C T I V E   M A S S\n')
+    f06_file.write('\n                              M O D A L   E F F E C T I V E   M A S S\n')
     f06_file.write('\n')
     f06_file.write('  MODE    FREQUENCY        T1             T2             T3'
                    '             R1             R2             R3\n')
@@ -2672,12 +2714,10 @@ def _write_mass_participation_f06(f06_file: TextIO,
             f06_file.write(f'  {eff_mass[i, j]:13.6E}')
         f06_file.write('\n')
 
-    f06_file.write('\n')
     f06_file.write(
+        '\n'
         '                      M O D A L   E F F E C T I V E   M A S S'
-        '   F R A C T I O N\n'
-    )
-    f06_file.write('\n')
+        '   F R A C T I O N\n\n')
     f06_file.write('  MODE    FREQUENCY        T1             T2             T3'
                    '             R1             R2             R3\n')
 
@@ -3087,8 +3127,9 @@ def get_Kgg(model: BDF, dof_map: DOF_MAP,
         else:
             Kgg = csc_matrix(Kgg_override[:ndof, :ndof])
     else:
-        Kgg = build_Kgg(model, dof_map, ndof, ngrid, ndof_per_grid,
-                        idtype=idtype, fdtype=fdtype)
+        Kgg = build_Kgg(
+            model, dof_map, ndof, ngrid, ndof_per_grid,
+            idtype=idtype, fdtype=fdtype)
     assert Kgg is not None, Kgg
     return Kgg
 
