@@ -531,6 +531,46 @@ class TestStaticSpring(unittest.TestCase):
 
 class TestStaticRod(unittest.TestCase):
     """tests the rods"""
+    def test_crod_conrod_ctube_axial(self):
+        """Tests a CROD/PROD"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'crod_axial.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        nids = [1, 2]
+        eid = 1
+        pid = 2
+        mid = 3
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(
+            mid, E, G, nu, rho=0.1, alpha=0.0, tref=0.0, ge=0.0,
+            St=0.0, Sc=0.0, Ss=0.0, mcsid=0)
+        model.add_crod(eid, pid, nids)
+        model.add_prod(pid, mid, A=1.0, j=0., c=0., nsm=0.1)
+
+        model.add_conrod(eid, mid, nids, A=1.0)
+
+        model.add_ctube(eid, pid+1, nids)
+        model.add_ptube(pid+1, mid, OD1=1.0, t=0.1, nsm=0.1)
+
+        load_id = 2
+        spc_id = 3
+        nid = 2
+        mag = 1.
+        fxyz = np.array([1., 0., 0.])
+        model.add_force(load_id, nid, mag, fxyz, cid=0)
+
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_static_case_control(model)
+        solver = Solver(model)
+        #with self.assertRaises(RuntimeError):
+        solver.run()
+
     def test_crod_axial(self):
         """Tests a CROD/PROD"""
         log = SimpleLogger(level='warning', encoding='utf-8')
