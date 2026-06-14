@@ -77,6 +77,8 @@ from .recover.static_force import recover_force_101
 from .recover.static_stress import recover_stress_101
 from .recover.static_strain import recover_strain_101
 from .recover.strain_energy import recover_strain_energy_101
+
+from .loads.build_fb import build_Fb_from_loadid
 from .build_stiffness import build_Kgg, DOF_MAP, Kbb_to_Kgg
 from .modal_frequency import get_freq_damping
 from .partition import partition_matrix, partition_vector, partition_vector2, partition_vector3
@@ -92,29 +94,24 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.breakdowns import NO_MASS  # , 
 from .build_stiffness import (
     _COOAccumulator,
     build_Kgg, Kbb_to_Kgg,
-    build_KDgg_beam,
-    build_thermal_load_beam)
+    build_KDgg_beam)
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     beam_pg_distributed, beam_pg_point,
     consistent_mass, lumped_mass,
     beam_transform,)
 from .elements.shells import (
-    build_KDgg_cquad4, build_KDgg_ctria3,
-    build_pload4_cquad4, build_pload4_ctria3,
-    build_thermal_load_cquad4, build_thermal_load_ctria3,
-)
+    build_KDgg_cquad4, build_KDgg_ctria3)
 from .elements.solids import build_KDgg_solids, build_mbb_solids
 #--------------------------------------------------------
 from .recover.utils import get_plot_request
 from .utils import recast_data
 
 from .craig_bampton import run_craig_bampton, write_cb_to_op4, write_cb_to_h5
-from .loads.pload1 import apply_pload1
-from .loads.grav_rforce import apply_rforce, apply_grav
 
 from pyNastran.dev.bdf_vectorized3.mesh_utils.inertia_relief import (
     build_rigid_body_modes, compute_inertia_relief,
 )
+from pyNastran.dev.bdf_vectorized3.mesh_utils.gmn_matrix import assemble_gmn
 
 
 
@@ -228,132 +225,33 @@ class Solver:
         for card_type, values in self.model._type_to_id_map.items():
             self.model.card_count[card_type] = len(values)
 
-    def build_Fb(
-        self, xg: NDArrayNfloat, sset_b, dof_map: DOF_MAP, ndof: int, subcase: Subcase
-    ) -> NDArrayNfloat:
+    def build_Fb(self, xg: NDArrayNfloat, sset_b,
+                 dof_map: DOF_MAP, ndof: int,
+                 subcase: Subcase) -> NDArrayNfloat:
         model = self.model
         log = model.log
         log.info("starting build_Fb")
 
-        Fb = np.zeros(ndof, dtype="float32")
-
         has_load = "LOAD" in subcase
         has_temp = "TEMPERATURE(LOAD)" in subcase or "TEMPERATURE(BOTH)" in subcase
 
-        if not has_load and not has_temp:
-            return Fb
-
+        load_id = 0
+        temp_load_id = 0
         if has_load:
             load_id, unused_options = subcase["LOAD"]
-            reduced_loads = model.get_reduced_static_load()
 
-            loads = reduced_loads[load_id]
-            for scale, load in loads:
-                if load.type == "SLOAD":
-                    for mag, nid in zip(load.mags, load.nodes):
-                        i = dof_map[(nid, 0)]  # TODO: wrong...
-                        Fb[i] = mag * scale
-                elif load.type == "FORCE":
-                    # TODO: wrong because it doesn't handle SPOINTs
-                    fxyz_myz = load.sum_forces_moments()
-                    fxyz = fxyz_myz[:, :3]
-                    nids = load.node_id
-                    log.debug(f"  FORCE nids={nids} Fxyz={fxyz}")
-                    for fxyzi, nid in zip(fxyz, nids):
-                        assert len(fxyzi) == 3
-                        fi = dof_map[(nid, 1)]
-                        Fb[fi : fi + 3] = fxyzi
-
-                elif load.type == "MOMENT":
-                    fxyz_myz = load.sum_forces_moments()
-                    mxyz = fxyz_myz[:, 3:]
-                    nids = load.node_id
-                    log.debug(f"  MOMENT nid={nids} Mxyz={mxyz}")
-                    for mxyzi, nid in zip(mxyz, nids):
-                        fi = dof_map[(nid, 4)]
-                        assert len(mxyzi) == 3
-                        Fb[fi : fi + 3] = mxyzi
-                elif load.type == "SPCD":
-                    for nid, components, enforced in zip(
-                        load.nodes, load.components, load.enforced
-                    ):
-                        for component in str(components):
-                            dof = int(component)
-                            fi = dof_map[(nid, dof)]
-                            xg[fi] = enforced
-                            Fb[fi] = np.nan
-                            sset_b[fi] = True
-                elif load.type == "PLOAD1":
-                    apply_pload1(model, load, scale, Fb, dof_map, log)
-                elif load.type == "PLOAD4":
-                    build_pload4_cquad4(model, Fb, dof_map, load_id)
-                    build_pload4_ctria3(model, Fb, dof_map, load_id)
-                elif load.type == "GRAV":
-                    apply_grav(model, load, scale, Fb, dof_map, ndof, log)
-                elif load.type == "RFORCE":
-                    apply_rforce(model, load, scale, Fb, dof_map, ndof, log)
-                else:
-                    print(load.get_stats())
-                    raise NotImplementedError(load)
-
-        # Thermal loads via TEMPERATURE(LOAD) or TEMPERATURE(BOTH)
         if has_temp:
             if "TEMPERATURE(LOAD)" in subcase:
                 temp_load_id, _ = subcase["TEMPERATURE(LOAD)"]
             else:
                 temp_load_id, _ = subcase["TEMPERATURE(BOTH)"]
-            node_temperatures = self._get_node_temperatures(temp_load_id)
-            if node_temperatures:
-                log.debug(f"  Thermal load: {len(node_temperatures)} nodes with dT")
-                build_thermal_load_cquad4(model, Fb, dof_map, node_temperatures)
-                build_thermal_load_ctria3(model, Fb, dof_map, node_temperatures)
-                build_thermal_load_beam(model, Fb, dof_map, node_temperatures)
 
+        Fb = build_Fb_from_loadid(
+            model, dof_map, ndof,
+            xg, sset_b,
+            load_id=load_id, temp_load_id=temp_load_id)
         log.info("end of build_Fb")
         return Fb
-
-    def _get_node_temperatures(self, temp_load_id: int) -> dict[int, float]:
-        """Build a dict of {node_id: temperature} from TEMP/TEMPD cards.
-
-        Parameters
-        ----------
-        temp_load_id : int
-            Load set ID referencing TEMP/TEMPD cards.
-
-        Returns
-        -------
-        node_temperatures : dict[int, float]
-            Temperature at each grid point.
-        """
-        model = self.model
-        node_temperatures: dict[int, float] = {}
-
-        # Default temperature from TEMPD
-        default_temp = None
-        if model.tempd.n > 0:
-            tempd = model.tempd
-            idx = np.where(tempd.load_id == temp_load_id)[0]
-            if len(idx) > 0:
-                default_temp = float(tempd.temperature[idx[0]])
-
-        # Apply default to all grid points
-        if default_temp is not None:
-            for nid in model.grid.node_id:
-                node_temperatures[int(nid)] = default_temp
-
-        # Override with explicit TEMP cards
-        if model.temp.n > 0:
-            temp = model.temp
-            idx = np.where(temp.load_id == temp_load_id)[0]
-            for i in idx:
-                inode = temp.inode
-                i0, i1 = inode[i]
-                for j in range(i0, i1):
-                    nid = int(temp.node_id[j])
-                    t_val = float(temp.temperature[j])
-                    node_temperatures[nid] = t_val
-
-        return node_temperatures
 
     def build_GMN(
         self, subcase: Subcase, dof_map: DOF_MAP, ndof: int,
@@ -421,7 +319,6 @@ class Solver:
         rigid_m_set = None
 
         if has_rigid:
-            from pyNastran.dev.bdf_vectorized3.mesh_utils.gmn_matrix import assemble_gmn
             try:
                 rigid_gmn_rows, rigid_m_set, _ = assemble_gmn(
                     model, dof_map=dof_map, ndof=ndof, apply_cd=True)
@@ -615,6 +512,7 @@ class Solver:
                 Kgg = csc_matrix(Kgg_in[:ndof, :ndof])
         else:
             Kgg = build_Kgg(model, dof_map, ndof, ngrid, ndof_per_grid, idtype="int32", fdtype=fdtype)
+
         Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
         if Mbb is not None:
             reference_point, MO = grid_point_weight(model, Mbb, dof_map, ndof)
@@ -883,19 +781,15 @@ class Solver:
             # Build a-set mass matrix (dense)
             M_a = partition_matrix(
                 Mgg, [("a", aset), ("s", sset), ("0", set0)])
-            Maa_dense = M_a["aa"]
-            if hasattr(Maa_dense, 'toarray'):
-                Maa_dense = Maa_dense.toarray()
-
+            Maa_dense = todense(M_a["aa"])
+                
             # Apply inertia relief
             F_net, a_rigid, F_inertia = compute_inertia_relief(
                 Maa_dense, D_a, Fa_solve)
             log.info(f"  rigid body acceleration: {a_rigid}")
 
             # Partition to l-set and solve
-            Kaa_dense = Kaa
-            if hasattr(Kaa_dense, 'toarray'):
-                Kaa_dense = Kaa_dense.toarray()
+            Kaa_dense = todense(Kaa)
             Kll = Kaa_dense[np.ix_(lset_local, lset_local)]
             Fl = F_net[lset_local]
 
@@ -2620,13 +2514,11 @@ def _write_spcforce_resultant(
     spc_resultant.write_f06(f06_file, page_stamp, page_num)
 
 
-def solve(
-    Kaa: lil_matrix,
-    Fa_solve: np.ndarray,
-    aset: np.ndarray,
-    log: SimpleLogger,
-    idtype: str = "int32",
-):
+def solve(Kaa: lil_matrix,
+          Fa_solve: np.ndarray,
+          aset: np.ndarray,
+          log: SimpleLogger,
+          idtype: str = "int32",):
     """solves [K]{u} = {F}"""
     log.info("starting solve")
     Kaa_, ipositive, inegative, unused_sz_set = remove_rows(Kaa, aset, idtype=idtype)
@@ -2671,14 +2563,13 @@ def solve(
     return xas_, ipositive, inegative
 
 
-def build_Mbb(
-    model: BDF, subcase: Subcase, dof_map: DOF_MAP, ndof: int, fdtype="float64"
-) -> NDArrayNNfloat:
+def build_Mbb(model: BDF, subcase: Subcase,
+              dof_map: DOF_MAP, ndof: int, fdtype="float64") -> NDArrayNNfloat:
     """builds the mass matrix in the basic frame, [Mbb]"""
     log = model.log
     log.info("starting build_Mbb")
     wtmass = 1.0
-    _coo_m = _COOAccumulator(ndof)
+    coo_m = _COOAccumulator(ndof)
     str(model)
     str(subcase)
     # no_mass = {
@@ -2686,32 +2577,20 @@ def build_Mbb(
     #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
     # }
 
-    mass_rod_2x2 = (
-        np.array(
-            [
-                [2, 0, 1, 0],
-                [0, 2, 0, 1],
-                [1, 0, 2, 0],
-                [0, 1, 0, 2],
-            ],
-            dtype="float64",
-        )
-        / 3.0
-    )
-    mass_tri = (
-        np.array(
-            [
-                [4, 0, 2, 0, 1, 0],
-                [0, 4, 0, 2, 0, 1],
-                [2, 0, 4, 0, 2, 0],
-                [0, 2, 0, 4, 0, 2],
-                [1, 0, 2, 0, 4, 0],
-                [0, 1, 0, 2, 0, 4],
-            ],
-            dtype="float64",
-        )
-        / 6.0
-    )
+    mass_rod_2x2 = 1/3 * np.array([
+        [2, 0, 1, 0],
+        [0, 2, 0, 1],
+        [1, 0, 2, 0],
+        [0, 1, 0, 2],
+    ], dtype="float64")
+    mass_tri = 1/6 * np.array([
+        [4, 0, 2, 0, 1, 0],
+        [0, 4, 0, 2, 0, 1],
+        [2, 0, 4, 0, 2, 0],
+        [0, 2, 0, 4, 0, 2],
+        [1, 0, 2, 0, 4, 0],
+        [0, 1, 0, 2, 0, 4],
+    ], dtype="float64")
     # mass_quad_1x1 = np.array([
     # [1, 0, 1, 0, 1, 0, 1, 0],
     # [0, 1, 0, 1, 0, 1, 0, 1],
@@ -2723,22 +2602,16 @@ def build_Mbb(
     # [0, 1, 0, 1, 0, 1, 0, 1],
     # ], dtype='float64') / 36.
 
-    mass_quad_2x2 = (
-        np.array(
-            [
-                [4, 0, 2, 0, 1, 0, 2, 0],
-                [0, 4, 0, 2, 0, 1, 0, 2],
-                [2, 0, 4, 0, 2, 0, 1, 0],
-                [0, 2, 0, 4, 0, 2, 0, 1],
-                [1, 0, 2, 0, 4, 0, 2, 0],
-                [0, 1, 0, 2, 0, 4, 0, 2],
-                [2, 0, 1, 0, 2, 0, 4, 0],
-                [0, 2, 0, 1, 0, 2, 0, 4],
-            ],
-            dtype="float64",
-        )
-        / 36.0
-    )
+    mass_quad_2x2 = 1/36 * np.array([
+        [4, 0, 2, 0, 1, 0, 2, 0],
+        [0, 4, 0, 2, 0, 1, 0, 2],
+        [2, 0, 4, 0, 2, 0, 1, 0],
+        [0, 2, 0, 4, 0, 2, 0, 1],
+        [1, 0, 2, 0, 4, 0, 2, 0],
+        [0, 1, 0, 2, 0, 4, 0, 2],
+        [2, 0, 1, 0, 2, 0, 4, 0],
+        [0, 2, 0, 1, 0, 2, 0, 4],
+    ], dtype="float64")
 
     mass_total = 0.0
     if model.conm1:
@@ -2750,12 +2623,11 @@ def build_Mbb(
             # TODO: support CID
             if nid_ref.cd != elem.cid:
                 log.warning(
-                    f"  CONM1 eid={eid} nid={nid} CD={nid_ref.cd} to cid={elem.cid} is not supported"
-                )
+                    f"  CONM1 eid={eid} nid={nid} CD={nid_ref.cd} to cid={elem.cid} is not supported")
         else:  # pragma: no cover
             print(elem.get_stats())
             raise NotImplementedError(elem)
-        _coo_m.add_matrix(list(range(i1, i1 + 6)), elem.mass_matrix)
+        coo_m.add_matrix(list(range(i1, i1 + 6)), elem.mass_matrix)
 
     # PARAM,COUPMASS: 1 => consistent mass, -1 or absent => lumped
     use_consistent_shells = False
@@ -2765,30 +2637,18 @@ def build_Mbb(
             use_consistent_shells = True
 
     # Consistent mass matrices for shells (m/36 * [4,2,1,2;...])
-    mass_quad_consistent = (
-        np.array(
-            [
-                [4, 2, 1, 2],
-                [2, 4, 2, 1],
-                [1, 2, 4, 2],
-                [2, 1, 2, 4],
-            ],
-            dtype="float64",
-        )
-        / 36.0
-    )
-    mass_tri_consistent = (
-        np.array(
-            [
-                [2, 1, 1],
-                [1, 2, 1],
-                [1, 1, 2],
-            ],
-            dtype="float64",
-        )
-        / 12.0
-    )
-
+    mass_quad_consistent = 1/36 * np.array([
+        [4, 2, 1, 2],
+        [2, 4, 2, 1],
+        [1, 2, 4, 2],
+        [2, 1, 2, 4],
+    ], dtype="float64")
+    mass_tri_consistent = 1/12 * np.array([
+        [2, 1, 1],
+        [1, 2, 1],
+        [1, 1, 2],
+    ], dtype="float64")
+    
     # has possibility of mass
     has_mass = False
 
@@ -2801,7 +2661,7 @@ def build_Mbb(
 
         has_mass = True
         if etype == "CONM2":
-            mass_total = conm2_fill_Mbb(model, mass_total, _coo_m, dof_map)
+            mass_total = conm2_fill_Mbb(model, mass_total, coo_m, dof_map)
 
         elif etype in ["CROD", "CONROD", "CTUBE"]:
             # verified
@@ -2816,7 +2676,7 @@ def build_Mbb(
                 i1 = dof_map[(nid1, 1)]
                 j1 = dof_map[(nid2, 1)]
                 ii = [i1, i1 + 1, j1, j1 + 1]
-                _coo_m.add_matrix(ii, mass_rod_2x2 * mass)
+                coo_m.add_matrix(ii, mass_rod_2x2 * mass)
         elif etype in {"CBAR", "CBEAM"}:
             # PARAM,COUPMASS,1 => consistent; default (0 or absent) => lumped
             use_consistent = False
@@ -2869,7 +2729,7 @@ def build_Mbb(
                     gi1, gi1 + 1, gi1 + 2, gi1 + 3, gi1 + 4, gi1 + 5,
                     gi2, gi2 + 1, gi2 + 2, gi2 + 3, gi2 + 4, gi2 + 5,
                 ]
-                _coo_m.add_matrix(n_ijv, M_basic)
+                coo_m.add_matrix(n_ijv, M_basic)
         elif etype == "CTRIA3":
             masses = elem.mass()
             if masses.sum() == 0.0:
@@ -2884,15 +2744,15 @@ def build_Mbb(
                     M_consist = mass_tri_consistent * massi
                     for dof_offset in range(3):
                         ii = [dof_map[(n, 1)] + dof_offset for n in nids_e]
-                        _coo_m.add_matrix(ii, M_consist)
+                        coo_m.add_matrix(ii, M_consist)
                 else:
                     # Lumped: m/3 per node on Tx, Ty, Tz
                     m_node = massi / 3.0
                     for nid in [nid1, nid2, nid3]:
                         i1 = dof_map[(nid, 1)]
-                        _coo_m.add_scalar(i1, i1, m_node)
-                        _coo_m.add_scalar(i1 + 1, i1 + 1, m_node)
-                        _coo_m.add_scalar(i1 + 2, i1 + 2, m_node)
+                        coo_m.add_scalar(i1, i1, m_node)
+                        coo_m.add_scalar(i1 + 1, i1 + 1, m_node)
+                        coo_m.add_scalar(i1 + 2, i1 + 2, m_node)
             # Mbb[i1, i1] = Mbb[i1+1, i1+1] = Mbb[i1+2, i1+2] = \
             # Mbb[i2, i2] = Mbb[i2+1, i2+1] = Mbb[i2+2, i2+2] = \
             # Mbb[i3, i3] = Mbb[i3+1, i3+1] = Mbb[i3+2, i3+2] = mass / 3
@@ -2911,15 +2771,15 @@ def build_Mbb(
                     M_consist = mass_quad_consistent * massi
                     for dof_offset in range(3):
                         ii = [dof_map[(n, 1)] + dof_offset for n in nids_e]
-                        _coo_m.add_matrix(ii, M_consist)
+                        coo_m.add_matrix(ii, M_consist)
                 else:
                     # Lumped: m/4 per node on Tx, Ty, Tz
                     m_node = massi / 4.0
                     for nid in [nid1, nid2, nid3, nid4]:
                         i1 = dof_map[(nid, 1)]
-                        _coo_m.add_scalar(i1, i1, m_node)
-                        _coo_m.add_scalar(i1 + 1, i1 + 1, m_node)
-                        _coo_m.add_scalar(i1 + 2, i1 + 2, m_node)
+                        coo_m.add_scalar(i1, i1, m_node)
+                        coo_m.add_scalar(i1 + 1, i1 + 1, m_node)
+                        coo_m.add_scalar(i1 + 2, i1 + 2, m_node)
             # if 0:  # pragma: no cover
             # mass4 = mass / 9. # 4/36
             # mass2 = mass / 18. # 2/36
@@ -2993,7 +2853,7 @@ def build_Mbb(
                     i4,
                     i4 + 1,
                 ]
-                _coo_m.add_matrix(ii, mass_quad_2x2 * massi)
+                coo_m.add_matrix(ii, mass_quad_2x2 * massi)
         elif etype in {"CHEXA", "CTETRA", "CPENTA"}:
             pass  # handled below
         else:  # pragma: no cover
@@ -3001,10 +2861,10 @@ def build_Mbb(
             raise NotImplementedError(elem)
 
     # Solid elements (CHEXA, CTETRA, CPENTA) — consistent mass
-    mass_total += build_mbb_solids(model, _coo_m, dof_map)
+    mass_total += build_mbb_solids(model, coo_m, dof_map)
 
     # Convert COO accumulator to sparse CSC
-    Mbb = _coo_m.to_csc()
+    Mbb = coo_m.to_csc()
 
     if wtmass != 1.0:
         Mbb *= wtmass
@@ -3216,9 +3076,8 @@ def get_ndof(model: BDF, subcase: Subcase) -> tuple[int, int, int]:
     return ngrid, ndof_per_grid, ndof
 
 
-def conm2_fill_Mbb(
-    model: BDF, mass_total: float, _coo_m, dof_map: dict[tuple[int, int], int]
-) -> float:
+def conm2_fill_Mbb(model: BDF, mass_total: float,
+                   coo_m, dof_map: dict[tuple[int, int], int]) -> float:
     eye3 = np.eye(3, dtype="float64")
     conm2 = model.conm2
     log = model.log
@@ -3287,7 +3146,7 @@ def conm2_fill_Mbb(
         M6[:3, 3:] = mx
         M6[3:, :3] = mx.T
         M6[3:, 3:] = I
-        _coo_m.add_matrix(list(range(i1, i1 + 6)), M6)
+        coo_m.add_matrix(list(range(i1, i1 + 6)), M6)
         mass_total += mass
     return mass_total
 
@@ -3411,11 +3270,7 @@ def _run_modes(
         nl = len(lset_local)
         log.info(f"SUPORT r-set: {nr} DOFs, l-set: {nl} DOFs")
 
-        if hasattr(Kaa, 'toarray'):
-            Kaa_dense = Kaa.toarray()
-        else:
-            Kaa_dense = np.asarray(Kaa)
-
+        Kaa_dense = todense(Kaa)
         Kll = Kaa_dense[np.ix_(lset_local, lset_local)]
         Mll = Maa[np.ix_(lset_local, lset_local)]
 
@@ -3637,8 +3492,7 @@ def solve_eigenvector(
     ndof: int,
     neigenvalues: int,
     use_lobpcg: bool = False,
-    X0: np.ndarray | None = None,
-) -> tuple[np.ndarray, np.ndarray]:
+    X0: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray]:
     """Solve the generalized eigenproblem K*x = lambda*M*x.
 
     Parameters
@@ -3698,7 +3552,9 @@ def solve_eigenvector(
     return eigenvalues, xa
 
 
-def _build_xg(model: BDF, dof_map: DOF_MAP, ndof: int, subcase: Subcase) -> NDArrayNfloat:
+def _build_xg(model: BDF,
+              dof_map: DOF_MAP, ndof: int,
+              subcase: Subcase) -> NDArrayNfloat:
     """
     Builds the {xg} vector, which has all SPCs in the analysis (cd) frame
     (called global g by NASTRAN)
@@ -3768,3 +3624,55 @@ def _build_xg(model: BDF, dof_map: DOF_MAP, ndof: int, subcase: Subcase) -> NDAr
     spc_set = np.array(spc_set, dtype="int32")
     # print('spc_set =', spc_set, xspc)
     return spc_set, sset, xspc
+
+
+def _get_node_temperatures(model: BDF,
+                           temp_load_id: int) -> dict[int, float]:
+    """Build a dict of {node_id: temperature} from TEMP/TEMPD cards.
+
+    Parameters
+    ----------
+    temp_load_id : int
+        Load set ID referencing TEMP/TEMPD cards.
+
+    Returns
+    -------
+    node_temperatures : dict[int, float]
+        Temperature at each grid point.
+    """
+    node_temperatures: dict[int, float] = {}
+
+    # Default temperature from TEMPD
+    default_temp = None
+    if model.tempd.n > 0:
+        tempd = model.tempd
+        idx = np.where(tempd.load_id == temp_load_id)[0]
+        if len(idx) > 0:
+            default_temp = tempd.temperature[idx[0]]
+
+    # Apply default to all grid points
+    if default_temp is not None:
+        for nid in model.grid.node_id:
+            node_temperatures[nid] = default_temp
+
+    # Override with explicit TEMP cards
+    if model.temp.n > 0:
+        temp = model.temp
+        idx = np.where(temp.load_id == temp_load_id)[0]
+        for i in idx:
+            inode = temp.inode
+            i0, i1 = inode[i]
+            for j in range(i0, i1):
+                nid = temp.node_id[j]
+                t_val = temp.temperature[j]
+                node_temperatures[nid] = t_val
+
+    return node_temperatures
+
+
+def todense(matrix: np.ndarray):
+    if hasattr(matrix, 'toarray'):
+        dense_matrix = matrix.toarray()
+    else:
+        dense_matrix = np.asarray(matrix)
+    return dense_matrix

@@ -8,7 +8,6 @@ from pyNastran.dev.bdf_vectorized3.solver.solver import Solver, BDF, partition_v
 
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.f06.errors import FatalError
-from pyNastran.dev.solver.solver import Solver as SolverOld, BDF as BDFold
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
 PKG_PATH = Path(pyNastran.__path__[0])
@@ -222,57 +221,46 @@ class TestStaticSpring(unittest.TestCase):
     def _test_celas2_cd(self):
         """Tests a CELAS2"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        model_old = BDFold(log=log, mode='msc')
-        modelv = BDF(log=log, mode='msc')
-        models = [model_old, modelv]
-        for model in models:
-            model.bdf_filename = TEST_DIR / 'celas2.bdf'
-            model.add_grid(1, [0., 0., 0.])
-            cd = 100
-            model.add_grid(2, [0., 0., 0.], cd=cd)
-            origin = [0., 0., 0.]
-            zaxis = [0., 0., 1.]
-            xzplane = [0., 1., 0.]
-            model.add_cord2r(cd, origin, zaxis, xzplane, rid=0, setup=True, comment='')
-            nids = [1, 2]
-            eid = 1
-            k = 1000.
-            model.add_celas2(eid, k, nids, c1=1, c2=2, ge=0., s=0., comment='')
+        model = BDF(log=log, mode='msc')
 
-            load_id = 2
-            spc_id = 3
-            # model.add_sload(load_id, 2, 20.)
-            fxyz = np.array([1., 0., 0.])
-            mag = 20.
-            model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
+        model.bdf_filename = TEST_DIR / 'celas2.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        cd = 100
+        model.add_grid(2, [0., 0., 0.], cd=cd)
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [0., 1., 0.]
+        model.add_cord2r(cd, origin, zaxis, xzplane, rid=0, setup=True, comment='')
+        nids = [1, 2]
+        eid = 1
+        k = 1000.
+        model.add_celas2(eid, k, nids, c1=1, c2=2, ge=0., s=0., comment='')
 
-            components = 123456
-            nodes = 1
-            model.add_spc1(spc_id, components, nodes, comment='')
-            setup_static_case_control(model)
+        load_id = 2
+        spc_id = 3
+        # model.add_sload(load_id, 2, 20.)
+        fxyz = np.array([1., 0., 0.])
+        mag = 20.
+        model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
 
-        solver_old = SolverOld(model_old)
-        solver_old.run()
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_static_case_control(model)
 
-        solverv = Solver(modelv)
-        solverv.run()
+        solver = Solver(model)
+        solver.run()
 
         # F = k * d
         d = mag / k
-        Fg1 = solver_old.Fg
-        Fg2 = solverv.Fg
-
-        Kgg1 = solver_old.Kgg
-        Kgg2 = solverv.Kgg
-
-        Kaa1 = solver_old.Kaa.toarray()
-        Kaa2 = solverv.Kaa.toarray()
+        Fg = solver.Fg
+        Kgg = solver.Kgg
+        Kaa2 = solver.Kaa.toarray()
         Fg_expected = [ 0., 0.0, 0., 0., 0., 0.,
                         20., 0., 0., 0., 0., 0.]
-        assert np.allclose(Fg2, Fg_expected), f'Force Error:\n Fg2={Fg2}\n Fg_expected={Fg_expected}'
-        assert np.allclose(Kgg1, Kgg2)
-        assert np.allclose(Kaa1, Kaa2)
-        assert np.allclose(solver_old.xa_[0], d)
+        assert np.allclose(Fg, Fg_expected), f'Force Error:\n Fg2={Fg}\n Fg_expected={Fg_expected}'
+        #assert np.allclose(Kgg, Kgg)
+        #assert np.allclose(Kaa, Kaa)
         assert np.allclose(solverv.xa_[0], d)
 
     def test_celas3(self):

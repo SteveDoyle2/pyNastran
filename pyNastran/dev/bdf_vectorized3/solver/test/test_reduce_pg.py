@@ -6,9 +6,8 @@ Verifies:
 3. OMIT: Pa = Pf_a - Kao @ Koo^{-1} @ Pf_o (static condensation of loads)
 4. Full chain: MPC + SPC + OMIT combined
 """
-
-import numpy as np
 import unittest
+import numpy as np
 from pyNastran.dev.bdf_vectorized3.solver.reduce_pg import reduce_Pg_to_Pa
 
 
@@ -86,14 +85,12 @@ class TestReducePg(unittest.TestCase):
         A-set: DOFs 0,1. O-set: DOFs 2,3.
         """
         ndof = 4
-        K = np.array(
-            [
-                [2.0, -1.0, 0.0, 0.0],
-                [-1.0, 2.0, -1.0, 0.0],
-                [0.0, -1.0, 2.0, -1.0],
-                [0.0, 0.0, -1.0, 1.0],
-            ]
-        )
+        K = np.array([
+            [2.0, -1.0, 0.0, 0.0],
+            [-1.0, 2.0, -1.0, 0.0],
+            [0.0, -1.0, 2.0, -1.0],
+            [0.0, 0.0, -1.0, 1.0],
+        ])
 
         # No MPC, no SPC
         sset_b = np.zeros(ndof, dtype="bool")
@@ -113,7 +110,9 @@ class TestReducePg(unittest.TestCase):
         # Apply force at interior DOF 3 only
         Pg = np.array([0.0, 0.0, 0.0, 5.0])
 
-        Pa = reduce_Pg_to_Pa(Pg, ndof, sset_b=sset_b, mset_b=mset_b, oset_b=oset_b, Koo=Koo, Koa=Koa)
+        Pa = reduce_Pg_to_Pa(
+            Pg, ndof, sset_b=sset_b, mset_b=mset_b, oset_b=oset_b,
+            Koo=Koo, Koa=Koa)
 
         # Manual calculation:
         # Pf_a = [0.0, 0.0], Pf_o = [0.0, 5.0]
@@ -162,14 +161,12 @@ class TestReducePg(unittest.TestCase):
         # After OMIT: a-set = {1, 2}, o-set = {3, 4}
         # Build a simple stiffness for the f-set partition
         # K_ff for DOFs 1,2,3,4 (spring chain k=1):
-        Kff = np.array(
-            [
-                [2.0, -1.0, 0.0, 0.0],
-                [-1.0, 2.0, -1.0, 0.0],
-                [0.0, -1.0, 2.0, -1.0],
-                [0.0, 0.0, -1.0, 1.0],
-            ]
-        )
+        Kff = np.array([
+            [2.0, -1.0, 0.0, 0.0],
+            [-1.0, 2.0, -1.0, 0.0],
+            [0.0, -1.0, 2.0, -1.0],
+            [0.0, 0.0, -1.0, 1.0],
+        ])
         # a-indices in f-set: [0, 1] (DOFs 1,2)
         # o-indices in f-set: [2, 3] (DOFs 3,4)
         Koo = Kff[2:4, 2:4]
@@ -179,8 +176,8 @@ class TestReducePg(unittest.TestCase):
         Pg = np.array([10.0, 0.0, 0.0, 0.0, 3.0, 0.0])
 
         Pa = reduce_Pg_to_Pa(
-            Pg, ndof, sset_b=sset_b, mset_b=mset_b, oset_b=oset_b, Gm=Gm, Koo=Koo, Koa=Koa
-        )
+            Pg, ndof, sset_b=sset_b, mset_b=mset_b, oset_b=oset_b, Gm=Gm,
+            Koo=Koo, Koa=Koa)
 
         # Step by step:
         # 1. MPC: Pn = Pg_n + Gm^T @ Pg_m
@@ -234,27 +231,8 @@ class TestReducePg(unittest.TestCase):
         sset_b[0] = True
 
         Pa = reduce_Pg_to_Pa(Pg, ndof, sset_b=sset_b)
-
         assert np.allclose(Pa, np.zeros(3)), "Force at SPC should be dropped"
 
 
-if __name__ == "__main__":
-    test_spc_only()
-    print("PASS: test_spc_only")
-
-    test_mpc_force_transfer()
-    print("PASS: test_mpc_force_transfer")
-
-    test_omit_load_condensation()
-    print("PASS: test_omit_load_condensation")
-
-    test_full_chain_mpc_spc_omit()
-    print("PASS: test_full_chain_mpc_spc_omit")
-
-    test_multiple_load_vectors()
-    print("PASS: test_multiple_load_vectors")
-
-    test_zero_load_at_spc()
-    print("PASS: test_zero_load_at_spc")
-
-    print("\nAll PG reduction tests passed.")
+if __name__ == "__main__":  # pragma: no cover
+    unittest.main()

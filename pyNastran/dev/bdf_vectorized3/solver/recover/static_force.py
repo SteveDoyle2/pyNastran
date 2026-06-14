@@ -2,8 +2,8 @@ from __future__ import annotations
 from typing import TextIO, Optional, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.dev.solver.utils import lambda1d
-from pyNastran.dev.bdf_vectorized3.solver.utils import get_ieids_eids, get_element
+from pyNastran.dev.bdf_vectorized3.solver.utils import (
+    get_ieids_eids, get_element, lambda1d)
 from pyNastran.op2.op2_interface.op2_classes import (
     RealSpringForceArray, RealRodForceArray, RealCBarForceArray,
 )
@@ -16,8 +16,9 @@ from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF, Subcase, CBAR, PBAR, PBARL
-    DOF_MAP = dict[tuple[int, int], int]
+    from pyNastran.bdf_vectorized3.bdf import BDF, Subcase
+    from pyNastran.bdf_vectorized3.cards import CBAR, PBAR, PBARL
+DOF_MAP = dict[tuple[int, int], int]
 
 
 def recover_force_101(f06_file: TextIO, op2: OP2,

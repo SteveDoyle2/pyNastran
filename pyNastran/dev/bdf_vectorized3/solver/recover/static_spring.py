@@ -10,7 +10,7 @@ from pyNastran.op2.op2_interface.op2_classes import (
 #from .utils import get_plot_request
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF # , Subcase
+    from pyNastran.dev.bdfvectorized3.bdf import BDF
 
 def recover_celas(f06_file, op2,
                   model: BDF, dof_map, isubcase, xg, eids_str,
@@ -141,7 +141,7 @@ def get_celas1_ostr_oes_ese(model, ielas, eids, xg, dof_map,
         strain_energy[ieid] = _recover_strain_energyi_celas12(xg, dof_map, elem, si)
 
 
-def get_celas1_ostr_ese(model, ielas, eids, xg, dof_map,
+def get_celas1_ostr_ese(model: BDF, ielas, eids, xg, dof_map,
                         strain, unused_stress, unused_force, strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
@@ -151,7 +151,7 @@ def get_celas1_ostr_ese(model, ielas, eids, xg, dof_map,
         strain[ieid] = straini
         strain_energy[ieid] = _recover_strain_energyi_celas12(xg, dof_map, elem, si)
 
-def get_celas1_ostr_oef(model, ielas, eids, xg, dof_map,
+def get_celas1_ostr_oef(model: BDF, ielas, eids, xg, dof_map,
                         strain, unused_stress, force, unused_strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
@@ -160,7 +160,7 @@ def get_celas1_ostr_oef(model, ielas, eids, xg, dof_map,
         force[ieid] = forcei
         strain[ieid] = straini
 
-def get_celas1_oes_ese(model, ielas, eids, xg, dof_map,
+def get_celas1_oes_ese(model: BDF, ielas, eids, xg, dof_map,
                        unused_strain, stress, unused_force, strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
@@ -169,7 +169,7 @@ def get_celas1_oes_ese(model, ielas, eids, xg, dof_map,
         stress[ieid] = _recover_stressi_celas12(xg, dof_map, elem, ki, si)
         strain_energy[ieid] = _recover_strain_energyi_celas12(xg, dof_map, elem, si)
 
-def get_celas1_ostr_oes_oef_ese(model, ielas, eids, xg, dof_map,
+def get_celas1_ostr_oes_oef_ese(model: BDF, ielas, eids, xg, dof_map,
                                 strain, stress, force, strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
@@ -181,7 +181,7 @@ def get_celas1_ostr_oes_oef_ese(model, ielas, eids, xg, dof_map,
         strain[ieid] = straini
         strain_energy[ieid] = _recover_strain_energyi_celas12(xg, dof_map, elem, si)
 
-def get_celas1_ostr_oes_oef(model, ielas, eids, xg, dof_map,
+def get_celas1_ostr_oes_oef(model: BDF, ielas, eids, xg, dof_map,
                             strain, stress, force, unused_strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
@@ -192,7 +192,7 @@ def get_celas1_ostr_oes_oef(model, ielas, eids, xg, dof_map,
         stress[ieid] = _recover_stressi_celas12(xg, dof_map, elem, ki, si)
         strain[ieid] = straini
 
-def get_celas1_ostr_oef_ese(model, ielas, eids, xg, dof_map,
+def get_celas1_ostr_oef_ese(model: BDF, ielas, eids, xg, dof_map,
                             strain, stress, force, unused_strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
@@ -203,7 +203,7 @@ def get_celas1_ostr_oef_ese(model, ielas, eids, xg, dof_map,
         stress[ieid] = _recover_stressi_celas12(xg, dof_map, elem, ki, si)
         strain[ieid] = straini
 
-def get_celas1_ostr_oes(model, ielas, eids, xg, dof_map,
+def get_celas1_ostr_oes(model: BDF, ielas, eids, xg, dof_map,
                         strain, stress, unused_force, unused_strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
@@ -212,14 +212,14 @@ def get_celas1_ostr_oes(model, ielas, eids, xg, dof_map,
         stress[ieid] = _recover_stressi_celas12(xg, dof_map, elem, ki, si)
         strain[ieid] = _recover_straini_celas12(xg, dof_map, elem, si)
 
-def get_celas1_ostr(model, ielas, eids, xg, dof_map,
+def get_celas1_ostr(model: BDF, ielas, eids, xg, dof_map,
                     strain, unused_stress, unused_force, unused_strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
         si = elem.pid_ref.s
         strain[ieid] = _recover_straini_celas12(xg, dof_map, elem, si)
 
-def get_celas1_oes_oef_ese(model, ielas, eids, xg, dof_map,
+def get_celas1_oes_oef_ese(model: BDF, ielas, eids, xg, dof_map,
                            unused_strain, stress, force, strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
@@ -229,7 +229,7 @@ def get_celas1_oes_oef_ese(model, ielas, eids, xg, dof_map,
         stress[ieid] = _recover_stressi_celas12(xg, dof_map, elem, ki, si)
         strain_energy[ieid] = _recover_strain_energyi_celas12(xg, dof_map, elem, si)
 
-def get_celas1_oes_oef(model, ielas, eids, xg, dof_map,
+def get_celas1_oes_oef(model: BDF, ielas, eids, xg, dof_map,
                        unused_strain, stress, force, unused_strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
@@ -238,7 +238,7 @@ def get_celas1_oes_oef(model, ielas, eids, xg, dof_map,
         force[ieid] = _recover_forcei_celas12(xg, dof_map, elem, ki)
         stress[ieid] = _recover_stressi_celas12(xg, dof_map, elem, ki, si)
 
-def get_celas1_oes(model, ielas, eids, xg, dof_map,
+def get_celas1_oes(model: BDF, ielas, eids, xg, dof_map,
                    unused_strain, stress, unused_force, unused_strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
@@ -246,7 +246,7 @@ def get_celas1_oes(model, ielas, eids, xg, dof_map,
         si = elem.pid_ref.s
         stress[ieid] = _recover_stressi_celas12(xg, dof_map, elem, ki, si)
 
-def get_celas1_oef_ese(model, ielas, eids, xg, dof_map,
+def get_celas1_oef_ese(model: BDF, ielas, eids, xg, dof_map,
                        unused_strain, unused_stress, force, strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
@@ -255,14 +255,14 @@ def get_celas1_oef_ese(model, ielas, eids, xg, dof_map,
         force[ieid] = _recover_forcei_celas12(xg, dof_map, elem, ki)
         strain_energy[ieid] = _recover_strain_energyi_celas12(xg, dof_map, elem, si)
 
-def get_celas1_oef(model, ielas, eids, xg, dof_map,
+def get_celas1_oef(model: BDF, ielas, eids, xg, dof_map,
                    unused_strain, unused_stress, force, unused_strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
         ki = elem.pid_ref.k
         force[ieid] = _recover_forcei_celas12(xg, dof_map, elem, ki)
 
-def get_celas1_ese(model, ielas, eids, xg, dof_map,
+def get_celas1_ese(model: BDF, ielas, eids, xg, dof_map,
                    unused_strain, unused_stress, unused_force, strain_energy):
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
@@ -587,7 +587,8 @@ def _save_spring_force(op2: OP2, f06_file: TextIO, page_num: int, page_stamp: st
 def _save_spring_strain_energy(op2, f06_file, page_num, page_stamp,
                                element_name,
                                strain_energy, eids, write_f06_ese: bool,
-                               isubcase: int, title: str, subtitle: str, label: str) -> None:
+                               isubcase: int, title: str, subtitle: str,
+                               label: str) -> None:
     if strain_energy is None:
         return
     if strain_energy.sum() == 0.0:

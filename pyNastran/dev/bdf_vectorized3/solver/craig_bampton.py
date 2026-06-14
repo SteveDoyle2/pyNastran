@@ -17,8 +17,9 @@ from typing import Any
 import numpy as np
 from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import factorized, eigsh
+from pyNastran.op4.op4 import OP4
 
-from pyNastran.dev.solver.utils import DOF_MAP
+DOF_MAP = dict[tuple[int, int], int]
 
 
 def run_craig_bampton(
@@ -254,8 +255,6 @@ def write_cb_to_op4(
     precision : str
         'single', 'double', or 'default'.
     """
-    from pyNastran.op4.op4 import OP4
-
     op4 = OP4()
 
     # form: 1=square, 2=rectangular, 6=symmetric

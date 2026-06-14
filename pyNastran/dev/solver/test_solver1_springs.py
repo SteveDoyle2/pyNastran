@@ -1042,6 +1042,7 @@ class TestSolverShell(unittest.TestCase):
         #os.remove(solver.f06_filename)
         #os.remove(solver.op2_filename)
 
+
 if __name__ == '__main__':   # pragma: no cover
     np.seterr(all='raise')
     unittest.main()

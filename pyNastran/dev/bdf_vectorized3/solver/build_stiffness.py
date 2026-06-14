@@ -17,7 +17,7 @@ from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     thermal_load_beam,
     geometric_stiffness,
 )
-from pyNastran.dev.solver.utils import lambda1d, DOF_MAP
+from .utils import lambda1d, DOF_MAP
 
 
 # from pyNastran.bdf.cards.elements.bars import get_bar_vector, get_bar_yz_transform
@@ -893,66 +893,6 @@ def build_KDgg_beam(
         for r, c, v in zip(KD_coo.row, KD_coo.col, KD_coo.data):
             KDbb[r, c] += v
     return total
-
-
-def build_thermal_load_beam(
-    model: BDF,
-    Fb: np.ndarray,
-    dof_map: DOF_MAP,
-    node_temperatures: dict[int, float],
-) -> None:
-    """Add beam thermal loads to the global force vector.
-
-    Parameters
-    ----------
-    model : BDF
-        The model.
-    Fb : np.ndarray
-        Global force vector to accumulate into.
-    dof_map : DOF_MAP
-        DOF map.
-    node_temperatures : dict[int, float]
-        Node temperatures.
-    """
-    for elem in [model.cbar, model.cbeam]:
-        if elem.n == 0:
-            continue
-
-        area = elem.area()
-        xyz1, xyz2 = elem.get_xyz()
-        lengths = np.linalg.norm(xyz2 - xyz1, axis=1)
-        v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
-        e_g_nus = elem.e_g_nu()
-
-        # Get thermal expansion coefficient from MAT1
-        mat = model.mat1
-        pids = elem.property_id
-        for prop in elem.allowed_properties:
-            i_lookup, i_all = searchsorted_filter(prop.property_id, pids, msg='')
-            if len(i_lookup) == 0:
-                continue
-            mat_ids = prop.material_id[i_all]
-            mat_slice = mat.slice_card_by_material_id(mat_ids)
-            alphas = mat_slice.a if hasattr(mat_slice, 'a') else np.zeros(len(mat_ids))
-            for idx, ielem in enumerate(i_lookup):
-                nid1, nid2 = elem.nodes[ielem]
-                T1 = node_temperatures.get(nid1, 0.0)
-                T2 = node_temperatures.get(nid2, 0.0)
-                dT = 0.5 * (T1 + T2)
-                if abs(dT) < 1e-30:
-                    continue
-                alpha_i = alphas[idx] if alphas[idx] != 0.0 else 0.0
-                if alpha_i == 0.0:
-                    continue
-                e_i = e_g_nus[ielem, 0]
-                PG = thermal_load_beam(
-                    area[ielem], e_i, alpha_i, lengths[ielem],
-                    ihat[ielem], yhat[ielem], zhat[ielem], dT,
-                )
-                gi1 = dof_map[(nid1, 1)]
-                gi2 = dof_map[(nid2, 1)]
-                Fb[gi1:gi1 + 6] += PG[:6]
-                Fb[gi2:gi2 + 6] += PG[6:]
 
 
 def _build_kbb_cbush(model: BDF, Kbb: dok_matrix, dof_map: DOF_MAP) -> int:

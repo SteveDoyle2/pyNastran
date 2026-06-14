@@ -2,8 +2,8 @@ from __future__ import annotations
 from typing import TextIO, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.dev.solver.utils import lambda1d
-from pyNastran.dev.bdf_vectorized3.solver.utils import get_ieids_eids, get_element
+from pyNastran.dev.bdf_vectorized3.solver.utils import (
+    get_ieids_eids, get_element, lambda1d)
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     timoshenko_stiffness,
     beam_transform,
@@ -15,7 +15,7 @@ from .static_spring import _recover_strain_energy_celas
 from .utils import get_plot_request
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF, Subcase
+    from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 
     DOF_MAP = dict[tuple[int, int], int]
 

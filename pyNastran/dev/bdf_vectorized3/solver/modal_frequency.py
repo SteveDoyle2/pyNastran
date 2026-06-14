@@ -1,6 +1,7 @@
 import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 
+
 def get_freq_damping(model: BDF,
                      omegan: np.ndarray,
                      ndof_g: int) -> np.ndarray:

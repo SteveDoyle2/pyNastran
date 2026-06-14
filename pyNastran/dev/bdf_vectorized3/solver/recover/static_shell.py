@@ -7,11 +7,12 @@ Output format matches NX Nastran: [fiber_dist, σxx, σyy, τxy, angle, σ_major
 per fiber (top/bottom) per element.
 """
 from __future__ import annotations
-
+from itertools import count
 from typing import TextIO, TYPE_CHECKING
 
 import numpy as np
 
+from pyNastran.f06.errors import FatalError
 from pyNastran.dev.bdf_vectorized3.solver.elements.shells import (
     _dshape_quad4,
     _jacobian,
@@ -40,9 +41,9 @@ def _von_mises(sxx: float, syy: float, sxy: float) -> float:
 def _principal_stresses(sxx: float, syy: float, sxy: float) -> tuple[float, float, float]:
     """Returns (angle_deg, s_major, s_minor) for plane stress."""
     s_avg = 0.5 * (sxx + syy)
-    r = np.sqrt((0.5 * (sxx - syy)) ** 2 + sxy**2)
-    s_major = s_avg + r
-    s_minor = s_avg - r
+    radius = np.sqrt((0.5 * (sxx - syy)) ** 2 + sxy**2)
+    s_major = s_avg + radius
+    s_minor = s_avg - radius
     if abs(sxx - syy) > 1e-30:
         angle = 0.5 * np.degrees(np.arctan2(2.0 * sxy, sxx - syy))
     else:
@@ -53,8 +54,7 @@ def _principal_stresses(sxx: float, syy: float, sxy: float) -> tuple[float, floa
 def recover_shell_stress_cquad4(
     model: BDF,
     dof_map: DOF_MAP,
-    xb: np.ndarray,
-) -> dict[int, np.ndarray]:
+    xb: np.ndarray) -> dict[int, np.ndarray]:
     """Recover CQUAD4 stresses at centroid, top and bottom fibers.
 
     Returns
@@ -93,9 +93,18 @@ def recover_shell_stress_cquad4(
 
     results = {}
 
-    for i_elem in range(cquad4.n):
-        eid = int(cquad4.element_id[i_elem])
-        pid = int(cquad4.property_id[i_elem])
+    eids = cquad4.element_id
+    pids = cquad4.property_id
+    zoffsets = cquad4.zoffset
+
+    thetas = get_theta_from_theta_mcid(model, cquad4, normal)
+
+    zoffsets[np.isnan(zoffsets)] = 0.0
+    common_pshell_pids = np.intersect1d(pshell.property_id, pids)
+    is_pshells = np.array([pid in common_pshell_pids for pid in pids])
+
+    for (i_elem, eid, pid, theta_mat, zoffset, is_pshell) in zip(
+            count(), eids, pids, thetas, zoffsets, is_pshells):
         Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
 
         xy = np.zeros((4, 3))
@@ -107,19 +116,12 @@ def recover_shell_stress_cquad4(
         y_local = xy[:, 1]
 
         A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(
-            model, pid, pshell, pcomp
-        )
+            model, pid, pshell, pcomp)
 
         # Get z1, z2 (fiber distances from midplane)
-        if pshell.n > 0:
+        if is_pshell:
             iprop = np.searchsorted(pshell.property_id, pid)
-            if iprop < pshell.n and pshell.property_id[iprop] == pid:
-                prop_slice = pshell.slice_card_by_id(np.array([pid]))
-                z1 = float(prop_slice.z[0, 0])
-                z2 = float(prop_slice.z[0, 1])
-            else:
-                z1 = -thickness / 2.0
-                z2 = thickness / 2.0
+            z1, z2 = pshell.z[iprop, :]
         else:
             z1 = -thickness / 2.0
             z2 = thickness / 2.0
@@ -127,25 +129,7 @@ def recover_shell_stress_cquad4(
         # _get_ABD_for_element returns A in the MATERIAL frame.
         # For stress recovery in element frame, rotate A by theta/MCID
         # (same rotation used in stiffness assembly).
-        theta_elem = cquad4.theta[i_elem]
-        mcid_elem = cquad4.mcid[i_elem]
-        if mcid_elem >= 0:
-            mcid_ref = model.coord.slice_card_by_id(np.array([mcid_elem]))
-            i_mcid = mcid_ref.i[0]
-            i_proj = i_mcid - np.dot(i_mcid, normal[i_elem]) * normal[i_elem]
-            i_proj_norm = np.linalg.norm(i_proj)
-            if i_proj_norm > 1e-10:
-                i_proj /= i_proj_norm
-                cos_theta = np.dot(ihat[i_elem], i_proj)
-                sin_theta = np.dot(np.cross(ihat[i_elem], i_proj), normal[i_elem])
-                theta_mat = np.arctan2(sin_theta, cos_theta)
-            else:
-                theta_mat = 0.0
-        elif not np.isnan(theta_elem) and abs(theta_elem) > 1e-10:
-            theta_mat = np.radians(theta_elem)
-        else:
-            theta_mat = 0.0
-
+        #
         # Rotate A from material to element frame
         if abs(theta_mat) > 1e-10:
             c = np.cos(theta_mat)
@@ -157,16 +141,11 @@ def recover_shell_stress_cquad4(
             ])
             A_mat = T_inv @ A_mat @ T_inv.T
 
-        # Element offset
-        zoffset = cquad4.zoffset[i_elem]
-        if np.isnan(zoffset):
-            zoffset = 0.0
-
         # Extract element displacements in local frame
         elem_nodes = nodes[i_elem]
         u_local_20 = np.zeros(20)
         for inode in range(4):
-            nid = int(elem_nodes[inode])
+            nid = elem_nodes[inode]
             i_dof = dof_map[(nid, 1)]
             u_g = xb[i_dof : i_dof + 6]
             u_trans = Ti @ u_g[:3]
@@ -221,11 +200,52 @@ def recover_shell_stress_cquad4(
             angle, s_major, s_minor = _principal_stresses(sxx, syy, sxy)
             svm = _von_mises(sxx, syy, sxy)
             stress_data[i_fiber] = [z_fiber, sxx, syy, sxy, angle, s_major, s_minor, svm]
-
         results[eid] = stress_data
 
     return results
 
+
+
+def get_theta_from_theta_mcid(model: BDF,
+                              elem: CQUAD4 | CTRIA3,
+                              normal: np.ndarray) -> np.ndarray:
+    thetas = np.radians(elem.theta)
+    mcids = elem.mcid
+    is_theta = (mcids == -1)
+    is_mcid = ~is_theta
+
+    theta_mat = thetas
+    if is_mcid.sum():
+        # project mcid onto the elements for the mcids
+        mcids2 = mcids.copy()
+        mcids2[is_theta] = 0
+        mcids_ref = model.coord.slice_card_by_id(mcids2)
+
+        i_mcids = mcids_ref.i[is_mcid, :]
+        normals = normal[is_mcid, :]
+        ihats = ihat[is_mcid,:]
+
+        i_projs = np.einsum('ij,ij->i', i_mcids, normals) * normals
+        i_proj_norms = np.linalg.norm(i_proj, axis=1)
+
+        cos_theta = np.einsum('ij,ij->i', ihats, i_projs)
+
+        axb = np.cross(ihats, i_projs, axis=0)
+        sin_theta = np.einsum('ij,ij->i', axb, normals)
+        theta_mat[is_mcid] = np.arctan2(sin_theta, cos_theta)
+
+        ifailed = np.where(i_proj_norms < 1e-10)
+        if len(ifailed):
+            eids_mcid = eids[is_mcid]
+            eids_failed = eids_mcid[ifailed]
+            raise FatalError(f'eids={eids_failed} failed their MCID projection')
+
+    #is_zero = np.isnan(thetas) & (mcids == -1)
+    #thetas[is_zero] = 0.0
+    if np.any(np.isnan(theta_mat)):
+        print('theta_mat', theta_mat)
+        raise RuntimeError('incorrect application of theta_mats; found nan')
+    return theta_mat
 
 def recover_shell_stress_ctria3(
     model: BDF,
@@ -267,9 +287,19 @@ def recover_shell_stress_ctria3(
 
     results = {}
 
-    for i_elem in range(ctria3.n):
-        eid = int(ctria3.element_id[i_elem])
-        pid = int(ctria3.property_id[i_elem])
+    eids = ctria3.element_id
+    pids = ctria3.property_id
+    zoffsets = ctria3.zoffset
+
+    thetas = get_theta_from_theta_mcid(model, cquad4, normal)
+
+    zoffsets[np.isnan(zoffsets)] = 0.0
+    common_pshell_pids = np.intersect1d(pshell.property_id, pids)
+    is_pshells = np.array([pid in common_pshell_pids for pid in pids])
+
+    for i_elem, eid, pid, theta, zoffset, is_pshell in zip(
+            count(), eids, pids, thetas, zoffsets, is_pshells):
+
         Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
 
         xy = np.zeros((3, 3))
@@ -280,30 +310,19 @@ def recover_shell_stress_ctria3(
         y_local = xy[:, 1]
 
         A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(
-            model, pid, pshell, pcomp
-        )
+            model, pid, pshell, pcomp)
 
-        if pshell.n > 0:
+        if is_pshell:
             iprop = np.searchsorted(pshell.property_id, pid)
-            if iprop < pshell.n and pshell.property_id[iprop] == pid:
-                prop_slice = pshell.slice_card_by_id(np.array([pid]))
-                z1 = float(prop_slice.z[0, 0])
-                z2 = float(prop_slice.z[0, 1])
-            else:
-                z1 = -thickness / 2.0
-                z2 = thickness / 2.0
+            z1, z2 = pshell.z[iprop, :]
         else:
             z1 = -thickness / 2.0
             z2 = thickness / 2.0
 
-        zoffset = ctria3.zoffset[i_elem]
-        if np.isnan(zoffset):
-            zoffset = 0.0
-
         elem_nodes = nodes[i_elem]
         u_local_15 = np.zeros(15)
         for inode in range(3):
-            nid = int(elem_nodes[inode])
+            nid = elem_nodes[inode]
             i_dof = dof_map[(nid, 1)]
             u_g = xb[i_dof : i_dof + 6]
             u_trans = Ti @ u_g[:3]
@@ -376,8 +395,8 @@ def recover_shell_stress_ctria3(
             sxx, syy, sxy = stress_fiber
             angle, s_major, s_minor = _principal_stresses(sxx, syy, sxy)
             svm = _von_mises(sxx, syy, sxy)
-            stress_data[i_fiber] = [z_fiber, sxx, syy, sxy, angle, s_major, s_minor, svm]
-
+            stress_data[i_fiber] = [
+                z_fiber, sxx, syy, sxy, angle, s_major, s_minor, svm]
         results[eid] = stress_data
 
     return results
@@ -403,10 +422,10 @@ def recover_shell_force_cquad4(
     cquad4 = model.cquad4
     force_results = {}
 
-    for eid, stress_data in stress_results.items():
-        idx_elem = np.searchsorted(cquad4.element_id, eid)
-        pid = int(cquad4.property_id[idx_elem])
-
+    eids = list(stress_results)
+    ieid = np.searchsorted(cquad4.element_id, eids)
+    pids = cquad4.property_id[ieid]
+    for (eid, stress_data), pid in zip(stress_results.items(), pids):
         iprop = np.searchsorted(pshell.property_id, pid)
         thickness = float(pshell.t[iprop]) if iprop < pshell.n else 0.1
         z1 = stress_data[0, 0]
@@ -431,7 +450,6 @@ def recover_shell_force_cquad4(
         # For now, set to 0 (TODO: compute from transverse shear strains)
         Qx = 0.0
         Qy = 0.0
-
         force_results[eid] = np.array([Nxx, Nyy, Nxy, Mxx, Myy, Mxy, Qx, Qy])
 
     return force_results
@@ -440,8 +458,7 @@ def recover_shell_force_cquad4(
 def recover_shell_strain_energy_cquad4(
     model: BDF,
     dof_map: DOF_MAP,
-    xb: np.ndarray,
-) -> dict[int, float]:
+    xb: np.ndarray) -> dict[int, float]:
     """Recover CQUAD4 element strain energy: SE = 0.5 * u^T @ K @ u.
 
     Returns
@@ -477,34 +494,37 @@ def recover_shell_strain_energy_cquad4(
 
     results = {}
 
-    for i_elem in range(cquad4.n):
-        eid = int(cquad4.element_id[i_elem])
-        pid = int(cquad4.property_id[i_elem])
-        Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
+    eids = cquad4.element_id
+    pids = cquad4.property_id
+    zoffsets = cquad4.zoffset
+    assert np.abs(zoffsets.min()) >= 0., zoffsets
+    apply_zoffset = (np.abs(zoffset) > 0.0)
+
+    for i, eid, pid, zoffset, apply_zoffset in zip(count(), eids, pids, zoffsets, apply_zoffsets):
+        Ti = np.vstack([ihat[i], jhat[i], normal[i]])
 
         xy = np.zeros((4, 3))
-        xy[0] = Ti @ p1[i_elem]
-        xy[1] = Ti @ p2[i_elem]
-        xy[2] = Ti @ p3[i_elem]
-        xy[3] = Ti @ p4[i_elem]
+        xy[0] = Ti @ p1[i]
+        xy[1] = Ti @ p2[i]
+        xy[2] = Ti @ p3[i]
+        xy[3] = Ti @ p4[i]
         x_local = xy[:, 0]
         y_local = xy[:, 1]
 
         A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(
-            model, pid, pshell, pcomp
-        )
+            model, pid, pshell, pcomp)
 
         Ke = macn2_stiffness(x_local, y_local, A_mat, D_mat, Ds_mat, B_mat)
 
-        zoffset = cquad4.zoffset[i_elem]
-        if not np.isnan(zoffset) and abs(zoffset) > 0.0:
+        #if not np.isnan(zoffset) and abs(zoffset) > 0.0:
+        if apply_zoffset:
             Ke = _apply_shell_offset(Ke, zoffset)
 
         # Extract local displacements
-        elem_nodes = nodes[i_elem]
+        elem_nodes = nodes[i]
         u_local = np.zeros(20)
         for inode in range(4):
-            nid = int(elem_nodes[inode])
+            nid = elem_nodes[inode]
             i_dof = dof_map[(nid, 1)]
             u_g = xb[i_dof : i_dof + 6]
             u_trans = Ti @ u_g[:3]

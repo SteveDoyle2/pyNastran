@@ -5,12 +5,13 @@ into the global DOF assembly.
 """
 
 from __future__ import annotations
-
+from itertools import count
 from typing import TYPE_CHECKING
 
 import numpy as np
 
 from .tetra import (
+    _solid_B_matrix,
     _tetra4_shape_functions,
     _tetra10_shape_functions,
     _TETRA4_GAUSS,
@@ -48,8 +49,8 @@ from .hexa import (
 
 if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
-    from pyNastran.dev.solver.utils import DOF_MAP
     from pyNastran.dev.bdf_vectorized3.solver.build_stiffness import _COOAccumulator
+    DOF_MAP = dict[tuple[int, int], int]
 
 
 def _get_solid_material_D(model: BDF, property_id: int) -> np.ndarray:
@@ -105,7 +106,7 @@ def _solid_dof_indices(dof_map: "DOF_MAP", node_ids: np.ndarray) -> list[int]:
     """
     n_ijv = []
     for nid in node_ids:
-        gi = dof_map[(int(nid), 1)]
+        gi = dof_map[(nid, 1)]
         n_ijv.extend([gi, gi + 1, gi + 2])
     return n_ijv
 
@@ -156,11 +157,10 @@ def build_kbb_chexa(model: BDF, coo: "_COOAccumulator", dof_map: "DOF_MAP") -> i
     log = model.log
     nelements = 0
 
-    for i in range(elem.n):
-        eid = int(elem.element_id[i])
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
-
+    eids = elem.element_id
+    pids = elem.property_id
+    nodes = elem.nodes
+    for i, eid, pid, all_nodes in zip(count(), eids, pids, nodes):
         # Determine if HEXA8 or HEXA20 based on midside nodes
         base_nodes = all_nodes[:8]
         midside_nodes = all_nodes[8:]
@@ -200,10 +200,10 @@ def build_kbb_ctetra(model: BDF, coo: "_COOAccumulator", dof_map: "DOF_MAP") -> 
     log = model.log
     nelements = 0
 
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
-
+    eids = elem.element_id
+    pids = elem.property_id
+    nodes = elem.nodes
+    for i, eid, pid, all_nodes in zip(count(), eids, pids, nodes):
         base_nodes = all_nodes[:4]
         midside_nodes = all_nodes[4:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
@@ -241,10 +241,10 @@ def build_kbb_cpenta(model: BDF, coo: "_COOAccumulator", dof_map: "DOF_MAP") -> 
     log = model.log
     nelements = 0
 
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
-
+    eids = elem.element_id
+    pids = elem.property_id
+    nodes = elem.nodes
+    for i, eid, pid, all_nodes in zip(count(), eids, pids, nodes):
         base_nodes = all_nodes[:6]
         midside_nodes = all_nodes[6:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
@@ -303,9 +303,10 @@ def _build_mbb_chexa(
         return 0.0
 
     mass_total = 0.0
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
+    eids = elem.element_id
+    pids = elem.property_id
+    nodes = elem.nodes
+    for i, eid, pid, all_nodes in zip(count(), eids, pids, nodes):
         base_nodes = all_nodes[:8]
         midside_nodes = all_nodes[8:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
@@ -341,9 +342,10 @@ def _build_mbb_ctetra(
         return 0.0
 
     mass_total = 0.0
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
+    eids = elem.element_id
+    pids = elem.property_id
+    nodes = elem.nodes
+    for i, eid, pid, all_nodes in zip(count(), eids, pids, nodes):
         base_nodes = all_nodes[:4]
         midside_nodes = all_nodes[4:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
@@ -379,9 +381,10 @@ def _build_mbb_cpenta(
         return 0.0
 
     mass_total = 0.0
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
+    eids = elem.element_id
+    pids = elem.property_id
+    nodes = elem.nodes
+    for i, eid, pid, all_nodes in zip(count(), eids, pids, nodes):
         base_nodes = all_nodes[:6]
         midside_nodes = all_nodes[6:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
@@ -447,8 +450,6 @@ def _compute_element_stress(
     -------
     stress_avg : (6,) average stress [sxx, syy, szz, sxy, syz, sxz]
     """
-    from .tetra import _solid_B_matrix
-
     # Extract element displacements
     ue = np.zeros(3 * nnodes)
     for k, nid in enumerate(node_ids):
@@ -502,9 +503,10 @@ def _build_KDgg_chexa(model: BDF, KDgg, dof_map, u_global):
         dNdnat = np.array([dNdxi, dNdeta, dNdmu])
         return N, dNdnat
 
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
+    eids = elem.element_id
+    pids = elem.property_id
+    nodes = elem.nodes
+    for i, eid, pid, all_nodes in zip(count(), eids, pids, nodes):
         base_nodes = all_nodes[:8]
         midside_nodes = all_nodes[8:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False

@@ -15,10 +15,9 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.scipy_utils import dok_matrix
-from pyNastran.dev.solver.utils import DOF_MAP
-
 if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    DOF_MAP = dict[tuple[int, int], int]
 
 # ---------------------------------------------------------------------------
 # Gauss quadrature constants
