@@ -60,12 +60,10 @@ from pyNastran.op2.op2_interface.op2_classes import (
     ComplexAccelerationArray,
     RealEigenvalues,
     RealEigenvectorArray,
+    RealMPCForcesArray,
+    RealGridPointForcesArray,
 )
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
-from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import (
-    RealMPCForcesArray,)
-from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import (
-    RealGridPointForcesArray,)
 # from pyNastran.bdf.mesh_utils.loads import get_ndof
 
 from .recover.utils import get_f06_op2_pch_set, get_mag_phase_from_options
@@ -79,7 +77,7 @@ from .recover.static_strain import recover_strain_101
 from .recover.strain_energy import recover_strain_energy_101
 
 from .loads.build_fb import build_Fb_from_loadid
-from .build_stiffness import build_Kgg, DOF_MAP, Kbb_to_Kgg
+from .build_mass import build_Mbb
 from .modal_frequency import get_freq_damping
 from .partition import partition_matrix, partition_vector, partition_vector2, partition_vector3
 from .utils_statics import save_static_table
@@ -88,31 +86,28 @@ from .utils_modes import (
     apply_phi_normalization, compute_mass_participation,
 )
 from .utils_freq import get_frequencies, slice_freq_set
-from pyNastran.dev.bdf_vectorized3.bdf_interface.breakdowns import NO_MASS  # , NO_VOLUME
 
 #-----------------------------------------------
 from .build_stiffness import (
     _COOAccumulator,
     build_Kgg, Kbb_to_Kgg,
-    build_KDgg_beam)
-from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
-    beam_pg_distributed, beam_pg_point,
-    consistent_mass, lumped_mass,
-    beam_transform,)
+    build_KDgg_beam, DOF_MAP)
 from .elements.shells import (
     build_KDgg_cquad4, build_KDgg_ctria3)
-from .elements.solids import build_KDgg_solids, build_mbb_solids
+from .elements.solids import build_KDgg_solids
 #--------------------------------------------------------
 from .recover.utils import get_plot_request
 from .utils import recast_data
 
-from .craig_bampton import run_craig_bampton, write_cb_to_op4, write_cb_to_h5
+from .craig_bampton import (
+    run_craig_bampton, write_cb_to_op4, write_cb_to_h5)
 
 from pyNastran.dev.bdf_vectorized3.mesh_utils.inertia_relief import (
-    build_rigid_body_modes, compute_inertia_relief,
-)
+    build_rigid_body_modes, compute_inertia_relief)
 from pyNastran.dev.bdf_vectorized3.mesh_utils.gmn_matrix import assemble_gmn
 
+import scipy
+Array = np.ndarray | scipy.sparse.csc_matrix
 
 
 class Solver:
@@ -287,119 +282,13 @@ class Solver:
         mset : (n_mset,) int array or None
             Indices of dependent (m-set) DOFs in the g-set. None if no constraints.
         """
-        model = self.model
-        log = model.log
-
-        # Collect all dependent DOFs from MPC cards and rigid elements
-        dependents_list = []
-
-        # --- MPC cards ---
+        mpc_id = 0
         has_mpc = "MPC" in subcase
-        mpc_filtered = None
         if has_mpc:
             mpc_id, unused_options = subcase["MPC"]
-            mpc = model.mpc
-            if mpc.n > 0:
-                mpc_filtered = mpc.slice_card_by_id(mpc_id, sort_ids=True)
-                if mpc_filtered.n == 0:
-                    mpc_filtered = None
-
-        if mpc_filtered is not None:
-            for mpc_idi, (idim0, idim1) in zip(mpc_filtered.mpc_id, mpc_filtered.idim):
-                nodes = mpc_filtered.node_id[idim0:idim1]
-                components = mpc_filtered.components[idim0:idim1]
-                nid_dep = int(nodes[0])
-                comp_dep = int(components[0])
-                idof_dep = dof_map[(nid_dep, comp_dep)]
-                dependents_list.append(idof_dep)
-
-        # --- Rigid elements (RBE2, RBE3, RBAR, RBAR1, RBE1, RROD) ---
-        has_rigid = _has_rigid_elements(model)
-        rigid_gmn_rows = None
-        rigid_m_set = None
-
-        if has_rigid:
-            try:
-                rigid_gmn_rows, rigid_m_set, _ = assemble_gmn(
-                    model, dof_map=dof_map, ndof=ndof, apply_cd=True)
-            except ValueError:
-                rigid_gmn_rows = None
-                rigid_m_set = None
-
-        if rigid_m_set is not None:
-            for (nid, dof), _ in rigid_m_set.items():
-                idof_dep = dof_map[(nid, dof)]
-                dependents_list.append(idof_dep)
-
-        if not dependents_list:
-            return None, None
-
-        mset = np.unique(np.array(dependents_list, dtype="int32"))
-
-        # n-set = g-set minus m-set
-        gset = np.arange(ndof, dtype="int32")
-        nset = np.setdiff1d(gset, mset)
-        n_ndof = len(nset)
-
-        # Map from g-set index to n-set column index
-        g_to_n = np.full(ndof, -1, dtype="int32")
-        g_to_n[nset] = np.arange(n_ndof, dtype="int32")
-
-        # Build GMN as sparse (ndof x n_ndof)
-        # Independent DOFs: identity mapping
-        GMN = dok_matrix((ndof, n_ndof), dtype=fdtype)
-        for g_idx, n_col in zip(nset, range(n_ndof)):
-            GMN[g_idx, n_col] = 1.0
-
-        # --- Fill from MPC cards ---
-        if mpc_filtered is not None:
-            for mpc_idi, (idim0, idim1) in zip(mpc_filtered.mpc_id, mpc_filtered.idim):
-                coefficients = mpc_filtered.coefficients[idim0:idim1]
-                components = mpc_filtered.components[idim0:idim1]
-                nodes = mpc_filtered.node_id[idim0:idim1]
-
-                nid_dep = int(nodes[0])
-                comp_dep = int(components[0])
-                coeff_dep = float(coefficients[0])
-                idof_dep = dof_map[(nid_dep, comp_dep)]
-
-                for i in range(1, len(nodes)):
-                    nid_ind = int(nodes[i])
-                    comp_ind = int(components[i])
-                    coeff_ind = float(coefficients[i])
-                    if coeff_ind == 0.0:
-                        continue
-                    idof_ind = dof_map[(nid_ind, comp_ind)]
-                    n_col = g_to_n[idof_ind]
-                    if n_col < 0:
-                        log.warning(
-                            f"MPC independent DOF ({nid_ind},{comp_ind}) is also "
-                            f"dependent in another constraint — skipping")
-                        continue
-                    GMN[idof_dep, n_col] += -coeff_ind / coeff_dep
-
-        # --- Fill from rigid elements ---
-        if rigid_gmn_rows is not None and rigid_m_set is not None:
-            # rigid_gmn_rows is (n_m_rigid, ndof) — maps g-set to m-set
-            # Each row i corresponds to m-set DOF i, columns are g-set DOFs
-            rigid_dense = rigid_gmn_rows.toarray()
-            for (nid, dof), m_row in rigid_m_set.items():
-                idof_dep = dof_map[(nid, dof)]
-                # For each independent g-set DOF contributing to this m-set DOF
-                for g_col in range(ndof):
-                    val = rigid_dense[m_row, g_col]
-                    if abs(val) < 1e-15:
-                        continue
-                    n_col = g_to_n[g_col]
-                    if n_col < 0:
-                        continue
-                    GMN[idof_dep, n_col] += val
-
-        GMN_csc = GMN.tocsc()
-        n_mpc = mpc_filtered.n if mpc_filtered is not None else 0
-        n_rigid = len(rigid_m_set) if rigid_m_set is not None else 0
-        log.info(f"MPC/rigid reduction: {len(mset)} dependent DOFs eliminated "
-                 f"(MPC={n_mpc}, rigid={n_rigid}, g={ndof} -> n={n_ndof})")
+        GMN_csc, mset = _build_Gmn(
+            self.model, mpc_id,
+            dof_map, ndof, fdtype=fdtype)
         return GMN_csc, mset
 
     def run_sol_101_statics(
@@ -504,30 +393,25 @@ class Solver:
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
 
         gset_b = ps_to_sg_set(ndof, ps)
-        if self.Kgg_override is not None:
-            Kgg_in = self.Kgg_override
-            if issparse(Kgg_in):
-                Kgg = Kgg_in[:ndof, :ndof].tocsc()
-            else:
-                Kgg = csc_matrix(Kgg_in[:ndof, :ndof])
-        else:
-            Kgg = build_Kgg(model, dof_map, ndof, ngrid, ndof_per_grid, idtype="int32", fdtype=fdtype)
+        idtype = 'int32'
+        Kgg = get_Kgg(
+            model, dof_map, ndof, ngrid, ndof_per_grid,
+            idtype=idtype, fdtype=fdtype,
+            Kgg_override=self.Kgg_override)
 
-        Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
-        if Mbb is not None:
-            reference_point, MO = grid_point_weight(model, Mbb, dof_map, ndof)
-            weight = make_grid_point_weight(
-                reference_point,
-                MO,
-                approach_code=1,
-                table_code=13,
-                title=title,
-                subtitle=subtitle,
-                label=label,
-                superelement_adaptivity_index="",
-            )
-            self.op2.grid_point_weight[label] = weight
-            page_num = weight.write_f06(f06_file, page_stamp, page_num)
+        rset_b = get_rset_bool(model, dof_map, ndof)
+        has_suport = np.any(rset_b)
+
+        Mbb = None
+        is_mass_load = len(model.grav) > 0 or len(model.rforce) > 0
+        is_param_grdpnt = 'GRDPNT' in model.params
+        if is_mass_load or is_param_grdpnt or has_suport:
+            Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
+            page_num = write_grid_point_weight(
+                model, Mbb, dof_map, ndof,
+                self.op2, f06_file,
+                title=title, subtitle=subtitle, label=label,
+                page_stamp=page_stamp, page_num=page_num)
 
         # ----------------------MPC reduction (g -> n)----------------------
         GMN, mset = self.build_GMN(subcase, dof_map, ndof, fdtype=fdtype)
@@ -654,9 +538,8 @@ class Solver:
         #    f-set is placed in the a-set and the o-set is not created.
 
         Fg_oload = Fg_gset
-        page_num = write_oload(
-            Fg_oload, dof_map, isubcase, ngrid, ndof_per_grid, f06_file, page_stamp, page_num, log
-        )
+        page_num = write_oload_resultant(
+            Fg_oload, dof_map, isubcase, ngrid, ndof_per_grid, f06_file, page_stamp, page_num, log)
 
         # aset - analysis set
         # sset - SPC set
@@ -751,10 +634,8 @@ class Solver:
             self.log.info(f"  Fa_solve = {Fa_solve}")
 
         # --- SUPORT / inertia relief for statics ---
-        rset_b = get_rset_bool(model, dof_map, ndof)
-        has_suport = np.any(rset_b)
         inrel = -1
-        if hasattr(model, 'params') and 'INREL' in model.params:
+        if 'INREL' in model.params:
             inrel = model.params['INREL'].values[0]
 
         if has_suport and inrel == -2 and is_aset:
@@ -855,13 +736,23 @@ class Solver:
             fspc[sset] = fspc_s
         if is_set0:
             log.info(f"fspc_0 recovery")
+            log.debug(f"  fspc_0 = K0a @ xa + K0s @ xs")
             fspc_0 = K0a @ xa + K0s @ xs
             log.debug(f"  fspc_0 = {fspc_0}")
             Fg[set0] = fspc_0
             fspc[set0] = fspc_0
 
         # ----------------------MPC recovery (n -> g)----------------------
-        if GMN is not None:
+        _, _, _, is_mpc_request = get_plot_request(subcase, 'MPCFORCES')
+        _, _, _, is_spc_request = get_plot_request(subcase, 'SPCFORCES')
+        _, _, _, is_gpforce_request = get_plot_request(subcase, 'GPFORCE')
+        _, _, _, is_oload_request = get_plot_request(subcase, 'OLOAD')
+        is_load_recovery_request = (
+            is_spc_request or is_mpc_request or
+            is_gpforce_request # or is_oload_request
+        )
+
+        if is_load_recovery_request and GMN is not None:
             # Expand n-set solution to g-set: xg = GMN @ xn
             xn_solve = np.where(np.isnan(xn_full), 0.0, xn_full)
             xg = np.asarray(GMN @ xn_solve).ravel()
@@ -908,25 +799,26 @@ class Solver:
         # log.debug(f'Fb = {Fb}')
         # log.debug(f'xb = {xb}')
 
-        self._save_displacment(
-            f06_file,
-            subcase,
-            itime,
-            ntimes,
-            node_gridtype,
-            xg,
-            ngrid,
-            ndof_per_grid,
-            title=title,
-            subtitle=subtitle,
-            label=label,
-            fdtype=fdtype,
-            page_num=page_num,
-            page_stamp=page_stamp,
-        )
+        # SPCFORCE resultant
+        #if 'SPCFORCES' in subcase:
+        page_num = _write_spcforce_resultant(
+            f06_file, fspc, ngrid, ndof_per_grid, isubcase,
+            page_stamp, page_num, log)
 
-        self._save_applied_load(
-            f06_file,
+        op2 = self.op2
+        page_stamp % page_num
+        page_num = recover_statics(
+            model, op2, f06_file,
+            subcase,
+            xg, node_gridtype,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            page_stamp=page_stamp, page_num=page_num,
+            fdtype=fdtype)
+
+        page_stamp % page_num
+        page_num = _save_applied_load(
+            self.op2, f06_file,
             subcase,
             itime,
             ntimes,
@@ -939,11 +831,10 @@ class Solver:
             label=label,
             fdtype=fdtype,
             page_num=page_num,
-            page_stamp=page_stamp,
-        )
+            page_stamp=page_stamp)
 
-        self._save_spc_forces(
-            f06_file,
+        page_num = _save_spc_forces(
+            self.op2, f06_file,
             subcase,
             itime,
             ntimes,
@@ -956,11 +847,10 @@ class Solver:
             label=label,
             fdtype=fdtype,
             page_num=page_num,
-            page_stamp=page_stamp,
-        )
+            page_stamp=page_stamp)
 
-        self._save_mpc_forces(
-            f06_file,
+        page_num = _save_mpc_forces(
+            self.op2, f06_file,
             subcase,
             itime,
             ntimes,
@@ -973,25 +863,17 @@ class Solver:
             label=label,
             fdtype=fdtype,
             page_num=page_num,
-            page_stamp=page_stamp,
-        )
-
-        # SPCFORCE resultant
-        if 'SPCFORCES' in subcase:
-            _write_spcforce_resultant(
-                f06_file, fspc, ngrid, ndof_per_grid, isubcase,
-                page_stamp, page_num, log)
+            page_stamp=page_stamp)
 
         if 'GPFORCE' in subcase:
-            _write_gpforce_balance(
+            page_num = _write_gpforce_balance(
                 f06_file, self.op2, node_gridtype, Fg_oload, fspc,
                 Kgg_orig, xg, isubcase, ngrid, ndof_per_grid,
                 title=title, subtitle=subtitle, label=label,
                 page_stamp=page_stamp, page_num=page_num)
 
-        op2 = self.op2
         page_stamp += "\n"
-        recover_force_101(
+        page_num = recover_force_101(
             f06_file,
             op2,
             self.model,
@@ -1001,20 +883,17 @@ class Solver:
             title=title,
             subtitle=subtitle,
             label=label,
-            page_stamp=page_stamp,
-        )
+            page_stamp=page_stamp)
 
-        recover_strain_101(
+        page_num = recover_strain_101(
             f06_file, op2, self.model, dof_map, subcase, xb,
             title=title, subtitle=subtitle, label=label,
-            page_stamp=page_stamp,
-        )
-        recover_stress_101(
+            page_stamp=page_stamp)
+        page_num = recover_stress_101(
             f06_file, op2, self.model, dof_map, subcase, xb,
             title=title, subtitle=subtitle, label=label,
-            page_stamp=page_stamp,
-        )
-        recover_strain_energy_101(
+            page_stamp=page_stamp)
+        page_num = recover_strain_energy_101(
             f06_file,
             op2,
             self.model,
@@ -1029,183 +908,6 @@ class Solver:
         self.log.info("finished")
         out = {}
         return out, page_num, end_options
-
-    def _save_displacment(
-        self,
-        f06_file: TextIO,
-        subcase: Subcase,
-        itime: int,
-        ntimes: int,
-        node_gridtype: NDArrayN2int,
-        xg: NDArrayNfloat,
-        ngrid: int,
-        ndof_per_grid: int,
-        title: str = "",
-        subtitle: str = "",
-        label: str = "",
-        fdtype: str = "float32",
-        page_num: int = 1,
-        page_stamp: str = "PAGE %s",
-    ) -> int:
-        f06_request_name = "DISPLACEMENT"
-        table_name = "OUGV1"
-        # self.log.debug(f'xg = {xg}')
-        page_num = save_static_table(
-            f06_file,
-            subcase,
-            itime,
-            ntimes,
-            node_gridtype,
-            xg,
-            RealDisplacementArray,
-            f06_request_name,
-            table_name,
-            self.op2.displacements,
-            ngrid,
-            ndof_per_grid,
-            title=title,
-            subtitle=subtitle,
-            label=label,
-            fdtype=fdtype,
-            page_num=page_num,
-            page_stamp=page_stamp,
-        )
-        return page_num
-
-    def _save_spc_forces(
-        self,
-        f06_file: TextIO,
-        subcase: Subcase,
-        itime: int,
-        ntimes: int,
-        node_gridtype: NDArrayN2int,
-        fspc: NDArrayNfloat,
-        ngrid: int,
-        ndof_per_grid: int,
-        title: str = "",
-        subtitle: str = "",
-        label: str = "",
-        fdtype: str = "float32",
-        page_num: int = 1,
-        page_stamp: str = "PAGE %s",
-    ) -> int:
-        f06_request_name = "SPCFORCES"
-        table_name = "OQG1"
-        # self.log.debug(f'Fg = {Fg}')
-        page_num = save_static_table(
-            f06_file,
-            subcase,
-            itime,
-            ntimes,
-            node_gridtype,
-            fspc,
-            RealSPCForcesArray,
-            f06_request_name,
-            table_name,
-            self.op2.spc_forces,
-            ngrid,
-            ndof_per_grid,
-            title=title,
-            subtitle=subtitle,
-            label=label,
-            fdtype=fdtype,
-            page_num=page_num,
-            page_stamp=page_stamp,
-        )
-        return page_num
-
-    def _save_mpc_forces(
-        self,
-        f06_file: TextIO,
-        subcase: Subcase,
-        itime: int,
-        ntimes: int,
-        node_gridtype: NDArrayN2int,
-        fmpc: NDArrayNfloat,
-        ngrid: int,
-        ndof_per_grid: int,
-        title: str = "",
-        subtitle: str = "",
-        label: str = "",
-        fdtype: str = "float32",
-        page_num: int = 1,
-        page_stamp: str = "PAGE %s",
-    ) -> int:
-        """Save MPC forces to F06 and OP2."""
-        f06_request_name = "MPCFORCES"
-        unused_nids_write, write_f06, write_op2, quick_return = get_plot_request(
-            subcase, f06_request_name)
-        if quick_return:
-            return page_num
-
-        idtype2, fdtype2 = recast_data("int32", fdtype)
-        isubcase = subcase.id
-        nnodes = node_gridtype.shape[0]
-        data = np.zeros((ntimes, nnodes, 6), dtype=fdtype2)
-        ngrid_dofs = ngrid * ndof_per_grid
-        _fgi = fmpc[:ngrid_dofs].reshape(ngrid, ndof_per_grid)
-        data[itime, :ngrid, :] = _fgi
-        data[itime, ngrid:, 0] = fmpc[ngrid_dofs:]
-
-        # Use OQG1 for data_code creation, then override table_name for write_f06
-        table_name = "OQG1"
-        mpc_obj = RealMPCForcesArray.add_static_case(
-            table_name, node_gridtype, data, isubcase,
-            is_sort1=True, is_random=False, is_msc=True,
-            random_code=0, title=title, subtitle=subtitle, label=label)
-        mpc_obj.table_name = "OQMG1"
-
-        if write_f06:
-            page_num = mpc_obj.write_f06(
-                f06_file, header=None,
-                page_stamp=page_stamp, page_num=page_num,
-                is_mag_phase=False, is_sort1=True)
-            f06_file.write("\n")
-        if write_op2:
-            self.op2.mpc_forces[isubcase] = mpc_obj
-        return page_num
-
-    def _save_applied_load(
-        self,
-        f06_file: TextIO,
-        subcase: Subcase,
-        itime: int,
-        ntimes: int,
-        node_gridtype: NDArrayN2int,
-        Fg: NDArrayNfloat,
-        ngrid: int,
-        ndof_per_grid: int,
-        title: str = "",
-        subtitle: str = "",
-        label: str = "",
-        fdtype: str = "float32",
-        page_num: int = 1,
-        page_stamp: str = "PAGE %s",
-    ) -> int:
-        f06_request_name = "OLOAD"
-        table_name = "OPG1"
-        # self.log.debug(f'Fg = {Fg}')
-        page_num = save_static_table(
-            f06_file,
-            subcase,
-            itime,
-            ntimes,
-            node_gridtype,
-            Fg,
-            RealLoadVectorArray,
-            f06_request_name,
-            table_name,
-            self.op2.load_vectors,
-            ngrid,
-            ndof_per_grid,
-            title=title,
-            subtitle=subtitle,
-            label=label,
-            fdtype=fdtype,
-            page_num=page_num,
-            page_stamp=page_stamp,
-        )
-        return page_num
 
     def run_sol_103_modes(
         self,
@@ -1250,9 +952,9 @@ class Solver:
         self.GMN = GMN
         self.mset = mset
 
-        out = _run_modes(
-            model,
-            subcase,
+        page_num, out = _run_modes(
+            model, subcase,
+            op2, f06_file,
             ngrid,
             ndof_per_grid,
             ndof,
@@ -1263,6 +965,7 @@ class Solver:
             mset=mset,
             idtype=idtype,
             fdtype=fdtype,
+            page_stamp=page_stamp, page_num=page_num,
         )
         phig = out["modes_phig"]
         eigenvalue = out["modes_eigenvalue"]
@@ -1636,14 +1339,10 @@ class Solver:
         dof_map, ps = _get_dof_map(model)
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
 
-        if self.Kgg_override is not None:
-            Kgg_arr = self.Kgg_override
-            if issparse(Kgg_arr):
-                Kgg = Kgg_arr
-            else:
-                Kgg = csc_matrix(Kgg_arr[:ndof, :ndof])
-        else:
-            Kgg = build_Kgg(model, dof_map, ndof, ngrid, ndof_per_grid)
+        Kgg = get_Kgg(
+            model, dof_map, ndof, ngrid, ndof_per_grid,
+            idtype=idtype, fdtype=fdtype,
+            Kgg_override=self.Kgg_override)
 
         # Static preload solve
         sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
@@ -1660,12 +1359,7 @@ class Solver:
         log.debug("  static preload solved")
 
         # Build geometric stiffness from preload stress state
-        KDgg = dok_matrix((ndof, ndof))
-        build_KDgg_cquad4(model, KDgg, dof_map, u_global)
-        build_KDgg_ctria3(model, KDgg, dof_map, u_global)
-        build_KDgg_beam(model, KDgg, dof_map, u_global)
-        build_KDgg_solids(model, KDgg, dof_map, u_global)
-
+        KDgg = build_KDgg(model, ndof, dof_map, u_global)
         KDff = KDgg.tocsc()[np.ix_(free_dofs, free_dofs)].toarray()
 
         log.debug("  geometric stiffness assembled")
@@ -1685,10 +1379,16 @@ class Solver:
             eigenvalues_all = eigenvalues_all.real
             eigvecs_all = eigvecs_all.real
 
-        # Keep only positive eigenvalues (physical buckling modes) sorted ascending
-        pos_mask = eigenvalues_all > 0
-        eigenvalues_pos = eigenvalues_all[pos_mask]
-        eigvecs_pos = eigvecs_all[:, pos_mask]
+        if 0:
+            # Keep only positive eigenvalues
+            # (physical buckling modes) sorted ascending
+            pos_mask = eigenvalues_all > 0
+            eigenvalues_pos = eigenvalues_all[pos_mask]
+            eigvecs_pos = eigvecs_all[:, pos_mask]
+        else:
+            # user must limit the eigenvalues
+            eigenvalues_pos = eigenvalues_all
+            eigvecs_pos = eigvecs_all
         sort_idx = np.argsort(eigenvalues_pos)
         eigenvalue = eigenvalues_pos[sort_idx[:neigenvalue]]
         xa_ = eigvecs_pos[:, sort_idx[:neigenvalue]]
@@ -1737,17 +1437,17 @@ class Solver:
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
 
         # Build global matrices
-        if self.Kgg_override is not None:
-            Kgg_in = self.Kgg_override
-            if issparse(Kgg_in):
-                Kgg = Kgg_in[:ndof, :ndof].tocsc()
-            else:
-                Kgg = csc_matrix(Kgg_in[:ndof, :ndof])
-        else:
-            Kgg = build_Kgg(model, dof_map, ndof, ngrid, ndof_per_grid,
-                            idtype=idtype, fdtype=fdtype)
+        Kgg = get_Kgg(
+            model, dof_map, ndof, ngrid, ndof_per_grid,
+            idtype=idtype, fdtype=fdtype,
+            Kgg_override=self.Kgg_override)
 
         Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
+        page_num = write_grid_point_weight(
+            model, Mbb, dof_map, ndof,
+            self.op2, f06_file,
+            title=title, subtitle=subtitle, label=label,
+            page_stamp=page_stamp, page_num=page_num)
         Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid, inplace=False)
 
         # Apply SPC constraints — reduce to free (f) set
@@ -1916,9 +1616,9 @@ class Solver:
         self.GMN = GMN
         self.mset = mset
 
-        out = _run_modes(
-            model,
-            subcase,
+        page_num, out = _run_modes(
+            model, subcase,
+            op2, f06_file,
             ngrid,
             ndof_per_grid,
             ndof,
@@ -1928,6 +1628,7 @@ class Solver:
             mset=mset,
             idtype=idtype,
             fdtype=fdtype,
+            page_stamp=page_stamp, page_num=page_num,
         )
 
         aset = out["aset"]
@@ -2291,10 +1992,7 @@ def partition_a_to_lr(
     lset_local = np.where(~r_in_a)[0]
 
     # Convert Kaa to dense if sparse for partitioning
-    if hasattr(Kaa, 'toarray'):
-        Kaa_dense = Kaa.toarray()
-    else:
-        Kaa_dense = np.asarray(Kaa)
+    Kaa_dense = todense(Kaa)
 
     K = partition_matrix(
         Kaa_dense, [("l", lset_local), ("r", rset_local)])
@@ -2467,7 +2165,7 @@ def xg_to_xb(
     return xb
 
 
-def write_oload(
+def write_oload_resultant(
     Fb: NDArrayNfloat,
     dof_map: DOF_MAP,
     isubcase: int,
@@ -2476,8 +2174,7 @@ def write_oload(
     f06_file: TextIO,
     page_stamp: str,
     page_num: int,
-    log: SimpleLogger,
-) -> int:
+    log: SimpleLogger,) -> int:
     """writes the OLOAD RESULTANT table"""
     str(ngrid)
     str(dof_map)
@@ -2504,14 +2201,14 @@ def _write_spcforce_resultant(
     isubcase: int,
     page_stamp: str,
     page_num: int,
-    log: SimpleLogger,
-) -> None:
+    log: SimpleLogger,) -> int:
     """Write SPCFORCE RESULTANT table to F06."""
     fxyz_mxyz = fspc[:ngrid * ndof_per_grid].reshape(ngrid, ndof_per_grid)
     fxyz_mxyz_sum = fxyz_mxyz.sum(axis=0)
     spc_resultant = Resultant("SPCFORCE", fxyz_mxyz_sum, isubcase)
     log.info(f"SPCFORCE RESULTANT {fxyz_mxyz_sum}")
     spc_resultant.write_f06(f06_file, page_stamp, page_num)
+    return page_num
 
 
 def solve(Kaa: lil_matrix,
@@ -2561,324 +2258,6 @@ def solve(Kaa: lil_matrix,
         log.warning(f"  sparse_error = {sparse_error}")
     log.info("finished solve")
     return xas_, ipositive, inegative
-
-
-def build_Mbb(model: BDF, subcase: Subcase,
-              dof_map: DOF_MAP, ndof: int, fdtype="float64") -> NDArrayNNfloat:
-    """builds the mass matrix in the basic frame, [Mbb]"""
-    log = model.log
-    log.info("starting build_Mbb")
-    wtmass = 1.0
-    coo_m = _COOAccumulator(ndof)
-    str(model)
-    str(subcase)
-    # no_mass = {
-    #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-    #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
-    # }
-
-    mass_rod_2x2 = 1/3 * np.array([
-        [2, 0, 1, 0],
-        [0, 2, 0, 1],
-        [1, 0, 2, 0],
-        [0, 1, 0, 2],
-    ], dtype="float64")
-    mass_tri = 1/6 * np.array([
-        [4, 0, 2, 0, 1, 0],
-        [0, 4, 0, 2, 0, 1],
-        [2, 0, 4, 0, 2, 0],
-        [0, 2, 0, 4, 0, 2],
-        [1, 0, 2, 0, 4, 0],
-        [0, 1, 0, 2, 0, 4],
-    ], dtype="float64")
-    # mass_quad_1x1 = np.array([
-    # [1, 0, 1, 0, 1, 0, 1, 0],
-    # [0, 1, 0, 1, 0, 1, 0, 1],
-    # [1, 0, 1, 0, 1, 0, 1, 0],
-    # [0, 1, 0, 1, 0, 1, 0, 1],
-    # [1, 0, 1, 0, 1, 0, 1, 0],
-    # [0, 1, 0, 1, 0, 1, 0, 1],
-    # [1, 0, 1, 0, 1, 0, 1, 0],
-    # [0, 1, 0, 1, 0, 1, 0, 1],
-    # ], dtype='float64') / 36.
-
-    mass_quad_2x2 = 1/36 * np.array([
-        [4, 0, 2, 0, 1, 0, 2, 0],
-        [0, 4, 0, 2, 0, 1, 0, 2],
-        [2, 0, 4, 0, 2, 0, 1, 0],
-        [0, 2, 0, 4, 0, 2, 0, 1],
-        [1, 0, 2, 0, 4, 0, 2, 0],
-        [0, 1, 0, 2, 0, 4, 0, 2],
-        [2, 0, 1, 0, 2, 0, 4, 0],
-        [0, 2, 0, 1, 0, 2, 0, 4],
-    ], dtype="float64")
-
-    mass_total = 0.0
-    if model.conm1:
-        nid = elem.nid
-        nid_ref = elem.nid_ref
-        if nid_ref.type == "GRID":
-            i1 = dof_map[(nid, 1)]
-
-            # TODO: support CID
-            if nid_ref.cd != elem.cid:
-                log.warning(
-                    f"  CONM1 eid={eid} nid={nid} CD={nid_ref.cd} to cid={elem.cid} is not supported")
-        else:  # pragma: no cover
-            print(elem.get_stats())
-            raise NotImplementedError(elem)
-        coo_m.add_matrix(list(range(i1, i1 + 6)), elem.mass_matrix)
-
-    # PARAM,COUPMASS: 1 => consistent mass, -1 or absent => lumped
-    use_consistent_shells = False
-    if hasattr(model, "params") and "COUPMASS" in model.params:
-        coupmass_val = model.params["COUPMASS"].values[0]
-        if coupmass_val >= 1:
-            use_consistent_shells = True
-
-    # Consistent mass matrices for shells (m/36 * [4,2,1,2;...])
-    mass_quad_consistent = 1/36 * np.array([
-        [4, 2, 1, 2],
-        [2, 4, 2, 1],
-        [1, 2, 4, 2],
-        [2, 1, 2, 4],
-    ], dtype="float64")
-    mass_tri_consistent = 1/12 * np.array([
-        [2, 1, 1],
-        [1, 2, 1],
-        [1, 1, 2],
-    ], dtype="float64")
-    
-    # has possibility of mass
-    has_mass = False
-
-    for elem in model.element_cards:
-        etype = elem.type
-        if etype in NO_MASS:
-            continue
-        if elem.n == 0:
-            continue
-
-        has_mass = True
-        if etype == "CONM2":
-            mass_total = conm2_fill_Mbb(model, mass_total, coo_m, dof_map)
-
-        elif etype in ["CROD", "CONROD", "CTUBE"]:
-            # verified
-            mass = elem.mass()
-            if mass == 0.0:
-                log.warning(f"  no mass for {etype} eid={eid}")
-                continue
-
-            nids1 = elem.nodes[:, 0]
-            nids2 = elem.nodes[:, 1]
-            for nid1, nid2 in zip(nids1, nids2):
-                i1 = dof_map[(nid1, 1)]
-                j1 = dof_map[(nid2, 1)]
-                ii = [i1, i1 + 1, j1, j1 + 1]
-                coo_m.add_matrix(ii, mass_rod_2x2 * mass)
-        elif etype in {"CBAR", "CBEAM"}:
-            # PARAM,COUPMASS,1 => consistent; default (0 or absent) => lumped
-            use_consistent = False
-            if hasattr(model, 'params') and 'COUPMASS' in model.params:
-                coupmass_val = model.params['COUPMASS'].values[0]
-                if coupmass_val >= 1:
-                    use_consistent = True
-
-            area = elem.area()
-            inertia = elem.inertia()
-            xyz1, xyz2 = elem.get_xyz()
-            lengths = np.linalg.norm(xyz2 - xyz1, axis=1)
-            v, ihat_arr, yhat_arr, zhat_arr, wa_arr, wb_arr = elem.get_axes(xyz1, xyz2)
-            k_arr = elem.k()
-            e_g_nus = elem.e_g_nu()
-
-            elem_masses = elem.mass()
-            mass_total += elem_masses.sum()
-            mass_per_length_total = elem_masses / lengths
-
-            for (nid1, nid2), areai, inertiai, lengthi, ki, e_g_nu, ihati, jhati, khati, mpl in zip(
-                elem.nodes, area, inertia, lengths, k_arr, e_g_nus,
-                ihat_arr, yhat_arr, zhat_arr, mass_per_length_total,
-            ):
-                i1_inertia, i2_inertia, i12, j = inertiai
-                e, g, nu = e_g_nu
-                k1, k2 = ki
-
-                rho_eff = mpl / areai if areai > 0 else 0.0
-
-                if use_consistent:
-                    Me = consistent_mass(
-                        areai, lengthi, rho_eff,
-                        i1_inertia, i2_inertia, j,
-                        k1, k2, nsm=0.0,
-                    )
-                else:
-                    Me = lumped_mass(
-                        areai, lengthi, rho_eff,
-                        i1_inertia, i2_inertia, j,
-                        nsm=0.0,
-                    )
-
-                Teb = beam_transform(ihati, jhati, khati)
-                M_basic = Teb.T @ Me @ Teb
-
-                gi1 = dof_map[(nid1, 1)]
-                gi2 = dof_map[(nid2, 1)]
-                n_ijv = [
-                    gi1, gi1 + 1, gi1 + 2, gi1 + 3, gi1 + 4, gi1 + 5,
-                    gi2, gi2 + 1, gi2 + 2, gi2 + 3, gi2 + 4, gi2 + 5,
-                ]
-                coo_m.add_matrix(n_ijv, M_basic)
-        elif etype == "CTRIA3":
-            masses = elem.mass()
-            if masses.sum() == 0.0:
-                log.warning(f"  no mass for CTRIA3 eid={elem.element_id}")
-                continue
-            for (nid1, nid2, nid3), massi in zip(elem.nodes, masses):
-                if massi == 0.0:
-                    continue
-                if use_consistent_shells:
-                    # Consistent: m * [2,1,1;1,2,1;1,1,2]/12
-                    nids_e = [nid1, nid2, nid3]
-                    M_consist = mass_tri_consistent * massi
-                    for dof_offset in range(3):
-                        ii = [dof_map[(n, 1)] + dof_offset for n in nids_e]
-                        coo_m.add_matrix(ii, M_consist)
-                else:
-                    # Lumped: m/3 per node on Tx, Ty, Tz
-                    m_node = massi / 3.0
-                    for nid in [nid1, nid2, nid3]:
-                        i1 = dof_map[(nid, 1)]
-                        coo_m.add_scalar(i1, i1, m_node)
-                        coo_m.add_scalar(i1 + 1, i1 + 1, m_node)
-                        coo_m.add_scalar(i1 + 2, i1 + 2, m_node)
-            # Mbb[i1, i1] = Mbb[i1+1, i1+1] = Mbb[i1+2, i1+2] = \
-            # Mbb[i2, i2] = Mbb[i2+1, i2+1] = Mbb[i2+2, i2+2] = \
-            # Mbb[i3, i3] = Mbb[i3+1, i3+1] = Mbb[i3+2, i3+2] = mass / 3
-        elif etype == "CQUAD4":
-            masses = elem.mass()
-            if masses.sum() == 0.0:
-                log.warning(f"  no mass for CQUAD4 eid={elem.element_id}")
-                continue
-            for (nid1, nid2, nid3, nid4), massi in zip(elem.nodes, masses):
-                if massi == 0.0:
-                    continue
-                if use_consistent_shells:
-                    # Consistent: m * [4,2,1,2;2,4,2,1;1,2,4,2;2,1,2,4]/36
-                    # Applied to each translational DOF (Tx, Ty, Tz) independently
-                    nids_e = [nid1, nid2, nid3, nid4]
-                    M_consist = mass_quad_consistent * massi
-                    for dof_offset in range(3):
-                        ii = [dof_map[(n, 1)] + dof_offset for n in nids_e]
-                        coo_m.add_matrix(ii, M_consist)
-                else:
-                    # Lumped: m/4 per node on Tx, Ty, Tz
-                    m_node = massi / 4.0
-                    for nid in [nid1, nid2, nid3, nid4]:
-                        i1 = dof_map[(nid, 1)]
-                        coo_m.add_scalar(i1, i1, m_node)
-                        coo_m.add_scalar(i1 + 1, i1 + 1, m_node)
-                        coo_m.add_scalar(i1 + 2, i1 + 2, m_node)
-            # if 0:  # pragma: no cover
-            # mass4 = mass / 9. # 4/36
-            # mass2 = mass / 18. # 2/36
-            # mass1 = mass / 36.
-            # print(mass1, mass2, mass4)
-            # Mbb[i1, i1] += mass4
-            # Mbb[i1+1, i1+1] += mass4
-            # Mbb[i2, i2] += mass4
-            # Mbb[i2+1, i2+1] += mass4
-            # Mbb[i3, i3] += mass4
-            # Mbb[i3+1, i3+1] += mass4
-            # Mbb[i4, i4] += mass4
-            # Mbb[i4+1, i4+1] += mass4
-
-            # Mbb[i1, i3] += mass1
-            # Mbb[i1, i2] += mass2
-            # Mbb[i1, i4] += mass2
-            # Mbb[i3, i1] += mass1
-            # Mbb[i2, i1] += mass2
-            # Mbb[i4, i1] += mass2
-
-            # Mbb[i1+1, i3+1] += mass1
-            # Mbb[i1+1, i2+1] += mass1
-            # Mbb[i1+1, i4+1] += mass2
-            # Mbb[i3+1, i1+1] += mass1
-            # Mbb[i2+1, i1+1] += mass2
-            # Mbb[i4+1, i1+1] += mass2
-
-            # Mbb[i2, i4] += mass1
-            # Mbb[i2+1, i4+1] += mass1
-            # Mbb[i2, i3] += mass2
-            # Mbb[i2+1, i3+1] += mass2
-
-            # Mbb[i4, i2] += mass1
-            # Mbb[i4+1, i2+1] += mass1
-            # Mbb[i3, i2] += mass2
-            # Mbb[i3+1, i2+1] += mass2
-
-            # Mbb[i3, i4] += mass2
-            # Mbb[i3+1, i4+1] = mass2
-            # Mbb[i4, i3] += mass2
-            # Mbb[i4+1, i3+1] += mass2
-
-            # Mbb[i2+1, i3+1] = 1
-            # Mbb[i2+1, i2+1] = Mbb[i1+1, i4+1] = 2
-
-            # Mbb[i2, i1+1] = Mbb[i3, i1+1] = Mbb[i4, i1+1] = 1
-            # Mbb[i1, i2+1] = Mbb[i3, i2+1] = Mbb[i4, i2+1] = 1
-            # Mbb[i1, i3+1] = Mbb[i2, i3+1] = Mbb[i4, i3+1] = 1
-            # Mbb[i1, i4+1] = Mbb[i2, i4+1] = Mbb[i3, i4+1] = 1
-            # print(Mbb)
-            # print(Mbb[ii, :][:, ii])
-        elif etype == "CSHEAR":
-            masses = elem.mass()
-            if masses.sum() == 0.0:
-                continue
-            for (nid1, nid2, nid3, nid4), massi in zip(elem.nodes, masses):
-                if massi == 0.0:
-                    continue
-                i1 = dof_map[(nid1, 1)]
-                i2 = dof_map[(nid2, 1)]
-                i3 = dof_map[(nid3, 1)]
-                i4 = dof_map[(nid4, 1)]
-                ii = [
-                    i1,
-                    i1 + 1,
-                    i2,
-                    i2 + 1,
-                    i3,
-                    i3 + 1,
-                    i4,
-                    i4 + 1,
-                ]
-                coo_m.add_matrix(ii, mass_quad_2x2 * massi)
-        elif etype in {"CHEXA", "CTETRA", "CPENTA"}:
-            pass  # handled below
-        else:  # pragma: no cover
-            print(elem.get_stats())
-            raise NotImplementedError(elem)
-
-    # Solid elements (CHEXA, CTETRA, CPENTA) — consistent mass
-    mass_total += build_mbb_solids(model, coo_m, dof_map)
-
-    # Convert COO accumulator to sparse CSC
-    Mbb = coo_m.to_csc()
-
-    if wtmass != 1.0:
-        Mbb *= wtmass
-
-    has_special_points = "SPOINT" in model.card_count or "EPOINT" in model.card_count
-    is_all_grids = not has_special_points
-    unused_can_dof_slice = is_all_grids and not has_mass
-    if Mbb.nnz > 0:
-        i = np.arange(0, ndof).reshape(ndof // 6, 6)[:, :3].ravel()
-        massi = sum(Mbb[ii, ii] for ii in i)
-        log.info(f"finished build_Mbb; M={massi:.6g}; mass_total={mass_total:.6g}")
-    else:
-        return None
-    return Mbb
 
 
 def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int):
@@ -2975,15 +2354,6 @@ def ps_to_sg_set(ndof: int, ps: list[int]):
     return sg_set
 
 
-def _has_rigid_elements(model: BDF) -> bool:
-    """Check if the model has any rigid elements (RBE2, RBE3, etc.)."""
-    for attr in ("rbe2", "rbe3", "rbar", "rbar1", "rbe1", "rrod"):
-        elem = getattr(model, attr, None)
-        if elem is not None and elem.n > 0:
-            return True
-    return False
-
-
 def autospc_n_set(
     Knn,
     ndof_n: int,
@@ -3076,84 +2446,11 @@ def get_ndof(model: BDF, subcase: Subcase) -> tuple[int, int, int]:
     return ngrid, ndof_per_grid, ndof
 
 
-def conm2_fill_Mbb(model: BDF, mass_total: float,
-                   coo_m, dof_map: dict[tuple[int, int], int]) -> float:
-    eye3 = np.eye(3, dtype="float64")
-    conm2 = model.conm2
-    log = model.log
-    # mass = elem.Mass()
-    # nid = elem.nid
-    # nid_ref = elem.nid_ref
-    inid = model.grid.index(conm2.node_id)
-    cds = model.grid.cd[inid]
-    for eid, nid, cd, cid, mass, elem_x, elem_i in zip(
-        conm2.element_id,
-        conm2.node_id,
-        cds,
-        conm2.coord_id,
-        conm2.mass(),
-        conm2.xyz_offset,
-        conm2.inertia,
-    ):
-        i1 = dof_map[(nid, 1)]
-        if cd != cid:
-            log.warning(f"  CONM2 eid={eid} nid={nid} CD={cd} to CONM2 cid={cid} is not supported")
-        # Mbb[i1, i1] = mass
-        # Mbb[i1+1, i1+1] = mass
-        # Mbb[i1+2, i1+2] = mass
-        # TODO: support CID
-        I11, I21, I22, I31, I32, I33 = elem_i
-        x1, x2, x3 = elem_x
-        mxx = (
-            np.array(
-                [
-                    [x1 * x1, -x1 * x2, -x1 * x3],
-                    [-x2 * x1, x2 * x2, -x2 * x3],
-                    [-x3 * x1, x3 * x2, x3 * x3],
-                ]
-            )
-            * mass
-        )
-        Tr = np.array(
-            [
-                [0, x3, -x2],
-                [-x3, 0, x1],
-                [x2, -x1, 0],
-            ],
-            dtype="float64",
-        )
-        mx = Tr * mass
-        I = (
-            np.array(
-                [
-                    [I11, -I21, I31],
-                    [-I21, I22, -I32],
-                    [-I31, -I32, I33],
-                ]
-            )
-            + mxx
-        )
-
-        # [mass, 01, 02, 03, mass * X3, -mass * X2]
-        # [10, mass, 12, -mass * X3, 14, mass * X1]
-        # [20, 21, mass, mass * X2, -mass * X1, 25]
-        # [30, -mass * X3, mass * X2,        I11 + mass * X2 * X2 + mass * X3 * X3, -I21 - mass * X2 * X1,                  -I31 - mass * X3 * X1]
-        # [mass * X3, 41, -mass * X1,       -I21 - mass * X2 * X1,                   I22 + mass * X1 * X1 + mass * X3 * X3, -I32 - mass * X3 * X2]
-        # [-mass * X2, mass * X1, 52,       -I31 - mass * X3 * X1,                  -I32 - mass * X3 * X2,                   I33 + mass * X2 * X2 + mass * X1 * X1]
-
-        M6 = np.zeros((6, 6), dtype='float64')
-        M6[:3, :3] = eye3 * mass
-        M6[:3, 3:] = mx
-        M6[3:, :3] = mx.T
-        M6[3:, 3:] = I
-        coo_m.add_matrix(list(range(i1, i1 + 6)), M6)
-        mass_total += mass
-    return mass_total
-
-
 def _run_modes(
     model: BDF,
     subcase: Subcase,
+    op2: OP2,
+    f06_file,
     ngrid: int,
     ndof_per_grid: int,
     ndof: int,
@@ -3164,19 +2461,24 @@ def _run_modes(
     mset: np.ndarray | None = None,
     idtype: str = "int32",
     fdtype: str = "float64",
-):
+    title: str='', subtitle: str='', label: str='',
+    page_stamp: str='',
+    page_num: int=1) -> tuple[int, dict[str, Any]]:
+
     log = model.log
     out = {}
-    if Kgg_override is not None:
-        if issparse(Kgg_override):
-            Kgg = Kgg_override
-        else:
-            Kgg = csc_matrix(Kgg_override[:ndof, :ndof])
-    else:
-        Kgg = build_Kgg(model, dof_map, ndof, ngrid, ndof_per_grid, idtype="int32", fdtype=fdtype)
+    Kgg = get_Kgg(
+        model, dof_map, ndof, ngrid, ndof_per_grid,
+        idtype=idtype, fdtype=fdtype,
+        Kgg_override=Kgg_override)
     out["Kgg"] = Kgg
 
     Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
+    page_num = write_grid_point_weight(
+        model, Mbb, dof_map, ndof,
+        op2, f06_file,
+        title=title, subtitle=subtitle, label=label,
+        page_stamp=page_stamp, page_num=page_num)
 
     Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid)
     out["Mgg"] = Mgg
@@ -3329,11 +2631,13 @@ def _run_modes(
         for imode in range(nmode):
             phig_g[imode, :] = (GMN_dense @ phig[imode, :]).ravel()
         phig = phig_g
+        del GMN_dense
 
     # phit = phig
     nnode_g = len(node_gridtype)
-    phi, Mhh, Khh = apply_phi_normalization(Mgg, Kgg, eigenvalue, phig, nmode, nnode_g, norm_str)
-    log.info(f"Mhhp_diag: {np.diag(Mhh)}")
+    phi, Mhh, Khh = apply_phi_normalization(
+        Mgg, Kgg, eigenvalue, phig, nmode, nnode_g, norm_str)
+    log.info(f"Mhh_diag: {np.diag(Mhh)}")
     log.info(f"Khh_diag: {np.diag(Khh)}")
 
     assert np.all(np.isfinite(phia))
@@ -3343,7 +2647,7 @@ def _run_modes(
     out["modes_phig"] = phig
     out["modes_Mhh"] = Mhh
     out["modes_Khh"] = Khh
-    return out
+    return page_num, out
 
 
 def _write_mass_participation_f06(f06_file: TextIO,
@@ -3411,18 +2715,15 @@ def _write_gpforce_balance(
     subtitle: str = '',
     label: str = '',
     page_stamp: str = 'PAGE %s',
-    page_num: int = 1,
-) -> int:
+    page_num: int = 1,) -> int:
     """Build grid point force balance and write to F06 via pyNastran object.
 
     For each grid, reports: applied load, SPC force, and the total
     (should be ~0 at equilibrium).
     """
     # Internal forces: F_int = K @ x (at each DOF)
-    if hasattr(Kgg, 'dot'):
-        f_internal = Kgg.dot(xg)
-    else:
-        f_internal = Kgg @ xg
+    # f_internal = Kgg @ xg
+    f_internal = dot2(Kgg, xg)
 
     # Clean up NaN in applied forces (SPCD DOFs)
     Fg_clean = np.where(np.isnan(Fg_applied), 0.0, Fg_applied)
@@ -3493,7 +2794,9 @@ def solve_eigenvector(
     neigenvalues: int,
     use_lobpcg: bool = False,
     X0: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray]:
-    """Solve the generalized eigenproblem K*x = lambda*M*x.
+    """
+    Solve the generalized eigenproblem
+      Kaa*x = lambda*Maa*x.
 
     Parameters
     ----------
@@ -3626,53 +2929,412 @@ def _build_xg(model: BDF,
     return spc_set, sset, xspc
 
 
-def _get_node_temperatures(model: BDF,
-                           temp_load_id: int) -> dict[int, float]:
-    """Build a dict of {node_id: temperature} from TEMP/TEMPD cards.
-
-    Parameters
-    ----------
-    temp_load_id : int
-        Load set ID referencing TEMP/TEMPD cards.
-
-    Returns
-    -------
-    node_temperatures : dict[int, float]
-        Temperature at each grid point.
-    """
-    node_temperatures: dict[int, float] = {}
-
-    # Default temperature from TEMPD
-    default_temp = None
-    if model.tempd.n > 0:
-        tempd = model.tempd
-        idx = np.where(tempd.load_id == temp_load_id)[0]
-        if len(idx) > 0:
-            default_temp = tempd.temperature[idx[0]]
-
-    # Apply default to all grid points
-    if default_temp is not None:
-        for nid in model.grid.node_id:
-            node_temperatures[nid] = default_temp
-
-    # Override with explicit TEMP cards
-    if model.temp.n > 0:
-        temp = model.temp
-        idx = np.where(temp.load_id == temp_load_id)[0]
-        for i in idx:
-            inode = temp.inode
-            i0, i1 = inode[i]
-            for j in range(i0, i1):
-                nid = temp.node_id[j]
-                t_val = temp.temperature[j]
-                node_temperatures[nid] = t_val
-
-    return node_temperatures
-
-
 def todense(matrix: np.ndarray):
     if hasattr(matrix, 'toarray'):
         dense_matrix = matrix.toarray()
     else:
         dense_matrix = np.asarray(matrix)
     return dense_matrix
+
+def dot2(A, x):
+    if hasattr(A, 'dot'):
+        b = A.dot(x)
+    else:
+        b = A @ x
+    return b
+
+
+def _has_rigid_elements(model: BDF) -> bool:
+    """Check if the model has any rigid elements (RBE2, RBE3, etc.)."""
+    for attr in ("rbe2", "rbe3", "rbar", "rbar1", "rbe1", "rrod"):
+        elem = getattr(model, attr, None)
+        if elem is not None and elem.n > 0:
+            return True
+    return False
+
+
+def _build_Gmn(model: BDF, mpc_id: int,
+               dof_map: DOF_MAP, ndof: int,
+               fdtype: str = "float64",
+               ) -> tuple[np.ndarray | None, np.ndarray | None]:
+    """
+    TODO: handle MPCADD
+    """
+    log = model.log
+
+    # Collect all dependent DOFs from MPC cards and rigid elements
+    dependents_list = []
+
+    # --- MPC cards ---
+    mpc_filtered = None
+    if mpc_id != 0:
+        # TODO: handle MPCADD
+        mpc = model.mpc
+        if mpc.n > 0:
+            mpc_filtered = mpc.slice_card_by_id(mpc_id, sort_ids=True)
+            if mpc_filtered.n == 0:
+                mpc_filtered = None
+
+    if mpc_filtered is not None:
+        for mpc_idi, (idim0, idim1) in zip(mpc_filtered.mpc_id, mpc_filtered.idim):
+            nodes = mpc_filtered.node_id[idim0:idim1]
+            components = mpc_filtered.components[idim0:idim1]
+            nid_dep = int(nodes[0])
+            comp_dep = int(components[0])
+            idof_dep = dof_map[(nid_dep, comp_dep)]
+            dependents_list.append(idof_dep)
+
+    # --- Rigid elements (RBE2, RBE3, RBAR, RBAR1, RBE1, RROD) ---
+    has_rigid = _has_rigid_elements(model)
+    rigid_gmn_rows = None
+    rigid_m_set = None
+
+    if has_rigid:
+        try:
+            rigid_gmn_rows, rigid_m_set, _ = assemble_gmn(
+                model, dof_map=dof_map, ndof=ndof, apply_cd=True)
+        except ValueError:
+            rigid_gmn_rows = None
+            rigid_m_set = None
+
+    if rigid_m_set is not None:
+        for (nid, dof), _ in rigid_m_set.items():
+            idof_dep = dof_map[(nid, dof)]
+            dependents_list.append(idof_dep)
+
+    if not dependents_list:
+        return None, None
+
+    mset = np.unique(np.array(dependents_list, dtype="int32"))
+
+    # n-set = g-set minus m-set
+    gset = np.arange(ndof, dtype="int32")
+    nset = np.setdiff1d(gset, mset)
+    n_ndof = len(nset)
+
+    # Map from g-set index to n-set column index
+    g_to_n = np.full(ndof, -1, dtype="int32")
+    g_to_n[nset] = np.arange(n_ndof, dtype="int32")
+
+    # Build GMN as sparse (ndof x n_ndof)
+    # Independent DOFs: identity mapping
+    GMN = dok_matrix((ndof, n_ndof), dtype=fdtype)
+    for g_idx, n_col in zip(nset, range(n_ndof)):
+        GMN[g_idx, n_col] = 1.0
+
+    # --- Fill from MPC cards ---
+    if mpc_filtered is not None:
+        for mpc_idi, (idim0, idim1) in zip(mpc_filtered.mpc_id, mpc_filtered.idim):
+            coefficients = mpc_filtered.coefficients[idim0:idim1]
+            components = mpc_filtered.components[idim0:idim1]
+            nodes = mpc_filtered.node_id[idim0:idim1]
+
+            nid_dep = int(nodes[0])
+            comp_dep = int(components[0])
+            coeff_dep = float(coefficients[0])
+            idof_dep = dof_map[(nid_dep, comp_dep)]
+
+            for i in range(1, len(nodes)):
+                nid_ind = int(nodes[i])
+                comp_ind = int(components[i])
+                coeff_ind = float(coefficients[i])
+                if coeff_ind == 0.0:
+                    continue
+                idof_ind = dof_map[(nid_ind, comp_ind)]
+                n_col = g_to_n[idof_ind]
+                if n_col < 0:
+                    log.warning(
+                        f"MPC independent DOF ({nid_ind},{comp_ind}) is also "
+                        f"dependent in another constraint — skipping")
+                    continue
+                GMN[idof_dep, n_col] += -coeff_ind / coeff_dep
+
+    # --- Fill from rigid elements ---
+    if rigid_gmn_rows is not None and rigid_m_set is not None:
+        # rigid_gmn_rows is (n_m_rigid, ndof) — maps g-set to m-set
+        # Each row i corresponds to m-set DOF i, columns are g-set DOFs
+        rigid_dense = rigid_gmn_rows.toarray()
+        for (nid, dof), m_row in rigid_m_set.items():
+            idof_dep = dof_map[(nid, dof)]
+            # For each independent g-set DOF contributing to this m-set DOF
+            for g_col in range(ndof):
+                val = rigid_dense[m_row, g_col]
+                if abs(val) < 1e-15:
+                    continue
+                n_col = g_to_n[g_col]
+                if n_col < 0:
+                    continue
+                GMN[idof_dep, n_col] += val
+
+    GMN_csc = GMN.tocsc()
+    n_mpc = mpc_filtered.n if mpc_filtered is not None else 0
+    n_rigid = len(rigid_m_set) if rigid_m_set is not None else 0
+    log.info(f"MPC/rigid reduction: {len(mset)} dependent DOFs eliminated "
+             f"(MPC={n_mpc}, rigid={n_rigid}, g={ndof} -> n={n_ndof})")
+    return GMN_csc, mset
+
+def get_Kgg(model: BDF, dof_map: DOF_MAP,
+        ndof: int, ngrid: int, ndof_per_grid: int,
+        idtype: str='int32', fdtype: str='float64',
+        Kgg_override=None):
+    if Kgg_override is not None:
+        # if issparse(Kgg_override):
+        #     Kgg = Kgg_override
+        # else:
+        #     Kgg = csc_matrix(Kgg_override[:ndof, :ndof])
+        if issparse(Kgg_override):
+            Kgg = Kgg_override[:ndof, :ndof].tocsc()
+        else:
+            Kgg = csc_matrix(Kgg_override[:ndof, :ndof])
+    else:
+        Kgg = build_Kgg(model, dof_map, ndof, ngrid, ndof_per_grid,
+                        idtype=idtype, fdtype=fdtype)
+    assert Kgg is not None, Kgg
+    return Kgg
+
+def build_KDgg(model: BDF, ndof: int):
+    KDgg = dok_matrix((ndof, ndof))
+    build_KDgg_cquad4(model, KDgg, dof_map, u_global)
+    build_KDgg_ctria3(model, KDgg, dof_map, u_global)
+    build_KDgg_beam(model, KDgg, dof_map, u_global)
+    build_KDgg_solids(model, KDgg, dof_map, u_global)
+    return KDgg
+
+
+def write_grid_point_weight(
+        model: BDF, Mbb: Array | None,
+        dof_map: DOF_MAP, ndof: int,
+        op2: OP2,
+        f06_file: TextIO,
+        title: str='', subtitle: str='', label: str='',
+        page_stamp: str='', page_num: int=1) -> int:
+    if Mbb is not None:
+        reference_point, MO = grid_point_weight(
+            model, Mbb, dof_map, ndof)
+        weight = make_grid_point_weight(
+            reference_point,
+            MO,
+            approach_code=1,
+            table_code=13,
+            title=title,
+            subtitle=subtitle,
+            label=label,
+            superelement_adaptivity_index="",)
+        op2.grid_point_weight[label] = weight
+        page_num = weight.write_f06(f06_file, page_stamp, page_num)
+    return page_num
+
+
+def recover_statics(model: BDF, op2: OP2,
+                    f06_file: TextIO,
+                    subcase: Subcase,
+                    xg: np.ndarray,
+                    node_gridtype: np.ndarray,
+                    ngrid, ndof_per_grid,
+                    title='', subtitle='', label='',
+                    page_stamp: str='', page_num: int=1,
+                    fdtype: str='float32') -> int:
+    itime = 0
+    ntimes = 1  # static
+    #isubcase = subcase.id
+    assert page_stamp is not None, page_stamp
+    page_stamp % page_num
+    page_num = _save_displacment(
+        op2, f06_file,
+        subcase,
+        itime,
+        ntimes,
+        node_gridtype,
+        xg,
+        ngrid,
+        ndof_per_grid,
+        title=title,
+        subtitle=subtitle,
+        label=label,
+        fdtype=fdtype,
+        page_num=page_num,
+        page_stamp=page_stamp,
+    )
+    return page_num
+
+def _save_displacment(
+    op2: OP2,
+    f06_file: TextIO,
+    subcase: Subcase,
+    itime: int,
+    ntimes: int,
+    node_gridtype: NDArrayN2int,
+    xg: NDArrayNfloat,
+    ngrid: int,
+    ndof_per_grid: int,
+    title: str = "",
+    subtitle: str = "",
+    label: str = "",
+    fdtype: str = "float32",
+    page_num: int = 1,
+    page_stamp: str = "PAGE %s",) -> int:
+    f06_request_name = "DISPLACEMENT"
+    table_name = "OUGV1"
+    # self.log.debug(f'xg = {xg}')
+    assert page_stamp is not None
+    page_stamp % page_num
+    page_num = save_static_table(
+        f06_file,
+        subcase,
+        itime,
+        ntimes,
+        node_gridtype,
+        xg,
+        RealDisplacementArray,
+        f06_request_name,
+        table_name,
+        op2.displacements,
+        ngrid,
+        ndof_per_grid,
+        title=title,
+        subtitle=subtitle,
+        label=label,
+        fdtype=fdtype,
+        page_num=page_num,
+        page_stamp=page_stamp,
+    )
+    return page_num
+
+def _save_spc_forces(
+    op2: OP2,
+    f06_file: TextIO,
+    subcase: Subcase,
+    itime: int,
+    ntimes: int,
+    node_gridtype: NDArrayN2int,
+    fspc: NDArrayNfloat,
+    ngrid: int,
+    ndof_per_grid: int,
+    title: str = "",
+    subtitle: str = "",
+    label: str = "",
+    fdtype: str = "float32",
+    page_num: int = 1,
+    page_stamp: str = "PAGE %s",) -> int:
+    f06_request_name = "SPCFORCES"
+    table_name = "OQG1"
+    # self.log.debug(f'Fg = {Fg}')
+    assert page_stamp is not None
+    page_stamp % page_num
+    page_num = save_static_table(
+        f06_file,
+        subcase,
+        itime,
+        ntimes,
+        node_gridtype,
+        fspc,
+        RealSPCForcesArray,
+        f06_request_name,
+        table_name,
+        op2.spc_forces,
+        ngrid,
+        ndof_per_grid,
+        title=title,
+        subtitle=subtitle,
+        label=label,
+        fdtype=fdtype,
+        page_num=page_num,
+        page_stamp=page_stamp,
+    )
+    return page_num
+
+def _save_mpc_forces(
+    op2: OP2,
+    f06_file: TextIO,
+    subcase: Subcase,
+    itime: int,
+    ntimes: int,
+    node_gridtype: NDArrayN2int,
+    fmpc: NDArrayNfloat,
+    ngrid: int,
+    ndof_per_grid: int,
+    title: str = "",
+    subtitle: str = "",
+    label: str = "",
+    fdtype: str = "float32",
+    page_num: int = 1,
+    page_stamp: str = "PAGE %s",) -> int:
+    """Save MPC forces to F06 and OP2."""
+    assert page_stamp is not None
+    page_stamp % page_num
+    f06_request_name = 'MPCFORCES'
+    unused_nids_write, write_f06, write_op2, quick_return = get_plot_request(
+        subcase, f06_request_name)
+    if quick_return:
+        return page_num
+
+    idtype2, fdtype2 = recast_data("int32", fdtype)
+    isubcase = subcase.id
+    nnodes = node_gridtype.shape[0]
+    data = np.zeros((ntimes, nnodes, 6), dtype=fdtype2)
+    ngrid_dofs = ngrid * ndof_per_grid
+    _fgi = fmpc[:ngrid_dofs].reshape(ngrid, ndof_per_grid)
+    data[itime, :ngrid, :] = _fgi
+    data[itime, ngrid:, 0] = fmpc[ngrid_dofs:]
+
+    # Use OQG1 for data_code creation, then override table_name for write_f06
+    table_name = "OQG1"
+    mpc_obj = RealMPCForcesArray.add_static_case(
+        table_name, node_gridtype, data, isubcase,
+        is_sort1=True, is_random=False, is_msc=True,
+        random_code=0, title=title, subtitle=subtitle, label=label)
+    mpc_obj.table_name = "OQMG1"
+
+    if write_f06:
+        page_num = mpc_obj.write_f06(
+            f06_file, header=None,
+            page_stamp=page_stamp, page_num=page_num,
+            is_mag_phase=False, is_sort1=True)
+        f06_file.write("\n")
+    if write_op2:
+        op2.mpc_forces[isubcase] = mpc_obj
+    return page_num
+
+
+def _save_applied_load(
+    op2: OP2,
+    f06_file: TextIO,
+    subcase: Subcase,
+    itime: int,
+    ntimes: int,
+    node_gridtype: NDArrayN2int,
+    Fg: NDArrayNfloat,
+    ngrid: int,
+    ndof_per_grid: int,
+    title: str = "",
+    subtitle: str = "",
+    label: str = "",
+    fdtype: str = "float32",
+    page_num: int = 1,
+    page_stamp: str = "PAGE %s",) -> int:
+    f06_request_name = "OLOAD"
+    table_name = "OPG1"
+    # self.log.debug(f'Fg = {Fg}')
+    assert page_stamp is not None
+    page_stamp % page_num
+    page_num = save_static_table(
+        f06_file,
+        subcase,
+        itime,
+        ntimes,
+        node_gridtype,
+        Fg,
+        RealLoadVectorArray,
+        f06_request_name,
+        table_name,
+        op2.load_vectors,
+        ngrid,
+        ndof_per_grid,
+        title=title,
+        subtitle=subtitle,
+        label=label,
+        fdtype=fdtype,
+        page_num=page_num,
+        page_stamp=page_stamp,
+    )
+    return page_num

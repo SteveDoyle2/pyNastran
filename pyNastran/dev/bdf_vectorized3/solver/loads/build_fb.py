@@ -88,7 +88,6 @@ def build_Fb_from_loadid(model: BDF,
     return Fb
 
 
-
 def build_thermal_load_beam(
     model: BDF,
     Fb: np.ndarray,
@@ -146,3 +145,48 @@ def build_thermal_load_beam(
                 gi2 = dof_map[(nid2, 1)]
                 Fb[gi1:gi1 + 6] += PG[:6]
                 Fb[gi2:gi2 + 6] += PG[6:]
+
+
+
+def _get_node_temperatures(model: BDF,
+                           temp_load_id: int) -> dict[int, float]:
+    """Build a dict of {node_id: temperature} from TEMP/TEMPD cards.
+
+    Parameters
+    ----------
+    temp_load_id : int
+        Load set ID referencing TEMP/TEMPD cards.
+
+    Returns
+    -------
+    node_temperatures : dict[int, float]
+        Temperature at each grid point.
+    """
+    node_temperatures: dict[int, float] = {}
+
+    # Default temperature from TEMPD
+    default_temp = None
+    if model.tempd.n > 0:
+        tempd = model.tempd
+        idx = np.where(tempd.load_id == temp_load_id)[0]
+        if len(idx) > 0:
+            default_temp = tempd.temperature[idx[0]]
+
+    # Apply default to all grid points
+    if default_temp is not None:
+        for nid in model.grid.node_id:
+            node_temperatures[nid] = default_temp
+
+    # Override with explicit TEMP cards
+    if model.temp.n > 0:
+        temp = model.temp
+        idx = np.where(temp.load_id == temp_load_id)[0]
+        for i in idx:
+            inode = temp.inode
+            i0, i1 = inode[i]
+            for j in range(i0, i1):
+                nid = temp.node_id[j]
+                t_val = temp.temperature[j]
+                node_temperatures[nid] = t_val
+
+    return node_temperatures

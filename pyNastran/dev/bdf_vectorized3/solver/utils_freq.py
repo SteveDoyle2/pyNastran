@@ -11,7 +11,7 @@ def get_frequencies(model: BDF, subcase: Subcase,
     use that.
     """
     is_not_freqs = (len(model.frequencies) == 0)
-    is_frequency = ('FREQUENCY' not in subcase)
+    is_not_frequency = ('FREQUENCY' not in subcase)
     natural_freq = np.unique(omega_ns) / (2 * np.pi)
     del omega_ns
 
