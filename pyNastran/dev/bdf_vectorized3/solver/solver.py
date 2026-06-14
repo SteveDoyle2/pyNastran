@@ -27,7 +27,7 @@ from datetime import date
 from typing import TextIO, Any
 
 import numpy as np
-import scipy as sp
+import scipy
 from scipy.linalg import eigh, eig
 from scipy.sparse import csc_matrix, lil_matrix, dok_matrix, issparse
 from scipy.sparse.linalg import ArpackNoConvergence
@@ -66,8 +66,6 @@ from pyNastran.op2.op2_interface.op2_classes import (
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
 # from pyNastran.bdf.mesh_utils.loads import get_ndof
 
-from .recover.utils import get_f06_op2_pch_set, get_mag_phase_from_options
-
 from .recover.freq_force import recover_force_freq
 from .recover.modal_force import recover_force_103
 from .recover.static_force import recover_force_101
@@ -75,27 +73,29 @@ from .recover.static_force import recover_force_101
 from .recover.static_stress import recover_stress_101
 from .recover.static_strain import recover_strain_101
 from .recover.strain_energy import recover_strain_energy_101
+from .recover.utils import (
+    get_f06_op2_pch_set, get_mag_phase_from_options, get_plot_request)
 
-from .loads.build_fb import build_Fb_from_loadid
-from .build_mass import build_Mbb
-from .modal_frequency import get_freq_damping
-from .partition import partition_matrix, partition_vector, partition_vector2, partition_vector3
+from .partition import (
+    partition_matrix, partition_vector,
+    partition_vector2, partition_vector3)
 from .utils_statics import save_static_table
 from .utils_modes import (
     slice_modal_set, get_real_eigenvalue_method,
     apply_phi_normalization, compute_mass_participation,
 )
+from .modal_frequency import get_freq_damping
 from .utils_freq import get_frequencies, slice_freq_set
 
 #-----------------------------------------------
 from .build_stiffness import (
     _COOAccumulator,
-    build_Kgg, Kbb_to_Kgg,
-    DOF_MAP)
+    build_Kgg, Kbb_to_Kgg)
 from .build_stiffness_geometric import build_KDgg
+from .build_mass import build_Mbb
+from .loads.build_fb import build_Fb_from_loadid
 #--------------------------------------------------------
-from .recover.utils import get_plot_request
-from .utils import recast_data
+from .utils import recast_data, get_param, DOF_MAP
 
 from .craig_bampton import (
     run_craig_bampton, write_cb_to_op4, write_cb_to_h5)
@@ -104,7 +104,6 @@ from pyNastran.dev.bdf_vectorized3.mesh_utils.inertia_relief import (
     build_rigid_body_modes, compute_inertia_relief)
 from pyNastran.dev.bdf_vectorized3.mesh_utils.gmn_matrix import assemble_gmn
 
-import scipy
 Array = np.ndarray | scipy.sparse.csc_matrix
 
 
@@ -651,9 +650,7 @@ class Solver:
             self.log.info(f"  Fa_solve = {Fa_solve}")
 
         # --- SUPORT / inertia relief for statics ---
-        inrel = -1
-        if 'INREL' in model.params:
-            inrel = model.params['INREL'].values[0]
+        inrel = get_param(model, 'INREL', -1)
 
         if has_suport and inrel == -2 and is_aset:
             # Inertia relief: partition a = l + r, apply inertia relief
@@ -1972,8 +1969,10 @@ def get_qset(model: BDF) -> set[tuple[int, int]]:
 
 
 def get_residual_structure(
-    model: BDF, dof_map: DOF_MAP, fset: NDArrayNbool, idtype: str = "int32"
-) -> NDArrayNbool:
+        model: BDF,
+        dof_map: DOF_MAP,
+        fset: NDArrayNbool,
+        idtype: str = "int32") -> NDArrayNbool:
     """gets the residual structure dofs"""
     asetmap = get_aset(model)
     bsetmap = get_bset(model)
@@ -2021,8 +2020,7 @@ def get_residual_structure(
                 raise RuntimeError(
                     "OMITi entries cannot overlap with ASETi entries "
                     "or any ASET subsets, such as QSETi, "
-                    "SUPORTi, CSETi, and BSETi entries."
-                )
+                    "SUPORTi, CSETi, and BSETi entries.")
 
         oset = fset & ~aset  # assign remaining to O set
         # 3. If there are no ASETi, QSETi, or OMITi entries present but
@@ -2075,8 +2073,10 @@ def get_residual_structure(
 
 
 def apply_dof_map_to_set(
-    set_map, dof_map: DOF_MAP, idtype: str = "int32", use_ints: bool = True
-) -> NDArrayNbool:
+        set_map,
+        dof_map: DOF_MAP,
+        idtype: str = "int32",
+        use_ints: bool = True) -> NDArrayNbool:
     """changes a set defined in terms of (nid, comp) into an array of integers"""
     if use_ints:
         ndof = len(set_map)
@@ -2093,11 +2093,10 @@ def apply_dof_map_to_set(
     return aset
 
 
-def xg_to_xb(
-    model: BDF,
-    xg: NDArrayNfloat,
-    ngrid: int, ndof_per_grid: int,
-    inplace: bool = True) -> NDArrayNfloat:
+def xg_to_xb(model: BDF,
+             xg: NDArrayNfloat,
+             ngrid: int, ndof_per_grid: int,
+             inplace: bool = True) -> NDArrayNfloat:
     assert isinstance(xg, np.ndarray)
     str(ngrid)
 
@@ -2241,7 +2240,10 @@ def solve(Kaa: lil_matrix,
     return xas_, ipositive, inegative
 
 
-def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int):
+def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int,
+                      xyz_cid0: np.ndarray=None):
+    if xyz_cid0 is None:
+        xyz_cid0 = model.grid.xyz_cid0()
     str(dof_map)
     str(ndof)
     z = np.zeros((3, 3), dtype="float64")
@@ -2264,7 +2266,6 @@ def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int):
         dxyz = model.nodes[reference_point].get_position()
 
     coord = model.coord
-    xyz_cid0 = model.grid.xyz_cid0()
     cds = model.grid.cd
     cids = coord.coord_id
     # icds = coord.index(cds, assume_sorted=False, inverse=False)
@@ -2809,7 +2810,7 @@ def solve_eigenvector(
     backend = get_solver()
     if ndof2 <= neigenvalues:
         Kaa2_dense = Kaa2.todense()
-        eigenvalues, xa = sp.linalg.eigh(Kaa2_dense, Maa2)
+        eigenvalues, xa = scipy.linalg.eigh(Kaa2_dense, Maa2)
     elif use_lobpcg:
         X0_reduced = None
         if X0 is not None:
@@ -3090,7 +3091,7 @@ def write_grid_point_weight(
         page_stamp: str='', page_num: int=1) -> int:
     if Mbb is not None:
         reference_point, MO = grid_point_weight(
-            model, Mbb, dof_map, ndof)
+            model, Mbb, dof_map, ndof, xyz_cid0=None)
         weight = make_grid_point_weight(
             reference_point,
             MO,

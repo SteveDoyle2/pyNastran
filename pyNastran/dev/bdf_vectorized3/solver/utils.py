@@ -7,6 +7,10 @@ if TYPE_CHECKING:
 DOF_MAP = dict[tuple[int, int], int]
 
 
+def get_param(model: BDF, key: str, default):
+    return model.params[key].values[0] if key in model.params else default
+    
+
 def lambda1d(dxyz: np.ndarray, debug: bool=True) -> np.ndarray:
     """
     ::

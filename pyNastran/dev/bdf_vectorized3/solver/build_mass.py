@@ -13,12 +13,9 @@ from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
 from .elements.solids import build_mbb_solids
 
 from .build_stiffness import _COOAccumulator
-from .utils import DOF_MAP
+from .utils import get_param, DOF_MAP
 
 
-fastedef get_param(model: BDF, key: str, default):
-    return model.params[key].values[0] if key in model.params else default
-    
 def build_Mbb(model: BDF, subcase: Subcase,
               dof_map: DOF_MAP, ndof: int,
               xyz_cid0: np.ndarray | None=None,
