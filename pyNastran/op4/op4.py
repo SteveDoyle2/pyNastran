@@ -3,7 +3,7 @@
 import sys
 import os
 from struct import pack, unpack, Struct
-from typing import TextIO, BinaryIO, Optional, cast
+from typing import TextIO, BinaryIO, Optional, Any, cast
 
 import numpy as np
 from numpy import float32, float64, complex64, complex128
@@ -2272,17 +2272,39 @@ def is_saved_matrix(name: str, matrix_names: Optional[list[str]]) -> bool:
             return True
     return False
 
-def _read_op4_fast_ascii(op4_filename: PathLike,
-                         matrix_names: Optional[list[str]]=None) -> dict[str, Matrix]:
-    """Fast ASCII OP4 reader. Minimizes per-line Python overhead by
-    deferring string-to-float conversion to numpy (C-level batch)."""
+def get_dtype_dtval(matrix_type: int,
+                    precision: str) -> tuple[Any, Any]:
+    matrix_type = MATRIX_TYPE_MAP[(matrix_type, precision)]
+    if matrix_type in (1, 3):
+        dtype = float32 if not is_complex else complex64
+        dt_val = float32
+    else:
+        dtype = float64 if not is_complex else complex128
+        dt_val = float64
+    return dtype, dt_val
+            
+def _read_op4_ascii(op4_filename: PathLike,
+                    precision: str='default',
+                    matrix_names: Optional[list[str]]=None) -> dict[str, Matrix]:
+    """
+    Fast ASCII OP4 reader. Minimizes per-line Python
+    overhead by deferring string-to-float conversion
+    to numpy (C-level batch).
+
+    Parameters
+    ----------
+    precision : str; {'default', 'single', 'double'}
+        specifies if the matrices are in single or double precsion
+        which means the format will be whatever the file is in
+    """
+    assert precision in {'default', 'single', 'double'}, f'precision={precision!r}'
     with open(op4_filename, 'r') as f:
         lines = f.readlines()
 
     matrices: dict[str, Matrix] = {}
+
     i = 0
     nlines = len(lines)
-
     while i < nlines:
         line = lines[i]
         i += 1
@@ -2303,12 +2325,14 @@ def _read_op4_fast_ascii(op4_filename: PathLike,
             form = int(parts[2])
             matrix_type = int(parts[3])
         except ValueError:
+            log.error(str(parts))
             continue
         name = line[32:40].strip()
 
         try:
             is_big_mat, nrows = get_big_mat_nrows(nrows_raw)
         except EmptyMatrixError:
+            log.error(f'nrows_raw={nrows_raw}')
             break
 
         # Parse format spec: e.g. "1P,3E23.16" or "1P,5E16.9"
@@ -2316,12 +2340,7 @@ def _read_op4_fast_ascii(op4_filename: PathLike,
         line_size = int(size_str.split(',')[1].split('E')[1].split('.')[0])
 
         is_complex = matrix_type in (3, 4)
-        if matrix_type in (1, 3):
-            dtype = float32 if not is_complex else complex64
-            dt_val = float32
-        else:
-            dtype = float64 if not is_complex else complex128
-            dt_val = float64
+        dtype, dt_val = get_dtype_dtval(matrix_type, precision)
 
         # First column header
         line = lines[i]
@@ -2482,7 +2501,25 @@ def _read_op4_fast_ascii(op4_filename: PathLike,
     return matrices
 
 
-def read_op4_fast(op4_filename: PathLike,
+MATRIX_TYPE_MAP = {
+    (1, 'default'): 1,
+    (2, 'default'): 2,
+    (3, 'default'): 3,
+    (4, 'default'): 4,
+
+    (1, 'single'): 1,
+    (2, 'single'): 1,
+    (3, 'single'): 3,
+    (4, 'single'): 3,
+
+    (1, 'double'): 2,
+    (2, 'double'): 2,
+    (3, 'double'): 4,
+    (4, 'double'): 4,
+}
+
+def read_op4_fast(op4_filename: PathLike | None,
+                  precision: str='default',
                   matrix_names: Optional[list[str]]=None) -> dict[str, Matrix]:
     """
     Fast OP4 reader using bulk buffer reads and numpy parsing.
@@ -2510,6 +2547,9 @@ def read_op4_fast(op4_filename: PathLike,
         Path to the OP4 file (binary or ASCII).
     matrix_names : list[str] or None
         If specified, only read these matrices (others are skipped).
+    precision : str; {'default', 'single', 'double'}
+        specifies if the matrices are in single or double precsion
+        which means the format will be whatever the file is in
 
     Returns
     -------
@@ -2518,8 +2558,26 @@ def read_op4_fast(op4_filename: PathLike,
         Dense full-column matrices: Matrix.data is np.ndarray (F-order).
         Partial-column or sparse matrices: Matrix.data is scipy.sparse.coo_matrix.
     """
+    if precision not in {'default', 'single', 'double'}:
+        msg = f"precision={precision!r} and must be 'single', 'double', or 'default'"
+        raise ValueError(msg)
+
+    if op4_filename is None:
+        from pyNastran.utils.gui_io import load_file_dialog
+        wildcard_wx = "Nastran OP4 (*.op4)|*.op4|" \
+            "All files (*.*)|*.*"
+        wildcard_qt = "Nastran OP4 (*.op4);;All files (*)"
+        title = 'Please select a OP4 to load'
+        op4_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)[0]
+        assert op4_filename is not None, op4_filename
+
+    if not os.path.exists(op4_filename):
+        raise IOError('cannot find op4_filename=%r' % str(op4_filename))
+
     if not file_is_binary(op4_filename):
-        return _read_op4_fast_ascii(op4_filename, matrix_names)
+        return _read_op4_ascii(
+            op4_filename, precision=precision,
+            matrix_names=matrix_names)
 
     with open(op4_filename, 'rb') as f:
         buf = f.read()
@@ -2850,9 +2908,22 @@ def read_op4_fast(op4_filename: PathLike,
             else:
                 data_mat = coo_matrix((nrows, ncols), dtype=dtype)
 
+        matrix_type2 = MATRIX_TYPE_MAP[(matrix_type, precision)]
+        if matrix_type != matrix_type2:
+            if matrix_type2 == 1:
+                dtypei = float32
+            elif matrix_type2 == 2:
+                dtypei = float64
+            elif matrix_type2 == 3:
+                dtypei = complex64
+            elif matrix_type2 == 4:
+               dtypei = complex128
+            else:  # pragma: no cover
+                raise RuntimeError(matrix_type)
+            data_mat.astype(dtypei)
+
         amat = Matrix(name, form, data=data_mat)
         _save_matrix(matrices, name, amat)
-
     return matrices
 
 

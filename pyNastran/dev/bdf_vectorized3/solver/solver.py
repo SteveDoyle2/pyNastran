@@ -91,10 +91,8 @@ from .utils_freq import get_frequencies, slice_freq_set
 from .build_stiffness import (
     _COOAccumulator,
     build_Kgg, Kbb_to_Kgg,
-    build_KDgg_beam, DOF_MAP)
-from .elements.shells import (
-    build_KDgg_cquad4, build_KDgg_ctria3)
-from .elements.solids import build_KDgg_solids
+    DOF_MAP)
+from .build_stiffness_geometric import build_KDgg
 #--------------------------------------------------------
 from .recover.utils import get_plot_request
 from .utils import recast_data
@@ -241,6 +239,9 @@ class Solver:
             else:
                 temp_load_id, _ = subcase["TEMPERATURE(BOTH)"]
 
+        if has_load or has_temp:
+            log.warning('creating Fb')
+
         Fb = build_Fb_from_loadid(
             model, dof_map, ndof,
             xg, sset_b,
@@ -381,11 +382,17 @@ class Solver:
         itime = 0
         ntimes = 1  # static
         isubcase = subcase.id
+        idtype = 'int32'
         # -----------------------------------------------------------------------
         model = self.model
         model.setup(run_geom_check=True)
 
         log = model.log
+
+        is_mpc_request = get_plot_request(subcase, 'MPCFORCES')[-1]
+        is_spc_request = get_plot_request(subcase, 'SPCFORCES')[-1]
+        is_gpforce_request = get_plot_request(subcase, 'GPFORCE')[-1]
+        is_oload_request = get_plot_request(subcase, 'OLOAD')[-1]
 
         dof_map, ps = _get_dof_map(model)
 
@@ -393,15 +400,15 @@ class Solver:
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
 
         gset_b = ps_to_sg_set(ndof, ps)
-        idtype = 'int32'
+
+        rset_b = get_rset_bool(model, dof_map, ndof)
+        has_suport = np.any(rset_b)
+        #--------------------------------------------------
         log.warning('creating Kgg')
         Kgg = get_Kgg(
             model, dof_map, ndof, ngrid, ndof_per_grid,
             idtype=idtype, fdtype=fdtype,
             Kgg_override=self.Kgg_override)
-
-        rset_b = get_rset_bool(model, dof_map, ndof)
-        has_suport = np.any(rset_b)
 
         Mbb = None
         is_mass_load = len(model.grav) > 0 or len(model.rforce) > 0
@@ -416,15 +423,17 @@ class Solver:
                 page_stamp=page_stamp, page_num=page_num)
 
         # ----------------------MPC reduction (g -> n)----------------------
-        log.warning('creating Gmn')
         GMN, mset = self.build_GMN(subcase, dof_map, ndof, fdtype=fdtype)
         self.GMN = GMN
         self.mset = mset
 
         log.warning('creating Mgg')
-        Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid, inplace=False) if Mbb is not None else None
+        Mgg = None if Mbb is None else Kbb_to_Kgg(
+            model, Mbb, ngrid, ndof_per_grid,
+            inplace=False)
 
         if GMN is not None:
+            log.info('Applying GMN: n = g - m')
             # Transform to n-set: Knn = GMN^T @ Kgg @ GMN, Mnn = GMN^T @ Mgg @ GMN
             Knn = GMN.T @ Kgg @ GMN
             Mnn = GMN.T @ Mgg @ GMN if Mgg is not None else None
@@ -444,10 +453,8 @@ class Solver:
             self._autospc_n_dofs = np.array([], dtype="int32")
 
         gset = np.arange(ndof, dtype=idtype)
-        log.warning('creating xg')
         sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
 
-        log.warning('creating Fb')
         Fb = self.build_Fb(xg, sset_b, dof_map, ndof, subcase)
         Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
 
@@ -525,6 +532,9 @@ class Solver:
                 aset = apply_dof_map_to_set(asetmap, dof_map, idtype=idtype)
             else:
                 aset = np.setdiff1d(gset, sset)
+
+        #if not is_gpforce_request:
+        #    del Kgg_orig
 
         naset = aset.sum() if aset.dtype == bool else len(aset)
         nsset = sset.sum() if sset.dtype == bool else len(sset)
@@ -752,10 +762,6 @@ class Solver:
             fspc[set0] = fspc_0
 
         # ----------------------MPC recovery (n -> g)----------------------
-        is_mpc_request = get_plot_request(subcase, 'MPCFORCES')[-1]
-        is_spc_request = get_plot_request(subcase, 'SPCFORCES')[-1]
-        is_gpforce_request = get_plot_request(subcase, 'GPFORCE')[-1]
-        is_oload_request = get_plot_request(subcase, 'OLOAD')[-1]
         #is_load_recovery_request = (
         #    is_spc_request or is_mpc_request or
         #    is_gpforce_request # or is_oload_request
@@ -823,60 +829,13 @@ class Solver:
         page_num = recover_statics(
             model, op2, f06_file,
             subcase,
-            xg, node_gridtype,
+            xg,
+            Fg_oload, fspc, self.fmpc,
+            node_gridtype,
             ngrid, ndof_per_grid,
             title=title, subtitle=subtitle, label=label,
             page_stamp=page_stamp, page_num=page_num,
             fdtype=fdtype)
-
-        page_stamp % page_num
-        page_num = _save_applied_load(
-            self.op2, f06_file,
-            subcase,
-            itime,
-            ntimes,
-            node_gridtype,
-            Fg_oload,
-            ngrid,
-            ndof_per_grid,
-            title=title,
-            subtitle=subtitle,
-            label=label,
-            fdtype=fdtype,
-            page_num=page_num,
-            page_stamp=page_stamp)
-
-        page_num = _save_spc_forces(
-            self.op2, f06_file,
-            subcase,
-            itime,
-            ntimes,
-            node_gridtype,
-            fspc,
-            ngrid,
-            ndof_per_grid,
-            title=title,
-            subtitle=subtitle,
-            label=label,
-            fdtype=fdtype,
-            page_num=page_num,
-            page_stamp=page_stamp)
-
-        page_num = _save_mpc_forces(
-            self.op2, f06_file,
-            subcase,
-            itime,
-            ntimes,
-            node_gridtype,
-            self.fmpc,
-            ngrid,
-            ndof_per_grid,
-            title=title,
-            subtitle=subtitle,
-            label=label,
-            fdtype=fdtype,
-            page_num=page_num,
-            page_stamp=page_stamp)
 
         if 'GPFORCE' in subcase:
             page_num = _write_gpforce_balance(
@@ -945,6 +904,7 @@ class Solver:
         [A][X] = [X]λ^2
         """
         model = self.model
+        nmodes, norm_str = get_real_eigenvalue_method(model, subcase)
         log = model.log
         log.debug(f"run_sol_103 (modes)")
         assert len(model.methods), "SOL 103 (modes) requires a METHOD and a EIGR/EIGRL card"
@@ -1143,13 +1103,16 @@ class Solver:
         label: str = "",
         page_num: int = 1,
         idtype: str = "int32",
-        fdtype: str = "float64",
-    ):
+        fdtype: str = "float64"):
         model = self.model
+        neigenvalue, norm_str = get_real_eigenvalue_method(model, subcase)
+        if norm_str == "MAX":
+            raise RuntimeError("norm_str=MAX and should be MASS (it makes the math harder)")
+
         log = model.log
         isubcase = subcase.id
         op2 = self.op2
-        # -----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
 
         # handles MAX/MASS normalization
@@ -1195,12 +1158,9 @@ class Solver:
         # phiT = phi.T
         #  modal space (h); sometimes called x
         # print(phi.shape, Mgg.shape)
-        nmodes, norm_str = get_real_eigenvalue_method(model, subcase)
         # phi = phit.T
         Mhh = out["modes_Mhh"]
         Khh = out["modes_Khh"]
-        if norm_str == "MAX":
-            raise RuntimeError("norm_str=MAX and should be MASS (it makes the math harder)")
         # Mhh = phit @ Mgg @ phi
         # Chh = phi @ Cgg @ phi.t
         # Khh = phi @ Kgg @ phi.T
@@ -1345,6 +1305,7 @@ class Solver:
         model = self.model
         log = model.log
         log.debug("run_sol_105 (buckling)")
+        neigenvalue, norm_str = get_real_eigenvalue_method(model, subcase)
 
         end_options = ["SEKR", "MODES"]
 
@@ -1373,6 +1334,11 @@ class Solver:
         log.debug("  static preload solved")
 
         # Build geometric stiffness from preload stress state
+        #KDgg = get_KDgg(
+        #    model, dof_map, ndof,
+        #    ngrid, ndof_per_grid,
+        #    idtype=idtype, fdtype=fdtype,
+        #    KDgg_override=self.KDgg_override)
         KDgg = build_KDgg(model, ndof, dof_map, u_global)
         KDff = KDgg.tocsc()[np.ix_(free_dofs, free_dofs)].toarray()
 
@@ -1381,7 +1347,6 @@ class Solver:
         # Solve buckling eigenproblem: (K + lambda*KD)*x = 0
         # => K*x = -lambda*KD*x
         # Use scipy generalized eigenvalue: Kff @ x = lambda * (-KDff) @ x
-        neigenvalue, _ = get_real_eigenvalue_method(model, subcase)
         neg_KDff = -KDff
 
         # Use eigh for symmetric positive-definite B (standard buckling)
@@ -1441,6 +1406,12 @@ class Solver:
         Number of modes from METHOD (EIGRL/EIGR).
         """
         model = self.model
+        neigenvalues, _ = get_real_eigenvalue_method(model, subcase)
+
+        base_name = os.path.splitext(model.bdf_filename)[0]
+        op4_filename = base_name + ".cb.op4"
+        h5_filename = base_name + ".cb.h5"
+
         log = model.log
         log.debug("run_sol_31 (Craig-Bampton)")
 
@@ -1449,6 +1420,7 @@ class Solver:
         model.setup(run_geom_check=True)
         dof_map, ps = _get_dof_map(model)
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
+        #-----------------------------------------------------------
 
         # Build global matrices
         Kgg = get_Kgg(
@@ -1478,35 +1450,7 @@ class Solver:
         g_to_f[free_dofs] = np.arange(len(free_dofs), dtype="int32")
 
         # Identify R-set DOFs from SUPORT/SUPORT1 cards
-        r_set_dofs = []
-        suport = model.suport
-        if suport.n > 0:
-            for i in range(suport.n):
-                nid = int(suport.node_id[i])
-                comp_str = str(suport.component[i])
-                for c in comp_str:
-                    dof = int(c)
-                    g_idx = dof_map[(nid, dof)]
-                    f_idx = g_to_f[g_idx]
-                    if f_idx >= 0:
-                        r_set_dofs.append((nid, dof))
-
-        suport1 = model.suport1
-        if suport1.n > 0:
-            for i in range(suport1.n):
-                nid = int(suport1.node_id[i])
-                comp_str = str(suport1.component[i])
-                for c in comp_str:
-                    dof = int(c)
-                    g_idx = dof_map[(nid, dof)]
-                    f_idx = g_to_f[g_idx]
-                    if f_idx >= 0:
-                        r_set_dofs.append((nid, dof))
-
-        if not r_set_dofs:
-            raise RuntimeError(
-                "SOL 31 requires SUPORT or SUPORT1 cards to define boundary DOFs"
-            )
+        r_set_dofs = get_cb_rset_dofs(model, subcase, dof_map, g_to_f)
 
         # Build DOF map for the free set
         f_dof_map: DOF_MAP = {}
@@ -1516,17 +1460,12 @@ class Solver:
                 f_dof_map[(nid, dof)] = f_idx
 
         # Number of eigenvalues
-        neigenvalues = 20
-        if "METHOD" in subcase:
-            neigenvalues, _ = get_real_eigenvalue_method(model, subcase)
-
         log.info(f"  R-set DOFs: {len(r_set_dofs)}, modes requested: {neigenvalues}")
 
         # Run Craig-Bampton
         cb_result = run_craig_bampton(
             Kff, Mff, f_dof_map, r_set_dofs,
-            neigenvalues=neigenvalues, log=log,
-        )
+            neigenvalues=neigenvalues, log=log)
 
         # Write summary to F06
         eigenvalues = cb_result["eigenvalues"]
@@ -1549,10 +1488,9 @@ class Solver:
         self.cb_result = cb_result
 
         # Write CB matrices to OP4 and HDF5
-        base_name = os.path.splitext(model.bdf_filename)[0]
-        op4_filename = base_name + ".cb.op4"
-        h5_filename = base_name + ".cb.h5"
-        write_cb_to_op4(op4_filename, cb_result, is_binary=True, precision="double")
+        write_cb_to_op4(
+            op4_filename, cb_result,
+            is_binary=True, precision="double")
         log.info(f"  CB matrices written to: {op4_filename}")
         try:
             write_cb_to_h5(h5_filename, cb_result)
@@ -1573,8 +1511,7 @@ class Solver:
         label: str = "",
         page_num: int = 1,
         idtype: str = "int32",
-        fdtype: str = "float64",
-    ):
+        fdtype: str = "float64"):
         """
         Direct frequency response
 
@@ -1616,6 +1553,7 @@ class Solver:
         #'SEKR',  # STIFFNESS MATRIX REDUCTION STEP
         # ]
         model = self.model
+        neigenvalues, _ = get_real_eigenvalue_method(model, subcase)
         # op2 = self.op2
         # ---------------------------------------------------
         # title = ''
@@ -2245,7 +2183,7 @@ def _write_spcforce_resultant(
     log: SimpleLogger,) -> int:
     """Write SPCFORCE RESULTANT table to F06."""
     ndof = ngrid * ndof_per_grid
-    assert fspc.shape == (ndof,), (f'fspc.shape={fspc.shape}, ngrid={ngrid}, ngrid*6={ngrid*6}')
+    #assert fspc.shape == (ndof,), (f'fspc.shape={fspc.shape}, ngrid={ngrid}, ngrid*6={ngrid*6}')
     fxyz_mxyz = fspc[:ngrid * ndof_per_grid].reshape(ngrid, ndof_per_grid)
     fxyz_mxyz_sum = fxyz_mxyz.sum(axis=0)
     spc_resultant = Resultant("SPCFORCE", fxyz_mxyz_sum, isubcase)
@@ -2508,6 +2446,8 @@ def _run_modes(
     page_stamp: str='',
     page_num: int=1) -> tuple[int, dict[str, Any]]:
 
+    neigenvalue, norm_str = get_real_eigenvalue_method(model, subcase)
+
     log = model.log
     out = {}
     Kgg = get_Kgg(
@@ -2602,8 +2542,6 @@ def _run_modes(
     # Solve eigenvalue problem on the l-set (flexible DOFs).
     rset_b = get_rset_bool(model, dof_map, ndof)
     has_rset = np.any(rset_b) and GMN is None
-
-    neigenvalue, norm_str = get_real_eigenvalue_method(model, subcase)
 
     if has_rset:
         # r-set within the a-set
@@ -2908,6 +2846,7 @@ def _build_xg(model: BDF,
 
     """
     log = model.log
+
     # model = self.model
     xspc = np.full(ndof, np.nan, dtype="float64")
     if "SPC" not in subcase:
@@ -2915,6 +2854,8 @@ def _build_xg(model: BDF,
         spc_set = np.array([], dtype="int32")
         sset = np.zeros(ndof, dtype="bool")
         return spc_set, sset, xspc
+
+    log.warning('creating xg')
     spc_id, unused_options = subcase["SPC"]
     spcs = []
     # for spc in model.spcs:
@@ -3007,6 +2948,12 @@ def _build_Gmn(model: BDF, mpc_id: int,
 
     # --- MPC cards ---
     mpc_filtered = None
+
+    # --- Rigid elements (RBE2, RBE3, RBAR, RBAR1, RBE1, RROD) ---
+    has_rigid = _has_rigid_elements(model)
+    if mpc_id != 0 or has_rigid:
+        log.info('creating Gmn')
+
     if mpc_id != 0:
         # TODO: handle MPCADD
         mpc = model.mpc
@@ -3025,7 +2972,6 @@ def _build_Gmn(model: BDF, mpc_id: int,
             dependents_list.append(idof_dep)
 
     # --- Rigid elements (RBE2, RBE3, RBAR, RBAR1, RBE1, RROD) ---
-    has_rigid = _has_rigid_elements(model)
     rigid_gmn_rows = None
     rigid_m_set = None
 
@@ -3069,15 +3015,15 @@ def _build_Gmn(model: BDF, mpc_id: int,
             components = mpc_filtered.components[idim0:idim1]
             nodes = mpc_filtered.node_id[idim0:idim1]
 
-            nid_dep = int(nodes[0])
+            nid_dep = nodes[0]
             comp_dep = int(components[0])
-            coeff_dep = float(coefficients[0])
+            coeff_dep = coefficients[0]
             idof_dep = dof_map[(nid_dep, comp_dep)]
 
             for i in range(1, len(nodes)):
-                nid_ind = int(nodes[i])
+                nid_ind = nodes[i]
                 comp_ind = int(components[i])
-                coeff_ind = float(coefficients[i])
+                coeff_ind = coefficients[i]
                 if coeff_ind == 0.0:
                     continue
                 idof_ind = dof_map[(nid_ind, comp_ind)]
@@ -3113,6 +3059,7 @@ def _build_Gmn(model: BDF, mpc_id: int,
              f"(MPC={n_mpc}, rigid={n_rigid}, g={ndof} -> n={n_ndof})")
     return GMN_csc, mset
 
+
 def get_Kgg(model: BDF, dof_map: DOF_MAP,
         ndof: int, ngrid: int, ndof_per_grid: int,
         idtype: str='int32', fdtype: str='float64',
@@ -3132,14 +3079,6 @@ def get_Kgg(model: BDF, dof_map: DOF_MAP,
             idtype=idtype, fdtype=fdtype)
     assert Kgg is not None, Kgg
     return Kgg
-
-def build_KDgg(model: BDF, ndof: int):
-    KDgg = dok_matrix((ndof, ndof))
-    build_KDgg_cquad4(model, KDgg, dof_map, u_global)
-    build_KDgg_ctria3(model, KDgg, dof_map, u_global)
-    build_KDgg_beam(model, KDgg, dof_map, u_global)
-    build_KDgg_solids(model, KDgg, dof_map, u_global)
-    return KDgg
 
 
 def write_grid_point_weight(
@@ -3170,6 +3109,9 @@ def recover_statics(model: BDF, op2: OP2,
                     f06_file: TextIO,
                     subcase: Subcase,
                     xg: np.ndarray,
+                    Fg_oload: np.ndarray | None,
+                    fspc: np.ndarray | None,
+                    fmpc: np.ndarray | None,
                     node_gridtype: np.ndarray,
                     ngrid, ndof_per_grid,
                     title='', subtitle='', label='',
@@ -3196,6 +3138,55 @@ def recover_statics(model: BDF, op2: OP2,
         page_num=page_num,
         page_stamp=page_stamp,
     )
+
+    page_num = _save_applied_load(
+        op2, f06_file,
+        subcase,
+        itime,
+        ntimes,
+        node_gridtype,
+        Fg_oload,
+        ngrid,
+        ndof_per_grid,
+        title=title,
+        subtitle=subtitle,
+        label=label,
+        fdtype=fdtype,
+        page_num=page_num,
+        page_stamp=page_stamp)
+
+    page_num = _save_spc_forces(
+        op2, f06_file,
+        subcase,
+        itime,
+        ntimes,
+        node_gridtype,
+        fspc,
+        ngrid,
+        ndof_per_grid,
+        title=title,
+        subtitle=subtitle,
+        label=label,
+        fdtype=fdtype,
+        page_num=page_num,
+        page_stamp=page_stamp)
+
+    page_num = _save_mpc_forces(
+        op2, f06_file,
+        subcase,
+        itime,
+        ntimes,
+        node_gridtype,
+        fmpc,
+        ngrid,
+        ndof_per_grid,
+        title=title,
+        subtitle=subtitle,
+        label=label,
+        fdtype=fdtype,
+        page_num=page_num,
+        page_stamp=page_stamp)
+
     return page_num
 
 def _save_displacment(
@@ -3301,6 +3292,28 @@ def _save_mpc_forces(
     page_num: int = 1,
     page_stamp: str = "PAGE %s",) -> int:
     """Save MPC forces to F06 and OP2."""
+
+    #page_num = save_static_table(
+    #    f06_file,
+    #    subcase,
+    #    itime,
+    #    ntimes,
+    #    node_gridtype,
+    #    fmpc,
+    #    RealMPCForcesArray,
+    #    f06_request_name,
+    #    table_name,
+    #    op2.mpc_forces,
+    #    ngrid,
+    #    ndof_per_grid,
+    #    title=title,
+    #    subtitle=subtitle,
+    #    label=label,
+    #    fdtype=fdtype,
+    #    page_num=page_num,
+    #    page_stamp=page_stamp,
+    #)
+
     assert page_stamp is not None
     page_stamp % page_num
     f06_request_name = 'MPCFORCES'
@@ -3379,3 +3392,41 @@ def _save_applied_load(
         page_stamp=page_stamp,
     )
     return page_num
+
+
+def get_cb_rset_dofs(model: BDF,
+                     subcase: Subcase,
+                     dof_map: DOF_MAP,
+                     g_to_f: np.ndarray) -> list:
+    """TODO: handle subcase"""
+    r_set_dofs = []
+    suport = model.suport
+    if suport.n > 0:
+        for i in range(suport.n):
+            nid = suport.node_id[i]
+            comp_str = str(suport.component[i])
+            for c in comp_str:
+                dof = int(c)
+                g_idx = dof_map[(nid, dof)]
+                f_idx = g_to_f[g_idx]
+                if f_idx >= 0:
+                    r_set_dofs.append((nid, dof))
+
+    suport1 = model.suport1
+    if suport1.n > 0:
+        for i in range(suport1.n):
+            nid = suport1.node_id[i]
+            comp_str = str(suport1.component[i])
+            for c in comp_str:
+                dof = int(c)
+                g_idx = dof_map[(nid, dof)]
+                f_idx = g_to_f[g_idx]
+                if f_idx >= 0:
+                    r_set_dofs.append((nid, dof))
+
+    if not r_set_dofs:
+        raise RuntimeError(
+            "SOL 31 requires SUPORT or SUPORT1 cards to define boundary DOFs"
+        )
+    return r_set_dofs
+

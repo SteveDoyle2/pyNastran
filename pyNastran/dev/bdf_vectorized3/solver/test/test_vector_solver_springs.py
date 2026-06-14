@@ -1678,6 +1678,139 @@ class TestHarmonic(unittest.TestCase):
         solver.run()
 
 
+class TestStaticSolid(unittest.TestCase):
+    def test_ctetra(self):
+        model = BDF(debug=None, log=None, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cshear1.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 0., 1.])
+
+        mid = 3
+        pid = 4
+        model.add_ctetra(10, pid, [1, 2, 3, 4])
+        model.add_psolid(pid, mid)
+
+        spc_id = 3
+        load_id = 2
+        model.add_spc1(spc_id, '123456', [1, 2, 3], comment='')
+        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
+
+        E = 1.0E7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        model.add_param('GRDPNT', 0)
+
+        setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_hexa(self):
+        model = BDF(debug=None, log=None, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cshear1.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        model.add_grid(5, [0., 0., 1.])
+        model.add_grid(6, [1., 0., 1.])
+        model.add_grid(7, [1., 1., 1.])
+        model.add_grid(8, [0., 1., 1.])
+
+        mid = 3
+        pid = 4
+        model.add_chexa(10, pid, [1, 2, 3, 4, 5, 6, 7, 8])
+        model.add_psolid(pid, mid)
+
+        spc_id = 3
+        load_id = 2
+        model.add_spc1(spc_id, '123456', [1, 2, 3], comment='')
+        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
+
+        E = 1.0E7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        model.add_param('GRDPNT', 0)
+
+        setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_penta(self):
+        model = BDF(debug=None, log=None, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cshear1.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+
+        model.add_grid(4, [0., 0., 1.])
+        model.add_grid(5, [1., 0., 1.])
+        model.add_grid(6, [1., 1., 1.])
+
+        mid = 3
+        pid = 4
+        model.add_cpenta(10, pid, [1, 2, 3, 4, 5, 6])
+        model.add_psolid(pid, mid)
+
+        spc_id = 3
+        load_id = 2
+        model.add_spc1(spc_id, '123456', [1, 2, 3], comment='')
+        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
+
+        E = 1.0E7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        model.add_param('GRDPNT', 0)
+        setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+
+class TestStaticShear(unittest.TestCase):
+    def test_cshear1(self):
+        """Tests CSHEAR."""
+        model = BDF(debug=None, log=None, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cshear1.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 0., 2.])
+        model.add_grid(4, [0., 0., 2.])
+        thickness = 0.3
+        mid = 3
+        nids = [1, 2, 3, 4]
+        model.add_cshear(1, 1, nids)
+        model.add_cshear(2, 1, nids)
+        model.add_pshear(1, mid, thickness)
+
+        model.add_conrod(10, mid, [1, 2], A=1.0)
+        model.add_conrod(11, mid, [2, 3], A=1.0)
+        model.add_conrod(12, mid, [3, 4], A=1.0)
+        model.add_conrod(13, mid, [4, 1], A=1.0)
+
+        E = 1.0E7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        spc_id = 3
+        load_id = 2
+        model.add_spc1(spc_id, '123456', [1, 2], comment='')
+        model.add_force(load_id, 3, 1.0, [0., 0., 1.], cid=0, comment='')
+        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
+
+        setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+
 class TestStaticShell(unittest.TestCase):
     """tests the shells"""
     def test_cquad4_bad_normal(self):
