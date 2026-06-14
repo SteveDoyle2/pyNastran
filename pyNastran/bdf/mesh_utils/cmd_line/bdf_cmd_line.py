@@ -10,7 +10,7 @@ from pyNastran.bdf.mesh_utils.host_jobs import cmd_line_host_jobs
 
 from .inclzip import cmd_line_inclzip
 from .convert import cmd_line_convert
-from .diff import cmd_line_diff
+from .diff import cmd_line_diff, cmd_line_apply_diff
 from .delete import cmd_line_delete
 from .export_mcids import cmd_line_export_mcids
 from .equivalence import cmd_line_equivalence
@@ -43,6 +43,7 @@ from .utils import filter_no_args
 
 CMD_MAPS = {
     'inclzip': cmd_line_inclzip,
+    'diff_apply': cmd_line_apply_diff,
     'diff': cmd_line_diff,
     'merge': cmd_line_merge,
     'equivalence': cmd_line_equivalence,

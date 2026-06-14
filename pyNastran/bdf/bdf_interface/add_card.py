@@ -5284,23 +5284,21 @@ class AddAero:
         return aedw
 
     def add_aepress(self, mach, sym_xz: str, sym_xy: str, ux_id: int,
-                    dmij: str='', dmiji: str='', comment: str='') -> None:
+                    dmij: str='', dmiji: str='', comment: str='') -> AEPRESS:
         #AEPRESS MACH SYMXZ SYMXY UXID DMIJ DMIJI
         """adds an AEPRESS card"""
         assert isinstance(sym_xz, str), sym_xz
         assert isinstance(sym_xy, str), sym_xy
         assert isinstance(dmij, str), dmij
         assert isinstance(dmiji, str), dmiji
-        fields = ['AEPRESS', mach, sym_xz, sym_xy, ux_id, dmij, dmiji]
-        self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
-        #aepress = AEPRESS(mach, sym_xz, sym_xy, ux_id, mesh,
-        #                  dmij=dmij, dmiji=dmiji, comment=comment)
-        #self._add_methods.add_aepress_object(aepress)
-        #return aepress
+        aepress = AEPRESS(mach, sym_xz, sym_xy, ux_id,
+                         dmij=dmij, dmiji=dmiji, comment=comment)
+        self._add_methods.add_aepress_object(aepress)
+        return aepress
 
     def add_aeforce(self, mach: float, sym_xz: str, sym_xy: str,
                     ux_id: int, mesh: str, force: int=0,
-                    dmik: str='', perq: str='', comment: str='') -> None:
+                    dmik: str='', perq: str='', comment: str='') -> AEFORCE:
         """adds an AEFORCE card
 
         Parameters
@@ -5312,12 +5310,10 @@ class AddAero:
         assert isinstance(sym_xy, str), sym_xy
         assert isinstance(dmik, str), dmik
         assert isinstance(perq, str), perq
-        fields = ['AEFORCE', mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq]
-        self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
-        #aeforce = AEFORCE(mach, sym_xz, sym_xy, ux_id, mesh,
-        #                  force=force, dmik=dmik, perq=perq, comment=comment)
-        #self._add_methods.add_aeforce_object(aeforce)
-        #return aeforce
+        aeforce = AEFORCE(mach, sym_xz, sym_xy, ux_id, mesh,
+                         force=force, dmik=dmik, perq=perq, comment=comment)
+        self._add_methods.add_aeforce_object(aeforce)
+        return aeforce
 
     def add_sblnd1(self, eid, eid1, eid2, option_bytes, w1, aero_grid, d1, d2, x, cid):
         fields = ['SBLND1', eid, eid1, eid2, option_bytes, w1, aero_grid, d1, d2] + x + [cid]

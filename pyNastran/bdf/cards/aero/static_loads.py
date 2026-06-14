@@ -1247,6 +1247,10 @@ class UXVEC(BaseCard):
             list_fields += [label, ux]
         return list_fields
 
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
     # def repr_fields(self):
     #     # fixes a Nastran bug
     #     list_fields = self.raw_fields()
@@ -1290,7 +1294,7 @@ class AEFORCE(BaseCard):
     def __init__(self, mach: float, sym_xz: str, sym_xy: str,
                  uxid: int, mesh: str,
                  force: int=0,
-                 dmik: int=0, comment: str=''):
+                 dmik: int=0, perq: str='', comment: str=''):
         """
         Creates an AEFORCE card.
 

@@ -14,6 +14,7 @@ def read_lax_bdf(bdf_filename: str,
                  xref: bool=True,
                  read_includes: bool=True,
                  is_strict_card_parser: bool=False,
+                 save_file_structure: bool=False,
                  cards_to_read: list[str]=None,
                  duplicate_cards: list[str]=None,
                  log=None) -> BDF:
@@ -29,7 +30,7 @@ def read_lax_bdf(bdf_filename: str,
         #duplicate_cards = {'GRID', 'CONM2'}
         model.set_allow_duplicates(set(duplicate_cards))
     model.read_bdf(bdf_filename, punch=punch,
-                   validate=validate, xref=xref)
+                   validate=validate, xref=xref, save_file_structure=save_file_structure)
     return model
 
 
@@ -38,6 +39,7 @@ def read_lax_obj(bdf_filename: PathLike,
                  xref: bool=True,
                  read_includes: bool=True,
                  is_strict_card_parser: bool=True,
+                 save_file_structure: bool=False,
                  punch: bool=False,
                  duplicate_cards=None,
                  log=None) -> BDF:
@@ -78,6 +80,7 @@ def read_lax_obj(bdf_filename: PathLike,
                 validate=False,
                 read_includes=read_includes,
                 is_strict_card_parser=is_strict_card_parser,
+                save_file_structure=save_file_structure,
                 duplicate_cards=duplicate_cards,
                 log=log)
             model.save(obj_filename)
@@ -88,6 +91,7 @@ def read_lax_obj(bdf_filename: PathLike,
             validate=False,
             read_includes=read_includes,
             is_strict_card_parser=is_strict_card_parser,
+            save_file_structure=save_file_structure,
             duplicate_cards=duplicate_cards,
             log=log)
     return model

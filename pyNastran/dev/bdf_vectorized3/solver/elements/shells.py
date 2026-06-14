@@ -961,7 +961,7 @@ class ShellQuadSolver:
         """Compute 20x20 element stiffness using the selected formulation."""
         if self.formulation == "MITC4":
             return mitc4_stiffness(x, y, A_mat, D_mat, Ds_mat, B_mat)
-        if self.formulation == "MACN2":
+        elif self.formulation == "MACN2":
             return macn2_stiffness(x, y, A_mat, D_mat, Ds_mat, B_mat)
         return macneal_stiffness(x, y, A_mat, D_mat, Ds_mat, B_mat)
 

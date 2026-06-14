@@ -15,6 +15,7 @@ scalar_obj_keys: list[str] = [
     'sol',
     # 'zona',
 ]
+
 dict_cards = [
     'nodes', 'elements', 'properties',
     'pbusht', 'pdampt', 'pelast', 'properties_mass',
