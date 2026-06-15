@@ -77,8 +77,11 @@ from numpy.typing import NDArray
 from scipy import sparse
 from cpylog import SimpleLogger
 
+
+from pyNastran.dev.bdf_vectorized3.bdf import read_bdf
 if TYPE_CHECKING:
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from pyNastran.utils import PathLike
+
 
 log = SimpleLogger(level='warning')
 
@@ -94,8 +97,8 @@ NO_MASS = {
 
 
 def build_mgg_lumped(
-    bdf_filename: str | Path | None = None,
-    model: 'BDF | None' = None,
+    bdf_filename: PathLike | None = None,
+    model: BDF | None = None,
     wtmass: float = 1.0,
     output_frame: str = 'basic',
 ) -> tuple[sparse.csr_matrix, NDArray[np.integer], float]:
@@ -136,8 +139,7 @@ def build_mgg_lumped(
             f"output_frame must be 'basic' or 'global', got {output_frame!r}")
 
     if model is None:
-        from pyNastran.dev.bdf_vectorized3.bdf import read_bdf
-        model = read_bdf(str(bdf_filename), xref=True, debug=False)
+        model = read_bdf(bdf_filename, xref=True, debug=False)
 
     grid_ids = model.grid.node_id  # already sorted
     n_grids = len(grid_ids)
@@ -214,7 +216,7 @@ def build_mgg_lumped(
 # COORDINATE TRANSFORMS
 # =============================================================================
 
-def _get_cid_rotation(model: 'BDF', cid: int) -> NDArray:
+def _get_cid_rotation(model: BDF, cid: int) -> NDArray:
     """Get 3x3 rotation matrix from CID to basic (CID=0).
 
     Returns I_3 for CID=0 or CID=-1 (both are basic frame).
@@ -226,7 +228,7 @@ def _get_cid_rotation(model: 'BDF', cid: int) -> NDArray:
 
 def _transform_mbb_to_mgg(
     Mbb: sparse.csr_matrix,
-    model: 'BDF',
+    model: BDF,
     grid_ids: NDArray,
     n_grids: int,
 ) -> sparse.csr_matrix:
@@ -328,14 +330,13 @@ def _transform_mbb_to_mgg(
 # =============================================================================
 
 def _add_structural_elements(
-    model: 'BDF',
+    model: BDF,
     grid_ids: NDArray,
     n_grids: int,
     wtmass: float,
     all_rows: list,
     all_cols: list,
-    all_vals: list,
-) -> None:
+    all_vals: list,) -> None:
     """Add lumped mass from all structural element cards (vectorized).
 
     For each card type, computes per-element mass, divides by number of
@@ -397,14 +398,13 @@ def _add_structural_elements(
 
 
 def _add_conm2(
-    model: 'BDF',
+    model: BDF,
     grid_ids: NDArray,
     n_grids: int,
     wtmass: float,
     all_rows: list,
     all_cols: list,
-    all_vals: list,
-) -> None:
+    all_vals: list,) -> None:
     """Add CONM2 mass elements as full 6x6 blocks (vectorized).
 
     Computes the 6x6 mass matrix for all CONM2 elements simultaneously.
@@ -559,14 +559,13 @@ def _add_conm2(
 
 
 def _add_conm1(
-    model: 'BDF',
+    model: BDF,
     grid_ids: NDArray,
     n_grids: int,
     wtmass: float,
     all_rows: list,
     all_cols: list,
-    all_vals: list,
-) -> None:
+    all_vals: list,) -> None:
     """Add CONM1 elements (direct 6x6 mass matrices).
 
     CONM1 provides its mass matrix directly — no CID rotation is applied
@@ -601,14 +600,13 @@ def _add_conm1(
 
 
 def _add_cmass2(
-    model: 'BDF',
+    model: BDF,
     grid_ids: NDArray,
     n_grids: int,
     wtmass: float,
     all_rows: list,
     all_cols: list,
-    all_vals: list,
-) -> None:
+    all_vals: list,) -> None:
     """Add CMASS2 scalar mass elements (vectorized)."""
     cmass2 = model.cmass2
     if cmass2.n == 0:
@@ -671,14 +669,13 @@ def _add_cmass2(
 
 
 def _add_cmass1(
-    model: 'BDF',
+    model: BDF,
     grid_ids: NDArray,
     n_grids: int,
     wtmass: float,
     all_rows: list,
     all_cols: list,
-    all_vals: list,
-) -> None:
+    all_vals: list,) -> None:
     """Add CMASS1 scalar mass elements (mass from PMASS property)."""
     cmass1 = model.cmass1
     if cmass1.n == 0:

@@ -15,10 +15,13 @@ References
 - Simcenter Nastran DMAP Programmer's Guide, "Static Solution Sequence" flow.
 - NX Nastran User's Guide, Appendix B: Set Notation System.
 """
-
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 from scipy.sparse import issparse, csc_matrix
 from scipy.sparse.linalg import spsolve
+if TYPE_CHECKING:
+    from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
 def reduce_Pg_to_Pa(
@@ -85,25 +88,58 @@ def reduce_Pg_to_Pa(
     Guyan transformation is:
         u_o = -Koo^{-1} @ Koa @ u_a + Koo^{-1} @ Pf_o
     and the equivalent boundary load from virtual work is:
-        Pa = Pf_a + Goa^T @ Pf_o = Pf_a + (-Koo^{-1} @ Koa)^T @ Pf_o
+        Pa = Pf_a + Goa^T @ Pf_o
+           = Pf_a + (-Koo^{-1} @ Koa)^T @ Pf_o
            = Pf_a - Kao^T @ Koo^{-T} @ Pf_o
-    For symmetric K: Kao^T = Koa, Koo^{-T} = Koo^{-1}, giving:
-        Pa = Pf_a - Koa^T @ Koo^{-1} @ Pf_o
+        Goa = -Koo^{-1} @ Koa
+    For symmetric K:
+        Kao^T = Koa
+        Koo^{-T} = Koo^{-1}
+        giving:
+          Pa = Pf_a - Koa^T @ Koo^{-1} @ Pf_o
     But since Koa = Kao^T (symmetry), this is:
         Pa = Pf_a + Kao @ Koo^{-1} @ Pf_o
 
-    Wait — let's be precise. The static condensation of loads uses:
+    The static condensation of loads uses:
         Pa = Pf_a - Kao @ Koo^{-1} @ Pf_o
 
     This comes from eliminating u_o from:
         [Kaa Kao] [u_a]   [Pf_a]
         [Koa Koo] [u_o] = [Pf_o]
 
+    Kaa ua + Kao uo = Pfa
+    Koa ua + Koo uo = Pfo
+ 
+    Multiply by Koo^-1:
+      Koo^-1 Kaa ua + Koo^-1 Kao uo = Koo^-1 Pfa
+      Koo^-1 Koa ua +            uo = Koo^-1 Pfo
+      uo = Koo^-1 Pfo - Koo^-1 Koa ua
+         = Koo^-1 Pfo - Goa ua  ***
+      Goa = Koo^-1 Koa  ***
+    
+    Plug in:
+      Kaa ua + Kao (Koo^-1 Pfo - Goa ua) = Pfa
+      Kaa ua + Kao (Koo^-1 Pfo - Goa ua) = Pfa
+      Kaa ua + Kao Koo^-1 Pfo - Kao Goa ua = Pfa
+      Kaa ua - Kao Goa ua = Pfa - Kao Koo^-1 Pfo
+        (Kaa - Kao Goa) ua = Pa2
+        Kaa' = Kaa - Kao Goa
+             = Kaa - Kao Koo^-1 Koa
+        Kaa' ua = Pa2
+
+        Pa2 = Pfa - Kao Koo^-1 Pfo  ***
+        
+        Goa    = Koo^-1 Koa  ***
+
+        ua = (Kaa - Kao Goa       )^-1 Pa2
+        ua = (Kaa - Kao Koo^-1 Koa)^-1 Pa2
+          
+
     Row 2: u_o = Koo^{-1} @ (Pf_o - Koa @ u_a)
     Sub into row 1: Kaa @ u_a + Kao @ Koo^{-1} @ (Pf_o - Koa @ u_a) = Pf_a
     Rearrange: (Kaa - Kao @ Koo^{-1} @ Koa) @ u_a = Pf_a - Kao @ Koo^{-1} @ Pf_o
 
-    So: Pa_reduced = Pf_a - Kao @ Koo^{-1} @ Pf_o
+    So:  Pa_reduced = Pf_a - Kao @ Koo^{-1} @ Pf_o
     And: Kaa_reduced = Kaa - Kao @ Koo^{-1} @ Koa
     """
     is_1d = Pg.ndim == 1
@@ -160,12 +196,8 @@ def reduce_Pg_to_Pa(
             Koo_inv_Pfo = np.linalg.solve(Koo, Pf_o)
 
         # Kao = Koa^T (stiffness is symmetric)
-        if issparse(Koa):
-            Kao = Koa.T
-            Pa = Pf_a - (Kao @ Koo_inv_Pfo)
-        else:
-            Kao = Koa.T
-            Pa = Pf_a - Kao @ Koo_inv_Pfo
+        Kao = Koa.T
+        Pa = Pf_a - Kao @ Koo_inv_Pfo
     else:
         Pa = Pf
 
@@ -174,7 +206,8 @@ def reduce_Pg_to_Pa(
     return Pa
 
 
-def get_mpc_dependent_dofs(model) -> tuple[np.ndarray, np.ndarray | None]:
+def get_mpc_dependent_dofs(model: BDF) -> tuple[np.ndarray,
+                                                np.ndarray | None]:
     """Identify MPC-dependent DOFs and build the Gm transformation matrix.
 
     Parameters
@@ -271,11 +304,19 @@ def get_omit_dofs(model, dof_map: dict, ndof: int) -> np.ndarray | None:
         Boolean mask for omitted DOFs. None if no OMIT cards.
     """
     omit = model.omit
-    if omit.n == 0:
+    omit1 = model.omit1
+    if omit.n == 0 and omit1.n == 0:
         return None
 
     oset_b = np.zeros(ndof, dtype="bool")
     for nid, comp in zip(omit.node_id, omit.component):
+        for c in str(comp):
+            dof = int(c)
+            if (nid, dof) in dof_map:
+                oset_b[dof_map[(nid, dof)]] = True
+
+    assert len(omit1.node_id) == len(omit1.component)
+    for nid, comp in zip(omit1.node_id, omit1.component):
         for c in str(comp):
             dof = int(c)
             if (nid, dof) in dof_map:

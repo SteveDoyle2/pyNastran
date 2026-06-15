@@ -1,3 +1,7 @@
+from pyNastran.dev.bdf_vectorized3.mesh_utils.test.test_inertia_relief import *
+from pyNastran.dev.bdf_vectorized3.mesh_utils.test.test_mass_matrix import *
+from pyNastran.dev.bdf_vectorized3.mesh_utils.test.test_vector_quality import *
+from pyNastran.dev.bdf_vectorized3.mesh_utils.test.test_gmn_matrix import *
 from pyNastran.dev.bdf_vectorized3.mesh_utils.test.test_vector_equivalence import TestEquiv
 #from pyNastran.dev.bdf_vectorized3.mesh_utils.test.test_convert import TestConvert
 #from pyNastran.dev.bdf_vectorized3.mesh_utils.test.test_cutting_plane import TestCuttingPlane

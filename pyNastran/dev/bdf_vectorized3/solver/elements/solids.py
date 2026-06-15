@@ -5,12 +5,13 @@ into the global DOF assembly.
 """
 
 from __future__ import annotations
-
+from itertools import count
 from typing import TYPE_CHECKING
 
 import numpy as np
 
 from .tetra import (
+    _solid_B_matrix,
     _tetra4_shape_functions,
     _tetra10_shape_functions,
     _TETRA4_GAUSS,
@@ -47,45 +48,9 @@ from .hexa import (
 )
 
 if TYPE_CHECKING:
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
-    from pyNastran.dev.solver.utils import DOF_MAP
+    from pyNastran.dev.bdf_vectorized3.bdf import BDF, CTETRA, CHEXA, CPENTA
     from pyNastran.dev.bdf_vectorized3.solver.build_stiffness import _COOAccumulator
-
-
-def _get_solid_material_D(model: BDF, property_id: int) -> np.ndarray:
-    """Get the 6x6 constitutive matrix for a PSOLID property.
-
-    Parameters
-    ----------
-    model : BDF
-        The BDF model.
-    property_id : int
-        Property ID (must reference a PSOLID card with MAT1).
-
-    Returns
-    -------
-    D : (6, 6) constitutive matrix
-    """
-    psolid = model.psolid
-    iprop = np.searchsorted(psolid.property_id, property_id)
-    mid = int(psolid.material_id[iprop])
-
-    mat1 = model.mat1
-    imat = np.searchsorted(mat1.material_id, mid)
-    E = float(mat1.E[imat])
-    nu = float(mat1.nu[imat])
-    return _isotropic_constitutive(E, nu)
-
-
-def _get_solid_rho(model: BDF, property_id: int) -> float:
-    """Get the density for a PSOLID property."""
-    psolid = model.psolid
-    iprop = np.searchsorted(psolid.property_id, property_id)
-    mid = int(psolid.material_id[iprop])
-
-    mat1 = model.mat1
-    imat = np.searchsorted(mat1.material_id, mid)
-    return float(mat1.rho[imat])
+    DOF_MAP = dict[tuple[int, int], int]
 
 
 def _solid_dof_indices(dof_map: "DOF_MAP", node_ids: np.ndarray) -> list[int]:
@@ -105,12 +70,13 @@ def _solid_dof_indices(dof_map: "DOF_MAP", node_ids: np.ndarray) -> list[int]:
     """
     n_ijv = []
     for nid in node_ids:
-        gi = dof_map[(int(nid), 1)]
+        gi = dof_map[(nid, 1)]
         n_ijv.extend([gi, gi + 1, gi + 2])
     return n_ijv
 
 
-def _get_element_coords(model: BDF, node_ids: np.ndarray) -> np.ndarray:
+def _get_element_coords(model: BDF, node_ids: np.ndarray,
+                        xyz_cid0: np.ndarray) -> np.ndarray:
     """Get nodal coordinates for an element's nodes.
 
     Parameters
@@ -125,14 +91,14 @@ def _get_element_coords(model: BDF, node_ids: np.ndarray) -> np.ndarray:
     coords : (nnodes, 3)
         Nodal coordinates in basic frame.
     """
-    grid = model.grid
-    all_nids = grid.node_id
-    xyz_cid0 = grid.xyz_cid0()
-    inodes = np.searchsorted(all_nids, node_ids)
+    inodes = model.grid.index(node_ids)
     return xyz_cid0[inodes]
 
 
-def build_kbb_chexa(model: BDF, coo: "_COOAccumulator", dof_map: "DOF_MAP") -> int:
+def build_kbb_chexa(model: BDF,
+        coo: "_COOAccumulator",
+        dof_map: "DOF_MAP",
+        xyz_cid0: np.ndarray) -> int:
     """Assemble CHEXA element stiffness matrices into the global COO accumulator.
 
     Parameters
@@ -156,31 +122,40 @@ def build_kbb_chexa(model: BDF, coo: "_COOAccumulator", dof_map: "DOF_MAP") -> i
     log = model.log
     nelements = 0
 
-    for i in range(elem.n):
-        eid = int(elem.element_id[i])
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
+    eids = elem.element_id
+    pids, mids, Ds = solid_emat(model, elem)
 
+    nodes = elem.nodes
+    inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
+    ipos = (nodes.ravel() > 0)
+    inodes.ravel()[ipos] = model.grid.index(nodes.ravel()[ipos])
+    for i, eid, pid, all_nodes, all_inodes, D in zip(count(), eids, pids, nodes, inodes, Ds):
         # Determine if HEXA8 or HEXA20 based on midside nodes
         base_nodes = all_nodes[:8]
         midside_nodes = all_nodes[8:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
+        base_inodes = all_inodes[:8]
+        midside_inodes = all_inodes[8:]
 
-        D = _get_solid_material_D(model, pid)
+        #assert isinstance(pid, int), (pid, type(pid))
+        #D = _get_solid_material_D(model, pid)
 
         if has_midside:
-            active_nodes = all_nodes[all_nodes > 0]
+            ipos = (all_nodes > 0)
+            active_inodes = all_inodes[ipos]
+            active_nodes = all_nodes[ipos]
             if len(active_nodes) == 20:
-                coords = _get_element_coords(model, active_nodes)
+                #coords = xyz_cid0[active_inodes, :]
+                coords = _get_element_coords(model, active_nodes, xyz_cid0)
                 Ke = hexa20_stiffness(coords, D)
                 n_ijv = _solid_dof_indices(dof_map, active_nodes)
             else:
                 # Partial midside nodes - fall back to HEXA8
-                coords = _get_element_coords(model, base_nodes)
+                coords = xyz_cid0[base_inodes, :]
                 Ke = hexa8_stiffness(coords, D)
                 n_ijv = _solid_dof_indices(dof_map, base_nodes)
         else:
-            coords = _get_element_coords(model, base_nodes)
+            coords = xyz_cid0[base_inodes, :]
             Ke = hexa8_stiffness(coords, D)
             n_ijv = _solid_dof_indices(dof_map, base_nodes)
 
@@ -191,7 +166,10 @@ def build_kbb_chexa(model: BDF, coo: "_COOAccumulator", dof_map: "DOF_MAP") -> i
     return nelements
 
 
-def build_kbb_ctetra(model: BDF, coo: "_COOAccumulator", dof_map: "DOF_MAP") -> int:
+def build_kbb_ctetra(model: BDF,
+                     coo: "_COOAccumulator",
+                     dof_map: "DOF_MAP",
+                     xyz_cid0: np.ndarray) -> int:
     """Assemble CTETRA element stiffness matrices into the global COO accumulator."""
     elem = model.ctetra
     if elem.n == 0:
@@ -200,28 +178,36 @@ def build_kbb_ctetra(model: BDF, coo: "_COOAccumulator", dof_map: "DOF_MAP") -> 
     log = model.log
     nelements = 0
 
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
+    eids = elem.element_id
+    pids, mids, Ds = solid_emat(model, elem)
 
+    nodes = elem.nodes
+    inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
+    ipos = (nodes.ravel() > 0)
+    inodes.ravel()[ipos] = model.grid.index(nodes.ravel()[ipos])
+    for i, eid, pid, all_nodes, all_inodes, D in zip(count(), eids, pids, nodes, inodes, Ds):
         base_nodes = all_nodes[:4]
         midside_nodes = all_nodes[4:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
+        base_inodes = all_inodes[:4]
+        midside_inodes = all_inodes[4:]
 
-        D = _get_solid_material_D(model, pid)
+        #D = _get_solid_material_D(model, pid)
 
         if has_midside:
-            active_nodes = all_nodes[all_nodes > 0]
+            ipos = (all_nodes > 0)
+            active_inodes = all_inodes[ipos]
+            active_nodes = all_nodes[ipos]
             if len(active_nodes) == 10:
-                coords = _get_element_coords(model, active_nodes)
+                coords = _get_element_coords(model, active_nodes, xyz_cid0)
                 Ke = tetra10_stiffness(coords, D)
                 n_ijv = _solid_dof_indices(dof_map, active_nodes)
             else:
-                coords = _get_element_coords(model, base_nodes)
+                coords = xyz_cid0[base_inodes, :]
                 Ke = tetra4_stiffness(coords, D)
                 n_ijv = _solid_dof_indices(dof_map, base_nodes)
         else:
-            coords = _get_element_coords(model, base_nodes)
+            coords = xyz_cid0[base_inodes, :]
             Ke = tetra4_stiffness(coords, D)
             n_ijv = _solid_dof_indices(dof_map, base_nodes)
 
@@ -232,7 +218,10 @@ def build_kbb_ctetra(model: BDF, coo: "_COOAccumulator", dof_map: "DOF_MAP") -> 
     return nelements
 
 
-def build_kbb_cpenta(model: BDF, coo: "_COOAccumulator", dof_map: "DOF_MAP") -> int:
+def build_kbb_cpenta(model: BDF,
+                     coo: "_COOAccumulator",
+                     dof_map: "DOF_MAP",
+                     xyz_cid0: np.ndarray) -> int:
     """Assemble CPENTA element stiffness matrices into the global COO accumulator."""
     elem = model.cpenta
     if elem.n == 0:
@@ -241,28 +230,36 @@ def build_kbb_cpenta(model: BDF, coo: "_COOAccumulator", dof_map: "DOF_MAP") -> 
     log = model.log
     nelements = 0
 
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
+    eids = elem.element_id
+    pids, mids, Ds = solid_emat(model, elem)
 
+    nodes = elem.nodes
+    inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
+    ipos = (nodes.ravel() > 0)
+    inodes.ravel()[ipos] = model.grid.index(nodes.ravel()[ipos])
+    for i, eid, pid, all_nodes, all_inodes, D in zip(count(), eids, pids, nodes, inodes, Ds):
         base_nodes = all_nodes[:6]
         midside_nodes = all_nodes[6:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
+        base_inodes = all_inodes[:6]
+        midside_inodes = all_inodes[6:]
 
-        D = _get_solid_material_D(model, pid)
+        #D = _get_solid_material_D(model, pid)
 
         if has_midside:
-            active_nodes = all_nodes[all_nodes > 0]
+            ipos = (all_nodes > 0)
+            active_inodes = all_inodes[ipos]
+            active_nodes = all_nodes[ipos]
             if len(active_nodes) == 15:
-                coords = _get_element_coords(model, active_nodes)
+                coords = _get_element_coords(model, active_nodes, xyz_cid0)
                 Ke = penta15_stiffness(coords, D)
                 n_ijv = _solid_dof_indices(dof_map, active_nodes)
             else:
-                coords = _get_element_coords(model, base_nodes)
+                coords = xyz_cid0[base_inodes, :]
                 Ke = penta6_stiffness(coords, D)
                 n_ijv = _solid_dof_indices(dof_map, base_nodes)
         else:
-            coords = _get_element_coords(model, base_nodes)
+            coords = xyz_cid0[base_inodes, :]
             Ke = penta6_stiffness(coords, D)
             n_ijv = _solid_dof_indices(dof_map, base_nodes)
 
@@ -277,6 +274,8 @@ def build_mbb_solids(
     model: BDF,
     coo: "_COOAccumulator",
     dof_map: "DOF_MAP",
+    xyz_cid0: np.ndarray,
+    use_consistent: bool,
 ) -> float:
     """Assemble solid element mass matrices into the global COO accumulator.
 
@@ -286,9 +285,9 @@ def build_mbb_solids(
         Total mass contributed by solid elements.
     """
     mass_total = 0.0
-    mass_total += _build_mbb_chexa(model, coo, dof_map)
-    mass_total += _build_mbb_ctetra(model, coo, dof_map)
-    mass_total += _build_mbb_cpenta(model, coo, dof_map)
+    mass_total += _build_mbb_chexa(model, coo, dof_map, xyz_cid0, use_consistent)
+    mass_total += _build_mbb_ctetra(model, coo, dof_map, xyz_cid0, use_consistent)
+    mass_total += _build_mbb_cpenta(model, coo, dof_map, xyz_cid0, use_consistent)
     return mass_total
 
 
@@ -296,31 +295,39 @@ def _build_mbb_chexa(
     model: BDF,
     coo: "_COOAccumulator",
     dof_map: "DOF_MAP",
-) -> float:
+    xyz_cid0: np.ndarray,
+    use_consistent: bool) -> float:
     """Assemble CHEXA mass matrices."""
     elem = model.chexa
     if elem.n == 0:
         return 0.0
 
     mass_total = 0.0
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
-        base_nodes = all_nodes[:8]
-        midside_nodes = all_nodes[8:]
-        has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
+    eids = elem.element_id
+    pids, mids, rhos = solid_rho(model, elem)
 
-        rho = _get_solid_rho(model, pid)
+    nodes = elem.nodes
+    inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
+    ipos = (nodes.ravel() > 0)
+    inodes.ravel()[ipos] = model.grid.index(nodes.ravel()[ipos])
+    for i, eid, pid, all_nodes, all_inodes, rho in zip(count(), eids, pids, nodes, inodes, rhos):
         if rho == 0.0:
             continue
 
+        base_nodes = all_nodes[:8]
+        midside_nodes = all_nodes[8:]
+        has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
+        base_inodes = all_inodes[:8]
+        midside_inodes = all_inodes[8:]
+
         if has_midside and len(all_nodes[all_nodes > 0]) == 20:
             active_nodes = all_nodes[all_nodes > 0]
-            coords = _get_element_coords(model, active_nodes)
+            coords = _get_element_coords(model, active_nodes, xyz_cid0)
             Me = hexa20_mass(coords, rho)
             n_ijv = _solid_dof_indices(dof_map, active_nodes)
         else:
-            coords = _get_element_coords(model, base_nodes)
+            coords = xyz_cid0[base_inodes, :]
+            #coords = _get_element_coords(model, base_nodes, xyz_cid0)
             Me = hexa8_mass(coords, rho)
             n_ijv = _solid_dof_indices(dof_map, base_nodes)
 
@@ -334,31 +341,36 @@ def _build_mbb_ctetra(
     model: BDF,
     coo: "_COOAccumulator",
     dof_map: "DOF_MAP",
-) -> float:
+    xyz_cid0: np.ndarray,
+    use_consistent: bool) -> float:
     """Assemble CTETRA mass matrices."""
     elem = model.ctetra
     if elem.n == 0:
         return 0.0
 
     mass_total = 0.0
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
+    eids = elem.element_id
+    pids, mids, rhos = solid_rho(model, elem)
+
+    nodes = elem.nodes
+    inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
+    ipos = (nodes.ravel() > 0)
+    inodes.ravel()[ipos] = model.grid.index(nodes.ravel()[ipos])
+    for i, eid, pid, all_nodes, all_inodes, rho in zip(count(), eids, pids, nodes, inodes, rhos):
+        if rho == 0.0:
+            continue
+
         base_nodes = all_nodes[:4]
         midside_nodes = all_nodes[4:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
 
-        rho = _get_solid_rho(model, pid)
-        if rho == 0.0:
-            continue
-
         if has_midside and len(all_nodes[all_nodes > 0]) == 10:
             active_nodes = all_nodes[all_nodes > 0]
-            coords = _get_element_coords(model, active_nodes)
+            coords = _get_element_coords(model, active_nodes, xyz_cid0)
             Me = tetra10_mass(coords, rho)
             n_ijv = _solid_dof_indices(dof_map, active_nodes)
         else:
-            coords = _get_element_coords(model, base_nodes)
+            coords = _get_element_coords(model, base_nodes, xyz_cid0)
             Me = tetra4_mass(coords, rho)
             n_ijv = _solid_dof_indices(dof_map, base_nodes)
 
@@ -372,31 +384,36 @@ def _build_mbb_cpenta(
     model: BDF,
     coo: "_COOAccumulator",
     dof_map: "DOF_MAP",
-) -> float:
+    xyz_cid0: np.ndarray,
+    use_consistent: bool) -> float:
     """Assemble CPENTA mass matrices."""
     elem = model.cpenta
     if elem.n == 0:
         return 0.0
 
     mass_total = 0.0
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
+    eids = elem.element_id
+    pids, mids, rhos = solid_rho(model, elem)
+
+    nodes = elem.nodes
+    inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
+    ipos = (nodes.ravel() > 0)
+    inodes.ravel()[ipos] = model.grid.index(nodes.ravel()[ipos])
+    for i, eid, pid, all_nodes, all_inodes, rho in zip(count(), eids, pids, nodes, inodes, rhos):
+        if rho == 0.0:
+            continue
+
         base_nodes = all_nodes[:6]
         midside_nodes = all_nodes[6:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
 
-        rho = _get_solid_rho(model, pid)
-        if rho == 0.0:
-            continue
-
         if has_midside and len(all_nodes[all_nodes > 0]) == 15:
             active_nodes = all_nodes[all_nodes > 0]
-            coords = _get_element_coords(model, active_nodes)
+            coords = _get_element_coords(model, active_nodes, xyz_cid0)
             Me = penta15_mass(coords, rho)
             n_ijv = _solid_dof_indices(dof_map, active_nodes)
         else:
-            coords = _get_element_coords(model, base_nodes)
+            coords = _get_element_coords(model, base_nodes, xyz_cid0)
             Me = penta6_mass(coords, rho)
             n_ijv = _solid_dof_indices(dof_map, base_nodes)
 
@@ -410,8 +427,7 @@ def build_KDgg_solids(
     model: BDF,
     KDgg,
     dof_map: "DOF_MAP",
-    u_global: np.ndarray,
-) -> None:
+    u_global: np.ndarray) -> None:
     """Assemble geometric stiffness for solid elements from preload displacements.
 
     Parameters
@@ -425,9 +441,9 @@ def build_KDgg_solids(
     u_global : (ndof,)
         Global displacement vector from preload.
     """
-    _build_KDgg_chexa(model, KDgg, dof_map, u_global)
-    _build_KDgg_ctetra(model, KDgg, dof_map, u_global)
-    _build_KDgg_cpenta(model, KDgg, dof_map, u_global)
+    _build_KDgg_chexa(model, KDgg, dof_map, u_global, xyz_cid0)
+    _build_KDgg_ctetra(model, KDgg, dof_map, u_global, xyz_cid0)
+    _build_KDgg_cpenta(model, KDgg, dof_map, u_global, xyz_cid0)
 
 
 def _compute_element_stress(
@@ -439,16 +455,13 @@ def _compute_element_stress(
     u_global: np.ndarray,
     nnodes: int,
     shape_func,
-    gauss_data,
-) -> np.ndarray:
+    gauss_data,) -> np.ndarray:
     """Compute average element stress from preload displacements.
 
     Returns
     -------
     stress_avg : (6,) average stress [sxx, syy, szz, sxy, syz, sxz]
     """
-    from .tetra import _solid_B_matrix
-
     # Extract element displacements
     ue = np.zeros(3 * nnodes)
     for k, nid in enumerate(node_ids):
@@ -471,30 +484,28 @@ def _compute_element_stress(
         stress_sum += stress * detJ * w
         vol += detJ * w
 
-    if vol > 0.0:
+    if vol != 0.0:
         return stress_sum / vol
     return np.zeros(6)
 
 
-def _build_KDgg_chexa(model: BDF, KDgg, dof_map, u_global):
+def _build_KDgg_chexa(model: BDF, KDgg, dof_map, u_global, xyz_cid0):
     """Assemble CHEXA geometric stiffness."""
     elem = model.chexa
     if elem.n == 0:
         return
 
     k = 1.0 / np.sqrt(3.0)
-    gauss_pts_8 = np.array(
-        [
-            [-k, -k, -k],
-            [k, -k, -k],
-            [k, k, -k],
-            [-k, k, -k],
-            [-k, -k, k],
-            [k, -k, k],
-            [k, k, k],
-            [-k, k, k],
-        ]
-    )
+    gauss_pts_8 = np.array([
+        [-k, -k, -k],
+        [k, -k, -k],
+        [k, k, -k],
+        [-k, k, -k],
+        [-k, -k, k],
+        [k, -k, k],
+        [k, k, k],
+        [-k, k, k],
+    ])
     weights_8 = np.ones(8)
 
     def shape_8(xi, eta, mu):
@@ -502,19 +513,24 @@ def _build_KDgg_chexa(model: BDF, KDgg, dof_map, u_global):
         dNdnat = np.array([dNdxi, dNdeta, dNdmu])
         return N, dNdnat
 
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
+    eids = elem.element_id
+    pids, mids, Ds = solid_emat(model, elem)
+
+    nodes = elem.nodes
+    inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
+    ipos = (nodes.ravel() > 0)
+    inodes.ravel()[ipos] = model.grid.index(nodes.ravel()[ipos])
+    for i, eid, pid, all_nodes, all_inodes, D in zip(count(), eids, pids, nodes, inodes, Ds):
         base_nodes = all_nodes[:8]
         midside_nodes = all_nodes[8:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
 
-        D = _get_solid_material_D(model, pid)
+        #D = _get_solid_material_D(model, pid)
 
         if has_midside and len(all_nodes[all_nodes > 0]) == 20:
             # HEXA20 geometric stiffness
             active_nodes = all_nodes[all_nodes > 0]
-            coords = _get_element_coords(model, active_nodes)
+            coords = _get_element_coords(model, active_nodes, xyz_cid0)
             k3 = np.sqrt(3.0 / 5.0)
             pts_1d = np.array([-k3, 0.0, k3])
             wts_1d = np.array([5.0 / 9.0, 8.0 / 9.0, 5.0 / 9.0])
@@ -541,7 +557,7 @@ def _build_KDgg_chexa(model: BDF, KDgg, dof_map, u_global):
             KDe = hexa20_geometric_stiffness(coords, stress)
             n_ijv = _solid_dof_indices(dof_map, active_nodes)
         else:
-            coords = _get_element_coords(model, base_nodes)
+            coords = _get_element_coords(model, base_nodes, xyz_cid0)
             gauss_data = (gauss_pts_8, weights_8)
             stress = _compute_element_stress(
                 model,
@@ -565,24 +581,28 @@ def _build_KDgg_chexa(model: BDF, KDgg, dof_map, u_global):
                     KDgg[n_ijv[ii], n_ijv[jj]] += KDe[ii, jj]
 
 
-def _build_KDgg_ctetra(model: BDF, KDgg, dof_map, u_global):
+def _build_KDgg_ctetra(model: BDF, KDgg, dof_map, u_global, xyz_cid0):
     """Assemble CTETRA geometric stiffness."""
     elem = model.ctetra
     if elem.n == 0:
         return
 
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
+    pids, mids, Ds = solid_emat(model, elem)
+
+    nodes = elem.nodes
+    inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
+    ipos = (nodes.ravel() > 0)
+    inodes.ravel()[ipos] = model.grid.index(nodes.ravel()[ipos])
+    for i, eid, pid, all_nodes, all_inodes, D in zip(count(), eids, pids, nodes, inodes, Ds):
         base_nodes = all_nodes[:4]
         midside_nodes = all_nodes[4:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
 
-        D = _get_solid_material_D(model, pid)
+        #D = _get_solid_material_D(model, pid)
 
         if has_midside and len(all_nodes[all_nodes > 0]) == 10:
             active_nodes = all_nodes[all_nodes > 0]
-            coords = _get_element_coords(model, active_nodes)
+            coords = _get_element_coords(model, active_nodes, xyz_cid0)
             stress = _compute_element_stress(
                 model,
                 coords,
@@ -619,24 +639,28 @@ def _build_KDgg_ctetra(model: BDF, KDgg, dof_map, u_global):
                     KDgg[n_ijv[ii], n_ijv[jj]] += KDe[ii, jj]
 
 
-def _build_KDgg_cpenta(model: BDF, KDgg, dof_map, u_global):
+def _build_KDgg_cpenta(model: BDF, KDgg, dof_map, u_global, xyz_cid0):
     """Assemble CPENTA geometric stiffness."""
     elem = model.cpenta
     if elem.n == 0:
         return
 
-    for i in range(elem.n):
-        pid = int(elem.property_id[i])
-        all_nodes = elem.nodes[i]
+    pids, mids, Ds = solid_emat(model, elem)
+
+    nodes = elem.nodes
+    inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
+    ipos = (nodes.ravel() > 0)
+    inodes.ravel()[ipos] = model.grid.index(nodes.ravel()[ipos])
+    for i, eid, pid, all_nodes, all_inodes, D in zip(count(), eids, pids, nodes, inodes, Ds):
         base_nodes = all_nodes[:6]
         midside_nodes = all_nodes[6:]
         has_midside = midside_nodes.max() > 0 if len(midside_nodes) > 0 else False
 
-        D = _get_solid_material_D(model, pid)
+        #D = _get_solid_material_D(model, pid)
 
         if has_midside and len(all_nodes[all_nodes > 0]) == 15:
             active_nodes = all_nodes[all_nodes > 0]
-            coords = _get_element_coords(model, active_nodes)
+            coords = _get_element_coords(model, active_nodes, xyz_cid0)
             stress = _compute_element_stress(
                 model,
                 coords,
@@ -671,3 +695,45 @@ def _build_KDgg_cpenta(model: BDF, KDgg, dof_map, u_global):
             for jj in range(ndof_e):
                 if KDe[ii, jj] != 0.0:
                     KDgg[n_ijv[ii], n_ijv[jj]] += KDe[ii, jj]
+
+
+def solid_rho(model: BDF, elem: CTETRA | CHEXA | CPENTA) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    mat1 = model.mat1
+    psolid = model.psolid
+
+    pid = elem.property_id
+    ipid = psolid.index(pid)
+    mid = psolid.material_id[ipid]
+    imid = mat1.index(mid)
+    rho = mat1.rho[imid]
+    return pid, mid, rho
+
+
+def solid_emat(model: BDF, elem) -> tuple[np.ndarray, np.ndarray,
+                                          list[np.ndarray, ...]]:
+    """Get the 6x6 constitutive matrix for a PSOLID property.
+
+    Parameters
+    ----------
+    model : BDF
+        The BDF model.
+    element_id : int
+        Element ID (must reference a PSOLID card with MAT1).
+
+    Returns
+    -------
+    D : (6, 6) constitutive matrix
+    """
+    mat1 = model.mat1
+    psolid = model.psolid
+
+    pids = elem.property_id
+    ipid = psolid.index(pids)
+    mids = psolid.material_id[ipid]
+
+    imid = mat1.index(mids)
+    Es = mat1.E[imid]
+    Gs = mat1.G[imid]
+    nus = mat1.nu[imid]
+    Ds = [_isotropic_constitutive(E, G, nu) for E, G, nu in zip(Es, Gs, nus)]
+    return pids, mids, Ds

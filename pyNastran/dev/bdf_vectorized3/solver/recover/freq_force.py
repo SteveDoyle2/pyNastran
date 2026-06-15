@@ -1,6 +1,6 @@
 from typing import TextIO
 import numpy as np
-from pyNastran.bdf.bdf import BDF, Subcase
+from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 from .utils import (
     get_f06_op2_pch_set, get_mag_phase_from_options,
     get_ieids_eids)

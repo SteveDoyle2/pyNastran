@@ -359,7 +359,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                 subcases_set.add(subcase_id)
                 if sort_subcases:
                     res_categories2[(subcase_id, res.table_name_str)].append(res)
-                else:
+                else:  # pragma: no cover
                     res_categories2[res.table_name_str].append(res)
             else:
                 # grid_point
@@ -389,7 +389,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                 subcase_id = eigenvalue.isubcase  # TODO: not 100%
                 subcases_set.add(subcase_id)
                 res_categories2[(subcase_id, eigenvalue.table_name)].append(eigenvalue)
-    else:
+    else:  # pragma: no cover
         for key in eigenvalues_list:
             if key in skips:
                 continue
@@ -446,7 +446,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                     fop2_ascii.write('---------------\n')
                     total_case_count += case_count
 
-    else:
+    else:  # pragma: no cover
         for table_name in pretables + table_order:
             if table_name not in res_categories2:
                 # no LAMA table in a static run

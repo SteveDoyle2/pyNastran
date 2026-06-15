@@ -10,6 +10,7 @@ from pyNastran.op2.op2_interface.op2_classes import (
 from .recover.utils import get_plot_request
 from .utils import recast_data
 
+
 def save_static_table(f06_file: TextIO,
                       subcase: Subcase, itime: int, ntimes: int,
                       node_gridtype: NDArrayN2int, Fg: NDArrayNfloat,

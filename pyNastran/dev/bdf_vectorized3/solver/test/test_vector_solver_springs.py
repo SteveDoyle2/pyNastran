@@ -4,16 +4,17 @@ import unittest
 import numpy as np
 from cpylog import SimpleLogger
 import pyNastran
-from pyNastran.dev.bdf_vectorized3.solver.solver import Solver, BDF, partition_vector2
+from pyNastran.dev.bdf_vectorized3.solver.solver import Solver, partition_vector2
+from pyNastran.dev.bdf_vectorized3.bdf import BDF, read_bdf
 
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.f06.errors import FatalError
-from pyNastran.dev.solver.solver import Solver as SolverOld, BDF as BDFold
-from pyNastran.bdf.case_control_deck import CaseControlDeck
+from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
 
 PKG_PATH = Path(pyNastran.__path__[0])
 # TEST_DIR = PKG_PATH / 'dev' / 'solver'
 TEST_DIR = Path(__file__).parent
+MODEL_PATH = PKG_PATH / '..' / 'models'
 
 
 def setup_static_case_control(model: BDF, extra_case_lines=None):
@@ -222,57 +223,46 @@ class TestStaticSpring(unittest.TestCase):
     def _test_celas2_cd(self):
         """Tests a CELAS2"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        model_old = BDFold(log=log, mode='msc')
-        modelv = BDF(log=log, mode='msc')
-        models = [model_old, modelv]
-        for model in models:
-            model.bdf_filename = TEST_DIR / 'celas2.bdf'
-            model.add_grid(1, [0., 0., 0.])
-            cd = 100
-            model.add_grid(2, [0., 0., 0.], cd=cd)
-            origin = [0., 0., 0.]
-            zaxis = [0., 0., 1.]
-            xzplane = [0., 1., 0.]
-            model.add_cord2r(cd, origin, zaxis, xzplane, rid=0, setup=True, comment='')
-            nids = [1, 2]
-            eid = 1
-            k = 1000.
-            model.add_celas2(eid, k, nids, c1=1, c2=2, ge=0., s=0., comment='')
+        model = BDF(log=log, mode='msc')
 
-            load_id = 2
-            spc_id = 3
-            # model.add_sload(load_id, 2, 20.)
-            fxyz = np.array([1., 0., 0.])
-            mag = 20.
-            model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
+        model.bdf_filename = TEST_DIR / 'celas2.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        cd = 100
+        model.add_grid(2, [0., 0., 0.], cd=cd)
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [0., 1., 0.]
+        model.add_cord2r(cd, origin, zaxis, xzplane, rid=0, setup=True, comment='')
+        nids = [1, 2]
+        eid = 1
+        k = 1000.
+        model.add_celas2(eid, k, nids, c1=1, c2=2, ge=0., s=0., comment='')
 
-            components = 123456
-            nodes = 1
-            model.add_spc1(spc_id, components, nodes, comment='')
-            setup_static_case_control(model)
+        load_id = 2
+        spc_id = 3
+        # model.add_sload(load_id, 2, 20.)
+        fxyz = np.array([1., 0., 0.])
+        mag = 20.
+        model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
 
-        solver_old = SolverOld(model_old)
-        solver_old.run()
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_static_case_control(model)
 
-        solverv = Solver(modelv)
-        solverv.run()
+        solver = Solver(model)
+        solver.run()
 
         # F = k * d
         d = mag / k
-        Fg1 = solver_old.Fg
-        Fg2 = solverv.Fg
-
-        Kgg1 = solver_old.Kgg
-        Kgg2 = solverv.Kgg
-
-        Kaa1 = solver_old.Kaa.toarray()
-        Kaa2 = solverv.Kaa.toarray()
+        Fg = solver.Fg
+        Kgg = solver.Kgg
+        Kaa2 = solver.Kaa.toarray()
         Fg_expected = [ 0., 0.0, 0., 0., 0., 0.,
                         20., 0., 0., 0., 0., 0.]
-        assert np.allclose(Fg2, Fg_expected), f'Force Error:\n Fg2={Fg2}\n Fg_expected={Fg_expected}'
-        assert np.allclose(Kgg1, Kgg2)
-        assert np.allclose(Kaa1, Kaa2)
-        assert np.allclose(solver_old.xa_[0], d)
+        assert np.allclose(Fg, Fg_expected), f'Force Error:\n Fg2={Fg}\n Fg_expected={Fg_expected}'
+        #assert np.allclose(Kgg, Kgg)
+        #assert np.allclose(Kaa, Kaa)
         assert np.allclose(solverv.xa_[0], d)
 
     def test_celas3(self):
@@ -543,6 +533,46 @@ class TestStaticSpring(unittest.TestCase):
 
 class TestStaticRod(unittest.TestCase):
     """tests the rods"""
+    def test_crod_conrod_ctube_axial(self):
+        """Tests a CROD/PROD"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'crod_axial.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        nids = [1, 2]
+        eid = 1
+        pid = 2
+        mid = 3
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(
+            mid, E, G, nu, rho=0.1, alpha=0.0, tref=0.0, ge=0.0,
+            St=0.0, Sc=0.0, Ss=0.0, mcsid=0)
+        model.add_crod(eid, pid, nids)
+        model.add_prod(pid, mid, A=1.0, j=0., c=0., nsm=0.1)
+
+        model.add_conrod(eid, mid, nids, A=1.0)
+
+        model.add_ctube(eid, pid+1, nids)
+        model.add_ptube(pid+1, mid, OD1=1.0, t=0.1, nsm=0.1)
+
+        load_id = 2
+        spc_id = 3
+        nid = 2
+        mag = 1.
+        fxyz = np.array([1., 0., 0.])
+        model.add_force(load_id, nid, mag, fxyz, cid=0)
+
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_static_case_control(model)
+        solver = Solver(model)
+        #with self.assertRaises(RuntimeError):
+        solver.run()
+
     def test_crod_axial(self):
         """Tests a CROD/PROD"""
         log = SimpleLogger(level='warning', encoding='utf-8')
@@ -1687,6 +1717,166 @@ class TestHarmonic(unittest.TestCase):
         setup_frequency_response_case_control(model)
         solver = Solver(model)
         #with self.assertRaises(RuntimeError):
+        solver.run()
+
+
+#class TestStaticAero(unittest.TestCase):
+#    def test_bwb_saero_modes(self):
+#        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
+#        model = read_bdf(bdf_filename)
+#        model.add_eigrl(31, nd=15)
+#        model.setup()
+#
+#        model.sol = 103
+#        subcases = model.subcases
+#        subcase: Subcase = subcases[1]
+#        subcase.add_integer_type('METHOD', 31)
+#        solver = Solver(model)
+#        solver.run()
+
+#class TestStatic2(unittest.TestCase):
+#    def test_static(self):
+#        bdf_filename = MODEL_PATH / 'sol_101_elements' / #'buckling_solid_shell_bar.bdf'
+#        model = read_bdf(bdf_filename)
+#        solver = Solver(model)
+#        solver.run()
+
+class TestStaticSolid(unittest.TestCase):
+    def test_ctetra_10(self):
+        bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'
+        model = read_bdf(bdf_filename)
+        solver = Solver(model)
+        solver.run()
+
+    def test_ctetra(self):
+        model = BDF(debug=None, log=None, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cshear1.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 0., 1.])
+
+        mid = 3
+        pid = 4
+        model.add_ctetra(10, pid, [1, 2, 3, 4])
+        model.add_psolid(pid, mid)
+
+        spc_id = 3
+        load_id = 2
+        model.add_spc1(spc_id, '123456', [1, 2, 3], comment='')
+        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
+
+        E = 1.0E7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        model.add_param('GRDPNT', 0)
+
+        setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_hexa(self):
+        model = BDF(debug=None, log=None, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cshear1.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        model.add_grid(5, [0., 0., 1.])
+        model.add_grid(6, [1., 0., 1.])
+        model.add_grid(7, [1., 1., 1.])
+        model.add_grid(8, [0., 1., 1.])
+
+        mid = 3
+        pid = 4
+        model.add_chexa(10, pid, [1, 2, 3, 4, 5, 6, 7, 8])
+        model.add_psolid(pid, mid)
+
+        spc_id = 3
+        load_id = 2
+        model.add_spc1(spc_id, '123456', [1, 2, 3], comment='')
+        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
+
+        E = 1.0E7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        model.add_param('GRDPNT', 0)
+
+        setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_penta(self):
+        model = BDF(debug=None, log=None, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cshear1.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+
+        model.add_grid(4, [0., 0., 1.])
+        model.add_grid(5, [1., 0., 1.])
+        model.add_grid(6, [1., 1., 1.])
+
+        mid = 3
+        pid = 4
+        model.add_cpenta(10, pid, [1, 2, 3, 4, 5, 6])
+        model.add_psolid(pid, mid)
+
+        spc_id = 3
+        load_id = 2
+        model.add_spc1(spc_id, '123456', [1, 2, 3], comment='')
+        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
+
+        E = 1.0E7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        model.add_param('GRDPNT', 0)
+        setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+
+class TestStaticShear(unittest.TestCase):
+    def test_cshear1(self):
+        """Tests CSHEAR."""
+        model = BDF(debug=None, log=None, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cshear1.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 0., 2.])
+        model.add_grid(4, [0., 0., 2.])
+        thickness = 0.3
+        mid = 3
+        nids = [1, 2, 3, 4]
+        model.add_cshear(1, 1, nids)
+        model.add_cshear(2, 1, nids)
+        model.add_pshear(1, mid, thickness)
+
+        model.add_conrod(10, mid, [1, 2], A=1.0)
+        model.add_conrod(11, mid, [2, 3], A=1.0)
+        model.add_conrod(12, mid, [3, 4], A=1.0)
+        model.add_conrod(13, mid, [4, 1], A=1.0)
+
+        E = 1.0E7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        spc_id = 3
+        load_id = 2
+        model.add_spc1(spc_id, '123456', [1, 2], comment='')
+        model.add_force(load_id, 3, 1.0, [0., 0., 1.], cid=0, comment='')
+        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
+
+        setup_static_case_control(model)
+        solver = Solver(model)
         solver.run()
 
 

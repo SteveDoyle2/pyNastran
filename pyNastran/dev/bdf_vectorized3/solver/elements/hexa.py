@@ -20,8 +20,9 @@ from .tetra import _solid_B_matrix
 
 
 def _hexa8_shape_functions(
-    xi: float, eta: float, mu: float
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    xi: float,
+    eta: float,
+    mu: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute shape functions and derivatives for 8-node hex.
 
     Parameters
@@ -48,7 +49,7 @@ def _hexa8_shape_functions(
     return N, dNdxi, dNdeta, dNdmu
 
 
-def _isotropic_constitutive(E: float, nu: float) -> np.ndarray:
+def _isotropic_constitutive(E: float, G: float, nu: float) -> np.ndarray:
     """Build 6x6 isotropic elasticity matrix (Voigt notation).
 
     Ordering: [sigma_xx, sigma_yy, sigma_zz, tau_xy, tau_yz, tau_xz].
@@ -57,6 +58,8 @@ def _isotropic_constitutive(E: float, nu: float) -> np.ndarray:
     ----------
     E : float
         Young's modulus.
+    G : float
+        Shear modulus.
     nu : float
         Poisson's ratio.
 

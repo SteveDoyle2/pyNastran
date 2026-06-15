@@ -10,12 +10,12 @@ def get_frequencies(model: BDF, subcase: Subcase,
     We need the natural frequencies because some cards
     use that.
     """
-    is_freqs = (len(model.frequencies) == 0)
-    is_frequency = ('FREQUENCY' not in subcase)
+    is_not_freqs = (len(model.frequencies) == 0)
+    is_not_frequency = ('FREQUENCY' not in subcase)
     natural_freq = np.unique(omega_ns) / (2 * np.pi)
     del omega_ns
 
-    if is_freqs or is_frequency:
+    if is_not_freqs or is_not_frequency:
         nfreq = 1001
         #freq_max = 2 * np.pi * omega_max
         fmax_default = 1.5 * natural_freq.max()

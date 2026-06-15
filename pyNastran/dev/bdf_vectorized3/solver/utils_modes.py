@@ -1,10 +1,18 @@
 import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 
+def todense(Mgg):
+    if hasattr(Mgg, "toarray"):
+        Mgg_dense = Mgg.toarray()
+    else:
+        Mgg_dense = np.asarray(Mgg)
+    return Mgg_dense
 
-def slice_modal_set(
-    node_gridtype: np.ndarray, phi: np.ndarray, nnode: int, nmode: int, node_set: np.ndarray
-) -> np.ndarray:
+
+def slice_modal_set(node_gridtype: np.ndarray,
+                    phi: np.ndarray,
+                    nnode: int, nmode: int,
+                    node_set: np.ndarray) -> np.ndarray:
     assert phi.ndim == 2, phi.shape
     assert node_gridtype.shape == (nnode, 2), node_gridtype.shape
     assert phi.shape == (nmode, nnode * 6), (phi.shape, (nmode, nnode * 6))
@@ -22,28 +30,41 @@ def slice_modal_set(
     return node_gridtype, phi, nnode
 
 
-def get_real_eigenvalue_method(model: BDF, subcase: Subcase) -> [int, str]:
+def get_real_eigenvalue_method(model: BDF,
+                               subcase: Subcase) -> [int, str]:
     method_id, options = subcase["METHOD"]
     assert isinstance(method_id, int), method_id
     method = model.methods[method_id]
     if method.type == "EIGRL":
         neigenvalue = method.nd  # nroots
         norm_str = "MASS" if method.norm is None else method.norm
+    elif method.type == 'EIGB':
+        # C      : None
+        # G      : None
+        # L1     : 0.0
+        # L2     : 100.0
+        # method : 'INV'
+        # ndn    : 60
+        # ndp    : 60
+        # nep    : 20
+        neigenvalue = method.ndn + method.ndp
+        norm_str = method.norm
     else:
-        raise RuntimeError(method)
+        raise RuntimeError(method.get_stats())
     # neigenvalues = 10
+    assert isinstance(norm_str, str), norm_str
+    assert norm_str in ['MAX', 'MASS', 'POINT'], norm_str
     return neigenvalue, norm_str
 
 
-def apply_phi_normalization(
-    Mgg: np.ndarray,
-    Kgg: np.ndarray,
-    eigenvalue: np.ndarray,
-    phit: np.ndarray,
-    nmode: int,
-    nnode_g: int,
-    norm_str: str,
-):
+def apply_phi_normalization(Mgg: np.ndarray,
+                            Kgg: np.ndarray,
+                            eigenvalue: np.ndarray,
+                            phit: np.ndarray,
+                            nmode: int,
+                            nnode_g: int,
+                            norm_str: str,
+                            ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Applies eigenvalue/eigevenctor normalization
     for norm_str:
@@ -75,11 +96,11 @@ def apply_phi_normalization(
         # print(f'eig(Khh) = {np.diag(Khh)}')
 
         # print(Mhh)
-        massh = np.diag(Mhh)
-        if not np.allclose(massh, np.ones(nmode)):
-            norm_scale = np.sqrt(massh)
+        mhh_diag = np.diag(Mhh)
+        if not np.allclose(mhh_diag, np.ones(nmode)):
+            norm_scale = np.sqrt(mhh_diag)
             phit /= norm_scale[:, np.newaxis]
-            eigenvalue /= massh
+            eigenvalue /= mhh_diag
     else:
         raise RuntimeError(f"norm_str={norm_str!r} and must be [MASS, MAX]")
     phi = phit.T
@@ -88,9 +109,10 @@ def apply_phi_normalization(
     return phit, Mhh, Khh
 
 
-def compute_mass_participation(
-    phig: np.ndarray, Mgg: np.ndarray, nnode_g: int, nmode: int
-) -> dict[str, np.ndarray]:
+def compute_mass_participation(phig: np.ndarray,
+                               Mgg: np.ndarray,
+                               nnode_g: int, nmode: int,
+                               ) -> dict[str, np.ndarray]:
     """Compute modal mass participation factors and effective mass.
 
     Assumes mass-normalized eigenvectors (phi.T @ M @ phi = I).
@@ -123,17 +145,15 @@ def compute_mass_participation(
     ndof = nnode_g * 6
     assert phig.shape == (nmode, ndof), (phig.shape, (nmode, ndof))
 
-    # Build rigid-body direction vectors: one per DOF direction (Tx,Ty,Tz,Rx,Ry,Rz)
+    # Build rigid-body direction vectors:
+    #   one per DOF direction (Tx,Ty,Tz,Rx,Ry,Rz)
     # Each column of R selects DOF i at every node
     R = np.zeros((ndof, 6), dtype=phig.dtype)
     for i in range(6):
         R[i::6, i] = 1.0
 
     # Total mass per direction: r_j.T @ M @ r_j
-    if hasattr(Mgg, "toarray"):
-        Mgg_dense = Mgg.toarray()
-    else:
-        Mgg_dense = np.asarray(Mgg)
+    Mgg_dense = todense(Mgg)
     total_mass = np.einsum("ij,ik,jk->k", R, Mgg_dense @ R, np.eye(6))
     # Simpler: total_mass[j] = R[:,j].T @ M @ R[:,j]
     total_mass = np.array([R[:, j] @ Mgg_dense @ R[:, j] for j in range(6)])

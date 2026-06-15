@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import Subcase
+    from pyNastran.dev.bdf_vectorized3.bdf import Subcase
 
 
 def get_plot_request(subcase: Subcase,

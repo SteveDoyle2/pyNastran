@@ -9,16 +9,15 @@ with 6 DOF per node.
 """
 
 from __future__ import annotations
-
+from itertools import count
 from typing import TYPE_CHECKING
 
 import numpy as np
 
 from pyNastran.utils.scipy_utils import dok_matrix
-from pyNastran.dev.solver.utils import DOF_MAP
-
 if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    DOF_MAP = dict[tuple[int, int], int]
 
 # ---------------------------------------------------------------------------
 # Gauss quadrature constants
@@ -40,24 +39,20 @@ _GAMMA = np.array([1.0, -1.0, 1.0, -1.0])
 # ---------------------------------------------------------------------------
 def _shape_quad4(xi: float, eta: float) -> np.ndarray:
     """Bilinear shape functions (4,)."""
-    return 0.25 * np.array(
-        [
-            (1.0 - xi) * (1.0 - eta),
-            (1.0 + xi) * (1.0 - eta),
-            (1.0 + xi) * (1.0 + eta),
-            (1.0 - xi) * (1.0 + eta),
-        ]
-    )
+    return 0.25 * np.array([
+        (1.0 - xi) * (1.0 - eta),
+        (1.0 + xi) * (1.0 - eta),
+        (1.0 + xi) * (1.0 + eta),
+        (1.0 - xi) * (1.0 + eta),
+    ])
 
 
 def _dshape_quad4(xi: float, eta: float) -> np.ndarray:
     """Shape function derivatives (2, 4): [dN/dxi; dN/deta]."""
-    return 0.25 * np.array(
-        [
-            [-(1.0 - eta), (1.0 - eta), (1.0 + eta), -(1.0 + eta)],
-            [-(1.0 - xi), -(1.0 + xi), (1.0 + xi), (1.0 - xi)],
-        ]
-    )
+    return 0.25 * np.array([
+        [-(1.0 - eta), (1.0 - eta), (1.0 + eta), -(1.0 + eta)],
+        [-(1.0 - xi), -(1.0 + xi), (1.0 + xi), (1.0 - xi)],
+    ])
 
 
 def _jacobian(dN: np.ndarray, x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, float]:
@@ -765,6 +760,7 @@ def _get_ABD_for_element(
     pid: int,
     pshell,
     pcomp,
+    pcompg,
 ) -> tuple[np.ndarray, np.ndarray | None, np.ndarray, np.ndarray, float]:
     """Get A, B, D, Ds, thickness for a single property ID.
 
@@ -778,118 +774,127 @@ def _get_ABD_for_element(
     """
     kappa = 5.0 / 6.0
 
+    mat1 = model.mat1
+    mat8 = model.mat8
     def _get_shear_modulus(mid: int) -> tuple[float, float]:
         """Get transverse shear moduli (G13, G23) for a material ID.
 
         Returns (G13, G23). For MAT1 (isotropic), G13 = G23 = G.
         For MAT8 (orthotropic), uses G1Z and G2Z fields.
         """
-        mat1 = model.mat1
-        if mat1.n > 0:
+        for mat in [mat1, mat8]:
+            if mid in mat.material_id:
+                break
+        else:
+            raise RuntimeError(f'mid={mid} is ot a MAT1/MAT8')
+ 
+        if mat.type == 'MAT1':
             idx = np.searchsorted(mat1.material_id, mid)
-            if idx < mat1.n and mat1.material_id[idx] == mid:
-                g = float(mat1.G[idx])
-                return g, g
-        mat8 = model.mat8
-        if mat8.n > 0:
+            g = mat1.G[idx]
+            return g, g
+        elif mat.type == 'MAT8':
             idx = np.searchsorted(mat8.material_id, mid)
-            if idx < mat8.n and mat8.material_id[idx] == mid:
-                g13 = float(mat8.G13[idx])
-                g23 = float(mat8.G23[idx])
-                return g13, g23
+            g13 = mat8.G13[idx]
+            g23 = mat8.G23[idx]
+            return g13, g23
+        else:
+            raise RuntimeError(f'mid={mid} is ot a MAT1/MAT8')
         return 0.0, 0.0
 
-    # Try PSHELL first
-    if pshell.n > 0:
-        iprop = np.searchsorted(pshell.property_id, pid)
-        if iprop < pshell.n and pshell.property_id[iprop] == pid:
-            prop_slice = pshell.slice_card_by_id(np.array([pid]))
-            thickness = float(prop_slice.t[0])
-            mids = prop_slice.material_id[0]
-            mid1, mid2, mid3, mid4 = mids
-            tst = float(prop_slice.tst[0])
+    # find the prop
+    for prop in [pshell, pcomp, pcompg]:
+        if pid in prop.property_id:
+            break
 
-            # Validate: must have MID1 or MID2 for a solvable element
-            if mid1 <= 0 and mid2 <= 0:
-                raise RuntimeError(
-                    f"PSHELL pid={pid}: requires MID1 (membrane) or MID2 "
-                    f"(bending) for a solvable element"
-                )
+    if prop.type == 'PSHELL':
+        prop_slice = prop.slice_card_by_id([pid])
+        iprop = prop.index(pid)[0]
+        thickness = prop.t[iprop]
+        mids = prop.material_id[iprop, :]
+        #print('mids = ', mids)
+        #print(prop.get_stats())
+        mid1, mid2, mid3, mid4 = mids
+        tst = prop.tst[iprop]
+        twelveIt3 = prop.twelveIt3[iprop]
 
-            # ABD matrices (get_individual_ABD_matrices may produce NaN
-            # for missing MIDs — replace with zeros)
-            A_arr, B_arr, D_arr = prop_slice.get_individual_ABD_matrices()
-            A_mat = A_arr[0]
-            D_mat = D_arr[0]
-            B_arr_0 = B_arr[0]
+        # Validate: must have MID1 or MID2 for a solvable element
+        if mid1 <= 0 and mid2 <= 0:
+            raise RuntimeError(
+                f"PSHELL pid={pid}: requires MID1 (membrane) or MID2 "
+                f"(bending) for a solvable element")
 
-            # Zero out NaN entries (from missing MIDs)
-            A_mat = np.nan_to_num(A_mat, nan=0.0)
-            D_mat = np.nan_to_num(D_mat, nan=0.0)
-            B_arr_0 = np.nan_to_num(B_arr_0, nan=0.0)
+        # ABD matrices (get_individual_ABD_matrices may produce NaN
+        # for missing MIDs — replace with zeros)
+        A_arr, B_arr, D_arr = prop_slice.get_individual_ABD_matrices()
+        A_mat = A_arr[0]
+        D_mat = D_arr[0]
+        B_arr_0 = B_arr[0]
 
-            B_mat = B_arr_0 if np.any(np.abs(B_arr_0) > 1e-12) else None
+        # Zero out NaN entries (from missing MIDs)
+        A_mat = np.nan_to_num(A_mat, nan=0.0)
+        D_mat = np.nan_to_num(D_mat, nan=0.0)
+        B_arr_0 = np.nan_to_num(B_arr_0, nan=0.0)
 
-            # Transverse shear: only meaningful when bending exists (MID2)
-            # or when MID3 is explicitly specified.
-            twelveIt3 = float(prop_slice.twelveIt3[0])
-            if mid3 > 0:
-                G13, G23 = _get_shear_modulus(mid3)
-            elif mid2 > 0:
-                G13, G23 = _get_shear_modulus(mid2)
-            else:
-                G13, G23 = 0.0, 0.0
+        B_mat = B_arr_0 if np.any(np.abs(B_arr_0) > 1e-12) else None
 
-            if mid3 > 0:
-                # Explicit MID3: use G-based shear stiffness
-                ts = tst * thickness
-                Ds_mat = kappa * ts * np.array([[G13, 0.0], [0.0, G23]])
-            elif mid2 > 0 and D_mat[0, 0] > 0.0:
-                # MID3 blank: NX derives shear from bending rigidity D11
-                Ds_mat = 129.0 * D_mat[0, 0] * twelveIt3 * np.eye(2)
-            elif G13 > 0.0 or G23 > 0.0:
-                ts = tst * thickness
-                Ds_mat = kappa * ts * np.array([[G13, 0.0], [0.0, G23]])
-            else:
-                Ds_mat = np.zeros((2, 2))
+        # Transverse shear: only meaningful when bending exists (MID2)
+        # or when MID3 is explicitly specified.
+        if mid3 > 0:
+            G13, G23 = _get_shear_modulus(mid3)
+        elif mid2 > 0:
+            G13, G23 = _get_shear_modulus(mid2)
+        else:
+            G13, G23 = 0.0, 0.0
 
-            return A_mat, B_mat, D_mat, Ds_mat, thickness
+        if mid3 > 0:
+            # Explicit MID3: use G-based shear stiffness
+            ts = tst * thickness
+            Ds_mat = kappa * ts * np.array([[G13, 0.0], [0.0, G23]])
+        elif mid2 > 0 and D_mat[0, 0] > 0.0:
+            # MID3 blank: NX derives shear from bending rigidity D11
+            Ds_mat = 129.0 * D_mat[0, 0] * twelveIt3 * np.eye(2)
+        elif G13 > 0.0 or G23 > 0.0:
+            ts = tst * thickness
+            Ds_mat = kappa * ts * np.array([[G13, 0.0], [0.0, G23]])
+        else:
+            Ds_mat = np.zeros((2, 2))
+
+        return A_mat, B_mat, D_mat, Ds_mat, thickness
 
     # Try PCOMP
-    if pcomp.n > 0:
-        iprop = np.searchsorted(pcomp.property_id, pid)
-        if iprop < pcomp.n and pcomp.property_id[iprop] == pid:
-            prop_slice = pcomp.slice_card_by_id(np.array([pid]))
-            A_arr, B_arr, D_arr = prop_slice.get_individual_ABD_matrices()
-            A_mat = A_arr[0]
-            B_arr_0 = B_arr[0]
-            D_mat = D_arr[0]
-            thickness = float(prop_slice.total_thickness()[0])
+    elif prop.type in {'PCOMP'}:
+        iprop = pcomp.index(pid)
+        prop_slice = pcomp.slice_card_by_id(np.array([pid]))
+        A_arr, B_arr, D_arr = prop_slice.get_individual_ABD_matrices()
+        A_mat = A_arr[0]
+        B_arr_0 = B_arr[0]
+        D_mat = D_arr[0]
+        thickness = prop_slice.total_thickness()[0]
 
-            B_mat = B_arr_0 if np.any(np.abs(B_arr_0) > 1e-12) else None
+        B_mat = B_arr_0 if np.any(np.abs(B_arr_0) > 1e-12) else None
 
-            # Transverse shear: thickness-weighted average across plies,
-            # rotated by ply angle.
-            # Ds = κ · Σ ti · R(θi)^T · [[G13_i, 0],[0, G23_i]] · R(θi)
-            ilayer = prop_slice.ilayer
-            i0, i1 = ilayer[0]
-            ply_mids = prop_slice.material_id[i0:i1]
-            ply_thetas = prop_slice.theta[i0:i1]
-            ply_thicknesses = prop_slice.thickness[i0:i1]
-            Ds_mat = np.zeros((2, 2))
-            for mid_ply, theta_ply, t_ply in zip(ply_mids, ply_thetas, ply_thicknesses):
-                g13_ply, g23_ply = _get_shear_modulus(int(mid_ply))
-                Ds_ply = np.array([[g13_ply, 0.0], [0.0, g23_ply]])
-                if abs(theta_ply) > 1e-10:
-                    c = np.cos(np.radians(theta_ply))
-                    s = np.sin(np.radians(theta_ply))
-                    R = np.array([[c, s], [-s, c]])
-                    Ds_ply = R.T @ Ds_ply @ R
-                Ds_mat += t_ply * Ds_ply
-            Ds_mat *= kappa
-            return A_mat, B_mat, D_mat, Ds_mat, thickness
-
-    raise RuntimeError(f"No PSHELL or PCOMP found for PID={pid}")
+        # Transverse shear: thickness-weighted average across plies,
+        # rotated by ply angle.
+        # Ds = κ · Σ ti · R(θi)^T · [[G13_i, 0],[0, G23_i]] · R(θi)
+        ilayer = prop_slice.ilayer
+        i0, i1 = ilayer[0]
+        ply_mids = prop_slice.material_id[i0:i1]
+        ply_thetas = prop_slice.theta[i0:i1]
+        ply_thicknesses = prop_slice.thickness[i0:i1]
+        Ds_mat = np.zeros((2, 2))
+        for mid_ply, theta_ply, t_ply in zip(ply_mids, ply_thetas, ply_thicknesses):
+            g13_ply, g23_ply = _get_shear_modulus(mid_ply)
+            Ds_ply = np.array([[g13_ply, 0.0], [0.0, g23_ply]])
+            if abs(theta_ply) > 1e-10:
+                c = np.cos(np.radians(theta_ply))
+                s = np.sin(np.radians(theta_ply))
+                R = np.array([[c, s], [-s, c]])
+                Ds_ply = R.T @ Ds_ply @ R
+            Ds_mat += t_ply * Ds_ply
+        Ds_mat *= kappa
+        return A_mat, B_mat, D_mat, Ds_mat, thickness
+    else:
+        raise RuntimeError(f"No PSHELL or PCOMP found for PID={pid}")
 
 
 # ---------------------------------------------------------------------------
@@ -1045,6 +1050,7 @@ class ShellQuadSolver:
 
         pshell = model.pshell
         pcomp = model.pcomp
+        pcompg = model.pcompg
 
         # Nodal coordinates
         grid = model.grid
@@ -1079,9 +1085,8 @@ class ShellQuadSolver:
 
         # Process each element
         nid_array = grid.node_id
-        for i_elem in range(nelements):
-            pid = int(cquad4.property_id[i_elem])
-
+        pids = cquad4.property_id
+        for i_elem, pid in zip(count(), pids):
             # Build rotation matrix T (3x3): rows = [ihat, jhat, normal]
             Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
 
@@ -1095,7 +1100,8 @@ class ShellQuadSolver:
             y_local = xy[:, 1]
 
             # Get constitutive matrices (in material frame)
-            A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(model, pid, pshell, pcomp)
+            A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(
+                model, pid, pshell, pcomp, pcompg)
 
             # Material coordinate rotation (THETA/MCID on CQUAD4)
             # Rotates constitutive from material frame to element frame
@@ -1153,7 +1159,7 @@ class ShellQuadSolver:
             dN_c = _dshape_quad4(0.0, 0.0)
             _, det_J_c = _jacobian(dN_c, x_local, y_local)
             if det_J_c <= 0.0:
-                eid = int(cquad4.element_id[i_elem])
+                eid = cquad4.element_id[i_elem]
                 raise RuntimeError(
                     f"CQUAD4 eid={eid} has non-positive Jacobian "
                     f"determinant ({det_J_c:.6g}) — element is degenerate"
@@ -1300,7 +1306,7 @@ def _pload4_direction_local(
     if nvec_sq < 1e-60:
         return None
 
-    cid = int(pload4.coord_id[i_card])
+    cid = pload4.coord_id[i_card]
 
     if cid == 0:
         nvec_global = nvec
@@ -1393,7 +1399,7 @@ def build_pload4_cquad4(
             Ti_rot_T = Ti[0:2, :].T  # (3, 2)
 
             for inode in range(4):
-                nid = int(elem_nodes[inode])
+                nid = elem_nodes[inode]
                 i_dof = dof_map[(nid, 1)]
                 fl = Fe_local[5 * inode : 5 * inode + 5]
                 Fb[i_dof : i_dof + 3] += Ti_T @ fl[:3]
@@ -1526,7 +1532,7 @@ def build_pload4_ctria3(
             Ti_rot_T = Ti[0:2, :].T
 
             for inode in range(3):
-                nid = int(elem_nodes[inode])
+                nid = elem_nodes[inode]
                 i_dof = dof_map[(nid, 1)]
                 fl = Fe_local[5 * inode : 5 * inode + 5]
                 Fb[i_dof : i_dof + 3] += Ti_T @ fl[:3]
@@ -1559,23 +1565,23 @@ def _get_alpha_vec_for_element(
         if iprop < pshell.n and pshell.property_id[iprop] == pid:
             prop_slice = pshell.slice_card_by_id(np.array([pid]))
             mids = prop_slice.material_id[0]
-            mid1 = int(mids[0])
+            mid1 = mids[0]
             if mid1 <= 0:
                 return np.zeros(3), 0.0
 
             if mat1.n > 0:
                 idx = np.searchsorted(mat1.material_id, mid1)
                 if idx < mat1.n and mat1.material_id[idx] == mid1:
-                    alpha = float(mat1.alpha[idx])
-                    tref = float(mat1.tref[idx])
+                    alpha = mat1.alpha[idx]
+                    tref = mat1.tref[idx]
                     return np.array([alpha, alpha, 0.0]), tref
 
             if mat8.n > 0:
                 idx = np.searchsorted(mat8.material_id, mid1)
                 if idx < mat8.n and mat8.material_id[idx] == mid1:
-                    a1 = float(mat8.alpha[idx, 0])
-                    a2 = float(mat8.alpha[idx, 1])
-                    tref = float(mat8.tref[idx])
+                    a1 = mat8.alpha[idx, 0]
+                    a2 = mat8.alpha[idx, 1]
+                    tref = mat8.tref[idx]
                     return np.array([a1, a2, 0.0]), tref
 
     if pcomp.n > 0:
@@ -1592,7 +1598,7 @@ def _get_alpha_vec_for_element(
             alpha_vec = np.zeros(3)
             tref_val = 0.0
             for mid_ply, theta_ply, t_ply in zip(ply_mids, ply_thetas, ply_thicknesses):
-                mid_ply = int(mid_ply)
+                mid_ply = mid_ply
                 a_ply = np.zeros(3)
                 tref_ply = 0.0
 
@@ -1654,6 +1660,8 @@ def build_thermal_load_cquad4(
 
     pshell = model.pshell
     pcomp = model.pcomp
+    pcompg = model.pcompg
+
     grid = model.grid
     nodes = cquad4.nodes
     inid = grid.index(nodes)
@@ -1678,12 +1686,11 @@ def build_thermal_load_cquad4(
     jnorm = np.linalg.norm(jhat, axis=1)
     jhat /= jnorm[:, np.newaxis]
 
-    for i_elem in range(nelements):
-        pid = int(cquad4.property_id[i_elem])
-        elem_nodes = nodes[i_elem]
+    pids = cquad4.property_id
+    for i_elem, pid, elem_nodes in zip(count(), pids, nodes):
 
         # Get element temperatures (average of nodal temps)
-        elem_temps = np.array([node_temperatures.get(int(nid), 0.0) for nid in elem_nodes])
+        elem_temps = np.array([node_temperatures.get(nid, 0.0) for nid in elem_nodes])
 
         # Get CTE and Tref
         alpha_vec, tref = _get_alpha_vec_for_element(model, pid, pshell, pcomp)
@@ -1708,7 +1715,7 @@ def build_thermal_load_cquad4(
         y_local = xy[:, 1]
 
         # Get constitutive matrices
-        A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(model, pid, pshell, pcomp)
+        A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(model, pid, pshell, pcomp, pcompg)
 
         # Material coordinate rotation
         theta_elem = cquad4.theta[i_elem]
@@ -1810,7 +1817,7 @@ def build_thermal_load_cquad4(
 
         # Assemble into Fb
         for inode_local in range(4):
-            nid = int(elem_nodes[inode_local])
+            nid = elem_nodes[inode_local]
             i_dof = dof_map[(nid, 1)]
             for comp in range(6):
                 Fb[i_dof + comp] += Fe_global[6 * inode_local + comp]
@@ -1842,6 +1849,8 @@ def build_thermal_load_ctria3(
 
     pshell = model.pshell
     pcomp = model.pcomp
+    pcompg = model.pcompg
+
     grid = model.grid
     nodes = ctria3.nodes
     inid = grid.index(nodes)
@@ -1865,11 +1874,9 @@ def build_thermal_load_ctria3(
     jnorm = np.linalg.norm(jhat, axis=1)
     jhat /= jnorm[:, np.newaxis]
 
-    for i_elem in range(nelements):
-        pid = int(ctria3.property_id[i_elem])
-        elem_nodes = nodes[i_elem]
-
-        elem_temps = np.array([node_temperatures.get(int(nid), 0.0) for nid in elem_nodes])
+    pids = ctria3.property_id
+    for i_elem, pid, elem_nodes in zip(count(), pids, nodes):
+        elem_temps = np.array([node_temperatures.get(nid, 0.0) for nid in elem_nodes])
 
         alpha_vec, tref = _get_alpha_vec_for_element(model, pid, pshell, pcomp)
         if np.all(np.abs(alpha_vec) < 1e-30):
@@ -1894,7 +1901,7 @@ def build_thermal_load_ctria3(
         area = ni[i_elem] / 2.0
 
         # Get constitutive matrices
-        A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(model, pid, pshell, pcomp)
+        A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(model, pid, pshell, pcomp, pcompg)
 
         # Material coordinate rotation
         theta_elem = ctria3.theta[i_elem]
@@ -1971,7 +1978,7 @@ def build_thermal_load_ctria3(
 
         # Assemble into Fb
         for inode_local in range(3):
-            nid = int(elem_nodes[inode_local])
+            nid = elem_nodes[inode_local]
             i_dof = dof_map[(nid, 1)]
             for comp in range(6):
                 Fb[i_dof + comp] += Fe_global[6 * inode_local + comp]
@@ -2832,6 +2839,7 @@ class ShellTriSolver:
 
         pshell = model.pshell
         pcomp = model.pcomp
+        pcompg = model.pcompg
 
         grid = model.grid
         nodes = ctria3.nodes  # (nelements, 3)
@@ -2863,9 +2871,8 @@ class ShellTriSolver:
         jhat /= jnorm[:, np.newaxis]
 
         # Process each element
-        for i_elem in range(nelements):
-            pid = int(ctria3.property_id[i_elem])
-
+        pids = ctria3.property_id
+        for i_elem, pid in zip(count(), pids):
             Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
 
             # Transform nodes to local frame
@@ -2877,7 +2884,7 @@ class ShellTriSolver:
             y_local = xy[:, 1]
 
             # Get constitutive matrices
-            A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(model, pid, pshell, pcomp)
+            A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(model, pid, pshell, pcomp, pcompg)
 
             # Material coordinate rotation (THETA/MCID on CTRIA3)
             theta_elem = ctria3.theta[i_elem]
@@ -3029,6 +3036,8 @@ def build_KDgg_cquad4(
 
     pshell = model.pshell
     pcomp = model.pcomp
+    pcompg = model.pcompg
+
     grid = model.grid
     nodes = cquad4.nodes
     inid = grid.index(nodes)
@@ -3054,9 +3063,8 @@ def build_KDgg_cquad4(
     jhat /= jnorm[:, np.newaxis]
 
     nid_array = grid.node_id
-
-    for i_elem in range(nelements):
-        pid = int(cquad4.property_id[i_elem])
+    pids = cquad4.property_id
+    for i_elem, pid, elem_nodes in zip(count(), pids, nodes):
         Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
 
         xy = np.zeros((4, 3))
@@ -3067,13 +3075,12 @@ def build_KDgg_cquad4(
         x_local = xy[:, 0]
         y_local = xy[:, 1]
 
-        A_mat, _, _, _, thickness = _get_ABD_for_element(model, pid, pshell, pcomp)
+        A_mat, _, _, _, thickness = _get_ABD_for_element(model, pid, pshell, pcomp, pcompg)
 
         # Extract membrane displacements in local frame
-        elem_nodes = nodes[i_elem]
         u_mem_local = np.zeros(8)
         for inode in range(4):
-            nid = int(elem_nodes[inode])
+            nid = elem_nodes[inode]
             i_dof = dof_map[(nid, 1)]
             u_g = u_global[i_dof : i_dof + 3]
             u_l = Ti @ u_g
@@ -3152,6 +3159,8 @@ def build_KDgg_ctria3(
 
     pshell = model.pshell
     pcomp = model.pcomp
+    pcompg = model.pcompg
+
     grid = model.grid
     nodes = ctria3.nodes
     inid = grid.index(nodes)
@@ -3171,8 +3180,8 @@ def build_KDgg_ctria3(
     jhat = np.cross(normal, ihat, axis=1)
     jhat /= np.linalg.norm(jhat, axis=1)[:, np.newaxis]
 
-    for i_elem in range(nelements):
-        pid = int(ctria3.property_id[i_elem])
+    pids = ctria3.property_id
+    for i_elem, pid, elem_nodes in zip(count(), pids, nodes):
         Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
 
         xy = np.zeros((3, 3))
@@ -3182,13 +3191,12 @@ def build_KDgg_ctria3(
         x_local = xy[:, 0]
         y_local = xy[:, 1]
 
-        A_mat, _, _, _, thickness = _get_ABD_for_element(model, pid, pshell, pcomp)
+        A_mat, _, _, _, thickness = _get_ABD_for_element(model, pid, pshell, pcomp, pcompg)
 
         # Extract membrane displacements in local frame
-        elem_nodes = nodes[i_elem]
         u_mem_local = np.zeros(6)
         for inode in range(3):
-            nid = int(elem_nodes[inode])
+            nid = elem_nodes[inode]
             i_dof = dof_map[(nid, 1)]
             u_g = u_global[i_dof : i_dof + 3]
             u_l = Ti @ u_g
