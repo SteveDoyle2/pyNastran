@@ -20,7 +20,9 @@ def f06_to_pressure_loads(f06_filename: PathLike,
                           plot_cp: bool=False,
                           plot_force: bool=False,
                           plot_moment: bool=False,
-                          debug: bool=False) -> dict:
+                          plot: bool=True,
+                          show: bool=True,
+                          debug: bool=False,) -> dict:
     caero_model = read_bdf(aerobox_caero_filename, log=log,
                            xref=False, validate=False, debug=debug)
     log = caero_model.log
@@ -223,6 +225,8 @@ def f06_to_pressure_loads(f06_filename: PathLike,
         log.info(f'finished writing {eid_csv_filename}')
 
     # --- Plotting ---
+    if not plot:
+        plot_cp = plot_force = plot_moment = False
     if plot_cp or plot_force or plot_moment:
         try:
             import matplotlib.pyplot as plt
@@ -265,7 +269,8 @@ def f06_to_pressure_loads(f06_filename: PathLike,
                     colorbar_label='My Moment',
                     show=False,
                 )
-        plt.show()
+        if show:
+            plt.show()
 
     out_loads = {
         #'eid_cp': (eids, cp_array),

@@ -62,7 +62,9 @@ def cmd_line_diff(argv=None, quiet: bool=False) -> None:
     size = 16
     bdf_filename1 = data['IN_BDF_FILENAME1']
     bdf_filename2 = data['IN_BDF_FILENAME2']
-    skip_cards = data['CARDS'].split(',')
+    skip_cards = []
+    if data['CARDS']:
+        skip_cards = data['CARDS'].split(',')
     # assert len(skip_cards) > 0, skip_cards
 
     #bdf_filename_out = data['--output']

@@ -887,7 +887,7 @@ class TestF06Utils(unittest.TestCase):
         trim_results = f06_to_pressure_loads(
             f06_filename, aerobox_caero_filename,
             loads_filename,
-            log=log, nlines_max=1_000_000, show=False)
+            log=log, nlines_max=1_000_000, show=False, plot=IS_MATPLOTLIB)
 
         # set the file names?
         trim_results = f06_to_pressure_loads(
@@ -895,7 +895,7 @@ class TestF06Utils(unittest.TestCase):
             loads_filename,
             nid_csv_filename=nid_csv_filename,
             eid_csv_filename=eid_csv_filename,
-            log=log, nlines_max=1_000_000, show=False)
+            log=log, nlines_max=1_000_000, show=False, plot=IS_MATPLOTLIB)
 
         argv = [
             'f06', 'plot_144', str(f06_filename),
@@ -909,7 +909,8 @@ class TestF06Utils(unittest.TestCase):
                      show=False, log=log)
 
         # --- hinge moment derivatives ---
-        out_dict = read_f06_trim(f06_filename, log=log, nlines_max=1_000_000, debug=None)
+        out_dict = read_f06_trim(f06_filename, log=log, nlines_max=1_000_000,
+                                 debug=None)
         hmd = out_dict['trim_results'].hinge_moment_derivatives
         assert len(hmd) == 1, f'expected 1 hinge moment entry, got {len(hmd)}'
         assert (1, 'TFLAP') in hmd
