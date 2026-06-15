@@ -101,7 +101,7 @@ def cmd_line(argv=None, log=None, quiet: bool=False) -> None:
     help_bin_msg = '  bdf bin                         -h | --help\n' if dev else ''
     msg = (
         'Usage:\n'
-        '  bdf diff                        IN_BDF_FILENAME1 IN_BDF_FILENAME2 [--punch]\n'
+        '  bdf diff                        IN_BDF_FILENAME1 IN_BDF_FILENAME2 [--punch] [--skip_cards CARDS]\n'
         '  bdf merge                       (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
         '  bdf equivalence                 IN_BDF_FILENAME EQ_TOL [--punch]\n'
         '  bdf inclzip                     IN_BDF_FILENAME EQ_TOL [-o OUT_BDF_FILENAME] [--punch]\n'

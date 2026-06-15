@@ -31,7 +31,7 @@ def cmd_line_diff(argv=None, quiet: bool=False) -> None:
     import pyNastran
     msg = (
         "Usage:\n"
-        '  bdf diff IN_BDF_FILENAME1 IN_BDF_FILENAME2 [--punch]\n'
+        '  bdf diff IN_BDF_FILENAME1 IN_BDF_FILENAME2 [--punch] [--skip_cards CARDS]\n'
         '  bdf diff -h | --help\n'
         '  bdf diff -v | --version\n'
         '\n'
@@ -62,6 +62,8 @@ def cmd_line_diff(argv=None, quiet: bool=False) -> None:
     size = 16
     bdf_filename1 = data['IN_BDF_FILENAME1']
     bdf_filename2 = data['IN_BDF_FILENAME2']
+    skip_cards = data['CARDS'].split(',')
+    # assert len(skip_cards) > 0, skip_cards
 
     #bdf_filename_out = data['--output']
     #debug = data['--debug']
@@ -81,4 +83,4 @@ def cmd_line_diff(argv=None, quiet: bool=False) -> None:
     log = SimpleLogger(level=level)
     print(log)
     added_cards, removed_cards, added_model, removed_model = get_diff_bdfs(
-        bdf_filename1, bdf_filename2, log=log)
+        bdf_filename1, bdf_filename2, skip_cards=skip_cards, log=log)

@@ -85,6 +85,7 @@ dict_int_list_obj_attrs: list[str] = [
 def get_diff_bdfs(bdf_filename1: PathLike, bdf_filename2: PathLike,
                   added_bdf_filename: PathLike='',
                   removed_bdf_filename: PathLike='',
+                  skip_cards: list[str] | None = None,
                   log=None) -> tuple[bool, bool, BDF, BDF]:
     """
     diffs two bdfs
@@ -100,8 +101,8 @@ def get_diff_bdfs(bdf_filename1: PathLike, bdf_filename2: PathLike,
     if removed_bdf_filename == '':
         removed_bdf_filename = base2 + '.removed' + ext2
 
-    old_model = read_bdf(bdf_filename1, xref=False, log=log)
-    new_model = read_bdf(bdf_filename2, xref=False, log=log)
+    old_model = read_bdf(bdf_filename1, xref=False, log=log, skip_cards=skip_cards)
+    new_model = read_bdf(bdf_filename2, xref=False, log=log, skip_cards=skip_cards)
 
     removed_model = BDF(log=log)
     added_model = BDF(log=log)
@@ -168,53 +169,20 @@ def _save_case_control(old_model: BDF, new_model: BDF,
     removed_subcases = {}
     for isubcase in isubcases:
         old_subcase = old_subcases[isubcase]
+        if isubcase not in new_subcases:
+            removed_subcase = old_subcase
+            removed_subcases[isubcase] = removed_subcase
+            continue
+
         new_subcase = new_subcases[isubcase]
-        added_subcase = Subcase(id=isubcase)
-        removed_subcase = Subcase(id=isubcase)
         if old_subcase == new_subcase:
             #log.info(f'same subcase; isubcase={isubcase}')
             #print(old_subcase)
             #print(new_subcase)
             #print('-'*40)
             continue
-        #print(old_subcase.params)
-        old_params = old_subcase.params
-        new_params = new_subcase.params
-        keys = np.unique(np.array(list(old_params) + list(new_params)))
-        added_params = {}
-        removed_params = {}
-        for key in keys:
-            if key not in old_params:
-                #log.debug(f'{isubcase}: added   {key} param: {new_params[key]}')
-                added_params[key] = new_params[key]
-                continue
-            if key not in new_params:
-                #log.debug(f'{isubcase}: removed {key} param: {old_params[key]}')
-                removed_params[key] = old_params[key]
-                continue
-            old_param = old_params[key]
-            new_param = new_params[key]
-            if old_param == new_param:
-                continue
-            if str(new_param) == str(old_param):
-                #print(new_param)
-                continue
-
-            added_params[key] = new_param
-            removed_params[key] = old_param
-            #print(type(old_param), type(new_param))
-            #log.debug(f'{isubcase}: changed {key} param: {old_param!r} {new_param!r}')
-            #log.debug(f'  old={old_param!r} -> {new_param!r}')
-
-        if added_params:
-            #print(isubcase, type(isubcase), type(added_subcases))
-            added_subcase.params = added_params
-            added_subcases[isubcase] = added_subcase
-        if removed_params:
-            #print('removed_params =', removed_params)
-            removed_subcase.params = removed_params
-            removed_subcases[isubcase] = removed_subcase
-            #log.debug(f'{isubcase}: changed isubcase={isubcase}:\n{str(removed_subcase)}')
+        _save_subcase(isubcase, old_subcase, new_subcase,
+                      added_subcases, removed_subcases)
 
     if len(added_subcases):
         added = True
@@ -232,8 +200,53 @@ def _save_case_control(old_model: BDF, new_model: BDF,
             removed_subcases[0] = Subcase(id=0)
         removed_case_control.subcases = removed_subcases
         removed_model.case_control_deck = removed_case_control
-
     return added, removed
+
+
+def _save_subcase(isubcase: int,
+                  old_subcase: Subcase, new_subcase: Subcase,
+                  added_subcases: dict[int, Subcase],
+                  removed_subcases: dict[int, Subcase]):
+    added_subcase = Subcase(id=isubcase)
+    removed_subcase = Subcase(id=isubcase)
+    #print(old_subcase.params)
+    old_params = old_subcase.params
+    new_params = new_subcase.params
+    keys = np.unique(np.array(list(old_params) + list(new_params)))
+    added_params = {}
+    removed_params = {}
+    for key in keys:
+        if key not in old_params:
+            #log.debug(f'{isubcase}: added   {key} param: {new_params[key]}')
+            added_params[key] = new_params[key]
+            continue
+        if key not in new_params:
+            #log.debug(f'{isubcase}: removed {key} param: {old_params[key]}')
+            removed_params[key] = old_params[key]
+            continue
+        old_param = old_params[key]
+        new_param = new_params[key]
+        if old_param == new_param:
+            continue
+        if str(new_param) == str(old_param):
+            #print(new_param)
+            continue
+
+        added_params[key] = new_param
+        removed_params[key] = old_param
+        #print(type(old_param), type(new_param))
+        #log.debug(f'{isubcase}: changed {key} param: {old_param!r} {new_param!r}')
+        #log.debug(f'  old={old_param!r} -> {new_param!r}')
+
+    if added_params:
+        #print(isubcase, type(isubcase), type(added_subcases))
+        added_subcase.params = added_params
+        added_subcases[isubcase] = added_subcase
+    if removed_params:
+        #print('removed_params =', removed_params)
+        removed_subcase.params = removed_params
+        removed_subcases[isubcase] = removed_subcase
+        #log.debug(f'{isubcase}: changed isubcase={isubcase}:\n{str(removed_subcase)}')
 
 def _save_scalars(old_model: BDF, new_model: BDF,
                   added_model: BDF, removed_model: BDF,
@@ -270,6 +283,7 @@ def _save_dict_cards(old_model: BDF, new_model: BDF,
                      dict_cards: list[str],
                      added_cards: bool, removed_cards: bool) -> tuple[bool, bool]:
 
+    log = old_model.log
     for card in dict_cards:
         old_group = getattr(old_model, card)
         new_group = getattr(new_model, card)
@@ -280,18 +294,18 @@ def _save_dict_cards(old_model: BDF, new_model: BDF,
                             list(new_group.keys()))
         for idi in all_ids:
             if idi not in old_group:
-                #print(f'{card} id={idi} not in old_group; added')
+                log.debug(f'{card} id={idi} not in old_group; added')
                 added_group[idi] = new_group[idi]
             elif idi not in new_group:
-                #print(f'{card} id={idi} not in new_group; removed')
+                log.debug(f'{card} id={idi} not in new_group; removed')
                 removed_group[idi] = old_group[idi]
             else:
                 added_card = new_group[idi]
                 removed_card = old_group[idi]
                 if added_card == removed_card:
-                    #print(f'{card} id={idi} in both')
+                    # log.debug(f'{card} id={idi} in both')
                     continue
-                #print(f'{card} id={idi} in both, but different')
+                log.debug(f'{card} id={idi} in both, but different')
                 added_group[idi] = added_card
                 removed_group[idi] = removed_card
         if len(added_group):
