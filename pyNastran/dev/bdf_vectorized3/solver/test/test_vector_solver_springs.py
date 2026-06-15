@@ -4,15 +4,17 @@ import unittest
 import numpy as np
 from cpylog import SimpleLogger
 import pyNastran
-from pyNastran.dev.bdf_vectorized3.solver.solver import Solver, BDF, partition_vector2
+from pyNastran.dev.bdf_vectorized3.solver.solver import Solver, partition_vector2
+from pyNastran.dev.bdf_vectorized3.bdf import BDF, read_bdf
 
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.f06.errors import FatalError
-from pyNastran.bdf.case_control_deck import CaseControlDeck
+from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
 
 PKG_PATH = Path(pyNastran.__path__[0])
 # TEST_DIR = PKG_PATH / 'dev' / 'solver'
 TEST_DIR = Path(__file__).parent
+MODEL_PATH = PKG_PATH / '..' / 'models'
 
 
 def setup_static_case_control(model: BDF, extra_case_lines=None):
@@ -1718,7 +1720,34 @@ class TestHarmonic(unittest.TestCase):
         solver.run()
 
 
+#class TestStaticAero(unittest.TestCase):
+#    def test_bwb_saero_modes(self):
+#        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
+#        model = read_bdf(bdf_filename)
+#        model.add_eigrl(31, nd=15)
+#        model.setup()
+#
+#        model.sol = 103
+#        subcases = model.subcases
+#        subcase: Subcase = subcases[1]
+#        subcase.add_integer_type('METHOD', 31)
+#        solver = Solver(model)
+#        solver.run()
+
+#class TestStatic2(unittest.TestCase):
+#    def test_static(self):
+#        bdf_filename = MODEL_PATH / 'sol_101_elements' / #'buckling_solid_shell_bar.bdf'
+#        model = read_bdf(bdf_filename)
+#        solver = Solver(model)
+#        solver.run()
+
 class TestStaticSolid(unittest.TestCase):
+    def test_ctetra_10(self):
+        bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'
+        model = read_bdf(bdf_filename)
+        solver = Solver(model)
+        solver.run()
+
     def test_ctetra(self):
         model = BDF(debug=None, log=None, mode='msc')
         model.bdf_filename = TEST_DIR / 'cshear1.bdf'

@@ -16,7 +16,7 @@ from .utils import get_plot_request
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
-    from pyNastran.op2.op2 import OP2
+
     DOF_MAP = dict[tuple[int, int], int]
 
 
@@ -182,6 +182,9 @@ def _recover_strain_energy_beam(
     elem = get_element(model, element_name, ieids, eids)
     xyz1 = model.grid.get_position_by_node_id(elem.nodes[:, 0])
     xyz2 = model.grid.get_position_by_node_id(elem.nodes[:, 1])
+    #dxyz = xyz2 - xyz1
+    #L = np.linalg.norm(dxyz, axis=1)
+    #assert len(L) == neids
 
     LAIJEG = elem.stiffness_info()
     # columns: [length, area, I1, I2, I12, J, E, G]

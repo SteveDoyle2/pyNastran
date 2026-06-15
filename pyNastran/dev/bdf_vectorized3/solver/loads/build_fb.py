@@ -30,7 +30,16 @@ def build_Fb_from_loadid(model: BDF,
         reduced_loads = model.get_reduced_static_load()
 
         loads = reduced_loads[load_id]
+        loads2 = []
         for scale, load in loads:
+            if isinstance(load, list):
+                for loadi in load:
+                    loads2.append((scale, loadi))
+                continue
+            loads2.append((scale, load))
+
+        for scale, load in loads2:
+            print(scale, load, type(load))
             if load.type == "SLOAD":
                 for mag, nid in zip(load.mags, load.nodes):
                     i = dof_map[(nid, 0)]  # TODO: wrong...

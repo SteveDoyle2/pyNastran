@@ -887,7 +887,7 @@ class TestF06Utils(unittest.TestCase):
         trim_results = f06_to_pressure_loads(
             f06_filename, aerobox_caero_filename,
             loads_filename,
-            log=log, nlines_max=1_000_000)
+            log=log, nlines_max=1_000_000, show=False)
 
         # set the file names?
         trim_results = f06_to_pressure_loads(
@@ -895,7 +895,7 @@ class TestF06Utils(unittest.TestCase):
             loads_filename,
             nid_csv_filename=nid_csv_filename,
             eid_csv_filename=eid_csv_filename,
-            log=log, nlines_max=1_000_000)
+            log=log, nlines_max=1_000_000, show=False)
 
         argv = [
             'f06', 'plot_144', str(f06_filename),

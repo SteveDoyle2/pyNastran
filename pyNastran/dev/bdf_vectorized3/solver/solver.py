@@ -134,6 +134,8 @@ class Solver:
         # Must be (ndof, ndof) dense or sparse array in the same DOF ordering
         # as the model's grid nodes (6 DOF per node, node order from grid.node_id).
         self.Kgg_override = None
+        self.Mgg_override = None
+        self.KDgg_override = None
 
         base_name = os.path.splitext(model.bdf_filename)[0]
         self._bdf_filename = base_name + ".solver.bdf"
@@ -162,7 +164,8 @@ class Solver:
         title = f"pyNastran {pyNastran.__version__}"
         for subcase in model.subcases.values():
             if "TITLE" in subcase:
-                title = subcase.get_parameter("TITLE")
+                title = subcase.get_parameter("TITLE")[0]
+                assert isinstance(title, str), title
                 break
 
         today = None
@@ -399,7 +402,6 @@ class Solver:
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
 
         gset_b = ps_to_sg_set(ndof, ps)
-
         rset_b = get_rset_bool(model, dof_map, ndof)
         has_suport = np.any(rset_b)
         #--------------------------------------------------
@@ -917,6 +919,12 @@ class Solver:
 
         dof_map, ps = _get_dof_map(model)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
+
+        gset_b = ps_to_sg_set(ndof, ps)
+        rset_b = get_rset_bool(model, dof_map, ndof)
+        has_suport = np.any(rset_b)
+        #--------------------------------------------------
+
         # Build GMN for MPC reduction
         GMN, mset = self.build_GMN(subcase, dof_map, ndof, fdtype=fdtype)
         self.GMN = GMN
@@ -931,6 +939,7 @@ class Solver:
             node_gridtype,
             dof_map,
             Kgg_override=self.Kgg_override,
+            Mgg_override=self.Mgg_override,
             GMN=GMN,
             mset=mset,
             idtype=idtype,
@@ -2439,6 +2448,7 @@ def _run_modes(
     node_gridtype: np.ndarray,
     dof_map: dict,
     Kgg_override=None,
+    Mgg_override=None,
     GMN=None,
     mset: np.ndarray | None = None,
     idtype: str = "int32",
@@ -2552,7 +2562,7 @@ def _run_modes(
         rset_local = np.where(r_in_a)[0]
         nr = len(rset_local)
         nl = len(lset_local)
-        log.info(f"SUPORT r-set: {nr} DOFs, l-set: {nl} DOFs")
+        log.warning(f"SUPORT r-set: {nr} DOFs, l-set: {nl} DOFs")
 
         Kaa_dense = todense(Kaa)
         Kll = Kaa_dense[np.ix_(lset_local, lset_local)]
@@ -2858,17 +2868,8 @@ def _build_xg(model: BDF,
 
     log.warning('creating xg')
     spc_id, unused_options = subcase["SPC"]
-    spcs = []
-    # for spc in model.spcs:
-    # if spc.n == 0:
-    # continue
-    # spci = spc.slice_card_by_id(spc_id)
-    # spcs.append(spci)
-    spc_cards = [spc for spc in model.spc_cards if spc.n > 0]
-    spcs = [spc.slice_card_by_id(spc_id, sort_ids=True) for spc in spc_cards]
-    model.spc1
-    # spcs = model.get_reduced_spcs(spc_id, consider_spcadd=True, stop_on_failure=True)
-
+ 
+    spcs = get_reduced_spcs(model, spc_id)
     spc_set = []
     sset = np.zeros(ndof, dtype="bool")
     for spc in spcs:
@@ -2909,6 +2910,32 @@ def _build_xg(model: BDF,
     spc_set = np.array(spc_set, dtype="int32")
     # print('spc_set =', spc_set, xspc)
     return spc_set, sset, xspc
+
+
+def get_reduced_spcs(model: BDF, spc_id: int) -> list:
+    spcs = []
+    if spc_id == 0:
+        return spcs
+    if model.spcadd.n > 0 and spc_id in model.spcadd:
+        spc_ids = []
+        spcadd = model.spcadd.slice_card_by_id(spc_id)
+        #print(spcadd.get_stats())
+        spc_ids = spcadd.spc_ids
+    else:
+        spc_ids = [spc_id]
+        #raise RuntimeError('no spcs')
+    #spcs = model.get_reduced_spcs(spc_id, consider_spcadd=True, stop_on_failure=True)
+
+    spc_cards = [spc for spc in model.spc_cards if spc.n > 0]
+    for spc_card in spc_cards:
+        #print(spc_card.get_stats())
+        for spc_idi in spc_ids:
+            if spc_idi not in spc_card.spc_id:
+                continue
+            spci = spc_card.slice_card_by_id(spc_idi)
+            spcs.append(spci)
+    #assert len(spcs) > 0, spcs
+    return spcs
 
 
 def todense(matrix: np.ndarray):

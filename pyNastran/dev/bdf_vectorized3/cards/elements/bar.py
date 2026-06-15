@@ -1759,27 +1759,46 @@ class PBARL(Property):
             area[i] = A
         return area
 
-    def I(self):
-        """A, I1, I2, I12"""
+    def inertia(self) -> np.ndarray:
+        inertia = self.area_inertia()[:, 1:]
+        return inertia
+
+    def area_inertia(self) -> np.ndarray:
+        """A, I1, I2, I12, J"""
         nprop = len(self.property_id)
-        I = np.full((nprop, 4), np.nan, dtype='float64')
+        area_inertia = np.full((nprop, 5), np.nan, dtype='float64')
         for i, pid, beam_type, idim in zip(count(), self.property_id,
                                            self.Type, self.idim):
             idim0, idim1 = idim
             dim = self.dims[idim0:idim1].tolist()
             # from pyNastran.bdf.cards.properties.bars import A_I1_I2_I12
-            I[i] = _bar_areaL('PBARL', beam_type, dim, self)
-        return I
+            area_inertia[i, :-1] = _bar_areaL('PBARL', beam_type, dim, self)
 
-    def i1(self):
+        #A = area_inertia[:, 0]
+        i1 = area_inertia[:, 1]
+        i2 = area_inertia[:, 2]
+        #i12 = area_inertia[:, 3]
+        j = i1 + i2
+        area_inertia[:, -1] = j 
+        return area_inertia
+
+    def e_g_nu(self) -> np.ndarray:
+        """calculates E, G, nu"""
+        e_g_nu = e_g_nu_from_isotropic_material(self.material_id, self.allowed_materials)
+        return e_g_nu
+
+    def I(self) -> np.ndarray:
+        return self.area_inertia()
+
+    def i1(self) -> np.ndarray:
         i1 = self.I()[:, 1]
         return i1
 
-    def i2(self):
+    def i2(self) -> np.ndarray:
         i1 = self.I()[:, 2]
         return i1
 
-    def i12(self):
+    def i12(self) -> np.ndarray:
         i12 = self.I()[:, 3]
         return i12
 
@@ -2270,8 +2289,13 @@ def k_from_property_id(property_id: np.ndarray,
             continue
 
         # we're at least using some properties
+        nprop = len(prop)
         if prop.type in {'PBAR', 'PBEAM'}:
             k1_k2i = prop.k
+        elif prop.type in {'PBARL'}:
+            k1_k2i = np.zeros((nprop, 2))  # euler-bernoulli
+        #elif prop.type in {'PBEAML'}:
+            #k1_k2i = np.ones((nprop, 2))  # timoshenko
         else:
             k1_k2i = prop.k()
         k1_k2[i_lookup] = k1_k2i[i_all]

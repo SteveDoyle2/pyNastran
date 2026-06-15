@@ -69,6 +69,8 @@ def recover_shell_stress_cquad4(
 
     pshell = model.pshell
     pcomp = model.pcomp
+    pcompg = model.pcompg
+
     grid = model.grid
     nodes = cquad4.nodes
     inid = grid.index(nodes)
@@ -116,7 +118,7 @@ def recover_shell_stress_cquad4(
         y_local = xy[:, 1]
 
         A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(
-            model, pid, pshell, pcomp)
+            model, pid, pshell, pcomp, pcompg)
 
         # Get z1, z2 (fiber distances from midplane)
         if is_pshell:
@@ -266,6 +268,8 @@ def recover_shell_stress_ctria3(
 
     pshell = model.pshell
     pcomp = model.pcomp
+    pcompg = model.pcompg
+
     grid = model.grid
     nodes = ctria3.nodes
     inid = grid.index(nodes)
@@ -310,7 +314,7 @@ def recover_shell_stress_ctria3(
         y_local = xy[:, 1]
 
         A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(
-            model, pid, pshell, pcomp)
+            model, pid, pshell, pcomp, pcompg)
 
         if is_pshell:
             iprop = np.searchsorted(pshell.property_id, pid)
@@ -471,6 +475,8 @@ def recover_shell_strain_energy_cquad4(
 
     pshell = model.pshell
     pcomp = model.pcomp
+    pcompg = model.pcompg
+
     grid = model.grid
     nodes = cquad4.nodes
     inid = grid.index(nodes)
@@ -512,7 +518,7 @@ def recover_shell_strain_energy_cquad4(
         y_local = xy[:, 1]
 
         A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(
-            model, pid, pshell, pcomp)
+            model, pid, pshell, pcomp, pcompg)
 
         Ke = macn2_stiffness(x_local, y_local, A_mat, D_mat, Ds_mat, B_mat)
 

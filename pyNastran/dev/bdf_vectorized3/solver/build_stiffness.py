@@ -504,7 +504,7 @@ def _build_kbb_crod(
     J = prop2.J
     material_id = prop2.material_id
     mat1 = mat.slice_card_by_material_id(material_id)
-    assert elem.n == prop.n
+    assert elem.n == prop2.n
     assert elem.n == mat1.n
 
     G = mat1.G

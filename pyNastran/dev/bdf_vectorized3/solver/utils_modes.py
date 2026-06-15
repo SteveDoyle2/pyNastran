@@ -38,9 +38,22 @@ def get_real_eigenvalue_method(model: BDF,
     if method.type == "EIGRL":
         neigenvalue = method.nd  # nroots
         norm_str = "MASS" if method.norm is None else method.norm
+    elif method.type == 'EIGB':
+        # C      : None
+        # G      : None
+        # L1     : 0.0
+        # L2     : 100.0
+        # method : 'INV'
+        # ndn    : 60
+        # ndp    : 60
+        # nep    : 20
+        neigenvalue = method.ndn + method.ndp
+        norm_str = method.norm
     else:
-        raise RuntimeError(method)
+        raise RuntimeError(method.get_stats())
     # neigenvalues = 10
+    assert isinstance(norm_str, str), norm_str
+    assert norm_str in ['MAX', 'MASS', 'POINT'], norm_str
     return neigenvalue, norm_str
 
 
