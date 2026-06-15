@@ -17,7 +17,7 @@ from cpylog import SimpleLogger
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.solver.solver import Solver
 from pyNastran.bdf.case_control_deck import CaseControlDeck
-DIRNAME = Path(__file__).parent
+DIRNAME = Path(__file__).parent / '_nastran'
 
 def _make_free_free_beam(nmodes: int = 5):
     """Create a free-free beam model with SUPORT at node 1.
