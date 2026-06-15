@@ -645,6 +645,7 @@ def _setup_refine(model: BDF,
     # handles CQUAD4/CHEXA8 interface
     nodes = model.nodes
     faces_to_center = {}
+    skipped_etypes = set([])
     for elem in model.elements.values():
         ## TODO: handle CTRIA3/CPENTA6 interface
 
@@ -671,7 +672,11 @@ def _setup_refine(model: BDF,
         elif elem.type in elements_skip:
             continue
         else:
-            log.warning(elem.rstrip())
+            skipped_etypes.add(elem.type)
+    if len(skipped_etypes):
+        etypes = list(skipped_etypes)
+        etypes.sort()
+        log.warning(f'skipping refine for etypes={etypes}')
     return nid0, edges_to_center, faces_to_center
 
 def _setup_quad_face(nodes, all_nodes, xyz_cid0,
