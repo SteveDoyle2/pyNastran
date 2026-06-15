@@ -1,4 +1,5 @@
 from collections import defaultdict
+import warnings
 from typing import Optional
 import numpy as np
 
@@ -223,7 +224,11 @@ def f06_to_pressure_loads(f06_filename: PathLike,
 
     # --- Plotting ---
     if plot_cp or plot_force or plot_moment:
-        import matplotlib.pyplot as plt
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            warnings.warn('no matplotlib...returning')
+            return {}
         if plot_cp and has_pressure:
             for subcase, element_pressure in element_pressure_dict.items():
                 apress = trim_results.aero_pressure[subcase]
@@ -324,15 +329,6 @@ def plot_element_pressure(caero_model,
     ax : matplotlib Axes3D
 
     """
-    import matplotlib
-    matplotlib.use('QtAgg')
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-    from matplotlib.cm import ScalarMappable
-    from matplotlib.colors import Normalize
-
-    if not colorbar_label:
-        colorbar_label = 'Cp' if result_type == 'cp' else 'Pressure'
 
     nodes = caero_model.nodes
     elements = caero_model.elements
@@ -354,6 +350,20 @@ def plot_element_pressure(caero_model,
         values.append(cp * sign)
 
     values = np.array(values)
+    try:
+        import matplotlib
+    except ImportError:
+        warnings.warn('no matplotlib...returning')
+        return None, None
+
+    #matplotlib.use('QtAgg')
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+    from matplotlib.cm import ScalarMappable
+    from matplotlib.colors import Normalize
+
+    if not colorbar_label:
+        colorbar_label = 'Cp' if result_type == 'cp' else 'Pressure'
 
     if ax is None:
         fig = plt.figure(figsize=(12, 8))

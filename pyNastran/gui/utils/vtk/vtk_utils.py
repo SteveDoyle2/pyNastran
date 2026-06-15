@@ -13,7 +13,7 @@ import numpy as np
 from pyNastran.gui.vtk_common_core import vtkVersion, VTK_VERSION as vtk_version
 _VTK_VERSION = vtkVersion.GetVTKVersion()
 VTK_VERSION_SPLIT = [int(val) for val in _VTK_VERSION.split('.')]
-_VTK_ERROR_MESSAGE = f'VTK version={vtk_version!r} is not supported (use 9.3<=vtk<9.7)'
+_VTK_ERROR_MESSAGE = f'VTK version={vtk_version!r} is not supported (use 9.3<=vtk<9.7); VTK_VERSION_SPLIT={str(VTK_VERSION_SPLIT)}'
 if VTK_VERSION_SPLIT[0] == 9:
     if not(3 <= VTK_VERSION_SPLIT[1] < 7):
         raise NotImplementedError(_VTK_ERROR_MESSAGE)
