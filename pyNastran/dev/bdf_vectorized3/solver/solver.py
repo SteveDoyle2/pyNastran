@@ -222,7 +222,8 @@ class Solver:
 
     def build_Fb(self, xg: NDArrayNfloat, sset_b,
                  dof_map: DOF_MAP, ndof: int,
-                 subcase: Subcase) -> NDArrayNfloat:
+                 subcase: Subcase,
+                 Mbb: Array | None = None) -> NDArrayNfloat:
         model = self.model
         log = model.log
         log.info("starting build_Fb")
@@ -247,7 +248,8 @@ class Solver:
         Fb = build_Fb_from_loadid(
             model, dof_map, ndof,
             xg, sset_b,
-            load_id=load_id, temp_load_id=temp_load_id)
+            load_id=load_id, temp_load_id=temp_load_id,
+            Mbb=Mbb)
         log.info("end of build_Fb")
         return Fb
 
@@ -414,14 +416,25 @@ class Solver:
         Mbb = None
         is_mass_load = len(model.grav) > 0 or len(model.rforce) > 0
         is_param_grdpnt = 'GRDPNT' in model.params
+
         if is_mass_load or is_param_grdpnt or has_suport:
             log.warning('creating Mbb')
-            Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
+            Mbb = build_Mbb(
+                model, subcase, dof_map, ndof, fdtype=fdtype)
             page_num = write_grid_point_weight(
                 model, Mbb, dof_map, ndof,
                 self.op2, f06_file,
                 title=title, subtitle=subtitle, label=label,
                 page_stamp=page_stamp, page_num=page_num)
+
+#    def build_Fb(self, xg: NDArrayNfloat, sset_b,
+#                 dof_map: DOF_MAP, ndof: int,
+#                 subcase: Subcase,
+#                 Mbb: Array | None = None) -> NDArrayNfloat:
+        sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
+
+        Fb, Mbb = self.build_Fb(
+            xg, sset_b, dof_map, ndof, subcase, Mbb=Mbb)
 
         # ----------------------MPC reduction (g -> n)----------------------
         GMN, mset = self.build_GMN(subcase, dof_map, ndof, fdtype=fdtype)
@@ -454,9 +467,6 @@ class Solver:
             self._autospc_n_dofs = np.array([], dtype="int32")
 
         gset = np.arange(ndof, dtype=idtype)
-        sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
-
-        Fb = self.build_Fb(xg, sset_b, dof_map, ndof, subcase)
         Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
 
         # Save g-set force for oload output before MPC transform
@@ -1326,7 +1336,8 @@ class Solver:
 
         # Static preload solve
         sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
-        Fb = self.build_Fb(xg, sset_b, dof_map, ndof, subcase)
+        Fb = self.build_Fb(xg, sset_b, dof_map, ndof, subcase,
+                           Mbb=None)
         Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
 
         free_dofs = np.where(~sset_b)[0]

@@ -1,14 +1,16 @@
 import numpy as np
-from pyNastran.dev.bdf_vectorized3.bdf import BDF
+from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 from .pload1 import apply_pload1
 from .grav_rforce import apply_rforce, apply_grav
 
+from ..build_mass import build_Mbb
 from ..elements.beam import thermal_load_beam
 from ..elements.shells import (
     build_pload4_cquad4, build_pload4_ctria3,
     build_thermal_load_cquad4, build_thermal_load_ctria3)
 
 DOF_MAP = dict[tuple[int, int], int]
+Array = np.ndarray
 
 
 def build_Fb_from_loadid(model: BDF,
@@ -18,13 +20,15 @@ def build_Fb_from_loadid(model: BDF,
                          sset_b: np.ndarray,
                          load_id: int=0,
                          temp_load_id: int=0,
-                         fdtype: str='float32'):
+                         fdtype: str='float32',
+                         Mbb: Array | None = None):
     Fb = np.zeros(ndof, dtype=fdtype)
     assert len(xg) == ndof
 
     if load_id == 0 and temp_load_id == 0:
         return Fb
     log = model.log
+    xyz_cid0 = model.grid.xyz_cid0()
 
     if load_id:
         reduced_loads = model.get_reduced_static_load()
@@ -38,8 +42,20 @@ def build_Fb_from_loadid(model: BDF,
                 continue
             loads2.append((scale, load))
 
+        build_mbb = Mbb is None
         for scale, load in loads2:
-            print(scale, load, type(load))
+            if load.type in {'GRAV', 'RFORCE'}:
+                build_mbb = True
+
+        if build_mbb:
+            # mass matrix.
+            temp_subcase = Subcase(id=0)
+            Mbb = build_Mbb(
+                model, temp_subcase, dof_map, ndof,
+                fdtype="float64")
+        
+        for scale, load in loads2:
+            # print(scale, load, type(load))
             if load.type == "SLOAD":
                 for mag, nid in zip(load.mags, load.nodes):
                     i = dof_map[(nid, 0)]  # TODO: wrong...
@@ -79,9 +95,9 @@ def build_Fb_from_loadid(model: BDF,
                 build_pload4_cquad4(model, Fb, dof_map, load_id)
                 build_pload4_ctria3(model, Fb, dof_map, load_id)
             elif load.type == "GRAV":
-                apply_grav(model, load, scale, Fb, dof_map, ndof, log)
+                apply_grav(model, load, scale, Fb, dof_map, ndof, log, Mbb=Mbb)
             elif load.type == "RFORCE":
-                apply_rforce(model, load, scale, Fb, dof_map, ndof, log)
+                apply_rforce(model, load, scale, Fb, dof_map, ndof, log, Mbb=Mbb)
             else:
                 print(load.get_stats())
                 raise NotImplementedError(load)
@@ -93,15 +109,16 @@ def build_Fb_from_loadid(model: BDF,
             log.debug(f"  Thermal load: {len(node_temperatures)} nodes with dT")
             build_thermal_load_cquad4(model, Fb, dof_map, node_temperatures)
             build_thermal_load_ctria3(model, Fb, dof_map, node_temperatures)
-            build_thermal_load_beam(model, Fb, dof_map, node_temperatures)
-    return Fb
+            build_thermal_load_beam(model, Fb, dof_map, node_temperatures, xyz_cid0)
+    return Fb, Mbb
 
 
 def build_thermal_load_beam(
     model: BDF,
     Fb: np.ndarray,
     dof_map: DOF_MAP,
-    node_temperatures: dict[int, float]) -> None:
+    node_temperatures: dict[int, float],
+    xyz_cid0: np.ndarray) -> None:
     """Add beam thermal loads to the global force vector.
 
     Parameters
@@ -115,12 +132,16 @@ def build_thermal_load_beam(
     node_temperatures : dict[int, float]
         Node temperatures.
     """
+    grid = model.grid
     for elem in [model.cbar, model.cbeam]:
         if elem.n == 0:
             continue
 
         area = elem.area()
-        xyz1, xyz2 = elem.get_xyz()
+        inode = grid.index(elem.nodes)
+        xyz1 = xyz_cid0[inode[:, 0], :]
+        xyz2 = xyz_cid0[inode[:, 1], :]
+        #xyz1, xyz2 = elem.get_xyz()
         lengths = np.linalg.norm(xyz2 - xyz1, axis=1)
         v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
         e_g_nus = elem.e_g_nu()
@@ -180,6 +201,7 @@ def _get_node_temperatures(model: BDF,
         idx = np.where(tempd.load_id == temp_load_id)[0]
         if len(idx) > 0:
             default_temp = tempd.temperature[idx[0]]
+    assert default_temp is not None, default_temp
 
     # Apply default to all grid points
     if default_temp is not None:
