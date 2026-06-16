@@ -3,9 +3,9 @@ from pyNastran.dev.bdf_vectorized3.bdf import BDF
 import numpy as np
 from scipy.sparse import dok_matrix
 
-from .elements.shells import (
+from ..elements.shells import (
     build_KDgg_cquad4, build_KDgg_ctria3)
-from .elements.solids import build_KDgg_solids
+from ..elements.solids import build_KDgg_solids
 DOF_MAP = dict[tuple[int, int], int]
 
 

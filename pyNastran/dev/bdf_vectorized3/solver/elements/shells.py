@@ -1227,8 +1227,7 @@ def build_kbb_cquad4(
     all_nids: np.ndarray,
     xyz_cid0: np.ndarray,
     idtype: str = "int32",
-    fdtype: str = "float64",
-) -> int:
+    fdtype: str = "float64") -> int:
     """Build CQUAD4 stiffness using PARAM,MYQUAD formulation dispatch."""
     solver = ShellQuadSolver(model)
     return solver.build_kbb(Kbb, dof_map, all_nids, xyz_cid0)

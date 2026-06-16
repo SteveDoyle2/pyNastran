@@ -1,6 +1,16 @@
+from typing import TextIO, Any
 import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
-
+from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2_interface.op2_classes import (
+    # RealDisplacementArray,
+    # RealSPCForcesArray,
+    # RealLoadVectorArray,
+    # ComplexDisplacementArray,
+    # ComplexVelocityArray,
+    # ComplexAccelerationArray,
+    RealEigenvalues,
+)
 def todense(Mgg):
     if hasattr(Mgg, "toarray"):
         Mgg_dense = Mgg.toarray()
@@ -108,6 +118,43 @@ def apply_phi_normalization(Mgg: np.ndarray,
     Khh = phit @ Kgg @ phi
     return phit, Mhh, Khh
 
+
+def save_eigenvalues(op2: OP2,
+                     f06_file: TextIO,
+                     out: dict[str, Any],
+                     subcase: Subcase,
+                     title: str,
+                     page_stamp: str = '',
+                     page_num: int=1) -> int:
+    eigenvalue = out["modes_eigenvalue"]
+    Mhh = out["modes_Mhh"]
+    Khh = out["modes_Khh"]
+    nmode = len(eigenvalue)
+
+    eigenvalue_obj = RealEigenvalues(title, "LAMA", nmodes=nmode)
+
+    cycle = np.sqrt(np.abs(eigenvalue)) / (2.0 * np.pi)
+    radian = np.sqrt(np.abs(eigenvalue))
+
+    eigenvalue_obj.mode = np.arange(nmode, dtype="int32") + 1
+    eigenvalue_obj.extraction_order = np.arange(nmode, dtype="int32") + 1
+    eigenvalue_obj.eigenvalues = eigenvalue
+    eigenvalue_obj.radians = radian
+    eigenvalue_obj.cycles = cycle
+    eigenvalue_obj.generalized_mass = np.diag(Mhh)
+    eigenvalue_obj.generalized_stiffness = np.diag(Khh)
+
+    op2.eigenvalues[title] = eigenvalue_obj
+    # op2.eigenvalues[isubcase] = eigenvalues_obj
+
+    write_eigenvalue_f06 = True
+    if write_eigenvalue_f06:
+        str(page_num)
+        header = []
+        page_num = eigenvalue_obj.write_f06(
+            f06_file, header=header, page_stamp=page_stamp, page_num=page_num)
+        f06_file.write("\n")
+    return page_num
 
 def compute_mass_participation(phig: np.ndarray,
                                Mgg: np.ndarray,

@@ -263,7 +263,7 @@ class TestStaticSpring(unittest.TestCase):
         assert np.allclose(Fg, Fg_expected), f'Force Error:\n Fg2={Fg}\n Fg_expected={Fg_expected}'
         #assert np.allclose(Kgg, Kgg)
         #assert np.allclose(Kaa, Kaa)
-        assert np.allclose(solverv.xa_[0], d)
+        assert np.allclose(solver.xa_[0], d)
 
     def test_celas3(self):
         """Tests a CELAS3/PELAS"""

@@ -8,6 +8,7 @@ Defines various utilities including:
 
 """
 from __future__ import annotations
+import os
 from copy import deepcopy
 from typing import TYPE_CHECKING
 import numpy as np  # type: ignore
@@ -17,6 +18,8 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.patran_utils.colon_syntax import (
     parse_patran_syntax, parse_patran_syntax_dict, parse_patran_syntax_dict_map,
     write_patran_syntax_dict)  # pragma: disable=unused-import
+from pyNastran.utils import print_bad_path, PathLike
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF
@@ -81,6 +84,67 @@ def _femap_comment_to_sline(line: str) -> tuple[str, int, str]:
     word = word.strip()
     idi = int(id_str)
     return word, idi, name
+
+def parse_femap_syntax_copy(filename_lines: PathLike | list[str],
+                            combine_rows: bool=False) -> dict[int, np.ndarray]:
+    """Parses the following syntax from FEMAP (use Copy vs. Copy-As-List):
+
+    7203615,7203654,1 7203990,7204010,1 7204032,7204050,1
+    7203594,7203614,1 7203655,7203675,1 7203969,7203989,1 7204011,7204031,1
+
+    Returns
+    -------
+    out : dict[key, values]
+        key : int
+            the line number
+        values : (n,) int np.ndarray
+            sorted ids
+
+    .. note:: assume_unique_row avoids combining the "groups"
+    """
+    assert os.path.exists(filename_lines), print_bad_path(filename_lines)
+    if isinstance(filename_lines, PathLike):
+        with open(filename_lines, 'r') as prop_file:
+            lines = prop_file.readlines()
+    else:
+        assert isinstance(filename_lines, list), filename_lines
+
+    lines2 = []
+    for line in lines:
+        line = line.split('#')[0].strip()
+        if line:
+            lines2.append(line)
+    assert len(lines2) > 0, lines2
+
+    row_values = {}
+    for i, line in enumerate(lines2):
+        # split line and remove blank entries
+        sline = [val.strip() for val in line.split(' ') if val.strip()]
+
+        values = []
+        row_values[i] = values
+        for pair in sline:
+            if ',' in pair:
+                # 7203615,7203654,1
+                sline = pair.split(',')
+                assert ' ' not in sline, sline
+                if len(sline) == 1:
+                    values.append(int(sline[0]))
+                elif len(sline) == 3:
+                    start, stop, step = [int(val) for val in sline]
+                    valuesi = range(start, stop+step, step)
+                    values.extend(valuesi)
+                else:
+                    raise NotImplementedError(f'line={line!r} pair={pair!r} sline={sline}')
+
+    out = {key: np.unique(values) for key, values in row_values.items()}
+    if combine_rows:
+        values = [values for key, values in out.items()]
+        out2 = {
+            0: np.unique(np.hstack(values)),
+        }
+        return out2
+    return out
 
 def parse_femap_syntax(lines: list[str]) -> np.ndarray:
     """Parses the following syntax from FEMAP:
@@ -275,7 +339,7 @@ def PositionWRT(xyz: NDArray3float, cid: int, cid_new: int, model: BDF) -> NDArr
         p1_local = cp_ref.coord_to_xyz(xyz)
 
         # transform xyz_1 to xyz_2
-        p2_local = dot(
+        p2_local = np.dot(
             (p1_local @ cp_ref.beta()) + cp_ref.origin - coord_to_ref.origin,
             coord_to_ref.beta().T)
 

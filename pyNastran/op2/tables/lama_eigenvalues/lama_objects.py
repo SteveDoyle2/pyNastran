@@ -92,7 +92,7 @@ class RealEigenvalues(BaseScalarObject):
             self.add_f06_line(line, i)
 
     def write_f06(self, f06_file: TextIO, header: list[str], page_stamp: str,
-                  page_num: int=1) -> None:
+                  page_num: int=1) -> int:
         title = ''
         if self.title is not None:
             title = '%s' % str(self.title).center(124).rstrip() + '\n'

@@ -24,7 +24,7 @@ import numpy.testing as npt
 from scipy import sparse
 
 from pyNastran.dev.bdf_vectorized3.bdf import read_bdf
-from pyNastran.dev.bdf_vectorized3.mesh_utils.mass_matrix import (
+from pyNastran.dev.bdf_vectorized3.solver.matrices.mass_matrix import (
     build_mgg_lumped,
     get_grid_point_weight,
 )

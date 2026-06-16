@@ -1,3 +1,4 @@
+from itertools import count
 import numpy as np
 from cpylog import SimpleLogger
 from pyNastran.nptyping_interface import (
@@ -10,10 +11,10 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.breakdowns import NO_MASS
 
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     consistent_mass, lumped_mass, beam_transform,)
-from .elements.solids import build_mbb_solids
+from ..elements.solids import build_mbb_solids
 
 from .build_stiffness import _COOAccumulator
-from .utils import get_param, DOF_MAP
+from ..utils import get_param, DOF_MAP
 
 
 def build_Mbb(model: BDF, subcase: Subcase,
@@ -71,23 +72,27 @@ def build_Mbb(model: BDF, subcase: Subcase,
         [0, 2, 0, 1, 0, 2, 0, 4],
     ], dtype="float64")
 
+    grid = model.grid
+
     mass_total = 0.0
     if model.conm1:
-        nid = elem.nid
-        nid_ref = elem.nid_ref
-        if nid_ref.type == "GRID":
+        elem = model.conm1
+        inid = grid.index(elem.node_id)  #  TODO: prevents SPOINTs
+        cd = grid.cd
+        for i, eid, nid, coord, cdi in zip(count(), elem.element_id, elem.node_id, elem.coord_id, cd):
+            # if nid_ref.type == "GRID":
             i1 = dof_map[(nid, 1)]
 
             # TODO: support CID
-            if nid_ref.cd != elem.cid:
+            if cdi != elem.cid:
                 log.warning(
-                    f"  CONM1 eid={eid} nid={nid} CD={nid_ref.cd} to cid={elem.cid} is not supported")
-        else:  # pragma: no cover
-            print(elem.get_stats())
-            raise NotImplementedError(elem)
-        coo_m.add_matrix(list(range(i1, i1 + 6)), elem.mass_matrix)
+                    f"  CONM1 eid={eid} nid={nid} CD={cdi} to cid={elem.cid} is not supported")
+            # else:  # pragma: no cover
+            #     print(elem.get_stats())
+            #     raise NotImplementedError(elem)
+            coo_m.add_matrix(list(range(i1, i1 + 6)), elem.mass_matrix)
 
-    # PARAM,COUPMASS: 1 => consistent mass, -1 or absent => lumped
+    # PARAM,COUPMASS,1  => consistent; default (0 or absent) => lumped
     icoupmass = get_param(model, 'COUPMASS', 0)
     use_consistent = bool(icoupmass)
 
@@ -111,6 +116,7 @@ def build_Mbb(model: BDF, subcase: Subcase,
         etype = elem.type
         if etype in NO_MASS or elem.n == 0:
             continue
+        eids = elem.element_id
 
         has_mass = True
         if etype == "CONM2":
@@ -118,26 +124,16 @@ def build_Mbb(model: BDF, subcase: Subcase,
 
         elif etype in ["CROD", "CONROD", "CTUBE"]:
             # verified
-            mass = elem.mass()
-            if mass == 0.0:
-                log.warning(f"  no mass for {etype} eid={eid}")
-                continue
+            mass, imass = _filter_elements_by_mass(elem)
 
-            nids1 = elem.nodes[:, 0]
-            nids2 = elem.nodes[:, 1]
+            nids1 = elem.nodes[imass, 0]
+            nids2 = elem.nodes[imass, 1]
             for nid1, nid2 in zip(nids1, nids2):
                 i1 = dof_map[(nid1, 1)]
                 j1 = dof_map[(nid2, 1)]
                 ii = [i1, i1 + 1, j1, j1 + 1]
                 coo_m.add_matrix(ii, mass_rod_2x2 * mass)
         elif etype in {"CBAR", "CBEAM"}:
-            # PARAM,COUPMASS,1 => consistent; default (0 or absent) => lumped
-            use_consistent = False
-            if hasattr(model, 'params') and 'COUPMASS' in model.params:
-                coupmass_val = model.params['COUPMASS'].values[0]
-                if coupmass_val >= 1:
-                    use_consistent = True
-
             area = elem.area()
             inertia = elem.inertia()
             xyz1, xyz2 = elem.get_xyz()
@@ -180,14 +176,10 @@ def build_Mbb(model: BDF, subcase: Subcase,
                     gi2, gi2 + 1, gi2 + 2, gi2 + 3, gi2 + 4, gi2 + 5,
                 ]
                 coo_m.add_matrix(n_ijv, M_basic)
+
         elif etype == "CTRIA3":
-            masses = elem.mass()
-            if masses.sum() == 0.0:
-                log.warning(f"  no mass for CTRIA3 eid={elem.element_id}")
-                continue
-            for (nid1, nid2, nid3), massi in zip(elem.nodes, masses):
-                if massi == 0.0:
-                    continue
+            mass, imass = _filter_elements_by_mass(elem)
+            for (nid1, nid2, nid3), massi in zip(elem.nodes[imass, :], mass[imass]):
                 if use_consistent:
                     # Consistent: m * [2,1,1;1,2,1;1,1,2]/12
                     nids_e = [nid1, nid2, nid3]
@@ -207,13 +199,8 @@ def build_Mbb(model: BDF, subcase: Subcase,
             # Mbb[i2, i2] = Mbb[i2+1, i2+1] = Mbb[i2+2, i2+2] = \
             # Mbb[i3, i3] = Mbb[i3+1, i3+1] = Mbb[i3+2, i3+2] = mass / 3
         elif etype == "CQUAD4":
-            masses = elem.mass()
-            if masses.sum() == 0.0:
-                log.warning(f"  no mass for CQUAD4 eid={elem.element_id}")
-                continue
-            for (nid1, nid2, nid3, nid4), massi in zip(elem.nodes, masses):
-                if massi == 0.0:
-                    continue
+            mass, imass = _filter_elements_by_mass(elem)
+            for (nid1, nid2, nid3, nid4), massi in zip(elem.nodes[imass, :], mass[imass]):
                 if use_consistent:
                     # Consistent: m * [4,2,1,2;2,4,2,1;1,2,4,2;2,1,2,4]/36
                     # Applied to each translational DOF (Tx, Ty, Tz) independently
@@ -283,12 +270,8 @@ def build_Mbb(model: BDF, subcase: Subcase,
             # print(Mbb)
             # print(Mbb[ii, :][:, ii])
         elif etype == "CSHEAR":
-            masses = elem.mass()
-            if masses.sum() == 0.0:
-                continue
-            for (nid1, nid2, nid3, nid4), massi in zip(elem.nodes, masses):
-                if massi == 0.0:
-                    continue
+            mass, imass = _filter_elements_by_mass(elem)
+            for (nid1, nid2, nid3, nid4), massi in zip(elem.nodes[imass, :], mass[imass]):
                 i1 = dof_map[(nid1, 1)]
                 i2 = dof_map[(nid2, 1)]
                 i3 = dof_map[(nid3, 1)]
@@ -392,3 +375,12 @@ def conm2_fill_Mbb(model: BDF, mass_total: float,
         coo_m.add_matrix(list(range(i1, i1 + 6)), M6)
         mass_total += mass
     return mass_total
+
+
+def _filter_elements_by_mass(elem) -> np.ndarray:
+    mass = elem.mass()
+    izero = (mass == 0.0)
+    imass = ~izero
+    if izero.sum():
+        elem.model.log.warning(f"  no mass for {elem.etype} eid={elem.element_id[izero]}")
+    return mass, imass

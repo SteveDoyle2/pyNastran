@@ -52,7 +52,7 @@ is expressed (but F_net is invariant to this choice).
 Example
 -------
 >>> from pyNastran.dev.bdf_vectorized3.bdf import BDF
->>> from pyNastran.dev.bdf_vectorized3.mesh_utils.mass_matrix import build_mgg_lumped
+>>> from pyNastran.dev.bdf_vectorized3.solver.matrices.mass_matrix import build_mgg_lumped
 >>> from pyNastran.dev.bdf_vectorized3.mesh_utils.inertia_relief import (
 ...     build_rigid_body_modes, compute_inertia_relief)
 >>> import numpy as np
@@ -90,7 +90,7 @@ Or use the convenience wrapper:
 
 See Also
 --------
-pyNastran.dev.bdf_vectorized3.mesh_utils.mass_matrix : MGG assembly module.
+pyNastran.dev.bdf_vectorized3.solver.matrices.mass_matrix : MGG assembly module.
 """
 from __future__ import annotations
 
@@ -101,6 +101,7 @@ from numpy.typing import NDArray
 from scipy import sparse
 from cpylog import SimpleLogger
 
+from pyNastran.dev.bdf_vectorized3.solver.matrices.mass_matrix import build_mgg_lumped
 if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
@@ -319,8 +320,6 @@ def compute_inertia_relief_from_model(
         - 'D': rigid body mode matrix
         - 'residual_force': D^T @ F_net (should be ~0)
     """
-    from pyNastran.dev.bdf_vectorized3.mesh_utils.mass_matrix import build_mgg_lumped
-
     M, grid_ids, total_mass = build_mgg_lumped(model=model, wtmass=wtmass)
     node_xyz = model.grid.xyz_cid0()
     D = build_rigid_body_modes(grid_ids, node_xyz, ref_point)

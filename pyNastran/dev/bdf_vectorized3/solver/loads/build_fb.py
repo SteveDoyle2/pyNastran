@@ -1,9 +1,11 @@
 import numpy as np
+
+from pyNastran.dev.bdf_vectorized3.cards.base_card import searchsorted_filter  #, searchsorted_filter_
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 from .pload1 import apply_pload1
 from .grav_rforce import apply_rforce, apply_grav
 
-from ..build_mass import build_Mbb
+from ..matrices.build_mass import build_Mbb
 from ..elements.beam import thermal_load_beam
 from ..elements.shells import (
     build_pload4_cquad4, build_pload4_ctria3,
@@ -53,7 +55,7 @@ def build_Fb_from_loadid(model: BDF,
             Mbb = build_Mbb(
                 model, temp_subcase, dof_map, ndof,
                 fdtype="float64")
-        
+
         for scale, load in loads2:
             # print(scale, load, type(load))
             if load.type == "SLOAD":

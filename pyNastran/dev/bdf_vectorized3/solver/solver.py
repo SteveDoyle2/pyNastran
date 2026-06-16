@@ -43,7 +43,7 @@ from pyNastran.nptyping_interface import (
     NDArrayNfloat,
     NDArrayNNfloat,
 )
-from pyNastran.utils.numpy_utils import integer_types  # , float_types
+#from pyNastran.utils.numpy_utils import integer_types  # , float_types
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 
 from pyNastran.f06.f06_writer import make_end
@@ -58,7 +58,6 @@ from pyNastran.op2.op2_interface.op2_classes import (
     ComplexDisplacementArray,
     ComplexVelocityArray,
     ComplexAccelerationArray,
-    RealEigenvalues,
     RealEigenvectorArray,
     RealMPCForcesArray,
     RealGridPointForcesArray,
@@ -77,22 +76,24 @@ from .recover.utils import (
     get_f06_op2_pch_set, get_mag_phase_from_options, get_plot_request)
 
 from .partition import (
-    partition_matrix, partition_vector,
+    partition_matrix, # partition_vector,
     partition_vector2, partition_vector3)
 from .utils_statics import save_static_table
 from .utils_modes import (
     slice_modal_set, get_real_eigenvalue_method,
-    apply_phi_normalization, compute_mass_participation,
+    apply_phi_normalization,
+    save_eigenvalues,
+    compute_mass_participation,
 )
 from .modal_frequency import get_freq_damping
 from .utils_freq import get_frequencies, slice_freq_set
 
 #-----------------------------------------------
-from .build_stiffness import (
-    _COOAccumulator,
+from .matrices.build_stiffness import (
+    #_COOAccumulator,
     build_Kgg, Kbb_to_Kgg)
-from .build_stiffness_geometric import build_KDgg
-from .build_mass import build_Mbb
+from .matrices.build_stiffness_geometric import build_KDgg
+from .matrices.build_mass import build_Mbb
 from .loads.build_fb import build_Fb_from_loadid
 #--------------------------------------------------------
 from .utils import recast_data, get_param, DOF_MAP
@@ -102,7 +103,7 @@ from .craig_bampton import (
 
 from pyNastran.dev.bdf_vectorized3.mesh_utils.inertia_relief import (
     build_rigid_body_modes, compute_inertia_relief)
-from pyNastran.dev.bdf_vectorized3.mesh_utils.gmn_matrix import assemble_gmn
+from pyNastran.dev.bdf_vectorized3.solver.matrices.gmn_matrix import assemble_gmn
 
 Array = np.ndarray | scipy.sparse.csc_matrix
 
@@ -915,7 +916,7 @@ class Solver:
         model = self.model
         nmodes, norm_str = get_real_eigenvalue_method(model, subcase)
         log = model.log
-        log.debug(f"run_sol_103 (modes)")
+        log.debug("run_sol_103 (modes)")
         assert len(model.methods), "SOL 103 (modes) requires a METHOD and a EIGR/EIGRL card"
         end_options = [
             "SEMR",  # MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES)
@@ -958,27 +959,14 @@ class Solver:
         )
         phig = out["modes_phig"]
         eigenvalue = out["modes_eigenvalue"]
-        Mhh = out["modes_Mhh"]
-        Khh = out["modes_Khh"]
-        # out['modes_phigg'] = xg_out
-        nmode = len(eigenvalue)
-
-        isubcase = subcase.id
-        mode_cycle = eigenvalue
-        eigenvalue_obj = RealEigenvalues(title, "LAMA", nmodes=nmode)
-
         cycle = np.sqrt(np.abs(eigenvalue)) / (2.0 * np.pi)
-        radian = np.sqrt(np.abs(eigenvalue))
+        mode_cycle = eigenvalue
+        isubcase = subcase.id
 
-        eigenvalue_obj.mode = np.arange(nmode, dtype="int32") + 1
-        eigenvalue_obj.extraction_order = np.arange(nmode, dtype="int32") + 1
-        eigenvalue_obj.eigenvalues = eigenvalue
-        eigenvalue_obj.radians = radian
-        eigenvalue_obj.cycles = cycle
-        eigenvalue_obj.generalized_mass = np.diag(Mhh)
-        eigenvalue_obj.generalized_stiffness = np.diag(Khh)
-        op2.eigenvalues[title] = eigenvalue_obj
-        # op2.eigenvalues[isubcase] = eigenvalues_obj
+        page_num = save_eigenvalues(self.op2, f06_file, out, subcase, title,
+                                    page_stamp=page_stamp, page_num=page_num)
+        eigenvalue = out["modes_eigenvalue"]
+        nmode = len(eigenvalue)
 
         # Mass participation factors
         Mgg = out["Mgg"]
@@ -1029,16 +1017,6 @@ class Solver:
             )
             eigenvector_obj.nonlinear_factor = 1
             op2.eigenvectors[isubcase] = eigenvector_obj
-
-        write_eigenvalue_f06 = True
-        write_eigenvalue_op2 = True
-        if write_eigenvalue_f06:
-            str(page_num)
-            header = []
-            page_num = eigenvalue_obj.write_f06(
-                f06_file, header=header, page_stamp=page_stamp, page_num=page_num
-            )
-            f06_file.write("\n")
 
         if write_phi_f06:
             page_num = eigenvector_obj.write_f06(
@@ -1488,13 +1466,13 @@ class Solver:
         eigenvalues = cb_result["eigenvalues"]
         nvec = len(eigenvalues)
         f06_file.write(f"\n{'='*72}\n")
-        f06_file.write(f"  CRAIG-BAMPTON MODEL GENERATION (SOL 31)\n")
+        f06_file.write("  CRAIG-BAMPTON MODEL GENERATION (SOL 31)\n")
         f06_file.write(f"{'='*72}\n\n")
         f06_file.write(f"  Number of boundary (R-set) DOFs: {len(r_set_dofs)}\n")
         f06_file.write(f"  Number of fixed-interface modes: {nvec}\n")
         f06_file.write(f"  Total CB DOFs: {cb_result['num_cb_dofs']}\n\n")
 
-        f06_file.write(f"  FIXED-INTERFACE NATURAL FREQUENCIES\n")
+        f06_file.write("  FIXED-INTERFACE NATURAL FREQUENCIES\n")
         f06_file.write(f"  {'MODE':>4s}  {'EIGENVALUE':>14s}  {'FREQUENCY (Hz)':>14s}\n")
         for i, ev in enumerate(eigenvalues):
             freq_hz = np.sqrt(abs(ev)) / (2.0 * np.pi)

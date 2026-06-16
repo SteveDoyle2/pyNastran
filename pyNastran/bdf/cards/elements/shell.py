@@ -300,7 +300,15 @@ class TriShell(ShellElement):
         return self.pid_ref.Thickness(tflag=self.tflag, tscales=tscales)
         #return self.pid_ref.Thickness()
 
-    def AreaCentroidNormal(self) -> tuple[float, float, float]:
+    def AreaCentroid(self) -> tuple[float, np.ndarray]:
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
+        a = n1 - n2
+        b = n1 - n3
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
+        centroid = (n1 + n2 + n3) / 3
+        return area, centroid
+
+    def AreaCentroidNormal(self) -> tuple[float, np.ndarray, np.ndarray]:
         """
         Returns area,centroid, normal as it's more efficient to do them
         together
@@ -474,6 +482,13 @@ class TriShell(ShellElement):
         dxyz = np.mean([dxyz21, dxyz32, dxyz13]) / 2.
 
         return dxyz, centroid, normal, xyz1, xyz2
+
+    def Area_no_xref(self, model):
+        (n1, n2, n3) = self.get_node_positions_no_xref(model, nodes=self.nodes[:3])
+        a = n1 - n2
+        b = n1 - n3
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
+        return area
 
 
 class CTRIA3(TriShell):
@@ -1344,7 +1359,7 @@ class CTRIA6(TriShell):
         """Returns the thickness, :math:`t`"""
         return self.pid_ref.Thickness()
 
-    def AreaCentroidNormal(self):
+    def AreaCentroidNormal(self) -> tuple[float, np.ndarray, np.ndarray]:
         """
         Returns area, centroid, normal as it's more efficient to do them
         together
@@ -1817,12 +1832,12 @@ class QuadShell(ShellElement):
             raise RuntimeError(msg)
         return n
 
-    def AreaCentroidNormal(self) -> tuple[float, float, float]:
+    def AreaCentroidNormal(self) -> tuple[float, np.ndarray, np.ndarray]:
         (area, centroid) = self.AreaCentroid()
         normal = self.Normal()
         return area, centroid, normal
 
-    def AreaCentroid(self) -> tuple[float, float]:
+    def AreaCentroid(self) -> tuple[float, np.ndarray]:
         r"""
         ::
           1-----2

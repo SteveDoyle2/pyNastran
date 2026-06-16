@@ -20,7 +20,7 @@ from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     thermal_load_beam,
     geometric_stiffness,
 )
-from .utils import lambda1d, DOF_MAP
+from ..utils import lambda1d, DOF_MAP
 
 
 if TYPE_CHECKING:  # pragma: no cover

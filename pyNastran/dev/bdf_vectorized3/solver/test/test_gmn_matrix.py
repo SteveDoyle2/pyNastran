@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
-from pyNastran.dev.bdf_vectorized3.mesh_utils.gmn_matrix import (
+from pyNastran.dev.bdf_vectorized3.solver.matrices.gmn_matrix import (
     _expand_dof_string,
     _rigid_body_matrix,
     assemble_gmn,

@@ -32,7 +32,7 @@ from pyNastran.dev.bdf_vectorized3.mesh_utils.inertia_relief import (
     compute_inertia_relief,
     compute_inertia_relief_from_model,
 )
-from pyNastran.dev.bdf_vectorized3.mesh_utils.mass_matrix import (
+from pyNastran.dev.bdf_vectorized3.solver.matrices.mass_matrix import (
     build_mgg_lumped,
 )
 

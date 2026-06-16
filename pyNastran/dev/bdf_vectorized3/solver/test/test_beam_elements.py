@@ -34,7 +34,7 @@ from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
 )
 from pyNastran.dev.bdf_vectorized3.bdf import BDF as BDF3
 from pyNastran.dev.bdf_vectorized3.solver.solver import Solver
-from pyNastran.dev.bdf_vectorized3.solver.build_stiffness import build_Kgg
+from pyNastran.dev.bdf_vectorized3.solver.matrices.build_stiffness import build_Kgg
 
 DIRNAME = Path(__file__).parent / '_nastran'
 

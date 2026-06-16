@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict, parse_patran_syntax_dict_map,
     write_patran_syntax_dict, split_eids_along_nids,
-    parse_femap_syntax,
+    parse_femap_syntax, parse_femap_syntax_copy,
     split_comment_to_femap_comment,
     get_femap_property_comments_dict,
     get_femap_material_comments_dict)
@@ -63,6 +63,18 @@ class TestBdfUtils(unittest.TestCase):
         out = get_femap_material_comments_dict(model.materials)
         # {1: 'fake material'}
         print(out)
+
+    def test_femap_syntax_copy(self):
+        """tests ``parse_femap_syntax``"""
+        lines = [
+            '7203615,7203654,1 7203990,7204010,1 7204032,7204050,1',
+            '7203594,7203614,1 7203655,7203675,1 7203969,7203989,1 7204011,7204031,1',
+        ]
+        out = parse_femap_syntax_copy(lines, combine_rows=False)
+        assert len(out) == 2, out
+
+        out = parse_femap_syntax_copy(lines, combine_rows=True)
+        assert len(out) == 1, out
 
     def test_femap_syntax(self):
         """tests ``parse_femap_syntax``"""
