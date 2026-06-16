@@ -14,16 +14,24 @@ from pyNastran.utils.solver_utils import get_solver
 import pyNastran
 from pyNastran.utils.numpy_utils import integer_types  # , float_types
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
-
+#from pyNastran.dev.bdf_vectorized3.cards.load.gravity import GRAV
 from pyNastran.f06.errors import FatalError
 
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     beam_pg_distributed, beam_pg_point,
     consistent_mass, lumped_mass,
     beam_transform,)
+DOF_MAP = dict[tuple[int, int], int]
+Array = np.ndarray
 
 
-def apply_grav(model, load, scale, Fb, dof_map, ndof, log):
+def apply_grav(model: BDF,
+               load: 'GRAV',
+               scale: float,
+               Fb: np.ndarray,
+               dof_map: DOF_MAP, ndof: int,
+               log: SimpleLogger,
+               Mbb: Array | None = None) -> Array:
     """Apply GRAV load (gravity) to Fb using grid-level mass approach.
 
     Following MYSTRAN's approach: F_i = M_grid_i * acceleration.
@@ -56,25 +64,14 @@ def apply_grav(model, load, scale, Fb, dof_map, ndof, log):
         # More efficient: iterate grids, get diagonal mass, apply accel
         grid = model.grid
         for nid in grid.node_id:
-            nid_int = int(nid)
-            i1 = dof_map[(nid_int, 1)]
+            i1 = dof_map[(nid, 1)]
             # Get translational mass from Mbb diagonal (will be assembled later)
             # Instead, apply accel to the force vector; the mass contribution
             # is handled by assembling F = rho*V*a for each element
 
-        # Grid-level approach: we need the assembled mass matrix.
-        # Build a temporary Mbb for this calculation.
-        # For efficiency, use the same Mbb that will be built for the analysis.
-        # The caller (build_Fb) is called AFTER Mbb is built in SOL 101.
-        # However, build_Fb is called before Mbb->Mgg transform in the flow.
-        # We must build our own mass here.
-        temp_subcase = Subcase(id=0)
-        Mbb_temp = build_Mbb(model, temp_subcase, dof_map, ndof, fdtype="float64")
-
         # Apply F = M * a for each grid (translational DOFs only)
         for nid in grid.node_id:
-            nid_int = int(nid)
-            i1 = dof_map[(nid_int, 1)]
+            i1 = dof_map[(nid, 1)]
             # Extract the 3x3 translational mass block for this grid
             m_diag = np.array([
                 Mbb_temp[i1, i1],
@@ -84,23 +81,41 @@ def apply_grav(model, load, scale, Fb, dof_map, ndof, log):
             Fb[i1: i1 + 3] += m_diag * accel_basic
 
 
-def apply_rforce(model, load, scale, Fb, dof_map, ndof, log):
+def apply_rforce(model: BDF,
+                 load: 'RFORCE',
+                 scale: float,
+                 Fb: np.ndarray,
+                 dof_map: DOF_MAP, ndof: int,
+                 log: SimpleLogger,
+                 xyz_cid0 : np.ndarray | None,
+                 Mbb: Array | None = None) -> Array:
     """Apply RFORCE load (centrifugal/rotational force) to Fb.
 
     Following MYSTRAN's approach:
     F_i = M_i * [omega x (omega x r_i) + alpha x r_i]
     where r_i = position of grid i relative to the reference grid.
     """
+    # Build temporary Mbb for force computation
+    # temp_subcase = Subcase(id=0)
+    # Mbb_temp = build_Mbb(model, temp_subcase, dof_map, ndof, fdtype="float64")
+
+    # Reference point position
+    grid = model.grid
+    all_nids = grid.node_id
+    if xyz_cid0 is None:
+        xyz_cid0 = grid.xyz_cid0()
+
     for i_load in range(load.n):
         nid_ref = load.node_id[i_load]
         cid = load.coord_id[i_load]
         a_scale = load.scale_factor[i_load]
-        r1, r2, r3 = load.r123[i_load]
-        method = load.method[i_load] if hasattr(load, 'method') else 1
-        racc = load.racc[i_load] if hasattr(load, 'racc') else 0.0
+        r123 = load.r123[i_load]
+        method = load.method[i_load] # if hasattr(load, 'method') else 1
+        racc = load.racc[i_load] # if hasattr(load, 'racc') else 0.0
 
         # Angular velocity vector
-        omega = a_scale * np.array([r1, r2, r3])
+        freq = a_scale * r123     # rev/s
+        omega = 2 * np.pi * freq  # rad/s
 
         # Transform from CID to basic if needed
         if cid != 0:
@@ -109,7 +124,7 @@ def apply_rforce(model, load, scale, Fb, dof_map, ndof, log):
             omega = beta.T @ omega
 
         # Angular acceleration (for tangential component)
-        alpha = racc * np.array([r1, r2, r3])
+        alpha = 2 * np.pi * racc * r123  # rev/s^s -> rad/s^2
         if cid != 0:
             alpha = beta.T @ alpha
 
@@ -118,38 +133,41 @@ def apply_rforce(model, load, scale, Fb, dof_map, ndof, log):
 
         log.debug(f"  RFORCE: omega={omega}, alpha={alpha}, nid_ref={nid_ref}")
 
-        # Reference point position
-        grid = model.grid
-        all_nids = grid.node_id
-        xyz_cid0 = grid.xyz_cid0()
-
+        xyz_ref = np.zeros(3)
         if nid_ref > 0:
             iref = np.searchsorted(all_nids, nid_ref)
             xyz_ref = xyz_cid0[iref]
-        else:
-            xyz_ref = np.zeros(3)
 
-        # Build temporary Mbb for force computation
-        temp_subcase = Subcase(id=0)
-        Mbb_temp = build_Mbb(model, temp_subcase, dof_map, ndof, fdtype="float64")
+        # Relative position
+        dxyz = xyz_cid0 - xyz_ref[np.newaxis, :]
+
+        # Centripetal: omega x (omega x r_i)
+        omega_cross_r = np.cross(omega, dxyz, axis=0)
+        assert omega_cross_r.shape == dxyz.shape
+        accel_centripetal = np.cross(omega, omega_cross_r, axis=0)
+        assert accel_centripetal.shape == dxyz.shape
+
+        # Tangential: alpha x r_i
+        accel_tangential = np.cross(alpha, dxyz, axis=0)
+        assert accel_tangential.shape == dxyz.shape
+
+        # Total acceleration (negative for inertial force direction in Nastran)
+        accel_totals = -(accel_centripetal + accel_tangential)
 
         # Apply F = M * a_centrifugal at each grid
-        for nid, xyz_i in zip(all_nids, xyz_cid0):
-            nid_int = int(nid)
-            i1 = dof_map[(nid_int, 1)]
-
-            # Relative position
-            r_i = xyz_i - xyz_ref
+        #for nid, xyz_i, r_i in zip(all_nids, xyz_cid0, dxyz):
+        for nid, r_i, accel_total in zip(all_nids, dxyz, accel_totals):
+            i1 = dof_map[(nid, 1)]
 
             # Centripetal: omega x (omega x r_i)
-            omega_cross_r = np.cross(omega, r_i)
-            accel_centripetal = np.cross(omega, omega_cross_r)
+            #omega_cross_r = np.cross(omega, r_i)
+            #accel_centripetal = np.cross(omega, omega_cross_r)
 
             # Tangential: alpha x r_i
-            accel_tangential = np.cross(alpha, r_i)
+            #accel_tangential = np.cross(alpha, r_i)
 
             # Total acceleration (negative for inertial force direction in Nastran)
-            accel_total = -(accel_centripetal + accel_tangential)
+            #accel_total = -(accel_centripetal + accel_tangential)
 
             # Mass at this grid
             m_diag = np.array([
