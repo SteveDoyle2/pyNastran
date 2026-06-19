@@ -453,15 +453,14 @@ def _get_bar_recovery_points(model: BDF, elem) -> np.ndarray:
         i_lookup, i_all = searchsorted_filter(prop.property_id, pids, msg='')
         if len(i_lookup) == 0:
             continue
-        if hasattr(prop, 'c') and prop.c.shape[0] > 0:
-            cdef[i_lookup, 0] = prop.c[i_all, 0]
-            cdef[i_lookup, 1] = prop.c[i_all, 1]
-            cdef[i_lookup, 2] = prop.d[i_all, 0]
-            cdef[i_lookup, 3] = prop.d[i_all, 1]
-            cdef[i_lookup, 4] = prop.e[i_all, 0]
-            cdef[i_lookup, 5] = prop.e[i_all, 1]
-            cdef[i_lookup, 6] = prop.f[i_all, 0]
-            cdef[i_lookup, 7] = prop.f[i_all, 1]
+        cdef[i_lookup, 0] = prop.c[i_all, 0]
+        cdef[i_lookup, 1] = prop.c[i_all, 1]
+        cdef[i_lookup, 2] = prop.d[i_all, 0]
+        cdef[i_lookup, 3] = prop.d[i_all, 1]
+        cdef[i_lookup, 4] = prop.e[i_all, 0]
+        cdef[i_lookup, 5] = prop.e[i_all, 1]
+        cdef[i_lookup, 6] = prop.f[i_all, 0]
+        cdef[i_lookup, 7] = prop.f[i_all, 1]
     return cdef
 
 
@@ -490,29 +489,30 @@ def _recover_stress_cbar(
     xyz1 = model.grid.get_position_by_node_id(elem.nodes[:, 0])
     xyz2 = model.grid.get_position_by_node_id(elem.nodes[:, 1])
 
-    AIJEG = elem.stiffness_info()
+    LAIJEG = elem.stiffness_info()
     # columns: [length, area, I1, I2, I12, J, E, G]
-    Avec = AIJEG[:, 1]
-    Ivec = AIJEG[:, [2, 3, 4]]
-    Jvec = AIJEG[:, 5]
-    Evec = AIJEG[:, 6]
-    Gvec = AIJEG[:, 7]
+    A = LAIJEG[:, 0]
+    A = LAIJEG[:, 1]
+    I = LAIJEG[:, [2, 3, 4]]
+    J = LAIJEG[:, 5]
+    E = LAIJEG[:, 6]
+    G = LAIJEG[:, 7]
 
     cdef = _get_bar_recovery_points(model, elem)
 
     stresses = np.full((neids, 15), np.nan, dtype=fdtype)
 
     v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
-    for (ieid, eid, nodes, xyz1i, xyz2i, Ai, Ii, Ji, Ei, Gi,
+    for (ieid, eid, nodes, xyz1i, xyz2i, Li, Ai, Ii, Ji, Ei, Gi,
          vi, ihati, yhati, zhati, wai, wbi, cdefi) in zip(
-        ieids, eids, elem.nodes, xyz1, xyz2, Avec, Ivec, Jvec, Evec, Gvec,
-        v, ihat, yhat, zhat, wa, wb, cdef,
+        ieids, eids, elem.nodes, xyz1, xyz2, L, A, I, J, E, G,
+        nu, ihat, yhat, zhat, wa, wb, cdef,
     ):
         stresses[ieid, :] = _recover_stressi_cbar(
             model, xb, dof_map, nodes, xyz1i, xyz2i,
-            Ai, Ii, Ji, Ei, Gi, vi, ihati, yhati, zhati, wai, wbi,
-            cdefi, fdtype=fdtype,
-        )
+            Li, Ai, Ii, Ji, Ei, Gi, vi,
+            ihati, yhati, zhati, wai, wbi,
+            cdefi, fdtype=fdtype,)
 
     data = stresses.reshape(1, *stresses.shape)
     table_name = "OES1"
@@ -539,6 +539,7 @@ def _recover_stressi_cbar(
     nodes: np.ndarray,
     xyz1: np.ndarray,
     xyz2: np.ndarray,
+    L: float,
     A: float,
     I: np.ndarray,
     J: float,
@@ -562,8 +563,6 @@ def _recover_stressi_cbar(
 
     q_all = np.hstack([xb[i1:i1 + 6], xb[i2:i2 + 6]])
 
-    dxyz = xyz2 - xyz1
-    L = np.linalg.norm(dxyz)
     k1 = k2 = 1e8
     Ke = timoshenko_stiffness(A, E, G, L, I1, I2, J, k1, k2, pa=0, pb=0)
     Teb = beam_transform(ihat, jhat, khat)

@@ -161,21 +161,24 @@ def _recover_strain_rod(
 
     if element_name == "CONROD":
         prop = elem
+        J = prop.J()
     elif element_name == "CROD":
         pid = elem.property_id
         prop = model.prod.slice_card_by_property_id(pid)
+        J = prop.J()
     elif element_name == "CTUBE":
         pid = elem.property_id
         prop = model.ptube.slice_card_by_property_id(pid)
+        J = prop.J()
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
 
     mat1 = model.mat1.slice_card_by_material_id(prop.material_id)
     G = mat1.G
-    if prop.type == "PTUBE":
-        J = prop.J()
-    else:
-        J = prop.J
+    #if prop.type == "PTUBE":
+    #    J = prop.J()
+    #else:
+    #    J = prop.J
 
     for ieid, eid, nodes, xyz1i, xyz2i, Gi, Ji in zip(ieids, eids, elem.nodes, xyz1, xyz2, G, J):
         strains[ieid, :] = _recover_straini_rod(xb, dof_map, nodes, xyz1i, xyz2i, Gi, Ji)
@@ -225,8 +228,7 @@ def _recover_straini_rod(
     xyz1: np.ndarray,
     xyz2: np.ndarray,
     G: float,
-    J: float,
-):
+    J: float,):
     """Get static rod strain: [axial, SMa, torsion, SMt]."""
     nid1, nid2 = nodes
     i1 = dof_map[(nid1, 1)]
