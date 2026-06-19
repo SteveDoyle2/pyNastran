@@ -89,8 +89,9 @@ def parse_femap_syntax_copy(filename_lines: PathLike | list[str],
                             combine_rows: bool=False) -> dict[int, np.ndarray]:
     """Parses the following syntax from FEMAP (use Copy vs. Copy-As-List):
 
-    7203615,7203654,1 7203990,7204010,1 7204032,7204050,1
-    7203594,7203614,1 7203655,7203675,1 7203969,7203989,1 7204011,7204031,1
+
+    lines = ['7203615,7203654,1 7203990,7204010,1 7204032,7204050,1',
+             '7203594,7203614,1 7203655,7203675,1 7203969,7203989,1 7204011,7204031,1',]
 
     Returns
     -------
@@ -102,12 +103,12 @@ def parse_femap_syntax_copy(filename_lines: PathLike | list[str],
 
     .. note:: assume_unique_row avoids combining the "groups"
     """
-    assert os.path.exists(filename_lines), print_bad_path(filename_lines)
-    if isinstance(filename_lines, PathLike):
+    if isinstance(filename_lines, list):
+        lines = filename_lines
+    else:
+        assert os.path.exists(filename_lines), print_bad_path(filename_lines)
         with open(filename_lines, 'r') as prop_file:
             lines = prop_file.readlines()
-    else:
-        assert isinstance(filename_lines, list), filename_lines
 
     lines2 = []
     for line in lines:

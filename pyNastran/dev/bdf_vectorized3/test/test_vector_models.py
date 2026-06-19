@@ -220,7 +220,7 @@ class TestModels(unittest.TestCase):
         test_bdf(args, show_args=False)
 
         model = BDF(debug=False)
-        model.include_zip(bdf_filename, encoding=None, make_ilines=True)
+        model.include_zip(bdf_filename, encoding=None)
 
         #if IS_PYTABLES:
             #h5_filename = MODEL_PATH / 'elements' / 'static_elements.h5'

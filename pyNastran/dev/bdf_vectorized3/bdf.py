@@ -57,7 +57,7 @@ from pyNastran.bdf.bdf_interface.model_group import ModelGroup
 from pyNastran.bdf.cards.coordinate_systems import transform_coords_vectorized
 
 #-------------------------------
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard
+#from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard
 try:
     import tables
     import pandas as pd
@@ -124,7 +124,7 @@ from pyNastran.bdf.cards.materials import NXSTRAT
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from .cards.grid import GRDSET
 #from pyNastran.bdf.cards.nodes import GRDSET # SEQGP, GRIDB
-from pyNastran.bdf.cards.aero.aero import MONDSP1
+#from pyNastran.bdf.cards.aero.aero import MONDSP1
 from pyNastran.bdf.cards.aero.static_loads import AEROS
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.optimization import DOPTPRM
@@ -2173,8 +2173,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'DVSET' : (Crash, None),
             #'DYNRED' : (Crash, None),
 
-            #'AEFORCE' : (Crash, None),
-            #'UXVEC' : (Crash, None),
             #'GUST2' : (Crash, None),
 
             #'RADBND' : (Crash, None),

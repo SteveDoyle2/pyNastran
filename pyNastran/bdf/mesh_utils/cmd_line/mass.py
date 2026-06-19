@@ -55,7 +55,7 @@ def cmd_line_mass(argv=None, quiet: bool=False) -> None:
     obj_filename = os.path.splitext(bdf_filename)[0] + '.obj'
     element_ids = get_ids(args.element_ids)
     model = read_lax_obj(
-        bdf_filename, obj_filename, args.obj,
+        bdf_filename, obj_filename, load_obj=args.obj,
         xref=False,
         is_strict_card_parser=not args.lax,
         punch=args.punch,

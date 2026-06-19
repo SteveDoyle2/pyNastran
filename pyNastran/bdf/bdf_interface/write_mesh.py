@@ -191,10 +191,7 @@ class WriteMesh(BDFAttributes):
             should the output file be closed
 
         """
-        if self.is_bdf_vectorized:
-            is_long_ids = False
-        else:
-            is_long_ids, size = self._get_long_ids(size)
+        is_long_ids, size = self._get_long_ids(size)
 
         out_filename, size = _output_helper(
             out_filename, interspersed, size, is_double, self.log)

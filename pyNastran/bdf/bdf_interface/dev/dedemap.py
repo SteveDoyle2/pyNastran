@@ -45,12 +45,12 @@ while i < nlines and 'N A S T R A N   S O U R C E   P R O G R A M   C O M P I L 
 
 with open(bdf_filename_out, 'w') as bdf_file_out:
     for block_name, block in blocks.items():
-        bdf_file_out.write(f'\n')
+        bdf_file_out.write('\n')
         bdf_file_out.write(f'0        N A S T R A N   S O U R C E   P R O G R A M   C O M P I L A T I O N             SUBDMAP  = {block_name}\n')
-        bdf_file_out.write(f'      OLD NO.  NEW NO.   ( *I* = INSERTED,   *D* = DELETED )\n')
+        bdf_file_out.write('      OLD NO.  NEW NO.   ( *I* = INSERTED,   *D* = DELETED )\n')
         for line in block:
-            if (line.startswith('     DMAP-DMAP INSTRUCTION') or 
-                'N A S T R A N   S O U R C E   P R O G R A M   C O M P I L A T I O N' in line or 
+            if (line.startswith('     DMAP-DMAP INSTRUCTION') or
+                'N A S T R A N   S O U R C E   P R O G R A M   C O M P I L A T I O N' in line or
                 'OLD NO.  NEW NO.   ( *I* = INSERTED,   *D* = DELETED )' in line):
                 continue
             bdf_file_out.write(line)

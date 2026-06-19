@@ -10,7 +10,7 @@ defines:
 """
 from __future__ import annotations
 from struct import unpack, Struct # , error as struct_error
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -110,7 +110,7 @@ def read_dbcopt(op2_reader: OP2Reader) -> None:
     op2_reader.read_3_markers([-6, 1, 0])
     data = op2_reader._read_record()
     desvar_ids = np.frombuffer(data, dtype=idtype).tolist()
-    assert len(desvar_ids) == nvars, f'len(desvars)={len(desvars)} nvars={nvars}'
+    assert len(desvar_ids) == nvars, f'len(desvar_ids)={len(desvar_ids)} nvars={nvars}'
 
     op2_reader.read_3_markers([-7, 1, 0])
     data = op2_reader._read_record()
@@ -341,6 +341,7 @@ def _save_dscmcol_response(op2_reader: OP2Reader, responses):
     op2: OP2 = op2_reader.op2
     if op2.read_mode == 2:
         assert len(responses) > 0
+    # print(f'responses1 = {responses}')
     if responses:
         if op2.op2_results.responses.dscmcol is not None:
             op2_reader.log.warning('overwriting DSCMCOL')
@@ -772,6 +773,7 @@ def dscmcol_dresp1(responses: dict[int, dict[str, Any]],
             print(f'internal_response_id={internal_response_id} '
                   f'external_response_id={external_response_id} response_type={response_type}')
             raise NotImplementedError(response_type)
+        # assert 'name' in response, response
         response['internal_response_id'] = internal_response_id
         response['external_response_id'] = external_response_id
         response['response_type'] = response_type
@@ -807,6 +809,7 @@ def dscmcol_dresp2(responses: dict[int, dict[str, Any]],
         seid = ints[idata+5]
         iresp2 = iresp + nresponses
         response = {
+            # 'name': '2',
             'iresponse': iresp2,
             'response_number': 2,
             'internal_response_id': internal_response_id,

@@ -3,8 +3,7 @@ import os
 import sys
 from cpylog import SimpleLogger
 from .utils import add_argparse_arguments
-
-# import pyNastran
+from pyNastran.utils import PathLike
 
 
 def cmd_line_inclzip(argv=None, quiet: bool=False) -> None:
@@ -45,12 +44,40 @@ def cmd_line_inclzip(argv=None, quiet: bool=False) -> None:
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8')
 
-    from .utils_bdf import read_lax_bdf
-    model = read_lax_bdf(
-        bdf_filename, punch=args.punch, xref=False,
-        validate=False,
-        is_strict_card_parser=not args.lax,
-        duplicate_cards=duplicate_cards,
-        log=log)
-    if bdf_filename_out:
-        model.write_bdf(bdf_filename_out)
+    # from .utils_bdf import read_lax_bdf
+    # model = read_lax_bdf(
+    #     bdf_filename, punch=args.punch, xref=False,
+    #     validate=False,
+    #     is_strict_card_parser=not args.lax,
+    #     duplicate_cards=duplicate_cards,
+    #     log=log)
+    # if bdf_filename_out:
+    #     model.write_bdf(bdf_filename_out)
+
+    inclzip(bdf_filename, bdf_filename_out,
+            punch=not args.lax,
+            is_strict_card_parser=is_strict_card_parser,
+            duplicate_cards=duplicate_cards,)
+
+def inclzip(bdf_filename: PathLike,
+            bdf_filename_out: PathLike,
+            punch: bool=False,
+            is_strict_card_parser: bool=True,
+            duplicate_cards: list[str] | None = None,
+            encoding: str | None=None,
+            log: SimpleLogger | None=None) -> None:
+    from pyNastran.bdf.bdf import BDF
+    model = BDF(log=log)
+    log = model.log
+
+    if duplicate_cards is not None:
+        model.set_allow_duplicates(set(duplicate_cards))
+
+    if not is_strict_card_parser:
+        log.warning('using lax card parser')
+        model.is_strict_card_parser = is_strict_card_parser
+    all_lines, ilines = model.include_zip(
+        bdf_filename, punch=punch,
+        encoding=encoding)
+    with open(bdf_filename_out, 'w') as bdf_file:
+        bdf_file.writelines(all_lines)

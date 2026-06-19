@@ -486,32 +486,23 @@ def _get_bdf_stats_loads(model: BDF) -> list[str]:
     """helper for ``get_bdf_stats(...)``"""
     # loads
     msg = []
-    if model.is_bdf_vectorized:
-        ## kind of hackish
-        for (lid, load_combination) in sorted(model.load_combinations.items()):
-            msg.append('bdf.load_combinations[%s]' % lid)
-            msg.append('')
-            if len(model.loads):
-                msg.append('bdf.loads[%s] : ???')
+    for (lid, load_combinations) in sorted(model.load_combinations.items()):
+        groups_dict: dict[str, int] = {}
+        for load_combination in load_combinations:
+            groups_dict[load_combination.type] = groups_dict.get(load_combination.type, 0) + 1
+        added_messge = _get_added_message_from_dict(groups_dict)
+        msg.append(f'bdf.load_combinations[{lid}]{added_messge}')
+        for name, count_name in sorted(groups_dict.items()):
+            msg.append('  %-8s %s' % (name + ':', count_name))
+        msg.append('')
 
-    else:
-        for (lid, load_combinations) in sorted(model.load_combinations.items()):
-            groups_dict: dict[str, int] = {}
-            for load_combination in load_combinations:
-                groups_dict[load_combination.type] = groups_dict.get(load_combination.type, 0) + 1
-            added_messge = _get_added_message_from_dict(groups_dict)
-            msg.append(f'bdf.load_combinations[{lid}]{added_messge}')
-            for name, count_name in sorted(groups_dict.items()):
-                msg.append('  %-8s %s' % (name + ':', count_name))
-            msg.append('')
-
-        for (lid, loads) in sorted(model.loads.items()):
-            groups_dict = {}
-            for loadi in loads:
-                groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
-            added_messge = _get_added_message_from_dict(groups_dict)
-            msg.append(f'bdf.loads[{lid}]{added_messge}')
-            for name, count_name in sorted(groups_dict.items()):
-                msg.append('  %-8s %s' % (name + ':', count_name))
-            msg.append('')
+    for (lid, loads) in sorted(model.loads.items()):
+        groups_dict = {}
+        for loadi in loads:
+            groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
+        added_messge = _get_added_message_from_dict(groups_dict)
+        msg.append(f'bdf.loads[{lid}]{added_messge}')
+        for name, count_name in sorted(groups_dict.items()):
+            msg.append('  %-8s %s' % (name + ':', count_name))
+        msg.append('')
     return msg

@@ -5,11 +5,12 @@ For example, with cross referencing...
 
 .. code-block:: python
 
+   >>> bdf_filename = 'fem.bdf'
    >>> model = BDF()
    >>> model.read_bdf(bdf_filename, xref=True)
 
    >>> nid1 = 1
-   >>> node1 = model.nodes[nid1]
+   >>> node = model.nodes[nid1]
    >>> node.nid
    1
 
@@ -68,7 +69,6 @@ around the idea of cross-referencing, so it's recommended that you use it.
 
 """
 # pylint: disable=R0902,R0904,R0914
-import traceback
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
@@ -76,6 +76,25 @@ from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.cross_reference_obj import CrossReference
+
+
+XREF_FUNCTION_MAP = {
+    # '': [],  # none
+    'nodes': ['cross_reference_nodes', 'cross_reference_coordinates'],
+    'elements': ['cross_reference_elements', 'cross_reference_bolts'],
+    'masses': ['cross_reference_masses'],
+    'rigid_elements': ['cross_reference_rigid_elements'],
+    'aero': ['cross_reference_aero'],
+    'properties': ['cross_reference_properties'],
+    'materials': ['cross_reference_materials'],
+    'constraints': ['cross_reference_constraints'],
+    'loads': ['cross_reference_loads'],
+    'sets': ['cross_reference_sets'],
+    'optimization': ['cross_reference_optimization'],
+    'contact': ['cross_reference_contact'],
+    'nodes_with_elements': ['cross_reference_nodes_with_elements'],
+    'superelements': ['cross_reference_superelements'],
+}
 
 
 class XrefMesh(BDFAttributes):
@@ -237,6 +256,19 @@ class XrefMesh(BDFAttributes):
                 xref_sets=xref_sets, xref_optimization=xref_optimization,
                 word=word)
 
+    def apply_xref_list(self, xref: bool | list[str] = True):
+        xref_list = _to_xref_list(xref)
+        if xref_list == ['all']:
+            self.cross_reference()
+            return
+
+        xref_obj = self.xref_obj
+        for xref_str in xref_list:
+            func_names = XREF_FUNCTION_MAP[xref_str]
+            for func_name in func_names:
+                func = getattr(xref_obj, func_name)
+                func()
+
     def _create_superelement_from_sebulk(self, sebulk,
                                          seid: int, rseid: int) -> None:
         """helper for sebulk"""
@@ -383,3 +415,13 @@ class XrefMesh(BDFAttributes):
             # pyram elpr <= 0.5
             # pyram detj <= 0.
             # pyram warp <= 0.707
+
+
+def _to_xref_list(xref: bool | list[str]) -> list[str]:
+    if isinstance(xref, bool):
+        xref_list = ['all'] if xref else []
+    elif isinstance(xref, list):
+        xref_list = xref
+    else:
+        raise TypeError(xref)
+    return xref_list

@@ -135,7 +135,10 @@ from .cards.material_deps import (
     MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11, MATS1, MATDMG)
 
 from .cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
-from .cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP  # GRIDB
+from .cards.nodes import (
+    GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP,
+    SPOINT, EPOINT,  # GRIDB
+)
 from .cards.aero.aero import (
     AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAEROs,
@@ -556,33 +559,33 @@ def load_bdf_object(obj_filename: str, xref: bool=True, log=None, debug: bool=Tr
     return model
 
 
-class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
-    """
-    Base class for the BDF Reader/Writer/Editor class that's used by the
-    main BDF object and (temporarily) the in-development vectorized object
-    to keep things working.
-
-    If you add very few methods and attributes to this, you get the ``BDF``
-    class.  The point of this class is to break out a attributes, so the
-    names (e.g., nodes) can be reused when vectorize the data.
-
-    """
+class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
+    """NASTRAN BDF Reader/Writer/Editor class."""
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
-    def __init__(self, debug: str | bool | None=True,
-                 log: Optional[SimpleLogger]=None,
+    _properties = ['is_bdf_vectorized', 'nid_map', 'wtmass', 'type_slot_str'] + [
+        'nastran_format', 'is_long_ids', 'sol', 'subcases',
+        'nnodes', 'node_ids', 'point_ids', 'npoints',
+        'nelements', 'element_ids', 'nproperties', 'property_ids',
+        'nmaterials', 'material_ids', 'ncoords', 'coord_ids',
+        'ncaeros', 'caero_ids', 'wtmass', 'nid_map',
+        #'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
+    ]
+
+    def __init__(self, debug: Optional[bool]=True,
+                 log: SimpleLogger | None=None,
                  mode: str='msc') -> None:
         """
-        Initializes the BDF_ object
+        Initializes the BDF object
 
         Parameters
         ----------
         debug : bool/None; default=True
             used to set the logger if no logger is passed in
-                True:  logs debug/info/error messages
-                False: logs info/error messages
-                None:  logs error messages
+                True:  logs debug/info/warning/error messages
+                False: logs info/warning/error messages
+                None:  logs warning/error messages
         log : logging module object / None
             if log is set, debug is ignored and uses the
             settings the logging object has
@@ -624,6 +627,17 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         BDFMethods.__init__(self)
         WriteMeshs.__init__(self)
         UnXrefMesh.__init__(self)
+
+        #: stores SPOINT, GRID cards
+        self.nodes: dict[int, GRID | SPOINT | EPOINT] = {}
+
+        # loads
+        #: stores LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
+        #: PLOAD, PLOAD2, PLOAD4, SLOAD
+        #: GMLOAD, SPCD, DEFORM,
+        #: QVOL
+        self.loads: dict[int, list[Any]] = {}
+        self.load_combinations: dict[int, list[Any]] = {}
 
         # useful in debugging errors in input
         self.debug = debug
@@ -1316,8 +1330,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         verify_bdf(self, xref)
 
     def include_zip(self, bdf_filename: PathLike | None=None,
+                    punch: bool=False,
                     encoding: Optional[str]=None,
-                    make_ilines: bool=True) -> tuple[list[str], Any]:
+                    ) -> tuple[list[str], np.ndarray]:
         """
         Read a bdf without perform any other operation, except (optionally)
         insert the INCLUDE files in the bdf
@@ -1328,8 +1343,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             the input bdf (default=None; popup a dialog)
         encoding : str; default=None -> system default
             the unicode encoding
-        make_ilines : bool; default=True
-            flag for ilines
 
         Returns
         -------
@@ -1345,7 +1358,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                    called directly; it's useful for ``read_bdf``
 
         """
-        punch = False  # doesn't really matter
         read_includes = True
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
         self._parse_primary_file_header(bdf_filename)
@@ -1357,8 +1369,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                          log=self.log, debug=self.debug)
         main_lines = obj.get_main_lines(self.bdf_filename)
         all_lines, ilines = obj.lines_to_deck_lines(main_lines)
-        if not make_ilines:
-            ilines = None
         self._set_pybdf_attributes(obj, save_file_structure=False)
         return all_lines, ilines
 
@@ -3618,9 +3628,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _get_npoints_nids_allnids(self):
         """helper method for get_xyz_in_coord"""
-        if self.is_bdf_vectorized:
-            return self.nodes.nids
-
         nnodes = len(self.nodes)
         nspoints = 0
         nepoints = 0
@@ -4115,20 +4122,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         """
         #F:\work\pyNastran\examples\femap_examples\Support\nast\tpl\heli112em7.dat
-        if self.is_bdf_vectorized:
-            # this is used when xref=False (only for vectorized=True)
-            # we now require nids, where the other approach
-            # (the one with xref=True) does not
-            in_place = False
-            cps_to_check = list(self.coords.keys())
-        else:
-            # this requires xref
-            #cps_to_check = list(icp_transform.keys())
-            # xref allows in_place=True
 
-            # this is more general and slightly slower
-            # requires in_place=False???
-            cps_to_check = list(self.coords.keys())
+        # this requires xref
+        #cps_to_check = list(icp_transform.keys())
+        # xref allows in_place=True
+
+        # this is more general and slightly slower
+        # requires in_place=False???
+        cps_to_check = list(self.coords.keys())
         cps_to_check.sort()
         assert 0 in cps_to_check, cps_to_check
 
@@ -4176,21 +4177,21 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 for cp in cord1s_to_update:
                     coord = self.coords[cp]
                     nid1, nid2, nid3 = coord.node_ids
-                    if self.is_bdf_vectorized or 1:
-                        i1, i2, i3 = np.searchsorted(nids, coord.node_ids)
-                        assert nids[i1] == nid1
-                        assert nids[i2] == nid2
-                        assert nids[i3] == nid3
-                        coord.e1 = xyz_cid0[i1, :]  #: the origin in the local frame
-                        coord.e2 = xyz_cid0[i2, :]  #: a point on the z-axis
-                        coord.e3 = xyz_cid0[i3, :]  #: a point on the xz-plane
-                    else:
-                        g1_ref = nodes[nid1]
-                        g2_ref = nodes[nid2]
-                        g3_ref = nodes[nid3]
-                        coord.e1 = g1_ref.get_position()  #: the origin in the local frame
-                        coord.e2 = g2_ref.get_position()  #: a point on the z-axis
-                        coord.e3 = g3_ref.get_position()  #: a point on the xz-plane
+                    # if 1:
+                    i1, i2, i3 = np.searchsorted(nids, coord.node_ids)
+                    assert nids[i1] == nid1
+                    assert nids[i2] == nid2
+                    assert nids[i3] == nid3
+                    coord.e1 = xyz_cid0[i1, :]  #: the origin in the local frame
+                    coord.e2 = xyz_cid0[i2, :]  #: a point on the z-axis
+                    coord.e3 = xyz_cid0[i3, :]  #: a point on the xz-plane
+                    # else:
+                    #     g1_ref = nodes[nid1]
+                    #     g2_ref = nodes[nid2]
+                    #     g3_ref = nodes[nid3]
+                    #     coord.e1 = g1_ref.get_position()  #: the origin in the local frame
+                    #     coord.e2 = g2_ref.get_position()  #: a point on the z-axis
+                    #     coord.e3 = g3_ref.get_position()  #: a point on the xz-plane
                     coord.setup_no_xref(self)
                     #coord.rid_ref = self.coords[coord.rid]
                     #coord.setup_no_xref(self)
@@ -4304,9 +4305,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return nids_checked, cps_checked, cps_to_check
 
     @property
-    def is_bdf_vectorized(self):
+    def is_bdf_vectorized(self) -> bool:
         """Returns False for the ``BDF`` class"""
-        return hasattr(self, 'grid')
+        return False
 
     def get_displacement_index(self) -> tuple[Any, Any, dict[int, Any]]:
         """
@@ -5102,50 +5103,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.reject_cards.append(card_obj)
             class_instance = None
         return class_instance
-
-
-class BDF(BDF_):
-    """NASTRAN BDF Reader/Writer/Editor class."""
-    _properties = ['is_bdf_vectorized', 'nid_map', 'wtmass', 'type_slot_str'] + [
-        'nastran_format', 'is_long_ids', 'sol', 'subcases',
-        'nnodes', 'node_ids', 'point_ids', 'npoints',
-        'nelements', 'element_ids', 'nproperties', 'property_ids',
-        'nmaterials', 'material_ids', 'ncoords', 'coord_ids',
-        'ncaeros', 'caero_ids', 'wtmass', 'is_bdf_vectorized', 'nid_map',
-        #'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
-    ]
-
-    def __init__(self, debug: Optional[bool]=True, log: Any=None,
-                 mode: str='msc') -> None:
-        """
-        Initializes the BDF object
-
-        Parameters
-        ----------
-        debug : bool/None; default=True
-            used to set the logger if no logger is passed in
-                True:  logs debug/info/warning/error messages
-                False: logs info/warning/error messages
-                None:  logs warning/error messages
-        log : logging module object / None
-            if log is set, debug is ignored and uses the
-            settings the logging object has
-        mode : str; default='msc'
-            the type of Nastran
-            valid_modes = {'msc', 'nx', 'mystran', 'zaero'}
-
-        """
-        BDF_.__init__(self, debug=debug, log=log, mode=mode)
-        #: stores SPOINT, GRID cards
-        self.nodes: dict[int, Any] = {}
-
-        # loads
-        #: stores LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-        #: PLOAD, PLOAD2, PLOAD4, SLOAD
-        #: GMLOAD, SPCD, DEFORM,
-        #: QVOL
-        self.loads: dict[int, list[Any]] = {}
-        self.load_combinations: dict[int, list[Any]] = {}
 
     def __deepcopy__(self, memo: dict[str, Any]):
         """performs a deepcopy"""

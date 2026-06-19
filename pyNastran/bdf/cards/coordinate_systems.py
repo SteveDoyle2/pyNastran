@@ -3209,10 +3209,7 @@ def transform_coords_vectorized(cps_to_check0, icp_transform,
 
         if origin is None:
             # the coord has not been xref'd, so add it to cps_to_check
-            # if self.is_bdf_vectorized:
-            #     assert in_place is False, 'in_place=%r must be False for vectorized' % in_place
-            # else:
-            #     raise RuntimeError('you must cross-reference the nodes')
+            # raise RuntimeError('you must cross-reference the nodes')
 
             cps_to_check.append(cp)
             if cp in icp_transform:

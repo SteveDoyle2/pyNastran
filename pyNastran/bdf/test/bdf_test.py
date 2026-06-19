@@ -42,6 +42,7 @@ def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
         run_export_caero: bool=True,
         allow_similar_eid: bool=True,
         sort_cards: bool=True,
+        allow_tabs: bool=True,
         xref: bool=True, is_lax_parser: bool=False,
         crash_cards=None):
     """Runs the full BDF test suite"""
@@ -120,7 +121,7 @@ def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
         run_export_caero=run_export_caero,
         run_skin_solids=run_skin_solids,
         allow_similar_eid=allow_similar_eid,
-        sort_cards=sort_cards,
+        sort_cards=sort_cards, allow_tabs=allow_tabs,
         encoding='latin1', crash_cards=crash_cards,
         dev=True, run_pickle=True)
     ntotal = len(files)
@@ -140,9 +141,10 @@ def main():
     ver = str(pyNastran.__version__)
 
     #is_release = False
+    nos = '[--nosort] [--notabs]'
     skips = '[--skip_loads] [--skip_mass] [--skip_mcid] [--skip_aero] [--skip_skin] [--no_similar_eid]'
     msg = (
-        f'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-x] [-c C] [--safe] [--lax] [--nosort] {skips}\n'
+        f'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-x] [-c C] [--safe] [--lax] {skips} {nos}\n'
         '        bdf_test -h | --help\n'
         '        bdf_test -v | --version\n'
         '\n'
@@ -165,6 +167,7 @@ def main():
         '  --no_similar_eid     No duplicate eids among elements, rigids, and masses\n'
         '  --lax                Use the lax card parser (default=False)\n'
         '  --nosort             Dont sort the nodes, elements, ... (default=False -> nosort)\n'
+        '  --notabs             Dont allow tabs (default=False -> tabs are fine)\n'
     )
     if len(sys.argv) == 0:
         sys.exit(msg)
@@ -181,6 +184,7 @@ def main():
     allow_similar_eid = not data['--no_similar_eid']
     xref = not data['--xref']
     sort_cards = not data['--nosort']
+    allow_tabs = True # not data['--notabs']
     is_lax_parser = data['--lax']
 
     crash_cards = []
@@ -194,6 +198,7 @@ def main():
         run_skin_solids=run_skin_solids,
         is_lax_parser=is_lax_parser,
         sort_cards=sort_cards,
+        allow_tabs=allow_tabs,
         xref=xref, crash_cards=crash_cards)
 
 

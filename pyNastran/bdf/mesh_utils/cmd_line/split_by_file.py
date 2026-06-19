@@ -74,8 +74,8 @@ def cmd_line_split_by_file(argv=None, quiet: bool=False,
     _check_missing_files(eid_filenames, log)
 
     from .utils_bdf import read_lax_obj
-    model = read_lax_obj(bdf_filename,
-        obj_filename, is_obj,
+    model = read_lax_obj(
+        bdf_filename, obj_filename, load_obj=is_obj,
         is_strict_card_parser=is_strict_card_parser,
         xref=False, punch=punch,
         duplicate_cards=None,

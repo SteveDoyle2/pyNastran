@@ -416,6 +416,8 @@ class DSCMCOL:
     def __init__(self, responses):
         """internal_response_id = iresponse + 1 = column in DSCM2"""
         self.responses = responses
+        # for key, response in self.responses.items():
+        #     assert 'name' in response, response
 
     #def write_f06(self):
         #msg = [
@@ -458,8 +460,8 @@ class DSCMCOL:
         ]
         responses_groups = {key: [] for key in response_groups_order}
 
-
         response_name_to_group = {
+            # 'dresp2': 'combined',
             'weight': 'weight_volume',
             'volume': 'weight_volume',
 
@@ -483,6 +485,8 @@ class DSCMCOL:
             'aeroelastic flutter damping': 'aeroelastic flutter',
         }
         response_name_to_f06_response_type = {
+            # 'dresp2': '2',
+
             # weight/volume
             'weight' : 'WEIGHT',
             'volume': 'VOLUME',
@@ -601,8 +605,12 @@ class DSCMCOL:
     @property
     def names(self) -> list[str]:
         names = []
-        for resp in self.responses.values():
-            names.append(resp['name'])
+        for key, resp in self.responses.items():
+            #print(key, resp)
+            if 'name' in resp:
+                names.append(resp['name'])
+            else:
+                names.append('2')
         return names
 
     def _write_static(self, ids, response_name_to_f06_response_type):
@@ -610,10 +618,14 @@ class DSCMCOL:
         is_composite = False
         for i in ids:
             respi = self.responses[i]
-            name = respi['name']
-            if name in ['composite failure', 'composite strain']:
-                is_composite = True
-                break
+            if 'name' in respi:
+                name = respi['name']
+                if name in ['composite failure', 'composite strain']:
+                    is_composite = True
+                    break
+            else:
+                # DRESP2
+                continue
 
         msg += (
             '             -----  STATICS RESPONSES  -----\n'

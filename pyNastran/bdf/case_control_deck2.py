@@ -85,7 +85,6 @@ class CaseControlDeck:
         self.debug = False
 
         self.allow_tabs = allow_tabs
-        assert allow_tabs is False
 
         self.sol_200_map = {
             'STATICS': 101,

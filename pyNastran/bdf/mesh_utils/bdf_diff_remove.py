@@ -8,8 +8,10 @@ from .bdf_diff import scalar_obj_keys, dict_cards
 def apply_diff(bdf_filename: PathLike,
                remove_filename: PathLike, encoding=None) -> None:
     obj_filename = os.path.splitext(bdf_filename)[0] + ".obj"
-    is_obj = True
-    model = read_lax_obj(bdf_filename, obj_filename, is_obj, xref=False, save_file_structure=True)
+    load_obj = True
+    model = read_lax_obj(
+        bdf_filename, obj_filename, load_obj=load_obj,
+        xref=False, save_file_structure=True)
     log = model.log
     # else:
     #     model = BDF()

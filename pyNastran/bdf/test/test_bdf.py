@@ -94,6 +94,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                       run_skin_solids: bool=True,
                       allow_similar_eid: bool=True,
                       sort_cards: bool=True,
+                      allow_tabs: bool=True,
                       dev: bool=True,
                       crash_cards: Optional[list[str]]=None,
                       run_pickle: bool=True, quiet: bool=False) -> list[str]:
@@ -231,6 +232,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                         run_skin_solids=run_skin_solids,
                         allow_similar_eid=allow_similar_eid,
                         sort_cards=sort_cards,
+                        allow_tabs=allow_tabs,
 
                         dev=dev,
                         crash_cards=crash_cards,
@@ -424,6 +426,8 @@ def run_bdf(folder: str, bdf_filename: PathLike,
     sort_cards : bool; default=True
         sort the cards; can be useful to not sort because
         1) it's faster, 2) simpler to compare two decks
+    allow_tabs : bool; default=True
+        False lets you clean up nastran models
     is_csv : bool; default=False
         hack to write the bdf as a CSV
     crash_cards: list[str]; default=None
@@ -2550,6 +2554,9 @@ def test_bdf_argparse(argv=None):
     parent_parser.add_argument(
         '--nosort', action='store_true',
         help='Dont sort the nodes, elements, ... (default=False -> sort)')
+    parent_parser.add_argument(
+        '--notabs', action='store_true',
+        help='Dont allow tabs (default=False -> allow tabs)')
 
     parent_parser.add_argument('--duplicate', action='store_true',
                                help='overwrite duplicates; takes the later card (default=False)')
@@ -2722,6 +2729,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --dictsort    Writes the BDF exactly as read with the INCLUDEs processed\n'
         '                (pyNastran_dict.bdf)\n'
         '  --nosort      Dont sort the nodes, elements, ... (default=False -> sort)\n'
+        '  --notabs      Dont allow tabs (default=False -> allow tabs)\n'
         '  --profile     Profiles the code (default=False)\n'
         '  --pickle      Pickles the data objects (default=False)\n'
         '  --hdf5        Save/load the BDF in HDF5 format\n'
@@ -2787,6 +2795,7 @@ def main(argv=None):
             raise
     save_file_structure = data['ifile']
     sort_cards = not data['nosort']
+    allow_tabs = not data['notabs']
     nocomments = data['nocomments']
     is_csv = data['csv']
     assert is_csv is False, is_csv
@@ -2841,6 +2850,7 @@ def main(argv=None):
             allow_duplicates=data['duplicate'],
             is_csv=is_csv,
             sort_cards=sort_cards,
+            allow_tabs=allow_tabs,
             stop=data['stop'],
             quiet=data['quiet'],
             dumplines=data['dumplines'],
@@ -2903,6 +2913,7 @@ def main(argv=None):
             allow_duplicates=data['duplicate'],
             is_csv=is_csv,
             sort_cards=sort_cards,
+            allow_tabs=allow_tabs,
             stop=data['stop'],
             nocomments=data['nocomments'],
             quiet=data['quiet'],

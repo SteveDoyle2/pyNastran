@@ -41,7 +41,7 @@ class TestReadWriteFiles(unittest.TestCase):
             bdf_filename, xref=True, punch=False,
             save_file_structure=True, log=log)
 
-        all_lines, ilines = model.include_zip(bdf_filename, encoding=None, make_ilines=True)
+        all_lines, ilines = model.include_zip(bdf_filename, encoding=None)
         #for (ifile, iline), line in zip(ilines, all_lines):
             #print(ifile, iline, line.rstrip())
         #print(ilines)
@@ -110,7 +110,7 @@ class TestReadWriteFiles(unittest.TestCase):
             #print(bdf_filename2)
         #print('out_filenames =', out_filenames)
 
-        all_lines, ilines = model.include_zip(bdf_filename, encoding=None, make_ilines=True)
+        all_lines, ilines = model.include_zip(bdf_filename, encoding=None)
         #for (ifile, iline), line in zip(ilines, all_lines):
             #if iline > 100:
                 #continue
