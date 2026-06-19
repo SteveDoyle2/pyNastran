@@ -11,6 +11,7 @@ import numpy as np
 from pyNastran.dev.bdf_vectorized3.cards.base_card import searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.solver.utils import (
     get_ieids_eids, get_element, lambda1d)
+from .rod import _recover_stress_rod
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     timoshenko_stiffness,
     beam_transform,
@@ -18,7 +19,6 @@ from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     beam_stress_at_points,
 )
 from pyNastran.op2.op2_interface.op2_classes import (
-    RealRodStressArray,
     RealBarStressArray,
     RealSpringStressArray,
     RealPlateStressArray,
@@ -26,7 +26,7 @@ from pyNastran.op2.op2_interface.op2_classes import (
 )
 from .utils import get_plot_request
 
-from .static_force import ke_cbar
+#from .static_force import ke_cbar
 from .static_shell import recover_shell_stress_cquad4, recover_shell_stress_ctria3
 
 
@@ -309,132 +309,6 @@ def _recover_stress_celas_v3(
         is_sort1=True,
     )
     return neids
-
-
-def _recover_stress_rod(
-    f06_file: TextIO,
-    op2,
-    model: BDF,
-    dof_map: DOF_MAP,
-    isubcase: int,
-    xb: np.ndarray,
-    eids_str: str,
-    element_name: str,
-    fdtype: str = "float32",
-    title: str = "",
-    subtitle: str = "",
-    label: str = "",
-    page_num: int = 1,
-    page_stamp: str = "PAGE %s",
-) -> int:
-    """Recovers static rod stress."""
-    neids, ieids, eids = get_ieids_eids(model, element_name, eids_str)
-    if not neids:
-        return neids
-
-    elem = get_element(model, element_name, ieids, eids)
-    xyz1 = model.grid.get_position_by_node_id(elem.nodes[:, 0])
-    xyz2 = model.grid.get_position_by_node_id(elem.nodes[:, 1])
-
-    stresses = np.full((neids, 4), np.nan, dtype=fdtype)
-
-    if element_name == "CONROD":
-        prop = elem
-    elif element_name == "CROD":
-        pid = elem.property_id
-        prop = model.prod.slice_card_by_property_id(pid)
-    elif element_name == "CTUBE":
-        pid = elem.property_id
-        prop = model.ptube.slice_card_by_property_id(pid)
-    else:  # pragma: no cover
-        raise NotImplementedError(element_name)
-
-    mat1 = model.mat1.slice_card_by_material_id(prop.material_id)
-    E = mat1.E
-    G = mat1.G
-    if prop.type == "PTUBE":
-        A = prop.area()
-        J = prop.J()
-    else:
-        A = prop.A
-        J = prop.J
-
-    for ieid, eid, nodes, xyz1i, xyz2i, Gi, Ji, Ai, Ei in zip(
-        ieids, eids, elem.nodes, xyz1, xyz2, G, J, A, E
-    ):
-        stresses[ieid, :] = _recover_stressi_rod(xb, dof_map, nodes, xyz1i, xyz2i, Gi, Ji, Ai, Ei)
-
-    data = stresses.reshape(1, *stresses.shape)
-    table_name = "OES1"
-    stress_obj = RealRodStressArray.add_static_case(
-        table_name,
-        element_name,
-        eids,
-        data,
-        isubcase,
-        is_sort1=True,
-        is_random=False,
-        is_msc=True,
-        random_code=0,
-        title=title,
-        subtitle=subtitle,
-        label=label,
-    )
-
-    stress = op2.op2_results.stress
-    if element_name == "CONROD":
-        stress.conrod_stress[isubcase] = stress_obj
-    elif element_name == "CROD":
-        stress.crod_stress[isubcase] = stress_obj
-    elif element_name == "CTUBE":
-        stress.ctube_stress[isubcase] = stress_obj
-    else:  # pragma: no cover
-        raise NotImplementedError(element_name)
-
-    stress_obj.write_f06(
-        f06_file,
-        header=None,
-        page_stamp=page_stamp,
-        page_num=page_num,
-        is_mag_phase=False,
-        is_sort1=True,
-    )
-    return neids
-
-
-def _recover_stressi_rod(
-    xb: np.ndarray,
-    dof_map: DOF_MAP,
-    nodes: np.ndarray,
-    xyz1: np.ndarray,
-    xyz2: np.ndarray,
-    G: float,
-    J: float,
-    A: float,
-    E: float,
-):
-    """Get static rod stress: [axial, SMa, torsion, SMt]."""
-    nid1, nid2 = nodes
-    i1 = dof_map[(nid1, 1)]
-    i2 = dof_map[(nid2, 1)]
-
-    q_axial = np.array([xb[i1], xb[i1 + 1], xb[i1 + 2], xb[i2], xb[i2 + 1], xb[i2 + 2]])
-    q_torsion = np.array([xb[i1 + 3], xb[i1 + 4], xb[i1 + 5], xb[i2 + 3], xb[i2 + 4], xb[i2 + 5]])
-    dxyz12 = xyz1 - xyz2
-    Lambda = lambda1d(dxyz12, debug=False)
-
-    u_axial = Lambda @ q_axial
-    u_torsion = Lambda @ q_torsion
-    du_axial = u_axial[0] - u_axial[1]
-    du_torsion = u_torsion[0] - u_torsion[1]
-
-    L = np.linalg.norm(dxyz12)
-    axial_strain = du_axial / L
-    axial_stress = E * axial_strain
-    torsional_moment = du_torsion * G * J / L
-    torsional_stress = torsional_moment / J if J > 0 else 0.0
-    # SM fields are NaN (safety margin not computed)
-    return axial_stress, np.nan, torsional_stress, np.nan
 
 
 def _get_bar_recovery_points(model: BDF, elem) -> np.ndarray:

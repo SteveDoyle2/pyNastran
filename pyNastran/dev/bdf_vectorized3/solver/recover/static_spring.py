@@ -439,7 +439,7 @@ def _recover_stress_celas(f06_file: TextIO, op2: OP2,
     k, s = _celas_ks(model, element_name, elem, ieids)
     elem, dx = _spring_dx(
         element_name, neids, ieids, eids,
-        dtype=dtype)
+        fdtype=fdtype)
 
     stress = k * s * dx  # this seems wrong
 
@@ -467,7 +467,7 @@ def _recover_strain_celas(f06_file: TextIO, op2: OP2,
     # k, s = _celas_ks(model, element_name, elem, ieids)
     elem, dx = _spring_dx(
         element_name, neids, ieids, eids,
-        dtype=dtype)
+        fdtype=fdtype)
     strain = dx  # this seems wrong
 
     write_f06_strain = True
@@ -514,7 +514,7 @@ def _spring_dx(element_name: str,
                neids: int,
                ieids: np.ndarray,
                eids: np.ndarray,
-               dtype: str='float32'):
+               fdtype: str='float32'):
 
     elem = get_element(model, element_name, ieids, eids)
     dx = np.full((neids, 1), np.nan, dtype=fdtype)
