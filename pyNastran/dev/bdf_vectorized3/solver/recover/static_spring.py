@@ -26,6 +26,7 @@ def recover_celas(f06_file, op2,
     neids, ielas, eids = get_ieids_eids(model, element_name, eids_str)
     if not neids:
         return neids
+    xg, nmode = _fix_xg(xg)
 
     get_strain = write_f06_strain or write_op2_strain
     get_stress = write_f06_stress or write_op2_stress
@@ -107,31 +108,51 @@ def recover_celas(f06_file, op2,
             strain[ieid] = _recover_straini_celas34(xg, dof_map, elem, si)
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
-    _save_spring_strain(
-        op2, f06_file, page_num, page_stamp,
+
+    case = None
+    _save_spring_stress_strain_force(
+        op2.op2_results.strain, f06_file, page_num, page_stamp,
         element_name,
-        strain, eids, write_f06_strain,
-        isubcase, title, subtitle, label)
-    _save_spring_stress(
-        op2, f06_file, page_num, page_stamp,
+        strain, eids,
+        isubcase, title, subtitle, label,
+        nmode, result_type='strain',
+        case=case,
+        write_op2=True,
+        write_f06=write_f06_strain)
+
+    _save_spring_stress_strain_force(
+        op2.op2_results.stress, f06_file, page_num, page_stamp,
         element_name,
-        stress, eids, write_f06_stress,
-        isubcase, title, subtitle, label)
-    _save_spring_force(
-        op2, f06_file, page_num, page_stamp,
+        stress, eids,
+        isubcase, title, subtitle, label,
+        nmode, result_type='stress',
+        case=case,
+        write_op2=True,
+        write_f06=write_f06_stress)
+
+    _save_spring_stress_strain_force(
+        op2.op2_results.force, f06_file, page_num, page_stamp,
         element_name,
-        force, eids, write_f06_force,
-        isubcase, title, subtitle, label)
+        force, eids,
+        isubcase, title, subtitle, label,
+        nmode, result_type='force',
+        case=case,
+        write_op2=True,
+        write_f06=write_f06_force)
+
     save_strain_energy(
         op2, f06_file, page_num, page_stamp,
         element_name,
         strain_energy, eids,
         isubcase, title, subtitle, label,
-        write_f06=write_f06_ese, write_op2=True)
+        #case=case,
+        write_op2=True,
+        write_f06=write_f06_ese)
     return neids
 
 def get_celas1_ostr_oes_ese(model, ielas, eids, xg, dof_map,
                             strain, stress, unused_force, strain_energy):
+    asdf
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
         ki = elem.pid_ref.k
@@ -144,6 +165,7 @@ def get_celas1_ostr_oes_ese(model, ielas, eids, xg, dof_map,
 
 def get_celas1_ostr_ese(model: BDF, ielas, eids, xg, dof_map,
                         strain, unused_stress, unused_force, strain_energy):
+    sasdf
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
         ki = elem.pid_ref.k
@@ -154,6 +176,7 @@ def get_celas1_ostr_ese(model: BDF, ielas, eids, xg, dof_map,
 
 def get_celas1_ostr_oef(model: BDF, ielas, eids, xg, dof_map,
                         strain, unused_stress, force, unused_strain_energy):
+    asdf
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
         ki = elem.pid_ref.k
@@ -163,6 +186,7 @@ def get_celas1_ostr_oef(model: BDF, ielas, eids, xg, dof_map,
 
 def get_celas1_oes_ese(model: BDF, ielas, eids, xg, dof_map,
                        unused_strain, stress, unused_force, strain_energy):
+    asdf
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
         ki = elem.pid_ref.k
@@ -172,6 +196,7 @@ def get_celas1_oes_ese(model: BDF, ielas, eids, xg, dof_map,
 
 def get_celas1_ostr_oes_oef_ese(model: BDF, ielas, eids, xg, dof_map,
                                 strain, stress, force, strain_energy):
+    asdf
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
         ki = elem.pid_ref.k
@@ -195,6 +220,7 @@ def get_celas1_ostr_oes_oef(model: BDF, ielas, eids, xg, dof_map,
 
 def get_celas1_ostr_oef_ese(model: BDF, ielas, eids, xg, dof_map,
                             strain, stress, force, unused_strain_energy):
+    asdf
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
         ki = elem.pid_ref.k
@@ -215,6 +241,7 @@ def get_celas1_ostr_oes(model: BDF, ielas, eids, xg, dof_map,
 
 def get_celas1_ostr(model: BDF, ielas, eids, xg, dof_map,
                     strain, unused_stress, unused_force, unused_strain_energy):
+    asdf
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
         si = elem.pid_ref.s
@@ -222,6 +249,7 @@ def get_celas1_ostr(model: BDF, ielas, eids, xg, dof_map,
 
 def get_celas1_oes_oef_ese(model: BDF, ielas, eids, xg, dof_map,
                            unused_strain, stress, force, strain_energy):
+    asdf
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
         ki = elem.pid_ref.k
@@ -232,6 +260,7 @@ def get_celas1_oes_oef_ese(model: BDF, ielas, eids, xg, dof_map,
 
 def get_celas1_oes_oef(model: BDF, ielas, eids, xg, dof_map,
                        unused_strain, stress, force, unused_strain_energy):
+    asdf
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
         ki = elem.pid_ref.k
@@ -241,6 +270,7 @@ def get_celas1_oes_oef(model: BDF, ielas, eids, xg, dof_map,
 
 def get_celas1_oes(model: BDF, ielas, eids, xg, dof_map,
                    unused_strain, stress, unused_force, unused_strain_energy):
+    asdf
     for ieid, eid in zip(ielas, eids):
         elem = model.elements[eid]
         ki = elem.pid_ref.k
@@ -403,18 +433,33 @@ def _slice_results(model: BDF,
     return force, stress, strain, strain_energy
 
 
+def _fix_xg(xg):
+    if xg.ndim == 1:
+        ndof = xg.shape
+        nmode = 1
+    else:
+        assert xg.shape == 2, xg.shape
+        ndof, nmode = xg.shape
+        assert nmode == 1, xg.shape
+    return xg, nmode
+
 def _recover_force_celas(f06_file: TextIO, op2: OP2,
                          model: BDF, dof_map: dict[int, int],
                          isubcase: int, xg: np.ndarray, eids_str: str,
                          element_name: str, fdtype='float32',
                          title: str='', subtitle: str='', label: str='',
-                         page_num: int=1, page_stamp='PAGE %s') -> None:
-    """recovers static spring force"""
+                         page_num: int=1, page_stamp='PAGE %s',
+                         write_f06: bool = True,
+                         write_op2: bool = True,
+                         case=None) -> None:
+    """recovers static/modal spring force"""
     neids, ieids, eids = get_ieids_eids(model, element_name, eids_str)
     # print(f'eids_str={eids_str} eids={eids} ieids={eids}')
     if not neids:
         return neids
+    xg, nmode = _fix_xg(xg)
 
+    model.log.warning(f'xg.shape={xg.shape}')
     elem = get_element(model, element_name, ieids, eids)
     k = _celas_ks(model, elem, element_name, ieids)[0]
     dx = _spring_dx(
@@ -422,14 +467,17 @@ def _recover_force_celas(f06_file: TextIO, op2: OP2,
         elem, element_name, neids, ieids, eids,
         fdtype=fdtype)
 
-    force = k * dx
+    force = k[np.newaxis, :, np.newaxis] * dx
+    #assert k.shape == dx.shape, (k.shape, dx.shape)
 
-    write_f06_force = True
-    _save_spring_force(
-        op2, f06_file, page_num, page_stamp,
+    _save_spring_stress_strain_force(
+        op2.op2_results.force, f06_file, page_num, page_stamp,
         element_name,
-        force, eids, write_f06_force,
-        isubcase, title, subtitle, label)
+        force, eids,
+        isubcase, title, subtitle, label,
+        nmode, result_type='force',
+        write_f06=write_f06, write_op2=write_op2,
+        case=case)
     assert neids > 0
     return neids
 
@@ -438,12 +486,16 @@ def _recover_stress_celas(f06_file: TextIO, op2: OP2,
                           isubcase: int, xg: np.ndarray, eids_str: str,
                           element_name: str, fdtype='float32',
                           title: str='', subtitle: str='', label: str='',
-                          page_num: int=1, page_stamp='PAGE %s') -> None:
+                          page_num: int=1, page_stamp='PAGE %s',
+                          write_f06: bool = True,
+                          write_op2: bool = True,
+                          case=None) -> None:
     """recovers static spring force"""
     neids, ieids, eids = get_ieids_eids(model, element_name, eids_str)
     # print(f'eids_str={eids_str} eids={eids} ieids={eids}')
     if not neids:
         return neids
+    xg, nmode = _fix_xg(xg)
 
     elem = get_element(model, element_name, ieids, eids)
     k, s = _celas_ks(model, elem, element_name, ieids)
@@ -452,14 +504,18 @@ def _recover_stress_celas(f06_file: TextIO, op2: OP2,
         elem, element_name, neids, ieids, eids,
         fdtype=fdtype)
 
-    stress = k * s * dx  # this seems wrong
+    ks = k * s
+    stress = ks[:, np.newaxis, :] * dx  # this seems wrong
+    #assert k.shape == dx.shape, (k.shape, dx.shape)
 
-    write_f06_stress = True
-    _save_spring_stress(
+    _save_spring_stress_strain_force(
         op2.op2_results.stress, f06_file, page_num, page_stamp,
         element_name,
-        force, eids, write_f06_stress,
-        isubcase, title, subtitle, label)
+        force, eids, write_f06,
+        isubcase, title, subtitle, label,
+        nmode, result_type='stress',
+        write_f06=write_f06, write_op2=write_op2,
+        case=case)
     assert neids > 0
     return neids
 
@@ -468,28 +524,35 @@ def _recover_strain_celas(f06_file: TextIO, op2: OP2,
                           isubcase: int, xg: np.ndarray, eids_str: str,
                           element_name: str, fdtype='float32',
                           title: str='', subtitle: str='', label: str='',
-                          page_num: int=1, page_stamp='PAGE %s') -> None:
+                          page_num: int=1, page_stamp='PAGE %s',
+                          write_f06: bool = True,
+                          write_op2: bool = True,
+                          case=None) -> None:
     """recovers static spring force"""
     neids, ieids, eids = get_ieids_eids(model, element_name, eids_str)
     # print(f'eids_str={eids_str} eids={eids} ieids={eids}')
     if not neids:
         return neids
+    xg, nmode = _fix_xg(xg)
 
     elem = get_element(model, element_name, ieids, eids)
-    # k, s = _celas_ks(model, elem, element_name, ieids)
+    k, s = _celas_ks(model, elem, element_name, ieids)
     dx = _spring_dx(
         xg, dof_map,
         elem, element_name, neids, ieids, eids,
         fdtype=fdtype)
 
     strain = dx  # this seems wrong
+    assert k.shape == dx.shape, (k.shape, dx.shape)
 
-    write_f06_strain = True
-    _save_spring_strain(
-        op2.op2_results, f06_file, page_num, page_stamp,
+    _save_spring_stress_strain_force(
+        op2.op2_results.strain, f06_file, page_num, page_stamp,
         element_name,
-        force, eids, write_f06_stress,
-        isubcase, title, subtitle, label)
+        force, eids, write_f06,
+        isubcase, title, subtitle, label,
+        nmode, result_type='strain',
+        write_f06=write_f06, write_op2=write_op2,
+        case=case)
     assert neids > 0
     return neids
 
@@ -500,11 +563,13 @@ def _recover_strain_energy_celas(f06_file, op2,
                                  title: str='', subtitle: str='', label: str='',
                                  page_num: int=1, page_stamp='PAGE %s',
                                  write_f06: bool = True,
-                                 write_op2: bool = True) -> None:
+                                 write_op2: bool = True,
+                                 case=None) -> None:
     """recovers static spring strain energy"""
     neids, ieids, eids = get_ieids_eids(model, element_name, eids_str)
     if not neids:
         return neids
+    xg, nmode = _fix_xg(xg)
 
     elem = get_element(model, element_name, ieids, eids)
     k = _celas_ks(model, elem, element_name, ieids)[0]
@@ -514,7 +579,7 @@ def _recover_strain_energy_celas(f06_file, op2,
         fdtype=fdtype)
     
     # 1/2 * k * x^2
-    strain_energy = 0.5 * k * dx ** 2
+    strain_energy = 0.5 * k[:, np.newaxis] * dx ** 2
     assert np.all(np.isfinite(k)), k
     assert np.all(np.isfinite(strain_energy)), strain_energy
 
@@ -523,7 +588,8 @@ def _recover_strain_energy_celas(f06_file, op2,
         element_name,
         strain_energy, eids,
         isubcase, title, subtitle, label,
-        write_f06=write_f06, write_op2=write_op2)
+        write_f06=write_f06, write_op2=write_op2,
+        case=case)
     return neids
 
 
@@ -535,88 +601,95 @@ def _spring_dx(xg: np.ndarray,
                ieids: np.ndarray,
                eids: np.ndarray,
                fdtype: str='float32'):
-    dx = np.full((neids, 1), np.nan, dtype=fdtype)
+    #if xg.ndim == 1:
+    #    ndof = len(xg)
+    ###    nmode = 1
+    #    xg = xg.reshape(ndof, nmode)
+    #else:
+    #    assert xg.shape == 2, xg.shape
+    #    ndof, nmode = xg.shape
+    #    assert nmode == 1, xg.shape
+    ndof, nmode = xg.shape
+
+    dx = np.full((neids, nmode), np.nan, dtype=fdtype)
     if element_name in {'CELAS1', 'CELAS2'}:
         for ieid, eid, nodes, comps in zip(ieids, eids, elem.nodes, elem.components):
             nid1, nid2 = nodes
             c1, c2 = comps
             i = dof_map[(nid1, c1)]
             j = dof_map[(nid2, c2)]
-            dx[ieid] = xg[j] - xg[i]  # TODO: check the sign
+            dx[ieid, :] = xg[j, :] - xg[i, :]  # TODO: check the sign
     elif element_name in {'CELAS3', 'CELAS4'}:
         for ieid, eid, nodes in zip(ieids, eids, elem.spoints):
             nid1, nid2 = nodes
             i = dof_map[(nid1, 0)]
             j = dof_map[(nid2, 0)]
-            dx[ieid] = xg[j] - xg[i]  # TODO: check the sign
+            dx[ieid, :] = xg[j, :] - xg[i, :]  # TODO: check the sign
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
     assert np.all(np.isfinite(dx)), dx
+
+    #if nmode == 1:
+    #    dx = dx.reshape(1, neids, 1)
     return dx
 
 
-def _save_spring_force(op2: OP2, f06_file: TextIO, page_num: int, page_stamp: str,
-                       element_name: str,
-                       force: np.ndarray, eids: np.ndarray,
-                       write_f06_force: bool,
-                       isubcase: int, title: str, subtitle: str,
-                       label: str) -> None:
-    if force is None:
-        return
-    data = force.reshape(1, *force.shape)
-    table_name = 'OEF1'
-    spring_force_obj = RealSpringForceArray.add_static_case(
-        table_name, element_name, eids, data, isubcase,
-        is_sort1=True, is_random=False, is_msc=True,
-        random_code=0, title=title, subtitle=subtitle, label=label)
-
-    force = op2.op2_results.force
-    obj = getattr(force, f'{element_name.lower()}_force')
-    obj[isubcase] = spring_force_obj
-    if write_f06_force:
-        spring_force_obj.write_f06(
-            f06_file, header=None, page_stamp=page_stamp,
-            page_num=page_num, is_mag_phase=False, is_sort1=True)
-
-
-def _save_spring_stress(stress_result,
-                        f06_file, page_num, page_stamp,
-                        element_name,
-                        stress, eids, write_f06_stress: bool,
-                        isubcase: int, title: str, subtitle: str,
-                        label: str) -> None:
-    data = stress.reshape(1, *stress.shape)
-    table_name = 'OES1'
-    spring_stress_obj = RealSpringStressArray.add_static_case(
-        table_name, element_name, eids, data, isubcase,
-        is_sort1=True, is_random=False, is_msc=True,
-        random_code=0, title=title, subtitle=subtitle, label=label)
-
-    obj = getattr(stress_result, f'{element_name.lower()}_stress')
-    obj[isubcase] = spring_stress_obj
-    if write_f06_stress:
-        spring_stress_obj.write_f06(
-            f06_file, header=None, page_stamp=page_stamp,
-            page_num=page_num, is_mag_phase=False, is_sort1=True)
-
-
-def _save_spring_strain(op2, f06_file, page_num, page_stamp,
-                        element_name,
-                        strain, eids, write_f06_strain: bool,
-                        isubcase: int, title: str, subtitle: str,
-                        label: str) -> None:
+def _save_spring_stress_strain_force(
+        results, f06_file, page_num, page_stamp,
+        element_name: str,
+        strain, eids,
+        isubcase: int, title: str, subtitle: str,
+        label: str,
+        nmode: int,
+        result_type: str,
+        case=None,
+        write_op2: bool=True,
+        write_f06: bool=True) -> None:
     if strain is None:
         return
-    data = strain.reshape(1, *strain.shape)
-    table_name = 'OSTR1'
-    spring_strain_obj = RealSpringStrainArray.add_static_case(
-        table_name, element_name, eids, data, isubcase,
-        is_sort1=True, is_random=False, is_msc=True,
-        random_code=0, title=title, subtitle=subtitle, label=label)
+    if case is None:
+        case = {}
+    data = strain
+    #data = strain.reshape(1, *strain.shape)
+ 
+    if result_type == 'stress':
+        table_name = 'OES1'
+        cls = RealSpringStressArray
+    elif result_type == 'strain':
+        table_name = 'OSTR1'
+        cls = RealSpringStrainArray
+    elif result_type == 'force':
+        table_name = 'OEF1'
+        cls = RealSpringForceArray
+    else:  # pragma: no cover
+        raise RuntimeError(result_type)
 
-    obj = getattr(strain_result, f'{element_name.lower()}_strain')
-    obj[isubcase] = spring_strain_obj
-    if write_f06_strain:
-        spring_strain_obj.write_f06(
+    casetype = case.get('type', 'static')
+    if casetype == 'static':
+        assert nmode == 1, data.shape
+        spring_obj = cls.add_static_case(
+            table_name, element_name, eids, data, isubcase,
+            is_sort1=True, is_random=False, is_msc=True,
+            random_code=0, title=title, subtitle=subtitle, label=label)
+    elif casetype == 'modes':
+        eigenvalues = case['eigenvalue']
+        spring_obj = cls.add_modal_case(
+            table_name, element_name, eids, data, isubcase,
+            is_sort1=True, is_random=False, is_msc=True,
+            random_code=0, title=title, subtitle=subtitle, label=label)
+    elif casetype == 'freq':
+        frequency = case['frequency']
+        spring_obj = cls.add_freq_case(
+            table_name, element_name, eids, data, isubcase,
+            is_sort1=True, is_random=False, is_msc=True,
+            random_code=0, title=title, subtitle=subtitle, label=label)
+    else:  # pragma: no cover
+        raise RuntimeError(case)
+
+    obj_dict = getattr(results, f'{element_name.lower()}_{result_type}')
+    if write_op2:
+        obj_dict[isubcase] = spring_obj
+    if write_f06:
+        spring_obj.write_f06(
             f06_file, header=None, page_stamp=page_stamp,
             page_num=page_num, is_mag_phase=False, is_sort1=True)

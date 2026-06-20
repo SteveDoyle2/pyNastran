@@ -46,7 +46,7 @@ def get_rod_pid_prop(model: BDF,
 
 def get_rod_du(xb: np.ndarray,
                dof_map: DOF_MAP,
-               elem, ieids, eids, dxyz):
+               elem, ieids, eids, dxyz, fdtype='float64'):
     neids = len(eids)
     du_axial = np.full(neids, np.nan, dtype=fdtype)
     du_torsion = np.full(neids, np.nan, dtype=fdtype)
@@ -74,7 +74,7 @@ def _recover_dx_rod(xb: np.ndarray,
         xb[i1+3], xb[i1+4], xb[i1+5],
         xb[i2+3], xb[i2+4], xb[i2+5]
     ])
-    Lambda = lambda1d(dxyz12, debug=False)
+    Lambda = lambda1d(dxyz, debug=False)
 
     u_axial = Lambda @ q_axial
     u_torsion = Lambda @ q_torsion
@@ -103,7 +103,7 @@ def _recover_force_rod(f06_file: TextIO, op2: OP2,
 
     _prop, _pid, A, J, E, G = get_rod_pid_prop(model, elem, element_name)
     du_axial, du_torsion = get_rod_du(
-        xb, dof_map, elem, ieids, eids, dxyz)
+        xb, dof_map, elem, ieids, eids, dxyz, fdtype=fdtype)
 
     axial_force = A * E * du_axial / L
     torsional_moment = du_torsion * G * J / L
@@ -157,7 +157,7 @@ def _recover_stress_rod(
 
     prop, pid, A, J, E, G = get_rod_pid_prop(model, elem, element_name)
     du_axial, du_torsion = get_rod_du(
-        xb, dof_map, elem, ieids, eids, dxyz)
+        xb, dof_map, elem, ieids, eids, dxyz, fdtype=fdtype)
 
     #axial_strain = np.zeros(neids, dtype=dtype)
     #torsional_moment = np.zeros(neids, dtype=dtype)
@@ -186,7 +186,7 @@ def _recover_stress_rod(
 
     #headers = ['axial', 'SMa', 'torsion', 'SMt']
     # SM fields are NaN (safety margin not computed)
-    nan = np.full(neids, np.nan, dtype=dtype)
+    nan = np.full(neids, np.nan, dtype=fdtype)
     stresses = np.column_stack([axial_stress, nan, torsional_stress, nan])
 
     data = stresses.reshape(1, *stresses.shape)
@@ -252,7 +252,7 @@ def _recover_strain_rod(
 
     _prop, _pid, A, J, E, G = get_rod_pid_prop(model, elem, element_name)
     du_axial, du_torsion = get_rod_du(
-        xb, dof_map, elem, ieids, eids, dxyz)
+        xb, dof_map, elem, ieids, eids, dxyz, fdtype=fdtype)
 
     axial_strain = du_axial / L
     torsional_strain = du_torsion / L
@@ -262,7 +262,7 @@ def _recover_strain_rod(
 
     #headers = ['axial', 'SMa', 'torsion', 'SMt']
     # SM fields are NaN (safety margin not computed)
-    nan = np.full(neids, np.nan, dtype=dtype)
+    nan = np.full(neids, np.nan, dtype=fdtype)
     strains = np.column_stack([axial_strain, nan, torsional_strain, nan])
 
     data = strains.reshape(1, *strains.shape)
@@ -318,7 +318,7 @@ def _recover_strain_energy_rod(
 
     _prop, _pid, A, J, E, G = get_rod_pid_prop(model, elem, element_name)
     du_axial, du_torsion = get_rod_du(
-        xb, dof_map, elem, ieids, eids, dxyz)
+        xb, dof_map, elem, ieids, eids, dxyz, fdtype=fdtype)
 
     k_axial = E * A / L
     k_torsion = G * J / L

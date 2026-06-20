@@ -103,21 +103,36 @@ def save_strain_energy(
     isubcase: int,
     title: str, subtitle: str, label: str,
     write_f06: bool=True,
-    write_op2: bool=True) -> None:
+    write_op2: bool=True,
+    case=None) -> None:
     """Save strain energy results to OP2 and write F06."""
     if strain_energy is None:
         warnings.warn(f'no strain energy for {element_name}')
     if strain_energy.sum() == 0.0:
         warnings.warn(f'empty strain energy for {element_name}')
         return
+    
+    if case is None:
+        case = {}
     data = strain_energy.reshape(1, *strain_energy.shape)
     assert np.all(np.isfinite(data)), data
     table_name = 'ONRGY1'
     #try:
-    se_obj = RealStrainEnergyArray.add_static_case(
-        table_name, element_name, eids, data, isubcase,
-        is_sort1=True, is_random=False, is_msc=True,
-        random_code=0, title=title, subtitle=subtitle, label=label)
+
+    case_type = case.get('type', 'static')
+    if case_type == 'static':
+        se_obj = RealStrainEnergyArray.add_static_case(
+            table_name, element_name, eids, data, isubcase,
+            is_sort1=True, is_random=False, is_msc=True,
+            random_code=0, title=title, subtitle=subtitle, label=label)
+    elif case_type == 'modes':
+        eigenvalue = case['eigenvalue']
+        se_obj = RealStrainEnergyArray.add_modal_case(
+            table_name, element_name, eids, data, isubcase,
+            is_sort1=True, is_random=False, is_msc=True,
+            random_code=0, title=title, subtitle=subtitle, label=label)
+    else:
+        raise RuntimeError(case)
     #except (KeyError, NotImplementedError, AssertionError):
     #    return
 

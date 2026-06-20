@@ -171,7 +171,7 @@ def _recover_strain_cbar(
     strains = np.full((neids, 15), np.nan, dtype=fdtype)
 
     v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
-    Teb = beam_transforms(ihat, jhat, khat)
+    Teb = beam_transforms(ihat, yhat, zhat)
 
     for (ieid, eid, nodes, Li, Ai, Ii, Ji, Ei, Gi,
          vi, Tebi, ihati, yhati, zhati, wai, wbi, cdefi) in zip(

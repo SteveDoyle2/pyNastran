@@ -128,6 +128,10 @@ def _recover_force_celas(f06_file: TextIO, op2,
     slot = getattr(forces, element_name.lower() + '_force')
     modal_obj: RealSpringForceArray = slot[isubcase]
 
+    heo = modal_obj.data.shape
+    assert modal_obj.data.ndim == 3, heo
+    assert modal_obj.data.shape[2] == 1, heo
+
     nfreq = len(freqs)
     # nmode = xq.shape[0]
 
@@ -137,10 +141,11 @@ def _recover_force_celas(f06_file: TextIO, op2,
     # f: frequency
     # h: modal
     # o: one
+    fh = xq.shape
+
     assert xq.ndim == 2, xq.shape
-    assert modal_obj.data.ndim == 3, modal_obj.data.shape
     force = np.einsum('fh,heo->feo', xq, modal_obj.data)
-    assert force.shape == (nfreq, neid, 1), force.shape
+    assert force.shape == (nfreq, neid, 1), (fh, heo, force.shape)
 
     # nmode = xq.shape[0]
     table_name = 'OEF1'
@@ -159,6 +164,8 @@ def _recover_force_celas(f06_file: TextIO, op2,
         freqs,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
+    assert obj.data.shape[2] == 1, obj.data.shape
+
     slot[isubcase] = obj
 
     header = ['', '', '']

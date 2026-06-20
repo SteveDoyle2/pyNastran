@@ -486,7 +486,7 @@ def thermal_load_beam(
 
 def beam_transforms(ihat, jhat, khat):
     neid = len(ihat)
-    Tebs = np.full((neid, 12, 12), dtype="float64")
+    Teb = np.zeros((neid, 12, 12), dtype="float64")
     for i in range(4):
         r = i * 3
         Teb[:, r, r] = ihat[:, 0]
@@ -498,7 +498,7 @@ def beam_transforms(ihat, jhat, khat):
         Teb[:, r + 2, r] = khat[0]
         Teb[:, r + 2, r + 1] = khat[:, 1]
         Teb[:, r + 2, r + 2] = khat[:, 2]
-    return Tebs
+    return Teb
 
 def beam_transform(
     ihat: np.ndarray,
