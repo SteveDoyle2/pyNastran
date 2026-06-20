@@ -1,0 +1,26 @@
+$pyNastran: version=msc
+$pyNastran: punch=False
+$pyNastran: encoding=utf-8
+$EXECUTIVE CONTROL DECK
+SOL 101
+CEND
+$CASE CONTROL DECK
+DISPLACEMENT(PLOT,PRINT) = ALL
+ESE(PLOT,PRINT) = ALL
+SPCFORCES(PLOT,PRINT) = ALL
+SUBCASE 1
+    LOAD = 2
+    SPC = 3
+BEGIN BULK
+$SPOINTS
+SPOINT         1    THRU       5
+CELAS1         4      20       4               5
+CELAS2         3   2000.       3               4
+CELAS3         2      10       2       3
+CELAS4         1   1000.       1       2
+PELAS         10    500.
+PELAS         20    800.
+$LOADS
+SLOAD          2       5     10.
+$SPCs
+SPC1           3               1

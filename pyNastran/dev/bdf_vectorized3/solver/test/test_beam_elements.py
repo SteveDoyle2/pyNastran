@@ -19,6 +19,8 @@ import unittest
 import numpy as np
 from scipy.linalg import eig
 
+
+from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.dev.bdf_vectorized3.bdf import BDF as BDF3
 
 from pyNastran.dev.bdf_vectorized3.solver.solver import Solver
@@ -36,7 +38,8 @@ from pyNastran.dev.bdf_vectorized3.solver.matrices.build_stiffness import build_
 from pyNastran.dev.bdf_vectorized3.solver.recover.beam import (
     beam_stress_at_points, recover_beam_force)
 
-DIRNAME = Path(__file__).parent / '_nastran'
+#DIRNAME = Path(__file__).parent / '_nastran'
+DIRNAME = Path(__file__).parent / 'examples'
 
 
 
@@ -440,7 +443,6 @@ class TestSolverBeam(unittest.TestCase):
             "  SPC = 1",
             "  LOAD = 1",
         ]
-        from pyNastran.bdf.case_control_deck import CaseControlDeck
         model.case_control_deck = CaseControlDeck(cc_lines)
         model.sol = 101
         model.setup(run_geom_check=True)
@@ -571,7 +573,6 @@ class TestSolverBeam(unittest.TestCase):
         model.add_force(sid=1, node=n_elem + 1, mag=1.0, xyz=[Px, Py, Pz])
         model.add_moment(sid=1, node=n_elem + 1, mag=Mx, xyz=[1.0, 0.0, 0.0])
 
-        from pyNastran.bdf.case_control_deck import CaseControlDeck
         model.case_control_deck = CaseControlDeck([
             "SUBCASE 1", "  SPC = 1", "  LOAD = 1",
         ])

@@ -13,7 +13,7 @@ from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
 
 PKG_PATH = Path(pyNastran.__path__[0])
 # TEST_DIR = PKG_PATH / 'dev' / 'solver'
-TEST_DIR = Path(__file__).parent
+TEST_DIR = Path(__file__).parent / 'examples'
 MODEL_PATH = PKG_PATH / '..' / 'models'
 
 

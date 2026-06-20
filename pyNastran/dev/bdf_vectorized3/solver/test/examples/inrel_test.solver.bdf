@@ -1,0 +1,33 @@
+$pyNastran: version=msc
+$pyNastran: punch=False
+$pyNastran: encoding=utf-8
+$EXECUTIVE CONTROL DECK
+SOL 101
+CEND
+$CASE CONTROL DECK
+DISPLACEMENT(PLOT,PRINT) = ALL
+SUBCASE 1
+    LOAD = 2
+    SPC = 3
+BEGIN BULK
+$PARAMS
+PARAM      INREL      -2
+$NODES
+GRID           1              0.      0.      0.
+GRID           2              1.      0.      0.
+GRID           3              2.      0.      0.
+CBAR           1       1       1       2      0.      1.      0.
+CBAR           2       1       2       3      0.      1.      0.
+PBAR           1       1      1.   .0833   .0833   .1666
+$MATERIALS
+MAT1           1    1.+7              .3      .1
+$MASSES
+CONM2        101       1       0      1.
+CONM2        102       2       0      1.
+CONM2        103       3       0      1.
+$LOADS
+FORCE          2       3              1.      0.      1.      0.
+$SPCs
+SPC1           3  123456       1
+$CONSTRAINTS
+SUPORT         1  123456

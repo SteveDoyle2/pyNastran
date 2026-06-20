@@ -1,0 +1,35 @@
+$pyNastran: version=msc
+$pyNastran: punch=False
+$pyNastran: encoding=utf-8
+$EXECUTIVE CONTROL DECK
+SOL 101
+CEND
+$CASE CONTROL DECK
+DISPLACEMENT(PLOT,PRINT) = ALL
+ESE(PLOT,PRINT) = ALL
+FORCE(PLOT,PRINT) = ALL
+GPFORCE(PLOT,PRINT) = ALL
+MPCFORCES(PLOT,PRINT) = ALL
+OLOAD(PLOT,PRINT) = ALL
+SPCFORCES(PLOT,PRINT) = ALL
+STRAIN(PLOT,PRINT) = ALL
+STRESS(PLOT,PRINT) = ALL
+SUBCASE 1
+    LOAD = 2
+    SPC = 3
+BEGIN BULK
+$NODES
+GRID           1              0.      0.      0.
+GRID           2              .5      0.      0.
+GRID           3              1.      0.      0.
+CBAR           1       2       1       2      0.      1.      0.
+CBAR           2       2       2       3      0.      1.      0.
+PBAR           2       3      1.      1.      1.      1.
++
+                              1.
+$MATERIALS
+MAT1           3    3.+7              .3
+$LOADS
+FORCE          2       3              1.      1.      0.      0.
+$SPCs
+SPC1           3  123456       1

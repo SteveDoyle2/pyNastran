@@ -1,0 +1,46 @@
+$pyNastran: version=msc
+$pyNastran: punch=False
+$pyNastran: encoding=utf-8
+$EXECUTIVE CONTROL DECK
+SOL 111
+CEND
+$CASE CONTROL DECK
+SET 2 = 2, 3
+SET 3 = 2
+ACCELERATION(PLOT,PRINT) = 3
+DISPLACEMENT(PLOT,PRINT) = ALL
+FORCE(PLOT,PRINT) = ALL
+OLOAD(PLOT,PRINT) = ALL
+SPCFORCES(PLOT,PRINT) = ALL
+STRAIN(PLOT,PRINT) = ALL
+STRESS(PLOT,PRINT) = ALL
+VELOCITY(PLOT,PRINT) = 2
+SUBCASE 1
+    FREQUENCY = 100
+    LOAD = 2
+    METHOD = 103
+    SPC = 3
+BEGIN BULK
+$NODES
+GRID           1              0.      0.      0.
+GRID           2              1.      0.      0.
+GRID           3              2.      0.      0.
+CELAS2        101000000.       1       1       2       1
+CELAS2        111000000.       2       1       3       1
+$MASSES
+CONM2         12       2       0      3.
+CONM2         13       3       0      3.
+DAREA         10       3       1      1.
+RLOAD1         3      10                      1.            LOAD
+$DYNAMIC
+EIGRL        103                       2
+FREQ1        100      1.      1.    2000
+FREQ         100      .5  1000.5
+FREQ2        100     20.     40.       6
+FREQ3        100     10.   2000.  LINEAR      10      1.
+FREQ3        100    500.    500.  LINEAR      10      1.
+FREQ4        100      1.   2000.      .1       3
+FREQ5        100     20.    200.      .6      .8      .9     .95      1.
+            1.05     1.1     1.2
+$SPCs
+SPC1           3  123456       1
