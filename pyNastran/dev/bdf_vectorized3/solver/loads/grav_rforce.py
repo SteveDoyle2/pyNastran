@@ -19,8 +19,7 @@ from pyNastran.f06.errors import FatalError
 
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     beam_pg_distributed, beam_pg_point,
-    consistent_mass, lumped_mass,
-    beam_transform,)
+    consistent_mass, lumped_mass,)
 DOF_MAP = dict[tuple[int, int], int]
 Array = np.ndarray
 

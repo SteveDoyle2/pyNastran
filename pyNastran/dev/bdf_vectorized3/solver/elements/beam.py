@@ -36,8 +36,7 @@ def timoshenko_stiffness(
     pa: int = 0,
     pb: int = 0,
     s1: float = 0.0,
-    s2: float = 0.0,
-) -> np.ndarray:
+    s2: float = 0.0,) -> np.ndarray:
     """12x12 Timoshenko beam stiffness in element local coordinates.
 
     Uses the flexibility-based method with 3-point Gauss-Legendre quadrature,
@@ -75,6 +74,11 @@ def timoshenko_stiffness(
     -------
     K : np.ndarray, shape (12, 12)
     """
+    EA = E * A
+    GJ = G * J
+    assert EA > 0, (EA, E, A)
+    assert GJ > 0, (GJ, G, J)
+
     n_gauss = 3
     s_pts = _GAUSS3_S
     weights = _GAUSS3_W
@@ -83,15 +87,15 @@ def timoshenko_stiffness(
     # Axial flexibility
     f_ax = 0.0
     for ig in range(n_gauss):
-        f_ax += weights[ig] * dx_dxi / (E * A)
+        f_ax += weights[ig] * dx_dxi / EA
     k_ax = 1.0 / f_ax
 
     # Torsion flexibility
-    if G * J == 0.0:
+    if GJ == 0.0:
         raise FatalError(f'G*J=0 (G={G}, J={J}); torsional stiffness is undefined')
     f_tx = 0.0
     for ig in range(n_gauss):
-        f_tx += weights[ig] * dx_dxi / (G * J)
+        f_tx += weights[ig] * dx_dxi / GJ
     k_tx = 1.0 / f_tx
 
     # Bending flexibility integrals
@@ -194,8 +198,7 @@ def consistent_mass(
     J: float,
     k1: float,
     k2: float,
-    nsm: float = 0.0,
-) -> np.ndarray:
+    nsm: float = 0.0,) -> np.ndarray:
     """12x12 consistent Timoshenko beam mass matrix in element local coords.
 
     Includes translational inertia, rotary inertia, and coupling.
@@ -330,7 +333,6 @@ def consistent_mass(
     M[8, 10] = M[10, 8] = b2 * m_total * L
     M[4, 4] = M[10, 10] = e2 * m_total * L2
     M[4, 10] = M[10, 4] = -f2 * m_total * L2
-
     return M
 
 
@@ -344,8 +346,7 @@ def geometric_stiffness(
     J: float,
     k1: float,
     k2: float,
-    P: float,
-) -> np.ndarray:
+    P: float,) -> np.ndarray:
     """12x12 geometric (differential) stiffness for a beam under axial load P.
 
     Uses the EB formula P/(30L)*[36, 3L, ...] which matches NX Nastran KDGG
@@ -439,8 +440,7 @@ def thermal_load_beam(
     ihat: np.ndarray,
     jhat: np.ndarray,
     khat: np.ndarray,
-    dT: float,
-) -> np.ndarray:
+    dT: float,) -> np.ndarray:
     """12-component thermal load vector for a uniform temperature beam.
 
     Parameters
@@ -502,61 +502,35 @@ def beam_transforms(ihat, jhat, khat):
         Teb[:, r + 2, r + 2] = khat[:, 2]
     return Teb
 
-def beam_transform(
-    ihat: np.ndarray,
-    jhat: np.ndarray,
-    khat: np.ndarray,
-) -> np.ndarray:
-    """Build the 12x12 coordinate transformation from element to basic.
 
-    Parameters
-    ----------
-    ihat, jhat, khat : np.ndarray, shape (3,)
-        Unit vectors of the element coordinate system.
-
-    Returns
-    -------
-    Teb : np.ndarray, shape (12, 12)
-    """
-    Teb = np.zeros((12, 12), dtype="float64")
-    for i in range(4):
-        r = i * 3
-        Teb[r, r] = ihat[0]
-        Teb[r, r + 1] = ihat[1]
-        Teb[r, r + 2] = ihat[2]
-        Teb[r + 1, r] = jhat[0]
-        Teb[r + 1, r + 1] = jhat[1]
-        Teb[r + 1, r + 2] = jhat[2]
-        Teb[r + 2, r] = khat[0]
-        Teb[r + 2, r + 1] = khat[1]
-        Teb[r + 2, r + 2] = khat[2]
-    return Teb
-
-
-def recover_beam_force(
-    Ke: np.ndarray,
-    Teb: np.ndarray,
-    q_basic: np.ndarray,) -> np.ndarray:
-    """Recover element internal forces from global displacements.
-
-    Parameters
-    ----------
-    Ke : np.ndarray, shape (12, 12)
-        Element stiffness in element local coordinates.
-    Teb : np.ndarray, shape (12, 12)
-        Transformation from element to basic coordinates.
-    q_basic : np.ndarray, shape (12,)
-        Nodal displacements in basic coordinates.
-
-    Returns
-    -------
-    Fe : np.ndarray, shape (12,)
-        Element forces in element local coordinates.
-        [Fx1, Fy1, Fz1, Mx1, My1, Mz1, Fx2, Fy2, Fz2, Mx2, My2, Mz2]
-    """
-    q_element = Teb @ q_basic
-    Fe = Ke @ q_element
-    return Fe
+#def beam_transform(
+#    ihat: np.ndarray,
+#    jhat: np.ndarray,
+#    khat: np.ndarray,) -> np.ndarray:
+#    """Build the 12x12 coordinate transformation from element to basic.
+#
+#    Parameters
+#    ----------
+#    ihat, jhat, khat : np.ndarray, shape (3,)
+#        Unit vectors of the element coordinate system.
+#
+#    Returns
+#    -------
+#    Teb : np.ndarray, shape (12, 12)
+#    """
+#    Teb = np.zeros((12, 12), dtype="float64")
+#    for i in range(4):
+#        r = i * 3
+#        Teb[r, r] = ihat[0]
+#        Teb[r, r + 1] = ihat[1]
+#        Teb[r, r + 2] = ihat[2]
+#        Teb[r + 1, r] = jhat[0]
+#        Teb[r + 1, r + 1] = jhat[1]
+#        Teb[r + 1, r + 2] = jhat[2]
+#        Teb[r + 2, r] = khat[0]
+#        Teb[r + 2, r + 1] = khat[1]
+#        Teb[r + 2, r + 2] = khat[2]
+#    return Teb
 
 
 # =============================================================================

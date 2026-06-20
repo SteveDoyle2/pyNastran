@@ -20,12 +20,38 @@ from pyNastran.f06.errors import FatalError
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     beam_pg_distributed, beam_pg_point,
     consistent_mass, lumped_mass,
-    beam_transform,)
+    beam_transforms,)
 #-----------------------------------------------
 
 
 def apply_pload1(model, load, scale, Fb, dof_map, log):
     """Apply PLOAD1 (distributed/concentrated loads on CBAR/CBEAM) to Fb."""
+
+    load_eids = load.element_id
+    eids_bar  = np.intersect1d(model.cbar.element_id, load_eids)
+    eids_beam = np.intersect1d(model.cbeam.element_id, load_eids)
+    all_eids = np.union1d(eids_bar, eids_beam)
+    missing_eids = np.setdiff1d(load_eids, all_eids)
+    if elem is None:
+        log.warning(f"  PLOAD1: element {missing_eids} not found")
+
+    ibar = np.array([i for i, eid in enumerate(load.element)
+                     if eid in eids_bar])
+    ibeam = np.array([i for i, eid in enumerate(load.element)
+                      if eid in eids_beam])
+
+    if len(ibar):
+        i = ibar
+        eid = load.element_id[i]
+        elem = model.cbar.slice_card_by_id(eid)
+        set_Fb(model, elem, load, ibar, Fb, dof_map, scale=scale)
+
+    if len(ibeam):
+        i = ibeam
+        eid = load.element_id[i]
+        elem = model.cbeam.slice_card_by_id(eid)
+        set_Fb(model, elem, load, ibeam, Fb, dof_map, scale=scale)
+    return
     for i_load in range(load.n):
         eid = load.element_id[i_load]
         load_type = str(load.load_type[i_load]).strip()
@@ -34,6 +60,7 @@ def apply_pload1(model, load, scale, Fb, dof_map, log):
         p1, p2 = load.pressure[i_load]
 
         # Find the element (CBAR or CBEAM)
+        # TODO: split this...
         elem = None
         for e in [model.cbar, model.cbeam]:
             if e.n == 0:
@@ -52,6 +79,8 @@ def apply_pload1(model, load, scale, Fb, dof_map, log):
         xyz2i = xyz2[0]
         L = np.linalg.norm(xyz2i - xyz1i)
         v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
+        Teb = beam_transform(ihat[0], yhat[0], zhat[0])
+
         e_g_nus = elem.e_g_nu()
         E_val, G_val, nu_val = e_g_nus[0]
         inertia = elem.inertia()
@@ -119,10 +148,113 @@ def apply_pload1(model, load, scale, Fb, dof_map, log):
             )
 
         # Transform to basic and assemble
-        Teb = beam_transform(ihat[0], yhat[0], zhat[0])
         PG = Teb.T @ fe
 
         nid1, nid2 = elem.nodes[0]
+        gi1 = dof_map[(nid1, 1)]
+        gi2 = dof_map[(nid2, 1)]
+        Fb[gi1:gi1 + 6] += PG[:6]
+        Fb[gi2:gi2 + 6] += PG[6:]
+
+
+def set_Fb(model: BDF,
+           elem, load, ibar,
+           Fb, dof_map, scale: float=1.0):
+    xyz1, xyz2 = elem.get_xyz()
+    LAIJEG = elem.stiffness_info()
+    # columns: [length, area, I1, I2, I12, J, k1, k2, E, G]
+    assert LAIJEG.shape[1] == 10, LAIJEG.shape
+    L = LAIJEG[:, 0]
+    A = LAIJEG[:, 1]
+    I = LAIJEG[:, [2, 3, 4]]
+    J = LAIJEG[:, 5]
+    k1 = LAIJEG[:, 6] 
+    k2 = LAIJEG[:, 7]
+    E = LAIJEG[:, 8]
+    G = LAIJEG[:, 9]
+
+    # Get element properties
+    xyz1, xyz2 = elem.get_xyz()
+    iload = np.arange(load.n)[ibar]
+
+    v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
+    Teb = beam_transforms(ihat, yhat, zhat)
+
+    #e_g_nus = elem.e_g_nu()
+    #E_val, G_val, nu_val = e_g_nus[0]
+    #inertia = elem.inertia()
+    #I1, I2, I12, J_val = inertia[0]
+    for (i, (nid1, nid2), xyz1i, xyz2i, Li, Ai, (i1, i2, i12i), Ji,
+            k1i, k2i, Tebi, Ei, Gi) in zip(
+            iload, elem.nodes, xyz1, xyz2,
+            L, A, I, J, k1, k2, Teb, E, G):
+        eid = load.element_id[i]
+        load_type = load.load_type[i]
+        scale_type = load.scale[i]
+        x1, x2 = load.x[i]
+        p1, p2 = load.pressure[i]
+
+        # Convert scale type to actual x positions
+        if scale_type in ("FR", "FRPR"):
+            xa = x1 * Li
+            xb = x2 * Li
+        else:
+            xa = x1
+            xb = x2
+
+        # Determine load direction in element local coords
+        # FX/FY/FZ = basic coord; FXE/FYE/FZE = element coord
+        is_element = load_type.endswith("E")
+        base_type = load_type.rstrip("E")
+
+        qx = qy = qz = 0.0
+        qx_end = qy_end = qz_end = 0.0
+        is_force = base_type.startswith("F")
+
+        if is_force:
+            direction = base_type[1]  # X, Y, or Z
+            if is_element:
+                if direction == "X":
+                    qx, qx_end = p1, p2
+                elif direction == "Y":
+                    qy, qy_end = p1, p2
+                else:
+                    qz, qz_end = p1, p2
+            else:
+                # Basic coord -> element local via rotation
+                T = Tebi
+                if direction == "X":
+                    q_basic = np.array([1.0, 0.0, 0.0])
+                elif direction == "Y":
+                    q_basic = np.array([0.0, 1.0, 0.0])
+                else:
+                    q_basic = np.array([0.0, 0.0, 1.0])
+                q_local = T @ q_basic
+                qx, qy, qz = p1 * q_local
+                qx_end, qy_end, qz_end = p2 * q_local
+        else:
+            # Moment loads (MX, MY, MZ) — not yet supported
+            model.log.warning(f"  PLOAD1: moment load type {load_type} not yet supported")
+            continue
+
+        # Point load vs distributed
+        is_point = abs(xa - xb) < 1e-14 * L
+        if is_point:
+            fe = beam_pg_point(
+                qx * scale, qy * scale, qz * scale,
+                xa, Li, Ei, Gi, areai, i1i, i2i, k1i, k2i,
+            )
+        else:
+            fe = beam_pg_distributed(
+                qx * scale, qy * scale, qz * scale,
+                Li, Ei, Gi, areai, i1i, i2i, k1i, k2i,
+                x_start=xa, x_end=xb,
+                qx_end=qx_end * scale, qy_end=qy_end * scale, qz_end=qz_end * scale,
+            )
+
+        # Transform to basic and assemble
+        PG = Teb.T @ fe
+
         gi1 = dof_map[(nid1, 1)]
         gi2 = dof_map[(nid2, 1)]
         Fb[gi1:gi1 + 6] += PG[:6]

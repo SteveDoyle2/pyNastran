@@ -374,7 +374,7 @@ class CBEAM(Element):
 
     def stiffness_info(self) -> np.ndarray:
         """
-        [L, rho, A, ]
+        [L, rho, A, i1, i2, i12, j, k1, k2, s1, s2, E, G]
         """
         pid = self.property_id
         npid = len(pid)
@@ -382,6 +382,12 @@ class CBEAM(Element):
         area = np.full(npid, np.nan, dtype='float64')
         I = np.full((npid, 3), np.nan, dtype='float64')
         J = np.full(npid, np.nan, dtype='float64')
+
+        k1 = np.full(npid, np.nan, dtype='float64')
+        k2 = np.full(npid, np.nan, dtype='float64')
+        s1 = np.full(npid, np.nan, dtype='float64')
+        s2 = np.full(npid, np.nan, dtype='float64')
+
         E = np.full(npid, np.nan, dtype='float64')
         G = np.full(npid, np.nan, dtype='float64')
         for prop in self.allowed_properties:
@@ -389,17 +395,24 @@ class CBEAM(Element):
             if len(i_lookup) == 0:
                 continue
             # we're at least using some properties
-            breakdowni = prop.stiffness_info() # [area, I, J]
+            # [area, I, J, k1, k2, s1, s2]
+            breakdowni = prop.prop_stiffness_info()
             area[i_lookup] = breakdowni[i_all, 0]
             #print(prop.type, i_lookup, i_all, breakdowni.shape)
             I[i_lookup, :] = breakdowni[i_all, :][:, [1, 2, 3]]
             J[i_lookup] = breakdowni[i_all, 4]
 
+            k1[i_lookup] = breakdowni[i_all, 5]
+            k2[i_lookup] = breakdowni[i_all, 6]
+            s1[i_lookup] = breakdowni[i_all, 7]
+            s2[i_lookup] = breakdowni[i_all, 8]
+
             mat1 = self.model.mat1.slice_card_by_material_id(prop.material_id)
             E[i_lookup] = mat1.E
             G[i_lookup] = mat1.G
         length = self.length()
-        breakdown = np.column_stack([length, area, I, J, E, G])
+        breakdown = np.column_stack([length, area, I, J, k1, k2, s1, s2,
+                                     E, G])
         return breakdown
 
     @parse_check
@@ -2050,12 +2063,13 @@ class PBEAM(Property):
         assert len(inertias) == nproperties
         return inertias
 
-    def stiffness_info(self) -> np.ndarray:
-        """[area, I1, I2, I12, J]"""
-        length = self.length()
+    def prop_stiffness_info(self) -> np.ndarray:
+        """[area, I1, I2, I12, J, k1, k2, s1, s2]"""
         area = self.area()
         inertia = self.inertia()
-        breakdown = np.column_stack([length, area, inertia])
+        breakdown = np.column_stack([
+            area, inertia,
+            self.k1, self.k2, self.s1, self.s2])
         return breakdown
 
     def to_old_card(self) -> list[Any]:

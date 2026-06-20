@@ -13,8 +13,7 @@ from .utils import get_plot_request
 from .static_spring import _recover_force_celas
 from .rod import _recover_force_rod
 from .bar import _recover_force_cbar
-from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
-    recover_beam_force,)
+from .beam import _recover_force_cbeam
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf_vectorized3.bdf import BDF, Subcase
@@ -61,7 +60,7 @@ def recover_force_101(f06_file: TextIO, op2: OP2,
         'CBAR', fdtype=fdtype,
         title=title, subtitle=subtitle, label=label,
         page_num=page_num, page_stamp=page_stamp)
-    nelements += _recover_force_cbar(
+    nelements += _recover_force_cbeam(
         f06_file, op2, model, dof_map, isubcase, xb, eid_str,
         'CBEAM', fdtype=fdtype,
         title=title, subtitle=subtitle, label=label,

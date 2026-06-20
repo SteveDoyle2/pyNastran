@@ -10,17 +10,43 @@ from pyNastran.op2.op2_interface.op2_classes import (
     RealBarStrainArray,
     RealBarStressArray,
 )
-from .utils import fix_xb_shape
+from .utils import save_strain_energy, fix_xb_shape
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     timoshenko_stiffness,
     beam_transforms,
-    recover_beam_force,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf_vectorized3.bdf import BDF, Subcase
     from pyNastran.bdf_vectorized3.cards import CBAR, PBAR, PBARL
 DOF_MAP = dict[tuple[int, int], int]
+
+
+def recover_beam_force(
+    Ke: np.ndarray,
+    Teb: np.ndarray,
+    q_basic: np.ndarray,) -> np.ndarray:
+    """Recover element internal forces from global displacements.
+
+    Parameters
+    ----------
+    Ke : np.ndarray, shape (12, 12)
+        Element stiffness in element local coordinates.
+    Teb : np.ndarray, shape (12, 12)
+        Transformation from element to basic coordinates.
+    q_basic : np.ndarray, shape (12,)
+        Nodal displacements in basic coordinates.
+
+    Returns
+    -------
+    Fe : np.ndarray, shape (12,)
+        Element forces in element local coordinates.
+        [Fx1, Fy1, Fz1, Mx1, My1, Mz1, Fx2, Fy2, Fz2, Mx2, My2, Mz2]
+    """
+    #q_element = Teb @ q_basic
+    #Fe = Ke @ q_element
+    Fe = Ke @ Teb @ q_basic
+    return Fe
 
 
 def _get_beam_recovery_points(model: BDF, elem) -> np.ndarray:
@@ -64,15 +90,16 @@ def _recover_force_cbeam(f06_file: TextIO, op2,
 
     LAIJEG = elem.stiffness_info()
     # columns: [length, area, I1, I2, I12, J, E, G]
-    L = LAIJEG[:, 0]
-    A = LAIJEG[:, 1]
-    I = LAIJEG[:, [2, 3, 4]]
-    J = LAIJEG[:, 5]
-    E = LAIJEG[:, 6]
-    G = LAIJEG[:, 7]
-    assert isinstance(J, np.ndarray), (elem.type, J)
-    assert isinstance(A, np.ndarray), (elem.type, A)
-    assert isinstance(E, np.ndarray), (elem.type, E)
+    #L = LAIJEG[:, 0]
+    #A = LAIJEG[:, 1]
+    #I = LAIJEG[:, [2, 3, 4]]
+    #J = LAIJEG[:, 5]
+    #k1
+    #k2
+    #s1
+    #s2
+    #E = LAIJEG[:, 10]
+    #G = LAIJEG[:, 11]
 
     Fe = get_beam_force_fe(
         model, xb, dof_map, elem, ieids, neids,
@@ -102,21 +129,20 @@ def _recover_force_cbeam(f06_file: TextIO, op2,
     bending_moment_b1 = My2
     bending_moment_b2 = Mz2
 
-    forces2 = np.column_stack([
+    force = np.column_stack([
         bending_moment_a1, bending_moment_a2,
         bending_moment_b1, bending_moment_b2,
         shear1, shear2, axial, torque])
-    assert np.allclose(forces, forces2)
 
-    data = forces.reshape(nmode, neids, 8)
+    data = force.reshape(nmode, neids, 8)
     table_name = 'OEF1'
     force_obj = RealCBarForceArray.add_static_case(
         table_name, 'CBAR', eids, data, isubcase,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
 
-    force = op2.op2_results.force
-    force.cbeam_force[isubcase] = force_obj
+    force_dict = op2.op2_results.force
+    force_dict.cbeam_force[isubcase] = force_obj
 
     force_obj.write_f06(f06_file, header=None, page_stamp=page_stamp,
                         page_num=page_num, is_mag_phase=False, is_sort1=True)
@@ -129,30 +155,60 @@ def get_beam_force_fe(model: BDF,
                       elem: CBAR,
                       ieids, neids: int,
                       LAIJEG: np.ndarray, fdtype='float32'):
+
     xyz1 = model.grid.get_position_by_node_id(elem.nodes[:, 0])
     xyz2 = model.grid.get_position_by_node_id(elem.nodes[:, 1])
 
+    v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
+    Teb = beam_transforms(ihat, yhat, zhat)
+
+    q_basic, Ke = get_beam_force_Ku(
+        model, xb, dof_map,
+        elem, ieids, neids,
+        LAIJEG, fdtype=fdtype)
+
+    #Fe = Ke @ Teb @ q_basic
+    Fe = np.einsum('ntu,nuv,nv->nt', Ke, Teb, q_basic)
+    return Fe
+
+
+def get_beam_force_Ku(model: BDF,
+                      xb: np.ndarray,
+                      dof_map: DOF_MAP,
+                      elem: CBAR,
+                      ieids, neids: int,
+                      LAIJEG: np.ndarray, fdtype='float32'):
     L = LAIJEG[:, 0]
     A = LAIJEG[:, 1]
     I = LAIJEG[:, [2, 3, 4]]
     J = LAIJEG[:, 5]
-    E = LAIJEG[:, 6]
-    G = LAIJEG[:, 7]
 
-    Fe = np.full((neids, 12), np.nan, dtype=fdtype)
-    v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
-    Teb = beam_transforms(ihat, yhat, zhat)
-    for (ieid, nodes, Li, Ai, I1, Ji, Ei, Gi,
-         vi, Tebi, wai, wbi) in zip(
+    k1 = LAIJEG[:, 6]
+    k2 = LAIJEG[:, 7]
+    #s1 = LAIJEG[:, 8]
+    #s2 = LAIJEG[:, 9]
+
+    E = LAIJEG[:, 10]
+    G = LAIJEG[:, 11]
+
+    q_basic = np.full((neids, 12), np.nan, dtype=fdtype)
+    Ke = np.full((neids, 12, 12), np.nan, dtype=fdtype)
+
+    for (ieid, nodes, Li, Ai, I1, Ji, Ei, Gi, k1i, k2i) in zip(
             ieids, elem.nodes, L, A, I, J, E, G,
-            v, Teb, wa, wb):
-        Kei, Fei = _recover_forcei_cbeam(
+            k1, k2):
+        q_basici, Kei = _recover_Ku_cbeami(
             xb, dof_map, nodes,
             Li, Ai, I1, Ji, Ei, Gi,
-            vi, Tebi, wai, wbi)
+            k1i, k2i)
+        q_basic[ieid, :] = q_basici
+        Ke[ieid, :] = Kei
 
         #(Fx1, Fy1, Fz1, Mx1, My1, Mz1,
         # Fx2, Fy2, Fz2, Mx2, My2, Mz2) = Fei
+        #Fei = recover_beam_force(Ke, Teb, q_all)
+        #Fei = Kei @ Tebi @ q_basici
+
         #axial = Fx1
         #torque = Mx1
         #shear1 = Fy1
@@ -168,25 +224,48 @@ def get_beam_force_fe(model: BDF,
         #    bending_moment_b1, bending_moment_b2,
         #    shear1, shear2,
         #    axial, torque)
-        Fe[ieid, :] = Fei
-    return Fe
+    return q_basic, Ke
 
 
-def ke_cbeam(L, A, I, J, E, G,
-             Teb, wa, wb,
-             fdtype: str='float64'):
-    """Get the elemental stiffness matrix in the basic frame."""
-    I1, I2, I12 = I
-    k1 = k2 = 1e8
-    Ke = timoshenko_stiffness(A, E, G, L, I1, I2, J, k1, k2, pa=0, pb=0)
-    K = Teb.T @ Ke @ Teb
-    return True, K
+#def ke_cbeam(L, A, I, J, E, G,
+#             Teb, wa, wb,
+#             fdtype: str='float64'):
+#    """Get the elemental stiffness matrix in the basic frame."""
+#    I1, I2, I12 = I
+#    k1 = k2 = 1e8
+#    Ke = timoshenko_stiffness(A, E, G, L, I1, I2, J, k1, k2, pa=0, pb=0)
+#    K = Teb.T @ Ke @ Teb
+#    return True, K
+#
+#
+#def ke_cbeam2(L, A, I, J, E, G, k1, k2,
+#              fdtype: str='float64'):
+#    """Get the elemental stiffness matrix in the basic frame."""
+#    I1, I2, I12 = I
+#    k1 = k2 = 1e8
+#    Ke = timoshenko_stiffness(A, E, G, L, I1, I2, J, k1, k2, pa=0, pb=0)
+#    K = Teb.T @ Ke @ Teb
+#    return True, K
 
 
+#def _recover_dxi_cbeam(xb: np.ndarray,
+#                       dof_map: DOF_MAP,
+#                       nodes: np.ndarray,
+#                       fdtype: str='float64'):
+#    """Get the static CBAR force."""
+#    nid1, nid2 = nodes
+#    i1 = dof_map[(nid1, 1)]
+#    i2 = dof_map[(nid2, 1)]
+#    q_all = np.hstack([xb[i1:i1 + 6], xb[i2:i2 + 6]])
+#    return q_all
 
-def _recover_dxi_cbeam(xb: np.ndarray,
+
+def _recover_Ku_cbeami(xb: np.ndarray,
                        dof_map: DOF_MAP,
                        nodes: np.ndarray,
+                       L: np.ndarray,
+                       A, I, J, E, G,
+                       k1, k2,
                        fdtype: str='float64'):
     """Get the static CBAR force."""
     nid1, nid2 = nodes
@@ -195,33 +274,12 @@ def _recover_dxi_cbeam(xb: np.ndarray,
     i1 = dof_map[(nid1, 1)]
     i2 = dof_map[(nid2, 1)]
 
-    q_all = np.hstack([xb[i1:i1 + 6], xb[i2:i2 + 6]])
-    return q_all
+    q_basic = np.hstack([xb[i1:i1 + 6], xb[i2:i2 + 6]])
 
-
-def _recover_forcei_cbeam(xb: np.ndarray,
-                          dof_map: DOF_MAP,
-                          nodes: np.ndarray,
-                          L: np.ndarray,
-                          A, I, J, E, G,
-                          v, Teb, wa, wb,
-                          fdtype: str='float64'):
-    """Get the static CBAR force."""
-    nid1, nid2 = nodes
-    I1, I2, I12 = I
-
-    i1 = dof_map[(nid1, 1)]
-    i2 = dof_map[(nid2, 1)]
-
-    q_all = np.hstack([xb[i1:i1 + 6], xb[i2:i2 + 6]])
-
-    k1 = k2 = 1e8
-    Ke = timoshenko_stiffness(A, E, G, L, I1, I2, J, k1, k2, pa=0, pb=0)
-    Fe = recover_beam_force(Ke, Teb, q_all)
-
-    #(Fx1, Fy1, Fz1, Mx1, My1, Mz1,
-    # Fx2, Fy2, Fz2, Mx2, My2, Mz2) = Fe
-    return Ke, Fe
+    Ke = timoshenko_stiffness(
+        A, E, G, L, I1, I2, J,
+        k1, k2, pa=0, pb=0)
+    return q_basic, Ke
 
 
 def _recover_strain_cbeam(
@@ -251,37 +309,31 @@ def _recover_strain_cbeam(
         model, xb, dof_map, elem, ieids, neids,
         LAIJEG, fdtype=fdtype)
 
-    # columns: [length, area, I1, I2, I12, J, E, G]
-    Lvec = LAIJEG[:, 0]
-    Avec = LAIJEG[:, 1]
-    Ivec = LAIJEG[:, [2, 3, 4]]
-    Jvec = LAIJEG[:, 5]
-    Evec = LAIJEG[:, 6]
-    Gvec = LAIJEG[:, 7]
+    # columns: [length, area, I1, I2, I12, J, k1, k2, s1, s2, E, G]
+    L = LAIJEG[:, 0]
+    A = LAIJEG[:, 1]
+    I = LAIJEG[:, [2, 3, 4]]
+    J = LAIJEG[:, 5]
+
+    #k1 = LAIJEG[:, 6]
+    #k2 = LAIJEG[:, 7]
+    #s1 = LAIJEG[:, 8]
+    #s2 = LAIJEG[:, 9]
+
+    E = LAIJEG[:, 10]
+    G = LAIJEG[:, 11]
 
     cdef = _get_beam_recovery_points(model, elem)
 
     strain = np.full((neids, 15), np.nan, dtype=fdtype)
     for (ieid, eid, Ai, Ii, Ji, Ei, Gi, Fei, cdefi) in zip(
-        ieids, eids, Avec, Ivec, Jvec, Evec, Gvec, Fe, cdef,):
+        ieids, eids, A, I, J, E, G, Fe, cdef,):
         strain[ieid, :] = _recover_straini_cbeam(
             Ai, Ii, Ji, Ei, Gi, Fei, cdefi, fdtype=fdtype,)
 
-    s1a, s2a, s3a, s4a = strain[:, 0], strain[:, 1], strain[:, 2], strain[:, 3]
-    s1b, s2b, s3b, s4b = strain[:, 8], strain[:, 9], strain[:, 10], strain[:, 11]
-    smaxa = np.max([s1a, s2a, s3a, s4a], axis=0)  # 5
-    smina = np.min([s1a, s2a, s3a, s4a], axis=0)  # 6
-    smaxb = np.max([s1b, s2b, s3b, s4b], axis=0)  # 12
-    sminb = np.min([s1b, s2b, s3b, s4b], axis=0)  # 13
-    assert smaxa.shape == s1a.shape
-    strain[:, 5] = smaxa
-    strain[:, 6] = smina
-    strain[:, 12] = smaxb
-    strain[:, 13] = sminb
-    #MS_tension = np.nan
-    #MS_compression = np.nan
+    _set_min_max_stress(strain)
 
-    #out = (
+    #strain = (
     #    s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
     #    s1b, s2b, s3b, s4b, smaxb, sminb, MS_compression,
     #)
@@ -367,13 +419,19 @@ def _recover_stress_cbeam(
         model, xb, dof_map, elem, ieids, neids,
         LAIJEG, fdtype=fdtype)
 
-    # columns: [length, area, I1, I2, I12, J, E, G]
+    # columns: [length, area, I1, I2, I12, J, k1, k2, s1, s2, E, G]
     L = LAIJEG[:, 0]
     A = LAIJEG[:, 1]
     I = LAIJEG[:, [2, 3, 4]]
     J = LAIJEG[:, 5]
-    E = LAIJEG[:, 6]
-    G = LAIJEG[:, 7]
+
+    #k1 = LAIJEG[:, 6]
+    #k2 = LAIJEG[:, 7]
+    #s1 = LAIJEG[:, 8]
+    #s2 = LAIJEG[:, 9]
+
+    E = LAIJEG[:, 10]
+    G = LAIJEG[:, 11]
     nu = E / (2 * G) - 1
 
     cdef = _get_beam_recovery_points(model, elem)
@@ -386,21 +444,8 @@ def _recover_stress_cbeam(
             Li, Ai, Ii, Ji, Ei, Gi,
             Fei, cdefi, fdtype=fdtype,)
 
-    s1a, s2a, s3a, s4a = stress[:, 0], stress[:, 1], stress[:, 2], stress[:, 3]
-    s1b, s2b, s3b, s4b = stress[:, 8], stress[:, 9], stress[:, 10], stress[:, 11]
-    smaxa = np.max([s1a, s2a, s3a, s4a], axis=0)  # 5
-    smina = np.min([s1a, s2a, s3a, s4a], axis=0)  # 6
-    smaxb = np.max([s1b, s2b, s3b, s4b], axis=0)  # 12
-    sminb = np.min([s1b, s2b, s3b, s4b], axis=0)  # 13
-    assert smaxa.shape == s1a.shape
-    stress[:, 5] = smaxa
-    stress[:, 6] = smina
-    stress[:, 12] = smaxb
-    stress[:, 13] = sminb
-    #MS_tension = np.nan
-    #MS_compression = np.nan
-
-    #out = (
+    _set_min_max_stress(stress)
+    #stress = (
     #    s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
     #    s1b, s2b, s3b, s4b, smaxb, sminb, MS_compression,
     #)
@@ -420,6 +465,27 @@ def _recover_stress_cbeam(
         page_num=page_num, is_mag_phase=False, is_sort1=True,
     )
     return neids
+
+
+
+def _set_min_max_stress(stress):
+    #out = (
+    #    s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
+    #    s1b, s2b, s3b, s4b, smaxb, sminb, MS_compression,
+    #)
+    s1a, s2a, s3a, s4a = stress[:, 0], stress[:, 1], stress[:, 2], stress[:, 3]
+    s1b, s2b, s3b, s4b = stress[:, 8], stress[:, 9], stress[:, 10], stress[:, 11]
+    smaxa = np.max([s1a, s2a, s3a, s4a], axis=0)  # 5
+    smina = np.min([s1a, s2a, s3a, s4a], axis=0)  # 6
+    smaxb = np.max([s1b, s2b, s3b, s4b], axis=0)  # 12
+    sminb = np.min([s1b, s2b, s3b, s4b], axis=0)  # 13
+    assert smaxa.shape == s1a.shape
+    stress[:, 5] = smaxa
+    stress[:, 6] = smina
+    stress[:, 12] = smaxb
+    stress[:, 13] = sminb
+    #MS_tension = np.nan
+    #MS_compression = np.nan
 
 
 def _recover_stressi_cbeam(
@@ -521,3 +587,79 @@ def beam_stress_at_points(
     stress_a = -force2stress @ Fe[:6]
     stress_b = force2stress @ Fe[6:]
     return stress_a, stress_b
+
+def _recover_strain_energy_beam(
+        f06_file: TextIO,
+        op2: OP2,
+        model: BDF,
+        dof_map: DOF_MAP,
+        isubcase: int, xb: np.ndarray, eids_str: str,
+        element_name: str, fdtype: str = 'float32',
+        title: str = '', subtitle: str = '', label: str = '',
+        page_num: int = 1,
+        page_stamp: str = 'PAGE %s',) -> int:
+    """Recover strain energy for CBAR/CBEAM: SE = 0.5 * u^T @ K @ u."""
+    neids, ieids, eids = get_ieids_eids(model, element_name, eids_str)
+    if not neids:
+        return 0
+
+    xb, nmode = fix_xb_shape(xb)
+
+    elem = get_element(model, element_name, ieids, eids)
+    xyz1 = model.grid.get_position_by_node_id(elem.nodes[:, 0])
+    xyz2 = model.grid.get_position_by_node_id(elem.nodes[:, 1])
+
+    LAIJEG = elem.stiffness_info()
+    # columns: [length, area, I1, I2, I12, J, k1, k2,
+    #           E, G]
+    L = LAIJEG[:, 0]
+    A = LAIJEG[:, 1]
+    I = LAIJEG[:, [2, 3, 4]]
+    J = LAIJEG[:, 5]
+    k1 = LAIJEG[:, 6]
+    k2 = LAIJEG[:, 7]
+    if element_name == 'CBAR':
+        E = LAIJEG[:, 8]
+        G = LAIJEG[:, 9]
+        assert LAIJEG.shape[1] == 10, LAIJEG.shape
+    elif element_name == 'CBEAM':
+        # s1 = LAIJEG[:, 8]
+        # s2 = LAIJEG[:, 9]
+        E = LAIJEG[:, 10]
+        G = LAIJEG[:, 11]
+        assert LAIJEG.shape[1] == 12, LAIJEG.shape
+    else:  # pragma: no cover
+        raise NotImplementedError(element_name)
+        
+    assert E.min() > 0, E
+    assert G.min() > 0, G
+
+    v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
+
+    Teb = beam_transforms(ihat, yhat, zhat)
+    Ke = np.zeros((neids, 12, 12), dtype=fdtype)
+    q_basic = np.zeros((neids, 12), dtype=fdtype)
+    q_elem2 = np.zeros((neids, 12), dtype=fdtype)
+    for (ieid, (nid1, nid2), Li, Ai, Ii, Ji, Ei, Gi, k1i, k2i, Tebi,
+        ) in zip(ieids, elem.nodes, L, A, I, J, E, G, k1, k2, Teb):
+        I1, I2, I12 = Ii
+   
+        Kei = timoshenko_stiffness(Ai, Ei, Gi, Li, I1, I2, Ji,
+                                   k1i, k2i)
+        Ke[ieid, :, :] = Kei
+
+        gi1 = dof_map[(nid1, 1)]
+        gi2 = dof_map[(nid2, 1)]
+        q_basici = np.hstack([xb[gi1:gi1 + 6], xb[gi2:gi2 + 6]])
+        q_basic[ieid, :] = q_basici
+
+    q_elem = np.einsum('ntu,nu->nt', Teb, q_basic)
+    strain_energy = 0.5 * np.einsum('nt,ntu,nu->n', q_elem, Ke, q_elem)
+    #assert np.allclose(q_elem, q_elem2)
+    #assert np.allclose(strain_energy, strain_energy2)
+
+    strain_energy = strain_energy.reshape(nmode, neids, 1)
+    save_strain_energy(
+        op2, f06_file, page_num, page_stamp, element_name,
+        strain_energy, eids, isubcase, title, subtitle, label)
+    return neids

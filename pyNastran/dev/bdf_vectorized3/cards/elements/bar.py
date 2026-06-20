@@ -569,7 +569,7 @@ class CBAR(Element):
 
     def stiffness_info(self) -> np.ndarray:
         """
-        [L, rho, A, ]
+        [L, A, I1, I2, I12, J, k1, k2, E, G]
         """
         pid = self.property_id
         npid = len(pid)
@@ -577,6 +577,10 @@ class CBAR(Element):
         area = np.full(npid, np.nan, dtype='float64')
         I = np.full((npid, 3), np.nan, dtype='float64')
         J = np.full(npid, np.nan, dtype='float64')
+
+        k1 = np.full(npid, np.nan, dtype='float64')
+        k2 = np.full(npid, np.nan, dtype='float64')
+
         E = np.full(npid, np.nan, dtype='float64')
         G = np.full(npid, np.nan, dtype='float64')
         for prop in self.allowed_properties:
@@ -584,17 +588,26 @@ class CBAR(Element):
             if len(i_lookup) == 0:
                 continue
             # we're at least using some properties
-            breakdowni = prop.stiffness_info() # [area, I, J]
-            area[i_lookup] = breakdowni[i_all, 0]
+            # [area, I1, I2, I12, J, k1, k2]
+            breakdowni = prop.prop_stiffness_info()
+            assert breakdowni.shape[1] == 7, breakdowni.shape
+
+            slicei = breakdowni[i_all, :]
             #print(prop.type, i_lookup, i_all, breakdowni.shape)
-            I[i_lookup, :] = breakdowni[i_all, :][:, [1, 2, 3]]
-            J[i_lookup] = breakdowni[i_all, 4]
+            area[i_lookup] = slicei[:, 0]
+            I[i_lookup, :] = slicei[:, [1, 2, 3]]
+            J[i_lookup] = slicei[:, 4]
+            k1[i_lookup] = slicei[:, 5]
+            k2[i_lookup] = slicei[:, 6]
 
             mat1 = self.model.mat1.slice_card_by_material_id(prop.material_id)
             E[i_lookup] = mat1.E
             G[i_lookup] = mat1.G
         length = self.length()
-        breakdown = np.column_stack([length, area, I, J, E, G])
+        breakdown = np.column_stack([
+            length, area, I, J, k1, k2,
+            E, G])
+        assert breakdown.shape[1] == 10, breakdown.shape
         return breakdown
 
     def area(self) -> np.ndarray:
@@ -899,7 +912,7 @@ PBARL_MSG = '\n' + """
 
 class PBAR(Property):
     """
-    Defines the properties of a simple beam element (CBAR entry).
+    Defines the properties of a simple beam element (CBAR).
 
     +------+-----+-----+-----+----+----+----+-----+-----+
     |   1  |  2  |  3  |  4  |  5 |  6 |  7 |  8  |  9  |
@@ -1128,9 +1141,12 @@ class PBAR(Property):
         if np.any(self.j < 0.):
             raise ValueError('J=%r must be greater than or equal to 0.0' % self.j)
 
-    def stiffness_info(self) -> np.ndarray:
-        """[area, I, J]"""
-        breakdown = np.column_stack([self.A, self.I, self.J])
+    def prop_stiffness_info(self) -> np.ndarray:
+        """[area, I1, I2, I12, J, k1, k2]"""
+        breakdown = np.column_stack([
+            self.A, self.I, self.J,
+            self.k])
+        assert breakdown.shape[1] == 7, breakdown.shape
         return breakdown
 
     @property

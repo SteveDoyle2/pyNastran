@@ -10,7 +10,7 @@ from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 from pyNastran.dev.bdf_vectorized3.bdf_interface.breakdowns import NO_MASS
 
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
-    consistent_mass, lumped_mass, beam_transform,)
+    consistent_mass, lumped_mass, beam_transforms,)
 from ..elements.solids import build_mbb_solids
 
 from .build_stiffness import _COOAccumulator
@@ -138,7 +138,7 @@ def build_Mbb(model: BDF, subcase: Subcase,
             inertia = elem.inertia()
             xyz1, xyz2 = elem.get_xyz()
             lengths = np.linalg.norm(xyz2 - xyz1, axis=1)
-            v, ihat_arr, yhat_arr, zhat_arr, wa_arr, wb_arr = elem.get_axes(xyz1, xyz2)
+            v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
             k_arr = elem.k()
             e_g_nus = elem.e_g_nu()
 
@@ -146,11 +146,12 @@ def build_Mbb(model: BDF, subcase: Subcase,
             mass_total += elem_masses.sum()
             mass_per_length_total = elem_masses / lengths
 
-            for (nid1, nid2), areai, inertiai, lengthi, ki, e_g_nu, ihati, jhati, khati, mpl in zip(
+            Teb = beam_transforms(ihat, yhat, zhat)
+            for (nid1, nid2), areai, inertiai, lengthi, ki, e_g_nu, Tebi, mpl in zip(
                 elem.nodes, area, inertia, lengths, k_arr, e_g_nus,
-                ihat_arr, yhat_arr, zhat_arr, mass_per_length_total):
+                Teb, mass_per_length_total):
 
-                i1_inertia, i2_inertia, i12, j = inertiai
+                i1, i2, i12, j = inertiai
                 e, g, nu = e_g_nu
                 k1, k2 = ki
 
@@ -158,16 +159,15 @@ def build_Mbb(model: BDF, subcase: Subcase,
                 if use_consistent:
                     Me = consistent_mass(
                         areai, lengthi, rho_eff,
-                        i1_inertia, i2_inertia, j,
+                        i1, i2, j,
                         k1, k2, nsm=0.0)
                 else:
                     Me = lumped_mass(
                         areai, lengthi, rho_eff,
-                        i1_inertia, i2_inertia, j,
+                        i1, i2, j,
                         nsm=0.0)
 
-                Teb = beam_transform(ihati, jhati, khati)
-                M_basic = Teb.T @ Me @ Teb
+                M_basic = Tebi.T @ Me @ Tebi
 
                 gi1 = dof_map[(nid1, 1)]
                 gi2 = dof_map[(nid2, 1)]
