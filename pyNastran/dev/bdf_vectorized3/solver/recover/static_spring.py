@@ -601,15 +601,15 @@ def _spring_dx(xg: np.ndarray,
                ieids: np.ndarray,
                eids: np.ndarray,
                fdtype: str='float32'):
-    #if xg.ndim == 1:
-    #    ndof = len(xg)
-    ###    nmode = 1
-    #    xg = xg.reshape(ndof, nmode)
-    #else:
-    #    assert xg.shape == 2, xg.shape
-    #    ndof, nmode = xg.shape
+    if xg.ndim == 1:
+        ndof = len(xg)
+        nmode = 1
+        xg = xg.reshape(ndof, nmode)
+    else:
+        assert xg.shape == 2, xg.shape
+        ndof, nmode = xg.shape
     #    assert nmode == 1, xg.shape
-    ndof, nmode = xg.shape
+    #ndof, nmode = xg.shape
 
     dx = np.full((neids, nmode), np.nan, dtype=fdtype)
     if element_name in {'CELAS1', 'CELAS2'}:
