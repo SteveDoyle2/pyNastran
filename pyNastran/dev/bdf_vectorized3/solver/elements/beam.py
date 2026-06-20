@@ -503,34 +503,34 @@ def beam_transforms(ihat, jhat, khat):
     return Teb
 
 
-#def beam_transform(
-#    ihat: np.ndarray,
-#    jhat: np.ndarray,
-#    khat: np.ndarray,) -> np.ndarray:
-#    """Build the 12x12 coordinate transformation from element to basic.
-#
-#    Parameters
-#    ----------
-#    ihat, jhat, khat : np.ndarray, shape (3,)
-#        Unit vectors of the element coordinate system.
-#
-#    Returns
-#    -------
-#    Teb : np.ndarray, shape (12, 12)
-#    """
-#    Teb = np.zeros((12, 12), dtype="float64")
-#    for i in range(4):
-#        r = i * 3
-#        Teb[r, r] = ihat[0]
-#        Teb[r, r + 1] = ihat[1]
-#        Teb[r, r + 2] = ihat[2]
-#        Teb[r + 1, r] = jhat[0]
-#        Teb[r + 1, r + 1] = jhat[1]
-#        Teb[r + 1, r + 2] = jhat[2]
-#        Teb[r + 2, r] = khat[0]
-#        Teb[r + 2, r + 1] = khat[1]
-#        Teb[r + 2, r + 2] = khat[2]
-#    return Teb
+def beam_transform(
+    ihat: np.ndarray,
+    jhat: np.ndarray,
+    khat: np.ndarray,) -> np.ndarray:
+    """Build the 12x12 coordinate transformation from element to basic.
+
+    Parameters
+    ----------
+    ihat, jhat, khat : np.ndarray, shape (3,)
+        Unit vectors of the element coordinate system.
+
+    Returns
+    -------
+    Teb : np.ndarray, shape (12, 12)
+    """
+    Teb = np.zeros((12, 12), dtype="float64")
+    for i in range(4):
+        r = i * 3
+        Teb[r, r] = ihat[0]
+        Teb[r, r + 1] = ihat[1]
+        Teb[r, r + 2] = ihat[2]
+        Teb[r + 1, r] = jhat[0]
+        Teb[r + 1, r + 1] = jhat[1]
+        Teb[r + 1, r + 2] = jhat[2]
+        Teb[r + 2, r] = khat[0]
+        Teb[r + 2, r + 1] = khat[1]
+        Teb[r + 2, r + 2] = khat[2]
+    return Teb
 
 
 # =============================================================================

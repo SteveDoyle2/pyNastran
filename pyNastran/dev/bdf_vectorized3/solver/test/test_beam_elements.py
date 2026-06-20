@@ -28,13 +28,13 @@ from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     lumped_mass,
     geometric_stiffness,
     beam_transform,
-    recover_beam_force,
     beam_pg_distributed,
     beam_pg_point,
 )
+
 from pyNastran.dev.bdf_vectorized3.solver.matrices.build_stiffness import build_Kgg
 from pyNastran.dev.bdf_vectorized3.solver.recover.beam import (
-    beam_stress_at_points)
+    beam_stress_at_points, recover_beam_force)
 
 DIRNAME = Path(__file__).parent / '_nastran'
 

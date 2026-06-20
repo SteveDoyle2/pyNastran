@@ -16,7 +16,6 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.solver.elements.shells import build_kbb_cquad4, build_kbb_ctria3
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     timoshenko_stiffness,
-    #beam_transform,
     beam_transforms,
     thermal_load_beam,
     geometric_stiffness,
@@ -33,11 +32,8 @@ if TYPE_CHECKING:  # pragma: no cover
         # MAT1,
     )
     from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import (
-        CELAS1,
-        CELAS2,
-        CBAR,
-        CTUBE,
-        PTUBE,
+        CELAS1, CELAS2,
+        CBAR, CTUBE, PTUBE,
     )
 
 
@@ -490,15 +486,15 @@ def _build_kbb_rod(
         elem = model.conrod
         if len(elem) == 0:
             return 0
-        prop = elem
-        A = prop.area()
-        J = prop.J
+        prop2 = elem
+        A = elem.area()
+        J = elem.J
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
     assert isinstance(A, np.ndarray), (element_name, A)
     assert isinstance(J, np.ndarray), (element_name, J)
 
-    mat = model.mat1
+    mat1 = model.mat1
 
     nodes = elem.nodes
     inid = model.grid.index(nodes)
@@ -508,111 +504,59 @@ def _build_kbb_rod(
     xyz2 = xyz_cid0[inid2, :]
     dxyz = xyz2 - xyz1
     L = np.linalg.norm(dxyz, axis=1)
+
     #L = elem.length()
-    assert len(length) == elem.n
+    assert len(L) == elem.n
     if L.min() <= 0.0:
         ifailed = (L <= 0.0)
         eids_failed = eids[ifailed]
         raise FatalError(f'{elem.type} length must be greater than 0 for eids={eids}')
 
     material_id = prop2.material_id
-    mat1 = mat.slice_card_by_material_id(material_id)
+    imat = mat1.index(material_id)
     assert elem.n == prop2.n
-    assert elem.n == mat1.n
-    G = mat1.G
-    E = mat1.E
-
-    k_axial = A * E / L
-    k_torsion = G * J / L
-    for eid, nodes, dxyzi, k_axiali, k_torsioni in zip(elem.element_id, elem.nodes, dxyz, k_axial, k_torsion):
-        _build_kbbi_conrod_crod(eid, Kbb, dof_map, nodes, dxyzi, k_axiali, k_torsioni)
-    return len(elem)
-
-
-def _build_kbb_ctube(model: BDF,
-                     Kbb: dok_matrix,
-                     dof_map: DOF_MAP,
-                     xyz_cid0: np.ndarray) -> None:
-    """fill the CTUBE Kbb matrix"""
-    elem = model.ctube
-    if elem.n == 0:
-        return elem.n
-    prop: PTUBE = model.ptube
-    mat = model.mat1
-
-    nodes = elem.nodes
-    pids = elem.property_id
-    inid = model.grid.index(nodes)
-    inid1 = inid[:, 0]
-    inid2 = inid[:, 1]
-    xyz1 = xyz_cid0[inid1, :]
-    xyz2 = xyz_cid0[inid2, :]
-    dxyz = xyz2 - xyz1
-    length = np.linalg.norm(dxyz, axis=1)
-    assert len(length) == elem.n
-
-    prop2: PTUBE = prop.slice_card_by_id(pids, assume_sorted=True)
-    area = prop2.area()
-    J = prop2.J()
-    material_id = prop2.material_id
-    mat1 = mat.slice_card_by_material_id(material_id)
-    assert elem.n == prop.n
-    assert elem.n == mat1.n
-
-    G = mat1.G
-    E = mat1.E
-    L = length
-    A = area
-    if length.min() <= 0.0:
-        ifailed = (length <= 0.0)
-        eids_failed = eids[ifailed]
-        raise FatalError(f'{elem.type} length must be greater than 0 for eids={eids}')
+    assert elem.n == len(imat)
+    G = mat1.G[imat]
+    E = mat1.E[imat]
     
+    neids = len(elem)
+    i = np.arange(neids)
+
+    # 1) primary direction
+    vx = dxyz / L[:, np.newaxis]
+
+    # 2) find the max(abs(vx)) in each row
+    vx_abs = np.abs(vx)
+    imax0 = np.argmax(vx_abs, axis=1)
+    imax = (i, imax0)
+    assert len(imax0) == neids
+
+    # 3) define a 0 matrix (delta) and add the max
+    #    value to it. Offset the column entry by 1
+    jmax = (i, imax0-1)
+    delta = np.zeros((neids, 3), dtype=imax0.dtype)
+    delta[jmax] = vx_abs[imax]
+    vy_og = vx + delta
+
+    # 4) cross to get vz
+    vz = np.cross(vx, vy_og, axis=1)
+    assert vx.shape == vz.shape, (vx.shape, vz.shape)
+    vz_norm = np.linalg.norm(vz, axis=1)
+    assert len(vz_norm) == neids
+    vz /= vz_norm[:, np.newaxis]
+
+    # 5) cross to get vy
+    vy = np.cross(vz, vx, axis=1)
+    vy_norm = np.linalg.norm(vy, axis=1)
+    vy /= vy_norm[:, np.newaxis]
+
     k_axial = A * E / L
     k_torsion = G * J / L
-    for eid, nodes, dxyzi, k_axiali, k_torsioni in zip(elem.element_id, elem.nodes, dxyz, k_axial, k_torsion):
-        _build_kbbi_conrod_crod(eid, Kbb, dof_map, nodes, dxyzi, k_axiali, k_torsioni)
-    return len(elem)
-
-
-def _build_kbb_conrod(
-        model: BDF,
-        Kbb: dok_matrix, 
-        dof_map: DOF_MAP,
-        xyz_cid0: np.ndarray) -> int:
-    """fill the CONROD Kbb matrix"""
-    elem = model.conrod
-    if elem.n == 0:
-        return elem.n
-    prop = model.conrod
-    mat = model.mat1
-
-    nodes = elem.nodes
-    inid = model.grid.index(nodes)
-    inid1 = inid[:, 0]
-    inid2 = inid[:, 1]
-    xyz1 = xyz_cid0[inid1, :]
-    xyz2 = xyz_cid0[inid2, :]
-    dxyz = xyz2 - xyz1
-    length = np.linalg.norm(dxyz, axis=1)
-    assert len(length) == elem.n
-
-    material_id = prop.material_id
-    mat1 = mat.slice_card_by_material_id(material_id)
-    assert elem.n == prop.n
-    assert elem.n == mat1.n
-    G = mat1.G
-    E = mat1.E
-    L = length
-    A = area
-    if length.min() <= 0.0:
-        ifailed = (length <= 0.0)
-        eids_failed = eids[ifailed]
-        raise FatalError(f'{elem.type} length must be greater than 0 for eids={eids}')
-    k_axial = A * E / L
-    k_torsion = G * J / L
-    for eid, nodes, dxyzi, k_axiali, k_torsioni in zip(elem.element_id, elem.nodes, dxyz, k_axial, k_torsion):
-        _build_kbbi_conrod_crod(eid, Kbb, dof_map, nodes, dxyzi, k_axiali, k_torsioni)
+    T3 = np.dstack([vx, vy, vz])
+    assert T3.shape == (neids, 3, 3), T3.shape
+    for eid, nodes, T3i, k_axiali, k_torsioni in zip(elem.element_id, elem.nodes, T3, k_axial, k_torsion):
+        assert T3i.shape == (3, 3), T3i.shape
+        _build_kbbi_conrod_crod(eid, Kbb, dof_map, nodes, T3i, k_axiali, k_torsioni)
     return len(elem)
 
 
@@ -621,19 +565,20 @@ def _build_kbbi_conrod_crod(
     Kbb: dok_matrix,
     dof_map: DOF_MAP,
     nodes,
-    dxyz12: np.ndarray,
+    T3: np.ndarray,
     k_axial: float,
     k_torsion: float,
     fdtype: str = "float64",) -> None:
-    """fill the ith rod Kbb matrix"""
-    nid1, nid2 = nodes
-    # print(f'A = {A}')
+    """
+    fill the ith rod Kbb matrix
     # k_axial = A * E / L
     # k_torsion = G * J / L
+    """
+    nid1, nid2 = nodes
     log = SimpleLogger(level='debug')
-    #assert isinstance(k_axial, float), k_axial
-    #assert isinstance(k_torsion, float), k_torsion
-    k = np.array([[1.0, -1.0], [-1.0, 1.0]])# 1D rod; element coordinate system
+    
+    # 1D rod; element coordinate system
+    k = np.array([[1.0, -1.0], [-1.0, 1.0]])
     k3 = np.array([
         [1.0, -1.0, 0.0],
         [-1.0, 1.0, 0.0],
@@ -642,37 +587,8 @@ def _build_kbbi_conrod_crod(
     k6 = np.zeros((6, 6))
     k6[0, 0] = k6[3, 3] = 1.0
     k6[0, 3] = k6[3, 0] = -1.0
-    #Lambda = lambda1d(dxyz12, debug=False)
-    #K = Lambda.T @ k @ Lambda  # transform to basic?
 
-    # (a) Component of VY in direction of min VX is set to zero
-    xnorm = np.linalg.norm(dxyz12)
-    vx = dxyz12 / xnorm
-    # iy = np.argsort(np.abs(vx))
-
-    # (b1) Other 2 VY(i) are corresponding VX(i) switched with one x(-1)
-    #vyi = np.array([vx[1], vx[0], vx[2]])  # arbitrary rotation
-
-    # (b2) Find the max vx and pick the neighboring index; add 1 to that
-    ixmax = (vx == vx.max())
-    dy = np.zeros(3)
-    dy[ixmax-1] += 1.0
-    vyi = vx + dy
-
-    ynorm = np.linalg.norm(vyi)
-    if ynorm == 0:
-        log.warning(f'eid={eid}; ynorm=0')
-
-    vyi /= ynorm
-    vz = np.cross(vx, vyi)
-    znorm = np.linalg.norm(vz)
-    if znorm == 0:
-        log.warning(f'eid={eid}; znorm=0')
-    vz /= znorm  # not sure why I need to renormalize this?
-
-    vy = np.cross(vz, vx)
     # Tr = np.row_stack([vx, vy, vz])
-    T3 = np.column_stack([vx, vy, vz])
     # Tv = np.vstack([vx, vy, vz])
     z = np.zeros((3, 3))
     T6 = np.block([[T3, z], [z, T3]])
@@ -726,7 +642,6 @@ def _build_kbbi_conrod_crod(
     # print(Kbb.todense())
 
     # torsion
-    # idofs += 3
     n_ijv += 3
     for dof1, i1 in zip(idofs, n_ijv):
         for dof2, i2 in zip(idofs, n_ijv):
@@ -748,41 +663,40 @@ def _build_kbb_cbeam(
     idtype: str = "int32",
     fdtype: str = "float64",) -> int:
     """Fill the CBEAM Kbb matrix using a Timoshenko beam."""
-    #str(all_nids)
-    #str(xyz_cid0)
     elem = model.cbeam
     nelements = len(elem)
     if nelements == 0:
         return nelements
 
-    area = elem.area()
-    inertia = elem.inertia()
+    LAIJEG = elem.stiffness_info()
+    L = LAIJEG[:, 0]
+    A = LAIJEG[:, 1]
+    I = LAIJEG[:, [2, 3, 4]]
+    J = LAIJEG[:, 5]
+
+    k1 = LAIJEG[:, 6]
+    k2 = LAIJEG[:, 7]
+
     xyz1, xyz2 = elem.get_xyz()
-    length = np.linalg.norm(xyz2 - xyz1, axis=1)
     assert len(length) == nelements
     v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
-    k = elem.k()
+
     e_g_nus = elem.e_g_nu()
 
     Teb = beam_transforms(ihat, yhat, zhat)
-    for ielement, eid, (nid1, nid2), areai, inertiai, pa, pb, Tebi, lengthi, ki, e_g_nu in zip(
-        count(),
-        elem.element_id,
-        elem.nodes,
-        area,
-        inertia,
-        elem.pa,
-        elem.pb,
-        Teb, length,
-        k,
-        e_g_nus):
-        i1, i2, i12, j = inertiai
-        e, g, nu = e_g_nu
-        k1, k2 = ki
+    for (ielement, eid, (nid1, nid2), Li, Ai, Ii, pa, pb, Tebi,
+         k1i, k2i, (e, g, nu)) in zip(
+            count(),
+            elem.element_id,
+            elem.nodes,
+            L, A, inertia,
+            elem.pa, elem.pb,
+            Teb, k1, k2, e_g_nus):
+        i1i, i2i, i12i, ji = Ii
 
         Ke = timoshenko_stiffness(
-            areai, e, g, lengthi, i1, i2, j, k1, k2,
-            pa=pa, pb=pb)
+            Ai, e, g, Li, i1i, i2i, ji,
+            k1=k1i, k2=k2i, pa=pa, pb=pb)
         K = Teb.T @ Ke @ Teb
 
         gi1 = dof_map[(nid1, 1)]
