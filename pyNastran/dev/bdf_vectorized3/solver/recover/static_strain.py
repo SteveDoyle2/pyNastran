@@ -15,6 +15,7 @@ from pyNastran.op2.op2_interface.op2_classes import (
 )
 from .utils import get_plot_request
 from .rod import _recover_strain_rod
+from ..elements.beam import beam_transforms
 from .static_stress import _get_bar_recovery_points
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -170,14 +171,16 @@ def _recover_strain_cbar(
     strains = np.full((neids, 15), np.nan, dtype=fdtype)
 
     v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
+    Teb = beam_transforms(ihat, jhat, khat)
+
     for (ieid, eid, nodes, Li, Ai, Ii, Ji, Ei, Gi,
-         vi, ihati, yhati, zhati, wai, wbi, cdefi) in zip(
-        ieids, eids, elem.nodes, Li, Avec, Ivec, Jvec, Evec, Gvec,
-        v, ihat, yhat, zhat, wa, wb, cdef,
+         vi, Tebi, ihati, yhati, zhati, wai, wbi, cdefi) in zip(
+        ieids, eids, elem.nodes, Lvec, Avec, Ivec, Jvec, Evec, Gvec,
+        v, Teb, ihat, yhat, zhat, wa, wb, cdef,
     ):
         strains[ieid, :] = _recover_straini_cbar(
             model, xb, dof_map, nodes, Li,
-            Ai, Ii, Ji, Ei, Gi, vi, ihati, yhati, zhati, wai, wbi,
+            Ai, Ii, Ji, Ei, Gi, vi, Tebi, ihati, yhati, zhati, wai, wbi,
             cdefi, fdtype=fdtype,
         )
 
@@ -211,6 +214,7 @@ def _recover_straini_cbar(
     E: float,
     G: float,
     v,
+    Tebi,
     ihat,
     jhat,
     khat,
@@ -231,6 +235,7 @@ def _recover_straini_cbar(
     k1 = k2 = 1e8
     Ke = timoshenko_stiffness(A, E, G, L, I1, I2, J, k1, k2, pa=0, pb=0)
     Teb = beam_transform(ihat, jhat, khat)
+    assert np.allclose(Teb, Tebi)
     Fe = recover_beam_force(Ke, Teb, q_all)
 
     C1, C2, D1, D2, E1, E2, F1, F2 = cdef

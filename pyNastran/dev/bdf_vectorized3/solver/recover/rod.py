@@ -7,14 +7,16 @@ from pyNastran.dev.bdf_vectorized3.solver.utils import (
 from pyNastran.op2.op2_interface.op2_classes import (
     RealRodForceArray,
 )
-from .utils import get_plot_request
+from .utils import get_plot_request, save_strain_energy
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf_vectorized3.bdf import BDF, Subcase
 DOF_MAP = dict[tuple[int, int], int]
 
 
-def get_rod_pid_prop(elem, element_name: str) -> tuple:
+def get_rod_pid_prop(model: BDF,
+                     elem,
+                     element_name: str) -> tuple:
     if element_name == 'CONROD':
         prop = elem
         pid = None
@@ -33,12 +35,19 @@ def get_rod_pid_prop(elem, element_name: str) -> tuple:
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
 
+    assert isinstance(J, np.ndarray), (prop.type, J)
+    assert isinstance(A, np.ndarray), (prop.type, A)
+
     mat1 = elem.model.mat1.slice_card_by_material_id(prop.material_id)
     E = mat1.E
     G = mat1.G
+    assert isinstance(E, np.ndarray), (prop.type, E)
     return prop, pid, A, J, E, G
 
-def get_rod_du(elem, ieids, eids, dxyz):
+def get_rod_du(xb: np.ndarray,
+               dof_map: DOF_MAP,
+               elem, ieids, eids, dxyz):
+    neids = len(eids)
     du_axial = np.full(neids, np.nan, dtype=fdtype)
     du_torsion = np.full(neids, np.nan, dtype=fdtype)
     for ieid, eid, nodes, dxyzi in zip(ieids, eids, elem.nodes, dxyz):
@@ -89,13 +98,12 @@ def _recover_force_rod(f06_file: TextIO, op2: OP2,
     xyz1 = model.grid.get_position_by_node_id(elem.nodes[:, 0])
     xyz2 = model.grid.get_position_by_node_id(elem.nodes[:, 1])
     dxyz = xyz2 - xyz1
-    L = np.linalg.norm(dxyz, axis=0)
+    L = np.linalg.norm(dxyz, axis=1)
+    assert len(L) == neids
 
-    _prop, _pid, A, J, E, G = get_rod_pid_prop(elem, element_name)
-    assert isinstance(J, np.ndarray), (prop.type, J)
-    assert isinstance(A, np.ndarray), (prop.type, A)
-    assert isinstance(E, np.ndarray), (prop.type, E)
-    du_axial, du_torsion = get_rod_du(elem, ieids, eids, dxyz)
+    _prop, _pid, A, J, E, G = get_rod_pid_prop(model, elem, element_name)
+    du_axial, du_torsion = get_rod_du(
+        xb, dof_map, elem, ieids, eids, dxyz)
 
     axial_force = A * E * du_axial / L
     torsional_moment = du_torsion * G * J / L
@@ -143,16 +151,13 @@ def _recover_stress_rod(
     xyz1 = model.grid.get_position_by_node_id(elem.nodes[:, 0])
     xyz2 = model.grid.get_position_by_node_id(elem.nodes[:, 1])
 
-    prop, pid, A, J, E, G = get_rod_pid_prop(elem, element_name)
-
     dxyz = xyz2 - xyz1
-    L = np.linalg.norm(dxyz, axis=0)
+    L = np.linalg.norm(dxyz, axis=1)
+    assert len(L) == neids
 
-    _prop, _pid, A, J, E, G = get_rod_pid_prop(elem, element_name)
-    assert isinstance(J, np.ndarray), (prop.type, J)
-    assert isinstance(A, np.ndarray), (prop.type, A)
-    assert isinstance(E, np.ndarray), (prop.type, E)
-    du_axial, du_torsion = get_rod_du(elem, ieids, eids, dxyz)
+    prop, pid, A, J, E, G = get_rod_pid_prop(model, elem, element_name)
+    du_axial, du_torsion = get_rod_du(
+        xb, dof_map, elem, ieids, eids, dxyz)
 
     #axial_strain = np.zeros(neids, dtype=dtype)
     #torsional_moment = np.zeros(neids, dtype=dtype)
@@ -242,13 +247,12 @@ def _recover_strain_rod(
     xyz2 = model.grid.get_position_by_node_id(elem.nodes[:, 1])
 
     dxyz = xyz2 - xyz1
-    L = np.linalg.norm(dxyz, axis=0)
+    L = np.linalg.norm(dxyz, axis=1)
+    assert len(L) == neids
 
-    _prop, _pid, A, J, E, G = get_rod_pid_prop(elem, element_name)
-    assert isinstance(J, np.ndarray), (prop.type, J)
-    assert isinstance(A, np.ndarray), (prop.type, A)
-    assert isinstance(E, np.ndarray), (prop.type, E)
-    du_axial, du_torsion = get_rod_du(elem, ieids, eids, dxyz)
+    _prop, _pid, A, J, E, G = get_rod_pid_prop(model, elem, element_name)
+    du_axial, du_torsion = get_rod_du(
+        xb, dof_map, elem, ieids, eids, dxyz)
 
     axial_strain = du_axial / L
     torsional_strain = du_torsion / L
@@ -293,34 +297,35 @@ def _recover_strain_rod(
     )
     return neids
 
+def _recover_strain_energy_rod(
+    f06_file: TextIO, op2,
+    model: BDF, dof_map: DOF_MAP,
+    isubcase: int, xb: np.ndarray, eids_str: str,
+    element_name: str, fdtype: str = 'float32',
+    title: str = '', subtitle: str = '', label: str = '',
+    page_num: int = 1, page_stamp: str = 'PAGE %s',) -> int:
+    """Recover strain energy for CROD/CONROD/CTUBE: SE = 0.5 * u^T @ K @ u."""
+    neids, ieids, eids = get_ieids_eids(model, element_name, eids_str)
+    if not neids:
+        return 0
 
-def _recover_straini_rod(
-    xb: np.ndarray,
-    dof_map: DOF_MAP,
-    nodes: np.ndarray,
-    xyz1: np.ndarray,
-    xyz2: np.ndarray,
-    G: float,
-    J: float,):
-    """Get static rod strain: [axial, SMa, torsion, SMt]."""
-    nid1, nid2 = nodes
-    i1 = dof_map[(nid1, 1)]
-    i2 = dof_map[(nid2, 1)]
+    elem = get_element(model, element_name, ieids, eids)
+    xyz1 = model.grid.get_position_by_node_id(elem.nodes[:, 0])
+    xyz2 = model.grid.get_position_by_node_id(elem.nodes[:, 1])
+    dxyz = xyz2 - xyz1
+    L = np.linalg.norm(dxyz, axis=1)
+    assert len(L) == neids
 
-    q_axial = np.array([xb[i1], xb[i1 + 1], xb[i1 + 2], xb[i2], xb[i2 + 1], xb[i2 + 2]])
-    q_torsion = np.array([xb[i1 + 3], xb[i1 + 4], xb[i1 + 5], xb[i2 + 3], xb[i2 + 4], xb[i2 + 5]])
-    dxyz12 = xyz1 - xyz2
-    Lambda = lambda1d(dxyz12, debug=False)
+    _prop, _pid, A, J, E, G = get_rod_pid_prop(model, elem, element_name)
+    du_axial, du_torsion = get_rod_du(
+        xb, dof_map, elem, ieids, eids, dxyz)
 
-    u_axial = Lambda @ q_axial
-    u_torsion = Lambda @ q_torsion
-    du_axial = u_axial[0] - u_axial[1]
-    du_torsion = u_torsion[0] - u_torsion[1]
+    k_axial = E * A / L
+    k_torsion = G * J / L
+    strain_energy = 0.5 * (k_axial * du_axial**2 + k_torsion * du_torsion**2)
 
-    L = np.linalg.norm(dxyz12)
-    axial_strain = du_axial / L
-    torsional_strain = du_torsion / L
-    # SM fields are NaN (safety margin not computed)
-    return axial_strain, np.nan, torsional_strain, np.nan
-
-
+    save_strain_energy(
+        op2, f06_file, page_num, page_stamp, element_name,
+        strain_energy, eids, isubcase, title, subtitle, label,
+    )
+    return neids
