@@ -13,6 +13,8 @@ from typing import TextIO, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.f06.errors import FatalError
+
+#from pyNastran.dev.bdf_vectorized3.cards.base_card import searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.solver.elements.shells import (
     _dshape_quad4,
     _jacobian,
@@ -24,8 +26,7 @@ from pyNastran.dev.bdf_vectorized3.solver.elements.shells import (
     _GAUSS_2x2_PTS,
     _GAUSS_2x2_WTS,
     macn2_stiffness,
-    _apply_shell_offset,
-)
+    _apply_shell_offset,)
 
 
 if TYPE_CHECKING:
@@ -38,7 +39,8 @@ def _von_mises(sxx: float, syy: float, sxy: float) -> float:
     return np.sqrt(sxx**2 - sxx * syy + syy**2 + 3.0 * sxy**2)
 
 
-def _principal_stresses(sxx: float, syy: float, sxy: float) -> tuple[float, float, float]:
+def _principal_stresses(sxx: float, syy: float, sxy: float,
+                        ) -> tuple[float, float, float]:
     """Returns (angle_deg, s_major, s_minor) for plane stress."""
     s_avg = 0.5 * (sxx + syy)
     radius = np.sqrt((0.5 * (sxx - syy)) ** 2 + sxy**2)
@@ -66,6 +68,9 @@ def recover_shell_stress_cquad4(
     cquad4 = model.cquad4
     if cquad4.n == 0:
         return {}
+
+    if hasattr(model, 'cquad4_pshell'):
+        asdf
 
     pshell = model.pshell
     pcomp = model.pcomp
@@ -199,9 +204,12 @@ def recover_shell_stress_cquad4(
             strain_fiber = strain_membrane + z_fiber * curvature
             stress_fiber = Q_elem @ strain_fiber
             sxx, syy, sxy = stress_fiber
-            angle, s_major, s_minor = _principal_stresses(sxx, syy, sxy)
-            svm = _von_mises(sxx, syy, sxy)
-            stress_data[i_fiber] = [z_fiber, sxx, syy, sxy, angle, s_major, s_minor, svm]
+            #exx, eyy, exy = strain_fiber
+            #angle, s_major, s_minor = _principal_stresses(sxx, syy, sxy)
+            #svm = _von_mises(sxx, syy, sxy)
+            #stress_data[i_fiber] = [
+            #    z_fiber, sxx, syy, sxy, angle, s_major, s_minor, svm]
+            stress_data[i_fiber, :4] = [z_fiber, sxx, syy, sxy]
         results[eid] = stress_data
 
     return results
@@ -249,11 +257,11 @@ def get_theta_from_theta_mcid(model: BDF,
         raise RuntimeError('incorrect application of theta_mats; found nan')
     return theta_mat
 
+
 def recover_shell_stress_ctria3(
     model: BDF,
     dof_map: DOF_MAP,
-    xb: np.ndarray,
-) -> dict[int, np.ndarray]:
+    xb: np.ndarray,) -> dict[int, np.ndarray]:
     """Recover CTRIA3 stresses at centroid, top and bottom fibers.
 
     Returns
@@ -265,6 +273,9 @@ def recover_shell_stress_ctria3(
     ctria3 = model.ctria3
     if ctria3.n == 0:
         return {}
+
+    if hasattr(model, 'ctria3_pshell'):
+        asdf
 
     pshell = model.pshell
     pcomp = model.pcomp
@@ -301,10 +312,18 @@ def recover_shell_stress_ctria3(
     common_pshell_pids = np.intersect1d(pshell.property_id, pids)
     is_pshells = np.array([pid in common_pshell_pids for pid in pids])
 
-    for i_elem, eid, pid, theta, zoffset, is_pshell in zip(
-            count(), eids, pids, thetas, zoffsets, is_pshells):
+    T = np.full((neid, 3, 3), np.nan, dtype='float32')
+    T[:, 0, :] = ihat
+    T[:, 0, :] = jhat
+    T[:, 0, :] = normal
+    #T3 = np.vstack([ihat, jhat, normal])
+    assert T.shape == T3.shape
+
+    for i_elem, eid, pid, theta, zoffset, is_pshell, Ti2 in zip(
+            count(), eids, pids, thetas, zoffsets, is_pshells, T):
 
         Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
+        assert np.allclose(Ti, Ti2)
 
         xy = np.zeros((3, 3))
         xy[0] = Ti @ p1[i_elem]
@@ -344,16 +363,17 @@ def recover_shell_stress_ctria3(
                 u_local_15[r + 1] -= zoffset * u_local_15[r + 3]
 
         # CST membrane strain (constant)
-        area = 0.5 * abs(
+        area2 = abs(
             (x_local[1] - x_local[0]) * (y_local[2] - y_local[0])
             - (x_local[2] - x_local[0]) * (y_local[1] - y_local[0])
         )
+        area = 0.5 * area
         dNdx = np.array(
             [y_local[1] - y_local[2], y_local[2] - y_local[0], y_local[0] - y_local[1]]
-        ) / (2.0 * area)
+        ) / area2
         dNdy = np.array(
             [x_local[2] - x_local[1], x_local[0] - x_local[2], x_local[1] - x_local[0]]
-        ) / (2.0 * area)
+        ) / area2
 
         u_mem = np.zeros(6)
         for inode in range(3):
@@ -392,25 +412,27 @@ def recover_shell_stress_ctria3(
         else:
             Q = A_mat
 
+        strain_data = np.zeros((2, 8))
         stress_data = np.zeros((2, 8))
         for i_fiber, z_fiber in enumerate([z1, z2]):
             strain_fiber = strain_membrane + z_fiber * curvature
             stress_fiber = Q @ strain_fiber
+            exx, eyy, exy = strain_fiber
             sxx, syy, sxy = stress_fiber
             angle, s_major, s_minor = _principal_stresses(sxx, syy, sxy)
             svm = _von_mises(sxx, syy, sxy)
             stress_data[i_fiber] = [
                 z_fiber, sxx, syy, sxy, angle, s_major, s_minor, svm]
+            strain_data[i_fiber, :4] = [z_fiber, exx, eyy, exy]
+            stress_data[i_fiber, :4] = [z_fiber, sxx, syy, sxy]
         results[eid] = stress_data
-
     return results
 
 
 def recover_shell_force_cquad4(
     model: BDF,
     dof_map: DOF_MAP,
-    xb: np.ndarray,
-) -> dict[int, np.ndarray]:
+    xb: np.ndarray,) -> dict[int, np.ndarray]:
     """Recover CQUAD4 element forces (stress resultants) at centroid.
 
     Returns
@@ -424,6 +446,8 @@ def recover_shell_force_cquad4(
 
     pshell = model.pshell
     cquad4 = model.cquad4
+    if hasattr(model, 'cquad4_pshell'):
+        asdf
     force_results = {}
 
     eids = list(stress_results)
@@ -431,7 +455,7 @@ def recover_shell_force_cquad4(
     pids = cquad4.property_id[ieid]
     for (eid, stress_data), pid in zip(stress_results.items(), pids):
         iprop = np.searchsorted(pshell.property_id, pid)
-        thickness = float(pshell.t[iprop]) if iprop < pshell.n else 0.1
+        thickness = pshell.t[iprop] if iprop < pshell.n else 0.1
         z1 = stress_data[0, 0]
         z2 = stress_data[1, 0]
 
@@ -473,6 +497,9 @@ def recover_shell_strain_energy_cquad4(
     if cquad4.n == 0:
         return {}
 
+    if hasattr(model, 'cquad4_pshell'):
+        asdf
+
     pshell = model.pshell
     pcomp = model.pcomp
     pcompg = model.pcompg
@@ -506,6 +533,8 @@ def recover_shell_strain_energy_cquad4(
     assert np.abs(zoffsets.min()) >= 0., zoffsets
     apply_zoffset = (np.abs(zoffset) > 0.0)
 
+    T = np.vstack([ihat, jhat, normal])
+    assert T.shape == (neids, 3, 3), T.shape
     for i, eid, pid, zoffset, apply_zoffset in zip(count(), eids, pids, zoffsets, apply_zoffsets):
         Ti = np.vstack([ihat[i], jhat[i], normal[i]])
 

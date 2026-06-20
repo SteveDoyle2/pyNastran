@@ -12,12 +12,6 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.solver.utils import (
     get_ieids_eids, get_element, lambda1d)
 from .rod import _recover_stress_rod
-from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
-    timoshenko_stiffness,
-    beam_transform,
-    recover_beam_force,
-    beam_stress_at_points,
-)
 from pyNastran.op2.op2_interface.op2_classes import (
     RealBarStressArray,
     RealSpringStressArray,
@@ -28,8 +22,8 @@ from .utils import get_plot_request
 
 #from .static_force import ke_cbar
 from .static_shell import recover_shell_stress_cquad4, recover_shell_stress_ctria3
-
-
+from .bar import _recover_stress_cbar
+from .beam import _recover_stress_cbeam
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
     DOF_MAP = dict[tuple[int, int], int]
@@ -47,8 +41,7 @@ def recover_stress_101(
     subtitle: str = "",
     label: str = "",
     page_num: int = 1,
-    page_stamp: str = "PAGE %s",
-):
+    page_stamp: str = "PAGE %s",):
     """Recovers element stresses from STRESS = ALL."""
     if "STRESS" not in subcase:
         return
@@ -73,8 +66,7 @@ def recover_stress_101(
         subtitle=subtitle,
         label=label,
         page_num=page_num,
-        page_stamp=page_stamp,
-    )
+        page_stamp=page_stamp,)
     nelements += _recover_stress_celas_v3(
         f06_file,
         op2,
@@ -89,8 +81,7 @@ def recover_stress_101(
         subtitle=subtitle,
         label=label,
         page_num=page_num,
-        page_stamp=page_stamp,
-    )
+        page_stamp=page_stamp,)
     nelements += _recover_stress_celas_v3(
         f06_file,
         op2,
@@ -105,8 +96,7 @@ def recover_stress_101(
         subtitle=subtitle,
         label=label,
         page_num=page_num,
-        page_stamp=page_stamp,
-    )
+        page_stamp=page_stamp,)
     nelements += _recover_stress_celas_v3(
         f06_file,
         op2,
@@ -121,8 +111,7 @@ def recover_stress_101(
         subtitle=subtitle,
         label=label,
         page_num=page_num,
-        page_stamp=page_stamp,
-    )
+        page_stamp=page_stamp,)
 
     nelements += _recover_stress_rod(
         f06_file,
@@ -138,8 +127,7 @@ def recover_stress_101(
         subtitle=subtitle,
         label=label,
         page_num=page_num,
-        page_stamp=page_stamp,
-    )
+        page_stamp=page_stamp,)
     nelements += _recover_stress_rod(
         f06_file,
         op2,
@@ -154,8 +142,7 @@ def recover_stress_101(
         subtitle=subtitle,
         label=label,
         page_num=page_num,
-        page_stamp=page_stamp,
-    )
+        page_stamp=page_stamp,)
     nelements += _recover_stress_rod(
         f06_file,
         op2,
@@ -170,8 +157,7 @@ def recover_stress_101(
         subtitle=subtitle,
         label=label,
         page_num=page_num,
-        page_stamp=page_stamp,
-    )
+        page_stamp=page_stamp,)
     nelements += _recover_stress_cbar(
         f06_file,
         op2,
@@ -186,9 +172,8 @@ def recover_stress_101(
         subtitle=subtitle,
         label=label,
         page_num=page_num,
-        page_stamp=page_stamp,
-    )
-    nelements += _recover_stress_cbar(
+        page_stamp=page_stamp,)
+    nelements += _recover_stress_cbeam(
         f06_file,
         op2,
         model,
@@ -202,8 +187,7 @@ def recover_stress_101(
         subtitle=subtitle,
         label=label,
         page_num=page_num,
-        page_stamp=page_stamp,
-    )
+        page_stamp=page_stamp,)
     nelements += _recover_stress_shell(
         f06_file,
         op2,
@@ -216,8 +200,7 @@ def recover_stress_101(
         subtitle=subtitle,
         label=label,
         page_num=page_num,
-        page_stamp=page_stamp,
-    )
+        page_stamp=page_stamp,)
 
     if nelements == 0:
         model.log.warning(f"no stress output...{model.card_count}; {model.bdf_filename}")
@@ -237,8 +220,7 @@ def _recover_stress_celas_v3(
     subtitle: str = "",
     label: str = "",
     page_num: int = 1,
-    page_stamp: str = "PAGE %s",
-) -> int:
+    page_stamp: str = "PAGE %s",) -> int:
     """Recovers static spring stress for vectorized3 BDF."""
     neids, ieids, eids = get_ieids_eids(model, element_name, eids_str)
     if not neids:
@@ -293,8 +275,7 @@ def _recover_stress_celas_v3(
         random_code=0,
         title=title,
         subtitle=subtitle,
-        label=label,
-    )
+        label=label,)
 
     stress_results = op2.op2_results.stress
     slot_name = f"{element_name.lower()}_stress"
@@ -306,163 +287,8 @@ def _recover_stress_celas_v3(
         page_stamp=page_stamp,
         page_num=page_num,
         is_mag_phase=False,
-        is_sort1=True,
-    )
+        is_sort1=True)
     return neids
-
-
-def _get_bar_recovery_points(model: BDF, elem) -> np.ndarray:
-    """Get C,D,E,F stress recovery points per element from properties.
-
-    Returns
-    -------
-    cdef : np.ndarray, shape (neids, 8)
-        [C1, C2, D1, D2, E1, E2, F1, F2] per element.
-    """
-    neids = elem.n
-    cdef = np.zeros((neids, 8), dtype="float64")
-    pids = elem.property_id
-
-    for prop in elem.allowed_properties:
-        i_lookup, i_all = searchsorted_filter(prop.property_id, pids, msg='')
-        if len(i_lookup) == 0:
-            continue
-        cdef[i_lookup, 0] = prop.c[i_all, 0]
-        cdef[i_lookup, 1] = prop.c[i_all, 1]
-        cdef[i_lookup, 2] = prop.d[i_all, 0]
-        cdef[i_lookup, 3] = prop.d[i_all, 1]
-        cdef[i_lookup, 4] = prop.e[i_all, 0]
-        cdef[i_lookup, 5] = prop.e[i_all, 1]
-        cdef[i_lookup, 6] = prop.f[i_all, 0]
-        cdef[i_lookup, 7] = prop.f[i_all, 1]
-    return cdef
-
-
-def _recover_stress_cbar(
-    f06_file: TextIO,
-    op2,
-    model: BDF,
-    dof_map: DOF_MAP,
-    isubcase: int,
-    xb: np.ndarray,
-    eids_str: str,
-    element_name: str,
-    fdtype: str = "float32",
-    title: str = "",
-    subtitle: str = "",
-    label: str = "",
-    page_num: int = 1,
-    page_stamp: str = "PAGE %s",
-) -> int:
-    """Recovers static CBAR stress."""
-    neids, ieids, eids = get_ieids_eids(model, element_name, eids_str)
-    if not neids:
-        return neids
-
-    elem = get_element(model, element_name, ieids, eids)
-    xyz1 = model.grid.get_position_by_node_id(elem.nodes[:, 0])
-    xyz2 = model.grid.get_position_by_node_id(elem.nodes[:, 1])
-
-    LAIJEG = elem.stiffness_info()
-    # columns: [length, area, I1, I2, I12, J, E, G]
-    A = LAIJEG[:, 0]
-    A = LAIJEG[:, 1]
-    I = LAIJEG[:, [2, 3, 4]]
-    J = LAIJEG[:, 5]
-    E = LAIJEG[:, 6]
-    G = LAIJEG[:, 7]
-
-    cdef = _get_bar_recovery_points(model, elem)
-
-    stresses = np.full((neids, 15), np.nan, dtype=fdtype)
-
-    v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
-    for (ieid, eid, nodes, xyz1i, xyz2i, Li, Ai, Ii, Ji, Ei, Gi,
-         vi, ihati, yhati, zhati, wai, wbi, cdefi) in zip(
-        ieids, eids, elem.nodes, xyz1, xyz2, L, A, I, J, E, G,
-        nu, ihat, yhat, zhat, wa, wb, cdef,
-    ):
-        stresses[ieid, :] = _recover_stressi_cbar(
-            model, xb, dof_map, nodes, xyz1i, xyz2i,
-            Li, Ai, Ii, Ji, Ei, Gi, vi,
-            ihati, yhati, zhati, wai, wbi,
-            cdefi, fdtype=fdtype,)
-
-    data = stresses.reshape(1, *stresses.shape)
-    table_name = "OES1"
-    stress_obj = RealBarStressArray.add_static_case(
-        table_name, "CBAR", eids, data, isubcase,
-        is_sort1=True, is_random=False, is_msc=True,
-        random_code=0, title=title, subtitle=subtitle, label=label,
-    )
-
-    stress = op2.op2_results.stress
-    stress.cbar_stress[isubcase] = stress_obj
-
-    stress_obj.write_f06(
-        f06_file, header=None, page_stamp=page_stamp,
-        page_num=page_num, is_mag_phase=False, is_sort1=True,
-    )
-    return neids
-
-
-def _recover_stressi_cbar(
-    model: BDF,
-    xb: np.ndarray,
-    dof_map: DOF_MAP,
-    nodes: np.ndarray,
-    xyz1: np.ndarray,
-    xyz2: np.ndarray,
-    L: float,
-    A: float,
-    I: np.ndarray,
-    J: float,
-    E: float,
-    G: float,
-    v,
-    ihat,
-    jhat,
-    khat,
-    wa,
-    wb,
-    cdef: np.ndarray,
-    fdtype: str = "float64",
-):
-    """Get static CBAR stress at points C, D, E, F for ends A and B."""
-    nid1, nid2 = nodes
-    I1, I2, I12 = I
-
-    i1 = dof_map[(nid1, 1)]
-    i2 = dof_map[(nid2, 1)]
-
-    q_all = np.hstack([xb[i1:i1 + 6], xb[i2:i2 + 6]])
-
-    k1 = k2 = 1e8
-    Ke = timoshenko_stiffness(A, E, G, L, I1, I2, J, k1, k2, pa=0, pb=0)
-    Teb = beam_transform(ihat, jhat, khat)
-    Fe = recover_beam_force(Ke, Teb, q_all)
-
-    C1, C2, D1, D2, E1, E2, F1, F2 = cdef
-    stress_a, stress_b = beam_stress_at_points(
-        Fe, A, I1, I2, J, C1, C2, D1, D2, E1, E2, F1, F2,
-    )
-
-    s1a, s2a, s3a, s4a = stress_a
-    s1b, s2b, s3b, s4b = stress_b
-    axial = Fe[0] / A
-
-    smaxa = max(s1a, s2a, s3a, s4a)
-    smina = min(s1a, s2a, s3a, s4a)
-    smaxb = max(s1b, s2b, s3b, s4b)
-    sminb = min(s1b, s2b, s3b, s4b)
-    MS_tension = np.nan
-    MS_compression = np.nan
-
-    out = (
-        s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
-        s1b, s2b, s3b, s4b, smaxb, sminb, MS_compression,
-    )
-    return out
 
 
 def _recover_stress_shell(
@@ -477,8 +303,7 @@ def _recover_stress_shell(
     subtitle: str = "",
     label: str = "",
     page_num: int = 1,
-    page_stamp: str = "PAGE %s",
-) -> int:
+    page_stamp: str = "PAGE %s",) -> int:
     """Recover CQUAD4/CTRIA3 shell stresses and store in op2."""
     nelements = 0
     quad_results = recover_shell_stress_cquad4(model, dof_map, xb)
@@ -556,8 +381,7 @@ def recover_modal_stress_shell(
     fdtype: str = "float32",
     title: str = "",
     subtitle: str = "",
-    label: str = "",
-) -> int:
+    label: str = "",) -> int:
     """Recover CQUAD4/CTRIA3 shell stresses for modal analysis (SOL 103).
 
     Parameters
@@ -568,6 +392,14 @@ def recover_modal_stress_shell(
     """
     nmodes = len(modes)
     cycles = np.sqrt(np.abs(eigenvalues)) / (2.0 * np.pi)
+
+    case = {
+        'type': 'modal',
+        'eigens': eigenvalues,
+        'cycles': cycles,
+        'modes': modes,
+    }
+    del case['type']
 
     # Compute stress for each mode
     quad_all = []
@@ -604,13 +436,9 @@ def recover_modal_stress_shell(
             fiber=fiber,
             data=data,
             isubcase=isubcase,
-            modes=modes,
-            eigns=eigenvalues,
-            cycles=cycles,
             title=title,
             subtitle=subtitle,
-            label=label,
-        )
+            label=label, **case)
         op2.op2_results.stress.cquad4_stress[isubcase] = quad_stress
 
     # CTRIA3
@@ -640,13 +468,9 @@ def recover_modal_stress_shell(
             fiber=fiber,
             data=data,
             isubcase=isubcase,
-            modes=modes,
-            eigns=eigenvalues,
-            cycles=cycles,
             title=title,
             subtitle=subtitle,
-            label=label,
-        )
+            label=label, **case)
         op2.op2_results.stress.ctria3_stress[isubcase] = tri_stress
 
     return len(quad_all[0]) + len(tri_all[0]) if quad_all else 0

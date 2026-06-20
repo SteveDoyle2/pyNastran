@@ -7,7 +7,7 @@ from pyNastran.op2.op2_interface.op2_classes import (
     RealStrainEnergyArray,
     RealSpringStrainArray, RealSpringStressArray, RealSpringForceArray,
 )
-from .utils import save_strain_energy # get_plot_request, 
+from .utils import save_strain_energy, fix_xb_shape # get_plot_request, 
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdfvectorized3.bdf import BDF
@@ -26,7 +26,7 @@ def recover_celas(f06_file, op2,
     neids, ielas, eids = get_ieids_eids(model, element_name, eids_str)
     if not neids:
         return neids
-    xg, nmode = _fix_xg(xg)
+    xg, nmode = fix_xb_shape(xg)
 
     get_strain = write_f06_strain or write_op2_strain
     get_stress = write_f06_stress or write_op2_stress
@@ -433,16 +433,6 @@ def _slice_results(model: BDF,
     return force, stress, strain, strain_energy
 
 
-def _fix_xg(xg):
-    if xg.ndim == 1:
-        ndof = xg.shape
-        nmode = 1
-    else:
-        assert xg.shape == 2, xg.shape
-        ndof, nmode = xg.shape
-        assert nmode == 1, xg.shape
-    return xg, nmode
-
 def _recover_force_celas(f06_file: TextIO, op2: OP2,
                          model: BDF, dof_map: dict[int, int],
                          isubcase: int, xg: np.ndarray, eids_str: str,
@@ -457,7 +447,7 @@ def _recover_force_celas(f06_file: TextIO, op2: OP2,
     # print(f'eids_str={eids_str} eids={eids} ieids={eids}')
     if not neids:
         return neids
-    xg, nmode = _fix_xg(xg)
+    xg, nmode = fix_xb_shape(xg)
 
     model.log.warning(f'xg.shape={xg.shape}')
     elem = get_element(model, element_name, ieids, eids)
@@ -495,7 +485,7 @@ def _recover_stress_celas(f06_file: TextIO, op2: OP2,
     # print(f'eids_str={eids_str} eids={eids} ieids={eids}')
     if not neids:
         return neids
-    xg, nmode = _fix_xg(xg)
+    xg, nmode = fix_xb_shape(xg)
 
     elem = get_element(model, element_name, ieids, eids)
     k, s = _celas_ks(model, elem, element_name, ieids)
@@ -533,7 +523,7 @@ def _recover_strain_celas(f06_file: TextIO, op2: OP2,
     # print(f'eids_str={eids_str} eids={eids} ieids={eids}')
     if not neids:
         return neids
-    xg, nmode = _fix_xg(xg)
+    xg, nmode = fix_xb_shape(xg)
 
     elem = get_element(model, element_name, ieids, eids)
     k, s = _celas_ks(model, elem, element_name, ieids)
@@ -569,7 +559,7 @@ def _recover_strain_energy_celas(f06_file, op2,
     neids, ieids, eids = get_ieids_eids(model, element_name, eids_str)
     if not neids:
         return neids
-    xg, nmode = _fix_xg(xg)
+    xg, nmode = fix_xb_shape(xg)
 
     elem = get_element(model, element_name, ieids, eids)
     k = _celas_ks(model, elem, element_name, ieids)[0]
@@ -579,9 +569,10 @@ def _recover_strain_energy_celas(f06_file, op2,
         fdtype=fdtype)
     
     # 1/2 * k * x^2
-    strain_energy = 0.5 * k[:, np.newaxis] * dx ** 2
+    strain_energy = 0.5 * k[:, np.newaxis] * dx * dx
     assert np.all(np.isfinite(k)), k
     assert np.all(np.isfinite(strain_energy)), strain_energy
+    strain_energy = strain_energy.reshape(nmode, neids, 1)
 
     save_strain_energy(
         op2, f06_file, page_num, page_stamp,

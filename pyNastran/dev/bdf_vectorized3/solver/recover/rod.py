@@ -6,8 +6,10 @@ from pyNastran.dev.bdf_vectorized3.solver.utils import (
     get_ieids_eids, get_element, lambda1d)
 from pyNastran.op2.op2_interface.op2_classes import (
     RealRodForceArray,
+    RealRodStrainArray,
+    RealRodStressArray,
 )
-from .utils import get_plot_request, save_strain_energy
+from .utils import get_plot_request, save_strain_energy, fix_xb_shape
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf_vectorized3.bdf import BDF, Subcase
@@ -298,13 +300,15 @@ def _recover_strain_rod(
     return neids
 
 def _recover_strain_energy_rod(
-    f06_file: TextIO, op2,
-    model: BDF, dof_map: DOF_MAP,
-    isubcase: int, xb: np.ndarray, eids_str: str,
-    element_name: str, fdtype: str = 'float32',
-    title: str = '', subtitle: str = '', label: str = '',
-    page_num: int = 1, page_stamp: str = 'PAGE %s',) -> int:
+        f06_file: TextIO,
+        op2: OP2,
+        model: BDF, dof_map: DOF_MAP,
+        isubcase: int, xb: np.ndarray, eids_str: str,
+        element_name: str, fdtype: str = 'float32',
+        title: str = '', subtitle: str = '', label: str = '',
+        page_num: int = 1, page_stamp: str = 'PAGE %s',) -> int:
     """Recover strain energy for CROD/CONROD/CTUBE: SE = 0.5 * u^T @ K @ u."""
+    xb, nmode = fix_xb_shape(xb)
     neids, ieids, eids = get_ieids_eids(model, element_name, eids_str)
     if not neids:
         return 0
@@ -322,8 +326,10 @@ def _recover_strain_energy_rod(
 
     k_axial = E * A / L
     k_torsion = G * J / L
-    strain_energy = 0.5 * (k_axial * du_axial**2 + k_torsion * du_torsion**2)
-
+    strain_energy = 0.5 * (k_axial * du_axial * du_axial +
+                           k_torsion * du_torsion * du_torsion) 
+    strain_energy = strain_energy.reshape(nmode, neids, 1)
+    # assert strain_energy.shape == (nmode, neids, 1), strain_energy.shape
     save_strain_energy(
         op2, f06_file, page_num, page_stamp, element_name,
         strain_energy, eids, isubcase, title, subtitle, label,

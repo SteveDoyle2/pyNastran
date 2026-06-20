@@ -11,6 +11,16 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 
+def fix_xb_shape(xb: np.ndarray):
+    if xb.ndim == 1:
+        ndof = xb.shape
+        nmode = 1
+    else:
+        assert xb.shape == 2, xb.shape
+        ndof, nmode = xb.shape
+        assert nmode == 1, xb.shape
+    return xb, nmode
+
 def get_plot_request(subcase: Subcase,
                      request: str) -> tuple[str, bool, bool, bool]:
     """
@@ -114,7 +124,10 @@ def save_strain_energy(
     
     if case is None:
         case = {}
-    data = strain_energy.reshape(1, *strain_energy.shape)
+     
+    assert strain_energy.ndim == 3, strain_energy.shape
+    data = strain_energy
+    #data = strain_energy.reshape(1, *strain_energy.shape)
     assert np.all(np.isfinite(data)), data
     table_name = 'ONRGY1'
     #try:

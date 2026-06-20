@@ -17,10 +17,30 @@ TABLE_NAME_TO_TABLE_CODE = {
     'ONRGY1': 18,
 }
 element_name_to_element_type = {
+    'CROD': 1,
+    'CTUBE': 3,
+    'CSHEAR': 4,
+    'CONROD': 10,
+
     'CELAS1': 11,
     'CELAS2': 12,
     'CELAS3': 13,
     'CELAS4': 14,
+
+    'CDAMP1': 20,
+    'CDAMP2': 21,
+    'CDAMP3': 22,
+    'CDAMP4': 23,
+
+    'CVISC': 24,
+
+    'CBAR': 34,
+    'CBAR-100': 100,
+
+    'CBEAM': 2,
+    'CTRIA3': 74,
+    'CQUAD4-33': 33,
+    'CQUAD4-144': 144,
 }
 
 

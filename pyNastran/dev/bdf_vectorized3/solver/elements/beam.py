@@ -487,6 +487,8 @@ def thermal_load_beam(
 def beam_transforms(ihat, jhat, khat):
     neid = len(ihat)
     Teb = np.zeros((neid, 12, 12), dtype="float64")
+    #r = np.arange(4)
+    #assert len(r) == 4, r
     for i in range(4):
         r = i * 3
         Teb[:, r, r] = ihat[:, 0]
@@ -495,7 +497,7 @@ def beam_transforms(ihat, jhat, khat):
         Teb[:, r + 1, r] = jhat[:, 0]
         Teb[:, r + 1, r + 1] = jhat[:, 1]
         Teb[:, r + 1, r + 2] = jhat[:, 2]
-        Teb[:, r + 2, r] = khat[0]
+        Teb[:, r + 2, r] = khat[:, 0]
         Teb[:, r + 2, r + 1] = khat[:, 1]
         Teb[:, r + 2, r + 2] = khat[:, 2]
     return Teb
@@ -534,8 +536,7 @@ def beam_transform(
 def recover_beam_force(
     Ke: np.ndarray,
     Teb: np.ndarray,
-    q_basic: np.ndarray,
-) -> np.ndarray:
+    q_basic: np.ndarray,) -> np.ndarray:
     """Recover element internal forces from global displacements.
 
     Parameters
@@ -556,75 +557,6 @@ def recover_beam_force(
     q_element = Teb @ q_basic
     Fe = Ke @ q_element
     return Fe
-
-
-def beam_stress_at_points(
-    Fe: np.ndarray,
-    A: float,
-    I1: float,
-    I2: float,
-    J: float,
-    c1: float,
-    c2: float,
-    d1: float,
-    d2: float,
-    e1: float,
-    e2: float,
-    f1: float,
-    f2: float,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Compute beam longitudinal stress at C,D,E,F recovery points.
-
-    Parameters
-    ----------
-    Fe : np.ndarray, shape (12,)
-        Element forces in local coordinates.
-    A : float
-        Cross-sectional area.
-    I1 : float
-        Moment of inertia about axis 1 (for bending in plane 1).
-    I2 : float
-        Moment of inertia about axis 2 (for bending in plane 2).
-    J : float
-        Torsional constant.
-    c1, c2, d1, d2, e1, e2, f1, f2 : float
-        Stress recovery point coordinates (y, z offsets).
-
-    Returns
-    -------
-    stress_a : np.ndarray, shape (4,)
-        Longitudinal stress at end A [C, D, E, F].
-    stress_b : np.ndarray, shape (4,)
-        Longitudinal stress at end B [C, D, E, F].
-
-    Notes
-    -----
-    sigma = P/A + My*z/Iy - Mz*y/Iz
-    The sign convention follows Nastran: point (c1,c2) means y=c1, z=c2.
-    sigma = Fx/A + Mz*c1/Iz + My*c2/Iy  (Nastran convention)
-    """
-    # Safe division
-    inv_I1 = 1.0 / I1 if I1 > 0.0 else 0.0
-    inv_I2 = 1.0 / I2 if I2 > 0.0 else 0.0
-
-    # force2stress maps [Fx, Fy, Fz, Mx, My, Mz] -> stress at each point
-    # sigma = Fx/A + My*z/Iy + Mz*y/Iz  (Nastran: My=Fe[4], Mz=Fe[5])
-    # But Nastran convention: c1=y coord, c2=z coord of recovery point
-    # sigma = Fx/A + Mz*(c1)/Iz + My*(c2)/Iy
-    #       = Fx/A + 0*Fy + 0*Fz + 0*Mx + c2/I1*My + c1/I2*Mz
-    # where I1=Iy (bending about y, uses z-coord) and I2=Iz (bending about z, uses y-coord)
-    # NX convention: sigma = P/A - M1*c1/I1 + M2*c2/I2
-    # where M1=Mz (plane 1), M2=My (plane 2)
-    force2stress = np.array([
-        [1.0 / A, 0.0, 0.0, 0.0, c2 * inv_I1, -c1 * inv_I2],
-        [1.0 / A, 0.0, 0.0, 0.0, d2 * inv_I1, -d1 * inv_I2],
-        [1.0 / A, 0.0, 0.0, 0.0, e2 * inv_I1, -e1 * inv_I2],
-        [1.0 / A, 0.0, 0.0, 0.0, f2 * inv_I1, -f1 * inv_I2],
-    ])
-
-    stress_a = -force2stress @ Fe[:6]
-    stress_b = force2stress @ Fe[6:]
-    return stress_a, stress_b
 
 
 # =============================================================================

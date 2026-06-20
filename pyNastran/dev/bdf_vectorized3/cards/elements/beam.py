@@ -1595,6 +1595,32 @@ class PBEAM(Property):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         save_ifile_comment(self, ifile, comment)
+       
+        if len(self.property_id) == 0:
+            property_id = np.hstack([self.property_id, property_id])
+            material_id = np.hstack([self.material_id, material_id])
+            nstation = np.hstack([self.nstation, nstation])
+            xxb = np.hstack([self.xxb, xxb])
+            so = np.hstack([self.so, so])
+            A = np.hstack([self.A, A])
+            J = np.hstack([self.J, J])
+            I1 = np.hstack([self.I1, I1])
+            I2 = np.hstack([self.I2, I2])
+            I12 = np.hstack([self.I12, I12])
+
+            nsm = np.hstack([self.nsm, nsm])
+            c1 = np.hstack([self.c1, c1])
+            c2 = np.hstack([self.c2, c2])
+            d1 = np.hstack([self.c1, d1])
+            d2 = np.hstack([self.c2, d2])
+            e1 = np.hstack([self.c1, e1])
+            e2 = np.hstack([self.c2, e2])
+            f1 = np.hstack([self.c1, f1])
+            f2 = np.hstack([self.c2, f2])
+
+            k1 = np.hstack([self.k1, k1])
+            k2 = np.hstack([self.k2, k2])
+
         self.property_id = property_id
         self.material_id = material_id
 
@@ -1635,6 +1661,12 @@ class PBEAM(Property):
         self.n1b = n1b
         self.n2b = n2b
         self.n = len(property_id)
+
+    def cdef(self) -> np.ndarray:
+        cdef = np.column_stack([
+            self.c1, self.c2, self.d1, self.d2,
+            self.e1, self.e2, self.f1, self.f2])
+        return cdef
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)

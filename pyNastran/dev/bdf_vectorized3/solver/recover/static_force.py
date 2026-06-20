@@ -8,14 +8,13 @@ from pyNastran.op2.op2_interface.op2_classes import (
     RealSpringForceArray, RealRodForceArray, RealCBarForceArray,
 )
 # from pyNastran.dev.solver.build_stiffness import ke_cbar
-from .static_spring import _recover_force_celas
 from .utils import get_plot_request
 
+from .static_spring import _recover_force_celas
 from .rod import _recover_force_rod
 from .bar import _recover_force_cbar
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
-    timoshenko_stiffness, beam_transform, recover_beam_force,
-)
+    recover_beam_force,)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf_vectorized3.bdf import BDF, Subcase
@@ -43,42 +42,20 @@ def recover_force_101(f06_file: TextIO, op2: OP2,
     isubcase = subcase.id
 
     nelements = 0
-    nelements += _recover_force_celas(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CELAS1', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
-    nelements += _recover_force_celas(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CELAS2', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
-    nelements += _recover_force_celas(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CELAS3', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
-    nelements += _recover_force_celas(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CELAS4', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
+    for name in ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4']:
+        nelements += _recover_force_celas(
+            f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+            name, fdtype=fdtype,
+            title=title, subtitle=subtitle, label=label,
+            page_num=page_num, page_stamp=page_stamp)
 
-    nelements += _recover_force_rod(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CROD', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
-    nelements += _recover_force_rod(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CONROD', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
-    nelements += _recover_force_rod(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CTUBE', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
+    for name in ['CROD', 'CTUBE', 'CONROD']:
+        nelements += _recover_force_rod(
+            f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+            name, fdtype=fdtype,
+            title=title, subtitle=subtitle, label=label,
+            page_num=page_num, page_stamp=page_stamp)
+
     nelements += _recover_force_cbar(
         f06_file, op2, model, dof_map, isubcase, xb, eid_str,
         'CBAR', fdtype=fdtype,

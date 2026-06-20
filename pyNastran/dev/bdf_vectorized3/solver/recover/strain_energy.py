@@ -7,13 +7,15 @@ from pyNastran.dev.bdf_vectorized3.solver.utils import (
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     timoshenko_stiffness,
     beam_transform,
+    beam_transforms,
 )
 from pyNastran.op2.op2_interface.op2_classes import (
     RealStrainEnergyArray,)
 from .static_spring import _recover_strain_energy_celas
 from .rod import _recover_strain_energy_rod
 #from .bar import _recover_strain_energy_beam
-from .utils import get_plot_request, save_strain_energy
+from .utils import get_plot_request, save_strain_energy, fix_xb_shape
+
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
@@ -36,42 +38,20 @@ def recover_strain_energy_101(f06_file: TextIO, op2,
     isubcase = subcase.id
 
     nelements = 0
-    nelements += _recover_strain_energy_celas(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CELAS1', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
-    nelements += _recover_strain_energy_celas(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CELAS2', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
-    nelements += _recover_strain_energy_celas(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CELAS3', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
-    nelements += _recover_strain_energy_celas(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CELAS4', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
+    for name in ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4']:
+        nelements += _recover_strain_energy_celas(
+            f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+            name, fdtype=fdtype,
+            title=title, subtitle=subtitle, label=label,
+            page_num=page_num, page_stamp=page_stamp)
 
-    nelements += _recover_strain_energy_rod(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CROD', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
-    nelements += _recover_strain_energy_rod(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CONROD', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
-    nelements += _recover_strain_energy_rod(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CTUBE', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
+    for name in ['CROD', 'CTUBE', 'CONROD']:
+        nelements += _recover_strain_energy_rod(
+            f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+            name, fdtype=fdtype,
+            title=title, subtitle=subtitle, label=label,
+            page_num=page_num, page_stamp=page_stamp)
+
     nelements += _recover_strain_energy_beam(
         f06_file, op2, model, dof_map, isubcase, xb, eid_str,
         'CBAR', fdtype=fdtype,
@@ -87,17 +67,21 @@ def recover_strain_energy_101(f06_file: TextIO, op2,
 
 
 def _recover_strain_energy_beam(
-    f06_file: TextIO, op2,
-    model: BDF, dof_map: DOF_MAP,
-    isubcase: int, xb: np.ndarray, eids_str: str,
-    element_name: str, fdtype: str = 'float32',
-    title: str = '', subtitle: str = '', label: str = '',
-    page_num: int = 1,
-    page_stamp: str = 'PAGE %s',) -> int:
+        f06_file: TextIO,
+        op2: OP2,
+        model: BDF,
+        dof_map: DOF_MAP,
+        isubcase: int, xb: np.ndarray, eids_str: str,
+        element_name: str, fdtype: str = 'float32',
+        title: str = '', subtitle: str = '', label: str = '',
+        page_num: int = 1,
+        page_stamp: str = 'PAGE %s',) -> int:
     """Recover strain energy for CBAR/CBEAM: SE = 0.5 * u^T @ K @ u."""
     neids, ieids, eids = get_ieids_eids(model, element_name, eids_str)
     if not neids:
         return 0
+
+    xb, nmode = fix_xb_shape(xb)
 
     elem = get_element(model, element_name, ieids, eids)
     xyz1 = model.grid.get_position_by_node_id(elem.nodes[:, 0])
@@ -115,28 +99,35 @@ def _recover_strain_energy_beam(
     v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
     ks = elem.k()
 
-    strain_energies = np.full((neids, 1), np.nan, dtype=fdtype)
+    strain_energy2 = np.full((neids, 1), np.nan, dtype=fdtype)
 
-    with np.errstate(under='ignore'):
-        for (ieid, eid, nodes, Li, Ai, Ii, Ji, Ei, Gi,
-             ihati, jhati, khati, ki) in zip(
-                ieids, eids, elem.nodes, L, A, I, J, E, G,
-                ihat, yhat, zhat, ks):
-            nid1, nid2 = nodes
-            I1, I2, I12 = Ii
-            k1, k2 = ki
-       
-            Ke = timoshenko_stiffness(Ai, Ei, Gi, Li, I1, I2, Ji, k1, k2)
-            Teb = beam_transform(ihati, jhati, khati)
-       
-            gi1 = dof_map[(nid1, 1)]
-            gi2 = dof_map[(nid2, 1)]
-            q_basic = np.hstack([xb[gi1:gi1 + 6], xb[gi2:gi2 + 6]])
-            q_elem = Teb @ q_basic
-            se = 0.5 * q_elem @ Ke @ q_elem
-            strain_energies[ieid] = se
+    Tebs = beam_transforms(ihat, yhat, zhat)
+    Ke = np.zeros((neids, 12, 12), dtype=fdtype)
+    q_basic = np.zeros((neids, 12), dtype=fdtype)
+    q_elem2 = np.zeros((neids, 12), dtype=fdtype)
+    for (ieid, nodes, Li, Ai, Ii, Ji, Ei, Gi, ki, Tebi,
+        ) in zip(ieids, elem.nodes, L, A, I, J, E, G, ks, Tebs):
+        nid1, nid2 = nodes
+        I1, I2, I12 = Ii
+        k1, k2 = ki
+   
+        Kei = timoshenko_stiffness(Ai, Ei, Gi, Li, I1, I2, Ji, k1, k2)
+        Ke[ieid, :, :] = Kei
 
+        gi1 = dof_map[(nid1, 1)]
+        gi2 = dof_map[(nid2, 1)]
+        q_basici = np.hstack([xb[gi1:gi1 + 6], xb[gi2:gi2 + 6]])
+        q_basic[ieid, :] = q_basici
+        #q_elemi = Teb2 @ q_basici
+        #q_elem2[ieid, :] = q_elemi
+        #strain_energy2[ieid] = 0.5 * q_elemi @ Kei @ q_elemi
+    q_elem = np.einsum('ntu,nu->nt', Tebs, q_basic)
+    strain_energy = 0.5 * np.einsum('nt,ntu,nu->n', q_elem, Ke, q_elem)
+    #assert np.allclose(q_elem, q_elem2)
+    #assert np.allclose(strain_energy, strain_energy2)
+
+    strain_energy = strain_energy.reshape(nmode, neids, 1)
     save_strain_energy(
         op2, f06_file, page_num, page_stamp, element_name,
-        strain_energies, eids, isubcase, title, subtitle, label)
+        strain_energy, eids, isubcase, title, subtitle, label)
     return neids
