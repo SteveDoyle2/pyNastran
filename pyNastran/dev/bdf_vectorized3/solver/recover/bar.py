@@ -4,18 +4,18 @@ import numpy as np
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.solver.utils import (
-    get_ieids_eids, get_element, lambda1d)
+    get_ieids_eids, get_element)
 from pyNastran.op2.op2_interface.op2_classes import (
     RealCBarForceArray,
     RealBarStrainArray,
     RealBarStressArray,
 )
-# from pyNastran.dev.solver.build_stiffness import ke_cbar
 from .utils import fix_xb_shape
 from .beam import beam_stress_at_points
 #from .static_stress import _get_bar_recovery_points
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
-    timoshenko_stiffness, beam_transform, recover_beam_force,
+    timoshenko_stiffness, recover_beam_force,
+    beam_transforms,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -148,15 +148,15 @@ def get_bar_force_fe(model: BDF,
     forces = np.full((neids, 8), np.nan, dtype=fdtype)
     Fe = np.full((neids, 12), np.nan, dtype=fdtype)
     v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
-    for (ieid, nodes, xyz1i, xyz2i,
-         Ai, I1, Ji, Ei, Gi,
-         vi, ihati, yhati, zhati, wai, wbi) in zip(
-            ieids, elem.nodes, xyz1, xyz2, A, I, J, E, G,
-            v, ihat, yhat, zhat, wa, wb):
+    Teb = beam_transforms(ihat, yhat, zhat)
+    for (ieid, nodes, Li, Ai, I1, Ji, Ei, Gi,
+         vi, Tebi, wai, wbi) in zip(
+            ieids, elem.nodes, L, A, I, J, E, G,
+            v, Teb, wa, wb):
         Fei = _recover_forcei_cbar(
             model, xb, dof_map, nodes,
-            xyz1i, xyz2i, Ai, I1, Ji, Ei, Gi,
-            vi, ihati, yhati, zhati, wai, wbi)
+            Li, Ai, I1, Ji, Ei, Gi,
+            vi, Tebi, wai, wbi)
 
         (Fx1, Fy1, Fz1, Mx1, My1, Mz1,
          Fx2, Fy2, Fz2, Mx2, My2, Mz2) = Fei
@@ -180,14 +180,20 @@ def get_bar_force_fe(model: BDF,
     return forces, Fe
 
 
+def ke_cbar2(L, A, I, J, E, G, k1, k2,
+             fdtype: str='float64'):
+    """Get the elemental stiffness matrix in the basic frame."""
+    I1, I2, I12 = I
+    Ke = timoshenko_stiffness(A, E, G, L, I1, I2, J, k1, k2, pa=0, pb=0)
+    return Ke
+
 def ke_cbar(L, A, I, J, E, G,
-            ihat, jhat, khat, wa, wb,
+            Teb, wa, wb,
             fdtype: str='float64'):
     """Get the elemental stiffness matrix in the basic frame."""
     I1, I2, I12 = I
     k1 = k2 = 1e8
     Ke = timoshenko_stiffness(A, E, G, L, I1, I2, J, k1, k2, pa=0, pb=0)
-    Teb = beam_transform(ihat, jhat, khat)
     K = Teb.T @ Ke @ Teb
     return True, K
 
@@ -195,10 +201,8 @@ def _recover_forcei_cbar(model: BDF,
                          xb: np.ndarray,
                          dof_map: DOF_MAP,
                          nodes: np.ndarray,
-                         xyz1: np.ndarray,
-                         xyz2: np.ndarray,
-                         A, I, J, E, G,
-                         v, ihat, jhat, khat, wa, wb,
+                         L, A, I, J, E, G,
+                         v, Teb, wa, wb,
                          fdtype: str='float64'):
     """Get the static CBAR force."""
     nid1, nid2 = nodes
@@ -209,11 +213,8 @@ def _recover_forcei_cbar(model: BDF,
 
     q_all = np.hstack([xb[i1:i1 + 6], xb[i2:i2 + 6]])
 
-    dxyz = xyz2 - xyz1
-    L = np.linalg.norm(dxyz)
     k1 = k2 = 1e8
     Ke = timoshenko_stiffness(A, E, G, L, I1, I2, J, k1, k2, pa=0, pb=0)
-    Teb = beam_transform(ihat, jhat, khat)
     Fe = recover_beam_force(Ke, Teb, q_all)
 
     #(Fx1, Fy1, Fz1, Mx1, My1, Mz1,
@@ -288,10 +289,8 @@ def _recover_straini_cbar(A: float, I: np.ndarray, J: float,
                           fdtype: str = "float64",):
     """Get static CBAR strain at points C, D, E, F for ends A and B."""
     I1, I2, I12 = I
-    C1, C2, D1, D2, E1, E2, F1, F2 = cdef
     stress_a, stress_b = beam_stress_at_points(
-        Fe, A, I1, I2, J,
-        C1, C2, D1, D2, E1, E2, F1, F2)
+        Fe, A, I1, I2, J, cdef)
 
     # strain = stress / E
     strain_a = stress_a / E
@@ -392,10 +391,8 @@ def _recover_stressi_cbar(
     """Get static CBAR stress at points C, D, E, F for ends A and B."""
     I1, I2, I12 = I
 
-    C1, C2, D1, D2, E1, E2, F1, F2 = cdef
     stress_a, stress_b = beam_stress_at_points(
-        Fe, A, I1, I2, J,
-        C1, C2, D1, D2, E1, E2, F1, F2)
+        Fe, A, I1, I2, J, cdef)
 
     s1a, s2a, s3a, s4a = stress_a
     s1b, s2b, s3b, s4b = stress_b

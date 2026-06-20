@@ -14,13 +14,14 @@ Tolerances:
 """
 import sys
 from pathlib import Path
-from collections import OrderedDict
 import unittest
 
 import numpy as np
 from scipy.linalg import eig
 
+from pyNastran.dev.bdf_vectorized3.bdf import BDF as BDF3
 
+from pyNastran.dev.bdf_vectorized3.solver.solver import Solver
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     timoshenko_stiffness,
     consistent_mass,
@@ -28,13 +29,12 @@ from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     geometric_stiffness,
     beam_transform,
     recover_beam_force,
-    beam_stress_at_points,
     beam_pg_distributed,
     beam_pg_point,
 )
-from pyNastran.dev.bdf_vectorized3.bdf import BDF as BDF3
-from pyNastran.dev.bdf_vectorized3.solver.solver import Solver
 from pyNastran.dev.bdf_vectorized3.solver.matrices.build_stiffness import build_Kgg
+from pyNastran.dev.bdf_vectorized3.solver.recover.beam import (
+    beam_stress_at_points)
 
 DIRNAME = Path(__file__).parent / '_nastran'
 
@@ -303,9 +303,12 @@ class TestSolverBeam(unittest.TestCase):
         Fe[0] = -P_axial  # reaction at A
         Fe[6] = P_axial   # force at B
 
+        cdef = [
+        #c1, c2, d1, d2, e1, e2, f1, f2,
+        hb, hb, -hb, hb, -hb, -hb, hb, -hb]
         stress_a, stress_b = beam_stress_at_points(
             Fe, A, I1, I2, J,
-            c1=hb, c2=hb, d1=-hb, d2=hb, e1=-hb, e2=-hb, f1=hb, f2=-hb,
+            cdef, #c1=hb, c2=hb, d1=-hb, d2=hb, e1=-hb, e2=-hb, f1=hb, f2=-hb,
         )
         expected = P_axial / A
         assert np.allclose(stress_b, expected, rtol=1e-10), f"Axial stress wrong: {stress_b}"
@@ -445,7 +448,7 @@ class TestSolverBeam(unittest.TestCase):
         # Solve
         ngrid = len(model.grid)
         ndof = ngrid * 6
-        dof_map = OrderedDict()
+        dof_map = {}
         for i, nid in enumerate(model.grid.node_id):
             for j in range(1, 7):
                 dof_map[(nid, j)] = i * 6 + (j - 1)
@@ -577,7 +580,7 @@ class TestSolverBeam(unittest.TestCase):
 
         ngrid = len(model.grid)
         ndof = ngrid * 6
-        dof_map = OrderedDict()
+        dof_map = {}
         for i, nid in enumerate(model.grid.node_id):
             for j in range(1, 7):
                 dof_map[(nid, j)] = i * 6 + (j - 1)

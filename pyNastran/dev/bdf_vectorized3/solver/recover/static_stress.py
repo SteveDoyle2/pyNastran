@@ -20,7 +20,6 @@ from pyNastran.op2.op2_interface.op2_classes import (
 )
 from .utils import get_plot_request
 
-#from .static_force import ke_cbar
 from .static_shell import recover_shell_stress_cquad4, recover_shell_stress_ctria3
 from .bar import _recover_stress_cbar
 from .beam import _recover_stress_cbeam

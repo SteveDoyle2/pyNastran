@@ -507,14 +507,15 @@ class CBEAM(Element):
         return [model.pbeam, model.pbeaml, model.pbcomp]
 
     @property
-    def allowed_properties(self):
+    def allowed_properties(self) -> list[PBEAM | PBEAML | PBCOMP]:
         all_properties = self.all_properties
         props = [prop for prop in all_properties if prop.n > 0]
         assert len(props) > 0, f'{self.type}: all_props={all_properties}'
         return props
 
     def mass_material_id(self) -> np.ndarray:
-        material_id = basic_mass_material_id(self.property_id, self.allowed_properties, 'CBEAM')
+        material_id = basic_mass_material_id(
+            self.property_id, self.allowed_properties, 'CBEAM')
         return material_id
 
     def mass(self) -> np.ndarray:
@@ -1397,7 +1398,6 @@ class PBEAM(Property):
                            nsia, nsib, cwa, cwb,
                            m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b,
                            ifile, comment))
-
         self.n += 1
         return self.n - 1
 
@@ -1621,6 +1621,23 @@ class PBEAM(Property):
             k1 = np.hstack([self.k1, k1])
             k2 = np.hstack([self.k2, k2])
 
+            s1 = np.hstack([self.s1, s1])
+            s2 = np.hstack([self.s2, s2])
+
+            nsia = np.hstack([self.nsia, nsia])
+            nsib = np.hstack([self.nsib, nsib])
+
+            cwa = np.hstack([self.cwa, cwa])
+            cwb = np.hstack([self.cwb, cwb])
+            m1a = np.hstack([self.m1a, m1a])
+            m2a = np.hstack([self.m2a, m2a])
+            m1b = np.hstack([self.m1b, m1b])
+            m2b = np.hstack([self.m2b, m2b])
+            n1a = np.hstack([self.n1a, n1a])
+            n2a = np.hstack([self.n2a, n2a])
+            n1b = np.hstack([self.n1b, n1b])
+            n2b = np.hstack([self.n2b, n2b])
+
         self.property_id = property_id
         self.material_id = material_id
 
@@ -1748,6 +1765,25 @@ class PBEAM(Property):
         prop.e2 = hslice_by_idim(i, istation, self.e2)
         prop.f1 = hslice_by_idim(i, istation, self.f1)
         prop.f2 = hslice_by_idim(i, istation, self.f2)
+
+        prop.k1 = hslice_by_idim(i, istation, self.k1)
+        prop.k2 = hslice_by_idim(i, istation, self.k2)
+        prop.s1 = hslice_by_idim(i, istation, self.s1)
+        prop.s2 = hslice_by_idim(i, istation, self.s2)
+
+        prop.nsia = hslice_by_idim(i, istation, self.nsia)
+        prop.nsib = hslice_by_idim(i, istation, self.nsib)
+        prop.cwa = hslice_by_idim(i, istation, self.cwa)
+        prop.cwb = hslice_by_idim(i, istation, self.cwb)
+        prop.m1a = hslice_by_idim(i, istation, self.m1a)
+        prop.m2a = hslice_by_idim(i, istation, self.m2a)
+        prop.m1b = hslice_by_idim(i, istation, self.m1b)
+        prop.m2b = hslice_by_idim(i, istation, self.m2b)
+        prop.n1a = hslice_by_idim(i, istation, self.n1a)
+        prop.n2a = hslice_by_idim(i, istation, self.n2a)
+        prop.n1b = hslice_by_idim(i, istation, self.n1b)
+        prop.n2b = hslice_by_idim(i, istation, self.n2b)
+
         prop.nstation = self.nstation[i]
         prop.n = len(i)
 
@@ -1845,7 +1881,7 @@ class PBEAM(Property):
             s1, s2, k1, k2, \
             nsia, nsib, cwa, cwb, \
             m1a, m2a, m1b, m2b, \
-            n1a, n2a, n1b, n2b in zip(property_ids, material_ids,
+            n1a, n2a, n1b, n2b in zip_longest(property_ids, material_ids,
                                       self.istation, self.nstation,
                                       self.s1, self.s2, self.k1, self.k2,
                                       self.nsia, self.nsib, self.cwa, self.cwb,
@@ -1921,8 +1957,8 @@ class PBEAM(Property):
                         list_fields += ['NO', xxb, A, i1, i2, i12, j, nsm]
                     elif so in ['YESA']:
                         list_fields += ['YESA', xxb, A, i1, i2, i12, j, nsm]
-                    else:
-                        raise RuntimeError('so=%r type(so)=%s' % (so, type(so)))
+                    else:  # pragma: no cover
+                        raise RuntimeError(f'so={so!r} type(so)={type(so)}')
                 i += 1
                 if not write_so:
                     break
@@ -2016,9 +2052,10 @@ class PBEAM(Property):
 
     def stiffness_info(self) -> np.ndarray:
         """[area, I1, I2, I12, J]"""
+        length = self.length()
         area = self.area()
         inertia = self.inertia()
-        breakdown = np.column_stack([area, inertia])
+        breakdown = np.column_stack([length, area, inertia])
         return breakdown
 
     def to_old_card(self) -> list[Any]:
@@ -2931,6 +2968,7 @@ class PBCOMP(Property):
 
     def area(self) -> np.ndarray:
         return self._area
+
 
 def _sort_pbeam(pid, xxb, so, area, i1, i2, i12, j, nsm,
                 c1, c2, d1, d2, e1, e2, f1, f2, ensure_xxb_1_section=True):
@@ -4945,7 +4983,6 @@ class CBEND(Element):
             ipos = chord_sq > 0
             chord = 2 * np.sqrt(chord_sq[ipos])
             length[igeom_flag1] = chord[ipos]
-
 
         if igeom_flag2.sum():
             i = np.where(igeom_flag2)[0]

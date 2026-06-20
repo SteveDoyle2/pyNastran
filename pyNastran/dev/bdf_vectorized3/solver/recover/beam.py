@@ -10,11 +10,10 @@ from pyNastran.op2.op2_interface.op2_classes import (
     RealBarStrainArray,
     RealBarStressArray,
 )
-# from pyNastran.dev.solver.build_stiffness import ke_cbar
 from .utils import fix_xb_shape
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     timoshenko_stiffness,
-    beam_transform,
+    beam_transforms,
     recover_beam_force,
 )
 
@@ -75,7 +74,7 @@ def _recover_force_cbeam(f06_file: TextIO, op2,
     assert isinstance(A, np.ndarray), (elem.type, A)
     assert isinstance(E, np.ndarray), (elem.type, E)
 
-    forces, Fe = get_beam_force_fe(
+    Fe = get_beam_force_fe(
         model, xb, dof_map, elem, ieids, neids,
         LAIJEG, fdtype=fdtype)
 
@@ -140,61 +139,72 @@ def get_beam_force_fe(model: BDF,
     E = LAIJEG[:, 6]
     G = LAIJEG[:, 7]
 
-    forces = np.full((neids, 8), np.nan, dtype=fdtype)
     Fe = np.full((neids, 12), np.nan, dtype=fdtype)
     v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
-    for (ieid, nodes, Li,
-         Ai, I1, Ji, Ei, Gi,
-         vi, ihati, yhati, zhati, wai, wbi) in zip(
+    Teb = beam_transforms(ihat, yhat, zhat)
+    for (ieid, nodes, Li, Ai, I1, Ji, Ei, Gi,
+         vi, Tebi, wai, wbi) in zip(
             ieids, elem.nodes, L, A, I, J, E, G,
-            v, ihat, yhat, zhat, wa, wb):
-        Fei = _recover_forcei_cbeam(
-            model, xb, dof_map, nodes,
+            v, Teb, wa, wb):
+        Kei, Fei = _recover_forcei_cbeam(
+            xb, dof_map, nodes,
             Li, Ai, I1, Ji, Ei, Gi,
-            vi, ihati, yhati, zhati, wai, wbi)
+            vi, Tebi, wai, wbi)
 
-        (Fx1, Fy1, Fz1, Mx1, My1, Mz1,
-         Fx2, Fy2, Fz2, Mx2, My2, Mz2) = Fei
-        axial = Fx1
-        torque = Mx1
-        shear1 = Fy1
-        shear2 = Fz1
-        bending_moment_a1 = My1
-        bending_moment_a2 = Mz1
+        #(Fx1, Fy1, Fz1, Mx1, My1, Mz1,
+        # Fx2, Fy2, Fz2, Mx2, My2, Mz2) = Fei
+        #axial = Fx1
+        #torque = Mx1
+        #shear1 = Fy1
+        #shear2 = Fz1
+        #bending_moment_a1 = My1
+        #bending_moment_a2 = Mz1
 
-        bending_moment_b1 = My2
-        bending_moment_b2 = Mz2
+        #bending_moment_b1 = My2
+        #bending_moment_b2 = Mz2
 
-        force = (
-            bending_moment_a1, bending_moment_a2,
-            bending_moment_b1, bending_moment_b2,
-            shear1, shear2,
-            axial, torque)
-        forces[ieid, :] = force
+        #force = (
+        #    bending_moment_a1, bending_moment_a2,
+        #    bending_moment_b1, bending_moment_b2,
+        #    shear1, shear2,
+        #    axial, torque)
         Fe[ieid, :] = Fei
-    return forces, Fe
+    return Fe
 
 
 def ke_cbeam(L, A, I, J, E, G,
-             ihat, jhat, khat, wa, wb,
+             Teb, wa, wb,
              fdtype: str='float64'):
     """Get the elemental stiffness matrix in the basic frame."""
     I1, I2, I12 = I
     k1 = k2 = 1e8
     Ke = timoshenko_stiffness(A, E, G, L, I1, I2, J, k1, k2, pa=0, pb=0)
-    Teb = beam_transform(ihat, jhat, khat)
     K = Teb.T @ Ke @ Teb
     return True, K
 
 
 
-def _recover_forcei_cbeam(model: BDF,
-                          xb: np.ndarray,
+def _recover_dxi_cbeam(xb: np.ndarray,
+                       dof_map: DOF_MAP,
+                       nodes: np.ndarray,
+                       fdtype: str='float64'):
+    """Get the static CBAR force."""
+    nid1, nid2 = nodes
+    I1, I2, I12 = I
+
+    i1 = dof_map[(nid1, 1)]
+    i2 = dof_map[(nid2, 1)]
+
+    q_all = np.hstack([xb[i1:i1 + 6], xb[i2:i2 + 6]])
+    return q_all
+
+
+def _recover_forcei_cbeam(xb: np.ndarray,
                           dof_map: DOF_MAP,
                           nodes: np.ndarray,
                           L: np.ndarray,
                           A, I, J, E, G,
-                          v, ihat, jhat, khat, wa, wb,
+                          v, Teb, wa, wb,
                           fdtype: str='float64'):
     """Get the static CBAR force."""
     nid1, nid2 = nodes
@@ -207,12 +217,11 @@ def _recover_forcei_cbeam(model: BDF,
 
     k1 = k2 = 1e8
     Ke = timoshenko_stiffness(A, E, G, L, I1, I2, J, k1, k2, pa=0, pb=0)
-    Teb = beam_transform(ihat, jhat, khat)
     Fe = recover_beam_force(Ke, Teb, q_all)
 
     #(Fx1, Fy1, Fz1, Mx1, My1, Mz1,
     # Fx2, Fy2, Fz2, Mx2, My2, Mz2) = Fe
-    return Fe
+    return Ke, Fe
 
 
 def _recover_strain_cbeam(
@@ -238,7 +247,7 @@ def _recover_strain_cbeam(
     elem = get_element(model, element_name, ieids, eids)
 
     LAIJEG = elem.stiffness_info()
-    forces, Fe = get_beam_force_fe(
+    Fe = get_beam_force_fe(
         model, xb, dof_map, elem, ieids, neids,
         LAIJEG, fdtype=fdtype)
 
@@ -252,13 +261,31 @@ def _recover_strain_cbeam(
 
     cdef = _get_beam_recovery_points(model, elem)
 
-    strains = np.full((neids, 15), np.nan, dtype=fdtype)
+    strain = np.full((neids, 15), np.nan, dtype=fdtype)
     for (ieid, eid, Ai, Ii, Ji, Ei, Gi, Fei, cdefi) in zip(
         ieids, eids, Avec, Ivec, Jvec, Evec, Gvec, Fe, cdef,):
-        strains[ieid, :] = _recover_straini_cbeam(
+        strain[ieid, :] = _recover_straini_cbeam(
             Ai, Ii, Ji, Ei, Gi, Fei, cdefi, fdtype=fdtype,)
 
-    data = strains.reshape(1, *strains.shape)
+    s1a, s2a, s3a, s4a = strain[:, 0], strain[:, 1], strain[:, 2], strain[:, 3]
+    s1b, s2b, s3b, s4b = strain[:, 8], strain[:, 9], strain[:, 10], strain[:, 11]
+    smaxa = np.max([s1a, s2a, s3a, s4a], axis=0)  # 5
+    smina = np.min([s1a, s2a, s3a, s4a], axis=0)  # 6
+    smaxb = np.max([s1b, s2b, s3b, s4b], axis=0)  # 12
+    sminb = np.min([s1b, s2b, s3b, s4b], axis=0)  # 13
+    assert smaxa.shape == s1a.shape
+    strain[:, 5] = smaxa
+    strain[:, 6] = smina
+    strain[:, 12] = smaxb
+    strain[:, 13] = sminb
+    #MS_tension = np.nan
+    #MS_compression = np.nan
+
+    #out = (
+    #    s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
+    #    s1b, s2b, s3b, s4b, smaxb, sminb, MS_compression,
+    #)
+    data = strain.reshape(1, *strain.shape)
     table_name = "OSTR1"
     strain_obj = RealBarStrainArray.add_static_case(
         table_name, "CBAR", eids, data, isubcase,
@@ -266,8 +293,8 @@ def _recover_strain_cbeam(
         random_code=0, title=title, subtitle=subtitle, label=label,
     )
 
-    strain = op2.op2_results.strain
-    strain.cbeam_strain[isubcase] = strain_obj
+    strain_dict = op2.op2_results.strain
+    strain_dict.cbeam_strain[isubcase] = strain_obj
 
     strain_obj.write_f06(
         f06_file, header=None, page_stamp=page_stamp,
@@ -282,10 +309,8 @@ def _recover_straini_cbeam(A: float, I: np.ndarray, J: float,
                            fdtype: str = "float64",):
     """Get static CBAR strain at points C, D, E, F for ends A and B."""
     I1, I2, I12 = I
-    C1, C2, D1, D2, E1, E2, F1, F2 = cdef
     stress_a, stress_b = beam_stress_at_points(
-        Fe, A, I1, I2, J,
-        C1, C2, D1, D2, E1, E2, F1, F2)
+        Fe, A, I1, I2, J, cdef)
 
     # strain = stress / E
     strain_a = stress_a / E
@@ -297,16 +322,20 @@ def _recover_straini_cbeam(A: float, I: np.ndarray, J: float,
     # axial strain from element forces
     axial = Fe[0] / (A * E)
 
-    smaxa = max(s1a, s2a, s3a, s4a)
-    smina = min(s1a, s2a, s3a, s4a)
-    smaxb = max(s1b, s2b, s3b, s4b)
-    sminb = min(s1b, s2b, s3b, s4b)
-    MS_tension = np.nan
-    MS_compression = np.nan
+    # smaxa = max(s1a, s2a, s3a, s4a)
+    # smina = min(s1a, s2a, s3a, s4a)
+    # smaxb = max(s1b, s2b, s3b, s4b)
+    # sminb = min(s1b, s2b, s3b, s4b)
+    # MS_tension = np.nan
+    # MS_compression = np.nan
 
+    #out = (
+    #    s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
+    #    s1b, s2b, s3b, s4b, smaxb, sminb, MS_compression,
+    #)
     out = (
-        s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
-        s1b, s2b, s3b, s4b, smaxb, sminb, MS_compression,
+        s1a, s2a, s3a, s4a, axial, np.nan, np.nan, np.nan,
+        s1b, s2b, s3b, s4b, np.nan, np.nan, np.nan,
     )
     return out
 
@@ -334,7 +363,7 @@ def _recover_stress_cbeam(
     elem = get_element(model, element_name, ieids, eids)
 
     LAIJEG = elem.stiffness_info()
-    forces, Fe = get_beam_force_fe(
+    Fe = get_beam_force_fe(
         model, xb, dof_map, elem, ieids, neids,
         LAIJEG, fdtype=fdtype)
 
@@ -349,23 +378,42 @@ def _recover_stress_cbeam(
 
     cdef = _get_beam_recovery_points(model, elem)
 
-    stresses = np.full((neids, 15), np.nan, dtype=fdtype)
+    stress = np.full((neids, 15), np.nan, dtype=fdtype)
     for (ieid, Li, Ai, Ii, Ji, Ei, Gi, nui,
          Fei, cdefi) in zip(
          ieids, L, A, I, J, E, G, nu, Fe, cdef):
-        stresses[ieid, :] = _recover_stressi_cbeam(
+        stress[ieid, :] = _recover_stressi_cbeam(
             Li, Ai, Ii, Ji, Ei, Gi,
             Fei, cdefi, fdtype=fdtype,)
 
-    data = stresses.reshape(1, *stresses.shape)
+    s1a, s2a, s3a, s4a = stress[:, 0], stress[:, 1], stress[:, 2], stress[:, 3]
+    s1b, s2b, s3b, s4b = stress[:, 8], stress[:, 9], stress[:, 10], stress[:, 11]
+    smaxa = np.max([s1a, s2a, s3a, s4a], axis=0)  # 5
+    smina = np.min([s1a, s2a, s3a, s4a], axis=0)  # 6
+    smaxb = np.max([s1b, s2b, s3b, s4b], axis=0)  # 12
+    sminb = np.min([s1b, s2b, s3b, s4b], axis=0)  # 13
+    assert smaxa.shape == s1a.shape
+    stress[:, 5] = smaxa
+    stress[:, 6] = smina
+    stress[:, 12] = smaxb
+    stress[:, 13] = sminb
+    #MS_tension = np.nan
+    #MS_compression = np.nan
+
+    #out = (
+    #    s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
+    #    s1b, s2b, s3b, s4b, smaxb, sminb, MS_compression,
+    #)
+
+    data = stress.reshape(1, *stress.shape)
     table_name = "OES1"
     stress_obj = RealBarStressArray.add_static_case(
         table_name, "CBAR", eids, data, isubcase,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label,)
 
-    stress = op2.op2_results.stress
-    stress.cbeam_stress[isubcase] = stress_obj
+    stress_dict = op2.op2_results.stress
+    stress_dict.cbeam_stress[isubcase] = stress_obj
 
     stress_obj.write_f06(
         f06_file, header=None, page_stamp=page_stamp,
@@ -387,27 +435,30 @@ def _recover_stressi_cbeam(
     """Get static CBAR stress at points C, D, E, F for ends A and B."""
     I1, I2, I12 = I
 
-    C1, C2, D1, D2, E1, E2, F1, F2 = cdef
     stress_a, stress_b = beam_stress_at_points(
-        Fe, A, I1, I2, J,
-        C1, C2, D1, D2, E1, E2, F1, F2)
+        Fe, A, I1, I2, J, cdef)
 
     s1a, s2a, s3a, s4a = stress_a
     s1b, s2b, s3b, s4b = stress_b
     axial = Fe[0] / A
 
-    smaxa = max(s1a, s2a, s3a, s4a)
-    smina = min(s1a, s2a, s3a, s4a)
-    smaxb = max(s1b, s2b, s3b, s4b)
-    sminb = min(s1b, s2b, s3b, s4b)
-    MS_tension = np.nan
-    MS_compression = np.nan
+    #smaxa = max(s1a, s2a, s3a, s4a)
+    #smina = min(s1a, s2a, s3a, s4a)
+    #smaxb = max(s1b, s2b, s3b, s4b)
+    #sminb = min(s1b, s2b, s3b, s4b)
+    #MS_tension = np.nan
+    #MS_compression = np.nan
 
+    #out = (
+    #    s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
+    #    s1b, s2b, s3b, s4b, smaxb, sminb, MS_compression,
+    #)
     out = (
-        s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
-        s1b, s2b, s3b, s4b, smaxb, sminb, MS_compression,
+        s1a, s2a, s3a, s4a, axial, np.nan, np.nan, np.nan,
+        s1b, s2b, s3b, s4b, np.nan, np.nan, np.nan,
     )
     return out
+
 
 def beam_stress_at_points(
     Fe: np.ndarray,
@@ -415,14 +466,7 @@ def beam_stress_at_points(
     I1: float,
     I2: float,
     J: float,
-    c1: float,
-    c2: float,
-    d1: float,
-    d2: float,
-    e1: float,
-    e2: float,
-    f1: float,
-    f2: float,) -> tuple[np.ndarray, np.ndarray]:
+    cdef: np.ndarray,) -> tuple[np.ndarray, np.ndarray]:
     """Compute beam longitudinal stress at C,D,E,F recovery points.
 
     Parameters
@@ -437,7 +481,7 @@ def beam_stress_at_points(
         Moment of inertia about axis 2 (for bending in plane 2).
     J : float
         Torsional constant.
-    c1, c2, d1, d2, e1, e2, f1, f2 : float
+    cdef : np.ndarray, shape (8,)
         Stress recovery point coordinates (y, z offsets).
 
     Returns
@@ -453,6 +497,8 @@ def beam_stress_at_points(
     The sign convention follows Nastran: point (c1,c2) means y=c1, z=c2.
     sigma = Fx/A + Mz*c1/Iz + My*c2/Iy  (Nastran convention)
     """
+    c1, c2, d1, d2, e1, e2, f1, f2 = cdef
+
     # Safe division
     inv_I1 = 1.0 / I1 if I1 > 0.0 else 0.0
     inv_I2 = 1.0 / I2 if I2 > 0.0 else 0.0
