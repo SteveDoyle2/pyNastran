@@ -20,7 +20,8 @@ from ..utils import get_param, DOF_MAP
 def build_Mbb(model: BDF, subcase: Subcase,
               dof_map: DOF_MAP, ndof: int,
               xyz_cid0: np.ndarray | None=None,
-              fdtype: str="float64") -> NDArrayNNfloat:
+              fdtype: str="float64",
+              solver_dict=None) -> NDArrayNNfloat:
     """builds the mass matrix in the basic frame, [Mbb]"""
     log = model.log
     log.info("starting build_Mbb")
@@ -311,12 +312,15 @@ def build_Mbb(model: BDF, subcase: Subcase,
         log.info(f"finished build_Mbb; M={massi:.6g}; mass_total={mass_total:.6g}")
     else:
         return None
+    
+    # write_mat(model, 'Mbb', Mbb, solver_dict)
     return Mbb
 
 
 
 def conm2_fill_Mbb(model: BDF, mass_total: float,
-                   coo_m, dof_map: dict[tuple[int, int], int]) -> float:
+                   coo_m, dof_map: dict[tuple[int, int], int],
+                   ) -> float:
     eye3 = np.eye(3, dtype="float64")
     conm2 = model.conm2
     log = model.log

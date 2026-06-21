@@ -1779,23 +1779,23 @@ class PBEAM(Property):
         prop.f1 = hslice_by_idim(i, istation, self.f1)
         prop.f2 = hslice_by_idim(i, istation, self.f2)
 
-        prop.k1 = hslice_by_idim(i, istation, self.k1)
-        prop.k2 = hslice_by_idim(i, istation, self.k2)
-        prop.s1 = hslice_by_idim(i, istation, self.s1)
-        prop.s2 = hslice_by_idim(i, istation, self.s2)
+        prop.k1 = self.k1[i]
+        prop.k2 = self.k2[i]
+        prop.s1 = self.s1[i]
+        prop.s2 = self.s2[i]
 
-        prop.nsia = hslice_by_idim(i, istation, self.nsia)
-        prop.nsib = hslice_by_idim(i, istation, self.nsib)
-        prop.cwa = hslice_by_idim(i, istation, self.cwa)
-        prop.cwb = hslice_by_idim(i, istation, self.cwb)
-        prop.m1a = hslice_by_idim(i, istation, self.m1a)
-        prop.m2a = hslice_by_idim(i, istation, self.m2a)
-        prop.m1b = hslice_by_idim(i, istation, self.m1b)
-        prop.m2b = hslice_by_idim(i, istation, self.m2b)
-        prop.n1a = hslice_by_idim(i, istation, self.n1a)
-        prop.n2a = hslice_by_idim(i, istation, self.n2a)
-        prop.n1b = hslice_by_idim(i, istation, self.n1b)
-        prop.n2b = hslice_by_idim(i, istation, self.n2b)
+        prop.nsia = self.nsia[i]
+        prop.nsib = self.nsib[i]
+        prop.cwa = self.cwa[i]
+        prop.cwb = self.cwb[i]
+        prop.m1a = self.m1a[i]
+        prop.m2a = self.m2a[i]
+        prop.m1b = self.m1b[i]
+        prop.m2b = self.m2b[i]
+        prop.n1a = self.n1a[i]
+        prop.n2a = self.n2a[i]
+        prop.n1b = self.n1b[i]
+        prop.n2b = self.n2b[i]
 
         prop.nstation = self.nstation[i]
         prop.n = len(i)

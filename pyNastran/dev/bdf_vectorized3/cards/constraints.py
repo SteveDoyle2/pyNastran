@@ -486,6 +486,7 @@ class SPC1(VectorizedBaseCard):
                    missing,
                    node=(nid, self.node_id),)
 
+
 class MPC(VectorizedBaseCard):
     """
     Multipoint Constraint
@@ -508,6 +509,7 @@ class MPC(VectorizedBaseCard):
     @VectorizedBaseCard.clear_check
     def clear(self) -> None:
         self.mpc_id = np.array([], dtype='int32')
+        self.nnode = np.array([], dtype='int32')
 
     def add(self, mpc_id: int,
             nodes: list[int], components: list[str], coefficients: list[float],

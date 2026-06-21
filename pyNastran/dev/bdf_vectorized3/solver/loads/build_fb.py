@@ -23,14 +23,17 @@ def build_Fb_from_loadid(model: BDF,
                          load_id: int=0,
                          temp_load_id: int=0,
                          fdtype: str='float32',
-                         Mbb: Array | None = None):
+                         Mbb: Array | None = None,
+                         xyz_cid0: np.ndarray | None = None):
+    if xyz_cid0 is None:
+        xyz_cid0 = model.grid.xyz_cid0()
+
     Fb = np.zeros(ndof, dtype=fdtype)
     assert len(xg) == ndof
 
     if load_id == 0 and temp_load_id == 0:
         return Fb
     log = model.log
-    xyz_cid0 = model.grid.xyz_cid0()
 
     if load_id:
         reduced_loads = model.get_reduced_static_load()
@@ -112,7 +115,7 @@ def build_Fb_from_loadid(model: BDF,
             build_thermal_load_cquad4(model, Fb, dof_map, node_temperatures)
             build_thermal_load_ctria3(model, Fb, dof_map, node_temperatures)
             build_thermal_load_beam(model, Fb, dof_map, node_temperatures, xyz_cid0)
-    return Fb, Mbb
+    return Fb, Mbb, xyz_cid0
 
 
 def build_thermal_load_beam(

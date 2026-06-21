@@ -17,7 +17,9 @@ from cpylog import SimpleLogger
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.solver.solver import Solver
 from pyNastran.bdf.case_control_deck import CaseControlDeck
-DIRNAME = Path(__file__).parent / '_nastran'
+#DIRNAME = Path(__file__).parent / '_nastran'
+DIRNAME = Path(__file__).parent / 'examples'
+
 
 def _make_free_free_beam(nmodes: int = 5):
     """Create a free-free beam model with SUPORT at node 1.
@@ -27,7 +29,7 @@ def _make_free_free_beam(nmodes: int = 5):
     """
     log = SimpleLogger(level="warning", encoding="utf-8")
     model = BDF(log=log, mode="msc")
-    model.bdf_filename = "suport_test.bdf"
+    model.bdf_filename = DIRNAME / "suport_test.bdf"
 
     # 5 grids along x-axis
     for i in range(1, 6):
@@ -183,11 +185,5 @@ class TestSuport(unittest.TestCase):
             os.remove(solver.op2_filename)
 
 
-if __name__ == "__main__":
-    test_sol103_free_free_modes()
-    print("PASS: test_sol103_free_free_modes")
-
-    test_sol101_inertia_relief()
-    print("PASS: test_sol101_inertia_relief")
-
-    print("\nAll SUPORT tests passed.")
+if __name__ == "__main__":  # pragma: no cover
+    unittest.main()
