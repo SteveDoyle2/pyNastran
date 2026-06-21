@@ -23,12 +23,18 @@ if TYPE_CHECKING:
 # Gauss quadrature constants
 # ---------------------------------------------------------------------------
 _GP = 1.0 / np.sqrt(3.0)
-_GAUSS_2x2_PTS = np.array([[-_GP, -_GP], [_GP, -_GP], [_GP, _GP], [-_GP, _GP]])
+_GAUSS_2x2_PTS = np.array([
+    [-_GP, -_GP],
+    [_GP, -_GP],
+    [_GP, _GP],
+    [-_GP, _GP],])
 _GAUSS_2x2_WTS = np.array([1.0, 1.0, 1.0, 1.0])
 
 # MITC4 tying points
-_TYING_XI = np.array([[0.0, -1.0], [0.0, 1.0]])
-_TYING_ETA = np.array([[-1.0, 0.0], [1.0, 0.0]])
+_TYING_XI = np.array([[0.0, -1.0],
+                      [0.0, 1.0]])
+_TYING_ETA = np.array([[-1.0, 0.0],
+                       [1.0, 0.0]])
 
 # MacNeal hourglass vector
 _GAMMA = np.array([1.0, -1.0, 1.0, -1.0])
@@ -39,38 +45,106 @@ _GAMMA = np.array([1.0, -1.0, 1.0, -1.0])
 # ---------------------------------------------------------------------------
 def _shape_quad4(xi: float, eta: float) -> np.ndarray:
     """Bilinear shape functions (4,)."""
-    return 0.25 * np.array([
+    N = 0.25 * np.array([
         (1.0 - xi) * (1.0 - eta),
         (1.0 + xi) * (1.0 - eta),
         (1.0 + xi) * (1.0 + eta),
         (1.0 - xi) * (1.0 + eta),
     ])
+    assert N.shape == (4,), N.shape
+    return N
+
+
+def _shape_quad4s(xi: np.ndarray,
+                  eta: np.ndarray) -> np.ndarray:
+    """Bilinear shape functions (4,)."""
+    neid = len(xi)
+    N = np.full((neid, 4), np.nan, dtype='float64')
+    N[:, 0] = (1.0 - xi) * (1.0 - eta)
+    N[:, 1] = (1.0 + xi) * (1.0 - eta)
+    N[:, 2] = (1.0 + xi) * (1.0 + eta)
+    N[:, 3] = (1.0 - xi) * (1.0 + eta)
+    return N / 4.0
 
 
 def _dshape_quad4(xi: float, eta: float) -> np.ndarray:
     """Shape function derivatives (2, 4): [dN/dxi; dN/deta]."""
-    return 0.25 * np.array([
+    dN = 0.25 * np.array([
         [-(1.0 - eta), (1.0 - eta), (1.0 + eta), -(1.0 + eta)],
         [-(1.0 - xi), -(1.0 + xi), (1.0 + xi), (1.0 - xi)],
     ])
+    assert dN.shape == (2, 4), dN.shape
+    return dN
 
 
-def _jacobian(dN: np.ndarray, x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, float]:
+def _dshape_quad4s(xi: np.ndarray, eta: np.ndarray) -> np.ndarray:
+    """Shape function derivatives (2, 4): [dN/dxi; dN/deta]."""
+    neid = len(xi)
+    dN = np.full((neid, 2, 4), np.nan, dtype='float64')
+    dN[:, 0, 0] = -(1.0 - eta)
+    dN[:, 0, 1] = (1.0 - eta)
+    dN[:, 0, 2] = (1.0 + eta)
+    dN[:, 0, 3] = -(1.0 + eta)
+
+    dN[:, 1, 0] = -(1.0 - xi)
+    dN[:, 1, 1] = -(1.0 + xi)
+    dN[:, 1, 2] = (1.0 + xi)
+    dN[:, 1, 3] = (1.0 - xi)
+    return dN / 4.0
+
+
+def _jacobian(dN: np.ndarray,
+              x: np.ndarray,
+              y: np.ndarray) -> tuple[np.ndarray, float]:
     """Jacobian (2, 2) and determinant."""
+    assert dN.shape == (2,4), dN.shape
+    assert x.shape == (4,), x.shape
     J = np.array([[dN[0] @ x, dN[0] @ y], [dN[1] @ x, dN[1] @ y]])
     det_J = J[0, 0] * J[1, 1] - J[0, 1] * J[1, 0]
+    return J, det_J
+
+def _jacobians(dNs: np.ndarray,
+               x: np.ndarray,
+               y: np.ndarray) -> tuple[np.ndarray, float]:
+    """Jacobian (n, 2, 2) and determinant."""
+    neid = dNs.shape[0]
+    J = np.full((neid, 2, 2), np.nan, dtype=dNs.dtype)
+    for i, dN in zip(count(), dNs):
+        #Ji, _ = _jacobian(dN, x, y)
+        J[i, :, :] = [[dN[0,:] @ x, dN[0,:] @ y],
+                      [dN[1,:] @ x, dN[1,:] @ y]]
+    det_J = J[:, 0, 0] * J[:, 1, 1] - J[:, 0, 1] * J[:, 1, 0]
     return J, det_J
 
 
 def _jacobian_inv(J: np.ndarray, det_J: float) -> np.ndarray:
     """Inverse Jacobian (2, 2)."""
-    return np.array([[J[1, 1], -J[0, 1]], [-J[1, 0], J[0, 0]]]) / det_J
+    return np.array([
+        [ J[1, 1], -J[0, 1]],
+        [-J[1, 0],  J[0, 0]]]) / det_J
+
+
+def _jacobian_invs(J: np.ndarray, det_J: float) -> np.ndarray:
+    """Inverse Jacobian (n, 2, 2)."""
+    Jinv = np.full(J.shape, np.nan, dtype=J.dtype)
+    Jinv[:, 0, 0] = J[:, 1, 1]
+    Jinv[:, 0, 1] = -J[:, 0, 1]
+    Jinv[:, 1, 0] = -J[:, 1, 0]
+    Jinv[:, 1, 1] = J[:, 0, 0]
+    #Jinv = np.array([
+    #    [ J[:, 1, 1], -J[:, 0, 1]],
+    #    [-J[:, 1, 0],  J[:, 0, 0]],
+    #])
+    assert Jinv.shape == (4, 2, 2), Jinv.shape
+    Jinv /= det_J[:, np.newaxis, np.newaxis]
+    return Jinv
 
 
 # ---------------------------------------------------------------------------
 # Strain-displacement matrices
 # ---------------------------------------------------------------------------
-def _membrane_B(dN_dx: np.ndarray, dN_dy: np.ndarray) -> np.ndarray:
+def _membrane_B(dN_dx: np.ndarray,
+                dN_dy: np.ndarray) -> np.ndarray:
     """Membrane B-matrix (3, 8)."""
     Bm = np.zeros((3, 8))
     Bm[0, 0::2] = dN_dx
@@ -80,7 +154,8 @@ def _membrane_B(dN_dx: np.ndarray, dN_dy: np.ndarray) -> np.ndarray:
     return Bm
 
 
-def _bending_B(dN_dx: np.ndarray, dN_dy: np.ndarray) -> np.ndarray:
+def _bending_B(dN_dx: np.ndarray,
+               dN_dy: np.ndarray) -> np.ndarray:
     """Bending curvature-displacement matrix (3, 12). DOF: [w, tx, ty]."""
     Bb = np.zeros((3, 12))
     Bb[0, 2::3] = dN_dx
@@ -90,7 +165,9 @@ def _bending_B(dN_dx: np.ndarray, dN_dy: np.ndarray) -> np.ndarray:
     return Bb
 
 
-def _shear_B(N: np.ndarray, dN_dx: np.ndarray, dN_dy: np.ndarray) -> np.ndarray:
+def _shear_B(N: np.ndarray,
+             dN_dx: np.ndarray,
+             dN_dy: np.ndarray) -> np.ndarray:
     """Standard transverse shear B-matrix (2, 12). DOF: [w, tx, ty]."""
     Bs = np.zeros((2, 12))
     Bs[0, 0::3] = dN_dx
@@ -103,7 +180,9 @@ def _shear_B(N: np.ndarray, dN_dx: np.ndarray, dN_dy: np.ndarray) -> np.ndarray:
 # ---------------------------------------------------------------------------
 # MITC4 transverse shear
 # ---------------------------------------------------------------------------
-def _covariant_shear_row(N: np.ndarray, dN_row: np.ndarray, J_row: np.ndarray) -> np.ndarray:
+def _covariant_shear_row(N: np.ndarray,
+                         dN_row: np.ndarray,
+                         J_row: np.ndarray) -> np.ndarray:
     """One covariant transverse shear strain row (12,)."""
     J_a1, J_a2 = J_row[0], J_row[1]
     row = np.zeros(12)
@@ -113,20 +192,37 @@ def _covariant_shear_row(N: np.ndarray, dN_row: np.ndarray, J_row: np.ndarray) -
     return row
 
 
-def _mitc4_shear_B(xi: float, eta: float, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+def _mitc4_shear_B(xi: float, eta: float,
+                   x: np.ndarray, y: np.ndarray) -> np.ndarray:
     """MITC4 assumed-strain transverse shear B-matrix (2, 12)."""
     e_xi3_rows = np.zeros((2, 12))
-    for itp, (xi_tp, eta_tp) in enumerate(_TYING_XI):
-        N_tp = _shape_quad4(xi_tp, eta_tp)
-        dN_tp = _dshape_quad4(xi_tp, eta_tp)
-        J_tp, _ = _jacobian(dN_tp, x, y)
+    xis = _TYING_XI[:, 0]
+    etas = _TYING_XI[:, 1]
+    N_tps = _shape_quad4s(xis, etas)
+    dN_tps = _dshape_quad4s(xis, etas)
+    J_tps, _ = _jacobians(dN_tps, x, y)
+    for itp, (xi_tp, eta_tp), N_tp, dN_tp, J_tp in zip(
+        count(), _TYING_XI, N_tps, dN_tps, J_tps):
+        #N_tp = _shape_quad4(xi_tp, eta_tp)
+        #dN_tp = _dshape_quad4(xi_tp, eta_tp)
+        #assert np.allclose(dN_tp, dN_tpi)
+        #J_tp, _ = _jacobian(dN_tp, x, y)
+        #assert J_tp.shape == J_tpi.shape, (J_tp.shape, J_tpi.shape)
+        #assert np.allclose(J_tp, J_tpi), (J_tp, J_tpi)
         e_xi3_rows[itp] = _covariant_shear_row(N_tp, dN_tp[0], J_tp[0])
 
     e_eta3_rows = np.zeros((2, 12))
-    for itp, (xi_tp, eta_tp) in enumerate(_TYING_ETA):
-        N_tp = _shape_quad4(xi_tp, eta_tp)
-        dN_tp = _dshape_quad4(xi_tp, eta_tp)
-        J_tp, _ = _jacobian(dN_tp, x, y)
+    xis = _TYING_ETA[:, 0]
+    etas = _TYING_ETA[:, 1]
+    N_tps = _shape_quad4s(xis, etas)
+    dN_tps = _dshape_quad4s(xis, etas)
+    J_tps, _ = _jacobians(dN_tps, x, y)
+    for (itp, (xi_tp, eta_tp), N_tp, dN_tp, J_tp) in zip(
+        count(), _TYING_ETA,   N_tps, dN_tps, J_tps):
+        #N_tp = _shape_quad4(xi_tp, eta_tp)
+        #dN_tp = _dshape_quad4(xi_tp, eta_tp)
+        #J_tp, _ = _jacobian(dN_tp, x, y)
+        #assert np.allclose(J_tp, J_tpi)
         e_eta3_rows[itp] = _covariant_shear_row(N_tp, dN_tp[1], J_tp[1])
 
     e_xi3 = 0.5 * (1.0 - eta) * e_xi3_rows[0] + 0.5 * (1.0 + eta) * e_xi3_rows[1]
@@ -161,12 +257,16 @@ def _split_membrane_direct_shear(A: np.ndarray) -> tuple[np.ndarray, np.ndarray]
 
     Works correctly for both isotropic and orthotropic materials.
     """
-    A_direct = np.array([[A[0, 0], A[0, 1], 0.0], [A[1, 0], A[1, 1], 0.0], [0.0, 0.0, 0.0]])
+    A_direct = np.array([
+        [A[0, 0], A[0, 1], 0.0],
+        [A[1, 0], A[1, 1], 0.0],
+        [0.0, 0.0, 0.0]])
     A_shear = A - A_direct
     return A_direct, A_shear
 
 
-def _membrane_selective(x: np.ndarray, y: np.ndarray, A_mat: np.ndarray) -> np.ndarray:
+def _membrane_selective(x: np.ndarray, y: np.ndarray,
+                        A_mat: np.ndarray) -> np.ndarray:
     """Compute 8x8 membrane stiffness with 1-point + hourglass stabilization.
 
     Uses the NX Nastran approach: full constitutive at 1-point (constant
@@ -180,12 +280,19 @@ def _membrane_selective(x: np.ndarray, y: np.ndarray, A_mat: np.ndarray) -> np.n
     """
     # Full 2x2 integration
     K_2x2 = np.zeros((8, 8))
-    for gpt, wt in zip(_GAUSS_2x2_PTS, _GAUSS_2x2_WTS):
-        xi, eta = gpt
-        dN_dnat = _dshape_quad4(xi, eta)
-        J, det_J = _jacobian(dN_dnat, x, y)
-        J_inv = _jacobian_inv(J, det_J)
-        dN_dxy = J_inv @ dN_dnat
+    xis = _GAUSS_2x2_PTS[:, 0]
+    etas = _GAUSS_2x2_PTS[:, 1]
+    dN_dnats = _dshape_quad4s(xis, etas)
+    #assert dN_dnats.shape == (4, 2, 4), dN_dnats.shape
+    Js, det_Js = _jacobians(dN_dnats, x, y)
+    #assert Js.shape == (4, 2, 2), Js.shape
+    #assert det_Js.shape == (4, ), det_Js.shape
+    J_invs = _jacobian_invs(Js, det_Js)
+    
+    dN_dxys = np.einsum('ntu,nuv->ntv', J_invs, dN_dnats)
+    #assert dN_dxys.shape == (4, 2, 4), dN_dxys.shape
+
+    for (det_J,  dN_dxy,  wt) in zip(det_Js, dN_dxys, _GAUSS_2x2_WTS):
         Bm = _membrane_B(dN_dxy[0], dN_dxy[1])
         K_2x2 += (Bm.T @ A_mat @ Bm) * det_J * wt
 
@@ -228,8 +335,7 @@ def mitc4_stiffness(
     D_mat: np.ndarray,
     Ds_mat: np.ndarray,
     B_mat: np.ndarray | None = None,
-    membrane: str = "selective",
-) -> np.ndarray:
+    membrane: str = "selective",) -> np.ndarray:
     """20x20 MITC4 shell element stiffness.
 
     Parameters
@@ -252,13 +358,17 @@ def mitc4_stiffness(
     K_ss = np.zeros((12, 12))
     K_mb = np.zeros((8, 12))
 
-    for gpt, wt in zip(_GAUSS_2x2_PTS, _GAUSS_2x2_WTS):
+    gauss_xi = _GAUSS_2x2_PTS[:, 0]
+    gauss_eta = _GAUSS_2x2_PTS[:, 1]
+    dN_dnats = _dshape_quad4s(gauss_xi, gauss_eta)
+    Js, det_Js = _jacobians(dN_dnats, x, y)
+    J_invs = _jacobian_invs(Js, det_Js)
+    dN_dxys = np.einsum('ntu,nuv->ntv', J_invs, dN_dnats)
+    
+    for gpt, wt, dN_dnat, det_J, J_inv, dN_dxy in zip(
+                 _GAUSS_2x2_PTS, _GAUSS_2x2_WTS, 
+                 dN_dnats, det_Js, J_invs, dN_dxys):
         xi, eta = gpt
-        dN_dnat = _dshape_quad4(xi, eta)
-        J, det_J = _jacobian(dN_dnat, x, y)
-        J_inv = _jacobian_inv(J, det_J)
-        dN_dxy = J_inv @ dN_dnat
-
         Bb = _bending_B(dN_dxy[0], dN_dxy[1])
         K_bb += (Bb.T @ D_mat @ Bb) * det_J * wt
 
@@ -282,11 +392,13 @@ def mitc4_stiffness(
 # MacNeal stabilization helpers
 # ---------------------------------------------------------------------------
 def _macneal_membrane_stabilization(
-    x: np.ndarray, y: np.ndarray, A_mat: np.ndarray, Bm_c: np.ndarray, det_J_c: float
-) -> np.ndarray:
+    x: np.ndarray, y: np.ndarray, A_mat: np.ndarray,
+    Bm_c: np.ndarray, det_J_c: float) -> np.ndarray:
     """Membrane hourglass stabilization (8, 8). alpha=0.3."""
     A_elem = det_J_c * 4.0
     K_2x2 = np.zeros((8, 8))
+    xis = _GAUSS_2x2_PTS[:, 0]
+    etas = _GAUSS_2x2_PTS[:, 1]
     for gpt, wt in zip(_GAUSS_2x2_PTS, _GAUSS_2x2_WTS):
         xi, eta = gpt
         dN_dnat = _dshape_quad4(xi, eta)
@@ -300,8 +412,8 @@ def _macneal_membrane_stabilization(
 
 
 def _macneal_bending_stabilization(
-    x: np.ndarray, y: np.ndarray, D_mat: np.ndarray, Bb_c: np.ndarray, det_J_c: float
-) -> np.ndarray:
+    x: np.ndarray, y: np.ndarray, D_mat: np.ndarray,
+    Bb_c: np.ndarray, det_J_c: float) -> np.ndarray:
     """Bending hourglass stabilization (12, 12). alpha=0.5."""
     A_elem = det_J_c * 4.0
     K_2x2 = np.zeros((12, 12))
@@ -589,7 +701,9 @@ def _drilling_allman(x: np.ndarray, y: np.ndarray, A_mat: np.ndarray) -> np.ndar
     return K_drill - K_std
 
 
-def _drilling_hughes_brezzi(x: np.ndarray, y: np.ndarray, gamma: float) -> np.ndarray:
+def _drilling_hughes_brezzi(x: np.ndarray,
+                            y: np.ndarray,
+                            gamma: float) -> np.ndarray:
     """Hughes-Brezzi variational drilling: penalty on (θz - ½ curl u).
 
     Adds the term γ·∫(θz - ½(∂v/∂x - ∂u/∂y))² dA to the element energy.
@@ -632,8 +746,7 @@ def geometric_stiffness(
     x: np.ndarray,
     y: np.ndarray,
     stress_resultants: np.ndarray,
-    thickness: float = 0.0,
-) -> np.ndarray:
+    thickness: float = 0.0,) -> np.ndarray:
     """20x20 geometric (differential) stiffness for buckling.
 
     Parameters
@@ -662,13 +775,15 @@ def geometric_stiffness(
     tx_idx = np.array([3, 8, 13, 18], dtype=int)
     ty_idx = np.array([4, 9, 14, 19], dtype=int)
 
-    for igp, (gpt, wt) in enumerate(zip(_GAUSS_2x2_PTS, _GAUSS_2x2_WTS)):
-        xi, eta = gpt
-        dN_dnat = _dshape_quad4(xi, eta)
-        J, det_J = _jacobian(dN_dnat, x, y)
-        J_inv = _jacobian_inv(J, det_J)
-        dN_dxy = J_inv @ dN_dnat  # (2, 4)
+    xis = _GAUSS_2x2_PTS[:, 0]
+    etas = _GAUSS_2x2_PTS[:, 1]
+    dN_dnats = _dshape_quad4(xis, etas)
+    Js, det_Js = _jacobians(dN_dnats, x, y)
+    J_invs = _jacobian_invs(Js, det_Js)
+    dN_dxys = np.einsum('ntu,nuv->ntv', J_invs, dN_dnats)
 
+    for igp, (gpt, wt, det_J, dN_dxy) in zip(count(), _GAUSS_2x2_PTS, _GAUSS_2x2_WTS,
+                       det_Js, dN_dxys):
         Nxx, Nyy, Nxy = stress_at_gp[igp]
         S_N = np.array([[Nxx, Nxy], [Nxy, Nyy]])
         kg_N = (dN_dxy.T @ S_N @ dN_dxy) * det_J * wt  # (4, 4)
@@ -760,8 +875,7 @@ def _get_ABD_for_element(
     pid: int,
     pshell,
     pcomp,
-    pcompg,
-) -> tuple[np.ndarray, np.ndarray | None, np.ndarray, np.ndarray, float]:
+    pcompg,) -> tuple[np.ndarray, np.ndarray | None, np.ndarray, np.ndarray, float]:
     """Get A, B, D, Ds, thickness for a single property ID.
 
     Returns
@@ -879,15 +993,15 @@ def _get_ABD_for_element(
         ilayer = prop_slice.ilayer
         i0, i1 = ilayer[0]
         ply_mids = prop_slice.material_id[i0:i1]
-        ply_thetas = prop_slice.theta[i0:i1]
+        ply_thetas = np.radians(prop_slice.theta[i0:i1])
         ply_thicknesses = prop_slice.thickness[i0:i1]
         Ds_mat = np.zeros((2, 2))
         for mid_ply, theta_ply, t_ply in zip(ply_mids, ply_thetas, ply_thicknesses):
             g13_ply, g23_ply = _get_shear_modulus(mid_ply)
             Ds_ply = np.array([[g13_ply, 0.0], [0.0, g23_ply]])
             if abs(theta_ply) > 1e-10:
-                c = np.cos(np.radians(theta_ply))
-                s = np.sin(np.radians(theta_ply))
+                c = np.cos(theta_ply)
+                s = np.sin(theta_ply)
                 R = np.array([[c, s], [-s, c]])
                 Ds_ply = R.T @ Ds_ply @ R
             Ds_mat += t_ply * Ds_ply
@@ -1590,7 +1704,7 @@ def _get_alpha_vec_for_element(
             ilayer = prop_slice.ilayer
             i0, i1 = ilayer[0]
             ply_mids = prop_slice.material_id[i0:i1]
-            ply_thetas = prop_slice.theta[i0:i1]
+            ply_thetas = np.radians(prop_slice.theta[i0:i1])
             ply_thicknesses = prop_slice.thickness[i0:i1]
             total_t = float(prop_slice.total_thickness()[0])
 
@@ -1612,13 +1726,13 @@ def _get_alpha_vec_for_element(
                     idx = np.searchsorted(mat8.material_id, mid_ply)
                     if idx < mat8.n and mat8.material_id[idx] == mid_ply:
                         a_ply = np.array(
-                            [float(mat8.alpha[idx, 0]), float(mat8.alpha[idx, 1]), 0.0]
+                            [mat8.alpha[idx, 0], mat8.alpha[idx, 1], 0.0]
                         )
-                        tref_ply = float(mat8.tref[idx])
+                        tref_ply = mat8.tref[idx]
 
                 if abs(theta_ply) > 1e-10:
-                    c = np.cos(np.radians(theta_ply))
-                    s = np.sin(np.radians(theta_ply))
+                    c = np.cos(theta_ply)
+                    s = np.sin(theta_ply)
                     # Transform alpha from ply to laminate coords
                     ax = a_ply[0] * c**2 + a_ply[1] * s**2
                     ay = a_ply[0] * s**2 + a_ply[1] * c**2
@@ -1741,13 +1855,11 @@ def build_thermal_load_cquad4(
         if abs(theta_mat) > 1e-10:
             c = np.cos(theta_mat)
             s = np.sin(theta_mat)
-            T_inv = np.array(
-                [
+            T_inv = np.array([
                     [c**2, s**2, -2 * s * c],
                     [s**2, c**2, 2 * s * c],
                     [s * c, -s * c, c**2 - s**2],
-                ]
-            )
+            ])
             A_mat = T_inv @ A_mat @ T_inv.T
             if B_mat is not None:
                 B_mat = T_inv @ B_mat @ T_inv.T
@@ -1826,8 +1938,7 @@ def build_thermal_load_ctria3(
     model: BDF,
     Fb: np.ndarray,
     dof_map: DOF_MAP,
-    node_temperatures: dict[int, float],
-) -> None:
+    node_temperatures: dict[int, float],) -> None:
     """Compute and add CTRIA3 thermal equivalent nodal loads to Fb.
 
     Parameters
@@ -1908,7 +2019,7 @@ def build_thermal_load_ctria3(
 
         theta_mat = 0.0
         if mcid_elem >= 0:
-            mcid_ref = model.coord.slice_card_by_id(np.array([mcid_elem]))
+            mcid_ref = model.coord.slice_card_by_id([mcid_elem])
             i_mcid = mcid_ref.i[0]
             i_proj = i_mcid - np.dot(i_mcid, normal[i_elem]) * normal[i_elem]
             i_proj_norm = np.linalg.norm(i_proj)
@@ -1923,13 +2034,11 @@ def build_thermal_load_ctria3(
         if abs(theta_mat) > 1e-10:
             c = np.cos(theta_mat)
             s = np.sin(theta_mat)
-            T_inv = np.array(
-                [
-                    [c**2, s**2, -2 * s * c],
-                    [s**2, c**2, 2 * s * c],
-                    [s * c, -s * c, c**2 - s**2],
-                ]
-            )
+            T_inv = np.array([
+                [c**2, s**2, -2 * s * c],
+                [s**2, c**2, 2 * s * c],
+                [s * c, -s * c, c**2 - s**2],
+            ])
             A_mat = T_inv @ A_mat @ T_inv.T
             if B_mat is not None:
                 B_mat = T_inv @ B_mat @ T_inv.T
@@ -2606,8 +2715,7 @@ def ctria3_mindlin_stiffness(
     A_mat: np.ndarray,
     D_mat: np.ndarray,
     Ds_mat: np.ndarray,
-    B_mat: np.ndarray | None = None,
-) -> np.ndarray:
+    B_mat: np.ndarray | None = None,) -> np.ndarray:
     """15x15 CTRIA3 Mindlin-Reissner shell element stiffness (DST formulation).
 
     Uses the DST (Discrete Shear Triangle) of Batoz & Lardeur (1989), which
@@ -2779,8 +2887,7 @@ class ShellTriSolver:
         A_mat: np.ndarray,
         thickness: float,
         n_vec: np.ndarray,
-        Ti: np.ndarray,
-    ) -> None:
+        Ti: np.ndarray,) -> None:
         """Apply drilling DOF stiffness to the 18x18 global element matrix."""
         method = self.drilling
         if method == "NONE":
@@ -2821,8 +2928,7 @@ class ShellTriSolver:
         Ke_global += T_drill.T @ K_drill_local @ T_drill
 
     def build_kbb(
-        self, Kbb: dok_matrix, dof_map: DOF_MAP, all_nids: np.ndarray, xyz_cid0: np.ndarray
-    ) -> int:
+        self, Kbb: dok_matrix, dof_map: DOF_MAP, all_nids: np.ndarray, xyz_cid0: np.ndarray) -> int:
         """Assemble CTRIA3 stiffness into Kbb.
 
         Returns
@@ -2910,13 +3016,11 @@ class ShellTriSolver:
             if abs(theta_mat) > 1e-10:
                 c = np.cos(theta_mat)
                 s = np.sin(theta_mat)
-                T_inv = np.array(
-                    [
+                T_inv = np.array([
                         [c**2, s**2, -2 * s * c],
                         [s**2, c**2, 2 * s * c],
                         [s * c, -s * c, c**2 - s**2],
-                    ]
-                )
+                ])
                 A_mat = T_inv @ A_mat @ T_inv.T
                 D_mat = T_inv @ D_mat @ T_inv.T
                 if B_mat is not None:
@@ -3013,8 +3117,7 @@ def build_KDgg_cquad4(
     model: BDF,
     KDgg: dok_matrix,
     dof_map: DOF_MAP,
-    u_global: np.ndarray,
-) -> int:
+    u_global: np.ndarray,) -> int:
     """Assemble CQUAD4 geometric stiffness from membrane stress resultants.
 
     Parameters

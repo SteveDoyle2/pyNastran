@@ -8,7 +8,8 @@ from .grav_rforce import apply_rforce, apply_grav
 from ..matrices.build_mass import build_Mbb
 from ..elements.beam import thermal_load_beam
 from ..elements.shells import (
-    build_pload4_cquad4, build_pload4_ctria3,
+    build_pload4_cquad4, #build_pload2_cquad4,
+    build_pload4_ctria3, #build_pload2_ctria3,
     build_thermal_load_cquad4, build_thermal_load_ctria3)
 
 DOF_MAP = dict[tuple[int, int], int]
@@ -96,6 +97,9 @@ def build_Fb_from_loadid(model: BDF,
                         sset_b[fi] = True
             elif load.type == "PLOAD1":
                 apply_pload1(model, load, scale, Fb, dof_map, log)
+            #elif load.type == "PLOAD2":
+                #build_pload2_cquad4(model, Fb, dof_map, load_id)
+                #build_pload2_ctria3(model, Fb, dof_map, load_id)
             elif load.type == "PLOAD4":
                 build_pload4_cquad4(model, Fb, dof_map, load_id)
                 build_pload4_ctria3(model, Fb, dof_map, load_id)

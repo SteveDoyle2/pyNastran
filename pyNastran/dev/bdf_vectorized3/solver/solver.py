@@ -227,6 +227,9 @@ class Solver:
             op2.write_op2(
                 self.op2_filename, post=-1, endian=b"<",
                 skips=None, nastran_format="nx")
+        for name, file_obj in self.solver_dict.items():
+            file_obj.close()
+        self.solver_dict = {}
 
     def _update_card_count(self) -> None:
         for card_type, values in self.model._type_to_id_map.items():
@@ -321,8 +324,7 @@ class Solver:
         label: str = "",
         page_num: int = 1,
         idtype: str = "int32",
-        fdtype: str = "float64",
-    ) -> Any:
+        fdtype: str = "float64",) -> Any:
         """
         Runs a SOL 101
 
@@ -464,7 +466,7 @@ class Solver:
         write_mat(model, Mgg, 'PRTMGG', self.solver_dict)
 
         if GMN is not None:
-            log.info('Applying GMN: n = g - m')
+            log.info('Applying GMN to K: n = g - m')
             # Transform to n-set: Knn = GMN^T @ Kgg @ GMN, Mnn = GMN^T @ Mgg @ GMN
             Knn = GMN.T @ Kgg @ GMN
             Mnn = GMN.T @ Mgg @ GMN if Mgg is not None else None
@@ -637,9 +639,11 @@ class Solver:
         self.set0 = set0
         self.aset = aset
 
+        log.warning('partitioning F: a = g - s - 0')
         Fa, Fs = partition_vector2(Fg, [["a", aset], ["s", sset]])
         del Fs
 
+        log.warning('partitioning U: a = g - s - 0')
         xa, xs, x0 = partition_vector3(xg, [["a", aset], ["s", sset], ["0", set0]])
         write_mat(model, xs, 'PRTUS', self.solver_dict)
         write_mat(model, x0, 'PRTU0', self.solver_dict)
@@ -652,6 +656,7 @@ class Solver:
         del x0
 
         self.Kgg = Kgg_orig
+        log.warning('partitioning K: a = g - s - 0')
         K = partition_matrix(Kgg, [("a", aset), ("s", sset), ("0", set0)])
         Kaa = K["aa"]
         Kss = K["ss"]
@@ -698,7 +703,7 @@ class Solver:
 
         if has_suport and inrel == -2 and is_aset:
             # Inertia relief: partition a = l + r, apply inertia relief
-            log.warning('a = r + l')
+            log.warning('SUPORT/INREL: l = a - r')
             a_indices = np.where(aset)[0]
             r_in_a = rset_b[a_indices]
             lset_local = np.where(~r_in_a)[0]
@@ -761,7 +766,7 @@ class Solver:
                 'D_a': D_a,
             }
         elif is_aset:
-            log.warning('a set')
+            log.warning('a set reduction')
             xa_, ipositive, inegative = solve(Kaa, Fa_solve, aset, log, idtype=idtype)
             Fa_ = Fa[ipositive]
 
@@ -832,7 +837,6 @@ class Solver:
             Fg_out = Fg_g
             fspc = fspc_g
             ndof_out = ndof
-            #log.warning(f'ndof_out={ndof_out}; fspc.shape={fspc.shape}')
 
             # MPC forces: F_mpc = Kgg @ xg - Fg_applied at dependent DOFs
             # The MPC force is the reaction needed to enforce the constraint
@@ -1084,9 +1088,11 @@ class Solver:
         op2 = self.op2
         page_stamp += "\n"
 
-        # TODO: add transform for xg to xb
-        #       (need for rods, quads, etc., but not springs)
+        # add transform for xg to xb
+        # (need for rods, quads, etc., but not springs)
+        phib = xg_to_xb(model, phig, ngrid, ndof_per_grid)
         phib = phig
+
         recover_force_103(
             f06_file,
             op2,
@@ -1154,6 +1160,7 @@ class Solver:
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
 
         # handles MAX/MASS normalization
+        log.info('running modes')
         out, page_num, end_options = self.run_sol_103_modes(
             subcase,
             f06_file,
@@ -1178,12 +1185,15 @@ class Solver:
         # ndof_a = Kaa.shape[0]
 
         # natural frequency
+        assert eigenvalue.ndim == 1, eigenvalue
         omegan = np.sqrt(np.abs(eigenvalue))
 
         # frequency
+        log.info('getting frequencies')
         freq = get_frequencies(model, subcase, omegan)
         nfreq = len(freq)
         omega = 2 * np.pi * freq
+        assert nfreq > 0, nfreq
 
         # TODO: parse inputs for loads
         Fg = np.ones((ndof_g, 1), dtype="complex64")
@@ -1206,6 +1216,18 @@ class Solver:
         # Khh = phi @ Kgg @ phi.T
         # Fh = phi @ Fg
 
+        # U(t)   = A*e^(i*omega*t) U
+        # Ud(t)  = i*omega * A*e^(i*omega*t) U
+        # Udd(t) = -omega^2 * A*e^(i*omega*t) U
+
+        #log.info('[Mgg] {xddg} + Cgg xdg + Kgg xg = Fg')
+        #log.info('{qh}   = [PHI]{xg}')
+        #log.info('{qdh}  = [PHI]{xdg}')
+        #log.info('{qddh} = [PHI]{xddg}')
+        #log.info('[PHIT][Mgg][PHI]{qddh} + [PHIT][Cgg][PHI]{qdg} + '
+        #         '[PHIT][Kgg][PHI]{qh} = [PHIT]{Fg}')
+        #log.info('[I]{qddh} + [C]{qdh} + [omega]{qh} = {Fh}')
+        
         Fh = phit @ Fg
         # print('Fh:\n', Fh)
         omega2 = omega * omega  # frequncy
@@ -2155,6 +2177,12 @@ def xg_to_xb(model: BDF,
              ngrid: int, ndof_per_grid: int,
              inplace: bool = True) -> NDArrayNfloat:
     assert isinstance(xg, np.ndarray)
+    shape = xg.shape
+    if xg.ndim == 1:
+        ndof = len(xg)
+        xg = xg.reshape(ndof, 1)
+    else:
+        assert xg.ndim == 2, xg.shape
     str(ngrid)
 
     xb = xg
@@ -2170,8 +2198,14 @@ def xg_to_xb(model: BDF,
             T = cd_ref.beta_n(n=2)
             i1 = i * ndof_per_grid
             i2 = (i + 1) * ndof_per_grid
-            xi = xg[i1:i2]
-            xb[i1:i2] = xi @ T  # TODO: verify the transform; I think it's right
+            #xi = xg[i1:i2]   # 1d
+            xi = xg[i1:i2, :]
+            
+            # TODO: verify the transform; I think it's right
+            # (6,2) = (6,2) * (6,6,2)
+            #xb[i1:i2] = xi @ T  # 1d
+            xb[i1:i2, :] = xi @ T[:, :, np.newaxis]
+    xb = xb.reshape(shape)
     return xb
 
 def xb_to_xg(
@@ -2333,14 +2367,11 @@ def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int,
 
         # TODO: what about otuput coordinate frames; specifically cylindrical and spherical frames?
         xi, yi, zi = xyz0 - dxyz
-        Tr = np.array(
-            [
-                [0, zi, -yi],
-                [-zi, 0, xi],
-                [yi, -xi, 0],
-            ],
-            dtype="float64",
-        )
+        Tr = np.array([
+            [0, zi, -yi],
+            [-zi, 0, xi],
+            [yi, -xi, 0],
+        ], dtype="float64",)
         # cd_ref = node.cd_ref
         beta = coord.xyz_to_global_transform[cd]
         Ti = beta
@@ -3021,7 +3052,9 @@ def _build_Gmn(model: BDF, mpc_id: int,
                solver_dict=None,
                ) -> tuple[np.ndarray | None, np.ndarray | None]:
     """
-    TODO: handle MPCADD
+    Supports:
+     - MPC, MPCADD
+     - RBE1, RBE2, RBE3
     """
     assert solver_dict is not None, solver_dict
     log = model.log
@@ -3132,6 +3165,7 @@ def _build_Gmn(model: BDF, mpc_id: int,
 
 def reduce_mpc_cards(model: BDF,
                      mpc_id: int) -> MPC:
+    """gets the MPCs; handles MPCADD"""
     if mpc_id == 0:
         return MPC(model)
 
@@ -3176,23 +3210,25 @@ def get_Kgg(model: BDF, dof_map: DOF_MAP,
     return Kgg
 
 
-def write_mat(model: BDF, Kgg,
+def write_mat(model: BDF,
+              Kgg,
               name: str,
               solver_dict: dict):
     assert isinstance(name, str), name
+    assert isinstance(solver_dict, dict), solver_dict
+    name2 = name[3:].upper()  # drop PRT
+
+    prt_f06 = False
+    prt_op4, prt_h5 = get_matprn(model, name)
+
     if Kgg is None:
         return
     
-    prt_f06 = False
-    prt_op4, prt_h5 = get_matprn(model, name)
-    name2 = name[3:].upper()  # drop PRT
-
-    assert len(solver_dict), solver_dict
-    if prt_f06:
+    if prt_f06 and 'f06' in solver_dict:
         solver_dict['f06'].write(name2, Kgg)
-    if prt_op4:
+    if prt_op4 and 'op4' in solver_dict:
         solver_dict['op4'].write(name2, Kgg)
-    if prt_h5:
+    if prt_h5 and 'h5' in solver_dict:
         solver_dict['h5'].write(name2, Kgg)
 
 
