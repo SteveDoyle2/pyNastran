@@ -153,7 +153,7 @@ class Solver:
             'op4': DynamicFileWriter(self.op4_filename),
             'h5': DynamicFileWriter(self.h5_filename),
         }
-        print(self.solver_dict)
+        #print(self.solver_dict)
 
 
     def run(self):
@@ -1614,6 +1614,7 @@ class Solver:
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         dof_map, ps = _get_dof_map(model)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
+        xyz_cid0 = model.grid.xyz_cid0()
 
         GMN, mset = self.build_GMN(
             subcase, dof_map, ndof, xyz_cid0, fdtype=fdtype)
@@ -3119,7 +3120,7 @@ def _build_Gmn(model: BDF, mpc_id: int,
                     continue
                 GMN[idof_dep, n_col] += val
 
-    write_mat(model, 'PRTGMN', GMN, solver_dict)
+    write_mat(model, GMN, 'PRTGMN', solver_dict)
 
     GMN_csc = GMN.tocsc()
     n_mpc = len(mpc)
@@ -3170,13 +3171,15 @@ def get_Kgg(model: BDF, dof_map: DOF_MAP,
         Kgg = build_Kgg(
             model, dof_map, ndof, ngrid, ndof_per_grid,
             idtype=idtype, fdtype=fdtype)
-        write_mat(model, 'PRTKGG', Kgg, solver_dict)
+        write_mat(model, Kgg, 'PRTKGG', solver_dict)
     assert Kgg is not None, Kgg
     return Kgg
 
 
-def write_mat(model: BDF, name: str,
-              Kgg, solver_dict: dict):
+def write_mat(model: BDF, Kgg,
+              name: str,
+              solver_dict: dict):
+    assert isinstance(name, str), name
     if Kgg is None:
         return
     

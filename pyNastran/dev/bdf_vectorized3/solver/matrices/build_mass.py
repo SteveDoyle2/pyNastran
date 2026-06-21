@@ -313,7 +313,7 @@ def build_Mbb(model: BDF, subcase: Subcase,
     else:
         return None
     
-    # write_mat(model, 'Mbb', Mbb, solver_dict)
+    # write_mat(model, 'Mbb', 'PRTMBB', Mbb, solver_dict)
     return Mbb
 
 
