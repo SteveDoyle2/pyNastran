@@ -1974,8 +1974,7 @@ def build_thermal_load_cquad4(
     model: BDF,
     Fb: np.ndarray,
     dof_map: DOF_MAP,
-    node_temperatures: dict[int, float],
-) -> None:
+    node_temperatures: dict[int, float],) -> None:
     """Compute and add CQUAD4 thermal equivalent nodal loads to Fb.
 
     Parameters
@@ -2002,6 +2001,7 @@ def build_thermal_load_cquad4(
     xyz = grid.xyz_cid0()
 
     ABDs = get_shell_ABDs(model, cquad4_all)
+    alpha_trefs = get_alpha_trefs(model, cquad4_all)
 
     elem_props = split_shell_by_properties(
         model, cquad4_all)
@@ -2037,7 +2037,7 @@ def build_thermal_load_cquad4(
             elem_temps = np.array([node_temperatures.get(nid, 0.0) for nid in elem_nodes])
 
             # Get CTE and Tref
-            alpha_vec, tref = _get_alpha_vec_for_element_from_prop(model, pid, prop)
+            alpha_vec, tref = alpha_trefs[pid]
             if np.all(np.abs(alpha_vec) < 1e-30):
                 continue
 
@@ -2194,12 +2194,12 @@ def build_thermal_load_ctria3(
     elem_props = split_shell_by_properties(
         model, ctria3_all)
 
-
     pshell = model.pshell
     pcomp = model.pcomp
     pcompg = model.pcompg
 
     ABDs = get_shell_ABDs(model, ctria3)
+    alpha_trefs = get_alpha_trefs(model, ctria3)
     for prop_type, (ctria3, prop) in elem_props.items():
         if ctria3.n == 0:
             continue
@@ -3658,4 +3658,20 @@ def get_shell_ABDs(model: BDF, cquad4) -> dict[int, Any]:
         ABD = get_ABD_by_elem_prop(model, cquad4i, prop)
         ABDs.update(ABD)
     return ABDs
+
+
+def get_alpha_trefs(model: BDF, cquad4) -> dict[int, Any]:
+    elem_props = split_shell_by_properties(
+        model, cquad4)
+
+    alpha_trefs = {}
+    for prop_type, (cquad4i, prop) in elem_props.items():
+        if cquad4i.n == 0:
+            continue
+        alpha_tref = {}
+        for pid in prop.property_id:
+            alpha_tref[pid] = _get_alpha_vec_for_element_from_prop(
+                model, pid, prop)
+        alpha_trefs.update(alpha_tref)
+    return alpha_trefs
 

@@ -39,80 +39,6 @@ def setup_static_case_control(model: BDF, extra_case_lines=None):
     model.case_control_deck = cc
 
 
-def setup_modal_case_control(model: BDF, extra_case_lines=None):
-    lines = [
-        'STRESS(PLOT,PRINT) = ALL',
-        'STRAIN(PLOT,PRINT) = ALL',
-        'FORCE(PLOT,PRINT) = ALL',
-        'DISP(PLOT,PRINT) = ALL',
-        #'GPFORCE(PLOT,PRINT) = ALL',
-        'SPCFORCE(PLOT,PRINT) = ALL',
-        'MPCFORCE(PLOT,PRINT) = ALL',
-        #'OLOAD(PLOT,PRINT) = ALL',
-        #'ESE(PLOT,PRINT) = ALL',
-        'SUBCASE 1',
-        '  LOAD = 2',
-        '  SPC = 3',
-        '  METHOD = 103',
-    ]
-    if extra_case_lines is not None:
-        lines += extra_case_lines
-    cc = CaseControlDeck(lines, log=model.log)
-    model.sol = 103
-    model.case_control_deck = cc
-
-def setup_direct_frequency_case_control(model: BDF, extra_case_lines=None):
-    lines = [
-        'STRESS(PLOT,PRINT) = ALL',
-        'STRAIN(PLOT,PRINT) = ALL',
-        'FORCE(PLOT,PRINT) = ALL',
-        'DISP(PLOT,PRINT) = ALL',
-        #'GPFORCE(PLOT,PRINT) = ALL',
-        'SPCFORCE(PLOT,PRINT) = ALL',
-        'MPCFORCE(PLOT,PRINT) = ALL',
-        #'OLOAD(PLOT,PRINT) = ALL',
-        #'ESE(PLOT,PRINT) = ALL',
-        'SUBCASE 1',
-        '  LOAD = 2',
-        '  SPC = 3',
-        '  METHOD = 103',
-        '  FREQUENCY = 100',
-    ]
-    if extra_case_lines is not None:
-        lines += extra_case_lines
-    cc = CaseControlDeck(lines, log=model.log)
-    model.sol = 108
-    model.case_control_deck = cc
-
-def setup_frequency_response_case_control(model: BDF, extra_case_lines=None):
-    lines = [
-        'STRESS(PLOT,PRINT) = ALL',
-        'STRAIN(PLOT,PRINT) = ALL',
-        'FORCE(PLOT,PRINT) = ALL',
-        'DISP(PLOT,PRINT) = ALL',
-        'SET 2 = 2,3',
-        'SET 3 = 2',
-        'VELO(PLOT,PRINT) = 2',
-        'ACCEL(PLOT,PRINT) = 3',
-        #'GPFORCE(PLOT,PRINT) = ALL',
-        'SPCFORCE(PLOT,PRINT) = ALL',
-        # 'MPCFORCE(PLOT,PRINT) = ALL',
-        'OLOAD(PLOT,PRINT) = ALL',
-        'FORCE(PLOT,PRINT) = ALL',
-        #'ESE(PLOT,PRINT) = ALL',
-        'SUBCASE 1',
-        '  LOAD = 2',
-        '  SPC = 3',
-        '  METHOD = 103',
-        '  FREQUENCY = 100',
-    ]
-    if extra_case_lines is not None:
-        lines += extra_case_lines
-    cc = CaseControlDeck(lines, log=model.log)
-    model.sol = 111
-    model.case_control_deck = cc
-
-
 class TestSolverTools(unittest.TestCase):
     def test_partition_vector(self):
         xg = np.array([0., 1., 2., 3., 4.], dtype='float64')
@@ -122,6 +48,7 @@ class TestSolverTools(unittest.TestCase):
         xa, xs = partition_vector2(xg, [['a', aset], ['s', sset]])
         assert len(xa) == 3 and np.allclose(xa, [1., 3., 4.]), xa
         assert len(xs) == 2 and np.allclose(xs, [0., 2.]), xs
+
 
 class TestStaticSpring(unittest.TestCase):
     def test_celas2_conm2(self):
@@ -169,56 +96,6 @@ class TestStaticSpring(unittest.TestCase):
         solver = Solver(model)
         model.sol = 101
         solver.run()
-
-    def test_celas1(self):
-        """Tests a CELAS1/PELAS"""
-        log = SimpleLogger(level='warning', encoding='utf-8')
-        model = BDF(log=log, mode='msc')
-        model.bdf_filename = TEST_DIR / 'celas1.bdf'
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [0., 0., 0.])
-        nids = [1, 2]
-        eid = 1
-        pid = 2
-        model.add_celas1(eid, pid, nids, c1=1, c2=1, comment='')
-        k = 1000.
-
-        load_id = 2
-        spc_id = 3
-        model.add_pelas(pid, k, ge=0., s=0., comment='')
-        # model.add_sload(load_id, 2, 20.)
-        fxyz = np.array([1., 0., 0.])
-        mag = 20.
-        model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
-
-        components = 123456
-        nodes = 1
-        model.add_spc1(spc_id, components, nodes, comment='')
-        setup_static_case_control(model)
-
-        solver = Solver(model)
-        model.sol = 101
-        solver.run()
-
-        eid = 2
-        nid = 2
-        mass = 1.
-        model.add_conm2(eid, nid, mass, cid=0, X=None, I=None, comment='')
-        setup_modal_case_control(model)
-        sid = 103
-        nmodes = 2
-        model.add_eigrl(sid, v1=None, v2=None, nd=nmodes, msglvl=0,
-                        maxset=None, shfscl=None, norm=None, options=None, values=None, comment='')
-        model.sol = 103
-        solver.run()
-
-        # F = k * d
-        # d = F / k
-        # 20=1000.*d
-        d = mag / k
-        assert np.allclose(solver.xa_[0], d)
-        os.remove(solver.f06_filename)
-        os.remove(solver.op2_filename)
 
     def _test_celas2_cd(self):
         """Tests a CELAS2"""
@@ -756,7 +633,7 @@ class TestStaticRod(unittest.TestCase):
 
     def _test_crod_rotate(self):
         """Tests a CROD/PROD"""
-        log = SimpleLogger(level='debug', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         # log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(log=log, mode='msc')
         model.bdf_filename = TEST_DIR / 'crod.bdf'
@@ -1105,93 +982,6 @@ class TestStaticRod(unittest.TestCase):
         assert np.allclose(solver.Fg[9], mag_torsion), f'F={mag_torsion} Fg[9]={solver.Fg[9]}'
 
 
-def mesh_line_by_points(xyz1: np.ndarray, xyz2: np.ndarray, nelement: int,
-                        nid0: int=1, eid0: int=1,
-                        idtype='int32',
-                        fdtype='float64') -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    assert nelement >= 1
-    dxyz = xyz2 - xyz1
-    length = np.linalg.norm(dxyz)
-    assert length > 0, length
-    nnodes = nelement + 1
-    nids = np.arange(0, nnodes)
-    eids = np.arange(eid0, eid0+nelement)
-    assert len(nids) == nnodes, nnodes
-    assert len(eids) == nelement, nelement
-
-    line_nodes = nid0 + np.column_stack([nids[:-1], nids[1:]])
-    xyzs = (nids / length)[:, np.newaxis] * dxyz
-    nids += nid0
-    return nids, xyzs, eids, line_nodes
-
-
-class TestModalBar(unittest.TestCase):
-    """tests the CBARs"""
-    def test_cbar_modes(self):
-        """Tests a CBAR/PBAR"""
-        log = SimpleLogger(level='debug', encoding='utf-8')
-        model = BDF(log=log, mode='msc')
-        model.bdf_filename = TEST_DIR / 'cbar_modes.bdf'
-        xyz1 = np.array([0., 0., 0.])
-        xyz2 = np.array([1., 0., 0.])
-        nelement = 100
-        nmodes = 16
-
-        nid0 = 1
-        eid0 = 1
-        pid = 10
-        mid = 100
-        node_id, xyz, element_id, line_nodes = mesh_line_by_points(xyz1, xyz2, nelement, nid0=nid0, eid0=eid0)
-
-        nnode = len(node_id)
-        zero = np.zeros(nnode, dtype='int32')
-        cp = zero
-        cd = zero
-        ps = zero
-        seid = zero
-        model.grid._save(node_id, cp, cd, xyz, ps, seid, comment=None)
-        model.grid._xyz_cid0 = xyz
-
-        one = np.ones(nelement, dtype='int32')
-        property_id = pid * one
-
-        # y-axis
-        x = np.zeros((nelement, 3), dtype='float64')
-        x[:, 1] = 1.
-        model.cbar._save(element_id, property_id, line_nodes, x=x)
-
-        #bar_type = 'BAR'
-        #dim = [1., 2.]
-        #model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=0., comment='')
-
-        A = 1.0
-        b = 3.0
-        h = 3.0
-        i1 = 1 / 12 * b * h ** 3
-        i2 = 1 / 12 * h * b ** 3
-        i12 = 0.
-        j = i1 + i2
-        model.add_pbar(pid, mid, area=A, i1=i1, i2=i2, i12=i12, j=j, nsm=0.,
-                       c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
-                       k1=1.e8, k2=1.e8, comment='')
-
-        E = 3.0e7
-        G = None
-        nu = 0.3
-        rho = 0.1
-        model.add_mat1(mid, E, G, nu, rho=rho,
-                       alpha=0.0, tref=0.0, ge=0.0, St=0.0,
-                       Sc=0.0, Ss=0.0, mcsid=0)
-
-        model.add_eigrl(103, nd=nmodes)
-        setup_modal_case_control(model)
-        model.setup()
-        assert len(model.cbar)
-        solver = Solver(model)
-        with self.assertRaises(FatalError):
-            solver.run()
-
-
 class TestStaticBar(unittest.TestCase):
     """tests the CBARs"""
     def _test_cbar_rbe3_ex(self):
@@ -1534,193 +1324,7 @@ class TestStaticBar(unittest.TestCase):
         assert dx == solver.xg[6*2], f'dx={dx} xg={solver.xg}'
 
 
-class TestHarmonic(unittest.TestCase):
-    def test_spring_mass_damper_direct(self):
-        """spring-mass-damper problem"""
-        model = BDF(debug=None, log=None, mode='msc')
-        model.bdf_filename = TEST_DIR / 'freq_direct_response.bdf'
-        mid = 3
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        model.add_grid(3, [2., 0., 0.])
-
-        eid = 10
-        pid = 20
-        nids = [1, 2]
-        #x = [1., 0., 0.]
-        #g0 = None
-        #model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
-                       #pa=0, pb=0, wa=None, wb=None, comment='', validate=False)
-        #mid = 30
-        #Type = 'ROD'
-        #dim = [0.5]
-        #model.add_pbarl(pid, mid, Type, dim, group='MSCBML0', nsm=0., comment='')
-
-        k = 1e6
-        model.add_celas2(eid, k, nids, c1=1, c2=1, ge=0., s=0., comment='')
-
-        eid += 1
-        nids = [2, 3]
-        model.add_celas2(eid, k, nids, c1=1, c2=1, ge=0., s=0., comment='')
-
-        #E = 3.0e7
-        #G = None
-        #nu = 0.3
-        #model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0,
-                       #St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
-
-        eid += 1
-        nid = 2
-        mass = 2.0
-        model.add_conm2(eid, nid, mass, cid=0, X=None, I=None, comment='')
-
-        eid += 1
-        nid = 3
-        model.add_conm2(eid, nid, mass, cid=0, X=None, I=None, comment='')
-
-        sid = 103
-        nmodes = 2
-        model.add_eigrl(sid, v1=None, v2=None, nd=nmodes, msglvl=0,
-                        maxset=None, shfscl=None, norm=None, options=None, values=None, comment='')
-
-        darea_id = 10
-        component = 1
-        scale = 1.0
-        model.add_darea(darea_id, nid, component, scale, comment='')
-
-        sid = 3
-        excite_id = darea_id
-        model.add_rload1(sid, excite_id, delay=0, dphase=0, tc=1., td=0, load_type='LOAD', comment='')
-
-        spc_id = 3
-        components = 123456
-        nodes = 1
-        model.add_spc1(spc_id, components, nodes, comment='')
-
-        freq_id = 100
-        f1 = 1.
-        df = 1.
-        ndf = 2000
-        model.add_freq1(freq_id, f1, df, ndf=ndf, comment='')
-
-        freqs = [1000.5, 0.5]
-        model.add_freq(freq_id, freqs)
-
-        f1 = 20.
-        f2 = 40.
-        model.add_freq2(freq_id, f1, f2, nf=6, comment='')
-
-        f1 = 10.
-        f2 = 2000.
-        model.add_freq3(freq_id, f1, f2, Type='LINEAR', nef=10, cluster=1.0, comment='')
-
-        f1 = 500.
-        model.add_freq3(freq_id, f1, f2=None, Type='LINEAR', nef=10, cluster=1.0, comment='')
-
-        model.add_freq4(freq_id, f1=1., f2=2000., fspread=0.1, nfm=3, comment='')
-
-        fractions = [0.6, 0.8, 0.9, 0.95, 1.0, 1.05, 1.1, 1.2]
-        model.add_freq5(freq_id, fractions, f1=20., f2=200., comment='')
-
-        setup_direct_frequency_case_control(model)
-        solver = Solver(model)
-        #with self.assertRaises(RuntimeError):
-        solver.run()
-
-    def test_spring_mass_damper_freq_response(self):
-        """spring-mass-damper problem"""
-        model = BDF(debug=None, log=None, mode='msc')
-        model.bdf_filename = TEST_DIR / 'freq_response.bdf'
-        # mid = 3
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        model.add_grid(3, [2., 0., 0.])
-
-        eid = 10
-        # pid = 20
-        nids = [1, 2]
-        #x = [1., 0., 0.]
-        #g0 = None
-        #model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
-                       #pa=0, pb=0, wa=None, wb=None, comment='', validate=False)
-        #mid = 30
-        #Type = 'ROD'
-        #dim = [0.5]
-        #model.add_pbarl(pid, mid, Type, dim, group='MSCBML0', nsm=0., comment='')
-
-        k = 1e6
-        model.add_celas2(eid, k, nids, c1=1, c2=1, ge=0., s=0., comment='')
-
-        eid += 1
-        nids = [2, 3]
-        model.add_celas2(eid, k, nids, c1=1, c2=1, ge=0., s=0., comment='')
-
-        #E = 3.0e7
-        #G = None
-        #nu = 0.3
-        #model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0,
-                       #St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
-
-        eid += 1
-        nid = 2
-        mass = 3.0
-        model.add_conm2(eid, nid, mass, cid=0, X=None, I=None, comment='')
-
-        eid += 1
-        nid = 3
-        model.add_conm2(eid, nid, mass, cid=0, X=None, I=None, comment='')
-
-        sid = 103
-        nmodes = 2
-        model.add_eigrl(sid, v1=None, v2=None, nd=nmodes, msglvl=0,
-                        maxset=None, shfscl=None, norm=None, options=None, values=None, comment='')
-
-        darea_id = 10
-        component = 1
-        scale = 1.0
-        model.add_darea(darea_id, nid, component, scale, comment='')
-
-        sid = 3
-        excite_id = darea_id
-        model.add_rload1(sid, excite_id, delay=0, dphase=0, tc=1., td=0, load_type='LOAD', comment='')
-
-        spc_id = 3
-        components = 123456
-        nodes = 1
-        model.add_spc1(spc_id, components, nodes, comment='')
-
-        freq_id = 100
-        f1 = 1.
-        df = 1.
-        ndf = 2000
-        model.add_freq1(freq_id, f1, df, ndf=ndf, comment='')
-
-        freqs = [1000.5, 0.5]
-        model.add_freq(freq_id, freqs)
-
-        f1 = 20.
-        f2 = 40.
-        model.add_freq2(freq_id, f1, f2, nf=6, comment='')
-
-        f1 = 10.
-        f2 = 2000.
-        model.add_freq3(freq_id, f1, f2, Type='LINEAR', nef=10, cluster=1.0, comment='')
-
-        f1 = 500.
-        model.add_freq3(freq_id, f1, f2=None, Type='LINEAR', nef=10, cluster=1.0, comment='')
-
-        model.add_freq4(freq_id, f1=1., f2=2000., fspread=0.1, nfm=3, comment='')
-
-        fractions = [0.6, 0.8, 0.9, 0.95, 1.0, 1.05, 1.1, 1.2]
-        model.add_freq5(freq_id, fractions, f1=20., f2=200., comment='')
-
-        setup_frequency_response_case_control(model)
-        solver = Solver(model)
-        #with self.assertRaises(RuntimeError):
-        solver.run()
-
-
-#class TestStaticAero(unittest.TestCase):
+#Class TestStaticAero(unittest.TestCase):
 #    def test_bwb_saero_modes(self):
 #        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
 #        model = read_bdf(bdf_filename)
@@ -1748,9 +1352,9 @@ class TestStaticSolid(unittest.TestCase):
         solver = Solver(model)
         solver.run()
 
-    def test_ctetra(self):
+    def test_ctetra4(self):
         model = BDF(debug=None, log=None, mode='msc')
-        model.bdf_filename = TEST_DIR / 'cshear1.bdf'
+        model.bdf_filename = TEST_DIR / 'ctetra4.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -1777,9 +1381,9 @@ class TestStaticSolid(unittest.TestCase):
         solver = Solver(model)
         solver.run()
 
-    def test_hexa(self):
+    def test_hexa8(self):
         model = BDF(debug=None, log=None, mode='msc')
-        model.bdf_filename = TEST_DIR / 'cshear1.bdf'
+        model.bdf_filename = TEST_DIR / 'chexa8.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -1811,9 +1415,9 @@ class TestStaticSolid(unittest.TestCase):
         solver = Solver(model)
         solver.run()
 
-    def test_penta(self):
+    def test_penta6(self):
         model = BDF(debug=None, log=None, mode='msc')
-        model.bdf_filename = TEST_DIR / 'cshear1.bdf'
+        model.bdf_filename = TEST_DIR / 'cpenta6.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])

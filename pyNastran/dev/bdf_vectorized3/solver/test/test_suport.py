@@ -17,7 +17,6 @@ from cpylog import SimpleLogger
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.solver.solver import Solver
 from pyNastran.bdf.case_control_deck import CaseControlDeck
-#DIRNAME = Path(__file__).parent / '_nastran'
 DIRNAME = Path(__file__).parent / 'examples'
 
 
