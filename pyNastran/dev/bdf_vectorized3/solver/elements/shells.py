@@ -1288,8 +1288,8 @@ class ShellQuadSolver:
             Number of CQUAD4 elements processed.
         """
         model = self.model
-        cquad4_all = model.cquad4
-        nelements = cquad4_all.n
+        cquad4 = model.cquad4
+        nelements = cquad4.n
         if nelements == 0:
             return 0
 
@@ -1297,173 +1297,168 @@ class ShellQuadSolver:
         grid = model.grid
         xyz = grid.xyz_cid0()
 
-        elem_props = split_shell_by_properties(
-            model, cquad4_all)
-        for prop_type, (cquad4, prop) in elem_props.items():
-            if cquad4.n == 0:
-                continue
-            ABDs = get_ABD_by_elem_prop(model, cquad4, prop)
+        ABDs = get_shell_ABDs(model, cquad4)
 
-            nodes = cquad4.nodes  # (nelements, 4)
-            inid = grid.index(nodes)
-            p1 = xyz[inid[:, 0], :]
-            p2 = xyz[inid[:, 1], :]
-            p3 = xyz[inid[:, 2], :]
-            p4 = xyz[inid[:, 3], :]
+        nodes = cquad4.nodes  # (nelements, 4)
+        inid = grid.index(nodes)
+        p1 = xyz[inid[:, 0], :]
+        p2 = xyz[inid[:, 1], :]
+        p3 = xyz[inid[:, 2], :]
+        p4 = xyz[inid[:, 3], :]
 
-            # Element normals
-            v13 = p1 - p3
-            v24 = p2 - p4
-            normal = np.cross(v13, v24)
-            ni = np.linalg.norm(normal, axis=1)
-            if np.any(ni == 0.0):
-                bad = cquad4.element_id[ni == 0.0]
-                raise RuntimeError(f"CQUAD4 elements {bad.tolist()} have zero-area normals")
-            normal /= ni[:, np.newaxis]
+        # Element normals
+        v13 = p1 - p3
+        v24 = p2 - p4
+        normal = np.cross(v13, v24)
+        ni = np.linalg.norm(normal, axis=1)
+        if np.any(ni == 0.0):
+            bad = cquad4.element_id[ni == 0.0]
+            raise RuntimeError(f"CQUAD4 elements {bad.tolist()} have zero-area normals")
+        normal /= ni[:, np.newaxis]
 
-            # Element local x-axis (node 1 -> node 2)
-            ihat = p2 - p1
-            inorm = np.linalg.norm(ihat, axis=1)
-            ihat /= inorm[:, np.newaxis]
+        # Element local x-axis (node 1 -> node 2)
+        ihat = p2 - p1
+        inorm = np.linalg.norm(ihat, axis=1)
+        ihat /= inorm[:, np.newaxis]
 
-            # Element local y-axis (k x i)
-            jhat = np.cross(normal, ihat, axis=1)
-            jnorm = np.linalg.norm(jhat, axis=1)
-            jhat /= jnorm[:, np.newaxis]
+        # Element local y-axis (k x i)
+        jhat = np.cross(normal, ihat, axis=1)
+        jnorm = np.linalg.norm(jhat, axis=1)
+        jhat /= jnorm[:, np.newaxis]
 
-            # Process each element
-            nid_array = grid.node_id
-            pids = cquad4.property_id
-            npid = len(pids)
-            Tis = np.dstack([ihat, jhat, normal])   # wong...
-            
-            assert Tis.shape == (npid, 3, 3), Tis.shape
+        # Process each element
+        nid_array = grid.node_id
+        pids = cquad4.property_id
+        npid = len(pids)
+        Tis = np.dstack([ihat, jhat, normal])   # wong...
+        
+        assert Tis.shape == (npid, 3, 3), Tis.shape
 
-            # TODO: get theta from theta_mcid...
+        # TODO: get theta from theta_mcid...
 
-            for i_elem, pid, Ti2 in zip(count(), pids, Tis):
-                # Build rotation matrix T (3x3): rows = [ihat, jhat, normal]
-                Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
-                #assert np.allclose(Ti, Ti2)   # wong...
+        for i_elem, pid, Ti2 in zip(count(), pids, Tis):
+            # Build rotation matrix T (3x3): rows = [ihat, jhat, normal]
+            Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
+            #assert np.allclose(Ti, Ti2)   # wong...
 
-                # Transform nodes to local frame
-                xy = np.zeros((4, 3))
-                xy[0] = Ti @ p1[i_elem]
-                xy[1] = Ti @ p2[i_elem]
-                xy[2] = Ti @ p3[i_elem]
-                xy[3] = Ti @ p4[i_elem]
-                x_local = xy[:, 0]
-                y_local = xy[:, 1]
+            # Transform nodes to local frame
+            xy = np.zeros((4, 3))
+            xy[0] = Ti @ p1[i_elem]
+            xy[1] = Ti @ p2[i_elem]
+            xy[2] = Ti @ p3[i_elem]
+            xy[3] = Ti @ p4[i_elem]
+            x_local = xy[:, 0]
+            y_local = xy[:, 1]
 
-                # Get constitutive matrices (in material frame)
-                A_mat, B_mat, D_mat, Ds_mat, thickness = ABDs[pid]
+            # Get constitutive matrices (in material frame)
+            A_mat, B_mat, D_mat, Ds_mat, thickness = ABDs[pid]
 
-                # Material coordinate rotation (THETA/MCID on CQUAD4)
-                # Rotates constitutive from material frame to element frame
-                theta_elem = cquad4.theta[i_elem]
-                mcid_elem = cquad4.mcid[i_elem]
+            # Material coordinate rotation (THETA/MCID on CQUAD4)
+            # Rotates constitutive from material frame to element frame
+            theta_elem = cquad4.theta[i_elem]
+            mcid_elem = cquad4.mcid[i_elem]
 
-                if mcid_elem >= 0:
-                    # MCID: material x-axis from coordinate system projected onto element
-                    mcid_ref = model.coord.slice_card_by_id(np.array([mcid_elem]))
-                    i_mcid = mcid_ref.i[0]  # x-axis of coord system
-                    # Project onto element plane
-                    i_proj = i_mcid - np.dot(i_mcid, normal[i_elem]) * normal[i_elem]
-                    i_proj_norm = np.linalg.norm(i_proj)
-                    if i_proj_norm > 1e-10:
-                        i_proj /= i_proj_norm
-                        # Angle between element x-axis (ihat) and projected MCID x-axis
-                        cos_theta = np.dot(ihat[i_elem], i_proj)
-                        sin_theta = np.dot(np.cross(ihat[i_elem], i_proj), normal[i_elem])
-                        theta_mat = np.arctan2(sin_theta, cos_theta)
-                    else:
-                        theta_mat = 0.0
-                elif not np.isnan(theta_elem) and abs(theta_elem) > 1e-10:
-                    # THETA: direct angle in degrees
-                    theta_mat = np.radians(theta_elem)
+            if mcid_elem >= 0:
+                # MCID: material x-axis from coordinate system projected onto element
+                mcid_ref = model.coord.slice_card_by_id(np.array([mcid_elem]))
+                i_mcid = mcid_ref.i[0]  # x-axis of coord system
+                # Project onto element plane
+                i_proj = i_mcid - np.dot(i_mcid, normal[i_elem]) * normal[i_elem]
+                i_proj_norm = np.linalg.norm(i_proj)
+                if i_proj_norm > 1e-10:
+                    i_proj /= i_proj_norm
+                    # Angle between element x-axis (ihat) and projected MCID x-axis
+                    cos_theta = np.dot(ihat[i_elem], i_proj)
+                    sin_theta = np.dot(np.cross(ihat[i_elem], i_proj), normal[i_elem])
+                    theta_mat = np.arctan2(sin_theta, cos_theta)
                 else:
                     theta_mat = 0.0
+            elif not np.isnan(theta_elem) and abs(theta_elem) > 1e-10:
+                # THETA: direct angle in degrees
+                theta_mat = np.radians(theta_elem)
+            else:
+                theta_mat = 0.0
 
-                # Rotate ABD from material to element frame
-                if abs(theta_mat) > 1e-10:
-                    c = np.cos(theta_mat)
-                    s = np.sin(theta_mat)
-                    T_rot = np.array([
-                        [c**2, s**2, 2 * s * c],
-                        [s**2, c**2, -2 * s * c],
-                        [-s * c, s * c, c**2 - s**2],
-                    ])
-                    T_inv = np.array([
-                        [c**2, s**2, -2 * s * c],
-                        [s**2, c**2, 2 * s * c],
-                        [s * c, -s * c, c**2 - s**2],
-                    ])
-                    A_mat = T_inv @ A_mat @ T_inv.T
-                    D_mat = T_inv @ D_mat @ T_inv.T
-                    if B_mat is not None:
-                        B_mat = T_inv @ B_mat @ T_inv.T
-                    # Rotate transverse shear: Ds in material -> element
-                    R2 = np.array([[c, s], [-s, c]])
-                    Ds_mat = R2.T @ Ds_mat @ R2
+            # Rotate ABD from material to element frame
+            if abs(theta_mat) > 1e-10:
+                c = np.cos(theta_mat)
+                s = np.sin(theta_mat)
+                T_rot = np.array([
+                    [c**2, s**2, 2 * s * c],
+                    [s**2, c**2, -2 * s * c],
+                    [-s * c, s * c, c**2 - s**2],
+                ])
+                T_inv = np.array([
+                    [c**2, s**2, -2 * s * c],
+                    [s**2, c**2, 2 * s * c],
+                    [s * c, -s * c, c**2 - s**2],
+                ])
+                A_mat = T_inv @ A_mat @ T_inv.T
+                D_mat = T_inv @ D_mat @ T_inv.T
+                if B_mat is not None:
+                    B_mat = T_inv @ B_mat @ T_inv.T
+                # Rotate transverse shear: Ds in material -> element
+                R2 = np.array([[c, s], [-s, c]])
+                Ds_mat = R2.T @ Ds_mat @ R2
 
-                # Verify Jacobian quality at centroid
-                dN_c = _dshape_quad4(0.0, 0.0)
-                _, det_J_c = _jacobian(dN_c, x_local, y_local)
-                if det_J_c <= 0.0:
-                    eid = cquad4.element_id[i_elem]
-                    raise RuntimeError(
-                        f"CQUAD4 eid={eid} has non-positive Jacobian "
-                        f"determinant ({det_J_c:.6g}) — element is degenerate"
-                    )
-
-                # Compute element stiffness (20x20 in local frame)
-                Ke_local = self._element_stiffness(x_local, y_local, A_mat, D_mat, Ds_mat, B_mat)
-
-                # Apply shell offset
-                zoffset = cquad4.zoffset[i_elem]
-                if not np.isnan(zoffset) and abs(zoffset) > 0.0:
-                    Ke_local = _apply_shell_offset(Ke_local, zoffset)
-
-                # Transform local 20-DOF -> global 24-DOF
-                T_node = np.zeros((5, 6))
-                T_node[0:3, 0:3] = Ti
-                T_node[3:5, 3:6] = Ti[0:2, :]
-
-                T_full = np.zeros((20, 24))
-                for inode in range(4):
-                    r0 = 5 * inode
-                    c0 = 6 * inode
-                    T_full[r0 : r0 + 5, c0 : c0 + 6] = T_node
-
-                Ke_global = T_full.T @ Ke_local @ T_full
-
-                # Drilling stiffness (rotation about element normal)
-                self._apply_drilling(
-                    Ke_global,
-                    Ke_local,
-                    x_local,
-                    y_local,
-                    A_mat,
-                    thickness,
-                    normal[i_elem],
-                    Ti,
+            # Verify Jacobian quality at centroid
+            dN_c = _dshape_quad4(0.0, 0.0)
+            _, det_J_c = _jacobian(dN_c, x_local, y_local)
+            if det_J_c <= 0.0:
+                eid = cquad4.element_id[i_elem]
+                raise RuntimeError(
+                    f"CQUAD4 eid={eid} has non-positive Jacobian "
+                    f"determinant ({det_J_c:.6g}) — element is degenerate"
                 )
 
-                # Assemble into Kbb
-                elem_nodes = nodes[i_elem]
-                global_dofs = []
-                for nid in elem_nodes:
-                    i_dof = dof_map[(nid, 1)]
-                    for comp in range(6):
-                        global_dofs.append(i_dof + comp)
+            # Compute element stiffness (20x20 in local frame)
+            Ke_local = self._element_stiffness(x_local, y_local, A_mat, D_mat, Ds_mat, B_mat)
 
-                for ii in range(24):
-                    gi = global_dofs[ii]
-                    for jj in range(24):
-                        gj = global_dofs[jj]
-                        val = Ke_global[ii, jj]
-                        if abs(val) > 0.0:
-                            Kbb[gi, gj] += val
+            # Apply shell offset
+            zoffset = cquad4.zoffset[i_elem]
+            if not np.isnan(zoffset) and abs(zoffset) > 0.0:
+                Ke_local = _apply_shell_offset(Ke_local, zoffset)
+
+            # Transform local 20-DOF -> global 24-DOF
+            T_node = np.zeros((5, 6))
+            T_node[0:3, 0:3] = Ti
+            T_node[3:5, 3:6] = Ti[0:2, :]
+
+            T_full = np.zeros((20, 24))
+            for inode in range(4):
+                r0 = 5 * inode
+                c0 = 6 * inode
+                T_full[r0 : r0 + 5, c0 : c0 + 6] = T_node
+
+            Ke_global = T_full.T @ Ke_local @ T_full
+
+            # Drilling stiffness (rotation about element normal)
+            self._apply_drilling(
+                Ke_global,
+                Ke_local,
+                x_local,
+                y_local,
+                A_mat,
+                thickness,
+                normal[i_elem],
+                Ti,
+            )
+
+            # Assemble into Kbb
+            elem_nodes = nodes[i_elem]
+            global_dofs = []
+            for nid in elem_nodes:
+                i_dof = dof_map[(nid, 1)]
+                for comp in range(6):
+                    global_dofs.append(i_dof + comp)
+
+            for ii in range(24):
+                gi = global_dofs[ii]
+                for jj in range(24):
+                    gj = global_dofs[jj]
+                    val = Ke_global[ii, jj]
+                    if abs(val) > 0.0:
+                        Kbb[gi, gj] += val
 
         return nelements
 
@@ -2006,12 +2001,13 @@ def build_thermal_load_cquad4(
     grid = model.grid
     xyz = grid.xyz_cid0()
 
+    ABDs = get_shell_ABDs(model, cquad4_all)
+
     elem_props = split_shell_by_properties(
         model, cquad4_all)
     for prop_type, (cquad4, prop) in elem_props.items():
         if cquad4.n == 0:
             continue
-        ABDs = get_ABD_by_elem_prop(model, cquad4, prop)
 
         nodes = cquad4.nodes
         inid = grid.index(nodes)
@@ -2202,6 +2198,8 @@ def build_thermal_load_ctria3(
     pshell = model.pshell
     pcomp = model.pcomp
     pcompg = model.pcompg
+
+    ABDs = get_shell_ABDs(model, ctria3)
     for prop_type, (ctria3, prop) in elem_props.items():
         if ctria3.n == 0:
             continue
@@ -2227,7 +2225,6 @@ def build_thermal_load_ctria3(
         jhat /= jnorm[:, np.newaxis]
 
         pids = ctria3.property_id_all
-        ABDs = get_ABD_by_elem_prop(model, ctria3, prop)
 
         for i_elem, pid, elem_nodes in zip(count(), pids, nodes):
             elem_temps = np.array([node_temperatures.get(nid, 0.0) for nid in elem_nodes])
@@ -3188,144 +3185,138 @@ class ShellTriSolver:
 
         grid = model.grid
         xyz = grid.xyz_cid0()
+        ABDs = get_shell_ABDs(model, ctria3)
 
-        elem_props = split_shell_by_properties(
-            model, ctria3_all)
-  
-        for prop_type, (ctria3, prop) in elem_props.items():
-            if ctria3.n == 0:
-                continue
-            ABDs = get_ABD_by_elem_prop(model, ctria3, prop)
-            nodes = ctria3.nodes  # (nelements, 3)
-            inid = grid.index(nodes)
-            p1 = xyz[inid[:, 0], :]
-            p2 = xyz[inid[:, 1], :]
-            p3 = xyz[inid[:, 2], :]
+        nodes = ctria3.nodes  # (nelements, 3)
+        inid = grid.index(nodes)
+        p1 = xyz[inid[:, 0], :]
+        p2 = xyz[inid[:, 1], :]
+        p3 = xyz[inid[:, 2], :]
 
-            # Element normals: (p2 - p1) x (p3 - p1)
-            v12 = p2 - p1
-            v13 = p3 - p1
-            normal = np.cross(v12, v13)
-            ni = np.linalg.norm(normal, axis=1)
-            if np.any(ni == 0.0):
-                bad = ctria3.element_id[ni == 0.0]
-                raise RuntimeError(f"CTRIA3 elements {bad.tolist()} have zero-area normals")
-            normal /= ni[:, np.newaxis]
+        # Element normals: (p2 - p1) x (p3 - p1)
+        v12 = p2 - p1
+        v13 = p3 - p1
+        normal = np.cross(v12, v13)
+        ni = np.linalg.norm(normal, axis=1)
+        if np.any(ni == 0.0):
+            bad = ctria3.element_id[ni == 0.0]
+            raise RuntimeError(f"CTRIA3 elements {bad.tolist()} have zero-area normals")
+        normal /= ni[:, np.newaxis]
 
-            # Element local x-axis (node 1 -> node 2)
-            ihat = v12.copy()
-            inorm = np.linalg.norm(ihat, axis=1)
-            ihat /= inorm[:, np.newaxis]
+        # Element local x-axis (node 1 -> node 2)
+        ihat = v12.copy()
+        inorm = np.linalg.norm(ihat, axis=1)
+        ihat /= inorm[:, np.newaxis]
 
-            # Element local y-axis (normal x ihat)
-            jhat = np.cross(normal, ihat, axis=1)
-            jnorm = np.linalg.norm(jhat, axis=1)
-            jhat /= jnorm[:, np.newaxis]
+        # Element local y-axis (normal x ihat)
+        jhat = np.cross(normal, ihat, axis=1)
+        jnorm = np.linalg.norm(jhat, axis=1)
+        jhat /= jnorm[:, np.newaxis]
 
-            # Process each element
-            pids = ctria3.property_id
-            for i_elem, pid in zip(count(), pids):
-                Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
+        # Process each element
+        pids = ctria3.property_id
+        for i_elem, pid in zip(count(), pids):
+            Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
 
-                # Transform nodes to local frame
-                xy = np.zeros((3, 3))
-                xy[0] = Ti @ p1[i_elem]
-                xy[1] = Ti @ p2[i_elem]
-                xy[2] = Ti @ p3[i_elem]
-                x_local = xy[:, 0]
-                y_local = xy[:, 1]
+            # Transform nodes to local frame
+            xy = np.zeros((3, 3))
+            xy[0] = Ti @ p1[i_elem]
+            xy[1] = Ti @ p2[i_elem]
+            xy[2] = Ti @ p3[i_elem]
+            x_local = xy[:, 0]
+            y_local = xy[:, 1]
 
-                # Get constitutive matrices
-                A_mat, B_mat, D_mat, Ds_mat, thickness = ABDs[pid]
+            # Get constitutive matrices
+            A_mat, B_mat, D_mat, Ds_mat, thickness = ABDs[pid]
 
-                # Material coordinate rotation (THETA/MCID on CTRIA3)
-                theta_elem = ctria3.theta[i_elem]
-                mcid_elem = ctria3.mcid[i_elem]
+            # Material coordinate rotation (THETA/MCID on CTRIA3)
+            theta_elem = ctria3.theta[i_elem]
+            mcid_elem = ctria3.mcid[i_elem]
 
-                if mcid_elem >= 0:
-                    mcid_ref = model.coord.slice_card_by_id(np.array([mcid_elem]))
-                    i_mcid = mcid_ref.i[0]
-                    i_proj = i_mcid - np.dot(i_mcid, normal[i_elem]) * normal[i_elem]
-                    i_proj_norm = np.linalg.norm(i_proj)
-                    if i_proj_norm > 1e-10:
-                        i_proj /= i_proj_norm
-                        cos_theta = np.dot(ihat[i_elem], i_proj)
-                        sin_theta = np.dot(np.cross(ihat[i_elem], i_proj), normal[i_elem])
-                        theta_mat = np.arctan2(sin_theta, cos_theta)
-                    else:
-                        theta_mat = 0.0
-                elif not np.isnan(theta_elem) and abs(theta_elem) > 1e-10:
-                    theta_mat = np.radians(theta_elem)
+            if mcid_elem >= 0:
+                mcid_ref = model.coord.slice_card_by_id(np.array([mcid_elem]))
+                i_mcid = mcid_ref.i[0]
+                i_proj = i_mcid - np.dot(i_mcid, normal[i_elem]) * normal[i_elem]
+                i_proj_norm = np.linalg.norm(i_proj)
+                if i_proj_norm > 1e-10:
+                    i_proj /= i_proj_norm
+                    cos_theta = np.dot(ihat[i_elem], i_proj)
+                    sin_theta = np.dot(np.cross(ihat[i_elem], i_proj), normal[i_elem])
+                    theta_mat = np.arctan2(sin_theta, cos_theta)
                 else:
                     theta_mat = 0.0
+            elif not np.isnan(theta_elem) and abs(theta_elem) > 1e-10:
+                theta_mat = np.radians(theta_elem)
+            else:
+                theta_mat = 0.0
 
-                # Rotate ABD from material to element frame
-                if abs(theta_mat) > 1e-10:
-                    c = np.cos(theta_mat)
-                    s = np.sin(theta_mat)
-                    T_inv = np.array([
-                            [c**2, s**2, -2 * s * c],
-                            [s**2, c**2, 2 * s * c],
-                            [s * c, -s * c, c**2 - s**2],
-                    ])
-                    A_mat = T_inv @ A_mat @ T_inv.T
-                    D_mat = T_inv @ D_mat @ T_inv.T
-                    if B_mat is not None:
-                        B_mat = T_inv @ B_mat @ T_inv.T
-                    R2 = np.array([[c, s], [-s, c]])
-                    Ds_mat = R2.T @ Ds_mat @ R2
+            # Rotate ABD from material to element frame
+            if abs(theta_mat) > 1e-10:
+                c = np.cos(theta_mat)
+                s = np.sin(theta_mat)
+                T_inv = np.array([
+                        [c**2, s**2, -2 * s * c],
+                        [s**2, c**2, 2 * s * c],
+                        [s * c, -s * c, c**2 - s**2],
+                ])
+                A_mat = T_inv @ A_mat @ T_inv.T
+                D_mat = T_inv @ D_mat @ T_inv.T
+                if B_mat is not None:
+                    B_mat = T_inv @ B_mat @ T_inv.T
+                R2 = np.array([[c, s], [-s, c]])
+                Ds_mat = R2.T @ Ds_mat @ R2
 
-                # Compute element stiffness (15x15 in local frame)
-                if self.trityp == "THICK":
-                    Ke_local = ctria3_mindlin_stiffness(x_local, y_local, A_mat, D_mat, Ds_mat, B_mat)
-                else:
-                    Ke_local = ctria3_stiffness(x_local, y_local, A_mat, D_mat, Ds_mat, B_mat)
+            # Compute element stiffness (15x15 in local frame)
+            if self.trityp == "THICK":
+                Ke_local = ctria3_mindlin_stiffness(x_local, y_local, A_mat, D_mat, Ds_mat, B_mat)
+            else:
+                Ke_local = ctria3_stiffness(x_local, y_local, A_mat, D_mat, Ds_mat, B_mat)
 
-                # Apply shell offset
-                zoffset = ctria3.zoffset[i_elem]
-                if not np.isnan(zoffset) and abs(zoffset) > 0.0:
-                    Ke_local = _apply_tri3_shell_offset(Ke_local, zoffset)
+            # Apply shell offset
+            zoffset = ctria3.zoffset[i_elem]
+            if not np.isnan(zoffset) and abs(zoffset) > 0.0:
+                Ke_local = _apply_tri3_shell_offset(Ke_local, zoffset)
 
-                # Transform local 15-DOF -> global 18-DOF
-                T_node = np.zeros((5, 6))
-                T_node[0:3, 0:3] = Ti
-                T_node[3:5, 3:6] = Ti[0:2, :]
+            # Transform local 15-DOF -> global 18-DOF
+            T_node = np.zeros((5, 6))
+            T_node[0:3, 0:3] = Ti
+            T_node[3:5, 3:6] = Ti[0:2, :]
 
-                T_full = np.zeros((15, 18))
-                for inode in range(3):
-                    r0 = 5 * inode
-                    c0 = 6 * inode
-                    T_full[r0 : r0 + 5, c0 : c0 + 6] = T_node
+            T_full = np.zeros((15, 18))
+            for inode in range(3):
+                r0 = 5 * inode
+                c0 = 6 * inode
+                T_full[r0 : r0 + 5, c0 : c0 + 6] = T_node
 
-                Ke_global = T_full.T @ Ke_local @ T_full
+            Ke_global = T_full.T @ Ke_local @ T_full
 
-                # Drilling stiffness
-                self._apply_drilling(
-                    Ke_global,
-                    Ke_local,
-                    x_local,
-                    y_local,
-                    A_mat,
-                    thickness,
-                    normal[i_elem],
-                    Ti,
-                )
+            # Drilling stiffness
+            self._apply_drilling(
+                Ke_global,
+                Ke_local,
+                x_local,
+                y_local,
+                A_mat,
+                thickness,
+                normal[i_elem],
+                Ti,
+            )
 
-                # Assemble into Kbb
-                elem_nodes = nodes[i_elem]
-                global_dofs = []
-                for nid in elem_nodes:
-                    i_dof = dof_map[(nid, 1)]
-                    for comp in range(6):
-                        global_dofs.append(i_dof + comp)
+            # Assemble into Kbb
+            elem_nodes = nodes[i_elem]
+            global_dofs = []
+            for nid in elem_nodes:
+                i_dof = dof_map[(nid, 1)]
+                for comp in range(6):
+                    global_dofs.append(i_dof + comp)
 
-                for ii in range(18):
-                    gi = global_dofs[ii]
-                    for jj in range(18):
-                        gj = global_dofs[jj]
-                        val = Ke_global[ii, jj]
-                        if abs(val) > 0.0:
-                            Kbb[gi, gj] += val
+            for ii in range(18):
+                gi = global_dofs[ii]
+                for jj in range(18):
+                    gj = global_dofs[jj]
+                    val = Ke_global[ii, jj]
+                    if abs(val) > 0.0:
+                        Kbb[gi, gj] += val
 
         return nelements
 
@@ -3378,8 +3369,8 @@ def build_KDgg_cquad4(
     -------
     nelements : int
     """
-    cquad4_all = model.cquad4
-    nelements = cquad4_all.n
+    cquad4 = model.cquad4
+    nelements = cquad4.n
     if nelements == 0:
         return 0
 
@@ -3387,100 +3378,98 @@ def build_KDgg_cquad4(
     xyz = grid.xyz_cid0()
 
     elem_props = split_shell_by_properties(
-        model, cquad4_all)
-    for prop_type, (cquad4, prop) in elem_props.items():
-        if cquad4.n == 0:
-            continue
-        ABDs = get_ABD_by_elem_prop(model, cquad4, prop)
-        nodes = cquad4.nodes
-        inid = grid.index(nodes)
+        model, cquad4)
+    ABDs = get_shell_ABDs(model, cquad4)
 
-        p1 = xyz[inid[:, 0], :]
-        p2 = xyz[inid[:, 1], :]
-        p3 = xyz[inid[:, 2], :]
-        p4 = xyz[inid[:, 3], :]
+    nodes = cquad4.nodes
+    inid = grid.index(nodes)
 
-        v13 = p1 - p3
-        v24 = p2 - p4
-        normal = np.cross(v13, v24)
-        ni = np.linalg.norm(normal, axis=1)
-        normal /= ni[:, np.newaxis]
+    p1 = xyz[inid[:, 0], :]
+    p2 = xyz[inid[:, 1], :]
+    p3 = xyz[inid[:, 2], :]
+    p4 = xyz[inid[:, 3], :]
 
-        ihat = p2 - p1
-        inorm = np.linalg.norm(ihat, axis=1)
-        ihat /= inorm[:, np.newaxis]
+    v13 = p1 - p3
+    v24 = p2 - p4
+    normal = np.cross(v13, v24)
+    ni = np.linalg.norm(normal, axis=1)
+    normal /= ni[:, np.newaxis]
 
-        jhat = np.cross(normal, ihat, axis=1)
-        jnorm = np.linalg.norm(jhat, axis=1)
-        jhat /= jnorm[:, np.newaxis]
+    ihat = p2 - p1
+    inorm = np.linalg.norm(ihat, axis=1)
+    ihat /= inorm[:, np.newaxis]
 
-        nid_array = grid.node_id
-        pids = cquad4.property_id
-        for i_elem, pid, elem_nodes in zip(count(), pids, nodes):
-            Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
+    jhat = np.cross(normal, ihat, axis=1)
+    jnorm = np.linalg.norm(jhat, axis=1)
+    jhat /= jnorm[:, np.newaxis]
 
-            xy = np.zeros((4, 3))
-            xy[0] = Ti @ p1[i_elem]
-            xy[1] = Ti @ p2[i_elem]
-            xy[2] = Ti @ p3[i_elem]
-            xy[3] = Ti @ p4[i_elem]
-            x_local = xy[:, 0]
-            y_local = xy[:, 1]
+    nid_array = grid.node_id
+    pids = cquad4.property_id
+    for i_elem, pid, elem_nodes in zip(count(), pids, nodes):
+        Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
 
-            A_mat, _, _, _, thickness = ABDs[i_elem]
+        xy = np.zeros((4, 3))
+        xy[0] = Ti @ p1[i_elem]
+        xy[1] = Ti @ p2[i_elem]
+        xy[2] = Ti @ p3[i_elem]
+        xy[3] = Ti @ p4[i_elem]
+        x_local = xy[:, 0]
+        y_local = xy[:, 1]
 
-            # Extract membrane displacements in local frame
-            u_mem_local = np.zeros(8)
-            for inode in range(4):
-                nid = elem_nodes[inode]
-                i_dof = dof_map[(nid, 1)]
-                u_g = u_global[i_dof : i_dof + 3]
-                u_l = Ti @ u_g
-                u_mem_local[2 * inode] = u_l[0]
-                u_mem_local[2 * inode + 1] = u_l[1]
+        A_mat, _, _, _, thickness = ABDs[i_elem]
 
-            # Compute membrane stress resultants at centroid
-            dN_c = _dshape_quad4(0.0, 0.0)
-            J_c, det_J_c = _jacobian(dN_c, x_local, y_local)
-            J_inv_c = _jacobian_inv(J_c, det_J_c)
-            dN_dxy_c = J_inv_c @ dN_c
-            Bm_c = _membrane_B(dN_dxy_c[0], dN_dxy_c[1])
-            strain_m = Bm_c @ u_mem_local
-            stress_resultants = A_mat @ strain_m  # [Nxx, Nyy, Nxy]
+        # Extract membrane displacements in local frame
+        u_mem_local = np.zeros(8)
+        for inode in range(4):
+            nid = elem_nodes[inode]
+            i_dof = dof_map[(nid, 1)]
+            u_g = u_global[i_dof : i_dof + 3]
+            u_l = Ti @ u_g
+            u_mem_local[2 * inode] = u_l[0]
+            u_mem_local[2 * inode + 1] = u_l[1]
 
-            # Build element geometric stiffness
-            Kg_local = geometric_stiffness(x_local, y_local, stress_resultants, thickness)
+        # Compute membrane stress resultants at centroid
+        dN_c = _dshape_quad4(0.0, 0.0)
+        J_c, det_J_c = _jacobian(dN_c, x_local, y_local)
+        J_inv_c = _jacobian_inv(J_c, det_J_c)
+        dN_dxy_c = J_inv_c @ dN_c
+        Bm_c = _membrane_B(dN_dxy_c[0], dN_dxy_c[1])
+        strain_m = Bm_c @ u_mem_local
+        stress_resultants = A_mat @ strain_m  # [Nxx, Nyy, Nxy]
 
-            # Apply offset
-            zoffset = cquad4.zoffset[i_elem]
-            if not np.isnan(zoffset) and abs(zoffset) > 0.0:
-                Kg_local = _apply_shell_offset(Kg_local, zoffset)
+        # Build element geometric stiffness
+        Kg_local = geometric_stiffness(x_local, y_local, stress_resultants, thickness)
 
-            # Transform to global
-            T_node = np.zeros((5, 6))
-            T_node[0:3, 0:3] = Ti
-            T_node[3:5, 3:6] = Ti[0:2, :]
+        # Apply offset
+        zoffset = cquad4.zoffset[i_elem]
+        if not np.isnan(zoffset) and abs(zoffset) > 0.0:
+            Kg_local = _apply_shell_offset(Kg_local, zoffset)
 
-            T_full = np.zeros((20, 24))
-            for inode in range(4):
-                T_full[5 * inode : 5 * inode + 5, 6 * inode : 6 * inode + 6] = T_node
+        # Transform to global
+        T_node = np.zeros((5, 6))
+        T_node[0:3, 0:3] = Ti
+        T_node[3:5, 3:6] = Ti[0:2, :]
 
-            Kg_global = T_full.T @ Kg_local @ T_full
+        T_full = np.zeros((20, 24))
+        for inode in range(4):
+            T_full[5 * inode : 5 * inode + 5, 6 * inode : 6 * inode + 6] = T_node
 
-            # Assemble
-            global_dofs = []
-            for nid in elem_nodes:
-                i_dof = dof_map[(nid, 1)]
-                for comp in range(6):
-                    global_dofs.append(i_dof + comp)
+        Kg_global = T_full.T @ Kg_local @ T_full
 
-            for ii in range(24):
-                gi = global_dofs[ii]
-                for jj in range(24):
-                    gj = global_dofs[jj]
-                    val = Kg_global[ii, jj]
-                    if abs(val) > 0.0:
-                        KDgg[gi, gj] += val
+        # Assemble
+        global_dofs = []
+        for nid in elem_nodes:
+            i_dof = dof_map[(nid, 1)]
+            for comp in range(6):
+                global_dofs.append(i_dof + comp)
+
+        for ii in range(24):
+            gi = global_dofs[ii]
+            for jj in range(24):
+                gj = global_dofs[jj]
+                val = Kg_global[ii, jj]
+                if abs(val) > 0.0:
+                    KDgg[gi, gj] += val
 
     return nelements
 
@@ -3489,8 +3478,7 @@ def build_KDgg_ctria3(
     model: BDF,
     KDgg: dok_matrix,
     dof_map: DOF_MAP,
-    u_global: np.ndarray,
-) -> int:
+    u_global: np.ndarray,) -> int:
     """Assemble CTRIA3 geometric stiffness from membrane stress resultants.
 
     Parameters
@@ -3504,118 +3492,112 @@ def build_KDgg_ctria3(
     -------
     nelements : int
     """
-    ctria3_all = model.ctria3
-    nelements = ctria3_all.n
+    ctria3 = model.ctria3
+    nelements = ctria3.n
     if nelements == 0:
         return 0
-
-    pshell = model.pshell
-    pcomp = model.pcomp
-    pcompg = model.pcompg
 
     grid = model.grid
     xyz = grid.xyz_cid0()
 
     elem_props = split_shell_by_properties(
-        model, ctria3_all)
-    for prop_type, (ctria3, prop) in elem_props.items():
-        if ctria3.n == 0:
-            continue
-        ABDs = get_ABD_by_elem_prop(model, ctria3, prop)
+        model, ctria3)
 
-        nodes = ctria3.nodes
-        inid = grid.index(nodes)
-        p1 = xyz[inid[:, 0], :]
-        p2 = xyz[inid[:, 1], :]
-        p3 = xyz[inid[:, 2], :]
+    ABDs = get_shell_ABDs(model, cquad4)
 
-        v12 = p2 - p1
-        v13 = p3 - p1
-        normal = np.cross(v12, v13, axis=1)
-        ni = np.linalg.norm(normal, axis=1)
-        normal /= ni[:, np.newaxis]
+    nodes = ctria3.nodes
+    inid = grid.index(nodes)
+    p1 = xyz[inid[:, 0], :]
+    p2 = xyz[inid[:, 1], :]
+    p3 = xyz[inid[:, 2], :]
 
-        ihat = v12 / np.linalg.norm(v12, axis=1)[:, np.newaxis]
-        jhat = np.cross(normal, ihat, axis=1)
-        jhat /= np.linalg.norm(jhat, axis=1)[:, np.newaxis]
+    v12 = p2 - p1
+    v13 = p3 - p1
+    normal = np.cross(v12, v13, axis=1)
+    ni = np.linalg.norm(normal, axis=1)
+    normal /= ni[:, np.newaxis]
 
-        pids = ctria3.property_id
-        for i_elem, pid, elem_nodes in zip(count(), pids, nodes):
-            Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
+    ihat = v12 / np.linalg.norm(v12, axis=1)[:, np.newaxis]
+    jhat = np.cross(normal, ihat, axis=1)
+    jhat /= np.linalg.norm(jhat, axis=1)[:, np.newaxis]
 
-            xy = np.zeros((3, 3))
-            xy[0] = Ti @ p1[i_elem]
-            xy[1] = Ti @ p2[i_elem]
-            xy[2] = Ti @ p3[i_elem]
-            x_local = xy[:, 0]
-            y_local = xy[:, 1]
+    pids = ctria3.property_id
+    for i_elem, pid, elem_nodes in zip(count(), pids, nodes):
+        Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
 
-            A_mat, _, _, _, thickness = ABD[i_elem]
+        xy = np.zeros((3, 3))
+        xy[0] = Ti @ p1[i_elem]
+        xy[1] = Ti @ p2[i_elem]
+        xy[2] = Ti @ p3[i_elem]
+        x_local = xy[:, 0]
+        y_local = xy[:, 1]
 
-            # Extract membrane displacements in local frame
-            u_mem_local = np.zeros(6)
-            for inode in range(3):
-                nid = elem_nodes[inode]
-                i_dof = dof_map[(nid, 1)]
-                u_g = u_global[i_dof : i_dof + 3]
-                u_l = Ti @ u_g
-                u_mem_local[2 * inode] = u_l[0]
-                u_mem_local[2 * inode + 1] = u_l[1]
+        A_mat, _, _, _, thickness = ABD[i_elem]
 
-            # CST membrane strain (constant over element)
-            area = 0.5 * abs(
-                (x_local[1] - x_local[0]) * (y_local[2] - y_local[0])
-                - (x_local[2] - x_local[0]) * (y_local[1] - y_local[0])
-            )
-            dNdx = np.array(
-                [y_local[1] - y_local[2], y_local[2] - y_local[0], y_local[0] - y_local[1]]
-            ) / (2.0 * area)
-            dNdy = np.array(
-                [x_local[2] - x_local[1], x_local[0] - x_local[2], x_local[1] - x_local[0]]
-            ) / (2.0 * area)
+        # Extract membrane displacements in local frame
+        u_mem_local = np.zeros(6)
+        for inode in range(3):
+            nid = elem_nodes[inode]
+            i_dof = dof_map[(nid, 1)]
+            u_g = u_global[i_dof : i_dof + 3]
+            u_l = Ti @ u_g
+            u_mem_local[2 * inode] = u_l[0]
+            u_mem_local[2 * inode + 1] = u_l[1]
 
-            Bm = np.zeros((3, 6))
-            Bm[0, 0::2] = dNdx
-            Bm[1, 1::2] = dNdy
-            Bm[2, 0::2] = dNdy
-            Bm[2, 1::2] = dNdx
+        # CST membrane strain (constant over element)
+        area = 0.5 * abs(
+            (x_local[1] - x_local[0]) * (y_local[2] - y_local[0])
+            - (x_local[2] - x_local[0]) * (y_local[1] - y_local[0])
+        )
+        dNdx = np.array(
+            [y_local[1] - y_local[2], y_local[2] - y_local[0], y_local[0] - y_local[1]]
+        ) / (2.0 * area)
+        dNdy = np.array(
+            [x_local[2] - x_local[1], x_local[0] - x_local[2], x_local[1] - x_local[0]]
+        ) / (2.0 * area)
 
-            strain_m = Bm @ u_mem_local
-            stress_resultants = A_mat @ strain_m
+        Bm = np.zeros((3, 6))
+        Bm[0, 0::2] = dNdx
+        Bm[1, 1::2] = dNdy
+        Bm[2, 0::2] = dNdy
+        Bm[2, 1::2] = dNdx
 
-            # Build element geometric stiffness
-            Kg_local = ctria3_geometric_stiffness(x_local, y_local, stress_resultants, thickness)
+        strain_m = Bm @ u_mem_local
+        stress_resultants = A_mat @ strain_m
 
-            # Apply offset
-            zoffset = ctria3.zoffset[i_elem]
-            if not np.isnan(zoffset) and abs(zoffset) > 0.0:
-                Kg_local = _apply_tri3_shell_offset(Kg_local, zoffset)
+        # Build element geometric stiffness
+        Kg_local = ctria3_geometric_stiffness(x_local, y_local, stress_resultants, thickness)
 
-            # Transform to global
-            T_node = np.zeros((5, 6))
-            T_node[0:3, 0:3] = Ti
-            T_node[3:5, 3:6] = Ti[0:2, :]
+        # Apply offset
+        zoffset = ctria3.zoffset[i_elem]
+        if not np.isnan(zoffset) and abs(zoffset) > 0.0:
+            Kg_local = _apply_tri3_shell_offset(Kg_local, zoffset)
 
-            T_full = np.zeros((15, 18))
-            for inode in range(3):
-                T_full[5 * inode : 5 * inode + 5, 6 * inode : 6 * inode + 6] = T_node
+        # Transform to global
+        T_node = np.zeros((5, 6))
+        T_node[0:3, 0:3] = Ti
+        T_node[3:5, 3:6] = Ti[0:2, :]
 
-            Kg_global = T_full.T @ Kg_local @ T_full
+        T_full = np.zeros((15, 18))
+        for inode in range(3):
+            T_full[5 * inode : 5 * inode + 5, 6 * inode : 6 * inode + 6] = T_node
 
-            # Assemble
-            global_dofs = []
-            for nid in elem_nodes:
-                i_dof = dof_map[(nid, 1)]
-                for comp in range(6):
-                    global_dofs.append(i_dof + comp)
+        Kg_global = T_full.T @ Kg_local @ T_full
 
-            for ii in range(18):
-                gi = global_dofs[ii]
-                for jj in range(18):
-                    gj = global_dofs[jj]
-                    val = Kg_global[ii, jj]
-                    if abs(val) > 0.0:
-                        KDgg[gi, gj] += val
+        # Assemble
+        global_dofs = []
+        for nid in elem_nodes:
+            i_dof = dof_map[(nid, 1)]
+            for comp in range(6):
+                global_dofs.append(i_dof + comp)
+
+        for ii in range(18):
+            gi = global_dofs[ii]
+            for jj in range(18):
+                gj = global_dofs[jj]
+                val = Kg_global[ii, jj]
+                if abs(val) > 0.0:
+                    KDgg[gi, gj] += val
 
     return nelements
 
@@ -3664,3 +3646,16 @@ def get_ABD_by_elem_prop(model: BDF, elem, prop) -> dict[pid, Any]:
             model, pid, prop)
         ABDs[pid] = A_mat, B_mat, D_mat, Ds_mat, thickness
     return ABDs
+
+
+def get_shell_ABDs(model: BDF, cquad4) -> dict[int, Any]:
+    elem_props = split_shell_by_properties(
+        model, cquad4)
+    ABDs = {}
+    for prop_type, (cquad4i, prop) in elem_props.items():
+        if cquad4i.n == 0:
+            continue
+        ABD = get_ABD_by_elem_prop(model, cquad4i, prop)
+        ABDs.update(ABD)
+    return ABDs
+
