@@ -2501,7 +2501,6 @@ def _dkt_bending_stiffness(x: np.ndarray, y: np.ndarray, D_mat: np.ndarray) -> n
     ]
 
     K_bb = np.zeros((9, 9))
-
     for L1, L2 in gauss_pts:
         L3 = 1.0 - L1 - L2
 
@@ -3178,8 +3177,8 @@ class ShellTriSolver:
             Number of CTRIA3 elements processed.
         """
         model = self.model
-        ctria3_all = model.ctria3
-        nelements = ctria3_all.n
+        ctria3 = model.ctria3
+        nelements = ctria3.n
         if nelements == 0:
             return 0
 

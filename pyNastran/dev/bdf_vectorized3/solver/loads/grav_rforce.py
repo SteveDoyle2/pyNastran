@@ -30,16 +30,28 @@ def apply_grav(model: BDF,
                Fb: np.ndarray,
                dof_map: DOF_MAP, ndof: int,
                log: SimpleLogger,
-               Mbb: Array | None = None) -> Array:
+               Mbb: Array) -> Array:
     """Apply GRAV load (gravity) to Fb using grid-level mass approach.
 
     Following MYSTRAN's approach: F_i = M_grid_i * acceleration.
     The assembled mass matrix is used to compute forces at each grid.
     """
+    assert Mbb is not None, Mbb
+
+    coord = model.coord
+    betas = {}
+    for cid in np.unique(load.coord_id):
+        betas[cid] = coord.xyz_to_global_transform[cid]
+            
     for i_load in range(load.n):
         sid = load.load_id[i_load]
         N_vec = load.N[i_load]  # direction vector (3,)
-        mag = load.scale_factor[i_load]  # scale factor (acceleration magnitude)
+        if load.type == 'GRAV':
+            mag = load.scale[i_load]  # accel
+        else:
+            # # scale factor (acceleration)
+            mag = load.scale_factor[i_load]
+            asdf
         cid = load.coord_id[i_load]
 
         # Acceleration vector in basic frame
@@ -50,8 +62,7 @@ def apply_grav(model: BDF,
 
         # Transform from CID to basic if needed
         if cid != 0:
-            coord = model.coord
-            beta = coord.xyz_to_global_transform[cid]
+            beta = betas[cid]
             accel_basic = beta.T @ accel_basic
 
         accel_basic *= scale
@@ -73,9 +84,9 @@ def apply_grav(model: BDF,
             i1 = dof_map[(nid, 1)]
             # Extract the 3x3 translational mass block for this grid
             m_diag = np.array([
-                Mbb_temp[i1, i1],
-                Mbb_temp[i1 + 1, i1 + 1],
-                Mbb_temp[i1 + 2, i1 + 2],
+                Mbb[i1, i1],
+                Mbb[i1 + 1, i1 + 1],
+                Mbb[i1 + 2, i1 + 2],
             ])
             Fb[i1: i1 + 3] += m_diag * accel_basic
 

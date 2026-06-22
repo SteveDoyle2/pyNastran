@@ -2,9 +2,9 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import expand_thru
-from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8 # , print_field_8
+from pyNastran.bdf.field_writer_8 import (
+    set_blank_if_default, print_card_8) # , print_float_8 # , print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -12,9 +12,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_or_blank, double_or_blank, string_or_blank,
     integer_string_or_blank, fields)
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
-from pyNastran.utils.numpy_utils import (
-    integer_types,
-)
+from pyNastran.utils.numpy_utils import integer_types
 
 from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
     CTETRA, CTETRA_FACE_MAPPER,
@@ -289,6 +287,10 @@ class PLOAD1(Load):
         """
         x2 = x2 if x2 is not None else x1
         p2 = p2 if p2 is not None else p1
+        assert isinstance(eid, integer_types), eid
+        assert isinstance(load_type, str), load_type
+        assert load_type in self.valid_types, f'load_type={load_type!r}'
+        assert scale in self.valid_scales, f'scale={scale!r}'
         self.cards.append((sid, eid, load_type, scale, [x1, x2], [p1, p2], comment))
         self.n += 1
         return self.n - 1

@@ -52,13 +52,16 @@ def build_Fb_from_loadid(model: BDF,
         for scale, load in loads2:
             if load.type in {'GRAV', 'RFORCE'}:
                 build_mbb = True
+                break
 
-        if build_mbb:
+        if build_mbb and Mbb is None:
             # mass matrix.
             temp_subcase = Subcase(id=0)
             Mbb = build_Mbb(
                 model, temp_subcase, dof_map, ndof,
                 fdtype="float64")
+            assert Mbb is not None, 'Mbb is still None'
+        assert Mbb is not None, Mbb
 
         for scale, load in loads2:
             # print(scale, load, type(load))
@@ -104,7 +107,8 @@ def build_Fb_from_loadid(model: BDF,
                 build_pload4_cquad4(model, Fb, dof_map, load_id)
                 build_pload4_ctria3(model, Fb, dof_map, load_id)
             elif load.type == "GRAV":
-                apply_grav(model, load, scale, Fb, dof_map, ndof, log, Mbb=Mbb)
+                apply_grav(model, load, scale, Fb, dof_map, ndof, log,
+                           Mbb=Mbb)
             elif load.type == "RFORCE":
                 apply_rforce(model, load, scale, Fb, dof_map, ndof, log, Mbb=Mbb)
             else:

@@ -988,7 +988,7 @@ class TestStaticBar(unittest.TestCase):
         """Tests a CBAR/PBAR"""
         log = SimpleLogger(level='debug', encoding='utf-8')
         model = BDF(log=log, mode='msc')
-        model.bdf_filename = TEST_DIR / 'cbar.bdf'
+        model.bdf_filename = TEST_DIR / 'cbar_rbe3.bdf'
         model.add_grid(100, [3., 3., 0.])
         model.add_grid(101, [3., 3., 4.])
         L = 1.0
@@ -1089,44 +1089,14 @@ class TestStaticBar(unittest.TestCase):
         log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(log=log, mode='msc')
         model.bdf_filename = TEST_DIR / 'cbar.bdf'
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        L = 1.0
+        k_axial = build_static_cbar(model)
 
-        nids = [1, 2]
-        eid = 1
-        pid = 2
-        mid = 3
-        E = 3.0e7
-        G = None
-        nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.0, alpha=0.0, tref=0.0, ge=0.0, St=0.0,
-                       Sc=0.0, Ss=0.0, mcsid=0)
-
-        x = [0., 1., 0.]
-        g0 = None
-        model.add_cbar(eid, pid, nids, x, g0,
-                       offt='GGG', pa=0, pb=0, wa=None, wb=None, comment='')
-
-        A = 1.
-        k_axial = A * E / L
-        model.add_pbar(pid, mid,
-                       area=A, i1=1., i2=1., i12=1., j=1.,
-                       nsm=0.,
-                       c1=0., c2=0., d1=0., d2=0.,
-                       e1=0., e2=0., f1=0., f2=0.,
-                       k1=1.e8, k2=1.e8, comment='')
         load_id = 2
-        spc_id = 3
         nid = 2
         mag = 1.
         fxyz = np.array([1., 0., 0.])
         model.add_force(load_id, nid, mag, fxyz, cid=0)
 
-        components = 123456
-        nodes = 1
-        model.add_spc1(spc_id, components, nodes, comment='')
-        setup_static_case_control(model)
         solver = Solver(model)
         solver.run()
 
@@ -1135,6 +1105,85 @@ class TestStaticBar(unittest.TestCase):
         dx = fmag / k_axial
         xg = solver.xg
         assert dx == xg[6], f'dx={dx} xg={xg}'
+
+    def test_cbar_grav(self):
+        """Tests a CBAR/PBAR"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cbar_grav.bdf'
+        k_axial = build_static_cbar(model)
+
+        load_id = 2
+        nid = 2
+        mag = 1.
+        gxyz = np.array([1., 0., 0.])
+        model.add_grav(load_id, scale=mag, N=gxyz, cid=0)
+
+        solver = Solver(model)
+        solver.run()
+        read_bdf(solver._bdf_filename)
+
+        # F = kx
+        #fmag = 1.0
+        #dx = fmag / k_axial
+        #xg = solver.xg
+        #assert dx == xg[6], f'dx={dx} xg={xg}'
+
+    def test_cbar_pload1(self):
+        """Tests a CBAR/PBAR"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cbar_pload1.bdf'
+        k_axial = build_static_cbar(model)
+
+        load_id = 2
+        nid = 2
+        mag = 1.
+        fxyz = np.array([1., 0., 0.])
+        eid = 1
+
+        # constant
+        model.add_pload1(
+            load_id, eid, x1=0., x2=1.0, p1=1., p2=1.,
+            load_type='FZ', scale='FR',)
+        model.add_pload1(
+            load_id, eid, x1=0., x2=1.0, p1=1., p2=1.,
+            load_type='FY', scale='FR',)
+        model.add_pload1(
+            load_id, eid, x1=0., x2=1.0, p1=1., p2=1.,
+            load_type='FX', scale='FR',)
+
+        # ramp
+        model.add_pload1(
+            load_id, eid, x1=0., x2=1.0, p1=2., p2=1.,
+            load_type='FZ', scale='FR',)
+        model.add_pload1(
+            load_id, eid, x1=0., x2=1.0, p1=2., p2=1.,
+            load_type='FY', scale='FR',)
+        model.add_pload1(
+            load_id, eid, x1=0., x2=1.0, p1=2., p2=1.,
+            load_type='FX', scale='FR',)
+
+        # point
+        model.add_pload1(
+            load_id, eid, x1=0., x2=1.0, p1=0.4, p2=0.4,
+            load_type='FZ', scale='FR',)
+        model.add_pload1(
+            load_id, eid, x1=0., x2=1.0, p1=0.4, p2=0.4,
+            load_type='FY', scale='FR',)
+        model.add_pload1(
+            load_id, eid, x1=0., x2=1.0, p1=0.4, p2=0.4,
+            load_type='FX', scale='FR',)
+
+        solver = Solver(model)
+        solver.run()
+        read_bdf(solver._bdf_filename)
+
+        # F = kx
+        #fmag = 1.0
+        #dx = 1. # fmag / k_axial
+        #xg = solver.xg
+        #assert dx == xg[6], f'dx={dx} xg={xg}'
 
     def test_cbar2(self):
         """Tests a CBAR/PBAR"""
@@ -1560,6 +1609,59 @@ class TestStaticShell(unittest.TestCase):
             solver.run()
         #os.remove(model.bdf_filename)
 
+    def test_ctria3_pshell_mat1(self):
+        """Tests CQUAD4/PSHELL/MAT1 with CROD, CONROD, and CONM2."""
+        model = BDF(debug=None, log=None, mode='msc')
+        model.bdf_filename = TEST_DIR / 'ctria3_pshell_mat1.bdf'
+        # 6---5---4
+        # |       |
+        # |       |
+        # 1---2---3
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        thickness = 0.3
+        mid = 3
+        E = 1.0E7
+        G = None
+        nu = 0.3
+
+        # --- CQUAD4 elements ---
+        model.add_ctria3(1, 1, [1, 2, 3], theta_mcid=0.0, zoffset=0.,
+                         tflag=0, T1=None, T2=None, T3=None)
+        model.add_ctria3(2, 1, [1, 2, 3], theta_mcid=0.0, zoffset=0.,
+                         tflag=0, T1=None, T2=None, T3=None)
+        model.add_pshell(1, mid1=mid, t=thickness, mid2=mid, twelveIt3=1.0,
+                         mid3=mid, tst=0.833333, nsm=0.0, z1=None, z2=None,
+                         mid4=None)
+
+        # --- CROD element (node 5 to node 6, stiffening bar) ---
+        model.add_crod(10, 10, [1, 2])
+        model.add_prod(10, mid, A=0.5, j=0.01)
+
+        # --- CONROD element (node 4 to node 6, diagonal brace) ---
+        model.add_conrod(20, mid, [2, 3], A=0.3, j=0.005)
+
+        # --- CONM2 (point mass at node 5) ---
+        model.add_conm2(30, 3, mass=2.0, cid=0, X=None, I=None)
+
+        model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0)
+
+        # BC/loads: fix nodes 1, 2, 3; load nodes 4, 5, 6
+        spc_id = 3
+        load_id = 2
+        model.add_spc1(spc_id, '123456', [1, 2])
+        model.add_force(load_id, 1, 1.0, [0., 0., 1.], cid=0)
+        model.add_force(load_id, 2, 1.0, [0., 0., 1.], cid=0)
+        model.add_force(load_id, 3, 1.0, [0., 0., 1.], cid=0)
+        
+        model.add_pload4(load_id, eids=1, pressures=2.0)
+
+        setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
     def test_cquad4_pshell_mat1(self):
         """Tests CQUAD4/PSHELL/MAT1 with CROD, CONROD, and CONM2."""
         model = BDF(debug=None, log=None, mode='msc')
@@ -1609,6 +1711,8 @@ class TestStaticShell(unittest.TestCase):
         model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0)
         model.add_force(load_id, 5, 1.0, [0., 0., 1.], cid=0)
         model.add_force(load_id, 6, 1.0, [0., 0., 1.], cid=0)
+        
+        model.add_pload4(load_id, eids=1, pressures=2.0)
 
         setup_static_case_control(model)
         solver = Solver(model)
@@ -1818,6 +1922,42 @@ class TestStaticShell(unittest.TestCase):
         #os.remove(solver.f06_filename)
         #os.remove(solver.op2_filename)
 
+
+def build_static_cbar(model: BDF):
+    model.add_grid(1, [0., 0., 0.])
+    model.add_grid(2, [1., 0., 0.])
+    L = 1.0
+
+    nids = [1, 2]
+    eid = 1
+    pid = 2
+    mid = 3
+    E = 3.0e7
+    G = None
+    nu = 0.3
+    model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0, St=0.0,
+                   Sc=0.0, Ss=0.0, mcsid=0)
+
+    x = [0., 1., 0.]
+    g0 = None
+    model.add_cbar(eid, pid, nids, x, g0,
+                   offt='GGG', pa=0, pb=0, wa=None, wb=None, comment='')
+
+    A = 1.
+    k_axial = A * E / L
+    model.add_pbar(pid, mid,
+                   area=A, i1=1., i2=1., i12=1., j=1.,
+                   nsm=0.,
+                   c1=0., c2=0., d1=0., d2=0.,
+                   e1=0., e2=0., f1=0., f2=0.,
+                   k1=1.e8, k2=1.e8, comment='')
+    spc_id = 3
+
+    components = 123456
+    nodes = 1
+    model.add_spc1(spc_id, components, nodes, comment='')
+    setup_static_case_control(model)
+    return k_axial
 
 if __name__ == '__main__':  # pragma: no cover
     np.seterr(all='raise')

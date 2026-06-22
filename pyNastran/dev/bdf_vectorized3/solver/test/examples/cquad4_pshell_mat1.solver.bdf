@@ -39,5 +39,7 @@ $LOADS
 FORCE          2       4              1.      0.      0.      1.
 FORCE          2       5              1.      0.      0.      1.
 FORCE          2       6              1.      0.      0.      1.
+PLOAD4         2       1      2.
+               0      0.      0.      0.
 $SPCs
 SPC1           3  123456       1       2       3

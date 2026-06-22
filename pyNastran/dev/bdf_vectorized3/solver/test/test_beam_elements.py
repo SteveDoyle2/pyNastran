@@ -387,7 +387,7 @@ class TestSolverBeam(unittest.TestCase):
 
     def test_sol101_cbar_axial(self):
         """CBAR axial: tip displacement = P*L/(E*A)."""
-        bdf_path = DIRNAME / "cbar.solver.bdf"
+        bdf_path = DIRNAME / "cbar_axial.bdf"
         model = BDF3(log=None)
         model.read_bdf(bdf_path)
         solver = Solver(model)
@@ -475,7 +475,7 @@ class TestSolverBeam(unittest.TestCase):
 
     def test_sol101_cbeam_runs(self):
         """CBEAM SOL 101 runs without error on the reference BDF."""
-        bdf_path = DIRNAME / "cbeam.solver.bdf"
+        bdf_path = DIRNAME / "cbeam_run.bdf"
         model = BDF3(log=None)
         model.read_bdf(bdf_path)
         solver = Solver(model)
@@ -484,7 +484,7 @@ class TestSolverBeam(unittest.TestCase):
 
     def test_sol101_cbar_reference_bdf(self):
         """CBAR reference BDF (cbar.solver.bdf) gives correct axial displacement."""
-        bdf_path = DIRNAME / "cbar.solver.bdf"
+        bdf_path = DIRNAME / "cbar_axial.bdf"
         model = BDF3(log=None)
         model.read_bdf(bdf_path)
         solver = Solver(model)

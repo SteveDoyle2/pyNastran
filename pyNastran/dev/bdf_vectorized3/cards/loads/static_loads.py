@@ -395,6 +395,10 @@ class Load0(Load):
             a comment for the card
 
         """
+        assert isinstance(node, integer_types), node
+        assert isinstance(cid, integer_types), cid
+        assert isinstance(mag, float_types), mag
+        assert isinstance(xyz, (list, np.ndarray)), xyz
         self.cards.append((sid, node, cid, mag, xyz, comment))
         self.n += 1
 

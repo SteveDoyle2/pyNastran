@@ -6,6 +6,7 @@ from pyNastran.nptyping_interface import (
     NDArrayNint, NDArrayN2int,
     NDArrayNfloat, NDArrayNNfloat)
 
+from pyNastran.f06.errors import FatalError
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 from pyNastran.dev.bdf_vectorized3.bdf_interface.breakdowns import NO_MASS
 
@@ -311,7 +312,7 @@ def build_Mbb(model: BDF, subcase: Subcase,
         massi = sum(Mbb[ii, ii] for ii in i)
         log.info(f"finished build_Mbb; M={massi:.6g}; mass_total={mass_total:.6g}")
     else:
-        return None
+        log.warning(f'No mass; mass_total={mass_total:.6g}')
     
     # write_mat(model, 'Mbb', 'PRTMBB', Mbb, solver_dict)
     return Mbb
@@ -333,11 +334,7 @@ def conm2_fill_Mbb(model: BDF, mass_total: float,
         conm2.element_id,
         conm2.node_id,
         cds,
-        conm2.coord_id,
-        conm2.mass(),
-        conm2.xyz_offset,
-        conm2.inertia,
-    ):
+        conm2.coord_id, conm2.mass(), conm2.xyz_offset, conm2.inertia,):
         i1 = dof_map[(nid, 1)]
         if cd != cid:
             log.warning(f"  CONM2 eid={eid} nid={nid} CD={cd} to CONM2 cid={cid} is not supported")

@@ -18,20 +18,22 @@ SUBCASE 1
     LOAD = 2
     SPC = 3
 BEGIN BULK
-$PARAMS
-PARAM     GRDPNT       0
 $NODES
 GRID           1              0.      0.      0.
 GRID           2              1.      0.      0.
-GRID           3              1.      1.      0.
-GRID           4              0.      0.      1.
-GRID           5              1.      0.      1.
-GRID           6              1.      1.      1.
-CPENTA        10       4       1       2       3       4       5       6
-PSOLID         4       3       0
+GRID           3              1.      0.      2.
+GRID           4              0.      0.      2.
+CONROD        10       1       2       3      1.
+CONROD        11       2       3       3      1.
+CONROD        12       3       4       3      1.
+CONROD        13       4       1       3      1.
+CSHEAR         1       1       1       2       3       4
+CSHEAR         2       1       1       2       3       4
+PSHEAR         1       3      .3              0.      0.
 $MATERIALS
 MAT1           3    1.+7              .3      1.
 $LOADS
+FORCE          2       3              1.      0.      0.      1.
 FORCE          2       4              1.      0.      0.      1.
 $SPCs
-SPC1           3  123456       1       2       3
+SPC1           3  123456       1       2

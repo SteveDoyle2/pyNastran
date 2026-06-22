@@ -22,12 +22,13 @@ from pyNastran.dev.bdf_vectorized3.solver.elements.shells import (
     _membrane_B,
     _bending_B,
     _shape_quad4,
-    _get_ABD_for_element,
     _GAUSS_2x2_PTS,
     _GAUSS_2x2_WTS,
     macn2_stiffness,
-    _apply_shell_offset,)
-
+    _apply_shell_offset,
+    get_shell_ABDs,
+)
+from pyNastran.dev.bdf_vectorized3.solver.loads.pload1 import coord_transforms
 
 if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -110,9 +111,10 @@ def recover_shell_stress_cquad4(
     common_pshell_pids = np.intersect1d(pshell.property_id, pids)
     is_pshells = np.array([pid in common_pshell_pids for pid in pids])
 
-    for (i_elem, eid, pid, theta_mat, zoffset, is_pshell) in zip(
-            count(), eids, pids, thetas, zoffsets, is_pshells):
-        Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
+    ABDs = get_shell_ABDs(model, cquad4)
+    T = coord_transforms(ihat, jhat, normal)
+    for (i_elem, eid, pid, theta_mat, zoffset, is_pshell, Ti) in zip(
+            count(), eids, pids, thetas, zoffsets, is_pshells, T):
 
         xy = np.zeros((4, 3))
         xy[0] = Ti @ p1[i_elem]
@@ -122,8 +124,7 @@ def recover_shell_stress_cquad4(
         x_local = xy[:, 0]
         y_local = xy[:, 1]
 
-        A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(
-            model, pid, pshell, pcomp, pcompg)
+        A_mat, B_mat, D_mat, Ds_mat, thickness = ABDs[pid]
 
         # Get z1, z2 (fiber distances from midplane)
         if is_pshell:
@@ -277,6 +278,7 @@ def recover_shell_stress_ctria3(
     if hasattr(model, 'ctria3_pshell'):
         asdf
 
+    neid = len(ctria3)
     pshell = model.pshell
     pcomp = model.pcomp
     pcompg = model.pcompg
@@ -306,24 +308,16 @@ def recover_shell_stress_ctria3(
     pids = ctria3.property_id
     zoffsets = ctria3.zoffset
 
-    thetas = get_theta_from_theta_mcid(model, cquad4, normal)
+    thetas = get_theta_from_theta_mcid(model, ctria3, normal)
 
     zoffsets[np.isnan(zoffsets)] = 0.0
     common_pshell_pids = np.intersect1d(pshell.property_id, pids)
     is_pshells = np.array([pid in common_pshell_pids for pid in pids])
+    ABDs = get_shell_ABDs(model, ctria3)
 
-    T = np.full((neid, 3, 3), np.nan, dtype='float32')
-    T[:, 0, :] = ihat
-    T[:, 0, :] = jhat
-    T[:, 0, :] = normal
-    #T3 = np.vstack([ihat, jhat, normal])
-    assert T.shape == T3.shape
-
-    for i_elem, eid, pid, theta, zoffset, is_pshell, Ti2 in zip(
+    T = coord_transforms(ihat, jhat, normal)
+    for i_elem, eid, pid, theta, zoffset, is_pshell, Ti in zip(
             count(), eids, pids, thetas, zoffsets, is_pshells, T):
-
-        Ti = np.vstack([ihat[i_elem], jhat[i_elem], normal[i_elem]])
-        assert np.allclose(Ti, Ti2)
 
         xy = np.zeros((3, 3))
         xy[0] = Ti @ p1[i_elem]
@@ -332,9 +326,7 @@ def recover_shell_stress_ctria3(
         x_local = xy[:, 0]
         y_local = xy[:, 1]
 
-        A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(
-            model, pid, pshell, pcomp, pcompg)
-
+        A_mat, B_mat, D_mat, Ds_mat, thickness = ABDs[pid]
         if is_pshell:
             iprop = np.searchsorted(pshell.property_id, pid)
             z1, z2 = pshell.z[iprop, :]
@@ -367,7 +359,7 @@ def recover_shell_stress_ctria3(
             (x_local[1] - x_local[0]) * (y_local[2] - y_local[0])
             - (x_local[2] - x_local[0]) * (y_local[1] - y_local[0])
         )
-        area = 0.5 * area
+        area = 0.5 * area2
         dNdx = np.array(
             [y_local[1] - y_local[2], y_local[2] - y_local[0], y_local[0] - y_local[1]]
         ) / area2
@@ -393,10 +385,17 @@ def recover_shell_stress_ctria3(
         # For DKT: evaluate at centroid (1/3, 1/3, 1/3)
         # Simplified: use linear interpolation of rotations for curvature
         u_bend = np.zeros(9)
+        u_bend2 = np.zeros(9)
+        inodes = np.arange(3)
+        u_bend2[3 * inodes    ] = u_local_15[5 * inodes + 2]
+        u_bend2[3 * inodes + 1] = u_local_15[5 * inodes + 3]
+        u_bend2[3 * inodes + 2] = u_local_15[5 * inodes + 4]
+
         for inode in range(3):
             u_bend[3 * inode] = u_local_15[5 * inode + 2]
             u_bend[3 * inode + 1] = u_local_15[5 * inode + 3]
             u_bend[3 * inode + 2] = u_local_15[5 * inode + 4]
+        assert np.allclose(u_bend, u_bend2)
 
         # Curvature from rotations: kxx = dtheta_y/dx, kyy = -dtheta_x/dy,
         # kxy = dtheta_y/dy - dtheta_x/dx
@@ -532,12 +531,11 @@ def recover_shell_strain_energy_cquad4(
     zoffsets = cquad4.zoffset
     assert np.abs(zoffsets.min()) >= 0., zoffsets
     apply_zoffset = (np.abs(zoffset) > 0.0)
+    ABDs = get_shell_ABDs(model, cquad4)
 
-    T = np.vstack([ihat, jhat, normal])
+    T = coord_transforms(ihat, jhat, normal)
     assert T.shape == (neids, 3, 3), T.shape
-    for i, eid, pid, zoffset, apply_zoffset in zip(count(), eids, pids, zoffsets, apply_zoffsets):
-        Ti = np.vstack([ihat[i], jhat[i], normal[i]])
-
+    for i, eid, pid, zoffset, apply_zoffset, Ti in zip(count(), eids, pids, zoffsets, apply_zoffsets, T):
         xy = np.zeros((4, 3))
         xy[0] = Ti @ p1[i]
         xy[1] = Ti @ p2[i]
@@ -546,8 +544,7 @@ def recover_shell_strain_energy_cquad4(
         x_local = xy[:, 0]
         y_local = xy[:, 1]
 
-        A_mat, B_mat, D_mat, Ds_mat, thickness = _get_ABD_for_element(
-            model, pid, pshell, pcomp, pcompg)
+        A_mat, B_mat, D_mat, Ds_mat, thickness = ABDs[pid]
 
         Ke = macn2_stiffness(x_local, y_local, A_mat, D_mat, Ds_mat, B_mat)
 
