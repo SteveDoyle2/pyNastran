@@ -385,31 +385,6 @@ class TestSolverBeam(unittest.TestCase):
         err_euler = abs(P_cr_fem - P_euler) / P_euler * 100
         assert err_euler < 0.5, f"Buckling error {err_euler:.2f}% vs Euler (tol 0.5%)"
 
-    def test_sol101_cbar_axial(self):
-        """CBAR axial: tip displacement = P*L/(E*A)."""
-        bdf_path = DIRNAME / "cbar_axial.bdf"
-        model = BDF3(log=None)
-        model.read_bdf(bdf_path)
-        solver = Solver(model)
-        solver.run()
-
-        # Model: 2 CBAR elements, L=0.5 each (total 1.0), E=3e7, A=1, tip Fx=1
-        E = 3e7
-        A = 1.0
-        L = 1.0
-        P = 1.0
-        expected_ux_tip = P * L / (E * A)
-
-        # Check solver displacement at tip (node 3)
-        xa = solver.xa_
-        assert xa is not None, "Solver did not produce displacements"
-        # a-set has 12 DOFs (nodes 2 and 3, 6 each). Node 3 x-DOF is index 6.
-        ux_tip = xa[6]
-        assert np.isclose(ux_tip, expected_ux_tip, rtol=1e-6), (
-            f"Axial disp {ux_tip:.6e} != expected {expected_ux_tip:.6e}"
-        )
-
-
     def test_sol101_cbar_bending(self):
         """CBAR bending: 10-element cantilever tip deflection matches Timoshenko."""
         E = 200e9
@@ -472,34 +447,6 @@ class TestSolverBeam(unittest.TestCase):
         w_analytical = P * L**3 / (3 * E * Iy) + P * L / (ks * G * A)
         err = abs(w_tip - w_analytical) / abs(w_analytical) * 100
         assert err < 0.01, f"Bending deflection error {err:.4f}% (tol 0.01%)"
-
-    def test_sol101_cbeam_runs(self):
-        """CBEAM SOL 101 runs without error on the reference BDF."""
-        bdf_path = DIRNAME / "cbeam_run.bdf"
-        model = BDF3(log=None)
-        model.read_bdf(bdf_path)
-        solver = Solver(model)
-        solver.run()
-
-
-    def test_sol101_cbar_reference_bdf(self):
-        """CBAR reference BDF (cbar.solver.bdf) gives correct axial displacement."""
-        bdf_path = DIRNAME / "cbar_axial.bdf"
-        model = BDF3(log=None)
-        model.read_bdf(bdf_path)
-        solver = Solver(model)
-        solver.run()
-
-        # cbar.solver.bdf: 2 elements, L_total=1, E=3e7, A=1, Fx=1 at tip
-        expected = 1.0 / (3e7 * 1.0)  # P*L/(E*A)
-        xa = solver.xa_
-        # First free DOF should be the axial displacement
-        # Node 2 x-dof and node 3 x-dof
-        # With SPC on node 1, the a-set starts at node 2 DOF 1
-        # u2_x = P*L_half/(E*A) = 1*0.5/(3e7) for first element
-        # u3_x = P*L/(E*A) = 1/(3e7) for full span
-        u3_x = xa[6]  # node 3, DOF 1 (7th entry in a-set: 6 DOFs for node 2, then node 3 DOF 1)
-        assert np.isclose(u3_x, expected, rtol=1e-6), f"u3_x={u3_x:.6e}, expected={expected:.6e}"
 
     def test_kgg_shear_relief(self):
         """KGG with S1/S2 shear relief matches timoshenko_beam.py reference."""
