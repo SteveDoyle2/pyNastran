@@ -8,7 +8,7 @@ Verifies:
 """
 import unittest
 import numpy as np
-from pyNastran.dev.bdf_vectorized3.loads.reduce_pg import reduce_Pg_to_Pa
+from pyNastran.dev.bdf_vectorized3.solver.loads.reduce_pg import reduce_Pg_to_Pa
 
 
 class TestReducePg(unittest.TestCase):
