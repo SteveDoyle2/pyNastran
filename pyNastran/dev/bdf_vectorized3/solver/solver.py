@@ -392,6 +392,7 @@ class Solver:
         b = l - c ???
         c = l - b ???
         """
+        out = {}
         self.log.debug(f"run_sol_101")
         end_options = [
             "SEMG",  # STIFFNESS AND MASS MATRIX GENERATION STEP
