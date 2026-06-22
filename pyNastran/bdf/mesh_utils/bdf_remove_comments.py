@@ -9,15 +9,11 @@ defines:
 
 """
 from __future__ import annotations
-from itertools import chain
-from io import StringIO, IOBase
+from io import StringIO
 from typing import Optional, TYPE_CHECKING
-
-import numpy as np
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.utils import PathLike
-from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.mesh_utils.bdf_renumber import _write_bdf, _get_bdf_model
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
@@ -82,7 +78,7 @@ def bdf_remove_comments(bdf_filename: PathLike | BDF | StringIO,
         if attr in SKIP_ATTRS:
             continue
         dict_list_scalar = getattr(model, attr)
-        if dict_list_scalar is None:
+        if dict_list_scalar is None or isinstance(dict_list_scalar, PathLike):
             continue
 
         if isinstance(dict_list_scalar, list):
@@ -101,14 +97,11 @@ def bdf_remove_comments(bdf_filename: PathLike | BDF | StringIO,
                     # dict[card]
                     assert hasattr(value, 'comment'), (attr, value)
                     value.comment = ''
-
-        elif isinstance(dict_list_scalar, PathLike):
-            pass
         else:
             if not hasattr(dict_list_scalar, 'comment'):
                 #print(attr)
                 continue
-            assert hasattr(dict_list_scalar, 'comment'), (attr, value, type(value))
+            assert hasattr(dict_list_scalar, 'comment'), (attr, dict_list_scalar)
             dict_list_scalar.comment = ''
 
     _write_bdf(model, bdf_filename_out, size=size, is_double=is_double)

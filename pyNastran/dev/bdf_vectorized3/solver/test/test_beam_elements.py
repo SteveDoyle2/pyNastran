@@ -12,7 +12,6 @@ Tolerances:
   - Frequencies (ratio) vs Nastran: < 0.001%
   - Statics deflection vs analytical: < 1e-10%
 """
-import sys
 from pathlib import Path
 import unittest
 
@@ -186,7 +185,6 @@ class TestSolverBeam(unittest.TestCase):
         Iz = 2e-5
         J = 3e-5
         m_expected = rho * A * L
-
         M = consistent_mass(A, L, rho, Iy, Iz, J, k1=1.0, k2=1.0)
 
         # Sum of x-translational mass (DOFs 0 and 6)

@@ -3546,7 +3546,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         for card, count in self.card_count.items():
             msg += f'{card}: {count}\n'
         return msg
-        return get_bdf_stats(self, return_type=return_type)
 
     def get_displacement_index_xyz_cp_cd(self, fdtype: str='float64',
                                          idtype: str='int32',
