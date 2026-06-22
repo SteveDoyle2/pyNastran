@@ -221,7 +221,7 @@ def _build_kbb_cbar_coo(model: BDF, coo: _COOAccumulator,
     Teb = beam_transforms(ihat, yhat, zhat)
     for ((nid1, nid2), Li, Ai, inertiai, ji, pa, pb,
           Tebi, k1i, k2i, e_g_nu) in zip(
-          elem.nodes, L, A, I, elem.pa, elem.pb,
+          elem.nodes, L, A, I, J, elem.pa, elem.pb,
           Teb, k1, k2, e_g_nus,):
         i1, i2, i12 = inertiai
         e, g, nu = e_g_nu

@@ -32,8 +32,7 @@ def reduce_Pg_to_Pa(
     oset_b: np.ndarray | None = None,
     Gm: np.ndarray | None = None,
     Koo: np.ndarray | csc_matrix | None = None,
-    Koa: np.ndarray | csc_matrix | None = None,
-) -> np.ndarray:
+    Koa: np.ndarray | csc_matrix | None = None,) -> np.ndarray:
     """Reduce load vector from g-set to a-set through MPC, SPC, and OMIT.
 
     Parameters
@@ -148,7 +147,10 @@ def reduce_Pg_to_Pa(
     n_loads = Pg.shape[1]
 
     # --- Step 1: MPC elimination (G → N) ---
-    has_mpc = mset_b is not None and Gm is not None and np.any(mset_b)
+    has_mpc = (
+        mset_b is not None and
+        Gm is not None and
+        np.any(mset_b))
     if has_mpc:
         nset_b = ~mset_b  # n = g - m
         Pg_m = Pg[mset_b, :]  # Forces at dependent DOFs
@@ -175,7 +177,11 @@ def reduce_Pg_to_Pa(
         Pf = Pn[~sset_b[nset_b], :]
 
     # --- Step 3: OMIT reduction (F → A) ---
-    has_omit = oset_b is not None and np.any(oset_b) and Koo is not None and Koa is not None
+    has_omit = (
+        oset_b is not None and
+        np.any(oset_b) and
+        Koo is not None and
+        Koa is not None)
     if has_omit:
         # oset_b is in g-set; find which f-set DOFs are omitted
         f_indices = np.where(fset_b)[0]

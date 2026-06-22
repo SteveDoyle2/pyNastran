@@ -64,8 +64,8 @@ class ABCOQSET(VectorizedBaseCard):
 
     def add_set(self, nids: list[int], components: list[int],
                 ifile: int, comment: str='') -> int:
-        assert isinstance(nids, (list, np.ndarray, tuple))
-        assert isinstance(components, (list, np.ndarray, tuple))
+        assert isinstance(nids, (list, np.ndarray, tuple)), nids
+        assert isinstance(components, (list, np.ndarray, tuple)), components
         nnodes = len(nids)
         ncomp = len(components)
         assert nnodes == ncomp, (nnodes, ncomp)
@@ -309,8 +309,8 @@ class SuperBCQSET(VectorizedBaseCard):
 
     def add_set(self, seid: int, nids: list[int], components: list[int],
                 ifile: int, comment: str='') -> int:
-        assert isinstance(nids, (list, np.ndarray, tuple))
-        assert isinstance(components, (list, np.ndarray, tuple))
+        assert isinstance(nids, (list, np.ndarray, tuple)), nids
+        assert isinstance(components, (list, np.ndarray, tuple)), components
         nnodes = len(nids)
         ncomp = len(components)
         assert nnodes == ncomp, (nnodes, ncomp)
@@ -804,8 +804,8 @@ class SUPORT(VectorizedBaseCard):
 
     def add_set(self, nids: list[int], components: list[int],
                 ifile: int=0, comment: str='') -> int:
-        assert isinstance(nids, (list, np.ndarray, tuple))
-        assert isinstance(components, (list, np.ndarray, tuple))
+        assert isinstance(nids, (list, np.ndarray, tuple)), nids
+        assert isinstance(components, (list, np.ndarray, tuple)), components
         nnodes = len(nids)
         ncomp = len(components)
         assert nnodes == ncomp, (nnodes, ncomp)

@@ -1,4 +1,5 @@
-"""Craig-Bampton (SOL 31 / GEN CB MODEL) reduction.
+"""
+Craig-Bampton (SOL 31 / GEN CB MODEL) reduction.
 
 Computes the Craig-Bampton reduced stiffness (KXX), mass (MXX),
 transformation matrix (PHIXA), and Output Transformation Matrices (OTMs).
@@ -17,6 +18,9 @@ from typing import Any
 import numpy as np
 from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import factorized, eigsh
+
+from cpylog import SimpleLogger
+
 from pyNastran.op4.op4 import OP4
 
 DOF_MAP = dict[tuple[int, int], int]
@@ -64,8 +68,6 @@ def run_craig_bampton(
         'l_dof_indices' : (ndofl,) L-set DOF indices in the A-set
     """
     if log is None:
-        from cpylog import SimpleLogger
-
         log = SimpleLogger(level="debug")
 
     ndof = Kgg.shape[0]
@@ -138,7 +140,9 @@ def run_craig_bampton(
     # =========================================================================
     # Step 3: CB Stiffness (KXX)
     # KRRcb = KRR + KRL * DLR
-    # KXX = [[KRRcb, 0], [0, diag(omega_i^2)]]
+    # KXX = [
+    #    [KRRcb, 0              ],
+    #    [0,     diag(omega_i^2)]]
     # =========================================================================
     KRR_dense = KRR.toarray()
     KRL_dense = KRL.toarray()
@@ -233,9 +237,9 @@ def write_cb_to_op4(
     op4_filename: str,
     cb_result: dict[str, np.ndarray],
     is_binary: bool = True,
-    precision: str = "double",
-) -> None:
-    """Write Craig-Bampton matrices to Nastran OP4 format.
+    precision: str = "double",) -> None:
+    """
+    Write Craig-Bampton matrices to Nastran OP4 format.
 
     Writes the following named matrices:
         KXX    - CB reduced stiffness (num_cb x num_cb)
@@ -255,8 +259,6 @@ def write_cb_to_op4(
     precision : str
         'single', 'double', or 'default'.
     """
-    op4 = OP4()
-
     # form: 1=square, 2=rectangular, 6=symmetric
     matrices = {}
 
@@ -275,19 +277,17 @@ def write_cb_to_op4(
     matrices["IF_LTM"] = (2, IF_LTM)
 
     name_order = ["KXX", "MXX", "PHIXA", "DLR", "IF_LTM"]
+    op4 = OP4()
     op4.write_op4(
         op4_filename,
         matrices,
         name_order=name_order,
         precision=precision,
-        is_binary=is_binary,
-    )
+        is_binary=is_binary,)
 
 
-def write_cb_to_h5(
-    h5_filename: str,
-    cb_result: dict[str, np.ndarray],
-) -> None:
+def write_cb_to_h5(h5_filename: str,
+                   cb_result: dict[str, np.ndarray],) -> None:
     """Write Craig-Bampton matrices to HDF5 using PyTables.
 
     Creates the following datasets under /CRAIG_BAMPTON/:
@@ -312,14 +312,15 @@ def write_cb_to_h5(
     import tables
 
     with tables.open_file(h5_filename, mode="w", title="Craig-Bampton Model") as h5:
-        cb_group = h5.create_group("/", "CRAIG_BAMPTON", "Craig-Bampton Matrices")
+        cb_group = h5.create_group(
+            "/", "CRAIG_BAMPTON", "Craig-Bampton Matrices")
 
         h5.create_array(
-            cb_group, "KXX", cb_result["KXX"].astype(np.float64), title="CB Reduced Stiffness"
-        )
+            cb_group, "KXX", cb_result["KXX"].astype(np.float64),
+            title="CB Reduced Stiffness")
         h5.create_array(
-            cb_group, "MXX", cb_result["MXX"].astype(np.float64), title="CB Reduced Mass"
-        )
+            cb_group, "MXX", cb_result["MXX"].astype(np.float64),
+            title="CB Reduced Mass")
         h5.create_array(
             cb_group,
             "PHIXA",
@@ -327,27 +328,28 @@ def write_cb_to_h5(
             title="CB Transformation Matrix",
         )
         h5.create_array(
-            cb_group, "DLR", cb_result["DLR"].astype(np.float64), title="Constraint Modes"
+            cb_group, "DLR", cb_result["DLR"].astype(np.float64),
+            title="Constraint Modes"
         )
         h5.create_array(
-            cb_group, "IF_LTM", cb_result["IF_LTM"].astype(np.float64), title="Interface Force LTM"
-        )
+            cb_group, "IF_LTM", cb_result["IF_LTM"].astype(np.float64),
+            title="Interface Force LTM")
         h5.create_array(
-            cb_group, "KRRcb", cb_result["KRRcb"].astype(np.float64), title="Boundary Stiffness"
-        )
+            cb_group, "KRRcb", cb_result["KRRcb"].astype(np.float64),
+            title="Boundary Stiffness")
         h5.create_array(
-            cb_group, "MRRcb", cb_result["MRRcb"].astype(np.float64), title="Boundary Mass"
-        )
-        h5.create_array(cb_group, "MRN", cb_result["MRN"].astype(np.float64), title="Coupling Mass")
+            cb_group, "MRRcb", cb_result["MRRcb"].astype(np.float64),
+            title="Boundary Mass")
+        h5.create_array(cb_group, "MRN", cb_result["MRN"].astype(np.float64),
+            title="Coupling Mass")
         h5.create_array(
             cb_group,
             "eigenvalues",
             cb_result["eigenvalues"].astype(np.float64),
-            title="Fixed-Interface Eigenvalues (rad/s)^2",
-        )
+            title="Fixed-Interface Eigenvalues (rad/s)^2",)
         h5.create_array(
-            cb_group, "gen_mass", cb_result["gen_mass"].astype(np.float64), title="Generalized Mass"
-        )
+            cb_group, "gen_mass", cb_result["gen_mass"].astype(np.float64),
+            title="Generalized Mass")
 
         # Store dimension info as attributes
         cb_group._v_attrs.ndofr = len(cb_result["r_dof_indices"])
@@ -360,11 +362,9 @@ def write_cb_to_h5(
             cb_group,
             "r_dof_indices",
             cb_result["r_dof_indices"].astype(np.int32),
-            title="R-set DOF Indices",
-        )
+            title="R-set DOF Indices",)
         h5.create_array(
             cb_group,
             "l_dof_indices",
             cb_result["l_dof_indices"].astype(np.int32),
-            title="L-set DOF Indices",
-        )
+            title="L-set DOF Indices",)

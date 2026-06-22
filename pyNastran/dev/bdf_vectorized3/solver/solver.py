@@ -66,6 +66,7 @@ from pyNastran.op2.op2_interface.op2_classes import (
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
 # from pyNastran.bdf.mesh_utils.loads import get_ndof
 
+from .loads.reduce_pg import reduce_Pg_to_Pa
 from .recover.freq_force import recover_force_freq
 from .recover.modal_force import recover_force_103
 from .recover.static_force import recover_force_101
@@ -406,10 +407,14 @@ class Solver:
         idtype = 'int32'
         # -----------------------------------------------------------------------
         model = self.model
+        log = model.log
+
         model.setup(run_geom_check=True)
         xyz_cid0 = model.grid.xyz_cid0()
-
-        log = model.log
+        # -----------------------------------------------------------------------
+        load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
+            model.sol, subcase)
+        # -----------------------------------------------------------------------
 
         is_mpc_request = get_plot_request(subcase, 'MPCFORCES')[-1]
         is_spc_request = get_plot_request(subcase, 'SPCFORCES')[-1]
@@ -422,7 +427,7 @@ class Solver:
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
 
         gset_b = ps_to_sg_set(ndof, ps)
-        rset_b = get_rset_bool(model, dof_map, ndof)
+        rset_b = get_rset_bool(model, dof_map, ndof, suport_id=suport_id)
         has_suport = np.any(rset_b)
         #--------------------------------------------------
         log.warning('creating Kgg')
@@ -458,6 +463,8 @@ class Solver:
             subcase, dof_map, ndof, xyz_cid0, fdtype=fdtype)
         self.GMN = GMN
         self.mset = mset
+        #out['GMN'] = GMN
+        out['mset_bool'] = mset
 
         log.warning('creating Mgg')
         Mgg = None if Mbb is None else Kbb_to_Kgg(
@@ -469,7 +476,10 @@ class Solver:
             log.info('Applying GMN to K: n = g - m')
             # Transform to n-set: Knn = GMN^T @ Kgg @ GMN, Mnn = GMN^T @ Mgg @ GMN
             Knn = GMN.T @ Kgg @ GMN
+            write_mat(model, Knn, 'PRTKNN', self.solver_dict)
+
             Mnn = GMN.T @ Mgg @ GMN if Mgg is not None else None
+            write_mat(model, Mnn, 'PRTMNN', self.solver_dict)
 
             # AUTOSPC on N-set: detect singular DOFs after MPC reduction
             n_ndof_temp = Knn.shape[0]
@@ -494,6 +504,8 @@ class Solver:
         # Save g-set force for oload output before MPC transform
         Fg_gset = np.where(np.isnan(Fg), 0.0, Fg.copy())
 
+
+        asetmap = get_aset(model)
         if GMN is not None:
             # Transform force to n-set
             Fn = GMN.T @ Fg
@@ -540,7 +552,6 @@ class Solver:
             sset_b_n = np.zeros(n_ndof, dtype="bool")
             sset_b_n[sset_n] = True
 
-            asetmap = get_aset(model)
             if asetmap:
                 aset_g = apply_dof_map_to_set(asetmap, dof_map, idtype=idtype)
                 aset = np.array([
@@ -562,7 +573,6 @@ class Solver:
             xg_orig = None
 
             # -------------------SPC reduction (g -> a)-------------------
-            asetmap = get_aset(model)
             if asetmap:
                 aset = apply_dof_map_to_set(
                     asetmap, dof_map, idtype=idtype)
@@ -945,7 +955,7 @@ class Solver:
         idtype: str = "int32",
         fdtype: str = "float64",
         write_op2: bool = True,
-    ):
+        matrices_to_save: set[str] | None=None):
         """
         [M]{xdd} + [C]{xd} + [K]{x} = {F}
         [M]{xdd} + [K]{x} = {0}
@@ -955,6 +965,9 @@ class Solver:
         λ^2 = [M]^-1[K]
         [A][X] = [X]λ^2
         """
+        if matrices_to_save is None:
+            matrices_to_save = set([])
+
         model = self.model
         nmodes, norm_str = get_real_eigenvalue_method(model, subcase)
         log = model.log
@@ -970,12 +983,16 @@ class Solver:
 
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         xyz_cid0 = model.grid.xyz_cid0()
+        # -----------------------------------------------------------------------
+        load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
+            model.sol, subcase)
+        # -----------------------------------------------------------------------
 
         dof_map, ps = _get_dof_map(model)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
 
         gset_b = ps_to_sg_set(ndof, ps)
-        rset_b = get_rset_bool(model, dof_map, ndof)
+        rset_b = get_rset_bool(model, dof_map, ndof, suport_id=suport_id)
         has_suport = np.any(rset_b)
         #--------------------------------------------------
 
@@ -985,6 +1002,7 @@ class Solver:
         self.GMN = GMN
         self.mset = mset
 
+        matrices_to_save.add('Mgg')
         page_num, out = _run_modes(
             model, subcase,
             op2, f06_file,
@@ -1001,7 +1019,12 @@ class Solver:
             fdtype=fdtype,
             page_stamp=page_stamp, page_num=page_num,
             solver_dict=self.solver_dict,
+            matrices_to_save=matrices_to_save,
         )
+        if 'GMN' in matrices_to_save:
+            out['GMN'] = GMN
+            out['mset_bool'] = mset
+
         phig = out["modes_phig"]
         eigenvalue = out["modes_eigenvalue"]
         cycle = np.sqrt(np.abs(eigenvalue)) / (2.0 * np.pi)
@@ -1137,6 +1160,16 @@ class Solver:
         str(page_stamp)
         return out, page_num, end_options
 
+    def build_complex_Fb(self,
+                         model: BDF,
+                         subcase: Subcase,
+                         ndof_g: int):
+        # TODO: parse inputs for loads
+        Fg = np.ones((ndof_g, 1), dtype="complex64")
+        dload_id, _ = subcase['DLOAD']
+
+        return Fg
+
     def run_sol_111_modal_frequency(
         self,
         subcase: Subcase,
@@ -1157,7 +1190,15 @@ class Solver:
         isubcase = subcase.id
         op2 = self.op2
         # ---------------------------------------------------------------------
+        # case control
+        load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
+            model.sol, subcase)
+        dload_id, _ = subcase['DLOAD']
+        freq_id, _ = subcase['FREQUENCY']
+        # ---------------------------------------------------------------------
+        ngrid = len(model.grid)
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
+        ngrid, ndof_per_grid, ndof_g = get_ndof(self.model, subcase)
 
         # handles MAX/MASS normalization
         log.info('running modes')
@@ -1171,7 +1212,18 @@ class Solver:
             page_num=page_num,
             idtype=idtype,
             fdtype=fdtype,
+            matrices_to_save={'Koa', 'Koo', 'GMN'},
         )
+        Koa = out.get('Koa')
+        Koo = out.get('Koo')
+        
+        GMN = None
+        if mpc_id or 'GMN' in out:
+            GMN = out.get('GMN')
+            mset_b = out['mset_bool']
+        sset_b = out['sset_bool']
+        oset_b = None
+
         end_options.append("DYNRED")
         # aset = out['aset']
         Kgg = out["Kgg"]
@@ -1195,8 +1247,15 @@ class Solver:
         omega = 2 * np.pi * freq
         assert nfreq > 0, nfreq
 
-        # TODO: parse inputs for loads
-        Fg = np.ones((ndof_g, 1), dtype="complex64")
+        Fb = self.build_complex_Fb(model, subcase, ndof_g)
+        Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
+        Fa = reduce_Pg_to_Pa(
+            Fg,
+            ndof_g,
+            sset_b,
+            mset_b=mset_b,
+            oset_b=oset_b,
+            Gm=GMN, Koo=Koo, Koa=Koa)
 
         Cstr_gg, zomegan2 = get_freq_damping(model, omegan, ndof_g)
 
@@ -1463,8 +1522,7 @@ class Solver:
         label: str = "",
         page_num: int = 1,
         idtype: str = "int32",
-        fdtype: str = "float64",
-    ):
+        fdtype: str = "float64",):
         """SOL 31 Craig-Bampton (GEN CB MODEL).
 
         Boundary DOFs defined by SUPORT/SUPORT1 cards.
@@ -1520,6 +1578,8 @@ class Solver:
 
         # Identify R-set DOFs from SUPORT/SUPORT1 cards
         r_set_dofs = get_cb_rset_dofs(model, subcase, dof_map, g_to_f)
+        
+        # f - r = l?
 
         # Build DOF map for the free set
         f_dof_map: DOF_MAP = {}
@@ -1531,6 +1591,10 @@ class Solver:
         # Number of eigenvalues
         log.info(f"  R-set DOFs: {len(r_set_dofs)}, modes requested: {neigenvalues}")
 
+        #f = n - s        unconstrained (free structural DOFs)
+        #a = f - o        ananlysis??? set
+        #L = a - r
+        
         # Run Craig-Bampton
         cb_result = run_craig_bampton(
             Kff, Mff, f_dof_map, r_set_dofs,
@@ -1627,6 +1691,7 @@ class Solver:
         # ]
         model = self.model
         neigenvalues, _ = get_real_eigenvalue_method(model, subcase)
+
         # op2 = self.op2
         # ---------------------------------------------------
         # title = ''
@@ -1635,20 +1700,27 @@ class Solver:
 
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         dof_map, ps = _get_dof_map(model)
-        ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
+        ngrid, ndof_per_grid, ndof_g = get_ndof(self.model, subcase)
         xyz_cid0 = model.grid.xyz_cid0()
+        # -----------------------------------------------------------------------
+        load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
+            model.sol, subcase)
+        dload_id, _ = subcase['DLOAD']
+        freq_id, _ = subcase['FREQUENCY']
+        # -----------------------------------------------------------------------
 
         GMN, mset = self.build_GMN(
-            subcase, dof_map, ndof, xyz_cid0, fdtype=fdtype)
+            subcase, dof_map, ndof_g, xyz_cid0, fdtype=fdtype)
         self.GMN = GMN
         self.mset = mset
+        mset_b = mset
 
         page_num, out = _run_modes(
             model, subcase,
             self.op2, f06_file,
             ngrid,
             ndof_per_grid,
-            ndof,
+            ndof_g,
             node_gridtype,
             dof_map,
             GMN=GMN,
@@ -1657,7 +1729,15 @@ class Solver:
             fdtype=fdtype,
             page_stamp=page_stamp, page_num=page_num,
             solver_dict=self.solver_dict,
+            matrices_to_save={'Koa', 'Koo'},
         )
+        #out['GMN'] = GMN
+        #out['mset_bool'] = mset
+
+        Koa = out.get('Koa')
+        Koo = out.get('Koo')
+        sset_b = out.get('sset_bool')
+        oset_b = out.get('oset_bool')
 
         aset = out["aset"]
         Kaa = out["Kaa"]
@@ -1669,14 +1749,24 @@ class Solver:
         nfreq = len(freqs)
         omegai = 2 * np.pi * freqs
 
+        Fb = self.build_complex_Fb(model, subcase, ndof_g)
+        Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
+        Fa = reduce_Pg_to_Pa(
+            Fg,
+            ndof_g,
+            sset_b,
+            mset_b=mset_b,
+            oset_b=oset_b,
+            Gm=GMN, Koo=Koo, Koa=Koa)
+
         ndof_a = Kaa.shape[0]
         Caa = np.eye(ndof_a)
         np.fill_diagonal(Caa, 0.01)
 
         # nfreq = len(omegas)
-        shape = (ndof, ndof, nfreq)
+        shape = (ndof_g, ndof_g, nfreq)
         tf_matrix = np.zeros(shape, dtype="complex128")  # full system 3x3 TF matrix
-        tf_mask = np.ones((ndof, ndof, nfreq), dtype="bool")
+        tf_mask = np.ones((ndof_g, ndof_g, nfreq), dtype="bool")
         tf_mask[~aset, :, :] = 0
         tf_mask[:, ~aset, :] = 0
         tf_matrix_a = np.ones((ndof_a, ndof_a, nfreq), dtype="complex128")
@@ -1931,26 +2021,38 @@ def get_omit_set(model: BDF) -> set[tuple[int, int]]:
     return model.omit.set_map
 
 
-def get_rset(model: BDF) -> set[tuple[int, int]]:
+def get_rset(model: BDF,
+             suport_id: int=0) -> set[tuple[int, int]]:
     """Creates the r-set from SUPORT/SUPORT1 cards.
 
     The r-set contains the reference DOFs used to define rigid-body motion
     in free-body (inertia relief) analysis.
     """
     rset_map: set[tuple[int, int]] = set()
+
     suport = model.suport
-    if suport.n > 0:
-        for nid, comp in zip(suport.node_id, suport.component):
-            comp_str = str(comp)
-            for compi in comp_str:
-                if compi != '0':
-                    rset_map.add((nid, int(compi)))
+    if suport.n == 0:
+        return rset_map
+
+    suport_ids = []
+    if 0 in suport.suport_id:
+        suport_ids.append(0)
+    if suport_id > 0:
+        suport_ids.append(suport_id)
+    suport = model.suport.slice_card_by_id(suport_id)
+
+    for nid, comp in zip(suport.node_id, suport.component):
+        comp_str = str(comp)
+        for compi in comp_str:
+            if compi != '0':
+                rset_map.add((nid, int(compi)))
     return rset_map
 
 
 def get_rset_bool(model: BDF,
                   dof_map: DOF_MAP,
-                  ndof: int) -> np.ndarray:
+                  ndof: int,
+                  suport_id: int) -> np.ndarray:
     """Build a boolean r-set mask from SUPORT/SUPORT1 cards.
 
     Parameters
@@ -1968,7 +2070,7 @@ def get_rset_bool(model: BDF,
         True at DOF indices belonging to the r-set (SUPORT reference DOFs).
     """
     rset_b = np.zeros(ndof, dtype='bool')
-    rset_map = get_rset(model)
+    rset_map = get_rset(model, suport_id=suport_id)
     for nid_dof in rset_map:
         if nid_dof in dof_map:
             rset_b[dof_map[nid_dof]] = True
@@ -2051,12 +2153,13 @@ def get_residual_structure(
         model: BDF,
         dof_map: DOF_MAP,
         fset: NDArrayNbool,
+        suport_id: int=0,
         idtype: str = "int32") -> NDArrayNbool:
     """gets the residual structure dofs"""
     asetmap = get_aset(model)
     bsetmap = get_bset(model)
     csetmap = get_cset(model)
-    rsetmap = get_rset(model)
+    rsetmap = get_rset(model, suport_id=suport_id)
     qsetmap = get_qset(model)
     osetmap = get_omit_set(model)
     aset = apply_dof_map_to_set(asetmap, dof_map, idtype=idtype, use_ints=False)
@@ -2331,10 +2434,10 @@ def solve(Kaa: lil_matrix,
     return xas_, ipositive, inegative
 
 
-def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int,
-                      xyz_cid0: np.ndarray=None):
-    if xyz_cid0 is None:
-        xyz_cid0 = model.grid.xyz_cid0()
+def grid_point_weight(model: BDF, Mbb,
+                      dof_map: DOF_MAP, ndof: int,
+                      xyz_cid0: np.ndarray):
+    xyz_cid0 = model.grid.xyz_cid0()
     str(dof_map)
     str(ndof)
     z = np.zeros((3, 3), dtype="float64")
@@ -2535,10 +2638,16 @@ def _run_modes(
     title: str='', subtitle: str='', label: str='',
     page_stamp: str='',
     page_num: int=1,
-    solver_dict=None) -> tuple[int, dict[str, Any]]:
+    solver_dict=None,
+    matrices_to_save: set[str] | None=None) -> tuple[int, dict[str, Any]]:
+    if matrices_to_save is None:
+        matrices_to_save = set([])
     assert solver_dict is not None, solver_dict
 
     neigenvalue, norm_str = get_real_eigenvalue_method(model, subcase)
+    suport_id = subcase['SUPORT'][0] if 'SUPORT' in subcase else 0
+    spc_id = subcase['SPC'][0] if 'SPC' in subcase else 0
+    mpc_id = subcase['MPC'][0] if 'MPC' in subcase else 0
 
     log = model.log
     out = {}
@@ -2558,7 +2667,8 @@ def _run_modes(
         page_stamp=page_stamp, page_num=page_num)
 
     Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid)
-    out["Mgg"] = Mgg
+    if 'Mgg' in matrices_to_save:
+        out["Mgg"] = Mgg
     del Mbb
 
     # ----------------------MPC reduction (g -> n)----------------------
@@ -2602,6 +2712,8 @@ def _run_modes(
         Kgg_work = Knn
         Mgg_work = Mnn
     else:
+        #mset = None
+        mset_b = None
         gset = np.ones(ndof, dtype="bool")
         sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
         aset = gset & ~sset_b  # a = g-s
@@ -2621,6 +2733,14 @@ def _run_modes(
         ndof_work = ndof
         Kgg_work = Kgg
         Mgg_work = Mgg
+
+    out['gset_bool'] = gset
+    #out['gset_bool'] = gset_b
+    out['sset'] = sset
+    out['sset_bool'] = sset_b
+    #out['mset'] = mset
+    out['mset_bool'] = mset_b
+
     # Kss = K['ss']
     # Kas = K['as']
     # Ksa = K['sa']
@@ -2634,7 +2754,7 @@ def _run_modes(
     # --- R-set partitioning (SUPORT reduction) ---
     # If SUPORT cards exist, partition a = l + r.
     # Solve eigenvalue problem on the l-set (flexible DOFs).
-    rset_b = get_rset_bool(model, dof_map, ndof)
+    rset_b = get_rset_bool(model, dof_map, ndof, suport_id=suport_id)
     has_rset = np.any(rset_b) and GMN is None
 
     if has_rset:
@@ -2944,7 +3064,7 @@ def _build_xg(model: BDF,
     # model = self.model
     xspc = np.full(ndof, np.nan, dtype="float64")
     if "SPC" not in subcase:
-        log.warning("no SPCs defined in case control")
+        #log.warning("no SPCs defined in case control")
         spc_set = np.array([], dtype="int32")
         sset = np.zeros(ndof, dtype="bool")
         return spc_set, sset, xspc
@@ -3260,8 +3380,9 @@ def write_grid_point_weight(
         title: str='', subtitle: str='', label: str='',
         page_stamp: str='', page_num: int=1) -> int:
     if Mbb is not None:
+        xyz_cid0 = model.grid.xyz_cid0()
         reference_point, MO = grid_point_weight(
-            model, Mbb, dof_map, ndof, xyz_cid0=None)
+            model, Mbb, dof_map, ndof, xyz_cid0=xyz_cid0)
         weight = make_grid_point_weight(
             reference_point,
             MO,
@@ -3569,35 +3690,104 @@ def get_cb_rset_dofs(model: BDF,
                      subcase: Subcase,
                      dof_map: DOF_MAP,
                      g_to_f: np.ndarray) -> list:
-    """TODO: handle subcase"""
-    r_set_dofs = []
-    suport = model.suport
-    if suport.n > 0:
-        for i in range(suport.n):
-            nid = suport.node_id[i]
-            comp_str = str(suport.component[i])
-            for c in comp_str:
-                dof = int(c)
-                g_idx = dof_map[(nid, dof)]
-                f_idx = g_to_f[g_idx]
-                if f_idx >= 0:
-                    r_set_dofs.append((nid, dof))
-
-    suport1 = model.suport1
-    if suport1.n > 0:
-        for i in range(suport1.n):
-            nid = suport1.node_id[i]
-            comp_str = str(suport1.component[i])
-            for c in comp_str:
-                dof = int(c)
-                g_idx = dof_map[(nid, dof)]
-                f_idx = g_to_f[g_idx]
-                if f_idx >= 0:
-                    r_set_dofs.append((nid, dof))
-
-    if not r_set_dofs:
-        raise RuntimeError(
-            "SOL 31 requires SUPORT or SUPORT1 cards to define boundary DOFs"
-        )
+    """handles subcase"""
+    if not len(model.suport):
+        raise RuntimeError("SOL 31 requires SUPORT or SUPORT1 cards to define boundary DOFs")
+    r_set_dofs = _get_rset_dofs(model, subcase, dof_map, g_to_f)
     return r_set_dofs
 
+
+def get_arobc_set(model: BDF,
+                  subcase: Subcase,
+                  dof_map: DOF_MAP, g_to_f):
+    # The a-set and o-set are created in the following ways:
+    # 2. If ASETi or QSETi entries are present, then the a-set consists
+    #    of all DOFs listed on ASETi entries and any entries listing its
+    #    subsets, such as QSETi, SUPORTi, CSETi, and BSETi entries.  Any
+    #    OMITi entries are redundant. The remaining f-set DOFs are placed
+    #    in the o-set.
+
+    r_set_dofs = _get_rset_dofs(model, subcase, dof_map, g_to_f)
+    asetmap = get_aset(model)
+    bsetmap = get_bset(model)
+    csetmap = get_cset(model)
+    osetmap = get_oset(model)
+    qsetmap = get_qset(model)
+    
+    naset = len(asetmap)
+    nbset = len(bsetmap)
+    ncset = len(csetmap)
+    noset = len(osetmap)
+    nqset = len(qsetmap)
+    nrset = len(r_set_dofs)
+    if noset and not any(naset, nbset, ncset, nqset, nrset):
+        # 1. If only OMITi entries are present, then the o-set consists
+        #    of DOFs listed explicitly on OMITi entries. The remaining
+        #    f-set DOFs are placed in the b-set, which is a subset of
+        #    the a-set.
+        del asetmap, bsetmap, csetmap, qsetmap, rsetmap
+        # Koo
+    elif not all(naset, nqset, noset) and any(nrset, nbset, ncset):
+        # 3. If there are no ASETi, QSETi, or OMITi entries present but there
+        #    are SUPORTi, BSETi, or CSETi entries present, then the entire
+        #    f-set is placed in the a-set and the o-set is not created.
+        del asetmap, qsetmap, osetmap
+    elif any([naset, nqset]):
+        # 2. If ASETi or QSETi entries are present, then the a-set consists
+        #    of all DOFs listed on ASETi entries and any entries listing its
+        #    subsets, such as QSETi, SUPORTi, CSETi, and BSETi entries.  Any
+        #    OMITi entries are redundant. The remaining f-set DOFs are placed
+        #    in the o-set.
+        del osetmap
+    else:
+        raise RuntimeError('bad aset reduction')
+      
+    #aset_g = apply_dof_map_to_set(asetmap, dof_map, idtype=idtype)
+
+
+def _get_rset_dofs(model: BDF,
+                  subcase: Subcase,
+                  dof_map: DOF_MAP,
+                  g_to_f: np.ndarray) -> list:
+
+    # handles subcase
+    suport = model.suport
+    
+    suport_ids = []
+    if 0 in suport.suport_id:
+        suport_ids.append(0)
+
+    if 'SUPORT' in subcase:
+        suport_id, _ = subcase['SUPORT']
+        suport_ids.append(suport_id)
+
+    # loop over the suports
+    r_set_dofs = []
+    suport = suport.slice_card_by_id(suport_ids)
+    for nid, comps in zip(suport.node_id, suport.component):
+        for comp in str(comps):
+            dof = int(comp)
+            g_idx = dof_map[(nid, dof)]
+            f_idx = g_to_f[g_idx]
+            if f_idx >= 0:
+                r_set_dofs.append((nid, dof))
+
+    return r_set_dofs
+
+
+def get_case_control(sol: int, subcase: Subcase):
+    # case control checkout
+    method_id = 0
+    if sol == 101:
+        load_id = subcase['LOAD'][0]
+        spc_id = subcase['SPC'][0] if 'SPC' in subcase else 0
+        mpc_id = subcase['MPC'][0] if 'MPC' in subcase else 0
+        suport_id = subcase['SUPORT'][0] if 'SUPORT' in subcase else 0
+    else:
+        # modes/buckling/freq response
+        load_id = subcase['LOAD'][0] if 'LOAD' in subcase else 0
+        spc_id = subcase['SPC'][0] if 'SPC' in subcase else 0
+        mpc_id = subcase['MPC'][0] if 'MPC' in subcase else 0
+        method_id = subcase['METHOD'][0] if 'METHOD' in subcase else 0
+        suport_id = subcase['SUPORT'][0] if 'SUPORT' in subcase else 0
+    return load_id, spc_id, mpc_id, suport_id, method_id
