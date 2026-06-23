@@ -313,6 +313,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             allow_duplicates: bool=False,
             allow_similar_eid: bool=True,
             skip_cards: Optional[list[str]]=None,
+            remove_cards: Optional[list[str]]=None,
             skip_aero_zero_check: bool=False,
             is_csv: bool=False,
             sort_cards: bool=True,
@@ -462,6 +463,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         is_lax_parser=is_lax_parser,
         allow_similar_eid=allow_similar_eid,
         skip_cards=skip_cards,
+        remove_cards=remove_cards,
         skip_aero_zero_check=skip_aero_zero_check,
         is_csv=is_csv,
         sort_cards=sort_cards,
@@ -512,6 +514,7 @@ def run_and_compare_fems(
         allow_duplicates: bool=False,
         allow_similar_eid: bool=True,
         skip_cards: Optional[list[str]] = None,
+        remove_cards: Optional[list[str]] = None,
         skip_aero_zero_check: bool=False,
         is_csv: bool=False,
         sort_cards: bool=True,
@@ -613,6 +616,7 @@ def run_and_compare_fems(
             run_export_caero=run_export_caero,
             run_dependent_checks=run_dependent_checks,
             run_eid_checks=run_eid_checks, run_mcid=run_mcid,
+            remove_cards=remove_cards,
             skip_aero_zero_check=skip_aero_zero_check,
             save_file_structure=save_file_structure,
             nocomments=nocomments,
@@ -839,9 +843,37 @@ def clean_comments(model: BDF) -> None:
         else:
             raise NotImplementedError((group, type(obj)))
 
+def _remove_cards(model: BDF, remove_cards: list[str]):
+    #print('reject_cards', model.reject_cards)
+    #print('reject_lines', model.reject_lines)
+    reject_lines2 = []
+    log = model.log
+    for lines in model.reject_lines:
+        assert isinstance(lines, list), type(lines)
+        for line in lines:
+            line = line.split('$')[0].strip()
+            if len(line) == 0:
+                continue
+            break
+        else:
+            log.info(f'dont remove line0={lines[0]}')
+            reject_lines2.extend(lines)
+            continue
+        # split by nastran rules
+        card_name = line.split(',')[0].strip().split(' ')[0].strip('*').upper()
+        if card_name in remove_cards:
+            log.info(f'removing {card_name!r}')
+        else:
+            log.info(f'dont remove {card_name!r}')
+            reject_lines2.extend(lines)
+        break
+    model.reject_lines = reject_lines2
+
+
 def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              xref: bool, punch: bool, sum_load: bool,
              size: int, is_double: bool,
+             remove_cards: list[str] | None = None,
              run_extract_bodies: bool=False, run_skin_solids: bool=True,
              run_export_caero: bool=True,
              run_dependent_checks: bool=True,
@@ -922,6 +954,8 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
     log = fem1.log
     if crash_cards is None:
         crash_cards = []
+    if remove_cards is None:
+        remove_cards = []
     check_path(bdf_filename, 'bdf_filename')
     if isinstance(out_model, PurePath):
         out_model = str(out_model)
@@ -934,9 +968,11 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
         if '.pch' in bdf_filename:
             fem1.read_bdf(bdf_filename, xref=False, punch=True, encoding=encoding,
                           save_file_structure=save_file_structure)
+            _remove_cards(fem1, remove_cards)
         else:
             fem1.read_bdf(bdf_filename, xref=False, punch=punch, encoding=encoding,
                           save_file_structure=save_file_structure)
+            _remove_cards(fem1, remove_cards)
             if nocomments:
                 clean_comments(fem1)
 
@@ -1103,6 +1139,7 @@ def _test_hdf5(fem1: BDF, hdf5_filename: str) -> None:
 
 
 def get_dof_map(model: BDF,
+                subcase_id: int,
                 spc_id: int=0,
                 mpc_id: int=0,
                 suport1_id: int=0):
@@ -1116,8 +1153,9 @@ def get_dof_map(model: BDF,
       - loads
       - RSSCON
     """
+    model.log.info(f'subcase={subcase_id}: MPC={mpc_id} SPC={spc_id} SUPORT1={suport1_id}')
     log = model.log
-    dep_nid_to_comp = get_dependent_nid_to_components(
+    mpc_dep_nid_to_comp = get_dependent_nid_to_components(
         model, mpc_id=mpc_id)
     spc_nid_to_components = {}
     if spc_id:
@@ -1158,7 +1196,7 @@ def get_dof_map(model: BDF,
 
     loads_nid_to_components = {}
     dof_map = {
-        'm': dep_nid_to_comp,
+        'm': mpc_dep_nid_to_comp,
         's': spc_nid_to_components,
         'r': suport_nid_to_components,
         'p': loads_nid_to_components,
@@ -1604,9 +1642,9 @@ def check_case(sol: int,
     mpc_id = 0 if 'MPC' not in subcase else subcase['MPC'][0]
     spc_id = 0 if 'SPC' not in subcase else subcase['SPC'][0]
     suport1_id = 0 if 'SUPORT1' not in subcase else subcase['SUPORT1'][0]
-    log.info(f'subcase={subcase.id}: MPC={mpc_id} SPC={spc_id} SUPORT1={suport1_id}')
     dof_map = get_dof_map(
         fem2,
+        subcase_id=subcase.id,
         spc_id=spc_id,
         mpc_id=mpc_id,
         suport1_id=suport1_id)
@@ -2572,6 +2610,8 @@ def test_bdf_argparse(argv=None):
                                help='Crash on specific cards (e.g. CGEN,EGRID)')
     parent_parser.add_argument('--skip_cards', nargs=1, type=str,
                                help="Define cards to skip (e.g. 'DMI,RBE2')")
+    parent_parser.add_argument('--remove_cards', nargs=1, type=str,
+                               help="Define cards to remove_cards (e.g. 'DMI,RBE2')")
 
     parent_parser.add_argument('--dumplines', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
@@ -2647,6 +2687,18 @@ def _set_version(args: dict[str, Any]):
         if name in args:
             del args[name]
 
+def _get_cards(data: dict, name: str) -> list[str]:
+    if data[name] is None:
+        skip_cards_list = []
+    else:
+        skip_cards = ','.join(data[name])
+        try:
+            skip_cards_list = [] if skip_cards is None else skip_cards.split(',')
+        except:
+            print(f'{name} = {skip_cards!r}')
+            raise
+    return skip_cards_list
+
 # defaults
 #check        = False
 #crash        = None
@@ -2672,13 +2724,14 @@ def _set_version(args: dict[str, Any]):
 def get_test_bdf_usage_args_examples(encoding):
     """helper method"""
     formats = '--msc|--nx|--optistruct|--zaero|--mystran'
-    options = (
+
+    options_short = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--crash C] [--pickle] [--profile] [--hdf5] [--obj] [{formats}]\n'
         #  [--filter_unused]
-        f'              [--lax] [--nosort] [--duplicate] [skip_cards CARDS] [--ifile]\n'
+        f'              [--lax] [--nosort] [--duplicate] [skip_cards CARDS] [remove_cards CARDS] [--ifile]\n'
         f'              [--skip_all] [--skip_loads] [--skip_mass] [--skip_aero] [--skip_skin]\n'
-        f'              [--skip_mcid] [--skip_eid_checks]\n'
+        f'              [--skip_mcid] [--skip_eid_checks] [--csv]\n'
     )
     usage = (
         "Usage:\n"
@@ -2689,16 +2742,12 @@ def get_test_bdf_usage_args_examples(encoding):
         '  test_bdf [-x | --safe] [-p] [--stop]         BDF_FILENAME [options]\n'
         '  test_bdf -h | --help\n'
         '  test_bdf -v | --version\n' +
-        options
+        options_short
 
         #"  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n"
     )
-    args = (
-        '\n'
-        'Positional Arguments:\n'
-        '  BDF_FILENAME   path to BDF/DAT/NAS file\n'
-        '\n'
 
+    options = (
         'Options:\n'
         '  -x, --xref     disables cross-referencing and checks of the BDF\n'
         '                 (default=True -> on)\n'
@@ -2715,12 +2764,12 @@ def get_test_bdf_usage_args_examples(encoding):
         '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
         '  --csv          writes the BDF in CSV format; partial (default=False)\n'
         '  --no_similar_eid   No duplicate eids among elements, rigids, and masses\n'
-        #'  --filter_unused       Filters unused cards\n'
+        # '  --filter_unused       Filters unused cards\n'
         '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
         f'  --encoding ENCODE  the encoding method (default=None -> {encoding!r})\n' +
         '  -q, --quiet        prints debug messages (default=False)\n'
-
-        '\n'
+    )
+    dev_options = (
         'Developer:\n'
         '  --crash C     Crash on specific cards (e.g. CGEN,EGRID)\n'
         '  --stop        Stop after first read/write (default=False)\n'
@@ -2745,7 +2794,8 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --skip_skin    Skip the solid skinning (default=False)\n'
         '  --skip_mcid         Skip the material coordinate system exporting (default=False)\n'
         '  --skip_eid_checks   Skip some element checks (default=False)\n'
-        "  --skip_cards CARDS  CSV list of cards (e.g., 'DMI,RBE2')\n"
+        "  --skip_cards   CARDS  CSV list of cards to not parse (e.g., 'DMI,RBE2')\n"
+        "  --remove_cards CARDS  CSV list of cards to remove after skipping (e.g., 'DMI,RBE2')\n"
         "  --ifile        save the file structure for better error messages\n"
         '\n'
         'Info:\n'
@@ -2753,6 +2803,19 @@ def get_test_bdf_usage_args_examples(encoding):
         "  -v, --version  show program's version number and exit\n"
         '\n'
     )
+
+    args = (
+        '\n'
+        'Positional Arguments:\n'
+        '  BDF_FILENAME   path to BDF/DAT/NAS file\n'
+        '\n' +
+        options +
+        '\n' +
+        dev_options +
+        '\n'
+    )
+    _check_argparse_options(usage, options, dev_options)
+
     examples = (
         'Examples\n'
         '--------\n'
@@ -2760,6 +2823,48 @@ def get_test_bdf_usage_args_examples(encoding):
         '  test_bdf --xref fem.bdf\n'
     )
     return usage, args, examples
+
+
+def _check_argparse_options(usage: str, options: str, dev_options: str):
+    all_options = options + dev_options
+
+    missing_flags = []
+    for line in all_options.split('\n'):
+        line = line.strip()
+        if not line.startswith('-'):
+            continue
+        base = line.split('  ', 1)[0]
+        # print(f'base = {base!r}')
+        if ',' in base:
+            sline = [basei.strip() for basei in base.split(',')]
+            # print(f'  sline = {sline!r}')
+            flags = []
+            for slinei in sline:
+                if ' ' in slinei:
+                    sline2 = slinei.split(' ')
+                    # print(f'  slinei = {slinei!r}')
+                    # print(f'    sline2 = {sline2}')
+                    flags.append(sline2[0])
+                else:
+                    flags.append(slinei)
+        else:
+            flags = base.split(' ')[0]
+        # print(f'  flags = {flags!r}')
+
+        for flag in flags:
+            if flag in usage:
+                pass
+            break
+        else:
+            missing_flags.append(flags)
+
+    log = SimpleLogger(level='warning')
+    if missing_flags:
+        for flags in missing_flags:
+            log.warning(f'couldnt find flags={flags}')
+        log.warning(usage)
+    # else:
+    #     log.warning('No missing flags')
 
 
 def main(argv=None):
@@ -2784,15 +2889,10 @@ def main(argv=None):
     data['run_mcid'] = not data['skip_mcid'] and run_all
     allow_similar_eid = not data['no_similar_eid']
     #print(f'allow_similar_eid = {allow_similar_eid}')
-    if data['skip_cards'] is None:
-        skip_cards_list = []
-    else:
-        skip_cards = ','.join(data['skip_cards'])
-        try:
-            skip_cards_list = [] if skip_cards is None else skip_cards.split(',')
-        except:
-            print(f'skip_cards = {skip_cards!r}')
-            raise
+
+    remove_cards = _get_cards(data, 'remove_cards')
+    skip_cards = _get_cards(data, 'skip_cards')
+
     save_file_structure = data['ifile']
     sort_cards = not data['nosort']
     allow_tabs = not data['notabs']
@@ -2843,7 +2943,8 @@ def main(argv=None):
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,
             allow_similar_eid=allow_similar_eid,
-            skip_cards=skip_cards_list,
+            skip_cards=skip_cards,
+            remove_cards=remove_cards,
             save_file_structure=save_file_structure,
 
             is_lax_parser=data['lax'],
@@ -2906,7 +3007,8 @@ def main(argv=None):
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,
             allow_similar_eid=allow_similar_eid,
-            skip_cards=skip_cards_list,
+            skip_cards=skip_cards,
+            remove_cards=remove_cards,
             save_file_structure=save_file_structure,
 
             is_lax_parser=data['lax'],

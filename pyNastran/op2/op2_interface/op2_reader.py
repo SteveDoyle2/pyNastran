@@ -3040,12 +3040,19 @@ class OP2Reader:
 
         """
         op2: OP2 = self.op2
+        # n0 = op2.f.tell()
+        # try:
         data = op2.f.read(4)
         ndata, = op2.struct_i.unpack(data)
 
         data_out = op2.f.read(ndata)
         data = op2.f.read(4)
         op2.n += 8 + ndata
+        # except:
+        #     op2.f.seek(n0)
+        #     op2.n = n0
+        #     op2.show(40, types='ifs')
+        #     raise
         return data_out
 
     def read_block8(self) -> bytes:
