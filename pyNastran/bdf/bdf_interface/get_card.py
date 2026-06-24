@@ -1340,15 +1340,18 @@ class GetCard(GetMethods):
         #}
         elements_without_properties = {
             'CONROD', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4',
-            'CHBDYG', 'GENEL'}
+            'CHBDYG', 'GENEL',
+            # --no_similar_eid
+            'CONM1', 'CONM2', # CMASS2/4?
+        }
 
         log = self.log
         for eid, element in self.elements.items():
+            if element.type in elements_without_properties:
+                continue
             try:
                 pid = element.Pid()
             except AttributeError:
-                if element.type in elements_without_properties:
-                    continue
                 print(element)
                 raise
             if pid in pids:

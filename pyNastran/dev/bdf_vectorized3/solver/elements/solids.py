@@ -49,7 +49,7 @@ from .hexa import (
 
 if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.bdf import BDF, CTETRA, CHEXA, CPENTA
-    from pyNastran.dev.bdf_vectorized3.solver.build_stiffness import _COOAccumulator
+    from pyNastran.dev.bdf_vectorized3.solver.matrices.build_stiffness import _COOAccumulator
     DOF_MAP = dict[tuple[int, int], int]
 
 
@@ -122,8 +122,7 @@ def build_kbb_chexa(model: BDF,
     log = model.log
     nelements = 0
 
-    eids = elem.element_id
-    pids, mids, Ds = solid_emat(model, elem)
+    eids, pids, mids, Ds = solid_emat(model, elem)
 
     nodes = elem.nodes
     inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
@@ -178,8 +177,7 @@ def build_kbb_ctetra(model: BDF,
     log = model.log
     nelements = 0
 
-    eids = elem.element_id
-    pids, mids, Ds = solid_emat(model, elem)
+    eids, pids, mids, Ds = solid_emat(model, elem)
 
     nodes = elem.nodes
     inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
@@ -230,8 +228,7 @@ def build_kbb_cpenta(model: BDF,
     log = model.log
     nelements = 0
 
-    eids = elem.element_id
-    pids, mids, Ds = solid_emat(model, elem)
+    eids, pids, mids, Ds = solid_emat(model, elem)
 
     nodes = elem.nodes
     inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
@@ -441,6 +438,7 @@ def build_KDgg_solids(
     u_global : (ndof,)
         Global displacement vector from preload.
     """
+    xyz_cid0 = model.grid.xyz_cid0()
     _build_KDgg_chexa(model, KDgg, dof_map, u_global, xyz_cid0)
     _build_KDgg_ctetra(model, KDgg, dof_map, u_global, xyz_cid0)
     _build_KDgg_cpenta(model, KDgg, dof_map, u_global, xyz_cid0)
@@ -513,8 +511,7 @@ def _build_KDgg_chexa(model: BDF, KDgg, dof_map, u_global, xyz_cid0):
         dNdnat = np.array([dNdxi, dNdeta, dNdmu])
         return N, dNdnat
 
-    eids = elem.element_id
-    pids, mids, Ds = solid_emat(model, elem)
+    eids, pids, mids, Ds = solid_emat(model, elem)
 
     nodes = elem.nodes
     inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
@@ -587,7 +584,7 @@ def _build_KDgg_ctetra(model: BDF, KDgg, dof_map, u_global, xyz_cid0):
     if elem.n == 0:
         return
 
-    pids, mids, Ds = solid_emat(model, elem)
+    eids, pids, mids, Ds = solid_emat(model, elem)
 
     nodes = elem.nodes
     inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
@@ -617,7 +614,7 @@ def _build_KDgg_ctetra(model: BDF, KDgg, dof_map, u_global, xyz_cid0):
             KDe = tetra10_geometric_stiffness(coords, stress)
             n_ijv = _solid_dof_indices(dof_map, active_nodes)
         else:
-            coords = _get_element_coords(model, base_nodes)
+            coords = _get_element_coords(model, base_nodes, xyz_cid0)
             stress = _compute_element_stress(
                 model,
                 coords,
@@ -645,7 +642,7 @@ def _build_KDgg_cpenta(model: BDF, KDgg, dof_map, u_global, xyz_cid0):
     if elem.n == 0:
         return
 
-    pids, mids, Ds = solid_emat(model, elem)
+    eids, pids, mids, Ds = solid_emat(model, elem)
 
     nodes = elem.nodes
     inodes = np.full(nodes.shape, -1, dtype=nodes.dtype)
@@ -675,7 +672,7 @@ def _build_KDgg_cpenta(model: BDF, KDgg, dof_map, u_global, xyz_cid0):
             KDe = penta15_geometric_stiffness(coords, stress)
             n_ijv = _solid_dof_indices(dof_map, active_nodes)
         else:
-            coords = _get_element_coords(model, base_nodes)
+            coords = _get_element_coords(model, base_nodes, xyz_cid0)
             stress = _compute_element_stress(
                 model,
                 coords,
@@ -709,8 +706,8 @@ def solid_rho(model: BDF, elem: CTETRA | CHEXA | CPENTA) -> tuple[np.ndarray, np
     return pid, mid, rho
 
 
-def solid_emat(model: BDF, elem) -> tuple[np.ndarray, np.ndarray,
-                                          list[np.ndarray, ...]]:
+def solid_emat(model: BDF, elem) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                          np.ndarray]:
     """Get the 6x6 constitutive matrix for a PSOLID property.
 
     Parameters
@@ -727,6 +724,7 @@ def solid_emat(model: BDF, elem) -> tuple[np.ndarray, np.ndarray,
     mat1 = model.mat1
     psolid = model.psolid
 
+    eids = elem.element_id
     pids = elem.property_id
     ipid = psolid.index(pids)
     mids = psolid.material_id[ipid]
@@ -735,5 +733,5 @@ def solid_emat(model: BDF, elem) -> tuple[np.ndarray, np.ndarray,
     Es = mat1.E[imid]
     Gs = mat1.G[imid]
     nus = mat1.nu[imid]
-    Ds = [_isotropic_constitutive(E, G, nu) for E, G, nu in zip(Es, Gs, nus)]
-    return pids, mids, Ds
+    Ds = _isotropic_constitutive(Es, Gs, nus)
+    return eids, pids, mids, Ds

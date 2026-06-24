@@ -49,38 +49,62 @@ def _hexa8_shape_functions(
     return N, dNdxi, dNdeta, dNdmu
 
 
-def _isotropic_constitutive(E: float, G: float, nu: float) -> np.ndarray:
+def _isotropic_constitutive(E: float | np.ndarray,
+                            G: float | np.ndarray,
+                            nu: float | np.ndarray) -> np.ndarray:
     """Build 6x6 isotropic elasticity matrix (Voigt notation).
 
     Ordering: [sigma_xx, sigma_yy, sigma_zz, tau_xy, tau_yz, tau_xz].
 
     Parameters
     ----------
-    E : float
+    E : float or (neid,) np.ndarray
         Young's modulus.
-    G : float
+    G : float or (neid,) np.ndarray
         Shear modulus.
-    nu : float
+    nu : float or (neid,) np.ndarray
         Poisson's ratio.
 
     Returns
     -------
-    D : (6, 6) constitutive matrix
+    D : varies
+        varies if E is a float or np.ndarray
+        float     : (6, 6) constitutive matrix
+        np.ndarray: (neid, 6, 6) constitutive matrix
     """
     coeff = E / ((1 + nu) * (1 - 2 * nu))
     d11 = 1 - nu
     d12 = nu
     d44 = (1 - 2 * nu) / 2
-    D = coeff * np.array(
-        [
+    if isinstance(E, float):
+        D = coeff * np.array([
             [d11, d12, d12, 0, 0, 0],
             [d12, d11, d12, 0, 0, 0],
             [d12, d12, d11, 0, 0, 0],
             [0, 0, 0, d44, 0, 0],
             [0, 0, 0, 0, d44, 0],
             [0, 0, 0, 0, 0, d44],
-        ]
-    )
+        ])
+    elif isinstance(E, np.ndarray):
+        neid = len(E)
+        D = np.zeros((neid, 6, 6), dtype='float64')
+        # diagonals
+        D[0, 0] = d11
+        D[1, 1] = d11
+        D[2, 2] = d11
+        D[3, 3] = d44
+        D[4, 4] = d44
+        D[5, 5] = d44
+
+        # cross terms
+        D[0, 1] = d12
+        D[1, 0] = d12
+        D[0, 2] = d12
+        D[2, 0] = d12
+        D[1, 2] = d12
+        D[2, 1] = d12
+    else:  # pragma: no cover
+        raise TypeError(type(E))
     return D
 
 
@@ -99,8 +123,7 @@ def hexa8_stiffness(coords: np.ndarray, D: np.ndarray) -> np.ndarray:
     Ke : (24, 24) element stiffness matrix
     """
     k = 1.0 / np.sqrt(3.0)
-    gauss_pts = np.array(
-        [
+    gauss_pts = np.array([
             [-k, -k, -k],
             [k, -k, -k],
             [k, k, -k],
@@ -109,8 +132,7 @@ def hexa8_stiffness(coords: np.ndarray, D: np.ndarray) -> np.ndarray:
             [k, -k, k],
             [k, k, k],
             [-k, k, k],
-        ]
-    )
+    ])
 
     Ke = np.zeros((24, 24))
     ix = np.arange(0, 24, 3)
@@ -162,18 +184,16 @@ def hexa8_mass(coords: np.ndarray, rho: float) -> np.ndarray:
     Me : (24, 24) consistent mass matrix
     """
     k = 1.0 / np.sqrt(3.0)
-    gauss_pts = np.array(
-        [
-            [-k, -k, -k],
-            [k, -k, -k],
-            [k, k, -k],
-            [-k, k, -k],
-            [-k, -k, k],
-            [k, -k, k],
-            [k, k, k],
-            [-k, k, k],
-        ]
-    )
+    gauss_pts = np.array([
+        [-k, -k, -k],
+        [k, -k, -k],
+        [k, k, -k],
+        [-k, k, -k],
+        [-k, -k, k],
+        [k, -k, k],
+        [k, k, k],
+        [-k, k, k],
+    ])
 
     Me = np.zeros((24, 24))
 
@@ -210,18 +230,16 @@ def hexa8_volume(coords: np.ndarray) -> float:
     volume : float
     """
     k = 1.0 / np.sqrt(3.0)
-    gauss_pts = np.array(
-        [
-            [-k, -k, -k],
-            [k, -k, -k],
-            [k, k, -k],
-            [-k, k, -k],
-            [-k, -k, k],
-            [k, -k, k],
-            [k, k, k],
-            [-k, k, k],
-        ]
-    )
+    gauss_pts = np.array([
+        [-k, -k, -k],
+        [k, -k, -k],
+        [k, k, -k],
+        [-k, k, -k],
+        [-k, -k, k],
+        [k, -k, k],
+        [k, k, k],
+        [-k, k, k],
+    ])
 
     volume = 0.0
     for gpt in gauss_pts:
@@ -234,8 +252,7 @@ def hexa8_volume(coords: np.ndarray) -> float:
 
 def hexa8_geometric_stiffness(
     coords: np.ndarray,
-    stress: np.ndarray,
-) -> np.ndarray:
+    stress: np.ndarray,) -> np.ndarray:
     """Compute the 24x24 CHEXA8 geometric stiffness matrix.
 
     Parameters
@@ -250,30 +267,26 @@ def hexa8_geometric_stiffness(
     KDe : (24, 24) geometric stiffness matrix
     """
     k = 1.0 / np.sqrt(3.0)
-    gauss_pts = np.array(
-        [
-            [-k, -k, -k],
-            [k, -k, -k],
-            [k, k, -k],
-            [-k, k, -k],
-            [-k, -k, k],
-            [k, -k, k],
-            [k, k, k],
-            [-k, k, k],
-        ]
-    )
+    gauss_pts = np.array([
+        [-k, -k, -k],
+        [k, -k, -k],
+        [k, k, -k],
+        [-k, k, -k],
+        [-k, -k, k],
+        [k, -k, k],
+        [k, k, k],
+        [-k, k, k],
+    ])
     ndof = 24
     nnodes = 8
     KDe = np.zeros((ndof, ndof))
 
     sxx, syy, szz, sxy, syz, sxz = stress
-    sigma = np.array(
-        [
-            [sxx, sxy, sxz],
-            [sxy, syy, syz],
-            [sxz, syz, szz],
-        ]
-    )
+    sigma = np.array([
+        [sxx, sxy, sxz],
+        [sxy, syy, syz],
+        [sxz, syz, szz],
+    ])
 
     for gpt in gauss_pts:
         xi, eta, mu = gpt
@@ -409,7 +422,6 @@ def hexa20_stiffness(coords: np.ndarray, D: np.ndarray) -> np.ndarray:
                 dN_dxyz = Jinv @ dNdnat
                 B = _solid_B_matrix(dN_dxyz, 20)
                 Ke += (B.T @ D @ B) * detJ * w
-
     return Ke
 
 
@@ -456,8 +468,7 @@ def hexa20_mass(coords: np.ndarray, rho: float) -> np.ndarray:
 
 def hexa20_geometric_stiffness(
     coords: np.ndarray,
-    stress: np.ndarray,
-) -> np.ndarray:
+    stress: np.ndarray,) -> np.ndarray:
     """Compute the 60x60 CHEXA20 geometric stiffness matrix.
 
     Parameters
@@ -480,13 +491,11 @@ def hexa20_geometric_stiffness(
     KDe = np.zeros((ndof, ndof))
 
     sxx, syy, szz, sxy, syz, sxz = stress
-    sigma = np.array(
-        [
-            [sxx, sxy, sxz],
-            [sxy, syy, syz],
-            [sxz, syz, szz],
-        ]
-    )
+    sigma = np.array([
+        [sxx, sxy, sxz],
+        [sxy, syy, syz],
+        [sxz, syz, szz],
+    ])
 
     for i in range(3):
         for j in range(3):
@@ -506,5 +515,4 @@ def hexa20_geometric_stiffness(
                         KDe[3 * ii, 3 * jj] += val
                         KDe[3 * ii + 1, 3 * jj + 1] += val
                         KDe[3 * ii + 2, 3 * jj + 2] += val
-
     return KDe
