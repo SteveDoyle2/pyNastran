@@ -66,7 +66,7 @@ def get_mpc_node_ids(model: BDF, mpc_id: int,
                 if coefficient != 0.0:
                     lines.append([nid0, nid])
         else:
-            msg = 'get_MPCx_node_ids doesnt support %r' % card.type
+            msg = f'get_mpc_node_ids doesnt support {card.type!r}'
             if stop_on_failure:
                 raise RuntimeError(msg)
             model.log.warning(msg)
@@ -210,8 +210,8 @@ def get_dependent_nid_to_components(model: BDF, mpc_id: int=0,
       - dependent nodes : loads/motions may not be defined
 
     """
-    set_nid_to_components: set[tuple] = set([])
-    errored_components: set[tuple] = set([])
+    set_nid_to_components: set[tuple[int, str]] = set([])
+    errored_components: set[tuple[int, str]] = set([])
     dependent_nid_to_components = defaultdict(set)
 
     if mpc_id is not None and mpc_id != 0:
@@ -239,7 +239,7 @@ def get_dependent_nid_to_components(model: BDF, mpc_id: int=0,
                                 dependent_nid_to_components,
                                 errored_components)
 
-            for gmi, component in zip(rigid_element.Gmi_node_ids, rigid_element.Cmi):
+            for nid, component in zip(rigid_element.Gmi_node_ids, rigid_element.Cmi):
                 add_to_errored_mpcs(nid, component,
                                     set_nid_to_components,
                                     dependent_nid_to_components,
@@ -263,6 +263,7 @@ def get_dependent_nid_to_components(model: BDF, mpc_id: int=0,
             nid = rigid_element.gb
             for component in rigid_element.cb:
                 add_to_errored_mpcs(nid, component,
+                                    set_nid_to_components,
                                     dependent_nid_to_components,
                                     errored_components)
         elif rigid_element.type == 'RBE1':
@@ -307,7 +308,8 @@ def get_dependent_nid_to_components(model: BDF, mpc_id: int=0,
                                         errored_components)
         elif rigid_element.type == 'RSPLINE':
             #independent_nid = rigid_element.independent_nid
-            for nid, component in zip(rigid_element.dependent_nids, rigid_element.dependent_components):
+            for nid, component in zip(rigid_element.dependent_nids,
+                                      rigid_element.dependent_components):
                 if component is None:
                     continue
                 add_to_errored_mpcs(nid, component,
@@ -317,7 +319,7 @@ def get_dependent_nid_to_components(model: BDF, mpc_id: int=0,
         elif rigid_element.type == 'RSSCON':
             msg = 'skipping card in get_dependent_nid_to_components\n%s' % str(rigid_element)
             model.log.warning(msg)
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(rigid_element.type)
 
     # print(f'dependent_nid_to_components = {dependent_nid_to_components}')
@@ -342,9 +344,9 @@ def get_dependent_nid_to_components(model: BDF, mpc_id: int=0,
 
 
 def add_to_errored_mpcs(nid, component,
-                        set_nid_to_components,
-                        dependent_nid_to_components,
-                        errored_components):
+                        set_nid_to_components: set[tuple[int, str]],
+                        dependent_nid_to_components: dict[int, set[str]],
+                        errored_components: set[tuple[int, str]]):
     if (nid, component) in set_nid_to_components:
         errored_components.add((nid, component))
     dependent_nid_to_components[nid].add(component)
@@ -416,7 +418,7 @@ def get_lines_rigid(model: BDF) -> Any:
                 lines_rigid.append([dependent_nid, independent_nid])
         elif elem.type == 'RSSCON':
             model.log.warning('skipping card in _get_rigid\n%s' % str(elem))
-        else:
+        else:  # pragma: no cover
             print(str(elem))
             raise NotImplementedError(elem.type)
     return lines_rigid
