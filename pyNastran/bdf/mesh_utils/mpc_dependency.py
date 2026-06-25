@@ -134,7 +134,7 @@ def get_mpc_node_ids_c1(model: BDF, mpc_id: int,
                     for dof in dofs:
                         dependent_node_ids_c1[dof].append(nid)
         else:
-            msg = 'get_MPCx_node_ids_c1 doesnt support %r' % card.type
+            msg = f'get_mpc_node_ids_c1 doesnt support {card.type!r}'
             if stop_on_failure:
                 raise RuntimeError(msg)
             model.log.warning(msg)

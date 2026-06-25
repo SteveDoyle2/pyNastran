@@ -527,12 +527,14 @@ class AddMethods:
         key = mass.eid
         model = self.model
         assert key > 0, 'eid=%s must be positive; mass=\n%s' % (key, mass)
-        if key in model.masses and not allow_overwrites:
-            if not mass == self.model.masses[key]:
-                model._duplicate['masses'].append(mass)
-        else:
-            model.masses[key] = mass
-            model._type_to_id_map[mass.type].append(key)
+        add_object_to_dict_no_dupes(model, key, 'mass', mass, model.masses,
+                                    model._duplicate['masses'], allow_overwrites)
+        # if key in model.masses and not allow_overwrites:
+        #     if not mass == self.model.masses[key]:
+        #         model._duplicate['masses'].append(mass)
+        # else:
+        #     model.masses[key] = mass
+        #     model._type_to_id_map[mass.type].append(key)
 
     def add_damper_object(self, elem, allow_overwrites: bool=False) -> None:
         """.. warning:: can dampers have the same ID as a standard element?"""
@@ -1213,13 +1215,16 @@ class AddMethods:
     def add_aefact_object(self, aefact: AEFACT, allow_overwrites: bool=False) -> None:
         """adds an AEFACT object"""
         key = aefact.sid
-        if key in self.model.aefacts and not allow_overwrites:
-            if not aefact == self.model.aefacts[key]:
-                assert key not in self.model.aefacts, 'AEFACT.sid=%s\nold=\n%snew=\n%s' % (key, self.model.aefacts[key], aefact)
-        else:
-            assert key > 0, 'sid=%s method=\n%s' % (key, aefact)
-            self.model.aefacts[key] = aefact
-            self.model._type_to_id_map[aefact.type].append(key)
+        add_object_to_dict(
+            self.model, key, 'aefact', aefact, self.model.aefacts,
+            allow_overwrites=allow_overwrites)
+        # if key in self.model.aefacts and not allow_overwrites:
+        #     if not aefact == self.model.aefacts[key]:
+        #         assert key not in self.model.aefacts, 'AEFACT.sid=%s\nold=\n%snew=\n%s' % (key, self.model.aefacts[key], aefact)
+        # else:
+        #     assert key > 0, 'sid=%s method=\n%s' % (key, aefact)
+        #     self.model.aefacts[key] = aefact
+        #     self.model._type_to_id_map[aefact.type].append(key)
 
     def add_aelist_object(self, aelist: AELIST) -> None:
         """adds an AELIST object"""
@@ -1246,9 +1251,12 @@ class AddMethods:
     def add_aecomp_object(self, aecomp: AECOMP | AECOMPL) -> None:
         """adds an AECOMP object"""
         key = aecomp.name
-        assert key not in self.model.aecomps, '\naecomp=\n%s oldAECOMP=\n%s' % (aecomp, self.model.aecomps[key])
-        self.model.aecomps[key] = aecomp
-        self.model._type_to_id_map[aecomp.type].append(key)
+        add_object_to_dict(
+            self.model, key, 'aecomp', aecomp, self.model.aecomps,
+            allow_overwrites=False)
+        # assert key not in self.model.aecomps, '\naecomp=\n%s oldAECOMP=\n%s' % (aecomp, self.model.aecomps[key])
+        # self.model.aecomps[key] = aecomp
+        # self.model._type_to_id_map[aecomp.type].append(key)
 
     def add_aeparm_object(self, aeparam: AEPARM) -> None:
         """adds an AEPARM object"""
@@ -1766,25 +1774,33 @@ class AddMethods:
                           allow_overwrites: bool=False) -> None:
         """adds a EIGR/EIGRL object"""
         key = method.sid
-        if key in self.model.methods and not allow_overwrites:
-            if not method == self.model.methods[key]:
-                assert key not in self.model.methods, 'sid=%s\nold_method=\n%snew_method=\n%s' % (key, self.model.methods[key], method)
-        else:
-            assert key > 0, 'sid=%s method=\n%s' % (key, method)
-            self.model.methods[key] = method
-            self.model._type_to_id_map[method.type].append(key)
+        model = self.model
+        add_object_to_dict(
+            model, key, 'method', method, self.model.methods,
+            allow_overwrites)
+        # if key in self.model.methods and not allow_overwrites:
+        #     if not method == self.model.methods[key]:
+        #         assert key not in self.model.methods, 'sid=%s\nold_method=\n%snew_method=\n%s' % (key, self.model.methods[key], method)
+        # else:
+        #     assert key > 0, 'sid=%s method=\n%s' % (key, method)
+        #     self.model.methods[key] = method
+        #     self.model._type_to_id_map[method.type].append(key)
 
     def add_cmethod_object(self, method: EIGC | EIGP,
                            allow_overwrites: bool=False) -> None:
         """adds a EIGB/EIGC object"""
         key = method.sid
-        if key in self.model.cMethods and not allow_overwrites:
-            if not method == self.model.cMethods[key]:
-                assert key not in self.model.cMethods, 'sid=%s\nold_cmethod=\n%snew_cmethod=\n%s' % (key, self.model.cMethods[key], method)
-        else:
-            assert key > 0, 'sid=%s cMethod=\n%s' % (key, method)
-            self.model.cMethods[key] = method
-            self.model._type_to_id_map[method.type].append(key)
+        model = self.model
+        add_object_to_dict(
+            model, key, 'cmethod', method, self.model.cMethods,
+            allow_overwrites)
+        # if key in self.model.cMethods and not allow_overwrites:
+        #     if not method == self.model.cMethods[key]:
+        #         assert key not in self.model.cMethods, 'sid=%s\nold_cmethod=\n%snew_cmethod=\n%s' % (key, self.model.cMethods[key], method)
+        # else:
+        #     assert key > 0, 'sid=%s cMethod=\n%s' % (key, method)
+        #     self.model.cMethods[key] = method
+        #     self.model._type_to_id_map[method.type].append(key)
 
     def add_mkaero_object(self, mkaero: MKAERO1 | MKAERO2) -> None:
         """adds an MKAERO1/MKAERO2 object"""

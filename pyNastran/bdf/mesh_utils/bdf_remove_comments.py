@@ -24,7 +24,7 @@ SKIP_ATTRS = {
     'allow_duplicate_element_rbe_mass',
     'allow_overwrites_set', 'card_count', 'has_enddata',
     'cards_to_read', 'case_control_deck', 'case_control_lines',
-    'executive_control_lines', 'debug', 'is_bdf_vectorized',
+    'executive_control_lines', 'debug',
     'is_msc', 'is_nx', 'is_optistruct',
     'is_zaero', 'is_mystran',
     'is_superelements',

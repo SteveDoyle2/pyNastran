@@ -857,6 +857,7 @@ def _remove_cards(model: BDF, remove_cards: list[str]):
             break
         else:
             log.info(f'dont remove line0={lines[0]}')
+            assert '\x00' not in lines[0], lines
             reject_lines2.extend(lines)
             continue
         # split by nastran rules
@@ -2583,10 +2584,12 @@ def test_bdf_argparse(argv=None):
                                help='Skip the material coordinate system exporting (default=False)')
     parent_parser.add_argument('--skip_eid_checks', action='store_true',
                                help='Skip the element checks (default=False)')
-    parent_parser.add_argument('--skip_all', action='store_true',
-                               help='Skip all the above flags (loads, mass, aero, etc.; not skip_cards (default=False)')
-    parent_parser.add_argument('--no_similar_eid', action='store_true',
-                               help='No duplicate eids among elements, rigids, and masses (default=False)')
+    parent_parser.add_argument(
+        '--skip_all', action='store_true',
+        help='Skip all the above flags (loads, mass, aero, etc.; not skip_cards (default=False)')
+    parent_parser.add_argument(
+        '--no_similar_eid', action='store_true',
+        help='No duplicate eids among elements, rigids, and masses (default=False)')
     parent_parser.add_argument('--lax', action='store_true',
                                help='use the lax card parser (default=False)')
     parent_parser.add_argument(
@@ -2598,8 +2601,9 @@ def test_bdf_argparse(argv=None):
 
     parent_parser.add_argument('--duplicate', action='store_true',
                                help='overwrite duplicates; takes the later card (default=False)')
-    parent_parser.add_argument('--ifile', action='store_true',
-                               help='gives you better log messages when things are bad (default=False)')
+    parent_parser.add_argument(
+        '--ifile', action='store_true',
+        help='gives you better log messages when things are bad (default=False)')
     parent_parser.add_argument('--nocomments', action='store_true',
                                help='removes the comments (default=False)')
     parent_parser.add_argument('-q', '--quiet', action='store_true',
@@ -2787,7 +2791,8 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --nx          Assume NX Nastran\n'
         '  --optistruct  Assume OptiStruct\n'
         '  --mystran     Assume Mystran\n'
-        '  --skip_all    Skip all the above flags (loads, mass, aero, etc.; not skip_cards) (default=False)\n'
+        '  --skip_all    Skip all the above flags (loads, mass, aero, etc.; not skip_cards) '
+        '(default=False)\n'
         '  --skip_loads   Skip the loads summation calculations (default=False)\n'
         '  --skip_mass    Skip the mass properties calculations (default=False)\n'
         '  --skip_aero    Skip the processing of the caero mesh (default=False)\n'
