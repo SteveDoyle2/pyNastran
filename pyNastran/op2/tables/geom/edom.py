@@ -2174,8 +2174,8 @@ class EDOM(GeomCommon):
                       response_type, property_type, region,
                       atta, attb, atti)
             dresp1 = op2.add_dresp1(dresp_id, label,
-                                    response_type, property_type, region,
-                                    atta, attb, atti, validate=True)
+                                    response_type, property_type,
+                                    atta, attb, atti, region=region, validate=True)
             str(dresp1)
             dresp1.write_card_16()
             n += (i1 - i0 + 1) * self.size

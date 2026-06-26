@@ -15,7 +15,8 @@ All optimization cards are defined in this file.  This includes:
 * doptprm - DOPTPRM
 
 some missing optimization flags
-http://mscnastrannovice.blogspot.com/2014/06/msc-nastran-design-optimization-quick.html"""
+http://mscnastrannovice.blogspot.com/2014/06/msc-nastran-design-optimization-quick.html
+"""
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import annotations
 from typing import Any, Optional, TYPE_CHECKING
@@ -426,7 +427,7 @@ def validate_dvprel(prop_type: str, pname_fid: str | int,
 
     elif prop_type == 'PBEND':
         raise RuntimeError('Nastran does not support the PBEND')
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(msg)
     return pname_fid
 
@@ -1825,7 +1826,7 @@ def _validate_dresp_property_none(label: str,
 
     elif response_type in {'STRESS', 'STRAIN', 'FORCE', 'CFAILURE'}:
         raise RuntimeError(f'response_type={response_type!r} and property_type must not be None...{msg}')
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(msg)
     return atta, attb, atti
 
@@ -1938,15 +1939,15 @@ class DRESP1(OptConstraint):
         #attb = None
         #atti = [pid]
         #return DRESP1(dresp_id, label, response_type, property_type,
-                      #region, atta, attb, atti, comment='', validate=False)
+                      #atta, attb, atti, region=region, comment='', validate=False)
 
     def __init__(self, dresp_id: int, label: str,
                  response_type: str,
                  property_type: Optional[str],
-                 region: int,
                  atta: Optional[int | float | str],
                  attb: Optional[int | float | str],
                  atti: list[int],
+                 region: int=0,
                  comment: str='', validate: bool=False):
         """
         Creates a DRESP1 card.
@@ -2005,7 +2006,7 @@ class DRESP1(OptConstraint):
         >>> region = None
         >>> attb = None
         >>> atti = [pid]
-        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        >>> DRESP1(dresp_id, label, response_type, property_type, atta, attb, atti, region=region)
 
 
         **stress/PCOMP**
@@ -2020,7 +2021,7 @@ class DRESP1(OptConstraint):
         >>> region = None
         >>> attb = layer
         >>> atti = [pid]
-        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        >>> DRESP1(dresp_id, label, response_type, property_type, atta, attb, atti, region=region)
 
         **stress/PCOMP**
 
@@ -2034,7 +2035,7 @@ class DRESP1(OptConstraint):
         >>> region = None
         >>> attb = layer
         >>> atti = [eid]
-        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        >>> DRESP1(dresp_id, label, response_type, property_type, atta, attb, atti, region=region)
 
         **displacement - not done**
 
@@ -2045,7 +2046,7 @@ class DRESP1(OptConstraint):
         >>> #region = ???
         >>> #attb = ???
         >>> atti = [nid]
-        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        >>> DRESP1(dresp_id, label, response_type, property_type, atta, attb, atti, region=region)
 
 
         **not done**
@@ -2056,7 +2057,7 @@ class DRESP1(OptConstraint):
         >>> #region = ???
         >>> #attb = ???
         >>> atti = [eid]  # ???
-        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        >>> DRESP1(dresp_id, label, response_type, property_type, atta, attb, atti, region=region)
         """
         OptConstraint.__init__(self)
         if comment:
@@ -2114,7 +2115,7 @@ class DRESP1(OptConstraint):
             a comment for the card
 
         """
-        oid = integer(card, 1, 'oid')
+        dresp_id = integer(card, 1, 'oid')
         label = string(card, 2, 'label')
         #label = loose_string(card, 2, 'label')
         response_type = string(card, 3, 'response_type')
@@ -2129,8 +2130,8 @@ class DRESP1(OptConstraint):
         for i in range(8, len(card)):
             attii = integer_double_string_or_blank(card, i, 'atti_%i' % (i + 1))
             atti.append(attii)
-        return DRESP1(oid, label, response_type, property_type, region, atta, attb, atti,
-                      comment=comment, validate=False)
+        return DRESP1(dresp_id, label, response_type, property_type, atta, attb, atti,
+                      region=region, comment=comment, validate=False)
 
     def _verify(self, model: BDF, xref: bool) -> None:
         if not xref:
@@ -2163,7 +2164,7 @@ class DRESP1(OptConstraint):
             #if property_type is None:
                 #continue
             if property_type == 'ELEM':
-                _dresp_verify_eids(self, model)
+                _dresp_verify_eids(self, model, property_type)
             else:
                 _dresp_verify_prop(self, model, property_type)
         else:  # pragma: no cover
@@ -2679,7 +2680,8 @@ class DRESP2(OptConstraint):
 
     def __init__(self, dresp_id: int, label: str,
                  dequation: int | str,
-                 region: int, params,
+                 params: dict[tuple[int, str], list[int]],
+                 region: int=0,
                  method: str='MIN',
                  c1: float=1., c2: float=0.005, c3: float=10.,
                  validate: bool=False, comment: str=''):
@@ -2748,7 +2750,7 @@ class DRESP2(OptConstraint):
         self.dequation = dequation
         if region is None:
             region = 0
-        assert region >= 0, region
+
         self.region = region
         self.method = method
 
@@ -2758,6 +2760,9 @@ class DRESP2(OptConstraint):
         self.c2 = c2
         self.c3 = c3
         self.params = params
+
+        assert region >= 0, str(self)
+        assert isinstance(params, dict), str(self)
         self.params_ref = None
         self.dequation_ref = None
         self.dtable_ref = None
@@ -2856,8 +2861,8 @@ class DRESP2(OptConstraint):
         #print("--DRESP2 Params--")
         #for key, value_list in sorted(params.items()):
             #print("  key=%s value_list=%s" %(key, value_list))
-        return DRESP2(dresp_id, label, dequation, region, params,
-                      method, c1, c2, c3, comment=comment)
+        return DRESP2(dresp_id, label, dequation, params, region=region,
+                      method=method, c1=c1, c2=c2, c3=c3, comment=comment)
 
     def OptID(self) -> int:
         return self.DRespID()
@@ -3120,7 +3125,7 @@ class DRESP3(OptConstraint):
     type = 'DRESP3'
 
     def __init__(self, dresp_id: int, label: str,
-                 group, Type, region: int, params,
+                 group, Type, params, region: int=0,
                  validate: bool=False, comment=''):
         """
         Creates a DRESP3 card.
@@ -3150,8 +3155,6 @@ class DRESP3(OptConstraint):
         Type : str
             Refers to a specific user-created response calculation type
             in the external function evaluator
-        region : int
-            Region identifier for constraint screening
         params : dict[(index, card_type)] = values
             the storage table for the response function
             index : int
@@ -3161,6 +3164,8 @@ class DRESP3(OptConstraint):
                 DESVAR, DVPREL1, DRESP2, etc.
             values : list[int]
                 the values for this response
+        region : int; default=0
+            Region identifier for constraint screening
         comment : str; default=''
             a comment for the card
         validate : bool; default=False
@@ -3247,7 +3252,7 @@ class DRESP3(OptConstraint):
         #    (2, 'DRESP1') = [40],
         # }
         params = parse_table_fields('DRESP3', card, list_fields)
-        return DRESP3(dresp_id, label, group, Type, region, params,
+        return DRESP3(dresp_id, label, group, Type, params, region=region,
                       comment=comment)
 
     def _pack_params(self):

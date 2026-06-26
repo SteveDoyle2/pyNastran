@@ -342,8 +342,8 @@ def read_dresp1(name: str, group: h5py._hl.group.Group, geom_model: BDF) -> None
             property_type = None
         atta, attb = get_attb_from_atti(response_type, atta, attbi, attbr)
         atti = ATTI[ipos:ipos+ilen].tolist()
-        obj = geom_model.add_dresp1(idi, label_str, response_type, property_type, region,
-                                    atta, attb, atti, validate=True, comment='')
+        obj = geom_model.add_dresp1(idi, label_str, response_type, property_type,
+                                    atta, attb, atti, region=region, validate=True, comment='')
         assert afpmid == 0, afpmid
         obj.validate()
         str(obj)

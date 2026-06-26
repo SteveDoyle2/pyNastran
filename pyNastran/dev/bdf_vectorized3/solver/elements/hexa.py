@@ -89,20 +89,20 @@ def _isotropic_constitutive(E: float | np.ndarray,
         neid = len(E)
         D = np.zeros((neid, 6, 6), dtype='float64')
         # diagonals
-        D[0, 0] = d11
-        D[1, 1] = d11
-        D[2, 2] = d11
-        D[3, 3] = d44
-        D[4, 4] = d44
-        D[5, 5] = d44
+        D[:, 0, 0] = d11
+        D[:, 1, 1] = d11
+        D[:, 2, 2] = d11
+        D[:, 3, 3] = d44
+        D[:, 4, 4] = d44
+        D[:, 5, 5] = d44
 
         # cross terms
-        D[0, 1] = d12
-        D[1, 0] = d12
-        D[0, 2] = d12
-        D[2, 0] = d12
-        D[1, 2] = d12
-        D[2, 1] = d12
+        D[:, 0, 1] = d12
+        D[:, 1, 0] = d12
+        D[:, 0, 2] = d12
+        D[:, 2, 0] = d12
+        D[:, 1, 2] = d12
+        D[:, 2, 1] = d12
     else:  # pragma: no cover
         raise TypeError(type(E))
     return D

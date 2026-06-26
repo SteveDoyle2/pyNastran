@@ -25,9 +25,9 @@ def constrain_solid_stress_from_properties(model: BDF, pids: list[int],
             region = None
             attb = None
             atti = [pid]
-            model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+            model.add_dresp1(dresp_id, label, response_type, property_type, atta, attb, atti, region=region)
             model.add_dconstr(constraint_id, dresp_id, uid=uallow)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(prop)
 
 
@@ -54,12 +54,12 @@ def constrain_shell_stress_from_properties(model: BDF, pids: list[int],
             atti = [pid]
 
             label = f'o{pid}U'[:8]
-            model.add_dresp1(dresp_id, label, response_type, property_type, region, atta[0], attb, atti)
+            model.add_dresp1(dresp_id, label, response_type, property_type, atta[0], attb, atti, region=region)
             model.add_dconstr(constraint_id, dresp_id, uid=uallow)
             dresp_id += 1
 
             label = f'o{pid}L'[:8]
-            model.add_dresp1(dresp_id, label, response_type, property_type, region, atta[1], attb, atti)
+            model.add_dresp1(dresp_id, label, response_type, property_type, atta[1], attb, atti, region=region)
             model.add_dconstr(constraint_id, dresp_id, uid=uallow)
             dresp_id += 1
 
@@ -104,7 +104,7 @@ def solid_topology_optimization(model: BDF, pids_to_optimize: list[int], xinit=0
         region = None
         attb = None
         atti = [pid]
-        model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        model.add_dresp1(dresp_id, label, response_type, property_type, atta, attb, atti, region=region)
         model.add_dconstr(constraint_id, dresp_id, uid=uallow)
         dresp_id += 1
 
@@ -121,9 +121,9 @@ def solid_topology_optimization(model: BDF, pids_to_optimize: list[int], xinit=0
             #region = None
             #attb = None
             #atti = [pid]
-            #DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
-            #model.add_dresp1(dresp_id, label, response_type, property_type, region,
-                             #atta, attb, atti, validate=True, comment='')
+            #DRESP1(dresp_id, label, response_type, property_type, atta, attb, atti, region=region)
+            #model.add_dresp1(dresp_id, label, response_type, property_type,
+                             #region=region, atta, attb, atti, validate=True, comment='')
             #pid += 1
 
     #model.properties[pid]

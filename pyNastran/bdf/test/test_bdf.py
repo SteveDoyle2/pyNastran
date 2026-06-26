@@ -850,6 +850,7 @@ def _remove_cards(model: BDF, remove_cards: list[str]):
     log = model.log
     for lines in model.reject_lines:
         assert isinstance(lines, list), type(lines)
+        # log.info(f'lines = {lines}')
         for line in lines:
             line = line.split('$')[0].strip()
             if len(line) == 0:
@@ -865,9 +866,8 @@ def _remove_cards(model: BDF, remove_cards: list[str]):
         if card_name in remove_cards:
             log.info(f'removing {card_name!r}')
         else:
-            log.info(f'dont remove {card_name!r}')
+            # log.info(f'dont remove {card_name!r}')
             reject_lines2.extend(lines)
-        break
     model.reject_lines = reject_lines2
 
 
@@ -969,7 +969,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
         if '.pch' in bdf_filename:
             fem1.read_bdf(bdf_filename, xref=False, punch=True, encoding=encoding,
                           save_file_structure=save_file_structure)
-            _remove_cards(fem1, remove_cards)
+            #_remove_cards(fem1, remove_cards)
         else:
             fem1.read_bdf(bdf_filename, xref=False, punch=punch, encoding=encoding,
                           save_file_structure=save_file_structure)

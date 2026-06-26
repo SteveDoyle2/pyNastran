@@ -752,41 +752,50 @@ class AddMethods:
         """adds an PBUSHT object"""
         key = prop.pid
         model = self.model
-        if key in model.pbusht and not allow_overwrites:
-            if not prop == model.pbusht[key]:
-                assert key not in model.pbusht, 'PBUSHT.pid=%s old=\n%snew=\n%s' % (
-                    key, model.pbusht[key], prop)
-        else:
-            assert key > 0, 'pid=%s prop=%s' % (key, prop)
-            model.pbusht[key] = prop
-            model._type_to_id_map[prop.type].append(key)
+        add_object_to_dict(
+            model, key, 'pbusht', prop, model.pbusht,
+            allow_overwrites)
+        # if key in model.pbusht and not allow_overwrites:
+        #     if not prop == model.pbusht[key]:
+        #         assert key not in model.pbusht, 'PBUSHT.pid=%s old=\n%snew=\n%s' % (
+        #             key, model.pbusht[key], prop)
+        # else:
+        #     assert key > 0, 'pid=%s prop=%s' % (key, prop)
+        #     model.pbusht[key] = prop
+        #     model._type_to_id_map[prop.type].append(key)
 
     def add_pdampt_object(self, prop: PDAMPT, allow_overwrites: bool=False) -> None:
         """adds an PDAMPT object"""
         key = prop.pid
         model = self.model
-        if key in model.pdampt and not allow_overwrites:
-            if not prop == model.pdampt[key]:
-                assert key not in model.pdampt, 'PDAMPT.pid=%s old=\n%snew=\n%s' % (
-                    key, model.pdampt[key], prop)
-        else:
-            assert key > 0, 'pid=%s prop=%s' % (key, prop)
-            model.pdampt[key] = prop
-            model._type_to_id_map[prop.type].append(key)
+        add_object_to_dict(
+            model, key, 'pdampt', prop, model.pdampt,
+            allow_overwrites)
+        # if key in model.pdampt and not allow_overwrites:
+        #     if not prop == model.pdampt[key]:
+        #         assert key not in model.pdampt, 'PDAMPT.pid=%s old=\n%snew=\n%s' % (
+        #             key, model.pdampt[key], prop)
+        # else:
+        #     assert key > 0, 'pid=%s prop=%s' % (key, prop)
+        #     model.pdampt[key] = prop
+        #     model._type_to_id_map[prop.type].append(key)
 
     def add_pelast_object(self, prop: PELAST, allow_overwrites: bool=False) -> None:
         """adds an PELAST object"""
         key = prop.pid
         assert key > 0, 'pid=%s prop=%s' % (key, prop)
         model = self.model
-        if key in model.pelast and not allow_overwrites:
-            if not prop == model.pelast[key]:
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' % (key, model.pelast[key],prop))
-                assert key not in model.pelast, 'PELAST.pid=%s old=\n%snew=\n%s' % (
-                    key, model.pelast[key], prop)
-        else:
-            model.pelast[key] = prop
-            model._type_to_id_map[prop.type].append(key)
+        add_object_to_dict(
+            model, key, 'pelast', prop, model.pelast,
+            allow_overwrites)
+        # if key in model.pelast and not allow_overwrites:
+        #     if not prop == model.pelast[key]:
+        #         #print('pid=%s\noldProperty=\n%snewProperty=\n%s' % (key, model.pelast[key],prop))
+        #         assert key not in model.pelast, 'PELAST.pid=%s old=\n%snew=\n%s' % (
+        #             key, model.pelast[key], prop)
+        # else:
+        #     model.pelast[key] = prop
+        #     model._type_to_id_map[prop.type].append(key)
 
     def add_tf_object(self, tf: TF, allow_overwrites: bool=False) -> None:
         """adds an TF (transfer function) object"""
@@ -830,12 +839,16 @@ class AddMethods:
         """adds an MATHP, MATHE object"""
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
-        if key in self.model.hyperelastic_materials and not allow_overwrites:
-            if not material == self.model.hyperelastic_materials[key]:
-                assert key not in self.model.hyperelastic_materials, 'mid=%s\nold=\n%snew=\n%s' % (key, self.model.hyperelastic_materials[key], material)
-        else:
-            self.model.hyperelastic_materials[key] = material
-            self.model._type_to_id_map[material.type].append(key)
+        model = self.model
+        add_object_to_dict(
+            model, key, 'hyperelastic_material', material, model.hyperelastic_materials,
+            allow_overwrites)
+        # if key in self.model.hyperelastic_materials and not allow_overwrites:
+        #     if not material == self.model.hyperelastic_materials[key]:
+        #         assert key not in self.model.hyperelastic_materials, 'mid=%s\nold=\n%snew=\n%s' % (key, self.model.hyperelastic_materials[key], material)
+        # else:
+        #     self.model.hyperelastic_materials[key] = material
+        #     self.model._type_to_id_map[material.type].append(key)
 
     def add_material_dependence_object(self, material: MaterialDependence,
                                        allow_overwrites: bool=False) -> None:

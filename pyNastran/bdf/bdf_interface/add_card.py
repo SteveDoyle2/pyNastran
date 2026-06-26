@@ -5278,8 +5278,8 @@ class AddAero:
         assert isinstance(sym_xy, str), sym_xy
         assert isinstance(dmij, str), dmij
         assert isinstance(dmiji, str), dmiji
-        aedw = AEDW(mach, sym_xz, sym_xy, ux_id, mesh,
-                          dmij=dmij, dmiji=dmiji, comment=comment)
+        aedw = AEDW(mach, sym_xz, sym_xy, ux_id,
+                    dmij=dmij, dmiji=dmiji, comment=comment)
         self._add_methods.add_aedw_object(aedw)
         return aedw
 
@@ -5944,10 +5944,11 @@ class AddOptimization:
         return topvar
 
     def add_dresp1(self, dresp_id: int, label: str,
-                   response_type: str, property_type: str, region: int,
+                   response_type: str, property_type: str,
                    atta: Optional[int | float | str],
                    attb: Optional[int | float | str],
                    atti: list[int | float | str],
+                   region: int=0,
                    validate: bool=True, comment: str='') -> DRESP1:
         """
         Creates a DRESP1 card.
@@ -5975,8 +5976,6 @@ class AddOptimization:
 
             Must be {ELEM, PBAR, PSHELL, PCOMP, PANEL, etc.)
             PTYPE = RANDPS ID when RTYPE=PSDDISP, PSDVELO, or PSDACCL.
-        region : str
-            Region identifier for constraint screening
         atta : int / float / str / blank
             Response attribute
         attb : int / float / str / blank
@@ -5988,6 +5987,8 @@ class AddOptimization:
                 list of property ids
             list[str]
                 'ALL'
+        region : int; default=0
+            Region identifier for constraint screening
         comment : str; default=''
             a comment for the card
         validate : bool; default=True
@@ -6006,7 +6007,7 @@ class AddOptimization:
         >>> region = None
         >>> attb = None
         >>> atti = [pid]
-        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        >>> DRESP1(dresp_id, label, response_type, property_type, atta, attb, atti, region=region)
 
 
         **Stress/PCOMP**
@@ -6021,18 +6022,18 @@ class AddOptimization:
         >>> region = None
         >>> attb = layer
         >>> atti = [pid]
-        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        >>> DRESP1(dresp_id, label, response_type, property_type, atta, attb, atti, region=region)
 
         """
         assert len(label) <= 8, label
-        dresp = DRESP1(dresp_id, label, response_type, property_type, region,
-                       atta, attb, atti, validate=validate, comment=comment)
+        dresp = DRESP1(dresp_id, label, response_type, property_type,
+                       atta, attb, atti, region=region, validate=validate, comment=comment)
         self._add_methods.add_dresp_object(dresp)
         return dresp
 
     def add_dresp2(self, dresp_id: int, label: str,
                    dequation: int | str,
-                   region: int, params: dict[tuple[int, str], list[int]],
+                   params: dict[tuple[int, str], list[int]], region: int=0,
                    method: str='MIN', c1: float=1., c2: float=0.005, c3: float=10.,
                    validate: bool=True, comment: str='') -> DRESP2:
         """
@@ -6057,8 +6058,6 @@ class AddOptimization:
             Name of the response
         dequation : int
             DEQATN id
-        region : str
-            Region identifier for constraint screening
         params : dict[(index, card_type)] = values
             the storage table for the response function
             index : int
@@ -6068,6 +6067,8 @@ class AddOptimization:
                 DESVAR, DVPREL1, DRESP2, etc.
             values : list[int]
                 the values for this response
+        region : int; default=0
+            Region identifier for constraint screening
         method : str; default=MIN
             flag used for FUNC=BETA/MATCH
             FUNC = BETA
@@ -6089,17 +6090,18 @@ class AddOptimization:
 
         """
         assert len(label) <= 8, label
-        dresp = DRESP2(dresp_id, label, dequation, region, params,
+        dresp = DRESP2(dresp_id, label, dequation, params, region=region,
                        method=method, c1=c1, c2=c2, c3=c3, comment=comment,
                        validate=validate)
         self._add_methods.add_dresp_object(dresp)
         return dresp
 
-    def add_dresp3(self, dresp_id, label, group, Type, region, params,
-                   validate=True, comment='') -> DRESP3:
+    def add_dresp3(self, dresp_id: int, label: str, group: str, Type: str,
+                   params, region: int=0,
+                   validate: bool=True, comment: str='') -> DRESP3:
         """Creates a DRESP3 card"""
-        dresp = DRESP3(dresp_id, label, group, Type, region, params,
-                       validate=validate, comment=comment)
+        dresp = DRESP3(dresp_id, label, group, Type, params,
+                       region=region, validate=validate, comment=comment)
         self._add_methods.add_dresp_object(dresp)
         return dresp
 
@@ -9841,14 +9843,14 @@ def add_beam_stress_strain_constraints(model, pid: int, label: str,
     region = None
     attb = None
     atti = [pid]
-    #DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+    #DRESP1(dresp_id, label, response_type, property_type, atta, attb, atti, region=region)
     min_stress, max_stress = static_stress_constraints
     min_value = -1e20 if min_stress is None else min_stress
     max_value = 1e20 if max_stress is None else max_stress
     for atta in attas:
         label2 = label + str(atta)
-        model.add_dresp1(dresp_id, label2, response_type, property_type, region,
-                         atta, attb, atti, validate=True, comment='')
+        model.add_dresp1(dresp_id, label2, response_type, property_type,
+                         atta, attb, atti, region=region, validate=True, comment='')
         dconstr = model.add_dconstr(dconstr_id, dresp_id, lid=min_value, uid=max_value,
                                     lowfq=0.0, highfq=1.e20, comment='')
         dresp_id += 1

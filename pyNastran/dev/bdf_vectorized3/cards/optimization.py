@@ -1447,9 +1447,9 @@ class DRESP2(VectorizedBaseCard):
         self.nparam_values = np.array([], dtype='int32')
         self.param_values = np.array([], dtype='int32')
 
-    def add(self, dresp_id: int, label: str, dequation: int, region: int,
+    def add(self, dresp_id: int, label: str, dequation: int,
             params: dict[tuple[int, str], list[int]],
-            method: str='MIN',
+            region: int=0, method: str='MIN',
             c1: float=1., c2: float=0.005, c3: float=10.,
             validate: bool=True, comment: str='') -> int:
         """

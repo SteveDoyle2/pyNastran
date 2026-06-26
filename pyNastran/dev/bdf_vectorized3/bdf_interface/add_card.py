@@ -3602,13 +3602,14 @@ class AddAero(BDFAttributes):
         assert isinstance(sym_xy, str), sym_xy
         assert isinstance(dmij, str), dmij
         assert isinstance(dmiji, str), dmiji
+        # self.aepress.add(mach, sym_xz, sym_xy, ux_id, dmij=dmij, dmiji=dmiji)
         fields = ['AEPRESS', mach, sym_xz, sym_xy, ux_id, dmij, dmiji]
         self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
 
     def add_aeforce(self, mach: float, sym_xz: str, sym_xy: str, ux_id: int,
                     mesh: str, force: int, dmik: str, perq: str='') -> None:
         """adds an AEFORCE card"""
-        self.aeforce.add(mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq)
+        self.aeforce.add(mach, sym_xz, sym_xy, ux_id, mesh, force=force, dmik=dmik, perq=perq)
 
 
 class AddOptimization(BDFAttributes):
@@ -3691,10 +3692,10 @@ class AddOptimization(BDFAttributes):
         return topvar
 
     def add_dresp1(self, dresp_id: int, label: str,
-                   response_type: str, property_type: str, region: str,
+                   response_type: str, property_type: str,
                    atta: Optional[int | float | str],
                    attb: Optional[int | float | str],
-                   atti: list[int | float | str],
+                   atti: list[int | float | str], region: int=0,
                    validate: bool=True, comment: str='') -> int:
         """
         Creates a DRESP1 card.
@@ -3777,9 +3778,9 @@ class AddOptimization(BDFAttributes):
             atta, attb, atti, validate=validate, comment=comment)
         return dresp
 
-    def add_dresp2(self, dresp_id: int, label: str, dequation: int, region: int,
+    def add_dresp2(self, dresp_id: int, label: str, dequation: int,
                    params: dict[tuple[int, str], list[int]],
-                   method: str='MIN',
+                   region: int=0, method: str='MIN',
                    c1: float=1., c2: float=0.005, c3: float=10.,
                    validate: bool=True, comment: str='') -> int:
         """
@@ -3804,8 +3805,6 @@ class AddOptimization(BDFAttributes):
             Name of the response
         dequation : int
             DEQATN id
-        region : str
-            Region identifier for constraint screening
         params : dict[(index, card_type)] = values
             the storage table for the response function
             index : int
@@ -3815,6 +3814,8 @@ class AddOptimization(BDFAttributes):
                 DESVAR, DVPREL1, DRESP2, etc.
             values : list[int]
                 the values for this response
+        region : int; default=0
+            Region identifier for constraint screening
         method : str; default=MIN
             flag used for FUNC=BETA/MATCH
             FUNC = BETA
@@ -3837,19 +3838,20 @@ class AddOptimization(BDFAttributes):
         """
         assert len(label) <= 8, label
         dresp = self.dresp2.add(
-            dresp_id, label, dequation, region, params,
+            dresp_id, label, dequation, params, region=region,
             method=method, c1=c1, c2=c2, c3=c3, comment=comment,
             validate=validate)
         return dresp
 
-    def add_dresp3(self, dresp_id, label, group, Type, region, params,
-                   validate=True, comment: str='') -> DRESP3:
+    def add_dresp3(self, dresp_id: int, label: str, group: str, Type: str,
+                   params, region: int=0,
+                   validate: bool=True, comment: str='') -> DRESP3:
         """Creates a DRESP3 card"""
         assert len(label) <= 8, label
         # dresp = DRESP3(dresp_id, label, group, Type, region, params,
         #                validate=validate, comment=comment)
-        self.dresp3.add(dresp_id, label, group, Type, region, params,
-                        validate=validate, comment=comment)
+        self.dresp3.add(dresp_id, label, group, Type, params,
+                        region=region, validate=validate, comment=comment)
         return dresp
 
     def add_dvcrel1(self, dvcrel_id: int, element_type: str, eid: int, cp_name: str,
