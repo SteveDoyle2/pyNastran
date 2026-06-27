@@ -38,6 +38,16 @@ def setup_static_case_control(model: BDF, extra_case_lines=None):
     model.sol = 101
     model.case_control_deck = cc
 
+def _diff(name, actual, expected):
+    if actual.ndim == 1:
+        msg = (
+            f'{name}_actual   = {str(actual)}\n'
+            f'{name}_expected = {str(expected)}\n')
+    elif actual.ndim == 2:
+        msg = (
+            f'{name}_actual:\n{str(actual)}\n'
+            f'{name}_expected:\n{str(expected)}\n')
+    return msg
 
 class TestSolverTools(unittest.TestCase):
     def test_partition_vector(self):
@@ -49,6 +59,35 @@ class TestSolverTools(unittest.TestCase):
         assert len(xa) == 3 and np.allclose(xa, [1., 3., 4.]), xa
         assert len(xs) == 2 and np.allclose(xs, [0., 2.]), xs
 
+
+class TestStaticBush(unittest.TestCase):
+    def test_cbush(self):
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cbush.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        
+        eid = 10
+        pid = 11
+        x = [0., 1., 0]
+        model.add_cbush(eid, pid, [1, 2], x=x, g0=None, comment='cbush')
+        model.add_pbush(pid, k=[1., 0., 0.], b=None, ge=None, comment='pbush')
+
+        load_id = 2
+        fxyz = np.array([1., 0., 0.])
+        mag = 20.
+        model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
+
+        spc_id = 3
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_static_case_control(model)
+
+        solver = Solver(model)
+        model.sol = 101
+        solver.run()
 
 class TestStaticSpring(unittest.TestCase):
     def test_celas2_conm2(self):
@@ -113,14 +152,14 @@ class TestStaticSpring(unittest.TestCase):
         nids = [1, 2]
         eid = 1
         k = 1000.
-        model.add_celas2(eid, k, nids, c1=1, c2=2, ge=0., s=0., comment='')
+        model.add_celas2(eid, k, nids, c1=1, c2=2, ge=0., s=0.)
 
         load_id = 2
         spc_id = 3
         # model.add_sload(load_id, 2, 20.)
         fxyz = np.array([1., 0., 0.])
         mag = 20.
-        model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
+        model.add_force(load_id, 2, mag, fxyz, cid=0)
 
         components = 123456
         nodes = 1
@@ -134,13 +173,32 @@ class TestStaticSpring(unittest.TestCase):
         d = mag / k
         Fg = solver.Fg
         Kgg = solver.Kgg
-        Kaa2 = solver.Kaa.toarray()
-        Fg_expected = [ 0., 0.0, 0., 0., 0., 0.,
-                        20., 0., 0., 0., 0., 0.]
-        assert np.allclose(Fg, Fg_expected), f'Force Error:\n Fg2={Fg}\n Fg_expected={Fg_expected}'
-        #assert np.allclose(Kgg, Kgg)
-        #assert np.allclose(Kaa, Kaa)
+        Kaa = solver.Kaa
+        Fg_expected = np.array(
+            [-20., 0., 0., 0., 0., 0.,
+              20., 0., 0., 0., 0., 0.])
+        shape = (2, 6)
+        assert np.allclose(Fg, Fg_expected), f'Force Error:\n Fg:\n{Fg.reshape(shape)}\n Fg_expected:\n{Fg_expected.reshape(shape)}'
+        Kgg_expected = np.zeros((12, 12))
+        Kgg_expected[  0,   0] = k
+        Kgg_expected[  0, 6+1] = -k
+        Kgg_expected[6+1,   0] = -k
+        Kgg_expected[6+1, 6+1] = k
+
+        Kaa_expected = np.zeros((6, 6))
+        Kgg_expected[ 1, 1] = k
+        #Kaa_expected = k * np.array([
+        #    [1, -1],
+        #    [-1, 1],
+        #])
+
         assert np.allclose(solver.xa_[0], d)
+
+        Kggd = Kgg.toarray()
+        Kaad = Kaa.toarray()
+        assert type(Kggd) == type(Kgg_expected), (type(Kgg), type(Kgg_expected))
+        #assert np.allclose(Kaad, Kaa_expected), (Kaad, Kaa_expected)
+        assert np.allclose(Kggd, Kgg_expected), _diff('gg', Kggd, Kgg_expected)
 
     def test_celas3(self):
         """Tests a CELAS3/PELAS"""
@@ -531,8 +589,8 @@ class TestStaticRod(unittest.TestCase):
         E = 42.
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.1, alpha=0.0, tref=0.0, ge=0.0, St=0.0,
-                       Sc=0.0, Ss=0.0, mcsid=0)
+        model.add_mat1(
+            mid, E, G, nu, rho=0.1, alpha=0.0, tref=0.0, ge=0.0, St=0.0, Sc=0.0, Ss=0.0, mcsid=0)
         model.add_crod(eid, pid, nids)
         model.add_prod(pid, mid, A=1.0, j=0., c=0., nsm=0.)
 
@@ -551,14 +609,14 @@ class TestStaticRod(unittest.TestCase):
         #components = 123456
         #nodes = 1
         #enforced = 0.1
-        #model.add_spc(spc_id, nodes, components, enforced, comment='')
+        #model.add_spc(spc_id, nodes, components, enforced)
         nodes = 2
         components = 1
         enforced = 0.1
-        model.add_spcd(load_id, nodes, components, enforced, comment='')
+        model.add_spcd(load_id, nodes, components, enforced)
 
         components = '1'
-        model.add_spcd(9999999, nodes, components, enforced, comment='')
+        model.add_spcd(9999999, nodes, components, enforced)
 
         components = 123456
         #model.add_spc1(spc_id, components, nodes, comment='')

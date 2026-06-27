@@ -24,6 +24,7 @@ from .springs import (
     _build_kbb_celas1, _build_kbb_celas2,
     _build_kbb_celas3, _build_kbb_celas4,)
 
+from .bush import assemble_cbush_matrices
 from .rods import _build_kbb_rod
 from ..utils import lambda1d, DOF_MAP
 
@@ -120,7 +121,13 @@ def build_Kgg(
         model, Kbb, dof_map, all_nids, xyz_cid0, idtype="int32", fdtype="float64")
     nelements += build_kbb_ctria3(
         model, Kbb, dof_map, all_nids, xyz_cid0, idtype="int32", fdtype="float64")
-    nelements += _build_kbb_cbush(model, Kbb, dof_map)
+    #nelements += _build_kbb_cbush(model, Kbb, dof_map)
+    ndof = Kbb.shape[0]
+    nelements += assemble_cbush_matrices(
+        model, dof_map,
+        Kbb, Mgg=None,
+        include_damping=False, include_mass=False,
+        extra_mass=None)
     nelements += _build_kbb_cshear(model, Kbb, dof_map, xyz_cid0)
 
     # Solid elements (CHEXA, CTETRA, CPENTA)
@@ -380,35 +387,6 @@ def _beami_stiffness(
     k2: float = 1e8,):
     """Wrapper for backward compatibility; delegates to timoshenko_stiffness."""
     return timoshenko_stiffness(A, E, G, L, Iy, Iz, J, k1, k2, pa, pb)
-
-
-def _build_kbb_cbush(model: BDF,
-                     Kbb: dok_matrix,
-                     dof_map: DOF_MAP) -> int:
-    """Fill CBUSH stiffness: diagonal 12x12 from PBUSH k_fields."""
-    elem = model.cbush
-    if elem.n == 0:
-        return 0
-    pbush = model.pbush
-    pids = elem.property_id
-    ipids = pbush.index(pids)
-    for i_elem, pid, (nid1, nid2), iprop in zip(count(), pids, elem.nodes, ipids):
-        if iprop >= pbush.n or pbush.property_id[iprop] != pid:
-            continue
-        k6 = pbush.k_fields[iprop]  # [K1, K2, K3, K4, K5, K6]
-
-        i1 = dof_map[(nid1, 1)]
-        j1 = dof_map[(nid2, 1)]
-        for dof, ki in enumerate(k6):
-            if ki == 0.0:
-                continue
-            ii = i1 + dof
-            jj = j1 + dof
-            Kbb[ii, ii] += ki
-            Kbb[jj, jj] += ki
-            Kbb[ii, jj] -= ki
-            Kbb[jj, ii] -= ki
-    return elem.n
 
 
 def _ke_cshear(p1: np.ndarray,
