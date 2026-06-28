@@ -27,7 +27,7 @@ def assemble_cbush_matrices(
     extra_mass: dict[int, float] | None = None,) -> tuple[NDArray, NDArray | None, NDArray | None]:
     """Assemble CBUSH stiffness, damping, and lumped mass matrices.
 
-    Uses pyNastran bdf_vectorized3 array-based API: reads element
+    Uses pyNastran array-based API: reads element
     connectivity from ``model.cbush`` and property data from
     ``model.pbush`` (K1-K6, B1-B6, mass as NumPy arrays).
 
@@ -122,14 +122,17 @@ def assemble_cbush_matrices(
     grid = model.grid
     coord = model.coord
     xyz = grid.xyz_cid0()
-    nid = grid.node_id
+    #nid = grid.node_id
     
-    unids = np.unique(nid)
+    unids = np.unique(nodes)
     if unids[0] == 0:
         inid = -np.ones((neid * 2), dtype='int32')
         is_nids = (nodes > 0)
         is_nids_ravel = is_nids.ravel()
-        inid[is_nids_ravel] = grid.index(nodes.ravel()[is_nids_ravel])
+        nids_ravel = nodes.ravel()[is_nids_ravel]
+        print(f'nids_ravel = {nids_ravel}')
+        print(f'grid.node_id = {grid.node_id}')
+        inid[is_nids_ravel] = grid.index(nids_ravel)
         inid = inid.reshape((neid, 2))
     else:
         inid = grid.index(nodes)
@@ -144,17 +147,85 @@ def assemble_cbush_matrices(
     # Assemble element by element using G-matrix formulation
     # K_elem = G^T @ K_spring @ G where G accounts for rigid arms
     # from nodes to spring point (handles S offset and OCID offset)
-    for i, eid, pid, ki, si, ocidi, si_vec, massi in zip(
-            count(), eids, pids, k,
-            s_all, ocid_all, si_all, mass):
+    kgg_elems: dict[int, tuple[tuple[int, ...], np.ndarray]] = {}
+    bgg_elems: dict[int, tuple[tuple[int, ...], np.ndarray]] = {}
+    mgg_elems: dict[int, tuple[tuple[int, ...], np.ndarray]] = {}
+    cbush_kelems(model, cbush, transforms, kgg_elems, pbush.k_fields)
 
-        # Compute element stiffness via G-matrix formulation
-        #s_val = s_all[i]
-        #ocid_val = ocid_all[i]
-        #si_vec = si_all[i]
+    for eid, ((ga, gb), k_elem) in kgg_elems.items():
+        print(f'eid\n{k_elem}')
+        _assemble_kelm(Kgg, k_elem, ga, gb, dof_map)
+    #print(f'Kgg:\n{Kgg.todense()}')
 
-        ga = nodes[i, 0]
-        gb = nodes[i, 1]
+    if include_damping:
+        cbush_kelems(model, cbush, transforms, bgg_elems, pbush.b_fields)
+        for eid, ((ga, gb), b_elem) in bgg_elems.items():
+            _assemble_kelm(Bgg, b_elem, ga, gb, dof_map)
+
+    if include_mass:
+        imass = (mass != 0)
+        has_mass = (imass.sum() > 0)
+        if has_mass and Mgg is not None:
+            dmass = mass[imass] / 2.0
+            for i, eid, (ga, gb), dmassi in zip(count(),
+                        cbush.element_id[imass],
+                        cbush.nodes[imass, :], dmass):
+                for node in [ga, gb]:
+                    if node == 0:
+                        continue
+                    #assert isinstance(dof_map, dict)
+                    #assert isinstance(node, integer_types)
+                    idx = dof_map[(node, 1)]
+                    #print((node, idx))
+                    Mgg[idx, idx] += dmassi
+                    Mgg[idx+1, idx+1] += dmassi
+                    Mgg[idx+2, idx+2] += dmassi
+
+    log.info(f"Assembled {neid} CBUSH elements into {ndof}x{ndof} matrices")
+    assert neid > 0, neid
+    return neid
+
+
+def cbush_kelems(model: BDF,
+                 cbush: CBUSH,
+                 transforms,
+                 k_elems: dict[int, tuple[tuple[int, ...], np.ndarray]],
+                 k_fields):
+    grid = model.grid
+    transforms = _compute_cbush_transforms(cbush, model)
+
+    # Element S parameter and OCID offset arrays
+    s_all = cbush.s        # (n,) spring location fraction
+    ocid_all = cbush.ocid  # (n,) offset coordinate system
+    si_all = cbush.si      # (n, 3) offset components
+
+    # neid = len(cbush)
+    nodes = cbush.nodes
+    gas = cbush.nodes[:, 0]
+    gbs = cbush.nodes[:, 1]
+    is_gas = (gas > 0)
+    is_gbs = (gbs > 0)
+    neid = len(cbush)
+    
+    xyz_cid0 = grid.xyz_cid0()
+    xyz = xyz_cid0
+    ga_xyzs = np.full((neid, 3), np.nan, dtype='float64')
+    gb_xyzs = np.full((neid, 3), np.nan, dtype='float64')
+    igas = grid.index(gas[is_gas])
+    igbs = grid.index(gbs[is_gbs])
+    ga_xyzs[is_gas, :] = xyz_cid0[igas, :]
+    gb_xyzs[is_gbs, :] = xyz_cid0[igbs, :]
+   
+    is_ks = np.abs(k_fields).sum(axis=1)
+    assert len(is_ks) == neid
+    for (i, eid, (ga, gb), ki,
+            si, ocidi, si_vec,
+            ga_xyz, gb_xyz, is_ga, is_gb, is_k) in zip(
+            count(), cbush.element_id, nodes, k_fields,
+            s_all, ocid_all, si_all,
+            ga_xyzs, gb_xyzs, is_gas, is_gbs, is_ks):
+        if not is_k:
+            continue
 
         # Get rotation matrix R (element-to-global, rows = elem axes in global)
         T = transforms[i]  # (6, 6) or None
@@ -163,14 +234,9 @@ def assemble_cbush_matrices(
         else:
             R = np.eye(3)
 
-        # Get node positions
-        iga = grid.index(ga)
-        ga_xyz = xyz[iga]
-
-        if gb > 0:
-            igb = grid.index(gb)
-            gb_xyz = xyz[igb]
-        else:
+        if not is_ga:
+            ga_xyz = None
+        if not is_gb:
             gb_xyz = None
 
         # Determine OCID offset in global coordinates
@@ -180,45 +246,17 @@ def assemble_cbush_matrices(
                 ocid_offset = si_vec.copy()
             else:
                 # Transform si from OCID system to global
-                coord = model.coord.slice_card_by_id(np.array([ocid_val]))
+                coord = model.coord.slice_card_by_id(np.array([ocidi]))
                 R_ocid = np.array([coord.i[0], coord.j[0], coord.k[0]])
                 ocid_offset = R_ocid.T @ si_vec
 
         k_elem = _cbush_kelm(
-            ki, R, ga_xyz, gb_xyz, s=si, ocid_offset=ocid_offset)
-
-        # Transform from basic to CD frames (Kgg = Tlg^T @ Kll @ Tlg)
-        k_elem = _apply_cd_transform(k_elem, ga, gb, grid, coord)
-        _assemble_kelm(Kgg, k_elem, ga, gb, dof_map)
-
-        # Damping (same G-matrix formulation)
-        if include_damping:
-            b_vals = b_all[i]
-            if np.any(b_vals != 0):
-                has_damping = True
-                b_elem = _cbush_kelm(
-                    bi, R, ga_xyz, gb_xyz,
-                    s=si, ocid_offset=ocid_offset)
-                b_elem = _apply_cd_transform(b_elem, ga, gb, grid, coord)
-                _assemble_kelm(Bgg, b_elem, ga, gb, dof_map)
-
-        # Lumped mass (split equally to both nodes)
-        if massi > 0:
-            has_mass = True
-            for node in [ga, gb]:
-                if node == 0:
-                    continue
-                for comp in range(1, 4):
-                    idx = dof_map.get((node, comp))
-                    if idx is not None:
-                        Mgg[idx, idx] += massi / 2.0
-
-    log.info(f"Assembled {neid} CBUSH elements into {ndof}x{ndof} matrices")
-    assert neid > 0, neid
-    return neid
+            eid, ki, R, ga_xyz, gb_xyz, s=si, ocid_offset=ocid_offset)
+        k_elems[eid] = ((ga, gb), k_elem)
 
 
-def _cbush_kelm(k: NDArray,
+def _cbush_kelm(eid: int,
+                k: NDArray,
                 R: NDArray,
                 ga_xyz: NDArray,
                 gb_xyz: NDArray | None,
@@ -256,14 +294,17 @@ def _cbush_kelm(k: NDArray,
     -------
     K : (6, 6) for grounded or (12, 12) for connected
     """
-    grounded = gb_xyz is None
+    a_grounded = ga_xyz is None
+    b_grounded = gb_xyz is None
 
     # Compute rigid arm vectors (global coords, node to spring point)
-    print('ocid_offset', ocid_offset)
     if ocid_offset is not None and np.any(ocid_offset != 0):
         r_a = np.asarray(ocid_offset, dtype='float64')
         r_b = r_a - (gb_xyz - ga_xyz) if not grounded else None
-    elif grounded:
+    elif a_grounded:
+        r_b = np.zeros(3)
+        r_a = None
+    elif b_grounded:
         r_a = np.zeros(3)
         r_b = None
     else:
@@ -271,13 +312,21 @@ def _cbush_kelm(k: NDArray,
         r_b = (s - 1.0) * (gb_xyz - ga_xyz)
 
     K_spring = np.diag(k)
-    if grounded:
-        G_a = np.zeros((6, 6))
-        G_a[:3, :3] = R
-        G_a[:3, 3:] = -R @ _skew(r_a.ravel())
-        G_a[3:, 3:] = R
-        return G_a.T @ K_spring @ G_a
+    #print(f's={s} ga_xyz={ga_xyz} gb_xyz={gb_xyz} ra={r_a} rb={r_b}')
+    if a_grounded:
+        #print(f'eid={eid} A grounded')
+        G = np.zeros((6, 6))
+        G[:3, :3] = R
+        G[:3, 3:] = -R @ _skew(r_b.ravel())
+        G[3:, 3:] = R
+    elif b_grounded:
+        #print(f'eid={eid} B grounded')
+        G = np.zeros((6, 6))
+        G[:3, :3] = R
+        G[:3, 3:] = -R @ _skew(r_a.ravel())
+        G[3:, 3:] = R
     else:
+        #print(f'eid={eid} free; k={k}')
         G = np.zeros((6, 12))
         G[:3, 0:3] = -R
         G[:3, 3:6] = R @ _skew(r_a.ravel())
@@ -285,7 +334,8 @@ def _cbush_kelm(k: NDArray,
         G[:3, 9:12] = -R @ _skew(r_b.ravel())
         G[3:, 3:6] = -R
         G[3:, 9:12] = R
-        return G.T @ K_spring @ G
+    K0 = G.T @ K_spring @ G
+    return K0
 
 
 def _compute_cbush_transforms(
@@ -317,6 +367,14 @@ def _compute_cbush_transforms(
         unique_cids = unique_cids[unique_cids > 0]
 
         nodes = cbush.nodes
+
+        #ucoord = coord.slice_card_by_id(unique_cids)
+        #ir_ucids = (coord.coord_type == 'R')
+        #ic_ucids = (coord.coord_type == 'C')
+        #is_ucids = (coord.coord_type == 'S')
+        #rbeta = coord.beta[ir_ucids, :, :]
+        #cbeta = coord.beta[ic_ucids, :, :]
+        #sbeta = coord.beta[is_ucids, :, :]
 
         for cid in unique_cids:
             icid = coord.index(cid)
@@ -403,7 +461,7 @@ def _compute_cbush_transforms(
 
         # Build element coordinate system
         if gb_id == 0:
-            elem_x = x_vec.copy()
+            elem_x = x_vec #.copy()
         else:
             iga = grid.index(ga_id)
             igb = grid.index(gb_id)
@@ -437,28 +495,31 @@ def _assemble_kelm(
     dof_map: dict,) -> None:
     """Assemble element stiffness (6x6 or 12x12) into global matrix.
 
-    For grounded (6x6): assembles at GA DOFs.
+    For grounded (6x6): assembles at GA/GB DOFs.
     For connected (12x12): assembles at [GA, GB] DOFs using the full
     12x12 element matrix which already includes cross-coupling.
     """
-    ga_dofs = [dof_map.get((ga, comp)) for comp in range(1, 7)]
-
-    if gb == 0:
-        for i in range(6):
-            if ga_dofs[i] == 0:
-                continue
-            for j in range(6):
-                if ga_dofs[j] != 0:
-                    Kgg[ga_dofs[i], ga_dofs[j]] += k_elem[i, j]
+    if ga == 0 and gb == 0:
+        raise RuntimeError((ga, gb))
+    elif gb == 0:
+        ga1 = dof_map.get((ga, 1))
+        ga_dofs = [ga1+comp for comp in range(6)]
+        all_dofs = np.array(ga_dofs)
+    elif ga == 0:
+        gb1 = dof_map.get((gb, 1))
+        gb_dofs = [gb1+comp for comp in range(6)]
+        all_dofs = np.array(gb_dofs)
     else:
-        gb_dofs = [dof_map.get((gb, comp)) for comp in range(1, 7)]
-        all_dofs = ga_dofs + gb_dofs
-        for i in range(12):
-            if all_dofs[i] == 0:
-                continue
-            for j in range(12):
-                if all_dofs[j] != 0:
-                    Kgg[all_dofs[i], all_dofs[j]] += k_elem[i, j]
+        ga1 = dof_map.get((ga, 1))
+        ga_dofs = [ga1+comp for comp in range(6)]
+
+        gb1 = dof_map.get((gb, 1))
+        gb_dofs = [gb1+comp for comp in range(6)]
+        all_dofs = np.array(ga_dofs + gb_dofs)
+    i, j = np.where(k_elem != 0.0)
+    idofs = all_dofs[i]
+    jdofs = all_dofs[j]
+    Kgg[idofs, jdofs] += k_elem[i, j]
 
 
 def _apply_cd_transform(k_elem: NDArray,

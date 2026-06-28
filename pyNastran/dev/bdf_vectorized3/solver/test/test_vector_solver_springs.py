@@ -61,10 +61,10 @@ class TestSolverTools(unittest.TestCase):
 
 
 class TestStaticBush(unittest.TestCase):
-    def test_cbush(self):
+    def test_cbush_1dof(self):
         log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(log=log, mode='msc')
-        model.bdf_filename = TEST_DIR / 'cbush.bdf'
+        model.bdf_filename = TEST_DIR / 'cbush_1dof.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         
@@ -72,7 +72,7 @@ class TestStaticBush(unittest.TestCase):
         pid = 11
         x = [0., 1., 0]
         model.add_cbush(eid, pid, [1, 2], x=x, g0=None, comment='cbush')
-        model.add_pbush(pid, k=[1., 0., 0.], b=None, ge=None, comment='pbush')
+        model.add_pbush(pid, k=[100., 0., 0.], b=None, ge=None, comment='pbush', mass=1.0)
 
         load_id = 2
         fxyz = np.array([1., 0., 0.])
@@ -88,6 +88,90 @@ class TestStaticBush(unittest.TestCase):
         solver = Solver(model)
         model.sol = 101
         solver.run()
+
+    def test_cbush_3dof(self):
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cbush_3dof.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+        
+        eid = 10
+        pid = 11
+        x = [0., 1., 0]
+        model.add_cbush(eid, pid, [1, 2], x=x, g0=None, cid=0,
+                        comment='cbush')
+        model.add_pbush(
+            pid, k=[100., 200., 300.],
+            b=None, ge=None, comment='pbush', mass=1.0)
+
+        load_id = 2
+        fxyz = np.array([1., 0., 0.])
+        mag = 20.
+        model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
+
+        spc_id = 3
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_static_case_control(model)
+
+        solver = Solver(model)
+        model.sol = 101
+        solver.run()
+
+    def test_cbush_3dof_ga_ground(self):
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cbush_gb_ground.bdf'
+        model.add_grid(2, [0., 0., 0.])
+        
+        eid = 10
+        pid = 11
+        x = [0., 1., 0]
+        model.add_cbush(eid, pid, [0, 2], x=x, g0=None, cid=0,
+                        comment='cbush')
+        model.add_pbush(
+            pid, k=[100., 200., 300.],
+            b=None, ge=None, comment='pbush', mass=1.0)
+
+        load_id = 2
+        fxyz = np.array([1., 0., 0.])
+        mag = 20.
+        model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
+
+        setup_static_case_control(model)
+
+        solver = Solver(model)
+        model.sol = 101
+        solver.run()
+
+    def test_cbush_3dof_gb_ground(self):
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cbush_gb_ground.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        
+        eid = 10
+        pid = 11
+        x = [0., 1., 0]
+        model.add_cbush(eid, pid, [1, 0], x=x, g0=None, cid=0,
+                        comment='cbush')
+        model.add_pbush(
+            pid, k=[100., 200., 300.],
+            b=None, ge=None, comment='pbush', mass=1.0)
+
+        load_id = 2
+        fxyz = np.array([1., 0., 0.])
+        mag = 20.
+        model.add_force(load_id, 1, mag, fxyz, cid=0, comment='')
+
+        setup_static_case_control(model)
+
+        solver = Solver(model)
+        model.sol = 101
+        solver.run()
+
 
 class TestStaticSpring(unittest.TestCase):
     def test_celas2_conm2(self):
