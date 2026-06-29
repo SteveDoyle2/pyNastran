@@ -619,11 +619,11 @@ class PBUSH(Property):
             ifile[icard] = ifilei
             property_id[icard] = pid
             if k_fieldsi:
-                k_fields[icard, :] = k_fieldsi
+                k_fields[icard, :len(k_fieldsi)] = k_fieldsi
             if b_fieldsi:
-                b_fields[icard, :] = b_fieldsi
+                b_fields[icard, :len(b_fieldsi)] = b_fieldsi
             if ge_fieldsi:
-                ge_fields[icard, :] = ge_fieldsi
+                ge_fields[icard, :len(ge_fieldsi)] = ge_fieldsi
             #t_fields[icard, :] = t_fields
             rcv_fields[icard, :] = rcv_fieldsi
             _mass[icard] = massi

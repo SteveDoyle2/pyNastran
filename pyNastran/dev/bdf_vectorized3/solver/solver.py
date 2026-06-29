@@ -67,6 +67,10 @@ from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weigh
 # from pyNastran.bdf.mesh_utils.loads import get_ndof
 
 from .loads.reduce_pg import reduce_Pg_to_Pa
+from .recover.table import (
+    _save_displacment, _save_spc_forces,
+    _save_mpc_forces, _save_applied_load)
+
 from .recover.freq_force import recover_force_freq
 from .recover.modal_force import recover_force_103
 from .recover.static_force import recover_force_101
@@ -80,7 +84,6 @@ from .recover.utils import (
 from .partition import (
     partition_matrix, # partition_vector,
     partition_vector2, partition_vector3)
-from .utils_statics import save_static_table
 from .utils_modes import (
     slice_modal_set, get_real_eigenvalue_method,
     apply_phi_normalization,
@@ -473,29 +476,11 @@ class Solver:
             inplace=False)
         write_mat(model, Mgg, 'PRTMGG', self.solver_dict)
 
-        if GMN is not None:
-            log.info('Applying GMN to K: n = g - m')
-            # Transform to n-set: Knn = GMN^T @ Kgg @ GMN, Mnn = GMN^T @ Mgg @ GMN
-            Knn = GMN.T @ Kgg @ GMN
-            write_mat(model, Knn, 'PRTKNN', self.solver_dict)
-
-            Mnn = GMN.T @ Mgg @ GMN if Mgg is not None else None
-            write_mat(model, Mnn, 'PRTMNN', self.solver_dict)
-
-            # AUTOSPC on N-set: detect singular DOFs after MPC reduction
-            n_ndof_temp = Knn.shape[0]
-            autospc_dofs_n = autospc_n_set(Knn, n_ndof_temp, log)
-            if len(autospc_dofs_n) > 0:
-                # Add these to the SPC set in the n-set coordinate system
-                # They will be picked up during the SPC partition below
-                self._autospc_n_dofs = autospc_dofs_n
-            else:
-                self._autospc_n_dofs = np.array([], dtype="int32")
-        else:
-            Knn = Kgg
-            Mnn = Mgg
-            self._autospc_n_dofs = np.array([], dtype="int32")
-
+        Knn, Mnn, autospc_n_dofs = static_g_to_n(
+            model,
+            Kgg, Mgg, GMN,
+            log, self.solver_dict)
+        self._autospc_n_dofs = autospc_n_dofs
         gset = np.arange(ndof, dtype=idtype)
 
         write_mat(model, Fb, 'PRTPB', self.solver_dict)
@@ -505,15 +490,15 @@ class Solver:
         # Save g-set force for oload output before MPC transform
         Fg_gset = np.where(np.isnan(Fg), 0.0, Fg.copy())
 
-
         asetmap = get_aset(model)
+
+        Fn, nset_indices = static_Pg_to_Pn(
+            model,
+            Fg, GMN,
+            gset, mset,
+            log, self.solver_dict)
+
         if GMN is not None:
-            # Transform force to n-set
-            Fn = GMN.T @ Fg
-            write_mat(model, Fn, 'PRTPN', self.solver_dict)
-            # Transform enforced displacements to n-set
-            # n-set indices: remove m-set DOFs from the indexing
-            nset_indices = np.setdiff1d(gset, mset)
             n_ndof = len(nset_indices)
 
             # Rebuild SPC set and xg in n-set coordinates
@@ -615,7 +600,7 @@ class Solver:
         abs_xg = np.abs(xg)
         finite_xg = np.any(np.isfinite(abs_xg))
         if finite_xg and np.nanmax(abs_xg) > 0.0:
-            self.log.info(f"SPCD found")
+            self.log.warning(f"SPCD found")
             self.log.info(f"  xg = {xg}")
             self.log.info(f"  Fg = {Fg}")
             set0 = xg == 0.0
@@ -1554,8 +1539,9 @@ class Solver:
             Kgg_override=self.Kgg_override,
             solver_dict=self.solver_dict)
 
-        Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype,
-                        solver_dict=self.solver_dict)
+        Mbb = build_Mbb(
+            model, subcase, dof_map, ndof, fdtype=fdtype,
+            solver_dict=self.solver_dict)
         page_num = write_grid_point_weight(
             model, Mbb, dof_map, ndof,
             self.op2, f06_file,
@@ -3482,210 +3468,6 @@ def recover_statics(model: BDF, op2: OP2,
 
     return page_num
 
-def _save_displacment(
-    op2: OP2,
-    f06_file: TextIO,
-    subcase: Subcase,
-    itime: int,
-    ntimes: int,
-    node_gridtype: NDArrayN2int,
-    xg: NDArrayNfloat,
-    ngrid: int,
-    ndof_per_grid: int,
-    title: str = "",
-    subtitle: str = "",
-    label: str = "",
-    fdtype: str = "float32",
-    page_num: int = 1,
-    page_stamp: str = "PAGE %s",) -> int:
-    f06_request_name = "DISPLACEMENT"
-    table_name = "OUGV1"
-    # self.log.debug(f'xg = {xg}')
-    assert page_stamp is not None
-    page_stamp % page_num
-    page_num = save_static_table(
-        f06_file,
-        subcase,
-        itime,
-        ntimes,
-        node_gridtype,
-        xg,
-        RealDisplacementArray,
-        f06_request_name,
-        table_name,
-        op2.displacements,
-        ngrid,
-        ndof_per_grid,
-        title=title,
-        subtitle=subtitle,
-        label=label,
-        fdtype=fdtype,
-        page_num=page_num,
-        page_stamp=page_stamp,
-    )
-    return page_num
-
-def _save_spc_forces(
-    op2: OP2,
-    f06_file: TextIO,
-    subcase: Subcase,
-    itime: int,
-    ntimes: int,
-    node_gridtype: NDArrayN2int,
-    fspc: NDArrayNfloat,
-    ngrid: int,
-    ndof_per_grid: int,
-    title: str = "",
-    subtitle: str = "",
-    label: str = "",
-    fdtype: str = "float32",
-    page_num: int = 1,
-    page_stamp: str = "PAGE %s",) -> int:
-    f06_request_name = "SPCFORCES"
-    table_name = "OQG1"
-    # self.log.debug(f'Fg = {Fg}')
-    assert page_stamp is not None
-    page_stamp % page_num
-    page_num = save_static_table(
-        f06_file,
-        subcase,
-        itime,
-        ntimes,
-        node_gridtype,
-        fspc,
-        RealSPCForcesArray,
-        f06_request_name,
-        table_name,
-        op2.spc_forces,
-        ngrid,
-        ndof_per_grid,
-        title=title,
-        subtitle=subtitle,
-        label=label,
-        fdtype=fdtype,
-        page_num=page_num,
-        page_stamp=page_stamp,
-    )
-    return page_num
-
-def _save_mpc_forces(
-    op2: OP2,
-    f06_file: TextIO,
-    subcase: Subcase,
-    itime: int,
-    ntimes: int,
-    node_gridtype: NDArrayN2int,
-    fmpc: NDArrayNfloat,
-    ngrid: int,
-    ndof_per_grid: int,
-    title: str = "",
-    subtitle: str = "",
-    label: str = "",
-    fdtype: str = "float32",
-    page_num: int = 1,
-    page_stamp: str = "PAGE %s",) -> int:
-    """Save MPC forces to F06 and OP2."""
-
-    #page_num = save_static_table(
-    #    f06_file,
-    #    subcase,
-    #    itime,
-    #    ntimes,
-    #    node_gridtype,
-    #    fmpc,
-    #    RealMPCForcesArray,
-    #    f06_request_name,
-    #    table_name,
-    #    op2.mpc_forces,
-    #    ngrid,
-    #    ndof_per_grid,
-    #    title=title,
-    #    subtitle=subtitle,
-    #    label=label,
-    #    fdtype=fdtype,
-    #    page_num=page_num,
-    #    page_stamp=page_stamp,
-    #)
-
-    assert page_stamp is not None
-    page_stamp % page_num
-    f06_request_name = 'MPCFORCES'
-    unused_nids_write, write_f06, write_op2, quick_return = get_plot_request(
-        subcase, f06_request_name)
-    if quick_return:
-        return page_num
-
-    idtype2, fdtype2 = recast_data("int32", fdtype)
-    isubcase = subcase.id
-    nnodes = node_gridtype.shape[0]
-    data = np.zeros((ntimes, nnodes, 6), dtype=fdtype2)
-    ngrid_dofs = ngrid * ndof_per_grid
-    _fgi = fmpc[:ngrid_dofs].reshape(ngrid, ndof_per_grid)
-    data[itime, :ngrid, :] = _fgi
-    data[itime, ngrid:, 0] = fmpc[ngrid_dofs:]
-
-    # Use OQG1 for data_code creation, then override table_name for write_f06
-    table_name = "OQG1"
-    mpc_obj = RealMPCForcesArray.add_static_case(
-        table_name, node_gridtype, data, isubcase,
-        is_sort1=True, is_random=False, is_msc=True,
-        random_code=0, title=title, subtitle=subtitle, label=label)
-    mpc_obj.table_name = "OQMG1"
-
-    if write_f06:
-        page_num = mpc_obj.write_f06(
-            f06_file, header=None,
-            page_stamp=page_stamp, page_num=page_num,
-            is_mag_phase=False, is_sort1=True)
-        f06_file.write("\n")
-    if write_op2:
-        op2.mpc_forces[isubcase] = mpc_obj
-    return page_num
-
-
-def _save_applied_load(
-    op2: OP2,
-    f06_file: TextIO,
-    subcase: Subcase,
-    itime: int,
-    ntimes: int,
-    node_gridtype: NDArrayN2int,
-    Fg: NDArrayNfloat,
-    ngrid: int,
-    ndof_per_grid: int,
-    title: str = "",
-    subtitle: str = "",
-    label: str = "",
-    fdtype: str = "float32",
-    page_num: int = 1,
-    page_stamp: str = "PAGE %s",) -> int:
-    f06_request_name = "OLOAD"
-    table_name = "OPG1"
-    # self.log.debug(f'Fg = {Fg}')
-    assert page_stamp is not None
-    page_stamp % page_num
-    page_num = save_static_table(
-        f06_file,
-        subcase,
-        itime,
-        ntimes,
-        node_gridtype,
-        Fg,
-        RealLoadVectorArray,
-        f06_request_name,
-        table_name,
-        op2.load_vectors,
-        ngrid,
-        ndof_per_grid,
-        title=title,
-        subtitle=subtitle,
-        label=label,
-        fdtype=fdtype,
-        page_num=page_num,
-        page_stamp=page_stamp,
-    )
-    return page_num
-
 
 def get_cb_rset_dofs(model: BDF,
                      subcase: Subcase,
@@ -3792,3 +3574,136 @@ def get_case_control(sol: int, subcase: Subcase):
         method_id = subcase['METHOD'][0] if 'METHOD' in subcase else 0
         suport_id = subcase['SUPORT'][0] if 'SUPORT' in subcase else 0
     return load_id, spc_id, mpc_id, suport_id, method_id
+
+
+def static_g_to_n(model: BDF,
+                  Kgg, Mgg, GMN,
+                  log: SimpleLogger, solver_dict):
+    if GMN is not None:
+        log.info('Applying GMN to K: n = g - m')
+        # Transform to n-set: Knn = GMN^T @ Kgg @ GMN, Mnn = GMN^T @ Mgg @ GMN
+        Knn = GMN.T @ Kgg @ GMN
+        write_mat(model, Knn, 'PRTKNN', solver_dict)
+
+        Mnn = GMN.T @ Mgg @ GMN if Mgg is not None else None
+        write_mat(model, Mnn, 'PRTMNN', solver_dict)
+
+        # AUTOSPC on N-set: detect singular DOFs after MPC reduction
+        n_ndof_temp = Knn.shape[0]
+        autospc_dofs_n = autospc_n_set(Knn, n_ndof_temp, log)
+        if len(autospc_dofs_n) > 0:
+            # Add these to the SPC set in the n-set coordinate system
+            # They will be picked up during the SPC partition below
+            autospc_n_dofs = autospc_dofs_n
+        else:
+            autospc_n_dofs = np.array([], dtype="int32")
+
+        #un, ipos, ineg = solve(
+        #    Knn, Fn, nset, log, idtype='int32')
+    else:
+        Knn = Kgg
+        Mnn = Mgg
+        autospc_n_dofs = np.array([], dtype="int32")
+    return Knn, Mnn, autospc_n_dofs
+
+def static_Pg_to_Pn(model: BDF,
+                    Pg, GMN,
+                    gset, mset,
+                    log: SimpleLogger, solver_dict):
+    if GMN is not None:
+        # Transform force to n-set
+        Pn = GMN.T @ Pg
+        write_mat(model, Pn, 'PRTPN', solver_dict)
+        # Transform enforced displacements to n-set
+        # n-set indices: remove m-set DOFs from the indexing
+        nset_indices = np.setdiff1d(gset, mset)
+    else:
+        Pn = Pg
+        nset_indices = gset
+    return Pn, nset_indices
+
+def static_Knn_to_Kff(
+    model: BDF,
+    Knn, Mnn, Pn,
+    xs,
+    nset,
+    log: SimpleLogger, solver_dict):
+    """
+    n = f + s
+    
+    {Fn} = {Ff*} = [Kff Kfs] {xf?}
+           {Fs?}   [Kfs Kss] {xs*}
+    
+    {Ff} = [Kff] {xf} + [Kfs] {xs*}
+    {Fs} = [Kfs] {xf} + [Kss] {xs*}
+    """
+    sset = np.isfinite(xs)
+    xs_abs = np.abs(xs)
+    if sset.sum():
+        fset = nset - sset
+        f_idx = np.ix_(fset)
+        s_idx = np.ix_(sset)
+        ff_idx = np.ix_(fset, fset)
+        fs_idx = np.ix_(fset, sset)
+
+        Kff = Knn.todense()[ff_idx].tocsc()
+        if Mff is not None:
+            Mff = Mnn.todense()[ff_idx].tocsc()
+        if np.nansum(xs_abs) == 0.0:
+            # {Ff} = [Kff] {xf} + [Kfs] {xs*}
+            # {Ff} = [Kff] {xf}
+            Ff = Fn[f_idx]
+        else:
+            # {Ff} = [Kff] {xf}
+            # [Kff] {xf} = {Ff} - [Kfs] {xs}
+            Ff0 = Fn[f_idx]
+            xs0 = xs[s_idx]
+            Ff = Ff0 - Kfs @ xs0
+        xf, ipos, ineg = solve(
+            Kff, Ff, fset, log, idtype='int32')
+    else:
+        Kff = Knn
+        Mff = Mnn
+        Pf = Pn
+        uf = un
+        fset = nset
+    return Kff, Mff, Pf, uf, fset
+
+def static_Kff_to_Kaa(
+    model: BDF,
+    Kaa, Mff, Pf,
+    xs,
+    nset,
+    log: SimpleLogger, solver_dict):
+    """
+    f = a + o
+
+    {Ff} = {Fa*} = [Kaa Kao] {xa?}
+           {Fo*}   [Koa Koo] {xo?}
+    
+    {Fa*} = [Kaa] {xa} + [Kao] {xo?}
+    {Fo*} = [Kao] {xa} + [Koo] {xo?}
+
+    {Fa} = [Kaa] {xa} + [Kao] xo?}
+    {xo} = [Koo]^-1 ({Fo} - [Kao] {xa})
+    
+    {Fa} = [Kaa] {xa} + [Kao] [Koo]^-1 ({Fo} - [Kao] {xa})
+    {Fa} = [Kaa] {xa}
+           + [Kao] [Koo]^-1 {Fo}
+           - [Kao] [Koo]^-1 [Kao] {xa}
+
+    {Fa} = [Kaa] {xa}
+           + [Kao]   [Koo]^-1 {Fo}
+           - [Koa]^T [Koo]^-1 [Kao] {xa}
+
+    {Fa} = ([Kaa] - [Koa]^T [Koo]^-1 [Kao] ) + {xa}
+           + [Kao] [Koo]^-1 {Fo}
+
+    {Fa} - [Kao] [Koo]^-1 {Fo}
+       = ([Kaa] - [Koa]^T [Koo]^-1 [Kao] ) + {xa}
+           
+    {Fa'}  = {Fa} - [Kao] [Koo]^-1 {Fo}
+    {Kaa'} = [Kaa] - [Koa]^T [Koo]^-1 [Kao]
+    {Fa'} = [Kaa'] + {xa}
+    """
+    pass
