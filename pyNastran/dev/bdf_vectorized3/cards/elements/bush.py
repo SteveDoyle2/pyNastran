@@ -626,8 +626,9 @@ class PBUSH(Property):
 
             ifile[icard] = ifilei
             property_id[icard] = pid
+            print(f'k_fieldsi = {k_fieldsi}')
             if k_fieldsi:
-                b_fields[icard, :len(k_fieldsi)] = k_fieldsi
+                k_fields[icard, :len(k_fieldsi)] = k_fieldsi
             if b_fieldsi:
                 b_fields[icard, :len(b_fieldsi)] = b_fieldsi
             if ge_fieldsi:

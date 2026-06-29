@@ -153,8 +153,9 @@ def assemble_cbush_matrices(
     cbush_kelems(model, cbush, transforms, kgg_elems, pbush.k_fields)
 
     for eid, ((ga, gb), k_elem) in kgg_elems.items():
-        print(f'eid\n{k_elem}')
+        #print(f'eid\n{k_elem}')
         _assemble_kelm(Kgg, k_elem, ga, gb, dof_map)
+    #print(f'kfields = {model.pbush.k_fields}')
     #print(f'Kgg:\n{Kgg.todense()}')
 
     if include_damping:
