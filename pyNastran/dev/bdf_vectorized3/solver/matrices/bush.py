@@ -130,8 +130,8 @@ def assemble_cbush_matrices(
         is_nids = (nodes > 0)
         is_nids_ravel = is_nids.ravel()
         nids_ravel = nodes.ravel()[is_nids_ravel]
-        print(f'nids_ravel = {nids_ravel}')
-        print(f'grid.node_id = {grid.node_id}')
+        #print(f'nids_ravel = {nids_ravel}')
+        #print(f'grid.node_id = {grid.node_id}')
         inid[is_nids_ravel] = grid.index(nids_ravel)
         inid = inid.reshape((neid, 2))
     else:

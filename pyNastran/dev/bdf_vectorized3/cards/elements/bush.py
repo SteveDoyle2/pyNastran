@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double, force_double_or_blank
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, string, blank,
@@ -509,14 +509,14 @@ class PBUSH(Property):
         pid : int
             property id
         k : list[float]
-            Nominal stiffness values in directions 1 through 6.
+            Stiffness values in directions 1 through 6.
             len(k) = 6
         b : list[float]
-            Nominal damping coefficients in direction 1 through 6 in units of
+            Damping coefficients in direction 1 through 6 in units of
             force per unit velocity
             len(b) = 6
         ge : list[float]
-            Nominal structural damping constant in directions 1 through 6.
+            Structural damping constant in directions 1 through 6.
             len(ge) = 6
         rcv : list[float]; default=None -> (None, None, None, None)
             [sa, st, ea, et] = rcv
@@ -528,6 +528,13 @@ class PBUSH(Property):
             a comment for the card
 
         """
+        if isinstance(k, float_types):
+            k = [k] * 6
+        if isinstance(b, float_types):
+            b = [b] * 6
+        if isinstance(ge, float_types):
+            ge = [ge] * 6
+        assert len(k) >= 0
         self.cards.append((pid, k, b, ge, rcv,
                            mass, alpha, tref, coincident_length, ifile, comment))
         self.n += 1
@@ -592,6 +599,7 @@ class PBUSH(Property):
             istart += 8
 
         alpha, tref, coincident_length = t_fields
+        assert len(k_fields) >= 0
         self.cards.append((pid, k_fields, b_fields, ge_fields, rcv_fields,
                            mass, alpha, tref, coincident_length, ifile, comment))
         self.n += 1
@@ -619,7 +627,7 @@ class PBUSH(Property):
             ifile[icard] = ifilei
             property_id[icard] = pid
             if k_fieldsi:
-                k_fields[icard, :len(k_fieldsi)] = k_fieldsi
+                b_fields[icard, :len(k_fieldsi)] = k_fieldsi
             if b_fieldsi:
                 b_fields[icard, :len(b_fieldsi)] = b_fieldsi
             if ge_fieldsi:
@@ -723,8 +731,9 @@ class PBUSH(Property):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
         #nid = self.model.grid.node_id
-        #pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
-                          #msg=f'no spring properties for {self.type}')
+        #pids = hstack_msg(
+          #[prop.property_id for prop in self.allowed_properties],
+          #msg=f'no spring properties for {self.type}')
         #pids.sort()
         #geom_check(self,
                    #missing,
