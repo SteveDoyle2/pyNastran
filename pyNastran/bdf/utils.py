@@ -136,11 +136,15 @@ def parse_femap_syntax_copy(filename_lines: PathLike | list[str],
                     values.append(int(sline[0]))
                 elif len(sline) == 3:
                     start, stop, step = [int(val) for val in sline]
+                    assert start < stop, (start, stop)
                     valuesi = range(start, stop+step, step)
                     values.extend(valuesi)
                 else:
                     raise NotImplementedError(f'line={line!r} pair={pair!r} sline={sline}')
-
+            else:
+                value = int(pair)
+                values.append(value)
+        print(f'{i}: len(values)={len(values)}')
     out = {key: np.unique(values) for key, values in row_values.items()}
     if combine_rows:
         values = [values for key, values in out.items()]

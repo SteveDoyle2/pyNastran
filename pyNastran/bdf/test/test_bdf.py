@@ -848,6 +848,7 @@ def _remove_cards(model: BDF, remove_cards: list[str]):
     #print('reject_lines', model.reject_lines)
     reject_lines2 = []
     log = model.log
+    _removed_cards = set([])
     for lines in model.reject_lines:
         assert isinstance(lines, list), type(lines)
         # log.info(f'lines = {lines}')
@@ -864,7 +865,9 @@ def _remove_cards(model: BDF, remove_cards: list[str]):
         # split by nastran rules
         card_name = line.split(',')[0].strip().split(' ')[0].strip('*').upper()
         if card_name in remove_cards:
-            log.info(f'removing {card_name!r}')
+            if card_name not in _removed_cards:
+                _removed_cards.add(card_name)
+                log.info(f'removing {card_name!r}')
         else:
             # log.info(f'dont remove {card_name!r}')
             reject_lines2.extend(lines)

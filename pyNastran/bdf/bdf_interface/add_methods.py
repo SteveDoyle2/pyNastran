@@ -462,24 +462,28 @@ class AddMethods:
         key = elem.eid
         model = self.model
         assert key > 0, 'eid=%s elem=%s' % (key, elem)
-        if key not in model.elements:
-            model.elements[key] = elem
-            model._type_to_id_map[elem.type].append(key)
-        elif elem == model.elements[key]:
-            tag = _get_add_tag(model, elem, model.elements[key])
-            model.log.warning(f'replacing equivalent element:\n{elem}{tag}')
-        elif allow_overwrites:
-            model.log.warning(f'replacing elements:\n{model.elements[key]}with:\n{elem}')
-            model.elements[key] = elem
+        add_object_to_dict_no_dupes(model, key, 'element', elem, model.elements,
+                                    model._duplicate['elements'], allow_overwrites)
 
-            # already handled
-            #model._type_to_id_map[elem.type].append(key)
-        else:
-            model.log.error(f'duplicate element {key}:\n{model.elements[key]}with:\n{elem}')
-            model._duplicate['elements'].append(elem)
-            if model._stop_on_duplicate_error:
-                model.pop_parse_errors()
-            #raise RuntimeError('eid=%s\nold_element=\n%snew_element=\n%s' % (elem.eid, model.elements[key], elem))
+        if 0:  # pragma: no cover
+            if key not in model.elements:
+                model.elements[key] = elem
+                model._type_to_id_map[elem.type].append(key)
+            elif elem == model.elements[key]:
+                tag = _get_add_tag(model, elem, model.elements[key])
+                model.log.warning(f'replacing equivalent element:\n{elem}{tag}')
+            elif allow_overwrites:
+                model.log.warning(f'replacing elements:\n{model.elements[key]}with:\n{elem}')
+                model.elements[key] = elem
+
+                # already handled
+                #model._type_to_id_map[elem.type].append(key)
+            else:
+                model.log.error(f'duplicate element {key}:\n{model.elements[key]}with:\n{elem}')
+                model._duplicate['elements'].append(elem)
+                if model._stop_on_duplicate_error:
+                    model.pop_parse_errors()
+                #raise RuntimeError('eid=%s\nold_element=\n%snew_element=\n%s' % (elem.eid, model.elements[key], elem))
 
     def add_ao_object(self, elem_flag: CBARAO,
                       allow_overwrites: bool=False) -> None:
