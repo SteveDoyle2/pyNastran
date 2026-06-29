@@ -536,15 +536,6 @@ class PSHELL(Property):
         Qbar = np.array(Qbar_list, dtype=S2.dtype)
         return Qbar
 
-    def get_Sbar_matrix(self, mid_ref, theta=0.):
-        """theta must be in radians"""
-        # this is the inverse of Sbar
-        S2, unused_S3 = get_mat_props_S(mid_ref)
-        T = get_2d_plate_transform(theta)
-        #Tinv = np.linalg.inv(T)
-        Sbar = np.linalg.multi_dot([T.T, S2, T])
-        return Sbar
-
     def get_ABD_matrices(self, theta_offset=0.) -> np.ndarray:
         """
         Gets the ABD matrix
@@ -1034,6 +1025,7 @@ class CompositeProperty(Property):
 
         assert len(total_thickness) == nproperties
         return total_thickness
+
 
 class PCOMP(CompositeProperty):
     """
@@ -1753,15 +1745,6 @@ class PCOMP(CompositeProperty):
         #Qbarv = np.linalg.inv(Sbarv)
         Qbarv = np.array(Qbar, dtype=S2.dtype)
         return Qbarv
-
-    def get_Sbar_matrix(self, mid_ref, theta=0.):
-        """theta must be in radians"""
-        # this is the inverse of Sbar
-        S2, unused_S3 = get_mat_props_S(mid_ref)
-        T = get_2d_plate_transform(theta)
-        #Tinv = np.linalg.inv(T)
-        Sbar = np.linalg.multi_dot([T.T, S2, T])
-        return Sbar
 
     def get_ABD_matrices(self, theta_offset: float=0.) -> np.ndarray:
         """
@@ -3077,112 +3060,3 @@ def get_2d_plate_transform(theta: np.ndarray) -> np.ndarray:
         #[-ct * st, ct * st, ct2 - st2],
     #])
     return T
-
-def get_mat_props_S(mid: np.ndarray):
-    """
-    Gets the material matrix [S] or [C] for plane strain
-
-    [e] = [S][o]
-    """
-    mtype = mid_ref.type
-    if mtype == 'MAT1':
-        e = mid_ref.e
-        g = mid_ref.g
-        nu = mid_ref.nu
-        # http://web.mit.edu/16.20/homepage/3_Constitutive/Constitutive_files/module_3_with_solutions.pdf
-        # [e11, e22, 2*e12] = ei @  [o11, o22, o12]
-        #[e] = [S][o]
-        #[o] = [C][e]
-        # eq 3.35 (2d)
-        # eq 3.50 (3d)
-        ei2 = np.array([
-            [  1 / e, -nu / e,    0.],
-            [-nu / e,   1 / e,    0.],
-            [     0.,      0., 1 / g],
-        ])
-        #G = E / (2*(1 + nu))
-        #1 / G = (2*(1 + nu)) / E
-        nu2 = 2 * (1 + nu)
-        ei3 = np.array([
-            [1, -nu, -nu, 0., 0., 0.],
-            [-nu, 1, -nu, 0., 0., 0.],
-            [-nu, -nu, 1, 0., 0., 0.],
-            [0., 0., 0., nu2, 0., 0.],
-            [0., 0., 0., 0., nu2, 0.],
-            [0., 0., 0., 0., 0., nu2],
-        ]) / e
-
-        #denom = e / (1 - nu ** 2)
-        #C2 = np.array([
-            #[1., -nu, 0.],
-            #[nu, 1., 0.],
-            #[0., 0., g / denom],
-        #]) * denom
-
-        #lambd = e * nu / (1 + nu) / (1 - 2 * nu)
-        #lambda_2u = lambd + 2 * g
-        #C3 = np.array([
-            #[lambda_2u, lambd, lambd, 0., 0., 0.],
-            #[lambd, lambda_2u, lambd, 0., 0., 0.],
-            #[lambd, lambd, lambda_2u, 0., 0., 0.],
-            #[0., 0., 0., g, 0., 0.],
-            #[0., 0., 0., 0., g, 0.],
-            #[0., 0., 0., 0., 0., g],
-        #])
-
-    elif mtype == 'MAT8':
-        # orthotropic
-        material = mid_ref
-        # http://web.mit.edu/16.20/homepage/3_Constitutive/Constitutive_files/module_3_with_solutions.pdf
-        # [e11, e22, 2*e12] = ei @  [o11, o22, o12]
-        # eq 3.35 (2d)
-        # eq 3.50 (3d)
-        #ei2 = np.array([
-            #[e, -nu / e, 0., ],
-            #[-nu / e, e, 0., ],
-            #[0., 0., 1/g],
-        #])
-        #G = E / (2*(1 + nu))
-        #1 / G = (2*(1 + nu)) / E
-
-        #  https://en.wikipedia.org/wiki/Orthotropic_material
-        e1, e2 = material.e11, material.e22 # , material.e33
-        e3 = 1.
-        nu12 = material.nu12
-        g12, g31, g23 = material.g12, material.g1z, material.g2z
-        if g12 == 0.:
-            g12 = 1.
-        if g31 == 0.:
-            g31 = 1.
-        if g23 == 0.:
-            g23 = 1.
-
-        # nu21 * E1 = nu12 * E2
-        nu13 = nu12 # assume; should fall out in calcs given e3=0
-        nu23 = nu12 # assume; should fall out in calcs given e3=0
-        nu21 = nu12 * e2 / e1
-        nu31 = nu13 * e3 / e1
-        nu32 = nu23 * e3 / e2
-        ei2 = np.array([
-            [    1/e1, -nu21/e2,    0.],
-            [-nu12/e1,     1/e2,    0.],
-            [      0.,       0., 1/g12],
-        ])
-        ei3 = np.array([
-            [    1/e1, -nu21/e2, -nu31/e3,    0.,    0.,    0.],
-            [-nu12/e1,     1/e2, -nu32/e3,    0.,    0.,    0.],
-            [-nu13/e1, -nu23/e2,     1/e3,    0.,    0.,    0.],
-            [      0.,       0.,       0., 1/g23,    0.,    0.],
-            [      0.,       0.,       0.,    0., 1/g31,    0.],
-            [      0.,       0.,       0.,    0.,    0., 1/g12],
-        ])
-        #denom = 1 - nu12 * nu21
-        #C2 = np.array([
-            #[e1, -nu21 * e1, 0.],
-            #[nu12 * e2, e2, 0.],
-            #[0., 0., g12 * denom],
-        #]) / denom
-
-    else:
-        raise NotImplementedError(mid_ref.get_stats())
-    return ei2, ei3

@@ -190,6 +190,9 @@ class WriteMesh(BDFAttributes):
         close : bool; default=True
             should the output file be closed
 
+        .. note:: If you want to drop the executive & case control
+                  decks, set model.punch = False
+
         """
         is_long_ids, size = self._get_long_ids(size)
 

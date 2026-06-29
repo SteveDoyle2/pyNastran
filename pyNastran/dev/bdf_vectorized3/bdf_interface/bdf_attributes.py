@@ -146,7 +146,8 @@ from pyNastran.dev.bdf_vectorized3.cards.aero import (
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
     AECOMP, AECOMPL, AELIST, AEFACT, FLFACT, FLUTTER,
     AEPARM, AELINK, AESTAT,
-    GUST, AESURF, AESURFS, CSSCHD, DIVERG, TRIM, TRIM2, UXVEC, AEFORCE)
+    GUST, AESURF, AESURFS, CSSCHD, DIVERG, TRIM, TRIM2,
+    UXVEC, AEFORCE, AEPRESS)
 from pyNastran.dev.bdf_vectorized3.cards.optimization import (
     DESVAR, DLINK, DVGRID,
     DRESP1, DRESP2, DCONSTR,
@@ -714,6 +715,8 @@ class BDFAttributes:
         self.trim2 = TRIM2(self)
         self.uxvec = UXVEC(self)
         self.aeforce = AEFORCE(self)
+        # self.aepress = AEPRESS(self)
+        # self.aedw = AEDW(self)
 
         # static aero
         self.aeros = None
@@ -1144,7 +1147,8 @@ class BDFAttributes:
     def aero_load_cards(self) -> list[VectorizedBaseCard]:
         loads = [
             self.gust, self.csschd, self.trim, self.trim2,
-            self.uxvec, self.aeforce, self.diverg,
+            self.uxvec, self.diverg,
+            self.aeforce, #self.aepress, # self.aedw,
         ]
         return loads
 
@@ -1226,8 +1230,9 @@ class BDFAttributes:
         ] + self.spc_cards + self.mpc_cards + self.element_cards + self.rigid_element_cards + \
         self.property_cards + self.material_cards + self.optimization_cards + \
         self.load_cards + self.dynamic_load_cards + \
-        self.plot_element_cards + self.thermal_element_cards + self.bolt_cards + \
-        self.thermal_boundary_condition_cards + self.setx_cards + self.set_cards + self.seset_cards + \
+        self.plot_element_cards + self.bolt_cards + \
+        self.thermal_element_cards + self.thermal_boundary_condition_cards + \
+        self.setx_cards + self.set_cards + self.seset_cards + \
         self.aero_objects + self.dynamic_cards + self.nonstructural_mass_cards + self.contact_cards
         #for i, card in enumerate(cards):
             #assert isinstance(card.type, str), card

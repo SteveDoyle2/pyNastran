@@ -36,7 +36,10 @@ def split_comment_to_femap_comment(comment: str,
         ['$ Femap Region 12345 : Wing NSM']
         ['$ Femap Property 100 : Wing Skin 20 Plies\n$\n$ Femap Layup 101 : 20 Ply\n']
         ['$$ Femap Material 202 : Steel:42\n']
-        ['$ Femap Property 8000007 : Aileron, Steel Pin dia=.375', '$ Femap PropShape 8000007 : 5,0,0.1875,0.,0.,0.,0.,0.', '$ Femap PropMethod 8000007 : 5,0,1,0.', '$ Femap PropOrient 8000007 : 5,0,0.,1.,2.,3.,4.,-1.,0.,0.']
+        ['$ Femap Property 8000007 : Aileron, Steel Pin dia=.375',
+         '$ Femap PropShape 8000007 : 5,0,0.1875,0.,0.,0.,0.,0.',
+         '$ Femap PropMethod 8000007 : 5,0,1,0.',
+         '$ Femap PropOrient 8000007 : 5,0,0.,1.,2.,3.,4.,-1.,0.,0.']
 
     Returns
     -------
@@ -133,11 +136,15 @@ def parse_femap_syntax_copy(filename_lines: PathLike | list[str],
                     values.append(int(sline[0]))
                 elif len(sline) == 3:
                     start, stop, step = [int(val) for val in sline]
+                    assert start < stop, (start, stop)
                     valuesi = range(start, stop+step, step)
                     values.extend(valuesi)
                 else:
                     raise NotImplementedError(f'line={line!r} pair={pair!r} sline={sline}')
-
+            else:
+                value = int(pair)
+                values.append(value)
+        print(f'{i}: len(values)={len(values)}')
     out = {key: np.unique(values) for key, values in row_values.items()}
     if combine_rows:
         values = [values for key, values in out.items()]

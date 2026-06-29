@@ -528,7 +528,7 @@ class BDFAttributes:
                 'nnodes', 'node_ids', 'point_ids', 'npoints',
                 'nelements', 'element_ids', 'nproperties', 'property_ids',
                 'nmaterials', 'material_ids', 'ncoords', 'coord_ids',
-                'ncaeros', 'caero_ids', 'wtmass', 'is_bdf_vectorized', 'nid_map']
+                'ncaeros', 'caero_ids', 'wtmass', 'nid_map']
 
     def object_attributes(self, mode: str='public',
                           keys_to_skip: Optional[list[str]]=None,

@@ -1293,8 +1293,8 @@ class AEFORCE(BaseCard):
 
     def __init__(self, mach: float, sym_xz: str, sym_xy: str,
                  uxid: int, mesh: str,
-                 force: int=0,
-                 dmik: int=0, perq: str='', comment: str=''):
+                 force: str='',
+                 dmik: str='', perq: str='', comment: str=''):
         """
         Creates an AEFORCE card.
 
@@ -1311,10 +1311,10 @@ class AEFORCE(BaseCard):
             AERO or STRUCT that declares whether the force vector
             is defined on the aerodynamic ks-set mesh or the structural
             g-set mesh.
-        force : int
+        force : str=''
             ID of a FORCE/MOMENT set that defines the vector.
             Required if mesh='STRUCT'.
-        dmik: int
+        dmik: str=''
             Name of a DMIK entry that defines the aerodynamic force
             vector.  Required if mesh='AERO'.
         """
@@ -1350,13 +1350,13 @@ class AEFORCE(BaseCard):
         sym_xy = string(card, 3, 'sym_xy')
         uxid = integer(card, 4, 'uxid')
         mesh = string(card, 5, 'mesh')
-        force = integer_or_blank(card, 6, 'force', default=0)
-        dmik = integer_or_blank(card, 7, 'dmik', default=0)
+        force = string_or_blank(card, 6, 'force', default='')
+        dmik = string_or_blank(card, 7, 'dmik', default='')
         assert len(card) <= 8, f'len(AEFORCE card) = {len(card):d}\ncard={card}'
         return AEFORCE(mach, sym_xz, sym_xy, uxid, mesh, force, dmik, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
-        msg = f', which is required by {self.type} for mach={mach}'
+        msg = f', which is required by {self.type} for mach={self.mach}'
         self.uxid_ref = model.UXVEC(self.uxid, msg=msg)
         if self.force:
             self.force_ref = model.Load(self.force, msg=msg)
@@ -1404,14 +1404,14 @@ class AEPRESS(BaseCard):
         sym_xz = 'ASYM'
         sym_xy = 'ASYM'
         uxid = 1
-        dmij = 2
-        dmiji = 0
+        dmij = 'CAT'
+        dmiji = ''
         return AEPRESS(mach, sym_xz, sym_xy, uxid, dmij, dmiji)
 
     def __init__(self, mach: float, sym_xz: str, sym_xy: str,
                  uxid: int,
-                 dmij: int=0,
-                 dmiji: int=0, comment: str=''):
+                 dmij: str='',
+                 dmiji: str='', comment: str=''):
         """
         Creates an AEPRESS card.
 
@@ -1424,10 +1424,10 @@ class AEPRESS(BaseCard):
         uxid : int
             The identification number of a UXVEC entry that defines the
             control parameter vector associated with this downwash vector.
-        dmij : int; default=0
+        dmij : str; default=''
             Name of a DMI or DMIJ entry that defines the pressure per
             unit dynamic pressure.
-        dmiji : int; default=0
+        dmiji : str; default=''
             The name of a DMIJI entry that defines the CAERO2
             interference element downwashes.
         """
@@ -1461,13 +1461,13 @@ class AEPRESS(BaseCard):
         sym_xz = string(card, 2, 'sym_xz')
         sym_xy = string(card, 3, 'sym_xy')
         uxid = integer(card, 4, 'uxid')
-        dmij = integer_or_blank(card, 5, 'dmij', default=0)
-        dmiji = integer_or_blank(card, 6, 'dmiji', default=0)
+        dmij = string_or_blank(card, 5, 'dmij', default='')
+        dmiji = string_or_blank(card, 6, 'dmiji', default='')
         assert len(card) <= 7, f'len(AEPRESS card) = {len(card):d}\ncard={card}'
         return AEPRESS(mach, sym_xz, sym_xy, uxid, dmij, dmiji, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
-        msg = f', which is required by {self.type} for mach={mach}'
+        msg = f', which is required by {self.type} for mach={self.mach}'
         self.uxid_ref = model.UXVEC(self.uxid, msg=msg)
         if self.dmij:
             self.dmij_ref = model.DMIJ(self.dmij, msg=msg)
@@ -1521,8 +1521,8 @@ class AEDW(BaseCard):
 
     def __init__(self, mach: float, sym_xz: str, sym_xy: str,
                  uxid: int,
-                 dmij: int=0,
-                 dmiji: int=0, comment: str=''):
+                 dmij: str='',
+                 dmiji: str='', comment: str=''):
         """
         Creates an AEDW card.
 
@@ -1535,10 +1535,10 @@ class AEDW(BaseCard):
         uxid : int
             The identification number of a UXVEC entry that defines the
             control parameter vector associated with this downwash vector.
-        dmij : int; default=0
+        dmij : str; default=''
             Name of a DMI or DMIJ entry that defines the pressure per
             unit dynamic pressure.
-        dmiji : int; default=0
+        dmiji : str; default=''
             The name of a DMIJI entry that defines the CAERO2
             interference element downwashes.
         """
@@ -1572,13 +1572,13 @@ class AEDW(BaseCard):
         sym_xz = string(card, 2, 'sym_xz')
         sym_xy = string(card, 3, 'sym_xy')
         uxid = integer(card, 4, 'uxid')
-        dmij = integer_or_blank(card, 5, 'dmij', default=0)
-        dmiji = integer_or_blank(card, 6, 'dmiji', default=0)
+        dmij = string_or_blank(card, 5, 'dmij', default='')
+        dmiji = string_or_blank(card, 6, 'dmiji', default='')
         assert len(card) <= 7, f'len(AEDW card) = {len(card):d}\ncard={card}'
         return AEDW(mach, sym_xz, sym_xy, uxid, dmij, dmiji, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
-        msg = f', which is required by {self.type} for mach={mach}'
+        msg = f', which is required by {self.type} for mach={self.mach}'
         self.uxid_ref = model.UXVEC(self.uxid, msg=msg)
         if self.dmij:
             self.dmij_ref = model.DMIJ(self.dmij, msg=msg)

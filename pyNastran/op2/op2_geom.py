@@ -279,7 +279,7 @@ class OP2GeomCommon(OP2, GeomCommon):
 class OP2Geom(BDF, OP2GeomCommon):
     """creates an interface for the OP2 and BDF classes"""
     _properties = [
-        'is_bdf_vectorized', 'nid_map', 'wtmass',
+        'nid_map', 'wtmass',
         'is_real', 'is_complex', 'is_random',
         '_sort_method', 'is_sort1', 'is_sort2',
         'matrix_tables', 'table_name_str', 'is_geometry',

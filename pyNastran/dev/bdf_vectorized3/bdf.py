@@ -2797,6 +2797,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'TRIM2': partial(self._prepare_card, self.trim2),
             'UXVEC': partial(self._prepare_card, self.uxvec),
             'AEFORCE': partial(self._prepare_card, self.aeforce),
+            # 'AEPRESS': partial(self._prepare_card, self.aepress),
             'DIVERG': partial(self._prepare_card, self.diverg),
             # diverg
 

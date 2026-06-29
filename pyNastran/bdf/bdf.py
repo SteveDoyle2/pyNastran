@@ -564,7 +564,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
-    _properties = ['is_bdf_vectorized', 'nid_map', 'wtmass', 'type_slot_str'] + [
+    _properties = ['nid_map', 'wtmass', 'type_slot_str'] + [
         'nastran_format', 'is_long_ids', 'sol', 'subcases',
         'nnodes', 'node_ids', 'point_ids', 'npoints',
         'nelements', 'element_ids', 'nproperties', 'property_ids',
@@ -1159,7 +1159,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'material_ids', 'caero_ids', 'is_long_ids',
             'nnodes', 'npoints', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros', 'nid_map',
-            'is_bdf_vectorized', 'type_slot_str',
+            'type_slot_str',
 
             'point_ids', 'subcases',
             '_card_parser', '_card_parser_prepare',
@@ -4217,15 +4217,9 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     #coord.e1 = xyz_cid0[i1, :] #: the origin in the local frame
                     #coord.e2 = xyz_cid0[i2, :] #: a point on the z-axis
                     #coord.e3 = xyz_cid0[i3, :] #: a point on the xz-plane
-                    if self.is_bdf_vectorized:
-                        i1, i2, i3 = np.searchsorted(nids, coord.node_ids)
-                        cp1 = nodes.cp[i1]
-                        cp2 = nodes.cp[i2]
-                        cp3 = nodes.cp[i3]
-                    else:
-                        cp1 = nodes[nid1].cp
-                        cp2 = nodes[nid2].cp
-                        cp3 = nodes[nid3].cp
+                    cp1 = nodes[nid1].cp
+                    cp2 = nodes[nid2].cp
+                    cp3 = nodes[nid3].cp
                     msg += f'  g1={nid1} xyz={coord.e1} cp={cp1}\n'
                     msg += f'  g2={nid2} xyz={coord.e2} cp={cp2}\n'
                     msg += f'  g3={nid3} xyz={coord.e3} cp={cp3}\n'
@@ -4303,11 +4297,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             nids, xyz_cp, xyz_cid0, xyz_cid0_correct,
             self.coords, do_checks)
         return nids_checked, cps_checked, cps_to_check
-
-    @property
-    def is_bdf_vectorized(self) -> bool:
-        """Returns False for the ``BDF`` class"""
-        return False
 
     def get_displacement_index(self) -> tuple[Any, Any, dict[int, Any]]:
         """

@@ -1289,8 +1289,8 @@ def hdf5_load_dresps(model: BDF, group, encoding: str):
                 if 'atti' in drespi_group:
                     atti = _cast_array(drespi_group['atti']).tolist()
 
-                model.add_dresp1(dresp_idi, labeli, response_typei, property_typei, regioni,
-                                 attai, attbi, atti, validate=False, comment='')
+                model.add_dresp1(dresp_idi, labeli, response_typei, property_typei,
+                                 attai, attbi, atti, region=regioni, validate=False, comment='')
 
         elif class_type == 'DRESP2':
             dresp_id = _cast_array(sub_group['dresp_id'])
@@ -1327,7 +1327,7 @@ def hdf5_load_dresps(model: BDF, group, encoding: str):
 
                 labeli = labeli.decode(encoding)
                 methodi = methodi.decode(encoding)
-                model.add_dresp2(dresp_idi, labeli, dequationi, regioni, paramsi,
+                model.add_dresp2(dresp_idi, labeli, dequationi, paramsi, region=regioni,
                                  method=methodi, c1=c1, c2=c2, c3=c3,
                                  validate=False, comment='')
         else:

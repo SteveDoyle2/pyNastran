@@ -746,7 +746,8 @@ class Element(VectorizedBaseCard):
         #print(f'prop is_in = {is_in.tolist()}')
         if not np.any(is_in):
             log.error(f'skipping {element.type} because it is empty after filtering; '
-                      f'property_ids={upids}')
+                      # f'property_ids={upids}'
+                      )
             return is_removed, element
 
         is_removed = False

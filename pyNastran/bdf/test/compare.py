@@ -62,7 +62,11 @@ def get_card_difference(fem1: BDF, fem2: BDF,
         if card_name in card_names:
             card_group = card_groupi
             break
-    assert card_group != '', card_name
+    # if card_group == '':
+    #     msg += f'{prefix}{card_name}:   ???\n'
+    #     return msg
+
+    assert card_group != '', f'card_name={card_name!r} card_group={card_group!r}'
 
     cards1 = getattr(fem1, card_group)
     cards2 = getattr(fem2, card_group)

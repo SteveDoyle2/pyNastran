@@ -2730,7 +2730,7 @@ class CAERO7(VectorizedBaseCard):
             #msg += 'p1=%s and must be a numpy array\n' % (self.p1)
             #is_failed = True
 
-        #element_id = self.element_id
+        element_id = self.element_id
 
         ibad = (self.x12 <= 0.)
         if np.any(ibad):
@@ -3448,7 +3448,13 @@ class PAERO3(PAERO):
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id):
             ifile = np.stack([self.ifile, ifile])
-            afd
+            property_id = self.hstack([self.property_id, property_id])
+            property_id = self.hstack([self.property_id, property_id])
+            nbox = self.hstack([self.nbox, nbox])
+            ncontrol_surface = self.hstack([self.ncontrol_surface, ncontrol_surface])
+            ncontrol_surface = self.hstack([self.ncontrol_surface, ncontrol_surface])
+            x = self.hstack([self.x, x])
+            y = self.hstack([self.y, y])
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.nbox = nbox
@@ -8564,3 +8570,6 @@ def get_mklist(mkaeros: list) -> np.ndarray:
     mk_array = np.array(mklist, dtype='float64')
     mk_array = np.unique(mk_array, axis=0)
     return mk_array
+
+AEPRESS = None
+AEDW = None

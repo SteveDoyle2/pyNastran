@@ -848,8 +848,10 @@ def _remove_cards(model: BDF, remove_cards: list[str]):
     #print('reject_lines', model.reject_lines)
     reject_lines2 = []
     log = model.log
+    _removed_cards = set([])
     for lines in model.reject_lines:
         assert isinstance(lines, list), type(lines)
+        # log.info(f'lines = {lines}')
         for line in lines:
             line = line.split('$')[0].strip()
             if len(line) == 0:
@@ -857,16 +859,18 @@ def _remove_cards(model: BDF, remove_cards: list[str]):
             break
         else:
             log.info(f'dont remove line0={lines[0]}')
+            assert '\x00' not in lines[0], lines
             reject_lines2.extend(lines)
             continue
         # split by nastran rules
         card_name = line.split(',')[0].strip().split(' ')[0].strip('*').upper()
         if card_name in remove_cards:
-            log.info(f'removing {card_name!r}')
+            if card_name not in _removed_cards:
+                _removed_cards.add(card_name)
+                log.info(f'removing {card_name!r}')
         else:
-            log.info(f'dont remove {card_name!r}')
+            # log.info(f'dont remove {card_name!r}')
             reject_lines2.extend(lines)
-        break
     model.reject_lines = reject_lines2
 
 
@@ -968,7 +972,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
         if '.pch' in bdf_filename:
             fem1.read_bdf(bdf_filename, xref=False, punch=True, encoding=encoding,
                           save_file_structure=save_file_structure)
-            _remove_cards(fem1, remove_cards)
+            #_remove_cards(fem1, remove_cards)
         else:
             fem1.read_bdf(bdf_filename, xref=False, punch=punch, encoding=encoding,
                           save_file_structure=save_file_structure)
@@ -2583,10 +2587,12 @@ def test_bdf_argparse(argv=None):
                                help='Skip the material coordinate system exporting (default=False)')
     parent_parser.add_argument('--skip_eid_checks', action='store_true',
                                help='Skip the element checks (default=False)')
-    parent_parser.add_argument('--skip_all', action='store_true',
-                               help='Skip all the above flags (loads, mass, aero, etc.; not skip_cards (default=False)')
-    parent_parser.add_argument('--no_similar_eid', action='store_true',
-                               help='No duplicate eids among elements, rigids, and masses (default=False)')
+    parent_parser.add_argument(
+        '--skip_all', action='store_true',
+        help='Skip all the above flags (loads, mass, aero, etc.; not skip_cards (default=False)')
+    parent_parser.add_argument(
+        '--no_similar_eid', action='store_true',
+        help='No duplicate eids among elements, rigids, and masses (default=False)')
     parent_parser.add_argument('--lax', action='store_true',
                                help='use the lax card parser (default=False)')
     parent_parser.add_argument(
@@ -2598,8 +2604,9 @@ def test_bdf_argparse(argv=None):
 
     parent_parser.add_argument('--duplicate', action='store_true',
                                help='overwrite duplicates; takes the later card (default=False)')
-    parent_parser.add_argument('--ifile', action='store_true',
-                               help='gives you better log messages when things are bad (default=False)')
+    parent_parser.add_argument(
+        '--ifile', action='store_true',
+        help='gives you better log messages when things are bad (default=False)')
     parent_parser.add_argument('--nocomments', action='store_true',
                                help='removes the comments (default=False)')
     parent_parser.add_argument('-q', '--quiet', action='store_true',
@@ -2787,7 +2794,8 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --nx          Assume NX Nastran\n'
         '  --optistruct  Assume OptiStruct\n'
         '  --mystran     Assume Mystran\n'
-        '  --skip_all    Skip all the above flags (loads, mass, aero, etc.; not skip_cards) (default=False)\n'
+        '  --skip_all    Skip all the above flags (loads, mass, aero, etc.; not skip_cards) '
+        '(default=False)\n'
         '  --skip_loads   Skip the loads summation calculations (default=False)\n'
         '  --skip_mass    Skip the mass properties calculations (default=False)\n'
         '  --skip_aero    Skip the processing of the caero mesh (default=False)\n'

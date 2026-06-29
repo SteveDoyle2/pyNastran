@@ -547,9 +547,9 @@ class TestMeshUtils(unittest.TestCase):
             label = f's{eid}'
             atti = [eid]
             model.add_dresp1(dresp_id, label, response_type, property_type,
-                            region, atta, attb,
-                            atti, validate=True,
-                            comment=comment)
+                             atta, attb, atti,
+                             region=region, validate=True,
+                             comment=comment)
             dresp_id += 1
             comment = ''
 
