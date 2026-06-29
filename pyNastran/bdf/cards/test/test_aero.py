@@ -473,7 +473,7 @@ class TestAero(unittest.TestCase):
         mesh = 'STRUCT'
         labels = ['A', 'B']
         uxs = [1., 2.,]
-        model.add_aeforce(mach, sym_xz, sym_xy, uxid, mesh, force=0, dmik='', comment='aeforce')
+        model.add_aeforce(mach, sym_xz, sym_xy, uxid, mesh, force='', dmik='', comment='aeforce')
         #model.add_uxvec(uxid, labels, uxs, comment='uxvec')
         model.add_set1(6003, [11, 12, 13])
         model.add_grid(11, [0., 0., 0.])
