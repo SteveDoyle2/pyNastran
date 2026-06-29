@@ -1510,39 +1510,55 @@ class AddMethods:
     def add_dresp_object(self, dresp: DRESP1 | DRESP2 | DRESP3) -> None:
         """adds a DRESP1/DRESP2/DRESP3 object"""
         key = dresp.dresp_id
-        assert key not in self.model.dresps, 'DRESPx=%s old=\n%snew=\n%s' % (
-            key, self.model.dresps[key], dresp)
+        # assert key not in self.model.dresps, 'DRESPx=%s old=\n%snew=\n%s' % (
+        #     key, self.model.dresps[key], dresp)
         assert key > 0
-        self.model.dresps[key] = dresp
-        self.model._type_to_id_map[dresp.type].append(key)
+        model: BDF = self.model
+        add_object_to_dict(
+            model, key, 'dresp', dresp, model.dresps,
+            allow_overwrites=False)
+        # self.model.dresps[key] = dresp
+        # self.model._type_to_id_map[dresp.type].append(key)
 
     def add_dvcrel_object(self, dvcrel: DVCREL1 | DVCREL2) -> None:
         """adds a DVCREL1/DVCREL2 object"""
         key = dvcrel.oid
-        assert key not in self.model.dvcrels, 'DVCRELx=%s old\n%snew=\n%s' % (
-            key, self.model.dvcrels[key], dvcrel)
+        # assert key not in self.model.dvcrels, 'DVCRELx=%s old\n%snew=\n%s' % (
+        #     key, self.model.dvcrels[key], dvcrel)
         assert key > 0
-        self.model.dvcrels[key] = dvcrel
-        self.model._type_to_id_map[dvcrel.type].append(key)
+        # self.model.dvcrels[key] = dvcrel
+        # self.model._type_to_id_map[dvcrel.type].append(key)
+        model = self.model
+        add_object_to_dict(
+            model, key, 'dvcrel', dvcrel, model.dvcrels,
+            allow_overwrites=False)
 
     def add_dvmrel_object(self, dvmrel: DVMREL1 | DVMREL2) -> None:
         """adds a DVMREL1/DVMREL2 object"""
         key = dvmrel.oid
-        assert key not in self.model.dvmrels, 'DVMRELx=%s old=\n%snew=\n%s' % (
-            key, self.model.dvmrels[key], dvmrel)
-        assert key not in self.model.dvmrels
+        # assert key not in self.model.dvmrels, 'DVMRELx=%s old=\n%snew=\n%s' % (
+        #     key, self.model.dvmrels[key], dvmrel)
+        # assert key not in self.model.dvmrels
         assert key > 0
-        self.model.dvmrels[key] = dvmrel
-        self.model._type_to_id_map[dvmrel.type].append(key)
+        # self.model.dvmrels[key] = dvmrel
+        # self.model._type_to_id_map[dvmrel.type].append(key)
+        model = self.model
+        add_object_to_dict(
+            model, key, 'dvmrel', dvmrel, model.dvmrels,
+            allow_overwrites=False)
 
     def add_dvprel_object(self, dvprel: DVPREL1 | DVPREL2) -> None:
         """adds a DVPREL1/DVPREL2 object"""
         key = dvprel.oid
-        assert key not in self.model.dvprels, 'DVPRELx=%s old\n%snew=\n%s' % (
-            key, self.model.dvprels[key], dvprel)
+        # assert key not in self.model.dvprels, 'DVPRELx=%s old\n%snew=\n%s' % (
+        #     key, self.model.dvprels[key], dvprel)
         assert key > 0
-        self.model.dvprels[key] = dvprel
-        self.model._type_to_id_map[dvprel.type].append(key)
+        # self.model.dvprels[key] = dvprel
+        # self.model._type_to_id_map[dvprel.type].append(key)
+        model =  self.model
+        add_object_to_dict(
+            model, key, 'dvprel', dvprel, model.dvprels,
+            allow_overwrites=False)
 
     def add_dvgrid_object(self, dvgrid: DVGRID) -> None:
         """adds a DVGRID object"""
@@ -1558,18 +1574,26 @@ class AddMethods:
     def add_dvtrel_object(self, dvtrel: DVTREL1) -> None:  # DVTREL2
         """adds a DVTREL1/DVTREL2 object"""
         key = dvtrel.dvtrel_id
-        assert key not in self.model.dvtrels, 'DVTRELx=%s old\n%snew=\n%s' % (
-            key, self.model.dvtrels[key], dvtrel)
+        # assert key not in self.model.dvtrels, 'DVTRELx=%s old\n%snew=\n%s' % (
+        #     key, self.model.dvtrels[key], dvtrel)
         assert key > 0
-        self.model.dvtrels[key] = dvtrel
-        self.model._type_to_id_map[dvtrel.type].append(key)
+        # self.model.dvtrels[key] = dvtrel
+        # self.model._type_to_id_map[dvtrel.type].append(key)
+        model = self.model
+        add_object_to_dict(
+            model, key, 'dvtrel', dvtrel, model.dvtrels,
+            allow_overwrites=False)
 
     def add_group_object(self, group: GROUP) -> None:
         """adds a GROUP object"""
         key = group.group_id
         assert key > 0
-        self.model.group[key] = group
-        self.model._type_to_id_map[group.type].append(key)
+        # self.model.group[key] = group
+        # self.model._type_to_id_map[group.type].append(key)
+        model = self.model
+        add_object_to_dict(
+            model, key, 'group', group, model.group,
+            allow_overwrites=False)
 
     def add_dmncon_object(self, dmncon: DMNCON) -> None:
         """adds a DMNCON object"""
@@ -1743,49 +1767,69 @@ class AddMethods:
     def add_table_object(self, table: TABLEH1 | TABLEHT | TABLES1 | TABLEST) -> None:
         """adds a TABLES1, TABLEST object"""
         key = table.tid
-        if key in self.model.tables:
-            if not table == self.model.tables[key]:
-                assert key not in self.model.tables, '\ntable=\n%s old_table=\n%s' % (
-                    table, self.model.tables[key])
+        # if key in self.model.tables:
+        #     if not table == self.model.tables[key]:
+        #         assert key not in self.model.tables, '\ntable=\n%s old_table=\n%s' % (
+        #             table, self.model.tables[key])
         assert key > 0
-        self.model.tables[key] = table
-        self.model._type_to_id_map[table.type].append(key)
+        # self.model.tables[key] = table
+        # self.model._type_to_id_map[table.type].append(key)
+        model = self.model
+        add_object_to_dict(
+            model, key, 'table', table, model.tables,
+            allow_overwrites=False)
 
     def add_tabled_object(self, table: TABLED1 | TABLED2 | TABLED3 | TABLED4) -> None:
         """adds a TABLED1, TABLED2, TABLED3, TABLED4 object"""
         key = table.tid
-        assert key not in self.model.tables_d, '\ntabled=\n%s old_tabled=\n%s' % (
-            table, self.model.tables_d[key])
+        # assert key not in self.model.tables_d, '\ntabled=\n%s old_tabled=\n%s' % (
+        #     table, self.model.tables_d[key])
         #assert key > 0; yes you can have negative tables...
-        self.model.tables_d[key] = table
-        self.model._type_to_id_map[table.type].append(key)
+        # self.model.tables_d[key] = table
+        # self.model._type_to_id_map[table.type].append(key)
+        model = self.model
+        add_object_to_dict(
+            model, key, 'table', table, model.tables_d,
+            allow_overwrites=False)
 
     def add_tablem_object(self, table: TABLEM1 | TABLEM2 | TABLEM3 | TABLEM4) -> None:
         """adds a TABLEM1, TABLEM2, TABLEM3, TABLEM4 object"""
         key = table.tid
-        assert key not in self.model.tables_m, '\ntablem=\n%s old_tablem=\n%s' % (
-            table, self.model.tables_m[key])
+        # assert key not in self.model.tables_m, '\ntablem=\n%s old_tablem=\n%s' % (
+        #     table, self.model.tables_m[key])
         #assert key > 0; yes you can have negative tables...
-        self.model.tables_m[key] = table
-        self.model._type_to_id_map[table.type].append(key)
+        # self.model.tables_m[key] = table
+        # self.model._type_to_id_map[table.type].append(key)
+        model = self.model
+        add_object_to_dict(
+            model, key, 'table', table, model.tables_m,
+            allow_overwrites=False)
 
     def add_table_sdamping_object(self, table: TABDMP1) -> None:
         """adds a TABDMP1 object"""
         key = table.tid
-        assert key not in self.model.tables_sdamping, '\nTable=\n%s oldTable=\n%s' % (
-            table, self.model.tables_sdamping[key])
+        # assert key not in self.model.tables_sdamping, '\nTable=\n%s oldTable=\n%s' % (
+        #     table, self.model.tables_sdamping[key])
         #assert key > 0; yes you can have negative tables...
-        self.model.tables_sdamping[key] = table
-        self.model._type_to_id_map[table.type].append(key)
+        # self.model.tables_sdamping[key] = table
+        # self.model._type_to_id_map[table.type].append(key)
+        model = self.model
+        add_object_to_dict(
+            model, key, 'table', table, model.tables_sdamping,
+            allow_overwrites=False)
 
     def add_random_table_object(self, table: TABRND1 | TABRNDG) -> None:
         """adds a TABRND1, TABRNDG object"""
         key = table.tid
-        assert key not in self.model.random_tables, '\nTable=\n%s old=\n%s' % (
-            table, self.model.random_tables[key])
+        # assert key not in self.model.random_tables, '\nTable=\n%s old=\n%s' % (
+        #     table, self.model.random_tables[key])
         assert key > 0
-        self.model.random_tables[key] = table
-        self.model._type_to_id_map[table.type].append(key)
+        # self.model.random_tables[key] = table
+        # self.model._type_to_id_map[table.type].append(key)
+        model = self.model
+        add_object_to_dict(
+            model, key, 'table', table, model.random_tables,
+            allow_overwrites=False)
 
     def add_method_object(self, method: EIGR | EIGRL | EIGB,
                           allow_overwrites: bool=False) -> None:
@@ -1955,7 +1999,7 @@ def add_object_to_dict(model: BDF, key: int,
         #     model.pop_parse_errors()
         raise RuntimeError(f'id={key!r}\n'
                            f'old_{obj_name}=\n{str(obj_dict[key])}'
-                           f'new_{obj_name}=\n{str(obj)}')
+                           f'new_{obj_name}=\n{str(obj)}{tag}')
 
 
 def add_object_to_dict_no_dupes(model: BDF, key: int, obj_name: str,

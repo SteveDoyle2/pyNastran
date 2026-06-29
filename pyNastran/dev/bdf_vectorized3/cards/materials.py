@@ -271,6 +271,7 @@ class MAT1(Material):
         self.Ss *= stress_scale
         self.St *= stress_scale
         self.Sc *= stress_scale
+        self.tref *= temperature_scale
 
     def __apply_slice__(self, mat: MAT1, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
@@ -401,7 +402,7 @@ class MAT1(Material):
         s66 = np.zeros((nmaterial, 6, 6), dtype='float64')
         E = self.E
         nu = self.nu
-        G = self.G
+        # G = self.G
         s11 = E * (1 - nu) / ((1 + nu) * (1 - 2 * nu))
         s12 = nu * s00
         s66[:, 0, 0] = s66[:, 1, 1] = s66[:, 2, 2] = s11
@@ -1714,6 +1715,7 @@ class MAT8(Material):
         #self.hf = hf
         #self.ht = ht
         #self.hfb = hfb
+        self.tref *= temperature_scale
 
     @property
     def a1(self) -> np.ndarray:
@@ -2396,7 +2398,7 @@ class MAT10(Material):
 
     def convert(self, pressure_scale: float=1.0,
                 velocity_scale: float=1.0,
-                temperature_scale: float=1.0,
+                # temperature_scale: float=1.0,
                 alpha_scale: float=1.0, **kwargs) -> None:
         self.bulk *= pressure_scale
         self.c *= velocity_scale
@@ -2422,6 +2424,8 @@ class MAT10(Material):
         ncards = len(material_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
+        if len(self.material_id) != 0:
+            raise NotImplementedError()
         self.material_id = material_id
         self.bulk = bulk
         self.rho = rho
@@ -3803,10 +3807,6 @@ class MATHE(Material):
         texp = np.zeros(ncards, dtype='float64')
         c10 = np.zeros(ncards, dtype='float64')
         c01 = np.zeros(ncards, dtype='float64')
-
-        c20 = np.zeros(ncards, dtype='float64')
-        c11 = np.zeros(ncards, dtype='float64')
-        c02 = np.zeros(ncards, dtype='float64')
 
         c20 = np.zeros(ncards, dtype='float64')
         c11 = np.zeros(ncards, dtype='float64')
