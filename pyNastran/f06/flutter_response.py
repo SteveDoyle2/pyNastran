@@ -1366,6 +1366,10 @@ class FlutterResponse:
                 raise RuntimeError(f'ix={ix} is out of bounds')
             ys = self.results[imode, :, iy].ravel()
             # print('freq, xs, ys')
+
+            if len(freq) == 0:
+                # print('no points after remove_eas_range')
+                continue
             jcolor, color2, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
                 eas, freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
@@ -1506,6 +1510,10 @@ class FlutterResponse:
                 eas = self.results[imode, :, self.ieas].ravel()
             y1s = self.results[imode, :, iy1].ravel()
             y2s = self.results[imode, :, iy2].ravel()
+
+            if len(freq) == 0:
+                # print('no points after remove_eas_range')
+                continue
             jcolor, color2, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
                 eas, freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
