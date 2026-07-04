@@ -90,7 +90,10 @@ class TestSuport(unittest.TestCase):
 
         # All eigenvalues should be positive (elastic modes only)
         # Rigid body modes (near zero) should be eliminated by SUPORT
-        assert len(eigenvalues) == 4, f"Expected 4 modes, got {len(eigenvalues)}"
+        nmode = len(eigenvalues)
+        assert eigenvalues.min() > 24031. # 24031.9155
+        assert len(eigenvalues) == 4, f"Expected 4 modes, got {nmode}"
+        #assert len(eigenvalues) == 24, f"Expected 24 modes, got {nmode}"
         assert np.all(eigenvalues > 1.0), (
             f"Expected positive eigenvalues (no rigid body modes), got: {eigenvalues}"
         )

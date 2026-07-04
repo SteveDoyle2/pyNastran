@@ -309,9 +309,9 @@ class Solver:
             Indices of dependent (m-set) DOFs in the g-set. None if no constraints.
         """
         mpc_id = 0
-        has_mpc = "MPC" in subcase
-        if has_mpc:
-            mpc_id, unused_options = subcase["MPC"]
+        if "MPC" in subcase:
+            mpc_id = subcase["MPC"][0]
+
         GMN_csc, mset = _build_Gmn(
             self.model, mpc_id,
             dof_map, ndof, xyz_cid0, fdtype=fdtype,
@@ -602,12 +602,12 @@ class Solver:
         finite_xg = np.any(np.isfinite(abs_xg))
         if finite_xg and np.nanmax(abs_xg) > 0.0:
             self.log.warning(f"SPCD found")
-            self.log.info(f"  xg = {xg}")
-            self.log.info(f"  Fg = {Fg}")
+            self.log.info(f"  xg = {xg}; n={ndof_g}")
+            self.log.info(f"  Fg = {Fg}; n={ndof_g}")
             set0 = xg == 0.0
             set0_ = np.where(set0)
 
-            self.log.info(f"  aset = {aset}")
+            self.log.info(f"  aset = {aset}; n={len(aset)}")
             if np.any(set0_):
                 self.log.info(f"  removing set0_ from sset")
                 self.log.info(f"    set0_ = {set0_}")
@@ -636,7 +636,7 @@ class Solver:
         self.set0 = set0
         self.aset = aset
 
-        log.warning('partitioning F: a = g - s - 0')
+        log.warning(f'partitioning F: a = g - s - 0; ndof_a={len(aset)}')
         Fa, Fs = partition_vector2(Fg, [["a", aset], ["s", sset]])
         del Fs
 
@@ -700,16 +700,16 @@ class Solver:
 
         if has_suport and inrel == -2 and is_aset:
             # Inertia relief: partition a = l + r, apply inertia relief
-            log.warning('SUPORT/INREL: l = a - r')
             a_indices = np.where(aset)[0]
-            r_in_a = rset_b[a_indices]
+            r_in_a = rset_bool[a_indices]
             lset_local = np.where(~r_in_a)[0]
             rset_local = np.where(r_in_a)[0]
-            nr = len(rset_local)
-            nl = len(lset_local)
+            ndof_r = len(rset_local)
+            ndof_l = len(lset_local)
+            log.warning(f'SUPORT/INREL: l = a - r; ; ndof_l={ndof_l}')
             log.info(
                 f"Inertia relief (PARAM,INREL,-2): "
-                f"r-set={nr} DOFs, l-set={nl} DOFs")
+                f"r-set={ndof_r} DOFs, l-set={ndof_l} DOFs")
 
             # Build D matrix for a-set grid coordinates
             # Map a-set DOF indices back to grid positions
@@ -742,14 +742,15 @@ class Solver:
 
             # Solve Kll @ ul = Fl
             Kll_sp = csc_matrix(Kll)
+            lset_ = np.ones(ndof_l, dtype='bool')
             xl_, ipositive_l, inegative_l = solve(
-                Kll_sp, Fl, np.ones(nl, dtype='bool'), log,
+                Kll_sp, Fl, lset_, log,
                 idtype=idtype)
             write_mat(model, xl_, 'PRTUL', self.solver_dict)
 
             # Expand l-set solution back to a-set
             xa[:] = 0.0
-            ul = np.zeros(nl, dtype=fdtype)
+            ul = np.zeros(ndof_l, dtype=fdtype)
             ul[ipositive_l] = xl_
             xa[lset_local] = ul
             # r-set displacements are zero (rigid body reference)
@@ -980,8 +981,8 @@ class Solver:
         ngrid, ndof_per_grid, ndof_g = get_ndof(self.model, subcase)
 
         gset_b = ps_to_sg_set(ndof_g, ps)
-        rset_b = get_rset_bool(model, dof_map, ndof_g, suport_id=suport_id)
-        has_suport = np.any(rset_b)
+        rset_bool = get_rset_bool(model, dof_map, ndof_g, suport_id=suport_id)
+        has_suport = np.any(rset_bool)
         #--------------------------------------------------
 
         # Build GMN for MPC reduction
@@ -1386,7 +1387,7 @@ class Solver:
 
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         dof_map, ps = _get_dof_map(model)
-        ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
+        ngrid, ndof_per_grid, ndof_g = get_ndof(model, subcase)
         xyz_cid0 = model.grid.xyz_cid0()
         # -----------------------------------------------------------------------
 
@@ -1406,11 +1407,15 @@ class Solver:
         Mbb = None
         Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
 
+        ndof_n = ndof_g  # TODO: assumed
+
         free_dofs = np.where(~sset_b)[0]
+        assert free_dofs.ndim == 1 and len(free_dofs) > 0, free_dofs
         assert len(sset_b) == len(Fg)
         Kff = Kgg.tocsc()[np.ix_(free_dofs, free_dofs)].toarray()
         Ff = Fb[free_dofs]
 
+        ndof_f = len(Ff)
         try:
             u_free = np.linalg.solve(Kff, Ff)
         except:
@@ -1423,19 +1428,23 @@ class Solver:
         out = _run_buckling(
             model, subcase,
             ndof_g, dof_map, u_global, Kff, free_dofs)
+        #"free_dofs": free_dofs,
 
         # "buckling_eigenvalues": eigenvalue,
         # "buckling_modes": xa_,
         # "free_dofs": free_dofs,
         KDgg = out['KDgg']
         phi_f = out['buckling_modes']
-        nmode = phi_f.shape[0]
-        phi_n = np.zeros((nmode, ndof), dtype=fdtype)
-        phi_n[:, free_dofs] = phi_f
-        phi_g = phi_n_to_g(phi_n, ndof_g, GMN=GMN, fdtype=fdtype)
-
         eigenvalue = out['buckling_eigenvalues']
         nmode = len(eigenvalue)
+
+        phi_n = np.zeros((nmode, ndof_n), dtype=fdtype)
+        #print(phi_n.shape, free_dofs.shape, phi_f.shape)
+
+        assert phi_f.shape == (ndof_f, nmode), (phi_f.shape, (ndof_f, nmode))
+        phi_n[:, free_dofs] = phi_f.T
+        phi_g = phi_n_to_g(phi_n, ndof_g, nmode, GMN=GMN, fdtype=fdtype)
+
         nnode_g = len(node_gridtype)
         phi_g, KDhh, Khh = apply_phi_normalization(
             KDgg, Kgg, eigenvalue, phi_g, nmode, nnode_g, norm_str)
@@ -1506,7 +1515,7 @@ class Solver:
         result = {}
         model.setup(run_geom_check=True)
         dof_map, ps = _get_dof_map(model)
-        ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
+        ngrid, ndof_per_grid, ndof_g = get_ndof(model, subcase)
         #-----------------------------------------------------------
 
         # Build global matrices
@@ -1703,7 +1712,7 @@ class Solver:
         sset_b = out.get('sset_bool')
         oset_b = out.get('oset_bool')
 
-        aset = out["aset"]
+        aset = out["aset_bool"]
         Kaa = out["Kaa"]
         Maa = out["Maa"]
         eigenvalue = out["modes_eigenvalue"]
@@ -1758,7 +1767,7 @@ class Solver:
 
 def _save_eigenvectors(model: BDF,
                        subcase: Subcase,
-                       phig: np.ndarray,
+                       phi_g: np.ndarray,
                        node_gridtype: np.ndarray,
                        modes: np.ndarray,
                        eigenvalue: np.ndarray,
@@ -1772,6 +1781,7 @@ def _save_eigenvectors(model: BDF,
                        idtype: str='int32') -> int:
     isubcase = subcase.id
     nmode = len(eigenvalue)
+    assert phi_g.shape[0] == nmode, (phi_g.shape, nmode)
     eigenvalue = eigenvalue.astype("float32")
     (
         write_phi_f06,
@@ -1785,8 +1795,9 @@ def _save_eigenvectors(model: BDF,
     if write_eigenvector:
         nnode = node_gridtype.shape[0]
         # print(xg_out.shape)
+        assert phi_g.shape == (nmode, nnode*6), (phi_g.shape)
         node_gridtypei, phi, nnodei = slice_modal_set(
-            node_gridtype, phig, nnode, nmode, phi_set)
+            node_gridtype, phi_g, nnode, nmode, phi_set)
 
         # phi:  (nmode, nnode*6)
         # data: (nmode, nnode, 6)
@@ -2169,7 +2180,7 @@ def partition_a_to_lr(
     na = len(a_indices)
 
     # Which of the a-set DOFs are in the r-set?
-    r_in_a = rset_b[a_indices]
+    r_in_a = rset_bool[a_indices]
     rset_local = np.where(r_in_a)[0]
     lset_local = np.where(~r_in_a)[0]
 
@@ -2752,18 +2763,18 @@ def _run_modes(
     # --- R-set partitioning (SUPORT reduction) ---
     # If SUPORT cards exist, partition a = l + r.
     # Solve eigenvalue problem on the l-set (flexible DOFs).
-    rset_b = get_rset_bool(model, dof_map, ndof_g, suport_id=suport_id)
-    has_rset = np.any(rset_b) and GMN is None
+    rset_bool = get_rset_bool(model, dof_map, ndof_g, suport_id=suport_id)
+    has_rset = np.any(rset_bool) and GMN is None
 
     if has_rset:
         # r-set within the a-set
         a_indices = np.where(aset)[0]
-        r_in_a = rset_b[a_indices]
+        r_in_a = rset_bool[a_indices]
         lset_local = np.where(~r_in_a)[0]
         rset_local = np.where(r_in_a)[0]
-        nr = len(rset_local)
-        nl = len(lset_local)
-        log.warning(f"SUPORT r-set: {nr} DOFs, l-set: {nl} DOFs")
+        ndof_r = len(rset_local)
+        ndof_l = len(lset_local)
+        log.warning(f"SUPORT (l=a-r); r-set: {ndof_r} DOFs, l-set: {ndof_l} DOFs")
 
         Kaa_dense = todense(Kaa)
         Kll = Kaa_dense[np.ix_(lset_local, lset_local)]
@@ -2771,29 +2782,31 @@ def _run_modes(
 
         # Remove zero rows/columns (AUTOSPC equivalent for l-set)
         Kll_sp = csc_matrix(Kll)
+        lset = np.ones(ndof_l, dtype='bool')
         Kll_, ipositive, unused_ineg, unused_sz = remove_rows(
-            Kll_sp, np.ones(nl, dtype='bool'))
+            Kll_sp, lset)
         Mll_ = Mll[ipositive, :][:, ipositive]
         ndof_ = Kll_.shape[0]
 
         if issparse(Mll_):
             Mll_ = Mll_.toarray()
-        eigenvalue, xl_ = solve_eigenvector(Kll_, Mll_, ndof_, neigenvalue)
+        eigenvalue, xl_ = solve_eigenvector(
+            Kll_, Mll_,
+            neigenvalues=neigenvalue)
         nmode = len(eigenvalue)
-        log.debug(f"eigenvalue = {eigenvalue}")
+        log.debug(f"eigenvalue = {eigenvalue}; n={nmode}")
 
         # Expand l-set eigenvectors back to a-set then g-set
         ndof_a = len(xa)
         phi_a = np.zeros((nmode, ndof_a), dtype=fdtype)
-        for imode in range(nmode):
-            phi_l = np.zeros(nl, dtype=fdtype)
-            phi_l[ipositive] = xl_[:, imode]
-            phi_a[imode, lset_local] = phi_l
-
-        phi_n = np.full((nmode, ndof_n), 0.0, dtype=fdtype)
-        phi_n[:, aset] = phi_a
-        phi_n[:, sset] = xs
-        out["rset_b"] = rset_b
+        #phi_a2 = np.zeros((nmode, ndof_a), dtype=fdtype)
+        #for imode in range(nmode):
+        #    phi_l = np.zeros(nl, dtype=fdtype)
+        #    phi_l[ipositive] = xl_[:, imode]
+        #    phi_a2[imode, lset_local] = phi_l
+        phi_a[:, lset_local] = xl_.T
+        #assert np.allclose(phi_a, phi_a2), (phi_a, phi_a2)
+        out["rset_bool"] = rset_bool
     else:
         # No SUPORT: solve on the full a-set (original path)
         Kaa_, ipositive, unused_inegative, unused_sz_set = remove_rows(
@@ -2803,27 +2816,33 @@ def _run_modes(
 
         if issparse(Maa_):
             Maa_ = Maa_.toarray()
-        eigenvalue, xa_ = solve_eigenvector(Kaa_, Maa_, ndof_, neigenvalue)
+        eigenvalue, xa_ = solve_eigenvector(
+            Kaa_, Maa_,
+            neigenvalues=neigenvalue)
         nmode = len(eigenvalue)
-        log.debug(f"eigenvalue = {eigenvalue}")
+        log.debug(f"eigenvalue = {eigenvalue}; n={nmode}")
 
         ndof_a = len(xa)
         phi_a = np.zeros((nmode, ndof_a), dtype=fdtype)
-        for imode in range(nmode):
-            phi_a[imode, ipositive] = xa_[:, imode]
+        #for imode in range(nmode):
+        #    phi_a[imode, ipositive] = xa_[:, imode]
+        phi_a[:, ipositive] = xa_.T
+        log.info(f'phi.shape={phi_a.shape}; nmode={nmode}')
 
-        phi_n = np.full((nmode, ndof_n), 0.0, dtype=fdtype)
-        phi_n[:, aset] = phi_a
-        phi_n[:, sset] = xs
+    phi_n = np.zeros((nmode, ndof_n), dtype=fdtype)
+    phi_n[:, aset] = phi_a
+    phi_n[:, sset] = xs
 
-    phi_g = phi_n_to_g(phi_n, ndof_g, GMN=GMN, fdtype=fdtype)
+    phi_g = phi_n_to_g(phi_n, ndof_g, nmode, GMN=GMN, fdtype=fdtype)
 
     # phi_t = phi_g
     nnode_g = len(node_gridtype)
     phi_g, Mhh, Khh = apply_phi_normalization(
         Mgg, Kgg, eigenvalue, phi_g, nmode, nnode_g, norm_str)
-    log.info(f"Mhh_diag: {np.diag(Mhh)}")
-    log.info(f"Khh_diag: {np.diag(Khh)}")
+    generalized_mass = np.diag(Mhh)
+    generalized_stiffness = np.diag(Khh)
+    log.info(f"Mhh_diag: {generalized_mass[:20]}; n={nmode}")
+    log.info(f"Khh_diag: {generalized_stiffness[:20]}; n={nmode}")
 
     assert np.all(np.isfinite(phi_a))
     assert np.all(np.isfinite(phi_g))
@@ -2836,12 +2855,13 @@ def _run_modes(
 
 
 def phi_n_to_g(phi_n: np.ndarray, ndof_g: int,
+               nmode: int,
                GMN=None, fdtype: str='float64') -> np.ndarray:
     if GMN is None:
         return phi_n
 
     # ----------------------MPC recovery (n -> g) for modes----------------------
-    nmode = phi_n.shape[1]
+    assert nmode == phi_n.shape[1], (nmode, phi_n.shape)
 
     # phig is currently in n-set (ndof_work = ndof_n), expand to g-set
     GMN_dense = GMN.toarray()
@@ -2853,7 +2873,7 @@ def phi_n_to_g(phi_n: np.ndarray, ndof_g: int,
 
 def _run_buckling(model: BDF,
                   subcase: Subcase,
-                  ndof: int,
+                  ndof_g: int,
                   dof_map: DOF_MAP,
                   u_global: np.ndarray,
                   Kff,
@@ -2871,6 +2891,7 @@ def _run_buckling(model: BDF,
     KDgg = build_KDgg(model, ndof_g, dof_map, u_global)
     KDgg = KDgg.tocsc()
     KDff = KDgg[np.ix_(free_dofs, free_dofs)].toarray()
+    ndof_f = KDff.shape[0]
 
     log.debug("  geometric stiffness assembled")
 
@@ -2888,24 +2909,25 @@ def _run_buckling(model: BDF,
         eigenvalues_all = eigenvalues_all.real
         eigvecs_all = eigvecs_all.real
 
-    if 0:
-        # Keep only positive eigenvalues
-        # (physical buckling modes) sorted ascending
-        pos_mask = eigenvalues_all > 0
-        eigenvalues_pos = eigenvalues_all[pos_mask]
-        eigvecs_pos = eigvecs_all[:, pos_mask]
-    else:
-        # user must limit the eigenvalues
-        eigenvalues_pos = eigenvalues_all
-        eigvecs_pos = eigvecs_all
+    #if 0:
+    #    # Keep only positive eigenvalues
+    #    # (physical buckling modes) sorted ascending
+    #    pos_mask = eigenvalues_all > 0
+    #    eigenvalues_pos = eigenvalues_all[pos_mask]
+    #    eigvecs_pos = eigvecs_all[:, pos_mask]
+    #else:
+    # user must limit the eigenvalues
+    eigenvalues_pos = eigenvalues_all
+    eigvecs_pos = eigvecs_all
 
     sort_idx = np.argsort(eigenvalues_pos)
     eigenvalue = eigenvalues_pos[sort_idx[:neigenvalue]]
     xa_ = eigvecs_pos[:, sort_idx[:neigenvalue]]
+
     nmode = len(eigenvalue)
+    assert xa_.shape == (ndof_f, nmode), (xa_.shape, (ndof_f, nmode))
 
     # Buckling eigenvalues (critical load factors)
-    nmode = len(eigenvalue)
     log.info(f"  buckling eigenvalues (critical load factors): {eigenvalue[:min(5,nmode)]}")
 
     # Store results
@@ -2913,9 +2935,9 @@ def _run_buckling(model: BDF,
 
     out = {
         'KDgg': KDgg,
+        'eigenvaue_index': sort_idx,
         "buckling_eigenvalues": eigenvalue,
         "buckling_modes": xa_,
-        "free_dofs": free_dofs,
     }
     return out
 
@@ -3094,12 +3116,16 @@ def solve_eigenvector(
     Kaa2 = Kaa[is_modes, :][:, is_modes]
     Maa2 = Maa[is_modes, :][:, is_modes]
 
+    ndof = Kaa.shape[0]
     ndof2 = Maa2.shape[0]
     backend = get_solver()
+    print(f'eig backend = {backend}')
     if ndof2 <= neigenvalues:
+        print(f'  ndof={ndof2}; neig={neigenvalues}')
         Kaa2_dense = Kaa2.todense()
         eigenvalues, xa = scipy.linalg.eigh(Kaa2_dense, Maa2)
     elif use_lobpcg:
+        print(f'  use_lobpcg; neig={neigenvalues}')
         X0_reduced = None
         if X0 is not None:
             X0_reduced = X0[is_modes, :]
@@ -3108,6 +3134,7 @@ def solve_eigenvector(
         xa[no_modes, :] = 0
         xa[is_modes, :] = xa_
     else:
+        print(f'  eigsh; neig={neigenvalues}')
         try:
             eigenvalues, xa_ = backend.eigsh(
                 Kaa2, k=neigenvalues, M=Maa2, which="SM", return_eigenvectors=True
