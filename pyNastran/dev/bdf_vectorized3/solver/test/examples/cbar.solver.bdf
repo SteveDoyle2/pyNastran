@@ -20,22 +20,16 @@ SUBCASE 1
 BEGIN BULK
 $NODES
 GRID           1              0.      0.      0.
-GRID           2              1.      0.      0.
+GRID           2              .5      0.      0.
+GRID           3              1.      0.      0.
 CBAR           1       2       1       2      0.      1.      0.
+CBAR           2       2       2       3      0.      1.      0.
 PBAR           2       3      1.      1.      1.      1.
 +
                               1.
 $MATERIALS
-MAT1           3    3.+7              .3      1.
+MAT1           3    3.+7              .3
 $LOADS
-PLOAD1         2       1      FZ     1.0      0.      1.      1.      1.
-PLOAD1         2       1      FY     1.0      0.      1.      1.      1.
-PLOAD1         2       1      FX     1.0      0.      1.      1.      1.
-PLOAD1         2       1      FZ     1.0      0.      2.      1.      1.
-PLOAD1         2       1      FY     1.0      0.      2.      1.      1.
-PLOAD1         2       1      FX     1.0      0.      2.      1.      1.
-PLOAD1         2       1      FZ     1.0      0.      .4      1.      .4
-PLOAD1         2       1      FY     1.0      0.      .4      1.      .4
-PLOAD1         2       1      FX     1.0      0.      .4      1.      .4
+FORCE          2       3              1.      1.      0.      0.
 $SPCs
 SPC1           3  123456       1

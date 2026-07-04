@@ -24,6 +24,7 @@ displacement convergence:
 import os
 import copy
 from datetime import date
+from dataclasses import dataclass
 from typing import TextIO, Any
 
 import numpy as np
@@ -113,6 +114,29 @@ from .dynamic_file_writer import DynamicFileWriter
 
 Array = np.ndarray | scipy.sparse.csc_matrix
 
+STATIC_SOLS = (101, 105)  # 105-buckling requires statics
+MODAL_SOLS = (31, 103,  # craig-bampton, modes
+              107,  # ???
+              108,  # direct frequency
+              109,  # ???
+              111,  # modal frequency
+              112,  # ???,
+              )  # TODO: verify 107, 109, 112
+
+
+@dataclass
+class SolverData:
+    """storage struct for common variables"""
+    Kgg: Any
+    Mgg: Any
+    node_gridtype: np.ndarray
+    dof_map: DOF_MAP
+    xyz_cid0: np.ndarray
+    ngrid: int
+    ndof_g: int
+    ndof_per_grid: int
+    GMN0: tuple[np.ndarray | None, np.ndarray | None]  # GMN, mset
+
 
 class Solver:
     """defines the Nastran knockoff class"""
@@ -163,8 +187,12 @@ class Solver:
     def run(self):
         page_num = 1
         model = self.model
-        model.write_bdf(self._bdf_filename)
+        op2 = self.op2
+        log = self.log
         sol = model.sol
+        idtype = 'int32'
+        fdtype = 'float64'
+
         solmap = {
             31: self.run_sol_31_craig_bampton,
             101: self.run_sol_101_statics,
@@ -173,8 +201,6 @@ class Solver:
             108: self.run_sol_108_direct_frequency,
             111: self.run_sol_111_modal_frequency,
         }
-        model.cross_reference()
-        self._update_card_count()
 
         # title = ''
         title = f"pyNastran {pyNastran.__version__}"
@@ -183,18 +209,44 @@ class Solver:
                 title = subcase.get_parameter("TITLE")[0]
                 assert isinstance(title, str), title
                 break
+        #----------------------------------------------------------
+
+        model.write_bdf(self._bdf_filename)
+        model.cross_reference()
+        self._update_card_count()
+
+        Ug_preloads = {}
+        check_subcases(model)
+        preloads_to_save, preloads_to_apply = find_preload(model)
 
         today = None
-        page_stamp = self.op2.make_stamp(title, today)  # + '\n'
+        page_stamp = op2.make_stamp(title, today)  # + '\n'
+        
+        #----------------------------------------------------------
+        is_structural = True  # TODO: support HEAT
+
+        #----------------------------------------------------------
         with open(self.f06_filename, "w") as f06_file:
-            f06_file.write(self.op2.make_f06_header())
-            self.op2._write_summary(f06_file, card_count=model.card_count)
+            f06_file.write(op2.make_f06_header())
+            op2._write_summary(f06_file, card_count=model.card_count)
             f06_file.write("\n")
+
+            solver_data, page_num = setup_solver_data(
+                is_structural,
+                model, op2, f06_file,
+                idtype, fdtype,
+                solver_dict=self.solver_dict,
+                Kgg_override=self.Kgg_override,
+                Mgg_override=self.Mgg_override,
+                title=title, page_stamp=page_stamp, page_num=page_num,
+            )
+            
+            # run the solutions
             if sol in [31, 101, 103, 105, 107, 108, 109, 111, 112]:
                 for subcase_id, subcase in sorted(model.subcases.items()):
                     if subcase_id == 0:
                         continue
-                    self.log.debug(f"subcase_id={subcase_id}")
+                    log.debug(f"subcase_id={subcase_id}")
                     # isubcase = subcase.id
                     subtitle = f"SUBCASE {subcase_id}"
                     label = ""
@@ -203,26 +255,38 @@ class Solver:
                     if "LABEL" in subcase:
                         label = subcase.get_parameter("LABEL")
 
+                    Ug_preload = None
+                    if subcase_id in preloads_to_apply:
+                        preload_value = preloads_to_apply
+                        Ug_preload = Ug_preloads[preload_value]
+
                     runner = solmap[sol]
                     # print(runner)
                     out, page_num, end_options = runner(
+                        solver_data,
                         subcase,
                         f06_file,
                         page_stamp,
+                        Ug_preload=Ug_preload,
                         title=title,
                         subtitle=subtitle,
                         label=label,
                         page_num=page_num,
-                        idtype="int32",
-                        fdtype="float64",
+                        idtype=idtype,
+                        fdtype=fdtype,
                     )
+                    if sol == 105: # buckling
+                        out['xg']  # verify this exists
+                        if subcase_id in preloads_to_save:
+                            value, options = subcase['STATSUB']
+                            assert 'PRELOAD' in options, options
+                            Ug_preloads[value] = out['xg']
                     del out
             else:  # pragma: no cover
                 raise NotImplementedError(sol)
             end_flag = True
             f06_file.write(make_end(end_flag, end_options))
         # Write OP2 once after all subcases (only if there's data)
-        op2 = self.op2
         has_results = (
             op2.displacements or op2.spc_forces or op2.load_vectors
             or op2.eigenvectors or op2.eigenvalues
@@ -273,7 +337,9 @@ class Solver:
         log.info("end of build_Fb")
         return Fb, Mbb, xyz_cid0
 
-    def build_GMN(self, subcase: Subcase,
+    def build_GMN(self,
+                  solver_data: SolverData,
+                  subcase: Subcase,
                   dof_map: DOF_MAP, ndof: int,
                   xyz_cid0: np.ndarray,
                   fdtype: str = "float64",
@@ -312,6 +378,9 @@ class Solver:
         if "MPC" in subcase:
             mpc_id = subcase["MPC"][0]
 
+        if mpc_id == 0:
+            return solver_data.GMN0  # (GMN_csc, mset)
+
         GMN_csc, mset = _build_Gmn(
             self.model, mpc_id,
             dof_map, ndof, xyz_cid0, fdtype=fdtype,
@@ -320,9 +389,11 @@ class Solver:
 
     def run_sol_101_statics(
         self,
+        solver_data: SolverData,
         subcase: Subcase,
         f06_file: TextIO,
         page_stamp: str,
+        Ug_preload=None,
         title: str = "",
         subtitle: str = "",
         label: str = "",
@@ -395,6 +466,7 @@ class Solver:
         b = l - c ???
         c = l - b ???
         """
+        assert Ug_preload is None, Ug_preload
         out = {}
         self.log.debug(f"run_sol_101")
         end_options = [
@@ -431,16 +503,11 @@ class Solver:
         ngrid, ndof_per_grid, ndof_g = get_ndof(model, subcase)
 
         gset_b = ps_to_sg_set(ndof_g, ps)
-        rset_b = get_rset_bool(model, dof_map, ndof_g, suport_id=suport_id)
-        has_suport = np.any(rset_b)
+        rset_bool = get_rset_bool(model, dof_map, ndof_g, suport_id=suport_id)
+        has_suport = np.any(rset_bool)
         #--------------------------------------------------
-        log.warning('creating Kgg')
-        Kgg = get_Kgg(
-            model, dof_map, ndof_g, ngrid, ndof_per_grid,
-            idtype=idtype, fdtype=fdtype,
-            Kgg_override=self.Kgg_override,
-            solver_dict=self.solver_dict)
 
+        Kgg = solver_data.Kgg
         Mbb = None
         is_mass_load = len(model.grav) > 0 or len(model.rforce) > 0
         is_param_grdpnt = 'GRDPNT' in model.params
@@ -464,7 +531,7 @@ class Solver:
 
         # ---------------------MPC reduction (g -> n)---------------------
         GMN, mset = self.build_GMN(
-            subcase, dof_map, ndof_g, xyz_cid0, fdtype=fdtype)
+            solver_data, subcase, dof_map, ndof_g, xyz_cid0, fdtype=fdtype)
         self.GMN = GMN
         self.mset = mset
         #out['GMN'] = GMN
@@ -933,9 +1000,11 @@ class Solver:
 
     def run_sol_103_modes(
         self,
+        solver_data: SolverData,
         subcase: Subcase,
         f06_file: TextIO,
         page_stamp: str,
+        Ug_preload=None,
         title: str = "",
         subtitle: str = "",
         label: str = "",
@@ -970,8 +1039,8 @@ class Solver:
         ]
         # write_f06 = True
 
-        node_gridtype = _get_node_gridtype(model, idtype=idtype)
-        xyz_cid0 = model.grid.xyz_cid0()
+        node_gridtype = solver_data.node_gridtype
+        xyz_cid0 = solver_data.xyz_cid0
         # -----------------------------------------------------------------------
         load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
             model.sol, subcase)
@@ -987,23 +1056,19 @@ class Solver:
 
         # Build GMN for MPC reduction
         GMN, mset = self.build_GMN(
-            subcase, dof_map, ndof_g, xyz_cid0, fdtype=fdtype)
+            solver_data, subcase, dof_map, ndof_g, xyz_cid0, fdtype=fdtype)
         self.GMN = GMN
         self.mset = mset
 
         matrices_to_save.add('Mgg')
         page_num, out = _run_modes(
-            model, subcase,
+            solver_data, model, subcase,
             op2, f06_file,
             ngrid,
             ndof_per_grid,
             ndof_g,
-            node_gridtype,
-            dof_map,
-            Kgg_override=self.Kgg_override,
             Mgg_override=self.Mgg_override,
-            GMN=GMN,
-            mset=mset,
+            GMN=GMN, mset=mset,
             idtype=idtype,
             fdtype=fdtype,
             page_stamp=page_stamp, page_num=page_num,
@@ -1121,9 +1186,11 @@ class Solver:
 
     def run_sol_111_modal_frequency(
         self,
+        solver_data: SolverData,
         subcase: Subcase,
         f06_file: TextIO,
         page_stamp: str,
+        Ug_preload=None,
         title: str = "",
         subtitle: str = "",
         label: str = "",
@@ -1152,8 +1219,10 @@ class Solver:
         # handles MAX/MASS normalization
         log.info('running modes')
         out, page_num, end_options = self.run_sol_103_modes(
+            solver_data,
             subcase,
             f06_file,
+            Ug_preload=None,
             page_stamp=page_stamp,
             title=title,
             subtitle=subtitle,
@@ -1357,9 +1426,11 @@ class Solver:
 
     def run_sol_105_buckling(
         self,
+        solver_data: SolverData,
         subcase: Subcase,
         f06_file: TextIO,
         page_stamp: str,
+        Ug_preload=None,
         title: str = "",
         subtitle: str = "",
         label: str = "",
@@ -1385,18 +1456,20 @@ class Solver:
 
         end_options = ["SEKR", "MODES"]
 
-        node_gridtype = _get_node_gridtype(model, idtype=idtype)
+        # -----------------------------------------------------------------------
         dof_map, ps = _get_dof_map(model)
         ngrid, ndof_per_grid, ndof_g = get_ndof(model, subcase)
-        xyz_cid0 = model.grid.xyz_cid0()
+
         # -----------------------------------------------------------------------
 
-        GMN = None
-        Kgg = get_Kgg(
-            model, dof_map, ndof_g, ngrid, ndof_per_grid,
-            idtype=idtype, fdtype=fdtype,
-            Kgg_override=self.Kgg_override,
-            solver_dict=self.solver_dict)
+        Kgg = solver_data.Kgg
+        dof_map = solver_data.dof_map
+        node_gridtype = solver_data.node_gridtype
+        ndof_g = solver_data.ndof_g
+        GMN, mset = solver_data.GMN0
+        xyz_cid0 = solver_data.xyz_cid0
+
+        # -----------------------------------------------------------------------
 
         # Static preload solve
         sset, sset_b, xg = _build_xg(model, dof_map, ndof_g, subcase)
@@ -1412,7 +1485,7 @@ class Solver:
         free_dofs = np.where(~sset_b)[0]
         assert free_dofs.ndim == 1 and len(free_dofs) > 0, free_dofs
         assert len(sset_b) == len(Fg)
-        Kff = Kgg.tocsc()[np.ix_(free_dofs, free_dofs)].toarray()
+        Kff = Kgg[np.ix_(free_dofs, free_dofs)].toarray()
         Ff = Fb[free_dofs]
 
         ndof_f = len(Ff)
@@ -1428,6 +1501,7 @@ class Solver:
         out = _run_buckling(
             model, subcase,
             ndof_g, dof_map, u_global, Kff, free_dofs)
+        out['xg'] = u_global
         #"free_dofs": free_dofs,
 
         # "buckling_eigenvalues": eigenvalue,
@@ -1486,9 +1560,11 @@ class Solver:
 
     def run_sol_31_craig_bampton(
         self,
+        solver_data: SolverData,
         subcase: Subcase,
         f06_file: TextIO,
         page_stamp: str,
+        Ug_preload=None,
         title: str = "",
         subtitle: str = "",
         label: str = "",
@@ -1519,30 +1595,30 @@ class Solver:
         #-----------------------------------------------------------
 
         # Build global matrices
-        Kgg = get_Kgg(
-            model, dof_map, ndof_g, ngrid, ndof_per_grid,
-            idtype=idtype, fdtype=fdtype,
-            Kgg_override=self.Kgg_override,
-            solver_dict=self.solver_dict)
+        Kgg = solver_data.Kgg
 
-        Mbb = build_Mbb(
-            model, subcase, dof_map, ndof_g, fdtype=fdtype,
-            solver_dict=self.solver_dict)
-        page_num = write_grid_point_weight(
-            model, Mbb, dof_map, ndof_g,
-            self.op2, f06_file,
-            title=title, subtitle=subtitle, label=label,
-            page_stamp=page_stamp, page_num=page_num)
-        Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid,
-                         inplace=False)
+        if solver_data.Mgg is not None:
+            Mgg = solver_data.Mgg
+        else:
+            Mbb = build_Mbb(
+                model, subcase, dof_map, ndof_g, fdtype=fdtype,
+                solver_dict=self.solver_dict)
+            page_num = write_grid_point_weight(
+                model, Mbb, dof_map, ndof_g,
+                self.op2, f06_file,
+                title=title, subtitle=subtitle, label=label,
+                page_stamp=page_stamp, page_num=page_num)
+            Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid,
+                             inplace=False)
+            Mgg = Mgg.tocsc()
 
         # Apply SPC constraints — reduce to free (f) set
         gset_b = ps_to_sg_set(ndof_g, ps)
         sset, sset_b, xg = _build_xg(model, dof_map, ndof_g, subcase)
         free_dofs = np.where(~sset_b)[0]
 
-        Kff = Kgg.tocsc()[np.ix_(free_dofs, free_dofs)]
-        Mff = Mgg.tocsc()[np.ix_(free_dofs, free_dofs)]
+        Kff = Kgg[np.ix_(free_dofs, free_dofs)]
+        Mff = Mgg[np.ix_(free_dofs, free_dofs)]
 
         # Build DOF map for the free set
         # Re-map dof_map indices to free-set indices
@@ -1613,9 +1689,11 @@ class Solver:
 
     def run_sol_108_direct_frequency(
         self,
+        solver_data: SolverData,
         subcase: Subcase,
         f06_file: TextIO,
         page_stamp: str,
+        Ug_preload=None,
         title: str = "",
         subtitle: str = "",
         label: str = "",
@@ -1671,10 +1749,10 @@ class Solver:
         # today = None
         # page_stamp = self.op2.make_stamp(title, today) # + '\n'
 
-        node_gridtype = _get_node_gridtype(model, idtype=idtype)
+        node_gridtype = solver_data.node_gridtype
         dof_map, ps = _get_dof_map(model)
         ngrid, ndof_per_grid, ndof_g = get_ndof(self.model, subcase)
-        xyz_cid0 = model.grid.xyz_cid0()
+        xyz_cid0 = solver_data.xyz_cid0
         # -----------------------------------------------------------------------
         load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
             model.sol, subcase)
@@ -1683,21 +1761,18 @@ class Solver:
         # -----------------------------------------------------------------------
 
         GMN, mset = self.build_GMN(
-            subcase, dof_map, ndof_g, xyz_cid0, fdtype=fdtype)
+            solver_data, subcase, dof_map, ndof_g, xyz_cid0, fdtype=fdtype)
         self.GMN = GMN
         self.mset = mset
         mset_b = mset
 
         page_num, out = _run_modes(
-            model, subcase,
+            solver_data, model, subcase,
             self.op2, f06_file,
             ngrid,
             ndof_per_grid,
             ndof_g,
-            node_gridtype,
-            dof_map,
-            GMN=GMN,
-            mset=mset,
+            GMN=GMN, mset=mset,
             idtype=idtype,
             fdtype=fdtype,
             page_stamp=page_stamp, page_num=page_num,
@@ -2129,15 +2204,15 @@ def get_rset_bool(model: BDF,
 
     Returns
     -------
-    rset_b : (ndof_g,) bool array
+    rset_bool : (ndof_g,) bool array
         True at DOF indices belonging to the r-set (SUPORT reference DOFs).
     """
-    rset_b = np.zeros(ndof_g, dtype='bool')
+    rset_bool = np.zeros(ndof_g, dtype='bool')
     rset_map = get_rset(model, suport_id=suport_id)
     for nid_dof in rset_map:
         if nid_dof in dof_map:
-            rset_b[dof_map[nid_dof]] = True
-    return rset_b
+            rset_bool[dof_map[nid_dof]] = True
+    return rset_bool
 
 
 def partition_a_to_lr(
@@ -2145,7 +2220,7 @@ def partition_a_to_lr(
     Maa: np.ndarray,
     Fa: np.ndarray | None,
     aset_b: np.ndarray,
-    rset_b: np.ndarray,
+    rset_bool: np.ndarray,
 ) -> dict[str, Any]:
     """Partition the a-set into l-set and r-set for SUPORT reduction.
 
@@ -2162,7 +2237,7 @@ def partition_a_to_lr(
         Applied force in the analysis set. None for modes.
     aset_b : (ndof_g,) bool
         Boolean mask for the a-set in global DOFs.
-    rset_b : (ndof_g,) bool
+    rset_bool : (ndof_g,) bool
         Boolean mask for the r-set in global DOFs.
 
     Returns
@@ -2683,6 +2758,7 @@ def get_ndof(model: BDF, subcase: Subcase) -> tuple[int, int, int]:
 
 
 def _run_modes(
+    solver_data: SolverData,
     model: BDF,
     subcase: Subcase,
     op2: OP2,
@@ -2690,9 +2766,6 @@ def _run_modes(
     ngrid: int,
     ndof_per_grid: int,
     ndof_g: int,
-    node_gridtype: np.ndarray,
-    dof_map: dict,
-    Kgg_override=None,
     Mgg_override=None,
     GMN=None,
     mset: np.ndarray | None = None,
@@ -2703,6 +2776,7 @@ def _run_modes(
     page_num: int=1,
     solver_dict=None,
     matrices_to_save: set[str] | None=None) -> tuple[int, dict[str, Any]]:
+    #--------------------------------------------------------------
     if matrices_to_save is None:
         matrices_to_save = set([])
     assert solver_dict is not None, solver_dict
@@ -2714,25 +2788,29 @@ def _run_modes(
 
     log = model.log
     out = {}
-    Kgg = get_Kgg(
-        model, dof_map, ndof_g, ngrid, ndof_per_grid,
-        idtype=idtype, fdtype=fdtype,
-        Kgg_override=Kgg_override,
-        solver_dict=solver_dict)
+    Kgg = solver_data.Kgg
+    node_gridtype = solver_data.node_gridtype
+    dof_map = solver_data.dof_map
+    #--------------------------------------------------------------
     out["Kgg"] = Kgg
 
-    Mbb = build_Mbb(model, subcase, dof_map, ndof_g, fdtype=fdtype,
-                    solver_dict=solver_dict)
-    page_num = write_grid_point_weight(
-        model, Mbb, dof_map, ndof_g,
-        op2, f06_file,
-        title=title, subtitle=subtitle, label=label,
-        page_stamp=page_stamp, page_num=page_num)
+    if solver_data.Mgg is None:
+        Mgg = solver_data.Mgg
+    else:
+        Mbb = build_Mbb(model, subcase, dof_map, ndof_g, fdtype=fdtype,
+                        solver_dict=solver_dict)
+        page_num = write_grid_point_weight(
+            model, Mbb, dof_map, ndof_g,
+            op2, f06_file,
+            title=title, subtitle=subtitle, label=label,
+            page_stamp=page_stamp, page_num=page_num)
+        Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid)
+        Mgg = Mgg.tocsc()
 
-    Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid)
-    if 'Mgg' in matrices_to_save:
-        out["Mgg"] = Mgg
-    del Mbb
+        #solver_data.Mgg = Mgg
+        if 'Mgg' in matrices_to_save:
+            out["Mgg"] = Mgg
+        del Mbb
 
     sset, sset_b, xg = _build_xg(model, dof_map, ndof_g, subcase)
     Kaa, Maa = modes_g_to_a(
@@ -3279,15 +3357,18 @@ def _build_Gmn(model: BDF, mpc_id: int,
      - RBE1, RBE2, RBE3
     """
     assert solver_dict is not None, solver_dict
+
+    # --- Rigid elements (RBE2, RBE3, RBAR, RBAR1, RBE1, RROD) ---
+    has_rigid = _has_rigid_elements(model)
+    if mpc_id == 0 and not has_rigid:
+        return None, None
+
     log = model.log
+    log.info('creating Gmn')
 
     # Collect all dependent DOFs from MPC cards and rigid elements
     dependents_list = []
 
-    # --- Rigid elements (RBE2, RBE3, RBAR, RBAR1, RBE1, RROD) ---
-    has_rigid = _has_rigid_elements(model)
-    if mpc_id != 0 or has_rigid:
-        log.info('creating Gmn')
 
     # --- MPC cards ---
     mpc = reduce_mpc_cards(model, mpc_id)
@@ -3313,7 +3394,8 @@ def _build_Gmn(model: BDF, mpc_id: int,
             dependents_list.append(idof_dep)
 
     if not dependents_list:
-        return None, None
+        raise RuntimeError('invalid rigids...no dependent DOFs?')
+        #return None, None
 
     mset = np.unique(np.array(dependents_list, dtype="int32"))
 
@@ -3922,3 +4004,93 @@ def modes_g_to_a(Kgg, Mgg,
     #assert len(xa) == len(aset), (len(xa), len(aset))
     return Kaa, Maa
 
+
+def check_subcases(model: BDF):
+    subcase_ids = []
+    for subcase_id, subcase in sorted(model.subcases.items()):
+        if subcase_id == 0:
+            continue
+        subcase_ids.append(subcase_id)
+    assert len(subcase_ids), subcase_ids
+
+
+def find_preload(model: BDF) -> tuple[set[int], dict[int, int]]:
+    """identify STATSUBs cases and that they're valid"""
+    preloads_to_save = set([])
+    preloads_to_apply = {}
+    for subcase_id, subcase in sorted(model.subcases.items()):
+        if subcase_id == 0:
+            continue
+        if 'STATSUB' not in subcase:
+            continue
+        value, options = subcase['STATSUB']
+        assert 'PRELOAD' in options, options
+        log.debug(f"subcase={subcase_id};  STATSUB({options})={value}")
+        assert value in subcase_ids, f'missing PRELOAD={value} for subcase={subcase_id}'
+        preloads_to_save.add(value)
+        preloads_to_apply[subcase_id] = value
+    return preloads_to_save, preloads_to_apply
+
+def setup_solver_data(is_structural: bool,
+                      model: BDF,
+                      op2: OP2,
+                      f06_file: TextIO,
+                      idtype: str,
+                      fdtype: str,
+                      solver_dict: dict,
+                      Kgg_override=None,
+                      Mgg_override=None,
+                      title='', label='',
+                      page_stamp='',
+                      page_num: int=1) -> tuple[SolverData, int]:
+    sol = model.sol
+    node_gridtype = _get_node_gridtype(model, idtype=idtype)
+    dof_map, ps = _get_dof_map(model)
+
+    subcase = model.subcases[0]
+    ngrid, ndof_per_grid, ndof_g = get_ndof(model, subcase)
+    xyz_cid0 = model.grid.xyz_cid0()
+
+    is_param_grdpnt = 'GRDPNT' in model.params
+    if is_structural:
+        Kgg = get_Kgg(
+            model, dof_map, ndof_g, ngrid, ndof_per_grid,
+            idtype=idtype, fdtype=fdtype,
+            Kgg_override=Kgg_override,
+            solver_dict=solver_dict)
+        Kgg = Kgg.tocsc()
+
+        mpc_id = 0
+        GMN_csc, mset = _build_Gmn(
+            model, mpc_id,
+            dof_map, ndof_g, xyz_cid0, fdtype=fdtype,
+            solver_dict=solver_dict)
+
+        Mgg = None
+        if is_param_grdpnt or sol in MODAL_SOLS:
+            Mbb = build_Mbb(
+                model, subcase, dof_map, ndof_g, fdtype=fdtype,
+                solver_dict=solver_dict)
+            page_num = write_grid_point_weight(
+                model, Mbb, dof_map, ndof_g,
+                op2, f06_file,
+                title=title, label=label,
+                page_stamp=page_stamp, page_num=page_num)
+            Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid,
+                             inplace=False)
+            Mgg = Mgg.tocsc()
+        elif sol in STATIC_SOLS:
+            pass
+        else:
+            raise RuntimeError(sol)
+
+        GMN0 = (GMN_csc, mset)
+        solver_data = SolverData(
+            Kgg, Mgg,
+            node_gridtype, dof_map,
+            xyz_cid0,
+            ngrid, ndof_g, ndof_per_grid,
+            GMN0=GMN0)
+    else:
+        raise NotImplementedError('heat')
+    return solver_data, page_num

@@ -87,9 +87,9 @@ def get_reduced_static_load(model: BDF,
 
     #new_reduced_loads = defaultdict(list)
     for loadi in model.load_cards:
-        log.debug(loadi)
         if loadi.type in SKIP_LOADS or loadi.n == 0:
             continue
+        log.debug(loadi)
         uloads = np.unique(loadi.load_id)
         for uload in uloads:
             if filter_load_card_ids and uload in reduced_loads:
