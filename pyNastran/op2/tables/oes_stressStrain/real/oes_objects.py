@@ -429,6 +429,7 @@ def set_static_case(cls, is_sort1, isubcase,
     obj.get_stats()
     return obj
 
+
 def set_modal_case(cls, is_sort1, isubcase, data_code,
                    func, args, modes, eigns, cycles):
 
@@ -450,6 +451,31 @@ def set_modal_case(cls, is_sort1, isubcase, data_code,
     obj.is_built = True
     obj.get_stats()
     return obj
+
+
+def set_buckling_case(cls, is_sort1, isubcase, data_code,
+                      func, args, modes, eigns, cycles):
+
+    data_code['data_names'] = ['modes', 'eigns', 'mode_cycles', 'freqs']
+    data_code['load_set'] = 1
+    #data_code['lsdvmns'] = [0] # TODO: ???
+    data_code['analysis_code'] = 5 # buckling - TODO: verify this
+    data_code['approach_code'] = set_approach_code(data_code['analysis_code'],
+                                                   data_code['device_code'])
+
+    _check_num_wide(data_code)
+    obj = func(cls, data_code, is_sort1, isubcase,
+               *args, modes)
+    obj.modes = modes
+    obj.eigns = eigns
+    obj.freqs = eigns
+
+    obj.mode_cycles = cycles
+    obj.cycles = cycles
+    obj.is_built = True
+    obj.get_stats()
+    return obj
+
 
 def set_transient_case(cls, is_sort1: bool, isubcase: int,
                        data_code, func, args, times: np.ndarray):

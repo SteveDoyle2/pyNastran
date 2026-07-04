@@ -95,7 +95,6 @@ from .utils_freq import get_frequencies, slice_freq_set
 
 #-----------------------------------------------
 from .matrices.build_stiffness import (
-    #_COOAccumulator,
     build_Kgg, Kbb_to_Kgg)
 from .matrices.build_stiffness_geometric import build_KDgg
 from .matrices.build_mass import build_Mbb
@@ -217,7 +216,7 @@ class Solver:
                         fdtype="float64",
                     )
                     del out
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(sol)
             end_flag = True
             f06_file.write(make_end(end_flag, end_options))
@@ -1031,59 +1030,13 @@ class Solver:
 
         _write_mass_participation_f06(f06_file, mpf, cycle, nmode)
         log.info(f"mass participation cumulative (Tx): {mpf['cumulative_ratio'][-1, 0]:.4f}")
+        page_num = _save_eigenvectors(
+            model, subcase,
+            phig, eigenvalues, mode_cycle, node_gridtype,
+            op2, f06_file, page_num, sol_type='modes',
+            page_stamp=page_stamp,
+            title=title, subtitle=subtitle, label=label,)
 
-        modes = np.arange(1, nmode + 1, dtype=idtype)
-        eigenvalue = eigenvalue.astype("float32")
-        (
-            write_phi_f06,
-            write_phi_op2,
-            write_phi_pch,
-            unused_options,
-            phi_set,
-        ) = get_f06_op2_pch_set(subcase, "DISPLACEMENT")
-        write_eigenvector = any((write_phi_f06, write_phi_op2))
-
-        if write_eigenvector:
-            nnode = node_gridtype.shape[0]
-            # print(xg_out.shape)
-            node_gridtypei, phi, nnodei = slice_modal_set(
-                node_gridtype, phig, nnode, nmode, phi_set)
-
-            # phi:  (nmode, nnode*6)
-            # data: (nmode, nnode, 6)
-            data = phi.reshape((nmode, nnodei, 6)).astype("float32")
-            table_name = "OUGV1"
-            eigenvector_obj = RealEigenvectorArray.add_modal_case(
-                table_name,
-                node_gridtypei,
-                data,
-                isubcase,
-                modes,
-                eigenvalue,
-                mode_cycle,
-                is_sort1=True,
-                is_random=False,
-                is_msc=True,
-                random_code=0,
-                title=title,
-                subtitle=subtitle,
-                label=label,
-            )
-            eigenvector_obj.nonlinear_factor = 1
-
-        if write_phi_op2:
-            op2.eigenvectors[isubcase] = eigenvector_obj
-
-        if write_phi_f06:
-            page_num = eigenvector_obj.write_f06(
-                f06_file,
-                header=None,
-                page_stamp=page_stamp,
-                page_num=page_num,
-                is_mag_phase=False,
-                is_sort1=True,
-            )
-            f06_file.write("\n")
         # fspc = Ksa @ xa + Kss @ xs
         # Fs[ipositive] = Fsi
 
@@ -1411,6 +1364,8 @@ class Solver:
         """
         model = self.model
         log = model.log
+        op2 = self.op2
+
         log.debug("run_sol_105 (buckling)")
         neigenvalue, norm_str = get_real_eigenvalue_method(
             model, subcase)
@@ -1420,7 +1375,10 @@ class Solver:
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         dof_map, ps = _get_dof_map(model)
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
+        xyz_cid0 = model.grid.xyz_cid0()
+        # -----------------------------------------------------------------------
 
+        GMN = None
         Kgg = get_Kgg(
             model, dof_map, ndof, ngrid, ndof_per_grid,
             idtype=idtype, fdtype=fdtype,
@@ -1429,73 +1387,53 @@ class Solver:
 
         # Static preload solve
         sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
-        Fb = self.build_Fb(xg, sset_b, dof_map, ndof, subcase,
-                           Mbb=None, xyz_cid0=xyz_cid0)
+
+        Fb, Mbb, xyz_cid0 = self.build_Fb(
+            xg, sset_b, dof_map, ndof, subcase,
+            Mbb=None, xyz_cid0=xyz_cid0)
+        Mbb = None
         Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
 
         free_dofs = np.where(~sset_b)[0]
+        assert len(sset_b) == len(Fg)
         Kff = Kgg.tocsc()[np.ix_(free_dofs, free_dofs)].toarray()
         Ff = Fb[free_dofs]
 
-        u_free = np.linalg.solve(Kff, Ff)
+        try:
+            u_free = np.linalg.solve(Kff, Ff)
+        except:
+            print(f'Kff:\n{Kff}')
+            raise
         u_global = np.zeros(ndof, dtype=fdtype)
         u_global[free_dofs] = u_free
 
         log.debug("  static preload solved")
+        out = _run_buckling(
+            model, subcase,
+            ndof, dof_map, u_global, Kff, free_dofs)
 
-        # Build geometric stiffness from preload stress state
-        #KDgg = get_KDgg(
-        #    model, dof_map, ndof,
-        #    ngrid, ndof_per_grid,
-        #    idtype=idtype, fdtype=fdtype,
-        #    KDgg_override=self.KDgg_override)
-        KDgg = build_KDgg(model, ndof, dof_map, u_global)
-        KDff = KDgg.tocsc()[np.ix_(free_dofs, free_dofs)].toarray()
+        # "buckling_eigenvalues": eigenvalue,
+        # "buckling_modes": xa_,
+        # "free_dofs": free_dofs,
+        phi_f = out['buckling_modes']
+        eigenvalues = out['buckling_eigenvalues']
+        
+        recover_results = get_recover_results(subcase, ['DISPLACEMENT'])
 
-        log.debug("  geometric stiffness assembled")
+        if recover_results:
+            nmode = phi_f.shape[0]
+            phi_n = np.zeros((nmode, ndof), dtype=fdtype)
+            phi_n[:, free_dofs] = phi_f
+            phi_g = phi_n_to_g(phi_n, ndof, GMN=GMN, fdtype=fdtype)
 
-        # Solve buckling eigenproblem: (K + lambda*KD)*x = 0
-        # => K*x = -lambda*KD*x
-        # Use scipy generalized eigenvalue: Kff @ x = lambda * (-KDff) @ x
-        neg_KDff = -KDff
+            page_num = _save_eigenvectors(
+                model, subcase,
+                phi_g, eigenvalues, eigenvalues, node_gridtype,
+                op2, f06_file, page_num, sol_type='buckling',
+                page_stamp=page_stamp,
+                title=title, subtitle=subtitle, label=label,)
 
-        # Use eigh for symmetric positive-definite B (standard buckling)
-        # If -KD isn't positive definite, fall back to general eig
-        try:
-            eigenvalues_all, eigvecs_all = eigh(Kff, neg_KDff)
-        except np.linalg.LinAlgError:
-            eigenvalues_all, eigvecs_all = eig(Kff, neg_KDff)
-            eigenvalues_all = eigenvalues_all.real
-            eigvecs_all = eigvecs_all.real
-
-        if 0:
-            # Keep only positive eigenvalues
-            # (physical buckling modes) sorted ascending
-            pos_mask = eigenvalues_all > 0
-            eigenvalues_pos = eigenvalues_all[pos_mask]
-            eigvecs_pos = eigvecs_all[:, pos_mask]
-        else:
-            # user must limit the eigenvalues
-            eigenvalues_pos = eigenvalues_all
-            eigvecs_pos = eigvecs_all
-        sort_idx = np.argsort(eigenvalues_pos)
-        eigenvalue = eigenvalues_pos[sort_idx[:neigenvalue]]
-        xa_ = eigvecs_pos[:, sort_idx[:neigenvalue]]
-        nmode = len(eigenvalue)
-
-        # Buckling eigenvalues (critical load factors)
-        nmode = len(eigenvalue)
-        log.info(f"  buckling eigenvalues (critical load factors): {eigenvalue[:min(5,nmode)]}")
-
-        # Store results
-        log.info(f"  buckling eigenvalues: {eigenvalue[:min(5, nmode)]}")
-
-        out = {
-            "buckling_eigenvalues": eigenvalue,
-            "buckling_modes": xa_,
-            "free_dofs": free_dofs,
-        }
-        self.buckling_eigenvalues = eigenvalue
+        self.buckling_eigenvalues = out['buckling_eigenvalues']
         return out, page_num, end_options
 
     def run_sol_31_craig_bampton(
@@ -1778,6 +1716,94 @@ class Solver:
         ]
         return out, page_num, end_options
 
+
+def _save_eigenvectors(model: BDF,
+                       subcase: Subcase,
+                       phig: np.ndarray,
+                       eigenvalue: np.ndarray,
+                       mode_cycle: np.ndarray,
+                       node_gridtype: np.ndarray,
+                       op2: OP2,
+                       f06_file: TextIO,
+                       page_num: int,
+                       sol_type: str,
+                       page_stamp: str,
+                       title: str, subtitle: str, label: str,
+                       idtype: str='int32') -> int:
+    isubcase = subcase.id
+    nmode = len(eigenvalue)
+    modes = np.arange(1, nmode + 1, dtype=idtype)
+    eigenvalue = eigenvalue.astype("float32")
+    (
+        write_phi_f06,
+        write_phi_op2,
+        write_phi_pch,
+        unused_options,
+        phi_set,
+    ) = get_f06_op2_pch_set(subcase, "DISPLACEMENT")
+    write_eigenvector = any((write_phi_f06, write_phi_op2))
+
+    if write_eigenvector:
+        nnode = node_gridtype.shape[0]
+        # print(xg_out.shape)
+        node_gridtypei, phi, nnodei = slice_modal_set(
+            node_gridtype, phig, nnode, nmode, phi_set)
+
+        # phi:  (nmode, nnode*6)
+        # data: (nmode, nnode, 6)
+        data = phi.reshape((nmode, nnodei, 6)).astype("float32")
+        table_name = "OUGV1"
+        if sol_type == 'modes':
+            eigenvector_obj = RealEigenvectorArray.add_modal_case(
+                table_name,
+                node_gridtypei,
+                data,
+                isubcase,
+                modes,
+                eigenvalue,
+                mode_cycle,
+                is_sort1=True,
+                is_random=False,
+                is_msc=True,
+                random_code=0,
+                title=title,
+                subtitle=subtitle,
+                label=label,
+            )
+        else:
+            assert sol_type == 'buckling', sol_type
+            eigenvector_obj = RealEigenvectorArray.add_buckling_case(
+                table_name,
+                node_gridtypei,
+                data,
+                isubcase,
+                modes,
+                eigenvalue,
+                mode_cycle,
+                is_sort1=True,
+                is_random=False,
+                is_msc=True,
+                random_code=0,
+                title=title,
+                subtitle=subtitle,
+                label=label,
+            )
+        eigenvector_obj.nonlinear_factor = 1
+
+    if write_phi_op2:
+        op2.eigenvectors[isubcase] = eigenvector_obj
+
+    if write_phi_f06:
+        page_num = eigenvector_obj.write_f06(
+            f06_file,
+            header=None,
+            page_stamp=page_stamp,
+            page_num=page_num,
+            is_mag_phase=False,
+            is_sort1=True,
+        )
+        f06_file.write("\n")
+    return page_num
 
 def remove_rows(Kgg: NDArrayNNfloat, aset: NDArrayNint, idtype: str = "int32") -> NDArrayNNfloat:
     """
@@ -2303,7 +2329,7 @@ def xb_to_xg(
     xb: NDArrayNfloat,
     ngrid: int, ndof_per_grid: int,
     inplace: bool = True) -> NDArrayNfloat:
-    assert isinstance(xb, np.ndarray)
+    assert isinstance(xb, np.ndarray), type(xb)
     str(ngrid)
 
     xg = xb
@@ -2773,15 +2799,15 @@ def _run_modes(
 
         # Expand l-set eigenvectors back to a-set then g-set
         ndof_a = len(xa)
-        phia = np.zeros((nmode, ndof_a), dtype=fdtype)
+        phi_a = np.zeros((nmode, ndof_a), dtype=fdtype)
         for imode in range(nmode):
-            phil = np.zeros(nl, dtype=fdtype)
-            phil[ipositive] = xl_[:, imode]
-            phia[imode, lset_local] = phil
+            phi_l = np.zeros(nl, dtype=fdtype)
+            phi_l[ipositive] = xl_[:, imode]
+            phi_a[imode, lset_local] = phi_l
 
-        phig = np.full((nmode, ndof_work), 0.0, dtype=fdtype)
-        phig[:, aset] = phia
-        phig[:, sset] = xs
+        phi_n = np.full((nmode, ndof_work), 0.0, dtype=fdtype)
+        phi_n[:, aset] = phi_a
+        phi_n[:, sset] = xs
         out["rset_b"] = rset_b
     else:
         # No SUPORT: solve on the full a-set (original path)
@@ -2797,28 +2823,20 @@ def _run_modes(
         log.debug(f"eigenvalue = {eigenvalue}")
 
         ndof_a = len(xa)
-        phia = np.zeros((nmode, ndof_a), dtype=fdtype)
+        phi_a = np.zeros((nmode, ndof_a), dtype=fdtype)
         for imode in range(nmode):
-            phia[imode, ipositive] = xa_[:, imode]
+            phi_a[imode, ipositive] = xa_[:, imode]
 
-        phig = np.full((nmode, ndof_work), 0.0, dtype=fdtype)
-        phig[:, aset] = phia
-        phig[:, sset] = xs
+        phi_n = np.full((nmode, ndof_work), 0.0, dtype=fdtype)
+        phi_n[:, aset] = phi_a
+        phi_n[:, sset] = xs
 
-    # ----------------------MPC recovery (n -> g) for modes----------------------
-    if GMN is not None:
-        # phig is currently in n-set (ndof_work = n_ndof), expand to g-set
-        GMN_dense = GMN.toarray()
-        phig_g = np.zeros((nmode, ndof), dtype=fdtype)
-        for imode in range(nmode):
-            phig_g[imode, :] = (GMN_dense @ phig[imode, :]).ravel()
-        phig = phig_g
-        del GMN_dense
+    phi_g = phi_n_to_g(phi_n, ndof, GMN=GMN, fdtype=fdtype)
 
-    # phit = phig
+    # phi_t = phi_g
     nnode_g = len(node_gridtype)
     phi, Mhh, Khh = apply_phi_normalization(
-        Mgg, Kgg, eigenvalue, phig, nmode, nnode_g, norm_str)
+        Mgg, Kgg, eigenvalue, phi_g, nmode, nnode_g, norm_str)
     log.info(f"Mhh_diag: {np.diag(Mhh)}")
     log.info(f"Khh_diag: {np.diag(Khh)}")
 
@@ -2830,6 +2848,89 @@ def _run_modes(
     out["modes_Mhh"] = Mhh
     out["modes_Khh"] = Khh
     return page_num, out
+
+
+def phi_n_to_g(phi_n: np.ndarray, ndof_g: int,
+               GMN=None, fdtype: str='float64') -> np.ndarray:
+    if GMN is None:
+        return phi_n
+
+    # ----------------------MPC recovery (n -> g) for modes----------------------
+    nmode = phi_n.shape[1]
+
+    # phig is currently in n-set (ndof_work = n_ndof), expand to g-set
+    GMN_dense = GMN.toarray()
+    phi_g = np.zeros((nmode, ndof_g), dtype=fdtype)
+    for imode in range(nmode):
+        phi_g[imode, :] = (GMN_dense @ phi_n[imode, :]).ravel()
+    return phi_g
+
+
+def _run_buckling(model: BDF,
+                  subcase: Subcase,
+                  ndof: int,
+                  dof_map: DOF_MAP,
+                  u_global: np.ndarray,
+                  Kff,
+                  free_dofs: np.ndarray) -> tuple[dict, int]:
+    log = model.log
+    neigenvalue, norm_str = get_real_eigenvalue_method(
+        model, subcase)
+
+    # Build geometric stiffness from preload stress state
+    #KDgg = get_KDgg(
+    #    model, dof_map, ndof,
+    #    ngrid, ndof_per_grid,
+    #    idtype=idtype, fdtype=fdtype,
+    #    KDgg_override=self.KDgg_override)
+    KDgg = build_KDgg(model, ndof, dof_map, u_global)
+    KDff = KDgg.tocsc()[np.ix_(free_dofs, free_dofs)].toarray()
+
+    log.debug("  geometric stiffness assembled")
+
+    # Solve buckling eigenproblem: (K + lambda*KD)*x = 0
+    # => K*x = -lambda*KD*x
+    # Use scipy generalized eigenvalue: Kff @ x = lambda * (-KDff) @ x
+    neg_KDff = -KDff
+
+    # Use eigh for symmetric positive-definite B (standard buckling)
+    # If -KD isn't positive definite, fall back to general eig
+    try:
+        eigenvalues_all, eigvecs_all = eigh(Kff, neg_KDff)
+    except np.linalg.LinAlgError:
+        eigenvalues_all, eigvecs_all = eig(Kff, neg_KDff)
+        eigenvalues_all = eigenvalues_all.real
+        eigvecs_all = eigvecs_all.real
+
+    if 0:
+        # Keep only positive eigenvalues
+        # (physical buckling modes) sorted ascending
+        pos_mask = eigenvalues_all > 0
+        eigenvalues_pos = eigenvalues_all[pos_mask]
+        eigvecs_pos = eigvecs_all[:, pos_mask]
+    else:
+        # user must limit the eigenvalues
+        eigenvalues_pos = eigenvalues_all
+        eigvecs_pos = eigvecs_all
+
+    sort_idx = np.argsort(eigenvalues_pos)
+    eigenvalue = eigenvalues_pos[sort_idx[:neigenvalue]]
+    xa_ = eigvecs_pos[:, sort_idx[:neigenvalue]]
+    nmode = len(eigenvalue)
+
+    # Buckling eigenvalues (critical load factors)
+    nmode = len(eigenvalue)
+    log.info(f"  buckling eigenvalues (critical load factors): {eigenvalue[:min(5,nmode)]}")
+
+    # Store results
+    log.info(f"  buckling eigenvalues: {eigenvalue[:min(5, nmode)]}")
+
+    out = {
+        "buckling_eigenvalues": eigenvalue,
+        "buckling_modes": xa_,
+        "free_dofs": free_dofs,
+    }
+    return out
 
 
 def _write_mass_participation_f06(f06_file: TextIO,
@@ -3574,6 +3675,18 @@ def get_case_control(sol: int, subcase: Subcase):
         method_id = subcase['METHOD'][0] if 'METHOD' in subcase else 0
         suport_id = subcase['SUPORT'][0] if 'SUPORT' in subcase else 0
     return load_id, spc_id, mpc_id, suport_id, method_id
+
+
+def get_recover_results(subcase: Subcase,
+                        results: list[str]) -> bool:
+    recover_results = False
+    for key in results:
+        if key in subcase:
+            value, options = subcase[key]
+            if value != 'NONE':
+                recover_results = True
+                return recover_results
+    return recover_results
 
 
 def static_g_to_n(model: BDF,

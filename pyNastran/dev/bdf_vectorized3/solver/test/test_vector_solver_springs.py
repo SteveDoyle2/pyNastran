@@ -38,6 +38,33 @@ def setup_static_case_control(model: BDF, extra_case_lines=None):
     model.sol = 101
     model.case_control_deck = cc
 
+def setup_buckling_case_control_1(model: BDF, extra_case_lines=None,
+                                  nmodes: int=10):
+    lines = [
+        'STRESS(PLOT,PRINT) = ALL',
+        'STRAIN(PLOT,PRINT) = ALL',
+        'FORCE(PLOT,PRINT) = ALL',
+        'DISP(PLOT,PRINT) = ALL',
+        'GPFORCE(PLOT,PRINT) = ALL',
+        'SPCFORCE(PLOT,PRINT) = ALL',
+        'MPCFORCE(PLOT,PRINT) = ALL',
+        'OLOAD(PLOT,PRINT) = ALL',
+        'ESE(PLOT,PRINT) = ALL',
+        'SUBCASE 1',
+        '  LOAD = 2',
+        '  SPC = 3',
+        #'SUBCASE 2',
+        #'  STATSUB(PRELOAD) = 1',
+        '  METHOD = 42',
+    ]
+    if extra_case_lines is not None:
+        lines += extra_case_lines
+    cc = CaseControlDeck(lines, log=model.log)
+    model.sol = 105
+    model.case_control_deck = cc
+    model.add_eigrl(42, nd=nmodes)
+
+
 def _diff(name, actual, expected):
     if actual.ndim == 1:
         msg = (
@@ -1536,6 +1563,33 @@ class TestStaticBar(unittest.TestCase):
 #        solver = Solver(model)
 #        solver.run()
 
+def _build_ctetra4() -> BDF:
+    model = BDF(debug=None, log=None, mode='msc')
+    model.add_grid(1, [0., 0., 0.])
+    model.add_grid(2, [1., 0., 0.])
+    model.add_grid(3, [1., 1., 0.])
+    model.add_grid(4, [0., 0., 1.])
+
+    mid = 3
+    pid = 4
+    model.add_ctetra(10, pid, [1, 2, 3, 4])
+    model.add_psolid(pid, mid)
+
+    spc_id = 3
+    load_id = 2
+    model.add_spc1(spc_id, '123', [1, 2, 3], comment='')
+    model.add_spc1(spc_id, '456', [1, 2, 3, 4], comment='')
+    model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
+
+    E = 1.0E7
+    G = None
+    nu = 0.3
+    model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0,
+                   St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+    model.add_param('GRDPNT', 0)
+    return model
+
+
 class TestStaticSolid(unittest.TestCase):
     def test_ctetra_10(self):
         bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'
@@ -1544,31 +1598,18 @@ class TestStaticSolid(unittest.TestCase):
         solver.run()
 
     def test_ctetra4(self):
-        model = BDF(debug=None, log=None, mode='msc')
+        model = _build_ctetra4()
         model.bdf_filename = TEST_DIR / 'ctetra4.bdf'
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        model.add_grid(3, [1., 1., 0.])
-        model.add_grid(4, [0., 0., 1.])
-
-        mid = 3
-        pid = 4
-        model.add_ctetra(10, pid, [1, 2, 3, 4])
-        model.add_psolid(pid, mid)
-
-        spc_id = 3
-        load_id = 2
-        model.add_spc1(spc_id, '123456', [1, 2, 3], comment='')
-        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
-
-        E = 1.0E7
-        G = None
-        nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0,
-                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
-        model.add_param('GRDPNT', 0)
 
         setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_ctetra4_buckling(self):
+        model = _build_ctetra4()
+        model.bdf_filename = TEST_DIR / 'ctetra4_buckling.bdf'
+
+        setup_buckling_case_control_1(model)
         solver = Solver(model)
         solver.run()
 
