@@ -673,6 +673,26 @@ class BucklingEigenvalues(BaseScalarObject):
         self.generalized_stiffness = np.zeros(nmodes, dtype='float32')
         self.data_frame = None
 
+    @classmethod
+    def add_from_solution(cls,
+                          mode: np.ndarray,
+                          extraction_order: np.ndarray,
+                          eigenvalue: np.ndarray,
+                          freq: np.ndarray,
+                          omega: np.ndarray,
+                          generalized_mass: np.ndarray,
+                          generalized_stiffness: np.ndarray,
+                          title: str, table_name: str):
+        obj = BucklingEigenvalues(title, table_name, 0)
+        obj.mode = mode
+        obj.extraction_order = extraction_order
+        obj.eigenvalues = eigenvalue
+        obj.freqs = freq
+        obj.omegas = omega
+        obj.generalized_mass = generalized_mass
+        obj.generalized_stiffness = generalized_stiffness
+        return obj
+
     def __eq__(self, table):  # pragma: no cover
         return True
 
