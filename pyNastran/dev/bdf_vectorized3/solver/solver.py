@@ -302,7 +302,7 @@ class Solver:
 
         Returns
         -------
-        GMN : (ndof, n_ndof) sparse matrix or None
+        GMN : (ndof, ndof_n) sparse matrix or None
             Transformation from n-set to g-set. None if no constraints.
         mset : (n_mset,) int array or None
             Indices of dependent (m-set) DOFs in the g-set. None if no constraints.
@@ -427,15 +427,15 @@ class Solver:
         dof_map, ps = _get_dof_map(model)
 
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
-        ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
+        ngrid, ndof_per_grid, ndof_g = get_ndof(model, subcase)
 
-        gset_b = ps_to_sg_set(ndof, ps)
-        rset_b = get_rset_bool(model, dof_map, ndof, suport_id=suport_id)
+        gset_b = ps_to_sg_set(ndof_g, ps)
+        rset_b = get_rset_bool(model, dof_map, ndof_g, suport_id=suport_id)
         has_suport = np.any(rset_b)
         #--------------------------------------------------
         log.warning('creating Kgg')
         Kgg = get_Kgg(
-            model, dof_map, ndof, ngrid, ndof_per_grid,
+            model, dof_map, ndof_g, ngrid, ndof_per_grid,
             idtype=idtype, fdtype=fdtype,
             Kgg_override=self.Kgg_override,
             solver_dict=self.solver_dict)
@@ -447,23 +447,23 @@ class Solver:
         if is_mass_load or is_param_grdpnt or has_suport:
             log.warning('creating Mbb')
             Mbb = build_Mbb(
-                model, subcase, dof_map, ndof, fdtype=fdtype,
+                model, subcase, dof_map, ndof_g, fdtype=fdtype,
                 solver_dict=self.solver_dict)
             page_num = write_grid_point_weight(
-                model, Mbb, dof_map, ndof,
+                model, Mbb, dof_map, ndof_g,
                 self.op2, f06_file,
                 title=title, subtitle=subtitle, label=label,
                 page_stamp=page_stamp, page_num=page_num)
 
-        sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
+        sset, sset_b, xg = _build_xg(model, dof_map, ndof_g, subcase)
 
         Fb, Mbb, xyz_cid0 = self.build_Fb(
-            xg, sset_b, dof_map, ndof, subcase, Mbb=Mbb,
+            xg, sset_b, dof_map, ndof_g, subcase, Mbb=Mbb,
             xyz_cid0=xyz_cid0)
 
         # ---------------------MPC reduction (g -> n)---------------------
         GMN, mset = self.build_GMN(
-            subcase, dof_map, ndof, xyz_cid0, fdtype=fdtype)
+            subcase, dof_map, ndof_g, xyz_cid0, fdtype=fdtype)
         self.GMN = GMN
         self.mset = mset
         #out['GMN'] = GMN
@@ -480,7 +480,7 @@ class Solver:
             Kgg, Mgg, GMN,
             log, self.solver_dict)
         self._autospc_n_dofs = autospc_n_dofs
-        gset = np.arange(ndof, dtype=idtype)
+        gset = np.arange(ndof_g, dtype=idtype)
 
         write_mat(model, Fb, 'PRTPB', self.solver_dict)
         Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
@@ -498,12 +498,12 @@ class Solver:
             log, self.solver_dict)
 
         if GMN is not None:
-            n_ndof = len(nset_indices)
+            ndof_n = len(nset_indices)
 
             # Rebuild SPC set and xg in n-set coordinates
             # Map g-set SPC indices to n-set indices
             g_to_n = np.full(ndof, -1, dtype="int32")
-            g_to_n[nset_indices] = np.arange(n_ndof, dtype="int32")
+            g_to_n[nset_indices] = np.arange(ndof_n, dtype="int32")
 
             sset_n = []
             for s_idx in sset:
@@ -512,7 +512,7 @@ class Solver:
                     sset_n.append(n_idx)
             sset_n = np.array(sset_n, dtype="int32")
 
-            xn = np.full(n_ndof, np.nan, dtype=fdtype)
+            xn = np.full(ndof_n, np.nan, dtype=fdtype)
             for s_idx in sset:
                 n_idx = g_to_n[s_idx]
                 if n_idx >= 0:
@@ -533,8 +533,8 @@ class Solver:
                         xn[a_idx] = 0.0
 
             # Work in n-set from here
-            nset_all = np.arange(n_ndof, dtype=idtype)
-            sset_b_n = np.zeros(n_ndof, dtype="bool")
+            nset_all = np.arange(ndof_n, dtype=idtype)
+            sset_b_n = np.zeros(ndof_n, dtype="bool")
             sset_b_n[sset_n] = True
 
             if asetmap:
@@ -551,9 +551,9 @@ class Solver:
             Fg = Fn
             Kgg_orig = Kgg
             Kgg = Knn
-            ndof_solve = n_ndof
+            ndof_solve = ndof_n
         else:
-            ndof_solve = ndof
+            ndof_solve = ndof_g
             Kgg_orig = Kgg
             xg_orig = None
 
@@ -844,8 +844,8 @@ class Solver:
         else:
             xg_out = xn_full
             Fg_out = Fg
-            ndof_out = ndof
-            self.fmpc = np.zeros(ndof, dtype=fdtype)
+            ndof_out = ndof_g
+            self.fmpc = np.zeros(ndof_g, dtype=fdtype)
 
         log.debug(f"xa = {xa}")
         log.debug(f"xs = {xs}")
@@ -1010,7 +1010,7 @@ class Solver:
             out['GMN'] = GMN
             out['mset_bool'] = mset
 
-        phig = out["modes_phig"]
+        phi_g = out["modes_phig"]
         eigenvalue = out["modes_eigenvalue"]
         cycle = np.sqrt(np.abs(eigenvalue)) / (2.0 * np.pi)
         mode_cycle = eigenvalue
@@ -1019,23 +1019,28 @@ class Solver:
         page_num = save_eigenvalues(
             self.op2, f06_file, out, subcase, title,
             page_stamp=page_stamp, page_num=page_num)
-        eigenvalue = out["modes_eigenvalue"]
+        #eigenvalue = out["modes_eigenvalue"]
         nmode = len(eigenvalue)
 
         # Mass participation factors
         Mgg = out["Mgg"]
         nnode_g = node_gridtype.shape[0]
-        mpf = compute_mass_participation(phig, Mgg, nnode_g, nmode)
+        mpf = compute_mass_participation(phi_g, Mgg, nnode_g, nmode)
         out["mass_participation"] = mpf
 
         _write_mass_participation_f06(f06_file, mpf, cycle, nmode)
         log.info(f"mass participation cumulative (Tx): {mpf['cumulative_ratio'][-1, 0]:.4f}")
+
+        nmode = len(eigenvalue)
+        modes = np.arange(1, nmode + 1, dtype=idtype)
         page_num = _save_eigenvectors(
             model, subcase,
-            phig, eigenvalues, mode_cycle, node_gridtype,
-            op2, f06_file, page_num, sol_type='modes',
+            phi_g,  node_gridtype,
+            modes, eigenvalue, mode_cycle,
+            op2, f06_file, page_num,
             page_stamp=page_stamp,
-            title=title, subtitle=subtitle, label=label,)
+            title=title, subtitle=subtitle, label=label,
+            sol_type='modes',)
 
         # fspc = Ksa @ xa + Kss @ xs
         # Fs[ipositive] = Fsi
@@ -1052,8 +1057,8 @@ class Solver:
 
         # add transform for xg to xb
         # (need for rods, quads, etc., but not springs)
-        phib = xg_to_xb(model, phig, ngrid, ndof_per_grid)
-        phib = phig
+        phi_b = xg_to_xb(model, phi_g, ngrid, ndof_per_grid)
+        phi_b = phi_g
 
         recover_force_103(
             f06_file,
@@ -1061,8 +1066,8 @@ class Solver:
             self.model,
             dof_map,
             subcase,
-            phig,
-            phib,
+            phi_g,
+            phi_b,
             modes,
             eigenvalue,  # freqs,
             title=title,
@@ -1076,9 +1081,9 @@ class Solver:
         #
         # TODO: how does this write correctly to the op2?
         # TODO: this does a lot of extra work 
-        nmode = phig.shape[0]
+        nmode = phi_g.shape[0]
         for imode in range(nmode):
-            xb_mode = phib[imode, :]
+            xb_mode = phi_b[imode, :]
             recover_force_101(
                 f06_file, op2, self.model, dof_map, subcase,
                 xb_mode, title=title, subtitle=subtitle, label=label,
@@ -1106,7 +1111,6 @@ class Solver:
         # TODO: parse inputs for loads
         Fg = np.ones((ndof_g, 1), dtype="complex64")
         dload_id, _ = subcase['DLOAD']
-
         return Fg
 
     def run_sol_111_modal_frequency(
@@ -1169,7 +1173,7 @@ class Solver:
         # Mgg = out['Mgg']
         eigenvalue = out["modes_eigenvalue"]
         # print(list(out))
-        phit = out["modes_phig"]  # phi-gg
+        phi_t = out["modes_phig"]  # phi-gg
 
         nmode = len(eigenvalue)
         ndof_g = Kgg.shape[0]
@@ -1201,15 +1205,15 @@ class Solver:
         # nfreq = len(omegas)
         # shape = (ndof, ndof, nfreq)
 
-        # phiT = phi.T
+        # phi_T = phi.T
         #  modal space (h); sometimes called x
         # print(phi.shape, Mgg.shape)
-        # phi = phit.T
+        # phi = phi_t.T
         Mhh = out["modes_Mhh"]
         Khh = out["modes_Khh"]
         assert Khh.ndim == 2, Khh.shape
         assert Mhh.ndim == 2, Mhh.shape
-        # Mhh = phit @ Mgg @ phi
+        # Mhh = phi_t @ Mgg @ phi
         # Chh = phi @ Cgg @ phi.T
         # Khh = phi @ Kgg @ phi.T
         # Fh = phi @ Fg
@@ -1226,7 +1230,7 @@ class Solver:
         #         '[PHIT][Kgg][PHI]{qh} = [PHIT]{Fg}')
         #log.info('[I]{qddh} + [C]{qdh} + [omega]{qh} = {Fh}')
         
-        Fh = phit @ Fg
+        Fh = phi_t @ Fg
         # print('Fh:\n', Fh)
         omega2 = omega * omega  # frequncy
         omegan2 = np.diag(Khh)  # natural frequency squared
@@ -1252,7 +1256,7 @@ class Solver:
             xq[ifreq, :] = xq_freq
             log.info(xq_freq)
 
-        xg = xq @ phit  # (1000,2) * (2,18) = (1000,18)
+        xg = xq @ phi_t  # (1000,2) * (2,18) = (1000,18)
         # vg = (1j * omega)[:, np.newaxis] * xg[np.newaxis, :]
         # ValueError: operands could not be broadcast together with shapes (2050,) (2050,18)
         # print(omega2.shape, xg.shape)
@@ -1416,10 +1420,12 @@ class Solver:
         # "buckling_modes": xa_,
         # "free_dofs": free_dofs,
         phi_f = out['buckling_modes']
-        eigenvalues = out['buckling_eigenvalues']
+        eigenvalue = out['buckling_eigenvalues']
         
         recover_results = get_recover_results(subcase, ['DISPLACEMENT'])
 
+        nmode = len(eigenvalue)
+        modes = np.arange(1, nmode + 1, dtype=idtype)
         if recover_results:
             nmode = phi_f.shape[0]
             phi_n = np.zeros((nmode, ndof), dtype=fdtype)
@@ -1428,10 +1434,12 @@ class Solver:
 
             page_num = _save_eigenvectors(
                 model, subcase,
-                phi_g, eigenvalues, eigenvalues, node_gridtype,
-                op2, f06_file, page_num, sol_type='buckling',
+                phi_g,  node_gridtype,
+                modes, eigenvalue, eigenvalue,
+                op2, f06_file, page_num,
                 page_stamp=page_stamp,
-                title=title, subtitle=subtitle, label=label,)
+                title=title, subtitle=subtitle, label=label,
+                sol_type='buckling',)
 
         self.buckling_eigenvalues = out['buckling_eigenvalues']
         return out, page_num, end_options
@@ -1720,9 +1728,10 @@ class Solver:
 def _save_eigenvectors(model: BDF,
                        subcase: Subcase,
                        phig: np.ndarray,
+                       node_gridtype: np.ndarray,
+                       modes: np.ndarray,
                        eigenvalue: np.ndarray,
                        mode_cycle: np.ndarray,
-                       node_gridtype: np.ndarray,
                        op2: OP2,
                        f06_file: TextIO,
                        page_num: int,
@@ -1732,7 +1741,6 @@ def _save_eigenvectors(model: BDF,
                        idtype: str='int32') -> int:
     isubcase = subcase.id
     nmode = len(eigenvalue)
-    modes = np.arange(1, nmode + 1, dtype=idtype)
     eigenvalue = eigenvalue.astype("float32")
     (
         write_phi_f06,
@@ -1772,6 +1780,7 @@ def _save_eigenvectors(model: BDF,
             )
         else:
             assert sol_type == 'buckling', sol_type
+            asdf
             eigenvector_obj = RealEigenvectorArray.add_buckling_case(
                 table_name,
                 node_gridtypei,
@@ -2064,7 +2073,7 @@ def get_rset(model: BDF,
 
 def get_rset_bool(model: BDF,
                   dof_map: DOF_MAP,
-                  ndof: int,
+                  ndof_g: int,
                   suport_id: int) -> np.ndarray:
     """Build a boolean r-set mask from SUPORT/SUPORT1 cards.
 
@@ -2074,15 +2083,15 @@ def get_rset_bool(model: BDF,
         The model.
     dof_map : DOF_MAP
         Maps (nid, dof) to index in g-set.
-    ndof : int
+    ndof_g : int
         Total number of DOFs.
 
     Returns
     -------
-    rset_b : (ndof,) bool array
+    rset_b : (ndof_g,) bool array
         True at DOF indices belonging to the r-set (SUPORT reference DOFs).
     """
-    rset_b = np.zeros(ndof, dtype='bool')
+    rset_b = np.zeros(ndof_g, dtype='bool')
     rset_map = get_rset(model, suport_id=suport_id)
     for nid_dof in rset_map:
         if nid_dof in dof_map:
@@ -2639,7 +2648,7 @@ def _run_modes(
     f06_file,
     ngrid: int,
     ndof_per_grid: int,
-    ndof: int,
+    ndof_g: int,
     node_gridtype: np.ndarray,
     dof_map: dict,
     Kgg_override=None,
@@ -2665,16 +2674,16 @@ def _run_modes(
     log = model.log
     out = {}
     Kgg = get_Kgg(
-        model, dof_map, ndof, ngrid, ndof_per_grid,
+        model, dof_map, ndof_g, ngrid, ndof_per_grid,
         idtype=idtype, fdtype=fdtype,
         Kgg_override=Kgg_override,
         solver_dict=solver_dict)
     out["Kgg"] = Kgg
 
-    Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype,
+    Mbb = build_Mbb(model, subcase, dof_map, ndof_g, fdtype=fdtype,
                     solver_dict=solver_dict)
     page_num = write_grid_point_weight(
-        model, Mbb, dof_map, ndof,
+        model, Mbb, dof_map, ndof_g,
         op2, f06_file,
         title=title, subtitle=subtitle, label=label,
         page_stamp=page_stamp, page_num=page_num)
@@ -2684,75 +2693,21 @@ def _run_modes(
         out["Mgg"] = Mgg
     del Mbb
 
-    # ----------------------MPC reduction (g -> n)----------------------
-    if GMN is not None:
-        Knn = GMN.T @ Kgg @ GMN
-        Mnn = GMN.T @ Mgg @ GMN
-        # Work in n-set
-        gset_all = np.arange(ndof, dtype="int32")
-        nset_indices = np.setdiff1d(gset_all, mset)
-        n_ndof = len(nset_indices)
-
-        # Map g-set SPC to n-set
-        sset_g, sset_b_g, xg = _build_xg(model, dof_map, ndof, subcase)
-        g_to_n = np.full(ndof, -1, dtype="int32")
-        g_to_n[nset_indices] = np.arange(n_ndof, dtype="int32")
-
-        sset_b = np.zeros(n_ndof, dtype="bool")
-        for s_idx in sset_g:
-            n_idx = g_to_n[s_idx]
-            if n_idx >= 0:
-                sset_b[n_idx] = True
-        sset = sset_b
-
-        gset = np.ones(n_ndof, dtype="bool")
-        aset = gset & ~sset_b
-        out["aset"] = aset
-        out["xg"] = xg
-
-        xn = np.zeros(n_ndof, dtype=fdtype)
-        xa, xs = partition_vector2(xn, [["a", aset], ["s", sset_b]])
-
-        M = partition_matrix(Mnn, [["a", aset], ["s", sset_b]])
-        Maa = M["aa"]
-        out["Maa"] = Maa
-
-        K = partition_matrix(Knn, [["a", aset], ["s", sset_b]])
-        Kaa = K["aa"]
-        out["Kaa"] = Kaa
-
-        ndof_work = n_ndof
-        Kgg_work = Knn
-        Mgg_work = Mnn
-    else:
-        #mset = None
-        mset_b = None
-        gset = np.ones(ndof, dtype="bool")
-        sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
-        aset = gset & ~sset_b  # a = g-s
-        out["aset"] = aset
-
-        xa, xs = partition_vector2(xg, [["a", aset], ["s", sset_b]])
-        out["xg"] = xg
-
-        M = partition_matrix(Mgg, [["a", aset], ["s", sset_b]])
-        Maa = M["aa"]
-        out["Maa"] = Maa
-
-        K = partition_matrix(Kgg, [["a", aset], ["s", sset_b]])
-        Kaa = K["aa"]
-        out["Kaa"] = Kaa
-
-        ndof_work = ndof
-        Kgg_work = Kgg
-        Mgg_work = Mgg
-
-    out['gset_bool'] = gset
-    #out['gset_bool'] = gset_b
-    out['sset'] = sset
-    out['sset_bool'] = sset_b
-    #out['mset'] = mset
-    out['mset_bool'] = mset_b
+    sset, sset_b, xg = _build_xg(model, dof_map, ndof_g, subcase)
+    Kaa, Maa = modes_g_to_a(
+        Kgg, Mgg,
+        xg, sset, sset_b,
+        model, dof_map, subcase,
+        out, GMN=GMN)
+    ndof_n = out['ndof_n']
+    #ndof_work = Kaa.shape[0]
+    aset_bool = out['aset_bool']
+    #aset = np.where(aset_bool)[0]
+    aset = aset_bool
+    xa = out['xa']
+    xs = out['xs']
+    ndof_n = out['ndof_n']
+    #assert len(xa) == len(aset), (len(xa), len(aset))
 
     # Kss = K['ss']
     # Kas = K['as']
@@ -2767,7 +2722,7 @@ def _run_modes(
     # --- R-set partitioning (SUPORT reduction) ---
     # If SUPORT cards exist, partition a = l + r.
     # Solve eigenvalue problem on the l-set (flexible DOFs).
-    rset_b = get_rset_bool(model, dof_map, ndof, suport_id=suport_id)
+    rset_b = get_rset_bool(model, dof_map, ndof_g, suport_id=suport_id)
     has_rset = np.any(rset_b) and GMN is None
 
     if has_rset:
@@ -2805,7 +2760,7 @@ def _run_modes(
             phi_l[ipositive] = xl_[:, imode]
             phi_a[imode, lset_local] = phi_l
 
-        phi_n = np.full((nmode, ndof_work), 0.0, dtype=fdtype)
+        phi_n = np.full((nmode, ndof_n), 0.0, dtype=fdtype)
         phi_n[:, aset] = phi_a
         phi_n[:, sset] = xs
         out["rset_b"] = rset_b
@@ -2827,24 +2782,24 @@ def _run_modes(
         for imode in range(nmode):
             phi_a[imode, ipositive] = xa_[:, imode]
 
-        phi_n = np.full((nmode, ndof_work), 0.0, dtype=fdtype)
+        phi_n = np.full((nmode, ndof_n), 0.0, dtype=fdtype)
         phi_n[:, aset] = phi_a
         phi_n[:, sset] = xs
 
-    phi_g = phi_n_to_g(phi_n, ndof, GMN=GMN, fdtype=fdtype)
+    phi_g = phi_n_to_g(phi_n, ndof_g, GMN=GMN, fdtype=fdtype)
 
     # phi_t = phi_g
     nnode_g = len(node_gridtype)
-    phi, Mhh, Khh = apply_phi_normalization(
+    phi_g, Mhh, Khh = apply_phi_normalization(
         Mgg, Kgg, eigenvalue, phi_g, nmode, nnode_g, norm_str)
     log.info(f"Mhh_diag: {np.diag(Mhh)}")
     log.info(f"Khh_diag: {np.diag(Khh)}")
 
-    assert np.all(np.isfinite(phia))
-    assert np.all(np.isfinite(phig))
+    assert np.all(np.isfinite(phi_a))
+    assert np.all(np.isfinite(phi_g))
     out["modes_eigenvalue"] = eigenvalue
     out["modes_norm"] = norm_str
-    out["modes_phig"] = phig
+    out["modes_phig"] = phi_g
     out["modes_Mhh"] = Mhh
     out["modes_Khh"] = Khh
     return page_num, out
@@ -2858,7 +2813,7 @@ def phi_n_to_g(phi_n: np.ndarray, ndof_g: int,
     # ----------------------MPC recovery (n -> g) for modes----------------------
     nmode = phi_n.shape[1]
 
-    # phig is currently in n-set (ndof_work = n_ndof), expand to g-set
+    # phig is currently in n-set (ndof_work = ndof_n), expand to g-set
     GMN_dense = GMN.toarray()
     phi_g = np.zeros((nmode, ndof_g), dtype=fdtype)
     for imode in range(nmode):
@@ -3306,16 +3261,16 @@ def _build_Gmn(model: BDF, mpc_id: int,
     # n-set = g-set minus m-set
     gset = np.arange(ndof, dtype="int32")
     nset = np.setdiff1d(gset, mset)
-    n_ndof = len(nset)
+    ndof_n = len(nset)
 
     # Map from g-set index to n-set column index
     g_to_n = np.full(ndof, -1, dtype="int32")
-    g_to_n[nset] = np.arange(n_ndof, dtype="int32")
+    g_to_n[nset] = np.arange(ndof_n, dtype="int32")
 
-    # Build GMN as sparse (ndof x n_ndof)
+    # Build GMN as sparse (ndof x ndof_n)
     # Independent DOFs: identity mapping
-    GMN = dok_matrix((ndof, n_ndof), dtype=fdtype)
-    for g_idx, n_col in zip(nset, range(n_ndof)):
+    GMN = dok_matrix((ndof, ndof_n), dtype=fdtype)
+    for g_idx, n_col in zip(nset, range(ndof_n)):
         GMN[g_idx, n_col] = 1.0
 
     # --- Fill from MPC cards ---
@@ -3367,7 +3322,7 @@ def _build_Gmn(model: BDF, mpc_id: int,
     n_mpc = len(mpc)
     n_rigid = len(rigid_m_set) if rigid_m_set is not None else 0
     log.info(f"MPC/rigid reduction: {len(mset)} dependent DOFs eliminated "
-             f"(MPC={n_mpc}, rigid={n_rigid}, g={ndof} -> n={n_ndof})")
+             f"(MPC={n_mpc}, rigid={n_rigid}, g={ndof} -> n={ndof_n})")
     return GMN_csc, mset
 
 
@@ -3702,8 +3657,8 @@ def static_g_to_n(model: BDF,
         write_mat(model, Mnn, 'PRTMNN', solver_dict)
 
         # AUTOSPC on N-set: detect singular DOFs after MPC reduction
-        n_ndof_temp = Knn.shape[0]
-        autospc_dofs_n = autospc_n_set(Knn, n_ndof_temp, log)
+        ndof_n_temp = Knn.shape[0]
+        autospc_dofs_n = autospc_n_set(Knn, ndof_n_temp, log)
         if len(autospc_dofs_n) > 0:
             # Add these to the SPC set in the n-set coordinate system
             # They will be picked up during the SPC partition below
@@ -3820,3 +3775,91 @@ def static_Kff_to_Kaa(
     {Fa'} = [Kaa'] + {xa}
     """
     pass
+
+
+def modes_g_to_a(Kgg, Mgg,
+                 xg: np.ndarray,
+                 sset_g: np.ndarray,
+                 sset_b_g: np.ndarray,
+                 model: BDF,
+                 dof_map: DOF_MAP,
+                 subcase: Subcase,
+                 out: dict[str, Any],
+                 GMN=None):
+    # ----------------------MPC reduction (g -> n)----------------------
+    ndof_g = Kgg.shape[0]
+    
+    if GMN is not None:
+        Knn = GMN.T @ Kgg @ GMN
+        Mnn = GMN.T @ Mgg @ GMN
+        # Work in n-set
+        gset_all = np.arange(ndof_g, dtype="int32")
+        nset_indices = np.setdiff1d(gset_all, mset)
+        ndof_n = len(nset_indices)
+
+        # Map g-set SPC to n-set
+        #sset_g, sset_b_g, xg = _build_xg(model, dof_map, ndof_g, subcase)
+        g_to_n = np.full(ndof_g, -1, dtype="int32")
+        g_to_n[nset_indices] = np.arange(ndof_n, dtype="int32")
+
+        sset_b = np.zeros(ndof_n, dtype="bool")
+        for s_idx in sset_g:
+            n_idx = g_to_n[s_idx]
+            if n_idx >= 0:
+                sset_b[n_idx] = True
+        sset = sset_b
+
+        gset = np.ones(ndof_n, dtype="bool")
+        aset = gset & ~sset_b
+
+        xn = np.zeros(ndof_n, dtype=fdtype)
+        xa, xs = partition_vector2(xn, [["a", aset], ["s", sset_b]])
+
+        M = partition_matrix(Mnn, [["a", aset], ["s", sset_b]])
+        Maa = M["aa"]
+
+        K = partition_matrix(Knn, [["a", aset], ["s", sset_b]])
+        Kaa = K["aa"]
+
+        #ndof_work = ndof_n
+        Kgg_work = Knn
+        Mgg_work = Mnn
+    else:
+        ndof_n = ndof_g
+        #mset = None
+        mset_b = None
+        gset = np.ones(ndof_g, dtype="bool")
+        sset = sset_g
+        sset_b = sset_b_g
+        aset = gset & ~sset_b  # a = g-s
+
+        xa, xs = partition_vector2(xg, [["a", aset], ["s", sset_b]])
+
+        M = partition_matrix(Mgg, [["a", aset], ["s", sset_b]])
+        Maa = M["aa"]
+
+        K = partition_matrix(Kgg, [["a", aset], ["s", sset_b]])
+        Kaa = K["aa"]
+
+        #ndof_work = ndof
+        Kgg_work = Kgg
+        Mgg_work = Mgg
+
+    out["xg"] = xg
+    out["xa"] = xa
+    out["xs"] = xs
+    out["Kaa"] = Kaa
+    out["Maa"] = Maa
+
+    out['gset_bool'] = gset
+    #out['gset_bool'] = gset_b
+    out['sset'] = sset
+    out['sset_bool'] = sset_b
+    #out['mset'] = mset
+    out['mset_bool'] = mset_b
+    out["aset_bool"] = aset
+    out['ndof_n'] = ndof_n
+
+    #assert len(xa) == len(aset), (len(xa), len(aset))
+    return Kaa, Maa
+

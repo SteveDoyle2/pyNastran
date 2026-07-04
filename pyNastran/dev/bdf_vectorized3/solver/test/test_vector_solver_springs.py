@@ -38,6 +38,31 @@ def setup_static_case_control(model: BDF, extra_case_lines=None):
     model.sol = 101
     model.case_control_deck = cc
 
+
+def setup_modes_case_control(model: BDF, extra_case_lines=None,
+                             nmodes: int=10):
+    lines = [
+        'STRESS(PLOT,PRINT) = ALL',
+        'STRAIN(PLOT,PRINT) = ALL',
+        'FORCE(PLOT,PRINT) = ALL',
+        'DISP(PLOT,PRINT) = ALL',
+        'GPFORCE(PLOT,PRINT) = ALL',
+        'SPCFORCE(PLOT,PRINT) = ALL',
+        'MPCFORCE(PLOT,PRINT) = ALL',
+        'OLOAD(PLOT,PRINT) = ALL',
+        'ESE(PLOT,PRINT) = ALL',
+        'SUBCASE 1',
+        #'  LOAD = 2',
+        '  SPC = 3',
+        '  METHOD = 42',
+    ]
+    if extra_case_lines is not None:
+        lines += extra_case_lines
+    cc = CaseControlDeck(lines, log=model.log)
+    model.sol = 103
+    model.case_control_deck = cc
+    model.add_eigrl(42, nd=nmodes)
+
 def setup_buckling_case_control_1(model: BDF, extra_case_lines=None,
                                   nmodes: int=10):
     lines = [
@@ -1597,11 +1622,19 @@ class TestStaticSolid(unittest.TestCase):
         solver = Solver(model)
         solver.run()
 
-    def test_ctetra4(self):
+    def test_ctetra4_static(self):
         model = _build_ctetra4()
         model.bdf_filename = TEST_DIR / 'ctetra4.bdf'
 
         setup_static_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_ctetra4_modes(self):
+        model = _build_ctetra4()
+        model.bdf_filename = TEST_DIR / 'ctetra4.bdf'
+
+        setup_modes_case_control(model)
         solver = Solver(model)
         solver.run()
 
