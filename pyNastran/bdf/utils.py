@@ -144,7 +144,7 @@ def parse_femap_syntax_copy(filename_lines: PathLike | list[str],
             else:
                 value = int(pair)
                 values.append(value)
-        print(f'{i}: len(values)={len(values)}')
+        #print(f'{i}: len(values)={len(values)}')
     out = {key: np.unique(values) for key, values in row_values.items()}
     if combine_rows:
         values = [values for key, values in out.items()]
