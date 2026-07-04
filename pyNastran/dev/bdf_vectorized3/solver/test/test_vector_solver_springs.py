@@ -64,7 +64,7 @@ def setup_modes_case_control(model: BDF, extra_case_lines=None,
     model.add_eigrl(42, nd=nmodes)
 
 def setup_buckling_case_control_1(model: BDF, extra_case_lines=None,
-                                  nmodes: int=10):
+                                  nmodes: int=10, nsubcases=1):
     lines = [
         'STRESS(PLOT,PRINT) = ALL',
         'STRAIN(PLOT,PRINT) = ALL',
@@ -75,13 +75,28 @@ def setup_buckling_case_control_1(model: BDF, extra_case_lines=None,
         'MPCFORCE(PLOT,PRINT) = ALL',
         'OLOAD(PLOT,PRINT) = ALL',
         'ESE(PLOT,PRINT) = ALL',
-        'SUBCASE 1',
-        '  LOAD = 2',
-        '  SPC = 3',
-        #'SUBCASE 2',
-        #'  STATSUB(PRELOAD) = 1',
-        '  METHOD = 42',
     ]
+    if nsubcases == 0:
+        lines += [
+            'LOAD = 2',
+            'SPC = 3',
+            'METHOD = 42',]
+    elif nsubcases == 1:
+        lines += [
+            'SUBCASE 1',
+            '  LOAD = 2',
+            '  SPC = 3',
+            '  METHOD = 42',]
+    else:
+        assert nsubcases == 2, nsubcases
+        lines += [
+            'SUBCASE 1',
+            '  LOAD = 2',
+            '  SPC = 3',
+            'SUBCASE 2',
+            '  STATSUB(PRELOAD) = 1',
+            '  METHOD = 42',]
+
     if extra_case_lines is not None:
         lines += extra_case_lines
     cc = CaseControlDeck(lines, log=model.log)
@@ -1700,11 +1715,30 @@ class TestStaticSolid(unittest.TestCase):
         solver = Solver(model)
         solver.run()
 
-    def test_ctetra4_buckling(self):
+    def test_ctetra4_buckling0(self):
+        """verifies global subcase buckling"""
+        model = _build_ctetra4()
+        model.bdf_filename = TEST_DIR / 'ctetra4_buckling0.bdf'
+
+        setup_buckling_case_control_1(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_ctetra4_buckling1(self):
+        """verifies single subcase buckling"""
         model = _build_ctetra4()
         model.bdf_filename = TEST_DIR / 'ctetra4_buckling.bdf'
 
         setup_buckling_case_control_1(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_ctetra4_buckling2(self):
+        """verifies statsub subcase buckling"""
+        model = _build_ctetra4()
+        model.bdf_filename = TEST_DIR / 'ctetra4_buckling2.bdf'
+
+        setup_buckling_case_control_1(model, nsubcases=2)
         solver = Solver(model)
         solver.run()
 

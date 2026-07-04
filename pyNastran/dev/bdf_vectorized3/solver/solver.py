@@ -257,7 +257,7 @@ class Solver:
 
                     Ug_preload = None
                     if subcase_id in preloads_to_apply:
-                        preload_value = preloads_to_apply
+                        preload_value = preloads_to_apply[subcase_id]
                         Ug_preload = Ug_preloads[preload_value]
 
                     runner = solmap[sol]
@@ -278,9 +278,7 @@ class Solver:
                     if sol == 105: # buckling
                         out['xg']  # verify this exists
                         if subcase_id in preloads_to_save:
-                            value, options = subcase['STATSUB']
-                            assert 'PRELOAD' in options, options
-                            Ug_preloads[value] = out['xg']
+                            Ug_preloads[subcase_id] = (out['xg'], out['free_dofs'])
                     del out
             else:  # pragma: no cover
                 raise NotImplementedError(sol)
@@ -340,7 +338,8 @@ class Solver:
     def build_GMN(self,
                   solver_data: SolverData,
                   subcase: Subcase,
-                  dof_map: DOF_MAP, ndof: int,
+                  dof_map: DOF_MAP,
+                  ndof: int,
                   xyz_cid0: np.ndarray,
                   fdtype: str = "float64",
                   ) -> tuple[np.ndarray | None, np.ndarray | None]:
@@ -1451,9 +1450,31 @@ class Solver:
         # -----------------------------------------------------------------------
     
         log.debug("run_sol_105 (buckling)")
-        neigenvalue, norm_str = get_real_eigenvalue_method(
-            model, subcase)
+        load_id = 0
+        if 'LOAD' in subcase:
+            load_id = subcase['LOAD'][0]
+        else:
+            assert Ug_preload is not None, Ug_preload
+            # TODO: this seems like a super hacky way to get Kff
+            #       Should I even be after Kff (f=l+r)?
+            #       what about SUPORT?
+            #
+            u_global, free_dofs = Ug_preload
+            Kgg = solver_data.Kgg
+            Kff = Kgg[np.ix_(free_dofs, free_dofs)].toarray()
 
+        assert load_id >= 0, load_id
+
+        method_id = 0
+        neigenvalue = 0
+        norm_str = ''
+        if 'METHOD' in subcase:
+            method_id = subcase['METHOD'][0]
+            neigenvalue, norm_str = get_real_eigenvalue_method(
+                model, subcase)
+        assert method_id >= 0, method_id
+
+        log.warning(f'load_id={load_id} method_id={method_id}')
         end_options = ["SEKR", "MODES"]
 
         # -----------------------------------------------------------------------
@@ -1462,7 +1483,6 @@ class Solver:
 
         # -----------------------------------------------------------------------
 
-        Kgg = solver_data.Kgg
         dof_map = solver_data.dof_map
         node_gridtype = solver_data.node_gridtype
         ndof_g = solver_data.ndof_g
@@ -1471,37 +1491,45 @@ class Solver:
 
         # -----------------------------------------------------------------------
 
-        # Static preload solve
-        sset, sset_b, xg = _build_xg(model, dof_map, ndof_g, subcase)
-
-        Fb, Mbb, xyz_cid0 = self.build_Fb(
-            xg, sset_b, dof_map, ndof_g, subcase,
-            Mbb=None, xyz_cid0=xyz_cid0)
-        Mbb = None
-        Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
-
         ndof_n = ndof_g  # TODO: assumed
 
-        free_dofs = np.where(~sset_b)[0]
-        assert free_dofs.ndim == 1 and len(free_dofs) > 0, free_dofs
-        assert len(sset_b) == len(Fg)
-        Kff = Kgg[np.ix_(free_dofs, free_dofs)].toarray()
-        Ff = Fb[free_dofs]
+        if load_id > 0:
+            # Static preload solve
+            Kgg = solver_data.Kgg
+            sset, sset_b, xg = _build_xg(model, dof_map, ndof_g, subcase)
 
-        ndof_f = len(Ff)
-        try:
-            u_free = np.linalg.solve(Kff, Ff)
-        except:
-            print(f'Kff:\n{Kff}')
-            raise
-        u_global = np.zeros(ndof_g, dtype=fdtype)
-        u_global[free_dofs] = u_free
+            Fb, Mbb, xyz_cid0 = self.build_Fb(
+                xg, sset_b, dof_map, ndof_g, subcase,
+                Mbb=None, xyz_cid0=xyz_cid0)
+            Mbb = None
+            Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
 
-        log.debug("  static preload solved")
+            free_dofs = np.where(~sset_b)[0]
+            assert free_dofs.ndim == 1 and len(free_dofs) > 0, free_dofs
+            assert len(sset_b) == len(Fg)
+            Kff = Kgg[np.ix_(free_dofs, free_dofs)].toarray()
+            Ff = Fb[free_dofs]
+
+            try:
+                u_free = np.linalg.solve(Kff, Ff)
+            except:
+                print(f'Kff:\n{Kff}')
+                raise
+            u_global = np.zeros(ndof_g, dtype=fdtype)
+            u_global[free_dofs] = u_free
+            log.debug("  static preload solved")
+        
+        if method_id == 0:
+            # multi-subcase buckling
+            out = {'xg': u_global, 'free_dofs': free_dofs}
+            return out, page_num, end_options
+        
+        ndof_f = Kff.shape[0]
         out = _run_buckling(
             model, subcase,
             ndof_g, dof_map, u_global, Kff, free_dofs)
         out['xg'] = u_global
+
         #"free_dofs": free_dofs,
 
         # "buckling_eigenvalues": eigenvalue,
@@ -3345,8 +3373,10 @@ def _has_rigid_elements(model: BDF) -> bool:
     return False
 
 
-def _build_Gmn(model: BDF, mpc_id: int,
-               dof_map: DOF_MAP, ndof_g: int,
+def _build_Gmn(model: BDF,
+               mpc_id: int,
+               dof_map: DOF_MAP,
+               ndof_g: int,
                xyz_cid0: np.ndarray,
                fdtype: str = "float64",
                solver_dict=None,
@@ -4007,29 +4037,86 @@ def modes_g_to_a(Kgg, Mgg,
 
 def check_subcases(model: BDF):
     subcase_ids = []
+    subcases = {}
     for subcase_id, subcase in sorted(model.subcases.items()):
         if subcase_id == 0:
             continue
+        subcases[subcase_id] = subcase
         subcase_ids.append(subcase_id)
     assert len(subcase_ids), subcase_ids
+    
+    
+    sol = model.sol
+    for subcase_id, subcase in subcases.items():
+        spc_id = 0
+        mpc_id = 0
+        method_id = 0
+        if 'SPC' in subcase:
+            spc_id = subcase['SPC'][0]
+
+        if 'MPC' in subcase:
+            mpc_id = subcase['MPC'][0]
+
+        if 'METHOD' in subcase:
+            method_id = subcase['METHOD'][0]
+            method = model.methods[method_id]
+
+
+    if sol == 103:
+        is_modes = False
+        for subcase_id, subcase in subcases.items():
+            load_id = 0
+            method_id = 0
+            if 'METHOD' in subcase:
+                method_id = subcase['METHOD'][0]
+            else:  # pragma: no cover
+                raise RuntimeError(str(subcase))
+
+    elif sol == 105:
+        is_buckling = False
+        for subcase_id, subcase in subcases.items():
+            load_id = 0
+            method_id = 0
+            if 'METHOD' in subcase and 'LOAD' in subcase:
+                spc_id = subcase['SPC']
+                method_id = subcase['METHOD'][0]
+                load_id = subcase['LOAD'][0]
+                is_buckling = True
+            elif 'LOAD' in subcase:
+                spc_id = subcase['SPC']
+                load_id = subcase['LOAD'][0]
+            elif 'METHOD' in subcase:
+                method_id = subcase['METHOD'][0]
+                value, options = subcase['STATSUB']
+            else:  # pragma: no cover
+                raise RuntimeError(str(subcase))
+            
+            #if load_id:
+                #method = model.loads[method_id]
 
 
 def find_preload(model: BDF) -> tuple[set[int], dict[int, int]]:
     """identify STATSUBs cases and that they're valid"""
+    log = model.log
     preloads_to_save = set([])
     preloads_to_apply = {}
+    subcase_ids = []
     for subcase_id, subcase in sorted(model.subcases.items()):
         if subcase_id == 0:
             continue
+        subcase_ids.append(subcase_id)
+        #print(subcase)
+        #print('------------------')
         if 'STATSUB' not in subcase:
             continue
         value, options = subcase['STATSUB']
         assert 'PRELOAD' in options, options
         log.debug(f"subcase={subcase_id};  STATSUB({options})={value}")
-        assert value in subcase_ids, f'missing PRELOAD={value} for subcase={subcase_id}'
+        assert value in subcase_ids, f'missing PRELOAD={value} for subcase={subcase_id}; subcases={subcase_ids}'
         preloads_to_save.add(value)
         preloads_to_apply[subcase_id] = value
     return preloads_to_save, preloads_to_apply
+
 
 def setup_solver_data(is_structural: bool,
                       model: BDF,
@@ -4046,12 +4133,29 @@ def setup_solver_data(is_structural: bool,
     sol = model.sol
     node_gridtype = _get_node_gridtype(model, idtype=idtype)
     dof_map, ps = _get_dof_map(model)
-
-    subcase = model.subcases[0]
-    ngrid, ndof_per_grid, ndof_g = get_ndof(model, subcase)
     xyz_cid0 = model.grid.xyz_cid0()
 
+    #nsubcase = 0
+    is_any_mpc = False     # are there any cases that have MPC
+    is_any_no_mpc = False  # are there any cases that don't have MPC
+    mpc_ids = set([])
+    for subcase_id, subcase in model.subcases.items():
+        if subcase_id == 0:
+            continue
+        #nsubcase += 1
+        if 'MPC' in subcase:
+            is_any_mpc = True
+            mpc_id = subcase['MPC'][0]
+            mpc_ids.add(mpc_id)
+        else:
+            is_any_no_mpc = True
+
+    ngrid, ndof_per_grid, ndof_g = get_ndof(model, subcase)
+
     is_param_grdpnt = 'GRDPNT' in model.params
+    mpc_id = 0
+    Mgg = None
+
     if is_structural:
         Kgg = get_Kgg(
             model, dof_map, ndof_g, ngrid, ndof_per_grid,
@@ -4060,14 +4164,18 @@ def setup_solver_data(is_structural: bool,
             solver_dict=solver_dict)
         Kgg = Kgg.tocsc()
 
-        mpc_id = 0
-        GMN_csc, mset = _build_Gmn(
-            model, mpc_id,
-            dof_map, ndof_g, xyz_cid0, fdtype=fdtype,
-            solver_dict=solver_dict)
+        if is_any_no_mpc:
+            # only calculate this if there is a case without MPCs
+            # TODO: calculate GMN for all mpc_ids
+            GMN_csc, mset = _build_Gmn(
+                model, mpc_id,
+                dof_map, ndof_g, xyz_cid0, fdtype=fdtype,
+                solver_dict=solver_dict)
+        else:
+            GMN_csc, mset = None, None
 
-        Mgg = None
         if is_param_grdpnt or sol in MODAL_SOLS:
+            # TODO: doesn't include NSM
             Mbb = build_Mbb(
                 model, subcase, dof_map, ndof_g, fdtype=fdtype,
                 solver_dict=solver_dict)
