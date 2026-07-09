@@ -1,6 +1,6 @@
 from __future__ import annotations
 import sys
-from typing import Any, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING
 import numpy as np
 
 from cpylog import SimpleLogger
@@ -69,6 +69,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
         ' --size SIZE                          size of the BDF (8/16; default=16)\n'
         ' --clean                              writes a BDF with at least 1 whitespace in an FLFACT field (for readability)\n'
         ' --sid SID                            updates the flutter ID\n'
+        " --minus_eas MINUS_EAS                request flutter mode shapes at the closest point ('400,500')\n"
         '\n'
 
         'Info:\n'
@@ -77,6 +78,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
         '\n'
         'Examples:\n'
         '  bdf flutter english_in eas  1   800. knots 101 mach 0.8 na\n'
+        "  bdf flutter english_in eas  1   800. knots 101 mach 0.8 na --minus_eas '100,200'\n"
         '  bdf flutter english_in tas  .1  800. ft/s  101 alt 2500 m\n'
         '  bdf flutter english_in mach .05 0.5        101 alt 2500\n'
         '  bdf flutter english_in mach .05 0.5        101 alt 2500 m --eas_limit 300 knots --out flutter_cards_temp.inc --size 16\n'
@@ -111,8 +113,11 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
     if isinstance(is_minus_eas, bool):
         if is_minus_eas:
             minus_eas = _float_list(data, 'MINUS_EAS')
+    elif isinstance(is_minus_eas, str):
+        minus_eas = _float_list(data, '--minus_eas')
     else:
-        raise NotImplementedError(data['--minus_eas'])
+        raise TypeError(data['--minus_eas'])
+        # raise NotImplementedError(data)
 
     units_out = data['UNITS']
     if units_out.lower() not in UNITS_MAP:  # pragma: no cover

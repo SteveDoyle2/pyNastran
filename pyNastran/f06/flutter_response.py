@@ -34,8 +34,6 @@ from typing import Iterable, TextIO, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 import numpy.typing as npt
-import scipy
-import scipy.interpolate
 try:
     import matplotlib
     import matplotlib.pyplot as plt
@@ -64,6 +62,10 @@ LINESTYLES = ['-', '--', '-.', ':', 'None', ' ', '',
 Crossing = tuple[np.floating | float,
                  float, float]
 Limit = tuple[Optional[float], Optional[float]] | None
+
+VCrossingModeDict = dict[int, list[Crossing]]
+# VCrossingDict = dict[npt.floating, VCrossingModeDict]
+VCrossingDict = dict[float, VCrossingModeDict]
 
 
 class FlutterResponse:
@@ -812,8 +814,7 @@ class FlutterResponse:
                               freq_round: int=2,
                               eas_round: int=3,
                               divergence_freq_tol: float=0.1,
-                              ) -> tuple[dict[npt.floating, dict[int, list[Crossing]]],
-                                         dict[npt.floating, dict[int, list[Crossing]]]]:
+                              ) -> tuple[VCrossingDict, VCrossingDict]:
         """
         Gets the flutter crossings
 
@@ -2264,8 +2265,8 @@ class FlutterResponse:
                         imodes: np.ndarray,
                         modes: np.ndarray,
                         imodes_crossing: np.ndarray,
-                        vl_vf_crossing_dict: dict[float, dict[int, list[Crossing]]],
-                        vd_crossing_dict: dict[float, dict[int, list[Crossing]]],
+                        vl_vf_crossing_dict: VCrossingDict,
+                        vd_crossing_dict: VCrossingDict,
                         colors: list[str],
                         symbols: list[str],
                         eas_max: Optional[float]=None,
@@ -2821,8 +2822,8 @@ class FlutterResponse:
     #     return vl_array3, vf_array3
 
     @staticmethod
-    def xcrossing_dict_to_VL_VF_VD(vl_vf_crossing_dict: dict[int, list[Crossing]],
-                                   vd_crossing_dict: dict[int, list[Crossing]],
+    def xcrossing_dict_to_VL_VF_VD(vl_vf_crossing_dict: VCrossingDict,
+                                   vd_crossing_dict: VCrossingDict,
                                    log: SimpleLogger,
                                    freq_target: float,
                                    vl_target: float,
@@ -2835,12 +2836,12 @@ class FlutterResponse:
         """
         Parameters
         ----------
-        vl_vf_crossing_dict: dict[int, list[Crossing]]
+        vl_vf_crossing_dict: VCrossingDict
             mode_num: int
                 mode number
             Crossing: (damping, freq, vel)
                 3 floats
-        vd_crossing_dict: dict[int, list[Crossing]]
+        vd_crossing_dict: VCrossingDict
             mode_num: int
                 mode number
             Crossing: (damping, freq, vel)
@@ -3327,7 +3328,6 @@ def _update_ncol(nmodes: int, ncol: int=0,
         ncol += 1
     ncol = min(ncol, nmodes)
     return ncol
-
 
 def _symbols_colors_from_nlines(colors: list[str], symbols: list[str],
                                 nlines: int) -> tuple[list[str], list[str]]:
@@ -3874,7 +3874,7 @@ def _sort_vd_crossings_by_mode(vd_crossing_dict: dict[float, dict[int, list[Cros
     return vd_crossing_dict_modes_sort
 
 
-def _get_vd_array(vd_crossing_dict: dict[int, list[Crossing]],
+def _get_vd_array(vd_crossing_dict: VCrossingDict,
                   V_baseline: float, freq_target: float,
                   log: SimpleLogger) -> np.ndarray:
     vd_list = [(-1, V_baseline, np.nan)]
@@ -3892,16 +3892,48 @@ def _get_vd_array(vd_crossing_dict: dict[int, list[Crossing]],
     return vd_array
 
 
-def _get_vl_vf_array(vl_vf_crossing_dict: dict[float, list[Crossing]],
+def _get_vl_vf_array(vl_vf_crossing_dict: VCrossingDict,
                      VL_target: float, VF_target: float,
                      V_baseline: float,
                      log: SimpleLogger) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Converts the VCrossingDict into an array
+
+    Parameters
+    ----------
+    vl_vf_crossing_dict: dict[percent_damping, dict[mode, [(freq, velocity), ...]]
+        the flutter crossings
+    VL_target : float
+        definition of the 0% crossing
+    VF_target : float
+        definition of the 3% crossing
+    V_baseline : float
+        fake flutter speed for when there's no crossing
+    log : SimpleLogger
+        a logger
+
+    Returns
+    -------
+    v0_array :  (ncrossing_vl, 3) float ndarray
+        The 0% crossings
+        (-1, V_baseline, np.nan)  # null crossing
+        (10, 200.0,      30.2)    mode 10 crosses 0% at 200 KEAS and 30.2 Hz
+    v3_array : (ncrossing_vf, 3) float ndarray
+        The 3% crossings
+
+    """
     V0s = [(-1, V_baseline, np.nan)]
     V3s = [(-1, V_baseline, np.nan)]
     for damping_target, vl_vf_crossings in vl_vf_crossing_dict.items():
         if damping_target == 0.0:  # VL
             for mode, crossings in vl_vf_crossings.items():
-                # [(0.0, array([116., 686.01, 0., 0.]), array([118., 691., 0., 0.]), array([117., 686.007, 0., 0.]))]
+                # [(
+                #     0.0,
+                #     array([116., 686.01, 0., 0.]),
+                #     array([118., 691., 0., 0.]),
+                #     array([117., 686.007, 0., 0.]),
+                #  ),]
+                #
                 # iy, eas, damping, freq
                 for (damping, p1, p2, pmax) in crossings:
                     iy, vel, damping, freq = p1

@@ -52,6 +52,17 @@ class TestBDFFlutter(unittest.TestCase):
         cmd_line_create_flutter(args, quiet=True)
         cmd_line(args, quiet=True)
 
+    def test_flutter_sweep_eas_const_alt_minus(self):
+        args = ['bdf', 'flutter', 'english_in', 'eas', '0.1', '100.1', 'knots', '10', 'alt', '0.', 'm',
+                '--minus_eas', '60']
+        cmd_line_create_flutter(args, quiet=True)
+        cmd_line(argv=args, quiet=True)
+
+        args = ['bdf', 'flutter', 'english_in', 'eas', '0.1', '100.1', 'knots', '10', 'alt', '0.', 'm',
+                '--minus_eas', '60,80']
+        cmd_line_create_flutter(args, quiet=True)
+        cmd_line(argv=args, quiet=True)
+
     def test_flutter_sweep_eas_const_alt(self):
         args = ['bdf', 'flutter', 'english_in', 'eas', '0.1', '100.1', 'knots', '10', 'alt', '0.', 'm']
         cmd_line_create_flutter(args, quiet=True)

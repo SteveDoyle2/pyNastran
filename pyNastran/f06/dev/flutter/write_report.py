@@ -551,7 +551,14 @@ def _cases_to_document(log: SimpleLogger,
         for key, data in flutter_table.items():
             msg += f'{key}: {len(data)}\n'
         raise ValueError(msg) from error
-    df.to_excel(excel_filename, index=True)
+
+    # startcol = 0  # column A
+    startcol = len(flutter_table)
+    with pd.ExcelWriter(excel_filename, engine='openpyxl') as excel_file:
+        # df1.to_excel(writer, sheet_name='Products', index=False)
+        # df2.to_excel(writer, sheet_name='Employees', index=False)
+        df.to_excel(excel_file, sheet_name='Sheet1', index=True)
+        table.to_excel(excel_file, sheet_name='Sheet1', startcol=startcol, index=False)
 
     # if the 0% requirement is not defined, remove the response
     if percent0 <= -100.0:
