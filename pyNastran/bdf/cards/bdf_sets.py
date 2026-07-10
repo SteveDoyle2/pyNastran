@@ -43,7 +43,7 @@ from pyNastran.utils.numpy_utils import integer_types, integer_string_types
 from pyNastran.bdf.cards.base_card import (
     BaseCard, _node_ids, expand_thru, write_card
 )
-from pyNastran.bdf.cards.collpase_card import collapse_thru, condense, build_thru_packs
+from pyNastran.bdf.cards.collpase_card import collapse_thru, collapse_thru_packs, condense, build_thru_packs
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -127,6 +127,7 @@ class ABCQSet(Set):
         #:  Identifiers of grids points. (Integer > 0)
         if isinstance(ids, int):
             ids = [ids]
+
         self.ids = ids
         self.components = components
         assert isinstance(ids, list), ids
@@ -500,8 +501,7 @@ class ABCQSet1(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = expand_thru(ids)
         self.ids_ref = None
-
-        self.use_thru = True
+        self.use_thru = False
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -542,7 +542,7 @@ class ABCQSet1(Set):
             the BDF object
 
         """
-        msg = ', which is required by %s' % self.type
+        msg = f', which is required by {self.type}'
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
@@ -571,8 +571,9 @@ class ABCQSet1(Set):
         return list_fields
 
     def __repr__(self):
-        list_fields = self.raw_fields()
-        return self.comment + print_card_8(list_fields)
+        return self.comment + write_xset1_card(self.type, self.components, self.node_ids)
+        # list_fields = self.raw_fields()
+        # return self.comment + print_card_8(list_fields)
 
 
 class SuperABCQSet1(Set):
@@ -877,7 +878,7 @@ class CSET1(ABCQSet1):
         components = '123'
         return CSET1(ids, components)
 
-    def __init__(self, ids, components, comment: str=''):
+    def __init__(self, ids: list[int], components: str, comment: str=''):
         """
         Creates an CSET1 card, which defines the degree of freedoms that
         will be free during a generalized dynamic reduction or component
@@ -954,12 +955,26 @@ class CSET1(ABCQSet1):
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        list_fields = ['CSET1', self.components] + collapse_thru(self.node_ids)
+        list_fields = ['CSET1', self.components] + self.node_ids
         return list_fields
 
     def __repr__(self):
+        return self.comment + write_xset1_card(self.type, self.components, self.node_ids)
         list_fields = self.raw_fields()
         return self.comment + print_card_8(list_fields)
+
+
+def write_xset1_card(card_type: str, components: str, node_ids: list[int]) -> str:
+    singles, doubles = collapse_thru_packs(node_ids)
+    cards = []
+    if singles:
+        list_fields = [card_type, components] + singles
+        cards.append(print_card_8(list_fields))
+    for double in doubles:
+        (first_val, thru, last_val) = double
+        list_fields = [card_type, components, first_val, thru, last_val]
+        cards.append(print_card_8(list_fields))
+    return ''.join(cards)
 
 
 class QSET1(ABCQSet1):
