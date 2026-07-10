@@ -500,6 +500,8 @@ class BDFInputPy:
                 jfile = ilines[i][0]
                 jline = ilines[i][1]
                 source_filename = os.path.abspath(self.loaded_filenames[jfile])
+                spaces = self._get_trace_spaces(source_filename)
+
                 include_dir = os.path.abspath(os.path.dirname(source_filename))
                 if self.debug and 0:  # pragma: no cover
                     print(f'jfile={jfile} jline={jline}')
@@ -517,6 +519,7 @@ class BDFInputPy:
                         include_dirs=include_dirs,
                         replace_includes=replace_includes,
                         source_filename=source_filename,
+                        spaces=spaces,
                         write_env_on_error=False,
                     )
                     if bdf_filename2 == '':
@@ -809,15 +812,36 @@ class BDFInputPy:
                     return ilevel + 1
         raise RuntimeError(f'could not find source filename={source_filename!r}')
 
-    def _get_trace_spaces(self, source_filename: str, bdf_filename_inc: str) -> str:
-        bdf_filename_inc = os.path.abspath(bdf_filename_inc)
+    def _get_trace_spaces(self, source_filename: str,
+                          bdf_filename_inc: str='') -> str:
+        """
+        Gets the spaces to properly indent files in the tree
+
+        Parameters
+        ----------
+        source_filename : str
+            the path to the main file
+        bdf_filename_inc : str; default=''
+            The filename to include.
+            If we haven't determined the bdf_filename_inc yet, this will be
+            empty. It's used for writing better warning messages.
+
+        Returns
+        -------
+        spaces : str
+            the indentation level as a string
+
+        """
         ilevel = self._get_ilevel(source_filename)
-        # self.log.debug(f'adding {bdf_filename_inc}')
-        if ilevel not in self._files_trace:
-            self._files_trace[ilevel] = [bdf_filename_inc]
-        else:
-            self._files_trace[ilevel].append(bdf_filename_inc)
         spaces = ' ' * ilevel
+
+        if bdf_filename_inc:
+            bdf_filename_inc = os.path.abspath(bdf_filename_inc)
+            # self.log.debug(f'adding {bdf_filename_inc}')
+            if ilevel not in self._files_trace:
+                self._files_trace[ilevel] = [bdf_filename_inc]
+            else:
+                self._files_trace[ilevel].append(bdf_filename_inc)
         return spaces
 
     def _open_file(self, bdf_filename: str | StringIO,
@@ -845,6 +869,7 @@ class BDFInputPy:
         """
         if encoding is None:
             encoding = self.encoding
+
         if basename:
             bdf_filename_inc = os.path.join(self.include_dir, os.path.basename(bdf_filename))
         else:
