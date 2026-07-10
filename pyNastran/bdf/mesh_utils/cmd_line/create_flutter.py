@@ -110,7 +110,9 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
 
     minus_eas = []
     is_minus_eas = data['--minus_eas']
-    if isinstance(is_minus_eas, bool):
+    if is_minus_eas is None:
+        pass
+    elif isinstance(is_minus_eas, bool):
         if is_minus_eas:
             minus_eas = _float_list(data, 'MINUS_EAS')
     elif isinstance(is_minus_eas, str):

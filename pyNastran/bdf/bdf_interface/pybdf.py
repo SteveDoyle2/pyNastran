@@ -203,6 +203,9 @@ class BDFInputPy:
         self.use_new_parser: bool = False
         self.heavy_debug = False
 
+        # nlevels, list[files]
+        self._files_trace = {}
+
     def get_lines(self, bdf_filename: PathLike | StringIO,
                   punch: Optional[bool]=False,
                   make_ilines: bool=True,
@@ -592,6 +595,7 @@ class BDFInputPy:
         ilines : (nlines, 2) int np.ndarray
            [ifile, iline] array
         """
+        source_filename, source_line = source_file_line
         try:
             self._open_file_checks(bdf_filename2)
         except IOError:
@@ -602,8 +606,8 @@ class BDFInputPy:
                 f'  Check the end of {crash_name!r}\n'
                 f'  bdf_filename2 = {bdf_filename2!r}\n'
                 f'  abs_filename2 = {os.path.abspath(bdf_filename2)!r}\n'
-                f'  source_filename = {source_file_line[0]!r}\n'
-                f'  source_line     = {source_file_line[1]}\n'
+                f'  source_filename = {source_filename!r}\n'
+                f'  source_line     = {source_line}\n'
                 f'  include_lines = {include_lines}')
             self.log.error('\n\n'+msg)
             #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
@@ -612,7 +616,8 @@ class BDFInputPy:
             #raise IOError(msg)
 
         read_again = False
-        with self._open_file(bdf_filename2, basename=False, is_file0=False) as bdf_file:
+        with self._open_file(bdf_filename2, source_filename=source_filename,
+                             basename=False, is_file0=False) as bdf_file:
             #print('bdf_file.name = %s' % bdf_file.name)
             try:
                 lines2 = bdf_file.readlines()
@@ -792,7 +797,31 @@ class BDFInputPy:
             log.error(msg)
             raise IOError(msg)
 
+    def _get_ilevel(self, source_filename: str | StringIO) -> int:
+        if not source_filename:
+            return 0
+
+        # self.log.debug(f'looking for {source_filename}')
+        for ilevel, source_filenames in self._files_trace.items():
+            for source_filenamei in source_filenames:
+                # self.log.debug(source_filenamei)
+                if source_filenamei == source_filename:
+                    return ilevel + 1
+        raise RuntimeError(f'could not find source filename={source_filename!r}')
+
+    def _get_trace_spaces(self, source_filename: str, bdf_filename_inc: str) -> str:
+        bdf_filename_inc = os.path.abspath(bdf_filename_inc)
+        ilevel = self._get_ilevel(source_filename)
+        # self.log.debug(f'adding {bdf_filename_inc}')
+        if ilevel not in self._files_trace:
+            self._files_trace[ilevel] = [bdf_filename_inc]
+        else:
+            self._files_trace[ilevel].append(bdf_filename_inc)
+        spaces = ' ' * ilevel
+        return spaces
+
     def _open_file(self, bdf_filename: str | StringIO,
+                   source_filename: str='',
                    basename: bool=False, check: bool=True,
                    encoding: Optional[str]=None,
                    is_file0: bool=False) -> Any:
@@ -821,14 +850,17 @@ class BDFInputPy:
         else:
             bdf_filename_inc = os.path.join(self.include_dir, bdf_filename)
 
+        spaces = self._get_trace_spaces(source_filename, bdf_filename_inc)
+
         # bdf_filename
         self._validate_open_file(bdf_filename_inc, check)
 
         #ifile = len(self.active_filenames)
         if is_file0 or is_file_case_sensitive(bdf_filename_inc):
-            self.log.debug(f'opening {bdf_filename_inc!r}')
+            # we don't need to verify the case on the input file
+            self.log.debug(f'{spaces}- {bdf_filename_inc!r}')
         else:
-            self.log.warning(f'opening {bdf_filename_inc!r} (not case sensitive)')
+            self.log.warning(f'{spaces}- {bdf_filename_inc!r} (not case sensitive)')
 
         self.active_filenames.append(bdf_filename_inc)
         self.loaded_filenames.append(bdf_filename_inc)

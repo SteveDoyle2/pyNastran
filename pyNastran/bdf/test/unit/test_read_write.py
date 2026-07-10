@@ -28,7 +28,7 @@ class TestReadWriteFiles(unittest.TestCase):
         """
         log = SimpleLogger(level='info', encoding='utf-8')
         bdf_filename = os.path.join(TEST_PATH, 'include_dir2', 'level2', 'file1.bdf')
-        model =read_bdf(bdf_filename, log=log)
+        model = read_bdf(bdf_filename, log=log)
         assert len(model.nodes) == 5, model.nodes
 
     def test_read_include_dir_2_files(self):

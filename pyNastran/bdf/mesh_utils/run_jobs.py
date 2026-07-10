@@ -4,7 +4,7 @@ TODO: support old=no
 # pep8: disable=E252
 import os
 import sys
-# import copy
+import copy
 import shlex
 import datetime
 from itertools import count
@@ -387,6 +387,7 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
                           cleanup: bool=True,
                           run: bool=True,
                           debug: bool=False) -> tuple[int, list[list[str]]]:
+    keywords_raw = copy.deepcopy(keywords)
     nfiles = len(bdf_filenames)
     eta = 'N/A'
     eta_next = 'N/A'
@@ -404,7 +405,11 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
         is_keywords_list = isinstance(keywords0, list)
     if is_keywords_list:
         #print(f'keywords0 = {keywords0}')
-        assert len(keywords) == len(bdf_filenames), f'keywords={keywords} \nbdf_filenames={bdf_filenames}'
+        if len(keywords) != len(bdf_filenames):
+            raise RuntimeError(f'nkeywords={len(keywords)} nfiles={len(bdf_filenames)}\n'
+                               f'keywords_raw={keywords_raw}\n'
+                               f'keywords    ={keywords}\n'
+                               f'bdf_filenames={bdf_filenames}')
 
     allow_op2_skip = not process_all
     for ifile, bdf_filename in enumerate(bdf_filenames):
