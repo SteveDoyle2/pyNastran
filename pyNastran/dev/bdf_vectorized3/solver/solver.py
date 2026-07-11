@@ -24,6 +24,7 @@ displacement convergence:
 import os
 import copy
 from datetime import date
+from dataclasses import dataclass
 from typing import TextIO, Any
 
 import numpy as np
@@ -54,6 +55,7 @@ from pyNastran.f06.errors import FatalError
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.op2_interface.op2_classes import (
     RealDisplacementArray,
+    BucklingEigenvalues,
     RealSPCForcesArray,
     RealLoadVectorArray,
     ComplexDisplacementArray,
@@ -95,7 +97,6 @@ from .utils_freq import get_frequencies, slice_freq_set
 
 #-----------------------------------------------
 from .matrices.build_stiffness import (
-    #_COOAccumulator,
     build_Kgg, Kbb_to_Kgg)
 from .matrices.build_stiffness_geometric import build_KDgg
 from .matrices.build_mass import build_Mbb
@@ -112,6 +113,29 @@ from pyNastran.dev.bdf_vectorized3.solver.matrices.gmn_matrix import assemble_gm
 from .dynamic_file_writer import DynamicFileWriter
 
 Array = np.ndarray | scipy.sparse.csc_matrix
+
+STATIC_SOLS = (101, 105)  # 105-buckling requires statics
+MODAL_SOLS = (31, 103,  # craig-bampton, modes
+              107,  # ???
+              108,  # direct frequency
+              109,  # ???
+              111,  # modal frequency
+              112,  # ???,
+              )  # TODO: verify 107, 109, 112
+
+
+@dataclass
+class SolverData:
+    """storage struct for common variables"""
+    Kgg: Any
+    Mgg: Any
+    node_gridtype: np.ndarray
+    dof_map: DOF_MAP
+    xyz_cid0: np.ndarray
+    ngrid: int
+    ndof_g: int
+    ndof_per_grid: int
+    GMN0: tuple[np.ndarray | None, np.ndarray | None]  # GMN, mset
 
 
 class Solver:
@@ -138,7 +162,7 @@ class Solver:
 
         # User-supplied KGG override (e.g. from Nastran DMAP export).
         # When set, the solver skips internal KGG assembly and uses this instead.
-        # Must be (ndof, ndof) dense or sparse array in the same DOF ordering
+        # Must be (ndof_g, ndof_g) dense or sparse array in the same DOF ordering
         # as the model's grid nodes (6 DOF per node, node order from grid.node_id).
         self.Kgg_override = None
         self.Mgg_override = None
@@ -160,11 +184,14 @@ class Solver:
         #print(self.solver_dict)
 
 
-    def run(self):
+    def run(self, fdtype: float='float64'):
         page_num = 1
         model = self.model
-        model.write_bdf(self._bdf_filename)
+        op2 = self.op2
+        log = self.log
         sol = model.sol
+        idtype = 'int32'
+
         solmap = {
             31: self.run_sol_31_craig_bampton,
             101: self.run_sol_101_statics,
@@ -173,8 +200,6 @@ class Solver:
             108: self.run_sol_108_direct_frequency,
             111: self.run_sol_111_modal_frequency,
         }
-        model.cross_reference()
-        self._update_card_count()
 
         # title = ''
         title = f"pyNastran {pyNastran.__version__}"
@@ -183,18 +208,44 @@ class Solver:
                 title = subcase.get_parameter("TITLE")[0]
                 assert isinstance(title, str), title
                 break
+        #----------------------------------------------------------
+
+        model.write_bdf(self._bdf_filename)
+        model.cross_reference()
+        self._update_card_count()
+
+        Ug_preloads = {}
+        check_subcases(model)
+        preloads_to_save, preloads_to_apply = find_preload(model)
 
         today = None
-        page_stamp = self.op2.make_stamp(title, today)  # + '\n'
+        page_stamp = op2.make_stamp(title, today)  # + '\n'
+        
+        #----------------------------------------------------------
+        is_structural = True  # TODO: support HEAT
+
+        #----------------------------------------------------------
         with open(self.f06_filename, "w") as f06_file:
-            f06_file.write(self.op2.make_f06_header())
-            self.op2._write_summary(f06_file, card_count=model.card_count)
+            f06_file.write(op2.make_f06_header())
+            op2._write_summary(f06_file, card_count=model.card_count)
             f06_file.write("\n")
+
+            solver_data, page_num = setup_solver_data(
+                is_structural,
+                model, op2, f06_file,
+                idtype, fdtype,
+                solver_dict=self.solver_dict,
+                Kgg_override=self.Kgg_override,
+                Mgg_override=self.Mgg_override,
+                title=title, page_stamp=page_stamp, page_num=page_num,
+            )
+            
+            # run the solutions
             if sol in [31, 101, 103, 105, 107, 108, 109, 111, 112]:
                 for subcase_id, subcase in sorted(model.subcases.items()):
                     if subcase_id == 0:
                         continue
-                    self.log.debug(f"subcase_id={subcase_id}")
+                    log.debug(f"subcase_id={subcase_id}")
                     # isubcase = subcase.id
                     subtitle = f"SUBCASE {subcase_id}"
                     label = ""
@@ -203,26 +254,36 @@ class Solver:
                     if "LABEL" in subcase:
                         label = subcase.get_parameter("LABEL")
 
-                    runner = solmap[sol]
-                    # print(runner)
-                    out, page_num, end_options = runner(
+                    Ug_preload = None
+                    if subcase_id in preloads_to_apply:
+                        preload_value = preloads_to_apply[subcase_id]
+                        Ug_preload = Ug_preloads[preload_value]
+
+                    run_sol_func = solmap[sol]
+                    # print(run_sol_func)
+                    out, page_num, end_options = run_sol_func(
+                        solver_data,
                         subcase,
                         f06_file,
                         page_stamp,
+                        Ug_preload=Ug_preload,
                         title=title,
                         subtitle=subtitle,
                         label=label,
                         page_num=page_num,
-                        idtype="int32",
-                        fdtype="float64",
+                        idtype=idtype,
+                        fdtype=fdtype,
                     )
+                    if sol == 105: # buckling
+                        out['xg']  # verify this exists
+                        if subcase_id in preloads_to_save:
+                            Ug_preloads[subcase_id] = (out['xg'], out['free_dofs'])
                     del out
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(sol)
             end_flag = True
             f06_file.write(make_end(end_flag, end_options))
         # Write OP2 once after all subcases (only if there's data)
-        op2 = self.op2
         has_results = (
             op2.displacements or op2.spc_forces or op2.load_vectors
             or op2.eigenvectors or op2.eigenvalues
@@ -239,11 +300,14 @@ class Solver:
         for card_type, values in self.model._type_to_id_map.items():
             self.model.card_count[card_type] = len(values)
 
-    def build_Fb(self, xg: NDArrayNfloat, sset_b,
-                 dof_map: DOF_MAP, ndof: int,
+    def build_Fb(self, xg: NDArrayNfloat,
+                 sset_bool,
+                 dof_map: DOF_MAP,
+                 ndof_g: int,
                  subcase: Subcase,
                  Mbb: Array | None = None,
-                 xyz_cid0: np.ndarray | None = None) -> NDArrayNfloat:
+                 xyz_cid0: np.ndarray | None = None,
+                 fdtype='float64') -> NDArrayNfloat:
         model = self.model
         log = model.log
         log.info("starting build_Fb")
@@ -266,15 +330,18 @@ class Solver:
             log.warning('creating Fb')
 
         Fb, Mbb, xyz_cid0 = build_Fb_from_loadid(
-            model, dof_map, ndof,
-            xg, sset_b,
+            model, dof_map, ndof_g,
+            xg, sset_bool,
             load_id=load_id, temp_load_id=temp_load_id,
-            Mbb=Mbb, xyz_cid0=xyz_cid0)
+            Mbb=Mbb, xyz_cid0=xyz_cid0, fdtype=fdtype)
         log.info("end of build_Fb")
         return Fb, Mbb, xyz_cid0
 
-    def build_GMN(self, subcase: Subcase,
-                  dof_map: DOF_MAP, ndof: int,
+    def build_GMN(self,
+                  solver_data: SolverData,
+                  subcase: Subcase,
+                  dof_map: DOF_MAP,
+                  ndof: int,
                   xyz_cid0: np.ndarray,
                   fdtype: str = "float64",
                   ) -> tuple[np.ndarray | None, np.ndarray | None]:
@@ -303,15 +370,18 @@ class Solver:
 
         Returns
         -------
-        GMN : (ndof, n_ndof) sparse matrix or None
+        GMN : (ndof, ndof_n) sparse matrix or None
             Transformation from n-set to g-set. None if no constraints.
         mset : (n_mset,) int array or None
             Indices of dependent (m-set) DOFs in the g-set. None if no constraints.
         """
         mpc_id = 0
-        has_mpc = "MPC" in subcase
-        if has_mpc:
-            mpc_id, unused_options = subcase["MPC"]
+        if "MPC" in subcase:
+            mpc_id = subcase["MPC"][0]
+
+        if mpc_id == 0:
+            return solver_data.GMN0  # (GMN_csc, mset)
+
         GMN_csc, mset = _build_Gmn(
             self.model, mpc_id,
             dof_map, ndof, xyz_cid0, fdtype=fdtype,
@@ -320,9 +390,11 @@ class Solver:
 
     def run_sol_101_statics(
         self,
+        solver_data: SolverData,
         subcase: Subcase,
         f06_file: TextIO,
         page_stamp: str,
+        Ug_preload=None,
         title: str = "",
         subtitle: str = "",
         label: str = "",
@@ -371,6 +443,13 @@ class Solver:
         g = (a + o) + (sb + sg) + (mp + mr)
         a + o = g - (sb + sg) + (mp + mr)
         a = g - o - (sb + sg) + (mp + mr)
+        
+        f = a + o
+        a = t
+        t = l + r
+        l = t - r = a - r
+        a = f - o
+        l = f - o - r
 
         l = b + c   # left over dofs
         t = l + r   # total set of DOFs for super
@@ -395,6 +474,7 @@ class Solver:
         b = l - c ???
         c = l - b ???
         """
+        assert Ug_preload is None, Ug_preload
         out = {}
         self.log.debug(f"run_sol_101")
         end_options = [
@@ -408,17 +488,25 @@ class Solver:
         itime = 0
         ntimes = 1  # static
         isubcase = subcase.id
-        idtype = 'int32'
-        # -----------------------------------------------------------------------
+        # ------------------------------------------------------------------
         model = self.model
         log = model.log
 
         model.setup(run_geom_check=True)
-        xyz_cid0 = model.grid.xyz_cid0()
-        # -----------------------------------------------------------------------
+        xyz_cid0 = solver_data.xyz_cid0
+        node_gridtype = solver_data.node_gridtype
+        Kgg = solver_data.Kgg
+        ndof_g = solver_data.ndof_g
+        Mbb = None
+
+        gset = np.arange(ndof_g, dtype=idtype)
+        gset_str = np.full(ndof_g, 'g', dtype='|U1')
+        gset_idx = np.arange(ndof_g, dtype='int32')
+
+        # ------------------------------------------------------------------
         load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
             model.sol, subcase)
-        # -----------------------------------------------------------------------
+        # ------------------------------------------------------------------
 
         is_mpc_request = get_plot_request(subcase, 'MPCFORCES')[-1]
         is_spc_request = get_plot_request(subcase, 'SPCFORCES')[-1]
@@ -427,48 +515,46 @@ class Solver:
 
         dof_map, ps = _get_dof_map(model)
 
-        node_gridtype = _get_node_gridtype(model, idtype=idtype)
-        ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
+        ngrid, ndof_per_grid, ndof_g = get_ndof(model, subcase)
 
-        gset_b = ps_to_sg_set(ndof, ps)
-        rset_b = get_rset_bool(model, dof_map, ndof, suport_id=suport_id)
-        has_suport = np.any(rset_b)
+        gset_bool = ps_to_sg_set(ndof_g, ps)
+        gset_str[gset_bool] = '0'
+
+        rset_bool = get_rset_bool(
+            model, dof_map, ndof_g, suport_id=suport_id)
+        has_suport = np.any(rset_bool)
         #--------------------------------------------------
-        log.warning('creating Kgg')
-        Kgg = get_Kgg(
-            model, dof_map, ndof, ngrid, ndof_per_grid,
-            idtype=idtype, fdtype=fdtype,
-            Kgg_override=self.Kgg_override,
-            solver_dict=self.solver_dict)
 
-        Mbb = None
         is_mass_load = len(model.grav) > 0 or len(model.rforce) > 0
         is_param_grdpnt = 'GRDPNT' in model.params
 
         if is_mass_load or is_param_grdpnt or has_suport:
             log.warning('creating Mbb')
             Mbb = build_Mbb(
-                model, subcase, dof_map, ndof, fdtype=fdtype,
+                model, subcase, dof_map, ndof_g, fdtype=fdtype,
                 solver_dict=self.solver_dict)
             page_num = write_grid_point_weight(
-                model, Mbb, dof_map, ndof,
+                model, Mbb, dof_map, ndof_g,
                 self.op2, f06_file,
                 title=title, subtitle=subtitle, label=label,
                 page_stamp=page_stamp, page_num=page_num)
 
-        sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
+        sset, sset_bool, xg = _build_xg(model, dof_map, ndof_g, subcase)
 
         Fb, Mbb, xyz_cid0 = self.build_Fb(
-            xg, sset_b, dof_map, ndof, subcase, Mbb=Mbb,
-            xyz_cid0=xyz_cid0)
+            xg, sset_bool, dof_map, ndof_g, subcase, Mbb=Mbb,
+            xyz_cid0=xyz_cid0, fdtype=fdtype)
+        assert Fb.dtype == np.float64, Fb.dtype
 
         # ---------------------MPC reduction (g -> n)---------------------
-        GMN, mset = self.build_GMN(
-            subcase, dof_map, ndof, xyz_cid0, fdtype=fdtype)
+        GMN, mset_bool = self.build_GMN(
+            solver_data, subcase, dof_map, ndof_g,
+            xyz_cid0, fdtype=fdtype)
+
         self.GMN = GMN
-        self.mset = mset
+        self.mset = mset_bool
         #out['GMN'] = GMN
-        out['mset_bool'] = mset
+        out['mset_bool'] = mset_bool
 
         log.warning('creating Mgg')
         Mgg = None if Mbb is None else Kbb_to_Kgg(
@@ -480,12 +566,13 @@ class Solver:
             model,
             Kgg, Mgg, GMN,
             log, self.solver_dict)
+
         self._autospc_n_dofs = autospc_n_dofs
-        gset = np.arange(ndof, dtype=idtype)
 
         write_mat(model, Fb, 'PRTPB', self.solver_dict)
         Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
         write_mat(model, Fg, 'PRTPG', self.solver_dict)
+        assert Fg.dtype == np.float64, Fg.dtype
 
         # Save g-set force for oload output before MPC transform
         Fg_gset = np.where(np.isnan(Fg), 0.0, Fg.copy())
@@ -495,16 +582,18 @@ class Solver:
         Fn, nset_indices = static_Pg_to_Pn(
             model,
             Fg, GMN,
-            gset, mset,
+            gset, mset_bool,
             log, self.solver_dict)
 
+        gset_str[mset_bool] = 'm'
+        gset_str[sset_bool] = 's'
         if GMN is not None:
-            n_ndof = len(nset_indices)
+            ndof_n = len(nset_indices)
 
             # Rebuild SPC set and xg in n-set coordinates
             # Map g-set SPC indices to n-set indices
-            g_to_n = np.full(ndof, -1, dtype="int32")
-            g_to_n[nset_indices] = np.arange(n_ndof, dtype="int32")
+            g_to_n = np.full(ndof_g, -1, dtype="int32")
+            g_to_n[nset_indices] = np.arange(ndof_n, dtype="int32")
 
             sset_n = []
             for s_idx in sset:
@@ -513,15 +602,15 @@ class Solver:
                     sset_n.append(n_idx)
             sset_n = np.array(sset_n, dtype="int32")
 
-            xn = np.full(n_ndof, np.nan, dtype=fdtype)
+            xn = np.full(ndof_n, np.nan, dtype=fdtype)
             for s_idx in sset:
                 n_idx = g_to_n[s_idx]
                 if n_idx >= 0:
                     xn[n_idx] = xg[s_idx]
 
             # Also check if any dependent DOF has an SPC — that's a conflict
-            for m_idx in mset:
-                if sset_b[m_idx]:
+            for m_idx in mset_bool:
+                if sset_bool[m_idx]:
                     log.warning(
                         f"DOF {m_idx} is both MPC-dependent and SPC-constrained; "
                         f"SPC on dependent DOF is ignored")
@@ -534,9 +623,9 @@ class Solver:
                         xn[a_idx] = 0.0
 
             # Work in n-set from here
-            nset_all = np.arange(n_ndof, dtype=idtype)
-            sset_b_n = np.zeros(n_ndof, dtype="bool")
-            sset_b_n[sset_n] = True
+            nset_all = np.arange(ndof_n, dtype=idtype)
+            sset_bool_n = np.zeros(ndof_n, dtype="bool")
+            sset_bool_n[sset_n] = True
 
             if asetmap:
                 aset_g = apply_dof_map_to_set(asetmap, dof_map, idtype=idtype)
@@ -552,9 +641,9 @@ class Solver:
             Fg = Fn
             Kgg_orig = Kgg
             Kgg = Knn
-            ndof_solve = n_ndof
+            ndof_solve = ndof_n
         else:
-            ndof_solve = ndof
+            ndof_solve = ndof_g
             Kgg_orig = Kgg
             xg_orig = None
 
@@ -589,7 +678,8 @@ class Solver:
 
         Fg_oload = Fg_gset
         page_num = write_oload_resultant(
-            Fg_oload, dof_map, isubcase, ngrid, ndof_per_grid, f06_file, page_stamp, page_num, log)
+            Fg_oload, dof_map, isubcase, ngrid, ndof_per_grid,
+            f06_file, page_stamp, page_num, log)
 
         # aset - analysis set
         # sset - SPC set
@@ -601,12 +691,12 @@ class Solver:
         finite_xg = np.any(np.isfinite(abs_xg))
         if finite_xg and np.nanmax(abs_xg) > 0.0:
             self.log.warning(f"SPCD found")
-            self.log.info(f"  xg = {xg}")
-            self.log.info(f"  Fg = {Fg}")
+            self.log.info(f"  xg = {xg}; n={ndof_g}")
+            self.log.info(f"  Fg = {Fg}; n={ndof_g}")
             set0 = xg == 0.0
             set0_ = np.where(set0)
 
-            self.log.info(f"  aset = {aset}")
+            self.log.info(f"  aset = {aset}; n={len(aset)}")
             if np.any(set0_):
                 self.log.info(f"  removing set0_ from sset")
                 self.log.info(f"    set0_ = {set0_}")
@@ -635,7 +725,7 @@ class Solver:
         self.set0 = set0
         self.aset = aset
 
-        log.warning('partitioning F: a = g - s - 0')
+        log.warning(f'partitioning F: a = g - s - 0; ndof_a={len(aset)}')
         Fa, Fs = partition_vector2(Fg, [["a", aset], ["s", sset]])
         del Fs
 
@@ -697,18 +787,19 @@ class Solver:
         # --- SUPORT / inertia relief for statics ---
         inrel = get_param(model, 'INREL', -1)
 
+        gset_str[rset_bool] = 'r'
         if has_suport and inrel == -2 and is_aset:
             # Inertia relief: partition a = l + r, apply inertia relief
-            log.warning('SUPORT/INREL: l = a - r')
             a_indices = np.where(aset)[0]
-            r_in_a = rset_b[a_indices]
+            r_in_a = rset_bool[a_indices]
             lset_local = np.where(~r_in_a)[0]
             rset_local = np.where(r_in_a)[0]
-            nr = len(rset_local)
-            nl = len(lset_local)
+            ndof_r = len(rset_local)
+            ndof_l = len(lset_local)
+            log.warning(f'SUPORT/INREL: l = a - r; ; ndof_l={ndof_l}')
             log.info(
                 f"Inertia relief (PARAM,INREL,-2): "
-                f"r-set={nr} DOFs, l-set={nl} DOFs")
+                f"r-set={ndof_r} DOFs, l-set={ndof_l} DOFs")
 
             # Build D matrix for a-set grid coordinates
             # Map a-set DOF indices back to grid positions
@@ -734,26 +825,27 @@ class Solver:
 
             # Partition to l-set and solve
             Kaa_dense = todense(Kaa)
-            Kll = Kaa_dense[np.ix_(lset_local, lset_local)]
+            ll_idx = np.ix_(lset_local, lset_local)
+            Kll = Kaa_dense[ll_idx]
             Fl = F_net[lset_local]
             write_mat(model, Kll, 'PRTKLL', self.solver_dict)
             write_mat(model, Fl, 'PRTPL', self.solver_dict)
 
             # Solve Kll @ ul = Fl
-            Kll_sp = csc_matrix(Kll)
-            xl_, ipositive_l, inegative_l = solve(
-                Kll_sp, Fl, np.ones(nl, dtype='bool'), log,
+            Kll_sparse = csc_matrix(Kll)
+            lset = np.ones(ndof_l, dtype='bool')
+            ul, ipositive_l, inegative_l = solve(
+                Kll_sparse, Fl, lset, log,
                 idtype=idtype)
-            write_mat(model, xl_, 'PRTUL', self.solver_dict)
+            write_mat(model, ul, 'PRTUL', self.solver_dict)
 
             # Expand l-set solution back to a-set
             xa[:] = 0.0
-            ul = np.zeros(nl, dtype=fdtype)
-            ul[ipositive_l] = xl_
             xa[lset_local] = ul
+
             # r-set displacements are zero (rigid body reference)
 
-            self.xa_ = xa[lset_local][ipositive_l]
+            self.xa_ = ul[ipositive_l]
             self.Fa_ = Fl[ipositive_l]
             self.inertia_relief = {
                 'a_rigid': a_rigid,
@@ -763,21 +855,19 @@ class Solver:
             }
         elif is_aset:
             log.warning('a set reduction')
-            xa_, ipositive, inegative = solve(Kaa, Fa_solve, aset, log, idtype=idtype)
+            xa, ipositive, inegative = solve(
+                Kaa, Fa_solve, aset, log, idtype=idtype)
+            xa_ = xa[ipositive]
             Fa_ = Fa[ipositive]
 
             log.info(f"aset_ = {ipositive}")
             log.info(f"xa_ = {xa_}")
             log.info(f"Fa_ = {Fa_}")
 
-            xa[ipositive] = xa_
-            xa[inegative] = 0.0
             self.xa_ = xa_
             self.Fa_ = Fa_
         else:
             FatalError("A-set is empty; all DOFs are constrained")
-            #self.xa_ = []
-            #self.Fa_ = []
 
         # Assemble solution in the working DOF set (n-set if GMN, else g-set)
         xn_full = np.full(ndof_solve, np.nan, dtype=fdtype)
@@ -818,35 +908,38 @@ class Solver:
 
         if GMN is not None:
             log.warning('recover SPC/MPC forces')
+
             # Expand n-set solution to g-set: xg = GMN @ xn
             xn_solve = np.where(np.isnan(xn_full), 0.0, xn_full)
             xg = np.asarray(GMN @ xn_solve).ravel()
+
             # SPC forces in g-set: fspc_g = Kgg_orig @ xg - Fg_orig
-            fspc_g = np.full(ndof, 0.0, dtype=fdtype)
+            fspc_g = np.full(ndof_g, 0.0, dtype=fdtype)
+
             # Rebuild Fg in g-set
             Fg_g = np.asarray(Kgg_orig @ xg).ravel()
+
             # For the SPC DOFs in the original g-set
-            sset_orig, sset_b_orig, unused_xg_orig2 = _build_xg(
-                model, dof_map, ndof, subcase)
+            sset_orig, sset_bool_orig, unused_xg_orig2 = _build_xg(
+                model, dof_map, ndof_g, subcase)
             fspc_g[sset_orig] = Fg_g[sset_orig]
             xg_out = xg
             Fg_out = Fg_g
             fspc = fspc_g
-            ndof_out = ndof
+            #ndof_out = ndof_g
 
             # MPC forces: F_mpc = Kgg @ xg - Fg_applied at dependent DOFs
             # The MPC force is the reaction needed to enforce the constraint
             Fg_applied = np.where(np.isnan(Fg_gset), 0.0, Fg_gset)
             F_internal = np.asarray(Kgg_orig @ xg).ravel()
-            fmpc = np.zeros(ndof, dtype=fdtype)
-            fmpc[mset] = F_internal[mset] - Fg_applied[mset]
+            fmpc = np.zeros(ndof_g, dtype=fdtype)
+            fmpc[mset_bool] = F_internal[mset_bool] - Fg_applied[mset_bool]
             self.fmpc = fmpc
-            log.debug(f"  MPC forces at {len(mset)} dependent DOFs")
+            log.debug(f"  MPC forces at {len(mset_bool)} dependent DOFs")
         else:
             xg_out = xn_full
             Fg_out = Fg
-            ndof_out = ndof
-            self.fmpc = np.zeros(ndof, dtype=fdtype)
+            self.fmpc = np.zeros(ndof_g, dtype=fdtype)
 
         log.debug(f"xa = {xa}")
         log.debug(f"xs = {xs}")
@@ -931,9 +1024,11 @@ class Solver:
 
     def run_sol_103_modes(
         self,
+        solver_data: SolverData,
         subcase: Subcase,
         f06_file: TextIO,
         page_stamp: str,
+        Ug_preload=None,
         title: str = "",
         subtitle: str = "",
         label: str = "",
@@ -955,8 +1050,33 @@ class Solver:
             matrices_to_save = set([])
 
         model = self.model
-        nmodes, norm_str = get_real_eigenvalue_method(model, subcase)
+        op2 = self.op2
         log = model.log
+
+        load_id = 0
+        if 'LOAD' in subcase:
+            load_id = subcase['LOAD'][0]
+
+        if Ug_preload is not None:
+            assert Ug_preload is not None, Ug_preload
+            # TODO: this seems like a super hacky way to get Kff
+            #       Should I even be after Kff (f=l+r)?
+            #       what about SUPORT?
+            #
+            u_global, free_dofs = Ug_preload
+            Kgg = solver_data.Kgg
+            Kff = Kgg[np.ix_(free_dofs, free_dofs)].toarray()
+
+            KDgg = build_KDgg(model, ndof_g, dof_map, u_global)
+            KDgg = KDgg.tocsc()
+            Kgg = Kgg + KDgg
+        else:
+            Kgg = solver_data.Kgg
+
+        #KDff = KDgg[np.ix_(free_dofs, free_dofs)].toarray()
+        #ndof_f = KDff.shape[0]
+
+        nmodes, norm_str = get_real_eigenvalue_method(model, subcase)
         log.debug("run_sol_103 (modes)")
         assert len(model.methods), "SOL 103 (modes) requires a METHOD and a EIGR/EIGRL card"
         end_options = [
@@ -964,43 +1084,39 @@ class Solver:
             "SEKR",  # STIFFNESS MATRIX REDUCTION STEP
             "MODES",  # run modes
         ]
-        op2 = self.op2
         # write_f06 = True
 
-        node_gridtype = _get_node_gridtype(model, idtype=idtype)
-        xyz_cid0 = model.grid.xyz_cid0()
-        # -----------------------------------------------------------------------
+        node_gridtype = solver_data.node_gridtype
+        xyz_cid0 = solver_data.xyz_cid0
+        # -----------------------------------------------------------------
         load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
             model.sol, subcase)
-        # -----------------------------------------------------------------------
+        # -----------------------------------------------------------------
 
         dof_map, ps = _get_dof_map(model)
-        ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
+        ngrid, ndof_per_grid, ndof_g = get_ndof(self.model, subcase)
 
-        gset_b = ps_to_sg_set(ndof, ps)
-        rset_b = get_rset_bool(model, dof_map, ndof, suport_id=suport_id)
-        has_suport = np.any(rset_b)
+        gset_bool = ps_to_sg_set(ndof_g, ps)
+        rset_bool = get_rset_bool(model, dof_map, ndof_g, suport_id=suport_id)
+        has_suport = np.any(rset_bool)
         #--------------------------------------------------
 
         # Build GMN for MPC reduction
-        GMN, mset = self.build_GMN(
-            subcase, dof_map, ndof, xyz_cid0, fdtype=fdtype)
+        GMN, mset_bool = self.build_GMN(
+            solver_data, subcase, dof_map, ndof_g, xyz_cid0, fdtype=fdtype)
         self.GMN = GMN
-        self.mset = mset
+        self.mset = mset_bool
 
         matrices_to_save.add('Mgg')
         page_num, out = _run_modes(
-            model, subcase,
+            solver_data, model, subcase,
             op2, f06_file,
             ngrid,
             ndof_per_grid,
-            ndof,
-            node_gridtype,
-            dof_map,
-            Kgg_override=self.Kgg_override,
+            ndof_g,
+            Kgg_override=Kgg,
             Mgg_override=self.Mgg_override,
-            GMN=GMN,
-            mset=mset,
+            GMN=GMN, mset_bool=mset_bool,
             idtype=idtype,
             fdtype=fdtype,
             page_stamp=page_stamp, page_num=page_num,
@@ -1009,140 +1125,101 @@ class Solver:
         )
         if 'GMN' in matrices_to_save:
             out['GMN'] = GMN
-            out['mset_bool'] = mset
+            out['mset_bool'] = mset_bool
 
-        phig = out["modes_phig"]
+        phi_g = out["modes_phig"]
         eigenvalue = out["modes_eigenvalue"]
-        cycle = np.sqrt(np.abs(eigenvalue)) / (2.0 * np.pi)
+        omega = np.sqrt(np.abs(eigenvalue))
+        cycle = omega / (2.0 * np.pi)
         mode_cycle = eigenvalue
         isubcase = subcase.id
 
         page_num = save_eigenvalues(
             self.op2, f06_file, out, subcase, title,
             page_stamp=page_stamp, page_num=page_num)
-        eigenvalue = out["modes_eigenvalue"]
         nmode = len(eigenvalue)
 
         # Mass participation factors
         Mgg = out["Mgg"]
         nnode_g = node_gridtype.shape[0]
-        mpf = compute_mass_participation(phig, Mgg, nnode_g, nmode)
+        mpf = compute_mass_participation(phi_g, Mgg, nnode_g, nmode)
         out["mass_participation"] = mpf
 
         _write_mass_participation_f06(f06_file, mpf, cycle, nmode)
         log.info(f"mass participation cumulative (Tx): {mpf['cumulative_ratio'][-1, 0]:.4f}")
 
-        modes = np.arange(1, nmode + 1, dtype=idtype)
-        eigenvalue = eigenvalue.astype("float32")
-        (
-            write_phi_f06,
-            write_phi_op2,
-            write_phi_pch,
-            unused_options,
-            phi_set,
-        ) = get_f06_op2_pch_set(subcase, "DISPLACEMENT")
-        write_eigenvector = any((write_phi_f06, write_phi_op2))
+        nmode = len(eigenvalue)
+        recover_results = get_recover_results(
+            subcase, ['DISPLACEMENT', 'FORCE', 'STRAIN', 'STRESS', 'ESE'])
 
-        if write_eigenvector:
-            nnode = node_gridtype.shape[0]
-            # print(xg_out.shape)
-            node_gridtypei, phi, nnodei = slice_modal_set(
-                node_gridtype, phig, nnode, nmode, phi_set)
+        if recover_results:
+            modes = np.arange(1, nmode + 1, dtype=idtype)
+            page_num = _save_eigenvectors(
+                model, subcase,
+                phi_g,  node_gridtype,
+                modes, eigenvalue, mode_cycle,
+                op2, f06_file, page_num,
+                page_stamp=page_stamp,
+                title=title, subtitle=subtitle, label=label,
+                sol_type='modes',)
 
-            # phi:  (nmode, nnode*6)
-            # data: (nmode, nnode, 6)
-            data = phi.reshape((nmode, nnodei, 6)).astype("float32")
-            table_name = "OUGV1"
-            eigenvector_obj = RealEigenvectorArray.add_modal_case(
-                table_name,
-                node_gridtypei,
-                data,
-                isubcase,
+            # fspc = Ksa @ xa + Kss @ xs
+            # Fs[ipositive] = Fsi
+
+            # Fg[aset] = Fa
+            # Fg[sset] = fspc
+            # log.debug(f'xa = {xa}')
+            # log.debug(f'Fs = {Fs}')
+            # log.debug(f'xg = {xg}')
+            # log.debug(f'Fg = {Fg}')
+
+            page_stamp += "\n"
+
+            # add transform for xg to xb
+            # (need for rods, quads, etc., but not springs)
+            phi_b = xg_to_xb(model, phi_g, ngrid, ndof_per_grid)
+            phi_b = phi_g
+
+            recover_force_103(
+                f06_file,
+                op2,
+                self.model,
+                dof_map,
+                subcase,
+                phi_g,
+                phi_b,
                 modes,
-                eigenvalue,
-                mode_cycle,
-                is_sort1=True,
-                is_random=False,
-                is_msc=True,
-                random_code=0,
+                eigenvalue,  # freqs,
                 title=title,
                 subtitle=subtitle,
                 label=label,
-            )
-            eigenvector_obj.nonlinear_factor = 1
-
-        if write_phi_op2:
-            op2.eigenvectors[isubcase] = eigenvector_obj
-
-        if write_phi_f06:
-            page_num = eigenvector_obj.write_f06(
-                f06_file,
-                header=None,
                 page_stamp=page_stamp,
-                page_num=page_num,
-                is_mag_phase=False,
-                is_sort1=True,
             )
-            f06_file.write("\n")
-        # fspc = Ksa @ xa + Kss @ xs
-        # Fs[ipositive] = Fsi
 
-        # Fg[aset] = Fa
-        # Fg[sset] = fspc
-        # log.debug(f'xa = {xa}')
-        # log.debug(f'Fs = {Fs}')
-        # log.debug(f'xg = {xg}')
-        # log.debug(f'Fg = {Fg}')
-
-        op2 = self.op2
-        page_stamp += "\n"
-
-        # add transform for xg to xb
-        # (need for rods, quads, etc., but not springs)
-        phib = xg_to_xb(model, phig, ngrid, ndof_per_grid)
-        phib = phig
-
-        recover_force_103(
-            f06_file,
-            op2,
-            self.model,
-            dof_map,
-            subcase,
-            phig,
-            phib,
-            modes,
-            eigenvalue,  # freqs,
-            title=title,
-            subtitle=subtitle,
-            label=label,
-            page_stamp=page_stamp,
-        )
-
-        # Per-mode force/stress/strain/ESE recovery
-        # using static routines
-        #
-        # TODO: how does this write correctly to the op2?
-        # TODO: this does a lot of extra work 
-        nmode = phig.shape[0]
-        for imode in range(nmode):
-            xb_mode = phib[imode, :]
-            recover_force_101(
-                f06_file, op2, self.model, dof_map, subcase,
-                xb_mode, title=title, subtitle=subtitle, label=label,
-                page_stamp=page_stamp,)
-            recover_strain_101(
-                f06_file, op2, self.model, dof_map, subcase,
-                xb_mode, title=title, subtitle=subtitle, label=label,
-                page_stamp=page_stamp,)
-            recover_stress_101(
-                f06_file, op2, self.model, dof_map, subcase,
-                xb_mode, title=title, subtitle=subtitle, label=label,
-                page_stamp=page_stamp,)
-            recover_strain_energy_101(
-                f06_file, op2, self.model, dof_map, subcase,
-                xb_mode, title=title, subtitle=subtitle, label=label,
-                page_stamp=page_stamp,)
-        str(f06_file)
+            # Per-mode force/stress/strain/ESE recovery
+            # using static routines
+            #
+            # TODO: how does this write correctly to the op2?
+            # TODO: this does a lot of extra work 
+            for imode in range(nmode):
+                xb_mode = phi_b[imode, :]
+                recover_force_101(
+                    f06_file, op2, self.model, dof_map, subcase,
+                    xb_mode, title=title, subtitle=subtitle, label=label,
+                    page_stamp=page_stamp,)
+                recover_strain_101(
+                    f06_file, op2, self.model, dof_map, subcase,
+                    xb_mode, title=title, subtitle=subtitle, label=label,
+                    page_stamp=page_stamp,)
+                recover_stress_101(
+                    f06_file, op2, self.model, dof_map, subcase,
+                    xb_mode, title=title, subtitle=subtitle, label=label,
+                    page_stamp=page_stamp,)
+                recover_strain_energy_101(
+                    f06_file, op2, self.model, dof_map, subcase,
+                    xb_mode, title=title, subtitle=subtitle, label=label,
+                    page_stamp=page_stamp,)
+            str(f06_file)
         str(page_stamp)
         return out, page_num, end_options
 
@@ -1153,14 +1230,15 @@ class Solver:
         # TODO: parse inputs for loads
         Fg = np.ones((ndof_g, 1), dtype="complex64")
         dload_id, _ = subcase['DLOAD']
-
         return Fg
 
     def run_sol_111_modal_frequency(
         self,
+        solver_data: SolverData,
         subcase: Subcase,
         f06_file: TextIO,
         page_stamp: str,
+        Ug_preload=None,
         title: str = "",
         subtitle: str = "",
         label: str = "",
@@ -1189,8 +1267,10 @@ class Solver:
         # handles MAX/MASS normalization
         log.info('running modes')
         out, page_num, end_options = self.run_sol_103_modes(
+            solver_data,
             subcase,
             f06_file,
+            Ug_preload=None,
             page_stamp=page_stamp,
             title=title,
             subtitle=subtitle,
@@ -1206,8 +1286,8 @@ class Solver:
         GMN = None
         if mpc_id or 'GMN' in out:
             GMN = out.get('GMN')
-            mset_b = out['mset_bool']
-        sset_b = out['sset_bool']
+            mset_bool = out['mset_bool']
+        sset_bool = out['sset_bool']
         oset_b = None
 
         end_options.append("DYNRED")
@@ -1216,7 +1296,7 @@ class Solver:
         # Mgg = out['Mgg']
         eigenvalue = out["modes_eigenvalue"]
         # print(list(out))
-        phit = out["modes_phig"]  # phi-gg
+        phi_t = out["modes_phig"]  # phi-gg
 
         nmode = len(eigenvalue)
         ndof_g = Kgg.shape[0]
@@ -1238,25 +1318,25 @@ class Solver:
         Fa = reduce_Pg_to_Pa(
             Fg,
             ndof_g,
-            sset_b,
-            mset_b=mset_b,
+            sset_bool,
+            mset_b=mset_bool,
             oset_b=oset_b,
             Gm=GMN, Koo=Koo, Koa=Koa)
 
         Cstr_gg, zomegan2 = get_freq_damping(model, omegan, ndof_g)
 
         # nfreq = len(omegas)
-        # shape = (ndof, ndof, nfreq)
+        # shape = (ndof_g, ndof_g, nfreq)
 
-        # phiT = phi.T
+        # phi_T = phi.T
         #  modal space (h); sometimes called x
         # print(phi.shape, Mgg.shape)
-        # phi = phit.T
+        # phi = phi_t.T
         Mhh = out["modes_Mhh"]
         Khh = out["modes_Khh"]
         assert Khh.ndim == 2, Khh.shape
         assert Mhh.ndim == 2, Mhh.shape
-        # Mhh = phit @ Mgg @ phi
+        # Mhh = phi_t @ Mgg @ phi
         # Chh = phi @ Cgg @ phi.T
         # Khh = phi @ Kgg @ phi.T
         # Fh = phi @ Fg
@@ -1273,7 +1353,7 @@ class Solver:
         #         '[PHIT][Kgg][PHI]{qh} = [PHIT]{Fg}')
         #log.info('[I]{qddh} + [C]{qdh} + [omega]{qh} = {Fh}')
         
-        Fh = phit @ Fg
+        Fh = phi_t @ Fg
         # print('Fh:\n', Fh)
         omega2 = omega * omega  # frequncy
         omegan2 = np.diag(Khh)  # natural frequency squared
@@ -1299,7 +1379,7 @@ class Solver:
             xq[ifreq, :] = xq_freq
             log.info(xq_freq)
 
-        xg = xq @ phit  # (1000,2) * (2,18) = (1000,18)
+        xg = xq @ phi_t  # (1000,2) * (2,18) = (1000,18)
         # vg = (1j * omega)[:, np.newaxis] * xg[np.newaxis, :]
         # ValueError: operands could not be broadcast together with shapes (2050,) (2050,18)
         # print(omega2.shape, xg.shape)
@@ -1394,9 +1474,11 @@ class Solver:
 
     def run_sol_105_buckling(
         self,
+        solver_data: SolverData,
         subcase: Subcase,
         f06_file: TextIO,
         page_stamp: str,
+        Ug_preload=None,
         title: str = "",
         subtitle: str = "",
         label: str = "",
@@ -1411,98 +1493,215 @@ class Solver:
         """
         model = self.model
         log = model.log
+        op2 = self.op2
+        isubcase = subcase.id
+        assert isinstance(isubcase, int), isubcase
+        # -----------------------------------------------------------------------
+    
         log.debug("run_sol_105 (buckling)")
-        neigenvalue, norm_str = get_real_eigenvalue_method(
-            model, subcase)
+        load_id = 0
+        if 'LOAD' in subcase:
+            load_id = subcase['LOAD'][0]
+        else:
+            assert Ug_preload is not None, Ug_preload
+            # TODO: this seems like a super hacky way to get Kff
+            #       Should I even be after Kff (f=l+r)?
+            #       what about SUPORT?
+            #
+            ug, free_dofs = Ug_preload
+            Kgg = solver_data.Kgg
+            Kaa = solver_data.Kaa
+            #Kff = Kgg[np.ix_(free_dofs, free_dofs)].toarray()
 
+        assert load_id >= 0, load_id
+
+        method_id = 0
+        neigenvalue = 0
+        norm_str = ''
+        if 'METHOD' in subcase:
+            method_id = subcase['METHOD'][0]
+            neigenvalue, norm_str = get_real_eigenvalue_method(
+                model, subcase)
+        assert method_id >= 0, method_id
+
+        log.warning(f'load_id={load_id} method_id={method_id}')
         end_options = ["SEKR", "MODES"]
 
-        node_gridtype = _get_node_gridtype(model, idtype=idtype)
+        # -----------------------------------------------------------------------
         dof_map, ps = _get_dof_map(model)
-        ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
+        ngrid, ndof_per_grid, ndof_g = get_ndof(model, subcase)
 
-        Kgg = get_Kgg(
-            model, dof_map, ndof, ngrid, ndof_per_grid,
-            idtype=idtype, fdtype=fdtype,
-            Kgg_override=self.Kgg_override,
-            solver_dict=self.solver_dict)
+        # -----------------------------------------------------------------------
 
-        # Static preload solve
-        sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
-        Fb = self.build_Fb(xg, sset_b, dof_map, ndof, subcase,
-                           Mbb=None, xyz_cid0=xyz_cid0)
-        Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
+        dof_map = solver_data.dof_map
+        node_gridtype = solver_data.node_gridtype
+        ndof_g = solver_data.ndof_g
+        GMN, mset_bool = solver_data.GMN0
+        xyz_cid0 = solver_data.xyz_cid0
+        
+        solver_dict = self.solver_dict
 
-        free_dofs = np.where(~sset_b)[0]
-        Kff = Kgg.tocsc()[np.ix_(free_dofs, free_dofs)].toarray()
-        Ff = Fb[free_dofs]
+        # -----------------------------------------------------------------------
 
-        u_free = np.linalg.solve(Kff, Ff)
-        u_global = np.zeros(ndof, dtype=fdtype)
-        u_global[free_dofs] = u_free
+        ndof_n = ndof_g  # TODO: assumed
+        Mff = None
+        if load_id > 0:
+            gset_bool = np.ones(ndof_g, dtype='bool')
+            gset_str = np.full(ndof_g, 'g', dtype='|U1')
+            gset_idx = np.arange(ndof_g, dtype='int32')
 
-        log.debug("  static preload solved")
+            # Static preload solve
+            Kgg = solver_data.Kgg
+            sset, sset_bool, ug = _build_xg(model, dof_map, ndof_g, subcase)
 
-        # Build geometric stiffness from preload stress state
-        #KDgg = get_KDgg(
-        #    model, dof_map, ndof,
-        #    ngrid, ndof_per_grid,
-        #    idtype=idtype, fdtype=fdtype,
-        #    KDgg_override=self.KDgg_override)
-        KDgg = build_KDgg(model, ndof, dof_map, u_global)
-        KDff = KDgg.tocsc()[np.ix_(free_dofs, free_dofs)].toarray()
+            Fb, Mbb, xyz_cid0 = self.build_Fb(
+                ug, sset_bool, dof_map, ndof_g, subcase,
+                Mbb=None, xyz_cid0=xyz_cid0, fdtype=fdtype)
+            Mbb = None
+            Fg = xb_to_xg(model, Fb, ngrid, ndof_per_grid)
 
-        log.debug("  geometric stiffness assembled")
+            # TODO: update this...
+            Knn = Kgg
+            Pn = Fg
+            un = ug
+            nset_bool = gset_bool
+            nset_idx = gset_idx
+            #gset_str[mset_idx] = 'm'
 
-        # Solve buckling eigenproblem: (K + lambda*KD)*x = 0
-        # => K*x = -lambda*KD*x
-        # Use scipy generalized eigenvalue: Kff @ x = lambda * (-KDff) @ x
-        neg_KDff = -KDff
+            #assert id(un) == id(ug)
 
-        # Use eigh for symmetric positive-definite B (standard buckling)
-        # If -KD isn't positive definite, fall back to general eig
-        try:
-            eigenvalues_all, eigvecs_all = eigh(Kff, neg_KDff)
-        except np.linalg.LinAlgError:
-            eigenvalues_all, eigvecs_all = eig(Kff, neg_KDff)
-            eigenvalues_all = eigenvalues_all.real
-            eigvecs_all = eigvecs_all.real
+            free_dofs = np.where(~sset_bool)[0]
+            assert free_dofs.ndim == 1 and len(free_dofs) > 0, free_dofs
+            assert len(sset_bool) == len(Pn), (len(sset_bool), len(Pn))
+            Kff2 = Kgg[np.ix_(free_dofs, free_dofs)].toarray()
+            Pf2 = Fb[free_dofs]
 
-        if 0:
-            # Keep only positive eigenvalues
-            # (physical buckling modes) sorted ascending
-            pos_mask = eigenvalues_all > 0
-            eigenvalues_pos = eigenvalues_all[pos_mask]
-            eigvecs_pos = eigvecs_all[:, pos_mask]
-        else:
-            # user must limit the eigenvalues
-            eigenvalues_pos = eigenvalues_all
-            eigvecs_pos = eigvecs_all
-        sort_idx = np.argsort(eigenvalues_pos)
-        eigenvalue = eigenvalues_pos[sort_idx[:neigenvalue]]
-        xa_ = eigvecs_pos[:, sort_idx[:neigenvalue]]
+            Kff, Pf, uf, fset_bool, fset_idx = static_nset_to_fset(
+                model,
+                Knn, Pn,
+                un,
+                nset_bool,
+                gset_str, nset_idx,
+                log, solver_dict)
+            assert np.allclose(Pf, Pf2)
+            assert np.allclose(Kff2, Kff.toarray())
+
+            osetmap = get_omit_set(model)
+            print(f'osetmap = {osetmap}')
+
+            Maa, Kaa, Pa, Goa, ua, uo0, aset_bool, aset_idx = dynamic_fset_to_aset(
+                model,
+                Kff, Mff, Pf,
+                uf,
+                fset_bool, osetmap,
+                gset_str, fset_idx,
+                log, solver_dict)
+            gset_str[aset_idx] = 'a'
+
+            #log.debug(f'  Pa={Pa}')
+            #log.debug(f'  Kaa:\n{Kaa.toarray()}')
+            #log.debug(f'  aset_idx = {aset_idx}')
+            #log.debug(f'  aset_bool = {aset_bool}')
+            log.debug(f'  gset_str = {gset_str}')
+            try:
+                #ua = np.linalg.solve(Kaa, Pa)
+                ua, ipos, ineg = solve(
+                Kaa, Pa,
+                aset_bool,
+                log, idtype="int32")
+            except:
+                print(f'Kaa:\n{Kaa}')
+                raise
+            #u_global = np.zeros(ndof_g, dtype=fdtype)
+            log.debug(f'  ua={ua}')
+            assert len(ua) == len(aset_idx)
+            ug[aset_idx] = ua
+            log.debug(f'  ug={ug}')
+            log.debug("  static preload solved")
+            assert np.all(np.isfinite(ug)), ug
+            solver_data.Kaa = Kaa
+        
+        if method_id == 0:
+            # multi-subcase buckling
+            out = {'xg': ug, 'free_dofs': free_dofs}
+            return out, page_num, end_options
+
+        ndof_a = Kaa.shape[0]
+        out = _run_buckling(
+            model, subcase,
+            ndof_g, dof_map, ug, Kaa, free_dofs)
+        out['xg'] = ug
+
+        #"free_dofs": free_dofs,
+
+        # "buckling_eigenvalues": eigenvalue,
+        # "buckling_modes": xa_,
+        # "free_dofs": free_dofs,
+        KDgg = out['KDgg']
+        phi_a = out['buckling_modes']
+        eigenvalue = out['buckling_eigenvalues']
         nmode = len(eigenvalue)
 
-        # Buckling eigenvalues (critical load factors)
-        nmode = len(eigenvalue)
-        log.info(f"  buckling eigenvalues (critical load factors): {eigenvalue[:min(5,nmode)]}")
+        phi_n = np.zeros((ndof_n, nmode), dtype=fdtype)
+        #print(phi_n.shape, free_dofs.shape, phi_f.shape)
 
-        # Store results
-        log.info(f"  buckling eigenvalues: {eigenvalue[:min(5, nmode)]}")
+        assert phi_a.shape == (ndof_a, nmode), (phi_a.shape, (ndof_a, nmode))
+        phi_n[free_dofs, :] = phi_a
+        phi_g = phi_n_to_g(phi_n, ndof_g, nmode, GMN=GMN, fdtype=fdtype)
 
-        out = {
-            "buckling_eigenvalues": eigenvalue,
-            "buckling_modes": xa_,
-            "free_dofs": free_dofs,
-        }
-        self.buckling_eigenvalues = eigenvalue
+        nnode_g = len(node_gridtype)
+        log.info(f'KDgg.shape = {KDgg.shape}')
+        log.info(f'phi_a.shape = {phi_a.shape}')
+        log.info(f'phi_g.shape = {phi_g.shape}')
+        #phi_g, KDhh, Khh = apply_phi_normalization(
+        #    KDgg, Kgg, eigenvalue, phi_g, nmode, nnode_g, norm_str)
+
+        Khh  = phi_g.T @ Kgg  @ phi_g
+        KDhh = phi_g.T @ KDgg @ phi_g
+        log.info(f'KDhh = {KDhh}')
+
+        mode = np.arange(1, nmode + 1, dtype=idtype)
+        extraction_order = mode
+        omega = np.sqrt(np.abs(eigenvalue))
+        freq = omega / (2 * np.pi)
+
+        generalized_mass = np.diag(KDhh)
+        generalized_stiffness = np.diag(Khh)
+        log.info(f"Mhh_diag: {generalized_mass}")
+        log.info(f"Khh_diag: {generalized_stiffness}")
+
+        eig_obj = BucklingEigenvalues.add_from_solution(
+            mode,
+            extraction_order,
+            eigenvalue,
+            freq,
+            omega,
+            generalized_mass,
+            generalized_stiffness,
+            title, 'BLAMA')
+        op2.eigenvalues[isubcase] = eig_obj
+
+        recover_results = get_recover_results(subcase, ['DISPLACEMENT'])
+        if recover_results:
+            page_num = _save_eigenvectors(
+                model, subcase,
+                phi_g.T,  node_gridtype,
+                mode, eigenvalue, eigenvalue,
+                op2, f06_file, page_num,
+                page_stamp=page_stamp,
+                title=title, subtitle=subtitle, label=label,
+                sol_type='buckling',)
+
+        self.buckling_eigenvalues = out['buckling_eigenvalues']
         return out, page_num, end_options
 
     def run_sol_31_craig_bampton(
         self,
+        solver_data: SolverData,
         subcase: Subcase,
         f06_file: TextIO,
         page_stamp: str,
+        Ug_preload=None,
         title: str = "",
         subtitle: str = "",
         label: str = "",
@@ -1529,38 +1728,38 @@ class Solver:
         result = {}
         model.setup(run_geom_check=True)
         dof_map, ps = _get_dof_map(model)
-        ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
+        ngrid, ndof_per_grid, ndof_g = get_ndof(model, subcase)
         #-----------------------------------------------------------
 
         # Build global matrices
-        Kgg = get_Kgg(
-            model, dof_map, ndof, ngrid, ndof_per_grid,
-            idtype=idtype, fdtype=fdtype,
-            Kgg_override=self.Kgg_override,
-            solver_dict=self.solver_dict)
+        Kgg = solver_data.Kgg
 
-        Mbb = build_Mbb(
-            model, subcase, dof_map, ndof, fdtype=fdtype,
-            solver_dict=self.solver_dict)
-        page_num = write_grid_point_weight(
-            model, Mbb, dof_map, ndof,
-            self.op2, f06_file,
-            title=title, subtitle=subtitle, label=label,
-            page_stamp=page_stamp, page_num=page_num)
-        Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid,
-                         inplace=False)
+        if solver_data.Mgg is not None:
+            Mgg = solver_data.Mgg
+        else:
+            Mbb = build_Mbb(
+                model, subcase, dof_map, ndof_g, fdtype=fdtype,
+                solver_dict=self.solver_dict)
+            page_num = write_grid_point_weight(
+                model, Mbb, dof_map, ndof_g,
+                self.op2, f06_file,
+                title=title, subtitle=subtitle, label=label,
+                page_stamp=page_stamp, page_num=page_num)
+            Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid,
+                             inplace=False)
+            Mgg = Mgg.tocsc()
 
         # Apply SPC constraints — reduce to free (f) set
-        gset_b = ps_to_sg_set(ndof, ps)
-        sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
-        free_dofs = np.where(~sset_b)[0]
+        gset_bool = ps_to_sg_set(ndof_g, ps)
+        sset, sset_bool, xg = _build_xg(model, dof_map, ndof_g, subcase)
+        free_dofs = np.where(~sset_bool)[0]
 
-        Kff = Kgg.tocsc()[np.ix_(free_dofs, free_dofs)]
-        Mff = Mgg.tocsc()[np.ix_(free_dofs, free_dofs)]
+        Kff = Kgg[np.ix_(free_dofs, free_dofs)]
+        Mff = Mgg[np.ix_(free_dofs, free_dofs)]
 
         # Build DOF map for the free set
         # Re-map dof_map indices to free-set indices
-        g_to_f = np.full(ndof, -1, dtype="int32")
+        g_to_f = np.full(ndof_g, -1, dtype="int32")
         g_to_f[free_dofs] = np.arange(len(free_dofs), dtype="int32")
 
         # Identify R-set DOFs from SUPORT/SUPORT1 cards
@@ -1627,9 +1826,11 @@ class Solver:
 
     def run_sol_108_direct_frequency(
         self,
+        solver_data: SolverData,
         subcase: Subcase,
         f06_file: TextIO,
         page_stamp: str,
+        Ug_preload=None,
         title: str = "",
         subtitle: str = "",
         label: str = "",
@@ -1685,33 +1886,29 @@ class Solver:
         # today = None
         # page_stamp = self.op2.make_stamp(title, today) # + '\n'
 
-        node_gridtype = _get_node_gridtype(model, idtype=idtype)
+        node_gridtype = solver_data.node_gridtype
         dof_map, ps = _get_dof_map(model)
         ngrid, ndof_per_grid, ndof_g = get_ndof(self.model, subcase)
-        xyz_cid0 = model.grid.xyz_cid0()
-        # -----------------------------------------------------------------------
+        xyz_cid0 = solver_data.xyz_cid0
+        # -----------------------------------------------------------------
         load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
             model.sol, subcase)
         dload_id, _ = subcase['DLOAD']
         freq_id, _ = subcase['FREQUENCY']
-        # -----------------------------------------------------------------------
+        # -----------------------------------------------------------------
 
-        GMN, mset = self.build_GMN(
-            subcase, dof_map, ndof_g, xyz_cid0, fdtype=fdtype)
+        GMN, mset_bool = self.build_GMN(
+            solver_data, subcase, dof_map, ndof_g, xyz_cid0, fdtype=fdtype)
         self.GMN = GMN
-        self.mset = mset
-        mset_b = mset
+        self.mset = mset_bool
 
         page_num, out = _run_modes(
-            model, subcase,
+            solver_data, model, subcase,
             self.op2, f06_file,
             ngrid,
             ndof_per_grid,
             ndof_g,
-            node_gridtype,
-            dof_map,
-            GMN=GMN,
-            mset=mset,
+            GMN=GMN, mset_bool=mset_bool,
             idtype=idtype,
             fdtype=fdtype,
             page_stamp=page_stamp, page_num=page_num,
@@ -1719,14 +1916,14 @@ class Solver:
             matrices_to_save={'Koa', 'Koo'},
         )
         #out['GMN'] = GMN
-        #out['mset_bool'] = mset
+        #out['mset_bool'] = mset_bool
 
         Koa = out.get('Koa')
         Koo = out.get('Koo')
-        sset_b = out.get('sset_bool')
+        sset_bool = out.get('sset_bool')
         oset_b = out.get('oset_bool')
 
-        aset = out["aset"]
+        aset = out["aset_bool"]
         Kaa = out["Kaa"]
         Maa = out["Maa"]
         eigenvalue = out["modes_eigenvalue"]
@@ -1741,8 +1938,8 @@ class Solver:
         Fa = reduce_Pg_to_Pa(
             Fg,
             ndof_g,
-            sset_b,
-            mset_b=mset_b,
+            sset_bool,
+            mset_b=mset_bool,
             oset_b=oset_b,
             Gm=GMN, Koo=Koo, Koa=Koa)
 
@@ -1778,6 +1975,96 @@ class Solver:
         ]
         return out, page_num, end_options
 
+
+def _save_eigenvectors(model: BDF,
+                       subcase: Subcase,
+                       phi_g: np.ndarray,
+                       node_gridtype: np.ndarray,
+                       modes: np.ndarray,
+                       eigenvalue: np.ndarray,
+                       mode_cycle: np.ndarray,
+                       op2: OP2,
+                       f06_file: TextIO,
+                       page_num: int,
+                       sol_type: str,
+                       page_stamp: str,
+                       title: str, subtitle: str, label: str,
+                       idtype: str='int32') -> int:
+    isubcase = subcase.id
+    nmode = len(eigenvalue)
+    assert phi_g.shape[0] == nmode, (phi_g.shape, nmode)
+    eigenvalue = eigenvalue.astype("float32")
+    (
+        write_phi_f06,
+        write_phi_op2,
+        write_phi_pch,
+        unused_options,
+        phi_set,
+    ) = get_f06_op2_pch_set(subcase, "DISPLACEMENT")
+    write_eigenvector = any((write_phi_f06, write_phi_op2))
+
+    if write_eigenvector:
+        nnode = node_gridtype.shape[0]
+        # print(xg_out.shape)
+        assert phi_g.shape == (nmode, nnode*6), (phi_g.shape)
+        node_gridtypei, phi, nnodei = slice_modal_set(
+            node_gridtype, phi_g, nnode, nmode, phi_set)
+
+        # phi:  (nmode, nnode*6)
+        # data: (nmode, nnode, 6)
+        data = phi.reshape((nmode, nnodei, 6)).astype("float32")
+        table_name = "OUGV1"
+        if sol_type == 'modes':
+            eigenvector_obj = RealEigenvectorArray.add_modal_case(
+                table_name,
+                node_gridtypei,
+                data,
+                isubcase,
+                modes,
+                eigenvalue,
+                mode_cycle,
+                is_sort1=True,
+                is_random=False,
+                is_msc=True,
+                random_code=0,
+                title=title,
+                subtitle=subtitle,
+                label=label,
+            )
+        else:
+            assert sol_type == 'buckling', sol_type
+            eigenvector_obj = RealEigenvectorArray.add_buckling_case(
+                table_name,
+                node_gridtypei,
+                data,
+                isubcase,
+                modes,
+                eigenvalue,
+                mode_cycle,
+                is_sort1=True,
+                is_random=False,
+                is_msc=True,
+                random_code=0,
+                title=title,
+                subtitle=subtitle,
+                label=label,
+            )
+        eigenvector_obj.nonlinear_factor = 1
+
+    if write_phi_op2:
+        op2.eigenvectors[isubcase] = eigenvector_obj
+
+    if write_phi_f06:
+        page_num = eigenvector_obj.write_f06(
+            f06_file,
+            header=None,
+            page_stamp=page_stamp,
+            page_num=page_num,
+            is_mag_phase=False,
+            is_sort1=True,
+        )
+        f06_file.write("\n")
+    return page_num
 
 def remove_rows(Kgg: NDArrayNNfloat, aset: NDArrayNint, idtype: str = "int32") -> NDArrayNNfloat:
     """
@@ -2038,7 +2325,7 @@ def get_rset(model: BDF,
 
 def get_rset_bool(model: BDF,
                   dof_map: DOF_MAP,
-                  ndof: int,
+                  ndof_g: int,
                   suport_id: int) -> np.ndarray:
     """Build a boolean r-set mask from SUPORT/SUPORT1 cards.
 
@@ -2048,20 +2335,20 @@ def get_rset_bool(model: BDF,
         The model.
     dof_map : DOF_MAP
         Maps (nid, dof) to index in g-set.
-    ndof : int
+    ndof_g : int
         Total number of DOFs.
 
     Returns
     -------
-    rset_b : (ndof,) bool array
+    rset_bool : (ndof_g,) bool array
         True at DOF indices belonging to the r-set (SUPORT reference DOFs).
     """
-    rset_b = np.zeros(ndof, dtype='bool')
+    rset_bool = np.zeros(ndof_g, dtype='bool')
     rset_map = get_rset(model, suport_id=suport_id)
     for nid_dof in rset_map:
         if nid_dof in dof_map:
-            rset_b[dof_map[nid_dof]] = True
-    return rset_b
+            rset_bool[dof_map[nid_dof]] = True
+    return rset_bool
 
 
 def partition_a_to_lr(
@@ -2069,7 +2356,7 @@ def partition_a_to_lr(
     Maa: np.ndarray,
     Fa: np.ndarray | None,
     aset_b: np.ndarray,
-    rset_b: np.ndarray,
+    rset_bool: np.ndarray,
 ) -> dict[str, Any]:
     """Partition the a-set into l-set and r-set for SUPORT reduction.
 
@@ -2084,9 +2371,9 @@ def partition_a_to_lr(
         Mass in the analysis set.
     Fa : (na,) ndarray or None
         Applied force in the analysis set. None for modes.
-    aset_b : (ndof,) bool
+    aset_b : (ndof_g,) bool
         Boolean mask for the a-set in global DOFs.
-    rset_b : (ndof,) bool
+    rset_bool : (ndof_g,) bool
         Boolean mask for the r-set in global DOFs.
 
     Returns
@@ -2104,7 +2391,7 @@ def partition_a_to_lr(
     na = len(a_indices)
 
     # Which of the a-set DOFs are in the r-set?
-    r_in_a = rset_b[a_indices]
+    r_in_a = rset_bool[a_indices]
     rset_local = np.where(r_in_a)[0]
     lset_local = np.where(~r_in_a)[0]
 
@@ -2248,14 +2535,14 @@ def apply_dof_map_to_set(
         use_ints: bool = True) -> NDArrayNbool:
     """changes a set defined in terms of (nid, comp) into an array of integers"""
     if use_ints:
-        ndof = len(set_map)
-        aset = np.full(ndof, 0, dtype=idtype)
+        ndof_a = len(set_map)
+        aset = np.full(ndof_a, 0, dtype=idtype)
         for i, dofi in enumerate(set_map):
             aset[i] = dof_map[dofi]
         aset.sort()
     else:
-        ndof = len(dof_map)
-        aset = np.full(ndof, 0, dtype="bool")
+        ndof_a = len(dof_map)
+        aset = np.full(ndof_a, 0, dtype="bool")
         for dofi in set_map:
             i = dof_map[dofi]
             aset[i] = True
@@ -2269,8 +2556,8 @@ def xg_to_xb(model: BDF,
     assert isinstance(xg, np.ndarray)
     shape = xg.shape
     if xg.ndim == 1:
-        ndof = len(xg)
-        xg = xg.reshape(ndof, 1)
+        ndof_g = len(xg)
+        xg = xg.reshape(ndof_g, 1)
     else:
         assert xg.ndim == 2, xg.shape
     str(ngrid)
@@ -2303,7 +2590,7 @@ def xb_to_xg(
     xb: NDArrayNfloat,
     ngrid: int, ndof_per_grid: int,
     inplace: bool = True) -> NDArrayNfloat:
-    assert isinstance(xb, np.ndarray)
+    assert isinstance(xb, np.ndarray), type(xb)
     str(ngrid)
 
     xg = xb
@@ -2362,8 +2649,8 @@ def _write_spcforce_resultant(
     page_num: int,
     log: SimpleLogger,) -> int:
     """Write SPCFORCE RESULTANT table to F06."""
-    ndof = ngrid * ndof_per_grid
-    #assert fspc.shape == (ndof,), (f'fspc.shape={fspc.shape}, ngrid={ngrid}, ngrid*6={ngrid*6}')
+    ndof_g = ngrid * ndof_per_grid
+    #assert fspc.shape == (ndof_g,), (f'fspc.shape={fspc.shape}, ngrid={ngrid}, ngrid*6={ngrid*6}')
     fxyz_mxyz = fspc[:ngrid * ndof_per_grid].reshape(ngrid, ndof_per_grid)
     fxyz_mxyz_sum = fxyz_mxyz.sum(axis=0)
     spc_resultant = Resultant("SPCFORCE", fxyz_mxyz_sum, isubcase)
@@ -2373,12 +2660,13 @@ def _write_spcforce_resultant(
 
 
 def solve(Kaa: lil_matrix,
-          Fa_solve: np.ndarray,
+          Fa: np.ndarray,
           aset: np.ndarray,
           log: SimpleLogger,
           idtype: str = "int32",):
     """solves [K]{u} = {F}"""
     log.info("starting solve")
+    ndof_a = Kaa.shape[0]
     Kaa_, ipositive, inegative, unused_sz_set = remove_rows(Kaa, aset, idtype=idtype)
     if len(ipositive) == 0:
         log.error("empty Kaa")
@@ -2397,7 +2685,8 @@ def solve(Kaa: lil_matrix,
     # print(f'Fa = {Fa}')
     # print(f'Fs = {Fs}')
 
-    Fa_ = Fa_solve[ipositive]
+    ua = np.zeros(ndof_a, dtype=Fa.dtype)
+    Fa_ = Fa[ipositive]
     # [A]{x} = {b}
     # [Kaa]{x} = {F}
     # {x} = [Kaa][F]
@@ -2407,18 +2696,21 @@ def solve(Kaa: lil_matrix,
     Kaa_dense = Kaa_.toarray()
     np.set_printoptions(precision=0, linewidth=100)
     log.debug(f"  Kaas_:\n{Kaa_dense}")
-    log.debug(f"  Kaa_:\n{Kaa_}")
+    #log.debug(f"  Kaa_:\n{Kaa_}")
     log.debug(f"  Fa_: {Fa_}")
 
     backend = get_solver()
     log.debug(f"  solver backend: {backend.name}")
-    xa_ = np.linalg.solve(Kaa_dense, Fa_)
-    xas_ = backend.spsolve(Kaa_, Fa_)
-    sparse_error = np.linalg.norm(xa_ - xas_)
+    ua_ = np.linalg.solve(Kaa_dense, Fa_)
+    uas_ = backend.spsolve(Kaa_, Fa_)
+    sparse_error = np.linalg.norm(ua_ - uas_)
     if sparse_error > 1e-12:
         log.warning(f"  sparse_error = {sparse_error}")
+     
+    ua[ipositive] = uas_
     log.info("finished solve")
-    return xas_, ipositive, inegative
+    return ua, ipositive, inegative
+    #return xas_, ipositive, inegative
 
 
 def grid_point_weight(model: BDF, Mbb,
@@ -2494,8 +2786,8 @@ def grid_point_weight(model: BDF, Mbb,
 
 def dof_map_to_tr_set(dof_map, ndof: int) -> tuple[NDArrayNbool, NDArrayNbool]:
     """creates the translation/rotation sets"""
-    trans_set = np.zeros(ndof, dtype="bool")
-    rot_set = np.zeros(ndof, dtype="bool")
+    trans_set = np.zeros(ndof_g, dtype="bool")
+    rot_set = np.zeros(ndof_g, dtype="bool")
     for (unused_nid, dof), idof in dof_map.items():
         if dof in [0, 1, 2, 3]:
             trans_set[idof] = True
@@ -2504,10 +2796,10 @@ def dof_map_to_tr_set(dof_map, ndof: int) -> tuple[NDArrayNbool, NDArrayNbool]:
     return trans_set, rot_set
 
 
-def ps_to_sg_set(ndof: int, ps: list[int]):
+def ps_to_sg_set(ndof_g: int, ps: list[int]):
     """creates the SPC on the GRID (PS-field) set, {sg}"""
     # all DOFs are initially assumed to be active
-    sg_set = np.ones(ndof, dtype="bool")
+    sg_set = np.ones(ndof_g, dtype="bool")
 
     # False means it's constrained
     sg_set[ps] = False
@@ -2607,19 +2899,18 @@ def get_ndof(model: BDF, subcase: Subcase) -> tuple[int, int, int]:
 
 
 def _run_modes(
+    solver_data: SolverData,
     model: BDF,
     subcase: Subcase,
     op2: OP2,
     f06_file,
     ngrid: int,
     ndof_per_grid: int,
-    ndof: int,
-    node_gridtype: np.ndarray,
-    dof_map: dict,
+    ndof_g: int,
     Kgg_override=None,
     Mgg_override=None,
     GMN=None,
-    mset: np.ndarray | None = None,
+    mset_bool: np.ndarray | None = None,
     idtype: str = "int32",
     fdtype: str = "float64",
     title: str='', subtitle: str='', label: str='',
@@ -2627,6 +2918,11 @@ def _run_modes(
     page_num: int=1,
     solver_dict=None,
     matrices_to_save: set[str] | None=None) -> tuple[int, dict[str, Any]]:
+    """
+    TODO: When Kgg includes KDgg:
+     - SPC/SUPORT/MPC must be included in both cases...
+    """
+    #--------------------------------------------------------------
     if matrices_to_save is None:
         matrices_to_save = set([])
     assert solver_dict is not None, solver_dict
@@ -2638,95 +2934,51 @@ def _run_modes(
 
     log = model.log
     out = {}
-    Kgg = get_Kgg(
-        model, dof_map, ndof, ngrid, ndof_per_grid,
-        idtype=idtype, fdtype=fdtype,
-        Kgg_override=Kgg_override,
-        solver_dict=solver_dict)
+    node_gridtype = solver_data.node_gridtype
+    dof_map = solver_data.dof_map
+
+    if Kgg_override is None:
+        Kgg = solver_data.Kgg
+    else:
+        Kgg = Kgg_override
+    #--------------------------------------------------------------
     out["Kgg"] = Kgg
 
-    Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype,
-                    solver_dict=solver_dict)
-    page_num = write_grid_point_weight(
-        model, Mbb, dof_map, ndof,
-        op2, f06_file,
-        title=title, subtitle=subtitle, label=label,
-        page_stamp=page_stamp, page_num=page_num)
-
-    Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid)
-    if 'Mgg' in matrices_to_save:
-        out["Mgg"] = Mgg
-    del Mbb
-
-    # ----------------------MPC reduction (g -> n)----------------------
-    if GMN is not None:
-        Knn = GMN.T @ Kgg @ GMN
-        Mnn = GMN.T @ Mgg @ GMN
-        # Work in n-set
-        gset_all = np.arange(ndof, dtype="int32")
-        nset_indices = np.setdiff1d(gset_all, mset)
-        n_ndof = len(nset_indices)
-
-        # Map g-set SPC to n-set
-        sset_g, sset_b_g, xg = _build_xg(model, dof_map, ndof, subcase)
-        g_to_n = np.full(ndof, -1, dtype="int32")
-        g_to_n[nset_indices] = np.arange(n_ndof, dtype="int32")
-
-        sset_b = np.zeros(n_ndof, dtype="bool")
-        for s_idx in sset_g:
-            n_idx = g_to_n[s_idx]
-            if n_idx >= 0:
-                sset_b[n_idx] = True
-        sset = sset_b
-
-        gset = np.ones(n_ndof, dtype="bool")
-        aset = gset & ~sset_b
-        out["aset"] = aset
-        out["xg"] = xg
-
-        xn = np.zeros(n_ndof, dtype=fdtype)
-        xa, xs = partition_vector2(xn, [["a", aset], ["s", sset_b]])
-
-        M = partition_matrix(Mnn, [["a", aset], ["s", sset_b]])
-        Maa = M["aa"]
-        out["Maa"] = Maa
-
-        K = partition_matrix(Knn, [["a", aset], ["s", sset_b]])
-        Kaa = K["aa"]
-        out["Kaa"] = Kaa
-
-        ndof_work = n_ndof
-        Kgg_work = Knn
-        Mgg_work = Mnn
+    if solver_data.Mgg is None:
+        Mgg = solver_data.Mgg
     else:
-        #mset = None
-        mset_b = None
-        gset = np.ones(ndof, dtype="bool")
-        sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
-        aset = gset & ~sset_b  # a = g-s
-        out["aset"] = aset
+        Mbb = build_Mbb(model, subcase, dof_map, ndof_g, fdtype=fdtype,
+                        solver_dict=solver_dict)
+        page_num = write_grid_point_weight(
+            model, Mbb, dof_map, ndof_g,
+            op2, f06_file,
+            title=title, subtitle=subtitle, label=label,
+            page_stamp=page_stamp, page_num=page_num)
+        Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid)
+        Mgg = Mgg.tocsc()
+        solver_data.Mgg = Mgg
 
-        xa, xs = partition_vector2(xg, [["a", aset], ["s", sset_b]])
-        out["xg"] = xg
+        #solver_data.Mgg = Mgg
+        if 'Mgg' in matrices_to_save:
+            out["Mgg"] = Mgg
+        del Mbb
 
-        M = partition_matrix(Mgg, [["a", aset], ["s", sset_b]])
-        Maa = M["aa"]
-        out["Maa"] = Maa
-
-        K = partition_matrix(Kgg, [["a", aset], ["s", sset_b]])
-        Kaa = K["aa"]
-        out["Kaa"] = Kaa
-
-        ndof_work = ndof
-        Kgg_work = Kgg
-        Mgg_work = Mgg
-
-    out['gset_bool'] = gset
-    #out['gset_bool'] = gset_b
-    out['sset'] = sset
-    out['sset_bool'] = sset_b
-    #out['mset'] = mset
-    out['mset_bool'] = mset_b
+    # TODO: this line should be moved because it breaks preload
+    sset, sset_bool, xg = _build_xg(model, dof_map, ndof_g, subcase)
+    Kaa, Maa = modes_g_to_a(
+        Kgg, Mgg,
+        xg, mset_bool, sset, sset_bool,
+        model, dof_map, subcase,
+        out, GMN=GMN)
+    ndof_n = out['ndof_n']
+    #ndof_work = Kaa.shape[0]
+    aset_bool = out['aset_bool']
+    #aset = np.where(aset_bool)[0]
+    aset = aset_bool
+    xa = out['xa']
+    xs = out['xs']
+    ndof_n = out['ndof_n']
+    #assert len(xa) == len(aset), (len(xa), len(aset))
 
     # Kss = K['ss']
     # Kas = K['as']
@@ -2741,18 +2993,18 @@ def _run_modes(
     # --- R-set partitioning (SUPORT reduction) ---
     # If SUPORT cards exist, partition a = l + r.
     # Solve eigenvalue problem on the l-set (flexible DOFs).
-    rset_b = get_rset_bool(model, dof_map, ndof, suport_id=suport_id)
-    has_rset = np.any(rset_b) and GMN is None
+    rset_bool = get_rset_bool(model, dof_map, ndof_g, suport_id=suport_id)
+    has_rset = np.any(rset_bool) and GMN is None
 
     if has_rset:
         # r-set within the a-set
         a_indices = np.where(aset)[0]
-        r_in_a = rset_b[a_indices]
+        r_in_a = rset_bool[a_indices]
         lset_local = np.where(~r_in_a)[0]
         rset_local = np.where(r_in_a)[0]
-        nr = len(rset_local)
-        nl = len(lset_local)
-        log.warning(f"SUPORT r-set: {nr} DOFs, l-set: {nl} DOFs")
+        ndof_r = len(rset_local)
+        ndof_l = len(lset_local)
+        log.warning(f"SUPORT (l=a-r); r-set: {ndof_r} DOFs, l-set: {ndof_l} DOFs")
 
         Kaa_dense = todense(Kaa)
         Kll = Kaa_dense[np.ix_(lset_local, lset_local)]
@@ -2760,29 +3012,31 @@ def _run_modes(
 
         # Remove zero rows/columns (AUTOSPC equivalent for l-set)
         Kll_sp = csc_matrix(Kll)
+        lset = np.ones(ndof_l, dtype='bool')
         Kll_, ipositive, unused_ineg, unused_sz = remove_rows(
-            Kll_sp, np.ones(nl, dtype='bool'))
+            Kll_sp, lset)
         Mll_ = Mll[ipositive, :][:, ipositive]
         ndof_ = Kll_.shape[0]
 
         if issparse(Mll_):
             Mll_ = Mll_.toarray()
-        eigenvalue, xl_ = solve_eigenvector(Kll_, Mll_, ndof_, neigenvalue)
+        eigenvalue, xl_ = solve_eigenvector(
+            Kll_, Mll_,
+            neigenvalues=neigenvalue)
         nmode = len(eigenvalue)
-        log.debug(f"eigenvalue = {eigenvalue}")
+        log.debug(f"eigenvalue = {eigenvalue}; n={nmode}")
 
         # Expand l-set eigenvectors back to a-set then g-set
         ndof_a = len(xa)
-        phia = np.zeros((nmode, ndof_a), dtype=fdtype)
-        for imode in range(nmode):
-            phil = np.zeros(nl, dtype=fdtype)
-            phil[ipositive] = xl_[:, imode]
-            phia[imode, lset_local] = phil
-
-        phig = np.full((nmode, ndof_work), 0.0, dtype=fdtype)
-        phig[:, aset] = phia
-        phig[:, sset] = xs
-        out["rset_b"] = rset_b
+        phi_a = np.zeros((nmode, ndof_a), dtype=fdtype)
+        #phi_a2 = np.zeros((nmode, ndof_a), dtype=fdtype)
+        #for imode in range(nmode):
+        #    phi_l = np.zeros(nl, dtype=fdtype)
+        #    phi_l[ipositive] = xl_[:, imode]
+        #    phi_a2[imode, lset_local] = phi_l
+        phi_a[:, lset_local] = xl_.T
+        #assert np.allclose(phi_a, phi_a2), (phi_a, phi_a2)
+        out["rset_bool"] = rset_bool
     else:
         # No SUPORT: solve on the full a-set (original path)
         Kaa_, ipositive, unused_inegative, unused_sz_set = remove_rows(
@@ -2792,44 +3046,156 @@ def _run_modes(
 
         if issparse(Maa_):
             Maa_ = Maa_.toarray()
-        eigenvalue, xa_ = solve_eigenvector(Kaa_, Maa_, ndof_, neigenvalue)
+        eigenvalue, xa_ = solve_eigenvector(
+            Kaa_, Maa_,
+            neigenvalues=neigenvalue)
         nmode = len(eigenvalue)
-        log.debug(f"eigenvalue = {eigenvalue}")
+        log.debug(f"eigenvalue = {eigenvalue}; n={nmode}")
 
         ndof_a = len(xa)
-        phia = np.zeros((nmode, ndof_a), dtype=fdtype)
-        for imode in range(nmode):
-            phia[imode, ipositive] = xa_[:, imode]
+        phi_a = np.zeros((nmode, ndof_a), dtype=fdtype)
+        #for imode in range(nmode):
+        #    phi_a[imode, ipositive] = xa_[:, imode]
+        phi_a[:, ipositive] = xa_.T
+        log.info(f'phi.shape={phi_a.shape}; nmode={nmode}')
 
-        phig = np.full((nmode, ndof_work), 0.0, dtype=fdtype)
-        phig[:, aset] = phia
-        phig[:, sset] = xs
+    phi_n = np.zeros((nmode, ndof_n), dtype=fdtype)
+    phi_n[:, aset] = phi_a
+    phi_n[:, sset] = xs
 
-    # ----------------------MPC recovery (n -> g) for modes----------------------
-    if GMN is not None:
-        # phig is currently in n-set (ndof_work = n_ndof), expand to g-set
-        GMN_dense = GMN.toarray()
-        phig_g = np.zeros((nmode, ndof), dtype=fdtype)
-        for imode in range(nmode):
-            phig_g[imode, :] = (GMN_dense @ phig[imode, :]).ravel()
-        phig = phig_g
-        del GMN_dense
+    phi_g = phi_n_to_g(phi_n, ndof_g, nmode, GMN=GMN, fdtype=fdtype)
 
-    # phit = phig
+    # phi_t = phi_g
     nnode_g = len(node_gridtype)
-    phi, Mhh, Khh = apply_phi_normalization(
-        Mgg, Kgg, eigenvalue, phig, nmode, nnode_g, norm_str)
-    log.info(f"Mhh_diag: {np.diag(Mhh)}")
-    log.info(f"Khh_diag: {np.diag(Khh)}")
+    phi_g, Mhh, Khh = apply_phi_normalization(
+        Mgg, Kgg, eigenvalue, phi_g, nmode, nnode_g, norm_str)
+    generalized_mass = np.diag(Mhh)
+    generalized_stiffness = np.diag(Khh)
+    log.info(f"Mhh_diag: {generalized_mass[:20]}; n={nmode}")
+    log.info(f"Khh_diag: {generalized_stiffness[:20]}; n={nmode}")
 
-    assert np.all(np.isfinite(phia))
-    assert np.all(np.isfinite(phig))
+    assert np.all(np.isfinite(phi_a))
+    assert np.all(np.isfinite(phi_g))
     out["modes_eigenvalue"] = eigenvalue
     out["modes_norm"] = norm_str
-    out["modes_phig"] = phig
+    out["modes_phig"] = phi_g
     out["modes_Mhh"] = Mhh
     out["modes_Khh"] = Khh
     return page_num, out
+
+
+def phi_n_to_g(phi_n: np.ndarray, ndof_g: int,
+               nmode: int,
+               GMN=None, fdtype: str='float64') -> np.ndarray:
+    if GMN is None:
+        return phi_n
+
+    # ----------------------MPC recovery (n -> g) for modes----------------------
+    assert nmode == phi_n.shape[1], (nmode, phi_n.shape)
+
+    # phig is currently in n-set (ndof_work = ndof_n), expand to g-set
+    GMN_dense = GMN.toarray()
+    phi_g = np.zeros((nmode, ndof_g), dtype=fdtype)
+    for imode in range(nmode):
+        phi_g[imode, :] = (GMN_dense @ phi_n[imode, :]).ravel()
+    return phi_g
+
+
+def _run_buckling(model: BDF,
+                  subcase: Subcase,
+                  ndof_g: int,
+                  dof_map: DOF_MAP,
+                  u_global: np.ndarray,
+                  Kff,
+                  free_dofs: np.ndarray) -> tuple[dict, int]:
+    log = model.log
+    neigenvalue, norm_str = get_real_eigenvalue_method(
+        model, subcase)
+
+    # Build geometric stiffness from preload stress state
+    #KDgg = get_KDgg(
+    #    model, dof_map, ndof_g,
+    #    ngrid, ndof_per_grid,
+    #    idtype=idtype, fdtype=fdtype,
+    #    KDgg_override=self.KDgg_override)
+    KDgg = build_KDgg(model, ndof_g, dof_map, u_global)
+    KDgg = KDgg.tocsc()
+    KDff = KDgg[np.ix_(free_dofs, free_dofs)].toarray()
+    ndof_f = KDff.shape[0]
+
+    log.debug("  geometric stiffness assembled")
+
+    # Solve buckling eigenproblem: (K + lambda*KD)*x = 0
+    # => K*x = -lambda*KD*x
+    # Use scipy generalized eigenvalue: Kff @ x = lambda * (-KDff) @ x
+    neg_KDff = -KDff
+
+    # Use eigh for symmetric positive-definite B (standard buckling)
+    # If -KD isn't positive definite, fall back to general eig
+    #Kff + 1
+    #neg_KDff + 1
+    neigenvalue = min(ndof_f-1, neigenvalue)
+    log.debug("solving buckling")
+    log.debug(f"  K.shape={Kff.shape}; neigenvalue={neigenvalue}")
+
+    if 0:  # pragma: no cover
+        eigenvalues_all, eigvecs_all = solve_eigenvector(
+            Kff, neg_KDff,
+            neigenvalues=neigenvalue, sol='buckling')
+    if 1:
+        #eigenvalues_all, eigvecs_all = scipy.sparse.linalg.eigs(Kff,
+        #    k=neigenvalue, M=neg_KDff, sigma=None, which='LM',
+        #    v0=None, ncv=None, maxiter=None, tol=0, return_eigenvectors=True,
+        #    #Minv=None, OPinv=None, OPpart=None, rng=None,
+        #)
+        Kff_dense = Kff.toarray()
+        #eigenvalues_all, eigvecs_all = scipy.linalg.eigs(Kff_dense,
+        #    M=neg_KDff, return_eigenvectors=True)
+        eigenvalues_all, eigvecs_all = scipy.linalg.eig(
+            Kff_dense, b=neg_KDff)
+            #left=False, right=True, overwrite_a=False, overwrite_b=False,
+            #check_finite=True, homogeneous_eigvals=False)
+        eigenvalues_all = eigenvalues_all.real
+        eigvecs_all = eigvecs_all.real
+
+    else:  # pragma: no cover
+        try:
+            eigenvalues_all, eigvecs_all = eigh(Kff, neg_KDff)
+        except np.linalg.LinAlgError:
+            eigenvalues_all, eigvecs_all = eig(Kff, neg_KDff)
+            eigenvalues_all = eigenvalues_all.real
+            eigvecs_all = eigvecs_all.real
+    #if 0:
+    #    # Keep only positive eigenvalues
+    #    # (physical buckling modes) sorted ascending
+    #    pos_mask = eigenvalues_all > 0
+    #    eigenvalues_pos = eigenvalues_all[pos_mask]
+    #    eigvecs_pos = eigvecs_all[:, pos_mask]
+    #else:
+    # user must limit the eigenvalues
+    eigenvalues_pos = eigenvalues_all
+    eigvecs_pos = eigvecs_all
+    
+    sort_idx = np.argsort(np.abs(eigenvalues_pos))
+    eigenvalue = eigenvalues_pos[sort_idx[:neigenvalue]]
+    xa_ = eigvecs_pos[:, sort_idx[:neigenvalue]]
+
+    nmode = len(eigenvalue)
+    assert xa_.shape == (ndof_f, nmode), (xa_.shape, (ndof_f, nmode))
+
+    # Buckling eigenvalues (critical load factors)
+    log.info(f"  buckling eigenvalues (critical load factors): {eigenvalue[:min(5,nmode)]}")
+
+    # Store results
+    log.info(f"  {len(eigenvalue)} buckling eigenvalues: {eigenvalue[:min(5, nmode)]}")
+
+    out = {
+        'KDgg': KDgg,
+        'eigenvaue_index': sort_idx,
+        "buckling_eigenvalues": eigenvalue,
+        "buckling_modes": xa_,
+    }
+    return out
 
 
 def _write_mass_participation_f06(f06_file: TextIO,
@@ -2969,10 +3335,10 @@ def _write_gpforce_balance(
 def solve_eigenvector(
     Kaa: csc_matrix,
     Maa: np.ndarray,
-    ndof: int,
     neigenvalues: int,
     use_lobpcg: bool = False,
-    X0: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray]:
+    X0: np.ndarray | None = None,
+    sol: str='modes') -> tuple[np.ndarray, np.ndarray]:
     """
     Solve the generalized eigenproblem
       Kaa*x = lambda*Maa*x.
@@ -2980,17 +3346,21 @@ def solve_eigenvector(
     Parameters
     ----------
     use_lobpcg : bool
-        If True, use LOBPCG instead of ARPACK (eigsh). Requires pyamg
-        for preconditioning (optional but recommended).
+        True: use LOBPCG instead of ARPACK (eigsh). Requires
+              pyamg for preconditioning (optional but recommended).
     X0 : ndarray, optional
-        Initial eigenvector guess for LOBPCG warm-start, shape (ndof, k).
+        Initial eigenvector guess for LOBPCG warm-start, shape (ndof_g, k).
         Pass previous converged modes for fast re-solves.
     """
+    ndof_a = Kaa.shape[0]
     Kaa_dense = Kaa.toarray()
     assert isinstance(Maa, np.ndarray), type(Maa)
 
     if not np.any(Maa):
-        raise FatalError('mass matrix is zero; check that elements have material density')
+        if sol == 'modes':
+            raise FatalError(f'Mass matrix is zero; check that elements have material density')
+        else:
+            raise FatalError(f'Geometric stiffness matrix is zero; check that CBAR/CBEAM/shells/solids are used')
 
     # reduce the size of the matrix going into the solver
     # by removing empty rows/columns
@@ -3006,12 +3376,16 @@ def solve_eigenvector(
     Kaa2 = Kaa[is_modes, :][:, is_modes]
     Maa2 = Maa[is_modes, :][:, is_modes]
 
-    ndof2 = Maa.shape[0]
+    ndof = Kaa.shape[0]
+    ndof2 = Maa2.shape[0]
     backend = get_solver()
+    print(f'eig backend = {backend}')
     if ndof2 <= neigenvalues:
+        print(f'  ndof={ndof2}; neig={neigenvalues}')
         Kaa2_dense = Kaa2.todense()
         eigenvalues, xa = scipy.linalg.eigh(Kaa2_dense, Maa2)
     elif use_lobpcg:
+        print(f'  use_lobpcg; neig={neigenvalues}')
         X0_reduced = None
         if X0 is not None:
             X0_reduced = X0[is_modes, :]
@@ -3020,6 +3394,7 @@ def solve_eigenvector(
         xa[no_modes, :] = 0
         xa[is_modes, :] = xa_
     else:
+        print(f'  eigsh; neig={neigenvalues}')
         try:
             eigenvalues, xa_ = backend.eigsh(
                 Kaa2, k=neigenvalues, M=Maa2, which="SM", return_eigenvectors=True
@@ -3035,7 +3410,7 @@ def solve_eigenvector(
 
 
 def _build_xg(model: BDF,
-              dof_map: DOF_MAP, ndof: int,
+              dof_map: DOF_MAP, ndof_g: int,
               subcase: Subcase) -> NDArrayNfloat:
     """
     Builds the {xg} vector, which has all SPCs in the analysis (cd) frame
@@ -3049,22 +3424,21 @@ def _build_xg(model: BDF,
     log = model.log
 
     # model = self.model
-    xspc = np.full(ndof, np.nan, dtype="float64")
+    ug = np.full(ndof_g, np.nan, dtype="float64")
     if "SPC" not in subcase:
         #log.warning("no SPCs defined in case control")
         spc_set = np.array([], dtype="int32")
-        sset = np.zeros(ndof, dtype="bool")
-        return spc_set, sset, xspc
+        sset = np.zeros(ndof_g, dtype="bool")
+        return spc_set, sset, ug
 
-    log.warning('creating xg')
-    spc_id, unused_options = subcase["SPC"]
+    log.warning('creating ug')
+    spc_id = subcase["SPC"][0]
  
     spcs = get_reduced_spcs(model, spc_id)
     spc_set = []
-    sset = np.zeros(ndof, dtype="bool")
+    sset_bool = np.zeros(ndof_g, dtype="bool")
     for spc in spcs:
         if spc.type == "SPC1":
-            # print(spc.get_stats())
             dofs_missed = []
             for comp, (inode0, inode1) in zip(spc.components, spc.inode):
                 for dof in str(comp):
@@ -3078,28 +3452,31 @@ def _build_xg(model: BDF,
                             # print('dof_map =', dof_map)
                             # print((nid, dofi))
                             continue
-                        sset[idof] = True
+                        sset_bool[idof] = True
                         spc_set.append(idof)
-                        xspc[idof] = 0.0
+                        ug[idof] = 0.0
             if dofs_missed:
                 dof_str = ", ".join(str(dofi) for dofi in dofs_missed)
                 log.warning(f"Missing (nid,dof) pairs:")
                 log.warning(f"  {dof_str}\n{spc.rstrip()}")
                 # =({nid},{dofi}) doesn't exist...skipping
+                raise RuntimeError(dofs_missed)
             del dofs_missed
         elif spc.type == "SPC":
             for nid, components, enforcedi in zip(spc.node_id, spc.components, spc.enforced):
                 for component in str(components):
                     dofi = int(component)
                     idof = dof_map[(nid, dofi)]
-                    sset[idof] = True
+                    sset_bool[idof] = True
                     spc_set.append(idof)
-                    xspc[idof] = enforcedi
-        else:
+                    ug[idof] = enforcedi
+        else:  # pragma: no cover
             raise NotImplementedError(spc)
+ 
+    # idofs
     spc_set = np.array(spc_set, dtype="int32")
-    # print('spc_set =', spc_set, xspc)
-    return spc_set, sset, xspc
+    # print('spc_set =', spc_set, ug)
+    return spc_set, sset_bool, ug
 
 
 def get_reduced_spcs(model: BDF, spc_id: int) -> list:
@@ -3152,8 +3529,10 @@ def _has_rigid_elements(model: BDF) -> bool:
     return False
 
 
-def _build_Gmn(model: BDF, mpc_id: int,
-               dof_map: DOF_MAP, ndof: int,
+def _build_Gmn(model: BDF,
+               mpc_id: int,
+               dof_map: DOF_MAP,
+               ndof_g: int,
                xyz_cid0: np.ndarray,
                fdtype: str = "float64",
                solver_dict=None,
@@ -3164,15 +3543,18 @@ def _build_Gmn(model: BDF, mpc_id: int,
      - RBE1, RBE2, RBE3
     """
     assert solver_dict is not None, solver_dict
+
+    # --- Rigid elements (RBE2, RBE3, RBAR, RBAR1, RBE1, RROD) ---
+    has_rigid = _has_rigid_elements(model)
+    if mpc_id == 0 and not has_rigid:
+        return None, None
+
     log = model.log
+    log.info('creating Gmn')
 
     # Collect all dependent DOFs from MPC cards and rigid elements
     dependents_list = []
 
-    # --- Rigid elements (RBE2, RBE3, RBAR, RBAR1, RBE1, RROD) ---
-    has_rigid = _has_rigid_elements(model)
-    if mpc_id != 0 or has_rigid:
-        log.info('creating Gmn')
 
     # --- MPC cards ---
     mpc = reduce_mpc_cards(model, mpc_id)
@@ -3190,7 +3572,7 @@ def _build_Gmn(model: BDF, mpc_id: int,
 
     if has_rigid:
         rigid_gmn_rows, rigid_m_set, _ = assemble_gmn(
-            model, dof_map=dof_map, ndof=ndof, apply_cd=True)
+            model, dof_map=dof_map, ndof=ndof_g, apply_cd=True)
 
     if rigid_m_set is not None:
         for (nid, dof), _ in rigid_m_set.items():
@@ -3198,23 +3580,24 @@ def _build_Gmn(model: BDF, mpc_id: int,
             dependents_list.append(idof_dep)
 
     if not dependents_list:
-        return None, None
+        raise RuntimeError('invalid rigids...no dependent DOFs?')
+        #return None, None
 
     mset = np.unique(np.array(dependents_list, dtype="int32"))
 
     # n-set = g-set minus m-set
-    gset = np.arange(ndof, dtype="int32")
+    gset = np.arange(ndof_g, dtype="int32")
     nset = np.setdiff1d(gset, mset)
-    n_ndof = len(nset)
+    ndof_n = len(nset)
 
     # Map from g-set index to n-set column index
-    g_to_n = np.full(ndof, -1, dtype="int32")
-    g_to_n[nset] = np.arange(n_ndof, dtype="int32")
+    g_to_n = np.full(ndof_g, -1, dtype="int32")
+    g_to_n[nset] = np.arange(ndof_n, dtype="int32")
 
-    # Build GMN as sparse (ndof x n_ndof)
+    # Build GMN as sparse (ndof_g x ndof_n)
     # Independent DOFs: identity mapping
-    GMN = dok_matrix((ndof, n_ndof), dtype=fdtype)
-    for g_idx, n_col in zip(nset, range(n_ndof)):
+    GMN = dok_matrix((ndof_g, ndof_n), dtype=fdtype)
+    for g_idx, n_col in zip(nset, range(ndof_n)):
         GMN[g_idx, n_col] = 1.0
 
     # --- Fill from MPC cards ---
@@ -3266,7 +3649,7 @@ def _build_Gmn(model: BDF, mpc_id: int,
     n_mpc = len(mpc)
     n_rigid = len(rigid_m_set) if rigid_m_set is not None else 0
     log.info(f"MPC/rigid reduction: {len(mset)} dependent DOFs eliminated "
-             f"(MPC={n_mpc}, rigid={n_rigid}, g={ndof} -> n={n_ndof})")
+             f"(MPC={n_mpc}, rigid={n_rigid}, g={ndof_g} -> n={ndof_n})")
     return GMN_csc, mset
 
 
@@ -3303,7 +3686,7 @@ def get_Kgg(model: BDF, dof_map: DOF_MAP,
         # if issparse(Kgg_override):
         #     Kgg = Kgg_override
         # else:
-        #     Kgg = csc_matrix(Kgg_override[:ndof, :ndof])
+        #     Kgg = csc_matrix(Kgg_override[:ndof_g, :ndof_g])
         if issparse(Kgg_override):
             Kgg = Kgg_override[:ndof, :ndof].tocsc()
         else:
@@ -3576,6 +3959,18 @@ def get_case_control(sol: int, subcase: Subcase):
     return load_id, spc_id, mpc_id, suport_id, method_id
 
 
+def get_recover_results(subcase: Subcase,
+                        results: list[str]) -> bool:
+    recover_results = False
+    for key in results:
+        if key in subcase:
+            value, options = subcase[key]
+            if value != 'NONE':
+                recover_results = True
+                return recover_results
+    return recover_results
+
+
 def static_g_to_n(model: BDF,
                   Kgg, Mgg, GMN,
                   log: SimpleLogger, solver_dict):
@@ -3589,8 +3984,8 @@ def static_g_to_n(model: BDF,
         write_mat(model, Mnn, 'PRTMNN', solver_dict)
 
         # AUTOSPC on N-set: detect singular DOFs after MPC reduction
-        n_ndof_temp = Knn.shape[0]
-        autospc_dofs_n = autospc_n_set(Knn, n_ndof_temp, log)
+        ndof_n_temp = Knn.shape[0]
+        autospc_dofs_n = autospc_n_set(Knn, ndof_n_temp, log)
         if len(autospc_dofs_n) > 0:
             # Add these to the SPC set in the n-set coordinate system
             # They will be picked up during the SPC partition below
@@ -3622,12 +4017,15 @@ def static_Pg_to_Pn(model: BDF,
         nset_indices = gset
     return Pn, nset_indices
 
-def static_Knn_to_Kff(
+def static_nset_to_fset(
     model: BDF,
-    Knn, Mnn, Pn,
-    xs,
-    nset,
-    log: SimpleLogger, solver_dict):
+    Knn,
+    Pn: np.ndarray,
+    un: np.ndarray,
+    nset_bool: np.ndarray,
+    gset_str: np.ndarray, nset_idx: np.ndarray,
+    log: SimpleLogger,
+    solver_dict: dict[str, Any]):
     """
     n = f + s
     
@@ -3637,73 +4035,433 @@ def static_Knn_to_Kff(
     {Ff} = [Kff] {xf} + [Kfs] {xs*}
     {Fs} = [Kfs] {xf} + [Kss] {xs*}
     """
-    sset = np.isfinite(xs)
-    xs_abs = np.abs(xs)
-    if sset.sum():
-        fset = nset - sset
-        f_idx = np.ix_(fset)
-        s_idx = np.ix_(sset)
-        ff_idx = np.ix_(fset, fset)
-        fs_idx = np.ix_(fset, sset)
+    assert len(un) == len(nset_idx)
+    sset_bool = np.isfinite(un)
+    us_abs = np.abs(un)
 
-        Kff = Knn.todense()[ff_idx].tocsc()
-        if Mff is not None:
-            Mff = Mnn.todense()[ff_idx].tocsc()
-        if np.nansum(xs_abs) == 0.0:
-            # {Ff} = [Kff] {xf} + [Kfs] {xs*}
-            # {Ff} = [Kff] {xf}
-            Ff = Fn[f_idx]
-        else:
-            # {Ff} = [Kff] {xf}
-            # [Kff] {xf} = {Ff} - [Kfs] {xs}
-            Ff0 = Fn[f_idx]
-            xs0 = xs[s_idx]
-            Ff = Ff0 - Kfs @ xs0
-        xf, ipos, ineg = solve(
-            Kff, Ff, fset, log, idtype='int32')
-    else:
+    if sset_bool.sum() == 0:
         Kff = Knn
-        Mff = Mnn
         Pf = Pn
         uf = un
-        fset = nset
-    return Kff, Mff, Pf, uf, fset
+        fset_bool = nset_bool
+        return Kff, Pf, uf, fset_bool, fset_idx
 
-def static_Kff_to_Kaa(
+    log.info('reducing f=n-s')
+    log.info(f'  nn={nset_bool.sum()} Knn.shape={Knn.shape}')
+    log.info(f'  ns={sset_bool.sum()}')
+
+    i_s = np.where(sset_bool)[0]
+    i_f = np.where(~sset_bool)[0]
+    sset_idx = nset_idx[i_s]
+    fset_idx = nset_idx[i_f]
+    gset_str[sset_idx] = 's'
+
+    # remove sset from nset
+    #   keeps the same length
+    fset_bool = nset_bool & ~sset_bool
+    log.info(f'  nf={fset_bool.sum()}')
+
+    # now shrink it
+    ndof_f = fset_bool.sum()
+    fset = np.ones(ndof_f, dtype='bool')
+
+    f_idx = np.ix_(fset_bool)
+    s_idx = np.ix_(sset_bool)
+    ff_idx = np.ix_(fset_bool, fset_bool)
+    fs_idx = np.ix_(fset_bool, sset_bool)
+
+    uf = un[f_idx]
+
+    #  Knn.todense()[ff_idx].tocsc()
+    Kff = Knn[ff_idx]
+    assert ndof_f == Kff.shape[0], f'ndof_f={ndof_f} Kff.shape={Kff.shape[0]}'
+    assert len(fset) == ndof_f, f'len(fset)={len(fset)} ndof_f={ndof_f} Kff.shape={Kff.shape[0]}'
+    #if Mff is not None:
+    #    Mff = Mnn.todense()[ff_idx].tocsc()
+    if np.nansum(us_abs) == 0.0:
+        # {Ff} = [Kff] {xf} + [Kfs] {xs*}
+        # {Ff} = [Kff] {xf}
+        Pf = Pn[f_idx]
+    else:
+        # {Ff} = [Kff] {xf}
+        # [Kff] {xf} = {Ff} - [Kfs] {xs}
+        Ff0 = Pn[f_idx]
+        us0 = un[s_idx]
+        Pf = Ff0 - Kfs @ un0
+    #xf, ipos, ineg = solve(
+    #    Kff, Ff, fset, log, idtype='int32')
+    return Kff, Pf, uf, fset, fset_idx
+
+
+def dynamic_fset_to_aset(
     model: BDF,
-    Kaa, Mff, Pf,
-    xs,
-    nset,
+    Kff, Mff, Pf,
+    uf,
+    fset_bool, oset_bool,
+    gset_str, fset_idx,
     log: SimpleLogger, solver_dict):
     """
-    f = a + o
+    Compress a=f-o by static condensation
 
-    {Ff} = {Fa*} = [Kaa Kao] {xa?}
-           {Fo*}   [Koa Koo] {xo?}
+    {Ff} = {Fa} = [Maa Mao] {xadd} + [Kaa Kao] {xa}
+           {Fo}   [Moa Moo] {xodd} + [Koa Koo] {xo}
     
-    {Fa*} = [Kaa] {xa} + [Kao] {xo?}
-    {Fo*} = [Kao] {xa} + [Koo] {xo?}
+    -------------------------------------
+    assuming acceleration = 0
 
-    {Fa} = [Kaa] {xa} + [Kao] xo?}
-    {xo} = [Koo]^-1 ({Fo} - [Kao] {xa})
+    {Fa} = [Kaa] {xa} + [Kao] {xo}
+    {Fo} = [Kao] {xa} + [Koo] {xo}
     
-    {Fa} = [Kaa] {xa} + [Kao] [Koo]^-1 ({Fo} - [Kao] {xa})
-    {Fa} = [Kaa] {xa}
-           + [Kao] [Koo]^-1 {Fo}
-           - [Kao] [Koo]^-1 [Kao] {xa}
+    [Koo] {xo} = {Fo} - [Kao] {xa}
+    {x0} = [Koo]^-1 {Fo} - [Koo]^-1 [Kao] {xa}
+    {x0} = {xo0} + [Goa] {xa}
+   
+    {xo0} =  [Koo]^-1 {Fo}
+    [Goa] = -[Koo]^-1 [Kao]
 
-    {Fa} = [Kaa] {xa}
-           + [Kao]   [Koo]^-1 {Fo}
-           - [Koa]^T [Koo]^-1 [Kao] {xa}
+    {xa} = [Iaa] {ua} + [ 0 ]
+    {x0}   [Goa]        {xo0]
 
-    {Fa} = ([Kaa] - [Koa]^T [Koo]^-1 [Kao] ) + {xa}
-           + [Kao] [Koo]^-1 {Fo}
+    Premultiply by [Iaa, Goa^T]
 
-    {Fa} - [Kao] [Koo]^-1 {Fo}
-       = ([Kaa] - [Koa]^T [Koo]^-1 [Kao] ) + {xa}
-           
-    {Fa'}  = {Fa} - [Kao] [Koo]^-1 {Fo}
-    {Kaa'} = [Kaa] - [Koa]^T [Koo]^-1 [Kao]
-    {Fa'} = [Kaa'] + {xa}
+    [Iaa, Goa^T] {Fa} = [Iaa, Goa^T][Kaa Kao] [Iaa] {ua}
+                 {Fo}               [Koa Koo] [Goa]
+    Fa + Goa^T Fo = [Iaa, Goa^T] [Kaa + Kao*Goa] {ua}
+                                 [Koa + Koo*Goa]
+                    (Kaa + Kao*Goa) + Goa^T (Koa + Koo*Goa) {ua}
+    {Fa'} = [Kaa'] {ua}
+
+    Fa'  = Fa + Goa^T Fo
+    Kaa' = (Kaa + Kao*Goa) + Goa^T*Koa + Goa^T*Koo*Goa) {ua}
+    Maa' = (Maa + Mao*Goa) + Goa^T*Moa + Goa^T*Moo*Goa) {uadd}
+    
+    KG-ify by (a*b)^T = b^T a^T
+
+    Kaa' = Kaa + Kao*Goa +  Kao^T Gao    + Goa^T*Goa*Koo
+    Kaa' = Kaa + Kao*Goa + (Kao   Goa)^T + Goa^T*Goa*Koo
+         = Kaa + Kao*Goa
     """
-    pass
+    Maa = Mff
+    if oset_bool is None or len(oset_bool) == 0:
+        aset = fset_bool
+        aset_idx = fset_idx
+        Kaa = Kff
+        Pa = Pf
+        ua = uf
+        Goa = None
+        uo0 = None
+        return Maa, Kaa, Pa, Goa, ua, uo0, aset, aset_idx
+
+    log.info('reducing a=f-o')
+    assert len(fset_bool) == len(oset_bool), (len(fset_bool), len(oset_bool))
+    assert len(fset_bool) == Kff.shape[0], (len(fset_bool), Kff.shape)
+    aset_bool = fset_bool & ~oset_bool
+    ndof_a = aset_bool.sum()
+
+    # set the dof set name
+    i_o = np.where(oset_bool)[0]
+    i_a = np.where(~oset_bool)[0]
+    oset_idx = nset_idx[i_o]
+    aset_idx = nset_idx[i_a]
+    gset_str[sset_idx] = 'o'
+
+    aset = np.ones(ndof_a, dtype='bool')
+    a_idx = np.ix_(fset_bool)
+    o_idx = np.ix_(oset_bool)
+    aa = np.ix_(aset_bool, aset_bool)
+    ao = np.ix_(aset_bool, oset_bool)
+    oo = np.ix_(oset_bool, oset_bool)
+
+    # a = f - o
+    Kaa = Kff[aa]
+    Kao = Kff[ao]
+    Koo = Kff[oo]
+    Pa = Pf[a]
+    Po = Pf[o]
+    ua = uf[a]
+    Kaa = Kaa + Kao @ Goa
+
+    # Fa' = Fa + Goa^T Fo
+    Pa = Pa + Goa.T @ Po
+
+    #[Goa] = -[Koo]^-1 [Kao]
+    Goa = solve(-Koo, Kao)
+
+    if np.abs(Po).max() > 0:
+        #{xo0} =  [Koo]^-1 {Fo}
+        uo0 = solve(Koo, Po)
+    else:
+        uo0 = Po * 0
+
+    if Mff is not None:
+        Maa = Mff[aa]
+        Mao = Mff[ao]
+        Moo = Mff[oo]
+
+        # Maa' = Maa + (Mao*Goa) + Goa^T*Moa + Goa^T*Moo*Goa)
+        Maa = Maa + (Mao @ Goa) + (Mao @ Goa).T + (Goa.T @ Moo @ Goa)
+    return Maa, Kaa, Pa, Goa, ua, uo0, aset, aset_idx
+
+def static_recover_disp_a_to_f(ua, Goa, uo0):
+    if Goa is None:
+        uf = ua
+    else:
+        #u0 = Goa @ ua + uo0
+        u0 = Goa @ ua + uo0
+    return uf
+
+def modes_g_to_a(Kgg, Mgg,
+                 xg: np.ndarray,
+                 mset_bool: np.ndarray | None,
+                 sset_g: np.ndarray,
+                 sset_bool_g: np.ndarray,
+                 model: BDF,
+                 dof_map: DOF_MAP,
+                 subcase: Subcase,
+                 out: dict[str, Any],
+                 GMN=None):
+    # ----------------------MPC reduction (g -> n)----------------------
+    ndof_g = Kgg.shape[0]
+    
+    if GMN is not None:
+        Knn = GMN.T @ Kgg @ GMN
+        Mnn = GMN.T @ Mgg @ GMN
+        # Work in n-set
+        gset_all = np.arange(ndof_g, dtype="int32")
+        nset_indices = np.setdiff1d(gset_all, mset_bool)
+        ndof_n = len(nset_indices)
+
+        # Map g-set SPC to n-set
+        #sset_g, sset_bool_g, xg = _build_xg(model, dof_map, ndof_g, subcase)
+        g_to_n = np.full(ndof_g, -1, dtype="int32")
+        g_to_n[nset_indices] = np.arange(ndof_n, dtype="int32")
+
+        sset_bool = np.zeros(ndof_n, dtype="bool")
+        for s_idx in sset_g:
+            n_idx = g_to_n[s_idx]
+            if n_idx >= 0:
+                sset_b[n_idx] = True
+        sset = sset_bool
+
+        gset_bool = np.ones(ndof_n, dtype="bool")
+        aset_bool = gset_bool & ~sset_bool
+
+        xn = np.zeros(ndof_n, dtype=fdtype)
+        xa, xs = partition_vector2(xn, [["a", aset], ["s", sset_bool]])
+
+        M = partition_matrix(Mnn, [["a", aset], ["s", sset_bool]])
+        Maa = M["aa"]
+
+        K = partition_matrix(Knn, [["a", aset], ["s", sset_bool]])
+        Kaa = K["aa"]
+
+        #ndof_work = ndof_n
+        Kgg_work = Knn
+        Mgg_work = Mnn
+    else:
+        ndof_n = ndof_g
+        #mset = None
+        mset_bool = None
+        gset_bool = np.ones(ndof_g, dtype="bool")
+        sset = sset_g
+        sset_bool = sset_bool_g
+        aset_bool = gset_bool & ~sset_bool  # a = g-s
+
+        xa, xs = partition_vector2(xg, [["a", aset_bool], ["s", sset_bool]])
+
+        M = partition_matrix(Mgg, [["a", aset_bool], ["s", sset_bool]])
+        Maa = M["aa"]
+
+        K = partition_matrix(Kgg, [["a", aset_bool], ["s", sset_bool]])
+        Kaa = K["aa"]
+
+        #ndof_work = ndof
+        Kgg_work = Kgg
+        Mgg_work = Mgg
+
+    out["xg"] = xg
+    out["xa"] = xa
+    out["xs"] = xs
+    out["Kaa"] = Kaa
+    out["Maa"] = Maa
+
+    out['gset_bool'] = gset_bool
+    #out['gset_bool'] = gset_bool
+    out['sset'] = sset
+    out['sset_bool'] = sset_bool
+    #out['mset'] = mset
+    out['mset_bool'] = mset_bool
+    out["aset_bool"] = aset_bool
+    out['ndof_n'] = ndof_n
+
+    #assert len(xa) == len(aset), (len(xa), len(aset))
+    return Kaa, Maa
+
+
+def check_subcases(model: BDF):
+    subcase_ids = []
+    subcases = {}
+    for subcase_id, subcase in sorted(model.subcases.items()):
+        if subcase_id == 0:
+            continue
+        subcases[subcase_id] = subcase
+        subcase_ids.append(subcase_id)
+    assert len(subcase_ids), subcase_ids
+    
+    
+    sol = model.sol
+    for subcase_id, subcase in subcases.items():
+        spc_id = 0
+        mpc_id = 0
+        method_id = 0
+        if 'SPC' in subcase:
+            spc_id = subcase['SPC'][0]
+
+        if 'MPC' in subcase:
+            mpc_id = subcase['MPC'][0]
+
+        if 'METHOD' in subcase:
+            method_id = subcase['METHOD'][0]
+            method = model.methods[method_id]
+
+
+    if sol == 103:
+        is_modes = False
+        for subcase_id, subcase in subcases.items():
+            load_id = 0
+            method_id = 0
+            if 'METHOD' in subcase:
+                method_id = subcase['METHOD'][0]
+            else:  # pragma: no cover
+                raise RuntimeError(str(subcase))
+
+    elif sol == 105:
+        is_buckling = False
+        for subcase_id, subcase in subcases.items():
+            load_id = 0
+            method_id = 0
+            if 'METHOD' in subcase and 'LOAD' in subcase:
+                spc_id = subcase['SPC']
+                method_id = subcase['METHOD'][0]
+                load_id = subcase['LOAD'][0]
+                is_buckling = True
+            elif 'LOAD' in subcase:
+                spc_id = subcase['SPC']
+                load_id = subcase['LOAD'][0]
+            elif 'METHOD' in subcase:
+                method_id = subcase['METHOD'][0]
+                value, options = subcase['STATSUB']
+            else:  # pragma: no cover
+                raise RuntimeError(str(subcase))
+            
+            #if load_id:
+                #method = model.loads[method_id]
+
+
+def find_preload(model: BDF) -> tuple[set[int], dict[int, int]]:
+    """identify STATSUBs cases and that they're valid"""
+    log = model.log
+    preloads_to_save = set([])
+    preloads_to_apply = {}
+    subcase_ids = []
+    for subcase_id, subcase in sorted(model.subcases.items()):
+        if subcase_id == 0:
+            continue
+        subcase_ids.append(subcase_id)
+        #print(subcase)
+        #print('------------------')
+        if 'STATSUB' not in subcase:
+            continue
+        value, options = subcase['STATSUB']
+        assert 'PRELOAD' in options, options
+        log.debug(f"subcase={subcase_id};  STATSUB({options})={value}")
+        assert value in subcase_ids, f'missing PRELOAD={value} for subcase={subcase_id}; subcases={subcase_ids}'
+        preloads_to_save.add(value)
+        preloads_to_apply[subcase_id] = value
+    return preloads_to_save, preloads_to_apply
+
+
+def setup_solver_data(is_structural: bool,
+                      model: BDF,
+                      op2: OP2,
+                      f06_file: TextIO,
+                      idtype: str,
+                      fdtype: str,
+                      solver_dict: dict,
+                      Kgg_override=None,
+                      Mgg_override=None,
+                      title='', label='',
+                      page_stamp='',
+                      page_num: int=1) -> tuple[SolverData, int]:
+    sol = model.sol
+    node_gridtype = _get_node_gridtype(model, idtype=idtype)
+    dof_map, ps = _get_dof_map(model)
+    xyz_cid0 = model.grid.xyz_cid0()
+
+    #nsubcase = 0
+    is_any_mpc = False     # are there any cases that have MPC
+    is_any_no_mpc = False  # are there any cases that don't have MPC
+    mpc_ids = set([])
+    for subcase_id, subcase in model.subcases.items():
+        if subcase_id == 0:
+            continue
+        #nsubcase += 1
+        if 'MPC' in subcase:
+            is_any_mpc = True
+            mpc_id = subcase['MPC'][0]
+            mpc_ids.add(mpc_id)
+        else:
+            is_any_no_mpc = True
+
+    ngrid, ndof_per_grid, ndof_g = get_ndof(model, subcase)
+
+    is_param_grdpnt = 'GRDPNT' in model.params
+    mpc_id = 0
+    Mgg = None
+
+    if is_structural:
+        Kgg = get_Kgg(
+            model, dof_map, ndof_g, ngrid, ndof_per_grid,
+            idtype=idtype, fdtype=fdtype,
+            Kgg_override=Kgg_override,
+            solver_dict=solver_dict)
+        Kgg = Kgg.tocsc()
+
+        if is_any_no_mpc:
+            # only calculate this if there is a case without MPCs
+            # TODO: calculate GMN for all mpc_ids
+            GMN_csc, mset = _build_Gmn(
+                model, mpc_id,
+                dof_map, ndof_g, xyz_cid0, fdtype=fdtype,
+                solver_dict=solver_dict)
+        else:
+            GMN_csc, mset = None, None
+
+        if is_param_grdpnt or sol in MODAL_SOLS:
+            # TODO: doesn't include NSM
+            Mbb = build_Mbb(
+                model, subcase, dof_map, ndof_g, fdtype=fdtype,
+                solver_dict=solver_dict)
+            page_num = write_grid_point_weight(
+                model, Mbb, dof_map, ndof_g,
+                op2, f06_file,
+                title=title, label=label,
+                page_stamp=page_stamp, page_num=page_num)
+            Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid,
+                             inplace=False)
+            Mgg = Mgg.tocsc()
+        elif sol in STATIC_SOLS:
+            pass
+        else:
+            raise RuntimeError(sol)
+
+        GMN0 = (GMN_csc, mset)
+        solver_data = SolverData(
+            Kgg, Mgg,
+            node_gridtype, dof_map,
+            xyz_cid0,
+            ngrid, ndof_g, ndof_per_grid,
+            GMN0=GMN0)
+    else:
+        raise NotImplementedError('heat')
+    return solver_data, page_num

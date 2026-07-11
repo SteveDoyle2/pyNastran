@@ -1,4 +1,5 @@
 from pyNastran.dev.bdf_vectorized3.solver.test.test_builder import *
+from pyNastran.dev.bdf_vectorized3.solver.test.test_bars import *
 from pyNastran.dev.bdf_vectorized3.solver.test.test_beam_elements import *
 from pyNastran.dev.bdf_vectorized3.solver.test.test_gmn_matrix import *
 from pyNastran.dev.bdf_vectorized3.solver.test.test_harmonic import *

@@ -51,7 +51,8 @@ from pyNastran.op2.op2_interface.write_utils import (
     get_title_subtitle_label)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    set_static_case, set_modal_case, set_transient_case,
+    set_static_case, set_modal_case, set_buckling_case,
+    set_transient_case,
     set_freq_case, set_complex_modes_case)
 from pyNastran.op2.result_objects.op2_objects import combination_inplace
 
@@ -959,6 +960,32 @@ class RealTableArray(TableArray):
         #obj.modes = modes
         #obj.eigns = eigenvalues
         #obj.mode_cycles = mode_cycles
+        return obj
+
+    @classmethod
+    def add_buckling_case(cls, table_name, node_gridtype, data, isubcase,
+                          modes, eigenvalues, mode_cycles,
+                          is_sort1=True, is_random=False, is_msc=True,
+                          random_code=0, title='', subtitle='', label=''):
+
+        #elif self.analysis_code == 2:  # real eigenvalues
+            ## mode number
+            #self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            ## eigenvalue
+            #self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
+            ## mode or cycle .. todo:: confused on the type - F1???
+            #self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)
+            #self.update_mode_cycle('mode_cycle')
+            #self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
+
+        data_code = oug_data_code(table_name,
+                                  is_real=True,
+                                  is_sort1=is_sort1, is_random=is_random,
+                                  random_code=random_code, title=title, subtitle=subtitle, label=label,
+                                  is_msc=is_msc)
+        obj = set_buckling_case(cls, is_sort1, isubcase, data_code,
+                                set_real_table, (node_gridtype, data),
+                                modes, eigenvalues, mode_cycles)
         return obj
 
     def envelope(self,
