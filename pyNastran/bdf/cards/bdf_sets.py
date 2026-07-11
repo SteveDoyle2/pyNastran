@@ -185,6 +185,15 @@ class ABCQSet(Set):
         nids = _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
         return nids
 
+    def get_nid_comp_dict(self) -> dict[int, str]:
+        nid_comp_dict = {}
+        for (nid, comp) in zip(self.node_ids, self.components):
+            if nid in nid_comp_dict:
+                nid_comp_dict[nid] = comp
+            else:
+                nid_comp_dict[nid] += comp
+        return nid_comp_dict
+
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
         list_fields = [self.type]  # ASET, BSET
@@ -553,6 +562,12 @@ class ABCQSet1(Set):
     #@property
     #def node_ids(self):
         #return self.get_ids()
+
+    def get_nid_comp_dict(self) -> dict[int, str]:
+        nid_comp_dict = {}
+        for nid in self.node_ids:
+            nid_comp_dict[nid] = self.components
+        return nid_comp_dict
 
     @property
     def node_ids(self):

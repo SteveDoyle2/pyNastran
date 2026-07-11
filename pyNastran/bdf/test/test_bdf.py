@@ -1142,6 +1142,15 @@ def _test_hdf5(fem1: BDF, hdf5_filename: str) -> None:
     #sys.exit('hdf5')
 
 
+def add_comps(nid_to_components: dict[int, str],
+              nid: int, comps: str):
+    assert isinstance(comps, str), comps
+    if nid not in nid_to_components:
+        nid_to_components[nid] = comps
+    else:
+        nid_to_components[nid] += comps
+
+
 def get_dof_map(model: BDF,
                 subcase_id: int,
                 spc_id: int=0,
@@ -1169,17 +1178,16 @@ def get_dof_map(model: BDF,
             log.error(f'Could not find SPC={spc_id}')
             spcs = []
         for spc in spcs:
-            # TODO: add SPC
             if spc.type == 'SPC1':
                 for nid in spc.nodes:
-                    spc_nid_to_components[nid] = spc.components
+                    add_comps(spc_nid_to_components, nid, spc.components)
             elif spc.type == 'SPC':
                 # components: ['123456']
                 # nodes: [9]
                 assert len(spc.nodes) == len(spc.components), spc.get_stats()
                 for nid, comps in zip(spc.nodes, spc.components):
-                    # for comp in comps:
-                    spc_nid_to_components[nid] = spc.components
+                    add_comps(spc_nid_to_components, nid, comps)
+
             elif spc.type == 'GMSPC':
                 log.warning(f'skipping\n{str(spc)}{spc.get_stats()}')
             else:  # pragma: no cover
@@ -1191,12 +1199,12 @@ def get_dof_map(model: BDF,
         suport1 = model.suport1[suport1_id]
         assert len(suport1.nodes) == len(suport1.Cs), suport1.get_stats()
         for nid, comp in zip(suport1.nodes, suport1.Cs):
-            suport_nid_to_components[nid] = comp
+            add_comps(spc_nid_to_components, nid, comp)
 
     for suport in model.suport:
         assert len(suport.nodes) == len(suport.Cs), suport.get_stats()
         for nid, comp in zip(suport.nodes, suport.Cs):
-            suport_nid_to_components[nid] = comp
+            add_comps(suport_nid_to_components, nid, comp)
 
     loads_nid_to_components = {}
     dof_map = {
@@ -1205,26 +1213,58 @@ def get_dof_map(model: BDF,
         'r': suport_nid_to_components,
         'p': loads_nid_to_components,
     }
+    sets = {
+        'a': model.asets,
+        'b': model.bsets,
+        'c': model.csets,
+        'o': model.omits,
+        'q': model.qsets,
+    }
+    for set_type, set_list in sets.items():
+        nid_comp_dict = {}
+        duplicate_nids = set([])
+        for seti in set_list:
+            nid_comp_dicti = seti.get_nid_comp_dict()
+            for key, value in nid_comp_dicti.items():
+                if key not in nid_comp_dict:
+                    nid_comp_dict[key] = value
+                else:
+                    log.warning.warn(f'duplicate (nid,dof) = {key}')
+                    nid, _dof = key
+                    duplicate_nids.add(nid)
+        dof_map[set_type] = nid_comp_dict
+        if duplicate_nids:
+            duplicate_nids_list = list(duplicate_nids)
+            duplicate_nids_list.sort()
+            log.error(f'duplicate_nids={duplicate_nids_list}')
+
     verify_dof_map(model, dof_map)
     return dof_map
 
 
 def verify_dof_map(model: BDF,
-                   dof_map: dict[str, dict[int, str]]) -> bool:
+                   dof_map: dict[str, dict[int, str]],
+                   ) -> bool:
     log = model.log
     used_dofs = defaultdict(str)
+    duplicate_nids = set()
     for set_type, nid_comp_dict in dof_map.items():
         for nid, comps in nid_comp_dict.items():
-            for comp in comps:
+            # change 321 to 123
+            comps2 = ''.join(sorted(list(set(comps))))
+            for comp in comps2:
                 dof = (nid, comp)
-                # if dof in used_dofs:
                 used_dofs[dof] += set_type
-                # else:
-                #     used_dofs[dof] = set_type
     for dof, set_types in sorted(used_dofs.items()):
         if len(set_types) > 1:
+            nid, comp = dof
+            duplicate_nids.add(nid)
             set_types_str = ', '.join(set_types)
             log.warning(f'dof={dof} is used by multiple sets: {set_types_str}')
+    if duplicate_nids:
+        duplicate_nids_list = list(duplicate_nids)
+        duplicate_nids_list.sort()
+        log.error(f'duplicate_nids={duplicate_nids_list}')
     return True
 
 
