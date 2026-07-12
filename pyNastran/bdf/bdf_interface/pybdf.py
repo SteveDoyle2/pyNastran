@@ -538,7 +538,7 @@ class BDFInputPy:
                         include_lines, bdf_filename2, i, j, ifile, source_file_line)
                     ifile += 1
                 else:
-                    bdf_filename2 = parse_include_lines(include_lines)
+                    bdf_filename2 = parse_include_lines(include_lines, log, spaces=spaces)
 
                     # these are the lines associated with the 1st/2nd include file found
                     self.include_lines[jfile].append((include_lines, bdf_filename2))
