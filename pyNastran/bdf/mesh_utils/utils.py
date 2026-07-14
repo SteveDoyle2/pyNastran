@@ -3,6 +3,7 @@ defines:
     bdf merge        (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
     bdf equivalence  IN_BDF_FILENAME EQ_TOL\n'
     bdf renumber     IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+    bdf replace      IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
     bdf mirror       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
     bdf export_mcids IN_BDF_FILENAME [-o OUT_GEOM_FILENAME]\n'
     bdf solid_dof    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--spc SPC]\n'

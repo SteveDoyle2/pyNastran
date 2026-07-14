@@ -1188,7 +1188,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             model.log = self.log
         self.xref_obj.model = self
 
-    def replace_cards(self, replace_model: BDF) -> None:
+    def replace_cards(self, replace_model: BDF,
+                      write_log: bool=True) -> None:
         """
         Replaces the common cards from the current (self) model from the
         ones in the new replace_model.  The intention is that you're
@@ -1206,31 +1207,78 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """
         self.log.info('replacing cards')
         self.log.info(replace_model.get_bdf_stats())
-        for nid, node in replace_model.nodes.items():
-            self.nodes[nid] = node
+        dict_names = [
+            'nodes', 'elements', 'properties', 'masses', 'rigid_elements',
+            'materials', 'thermal_materials',
+            'tables', 'tables_d', 'tables_m', 'tables_sdamping', 'random_tables',
+            'trims', 'csschds', 'flfacts', 'flutters', 'gusts',
+            # 'transfer_functions'
+            'desvars', 'dvprels', 'dvmrels', 'dvgrids',
+            # TODO: MATT1, MATT2, ...
+            'params', 'methods',
+        ]
+        dict_list_names = [
+            'spcadds', 'mpcadds',
+            'spcs', 'loads',
+        ]
+        singeltons = ['aero', 'aeros']
+        log = self.log
+        if write_log:
+            for name in dict_names:
+                my_objs = getattr(self, name)
+                replace_objs = getattr(replace_model, name)
+                assert isinstance(replace_objs, dict), (name, type(replace_objs))
+                for idi, replace_obj in replace_objs.items():
+                    assert not isinstance(replace_obj, list), replace_obj
+                    if idi not in my_objs:
+                        log.debug(f'adding:\n{str(replace_obj)}\n'
+                                  '----------------------------')
+                        replace_objs[idi] = replace_obj
+                        continue
+
+                    my_obj = my_objs[idi]
+                    if my_obj != replace_obj:
+                        log.debug(f'replacing:\n{str(my_obj)}\nwith:\n{str(replace_obj)}\n'
+                                  '----------------------------')
+                        replace_objs[idi] = replace_obj
+            for name in dict_list_names:
+                my_objs = getattr(self, name)
+                replace_objs_dict = getattr(replace_model, name)
+                assert isinstance(replace_objs_dict, dict), (name, type(replace_objs_dict))
+                for idi, replace_objs in replace_objs_dict.items():
+                    assert isinstance(replace_objs, list), (name, replace_objs)
+                    ## TODO: how sould I replace loads or spcs?
+                    ##       just whole sale replace
+                    log.debug(f'replacing {name}={idi}:')
+                    for obj in replace_objs:
+                        log.debug(str(obj))
+                    log.debug('----------')
+                    log.debug(f'with {name}={idi}:')
+                    for obj in replace_objs:
+                        log.debug(str(obj))
+                    log.debug('----------------------------')
+                    my_objs[idi] = replace_objs
+
+        else:
+            for name in dict_names:
+                dict_objs = getattr(replace_model, name)
+                for idi, obj in dict_objs.items():
+                    dict_objs[idi] = obj
+            for name in dict_list_names:
+                my_objs = getattr(self, name)
+                dict_objs = getattr(replace_model, name)
+                for idi, objs in dict_objs.items():
+                    assert isinstance(objs, list), (name, objs)
+                    ## TODO: how sould I replace loads or spcs?
+                    ##       just whole sale replace
+                    my_objs[idi] = objs
+
+        # for nid, node in replace_model.nodes.items():
+        #     self.nodes[nid] = node
         for cid, coord in replace_model.coords.items():
             if cid == 0:
                 continue
             self.coords[cid] = coord
-        for eid, elem in replace_model.elements.items():
-            self.elements[eid] = elem
-        for eid, elem in replace_model.masses.items():
-            self.masses[eid] = elem
-        for eid, elem in replace_model.rigid_elements.items():
-            self.rigid_elements[eid] = elem
-        for pid, prop in replace_model.properties.items():
-            self.properties[pid] = prop
-        for mid, mat in replace_model.materials.items():
-            self.materials[mid] = mat
-
-        for dvid, desvar in replace_model.desvars.items():
-            self.desvars[dvid] = desvar
-        for dvid, dvprel in replace_model.dvprels.items():
-            self.dvprels[dvid] = dvprel
-        for dvid, dvmrel in replace_model.dvmrels.items():
-            self.dvmrels[dvid] = dvmrel
-        for dvid, dvgrid in replace_model.dvgrids.items():
-            self.dvgrids[dvid] = dvgrid
 
     def disable_cards(self, cards: Sequence[str]) -> None:
         """

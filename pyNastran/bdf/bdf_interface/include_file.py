@@ -90,9 +90,9 @@ def get_include_filename(log: SimpleLogger,
         msg = f'Could not find INCLUDE file:\n{include_lines}\n'
         msg += f'  filename: {os.path.abspath(filename_raw)}\n'
         if source_filename:
-            msg += (f'  source file: {os.path.abspath(source_filename)}\n'\
+            msg += (f'  source file: {os.path.abspath(source_filename)}\n'
                     f'\n{print_bad_path(filename_raw)}\n\n')
-        msg += f'  include_dirs:\n - ' + '\n - '.join(repr(val) for val in include_dirs) + '\n'
+        msg += '  include_dirs:\n - ' + '\n - '.join(repr(val) for val in include_dirs) + '\n'
         if write_env_on_error:
             msg += '  environment:'
             skip_keys = [
@@ -143,7 +143,7 @@ def parse_include_lines(card_lines: list[str], log: SimpleLogger,
         raise SyntaxError(f'INCLUDE file is empty...card_lines={card_lines}\n'
                           'there is a $ sign in the INCLUDE card')
 
-    if '\\' in filename and not filename.startswith('\\'):
+    if '\\' in filename and not filename.startswith('\\') and ':' not in filename:
         # not Linux friendly
         log.warning(f"{spaces}- '{filename}' (backslash found)")
 
@@ -215,7 +215,7 @@ def split_filename_into_tokens(include_dir: str, filename: str,
     return pth_out
 
 
-def split_tokens(tokens: tuple[str], is_windows: bool,
+def split_tokens(tokens: tuple[str, ...], is_windows: bool,
                  debug: bool=False) -> list[str]:
     """converts a series of path tokens into a joinable path"""
     tokens2: list[str] = []

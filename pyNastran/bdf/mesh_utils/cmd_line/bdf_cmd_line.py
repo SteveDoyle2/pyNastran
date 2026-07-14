@@ -4,6 +4,7 @@ import sys
 # from typing import TYPE_CHECKING
 
 import pyNastran
+from dynanduril.femap.femap_hash import print_bad_path
 
 from pyNastran.bdf.mesh_utils.run_jobs import cmd_line_run_jobs
 from pyNastran.bdf.mesh_utils.host_jobs import cmd_line_host_jobs
@@ -17,6 +18,7 @@ from .equivalence import cmd_line_equivalence
 from .merge import cmd_line_merge
 from .mass import cmd_line_mass
 from .renumber import cmd_line_renumber
+from .replace import cmd_line_replace
 from .scale import cmd_line_scale
 from .remove_unused import cmd_line_remove_unused
 from .free_faces import cmd_line_free_faces
@@ -48,6 +50,7 @@ CMD_MAPS = {
     'merge': cmd_line_merge,
     'equivalence': cmd_line_equivalence,
     'renumber': cmd_line_renumber,
+    'replace': cmd_line_replace,
     'remove_comments': cmd_line_remove_comments,
     'mirror': cmd_line_mirror,
     'convert': cmd_line_convert,
@@ -106,6 +109,7 @@ def cmd_line(argv=None, log=None, quiet: bool=False) -> None:
         '  bdf equivalence                 IN_BDF_FILENAME EQ_TOL [--punch]\n'
         '  bdf inclzip                     IN_BDF_FILENAME EQ_TOL [-o OUT_BDF_FILENAME] [--punch]\n'
         '  bdf renumber                    IN_BDF_FILENAME [OUT_BDF_FILENAME] [--superelement] [--size SIZE]\n'
+        '  bdf replace                     IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch]\n'
         '  bdf remove_unused               IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch]\n'
         '  bdf filter                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--x YSIGN X] [--y YSIGN Y] [--z YSIGN Z]\n'
        f'  bdf delete_bad_shells           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] {SHELL_QUALITY}\n'
@@ -135,6 +139,7 @@ def cmd_line(argv=None, log=None, quiet: bool=False) -> None:
         '  bdf merge              -h | --help\n'
         '  bdf equivalence        -h | --help\n'
         '  bdf renumber           -h | --help\n'
+        '  bdf replace            -h | --help\n'
         '  bdf remove_unused      -h | --help\n'
         '  bdf delete_bad_shells  -h | --help\n'
         '  bdf collapse_quads     -h | --help\n'

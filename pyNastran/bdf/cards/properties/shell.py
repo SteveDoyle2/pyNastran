@@ -31,8 +31,10 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.cards.materials import MAT1, MAT2, MAT8, MAT9
+
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT9
+    from pyNastran.bdf.bdf import BDF, BDFCard
 
 FT_INT_TO_NAME = {
     0: None,
@@ -70,6 +72,7 @@ class CompositeShellProperty(Property):
     @property
     def TRef(self) -> float:
         return self.tref
+
     @TRef.setter
     def TRef(self, tref: float) -> None:
         self.tref = tref
@@ -90,9 +93,11 @@ class CompositeShellProperty(Property):
     def Rho(self, iply: int) -> float:
         _check_ply_range(self, iply)
         return self.get_density(iply)
+
     def Theta(self, iply: int) -> float:
         _check_ply_range(self, iply)
         return self.get_theta(iply)
+
     def sout(self, iply: int) -> str:
         _check_ply_range(self, iply)
         return self.get_sout(iply)
@@ -675,9 +680,57 @@ class CompositeShellProperty(Property):
         ksym = 2. if self.is_symmetrical else 1.
         return ksym * mass_per_area
 
+    # def get_individual_ABD_matrices(
+    #         self, theta_offset: float = 0.0,
+    #         degrees: bool = True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    #
+    def to_pshell_mat2(self) -> tuple[PSHELL, list[MAT2]]:
+        """TODO: not done"""
+        A, B, D = self.get_individual_ABD_matrices()
+
+        pid = self.pid
+        mid1 = pid + 100000000
+        mid2 = pid + 200000000
+        mid3 = pid + 300000000
+        # mid4 = 0
+        t = sum(self.thicknesses)  # should be total thickness
+        mat2a = _abd_matrix_to_mat2(mid1, A, rho=0.0, tref=0.0)
+        mat2b = _abd_matrix_to_mat2(mid2, B, rho=0.0, tref=0.0)
+        mat2c = _abd_matrix_to_mat2(mid3, D, rho=0.0, tref=0.0)
+        z0s, z1s, zmeans = self.get_z0_z1_zmean()
+        z1 = z0s[0]
+        z2 = z1s[-1]
+        pshell = PSHELL(pid, mid1, t=t, mid2=mid2, twelveIt3=1.0,
+                        z1=z1, z2=z2,
+                        mid3=mid3,
+                        tst=1.0, nsm=0.0)
+        return pshell, [mat2a, mat2b, mat2c]
+
+
+# intentionally unindented
 def _check_ply_range(self, iply: int) -> None:
     if iply == -1:
         raise IndexError(f'iply must be greater than or equal to iply={iply}; nplies={self.nplies}')
+
+def _abd_matrix_to_mat2(mid: int,
+                        amat: np.ndarray,
+                        rho: float=0.0, tref: float=0.0) -> MAT2:
+    """
+    ABDs are 3x3
+    """
+    G11 = amat[0, 0]
+    G12 = amat[0, 1]
+    G13 = amat[0, 2]
+    G22 = amat[1, 1]
+    G33 = amat[2, 2]
+    G23 = amat[1, 2]
+    mat2 = MAT2(
+        mid, G11, G12, G13, G22, G23, G33, rho,
+        # TODO: the rest of this...
+        a1=None, a2=None, a3=None, tref=tref,
+        ge=0.0, St=None, Sc=None, Ss=None,
+        mcsid=None, ge_matrix=None)
+    return mat2
 
 
 class PCOMP(CompositeShellProperty):
@@ -1061,11 +1114,12 @@ class PCOMP(CompositeShellProperty):
             thicknesses.append(t)
             thetas.append(theta)
             souts.append(sout)
-            try:
-                ft = map_failure_theory_int(ft_int)
-            except NotImplementedError:  # pragma: no cover
-                raise RuntimeError(f'unsupported ft.  pid={pid} ft={ft_int!r}.'
-                               f'\nPCOMP = {data}')
+
+        try:
+            ft = map_failure_theory_int(ft_int)
+        except NotImplementedError:  # pragma: no cover
+            raise RuntimeError(f'unsupported ft.  pid={pid} ft={ft_int!r}.'
+                           f'\nPCOMP = {data}')
         return PCOMP(pid, mids, thicknesses, thetas, souts,
                      nsm, sb, ft, tref, ge, lam, z0, validate=False, comment=comment)
 
@@ -1141,6 +1195,7 @@ class PCOMP(CompositeShellProperty):
         # where the materials are the same
         # (you need to look at the properties)
 
+        is_symmetric_materials = False
         if np.allclose(mlow, mhigh):
             is_symmetric_materials = True
         is_symmetric = (
@@ -1637,7 +1692,7 @@ class PCOMPG(CompositeShellProperty):
             global_ply_id = integer(card, 9 + i, 'global_ply_id')
             mid = integer_or_blank(card, 9 + i + 1, 'mid', mid_last)
 
-            # can be blank 2nd time thru
+            # can be blank 2nd time through
             thickness = double_or_blank(card, 9 + i + 2, 'thickness', thick_last)
 
             theta = double_or_blank(card, 9 + i + 3, 'theta', 0.0)

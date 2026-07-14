@@ -227,6 +227,13 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         args = ['bdf', 'diff', str(bdf_filename1), str(bdf_filename2)]
         cmd_line(args, quiet=True)
 
+    def test_cmdline_bdf_replace(self):
+        """tests ```bdf diff```"""
+        bdf_filename1 = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
+        bdf_filename2 = MODEL_PATH / 'sol_101_elements' / 'mode_solid_shell_bar.bdf'
+        args = ['bdf', 'replace', str(bdf_filename1), str(bdf_filename2), '--blk_punch', 'F']
+        cmd_line(args, quiet=False)
+
     def test_cmdline_free_edges(self):
         """Finds the free_edges
 
