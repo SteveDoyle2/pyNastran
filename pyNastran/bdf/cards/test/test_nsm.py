@@ -499,7 +499,8 @@ class TestNsm(unittest.TestCase):
 
     def test_nsm1_subset_per_unit_area(self):
         """NSM1 applies nsm_value per unit area; subset should only get
-        its own area's contribution."""
+        its own area's contribution.
+        """
         model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -536,7 +537,8 @@ class TestNsm(unittest.TestCase):
 
     def test_nsml_subset_total_mass(self):
         """NSML distributes total mass proportional to area; subset should
-        get proportional share based on area fraction."""
+        get proportional share based on area fraction.
+        """
         model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -862,6 +864,399 @@ class TestNsm(unittest.TestCase):
 
         mass, cg, inertia = mass_properties_nsm(model, nsm_id=90, element_ids=[2])
         self.assertAlmostEqual(mass, 6.0)
+
+
+    def test_nsml1_subset_pcomp(self):
+        """NSML1 on PCOMP distributes total mass by area to composite shells."""
+        model = BDF(debug=False)
+        # eid=1: area=1.0
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, 10, [1, 2, 3, 4])
+
+        # eid=2: area=4.0
+        model.add_grid(11, [0., 2., 0.])
+        model.add_grid(12, [2., 2., 0.])
+        model.add_grid(13, [2., 4., 0.])
+        model.add_grid(14, [0., 4., 0.])
+        model.add_cquad4(2, 10, [11, 12, 13, 14])
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_pcomp(10, [mid], [0.1], [0.])
+
+        total_nsm = 15.0
+        model.add_nsml1(100, 'PCOMP', total_nsm, 10)
+        model.cross_reference()
+
+        # total area = 1+4 = 5
+        # eid=1: 15*(1/5) = 3.0
+        # eid=2: 15*(4/5) = 12.0
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=100)
+        self.assertAlmostEqual(mass, 15.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=100, element_ids=[1])
+        self.assertAlmostEqual(mass, 3.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=100, element_ids=[2])
+        self.assertAlmostEqual(mass, 12.0)
+
+    def test_nsm1_subset_all_keyword(self):
+        """NSM1 with 'ALL' applies nsm to all properties of that type."""
+        model = BDF(debug=False)
+        # Two PSHELL properties, one element each
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, 1, [1, 2, 3, 4])  # area=1, pid=1
+
+        model.add_grid(11, [0., 2., 0.])
+        model.add_grid(12, [3., 2., 0.])
+        model.add_grid(13, [3., 3., 0.])
+        model.add_grid(14, [0., 3., 0.])
+        model.add_cquad4(2, 2, [11, 12, 13, 14])  # area=3, pid=2
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_pshell(1, mid1=mid, t=0.1)
+        model.add_pshell(2, mid1=mid, t=0.1)
+
+        nsm_per_area = 2.0
+        model.add_nsm1(110, 'PSHELL', nsm_per_area, 'ALL')
+        model.cross_reference()
+
+        # eid=1: 1.0*2.0 = 2.0
+        # eid=2: 3.0*2.0 = 6.0
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=110)
+        self.assertAlmostEqual(mass, 8.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=110, element_ids=[1])
+        self.assertAlmostEqual(mass, 2.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=110, element_ids=[2])
+        self.assertAlmostEqual(mass, 6.0)
+
+    def test_nsml1_subset_all_keyword(self):
+        """NSML1 with 'ALL' distributes total mass across all PSHELL elements."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, 1, [1, 2, 3, 4])  # area=1, pid=1
+
+        model.add_grid(11, [0., 2., 0.])
+        model.add_grid(12, [3., 2., 0.])
+        model.add_grid(13, [3., 3., 0.])
+        model.add_grid(14, [0., 3., 0.])
+        model.add_cquad4(2, 2, [11, 12, 13, 14])  # area=3, pid=2
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_pshell(1, mid1=mid, t=0.1)
+        model.add_pshell(2, mid1=mid, t=0.1)
+
+        total_nsm = 20.0
+        model.add_nsml1(120, 'PSHELL', total_nsm, 'ALL')
+        model.cross_reference()
+
+        # total area = 1+3 = 4
+        # eid=1: 20*(1/4) = 5.0
+        # eid=2: 20*(3/4) = 15.0
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=120)
+        self.assertAlmostEqual(mass, 20.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=120, element_ids=[1])
+        self.assertAlmostEqual(mass, 5.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=120, element_ids=[2])
+        self.assertAlmostEqual(mass, 15.0)
+
+    def test_nsm1_subset_cbar(self):
+        """NSM1 on PBAR applies per-unit-length mass to CBAR elements."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [2., 0., 0.])
+        model.add_grid(3, [5., 0., 0.])
+
+        mid = 1
+        pid = 10
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_pbar(pid, mid, A=1.0, i1=1.0, i2=1.0)
+
+        model.add_cbar(1, pid, [1, 2], x=[0., 0., 1.], g0=None)  # length=2
+        model.add_cbar(2, pid, [2, 3], x=[0., 0., 1.], g0=None)  # length=3
+
+        nsm_per_length = 4.0
+        model.add_nsm1(130, 'PBAR', nsm_per_length, pid)
+        model.cross_reference()
+
+        # eid=1: 2*4=8, eid=2: 3*4=12, total=20
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=130)
+        self.assertAlmostEqual(mass, 20.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=130, element_ids=[1])
+        self.assertAlmostEqual(mass, 8.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=130, element_ids=[2])
+        self.assertAlmostEqual(mass, 12.0)
+
+    def test_nsml1_subset_cbar(self):
+        """NSML1 on PBAR distributes total mass by length to CBAR elements."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [2., 0., 0.])
+        model.add_grid(3, [5., 0., 0.])
+
+        mid = 1
+        pid = 10
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_pbar(pid, mid, A=1.0, i1=1.0, i2=1.0)
+
+        model.add_cbar(1, pid, [1, 2], x=[0., 0., 1.], g0=None)  # length=2
+        model.add_cbar(2, pid, [2, 3], x=[0., 0., 1.], g0=None)  # length=3
+
+        total_nsm = 10.0
+        model.add_nsml1(140, 'PBAR', total_nsm, pid)
+        model.cross_reference()
+
+        # total length=5; eid=1: 10*(2/5)=4, eid=2: 10*(3/5)=6
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=140)
+        self.assertAlmostEqual(mass, 10.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=140, element_ids=[1])
+        self.assertAlmostEqual(mass, 4.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=140, element_ids=[2])
+        self.assertAlmostEqual(mass, 6.0)
+
+    def test_nsml_subset_element_type_line(self):
+        """NSML/ELEMENT assigns total mass to each element directly."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [4., 0., 0.])
+
+        mid = 1
+        pid = 10
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_prod(pid, mid, A=1.0)
+
+        model.add_crod(1, pid, [1, 2])  # length=1
+        model.add_crod(2, pid, [2, 3])  # length=3
+
+        # NSML/ELEMENT: each element gets its value as total mass
+        model.add_nsml(150, 'ELEMENT', [1, 2], [5.0, 7.0])
+        model.cross_reference()
+
+        # eid=1 gets 5.0, eid=2 gets 7.0
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=150)
+        self.assertAlmostEqual(mass, 12.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=150, element_ids=[1])
+        self.assertAlmostEqual(mass, 5.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=150, element_ids=[2])
+        self.assertAlmostEqual(mass, 7.0)
+
+    def test_nsmadd_subset_area_and_line(self):
+        """NSMADD with area (shell) and line (rod) NSM cards combined."""
+        model = BDF(debug=False)
+        # Shell element
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [2., 0., 0.])
+        model.add_grid(3, [2., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, 1, [1, 2, 3, 4])  # area=2
+
+        # Rod element
+        model.add_grid(11, [0., 5., 0.])
+        model.add_grid(12, [3., 5., 0.])
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_pshell(1, mid1=mid, t=0.1)
+        model.add_prod(2, mid, A=1.0)
+
+        model.add_crod(2, 2, [11, 12])  # length=3
+
+        # NSM1 on shell: 5.0 per area -> eid=1 gets 5*2=10
+        model.add_nsm1(160, 'PSHELL', 5.0, 1)
+        # NSM1 on rod: 2.0 per length -> eid=2 gets 2*3=6
+        model.add_nsm1(170, 'PROD', 2.0, 2)
+        # NSMADD
+        model.add_nsmadd(180, [160, 170])
+        model.cross_reference()
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=180)
+        self.assertAlmostEqual(mass, 16.0)
+
+        # Subset shell only
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=180, element_ids=[1])
+        self.assertAlmostEqual(mass, 10.0)
+
+        # Subset rod only
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=180, element_ids=[2])
+        self.assertAlmostEqual(mass, 6.0)
+
+    def test_nsm_subset_inertia(self):
+        """Validate inertia tensor for single-element subset with known geometry."""
+        model = BDF(debug=False)
+        # Single unit square at origin (centroid at 0.5, 0.5, 0)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, 1, [1, 2, 3, 4])  # area=1, centroid=(0.5,0.5,0)
+
+        # Second element far away
+        model.add_grid(11, [10., 0., 0.])
+        model.add_grid(12, [11., 0., 0.])
+        model.add_grid(13, [11., 1., 0.])
+        model.add_grid(14, [10., 1., 0.])
+        model.add_cquad4(2, 1, [11, 12, 13, 14])  # area=1, centroid=(10.5,0.5,0)
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_pshell(1, mid1=mid, t=0.1)
+
+        nsm_per_area = 3.0
+        model.add_nsm1(190, 'PSHELL', nsm_per_area, 1)
+        model.cross_reference()
+
+        # Point mass approximation: mass=3, at (0.5, 0.5, 0), ref=(0,0,0)
+        # Ixx = m*(dy^2+dz^2) = 3*(0.25+0) = 0.75
+        # Iyy = m*(dx^2+dz^2) = 3*(0.25+0) = 0.75
+        # Izz = m*(dx^2+dy^2) = 3*(0.25+0.25) = 1.5
+        # Ixy = m*dx*dy = 3*0.5*0.5 = 0.75
+        mass, cg, inertia = mass_properties_nsm(
+            model, nsm_id=190, element_ids=[1],
+            reference_point=[0., 0., 0.], inertia_reference='ref')
+        self.assertAlmostEqual(mass, 3.0)
+        assert np.allclose(cg, [0.5, 0.5, 0.0]), f'cg={cg}'
+        # inertia = [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
+        self.assertAlmostEqual(inertia[0], 0.75, places=5)
+        self.assertAlmostEqual(inertia[1], 0.75, places=5)
+        self.assertAlmostEqual(inertia[2], 1.5, places=5)
+        self.assertAlmostEqual(inertia[3], 0.75, places=5)
+        self.assertAlmostEqual(inertia[4], 0.0, places=5)
+        self.assertAlmostEqual(inertia[5], 0.0, places=5)
+
+    def test_nsm1_subset_multiple_pids(self):
+        """NSM1 applied to multiple PSHELL pids via THRU; subset filtering."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, 1, [1, 2, 3, 4])  # area=1, pid=1
+
+        model.add_grid(11, [0., 2., 0.])
+        model.add_grid(12, [2., 2., 0.])
+        model.add_grid(13, [2., 3., 0.])
+        model.add_grid(14, [0., 3., 0.])
+        model.add_cquad4(2, 2, [11, 12, 13, 14])  # area=2, pid=2
+
+        model.add_grid(21, [0., 4., 0.])
+        model.add_grid(22, [3., 4., 0.])
+        model.add_grid(23, [3., 5., 0.])
+        model.add_grid(24, [0., 5., 0.])
+        model.add_cquad4(3, 3, [21, 22, 23, 24])  # area=3, pid=3
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_pshell(1, mid1=mid, t=0.1)
+        model.add_pshell(2, mid1=mid, t=0.1)
+        model.add_pshell(3, mid1=mid, t=0.1)
+
+        nsm_per_area = 1.0
+        # NSM1 on pids 1 THRU 3
+        model.add_nsm1(200, 'PSHELL', nsm_per_area, [1, 'THRU', 3])
+        model.cross_reference()
+
+        # eid=1: 1*1=1, eid=2: 2*1=2, eid=3: 3*1=3, total=6
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=200)
+        self.assertAlmostEqual(mass, 6.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=200, element_ids=[1])
+        self.assertAlmostEqual(mass, 1.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=200, element_ids=[2])
+        self.assertAlmostEqual(mass, 2.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=200, element_ids=[3])
+        self.assertAlmostEqual(mass, 3.0)
+
+        # Subset of two elements
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=200, element_ids=[1, 3])
+        self.assertAlmostEqual(mass, 4.0)
+
+    def test_nsm_subset_empty_result(self):
+        """Subset with element_ids that don't overlap NSM gives zero mass."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, 1, [1, 2, 3, 4])  # area=1
+
+        model.add_grid(11, [0., 2., 0.])
+        model.add_grid(12, [1., 2., 0.])
+        model.add_grid(13, [1., 3., 0.])
+        model.add_grid(14, [0., 3., 0.])
+        model.add_cquad4(2, 1, [11, 12, 13, 14])  # area=1
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_pshell(1, mid1=mid, t=0.1)
+
+        # NSM only on eid=1
+        model.add_nsm1(210, 'PSHELL', 5.0, 1)
+        model.cross_reference()
+
+        # Full model: only eid=1 has NSM via pid=1
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=210)
+        self.assertAlmostEqual(mass, 10.0)
+
+        # Subset with both elements (both have pid=1)
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=210, element_ids=[1])
+        self.assertAlmostEqual(mass, 5.0)
+
+    def test_nsm1_subset_ctria3(self):
+        """NSM1 on CTRIA3 elements via PSHELL with subset filtering."""
+        model = BDF(debug=False)
+        # eid=1: triangle base=2, height=1 -> area=1.0
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [2., 0., 0.])
+        model.add_grid(3, [0., 1., 0.])
+        model.add_ctria3(1, 1, [1, 2, 3])  # area=1.0
+
+        # eid=2: triangle base=4, height=3 -> area=6.0
+        model.add_grid(11, [0., 5., 0.])
+        model.add_grid(12, [4., 5., 0.])
+        model.add_grid(13, [0., 8., 0.])
+        model.add_ctria3(2, 1, [11, 12, 13])  # area=6.0
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_pshell(1, mid1=mid, t=0.1)
+
+        nsm_per_area = 2.0
+        model.add_nsm1(220, 'PSHELL', nsm_per_area, 1)
+        model.cross_reference()
+
+        # eid=1: 1.0*2.0=2.0, eid=2: 6.0*2.0=12.0
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=220)
+        self.assertAlmostEqual(mass, 14.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=220, element_ids=[1])
+        self.assertAlmostEqual(mass, 2.0)
+
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=220, element_ids=[2])
+        self.assertAlmostEqual(mass, 12.0)
 
 
 if __name__ == '__main__':  # pragma: no cover
