@@ -666,14 +666,22 @@ def _mass_properties(
         model, elements, xyz, reference_xyz, mass, cg, inertia, mass_list, cg_list, inertia_list
     )
 
+    # vectorized path for line elements (CROD, CONROD, CBAR)
+    mass, cg, inertia = _mass_properties_lines_vectorized(
+        elements, xyz, reference_xyz, mass, cg, inertia, mass_list, cg_list, inertia_list
+    )
+
     # handle remaining elements (CBEAM, CONM2, solids, etc.)
     no_mass = copy.deepcopy(NO_MASS)
     no_mass.add("CWELD")  # TODO: not sure
     shell_types = {"CQUAD4", "CQUAD8", "CQUADR", "CTRIA3", "CTRIA6", "CTRIAR"}
+    line_types = {"CROD", "CONROD", "CBAR", "CTUBE"}
     mass_inertia = {"CONM2"}
+    batch_centroids = []
+    batch_masses = []
     for elements_pack in (elements, masses):
         for element in elements_pack:
-            if element.type in shell_types:
+            if element.type in shell_types or element.type in line_types:
                 continue
             if element.type == "CBEAM":
                 mass = _get_cbeam_mass_no_nsm(
@@ -745,9 +753,22 @@ def _mass_properties(
                         % (element, element.pid_ref)
                     )
                     continue
-            mass = increment_inertia(
-                centroid, reference_xyz, massi, mass, cg, inertia, mass_list, cg_list, inertia_list
-            )
+            if massi != 0.0:
+                batch_centroids.append(centroid)
+                batch_masses.append(massi)
+
+    if batch_centroids:
+        mass, cg, inertia = _accumulate_vectorized(
+            np.array(batch_centroids),
+            np.array(batch_masses),
+            reference_xyz,
+            mass,
+            cg,
+            inertia,
+            mass_list,
+            cg_list,
+            inertia_list,
+        )
 
     if mass:
         cg /= mass
@@ -921,6 +942,55 @@ def _mass_properties_shells_vectorized(
             inertia_list,
         )
 
+    return mass, cg, inertia
+
+
+def _mass_properties_lines_vectorized(
+    elements: list[Any],
+    xyz: dict[int, np.ndarray],
+    reference_xyz: np.ndarray,
+    mass: float,
+    cg: np.ndarray,
+    inertia: np.ndarray,
+    mass_list: list[float],
+    cg_list: list[np.ndarray],
+    inertia_list: list[np.ndarray],
+) -> tuple[float, np.ndarray, np.ndarray]:
+    """Vectorized mass properties for CROD/CONROD/CBAR/CTUBE line elements."""
+    line_types = {"CROD", "CONROD", "CBAR", "CTUBE"}
+    n1_list = []
+    n2_list = []
+    mpl_list = []
+
+    for element in elements:
+        if element.type not in line_types:
+            continue
+        n1, n2 = element.node_ids[:2]
+        mpl = element.MassPerLength()
+        if mpl == 0.0:
+            continue
+        n1_list.append(xyz[n1])
+        n2_list.append(xyz[n2])
+        mpl_list.append(mpl)
+
+    if n1_list:
+        p1 = np.array(n1_list)
+        p2 = np.array(n2_list)
+        mpl_arr = np.array(mpl_list)
+        centroids = (p1 + p2) * 0.5
+        lengths = np.linalg.norm(p2 - p1, axis=1)
+        masses_arr = mpl_arr * lengths
+        mass, cg, inertia = _accumulate_vectorized(
+            centroids,
+            masses_arr,
+            reference_xyz,
+            mass,
+            cg,
+            inertia,
+            mass_list,
+            cg_list,
+            inertia_list,
+        )
     return mass, cg, inertia
 
 

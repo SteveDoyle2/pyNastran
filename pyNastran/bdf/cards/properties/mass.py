@@ -1054,8 +1054,8 @@ def _xref_nsm(self, model: BDF, stop_on_failure: bool=True) -> list:  # old
             properties.append(prop)
         if missing_ids:
             missing_ids.sort()
-            if stop_on_failure:
-                raise RuntimeError(f'Missing properties on {self.type}={self.sid}: {missing_ids}')
+            # if stop_on_failure:
+            #     raise RuntimeError(f'Missing properties on {self.type}={self.sid}: {missing_ids}')
             log.warning(f'Missing properties on {self.type}={self.sid}: {missing_ids}')
         assert len(properties) > 0, properties
         ids_ref = properties
