@@ -182,7 +182,7 @@ class BDFInputPy:
         if replace_includes is None:
             replace_includes = {}
 
-        # not used
+        self.bdf_filename = ''
         self.replace_includes: dict[str, str] = replace_includes
 
         self.dumplines: bool = dumplines

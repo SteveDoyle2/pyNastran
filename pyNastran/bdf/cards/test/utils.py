@@ -56,6 +56,7 @@ def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
                    nastran_format: str='nx',
                    op2_log_level: str='warning') -> BDF:
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
+    assert xref in {'standard', 'safe'}, f'xref={xref}'
     if os.path.exists('junk.bdf'):
         os.remove('junk.bdf')
     if not remove_disabled_cards:

@@ -1496,7 +1496,7 @@ def constant_alt_line_alt_mach(alt: float,
                                mach0: float, mach1: np.ndarray,
                                num: int=20,
                                alt_units: str='ft',
-                               eas_units: str='knots') -> None:
+                               eas_units: str='knots') -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """creates a constant altitude line between two mach numbers"""
     # pressure0 = atm_pressure(0., pressure_units='psf')
     alts = np.ones(num) * alt

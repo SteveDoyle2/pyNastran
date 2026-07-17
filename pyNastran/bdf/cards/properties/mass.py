@@ -924,7 +924,7 @@ class PMASS(Property):
         return self.comment + print_card_16(card)
 
 
-PROPERTIES_XREF = {'PSHELL', 'PCOMP', 'PBAR', 'PBEAM', 'PBUSH', 'PTUBE', 'PROD',
+PROPERTIES_XREF = {'PSHELL', 'PCOMP', 'PCOMPG', 'PBAR', 'PBEAM', 'PBUSH', 'PTUBE', 'PROD',
                    'PBARL', 'PBEAML'}
 
 def xref_nsm(self, model: BDF) -> None:
@@ -991,6 +991,8 @@ def _xref_nsm(self, model: BDF, stop_on_failure: bool=True) -> list:  # old
     # if self.nsm_type in {'CROD', 'CONROD'}:
     #     return
     ids = self.ids
+
+    ELEMENTS_REF = ['CONROD', 'CROD', 'CTUBE']
     if self.nsm_type == 'ELEMENT':
         if ids == ['ALL']:
             ids = list(model.elements)
@@ -1012,6 +1014,27 @@ def _xref_nsm(self, model: BDF, stop_on_failure: bool=True) -> list:  # old
             if stop_on_failure:
                 raise RuntimeError(f'Missing elements on {self.type}={self.sid}: {missing_ids}')
             log.warning(f'Missing elements on {self.type}={self.sid}: {missing_ids}')
+        assert len(elements) > 0, elements
+        ids_ref = elements
+
+    elif self.nsm_type in ELEMENTS_REF:
+        elements = []
+        if ids == ['ALL']:
+            ids = list(model.elements)
+        assert len(ids) > 0, ids
+        for eid in ids:
+            try:
+                prop = model.Element(eid, msg=msg)
+            except KeyError:
+                missing_ids.append(eid)
+                elements.append(eid)
+                continue
+            elements.append(prop)
+        if missing_ids:
+            missing_ids.sort()
+            if stop_on_failure:
+                raise RuntimeError(f'Missing {self.nsm_type} elements on {self.type}={self.sid}: {missing_ids}')
+            log.warning(f'Missing {self.nsm_type} elements on {self.type}={self.sid}: {missing_ids}')
         assert len(elements) > 0, elements
         ids_ref = elements
 

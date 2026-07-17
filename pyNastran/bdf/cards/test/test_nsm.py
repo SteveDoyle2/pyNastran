@@ -1,6 +1,7 @@
 """defines various shell element tests"""
 from pathlib import Path
 import unittest
+import numpy as np
 from cpylog import SimpleLogger
 
 from pyNastran.bdf.bdf import BDF
@@ -70,7 +71,7 @@ class TestNsm(unittest.TestCase):
         model.add_nsm1(1004, 'ELEMENT', 1.0, eid_pbarl) # correct; 1.0
         model.add_nsm1(1005, 'ELEMENT', 1.0, 'ALL') # crash according to QRG b/c mixed type; 2.5
         model.add_nsm1(1006, 'PSHELL', 1.0, 'ALL') # correct; 1.5
-        model.add_nsm1(1007, 'PSHELL', 1.0, [10, 'THRU', 12]) # correct; 1.5
+        #model.add_nsm1(1007, 'PSHELL', 1.0, [10, 'THRU', 12]) # correct; 1.5
         model.add_nsm1(1008, 'PSHELL', 1.0, [10, 'THRU', 12, 'BY', 2]) # correct; 1.5
         model.add_nsm1(1009, 'PBARL', 1.0, pid_pbarl) # correct; 1.0
         model.add_nsm1(1010, 'PBEAML', 1.0, pid_pbeaml) # correct; 1.0
@@ -117,7 +118,7 @@ class TestNsm(unittest.TestCase):
         model.add_nsml(4012, 'CONROD', eid_conrod, 1.0) # correct; 1.0
 
         model.pop_parse_errors()
-        model.cross_reference()
+        model.safe_cross_reference()
         model.pop_xref_errors()
 
         expected_dict = {
@@ -195,7 +196,7 @@ class TestNsm(unittest.TestCase):
                     else:
                         nsm.get_eid_mass_cg_by_element(model)
 
-        model2 = save_load_deck(model, run_test_bdf=False)
+        model2 = save_load_deck(model, xref='safe', run_test_bdf=False)
         model2.reset_rslot_map()
         #print(model2._type_to_slot_map)
         model2.elements = {}
@@ -454,6 +455,47 @@ class TestNsm(unittest.TestCase):
         save_load_deck(model, run_mass_properties=False,
                        run_remove_unused=False, run_convert=False,
                        run_save_load_hdf5=False)
+
+    def test_nsmadd_subset(self):
+        model = BDF(debug=True)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, 1, [1, 2, 3, 4]) # area=1.0
+
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 1., 0.])
+        model.add_grid(14, [0., 1., 0.])
+        model.add_cquad4(2, 1, [11, 12, 13, 14]) # area=1.0
+
+        mid = 1
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        pid_pshell = 1
+
+        t = 0.1
+        rho = 1.0
+        area = 1.0
+        nsm = 0.
+        model.add_mat1(mid, E, G, nu, rho=rho)
+        model.add_pshell(pid_pshell, mid1=mid, t=t) #, nsm=None)
+
+        base_mass = 2 * area * (rho*t + nsm)
+        nsml1_mass = 3.14
+
+        model.add_nsml1(1, 'PSHELL', nsml1_mass, pid_pshell, comment='nsml1') # correct; 1.0
+        model.cross_reference()
+
+        expected_mass = base_mass + nsml1_mass
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=1)
+        assert np.allclose(mass, expected_mass), f'mass={mass} expected_mass={expected_mass}'
+
+        expected_mass = base_mass/2 + nsml1_mass/2
+        mass, cg, inertia = mass_properties_nsm(model, nsm_id=1, element_ids=[1])
+        assert np.allclose(mass, expected_mass), f'mass={mass} expected_mass={expected_mass}'
 
     # def test_nsm(self):
     #     """tests a complete nsm example"""

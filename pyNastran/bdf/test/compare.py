@@ -107,7 +107,7 @@ def compute_ints(cards1: dict[str, int],
                  cards2: dict[str, int],
                  fem1: BDF,
                  fem2: BDF,
-                 quiet: str=True) -> list[str]:
+                 quiet: bool=True) -> list[str]:
     """
     computes the difference / ratio / inverse-ratio between
     fem1 and fem2 to verify the number of card are the same:
@@ -201,8 +201,8 @@ def get_element_stats(fem1: BDF,
 def check_mass(fem1: BDF, run_mass: bool=True, quiet: bool=False):
     if not run_mass:
         return
-    mass1, cg1, inertia1 = mass_properties(fem1, reference_point=None, sym_axis=None)
-    mass2, cg2, inertia2 = mass_properties_nsm(fem1, reference_point=None, sym_axis=None)
+    mass1, cg1, inertia1 = mass_properties(fem1, reference_point=None, sym_axis='')
+    mass2, cg2, inertia2 = mass_properties_nsm(fem1, reference_point=None, sym_axis='')
     #mass3, cg3, inertia3 = mass_properties_breakdown(fem1)[:3]
     if not quiet:
         if fem1.wtmass != 1.0:
@@ -216,15 +216,15 @@ def check_mass(fem1: BDF, run_mass: bool=True, quiet: bool=False):
 
     for nsm_id in chain(fem1.nsms, fem1.nsmadds):
         mass, unused_cg, unused_inertia = mass_properties_nsm(
-            fem1, reference_point=None, sym_axis=None, nsm_id=nsm_id)
+            fem1, reference_point=None, sym_axis='', nsm_id=nsm_id)
         print('nsm_id=%s' % nsm_id)
         print('  mass = %s' % mass)
         print('  cg = %s' % cg1)
         print('  Ixx=%s, Iyy=%s, Izz=%s \n  Ixy=%s, Ixz=%s, Iyz=%s' % tuple(inertia1))
 
-    reference_point = [10., 10., 10.]
-    mass1, cg1, inertia1 = mass_properties(fem1, reference_point=reference_point, sym_axis=None)
-    mass2, cg2, inertia2 = mass_properties_nsm(fem1, reference_point=reference_point, sym_axis=None)
+    reference_point = np.array([10., 10., 10.])
+    mass1, cg1, inertia1 = mass_properties(fem1, reference_point=reference_point, sym_axis='')
+    mass2, cg2, inertia2 = mass_properties_nsm(fem1, reference_point=reference_point, sym_axis='')
     assert np.allclose(mass1, mass2), f'reference_point=[10., 10., 10.]; mass1={mass1} mass2={mass2}'
     assert np.allclose(cg1, cg2), f'reference_point=[10., 10., 10.]; mass={mass1} cg1={cg1} cg2={cg2}'
     assert np.allclose(inertia1, inertia2, atol=1e-5), f'reference_point=[10., 10., 10.]; mass={mass1} cg={cg1} inertia1={inertia1} inertia2={inertia2}'
@@ -232,7 +232,10 @@ def check_mass(fem1: BDF, run_mass: bool=True, quiet: bool=False):
 
 def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
     """Verifies the dmig.get_matrix() method works."""
-    is_matrix = len(fem1.dmig) or len(fem1.dmi) or len(fem1.dmij) or len(fem1.dmik) or len(fem1.dmiji)
+    is_matrix = (
+            len(fem1.dmig) or len(fem1.dmi) or
+            len(fem1.dmij) or len(fem1.dmik) or len(fem1.dmiji)
+    )
     if not is_matrix:
         return
     fem1.log.debug('get_matrix_stats')

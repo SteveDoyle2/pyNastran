@@ -167,6 +167,71 @@ USAGE_145 = (
 )
 
 
+def cmd_line_degif(argv=None, plot: bool=True, show: bool=True,
+                   log: Optional[SimpleLogger]=None) -> None:
+    if argv is None:
+        argv = sys.argv[1:]
+    else:
+        # FILE = os.path.abspath(__file__)
+        argv = ['f06'] + argv[2:]
+        # print(argv)
+
+    import argparse
+    ver = str(pyNastran.__version__)
+
+    parent_parser = argparse.ArgumentParser(prog='degif')
+    # positional arguments
+    parent_parser.add_argument('GIF_FILENAME', help='path to input GIF file', type=str)
+    # _add_parser_arguments(parent_parser, ['--lax'])
+
+    # bdf_aero_group = parent_parser.add_mutually_exclusive_group()
+    # bdf_aero_group.add_argument('--bdf', type=str, help='path to input BDF file containing CAEROs')
+    # bdf_aero_group.add_argument('--aerobox', type=str, help='path to exported CAERO file')
+    # bdf_aero_group.add_argument('--encoding', help=f'the encoding method (default=None -> {repr(encoding)})', type=str)
+
+    # parent_parser.add_argument('--cp', help='plot Cp (pressure coefficients)', action='store_true')
+    # parent_parser.add_argument('--force', help='plot aerodynamic forces (Fz)', action='store_true')
+    # parent_parser.add_argument('--moment', help='plot aerodynamic moments (My)', action='store_true')
+    parent_parser.add_argument('-v', '--version', action='version', version=ver)
+    args = parent_parser.parse_args(args=argv[1:])
+
+    gif_filename = args.GIF_FILENAME
+    import os
+    from PIL import Image
+
+    # Open the static GIF image
+    # with Image.open("image.gif") as img:
+    #     # Save the file as a PNG
+    #     img.save("output.png", "PNG")
+
+    dirname = os.path.dirname(gif_filename)
+    basename = os.path.basename(gif_filename)
+    gif_dirname = os.path.splitext(basename)[0]
+    output_folder = os.path.join(dirname, gif_dirname)
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    with Image.open(gif_filename) as img:
+        frame_num = 0
+
+        while True:
+            # Define a unique filename for each frame
+            frame_filename = os.path.join(output_folder, f"frame_{frame_num:03d}.png")
+
+            # Convert the frame to RGBA to preserve transparency correctly
+            frame_rgba = img.convert("RGBA")
+            frame_rgba.save(frame_filename, "PNG")
+
+            print(f"Saved: {frame_filename}")
+            frame_num += 1
+
+            try:
+                # Move to the next frame in the animation sequence
+                img.seek(img.tell() + 1)
+            except EOFError:
+                # Break the loop when the end of the GIF file is reached
+                break
+
 def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
                           log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
     """the interface to ``f06 plot_145`` on the command line"""
@@ -628,6 +693,7 @@ def cmd_line(argv=None, plot: bool=True, show: bool=True,
         '\n'
         '  f06 plot_144 -h | --help\n'
         '  f06 plot_145 -h | --help\n'
+        '  f06 degif -h | --help\n'
         '  f06 plot_200 -h | --help\n'
         '  f06 -v | --version\n'
         '\n'
@@ -640,6 +706,8 @@ def cmd_line(argv=None, plot: bool=True, show: bool=True,
         cmd_line_plot_trim(argv=argv, plot=plot, show=show, log=log)
     elif argv[1] == 'plot_145':
         cmd_line_plot_flutter(argv=argv, plot=plot, show=show, log=log)
+    elif argv[1] == 'degif':
+        cmd_line_degif(argv=argv, plot=plot, show=show, log=log)
     elif argv[1] == 'plot_200':
         cmd_line_plot_optimization(argv=argv, plot=plot, show=show, log=log)
     else:  # pragma: no cover
