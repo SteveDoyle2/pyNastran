@@ -3186,7 +3186,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         return card_obj
 
     def add_card_lax(self, card_lines: list[str], card_name: str,
-                     comment: str='', ifile=None, is_list: bool=True, has_none: bool=True) -> Any:
+                     comment: str='', ifile=None, is_list: bool=True,
+                     has_none: bool=True) -> Any:
         """see ``add_card``"""
         card_name = card_name.upper()
         #if card_name not in self.card_count:
@@ -3283,7 +3284,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             raise ValueError(msg)
         return npoints, nids, all_nodes
 
-    def get_xyz_in_coord(self, cid: int=0, fdtype: str='float64', sort_ids: bool=True):
+    def get_xyz_in_coord(self, cid: int=0, fdtype: str='float64',
+                         sort_ids: bool=True):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
 
@@ -3302,22 +3304,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             the xyz points in the cid coordinate frame
 
         """
-        #return self.get_displacement_index_xyz_cp_cd(cid=cid, fdtype=dtype)[2]
-        npoints, nids, all_nodes = self._get_npoints_nids_allnids()
-        xyz_cid0 = np.zeros((npoints, 3), dtype=fdtype)
-        if cid == 0:
-            for i, nid in enumerate(nids):
-                node = self.nodes[nid]
-                xyz = node.get_position()
-                xyz_cid0[i, :] = xyz
-        else:
-            for i, nid in enumerate(nids):
-                node = self.nodes[nid]
-                xyz = node.get_position_wrt(self, cid)
-                xyz_cid0[i, :] = xyz
-        if sort_ids:
-            isort = np.argsort(all_nodes)
-            xyz_cid0 = xyz_cid0[isort, :]
+        node_id = self.grid.node_id
+        xyz_cid0 = self.grid.transform_node_to_local_coord_id(
+            node_id, cid)
+        #if sort_ids:
+        #    isort = np.argsort(all_nodes)
+        #    xyz_cid0 = xyz_cid0[isort, :]
         return xyz_cid0
 
     def _add_card_helper_ifile(self, ifile, card_obj, card, card_name, comment=''):
@@ -3704,15 +3696,20 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         >>> out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
         >>> nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform = out
         """
-        icd_transform, icp_transform, xyz_cp, nid_cp_cd = self.get_displacement_index_xyz_cp_cd(
-            fdtype=fdtype, idtype=idtype, sort_ids=True)
-        nids = nid_cp_cd[:, 0]
-        if cid == 0:
-            #xyz_cid = self.grid.xyz_cid0()
-            xyz_cid = xyz_cp
-        else:
-            xyz_cid = self.transform_xyzcp_to_xyz_cid(xyz_cp, nids, icp_transform,
-                                                      cid=cid, in_place=False, atol=1e-6)
+        nid_cp_cd = np.vstack([self.grid.node_id, self.grid.cp, self.grid.cd])
+        xyz_cid0 = self.grid.transform_node_to_local_coord_id(
+            node_id, cid)
+        xyz_cp = self.grid.xyz
+        #icd_transform, icp_transform, xyz_cp, nid_cp_cd = self.get_displacement_index_xyz_cp_cd(
+        #    fdtype=fdtype, idtype=idtype, sort_ids=True)
+        #nids = nid_cp_cd[:, 0]
+        #if cid == 0:
+        #    #xyz_cid = self.grid.xyz_cid0()
+        #    xyz_cid = xyz_cp
+        #else:
+        #    xyz_cid = self.transform_xyzcp_to_xyz_cid(
+        #         xyz_cp, nids, icp_transform,
+        #         cid=cid, in_place=False, atol=1e-6)
         return nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform
 
     def transform_xyzcp_to_xyz_cid(self, xyz_cp: np.ndarray,
@@ -4609,7 +4606,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
     def _add_card_helper_hdf5(self, card_obj: BDFCard,
                               card: list[str],
-                              card_name: str, ifile: int, comment: str='') -> None:
+                              card_name: str, ifile: int,
+                              comment: str='') -> None:
         """
         Adds a card object to the BDF object.
 
@@ -4908,63 +4906,6 @@ def _bool(value):
     return True if value == 'true' else False
 
 
-#def _get_coords_to_update(coords: dict[int, CORD1R | CORD1C | CORD1S |
-                                            #CORD2R | CORD2C | CORD2S],
-                          #cps_to_check: list[int],
-                          #cps_checked: list[int],
-                          #nids_checked: list[int]) -> tuple[int, list[int], list[int], list[int]]:
-    #"""helper method for ``transform_xyzcp_to_xyz_cid``"""
-    #cord1s_to_update_temp = []
-    #cord2s_to_update_list = []
-    #for cp in sorted(cps_to_check):
-        #coord = coords[cp]
-        #if coord.type in {'CORD2R', 'CORD2C', 'CORD2S'}:
-            #if coord.rid in cps_checked:
-                #cord2s_to_update_list.append(cp)
-        #elif coord.type in {'CORD1R', 'CORD1C', 'CORD1S'}:
-            #cord1s_to_update_temp.append(cp)
-        #else:
-            #raise NotImplementedError(coord.rstrip())
-
-    #cord1s_to_update_list = []
-    #if cord1s_to_update_temp:
-        #cord1s_to_update = set()
-        #if len(nids_checked) == 0:
-            #raise RuntimeError('len(nids_checked)=0...this should not happen.')
-        #elif len(nids_checked) == 1:
-            #pass
-        #else:
-            #nids_checked = [np.hstack(nids_checked)]
-
-        #nids_checkedi = nids_checked[0]
-        #if len(nids_checkedi) != 0:
-            ## check the CORD1x cards
-            ##
-            ##print('nids_checked = ', nids_checkedi)
-            #for cp in cord1s_to_update_temp:
-                #coord = coords[cp]
-                #nids = coord.node_ids
-                ##print('cp=%s nids=%s' % (cp, nids))
-                #for nid in nids:
-                    #if nid not in nids_checkedi:
-                        ##print('  nid=%s break...' % nid)
-                        #break
-                #else:
-                    ##print('  passed')
-                    ## all nids passed
-                    #cord1s_to_update.add(cp)
-            #cord1s_to_update_list = list(cord1s_to_update)
-            #cord1s_to_update_list.sort()
-
-    #ncoords = len(cord1s_to_update_list) + len(cord2s_to_update_list)
-    ##if ncoords == 0:
-        ##msg = 'CPs not handled=%s cord1s_to_update=%s cord2s_to_update=%s\n' % (
-            ##cps_to_check, cord1s_to_update, cord2s_to_update)
-        ##for cp in (cord1s_to_update + cord2s_to_update):
-            ##msg += str(cp)
-        ##raise RuntimeError(msg)
-    #return ncoords, cord1s_to_update_list, cord2s_to_update_list, nids_checked
-
 class Zona:
     def __init__(self):
         pass
@@ -5012,19 +4953,6 @@ def map_update(fem: BDF, version: str):
         msg = f'mode={version!r} is not supported; modes=[msc, nx, optistruct, zona, mystran]'
         raise RuntimeError(msg)
     func()
-
-
-# if mode == 'msc':
-#     self.set_as_msc()
-# elif mode == 'nx':
-#     self.set_as_nx()
-# elif mode == 'mystran':
-#     self.set_as_mystran()
-# elif mode == 'zaero':
-#     self.set_as_zaero()
-# else:  # pragma: no cover
-#     msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zaero, mystran]'
-#     raise NotImplementedError(msg)
 
 
 def main():  # pragma: no cover

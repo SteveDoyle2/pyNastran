@@ -300,6 +300,7 @@ def run_bdf(folder: str, bdf_filename: str,
             nerrors: int=0, dev: bool=False,
             crash_cards=None,
             safe_xref: bool=False, run_pickle: bool=False,
+            is_lax_parser: bool=True,
             version: Optional[str]=None,
             validate_case_control: bool=True,
             stop_on_failure: bool=True,
@@ -392,6 +393,7 @@ def run_bdf(folder: str, bdf_filename: str,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
         nerrors=nerrors, dev=dev, crash_cards=crash_cards,
         safe_xref=safe_xref,
+        is_lax_parser=is_lax_parser,
         version=version,
         limit_mesh_opt=limit_mesh_opt,
 
@@ -453,6 +455,7 @@ def run_and_compare_fems(
         stop_on_failure: bool=True,
         log: Optional[SimpleLogger]=None,
         name: str='',
+        is_lax_parser: bool=True,
         run_nominal: bool=True):
     """runs two fem models and compares them"""
     if skip_cards is None:
@@ -460,7 +463,6 @@ def run_and_compare_fems(
     assert isinstance(bdf_model, (Path, str)) and os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDFv(debug=debug, log=log)
     fem1.idtype = 'int64'
-    is_lax_parser = True
     if is_lax_parser:
         fem1.log.warning('using lax card parser')
         fem1.is_strict_card_parser = False
@@ -531,14 +533,16 @@ def run_and_compare_fems(
 
         ierror = 0
         fem1.log.info('running fem2')
-        fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form,
-                        skip_cards,
-                        safe_xref=safe_xref,
-                        run_geom_check=run_geom_check,
-                        encoding=encoding, debug=debug, quiet=quiet,
-                        ierror=ierror, nerrors=nerrors,
-                        stop_on_failure=stop_on_failure,
-                        validate_case_control=validate_case_control, log=log)
+        fem2 = run_fem2(
+            bdf_model, out_model, xref, punch,
+            sum_load, size, is_double, mesh_form,
+            skip_cards,
+            safe_xref=safe_xref,
+            run_geom_check=run_geom_check,
+            encoding=encoding, debug=debug, quiet=quiet,
+            ierror=ierror, nerrors=nerrors,
+            stop_on_failure=stop_on_failure,
+            validate_case_control=validate_case_control, log=log)
 
         diff_cards = compare(fem1, fem2, xref=xref, check=check,
                              print_stats=print_stats, quiet=quiet)
@@ -2829,6 +2833,8 @@ def test_bdf_argparse(argv=None):
                                help='Pickles the data objects (default=False)\n')
     parent_parser.add_argument('--hdf5', action='store_true',
                                help='Save/load the BDF in HDF5 format')
+    parent_parser.add_argument('--lax', action='store_true',
+                               help='Dont use the strict card parser')
 
     usage, args, examples = get_test_bdf_usage_args_examples(encoding)
 
@@ -2967,6 +2973,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --profile     Profiles the code (default=False)\n'
         '  --pickle      Pickles the data objects (default=False)\n'
         '  --hdf5        Save/load the BDF in HDF5 format\n'
+        '  --lax         Dont be picky about card formatting\n'
         '  --obj          writes an obj file (default=False)\n'
         '  --msc         Assume MSC Nastran\n'
         '  --nx          Assume NX Nastran\n'
@@ -3057,6 +3064,7 @@ def main(argv=None, show_args: bool=True) -> None:
             safe_xref=data['safe'],
             hdf5=data['hdf5'],
             write_obj=data['obj'],
+            is_lax_parser=data['lax'],
             version=data['version'],
             print_stats=True,
             stop_on_failure=False,
@@ -3093,6 +3101,7 @@ def main(argv=None, show_args: bool=True) -> None:
             is_double=is_double,
             sum_load=data['loads'],
             stop=data['stop'],
+            is_lax_parser=data['lax'],
             quiet=data['quiet'],
             dumplines=data['dumplines'],
             dictsort=data['dictsort'],

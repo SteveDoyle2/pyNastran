@@ -16,6 +16,13 @@ MODEL_PATH = PKG_PATH / '..' / 'models'
 #from cpylog import SimpleLogger
 
 
+class TestModelsLax(unittest.TestCase):
+    def test_transient_lax(self):
+        bdf_filename = MODEL_PATH / 'elements' / 'time_elements.bdf'
+        args2 = ['test_bdf', str(bdf_filename), '--lax', '--quiet']
+        test_bdf(args2, show_args=False)
+
+
 class TestModels(unittest.TestCase):
     def test_h5_freq(self):
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
@@ -26,7 +33,6 @@ class TestModels(unittest.TestCase):
         #test_op2(args2, show_args=False)
 
     def test_h5_transient(self):
-        #bdf_filename = MODEL_PATH / 'elements' / 'time_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
         #args = ['test_bdf', str(bdf_filename), '--skip_nominal', '--quiet']
         #test_bdf(args, show_args=False)
@@ -149,8 +155,12 @@ class TestModels(unittest.TestCase):
     def test_models_bwb(self):
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
         #args = ['test_bdf', str(bdf_filename), '--quiet', '--skip_equivalence']
+        args = ['test_bdf', str(bdf_filename), '--quiet', '--lax']
+        test_bdf(args, show_args=False)
+
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
+
     def test_solid_bending(self):
         bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
@@ -480,7 +490,7 @@ class TestModels(unittest.TestCase):
         test_bdf(args, show_args=False)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     import warnings
     warnings.simplefilter('always', DeprecationWarning)
     unittest.main()

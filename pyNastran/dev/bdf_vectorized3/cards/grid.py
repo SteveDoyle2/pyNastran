@@ -762,6 +762,12 @@ class GRID(VectorizedBaseCard):
                 #assert np.array_equal(actual_nids, node_id)
         #return inid
 
+    def transform_node_to_local_coord_id(self, node_id: np.ndarray,
+                                         local_coord_id: int) -> np.ndarray:
+        xyz_cid = self.model.coord.transform_node_to_local_coord_id(
+            node_id, local_coord_id)
+        return xyz_cid
+
     def xyz_cid0(self) -> np.ndarray:
         """not validated"""
         if not self._is_sorted:
