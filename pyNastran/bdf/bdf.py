@@ -15,11 +15,10 @@ from __future__ import annotations
 import os
 import sys
 from copy import deepcopy
-from functools import partial
 from collections import Counter
 from io import StringIO, IOBase
 from pathlib import PurePath
-from functools import wraps
+from functools import partial, wraps
 from collections import defaultdict
 import traceback
 
@@ -561,9 +560,6 @@ def load_bdf_object(obj_filename: str, xref: bool=True, log=None, debug: bool=Tr
 
 class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     """NASTRAN BDF Reader/Writer/Editor class."""
-    #: required for sphinx bug
-    #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
-    #__slots__ = ['_is_dynamic_syntax']
     _properties = ['nid_map', 'wtmass', 'type_slot_str'] + [
         'nastran_format', 'is_long_ids', 'sol', 'subcases',
         'nnodes', 'node_ids', 'point_ids', 'npoints',
@@ -573,7 +569,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
     ]
 
-    def __init__(self, debug: Optional[bool]=True,
+    def __init__(self, debug: str | bool | None=True,
                  log: SimpleLogger | None=None,
                  mode: str='msc') -> None:
         """
@@ -785,7 +781,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MAT4', 'MAT5',
 
             # spcs
-            'SPC', 'SPCADD', 'SPC1', 'SPCOFF', 'SPCOFF1',  # 'SPCAX',
+            'SPC', 'SPCADD', 'SPC1',  # 'SPCAX',
+            'SPCOFF', 'SPCOFF1',
 
             # mpcs
             'MPC', 'MPCADD',
@@ -863,7 +860,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PCONV', 'PCONVM', 'PHBDY',
             'RADBC', 'CONV',
             'RADM', 'VIEW', 'VIEW3D',  # TODO: not validated
-
 
             'RADCAV',  # radcavs
 
@@ -948,7 +944,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             # gust for aeroelastic response; used by RANDPS card
             'TABRNDG',
 
-            # ???
+            # convection heat transfer coefficient table
             'TABLEHT', 'TABLEH1',
 
             #------------------------------------------------------------------
@@ -971,8 +967,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'BGSET',  # bgsets
             'BCTADD',  # bctadds
             'BCTSET',  # bctsets
-            'BSURF',  # bsurf
-            'BSURFS',  # bsurfs
+            'BSURF',    ## bsurf   - source/target_id to shell eid
+            'BSURFS',   ## bsurfs  - source/target_id to solid eid
             'BCONP',  # bconp
             'BLSEG',  # blseg
             'BFRIC',  # bfric
@@ -1547,7 +1543,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.cross_reference(xref=xref)
         self._xref = xref
 
-        self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
+        self.log.debug(f'---finished BDF.read_bdf of {self.bdf_filename}---')
 
     def _get_unparsed_cards(self, bulk_data_lines: list[str],
                             bulk_data_ilines: Any) -> None:
@@ -1715,8 +1711,10 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                         pass
             # TODO: redo get_card_ids_by_card_types & card_count
 
-    def _read_bdf_helper(self, bdf_filename: Optional[PathLike], encoding: str,
-                         punch: bool, read_includes: bool):
+    def _read_bdf_helper(self, bdf_filename: Optional[PathLike],
+                         encoding: str,
+                         punch: bool,
+                         read_includes: bool):
         """creates the file loading if bdf_filename is None"""
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
         #                       nxref_errors=None, stop_on_xref_error=True)
@@ -1873,7 +1871,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 bulk_data_lines, bulk_data_ilines, use_dict)
             return cards_list, cards_dict, card_count
 
-        #self.log.warning('get_bdf_cards')
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
 
@@ -1936,8 +1933,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                         cards_dict[old_card_name].append([_prep_comment(full_comment),
                                                           card_lines, ifile_iline])
                     else:
-                        # cards_list.append([old_card_name, _prep_comment(full_comment),
-                        #                    card_lines, old_ifile_iline])
                         cards_list.append([old_card_name, _prep_comment(full_comment),
                                            card_lines, card_ilines[-1]])
 
@@ -2002,8 +1997,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 cards_dict[old_card_name].append([_prep_comment(
                     backup_comment + full_comment), card_lines, ifile_iline])
             else:
-                # cards_list.append([old_card_name, _prep_comment(
-                #     backup_comment + full_comment), card_lines, ifile_iline])
                 cards_list.append([old_card_name, _prep_comment(
                     backup_comment + full_comment), card_lines, card_ilines[-1]])
             card_count[old_card_name] += 1
@@ -2032,8 +2025,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             if '$' in line:
                 line, comment = line.split('$', 1)
 
-            # if not self.allow_tabs and '\t' in line:
-            #     raise RuntimeError(f'There are tabs in:\n{line}')
             card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
             if card_name and card_name[0] not in ['+', '*']:
                 if old_card_name:
@@ -3627,7 +3618,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             msg += 'all_nodes=%s' % (all_nodes)
             raise RuntimeError(msg)
         if npoints == 0:
-            msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
+            msg = f'nnodes={nnodes} nspoints={nspoints} nepoints={nepoints}'
             raise ValueError(msg)
         return npoints, nids, all_nodes
 
@@ -4153,7 +4144,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 for cp in cord1s_to_update:
                     coord = self.coords[cp]
                     nid1, nid2, nid3 = coord.node_ids
-                    # if 1:
+
                     i1, i2, i3 = np.searchsorted(nids, coord.node_ids)
                     assert nids[i1] == nid1
                     assert nids[i2] == nid2
@@ -4538,7 +4529,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                      cards_dict: dict[str, list[str]],
                      card_count: dict[str, int]) -> None:
         """creates card objects and adds the parsed cards to the deck"""
-        # self.log.warning('_parse_cards')
         # we don't want replication markers in the card_count
         card_names_to_remove = (card_name for card_name in list(card_count.keys())
                                 if '=' in card_name)
@@ -5250,7 +5240,7 @@ def _get_file_tag(model: BDF, ifile_iline: int) -> str:
     tag = f'\nline={iline+1} file={filename}\n'
     return tag
 
-def _check_replicated_cards(replicated_cards):
+def _check_replicated_cards(replicated_cards) -> None:
     """helper method for ``parse_cards_list``"""
     replicated_card_old = []
     try:
