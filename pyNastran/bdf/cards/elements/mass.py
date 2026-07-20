@@ -1330,9 +1330,9 @@ class CONM2(PointMassElement):
 
         i11, i12, i22, i13, i23, i33 = self.I
         inertia = np.array([
-            [i11, i12, i13],
-            [i12, i22, i23],
-            [i13, i23, i33],
+            [i11, -i12, -i13],
+            [-i12, i22, -i23],
+            [-i13, -i23, i33],
         ], dtype='float32')
         is_psd, eigi = is_positive_semi_definite(inertia)
         if not is_psd:
