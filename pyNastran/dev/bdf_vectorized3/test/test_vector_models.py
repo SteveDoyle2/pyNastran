@@ -121,6 +121,7 @@ class TestModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'beam_modes' / 'cbarao_cbeam_static.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
+
     def test_models_beam_modes3(self):
         bdf_filename = MODEL_PATH / 'beam_modes' / 'cbarao_cbeam_modes.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']

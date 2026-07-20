@@ -1204,11 +1204,13 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
                 return None
             fem1.read_h5(bdf_model)
         elif '.pch' in bdf_model:
-            fem1.read_bdf(bdf_model, xref=False, punch=True, encoding=encoding,
-                          save_file_structure=save_file_structure)
+            fem1.read_bdf(
+                bdf_model, xref=False, punch=True, encoding=encoding,
+                save_file_structure=save_file_structure)
         else:
-            fem1.read_bdf(bdf_model, xref=False, punch=punch, encoding=encoding,
-                          save_file_structure=save_file_structure)
+            fem1.read_bdf(
+                bdf_model, xref=False, punch=punch, encoding=encoding,
+                save_file_structure=save_file_structure)
             for card in crash_cards:
                 if card in fem1.card_count:
                     raise DisabledCardError(f'card={card!r} has been disabled')
@@ -1443,13 +1445,15 @@ def _fem_xref_methods_check(fem1: BDFv) -> None:
                    consider_1d=True, consider_2d=True, consider_3d=True)
     get_dependent_nid_to_components(fem1)
 
-    fem1.get_pid_to_node_ids_and_elements_array(pids=None, etypes=None, idtype='int32',
-                                                msg=' which is required by test_bdf')
+    fem1.get_pid_to_node_ids_and_elements_array(
+        pids=None, etypes=None, idtype='int32',
+        msg=' which is required by test_bdf')
     fem1.get_property_id_to_element_ids_map(msg=' which is required by test_bdf')
     fem1.get_material_id_to_property_ids_map(msg=' which is required by test_bdf')
     fem1.get_element_ids_list_with_pids(pids=None)
-    fem1.get_element_ids_dict_with_pids(pids=None, stop_if_no_eids=False,
-                                        msg=' which is required by test_bdf')
+    fem1.get_element_ids_dict_with_pids(
+        pids=None, stop_if_no_eids=False,
+        msg=' which is required by test_bdf')
     fem1.get_node_id_to_element_ids_map()
     fem1.get_node_id_to_elements_map()
 
