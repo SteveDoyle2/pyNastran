@@ -1074,7 +1074,8 @@ class COORD(VectorizedBaseCard):
         #xyz2 = xyz @ T + origin
         return xyz2
 
-    def transform_node_to_local_coord_id(self, node_id: np.ndarray, local_coord_id: int) -> np.ndarray:
+    def transform_node_to_local_coord_id(self, node_id: np.ndarray,
+                                         local_coord_id: int) -> np.ndarray:
         # transform_node_to_local_xyz
         # transform_node_to_local_coord_id
         ## TODO: this is redundant

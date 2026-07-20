@@ -4,7 +4,6 @@ import sys
 # from typing import TYPE_CHECKING
 
 import pyNastran
-from dynanduril.femap.femap_hash import print_bad_path
 
 from pyNastran.bdf.mesh_utils.run_jobs import cmd_line_run_jobs
 from pyNastran.bdf.mesh_utils.host_jobs import cmd_line_host_jobs
