@@ -460,13 +460,17 @@ class CTUBE(RodElement):
         return self.pid_ref.Mid()
 
     def Mass(self) -> float:
+        mpa = self.MassPerLength()
+        if mpa == 0.0:
+            return 0.0
+        return mpa * self.Length()
+
+    def MassPerLength(self) -> float:
         if self.pid_ref is None:
             msg = 'Element eid=%d has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         mpa = self.pid_ref.MassPerLength()
-        if mpa == 0.0:
-            return 0.0
-        return mpa * self.Length()
+        return mpa
 
     def Nsm(self) -> float:
         if self.pid_ref is None:

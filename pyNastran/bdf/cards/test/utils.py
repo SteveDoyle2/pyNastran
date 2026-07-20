@@ -56,7 +56,7 @@ def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
                    nastran_format: str='nx',
                    op2_log_level: str='warning') -> BDF:
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
-    assert xref in {'standard', 'safe'}, f'xref={xref}'
+    assert xref in {'standard', 'safe', True, False}, f'xref={xref}'
     if os.path.exists('junk.bdf'):
         os.remove('junk.bdf')
     if not remove_disabled_cards:
@@ -257,8 +257,8 @@ def _run_mass_properties(model2: BDF, nnodes: int, nelements: int,
 
     if nelements > 1 and nnodes == 0:  # pragma: no cover
         raise RuntimeError('no nodes exist')
-    mass1, cg1, inertia1 = mass_properties(model2, reference_point=None, sym_axis=None)
-    mass2, cg2, inertia2 = mass_properties_nsm(model2, reference_point=None, sym_axis=None)
+    mass1, cg1, inertia1 = mass_properties(model2, reference_point=None, sym_axis='')
+    mass2, cg2, inertia2 = mass_properties_nsm(model2, reference_point=None, sym_axis='')
     # if not quiet:
     #     if model2.wtmass != 1.0:
     #         print('weight = %s' % (mass1 / model2.wtmass))

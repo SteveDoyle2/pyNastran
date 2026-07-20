@@ -3704,23 +3704,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             nid_cp_cd = nid_cp_cd[isort, :]
             xyz_cp = xyz_cp[isort, :]
 
-        icp_transform = {}
-        icd_transform = {}
         nids_all = nid_cp_cd[:, 0]
-
-        # get the indicies of the xyz array where the nodes that
-        # need to be transformed are
-        for cd, nids in sorted(nids_cd_transform.items()):
-            if cd == -1:
-                continue
-            nids = np.array(nids)
-            icd_transform[cd] = np.where(np.isin(nids_all, nids))[0]
-
-        for cp, nids in sorted(nids_cp_transform.items()):
-            if cp == -1:
-                continue
-            nids = np.array(nids)
-            icp_transform[cp] = np.where(np.isin(nids_all, nids))[0]
+        icd_transform, icp_transform = _get_nid_icp_icd_transforms(
+            nids_all, nids_cd_transform, nids_cp_transform)
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
     def get_xyz_in_coord_array(self, cid: int=0,
@@ -3765,11 +3751,42 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         >>> out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
         >>> nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform = out
         """
-        node_id = self.grid.node_id
-        nid_cp_cd = np.vstack([node_id, self.grid.cp, self.grid.cd])
-        xyz_cid0 = self.grid.transform_node_to_local_coord_id(
-            node_id, cid)
-        xyz_cp = self.grid.xyz
+        nid_cp_cd_list = []
+        xyz_cid_list = []
+        xyz_cp_list = []
+        ngrid = len(self.grid)
+        nids_cd_transform = {}
+        nids_cp_transform = {}
+        if ngrid:
+            node_id = self.grid.node_id
+            nid_cp_cd = np.column_stack([node_id, self.grid.cp, self.grid.cd])
+            xyz_cid = self.grid.transform_node_to_local_coord_id(
+                node_id, cid)
+            xyz_cp = self.grid.xyz
+            nid_cp_cd_list.append(nid_cp_cd)
+            xyz_cid_list.append(xyz_cid)
+            xyz_cp_list.append(xyz_cp)
+            nids_cp_transform = self.grid.get_cp_transform()
+            nids_cd_transform = self.grid.get_cd_transform()
+
+        nspoint = len(self.spoint)
+        if nspoint:
+            xyz = np.full((nspoint, 3), np.nan, dtype=fdtype)
+            nid_cp_cd = np.full((nspoint, 3), 0, dtype=idtype)
+            nid_cp_cd[:, 0] = self.spoint.spoint_id
+            nid_cp_cd_list.append(nid_cp_cd)
+            xyz_cid_list.append(xyz)
+            xyz_cp_list.append(xyz)
+
+        nepoint = len(self.epoint)
+        if nepoint:
+            xyz = np.full((nepoint, 3), np.nan, dtype=fdtype)
+            nid_cp_cd = np.full((nepoint, 3), 0, dtype=idtype)
+            nid_cp_cd[:, 0] = self.epoint.epoint_id
+            nid_cp_cd_list.append(nid_cp_cd)
+            xyz_cid_list.append(xyz)
+            xyz_cp_list.append(xyz)
+
         #icd_transform, icp_transform, xyz_cp, nid_cp_cd = self.get_displacement_index_xyz_cp_cd(
         #    fdtype=fdtype, idtype=idtype, sort_ids=True)
         #nids = nid_cp_cd[:, 0]
@@ -3780,6 +3797,30 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         #    xyz_cid = self.transform_xyzcp_to_xyz_cid(
         #         xyz_cp, nids, icp_transform,
         #         cid=cid, in_place=False, atol=1e-6)
+        nid_cp_cd = np.vstack(nid_cp_cd_list)
+        xyz_cid = np.vstack(xyz_cid_list)
+        xyz_cp = np.vstack(xyz_cp_list)
+        nids = nid_cp_cd[:, 0]
+        unids, uindex, counts = np.unique(nids, return_index=True, return_counts=True)
+        # self.log.warning(f'unids = {unids}')
+        # self.log.warning(f'uindex = {uindex}')
+        # self.log.warning(f'counts = {counts}')
+
+        if len(nids) != len(unids):
+            nids_duplicate = unids[counts > 1]
+            msg = f'duplicate nodes; nids_duplicate={nids_duplicate}; nids={nids}; ngrid={ngrid}; nspoint={nspoint}; nepoint={nepoint}'
+            # self.log.warning(f'grid.node_id = {self.grid.node_id}')
+            # self.log.warning(f'spoint.spoint_id = {self.spoint.spoint_id}')
+            self.log.warning(msg)
+        #assert np.array_equal(nids[uindex], unids)
+        if not np.array_equal(nids, unids):
+            nid_cp_cd = nid_cp_cd[uindex, :]
+            xyz_cid = xyz_cid[uindex, :]
+            xyz_cp = xyz_cp[uindex, :]
+
+        nids_all = nid_cp_cd[:, 0]
+        icd_transform, icp_transform = _get_nid_icp_icd_transforms(
+            nids_all, nids_cd_transform, nids_cp_transform)
         return nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform
 
     def transform_xyzcp_to_xyz_cid(self, xyz_cp: np.ndarray,
@@ -4984,6 +5025,29 @@ def _set_nodes(model: BDF,
             nid_cp_cd[i, 0] = nid
             i += 1
     return nid_cp_cd, xyz_cp, nids_cd_transform, nids_cp_transform
+
+
+def _get_nid_icp_icd_transforms(nids_all: np.ndarray,
+                                nids_cd_transform: dict[int, np.ndarray],
+                                nids_cp_transform: dict[int, np.ndarray],
+                                ) -> tuple[dict[int, np.ndarray],
+                                          dict[int, np.ndarray]]:
+    icp_transform = {}
+    icd_transform = {}
+    # get the indicies of the xyz array where the nodes that
+    # need to be transformed are
+    for cd, nids in sorted(nids_cd_transform.items()):
+        if cd == -1:
+            continue
+        nids = np.array(nids)
+        icd_transform[cd] = np.where(np.isin(nids_all, nids))[0]
+
+    for cp, nids in sorted(nids_cp_transform.items()):
+        if cp == -1:
+            continue
+        nids = np.array(nids)
+        icp_transform[cp] = np.where(np.isin(nids_all, nids))[0]
+    return icd_transform, icp_transform
 
 
 def _bool(value) -> bool:
