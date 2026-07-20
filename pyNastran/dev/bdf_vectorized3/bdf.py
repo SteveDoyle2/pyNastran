@@ -3765,7 +3765,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         >>> out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
         >>> nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform = out
         """
-        nid_cp_cd = np.vstack([self.grid.node_id, self.grid.cp, self.grid.cd])
+        node_id = self.grid.node_id
+        nid_cp_cd = np.vstack([node_id, self.grid.cp, self.grid.cd])
         xyz_cid0 = self.grid.transform_node_to_local_coord_id(
             node_id, cid)
         xyz_cp = self.grid.xyz
