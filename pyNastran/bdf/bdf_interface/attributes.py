@@ -351,7 +351,7 @@ SLOT_TO_TYPE_MAP: dict[str, list[str]] = {
     'dmi': ['DMI'],
     'dti': ['DTI'],
 
-    # optimzation
+    # optimization
     'dequations': ['DEQATN'],
     'dtable': ['DTABLE'],
     'dconstrs': ['DCONSTR', 'DCONADD'],
