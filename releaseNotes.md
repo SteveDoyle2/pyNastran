@@ -893,7 +893,7 @@ BDF:
 OP2:
  - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aide in finding data
  - reorganization of op2 class to reduce number of functions in the object.  This affects any custom table reading.
- - improved optimzation response reading
+ - improved optimization response reading
  - limited SORT2 support
  - fixed CD transformation bug for BOUGV1 and BOPHIG1 tables
  - Improved HDF5 export/import support (e.g., matrices, random results)

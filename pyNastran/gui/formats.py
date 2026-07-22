@@ -142,6 +142,12 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     pass
 
+try:
+    from pyNastran.converters.vtk.vtk_io import VtkIO
+    CLASS_MAP['vtk'] = VtkIO
+except ModuleNotFoundError:  # pragma: no cover
+    pass
+
 if DEV:
     try:
         from pyNastran.dev.h5.h5_nastran_io import H5NastranIO

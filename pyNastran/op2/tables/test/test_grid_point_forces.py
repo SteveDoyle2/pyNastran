@@ -69,6 +69,19 @@ class TestGridPointForcesSMT(unittest.TestCase):
         assert np.array_equal(zaxis2, [1., 1., 2.]), zaxis2
         assert np.array_equal(xzplane, [2., 1., 1.5]), xzplane
 
+    def test_wingbox_gpforce_exclude(self):
+        dirname = MODEL_PATH / 'wingbox'
+        op2_filename = dirname / 'wingbox_stitched_together-000.op2'
+        log = SimpleLogger(level='warning')
+        model = OP2(log=log)
+        tables = {
+            b'OGPFB1': [model._table_passer, model._table_passer],
+        }
+        model.set_additional_result_tables_to_read(tables)
+        with self.assertRaises(AssertionError):
+            model.set_additional_generalized_tables_to_read(tables)
+        model.read_op2(op2_filename)
+
     def test_wingbox(self):
         dirname = MODEL_PATH / 'wingbox'
         bdf_filename = dirname / 'wingbox_stitched_together-000.bdf'

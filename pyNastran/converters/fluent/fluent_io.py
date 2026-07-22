@@ -141,8 +141,8 @@ class FluentIO:
                 iregion = np.where(region == regioni)[0]
                 cf_xyz = cfs[iregion, :].sum(axis=0)
                 cm_xyz = cml[iregion, :].sum(axis=0)
-                assert len(cf_xyz) == 3, cxyz
-                assert len(cm_xyz) == 3, cxyz
+                assert len(cf_xyz) == 3, cf_xyz
+                assert len(cm_xyz) == 3, cm_xyz
                 gui.log_info(f'  region {regioni}: CFxyz={cf_xyz} CMxyz={cm_xyz}')
 
         nnodes = len(nodes)
@@ -155,7 +155,7 @@ class FluentIO:
 
         points = numpy_to_vtk_points(nodes)
         ugrid.SetPoints(points)
-        log.info(f'created vtk points')
+        log.info('created vtk points')
 
         xmax, ymax, zmax = nodes.max(axis=0)
         xmin, ymin, zmin = nodes.min(axis=0)
@@ -165,7 +165,7 @@ class FluentIO:
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
 
         _create_elements(ugrid, node_id, tris, quads)
-        log.info(f'created vtk elements')
+        log.info('created vtk elements')
 
         gui.nid_map = {}
         gui.create_global_axes(dim_max)

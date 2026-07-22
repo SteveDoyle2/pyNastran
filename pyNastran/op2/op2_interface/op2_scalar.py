@@ -43,6 +43,7 @@ Defines the sub-OP2 class.  This should never be called outside of the OP2 class
 import os
 from struct import Struct, unpack
 from collections import defaultdict
+import inspect
 from typing import Optional, Callable, Any
 
 from numpy import array
@@ -1411,7 +1412,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         table_mapper.update(table_mapper_geometry)
         table_mapper.update(table_mapper_random)
         table_mapper.update(satk_tables)
-        if self.is_nx and 0:  # pragma: no cover
+        if 0 and self.is_nx:  # pragma: no cover
             _table_mapper = {
                 #b'OUGRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
                 #b'OUGNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
@@ -2203,7 +2204,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             table_name = op2_reader._read_table_name(last_table_name=table_name,
                                                      rewind=True, stop_on_failure=False)
 
-    def set_additional_generalized_tables_to_read(self, tables: dict[bytes, Any]) -> None:
+    def set_additional_generalized_tables_to_read(self, tables: dict[bytes, Callable]) -> None:
         """
         Adds methods to call a generalized table.
         Everything is left to the user.
@@ -2225,6 +2226,10 @@ class OP2_Scalar(OP2Common, FortranFormat):
         """
         assert isinstance(tables, dict), tables
         self._update_generalized_tables(tables)
+
+        for key, func in tables.items():
+            assert isinstance(key, bytes), key
+            assert inspect.isfunction(func), f'{key!r}: {func} must be a function'
         self.generalized_tables = tables
 
     def set_additional_result_tables_to_read(
@@ -2268,7 +2273,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         assert hasattr(self, '_get_table_mapper'), 'missing _get_table_mapper'
         self._get_table_mapper = func
 
-    def _update_generalized_tables(self, tables: dict[bytes, Any]) -> None:
+    def _update_generalized_tables(self, tables: dict[bytes, Callable]) -> None:
         """
         helper function for:
          - set_additional_generalized_tables_to_read
