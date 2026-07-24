@@ -757,6 +757,7 @@ def _mass_properties(
                 batch_centroids.append(centroid)
                 batch_masses.append(massi)
 
+    inertia = np.array(inertia)
     if batch_centroids:
         mass, cg, inertia = _accumulate_vectorized(
             np.array(batch_centroids),

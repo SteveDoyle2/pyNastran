@@ -17,7 +17,7 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element,
+    Element, slice_element_by_property_id,
     parse_check, save_ifile_comment,
     #hslice_by_idim, make_idim,
     searchsorted_filter)
@@ -64,6 +64,9 @@ class ShellElement(Element):
         self.property_id = np.array([], dtype='int32')
         self.tflag = np.array([], dtype='int32')
         self.T = np.array([], dtype='int32')
+
+    def slice_card_by_property_id(self, property_id: np.ndarray):
+        return slice_element_by_property_id(self, property_id)
 
     def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
         used_dict['property_id'].append(self.property_id)

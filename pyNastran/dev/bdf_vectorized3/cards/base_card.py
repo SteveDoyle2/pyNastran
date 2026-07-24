@@ -575,6 +575,10 @@ class VectorizedBaseCard:
                     self.model.log.error(f'{self.type} {attr}\nold:{value1}\nnew:{value2}')
                     raise
 
+def slice_element_by_property_id(element: Element, property_id: np.ndarray):
+    ieids_list = np.array([i for i, pid in enumerate(element.property_id) if pid in property_id])
+    return element.slice_card_by_index(ieids_list, sort_index=True)
+
 
 class Element(VectorizedBaseCard):
     _id_name = 'element_id'

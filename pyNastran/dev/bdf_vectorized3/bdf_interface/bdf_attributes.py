@@ -1618,7 +1618,7 @@ class BDFAttributes:
             mass = mass2[i]
         return mass
 
-    def inertia_sum(self, element_id: Optional[np.ndarray]=None,
+    def inertia_sum(self, element_id: np.ndarray | list[int] | None = None,
                     nansum: bool=False) -> tuple[float, np.ndarray, np.ndarray]:  # pragma: no cover
         """
         mass moment of inertia
@@ -1631,15 +1631,15 @@ class BDFAttributes:
             use np.nansum instead of np.sum
         """
         fsum = np.nansum if nansum else np.sum
-        element_ids, mass, centroid, inertia = self.inertia()
+        element_ids, mass, centroid, inertia = self.inertia(element_id=element_id)
         mass_total = fsum(mass)
-        cg_total = fsum(mass * centroid).sum(axis=0) / mass_total
+        cg_total = fsum(mass[:, np.newaxis] * centroid).sum(axis=0) / mass_total
         inertia_total = fsum(inertia, axis=0)
         assert len(cg_total) == 3, cg_total
         assert len(inertia_total) == 6, inertia_total
         return mass_total, cg_total, inertia_total
 
-    def inertia_sum(self, element_id: Optional[np.ndarray]=None,
+    def _inertia_sum(self, element_id: Optional[np.ndarray]=None,
                     nansum: bool=False) -> tuple[float, np.ndarray, np.ndarray]:  # pragma: no cover
         """
         mass moment of inertia
@@ -1722,6 +1722,7 @@ class BDFAttributes:
         return total_mass, cg, inertia
 
     def inertia(self, nsm_id: int=0,
+                element_id: np.ndarray | list[int] | None = None,
                 include_base_mass: bool=True) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         [element_id, mass, cg, mass moment of inertia]
@@ -1747,25 +1748,44 @@ class BDFAttributes:
             nsm_ids = self.nsmadd.get_reduced_nsms(stop_on_failure=False)
             if nsm_id in nsm_ids:
                 self.log.warning(f'nsm_ids = {nsm_ids}')
-                raise NotImplementedError(f'nsm_id={nsm_id} not implemented')
+                nsm_cards = []
+                for cards in nsm_ids[nsm_id]:
+                    if isinstance(cards, list):
+                        nsm_cards.extend(cards)
+                    else:
+                        raise TypeError(cards)
+                print(f'nsm_cards = {nsm_cards}')
+
+                # raise NotImplementedError(f'nsm_id={nsm_id} not implemented')
             else:
-                cards = []
+                nsm_cards = []
                 for nsm in [self.nsm, self.nsm1, self.nsml1, self.nsml]:
                     if nsm_id not in nsm.nsm_id:
                         continue
                     nsm_card = nsm.slice_card_by_id(nsm_id)
-                    cards.append(nsm_card)
+                    nsm_cards.append(nsm_card)
                 # self.log.warning(f'cards = {cards}')
 
-            for card in cards:
+            for nsm_card in nsm_cards:
                 # print(card.get_stats())
-                element_id_nsm, mass_nsm, centroid_nsm, inertia_nsm = card.inertia()
+                element_id_nsm, mass_nsm, centroid_nsm, inertia_nsm = nsm_card.inertia(element_id=element_id)
+                neidi = len(element_id_nsm)
+                assert len(mass_nsm) == neidi, (mass_nsm, neidi)
+                assert centroid_nsm.shape == (neidi, 3), f'neidi={neidi}, centroid_nsm.shape={centroid_nsm.shape}'
+                assert inertia_nsm.shape == (neidi, 6), f'neidi={neidi}, inertia_nsm.shape={inertia_nsm.shape}'
                 element_ids_all.append(element_id_nsm)
                 masses.append(mass_nsm)
                 centroids.append(centroid_nsm)
 
         if include_base_mass:
             for card in element_cards:
+                if element_id:
+                    eids_common = np.intersect1d(element_id, card.element_id)
+                    # print(f'eids_common = {eids_common}')
+                    if len(eids_common) == 0:
+                        continue
+                    card = card.slice_card_by_id(eids_common)
+
                 element_ids_all.append(card.element_id)
                 massi = card.mass()
                 masses.append(massi)
@@ -1784,11 +1804,19 @@ class BDFAttributes:
             return element_id, mass, cg, inertia
             # return element_id_nsm, mass_nsm, centroid_nsm, inertia_nsm
 
-        element_id = np.hstack(element_ids_all)
+        element_id_out = np.hstack(element_ids_all)
         mass = np.hstack(masses)
         centroid = np.vstack(centroids)
+
+        # Find unique keys and map them to clean 0, 1, 2... indices
+        # element_ids_unique, inverse_indices = np.unique(element_id_out, return_inverse=True)
+
+        # Sum using mapped indices
+        # sums = np.bincount(inverse_indices, weights=mass)
+
+
         #abs_mass = np.abs(mass).sum()
-        neids = len(element_id)
+        neids = len(element_id_out)
         #if abs_mass == 0.:
             #assert len(element_id) > 0, element_id
             #cg = np.full(3, np.nan, dtype='float64')
@@ -1802,7 +1830,7 @@ class BDFAttributes:
 
         #cg = mass_cg.sum(axis=0) / mass.sum()
         #assert len(cg) == 3, cg
-        assert cg.shape == (neids, 3), cg.shape
+        assert cg.shape == (neids, 3), f'neid={neids}, cg.shape={cg.shape}'
 
         dxyz = centroid - cg
         dx = dxyz[:, 0]
@@ -1819,7 +1847,7 @@ class BDFAttributes:
         nrows = len(mass)
         assert inertia.shape == (nrows, 6), inertia.shape
         mass.sum()
-        return element_id, mass, centroid, inertia
+        return element_id_out, mass, centroid, inertia
 
     def length(self) -> float:
         assert len(self.grid), 'No grids'

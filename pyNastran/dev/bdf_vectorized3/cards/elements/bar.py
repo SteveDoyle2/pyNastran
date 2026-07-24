@@ -23,6 +23,7 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, Material, make_idim, hslice_by_idim,
+    slice_element_by_property_id,
     searchsorted_filter, parse_check, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import (
     line_mid_mass_per_length, line_length, line_vector_length, line_centroid,
@@ -244,6 +245,9 @@ class CBAR(Element):
         self.pb = np.array([], dtype='int32')
         self.wa = np.zeros((0, 3), dtype='float64')
         self.wb = np.zeros((0, 3), dtype='float64')
+
+    def slice_card_by_property_id(self, property_id: np.ndarray):
+        return slice_element_by_property_id(self, property_id)
 
     def add(self, eid: int, pid: int, nids: list[int],
             x: Optional[list[float]], g0: Optional[int],

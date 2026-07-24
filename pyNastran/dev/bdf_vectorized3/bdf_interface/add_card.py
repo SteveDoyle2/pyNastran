@@ -5917,7 +5917,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         assert isinstance(value, (float, str)), f'value={value} type={type(value)}'
-        assert isinstance(ids, (list, np.ndarray)), ids
+        # assert isinstance(ids, (list, np.ndarray)), ids
         assert isinstance(value, float), value
         nsm = self.nsm1.add(sid, nsm_type, value, ids, comment=comment)
         return nsm
@@ -5951,7 +5951,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             pid_eid = [pid_eid]
         if isinstance(value, float):
             value = [value]
-        assert isinstance(pid_eid, list, np.ndarray), pid_eid
+        assert isinstance(pid_eid, (list, np.ndarray)), pid_eid
         assert isinstance(value, list), value
         assert len(pid_eid) == len(value), 'len(pid_eid)=%s len(value)=%s' % (len(pid_eid), len(value))
 
@@ -5986,7 +5986,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        assert isinstance(ids, (list, np.ndarray)), ids
+        # assert isinstance(ids, (list, np.ndarray)), ids
         assert isinstance(value, float), value
         nsm = self.nsml1.add(sid, nsm_type, value, ids, comment=comment)
         return nsm

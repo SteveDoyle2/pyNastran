@@ -10,6 +10,7 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property,
+    slice_element_by_property_id,
     parse_check, searchsorted_filter, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float, get_print_card_size # , array_default_int
 from .utils import get_density_from_material, basic_mass_material_id
@@ -290,6 +291,9 @@ class CROD(Element):
         self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 2), dtype='int32')
+
+    def slice_card_by_property_id(self, property_id: np.ndarray):
+        return slice_element_by_property_id(self, property_id)
 
     def add(self, eid: int, pid: int, nodes: list[int],
             ifile: int=0, comment: str='') -> int:
@@ -672,6 +676,9 @@ class CTUBE(Element):
         self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 2), dtype='int32')
+
+    def slice_card_by_property_id(self, property_id: np.ndarray):
+        return slice_element_by_property_id(self, property_id)
 
     def add(self, eid: int, pid: int, nids: list[int],
             ifile: int=0, comment: str='') -> int:
