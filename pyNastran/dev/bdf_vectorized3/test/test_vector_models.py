@@ -1,9 +1,8 @@
-#import os
 import unittest
 import pathlib
-#import numpy as np
 
 import pyNastran
+import numpy as np
 from pyNastran.dev.bdf_vectorized3.test.test_bdf import (
     read_bdfv, main as test_bdf, IS_PYTABLES)
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -155,6 +154,27 @@ class TestModels(unittest.TestCase):
         test_bdf(args, show_args=False)
     def test_models_bwb(self):
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
+        model = BDF()
+        model.read_bdf(bdf_filename)
+
+        ctria3_eids = model.ctria3.element_id[:10]
+        cquad4_eids = model.cquad4.element_id[:10]
+        shell_eids = np.hstack([ctria3_eids, cquad4_eids])
+        nsm_id = 1
+        model.add_nsml1(nsm_id, 'ELEMENT', 1.0, shell_eids, 'mystring')
+        model.setup()
+
+        eids, mass0, cg0, inertia0 = model.inertia(nsm_id=nsm_id, include_base_mass=True)
+        assert isinstance(mass0, np.ndarray), mass0
+        mass0_total = mass0.sum()
+        assert np.allclose(mass0_total, 112616.08243956308), mass0_total
+
+        eids, mass_nsm, cg, inertia = model.inertia(nsm_id=nsm_id, include_base_mass=False)
+        assert np.allclose(mass_nsm.sum(), 1.0), mass_nsm.sum()
+
+        eids, mass_all, cg, inertia = model.inertia(nsm_id=nsm_id, include_base_mass=True)
+        assert np.allclose(mass_all.sum(), mass0_total+1.0), mass_all.sum()
+
         #args = ['test_bdf', str(bdf_filename), '--quiet', '--skip_equivalence']
         args = ['test_bdf', str(bdf_filename), '--quiet', '--lax']
         test_bdf(args, show_args=False)

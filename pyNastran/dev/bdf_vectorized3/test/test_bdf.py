@@ -2416,9 +2416,10 @@ def _check_case_parameters(subcase: Subcase,
         get_mpc_node_ids_c1(fem, mpc_id, consider_mpcadd=True, stop_on_failure=False)
         get_mpc_node_ids(fem, mpc_id, consider_mpcadd=True, stop_on_failure=False)
 
-    if 'NSM' in subcase and 0:
+    if 'NSM' in subcase:
         nsm_id = subcase.get_parameter('NSM')[0]
-        fem.get_reduced_nsms(nsm_id, stop_on_failure=False)
+        reduced_nsms = fem.get_reduced_nsms(nsm_id, stop_on_failure=False)
+        fem.mass_properties()
 
     if 'SDAMPING' in subcase:
         sdamping_id = subcase.get_int_parameter('SDAMPING')

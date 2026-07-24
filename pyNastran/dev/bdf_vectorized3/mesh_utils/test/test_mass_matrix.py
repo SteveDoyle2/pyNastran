@@ -18,6 +18,7 @@ Tolerances:
 import os
 import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 import numpy.testing as npt
@@ -28,7 +29,8 @@ from pyNastran.dev.bdf_vectorized3.solver.matrices.mass_matrix import (
     build_mgg_lumped,
     get_grid_point_weight,
 )
-
+import pyNastran
+PKG_PATH = Path(pyNastran.__path__[0])
 
 # =============================================================================
 # BDF FIXTURES
@@ -606,10 +608,7 @@ ENDDATA
 class TestBwbModel(unittest.TestCase):
     """Integration test on the BWB model."""
 
-    BWB_PATH = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))),
-        'models', 'bwb', 'bwb_saero.bdf')
+    BWB_PATH = PKG_PATH / 'models' / 'bwb' / 'bwb_saero.bdf'
 
     @classmethod
     def setUpClass(cls):

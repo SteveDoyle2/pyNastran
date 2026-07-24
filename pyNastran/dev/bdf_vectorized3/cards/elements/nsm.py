@@ -279,6 +279,8 @@ class NSM1i(VectorizedBaseCard):
             a comment for the card
 
         """
+        assert isinstance(ids, (list, np.ndarray)), ids
+        assert isinstance(value, float), value
         self.cards.append((sid, nsm_type, ids, value, comment))
         self.n += 1
         return self.n - 1
@@ -388,6 +390,10 @@ class NSM1i(VectorizedBaseCard):
             elif isinstance(pid_eidi, list):
                 pid_eidi = expand_thru_by(pid_eidi, set_fields=True, sort_fields=True, require_int=True, allow_blanks=False)
                 assert 'THRU' not in pid_eidi
+            elif isinstance(pid_eidi, np.ndarray):
+                pass
+            else:
+                raise NotImplementedError(pid_eidi)
             pid_eid_list.extend(pid_eidi)
             npid_eid[icard] = len(pid_eidi)
             value[icard] = valuei
@@ -435,6 +441,7 @@ class NSM1i(VectorizedBaseCard):
         #centroid[icoord, :] = self.xyz_offset[icoord, :]
         #return centroid
 
+
 class NSM1(NSM1i):
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -454,6 +461,95 @@ class NSM1(NSM1i):
         return
 
 class NSML1(NSM1i):
+
+    def inertia(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        element_id_list = []
+        mass_list = []
+        centroid_list = []
+        inertia_list = []
+        model = self.model
+
+        AREA_ETYPES = {'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUAD'}
+        LENGTH_ETYPES = {'CONROD', 'CROD', 'PROD', 'CBAR', 'CBEAM'}
+
+        for nsm_id, nsm_type, value, (insm0, insm1) in zip_longest(
+                self.nsm_id, self.nsm_type, self.value, self.ielement):
+            ids = self.pid_eid[insm0:insm1]
+            # print(f'ids={ids}')
+            is_area = False
+            is_length = False
+
+            elementi_id_list = []
+            centroidi_list = []
+            # inertiai_list = []
+            mass_area_length_list = []
+            total_area_length_list = []
+            if nsm_type == 'ELEMENT':
+                for card in model.element_cards:
+                    if len(card) == 0:
+                        continue
+                    assert ids.min() > 0, ids
+                    eid_common = np.intersect1d(ids, card.element_id)
+                    if len(eid_common) == 0:
+                        continue
+                    #print(f'{card.type} eids={eid_common} element_id={card.element_id}')
+                    if card.type in AREA_ETYPES:
+                        card2 = card.slice_card_by_id(eid_common)
+                        value_per = card2.area()
+                        centroid = card2.centroid()
+                        is_area = True
+                    elif card.type in LENGTH_ETYPES:
+                        card2 = card.slice_card_by_id(eid_common)
+                        value_per = card2.length()
+                        centroid = card2.centroid()
+                        is_length = True
+                    else:
+                        raise NotImplementedError(card.type)
+                    mass_area_length = value_per * value
+
+                    elementi_id_list.append(eid_common)
+                    centroidi_list.append(centroid)
+                    mass_area_length_list.append(mass_area_length)
+                    total_area_length_list.append(value_per)
+                if is_area and is_length:
+                    raise RuntimeError('Area and length are are both used')
+            else:
+                raise NotImplementedError(nsm_type)
+
+            element_id = np.hstack(elementi_id_list)
+            centroid = np.vstack(centroidi_list)
+            mass_area_length = np.hstack(mass_area_length_list)
+            total_area_length = np.hstack(total_area_length_list).sum()
+            massi = mass_area_length / total_area_length
+            assert len(massi) == len(centroid)
+            assert len(massi) == len(element_id)
+            mass_total = massi.sum()
+            dx = centroid[:, 0]
+            dy = centroid[:, 1]
+            dz = centroid[:, 2]
+            # massi[:, np.newaxis] *
+            # inertiai = np.column_stack([dx2, dy2, dz2, dxy, dxz, dyz])
+            Ixx = massi * (dy ** 2 + dz ** 2)
+            Iyy = massi * (dx ** 2 + dz ** 2)
+            Izz = massi * (dx ** 2 + dy ** 2)
+            Ixy = massi * (dx * dy)
+            Ixz = massi * (dx * dz)
+            Iyz = massi * (dy * dz)
+            inertiai = np.stack([Ixx, Iyy, Izz, Ixy, Ixz, Iyz], axis=1, out=None)
+
+            # print("massi", massi)
+            # print("inertiai.shape", inertiai.shape)
+            element_id_list.append(element_id)
+            mass_list.append(massi)
+            centroid_list.append(centroid)
+            inertia_list.append(inertiai)
+
+        element_id = np.hstack(element_id_list)
+        mass = np.hstack(mass_list)
+        centroid = np.vstack(centroid_list)
+        inertia = np.vstack(inertia_list)
+        return element_id, mass, centroid, inertia
+
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
