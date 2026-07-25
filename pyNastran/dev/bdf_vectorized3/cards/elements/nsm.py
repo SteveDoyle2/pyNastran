@@ -3,6 +3,8 @@ from itertools import zip_longest
 from collections import defaultdict
 from typing import TYPE_CHECKING
 import numpy as np
+
+from cpylog import SimpleLogger
 #from pyNastran.bdf.field_writer_8 import print_card_8
 #from pyNastran.utils.numpy_utils import integer_types # , cast_ints
 from pyNastran.bdf.cards.expand_card import expand_thru_by
@@ -19,6 +21,8 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float, get_print_card_size)  # , array_default_int
 from pyNastran.dev.bdf_vectorized3.cards.constraints import ADD
+from pyNastran.op2.result_objects.scalar6_table_object import float_types
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
@@ -448,148 +452,10 @@ class NSM1i(VectorizedBaseCard):
 class NSM1(NSM1i):
     def inertia(self, element_id: np.ndarray | list[int] | None=None,
                 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        element_id_list = []
-        mass_list = []
-        centroid_list = []
-        inertia_list = []
-        model = self.model
-
-        for nsm_id, nsm_type, value, (insm0, insm1) in zip_longest(
-                self.nsm_id, self.nsm_type, self.value, self.ielement):
-            ids = self.pid_eid[insm0:insm1]
-            ids.sort()
-            is_area = False
-            is_length = False
-
-            elementi_id_list = []
-            centroidi_list = []
-            # inertiai_list = []
-            mass_area_length_list = []
-            total_area_length_list = []
-            assert ids.min() > 0, ids
-            if nsm_type == 'CONROD':
-                card = model.conrod
-                is_area, is_length = _nsml_element(
-                    value, ids, card, is_area, is_length,
-                     elementi_id_list, centroidi_list,
-                     mass_area_length_list, total_area_length_list)
-                assert is_length, (is_area, is_length)
-
-            elif nsm_type == 'PROD':
-                pids = get_pids_list([model.prod])
-                cards = [model.crod]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-            elif nsm_type == 'PBAR':
-                pids = get_pids_list([model.pbar, model.pbarl])
-                cards = [model.cbar]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-            elif nsm_type == 'PBEAM':
-                pids = get_pids_list([model.pbeam, model.pbeaml])
-                cards = [model.cbeam]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-
-            elif nsm_type == 'PSHELL':
-                pids = get_pids_list([model.pshell])
-                cards = [model.ctria3, model.cquad4, model.ctria6, model.cquad8, model.cquad]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-
-            elif nsm_type == 'PCOMP':
-                pids = get_pids_list([model.pcomp, model.pcompg])
-                cards = [model.ctria3, model.cquad4, model.ctria6, model.cquad8, model.cquad]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-
-            elif nsm_type == 'ELEMENT':
-                for card in model.element_cards:
-                    if len(card) == 0:
-                        continue
-                    is_area, is_length = _nsml_element(
-                        value, ids, card, is_area, is_length,
-                        elementi_id_list, centroidi_list,
-                        mass_area_length_list, total_area_length_list)
-            else:
-                raise NotImplementedError(nsm_type)
-
-            if is_area and is_length:
-                raise RuntimeError('Area and length are are both used')
-
-            elementi_id = np.hstack(elementi_id_list)
-            centroidi = np.vstack(centroidi_list)
-            mass_area_length = np.hstack(mass_area_length_list)
-            total_area_length = np.hstack(total_area_length_list).sum()
-            massi = mass_area_length / total_area_length
-            del mass_area_length, total_area_length
-
-            neidi = len(elementi_id)
-            assert len(elementi_id) == neidi, (massi, neidi)
-            assert centroidi.shape == (neidi, 3), f'neidi={neidi}, centroidi.shape={centroidi.shape}'
-
-            if element_id is not None:
-                #grouped_sums = np.bincount(labels, weights=values)
-                # TODO: speed this up
-                element_ids_out2_list = []
-                centroid2_list = []
-                mass2_list = []
-                for eidii, centroidii, massii in zip(elementi_id, centroidi, massi):
-                    if eidii in element_id:
-                        print(f'adding {eidii} {massii}')
-                        element_ids_out2_list.append(eidii)
-                        centroid2_list.append(centroidii)
-                        mass2_list.append(massii)
-                elementi_id = np.array(element_ids_out2_list)
-                centroidi = np.array(centroid2_list)
-                massi = np.array(mass2_list)
-                neidi = len(elementi_id)
-                assert len(elementi_id) == len(massi), (len(elementi_id), len(massi))
-                assert len(elementi_id) == len(centroidi), (len(elementi_id), len(centroidi))
-                assert len(elementi_id) == neidi, (massi, neidi)
-                assert centroidi.shape == (neidi, 3), f'neidi={neidi}, centroidi.shape={centroidi.shape}'
-
-            assert len(massi) == len(centroidi)
-            assert len(massi) == len(elementi_id)
-            # mass_total = massi.sum()
-            dx = centroidi[:, 0]
-            dy = centroidi[:, 1]
-            dz = centroidi[:, 2]
-            # massi[:, np.newaxis] *
-            # inertiai = np.column_stack([dx2, dy2, dz2, dxy, dxz, dyz])
-            Ixx = massi * (dy ** 2 + dz ** 2)
-            Iyy = massi * (dx ** 2 + dz ** 2)
-            Izz = massi * (dx ** 2 + dy ** 2)
-            Ixy = massi * (dx * dy)
-            Ixz = massi * (dx * dz)
-            Iyz = massi * (dy * dz)
-            inertiai = np.stack([Ixx, Iyy, Izz, Ixy, Ixz, Iyz], axis=1, out=None)
-
-            element_id_list.append(elementi_id)
-            mass_list.append(massi)
-            centroid_list.append(centroidi)
-            inertia_list.append(inertiai)
-
-        element_id_out = np.hstack(element_id_list)
-        mass_out = np.hstack(mass_list)
-        centroid_out = np.vstack(centroid_list)
-        inertia_out = np.vstack(inertia_list)
-
-        neidi = len(element_id_out)
-        assert len(mass_out) == neidi, (mass_out, neidi)
-        assert centroid_out.shape == (neidi, 3), f'neidi={neidi}, centroid.shape={centroid_out.shape}'
-        assert inertia_out.shape == (neidi, 6), f'neidi={neidi}, inertia.shape={inertia_out.shape}'
-        return element_id_out, mass_out, centroid_out, inertia_out
+        self.model.log.info('NSM1 - inertia')
+        element_id, mass, centroid, inertia = inertia1_func(
+            self, element_id=element_id)
+        return element_id, mass, centroid, inertia
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -612,147 +478,9 @@ class NSML1(NSM1i):
 
     def inertia(self, element_id: np.ndarray | list[int] | None=None,
                 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        element_id_list = []
-        mass_list = []
-        centroid_list = []
-        inertia_list = []
-        model = self.model
-
-        for nsm_id, nsm_type, value, (insm0, insm1) in zip_longest(
-                self.nsm_id, self.nsm_type, self.value, self.ielement):
-            ids = self.pid_eid[insm0:insm1]
-            ids.sort()
-            is_area = False
-            is_length = False
-
-            elementi_id_list = []
-            centroidi_list = []
-            # inertiai_list = []
-            mass_area_length_list = []
-            total_area_length_list = []
-            if nsm_type == 'CONROD':
-                card = model.conrod
-                is_area, is_length = _nsml_element(
-                    value, ids, card, is_area, is_length,
-                     elementi_id_list, centroidi_list,
-                     mass_area_length_list, total_area_length_list)
-                assert is_length, (is_area, is_length)
-
-            elif nsm_type == 'PROD':
-                pids = get_pids_list([model.prod])
-                cards = [model.crod]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-            elif nsm_type == 'PBAR':
-                pids = get_pids_list([model.pbar, model.pbarl])
-                cards = [model.cbar]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-            elif nsm_type == 'PBEAM':
-                pids = get_pids_list([model.pbeam, model.pbeaml])
-                cards = [model.cbeam]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-
-            elif nsm_type == 'PSHELL':
-                pids = get_pids_list([model.pshell])
-                cards = [model.ctria3, model.cquad4, model.ctria6, model.cquad8, model.cquad]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-
-            elif nsm_type == 'PCOMP':
-                pids = get_pids_list([model.pcomp, model.pcompg])
-                cards = [model.ctria3, model.cquad4, model.ctria6, model.cquad8, model.cquad]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-
-            elif nsm_type == 'ELEMENT':
-                for card in model.element_cards:
-                    if len(card) == 0:
-                        continue
-                    is_area, is_length = _nsml_element(
-                        value, ids, card, is_area, is_length,
-                        elementi_id_list, centroidi_list,
-                        mass_area_length_list, total_area_length_list)
-            else:
-                raise NotImplementedError(nsm_type)
-
-            if is_area and is_length:
-                raise RuntimeError('Area and length are are both used')
-
-            elementi_id = np.hstack(elementi_id_list)
-            centroidi = np.vstack(centroidi_list)
-            mass_area_length = np.hstack(mass_area_length_list)
-            total_area_length = np.hstack(total_area_length_list).sum()
-            massi = mass_area_length / total_area_length
-            del mass_area_length, total_area_length
-
-            neidi = len(elementi_id)
-            assert len(elementi_id) == neidi, (massi, neidi)
-            assert centroidi.shape == (neidi, 3), f'neidi={neidi}, centroidi.shape={centroidi.shape}'
-
-            if element_id is not None:
-                #grouped_sums = np.bincount(labels, weights=values)
-                # TODO: speed this up
-                element_ids_out2_list = []
-                centroid2_list = []
-                mass2_list = []
-                for eidii, centroidii, massii in zip(elementi_id, centroidi, massi):
-                    if eidii in element_id:
-                        print(f'adding {eidii} {massii}')
-                        element_ids_out2_list.append(eidii)
-                        centroid2_list.append(centroidii)
-                        mass2_list.append(massii)
-                elementi_id = np.array(element_ids_out2_list)
-                centroidi = np.array(centroid2_list)
-                massi = np.array(mass2_list)
-                neidi = len(elementi_id)
-                assert len(elementi_id) == len(massi), (len(elementi_id), len(massi))
-                assert len(elementi_id) == len(centroidi), (len(elementi_id), len(centroidi))
-                assert len(elementi_id) == neidi, (massi, neidi)
-                assert centroidi.shape == (neidi, 3), f'neidi={neidi}, centroidi.shape={centroidi.shape}'
-
-            assert len(massi) == len(centroidi)
-            assert len(massi) == len(elementi_id)
-            # mass_total = massi.sum()
-            dx = centroidi[:, 0]
-            dy = centroidi[:, 1]
-            dz = centroidi[:, 2]
-            # massi[:, np.newaxis] *
-            # inertiai = np.column_stack([dx2, dy2, dz2, dxy, dxz, dyz])
-            Ixx = massi * (dy ** 2 + dz ** 2)
-            Iyy = massi * (dx ** 2 + dz ** 2)
-            Izz = massi * (dx ** 2 + dy ** 2)
-            Ixy = massi * (dx * dy)
-            Ixz = massi * (dx * dz)
-            Iyz = massi * (dy * dz)
-            inertiai = np.stack([Ixx, Iyy, Izz, Ixy, Ixz, Iyz], axis=1, out=None)
-
-            element_id_list.append(elementi_id)
-            mass_list.append(massi)
-            centroid_list.append(centroidi)
-            inertia_list.append(inertiai)
-
-        element_id_out = np.hstack(element_id_list)
-        mass_out = np.hstack(mass_list)
-        centroid_out = np.vstack(centroid_list)
-        inertia_out = np.vstack(inertia_list)
-
-        neidi = len(element_id_out)
-        assert len(mass_out) == neidi, (mass_out, neidi)
-        assert centroid_out.shape == (neidi, 3), f'neidi={neidi}, centroid.shape={centroid_out.shape}'
-        assert inertia_out.shape == (neidi, 6), f'neidi={neidi}, inertia.shape={inertia_out.shape}'
-        return element_id_out, mass_out, centroid_out, inertia_out
+        element_id, mass, centroid, inertia = inertia1_func(
+            self, element_id=element_id)
+        return element_id, mass, centroid, inertia
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -771,33 +499,99 @@ class NSML1(NSM1i):
         return
 
 
-def get_pids_list(cards: list) -> np.ndarray:
+def get_pids_list(cards: list, ids) -> np.ndarray:
     pids_list = []
     for card in cards:
         pids_list.append(card.property_id)
     pids = np.hstack(pids_list)
+    if len(ids) == 1 and ids[0] != -1:
+        pids = np.intersect1d(pids, ids)
     assert len(pids) > 0, pids
     return pids
 
 
-def _nsml_property(value, pids, cards, is_area, is_length,
+def _nsml_property(nsm_id: int,
+                   value: float,
+                   pids, element_cards: list,
+                   is_area: bool, is_length: bool,
                    elementi_id_list, centroidi_list,
-                   mass_area_length_list, total_area_length_list):
-    cards2 = []
-    for card in cards:
+                   mass_area_length_list, total_area_length_list,
+                   divide_by_sum: bool, log: SimpleLogger) -> tuple[bool, bool]:
+    assert isinstance(value, float), value
+
+    # filter the cards by property id
+    element_cards2 = []
+    for card in element_cards:
         if len(card) == 0:
             continue
         pids_common = np.intersect1d(pids, card.property_id)
         if len(pids_common) == 0:
             continue
         card2 = card.slice_card_by_property_id(pids_common)
-        ids2 = card.element_id
-        is_area, is_length = _nsml_element(
-            value, ids2, card2, is_area, is_length,
-            elementi_id_list, centroidi_list,
-            mass_area_length_list, total_area_length_list)
-        cards2.append(card2)
-    assert len(cards2) > 0, cards2
+        ids2 = card2.element_id
+        log.debug(f'    NSM={nsm_id} {card.type} pids_common={pids_common} eids={ids2} value={value}')
+        # is_area, is_length = _nsml_element(
+        #     value, ids2, card2, is_area, is_length,
+        #     elementi_id_list, centroidi_list,
+        #     mass_area_length_list, total_area_length_list, divide_by_sum)
+        element_cards2.append(card2)
+    assert len(element_cards2) > 0, element_cards2
+
+    card0 = element_cards2[0]  # CQUAD4
+    if card0.type in {'CROD', 'CTUBE', 'CBAR', 'CBEAM', 'CBEND'}:
+        is_length = True
+    elif card0.type in {'CTRIA3', 'CTRIA6', 'CTRIAR',
+                        'CQUAD4', 'CQUAD8', 'CQUADR'}:
+        is_area = True
+    else:  # pragma: no cover
+        raise NotImplementedError(card0.type)
+
+    element_id_list = []
+    area_list = []
+    mass_list = []
+    centroid_list = []
+    for card in element_cards2:
+        neid = len(card)
+        element_idi = card.element_id
+        centroidi = card.centroid()
+        # massi = card.mass()
+
+        # areai = None
+        if is_length:
+            areai = card.length()
+        elif is_area:
+            areai = card.area()
+        else:  # pragma: no cover
+            raise NotImplementedError(card.type)
+
+        if divide_by_sum:
+            massi = np.ones(neid) * value
+        else:
+            massi = areai * value
+        log.debug(f'      {card.type}: massi={massi} areai={areai}')
+        areai.sum()
+
+        element_id_list.append(element_idi)
+        area_list.append(areai)
+        mass_list.append(massi)
+        centroid_list.append(centroidi)
+
+    element_id = np.hstack(element_id_list)
+    area = np.hstack(area_list)
+    mass = np.hstack(mass_list)
+    centroid = np.vstack(centroid_list)
+    if divide_by_sum:
+        mass_per_area = mass / area.sum()
+        area = None
+    else:
+        mass_per_area = mass
+
+    elementi_id_list.append(element_id)
+    centroidi_list.append(centroid)
+    mass_area_length_list.append(mass_per_area)
+    total_area_length_list.append(area)
+
+    assert len(elementi_id_list) == len(centroidi_list), (len(elementi_id_list), len(centroidi_list))
     return is_area, is_length
 
 
@@ -806,30 +600,44 @@ def _nsml_element(value: float, ids: np.ndarray, card,
                   elementi_id_list,
                   centroidi_list,
                   mass_area_length_list,
-                  total_area_length_list) -> tuple[bool, bool]:
-    assert ids.min() > 0, ids
-    eid_common = np.intersect1d(ids, card.element_id)
+                  total_area_length_list,
+                  divide_by_sum: bool) -> tuple[bool, bool]:
+    if len(ids) == 1 and ids[0] == -1:  # ALL
+        eid_common = card.element_id
+    else:
+        assert ids.min() > 0, ids
+        eid_common = np.intersect1d(ids, card.element_id)
     if len(eid_common) == 0:
         return is_area, is_length
+
     # print(f'{card.type} eids={eid_common} element_id={card.element_id}')
     if card.type in AREA_ETYPES:
         card2 = card.slice_card_by_id(eid_common)
-        value_per = card2.area()
-        centroid = card2.centroid()
+        area = card2.area()
         is_area = True
     elif card.type in LENGTH_ETYPES:
         card2 = card.slice_card_by_id(eid_common)
-        value_per = card2.length()
-        centroid = card2.centroid()
+        area = card2.length()
         is_length = True
     else:
         raise NotImplementedError(card.type)
-    mass_area_length = value_per * value
+    centroid = card2.centroid()
+
+    neid = len(card2)
+    if divide_by_sum:
+        mass_area_length = np.ones(neid) * value
+    else:
+        mass_area_length = area * value
+
+    # if divide_by_sum:
+    #     mass_area_length = area * value
+    # else:
+    #     mass_area_length = np.ones(neid) * value
 
     elementi_id_list.append(eid_common)
     centroidi_list.append(centroid)
     mass_area_length_list.append(mass_area_length)
-    total_area_length_list.append(value_per)
+    total_area_length_list.append(area)
     return is_area, is_length
 
 
@@ -856,259 +664,17 @@ class NSM(NSMi):
 
     def inertia(self, element_id: np.ndarray | list[int] | None=None,
                 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        element_id_list = []
-        mass_list = []
-        centroid_list = []
-        inertia_list = []
-        model = self.model
-
-        # nsm_str = array_str(self.nsm_id, size=size)
-        # pid_eid_str = array_str(self.pid_eid, size=size)
-        # values = array_float(self.value, size=size, is_double=False)
-
-        for nsm_id, nsm_type, value, (ivalue0, ivalue1) in zip_longest(
-                self.nsm_id, self.nsm_type, self.value, self.ivalue):
-            ids = self.pid_eid[ivalue0:ivalue1]
-            # assert len(ids) == len(value), value
-            ids.sort()
-            is_area = False
-            is_length = False
-
-            elementi_id_list = []
-            centroidi_list = []
-            # inertiai_list = []
-            mass_area_length_list = []
-            total_area_length_list = []
-            assert ids.min() > 0, ids
-            if nsm_type == 'CONROD':
-                card = model.conrod
-                is_area, is_length = _nsml_element(
-                    value, ids, card, is_area, is_length,
-                     elementi_id_list, centroidi_list,
-                     mass_area_length_list, total_area_length_list)
-                assert is_length, (is_area, is_length)
-            elif nsm_type == 'PSHELL':
-                pids = get_pids_list([model.pshell])
-                cards = [model.ctria3, model.cquad4, model.ctria6, model.cquad8, model.cquad]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-
-            elif nsm_type == 'PCOMP':
-                pids = get_pids_list([model.pcomp, model.pcompg])
-                cards = [model.ctria3, model.cquad4, model.ctria6, model.cquad8, model.cquad]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-
-            elif nsm_type == 'ELEMENT':
-                for card in model.element_cards:
-                    if len(card) == 0:
-                        continue
-                    is_area, is_length = _nsml_element(
-                        value, ids, card, is_area, is_length,
-                        elementi_id_list, centroidi_list,
-                        mass_area_length_list, total_area_length_list)
-            else:
-                raise NotImplementedError(nsm_type)
-
-            if is_area and is_length:
-                raise RuntimeError('Area and length are are both used')
-
-            elementi_id = np.hstack(elementi_id_list)
-            centroidi = np.vstack(centroidi_list)
-            mass_area_length = np.hstack(mass_area_length_list)
-            total_area_length = np.hstack(total_area_length_list).sum()
-            massi = mass_area_length / total_area_length
-            del mass_area_length, total_area_length
-
-            neidi = len(elementi_id)
-            assert len(elementi_id) == neidi, (massi, neidi)
-            assert centroidi.shape == (neidi, 3), f'neidi={neidi}, centroidi.shape={centroidi.shape}'
-
-            if element_id is not None:
-                #grouped_sums = np.bincount(labels, weights=values)
-                # TODO: speed this up
-                element_ids_out2_list = []
-                centroid2_list = []
-                mass2_list = []
-                for eidii, centroidii, massii in zip(elementi_id, centroidi, massi):
-                    if eidii in element_id:
-                        print(f'adding {eidii} {massii}')
-                        element_ids_out2_list.append(eidii)
-                        centroid2_list.append(centroidii)
-                        mass2_list.append(massii)
-                elementi_id = np.array(element_ids_out2_list)
-                centroidi = np.array(centroid2_list)
-                massi = np.array(mass2_list)
-                neidi = len(elementi_id)
-                assert len(elementi_id) == len(massi), (len(elementi_id), len(massi))
-                assert len(elementi_id) == len(centroidi), (len(elementi_id), len(centroidi))
-                assert len(elementi_id) == neidi, (massi, neidi)
-                assert centroidi.shape == (neidi, 3), f'neidi={neidi}, centroidi.shape={centroidi.shape}'
-
-            assert len(massi) == len(centroidi)
-            assert len(massi) == len(elementi_id)
-            # mass_total = massi.sum()
-            dx = centroidi[:, 0]
-            dy = centroidi[:, 1]
-            dz = centroidi[:, 2]
-            # massi[:, np.newaxis] *
-            # inertiai = np.column_stack([dx2, dy2, dz2, dxy, dxz, dyz])
-            Ixx = massi * (dy ** 2 + dz ** 2)
-            Iyy = massi * (dx ** 2 + dz ** 2)
-            Izz = massi * (dx ** 2 + dy ** 2)
-            Ixy = massi * (dx * dy)
-            Ixz = massi * (dx * dz)
-            Iyz = massi * (dy * dz)
-            inertiai = np.stack([Ixx, Iyy, Izz, Ixy, Ixz, Iyz], axis=1, out=None)
-
-            element_id_list.append(elementi_id)
-            mass_list.append(massi)
-            centroid_list.append(centroidi)
-            inertia_list.append(inertiai)
-
-        element_id_out = np.hstack(element_id_list)
-        mass_out = np.hstack(mass_list)
-        centroid_out = np.vstack(centroid_list)
-        inertia_out = np.vstack(inertia_list)
-
-        neidi = len(element_id_out)
-        assert len(mass_out) == neidi, (mass_out, neidi)
-        assert centroid_out.shape == (neidi, 3), f'neidi={neidi}, centroid.shape={centroid_out.shape}'
-        assert inertia_out.shape == (neidi, 6), f'neidi={neidi}, inertia.shape={inertia_out.shape}'
-        return element_id_out, mass_out, centroid_out, inertia_out
+        element_id, mass, centroid, inertia = inertia_func(
+            self, element_id=element_id)
+        return element_id, mass, centroid, inertia
 
 
 class NSML(NSMi):
     def inertia(self, element_id: np.ndarray | list[int] | None=None,
                 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        element_id_list = []
-        mass_list = []
-        centroid_list = []
-        inertia_list = []
-        model = self.model
-
-        # nsm_str = array_str(self.nsm_id, size=size)
-        # pid_eid_str = array_str(self.pid_eid, size=size)
-        # values = array_float(self.value, size=size, is_double=False)
-
-        for nsm_id, nsm_type, value, (ivalue0, ivalue1) in zip_longest(
-                self.nsm_id, self.nsm_type, self.value, self.ivalue):
-            ids = self.pid_eid[ivalue0:ivalue1]
-            # assert len(ids) == len(value), value
-            ids.sort()
-            is_area = False
-            is_length = False
-
-            elementi_id_list = []
-            centroidi_list = []
-            # inertiai_list = []
-            mass_area_length_list = []
-            total_area_length_list = []
-            assert ids.min() > 0, ids
-            if nsm_type == 'CONROD':
-                card = model.conrod
-                is_area, is_length = _nsml_element(
-                    value, ids, card, is_area, is_length,
-                     elementi_id_list, centroidi_list,
-                     mass_area_length_list, total_area_length_list)
-                assert is_length, (is_area, is_length)
-            elif nsm_type == 'PSHELL':
-                pids = get_pids_list([model.pshell])
-                cards = [model.ctria3, model.cquad4, model.ctria6, model.cquad8, model.cquad]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-
-            elif nsm_type == 'PCOMP':
-                pids = get_pids_list([model.pcomp, model.pcompg])
-                cards = [model.ctria3, model.cquad4, model.ctria6, model.cquad8, model.cquad]
-                is_area, is_length = _nsml_property(
-                    value, pids, cards, is_area, is_length,
-                    elementi_id_list, centroidi_list,
-                    mass_area_length_list, total_area_length_list)
-
-            elif nsm_type == 'ELEMENT':
-                for card in model.element_cards:
-                    if len(card) == 0:
-                        continue
-                    is_area, is_length = _nsml_element(
-                        value, ids, card, is_area, is_length,
-                        elementi_id_list, centroidi_list,
-                        mass_area_length_list, total_area_length_list)
-            else:
-                raise NotImplementedError(nsm_type)
-
-            if is_area and is_length:
-                raise RuntimeError('Area and length are are both used')
-
-            elementi_id = np.hstack(elementi_id_list)
-            centroidi = np.vstack(centroidi_list)
-            mass_area_length = np.hstack(mass_area_length_list)
-            total_area_length = np.hstack(total_area_length_list).sum()
-            massi = mass_area_length / total_area_length
-            del mass_area_length, total_area_length
-
-            neidi = len(elementi_id)
-            assert len(elementi_id) == neidi, (massi, neidi)
-            assert centroidi.shape == (neidi, 3), f'neidi={neidi}, centroidi.shape={centroidi.shape}'
-
-            if element_id is not None:
-                #grouped_sums = np.bincount(labels, weights=values)
-                # TODO: speed this up
-                element_ids_out2_list = []
-                centroid2_list = []
-                mass2_list = []
-                for eidii, centroidii, massii in zip(elementi_id, centroidi, massi):
-                    if eidii in element_id:
-                        print(f'adding {eidii} {massii}')
-                        element_ids_out2_list.append(eidii)
-                        centroid2_list.append(centroidii)
-                        mass2_list.append(massii)
-                elementi_id = np.array(element_ids_out2_list)
-                centroidi = np.array(centroid2_list)
-                massi = np.array(mass2_list)
-                neidi = len(elementi_id)
-                assert len(elementi_id) == len(massi), (len(elementi_id), len(massi))
-                assert len(elementi_id) == len(centroidi), (len(elementi_id), len(centroidi))
-                assert len(elementi_id) == neidi, (massi, neidi)
-                assert centroidi.shape == (neidi, 3), f'neidi={neidi}, centroidi.shape={centroidi.shape}'
-
-            assert len(massi) == len(centroidi)
-            assert len(massi) == len(elementi_id)
-            # mass_total = massi.sum()
-            dx = centroidi[:, 0]
-            dy = centroidi[:, 1]
-            dz = centroidi[:, 2]
-            # massi[:, np.newaxis] *
-            # inertiai = np.column_stack([dx2, dy2, dz2, dxy, dxz, dyz])
-            Ixx = massi * (dy ** 2 + dz ** 2)
-            Iyy = massi * (dx ** 2 + dz ** 2)
-            Izz = massi * (dx ** 2 + dy ** 2)
-            Ixy = massi * (dx * dy)
-            Ixz = massi * (dx * dz)
-            Iyz = massi * (dy * dz)
-            inertiai = np.stack([Ixx, Iyy, Izz, Ixy, Ixz, Iyz], axis=1, out=None)
-
-            element_id_list.append(elementi_id)
-            mass_list.append(massi)
-            centroid_list.append(centroidi)
-            inertia_list.append(inertiai)
-
-        element_id_out = np.hstack(element_id_list)
-        mass_out = np.hstack(mass_list)
-        centroid_out = np.vstack(centroid_list)
-        inertia_out = np.vstack(inertia_list)
-
-        neidi = len(element_id_out)
-        assert len(mass_out) == neidi, (mass_out, neidi)
-        assert centroid_out.shape == (neidi, 3), f'neidi={neidi}, centroid.shape={centroid_out.shape}'
-        assert inertia_out.shape == (neidi, 6), f'neidi={neidi}, inertia.shape={inertia_out.shape}'
-        return element_id_out, mass_out, centroid_out, inertia_out
+        element_id, mass, centroid, inertia = inertia_func(
+            self, element_id=element_id)
+        return element_id, mass, centroid, inertia
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -1303,3 +869,307 @@ class NSMADD(ADD):
         #idim = self.inode
         #spc.node_id = hslice_by_idim(i, idim, self.node_id)
         #return spc
+
+
+def inertia_func(nsm_obj: NSM | NSML,
+                 element_id: np.ndarray | list[int] | None = None,
+                ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    divide_by_sum = False
+    if nsm_obj.type in ["NSML1", "NSML"]:
+        divide_by_sum = True
+
+    log = nsm_obj.model.log
+    log.debug(f'  {nsm_obj.type}: divide_by_mass={divide_by_sum}')
+    element_id_list = []
+    mass_list = []
+    centroid_list = []
+    inertia_list = []
+    model = nsm_obj.model
+
+    for nsm_id, nsm_type, (ivalue0, ivalue1) in zip_longest(
+            nsm_obj.nsm_id, nsm_obj.nsm_type, nsm_obj.ivalue):
+        log.debug(f'nsm_id={nsm_id} nsm_type={nsm_type}')
+        ids = nsm_obj.pid_eid[ivalue0:ivalue1]
+        value = nsm_obj.value[ivalue0:ivalue1]
+        assert len(ids) == len(value), value
+        ids.sort()
+        is_area = False
+        is_length = False
+
+        elementi_id_list = []
+        centroidi_list = []
+        # inertiai_list = []
+        mass_area_length_list = []
+        total_area_length_list = []
+        assert ids.min() > 0, ids
+        if nsm_type == 'CONROD':
+            card = model.conrod
+            is_area, is_length = _nsml_element(
+                value, ids, card, is_area, is_length,
+                elementi_id_list, centroidi_list,
+                mass_area_length_list, total_area_length_list, divide_by_sum)
+            assert is_length, (is_area, is_length)
+        elif nsm_type == 'PSHELL':
+            pids = get_pids_list([model.pshell], ids)
+            cards = [model.ctria3, model.ctriar, model.ctria6,
+                     model.cquad4, model.cquadr, model.cquad8, model.cquad,]
+            is_area, is_length = _nsml_property(
+                nsm_id, value, pids, cards, is_area, is_length,
+                elementi_id_list, centroidi_list,
+                mass_area_length_list, total_area_length_list, divide_by_sum, log)
+
+        elif nsm_type == 'PCOMP':
+            pids = get_pids_list([model.pcomp, model.pcompg], ids)
+            cards = [model.ctria3, model.ctriar, model.ctria6,
+                     model.cquad4, model.cquadr, model.cquad8, model.cquad,]
+            is_area, is_length = _nsml_property(
+                nsm_id, value, pids, cards, is_area, is_length,
+                elementi_id_list, centroidi_list,
+                mass_area_length_list, total_area_length_list, divide_by_sum, log)
+
+        elif nsm_type == 'ELEMENT':
+            for card in model.element_cards:
+                if len(card) == 0:
+                    continue
+                is_area, is_length = _nsml_element(
+                    value, ids, card, is_area, is_length,
+                    elementi_id_list, centroidi_list,
+                    mass_area_length_list, total_area_length_list, divide_by_sum)
+        else:
+            raise NotImplementedError(nsm_type)
+
+        if is_area and is_length:
+            raise RuntimeError('Area and length are are both used')
+
+        elementi_id = np.hstack(elementi_id_list)
+        centroidi = np.vstack(centroidi_list)
+        mass_area_length = np.hstack(mass_area_length_list)
+        if divide_by_sum:
+            total_area_length = np.hstack(total_area_length_list).sum()
+            massi = mass_area_length / total_area_length
+            del mass_area_length, total_area_length
+        else:
+            assert total_area_length_list[0] is None, total_area_length_list
+            massi = mass_area_length
+            del mass_area_length
+
+        neidi = len(elementi_id)
+        assert len(elementi_id) == neidi, (massi, neidi)
+        assert centroidi.shape == (neidi, 3), f'neidi={neidi}, centroidi.shape={centroidi.shape}'
+
+        if element_id is not None:
+            # grouped_sums = np.bincount(labels, weights=values)
+            # TODO: speed this up
+            element_ids_out2_list = []
+            centroid2_list = []
+            mass2_list = []
+            for eidii, centroidii, massii in zip(elementi_id, centroidi, massi):
+                if eidii in element_id:
+                    log.debug(f'adding {eidii} {massii}')
+                    element_ids_out2_list.append(eidii)
+                    centroid2_list.append(centroidii)
+                    mass2_list.append(massii)
+            elementi_id = np.array(element_ids_out2_list)
+            centroidi = np.array(centroid2_list)
+            massi = np.array(mass2_list)
+            neidi = len(elementi_id)
+            assert len(elementi_id) == len(massi), (len(elementi_id), len(massi))
+            assert len(elementi_id) == len(centroidi), (len(elementi_id), len(centroidi))
+            assert len(elementi_id) == neidi, (massi, neidi)
+            assert centroidi.shape == (neidi, 3), f'neidi={neidi}, centroidi.shape={centroidi.shape}'
+
+        assert len(massi) == len(centroidi)
+        assert len(massi) == len(elementi_id)
+        # mass_total = massi.sum()
+        dx = centroidi[:, 0]
+        dy = centroidi[:, 1]
+        dz = centroidi[:, 2]
+        # massi[:, np.newaxis] *
+        # inertiai = np.column_stack([dx2, dy2, dz2, dxy, dxz, dyz])
+        Ixx = massi * (dy ** 2 + dz ** 2)
+        Iyy = massi * (dx ** 2 + dz ** 2)
+        Izz = massi * (dx ** 2 + dy ** 2)
+        Ixy = massi * (dx * dy)
+        Ixz = massi * (dx * dz)
+        Iyz = massi * (dy * dz)
+        inertiai = np.stack([Ixx, Iyy, Izz, Ixy, Ixz, Iyz], axis=1, out=None)
+
+        element_id_list.append(elementi_id)
+        mass_list.append(massi)
+        centroid_list.append(centroidi)
+        inertia_list.append(inertiai)
+
+    element_id_out = np.hstack(element_id_list)
+    mass_out = np.hstack(mass_list)
+    centroid_out = np.vstack(centroid_list)
+    inertia_out = np.vstack(inertia_list)
+
+    neidi = len(element_id_out)
+    assert len(mass_out) == neidi, (mass_out, neidi)
+    assert centroid_out.shape == (neidi, 3), f'neidi={neidi}, centroid.shape={centroid_out.shape}'
+    assert inertia_out.shape == (neidi, 6), f'neidi={neidi}, inertia.shape={inertia_out.shape}'
+    return element_id_out, mass_out, centroid_out, inertia_out
+
+
+def inertia1_func(nsm_obj: NSM1 | NSML1,
+                  element_id: np.ndarray | list[int] | None = None,
+                 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    divide_by_sum = False
+    if nsm_obj.type in ["NSML1", "NSML"]:
+        divide_by_sum = True
+
+    element_id_list = []
+    mass_list = []
+    centroid_list = []
+    inertia_list = []
+    model = nsm_obj.model
+
+    log = model.log
+    log.debug(f'  {nsm_obj.type}: divide_by_mass={divide_by_sum}')
+    for nsm_id, nsm_type, value, (insm0, insm1) in zip_longest(
+            nsm_obj.nsm_id, nsm_obj.nsm_type, nsm_obj.value, nsm_obj.ielement):
+        log.debug(f'  nsm_id={nsm_id} nsm_type={nsm_type}')
+        ids = nsm_obj.pid_eid[insm0:insm1]
+        assert isinstance(value, float_types), value
+        ids.sort()
+        is_area = False
+        is_length = False
+
+        elementi_id_list = []
+        centroidi_list = []
+        # inertiai_list = []
+        mass_area_length_list = []
+        total_area_length_list = []
+        # assert ids.min() > 0, (ids, nsm_type)
+        if nsm_type == 'CONROD':
+            card = model.conrod
+            log.debug(f'ids = {ids}')
+            if len(ids) == 1 and ids[0] == -1:
+                ids = card.element_id
+            is_area, is_length = _nsml_element(
+                value, ids, card, is_area, is_length,
+                 elementi_id_list, centroidi_list,
+                 mass_area_length_list, total_area_length_list, divide_by_sum)
+            assert is_length, (is_area, is_length)
+
+        elif nsm_type == 'PROD':
+            pids = get_pids_list([model.prod], ids)
+            cards = [model.crod]
+
+            is_area, is_length = _nsml_property(
+                nsm_id, value, pids, cards, is_area, is_length,
+                elementi_id_list, centroidi_list,
+                mass_area_length_list, total_area_length_list, divide_by_sum, log)
+        elif nsm_type in {'PBAR', 'PBARL'}:
+            pids = get_pids_list([model.pbar, model.pbarl], ids)
+            cards = [model.cbar]
+            is_area, is_length = _nsml_property(
+                nsm_id, value, pids, cards, is_area, is_length,
+                elementi_id_list, centroidi_list,
+                mass_area_length_list, total_area_length_list, divide_by_sum, log)
+        elif nsm_type in {'PBEAM', 'PBEAML'}:
+            pids = get_pids_list([model.pbeam, model.pbeaml], ids)
+            cards = [model.cbeam]
+            is_area, is_length = _nsml_property(
+                nsm_id, value, pids, cards, is_area, is_length,
+                elementi_id_list, centroidi_list,
+                mass_area_length_list, total_area_length_list, divide_by_sum, log)
+
+        elif nsm_type == 'PSHELL':
+            pids = get_pids_list([model.pshell], ids)
+            cards = [model.ctria3, model.cquad4, model.ctria6, model.cquad8, model.cquad]
+            is_area, is_length = _nsml_property(
+                nsm_id, value, pids, cards, is_area, is_length,
+                elementi_id_list, centroidi_list,
+                mass_area_length_list, total_area_length_list, divide_by_sum, log)
+
+        elif nsm_type == 'PCOMP':
+            pids = get_pids_list([model.pcomp, model.pcompg])
+            cards = [model.ctria3, model.cquad4, model.ctria6, model.cquad8, model.cquad]
+            is_area, is_length = _nsml_property(
+                nsm_id, value, pids, cards, is_area, is_length,
+                elementi_id_list, centroidi_list,
+                mass_area_length_list, total_area_length_list, divide_by_sum, log)
+
+        elif nsm_type == 'ELEMENT':
+            for card in model.element_cards:
+                if len(card) == 0:
+                    continue
+                is_area, is_length = _nsml_element(
+                    value, ids, card, is_area, is_length,
+                    elementi_id_list, centroidi_list,
+                    mass_area_length_list, total_area_length_list, divide_by_sum)
+        else:  # pragma: no cover
+            raise NotImplementedError(nsm_type)
+
+        if is_area and is_length:
+            raise RuntimeError('Area and length are are both used')
+
+        assert len(elementi_id_list) == len(centroidi_list), (nsm_type, len(elementi_id_list), len(centroidi_list))
+        elementi_id = np.hstack(elementi_id_list)
+        centroidi = np.vstack(centroidi_list)
+        mass_area_length = np.hstack(mass_area_length_list)
+        neidi = len(elementi_id)
+        assert centroidi.shape == (neidi, 3), f'neidi={neidi}, centroidi.shape={centroidi.shape}'
+
+        if divide_by_sum:
+            total_area_length = np.hstack(total_area_length_list).sum()
+            massi = mass_area_length / total_area_length
+            del mass_area_length, total_area_length
+        else:
+            # assert total_area_length_list[0] is None, total_area_length_list
+            massi = mass_area_length
+            del mass_area_length
+
+        if element_id is not None:
+            #grouped_sums = np.bincount(labels, weights=values)
+            # TODO: speed this up
+            element_ids_out2_list = []
+            centroid2_list = []
+            mass2_list = []
+            for eidii, centroidii, massii in zip(elementi_id, centroidi, massi):
+                if eidii in element_id:
+                    # print(f'adding {eidii} {massii}')
+                    element_ids_out2_list.append(eidii)
+                    centroid2_list.append(centroidii)
+                    mass2_list.append(massii)
+            elementi_id = np.array(element_ids_out2_list)
+            centroidi = np.array(centroid2_list)
+            massi = np.array(mass2_list)
+            neidi = len(elementi_id)
+            assert len(elementi_id) == len(massi), (len(elementi_id), len(massi))
+            assert len(elementi_id) == len(centroidi), (len(elementi_id), len(centroidi))
+            assert len(elementi_id) == neidi, (massi, neidi)
+            assert centroidi.shape == (neidi, 3), f'neidi={neidi}, centroidi.shape={centroidi.shape}'
+
+        assert len(massi) == len(centroidi)
+        assert len(massi) == len(elementi_id)
+        # mass_total = massi.sum()
+        dx = centroidi[:, 0]
+        dy = centroidi[:, 1]
+        dz = centroidi[:, 2]
+        # massi[:, np.newaxis] *
+        # inertiai = np.column_stack([dx2, dy2, dz2, dxy, dxz, dyz])
+        Ixx = massi * (dy ** 2 + dz ** 2)
+        Iyy = massi * (dx ** 2 + dz ** 2)
+        Izz = massi * (dx ** 2 + dy ** 2)
+        Ixy = massi * (dx * dy)
+        Ixz = massi * (dx * dz)
+        Iyz = massi * (dy * dz)
+        inertiai = np.stack([Ixx, Iyy, Izz, Ixy, Ixz, Iyz], axis=1, out=None)
+
+        element_id_list.append(elementi_id)
+        mass_list.append(massi)
+        centroid_list.append(centroidi)
+        inertia_list.append(inertiai)
+
+    element_id_out = np.hstack(element_id_list)
+    mass_out = np.hstack(mass_list)
+    centroid_out = np.vstack(centroid_list)
+    inertia_out = np.vstack(inertia_list)
+
+    neidi = len(element_id_out)
+    assert len(mass_out) == neidi, (mass_out, neidi)
+    assert centroid_out.shape == (neidi, 3), f'neidi={neidi}, centroid.shape={centroid_out.shape}'
+    assert inertia_out.shape == (neidi, 6), f'neidi={neidi}, inertia.shape={inertia_out.shape}'
+    return element_id_out, mass_out, centroid_out, inertia_out

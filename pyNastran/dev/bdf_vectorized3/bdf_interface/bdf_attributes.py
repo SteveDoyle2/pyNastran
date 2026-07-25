@@ -166,7 +166,7 @@ from .breakdowns import (
     get_area_breakdown, get_volume_breakdown,
     NO_LENGTH, NO_AREA, NO_VOLUME, NO_MASS,
 )
-
+from pyNastran.dev.bdf_vectorized3.mesh_utils.mass_properties import mass_properties
 
 if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.dev.bdf_vectorized3.bdf import PARAM, MDLPRM, FLUTTER
@@ -1618,7 +1618,29 @@ class BDFAttributes:
             mass = mass2[i]
         return mass
 
-    def inertia_sum(self, element_id: np.ndarray | list[int] | None = None,
+    @property
+    def wtmass(self) -> float:
+        """
+        Gets the PARAM,WTMASS value, which defines the weight to mass
+        conversion factor
+
+        kg -> kg : 1.0
+        lb -> slug : 1/32.2
+        lb -> slinch : 1/(32.2*12)=1/386.4
+        """
+        wtmass = 1.0
+        if 'WTMASS' in self.params:
+            param = self.params['WTMASS']
+            wtmass = param.values[0]
+        return wtmass
+
+    def inertia_sum(self, nsm_id: int=0,
+                    element_id: np.ndarray | list[int] | None = None,
+                    reference_point: Optional[np.ndarray] = None,
+                    inertia_reference: str = "cg",
+                    sym_axis: str = "",
+                    scale: Optional[float] = None,
+                    include_base_mass: bool=True,
                     nansum: bool=False) -> tuple[float, np.ndarray, np.ndarray]:  # pragma: no cover
         """
         mass moment of inertia
@@ -1627,13 +1649,37 @@ class BDFAttributes:
         ----------
         element_id : Optional[np.ndarray]
             unused
+        reference_point : (3, ) ndarray; default = <0,0,0>.
+            an array that defines the origin of the frame.
+        inertia_reference : str; default='cg'
+            'cg' : inertia is taken about the cg
+            'ref' : inertia is about the reference point
+        sym_axis : str; default=''
+            'yz', 'xz', 'xy'
+        scale : float; default=WTMASS
+            scales weight to mass (1/g)
+            overwrites PARAM,WTMASS
         nansum : bool; default=False
             use np.nansum instead of np.sum
+
+        Returns
+        -------
+        mass : float
+            the mass of the model; wtmass is considered
+        cg : (3, ) float ndarray
+            the cg of the model as an array.
+        I : (6, ) float ndarray
+            moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]); wtmass is considered
+
         """
         fsum = np.nansum if nansum else np.sum
-        element_ids, mass, centroid, inertia = self.inertia(element_id=element_id)
+
+        element_ids, mass, centroid, inertia = self.inertia(
+            nsm_id=nsm_id, element_id=element_id,
+            reference_point=reference_point, inertia_reference=inertia_reference,
+            sym_axis=sym_axis, scale=scale, include_base_mass=include_base_mass)
         mass_total = fsum(mass)
-        cg_total = fsum(mass[:, np.newaxis] * centroid).sum(axis=0) / mass_total
+        cg_total = fsum(mass[:, np.newaxis] * centroid, axis=0) / mass_total
         inertia_total = fsum(inertia, axis=0)
         assert len(cg_total) == 3, cg_total
         assert len(inertia_total) == 6, inertia_total
@@ -1723,131 +1769,21 @@ class BDFAttributes:
 
     def inertia(self, nsm_id: int=0,
                 element_id: np.ndarray | list[int] | None = None,
+                reference_point: Optional[np.ndarray] = None,
+                inertia_reference: str = "cg",
+                sym_axis: str = "",
+                scale: Optional[float] = None,
                 include_base_mass: bool=True) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         [element_id, mass, cg, mass moment of inertia]
 
         TODO: doesn't handle WTMASS
         """
-        log = self.log
-        element_ids_all = []
-        #inertias = []
-        #mass = 0.
-        mass_cg = np.zeros(3, dtype='float64')
-        masses = []
-        centroids = []
-        element_cards = [card for card in self.element_cards
-                         if card.n > 0 and card.type not in NO_MASS]
-
-        if nsm_id == 0:
-            element_id_nsm = np.array([], dtype='int32')
-            mass_nsm = np.array([], dtype='float64')
-            centroid_nsm = np.zeros((0, 3), dtype='float64')
-            inertia_nsm = np.zeros((0, 6), dtype='float64')
-        else:
-            nsm_ids = self.nsmadd.get_reduced_nsms(stop_on_failure=False)
-            if nsm_id in nsm_ids:
-                self.log.warning(f'nsm_ids = {nsm_ids}')
-                nsm_cards = []
-                for cards in nsm_ids[nsm_id]:
-                    if isinstance(cards, list):
-                        nsm_cards.extend(cards)
-                    else:
-                        raise TypeError(cards)
-                print(f'nsm_cards = {nsm_cards}')
-
-                # raise NotImplementedError(f'nsm_id={nsm_id} not implemented')
-            else:
-                nsm_cards = []
-                for nsm in [self.nsm, self.nsm1, self.nsml1, self.nsml]:
-                    if nsm_id not in nsm.nsm_id:
-                        continue
-                    nsm_card = nsm.slice_card_by_id(nsm_id)
-                    nsm_cards.append(nsm_card)
-                # self.log.warning(f'cards = {cards}')
-
-            for nsm_card in nsm_cards:
-                # print(card.get_stats())
-                element_id_nsm, mass_nsm, centroid_nsm, inertia_nsm = nsm_card.inertia(element_id=element_id)
-                neidi = len(element_id_nsm)
-                assert len(mass_nsm) == neidi, (mass_nsm, neidi)
-                assert centroid_nsm.shape == (neidi, 3), f'neidi={neidi}, centroid_nsm.shape={centroid_nsm.shape}'
-                assert inertia_nsm.shape == (neidi, 6), f'neidi={neidi}, inertia_nsm.shape={inertia_nsm.shape}'
-                element_ids_all.append(element_id_nsm)
-                masses.append(mass_nsm)
-                centroids.append(centroid_nsm)
-
-        if include_base_mass:
-            for card in element_cards:
-                if element_id:
-                    eids_common = np.intersect1d(element_id, card.element_id)
-                    # print(f'eids_common = {eids_common}')
-                    if len(eids_common) == 0:
-                        continue
-                    card = card.slice_card_by_id(eids_common)
-
-                element_ids_all.append(card.element_id)
-                massi = card.mass()
-                masses.append(massi)
-                centroidi = card.centroid()
-                if np.any(np.isnan(centroidi)):
-                    log.error(f'{card.type} has nan centroid; centroid={centroidi}')
-                    raise RuntimeError(f'{card.type} has nan centroid; centroid={centroidi}')
-                centroids.append(centroidi)
-
-        if len(masses) == 0:
-            element_id = np.array([], dtype='int32')
-            mass = np.array([], dtype='float64')
-            cg = np.zeros((0, 3), dtype='float64')
-            inertia = np.zeros((0, 6), dtype='float64')
-            log.error('no elements with mass/inertia')
-            return element_id, mass, cg, inertia
-            # return element_id_nsm, mass_nsm, centroid_nsm, inertia_nsm
-
-        element_id_out = np.hstack(element_ids_all)
-        mass = np.hstack(masses)
-        centroid = np.vstack(centroids)
-
-        # Find unique keys and map them to clean 0, 1, 2... indices
-        # element_ids_unique, inverse_indices = np.unique(element_id_out, return_inverse=True)
-
-        # Sum using mapped indices
-        # sums = np.bincount(inverse_indices, weights=mass)
-
-
-        #abs_mass = np.abs(mass).sum()
-        neids = len(element_id_out)
-        #if abs_mass == 0.:
-            #assert len(element_id) > 0, element_id
-            #cg = np.full(3, np.nan, dtype='float64')
-            #inertia = np.full(6, np.nan, dtype='float64')
-            #log.error('no elements with mass...inertia is nan')
-            #return element_id, abs_mass, cg, inertia
-        mass_cg = mass[:, None] * centroid
-        imass = (mass != 0)
-        cg = np.full(centroid.shape, np.nan, dtype=centroid.dtype)
-        cg[imass] = mass_cg[imass, :] / mass[imass, np.newaxis]
-
-        #cg = mass_cg.sum(axis=0) / mass.sum()
-        #assert len(cg) == 3, cg
-        assert cg.shape == (neids, 3), f'neid={neids}, cg.shape={cg.shape}'
-
-        dxyz = centroid - cg
-        dx = dxyz[:, 0]
-        dy = dxyz[:, 1]
-        dz = dxyz[:, 2]
-        Ixx = mass * (dy ** 2 + dz ** 2)
-        Iyy = mass * (dx ** 2 + dz ** 2)
-        Izz = mass * (dx ** 2 + dy ** 2)
-        Ixy = mass * (dx * dy)
-        Ixz = mass * (dx * dz)
-        Iyz = mass * (dy * dz)
-        inertia = np.stack([Ixx, Iyy, Izz, Ixy, Ixz, Iyz], axis=1, out=None)
-
-        nrows = len(mass)
-        assert inertia.shape == (nrows, 6), inertia.shape
-        mass.sum()
-        return element_id_out, mass, centroid, inertia
+        element_id, mass, centroid, inertia = mass_properties(
+            self, nsm_id, element_id=element_id,
+            reference_point=reference_point, inertia_reference=inertia_reference,
+            sym_axis=sym_axis, scale=scale, include_base_mass=include_base_mass)
+        return element_id, mass, centroid, inertia
 
     def length(self) -> float:
         assert len(self.grid), 'No grids'

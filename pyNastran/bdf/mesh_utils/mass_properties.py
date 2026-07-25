@@ -645,16 +645,7 @@ def _mass_properties(
     inertia_list = []
     mass = 0.0
     cg = np.array([0.0, 0.0, 0.0])
-    inertia = np.array(
-        [
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-        ]
-    )
+    inertia = np.zeros(6)
 
     # pre-compute node positions once
     xyz = {}
@@ -1332,16 +1323,7 @@ def mass_properties_nsm(
 
     mass = 0.0
     cg = np.array([0.0, 0.0, 0.0])
-    inertia = np.array(
-        [
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-        ]
-    )
+    inertia = np.zeros(6)
     mass_list = []
     cg_list = []
     inertia_list = []

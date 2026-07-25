@@ -21,7 +21,7 @@ from pyNastran.utils.mathematics import integrate_positive_unit_line # integrate
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, make_idim, hslice_by_idim, searchsorted_filter, # vslice_by_idim,
-    parse_check, save_ifile_comment,
+    parse_check, save_ifile_comment, slice_element_by_property_id,
 )
 from .rod import line_pid_mass_per_length, line_length, line_vector_length, line_centroid, e_g_nu_from_property_id
 from .bar import (apply_bar_default, init_x_g0, get_bar_vector, split_offt_vector,
@@ -315,6 +315,9 @@ class CBEAM(Element):
         self.sa = sa
         self.sb = sb
         self.n = len(property_id)
+
+    def slice_card_by_property_id(self, property_id: np.ndarray):
+        return slice_element_by_property_id(self, property_id)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['element_id'].append(self.element_id)

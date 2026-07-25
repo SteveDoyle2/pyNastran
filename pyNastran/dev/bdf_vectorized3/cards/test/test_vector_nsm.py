@@ -536,7 +536,7 @@ class TestNsmV3(unittest.TestCase):
         G = None
         nu = 0.3
         nids = [1, 2, 3, 4]
-        model = BDF(debug=False)
+        model = BDF(debug=True)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -683,12 +683,12 @@ class TestNsmV3(unittest.TestCase):
         nsm_ids.sort()
         for nsm_id in nsm_ids:
             mass1_expected = expected_dict[nsm_id]
+            # assert mass1_expected >= 0, mass1_expected
             if mass1_expected == -1.0:
                 with self.assertRaises(RuntimeError):
                     eids, mass1, unused_cg, unused_I = model.inertia(nsm_id=nsm_id)
             else:
-                eids, mass1, unused_cg, unused_I = model.inertia(nsm_id=nsm_id)
-                mass1 = mass1.sum()
+                mass1, unused_cg, unused_I = model.inertia_sum(nsm_id=nsm_id)
                 if mass1 != mass1_expected:
                     unused_mass2 = model.inertia(nsm_id=nsm_id)[1]
                     raise RuntimeError('nsm_id=%s mass != %s; mass1=%s' % (nsm_id, mass1_expected, mass1))
@@ -1495,10 +1495,10 @@ class TestNsmV3(unittest.TestCase):
         # Iyy = m*(dx^2+dz^2) = 3*(0.25+0) = 0.75
         # Izz = m*(dx^2+dy^2) = 3*(0.25+0.25) = 1.5
         # Ixy = m*dx*dy = 3*0.5*0.5 = 0.75
-        eids, mass, cg, inertia = model.inertia(
-            nsm_id=190, element_id=[1])
-            # reference_point=[0., 0., 0.], inertia_reference='ref')
-        self.assertAlmostEqual(mass.sum(), 3.0)
+        mass, cg, inertia = model.inertia_sum(
+            nsm_id=190, element_id=[1],
+            reference_point=[0., 0., 0.], inertia_reference='ref')
+        self.assertAlmostEqual(mass, 3.0)
         assert np.allclose(cg, [0.5, 0.5, 0.0]), f'cg={cg}'
         # inertia = [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
         self.assertAlmostEqual(inertia[0], 0.75, places=5)
