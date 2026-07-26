@@ -794,21 +794,21 @@ class CTRIA3(ShellElement):
         return tri_area(self.model.grid, self.nodes)
 
     def centroid(self) -> np.ndarray:
-        """centroid ignores density"""
+        """centroid ignores density and zoffset"""
         centroid = tri_centroid(self.model.grid, self.nodes)
         return centroid
 
     def center_of_mass(self) -> np.ndarray:
-        """center_of_mass considers density"""
-        return self.centroid()
+        """center_of_mass considers density and zoffset"""
+        return shell_center_of_mass(self)
 
     def normal(self) -> np.ndarray:
         normal = self.area_centroid_normal()[2]
         return normal
 
     def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        normal = tri_area_centroid_normal(self.model.grid, self.nodes)
-        return normal
+        area, centroid, normal = tri_area_centroid_normal(self.model.grid, self.nodes)
+        return area, centroid, normal
 
     def consistent_mass_matrix(self) -> np.ndarray:
         """Consistent mass matrix (translational DOFs only).
@@ -1107,21 +1107,21 @@ class CTRIAR(ShellElement):
         return tri_area(self.model.grid, self.nodes)
 
     def centroid(self) -> np.ndarray:
-        """centroid ignores density"""
+        """centroid ignores density and zoffset"""
         centroid = tri_centroid(self.model.grid, self.nodes)
         return centroid
 
     def center_of_mass(self) -> np.ndarray:
-        """center_of_mass considers density"""
-        return self.centroid()
+        """center_of_mass considers density and zoffset"""
+        return shell_center_of_mass(self)
 
     def normal(self) -> np.ndarray:
         normal = self.area_centroid_normal()[2]
         return normal
 
     def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        normal = tri_area_centroid_normal(self.model.grid, self.nodes)
-        return normal
+        area, centroid, normal = tri_area_centroid_normal(self.model.grid, self.nodes)
+        return area, centroid, normal
 
     def consistent_mass_matrix(self) -> np.ndarray:
         """Consistent mass matrix (translational DOFs only).
@@ -1585,17 +1585,21 @@ class CQUAD4(ShellElement):
         return area
 
     def centroid(self) -> np.ndarray:
-        """centroid ignores density"""
+        """centroid ignores density and zoffset"""
         centroid = quad_centroid(self.model.grid, self.nodes)
         return centroid
 
     def center_of_mass(self) -> np.ndarray:
-        """center_of_mass considers density"""
-        return self.centroid()
+        """center_of_mass considers density and zoffset"""
+        return shell_center_of_mass(self)
 
     def normal(self) -> np.ndarray:
         normal = self.area_centroid_normal()[2]
         return normal
+
+    def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        area, centroid, normal = quad_area_centroid_normal(self.model.grid, self.nodes)
+        return area, centroid, normal
 
     def edges(self) -> np.ndarray:
         n1 = self.nodes[:, 0]
@@ -1609,10 +1613,6 @@ class CQUAD4(ShellElement):
         edges = np.vstack([e1, e2, e3, e4])
         edges.sort(axis=1)
         return edges
-
-    def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        normal = quad_area_centroid_normal(self.model.grid, self.nodes)
-        return normal
 
     def consistent_mass_matrix(self) -> np.ndarray:
         """Consistent mass matrix (translational DOFs only).
@@ -1887,19 +1887,21 @@ class CQUADR(ShellElement):
         return area
 
     def centroid(self) -> np.ndarray:
-        """centroid ignores density"""
+        """centroid ignores density and zoffset"""
         centroid = quad_centroid(self.model.grid, self.nodes)
         return centroid
 
     def center_of_mass(self) -> np.ndarray:
-        return self.centroid()
+        """center_of_mass considers density and zoffset"""
+        return shell_center_of_mass(self)
 
     def normal(self) -> np.ndarray:
         normal = self.area_centroid_normal()[2]
         return normal
+
     def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        normal = quad_area_centroid_normal(self.model.grid, self.nodes)
-        return normal
+        area, centroid, normal = quad_area_centroid_normal(self.model.grid, self.nodes)
+        return area, centroid, normal
 
     def consistent_mass_matrix(self) -> np.ndarray:
         """Consistent mass matrix (translational DOFs only).
@@ -2213,21 +2215,21 @@ class CTRIA6(ShellElement):
         return tri_area(self.model.grid, self.base_nodes)
 
     def centroid(self) -> np.ndarray:
-        """centroid ignores density"""
+        """centroid ignores density and center of mass"""
         centroid = tri_centroid(self.model.grid, self.base_nodes)
         return centroid
 
     def center_of_mass(self) -> np.ndarray:
-        """center_of_mass considers density"""
-        return self.centroid()
+        """center_of_mass considers density and zoffset"""
+        return shell_center_of_mass(self)
 
     def normal(self) -> np.ndarray:
         normal = self.area_centroid_normal()[2]
         return normal
 
     def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        normal = tri_area_centroid_normal(self.model.grid, self.base_nodes)
-        return normal
+        area, centroid, normal = tri_area_centroid_normal(self.model.grid, self.base_nodes)
+        return area, centroid, normal
 
     def consistent_mass_matrix(self) -> np.ndarray:
         """Consistent mass matrix (translational DOFs only).
@@ -2592,21 +2594,21 @@ class CQUAD8(ShellElement):
         return area
 
     def centroid(self) -> np.ndarray:
-        """centroid ignores density"""
+        """centroid ignores density and zoffset"""
         centroid = quad_centroid(self.model.grid, self.base_nodes)
         return centroid
 
     def center_of_mass(self) -> np.ndarray:
-        """center_of_mass considers density"""
-        return self.centroid()
+        """center_of_mass considers density and zoffset"""
+        return shell_center_of_mass(self)
 
     def normal(self) -> np.ndarray:
         normal = self.area_centroid_normal()[2]
         return normal
 
     def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        normal = quad_area_centroid_normal(self.model.grid, self.base_nodes)
-        return normal
+        area, centroid, normal = quad_area_centroid_normal(self.model.grid, self.base_nodes)
+        return area, centroid, normal
 
     def consistent_mass_matrix(self) -> np.ndarray:
         """Consistent mass matrix (translational DOFs only).
@@ -2818,12 +2820,20 @@ class CQUAD(ShellElement):
         return area
 
     def centroid(self) -> np.ndarray:
-        """centroid ignores density"""
+        """centroid ignores density and zoffset"""
         centroid = quad_centroid(self.model.grid, self.base_nodes)
         return centroid
 
+    def normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        normal = quad_area_centroid_normal(self.model.grid, self.base_nodes)[2]
+        return normal
+
+    def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        area, centroid, normal = quad_area_centroid_normal(self.model.grid, self.base_nodes)
+        return area, centroid, normal
+
     def center_of_mass(self) -> np.ndarray:
-        """center_of_mass considers density"""
+        """center_of_mass considers density (no zoffset for the CQUAD)"""
         return self.centroid()
 
     @property
@@ -3063,3 +3073,13 @@ def combine_int_float_array(int_array,
     mcids[itheta] = thetas[itheta]
     theta_mcids = mcids
     return theta_mcids
+
+def shell_center_of_mass(self) -> np.ndarray:
+    """center_of_mass considers density and zoffset"""
+    centroid, normal = self.area_centroid_normal()[1:]
+    is_finite = np.isfinite(self.zoffset)
+    if np.any(is_finite):
+        zoffset = self.zoffset.copy()
+        zoffset[~is_finite] = 0.
+        return centroid + zoffset[:, np.newaxis] * normal
+    return centroid

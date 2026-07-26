@@ -1792,7 +1792,7 @@ class Add2dElements(BDFAttributes):
         return elem
 
     def add_cquad4(self, eid: int, pid: int, nids: list[int],
-                   theta_mcid: int | float=0.0, zoffset: float=None,
+                   theta_mcid: int | float=0.0, zoffset: float=0.0,
                    tflag: int=0, T1=None, T2=None, T3=None, T4=None,
                    comment: str='') -> int:
         """

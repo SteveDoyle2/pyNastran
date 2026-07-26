@@ -90,6 +90,59 @@ class TestAcousticV3(unittest.TestCase):
 
 
 class TestShellsV3(unittest.TestCase):
+    def test_ctria3_zoffset_center_of_mass(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        eid = 5
+        pid = 10
+        mid = mid1 = mid2 = 11
+        model.add_ctria3(eid, pid, [1, 2, 3], zoffset=10.)
+        model.add_ctriar(eid+1, pid, [1, 2, 3], zoffset=10.)
+        model.add_pshell(pid, mid1, 1.0, mid2)
+        model.add_mat1(mid, 3.0e7, None, 0.3)
+        model.setup()
+        centroid_expected = [2/3, 1/3, 0.0]
+        centroid = model.ctria3.centroid().squeeze()
+        assert np.allclose(centroid, centroid_expected)
+        centroid = model.ctriar.centroid().squeeze()
+        assert np.allclose(centroid, centroid_expected)
+
+        center_of_mass_expected = [2/3, 1/3, 10.0]
+        center_of_mass = model.ctria3.center_of_mass().squeeze()
+        assert np.allclose(center_of_mass, center_of_mass_expected)
+        center_of_mass = model.ctriar.center_of_mass().squeeze()
+        assert np.allclose(center_of_mass, center_of_mass_expected)
+
+    def test_cquad4_zoffset_center_of_mass(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        eid = 5
+        pid = 10
+        mid = mid1 = mid2 = 11
+        model.add_cquad4(eid, pid, [1, 2, 3, 4], zoffset=10.)
+        model.add_cquadr(eid+1, pid, [1, 2, 3, 4], zoffset=10.)
+        model.add_pshell(pid, mid1, 1.0, mid2)
+        model.add_mat1(mid, 3.0e7, None, 0.3)
+        model.setup()
+        centroid_expected = [0.5, 0.5, 0.0]
+        centroid = model.cquad4.centroid().squeeze()
+        assert np.allclose(centroid, centroid_expected)
+        centroid = model.cquadr.centroid().squeeze()
+        assert np.allclose(centroid, centroid_expected)
+
+        center_of_mass_expected = [0.5, 0.5, 10.0]
+        center_of_mass = model.cquad4.center_of_mass().squeeze()
+        assert np.allclose(center_of_mass, center_of_mass_expected)
+        center_of_mass = model.cquadr.center_of_mass().squeeze()
+        assert np.allclose(center_of_mass, center_of_mass_expected)
+
     def test_pshell(self):
         log = get_logger(level='warning')
         model = BDF(log=log)
