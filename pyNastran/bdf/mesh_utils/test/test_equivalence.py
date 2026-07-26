@@ -390,7 +390,7 @@ class TestEquiv(unittest.TestCase):
         log = SimpleLogger(level='info')
         bdf_filename_out = DIRNAME / 'eq5.bdf'
 
-        model = BDF(debug=True, log=log, mode='msc')
+        model = BDF(debug=False, log=log, mode='msc')
         for nid in range(1, 11):
             model.add_grid(nid, [0., 0., 0.])
         eid = 1
@@ -413,14 +413,14 @@ class TestEquiv(unittest.TestCase):
         assert node_ids == [1], node_ids
         del model
 
-        model2 = BDF(debug=True, log=log, mode='msc')
+        model2 = BDF(debug=False, log=log, mode='msc')
         for nid in range(1, 11):
             model2.add_grid(nid, [0., 0., 0.])
         model2.add_celas2(eid, k, nids, c1=2, c2=0, ge=0., s=0., comment='')
         bdf_equivalence_nodes(model2, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
                               node_set=node_set, crash_on_collapse=False,
-                              log=log, debug=True, method='new')
+                              log=log, debug=False, method='new')
         model = save_check_nodes(bdf_filename_out, log, nnodes=1)
         node_ids = list(sorted(model.nodes))
         assert node_ids == [1], node_ids
@@ -453,7 +453,7 @@ class TestEquiv(unittest.TestCase):
         bdf_equivalence_nodes(model, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
                               node_set=node_set, crash_on_collapse=False,
-                              log=log, debug=True, method='new')
+                              log=log, debug=False, method='new')
         model2 = read_bdf(bdf_filename_out, debug=None)
         assert len(model2.nodes) == 3, model2.nodes
 

@@ -1530,7 +1530,7 @@ class TestBeams(unittest.TestCase):
         #PBRSECT 32      10      CP
             #OUTP=201,T=1.0,BRP=202,
             #T(11)=[2.0,PT=(202,224)],T(12)=[1.2,PT=(224,205)]
-
+F
         #model2 = BDF(debug=True, log=None, mode='msc')
         #model2.read_bdf(r'C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl\zbr3.dat')
         if IS_MATPLOTLIB:

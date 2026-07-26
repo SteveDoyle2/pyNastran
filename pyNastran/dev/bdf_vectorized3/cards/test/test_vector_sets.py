@@ -156,7 +156,7 @@ class TestSets(unittest.TestCase):
 
     def _test_set2_02(self):
         """checks the SET2 card"""
-        bdf = BDF(debug=True)
+        bdf = BDF(debug=False)
 
         set2 = bdf.add_set2(110, 10, -0.1, 1.1, -0.1, 1.1)
         caero = bdf.add_caero4(10, 10, [.0, .0, .0], 1., [.0, 1., .0], 1.)

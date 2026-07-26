@@ -997,7 +997,7 @@ class TestMeshUtils(unittest.TestCase):
         assert len(model.mpcs) == 1, model.mpcs
         assert len(model.mpcs[42]) == 1, model.mpcs[42]
         model, unused_mirror_model, unused_nid_offset, unused_eid_offset = bdf_mirror_plane(
-            model, plane, mirror_model=None, log=None, debug=True,
+            model, plane, mirror_model=None, log=None, debug=False,
             use_nid_offset=False)
         #for nid, node in sorted(mirror_model.nodes.items()):
             #print(nid, node.xyz)
@@ -1045,7 +1045,7 @@ class TestMeshUtils(unittest.TestCase):
         model.validate()
         model.cross_reference()
 
-        bdf_mirror(model, plane='xz', log=None, debug=True)
+        bdf_mirror(model, plane='xz', log=None, debug=False)
         model.cross_reference()
         #for eid, elem in model.elements.items():
             #print(eid, elem.Volume())
@@ -1081,7 +1081,7 @@ class TestMeshUtils(unittest.TestCase):
         model.validate()
         model.cross_reference()
 
-        bdf_mirror(model, plane='xz', log=None, debug=True)
+        bdf_mirror(model, plane='xz', log=None, debug=False)
         model.cross_reference()
         #for eid, elem in model.elements.items():
             #print(eid, elem.Volume())

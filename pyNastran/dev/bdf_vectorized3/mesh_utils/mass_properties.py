@@ -28,24 +28,24 @@ def mass_properties(
     # inertias = []
     # mass = 0.
     mass_cg = np.zeros(3, dtype="float64")
-    masses = []
-    centroids = []
+    mass_list = []
+    center_of_mass_list = []
     element_cards = [
         card for card in model.element_cards if card.n > 0 and card.type not in NO_MASS
     ]
 
-    if nsm_id == 0:
-        element_id_nsm = np.array([], dtype="int32")
-        mass_nsm = np.array([], dtype="float64")
-        centroid_nsm = np.zeros((0, 3), dtype="float64")
-        inertia_nsm = np.zeros((0, 6), dtype="float64")
-    else:
+    # if nsm_id == 0:
+    #     element_id_nsm = np.array([], dtype="int32")
+    #     mass_nsm = np.array([], dtype="float64")
+    #     centroid_nsm = np.zeros((0, 3), dtype="float64")
+    #     inertia_nsm = np.zeros((0, 6), dtype="float64")
+    # else:
+    if nsm_id != 0:
         nsm_cards = get_nsm_cards(model, nsm_id)
         for nsm_card in nsm_cards:
             # print(nsm_card.get_stats())
             element_id_nsm, mass_nsm, centroid_nsm, inertia_nsm = nsm_card.inertia(
-                element_id=element_id
-            )
+                element_id=element_id)
             neidi = len(element_id_nsm)
             assert len(mass_nsm) == neidi, (mass_nsm, neidi)
             assert centroid_nsm.shape == (neidi, 3), (
@@ -55,8 +55,8 @@ def mass_properties(
                 f"neidi={neidi}, inertia_nsm.shape={inertia_nsm.shape}"
             )
             element_ids_all.append(element_id_nsm)
-            masses.append(mass_nsm)
-            centroids.append(centroid_nsm)
+            mass_list.append(mass_nsm)
+            center_of_mass_list.append(centroid_nsm)
 
     if include_base_mass:
         for card in element_cards:
@@ -69,25 +69,24 @@ def mass_properties(
 
             element_ids_all.append(card.element_id)
             massi = card.mass()
-            masses.append(massi)
-            centroidi = card.centroid()
-            if np.any(np.isnan(centroidi)):
-                log.error(f"{card.type} has nan centroid; centroid={centroidi}")
-                raise RuntimeError(f"{card.type} has nan centroid; centroid={centroidi}")
-            centroids.append(centroidi)
+            mass_list.append(massi)
+            center_of_massi = card.center_of_mass()
+            if np.any(np.isnan(center_of_massi)):
+                log.error(f"{card.type} has nan center_of_mass; center_of_mass={center_of_massi}")
+                raise RuntimeError(f"{card.type} has nan center_of_mass; center_of_mass={center_of_massi}")
+            center_of_mass_list.append(center_of_massi)
 
-    if len(masses) == 0:
-        element_id = np.array([], dtype="int32")
-        mass = np.array([], dtype="float64")
-        cg = np.zeros((0, 3), dtype="float64")
-        inertia = np.zeros((0, 6), dtype="float64")
+    if len(mass_list) == 0:
+        element_id = np.array([-1], dtype="int32")
+        mass = np.zeros(1, dtype="float64")
+        cg = np.zeros((1, 3), dtype="float64")
+        inertia = np.zeros((1, 6), dtype="float64")
         log.error("no elements with mass/inertia")
         return element_id, mass, cg, inertia
-        # return element_id_nsm, mass_nsm, centroid_nsm, inertia_nsm
 
     element_id_out = np.hstack(element_ids_all)
-    mass = np.hstack(masses)
-    centroid = np.vstack(centroids)
+    mass = np.hstack(mass_list)
+    center_of_mass = np.vstack(center_of_mass_list)
 
     # Find unique keys and map them to clean 0, 1, 2... indices
     # element_ids_unique, inverse_indices = np.unique(element_id_out, return_inverse=True)
@@ -103,9 +102,9 @@ def mass_properties(
     # inertia = np.full(6, np.nan, dtype='float64')
     # log.error('no elements with mass...inertia is nan')
     # return element_id, abs_mass, cg, inertia
-    mass_cg = mass[:, None] * centroid
-    imass = mass != 0
-    cg = np.full(centroid.shape, np.nan, dtype=centroid.dtype)
+    mass_cg = mass[:, np.newaxis] * center_of_mass
+    imass = (mass != 0)
+    cg = np.full(center_of_mass.shape, np.nan, dtype=mass.dtype)
     cg[imass] = mass_cg[imass, :] / mass[imass, np.newaxis]
 
     # cg = mass_cg.sum(axis=0) / mass.sum()
@@ -119,9 +118,9 @@ def mass_properties(
         #     inertia = transform_inertia(
         #         mass, cg, xyz_ref, xyz_ref2, inertia, coord1=coord1, coord2=coord2
         #     )
-        dxyz = centroid - cg
+        dxyz = center_of_mass - cg
     else:
-        dxyz = centroid - reference_point
+        dxyz = center_of_mass - reference_point
     dx = dxyz[:, 0]
     dy = dxyz[:, 1]
     dz = dxyz[:, 2]
@@ -136,8 +135,9 @@ def mass_properties(
     nrows = len(mass)
     assert inertia.shape == (nrows, 6), inertia.shape
     mass.sum()
-    mass, cg, inertia = _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia)
-    return element_id_out, mass, centroid, inertia
+    mass, center_of_mass, inertia = _apply_mass_symmetry(
+        model, sym_axis, scale, mass, center_of_mass, inertia)
+    return element_id_out, mass, center_of_mass, inertia
 
 
 def get_nsm_cards(model: BDF, nsm_id: int) -> list:
@@ -224,36 +224,36 @@ def _apply_mass_symmetry(
 
         if "xz" in sym_axis_set:
             # y inertias are 0
-            cg[1] = 0.0
+            cg[:, 1] = 0.0
             mass *= 2.0
-            inertia[0] *= 2.0
-            inertia[1] *= 2.0
-            inertia[2] *= 2.0
-            inertia[3] *= 0.0  # Ixy
-            inertia[4] *= 2.0  # Ixz; no y
-            inertia[5] *= 0.0  # Iyz
+            inertia[:, 0] *= 2.0
+            inertia[:, 1] *= 2.0
+            inertia[:, 2] *= 2.0
+            inertia[:, 3] *= 0.0  # Ixy
+            inertia[:, 4] *= 2.0  # Ixz; no y
+            inertia[:, 5] *= 0.0  # Iyz
 
         if "xy" in sym_axis_set:
             # z inertias are 0
-            cg[2] = 0.0
+            cg[:, 2] = 0.0
             mass *= 2.0
-            inertia[0] *= 2.0
-            inertia[1] *= 2.0
-            inertia[2] *= 2.0
-            inertia[3] *= 2.0  # Ixy; no z
-            inertia[4] *= 0.0  # Ixz
-            inertia[5] *= 0.0  # Iyz
+            inertia[:, 0] *= 2.0
+            inertia[:, 1] *= 2.0
+            inertia[:, 2] *= 2.0
+            inertia[:, 3] *= 2.0  # Ixy; no z
+            inertia[:, 4] *= 0.0  # Ixz
+            inertia[:, 5] *= 0.0  # Iyz
 
         if "yz" in sym_axis_set:
             # x inertias are 0
-            cg[0] = 0.0
+            cg[:, 0] = 0.0
             mass *= 2.0
-            inertia[0] *= 2.0
-            inertia[1] *= 2.0
-            inertia[2] *= 2.0
-            inertia[3] *= 0.0  # Ixy
-            inertia[4] *= 0.0  # Ixz
-            inertia[5] *= 2.0  # Iyz; no x
+            inertia[:, 0] *= 2.0
+            inertia[:, 1] *= 2.0
+            inertia[:, 2] *= 2.0
+            inertia[:, 3] *= 0.0  # Ixy
+            inertia[:, 4] *= 0.0  # Ixz
+            inertia[:, 5] *= 2.0  # Iyz; no x
 
     wtmass = model.wtmass
     if scale is None:

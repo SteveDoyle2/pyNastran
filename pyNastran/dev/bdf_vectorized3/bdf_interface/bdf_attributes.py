@@ -1678,8 +1678,13 @@ class BDFAttributes:
             nsm_id=nsm_id, element_id=element_id,
             reference_point=reference_point, inertia_reference=inertia_reference,
             sym_axis=sym_axis, scale=scale, include_base_mass=include_base_mass)
+
         mass_total = fsum(mass)
-        cg_total = fsum(mass[:, np.newaxis] * centroid, axis=0) / mass_total
+        mass_cg_total = fsum(mass[:, np.newaxis] * centroid, axis=0)
+        if np.array_equal(mass_cg_total, np.zeros(3)):
+            cg_total = np.zeros(3)
+        else:
+            cg_total = mass_cg_total / mass_total
         inertia_total = fsum(inertia, axis=0)
         assert len(cg_total) == 3, cg_total
         assert len(inertia_total) == 6, inertia_total

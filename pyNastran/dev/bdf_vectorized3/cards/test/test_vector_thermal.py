@@ -1,5 +1,6 @@
 import unittest
 from io import StringIO
+import numpy as np
 
 from pyNastran.dev.bdf_vectorized3.bdf import read_bdf, BDF, CaseControlDeck, Subcase # CHBDYG,
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
@@ -383,4 +384,5 @@ class TestThermal(unittest.TestCase):
 
 
 if __name__ == '__main__':   # pragma: no cover
+    np.seterr(all='raise')
     unittest.main()

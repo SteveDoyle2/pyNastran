@@ -14,7 +14,7 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestParams(unittest.TestCase):
     def test_all_params(self):
-        model = BDF(debug=True, log=None, mode='msc')
+        model = BDF(debug=False, log=None, mode='msc')
 
         for key, (value, allowed) in string_params.items():
             model.add_param(key, value)
@@ -43,7 +43,7 @@ class TestParams(unittest.TestCase):
             str(param)
 
     def test_mdlprm_1(self):
-        model = BDF(debug=True, log=None, mode='msc')
+        model = BDF(debug=False, log=None, mode='msc')
         mdlprm_dict = {'HDF5': 1}
         model.add_mdlprm(mdlprm_dict, comment='mdlprm')
         save_load_deck(model, xref='standard', op2_log_level='warning')
@@ -69,7 +69,7 @@ class TestParams(unittest.TestCase):
         param.write_card_16(is_double=True)
 
     def test_param_mystran(self):
-        model = BDF(debug=True, log=None, mode='mystran')
+        model = BDF(debug=False, log=None, mode='mystran')
         param1 = model.add_param('POST', -1, comment='')
         str(param1)
 

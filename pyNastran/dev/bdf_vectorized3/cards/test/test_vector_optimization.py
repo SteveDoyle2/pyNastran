@@ -854,7 +854,7 @@ class TestOpt(unittest.TestCase):
         #model.uncross_reference()
 
         #-------------------------------------------
-        model2 = BDF(debug=True)
+        model2 = BDF(debug=False)
 
         dvcrel1_lines = dvcrel1_msg.split('\n')
         model2.add_card(dvcrel1_lines, 'DVCREL1', is_list=False)

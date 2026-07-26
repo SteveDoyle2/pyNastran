@@ -1,5 +1,6 @@
 import os
 import unittest
+import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 #from pyNastran.bdf.cards.test.utils import save_load_deck, _run_mass_properties, _run_loads, _run_hdf5
@@ -186,5 +187,7 @@ def create_superelement(debug=False) -> BDF:
     super_element.add_mat1(2000, 3.0e7, None, 0.3)
     return super_element
 
+
 if __name__ == '__main__':   # pragma: no cover
+    np.seterr(all=True)
     unittest.main()

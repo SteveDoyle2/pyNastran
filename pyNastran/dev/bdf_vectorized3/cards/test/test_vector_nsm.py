@@ -64,7 +64,7 @@ class TestNsmV3(unittest.TestCase):
         G = None
         nu = 0.3
         nids = [1, 2, 3, 4]
-        model = BDF(debug=True)
+        model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -321,7 +321,7 @@ class TestNsmV3(unittest.TestCase):
         nu = 0.3
         nids = [1, 2, 3, 4]
 
-        model = BDF(debug=True)
+        model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -344,7 +344,7 @@ class TestNsmV3(unittest.TestCase):
                        run_save_load_hdf5=False)
 
     def test_nsmadd_subset(self):
-        model = BDF(debug=True)
+        model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -725,7 +725,7 @@ class TestNsmV3(unittest.TestCase):
 
     def test_nsml1_subset_conrod(self):
         """NSML1 on CONROD elements distributes total mass by length."""
-        model = BDF(debug=True)
+        model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [2., 0., 0.])
         model.add_grid(3, [5., 0., 0.])
