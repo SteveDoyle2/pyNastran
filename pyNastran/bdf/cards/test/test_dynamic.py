@@ -865,7 +865,7 @@ class TestDynamic(unittest.TestCase):
         model.cross_reference()
         save_load_deck(model, run_convert=False)
 
-    def _test_dynamic1(self):
+    def test_dynamic1(self):
         """
         xref test for:
          - DLOAD -> DAREA -> NID

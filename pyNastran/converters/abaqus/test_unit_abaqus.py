@@ -88,7 +88,7 @@ class TestAbaqus(unittest.TestCase):
         model.write('spike.inp')
         os.remove('spike.inp')
 
-    def _test_abaqus_3(self):  # pragma: no cover
+    def test_abaqus_3(self):  # pragma: no cover
         log = get_logger(level='debug', encoding='utf-8')
         lines = [
             '*part, name=test\n'

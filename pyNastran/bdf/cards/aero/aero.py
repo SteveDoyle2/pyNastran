@@ -243,7 +243,7 @@ class AECOMP(BaseCard):
         The writer method used by BDF.write_card()
 
         Parameters
-        -----------
+        ----------
         size : int; default=8
             the size of the card (8/16)
 
@@ -344,7 +344,7 @@ class AECOMPL(BaseCard):
         The writer method used by BDF.write_card()
 
         Parameters
-        -----------
+        ----------
         size : int; default=8
             the size of the card (8/16)
 
@@ -450,7 +450,7 @@ class AEFACT(BaseCard):
         The writer method used by BDF.write_card()
 
         Parameters
-        -----------
+        ----------
         size : int; default=8
             the size of the card (8/16)
 
@@ -629,7 +629,7 @@ class AELINK(BaseCard):
             #raise RuntimeError(f'dependent_label={self.dependent_label} is not an #AESURF or AEPARM\n{self}')
 
         self.independent_labels_ref = []
-        
+
         missing_indep_labels = []
         for independent_label in self.independent_labels:
             is_aesurf = independent_label in aesurf_names
@@ -679,7 +679,7 @@ class AELINK(BaseCard):
         The writer method used by BDF.write_card()
 
         Parameters
-        -----------
+        ----------
         size : int; default=8
             the size of the card (8/16)
 
@@ -2385,12 +2385,12 @@ class CAERO1(BaseCard):
         Get the index of ``self.box_ids`` that corresponds to the given box id.
 
         Parameters
-        -----------
+        ----------
         box_id : int
             Box id to get the index of.
 
         Returns
-        --------
+        -------
         index : tuple
             Index of ``self.box_ids`` that corresponds to the given box id.
 
@@ -2406,12 +2406,12 @@ class CAERO1(BaseCard):
         The the location of the quarter chord of the box along the centerline.
 
         Parameters
-        -----------
+        ----------
         box_id : int
             Box id.
 
         Returns
-        --------
+        -------
         xyz_quarter_chord : ndarray
             Location of box quarter chord in global.
 
@@ -2423,12 +2423,12 @@ class CAERO1(BaseCard):
         The the location of the mid chord of the box along the centerline.
 
         Parameters
-        -----------
+        ----------
         box_id : int
             Box id.
 
         Returns
-        --------
+        -------
         xyz_mid_chord : ndarray
             Location of box mid chord in global.
 

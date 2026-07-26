@@ -141,13 +141,22 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
 from pyNastran.dev.bdf_vectorized3.cards.monitor import (
     MONPNT1, MONPNT2, MONPNT3, MONDSP1)
 from pyNastran.dev.bdf_vectorized3.cards.aero import (
-    CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAERO7,
+    CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
-    AECOMP, AECOMPL, AELIST, AEFACT, FLFACT, FLUTTER,
+    AECOMP, AECOMPL, AELIST, AEFACT,
     AEPARM, AELINK, AESTAT,
-    GUST, AESURF, AESURFS, CSSCHD, DIVERG, TRIM, TRIM2,
-    UXVEC, AEFORCE, AEPRESS)
+    AESURF, AESURFS,
+    )
+from pyNastran.dev.bdf_vectorized3.cards.aero.static_loads import (
+    CSSCHD, DIVERG, TRIM, TRIM2, UXVEC, AEFORCE,
+    # AEPRESS, AEDW,
+)
+from pyNastran.dev.bdf_vectorized3.cards.aero.dynamic_loads import (
+    GUST, FLFACT, FLUTTER,)
+from pyNastran.dev.bdf_vectorized3.cards.aero.zaero import CAERO7
+from pyNastran.dev.bdf_vectorized3.cards.aero.spline import (
+    SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
+
 from pyNastran.dev.bdf_vectorized3.cards.optimization import (
     DESVAR, DLINK, DVGRID,
     DRESP1, DRESP2, DCONSTR,

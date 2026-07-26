@@ -23,6 +23,7 @@ class TestDEQATN(unittest.TestCase):
         """splitting a DEQATN doesnt work with is_list=False if it's a list"""
         model = BDF(debug=None)
         card = ["DEQATN", 1000, "MAXDIFF(t1,t2)=abs(t2-t1)/t1"]
+        card_lines = [''.join([f'{field:8}' for field in card])]
         #with self.assertRaises(AttributeError): # TODO: fix this...
         model.add_card(card, "DEQATN", is_list=False)
         model.cross_reference()
@@ -33,7 +34,7 @@ class TestDEQATN(unittest.TestCase):
             model.write_bdf(bdf_file)
         bdf_file.getvalue()
 
-    def _test_deqatn_1b(self):
+    def test_deqatn_1b(self):
         """splitting a DEQATN doesnt work with is_list=False if it's a list"""
         model = BDF(debug=None)
         card = ["DEQATN", 1000, "MAXDIFF(t1,t2)=abs(t2-t1)/t1"]

@@ -855,3 +855,6 @@ class TestNewZaeroCards(unittest.TestCase):
         assert ase30.cmargin_ref.cmargin_id == 1
         assert ase30.cmargin_ref.gm_high == 50.0
         assert ase30.cmargin_ref.pm_high == 60.0
+
+if __name__ == '__main__':  # pragma: no cover
+    unittest.main()

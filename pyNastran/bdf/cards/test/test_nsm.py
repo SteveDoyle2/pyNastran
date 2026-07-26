@@ -434,7 +434,7 @@ class TestNsm(unittest.TestCase):
         nu = 0.3
         nids = [1, 2, 3, 4]
 
-        model = BDF(debug=True)
+        model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -457,7 +457,7 @@ class TestNsm(unittest.TestCase):
                        run_save_load_hdf5=False)
 
     def test_nsmadd_subset(self):
-        model = BDF(debug=True)
+        model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -1261,3 +1261,4 @@ class TestNsm(unittest.TestCase):
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
+`

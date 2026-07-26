@@ -13,7 +13,7 @@ from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
 
 from pyNastran.nptyping_interface import NDArray3float, NDArrayNint
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
