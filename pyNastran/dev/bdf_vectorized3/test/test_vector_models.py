@@ -152,6 +152,7 @@ class TestModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'fsi' / 'fsi.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
+
     def test_models_bwb(self):
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
         model = BDF()
@@ -164,16 +165,22 @@ class TestModels(unittest.TestCase):
         model.add_nsml1(nsm_id, 'ELEMENT', 1.0, shell_eids, 'mystring')
         model.setup()
 
-        eids, mass0, cg0, inertia0 = model.inertia(nsm_id=nsm_id, include_base_mass=True)
-        assert isinstance(mass0, np.ndarray), mass0
-        mass0_total = mass0.sum()
-        assert np.allclose(mass0_total, 112616.08243956308), mass0_total
+        mass0, cg0, inertia0 = model.inertia_sum(
+            nsm_id=nsm_id, include_base_mass=True, scale=1.0, sym_axis='no')
+        assert np.allclose(mass0, 112616.08243956308), mass0
+        assert np.allclose(cg0, [866.1320514684787, 150.61740236156632, 24.03841129486398]), cg0.tolist()
 
-        eids, mass_nsm, cg, inertia = model.inertia(nsm_id=nsm_id, include_base_mass=False)
-        assert np.allclose(mass_nsm.sum(), 1.0), mass_nsm.sum()
+        mass_nsm, cg, inertia = model.inertia_sum(
+            nsm_id=nsm_id, include_base_mass=False, scale=1.0, sym_axis='no')
+        assert np.allclose(mass_nsm, 1.0), mass_nsm
 
-        eids, mass_all, cg, inertia = model.inertia(nsm_id=nsm_id, include_base_mass=True)
-        assert np.allclose(mass_all.sum(), mass0_total+1.0), mass_all.sum()
+        mass_nsm0, cg, inertia = model.inertia_sum(
+            nsm_id=nsm_id, include_base_mass=False, scale=1.0, sym_axis='')
+        assert np.allclose(mass_nsm0, 2.0), mass_nsm0
+
+        mass_all, cg, inertia = model.inertia_sum(
+            nsm_id=nsm_id, include_base_mass=True, scale=1.0, sym_axis='no')
+        assert np.allclose(mass_all, mass0+1.0), mass_all
 
         #args = ['test_bdf', str(bdf_filename), '--quiet', '--skip_equivalence']
         args = ['test_bdf', str(bdf_filename), '--quiet', '--lax']
