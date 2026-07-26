@@ -1148,5 +1148,169 @@ class TestNsmV3(unittest.TestCase):
         eids, mass, cg, inertia = model.inertia(nsm_id=220, element_id=[2])
         self.assertAlmostEqual(mass.sum(), 12.0)
 
+    def test_nsm1_ptube(self):
+        """NSM1 on PTUBE (CTUBE elements) with subset filtering."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [2., 0., 0.])  # length=2
+        model.add_grid(3, [5., 0., 0.])  # length=3
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_ptube(1, mid, OD1=1.0)
+
+        model.add_ctube(1, 1, [1, 2])  # length=2
+        model.add_ctube(2, 1, [2, 3])  # length=3
+
+        nsm_per_length = 4.0
+        model.add_nsm1(10, 'PTUBE', nsm_per_length, 1)
+        model.cross_reference()
+
+        # eid=1: 2*4=8, eid=2: 3*4=12, total=20
+        eids, mass, cg, inertia = model.inertia(nsm_id=10)
+        self.assertAlmostEqual(mass.sum(), 20.0)
+
+        eids, mass, cg, inertia = model.inertia(nsm_id=10, element_id=[1])
+        self.assertAlmostEqual(mass.sum(), 8.0)
+
+        eids, mass, cg, inertia = model.inertia(nsm_id=10, element_id=[2])
+        self.assertAlmostEqual(mass.sum(), 12.0)
+
+    def test_nsml1_ptube(self):
+        """NSML1 on PTUBE distributes total mass by length."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [2., 0., 0.])
+        model.add_grid(3, [5., 0., 0.])
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_ptube(1, mid, OD1=1.0)
+
+        model.add_ctube(1, 1, [1, 2])  # length=2
+        model.add_ctube(2, 1, [2, 3])  # length=3
+
+        total_nsm = 10.0
+        model.add_nsml1(20, 'PTUBE', total_nsm, 1)
+        model.cross_reference()
+
+        # total length=5, eid=1: 10*(2/5)=4, eid=2: 10*(3/5)=6
+        eids, mass, cg, inertia = model.inertia(nsm_id=20)
+        self.assertAlmostEqual(mass.sum(), 10.0)
+
+        eids, mass, cg, inertia = model.inertia(nsm_id=20, element_id=[1])
+        self.assertAlmostEqual(mass.sum(), 4.0)
+
+        eids, mass, cg, inertia = model.inertia(nsm_id=20, element_id=[2])
+        self.assertAlmostEqual(mass.sum(), 6.0)
+
+    def test_nsm_conrod_type(self):
+        """NSM/NSML with CONROD nsm_type."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [3., 0., 0.])  # length=3
+        model.add_grid(3, [7., 0., 0.])  # length=4
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+
+        model.add_conrod(1, mid, [1, 2], A=1.0)  # length=3
+        model.add_conrod(2, mid, [2, 3], A=1.0)  # length=4
+
+        # NSM per-element values on CONROD type
+        model.add_nsm(30, 'CONROD', [1, 2], [2.0, 5.0])
+        model.cross_reference()
+
+        # NSM (not NSML): mass = length * value
+        # eid=1: 3*2=6, eid=2: 4*5=20
+        eids, mass, cg, inertia = model.inertia(nsm_id=30)
+        self.assertAlmostEqual(mass.sum(), 26.0)
+
+        eids, mass, cg, inertia = model.inertia(nsm_id=30, element_id=[1])
+        self.assertAlmostEqual(mass.sum(), 6.0)
+
+    def test_nsml_conrod_type(self):
+        """NSML with CONROD type distributes total mass by length."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [3., 0., 0.])
+        model.add_grid(3, [7., 0., 0.])
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+
+        model.add_conrod(1, mid, [1, 2], A=1.0)  # length=3
+        model.add_conrod(2, mid, [2, 3], A=1.0)  # length=4
+
+        # NSML: total mass distributed by length
+        model.add_nsml(40, 'CONROD', [1, 2], [7.0, 7.0])
+        model.cross_reference()
+
+        # NSML/CONROD: each (eid, value) pair — eid gets value as total mass
+        # eid=1: value=7, length=3, total_length=3 -> mass=7*3/3=7
+        # eid=2: value=7, length=4, total_length=4 -> mass=7*4/4=7
+        # Wait — CONROD type processes all together:
+        # mass_area_length=[3*7, 4*7]=[21,28], total=[3,4] (ELEMENT-like per-eid)
+        # Actually CONROD is not ELEMENT; divide_by_sum uses sum of all:
+        # total_length = 3+4=7, mass = [21/7, 28/7] = [3, 4], total=7
+        eids, mass, cg, inertia = model.inertia(nsm_id=40)
+        self.assertAlmostEqual(mass.sum(), 7.0)
+
+    def test_nsm_multiple_same_id_no_nsmadd(self):
+        """Multiple NSM cards with same nsm_id accessed directly (method B)."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, 1, [1, 2, 3, 4])  # area=1
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_pshell(1, mid1=mid, t=0.1)
+
+        # Two NSM1 cards with same sid=10
+        model.add_nsm1(10, 'PSHELL', 3.0, 1)
+        model.add_nsm1(10, 'PSHELL', 5.0, 1)
+        model.cross_reference()
+
+        # Both cards apply: area=1, mass = 1*3 + 1*5 = 8
+        eids, mass, cg, inertia = model.inertia(nsm_id=10)
+        self.assertAlmostEqual(mass.sum(), 8.0)
+
+    def test_nsml1_element_type(self):
+        """NSML1 on ELEMENT type distributes total mass across all elements."""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, 1, [1, 2, 3, 4])  # area=1
+
+        model.add_grid(11, [0., 2., 0.])
+        model.add_grid(12, [2., 2., 0.])
+        model.add_grid(13, [2., 3., 0.])
+        model.add_grid(14, [0., 3., 0.])
+        model.add_cquad4(2, 1, [11, 12, 13, 14])  # area=2
+
+        mid = 1
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.0)
+        model.add_pshell(1, mid1=mid, t=0.1)
+
+        total_nsm = 9.0
+        model.add_nsml1(50, 'ELEMENT', total_nsm, [1, 2])
+        model.cross_reference()
+
+        # total area=3, eid=1: 9*(1/3)=3, eid=2: 9*(2/3)=6
+        eids, mass, cg, inertia = model.inertia(nsm_id=50)
+        self.assertAlmostEqual(mass.sum(), 9.0)
+
+        eids, mass, cg, inertia = model.inertia(nsm_id=50, element_id=[1])
+        self.assertAlmostEqual(mass.sum(), 3.0)
+
+        eids, mass, cg, inertia = model.inertia(nsm_id=50, element_id=[2])
+        self.assertAlmostEqual(mass.sum(), 6.0)
+
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
