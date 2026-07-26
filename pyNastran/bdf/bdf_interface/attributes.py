@@ -658,6 +658,9 @@ class BDFAttributes:
         self._encoding = None
         self._is_long_ids = False  # ids > 8 characters
 
+        #: hacky way to change fields - might remove
+        self.dict_of_vars = {}
+
         #: ignore any ECHOON flags
         self.force_echo_off = True
 

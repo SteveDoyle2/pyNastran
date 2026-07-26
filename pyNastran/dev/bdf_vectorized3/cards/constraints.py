@@ -4,11 +4,13 @@ from collections import defaultdict
 from itertools import count
 import numpy as np
 
+from pyNastran.bdf.cards.properties.mass import NSM
 from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.bdf.cards.collpase_card import collapse_thru
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hslice_by_idim, make_idim
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    VectorizedBaseCard, hslice_by_idim, make_idim)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     components_or_blank, parse_components,)
@@ -27,6 +29,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     #from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from .elements.nsm import NSM, NSM1, NSML, NSML1
+    DUPLICATED_CARDS = NSM | NSM1 | NSML | NSML1
 
 
 class SPC(VectorizedBaseCard):
@@ -766,6 +770,13 @@ class ADD(VectorizedBaseCard):
         idim = self.idim
         obj.sids = hslice_by_idim(i, idim, self.sids)
 
+    def slice_card_by_id(self, ids: np.ndarray | int,
+                         assume_sorted: bool=True,
+                         sort_ids: bool=False):
+        card = slice_duplicate_card_by_id(
+            self, ids, assume_sorted=assume_sorted, sort_ids=sort_ids)
+        return card
+
 
 class SPCADD(ADD):
     """
@@ -794,11 +805,11 @@ class SPCADD(ADD):
         self.sids = spc_ids
 
     @property
-    def nspcs(self):
+    def nspcs(self) -> int:
         return self.nsids
     @nspcs.setter
-    def nspcs(self):
-        return self.nsids
+    def nspcs(self, nspcs: int) -> None:
+        self.nsids = nspcs
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['spc_id'].append(self.spc_id)
@@ -916,11 +927,11 @@ class MPCADD(ADD):
         self.sids = spc_ids
 
     @property
-    def nmpcs(self):
+    def nmpcs(self) -> int:
         return self.nsids
     @nmpcs.setter
-    def nmpcs(self):
-        return self.nsids
+    def nmpcs(self, nmpcs: int) -> None:
+        self.nsids = nmpcs
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['mpc_id'].append(self.mpc_id)
@@ -1190,6 +1201,26 @@ class BNDGRID(CommonSet):
         #thru = card.field(3).strip()
         #if thru == 'THRU':
             #self.add_set_card(card, comment='')
+
+
+def slice_duplicate_card_by_id(
+        self: DUPLICATED_CARDS | MPCADD | SPCADD | MPCADD,
+        ids: np.ndarray | int,
+        assume_sorted: bool = True,
+        sort_ids: bool = False):
+    if self.type in {'NSMADD', 'NSM', 'NSM1', 'NSML', 'NSML1'}:
+        sid = self.nsm_id
+    elif self.type in {'SPCADD', 'SPC', 'SPC1', 'SPCD'}:
+        sid = self.spc_id
+    elif self.type in {'MPCADD', 'MPC'}:
+        sid = self.mpc_id
+    elif self.type in {'DCONADD'}:
+        sid = self.dconadd_id
+    else:  # pragma: no cover
+        raise NotImplementedError(f"Unknown card type: {self.type}")
+    ids = np.atleast_1d(np.asarray(ids, dtype=sid.dtype))
+    i = np.where(np.isin(sid, ids))[0]
+    return self.slice_card_by_index(i)
 
 
 def spc_cards_to_nid_dof(spc_id: int,

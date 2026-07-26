@@ -44,6 +44,8 @@ from .shell_mass import (
 )
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.dev.bdf_vectorized3.bdf import BDF
 NUMPY_INTS = {'int32', 'int64'}
 NUMPY_FLOATS = {'float32', 'float64'}
 
@@ -1533,7 +1535,7 @@ class CQUAD4(ShellElement):
             else:
                 for eid, pid, nodes, theta_mcid, zoffset in zip(element_id, property_id, self.nodes, theta_mcids, self.zoffset):
                     zoffset_str = '' if np.isnan(zoffset) else print_field_16(zoffset)
-                    data = ['CQUAD4', eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], mcid, zoffset_str]
+                    data = ['CQUAD4', eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], theta_mcid, zoffset_str]
                     bdf_file.write(print_card(data))
         else:
             for eid, pid, nodes, theta_mcid, zoffset, tflag, T in zip(element_id, property_id, self.nodes, theta_mcids,
@@ -3042,13 +3044,13 @@ def _save_quad(element: CQUAD4 | CQUADR,
     if zoffset is None:
         zoffset = np.full(ncards, np.nan, dtype='float64')
     if theta is None:
-        theta = np.full(nelements, 0., dtype='float64')
+        theta = np.full(ncards, 0., dtype='float64')
     if mcid is None:
-        mcid = np.full(nelements, -1, dtype='int32')
+        mcid = np.full(ncards, -1, dtype='int32')
     if tflag is None:
-        tflag = np.zeros(nelements, dtype='int32')
+        tflag = np.zeros(ncards, dtype='int32')
     if T is None:
-        T = np.full((nelements, 4), np.nan, dtype='float64')
+        T = np.full((ncards, 4), np.nan, dtype='float64')
 
     assert zoffset is not None
     element.ifile = ifile

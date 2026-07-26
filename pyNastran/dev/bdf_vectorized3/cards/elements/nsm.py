@@ -29,7 +29,8 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_float,
     get_print_card_size,
 )  # , array_default_int
-from pyNastran.dev.bdf_vectorized3.cards.constraints import ADD
+from pyNastran.dev.bdf_vectorized3.cards.constraints import (
+    ADD, slice_duplicate_card_by_id)
 from pyNastran.op2.result_objects.scalar6_table_object import float_types
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -862,15 +863,15 @@ class NSMADD(ADD):
     _id_name = "nsm_id"
 
     @property
-    def nsm_id(self):
+    def nsm_id(self) -> np.ndarray:
         return self.sid
 
     @nsm_id.setter
-    def nsm_id(self, nsm_id: np.ndarray):
+    def nsm_id(self, nsm_id: np.ndarray) -> None:
         self.sid = nsm_id
 
     @property
-    def nsm_ids(self):
+    def nsm_ids(self) -> np.ndarray:
         return self.sids
 
     @nsm_ids.setter
@@ -1006,13 +1007,6 @@ class NSMADD(ADD):
         nsm.sids = hslice_by_idim(i, idim, self.sids)
         return nsm
 
-    def slice_card_by_id(self, ids: np.ndarray | int,
-                         assume_sorted: bool=True,
-                         sort_ids: bool=False) -> NSMADD:
-        card = slice_duplicate_card_by_id(
-            self, ids, assume_sorted=assume_sorted, sort_ids=sort_ids)
-        return card
-
     # def __apply_slice__(self, spc: NSMADD, i: np.ndarray) -> None:
     # spc.n = len(i)
     # spc.spc_id = self.spc_id[i]
@@ -1022,15 +1016,6 @@ class NSMADD(ADD):
     # idim = self.inode
     # spc.node_id = hslice_by_idim(i, idim, self.node_id)
     # return spc
-
-
-def slice_duplicate_card_by_id(self,
-                               ids: np.ndarray | int,
-                               assume_sorted: bool = True,
-                               sort_ids: bool = False):
-    ids = np.atleast_1d(np.asarray(ids, dtype=self.nsm_id.dtype))
-    i = np.where(np.isin(self.nsm_id, ids))[0]
-    return self.slice_card_by_index(i)
 
 
 def inertia_func(

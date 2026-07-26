@@ -505,7 +505,8 @@ def expand_tabs(line: str) -> str:
 
 
 def parse_executive_control_deck(
-        executive_control_lines: list[str]) -> tuple[Optional[int], Optional[str], Optional[int], str]:
+        executive_control_lines: list[str],
+        ) -> tuple[Optional[int], Optional[str], Optional[int], str]:
     """Extracts the solution from the executive control deck"""
     sol = None
     method = None
@@ -679,8 +680,8 @@ def print_filename(filename: PathLike | StringIO,
 
 
 def _parse_dynamic_syntax(key: str,
-                          dict_of_vars: dict[str, Any],
-                          log: Any) -> dict[str, Any]:
+                          dict_of_vars: dict[str, int | float | str],
+                          log: Any) -> int | float | str:
     """
     Applies the dynamic syntax for %varName
 
@@ -697,7 +698,6 @@ def _parse_dynamic_syntax(key: str,
     .. seealso:: :func: `set_dynamic_syntax`
 
     """
-
     key = key.strip()[1:]
     log.debug("dynamic key = %r" % key)
     #dict_of_vars = {'P5':0.5,'ONEK':1000.}
