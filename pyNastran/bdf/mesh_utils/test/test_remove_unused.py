@@ -34,7 +34,7 @@ class TestRemoveUnused(unittest.TestCase):
 
     def test_remove_isat(self):
         """removes unused data from the isat model"""
-        model_path = os.path.join(pkg_path, '..', 'models', 'isat')
+        model_path = os.path.join(pkg_path, '..', 'models', 'iSat')
         bdf_filename = os.path.join(model_path, 'ISat_Dploy_Sm.dat')
         bdf_filename_out = os.path.join(model_path, 'isat.bdf')
         model = read_bdf(bdf_filename, log=log, validate=False)
