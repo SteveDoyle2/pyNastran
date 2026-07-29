@@ -1,3 +1,4 @@
+from itertools import count
 import numpy as np
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import searchsorted_filter  #, searchsorted_filter_
@@ -17,6 +18,7 @@ Array = np.ndarray
 
 
 def build_Fb_from_loadid(model: BDF,
+                         subcase_id: int,
                          dof_map: DOF_MAP,
                          ndof: int,
                          xg: np.ndarray,
@@ -117,7 +119,7 @@ def build_Fb_from_loadid(model: BDF,
 
     # Thermal loads via TEMPERATURE(LOAD) or TEMPERATURE(BOTH)
     if temp_load_id:
-        node_temperatures = _get_node_temperatures(model, temp_load_id)
+        node_temperatures = _get_node_temperatures(model, subcase_id, temp_load_id)
         if node_temperatures:
             log.debug(f"  Thermal load: {len(node_temperatures)} nodes with dT")
             build_thermal_load_cquad4(model, Fb, dof_map, node_temperatures)
@@ -168,20 +170,22 @@ def build_thermal_load_beam(
                 continue
             mat_ids = prop.material_id[i_all]
             mat_slice = mat.slice_card_by_material_id(mat_ids)
-            alphas = mat_slice.a if hasattr(mat_slice, 'a') else np.zeros(len(mat_ids))
-            for idx, ielem in enumerate(i_lookup):
-                nid1, nid2 = elem.nodes[ielem]
-                T1 = node_temperatures.get(nid1, 0.0)
-                T2 = node_temperatures.get(nid2, 0.0)
+            
+            #print(mat_slice.get_stats())
+            tref = mat_slice.tref
+            alpha = mat_slice.alpha
+            nodes = elem.nodes[i_lookup, :]
+            for idx, ielem, (nid1, nid2), alphai, trefi in zip(count(), i_lookup, nodes, alpha, tref):
+                T1 = node_temperatures[nid1] + trefi
+                T2 = node_temperatures[nid2] + trefi
                 dT = 0.5 * (T1 + T2)
                 if abs(dT) < 1e-30:
                     continue
-                alpha_i = alphas[idx] if alphas[idx] != 0.0 else 0.0
-                if alpha_i == 0.0:
+                if alphai == 0.0:
                     continue
                 e_i = e_g_nus[ielem, 0]
                 PG = thermal_load_beam(
-                    area[ielem], e_i, alpha_i, lengths[ielem],
+                    area[ielem], e_i, alphai, lengths[ielem],
                     ihat[ielem], yhat[ielem], zhat[ielem], dT,
                 )
                 gi1 = dof_map[(nid1, 1)]
@@ -192,6 +196,7 @@ def build_thermal_load_beam(
 
 
 def _get_node_temperatures(model: BDF,
+                           subcase_id: int,
                            temp_load_id: int) -> dict[int, float]:
     """Build a dict of {node_id: temperature} from TEMP/TEMPD cards.
 
@@ -208,18 +213,16 @@ def _get_node_temperatures(model: BDF,
     node_temperatures: dict[int, float] = {}
 
     # Default temperature from TEMPD
-    default_temp = None
+    default_temp = np.nan
     if model.tempd.n > 0:
         tempd = model.tempd
         idx = np.where(tempd.load_id == temp_load_id)[0]
         if len(idx) > 0:
             default_temp = tempd.temperature[idx[0]]
-    assert default_temp is not None, default_temp
 
     # Apply default to all grid points
-    if default_temp is not None:
-        for nid in model.grid.node_id:
-            node_temperatures[nid] = default_temp
+    for nid in model.grid.node_id:
+        node_temperatures[nid] = default_temp
 
     # Override with explicit TEMP cards
     if model.temp.n > 0:
@@ -232,5 +235,9 @@ def _get_node_temperatures(model: BDF,
                 nid = temp.node_id[j]
                 t_val = temp.temperature[j]
                 node_temperatures[nid] = t_val
-
+    if default_temp is None:
+        nids_nan = np.array([
+            nid for nid, temp in node_temperatures.items()
+            if not np.isfinite(temp)], dtype='int32')
+        raise RuntimeError(f'subcase={subcase_id}: No TEMP/TEMPD defined for nodes={nids_nan.tolist()}')
     return node_temperatures

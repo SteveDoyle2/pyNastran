@@ -2,7 +2,9 @@ from pyNastran.dev.bdf_vectorized3.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
 
 
-def setup_static_case_control(model: BDF, extra_case_lines=None):
+def setup_static_case_control(model: BDF,
+                              analysis: str='',
+                              extra_case_lines=None) -> None:
     lines = [
         'STRESS(PLOT,PRINT) = ALL',
         'STRAIN(PLOT,PRINT) = ALL',
@@ -14,9 +16,15 @@ def setup_static_case_control(model: BDF, extra_case_lines=None):
         'OLOAD(PLOT,PRINT) = ALL',
         'ESE(PLOT,PRINT) = ALL',
         'SUBCASE 1',
-        '  LOAD = 2',
-        '  SPC = 3',
     ]
+    if analysis:
+        lines.extend([
+            f'  ANALYSIS = {analysis}',
+            f'  TEMPERATURE(LOAD) = 2'])
+    else:
+        lines.append('  LOAD = 2')
+    lines.append('  SPC = 3')
+
     if extra_case_lines is not None:
         lines += extra_case_lines
     cc = CaseControlDeck(lines, log=model.log)

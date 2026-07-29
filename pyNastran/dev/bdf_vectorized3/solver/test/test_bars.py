@@ -146,6 +146,35 @@ class TestStaticBar(unittest.TestCase):
         xg = solver.xg
         assert dx == xg[6], f'dx={dx} xg={xg}'
 
+    def test_cbar_thermal(self):
+        """Tests a CBAR/PBAR"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cbar_thermal.bdf'
+        k_axial = build_static_cbar(model, analysis='HEAT')
+
+        load_id = 2
+        node_temp_map = {1: 1.0, 2: 2.0}
+        dT = 1.5
+        model.add_temp(load_id, node_temp_map)
+        model.setup()
+        #model.mat1.alpha[0] = 1.0
+
+        solver = Solver(model)
+        solver.run()
+
+        # dx = L0 * alpha * dT
+        # F = kx
+        alpha = 1.0
+        dx = alpha * dT
+        fmag = k_axial * dx
+        #dx = fmag / k_axial
+        xg = solver.xg
+        nnode = len(xg) // 6
+        xg = xg.reshape(nnode, 6)
+        xgi = xg[1, 0]
+        assert np.allclose(dx, xgi), f'dx={dx} xg[1, 0]={xgi}; xg:\n{xg} Fmag={fmag}'
+
     def test_cbar_grav(self):
         """Tests a CBAR/PBAR"""
         log = SimpleLogger(level='warning', encoding='utf-8')
@@ -417,7 +446,7 @@ class TestStaticBar(unittest.TestCase):
         assert dx == xg[2, 0], f'dx={dx} dx_actual={dx_actual} xg:\n{xg}'
 
 
-def build_static_cbar(model: BDF):
+def build_static_cbar(model: BDF, analysis: str=''):
     model.add_grid(1, [0., 0., 0.])
     model.add_grid(2, [1., 0., 0.])
     L = 1.0
@@ -429,7 +458,14 @@ def build_static_cbar(model: BDF):
     E = 3.0e7
     G = None
     nu = 0.3
-    model.add_mat1(mid, E, G, nu, rho=1.0, alpha=0.0, tref=0.0, ge=0.0, St=0.0,
+    if analysis == 'HEAT':
+        alpha = 1.0
+        k = 5.0
+        model.add_mat4(mid, k, cp=0.0, rho=1.0)
+    else:
+        alpha = 0.0
+    model.add_mat1(mid, E, G, nu, rho=1.0,
+                   alpha=alpha, tref=0.0, ge=0.0, St=0.0,
                    Sc=0.0, Ss=0.0, mcsid=0)
 
     x = [0., 1., 0.]
@@ -450,7 +486,7 @@ def build_static_cbar(model: BDF):
     components = 123456
     nodes = 1
     model.add_spc1(spc_id, components, nodes, comment='')
-    setup_static_case_control(model)
+    setup_static_case_control(model, analysis=analysis)
     return k_axial
 
 

@@ -311,26 +311,15 @@ class Solver:
         model = self.model
         log = model.log
         log.info("starting build_Fb")
+        subcase_id = subcase.id
 
-        has_load = "LOAD" in subcase
-        has_temp = "TEMPERATURE(LOAD)" in subcase or "TEMPERATURE(BOTH)" in subcase
-
-        load_id = 0
-        temp_load_id = 0
-        if has_load:
-            load_id, unused_options = subcase["LOAD"]
-
-        if has_temp:
-            if "TEMPERATURE(LOAD)" in subcase:
-                temp_load_id, _ = subcase["TEMPERATURE(LOAD)"]
-            else:
-                temp_load_id, _ = subcase["TEMPERATURE(BOTH)"]
-
+        has_load, load_id = get_load_id(subcase)
+        has_temp, temp_load_id = get_temp_load_id(subcase)
         if has_load or has_temp:
             log.warning('creating Fb')
 
         Fb, Mbb, xyz_cid0 = build_Fb_from_loadid(
-            model, dof_map, ndof_g,
+            model, subcase_id, dof_map, ndof_g,
             xg, sset_bool,
             load_id=load_id, temp_load_id=temp_load_id,
             Mbb=Mbb, xyz_cid0=xyz_cid0, fdtype=fdtype)
@@ -504,7 +493,7 @@ class Solver:
         gset_idx = np.arange(ndof_g, dtype='int32')
 
         # ------------------------------------------------------------------
-        load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
+        load_id, temp_load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
             model.sol, subcase)
         # ------------------------------------------------------------------
 
@@ -1053,9 +1042,8 @@ class Solver:
         op2 = self.op2
         log = model.log
 
-        load_id = 0
-        if 'LOAD' in subcase:
-            load_id = subcase['LOAD'][0]
+        has_load, load_id = get_load_id(subcase)
+        #has_temp, temp_load_id = get_temp_load_id(subcase)
 
         if Ug_preload is not None:
             assert Ug_preload is not None, Ug_preload
@@ -1089,7 +1077,7 @@ class Solver:
         node_gridtype = solver_data.node_gridtype
         xyz_cid0 = solver_data.xyz_cid0
         # -----------------------------------------------------------------
-        load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
+        load_id, temp_load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
             model.sol, subcase)
         # -----------------------------------------------------------------
 
@@ -1255,7 +1243,7 @@ class Solver:
         op2 = self.op2
         # ---------------------------------------------------------------------
         # case control
-        load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
+        load_id, temp_load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
             model.sol, subcase)
         dload_id, _ = subcase['DLOAD']
         freq_id, _ = subcase['FREQUENCY']
@@ -1499,10 +1487,9 @@ class Solver:
         # -----------------------------------------------------------------------
     
         log.debug("run_sol_105 (buckling)")
-        load_id = 0
-        if 'LOAD' in subcase:
-            load_id = subcase['LOAD'][0]
-        else:
+        has_load, load_id = get_load_id(subcase)
+        #has_temp, temp_load_id = get_temp_load_id(subcase)
+        if not has_load:
             assert Ug_preload is not None, Ug_preload
             # TODO: this seems like a super hacky way to get Kff
             #       Should I even be after Kff (f=l+r)?
@@ -1891,7 +1878,7 @@ class Solver:
         ngrid, ndof_per_grid, ndof_g = get_ndof(self.model, subcase)
         xyz_cid0 = solver_data.xyz_cid0
         # -----------------------------------------------------------------
-        load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
+        load_id, temp_load_id, spc_id, mpc_id, suport_id, method_id = get_case_control(
             model.sol, subcase)
         dload_id, _ = subcase['DLOAD']
         freq_id, _ = subcase['FREQUENCY']
@@ -3944,19 +3931,20 @@ def _get_rset_dofs(model: BDF,
 def get_case_control(sol: int, subcase: Subcase):
     # case control checkout
     method_id = 0
+    has_load, load_id = get_load_id(subcase)
+    has_temp, temp_load_id = get_temp_load_id(subcase)
     if sol == 101:
-        load_id = subcase['LOAD'][0]
         spc_id = subcase['SPC'][0] if 'SPC' in subcase else 0
         mpc_id = subcase['MPC'][0] if 'MPC' in subcase else 0
         suport_id = subcase['SUPORT'][0] if 'SUPORT' in subcase else 0
+        assert has_load or has_temp, 'LOAD or TEMPERATURE(LOAD) is required'
     else:
         # modes/buckling/freq response
-        load_id = subcase['LOAD'][0] if 'LOAD' in subcase else 0
         spc_id = subcase['SPC'][0] if 'SPC' in subcase else 0
         mpc_id = subcase['MPC'][0] if 'MPC' in subcase else 0
         method_id = subcase['METHOD'][0] if 'METHOD' in subcase else 0
         suport_id = subcase['SUPORT'][0] if 'SUPORT' in subcase else 0
-    return load_id, spc_id, mpc_id, suport_id, method_id
+    return load_id, temp_load_id, spc_id, mpc_id, suport_id, method_id
 
 
 def get_recover_results(subcase: Subcase,
@@ -4465,3 +4453,20 @@ def setup_solver_data(is_structural: bool,
     else:
         raise NotImplementedError('heat')
     return solver_data, page_num
+
+def get_load_id(subcase: Subcase) -> tuple[bool, int]:
+    load_id = 0
+    has_load = "LOAD" in subcase
+    if has_load:
+        load_id, unused_options = subcase["LOAD"]
+    return has_load, load_id
+
+def get_temp_load_id(subcase: Subcase) -> tuple[bool, int]:
+    temp_load_id = 0
+    has_temp = "TEMPERATURE(LOAD)" in subcase or "TEMPERATURE(BOTH)" in subcase
+    if has_temp:
+        if "TEMPERATURE(LOAD)" in subcase:
+            temp_load_id, _ = subcase["TEMPERATURE(LOAD)"]
+        else:
+            temp_load_id, _ = subcase["TEMPERATURE(BOTH)"]
+    return has_temp, temp_load_id

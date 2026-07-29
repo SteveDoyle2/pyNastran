@@ -48,7 +48,7 @@ from pyNastran.gui.test.all_tests_no_gui import *
 # import pyNastran.gui.gui
 
 import pyNastran.dev
-from pyNastran.dev.tools.all_tests import TestInrel, TestPressureMap
+from pyNastran.dev.tools.all_tests import *
 if IS_TABLES:
     from pyNastran.dev.bdf_vectorized3.test.all_tests import *
 

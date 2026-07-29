@@ -1361,7 +1361,10 @@ class PBAR(Property):
 
     def e_g_nu(self) -> np.ndarray:
         """calculates E, G, nu"""
-        e_g_nu = e_g_nu_from_isotropic_material(self.material_id, self.allowed_materials)
+        e_g_nu = e_g_nu_from_isotropic_material(
+            self.material_id,
+            #self.allowed_materials,
+            [self.model.mat1])
         return e_g_nu
 
 
