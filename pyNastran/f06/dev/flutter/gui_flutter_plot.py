@@ -497,9 +497,9 @@ class FlutterGui(LoggableGui):
 
     def on_flutter_font_size(self) -> None:
         # font_size = self.font_size_edit.value()
-        self.on_set_flutter_font_size(self.font_size)
+        self.set_flutter_font_size(self.font_size)
 
-    def on_set_flutter_font_size(self, font_size: int) -> None:
+    def set_flutter_font_size(self, font_size: int) -> None:
         self.font_size = font_size
         font = make_font(font_size, is_bold=False)
         # for plot_layout in self.plot_layout:

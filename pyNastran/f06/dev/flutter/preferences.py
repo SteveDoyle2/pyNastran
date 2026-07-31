@@ -246,7 +246,7 @@ class FlutterPreferencesDialog(PyDialog):
         assert font_size > 0, font_size
         font = make_font(font_size, is_bold=False)
         self.setFont(font)
-        self.win_parent.on_set_flutter_font_size(font_size)
+        self.win_parent.set_flutter_font_size(font_size)
 
     def on_plot_font_size(self) -> None:
         plot_font_size = self.plot_font_size_edit.value()
