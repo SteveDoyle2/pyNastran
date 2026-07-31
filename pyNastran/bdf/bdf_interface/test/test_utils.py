@@ -310,6 +310,30 @@ class TestToFields(unittest.TestCase):
         self.assertEqual(len(fields), 9 + 8)
         self.assertNotIn('+B', fields)
 
+    def test_matrix_card_free_field_row_not_truncated(self):
+        """DMI/DMIG-family rows are variable-length; the 9-field cap must not apply."""
+        fields = to_fields(['DMI,AAA,1,1,1.0,1.0,1.0,1.0,1.0,2.0,3.0'], 'DMI')
+        self.assertEqual(len(fields), 11)
+        self.assertEqual(fields[9], '2.0')
+        self.assertEqual(fields[10], '3.0')
+
+    def test_large_field_csv_line0_overflow(self):
+        """A 6-token large-field CSV line-0 exceeds the 5-field grammar."""
+        with self.assertRaises(CardParseSyntaxError):
+            to_fields(['PBAR*,1,1.0,2.0,3.0,4.0,5.0'], 'PBAR')
+
+    def test_large_field_csv_continuation_overflow(self):
+        """A large-field continuation holds 4 data fields; 5 must raise."""
+        with self.assertRaises(CardParseSyntaxError):
+            to_fields(['GRID*,1,,1.0,2.0', '*,3.0,4.0,5.0,6.0,7.0'], 'GRID')
+
+    def test_large_field_csv_valid(self):
+        """5-field line-0 and 4-field continuations still parse."""
+        fields = to_fields(['GRID*,1,,1.0,2.0'], 'GRID')
+        self.assertEqual(fields, ['GRID*', '1', '', '1.0', '2.0'])
+        fields2 = to_fields(['GRID*,1,,1.0,2.0', '*,3.0,4.0'], 'GRID')
+        self.assertEqual(fields2[:7], ['GRID*', '1', '', '1.0', '2.0', '3.0', '4.0'])
+
 
 class TestReadBdfFreeFieldOverflow(unittest.TestCase):
     """read_bdf rejects free-field lines that exceed the 10-field line grammar."""
