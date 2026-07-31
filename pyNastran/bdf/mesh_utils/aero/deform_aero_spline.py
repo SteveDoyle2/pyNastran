@@ -96,13 +96,13 @@ def _get_discrete_aero_mesh(structure_model: Optional[BDF],
     return aero_model, aero_xyz_cid0_point, naero_boxes_all
 
 
-def _get_all_aero_boxs(model: BDF) -> np.ndarray:
+def _get_all_aero_boxes(model: BDF) -> np.ndarray:
     # TODO: assumes splines and caeros are sorted in the same way
     #       what does this impact if that's not true?
     all_aero_box_list = []
     for eid, spline in model.splines.items():
-        boxs = spline.aero_element_ids
-        all_aero_box_list.append(boxs)
+        boxes = spline.aero_element_ids
+        all_aero_box_list.append(boxes)
     all_aero_box = np.hstack(all_aero_box_list)
     all_aero_box.sort()
     return all_aero_box
@@ -220,7 +220,7 @@ def deform_aero_spline(structure_model: BDF,
     assert len(displacement0.shape) == 2, displacement0.shape
     assert displacement0.shape[1] == 6, displacement0.shape
 
-    all_aero_box = _get_all_aero_boxs(structure_model)
+    all_aero_box = _get_all_aero_boxes(structure_model)
     assert aero_xyz_cid0_point.shape == (naero_boxes_all * 4, 3), aero_xyz_cid0_point.shape
     aero_xyz_cid0_point = _deform_aero_spline(
         structure_model, nids, xyz_cid0,
@@ -243,9 +243,9 @@ def _deform_aero_spline(structure_model: BDF,
         cid = max(aero_model.coords) + 1
 
         # get the indices for the aero boxes
-        boxs = spline.aero_element_ids
-        nboxi = len(boxs)
-        ibox = np.searchsorted(all_aero_box, boxs)
+        boxes = spline.aero_element_ids
+        nboxi = len(boxes)
+        ibox = np.searchsorted(all_aero_box, boxes)
         naero_nodesi = nboxi * 4
 
         # get the structural deflections for the spline points

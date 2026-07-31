@@ -761,7 +761,7 @@ class PreferencesWindow(PyDialog):
 
         #--------------------------------------------------
 
-        out = self._get_nastran_vboxs()
+        out = self._get_nastran_vboxes()
         vbox_nastran, vbox_nastran_results, vbox_nastran_actors = out
 
         #self.create_legend_widgets()
@@ -876,7 +876,7 @@ class PreferencesWindow(PyDialog):
         vbox_other.addWidget(self.acceleration_pulldown, irow, 1)
         return vbox_other
 
-    def _get_nastran_vboxs(self) -> tuple[QVBoxLayout, QVBoxLayout, QVBoxLayout]:
+    def _get_nastran_vboxes(self) -> tuple[QVBoxLayout, QVBoxLayout, QVBoxLayout]:
         grid_nastran = self._get_grid_nastran_layout()
         grid_nastran_results = self._get_grid_nastran_results_layout()
 

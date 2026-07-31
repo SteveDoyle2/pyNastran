@@ -881,7 +881,7 @@ class PlotLayout(QHBoxLayout):
         ]
         return out
 
-    def get_comboboxs(self) -> list[tuple[str, QComboBox, list[str]]]:
+    def get_comboboxes(self) -> list[tuple[str, QComboBox, list[str]]]:
         out = [
             ('x_plot_type', self.x_plot_type_pulldown, X_PLOT_TYPES),
             ('plot_type', self.plot_type_pulldown, PLOT_TYPES),
@@ -891,7 +891,7 @@ class PlotLayout(QHBoxLayout):
         ]
         return out
 
-    def get_checkboxs(self) -> list[tuple[str, QCheckBox]]:
+    def get_checkboxes(self) -> list[tuple[str, QCheckBox]]:
         out = [
             ('use_rhoref', self.use_rhoref_checkbox),
             ('show_points', self.show_points_checkbox),

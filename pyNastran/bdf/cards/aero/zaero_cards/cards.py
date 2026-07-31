@@ -420,7 +420,7 @@ class AEROZ(Aero):
         self.acsid_ref = None
         self.rcsid_ref = None
 
-    def convert_to_zona(self, unused_model):
+    def convert_to_zona(self, unused_model: BDF):
         #$       ACSID XZSYM FLIP FMMUNIT FMLUNIT REFC   REFB   REFS
         #$+ABC   REFX  REFY  REFZ
         #AEROZ   0     YES   NO   SLIN    IN       22.73 59.394 1175.8
@@ -434,7 +434,7 @@ class AEROZ(Aero):
             sym_xz = 0
         elif self.sym_xz == 'YES':
             sym_xz = 1
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.sym_xz)
         assert sym_xz in [0, 1], sym_xz
         aeros = AEROS(cref, bref, sref, acsid=acsid, rcsid=0, sym_xz=sym_xz, sym_xy=0,

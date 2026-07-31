@@ -250,14 +250,14 @@ class EditNodeProperties(QDialog):
         location_layout.addWidget(self.location_y_edit)
         location_layout.addWidget(self.location_z_edit)
 
-        checkboxs = QButtonGroup(self)
-        checkboxs.addButton(self.checkbox_show)
-        checkboxs.addButton(self.checkbox_hide)
+        checkboxes = QButtonGroup(self)
+        checkboxes.addButton(self.checkbox_show)
+        checkboxes.addButton(self.checkbox_hide)
 
         vbox1 = QVBoxLayout()
         vbox1.addWidget(self.checkbox_show)
         vbox1.addWidget(self.checkbox_hide)
-        #vbox1.addLayout(checkboxs)
+        #vbox1.addLayout(checkboxes)
 
         #-----------------------------------------
         irow = 0

@@ -639,7 +639,7 @@ class TradeLayout(QVBoxLayout):
         ]
         return out
 
-    def get_comboboxs(self, prefix: str = '') -> list[tuple[str, QComboBox, list[str]]]:
+    def get_comboboxes(self, prefix: str = '') -> list[tuple[str, QComboBox, list[str]]]:
         out = [
             ('xaxis', self.xaxis_pulldown, AXIS_VALUES),
             ('yaxis', self.yaxis_pulldown, AXIS_VALUES),
