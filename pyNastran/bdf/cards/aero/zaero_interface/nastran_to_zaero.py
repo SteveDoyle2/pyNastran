@@ -413,7 +413,8 @@ def _convert_aesurf(model: BDF,
         # bag of panels
         aelist: AELIST = aesurf.aelist_id1_ref
         boxes = aelist.elements
-        panlst = PANLST2(panlst_id, panlst_id, boxes)
+        macro_id = panlst_id
+        panlst = PANLST2(panlst_id, macro_id, boxes)
         zaero_add.add_panlst_object(panlst)
         npanlst2 += 1
 
@@ -438,7 +439,7 @@ def _convert_caeros(model: BDF,
 
     # just map all the coords
     # overwrite if necessary
-    modelz.nodes = model.nodes
+    #modelz.nodes = model.nodes
     for cid, coord in model.coords.items():
         modelz.coords[cid] = copy.deepcopy(coord)
 
@@ -451,8 +452,8 @@ def _convert_caeros(model: BDF,
         assert caero.type == 'CAERO1', caero
         caero.cross_reference(model)
 
-        # label = f'caero{icaero}'
-        label = ''
+        label = f'caero{icaero}'
+        #label = ''
         comment = f'{caero.comment}\n{str(caero)}'
 
         # Nastran: xyz location frame
@@ -477,9 +478,13 @@ def _convert_caeros(model: BDF,
             #modelz.coords[caero.cp] = cp_ref
             modelz.coords[caero.cp] = acoord
 
+        # CAERO1 is element-based, while CAERO7 is node-based
+        nspan = 0 if caero.nspan == 0 else caero.nspan + 1
+        nchord = 0 if caero.nchord == 0 else caero.nchord + 1
+        assert nchord > 0, caero.get_stats()
         caero7 = CAERO7(caero.eid, label,
                         caero.p1, caero.x12, caero.p4, caero.x43,
-                        caero.cp, caero.nspan, caero.nchord,
+                        caero.cp, nspan, nchord,
                         caero.lspan,
                         comment=comment)
         if caero.lspan:
@@ -502,12 +507,14 @@ def _convert_splines(model: BDF,
     nspline3 = 0
     zaero_add = modelz.zaero._add_methods
     for spline_id, spline in model.splines.items():
+        caero_id = spline.caero
+        caero = modelz.caeros[caero_id]
+        nboxes = caero.nboxes
+        assert caero.type == 'CAERO7', caero.get_stats()
         # spline.cross_reference(model)
         # model_str = ''
         spline_type = spline.type
         if spline_type == 'SPLINE1':
-            caero_id = spline.caero
-            caero = modelz.caeros[caero_id]
             panlst_id = _get_panlst_id_from_caero(caero)
 
             comment = str(spline.comment)
@@ -536,7 +543,6 @@ def _convert_splines(model: BDF,
             comment = str(spline.comment)
             # model_str = caero.label
             model_str = ''
-            nboxes = caero.nboxes
 
             spline = cast(SPLINE2, spline)
             setg = int(spline.setg)
@@ -563,6 +569,10 @@ def _convert_splines(model: BDF,
         # panlst = PANLST1(panlst_id, macro_id,
         #                  box1=panlst_id, box2=panlst_id+nboxes)
         boxes = np.arange(panlst_id, panlst_id + nboxes)
+        assert len(boxes) == nboxes
+        nchord = len(caero.lchord_ref.elements) if caero.nchord == 0 else caero.nchord
+        nspan = len(caero.lspan_ref.elements) if caero.nspan == 0 else caero.nspan
+        # print(f'caero7={caero.eid} nspan={nspan} nchord={nchord}; nboxes={len(boxes)}')
         panlst = PANLST2(panlst_id, macro_id, boxes)
         zaero_add.add_panlst_object(panlst)
     return ncord2r, nspline1, nspline2, nspline3

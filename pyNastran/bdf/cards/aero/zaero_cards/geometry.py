@@ -215,7 +215,16 @@ class PANLST2(Spline):
         self.cross_reference(model)
 
     def raw_fields(self):
-        list_fields = ['PANLST2', self.eid, self.macro_id] + list(self.boxes)
+        self.boxes.sort()
+        box1 = self.boxes[0]
+        box2 = self.boxes[-1]
+        nbox = len(self.boxes)
+        dbox = box2 - box1 + 1
+        # print(f'box1={box1} box2={box2} dbox={dbox} nbox={nbox}')
+        if dbox == nbox:
+            list_fields = ['PANLST2', self.eid, self.macro_id, box1, 'THRU', box2]
+        else:
+            list_fields = ['PANLST2', self.eid, self.macro_id] + list(self.boxes)
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -1649,7 +1658,7 @@ class CAERO7(BaseCard):
     def nboxes(self) -> int:
         assert self.nchord > 0, self.get_stats()
         assert self.nspan > 0, self.get_stats()
-        return self.nchord * self.nspan
+        return (self.nchord - 1) * (self.nspan - 1)
 
     def Cp(self):
         if self.cp_ref is not None:
