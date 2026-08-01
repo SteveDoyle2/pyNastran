@@ -3,18 +3,20 @@ from io import StringIO
 from pathlib import Path
 import unittest
 
-from cpylog import SimpleLogger
+IS_MATPLOTLIB = False
+if IS_MATPLOTLIB:
+    import matplotlib.pyplot as plt
 
+from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.aero.zaero import ZAERO, get_dicts
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+from pyNastran.bdf.cards.aero.zaero_cards.ase import (
+    MIMOTF, SENSR, GAIN, SUMBLK, DEADBN, DELAY_ZAERO, FILTFL, LIMTR)
 
-
-IS_MATPLOTLIB = False
-if IS_MATPLOTLIB:
-    import matplotlib.pyplot as plt
 
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = PKG_PATH / '..' / 'models'
@@ -57,6 +59,7 @@ class TestAeroZaero(unittest.TestCase):
         bdf_filename = ZAERO_PATH / 'ztran.bdf'
         model = read_bdf(bdf_filename, xref=False, debug=None, log=log)
         model.safe_cross_reference()
+        model.zaero.build_block()
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,
                        run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False,
@@ -75,6 +78,7 @@ class TestAeroZaero(unittest.TestCase):
             log=None, debug=False, mode='zaero')
         #with self.assertRaises(AttributeError):
 
+        model.zaero.build_block()
         model.uncross_reference()
         model.write_bdf('zaero.bdf')
         model.safe_cross_reference()
@@ -94,6 +98,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = TRIM_DIR / 'case1' / 'ha144d.inp'
         model = read_bdf(zaero_filename, xref=False, debug=False, mode='zaero')
         model.zaero.safe_cross_reference()
+        model.zaero.build_block()
         model.zaero.uncross_reference()
 
         with self.assertRaises(AssertionError):
@@ -105,6 +110,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = FLUTTER_DIR / 'case1' / 'ha145e.inp'
         model = read_bdf(zaero_filename, xref=True, debug=False)
         model.zaero.safe_cross_reference()
+        model.zaero.build_block()
         write_raw_fields(model.zaero)
         model.write_bdf(FLUTTER_DIR / 'zaero.inp')
         model.zaero.uncross_reference()
@@ -113,6 +119,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = FLUTTER_DIR / 'case2' / 'crop.inp'
         model = read_bdf(zaero_filename, xref=True, debug=False)
         model.zaero.safe_cross_reference()
+        model.zaero.build_block()
         write_raw_fields(model.zaero)
         model.write_bdf(FLUTTER_DIR / 'zaero.inp')
         model.zaero.uncross_reference()
@@ -121,6 +128,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = FLUTTER_DIR / 'case3' / 'ha145fb.inp'
         model = read_bdf(zaero_filename, xref=True, debug=False)
         model.zaero.safe_cross_reference()
+        model.zaero.build_block()
         write_raw_fields(model.zaero)
         model.write_bdf(FLUTTER_DIR / 'zaero.inp')
         model.zaero.uncross_reference()
@@ -129,6 +137,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = FLUTTER_DIR / 'case4' / 'ha145g.inp'
         model = read_bdf(zaero_filename, xref=True, debug=False)
         model.zaero.safe_cross_reference()
+        model.zaero.build_block()
         write_raw_fields(model.zaero)
         model.write_bdf(FLUTTER_DIR / 'zaero.inp')
         model.zaero.uncross_reference()
@@ -137,6 +146,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = FLUTTER_DIR / 'case5' / 'f16ma41.inp'
         model = read_bdf(zaero_filename, xref=False, debug=False)
         model.zaero.cross_reference()
+        model.zaero.build_block()
         model.zaero.safe_cross_reference()
         write_raw_fields(model.zaero)
         model.write_bdf(FLUTTER_DIR / 'zaero.inp')
@@ -146,6 +156,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = FLUTTER_DIR / 'case6' / 'agard_trim.inp'
         model = read_bdf(zaero_filename, xref=False, debug=False)
         model.zaero.cross_reference()
+        model.zaero.build_block()
         model.zaero.safe_cross_reference()
         write_raw_fields(model.zaero)
         model.write_bdf(FLUTTER_DIR / 'zaero.inp')
@@ -155,6 +166,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = FLUTTER_DIR / 'case6' / 'agardztran.inp'
         model = read_bdf(zaero_filename, xref=False, debug=False)
         model.zaero.cross_reference()
+        model.zaero.build_block()
         model.zaero.safe_cross_reference()
         write_raw_fields(model.zaero)
         model.write_bdf(MLOADS_DIR / 'zaero.inp')
@@ -164,6 +176,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = FLUTTER_DIR / 'case7' / 'agardztaw.inp'
         model = read_bdf(zaero_filename, xref=False, debug=False)
         model.zaero.cross_reference()
+        model.zaero.build_block()
         model.zaero.safe_cross_reference()
         write_raw_fields(model.zaero)
         model.write_bdf(MLOADS_DIR / 'zaero.inp')
@@ -172,6 +185,7 @@ class TestAeroZaero(unittest.TestCase):
     def test_zaero_mloads_case1_in(self):
         zaero_filename = MLOADS_DIR / 'case1' / 'm144open.inp'
         model = read_bdf(zaero_filename, xref=True, debug=False)
+        model.zaero.build_block()
         model.zaero.uncross_reference()
         # model.zaero.cross_reference()
         model.zaero.safe_cross_reference()
@@ -190,6 +204,7 @@ class TestAeroZaero(unittest.TestCase):
     def test_zaero_mloads_case2a_in(self):
         zaero_filename = MLOADS_DIR / 'case2' / 'm144_trim.inp'
         model = read_bdf(zaero_filename, xref=True, debug=False)
+        model.zaero.build_block()
         model.zaero.safe_cross_reference()
         write_raw_fields(model.zaero)
         model.write_bdf(MLOADS_DIR / 'zaero.inp')
@@ -198,6 +213,7 @@ class TestAeroZaero(unittest.TestCase):
     def test_zaero_mloads_case2b_in(self):
         zaero_filename = MLOADS_DIR / 'case2' / 'm144clos.inp'
         model = read_bdf(zaero_filename, xref=True, debug=False)
+        model.zaero.build_block()
         model.zaero.safe_cross_reference()
         write_raw_fields(model.zaero)
         model.write_bdf(MLOADS_DIR / 'zaero.inp')
@@ -206,6 +222,7 @@ class TestAeroZaero(unittest.TestCase):
     def test_zaero_ase_case1(self):
         zaero_filename = ASE_DIR / 'case1' / 'cropase.inp'
         model = read_bdf(zaero_filename, mode='zaero', xref=True, debug=False)
+        model.zaero.build_block()
         model.zaero.safe_cross_reference()
         write_raw_fields(model.zaero)
         model.write_bdf(ASE_DIR / 'zaero.inp')
@@ -214,6 +231,7 @@ class TestAeroZaero(unittest.TestCase):
     def test_zaero_ase_case2(self):
         zaero_filename = ASE_DIR / 'case2' / 'gafa.inp'
         model = read_bdf(zaero_filename, mode='zaero', xref=True, debug=False)
+        model.zaero.build_block()
         model.zaero.safe_cross_reference()
         write_raw_fields(model.zaero)
         model.write_bdf(ASE_DIR / 'zaero.inp')
@@ -223,6 +241,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = GLOADS_DIR / 'case1' / 'kussner.inp'
         model = read_bdf(zaero_filename, mode='zaero', xref=False, debug=False)
         model.zaero.cross_reference()
+        model.zaero.build_block()
         model.zaero.safe_cross_reference()
         write_raw_fields(model.zaero)
         model.write_bdf(GLOADS_DIR / 'zaero.inp')
@@ -232,6 +251,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = GLOADS_DIR / 'case2' / 'gbj_dgust.inp'
         model = read_bdf(zaero_filename, mode='zaero', xref=False, debug=False)
         model.zaero.cross_reference()
+        model.zaero.build_block()
         model.zaero.safe_cross_reference()
         write_raw_fields(model.zaero)
         model.write_bdf(GLOADS_DIR / 'zaero.inp')
@@ -241,6 +261,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = GLOADS_DIR / 'case3' / 'gbj_cgust.inp'
         model = read_bdf(zaero_filename, mode='zaero', xref=False, debug=False)
         model.zaero.cross_reference()
+        model.zaero.build_block()
         model.zaero.safe_cross_reference()
         write_raw_fields(model.zaero)
         model.write_bdf(GLOADS_DIR / 'zaero.inp')
@@ -250,6 +271,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = GLOADS_DIR / 'case4' / 'cgust_md.inp'
         model = read_bdf(zaero_filename, mode='zaero', xref=False, debug=False)
         model.zaero.cross_reference()
+        model.zaero.build_block()
         model.write_bdf(GLOADS_DIR / 'zaero.inp')
         model.zaero.uncross_reference()
 
@@ -257,6 +279,7 @@ class TestAeroZaero(unittest.TestCase):
         zaero_filename = GLOADS_DIR / 'case4' / 'cgust_sof.inp'
         model = read_bdf(zaero_filename, mode='zaero', xref=False, debug=False)
         model.zaero.cross_reference()
+        model.zaero.build_block()
         model.write_bdf(GLOADS_DIR / 'zaero.inp')
         model.zaero.uncross_reference()
 
@@ -264,10 +287,6 @@ class TestAeroZaero(unittest.TestCase):
     def test_zaero_new_ase_cards(self):
         """Test parsing and round-tripping MIMOTF, SENSR, GAIN, SUMBLK,
         DEADBN, DELAY, FILTFL, LIMTR cards."""
-        from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-        from pyNastran.bdf.cards.aero.zaero_cards.ase import (
-            MIMOTF, SENSR, GAIN, SUMBLK, DEADBN, DELAY_ZAERO, FILTFL, LIMTR)
-
         # MIMOTF: 2x2 MIMO transfer function matrix referencing 4 SISOTFs
         card = BDFCard(['MIMOTF', '10', '2', '2', '101', '102', '103', '104'])
         obj = MIMOTF.add_card(card)

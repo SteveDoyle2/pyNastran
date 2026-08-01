@@ -215,7 +215,15 @@ class PANLST2(Spline):
         self.cross_reference(model)
 
     def raw_fields(self):
-        self.boxes.sort()
+        if len(self.boxes) == 3 and self.boxes[1] == 'THRU':
+            list_fields = ['PANLST2', self.eid, self.macro_id] + self.boxes
+            return list_fields
+
+        try:
+            self.boxes.sort()
+        except TypeError:
+            raise TypeError(f'boxes={self.boxes} are not sortable')
+
         box1 = self.boxes[0]
         box2 = self.boxes[-1]
         nbox = len(self.boxes)

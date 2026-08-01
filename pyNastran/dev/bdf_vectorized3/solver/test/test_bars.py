@@ -151,9 +151,10 @@ class TestStaticBar(unittest.TestCase):
         log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(log=log, mode='msc')
         model.bdf_filename = TEST_DIR / 'cbar_thermal.bdf'
-        k_axial = build_static_cbar(model, analysis='HEAT')
 
-        load_id = 2
+        thermal_load_id = 2
+        k_axial = build_static_cbar(model, thermal_load_id=2, load_id=0)
+
         node_temp_map = {1: 1.0, 2: 2.0}
         dT = 1.5
         model.add_temp(load_id, node_temp_map)

@@ -580,8 +580,15 @@ def _convert_splines(model: BDF,
 
 def _fit_plate_spline(model: BDF, modelz: BDF,
                       set_ids: list[int],
-                      cp: int, ncord2r: int, spline_id: int) -> tuple[int, int]:
-    if len(model.nodes) and 0:
+                      cp: int, ncord2r: int,
+                      spline_id: int) -> tuple[int, int]:
+    spline = model.splines[spline_id]
+    spline_type = spline.type
+    if spline_id in model.coords:
+        modelz.coords[spline_id] = model.coords[spline_id]
+    elif len(model.nodes):
+        log.warning(f'No {spline_type}={spline_id} coord (cid={spline_id}) defined. Attempting to fit a plane...')
+
         xyz_list = [model.nodes[nid].get_position() for nid in set_ids]
         xyzs = np.vstack(xyz_list)
         origin, zaxis, xzplane = fit_plane_to_point_cloud(xyzs)
@@ -590,14 +597,9 @@ def _fit_plate_spline(model: BDF, modelz: BDF,
         ncord2r += 1
         coord_id = cp
     else:
-        # model.log.warning('p1, p2 must be in cid=0')
-        msg = f'No spline grids defined; coord_id={spline_id} doesnt exist'
-        if spline_id in model.coords:
-            modelz.coords[spline_id] = model.coords[spline_id]
-        else:
-            model.log.warning(msg)
-            assert spline_id in model.coords, msg
-        coord_id = spline_id
+        msg = f'No {spline_type}={spline_id} coord (cid={spline_id}) defined and no spline nodes were defined.'
+        model.log.error(msg)
+        raise RuntimeError(msg)
     return coord_id, ncord2r
 
 
