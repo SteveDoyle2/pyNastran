@@ -47,13 +47,13 @@ def load_lineedits(data: dict[str, Any],
             raise
 
 
-def load_checkboxs(data: dict[str, Any],
-                   checkboxs: list[tuple[str, QCheckBox]]) -> None:
+def load_checkboxes(data: dict[str, Any],
+                    checkboxes: list[tuple[str, QCheckBox]]) -> None:
     """
-    checkboxs = [('use_rhoref', self.use_rhoref_checkbox),]
+    checkboxes = [('use_rhoref', self.use_rhoref_checkbox),]
     """
     # attrs aren't stored
-    for (key, checkbox) in checkboxs:
+    for (key, checkbox) in checkboxes:
         if key not in data:
             continue
         val = data[key]

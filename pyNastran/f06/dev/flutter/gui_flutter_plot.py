@@ -41,7 +41,7 @@ from pyNastran.f06.dev.flutter.preferences import (
     FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT, FREQ_NDIGITS_DEFAULT, FREQ_DIVERGENCE_TOL)
 
 from pyNastran.f06.dev.flutter.utils_qt import (
-    load_checkboxs, load_lineedits, load_pulldowns, load_min_max_lineedits)
+    load_checkboxes, load_lineedits, load_pulldowns, load_min_max_lineedits)
 from pyNastran.f06.dev.flutter.utils import (
     validate_json, get_point_removal_str, MODE_SWITCH_METHODS,
 )
@@ -397,11 +397,11 @@ class FlutterGui(LoggableGui):
                     # log.info(f'setting {key!r} -> {value!r}')
                     setattr(self, key, value)
 
-        checkboxs = []
+        checkboxes = []
         for plot_layout in self.plot_layout:
-            checkboxs.extend(plot_layout.get_checkboxs())
+            checkboxes.extend(plot_layout.get_checkboxes())
 
-        load_checkboxs(data, checkboxs)
+        load_checkboxes(data, checkboxes)
 
         min_max_lineedits = []
         for plot_layout in self.plot_layout:
@@ -417,10 +417,10 @@ class FlutterGui(LoggableGui):
         line_edits = []
         for plot_layout in self.plot_layout:
             line_edits.extend(plot_layout.get_lineedits())
-            pulldown_edits.extend(plot_layout.get_comboboxs())
+            pulldown_edits.extend(plot_layout.get_comboboxes())
 
         line_edits.extend(trade_layout.get_lineedits())
-        pulldown_edits.extend(trade_layout.get_comboboxs())
+        pulldown_edits.extend(trade_layout.get_comboboxes())
         load_lineedits(data, line_edits)
         load_pulldowns(data, pulldown_edits)
 
@@ -497,9 +497,9 @@ class FlutterGui(LoggableGui):
 
     def on_flutter_font_size(self) -> None:
         # font_size = self.font_size_edit.value()
-        self.on_set_flutter_font_size(self.font_size)
+        self.set_flutter_font_size(self.font_size)
 
-    def on_set_flutter_font_size(self, font_size: int) -> None:
+    def set_flutter_font_size(self, font_size: int) -> None:
         self.font_size = font_size
         font = make_font(font_size, is_bold=False)
         # for plot_layout in self.plot_layout:

@@ -7,7 +7,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, string,
-    integer_or_string, double,
+    integer_or_string, double, string_or_blank,
 )
 from pyNastran.bdf.cards.aero.utils import (
     elements_from_quad,
@@ -142,7 +142,7 @@ class PANLST2(Spline):
     """
     type = 'PANLST2'
 
-    def __init__(self, eid: int, macro_id: int, boxs: list[int],
+    def __init__(self, eid: int, macro_id: int, boxes: list[int],
                  comment: str=''):
         """
         Creates a PANLST2 card
@@ -162,7 +162,7 @@ class PANLST2(Spline):
 
         self.eid = eid
         self.macro_id = macro_id  # points to CAERO7 / BODY7
-        self.boxs = boxs
+        self.boxes = boxes
         self.aero_element_ids = []
         self.caero_ref = None
 
@@ -188,25 +188,25 @@ class PANLST2(Spline):
         if isinstance(thru, str):
             assert thru == 'THRU', thru
             box2 = integer(card, 5, 'box2')
-            boxs = [box1, 'THRU', box2]
+            boxes = [box1, 'THRU', box2]
             assert len(card) == 6, f'len(PANLST2 card) = {len(card):d}\ncard={card}'
         else:
-            boxs = [box1, thru]
+            boxes = [box1, thru]
             for ifield in range(5, len(card)):
                 box2 = integer(card, ifield, 'box2')
-                boxs.append(box2)
-        return PANLST2(eid, macro_id, boxs, comment=comment)
+                boxes.append(box2)
+        return PANLST2(eid, macro_id, boxes, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by PANLST2 eid=%s' % self.eid
         self.caero_ref = model.CAero(self.macro_id, msg=msg)
-        if 'THRU' in self.boxs:
-            box1, thru, box2 = self.boxs
+        if 'THRU' in self.boxes:
+            box1, thru, box2 = self.boxes
             # +1 leads to [box1, box2] instead of [box1, box2)
-            boxs = np.arange(box1, box2+1)
+            boxes = np.arange(box1, box2+1)
         else:
-            boxs = np.asarray(self.boxs, dtype='int32')
-        self.aero_element_ids = boxs
+            boxes = np.asarray(self.boxes, dtype='int32')
+        self.aero_element_ids = boxes
 
     def uncross_reference(self) -> None:
         self.caero_ref = None
@@ -215,7 +215,16 @@ class PANLST2(Spline):
         self.cross_reference(model)
 
     def raw_fields(self):
-        list_fields = ['PANLST2', self.eid, self.macro_id] + list(self.boxs)
+        self.boxes.sort()
+        box1 = self.boxes[0]
+        box2 = self.boxes[-1]
+        nbox = len(self.boxes)
+        dbox = box2 - box1 + 1
+        # print(f'box1={box1} box2={box2} dbox={dbox} nbox={nbox}')
+        if dbox == nbox:
+            list_fields = ['PANLST2', self.eid, self.macro_id, box1, 'THRU', box2]
+        else:
+            list_fields = ['PANLST2', self.eid, self.macro_id] + list(self.boxes)
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -1580,7 +1589,7 @@ class CAERO7(BaseCard):
 
         """
         eid = integer(card, 1, 'eid')
-        name = string(card, 2, 'name')
+        name = string_or_blank(card, 2, 'name', default='')
         cp = integer_or_blank(card, 3, 'cp', default=0)
         nspan = integer_or_blank(card, 4, 'nspan', default=0)
         nchord = integer_or_blank(card, 5, 'nchord', default=0)
@@ -1644,6 +1653,12 @@ class CAERO7(BaseCard):
                     self.eid, nspan, nchord)
                 raise OverflowError(msg)
             self._init_ids(dtype='int64')
+
+    @property
+    def nboxes(self) -> int:
+        assert self.nchord > 0, self.get_stats()
+        assert self.nspan > 0, self.get_stats()
+        return (self.nchord - 1) * (self.nspan - 1)
 
     def Cp(self):
         if self.cp_ref is not None:
@@ -2288,15 +2303,16 @@ class AESURFZ(BaseCard):
             the BDF object
 
         """
-        self.cid_ref = model.Coord(self.cid)
+        msg = ', which is required by AESURFZ aesid=%s' % self.aesid
+        self.cid_ref = model.Coord(self.cid, msg=msg)
         self.panlst_ref, self.aero_element_ids = cross_reference_panlst(
-            model, self.panlst)
+            model, self.panlst, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by AESURFZ aesid=%s' % self.aesid
         self.cid_ref = model.safe_coord(self.cid, self.aesid, xref_errors, msg=msg)
         self.panlst_ref, self.aero_element_ids = cross_reference_panlst(
-            model, self.panlst)
+            model, self.panlst, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -2612,9 +2628,14 @@ class AESLINK(BaseCard):
 
 
 def cross_reference_panlst(model: BDF,
-                           panlist_id: int) -> tuple[list[PANLST1 | PANLST2 | PANLST3],
+                           panlist_id: int,
+                           msg: str='') -> tuple[list[PANLST1 | PANLST2 | PANLST3],
                                                      np.ndarray]:
-    panlst_ref = model.zaero.panlsts[panlist_id]
+    try:
+        panlst_ref = model.zaero.panlsts[panlist_id]
+    except KeyError:
+        keys = list(model.zaero.panlsts)
+        raise RuntimeError(f'panlist_id={panlist_id} does not exist; allowed={keys}{msg}')
     aero_ids_list = []
     for panlst in panlst_ref:
         panlst.cross_reference(model)

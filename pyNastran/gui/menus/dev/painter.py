@@ -216,9 +216,9 @@ class EditBoundaryConditions(QDialog):
         grid.addWidget(self.point_size_edit, irow, 1)
         irow += 1
 
-        checkboxs = QButtonGroup(self)
-        checkboxs.addButton(self.checkbox_show)
-        checkboxs.addButton(self.checkbox_hide)
+        checkboxes = QButtonGroup(self)
+        checkboxes.addButton(self.checkbox_show)
+        checkboxes.addButton(self.checkbox_hide)
 
         vbox = QVBoxLayout()
         vbox.addWidget(self.table)

@@ -212,14 +212,14 @@ class BreakSurfaceMenu(QDialog):
         coord_type_layout.addWidget(self.radio_cylindrical)
         coord_type_layout.addWidget(self.radio_spherical)
 
-        checkboxs = QButtonGroup(self)
-        checkboxs.addButton(self.checkbox_region_all)
-        checkboxs.addButton(self.checkbox_region_ids)
+        checkboxes = QButtonGroup(self)
+        checkboxes.addButton(self.checkbox_region_all)
+        checkboxes.addButton(self.checkbox_region_ids)
 
         vbox1 = QVBoxLayout()
         vbox1.addWidget(self.checkbox_region_all)
         vbox1.addWidget(self.checkbox_region_ids)
-        #vbox1.addLayout(checkboxs)
+        #vbox1.addLayout(checkboxes)
 
         #-----------------------------------------
         irow = 0

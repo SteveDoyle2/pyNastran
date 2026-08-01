@@ -5,6 +5,8 @@ import sys
 import glob
 from typing import Optional, Any, TYPE_CHECKING
 
+from docutils.parsers.rst.directives import length_units
+
 from pyNastran import DEV
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
@@ -19,13 +21,14 @@ def process_nastran(bdf_filename: str, fmt2: str, fname2: str,
     """
     Converts Nastran to STL/Cart3d/Tecplot/UGRID3d
     """
-    assert fmt2 in ['stl', 'cart3d', 'tecplot', 'ugrid', 'nastran', 'abaqus'], 'format2=%s' % fmt2
+    ALLOWED_FORMATS = ['stl', 'cart3d', 'tecplot', 'ugrid', 'nastran', 'abaqus', 'zaero']
+    assert fmt2 in ALLOWED_FORMATS, f'format2={fmt2} ALLOWED_FORMATS={ALLOWED_FORMATS}'
     if data is None:
         data = {'--scale': 1.0,}
 
     from pyNastran.bdf.bdf import BDF
     xref = True
-    if fmt2 == 'ugrid':
+    if fmt2 in {'ugrid', 'zaero'}:
         xref = False
     model = BDF(log=log, debug=debug)
     model.read_bdf(bdf_filename, validate=False, xref=xref)
@@ -58,7 +61,16 @@ def process_nastran(bdf_filename: str, fmt2: str, fname2: str,
         nastran_to_abaqus(model, fname2)
     elif fmt2 == 'nastran':
         model.write_bdf(fname2, size=16)
-    else:
+    elif fmt2 == 'zaero':
+        # from pyNastran.bdf.cards.aero.zaero_interface.zaero_to_nastran import zaero_to_nastran
+        # return zaero_to_nastran(self, save=save)
+        from pyNastran.bdf.cards.aero.zaero_interface.nastran_to_zaero import nastran_to_zaero
+        zaero_filename = fname2
+        length_unit = 'IN'
+        mass_unit = 'SLIN'
+        nastran_to_zaero(model, zaero_filename,
+                         length_unit=length_unit, mass_unit=mass_unit)
+    else:  # pragma: no cover
         raise NotImplementedError(f'fmt2={fmt2!r} is not supported by process_nastran')
 
 
@@ -95,7 +107,7 @@ def process_cart3d(cart3d_filename: str, fmt2: str, fname2: str,
     """
     Converts Cart3d to STL/Nastran/Tecplot/Cart3d
     """
-    assert fmt2 in ['stl', 'nastran', 'tecplot', 'cart3d'], 'format2=%s' % fmt2
+    assert fmt2 in ['stl', 'nastran', 'tecplot', 'cart3d'], f'format2={fmt2}'
     if data is None:
         data = {'--scale': 1.0,}
 
@@ -119,7 +131,7 @@ def process_cart3d(cart3d_filename: str, fmt2: str, fname2: str,
         model.write_cart3d(fname2, is_binary=data['--binary'])
     # elif fmt2 == 'ugrid':
         # cart3d_to_ugrid(model, fname2)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(f'fmt2={fmt2!r} is not supported by process_cart3d')
 
 
@@ -162,7 +174,7 @@ def process_stl(stl_filename: str, fmt2: str, fname2: str,
         # stl_to_tecplot(model, fname2)
     # elif fmt2 == 'ugrid':
         # stl_to_ugrid(model, fname2)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(f'fmt2={fmt2!r} is not supported by process_stl')
 
 
@@ -235,7 +247,7 @@ def process_tecplot(tecplot_filename: str, fmt2: str, fname2: str,
 
         # supports quads/loads, not tris
         tecplot_to_cart3d_filename(model, fname2, log=log)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(f'fmt2={fmt2!r} is not supported by process_tecplot')
 
 
@@ -293,7 +305,7 @@ def process_ugrid(ugrid_filename: str, fmt2: str, fname2: str,
         element_slice(tecplot, data)
         tecplot_filename = fname2
         tecplot.write_tecplot(tecplot_filename)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(f'fmt2={fmt2!r} is not supported by process_ugrid')
 
 
@@ -337,7 +349,7 @@ def cmd_line_format_converter(argv=None, log: Optional[SimpleLogger]=None, quiet
         "Usage:\n"
         #format1s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot', 'vrml']
         #format2s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
-        "  format_converter nastran   <INPUT> <format2> <OUTPUT> [-o <OP2>] --no_xref\n"
+        "  format_converter nastran   <INPUT> <format2> <OUTPUT> [-o <OP2>] --no_xref [--punch]\n"
         "  format_converter <format1> <INPUT> tecplot   <OUTPUT> [-b] [--scale SCALE] [-r RESTYPE...] [--block] [-x <X>] [-y <Y>] [-z <Z>]\n"
         "  format_converter <format1> <INPUT> stl       <OUTPUT> [-b] [--scale SCALE]\n"
         '  format_converter cart3d    <INPUT> <format2> <OUTPUT> [-b] [--scale SCALE]\n'
@@ -358,6 +370,7 @@ def cmd_line_format_converter(argv=None, log: Optional[SimpleLogger]=None, quiet
         '  -o OP2, --op2 OP2  path to results file (nastran-specific)\n'
         '                 only used for Tecplot (not supported)\n'
         "  --no_xref      Don't cross-reference (nastran-specific)\n"
+        "  --punch        Assume a punch file\n"
         '\n'
 
         'Abaqus Options:\n' # 'utf8bom' = 'utf-8-sig'
@@ -399,7 +412,6 @@ def cmd_line_format_converter(argv=None, log: Optional[SimpleLogger]=None, quiet
         '  abaqus:  nastran\n'
 
     )
-
     from docopt import docopt
     import pyNastran
     ver = str(pyNastran.__version__)
@@ -473,7 +485,7 @@ def process_vrml(vrml_filename: str, fmt2: str, fname2: str,
         vrml_to_nastran(vrml_filename, fname2, log=log)
     elif fmt2 == 'stl':
         vrml_to_stl(vrml_filename, fname2, log=log)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(f'fmt2={fmt2!r}  is not supported by process_vrml')
 
 if __name__ == '__main__':  # pragma: no cover

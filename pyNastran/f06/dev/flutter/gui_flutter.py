@@ -81,7 +81,7 @@ JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json()
 
 from pyNastran.f06.dev.flutter.vtk_data import VtkData
 from pyNastran.f06.dev.flutter.utils_qt import (
-    load_checkboxs, load_lineedits, load_pulldowns,
+    load_checkboxes, load_lineedits, load_pulldowns,
     load_min_max_lineedits)
 if USE_VTK:
     from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
@@ -443,14 +443,14 @@ class FlutterGui(LoggableGui):
                     setattr(self, key, value)
 
         ifile = self.ifile
-        checkboxs = [
+        checkboxes = [
             ('use_rhoref', self.use_rhoref_checkbox),
             ('show_points', self.show_points_checkbox[ifile]),
             ('show_mode_number', self.show_mode_number_checkbox[ifile]),
             ('show_detailed_mode_info', self.show_detailed_mode_info_checkbox[ifile]),
             ('show_lines', self.show_lines_checkbox[ifile]),
         ]
-        load_checkboxs(data, checkboxs)
+        load_checkboxes(data, checkboxes)
 
         min_max_line_edits = [
             ('eas_lim', self.eas_lim_edit_min, self.eas_lim_edit_max),
