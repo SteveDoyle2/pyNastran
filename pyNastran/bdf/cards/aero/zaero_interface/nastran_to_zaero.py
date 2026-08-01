@@ -586,8 +586,9 @@ def _fit_plate_spline(model: BDF, modelz: BDF,
     spline_type = spline.type
     if spline_id in model.coords:
         modelz.coords[spline_id] = model.coords[spline_id]
+        coord_id = spline_id
     elif len(model.nodes):
-        log.warning(f'No {spline_type}={spline_id} coord (cid={spline_id}) defined. Attempting to fit a plane...')
+        model.log.warning(f'No {spline_type}={spline_id} coord (cid={spline_id}) defined. Attempting to fit a plane...')
 
         xyz_list = [model.nodes[nid].get_position() for nid in set_ids]
         xyzs = np.vstack(xyz_list)
