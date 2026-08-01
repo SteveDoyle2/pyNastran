@@ -1484,6 +1484,66 @@ class TestStaticShell(unittest.TestCase):
         solver = Solver(model)
         solver.run()
 
+    def test_cquad4_thermal(self):
+        """Tests a CBAR/PBAR"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cquad4_thermal.bdf'
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        thickness = 0.3
+        mid = 3
+        E = 1.0E7
+        G = None
+        nu = 0.3
+
+        # --- CQUAD4 elements ---
+        model.add_cquad4(1, 1, [1, 2, 3, 4], theta_mcid=0.0, zoffset=0.,
+                         tflag=0, T1=None, T2=None, T3=None, T4=None)
+        model.add_pshell(1, mid1=mid, t=thickness, mid2=mid, twelveIt3=1.0,
+                         mid3=mid, tst=0.833333, nsm=0.0, z1=None, z2=None,
+                         mid4=None)
+       
+        alpha = 3.
+        model.add_mat1(
+            mid, E, G, nu, rho=1.0,
+            alpha=alpha, tref=0.0, ge=0.0,
+            St=0.0, Sc=0.0, Ss=0.0, mcsid=0)
+
+        load_id = 2
+        dT = 2.0
+        node_temp_map = {1: 1.0, 2: 1.0,
+                         3: 2.0, 4: 2.0}
+        model.add_temp(load_id, node_temp_map)
+        model.setup()
+        setup_static_case_control(model, thermal_load_id=2, load_id=0)
+
+        # BC/loads: fix nodes 1, 2; load nodes 3, 4
+        spc_id = 3
+        load_id = 2
+        model.add_spc1(spc_id, '123456', [1, 2])
+
+        solver = Solver(model)
+        solver.run()
+
+        # dx = L0 * alpha * dT
+        # F = kx
+        L = 1.0
+        A = L * thickness
+        k_axial = A * E / L
+        dx = alpha * dT
+        dx = 3.91071428571428
+        fmag = k_axial * dx
+        #dx = fmag / k_axial
+        xg = solver.xg
+        nnode = len(xg) // 6
+        xg = xg.reshape(nnode, 6)
+        xgi = xg[2, 0]
+        assert np.allclose(dx, xgi), f'dx={dx} xg[1, 0]={xgi}; xg:\n{xg} Fmag={fmag}'
+
     def test_cquad4_pshell_mat1(self):
         """Tests CQUAD4/PSHELL/MAT1 with CROD, CONROD, and CONM2."""
         model = BDF(debug=None, log=None, mode='msc')

@@ -3,8 +3,9 @@ from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
 
 
 def setup_static_case_control(model: BDF,
-                              analysis: str='',
-                              extra_case_lines=None) -> None:
+                              extra_case_lines=None,
+                              thermal_load_id: int=0,
+                              load_id: int=2) -> None:
     lines = [
         'STRESS(PLOT,PRINT) = ALL',
         'STRAIN(PLOT,PRINT) = ALL',
@@ -17,12 +18,10 @@ def setup_static_case_control(model: BDF,
         'ESE(PLOT,PRINT) = ALL',
         'SUBCASE 1',
     ]
-    if analysis:
-        lines.extend([
-            f'  ANALYSIS = {analysis}',
-            f'  TEMPERATURE(LOAD) = 2'])
-    else:
-        lines.append('  LOAD = 2')
+    if thermal_load_id:
+        lines.append(f'  TEMPERATURE(LOAD) = {thermal_load_id}')
+    if load_id:
+        lines.append(f'  LOAD = {load_id}')
     lines.append('  SPC = 3')
 
     if extra_case_lines is not None:
