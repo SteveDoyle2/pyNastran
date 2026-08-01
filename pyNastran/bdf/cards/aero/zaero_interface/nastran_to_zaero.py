@@ -302,7 +302,6 @@ def _convert_aeros(model: BDF,
                    mass_unit: str,
                    length_unit: str) -> tuple[int, list]:
     aeros: AEROS = model.aeros
-    aeros.cross_reference(model)
     coords = {}
     if aeros is None:
         cref = 1.1
@@ -311,6 +310,7 @@ def _convert_aeros(model: BDF,
         acsid = 0
         rcsid = 0
     else:
+        aeros.cross_reference(model)
         cref = aeros.cref
         bref = aeros.bref
         sref = aeros.sref
@@ -435,7 +435,6 @@ def _convert_caeros(model: BDF,
                     modelz: BDF) -> int:
     icaero = 11
     ncaero7 = 0
-    assert len(model.paeros), model.paeros
 
     # just map all the coords
     # overwrite if necessary
@@ -448,6 +447,9 @@ def _convert_caeros(model: BDF,
     xref_obj.cross_reference_coordinates()
 
     log = model.log
+    if len(model.caeros):
+        assert len(model.paeros), model.paeros
+
     for caero_id, caero in model.caeros.items():
         assert caero.type == 'CAERO1', caero
         caero.cross_reference(model)
