@@ -5,8 +5,6 @@ import sys
 import glob
 from typing import Optional, Any, TYPE_CHECKING
 
-from docutils.parsers.rst.directives import length_units
-
 from pyNastran import DEV
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
