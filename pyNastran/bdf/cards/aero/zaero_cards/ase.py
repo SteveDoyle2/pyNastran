@@ -194,8 +194,10 @@ class ASECONT(BaseCard):
         # self.conct_ref = model.conct[self.conct_id]
         if self.extinp_set_id:
             extinps_ref = []
-            self.extinp_set_ref = model.Set(self.extinp_set_id, msg)
-            for idi in self.extinp_set_ref.ids():
+            extinp_set_ref = model.Set(self.extinp_set_id, msg)
+            #print(f'extinp_set_ref = {extinp_set_ref}') 
+            extinp_ids = extinp_set_ref.ids
+            for idi in extinp_ids:
                 # TODO: resolve EXTINP references by ID
                 extinp = zaero.extinp.get(idi)
                 extinps_ref.append(extinp)
@@ -203,7 +205,9 @@ class ASECONT(BaseCard):
         if self.extout_set_id:
             extouts_ref = []
             extout_set_ref = model.Set(self.extout_set_id, msg)
-            for extout_id in extout_set_ref.ids:
+            #print(f'extout_set_ref = {extout_set_ref}') 
+            extout_ids = extout_set_ref.ids
+            for extout_id in extout_ids:
                 extout = zaero.extout[extout_id]
                 extout.cross_reference(model, self)
                 extouts_ref.append(extout)

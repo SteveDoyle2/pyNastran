@@ -46,10 +46,20 @@ def view_block_diagram(model: BDF) -> None:
         subcase0 = subcases.pop(0)
         if 'MLOADS' in subcase0:
             mloads_id = subcase0['MLOADS'][0]
+            log.debug(f'mloads_id = {mloads_id}')
         elif 'ASE' in subcase0:
             ase_id = subcase0['ASE'][0]
-    # print(f'mloads_id = {mloads_id}')
-    # print(f'ase_id = {ase_id}')
+            log.debug(f'ase_id = {ase_id}')
+
+    cards = [
+        zaero.mloads, zaero.mldcomd, zaero.ase,
+        zaero.tfset, zaero.senset, zaero.sisotf, zaero.mimotf,
+        zaero.asesnsr, zaero.extinp, zaero.extout,
+        zaero.conct, zaero.aeslink,]
+
+    card_lengths = [len(card) for card in cards]
+    if sum(card_lengths) == 0:
+        return
 
     asecont = None
     if mloads_id in zaero.mloads:
@@ -82,6 +92,7 @@ def view_block_diagram(model: BDF) -> None:
     # tfset_id = 0
     # cnctset_id = 0
     # senset_id =0
+    log.info(f'tfset={tfset_id} cnctset={cnctset_id} gainset={gainset_id} senset={senset_id} mldcomd={mldcomd_id}  extout_set={extout_set_id}')
 
     nnode = 0
     nedge = 0
@@ -149,19 +160,33 @@ def view_block_diagram(model: BDF) -> None:
     asegain_ids = []
     asesnsr_ids = []
 
-    if tfset_id in zaero.tfset: # SISOTF/CJUNCT/MIMOSS
+    if tfset_id == 0:
+        pass
+    elif tfset_id in zaero.tfset: # SISOTF/CJUNCT/MIMOSS
         tfset = zaero.tfset[tfset_id]
         tfset_ids = set(tfset.ids)
+    else:
+        log.warning(f'missing TFSET={tfset_id}')
 
-    if cnctset_id in zaero.cnctset: # CONCT
+    if cnctset_id == 0:
+        pass
+    elif cnctset_id in zaero.cnctset: # CONCT
         cnctset = zaero.cnctset[cnctset_id]
         conct_ids = cnctset.ids
+    else:
+        log.warning(f'missing CNCTSET={cnctset_id}')
 
-    if gainset_id in zaero.gainset: # ASEGAIN
+    if gainset_id == 0:
+        pass
+    elif gainset_id in zaero.gainset: # ASEGAIN
         gainset = zaero.gainset[gainset_id]
         asegain_ids = gainset.ids
+    else:
+        log.warning(f'missing GAINSET={gainset_id}')
 
-    if senset_id in zaero.senset: # ASESNSR
+    if senset_id == 0:
+        pass
+    elif senset_id in zaero.senset: # ASESNSR
         senset = zaero.senset[senset_id]
         asesnsr_ids = senset.ids
         g.attr('node', shape='ellipse')
@@ -170,6 +195,8 @@ def view_block_diagram(model: BDF) -> None:
             output_name = f'{asesnsr.type}={asesnsr.asesnsr_id} ({asesnsr.name})'
             output_comment = clean_comment(asesnsr.comment)
             g.node(output_name+output_comment)
+    else:
+        log.warning(f'missing SENSET={senset_id}')
 
     # print(f' tfset_ids = {tfset_ids}')
     # print(f'all_conct_ids = {conct_ids}')
@@ -179,6 +206,7 @@ def view_block_diagram(model: BDF) -> None:
     # draw ASESNSRs that link to gains...
     for idi, card in zaero.asegain.items():
         if idi not in asegain_ids:
+            #log.warning(f'missing ASEGAIN={idi}')
             continue
         output_ref = card.output_ref
         if output_ref.type == 'CJUNCT':
@@ -214,6 +242,7 @@ def view_block_diagram(model: BDF) -> None:
     g.attr('node', shape='box')
     for idi, card in zaero.sisotf.items():
         if idi not in tfset_ids:
+            #log.warning(f'missing SISOTF={idi} in the TFSET')
             continue
         name = f'{card.type}={card.sisotf_id}'
         comment = clean_comment(card.comment)
@@ -237,7 +266,9 @@ def view_block_diagram(model: BDF) -> None:
         #     input_name = f'{input_ref.type}={input_ref.input_tf_id}'
         if input_ref.type == 'SISOTF':
             itag = '' if input_ref.sisotf_id in tfset_ids else 'x'
-            assert itag == '', input_ref
+            if itag != '':
+                raise RuntimeError(f'SISOTF id={input_ref.sisotf_id} not in TFSET_ids={tfset_ids}\n'
+                                   f'input_ref:\n{input_ref}')
             input_name = f'{itag}{input_ref.type}={input_ref.sisotf_id}'
             input_comment = clean_comment(input_ref.comment)
         else:  # pragma: no cover
@@ -375,12 +406,15 @@ def view_block_diagram(model: BDF) -> None:
     #-----------------
     #if nedge == 0:  # or nnode == 0:
     if nnode == 0:
+        log.warning('returning with no nodes')
         return
+
+    if nedge == 0:
+        log.warning('No edges')
 
     try:
         g.view()
     except ExecutableNotFound:
-        bbb
         return
 
 
@@ -410,14 +444,16 @@ class FakeDigraph:
     def attr(self, kind: str, **kwargs):
         for key, value in kwargs.items():
             if key == 'shape':
-                assert value in ['ellipse', 'box'], (key, value)
+                assert value in ['ellipse', 'box', 'diamond'], (key, value)
                 self.shape = value
             else:  # pragma: no cover
                 raise NotImplementedError((key, value))
 
     def node(self, a: str):
         assert isinstance(a, str), (a, type(a))
-        assert a not in self.nodes, a
+        #print(f'adding node={a!r}')
+        #if a in self.nodes:
+        #    warnings.warn(f'  overwriting node={a!r}')
         self.nodes[a] = [self.shape]
 
     def edge(self, a: str, b: str, label: str=''):

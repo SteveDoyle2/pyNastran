@@ -35,6 +35,21 @@ dirname = Path(os.path.dirname(__file__))
 
 
 class TestAeroZaero(unittest.TestCase):
+    def test_zaero_mloads(self):
+        bdf_file = get_mloads_file()
+        #log = SimpleLogger(level='error', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = read_bdf(bdf_file, xref=True,
+                         mode='zona', debug=None, log=log)
+        model.zaero.build_block()
+        model.zaero.uncross_reference()
+        model.safe_cross_reference()
+        #save_load_deck(model, xref='safe',
+        #               run_renumber=False, run_convert=False, run_remove_unused=False,
+        #               run_save_load=False, run_save_load_hdf5=False, #run_mass_properties=False,
+        #               run_export_caero=False, run_test_bdf=False, run_op2_writer=False)
+        model.zaero.convert_to_nastran()
+
     def test_zaero_1(self):
         """zaero explicit test"""
         log = SimpleLogger(level='error', encoding='utf-8')
@@ -874,6 +889,90 @@ class TestNewZaeroCards(unittest.TestCase):
         assert ase30.cmargin_ref.cmargin_id == 1
         assert ase30.cmargin_ref.gm_high == 50.0
         assert ase30.cmargin_ref.pm_high == 60.0
+
+def get_mloads_file():
+    lines = [
+        '$ pyNastran: version=zona',
+        'CEND',
+        'SUBCASE 1',
+        '  MLOADS = 3',
+        #'  SENSET = 20',
+        #'  GAINSET = 30',
+        'BEGIN BULK',
+        # ASECONT SID SURFID SENSID TFID GAINID CONCTID EINPID EOUTID
+        # ASECONT 10  20     30     40   50     60
+        '$ asecont, id, surf_id, sens_id, conct, gain, exout, exinp',
+        'asecont,   4,        0,      20,   30,    40,      ,    70',
+        '$      mloads, asecont, flutter, minstat, mldstat, mldcomd, time/mldtime',
+        'MLOADS,3,      4,       5,              ,        , 100,     101',
+        
+        '$       flutter, sym, fix    ',
+        'FLUTTER,5,       SYM,   6,',
+        'MLDCOMD,100',
+        '$       mldtime, tstart, tend, dt',
+        'MLDTIME,101,     0.0,    1.0,  0.1',
+        
+        'SENSET,20,201',
+        'TFSET,30,203',
+        'GAINSET,40,202',
+
+        '$ ------------input file to junction to------------',
+        '$ ------------1) output file           ------------',
+        '$ ------------2) sisotf to tf to actuator------------',
+        '$        id,   type, sens_id, comp, ',
+        #'ASESNSR, 301, 2,     302,     1,   ',
+        
+        #'$ extinp_id, blank, asecont_id, ase_comp, label,',
+        #'EXTINP, 302,      , 310,        3,        JIN',
+
+        '$        id,   type, sens_id, comp, ',
+        'ASESNSR, 301, 1,     304,     1,   ',
+
+        #'$      id,  out, comp, in, comp',
+        #'CONCT, 303, 204, 1,    302, 2',
+
+        '$      id, nu, ny, nu*ny values',
+        '$ nu=in, ny=out',
+        'CJUNCT, 304, 2, 1, 1.0, 1.0',
+
+        '$      id,  out, comp, in, comp',
+        'CONCT, 305, 304, 1,    306, 1',
+
+        # EXTOUT ID  TYPE ITFID CI LABEL
+        # EXTOUT 100      400   1  PILOT
+        
+        '$  TF,  NID0,', 
+        'TF,306,  306,',
+        '$ EXTOUT ID  TYPE  ITFID CI LABEL',
+        'EXTOUT,  307,    , 307,  1, JOUT',
+        #'EXTOUT, 306, myfile.out',
+        
+        #'SET1, 60, 306',  # extinp
+        'SET1, 70, 306',  # extout
+
+        '$ ------------sensor to gain to actuator------------',
+        '$        id,   type, sens_id, comp, ',
+        'ASESNSR, 201, 1,     202,     1,   ',
+
+        '$            otfid, CO, itfid, CI, gain',
+        'ASEGAIN,202, 201,    1,    203, 1,  2.1',
+
+        #'$      id, NDEN, NNUM,',
+        'SISOTF,203,  3,    2,    1.0, 2.0, 3.0, 4.0, 5.0,',
+        ', 6.0',
+        '$      id, nu, ny, nu*ny values',
+        'CJUNCT,205, 1, 1,  1.0',
+        '$      id,  out, comp, in, comp',
+        'CONCT, 206, 205, 1,    204, 1',
+
+        '$ Actuator',
+        'ACTU,204',
+        'ENDDATA',
+    ]
+    bdf_file = StringIO('\n'.join(lines))
+    bdf_file.bdf_filename = 'cat.bdf'
+    return bdf_file
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

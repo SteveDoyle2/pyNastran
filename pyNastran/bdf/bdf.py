@@ -1741,6 +1741,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         elif isinstance(bdf_filename, (str, PurePath)):
             bdf_filename2 = bdf_filename
         elif isinstance(bdf_filename, (StringIO, IOBase)):
+            if hasattr(bdf_filename, 'bdf_filename'):
+                bdf_filename = bdf_filename.bdf_filename
             self.bdf_filename = bdf_filename
             self.punch = punch
             return

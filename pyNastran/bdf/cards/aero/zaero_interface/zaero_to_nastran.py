@@ -21,7 +21,11 @@ def zaero_to_nastran(zaero_filename: PathLike | ZAERO | BDF,
     aesurf, aelists = _convert_aesurf_aelist(zaero)
 
     trims = _convert_trim(zaero)
-    aeros, aero = zaero.model.aeros.convert_to_zona(zaero.model)
+    aeros_obj = zaero.model.aeros
+    aeros = None
+    aero = None
+    if aeros_obj is not None:
+        aeros, aero = aeros_obj.convert_to_zona(zaero.model)
 
     aelinks = _convert_trimlnk(zaero)
 
