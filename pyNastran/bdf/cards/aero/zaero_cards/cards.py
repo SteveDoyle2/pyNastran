@@ -284,7 +284,7 @@ class AEROZ(Aero):
         # YES-aero=half,structure=half
         # NO-aero=full; structure=full
         # H2F-aero=full; structure=half
-        assert sym_xz in ['YES', 'NO', 'H2F'], 'sym_xz=%r' % flip
+        assert sym_xz in ['YES', 'NO', 'H2F'], f'sym_xz={sym_xz}'
 
         # YES-structure=left,aero=right
         assert flip in ['YES', 'NO'], f'flip={flip!r}'

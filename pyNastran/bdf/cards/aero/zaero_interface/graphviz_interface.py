@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
+from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
 
 try:
@@ -10,11 +11,17 @@ try:
     from graphviz import Digraph, ExecutableNotFound
     IS_GRAPHVIZ = True
 except ImportError:  # pragma: no cover
-    ExecutableNotFound = True
     IS_GRAPHVIZ = False
 
 
-def view_block_diagram(model: BDF) -> None:
+def view_block_diagram(model: BDF, subcase_id: int=-1) -> None:
+    """
+    Parameters
+    ----------
+    subcase_id : int=-1
+        -1:  get the first subcase
+        0+: take that subcase
+    """
     log = model.log
     zaero = model.zaero
     # g = graphviz.Graph('G', filename='process2.gv', engine='sfdp')
@@ -35,21 +42,32 @@ def view_block_diagram(model: BDF) -> None:
     g = Digraph('G', filename=filename)
     # g.attr('node', shape='circle')
 
-    mloads_id = 3
-    # mloads_id = 100
+    mloads_id = 0
     ase_id = 0
-    # asecont_id = 100001
-    if mloads_id == 0:
-        subcases = model.subcases
+    subcases = model.subcases
+    if len(subcases) == 0:
+        return
+
+    if subcase_id == -1:
+        #print(subcases)
         assert len(subcases) > 0, subcases
-        print(subcases)
-        subcase0 = subcases.pop(0)
-        if 'MLOADS' in subcase0:
-            mloads_id = subcase0['MLOADS'][0]
+        for subcase_id, subcase in subcases.items():
+            if 'MLOADS' in subcase or 'ASE' in subcase:
+                break
+        else:
+            log.warning(f'couldnt find a subcase with MLOADS/ASE')
+            return
+    
+    if subcase_id:
+        subcase = subcases[subcase_id]
+        if 'MLOADS' in subcase:
+            mloads_id = subcase['MLOADS'][0]
             log.debug(f'mloads_id = {mloads_id}')
-        elif 'ASE' in subcase0:
-            ase_id = subcase0['ASE'][0]
+        elif 'ASE' in subcase:
+            ase_id = subcase['ASE'][0]
             log.debug(f'ase_id = {ase_id}')
+    # mloads_id = 100
+    # asecont_id = 100001
 
     cards = [
         zaero.mloads, zaero.mldcomd, zaero.ase,
@@ -62,6 +80,7 @@ def view_block_diagram(model: BDF) -> None:
         return
 
     asecont = None
+    mldcomd_id = 0
     if mloads_id in zaero.mloads:
         mloads = zaero.mloads[mloads_id]
         # print(mloads)
@@ -73,6 +92,18 @@ def view_block_diagram(model: BDF) -> None:
         asecont = ase.asecont_ref
 
     #if mloads_id in zaero.mloads:
+
+    tfset_id = 1000001
+    cnctset_id = 1000001
+    gainset_id = 1000001
+    senset_id = 1000001
+    extout_set_id = 0
+    extinp_set_id = 0
+    # mldcomd_id = 401
+    # tfset_id = 0
+    # cnctset_id = 0
+    # senset_id =0
+    # raise RuntimeError('mloads')
     if asecont is not None:
         #asecont_id = mloads.asecont_id
         tfset_id = asecont.tf_id
@@ -80,22 +111,25 @@ def view_block_diagram(model: BDF) -> None:
         cnctset_id = asecont.conct_id
         senset_id = asecont.sens_id
         extout_set_id = asecont.extout_set_id
-    else:
-        tfset_id = 1000001
-        cnctset_id = 1000001
-        gainset_id = 1000001
-        senset_id = 1000001
-        mldcomd_id = 0
-        extout_set_id = 0
-        # raise RuntimeError('mloads')
-        # mldcomd_id = 401
-    # tfset_id = 0
-    # cnctset_id = 0
-    # senset_id =0
-    log.info(f'tfset={tfset_id} cnctset={cnctset_id} gainset={gainset_id} senset={senset_id} mldcomd={mldcomd_id}  extout_set={extout_set_id}')
+        extinp_set_id = asecont.extinp_set_id
+    log.info(f'tfset={tfset_id} cnctset={cnctset_id} gainset={gainset_id} senset={senset_id} mldcomd={mldcomd_id}  extinp_set={extinp_set_id} extout_set={extout_set_id}')
 
     nnode = 0
     nedge = 0
+    if extinp_set_id:
+        extinps_refs = asecont.extinps_ref
+        g.attr('node', shape='box')
+        for extinp_ref in extinps_refs:
+            if extinp_ref is None:
+                log.warning('EXTINPs are None')
+                continue
+            in_name, out_name, tag = extinp_to_node_name(
+                extinp_ref)
+            g.node(in_name)
+            g.edge(in_name, out_name)
+            nnode += 1
+            nedge += 1
+
     if extout_set_id:
         # EXTOUT       501          500007       1  PITCHR
         # extout_id : 501
@@ -108,17 +142,11 @@ def view_block_diagram(model: BDF) -> None:
 
         g.attr('node', shape='box')
         for extout_ref in extouts_refs:
-            itf_ref = extout_ref.itf_ref
-            input_name = f'{itf_ref.type}={itf_ref.cjunct_id} (in={itf_ref.nu}, out={itf_ref.ny})'
-            input_comment = clean_comment(itf_ref.comment)
+            in_name, out_name, tag = extout_to_node_name(
+                extout_ref)
 
-            output_name = f'EXTOUT={extout_ref.extout_id} ({extout_ref.label})'
-            output_comment = clean_comment(extout_ref.comment)
-            tag = f'(I={extout_ref.itf_component})'
-
-            g.node(output_name+output_comment)
-            g.edge(input_name + input_comment,
-                   output_name + output_comment)
+            g.node(out_name)
+            g.edge(in_name, out_name)
             nnode += 1
             nedge += 1
 
@@ -141,6 +169,10 @@ def view_block_diagram(model: BDF) -> None:
                 # ny: 1
                 # values: [0.0, 0.0, 1.0]
                 output_comment = clean_comment(itf_ref.comment)
+            elif itf_ref.type == 'ACTU':
+                output_name = f'ACTU={itf_ref.actu_id}'
+                output_comment = clean_comment(itf_ref.comment)
+                valuei = 1.0
             else:  # pragma: no cover
                 raise RuntimeError(itf_ref)
 
@@ -160,13 +192,14 @@ def view_block_diagram(model: BDF) -> None:
     asegain_ids = []
     asesnsr_ids = []
 
+    warnings = []
     if tfset_id == 0:
         pass
     elif tfset_id in zaero.tfset: # SISOTF/CJUNCT/MIMOSS
         tfset = zaero.tfset[tfset_id]
         tfset_ids = set(tfset.ids)
     else:
-        log.warning(f'missing TFSET={tfset_id}')
+        warnings.append(f'missing TFSET={tfset_id}')
 
     if cnctset_id == 0:
         pass
@@ -174,7 +207,7 @@ def view_block_diagram(model: BDF) -> None:
         cnctset = zaero.cnctset[cnctset_id]
         conct_ids = cnctset.ids
     else:
-        log.warning(f'missing CNCTSET={cnctset_id}')
+        warnings.append(f'missing CNCTSET={cnctset_id}')
 
     if gainset_id == 0:
         pass
@@ -182,7 +215,7 @@ def view_block_diagram(model: BDF) -> None:
         gainset = zaero.gainset[gainset_id]
         asegain_ids = gainset.ids
     else:
-        log.warning(f'missing GAINSET={gainset_id}')
+        warnings.append(f'missing GAINSET={gainset_id}')
 
     if senset_id == 0:
         pass
@@ -196,8 +229,11 @@ def view_block_diagram(model: BDF) -> None:
             output_comment = clean_comment(asesnsr.comment)
             g.node(output_name+output_comment)
     else:
-        log.warning(f'missing SENSET={senset_id}')
+        warnings.append(f'missing SENSET={senset_id}')
 
+    if warnings:
+        log.warning('\n'.join(warnings))
+        warnings = []
     # print(f' tfset_ids = {tfset_ids}')
     # print(f'all_conct_ids = {conct_ids}')
     # print(f'asegain_ids = {asegain_ids}')
@@ -418,6 +454,35 @@ def view_block_diagram(model: BDF) -> None:
         return
 
 
+
+def extinp_to_node_name(extinp_ref: EXTINP) -> tuple[str, str, str]:
+    itf_ref = extinp_ref.itf_ref
+    output_name = f'{itf_ref.type}={itf_ref.cjunct_id} (in={itf_ref.nu}, out={itf_ref.ny})'
+    output_comment = clean_comment(itf_ref.comment)
+
+    input_name = f'EXTINP={extinp_ref.extinp_id} ({extinp_ref.label})'
+    input_comment = clean_comment(extout_ref.comment)
+    tag = f'(I={extinp_ref.itf_component})'
+
+    in_name = input_name + input_comment
+    out_name = output_name + output_comment
+    return in_name, out_name, tag
+
+
+def extout_to_node_name(extout_ref: EXTOUT) -> tuple[str, str, str]:
+    itf_ref = extout_ref.itf_ref
+    input_name = f'{itf_ref.type}={itf_ref.cjunct_id} (in={itf_ref.nu}, out={itf_ref.ny})'
+    input_comment = clean_comment(itf_ref.comment)
+
+    output_name = f'EXTOUT={extout_ref.extout_id} ({extout_ref.label})'
+    output_comment = clean_comment(extout_ref.comment)
+
+    tag = f'(I={extout_ref.itf_component})'
+    in_name = input_name + input_comment
+    out_name = output_name + output_comment
+    return in_name, out_name, tag
+
+
 def clean_comment(comment: str) -> str:
     lines = comment.split('\n')
     lines2 = []
@@ -433,15 +498,21 @@ def clean_comment(comment: str) -> str:
     return comment2
 
 
+class FakeExecutableNotFound(RuntimeError):
+    pass
+
 class FakeDigraph:
-    def __init__(self, graph_type: str, filename: str=''):
+    def __init__(self, graph_type: str='G',
+                 engine: str='sfdp', filename: str=''):
         assert graph_type in ['G'], graph_type
+        assert engine in ['sfdp'], engine
         assert isinstance(filename, str), filename
         self.shape = ''
         self.nodes = {}
         self.edges = {}
+        self.log = SimpleLogger(level='debug')
 
-    def attr(self, kind: str, **kwargs):
+    def attr(self, kind: str, **kwargs) -> None:
         for key, value in kwargs.items():
             if key == 'shape':
                 assert value in ['ellipse', 'box', 'diamond'], (key, value)
@@ -449,14 +520,14 @@ class FakeDigraph:
             else:  # pragma: no cover
                 raise NotImplementedError((key, value))
 
-    def node(self, a: str):
+    def node(self, a: str) -> None:
         assert isinstance(a, str), (a, type(a))
-        #print(f'adding node={a!r}')
+        #self.log.info(f'adding node={a!r}')
         #if a in self.nodes:
-        #    warnings.warn(f'  overwriting node={a!r}')
+            #self.log.info(f'  overwriting node={a!r}')
         self.nodes[a] = [self.shape]
 
-    def edge(self, a: str, b: str, label: str=''):
+    def edge(self, a: str, b: str, label: str='') -> None:
         assert isinstance(a, str), (a, type(a))
         assert isinstance(b, str), (b, type(b))
         assert isinstance(label, str), (label, type(a))
@@ -467,8 +538,10 @@ class FakeDigraph:
     def view(self):
         assert len(self.nodes) > 0, self.nodes
         for (input_name, output_name), value in self.edges.items():
-            assert input_name in self.nodes, input_name
-            assert output_name in self.nodes, input_name
+            if input_name not in self.nodes:
+                self.log.warning(f'*missing input={input_name!r}')
+            if output_name not in self.nodes:
+                self.log.warning(f'*missing output={output_name!r}')
 
     #g.edge(input_name + input_comment,
     #       output_name + output_comment,
@@ -482,3 +555,4 @@ class FakeDigraph:
 
 if not IS_GRAPHVIZ:
     Digraph = FakeDigraph
+    ExecutableNotFound = FakeExecutableNotFound

@@ -1249,9 +1249,9 @@ class ZAERO:
         # self._check_tfset_cjunct()
         # self._check_cntcset_conct()
 
-    def build_block(self) -> None:
+    def build_block(self, subcase_id: int=-1) -> None:
         from .zaero_interface.graphviz_interface import view_block_diagram
-        view_block_diagram(self.model)
+        view_block_diagram(self.model, subcase_id=subcase_id)
 
     def _check_tfset_cjunct(self):  # pragma: no cover
         assert len(self.tfset) == 1, self.tfset

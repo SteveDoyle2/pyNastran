@@ -339,7 +339,7 @@ class EXTOUT(BaseCard):
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
         """
-        Adds a TRIM card from ``BDF.add_card(...)``
+        Adds a EXTOUT card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -845,11 +845,11 @@ def get_external_obj(obj: EXTINP | EXTOUT, model: BDF,
                 assert obj.itf_component == 1, f'component={obj.itf_component}\n{str(obj)}\nparent:\n{str(parent)}'
             elif itf_id in zaero.sisotf:
                 itf_ref = zaero.sisotf[itf_id]
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(msg)
         elif itf_id in zaero.cjunct:
             itf_ref = zaero.cjunct[itf_id]
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(msg)
     else:
         assert parent.type in ['ASECONT', 'MLDCOMD'], parent
@@ -859,7 +859,7 @@ def get_external_obj(obj: EXTINP | EXTOUT, model: BDF,
         #     itf_ref = zaero.sisotf[itf_id]
         if itf_id in zaero.cjunct:
             itf_ref = zaero.cjunct[itf_id]
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(msg)
     return itf_ref
 

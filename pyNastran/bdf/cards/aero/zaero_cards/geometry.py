@@ -1385,6 +1385,16 @@ class SEGMESH(BaseCard):
         return self.comment + print_card_8(card)
 
 
+CAERO7_TABLE = """
++--------+-----+-------+--------+-------+--------+--------+--------+---------+
+|   1    |  2  |   3   |   4    |   5   |   6    |    7   |   8    |    9    |
++========+=====+=======+========+=======+========+========+========+=========+
+| CAERO7 | WID | LABEL | ACOORD | NSPAN | NCHORD |  LSPAN |  ZTAIC | PAFOIL7 |
++--------+-----+-------+--------+-------+--------+--------+--------+---------+
+|        | XRL |  YRL  |   ZRL  |  RCH  |  LRCHD | ATTCHR | ACORDR |         |
++--------+-----+-------+--------+-------+--------+--------+--------+---------+
+|        | XTL |  YTL  |   ZTL  |  TCH  |  LTCHD | ATTCHT | ACORDT |         |
++--------+-----+-------+--------+-------+--------+--------+--------+---------+""".lstrip()
 class CAERO7(BaseCard):
     """
     Totally wrong...
@@ -1559,17 +1569,17 @@ class CAERO7(BaseCard):
             msg += 'NSPAN or LSPAN must be greater than 0; nspan=%r nlspan=%s\n' % (
                 self.nspan, self.lspan)
             is_failed = True
-        if self.nspan <= 0:
-            msg += 'NSPAN must be greater than 0; nspan=%r\n' % (
+        if self.nspan <= 1:
+            msg += 'NSPAN must be greater than 1; nspan=%r\n' % (
                 self.nspan)
             is_failed = True
 
-        if self.nchord <= 0:
-            msg += 'NCHORD must be greater than 0; nchord=%r\n' % (
+        if self.nchord <= 1:
+            msg += 'NCHORD must be greater than 1; nchord=%r\n' % (
                 self.nchord)
             is_failed = True
         if is_failed:
-            msg += str(self)
+            msg += str(self) + CAERO7_TABLE
             raise ValueError(msg)
         assert len(self.p1) == 3, 'p1=%s' % self.p1
         assert len(self.p4) == 3, 'p4=%s' % self.p4

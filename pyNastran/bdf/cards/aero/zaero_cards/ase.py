@@ -147,9 +147,14 @@ class ASECONT(BaseCard):
         self.tf_id = tf_id
         self.gain_id = gain_id
         self.conct_id = conct_id
+
         self.extinp_set_id = extinp_set_id
         self.extout_set_id = extout_set_id
+
+        self.extinp_set_ref = None
         self.extinps_ref = None
+
+        self.extout_set_ref = None
         self.extouts_ref = None
 
     @classmethod
@@ -201,7 +206,9 @@ class ASECONT(BaseCard):
                 # TODO: resolve EXTINP references by ID
                 extinp = zaero.extinp.get(idi)
                 extinps_ref.append(extinp)
+            self.extinp_set_ref = extinp_set_ref
             self.extinps_ref = extinps_ref
+
         if self.extout_set_id:
             extouts_ref = []
             extout_set_ref = model.Set(self.extout_set_id, msg)
@@ -211,6 +218,7 @@ class ASECONT(BaseCard):
                 extout = zaero.extout[extout_id]
                 extout.cross_reference(model, self)
                 extouts_ref.append(extout)
+            self.extout_set_ref = extout_set_ref
             self.extouts_ref = extouts_ref
 
 
@@ -413,7 +421,7 @@ class ASESNSR(BaseCard):
         sgid = integer(card, 3, 'sens_id')
         component = integer(card, 4, 'component')
         factor = double_or_blank(card, 5, 'factor', default=1.0)
-        sum_method = string_or_blank(card, 6, 'conct_id', default='NO')
+        sum_method = string_or_blank(card, 6, 'sum_method', default='NO')
 
         assert len(card) <= 7, f'len(ASESNSR card) = {len(card):d}\ncard={card}'
         asecont = ASESNSR(asesnsr_id, sensor_type, sgid, component, factor,
@@ -467,7 +475,8 @@ class ASESNS1(BaseCard):
 
     def __init__(self, asesns1_id: int,
                  label: str, ikey: int | str,
-                 factor: float, sum_method: str='NO', comment: str=''):
+                 factor: float, sum_method: str='NO',
+                 comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -563,7 +572,7 @@ class CJUNCT(BaseCard):
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
         """
-        Adds a TRIM card from ``BDF.add_card(...)``
+        Adds a CJUNCT card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -579,12 +588,15 @@ class CJUNCT(BaseCard):
         cjunct_id = integer(card, 1, 'cjunct_id')
         nu = integer(card, 2, 'nu')
         ny = integer(card, 3, 'ny')
-        values = []
-        for ifield in range(4, len(card)):
-            di = double(card, ifield, 'di')
-            values.append(di)
-
         nexpected = nu * ny
+
+        i = 1
+        values = []
+        for ifield in range(4, 4+nexpected):
+            di = double(card, ifield, f'd{i}')
+            values.append(di)
+            i += 1
+
         assert len(values) == nexpected, f'len(values) ={len(values):d}; expected={nu}*{ny}={nexpected}'
         assert len(card) >= 5, f'len(CJUNCT card) = {len(card):d}\ncard={card}'
         return CJUNCT(cjunct_id, nu, ny, values, comment=comment)
@@ -740,7 +752,7 @@ class TFSET(BaseCard):
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
         """
-        Adds a TRIM card from ``BDF.add_card(...)``
+        Adds a TFSET card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -1523,11 +1535,15 @@ class MIMOTF(BaseCard):
         mimotf_id = integer(card, 1, 'mimotf_id')
         n_input = integer(card, 2, 'NI')
         n_output = integer(card, 3, 'NO')
-        tf_ids = []
-        for ifield in range(4, len(card)):
-            tf_id = integer(card, ifield, f'TF{ifield-3}')
-            tf_ids.append(tf_id)
         nexpected = n_input * n_output
+
+        i = 1
+        tf_ids = []
+        for ifield in range(4, 4+nexpected):
+            tf_id = integer(card, ifield, f'TF{i}')
+            tf_ids.append(tf_id)
+            i += 1
+
         assert len(tf_ids) == nexpected, (
             f'len(tf_ids)={len(tf_ids)}; expected={n_input}*{n_output}={nexpected}\ncard={card}')
         return MIMOTF(mimotf_id, n_input, n_output, tf_ids, comment=comment)

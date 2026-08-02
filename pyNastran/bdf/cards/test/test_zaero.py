@@ -41,7 +41,7 @@ class TestAeroZaero(unittest.TestCase):
         log = SimpleLogger(level='warning', encoding='utf-8')
         model = read_bdf(bdf_file, xref=True,
                          mode='zona', debug=None, log=log)
-        model.zaero.build_block()
+        model.zaero.build_block(subcase_id=0)
         model.zaero.uncross_reference()
         model.safe_cross_reference()
         #save_load_deck(model, xref='safe',
@@ -894,7 +894,7 @@ def get_mloads_file():
     lines = [
         '$ pyNastran: version=zona',
         'CEND',
-        'SUBCASE 1',
+        'SUBCASE 3',
         '  MLOADS = 3',
         #'  SENSET = 20',
         #'  GAINSET = 30',
@@ -915,6 +915,7 @@ def get_mloads_file():
         'SENSET,20,201',
         'TFSET,30,203',
         'GAINSET,40,202',
+        'SURFSET,50,FLAP',
 
         '$ ------------input file to junction to------------',
         '$ ------------1) output file           ------------',
@@ -950,7 +951,7 @@ def get_mloads_file():
         #'SET1, 60, 306',  # extinp
         'SET1, 70, 306',  # extout
 
-        '$ ------------sensor to gain to actuator------------',
+        '$ -------sensor to gain to actuator to flap-------',
         '$        id,   type, sens_id, comp, ',
         'ASESNSR, 201, 1,     202,     1,   ',
 
@@ -967,6 +968,23 @@ def get_mloads_file():
 
         '$ Actuator',
         'ACTU,204',
+        #'$          label    type    actu',
+        #'AESLINK     FLAP    ASYM     204',
+        #'             1.0   flap1     1.0   flap2',
+        
+        '$ Flap, name, type, cid, PANLST/SETK,',
+        'AESURFZ,flap1, ASYM,   0, 209',
+        'AESURFZ,flap2, ASYM,   0, 209',
+        '$        panlst, caero, box1, box2',
+        'PANLST1, 209,      101, 101, 110',
+
+        '$             id   label  acoord   nspan   nchord lspan ztaic pafoil7',
+        '$             XRL    YRL     ZRL     RCH   LRCHD  ATTCHR  ACORDR',
+        'CAERO7       101                       2       2      0',
+        '              0.      0.      0.      1.',
+        '              0.      1.      0.      1.',
+        '$      ?, sym_xz, flip, , FM_LENGTH, ',
+        'AEROZ,  ,     NO,   NO, , IN,      ',
         'ENDDATA',
     ]
     bdf_file = StringIO('\n'.join(lines))
