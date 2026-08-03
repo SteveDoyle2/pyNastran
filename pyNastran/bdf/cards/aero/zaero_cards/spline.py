@@ -118,7 +118,7 @@ class SPLINE1_ZAERO(Spline):
         """
         eid = integer(card, 1, 'eid')
         model = string_or_blank(card, 2, 'model')
-        cp = blank(card, 3, 'cp')
+        cp = integer_or_blank(card, 3, 'cp', default=0)
 
         panlst = integer(card, 4, 'panlst/setk')
         setg = integer(card, 5, 'setg')

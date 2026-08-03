@@ -1,6 +1,6 @@
 from __future__ import annotations
 from itertools import count
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -104,6 +104,20 @@ class ACOORD(CoordBase):  # not done
         assert len(card) <= 8, f'len(ACOORD card) = {len(card):d}\ncard={card}'
         return ACOORD(cid, origin, delta, theta, comment=comment)
 
+    def coord_to_xyz_array(self, xyz_cp: np.ndarray) -> np.ndarray:
+        ## TODO: consider delta (pitch)
+        cphi = np.sin(self.theta) # roll
+        sphi = np.sin(self.theta)
+        rphi = np.array([
+            [1., 0., 0.],
+            [0., cphi, -sphi],
+            [0., sphi, cphi],
+        ])
+        assert xyz_cp.ndim == 2 and xyz_cp.shape[1] == 3, xyz_cp.shape
+        xyz_local = np.einsum('nt,tu->nu', xyz_cp, rphi)
+        xyz_cid0 = xyz_local + self.origin[np.newaxis, :]
+        return xyz_cid0
+
     def setup(self):
         self.i = np.array([1., 0., 0.])
         self.j = np.array([0., 1., 0.])
@@ -206,7 +220,7 @@ class AEROZ(Aero):
         #6:'symXZ', 7:'symXY',
     #}
 
-    def __init__(self, fm_mass_unit: str, fm_length_unit: str,
+    def __init__(self, mass_unit: str, length_unit: str,
                  cref: float, bref: float, sref: float,
                  flip: str='NO', acsid: int=0, rcsid: int=0,
                  sym_xz: str='NO',
@@ -244,8 +258,8 @@ class AEROZ(Aero):
 
         if xyz_ref is None:
             xyz_ref = [0., 0., 0.]
-        self.fm_mass_unit = fm_mass_unit
-        self.fm_length_unit = fm_length_unit
+        self.mass_unit = mass_unit
+        self.length_unit = length_unit
         self.flip = flip
 
         #: Aerodynamic coordinate system identification.
@@ -288,8 +302,8 @@ class AEROZ(Aero):
 
         # YES-structure=left,aero=right
         assert flip in ['YES', 'NO'], f'flip={flip!r}'
-        assert fm_mass_unit in ['SLIN', 'LBM', 'SLUG', 'NONE'], f'fm_mass_unit={fm_mass_unit!r}'
-        assert fm_length_unit in ['IN', 'FT', 'M', 'CM', 'MM', 'NONE'], f'fm_length_unit={fm_length_unit!r}'
+        assert mass_unit in ['SLIN', 'LBM', 'SLUG', 'NONE'], f'mass_unit={mass_unit!r}'
+        assert length_unit in ['IN', 'FT', 'M', 'CM', 'MM', 'NONE'], f'length_unit={length_unit!r}'
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -313,8 +327,8 @@ class AEROZ(Aero):
         acsid = integer_or_blank(card, 1, 'acsid', 0)
         sym_xz = string(card, 2, 'sym_xz')
         flip = string(card, 3, 'flip')
-        fm_mass_unit = string_or_blank(card, 4, 'fm_mass_unit', default='NONE')
-        fm_length_unit = string(card, 5, 'fm_length_unit')
+        mass_unit = string_or_blank(card, 4, 'fm_mass_unit', default='NONE')
+        length_unit = string(card, 5, 'fm_length_unit')
 
         #rcsid = integer_or_blank(card, 2, 'rcsid', 0)
 
@@ -332,27 +346,27 @@ class AEROZ(Aero):
         # faking data to not change gui
         rcsid = 0
         #sym_xy = 0
-        return AEROZ(fm_mass_unit, fm_length_unit,
+        return AEROZ(mass_unit, length_unit,
                      cref, bref, sref, acsid=acsid, rcsid=rcsid,
                      sym_xz=sym_xz, flip=flip, xyz_ref=xyz_ref,
                      comment=comment)
 
     @property
     def weight_unit(self) -> str:
-        if self.fm_mass_unit == 'NONE':
+        if self.mass_unit == 'NONE':
             weight_unit = 'NONE'
-        elif self.fm_length_unit in ['IN', 'FT']:
+        elif self.length_unit in ['IN', 'FT']:
             weight_unit = 'LBF'
-        elif self.fm_length_unit in ['MM', 'CM', 'M', 'KM']:
-            weight_unit ='N'
-        else:
-            raise RuntimeError(f'weight_unit={self.fm_length_unit!r}')
+        elif self.length_unit in ['MM', 'CM', 'M', 'KM']:
+            weight_unit = 'N'
+        else:  # pragma: no cover
+            raise RuntimeError(f'weight_unit={self.length_unit!r}')
         # UNIT_MAP = {
         #     ('SLIN', 'IN'): 'LBF',
         #     ('SLUG', 'FT'): 'LBF',
         #     ('LBF', 'IN'): 'LBF',
         # }
-        # key = (self.fm_mass_unit, self.fm_length_unit)
+        # key = (self.mass_unit, self.length_unit)
         # return UNIT_MAP.get(key, '???')
         return weight_unit
 
@@ -401,7 +415,7 @@ class AEROZ(Aero):
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
         self.rcsid_ref = model.Coord(self.rcsid, msg=msg)
 
-    def safe_cross_reference(self, model: BDF, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors: dict[str, Any]) -> None:
         """
         Safe cross reference aerodynamic coordinate system.
 
@@ -478,7 +492,7 @@ class AEROZ(Aero):
                 #59.53 0.0   0.0
 
         list_fields = ['AEROZ', self.Acsid(), self.sym_xz, self.flip,
-                       self.fm_mass_unit, self.fm_length_unit,
+                       self.mass_unit, self.length_unit,
                        self.cref, self.bref, self.sref] + list(self.xyz_ref)
         return list_fields
 

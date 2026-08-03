@@ -208,185 +208,10 @@ class TRIM_ZAERO(BaseCard):
             raise RuntimeError(msg)
 
     def cross_reference(self, model: BDF) -> None:
-        zaero = model.zaero
-        self.mkaeroz_ref = zaero.mkaeroz[self.mkaeroz]
-
-        assert self.trimobj_id == 0, self.trimobj_id
-        assert self.trimcon_id == 0, self.trimcon_id
-        weight_unit = '???'
-        mass_unit = '???'
-        length_unit = '???'
-        inertia_unit = '???'
-        aeroz = model.aeros
-        if aeroz is not None:
-            mass_unit = aeroz.fm_mass_unit
-            weight_unit = aeroz.weight_unit
-            length_unit = aeroz.fm_length_unit
-
-        pressure_unit = f'{weight_unit}/{length_unit}^2'
-        if self.wtmass == 1.0:
-            inertia_unit = f'{mass_unit}*{length_unit}^2'
-            weight_unit = mass_unit
-        else:
-            inertia_unit = f'{weight_unit}*{length_unit}^2'
-
-        aeroz: AEROZ = model.aeros
-        ref = aeroz.xyz_ref
-        cg = self.dcg + ref
-        mach = self.mkaeroz_ref.mach
-        msg = (
-            f'trim_id = {self.sid}\n'
-            f'  mach={mach:g}; q={self.q} ({pressure_unit})\n'
-            f'  weight={self.weight:g} ({weight_unit})\n'
-            f'  mass={self.weight*self.wtmass:g} ({mass_unit})\n'
-            f'  ref={ref} ({length_unit}); per AEROZ\n'
-            f'  dcg={self.dcg} ({length_unit}); per TRIM\n'
-            f'  cg={cg} ({length_unit})\n'
-            f'  inertia={self.inertia*self.wtmass} ({inertia_unit})\n'
-            f'  true/g={self.true_g}\n\n'
-            f'  nxyz={self.nxyz}\n'
-            f'  pqr_dot={self.pqr_dot}\n'
-        )
-        free_variables = []
-        fixed_variables = []
-        linked_variables = []
-        rb_state_variables = []
-        trim_dofs = []
-        trim_variables = []
-        for name, nxyzi in zip(('NX', 'NY', 'NZ'), self.nxyz):
-            if isinstance(nxyzi, str):
-                if nxyzi == 'FREE':
-                    msg += f'Trim DOF (Free): {name} = {nxyzi}\n'
-                    trim_dofs.append(name)
-                    free_variables.append(name)
-                elif nxyzi == 'NONE':
-                    msg += f'Trim DOF (N/A): {name} = {nxyzi}\n'
-                    pass
-                else:
-                    raise RuntimeError(f'{name}={nxyzi} is not [FREE, NONE]')
-            elif isinstance(nxyzi, float):
-                msg += f'Trim DOF (Fixed): {name} = {nxyzi}\n'
-                trim_dofs.append(f'{name}={nxyzi}')
-                fixed_variables.append(f'{name}={nxyzi}')
-            else:
-                raise RuntimeError(f'{name}={nxyzi!r} is not a valid type; type={type(nxyzi)}')
-
-        for name, pqrdi in zip(('PDOT', 'QDOT', 'RDOT'), self.pqr_dot):
-            # msg += f'Trim DOF: {name} = {pqrdi}\n'
-            if isinstance(pqrdi, str):
-                if pqrdi == 'FREE':
-                    msg += f'Trim DOF (Free): {name} = {pqrdi}\n'
-                    trim_dofs.append(name)
-                    free_variables.append(name)
-                elif pqrdi == 'NONE':
-                    msg += f'Trim DOF (N/A): {name} = {pqrdi}\n'
-                else:
-                    raise RuntimeError(f'{name}={pqrdi!r} is not [FREE, NONE]')
-            elif isinstance(pqrdi, float):
-                msg += f'Trim DOF (Fixed): {name} = {pqrdi}\n'
-                trim_dofs.append(f'{name}={pqrdi}')
-                fixed_variables.append(f'{name}={pqrdi}')
-            else:
-                raise RuntimeError(f'{name}={pqrdi!r} is not FREE')
-
-        assert len(self.trimvar_ids)
-        assert len(self.trimvar_ids) == len(self.uxs)
-        trimvar_refs = get_trimvars(model, self.trimvar_ids)
-        assert len(trimvar_refs)
-
-        # print(self.get_stats())
-        aesurfz = [key for key in model.aesurf]
-        aesurfz.sort()
-        set_aesurfz = set(aesurfz)
-        zona_state_vars = {'ALPHA', 'BETA', 'PRATE', 'QRATE', 'RRATE', 'THKCAM'}
-        for trimvar_id, trimvar_ref, ux in zip(self.trimvar_ids, trimvar_refs, self.uxs):
-            # print(trimvar_ref.get_stats())
-            if trimvar_ref is None:
-                free_variables.append('trimvar_id=???')
-                trim_variables.append('trimvar_id=???')
-                msg += f'Trim Variable: ???={ux} ({trimvar_id})\n'
-                continue
-
-            label = trimvar_ref.label
-            trimlnk_id = trimvar_ref.trimlnk_id
-            if trimlnk_id == 0:
-                linkage = ''
-            else:
-                if trimvar_ref.trimlnk_ref is None:
-                    linkage = f'; linked/missing ({trimlnk_id})'
-                else:
-                    linkage = f'; linked ({trimlnk_id})'
-                linked_variables.append(f'{label}={trimlnk_id}')
-
-            if isinstance(ux, str):
-                if ux == 'FREE':
-                    trim_variables.append(label)
-                    free_variables.append(label)
-                    if label in zona_state_vars:
-                        rb_state_variables.append(f'{label}')
-                        msg += f'Trim Variable (Free RB State): {label!r}={ux} ({trimvar_id}){linkage}\n'
-                        continue
-                    if label not in zona_state_vars and label in set_aesurfz:
-                        set_aesurfz.remove(label)
-                    msg += f'Trim Variable (Free): {label!r}={ux} ({trimvar_id}){linkage}\n'
-                elif ux == 'NONE':
-                    msg += f'Trim DOF (N/A): {label!r}={ux} ({trimvar_id}){linkage}\n'
-                else:
-                    raise RuntimeError(f'{label!r}={ux} ({trimvar_id}) is not [FREE, NONE]')
-            elif isinstance(ux, float):
-                msg += f'Trim Variable (Fixed RB State): {label!r}={ux} ({trimvar_id}){linkage}\n'
-                rb_state_variables.append(f'{label}={ux}')
-                # fixed_variables.append(f'{label}={ux}')  # TODO: not sure; yes
-                trim_variables.append(f'{label}={ux}')
-                if label not in zona_state_vars and label in set_aesurfz:
-                    set_aesurfz.remove(label)
-            else:
-                raise RuntimeError(f'{label!r}={ux} ({trimvar_id}) is not [FREE, NONE]')
-        self.trimvar_refs = trimvar_refs
-
-        nfree = len(free_variables)
-        nfixed = len(fixed_variables)
-        nlinked = len(linked_variables)
-        nstate = len(rb_state_variables)
-        nunused_aesurfz = len(set_aesurfz)
-        msg += f'\nSummary:\n'
-        msg += f'  trim_dofs = {trim_dofs}; ntrim_dof={len(trim_dofs)}\n'
-        msg += f'  trim_variables = {trim_variables}; ntrimvar={len(trim_variables)}\n\n'
-
-        msg += f'  fixed_variables    = {fixed_variables}; nfixed={nfixed}\n'
-        msg += f'  free_variables     = {free_variables}; nfree={nfree}\n\n'
-        msg += f'  rb_state_variables = {rb_state_variables}; nstate={nstate}\n'
-        msg += f'  aesurfz = {aesurfz}; n={len(aesurfz)}\n\n'
-        msg += f'  linked_variables = {linked_variables}; nlinked={nlinked}\n'
-        msg += f'  unused_aesurfz = {list(set_aesurfz)}; n={nunused_aesurfz} (should be linked, optimized, or unused)\n'
-        # ndelta1 = nfree - (nfixed + nlinked)
-        # msg += f'ndelta1 = nfree - (nfixed + nlinked) = {nfree} - ({nfixed} + {nlinked}) = {nfree} - {nfixed + nlinked} = {ndelta1}\n'
-
-        ndelta = nfree - nfixed
-        if ndelta == 0:
-            determination = 'solvable'
-        elif ndelta > 0:
-            determination = 'over-determined; reduce ndelta'
-        else:
-            determination = 'under-determined; increase ndelta'
-        msg += f'ndelta = nfree - nfixed = {nfree} - {nfixed} = {ndelta} ({determination})\n'
-        # print(msg)
-        assert nfixed == nfree, msg
-        # assert nfixed == nfree, msg
-        # assert nlinked == nunused_aesurfz, msg
-
-        # ] + self.cg + [self.wtmass, self.weight] + self.inertia + [
-        #     self.true_g] + self.nxyz + self.pqr_dot + [self.loadset]
-
-        # nlabels = len(self.trimvar_ids)
-        #self.suport = model.suport
-        #self.suport1 = model.suport1
-        #self.aestats = model.aestats
-        #self.aelinks = model.aelinks
-        #self.aesurf = model.aesurf
+        cross_reference_trim(self, model, stop_on_failure=True)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
-        self.cross_reference(model)
+        cross_reference_trim(self, model, stop_on_failure=False)
         del xref_errors
 
     def uncross_reference(self) -> None:
@@ -451,6 +276,189 @@ class TRIM_ZAERO(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+
+def cross_reference_trim(trim: TRIM_ZAERO, model: BDF, stop_on_failure: bool=True) -> None:
+    zaero = model.zaero
+    log = model.log
+    trim.mkaeroz_ref = zaero.mkaeroz[trim.mkaeroz]
+
+    assert trim.trimobj_id == 0, trim.trimobj_id
+    assert trim.trimcon_id == 0, trim.trimcon_id
+    weight_unit = '???'
+    mass_unit = '???'
+    length_unit = '???'
+    inertia_unit = '???'
+    aeroz = model.aeros
+    if aeroz is not None:
+        mass_unit = aeroz.mass_unit
+        weight_unit = aeroz.weight_unit
+        length_unit = aeroz.length_unit
+
+    pressure_unit = f'{weight_unit}/{length_unit}^2'
+    if trim.wtmass == 1.0:
+        inertia_unit = f'{mass_unit}*{length_unit}^2'
+        weight_unit = mass_unit
+    else:
+        inertia_unit = f'{weight_unit}*{length_unit}^2'
+
+    aeroz: AEROZ = model.aeros
+    ref = aeroz.xyz_ref
+    cg = trim.dcg + ref
+    mach = trim.mkaeroz_ref.mach
+    msg = (
+        f'trim_id = {trim.sid}\n'
+        f'  mach={mach:g}; q={trim.q} ({pressure_unit})\n'
+        f'  weight={trim.weight:g} ({weight_unit})\n'
+        f'  mass={trim.weight*trim.wtmass:g} ({mass_unit})\n'
+        f'  ref={ref} ({length_unit}); per AEROZ\n'
+        f'  dcg={trim.dcg} ({length_unit}); per TRIM\n'
+        f'  cg={cg} ({length_unit})\n'
+        f'  inertia={trim.inertia*trim.wtmass} ({inertia_unit})\n'
+        f'  true/g={trim.true_g}\n\n'
+        f'  nxyz={trim.nxyz}\n'
+        f'  pqr_dot={trim.pqr_dot}\n'
+    )
+    free_variables = []
+    fixed_variables = []
+    linked_variables = []
+    rb_state_variables = []
+    trim_dofs = []
+    trim_variables = []
+    for name, nxyzi in zip(('NX', 'NY', 'NZ'), trim.nxyz):
+        if isinstance(nxyzi, str):
+            if nxyzi == 'FREE':
+                msg += f'Trim DOF (Free): {name} = {nxyzi}\n'
+                trim_dofs.append(name)
+                free_variables.append(name)
+            elif nxyzi == 'NONE':
+                msg += f'Trim DOF (N/A): {name} = {nxyzi}\n'
+                pass
+            else:
+                raise RuntimeError(f'{name}={nxyzi} is not [FREE, NONE]')
+        elif isinstance(nxyzi, float):
+            msg += f'Trim DOF (Fixed): {name} = {nxyzi}\n'
+            trim_dofs.append(f'{name}={nxyzi}')
+            fixed_variables.append(f'{name}={nxyzi}')
+        else:
+            raise RuntimeError(f'{name}={nxyzi!r} is not a valid type; type={type(nxyzi)}')
+
+    for name, pqrdi in zip(('PDOT', 'QDOT', 'RDOT'), trim.pqr_dot):
+        # msg += f'Trim DOF: {name} = {pqrdi}\n'
+        if isinstance(pqrdi, str):
+            if pqrdi == 'FREE':
+                msg += f'Trim DOF (Free): {name} = {pqrdi}\n'
+                trim_dofs.append(name)
+                free_variables.append(name)
+            elif pqrdi == 'NONE':
+                msg += f'Trim DOF (N/A): {name} = {pqrdi}\n'
+            else:
+                raise RuntimeError(f'{name}={pqrdi!r} is not [FREE, NONE]')
+        elif isinstance(pqrdi, float):
+            msg += f'Trim DOF (Fixed): {name} = {pqrdi}\n'
+            trim_dofs.append(f'{name}={pqrdi}')
+            fixed_variables.append(f'{name}={pqrdi}')
+        else:
+            raise RuntimeError(f'{name}={pqrdi!r} is not FREE')
+
+    assert len(trim.trimvar_ids)
+    assert len(trim.trimvar_ids) == len(trim.uxs)
+    trimvar_refs = get_trimvars(model, trim.trimvar_ids)
+    assert len(trimvar_refs)
+
+    # print(self.get_stats())
+    aesurfz = [key for key in model.aesurf]
+    aesurfz.sort()
+    set_aesurfz = set(aesurfz)
+    zona_state_vars = {'ALPHA', 'BETA', 'PRATE', 'QRATE', 'RRATE', 'THKCAM'}
+    for trimvar_id, trimvar_ref, ux in zip(trim.trimvar_ids, trimvar_refs, trim.uxs):
+        # print(trimvar_ref.get_stats())
+        if trimvar_ref is None:
+            free_variables.append('trimvar_id=???')
+            trim_variables.append('trimvar_id=???')
+            msg += f'Trim Variable: ???={ux} ({trimvar_id})\n'
+            continue
+
+        label = trimvar_ref.label
+        trimlnk_id = trimvar_ref.trimlnk_id
+        if trimlnk_id == 0:
+            linkage = ''
+        else:
+            if trimvar_ref.trimlnk_ref is None:
+                linkage = f'; linked/missing ({trimlnk_id})'
+            else:
+                linkage = f'; linked ({trimlnk_id})'
+            linked_variables.append(f'{label}={trimlnk_id}')
+
+        if isinstance(ux, str):
+            if ux == 'FREE':
+                trim_variables.append(label)
+                free_variables.append(label)
+                if label in zona_state_vars:
+                    rb_state_variables.append(f'{label}')
+                    msg += f'Trim Variable (Free RB State): {label!r}={ux} ({trimvar_id}){linkage}\n'
+                    continue
+                if label not in zona_state_vars and label in set_aesurfz:
+                    set_aesurfz.remove(label)
+                msg += f'Trim Variable (Free): {label!r}={ux} ({trimvar_id}){linkage}\n'
+            elif ux == 'NONE':
+                msg += f'Trim DOF (N/A): {label!r}={ux} ({trimvar_id}){linkage}\n'
+            else:
+                raise RuntimeError(f'{label!r}={ux} ({trimvar_id}) is not [FREE, NONE]')
+        elif isinstance(ux, float):
+            msg += f'Trim Variable (Fixed RB State): {label!r}={ux} ({trimvar_id}){linkage}\n'
+            rb_state_variables.append(f'{label}={ux}')
+            # fixed_variables.append(f'{label}={ux}')  # TODO: not sure; yes
+            trim_variables.append(f'{label}={ux}')
+            if label not in zona_state_vars and label in set_aesurfz:
+                set_aesurfz.remove(label)
+        else:
+            raise RuntimeError(f'{label!r}={ux} ({trimvar_id}) is not [FREE, NONE]')
+    trim.trimvar_refs = trimvar_refs
+
+    nfree = len(free_variables)
+    nfixed = len(fixed_variables)
+    nlinked = len(linked_variables)
+    nstate = len(rb_state_variables)
+    nunused_aesurfz = len(set_aesurfz)
+    msg += f'\nSummary:\n'
+    msg += f'  trim_dofs = {trim_dofs}; ntrim_dof={len(trim_dofs)}\n'
+    msg += f'  trim_variables = {trim_variables}; ntrimvar={len(trim_variables)}\n\n'
+
+    msg += f'  fixed_variables    = {fixed_variables}; nfixed={nfixed}\n'
+    msg += f'  free_variables     = {free_variables}; nfree={nfree}\n\n'
+    msg += f'  rb_state_variables = {rb_state_variables}; nstate={nstate}\n'
+    msg += f'  aesurfz = {aesurfz}; n={len(aesurfz)}\n\n'
+    msg += f'  linked_variables = {linked_variables}; nlinked={nlinked}\n'
+    msg += f'  unused_aesurfz = {list(set_aesurfz)}; n={nunused_aesurfz} (should be linked, optimized, or unused)\n'
+    # ndelta1 = nfree - (nfixed + nlinked)
+    # msg += f'ndelta1 = nfree - (nfixed + nlinked) = {nfree} - ({nfixed} + {nlinked}) = {nfree} - {nfixed + nlinked} = {ndelta1}\n'
+
+    ndelta = nfree - nfixed
+    if ndelta == 0:
+        determination = 'solvable'
+    elif ndelta > 0:
+        determination = 'over-determined; reduce ndelta'
+    else:
+        determination = 'under-determined; increase ndelta'
+    msg += f'ndelta = nfree - nfixed = {nfree} - {nfixed} = {ndelta} ({determination})\n'
+    # print(msg)
+    if nfixed != nfree:
+        log.error(msg)
+        if stop_on_failure:
+            raise RuntimeError(msg)
+
+    # assert nfixed == nfree, msg
+    # assert nlinked == nunused_aesurfz, msg
+
+    # ] + self.cg + [self.wtmass, self.weight] + self.inertia + [
+    #     self.true_g] + self.nxyz + self.pqr_dot + [self.loadset]
+
+    # nlabels = len(self.trimvar_ids)
+    #self.suport = model.suport
+    #self.suport1 = model.suport1
+    #self.aestats = model.aestats
+    #self.aelinks = model.aelinks
+    #self.aesurf = model.aesurf
 
 class TRIMLNK(BaseCard):
     """

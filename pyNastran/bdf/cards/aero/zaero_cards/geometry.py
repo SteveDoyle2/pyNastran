@@ -1652,18 +1652,21 @@ class CAERO7(BaseCard):
 
     def _init_ids(self, dtype='int32'):
         """
-        Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
+        Fill `self.box_ids` with the sub-box ids. Shape is (nchord-1, nspan-1)
 
+        CAERO7 nspan/nchord are division point counts (grid lines),
+        so panel count in each direction is nspan-1 and nchord-1.
         """
         nchord, nspan = self.shape
-        assert nchord >= 1, 'nchord=%s' % nchord
-        assert nspan >= 1, 'nspan=%s' % nspan
-        self.box_ids = np.zeros((nchord, nspan), dtype=dtype)
+        assert nchord >= 2, 'nchord=%s' % nchord
+        assert nspan >= 2, 'nspan=%s' % nspan
+        nchord_panels = nchord - 1
+        nspan_panels = nspan - 1
 
-        npanels = nchord * nspan
+        npanels = nchord_panels * nspan_panels
         try:
             self.box_ids = np.arange(self.eid, self.eid + npanels,
-                                     dtype=dtype).reshape(nspan, nchord) # .T
+                                     dtype=dtype).reshape(nspan_panels, nchord_panels)
         except OverflowError:
             if dtype == 'int64':
                 # we already tried int64
@@ -1893,7 +1896,7 @@ class CAERO7(BaseCard):
     @property
     def npanels(self):
         nchord, nspan = self.shape
-        return nchord * nspan
+        return (nchord - 1) * (nspan - 1)
 
     @property
     def shape(self):
@@ -1928,8 +1931,8 @@ class CAERO7(BaseCard):
 
         """
         nchord, nspan = self.shape
-        nelements = nchord * nspan
-        npoints = (nchord + 1) * (nspan + 1)
+        npoints = nchord * nspan
+        nelements = (nchord - 1) * (nspan - 1)
         return npoints, nelements
 
     @property
@@ -1945,17 +1948,17 @@ class CAERO7(BaseCard):
         """
         if self.nchord == 0:
             x = self.lchord_ref.fractions
-            nchord = len(x) - 1
+            nchord = len(x)
         else:
             nchord = self.nchord
-            x = np.linspace(0., 1., nchord + 1)
+            x = np.linspace(0., 1., nchord)
 
         if self.nspan == 0:
             y = self.lspan_ref.fractions
-            nspan = len(y) - 1
+            nspan = len(y)
         else:
             nspan = self.nspan
-            y = np.linspace(0., 1., nspan + 1)
+            y = np.linspace(0., 1., nspan)
 
         if nchord < 1 or nspan < 1:
             msg = 'CAERO7 eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (

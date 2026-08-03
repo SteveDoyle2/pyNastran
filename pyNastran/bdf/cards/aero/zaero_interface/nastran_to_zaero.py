@@ -150,7 +150,7 @@ def _convert_flutter(model: BDF, modelz: BDF,
         machs = mach_ref.factors
         mach = machs[0]
         if model.mkaeros:
-            for makero in mkaeros:
+            for makero in model.mkaeros:
                 freqs = mkaero.reduced_freqs.tolist()
                 break
         else:
