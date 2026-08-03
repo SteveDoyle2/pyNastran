@@ -93,7 +93,8 @@ def write_mpt(op2_file, op2_ascii, model, endian=b'<',
         #model.log.debug('MPT %s %s' % (name, mids))
         nmaterials = len(mids)
         if name in materials_to_skip:
-            model.log.warning(f'skipping MPT-{name}')
+            if nmaterials:
+                model.log.warning(f'skipping MPT-{name}')
             continue
 
         #if nmaterials == 0:
@@ -729,4 +730,5 @@ MATERIAL_MAP = {
     'MATT8': write_matt8,
     'TSTEPNL': write_tstepnl,
     'NLPARM': write_nlparm,
+    #'NLPCI': write_nlpci,
 }

@@ -1659,10 +1659,13 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 assert isinstance(slot, dict), (card_name, slot_name, type(slot))
                 for (comment, card_lines, ifile_iline) in cards_list:
                     fields = to_fields_line0(card_lines[0], card_name)
-                    try:
-                        idi = int(fields[1].strip())
-                    except ValueError:
-                        raise ValueError(f'Cant parse {fields[1]!r} to an integer\n' +
+                    if card_name in {'AECOMP'}:
+                        idi = fields[1].strip()
+                    else:
+                        try:
+                            idi = int(fields[1].strip())
+                        except ValueError:
+                            raise ValueError(f'Cant parse {fields[1]!r} to an integer\n' +
                                          ''.join(card_lines))
                     if idi in slot:
                         raise RuntimeError('Cannot replace duplicate card:\n' +

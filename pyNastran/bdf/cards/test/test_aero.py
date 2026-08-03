@@ -66,6 +66,63 @@ class TestAero(unittest.TestCase):
      * SPLINE1 / SPLINE2 / SPLINE4 / SPLINE5
     """
 
+    def test_aero_op2(self):
+        model = BDF(debug=False)
+        model.bdf_filename = 'aero_op2.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [0., 1., 0.])
+        model.add_aeparm(101, 'cat', 'deg')
+        set_id1 = 42
+        set_id2 = 43
+        cid = 0
+        aelist_id = 104
+        csschd_id = 105
+        aesurf_id = 102
+        model.add_aesurf(aesurf_id, 'flap', cid, aelist_id)
+        model.add_aelist(aelist_id, [101, 'THRU', 110])
+        model.add_aesurfs(103, 'flap', set_id1)
+        model.add_set1(set_id1, [1, 2, 3])
+        model.add_set1(set_id2, [1, 2, 3])
+
+        aefact_id = 201
+        lalpha_id = 202
+        model.add_csschd(
+            csschd_id, aesurf_id, lschd=aefact_id, lalpha=lalpha_id)
+        model.add_aefact(aefact_id, [0.1, 0.2])
+        model.add_aefact(lalpha_id, [0.1, 0.2])
+
+        caero_id = 101
+        cref = 1.0
+        velocity = None
+        rho_ref = 1.0
+        model.add_aero(velocity, cref, rho_ref)
+        model.add_aestat(101, 'ALPHAS')
+        paero_id = 1
+        p1 = [0., 0., 0.]
+        x12 = 1.
+        x43 = 1.
+        p4 = [0., 1., 0.]
+        igroup = 1
+        model.add_paero1(paero_id)
+        model.add_caero1(caero_id, paero_id, igroup,
+                         p1, x12, p4, x43, nspan=1, nchord=10)
+        model.add_spline1(104, caero_id, 101, 110, set_id2)
+        
+        model.add_flutter(4, 'PKNL', 1, 2, 3)
+        model.add_flfact(1, [0.5])
+        model.add_flfact(2, [0.5])
+        model.add_flfact(3, [0.5])
+        
+        list_type = 'CAERO'
+        lists = [101]
+        model.add_aecomp('MYCOMP', list_type, lists,
+                   comment='aecomp')
+                   
+        model.validate()
+        model.cross_reference()
+        save_load_deck(model)
+    
     def test_caero1_symmetric(self):
         """
         verifies flipping the caero1 flips

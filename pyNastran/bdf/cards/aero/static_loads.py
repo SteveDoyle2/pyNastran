@@ -485,8 +485,10 @@ class CSSCHD(Aero):
         """
         msg = ', which is required by CSSCHD sid=%s' % self.sid
         self.aesurf_ref = model.AESurf_int(self.aesurf_id, msg=msg)
-        self.lalpha_ref = model.AEFact(self.lalpha, msg=msg)
-        self.lmach_ref = model.AEFact(self.lmach, msg=msg)
+        if self.lalpha is not None:
+            self.lalpha_ref = model.AEFact(self.lalpha, msg=msg)
+        if self.lmach is not None:
+            self.lmach_ref = model.AEFact(self.lmach, msg=msg)
         self.lschd_ref = model.AEFact(self.lschd, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
@@ -496,8 +498,10 @@ class CSSCHD(Aero):
         except KeyError:
             pass
 
-        self.lalpha_ref = model.safe_aefact(self.lalpha, self.sid, xref_errors, msg=msg)
-        self.lmach_ref = model.safe_aefact(self.lmach, self.sid, xref_errors, msg=msg)
+        if self.lalpha is not None:
+            self.lalpha_ref = model.safe_aefact(self.lalpha, self.sid, xref_errors, msg=msg)
+        if self.lmach is not None:
+            self.lmach_ref = model.safe_aefact(self.lmach, self.sid, xref_errors, msg=msg)
         self.lschd_ref = model.safe_aefact(self.lschd, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:

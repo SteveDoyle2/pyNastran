@@ -4989,7 +4989,7 @@ class AddAero:
         self._add_methods.add_flfact_object(flfact)
         return flfact
 
-    def add_aecomp(self, name: str, list_type: list[str], lists: list[int],
+    def add_aecomp(self, name: str, list_type: str, lists: list[int],
                    comment: str='') -> AECOMP:
         """
         Creates an AECOMP card
@@ -5139,7 +5139,8 @@ class AddAero:
         self._add_methods.add_diverg_object(diverg)
         return diverg
 
-    def add_csschd(self, sid, aesid, lschd, lalpha=None, lmach=None,
+    def add_csschd(self, sid: int, aesid: int, lschd: int,
+                   lalpha=None, lmach=None,
                    comment='') -> CSSCHD:
         """
         Creates an CSSCHD card, which defines a specified control surface

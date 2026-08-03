@@ -20,7 +20,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom, BDF
 
 def write_edt(op2_file: BinaryIO, op2_ascii, model: BDF | OP2Geom,
-              endian: bytes=b'<', nastran_format: str='nx') -> None:
+              endian: bytes=b'<',
+              size: int=4, nastran_format: str='nx') -> None:
     """writes the EDT/EDTS table"""
     if not hasattr(model, 'loads'):  # OP2
         return
@@ -63,6 +64,8 @@ def write_edt(op2_file: BinaryIO, op2_ascii, model: BDF | OP2Geom,
     # loads
     for diverg_id, diverg in sorted(model.divergs.items()):
         out[diverg.type].append(diverg_id)
+    for csschd_id, csschd in sorted(model.csschds.items()):
+        out[csschd.type].append(csschd_id)
     for trim_id, trim in sorted(model.trims.items()):
         out[trim.type].append(trim_id)
     #for gust_id, gust in sorted(model.gusts.items()):  # part of DIT
@@ -93,6 +96,7 @@ def write_edt(op2_file: BinaryIO, op2_ascii, model: BDF | OP2Geom,
     write_geom_header(b'EDT', op2_file, op2_ascii, endian=endian)
     itable = -3
 
+    #model.log.level = 'debug'
     for name, ids in sorted(out.items()):
         model.log.debug('EDT %s %s' % (name, ids))
         ncards = len(ids)
@@ -111,7 +115,8 @@ def write_edt(op2_file: BinaryIO, op2_ascii, model: BDF | OP2Geom,
             raise NotImplementedError(name)
 
         nbytes = func(model, name, ids, ncards, op2_file, op2_ascii,
-                      endian, nastran_format)
+                      endian, size=size,
+                      nastran_format=nastran_format)
         op2_file.write(pack('i', nbytes))
         itable -= 1
         data = [
@@ -137,7 +142,8 @@ def remove_unsupported_cards(card_dict: dict[str, Any],
 
 def write_trim(model: BDF | OP2Geom, name: str,
                trim_ids: list[int], ncards: int,
-               op2_file: BinaryIO, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
+               op2_file: BinaryIO, op2_ascii, endian: bytes,
+               size: int=4, nastran_format: str='nx') -> int:
     """
     (2402, 24, 342)
     MSC 2018.2
@@ -190,10 +196,54 @@ def write_trim(model: BDF | OP2Geom, name: str,
         all_data += data
     return nbytes
 
+def write_csschd(model: BDF | OP2Geom, name: str,
+                 csschd_ids: list[int], ncards: int,
+                 op2_file: BinaryIO, op2_ascii, endian: bytes,
+                 size: int=4,
+                 nastran_format: str='nx') -> int:
+    """
+    (6401, 64, 307,
+     10, 510, 10, 20, 30,
+     20, 510, 100, 20, 300)
+
+    csschd	10	510	10	20	30
+    csschd	20	510	100	20	300
+    """
+    key = (6401, 64, 307)
+
+    nvalues = 0
+    all_data = []
+    nvalues = 5 * ncards
+
+    assert nvalues > 0, nvalues
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    all_data = []
+    if size == 4:
+        structi = Struct(endian + b'5i')
+    else:  # pragma: no cover
+        structi = Struct(endian + b'5d')
+        raise NotImplementedError(size)
+
+    for csschd_id in csschd_ids:
+        csschd = model.csschds[csschd_id]
+        # data : [sid, aesid, lschd, lalpha, lmach]
+        lalpha = 0 if csschd.lalpha is None else csschd.lalpha
+        lmach = 0 if csschd.lmach is None else csschd.lmach
+        data = [csschd.sid, csschd.aesurf_id, csschd.lschd, lalpha, lmach]
+        assert None not in data, data
+
+        #print(f'  CSSCHD data={data}\n')
+        op2_ascii.write(f'  CSSCHD data={data}\n')
+        op2_file.write(structi.pack(*data))
+        all_data += data
+    assert len(data) == nvalues, f'ndata={len(data)}; nvalues={nvalues}'
+    return nbytes
+
 def write_diverg(model: BDF | OP2Geom, name: str,
                  diverg_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     Record – DIVERG(2702,27,387)
     Divergence analysis data.
@@ -240,7 +290,7 @@ def write_diverg(model: BDF | OP2Geom, name: str,
 def write_caero1(model: BDF | OP2Geom, name: str,
                  caero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     MSC 2018.2
 
@@ -287,7 +337,7 @@ def write_caero1(model: BDF | OP2Geom, name: str,
 def write_caero2(model: BDF | OP2Geom, name: str,
                  caero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     MSC 2018.2
 
@@ -330,7 +380,7 @@ def write_caero2(model: BDF | OP2Geom, name: str,
 def write_caero3(model: BDF | OP2Geom, name: str,
                  caero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     Aerodynamic panel element configuration.
 
@@ -388,7 +438,7 @@ def write_caero3(model: BDF | OP2Geom, name: str,
 def write_caero4(model: BDF | OP2Geom, name: str,
                  caero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     Word Name Type Description
     1 EID   I Element identification number
@@ -438,7 +488,7 @@ def write_caero4(model: BDF | OP2Geom, name: str,
 def write_caero5(model: BDF | OP2Geom, name: str,
                  caero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     MSC 2018.2
 
@@ -494,7 +544,7 @@ def write_caero5(model: BDF | OP2Geom, name: str,
 def write_paero1(model: BDF | OP2Geom, name: str,
                  paero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     (3102, 31, 264)
     MSC 2018.2
@@ -531,7 +581,7 @@ def write_paero1(model: BDF | OP2Geom, name: str,
 def write_paero2(model: BDF | OP2Geom, name: str,
                  paero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     MSC 2018.2
 
@@ -599,7 +649,7 @@ def write_paero2(model: BDF | OP2Geom, name: str,
 def write_paero5(model: BDF | OP2Geom, name: str,
                  paero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     MSC 2018.2
     Word Name Type Description
@@ -658,7 +708,7 @@ def write_paero5(model: BDF | OP2Geom, name: str,
 def write_spline1(model: BDF | OP2Geom, name: str,
                   spline_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
-                  nastran_format: str='nx') -> int:
+                  size: int=4, nastran_format: str='nx') -> int:
     """
     Word Name Type Description
     1 EID   I
@@ -694,7 +744,7 @@ def write_spline1(model: BDF | OP2Geom, name: str,
 def write_spline2(model: BDF | OP2Geom, name: str,
                   spline_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
-                  nastran_format: str='nx') -> int:
+                  size: int=4, nastran_format: str='nx') -> int:
     """
     Writes the SPLINE2 card
 
@@ -735,7 +785,7 @@ def write_spline2(model: BDF | OP2Geom, name: str,
 def write_spline3(model: BDF | OP2Geom, name: str,
                   spline_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
-                  nastran_format: str='nx') -> int:  # pragma: no cover
+                  size: int=4, nastran_format: str='nx') -> int:  # pragma: no cover
     """
     Writes the SPLINE3 card
 
@@ -783,7 +833,7 @@ def write_spline3(model: BDF | OP2Geom, name: str,
 def write_spline4(model: BDF | OP2Geom, name: str,
                   spline_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
-                  nastran_format: str='nx') -> int:
+                  size: int=4, nastran_format: str='nx') -> int:
     key = (6501, 65, 308)
 
     msg = b''
@@ -834,7 +884,7 @@ def write_spline4(model: BDF | OP2Geom, name: str,
 def write_aesurf(model: BDF | OP2Geom, name: str,
                  aesurf_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     MSC 2018.2
 
@@ -905,7 +955,7 @@ def write_aesurf(model: BDF | OP2Geom, name: str,
 def write_aesurfs(model: BDF | OP2Geom, name: str,
                   aesurfs_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
-                  nastran_format: str='nx') -> int:
+                  size: int=4, nastran_format: str='nx') -> int:
     """
     Word Name Type Description
     1 ID       I     Identification of an aerodynamic trim variable degree
@@ -937,7 +987,7 @@ def write_aesurfs(model: BDF | OP2Geom, name: str,
 def write_aestat(model: BDF | OP2Geom, name: str,
                  aestat_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     MSC 2018.2
 
@@ -965,7 +1015,7 @@ def write_aestat(model: BDF | OP2Geom, name: str,
 def write_flutter(model: BDF | OP2Geom, name: str,
                   flutter_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
-                  nastran_format: str='nx') -> int:
+                  size: int=4, nastran_format: str='nx') -> int:
     """
     (3902, 39, 272)
     MSC 2018.2
@@ -1037,7 +1087,7 @@ def _makero_temp(data, i: int, nloops: int):
 def write_mkaero1(model: BDF | OP2Geom, name: str,
                   mkaero1s: list[MKAERO1], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
-                  nastran_format: str='nx') -> int:
+                  size: int=4, nastran_format: str='nx') -> int:
     """writes the MKAERO1
 
     data = (1.3, -1, -1, -1, -1, -1, -1, -1,
@@ -1123,7 +1173,7 @@ def write_mkaero1(model: BDF | OP2Geom, name: str,
 def write_aero(model: BDF | OP2Geom, name: str,
                aero: list[AERO], ncards: int,
                op2_file: BinaryIO, op2_ascii, endian: bytes,
-               nastran_format: str='nx') -> int:
+               size: int=4, nastran_format: str='nx') -> int:
     """
     Word Name Type Description
     1 ACSID     I
@@ -1162,7 +1212,7 @@ def write_aero(model: BDF | OP2Geom, name: str,
 def write_aeros(model: BDF | OP2Geom, name: str,
                 aeros: list[AEROS], ncards: int,
                 op2_file: BinaryIO, op2_ascii, endian: bytes,
-                nastran_format: str='nx') -> int:
+                size: int=4, nastran_format: str='nx') -> int:
     """
     AEROS(2202, 22, 340)
 
@@ -1190,7 +1240,7 @@ def write_aeros(model: BDF | OP2Geom, name: str,
 def write_flfact(model: BDF | OP2Geom, name: str,
                  flfact_ids, ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     (4102, 41, 274)
     NX 2019.2
@@ -1229,7 +1279,7 @@ def write_flfact(model: BDF | OP2Geom, name: str,
 def write_set1(model: BDF | OP2Geom, name: str,
                set_ids: list[int], ncards: int,
                op2_file: BinaryIO, op2_ascii, endian: bytes,
-               nastran_format: str='nx') -> int:
+               size: int=4, nastran_format: str='nx') -> int:
     """
     SET1: (3502, 35, 268)
     MSC 2018.2
@@ -1289,7 +1339,7 @@ def write_set1(model: BDF | OP2Geom, name: str,
 def write_set2(model: BDF | OP2Geom, name: str,
                set_ids: list[int], ncards: int,
                op2_file: BinaryIO, op2_ascii, endian: bytes,
-               nastran_format: str = 'nx') -> int:
+               size: int=4, nastran_format: str = 'nx') -> int:
 
     key = (3602, 36, 269)
     nfields = 8
@@ -1308,7 +1358,7 @@ def write_set2(model: BDF | OP2Geom, name: str,
 def write_set3(model: BDF | OP2Geom, name: str,
                set_ids: list[int], ncards: int,
                op2_file: BinaryIO, op2_ascii, endian: bytes,
-               nastran_format: str='nx') -> int:
+               size: int=4, nastran_format: str='nx') -> int:
     """
     MSC 2018.2
     Word Name Type Description
@@ -1375,7 +1425,7 @@ def write_set3(model: BDF | OP2Geom, name: str,
 def write_aelink(model: BDF | OP2Geom, name: str,
                  aelink_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     MSC 2018.2
 
@@ -1463,7 +1513,7 @@ def write_aelink(model: BDF | OP2Geom, name: str,
 def write_monpnt1(model: BDF | OP2Geom, name: str,
                   monpnt_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
-                  nastran_format: str='nx') -> int:
+                  size: int=4, nastran_format: str='nx') -> int:
     """
     MSC 2018.2
     NX-92
@@ -1517,7 +1567,7 @@ def write_monpnt1(model: BDF | OP2Geom, name: str,
 def write_monpnt2(model: BDF | OP2Geom, name: str,
                   monpnt_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
-                  nastran_format: str='nx') -> int:
+                  size: int=4, nastran_format: str='nx') -> int:
     """
     Record 59 - MONPNT2(8204,82,621)
 
@@ -1616,7 +1666,7 @@ def write_monpnt2(model: BDF | OP2Geom, name: str,
 def write_monpnt3(model: BDF | OP2Geom, name: str,
                   monpnt_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
-                  nastran_format: str='nx') -> int:
+                  size: int=4, nastran_format: str='nx') -> int:
     """
     Record 60 - MONPNT3(8304,83,622)
     Word Name    Type   Description
@@ -1661,7 +1711,7 @@ def write_monpnt3(model: BDF | OP2Geom, name: str,
 def write_deform(model: BDF | OP2Geom, name: str,
                  loads: list[DEFORM], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     (104, 1, 81)
     NX 2019.2
@@ -1689,7 +1739,7 @@ def write_deform(model: BDF | OP2Geom, name: str,
 def write_aefact(model: BDF | OP2Geom, name: str,
                  aefact_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     MSC 2018.2
 
@@ -1733,7 +1783,7 @@ def write_aefact(model: BDF | OP2Geom, name: str,
 def write_aelist(model: BDF | OP2Geom, name: str,
                  aelist_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
-                 nastran_format: str='nx') -> int:
+                 size: int=4, nastran_format: str='nx') -> int:
     """
     MSC 2018.2
 
@@ -1773,6 +1823,7 @@ def write_aelist(model: BDF | OP2Geom, name: str,
 EDT_MAP = {
     'AEFACT': write_aefact,
     'AELIST': write_aelist,
+    'CSSCHD': write_csschd,
 
     'MONPNT1': write_monpnt1,
     'MONPNT2': write_monpnt2,

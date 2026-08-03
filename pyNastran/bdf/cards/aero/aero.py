@@ -136,7 +136,7 @@ class AECOMP(BaseCard):
             raise RuntimeError(msg)
 
     @classmethod
-    def add_card(cls, card: Any, comment: str='') -> AECOMP:
+    def add_card(cls, card: BDFCard, comment: str='') -> AECOMP:
         """
         Adds an AECOMP card from ``BDF.add_card(...)``
 

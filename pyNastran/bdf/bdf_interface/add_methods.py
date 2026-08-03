@@ -914,6 +914,8 @@ class AddMethods:
         key = coord.cid
         model = self.model
         assert coord.cid > -1, 'cid=%s coord=\n%s' % (key, coord)
+        if key == 0:
+            return
         # add_object_to_dict_no_dupes(model, key, 'coords', coord, model.coords,
         #                             model._duplicate['coords'], allow_overwrites)
 
