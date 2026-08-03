@@ -68,6 +68,14 @@ def write_edt(op2_file: BinaryIO, op2_ascii, model: BDF | OP2Geom,
         out[csschd.type].append(csschd_id)
     for trim_id, trim in sorted(model.trims.items()):
         out[trim.type].append(trim_id)
+    for uxvec_id, uxvec in sorted(model.uxvec.items()):
+        out[uxvec.type].append(uxvec_id)
+    for aedw_id, aedw in enumerate(model.aedw):
+        out[aedw.type].append(aedw_id)
+    for aepress_id, aepress in enumerate(model.aepress):
+        out[aepress.type].append(aepress_id)
+    for aeforce_id, aeforce in enumerate(model.aeforce):
+        out[aeforce.type].append(aeforce_id)
     #for gust_id, gust in sorted(model.gusts.items()):  # part of DIT
         #out[gust.type].append(gust_id)
     for aestat_id, aestat in sorted(model.aestats.items()):
@@ -96,7 +104,7 @@ def write_edt(op2_file: BinaryIO, op2_ascii, model: BDF | OP2Geom,
     write_geom_header(b'EDT', op2_file, op2_ascii, endian=endian)
     itable = -3
 
-    #model.log.level = 'debug'
+    # model.log.level = 'debug'
     for name, ids in sorted(out.items()):
         model.log.debug('EDT %s %s' % (name, ids))
         ncards = len(ids)
@@ -139,6 +147,150 @@ def remove_unsupported_cards(card_dict: dict[str, Any],
         if card_type not in card_types:
             del card_dict[card_type]
             log.warning(f"removing {card_type} in OP2 writer because it's unsupported")
+
+def write_uxvec(model: BDF | OP2Geom, name: str,
+                uxvec_ids: list[int], ncards: int,
+                op2_file: BinaryIO, op2_ascii, endian: bytes,
+                size: int=4, nastran_format: str='nx') -> int:
+    """
+    MSC 2020
+
+    Word Name Type Description
+    1 ID           I Control vector identification number
+    2 LABEL(2) CHAR4 Controller name
+    4 UX          RS Magnitude of aerodynamic extra point dof
+    Words 2 thru 4 repeat until (-1,-1) occurs
+
+    data  = (5001, 'PLOAD   ', 1.0, 'INTERCPT', 0.0, -1, -1)
+    """
+    ntotal1 = size # 4*1
+    ntotal_end = 2 * size # 4*2
+    ntotal2 = 3 * size # 4*3
+    #ndatai = len(data) - n
+    #ncards = ndatai // ntotal
+    #assert ndatai % ntotal == 0
+    #struct1 = Struct(endian + b'i', size)
+    #struct2 = Struct(endian + b'8s f', size)
+    #struct_end = Struct(endian + b'2i', size)
+
+    #struct1 = Struct(endian + b'i 3f')
+    #struct2 = Struct(endian + b'8sf')
+    #struct_end = Struct(endian + b'3i')
+    key = (7201, 72, 573)
+    #nfields = 16
+
+    nlabels_total = 0
+    for uxvec_id in uxvec_ids:
+        uxvec = model.uxvec[uxvec_id]
+        assert len(uxvec.labels) == len(uxvec.uxs), uxvec.get_stats()
+        nlabels = len(uxvec.labels)
+        #nuxs = len(trim.uxs)
+        nlabels_total += nlabels
+
+    # the 3* comes from [sid, -1, -1]
+    # the *3 comes from:
+    #  - label (2 fields of 4s)
+    #  - ux
+    nvalues = 3 * ncards + nlabels_total * 3
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    all_data = []
+    for uxvec_id in uxvec_ids:
+        uxvec = model.uxvec[uxvec_id]
+        nlabels = len(uxvec.labels)
+        data = [uxvec.sid]
+        fmt = b'i'
+        for label, ux in zip(uxvec.labels, uxvec.uxs):
+            label_bytes = b'%-8s' % label.encode('latin1')
+            data.extend([label_bytes, ux])
+            fmt += b'8sf'
+        data += [-1, -1]
+        fmt += b'2i'
+        assert None not in data, data
+        structi = Struct(fmt)
+        op2_ascii.write(f'  UXVEC data={data}\n')
+        #print(data)
+        op2_file.write(structi.pack(*data))
+        all_data += data
+    return nbytes
+
+def write_aedw(model: BDF | OP2Geom, name: str,
+               aedw_ids: list[int], ncards: int,
+               op2_file: BinaryIO, op2_ascii, endian: bytes,
+               size: int=4, nastran_format: str='nx') -> int:
+    """
+    Parametric pressure loading for aerodynamics.
+    Word Name Type Description
+    1 MACH     RS    Mach number
+    2 SYMXZ(2) CHAR4 Character string for identifying symmetry of the
+                     force vector. Allowable values are SYMM, ASYMM, and ANTI
+    4 SYMXY(2) CHAR4 Character string for identifying symmetry of the
+                     force vector. Allowable values are SYMM, ASYMM, and ANTI
+    6 UXID     I     The identification number of a UXVEC entry
+    7 DMIJ(2)  CHAR4 The name of a DMI or DMIJ entry that defines the pressure
+                     per unit dynamic pressure
+    9 DMIJI(2) CHAR4 The name of a DMIJI entry that defines the CAERO2
+                     interference element downwashes
+    """
+    key = (7301, 73, 574)
+    nvalues = 10 * ncards
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    #ntotal = 10 * size # 4*10
+    structi = Struct(endian + b'f 8s 8s i 8s 8s')
+
+    for i in aedw_ids:
+        aedw = model.aedw[i]
+        assert isinstance(aedw.dmij, str), aedw.dmij
+        assert isinstance(aedw.dmiji, str), aedw.dmiji
+        sym_xy_bytes = b'%-8s' % aedw.sym_xy.encode('latin1')
+        sym_xz_bytes = b'%-8s' % aedw.sym_xz.encode('latin1')
+        dmij_bytes = b'%-8s' % aedw.dmij.encode('latin1')
+        dmiji_bytes = b'%-8s' % aedw.dmiji.encode('latin1')
+
+        data = [aedw.mach, sym_xz_bytes, sym_xy_bytes, aedw.uxid, dmij_bytes, dmiji_bytes]
+        op2_file.write(structi.pack(*data))
+        #print(mach, sym_xz, sym_xy, ux_id, dmij, dmiji)
+    return nbytes
+
+def write_aepress(model: BDF | OP2Geom, name: str,
+                  aepress_ids: list[int], ncards: int,
+                  op2_file: BinaryIO, op2_ascii, endian: bytes,
+                  size: int=4, nastran_format: str='nx') -> int:
+    """
+    Parametric pressure loading for aerodynamics.
+    Word Name Type Description
+    1 MACH     RS    Mach number
+    2 SYMXZ(2) CHAR4 Character string for identifying symmetry of the
+                     force vector. Allowable values are SYMM, ASYMM, and ANTI
+    4 SYMXY(2) CHAR4 Character string for identifying symmetry of the
+                     force vector. Allowable values are SYMM, ASYMM, and ANTI
+    6 UXID     I     The identification number of a UXVEC entry
+    7 DMIJ(2)  CHAR4 The name of a DMI or DMIJ entry that defines the pressure
+                     per unit dynamic pressure
+    9 DMIJI(2) CHAR4 The name of a DMIJI entry that defines the CAERO2
+                     interference element downwashes
+    """
+    key = (7401, 74, 575)
+    nvalues = 10 * ncards
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    #ntotal = 10 * size # 4*10
+    structi = Struct(endian + b'f 8s 8s i 8s 8s')
+
+    for i in aepress_ids:
+        aepress = model.aepress[i]
+        assert isinstance(aepress.dmij, str), aepress.dmij
+        assert isinstance(aepress.dmiji, str), aepress.dmiji
+        sym_xy_bytes = b'%-8s' % aepress.sym_xy.encode('latin1')
+        sym_xz_bytes = b'%-8s' % aepress.sym_xz.encode('latin1')
+        dmij_bytes = b'%-8s' % aepress.dmij.encode('latin1')
+        dmiji_bytes = b'%-8s' % aepress.dmiji.encode('latin1')
+
+        data = [aepress.mach, sym_xz_bytes, sym_xy_bytes, aepress.uxid, dmij_bytes, dmiji_bytes]
+        op2_file.write(structi.pack(*data))
+        #print(mach, sym_xz, sym_xy, ux_id, dmij, dmiji)
+    return nbytes
 
 def write_trim(model: BDF | OP2Geom, name: str,
                trim_ids: list[int], ncards: int,
@@ -1844,6 +1996,10 @@ EDT_MAP = {
     'AERO': write_aero,
     'AEROS': write_aeros,
     'TRIM': write_trim,
+    'UXVEC': write_uxvec,
+    'AEDW': write_aedw,
+    'AEPRESS': write_aepress,
+    #'AEFORCE': write_aeforce,
     'FLUTTER': write_flutter,
     'DEFORM': write_deform,
     'FLFACT': write_flfact,

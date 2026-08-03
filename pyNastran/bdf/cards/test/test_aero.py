@@ -113,7 +113,27 @@ class TestAero(unittest.TestCase):
         model.add_flfact(1, [0.5])
         model.add_flfact(2, [0.5])
         model.add_flfact(3, [0.5])
-        
+
+        uxvec_id = 105
+        labels = ['cat', 'dog']
+        uxs = [1.0, 2.0]
+        model.add_uxvec(uxvec_id, labels, uxs, comment='uxvec')
+        sym_xz = 'NO'
+        sym_xy = 'NO'
+        ux_id = uxvec_id
+        mach = 0.8
+        model.add_aepress(mach, sym_xz, sym_xy,
+                    ux_id, dmij='', dmiji='MYMAT',
+                    comment='aepress')
+        model.add_aedw(mach, sym_xz, sym_xy,
+                       ux_id, dmij='', dmiji='MYMAT',
+                       comment='aedw')
+
+        mesh = 'AERO'
+        model.add_aeforce(mach, sym_xz, sym_xy, ux_id,
+                          mesh, force='',
+                          dmik='', perq='',
+                          comment='aeforce')
         list_type = 'CAERO'
         lists = [101]
         model.add_aecomp('MYCOMP', list_type, lists,

@@ -151,6 +151,7 @@ def remove_unused(bdf_filename: PathLike,
 
         # aero
         'AESURFS', 'CSSCHD', 'AECOMP', 'AEFORCE', 'AEPRESS', 'AEDW',
+        'UXVEC',
         # 'CAERO2',
         'CAERO3', 'CAERO4', 'CAERO5',
         'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',

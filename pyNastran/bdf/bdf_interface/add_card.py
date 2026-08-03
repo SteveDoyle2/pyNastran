@@ -5167,9 +5167,9 @@ class AddAero:
         self._add_methods.add_csschd_object(csschd)
         return csschd
 
-    def add_uxvec(self, idi: int, labels: list[str], uxs: list[float],
+    def add_uxvec(self, uxvec_id: int, labels: list[str], uxs: list[float],
                   comment: str='') -> UXVEC:
-        uxvec = UXVEC(idi, labels, uxs, comment=comment)
+        uxvec = UXVEC(uxvec_id, labels, uxs, comment=comment)
         self._add_methods.add_uxvec_object(uxvec)
         return uxvec
        
@@ -5272,7 +5272,7 @@ class AddAero:
         self._add_methods.add_aeparm_object(aeparm)
         return aeparm
 
-    def add_aedw(self, mach, sym_xz: str, sym_xy: str, ux_id: int,
+    def add_aedw(self, mach: float, sym_xz: str, sym_xy: str, ux_id: int,
                  dmij: str='', dmiji: str='', comment: str='') -> AEDW:
         """adds an AEDW card"""
         assert isinstance(sym_xz, str), sym_xz
@@ -5284,8 +5284,9 @@ class AddAero:
         self._add_methods.add_aedw_object(aedw)
         return aedw
 
-    def add_aepress(self, mach, sym_xz: str, sym_xy: str, ux_id: int,
-                    dmij: str='', dmiji: str='', comment: str='') -> AEPRESS:
+    def add_aepress(self, mach: float, sym_xz: str, sym_xy: str,
+                    ux_id: int, dmij: str='', dmiji: str='',
+                    comment: str='') -> AEPRESS:
         #AEPRESS MACH SYMXZ SYMXY UXID DMIJ DMIJI
         """adds an AEPRESS card"""
         assert isinstance(sym_xz, str), sym_xz

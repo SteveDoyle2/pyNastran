@@ -1511,7 +1511,7 @@ class AEDW(BaseCard):
     +------+------+-------+-------+------+------+-------+
 
     """
-    type = 'AEPRESS'
+    type = 'AEDW'
 
     @classmethod
     def _init_from_empty(cls):
