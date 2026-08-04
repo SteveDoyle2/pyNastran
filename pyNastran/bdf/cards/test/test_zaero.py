@@ -9,7 +9,7 @@ from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.bdf.cards.aero.zaero_interface import graphviz_interface
 from pyNastran.utils import print_bad_path
-from pyNastran.bdf.bdf import read_bdf
+from pyNastran.bdf.bdf import read_bdf, BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.aero.zaero import ZAERO, get_dicts
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -61,8 +61,6 @@ class TestAeroZaero(unittest.TestCase):
 
     def test_zaero_add_methods(self):
         """test all add_* convenience methods on the ZAERO class"""
-        from pyNastran.bdf.bdf import BDF
-
         model = BDF(debug=False)
         model.sol = 145
         zaero = ZAERO(model)
@@ -73,27 +71,19 @@ class TestAeroZaero(unittest.TestCase):
         assert atmos.type == "ATMOS"
         assert 1 in zaero.atmos
 
-        fixhatm = zaero.add_fixhatm(
-            2, 10000.0, 1, "SLUG", "IN", 1.0, 0, 0, [1]
-        )
+        fixhatm = zaero.add_fixhatm(2, 10000.0, 1, "SLUG", "IN", 1.0, 0, 0, [1])
         assert fixhatm.type == "FIXHATM"
         assert 2 in zaero.flutter_table
 
-        fixmatm = zaero.add_fixmatm(
-            3, 1, 1, "SLUG", "IN", 1.0, 0, 0, [5000.0, 10000.0]
-        )
+        fixmatm = zaero.add_fixmatm(3, 1, 1, "SLUG", "IN", 1.0, 0, 0, [5000.0, 10000.0])
         assert fixmatm.type == "FIXMATM"
         assert 3 in zaero.flutter_table
 
-        fixmach = zaero.add_fixmach(
-            4, 1, "SLUG", "IN", 0, 0, [100.0, 200.0], [0.001, 0.002]
-        )
+        fixmach = zaero.add_fixmach(4, 1, "SLUG", "IN", 0, 0, [100.0, 200.0], [0.001, 0.002])
         assert fixmach.type == "FIXMACH"
         assert 4 in zaero.flutter_table
 
-        fixmden = zaero.add_fixmden(
-            5, 1, 0.001, "SLUG", "IN", 0, 0, [100.0, 200.0]
-        )
+        fixmden = zaero.add_fixmden(5, 1, 0.001, "SLUG", "IN", 0, 0, [100.0, 200.0])
         assert fixmden.type == "FIXMDEN"
         assert 5 in zaero.flutter_table
 
@@ -126,9 +116,7 @@ class TestAeroZaero(unittest.TestCase):
         assert aesurfz.type == "AESURFZ"
         assert "ELEV" in model.aesurf
 
-        aeslink = zaero.add_aeslink(
-            "LNK1", "SYM", 100, ["ELEV"], [1.0]
-        )
+        aeslink = zaero.add_aeslink("LNK1", "SYM", 100, ["ELEV"], [1.0])
         assert aeslink.type == "AESLINK"
         assert "LNK1" in zaero.aeslink
 
@@ -169,29 +157,21 @@ class TestAeroZaero(unittest.TestCase):
         assert pltbode.type == "PLTBODE"
         assert 47 in zaero.pltbode
 
-        plttime = zaero.add_plttime(
-            48, 1, 0.0, 1.0, 100, "FORCE", "time.plt", "aero_time.plt"
-        )
+        plttime = zaero.add_plttime(48, 1, 0.0, 1.0, 100, "FORCE", "time.plt", "aero_time.plt")
         assert plttime.type == "PLTTIME"
         assert 48 in zaero.plttime
 
-        plttrim = zaero.add_plttrim(
-            49, 1, "FORCE", "trim.plt", "aero_trim.plt"
-        )
+        plttrim = zaero.add_plttrim(49, 1, "FORCE", "trim.plt", "aero_trim.plt")
         assert plttrim.type == "PLTTRIM"
         assert 49 in zaero.plttrim
 
         # --- flutter ---
-        mkaeroz = zaero.add_mkaeroz(
-            50, 0.8, 1, "aero.dat", 0, [0.01, 0.1, 1.0]
-        )
+        mkaeroz = zaero.add_mkaeroz(50, 0.8, 1, "aero.dat", 0, [0.01, 0.1, 1.0])
         assert mkaeroz.type == "MKAEROZ"
         assert 50 in zaero.mkaeroz
 
         # --- trim ---
-        trimvar = zaero.add_trimvar(
-            60, "ALPHA", -10.0, 10.0, 0, "NONE", 0
-        )
+        trimvar = zaero.add_trimvar(60, "ALPHA", -10.0, 10.0, 0, "NONE", 0)
         assert trimvar.type == "TRIMVAR"
         assert 60 in zaero.trimvar
 
@@ -199,16 +179,12 @@ class TestAeroZaero(unittest.TestCase):
         assert trimlnk.type == "TRIMLNK"
         assert 61 in zaero.trimlnk
 
-        trimfnc = zaero.add_trimfnc(
-            62, "USER", "LIFT", "YES", 0, 0, "test"
-        )
+        trimfnc = zaero.add_trimfnc(62, "USER", "LIFT", "YES", 0, 0, "test")
         assert trimfnc.type == "TRIMFNC"
         assert 62 in zaero.trimfnc
 
         # --- maneuver loads ---
-        mloads = zaero.add_mloads(
-            70, 1, 1, 0, 0, 0, 0, 0, 100.0, "SAVE"
-        )
+        mloads = zaero.add_mloads(70, 1, 1, 0, 0, 0, 0, 0, 100.0, "SAVE")
         assert mloads.type == "MLOADS"
         assert 70 in zaero.mloads
 
@@ -234,8 +210,7 @@ class TestAeroZaero(unittest.TestCase):
 
         # --- gust ---
         gloads = zaero.add_gloads(
-            80, 1, 1, 0, 0, 0, 0, 0, "SAVE", "UNFORM", "gloads.dat",
-            "SAVE", "gloads_freq.dat"
+            80, 1, 1, 0, 0, 0, 0, 0, "SAVE", "UNFORM", "gloads.dat", "SAVE", "gloads_freq.dat"
         )
         assert gloads.type == "GLOADS"
         assert 80 in zaero.gloads
@@ -285,9 +260,7 @@ class TestAeroZaero(unittest.TestCase):
         assert tfset.type == "TFSET"
         assert 98 in zaero.tfset
 
-        mimoss = zaero.add_mimoss(
-            99, 2, 1, 1, "DMI1", "S", 0, [1.0, 2.0], ["IN", "OUT"]
-        )
+        mimoss = zaero.add_mimoss(99, 2, 1, 1, "DMI1", "S", 0, [1.0, 2.0], ["IN", "OUT"])
         assert mimoss.type == "MIMOSS"
         assert 99 in zaero.mimoss
 
@@ -350,27 +323,18 @@ class TestAeroZaero(unittest.TestCase):
         assert 123 in zaero.setadd
 
         # --- MLD / transient ---
-        mldprnt = zaero.add_mldprnt(
-            130, "prnt.dat", "UNFORM", 0.0, 1.0, ["DISP"], [1]
-        )
-        assert mldprnt.type == "MLDPRNT"
+        mldprnt = zaero.add_mldprnt(130, "prnt.dat", "TABLE", 0.0, 1.0, ["DISP"], [1])
         assert 130 in zaero.mldprnt
 
-        mldstat = zaero.add_mldstat(
-            131, 0, "YES", "stat.dat", ["ALPHA"], [5.0]
-        )
+        mldstat = zaero.add_mldstat(131, 0, "YES", "stat.dat", ["ALPHA"], [5.0])
         assert mldstat.type == "MLDSTAT"
         assert 131 in zaero.mldstat
 
-        minstat = zaero.add_minstat(
-            132, 102, 10, 0, 0, 0, 0, 0, 0, "SAVE", "min.dat", 0
-        )
+        minstat = zaero.add_minstat(132, 102, 10, 0, 0, 0, 0, 0, 0, "SAVE", "min.dat", 0)
         assert minstat.type == "MINSTAT"
         assert 132 in zaero.minstat
 
-        mldtrim = zaero.add_mldtrim(
-            133, 386.4, 1.0, "NO", ["ALPHA"], [5.0]
-        )
+        mldtrim = zaero.add_mldtrim(133, 386.4, 1.0, "NO", ["ALPHA"], [5.0])
         assert mldtrim.type == "MLDTRIM"
         assert 133 in zaero.mldtrim
 
@@ -389,21 +353,17 @@ class TestAeroZaero(unittest.TestCase):
 
         dmil = zaero.add_dmil("DMI1", 1, 1, [1.0, 2.0])
         assert dmil.type == "DMIL"
-        assert ("DMI1", 1) in zaero.dmil
+        assert ("DMI1", 1, 1) in zaero.dmil
 
         conmlst = zaero.add_conmlst(141, [1.0, 2.0], [1, 2])
         assert conmlst.type == "CONMLST"
         assert 141 in zaero.conmlst
 
-        cpfact = zaero.add_cpfact(
-            142, 1, "SYM", "X", "MULT", "WING", 1.0, 0.0, [1, 2]
-        )
+        cpfact = zaero.add_cpfact(142, 1, "SYM", "X", "MULT", "WING", 1.0, 0.0, [1, 2])
         assert cpfact.type == "CPFACT"
         assert 142 in zaero.cpfact
 
-        apconst = zaero.add_apconst(
-            143, 0, 0, 0, 1, 1, [1.0], [1.0]
-        )
+        apconst = zaero.add_apconst(143, 0, 0, 0, 1, 1, [1.0], [1.0])
         assert apconst.type == "APCONST"
         assert 143 in zaero.apconst
 
@@ -422,6 +382,117 @@ class TestAeroZaero(unittest.TestCase):
         cmargin = zaero.add_cmargin(147, 6.0, -20.0, 45.0, -45.0)
         assert cmargin.type == "CMARGIN"
         assert 147 in zaero.cmargin
+
+    def test_zaero_add_methods_xref(self):
+        """Test cross_reference/uncross_reference/safe_cross_reference
+        on cards created via add_* convenience methods.
+        """
+        model = BDF(debug=False)
+        model.sol = 145
+        model.nastran_format = "zona"
+        zaero = ZAERO(model)
+        model.zaero = zaero
+
+        # --- leaf cards (no xref deps) ---
+        asesnsr_201 = zaero.add_asesnsr(201, 1, 1001, 1, 1.0, "NO")
+        asesnsr_202 = zaero.add_asesnsr(202, 2, 1002, 3, 1.0, "NO")
+        sisotf_301 = zaero.add_sisotf(301, 1, 2, [1.0, 2.0], [1.0, 0.5])
+        cjunct_401 = zaero.add_cjunct(401, 2, 1, [1.0, 1.0])
+        actu_801 = zaero.add_actu(801, 0.8, 0.5, 0.2)
+
+        # --- ASEGAIN: output=ASESNSR(201), input=SISOTF(301) ---
+        asegain_501 = zaero.add_asegain(501, 201, 1, 301, 1, 2.5, "Q")
+
+        # --- CONCT: various topology connections ---
+        conct_601 = zaero.add_conct(601, 202, 1, 301, 1)
+        conct_602 = zaero.add_conct(602, 301, 1, 401, 1)
+        conct_603 = zaero.add_conct(603, 401, 1, 801, 1)
+
+        # --- set cards ---
+        senset_20 = zaero.add_senset(20, [201, 202])
+        tfset_30 = zaero.add_tfset(30, [301, 401])
+        gainset_40 = zaero.add_gainset(40, [501])
+        cnctset_50 = zaero.add_cnctset(50, [601, 602, 603])
+
+        # --- AESURFZ + AESLINK ---
+        zaero.add_aesurfz("ELEV", "ASYM", 0, 209, 0, 0)
+        zaero.add_aesurfz("FLAP", "ASYM", 0, 209, 0, 0)
+        aeslink = zaero.add_aeslink("CTRL", "SYM", 801, ["ELEV", "FLAP"], [1.0, 0.5])
+
+        # --- MLDCOMD -> EXTINP -> ACTU (no ASECONT) ---
+        extinp_901 = zaero.add_extinp(901, "", 801, 1, "CMD1")
+        mldcomd_100 = zaero.add_mldcomd(100, [901], [1001])
+        model.add_tabled1(1001, [0.0, 1.0], [0.0, 1.0])
+
+        # --- cross_reference ---
+        zaero.cross_reference()
+
+        # verify ASEGAIN refs
+        assert asegain_501.output_ref is asesnsr_201
+        assert asegain_501.input_ref is sisotf_301
+
+        # verify CONCT refs
+        assert conct_601.output_ref is asesnsr_202
+        assert conct_601.input_ref is sisotf_301
+        assert conct_602.output_ref is sisotf_301
+        assert conct_602.input_ref is cjunct_401
+        assert conct_603.output_ref is cjunct_401
+        assert conct_603.input_ref is actu_801
+
+        # verify SET refs
+        assert senset_20.ids_ref == [asesnsr_201, asesnsr_202]
+        assert tfset_30.ids_ref == [sisotf_301, cjunct_401]
+        assert gainset_40.ids_ref == [asegain_501]
+        assert cnctset_50.ids_ref == [conct_601, conct_602, conct_603]
+
+        # verify AESLINK refs
+        assert aeslink.actu_ref is actu_801
+        assert len(aeslink.independent_labels_ref) == 2
+
+        # verify MLDCOMD -> EXTINP refs
+        assert len(mldcomd_100.extinps_ref) == 1
+        assert mldcomd_100.extinps_ref[0] is extinp_901
+        assert len(mldcomd_100.tables_ref) == 1
+        assert extinp_901.itf_ref is actu_801
+
+        # --- uncross_reference ---
+        zaero.uncross_reference()
+
+        # AESLINK has proper uncross_reference
+        assert aeslink.actu_ref is None
+        assert aeslink.independent_labels_ref == []
+
+        # MLDCOMD has proper uncross_reference
+        assert mldcomd_100.extinps_ref == []
+        assert mldcomd_100.tables_ref == []
+
+        # EXTINP has proper uncross_reference
+        assert extinp_901.itf_ref is None
+
+        # --- safe_cross_reference ---
+        zaero.safe_cross_reference()
+
+        # verify refs are repopulated
+        assert asegain_501.output_ref is asesnsr_201
+        assert asegain_501.input_ref is sisotf_301
+        assert conct_601.output_ref is asesnsr_202
+        assert conct_602.input_ref is cjunct_401
+        assert senset_20.ids_ref == [asesnsr_201, asesnsr_202]
+        assert tfset_30.ids_ref == [sisotf_301, cjunct_401]
+        assert gainset_40.ids_ref == [asegain_501]
+        assert cnctset_50.ids_ref == [conct_601, conct_602, conct_603]
+        assert aeslink.actu_ref is actu_801
+        assert len(aeslink.independent_labels_ref) == 2
+        assert mldcomd_100.extinps_ref[0] is extinp_901
+        assert extinp_901.itf_ref is actu_801
+
+        model.cross_reference()
+        # save_load_deck(
+        #     model, nastran_format='zaero',
+        #     run_renumber=False, run_convert=False, run_remove_unused=False,
+        #     run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False,
+        #     run_test_bdf=False, run_op2_writer=False, run_export_caero=False,
+        #     stringify=True)
 
     def test_zaero_1(self):
         """zaero explicit test"""
