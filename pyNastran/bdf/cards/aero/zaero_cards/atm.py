@@ -12,6 +12,7 @@ from __future__ import annotations
 # from itertools import count
 from typing import TYPE_CHECKING
 
+import numpy as np
 from matplotlib import pyplot as plt
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -48,11 +49,32 @@ class ATMOS(BaseCard):
             self.comment = comment
 
         self.atmos_id = atmos_id
-        self.mass_unit = mass_unit
+        length_unit = length_unit.upper()
         self.length_unit = length_unit
         self.temperature_unit = temperature_unit
-        self.atmosphere_table = atmosphere_table
-        assert temperature_unit in ['R', 'K'], temperature_unit
+        self.atmosphere_table = np.asarray(atmosphere_table)
+        MASS_MAP = {
+            'SLINCH': 'SLIN',
+        }
+        mass_unit = MASS_MAP.get(mass_unit.upper(), mass_unit)
+        self.mass_unit = mass_unit
+
+        assert mass_unit in ['SLIN', 'SLUG', 'LBM', 'G', 'KG', 'LBF/', 'N/', 'NONE'], f'mass_unit={mass_unit}'
+        assert length_unit in ['IN', 'FT', 'M', 'MM', 'CM', 'KM', 'NONE'], f'length_unit={length_unit}'
+        assert temperature_unit in ['R', 'K', 'C'], temperature_unit
+        assert len(atmosphere_table) > 0, atmosphere_table
+
+    def alt(self) -> np.ndarray:
+        return self.atmosphere_table[:, 0]
+
+    def sos(self) -> np.ndarray:
+        return self.atmosphere_table[:, 1]
+
+    def density(self) -> np.ndarray:
+        return self.atmosphere_table[:, 2]
+
+    def temperature(self) -> np.ndarray:
+        return self.atmosphere_table[:, 3]
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -84,11 +106,9 @@ class ATMOS(BaseCard):
             sos = double(card, ifield+1, f'sound{j+1}')
             rho = double(card, ifield+2, f'density{j+1}')
             temp = double(card, ifield+3, f'temperature{j+1}')
-            atmosphere_table.extend([alt, sos, rho, temp])
+            atmosphere_table.append([alt, sos, rho, temp])
             j += 1
-        assert len(atmosphere_table) % 4 == 0
-        assert len(atmosphere_table) // 4 > 0
-        assert len(card) > 8, f'len(FIXEMATM card) = {len(card):d}\ncard={card}'
+        assert len(card) > 8, f'len(ATMOS card) = {len(card):d}\ncard={card}'
         return ATMOS(atmos_id, mass_unit, length_unit,
                      temperature_unit, atmosphere_table, comment=comment)
 
@@ -128,7 +148,7 @@ class ATMOS(BaseCard):
         list_fields = [
             'ATMOS', self.atmos_id, self.mass_unit, self.length_unit, self.temperature_unit,
             None, None, None, None,
-        ] + self.atmosphere_table
+        ] + self.atmosphere_table.ravel().tolist()
         return list_fields
 
     def repr_fields(self):
@@ -393,9 +413,8 @@ class FIXMACH(BaseCard):
         self.vref = vref
         self.fluttf_id = fluttf_id
         self.print_flag = print_flag
-        self.velocity = velocity
-        self.rho = rho
-        assert isinstance(rho, list), rho
+        self.velocity = np.asarray(velocity)
+        self.rho = np.asarray(rho)
         self.atmos_ref = None
         self.mkaeroz_ref = None
         assert isinstance(mkaeroz_id, integer_types), self.get_stats()

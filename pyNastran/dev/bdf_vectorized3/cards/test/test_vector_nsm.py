@@ -8,7 +8,7 @@ from cpylog import SimpleLogger
 import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
-from pyNastran.dev.bdf_vectorized3.bdf_interface.breakdowns import NO_MASS
+# from pyNastran.dev.bdf_vectorized3.bdf_interface.breakdowns import NO_MASS
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.mass_properties import mass_properties_nsm
 import pyNastran
 

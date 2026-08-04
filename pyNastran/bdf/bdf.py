@@ -4935,7 +4935,8 @@ def _echo_card(card, card_obj):
         raise
 
 
-def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True,
+def read_bdf(bdf_filename: Optional[PathLike | StringIO]=None,
+             validate: bool=True,
              xref: bool=True, punch: bool=False,
              save_file_structure: bool=False,
              skip_cards: Optional[list[str]]=None,

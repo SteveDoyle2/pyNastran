@@ -461,7 +461,7 @@ def extinp_to_node_name(extinp_ref: EXTINP) -> tuple[str, str, str]:
     output_comment = clean_comment(itf_ref.comment)
 
     input_name = f'EXTINP={extinp_ref.extinp_id} ({extinp_ref.label})'
-    input_comment = clean_comment(extout_ref.comment)
+    input_comment = clean_comment(extinp_ref.comment)
     tag = f'(I={extinp_ref.itf_component})'
 
     in_name = input_name + input_comment
