@@ -3,7 +3,7 @@ from io import StringIO
 from pathlib import Path
 import unittest
 
-# IS_MATPLOTLIB = False
+import numpy as np
 
 from cpylog import SimpleLogger
 import pyNastran
@@ -12,6 +12,8 @@ from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import read_bdf, BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.aero.zaero import ZAERO, get_dicts
+from pyNastran.bdf.cards.aero.zaero_cards.cards import AEROZ
+from pyNastran.bdf.cards.aero.zaero_cards.geometry import CAERO7
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.cards.aero.zaero_cards.ase import (
     MIMOTF,
@@ -413,6 +415,22 @@ class TestAeroZaero(unittest.TestCase):
         tfset_30 = zaero.add_tfset(30, [301, 401])
         gainset_40 = zaero.add_gainset(40, [501])
         cnctset_50 = zaero.add_cnctset(50, [601, 602, 603])
+
+        # --- aero geometry (needed by AESURFZ xref) ---
+        aeroz = AEROZ("SLIN", "IN", 1.0, 1.0, 1.0)
+        model._add_methods.add_aeros_object(aeroz)
+        caero7 = CAERO7(
+            101,
+            "",
+            np.array([0.0, 0.0, 0.0]),
+            1.0,
+            np.array([0.0, 1.0, 0.0]),
+            1.0,
+            nspan=2,
+            nchord=2,
+        )
+        model._add_methods.add_caero_object(caero7)
+        zaero.add_panlst1(209, 101, 101, 110)
 
         # --- AESURFZ + AESLINK ---
         zaero.add_aesurfz("ELEV", "ASYM", 0, 209, 0, 0)
