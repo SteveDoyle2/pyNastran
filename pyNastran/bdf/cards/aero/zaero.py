@@ -1035,6 +1035,23 @@ class ZAERO:
         my_keys_to_skip = ['log',]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
+    def add_atmos(self, atm_id: int,
+                  mass_unit: str, length_unit: str, temperature_unit: str,
+                  alt: np.ndarray, sos: np.ndarray,
+                  density: np.ndarray, temperature: np.ndarray) -> ATMOS:
+        assert temperature_unit == 'R', temperature_unit
+        density_magnitude = np.floor(np.log10(np.abs(density)))
+        decimals = 3 - density_magnitude
+        decimals = np.nan_to_num(decimals, nan=0.0, posinf=0.0, neginf=0.0).astype(int)
+        density2 = np.array([np.round(x, d) for x, d in zip(density, decimals)])
+
+        atmosphere_table = np.column_stack([alt.round(0), sos.round(0), density2, temperature.round(2)])
+        atmosphere_list = atmosphere_table.ravel().tolist()
+        atmos = ATMOS(atm_id, mass_unit, length_unit, temperature_unit,
+                      atmosphere_list)
+        self._add_methods.add_atmos_object(atmos)
+        return atmos
+
     def verify(self, xref):
         if self.model.nastran_format not in {'zona', 'zaero'}:
             return

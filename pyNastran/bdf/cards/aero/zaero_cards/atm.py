@@ -52,6 +52,7 @@ class ATMOS(BaseCard):
         self.length_unit = length_unit
         self.temperature_unit = temperature_unit
         self.atmosphere_table = atmosphere_table
+        assert temperature_unit in ['R', 'K'], temperature_unit
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -74,7 +75,7 @@ class ATMOS(BaseCard):
         atmos_id = integer(card, 1, 'atmos_id')
         mass_unit = string(card, 2, 'mass_unit')
         length_unit = string(card, 3, 'length_unit')
-        temperature_unit = string(card, 3, 'temperature_unit')
+        temperature_unit = string(card, 4, 'temperature_unit')
 
         atmosphere_table = []
         j = 1
@@ -123,6 +124,7 @@ class ATMOS(BaseCard):
             the fields that define the card
 
         """
+        assert self.temperature_unit in ['R', 'K'], self.temperature_unit
         list_fields = [
             'ATMOS', self.atmos_id, self.mass_unit, self.length_unit, self.temperature_unit,
             None, None, None, None,

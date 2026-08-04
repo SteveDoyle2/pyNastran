@@ -102,7 +102,10 @@ def nastran_to_zaero(bdf_filename: PathLike | BDF,
             modelz.card_count[key] = ncard
 
     if zaero_inp_filename != '':
-        modelz.write_bdf(zaero_inp_filename)
+        with open(zaero_inp_filename) as inp_file:
+            bdf_file.write("$pyNastran: version=zaero\n")
+            bdf_file.write("INCLUDE 'base_fem.blk'\n")
+            modelz.write_bdf(inp_file, write_header=False)
     return modelz
 
 
@@ -165,9 +168,13 @@ def _convert_flutter(model: BDF, modelz: BDF,
             velocity_ref = flutter.reduced_freq_velocity_ref
             if not is_mach_constant:
                 model.log.warning(f'assuming mach is constant...')
+
             if is_mach_constant or 1:
                 velocity = velocity_ref.factors.tolist()
                 rho = density_ref.factors.tolist()
+                # atmosphere_table = # alt, sos, rho, temp
+                # atm_id = 100
+                # atmos = ATMOS(atm_id, mass_unit, length_unit, atmosphere_table)
                 atm = FIXMACH(sid, mkaeroz_id, mass_unit, length_unit,
                               flutter_id, print_flag, velocity, rho)
             else:  # pragma: no cover

@@ -5,6 +5,7 @@ import numpy as np
 
 from cpylog import SimpleLogger
 from .utils import filter_no_args
+from pyNastran.utils.atmosphere import atm_density, atm_speed_of_sound, atm_temperature
 from pyNastran.utils.convert import convert_altitude, convert_velocity
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -30,7 +31,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
 
     from docopt import docopt
     import pyNastran
-    options = '[-o OUT_BDF_FILENAME] [--size SIZE | --clean] [--sid SID] [--rhoref] [--minus_eas MINUS_EAS]'
+    options = '[-o OUT_BDF_FILENAME] [--size SIZE | --clean] [--sid SID] [--rhoref] [--minus_eas MINUS_EAS] [--zaero]'
     msg = (
         'Usage:\n'
         # SWEEP_UNIT
@@ -70,6 +71,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
         ' --clean                              writes a BDF with at least 1 whitespace in an FLFACT field (for readability)\n'
         ' --sid SID                            updates the flutter ID\n'
         " --minus_eas MINUS_EAS                request flutter mode shapes at the closest point ('400,500')\n"
+        ' --zaero                              zaero flag\n'
         '\n'
 
         'Info:\n'
@@ -125,6 +127,8 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
     if units_out.lower() not in UNITS_MAP:  # pragma: no cover
         raise NotImplementedError(units_out)
 
+    is_zaero = data['--zaero']
+    assert isinstance(is_zaero, bool), is_zaero
     rhoref_flag = data['--rhoref']
     npoints = _int(data, 'N')
     clean = data['--clean']
@@ -185,6 +189,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
                    size=size, clean=clean,
                    bdf_filename_out=bdf_filename_out,
                    minus_eas=minus_eas,
+                   is_zaero=is_zaero,
                    comment=cmd)
     if not quiet:
         print(cmd)
@@ -200,6 +205,7 @@ def create_flutter(log: SimpleLogger,
                    size: int=8,
                    clean: bool=False,
                    minus_eas: Optional[list[float]]=None,
+                   is_zaero: bool = False,
                    bdf_filename_out: str='flutter_cards.inc',
                    comment: str='') -> tuple[BDF, str, str]:
     if minus_eas is None:
@@ -308,7 +314,7 @@ def create_flutter(log: SimpleLogger,
     assert pressure_units != '', pressure_units
 
     if sweep_method == 'eas' and const_type == 'alt':
-        flutter.make_flfacts_eas_sweep_constant_alt(
+        alts, machs, eass = flutter.make_flfacts_eas_sweep_constant_alt(
             model, alt, eass,
             minus_eas=minus_eas,
             alt_units=alt_units,
@@ -317,7 +323,7 @@ def create_flutter(log: SimpleLogger,
             eas_units=eas_units)
     elif sweep_method == 'eas' and const_type == 'mach':
         gamma = 1.4
-        flutter.make_flfacts_eas_sweep_constant_mach(  # TODO: need to test this; seems wrong
+        alts, machs, eass = flutter.make_flfacts_eas_sweep_constant_mach(  # TODO: need to test this; seems wrong
             model, mach, eass,
             gamma=gamma,
             minus_eas=minus_eas,
@@ -328,7 +334,7 @@ def create_flutter(log: SimpleLogger,
             eas_units=eas_units)
 
     elif sweep_method == 'mach' and const_type == 'alt':
-        flutter.make_flfacts_mach_sweep_constant_alt(
+        alts, machs, eass = flutter.make_flfacts_mach_sweep_constant_alt(
             model, alt, machs,
             minus_eas=minus_eas,
             eas_limit=eas_limit,
@@ -338,7 +344,7 @@ def create_flutter(log: SimpleLogger,
             eas_units=eas_units)
     elif sweep_method == 'alt' and const_type == 'mach':
         #alt_units = sweep_unit
-        flutter.make_flfacts_alt_sweep_constant_mach(
+        alts, machs, eass = flutter.make_flfacts_alt_sweep_constant_mach(
             model, mach, alts,
             minus_eas=minus_eas,
             eas_limit=eas_limit,
@@ -347,7 +353,7 @@ def create_flutter(log: SimpleLogger,
             density_units=density_units,
             eas_units=eas_units)
     elif sweep_method == 'alt' and const_type == 'tas':
-        flutter.make_flfacts_alt_sweep_constant_tas(
+        alts, machs, eass = flutter.make_flfacts_alt_sweep_constant_tas(
             model, tas, alts,
             minus_eas=minus_eas,
             alt_units=alt_units,
@@ -356,7 +362,7 @@ def create_flutter(log: SimpleLogger,
             density_units=density_units,
             eas_units=eas_units)
     elif sweep_method == 'tas' and const_type == 'alt':
-        flutter.make_flfacts_tas_sweep_constant_alt(
+        alts, machs, eass = flutter.make_flfacts_tas_sweep_constant_alt(
             model, alt, tass,
             minus_eas=minus_eas,
             alt_units=alt_units,
@@ -382,7 +388,7 @@ def create_flutter(log: SimpleLogger,
             #density_units=density_units,
             #eas_units=eas_units)
     elif sweep_method == 'alt' and const_type == 'eas':
-        flutter.make_flfacts_alt_sweep_constant_eas(
+        alts, machs, eass = flutter.make_flfacts_alt_sweep_constant_eas(
             model, eas, alts,
             minus_eas=minus_eas,
             alt_units=alt_units,
@@ -392,8 +398,29 @@ def create_flutter(log: SimpleLogger,
     else:  # pragma: no cover
         raise NotImplementedError((sweep_method, const_type))
 
+    if is_zaero:
+        model = BDF()
+        model.set_as_zaero()
+        atm_id = 100
+        mass_unit = 'slinch'
+        length_unit = 'in'
+        temperature_units = 'R'
+        velocity_units = f'{length_unit}/s'
+        density_units = f'{mass_unit}/{length_unit}^3'
+        sos = np.array([
+            atm_speed_of_sound(alt, alt_units=alt_units, velocity_units=velocity_units)
+            for alt in alts])
+        density = np.array([
+            atm_density(alt, 1716., alt_units=alt_units, density_units=density_units)
+            for alt in alts])
+        nalt = len(alts)
+        temperature = np.array([
+            atm_temperature(alt, alt_units=alt_units, temperature_units=temperature_units)
+            for alt in alts])
+        model.zaero.add_atmos(atm_id, mass_unit, length_unit, temperature_units,
+                              alts, sos, density, temperature)
+
     if rhoref_flag:
-        from pyNastran.utils.atmosphere import atm_density
         rho0 = atm_density(alt=0., density_units=density_units)
         cref = 1.0
         velocity = 0.0

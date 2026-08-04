@@ -13,7 +13,7 @@ All cards are BaseCard objects.
 """
 from __future__ import annotations
 from itertools import count
-from typing import Optional, Any, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -89,7 +89,7 @@ class Aero(BaseCard):
             return True
         return False
 
-    def set_ground_effect(self, enable: bool) -> bool:  # TODO: verify
+    def set_ground_effect(self, enable: bool) -> None:  # TODO: verify
         if enable:
             self.sym_xy = -1
         else:
@@ -764,7 +764,7 @@ class FLUTTER(BaseCard):
                                              alt_units: str='m',
                                              velocity_units: str='m/s',
                                              density_units: str='kg/m^3',
-                                             eas_units: str='m/s') -> None:
+                                             eas_units: str='m/s') -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """makes an altitude sweep"""
         if minus_eas is None:
             minus_eas = []
@@ -806,6 +806,7 @@ class FLUTTER(BaseCard):
 
         comment = ' Alt: min=%.3f max=%.3f %s' % (alts2.min(), alts2.max(), alt_units)
         model.add_flfact(flfact_alt, alts2, comment=comment)
+        return alts2, mach, eas
 
     def make_flfacts_alt_sweep_constant_tas(self,
                                             model: BDF,
@@ -815,7 +816,7 @@ class FLUTTER(BaseCard):
                                             alt_units: str='m',
                                             velocity_units: str='m/s',
                                             density_units: str='kg/m^3',
-                                            eas_units: str='m/s') -> tuple[Any, Any, Any]:
+                                            eas_units: str='m/s') -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """untested"""
         if minus_eas is None:
             minus_eas = []
@@ -856,6 +857,7 @@ class FLUTTER(BaseCard):
         comment = ' EAS: min=%.3f max=%.3f %s' % (
             eas_in_eas_units.min(), eas_in_eas_units.max(), eas_units)
         model.add_flfact(flfact_eas, eas_in_eas_units, comment=comment)
+        return alts, mach, eas
 
     def make_flfacts_tas_sweep_constant_alt(self,
                                             model: BDF,
@@ -865,7 +867,7 @@ class FLUTTER(BaseCard):
                                             alt_units: str='m',
                                             velocity_units: str='m/s',
                                             density_units: str='kg/m^3',
-                                            eas_units: str='m/s') -> tuple[Any, Any, Any]:
+                                            eas_units: str='m/s') -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """makes an altitude sweep (dev...not validated)"""
         if minus_eas is None:
             minus_eas = []
@@ -907,6 +909,8 @@ class FLUTTER(BaseCard):
 
         #comment = ' Alt: min=%.3f max=%.3f %s' % (alt, al, alt_units)
         #model.add_flfact(flfact_alt, alts2, comment=comment)
+        alts = np.ones(len(mach)) * alt
+        return alts, mach, eas
 
     def make_flfacts_eas_sweep_constant_mach(self, model: BDF,
                                              mach: float, eass: np.ndarray,
@@ -916,7 +920,7 @@ class FLUTTER(BaseCard):
                                              velocity_units: str='m/s',
                                              density_units: str='kg/m^3',
                                              eas_units: str='m/s',
-                                             pressure_units: str='Pa'):
+                                             pressure_units: str='Pa') -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         eas = tas * sqrt(rho/rho0)
         ainf*Minf = V
@@ -968,6 +972,7 @@ class FLUTTER(BaseCard):
         comment = ' EAS: min=%.3f max=%.3f %s' % (
             eas_in_eas_units.min(), eas_in_eas_units.max(), eas_units)
         model.add_flfact(flfact_eas, eas_in_eas_units, comment=comment)
+        return alts, machs, eas
 
     def make_flfacts_mach_sweep_constant_alt(self, model: BDF, alt, machs,
                                              eas_limit=1000.,
@@ -975,7 +980,7 @@ class FLUTTER(BaseCard):
                                              alt_units='m',
                                              velocity_units='m/s',
                                              density_units='kg/m^3',
-                                             eas_units='m/s'):
+                                             eas_units='m/s') -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """makes a mach sweep"""
         if minus_eas is None:
             minus_eas = []
@@ -1016,6 +1021,8 @@ class FLUTTER(BaseCard):
         comment = ' EAS: min=%.3f max=%.3f %s' % (
             eas_in_eas_units.min(), eas_in_eas_units.max(), eas_units)
         model.add_flfact(flfact_eas, eas_in_eas_units, comment=comment)
+        alts = np.ones(len(machs)) * alt
+        return alts, machs, eas
 
     @property
     def headers(self):
