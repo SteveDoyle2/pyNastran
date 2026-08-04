@@ -137,7 +137,10 @@ class AddMethods:
     def add_mldprnt_object(self, mldprnt: MLDPRNT) -> None:
         """adds an MLDPRNT object"""
         key = mldprnt.mldprnt_id
-        assert key not in self.mldprnt
+        if key in self.model.zaero.mldprnt:
+            self.model.log.warning(f'skipping MLDPRNT\n{str(mldprnt)}')
+            return
+        assert key not in self.model.zaero.mldprnt, key
         assert key > 0, key
         self.mldprnt[key] = mldprnt
         self.model._type_to_id_map[mldprnt.type].append(key)
@@ -174,17 +177,6 @@ class AddMethods:
         self.model.zaero.mldtime[key] = mldtime
         self.model._type_to_id_map[mldtime.type].append(key)
 
-    def add_mldprnt_object(self, mldprnt: MLDPRNT) -> None:
-        """adds an MLDPRNT object"""
-        key = mldprnt.mldprnt_id
-        if key in self.model.zaero.mldprnt:
-            self.model.log.warning(f'skipping MLDPRNT\n{str(mldprnt)}')
-            return
-        assert key not in self.model.zaero.mldprnt, key
-        assert key > 0, key
-        self.model.zaero.mldprnt[key] = mldprnt
-        self.model._type_to_id_map[mldprnt.type].append(key)
-
     def add_mldtrim_object(self, mldtrim: MLDTRIM) -> None:
         """adds an MLDTRIM object"""
         key = mldtrim.mldtrim_id
@@ -210,7 +202,7 @@ class AddMethods:
         self.model.zaero.minstat[key] = minstat
         self.model._type_to_id_map[minstat.type].append(key)
 
-    def add_conmlst_object(self, conmlst: 'CONMLST') -> None:
+    def add_conmlst_object(self, conmlst: CONMLST) -> None:
         """adds a CONMLST object"""
         key = conmlst.conmlst_id
         assert key > 0, key
@@ -218,7 +210,7 @@ class AddMethods:
         self.model.zaero.conmlst[key] = conmlst
         self.model._type_to_id_map[conmlst.type].append(key)
 
-    def add_cpfact_object(self, cpfact: 'CPFACT') -> None:
+    def add_cpfact_object(self, cpfact: CPFACT) -> None:
         """adds a CPFACT object"""
         key = cpfact.cpfact_id
         assert key > 0, key
@@ -226,7 +218,7 @@ class AddMethods:
         self.model.zaero.cpfact[key] = cpfact
         self.model._type_to_id_map[cpfact.type].append(key)
 
-    def add_apconst_object(self, apconst: 'APCONST') -> None:
+    def add_apconst_object(self, apconst: APCONST) -> None:
         """adds an APCONST object"""
         key = apconst.sid
         assert key > 0, key
@@ -234,7 +226,7 @@ class AddMethods:
         self.model.zaero.apconst[key] = apconst
         self.model._type_to_id_map[apconst.type].append(key)
 
-    def add_spline0_object(self, spline0: 'SPLINE0') -> None:
+    def add_spline0_object(self, spline0: SPLINE0) -> None:
         """adds a SPLINE0 object"""
         key = spline0.eid
         assert key > 0, key
@@ -242,7 +234,7 @@ class AddMethods:
         self.model.zaero.spline0[key] = spline0
         self.model._type_to_id_map[spline0.type].append(key)
 
-    def add_pbody7_object(self, pbody7: 'PBODY7') -> None:
+    def add_pbody7_object(self, pbody7: PBODY7) -> None:
         """adds a PBODY7 object"""
         key = pbody7.pid
         assert key > 0, key
@@ -250,7 +242,7 @@ class AddMethods:
         self.model.zaero.pbody7[key] = pbody7
         self.model._type_to_id_map[pbody7.type].append(key)
 
-    def add_trimflt_object(self, trimflt: 'TRIMFLT') -> None:
+    def add_trimflt_object(self, trimflt: TRIMFLT) -> None:
         """adds a TRIMFLT object"""
         key = trimflt.trimflt_id
         assert key > 0, key
@@ -1036,21 +1028,731 @@ class ZAERO:
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def add_atmos(self, atm_id: int,
-                  mass_unit: str, length_unit: str, temperature_unit: str,
-                  alt: np.ndarray, sos: np.ndarray,
-                  density: np.ndarray, temperature: np.ndarray) -> ATMOS:
-        assert temperature_unit == 'R', temperature_unit
-        density_magnitude = np.floor(np.log10(np.abs(density)))
-        decimals = 3 - density_magnitude
-        decimals = np.nan_to_num(decimals, nan=0.0, posinf=0.0, neginf=0.0).astype(int)
-        density2 = np.array([np.round(x, d) for x, d in zip(density, decimals)])
+                  mass_unit: str, length_unit: str,
+                  temperature_unit: str,
+                  atmosphere_table: list[float],
+                  comment: str = '') -> ATMOS:
+                  # alt: np.ndarray, sos: np.ndarray,
+                  # density: np.ndarray, temperature: np.ndarray) -> ATMOS:
+        card = ATMOS(atm_id, mass_unit, length_unit,
+                     temperature_unit, atmosphere_table,
+                     comment=comment)
+        self._add_methods.add_atmos_object(card)
+        return card
 
-        atmosphere_table = np.column_stack([alt.round(0), sos.round(0), density2, temperature.round(2)])
-        atmosphere_list = atmosphere_table.ravel().tolist()
-        atmos = ATMOS(atm_id, mass_unit, length_unit, temperature_unit,
-                      atmosphere_list)
-        self._add_methods.add_atmos_object(atmos)
-        return atmos
+    # ---------------------------------------------------------------
+    # atmosphere / flutter table
+    # ---------------------------------------------------------------
+    def add_fixhatm(self, sid: int, alt: float, atm_id: int,
+                    mass_unit: str, length_unit: str, vref: float,
+                    fluttf_id: int, print_flag: int,
+                    mkaeroz_ids: list[int],
+                    comment: str = '') -> FIXHATM:
+        card = FIXHATM(sid, alt, atm_id, mass_unit, length_unit,
+                       vref, fluttf_id, print_flag, mkaeroz_ids,
+                       comment=comment)
+        self._add_methods.add_flutter_table_object(card)
+        return card
+
+    def add_fixmatm(self, sid: int, mkaeroz_id: int, atm_id: int,
+                    mass_unit: str, length_unit: str, vref: float,
+                    fluttf_id: int, print_flag: int,
+                    alts: list[float],
+                    comment: str = '') -> FIXMATM:
+        card = FIXMATM(sid, mkaeroz_id, atm_id, mass_unit, length_unit,
+                       vref, fluttf_id, print_flag, alts,
+                       comment=comment)
+        self._add_methods.add_flutter_table_object(card)
+        return card
+
+    def add_fixmach(self, sid: int, mkaeroz_id: int,
+                    mass_unit: str, length_unit: str,
+                    fluttf_id: int, print_flag: int,
+                    velocity: list[float], rho: list[float],
+                    vref: float = 1.0,
+                    comment: str = '') -> FIXMACH:
+        card = FIXMACH(sid, mkaeroz_id, mass_unit, length_unit,
+                       fluttf_id, print_flag, velocity, rho,
+                       vref=vref, comment=comment)
+        self._add_methods.add_flutter_table_object(card)
+        return card
+
+    def add_fixmden(self, sid: int, mkaeroz_id: int, rho: float,
+                    mass_unit: str, length_unit: str,
+                    fluttf_id: int, print_flag: int,
+                    velocity: list[float], vref: float = 1.0,
+                    comment: str = '') -> FIXMDEN:
+        card = FIXMDEN(sid, mkaeroz_id, rho, mass_unit, length_unit,
+                       fluttf_id, print_flag, velocity,
+                       vref=vref, comment=comment)
+        self._add_methods.add_flutter_table_object(card)
+        return card
+
+    # ---------------------------------------------------------------
+    # geometry
+    # ---------------------------------------------------------------
+    def add_splinem(self, save_flag: str, filename,
+                    comment: str = '') -> SPLINEM:
+        card = SPLINEM(save_flag, filename, comment=comment)
+        self._add_methods.add_splinem_object(card)
+        return card
+
+    def add_panlst1(self, eid: int, macro_id: int,
+                    box1: int, box2: int,
+                    comment: str = '') -> PANLST1:
+        card = PANLST1(eid, macro_id, box1, box2, comment=comment)
+        self._add_methods.add_panlst_object(card)
+        return card
+
+    def add_panlst2(self, eid: int, macro_id: int,
+                    boxes: list[int],
+                    comment: str = '') -> PANLST2:
+        card = PANLST2(eid, macro_id, boxes, comment=comment)
+        self._add_methods.add_panlst_object(card)
+        return card
+
+    def add_panlst3(self, eid: int, panel_groups,
+                    comment: str = '') -> PANLST3:
+        card = PANLST3(eid, panel_groups, comment=comment)
+        self._add_methods.add_panlst_object(card)
+        return card
+
+    def add_pafoil7(self, pid: int, i_axial: int,
+                    i_thickness_root: int, i_camber_root: int,
+                    le_radius_root: float,
+                    i_thickness_tip: int, i_camber_tip: int,
+                    le_radius_tip: float,
+                    comment: str = '') -> PAFOIL7:
+        card = PAFOIL7(pid, i_axial, i_thickness_root, i_camber_root,
+                       le_radius_root, i_thickness_tip, i_camber_tip,
+                       le_radius_tip, comment=comment)
+        self._add_methods.add_pafoil_object(card)
+        return card
+
+    def add_pafoil8(self, pid: int, i_axial: int,
+                    i_thickness_root: int, i_camber_root: int,
+                    le_radius_root: float, i_thickness_tip: int,
+                    comment: str = '') -> PAFOIL8:
+        card = PAFOIL8(pid, i_axial, i_thickness_root, i_camber_root,
+                       le_radius_root, i_thickness_tip, comment=comment)
+        self._add_methods.add_pafoil_object(card)
+        return card
+
+    def add_aesurfz(self, label: str, surface_type: str, cid: int,
+                    panlst: int, setg: int, actuator_tf: int,
+                    comment: str = '') -> AESURFZ:
+        card = AESURFZ(label, surface_type, cid, panlst, setg,
+                       actuator_tf, comment=comment)
+        self._add_methods.add_aesurfz_object(card)
+        return card
+
+    def add_aeslink(self, label, link_type: str, actu_id: int,
+                    independent_labels: list[str],
+                    linking_coefficients: list[float],
+                    comment: str = '') -> AESLINK:
+        card = AESLINK(label, link_type, actu_id, independent_labels,
+                       linking_coefficients, comment=comment)
+        self._add_methods.add_aeslink_object(card)
+        return card
+
+    def add_attach(self, attach_id: int, model_name: str,
+                   setk: int, refgrid: int,
+                   comment: str = '') -> ATTACH:
+        card = ATTACH(attach_id, model_name, setk, refgrid,
+                      comment=comment)
+        self._add_methods.add_attach_object(card)
+        return card
+
+    # ---------------------------------------------------------------
+    # plot
+    # ---------------------------------------------------------------
+    def add_pltmode(self, set_id: int, symmetry: str, mode: int,
+                    max_disp: float, output_format: str,
+                    filename: str,
+                    comment: str = '') -> PLTMODE:
+        card = PLTMODE(set_id, symmetry, mode, max_disp,
+                       output_format, filename, comment=comment)
+        self._add_methods.add_pltmode_object(card)
+        return card
+
+    def add_pltaero(self, set_id: int, femgrid: str, offset: int,
+                    out_format: str, filename: str,
+                    cell: str = 'NO', vct: str = 'NO',
+                    comment: str = '') -> PLTAERO:
+        card = PLTAERO(set_id, femgrid, offset, out_format, filename,
+                       cell=cell, vct=vct, comment=comment)
+        self._add_methods.add_pltaero_object(card)
+        return card
+
+    def add_pltvg(self, set_id: int, flutter_id: int, xaxis: str,
+                  filename, nmode: int = 0,
+                  output_format: str = 'TABLE',
+                  rho_ref: float = 1.0,
+                  comment: str = '') -> PLTVG:
+        card = PLTVG(set_id, flutter_id, xaxis, filename,
+                     nmode=nmode, output_format=output_format,
+                     rho_ref=rho_ref, comment=comment)
+        self._add_methods.add_pltvg_object(card)
+        return card
+
+    def add_pltcp(self, set_id: int, sym_flag: str, mkaeroz_id: int,
+                  ik: int, mode: int, out_format: str, filename,
+                  aero_filename='',
+                  comment: str = '') -> PLTCP:
+        card = PLTCP(set_id, sym_flag, mkaeroz_id, ik, mode,
+                     out_format, filename, aero_filename=aero_filename,
+                     comment=comment)
+        self._add_methods.add_pltcp_object(card)
+        return card
+
+    def add_pltmist(self, set_id: int, ase_id: int, irow: int,
+                    icol: int, klist: int, out_format: str,
+                    filename: str,
+                    comment: str = '') -> PLTMIST:
+        card = PLTMIST(set_id, ase_id, irow, icol, klist,
+                       out_format, filename, comment=comment)
+        self._add_methods.add_pltmist_object(card)
+        return card
+
+    def add_pltsurf(self, set_id: int, label: str, out_format: str,
+                    filename: str, scale_factor: float = 1.0,
+                    comment: str = '') -> PLTSURF:
+        card = PLTSURF(set_id, label, out_format, filename,
+                       scale_factor=scale_factor, comment=comment)
+        self._add_methods.add_pltsurf_object(card)
+        return card
+
+    def add_pltflut(self, set_id: int, out_format: str,
+                    filename: str, scale_factor: float = 1.0,
+                    comment: str = '') -> PLTFLUT:
+        card = PLTFLUT(set_id, out_format, filename,
+                       scale_factor=scale_factor, comment=comment)
+        self._add_methods.add_pltflut_object(card)
+        return card
+
+    def add_pltbode(self, set_id: int, cmargin_id: int,
+                    fmin: float, fmax: float, nf: int,
+                    filename: str, log_scale_flag: int = 0,
+                    draw_flag: int = 0,
+                    comment: str = '') -> PLTBODE:
+        card = PLTBODE(set_id, cmargin_id, fmin, fmax, nf, filename,
+                       log_scale_flag=log_scale_flag,
+                       draw_flag=draw_flag, comment=comment)
+        self._add_methods.add_pltbode_object(card)
+        return card
+
+    def add_plttime(self, set_id: int, mloads_id: int,
+                    tstart: float, tend: float, ndt: int,
+                    out_type: str, filename: str,
+                    aero_filename: str,
+                    output_format: str = 'TECPLOT',
+                    scale_factor: float = 1.0,
+                    comment: str = '') -> PLTTIME:
+        card = PLTTIME(set_id, mloads_id, tstart, tend, ndt,
+                       out_type, filename, aero_filename,
+                       output_format=output_format,
+                       scale_factor=scale_factor, comment=comment)
+        self._add_methods.add_plttime_object(card)
+        return card
+
+    def add_plttrim(self, set_id: int, trim_id: int,
+                    out_type: str, filename: str,
+                    aero_filename: str,
+                    flex: str = 'FLEX',
+                    output_format: str = 'TECPLOT',
+                    scale_factor: float = 1.0,
+                    comment: str = '') -> PLTTRIM:
+        card = PLTTRIM(set_id, trim_id, out_type, filename,
+                       aero_filename, flex=flex,
+                       output_format=output_format,
+                       scale_factor=scale_factor, comment=comment)
+        self._add_methods.add_plttrim_object(card)
+        return card
+
+    # ---------------------------------------------------------------
+    # flutter
+    # ---------------------------------------------------------------
+    def add_mkaeroz(self, sid: int, mach: float, flt_id: int,
+                    filename: str, print_flag: int,
+                    freqs: list[float], method: int = 0,
+                    save: str = 'SAVE',
+                    comment: str = '') -> MKAEROZ:
+        card = MKAEROZ(sid, mach, flt_id, filename, print_flag,
+                       freqs, method=method, save=save,
+                       comment=comment)
+        self._add_methods.add_mkaeroz_object(card)
+        return card
+
+    # ---------------------------------------------------------------
+    # trim
+    # ---------------------------------------------------------------
+    def add_trimvar(self, var_id: int, label: str,
+                    lower: float, upper: float,
+                    trimlnk_id: int, dmi, sym: int,
+                    initial: Optional[float] = None,
+                    dcd='NONE', dcy='NONE', dcl='NONE',
+                    dcr='NONE', dcm='NONE', dcn='NONE',
+                    comment: str = '') -> TRIMVAR:
+        card = TRIMVAR(var_id, label, lower, upper, trimlnk_id, dmi,
+                       sym, initial=initial,
+                       dcd=dcd, dcy=dcy, dcl=dcl,
+                       dcr=dcr, dcm=dcm, dcn=dcn,
+                       comment=comment)
+        self._add_methods.add_trimvar_object(card)
+        return card
+
+    def add_trimlnk(self, link_id: int, sym: str,
+                    coeffs: list[float], var_ids: list[int],
+                    comment: str = '') -> TRIMLNK:
+        card = TRIMLNK(link_id, sym, coeffs, var_ids,
+                       comment=comment)
+        self._add_methods.add_trimlnk_object(card)
+        return card
+
+    def add_trimfnc(self, trimfnc_id: int, fcn_type: str,
+                    label: str, rhs_flag: str, is_set,
+                    ia_set, remark: str,
+                    comment: str = '') -> TRIMFNC:
+        card = TRIMFNC(trimfnc_id, fcn_type, label, rhs_flag,
+                       is_set, ia_set, remark, comment=comment)
+        self._add_methods.add_trimfnc_object(card)
+        return card
+
+    # ---------------------------------------------------------------
+    # maneuver loads
+    # ---------------------------------------------------------------
+    def add_mloads(self, mloads_id: int, asecont_id: int,
+                   flutter_id: int, minstat_id: int,
+                   mldstat_id: int, mldcomd_id: int,
+                   mldtime_id: int, mldprnt_id: int,
+                   fmax: float, save_freq: str,
+                   df: float = 0.01, filename: str = '',
+                   comment: str = '') -> MLOADS:
+        card = MLOADS(mloads_id, asecont_id, flutter_id, minstat_id,
+                      mldstat_id, mldcomd_id, mldtime_id, mldprnt_id,
+                      fmax, save_freq, df=df, filename=filename,
+                      comment=comment)
+        self._add_methods.add_mloads_object(card)
+        return card
+
+    def add_extinp(self, extinp_id: int, input_type: int,
+                   itf_id: int, itf_component: int,
+                   label: str,
+                   comment: str = '') -> EXTINP:
+        card = EXTINP(extinp_id, input_type, itf_id, itf_component,
+                      label, comment=comment)
+        self._add_methods.add_extinp_object(card)
+        return card
+
+    def add_extout(self, extout_id: int, input_type: int,
+                   itf_id: int, itf_component: int,
+                   label: str,
+                   comment: str = '') -> EXTOUT:
+        card = EXTOUT(extout_id, input_type, itf_id, itf_component,
+                      label, comment=comment)
+        self._add_methods.add_extout_object(card)
+        return card
+
+    def add_actu(self, actu_id: int, a0: float, a1: float,
+                 a2: float,
+                 comment: str = '') -> ACTU:
+        card = ACTU(actu_id, a0, a1, a2, comment=comment)
+        self._add_methods.add_actu_object(card)
+        return card
+
+    def add_loadmod(self, loadmod_id: int, label, cid: int,
+                    set_k: int, set_g: int,
+                    comment: str = '') -> LOADMOD:
+        card = LOADMOD(loadmod_id, label, cid, set_k, set_g,
+                       comment=comment)
+        self._add_methods.add_loadmod_object(card)
+        return card
+
+    def add_rbred(self, sid: int, id_ase: int, component: str,
+                  node_id: int, phugoid0: str,
+                  comment: str = '') -> RBRED:
+        card = RBRED(sid, id_ase, component, node_id, phugoid0,
+                     comment=comment)
+        self._add_methods.add_rbred_object(card)
+        return card
+
+    # ---------------------------------------------------------------
+    # gust
+    # ---------------------------------------------------------------
+    def add_gloads(self, gloads_id: int, asecont_id: int,
+                   flutter_id: int, minstat_id: int,
+                   mldstat_id: int, mldcomd_id: int,
+                   mldtime_id: int, mldprnt_id: int,
+                   save_flag: str, form: str, filename: str,
+                   save_freq: str, filename_freq: str,
+                   comment: str = '') -> GLOADS:
+        card = GLOADS(gloads_id, asecont_id, flutter_id, minstat_id,
+                      mldstat_id, mldcomd_id, mldtime_id, mldprnt_id,
+                      save_flag, form, filename, save_freq,
+                      filename_freq, comment=comment)
+        self._add_methods.add_gloads_object(card)
+        return card
+
+    def add_dgust(self, dgust_id: int, gust_type: str,
+                  length_gust, gust_velocity: float,
+                  x0: float, fmax: float = 0.0,
+                  df: float = 0.01, nap: int = 0,
+                  comment: str = '') -> DGUST:
+        card = DGUST(dgust_id, gust_type, length_gust, gust_velocity,
+                     x0, fmax=fmax, df=df, nap=nap, comment=comment)
+        self._add_methods.add_dgust_object(card)
+        return card
+
+    def add_cgust(self, cgust_id: int, gust_type: str,
+                  one_over_velocity: float, x0: float,
+                  rms_velocity: float,
+                  length_gust: float = 2500.,
+                  fmax: float = 0.0, df: float = 0.01,
+                  comment: str = '') -> CGUST:
+        card = CGUST(cgust_id, gust_type, one_over_velocity, x0,
+                     rms_velocity, length_gust=length_gust,
+                     fmax=fmax, df=df, comment=comment)
+        self._add_methods.add_cgust_object(card)
+        return card
+
+    # ---------------------------------------------------------------
+    # ASE (aeroservoelastic)
+    # ---------------------------------------------------------------
+    def add_ase(self, ase_id: int, asecont_id: int,
+                flutter_id: int, mldstat_id: int,
+                minstat_id: int, cmargin_id: int,
+                comment: str = '') -> ASE:
+        card = ASE(ase_id, asecont_id, flutter_id, mldstat_id,
+                   minstat_id, cmargin_id, comment=comment)
+        self._add_methods.add_ase_object(card)
+        return card
+
+    def add_asecont(self, asecont_id: int, surf_id: int,
+                    sens_id: int, tf_id: int, gain_id: int,
+                    conct_id: int, extinp_set_id: int,
+                    extout_set_id: int,
+                    comment: str = '') -> ASECONT:
+        card = ASECONT(asecont_id, surf_id, sens_id, tf_id,
+                       gain_id, conct_id, extinp_set_id,
+                       extout_set_id, comment=comment)
+        self._add_methods.add_asecont_object(card)
+        return card
+
+    def add_asesnsr(self, asesnsr_id: int, sensor_type: int,
+                    sgid: int, component: int, factor: float,
+                    sum_method: str,
+                    comment: str = '') -> ASESNSR:
+        card = ASESNSR(asesnsr_id, sensor_type, sgid, component,
+                       factor, sum_method, comment=comment)
+        self._add_methods.add_asesnsr_object(card)
+        return card
+
+    def add_asesns1(self, asesns1_id: int, label: str, ikey,
+                    factor: float, sum_method: str = 'NO',
+                    comment: str = '') -> ASESNS1:
+        card = ASESNS1(asesns1_id, label, ikey, factor,
+                       sum_method=sum_method, comment=comment)
+        self._add_methods.add_asesns1_object(card)
+        return card
+
+    def add_asegain(self, asegain_id: int, otf_id: int,
+                    c_out: int, itf_id: int, c_in: int,
+                    gain: float, gain_type: str,
+                    comment: str = '') -> ASEGAIN:
+        card = ASEGAIN(asegain_id, otf_id, c_out, itf_id, c_in,
+                       gain, gain_type, comment=comment)
+        self._add_methods.add_asegain_object(card)
+        return card
+
+    def add_gainset(self, gainset_id: int, ids: list[int],
+                    comment: str = '') -> GAINSET:
+        card = GAINSET(gainset_id, ids, comment=comment)
+        self._add_methods.add_gainset_object(card)
+        return card
+
+    def add_cjunct(self, cjunct_id: int, nu: int, ny: int,
+                   values: list[float],
+                   comment: str = '') -> CJUNCT:
+        card = CJUNCT(cjunct_id, nu, ny, values,
+                      comment=comment)
+        self._add_methods.add_cjunct_object(card)
+        return card
+
+    def add_conct(self, conct_id: int, output_tf_id: int,
+                  output_component: int, input_tf_id: int,
+                  input_component: int,
+                  comment: str = '') -> CONCT:
+        card = CONCT(conct_id, output_tf_id, output_component,
+                     input_tf_id, input_component,
+                     comment=comment)
+        self._add_methods.add_conct_object(card)
+        return card
+
+    def add_tfset(self, tfset_id: int, ids: list[int],
+                  comment: str = '') -> TFSET:
+        card = TFSET(tfset_id, ids, comment=comment)
+        self._add_methods.add_tfset_object(card)
+        return card
+
+    def add_mimoss(self, mimoss_id: int, ntf: int, nu: int,
+                   ny: int, dmi_label: str, mimoss_type: str,
+                   print_flag: int, values: list[float],
+                   labels: list[str],
+                   comment: str = '') -> MIMOSS:
+        card = MIMOSS(mimoss_id, ntf, nu, ny, dmi_label,
+                      mimoss_type, print_flag, values, labels,
+                      comment=comment)
+        self._add_methods.add_mimoss_object(card)
+        return card
+
+    def add_mimotf(self, mimotf_id: int, n_input: int,
+                   n_output: int, tf_ids: list[int],
+                   comment: str = '') -> MIMOTF:
+        card = MIMOTF(mimotf_id, n_input, n_output, tf_ids,
+                      comment=comment)
+        self._add_methods.add_mimotf_object(card)
+        return card
+
+    def add_sisotf(self, sisotf_id: int, nnumerator: int,
+                   ndenominator: int, b: list[float],
+                   a: list[float],
+                   comment: str = '') -> SISOTF:
+        card = SISOTF(sisotf_id, nnumerator, ndenominator, b, a,
+                      comment=comment)
+        self._add_methods.add_sisotf_object(card)
+        return card
+
+    def add_aerolag(self, aerolag_id: int, nlag: int,
+                    lag_values: list[float],
+                    comment: str = '') -> AEROLAG:
+        card = AEROLAG(aerolag_id, nlag, lag_values,
+                       comment=comment)
+        self._add_methods.add_aerolag_object(card)
+        return card
+
+    def add_sensr(self, sensr_id: int, sensor_type: int,
+                  sgid: int, component: int, factor: float,
+                  sum_method: str,
+                  comment: str = '') -> SENSR:
+        card = SENSR(sensr_id, sensor_type, sgid, component,
+                     factor, sum_method, comment=comment)
+        self._add_methods.add_sensr_object(card)
+        return card
+
+    def add_gain(self, gain_id: int, k: float,
+                 comment: str = '') -> GAIN:
+        card = GAIN(gain_id, k, comment=comment)
+        self._add_methods.add_gain_object(card)
+        return card
+
+    def add_sumblk(self, sumblk_id: int, nsignal: int,
+                   signs: list[float],
+                   comment: str = '') -> SUMBLK:
+        card = SUMBLK(sumblk_id, nsignal, signs,
+                      comment=comment)
+        self._add_methods.add_sumblk_object(card)
+        return card
+
+    def add_deadbn(self, deadbn_id: int, threshold: float,
+                   comment: str = '') -> DEADBN:
+        card = DEADBN(deadbn_id, threshold, comment=comment)
+        self._add_methods.add_deadbn_object(card)
+        return card
+
+    def add_delay_zaero(self, delay_id: int, tau: float,
+                        order: int,
+                        comment: str = '') -> DELAY_ZAERO:
+        card = DELAY_ZAERO(delay_id, tau, order, comment=comment)
+        self._add_methods.add_delay_zaero_object(card)
+        return card
+
+    def add_filtfl(self, filtfl_id: int, filter_type: int,
+                   freq: float, order: int, zeta: float,
+                   comment: str = '') -> FILTFL:
+        card = FILTFL(filtfl_id, filter_type, freq, order, zeta,
+                      comment=comment)
+        self._add_methods.add_filtfl_object(card)
+        return card
+
+    def add_limtr(self, limtr_id: int, lower: float,
+                  upper: float,
+                  comment: str = '') -> LIMTR:
+        card = LIMTR(limtr_id, lower, upper, comment=comment)
+        self._add_methods.add_limtr_object(card)
+        return card
+
+    # ---------------------------------------------------------------
+    # sets
+    # ---------------------------------------------------------------
+    def add_senset(self, senset_id: int, ids: list[int],
+                   comment: str = '') -> SENSET:
+        card = SENSET(senset_id, ids, comment=comment)
+        self._add_methods.add_senset_object(card)
+        return card
+
+    def add_surfset(self, surfset_id: int, ids: list[int],
+                    comment: str = '') -> SURFSET:
+        card = SURFSET(surfset_id, ids, comment=comment)
+        self._add_methods.add_surfset_object(card)
+        return card
+
+    def add_cnctset(self, cnctset_id: int, ids: list[int],
+                    comment: str = '') -> CNCTSET:
+        card = CNCTSET(cnctset_id, ids, comment=comment)
+        self._add_methods.add_cnctset_object(card)
+        return card
+
+    def add_setadd(self, setadd_id: int, ids: list[int],
+                   comment: str = '') -> SETADD:
+        card = SETADD(setadd_id, ids, comment=comment)
+        self._add_methods.add_setadd_object(card)
+        return card
+
+    # ---------------------------------------------------------------
+    # MLD / transient
+    # ---------------------------------------------------------------
+    def add_mldprnt(self, mldprnt_id: int, filename: str,
+                    form: str, tspnt: float, tepnt: float,
+                    labels: list[str], ikeys: list[int],
+                    psd_time: str = 'TIME', sof='NO',
+                    comment: str = '') -> MLDPRNT:
+        card = MLDPRNT(mldprnt_id, filename, form, tspnt, tepnt,
+                       labels, ikeys, psd_time=psd_time, sof=sof,
+                       comment=comment)
+        self._add_methods.add_mldprnt_object(card)
+        return card
+
+    def add_mldstat(self, mldstat_id: int, mldtrim_id: int,
+                    transform, filename: str,
+                    states: list[str], values: list[float],
+                    dx_tox: str = 'YES',
+                    state_space_arr: str = '',
+                    state_space_brr: str = '',
+                    comment: str = '') -> MLDSTAT:
+        card = MLDSTAT(mldstat_id, mldtrim_id, transform, filename,
+                       states, values, dx_tox=dx_tox,
+                       state_space_arr=state_space_arr,
+                       state_space_brr=state_space_brr,
+                       comment=comment)
+        self._add_methods.add_mldstat_object(card)
+        return card
+
+    def add_minstat(self, minstat_id, aerolag_id, itmax, apcid,
+                    pweight_id, dinit_id, klist_id, min_inp,
+                    print_flag, save_flag, filename,
+                    msmod, aerolag_gust_id=0, dinit_gust_id=0,
+                    comment: str = '') -> MINSTAT:
+        card = MINSTAT(minstat_id, aerolag_id, itmax, apcid,
+                       pweight_id, dinit_id, klist_id, min_inp,
+                       print_flag, save_flag, filename,
+                       msmod, aerolag_gust_id=aerolag_gust_id,
+                       dinit_gust_id=dinit_gust_id,
+                       comment=comment)
+        self._add_methods.add_minstat_object(card)
+        return card
+
+    def add_mldtrim(self, mldtrim_id, gravity: float, nz: float,
+                    thkcam: str, trim_vars: list[str],
+                    values: list[float], modal_dmi: str = '',
+                    comment: str = '') -> MLDTRIM:
+        card = MLDTRIM(mldtrim_id, gravity, nz, thkcam,
+                       trim_vars, values, modal_dmi=modal_dmi,
+                       comment=comment)
+        self._add_methods.add_mldtrim_object(card)
+        return card
+
+    def add_mldcomd(self, mldcomd_id: int,
+                    extinp_ids: list[int], table_ids: list[int],
+                    comment: str = '') -> MLDCOMD:
+        card = MLDCOMD(mldcomd_id, extinp_ids, table_ids,
+                       comment=comment)
+        self._add_methods.add_mldcomd_object(card)
+        return card
+
+    def add_mldtime(self, mldtime_id: int, tstart: float,
+                    tend: float, dt: float, out_dt: int,
+                    print_flag: int, method: str,
+                    comment: str = '') -> MLDTIME:
+        card = MLDTIME(mldtime_id, tstart, tend, dt, out_dt,
+                       print_flag, method, comment=comment)
+        self._add_methods.add_mldtime_object(card)
+        return card
+
+    # ---------------------------------------------------------------
+    # other
+    # ---------------------------------------------------------------
+    def add_extfile(self, extfile_id: int, filename: str,
+                    comment: str = '') -> EXTFILE:
+        card = EXTFILE(extfile_id, filename, comment=comment)
+        self._add_methods.add_extfile_object(card)
+        return card
+
+    def add_dmil(self, name: str, col: int, row: int,
+                 values: list[float],
+                 comment: str = '') -> DMIL:
+        card = DMIL(name, col, row, values, comment=comment)
+        self._add_methods.add_dmil_object(card)
+        return card
+
+    def add_conmlst(self, conmlst_id: int,
+                    factors: list[float], conm_ids: list[int],
+                    comment: str = '') -> CONMLST:
+        card = CONMLST(conmlst_id, factors, conm_ids,
+                       comment=comment)
+        self._add_methods.add_conmlst_object(card)
+        return card
+
+    def add_cpfact(self, cpfact_id: int, idmk: int, sym: str,
+                   comp: str, cptype: str, panlst: str,
+                   factor1: float, factor2: float,
+                   strips: list[int],
+                   comment: str = '') -> CPFACT:
+        card = CPFACT(cpfact_id, idmk, sym, comp, cptype, panlst,
+                      factor1, factor2, strips, comment=comment)
+        self._add_methods.add_cpfact_object(card)
+        return card
+
+    def add_apconst(self, sid: int, da0: int, da1: int,
+                    da2: int, nrp: int, ncp: int,
+                    fr_values: list[float],
+                    fc_values: list[float],
+                    comment: str = '') -> APCONST:
+        card = APCONST(sid, da0, da1, da2, nrp, ncp,
+                       fr_values, fc_values, comment=comment)
+        self._add_methods.add_apconst_object(card)
+        return card
+
+    def add_spline0(self, eid: int, model_name: str, cp: int,
+                    setk: int,
+                    comment: str = '') -> SPLINE0:
+        card = SPLINE0(eid, model_name, cp, setk, comment=comment)
+        self._add_methods.add_spline0_object(card)
+        return card
+
+    def add_pbody7(self, pid: int, ipbody: int, fields: list,
+                   comment: str = '') -> PBODY7:
+        card = PBODY7(pid, ipbody, fields, comment=comment)
+        self._add_methods.add_pbody7_object(card)
+        return card
+
+    def add_trimflt(self, trimflt_id: int, title: str,
+                    alpha: float, fields: list,
+                    comment: str = '') -> TRIMFLT:
+        card = TRIMFLT(trimflt_id, title, alpha, fields,
+                       comment=comment)
+        self._add_methods.add_trimflt_object(card)
+        return card
+
+    def add_cmargin(self, cmargin_id: int, gm_high: float,
+                    gm_low: float, pm_high: float,
+                    pm_low: float, df: float = 1e-4,
+                    print_flag: int = 0, nroot: int = 0,
+                    comment: str = '') -> CMARGIN:
+        card = CMARGIN(cmargin_id, gm_high, gm_low, pm_high,
+                       pm_low, df=df, print_flag=print_flag,
+                       nroot=nroot, comment=comment)
+        self._add_methods.add_cmargin_object(card)
+        return card
 
     def verify(self, xref):
         if self.model.nastran_format not in {'zona', 'zaero'}:
@@ -1262,11 +1964,11 @@ class ZAERO:
 
 
     def _checks(self):
-        self.build_block()
+        self.view_block_diagram()
         # self._check_tfset_cjunct()
         # self._check_cntcset_conct()
 
-    def build_block(self, subcase_id: int=-1) -> None:
+    def view_block_diagram(self, subcase_id: int=-1) -> None:
         from .zaero_interface.graphviz_interface import view_block_diagram
         view_block_diagram(self.model, subcase_id=subcase_id)
 

@@ -417,8 +417,17 @@ def create_flutter(log: SimpleLogger,
         temperature = np.array([
             atm_temperature(alt, alt_units=alt_units, temperature_units=temperature_units)
             for alt in alts])
+
+        density_magnitude = np.floor(np.log10(np.abs(density)))
+        decimals = 3 - density_magnitude
+        decimals = np.nan_to_num(decimals, nan=0.0, posinf=0.0, neginf=0.0).astype(int)
+        density2 = np.array([np.round(x, d) for x, d in zip(density, decimals)])
+        atmosphere_table = np.column_stack([
+            alts.round(0), sos.round(0), density2, temperature.round(2),
+        ])
+        atmosphere_list = atmosphere_table.ravel().tolist()
         model.zaero.add_atmos(atm_id, mass_unit, length_unit, temperature_units,
-                              alts, sos, density, temperature)
+                              atmosphere_list)
 
     if rhoref_flag:
         rho0 = atm_density(alt=0., density_units=density_units)
