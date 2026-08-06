@@ -12,12 +12,19 @@ from pyNastran.gui.utils.qt.pydialog import QFloatEdit
 from pyNastran.utils import print_bad_path
 
 from pyNastran.f06.dev.flutter.utils import get_raw_json
+
 JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json(allow_vtk=False)
 
 from qtpy.QtWidgets import (
-    QApplication, QVBoxLayout, QComboBox,
-    QLabel, QPushButton,
-    QLineEdit, QFileDialog, QProgressBar,)
+    QApplication,
+    QVBoxLayout,
+    QComboBox,
+    QLabel,
+    QPushButton,
+    QLineEdit,
+    QFileDialog,
+    QProgressBar,
+)
 from pyNastran.f06.dev.flutter.qtablewidgetcopy import QTableWidgetCopy
 from pyNastran.f06.dev.flutter.utils_qt import create_grid_from_list
 from pyNastran.f06.dev.flutter.write_report import write_report
@@ -29,33 +36,34 @@ from pyNastran.f06.flutter_response import Limit  # FlutterResponse
 
 PKG_PATH = Path(pyNastran.__path__[0])
 
-AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
+AERO_PATH = PKG_PATH / ".." / "models" / "aero"
 
 import pandas as pd
-#import tables  # required for ???
-from pyNastran.f06.dev.flutter.utils_report import (
-    get_configs, get_trades, filenames_to_data_table)
+
+# import tables  # required for ???
+from pyNastran.f06.dev.flutter.utils_report import get_trades, filenames_to_data_table
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.f06.dev.flutter.gui_flutter_plot import FlutterGui
 
 # QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
 # QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
 
-AXIS_VALUES = ['Equivalent Airspeed, EAS', 'Altitude',
-               'Mach', 'Dynamic Pressure, Q']
+AXIS_VALUES = ["Equivalent Airspeed, EAS", "Altitude", "Mach", "Dynamic Pressure, Q"]
+
 
 class TradeLayout(QVBoxLayout):
     def dontcrash(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             # do something before `sum`
-            result = func(self) # , *args, **kwargs
+            result = func(self)  # , *args, **kwargs
             # do something after `sum`
             return result
+
         return wrapper
 
-    def __init__(self, parent: FlutterGui,
-                 *args, **kwargs):
+    def __init__(self, parent: FlutterGui, *args, **kwargs):
         """
         Parameters
         ----------
@@ -66,49 +74,49 @@ class TradeLayout(QVBoxLayout):
         super().__init__(*args, **kwargs)
         self.parent = parent
         self.log = parent.log
-        #------------------------------------------------------------
+        # ------------------------------------------------------------
         self.excel_dict: dict[str, pd.DataFrame] = {}
-        self.excel_filename = 'trade_study.xlsx'
-        self.python_envelope_filename = 'envelope.py'
-        self.base_f06_directory = ''
-        self.word_filename = 'flutter_summary.docx'
-        #------------------------------------------------------------
+        self.excel_filename = "trade_study.xlsx"
+        self.python_envelope_filename = "envelope.py"
+        self.base_f06_directory = ""
+        self.word_filename = "flutter_summary.docx"
+        # ------------------------------------------------------------
 
-        self.excel_filename_label = QLabel('Excel Filename:', parent)
+        self.excel_filename_label = QLabel("Excel Filename:", parent)
         self.excel_filename_edit = QLineEdit(parent)
         self.excel_filename_edit.setText(self.excel_filename)
-        self.excel_filename_edit.setToolTip('Must click load button before selecting tab')
-        self.excel_filename_browse = QPushButton('Browse...', parent)
-        self.excel_load_button = QPushButton('Load...', parent)
+        self.excel_filename_edit.setToolTip("Must click load button before selecting tab")
+        self.excel_filename_browse = QPushButton("Browse...", parent)
+        self.excel_load_button = QPushButton("Load...", parent)
 
-        self.nastran_zaero_label = QLabel('Nastran/ZAERO:', parent)
+        self.nastran_zaero_label = QLabel("Nastran/ZAERO:", parent)
         self.nastran_zaero_pulldown = QComboBox(parent)
-        self.nastran_zaero_pulldown.addItems(['Nastran F06/OUT', 'ZAERO Out'])
+        self.nastran_zaero_pulldown.addItems(["Nastran F06/OUT", "ZAERO Out"])
 
-        self.base_f06_directory_label = QLabel('Base F06 Directory:', parent)
+        self.base_f06_directory_label = QLabel("Base F06 Directory:", parent)
         self.base_f06_directory_edit = QLineEdit(parent)
         # self.base_f06_directory_edit.setText(self.base_f06_directory)
-        self.base_f06_directory_browse = QPushButton('Browse...', parent)
-        self.base_f06_directory_load = QPushButton('Load...', parent)
+        self.base_f06_directory_browse = QPushButton("Browse...", parent)
+        self.base_f06_directory_load = QPushButton("Load...", parent)
 
-        self.word_filename_label = QLabel('Word Filename:', parent)
+        self.word_filename_label = QLabel("Word Filename:", parent)
         self.word_filename_edit = QLineEdit(parent)
         self.word_filename_edit.setText(self.word_filename)
-        self.word_filename_browse = QPushButton('Browse...', parent)
+        self.word_filename_browse = QPushButton("Browse...", parent)
 
         self.tab_select_pulldown = QComboBox(parent)
 
-        self.tab_label = QLabel('Tab Name:', parent)
+        self.tab_label = QLabel("Tab Name:", parent)
         self.tab_edit = QLineEdit(parent)
         self.tab_edit.setVisible(False)
 
-        self.save_obj_checkbox = QCheckBox('Save Object', parent)
+        self.save_obj_checkbox = QCheckBox("Save Object", parent)
 
         # self.tab_select_browse.setEnabled(False)
         # self.tab_select_browse.setToolTip('Must click load button before selecting tab')
 
-        self.run_organize_button = QPushButton('Run', parent)
-        self.plot_from_obj_button = QPushButton('Plot From Object', parent)
+        self.run_organize_button = QPushButton("Run", parent)
+        self.plot_from_obj_button = QPushButton("Plot From Object", parent)
 
         # self.starting_row = QLabel('Starting Row:', parent)
         # self.starting_row = QLineEdit(parent)
@@ -120,58 +128,82 @@ class TradeLayout(QVBoxLayout):
         self.progress_bar = QProgressBar(parent)
         self.progress_bar.setVisible(False)
 
-        self.python_envelope_filename_label = QLabel('Python Filename:', parent)
+        self.python_envelope_filename_label = QLabel("Python Filename:", parent)
         self.python_envelope_filename_edit = QLineEdit(parent)
         self.python_envelope_filename_edit.setText(self.python_envelope_filename)
         # self.python_filename_edit.setToolTip('Must click load button before selecting tab')
-        self.python_envelope_filename_browse = QPushButton('Browse...', parent)
-        self.python_envelope_load_button = QPushButton('Load...', parent)
-        self.python_envelope_plot_button = QPushButton('Plot...', parent)
+        self.python_envelope_filename_browse = QPushButton("Browse...", parent)
+        self.python_envelope_load_button = QPushButton("Load...", parent)
+        self.python_envelope_plot_button = QPushButton("Plot...", parent)
 
-        self.eas_max_label = QLabel('EAS Max:', parent)
+        self.eas_max_label = QLabel("EAS Max:", parent)
         self.eas_max_edit = QFloatEdit(parent)
-        self.eas_max_edit.setToolTip('maximum value for the flutter/divegence table')
+        self.eas_max_edit.setToolTip("maximum value for the flutter/divegence table")
 
-        self.xaxis_label = QLabel('X-Axis', parent)
-        self.yaxis_label = QLabel('Y-Axis', parent)
+        self.xaxis_label = QLabel("X-Axis", parent)
+        self.yaxis_label = QLabel("Y-Axis", parent)
         self.xaxis_pulldown = QComboBox(parent)
         self.yaxis_pulldown = QComboBox(parent)
         self.xaxis_pulldown.addItems(AXIS_VALUES)
         self.yaxis_pulldown.addItems(AXIS_VALUES)
 
-        self.config_label = QLabel('Configs', parent)
+        self.config_label = QLabel("Configs", parent)
         self.config_edit = QLineEdit(parent)
-        self.config_edit.setToolTip('Comma separated list of configs')
+        self.config_edit.setToolTip("Comma separated list of configs")
         self.xaxis_pulldown.setEnabled(False)
         self.yaxis_pulldown.setEnabled(False)
         # self.config_edit.setEnabled(False)
-        #--------------------------------------
+        # --------------------------------------
         self.setup_layout()
         self.setup_connections()
 
     def setup_layout(self) -> None:
         parent = self.parent
 
-        grid_load = create_grid_from_list(parent, [
-            (self.nastran_zaero_label, self.nastran_zaero_pulldown),
-            (self.base_f06_directory_label, self.base_f06_directory_edit, self.base_f06_directory_browse, self.base_f06_directory_load),
-            (self.excel_filename_label, self.excel_filename_edit, self.excel_filename_browse, self.excel_load_button),
-            (self.tab_label, self.tab_select_pulldown), # self.tab_edit
-        ])
+        grid_load = create_grid_from_list(
+            parent,
+            [
+                (self.nastran_zaero_label, self.nastran_zaero_pulldown),
+                (
+                    self.base_f06_directory_label,
+                    self.base_f06_directory_edit,
+                    self.base_f06_directory_browse,
+                    self.base_f06_directory_load,
+                ),
+                (
+                    self.excel_filename_label,
+                    self.excel_filename_edit,
+                    self.excel_filename_browse,
+                    self.excel_load_button,
+                ),
+                (self.tab_label, self.tab_select_pulldown),  # self.tab_edit
+            ],
+        )
 
-        grid2 = create_grid_from_list(parent, [
-            (self.word_filename_label, self.word_filename_edit, self.word_filename_browse),
-            (self.eas_max_label, self.eas_max_edit),
-        ])
-        grid3 = create_grid_from_list(parent, [
-            (self.save_obj_checkbox,),
-            (self.python_envelope_filename_label, self.python_envelope_filename_edit, self.python_envelope_filename_browse,
-             self.python_envelope_load_button, self.python_envelope_plot_button),
-            (self.xaxis_label, self.xaxis_pulldown),
-            (self.yaxis_label, self.yaxis_pulldown),
-            (self.config_label, self.config_edit),
-        ])
-        #-----------------------------------------------------------
+        grid2 = create_grid_from_list(
+            parent,
+            [
+                (self.word_filename_label, self.word_filename_edit, self.word_filename_browse),
+                (self.eas_max_label, self.eas_max_edit),
+            ],
+        )
+        grid3 = create_grid_from_list(
+            parent,
+            [
+                (self.save_obj_checkbox,),
+                (
+                    self.python_envelope_filename_label,
+                    self.python_envelope_filename_edit,
+                    self.python_envelope_filename_browse,
+                    self.python_envelope_load_button,
+                    self.python_envelope_plot_button,
+                ),
+                (self.xaxis_label, self.xaxis_pulldown),
+                (self.yaxis_label, self.yaxis_pulldown),
+                (self.config_label, self.config_edit),
+            ],
+        )
+        # -----------------------------------------------------------
 
         # vbox = QVBoxLayout()
         self.addLayout(grid_load)
@@ -208,7 +240,7 @@ class TradeLayout(QVBoxLayout):
     def get_settings(self) -> dict[str, Any]:
         parent = self.parent
 
-        print(f'data = {parent.data}')
+        print(f"data = {parent.data}")
         # vl = self.vl
         # vl = self.data['vl']
         # data = {
@@ -287,16 +319,16 @@ class TradeLayout(QVBoxLayout):
         eas_max = sdouble_or_blank(self.eas_max_edit.text(), default=1000.0)
 
         settings = {
-            'x_plot_type': 'eas',
-            'nrigid_body_modes': 6,  # TODO: 6
-            'f06_units': parent._units_in,
-            'out_units': parent._units_out,
-            'modes': modes,
-            'vl_target': sdouble_or_blank(parent.data['vl'], default=-1.0),
-            'vf_target': sdouble_or_blank(parent.data['vf'], default=-1.0),
+            "x_plot_type": "eas",
+            "plot_type": parent.plot_type,
+            "nrigid_body_modes": 6,  # TODO: 6
+            "f06_units": parent._units_in,
+            "out_units": parent._units_out,
+            "modes": modes,
+            "vl_target": sdouble_or_blank(parent.data["vl"], default=-1.0),
+            "vf_target": sdouble_or_blank(parent.data["vf"], default=-1.0),
             #'xlim_kfreq': str_limit_to_limit(self.kfreq_lim),
             #'ylim_damping': self.damping_lim,  # NO
-
             # self.index_lim = index_lim
             # self.tas_lim = tas_lim
             # self.mach_lim = mach_lim
@@ -309,31 +341,40 @@ class TradeLayout(QVBoxLayout):
             # self.freq_lim = freq_lim
             # self.eigi_lim = eigi_lim
             # self.eigr_lim = eigr_lim
-            'ylim_damping': str_limit_to_limit(parent.ydamp_lim),
-            'ylim_freq': str_limit_to_limit(parent.freq_lim),
-            'eas_lim': str_limit_to_limit(parent.eas_lim),
-            'freq_tol': min_sdouble_or_blank(parent.freq_tol, threshold=0.0, default=-1.0),
-            'freq_tol_remove': min_sdouble_or_blank(parent.freq_tol_remove, threshold=0.0, default=-1.0),
-            'damping_required': min_sdouble_or_blank(parent.damping_required, threshold=-1.0, default=-1.0),
-            'damping_required_tol': sdouble_or_blank(parent.damping_required_tol, default=0.0),
-            'damping_limit': min_sdouble_or_blank(parent.damping, threshold=-1.0, default=-1.0),  # % damping
-            'eas_flutter_range': str_limit_to_limit(parent.eas_flutter_range),
-            'plot_font_size': parent.plot_font_size,
-            'show_lines': parent.show_lines,
-            'show_points': parent.show_points,
-            'show_mode_number': parent.show_mode_number,
-            'show_detailed_mode_info': parent.show_detailed_mode_info,
-            'point_spacing': parent.point_spacing,
-            'use_rhoref': parent.use_rhoref,
-            'flutter_ncolumns': parent.flutter_ncolumns,
+            "ylim_damping": str_limit_to_limit(parent.ydamp_lim),
+            "ylim_freq": str_limit_to_limit(parent.freq_lim),
+            "eas_lim": str_limit_to_limit(parent.eas_lim),
+            "freq_tol": min_sdouble_or_blank(parent.freq_tol, threshold=0.0, default=-1.0),
+            "freq_tol_remove": min_sdouble_or_blank(
+                parent.freq_tol_remove, threshold=0.0, default=-1.0
+            ),
+            "damping_required": min_sdouble_or_blank(
+                parent.damping_required, threshold=-1.0, default=-1.0
+            ),
+            "damping_required_tol": sdouble_or_blank(parent.damping_required_tol, default=0.0),
+            "damping_limit": min_sdouble_or_blank(
+                parent.damping, threshold=-1.0, default=-1.0
+            ),  # % damping
+            "eas_flutter_range": str_limit_to_limit(parent.eas_flutter_range),
+            "plot_font_size": parent.plot_font_size,
+            "show_lines": parent.show_lines,
+            "show_points": parent.show_points,
+            "show_mode_number": parent.show_mode_number,
+            "show_detailed_mode_info": parent.show_detailed_mode_info,
+            "point_spacing": parent.point_spacing,
+            "use_rhoref": parent.use_rhoref,
+            "flutter_ncolumns": parent.flutter_ncolumns,
             # 'mode_switch_method': None,
-            #------------------
-            'divergence_legend_loc': parent.divergence_legend_loc,
-            'divergence_freq_tol': parent.freq_divergence_tol,
-            'flutter_bbox_to_anchor_x': parent.flutter_bbox_to_anchor_x,
-            'freq_ndigits': parent.freq_ndigits,
-            'eas_max' : eas_max,
-            'ndir_levels': 1,
+            # ------------------
+            "divergence_legend_loc": parent.divergence_legend_loc,
+            "divergence_freq_tol": parent.freq_divergence_tol,
+            "flutter_bbox_to_anchor_x": parent.flutter_bbox_to_anchor_x,
+            "freq_ndigits": parent.freq_ndigits,
+            "eas_max": eas_max,
+            "ndir_levels": 1,
+            "eigr_lim": str_limit_to_limit(parent.eigr_lim),
+            "eigi_lim": str_limit_to_limit(parent.eigi_lim),
+            "xlim_kfreq": str_limit_to_limit(parent.kfreq_lim),
         }
         return settings
 
@@ -345,21 +386,21 @@ class TradeLayout(QVBoxLayout):
             return
         word_filename = self.get_word_filename()
         base, ext = os.path.splitext(word_filename)
-        obj_filename = base + '.obj'
+        obj_filename = base + ".obj"
 
         if not os.path.exists(obj_filename):
-            log.info(f'cannot find obj file: {obj_filename}\n{print_bad_path(obj_filename)}')
+            log.info(f"cannot find obj file: {obj_filename}\n{print_bad_path(obj_filename)}")
             return
-        log.info(f'loading obj file from {obj_filename}')
+        log.info(f"loading obj file from {obj_filename}")
         data = pickle.load(obj_filename)
         return
 
     def get_word_filename(self) -> str:
         word_filename = self.word_filename_edit.text().strip()
         if len(word_filename) == 0:
-            word_filename = 'flutter_summary.docx'
-        if not word_filename.lower().endswith('.docx'):
-            word_filename += 'docx'
+            word_filename = "flutter_summary.docx"
+        if not word_filename.lower().endswith(".docx"):
+            word_filename += "docx"
         return word_filename
 
     @dontcrash
@@ -369,7 +410,7 @@ class TradeLayout(QVBoxLayout):
         if not is_valid:
             return
 
-        #----------------------------------------------
+        # ----------------------------------------------
         out_table = self.table_widget.get_data()
         # print(f'out_table:\n{out_table}')
         # is_passed, configs = get_configs(
@@ -383,17 +424,17 @@ class TradeLayout(QVBoxLayout):
         #     return
         assert isinstance(configs, list), configs
         # assert isinstance(configs[0], str), configs
-        #----------------------------------------------
+        # ----------------------------------------------
         # configs = [config if config.strip() else for config in ]
 
         word_filename = self.get_word_filename()
         base, ext = os.path.splitext(word_filename)
-        obj_filename = base + '.obj'
+        obj_filename = base + ".obj"
 
         # print('settings')
         settings = self.get_settings()
 
-        f06_filenames = out_table['File'].to_list()
+        f06_filenames = out_table["File"].to_list()
         # print(f'f06_filenames = {f06_filenames}')
         if len(configs) == 0:
             configs = [os.path.splitext(os.path.basename(fname))[0]
@@ -408,7 +449,7 @@ class TradeLayout(QVBoxLayout):
 
         nfiles = len(f06_filenames)
         if nfiles == 0:
-            log.error('no files found')
+            log.error("no files found")
             return
 
         # Show progress bar and disable button
@@ -421,18 +462,23 @@ class TradeLayout(QVBoxLayout):
         is_nastran = self.is_nastran()
         # print(f'is_nastran = {is_nastran}')
         try:
-            log.info(f'Processing {len(f06_filenames)} files...')
+            log.info(f"Processing {len(f06_filenames)} files...")
             write_report(
                 word_filename,
-                f06_filenames, configs, out_table, trades,
-                log, settings,
+                f06_filenames,
+                configs,
+                out_table,
+                trades,
+                log,
+                settings,
                 obj_filename=obj_filename,
                 is_nastran=is_nastran,
                 progress_callback=self.update_f06_progress,
-                 **settings)
-            log.info(f'Successfully created {word_filename}')
+                **settings,
+            )
+            log.info(f"Successfully created {word_filename}")
         except Exception as e:
-            log.error(f'Failed to create Word document: {str(e)}')
+            log.error(f"Failed to create Word document: {str(e)}")
             log.error(traceback.format_exc())
         finally:
             # Hide progress bar and re-enable button
@@ -446,44 +492,47 @@ class TradeLayout(QVBoxLayout):
         f06_filename = os.path.abspath(f06_filename)
         basename = os.path.basename(f06_filename)
         dirname = os.path.basename(os.path.dirname(f06_filename))
-        self.parent.statusbar.showMessage(f'Processing F06 {current}/{total}: {dirname}/{basename}')
+        self.parent.statusbar.showMessage(f"Processing F06 {current}/{total}: {dirname}/{basename}")
 
     def is_nastran(self):
         index = self.nastran_zaero_pulldown.currentIndex()
-        print(f'index = {index}')
 
         # 0: nastran
         # 1: zaero
-        is_nastran = (index == 0)
+        is_nastran = index == 0
         return is_nastran
 
     def on_base_f06_directory_load(self) -> None:
         is_passed, directory = get_file_edit(
-            'base_f06_directory', self.base_f06_directory_edit,
-            self.log, allow_empty=True)
+            "base_f06_directory", self.base_f06_directory_edit, self.log, allow_empty=True
+        )
         if not is_passed:
             return
         if not os.path.isdir(directory):
-            self.log.error(f'{directory!r} is not a directory')
+            self.log.error(f"{directory!r} is not a directory")
             return
 
         is_nastran = self.is_nastran()
         if is_nastran:
-            filenames = [os.path.join(directory, fname)
-                         for fname in os.listdir(directory)
-                         if fname.lower().endswith('.f06') or fname.lower().endswith('.out')]
+            filenames = [
+                os.path.join(directory, fname)
+                for fname in os.listdir(directory)
+                if fname.lower().endswith(".f06") or fname.lower().endswith(".out")
+            ]
         else:
-            filenames = [os.path.join(directory, fname)
-                         for fname in os.listdir(directory)
-                         if fname.lower().endswith('.out')]
+            filenames = [
+                os.path.join(directory, fname)
+                for fname in os.listdir(directory)
+                if fname.lower().endswith(".out")
+            ]
 
         # filenames = get_files_of_type(directory, '.f06')
         if len(filenames) == 0:
-            self.log.error(f'no .f06/.op2 files were found in {directory!r}')
+            self.log.error(f"no .f06/.op2 files were found in {directory!r}")
             return
 
         # TODO: parse the filename for floats
-        headers = ['File']
+        headers = ["File"]
         # filenames2 = [os.path.relpath(pathi, directory) for pathi in natsort.natsorted(filenames)]
         filenames2 = list(natsort.natsorted(filenames))
 
@@ -497,20 +546,20 @@ class TradeLayout(QVBoxLayout):
     @dontcrash
     def on_load_python_envelope(self):
         is_passed, python_envelope_filename = get_file_edit(
-            'python_envelope_filename', self.python_envelope_filename_edit,
-            self.log)
+            "python_envelope_filename", self.python_envelope_filename_edit, self.log
+        )
         if not is_passed:
             return
 
-        with open(python_envelope_filename, 'r') as py_file:
+        with open(python_envelope_filename, "r") as py_file:
             code_string = py_file.read()
         exec(code_string)
 
     @dontcrash
     def on_load_excel(self):
         is_passed, excel_filename = get_file_edit(
-            'excel_filename', self.excel_filename_edit,
-            self.log)
+            "excel_filename", self.excel_filename_edit, self.log
+        )
         if not is_passed:
             return
         self.excel_dict = pd.read_excel(excel_filename, sheet_name=None)
@@ -531,7 +580,8 @@ class TradeLayout(QVBoxLayout):
     def on_base_f06_directory_browse(self):
         start_path = self.base_f06_directory_edit.text()
         directory = self._on_load_directory(
-            title='Select F06/ZAERO Directory', start_path=start_path)
+            title="Select F06/ZAERO Directory", start_path=start_path
+        )
         if directory:
             self.base_f06_directory_edit.setText(directory)
             self.base_f06_directory = directory
@@ -539,8 +589,10 @@ class TradeLayout(QVBoxLayout):
     def on_load_excel_file(self) -> None:
         start_path = self.excel_filename_edit.text()
         filename = self._on_load_file(
-            title='Select Excel File', start_path=start_path,
-            file_filter='Excel File (*.xlsx);;All Files (*)')
+            title="Select Excel File",
+            start_path=start_path,
+            file_filter="Excel File (*.xlsx);;All Files (*)",
+        )
         if filename:
             self.excel_filename_edit.setText(filename)
             self.excel_filename = filename
@@ -548,8 +600,10 @@ class TradeLayout(QVBoxLayout):
     def on_load_python_envelope_file(self) -> None:
         start_path = self.python_envelope_filename_edit.text()
         filename = self._on_load_file(
-            title='Select Python Envelope File', start_path=start_path,
-            file_filter='Python File (*.py);;All Files (*)')
+            title="Select Python Envelope File",
+            start_path=start_path,
+            file_filter="Python File (*.py);;All Files (*)",
+        )
         if filename:
             self.python_envelope_filename_edit.setText(filename)
             self.python_envelope_filename = filename
@@ -557,16 +611,20 @@ class TradeLayout(QVBoxLayout):
     def on_load_word_file(self) -> None:
         start_path = self.word_filename_edit.text()
         filename = self._on_load_file(
-            title='Select Word File', start_path=start_path,
-            file_filter='Word File (*.docx);;All Files (*)')
+            title="Select Word File",
+            start_path=start_path,
+            file_filter="Word File (*.docx);;All Files (*)",
+        )
         if filename:
             self.word_filename_edit.setText(filename)
             self.word_filename = filename
 
-    def _on_load_file(self,
-                      title: str="Select File",
-                      start_path: str="",
-                      file_filter: str="Text Files (*.txt);;All Files (*)") -> str:
+    def _on_load_file(
+        self,
+        title: str = "Select File",
+        start_path: str = "",
+        file_filter: str = "Text Files (*.txt);;All Files (*)",
+    ) -> str:
         """
         Open a dialog to select a directory
 
@@ -582,10 +640,9 @@ class TradeLayout(QVBoxLayout):
         file_path : str
             Selected directory path, or empty string if canceled
         """
-        file_path, _ = QFileDialog.getOpenFileName(
-            self.parent, title, start_path, file_filter)
+        file_path, _ = QFileDialog.getOpenFileName(self.parent, title, start_path, file_filter)
         if not file_path:
-            return ''
+            return ""
         return file_path
 
     def _on_load_directory(self,
@@ -607,8 +664,8 @@ class TradeLayout(QVBoxLayout):
             Selected directory path, or empty string if canceled
         """
         directory = QFileDialog.getExistingDirectory(
-            self.parent, title, start_path,
-            QFileDialog.Option.ShowDirsOnly)
+            self.parent, title, start_path, QFileDialog.Option.ShowDirsOnly
+        )
         if directory:
             # print(f"Selected directory: {directory}")
             return directory
@@ -634,40 +691,40 @@ class TradeLayout(QVBoxLayout):
         try:
             eas_max = float(eas_max)
         except ValueError:
-            eas_max = 1000.
+            eas_max = 1000.0
 
-        configs = self.config_edit.text().strip(' ,')
+        configs = self.config_edit.text().strip(" ,")
         xaxis = self.xaxis_pulldown.currentText()
         yaxis = self.yaxis_pulldown.currentText()
         # self.word_filename = word_filename
         trade = {
-            'base_f06_directory': base_f06_directory,
-            'excel_filename': excel_filename,
-            'python_envelope_filename': python_envelope_filename,
-            'word_filename': word_filename,
-            'configs': configs,
-            'xaxis': xaxis,
-            'yaxis': yaxis,
-            'eas_max': eas_max,
+            "base_f06_directory": base_f06_directory,
+            "excel_filename": excel_filename,
+            "python_envelope_filename": python_envelope_filename,
+            "word_filename": word_filename,
+            "configs": configs,
+            "xaxis": xaxis,
+            "yaxis": yaxis,
+            "eas_max": eas_max,
         }
         return trade
 
-    def get_lineedits(self, prefix: str='') -> list[tuple[str, int, QLineEdit]]:
+    def get_lineedits(self, prefix: str = "") -> list[tuple[str, int, QLineEdit]]:
         out = [
             # should be in trade/
-            (f'{prefix}excel_filename', -1, self.excel_filename_edit),
-            (f'{prefix}base_f06_directory', -1, self.base_f06_directory_edit),
-            (f'{prefix}python_envelope_filename', -1, self.python_envelope_filename_edit),
-            (f'{prefix}word_filename', -1, self.word_filename_edit),
-            (f'{prefix}configs', -1, self.config_edit),
-            (f'{prefix}eas_max', -1, self.eas_max_edit),
+            (f"{prefix}excel_filename", -1, self.excel_filename_edit),
+            (f"{prefix}base_f06_directory", -1, self.base_f06_directory_edit),
+            (f"{prefix}python_envelope_filename", -1, self.python_envelope_filename_edit),
+            (f"{prefix}word_filename", -1, self.word_filename_edit),
+            (f"{prefix}configs", -1, self.config_edit),
+            (f"{prefix}eas_max", -1, self.eas_max_edit),
         ]
         return out
 
-    def get_comboboxes(self, prefix: str = '') -> list[tuple[str, QComboBox, list[str]]]:
+    def get_comboboxes(self, prefix: str = "") -> list[tuple[str, QComboBox, list[str]]]:
         out = [
-            ('xaxis', self.xaxis_pulldown, AXIS_VALUES),
-            ('yaxis', self.yaxis_pulldown, AXIS_VALUES),
+            ("xaxis", self.xaxis_pulldown, AXIS_VALUES),
+            ("yaxis", self.yaxis_pulldown, AXIS_VALUES),
         ]
         return out
 
@@ -675,6 +732,9 @@ class TradeLayout(QVBoxLayout):
 def str_limit_to_limit(data: list[str | None]) -> Limit:
     data_out = []
     for value in data:
+        if value is None:
+            data_out.append(None)
+            continue
         value = value.strip()
         if len(value) == 0:
             data_out.append(None)
@@ -697,8 +757,8 @@ def min_sdouble_or_blank(value: float | str,
         value2 = default
     return value2
 
-def sdouble_or_blank(value: float | str,
-                     default: float) -> float:
+
+def sdouble_or_blank(value: float | str, default: float) -> float:
     if isinstance(value, str):
         value = value.strip()
         if len(value) == 0:
@@ -733,14 +793,14 @@ def get_file_edit(name: str,
     if len(filename) == 0:
         if allow_empty:
             is_passed = True
-            return is_passed, '.'
+            return is_passed, "."
         else:
-            log.error(f'{name}={filename!r} is empty')
+            log.error(f"{name}={filename!r} is empty")
             return is_passed, filename
 
     if not os.path.exists(filename):
         log.error(print_bad_path(filename))
-        return is_passed, ''
-    log.info(f'loading {name} {filename}')
+        return is_passed, ""
+    log.info(f"loading {name} {filename}")
     is_passed = True
     return is_passed, filename
