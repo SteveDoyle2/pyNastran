@@ -6,10 +6,10 @@ defines:
 from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 # from qtpy.QtWidgets import QMainWindow
-from pyNastran.f06.dev.flutter.preferences import FlutterPreferencesDialog
+from pyNastran.f06.dev.flutter.gui.preferences import FlutterPreferencesDialog
 from pyNastran.f06.dev.flutter.gui.vtk_data import VtkData
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.f06.dev.flutter.gui_flutter import FlutterGui
+    from pyNastran.f06.dev.flutter.gui.gui_flutter import FlutterGui
 
 
 class FlutterPreferencesObject:

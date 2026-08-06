@@ -6,13 +6,13 @@ defines:
 from __future__ import annotations
 from typing import Any, Optional, TYPE_CHECKING
 from pyNastran.utils import PathLike
-from pyNastran.f06.dev.flutter.vtk_data import (
+from pyNastran.f06.dev.flutter.gui.vtk_data import (
     DT_MS_MIN, DT_MS_MAX,
     apply_vtk_settings, VtkData)
-from pyNastran.f06.dev.flutter.vtk_window import VtkWindow
+from pyNastran.f06.dev.flutter.gui.vtk_window import VtkWindow
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.f06.dev.flutter.gui_flutter import FlutterGui
+    from pyNastran.f06.dev.flutter.gui.gui_flutter import FlutterGui
 
 
 class VtkWindowObject:

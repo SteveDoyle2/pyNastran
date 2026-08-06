@@ -5,7 +5,7 @@ import numpy as np
 from cpylog import SimpleLogger
 
 import pyNastran
-from pyNastran.f06.dev.flutter.action import Action
+from pyNastran.f06.dev.flutter.gui.action import Action
 from pyNastran.f06.dev.flutter.utils import (
     validate_json, get_plot_flags,
     load_f06_op2, get_png_filename, get_plot_file,

@@ -19,7 +19,7 @@ except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
 try:
-    import pyNastran.f06.dev.flutter.gui_flutter
+    import pyNastran.f06.dev.flutter.gui.gui_flutter
 except ImportError:  # pragma: no cover
     pass
 

@@ -40,7 +40,7 @@ from pyNastran.gui.utils.qt.pydialog import QLineEdit, QFloatEdit, make_font
 from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
-from pyNastran.f06.dev.flutter.utils_qt import create_grid_from_list
+from pyNastran.f06.dev.flutter.gui.utils_qt import create_grid_from_list
 from pyNastran.f06.dev.flutter.gui.actions_builder import Actions, Action, build_menus
 from pyNastran.f06.dev.flutter.gui.preferences_object import FlutterPreferencesObject
 from pyNastran.f06.dev.flutter.gui.preferences import (
@@ -80,7 +80,7 @@ else:
 JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json()
 
 from pyNastran.f06.dev.flutter.gui.vtk_data import VtkData
-from pyNastran.f06.dev.flutter.utils_qt import (
+from pyNastran.f06.dev.flutter.gui.utils_qt import (
     load_checkboxes, load_lineedits, load_pulldowns,
     load_min_max_lineedits)
 if USE_VTK:

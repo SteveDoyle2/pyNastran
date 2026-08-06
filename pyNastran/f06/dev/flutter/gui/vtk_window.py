@@ -133,8 +133,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from vtkmodules.vtkCommonDataModel import vtkPointData
     from pyNastran.gui.typing import ColorInt
-    from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
-    from pyNastran.f06.dev.flutter.vtk_data import VtkData
+    from pyNastran.f06.dev.flutter.gui.vtk_window_object import VtkWindowObject
+    from pyNastran.f06.dev.flutter.gui.vtk_data import VtkData
 
 
 class VtkWindow(QMainWindow):
