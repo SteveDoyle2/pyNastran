@@ -19,24 +19,12 @@ except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
 try:
-    import pyNastran.f06.dev.flutter.nastran_utils
-except ImportError:  # pragma: no cover
-    pass
-
-try:
     import pyNastran.f06.dev.flutter.gui_flutter
 except ImportError:  # pragma: no cover
     pass
 
-import pyNastran.f06.dev.flutter.utils
-
 try:
-    import pyNastran.f06.dev.flutter.actions_builder
-except ImportError:
-    pass
-
-try:
-    import pyNastran.f06.dev.flutter.scalar_bar
+    import pyNastran.f06.dev.flutter.gui.actions_builder
 except ImportError:
     pass
 
@@ -95,7 +83,7 @@ class TestZaero(unittest.TestCase):
         assert matrices["MHH"].shape == (4, 4)
         assert matrices["BHH"].shape == (4, 4)
         assert matrices["KHH"].shape == (4, 4)
-        print(matrices)
+        # print(matrices)
 
         bdf_model = data_dict["model"]
         assert bdf_model is not None
@@ -136,8 +124,19 @@ class TestZaero(unittest.TestCase):
     def test_zaero_case6_out_trim(self):
         zaero_out_filename = MODEL_DIR / 'case6' / 'agard_trim.out'
         responses, data_dict = read_zaero_out(zaero_out_filename)
-        assert len(responses) == 1, responses
-        assert len(data_dict) == 0, data_dict
+        assert len(responses) == 0, responses
+        assert len(data_dict) == 3, data_dict
+        assert isinstance(data_dict["matrices"], dict), data_dict
+        assert data_dict["model"] is not None
+
+        trim = data_dict["trim"]
+        assert trim["subcase"] == 1
+        assert trim["mach"] == 0.954
+        assert trim["dynamic_pressure"] == 1200.0
+        assert "ALPHA" in trim["stability_derivatives"], trim["stability_derivatives"]
+        assert "NZ" in trim["trim_results"], trim["trim_results"]
+        assert "ALPHA" in trim["trim_variables"], trim["trim_variables"]
+        assert len(trim["aero_forces"]) > 0, trim["aero_forces"]
 
     def test_zaero_case6_out_tran(self):
         zaero_out_filename = MODEL_DIR / "case6" / "agardztran.out"

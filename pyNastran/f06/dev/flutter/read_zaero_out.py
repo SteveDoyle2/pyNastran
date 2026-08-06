@@ -37,9 +37,22 @@ def read_zaero_out(
     with open(zaero_out_filename, "r") as zaero_out_file:
         lines = zaero_out_file.readlines()
 
-    (case_dict, ref_dict, exec_control_lines, case_control_lines, bulk_data_lines, modal_data) = (
+    (case_dict, ref_dict, exec_control_lines, case_control_lines, bulk_data_lines, modal_data, trim_data) = (
         zaero_lines_to_out(log, lines)
     )
+
+    bdf_model = _build_bdf_from_echo(exec_control_lines, case_control_lines, bulk_data_lines, log)
+
+    if trim_data is not None:
+        # TRIM discipline — no flutter V-G-F results
+        responses = {}
+        data_dict = {
+            "matrices": modal_data,
+            "model": bdf_model,
+            "trim": trim_data,
+        }
+        return responses, data_dict
+
     for key, data in case_dict.items():
         log.debug(f"{key}:\n{str(data)}")
 
@@ -53,7 +66,6 @@ def read_zaero_out(
         1: resp,
     }
 
-    bdf_model = _build_bdf_from_echo(exec_control_lines, case_control_lines, bulk_data_lines, log)
     data_dict = {
         "matrices": modal_data,
         "model": bdf_model,
@@ -297,9 +309,201 @@ def _parse_modal_table(
     return modal_data
 
 
+def _parse_trim_section(
+    lines: list[str], iline: int, nlines: int, log: SimpleLogger,
+) -> dict:
+    """Parse the ZAERO trim results section.
+
+    Returns a dict with keys such as ``mach``, ``dynamic_pressure``,
+    ``dynamic_pressure_units``, ``stability_derivatives``,
+    ``trim_results``, ``trim_variables``, and ``aero_forces``.
+    """
+    trim: dict = {}
+
+    # --- scan for MACH NUMBER and DYNAMIC PRESSURE header ---
+    while iline < nlines:
+        line = lines[iline]
+        if "MACH NUMBER =" in line:
+            # ' MACH NUMBER =  0.9540. STEADY ...'
+            parts = line.split("MACH NUMBER =")[1]
+            mach_str = parts.split(".")[0] + "." + parts.split(".")[1]
+            # mach_str is e.g. '  0.9540'
+            trim["mach"] = float(mach_str.strip().rstrip("."))
+            iline += 1
+            break
+        iline += 1
+
+    while iline < nlines:
+        line = lines[iline]
+        if "DYNAMIC PRESSURE=" in line:
+            # ' DYNAMIC PRESSURE= 0.12000E+04  LBF/IN**2'
+            after = line.split("DYNAMIC PRESSURE=")[1].strip()
+            tokens = after.split()
+            trim["dynamic_pressure"] = float(tokens[0])
+            trim["dynamic_pressure_units"] = tokens[1] if len(tokens) > 1 else ""
+            iline += 1
+            break
+        iline += 1
+
+    # --- stability derivatives table ---
+    # The table looks like:
+    #  -----...-----
+    #  | IDVAR  | LABEL  | DRAG COEFFICIENT| ...
+    #  |        |        |  RIGID |FLEXIBLE| ...
+    #  -----...-----
+    #  |     100|ALPHA   | 0.00000| 0.00000| ...
+    #  |  UNITS= 1/DEG   | E/R= ...
+    #  -----...-----
+    stability_derivatives: dict[str, dict[str, float]] = {}
+    while iline < nlines:
+        line = lines[iline]
+        if line.strip().startswith("| IDVAR"):
+            # skip header row, sub-header row, then dashed separator
+            iline += 3
+            break
+        iline += 1
+
+    # now read data rows until the closing dashed line
+    while iline < nlines:
+        line = lines[iline].strip()
+        if line.startswith("-----"):
+            iline += 1
+            break
+        if line.startswith("|") and "UNITS" not in line:
+            # '|     100|ALPHA   | 0.00000| 0.00000| ...'
+            cells = [c.strip() for c in line.split("|")]
+            cells = [c for c in cells if c]
+            if len(cells) >= 14:
+                label = cells[1]
+                stability_derivatives[label] = {
+                    "drag_rigid": float(cells[2]),
+                    "drag_flexible": float(cells[3]),
+                    "side_force_rigid": float(cells[4]),
+                    "side_force_flexible": float(cells[5]),
+                    "lift_rigid": float(cells[6]),
+                    "lift_flexible": float(cells[7]),
+                    "roll_moment_rigid": float(cells[8]),
+                    "roll_moment_flexible": float(cells[9]),
+                    "pitch_moment_rigid": float(cells[10]),
+                    "pitch_moment_flexible": float(cells[11]),
+                    "yaw_moment_rigid": float(cells[12]),
+                    "yaw_moment_flexible": float(cells[13]),
+                }
+        iline += 1
+
+    trim["stability_derivatives"] = stability_derivatives
+
+    # --- trim results ---
+    trim_results: dict[str, dict] = {}
+    while iline < nlines:
+        line = lines[iline]
+        if "T R I M   R E S U L T S" in line:
+            iline += 1
+            break
+        if "***  Z A E R O   T E R M I N A T E D ***" in line:
+            break
+        iline += 1
+
+    # look for COMPUTED: lines
+    while iline < nlines:
+        line = lines[iline]
+        if "COMPUTED:" in line:
+            # '      COMPUTED:   NZ         SYMMETRIC   2.4624E-01 G   ...'
+            tokens = line.split()
+            idx = tokens.index("COMPUTED:")
+            label = tokens[idx + 1]
+            symmetry = tokens[idx + 2]
+            # flexible value is next, then units, then rigid, then units
+            flexible_val = float(tokens[idx + 3])
+            flexible_units = tokens[idx + 4]
+            rigid_val = float(tokens[idx + 5])
+            rigid_units = tokens[idx + 6]
+            trim_results[label] = {
+                "symmetry": symmetry,
+                "flexible": flexible_val,
+                "flexible_units": flexible_units,
+                "rigid": rigid_val,
+                "rigid_units": rigid_units,
+            }
+        if "NUMBER OF TRIM VARIABLES" in line:
+            iline += 1
+            break
+        if "***  Z A E R O   T E R M I N A T E D ***" in line:
+            break
+        iline += 1
+
+    trim["trim_results"] = trim_results
+
+    # --- trim variables ---
+    trim_variables: dict[str, dict] = {}
+    while iline < nlines:
+        line = lines[iline]
+        if "USER INPUT:" in line:
+            tokens = line.split()
+            idx = tokens.index("INPUT:")
+            idvar = int(tokens[idx + 1])
+            label = tokens[idx + 2]
+            symmetry = tokens[idx + 3]
+            flexible_val = float(tokens[idx + 4])
+            rigid_val = float(tokens[idx + 5])
+            units = tokens[idx + 6]
+            trim_variables[label] = {
+                "idvar": idvar,
+                "symmetry": symmetry,
+                "flexible": flexible_val,
+                "rigid": rigid_val,
+                "units": units,
+            }
+        if "S U M M A R Y   O F   T O T A L" in line:
+            iline += 1
+            break
+        if "***  Z A E R O   T E R M I N A T E D ***" in line:
+            break
+        iline += 1
+
+    trim["trim_variables"] = trim_variables
+
+    # --- aero forces summary ---
+    aero_forces: dict[str, dict[str, float]] = {}
+    while iline < nlines:
+        line = lines[iline]
+        stripped = line.strip()
+        if "***  Z A E R O   T E R M I N A T E D ***" in line:
+            break
+        if "M O D A L   C O O R D I N A T E S" in line:
+            break
+        if ":" in stripped and stripped and not stripped.startswith("COEFFICIENTS"):
+            # 'INDUCED DRAG(CDL):             0.03363             0.34544     FX/REFS/Q'
+            parts = stripped.split(":")
+            coeff_name = parts[0].strip()
+            vals = parts[1].split()
+            if len(vals) >= 3:
+                try:
+                    flexible_val = float(vals[0])
+                    rigid_val = float(vals[1])
+                    units = vals[2]
+                    aero_forces[coeff_name] = {
+                        "flexible": flexible_val,
+                        "rigid": rigid_val,
+                        "units": units,
+                    }
+                except (ValueError, IndexError):
+                    pass
+        iline += 1
+
+    trim["aero_forces"] = aero_forces
+
+    log.info(f"parsed trim data: mach={trim.get('mach')}, "
+             f"q={trim.get('dynamic_pressure')}, "
+             f"{len(stability_derivatives)} derivatives, "
+             f"{len(trim_variables)} trim variables, "
+             f"{len(aero_forces)} aero forces")
+    return trim
+
+
 def zaero_lines_to_out(
     log: SimpleLogger, lines: list[str]
-) -> tuple[dict, dict, list[str], list[str], list[str], dict]:
+) -> tuple[dict, dict, list[str], list[str], list[str], dict, Optional[dict]]:
     out = {}
     nlines = len(lines)
     iline = 0
@@ -393,6 +597,21 @@ def zaero_lines_to_out(
     log.info(f"subcase={subcase!r} discipline={discipline!r} bulk_id={bulk_id!r}")
     iline += 3
 
+    if discipline == "TRIM":
+        log.info("TRIM discipline found; parsing trim results")
+        trim_data = _parse_trim_section(lines, iline, nlines, log)
+        trim_data['subcase'] = int(subcase)
+        trim_data['bulk_id'] = int(bulk_id)
+        return (
+            out,
+            {},
+            exec_control_lines,
+            case_control_lines,
+            bulk_data_lines,
+            modal_data,
+            trim_data,
+        )
+
     while "REFERENCE LENGTH (L) = " not in lines[iline]:
         #' MACH NUMBER =  0.9000, REFERENCE LENGTH (L) = 2.4000E+01/2.0 (IN), VREF= 1.0000E+00 (IN/SEC)'
         #' ALTITUDE = 0.0000E+00 (IN), ATMOS TABLE=STANDARD, REFERENCE LENGTH (L) = 1.0000E+01/2.0 (IN), VREF= 1.0000E+04 (IN/SEC)'
@@ -426,6 +645,7 @@ def zaero_lines_to_out(
                     case_control_lines,
                     bulk_data_lines,
                     modal_data,
+                    None,
                 )
             if "***  Z A E R O   T E R M I N A T E D ***" in lines[iline]:
                 log.info("***zero terminated***")
@@ -436,6 +656,7 @@ def zaero_lines_to_out(
                     case_control_lines,
                     bulk_data_lines,
                     modal_data,
+                    None,
                 )
             # log.debug(f'Units {iline}: {lines[iline].rstrip()}')
             iline += 1

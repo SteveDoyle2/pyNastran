@@ -44,7 +44,7 @@ import pandas as pd
 from pyNastran.f06.dev.flutter.utils_report import get_trades, filenames_to_data_table
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.f06.dev.flutter.gui_flutter_plot import FlutterGui
+    from pyNastran.f06.dev.flutter.gui.gui_flutter_plot import FlutterGui
 
 # QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
 # QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
