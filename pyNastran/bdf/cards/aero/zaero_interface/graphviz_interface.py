@@ -5,6 +5,13 @@ if TYPE_CHECKING:  # pragma: no cover
 
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
+from pyNastran.bdf.cards.aero.zaero_cards.manuever import (
+    # MLOADS,
+    EXTINP,
+    EXTOUT,
+    # TRIMFNC,
+    # ACTU,
+)
 
 try:
     import graphviz
@@ -14,7 +21,7 @@ except ImportError:  # pragma: no cover
     IS_GRAPHVIZ = False
 
 
-def view_block_diagram(model: BDF, subcase_id: int=-1) -> None:
+def view_block_diagram(model: BDF, subcase_id: int=-1, plot: bool=True) -> None:
     """
     Parameters
     ----------
@@ -55,9 +62,9 @@ def view_block_diagram(model: BDF, subcase_id: int=-1) -> None:
             if 'MLOADS' in subcase or 'ASE' in subcase:
                 break
         else:
-            log.warning(f'couldnt find a subcase with MLOADS/ASE')
+            log.warning('couldnt find a subcase with MLOADS/ASE')
             return
-    
+
     if subcase_id:
         subcase = subcases[subcase_id]
         if 'MLOADS' in subcase:
@@ -448,6 +455,8 @@ def view_block_diagram(model: BDF, subcase_id: int=-1) -> None:
     if nedge == 0:
         log.warning('No edges')
 
+    if not plot:
+        return
     try:
         g.view()
     except ExecutableNotFound:

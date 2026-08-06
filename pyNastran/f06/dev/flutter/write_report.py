@@ -23,6 +23,7 @@ from pyNastran.f06.flutter_response import get_damping_crossings as _get_damping
 from pyNastran.f06.parse_flutter import make_flutter_response, FlutterResponse
 from pyNastran.f06.dev.flutter.utils import get_vlines, get_noline_nopoints
 from pyNastran.f06.dev.flutter.utils_report import write_docx_path
+from pyNastran.f06.dev.flutter.read_zaero_out import read_zaero_out
 
 try:
     from docx import Document
@@ -33,7 +34,6 @@ except ImportError:
     raise
 
 if TYPE_CHECKING:  # pragma: no cover
-    import pandas as pd
     from cpylog import SimpleLogger
 
 
@@ -76,6 +76,7 @@ def write_report(docx_filename: str,
                  divergence_freq_tol: float=0.1,
                  ndir_levels: int=1,
                  eas_max: float=1000.0,
+                 is_nastran: bool=True,
                  obj_filename: str='',
                  progress_callback: Optional[Callable]=None,
                  ) -> None:
@@ -168,6 +169,8 @@ def write_report(docx_filename: str,
         frequency to identify divergence (Hz)
     ndir_levels: int; default=1
         number of directory levels to write
+    is_nastran : bool; default=True
+        support Nastran vs. ZAERO
     progress_callback : function
         run a callback for the gui
 
@@ -310,28 +313,23 @@ def write_report(docx_filename: str,
         if config.strip() == '':
             config = basename
 
-        try:
-            resp_dict, data_dict = make_flutter_response(
-                str(f06_filename),
-                f06_units=f06_units, out_units=out_units,
-                use_rhoref=use_rhoref, make_alt=make_alt,
-                log=log)
-        except Exception:
-            string_io = io.StringIO()
-            traceback.print_exc(file=string_io)
-            sout = string_io.getvalue()
-            log.error(f'Problem parsing flutter result from: {f06_filename}\n{sout}')
-            v0 = freq0 = v3 = freq3 = vdiverg = freq_diverg = np.nan
-            mass = np.full(1, np.nan)
-            cg = np.full(3, np.nan)
-            inertia = np.full((3, 3), np.nan)
-            hump_message = ''
-            case = (v0, freq0, v3, freq3, vdiverg, freq_diverg,
-                    mass, cg, inertia, config,
-                    hump_message,
-                    f06_filename, png_filename)
-            cases.append(case)
-            continue
+        if is_nastran:
+            try:
+                resp_dict, data_dict = make_flutter_response(
+                    str(f06_filename),
+                    f06_units=f06_units, out_units=out_units,
+                    use_rhoref=use_rhoref, make_alt=make_alt,
+                    log=log)
+            except Exception:
+                _add_null_case(cases, config, f06_filename, png_filename, log)
+                continue
+        else:
+            # zaero
+            try:
+                resp_dict, data_dict = read_zaero_out(f06_filename)
+            except Exception:
+                _add_null_case(cases, config, f06_filename, png_filename, log)
+                continue
 
         assert len(resp_dict) == 1, resp_dict
         response = resp_dict[subcase]
@@ -455,6 +453,26 @@ def write_report(docx_filename: str,
         log, docx_filename, excel_filename,
         table, cases, trades, settings,
         eas_units=eas_report_units, ndir_levels=ndir_levels)
+
+
+def _add_null_case(cases: list, config: str,
+                   f06_filename: str, png_filename: Path,
+                   log: SimpleLogger) -> None:
+    string_io = io.StringIO()
+    traceback.print_exc(file=string_io)
+    sout = string_io.getvalue()
+    log.error(f'Problem parsing flutter result from: {f06_filename}\n{sout}')
+    v0 = freq0 = v3 = freq3 = vdiverg = freq_diverg = np.nan
+    mass = np.full(1, np.nan)
+    cg = np.full(3, np.nan)
+    inertia = np.full((3, 3), np.nan)
+    hump_message = ''
+    case = (v0, freq0, v3, freq3, vdiverg, freq_diverg,
+            mass, cg, inertia, config,
+            hump_message,
+            f06_filename, png_filename)
+    cases.append(case)
+
 
 def _cases_to_document(log: SimpleLogger,
                        docx_filename: PathLike,

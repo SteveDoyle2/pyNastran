@@ -81,6 +81,10 @@ class TradeLayout(QVBoxLayout):
         self.excel_filename_browse = QPushButton('Browse...', parent)
         self.excel_load_button = QPushButton('Load...', parent)
 
+        self.nastran_zaero_label = QLabel('Nastran/ZAERO:', parent)
+        self.nastran_zaero_pulldown = QComboBox(parent)
+        self.nastran_zaero_pulldown.addItems(['Nastran F06/OUT', 'ZAERO Out'])
+
         self.base_f06_directory_label = QLabel('Base F06 Directory:', parent)
         self.base_f06_directory_edit = QLineEdit(parent)
         # self.base_f06_directory_edit.setText(self.base_f06_directory)
@@ -149,6 +153,7 @@ class TradeLayout(QVBoxLayout):
         parent = self.parent
 
         grid_load = create_grid_from_list(parent, [
+            (self.nastran_zaero_label, self.nastran_zaero_pulldown),
             (self.base_f06_directory_label, self.base_f06_directory_edit, self.base_f06_directory_browse, self.base_f06_directory_load),
             (self.excel_filename_label, self.excel_filename_edit, self.excel_filename_browse, self.excel_load_button),
             (self.tab_label, self.tab_select_pulldown), # self.tab_edit
@@ -413,6 +418,8 @@ class TradeLayout(QVBoxLayout):
         self.run_organize_button.setEnabled(False)
 
         # Process files
+        is_nastran = self.is_nastran()
+        # print(f'is_nastran = {is_nastran}')
         try:
             log.info(f'Processing {len(f06_filenames)} files...')
             write_report(
@@ -420,6 +427,7 @@ class TradeLayout(QVBoxLayout):
                 f06_filenames, configs, out_table, trades,
                 log, settings,
                 obj_filename=obj_filename,
+                is_nastran=is_nastran,
                 progress_callback=self.update_f06_progress,
                  **settings)
             log.info(f'Successfully created {word_filename}')
@@ -440,6 +448,15 @@ class TradeLayout(QVBoxLayout):
         dirname = os.path.basename(os.path.dirname(f06_filename))
         self.parent.statusbar.showMessage(f'Processing F06 {current}/{total}: {dirname}/{basename}')
 
+    def is_nastran(self):
+        index = self.nastran_zaero_pulldown.currentIndex()
+        print(f'index = {index}')
+
+        # 0: nastran
+        # 1: zaero
+        is_nastran = (index == 0)
+        return is_nastran
+
     def on_base_f06_directory_load(self) -> None:
         is_passed, directory = get_file_edit(
             'base_f06_directory', self.base_f06_directory_edit,
@@ -449,12 +466,20 @@ class TradeLayout(QVBoxLayout):
         if not os.path.isdir(directory):
             self.log.error(f'{directory!r} is not a directory')
             return
-        filenames = [os.path.join(directory, fname)
-                     for fname in os.listdir(directory)
-                     if fname.lower().endswith('.f06')]
+
+        is_nastran = self.is_nastran()
+        if is_nastran:
+            filenames = [os.path.join(directory, fname)
+                         for fname in os.listdir(directory)
+                         if fname.lower().endswith('.f06') or fname.lower().endswith('.out')]
+        else:
+            filenames = [os.path.join(directory, fname)
+                         for fname in os.listdir(directory)
+                         if fname.lower().endswith('.out')]
+
         # filenames = get_files_of_type(directory, '.f06')
         if len(filenames) == 0:
-            self.log.error(f'no .f06 files were found in {directory!r}')
+            self.log.error(f'no .f06/.op2 files were found in {directory!r}')
             return
 
         # TODO: parse the filename for floats
@@ -506,7 +531,7 @@ class TradeLayout(QVBoxLayout):
     def on_base_f06_directory_browse(self):
         start_path = self.base_f06_directory_edit.text()
         directory = self._on_load_directory(
-            title='Select F06 Directory', start_path=start_path)
+            title='Select F06/ZAERO Directory', start_path=start_path)
         if directory:
             self.base_f06_directory_edit.setText(directory)
             self.base_f06_directory = directory

@@ -2049,6 +2049,9 @@ class FlutterResponse:
             if len(freq) == 0:
                 # print('no points after remove_eas_range')
                 continue
+            if len(freq_calc) == 0:
+                # print('no points after remove_eas_range')
+                continue
             jcolor, color, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
                 vel_calc, freq_calc, damping_calc, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,

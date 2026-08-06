@@ -8,7 +8,27 @@ from pyNastran.f06.flutter_response import FlutterResponse
 
 def read_zaero_out(zaero_out_filename: PathLike,
                    log: Optional[SimpleLogger]=None,
-                   debug: Optional[str|bool]=True) -> tuple[dict, dict]:
+                   debug: Optional[str|bool]=True) -> tuple[dict[int, FlutterResponse],
+                                                            dict]:
+    """
+    Returns
+    -------
+    data_dict : dict
+        opgwg : dict[str, Any]
+            ref_point : int
+            MO: (6?,6?) float np.ndarray
+            cg : (3,1) float np.ndarray
+            mass : float
+            mass_error: float
+            cg_error: float...why???
+            I(S): (6?,6?) float np.ndarray
+        matrices
+            freq : (nmodes,) float np.ndarray
+            MHH : (nmodes,nmodes) float np.ndarray
+            BHH : (nmodes,nmodes) float np.ndarray
+            KHH : (nmodes,nmodes) float np.ndarray
+
+    """
     log = get_logger(log, debug)
     assert os.path.exists(zaero_out_filename), print_bad_path(zaero_out_filename)
     with open(zaero_out_filename, 'r') as zaero_out_file:
@@ -28,8 +48,10 @@ def read_zaero_out(zaero_out_filename: PathLike,
     responses = {
         1: resp,
     }
-    mass = {}
-    return responses, mass
+    data_dict = {
+        'matrices': {},
+    }
+    return responses, data_dict
 
 def out_dict_to_results(out_dict: dict,
                         ref_dict: dict[str, tuple[float, str]],

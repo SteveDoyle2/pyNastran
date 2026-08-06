@@ -2810,6 +2810,7 @@ class ZAERO:
             comment = ""
             if "$" in line and (line.lstrip().startswith("$") or line.index("$") >= 72):
                 line, comment = line.split("$", 1)
+                comment = comment.rstrip()
                 # if line.strip():
                 #     print(line)
                 strip_comment = comment.strip()

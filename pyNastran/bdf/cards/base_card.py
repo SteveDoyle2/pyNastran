@@ -7,6 +7,7 @@ defines:
  - word, num = break_word_by_trailing_integer(pname_fid)
  - word, num = break_word_by_trailing_parentheses_integer_ab(pname_fid)
 """
+
 from __future__ import annotations
 from abc import abstractmethod, abstractproperty, abstractclassmethod
 from typing import Optional, Any, TYPE_CHECKING
@@ -20,16 +21,16 @@ from pyNastran.bdf.bdf_interface.assign_type import integer_string_or_blank
 from pyNastran.bdf.field_writer import print_card, print_card_8, print_card_16, print_card_double
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.utils import deprecated
-from pyNastran.bdf.cards.expand_card import  expand_thru, expand_thru_by
+from pyNastran.bdf.cards.expand_card import expand_thru, expand_thru_by  # noqa: F401
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
-#from abc import ABC, abstractmethod
+# from abc import ABC, abstractmethod
 
 
-def write_card(comment: str,
-               card: list[int | float | str | None],
-               size: int, is_double: bool) -> str:
+def write_card(
+    comment: str, card: list[int | float | str | None], size: int, is_double: bool
+) -> str:
     if size == 8:
         try:
             return comment + print_card_8(card)
@@ -38,6 +39,7 @@ def write_card(comment: str,
     elif is_double:
         return comment + print_card_double(card)
     return comment + print_card_16(card)
+
 
 class BaseCard:
     """
@@ -53,25 +55,26 @@ class BaseCard:
      - update_field(self, n, value)
 
     """
+
     def __init__(self) -> None:
         pass
-        #ABC.__init__(self)
+        # ABC.__init__(self)
 
-    #@abstractproperty
-    #def _field_map(self) -> str:
-        #return ''
+    # @abstractproperty
+    # def _field_map(self) -> str:
+    # return ''
 
     @abstractproperty
     def type(self) -> str:
-        return ''
+        return ""
 
     @abstractmethod
     def raw_fields(self):  # pragma: no cover
-        #raise RuntimeError()
+        # raise RuntimeError()
         return []
 
     @abstractclassmethod
-    def add_card(self, card, comment: str=''):  # pragma: no cover
+    def add_card(self, card, comment: str = ""):  # pragma: no cover
         return BaseCard()
 
     def __deepcopy__(self, memo_dict):
@@ -81,14 +84,14 @@ class BaseCard:
         try:
             card = BDFCard(raw_fields)
         except RuntimeError:
-            raise RuntimeError(f'Cant deepcopy; invalid raw_fields={raw_fields}')
+            raise RuntimeError(f"Cant deepcopy; invalid raw_fields={raw_fields}")
         try:
             card2 = self.add_card(card, comment=self.comment)
         except:
             print(self)
             print(type(self))
             print(self.get_stats())
-            print(f'raw_fields = {raw_fields}')
+            print(f"raw_fields = {raw_fields}")
             raise
         try:
             str(card2)
@@ -100,12 +103,12 @@ class BaseCard:
 
     def get_stats(self) -> str:
         """Prints out an easy to read summary of the card"""
-        msg = f'---{self.type}---\n'
+        msg = f"---{self.type}---\n"
         for name in sorted(self.object_attributes()):
-            #if short and '_ref' in name:
-                #continue
+            # if short and '_ref' in name:
+            # continue
             value = getattr(self, name)
-            msg += '  %-6s : %r\n' % (name, value)
+            msg += "  %-6s : %r\n" % (name, value)
         return msg
 
     def deprecated(self, old_name: str, new_name: str, deprecated_version: str) -> None:
@@ -116,38 +119,46 @@ class BaseCard:
         """card checking method that should be overwritten"""
         pass
 
-    def object_attributes(self, mode: str='public',
-                          keys_to_skip: Optional[list[str]]=None,
-                          filter_properties: bool=False) -> list[str]:
+    def object_attributes(
+        self,
+        mode: str = "public",
+        keys_to_skip: Optional[list[str]] = None,
+        filter_properties: bool = False,
+    ) -> list[str]:
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip: list[str] = []
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
-                                 filter_properties=filter_properties)
+        return object_attributes(
+            self,
+            mode=mode,
+            keys_to_skip=keys_to_skip + my_keys_to_skip,
+            filter_properties=filter_properties,
+        )
 
-    def object_methods(self, mode: str='public',
-                       keys_to_skip: Optional[list[str]]=None) -> list[str]:
+    def object_methods(
+        self, mode: str = "public", keys_to_skip: Optional[list[str]] = None
+    ) -> list[str]:
         """.. seealso:: `pyNastran.utils.object_methods(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip: list[str] = []
-        return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return object_methods(self, mode=mode, keys_to_skip=keys_to_skip + my_keys_to_skip)
 
     @property
     def comment(self) -> str:
         """accesses the comment"""
         # just for testing
-        #self.deprecated('comment()', 'comment2()', '0.7')
-        if hasattr(self, '_comment'):
-            return '%s' % self._comment
-        return ''
+        # self.deprecated('comment()', 'comment2()', '0.7')
+        if hasattr(self, "_comment"):
+            return "%s" % self._comment
+        return ""
 
     @comment.setter
     def comment(self, new_comment: str) -> None:
         """sets a comment"""
-        #comment = new_comment.rstrip()
-        #self._comment = comment + '\n' if comment else ''
+        # comment = new_comment.rstrip()
+        # self._comment = comment + '\n' if comment else ''
         self._comment = _format_comment(new_comment)
 
     def _test_update_fields(self) -> None:
@@ -198,12 +209,12 @@ class BaseCard:
         (e.g., node.update_field(3, 0.1) to update z)
 
         """
-        msg = f'{self.__class__.__name__} has not overwritten _update_field_helper; out of range'
+        msg = f"{self.__class__.__name__} has not overwritten _update_field_helper; out of range"
         raise IndexError(msg)
 
     def _get_field_helper(self, n: int):
         """dynamic method for non-standard attributes (e.g., node.get_field(3, 0.1) to get z)"""
-        msg = f'{self.__class__.__name__} has not overwritten _get_field_helper; out of range'
+        msg = f"{self.__class__.__name__} has not overwritten _get_field_helper; out of range"
         raise IndexError(msg)
 
     def get_field(self, n: int) -> Optional[int | float | str]:
@@ -245,8 +256,7 @@ class BaseCard:
             has this model been cross referenced
 
         """
-        print('# skipping _verify (type=%s) because _verify is '
-              'not implemented' % self.type)
+        print("# skipping _verify (type=%s) because _verify is not implemented" % self.type)
 
     def __eq__(self, card: BDFCard) -> bool:
         """
@@ -254,11 +264,12 @@ class BaseCard:
 
         .. code-block:: python
 
-           >>> GRID(nid=1, ...) === GRID(nid=1, ...)
+           >>> from pyNastran.bdf.bdf import GRID, CQUAD4
+           >>> GRID(nid=1, ...) == GRID(nid=1, ...)
            True
-           >>> GRID(nid=1, ...) === GRID(nid=2, ...)
+           >>> GRID(nid=1, ...) == GRID(nid=2, ...)
            False
-           >>> GRID(nid=1, ...) === CQUAD4(eid=1, ...)
+           >>> GRID(nid=1, ...) == CQUAD4(eid=1, ...)
            False
 
         """
@@ -270,10 +281,10 @@ class BaseCard:
         fields2 = card.raw_fields()
         return self._is_same_fields(fields1, fields2)
 
-    def _is_same_fields(self,
-                        fields1: list[int | float | str | None],
-                        fields2: list[int | float | str | None]) -> bool:
-        for (field1, field2) in zip(fields1, fields2):
+    def _is_same_fields(
+        self, fields1: list[int | float | str | None], fields2: list[int | float | str | None]
+    ) -> bool:
+        for field1, field2 in zip(fields1, fields2):
             if not is_same(field1, field2):
                 return False
         return True
@@ -281,12 +292,12 @@ class BaseCard:
     def _is_same_fields_long(self, fields1, fields2):  # pragma: no cover
         """helper for __eq__"""
         out = []
-        for (field1, field2) in zip(fields1, fields2):
+        for field1, field2 in zip(fields1, fields2):
             is_samei = is_same(field1, field2)
             out.append(is_samei)
         return out
 
-    def print_raw_card(self, size: int=8, is_double: bool=False) -> str:
+    def print_raw_card(self, size: int = 8, is_double: bool = False) -> str:
         """A card's raw fields include all defaults for all fields"""
         list_fields = self.raw_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
@@ -303,12 +314,12 @@ class BaseCard:
         """
         return self.raw_fields()
 
-    def print_card(self, size: int=8, is_double: bool=False) -> str:
+    def print_card(self, size: int = 8, is_double: bool = False) -> str:
         """prints the card in 8/16/16-double format"""
         list_fields = self.repr_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
-    def print_repr_card(self, size: int=8, is_double: bool=False) -> str:
+    def print_repr_card(self, size: int = 8, is_double: bool = False) -> str:
         """prints the card in 8/16/16-double format"""
         list_fields = self.repr_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
@@ -327,21 +338,21 @@ class BaseCard:
             try:
                 return comment + print_card(list_fields, size=16)
             except Exception:
-                print('problem printing %s card' % self.type)
+                print("problem printing %s card" % self.type)
                 print("list_fields = ", list_fields)
                 raise
 
     def rstrip(self) -> str:
         try:
-            msg = '%s' % str(self)
+            msg = "%s" % str(self)
         except UnicodeEncodeError:
             comment = self.comment
-            self.comment = ''
-            msg = '$ dropped comment due to unicode error\n%s' % str(self)
+            self.comment = ""
+            msg = "$ dropped comment due to unicode error\n%s" % str(self)
             self.comment = comment
         return msg.rstrip()
 
-    def write_card(self, size: int=8, is_double: bool=False) -> str:
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
         """
         Writes the card with the specified width and precision
 
@@ -358,14 +369,16 @@ class BaseCard:
             the string representation of the card
 
         """
-        raise NotImplementedError('%s has not overwritten write_card' % self.__class__.__name__)
+        raise NotImplementedError("%s has not overwritten write_card" % self.__class__.__name__)
 
-    def write_card_16(self, is_double: bool=False) -> str:
+    def write_card_16(self, is_double: bool = False) -> str:
         fields = self.repr_fields()
         return print_card(fields, size=16, is_double=False)
 
+
 class Property(BaseCard):
     """Base Property Class"""
+
     def __init__(self) -> None:
         """dummy init"""
         pass
@@ -396,44 +409,44 @@ class Property(BaseCard):
             return self.mid
         return self.mid_ref.mid
 
-    #@abstractmethod
-    #def cross_reference(self, model: BDF) -> None:
-        #pass
-    #@abstractmethod
-    #def uncross_reference(self) -> None:
-        #pass
+    # @abstractmethod
+    # def cross_reference(self, model: BDF) -> None:
+    # pass
+    # @abstractmethod
+    # def uncross_reference(self) -> None:
+    # pass
     def write_card_8(self) -> str:
         return self.write_card()
 
-    def write_card_16(self, is_double: bool=False) -> str:
+    def write_card_16(self, is_double: bool = False) -> str:
         return self.write_card()
 
 
 class Material(BaseCard):
     """Base Material Class"""
+
     def __init__(self) -> None:
         """dummy init"""
         BaseCard.__init__(self)
 
     @property
     def TRef(self) -> float:  # pramga: no cover
-        if not hasattr(self, 'tref'):
-            raise AttributeError(f'{self.type!r} object has no attribute tref')
+        if not hasattr(self, "tref"):
+            raise AttributeError(f"{self.type!r} object has no attribute tref")
         return self.tref
 
     @TRef.setter
     def TRef(self, tref: float) -> None:  # pramga: no cover
         """sets the self.Tref attributes"""
-        if not hasattr(self, 'tref'):
-            raise AttributeError(f'{self.type!r} object has no attribute tref')
+        if not hasattr(self, "tref"):
+            raise AttributeError(f"{self.type!r} object has no attribute tref")
         self.tref = tref
 
     def cross_reference(self, model: BDF) -> None:
         """dummy cross reference method for a Material"""
         pass
 
-    def safe_cross_reference(self, model: BDF,
-                             xref_errors: dict[str, Any]) -> None:
+    def safe_cross_reference(self, model: BDF, xref_errors: dict[str, Any]) -> None:
         return self.cross_reference(model)
 
     def Mid(self) -> int:
@@ -450,13 +463,14 @@ class Material(BaseCard):
 
 class Element(BaseCard):
     """defines the Element class"""
+
     pid = 0  # CONM2, rigid
 
     def __init__(self) -> None:
         """dummy init"""
         BaseCard.__init__(self)
         #: the list of node IDs for an element (default=None)
-        #self.nodes = None
+        # self.nodes = None
 
     def verify_unique_node_ids(self) -> None:
         node_ids = self.node_ids
@@ -466,16 +480,16 @@ class Element(BaseCard):
         # type (Any, Any) -> None
         if required_node_ids:
             if non_required_node_ids:
-                raise NotImplementedError('only required nodes implemented')
+                raise NotImplementedError("only required nodes implemented")
             else:
                 urnids = np.unique(required_node_ids)
                 n_unique_node_ids = len(urnids)
                 n_node_ids = len(required_node_ids)
                 if n_unique_node_ids != n_node_ids:
-                    msg = 'nunique_node_ids=%s nnode_ids=%s' % (n_unique_node_ids, n_node_ids)
+                    msg = "nunique_node_ids=%s nnode_ids=%s" % (n_unique_node_ids, n_node_ids)
                     raise RuntimeError(msg)
         else:
-            raise NotImplementedError('only required nodes implemented')
+            raise NotImplementedError("only required nodes implemented")
 
     def Pid(self) -> int:
         """
@@ -491,30 +505,32 @@ class Element(BaseCard):
             return self.pid
         return self.pid_ref.pid
 
-    def get_node_positions(self, nodes: Any=None) -> np.ndarray:
+    def get_node_positions(self, nodes: Any = None) -> np.ndarray:
         """returns the positions of multiple node objects"""
         if nodes is None:
             nodes = self.nodes_ref
-            assert nodes is not None, 'cross-referencing is required'
+            assert nodes is not None, "cross-referencing is required"
 
         nnodes = len(nodes)
-        positions = np.empty((nnodes, 3), dtype='float64')
+        positions = np.empty((nnodes, 3), dtype="float64")
         positions.fill(np.nan)
         for i, node in enumerate(nodes):
             if isinstance(node, int):
-                raise TypeError("node=%s; type=%s must be a Node\n%s" % (
-                    str(node), type(node), self.get_stats()))
+                raise TypeError(
+                    "node=%s; type=%s must be a Node\n%s"
+                    % (str(node), type(node), self.get_stats())
+                )
             if node is not None:
                 positions[i, :] = node.get_position()
         return positions
 
-    def get_node_positions_no_xref(self, model: BDF, nodes: list[Any]=None) -> np.ndarray:
+    def get_node_positions_no_xref(self, model: BDF, nodes: list[Any] = None) -> np.ndarray:
         """returns the positions of multiple node objects"""
         if not nodes:
             nodes = self.nodes
 
         nnodes = len(nodes)
-        positions = np.empty((nnodes, 3), dtype='float64')
+        positions = np.empty((nnodes, 3), dtype="float64")
         positions.fill(np.nan)
         for i, nid in enumerate(nodes):
             if nid is not None:
@@ -522,90 +538,113 @@ class Element(BaseCard):
                 positions[i, :] = node.get_position_no_xref(model)
         return positions
 
-    def _node_ids(self, nodes: Optional[list[Any]]=None,
-                  allow_empty_nodes: bool=False, msg: str='') -> list[int]:
+    def _node_ids(
+        self, nodes: Optional[list[Any]] = None, allow_empty_nodes: bool = False, msg: str = ""
+    ) -> list[int]:
         """returns nodeIDs for repr functions"""
         return _node_ids(self, nodes=nodes, allow_empty_nodes=allow_empty_nodes, msg=msg)
 
-    def prepare_node_ids(self, nids: list[int], allow_empty_nodes: bool=False) -> list[int]:
+    def prepare_node_ids(self, nids: list[int], allow_empty_nodes: bool = False) -> list[int]:
         """Verifies all node IDs exist and that they're integers"""
-        #self.nodes = nids
+        # self.nodes = nids
         nids = self.validate_node_ids(nids, allow_empty_nodes)
         return nids
 
-    def validate_node_ids(self, nodes: list[int], allow_empty_nodes: bool=False) -> list[int]:
+    def validate_node_ids(self, nodes: list[int], allow_empty_nodes: bool = False) -> list[int]:
         if allow_empty_nodes:
             # verify we have nodes
             if len(nodes) == 0:
-                msg = '%s requires at least one node id be specified; node_ids=%s' % (
-                    self.type, nodes)
+                msg = "%s requires at least one node id be specified; node_ids=%s" % (
+                    self.type,
+                    nodes,
+                )
                 raise ValueError(msg)
 
-            #unique_nodes = unique(nodes)
-            #if len(nodes) != len(unique_nodes):
-                #msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nodes)
-                #raise IndexError(msg)
+            # unique_nodes = unique(nodes)
+            # if len(nodes) != len(unique_nodes):
+            # msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nodes)
+            # raise IndexError(msg)
 
             # remove 0 nodes
-            nodes2 = [nid if nid != 0 else None
-                      for nid in nodes]
+            nodes2 = [nid if nid != 0 else None for nid in nodes]
         else:
             nodes2 = nodes
-            #unique_nodes = unique(self.nodes)
-            #if len(self.nodes) != len(unique_nodes):
-                #msg = '%s requires that all node ids be unique; node_ids=%s' % (
-                    #self.type, self.nodes)
-                #raise IndexError(msg)
+            # unique_nodes = unique(self.nodes)
+            # if len(self.nodes) != len(unique_nodes):
+            # msg = '%s requires that all node ids be unique; node_ids=%s' % (
+            # self.type, self.nodes)
+            # raise IndexError(msg)
 
-        #nodes3 = []
-        #for nid in nodes:
-            #if isinstance(nid, integer_types):
-                #nodes3.append(nid)
-            #elif nid is None and allow_empty_nodes or np.isnan(nid):
-                #nodes3.append(None)
-            #else:  # string???
-                #msg = 'this element may have missing nodes...\n'
-                #msg += 'nids=%s allow_empty_nodes=False;\ntype(nid)=%s' % (nodes, type(nid))
-                #raise RuntimeError(msg)
-        #print('nodes', nodes)
-        #print('nodes2', nodes2)
-        #print('nodes3 =', nodes3)
-        #self.nodes = nodes2
+        # nodes3 = []
+        # for nid in nodes:
+        # if isinstance(nid, integer_types):
+        # nodes3.append(nid)
+        # elif nid is None and allow_empty_nodes or np.isnan(nid):
+        # nodes3.append(None)
+        # else:  # string???
+        # msg = 'this element may have missing nodes...\n'
+        # msg += 'nids=%s allow_empty_nodes=False;\ntype(nid)=%s' % (nodes, type(nid))
+        # raise RuntimeError(msg)
+        # print('nodes', nodes)
+        # print('nodes2', nodes2)
+        # print('nodes3 =', nodes3)
+        # self.nodes = nodes2
         return nodes2
 
 
 def _format_comment(comment: str) -> str:
-    r"""Format a card comment to precede the card using
-    nastran-compatible comment character $. The comment
-    string can have multiple lines specified as linebreaks.
+    r"""Format a card comment to precede the card using the
+    Nastran comment character ``$``.
 
-    Empty comments or just spaces are returned as an empty string.
+    Each line in *comment* is prepended with ``$`` unless it
+    already starts with one, so lines that arrive
+    pre-formatted from the parser are not double-prefixed.
+    Trailing whitespace on the whole string is stripped
+    before splitting so that a trailing ``\n`` does not
+    produce a spurious blank ``$`` line.
+
+    Parameters
+    ----------
+    comment : str
+        Raw comment text. May contain ``\n`` for multiple
+        lines. Lines may or may not already carry a leading
+        ``$``.
+
+    Returns
+    -------
+    str
+        Formatted comment block ready to be written before
+        a card, or an empty string if *comment* is blank.
 
     Examples
     --------
     >>> _format_comment('a comment\ntaking two lines')
-    $a comment
-    $taking two lines
+    '$a comment\n$taking two lines\n'
 
     >>> _format_comment('')
-    <empty string>
+    ''
 
     >>> _format_comment('       ')
-    <empty string>
+    ''
 
-    >>> _format_comment('$ a comment within a comment looks weird')
-    '$$ a comment within a comment looks weird'
+    >>> _format_comment('$ already formatted')
+    '$ already formatted\n'
 
-    >>> _format_comment('no trailing whitespace   ')
-    $no trailing extra whitespace
+    >>> _format_comment(' alt: (0, 100) (ft)\n sos: (1000, 1100) (in/s)')
+    '$ alt: (0, 100) (ft)\n$ sos: (1000, 1100) (in/s)\n'
     """
-    if comment.strip() == '':  # deals with a bunch of spaces
-        return ''
-    return ''.join(['${}\n'.format(comment_line)
-                    for comment_line in comment.rstrip().split('\n')])
+    if comment.strip() == "":  # deals with a bunch of spaces
+        return ""
+    lines = []
+    for comment_line in comment.rstrip().split("\n"):
+        if comment_line.startswith("$"):
+            lines.append(f"{comment_line}\n")
+        else:
+            lines.append(f"${comment_line}\n")
+    return "".join(lines)
 
 
-def _node_ids(card, nodes=None, allow_empty_nodes: bool=False, msg: str='') -> list[int]:
+def _node_ids(card, nodes=None, allow_empty_nodes: bool = False, msg: str = "") -> list[int]:
     try:
         if not nodes:
             nodes = card.nodes
@@ -631,22 +670,26 @@ def _node_ids(card, nodes=None, allow_empty_nodes: bool=False, msg: str='') -> l
                 else:
                     node_ids.append(node.nid)
 
-            #if isinstance(nodes[0], integer_types):
-                #node_ids = [node for node in nodes]
-            #else:
-                #node_ids = [node.nid for node in nodes]
+            # if isinstance(nodes[0], integer_types):
+            # node_ids = [node for node in nodes]
+            # else:
+            # node_ids = [node.nid for node in nodes]
         except Exception:
-            print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
-                card.type, nodes, allow_empty_nodes, msg))
+            print(
+                "type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s"
+                % (card.type, nodes, allow_empty_nodes, msg)
+            )
             raise
-        assert 0 not in node_ids, 'node_ids = %s' % node_ids
+        assert 0 not in node_ids, "node_ids = %s" % node_ids
         assert node_ids is not None, str(card)
         return node_ids
     except Exception:
-        print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
-            card.type, nodes, allow_empty_nodes, msg))
+        print(
+            "type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s"
+            % (card.type, nodes, allow_empty_nodes, msg)
+        )
         raise
-    raise RuntimeError('huh...')
+    raise RuntimeError("huh...")
 
 
 def break_word_by_trailing_integer(pname_fid: str) -> tuple[str, str]:
@@ -681,14 +724,21 @@ def break_word_by_trailing_integer(pname_fid: str) -> tuple[str, str]:
         else:
             break
 
-    num = ''.join(nums[::-1])
+    num = "".join(nums[::-1])
     if not num:
-        msg = ("pname_fid=%r does not follow the form 'T1', 'T11', 'THETA42' "
-               "(letters and a number)" % pname_fid)
+        msg = (
+            "pname_fid=%r does not follow the form 'T1', 'T11', 'THETA42' "
+            "(letters and a number)" % pname_fid
+        )
         raise SyntaxError(msg)
     word = pname_fid[:-i]
-    assert len(word)+len(num) == len(pname_fid), 'word=%r num=%r pname_fid=%r' % (word, num, pname_fid)
+    assert len(word) + len(num) == len(pname_fid), "word=%r num=%r pname_fid=%r" % (
+        word,
+        num,
+        pname_fid,
+    )
     return word, num
+
 
 def break_word_by_trailing_parentheses_integer_ab(pname_fid: str) -> tuple[str, str]:
     """
@@ -716,14 +766,14 @@ def break_word_by_trailing_parentheses_integer_ab(pname_fid: str) -> tuple[str, 
     ('NSM', 'B')
 
     """
-    assert pname_fid.endswith(')'), pname_fid
-    word, num = pname_fid[:-1].split('(')
-    if num not in ['A', 'B']:
+    assert pname_fid.endswith(")"), pname_fid
+    word, num = pname_fid[:-1].split("(")
+    if num not in ["A", "B"]:
         num = int(num)
     return word, num
 
-def read_ids_thru(card: BDFCard, ifield0: int,
-                  base_str: str='ID%d') -> list[int]:
+
+def read_ids_thru(card: BDFCard, ifield0: int, base_str: str = "ID%d") -> list[int]:
     """
     Helper for loading:
 
