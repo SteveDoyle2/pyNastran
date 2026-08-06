@@ -31,11 +31,9 @@ from qtpy.QtWidgets import (
     QCheckBox,
     QListWidgetItem, QAbstractItemView,
     QListWidget, QSpinBox, QTabWidget,)
-
-QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
-QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
-
 from cpylog import SimpleLogger
+
+import pyNastran
 from pyNastran.gui.utils.qt.pydialog import QLineEdit, QFloatEdit, make_font
 from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
@@ -61,7 +59,9 @@ from pyNastran.f06.dev.flutter.utils import (
     X_PLOT_TYPES, PLOT_TYPES, UNITS_IN, UNITS_OUT,
     MODE_SWITCH_METHODS)
 
-import pyNastran
+
+QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
+QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
 PKG_PATH = Path(pyNastran.__path__[0])
 
 AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'

@@ -531,6 +531,8 @@ class FlutterGui(LoggableGui):
                 show = True
             except IndexError:
                 show = False
+                # fname = ''
+                continue
 
             action: QAction = self.qactions[name]
             active_text = action.text()
