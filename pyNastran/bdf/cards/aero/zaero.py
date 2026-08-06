@@ -1165,8 +1165,7 @@ class ZAERO:
         length_unit: str,
         temperature_unit: str,
         atmosphere_table: list[float],
-        comment: str = "",
-    ) -> ATMOS:
+        comment: str = "") -> ATMOS:
         # alt: np.ndarray, sos: np.ndarray,
         # density: np.ndarray, temperature: np.ndarray) -> ATMOS:
         card = ATMOS(

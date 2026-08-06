@@ -506,16 +506,17 @@ def create_flutter(
         )
         sid = 11
         mkaeroz_id = 12
-        velocity = mach * sos
         fluttf_id = 0
         print_flag = 0
+        alts2.sort()
         model.zaero.add_fixmatm(
             sid, mkaeroz_id, atm_id, mass_unit, length_unit,
-            fluttf_id, print_flag, alts, vref=1.0, comment="")
-        model.zaero.add_fixmach(
-            sid, mkaeroz_id, mass_unit, length_unit,
-            fluttf_id, print_flag, velocity, density2,
-            vref=1.0, comment="")
+            fluttf_id, print_flag, alts2, vref=1.0, comment="")
+        # velocity = mach * sos
+        # model.zaero.add_fixmach(
+        #     sid, mkaeroz_id, mass_unit, length_unit,
+        #     fluttf_id, print_flag, velocity, density2,
+        #     vref=1.0, comment="")
 
     if rhoref_flag:
         rho0 = atm_density(alt=0.0, density_units=density_units)
