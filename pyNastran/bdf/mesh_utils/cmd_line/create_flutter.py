@@ -476,23 +476,23 @@ def create_flutter(
             ]
         )
 
-        density0 = atm_density(0.0, 1716.0, alt_units=alt_units, density_units=density_units)
+        # density0 = atm_density(0.0, 1716.0, alt_units=alt_units, density_units=density_units)
+        # round density to 4 sig figs
         density_magnitude = np.floor(np.log10(np.abs(density)))
         decimals = 3 - density_magnitude
         decimals = np.nan_to_num(decimals, nan=0.0, posinf=0.0, neginf=0.0).astype(int)
         density2 = np.array([np.round(x, d) for x, d in zip(density, decimals)])
+        alts2 = alts.round(0)
         sos2 = sos.round(0)
-        atmosphere_table = np.column_stack(
-            [
-                alts.round(0),
-                sos2,
-                density2,
-                temperature.round(2),
-            ]
-        )
-        atmosphere_list = atmosphere_table.ravel().tolist()
+        atmosphere_table = np.column_stack([
+                alts2, sos2, density2, temperature.round(2),
+        ])
+        # low to high
+        atmosphere_table_reversed = atmosphere_table[::-1, :]
+
+        atmosphere_list = atmosphere_table_reversed.ravel().tolist()
         msg = (
-            f"\n alt: ({alts.min()}, {alts.max()}) ({alt_units})"
+            f"\n alt: ({alts2.min()}, {alts2.max()}) ({alt_units})"
             f"\n sos: ({sos2.min()}, {sos2.max()}) ({velocity_units})"
             f"\n rho: ({density2.min()}, {density2.max()}) ({density_units})"
         )
@@ -509,18 +509,13 @@ def create_flutter(
         velocity = mach * sos
         fluttf_id = 0
         print_flag = 0
+        model.zaero.add_fixmatm(
+            sid, mkaeroz_id, atm_id, mass_unit, length_unit,
+            fluttf_id, print_flag, alts, vref=1.0, comment="")
         model.zaero.add_fixmach(
-            sid,
-            mkaeroz_id,
-            mass_unit,
-            length_unit,
-            fluttf_id,
-            print_flag,
-            velocity,
-            density2,
-            vref=1.0,
-            comment="",
-        )
+            sid, mkaeroz_id, mass_unit, length_unit,
+            fluttf_id, print_flag, velocity, density2,
+            vref=1.0, comment="")
 
     if rhoref_flag:
         rho0 = atm_density(alt=0.0, density_units=density_units)

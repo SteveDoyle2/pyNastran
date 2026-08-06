@@ -77,7 +77,7 @@ class TestAeroZaero(unittest.TestCase):
         assert fixhatm.type == "FIXHATM"
         assert 2 in zaero.flutter_table
 
-        fixmatm = zaero.add_fixmatm(3, 1, 1, "SLUG", "IN", 1.0, 0, 0, [5000.0, 10000.0])
+        fixmatm = zaero.add_fixmatm(3, 1, 1, "SLUG", "IN", 0, 0, [5000.0, 10000.0], vref=1.0)
         assert fixmatm.type == "FIXMATM"
         assert 3 in zaero.flutter_table
 
@@ -127,7 +127,7 @@ class TestAeroZaero(unittest.TestCase):
         assert 30 in zaero.attach
 
         # --- plot ---
-        pltmode = zaero.add_pltmode(40, "SYM", 1, 10.0, "TECPLOT", "mode.plt")
+        pltmode = zaero.add_pltmode(40, "SYM", 1, "TECPLOT", "mode.plt", max_disp=10.0)
         assert pltmode.type == "PLTMODE"
         assert 40 in zaero.pltmode
 

@@ -1192,16 +1192,9 @@ class ZAERO:
         comment: str = "",
     ) -> FIXHATM:
         card = FIXHATM(
-            sid,
-            alt,
-            atm_id,
-            mass_unit,
-            length_unit,
-            vref,
-            fluttf_id,
-            print_flag,
-            mkaeroz_ids,
-            comment=comment,
+            sid, alt, atm_id, mass_unit, length_unit,
+            fluttf_id, print_flag, mkaeroz_ids,
+            vref=vref, comment=comment,
         )
         self._add_methods.add_flutter_table_object(card)
         return card
@@ -1213,24 +1206,16 @@ class ZAERO:
         atm_id: int,
         mass_unit: str,
         length_unit: str,
-        vref: float,
         fluttf_id: int,
         print_flag: int,
         alts: list[float],
+        vref: float = 1.0,
         comment: str = "",
     ) -> FIXMATM:
         card = FIXMATM(
-            sid,
-            mkaeroz_id,
-            atm_id,
-            mass_unit,
-            length_unit,
-            vref,
-            fluttf_id,
-            print_flag,
-            alts,
-            comment=comment,
-        )
+            sid, mkaeroz_id, atm_id, mass_unit, length_unit,
+            fluttf_id, print_flag, alts,
+            vref=vref, comment=comment,)
         self._add_methods.add_flutter_table_object(card)
         return card
 
