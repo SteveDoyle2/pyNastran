@@ -41,21 +41,24 @@ class TestZaero(unittest.TestCase):
         zaero_out_filename = MODEL_DIR / 'case1' / 'ha145e.out'
         aic_filename = MODEL_DIR / 'case1' / 'HA145E_AIC.45'
         read_zaero_aic(aic_filename)
-        responses, mass = read_zaero_out(zaero_out_filename, debug=None)
+        responses, data_dict = read_zaero_out(zaero_out_filename, debug=None)
         assert len(responses) == 1, responses
-        assert len(mass) == 0, mass
+        assert len(data_dict) == 1, data_dict
+        assert len(data_dict['matrices']) == 0, data_dict
 
     def test_zaero_case2_out(self):
         zaero_out_filename = MODEL_DIR / 'case2' / 'crop.out'
-        responses, mass = read_zaero_out(zaero_out_filename, debug=None)
+        responses, data_dict = read_zaero_out(zaero_out_filename, debug=None)
         assert len(responses) == 1, responses
-        assert len(mass) == 0, mass
+        assert len(data_dict) == 1, data_dict
+        assert len(data_dict['matrices']) == 0, data_dict
 
     def test_zaero_case3_out(self):
         zaero_out_filename = MODEL_DIR / 'case3' / 'ha145fb.out'
-        responses, mass = read_zaero_out(zaero_out_filename, debug=None)
+        responses, data_dict = read_zaero_out(zaero_out_filename, debug=None)
         assert len(responses) == 1, responses
-        assert len(mass) == 0, mass
+        assert len(data_dict) == 1, data_dict
+        assert len(data_dict['matrices']) == 0, data_dict
 
     def test_zaero_case4_f06(self):
         from pyNastran.f06.parse_geom import parse_f06_geom
@@ -64,33 +67,38 @@ class TestZaero(unittest.TestCase):
 
     def test_zaero_case4_out(self):
         zaero_out_filename = MODEL_DIR / 'case4' / 'ha145g.out'
-        responses, mass = read_zaero_out(zaero_out_filename, debug=None)
+        responses, data_dict = read_zaero_out(zaero_out_filename, debug=None)
         assert len(responses) == 1, responses
-        assert len(mass) == 0, mass
+        assert len(data_dict) == 1, data_dict
+        assert len(data_dict['matrices']) == 0, data_dict
 
     def test_zaero_case5_out(self):
         zaero_out_filename = MODEL_DIR / 'case5' / 'f16ma41.out'
-        responses, mass = read_zaero_out(zaero_out_filename, debug=None)
+        responses, data_dict = read_zaero_out(zaero_out_filename, debug=None)
         assert len(responses) == 1, responses
-        assert len(mass) == 0, mass
+        assert len(data_dict) == 1, data_dict
+        assert len(data_dict['matrices']) == 0, data_dict
 
     # def test_zaero_case6_out_trim(self):
     #     zaero_out_filename = MODEL_DIR / 'case6' / 'agard_trim.out'
-    #     responses, mass = read_zaero_out(zaero_out_filename)
+    #     responses, data_dict = read_zaero_out(zaero_out_filename)
     #     assert len(responses) == 1, responses
-    #     assert len(mass) == 0, mass
+    #     assert len(data_dict) == 0, data_dict
 
     def test_zaero_case6_out_tran(self):
         zaero_out_filename = MODEL_DIR / 'case6' / 'agardztran.out'
-        responses, mass = read_zaero_out(zaero_out_filename, debug=None)
+        responses, data_dict = read_zaero_out(zaero_out_filename, debug=None)
         assert len(responses) == 1, responses
-        assert len(mass) == 0, mass
+        assert len(data_dict) == 1, data_dict
+        assert len(data_dict['matrices']) == 0, data_dict
 
     def test_zaero_case7_out(self):
         zaero_out_filename = MODEL_DIR / 'case7' / 'agardztaw.out'
-        responses, mass = read_zaero_out(zaero_out_filename, debug=None)
+        responses, data_dict = read_zaero_out(zaero_out_filename, debug=None)
         assert len(responses) == 1, responses
-        assert len(mass) == 0, mass
+        assert len(data_dict) == 1, data_dict
+        assert len(data_dict['matrices']) == 0, data_dict
+
 
 
 if __name__ == '__main__':

@@ -55,13 +55,15 @@ class ATMOS(BaseCard):
         self.atmosphere_table = np.asarray(atmosphere_table)
         MASS_MAP = {
             'SLINCH': 'SLIN',
+            'LBF': 'LBF/',
+            'N': 'N/',
         }
         mass_unit = MASS_MAP.get(mass_unit.upper(), mass_unit)
         self.mass_unit = mass_unit
 
         assert mass_unit in ['SLIN', 'SLUG', 'LBM', 'G', 'KG', 'LBF/', 'N/', 'NONE'], f'mass_unit={mass_unit}'
         assert length_unit in ['IN', 'FT', 'M', 'MM', 'CM', 'KM', 'NONE'], f'length_unit={length_unit}'
-        assert temperature_unit in ['R', 'K', 'C'], temperature_unit
+        assert temperature_unit in ['R', 'K', 'C', 'F'], temperature_unit
         assert len(atmosphere_table) > 0, atmosphere_table
 
     def alt(self) -> np.ndarray:
