@@ -304,11 +304,10 @@ class FIXMATM(BaseCard):
         self.vref = vref
         self.fluttf_id = fluttf_id
         self.print_flag = print_flag
-        self.alts = alts
+        self.alts = np.asarray(alts)
         self.atmos_ref = None
         self.mkaeroz_ref = None
         assert isinstance(mkaeroz_id, integer_types), self.get_stats()
-        assert isinstance(alts, list), alts
         assert len(alts) >= 0, alts
         if len(alts) > 1:
             assert alts[0] < alts[1], alts
@@ -386,7 +385,7 @@ class FIXMATM(BaseCard):
         """
         list_fields = [
             'FIXMATM', self.sid, self.mkaeroz_id, self.atm_id, self.mass_unit,
-            self.length_unit, self.vref, self.fluttf_id, self.print_flag] + self.alts
+            self.length_unit, self.vref, self.fluttf_id, self.print_flag] + self.alts.tolist()
         return list_fields
 
     def repr_fields(self):
@@ -549,7 +548,7 @@ class FIXMDEN(BaseCard):
         self.vref = vref
         self.fluttf_id = fluttf_id
         self.print_flag = print_flag
-        self.velocity = velocity
+        self.velocity = np.asarray(velocity)
         self.rho = rho
         self.atmos_ref = None
         self.mkaeroz_ref = None
@@ -629,7 +628,7 @@ class FIXMDEN(BaseCard):
         """
         list_fields = [
             'FIXMDEN', self.sid, self.mkaeroz_id, self.rho, self.mass_unit,
-            self.length_unit, self.vref, self.fluttf_id, self.print_flag] + self.velocity
+            self.length_unit, self.vref, self.fluttf_id, self.print_flag] + self.velocity.tolist()
         return list_fields
 
     def repr_fields(self):
