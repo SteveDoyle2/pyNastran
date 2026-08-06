@@ -50,8 +50,9 @@ def cmd_line_remove_unused(argv=None, quiet: bool=False) -> None:
         abs_name = os.path.abspath(bdf_filename)
         dirname = os.path.dirname(abs_name)
         basename = os.path.basename(abs_name)
+        basename_noext = os.path.splitext(basename)[0]
         out_bdf_filename = os.path.join(dirname, f'clean_{basename}')
-        dict_filename = os.path.join(dirname, f'clean_summary_{basename}')
+        dict_filename = os.path.join(dirname, f'clean_summary_{basename_noext}.out')
     else:
         dirname = os.path.dirname(out_bdf_filename)
         dict_filename = os.path.join(dirname, f'clean_summary.out')

@@ -8549,7 +8549,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
 
         """
         method = EIGRL(sid, v1, v2, nd, msglvl, maxset, shfscl,
-                       options, values, norm=norm, comment=comment)
+                       norm=norm, options=options, values=values, comment=comment)
         self._add_methods.add_method_object(method)
         return method
 
