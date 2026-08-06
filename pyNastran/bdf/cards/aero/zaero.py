@@ -1407,12 +1407,13 @@ class ZAERO:
         set_id: int,
         symmetry: str,
         mode: int,
-        max_disp: float,
         output_format: str,
         filename: str,
+        max_disp: float=1.0,
         comment: str = "",
     ) -> PLTMODE:
-        card = PLTMODE(set_id, symmetry, mode, max_disp, output_format, filename, comment=comment)
+        card = PLTMODE(set_id, symmetry, mode, output_format, filename,
+                       max_disp=max_disp, comment=comment)
         self._add_methods.add_pltmode_object(card)
         return card
 

@@ -23,8 +23,8 @@ class PLTMODE(BaseCard):
     type = 'PLTMODE'
 
     def __init__(self, set_id: int, symmetry: str,
-                 mode: int, max_disp: float,
-                 output_format: str, filename: str,
+                 mode: int, output_format: str, filename: str,
+                 max_disp: float = 1.0,
                  comment: str=''):
         BaseCard.__init__(self)
 
@@ -56,7 +56,7 @@ class PLTMODE(BaseCard):
         symmetry = string(card, 2, 'sym/asym')
         mode = integer(card, 3, 'mode')
         mode_type = '' if card.field(4) is None else card.field(4)
-        max_disp = double(card, 5, 'max_disp')
+        max_disp = double_or_blank(card, 5, 'max_disp', default=1.0)
         # if max_disp is None:
         #     ifield += 1
         #     max_disp = double(card, ifield, 'max_disp')
@@ -68,8 +68,8 @@ class PLTMODE(BaseCard):
         aero_filename = string_multifield_dollar_int_or_blank(
             card, (9, 10), 'aero_filename', default='AEROGEOM.PAT')
         assert len(card) <= 9, f'len(PLTMODE card) = {len(card):d}\ncard={card}'
-        return PLTMODE(set_id, symmetry, mode, max_disp,
-                       output_format, filename, comment=comment)
+        return PLTMODE(set_id, symmetry, mode, output_format, filename,
+                       max_disp=max_disp, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         return
@@ -99,8 +99,13 @@ class PLTMODE(BaseCard):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        disp_str = str(self.max_disp)
+        assert len(disp_str) < 8, disp_str
+        filename = self.filename if len(self.filename) == 16 else f' {self.filename:15}'
+        # msg = '$\t' * 7 + '\n'
+        msg = f'PLTMODE {self.set_id:<8d}{self.symmetry:8}{self.mode:<8d}{disp_str:8}{self.output_format:8}{filename}'
+        # card = self.repr_fields()
+        return self.comment + msg # print_card_8(card)
 
 
 class PLTAERO(BaseCard):
