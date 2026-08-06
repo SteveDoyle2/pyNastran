@@ -166,14 +166,14 @@ class FlutterResponse:
             use_rhoref=False,
             make_alt=False)
         resp.set_out_units(out_units)
-        fig, axes = resp.plot_vg_vf(
-            fig=None, damp_axes=None, freq_axes=None, modes=None, plot_type='eas',
-            legend=True, xlim=None,
-            ylim_damping=None, ylim_freq=None,
-            damping_limit=None,
-            clear=False, close=False,
-            ncol=0, png_filename=None, show=False)
-        plt.show()
+        # fig, axes = resp.plot_vg_vf(
+        #     fig=None, damp_axes=None, freq_axes=None, modes=None, plot_type='eas',
+        #     legend=True, xlim=None,
+        #     ylim_damping=None, ylim_freq=None,
+        #     damping_limit=None,
+        #     clear=False, close=False,
+        #     ncol=0, png_filename=None, show=False)
+        # plt.show()
         return resp
 
     @classmethod
