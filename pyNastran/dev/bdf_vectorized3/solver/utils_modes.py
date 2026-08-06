@@ -47,7 +47,7 @@ def get_real_eigenvalue_method(model: BDF,
     method = model.methods[method_id]
     if method.type == "EIGRL":
         neigenvalue = method.nd  # nroots
-        norm_str = "MASS" if method.norm is None else method.norm
+        norm_str = "MASS" if method.norm == '' else method.norm
     elif method.type == 'EIGB':
         # C      : None
         # G      : None
