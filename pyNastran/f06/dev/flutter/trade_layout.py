@@ -50,6 +50,7 @@ if TYPE_CHECKING:  # pragma: no cover
 # QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
 
 AXIS_VALUES = ["Equivalent Airspeed, EAS", "Altitude", "Mach", "Dynamic Pressure, Q"]
+NASTRAN_ZAERO_VALUES = ["Nastran F06/OUT", "ZAERO Out"]
 
 
 class TradeLayout(QVBoxLayout):
@@ -91,7 +92,7 @@ class TradeLayout(QVBoxLayout):
 
         self.nastran_zaero_label = QLabel("Nastran/ZAERO:", parent)
         self.nastran_zaero_pulldown = QComboBox(parent)
-        self.nastran_zaero_pulldown.addItems(["Nastran F06/OUT", "ZAERO Out"])
+        self.nastran_zaero_pulldown.addItems(NASTRAN_ZAERO_VALUES)
 
         self.base_f06_directory_label = QLabel("Base F06 Directory:", parent)
         self.base_f06_directory_edit = QLineEdit(parent)
@@ -696,6 +697,7 @@ class TradeLayout(QVBoxLayout):
         configs = self.config_edit.text().strip(" ,")
         xaxis = self.xaxis_pulldown.currentText()
         yaxis = self.yaxis_pulldown.currentText()
+        nastran_zaero = self.nastran_zaero_pulldown.currentText()
         # self.word_filename = word_filename
         trade = {
             "base_f06_directory": base_f06_directory,
@@ -706,6 +708,7 @@ class TradeLayout(QVBoxLayout):
             "xaxis": xaxis,
             "yaxis": yaxis,
             "eas_max": eas_max,
+            "nastran_zaero": nastran_zaero,
         }
         return trade
 
@@ -725,6 +728,7 @@ class TradeLayout(QVBoxLayout):
         out = [
             ("xaxis", self.xaxis_pulldown, AXIS_VALUES),
             ("yaxis", self.yaxis_pulldown, AXIS_VALUES),
+            ("nastran_zaero", self.nastran_zaero_pulldown, NASTRAN_ZAERO_VALUES),
         ]
         return out
 
