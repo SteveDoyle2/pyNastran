@@ -87,7 +87,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool = False) -> None:
     # type_defaults = {
     #    '--nerrors' : [int, 100],
     # }
-    if "gui" in argv:
+    if "gui" in argv or '--gui' in argv:
         from pyNastran.bdf.mesh_utils.gui_tools.gui_flutter import cmd_line_gui
         data = cmd_line_gui()
         return
