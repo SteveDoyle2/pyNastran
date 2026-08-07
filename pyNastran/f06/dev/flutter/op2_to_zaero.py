@@ -26,7 +26,6 @@ def nastran_to_zaero_f06(op2_filename: PathLike,
         from pyNastran.bdf.bdf import read_bdf
         model = read_bdf(bdf_filename)
         results_model.replace_cards(model, write_log=False)
-        asdf
 
     assert isinstance(f06_filename, str), (f06_filename, type(f06_filename))
     results_model.write_f06(f06_filename, write_cards=True)

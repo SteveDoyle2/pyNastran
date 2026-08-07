@@ -1508,7 +1508,7 @@ def _filter_keys(keys: list, filter_keys: bool=True) -> list:
     TODO: ignore SORT2 for now
 
     Parameters
-    -------
+    ----------
     keys : list
         all the keys to consider
 
@@ -1523,8 +1523,8 @@ def _filter_keys(keys: list, filter_keys: bool=True) -> list:
     >>> keys_out
     [(1, 1, 1, 55, 0, '', '')]
 
-    keys2 = [(1, 2, 1, 0, 0, '', ''),
-             (1, 2, 2, 0, 0, '', ''),]
+    >>> keys2 = [(1, 2, 1, 0, 0, '', ''),
+                 (1, 2, 2, 0, 0, '', ''),]
     >>> keys_out2 = _filter_keys(keys2)
     >>> keys_out2
     [(1, 2, 1, 0, 0, '', ''),

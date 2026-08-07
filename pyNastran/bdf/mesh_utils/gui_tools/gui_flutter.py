@@ -1,21 +1,24 @@
 # encoding: utf-8
 import os
-from typing import Any
+import sys
+import signal
 
 from PIL.ImageChops import constant
 import numpy as np
 from cpylog import SimpleLogger
 from cpylog.html_utils import str_to_html
+
 #from qtpy import QtGui
 from qtpy import QtCore
 from qtpy.QtWidgets import (
-    QMainWindow,
-    QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox,
-    QTabWidget, QWidget, QComboBox, QHBoxLayout, QVBoxLayout,
-)
+    # QMainWindow,
+    QLabel, QPushButton, QGridLayout, QApplication,
+    QSpinBox, QLineEdit, QCheckBox,
+    QWidget, QComboBox,
+    # QTabWidget, QDoubleSpinBox, QColorDialog,
+    QHBoxLayout, QVBoxLayout,)
 from pyNastran.gui.menus.cutting_plane.results_dialog import ResultsDialog
-from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float, QLINEEDIT_GOOD
+from pyNastran.gui.utils.qt.checks.qlineedit import check_float #, check_save_path, QLINEEDIT_GOOD
 
 #import pyNastran
 #from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
@@ -37,8 +40,21 @@ from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
 from pyNastran.gui.utils.qt.qcombobox import get_combo_box_text
 from pyNastran.bdf.mesh_utils.cmd_line.create_flutter import create_flutter
-from pyNastran.bdf.bdf import BDF
+# from pyNastran.bdf.bdf import BDF
 
+# import pyNastran
+# from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
+# from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
+# from pyNastran.gui.utils.qt.checks.qlineedit import (
+#     check_int, check_float, check_name_str, check_path, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
+# from pyNastran.utils import print_bad_path
+# from pyNastran.converters.cart3d.cart3d import read_cart3d
+# from pyNastran.converters.tecplot.tecplot import read_tecplot
+# from pyNastran.dev.tools.pressure_map.setup_aero import get_aero_model
+
+# kills the program when you hit Cntl+C from the command line
+# doesn't save the current state as presumably there's been an error
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 USE_WIN = False
 
@@ -243,8 +259,7 @@ class FlutterGui(PyDialog):
             f'Velocity ({velocity_units})',
             f'EAS ({eas_units})',
         ]
-        dlg = ResultsDialog(self, data, labels,
-                            title='Atmosphere Table')
+        dlg = ResultsDialog(self, data, labels, title='Atmosphere Table')
         dlg.show()
 
     def create_widgets(self):
@@ -504,27 +519,6 @@ class FlutterGui(PyDialog):
 
 
 def cmd_line_gui():
-    from qtpy.QtWidgets import (
-        QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-        QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox,
-        QTabWidget, QWidget, QComboBox, QHBoxLayout, QVBoxLayout,
-    )
-    import pyNastran
-    from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
-    from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
-    from pyNastran.gui.utils.qt.checks.qlineedit import (
-        check_int, check_float, check_name_str, check_path, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
-    from pyNastran.utils import print_bad_path
-    from pyNastran.converters.cart3d.cart3d import read_cart3d
-    from pyNastran.converters.tecplot.tecplot import read_tecplot
-    from pyNastran.dev.tools.pressure_map.pressure_map_aero_setup import get_aero_model
-
-    # kills the program when you hit Cntl+C from the command line
-    # doesn't save the current state as presumably there's been an error
-    import signal
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-    import sys
     # Someone is launching this directly
     # Create the QApplication
     app = QApplication(sys.argv)
@@ -537,7 +531,6 @@ def cmd_line_gui():
     main_window.show()
     # Enter the main loop
     app.exec_()
-
     return data
 
 if __name__ == '__main__':  # pragma: no cover

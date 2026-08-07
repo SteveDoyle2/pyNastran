@@ -30,6 +30,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.op2 import OP2
+    from pyNastran.op2.op2_geom import OP2Geom
     from pyNastran.op2.tables.onmd import NormalizedMassDensity
 
 
@@ -698,8 +699,10 @@ class F06Writer(OP2_F06_Common):
             'grid_point_weight', 'psds', 'monitor1', 'monitor3',
             'cstm',
         ]
-        res_types = list(model.get_result(table_type) for table_type in sorted(model.get_table_types())
-                         if table_type not in unallowed_results and not table_type.startswith('responses.'))
+        res_types = [model.get_result(table_type)
+                     for table_type in sorted(model.get_table_types())
+                     if table_type not in unallowed_results and
+                     not table_type.startswith('responses.')]
 
         for isubcase, res_keys in sorted(res_keys_subcase.items()):
             for res_key in res_keys:
@@ -773,7 +776,7 @@ class F06Writer(OP2_F06_Common):
                         del result
                     self.page_num += 1
 
-    def _write_normalized_mass_density(self, f06):
+    def _write_normalized_mass_density(self, f06: TextIO) -> None:
         normalized_mass_density = self.op2_results.responses.normalized_mass_density
         if normalized_mass_density is None:
             return
@@ -791,7 +794,7 @@ class F06Writer(OP2_F06_Common):
                 f06.write(f' {eid:-8d} {density:.8f}\n')
 
 
-def _check_combination(result, log: SimpleLogger):
+def _check_combination(result, log: SimpleLogger) -> None:
     try:
         name = result.class_name
         headers = result.get_headers()
@@ -815,7 +818,7 @@ def _check_combination(result, log: SimpleLogger):
     except Exception as error:
         warnings.warn(str(error))
 
-def check_element_node(obj):
+def check_element_node(obj) -> None:
     if obj is None:
         raise RuntimeError('obj is None...')
 
@@ -936,11 +939,12 @@ def _write_responses2(op2: OP2, f06: TextIO,
         f06.write(msg)
     return page_num
 
-def write_bdf(model: BDF | OP2Geom, f06_file: TextIO, page_stamp: str,
-                     page_num: int) -> int:
+def write_bdf(model: BDF | OP2Geom, f06_file: TextIO,
+              page_stamp: str,
+              page_num: int) -> int:
     """writes the geometry table"""
     if len(model.nodes) == 0:
-        return
+        return page_num
 
     page_stamp2 = page_stamp + '\n'
     if len(model.system_command_lines):
@@ -1007,7 +1011,7 @@ def write_bdf(model: BDF | OP2Geom, f06_file: TextIO, page_stamp: str,
             bdf_lines.append(f'           {j:10d}-        {msgi}')
             j += 1
 
-        names = ['elements']
+        names = ['elements', 'properties', 'materials', 'methods']
         for name in names:
             mydict = getattr(model, name)
             j = _write_bdf_dict(mydict, bdf_lines, j)

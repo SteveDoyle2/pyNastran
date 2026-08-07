@@ -89,8 +89,8 @@ def cmd_line_create_flutter(argv=None, quiet: bool = False) -> None:
     # }
     if "gui" in argv:
         from pyNastran.bdf.mesh_utils.gui_tools.gui_flutter import cmd_line_gui
-
         data = cmd_line_gui()
+        return
     else:
         argv = [str(arg) for arg in argv]
         cmd = "bdf " + " ".join(argv[1:])
@@ -341,9 +341,7 @@ def create_flutter(
 
     if sweep_method == "eas" and const_type == "alt":
         alts, machs, eass = flutter.make_flfacts_eas_sweep_constant_alt(
-            model,
-            alt,
-            eass,
+            model, alt, eass,
             minus_eas=minus_eas,
             alt_units=alt_units,
             velocity_units=velocity_units,
@@ -354,9 +352,7 @@ def create_flutter(
         gamma = 1.4
         alts, machs, eass = (
             flutter.make_flfacts_eas_sweep_constant_mach(  # TODO: need to test this; seems wrong
-                model,
-                mach,
-                eass,
+                model, mach, eass,
                 gamma=gamma,
                 minus_eas=minus_eas,
                 alt_units=alt_units,
@@ -369,9 +365,7 @@ def create_flutter(
 
     elif sweep_method == "mach" and const_type == "alt":
         alts, machs, eass = flutter.make_flfacts_mach_sweep_constant_alt(
-            model,
-            alt,
-            machs,
+            model, alt, machs,
             minus_eas=minus_eas,
             eas_limit=eas_limit,
             alt_units=alt_unit,
@@ -382,9 +376,7 @@ def create_flutter(
     elif sweep_method == "alt" and const_type == "mach":
         # alt_units = sweep_unit
         alts, machs, eass = flutter.make_flfacts_alt_sweep_constant_mach(
-            model,
-            mach,
-            alts,
+            model, mach, alts,
             minus_eas=minus_eas,
             eas_limit=eas_limit,
             alt_units=alt_units,
@@ -394,9 +386,7 @@ def create_flutter(
         )
     elif sweep_method == "alt" and const_type == "tas":
         alts, machs, eass = flutter.make_flfacts_alt_sweep_constant_tas(
-            model,
-            tas,
-            alts,
+            model, tas, alts,
             minus_eas=minus_eas,
             alt_units=alt_units,
             eas_limit=eas_limit,
@@ -406,9 +396,7 @@ def create_flutter(
         )
     elif sweep_method == "tas" and const_type == "alt":
         alts, machs, eass = flutter.make_flfacts_tas_sweep_constant_alt(
-            model,
-            alt,
-            tass,
+            model, alt, tass,
             minus_eas=minus_eas,
             alt_units=alt_units,
             eas_limit=eas_limit,
@@ -435,9 +423,7 @@ def create_flutter(
     # eas_units=eas_units)
     elif sweep_method == "alt" and const_type == "eas":
         alts, machs, eass = flutter.make_flfacts_alt_sweep_constant_eas(
-            model,
-            eas,
-            alts,
+            model, eas, alts,
             minus_eas=minus_eas,
             alt_units=alt_units,
             velocity_units=velocity_units,
@@ -456,25 +442,16 @@ def create_flutter(
         temperature_units = "R"
         velocity_units = f"{length_unit}/s"
         density_units = f"{mass_unit}/{length_unit}^3"
-        sos = np.array(
-            [
-                atm_speed_of_sound(alt, alt_units=alt_units, velocity_units=velocity_units)
-                for alt in alts
-            ]
-        )
-        density = np.array(
-            [
-                atm_density(alt, 1716.0, alt_units=alt_units, density_units=density_units)
-                for alt in alts
-            ]
-        )
         nalt = len(alts)
-        temperature = np.array(
-            [
-                atm_temperature(alt, alt_units=alt_units, temperature_units=temperature_units)
-                for alt in alts
-            ]
-        )
+        sos = np.array([
+            atm_speed_of_sound(alt, alt_units=alt_units, velocity_units=velocity_units)
+            for alt in alts])
+        density = np.array([
+            atm_density(alt, 1716.0, alt_units=alt_units, density_units=density_units)
+            for alt in alts])
+        temperature = np.array([
+            atm_temperature(alt, alt_units=alt_units, temperature_units=temperature_units)
+            for alt in alts])
 
         # density0 = atm_density(0.0, 1716.0, alt_units=alt_units, density_units=density_units)
         # round density to 4 sig figs
@@ -485,8 +462,7 @@ def create_flutter(
         alts2 = alts.round(0)
         sos2 = sos.round(0)
         atmosphere_table = np.column_stack([
-                alts2, sos2, density2, temperature.round(2),
-        ])
+                alts2, sos2, density2, temperature.round(2),])
         # low to high
         atmosphere_table_reversed = atmosphere_table[::-1, :]
 

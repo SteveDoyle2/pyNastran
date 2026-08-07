@@ -279,7 +279,6 @@ class CWELD(Element):
 
     Parameters
     ----------
-
     x : list[float]; [xs, ys, zs]
         applies to ELPAT, PARTPAT
     """
@@ -296,7 +295,9 @@ class CWELD(Element):
         eid = 1
         pid = 1
         connectype = 'ELEMID'
-        return CWELD(eid, pid, gs=None, connectype=connectype, ga=None, gb=None, mcid=None, shida=None, shidb=None, comment='')
+        obj = CWELD(eid, pid, gs=None, connectype=connectype,
+                    ga=None, gb=None, mcid=-1, shida=None, shidb=None, comment='')
+        return obj
 
     def __init__(self, eid: int, pid: int, gs: Optional[int],
                  connectype: str, ga: int, gb: int,
@@ -380,7 +381,7 @@ class CWELD(Element):
 
         ga = integer(card, 5, 'ga')
         gb = integer(card, 6, 'gb')
-        mcid = integer_or_blank(card, 8, 'mcid', -1)
+        mcid = integer_or_blank(card, 8, 'mcid', default=-1)
         shida_pida = integer_or_blank(card, 9, 'shida_pida')
         shidb_pidb = integer_or_blank(card, 10, 'shidb_pidb')
 
@@ -748,11 +749,10 @@ class CGAP(Element):
             assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid_ref.type in ['PGAP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            assert self.pid_ref.type in ['PGAP'], f'pid={pid} self.pid_ref.type={self.pid_ref.type}'
             if self.cid is not None and self.cid != 0:
                 assert self.cid_ref.type in ['CORD1R', 'CORD1C', 'CORD1S', 'CORD2R', 'CORD2C',
-                                             'CORD2S'], 'cid=%i self.cid.type=%s' % (
-                                                 cid, self.cid_ref.type)
+                                             'CORD2S'], f'cid={cid:d} self.cid.type={self.cid_ref.type}'
 
     def cross_reference(self, model: BDF) -> None:
         """
