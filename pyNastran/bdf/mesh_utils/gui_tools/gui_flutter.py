@@ -3,7 +3,6 @@ import os
 import sys
 import signal
 
-from PIL.ImageChops import constant
 import numpy as np
 from cpylog import SimpleLogger
 from cpylog.html_utils import str_to_html
@@ -192,9 +191,8 @@ class FlutterGui(PyDialog):
 
         # the defaults for create_flutter
         eas_limit = 1_000_000
-        eas_units = 'm/s'
         eas_str = ''
-        if (sweep_method != 'eas') and (constant != 'eas'):
+        if (sweep_method != 'eas') and (constant_type != 'eas'):
             eas_limit, eas_limit_flag = check_float(self.eas_limit_value)
             eas_str = f'--eas_limit {eas_limit} {eas_units}'
             is_passed = value1_flag and value2_flag and const_value_flag and eas_limit_flag
@@ -220,7 +218,7 @@ class FlutterGui(PyDialog):
         cmd = (
             f'bdf flutter {units_out} '
             f'{sweep_method} {value1} {value2}{sweep_unit2} {npoints} '
-            f'{constant_type} {units_out} {eas_str} {size_str}'
+            f'{constant_type} {const_value} {constant_unit} {eas_str} {size_str}'
         ).rstrip()
         if bdf_filename_out:
             cmd += f' --output {bdf_filename_out!r}'
