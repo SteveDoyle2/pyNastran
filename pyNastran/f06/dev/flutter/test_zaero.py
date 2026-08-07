@@ -7,9 +7,11 @@ import pyNastran
 from pyNastran.f06.parse_geom import parse_f06_geom
 from pyNastran.f06.dev.flutter.read_zaero_out import read_zaero_out
 from pyNastran.f06.dev.flutter.read_zaero_aic import read_zaero_aic, write_zaero_aic
+from pyNastran.f06.dev.flutter.op2_to_zaero import nastran_to_zaero_f06
 
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_DIR = PKG_PATH / "bdf" / "cards" / "aero" / "examples" / "flutter"
+BDF_MODEL_DIR = PKG_PATH / '..' / 'models'
 
 try:
     import matplotlib
@@ -152,6 +154,11 @@ class TestZaero(unittest.TestCase):
         assert len(data_dict) == 2, data_dict
         assert isinstance(data_dict["matrices"], dict), data_dict
 
+    def test_solid_bending_to_zaero(self):
+        op2_filename = BDF_MODEL_DIR / "solid_bending" / "solid_bending.op2"
+        bdf_filename = BDF_MODEL_DIR / "solid_bending" / "solid_bending.bdf"
+        nastran_to_zaero_f06(op2_filename, bdf_filename=bdf_filename)
+        # nastran_to_zaero_f06(op2_filename, bdf_filename=None)
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()
