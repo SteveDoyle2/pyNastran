@@ -1390,19 +1390,19 @@ class AddMethods:
                        allow_overwrites: bool=False) -> None:
         """adds an AEDW object"""
         self.model.aedw.append(aedw)
-        self.model._type_to_id_map['AEDW'].append(len(self.model.aedw))
+        self.model._type_to_id_map['AEDW'].append(len(self.model.aedw)-1)
 
     def add_aeforce_object(self, aeforce: AEFORCE,
                            allow_overwrites: bool=False) -> None:
         """adds an AEFORCE object"""
         self.model.aeforce.append(aeforce)
-        self.model._type_to_id_map['AEFORCE'].append(len(self.model.aeforce))
+        self.model._type_to_id_map['AEFORCE'].append(len(self.model.aeforce)-1)
 
     def add_aepress_object(self, aepress: AEPRESS,
                            allow_overwrites: bool=False) -> None:
         """adds an AEPRESS object"""
         self.model.aepress.append(aepress)
-        self.model._type_to_id_map['AEPRESS'].append(len(self.model.aepress))
+        self.model._type_to_id_map['AEPRESS'].append(len(self.model.aepress)-1)
 
     def add_flutter_object(self, flutter: FLUTTER, allow_overwrites: bool=False) -> None:
         """adds an FLUTTER object"""
