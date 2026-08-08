@@ -690,6 +690,7 @@ class BODY7(BaseCard):
         self.acoord_ref = None
         self.ascid_ref = None
         self.segmesh_refs = None
+        assert isinstance(idmeshes, list), f"idmeshes={idmeshes} should be a list"
 
     # @property
     # def cp(self):
@@ -751,11 +752,13 @@ class BODY7(BaseCard):
             the BDF object
 
         """
-        msg = ", which is required by BODY7 eid=%s" % self.eid
-        self.segmesh_refs = []
+        msg = f", which is required by BODY7 eid={self.eid}"
+        segmesh_refs = []
+        assert len(self.idmeshes)
         for segmesh_id in self.idmeshes:
             segmesh_ref = model.PAero(segmesh_id, msg=msg)  # links to SEGMESH/PAERO7
-            self.segmesh_refs.append(segmesh_ref)
+            segmesh_refs.append(segmesh_ref)
+        self.segmesh_refs = segmesh_refs
 
         # if self.pid is not None:
         # self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO7
@@ -778,6 +781,29 @@ class BODY7(BaseCard):
         self.acoord = self.ACoord()
         self.pid_ref = None
         self.acoord_ref = None
+
+    def plot(self, ax: plt.Axes) -> None:
+        """plots the panels"""
+        points, elements = self.get_points_elements_3d()
+        quads = []
+        for eid, elem in enumerate(elements[:, [0, 1, 2, 3, 0]]):
+            pointsi = points[elem]
+            x = pointsi[:, 0]
+            y = pointsi[:, 1]
+            z = pointsi[:, 2]
+            ax.plot(x, y, z, color='b')
+            # ax.plot_surface(x, y, z, color='b')
+            # box_id = self.eid + eid
+            # centroid = (x[:-1].sum() / 4, y[:-1].sum() / 4)
+            # elem_name = f'e{box_id}'
+            # ax.annotate(elem_name, centroid, ha='center')
+
+            # for pid, point in zip(elem, pointsi):
+                # point_name = f'p{pid}'
+                # ax.annotate(point_name, point, ha='center')
+            # quads.append(pointsi)
+        # from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+        # ax.add_collection3d(Poly3DCollection(quads))
 
     def convert_to_nastran(self, model):
         """
@@ -1071,6 +1097,7 @@ class BODY7(BaseCard):
         xyz = []
         element = []
         npoints = 0
+        assert len(self.segmesh_refs), self.segmesh_refs
         for segmesh in self.segmesh_refs:
             # print(segmesh)
             xyzi, elementi = self._get_points_elements_3di(segmesh)
@@ -1422,7 +1449,7 @@ class SEGMESH(BaseCard):
             idys.append(idy)
             idzs.append(idz)
         assert len(itypes) == naxial, (
-            f"naxial={naxial:%d} nradial={nradial:%d} len(itypes)={len(itypes):%d}"
+            f"naxial={naxial:d} nradial={nradial:d} len(itypes)={len(itypes):d}"
         )
         return SEGMESH(
             segmesh_id,
@@ -1452,7 +1479,7 @@ class SEGMESH(BaseCard):
         return self.pid
 
     def cross_reference(self, model: BDF) -> None:
-        msg = ", which is required by SEGMESH eid=%d" % self.pid
+        msg = f", which is required by SEGMESH eid={self.pid}"
         idys_ref = []
         idzs_ref = []
         for idy in self.idys:

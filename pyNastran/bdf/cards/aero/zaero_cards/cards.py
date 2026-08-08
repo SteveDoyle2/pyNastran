@@ -108,15 +108,12 @@ class ACOORD(CoordBase):  # not done
 
     def coord_to_xyz_array(self, xyz_cp: np.ndarray) -> np.ndarray:
         ## TODO: consider delta (pitch)
-        cphi = np.sin(self.theta)  # roll
+        cphi = np.cos(self.theta)  # roll
         sphi = np.sin(self.theta)
-        rphi = np.array(
-            [
-                [1.0, 0.0, 0.0],
-                [0.0, cphi, -sphi],
-                [0.0, sphi, cphi],
-            ]
-        )
+        rphi = np.array([
+            [1.0, 0.0, 0.0],
+            [0.0, cphi, -sphi],
+            [0.0, sphi, cphi], ])
         assert xyz_cp.ndim == 2 and xyz_cp.shape[1] == 3, xyz_cp.shape
         xyz_local = np.einsum("nt,tu->nu", xyz_cp, rphi)
         xyz_cid0 = xyz_local + self.origin[np.newaxis, :]
@@ -1420,6 +1417,13 @@ class PBODY7(BaseCard):
     """Defines properties for a BODY7 aerodynamic body element.
 
     PBODY7 PID     IPBODY  ...
+    +--------+------+---------+--------+---------+--------+------+------+-------+
+    |   1    |  2   |     3   |   4    |    5    |    6   |   7  |   8  |   9   |
+    +========+======+=========+========+=========+========+======+======+=======+
+    | PBODY7 | PID  |   WAKE  | CPBASE |  XSWAKE | XDWAKE | YOFF | ZOFF | INLET |
+    +--------+------+---------+--------+---------+--------+------+------+-------+
+    |        | IDP1 | FLOWRT1 |  IDP2  | FLOWRT2 |  -etc- |      |      |       |
+    +--------+------+---------+--------+---------+--------+------+------+-------+
     """
 
     type = "PBODY7"

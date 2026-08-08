@@ -1158,6 +1158,30 @@ class ZAERO:
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip + my_keys_to_skip)
 
+    def add_segmesh(self,
+                    segmesh_id: int,
+                    naxial: int,
+                    nradial: int,
+                    nose_radius: float,
+                    iaxis: int,
+                    itypes: list[int],
+                    xs: list[float],
+                    cambers: list[float],
+                    ys: list[float],
+                    zs: list[float],
+                    idys: list[int],
+                    idzs: list[int],
+                    comment: str = "",
+                    ) -> SEGMESH:
+        card = SEGMESH(
+            segmesh_id, naxial, nradial, nose_radius,
+            iaxis, itypes, xs, cambers,
+            ys, zs,
+            idys, idzs,
+            comment=comment,)
+        self.model._add_methods.add_paero_object(card)
+        return card
+
     def add_atmos(
         self,
         atm_id: int,
@@ -2314,8 +2338,14 @@ class ZAERO:
         self._add_methods.add_spline0_object(card)
         return card
 
-    def add_pbody7(self, pid: int, ipbody: int, fields: list, comment: str = "") -> PBODY7:
-        card = PBODY7(pid, ipbody, fields, comment=comment)
+    def add_body7(self, eid: int, label: str, pid: int,
+        nseg: int, idmeshes: list[int], acoord: int=0, comment: str="",) -> BODY7:
+        card = BODY7(eid, label, pid, nseg, idmeshes, acoord=acoord, comment=comment)
+        self.model._add_methods.add_caero_object(card)
+        return card
+
+    def add_pbody7(self, pid: int, wake: int, fields: list, comment: str = "") -> PBODY7:
+        card = PBODY7(pid, wake, fields, comment=comment)
         self._add_methods.add_pbody7_object(card)
         return card
 
