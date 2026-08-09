@@ -930,9 +930,12 @@ def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids
             if elem.g0 is not None:
                 assert isinstance(elem.g0, int), elem.g0
                 nids_used.add(elem.G0())
+            if elem.cid is not None:
+                assert isinstance(elem.cid, int), elem.cid
+                cids_used.add(elem.Cid())
+
     elif card_type == 'CBUSH':
         for eid in ids:
-            elem = model.elements[eid]
             elem = model.elements[eid]
             nids_used.update(elem.node_ids)
             if elem.g0 is not None:
@@ -947,7 +950,7 @@ def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids
             nids_used.update(elem.node_ids)
             pids_used.add(elem.Pid())
             cids_used.add(elem.Cid())
-    else:
+    else:  # pramga: no cover
         raise NotImplementedError(card_type)
 
 
@@ -971,7 +974,7 @@ def _store_nsm(model: BDF, ids: np.ndarray, pids_used: set[int]) -> None:
                 #     raise NotImplementedError('found ALL...\n%s' % str(nsm))
                 # eids_used.update(idsi)
                 pass
-            else:
+            else:  # pramga: no cover
                 msg = 'found nsm_type=%r...\n%s' % (nsm.nsm_type, str(nsm))
                 raise NotImplementedError(msg)
 
@@ -1072,7 +1075,7 @@ def _store_dresp1(model: BDF, ids: np.ndarray,
                                        'TFORC', 'FRFORC']:
                 #eids_used.update(dresp.atti_values())
                 pass
-            else:
+            else:  # pramga: no cover
                 msg = (
                     str(dresp) + 'region=%r property_type=%r response_type=%r, '
                     'atta=%r attb=%s atti=%s' % (
@@ -1107,7 +1110,7 @@ def _store_dresp1(model: BDF, ids: np.ndarray,
                         dresp.region, dresp.property_type, dresp.response_type,
                         dresp.atta, dresp.attb, dresp.atti))
                 raise NotImplementedError(msg)
-        else:
+        else:  # pramga: no cover
             msg = (
                 str(dresp) + 'region=%r property_type=%r response_type=%r '
                 'atta=%r attb=%s atti=%s' % (
@@ -1136,7 +1139,7 @@ def _store_masses(card_type: str, model: BDF,
         for eid in ids:
             elem = model.masses[eid]
             nids_used.update(elem.node_ids)
-    else:
+    else:  # pramga: no cover
         raise NotImplementedError(card_type)
 
 

@@ -94,9 +94,9 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.nastran_io3 import (
     Nastran3, DisplacementResults)
-from pyNastran.f06.dev.flutter.actions_builder import (
+from pyNastran.f06.dev.flutter.gui.actions_builder import (
     Actions, Action, build_menus)
-from pyNastran.f06.dev.flutter.scalar_bar import ScalarBar
+from pyNastran.f06.dev.flutter.gui.scalar_bar import ScalarBar
 from pyNastran.f06.dev.flutter.nastran_utils import (
     get_element_table, get_property_table, get_material_table,
     get_table_trees, get_ifile_name_dict, read_obj, write_obj,
@@ -133,8 +133,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from vtkmodules.vtkCommonDataModel import vtkPointData
     from pyNastran.gui.typing import ColorInt
-    from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
-    from pyNastran.f06.dev.flutter.vtk_data import VtkData
+    from pyNastran.f06.dev.flutter.gui.vtk_window_object import VtkWindowObject
+    from pyNastran.f06.dev.flutter.gui.vtk_data import VtkData
 
 
 class VtkWindow(QMainWindow):

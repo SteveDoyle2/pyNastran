@@ -1,21 +1,24 @@
 # encoding: utf-8
 import os
-from typing import Any
+import sys
+import signal
 
-from PIL.ImageChops import constant
 import numpy as np
 from cpylog import SimpleLogger
 from cpylog.html_utils import str_to_html
+
 #from qtpy import QtGui
 from qtpy import QtCore
 from qtpy.QtWidgets import (
-    QMainWindow,
-    QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox,
-    QTabWidget, QWidget, QComboBox, QHBoxLayout, QVBoxLayout,
-)
+    # QMainWindow,
+    QLabel, QPushButton, QGridLayout, QApplication,
+    QSpinBox, QLineEdit, QCheckBox,
+    QWidget, QComboBox,
+    QRadioButton, QButtonGroup,
+    # QTabWidget, QDoubleSpinBox, QColorDialog,
+    QHBoxLayout, QVBoxLayout,)
 from pyNastran.gui.menus.cutting_plane.results_dialog import ResultsDialog
-from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float, QLINEEDIT_GOOD
+from pyNastran.gui.utils.qt.checks.qlineedit import check_float #, check_save_path, QLINEEDIT_GOOD
 
 #import pyNastran
 #from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
@@ -34,11 +37,24 @@ from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
 #from .utils import filter_no_args
 #from pyNastran.utils.convert import convert_altitude, convert_velocity
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
+from pyNastran.gui.utils.qt.pydialog import PyDialog #, make_font, check_color
 from pyNastran.gui.utils.qt.qcombobox import get_combo_box_text
 from pyNastran.bdf.mesh_utils.cmd_line.create_flutter import create_flutter
-from pyNastran.bdf.bdf import BDF
+# from pyNastran.bdf.bdf import BDF
 
+# import pyNastran
+# from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
+# from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
+# from pyNastran.gui.utils.qt.checks.qlineedit import (
+#     check_int, check_float, check_name_str, check_path, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
+# from pyNastran.utils import print_bad_path
+# from pyNastran.converters.cart3d.cart3d import read_cart3d
+# from pyNastran.converters.tecplot.tecplot import read_tecplot
+# from pyNastran.dev.tools.pressure_map.setup_aero import get_aero_model
+
+# kills the program when you hit Cntl+C from the command line
+# doesn't save the current state as presumably there's been an error
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 USE_WIN = False
 
@@ -176,9 +192,8 @@ class FlutterGui(PyDialog):
 
         # the defaults for create_flutter
         eas_limit = 1_000_000
-        eas_units = 'm/s'
         eas_str = ''
-        if (sweep_method != 'eas') and (constant != 'eas'):
+        if (sweep_method != 'eas') and (constant_type != 'eas'):
             eas_limit, eas_limit_flag = check_float(self.eas_limit_value)
             eas_str = f'--eas_limit {eas_limit} {eas_units}'
             is_passed = value1_flag and value2_flag and const_value_flag and eas_limit_flag
@@ -186,12 +201,14 @@ class FlutterGui(PyDialog):
             is_passed = value1_flag and value2_flag and const_value_flag
 
         if sweep_method == constant_type:
-            self.log.error(f'sweep_method=constant_type; sweep_method={sweep_method} constant_type={constant_type}')
+            self.log.error('sweep_method=constant_type Error\n'
+                           f'sweep_method={sweep_method} constant_type={constant_type} and must be different')
             # self.sweep_pulldown.setColor
             # self.constant_unit_pulldown.setColor
             if is_passed:
                 return
 
+        is_zaero = self._radio_zaero.isChecked()
         if not is_passed:
             self.log.error('Invalid parsing')
             return
@@ -204,7 +221,7 @@ class FlutterGui(PyDialog):
         cmd = (
             f'bdf flutter {units_out} '
             f'{sweep_method} {value1} {value2}{sweep_unit2} {npoints} '
-            f'{constant_type} {units_out} {eas_str} {size_str}'
+            f'{constant_type} {const_value} {constant_unit} {eas_str} {size_str}'
         ).rstrip()
         if bdf_filename_out:
             cmd += f' --output {bdf_filename_out!r}'
@@ -222,29 +239,53 @@ class FlutterGui(PyDialog):
                 units_out=units_out,
                 size=size, clean=clean,
                 bdf_filename_out=bdf_filename_out,
-                comment=cmd)
+                comment=cmd, is_zaero=is_zaero)
         except Exception as error:
             self.log.error(str(error))
             return
-        sid = 1
-        flfact_rho = sid + 1
-        flfact_mach = sid + 2
-        flfact_velocity = sid + 3
-        flfact_eas = sid + 4
-        rho = model.flfacts[flfact_rho].factors
-        mach = model.flfacts[flfact_mach].factors
-        velocity = model.flfacts[flfact_velocity].factors
-        eas = model.flfacts[flfact_eas].factors
-        data = np.column_stack([rho, mach, velocity, eas])
 
-        labels = [
-            f'Density ({density_units})',
-            'Mach',
-            f'Velocity ({velocity_units})',
-            f'EAS ({eas_units})',
-        ]
-        dlg = ResultsDialog(self, data, labels,
-                            title='Atmosphere Table')
+        if is_zaero:
+            atmos_id = 10
+            fix_id = 11
+            if sweep_method == 'eas' and constant_type == 'mach':
+                atmos = model.zaero.atmos[atmos_id]
+                alt = atmos.alt
+                density = atmos.density
+                sos = atmos.sos
+                velocity = model.zaero.fixmatm[fix_id]
+                mach = velocity / sos
+                density0 = 1.0
+                eas = velocity * np.sqrt(density / density0)
+                data = np.column_stack([alt, mach, sos, density, eas])
+                alt_units = 'ft'
+                labels = [
+                    f'Altitude ({alt_units})',
+                    f'Density ({density_units})',
+                    'Mach',
+                    f'Velocity ({velocity_units})',
+                    f'EAS ({eas_units})',
+                ]
+            else:
+                return
+        else:
+            flutter_id = 1
+            flfact_rho = flutter_id + 1
+            flfact_mach = flutter_id + 2
+            flfact_velocity = flutter_id + 3
+            flfact_eas = flutter_id + 4
+            rho = model.flfacts[flfact_rho].factors
+            mach = model.flfacts[flfact_mach].factors
+            velocity = model.flfacts[flfact_velocity].factors
+            eas = model.flfacts[flfact_eas].factors
+            data = np.column_stack([rho, mach, velocity, eas])
+            labels = [
+                f'Density ({density_units})',
+                'Mach',
+                f'Velocity ({velocity_units})',
+                f'EAS ({eas_units})',
+            ]
+
+        dlg = ResultsDialog(self, data, labels, title='Atmosphere Table')
         dlg.show()
 
     def create_widgets(self):
@@ -303,8 +344,9 @@ class FlutterGui(PyDialog):
         self.aero_filename.setText('flutter_cards.bdf')
         self.aero_filename.setToolTip('Path to the Flutter File')
         self.aero_filename_load = QPushButton('Load...')
+        self.aero_filename_load.setEnabled(False)
 
-        self.flutter_id_label = QLabel('Flutter File:')
+        self.flutter_id_label = QLabel('Flutter ID:')
         self.flutter_id_value = QIntEdit('10')
         self.flutter_id_value.setToolTip('ID of the FLUTTER card')
         self.large_field_checkbox = QCheckBox('Large Field')
@@ -316,6 +358,13 @@ class FlutterGui(PyDialog):
         self.eas_limit_unit_pulldown = QComboBox(self)
         self.eas_limit_unit_pulldown.addItems(VELOCITY_UNITS)
         self.eas_limit_unit_pulldown.setItemText(0, VELOCITY_UNITS[0])
+
+        self._radio_nastran = QRadioButton('Nastran')
+        self._radio_zaero = QRadioButton('ZAero')
+        plot_type_group = QButtonGroup(self)
+        plot_type_group.addButton(self._radio_nastran)
+        plot_type_group.addButton(self._radio_zaero)
+        self._radio_nastran.setChecked(True)
 
         # ------------------------------------------------------------------
         # closing
@@ -410,11 +459,6 @@ class FlutterGui(PyDialog):
             grid.addWidget(self.eas_limit_unit_pulldown, irow, 2)
             irow += 1
             #-----------------------------------------------------
-            grid.addWidget(self.aero_filename_label, irow, 0)
-            grid.addWidget(self.aero_filename, irow, 1)
-            grid.addWidget(self.aero_filename_load, irow, 2)
-            irow += 1
-
             grid.addWidget(self.flutter_id_label, irow, 0)
             grid.addWidget(self.flutter_id_value, irow, 1)
             irow += 1
@@ -426,6 +470,16 @@ class FlutterGui(PyDialog):
             grid.addWidget(self.unit_system_label, irow, 0)
             grid.addWidget(self.unit_system_pulldown, irow, 1)
             irow += 1
+
+            grid.addWidget(self._radio_nastran, irow, 0)
+            grid.addWidget(self._radio_zaero, irow, 1)
+            irow += 1
+
+            grid.addWidget(self.aero_filename_label, irow, 0)
+            grid.addWidget(self.aero_filename, irow, 1)
+            grid.addWidget(self.aero_filename_load, irow, 2)
+            irow += 1
+
         return grid
 
     def set_connections(self):
@@ -504,27 +558,6 @@ class FlutterGui(PyDialog):
 
 
 def cmd_line_gui():
-    from qtpy.QtWidgets import (
-        QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-        QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox,
-        QTabWidget, QWidget, QComboBox, QHBoxLayout, QVBoxLayout,
-    )
-    import pyNastran
-    from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
-    from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
-    from pyNastran.gui.utils.qt.checks.qlineedit import (
-        check_int, check_float, check_name_str, check_path, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
-    from pyNastran.utils import print_bad_path
-    from pyNastran.converters.cart3d.cart3d import read_cart3d
-    from pyNastran.converters.tecplot.tecplot import read_tecplot
-    from pyNastran.dev.tools.pressure_map.pressure_map_aero_setup import get_aero_model
-
-    # kills the program when you hit Cntl+C from the command line
-    # doesn't save the current state as presumably there's been an error
-    import signal
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-    import sys
     # Someone is launching this directly
     # Create the QApplication
     app = QApplication(sys.argv)
@@ -537,7 +570,6 @@ def cmd_line_gui():
     main_window.show()
     # Enter the main loop
     app.exec_()
-
     return data
 
 if __name__ == '__main__':  # pragma: no cover

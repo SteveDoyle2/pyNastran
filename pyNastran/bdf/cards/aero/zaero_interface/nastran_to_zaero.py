@@ -102,7 +102,7 @@ def nastran_to_zaero(bdf_filename: PathLike | BDF,
             modelz.card_count[key] = ncard
 
     if zaero_inp_filename != '':
-        with open(zaero_inp_filename) as inp_file:
+        with open(zaero_inp_filename ,'w') as inp_file:
             bdf_file.write("$pyNastran: version=zaero\n")
             bdf_file.write("INCLUDE 'base_fem.blk'\n")
             modelz.write_bdf(inp_file, write_header=False)

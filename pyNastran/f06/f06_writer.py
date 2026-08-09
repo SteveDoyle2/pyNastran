@@ -27,7 +27,10 @@ from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet, add_results_of_exact_type
 from pyNastran.op2.result_objects.matrix import Matrix  # MatrixDict
 if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
+    from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.op2 import OP2
+    from pyNastran.op2.op2_geom import OP2Geom
     from pyNastran.op2.tables.onmd import NormalizedMassDensity
 
 
@@ -119,9 +122,9 @@ def make_f06_header() -> str:
 
 def sorted_bulk_data_header() -> str:
     """creates the bulk data echo header"""
-    msg = '0                                                 S O R T E D   B U L K   D A T A   E C H O                                         \n'
-    msg += '                 ENTRY                                                                                                              \n'
-    msg += '                 COUNT        .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .                      \n'
+    msg = '0                                                 S O R T E D   B U L K   D A T A   E C H O\n'
+    msg += '                 ENTRY\n'
+    msg += '                 COUNT        .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .\n'
     return msg
 
 
@@ -421,12 +424,14 @@ class F06Writer(OP2_F06_Common):
 
             page_stamp = self.make_stamp(self.title, self.date)
             f06_file.write(page_stamp % self.page_num)
+            f06_file.write('\n')
             self.page_num += 1
 
     def write_f06(self, f06_filename: PathLike,
                   matrix_filename: Optional[str]=None,
                   is_mag_phase: bool=False, is_sort1: bool=True,
                   delete_objects: bool=False, end_flag: bool=False,
+                  write_cards: bool = False,
                   quiet: bool=True, repr_check: bool=False,
                   close: bool=True) -> None:
         """
@@ -450,6 +455,8 @@ class F06Writer(OP2_F06_Common):
             should objects be deleted after they're written to reduce memory
         end_flag : bool; default=False
             should a dummy Nastran "END" table be made
+        write_cards : bool; default=False
+            write a nastran header
         quiet : bool; default=False
             suppress print messages
         repr_check: bool; default=False
@@ -465,6 +472,11 @@ class F06Writer(OP2_F06_Common):
             self, f06_filename, matrix_filename, quiet=quiet)
 
         page_stamp = self.make_stamp(self.title, self.date)
+
+        if write_cards:
+            self.page_num = write_bdf(self, f06, page_stamp, self.page_num)
+            self._write_summary(f06)
+
         if self.grid_point_weight:
             if not quiet:
                 print(" grid_point_weight")
@@ -510,14 +522,15 @@ class F06Writer(OP2_F06_Common):
                 #continue
         for key in object_attributes(results):
             resi = getattr(results, key)
+            if resi is None or isinstance(resi, dict) and len(resi) == 0:
+                continue
+
             if key == 'cddata':
                 f06.write(f'{key}:\n')
                 for subcase, obj in resi.items():
                     obj.write_f06(f06)
                 continue
 
-            if resi is None or isinstance(resi, dict) and len(resi) == 0:
-                continue
             if isinstance(resi, list):
                 f06.write(f'{key}:\n')
                 for resii in resi:
@@ -686,8 +699,10 @@ class F06Writer(OP2_F06_Common):
             'grid_point_weight', 'psds', 'monitor1', 'monitor3',
             'cstm',
         ]
-        res_types = list(model.get_result(table_type) for table_type in sorted(model.get_table_types())
-                         if table_type not in unallowed_results and not table_type.startswith('responses.'))
+        res_types = [model.get_result(table_type)
+                     for table_type in sorted(model.get_table_types())
+                     if table_type not in unallowed_results and
+                     not table_type.startswith('responses.')]
 
         for isubcase, res_keys in sorted(res_keys_subcase.items()):
             for res_key in res_keys:
@@ -761,7 +776,7 @@ class F06Writer(OP2_F06_Common):
                         del result
                     self.page_num += 1
 
-    def _write_normalized_mass_density(self, f06):
+    def _write_normalized_mass_density(self, f06: TextIO) -> None:
         normalized_mass_density = self.op2_results.responses.normalized_mass_density
         if normalized_mass_density is None:
             return
@@ -779,7 +794,7 @@ class F06Writer(OP2_F06_Common):
                 f06.write(f' {eid:-8d} {density:.8f}\n')
 
 
-def _check_combination(result, log: SimpleLogger):
+def _check_combination(result, log: SimpleLogger) -> None:
     try:
         name = result.class_name
         headers = result.get_headers()
@@ -803,7 +818,7 @@ def _check_combination(result, log: SimpleLogger):
     except Exception as error:
         warnings.warn(str(error))
 
-def check_element_node(obj):
+def check_element_node(obj) -> None:
     if obj is None:
         raise RuntimeError('obj is None...')
 
@@ -879,7 +894,6 @@ def _get_file_obj(self: F06Writer,
         #mat = open(matrix_filename, 'wb')
 
         f06 = open(f06_filename, 'w')
-        self._write_summary(f06)
     elif hasattr(f06_filename, 'read') and hasattr(f06_filename, 'write'):
         #print('type(f06_filename) =', type(f06_filename))
         #assert isinstance(f06_outname, file), 'type(f06_filename)= %s' % f06_filename
@@ -924,3 +938,97 @@ def _write_responses2(op2: OP2, f06: TextIO,
         msg = dscmcol.get_responses_by_group()
         f06.write(msg)
     return page_num
+
+def write_bdf(model: BDF | OP2Geom, f06_file: TextIO,
+              page_stamp: str,
+              page_num: int) -> int:
+    """writes the geometry table"""
+    if len(model.nodes) == 0:
+        return page_num
+
+    page_stamp2 = page_stamp + '\n'
+    if len(model.system_command_lines):
+        sys_lines = [
+            '0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O\n'
+            '0\n\n\n'
+        ]
+        sys_lines += model.system_command_lines
+        f06_file.writelines(sys_lines)
+        f06_file.write(page_stamp2 % page_num)
+        page_num += 1
+
+    if len(model.executive_control_lines):
+        exec_lines = [
+            '0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O\n'
+            '0\n'
+            '\n'
+        ]
+        exec_lines += model.executive_control_lines
+        f06_file.writelines(exec_lines)
+        f06_file.write(page_stamp2 % page_num)
+        page_num += 1
+
+    cc = model.case_control_deck
+    cc_str = str(cc).split('\n')
+    if len(cc_str) > 0:
+        cc_lines = [
+            '0                                        C A S E    C O N T R O L    E C H O\n'
+            '                 COMMAND\n'
+            '                 COUNT\n']
+        j = 1
+        for line in cc_str:
+            if len(line.strip()) == 0:
+                continue
+            cc_lines.append(f'           {j+1:8d}      {line}\n')
+            j += 1
+        f06_file.writelines(cc_lines)
+        f06_file.write(page_stamp2 % page_num)
+        page_num += 1
+
+    print(model.nodes)
+    if len(model.nodes):
+        bdf_lines = [
+            '0                                                 S O R T E D   B U L K   D A T A   E C H O\n'
+            '                 ENTRY\n'
+            '                 COUNT        .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .\n'
+        ]
+        j = 1
+        names = ['params', 'methods']
+        for name in names:
+            mydict = getattr(model, name)
+            j = _write_bdf_dict(mydict, bdf_lines, j)
+
+        for cid, coord in sorted(model.coords.items()):
+            if cid == 0:
+                continue
+            msg_sline = str(coord).strip().split('\n')
+            bdf_lines.append(f'           {j  :10d}-        {msg_sline[0]}\n')
+            bdf_lines.append(f'           {j+1:10d}-        {msg_sline[1]}\n')
+            j += 2
+
+        for nid, node in sorted(model.nodes.items()):
+            msgi = str(node)
+            bdf_lines.append(f'           {j:10d}-        {msgi}')
+            j += 1
+
+        names = ['elements', 'properties', 'materials', 'methods']
+        for name in names:
+            mydict = getattr(model, name)
+            j = _write_bdf_dict(mydict, bdf_lines, j)
+        bdf_lines.append('                              ENDDATA\n')
+        bdf_lines.append(f'0                       TOTAL COUNT= {j:9d}\n')
+        f06_file.writelines(bdf_lines)
+        f06_file.write(page_stamp2 % page_num)
+        page_num += 1
+
+    return page_num
+
+
+def _write_bdf_dict(mydict: dict,
+                    bdf_lines: list[str], j: int) -> int:
+    for key, obj in sorted(mydict.items()):
+        msg_sline = str(obj).strip().split('\n')
+        for line in msg_sline:
+            bdf_lines.append(f'           {j  :10d}-        {line}\n')
+            j += 1
+    return j

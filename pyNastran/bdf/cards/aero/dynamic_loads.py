@@ -756,6 +756,10 @@ class FLUTTER(BaseCard):
             eass.min(), eass.max(), eas_units)
         model.add_flfact(flfact_eas, eass, comment=comment)
 
+        nmach = len(mach)
+        alts = np.ones(nmach) * alt
+        return alts, mach, eass
+
     def make_flfacts_alt_sweep_constant_mach(self,
                                              model: BDF,
                                              mach: float, alts: np.ndarray,

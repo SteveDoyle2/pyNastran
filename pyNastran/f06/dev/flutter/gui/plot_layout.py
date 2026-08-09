@@ -25,7 +25,7 @@ except ModuleNotFoundError:
 
 from pyNastran.f06.dev.flutter.utils import get_raw_json
 JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json(allow_vtk=False)
-from pyNastran.f06.dev.flutter.utils_qt import create_grid_from_list
+from pyNastran.f06.dev.flutter.gui.utils_qt import create_grid_from_list
 
 from qtpy import QtCore
 from qtpy.compat import getopenfilename  # getsavefilename
@@ -44,7 +44,7 @@ from pyNastran.gui.utils.qt.pydialog import QFloatEdit, make_font
 from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
-from pyNastran.f06.dev.flutter.gui_flutter import (
+from pyNastran.f06.dev.flutter.gui.gui_flutter import (
     export_flutter_results, get_list_float_or_none, get_float_or_none,
     get_selected_items_flat)
 
@@ -74,11 +74,11 @@ PKG_PATH = Path(pyNastran.__path__[0])
 
 AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
 
-# from pyNastran.f06.dev.flutter.vtk_data import VtkData
+# from pyNastran.f06.dev.flutter.gui.vtk_data import VtkData
 from pyNastran.f06.parse_flutter import FlutterResponse
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.f06.dev.flutter.gui_flutter_plot import FlutterGui
+    from pyNastran.f06.dev.flutter.gui.gui_flutter_plot import FlutterGui
 
 QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
 QLINEEDIT_RED = 'QLineEdit {background-color: red;}'

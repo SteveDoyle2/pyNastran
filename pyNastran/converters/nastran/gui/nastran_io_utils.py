@@ -87,7 +87,7 @@ NO_THETA = [
     'CBAR', 'CBEAM', 'CBEAM3', 'CBEND',
     'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CVISC',
     'CONROD', 'CROD', 'CTUBE', 'PLOTEL',
-    'CHBDYP', 'GENEL',
+    'CHBDYP', 'GENEL', 'CGAP',
 ]
 
 

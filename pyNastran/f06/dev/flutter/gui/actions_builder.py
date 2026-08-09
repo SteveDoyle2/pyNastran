@@ -3,7 +3,7 @@ from pathlib import Path
 from functools import partial
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QAction, QMenu
-from pyNastran.f06.dev.flutter.action import Action
+from pyNastran.f06.dev.flutter.gui.action import Action
 
 
 class Actions:

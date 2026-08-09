@@ -146,7 +146,7 @@ class ATMOS(BaseCard):
             the fields that define the card
 
         """
-        assert self.temperature_unit in ['R', 'K'], self.temperature_unit
+        assert self.temperature_unit in ['R', 'K', 'F', 'C'], self.temperature_unit
         list_fields = [
             'ATMOS', self.atmos_id, self.mass_unit, self.length_unit, self.temperature_unit,
             None, None, None, None,
@@ -170,9 +170,9 @@ class FIXHATM(BaseCard):
     # }
 
     def __init__(self, sid: int, alt: float, atm_id: int,
-                 mass_unit: str, length_unit: str, vref: float,
+                 mass_unit: str, length_unit: str,
                  fluttf_id: int, print_flag: int, mkaeroz_ids: list[int],
-                 comment: str=''):
+                 vref: float=1.0, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -211,7 +211,7 @@ class FIXHATM(BaseCard):
         atm_id = integer(card, 3, 'atm_id')
         mass_unit = string(card, 4, 'mass_unit')
         length_unit = string(card, 5, 'length_unit')
-        vref = double(card, 6, 'vref')
+        vref = double_or_blank(card, 6, 'vref', default=1.0)
         fluttf_id = integer_or_blank(card, 7, 'fluttf_id', default=0)
         print_flag = integer(card, 8, 'print_flag')
 
@@ -223,7 +223,8 @@ class FIXHATM(BaseCard):
             j += 1
         assert len(card) > 8, f'len(FIXEMATM card) = {len(card):d}\ncard={card}'
         return FIXHATM(sid, alt, atm_id, mass_unit,
-                       length_unit, vref, fluttf_id, print_flag, mkaeroz_ids, comment=comment)
+                       length_unit, fluttf_id, print_flag, mkaeroz_ids,
+                       vref=vref, comment=comment)
 
     # def validate(self):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
@@ -231,6 +232,8 @@ class FIXHATM(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         if self.atm_id:
             self.atmos_ref = model.zaero.atmos[self.atm_id]
+        if self.fluttf_id and 0:
+            self.fluttf_ref = model.zaero.fluttf[self.fluttf_id]
         mkaerozs_ref = []
         for mkaeroz_id in self.mkaeroz_ids:
             mkaeroz_ref = model.zaero.mkaeroz[mkaeroz_id]
@@ -286,8 +289,9 @@ class FIXMATM(BaseCard):
     # }
 
     def __init__(self, sid: int, mkaeroz_id: int, atm_id: int,
-                 mass_unit: str, length_unit: str, vref: float,
-                 fluttf_id: int, print_flag: int, alts: list[float], comment: str=''):
+                 mass_unit: str, length_unit: str,
+                 fluttf_id: int, print_flag: int, alts: list[float],
+                 vref: float = 1.0, comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -300,10 +304,13 @@ class FIXMATM(BaseCard):
         self.vref = vref
         self.fluttf_id = fluttf_id
         self.print_flag = print_flag
-        self.alts = alts
+        self.alts = np.asarray(alts)
         self.atmos_ref = None
         self.mkaeroz_ref = None
         assert isinstance(mkaeroz_id, integer_types), self.get_stats()
+        assert len(alts) >= 0, alts
+        if len(alts) > 1:
+            assert alts[0] < alts[1], alts
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -327,7 +334,7 @@ class FIXMATM(BaseCard):
         atm_id = integer(card, 3, 'atm_id')
         mass_unit = string(card, 4, 'mass_unit')
         length_unit = string(card, 5, 'length_unit')
-        vref = double(card, 6, 'vref')
+        vref = double_or_blank(card, 6, 'vref', default=1.0)
         fluttf_id = integer_or_blank(card, 7, 'fluttf_id', default=0)
         print_flag = integer(card, 8, 'print_flag')
 
@@ -340,16 +347,14 @@ class FIXMATM(BaseCard):
         assert len(card) > 8, f'len(FIXEMATM card) = {len(card):d}\ncard={card}'
         assert isinstance(mkaeroz_id, integer_types)
         return FIXMATM(sid, mkaeroz_id, atm_id, mass_unit,
-                       length_unit, vref, fluttf_id, print_flag, alts, comment=comment)
+                       length_unit, fluttf_id, print_flag, alts,
+                       vref=vref, comment=comment)
 
     # def validate(self):
     #     assert self.true_g in ['TRUE', 'G'], 'true_g=%r' % self.true_g
 
     def cross_reference(self, model: BDF) -> None:
-        if self.atm_id:
-            self.atmos_ref = model.zaero.atmos[self.atm_id]
-        assert isinstance(self.mkaeroz_id, integer_types), self.get_stats()
-        self.mkaeroz_ref = model.zaero.mkaeroz[self.mkaeroz_id]
+        cross_reference_atmos_mkaeroz_fluttf(self, model)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -380,7 +385,7 @@ class FIXMATM(BaseCard):
         """
         list_fields = [
             'FIXMATM', self.sid, self.mkaeroz_id, self.atm_id, self.mass_unit,
-            self.length_unit, self.vref, self.fluttf_id, self.print_flag] + self.alts
+            self.length_unit, self.vref, self.fluttf_id, self.print_flag] + self.alts.tolist()
         return list_fields
 
     def repr_fields(self):
@@ -419,7 +424,13 @@ class FIXMACH(BaseCard):
         self.rho = np.asarray(rho)
         self.atmos_ref = None
         self.mkaeroz_ref = None
+        self.fluttf_ref = None
         assert isinstance(mkaeroz_id, integer_types), self.get_stats()
+
+    @property
+    def eas(self) -> np.ndarray:
+        eas = 0.5 * self.rho * (self.velocity / self.vref) ** 2
+        return eas
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -470,6 +481,8 @@ class FIXMACH(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         assert isinstance(self.mkaeroz_id, integer_types), self.get_stats()
+        if self.fluttf_id and 0:
+            self.fluttf_ref = model.zaero.fluttf[self.fluttf_id]
         self.mkaeroz_ref = model.zaero.mkaeroz[self.mkaeroz_id]
 
     def safe_cross_reference(self, model: BDF, xref_errors):
@@ -535,7 +548,7 @@ class FIXMDEN(BaseCard):
         self.vref = vref
         self.fluttf_id = fluttf_id
         self.print_flag = print_flag
-        self.velocity = velocity
+        self.velocity = np.asarray(velocity)
         self.rho = rho
         self.atmos_ref = None
         self.mkaeroz_ref = None
@@ -584,6 +597,8 @@ class FIXMDEN(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         assert isinstance(self.mkaeroz_id, integer_types), self.get_stats()
+        if self.fluttf_id and 0:
+            self.fluttf_ref = model.zaero.fluttf[self.fluttf_id]
         self.mkaeroz_ref = model.zaero.mkaeroz[self.mkaeroz_id]
 
     def safe_cross_reference(self, model: BDF, xref_errors):
@@ -613,7 +628,7 @@ class FIXMDEN(BaseCard):
         """
         list_fields = [
             'FIXMDEN', self.sid, self.mkaeroz_id, self.rho, self.mass_unit,
-            self.length_unit, self.vref, self.fluttf_id, self.print_flag] + self.velocity
+            self.length_unit, self.vref, self.fluttf_id, self.print_flag] + self.velocity.tolist()
         return list_fields
 
     def repr_fields(self):
@@ -623,3 +638,12 @@ class FIXMDEN(BaseCard):
     def write_card(self, size: int = 8, is_double: bool = False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+
+def cross_reference_atmos_mkaeroz_fluttf(card: FIXMATM, model):
+    assert isinstance(card.mkaeroz_id, integer_types), card.get_stats()
+    if card.atm_id:
+        card.atmos_ref = model.zaero.atmos[card.atm_id]
+    if card.fluttf_id and 0:
+        card.fluttf_ref = model.zaero.fluttf[card.fluttf_id]
+    card.mkaeroz_ref = model.zaero.mkaeroz[card.mkaeroz_id]

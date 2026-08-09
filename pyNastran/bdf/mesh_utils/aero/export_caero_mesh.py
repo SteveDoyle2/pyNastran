@@ -148,7 +148,7 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
 
                 bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
                 if hasattr(caero, 'lspan'):
-                    assert caero.type in {'CAERO1', 'CAERO4', 'CAERO5'}, caero
+                    assert caero.type in {'CAERO1', 'CAERO4', 'CAERO5', 'CAERO7'}, caero
                     if caero.lspan_ref:
                         aefact_chord = str(caero.lspan_ref).rstrip().split('\n')
                         bdf_file.write('$ ' + '\n$ '.join(aefact_chord) + '\n')

@@ -25,8 +25,8 @@ from qtpy.QtWidgets import (
     QFileDialog,
     QProgressBar,
 )
-from pyNastran.f06.dev.flutter.qtablewidgetcopy import QTableWidgetCopy
-from pyNastran.f06.dev.flutter.utils_qt import create_grid_from_list
+from pyNastran.f06.dev.flutter.gui.qtablewidgetcopy import QTableWidgetCopy
+from pyNastran.f06.dev.flutter.gui.utils_qt import create_grid_from_list
 from pyNastran.f06.dev.flutter.write_report import write_report
 
 from cpylog import SimpleLogger
@@ -44,7 +44,7 @@ import pandas as pd
 from pyNastran.f06.dev.flutter.utils_report import get_trades, filenames_to_data_table
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.f06.dev.flutter.gui_flutter_plot import FlutterGui
+    from pyNastran.f06.dev.flutter.gui.gui_flutter_plot import FlutterGui
 
 # QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
 # QLINEEDIT_RED = 'QLineEdit {background-color: red;}'

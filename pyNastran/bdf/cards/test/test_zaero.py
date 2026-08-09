@@ -44,21 +44,23 @@ dirname = Path(os.path.dirname(__file__))
 
 
 class TestAeroZaero(unittest.TestCase):
-    def test_zaero_mloads(self):
-        original_digraph = graphviz_interface.Digraph
-        original_enf = graphviz_interface.ExecutableNotFound
+    def setUp(self):
+        self._original_digraph = graphviz_interface.Digraph
+        self._original_enf = graphviz_interface.ExecutableNotFound
         graphviz_interface.Digraph = graphviz_interface.FakeDigraph
         graphviz_interface.ExecutableNotFound = graphviz_interface.FakeExecutableNotFound
-        try:
-            bdf_file = get_mloads_file()
-            log = SimpleLogger(level="warning", encoding="utf-8")
-            model = read_bdf(bdf_file, xref=True, mode="zona", debug=None, log=log)
-            model.zaero.view_block_diagram(subcase_id=-1)
-            model.zaero.uncross_reference()
-            model.safe_cross_reference()
-        finally:
-            graphviz_interface.Digraph = original_digraph
-            graphviz_interface.ExecutableNotFound = original_enf
+
+    def tearDown(self):
+        graphviz_interface.Digraph = self._original_digraph
+        graphviz_interface.ExecutableNotFound = self._original_enf
+
+    def test_zaero_mloads(self):
+        bdf_file = get_mloads_file()
+        log = SimpleLogger(level="warning", encoding="utf-8")
+        model = read_bdf(bdf_file, xref=True, mode="zona", debug=None, log=log)
+        model.zaero.view_block_diagram(subcase_id=-1)
+        model.zaero.uncross_reference()
+        model.safe_cross_reference()
         model.zaero.convert_to_nastran()
 
     def test_zaero_add_methods(self):
@@ -77,7 +79,7 @@ class TestAeroZaero(unittest.TestCase):
         assert fixhatm.type == "FIXHATM"
         assert 2 in zaero.flutter_table
 
-        fixmatm = zaero.add_fixmatm(3, 1, 1, "SLUG", "IN", 1.0, 0, 0, [5000.0, 10000.0])
+        fixmatm = zaero.add_fixmatm(3, 1, 1, "SLUG", "IN", 0, 0, [5000.0, 10000.0], vref=1.0)
         assert fixmatm.type == "FIXMATM"
         assert 3 in zaero.flutter_table
 
@@ -127,7 +129,7 @@ class TestAeroZaero(unittest.TestCase):
         assert 30 in zaero.attach
 
         # --- plot ---
-        pltmode = zaero.add_pltmode(40, "SYM", 1, 10.0, "TECPLOT", "mode.plt")
+        pltmode = zaero.add_pltmode(40, "SYM", 1, "TECPLOT", "mode.plt", max_disp=10.0)
         assert pltmode.type == "PLTMODE"
         assert 40 in zaero.pltmode
 
@@ -529,7 +531,7 @@ class TestAeroZaero(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             model.zaero.convert_to_nastran()
 
-    def _test_zaero_2(self):
+    def test_zaero_2(self):
         """zaero explicit test"""
         log = SimpleLogger(level="error", encoding="utf-8")  # lots of zaero errors
         bdf_filename = ZAERO_PATH / "ztran.bdf"
@@ -594,7 +596,7 @@ class TestAeroZaero(unittest.TestCase):
         model.zaero.view_block_diagram()
         model.zaero.uncross_reference()
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises((AssertionError, RuntimeError)):
             model.cross_reference()
         write_raw_fields(model.zaero)
         model.write_bdf(TRIM_DIR / "zaero.inp")

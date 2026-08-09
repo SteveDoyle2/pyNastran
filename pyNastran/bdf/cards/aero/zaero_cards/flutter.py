@@ -1,29 +1,41 @@
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, string,
-    string_or_blank, string_multifield_dollar_int_or_blank,
+    integer,
+    integer_or_blank,
+    double,
+    string,
+    string_or_blank,
+    string_multifield_dollar_int_or_blank,
 )
 from .utils import split_filename_dollar
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class MKAEROZ(BaseCard):
-    type = 'MKAEROZ'
+    type = "MKAEROZ"
 
-    def __init__(self, sid: int, mach: float,
-                 flt_id: int, filename: str,
-                 print_flag: int, freqs: list[float],
-                 method: int=0, save: str='SAVE',
-                 comment: str=''):
+    def __init__(
+        self,
+        sid: int,
+        mach: float,
+        flt_id: int,
+        filename: str,
+        print_flag: int,
+        freqs: list[float],
+        method: int = 0,
+        save: str = "SAVE",
+        comment: str = "",
+    ):
         """
         Parameters
-        ==========
+        ----------
         sid : int
             the MKAEROZ id
         mach : float
@@ -63,24 +75,32 @@ class MKAEROZ(BaseCard):
         self.filename_ref = None
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment: str=''):
-        sid = integer(card, 1, 'IDMK')
-        mach = double(card, 2, 'MACH')
-        method = integer(card, 3, 'METHOD')
-        flt_id = integer_or_blank(card, 4, 'IDFLT', default=0)
-        save = string_or_blank(card, 5, 'SAVE/ACQUIRE', default='SAVE')
-        #print(f'card = {card}')
-        filename = string_multifield_dollar_int_or_blank(
-            card, (6, 7), 'filename', default='')
-        print_flag = integer_or_blank(card, 8, 'PRINT_FLAG', default=0)
+    def add_card(cls, card: BDFCard, comment: str = ""):
+        sid = integer(card, 1, "IDMK")
+        mach = double(card, 2, "MACH")
+        method = integer(card, 3, "METHOD")
+        flt_id = integer_or_blank(card, 4, "IDFLT", default=0)
+        save = string_or_blank(card, 5, "SAVE/ACQUIRE", default="SAVE")
+        # print(f'card = {card}')
+        filename = string_multifield_dollar_int_or_blank(card, (6, 7), "filename", default="")
+        print_flag = integer_or_blank(card, 8, "PRINT_FLAG", default=0)
         freqs = []
         ifreq = 1
         for ifield in range(9, len(card)):
-            freq = double(card, ifield, 'FREQ%d' % ifreq)
+            freq = double(card, ifield, "FREQ%d" % ifreq)
             freqs.append(freq)
             ifreq += 1
-        return MKAEROZ(sid, mach, flt_id, filename, print_flag, freqs,
-                       method=method, save=save, comment=comment)
+        return MKAEROZ(
+            sid,
+            mach,
+            flt_id,
+            filename,
+            print_flag,
+            freqs,
+            method=method,
+            save=save,
+            comment=comment,
+        )
 
     def cross_reference(self, model: BDF) -> None:
         self.filename_ref = get_extfile(model, self.filename)
@@ -91,22 +111,25 @@ class MKAEROZ(BaseCard):
     def uncross_reference(self) -> None:
         return
 
-    def repr_fields(self):
-        """
-        Gets the fields in their simplified form
-
-        Returns
-        -------
-        fields : list[varies]
-          the fields that define the card
-
-        """
+    def raw_fields(self):
         filename_a, filename_b = split_filename_dollar(self.filename)
-        list_fields = ['MKAEROZ', self.sid, self.mach, self.method, self.flt_id,
-                       self.save, filename_a, filename_b, self.print_flag] + self.freqs
+        list_fields = [
+            "MKAEROZ",
+            self.sid,
+            self.mach,
+            self.method,
+            self.flt_id,
+            self.save,
+            filename_a,
+            filename_b,
+            self.print_flag,
+        ] + self.freqs
         return list_fields
 
-    def write_card(self, size: int=8, is_double: bool=False) -> str:
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -132,10 +155,21 @@ class FLUTTER_ZAERO(BaseCard):
     +---------+-------+-------+-------+-------+--------+-------+---------+--------+
 
     """
-    type = 'FLUTTER_ZAERO'
 
-    def __init__(self, sid: int, sym: str, fix: int, mlist: int, conmlst: int,
-                 nmode: int=0, tabdmp: int=0, nkstep: int=25, comment: str=''):
+    type = "FLUTTER_ZAERO"
+
+    def __init__(
+        self,
+        sid: int,
+        sym: str,
+        fix: int,
+        mlist: int,
+        conmlst: int,
+        nmode: int = 0,
+        tabdmp: int = 0,
+        nkstep: int = 25,
+        comment: str = "",
+    ):
         """
         Creates a FLUTTER card, which is required for a flutter (SOL 145)
         analysis.
@@ -190,8 +224,8 @@ class FLUTTER_ZAERO(BaseCard):
             self.comment = comment
 
         sym = sym.upper()
-        if sym == 'SYMM':
-            sym = 'SYM'
+        if sym == "SYMM":
+            sym = "SYM"
         self.sid = sid
         self.sym = sym
         self.fix = fix
@@ -200,12 +234,19 @@ class FLUTTER_ZAERO(BaseCard):
         self.mlist = mlist
         self.conmlst = conmlst
         self.nkstep = nkstep
-        assert sym in {'SYM', 'ANTI', 'ASYM',
-                       'SYMML', 'ANTIL', 'ASYMP',
-                       'SYMMP', 'ANTIP',}, f'FLUTTER sid={self.sid} sym={sym!r}'
+        assert sym in {
+            "SYM",
+            "ANTI",
+            "ASYM",
+            "SYMML",
+            "ANTIL",
+            "ASYMP",
+            "SYMMP",
+            "ANTIP",
+        }, f"FLUTTER sid={self.sid} sym={sym!r}"
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment: str=''):
+    def add_card(cls, card: BDFCard, comment: str = ""):
         """
         Adds a FLUTTER card from ``BDF.add_card(...)``
 
@@ -217,63 +258,82 @@ class FLUTTER_ZAERO(BaseCard):
             a comment for the card
 
         """
-        sid = integer(card, 1, 'sid')
-        sym = string(card, 2, 'sym')
-        fix = integer(card, 3, 'fix')
-        nmode = integer_or_blank(card, 4, 'nmode', default=0)
-        tabdmp = integer_or_blank(card, 5, 'tabdmp', default=0)
-        mlist = integer_or_blank(card, 6, 'mlist')
-        conmlst = integer_or_blank(card, 7, 'conmlst')
-        nkstep = integer_or_blank(card, 8, 'nkstep', default=25)
-        assert len(card) <= 9, f'len(FLUTTER card) = {len(card):d}\ncard={card}'
-        flutter = FLUTTER_ZAERO(sid, sym, fix, mlist, conmlst,
-                                nmode=nmode, tabdmp=tabdmp, nkstep=nkstep, comment=comment)
+        sid = integer(card, 1, "sid")
+        sym = string(card, 2, "sym")
+        fix = integer(card, 3, "fix")
+        nmode = integer_or_blank(card, 4, "nmode", default=0)
+        tabdmp = integer_or_blank(card, 5, "tabdmp", default=0)
+        mlist = integer_or_blank(card, 6, "mlist")
+        conmlst = integer_or_blank(card, 7, "conmlst")
+        nkstep = integer_or_blank(card, 8, "nkstep", default=25)
+        assert len(card) <= 9, f"len(FLUTTER card) = {len(card):d}\ncard={card}"
+        flutter = FLUTTER_ZAERO(
+            sid,
+            sym,
+            fix,
+            mlist,
+            conmlst,
+            nmode=nmode,
+            tabdmp=tabdmp,
+            nkstep=nkstep,
+            comment=comment,
+        )
         return flutter
 
     def cross_reference(self, model: BDF) -> None:
         return
-        #msg = ', which is required by SPLINE1 eid=%s' % self.eid
-        #self.setg_ref = model.Set(self.setg, msg=msg)
-        #self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
+        # msg = ', which is required by SPLINE1 eid=%s' % self.eid
+        # self.setg_ref = model.Set(self.setg, msg=msg)
+        # self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
-        #self.panlst_ref = model.zaero.panlsts[self.panlst]
-        #self.panlst_ref.cross_reference(model)
-        #self.aero_element_ids = self.panlst_ref.aero_element_ids
+        # self.panlst_ref = model.zaero.panlsts[self.panlst]
+        # self.panlst_ref.cross_reference(model)
+        # self.aero_element_ids = self.panlst_ref.aero_element_ids
 
     def safe_cross_reference(self, model: BDF, xref_errors=None):
         return
-        #msg = ', which is required by SPLINE1 eid=%s' % self.eid
-        #try:
-            #self.setg_ref = model.Set(self.setg, msg=msg)
-            #self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
-        #except KeyError:
-            #model.log.warning('failed to find SETx set_id=%s%s; allowed_sets=%s' % (
-                #self.setg, msg, np.unique(list(model.sets)))
+        # msg = ', which is required by SPLINE1 eid=%s' % self.eid
+        # try:
+        # self.setg_ref = model.Set(self.setg, msg=msg)
+        # self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
+        # except KeyError:
+        # model.log.warning('failed to find SETx set_id=%s%s; allowed_sets=%s' % (
+        # self.setg, msg, np.unique(list(model.sets)))
 
-        #try:
-            #self.panlst_ref = model.zaero.panlsts[self.panlst]
-            #self.panlst_ref.safe_cross_reference(model, xref_errors)
-            #self.aero_element_ids = self.panlst_ref.aero_element_ids
-        #except KeyError:
-            #pass
+        # try:
+        # self.panlst_ref = model.zaero.panlsts[self.panlst]
+        # self.panlst_ref.safe_cross_reference(model, xref_errors)
+        # self.aero_element_ids = self.panlst_ref.aero_element_ids
+        # except KeyError:
+        # pass
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         return
-        #self.panlst_ref = None
-        #self.setg_ref = None
+        # self.panlst_ref = None
+        # self.setg_ref = None
 
     def convert_to_nastran(self, model: BDF):
         raise NotImplementedError()
 
     def raw_fields(self):
-        list_fields = ['FLUTTER', self.sid, self.sym, self.fix, self.nmode,
-                       self.tabdmp, self.mlist, self.conmlst, self.nkstep]
+        list_fields = [
+            "FLUTTER",
+            self.sid,
+            self.sym,
+            self.fix,
+            self.nmode,
+            self.tabdmp,
+            self.mlist,
+            self.conmlst,
+            self.nkstep,
+        ]
         return list_fields
 
-    def write_card(self, size: int=8, is_double: bool=False) -> str:
+    def write_card(self, size: int = 8, is_double: bool = False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
 
 def get_extfile(model: BDF, filename: str | int) -> str | None:
     if isinstance(filename, str):
@@ -281,5 +341,5 @@ def get_extfile(model: BDF, filename: str | int) -> str | None:
     elif isinstance(filename, int):
         filename_ref = model.zaero.extfile[filename]
     else:
-        raise TypeError(f'filename={filename!r} type={str(filename)}')
+        raise TypeError(f"filename={filename!r} type={str(filename)}")
     return filename_ref

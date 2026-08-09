@@ -31,19 +31,17 @@ from qtpy.QtWidgets import (
     QCheckBox,
     QListWidgetItem, QAbstractItemView,
     QListWidget, QSpinBox, QTabWidget,)
-
-QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
-QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
-
 from cpylog import SimpleLogger
+
+import pyNastran
 from pyNastran.gui.utils.qt.pydialog import QLineEdit, QFloatEdit, make_font
 from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
-from pyNastran.f06.dev.flutter.utils_qt import create_grid_from_list
-from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_menus
-from pyNastran.f06.dev.flutter.preferences_object import FlutterPreferencesObject
-from pyNastran.f06.dev.flutter.preferences import (
+from pyNastran.f06.dev.flutter.gui.utils_qt import create_grid_from_list
+from pyNastran.f06.dev.flutter.gui.actions_builder import Actions, Action, build_menus
+from pyNastran.f06.dev.flutter.gui.preferences_object import FlutterPreferencesObject
+from pyNastran.f06.dev.flutter.gui.preferences import (
     FLUTTER_BBOX_TO_ANCHOR_DEFAULT, LEGEND_LOC_DEFAULT,
     FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT, FREQ_NDIGITS_DEFAULT, FREQ_DIVERGENCE_TOL)
 
@@ -61,7 +59,9 @@ from pyNastran.f06.dev.flutter.utils import (
     X_PLOT_TYPES, PLOT_TYPES, UNITS_IN, UNITS_OUT,
     MODE_SWITCH_METHODS)
 
-import pyNastran
+
+QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
+QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
 PKG_PATH = Path(pyNastran.__path__[0])
 
 AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
@@ -79,12 +79,12 @@ else:
 
 JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json()
 
-from pyNastran.f06.dev.flutter.vtk_data import VtkData
-from pyNastran.f06.dev.flutter.utils_qt import (
+from pyNastran.f06.dev.flutter.gui.vtk_data import VtkData
+from pyNastran.f06.dev.flutter.gui.utils_qt import (
     load_checkboxes, load_lineedits, load_pulldowns,
     load_min_max_lineedits)
 if USE_VTK:
-    from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
+    from pyNastran.f06.dev.flutter.gui.vtk_window_object import VtkWindowObject
 
 ICON_PATH = Path('')
 TRADE_KEYS = [

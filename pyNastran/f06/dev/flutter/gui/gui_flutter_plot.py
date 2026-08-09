@@ -19,9 +19,8 @@ except ModuleNotFoundError:
 
 from pyNastran.f06.dev.flutter.utils import get_raw_json
 JSON_FILENAME, USE_VTK, USE_TABS = get_raw_json(allow_vtk=False)
-from pyNastran.f06.dev.flutter.trade_layout import TradeLayout
-from pyNastran.f06.dev.flutter.plot_layout import PlotLayout
-
+from pyNastran.f06.dev.flutter.gui.trade_layout import TradeLayout
+from pyNastran.f06.dev.flutter.gui.plot_layout import PlotLayout
 
 # from qtpy import QtCore
 # from qtpy.compat import getopenfilename  # getsavefilename
@@ -34,13 +33,13 @@ import pyNastran
 from pyNastran.gui.utils.qt.pydialog import make_font
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
-from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_menus
-from pyNastran.f06.dev.flutter.preferences_object import FlutterPreferencesObject
-from pyNastran.f06.dev.flutter.preferences import (
+from pyNastran.f06.dev.flutter.gui.actions_builder import Actions, Action, build_menus
+from pyNastran.f06.dev.flutter.gui.preferences_object import FlutterPreferencesObject
+from pyNastran.f06.dev.flutter.gui.preferences import (
     FLUTTER_BBOX_TO_ANCHOR_DEFAULT, LEGEND_LOC_DEFAULT,
     FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT, FREQ_NDIGITS_DEFAULT, FREQ_DIVERGENCE_TOL)
 
-from pyNastran.f06.dev.flutter.utils_qt import (
+from pyNastran.f06.dev.flutter.gui.utils_qt import (
     load_checkboxes, load_lineedits, load_pulldowns, load_min_max_lineedits)
 from pyNastran.f06.dev.flutter.utils import (
     validate_json, get_point_removal_str, MODE_SWITCH_METHODS,
@@ -50,7 +49,7 @@ PKG_PATH = Path(pyNastran.__path__[0])
 
 AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
 
-from pyNastran.f06.dev.flutter.vtk_data import VtkData
+from pyNastran.f06.dev.flutter.gui.vtk_data import VtkData
 
 QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
 QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
@@ -532,6 +531,8 @@ class FlutterGui(LoggableGui):
                 show = True
             except IndexError:
                 show = False
+                # fname = ''
+                continue
 
             action: QAction = self.qactions[name]
             active_text = action.text()

@@ -8515,7 +8515,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
                   msglvl: int=0,
                   maxset: Optional[int]=None,
                   shfscl: Optional[int]=None,
-                  norm: Optional[str]=None,
+                  norm: str='',
                   options: Optional[list]=None,
                   values: Optional[list]=None,
                   comment: str='') -> EIGRL:
@@ -8538,7 +8538,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
             Number of vectors in block or set
         shfscl : float; default=None
             estimate of first flexible mode natural frequency
-        norm : str; default=None
+        norm : str; default=''
             {MAX, MASS}
         options : list[str]; default=None -> []
             line 2 keys
@@ -8548,8 +8548,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
             a comment for the card
 
         """
-        method = EIGRL(sid, v1, v2, nd, msglvl, maxset, shfscl, norm,
-                       options, values, comment=comment)
+        method = EIGRL(sid, v1, v2, nd, msglvl, maxset, shfscl,
+                       norm=norm, options=options, values=values, comment=comment)
         self._add_methods.add_method_object(method)
         return method
 

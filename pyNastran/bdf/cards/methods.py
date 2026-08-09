@@ -879,8 +879,9 @@ class EIGRL(Method):
         return EIGRL(sid, v1=None, v2=None, nd=None, msglvl=0, maxset=None,
                      shfscl=None, norm=None, options=None, values=None)
 
-    def __init__(self, sid, v1=None, v2=None, nd=None, msglvl=0, maxset=None, shfscl=None,
-                 norm=None, options=None, values=None, comment: str=''):
+    def __init__(self, sid: int, v1=None, v2=None, nd=None,
+                 msglvl: int=0, maxset=None, shfscl=None,
+                 norm: str='', options=None, values=None, comment: str=''):
         """
         Adds an EIGRL card
 
@@ -900,7 +901,7 @@ class EIGRL(Method):
             Number of vectors in block or set
         shfscl : float; default=None
             estimate of first flexible mode natural frequency
-        norm : str; default=None
+        norm : str; default=''
             {MAX, MASS, AF}
         options : list[str]; default=None -> []
             line 2 keys
@@ -913,6 +914,9 @@ class EIGRL(Method):
         Method.__init__(self)
         if comment:
             self.comment = comment
+
+        if norm is None:
+            norm = ''
         if options is None:
             options = []
         if values is None:
@@ -946,7 +950,7 @@ class EIGRL(Method):
         self.values = values
 
     def validate(self):
-        assert self.norm in [None, 'MAX', 'MASS', 'AF'], f'norm={self.norm!r}'
+        assert self.norm in ['', 'MAX', 'MASS', 'AF'], f'norm={self.norm!r}'
         assert self.msglvl in [0, 1, 2, 3, 4, -999], f'msglvl={self.msglvl:d}'
         if len(self.options) != len(self.values):
             raise RuntimeError('len(options) != len(values); noptions=%s nvalues=%s\n'
@@ -954,7 +958,7 @@ class EIGRL(Method):
                                                          self.options, self.values))
         for option, value in zip(self.options, self.values):
             if option == 'NORM':
-                assert value in ['MAX', ], 'option=%r value=%r' % (option, value)
+                assert value in ['MAX', ], f'option={option!r} value={value}'
             elif option == 'ALPH':
                 # float
                 pass
@@ -962,7 +966,7 @@ class EIGRL(Method):
                 # integer
                 pass
             else:
-                raise NotImplementedError('option=%r value=%r' % (option, value))
+                raise NotImplementedError(f'option={option!r} value={value}')
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -981,10 +985,9 @@ class EIGRL(Method):
         v1 = double_or_blank(card, 2, 'v1')
         v2 = double_or_blank(card, 3, 'v2')
         nd = integer_or_blank(card, 4, 'nd')
-        msglvl = integer_or_blank(card, 5, 'msglvl', 0)
+        msglvl = integer_or_blank(card, 5, 'msglvl', default=0)
         maxset = integer_or_blank(card, 6, 'maxset')
         shfscl = double_or_blank(card, 7, 'shfscl')
-        norm = string_or_blank(card, 8, 'norm')
 
         option_values = [interpret_value(field) for field in card[9:]]
         options = []
@@ -1008,7 +1011,7 @@ class EIGRL(Method):
             ## modal frequency response,cyclic buckling
             #self.norm = string_or_blank(card, 8, 'norm', 'MAX')
         #else:
-        norm = string_or_blank(card, 8, 'norm')
+        norm = string_or_blank(card, 8, 'norm', default='')
 
         #assert len(card) <= 9, f'len(EIGRL card) = {len(card):d}\ncard={card}'
         assert len(card) <= 10, f'len(EIGRL card) = {len(card):d}\ncard={card}'
@@ -1058,12 +1061,12 @@ def _load_isrr(nrows, card):
     nd1 = []
     for irow in range(nrows):
         i = 9 + 8 * irow
-        shift_r1i = double_or_blank(card, i, 'SHIFT_R1', 0.0)
-        shift_i1i = double_or_blank(card, i + 1, 'SHIFT_I1', 0.0)
+        shift_r1i = double_or_blank(card, i, 'SHIFT_R1', default=0.0)
+        shift_i1i = double_or_blank(card, i + 1, 'SHIFT_I1', default=0.0)
         #2
         #3
         #4
-        isrr_flagi = integer_or_blank(card, i + 5, 'ISRR_FLAG', 0)
+        isrr_flagi = integer_or_blank(card, i + 5, 'ISRR_FLAG', default=0)
         nd1i = integer(card, i + 6, 'ND1')
         shift_r1.append(shift_r1i)
         shift_i1.append(shift_i1i)
@@ -1102,7 +1105,7 @@ def _load_clan(nrows, card):
             assert isinstance(nej_blank, int), nej_blank
             alpha_bj = double(card, i + 2, 'alpha_bj' + str(irow))
             omega_bj = double(card, i + 3, 'omega_bj' + str(irow))
-            lj = double_or_blank(card, i + 4, 'LJ' + str(irow), 1.0)
+            lj = double_or_blank(card, i + 4, 'LJ' + str(irow), default=1.0)
             nej = integer_or_blank(card, i + 5, 'NEJ' + str(irow))
             ndj = integer(card, i + 6, 'NDJ' + str(irow))
             alphaBjs.append(alpha_bj)

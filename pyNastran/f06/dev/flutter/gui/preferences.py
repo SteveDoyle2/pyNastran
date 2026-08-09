@@ -13,7 +13,7 @@ from qtpy.QtWidgets import (
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font
 from pyNastran.gui.utils.qt.qcombobox import set_combo_box_text
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.f06.dev.flutter.preferences_object import (
+    from pyNastran.f06.dev.flutter.gui.preferences_object import (
         FlutterPreferencesObject)
 
 FONT_SIZE_DEFAULT = 10
