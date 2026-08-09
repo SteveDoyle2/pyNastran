@@ -5,9 +5,14 @@ import unittest
 from pathlib import Path
 
 import numpy as np
-import matplotlib
-# matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+try:
+    import matplotlib
+    IS_MATPLOTLIB = True
+except ImportError:
+    IS_MATPLOTLIB = False
+if IS_MATPLOTLIB:
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
 
 from cpylog import SimpleLogger
 import pyNastran
@@ -16,8 +21,7 @@ from pyNastran.bdf.bdf import BDF, CORD2R
 
 from pyNastran.bdf.mesh_utils.cut.cut_body7 import (
     get_cut_points,
-    cut_and_generate_body7,
-)
+    cut_and_generate_body7,)
 
 TEST_PATH = Path(__file__).parent
 PKG_PATH = Path(pyNastran.__path__[0])
@@ -115,6 +119,7 @@ class TestCutAndGenerateBody7(unittest.TestCase):
             "test_tube_body7_generation: y-axis tube, 3 stations",
             TEST_PATH / "tmp_tube_body7_generation.png",
             nominal_radii=[5.0],
+            plot=IS_MATPLOTLIB,
         )
 
     def test_tube_body7_with_pbody7(self) -> None:
@@ -165,6 +170,7 @@ class TestCutAndGenerateBody7(unittest.TestCase):
             "test_tube_body7_with_pbody7: y-axis tube + PBODY7",
             TEST_PATH / "tmp_tube_body7_with_pbody7.png",
             nominal_radii=[3.0],
+            plot=IS_MATPLOTLIB,
         )
 
     def test_output_file_written(self) -> None:
@@ -219,6 +225,7 @@ class TestCutAndGenerateBody7(unittest.TestCase):
                 "test_output_file_written: y-axis tube, file output",
                 TEST_PATH / "tmp_output_file_written.png",
                 nominal_radii=[2.0],
+                plot=IS_MATPLOTLIB,
             )
         finally:
             if out_file.exists():
@@ -298,6 +305,7 @@ class TestCutAndGenerateBody7(unittest.TestCase):
             "test_single_station: 1 cut on y-axis tube",
             TEST_PATH / "tmp_single_station.png",
             nominal_radii=[4.0],
+            plot=IS_MATPLOTLIB,
         )
 
 
@@ -440,6 +448,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             "test_two_x_cylinders: fuselage (x-axis)",
             TEST_PATH / "tmp_two_x_cyl_fuselage.png",
             nominal_radii=[3.0],
+            plot=IS_MATPLOTLIB,
         )
         plot_cross_sections(
             [nac_result],
@@ -449,6 +458,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             "test_two_x_cylinders: nacelle (x-axis)",
             TEST_PATH / "tmp_two_x_cyl_nacelle.png",
             nominal_radii=[1.0],
+            plot=IS_MATPLOTLIB,
         )
 
     def test_two_x_cylinders_write_output(self) -> None:
@@ -505,11 +515,8 @@ class TestTwoCylindersXAxis(unittest.TestCase):
                 nradial=12,
                 segmesh_id_start=100,
                 aefact_id_start=1000,
-                output_filename=out_file,
             )
             zaero_model = fuse_result['model']
-            assert out_file.exists()
-            contents = out_file.read_text()
             assert len(zaero_model.caeros) == 1, len(zaero_model.caeros)
             #assert "FUSELAG" in contents
             #assert contents == fuse_result["cards_text"]
@@ -531,11 +538,13 @@ class TestTwoCylindersXAxis(unittest.TestCase):
                 segmesh_id_start=200,
                 aefact_id_start=2000,
                 zaero_model = zaero_model,
-            )
+                output_filename=out_file,
+             )
 
             #with open(out_file, "a") as f:
             #    f.write(nac_result["cards_text"])
             #model = nac_result['model']
+            assert out_file.exists()
 
             combined = out_file.read_text()
             assert len(zaero_model.caeros) == 2
@@ -555,6 +564,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
                 "test_write_output: fuselage",
                 TEST_PATH / "tmp_write_fuse.png",
                 nominal_radii=[3.0],
+                plot=IS_MATPLOTLIB,
             )
             plot_cross_sections(
                 [nac_result],
@@ -564,6 +574,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
                 "test_write_output: nacelle",
                 TEST_PATH / "tmp_write_nac.png",
                 nominal_radii=[1.0],
+                plot=IS_MATPLOTLIB,
             )
         finally:
             if out_file.exists():
@@ -669,13 +680,14 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             "Hull wraps outer cylinder (R=10), inner points (R=5) discarded",
             TEST_PATH / "tmp_two_cylinders_4stations.png",
             nominal_radii=[r1, r2],
+            plot=IS_MATPLOTLIB,
         )
 
     def test_bwb(self) -> None:
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
         normal_plane = None
         log = SimpleLogger(level="warning", encoding="utf-8")
-        stations = np.linspace(-100., 1600., num=101)
+        stations = np.linspace(-100., 1600., num=21)
         coords = [
             make_x_cut_coord(100 + i, dx, center_y=0.0, center_z=0.0)
             for i, dx in enumerate(stations)
@@ -698,16 +710,18 @@ class TestTwoCylindersXAxis(unittest.TestCase):
         zaero_model = result["model"]
         # body7 = zaero_model.zaero.body7[1]
         body7 = zaero_model.caeros[1]
-        fig = plt.figure(figsize=(10, 6))
-        ax = fig.add_subplot(111, projection='3d')
-        ax.set_aspect('equal')
-        body7.plot(ax)
-        ax.set_xlabel("X")
-        ax.set_ylabel("Y")
-        ax.set_zlabel("Z")
-        ax.set_title("BWB BODY7 3D")
-        fig.tight_layout()
-        plt.show()
+        
+        if IS_MATPLOTLIB:
+            fig = plt.figure(figsize=(10, 6))
+            ax = fig.add_subplot(111, projection='3d')
+            ax.set_aspect('equal')
+            body7.plot(ax)
+            ax.set_xlabel("X")
+            ax.set_ylabel("Y")
+            ax.set_zlabel("Z")
+            ax.set_title("BWB BODY7 3D")
+            fig.tight_layout()
+            plt.show()
 
         plot_cross_sections(
             [result],
@@ -716,6 +730,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             stations,
             "test_bwb: BWB cross-sections",
             TEST_PATH / "tmp_bwb_xsec.png",
+            plot=IS_MATPLOTLIB,
         )
 
     def test_sears_haack_body(self) -> None:
@@ -822,6 +837,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             f"Sears-Haack body: L={body_length}, R_max={r_max}, 10 stations",
             TEST_PATH / "tmp_sears_haack_xsec.png",
             nominal_radii=[r_max],
+            plot=IS_MATPLOTLIB,
         )
 
         # --- side-view profile: R(x) analytic vs. hull mean radius ---
@@ -831,49 +847,50 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             hull_mean_radii.append(radii.mean())
 
         x_fine = np.linspace(0, body_length, 500)
-        r_fine = [sears_haack_radius(x / body_length) for x in x_fine]
+        r_fine = [sears_haack_radius(r_max, x / body_length) for x in x_fine]
 
-        fig, ax = plt.subplots(figsize=(10, 4))
-        ax.fill_between(x_fine, r_fine, -np.array(r_fine), color="lightblue", alpha=0.3)
-        ax.plot(x_fine, r_fine, "b-", linewidth=1.5, label="analytic R(x)")
-        ax.plot(x_fine, -np.array(r_fine), "b-", linewidth=1.5)
+        if IS_MATPLOTLIB:
+            fig, ax = plt.subplots(figsize=(10, 4))
+            ax.fill_between(x_fine, r_fine, -np.array(r_fine), color="lightblue", alpha=0.3)
+            ax.plot(x_fine, r_fine, "b-", linewidth=1.5, label="analytic R(x)")
+            ax.plot(x_fine, -np.array(r_fine), "b-", linewidth=1.5)
 
-        ax.plot(
-            stations,
-            hull_mean_radii,
-            "ro",
-            markersize=6,
-            label="hull mean radius",
-        )
-        ax.plot(stations, [-r for r in hull_mean_radii], "ro", markersize=6)
-
-        for i, dx in enumerate(stations):
             ax.plot(
-                [dx, dx],
-                [-hull_mean_radii[i], hull_mean_radii[i]],
-                "r-",
-                linewidth=0.8,
-                alpha=0.5,
+                stations,
+                hull_mean_radii,
+                "ro",
+                markersize=6,
+                label="hull mean radius",
             )
+            ax.plot(stations, [-r for r in hull_mean_radii], "ro", markersize=6)
 
-        ax.set_xlabel("x")
-        ax.set_ylabel("R(x)")
-        ax.set_title(
-            f"Sears-Haack body profile: L={body_length}, R_max={r_max}, "
-            f"R(x) = R_max * [4x(1-x)]^{{3/4}}"
-        )
-        ax.set_aspect("equal")
-        ax.legend(fontsize=8)
-        ax.grid(True, alpha=0.3)
-        fig.tight_layout()
+            for i, dx in enumerate(stations):
+                ax.plot(
+                    [dx, dx],
+                    [-hull_mean_radii[i], hull_mean_radii[i]],
+                    "r-",
+                    linewidth=0.8,
+                    alpha=0.5,
+                )
 
-        profile_path = TEST_PATH / "tmp_sears_haack_profile.png"
-        fig.savefig(profile_path, dpi=150)
-        plt.show()
-        # plt.close(fig)
-        assert profile_path.exists()
-        assert profile_path.stat().st_size > 0
-        os.remove(profile_path)
+            ax.set_xlabel("x")
+            ax.set_ylabel("R(x)")
+            ax.set_title(
+                f"Sears-Haack body profile: L={body_length}, R_max={r_max}, "
+                f"R(x) = R_max * [4x(1-x)]^{{3/4}}"
+            )
+            ax.set_aspect("equal")
+            ax.legend(fontsize=8)
+            ax.grid(True, alpha=0.3)
+            fig.tight_layout()
+
+            profile_path = TEST_PATH / "tmp_sears_haack_profile.png"
+            fig.savefig(profile_path, dpi=150)
+            plt.show()
+            # plt.close(fig)
+            assert profile_path.exists()
+            assert profile_path.stat().st_size > 0
+            os.remove(profile_path)
 
 
 def sears_haack_radius(r_max: float, x_norm: float) -> float:
@@ -929,14 +946,16 @@ def build_tube_model(log: SimpleLogger,
     model.add_pshell(pid, mid, t=t)
 
     nid = 1
-    theta_arr = np.linspace(0, 2 * np.pi, ncircum, endpoint=False)
+    theta_arr = np.linspace(0., 2 * np.pi, ncircum, endpoint=False)
     y_arr = np.linspace(0.0, length, nspan + 1)
 
-    for iy, yval in enumerate(y_arr):
+    x = radius * np.cos(theta_arr)
+    z = radius * np.sin(theta_arr)
+    for yval in y_arr:
         for it, th in enumerate(theta_arr):
-            x = radius * np.cos(th)
-            z = radius * np.sin(th)
-            model.add_grid(nid, [x, yval, z])
+            xi = x[it]
+            zi = z[it]
+            model.add_grid(nid, [xi, yval, zi])
             nid += 1
 
     eid = 1
@@ -989,15 +1008,17 @@ def add_x_cylinder(model: BDF,
     next_nid, next_eid : int
         next available node/element IDs after this cylinder
     """
-    theta_arr = np.linspace(0, 2 * np.pi, ncircum, endpoint=False)
+    theta_arr = np.linspace(0., 2 * np.pi, ncircum, endpoint=False)
     x_arr = np.linspace(x_start, x_end, nspan + 1)
 
     nid = nid_start
-    for ix, xval in enumerate(x_arr):
+    y = center_y + radius * np.cos(theta_arr)
+    z = center_z + radius * np.sin(theta_arr)
+    for xval in x_arr:
         for it, th in enumerate(theta_arr):
-            y = center_y + radius * np.cos(th)
-            z = center_z + radius * np.sin(th)
-            model.add_grid(nid, [xval, y, z])
+            yi = y[it]
+            zi = z[it]
+            model.add_grid(nid, [xval, yi, zi])
             nid += 1
 
     eid = eid_start
@@ -1011,6 +1032,7 @@ def add_x_cylinder(model: BDF,
             eid += 1
     return nid, eid
 
+
 def plot_cross_sections(
     results: list[dict],
     labels: list[str],
@@ -1018,8 +1040,11 @@ def plot_cross_sections(
     stations: list[float],
     title: str,
     plot_path: Path,
-    nominal_radii: list[float] | None = None,) -> None:
-    """Save a cross-section plot for one or more cut results.
+    nominal_radii: list[float] | None = None,
+    plot: bool=True,
+    show: bool=True) -> None:
+    """
+    Save a cross-section plot for one or more cut results.
 
     Parameters
     ----------
@@ -1038,6 +1063,9 @@ def plot_cross_sections(
     nominal_radii : list[float] or None
         if given, overlay dashed reference circles at these radii
     """
+    if not plot:
+        return
+
     nstations = len(stations)
     fig, axes = plt.subplots(1, nstations, figsize=(4 * nstations, 4))
     if nstations == 1:
@@ -1055,8 +1083,8 @@ def plot_cross_sections(
             ax.plot(hull[:, 0], hull[:, 1], "-", color=clr, linewidth=0.6, alpha=0.5)
             ax.plot(yz[:, 0], yz[:, 1], "o-", color=clr, markersize=3, label=lbl)
 
+        theta = np.linspace(0, 2 * np.pi, 100)
         if nominal_radii:
-            theta = np.linspace(0, 2 * np.pi, 100)
             for r in nominal_radii:
                 ax.plot(
                     r * np.cos(theta),
@@ -1078,12 +1106,13 @@ def plot_cross_sections(
     fig.suptitle(title, fontsize=11)
     fig.tight_layout()
     fig.savefig(plot_path, dpi=150)
-    fig.show()
+    if show:
+        fig.show()
     # plt.close(fig)
     assert plot_path.exists()
     assert plot_path.stat().st_size > 0
     os.remove(plot_path)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

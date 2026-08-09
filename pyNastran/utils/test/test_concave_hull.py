@@ -117,5 +117,5 @@ class TestConcaveHull(unittest.TestCase):
         np.testing.assert_allclose(area, expected_area, rtol=0.01)
 
 
-if __name__ == '__main':
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()
