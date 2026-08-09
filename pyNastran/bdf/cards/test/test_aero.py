@@ -6,7 +6,7 @@ from io import StringIO
 from pathlib import Path
 from collections import defaultdict
 import unittest
-from typing import Optional, Any
+from typing import Any
 
 import numpy as np
 from cpylog import SimpleLogger
@@ -1319,26 +1319,29 @@ class TestAero(unittest.TestCase):
         chord_aefact_id = 10000
         model.add_aefact(chord_aefact_id, [0., 0.5, 1.0])
         label = 'panel'
-        nspan = 2
-        nchord = 4
-        caero = model.add_caero7(eid, label, p1, x12, p4, x43, cp=0,
-                                 nspan=nspan, nchord=nchord, lspan=0,
-                                 p_airfoil=None, ztaic=None, comment='')
+        nspan = 3
+        nchord = 5
+        caero = model.add_caero7(
+            eid, label, p1, x12, p4, x43, cp=0,
+            nspan=nspan, nchord=nchord, lspan=0,
+            p_airfoil=None, ztaic=None, comment='')
         model.cross_reference()
 
         npoints, nelements = caero.get_panel_npoints_nelements()
-        npoints_expected = (nspan + 1) * (nchord + 1)
-        nelements_expected = nspan * nchord
-        #npoints_expected = 15 # 4*3
-        #nelements_expected = 8 # 2*3
+        npoints_expected = nspan * nchord
+        nelements_expected = (nspan - 1) * (nchord - 1)
+        #npoints_expected = 8 # 2*4
+        #nelements_expected = 3 # 1*3
         assert npoints_expected == npoints
         assert nelements_expected == nelements
-
 
         points, elements = caero.panel_points_elements()
         x, y = caero.xy
         chord_expected = np.array([0., 0.25, 0.5, 0.75, 1.])
         span_expected = np.array([0., 0.5, 1.])
+        assert len(x) == len(chord_expected), (x, chord_expected)
+        assert len(y) == len(span_expected), (y, span_expected)
+
         assert np.allclose(x, chord_expected)
         assert np.allclose(y, span_expected)
         if IS_MATPLOTLIB:
@@ -1361,7 +1364,6 @@ class TestAero(unittest.TestCase):
         for box_id, data in out.box_id_to_caero_element_map.items():
             expected_data = box_id_to_caero_element_map_expected[box_id]
             assert np.array_equal(data, expected_data)
-        x = 1
 
     def test_caero1_1(self):
         """checks the CAERO1/PAERO1/AEROS/AEFACT card"""
@@ -3203,8 +3205,9 @@ class TestAero(unittest.TestCase):
         csshcd1.write_card()
 
         sid = 6
-        csshcd2 = model.add_csschd(sid, aesid, lschd, lalpha=lalpha, lmach=lmach,
-                                   comment='csschd card')
+        csshcd2 = model.add_csschd(
+            sid, aesid, lschd, lalpha=lalpha, lmach=lmach,
+            comment='csschd card')
 
         label = 'ELEV'
         cid1 = 0
@@ -3278,8 +3281,9 @@ class TestAero(unittest.TestCase):
         table = 'STRESS'
         nddl_item = 'cat'
         eid = 17
-        monpnt2 = model.add_monpnt2(name, label, table, Type, nddl_item, eid,
-                                    comment='monpnt2')
+        monpnt2 = model.add_monpnt2(
+            name, label, table, Type, nddl_item, eid,
+            comment='monpnt2')
         monpnt2.raw_fields()
         monpnt2.validate()
 
@@ -3482,7 +3486,7 @@ def build_structure_from_caero(model: BDF,
     return model
 
 
-def _setup_aero_plot(fig_id: Optional[int]=None) -> tuple[Any, Any]:
+def _setup_aero_plot(fig_id: int | None=None) -> tuple[Any, Any]:
     """helper for plotting aero panels"""
     fig = None
     ax = None
