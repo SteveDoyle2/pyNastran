@@ -27,7 +27,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     import matplotlib
-
+    import matplotlib.pyplot as plt
     AxesSubplot = matplotlib.axes._subplots.AxesSubplot
 
 
@@ -1764,6 +1764,8 @@ class CAERO7(BaseCard):
         self.ascid_ref = None
         self.box_ids = None
         self.pafoil_ref = None
+        self.attach_root_ref = None
+        self.attach_tip_ref = None
         # self._init_ids() #TODO: make this work here?
 
     def validate(self):
@@ -1920,7 +1922,7 @@ class CAERO7(BaseCard):
             the BDF object
 
         """
-        msg = ", which is required by CAERO7 eid=%s" % self.eid
+        msg = f", which is required by CAERO7 eid={self.eid:d}"
         # self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
@@ -1934,6 +1936,12 @@ class CAERO7(BaseCard):
             assert isinstance(self.lspan, integer_types), self.lspan
             self.lspan_ref = model.AEFact(self.lspan, msg)
 
+        if self.attach_tip:
+            self.attach_tip_ref = model.CAero(self.attach_tip, msg=msg)
+            assert self.attach_tip_ref.type == 'BODY7', self.attach_tip_ref
+        if self.attach_root:
+            self.attach_root_ref = model.CAero(self.attach_root, msg=msg)
+            assert self.attach_root_ref.type == 'BODY7', self.attach_root_ref
         if self.p_airfoil:
             self.pafoil_ref = model.zaero.PAFOIL(self.p_airfoil, msg)
         self._init_ids()
@@ -3003,6 +3011,9 @@ def _check_panlsts(model: BDF, card_type: str, eid: int) -> None:
     for panlsts in model.zaero.panlsts.values():
         assert isinstance(panlsts, list), panlsts
         for panlst in panlsts:
+            if panlst.type in {'PANLST3'}:  # no macro_id
+                npanlsts += 1
+                continue
             if panlst.macro_id == eid:
                 npanlsts += 1
     assert npanlsts >= 1, f"No panlsts found for {card_type} eid={eid}"

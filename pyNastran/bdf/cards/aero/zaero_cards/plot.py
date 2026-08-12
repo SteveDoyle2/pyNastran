@@ -203,11 +203,10 @@ class PLTAERO(BaseCard):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        # TODO: needs a better writer
         assert len(self.filename) <= 16, f'filename={self.filename}; n={len(self.filename)} > 16'
         filename = self.filename if len(self.filename) == 16 else f' {self.filename:15}'
-        msg = f'PLTAERO {self.set_id:<8d}{self.femgrid:8}{self.offset:<8d}{self.out_format:8}{filename:16s}{self.cell}{self.vct}\n'
-        #card = self.repr_fields()
+        msg = f'PLTAERO {self.set_id:<8d}{self.femgrid:8}{self.offset:<8d}{self.out_format:8}{filename:16s}{self.cell:8}{self.vct:8}\n'
+        card = self.repr_fields()
         return self.comment + msg
 
 
@@ -231,8 +230,6 @@ class PLTVG(BaseCard):
         self.filename = filename
         self.rho_ref = rho_ref
         # assert out_format in {'TECPLOT', 'PATRAN', 'IDEAS', 'FEMAP', 'NASTRAN', 'NASTL', 'ANSYS'}, out_format
-        # assert vct in {'YES', 'NO'}, vct
-        # assert cell in {'YES', 'NO'}, cell
         assert xaxis in {'M', 'R', 'Q', 'H', 'V/VR', 'V', 'EQUV'}, f'field4={xaxis!r}'
         assert output_format in {'TABLE', 'IDEAS', 'FEMAP', 'ESA'}, f'output_format={output_format!r}'
 
@@ -319,8 +316,6 @@ class PLTCP(BaseCard):
         self.aero_filename = aero_filename
         assert sym_flag in {'SYM', 'ANTI'}, sym_flag
         assert out_format in {'TECPLOT',}, out_format
-        # assert vct in {'YES', 'NO'}, vct
-        # assert cell in {'YES', 'NO'}, cell
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):

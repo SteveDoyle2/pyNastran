@@ -375,7 +375,7 @@ class TestAeroZaero(unittest.TestCase):
         assert spline0.type == "SPLINE0"
         assert 144 in zaero.spline0
 
-        pbody7 = zaero.add_pbody7(145, 1, [1.0, 2.0])
+        pbody7 = zaero.add_pbody7(145, 1, 0, [], [],)
         assert pbody7.type == "PBODY7"
         assert 145 in zaero.pbody7
 

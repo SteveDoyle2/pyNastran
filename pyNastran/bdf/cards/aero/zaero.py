@@ -2345,8 +2345,14 @@ class ZAERO:
         self.model._add_methods.add_caero_object(card)
         return card
 
-    def add_pbody7(self, pid: int, wake: int, fields: list, comment: str = "") -> PBODY7:
-        card = PBODY7(pid, wake, fields, comment=comment)
+    def add_pbody7(self, pid: int, wake: int, inlet: int,
+                 idps: list[int], flowrates: list[float],
+                 cp_base: float=-0.2, xs_wake: float=1.3,
+                 xd_wake: float=1.1, yoffset: float=0.0, zoffset: float=0.0,
+                 comment: str = "") -> PBODY7:
+        card = PBODY7(pid, wake, inlet, idps, flowrates, cp_base=cp_base,
+                      xs_wake=xs_wake, xd_wake=xd_wake, yoffset=yoffset,
+                      zoffset=zoffset, comment=comment)
         self._add_methods.add_pbody7_object(card)
         return card
 
