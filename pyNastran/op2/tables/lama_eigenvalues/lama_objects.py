@@ -1,6 +1,7 @@
+from __future__ import annotations
 from math import sqrt
 from struct import Struct, pack
-from typing import TextIO
+from typing import TextIO, TYPE_CHECKING
 
 import numpy as np
 
@@ -8,6 +9,8 @@ from pyNastran.op2.result_objects.op2_objects import BaseScalarObject
 from pyNastran.op2.op2_interface.write_utils import write_table_header # set_table3_field,
 from pyNastran.f06.f06_formatting import write_floats_13e
 from pyNastran.op2.writer.utils import fix_table3_types
+if TYPE_CHECKING:
+    from pyNastran.op2.tables.oug.oug_eigenvectors import RealEigenvectorArray
 
 
 class RealEigenvalues(BaseScalarObject):
@@ -34,6 +37,27 @@ class RealEigenvalues(BaseScalarObject):
 
     def __eq__(self, table):  # pragma: no cover
         return True
+
+    @classmethod
+    def from_eigenvectors(cls, eigenvectors: RealEigenvectorArray,
+                          title: str='', table_name: str='LAMA',):
+        eigns = np.asarray(eigenvectors.eigns)
+        # assert isinstance(eigns, np.ndarray), eigns
+        omega = np.sqrt(np.abs(eigns))
+        freq = omega / (2 * np.pi)
+        nmodes = len(eigns)
+        mode = np.arange(1, nmodes+1)
+
+        eigenvalue_obj = RealEigenvalues(title=title, table_name=table_name, nmodes=nmodes)
+        isort = np.argsort(eigns)
+        eigenvalue_obj.eigenvalues = eigns[isort]
+        eigenvalue_obj.radians = omega[isort]
+        eigenvalue_obj.cycles = freq[isort]
+        eigenvalue_obj.mode = mode[isort]
+        eigenvalue_obj.extraction_order = mode[isort]
+        eigenvalue_obj.generalized_mass = np.ones(nmodes, dtype='float32')
+        eigenvalue_obj.generalized_stiffness = eigns[isort]
+        return eigenvalue_obj
 
     def get_stats(self, short: bool=False) -> list[str]:
         msg = []
@@ -96,7 +120,7 @@ class RealEigenvalues(BaseScalarObject):
         title = ''
         if self.title is not None:
             title = '%s' % str(self.title).center(124).rstrip() + '\n'
-        msg = header + ['                                              R E A L   E I G E N V A L U E S\n', title,
+        msg = header + ['                                              R E A L   E I G E N V A L U E S\n', #title,
                         '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                         '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
         for (imode, mode_num) in enumerate(self.mode):

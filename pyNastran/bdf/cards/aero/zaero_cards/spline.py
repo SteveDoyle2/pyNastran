@@ -291,6 +291,31 @@ class SPLINE2_ZAERO(Spline):
         return SPLINE2_ZAERO(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
                              curvature=curvature, comment=comment)
 
+    # @classmethod
+    # def add_card_lax(cls, card: BDFCard, comment: str=''):
+    #     """
+    #     Adds a SPLINE2 card from ``BDF.add_card(...)``
+    #
+    #     Parameters
+    #     ----------
+    #     card : BDFCard()
+    #         a BDFCard object
+    #     comment : str; default=''
+    #         a comment for the card
+    #
+    #     """
+    #     # SPLINE2 EID MODEL SETK SETG DZ EPS CID CURV
+    #     eid = integer(card, 1, 'eid')
+    #     model = str(integer_string_or_blank(card, 2, 'model', default=''))
+    #     panlst = integer(card, 3, 'panlst/setk')
+    #     setg = integer(card, 4, 'setg')
+    #     dz = double_or_blank(card, 5, 'dz', default=0.0)
+    #     eps = double_or_blank(card, 6, 'eps', default=0.01)
+    #     cp = integer_or_blank(card, 7, 'cp', default=0)
+    #     curvature = double_or_blank(card, 8, 'curvature', default=1.0)
+    #     return SPLINE2_ZAERO(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
+    #                          curvature=curvature, comment=comment)
+
     def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
         self.setg_ref = cross_reference_set(model, self.setg, msg=msg)

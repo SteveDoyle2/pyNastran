@@ -759,6 +759,7 @@ class BODY7(BaseCard):
             segmesh_ref = model.PAero(segmesh_id, msg=msg)  # links to SEGMESH/PAERO7
             segmesh_refs.append(segmesh_ref)
         self.segmesh_refs = segmesh_refs
+        _check_panlsts(model, self.type, self.eid)
 
         # if self.pid is not None:
         # self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO7
@@ -1401,7 +1402,7 @@ class SEGMESH(BaseCard):
         for i, xi in enumerate(self.xs[1:]):
             if xi <= xi_old:
                 raise RuntimeError(
-                    "xs=%s must be in ascending order\nx%i=%s x%i=%s (old)\n%s"
+                    "xs=%s must be in ascending order\nx%d=%s x%d=%s (old)\n%s"
                     % (self.xs, i + 2, xi, i + 1, xi_old, str(self))
                 )
 
@@ -1449,7 +1450,7 @@ class SEGMESH(BaseCard):
             idys.append(idy)
             idzs.append(idz)
         assert len(itypes) == naxial, (
-            f"naxial={naxial:d} nradial={nradial:d} len(itypes)={len(itypes):d}"
+            f"SEGMESH={segmesh_id}: naxial={naxial:d} len(itypes)={len(itypes):d}"
         )
         return SEGMESH(
             segmesh_id,
@@ -1582,8 +1583,6 @@ CAERO7_TABLE = """
 
 class CAERO7(BaseCard):
     """
-    Totally wrong...
-
     Defines an aerodynamic macro element (panel) in terms of two leading edge
     locations and side chords. This is used for Doublet-Lattice theory for
     subsonic aerodynamics and the ZONA51 theory for supersonic aerodynamics.
@@ -1843,7 +1842,7 @@ class CAERO7(BaseCard):
         achord_tip = integer_or_blank(card, 23, "achord_tip")
 
         # print(card.write_card())
-        assert len(card) <= 24, f"len(CAERO7 card) = {len(card):d}\ncard={card}"
+        assert 9 < len(card) <= 24, f"len(CAERO7 card) = {len(card):d}\ncard={card}"
         return CAERO7(
             eid,
             name,
@@ -1925,6 +1924,8 @@ class CAERO7(BaseCard):
         # self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
+
+        _check_panlsts(model, self.type, self.eid)
 
         # if self.nchord == 0:
         # assert isinstance(self.lchord, integer_types), self.lchord
@@ -2995,3 +2996,13 @@ def cross_reference_panlst(
         aero_ids_list.append(panlst.aero_element_ids)
     aero_element_ids = np.hstack(aero_ids_list)
     return panlst_ref, aero_element_ids
+
+def _check_panlsts(model: BDF, card_type: str, eid: int) -> None:
+    assert len(model.zaero.panlsts), 'No PANLSTs defined'
+    npanlsts = 0
+    for panlsts in model.zaero.panlsts.values():
+        assert isinstance(panlsts, list), panlsts
+        for panlst in panlsts:
+            if panlst.macro_id == eid:
+                npanlsts += 1
+    assert npanlsts >= 1, f"No panlsts found for {card_type} eid={eid}"

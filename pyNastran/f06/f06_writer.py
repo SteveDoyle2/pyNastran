@@ -20,6 +20,8 @@ import numpy as np
 import pyNastran
 from pyNastran.utils import object_attributes, PathLike, PurePath
 
+from pyNastran.bdf.field_writer_8 import print_card_8
+
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.op2_interface.internal_utils import get_result_length
@@ -213,6 +215,7 @@ class F06Writer(OP2_F06_Common):
         self.additional_matrices = {}
         self.subcase_key = defaultdict(list)
         self.end_options = {}
+        self.build = None
 
         self._results = ResultSet(
             self.get_all_results(),
@@ -312,7 +315,7 @@ class F06Writer(OP2_F06_Common):
                    today: Optional[date],
                    build: Optional[str]=None) -> str:
         """If this class is inherited, the PAGE stamp may be overwritten"""
-        return make_stamp(title, today, build=None)
+        return make_stamp(title, today, build=build)
 
     def make_grid_point_singularity_table(self, failed: list[tuple[int, int]]) -> str:
         """
@@ -334,7 +337,7 @@ class F06Writer(OP2_F06_Common):
             #msg += 'No constraints have been applied...\n'
             return ''
 
-        page_stamp = self.make_stamp(self.title, self.date)
+        page_stamp = self.make_stamp(self.title, self.date, self.build)
         msg += page_stamp % self.page_num
         self.page_num += 1
         return msg
@@ -422,7 +425,7 @@ class F06Writer(OP2_F06_Common):
             f06_file.write(summary_header)
             f06_file.write(summary)
 
-            page_stamp = self.make_stamp(self.title, self.date)
+            page_stamp = self.make_stamp(self.title, self.date, self.build)
             f06_file.write(page_stamp % self.page_num)
             f06_file.write('\n')
             self.page_num += 1
@@ -471,7 +474,7 @@ class F06Writer(OP2_F06_Common):
         f06, f06_filename, matrix_filename = _get_file_obj(
             self, f06_filename, matrix_filename, quiet=quiet)
 
-        page_stamp = self.make_stamp(self.title, self.date)
+        page_stamp = self.make_stamp(self.title, self.date, self.build)
 
         if write_cards:
             self.page_num = write_bdf(self, f06, page_stamp, self.page_num)
@@ -624,6 +627,7 @@ class F06Writer(OP2_F06_Common):
         # eigenvalues are written first
         self.page_num += 1
         for ikey, result in sorted(model.eigenvalues.items()):
+            # self.log.info(f'working on {result.__class__.__name__}')
             if not quiet:
                 print('%-18s case=%r' % (result.__class__.__name__, ikey))
             self.page_num = result.write_f06(f06, header, page_stamp,
@@ -666,8 +670,8 @@ class F06Writer(OP2_F06_Common):
                 #header[2] = complex/nonlinear
 
                 res_length = 18
-                res_format = '*%%-%is SUBCASE=%%i' % res_length
-                res_format_vectorized = ' %%-%is SUBCASE=%%i SUBTITLE=%%s' % res_length
+                res_format = '*%%-%is SUBCASE=%%d' % res_length
+                res_format_vectorized = ' %%-%is SUBCASE=%%d SUBTITLE=%%s' % res_length
                 class_name = result.__class__.__name__
                 if hasattr(result, 'data'):
                     if not quiet:
@@ -970,51 +974,59 @@ def write_bdf(model: BDF | OP2Geom, f06_file: TextIO,
 
     cc = model.case_control_deck
     cc_str = str(cc).split('\n')
+    is_echo = False
     if len(cc_str) > 0:
         cc_lines = [
             '0                                        C A S E    C O N T R O L    E C H O\n'
             '                 COMMAND\n'
             '                 COUNT\n']
         j = 1
+        cc_lines.append(f'           {j:8d}      ECHO = SORT\n')
+        j += 1
         for line in cc_str:
             if len(line.strip()) == 0:
                 continue
-            cc_lines.append(f'           {j+1:8d}      {line}\n')
+            if line.strip().startswith('ECHO'):
+                continue
+            cc_lines.append(f'           {j:8d}      {line}\n')
             j += 1
         f06_file.writelines(cc_lines)
         f06_file.write(page_stamp2 % page_num)
         page_num += 1
 
-    print(model.nodes)
     if len(model.nodes):
         bdf_lines = [
+            '0\n'
             '0                                                 S O R T E D   B U L K   D A T A   E C H O\n'
             '                 ENTRY\n'
             '                 COUNT        .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .\n'
         ]
         j = 1
-        names = ['params', 'methods']
-        for name in names:
-            mydict = getattr(model, name)
-            j = _write_bdf_dict(mydict, bdf_lines, j)
-
+        icoord = 1
         for cid, coord in sorted(model.coords.items()):
             if cid == 0:
                 continue
             msg_sline = str(coord).strip().split('\n')
-            bdf_lines.append(f'           {j  :10d}-        {msg_sline[0]}\n')
-            bdf_lines.append(f'           {j+1:10d}-        {msg_sline[1]}\n')
+            msg_sline = [line for line in msg_sline if not line.startswith('$')]
+            word = f'+C{icoord}'
+            linei1 = f'           {j  :10d}-        {msg_sline[0]}{word:<8}'
+            linei2 = f'           {j+1:10d}-        {word:<8}{msg_sline[1][8:]}'
+            bdf_lines.append(f'{linei1:100}\n')
+            bdf_lines.append(f'{linei2:110}\n')
+            icoord += 1
             j += 2
 
-        for nid, node in sorted(model.nodes.items()):
-            msgi = str(node)
-            bdf_lines.append(f'           {j:10d}-        {msgi}')
-            j += 1
-
-        names = ['elements', 'properties', 'materials', 'methods']
+        names = [
+            'elements', 'methods', 'nodes', 'materials', 'thermal_materials',
+            'params', 'properties']
+        # names2 = copy.deepcopy(names)
+        # names2.sort()
+        # assert names == names2, "names isn't sorted"
+        icol = 1
+        icontinue = 1
         for name in names:
             mydict = getattr(model, name)
-            j = _write_bdf_dict(mydict, bdf_lines, j)
+            j, icol, icontinue = _write_bdf_dict(mydict, bdf_lines, j, icol, icontinue)
         bdf_lines.append('                              ENDDATA\n')
         bdf_lines.append(f'0                       TOTAL COUNT= {j:9d}\n')
         f06_file.writelines(bdf_lines)
@@ -1025,10 +1037,65 @@ def write_bdf(model: BDF | OP2Geom, f06_file: TextIO,
 
 
 def _write_bdf_dict(mydict: dict,
-                    bdf_lines: list[str], j: int) -> int:
+                    bdf_lines: list[str], j: int,
+                    icol: int, icontinue: int) -> tuple[int, int, int]:
+    assert isinstance(j, int), j
+    assert isinstance(icontinue, int), icontinue
     for key, obj in sorted(mydict.items()):
-        msg_sline = str(obj).strip().split('\n')
-        for line in msg_sline:
-            bdf_lines.append(f'           {j  :10d}-        {line}\n')
+        # fields = obj.raw_fields()
+        # msgi = print_card_8(fields)
+        msgi = str(obj)
+        if msgi.count('\n') == 1:
+            linei = f'           {j:10d}-        {msgi.rstrip()}'
+            bdf_lines.append(f'{linei:<110}\n')
             j += 1
-    return j
+        else:
+            msg_sline = msgi.strip().split('\n')
+            continue_word = ''
+            msg_sline = [line for line in msg_sline if not line.startswith('$')]
+            if len(msg_sline) == 1:
+                linei = f'           {j:10d}-        {msg_sline[0]}'
+                bdf_lines.append(f'{linei:<110}\n')
+                j += 1
+                continue
+
+            # print(msg_sline)
+            # print(f'msgi={msgi!r}')
+            char = _excel_style_col(icol)
+            for iline, line in enumerate(msg_sline):
+                next_word = f'+{char}{icontinue}'
+                if len(next_word) > 8:
+                    icol += 1
+                    char = _excel_style_col(icol)
+                    icontinue = 1
+                    next_word = f'+{char}{icontinue}'
+                next_word = f'{next_word:8}'
+                assert len(next_word) <= 8, f'next_word={next_word!r}; n={len(next_word)}'
+
+                if iline == 0:
+                    # first word
+                    linei = f'           {j:10d}-        {line}{next_word:<8}'
+                elif iline == len(msg_sline) - 1:
+                    # last
+                    linei = f'           {j:10d}-        {continue_word:<8}{line[8:]}'
+                else:
+                    linei = f'           {j:10d}-        {continue_word:<8}{line[8:]}{next_word:<8}'
+
+                bdf_lines.append(f'{linei:<110}\n')
+                continue_word = next_word
+                j += 1
+    return j, icol, icontinue
+
+# def _get_char(col: str):
+#     col, rem = divmod(col - 1, 26)
+
+
+def _excel_style_col(icol: int) -> str:
+    """Convert given row and column number to an Excel-style cell name."""
+    result = []
+    letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    col = icol
+    while col:
+        col, rem = divmod(col-1, 26)
+        result[:0] = letters[rem]
+    return ''.join(result)

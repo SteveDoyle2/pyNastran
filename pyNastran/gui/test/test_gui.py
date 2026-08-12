@@ -87,14 +87,15 @@ def run_docopt(argv=None):
     """
     The main function for the command line ``test_pynastran_gui`` script.
     """
+    options = '[--log LOG] [--test] [--noquality]'
     msg = (
         "Usage:\n"
         # INPUT format may be explicitly or implicitly defined with or
         # without an output file
-        '  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  OUTPUT_FILENAME [--log LOG] [--test]\n'
-        '  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  [--log LOG] [--test]\n'
-        '  test_pynastrangui  -f FORMAT  [-r] [-d] INPUT_DIRECTORY [--log LOG] [--test]\n'
-        '  test_pynastrangui  -f FORMAT  [-r] [-d]                 [--log LOG] [--test]\n'
+        f'  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  OUTPUT_FILENAME {options}\n'
+        f'  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  {options}\n'
+        f'  test_pynastrangui  -f FORMAT  [-r] [-d] INPUT_DIRECTORY {options}\n'
+        f'  test_pynastrangui  -f FORMAT  [-r] [-d]                 {options}\n'
 
         '  test_pynastrangui -h | --help\n'
         '  test_pynastrangui -v | --version\n'
@@ -112,6 +113,7 @@ def run_docopt(argv=None):
         '  -d, --dir            directory to run tests on\n'
         "  -r, --regenerate     Resets the tests\n"
         '  --log LOG            debug, info, warning, error; default=debug\n'
+        '  --noquality          nastran specific thing to skip quality\n'
         '\n'
 
         'Debug:\n'
@@ -180,13 +182,15 @@ def run_docopt(argv=None):
         assert log_method in ['debug', 'info', 'warning', 'error'], 'log_method={log_method!r}'
     else:
         log_method = 'debug'
-    return formati, input_filenames, output_filenames, failed_cases_filename, log_method, data['--test']
+    test = data['--test']
+    quality = not data['--noquality']
+    return formati, input_filenames, output_filenames, failed_cases_filename, log_method, test, quality
 
 
 def main():
     """runs the gui"""
     (formati, input_filenames, output_filenames,
-     failed_cases_filename, log_method, test) = run_docopt()
+     failed_cases_filename, log_method, test, quality) = run_docopt()
     log = get_logger(log=None, level=log_method, encoding='utf-8')
     npass = 0
     nfailed = 0
@@ -195,6 +199,9 @@ def main():
 
     print('test =', test)
     test_gui = FakeGUI(formati)
+    nastran_settings = test_gui.settings.nastran_settings
+    assert isinstance(nastran_settings.is_element_quality, bool)
+    nastran_settings.is_element_quality = quality
     test_gui.log = log
     stop_on_failure = ntotal == 1
     time0 = time.time()

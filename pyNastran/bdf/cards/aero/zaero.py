@@ -1003,17 +1003,17 @@ class ZAERO:
         self.trimvar: dict[int, TRIMVAR] = {}
         self.trimlnk: dict[int, TRIMLNK] = {}
         self.mldtrim: dict[int, MLDTRIM] = {}
+        self.trimfnc: dict[int, TRIMFNC] = {}
+        self.trimobj: dict[int, TRIMOBJ] = {}
+        self.trimcon: dict[int, TRIMCON] = {}
+        self.trimadd: dict[int, TRIMADD] = {}
+        self.trimflt: dict[int, TRIMFLT] = {}
 
         # flutter
         self.pltvg: dict[int, PLTVG] = {}
         self.mkaeroz: dict[int, MKAEROZ] = {}
         self.nlfltr: dict[int, NLFLTR] = {}
         self.pltflut: dict[int, PLTFLUT] = {}
-
-        # trim
-        self.trimfnc: dict[int, TRIMFNC] = {}
-        self.trimobj: dict[int, TRIMOBJ] = {}
-        self.trimcon: dict[int, TRIMCON] = {}
 
         # gust
         self.gloads: dict[int, GLOADS] = {}
@@ -1066,6 +1066,7 @@ class ZAERO:
         self.cnctset: dict[int, CNCTSET] = {}
         self.surfset: dict[int, SURFSET] = {}
         self.setadd: dict[int, SETADD] = {}
+        self.thermo: dict[int, THERMO] = {}
 
         # TODO:
         self.extfile: dict[int, EXTFILE] = {}
@@ -2385,8 +2386,9 @@ class ZAERO:
     def verify(self, xref):
         if self.model.nastran_format not in {"zona", "zaero"}:
             return
-        for panlst in self.panlsts.values():
-            panlst._verify(xref)
+        for panlsts in self.panlsts.values():
+            for panlst in panlsts:
+                panlst._verify(xref)
         for mkaeroz in self.mkaeroz.values():
             mkaeroz._verify(xref)
         for trimvar in self.trimvar.values():

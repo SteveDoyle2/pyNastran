@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -24,8 +25,8 @@ class PLTMODE(BaseCard):
 
     def __init__(self, set_id: int, symmetry: str,
                  mode: int, output_format: str, filename: str,
-                 max_disp: float = 1.0,
-                 comment: str=''):
+                 mode_type: str='AERO', max_disp: float = 1.0,
+                 aero_filename: str='AEROGEOM.PAT', comment: str=''):
         BaseCard.__init__(self)
 
         if comment:
@@ -36,11 +37,15 @@ class PLTMODE(BaseCard):
         self.set_id = set_id
         self.mode = mode
         self.symmetry = symmetry
+        self.mode_type = mode_type
         self.max_disp = max_disp
         self.output_format = output_format
         self.filename = filename
+        self.aero_filename = aero_filename
         assert output_format in {'TECPLOT', 'FEMAP', 'NASTRAN', 'PATRAN'}, output_format
         assert symmetry in {'SYM', 'ASYM', 'ANTI'}, symmetry
+        assert mode_type in {'AERO', 'BOTH'}, mode_type
+        assert isinstance(self.mode, integer_types), self.mode
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -55,7 +60,7 @@ class PLTMODE(BaseCard):
 
         symmetry = string(card, 2, 'sym/asym')
         mode = integer(card, 3, 'mode')
-        mode_type = '' if card.field(4) is None else card.field(4)
+        mode_type = string_or_blank(card, 4, 'mode_type', default='AERO')
         max_disp = double_or_blank(card, 5, 'max_disp', default=1.0)
         # if max_disp is None:
         #     ifield += 1
@@ -64,18 +69,19 @@ class PLTMODE(BaseCard):
         output_format = string(card, 6, 'format')
 
         filename = string_multifield_dollar_int(card, (7, 8), 'filename')
-        # assert filename == 'GAFA_MODE4.PLT', filename
         aero_filename = string_multifield_dollar_int_or_blank(
             card, (9, 10), 'aero_filename', default='AEROGEOM.PAT')
         assert len(card) <= 9, f'len(PLTMODE card) = {len(card):d}\ncard={card}'
         return PLTMODE(set_id, symmetry, mode, output_format, filename,
-                       max_disp=max_disp, comment=comment)
+                       mode_type=mode_type, max_disp=max_disp,
+                       aero_filename=aero_filename, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         return
 
     def safe_cross_reference(self, model: BDF, xref_errors) -> None:
-        self.cross_reference(model)
+        return
+        # self.cross_reference(model)
 
     def uncross_reference(self) -> None:
         pass
@@ -91,21 +97,29 @@ class PLTMODE(BaseCard):
 
         """
         filenamea, filenameb = split_filename_dollar(self.filename)
-
+        aero_filenamea, aero_filenameb = split_filename_dollar(self.aero_filename)
         list_fields = [
             'PLTMODE', self.set_id, self.symmetry,
-            self.mode, self.max_disp,
-            self.output_format, filenamea, filenameb]
+            self.mode, self.mode_type, self.max_disp,
+            self.output_format, filenamea, filenameb, aero_filenamea, aero_filenameb]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         disp_str = str(self.max_disp)
         assert len(disp_str) < 8, disp_str
+        assert len(self.filename) <= 16, f'filename={self.filename}; n={len(self.filename)} > 16'
         filename = self.filename if len(self.filename) == 16 else f' {self.filename:15}'
+        if self.aero_filename == 'AEROGEOM.PAT':
+            aero_filename = ''
+        else:
+            aero_filename = self.aero_filename if len(self.aero_filename) == 16 else f' {self.aero_filename:15}'
         # msg = '$\t' * 7 + '\n'
-        msg = f'PLTMODE {self.set_id:<8d}{self.symmetry:8}{self.mode:<8d}{disp_str:8}{self.output_format:8}{filename}'
-        # card = self.repr_fields()
-        return self.comment + msg # print_card_8(card)
+        assert isinstance(self.mode, integer_types), self.mode
+        msg = (
+            f'PLTMODE {self.set_id:<8d}{self.symmetry:8}{self.mode:<8d}{self.mode_type:8}{disp_str:8}{self.output_format:8}{filename}\n'
+            f'        {aero_filename}'.rstrip())
+        card = self.repr_fields()
+        return self.comment + msg + '\n' # print_card_8(card)
 
 
 class PLTAERO(BaseCard):
@@ -155,7 +169,6 @@ class PLTAERO(BaseCard):
         #max_disp = double(card, 4, 'max_disp')
 
         out_format = string(card, 4, 'format')
-
         filename = string_multifield(card, (5, 6), 'filename')
 
         cell = string_or_blank(card, 7, 'cell', default='NO')
@@ -191,8 +204,12 @@ class PLTAERO(BaseCard):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         # TODO: needs a better writer
-        card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        assert len(self.filename) <= 16, f'filename={self.filename}; n={len(self.filename)} > 16'
+        filename = self.filename if len(self.filename) == 16 else f' {self.filename:15}'
+        msg = f'PLTAERO {self.set_id:<8d}{self.femgrid:8}{self.offset:<8d}{self.out_format:8}{filename:16s}{self.cell}{self.vct}\n'
+        #card = self.repr_fields()
+        return self.comment + msg
+
 
 class PLTVG(BaseCard):
     type = 'PLTVG'
@@ -270,9 +287,12 @@ class PLTVG(BaseCard):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        # TODO: needs a better writer
         card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        assert len(self.filename) <= 16, f'filename={self.filename}; n={len(self.filename)} > 16'
+        filename = self.filename if len(self.filename) == 16 else f' {self.filename:15}'
+        msg = (f'PLTVG   {self.set_id:<8d}{self.flutter_id:<8d}{self.nmode:<8d}'
+               f'{self.xaxis:8}{self.output_format:8}{filename}\n')
+        return self.comment + msg
 
 
 class PLTCP(BaseCard):

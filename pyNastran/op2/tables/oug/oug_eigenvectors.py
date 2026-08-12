@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import Optional
 import numpy as np
+
+from pyNastran.op2.result_objects.scalar6_table_object import float_types
 from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
 from pyNastran.f06.f06_formatting import write_floats_13e
 
@@ -184,11 +186,21 @@ class RealEigenvectorArray(RealTableArray):
             #return self._write_f06_transient(header, page_stamp, page_num, f06_file,
                                              #is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         # modes get added
-        words = '                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' \
-                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n'
+        # should be 22s
+        words = (
+            '      EIGENVALUE = %11.6E\n'
+            '          CYCLES = %11.6E           R E A L   E I G E N V E C T O R   N O . %10d\n \n' \
+            '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n' \
+            # '                                         R E A L   E I G E N V E C T O R   N O .\n'
+        )
 
         #if not len(header) >= 3:
             #header.append('')
+
+        # no self.cycles
+        # cycle = freq = eign / (2*pi)
+        omegas = np.sqrt(np.abs(self.eigns))
+        freqs = omegas / (2 * np.pi)
         for itime in range(self.ntimes):
             node = self.node_gridtype[:, 0]
             gridtype = self.node_gridtype[:, 1]
@@ -200,18 +212,25 @@ class RealEigenvectorArray(RealTableArray):
             r3 = self.data[itime, :, 5]
 
             dt = self._times[itime]
-            #if isinstance(dt, float):
-                #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            #else:
-                #header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
-            f06_file.write(''.join(header + [words % dt]))
+            # '      EIGENVALUE = -4.811883E-04'
+            # '          CYCLES =  3.491224E-03         R E A L   E I G E N V E C T O R   N O .          1'
+            assert self.data_code['name'] == 'mode', self.data_code
+            # 'data_names': ['mode', 'eign', 'mode_cycle']
+            eign = self.eigns[itime]
+            freq = freqs[itime]
+            # header[0] = f'      EIGENVALUE = {eign:10.4E}\n'
+            # if isinstance(dt, float_types):
+            #     header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            # else:
+            #     header[1] = ' %s = %10d\n' % (self.data_code['name'], dt)
+            f06_file.write(''.join(header + [words % (eign, freq, dt)]))
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 f06_file.write(
-                    '%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                    '%14d %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                         node_id, sgridtype, dx, dy, dz, rx, ry, rz))
 
             f06_file.write(page_stamp % page_num)
