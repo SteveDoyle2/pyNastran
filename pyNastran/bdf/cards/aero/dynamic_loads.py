@@ -704,7 +704,7 @@ class FLUTTER(BaseCard):
                                             alt_units: str='m',
                                             velocity_units: str='m/s',
                                             density_units: str='kg/m^3',
-                                            eas_units: str='m/s') -> None:
+                                            eas_units: str='m/s') -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Makes a sweep across equivalent airspeed for a constant altitude.
 

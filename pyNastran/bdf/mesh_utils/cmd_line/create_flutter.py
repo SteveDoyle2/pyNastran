@@ -436,7 +436,7 @@ def create_flutter(
     if is_zaero:
         model = BDF()
         model.set_as_zaero()
-        atm_id = 100
+        atm_id = sid
         mass_unit = "slinch"
         length_unit = "in"
         temperature_units = "R"
@@ -480,14 +480,17 @@ def create_flutter(
             atmosphere_list,
             comment=comment + msg,
         )
-        sid = 11
-        mkaeroz_id = 12
+        sweep_id = sid + 1
+        mkaeroz_id = sid + 2
         fluttf_id = 0
         print_flag = 0
         alts2.sort()
         model.zaero.add_fixmatm(
-            sid, mkaeroz_id, atm_id, mass_unit, length_unit,
+            sweep_id, mkaeroz_id, atm_id, mass_unit, length_unit,
             fluttf_id, print_flag, alts2, vref=1.0, comment="")
+
+        freqs = [0.1, 0.2, 0.5, 1.]
+        model.zaero.add_mkaeroz(mkaeroz_id, mach, freqs, comment="")
         # velocity = mach * sos
         # model.zaero.add_fixmach(
         #     sid, mkaeroz_id, mass_unit, length_unit,

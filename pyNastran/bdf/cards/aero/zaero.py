@@ -964,7 +964,7 @@ class ZAERO:
         self.mloads: dict[int, MLOADS] = {}
 
         # TODO: add me
-        self.dse: dict[int, DSE] = {}
+        self.dse: dict[int, DSE] = {}  # add me
         self.extfile: dict[int, EXTFILE] = {}
         self.conmlst: dict[int, CONMLST] = {}
         self.cpfact: dict[int, CPFACT] = {}
@@ -992,7 +992,7 @@ class ZAERO:
         # TRIMFLT
 
         # transient
-        self.eloads: dict[int, ELOADS] = {}
+        self.eloads: dict[int, ELOADS] = {}  # add me
         self.mldcomd: dict[int, MLDCOMD] = {}
         self.plttime: dict[int, PLTTIME] = {}
 
@@ -1004,23 +1004,23 @@ class ZAERO:
         self.trimlnk: dict[int, TRIMLNK] = {}
         self.mldtrim: dict[int, MLDTRIM] = {}
         self.trimfnc: dict[int, TRIMFNC] = {}
-        self.trimobj: dict[int, TRIMOBJ] = {}
-        self.trimcon: dict[int, TRIMCON] = {}
-        self.trimadd: dict[int, TRIMADD] = {}
-        self.trimflt: dict[int, TRIMFLT] = {}
+        self.trimobj: dict[int, TRIMOBJ] = {}  # add me
+        self.trimcon: dict[int, TRIMCON] = {}  # add me
+        self.trimadd: dict[int, TRIMADD] = {}  # add me
+        self.trimflt: dict[int, TRIMFLT] = {}  # add me
 
         # flutter
         self.pltvg: dict[int, PLTVG] = {}
         self.mkaeroz: dict[int, MKAEROZ] = {}
-        self.nlfltr: dict[int, NLFLTR] = {}
+        self.nlfltr: dict[int, NLFLTR] = {}  # add me
         self.pltflut: dict[int, PLTFLUT] = {}
 
         # gust
         self.gloads: dict[int, GLOADS] = {}
         self.dgust: dict[int, DGUST] = {}
         self.cgust: dict[int, CGUST] = {}
-        self.gengust: dict[int, GENGUST] = {}
-        self.gustinp: dict[int, GUSTINP] = {}
+        self.gengust: dict[int, GENGUST] = {}  # add me
+        self.gustinp: dict[int, GUSTINP] = {}  # add me
         self.dfs: dict[int, Any] = {}
 
         # ase
@@ -1031,9 +1031,9 @@ class ZAERO:
         self.asegain: dict[int, ASEGAIN] = {}
         self.gainset: dict[int, GAINSET] = {}
         self.pltbode: dict[int, PLTBODE] = {}
-        self.aseout: dict[int, ASEOUT] = {}
-        self.apcnsnd: dict[int, APCNSND] = {}
-        self.apcnscp: dict[int, APCNSCP] = {}
+        self.aseout: dict[int, ASEOUT] = {}  # add me
+        self.apcnsnd: dict[int, APCNSND] = {}  # add me
+        self.apcnscp: dict[int, APCNSCP] = {}  # add me
         self.mimoss: dict[int, MIMOSS] = {}
         self.mimotf: dict[int, MIMOTF] = {}
         self.sisotf: dict[int, SISOTF] = {}
@@ -1066,7 +1066,7 @@ class ZAERO:
         self.cnctset: dict[int, CNCTSET] = {}
         self.surfset: dict[int, SURFSET] = {}
         self.setadd: dict[int, SETADD] = {}
-        self.thermo: dict[int, THERMO] = {}
+        self.thermo: dict[int, THERMO] = {}  # add me
 
         # TODO:
         self.extfile: dict[int, EXTFILE] = {}
@@ -1624,22 +1624,22 @@ class ZAERO:
         self,
         sid: int,
         mach: float,
-        flt_id: int,
-        filename: str,
-        print_flag: int,
         freqs: list[float],
         method: int = 0,
+        flt_id: int = 0,
+        print_flag: int = 0,
+        filename: str = '',
         save: str = "SAVE",
         comment: str = "",
     ) -> MKAEROZ:
         card = MKAEROZ(
             sid,
             mach,
-            flt_id,
-            filename,
-            print_flag,
             freqs,
             method=method,
+            flt_id=flt_id,
+            filename=filename,
+            print_flag=print_flag,
             save=save,
             comment=comment,
         )

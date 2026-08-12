@@ -83,7 +83,7 @@ def get_directories(folders_file: str) -> list[str]:
 
 
 def get_all_files(folders_file: str, file_types: list[str],
-                  max_size: float=4.2) -> list[str]:
+                  max_size_mb: float=4.2) -> list[str]:
     """
     Gets all the files in the folder and subfolders.  Ignores missing folders.
 
@@ -102,12 +102,12 @@ def get_all_files(folders_file: str, file_types: list[str],
         a series of filenames that were found
     """
     dirnames = get_directories(folders_file)
-    files2 = get_files_from_directories(dirnames, file_types, max_size=max_size)
+    files2 = get_files_from_directories(dirnames, file_types, max_size_mb=max_size_mb)
     return files2
 
 
 def get_files_from_directories(dirnames: list[str], file_types: list[str],
-                               max_size: float=4.2) -> list[str]:
+                               max_size_mb: float=4.2) -> list[str]:
     """
     Gets all the files in the folder and subfolders.  Ignores missing folders.
 
@@ -235,8 +235,8 @@ def run(regenerate=True, make_geom=False, combine=True,
     stop_on_failure = False
     get_skip_cards = False
 
-    # max_size = 4000. # MB
-    max_size = 500.  # MB
+    # max_size_mb = 4000. # MB
+    max_size_mb = 500.  # MB
     filter_simcenter = False
     failed_cases_filename = 'failed_cases%s%s.in' % tuple(sys.version_info[:2])
     failed_cases_temp_filename = 'failed_cases%s%s.temp.in' % tuple(sys.version_info[:2])
@@ -249,8 +249,8 @@ def run(regenerate=True, make_geom=False, combine=True,
 
         for dirname in dirnames:
             print(dirname)
-        #files2 = get_files_from_directories(dirnames, ['.op2'], max_size=max_size)
-        files2 = get_files_of_types2(dirnames, ['.op2'], max_size_mb=max_size)
+        #files2 = get_files_from_directories(dirnames, ['.op2'], max_size_mb=max_size_mb)
+        files2 = get_files_of_types2(dirnames, ['.op2'], max_size_mb=max_size_mb)
         # files2 = [fname for fname in files2
         #           if '.test_op2.' not in fname]
         assert len(files2) > 0, files2

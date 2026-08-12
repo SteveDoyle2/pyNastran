@@ -148,7 +148,7 @@ def run_docopt(argv=None):
             input_filenames = [
                 get_files_of_type(
                     dirname, extension=extension,
-                    max_size=100., limit_file='no_dig.txt')
+                    max_size_mb=100., limit_file='no_dig.txt')
                 for extension in extensions
             ]
             input_filenames = list(itertools.chain.from_iterable(input_filenames))

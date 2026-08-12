@@ -25,14 +25,13 @@ class MKAEROZ(BaseCard):
         self,
         sid: int,
         mach: float,
-        flt_id: int,
-        filename: str,
-        print_flag: int,
         freqs: list[float],
         method: int = 0,
+        flt_id: int = 0,
+        filename: str = '',
+        print_flag : int = 0,
         save: str = "SAVE",
-        comment: str = "",
-    ):
+        comment: str = "",):
         """
         Parameters
         ----------
@@ -41,7 +40,7 @@ class MKAEROZ(BaseCard):
         mach : float
             the mach number for the TRIM solution
         freqs : list[float]
-            ???
+            reduced frequencies
         method : int
             ???
         filename : str | int; default=''
@@ -53,7 +52,7 @@ class MKAEROZ(BaseCard):
             ACQUIRE load an AIC database
             ADD     append the new acids to the existing AIC database
             RESTART continue an analysis
-        print_flag : int
+        print_flag : int; default=0
             ???
         comment : str; default=''
              a comment for the card
@@ -81,7 +80,6 @@ class MKAEROZ(BaseCard):
         method = integer(card, 3, "METHOD")
         flt_id = integer_or_blank(card, 4, "IDFLT", default=0)
         save = string_or_blank(card, 5, "SAVE/ACQUIRE", default="SAVE")
-        # print(f'card = {card}')
         filename = string_multifield_dollar_int_or_blank(card, (6, 7), "filename", default="")
         print_flag = integer_or_blank(card, 8, "PRINT_FLAG", default=0)
         freqs = []
@@ -93,12 +91,12 @@ class MKAEROZ(BaseCard):
         return MKAEROZ(
             sid,
             mach,
-            flt_id,
-            filename,
-            print_flag,
             freqs,
             method=method,
+            flt_id=flt_id,
             save=save,
+            filename=filename,
+            print_flag=print_flag,
             comment=comment,
         )
 
