@@ -397,8 +397,7 @@ class PAFOIL7(BaseCard):
         i_thickness_tip: int,
         i_camber_tip: int,
         le_radius_tip: float,
-        comment: str = "",
-    ):
+        comment: str = "",):
         """
         Defines a BODY7 card, which defines a slender body
         (e.g., fuselage/wingtip tank).
@@ -475,11 +474,11 @@ class PAFOIL7(BaseCard):
         i_axial = integer(card, 2, "i_axial")
 
         i_thickness_root = integer(card, 3, "i_thickness_root")
-        i_camber_root = integer(card, 4, "i_camber_root")
+        i_camber_root = integer_or_blank(card, 4, "i_camber_root", default=0)
         le_radius_root = double_or_blank(card, 5, "le_radius_root")
 
         i_thickness_tip = integer(card, 6, "i_thickness_tip")
-        i_camber_tip = integer(card, 7, "i_camber_tip")
+        i_camber_tip = integer_or_blank(card, 7, "i_camber_tip", default=0)
         le_radius_tip = double_or_blank(card, 8, "le_radius_tip")
 
         assert len(card) <= 9, f"len(PAFOIL7 card) = {len(card):d}\ncard={card}"
@@ -525,14 +524,22 @@ class PAFOIL7(BaseCard):
             the BDF object
 
         """
-        msg = ", which is required by PAFOIL7 pid=%s" % self.pid
+        msg = f", which is required by PAFOIL7 pid={self.pid:d}"
         self.i_axial_ref = model.AEFact(abs(self.i_axial), msg=msg)
+        naxial_fractions = len(self.i_axial_ref.fractions)
+        assert naxial_fractions >= 3, naxial_fractions
 
         self.i_thickness_root_ref = model.AEFact(self.i_thickness_root, msg=msg)
-        self.i_camber_root_ref = model.AEFact(self.i_camber_root, msg=msg)
+        assert len(self.i_thickness_root_ref.fractions) == naxial_fractions, (len(self.i_thickness_root_ref.fractions), naxial_fractions)
+        if self.i_camber_root != 0:
+            self.i_camber_root_ref = model.AEFact(self.i_camber_root, msg=msg)
+            assert len(self.i_camber_root_ref.fractions) == naxial_fractions, (len(self.i_camber_root_ref.fractions), naxial_fractions)
 
         self.i_thickness_tip_ref = model.AEFact(self.i_thickness_tip, msg=msg)
-        self.i_camber_tip_ref = model.AEFact(self.i_camber_tip, msg=msg)
+        assert len(self.i_thickness_tip_ref.fractions) == naxial_fractions, (len(self.i_thickness_tip_ref.fractions), naxial_fractions)
+        if self.i_camber_tip != 0:
+            self.i_camber_tip_ref = model.AEFact(self.i_camber_tip, msg=msg)
+            assert len(self.i_camber_tip_ref.fractions) == naxial_fractions, (len(self.i_camber_tip_ref.fractions), naxial_fractions)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
@@ -579,17 +586,10 @@ class PAFOIL7(BaseCard):
         # i_thickness_tip = integer(card, 6, 'i_thickness_tip')
         # le_radius_tip = integer(card, 7, 'le_radius_tip')
         # i_camber_tip = double_or_blank(card, 8, 'i_camber_tip')
-
         list_fields = [
-            "PAFOIL7",
-            self.pid,
-            self.i_axial,
-            self.i_thickness_root,
-            self.i_camber_root,
-            self.le_radius_root,
-            self.i_thickness_tip,
-            self.i_camber_tip,
-            self.le_radius_tip,
+            "PAFOIL7", self.pid, self.i_axial,
+            self.i_thickness_root, self.i_camber_root, self.le_radius_root,
+            self.i_thickness_tip, self.i_camber_tip, self.le_radius_tip,
         ]
         return list_fields
 

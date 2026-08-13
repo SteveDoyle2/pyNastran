@@ -2317,7 +2317,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             'PROD', 'PTUBE', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
             'PBEND',
         )
-        prop_types_without_mid = ('PVISC', 'PELAS', 'PBUSH', 'PDAMP', 'PDAMPT')
+        prop_types_without_mid = ('PVISC', 'PELAS', 'PBUSH', 'PDAMP', 'PDAMPT', 'PGAP')
 
         pid_res = GuiResult(0, header='PropertyID', title='PropertyID',
                             location='centroid', scalar=pids, mask_value=0)
