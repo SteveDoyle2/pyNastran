@@ -1127,7 +1127,7 @@ class MLDTIME(BaseCard):
         dt: float,
         out_dt: int,
         print_flag: int,
-        method: str,
+        method: int | None,
         comment: str = "",
     ):
         BaseCard.__init__(self)

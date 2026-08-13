@@ -1,6 +1,6 @@
 import os
 from io import StringIO
-from typing import Optional
+from typing import Optional, cast
 import numpy as np
 from cpylog import SimpleLogger, get_logger
 from pyNastran.utils import PathLike, print_bad_path
@@ -8,11 +8,9 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.flutter_response import FlutterResponse
 
 
-def read_zaero_out(
-    zaero_out_filename: PathLike,
-    log: Optional[SimpleLogger] = None,
-    debug: Optional[str | bool] = True,
-) -> tuple[dict[int, FlutterResponse], dict]:
+def read_zaero_out(zaero_out_filename: PathLike,
+                   log: Optional[SimpleLogger] = None,
+                   debug: Optional[str | bool] = True,) -> tuple[dict[int, FlutterResponse], dict]:
     """
     Returns
     -------
@@ -41,7 +39,8 @@ def read_zaero_out(
         zaero_lines_to_out(log, lines)
     )
 
-    bdf_model = _build_bdf_from_echo(exec_control_lines, case_control_lines, bulk_data_lines, log)
+    bdf_model = _build_bdf_from_echo(
+        exec_control_lines, case_control_lines, bulk_data_lines, log)
 
     if trim_data is not None:
         # TRIM discipline — no flutter V-G-F results
@@ -61,6 +60,7 @@ def read_zaero_out(
 
     # FlutterResponse.from_nx()
     assert isinstance(in_units, dict), in_units
+    log.debug(f'creating flutter response in_units={in_units}')
     resp = FlutterResponse.from_zaero(modes, result, in_units, zaero_out_filename)
     responses = {
         1: resp,
@@ -73,12 +73,10 @@ def read_zaero_out(
     return responses, data_dict
 
 
-def _build_bdf_from_echo(
-    exec_control_lines: list[str],
-    case_control_lines: list[str],
-    bulk_data_lines: list[str],
-    log: SimpleLogger,
-) -> BDF:
+def _build_bdf_from_echo(exec_control_lines: list[str],
+                         case_control_lines: list[str],
+                         bulk_data_lines: list[str],
+                         log: SimpleLogger,) -> BDF:
     """Build a BDF from ZAERO .out executive/case control and bulk data echo."""
     bdf_lines = []
     for line in exec_control_lines:
@@ -92,6 +90,7 @@ def _build_bdf_from_echo(
     for line in bulk_data_lines:
         bdf_lines.append(line)
     bdf_lines.append("ENDDATA")
+    # print('\n'.join(bdf_lines))
 
     bdf_string = "\n".join(bdf_lines)
     model = BDF(log=log)
@@ -130,7 +129,11 @@ def out_dict_to_results(
         # print('ref_dict = ', ref_dict)
         vref, velocity_units = ref_dict["VREF"]
         atmos_table = ref_dict["ATMOS TABLE"][0]
-        assert atmos_table == "STANDARD", atmos_table
+        # print(f'atmos_table = {atmos_table!r}')
+        if isinstance(atmos_table, str):
+            assert atmos_table == "STANDARD", atmos_table
+        else:
+            assert isinstance(atmos_table, int), atmos_table
         mach = ref_dict["MACH"][0]
         # alt, altitude_units = ref_dict['ALT']
         # print(f'vref={vref}; velocity_units={velocity_units}')
@@ -218,9 +221,8 @@ def out_dict_to_results(
     return modes, result, in_units
 
 
-def _read_ruler_section(
-    lines: list[str], iline: int, nlines: int, out_lines: list[str], stop_on: str
-) -> int:
+def _read_ruler_section(lines: list[str], iline: int, nlines: int,
+                        out_lines: list[str], stop_on: str) -> int:
     """Read lines between a |...1...| ruler and a stop keyword (e.g. CEND, BEGIN BULK)."""
     found_ruler = False
     while iline < nlines:
@@ -243,9 +245,8 @@ def _read_ruler_section(
     return iline
 
 
-def _parse_modal_table(
-    lines: list[str], iline: int, nlines: int, log: SimpleLogger
-) -> dict[str, np.ndarray]:
+def _parse_modal_table(lines: list[str], iline: int, nlines: int,
+                       log: SimpleLogger) -> dict[str, np.ndarray]:
     """Parse the ZAERO modal eigenvalue table into arrays.
 
     Returns
@@ -285,7 +286,7 @@ def _parse_modal_table(
         iline += 1
 
     if not rows:
-        return {}
+        return {}, iline
 
     data = np.array(rows, dtype="float64")
     log.debug(f"parsed {len(rows)} modal eigenvalues")
@@ -306,7 +307,7 @@ def _parse_modal_table(
         "BHH": np.zeros((nmodes, nmodes), dtype="float64"),
         "KHH": np.diag(Khh[isort]),
     }
-    return modal_data
+    return modal_data, iline
 
 
 def _parse_trim_section(
@@ -501,9 +502,9 @@ def _parse_trim_section(
     return trim
 
 
-def zaero_lines_to_out(
-    log: SimpleLogger, lines: list[str]
-) -> tuple[dict, dict, list[str], list[str], list[str], dict, Optional[dict]]:
+def zaero_lines_to_out(log: SimpleLogger,
+                       lines: list[str]) -> tuple[dict, dict, list[str], list[str], list[str], dict, Optional[dict]]:
+    # print(log)
     out = {}
     nlines = len(lines)
     iline = 0
@@ -516,6 +517,7 @@ def zaero_lines_to_out(
     while iline < nlines:
         if "E X E C U T I V E  C O N T R O L  S U M M A R Y" in lines[iline]:
             iline += 1
+            log.debug('reading executive control summary')
             break
         iline += 1
     iline = _read_ruler_section(lines, iline, nlines, exec_control_lines, stop_on="CEND")
@@ -524,23 +526,34 @@ def zaero_lines_to_out(
     while iline < nlines:
         if "C A S E  C O N T R O L  S U M M A R Y" in lines[iline]:
             iline += 1
+            log.debug('reading case control summary')
             break
         iline += 1
     iline = _read_ruler_section(lines, iline, nlines, case_control_lines, stop_on="BEGIN BULK")
+    line = lines[iline].rstrip()
+    # log.info(f'AA {iline}: {line}')
 
     # --- parse SORTED BULK DATA ECHO ---
     while iline < nlines:
-        if "S O R T E D   B U L K   D A T A   E C H O" in lines[iline]:
+        line = lines[iline]
+        if "S O R T E D   B U L K   D A T A   E C H O" in line:
             iline += 1
+            log.debug('reading sorted bulk data echo')
+            break
+        if "SYMMETRIC (OR ASYMMETRIC) FINITE ELEMENT MODAL RESULTS ARE SUCCESSFULLY READ IN FROM FILE" in line:
             break
         iline += 1
 
     # skip CARD / COUNT / ruler header lines
+    # "MODE      EXTRACTION      EIGENVALUE"
     while iline < nlines:
         stripped = lines[iline].strip()
+        # log.info(f'A {iline}: {stripped}')
         if stripped in ("", "CARD") or stripped.startswith(("COUNT", "|...1...|")):
             iline += 1
             continue
+        if "SYMMETRIC (OR ASYMMETRIC) FINITE ELEMENT MODAL RESULTS ARE SUCCESSFULLY READ IN FROM FILE" in line:
+            break
         break
 
     # read bulk cards until ENDDATA or blank section
@@ -548,6 +561,9 @@ def zaero_lines_to_out(
     while iline < nlines:
         line = lines[iline]
         stripped = line.strip()
+        # log.info(f'B {iline}: {stripped}')
+        if "SYMMETRIC (OR ASYMMETRIC) FINITE ELEMENT MODAL RESULTS ARE SUCCESSFULLY READ IN FROM FILE" in line:
+            break
         if stripped == "":
             iline += 1
             break
@@ -565,31 +581,42 @@ def zaero_lines_to_out(
         iline += 1
 
     # --- parse modal eigenvalue table ---
-    modal_data = _parse_modal_table(lines, iline, nlines, log)
+    modal_data, iline = _parse_modal_table(lines, iline, nlines, log)
+    # log.debug(f'end of modal table: line {iline}')
 
     # --- continue to flutter results ---
     # the subcase block has leading spaces before the asterisks
+
+    # ****************************************
+    # *                                      *
+    # *       SUBCASE       =        1       *
+    # *       DISCIPLINE    = FLUTTER        *
+    # *       BULK ENTRY ID =      100       *
+    # *                                      *
+    # ****************************************
+    # log.debug(f'iline = {iline}')
     while iline < nlines:
-        if (
-            "                                             ****************************************"
-            in lines[iline]
-        ):
+        line = lines[iline]
+        if "                                             ****************************************" in line:
+            log.debug(f'breaking on {line.rstrip()}')
             break
+        # log.debug(line.rstrip())
         iline += 1
 
     iline += 2
+    iline = cast(str, iline)
     subcase_sline = lines[iline].strip("\n *").split("=")
     subcase_sline = [val.strip() for val in subcase_sline]
     assert "SUBCASE" in subcase_sline, subcase_sline
     subcase = subcase_sline[1]
     assert subcase == "1", subcase_sline
 
-    discipline_sline = lines[iline + 1].strip("\n *").split("=")
+    discipline_sline = lines[iline+1].strip("\n *").split("=")
     discipline_sline = [val.strip() for val in discipline_sline]
     assert "DISCIPLINE" in discipline_sline, discipline_sline
     discipline = discipline_sline[1]
 
-    bulk_id_sline = lines[iline + 2].strip("\n *").split("=")
+    bulk_id_sline = lines[iline+2].strip("\n *").split("=")
     bulk_id_sline = [val.strip() for val in bulk_id_sline]
     assert "BULK ENTRY ID" in bulk_id_sline, bulk_id_sline
     bulk_id = bulk_id_sline[1]
@@ -638,26 +665,14 @@ def zaero_lines_to_out(
         while "UNITS    UNITS    UNITS          MODE NO." not in lines[iline]:
             if "SUBCASE       =" in lines[iline]:
                 log.warning("breaking on new subcase")
-                return (
-                    out,
-                    ref_dict,
-                    exec_control_lines,
-                    case_control_lines,
-                    bulk_data_lines,
-                    modal_data,
-                    None,
-                )
+                return (out, ref_dict,
+                        exec_control_lines, case_control_lines, bulk_data_lines,
+                        modal_data, None,)
             if "***  Z A E R O   T E R M I N A T E D ***" in lines[iline]:
                 log.info("***zero terminated***")
-                return (
-                    out,
-                    ref_dict,
-                    exec_control_lines,
-                    case_control_lines,
-                    bulk_data_lines,
-                    modal_data,
-                    None,
-                )
+                return (out, ref_dict,
+                        exec_control_lines, case_control_lines, bulk_data_lines,
+                        modal_data, None, )
             # log.debug(f'Units {iline}: {lines[iline].rstrip()}')
             iline += 1
 
@@ -855,8 +870,12 @@ def split_ref_line(line: str, log: SimpleLogger) -> dict[str, tuple[float, str]]
             unit = unit.strip(" ()").lower()
             assert unit in {"in", "ft", "m"}, unit
         elif name == "ATMOS TABLE":
-            assert value_str == "STANDARD", value_str
-            value = value_str
+            if isinstance(value, str):
+                assert value_str == "STANDARD", value_str
+                value = value_str
+            else:
+                atmos_value = int(value_str)
+                value = atmos_value
             unit = ""
         else:  # pragma: no cover
             raise RuntimeError(f"unhandled name; name={name!r} value={value_str!r}")
@@ -914,7 +933,8 @@ def split_flutter_values(line: str, apply_float: bool = True) -> list[str]:
         if value in {"INFINT", "+INFINT"}:
             value_out = np.inf  #'INFINT'
         elif "*" in value:
-            assert value == "********", f"value_out={value_out!r}; values2={values2}"
+                             # '*******'
+            assert value in {"*******", "********"}, f"i={i} value_out={value_out!r}; values2={values2}"
             value_out = np.nan
         else:
             try:

@@ -387,6 +387,7 @@ class FlutterResponse:
         self.subtitle = subtitle
         self.label = label
         self.configuration = configuration
+        assert isinstance(method, str), f'method={method!r}'
         if method == 'PK':
             self.mach = mach
             self.xysym = xysym

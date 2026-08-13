@@ -19,7 +19,8 @@ from qtpy.QtWidgets import (
     QFileDialog,
     QHBoxLayout, QVBoxLayout,)
 
-from pyNastran.bdf.mesh_utils.cmd_line.create_flutter import create_flutter
+from pyNastran.bdf.mesh_utils.cmd_line.create_flutter import (
+    create_flutter, VELOCITY_UNITS, ALT_UNITS)
 from pyNastran.utils.atmosphere import atm_density
 
 from pyNastran.gui.menus.cutting_plane.results_dialog import ResultsDialog
@@ -38,7 +39,6 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 USE_WIN = False
 
-from pyNastran.bdf.mesh_utils.cmd_line.create_flutter import VELOCITY_UNITS, ALT_UNITS
 UNIT_SYSTEMS_MAP = {
     'in-slinch-s (English-in)': 'english_in',
     'ft-slug-s (English-ft)': 'english_ft',
@@ -216,7 +216,6 @@ class FlutterGui(PyDialog):
         if bdf_filename_out:
             cmd += f' --output {bdf_filename_out!r}'
         log.info(cmd)
-        flutter_id
 
         if constant_unit == '-':
             constant_unit = 'none'

@@ -13,6 +13,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 from .utils import split_filename_dollar
 
+from pyNastran.bdf.cards.aero.zaero_interface.get_card import get_extfile, get_flutter_table
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -101,13 +102,13 @@ class MKAEROZ(BaseCard):
         )
 
     def cross_reference(self, model: BDF) -> None:
-        self.filename_ref = get_extfile(model, self.filename)
+        self.filename_ref = get_extfile(model.zaero, self.filename)
 
     def safe_cross_reference(self, model: BDF, xref_errors) -> None:
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
-        return
+        self.filename_ref = None
 
     def raw_fields(self):
         filename_a, filename_b = split_filename_dollar(self.filename)
@@ -161,13 +162,12 @@ class FLUTTER_ZAERO(BaseCard):
         sid: int,
         sym: str,
         fix: int,
-        mlist: int,
-        conmlst: int,
+        mlist: int = 0,
+        conmlst: int = 0,
         nmode: int = 0,
         tabdmp: int = 0,
         nkstep: int = 25,
-        comment: str = "",
-    ):
+        comment: str = "",):
         """
         Creates a FLUTTER card, which is required for a flutter (SOL 145)
         analysis.
@@ -232,16 +232,14 @@ class FLUTTER_ZAERO(BaseCard):
         self.mlist = mlist
         self.conmlst = conmlst
         self.nkstep = nkstep
-        assert sym in {
-            "SYM",
-            "ANTI",
-            "ASYM",
-            "SYMML",
-            "ANTIL",
-            "ASYMP",
-            "SYMMP",
-            "ANTIP",
-        }, f"FLUTTER sid={self.sid} sym={sym!r}"
+        assert sym in {"SYM", "ANTI", "ASYM", "SYMML", "ANTIL", "ASYMP", "SYMMP", "ANTIP",
+                       'SYMM1', 'SYMM2', 'SYMM3',
+                       'ASYM1', 'ASYM2', 'ASYM3',
+                       'ANTI1', 'ANTI2', 'ANTI3', }, f"FLUTTER sid={self.sid} sym={sym!r}"
+        self.fix_ref = None
+        self.tabdmp_ref = None
+        self.set_ref = None
+        self.conmlst_ref = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str = ""):
@@ -261,34 +259,32 @@ class FLUTTER_ZAERO(BaseCard):
         fix = integer(card, 3, "fix")
         nmode = integer_or_blank(card, 4, "nmode", default=0)
         tabdmp = integer_or_blank(card, 5, "tabdmp", default=0)
-        mlist = integer_or_blank(card, 6, "mlist")
-        conmlst = integer_or_blank(card, 7, "conmlst")
+        mlist = integer_or_blank(card, 6, "mlist", default=0)
+        conmlst = integer_or_blank(card, 7, "conmlst", default=0)
         nkstep = integer_or_blank(card, 8, "nkstep", default=25)
         assert len(card) <= 9, f"len(FLUTTER card) = {len(card):d}\ncard={card}"
-        flutter = FLUTTER_ZAERO(
-            sid,
-            sym,
-            fix,
-            mlist,
-            conmlst,
-            nmode=nmode,
-            tabdmp=tabdmp,
-            nkstep=nkstep,
-            comment=comment,
-        )
+        flutter = FLUTTER_ZAERO(sid, sym, fix,
+                                mlist=mlist, conmlst=conmlst, nmode=nmode,
+                                tabdmp=tabdmp, nkstep=nkstep, comment=comment,)
         return flutter
 
     def cross_reference(self, model: BDF) -> None:
+        msg = f', which is required by FLUTTER={self.sid:d}'
+        self.fix_ref = get_flutter_table(model.zaero, self.fix, msg=msg)
+        if self.tabdmp:
+            self.tabdmp_ref = model.tables_sdamping[self.tabdmp]
+        if self.mlist:
+            self.set_ref = model.Set(self.mlist, msg=msg)
+        if self.conmlst:
+            model.log.warning(f'skipping CONMLST={self.conmlst:d} on FLUTTER={self.sid:d}')
+            # self.conmlst_ref
         return
-        # msg = ', which is required by SPLINE1 eid=%s' % self.eid
-        # self.setg_ref = model.Set(self.setg, msg=msg)
-        # self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
-
         # self.panlst_ref = model.zaero.panlsts[self.panlst]
         # self.panlst_ref.cross_reference(model)
         # self.aero_element_ids = self.panlst_ref.aero_element_ids
 
     def safe_cross_reference(self, model: BDF, xref_errors=None):
+        self.cross_reference(model)
         return
         # msg = ', which is required by SPLINE1 eid=%s' % self.eid
         # try:
@@ -298,46 +294,22 @@ class FLUTTER_ZAERO(BaseCard):
         # model.log.warning('failed to find SETx set_id=%s%s; allowed_sets=%s' % (
         # self.setg, msg, np.unique(list(model.sets)))
 
-        # try:
-        # self.panlst_ref = model.zaero.panlsts[self.panlst]
-        # self.panlst_ref.safe_cross_reference(model, xref_errors)
-        # self.aero_element_ids = self.panlst_ref.aero_element_ids
-        # except KeyError:
-        # pass
-
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
-        return
-        # self.panlst_ref = None
-        # self.setg_ref = None
+        self.fix_ref = None
+        self.tabdmp_ref = None
+        self.set_ref = None
+        self.conmlst_ref = None
 
     def convert_to_nastran(self, model: BDF):
         raise NotImplementedError()
 
     def raw_fields(self):
         list_fields = [
-            "FLUTTER",
-            self.sid,
-            self.sym,
-            self.fix,
-            self.nmode,
-            self.tabdmp,
-            self.mlist,
-            self.conmlst,
-            self.nkstep,
-        ]
+            "FLUTTER", self.sid, self.sym, self.fix, self.nmode, self.tabdmp, self.mlist,
+            self.conmlst, self.nkstep,]
         return list_fields
 
     def write_card(self, size: int = 8, is_double: bool = False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
-
-
-def get_extfile(model: BDF, filename: str | int) -> str | None:
-    if isinstance(filename, str):
-        filename_ref = None
-    elif isinstance(filename, int):
-        filename_ref = model.zaero.extfile[filename]
-    else:
-        raise TypeError(f"filename={filename!r} type={str(filename)}")
-    return filename_ref

@@ -22,6 +22,7 @@ from pyNastran.bdf.cards.aero.utils import (
 )
 from pyNastran.bdf.cards.aero.aero import Spline, CAERO1, CAERO2, PAERO2, AEFACT, AELIST, AESURF
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
+from pyNastran.bdf.cards.aero.zaero_interface.get_card import get_pafoil
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -1943,7 +1944,7 @@ class CAERO7(BaseCard):
             self.attach_root_ref = model.CAero(self.attach_root, msg=msg)
             assert self.attach_root_ref.type == 'BODY7', self.attach_root_ref
         if self.p_airfoil:
-            self.pafoil_ref = model.zaero.PAFOIL(self.p_airfoil, msg)
+            self.pafoil_ref = get_pafoil(model.zaero, self.p_airfoil, msg)
         self._init_ids()
 
     def safe_cross_reference(self, model: BDF, xref_errors):
