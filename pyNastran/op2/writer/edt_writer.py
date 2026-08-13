@@ -19,6 +19,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, FLUTTER # , FLFACT, MKAERO2
     from pyNastran.op2.op2_geom import OP2Geom, BDF
 
+
 def write_edt(op2_file: BinaryIO, op2_ascii, model: BDF | OP2Geom,
               endian: bytes=b'<',
               size: int=4, nastran_format: str='nx') -> None:
@@ -288,6 +289,44 @@ def write_aepress(model: BDF | OP2Geom, name: str,
         dmiji_bytes = b'%-8s' % aepress.dmiji.encode('latin1')
 
         data = [aepress.mach, sym_xz_bytes, sym_xy_bytes, aepress.uxid, dmij_bytes, dmiji_bytes]
+        op2_file.write(structi.pack(*data))
+        #print(mach, sym_xz, sym_xy, ux_id, dmij, dmiji)
+    return nbytes
+
+def write_aeforce(model: BDF | OP2Geom, name: str,
+                  aeforce_ids: list[int], ncards: int,
+                  op2_file: BinaryIO, op2_ascii, endian: bytes,
+                  size: int=4, nastran_format: str='nx') -> int:
+    """Word Name Type Description
+    1 MACH     RS
+    2 SYMXZ(2) CHAR4
+    4 SYMXY(2) CHAR4
+    6 UXID     I
+    7 MESH(2)  CHAR4
+    9 FORCE    I
+    10 DMIK(2) CHAR4
+    """
+
+    key = (7501, 75, 576)
+    nvalues = 11 * ncards
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    #ntotal = 11 * size # 4*11
+    structi = Struct(endian + b'f 8s 8s i 8s i 8s')
+
+    for i in aeforce_ids:
+        aeforce = model.aeforce[i]
+        assert isinstance(aeforce.dmik, str), aeforce.dmik
+        assert isinstance(aeforce.mesh, str), aeforce.mesh
+        sym_xy_bytes = b'%-8s' % aeforce.sym_xy.encode('latin1')
+        sym_xz_bytes = b'%-8s' % aeforce.sym_xz.encode('latin1')
+        dmik_bytes = b'%-8s' % aeforce.dmik.encode('latin1')
+        mesh_bytes = b'%-8s' % aeforce.mesh.encode('latin1')
+        force = 0 if aeforce.force == '' else aeforce.force
+
+        data = [aeforce.mach, sym_xz_bytes, sym_xy_bytes,     aeforce.uxid, mesh_bytes, force, dmik_bytes]
+        assert None not in data, data
+        #print(data)
         op2_file.write(structi.pack(*data))
         #print(mach, sym_xz, sym_xy, ux_id, dmij, dmiji)
     return nbytes
@@ -1975,6 +2014,8 @@ def write_aelist(model: BDF | OP2Geom, name: str,
 EDT_MAP = {
     'AEFACT': write_aefact,
     'AELIST': write_aelist,
+    #'AECOMP': write_aecomp,
+    #'AECOMPL': write_aecompl,
     'CSSCHD': write_csschd,
 
     'MONPNT1': write_monpnt1,
@@ -1999,7 +2040,7 @@ EDT_MAP = {
     'UXVEC': write_uxvec,
     'AEDW': write_aedw,
     'AEPRESS': write_aepress,
-    #'AEFORCE': write_aeforce,
+    'AEFORCE': write_aeforce,
     'FLUTTER': write_flutter,
     'DEFORM': write_deform,
     'FLFACT': write_flfact,

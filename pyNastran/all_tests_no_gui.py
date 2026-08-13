@@ -1,8 +1,8 @@
 #import warnings
 #warnings.filterwarnings('ignore', 'missing __init__.py*')
 
-import sys
 import os
+import sys
 try:
     import tables
     IS_TABLES = True

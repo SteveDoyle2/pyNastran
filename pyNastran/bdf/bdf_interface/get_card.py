@@ -413,11 +413,13 @@ class GetCard(GetMethods):
             if isinstance(ids, bool):
                 continue
 
+            #self.log.level = 'debug'
+            #self.log.warning(f'ids={ids}')
             for idi in ids:
                 try:
                     card = slot[idi]
                 except KeyError:
-                    print(slot)
+                    self.log.warning(str(slot, idi))
                     msg = 'key=%r id=%r cannot be found\n' % (key, idi)
                     msg += 'id=%s not found.  Allowed=%s' % (
                         key, np.unique(ids))

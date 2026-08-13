@@ -312,6 +312,9 @@ SLOT_TO_TYPE_MAP: dict[str, list[str]] = {
     'trims': ['TRIM', 'TRIM2'],
     'divergs': ['DIVERG'],
     'uxvec': ['UXVEC'],
+    'aedw': ['AEDW'],
+    'aeforce': ['AEFORCE'],
+    'aepress': ['AEPRESS'],
 
     # coords
     'coords': ['CORD1R', 'CORD1C', 'CORD1S',

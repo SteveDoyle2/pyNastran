@@ -848,6 +848,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'UXVEC',  # uxvec,
             'CSSCHD',  # csschds
             'DIVERG',  # divergs
+            'AEFORCE', 'AEDW', 'AEPRESS',
 
             # coords
             'CORD1R', 'CORD1C', 'CORD1S',
@@ -1588,6 +1589,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'asets', 'bsets', 'csets', 'omits', 'qsets',
             'se_bsets', 'se_csets', 'se_qsets',
             'mkaeros', 'monitor_points', 'suport',
+            'aedw', 'aepress', 'aeforce',
         ]
         zaero_cards_to_skip = ['STFLOW', 'TRIMVAR', 'AEROZ', 'TRIMFNC', 'LOADMOD', 'EXTFILE']
         zaero_slots_to_skip = ['panlsts', 'pafoils', 'attach']

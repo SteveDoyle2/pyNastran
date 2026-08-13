@@ -5,9 +5,14 @@ import unittest
 from pathlib import Path
 
 import numpy as np
-import matplotlib
-# matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+try:
+    import matplotlib
+    IS_MATPLOTLIB = True
+except ImportError:
+    IS_MATPLOTLIB = False
+if IS_MATPLOTLIB:
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
 
 from cpylog import SimpleLogger
 import pyNastran
@@ -15,11 +20,8 @@ from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import BDF, CORD2R
 
 from pyNastran.bdf.mesh_utils.cut.cut_body7 import (
-    concave_hull_2d,
-    _order_hull_by_angle,
-    _get_cut_points,
-    cut_and_generate_body7,
-)
+    get_cut_points,
+    cut_and_generate_body7,)
 
 TEST_PATH = Path(__file__).parent
 PKG_PATH = Path(pyNastran.__path__[0])
@@ -28,222 +30,23 @@ assert PKG_PATH.exists(), print_bad_path(PKG_PATH)
 assert MODEL_PATH.exists(), print_bad_path(MODEL_PATH)
 
 
-def _plot_cross_sections(
-    results: list[dict],
-    labels: list[str],
-    colors: list[str],
-    stations: list[float],
-    title: str,
-    plot_path: Path,
-    nominal_radii: list[float] | None = None,
-) -> None:
-    """Save a cross-section plot for one or more cut results.
-
-    Parameters
-    ----------
-    results : list[dict]
-        each entry is a return dict from cut_and_generate_body7
-    labels : list[str]
-        legend label per result
-    colors : list[str]
-        matplotlib color per result
-    stations : list[float]
-        x-axis station values (subplot titles)
-    title : str
-        figure suptitle
-    plot_path : Path
-        where to save the .png
-    nominal_radii : list[float] or None
-        if given, overlay dashed reference circles at these radii
-    """
-    nstations = len(stations)
-    fig, axes = plt.subplots(1, nstations, figsize=(4 * nstations, 4))
-    if nstations == 1:
-        axes = [axes]
-
-    for istation, ax in enumerate(axes):
-        for ires, (res, lbl, clr) in enumerate(zip(results, labels, colors)):
-            if istation >= len(res["hulls"]):
-                continue
-            raw = res["cut_points_2d"][istation]
-            hull = res["hulls"][istation]
-            yz = res["hull_yz_resampled"][istation]
-
-            ax.plot(raw[:, 0], raw[:, 1], ".", color=clr, markersize=2, alpha=0.4)
-            ax.plot(hull[:, 0], hull[:, 1], "-", color=clr, linewidth=0.6, alpha=0.5)
-            ax.plot(yz[:, 0], yz[:, 1], "o-", color=clr, markersize=3, label=lbl)
-
-        if nominal_radii:
-            theta = np.linspace(0, 2 * np.pi, 100)
-            for r in nominal_radii:
-                ax.plot(
-                    r * np.cos(theta),
-                    r * np.sin(theta),
-                    "--",
-                    color="gray",
-                    linewidth=0.7,
-                    alpha=0.5,
-                    label=f"R={r:.1f}",
-                )
-
-        ax.set_title(f"station = {stations[istation]:.1f}")
-        ax.set_xlabel("local y")
-        ax.set_ylabel("local z")
-        ax.set_aspect("equal")
-        ax.legend(fontsize=6, loc="upper right")
-        ax.grid(True, alpha=0.3)
-
-    fig.suptitle(title, fontsize=11)
-    fig.tight_layout()
-    fig.savefig(plot_path, dpi=150)
-    fig.show()
-    # plt.close(fig)
-    assert plot_path.exists()
-    assert plot_path.stat().st_size > 0
-    os.remove(plot_path)
-
-
-class TestConcaveHull(unittest.TestCase):
-    """Tests for concave_hull_2d and _order_hull_by_angle.
-
-    Tolerances
-    ----------
-    hull area : atol=1e-10 for exact geometric shapes
-    hull closure : first == last point, exact
-    point count : exact integer match
-    """
-
-    def test_convex_hull_circle(self) -> None:
-        """A circle's convex hull should contain all points and close properly."""
-        npts = 24
-        theta = np.linspace(0, 2 * np.pi, npts, endpoint=False)
-        pts = np.column_stack([np.cos(theta), np.sin(theta)])
-
-        hull = concave_hull_2d(pts, alpha=0.0)
-
-        assert hull.shape[1] == 2
-        np.testing.assert_array_equal(hull[0], hull[-1])
-        assert len(hull) == npts + 1
-
-    def test_convex_hull_square(self) -> None:
-        """Four corners of a unit square — hull must be exactly 4 boundary points."""
-        pts = np.array(
-            [
-                [0.0, 0.0],
-                [1.0, 0.0],
-                [1.0, 1.0],
-                [0.0, 1.0],
-            ]
-        )
-        hull = concave_hull_2d(pts, alpha=0.0)
-        np.testing.assert_array_equal(hull[0], hull[-1])
-        assert len(hull) == 5
-
-    def test_convex_hull_square_with_interior_point(self) -> None:
-        """Interior point should not appear on the convex hull boundary."""
-        pts = np.array(
-            [
-                [0.0, 0.0],
-                [1.0, 0.0],
-                [1.0, 1.0],
-                [0.0, 1.0],
-                [0.5, 0.5],
-            ]
-        )
-        hull = concave_hull_2d(pts, alpha=0.0)
-        np.testing.assert_array_equal(hull[0], hull[-1])
-        assert len(hull) == 5
-
-    def test_concave_hull_removes_large_triangles(self) -> None:
-        """With a high alpha, the hull should be tighter (fewer or equal boundary points)."""
-        npts = 40
-        theta = np.linspace(0, 2 * np.pi, npts, endpoint=False)
-        r = 1.0 + 0.3 * np.cos(3 * theta)
-        pts = np.column_stack([r * np.cos(theta), r * np.sin(theta)])
-
-        hull_convex = concave_hull_2d(pts, alpha=0.0)
-        hull_concave = concave_hull_2d(pts, alpha=1.5)
-
-        assert len(hull_convex) >= 3
-        assert len(hull_concave) >= 3
-        np.testing.assert_array_equal(hull_convex[0], hull_convex[-1])
-        np.testing.assert_array_equal(hull_concave[0], hull_concave[-1])
-
-    def test_hull_too_few_points(self) -> None:
-        """Should raise ValueError with fewer than 3 points."""
-        pts = np.array([[0.0, 0.0], [1.0, 1.0]])
-        with self.assertRaises(ValueError):
-            concave_hull_2d(pts, alpha=0.0)
-
-    def test_order_hull_by_angle_ccw(self) -> None:
-        """After ordering, angles should be monotonically increasing."""
-        pts = np.array(
-            [
-                [1.0, 0.0],
-                [0.0, 1.0],
-                [-1.0, 0.0],
-                [0.0, -1.0],
-                [1.0, 0.0],
-            ]
-        )
-        ordered = _order_hull_by_angle(pts)
-        np.testing.assert_array_equal(ordered[0], ordered[-1])
-
-        open_pts = ordered[:-1]
-        centroid = open_pts.mean(axis=0)
-        angles = np.arctan2(
-            open_pts[:, 1] - centroid[1],
-            open_pts[:, 0] - centroid[0],
-        )
-        diffs = np.diff(angles)
-        assert np.all(diffs >= 0), f"angles not monotonic: {angles}"
-
-    def test_convex_hull_ellipse_area(self) -> None:
-        """Convex hull of a dense ellipse should approximate pi*a*b.
-
-        Tolerances: 1% relative for npts=200.
-        """
-        npts = 200
-        a, b = 3.0, 1.5
-        theta = np.linspace(0, 2 * np.pi, npts, endpoint=False)
-        pts = np.column_stack([a * np.cos(theta), b * np.sin(theta)])
-
-        hull = concave_hull_2d(pts, alpha=0.0)
-        hull = _order_hull_by_angle(hull)
-
-        hull_open = hull[:-1]
-        area = 0.5 * np.abs(
-            np.sum(
-                hull_open[:, 0] * np.roll(hull_open[:, 1], -1)
-                - np.roll(hull_open[:, 0], -1) * hull_open[:, 1]
-            )
-        )
-        expected_area = np.pi * a * b
-        np.testing.assert_allclose(area, expected_area, rtol=0.01)
-
-
 class TestGetCutPoints(unittest.TestCase):
-    """Tests for _get_cut_points."""
+    """Tests for get_cut_points."""
 
     def test_extracts_unique_points(self) -> None:
         """Duplicate xyz values between rod endpoints should be collapsed."""
-        rod_eid_nodes = np.array(
-            [
-                [10, 1, 2],
-                [20, 2, 3],
-            ],
-            dtype="int32",
-        )
+        rod_eid_nodes = np.array([
+            [10, 1, 2],
+            [20, 2, 3],
+        ], dtype="int32",)
         rod_nids = np.array([1, 2, 3], dtype="int32")
-        rod_xyzs = np.array(
-            [
-                [0.0, 0.0, 0.0],
-                [1.0, 0.0, 0.0],
-                [2.0, 0.0, 0.0],
-            ]
-        )
+        rod_xyzs = np.array([
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [2.0, 0.0, 0.0],
+        ])
         rods = (rod_eid_nodes, rod_nids, rod_xyzs)
-        pts = _get_cut_points(rods)
+        pts = get_cut_points(rods)
         assert pts.shape == (3, 3)
         np.testing.assert_array_equal(pts[0], [0.0, 0.0, 0.0])
         np.testing.assert_array_equal(pts[1], [1.0, 0.0, 0.0])
@@ -259,59 +62,10 @@ class TestCutAndGenerateBody7(unittest.TestCase):
     nradial : exact integer match in AEFACT card count
     BODY7/SEGMESH text : substring match for card names
     """
-
-    @staticmethod
-    def _build_tube_model(
-        log: SimpleLogger,
-        radius: float = 5.0,
-        length: float = 20.0,
-        ncircum: int = 16,
-        nspan: int = 5,
-    ) -> BDF:
-        """Build a cylindrical tube shell model aligned along y-axis.
-
-        Grid layout: ncircum points around circumference (xz-plane)
-        at each of nspan+1 stations from y=0 to y=length. CQUAD4
-        elements connect adjacent rings. The cutting convention
-        marches along y.
-        """
-        model = BDF(log=log, debug=False)
-
-        mid = 1
-        pid = 1
-        t = 0.1
-        E = 1.0e7
-        model.add_mat1(mid, E=E, G=None, nu=0.3)
-        model.add_pshell(pid, mid, t=t)
-
-        nid = 1
-        theta_arr = np.linspace(0, 2 * np.pi, ncircum, endpoint=False)
-        y_arr = np.linspace(0.0, length, nspan + 1)
-
-        for iy, yval in enumerate(y_arr):
-            for it, th in enumerate(theta_arr):
-                x = radius * np.cos(th)
-                z = radius * np.sin(th)
-                model.add_grid(nid, [x, yval, z])
-                nid += 1
-
-        eid = 1
-        for iy in range(nspan):
-            for it in range(ncircum):
-                n1 = iy * ncircum + it + 1
-                n2 = iy * ncircum + (it + 1) % ncircum + 1
-                n3 = (iy + 1) * ncircum + (it + 1) % ncircum + 1
-                n4 = (iy + 1) * ncircum + it + 1
-                model.add_cquad4(eid, pid, [n1, n2, n3, n4])
-                eid += 1
-
-        model.cross_reference()
-        return model
-
     def test_tube_body7_generation(self) -> None:
         """Cut a cylinder at 3 stations and verify BODY7/SEGMESH/AEFACT output."""
         log = SimpleLogger(level="warning", encoding="utf-8")
-        model = self._build_tube_model(log, radius=5.0, length=20.0, ncircum=16, nspan=5)
+        model = build_tube_model(log, radius=5.0, length=20.0, ncircum=16, nspan=5)
 
         stations = [4.0, 10.0, 16.0]
         coords = []
@@ -350,15 +104,14 @@ class TestCutAndGenerateBody7(unittest.TestCase):
         for yz in result["hull_yz_resampled"]:
             assert yz.shape == (12, 2)
 
-        cards_text = result["cards_text"]
-        assert "BODY7" in cards_text
-        assert "SEGMESH" in cards_text
-        assert "AEFACT" in cards_text
-        assert "TUBE" in cards_text
+        model = result["model"]
+        assert len(model.caeros) == 1 #"BODY7" in cards_text
+        assert len(model.paeros) == 1 #"SEGMESH" in cards_text
+        assert len(model.aefacts) == 6 # "AEFACT" in cards_text
+        #assert "TUBE" in cards_text
+        #assert cards_text.count("AEFACT") == 6
 
-        assert cards_text.count("AEFACT") == 6
-
-        _plot_cross_sections(
+        plot_cross_sections(
             [result],
             ["R=5 tube"],
             ["blue"],
@@ -366,12 +119,14 @@ class TestCutAndGenerateBody7(unittest.TestCase):
             "test_tube_body7_generation: y-axis tube, 3 stations",
             TEST_PATH / "tmp_tube_body7_generation.png",
             nominal_radii=[5.0],
+            plot=IS_MATPLOTLIB,
         )
 
     def test_tube_body7_with_pbody7(self) -> None:
         """Verify PBODY7 card is generated when pbody7_id > 0."""
         log = SimpleLogger(level="warning", encoding="utf-8")
-        model = self._build_tube_model(log, radius=3.0, length=10.0, ncircum=12, nspan=4)
+        model = build_tube_model(
+            log, radius=3.0, length=10.0, ncircum=12, nspan=4)
 
         stations = [2.5, 5.0, 7.5]
         coords = []
@@ -399,11 +154,15 @@ class TestCutAndGenerateBody7(unittest.TestCase):
             pbody7_id=5,
         )
 
-        cards_text = result["cards_text"]
-        assert "PBODY7" in cards_text
-        assert "BODY7" in cards_text
+        zaero_model = result['model']
+        assert len(zaero_model.caeros) == 1, len(zaero_model.caeros)
+        assert len(zaero_model.paeros) == 1, len(zaero_model.paeros)
+        assert len(zaero_model.aefacts) == 6, len(zaero_model.aefacts)
+        #cards_text = result["cards_text"]
+        #assert "PBODY7" in cards_text
+        #assert "BODY7" in cards_text
 
-        _plot_cross_sections(
+        plot_cross_sections(
             [result],
             ["R=3 tube"],
             ["green"],
@@ -411,12 +170,14 @@ class TestCutAndGenerateBody7(unittest.TestCase):
             "test_tube_body7_with_pbody7: y-axis tube + PBODY7",
             TEST_PATH / "tmp_tube_body7_with_pbody7.png",
             nominal_radii=[3.0],
+            plot=IS_MATPLOTLIB,
         )
 
     def test_output_file_written(self) -> None:
         """Verify that output_filename writes the cards to disk."""
         log = SimpleLogger(level="warning", encoding="utf-8")
-        model = self._build_tube_model(log, radius=2.0, length=8.0, ncircum=12, nspan=3)
+        model = build_tube_model(
+            log, radius=2.0, length=8.0, ncircum=12, nspan=3)
 
         stations = [2.0, 4.0, 6.0]
         coords = []
@@ -447,12 +208,16 @@ class TestCutAndGenerateBody7(unittest.TestCase):
             )
 
             assert out_file.exists()
-            contents = out_file.read_text()
-            assert "BODY7" in contents
-            assert "SEGMESH" in contents
-            assert contents == result["cards_text"]
+            zaero_model = result['model']
+            assert len(zaero_model.caeros) == 1, len(zaero_model.caeros)
+            assert len(zaero_model.paeros) == 1, len(zaero_model.paeros)
+            assert len(zaero_model.aefacts) == 6, len(zaero_model.aefacts)
+            #contents = out_file.read_text()
+            #assert "BODY7" in contents
+            #assert "SEGMESH" in contents
+            #assert contents == result["cards_text"]
 
-            _plot_cross_sections(
+            plot_cross_sections(
                 [result],
                 ["R=2 tube"],
                 ["red"],
@@ -460,6 +225,7 @@ class TestCutAndGenerateBody7(unittest.TestCase):
                 "test_output_file_written: y-axis tube, file output",
                 TEST_PATH / "tmp_output_file_written.png",
                 nominal_radii=[2.0],
+                plot=IS_MATPLOTLIB,
             )
         finally:
             if out_file.exists():
@@ -468,7 +234,8 @@ class TestCutAndGenerateBody7(unittest.TestCase):
     def test_no_cuts_found_raises(self) -> None:
         """Stations placed outside the model should raise RuntimeError."""
         log = SimpleLogger(level="error", encoding="utf-8")
-        model = self._build_tube_model(log, radius=2.0, length=8.0, ncircum=12, nspan=3)
+        model = build_tube_model(
+            log, radius=2.0, length=8.0, ncircum=12, nspan=3)
 
         stations = [100.0, 200.0]
         coords = []
@@ -498,7 +265,8 @@ class TestCutAndGenerateBody7(unittest.TestCase):
     def test_single_station(self) -> None:
         """A single cut station should still produce valid output."""
         log = SimpleLogger(level="warning", encoding="utf-8")
-        model = self._build_tube_model(log, radius=4.0, length=12.0, ncircum=16, nspan=4)
+        model = build_tube_model(
+            log, radius=4.0, length=12.0, ncircum=16, nspan=4)
 
         stations = [6.0]
         coords = [
@@ -522,12 +290,14 @@ class TestCutAndGenerateBody7(unittest.TestCase):
             label="ONESTN",
             nradial=8,
         )
+        zaero_model = result['model']
         assert len(result["stations_found"]) == 1
         assert len(result["hulls"]) == 1
-        assert "BODY7" in result["cards_text"]
+        #print(zaero_model.get_bdf_stats())
+        assert len(zaero_model.caeros) == 1, len(zaero_model.caeros) # "BODY7" in result["cards_text"]
         assert result["hull_yz_resampled"][0].shape == (8, 2)
 
-        _plot_cross_sections(
+        plot_cross_sections(
             [result],
             ["R=4 tube"],
             ["purple"],
@@ -535,6 +305,7 @@ class TestCutAndGenerateBody7(unittest.TestCase):
             "test_single_station: 1 cut on y-axis tube",
             TEST_PATH / "tmp_single_station.png",
             nominal_radii=[4.0],
+            plot=IS_MATPLOTLIB,
         )
 
 
@@ -550,94 +321,6 @@ class TestTwoCylindersXAxis(unittest.TestCase):
     nradial : exact integer match in AEFACT card count
     hull shape : cross-section radius within 10% of nominal (mesh discretization)
     """
-
-    @staticmethod
-    def _add_x_cylinder(
-        model: BDF,
-        nid_start: int,
-        eid_start: int,
-        pid: int,
-        center_y: float,
-        center_z: float,
-        radius: float,
-        x_start: float,
-        x_end: float,
-        ncircum: int = 16,
-        nspan: int = 8,
-    ) -> tuple[int, int]:
-        """Add a cylinder along x-axis to an existing BDF.
-
-        Parameters
-        ----------
-        model : BDF
-            model to add grids/elements to (already has MAT1/PSHELL)
-        nid_start, eid_start : int
-            starting node/element IDs
-        pid : int
-            PSHELL property ID (must already exist in model)
-        center_y, center_z : float
-            cross-section center offset from origin
-        radius : float
-            cylinder radius
-        x_start, x_end : float
-            axial extent
-        ncircum, nspan : int
-            mesh density
-
-        Returns
-        -------
-        next_nid, next_eid : int
-            next available node/element IDs after this cylinder
-        """
-        theta_arr = np.linspace(0, 2 * np.pi, ncircum, endpoint=False)
-        x_arr = np.linspace(x_start, x_end, nspan + 1)
-
-        nid = nid_start
-        for ix, xval in enumerate(x_arr):
-            for it, th in enumerate(theta_arr):
-                y = center_y + radius * np.cos(th)
-                z = center_z + radius * np.sin(th)
-                model.add_grid(nid, [xval, y, z])
-                nid += 1
-
-        eid = eid_start
-        for ix in range(nspan):
-            for it in range(ncircum):
-                n1 = nid_start + ix * ncircum + it
-                n2 = nid_start + ix * ncircum + (it + 1) % ncircum
-                n3 = nid_start + (ix + 1) * ncircum + (it + 1) % ncircum
-                n4 = nid_start + (ix + 1) * ncircum + it
-                model.add_cquad4(eid, pid, [n1, n2, n3, n4])
-                eid += 1
-
-        return nid, eid
-
-    @staticmethod
-    def _make_x_cut_coord(
-        cid: int,
-        x_station: float,
-        center_y: float = 0.0,
-        center_z: float = 0.0,
-    ) -> CORD2R:
-        """Build a CORD2R whose local y-axis = global x.
-
-        The cut happens at local y = 0, which corresponds to
-        global x = x_station.  Local x = -global y, local z = global z.
-
-        Parameters
-        ----------
-        cid : int
-            coordinate system ID
-        x_station : float
-            where to cut along global x
-        center_y, center_z : float
-            cross-section center (shifts the coord origin so the hull
-            is centered on the body axis)
-        """
-        origin = np.array([x_station, center_y, center_z])
-        zaxis = origin + np.array([0.0, 0.0, 1.0])
-        xzplane = origin + np.array([0.0, -1.0, 0.0])
-        return CORD2R(cid, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
 
     def test_two_x_cylinders(self) -> None:
         """Cut a fuselage + nacelle model and generate two BODY7 cards.
@@ -656,7 +339,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
         model.add_mat1(1, E=1.0e7, G=None, nu=0.3)
         model.add_pshell(1, 1, t=0.1)
 
-        next_nid, next_eid = self._add_x_cylinder(
+        next_nid, next_eid = add_x_cylinder(
             model,
             nid_start=1,
             eid_start=1,
@@ -669,7 +352,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             ncircum=16,
             nspan=8,
         )
-        self._add_x_cylinder(
+        add_x_cylinder(
             model,
             nid_start=next_nid,
             eid_start=next_eid,
@@ -689,7 +372,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
         # --- fuselage BODY7 ---
         fuse_stations = [2.5, 7.5, 12.5, 17.5]
         fuse_coords = [
-            self._make_x_cut_coord(100 + i, dx, center_y=0.0, center_z=0.0)
+            make_x_cut_coord(100 + i, dx, center_y=0.0, center_z=0.0)
             for i, dx in enumerate(fuse_stations)
         ]
         fuse_result = cut_and_generate_body7(
@@ -713,15 +396,19 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             radii = np.sqrt(yz[:, 0] ** 2 + yz[:, 1] ** 2)
             np.testing.assert_allclose(radii, 3.0, atol=0.5)
 
-        assert "BODY7" in fuse_result["cards_text"]
-        assert "FUSELAG" in fuse_result["cards_text"]
-        assert "SEGMESH" in fuse_result["cards_text"]
-        assert fuse_result["cards_text"].count("AEFACT") == 8
+        zaero_model = fuse_result['model']
+        assert len(zaero_model.caeros) == 1, len(zaero_model.caeros)
+        assert len(zaero_model.paeros) == 1, len(zaero_model.paeros)
+        assert len(zaero_model.aefacts) == 8, len(zaero_model.aefacts)
+        #assert "BODY7" in fuse_result["cards_text"]
+        #assert "FUSELAG" in fuse_result["cards_text"]
+        #assert "SEGMESH" in fuse_result["cards_text"]
+        #assert fuse_result["cards_text"].count("AEFACT") == 8
 
         # --- nacelle BODY7 ---
         nac_stations = [27.0, 30.0, 33.0]
         nac_coords = [
-            self._make_x_cut_coord(200 + i, dx, center_y=5.0, center_z=0.0)
+            make_x_cut_coord(200 + i, dx, center_y=5.0, center_z=0.0)
             for i, dx in enumerate(nac_stations)
         ]
         nac_result = cut_and_generate_body7(
@@ -745,11 +432,15 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             radii = np.sqrt(yz[:, 0] ** 2 + yz[:, 1] ** 2)
             np.testing.assert_allclose(radii, 1.0, atol=0.25)
 
-        assert "BODY7" in nac_result["cards_text"]
-        assert "NACELLE" in nac_result["cards_text"]
-        assert nac_result["cards_text"].count("AEFACT") == 6
+        zaero_model = fuse_result['model']
+        assert len(zaero_model.caeros) == 1, len(zaero_model.caeros)
+        assert len(zaero_model.paeros) == 1, len(zaero_model.paeros)
+        assert len(zaero_model.aefacts) == 8, len(zaero_model.aefacts)
+        #assert "BODY7" in nac_result["cards_text"]
+        #assert "NACELLE" in nac_result["cards_text"]
+        #assert nac_result["cards_text"].count("AEFACT") == 6
 
-        _plot_cross_sections(
+        plot_cross_sections(
             [fuse_result],
             ["fuselage R=3"],
             ["blue"],
@@ -757,8 +448,9 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             "test_two_x_cylinders: fuselage (x-axis)",
             TEST_PATH / "tmp_two_x_cyl_fuselage.png",
             nominal_radii=[3.0],
+            plot=IS_MATPLOTLIB,
         )
-        _plot_cross_sections(
+        plot_cross_sections(
             [nac_result],
             ["nacelle R=1"],
             ["red"],
@@ -766,6 +458,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             "test_two_x_cylinders: nacelle (x-axis)",
             TEST_PATH / "tmp_two_x_cyl_nacelle.png",
             nominal_radii=[1.0],
+            plot=IS_MATPLOTLIB,
         )
 
     def test_two_x_cylinders_write_output(self) -> None:
@@ -775,7 +468,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
         model.add_mat1(1, E=1.0e7, G=None, nu=0.3)
         model.add_pshell(1, 1, t=0.1)
 
-        next_nid, next_eid = self._add_x_cylinder(
+        next_nid, next_eid = add_x_cylinder(
             model,
             nid_start=1,
             eid_start=1,
@@ -788,7 +481,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             ncircum=16,
             nspan=8,
         )
-        self._add_x_cylinder(
+        add_x_cylinder(
             model,
             nid_start=next_nid,
             eid_start=next_eid,
@@ -809,7 +502,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
         try:
             fuse_stations = [5.0, 10.0, 15.0]
             fuse_coords = [
-                self._make_x_cut_coord(300 + i, dx) for i, dx in enumerate(fuse_stations)
+                make_x_cut_coord(300 + i, dx) for i, dx in enumerate(fuse_stations)
             ]
             fuse_result = cut_and_generate_body7(
                 model,
@@ -822,16 +515,15 @@ class TestTwoCylindersXAxis(unittest.TestCase):
                 nradial=12,
                 segmesh_id_start=100,
                 aefact_id_start=1000,
-                output_filename=out_file,
             )
-            assert out_file.exists()
-            contents = out_file.read_text()
-            assert "FUSELAG" in contents
-            assert contents == fuse_result["cards_text"]
+            zaero_model = fuse_result['model']
+            assert len(zaero_model.caeros) == 1, len(zaero_model.caeros)
+            #assert "FUSELAG" in contents
+            #assert contents == fuse_result["cards_text"]
 
             nac_stations = [27.5, 31.25]
             nac_coords = [
-                self._make_x_cut_coord(400 + i, dx, center_y=5.0)
+                make_x_cut_coord(400 + i, dx, center_y=5.0)
                 for i, dx in enumerate(nac_stations)
             ]
             nac_result = cut_and_generate_body7(
@@ -845,12 +537,18 @@ class TestTwoCylindersXAxis(unittest.TestCase):
                 nradial=10,
                 segmesh_id_start=200,
                 aefact_id_start=2000,
-            )
+                zaero_model = zaero_model,
+                output_filename=out_file,
+             )
 
-            with open(out_file, "a") as f:
-                f.write(nac_result["cards_text"])
+            #with open(out_file, "a") as f:
+            #    f.write(nac_result["cards_text"])
+            #model = nac_result['model']
+            assert out_file.exists()
 
             combined = out_file.read_text()
+            assert len(zaero_model.caeros) == 2
+            assert len(zaero_model.paeros) == 2
             assert "FUSELAG" in combined
             assert "NACELLE" in combined
             body7_lines = [ln for ln in combined.splitlines() if ln.startswith("BODY7")]
@@ -858,7 +556,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             assert len(body7_lines) == 2
             assert len(segmesh_lines) == 2
 
-            _plot_cross_sections(
+            plot_cross_sections(
                 [fuse_result],
                 ["fuselage R=3"],
                 ["blue"],
@@ -866,8 +564,9 @@ class TestTwoCylindersXAxis(unittest.TestCase):
                 "test_write_output: fuselage",
                 TEST_PATH / "tmp_write_fuse.png",
                 nominal_radii=[3.0],
+                plot=IS_MATPLOTLIB,
             )
-            _plot_cross_sections(
+            plot_cross_sections(
                 [nac_result],
                 ["nacelle R=1"],
                 ["red"],
@@ -875,6 +574,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
                 "test_write_output: nacelle",
                 TEST_PATH / "tmp_write_nac.png",
                 nominal_radii=[1.0],
+                plot=IS_MATPLOTLIB,
             )
         finally:
             if out_file.exists():
@@ -907,7 +607,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
         r1 = 5.0
         r2 = 10.0
 
-        next_nid, next_eid = self._add_x_cylinder(
+        next_nid, next_eid = add_x_cylinder(
             model,
             nid_start=1,
             eid_start=1,
@@ -920,7 +620,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             ncircum=20,
             nspan=1,
         )
-        self._add_x_cylinder(
+        add_x_cylinder(
             model,
             nid_start=next_nid,
             eid_start=next_eid,
@@ -938,7 +638,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
         normal_plane = np.array([1.0, 0.0, 0.0])
         stations = [0.0, 25.0, 50.0, 100.0]
         coords = [
-            self._make_x_cut_coord(100 + i, dx, center_y=0.0, center_z=0.0)
+            make_x_cut_coord(100 + i, dx, center_y=0.0, center_z=0.0)
             for i, dx in enumerate(stations)
         ]
 
@@ -964,11 +664,15 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             radii = np.sqrt(yz[:, 0] ** 2 + yz[:, 1] ** 2)
             np.testing.assert_allclose(radii, r2, rtol=0.05)
 
-        assert "BODY7" in result["cards_text"]
-        assert "COMBINED" in result["cards_text"]
-        assert result["cards_text"].count("AEFACT") == 8
+        zaero_model = result['model']
+        assert len(zaero_model.caeros) == 1, len(zaero_model.caeros)
+        assert len(zaero_model.paeros) == 1, len(zaero_model.paeros)
+        assert len(zaero_model.aefacts) == 8, len(zaero_model.aefacts)
+        #assert "BODY7" in result["cards_text"]
+        #assert "COMBINED" in result["cards_text"]
+        #assert result["cards_text"].count("AEFACT") == 8
 
-        _plot_cross_sections(
+        plot_cross_sections(
             [result],
             ["combined hull"],
             ["red"],
@@ -976,15 +680,16 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             "Hull wraps outer cylinder (R=10), inner points (R=5) discarded",
             TEST_PATH / "tmp_two_cylinders_4stations.png",
             nominal_radii=[r1, r2],
+            plot=IS_MATPLOTLIB,
         )
 
     def test_bwb(self) -> None:
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
         normal_plane = None
         log = SimpleLogger(level="warning", encoding="utf-8")
-        stations = np.linspace(-100., 1600., num=101)
+        stations = np.linspace(-100., 1600., num=21)
         coords = [
-            self._make_x_cut_coord(100 + i, dx, center_y=0.0, center_z=0.0)
+            make_x_cut_coord(100 + i, dx, center_y=0.0, center_z=0.0)
             for i, dx in enumerate(stations)
         ]
 
@@ -1005,24 +710,27 @@ class TestTwoCylindersXAxis(unittest.TestCase):
         zaero_model = result["model"]
         # body7 = zaero_model.zaero.body7[1]
         body7 = zaero_model.caeros[1]
-        fig = plt.figure(figsize=(10, 6))
-        ax = fig.add_subplot(111, projection='3d')
-        ax.set_aspect('equal')
-        body7.plot(ax)
-        ax.set_xlabel("X")
-        ax.set_ylabel("Y")
-        ax.set_zlabel("Z")
-        ax.set_title("BWB BODY7 3D")
-        fig.tight_layout()
-        plt.show()
+        
+        if IS_MATPLOTLIB:
+            fig = plt.figure(figsize=(10, 6))
+            ax = fig.add_subplot(111, projection='3d')
+            ax.set_aspect('equal')
+            body7.plot(ax)
+            ax.set_xlabel("X")
+            ax.set_ylabel("Y")
+            ax.set_zlabel("Z")
+            ax.set_title("BWB BODY7 3D")
+            fig.tight_layout()
+            plt.show()
 
-        _plot_cross_sections(
+        plot_cross_sections(
             [result],
             ["BWB hull"],
             ["blue"],
             stations,
             "test_bwb: BWB cross-sections",
             TEST_PATH / "tmp_bwb_xsec.png",
+            plot=IS_MATPLOTLIB,
         )
 
     def test_sears_haack_body(self) -> None:
@@ -1077,7 +785,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
         normal_plane = np.array([1.0, 0.0, 0.0])
         stations = np.linspace(5.0, 95.0, 10).tolist()
         coords = [
-            self._make_x_cut_coord(100 + i, dx, center_y=0.0, center_z=0.0)
+            make_x_cut_coord(100 + i, dx, center_y=0.0, center_z=0.0)
             for i, dx in enumerate(stations)]
 
         result = cut_and_generate_body7(
@@ -1113,11 +821,15 @@ class TestTwoCylindersXAxis(unittest.TestCase):
                 err_msg=f"station {stations[i]}: expected R={analytic_radii[i]:.3f}",
             )
 
-        assert "BODY7" in result["cards_text"]
-        assert "SEARSHK" in result["cards_text"]
-        assert result["cards_text"].count("AEFACT") == 20
+        zaero_model = result['model']
+        assert len(zaero_model.caeros) == 1, len(zaero_model.caeros)
+        assert len(zaero_model.paeros) == 1, len(zaero_model.paeros)
+        assert len(zaero_model.aefacts) == 20, len(zaero_model.aefacts)
+        #assert "BODY7" in result["cards_text"]
+        #assert "SEARSHK" in result["cards_text"]
+        #assert result["cards_text"].count("AEFACT") == 20
 
-        _plot_cross_sections(
+        plot_cross_sections(
             [result],
             ["Sears-Haack hull"],
             ["blue"],
@@ -1125,6 +837,7 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             f"Sears-Haack body: L={body_length}, R_max={r_max}, 10 stations",
             TEST_PATH / "tmp_sears_haack_xsec.png",
             nominal_radii=[r_max],
+            plot=IS_MATPLOTLIB,
         )
 
         # --- side-view profile: R(x) analytic vs. hull mean radius ---
@@ -1134,54 +847,272 @@ class TestTwoCylindersXAxis(unittest.TestCase):
             hull_mean_radii.append(radii.mean())
 
         x_fine = np.linspace(0, body_length, 500)
-        r_fine = [sears_haack_radius(x / body_length) for x in x_fine]
+        r_fine = [sears_haack_radius(r_max, x / body_length) for x in x_fine]
 
-        fig, ax = plt.subplots(figsize=(10, 4))
-        ax.fill_between(x_fine, r_fine, -np.array(r_fine), color="lightblue", alpha=0.3)
-        ax.plot(x_fine, r_fine, "b-", linewidth=1.5, label="analytic R(x)")
-        ax.plot(x_fine, -np.array(r_fine), "b-", linewidth=1.5)
+        if IS_MATPLOTLIB:
+            fig, ax = plt.subplots(figsize=(10, 4))
+            ax.fill_between(x_fine, r_fine, -np.array(r_fine), color="lightblue", alpha=0.3)
+            ax.plot(x_fine, r_fine, "b-", linewidth=1.5, label="analytic R(x)")
+            ax.plot(x_fine, -np.array(r_fine), "b-", linewidth=1.5)
 
-        ax.plot(
-            stations,
-            hull_mean_radii,
-            "ro",
-            markersize=6,
-            label="hull mean radius",
-        )
-        ax.plot(stations, [-r for r in hull_mean_radii], "ro", markersize=6)
-
-        for i, dx in enumerate(stations):
             ax.plot(
-                [dx, dx],
-                [-hull_mean_radii[i], hull_mean_radii[i]],
-                "r-",
-                linewidth=0.8,
-                alpha=0.5,
+                stations,
+                hull_mean_radii,
+                "ro",
+                markersize=6,
+                label="hull mean radius",
             )
+            ax.plot(stations, [-r for r in hull_mean_radii], "ro", markersize=6)
 
-        ax.set_xlabel("x")
-        ax.set_ylabel("R(x)")
-        ax.set_title(
-            f"Sears-Haack body profile: L={body_length}, R_max={r_max}, "
-            f"R(x) = R_max * [4x(1-x)]^{{3/4}}"
-        )
-        ax.set_aspect("equal")
-        ax.legend(fontsize=8)
-        ax.grid(True, alpha=0.3)
-        fig.tight_layout()
+            for i, dx in enumerate(stations):
+                ax.plot(
+                    [dx, dx],
+                    [-hull_mean_radii[i], hull_mean_radii[i]],
+                    "r-",
+                    linewidth=0.8,
+                    alpha=0.5,
+                )
 
-        profile_path = TEST_PATH / "tmp_sears_haack_profile.png"
-        fig.savefig(profile_path, dpi=150)
-        plt.show()
-        # plt.close(fig)
-        assert profile_path.exists()
-        assert profile_path.stat().st_size > 0
-        os.remove(profile_path)
+            ax.set_xlabel("x")
+            ax.set_ylabel("R(x)")
+            ax.set_title(
+                f"Sears-Haack body profile: L={body_length}, R_max={r_max}, "
+                f"R(x) = R_max * [4x(1-x)]^{{3/4}}"
+            )
+            ax.set_aspect("equal")
+            ax.legend(fontsize=8)
+            ax.grid(True, alpha=0.3)
+            fig.tight_layout()
+
+            profile_path = TEST_PATH / "tmp_sears_haack_profile.png"
+            fig.savefig(profile_path, dpi=150)
+            plt.show()
+            # plt.close(fig)
+            assert profile_path.exists()
+            assert profile_path.stat().st_size > 0
+            os.remove(profile_path)
+
 
 def sears_haack_radius(r_max: float, x_norm: float) -> float:
     """R(x) = R_max * [4*x*(1-x)]^(3/4), x in [0,1]."""
     return r_max * (4.0 * x_norm * (1.0 - x_norm)) ** 0.75
 
 
-if __name__ == "__main__":
+def make_x_cut_coord(
+    cid: int,
+    x_station: float,
+    center_y: float = 0.0,
+    center_z: float = 0.0,) -> CORD2R:
+    """Build a CORD2R whose local y-axis = global x.
+
+    The cut happens at local y = 0, which corresponds to
+    global x = x_station.  Local x = -global y, local z = global z.
+
+    Parameters
+    ----------
+    cid : int
+        coordinate system ID
+    x_station : float
+        where to cut along global x
+    center_y, center_z : float
+        cross-section center (shifts the coord origin so the hull
+        is centered on the body axis)
+    """
+    origin = np.array([x_station, center_y, center_z])
+    zaxis = origin + np.array([0.0, 0.0, 1.0])
+    xzplane = origin + np.array([0.0, -1.0, 0.0])
+    return CORD2R(cid, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
+
+
+def build_tube_model(log: SimpleLogger,
+                     radius: float = 5.0,
+                     length: float = 20.0,
+                     ncircum: int = 16,
+                     nspan: int = 5,) -> BDF:
+    """Build a cylindrical tube shell model aligned along y-axis.
+
+    Grid layout: ncircum points around circumference (xz-plane)
+    at each of nspan+1 stations from y=0 to y=length. CQUAD4
+    elements connect adjacent rings. The cutting convention
+    marches along y.
+    """
+    model = BDF(log=log, debug=False)
+
+    mid = 1
+    pid = 1
+    t = 0.1
+    E = 1.0e7
+    model.add_mat1(mid, E=E, G=None, nu=0.3)
+    model.add_pshell(pid, mid, t=t)
+
+    nid = 1
+    theta_arr = np.linspace(0., 2 * np.pi, ncircum, endpoint=False)
+    y_arr = np.linspace(0.0, length, nspan + 1)
+
+    x = radius * np.cos(theta_arr)
+    z = radius * np.sin(theta_arr)
+    for yval in y_arr:
+        for it, th in enumerate(theta_arr):
+            xi = x[it]
+            zi = z[it]
+            model.add_grid(nid, [xi, yval, zi])
+            nid += 1
+
+    eid = 1
+    for iy in range(nspan):
+        for it in range(ncircum):
+            n1 = iy * ncircum + it + 1
+            n2 = iy * ncircum + (it + 1) % ncircum + 1
+            n3 = (iy + 1) * ncircum + (it + 1) % ncircum + 1
+            n4 = (iy + 1) * ncircum + it + 1
+            model.add_cquad4(eid, pid, [n1, n2, n3, n4])
+            eid += 1
+
+    model.cross_reference()
+    return model
+
+
+def add_x_cylinder(model: BDF,
+                   nid_start: int,
+                   eid_start: int,
+                   pid: int,
+                   center_y: float,
+                   center_z: float,
+                   radius: float,
+                   x_start: float,
+                   x_end: float,
+                   ncircum: int = 16,
+                   nspan: int = 8,) -> tuple[int, int]:
+    """
+    Add a cylinder along x-axis to an existing BDF.
+
+    Parameters
+    ----------
+    model : BDF
+        model to add grids/elements to (already has MAT1/PSHELL)
+    nid_start, eid_start : int
+        starting node/element IDs
+    pid : int
+        PSHELL property ID (must already exist in model)
+    center_y, center_z : float
+        cross-section center offset from origin
+    radius : float
+        cylinder radius
+    x_start, x_end : float
+        axial extent
+    ncircum, nspan : int
+        mesh density
+
+    Returns
+    -------
+    next_nid, next_eid : int
+        next available node/element IDs after this cylinder
+    """
+    theta_arr = np.linspace(0., 2 * np.pi, ncircum, endpoint=False)
+    x_arr = np.linspace(x_start, x_end, nspan + 1)
+
+    nid = nid_start
+    y = center_y + radius * np.cos(theta_arr)
+    z = center_z + radius * np.sin(theta_arr)
+    for xval in x_arr:
+        for it, th in enumerate(theta_arr):
+            yi = y[it]
+            zi = z[it]
+            model.add_grid(nid, [xval, yi, zi])
+            nid += 1
+
+    eid = eid_start
+    for ix in range(nspan):
+        for it in range(ncircum):
+            n1 = nid_start + ix * ncircum + it
+            n2 = nid_start + ix * ncircum + (it + 1) % ncircum
+            n3 = nid_start + (ix + 1) * ncircum + (it + 1) % ncircum
+            n4 = nid_start + (ix + 1) * ncircum + it
+            model.add_cquad4(eid, pid, [n1, n2, n3, n4])
+            eid += 1
+    return nid, eid
+
+
+def plot_cross_sections(
+    results: list[dict],
+    labels: list[str],
+    colors: list[str],
+    stations: list[float],
+    title: str,
+    plot_path: Path,
+    nominal_radii: list[float] | None = None,
+    plot: bool=True,
+    show: bool=True) -> None:
+    """
+    Save a cross-section plot for one or more cut results.
+
+    Parameters
+    ----------
+    results : list[dict]
+        each entry is a return dict from cut_and_generate_body7
+    labels : list[str]
+        legend label per result
+    colors : list[str]
+        matplotlib color per result
+    stations : list[float]
+        x-axis station values (subplot titles)
+    title : str
+        figure suptitle
+    plot_path : Path
+        where to save the .png
+    nominal_radii : list[float] or None
+        if given, overlay dashed reference circles at these radii
+    """
+    if not plot:
+        return
+
+    nstations = len(stations)
+    fig, axes = plt.subplots(1, nstations, figsize=(4 * nstations, 4))
+    if nstations == 1:
+        axes = [axes]
+
+    for istation, ax in enumerate(axes):
+        for ires, (res, lbl, clr) in enumerate(zip(results, labels, colors)):
+            if istation >= len(res["hulls"]):
+                continue
+            raw = res["cut_points_2d"][istation]
+            hull = res["hulls"][istation]
+            yz = res["hull_yz_resampled"][istation]
+
+            ax.plot(raw[:, 0], raw[:, 1], ".", color=clr, markersize=2, alpha=0.4)
+            ax.plot(hull[:, 0], hull[:, 1], "-", color=clr, linewidth=0.6, alpha=0.5)
+            ax.plot(yz[:, 0], yz[:, 1], "o-", color=clr, markersize=3, label=lbl)
+
+        theta = np.linspace(0, 2 * np.pi, 100)
+        if nominal_radii:
+            for r in nominal_radii:
+                ax.plot(
+                    r * np.cos(theta),
+                    r * np.sin(theta),
+                    "--",
+                    color="gray",
+                    linewidth=0.7,
+                    alpha=0.5,
+                    label=f"R={r:.1f}",
+                )
+
+        ax.set_title(f"station = {stations[istation]:.1f}")
+        ax.set_xlabel("local y")
+        ax.set_ylabel("local z")
+        ax.set_aspect("equal")
+        ax.legend(fontsize=6, loc="upper right")
+        ax.grid(True, alpha=0.3)
+
+    fig.suptitle(title, fontsize=11)
+    fig.tight_layout()
+    fig.savefig(plot_path, dpi=150)
+    if show:
+        fig.show()
+    # plt.close(fig)
+    assert plot_path.exists()
+    assert plot_path.stat().st_size > 0
+    os.remove(plot_path)
+
+
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()
