@@ -1,6 +1,6 @@
 import os
 from io import StringIO
-from typing import Optional, cast
+from typing import Optional
 import numpy as np
 from cpylog import SimpleLogger, get_logger
 from pyNastran.utils import PathLike, print_bad_path
@@ -35,9 +35,9 @@ def read_zaero_out(zaero_out_filename: PathLike,
     with open(zaero_out_filename, "r") as zaero_out_file:
         lines = zaero_out_file.readlines()
 
-    (case_dict, ref_dict, exec_control_lines, case_control_lines, bulk_data_lines, modal_data, trim_data) = (
-        zaero_lines_to_out(log, lines)
-    )
+    (case_dict, ref_dict,
+     exec_control_lines, case_control_lines, bulk_data_lines,
+     modal_data, trim_data) = zaero_lines_to_out(log, lines)
 
     bdf_model = _build_bdf_from_echo(
         exec_control_lines, case_control_lines, bulk_data_lines, log)
@@ -246,7 +246,7 @@ def _read_ruler_section(lines: list[str], iline: int, nlines: int,
 
 
 def _parse_modal_table(lines: list[str], iline: int, nlines: int,
-                       log: SimpleLogger) -> dict[str, np.ndarray]:
+                       log: SimpleLogger) -> tuple[dict[str, np.ndarray], int]:
     """Parse the ZAERO modal eigenvalue table into arrays.
 
     Returns
@@ -503,7 +503,8 @@ def _parse_trim_section(
 
 
 def zaero_lines_to_out(log: SimpleLogger,
-                       lines: list[str]) -> tuple[dict, dict, list[str], list[str], list[str], dict, Optional[dict]]:
+                       lines: list[str]) -> tuple[dict, dict, list[str], list[str], list[str],
+                                                  dict, Optional[dict]]:
     # print(log)
     out = {}
     nlines = len(lines)
@@ -585,44 +586,8 @@ def zaero_lines_to_out(log: SimpleLogger,
     # log.debug(f'end of modal table: line {iline}')
 
     # --- continue to flutter results ---
-    # the subcase block has leading spaces before the asterisks
-
-    # ****************************************
-    # *                                      *
-    # *       SUBCASE       =        1       *
-    # *       DISCIPLINE    = FLUTTER        *
-    # *       BULK ENTRY ID =      100       *
-    # *                                      *
-    # ****************************************
-    # log.debug(f'iline = {iline}')
-    while iline < nlines:
-        line = lines[iline]
-        if "                                             ****************************************" in line:
-            log.debug(f'breaking on {line.rstrip()}')
-            break
-        # log.debug(line.rstrip())
-        iline += 1
-
-    iline += 2
-    iline = cast(str, iline)
-    subcase_sline = lines[iline].strip("\n *").split("=")
-    subcase_sline = [val.strip() for val in subcase_sline]
-    assert "SUBCASE" in subcase_sline, subcase_sline
-    subcase = subcase_sline[1]
-    assert subcase == "1", subcase_sline
-
-    discipline_sline = lines[iline+1].strip("\n *").split("=")
-    discipline_sline = [val.strip() for val in discipline_sline]
-    assert "DISCIPLINE" in discipline_sline, discipline_sline
-    discipline = discipline_sline[1]
-
-    bulk_id_sline = lines[iline+2].strip("\n *").split("=")
-    bulk_id_sline = [val.strip() for val in bulk_id_sline]
-    assert "BULK ENTRY ID" in bulk_id_sline, bulk_id_sline
-    bulk_id = bulk_id_sline[1]
-
-    log.info(f"subcase={subcase!r} discipline={discipline!r} bulk_id={bulk_id!r}")
-    iline += 3
+    iline, (subcase, discipline, bulk_id) = parse_subcase_block(
+        lines, iline, nlines, log)
 
     if discipline == "TRIM":
         log.info("TRIM discipline found; parsing trim results")
@@ -690,38 +655,8 @@ def zaero_lines_to_out(log: SimpleLogger,
         log.debug(f"names_sline = {names_sline}")
         assert names_sline[0] == "V/VREF", names_sline
 
-        density_units = ""
-        header = "v/vref"
-        if names_sline[1] == "V":
-            assert units_sline2[0] == "SEC", units_sline2
-            header += ",v"
-            if units_sline1[1] == "IN/":
-                velocity_units = "in/s"
-            else:  # pragma: no cover
-                raise RuntimeError((units_sline1[1], units_sline2[0]))
-        elif names_sline[1] == "DENSITY":
-            header += ",density"
-            if units_sline1[1] == "SLIN/":
-                assert units_sline2[0] == "IN**3", units_sline2
-                density_units = "slinch/in^3"
-            elif units_sline1[1] == "SLUG/":
-                assert units_sline2[0] == "FT**3", units_sline2
-                density_units = "slug/ft^3"
-            else:  # pragma: no cover
-                raise RuntimeError((units_sline1[1], units_sline2[0]))
-        else:  # pragma: no cover
-            raise NotImplementedError(
-                f"names_sline[1]={names_sline[1]!r}; names_sline={names_sline}"
-            )
-
-        if names_sline[2] == "MACH":
-            header += ",mach"
-        elif names_sline[2] == "DYN P":  # 'DYN P'
-            header += ",q"
-        elif names_sline[2] == "ALTITUDE":  # 'DYN P'
-            header += ",alt"
-        else:  # pragma: no cover
-            raise NotImplementedError(names_sline)
+        header, density_units = _get_header_from_names(
+            names_sline, units_sline1, units_sline2)
 
         # log.debug(f'units_sline1 = {units_sline1}')
         # log.debug(f'units_sline2 = {units_sline2}')
@@ -785,6 +720,86 @@ def zaero_lines_to_out(log: SimpleLogger,
     #  12702.30 7.284-08 5.876+00   -2.4526   0.000 0.0000   -2.4526   0.000 0.0000  -521511.   0.000 0.0000  0.000000   0.000 0.0000
     #  13151.00 9.788-08 8.464+00  -516766.   0.000 0.0000  ********   0.000 0.0000   -6.8127   0.000 0.0000   -4.3530   0.000 0.0000
 
+
+def parse_subcase_block(lines: list[str], iline: int, nlines: int,
+                        log: SimpleLogger) -> tuple[int, tuple[str, str, str]]:
+    """
+    the subcase block has leading spaces before the asterisks
+
+    ****************************************
+    *                                      *
+    *       SUBCASE       =        1       *
+    *       DISCIPLINE    = FLUTTER        *
+    *       BULK ENTRY ID =      100       *
+    *                                      *
+    ****************************************
+    """
+    # log.debug(f'iline = {iline}')
+    while iline < nlines:
+        line = lines[iline]
+        if "                                             ****************************************" in line:
+            log.debug(f'breaking on {line.rstrip()}')
+            break
+        # log.debug(line.rstrip())
+        iline += 1
+
+    iline += 2
+    subcase_sline = lines[iline].strip("\n *").split("=")
+    subcase_sline = [val.strip() for val in subcase_sline]
+    assert "SUBCASE" in subcase_sline, subcase_sline
+    subcase = subcase_sline[1]
+    assert subcase == "1", subcase_sline
+
+    discipline_sline = lines[iline+1].strip("\n *").split("=")
+    discipline_sline = [val.strip() for val in discipline_sline]
+    assert "DISCIPLINE" in discipline_sline, discipline_sline
+    discipline = discipline_sline[1]
+
+    bulk_id_sline = lines[iline+2].strip("\n *").split("=")
+    bulk_id_sline = [val.strip() for val in bulk_id_sline]
+    assert "BULK ENTRY ID" in bulk_id_sline, bulk_id_sline
+    bulk_id = bulk_id_sline[1]
+
+    log.info(f"subcase={subcase!r} discipline={discipline!r} bulk_id={bulk_id!r}")
+    iline += 3
+    return iline, (subcase, discipline, bulk_id)
+
+def _get_header_from_names(names_sline: list[str],
+                           units_sline1: list[str],
+                           units_sline2: list[str]) -> tuple[str, str]:
+    density_units = ""
+    header = "v/vref"
+    if names_sline[1] == "V":
+        assert units_sline2[0] == "SEC", units_sline2
+        header += ",v"
+        if units_sline1[1] == "IN/":
+            velocity_units = "in/s"
+        else:  # pragma: no cover
+            raise RuntimeError((units_sline1[1], units_sline2[0]))
+    elif names_sline[1] == "DENSITY":
+        header += ",density"
+        if units_sline1[1] == "SLIN/":
+            assert units_sline2[0] == "IN**3", units_sline2
+            density_units = "slinch/in^3"
+        elif units_sline1[1] == "SLUG/":
+            assert units_sline2[0] == "FT**3", units_sline2
+            density_units = "slug/ft^3"
+        else:  # pragma: no cover
+            raise RuntimeError((units_sline1[1], units_sline2[0]))
+    else:  # pragma: no cover
+        raise NotImplementedError(
+            f"names_sline[1]={names_sline[1]!r}; names_sline={names_sline}"
+        )
+
+    if names_sline[2] == "MACH":
+        header += ",mach"
+    elif names_sline[2] == "DYN P":  # 'DYN P'
+        header += ",q"
+    elif names_sline[2] == "ALTITUDE":  # 'DYN P'
+        header += ",alt"
+    else:  # pragma: no cover
+        raise NotImplementedError(names_sline)
+    return header, density_units
 
 def get_mode_sline(line: str) -> list[int]:
     """
@@ -870,12 +885,12 @@ def split_ref_line(line: str, log: SimpleLogger) -> dict[str, tuple[float, str]]
             unit = unit.strip(" ()").lower()
             assert unit in {"in", "ft", "m"}, unit
         elif name == "ATMOS TABLE":
-            if isinstance(value, str):
-                assert value_str == "STANDARD", value_str
-                value = value_str
-            else:
+            if value_str.isdigit():
                 atmos_value = int(value_str)
                 value = atmos_value
+            else:
+                assert value_str == "STANDARD", value_str
+                value = value_str
             unit = ""
         else:  # pragma: no cover
             raise RuntimeError(f"unhandled name; name={name!r} value={value_str!r}")
@@ -890,10 +905,13 @@ def split_flutter_values(line: str, apply_float: bool = True) -> list[str]:
 
     Parameters
     ----------
-    line
+    line : str
+        the line to parse
 
     Returns
     -------
+    values_out : list[float]
+        the values for the flutter table
 
     """
     values = [
@@ -933,8 +951,7 @@ def split_flutter_values(line: str, apply_float: bool = True) -> list[str]:
         if value in {"INFINT", "+INFINT"}:
             value_out = np.inf  #'INFINT'
         elif "*" in value:
-                             # '*******'
-            assert value in {"*******", "********"}, f"i={i} value_out={value_out!r}; values2={values2}"
+            assert value in {"*******", "********"}, f"i={i} value={value!r}; values2={values2}"
             value_out = np.nan
         else:
             try:

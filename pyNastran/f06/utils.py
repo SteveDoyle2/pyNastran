@@ -537,7 +537,7 @@ def get_cmd_line_float(data: dict[str, str], key: str) -> float:
     return value
 
 
-def split_float_colons(string_values: str) -> list[float]:
+def split_float_colons(string_values: str | None) -> list[float]:
     """
     Uses numpy-ish syntax to parse a set of two floats.  Blanks are interpreted as None.
 

@@ -12,6 +12,8 @@ Main BDF class.  Defines:
 
 # see https://docs.plm.automation.siemens.com/tdoc/nxnastran/10/help/#uid:index
 from __future__ import annotations
+
+import io
 import os
 import sys
 from copy import deepcopy
@@ -1457,7 +1459,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #     can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
         return cards_list
 
-    def read_bdf(self, bdf_filename: Optional[PathLike]=None,
+    def read_bdf(self, bdf_filename: Optional[PathLike | io.StringIO]=None,
                  validate: bool=True,
                  xref: bool=True,
                  punch: bool=False,

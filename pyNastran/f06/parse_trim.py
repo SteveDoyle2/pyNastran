@@ -1,9 +1,8 @@
 from typing import Optional, TextIO, Any
 import os
 import numpy as np
-#import scipy.sparse
 from cpylog import SimpleLogger  # get_logger
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.f06.f06_tables.trim import (
     MonitorLoads, TrimResults, ControllerState,
     AeroPressure, AeroForce, TrimVariables, TrimVariable,
@@ -52,7 +51,7 @@ TRIM_MATRICES = [
 ]
 
 
-def read_f06_trim(f06_filename: str,
+def read_f06_trim(f06_filename: PathLike,
                   log: Optional[SimpleLogger]=None,
                   nlines_max: int=1_000_000,
                   debug: bool=False) -> dict[str, TrimResults]:

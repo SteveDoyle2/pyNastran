@@ -269,10 +269,10 @@ class TestF06Flutter(unittest.TestCase):
             plot=IS_MATPLOTLIB,
             log=log)
         matrices = data['matrices']
-        matrices['freq']
-        matrices['KHH']
-        matrices['BHH']
-        matrices['MHH']
+        assert 'freq' in matrices
+        assert 'KHH' in matrices
+        assert 'BHH' in matrices
+        assert 'MHH' in matrices
         assert len(flutters) == 2, list(flutters.keys())
         assert flutters[1].results.shape == (10, 22, 7), flutters[1].results.shape
         assert flutters[2].results.shape == (10, 30, 7), flutters[2].results.shape
