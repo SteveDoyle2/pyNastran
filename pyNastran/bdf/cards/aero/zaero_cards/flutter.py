@@ -78,7 +78,7 @@ class MKAEROZ(BaseCard):
     def add_card(cls, card: BDFCard, comment: str = ""):
         sid = integer(card, 1, "IDMK")
         mach = double(card, 2, "MACH")
-        method = integer(card, 3, "METHOD")
+        method = integer_or_blank(card, 3, "METHOD", default=0)
         flt_id = integer_or_blank(card, 4, "IDFLT", default=0)
         save = string_or_blank(card, 5, "SAVE/ACQUIRE", default="SAVE")
         filename = string_multifield_dollar_int_or_blank(card, (6, 7), "filename", default="")

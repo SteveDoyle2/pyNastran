@@ -79,7 +79,8 @@ class TestAeroZaero(unittest.TestCase):
         assert fixhatm.type == "FIXHATM"
         assert 2 in zaero.flutter_table
 
-        fixmatm = zaero.add_fixmatm(3, 1, 1, "SLUG", "IN", 0, 0, [5000.0, 10000.0], vref=1.0)
+        fixmatm = zaero.add_fixmatm(3, 1, [5000.0, 10000.0], atm_id=1, mass_unit="SLUG", length_unit="IN", vref=1.0,
+                                    fluttf_id=0, print_flag=0)
         assert fixmatm.type == "FIXMATM"
         assert 3 in zaero.flutter_table
 
@@ -1113,7 +1114,7 @@ class TestNewZaeroCards(unittest.TestCase):
         assert 11 in model.zaero.pbody7
         card = model.zaero.pbody7[11]
         assert card.pid == 11
-        assert card.ipbody == 0
+        assert card.wake == 0
         card.raw_fields()
 
     def test_trimflt(self):
@@ -1369,6 +1370,11 @@ def get_mloads_file():
         # MLOADS  ID ASECONT FLUTTER MINSTAT MLDSTAT MLDCOMD MLDTIME
         "MLOADS, 10,       4,      5,      ,       , 100,    101",
         #
+        'MKAEROZ,7,0.8',
+        ',1.0',
+        #           idmk
+        'FIXMATM,6, 7, ',
+        ',0.0, 10000.',
         "FLUTTER, 5, SYM, 6",
         "MLDTIME,101, 0.0, 1.0, 0.1",
         #

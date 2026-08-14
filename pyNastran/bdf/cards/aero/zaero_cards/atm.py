@@ -19,7 +19,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, string,
-    blank, double,
+    blank, double, string_or_blank,
     # integer_or_string,
     # string_or_blank,
     # integer_or_double,
@@ -296,9 +296,10 @@ class FIXMATM(BaseCard):
     #     1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
     # }
 
-    def __init__(self, sid: int, mkaeroz_id: int, atm_id: int,
-                 mass_unit: str, length_unit: str,
-                 fluttf_id: int, print_flag: int, alts: list[float],
+    def __init__(self, sid: int, mkaeroz_id: int,
+                 alts: list[float],
+                 atm_id: int = 0, mass_unit: str='NONE', length_unit: str='NONE',
+                 fluttf_id: int=0, print_flag: int=0,
                  vref: float = 1.0, comment: str=''):
         BaseCard.__init__(self)
         if comment:
@@ -340,12 +341,12 @@ class FIXMATM(BaseCard):
         #         -10000. 0. 10000. 20000. 30000.
         sid = integer(card, 1, 'sid')
         mkaeroz_id = integer(card, 2, 'mkaeroz_id')
-        atm_id = integer(card, 3, 'atm_id')
-        mass_unit = string(card, 4, 'mass_unit')
-        length_unit = string(card, 5, 'length_unit')
+        atm_id = integer_or_blank(card, 3, 'atm_id', default=0)
+        mass_unit = string_or_blank(card, 4, 'mass_unit', default='NONE')
+        length_unit = string_or_blank(card, 5, 'length_unit', default='NONE')
         vref = double_or_blank(card, 6, 'vref', default=1.0)
         fluttf_id = integer_or_blank(card, 7, 'fluttf_id', default=0)
-        print_flag = integer(card, 8, 'print_flag')
+        print_flag = integer_or_blank(card, 8, 'print_flag', default=0)
 
         alts = []
         j = 1
@@ -355,8 +356,10 @@ class FIXMATM(BaseCard):
             j += 1
         assert len(card) > 8, f'len(FIXEMATM card) = {len(card):d}\ncard={card}'
         assert isinstance(mkaeroz_id, integer_types)
-        return FIXMATM(sid, mkaeroz_id, atm_id, mass_unit,
-                       length_unit, fluttf_id, print_flag, alts,
+        return FIXMATM(sid, mkaeroz_id, alts,
+                       atm_id=atm_id, mass_unit=mass_unit,
+                       length_unit=length_unit,
+                       print_flag=print_flag, fluttf_id=fluttf_id,
                        vref=vref, comment=comment)
 
     # def validate(self):

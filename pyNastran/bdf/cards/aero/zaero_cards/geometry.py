@@ -2256,6 +2256,97 @@ class CAERO7(BaseCard):
         self.p1 += dxyz
         self.p4 += dxyz
 
+    def get_points_elements_3d(self):
+        """
+        Gets the points/elements in 3d space as solids
+        The idea is that this is used by the GUI to display CAERO panels.
+
+        TODO: in progress
+        """
+        # points, elements = self.panel_points_elements()
+        p1, p2, p3, p4 = self.get_points()
+        x, y = self.xy
+        # We're reordering the points so we get the node ids and element ids
+        # to be consistent with Nastran.  This is only useful if you're plotting
+        # aero panel forces
+        #
+        # this gives us chordwise panels and chordwise nodes
+        points, elements = points_elements_from_quad_points(
+            p1, p4, p3, p2, y, x, dtype="int32")
+
+        p1i = [0., 0., 0.]
+        p2i = [1., 0., 0.]
+        p3i = [1., 1., 0.]
+        p4i = [0., 1., 0.]
+        points_relative, elementsi = points_elements_from_quad_points(
+            p1i, p4i, p3i, p2i, y, x, dtype="int32")
+        if self.p_airfoil is None:
+            return points, elements
+
+        nelement = len(elements)
+        pafoil_ref: PAFOIL7 = self.pafoil_ref
+
+        n1 = elements[:, 0]
+        n2 = elements[:, 1]
+        n3 = elements[:, 2]
+        n4 = elements[:, 3]
+        p1 = points[n1, :]
+        p2 = points[n2, :]
+        p3 = points[n3, :]
+        p4 = points[n4, :]
+        normal = np.cross(p3 - p1, p4 - p2)
+        assert len(normal) == nelement
+        norm = np.linalg.norm(normal, axis=1)
+        assert len(norm) == nelement
+        normal /= norm[:, np.newaxis]
+
+        p1_rel = points_relative[n1, :]
+        p2_rel = points_relative[n2, :]
+        p3_rel = points_relative[n3, :]
+        p4_rel = points_relative[n4, :]
+
+        xrel = np.column_stack([p1_rel[:, 0], p2_rel[:, 0], p3_rel[:, 0], p4_rel[:, 0]])
+        yrel = np.column_stack([p1_rel[:, 1], p2_rel[:, 1], p3_rel[:, 1], p4_rel[:, 1]])
+
+        thalf, camber = pafoil_ref.interpolate(xrel, yrel)
+
+        xyz = []
+        solids = []
+        i = 0
+        for eid, elem in enumerate(elements):
+            n1, n2, n3, n4 = elem
+            p1i = points[n1, :] - thalf[n1] + camber[n1]
+            p2i = points[n2, :] - thalf[n2] + camber[n2]
+            p3i = points[n3, :] - thalf[n3] + camber[n3]
+            p4i = points[n4, :] - thalf[n4] + camber[n4]
+            p5i = points[n1, :] + thalf[n1] + camber[n1]
+            p6i = points[n2, :] + thalf[n2] + camber[n2]
+            p7i = points[n3, :] + thalf[n3] + camber[n3]
+            p8i = points[n4, :] + thalf[n4] + camber[n4]
+            xyz.extend([p1i, p2i, p3i, p4i, p5i, p6i, p7i, p8i])
+            solids.append([i, i+1, i+2, i+3, i+4, i+5, i+6, i+7])
+            i += 8
+        xyz_array = np.array(xyz)
+        elements = np.array(solids)
+        return xyz_array, elements
+
+        # xyz = []
+        # element = []
+        # npoints = 0
+        # assert len(self.segmesh_refs), self.segmesh_refs
+        # for segmesh in self.segmesh_refs:
+        #     # print(segmesh)
+        #     xyzi, elementi = self._get_points_elements_3di(segmesh)
+        #     xyz.append(xyzi)
+        #     element.append(elementi + npoints)
+        #     npoints += xyzi.shape[0]
+        #
+        # xyzs = np.vstack(xyz)
+        # elements = np.vstack(element)
+        # assert xyzs is not None, str(self)
+        # assert elements is not None, str(self)
+        return xyzs, elements
+
     def plot(self, ax: AxesSubplot) -> None:
         """plots the panels"""
         points, elements = self.panel_points_elements()
