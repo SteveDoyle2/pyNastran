@@ -528,6 +528,11 @@ class PAFOIL7(BaseCard):
         self.i_axial_ref = model.AEFact(abs(self.i_axial), msg=msg)
         naxial_fractions = len(self.i_axial_ref.fractions)
         assert naxial_fractions >= 3, naxial_fractions
+        assert self.i_axial_ref.fractions[0] == 0.0, self.i_axial_ref.fractions
+        assert self.i_axial_ref.fractions[-1] == 100.0, self.i_axial_ref.fractions
+        uaxial = np.unique(self.i_axial_ref.fractions)
+        assert len(self.i_axial_ref.fractions) == len(uaxial), f'PAFOIL7={self.pid}: i_axial_ref.fractions is not sorted={self.i_axial_ref.fractions}'
+        assert np.allclose(self.i_axial_ref.fractions, uaxial), f'PAFOIL7={self.pid}: i_axial_ref.fractions is not sorted={self.i_axial_ref.fractions}'
 
         self.i_thickness_root_ref = model.AEFact(self.i_thickness_root, msg=msg)
         assert len(self.i_thickness_root_ref.fractions) == naxial_fractions, (len(self.i_thickness_root_ref.fractions), naxial_fractions)
@@ -576,16 +581,6 @@ class PAFOIL7(BaseCard):
             The fields that define the card
 
         """
-        # pid = integer(card, 1, 'pid')
-        # i_axial = integer(card, 2, 'i_axial')
-
-        # i_thickness_root = integer(card, 3, 'i_thickness_root')
-        # i_camber_root = integer(card, 4, 'i_camber_root')
-        # le_radius_root = double_or_blank(card, 5, 'le_radius_root')
-
-        # i_thickness_tip = integer(card, 6, 'i_thickness_tip')
-        # le_radius_tip = integer(card, 7, 'le_radius_tip')
-        # i_camber_tip = double_or_blank(card, 8, 'i_camber_tip')
         list_fields = [
             "PAFOIL7", self.pid, self.i_axial,
             self.i_thickness_root, self.i_camber_root, self.le_radius_root,
@@ -636,19 +631,15 @@ class BODY7(BaseCard):
     +-------+---------+-------+---------+--------+------+---------+---------+---------+
 
     """
-
     type = "BODY7"
 
-    def __init__(
-        self,
-        eid: int,
+    def __init__(self, eid: int,
         label: str,
         pid: int,
         nseg: int,
         idmeshes: list[int],
         acoord: int = 0,
-        comment: str = "",
-    ):
+        comment: str = "",):
         """
         Defines a BODY7 card, which defines a slender body
         (e.g., fuselage/wingtip tank).
@@ -674,7 +665,6 @@ class BODY7(BaseCard):
 
         """
         BaseCard.__init__(self)
-
         if comment:
             self.comment = comment
 
@@ -722,7 +712,7 @@ class BODY7(BaseCard):
 
         idmeshes = []
         for i, ifield in enumerate(range(6, len(card))):
-            segmesh = integer(card, ifield, "idmesh_%i" % (i + 1))
+            segmesh = integer(card, ifield, "idmesh_%d" % (i + 1))
             idmeshes.append(segmesh)
         assert len(card) <= 13, f"len(BODY7 card) = {len(card):d}\ncard={card}"
         return BODY7(eid, label, pid, nseg, idmeshes, acoord=acoord, comment=comment)
@@ -764,7 +754,7 @@ class BODY7(BaseCard):
 
         # if self.pid is not None:
         # self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO7
-        # self.acoord_ref = model.Coord(self.acoord, msg=msg)
+        self.acoord_ref = model.Coord(self.acoord, msg=msg)
         # if self.nsb == 0:
         # self.lsb_ref = model.AEFact(self.lsb, msg=msg)
         # if self.nint == 0:
