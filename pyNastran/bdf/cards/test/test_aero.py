@@ -141,7 +141,7 @@ class TestAero(unittest.TestCase):
                    
         model.validate()
         model.cross_reference()
-        save_load_deck(model, nastran_format='nx')
+        save_load_deck(model, nastran_format='nx', run_remove_unused=False)
         save_load_deck(model, nastran_format='msc')
     
     def test_caero1_symmetric(self):

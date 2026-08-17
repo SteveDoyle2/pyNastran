@@ -74,6 +74,7 @@ class TestOP2Writer(unittest.TestCase):
         rho = 12.
         c = 13.
         model.add_mat10(mid, bulk, rho, c, ge=14.0)
+        model.add_matt9(1, 2)
         eid = 5
         ga = 1
         gb = 2
