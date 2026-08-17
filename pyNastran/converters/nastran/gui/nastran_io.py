@@ -134,7 +134,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     from pyNastran.gui.main_window import MainWindow
-    from pyNastran.converters.nastran.gui.types import KeysMap, NastranKey
+    from pyNastran.converters.nastran.gui.types import KeysMap, NastranKey, HeaderDict
     #from pyNastran.bdf.bdf import MONPNT1, CORD2R, AECOMP, SET1
 
 DESIRED_RESULTS = [
@@ -2479,7 +2479,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             return icase
 
         if load_case_id not in model.loads and load_case_id not in model.load_combinations:
-            self.gui.log.warning('LOAD=%s not found' % load_case_id)
+            self.gui.log.warning(f'LOAD={load_case_id:d} not found')
             return icase
 
         is_pressure, pressures = get_pressure_array(
@@ -3697,15 +3697,18 @@ def update_mass_grid(gui: MainWindow,
         elif element.type in ('CMASS1', 'CMASS2'):
             n1, n2 = element.nodes
             factor = 0.
+            centroid = np.zeros(3)
             if element.nodes[0] is not None:
                 inid = np.searchsorted(node_ids, n1)
                 p1 = nodes[inid, :]
+                centroid += p1
                 factor += 1.
             if element.nodes[1] is not None:
                 inid = np.searchsorted(node_ids, n2)
                 p2 = nodes[inid, :]
+                centroid += p2
                 factor += 1.
-            centroid = (p1 + p2) / factor
+            centroid /= factor
             xyzs.append(centroid)
 
             elem = vtkVertex()
@@ -3729,12 +3732,12 @@ def _get_geometry_properties_by_name(gui: MainWindow,
     names.  Any names not in the dict will be ignored.
 
     Parameters
-    -----------
+    ----------
     names : list [str, ...]
         list of names.
 
     Returns
-    --------
+    -------
     geometry_properties : dict {str : AltGeometry or CoordProperties}
         Dictonairy from name to property object.
 

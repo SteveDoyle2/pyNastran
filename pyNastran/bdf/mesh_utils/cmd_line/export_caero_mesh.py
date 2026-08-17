@@ -66,39 +66,44 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     if data['--pid']:
         pid_method = data['--pid']
 
-    from pyNastran.bdf.bdf import read_bdf
+    # from pyNastran.bdf.bdf import read_bdf
     from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
-    skip_cards = [
-        # elements
-        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CONM2',
-        'CROD', 'CTUBE', 'CONROD', 'CBAR', 'CBEAM',
-        'CQUAD4', 'CTRIA3',
-        'CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM',
-        'RBE1', 'RBE2', 'RBE3', 'RBAR',
+    # skip_cards = [
+    #     # elements
+    #     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CONM2',
+    #     'CROD', 'CTUBE', 'CONROD', 'CBAR', 'CBEAM',
+    #     'CQUAD4', 'CTRIA3',
+    #     'CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM',
+    #     'RBE1', 'RBE2', 'RBE3', 'RBAR',
+    #
+    #     # properties
+    #     'PELAS', 'PDAMP', 'PROD', 'PTUBE',
+    #     'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
+    #     'PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG', 'PSOLID',
+    #     'MAT1', 'MAT8',
+    #
+    #     # loads
+    #     'PLOAD', 'PLOAD2', 'PLOAD4',
+    #     'FORCE', 'FORCE1', 'FORCE2',
+    #     'MOMENT', 'MOMENT1', 'MOMENT2',
+    #     'GRAV', 'ACCEL', 'ACCEL1',
+    #     # constraints
+    #     'SPC', 'SPC1', 'SPCAX', 'SPCADD', 'DEQATN',
+    #     'MPC', 'MPCAX', 'MPCADD',
+    #     'NSM', 'NSM1', 'NSML', 'NSML1', 'NSMADD',
+    #
+    #     #  optimization
+    #     'DVPREL1', 'DVPREL2', 'DVMREL1', 'DVMREL2', 'DVCREL1', 'DVCREL2', 'DCONADD',
+    #     'DRESP1', 'DRESP2', 'DRESP3', 'DESVAR', 'DCONSTR',
+    #     #  aero: maybe enable later
+    #     'TRIM', 'AESTAT', 'FLUTTER', 'FLFACT',
+    # ]
+    # level = 'debug' if not quiet else 'warning'
+    # log = SimpleLogger(level=level, encoding='utf-8')
+    # model = read_bdf(bdf_filename, punch=punch, xref=xref,
+    #                  log=log, skip_cards=skip_cards)
 
-        # properties
-        'PELAS', 'PDAMP', 'PROD', 'PTUBE',
-        'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
-        'PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG', 'PSOLID',
-        'MAT1', 'MAT8',
-
-        # loads
-        'PLOAD', 'PLOAD2', 'PLOAD4', 'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
-        'GRAV', 'ACCEL', 'ACCEL1',
-        # constraints
-        'SPC', 'SPC1', 'MPC', 'SPCADD', 'MPCADD', 'DEQATN',
-
-        #  optimization
-        'DVPREL1', 'DVPREL2', 'DVMREL1', 'DVMREL2', 'DVCREL1', 'DVCREL2', 'DCONADD',
-        'DRESP1', 'DRESP2', 'DRESP3', 'DESVAR', 'DCONSTR',
-        #  aero: maybe enable later
-        'TRIM', 'AESTAT', 'FLUTTER', 'FLFACT',
-    ]
-    level = 'debug' if not quiet else 'warning'
-    log = SimpleLogger(level=level, encoding='utf-8')
-    model = read_bdf(bdf_filename, punch=punch, xref=xref,
-                     log=log, skip_cards=skip_cards)
-    export_caero_mesh(model, caero_bdf_filename,
+    export_caero_mesh(bdf_filename, caero_bdf_filename,
                       is_aerobox_model=is_aerobox_model,
                       pid_method=pid_method,
                       xref=xref,

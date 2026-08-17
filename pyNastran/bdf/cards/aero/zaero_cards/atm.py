@@ -9,7 +9,6 @@ All cards are BaseCard objects.
 
 """
 from __future__ import annotations
-# from itertools import count
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -27,7 +26,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     # integer_or_string, integer_string_or_blank,
     # string_multifield,  # parse_components as fcomponent
 )
-
+from pyNastran.bdf.cards.aero.zaero_interface.get_card import get_atmos, get_mkaeroz
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -53,6 +52,11 @@ class ATMOS(BaseCard):
         self.length_unit = length_unit
         self.temperature_unit = temperature_unit
         self.atmosphere_table = np.asarray(atmosphere_table)
+        if self.atmosphere_table.ndim == 1:
+            nalt = len(self.atmosphere_table) // 4
+            self.atmosphere_table = self.atmosphere_table.reshape(nalt, 4)
+        else:
+            assert self.atmosphere_table.ndim == 2, self.atmosphere_table.shape
         MASS_MAP = {
             'SLINCH': 'SLIN',
             'LBF': 'LBF/',
@@ -66,15 +70,19 @@ class ATMOS(BaseCard):
         assert temperature_unit in ['R', 'K', 'C', 'F'], temperature_unit
         assert len(atmosphere_table) > 0, atmosphere_table
 
+    @property
     def alt(self) -> np.ndarray:
         return self.atmosphere_table[:, 0]
 
+    @property
     def sos(self) -> np.ndarray:
         return self.atmosphere_table[:, 1]
 
+    @property
     def density(self) -> np.ndarray:
         return self.atmosphere_table[:, 2]
 
+    @property
     def temperature(self) -> np.ndarray:
         return self.atmosphere_table[:, 3]
 
@@ -306,6 +314,7 @@ class FIXMATM(BaseCard):
         self.print_flag = print_flag
         self.alts = np.asarray(alts)
         self.atmos_ref = None
+        self.fluttf_ref = None
         self.mkaeroz_ref = None
         assert isinstance(mkaeroz_id, integer_types), self.get_stats()
         assert len(alts) >= 0, alts
@@ -362,6 +371,7 @@ class FIXMATM(BaseCard):
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         self.atmos_ref = None
+        self.fluttf_ref = None
         self.mkaeroz_ref = None
 
     def plot(self, fig: plt.Figure):
@@ -371,7 +381,6 @@ class FIXMATM(BaseCard):
         if ntables == 1:
             axes = [axes]
         assert len(axes) == ntables, (axes, ntables)
-
 
     def raw_fields(self):
         """
@@ -491,6 +500,7 @@ class FIXMACH(BaseCard):
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         self.mkaeroz_ref = None
+        self.fluttf_ref = None
 
     def plot(self, fig: plt.Figure):
         ntables = 1
@@ -641,9 +651,11 @@ class FIXMDEN(BaseCard):
 
 
 def cross_reference_atmos_mkaeroz_fluttf(card: FIXMATM, model):
+    msg = f', which is required by {card.type}={card.sid}'
     assert isinstance(card.mkaeroz_id, integer_types), card.get_stats()
     if card.atm_id:
-        card.atmos_ref = model.zaero.atmos[card.atm_id]
+        card.atmos_ref = get_atmos(model.zaero, card.atm_id, msg=msg)
     if card.fluttf_id and 0:
         card.fluttf_ref = model.zaero.fluttf[card.fluttf_id]
-    card.mkaeroz_ref = model.zaero.mkaeroz[card.mkaeroz_id]
+    card.mkaeroz_ref = get_mkaeroz(model.zaero, card.mkaeroz_id, msg=msg)
+

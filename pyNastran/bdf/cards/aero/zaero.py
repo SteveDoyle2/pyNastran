@@ -132,129 +132,58 @@ if TYPE_CHECKING:  # pragma: no cover
 
 ZAERO_CARDS = [
     # atmosphere
-    "ATMOS",
-    "FIXHATM",
-    "FIXMATM",
-    "FIXMACH",
-    "FIXMDEN",
+    "ATMOS", "FIXHATM", "FIXMATM", "FIXMACH", "FIXMDEN",
     # already added
-    "AEFACT",
-    "CORD2R",
+    "AEFACT", "CORD2R",
     # geometry
-    "CAERO7",
-    "AEROZ",
-    "AESURFZ",
-    "AESLINK",
-    "ATTACH",
-    "PANLST1",
-    "PANLST2",
-    "PANLST3",
-    "PAFOIL7",
-    "PAFOIL8",
-    "SEGMESH",
-    "BODY7",
-    "ACOORD",
-    "MKAEROZ",
+    "CAERO7", "AEROZ", "AESURFZ", "AESLINK", "ATTACH",
+    "PANLST1", "PANLST2", "PANLST3",
+    "PAFOIL7", "PAFOIL8",
+    "BODY7", "PBODY7", "SEGMESH",
+    "ACOORD", "MKAEROZ",
     "SPLINEM",
     # -------------
     # trim
-    "PLTCP",
-    "TRIMVAR",
-    "TRIMLNK",
+    "PLTCP", "TRIMVAR", "TRIMLNK",
     "TRIMFNC",  # optimization
     "PLTTRIM",
     # -------------
     # flutter
-    "FLUTTER",
-    "FIXHATM",
-    "FIXMATM",  # 'FIXMDEN',
-    "PLTVG",
-    "PLTFLUT",
-    "PLTSURF",
+    "FLUTTER", "FIXHATM", "FIXMATM",  # 'FIXMDEN',
+    "PLTVG", "PLTFLUT", "PLTSURF",
     # -------------
     # plotting
-    "PLTMODE",
-    "PLTAERO",  #'PLTTIME',
+    "PLTMODE", "PLTAERO",  #'PLTTIME',
     "PLTMIST",
     # -------------
     # mloads
-    "MLOADS",
-    "CJUNCT",
-    "CONCT",
-    "TFSET",
-    "MLDSTAT",
-    "MLDTRIM",
-    "MLDPRNT",
-    "MLDCOMD",
-    "EXTINP",
-    "EXTOUT",
-    "LOADMOD",
-    "PLTTIME",
+    "MLOADS", "CJUNCT", "CONCT", "TFSET",
+    "MLDSTAT", "MLDTRIM", "MLDPRNT", "MLDCOMD",
+    "EXTINP", "EXTOUT",
+    "LOADMOD", "PLTTIME",
     # -------------
     # gust
-    "GLOADS",
-    "DGUST",
-    "CGUST",
+    "GLOADS", "DGUST", "CGUST",
+    "GENGUST", "MFTGUST",
     # -------------
     # ase
-    "ASE",
-    "ASECONT",
-    "ASESNSR",
-    "ASESNS1",
-    "SENSET",
-    "ACTU",
-    "MIMOSS",
-    "SISOTF",
-    "ASEGAIN",
-    "GAINSET",
-    "MIMOTF",
-    "SENSR",
-    "GAIN",
-    "SUMBLK",
-    "DEADBN",
-    "DELAY",
-    "FILTFL",
-    "LIMTR",
-    "PLTBODE",
-    "AEROLAG",
+    "ASE", "ASECONT", "ASESNSR", "ASESNS1",
+    "SENSET", "ACTU", "MIMOSS", "SISOTF", "ASEGAIN",
+    "GAINSET", "MIMOTF", "SENSR", "GAIN",
+    "SUMBLK", "DEADBN", "DELAY", "FILTFL",
+    "LIMTR", "PLTBODE", "AEROLAG",
     # -------------
     # other
-    "SETADD",
-    "DMIL",
-    "EXTFILE",
-    "MLDTIME",
-    "MLDCOMD",
-    "MINSTAT",
-    "APCONST",
-    "CONMLST",
-    "CPFACT",
-    "SPLINE0",
-    "PBODY7",
-    "TRIMFLT",
-    "ASEOUT",
-    "CMARGIN",
-    "OUTPUT4",
-    "CROSPSD",
-    "FOILSEC",
-    "GENGUST",
-    "MFTGUST",
-    "DMIS",
-    "CELLWNG",
-    "CELLBOX",
-    "INPCFD",
-    "OMITCFD",
-    "WT1AJJ",
-    "WT1FRC",
-    "WT2AJJ",
-    "WTUCP",
-    "TRIMOBJ",
-    "TRIMCON",
-    "APCNSND",
-    "APCNSCP",
+    "SETADD", "DMIL", "EXTFILE", "MLDTIME", "MLDCOMD",
+    "MINSTAT", "APCONST", "CONMLST", "CPFACT", "SPLINE0",
+    "TRIMFLT", "ASEOUT", "CMARGIN", "OUTPUT4", "CROSPSD",
+    "FOILSEC", "DMIS",
+    "CELLWNG", "CELLBOX", "INPCFD", "OMITCFD",
+    "WT1AJJ", "WT1FRC", "WT2AJJ", "WTUCP",
+    "TRIMOBJ", "TRIMCON",
+    "APCNSND", "APCNSCP",
     "RBRED",
-    # (SPLINE0 and PBODY7 moved to supported list above)
-    "CNCTSET",
-    "SURFSET",
+    "CNCTSET", "SURFSET",
 ]
 
 
@@ -964,7 +893,7 @@ class ZAERO:
         self.mloads: dict[int, MLOADS] = {}
 
         # TODO: add me
-        self.dse: dict[int, DSE] = {}
+        self.dse: dict[int, DSE] = {}  # add me
         self.extfile: dict[int, EXTFILE] = {}
         self.conmlst: dict[int, CONMLST] = {}
         self.cpfact: dict[int, CPFACT] = {}
@@ -992,7 +921,7 @@ class ZAERO:
         # TRIMFLT
 
         # transient
-        self.eloads: dict[int, ELOADS] = {}
+        self.eloads: dict[int, ELOADS] = {}  # add me
         self.mldcomd: dict[int, MLDCOMD] = {}
         self.plttime: dict[int, PLTTIME] = {}
 
@@ -1003,24 +932,24 @@ class ZAERO:
         self.trimvar: dict[int, TRIMVAR] = {}
         self.trimlnk: dict[int, TRIMLNK] = {}
         self.mldtrim: dict[int, MLDTRIM] = {}
+        self.trimfnc: dict[int, TRIMFNC] = {}
+        self.trimobj: dict[int, TRIMOBJ] = {}  # add me
+        self.trimcon: dict[int, TRIMCON] = {}  # add me
+        self.trimadd: dict[int, TRIMADD] = {}  # add me
+        self.trimflt: dict[int, TRIMFLT] = {}  # add me
 
         # flutter
         self.pltvg: dict[int, PLTVG] = {}
         self.mkaeroz: dict[int, MKAEROZ] = {}
-        self.nlfltr: dict[int, NLFLTR] = {}
+        self.nlfltr: dict[int, NLFLTR] = {}  # add me
         self.pltflut: dict[int, PLTFLUT] = {}
-
-        # trim
-        self.trimfnc: dict[int, TRIMFNC] = {}
-        self.trimobj: dict[int, TRIMOBJ] = {}
-        self.trimcon: dict[int, TRIMCON] = {}
 
         # gust
         self.gloads: dict[int, GLOADS] = {}
         self.dgust: dict[int, DGUST] = {}
         self.cgust: dict[int, CGUST] = {}
-        self.gengust: dict[int, GENGUST] = {}
-        self.gustinp: dict[int, GUSTINP] = {}
+        self.gengust: dict[int, GENGUST] = {}  # add me
+        self.gustinp: dict[int, GUSTINP] = {}  # add me
         self.dfs: dict[int, Any] = {}
 
         # ase
@@ -1031,9 +960,9 @@ class ZAERO:
         self.asegain: dict[int, ASEGAIN] = {}
         self.gainset: dict[int, GAINSET] = {}
         self.pltbode: dict[int, PLTBODE] = {}
-        self.aseout: dict[int, ASEOUT] = {}
-        self.apcnsnd: dict[int, APCNSND] = {}
-        self.apcnscp: dict[int, APCNSCP] = {}
+        self.aseout: dict[int, ASEOUT] = {}  # add me
+        self.apcnsnd: dict[int, APCNSND] = {}  # add me
+        self.apcnscp: dict[int, APCNSCP] = {}  # add me
         self.mimoss: dict[int, MIMOSS] = {}
         self.mimotf: dict[int, MIMOTF] = {}
         self.sisotf: dict[int, SISOTF] = {}
@@ -1066,6 +995,7 @@ class ZAERO:
         self.cnctset: dict[int, CNCTSET] = {}
         self.surfset: dict[int, SURFSET] = {}
         self.setadd: dict[int, SETADD] = {}
+        self.thermo: dict[int, THERMO] = {}  # add me
 
         # TODO:
         self.extfile: dict[int, EXTFILE] = {}
@@ -1623,22 +1553,22 @@ class ZAERO:
         self,
         sid: int,
         mach: float,
-        flt_id: int,
-        filename: str,
-        print_flag: int,
         freqs: list[float],
         method: int = 0,
+        flt_id: int = 0,
+        print_flag: int = 0,
+        filename: str = '',
         save: str = "SAVE",
         comment: str = "",
     ) -> MKAEROZ:
         card = MKAEROZ(
             sid,
             mach,
-            flt_id,
-            filename,
-            print_flag,
             freqs,
             method=method,
+            flt_id=flt_id,
+            filename=filename,
+            print_flag=print_flag,
             save=save,
             comment=comment,
         )
@@ -2267,7 +2197,7 @@ class ZAERO:
         dt: float,
         out_dt: int,
         print_flag: int,
-        method: str,
+        method: int | None,
         comment: str = "",
     ) -> MLDTIME:
         card = MLDTIME(mldtime_id, tstart, tend, dt, out_dt, print_flag, method, comment=comment)
@@ -2344,8 +2274,14 @@ class ZAERO:
         self.model._add_methods.add_caero_object(card)
         return card
 
-    def add_pbody7(self, pid: int, wake: int, fields: list, comment: str = "") -> PBODY7:
-        card = PBODY7(pid, wake, fields, comment=comment)
+    def add_pbody7(self, pid: int, wake: int, inlet: int,
+                 idps: list[int], flowrates: list[float],
+                 cp_base: float=-0.2, xs_wake: float=1.3,
+                 xd_wake: float=1.1, yoffset: float=0.0, zoffset: float=0.0,
+                 comment: str = "") -> PBODY7:
+        card = PBODY7(pid, wake, inlet, idps, flowrates, cp_base=cp_base,
+                      xs_wake=xs_wake, xd_wake=xd_wake, yoffset=yoffset,
+                      zoffset=zoffset, comment=comment)
         self._add_methods.add_pbody7_object(card)
         return card
 
@@ -2385,8 +2321,9 @@ class ZAERO:
     def verify(self, xref):
         if self.model.nastran_format not in {"zona", "zaero"}:
             return
-        for panlst in self.panlsts.values():
-            panlst._verify(xref)
+        for panlsts in self.panlsts.values():
+            for panlst in panlsts:
+                panlst._verify(xref)
         for mkaeroz in self.mkaeroz.values():
             mkaeroz._verify(xref)
         for trimvar in self.trimvar.values():
@@ -2420,14 +2357,6 @@ class ZAERO:
                     continue
                 # self.model.log.info(f'xref {item.type}')
                 item.validate()
-
-    def PAFOIL(self, pid: int, msg: str = ""):
-        """gets a pafoil profile (PAFOIL7/PAFOIL8)"""
-        try:
-            return self.pafoil[pid]
-        except KeyError:
-            pafoils = np.unique(list(self.pafoil.keys()))
-            raise KeyError(f"pid={pid} not found{msg}.  Allowed pafoils={pafoils}")
 
     def update_for_zaero(self):
         """updates for zaero"""
@@ -2601,7 +2530,6 @@ class ZAERO:
 
     def view_block_diagram(self, subcase_id: int = -1) -> None:
         from .zaero_interface.graphviz_interface import view_block_diagram
-
         view_block_diagram(self.model, subcase_id=subcase_id)
 
     def _check_tfset_cjunct(self):  # pragma: no cover
@@ -3008,83 +2936,43 @@ def get_dicts(zaero: ZAERO, method: str) -> tuple[list, dict[int, list], list[di
     dicts = [
         # --------------general-------------
         # zaero.aeroz,
-        zaero.atmos,
-        zaero.flutter_table,
+        zaero.atmos, zaero.flutter_table,
         # -------------geometry-------------
         # zaero.panlsts,  # special-list
-        zaero.pafoil,
-        zaero.attach,
-        zaero.pltsurf,
-        zaero.pltmode,
-        zaero.pltmist,
-        zaero.pltbode,
+        zaero.pafoil, zaero.attach,
+        zaero.pltsurf, zaero.pltmode, zaero.pltmist, zaero.pltbode,
         # -------------transient------------
-        zaero.mloads,
-        zaero.eloads,
+        zaero.mloads, zaero.eloads,
         # --------------flutter-------------
-        zaero.nlfltr,
-        zaero.mkaeroz,
+        zaero.nlfltr, zaero.mkaeroz,
         # ---------------trim---------------
         # zaero.trim,  # part of the main BDF
-        zaero.aeslink,
-        zaero.trimvar,
-        zaero.trimlnk,
-        zaero.trimfnc,
-        zaero.trimobj,
-        zaero.trimcon,
-        zaero.actu,
+        zaero.aeslink, zaero.trimvar, zaero.trimlnk, zaero.trimfnc,
+        zaero.trimobj, zaero.trimcon, zaero.actu,
         # ---------------ase---------------
-        zaero.cjunct,
-        zaero.conct,
-        zaero.tfset,
-        zaero.cnctset,
-        zaero.ase,
-        zaero.asecont,
-        zaero.asesnsr,
-        zaero.asesns1,
-        zaero.asegain,
-        zaero.gainset,
-        zaero.mimoss,
-        zaero.mimotf,
-        zaero.sisotf,
-        zaero.sensr,
-        zaero.gain,
-        zaero.sumblk,
-        zaero.deadbn,
-        zaero.delay_zaero,
-        zaero.filtfl,
-        zaero.limtr,
+        zaero.cjunct, zaero.conct, zaero.tfset, zaero.cnctset, zaero.ase,
+        zaero.asecont, zaero.asesnsr, zaero.asesns1,
+        zaero.asegain, zaero.gainset,
+        zaero.mimoss, zaero.mimotf, zaero.sisotf,
+        zaero.sensr, zaero.gain, zaero.sumblk, zaero.deadbn,
+        zaero.delay_zaero, zaero.filtfl, zaero.limtr,
         #
-        zaero.senset,
-        zaero.surfset,
-        zaero.mldtrim,
-        zaero.mldstat,
-        zaero.minstat,
-        zaero.mldprnt,
-        zaero.mldcomd,
-        zaero.mldtime,
+        zaero.senset, zaero.surfset, zaero.mldtrim, zaero.mldstat,
+        zaero.minstat, zaero.mldprnt, zaero.mldcomd, zaero.mldtime,
         # zaero.extinp, zaero.extout,
         zaero.loadmod,
         zaero.rbred,
         zaero.aerolag,
         # ---------------gust---------------
-        zaero.gloads,
-        zaero.dgust,
-        zaero.cgust,
+        zaero.gloads, zaero.dgust, zaero.cgust,
         # ---------------other--------------
         zaero.extfile,
-        zaero.dse,
-        zaero.dmil,
+        zaero.dse, zaero.dmil,
         # plotting
-        zaero.pltvg,
-        zaero.pltbode,
-        zaero.pltaero,
+        zaero.pltvg, zaero.pltbode, zaero.pltaero,
     ]
     dict_lists = [
-        zaero.pltcp,
-        zaero.pltflut,
-        zaero.plttime,
-        zaero.plttrim,
+        zaero.pltcp, zaero.pltflut, zaero.plttime, zaero.plttrim,
     ]
     if method == "write":
         # these are xref'd by their parent

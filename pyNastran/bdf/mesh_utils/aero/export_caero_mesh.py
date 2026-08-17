@@ -77,8 +77,8 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
         bdf_filename, xref=xref,
         cards_to_include=cards_to_include,
         log=None, debug=False)
-    if isinstance(model, PathLike):
-        model = read_bdf(model)
+    # if isinstance(model, PathLike):
+    #     model = read_bdf(model)
     log = model.log
     if pid_method not in {'aesurf', 'caero', 'paero'}:
         raise RuntimeError(f'pid_method={pid_method!r} is not [aesurf, caero, paero]')
@@ -95,6 +95,9 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
     for caero_eid, caero in sorted(model.caeros.items()):
         if caero.type == 'CAERO2':
             log.warning('CAERO2 will probably cause issues...put it at the max id')
+            continue
+        if caero.type == 'BODY7':
+            log.warning(f'skipping BODY7={caero.eid}')
             continue
         points, elements = caero.panel_points_elements()
         for iaerobox_eid in range(len(elements)):
@@ -135,6 +138,8 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
             bdf_file.write(subcases)
             bdf_file.write('BEGIN BULK\n')
 
+        for cid, coord in sorted(model.coords.items()):
+            bdf_file.write(str(coord))
         bdf_file.write(loads)
         _write_properties(model, bdf_file, pid_method=pid_method)
 
@@ -144,6 +149,9 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
             if is_aerobox_model:
                 if caero.type == 'CAERO2':
                     _write_caero2_aerobox(bdf_file, caero)
+                    continue
+                if caero.type == 'BODY7':
+                    log.warning(f'skipping BODY7={caero.eid}')
                     continue
 
                 bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')

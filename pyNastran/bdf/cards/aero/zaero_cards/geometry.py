@@ -22,12 +22,13 @@ from pyNastran.bdf.cards.aero.utils import (
 )
 from pyNastran.bdf.cards.aero.aero import Spline, CAERO1, CAERO2, PAERO2, AEFACT, AELIST, AESURF
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
+from pyNastran.bdf.cards.aero.zaero_interface.get_card import get_pafoil
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     import matplotlib
-
+    import matplotlib.pyplot as plt
     AxesSubplot = matplotlib.axes._subplots.AxesSubplot
 
 
@@ -759,6 +760,7 @@ class BODY7(BaseCard):
             segmesh_ref = model.PAero(segmesh_id, msg=msg)  # links to SEGMESH/PAERO7
             segmesh_refs.append(segmesh_ref)
         self.segmesh_refs = segmesh_refs
+        _check_panlsts(model, self.type, self.eid)
 
         # if self.pid is not None:
         # self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO7
@@ -1401,7 +1403,7 @@ class SEGMESH(BaseCard):
         for i, xi in enumerate(self.xs[1:]):
             if xi <= xi_old:
                 raise RuntimeError(
-                    "xs=%s must be in ascending order\nx%i=%s x%i=%s (old)\n%s"
+                    "xs=%s must be in ascending order\nx%d=%s x%d=%s (old)\n%s"
                     % (self.xs, i + 2, xi, i + 1, xi_old, str(self))
                 )
 
@@ -1449,7 +1451,7 @@ class SEGMESH(BaseCard):
             idys.append(idy)
             idzs.append(idz)
         assert len(itypes) == naxial, (
-            f"naxial={naxial:d} nradial={nradial:d} len(itypes)={len(itypes):d}"
+            f"SEGMESH={segmesh_id}: naxial={naxial:d} len(itypes)={len(itypes):d}"
         )
         return SEGMESH(
             segmesh_id,
@@ -1582,8 +1584,6 @@ CAERO7_TABLE = """
 
 class CAERO7(BaseCard):
     """
-    Totally wrong...
-
     Defines an aerodynamic macro element (panel) in terms of two leading edge
     locations and side chords. This is used for Doublet-Lattice theory for
     subsonic aerodynamics and the ZONA51 theory for supersonic aerodynamics.
@@ -1765,6 +1765,8 @@ class CAERO7(BaseCard):
         self.ascid_ref = None
         self.box_ids = None
         self.pafoil_ref = None
+        self.attach_root_ref = None
+        self.attach_tip_ref = None
         # self._init_ids() #TODO: make this work here?
 
     def validate(self):
@@ -1843,7 +1845,7 @@ class CAERO7(BaseCard):
         achord_tip = integer_or_blank(card, 23, "achord_tip")
 
         # print(card.write_card())
-        assert len(card) <= 24, f"len(CAERO7 card) = {len(card):d}\ncard={card}"
+        assert 9 < len(card) <= 24, f"len(CAERO7 card) = {len(card):d}\ncard={card}"
         return CAERO7(
             eid,
             name,
@@ -1921,10 +1923,12 @@ class CAERO7(BaseCard):
             the BDF object
 
         """
-        msg = ", which is required by CAERO7 eid=%s" % self.eid
+        msg = f", which is required by CAERO7 eid={self.eid:d}"
         # self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
+
+        _check_panlsts(model, self.type, self.eid)
 
         # if self.nchord == 0:
         # assert isinstance(self.lchord, integer_types), self.lchord
@@ -1933,8 +1937,14 @@ class CAERO7(BaseCard):
             assert isinstance(self.lspan, integer_types), self.lspan
             self.lspan_ref = model.AEFact(self.lspan, msg)
 
+        if self.attach_tip:
+            self.attach_tip_ref = model.CAero(self.attach_tip, msg=msg)
+            assert self.attach_tip_ref.type == 'BODY7', self.attach_tip_ref
+        if self.attach_root:
+            self.attach_root_ref = model.CAero(self.attach_root, msg=msg)
+            assert self.attach_root_ref.type == 'BODY7', self.attach_root_ref
         if self.p_airfoil:
-            self.pafoil_ref = model.zaero.PAFOIL(self.p_airfoil, msg)
+            self.pafoil_ref = get_pafoil(model.zaero, self.p_airfoil, msg)
         self._init_ids()
 
     def safe_cross_reference(self, model: BDF, xref_errors):
@@ -2995,3 +3005,16 @@ def cross_reference_panlst(
         aero_ids_list.append(panlst.aero_element_ids)
     aero_element_ids = np.hstack(aero_ids_list)
     return panlst_ref, aero_element_ids
+
+def _check_panlsts(model: BDF, card_type: str, eid: int) -> None:
+    assert len(model.zaero.panlsts), 'No PANLSTs defined'
+    npanlsts = 0
+    for panlsts in model.zaero.panlsts.values():
+        assert isinstance(panlsts, list), panlsts
+        for panlst in panlsts:
+            if panlst.type in {'PANLST3'}:  # no macro_id
+                npanlsts += 1
+                continue
+            if panlst.macro_id == eid:
+                npanlsts += 1
+    assert npanlsts >= 1, f"No panlsts found for {card_type} eid={eid}"

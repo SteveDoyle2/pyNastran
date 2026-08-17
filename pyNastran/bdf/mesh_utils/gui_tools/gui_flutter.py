@@ -1,7 +1,9 @@
 # encoding: utf-8
+import json
 import os
 import sys
 import signal
+from pathlib import Path
 
 import numpy as np
 from cpylog import SimpleLogger
@@ -10,47 +12,26 @@ from cpylog.html_utils import str_to_html
 #from qtpy import QtGui
 from qtpy import QtCore
 from qtpy.QtWidgets import (
-    # QMainWindow,
     QLabel, QPushButton, QGridLayout, QApplication,
     QSpinBox, QLineEdit, QCheckBox,
     QWidget, QComboBox,
     QRadioButton, QButtonGroup,
-    # QTabWidget, QDoubleSpinBox, QColorDialog,
+    QFileDialog,
     QHBoxLayout, QVBoxLayout,)
+
+from pyNastran.bdf.mesh_utils.cmd_line.create_flutter import (
+    create_flutter, VELOCITY_UNITS, ALT_UNITS)
+from pyNastran.utils.atmosphere import atm_density
+
 from pyNastran.gui.menus.cutting_plane.results_dialog import ResultsDialog
-from pyNastran.gui.utils.qt.checks.qlineedit import check_float #, check_save_path, QLINEEDIT_GOOD
+from pyNastran.gui.utils.qt.checks.qlineedit import check_float
 
 #import pyNastran
-#from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
 from pyNastran.gui.menus.application_log import ApplicationLogWidget
-from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
-#from pyNastran.gui.utils.qt.checks.qlineedit import (
-#    check_int, check_float, check_name_str, check_path, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
-#from pyNastran.utils import print_bad_path
-#from pyNastran.converters.cart3d.cart3d import read_cart3d
-#from pyNastran.converters.tecplot.tecplot import read_tecplot
-#from pyNastran.dev.tools.pressure_map_aero_setup import get_aero_model
+from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit, PyDialog
 
-#import sys
-#from typing import Any
-#from cpylog import SimpleLogger
-#from .utils import filter_no_args
-#from pyNastran.utils.convert import convert_altitude, convert_velocity
-
-from pyNastran.gui.utils.qt.pydialog import PyDialog #, make_font, check_color
 from pyNastran.gui.utils.qt.qcombobox import get_combo_box_text
-from pyNastran.bdf.mesh_utils.cmd_line.create_flutter import create_flutter
-# from pyNastran.bdf.bdf import BDF
-
-# import pyNastran
-# from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
-# from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
-# from pyNastran.gui.utils.qt.checks.qlineedit import (
-#     check_int, check_float, check_name_str, check_path, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
-# from pyNastran.utils import print_bad_path
-# from pyNastran.converters.cart3d.cart3d import read_cart3d
-# from pyNastran.converters.tecplot.tecplot import read_tecplot
-# from pyNastran.dev.tools.pressure_map.setup_aero import get_aero_model
+from pyNastran.utils.convert import convert_velocity
 
 # kills the program when you hit Cntl+C from the command line
 # doesn't save the current state as presumably there's been an error
@@ -58,9 +39,6 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 USE_WIN = False
 
-#from pyNastran.bdf.mesh_utils.cmd_line.create_flutter import VELOCITY_UNITS, ALTITUDE_UNITS
-VELOCITY_UNITS = ['knots', 'ft/s', 'in/s', 'm/s', 'cm/s', 'mm/s']
-ALTITUDE_UNITS = ['ft', 'm']
 UNIT_SYSTEMS_MAP = {
     'in-slinch-s (English-in)': 'english_in',
     'ft-slug-s (English-ft)': 'english_ft',
@@ -68,6 +46,8 @@ UNIT_SYSTEMS_MAP = {
     'mm-Mg-s (SI-mm)': 'si_mm',
 }
 UNIT_SYSTEMS = list(UNIT_SYSTEMS_MAP.keys())
+
+SETTINGS_PATH = Path.home() / 'bdf_flutter.json'
 
 CONSTANT_TYPE_MAP = {
     'Mach': 'mach',
@@ -104,6 +84,7 @@ class FlutterGui(PyDialog):
 
         self.create_layout()
         self.set_connections()
+        self._load_settings()
 
         # self.on_font(self.font_size)
         # self.show()
@@ -112,7 +93,7 @@ class FlutterGui(PyDialog):
         sweep = get_combo_box_text(self.sweep_pulldown)
         constant = get_combo_box_text(self.constant_pulldown)
         is_eas_enabled = (sweep != 'Equivalent Airspeed') and (constant != 'Equivalent Airspeed')
-        self.eas_limit_value.setEnabled(is_eas_enabled)
+        self.eas_limit_edit.setEnabled(is_eas_enabled)
         self.eas_limit_unit_pulldown.setEnabled(is_eas_enabled)
 
         if sweep == 'Mach':
@@ -128,8 +109,8 @@ class FlutterGui(PyDialog):
         elif sweep == 'Altitude':
             self.sweep_unit_pulldown.setEnabled(True)
             self.sweep_unit_pulldown.clear()
-            self.sweep_unit_pulldown.addItems(ALTITUDE_UNITS)
-            self.sweep_unit_pulldown.setItemText(0, ALTITUDE_UNITS[0])
+            self.sweep_unit_pulldown.addItems(ALT_UNITS)
+            self.sweep_unit_pulldown.setItemText(0, ALT_UNITS[0])
         else:  # pragma: no cover
             raise NotImplementedError(sweep)
 
@@ -137,7 +118,7 @@ class FlutterGui(PyDialog):
         sweep = get_combo_box_text(self.sweep_pulldown)
         constant = get_combo_box_text(self.constant_pulldown)
         is_eas_enabled = (sweep != 'Equivalent Airspeed') and (constant != 'Equivalent Airspeed')
-        self.eas_limit_value.setEnabled(is_eas_enabled)
+        self.eas_limit_edit.setEnabled(is_eas_enabled)
         self.eas_limit_unit_pulldown.setEnabled(is_eas_enabled)
 
         # SWEEP_FORMATS = ['Mach', 'Equivalent Airspeed', 'Velocity', 'Altitude']
@@ -154,8 +135,8 @@ class FlutterGui(PyDialog):
         elif constant == 'Altitude':
             self.constant_unit_pulldown.setEnabled(True)
             self.constant_unit_pulldown.clear()
-            self.constant_unit_pulldown.addItems(ALTITUDE_UNITS)
-            self.constant_unit_pulldown.setItemText(0, ALTITUDE_UNITS[0])
+            self.constant_unit_pulldown.addItems(ALT_UNITS)
+            self.constant_unit_pulldown.setItemText(0, ALT_UNITS[0])
         else:  # pragma: no cover
             raise NotImplementedError(constant)
 
@@ -166,7 +147,12 @@ class FlutterGui(PyDialog):
         constant_unit = self.constant_unit_pulldown.currentText()
         sweep_unit = self.sweep_unit_pulldown.currentText()
         eas_units = self.eas_limit_unit_pulldown.currentText()
+        flutter_id = int(self.flutter_id_edit.text())
         npoints = self.n_value.value()
+
+        # log = self.log
+        log = SimpleLogger(level='debug')
+        log.info(f'flutter_id = {flutter_id}')
 
         sweep_method = CONSTANT_TYPE_MAP[sweep_method_unmapped]
         constant_type = CONSTANT_TYPE_MAP[constant_type_unmapped]
@@ -174,15 +160,19 @@ class FlutterGui(PyDialog):
 
         # if sweep_method == 'mach':
         #     sweep_unit = ''
-
         value1, value1_flag = check_float(self.sweep1_value)
         value2, value2_flag = check_float(self.sweep2_value)
-        const_value, const_value_flag = check_float(self.constant_value)
+        const_value, const_value_flag = check_float(self.constant_value_edit)
 
         is_large = self.large_field_checkbox.isChecked()
         clean = self.clean_checkbox.isChecked()
         size = 16 if is_large else 8
-        bdf_filename_out = os.path.abspath(self.aero_filename.text())
+        output_dir = self.output_dir_edit.text().strip()
+        flutter_filename = self.aero_filename.text().strip()
+        if output_dir:
+            bdf_filename_out = os.path.join(output_dir, flutter_filename)
+        else:
+            bdf_filename_out = os.path.abspath(flutter_filename)
 
         # bdf flutter UNITS eas  EAS1  EAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT
         # bdf flutter UNITS tas  TAS1  TAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS]
@@ -194,15 +184,15 @@ class FlutterGui(PyDialog):
         eas_limit = 1_000_000
         eas_str = ''
         if (sweep_method != 'eas') and (constant_type != 'eas'):
-            eas_limit, eas_limit_flag = check_float(self.eas_limit_value)
+            eas_limit, eas_limit_flag = check_float(self.eas_limit_edit)
             eas_str = f'--eas_limit {eas_limit} {eas_units}'
             is_passed = value1_flag and value2_flag and const_value_flag and eas_limit_flag
         else:
             is_passed = value1_flag and value2_flag and const_value_flag
 
         if sweep_method == constant_type:
-            self.log.error('sweep_method=constant_type Error\n'
-                           f'sweep_method={sweep_method} constant_type={constant_type} and must be different')
+            log.error('sweep_method=constant_type Error\n'
+                     f'sweep_method={sweep_method} constant_type={constant_type} and must be different')
             # self.sweep_pulldown.setColor
             # self.constant_unit_pulldown.setColor
             if is_passed:
@@ -210,7 +200,7 @@ class FlutterGui(PyDialog):
 
         is_zaero = self._radio_zaero.isChecked()
         if not is_passed:
-            self.log.error('Invalid parsing')
+            log.error('Invalid parsing')
             return
 
         size_str = '--clean' if clean else f'--size {size}'
@@ -225,42 +215,59 @@ class FlutterGui(PyDialog):
         ).rstrip()
         if bdf_filename_out:
             cmd += f' --output {bdf_filename_out!r}'
-        self.log.info(cmd)
+        log.info(cmd)
 
         if constant_unit == '-':
             constant_unit = 'none'
 
         try:
             model, density_units, velocity_units = create_flutter(
-                self.log,
+                log,
                 sweep_method, value1, value2, sweep_unit, npoints,
                 constant_type, const_value, constant_unit,
                 eas_limit=eas_limit, eas_units=eas_units,
-                units_out=units_out,
+                units_out=units_out, sid=flutter_id,
                 size=size, clean=clean,
                 bdf_filename_out=bdf_filename_out,
                 comment=cmd, is_zaero=is_zaero)
         except Exception as error:
-            self.log.error(str(error))
+            log.error(str(error))
             return
 
+        self._save_settings()
+
         if is_zaero:
-            atmos_id = 10
-            fix_id = 11
+            atmos_id = flutter_id
+            fix_id = flutter_id + 1
             if sweep_method == 'eas' and constant_type == 'mach':
+                log.info(f'atmos = {list(model.zaero.atmos)}')
                 atmos = model.zaero.atmos[atmos_id]
                 alt = atmos.alt
+                nalt = len(alt)
                 density = atmos.density
                 sos = atmos.sos
-                velocity = model.zaero.fixmatm[fix_id]
-                mach = velocity / sos
-                density0 = 1.0
-                eas = velocity * np.sqrt(density / density0)
-                data = np.column_stack([alt, mach, sos, density, eas])
+                log.info(f'flutter_table = {list(model.zaero.flutter_table)}')
+                table = model.zaero.flutter_table[fix_id]
+                if table.type == 'FIXMATM':
+                    # alts = table.alts
+                    mkaeroz_id = table.mkaeroz_id
+                    log.info(f'mkaeroz = {list(model.zaero.mkaeroz)}')
+                    mkaeroz = model.zaero.mkaeroz[mkaeroz_id]
+                    machi = mkaeroz.mach
+                    mach = machi * np.ones(nalt)
+                    velocity = mach * sos
+                else:
+                    raise NotImplementedError((sweep_method, constant_type, table.type))
+
+                density0 = atm_density(alt=0.0, density_units=density_units)
+                eas_scale = convert_velocity(1., velocity_units, eas_units)
+                eas = velocity * np.sqrt(density / density0) * eas_scale
+                data = np.column_stack([alt, density, sos.round(1), mach, velocity.round(1), eas.round(1)])
                 alt_units = 'ft'
                 labels = [
                     f'Altitude ({alt_units})',
                     f'Density ({density_units})',
+                    f'SOS ({velocity_units})',
                     'Mach',
                     f'Velocity ({velocity_units})',
                     f'EAS ({eas_units})',
@@ -268,7 +275,7 @@ class FlutterGui(PyDialog):
             else:
                 return
         else:
-            flutter_id = 1
+            # flutter_id = 1
             flfact_rho = flutter_id + 1
             flfact_mach = flutter_id + 2
             flfact_velocity = flutter_id + 3
@@ -333,11 +340,17 @@ class FlutterGui(PyDialog):
         self.constant_pulldown.setItemText(1, SWEEP_FORMATS[1])
 
         self.constant_value_label = QLabel('Constant Value:', self)
-        self.constant_value = QFloatEdit('0')
-        self.constant_value.setToolTip('The constant value')
+        self.constant_value_edit = QFloatEdit('0')
+        self.constant_value_edit.setToolTip('The constant value')
 
         # self.constant_unit_label = QLabel('Constant Value:', self)
         self.constant_unit_pulldown = QComboBox(self)
+
+        self.output_dir_label = QLabel('Output Directory:')
+        self.output_dir_edit = QLineEdit(self)
+        self.output_dir_edit.setText(os.getcwd())
+        self.output_dir_edit.setToolTip('Directory for the output flutter file')
+        self.output_dir_browse = QPushButton('Browse...')
 
         self.aero_filename_label = QLabel('Flutter File:')
         self.aero_filename = QLineEdit(self)
@@ -347,14 +360,14 @@ class FlutterGui(PyDialog):
         self.aero_filename_load.setEnabled(False)
 
         self.flutter_id_label = QLabel('Flutter ID:')
-        self.flutter_id_value = QIntEdit('10')
-        self.flutter_id_value.setToolTip('ID of the FLUTTER card')
+        self.flutter_id_edit = QIntEdit('10')
+        self.flutter_id_edit.setToolTip('ID of the FLUTTER card')
         self.large_field_checkbox = QCheckBox('Large Field')
         self.clean_checkbox = QCheckBox('Clean')
         # ------------------------------------------------------------------
         self.eas_limit_label = QLabel('EAS Limit:', self)
-        self.eas_limit_value = QFloatEdit('1000')
-        self.eas_limit_value.setToolTip('Equivalent Airspeed Limit; V_EAS = V_TAS * sqrt(rho/rho0)')
+        self.eas_limit_edit = QFloatEdit('1000')
+        self.eas_limit_edit.setToolTip('Equivalent Airspeed Limit; V_EAS = V_TAS * sqrt(rho/rho0)')
         self.eas_limit_unit_pulldown = QComboBox(self)
         self.eas_limit_unit_pulldown.addItems(VELOCITY_UNITS)
         self.eas_limit_unit_pulldown.setItemText(0, VELOCITY_UNITS[0])
@@ -426,7 +439,7 @@ class FlutterGui(PyDialog):
 
             grid.addWidget(self.constant_label, irow, 0)
             grid.addWidget(self.constant_pulldown, irow, 1)
-            grid.addWidget(self.constant_value, irow, 2)
+            grid.addWidget(self.constant_value_edit, irow, 2)
             grid.addWidget(self.constant_unit_pulldown, irow, 3)
             irow += 1
         else:
@@ -450,17 +463,17 @@ class FlutterGui(PyDialog):
             grid.addWidget(unit_label, irow, 2)
             irow += 1
             grid.addWidget(self.constant_pulldown, irow, 0)
-            grid.addWidget(self.constant_value, irow, 1)
+            grid.addWidget(self.constant_value_edit, irow, 1)
             grid.addWidget(self.constant_unit_pulldown, irow, 2)
             irow += 1
 
             grid.addWidget(self.eas_limit_label, irow, 0)
-            grid.addWidget(self.eas_limit_value, irow, 1)
+            grid.addWidget(self.eas_limit_edit, irow, 1)
             grid.addWidget(self.eas_limit_unit_pulldown, irow, 2)
             irow += 1
             #-----------------------------------------------------
             grid.addWidget(self.flutter_id_label, irow, 0)
-            grid.addWidget(self.flutter_id_value, irow, 1)
+            grid.addWidget(self.flutter_id_edit, irow, 1)
             irow += 1
 
             grid.addWidget(self.large_field_checkbox, irow, 0)
@@ -475,6 +488,11 @@ class FlutterGui(PyDialog):
             grid.addWidget(self._radio_zaero, irow, 1)
             irow += 1
 
+            grid.addWidget(self.output_dir_label, irow, 0)
+            grid.addWidget(self.output_dir_edit, irow, 1)
+            grid.addWidget(self.output_dir_browse, irow, 2)
+            irow += 1
+
             grid.addWidget(self.aero_filename_label, irow, 0)
             grid.addWidget(self.aero_filename, irow, 1)
             grid.addWidget(self.aero_filename_load, irow, 2)
@@ -485,7 +503,116 @@ class FlutterGui(PyDialog):
     def set_connections(self):
         self.sweep_pulldown.currentIndexChanged.connect(self.on_sweep_pulldown)
         self.constant_pulldown.currentIndexChanged.connect(self.on_constant_pulldown)
+        self.output_dir_browse.clicked.connect(self.on_browse_output_dir)
         self.apply_button.clicked.connect(self.on_apply)
+
+    def on_browse_output_dir(self) -> None:
+        current_dir = self.output_dir_edit.text().strip()
+        if not os.path.isdir(current_dir):
+            current_dir = os.getcwd()
+        dirname = QFileDialog.getExistingDirectory(
+            self, 'Select Output Directory', current_dir)
+        if dirname:
+            self.output_dir_edit.setText(dirname)
+
+    def _save_settings(self) -> None:
+        settings = {
+            'sweep_method': self.sweep_pulldown.currentText(),
+            'sweep_unit': self.sweep_unit_pulldown.currentText(),
+            'sweep_value1': self.sweep1_value.text(),
+            'sweep_value2': self.sweep2_value.text(),
+            'npoints': self.n_value.value(),
+            'constant_type': self.constant_pulldown.currentText(),
+            'constant_value': self.constant_value_edit.text(),
+            'constant_unit': self.constant_unit_pulldown.currentText(),
+            'eas_limit': self.eas_limit_edit.text(),
+            'eas_limit_unit': self.eas_limit_unit_pulldown.currentText(),
+            'unit_system': self.unit_system_pulldown.currentText(),
+            'large_field': self.large_field_checkbox.isChecked(),
+            'clean': self.clean_checkbox.isChecked(),
+            'nastran': self._radio_nastran.isChecked(),
+            'output_dir': self.output_dir_edit.text(),
+            'flutter_filename': self.aero_filename.text(),
+            'flutter_id': self.flutter_id_edit.text(),
+        }
+        try:
+            with open(SETTINGS_PATH, 'w') as json_file:
+                json.dump(settings, json_file, indent=2)
+            self.log.info(f'Settings saved to {SETTINGS_PATH}')
+        except OSError as error:
+            self.log.warning(f'Could not save settings: {error}')
+
+    def _load_settings(self) -> None:
+        if not SETTINGS_PATH.is_file():
+            return
+        try:
+            with open(SETTINGS_PATH, 'r') as f:
+                settings = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            return
+
+        def _set_combo(combo: QComboBox, value: str) -> None:
+            idx = combo.findText(value)
+            if idx >= 0:
+                combo.setCurrentIndex(idx)
+
+        combos = [
+            (self.sweep_pulldown, 'sweep_method', self.on_sweep_pulldown),
+            (self.sweep_unit_pulldown, 'sweep_unit', None),
+        ]
+        log = self.log
+        for obj, name, action in combos:
+            if name in settings:
+                value = settings[name]
+                _set_combo(obj, value)
+                if action is not None:
+                    action()
+            else:
+                log.warning(f'Could not find {name!r} in settings')
+
+        texts = [
+            (self.sweep1_value, 'sweep_value1'),
+            (self.sweep2_value, 'sweep_value2'),
+            (self.eas_limit_edit, 'eas_limit'),
+            (self.output_dir_edit, 'output_dir'),
+            (self.aero_filename, 'flutter_filename'),
+            (self.constant_value_edit, 'constant_value'),
+            (self.flutter_id_edit, 'flutter_id'),
+        ]
+        for obj, name in texts:
+            if name in settings:
+                value = settings[name]
+                obj.setText(value)
+            else:
+                log.warning(f'Could not find {name!r} in settings')
+
+        checkboxes = [
+            (self.large_field_checkbox, 'large_field'),
+            (self.clean_checkbox, 'clean'),
+        ]
+        for obj, name in checkboxes:
+            if name in settings:
+                value = settings[name]
+                obj.setChecked(value)
+            else:
+                log.warning(f'Could not find {name!r} in settings')
+
+        if 'npoints' in settings:
+            self.n_value.setValue(settings['npoints'])
+        if 'constant_type' in settings:
+            _set_combo(self.constant_pulldown, settings['constant_type'])
+            self.on_constant_pulldown()
+        if 'constant_unit' in settings:
+            _set_combo(self.constant_unit_pulldown, settings['constant_unit'])
+        if 'eas_limit_unit' in settings:
+            _set_combo(self.eas_limit_unit_pulldown, settings['eas_limit_unit'])
+        if 'unit_system' in settings:
+            _set_combo(self.unit_system_pulldown, settings['unit_system'])
+        if 'nastran' in settings:
+            if settings['nastran']:
+                self._radio_nastran.setChecked(True)
+            else:
+                self._radio_zaero.setChecked(True)
 
     def _start_logging(self) -> None:
         if self.log is not None:

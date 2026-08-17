@@ -1951,6 +1951,20 @@ def check_case(sol: int,
         _assert_has_spc(subcase, fem2)
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)', 'METHOD'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
+    elif sol is None and fem2.is_zaero:
+        zaero = fem2.zaero
+        if 'FLUTTER' in subcase:
+            flutter_id = subcase.get_parameter('FLUTTER')[0]
+            fem2.flutters[flutter_id]
+        if 'ASE' in subcase:
+            ase_id = subcase.get_parameter('ASE')[0]
+            zaero.ase[ase_id]
+        if 'MLOADS' in subcase:
+            mloads_id = subcase.get_parameter('MLOADS')[0]
+            zaero.mloads[mloads_id]
+        if 'GLOADS' in subcase:
+            gloads_id = subcase.get_parameter('GLOADS')[0]
+            zaero.mloads[gloads_id]
     else:
         msg = f'SOL = {sol!r}\n'
         msg += str(subcase)

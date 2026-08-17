@@ -1935,8 +1935,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
             self._setup_filenames(op2_filename, force=True)
             if not is_binary_file(op2_filename):
                 if os.path.getsize(op2_filename) == 0:
-                    raise IOError(f'op2_filename={op2_filename!r} is empty.')
-                raise IOError(f'op2_filename={op2_filename!r} is not a binary OP2.')
+                    raise IOError(f'op2_filename={str(op2_filename)!r} is empty.')
+                raise IOError(f'op2_filename={str(op2_filename)!r} is not a binary OP2.')
 
         self._create_binary_debug()
         self._setup_op2()

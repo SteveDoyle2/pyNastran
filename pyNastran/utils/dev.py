@@ -1,7 +1,7 @@
 """
 defines:
  - fnames = get_files_of_type(dirname, extension='.txt',
-                              max_size=100., limit_file='no_dig.txt')
+                              max_size_mb=100., limit_file='no_dig.txt')
  - msg = list_print(lst, float_fmt='%-4.2f')
 
 """

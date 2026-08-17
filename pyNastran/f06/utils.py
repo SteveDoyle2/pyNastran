@@ -163,7 +163,7 @@ USAGE_145 = (
     '[--in_units IN] [--out_units OUT] [--rhoref] '
     f'[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT] {AXES} '
     f'[--noline] [--nopoints] [--ncol NCOL] {EXPORTS} '
-    '[--modal IVEL MODE] [--freq_tol FREQ_TOL] [--freq_tol_remove FREQ_TOL_REMOVE] [--mag_tol MAG_TOL]\n'
+    '[--modal IVEL MODE] [--freq_tol FREQ_TOL] [--freq_tol_remove FREQ_TOL_REMOVE] [--mag_tol MAG_TOL] [--zaero]\n'
 )
 
 
@@ -309,6 +309,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         '  --freq_tol FREQ_TOL            sets the delta frequency tolerance for Vg-Vf and kfreq to dash a line\n'
         '  --freq_tol_remove HIDE_FREQ_TOL  sets the delta frequency tolerance for Vg-Vf and kfreq to hide a line\n'
         '  --mag_tol MAG_TOL              sets the magnitude tolerance for modal participation\n'
+        '  --zaero          flag a zaero file\n'
         '\n'
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -338,6 +339,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     if is_gui:
         gui_flutter(f06_filename)
         return
+    is_zaero = data['--zaero']
     modes = split_int_colon(data['--modes'], start_value=1)
 
     subcases = None
@@ -465,6 +467,35 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
     assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
 
+    ylim_kfreq = None
+    if is_zaero:
+        plot_vg = False
+        plot_vg_vf = False
+        from pyNastran.f06.dev.flutter.read_zaero_out import read_zaero_out, SimpleLogger
+        log = SimpleLogger(level='debug')
+        flutters, mass = read_zaero_out(f06_filename, log=log)
+
+        from pyNastran.f06.parse_flutter import make_flutter_plots
+        make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
+                           plot_type,
+                           plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
+                           nopoints, noline, ncol=ncol,
+                           ivelocity=ivelocity, mode=mode,
+                           vd_limit=vd_limit, damping_limit=damping_limit,
+                           freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
+                           mag_tol=mag_tol,
+                           export_csv_filename=export_csv_filename,
+                           export_zaero_filename=export_zaero_filename,
+                           export_veas_filename=export_veas_filename,
+                           export_f06_filename=export_f06_filename,
+                           vg_filename=vg_filename,
+                           vg_vf_filename=vg_vf_filename,
+                           root_locus_filename=root_locus_filename,
+                           modal_participation_filename=modal_participation_filename,
+                           kfreq_damping_filename=kfreq_damping_filename,
+                           subcases=subcases,
+                           show=show, clear=False, close=False)
+
     flutter_responses = plot_flutter_f06(
         f06_filename, modes=modes,
         subcases=subcases,
@@ -474,7 +505,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         plot_root_locus=plot_root_locus, plot_vg_vf=True, plot_vg=False,
         plot_kfreq_damping=plot_kfreq_damping,
         xlim=xlim,
-        ylim_damping=ylim_damping, ylim_freq=ylim_freq,
+        ylim_damping=ylim_damping, ylim_freq=ylim_freq, ylim_kfreq=ylim_kfreq,
         vd_limit=vd_limit,
         damping_limit=damping_limit,
         freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,

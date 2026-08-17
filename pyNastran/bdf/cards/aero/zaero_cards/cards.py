@@ -302,7 +302,7 @@ class AEROZ(Aero):
         # YES-aero=half,structure=half
         # NO-aero=full; structure=full
         # H2F-aero=full; structure=half
-        assert sym_xz in ["YES", "NO", "H2F"], f"sym_xz={sym_xz}"
+        assert sym_xz in ["YES", "NO", "H2F"], f"sym_xz={sym_xz!r}"
 
         # YES-structure=left,aero=right
         assert flip in ["YES", "NO"], f"flip={flip!r}"
@@ -321,7 +321,6 @@ class AEROZ(Aero):
         comment : str; default=''
             a comment for the card
 
-
         $       ACSID XZSYM FLIP FMMUNIT FMLUNIT REFC   REFB   REFS
         $+ABC   REFX  REFY  REFZ
         AEROZ   0     YES   NO   SLIN    IN       22.73 59.394 1175.8
@@ -332,7 +331,7 @@ class AEROZ(Aero):
         sym_xz = string(card, 2, "sym_xz")
         flip = string(card, 3, "flip")
         mass_unit = string_or_blank(card, 4, "fm_mass_unit", default="NONE")
-        length_unit = string(card, 5, "fm_length_unit")
+        length_unit = string_or_blank(card, 5, "fm_length_unit", default="NONE")
 
         # rcsid = integer_or_blank(card, 2, 'rcsid', 0)
 
@@ -1128,7 +1127,7 @@ class MLDTIME(BaseCard):
         dt: float,
         out_dt: int,
         print_flag: int,
-        method: str,
+        method: int | None,
         comment: str = "",
     ):
         BaseCard.__init__(self)
@@ -1428,26 +1427,59 @@ class PBODY7(BaseCard):
 
     type = "PBODY7"
 
-    def __init__(self, pid: int, ipbody: int, fields: list, comment: str = ""):
+    def __init__(self, pid: int, wake: int, inlet: int,
+                 idps: list[int], flowrates: list[float],
+                 cp_base: float=-0.2, xs_wake: float=1.3,
+                 xd_wake: float=1.1, yoffset: float=0.0, zoffset: float=0.0,
+                 comment: str = ""):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.pid = pid
-        self.ipbody = ipbody
-        self.fields = fields
+        self.wake = wake
+        self.inlet = inlet
+        self.idps = idps
+        self.flowrates = flowrates
+        self.cp_base = cp_base
+        self.xs_wake = xs_wake
+        self.xd_wake = xd_wake
+        self.yoffset = yoffset
+        self.zoffset = zoffset
 
     @classmethod
-    def add_card(cls, card, comment: str = ""):
+    def add_card(cls, card: BDFCard, comment: str = ""):
+        # PBODY7 ID   WAKE    CPBASE XSWAKE  XDWAKE YOFF ZOFF INLET CONT
+        #        IDP1 FLOWRT1 IDP2   FLOWRT2 -etc-
         pid = integer(card, 1, "pid")
-        ipbody = integer_or_blank(card, 2, "ipbody", default=0)
+        wake = integer(card, 2, "wake")
+        cp_base = double_or_blank(card, 3, "cp_base", default=-0.2)
+        xs_wake = double_or_blank(card, 4, "xs_wake", default=1.3)
+        xd_wake = double_or_blank(card, 5, "xd_wake", default=1.3)
+        yoffset = double_or_blank(card, 6, "yoffset", default=0.0)
+        zoffset = double_or_blank(card, 7, "zoffset", default=0.0)
+        inlet = integer(card, 8, "ipbody")
         fields = []
-        for i in range(3, len(card)):
-            val = card.field(i)
-            fields.append(val)
-        return PBODY7(pid, ipbody, fields, comment=comment)
+        ifield0 = 9
+        idps = []
+        flowrates = []
+        for i in range(inlet):
+            idp = integer(card, ifield0+2*i, f"idp{i+1}")
+            flowrate = double(card, ifield0 + 2 * i + 1, f"flowrate{i + 1}")
+            idps.append(idp)
+            flowrates.append(flowrate)
+        return PBODY7(pid, wake, inlet, idps, flowrates,
+                      cp_base=cp_base, xs_wake=xs_wake,
+                      xd_wake=xd_wake, yoffset=yoffset, zoffset=zoffset, comment=comment)
 
     def raw_fields(self):
-        return ["PBODY7", self.pid, self.ipbody] + self.fields
+        assert len(self.idps) == self.inlet
+        assert len(self.flowrates) == self.inlet
+
+        list_fields = ["PBODY7", self.pid, self.wake, self.cp_base, self.xs_wake, self.xd_wake,
+                       self.yoffset, self.zoffset, self.inlet]
+        for idp, flowrate in zip(self.idps, self.flowrates):
+            list_fields.extend([idp, flowrate])
+        return list_fields
 
     def write_card(self, size: int = 8, is_double: bool = False) -> str:
         card = self.raw_fields()

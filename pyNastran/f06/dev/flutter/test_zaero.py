@@ -154,9 +154,9 @@ class TestZaero(unittest.TestCase):
         assert len(data_dict) == 2, data_dict
         assert isinstance(data_dict["matrices"], dict), data_dict
 
-    def test_solid_bending_to_zaero(self):
-        op2_filename = BDF_MODEL_DIR / "solid_bending" / "solid_bending.op2"
-        bdf_filename = BDF_MODEL_DIR / "solid_bending" / "solid_bending.bdf"
+    def test_nastran_to_zaero(self):
+        op2_filename = BDF_MODEL_DIR / "plate_py" / "plate_py.op2"
+        bdf_filename = BDF_MODEL_DIR / "plate_py" / "plate_py.dat"
         nastran_to_zaero_f06(op2_filename, bdf_filename=bdf_filename)
         # nastran_to_zaero_f06(op2_filename, bdf_filename=None)
 
