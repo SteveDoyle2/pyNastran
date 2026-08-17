@@ -7,13 +7,13 @@ import pyNastran
 #from pyNastran.bdf.bdf import BDF
 #from pyNastran.op2.op2 import FatalError
 #from pyNastran.op2.op2_interface.op2_common import get_scode_word
-from pyNastran.op2.op2_geom import read_op2_geom
+from pyNastran.op2.op2_geom import read_op2_geom, OP2Geom
 from pyNastran.op2.op2 import OP2, read_op2
 #from pyNastran.op2.test.test_op2 import run_op2
 #from pyNastran.op2.writer.op2_writer import OP2Writer
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = Path(os.path.abspath(os.path.join(PKG_PATH, '..', 'models')))
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = Path(os.path.abspath(PKG_PATH / '..' / 'models'))
 
 
 class TestOP2Writer(unittest.TestCase):
@@ -55,6 +55,44 @@ class TestOP2Writer(unittest.TestCase):
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out, log=log)
         assert op2 == op2b
         os.remove(op2_filename_debug_out)
+
+    def test_write_materials(self):
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = OP2Geom(log=log)
+        folder = MODEL_PATH / 'solid_bending'
+        op2_filename = folder / 'solid_bending.op2'
+        model = read_op2_geom(
+            op2_filename, # debug_file=op2_filename_debug,
+            include_results='displacements', log=log)
+
+        op2_flags = {
+            'MAT10': {'include_alpha': True},  # default False
+            'RBAR': {'include_tref': True},
+        }
+        mid = 10
+        bulk = 11.
+        rho = 12.
+        c = 13.
+        model.add_mat10(mid, bulk, rho, c, ge=14.0)
+        model.add_matt9(1, 2)
+        eid = 5
+        ga = 1
+        gb = 2
+        cna = '3'
+        cnb = '4'
+        cma = ''
+        cmb = ''
+        model.add_rbar(eid, [ga, gb], cna, cnb, cma, cmb, alpha=2.0)
+        cma = '1'
+        cmb = '2'
+        model.add_rrod(eid+1, [ga, gb], cna, cnb, cma, cmb)
+
+        op2_filename_out = folder / 'materials.op2'
+        model.write_op2(op2_filename_out, op2_flags=op2_flags,
+                        nastran_format='msc')
+
+        new_model = read_op2_geom(op2_filename_out, validate=False, log=log)
+        op2_filename_out.unlink()
 
     def _test_write_solid_shell_bar_static_basic(self):  # pragma: no cover
         """tests basic op2 writing"""

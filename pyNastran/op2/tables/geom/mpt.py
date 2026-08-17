@@ -1277,19 +1277,22 @@ class MPT:
             #(mid, tc_tables, *other) = out
             #print(mid, tc_tables, *other)
             if sum(other) != 0:
-                op2.log.warning(f'mATT9 mid={mid} other={other} flags are dropped...')
+                op2.log.warning(f'MATT9 mid={mid} other={other} flags are dropped...')
             if op2.is_debug_file:
                 op2.binary_debug.write('  MATT9=%s\n' % str(out))
 
-            #MATT9(mid, g11_table=None, g12_table=None, g13_table=None, g14_table=None,
-                                 #g15_table=None, g16_table=None, g22_table=None, g23_table=None,
-                                 #g24_table=None, g25_table=None, g26_table=None, g33_table=None,
-                                 #g34_table=None, g35_table=None, g36_table=None, g44_table=None,
-                                 #g45_table=None, g46_table=None, g55_table=None, g56_table=None,
-                                 #g66_table=None, rho_table=None,
-                                 #a1_table=None, a2_table=None, a3_table=None,
-                                 #a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
-            tc_tables = [g11, g12, g13, g14, g15, g16, g22, g23, g24, g25, g26, g33]
+            #MATT9(mid,
+                #g11_table=None, g12_table=None, g13_table=None, g14_table=None,
+                #g15_table=None, g16_table=None, g22_table=None, g23_table=None,
+                #g24_table=None, g25_table=None, g26_table=None, g33_table=None,
+                #g34_table=None, g35_table=None, g36_table=None, g44_table=None,
+                #g45_table=None, g46_table=None, g55_table=None, g56_table=None,
+                #g66_table=None, rho_table=None,
+                #a1_table=None, a2_table=None, a3_table=None,
+                #a4_table=None, a5_table=None, a6_table=None, ge_table=None,  comment='')
+            tc_tables = [
+                g11, g12, g13, g14, g15, g16,
+                g22, g23, g24, g25, g26, g33]
             assert mid > 0, (mid, tc_tables, *other)
             trho = 0
             ta1 = 0
@@ -1332,14 +1335,16 @@ class MPT:
             assert c == 0, out
             assert d == 0, out
             assert e == 0, out
-            #MATT9(mid, g11_table=None, g12_table=None, g13_table=None, g14_table=None,
-                                 #g15_table=None, g16_table=None, g22_table=None, g23_table=None,
-                                 #g24_table=None, g25_table=None, g26_table=None, g33_table=None,
-                                 #g34_table=None, g35_table=None, g36_table=None, g44_table=None,
-                                 #g45_table=None, g46_table=None, g55_table=None, g56_table=None,
-                                 #g66_table=None, rho_table=None,
-                                 #a1_table=None, a2_table=None, a3_table=None,
-                                 #a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
+            #MATT9(
+                #mid, g11_table=None, g12_table=None, g13_table=None, g14_table=None,
+                #g15_table=None, g16_table=None, g22_table=None, g23_table=None,
+                #g24_table=None, g25_table=None, g26_table=None, g33_table=None,
+                #g34_table=None, g35_table=None, g36_table=None, g44_table=None,
+                #g45_table=None, g46_table=None, g55_table=None, g56_table=None,
+                #g66_table=None, rho_table=None,
+                #a1_table=None, a2_table=None, a3_table=None,
+                #a4_table=None, a5_table=None, a6_table=None, ge_table=None,  
+                #comment='')
             mat = MATT9(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
             materials.append(mat)
             n += ntotal
@@ -1388,14 +1393,16 @@ class MPT:
             #assert c == 0, out
             #assert d == 0, out
             #assert e == 0, out
-            #MATT9(mid, g11_table=None, g12_table=None, g13_table=None, g14_table=None,
-                                 #g15_table=None, g16_table=None, g22_table=None, g23_table=None,
-                                 #g24_table=None, g25_table=None, g26_table=None, g33_table=None,
-                                 #g34_table=None, g35_table=None, g36_table=None, g44_table=None,
-                                 #g45_table=None, g46_table=None, g55_table=None, g56_table=None,
-                                 #g66_table=None, rho_table=None,
-                                 #a1_table=None, a2_table=None, a3_table=None,
-                                 #a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
+            #MATT9(
+                #mid, g11_table=None, g12_table=None, g13_table=None, g14_table=None,
+                #g15_table=None, g16_table=None, g22_table=None, g23_table=None,
+                #g24_table=None, g25_table=None, g26_table=None, g33_table=None,
+                #g34_table=None, g35_table=None, g36_table=None, g44_table=None,
+                #g45_table=None, g46_table=None, g55_table=None, g56_table=None,
+                #g66_table=None, rho_table=None,
+                #a1_table=None, a2_table=None, a3_table=None,
+                #a4_table=None, a5_table=None, a6_table=None, ge_table=None,  
+                #comment='')
             #mat = MATT11(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
             #self._add_methods.add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
