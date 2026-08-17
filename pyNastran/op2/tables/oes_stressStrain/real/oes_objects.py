@@ -430,9 +430,12 @@ def set_static_case(cls, is_sort1, isubcase,
     return obj
 
 
-def set_modal_case(cls, is_sort1, isubcase, data_code,
-                   func, args, modes, eigns, cycles):
-
+def set_modal_case(cls, is_sort1: bool, isubcase: int, data_code,
+                   func, args,
+                   modes: np.ndarray,
+                   eigns: np.ndarray,
+                   cycles: np.ndarray):
+    data_code['name'] = 'mode'
     data_code['data_names'] = ['modes', 'eigns', 'mode_cycles']
     data_code['load_set'] = 1
     #data_code['lsdvmns'] = [0] # TODO: ???
@@ -455,7 +458,7 @@ def set_modal_case(cls, is_sort1, isubcase, data_code,
 
 def set_buckling_case(cls, is_sort1, isubcase, data_code,
                       func, args, modes, eigns, cycles):
-
+    data_code['name'] = 'mode'
     data_code['data_names'] = ['modes', 'eigns', 'mode_cycles', 'freqs']
     data_code['load_set'] = 1
     #data_code['lsdvmns'] = [0] # TODO: ???
@@ -480,6 +483,7 @@ def set_buckling_case(cls, is_sort1, isubcase, data_code,
 def set_transient_case(cls, is_sort1: bool, isubcase: int,
                        data_code, func, args, times: np.ndarray):
     data_code['lsdvmns'] = [0] # TODO: ???
+    data_code['name'] = 'dt'
     data_code['data_names'] = ['dt']
     data_code['load_set'] = 1
     data_code['analysis_code'] = 6
@@ -499,6 +503,7 @@ def set_post_buckling_case(cls, is_sort1, isubcase,
                            data_code, func, args,
                            modes, eigrs, eigis):
     data_code['lsdvmns'] = [0] # TODO: ???
+    data_code['name'] = 'mode'
     data_code['data_names'] = ['modes', 'eigrs', 'eigis']
     data_code['load_set'] = 1
     data_code['analysis_code'] = 8

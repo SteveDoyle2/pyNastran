@@ -393,7 +393,8 @@ class TestOP2Writer(unittest.TestCase):
         #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
-            'force.cshear_force', 'force.cvisc_force',
+            # 'force.cshear_force',
+            'force.cvisc_force',
             'grid_point_forces', '*strain_energy',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
