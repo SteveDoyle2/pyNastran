@@ -3316,7 +3316,11 @@ class AddRigidElements:
         self._add_methods.add_rigid_element_object(elem)
         return elem
 
-    def add_rbar(self, eid, nids, cna, cnb, cma, cmb, alpha=0., comment='') -> RBAR:
+    def add_rbar(self, eid: int, nids: list[int],
+                 cna, cnb, cma, cmb,
+                 alpha: float=0.,
+                 tref: float | None=None,
+                 comment='') -> RBAR:
         """
         Creates a RBAR element
 
@@ -3332,11 +3336,14 @@ class AddRigidElements:
             dependent DOFs in '123456'
         alpha : float; default=0.0
             coefficient of thermal expansion
+        tref : float; default=None
+            reference temperature
         comment : str; default=''
             a comment for the card
 
         """
-        elem = RBAR(eid, nids, cna, cnb, cma, cmb, alpha=alpha, comment=comment)
+        elem = RBAR(eid, nids, cna, cnb, cma, cmb,
+                    alpha=alpha, tref=tref, comment=comment)
         self._add_methods.add_rigid_element_object(elem)
         return elem
 
@@ -3739,7 +3746,7 @@ class AddMaterial:
 
     def add_mat10(self, mid, bulk, rho, c, ge=0.0, gamma=None,
                   table_bulk=None, table_rho=None, table_ge=None, table_gamma=None,
-                  comment='') -> MAT10:
+                  comment: str='') -> MAT10:
         """
         Creates a MAT10 card
 

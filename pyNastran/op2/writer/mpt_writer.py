@@ -15,7 +15,9 @@ INT_OUT_NLPARM_MAP = {value: key for key, value in NLPARM_INT_OUT_MAP.items()}
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import BDF, OP2Geom
 
-def write_mpt(op2_file, op2_ascii, model, endian=b'<',
+def write_mpt(op2_file, op2_ascii, model,
+              op2_flags: dict[str, dict[str, bool]],
+              endian=b'<',
               nastran_format: str='nx'):
     """writes the MPT/MPTS table"""
     if not hasattr(model, 'materials'):
@@ -100,8 +102,9 @@ def write_mpt(op2_file, op2_ascii, model, endian=b'<',
         #if nmaterials == 0:
             #continue
         func = MATERIAL_MAP[name]
+        flags = op2_flags.get(name, {})
         nbytes = func(model, name, mids, nmaterials,
-                      op2_file, op2_ascii, endian)
+                      op2_file, op2_ascii, endian, **flags)
 
         op2_file.write(pack('i', nbytes))
         itable -= 1
@@ -427,16 +430,25 @@ def write_mat9(model: BDF, name, mids, nmaterials,
     return nbytes
 
 def write_mat10(model: BDF, name, mids, nmaterials,
-                op2_file, op2_ascii, endian):
+                op2_file, op2_ascii, endian: bytes,
+                include_alpha: bool=False):
     """writes the MAT10"""
     key = (2801, 28, 365)
-    nfields = 5
-    spack = Struct(endian + b'i4f')
+    if include_alpha:
+        nfields = 6
+        spack = Struct(endian + b'i4ff')
+    else:
+        nfields = 5
+        spack = Struct(endian + b'i4f')
     nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.materials[mid]
         #(mid, bulk, rho, c, ge) = out
         data = [mid, mat.bulk, mat.rho, mat.c, mat.ge]
+        if include_alpha:
+            # alpha = gamma
+            gamma = 0.0 if mat.gamma is None else mat.gamma
+            data.append(gamma)
         assert len(data) == nfields
 
         #print('MAT10 -', data, len(data))

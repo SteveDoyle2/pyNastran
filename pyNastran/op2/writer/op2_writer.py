@@ -38,6 +38,20 @@ class TrashWriter:
         pass
 
 
+def apply_default_keys(op2_flags: dict[str, dict[str, bool]],
+                       op2_flags_default: dict[str, dict[str, bool]]) -> None:
+    assert op2_flags is not None, op2_flags
+    assert op2_flags_default is not None, op2_flags_default
+    for key, defaults in op2_flags_default.items():
+        if key not in op2_flags:
+            op2_flags[key] = defaults
+            continue
+        for keyi, default in defaults.items():
+            if keyi not in op2_flags[key]:
+                op2_flags[key][keyi] = default
+    return op2_flags
+
+
 class OP2Writer(OP2_F06_Common):
     def __init__(self, log=None, debug: bool=False):
         self.log = get_logger(log, debug)
@@ -47,6 +61,7 @@ class OP2Writer(OP2_F06_Common):
     def write_op2(self, op2_out_filename: PathLike,
                   post: int=-1,
                   endian: bytes=b'<',
+                  op2_flags: Optional[dict[str, dict[str, bool]]]=None,
                   includes: Optional[list[str]]=None,
                   skips: Optional[list[str]]=None,
                   nastran_format: Optional[str]=None,
@@ -82,8 +97,16 @@ class OP2Writer(OP2_F06_Common):
             nastran_format = self._nastran_format
         if nastran_revision is not None:
             self._nastran_revision = nastran_revision
+        if op2_flags is None:
+            op2_flags = {}
         assert nastran_format in {'msc', 'nx', 'optistruct'}, nastran_format
         skips = _set_skips(self, includes, skips)
+
+        op2_flags_default = {
+            'MAT10': {'include_alpha': False,},
+            'RBAR': {'include_tref': False,},
+        }
+        op2_flags = apply_default_keys(op2_flags, op2_flags_default)
 
         #print('writing %s' % op2_outname)
 
@@ -105,10 +128,11 @@ class OP2Writer(OP2_F06_Common):
             close = False
             #print('op2_outname =', op2_outname)
 
+        assert op2_flags is not None, op2_flags
         try:
             total_case_count, table_names = _write_op2(
                 op2_file, fop2_ascii, self,
-                skips,
+                skips, op2_flags,
                 post=post, endian=endian,
                 nastran_format=nastran_format,
                 nastran_revision=self._nastran_revision,
@@ -179,6 +203,7 @@ def _set_skips(model: OP2Writer,
 
 def _write_op2(op2_file, fop2_ascii, obj: OP2,
                skips: set[str],
+               op2_flags: dict[str, dict[str, bool]],
                post: int=-1, endian: bytes=b'<',
                nastran_format: str='nx',
                nastran_revision: str='') -> tuple[int, list[str]]:
@@ -205,11 +230,13 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
         if 'GEOM3' not in skips:  # constraints
             write_geom3(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
         if 'GEOM4' not in skips:  # loads
-            write_geom4(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+            write_geom4(op2_file, fop2_ascii, obj, op2_flags,
+            endian=endian, nastran_format=nastran_format)
         if 'EPT' not in skips:    # properties
             write_ept(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
         if 'MPT' not in skips:    # materials
-            write_mpt(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+            write_mpt(op2_file, fop2_ascii, obj, op2_flags,
+            endian=endian, nastran_format=nastran_format)
         if 'DYNAMIC' not in skips:    # dynamics
             write_dynamic(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
 
