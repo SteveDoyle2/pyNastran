@@ -176,7 +176,7 @@ def write_card(op2_file, op2_ascii, card_type: str, cards,
         flags = op2_flags.get(card_type, {})
         nbytes = func(card_type, cards, ncards,
                       op2_file, op2_ascii, endian, log,
-                      nastran_format=nastran_format)
+                      nastran_format=nastran_format, **flags)
 
     #elif card_type == 'TEMPD':
         #key = (5641, 65, 98)
@@ -530,7 +530,9 @@ def write_rbar(card_type: str, cards: list[RBAR],
                 cma, cmb,
                 rbar.alpha]
             if include_tref:
-                rbar.append(rbar.tref)
+                tref = 0.0 if rbar.tref is None else rbar.tref
+                fields.append(tref)
+            assert None not in fields, fields
 
     elif nastran_format == 'nx':
         fmt = endian + b'7i' * ncards
@@ -542,6 +544,7 @@ def write_rbar(card_type: str, cards: list[RBAR],
             fields += [
                 rbar.eid, rbar.ga, rbar.gb,
                 cna, cnb, cma, cmb]
+            assert None not in fields, fields
     else:  # pragma: no cover
         raise NotImplementedError(nastran_format)
     nfields = len(fields)

@@ -187,11 +187,7 @@ class TestOP2Writer(unittest.TestCase):
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
-        exclude_results = [
-            #'*_strain_energy',
-            'grid_point_forces',
-            # 'force.cquad4_force',
-        ]
+        exclude_results = []
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results,
                             log=log, )
@@ -216,7 +212,7 @@ class TestOP2Writer(unittest.TestCase):
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
-        exclude_results = ['grid_point_forces']
+        exclude_results = []
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, log=log,
                             exclude_results=exclude_results)
 
@@ -369,8 +365,7 @@ class TestOP2Writer(unittest.TestCase):
 
         exclude_results = [
             'force.ctria6_force', 'force.ctriar_force', 'force.cshear_force',
-            'force.cvisc_force',
-            'stress.cshear_stress',
+            'force.cvisc_force', 'stress.cshear_stress',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results, log=log)

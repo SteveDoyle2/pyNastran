@@ -5,7 +5,9 @@ from struct import pack, Struct
 from typing import BinaryIO, TYPE_CHECKING
 
 from .geom1_writer import write_geom_header, close_geom_table
-from .geom4_writer import write_header
+from .geom2_writer import _write_end_block
+from .geom4_writer import write_header, write_header_nvalues
+
 from pyNastran.bdf.cards.dynamic import (
     TSTEPNL, NLPARM, NLPARM_CONV_MAP, NLPARM_KMETHOD_MAP, NLPARM_INT_OUT_MAP,
 ) # TSTEP
@@ -52,6 +54,13 @@ def write_mpt(op2_file, op2_ascii, model,
             model.log.warning(f'skipping MPT-{mtype}')
             continue
         out[mtype] = list(mat_dict.keys())
+
+    for bc_id, bcs in model.bcs.items():
+        # CONV. RADBC
+        for bc in bcs:
+            if bc.type == 'RADM':
+                out[bc.type].append(bc)
+            # bc_dict[bc.type].append(bc)
 
     card_name_attrs = [
         ('NLPARM', model.nlparms),
@@ -769,6 +778,41 @@ def write_matt9(model: BDF, name, mids, nmaterials,
     return nbytes
 
 
+def write_radm(model, name: str, elems, nelements: int,
+               op2_file: BinaryIO, op2_ascii, endian: bytes) -> int:
+    """
+    RADM(8802, 88, 413)
+
+    Word Name Type Description
+    1 EID      I Element identification number
+    2 FAMB    RS Radiation view factor between the face and the ambient point
+    3 CONTROL_NODE  I Control point for radiation boundary condition
+    4 NODAMB   I
+    """
+    nradm = len(elems)
+    nfields = 1
+    for elem in elems:
+        nemissivity = len(elem.emissivity)
+        nfieldsi = 2 + nemissivity
+        nfields += nfieldsi
+
+    key = (8802, 88, 413)
+    nbytes = write_header_nvalues(name, nfields, key, op2_file, op2_ascii)
+
+    structi = Struct(endian + b'i')
+    op2_file.write(structi.pack(nradm))
+    for elem in elems:
+        nemissivity = len(elem.emissivity)
+        data = [elem.radmid, elem.absorb] + list(elem.emissivity)
+        assert None not in data, data
+        fmt = f'if {nemissivity:d}f'
+        structi = Struct(endian + fmt.encode('ascii'))
+        op2_file.write(structi.pack(*data))
+        # print(f'  RADM radmid={elem.radmid} absorb={elem.absorb} emissivity={elem.emissivity}')
+        op2_ascii.write(f'  RADM radmid={elem.radmid} absorb={elem.absorb} emissivity={elem.emissivity}\n')
+    return nbytes
+
+
 MATERIAL_MAP = {
     'MAT1': write_mat1,
     'MAT2': write_mat2,
@@ -789,4 +833,5 @@ MATERIAL_MAP = {
     'TSTEPNL': write_tstepnl,
     'NLPARM': write_nlparm,
     #'NLPCI': write_nlpci,
+    'RADM': write_radm,
 }

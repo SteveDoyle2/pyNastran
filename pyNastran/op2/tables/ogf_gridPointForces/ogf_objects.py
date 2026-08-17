@@ -1549,7 +1549,7 @@ class RealGridPointForcesArray(GridPointForces):
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
 
-        ntotali = self.num_wide
+        num_wide = self.num_wide
 
         #print('shape = %s' % str(self.data.shape))
         #assert self.ntimes == 1, self.ntimes
@@ -1573,22 +1573,24 @@ class RealGridPointForcesArray(GridPointForces):
             #print('stress itable = %s' % itable)
             itable -= 1
 
-            t1 = self.data[itime, :, 0]
-            t2 = self.data[itime, :, 1]
-            t3 = self.data[itime, :, 2]
-            r1 = self.data[itime, :, 3]
-            r2 = self.data[itime, :, 4]
-            r3 = self.data[itime, :, 5]
+            nrows = self._ntotals[itime]
 
-            nids = self.node_element[itime, :, 0]
-            eids = self.node_element[itime, :, 1]
-            enames = self.element_names[itime, :]
+            t1 = self.data[itime, :nrows, 0]
+            t2 = self.data[itime, :nrows, 1]
+            t3 = self.data[itime, :nrows, 2]
+            r1 = self.data[itime, :nrows, 3]
+            r2 = self.data[itime, :nrows, 4]
+            r3 = self.data[itime, :nrows, 5]
+
+            nids = self.node_element[itime, :nrows, 0]
+            eids = self.node_element[itime, :nrows, 1]
+            enames = self.element_names[itime, :nrows]
 
             nids_device = nids * 10 + self.device_code
             assert nids.min() > 0, nids.min()
             nnodes = len(nids)
 
-            ntotal = ntotali * nnodes
+            ntotal = num_wide * nnodes
             header = [4, itable, 4,
                       4, 1, 4,
                       4, 0, 4,
@@ -1600,7 +1602,6 @@ class RealGridPointForcesArray(GridPointForces):
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             #zero = ' '
-            ntotali = self._ntotals[itime]
             #print(self._ntotals)
             assert len(eids) == len(nids)
             assert len(enames) == len(nids), 'enames=%s nnids=%s' % (len(enames), len(nids))
@@ -1609,10 +1610,10 @@ class RealGridPointForcesArray(GridPointForces):
             assert len(t3) == len(nids)
             assert len(r1) == len(nids)
             assert len(r2) == len(nids)
-            assert len(nids) <= ntotali, 'len(nids)=%s ntotali=%s' % (len(nids), ntotali)
+            assert len(nids) <= nrows, 'len(nids)=%s nrows=%s' % (len(nids), nrows)
 
             for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
-                 range(ntotali), nids_device, eids, enames, t1, t2, t3, r1, r2, r3):
+                 range(nrows), nids_device, eids, enames, t1, t2, t3, r1, r2, r3):
 
                 #print(nid, eid, ename, t1i)
                 data = [nid, eid, ename.encode('ascii'), t1i, t2i, t3i, r1i, r2i, r3i]
@@ -2184,7 +2185,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
 
-        ntotali = self.num_wide
+        num_wide = self.num_wide
 
         #print('shape = %s' % str(self.data.shape))
 
@@ -2221,8 +2222,9 @@ class ComplexGridPointForcesArray(GridPointForces):
             nids_device = nids * 10 + self.device_code
             assert nids.min() > 0, nids.min()
             nnodes = len(nids)
+            nrows = self._ntotals[itime]
 
-            ntotal = ntotali * nnodes
+            ntotal = num_wide * nnodes
             header = [4, itable, 4,
                       4, 1, 4,
                       4, 0, 4,
@@ -2234,7 +2236,6 @@ class ComplexGridPointForcesArray(GridPointForces):
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             #zero = ' '
-            ntotal = self._ntotals[itime]
             #print(self._ntotals)
             assert len(eids) == len(nids)
             assert len(enames) == len(nids), 'enames=%s nnids=%s' % (len(enames), len(nids))
@@ -2243,10 +2244,10 @@ class ComplexGridPointForcesArray(GridPointForces):
             # assert len(t3) == len(nids)
             # assert len(r1) == len(nids)
             # assert len(r2) == len(nids)
-            assert len(nids) <= ntotal, 'len(nids)=%s ntotal=%s' % (len(nids), ntotal)
+            assert len(nids) <= nrows, 'len(nids)=%s nrows=%s' % (len(nids), nrows)
 
             for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
-                 range(ntotal), nids_device, eids, enames, t1, t2, t3, r1, r2, r3):
+                 range(nrows), nids_device, eids, enames, t1, t2, t3, r1, r2, r3):
 
                 #print(nid, eid, ename, t1i)
                 data = [nid, eid, ename.encode('ascii'),
@@ -2255,7 +2256,7 @@ class ComplexGridPointForcesArray(GridPointForces):
                 #print('  nid=%s eid=%s data=%s' % (nid, eid, str(data[2:])))
                 op2_ascii.write('  nid=%-3s eid=%-3s data=%s\n' % (nid, eid, str(data[2:])))
                 op2_file.write(struct1.pack(*data))
-                assert len(data) + 1 == self.num_wide
+                assert len(data) + 1 == num_wide
 
             itable -= 1
             header = [4 * ntotal,]

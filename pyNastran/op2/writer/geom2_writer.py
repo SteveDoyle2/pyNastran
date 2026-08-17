@@ -44,10 +44,22 @@ def write_geom2(op2_file: BinaryIO, op2_ascii,
         out[element.type].append(eid)
     for eid, element in model.micpnt.items():
         out[element.type].append(eid)
+
+    bc_dict = defaultdict(list)
     for bc_id, bcs in model.bcs.items():
-        log.error(str(bcs))
+        # CONV. RADBC
         for bc in bcs:
             out[bc.type].append(bc)
+            bc_dict[bc.type].append(bc)
+
+    # TODO: what can go in this?
+    if 'RADM' in bc_dict:
+        del out['RADM']
+        del bc_dict['RADM']
+    if 'CONV' in bc_dict:
+        del bc_dict['CONV']
+    assert len(bc_dict) == 0, bc_dict
+
 
     if nspoints:
         out['SPOINT'] = list(model.spoints.keys())
@@ -1281,4 +1293,5 @@ GEOM2_MAP = {
     'CPYRAM': write_solid,
     'MICPNT': write_micpnt,
     'RADBC': write_radbc,
+    #'RADM': write_radm,
 }
