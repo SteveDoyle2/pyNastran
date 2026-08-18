@@ -81,34 +81,10 @@ def write_ept(op2_file, op2_ascii, model: BDF, endian=b'<',
             # log.warning(f'reading EPT-{name}')
             itable = func(name, pids, itable, op2_file, op2_ascii, model, endian=endian,
                           nastran_format=nastran_format)
-            # itable = write_pfast(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,
-            #                      nastran_format=nastran_format)
             continue
         else:
             model.log.warning(f'skipping {name}')
             continue
-        #else:  # pragma: no cover
-            #raise NotImplementedError(name)
-
-        # doesn't include the key
-        nvalues = nfields * nproperties
-        nbytes = _write_table_header(
-            op2_file, op2_ascii, name, key, nvalues, size)
-
-        try:
-            write_card(op2_file, op2_ascii, model, name, pids, spack, endian)
-        except Exception:
-            model.log.error('failed EPT-%s' % name)
-            raise
-        op2_file.write(pack('i', nbytes))
-        itable -= 1
-
-        data = [
-            4, itable, 4,
-            4, 1, 4,
-            4, 0, 4]
-        op2_file.write(pack('9i', *data))
-        op2_ascii.write(str(data) + '\n')
 
     #-------------------------------------
     #print('itable', itable)
@@ -1035,9 +1011,38 @@ def write_nsmadd(card_type: str, cards: list, itable: int,
                  nastran_format: str='nx', size: int=4) -> int:
     ncards = len(cards)
     nbytes = write_spcadd(card_type, cards, ncards, op2_file, op2_ascii,
-                          endian)
+                          endian, model.log, nastran_format=nastran_format)
     itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
     return itable
+
+def write_pconvm(name: str, pids: np.ndarray, itable: int,
+                op2_file: BinaryIO, op2_ascii, model: BDF,
+                endian: bytes=b'<',
+                nastran_format: str='nx') -> int:
+    """writes the PCONMV"""
+    key = (2902, 29, 420)
+    size = 4
+
+    nfields = 8  # 8*4
+    structi = Struct(endian + b'4i 4f')
+    # (pconid, mid, form, flag, coeff, expr, expri, exppo) = out
+
+    nproperties = len(pids)
+    nvalues = nfields * nproperties
+    nbytes = _write_table_header(
+        op2_file, op2_ascii, name, key, nvalues, size)
+    for prop in sorted(pids):
+        # print(pid)
+        # prop = model.convection_properties[pid]
+        # print(prop.get_stats())
+        data = [prop.pconid, prop.mid, prop.form, prop.flag, prop.coeff, prop.expr, prop.exppi, prop.exppo]
+        assert None not in data, data
+        op2_file.write(structi.pack(*data))
+        op2_ascii.write(str(data) + '\n')
+
+    itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
+    return itable
+
 
 def write_nsm(name: str, nsms: list, itable: int,
               op2_file: BinaryIO, op2_ascii, model: BDF, endian: bytes=b'<',
@@ -1804,7 +1809,6 @@ def write_pelas(name: str, props: list, itable: int,
                 endian: bytes=b'<',
                 nastran_format: str='nx', size: int=4) -> int:
     key = (302, 3, 46)
-
     nfieldsi = len(props) * 4
     nbytes = _write_table_header(
         op2_file, op2_ascii, name, key, nfieldsi, size)
@@ -1903,4 +1907,5 @@ EPT_MAP = {
     'PELAST': write_pelast,
     'PHBDY': write_phbdy,
     'PGPLSN': write_pgplsn,
+    'PCONVM': write_pconvm,
 }

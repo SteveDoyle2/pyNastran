@@ -80,6 +80,7 @@ class RealEigenvectorArray(RealTableArray):
     def __init__(self, data_code, is_sort1: bool,
                  isubcase: int, dt, f06_flag: bool=False):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        # assert self.data_code['name'] == 'mode', self.data_code
 
     def scale(self, factors: np.ndarray) -> None:
         """
@@ -199,7 +200,13 @@ class RealEigenvectorArray(RealTableArray):
 
         # no self.cycles
         # cycle = freq = eign / (2*pi)
-        omegas = np.sqrt(np.abs(self.eigns))
+        if hasattr(self, 'eigns'):
+            # modes
+            eigns = self.eigns
+        else:
+            assert hasattr(self, 'eigrs'), self.data_code
+            eigns = self.eigrs
+        omegas = np.sqrt(np.abs(eigns))
         freqs = omegas / (2 * np.pi)
         for itime in range(self.ntimes):
             node = self.node_gridtype[:, 0]
@@ -214,9 +221,9 @@ class RealEigenvectorArray(RealTableArray):
             dt = self._times[itime]
             # '      EIGENVALUE = -4.811883E-04'
             # '          CYCLES =  3.491224E-03         R E A L   E I G E N V E C T O R   N O .          1'
-            assert self.data_code['name'] == 'mode', self.data_code
+            # assert self.data_code['name'] == 'mode', self.data_code
             # 'data_names': ['mode', 'eign', 'mode_cycle']
-            eign = self.eigns[itime]
+            eign = eigns[itime]
             freq = freqs[itime]
             # header[0] = f'      EIGENVALUE = {eign:10.4E}\n'
             # if isinstance(dt, float_types):

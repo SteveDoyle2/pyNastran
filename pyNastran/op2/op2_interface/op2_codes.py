@@ -355,7 +355,7 @@ class Op2Codes:
                 if name in 'mode':
                     fmts = ('int32', 'int64')
                 else:
-                    assert name in {'freq', 'dt', 'time',
+                    assert name in {'freq', 'dt', 'time', 'eigr',
                                     'lsdvmn', 'lftsfq', 'load_factor',
                                     'load_step', 'loadID', 'thresh'}, name + self.object_stats() # 'eigr', 'eign'
                     fmts = ('float32', 'float64')

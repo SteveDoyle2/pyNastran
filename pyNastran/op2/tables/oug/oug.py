@@ -142,7 +142,7 @@ class OUG:
             # load set number
             op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
             # real eigenvalue
-            op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, ) # TODO: was False
             op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
         elif op2.analysis_code == 9:  # complex eigenvalues
             # mode number

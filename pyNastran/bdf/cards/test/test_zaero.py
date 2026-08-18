@@ -1373,7 +1373,7 @@ def get_mloads_file():
         'MKAEROZ,7,0.8',
         ',1.0',
         #           idmk
-        'FIXMATM,6, 7, ',
+        'FIXMATM,6, 7, 0, slug, ft,',
         ',0.0, 10000.',
         "FLUTTER, 5, SYM, 6",
         "MLDTIME,101, 0.0, 1.0, 0.1",

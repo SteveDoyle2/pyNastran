@@ -185,7 +185,7 @@ class TestThermal(unittest.TestCase):
         pconv.raw_fields()
 
         pconid = 12
-        convm = model.add_convm(eid, pconid, ta1, film_node=0, cntmdot=0,
+        convm = model.add_convm(eid, pconid, ta1, film_node=10, cntmdot=2,
                                 ta2=None, mdot=1.0, comment='convm')
         convm.raw_fields()
         coef = 0.023

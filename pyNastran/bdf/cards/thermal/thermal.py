@@ -1170,7 +1170,7 @@ class PCONVM(ThermalProperty):
         self.flag = flag
 
         #: Constant coefficient used for forced convection
-        self.coef = coeff
+        self.coeff = coeff
 
         #: Reynolds number convection exponent. (Real > 0.0; Default = 0.0)
         self.expr = expr
@@ -1200,12 +1200,12 @@ class PCONVM(ThermalProperty):
         mid = integer(card, 2, 'mid')
         form = integer_or_blank(card, 3, 'form', default=0)
         flag = integer_or_blank(card, 4, 'flag', default=0)
-        coef = double(card, 5, 'coef')
+        coeff = double(card, 5, 'coef')
         expr = double_or_blank(card, 6, 'expr', default=0.0)
         exppi = double_or_blank(card, 7, 'exppi', default=0.0)
         exppo = double_or_blank(card, 8, 'exppo', default=0.0)
         assert len(card) <= 9, f'len(PCONVM card) = {len(card):d}\ncard={card}'
-        return PCONVM(pconid, mid, coef, form=form, flag=flag,
+        return PCONVM(pconid, mid, coeff, form=form, flag=flag,
                       expr=expr, exppi=exppi, exppo=exppo, comment=comment)
 
     #def cross_reference(self, model: BDF) -> None:
@@ -1217,7 +1217,7 @@ class PCONVM(ThermalProperty):
 
     def raw_fields(self):
         list_fields = ['PCONVM', self.pconid, self.mid, self.form,
-                       self.flag, self.coef, self.expr, self.exppi, self.exppo]
+                       self.flag, self.coeff, self.expr, self.exppi, self.exppo]
         return list_fields
 
     def repr_fields(self):
@@ -1227,7 +1227,7 @@ class PCONVM(ThermalProperty):
         exppi = set_blank_if_default(self.exppi, 0.0)
         exppo = set_blank_if_default(self.exppo, 0.0)
         list_fields = ['PCONVM', self.pconid, self.mid, form, flag,
-                       self.coef, expr, exppi, exppo]
+                       self.coeff, expr, exppi, exppo]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

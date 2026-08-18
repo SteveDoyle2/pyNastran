@@ -299,7 +299,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         '  --ncol NCOL      the number of columns for the legend\n'
         "  --nopoints       don't plot the points\n"
         "  --noline         don't plot the lines\n"
-        '  --rhoref         use sea level rho0 (density is actually density ratio; rho/rhoSL)'
+        '  --rhoref         use sea level rho0 (density is actually density ratio; rho/rhoSL)\n'
         '  --export_zaero   export a ZAERO file\n'
         '  --export_csv     export a CSV file\n'
         '  --export_f06     export an F06 file (temporary)\n'

@@ -15,7 +15,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from pyNastran.utils.convert import convert_length
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -302,8 +302,9 @@ class FIXMATM(BaseCard):
     # }
 
     def __init__(self, sid: int, mkaeroz_id: int,
+                 mass_unit: str, length_unit: str,
                  alts: list[float],
-                 atm_id: int = 0, mass_unit: str='NONE', length_unit: str='NONE',
+                 atm_id: int = 0,
                  fluttf_id: int=0, print_flag: int=0,
                  vref: float = 1.0, comment: str=''):
         BaseCard.__init__(self)
@@ -331,7 +332,7 @@ class FIXMATM(BaseCard):
             alts2 = convert_length(self.alts, self.length_unit.lower(), 'ft')
             assert alts2.min() >= -100_000., (alts2.min(), alts2.max())  # ft
             assert alts2.max() <= 260_000., (alts2.min(), alts2.max())  # ft
-            assert alts[0]
+        assert isinstance(alts[0], float_types), alts
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -353,8 +354,8 @@ class FIXMATM(BaseCard):
         sid = integer(card, 1, 'sid')
         mkaeroz_id = integer(card, 2, 'mkaeroz_id')
         atm_id = integer_or_blank(card, 3, 'atm_id', default=0)
-        mass_unit = string_or_blank(card, 4, 'mass_unit', default='NONE')
-        length_unit = string_or_blank(card, 5, 'length_unit', default='NONE')
+        mass_unit = string(card, 4, 'mass_unit')
+        length_unit = string(card, 5, 'length_unit')
         vref = double_or_blank(card, 6, 'vref', default=1.0)
         fluttf_id = integer_or_blank(card, 7, 'fluttf_id', default=0)
         print_flag = integer_or_blank(card, 8, 'print_flag', default=0)
@@ -367,9 +368,8 @@ class FIXMATM(BaseCard):
             j += 1
         assert len(card) > 8, f'len(FIXEMATM card) = {len(card):d}\ncard={card}'
         assert isinstance(mkaeroz_id, integer_types)
-        return FIXMATM(sid, mkaeroz_id, alts,
-                       atm_id=atm_id, mass_unit=mass_unit,
-                       length_unit=length_unit,
+        return FIXMATM(sid, mkaeroz_id, mass_unit, length_unit, alts,
+                       atm_id=atm_id,
                        print_flag=print_flag, fluttf_id=fluttf_id,
                        vref=vref, comment=comment)
 
@@ -455,6 +455,8 @@ class FIXMACH(BaseCard):
         self.mkaeroz_id = mkaeroz_id
         self.mass_unit = mass_unit
         self.length_unit = length_unit
+        assert isinstance(mass_unit, str), mass_unit
+        assert isinstance(length_unit, str), length_unit
         self.vref = vref
         self.fluttf_id = fluttf_id
         self.print_flag = print_flag

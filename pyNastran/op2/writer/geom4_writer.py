@@ -10,6 +10,7 @@ from .geom1_writer import write_geom_header, close_geom_table
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, USET, RBE1, RBE2, RBE3, RBAR
     from pyNastran.op2.op2_geom import OP2Geom
+    from cpylog import SimpleLogger
 
 
 def write_geom4(op2_file, op2_ascii, obj,
@@ -295,8 +296,8 @@ def write_uset(card_type: str, cards: list[USET],
         node_ids = uset.node_ids
         for nid, component in zip(node_ids, uset.components):
             datai = [sid, nid, int(component)]
-        op2_ascii.write('  USET data=%s\n' % str(datai))
-        data += datai
+            op2_ascii.write('  USET data=%s\n' % str(datai))
+            data += datai
     nfields = len(data)
     nbytes = write_header_nvalues(card_type, nfields, key, op2_file, op2_ascii)
     fmt = endian + b'3i' * (nfields // 3)
@@ -572,6 +573,7 @@ def write_spc1(card_type: str, cards, unused_ncards: int,
         #raise NotImplementedError('SPC1; thru_flag=%s' % thru_flag)
 
     max_spc_id = max([spc.conid for spc in cards])
+    nids = []
     try:
         nids = [max(spc.node_ids) for spc in cards]
     except ValueError:

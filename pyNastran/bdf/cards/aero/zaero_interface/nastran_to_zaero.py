@@ -247,9 +247,10 @@ def _convert_trim_mkaeroz(
         freqs = [0.]
         filename = ''
         mkaeroz = MKAEROZ(
-            mkaeroz_id, trim.mach, flt_id,
-             filename, print_flag, freqs,
-             method=0, save=None)
+            mkaeroz_id, trim.mach,
+            freqs, filename=filename,
+            flt_id=flt_id, print_flag=print_flag,
+            method=0, save=None)
         zaero.mkaeroz[mkaeroz_id] = mkaeroz
         nmkaeroz += 1
 

@@ -2584,14 +2584,14 @@ class GEOM2:
             out = structi.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('  CONVM=%s\n' % str(out))
-            (eid, pcon_id, flmnd, control_node, ta1, ta2) = out
+            (eid, pcon_id, film_node, control_node, ta1, ta2) = out
             #if eid <= 0:
-            if eid <= 0 or pcon_id <= 0 or flmnd < 0 or control_node <= 0 or ta1 <= 0 or ta2 <= 0:
+            if eid <= 0 or pcon_id <= 0 or film_node < 0 or control_node <= 0 or ta1 <= 0 or ta2 <= 0:
                 #self.show_data(data, 'if')
                 # TODO: I'm not sure that this really has 6 fields...
-                raise RuntimeError(f'eid={eid} pconid={pcon_id} flmnd={flmnd} control_node={control_node} ta1={ta1} ta2={ta2} < 0')
+                raise RuntimeError(f'eid={eid} pconid={pcon_id} film_node={film_node} control_node={control_node} ta1={ta1} ta2={ta2} < 0')
             mdot = 0.
-            data_in = [eid, pcon_id, flmnd, control_node, ta1, ta2, mdot]
+            data_in = [eid, pcon_id, film_node, control_node, ta1, ta2, mdot]
             elem = CONVM.add_op2_data(data_in)
             n += 24
             elements.append(elem)
@@ -2606,14 +2606,14 @@ class GEOM2:
             out = structi.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('  CONVM=%s\n' % str(out))
-            (eid, pcon_id, flmnd, control_node, ta1, ta2, mdot) = out
+            (eid, pcon_id, film_node, control_node, ta1, ta2, mdot) = out
 
-            if eid <= 0 or pcon_id <= 0 or flmnd < 0 or control_node <= 0 or ta1 <= 0 or ta2 <= 0:
+            if eid <= 0 or pcon_id <= 0 or film_node < 0 or control_node <= 0 or ta1 <= 0 or ta2 <= 0:
                 op2.show_data(data, 'if')
                 # TODO: I'm not sure that this really has 7 fields...
-                raise RuntimeError(f'eid={eid} pconid={pcon_id} flmnd={flmnd} '
+                raise RuntimeError(f'eid={eid} pconid={pcon_id} film_node={film_node} '
                                    f'control_node={control_node} ta1={ta1} ta2={ta2} < 0')
-            data_in = [eid, pcon_id, flmnd, control_node, ta1, ta2, mdot]
+            data_in = [eid, pcon_id, film_node, control_node, ta1, ta2, mdot]
             elem = CONVM.add_op2_data(data_in)
             n += 28
             elements.append(elem)
