@@ -146,7 +146,7 @@ class TestOP2Writer(unittest.TestCase):
 
         op2.write_op2(op2_filename_out) #, is_mag_phase=False)
         # unused_op2b = read_op2(op2_filename_out, debug_file=op2_filename_debug_out)
-        unused_op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        unused_op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out, log=log)
         os.remove(op2_filename_debug_out)
 
     def test_write_solid_shell_bar_static2(self):

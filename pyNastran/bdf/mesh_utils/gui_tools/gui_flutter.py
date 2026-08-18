@@ -232,6 +232,7 @@ class FlutterGui(PyDialog):
                 comment=cmd, is_zaero=is_zaero)
         except Exception as error:
             log.error(str(error))
+            # raise
             return
 
         self._save_settings()

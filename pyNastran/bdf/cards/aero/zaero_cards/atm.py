@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from matplotlib import pyplot as plt
 
+from pyNastran.utils.convert import convert_length
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
@@ -69,6 +70,11 @@ class ATMOS(BaseCard):
         assert length_unit in ['IN', 'FT', 'M', 'MM', 'CM', 'KM', 'NONE'], f'length_unit={length_unit}'
         assert temperature_unit in ['R', 'K', 'C', 'F'], temperature_unit
         assert len(atmosphere_table) > 0, atmosphere_table
+        alt = self.alt
+        sos = self.sos
+        assert len(np.unique(alt)) == len(alt)
+        assert np.array_equal(np.unique(alt), alt)
+        # assert np.array_equal(np.unique(sos), sos)
 
     @property
     def alt(self) -> np.ndarray:
@@ -143,7 +149,6 @@ class ATMOS(BaseCard):
             axes = [axes]
         assert len(axes) == ntables, (axes, ntables)
 
-
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -161,7 +166,7 @@ class ATMOS(BaseCard):
         ] + self.atmosphere_table.ravel().tolist()
         return list_fields
 
-    def repr_fields(self):
+    def repr_fields(self) -> list:
         list_fields = self.raw_fields()
         return list_fields
 
@@ -321,6 +326,12 @@ class FIXMATM(BaseCard):
         assert len(alts) >= 0, alts
         if len(alts) > 1:
             assert alts[0] < alts[1], alts
+        if atm_id == 0:
+            # -100 kft to 260 kft
+            alts2 = convert_length(self.alts, self.length_unit.lower(), 'ft')
+            assert alts2.min() >= -100_000., (alts2.min(), alts2.max())  # ft
+            assert alts2.max() <= 260_000., (alts2.min(), alts2.max())  # ft
+            assert alts[0]
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -367,6 +378,21 @@ class FIXMATM(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         cross_reference_atmos_mkaeroz_fluttf(self, model)
+        # self.plot_atmosphere()
+
+    def plot_atmosphere(self) -> None:
+        atmos = self.atmos_ref
+        from matplotlib import pyplot as plt
+        fig = plt.figure(1)
+        ax = fig.gca()
+        ax.plot(atmos.alt, atmos.sos, 'k-')
+
+        sos = np.interp(self.alts, atmos.alt, atmos.sos)
+        ax.plot(self.alts, sos, 'o')
+        ax.grid(True)
+        ax.set_xlabel('Altitude (ft)')
+        ax.set_ylabel('SO (ft/s)')
+        plt.show()
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)

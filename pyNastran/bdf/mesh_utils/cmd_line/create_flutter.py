@@ -453,13 +453,17 @@ def create_flutter(
             atm_temperature(alt, alt_units=alt_units, temperature_units=temperature_units)
             for alt in alts])
 
+        assert length_unit in ['in', 'm'], length_unit
+        alt_scale = 1.
+        if length_unit == 'in':
+            alt_scale = 12.
         # density0 = atm_density(0.0, 1716.0, alt_units=alt_units, density_units=density_units)
         # round density to 4 sig figs
         density_magnitude = np.floor(np.log10(np.abs(density)))
         decimals = 3 - density_magnitude
         decimals = np.nan_to_num(decimals, nan=0.0, posinf=0.0, neginf=0.0).astype(int)
         density2 = np.array([np.round(x, d) for x, d in zip(density, decimals)])
-        alts2 = alts.round(0)
+        alts2 = alts.round(0) * alt_scale
         sos2 = sos.round(0)
         atmosphere_table = np.column_stack([
                 alts2, sos2, density2, temperature.round(2),])
@@ -468,7 +472,7 @@ def create_flutter(
 
         atmosphere_list = atmosphere_table_reversed.ravel().tolist()
         msg = (
-            f"\n alt: ({alts2.min()}, {alts2.max()}) ({alt_units})"
+            f"\n alt: ({alts2.min()}, {alts2.max()}) ({length_unit})"
             f"\n sos: ({sos2.min()}, {sos2.max()}) ({velocity_units})"
             f"\n rho: ({density2.min()}, {density2.max()}) ({density_units})"
         )
@@ -486,8 +490,9 @@ def create_flutter(
         print_flag = 0
         alts2.sort()
         model.zaero.add_fixmatm(
-            sweep_id, mkaeroz_id, atm_id, mass_unit, length_unit,
-            fluttf_id, print_flag, alts2, vref=1.0, comment="")
+            sweep_id, mkaeroz_id, alts2,
+            atm_id=atm_id, mass_unit=mass_unit, length_unit=length_unit,
+            fluttf_id=fluttf_id, print_flag=fluttf_id, vref=1.0, comment="")
 
         freqs = [0.1, 0.2, 0.5, 1.]
         model.zaero.add_mkaeroz(mkaeroz_id, mach, freqs, comment="")
