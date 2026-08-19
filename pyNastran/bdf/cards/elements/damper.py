@@ -798,8 +798,8 @@ class CDAMP5(LineDamper):
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
-        nids = [integer_or_blank(card, 3, 'n1', 0),
-                integer_or_blank(card, 4, 'n2', 0)]
+        nids = [integer_or_blank(card, 3, 'n1', default=0),
+                integer_or_blank(card, 4, 'n2', default=0)]
         assert len(card) <= 5, f'len(CDAMP5 card) = {len(card):d}\ncard={card}'
         return CDAMP5(eid, pid, nids, comment=comment)
 

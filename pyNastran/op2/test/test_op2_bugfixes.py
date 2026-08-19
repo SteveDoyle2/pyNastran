@@ -10,6 +10,7 @@ Tests the following fixes:
 - write_op2 round-trip for real/complex stress results (rod, bar, shear, spring)
 """
 import os
+import copy
 import tempfile
 import unittest
 from io import BytesIO, StringIO
@@ -67,7 +68,7 @@ class TestComplexBarFixes(unittest.TestCase):
     def test_complex_bar_get_stats(self):
         """get_stats uses == not truthiness for element count assertion."""
         op2_filename = MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'
-        model = read_op2(str(op2_filename), debug=None)
+        model = read_op2(op2_filename, debug=None)
         cbar_stress = model.op2_results.stress.cbar_stress
         for subcase_id, result in cbar_stress.items():
             stats = result.get_stats()
@@ -77,7 +78,7 @@ class TestComplexBarFixes(unittest.TestCase):
     def test_complex_bar_eq(self):
         """__eq__ correctly unpacks all 9 columns (sa1-sa4, axial, sb1-sb4)."""
         op2_filename = MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'
-        model = read_op2(str(op2_filename), debug=None)
+        model = read_op2(op2_filename, debug=None)
         cbar_stress = model.op2_results.stress.cbar_stress
         for subcase_id, result in cbar_stress.items():
             assert result == result
@@ -85,7 +86,7 @@ class TestComplexBarFixes(unittest.TestCase):
     def test_complex_bar_data_layout(self):
         """Data array has 9 columns: [sa1, sa2, sa3, sa4, axial, sb1, sb2, sb3, sb4]."""
         op2_filename = MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'
-        model = read_op2(str(op2_filename), debug=None)
+        model = read_op2(op2_filename, debug=None)
         cbar_stress = model.op2_results.stress.cbar_stress
         for subcase_id, result in cbar_stress.items():
             assert result.data.shape[2] == 9
@@ -251,7 +252,7 @@ class TestWriteOp2RoundTrip(unittest.TestCase):
         Verifies: data shape preserved, values within atol=1e-5.
         """
         op2_filename = MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'
-        model = read_op2(str(op2_filename), debug=None)
+        model = read_op2(op2_filename, debug=None)
 
         fd, out_file = tempfile.mkstemp(suffix='.op2')
         os.close(fd)
@@ -278,7 +279,7 @@ class TestWriteOp2RoundTrip(unittest.TestCase):
         Verifies: 9 columns preserved, values within atol=1e-5.
         """
         op2_filename = MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'
-        model = read_op2(str(op2_filename), debug=None)
+        model = read_op2(op2_filename, debug=None)
 
         fd, out_file = tempfile.mkstemp(suffix='.op2')
         os.close(fd)
@@ -305,7 +306,7 @@ class TestWriteOp2RoundTrip(unittest.TestCase):
         Verifies: rod (4 cols), bar (15 cols) data within atol=1e-5.
         """
         op2_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
-        model = read_op2(str(op2_filename), debug=None)
+        model = read_op2(op2_filename, debug=None)
 
         fd, out_file = tempfile.mkstemp(suffix='.op2')
         os.close(fd)
@@ -1246,7 +1247,7 @@ class TestWriteOp2ReadBack(unittest.TestCase):
 
     def _round_trip(self, op2_filename, clear_gpf=True):
         """Helper: read model, write to temp, read back. Returns (model1, model2)."""
-        model = read_op2(str(op2_filename), debug=None)
+        model = read_op2(op2_filename, debug=None)
         if clear_gpf:
             model.grid_point_forces = {}
         fd, out_file = tempfile.mkstemp(suffix='.op2')
@@ -1443,7 +1444,7 @@ class TestWriteOp2CompositeBeamForce(unittest.TestCase):
     """
 
     def _round_trip(self, op2_filename):
-        model = read_op2(str(op2_filename), debug=None)
+        model = read_op2(op2_filename, debug=None)
         model.grid_point_forces = {}
         fd, out_file = tempfile.mkstemp(suffix='.op2')
         os.close(fd)
@@ -1540,7 +1541,7 @@ class TestOp2Metadata(unittest.TestCase):
     """
 
     def _round_trip(self, op2_filename):
-        model = read_op2(str(op2_filename), debug=None)
+        model = read_op2(op2_filename, debug=None)
         model.grid_point_forces = {}
         fd, out_file = tempfile.mkstemp(suffix='.op2')
         os.close(fd)
@@ -1633,49 +1634,49 @@ class TestOp2EqualityAndStats(unittest.TestCase):
 
     def test_real_rod_stress_equality(self):
         """RealRodStressArray.__eq__ returns True for self-comparison."""
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2', debug=None)
         rod = model.op2_results.stress.crod_stress[1]
         assert rod == rod
 
     def test_real_bar_stress_equality(self):
         """RealBarStressArray.__eq__ returns True for self-comparison."""
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2', debug=None)
         bar = model.op2_results.stress.cbar_stress[1]
         assert bar == bar
 
     def test_real_plate_stress_equality(self):
         """RealPlateStressArray.__eq__ returns True for self-comparison."""
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2', debug=None)
         plate = model.op2_results.stress.ctria3_stress[1]
         assert plate == plate
 
     def test_real_solid_stress_equality(self):
         """RealSolidStressArray.__eq__ returns True for self-comparison."""
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2', debug=None)
         solid = model.op2_results.stress.ctetra_stress[1]
         assert solid == solid
 
     def test_complex_rod_stress_equality(self):
         """ComplexRodStressArray.__eq__ returns True for self-comparison."""
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2', debug=None)
         rod = model.op2_results.stress.crod_stress[1]
         assert rod == rod
 
     def test_complex_bar_stress_equality(self):
         """ComplexBarStressArray.__eq__ returns True for self-comparison (uses fixed unpacking)."""
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2', debug=None)
         bar = model.op2_results.stress.cbar_stress[1]
         assert bar == bar
 
     def test_complex_plate_stress_equality(self):
         """ComplexPlateStressArray.__eq__ returns True for self-comparison."""
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2', debug=None)
         plate = model.op2_results.stress.ctria3_stress[1]
         assert plate == plate
 
     def test_get_stats_rod_stress(self):
         """get_stats returns meaningful output for RealRodStressArray."""
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2', debug=None)
         rod = model.op2_results.stress.crod_stress[1]
         stats = rod.get_stats()
         assert len(stats) > 0
@@ -1685,7 +1686,7 @@ class TestOp2EqualityAndStats(unittest.TestCase):
 
     def test_get_stats_complex_bar(self):
         """get_stats returns meaningful output for ComplexBarStressArray."""
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2', debug=None)
         bar = model.op2_results.stress.cbar_stress[1]
         stats = bar.get_stats()
         assert len(stats) > 0
@@ -1694,7 +1695,7 @@ class TestOp2EqualityAndStats(unittest.TestCase):
 
     def test_get_stats_transient_plate(self):
         """get_stats includes ntimes for transient results."""
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'transient_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'transient_solid_shell_bar.op2', debug=None)
         plate = model.op2_results.stress.cquad4_stress[1]
         stats = plate.get_stats()
         joined = ''.join(stats)
@@ -1702,7 +1703,7 @@ class TestOp2EqualityAndStats(unittest.TestCase):
 
     def test_write_f06_rod_stress(self):
         """RealRodStressArray.write_f06 produces valid text output."""
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2', debug=None)
         rod = model.op2_results.stress.crod_stress[1]
         f = StringIO()
         rod.write_f06(f, header=[''], page_stamp='PAGE %s')
@@ -1712,7 +1713,7 @@ class TestOp2EqualityAndStats(unittest.TestCase):
 
     def test_write_f06_complex_bar_stress(self):
         """ComplexBarStressArray.write_f06 produces valid text output."""
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'freq_solid_shell_bar.op2', debug=None)
         bar = model.op2_results.stress.cbar_stress[1]
         f = StringIO()
         bar.write_f06(f, header=['', ''], page_stamp='PAGE %s')
@@ -1721,7 +1722,7 @@ class TestOp2EqualityAndStats(unittest.TestCase):
 
     def test_write_f06_solid_stress(self):
         """RealSolidStressArray.write_f06 produces valid text output."""
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2', debug=None)
         solid = model.op2_results.stress.ctetra_stress[1]
         f = StringIO()
         solid.write_f06(f, header=[''], page_stamp='PAGE %s')
@@ -1745,8 +1746,7 @@ class TestLinearCombination(unittest.TestCase):
         Headers: [axial, SMa, torsion, SMt].
         ires=[0, 2] -> margins (columns 1, 3) are NOT combined.
         """
-        import copy
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2', debug=None)
         rod = model.op2_results.stress.crod_stress[1]
         rod_copy = copy.deepcopy(rod)
         rod_copy.linear_combination(0.0, update=False)
@@ -1762,8 +1762,7 @@ class TestLinearCombination(unittest.TestCase):
         Headers: [fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises].
         ires=[1, 2, 3] -> fiber_dist, angle, principal, ovm are NOT combined.
         """
-        import copy
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2', debug=None)
         plate = model.op2_results.stress.ctria3_stress[1]
         plate_copy = copy.deepcopy(plate)
         plate_copy.linear_combination(0.0, update=False)
@@ -1783,8 +1782,7 @@ class TestLinearCombination(unittest.TestCase):
         Headers: [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, von_mises].
         ires=slice(None, 6) -> principal stresses and ovm are NOT combined.
         """
-        import copy
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2', debug=None)
         solid = model.op2_results.stress.ctetra_stress[1]
         solid_copy = copy.deepcopy(solid)
         solid_copy.linear_combination(0.0, update=False)
@@ -1798,8 +1796,7 @@ class TestLinearCombination(unittest.TestCase):
         Headers: [sd, bm1, bm2, shear1, shear2, axial, torque, warp_torque].
         ires=slice(1, None) -> sd is NOT combined.
         """
-        import copy
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2', debug=None)
         bf = model.op2_results.force.cbeam_force[1]
         bf_copy = copy.deepcopy(bf)
         bf_copy.linear_combination(0.0, update=False)
@@ -1813,8 +1810,7 @@ class TestLinearCombination(unittest.TestCase):
         Headers: [o11, o22, t12, t1z, t2z, angle, major, minor, max_shear].
         ires=[0,1,2,3,4] -> angle, principal, max_shear are NOT combined.
         """
-        import copy
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2', debug=None)
         comp = model.op2_results.stress.cquad4_composite_stress[1]
         comp_copy = copy.deepcopy(comp)
         comp_copy.linear_combination(0.0, update=False)
@@ -1828,8 +1824,7 @@ class TestLinearCombination(unittest.TestCase):
         Workflow: zero -> add 2x -> update_data_components.
         Verifies: omax, omin, von_mises are recalculated from 2*oxx, 2*oyy, 2*txy.
         """
-        import copy
-        model = read_op2(str(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'), debug=None)
+        model = read_op2(MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2', debug=None)
         plate = model.op2_results.stress.ctria3_stress[1]
         plate_c = copy.deepcopy(plate)
         plate_c.linear_combination(0.0, update=False)
@@ -1864,5 +1859,5 @@ class TestLinearCombination(unittest.TestCase):
         assert np.all(data[:, :, 3] == 1)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

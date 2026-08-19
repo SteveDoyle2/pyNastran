@@ -20,17 +20,19 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, string,
-    blank, double, string_or_blank,
-    # integer_or_string,
-    # string_or_blank,
-    # integer_or_double,
-    # integer_or_string, integer_string_or_blank,
+    blank, double,
     # string_multifield,  # parse_components as fcomponent
 )
 from pyNastran.bdf.cards.aero.zaero_interface.get_card import get_atmos, get_mkaeroz
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+
+MASS_MAP = {
+    'SLINCH': 'SLIN',
+    'LBF': 'LBF/',
+    'N': 'N/',
+}
 
 
 class ATMOS(BaseCard):
@@ -59,11 +61,6 @@ class ATMOS(BaseCard):
             self.atmosphere_table = self.atmosphere_table.reshape(nalt, 4)
         else:
             assert self.atmosphere_table.ndim == 2, self.atmosphere_table.shape
-        MASS_MAP = {
-            'SLINCH': 'SLIN',
-            'LBF': 'LBF/',
-            'N': 'N/',
-        }
         mass_unit = MASS_MAP.get(mass_unit.upper(), mass_unit)
         self.mass_unit = mass_unit
 
@@ -72,7 +69,7 @@ class ATMOS(BaseCard):
         assert temperature_unit in ['R', 'K', 'C', 'F'], temperature_unit
         assert len(atmosphere_table) > 0, atmosphere_table
         alt = self.alt
-        sos = self.sos
+        # sos = self.sos
         assert len(np.unique(alt)) == len(alt)
         assert np.array_equal(np.unique(alt), alt)
         # assert np.array_equal(np.unique(sos), sos)
@@ -195,6 +192,7 @@ class FIXHATM(BaseCard):
         self.sid = sid
         self.mkaeroz_ids = mkaeroz_ids
         self.atm_id = atm_id
+        mass_unit = MASS_MAP.get(mass_unit.upper(), mass_unit)
         self.mass_unit = mass_unit
         self.length_unit = length_unit
         self.vref = vref
@@ -203,6 +201,8 @@ class FIXHATM(BaseCard):
         self.alt = alt
         self.atmos_ref = None
         self.mkaerozs_ref = None
+        assert mass_unit in ['SLIN', 'SLUG', 'LBM', 'G', 'KG', 'LBF/', 'N/'], f'mass_unit={mass_unit}'
+        assert length_unit in ['IN', 'FT', 'M', 'MM', 'CM', 'KM'], f'length_unit={length_unit}'
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str = ''):
@@ -317,6 +317,7 @@ class FIXMATM(BaseCard):
         self.sid = sid
         self.mkaeroz_id = mkaeroz_id
         self.atm_id = atm_id
+        mass_unit = MASS_MAP.get(mass_unit.upper(), mass_unit)
         self.mass_unit = mass_unit
         self.length_unit = length_unit
         self.vref = vref
@@ -336,6 +337,8 @@ class FIXMATM(BaseCard):
             assert alts2.min() >= -100_000., (alts2.min(), alts2.max())  # ft
             assert alts2.max() <= 260_000., (alts2.min(), alts2.max())  # ft
         assert isinstance(alts[0], float_types), alts
+        assert mass_unit in ['SLIN', 'SLUG', 'LBM', 'G', 'KG', 'LBF/', 'N/'], f'mass_unit={mass_unit}'
+        assert length_unit in ['IN', 'FT', 'M', 'MM', 'CM', 'KM'], f'length_unit={length_unit}'
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -456,10 +459,11 @@ class FIXMACH(BaseCard):
 
         self.sid = sid
         self.mkaeroz_id = mkaeroz_id
+        mass_unit = MASS_MAP.get(mass_unit.upper(), mass_unit)
         self.mass_unit = mass_unit
         self.length_unit = length_unit
-        assert isinstance(mass_unit, str), mass_unit
-        assert isinstance(length_unit, str), length_unit
+        assert mass_unit in ['SLIN', 'SLUG', 'LBM', 'G', 'KG', 'LBF/', 'N/'], f'mass_unit={mass_unit}'
+        assert length_unit in ['IN', 'FT', 'M', 'MM', 'CM', 'KM'], f'length_unit={length_unit}'
         self.vref = vref
         self.fluttf_id = fluttf_id
         self.print_flag = print_flag
@@ -516,7 +520,8 @@ class FIXMACH(BaseCard):
         assert len(card) > 8, f'len(FIXEMATM card) = {len(card):d}\ncard={card}'
         assert isinstance(mkaeroz_id, integer_types)
         return FIXMACH(sid, mkaeroz_id, mass_unit, length_unit,
-                       fluttf_id, print_flag, velocity, rho,
+                       velocity, rho,
+                       fluttf_id=fluttf_id, print_flag=print_flag,
                        vref=vref, comment=comment)
 
     # def validate(self):
@@ -587,6 +592,7 @@ class FIXMDEN(BaseCard):
 
         self.sid = sid
         self.mkaeroz_id = mkaeroz_id
+        mass_unit = MASS_MAP.get(mass_unit.upper(), mass_unit)
         self.mass_unit = mass_unit
         self.length_unit = length_unit
         self.vref = vref
@@ -597,6 +603,8 @@ class FIXMDEN(BaseCard):
         self.atmos_ref = None
         self.mkaeroz_ref = None
         assert isinstance(mkaeroz_id, integer_types), self.get_stats()
+        assert mass_unit in ['SLIN', 'SLUG', 'LBM', 'G', 'KG', 'LBF/', 'N/'], f'mass_unit={mass_unit}'
+        assert length_unit in ['IN', 'FT', 'M', 'MM', 'CM', 'KM'], f'length_unit={length_unit}'
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -633,7 +641,7 @@ class FIXMDEN(BaseCard):
         assert len(card) > 8, f'len(FIXEMATM card) = {len(card):d}\ncard={card}'
         assert isinstance(mkaeroz_id, integer_types)
         return FIXMDEN(sid, mkaeroz_id, density, mass_unit, length_unit,
-                       fluttf_id, print_flag, velocity,
+                       velocity, fluttf_id=fluttf_id, print_flag=print_flag,
                        vref=vref, comment=comment)
 
     # def validate(self):

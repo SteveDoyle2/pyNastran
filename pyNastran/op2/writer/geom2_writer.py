@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-#import struct
 from collections import defaultdict
 from struct import pack, Struct
 from typing import BinaryIO, TYPE_CHECKING
 import numpy as np
+
 from pyNastran.op2.errors import SixtyFourBitError
 from .geom1_writer import write_geom_header, close_geom_table
 integer_types = int
@@ -70,38 +70,7 @@ def write_geom2(op2_file: BinaryIO, op2_ascii,
         out['PLOTEL'] = list(model.plotels.keys())
 
     # elements with fixed lengths
-    geom2_key_mapper = {
-        # key, spack, nfields
-        'CTUBE': ((3701, 37, 49), b'4i', 4),
-        'CSHEAR': ((3101, 31, 61), b'6i', 6),
-        'CTRIAX': ((10108, 101, 512), b'9i', 9),
-        'CTRIAX6': ((6108, 61, 107), b'8i f ii', 11),
-        'CQUAD': ((9108, 91, 507), b'11i', 11),
-        'CQUADX': ((9008, 90, 508), b'11i', 11),  # same as CQUAD
-        'CROD': ((3001, 30, 48), b'4i', 4),
-
-        'CDAMP1': ((201, 2, 69), b'6i', 6),
-        'CDAMP2': ((301, 3, 70), b'if4i', 6),
-        'CDAMP3': ((401, 4, 71), b'4i', 4),
-        'CDAMP4': ((501, 5, 72), b'ifii', 4),
-        'CDAMP5': ((10608, 106, 404), b'ifii', 4),
-
-        'CELAS1': ((601, 6, 73), b'6i', 6),
-        'CELAS2': ((701, 7, 74), b'if4iff', 8),
-        'CELAS3': ((801, 8, 75), b'4i', 4),
-        'CELAS4': ((901, 9, 76), b'ifii', 4),
-
-        'CVISC': ((3901, 39, 50), b'4i', 4),
-        'CTRAX3': ((6111, 61, 996), b'5if', 6),
-        'CQUADX4': ((6112, 61, 997), b'6if', 7),
-        'CQUADX8': ((6114, 61, 999), b'10if', 11),
-        'CTRAX6': ((6113, 61, 998), b'8if', 9),
-
-        # masses :
-        'CPLSTN6': ((5801, 58, 982), b'2i 6i f 7i', 16),
-        'CPLSTN8': ((7201, 72, 983), b'2i 8i f 5i', 16),
-    }
-    allowed_etypes = list(geom2_key_mapper) + list(GEOM2_MAP)
+    allowed_etypes = list(GEOM2_MAP)
     for name, eids in sorted(out.items()):
         nelements = len(eids)
         # if name in etypes_to_skip:
@@ -111,54 +80,20 @@ def write_geom2(op2_file: BinaryIO, op2_ascii,
             max_eid_id = max(eids)
             if max_eid_id > 99999999:
                 raise SixtyFourBitError(f'64-bit OP2 writing is not supported; {name}: max eid={max_eid_id}')
-        #if max_nid > 99999999:
-            #raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max SPC nid={max_nid}')
-
-        #if nelements == 0:
-            #continue
-        #if name not in etypes:
-            #model.log.warning('skipping GEOM2-%s' % name)
-            #continue
 
         cards_written[name] = nelements
         # log.warning(f'GEOM2: {name}')
         if name in GEOM2_MAP:
             func = GEOM2_MAP[name]
-            assert name not in geom2_key_mapper, name
             nbytes = func(model, name, eids, nelements,
                           op2_file, op2_ascii, endian, nastran_format=nastran_format)
             assert isinstance(nbytes, int), nbytes
             itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
             continue
-        #elif name == 'CFAST':
-            #_write_cfast(model, name, eids, nelements, itable, op2_file, op2_ascii, endian,
-                         #nastran_format=nastran_format)
 
-        if name in geom2_key_mapper:
-            key, spacki, nfields = geom2_key_mapper[name]
-            spack = Struct(endian + spacki)
-            #print(name, spacki)
-
-        # -------------------
-        else:
-            log.warning(f'skipping GEOM2-{name}')
-            del cards_written[name]
-            continue
-        #else:  # pragma: no cover
-            #raise NotImplementedError(name)
-
-        #if self.is_debug_file:
-            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
-
-        nbytes = _write_intermediate_block(name, key, nfields, nelements,
-                                           op2_file, op2_ascii)
-
-        try:
-            write_card(name, eids, spack, model, op2_file, op2_ascii, endian)
-        except Exception:
-            model.log.error('failed GEOM2-%s' % name)
-            raise
-        itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
+        log.warning(f'skipping GEOM2-{name}')
+        del cards_written[name]
+        continue
 
     #-------------------------------------
     #print('itable', itable)
@@ -304,7 +239,6 @@ def write_cbar(model: OP2Geom, name, eids, nelements, op2_file, op2_ascii, endia
         #else:
             #raise RuntimeError('invalid f value...f=%s' % (f))
         op2_ascii.write('  eid=%s pid=%s nids=[%s, %s]\n' % (eid, pid, ga, gb))
-
     return nbytes
 
 
@@ -344,7 +278,6 @@ def write_solid(model, name: str, eids: np.ndarray, nelements: int,
             data = [eid, pid] + nids + nids2
         else:
             data = [eid, pid] + nids
-        #print(name, data)
         op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
         op2_file.write(spack.pack(*data))
     return nbytes
@@ -439,7 +372,7 @@ def write_plotel(model: OP2Geom, name, eids, nelements,
         data = [eid] + nids
         op2_ascii.write('  eid=%s nids=%s\n' % (eid, str(nids)))
         op2_file.write(spack.pack(*data))
-    return nfields
+    return nbytes
 
 def write_cbush(model: OP2Geom, name, eids, nelements,
                 op2_file, op2_ascii, endian,
@@ -527,7 +460,6 @@ def write_cgap(model: OP2Geom, name, eids, nelements,
         pid = elem.pid
         ga, gb = elem.node_ids
         cid = elem.cid
-        #print(elem.get_stats())
         if cid is None:
             cid = -1
 
@@ -738,145 +670,6 @@ def write_cfast(model: OP2Geom,
     asdf
     return itable
 
-def write_card(name, eids, spack, model: OP2Geom, op2_file, op2_ascii, endian,
-               nastran_format: str='nx'):
-    """writes the GEOM2 elements"""
-    op2_ascii.write('GEOM2-%s\n' % name)
-
-    eid0 = eids[0]
-    if isinstance(eid0, integer_types):
-        eid_max = max(eids)
-        if eid_max > 99999999:
-            raise SixtyFourBitError(f'64-bit OP2 writing is not supported; {name} max(eid)={eid_max}')
-
-    if name == 'CPLSTN6':
-        write_cplstn6(eids, spack, model, op2_file, op2_ascii, name)
-    elif name == 'CPLSTN8':
-        write_cplstn8(eids, spack, model, op2_file, op2_ascii, name)
-
-    elif name == 'CTRIAX':
-        for eid in sorted(eids):
-            elem = model.elements[eid]
-            nids = [nid if nid is not None else 0
-                    for nid in elem.node_ids]
-            pid = elem.pid
-            #eid, pid, n1, n2, n3, n4, n5, n6, unused_undef1 = data
-            data = [eid, pid] + nids + [0]
-            assert None not in data, '%s data=%s' % (name, data)
-            #print('  CTRIAX eid=%s mid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
-            op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
-            op2_file.write(spack.pack(*data))
-
-    elif name == 'CTRIAX6':
-        for eid in sorted(eids):
-            elem = model.elements[eid]
-            nids = [nid if nid is not None else 0
-                    for nid in elem.node_ids]
-            mid = elem.mid
-            #eid, mid, n1, n2, n3, n4, n5, n6, theta, unused_undef1, unused_undef2 = data
-            data = [eid, mid] + nids + [elem.theta, 0, 0]
-            assert None not in data, '%s data=%s' % (name, data)
-            #print('  CTRIAX6 eid=%s mid=%s nids=%s data=%s\n' % (eid, mid, str(nids), data[6:]))
-            op2_ascii.write('  eid=%s mid=%s nids=%s\n' % (eid, mid, str(nids)))
-            op2_file.write(spack.pack(*data))
-
-    elif name in ['CQUAD', 'CQUADX']:
-        for eid in sorted(eids):
-            elem = model.elements[eid]
-            nids = [nid if nid is not None else 0
-                    for nid in elem.node_ids]
-            pid = elem.pid
-            #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9) = out
-            data = [eid, pid] + nids
-            assert None not in data, '%s data=%s' % (name, data)
-            op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
-            op2_file.write(spack.pack(*data))
-
-    elif name in ['CTRAX3', 'CTRAX6', 'CQUADX4', 'CQUADX8']:
-        for eid in sorted(eids):
-            elem = model.elements[eid]
-            nids = elem.node_ids
-            pid = elem.pid
-            data = [eid, pid] + nids + [elem.theta]
-            assert None not in data, '  eid=%s pid=%s nids=%s theta=%r\n' % (eid, pid, str(nids), elem.theta)
-            #print('  eid=%s pid=%s nids=%s theta=%r\n' % (eid, pid, str(nids), elem.theta))
-            op2_ascii.write('  eid=%s pid=%s nids=%s theta=%r\n' % (eid, pid, str(nids), elem.theta))
-            op2_file.write(spack.pack(*data))
-
-
-    elif name in ['CROD', 'CTUBE', 'CVISC', 'CSHEAR']:
-        for eid in sorted(eids):
-            elem = model.elements[eid]
-            nids = elem.node_ids
-            pid = elem.pid
-            data = [eid, pid] + nids
-            #print(data)
-            op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
-            op2_file.write(spack.pack(*data))
-    elif name in ['CELAS1', 'CDAMP1']:
-        for eid in sorted(eids):
-            elem = model.elements[eid]
-            n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
-            pid = elem.pid
-            #(eid, pid, g1, g2, c1, c2)
-            data = [eid, pid, n1, n2, elem.c1, elem.c2]
-            #print(name, data)
-            op2_ascii.write('  eid=%s pid=%s nids=[%s, %s]\n' % (eid, pid, n1, n2))
-            op2_file.write(spack.pack(*data))
-    elif name == 'CELAS2':
-        for eid in sorted(eids):
-            elem = model.elements[eid]
-            n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
-            #(eid, k, g1, g2, c1, c2, ge, s) = out
-            c2 = elem.c2 if elem.c2 is not None else 0
-            data = [eid, elem.k, n1, n2, elem.c1, c2, elem.ge, elem.s]
-            #print('CELAS2', data)
-            op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
-            op2_file.write(spack.pack(*data))
-    elif name in ['CELAS3', 'CDAMP3', 'CDAMP5']:
-        for eid in sorted(eids):
-            elem = model.elements[eid]
-            n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
-            pid = elem.pid
-            #(eid, pid, s1, s2) = out
-            data = [eid, pid, n1, n2]
-            #print(name, data)
-            op2_ascii.write('  eid=%s pid=%s nids=[%s, %s]\n' % (eid, pid, n1, n2))
-            op2_file.write(spack.pack(*data))
-    elif name == 'CELAS4':
-        for eid in sorted(eids):
-            elem = model.elements[eid]
-            n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
-            #(eid, k, s1, s2) = out
-            data = [eid, elem.k, n1, n2]
-            #print(data)
-            op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
-            op2_file.write(spack.pack(*data))
-    elif name == 'CDAMP2':
-        for eid in sorted(eids):
-            elem = model.elements[eid]
-            n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
-            #(eid, bdamp, g1, g2, c1, c2) = out
-            c1 = elem.c1 if elem.c1 is not None else 0
-            c2 = elem.c2 if elem.c2 is not None else 0
-            data = [eid, elem.b, n1, n2, c1, c2]
-            #print(name, data)
-            op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
-            op2_file.write(spack.pack(*data))
-    elif name == 'CDAMP4':
-        for eid in sorted(eids):
-            elem = model.elements[eid]
-            n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
-            #(eid, b, s1, s2) = out
-            data = [eid, elem.b, n1, n2]
-            #print(name, data)
-            op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
-            op2_file.write(spack.pack(*data))
-
-    #--------------------------------------
-    else:  # pragma: no cover
-        raise NotImplementedError(name)
-
 
 def write_spoint(model: OP2Geom, name, nids, nelements,
                  op2_file, op2_ascii, endian,
@@ -908,7 +701,6 @@ def write_cmass1(model: OP2Geom, name, eids, nelements,
         gc = []
         gc1, gc2 = elem.grid_component()
         data = [eid, pid, gc1[0], gc2[0], gc1[1], gc2[1]]
-        #print(name, data)
         op2_ascii.write('  eid=%s pid=%s gc=[%s, %s]\n' % (eid, pid, gc1, gc2))
         op2_file.write(spack.pack(*data))
     return nbytes
@@ -928,7 +720,6 @@ def write_cmass2(model: OP2Geom, name, eids, nelements,
         gc1, gc2 = elem.grid_component()
         data = [eid, elem.mass, gc1[0], gc2[0], gc1[1], gc2[1]]
         assert None not in data, data
-        # print(name, data)
         op2_ascii.write(f'  eid={eid} data={data}\n')
         op2_file.write(spack.pack(*data))
     return nbytes
@@ -948,7 +739,6 @@ def write_cmass3(model: OP2Geom, name, eids, nelements,
         pid = elem.pid
         #(eid, pid, g1, g2)
         data = [eid, pid, n1, n2]
-        #print(name, data)
         op2_ascii.write('  eid=%s pid=%s nids=[%s, %s]\n' % (eid, pid, n1, n2))
         op2_file.write(spack.pack(*data))
     return nbytes
@@ -966,7 +756,6 @@ def write_cmass4(model: OP2Geom, name, eids, nelements,
         n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
         # (eid, b, s1, s2) = out
         data = [eid, elem.mass, n1, n2]
-        # print(name, data)
         op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
         op2_file.write(spack.pack(*data))
     return nbytes
@@ -1022,7 +811,6 @@ def write_conm2(model: OP2Geom, name, eids, nelements,
     spack = Struct(endian + b'3i 10f')
     for eid in sorted(eids):
         elem = model.masses[eid]
-        # 3i 10f
         # (eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
         data = [eid, elem.nid, elem.cid, elem.mass] + list(elem.X) + list(elem.I)
         assert None not in data, 'CONM2 data=%s' % (data)
@@ -1174,7 +962,6 @@ def write_cplsts3(model: OP2Geom, name: str,
         # print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
         op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
         assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
-        # 6i ff ii 4f
         op2_file.write(spack.pack(*data))
     return nbytes
 
@@ -1209,7 +996,6 @@ def write_cplsts4(model: OP2Geom, name: str,
         # print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
         op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
         assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
-        # 6i ff ii 4f
         op2_file.write(spack.pack(*data))
     return nbytes
 
@@ -1288,8 +1074,15 @@ def write_cplsts8(model: OP2Geom, name: str,
         op2_file.write(spack.pack(*data))
     return nbytes
 
-def write_cplstn6(eids, spack, model: OP2Geom, op2_file, op2_ascii, name: str,
-                  nastran_format: str='nx'):
+def write_cplstn6(model: OP2Geom, name: str,
+                  eids: list[int], nelements: int,
+                  op2_file, op2_ascii, endian,
+                  nastran_format: str = 'nx'):
+    key = (5801, 58, 982)
+    spack = Struct(endian + b'2i 6i f 7i')
+    nfields = 16
+    nbytes = _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii)
+
     for eid in sorted(eids):
         elem =model.elements[eid]
         nids = elem.node_ids
@@ -1303,11 +1096,18 @@ def write_cplstn6(eids, spack, model: OP2Geom, op2_file, op2_ascii, name: str,
         assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
         # 6i ff ii 4f
         op2_file.write(spack.pack(*data))
+    return nbytes
 
-def write_cplstn8(eids, spack, model: OP2Geom, op2_file, op2_ascii, name: str,
-                  nastran_format: str='nx'):
+def write_cplstn8(model: OP2Geom, name: str,
+                  eids: list[int], nelements: int,
+                  op2_file, op2_ascii, endian,
+                  nastran_format: str = 'nx'):
+    key = (7201, 72, 983)
+    spack = Struct(endian + b'2i 8i f 5i')
+    nfields = 16
+    nbytes = _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii)
     for eid in sorted(eids):
-        elem =model.elements[eid]
+        elem = model.elements[eid]
         nids = elem.node_ids
         pid = elem.pid
         theta = elem.theta
@@ -1324,6 +1124,7 @@ def write_cplstn8(eids, spack, model: OP2Geom, op2_file, op2_ascii, name: str,
         assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
         # 6i ff ii 4f
         op2_file.write(spack.pack(*data))
+    return nbytes
 
 
 def get_theta_from_theta_mcid(theta_mcid: int | float) -> float:
@@ -1347,7 +1148,6 @@ def write_radbc(model, name: str, elems, nelements: int,
     4 NODAMB   I
     """
     structi = Struct(endian + b'ifii')
-
     nelements = 0
     for elem in elems:
         nelements += len(elem.eids)
@@ -1362,8 +1162,6 @@ def write_radbc(model, name: str, elems, nelements: int,
         nodamb = elem.nodamb
         for eid in elem.eids:
             data = [eid, famb, control_node, nodamb]
-            # print(data) # 'ifii'
-
             # print('  RADBC eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
             # op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
             assert None not in data, data
@@ -1398,6 +1196,264 @@ def write_micpnt(model, name: str, eids: np.ndarray, nelements: int,
         op2_file.write(struc.pack(*data))
     return nbytes
 
+
+def write_elem_nodes(model, name: str, eids: np.ndarray, nelements: int,
+                     op2_file: BinaryIO, op2_ascii, endian: bytes,
+                     nastran_format: str = 'nx') -> int:
+    if name == 'CROD':
+        key = (3001, 30, 48)
+        fmt = b'4i'
+        nfields = 4
+    elif name == 'CTUBE':
+        key = (3701, 37, 49)
+        fmt = b'4i'
+        nfields = 4
+    elif name == 'CVISC':
+        key = (3901, 39, 50)
+        fmt = b'4i'
+        nfields = 4
+    elif name == 'CSHEAR':
+        key = (3101, 31, 61)
+        fmt = b'6i'
+        nfields = 6
+    else:  # pragma: no cover
+        raise NotImplementedError(name)
+
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+    spack = Struct(endian + fmt)
+    for eid in sorted(eids):
+        elem = model.elements[eid]
+        nids = elem.node_ids
+        pid = elem.pid
+        data = [eid, pid] + nids
+        op2_ascii.write(f'  {name} eid={eid} pid={pid} nids={nids}\n')
+        op2_file.write(spack.pack(*data))
+    return nbytes
+
+
+def write_elem_nodes_theta(model: OP2Geom, name: str, eids: np.ndarray, nelements: int,
+                           op2_file: BinaryIO, op2_ascii, endian: bytes,
+                           nastran_format: str = 'nx') -> int:
+    if name == 'CTRAX3':
+        key = (6111, 61, 996)
+        fmt = b'5if'
+        nfields = 6
+    elif name == 'CTRAX6':
+        key = (6113, 61, 998)
+        fmt = b'8if'
+        nfields = 9
+    elif name == 'CQUADX4':
+        key = (6112, 61, 997)
+        fmt = b'6if'
+        nfields = 7
+    elif name == 'CQUADX8':
+        key = (6114, 61, 999)
+        fmt = b'10if'
+        nfields = 11
+    else:  # pragma: no cover
+        raise NotImplementedError(name)
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+    spack = Struct(endian + fmt)
+    for eid in sorted(eids):
+            elem = model.elements[eid]
+            nids = elem.node_ids
+            pid = elem.pid
+            data = [eid, pid] + nids + [elem.theta]
+            assert None not in data, '  eid=%s pid=%s nids=%s theta=%r\n' % (eid, pid, str(nids), elem.theta)
+            #print('  eid=%s pid=%s nids=%s theta=%r\n' % (eid, pid, str(nids), elem.theta))
+            op2_ascii.write('  eid=%s pid=%s nids=%s theta=%r\n' % (eid, pid, str(nids), elem.theta))
+            op2_file.write(spack.pack(*data))
+    return nbytes
+
+def write_ctriax(model: OP2Geom, name: str, eids: np.ndarray, nelements: int,
+                 op2_file: BinaryIO, op2_ascii, endian: bytes,
+                 nastran_format: str = 'nx') -> int:
+    key = (10108, 101, 512)
+    spack = Struct(endian + b'9i')
+    nfields = 9
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+    for eid in sorted(eids):
+        elem = model.elements[eid]
+        nids = [nid if nid is not None else 0
+                for nid in elem.node_ids]
+        pid = elem.pid
+        #eid, pid, n1, n2, n3, n4, n5, n6, unused_undef1 = data
+        data = [eid, pid] + nids + [0]
+        assert None not in data, '%s data=%s' % (name, data)
+        #print('  CTRIAX eid=%s mid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        op2_file.write(spack.pack(*data))
+    return nbytes
+
+def write_ctriax6(model: OP2Geom, name: str, eids: np.ndarray, nelements: int,
+                  op2_file: BinaryIO, op2_ascii, endian: bytes,
+                  nastran_format: str = 'nx') -> int:
+    key = (6108, 61, 107)
+    spack = Struct(endian + b'8i f ii')
+    nfields = 11
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+    for eid in sorted(eids):
+        elem = model.elements[eid]
+        nids = [nid if nid is not None else 0
+                for nid in elem.node_ids]
+        mid = elem.mid
+        # eid, mid, n1, n2, n3, n4, n5, n6, theta, unused_undef1, unused_undef2 = data
+        data = [eid, mid] + nids + [elem.theta, 0, 0]
+        assert None not in data, '%s data=%s' % (name, data)
+        # print('  CTRIAX6 eid=%s mid=%s nids=%s data=%s\n' % (eid, mid, str(nids), data[6:]))
+        op2_ascii.write('  eid=%s mid=%s nids=%s\n' % (eid, mid, str(nids)))
+        op2_file.write(spack.pack(*data))
+    return nbytes
+
+def write_cquad_cquadx(model: OP2Geom, name: str, eids: np.ndarray, nelements: int,
+                       op2_file: BinaryIO, op2_ascii, endian: bytes,
+                       nastran_format: str = 'nx') -> int:
+    if name == 'CQUAD':
+        key = (9108, 91, 507)
+    elif name == 'CQUADX':
+        key = (9008, 90, 508)
+    else:  # pragma: no cover
+        raise NotImplementedError(name)
+    spack = Struct(endian + b'11i')
+    nfields = 11
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+
+    for eid in sorted(eids):
+        elem = model.elements[eid]
+        nids = [nid if nid is not None else 0
+                for nid in elem.node_ids]
+        pid = elem.pid
+        #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9) = out
+        data = [eid, pid] + nids
+        assert None not in data, '%s data=%s' % (name, data)
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        op2_file.write(spack.pack(*data))
+    return nbytes
+
+def write_celas1_cdamp1(model: OP2Geom, name: str, eids: np.ndarray, nelements: int,
+                        op2_file: BinaryIO, op2_ascii, endian: bytes,
+                        nastran_format: str = 'nx') -> int:
+    if name == 'CELAS1':
+        key = (601, 6, 73)
+    elif name =='CDAMP1':
+        key = (201, 2, 69)
+    else:  # pragma: no cover
+        raise NotImplementedError(name)
+    spack = Struct(endian + b'6i')
+    nfields = 6
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+    for eid in sorted(eids):
+        elem = model.elements[eid]
+        n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
+        pid = elem.pid
+        #(eid, pid, g1, g2, c1, c2)
+        data = [eid, pid, n1, n2, elem.c1, elem.c2]
+        op2_ascii.write('  eid=%s pid=%s nids=[%s, %s]\n' % (eid, pid, n1, n2))
+        op2_file.write(spack.pack(*data))
+    return nbytes
+
+def write_celas2(model: OP2Geom, name: str, eids: np.ndarray, nelements: int,
+                 op2_file: BinaryIO, op2_ascii, endian: bytes,
+                 nastran_format: str = 'nx') -> int:
+    key = (701, 7, 74)
+    spack = Struct(endian + b'if4iff')
+    nfields = 8
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+    for eid in sorted(eids):
+        elem = model.elements[eid]
+        n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
+        #(eid, k, g1, g2, c1, c2, ge, s) = out
+        c2 = elem.c2 if elem.c2 is not None else 0
+        data = [eid, elem.k, n1, n2, elem.c1, c2, elem.ge, elem.s]
+        op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
+        op2_file.write(spack.pack(*data))
+    return nbytes
+
+def write_celas3_cdamp3_cdamp5(model: OP2Geom, name: str, eids: np.ndarray, nelements: int,
+                               op2_file: BinaryIO, op2_ascii, endian: bytes,
+                               nastran_format: str = 'nx') -> int:
+    if name == 'CELAS3':
+        key = (801, 8, 75)
+    elif name == 'CDAMP3':
+        key = (401, 4, 71)
+    elif name == 'CDAMP5':
+        key = (10608, 106, 404)
+    else:  # pragma: no cover
+        raise NotImplementedError(name)
+    nfields = 4
+    spack = Struct(endian + b'4i')
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+    for eid in sorted(eids):
+        elem = model.elements[eid]
+        n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
+        pid = elem.pid
+        #(eid, pid, s1, s2) = out
+        data = [eid, pid, n1, n2]
+        op2_ascii.write('  eid=%s pid=%s nids=[%s, %s]\n' % (eid, pid, n1, n2))
+        op2_file.write(spack.pack(*data))
+    return nbytes
+
+def write_cdamp2(model: OP2Geom, name: str, eids: np.ndarray, nelements: int,
+                 op2_file: BinaryIO, op2_ascii, endian: bytes,
+                 nastran_format: str = 'nx') -> int:
+    key = (301, 3, 70)
+    spack = Struct(endian + b'if4i')
+    nfields = 6
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+    for eid in sorted(eids):
+        elem = model.elements[eid]
+        n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
+        #(eid, bdamp, g1, g2, c1, c2) = out
+        c1 = elem.c1 if elem.c1 is not None else 0
+        c2 = elem.c2 if elem.c2 is not None else 0
+        data = [eid, elem.b, n1, n2, c1, c2]
+        op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
+        op2_file.write(spack.pack(*data))
+    return nbytes
+
+def write_cdamp4(model: OP2Geom, name: str, eids: np.ndarray, nelements: int,
+                 op2_file: BinaryIO, op2_ascii, endian: bytes,
+                 nastran_format: str = 'nx') -> int:
+    key = (501, 5, 72)
+    spack = Struct(endian + b'ifii')
+    nfields = 4
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+    for eid in sorted(eids):
+        elem = model.elements[eid]
+        n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
+        #(eid, b, s1, s2) = out
+        data = [eid, elem.b, n1, n2]
+        op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
+        op2_file.write(spack.pack(*data))
+    return nbytes
+
+def write_celas4(model: OP2Geom, name: str, eids: np.ndarray, nelements: int,
+                 op2_file: BinaryIO, op2_ascii, endian: bytes,
+                 nastran_format: str = 'nx') -> int:
+    key = (901, 9, 76)
+    spack = Struct(endian + b'ifii')
+    nfields = 4
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+    for eid in sorted(eids):
+        elem = model.elements[eid]
+        n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
+        #(eid, k, s1, s2) = out
+        data = [eid, elem.k, n1, n2]
+        op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
+        op2_file.write(spack.pack(*data))
+    return nbytes
+
 GEOM2_MAP = {
     'SPOINT': write_spoint,
     # masses
@@ -1408,6 +1464,17 @@ GEOM2_MAP = {
     'CONM1': write_conm1,
     'CONM2': write_conm2,
 
+    'CELAS1': write_celas1_cdamp1,
+    'CELAS2': write_celas2,
+    'CELAS3': write_celas3_cdamp3_cdamp5,
+    'CELAS4': write_celas4,
+
+    'CDAMP1': write_celas1_cdamp1,
+    'CDAMP2': write_cdamp2,
+    'CDAMP3': write_celas3_cdamp3_cdamp5,
+    'CDAMP4': write_cdamp4,
+    'CDAMP5': write_celas3_cdamp3_cdamp5,
+
     # 1d
     'PLOTEL': write_plotel,
     'CONROD': write_conrod,
@@ -1416,6 +1483,11 @@ GEOM2_MAP = {
     'CGAP': write_cgap,
     'CBAR': write_cbar,
     'CBEAM': write_cbeam,
+
+    'CROD': write_elem_nodes,
+    'CTUBE': write_elem_nodes,
+    'CVISC': write_elem_nodes,
+    'CSHEAR': write_elem_nodes,
 
     # 2d
     'CQUAD4': write_cquad4_cquadr,
@@ -1428,6 +1500,18 @@ GEOM2_MAP = {
     'CPLSTS4': write_cplsts4,
     'CPLSTS6': write_cplsts6,
     'CPLSTS8': write_cplsts8,
+
+    'CPLSTN6': write_cplstn6,
+    'CPLSTN8': write_cplstn8,
+
+    'CTRAX3': write_elem_nodes_theta,
+    'CTRAX6': write_elem_nodes_theta,
+    'CQUADX4': write_elem_nodes_theta,
+    'CQUADX8': write_elem_nodes_theta,
+    'CTRIAX6': write_ctriax6,
+
+    'CQUAD': write_cquad_cquadx,
+    'CQUADX': write_cquad_cquadx,
 
     # solids
     'CTETRA': write_solid,

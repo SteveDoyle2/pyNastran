@@ -1200,11 +1200,7 @@ class ZAERO:
         mass_unit: str,
         length_unit: str,
         velocity: list[float],
-        fluttf_id: int = 0,
-        print_flag: int = 0,
-        vref: float = 1.0,
-        comment: str = "",
-    ) -> FIXMDEN:
+        fluttf_id: int = 0, print_flag: int = 0, vref: float = 1.0, comment: str = "",) -> FIXMDEN:
         card = FIXMDEN(
             sid,
             mkaeroz_id,
@@ -1228,8 +1224,7 @@ class ZAERO:
         return card
 
     def add_panlst1(
-        self, eid: int, macro_id: int, box1: int, box2: int, comment: str = ""
-    ) -> PANLST1:
+        self, eid: int, macro_id: int, box1: int, box2: int, comment: str = "") -> PANLST1:
         card = PANLST1(eid, macro_id, box1, box2, comment=comment)
         self._add_methods.add_panlst_object(card)
         return card
@@ -1244,51 +1239,21 @@ class ZAERO:
         self._add_methods.add_panlst_object(card)
         return card
 
-    def add_pafoil7(
-        self,
-        pid: int,
-        i_axial: int,
-        i_thickness_root: int,
-        i_camber_root: int,
-        le_radius_root: float,
-        i_thickness_tip: int,
-        i_camber_tip: int,
-        le_radius_tip: float,
-        comment: str = "",
-    ) -> PAFOIL7:
+    def add_pafoil7(self, pid: int, i_axial: int,
+                    i_thickness_root: int, i_camber_root: int, le_radius_root: float,
+                    i_thickness_tip: int, i_camber_tip: int, le_radius_tip: float, comment: str = "",) -> PAFOIL7:
         card = PAFOIL7(
-            pid,
-            i_axial,
-            i_thickness_root,
-            i_camber_root,
-            le_radius_root,
-            i_thickness_tip,
-            i_camber_tip,
-            le_radius_tip,
-            comment=comment,
-        )
+            pid, i_axial,
+            i_thickness_root, i_camber_root, le_radius_root,
+            i_thickness_tip, i_camber_tip, le_radius_tip, comment=comment,)
         self._add_methods.add_pafoil_object(card)
         return card
 
-    def add_pafoil8(
-        self,
-        pid: int,
-        i_axial: int,
-        i_thickness_root: int,
-        i_camber_root: int,
-        le_radius_root: float,
-        i_thickness_tip: int,
-        comment: str = "",
-    ) -> PAFOIL8:
-        card = PAFOIL8(
-            pid,
-            i_axial,
-            i_thickness_root,
-            i_camber_root,
-            le_radius_root,
-            i_thickness_tip,
-            comment=comment,
-        )
+    def add_pafoil8(self, pid: int, i_axial: int,
+                    i_thickness_root: int, i_camber_root: int, le_radius_root: float,
+                    i_thickness_tip: int, comment: str = "", ) -> PAFOIL8:
+        card = PAFOIL8(pid, i_axial,
+            i_thickness_root, i_camber_root, le_radius_root, i_thickness_tip, comment=comment,)
         self._add_methods.add_pafoil_object(card)
         return card
 
@@ -1306,24 +1271,15 @@ class ZAERO:
         self._add_methods.add_aesurfz_object(card)
         return card
 
-    def add_aeslink(
-        self,
-        label,
-        link_type: str,
-        actu_id: int,
-        independent_labels: list[str],
-        linking_coefficients: list[float],
-        comment: str = "",
-    ) -> AESLINK:
-        card = AESLINK(
-            label, link_type, actu_id, independent_labels, linking_coefficients, comment=comment
-        )
+    def add_aeslink(self, label, link_type: str, actu_id: int,
+        independent_labels: list[str], linking_coefficients: list[float], comment: str = "",) -> AESLINK:
+        card = AESLINK(label, link_type, actu_id,
+                       independent_labels, linking_coefficients, comment=comment)
         self._add_methods.add_aeslink_object(card)
         return card
 
-    def add_attach(
-        self, attach_id: int, model_name: str, setk: int, refgrid: int, comment: str = ""
-    ) -> ATTACH:
+    def add_attach(self, attach_id: int, model_name: str,
+                   setk: int, refgrid: int, comment: str = "") -> ATTACH:
         card = ATTACH(attach_id, model_name, setk, refgrid, comment=comment)
         self._add_methods.add_attach_object(card)
         return card
@@ -1331,16 +1287,9 @@ class ZAERO:
     # ---------------------------------------------------------------
     # plot
     # ---------------------------------------------------------------
-    def add_pltmode(
-        self,
-        set_id: int,
-        symmetry: str,
-        mode: int,
-        output_format: str,
-        filename: str,
-        max_disp: float=1.0,
-        comment: str = "",
-    ) -> PLTMODE:
+    def add_pltmode(self, set_id: int, symmetry: str, mode: int,
+                    output_format: str, filename: str,
+                    max_disp: float=1.0, comment: str = "",) -> PLTMODE:
         card = PLTMODE(set_id, symmetry, mode, output_format, filename,
                        max_disp=max_disp, comment=comment)
         self._add_methods.add_pltmode_object(card)
