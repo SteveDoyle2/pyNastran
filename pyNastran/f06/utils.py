@@ -495,6 +495,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
                            kfreq_damping_filename=kfreq_damping_filename,
                            subcases=subcases,
                            show=show, clear=False, close=False)
+        return flutters
 
     flutter_responses = plot_flutter_f06(
         f06_filename, modes=modes,

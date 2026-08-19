@@ -72,8 +72,6 @@ def write_geom2(op2_file: BinaryIO, op2_ascii,
     # elements with fixed lengths
     geom2_key_mapper = {
         # key, spack, nfields
-        'CHBDYP': ((10908, 109, 407), b'12i 3f', 15),
-        'CHBDYG': ((10808, 108, 406), b'16i', 16),
         'CTUBE': ((3701, 37, 49), b'4i', 4),
         'CSHEAR': ((3101, 31, 61), b'6i', 6),
         'CTRIAX': ((10108, 101, 512), b'9i', 9),
@@ -351,8 +349,13 @@ def write_solid(model, name: str, eids: np.ndarray, nelements: int,
         op2_file.write(spack.pack(*data))
     return nbytes
 
-def write_chbdyp(eids, spack, model: OP2Geom, op2_file, op2_ascii,
-                 nastran_format: str='nx'):
+def write_chbdyp(model, name: str, eids: np.ndarray, nelements: int,
+                op2_file: BinaryIO, op2_ascii, endian: bytes,
+                nastran_format: str = 'nx') -> int:
+    key = (10908, 109, 407)
+    spack = Struct(endian + b'12i 3f')
+    nfields = 15
+    nbytes = _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii)
     surface_type_str_to_int = {
         'POINT' : 1,
         'LINE' : 2,
@@ -385,9 +388,15 @@ def write_chbdyp(eids, spack, model: OP2Geom, op2_file, op2_ascii,
         assert None not in data, data
         op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
         op2_file.write(spack.pack(*data))
+    return nbytes
 
-def write_chbdyg(eids, spack, model: OP2Geom, op2_file, op2_ascii,
-                 nastran_format: str='nx'):
+def write_chbdyg(model, name: str, eids: np.ndarray, nelements: int,
+                 op2_file: BinaryIO, op2_ascii, endian: bytes,
+                 nastran_format: str = 'nx') -> int:
+    key = (10808, 108, 406)
+    spack = Struct(endian + b'16i')
+    nfields = 16
+    nbytes = _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii)
     surface_type_str_to_int = {
         'REV' : 3,
         'AREA3' : 4,
@@ -414,7 +423,7 @@ def write_chbdyg(eids, spack, model: OP2Geom, op2_file, op2_ascii,
         assert None not in data, data
         op2_ascii.write('  eid=%s nids=%s\n' % (eid, str(nids)))
         op2_file.write(spack.pack(*data))
-
+    return nbytes
 
 def write_plotel(model: OP2Geom, name, eids, nelements,
                 op2_file, op2_ascii, endian: bytes,
@@ -740,12 +749,7 @@ def write_card(name, eids, spack, model: OP2Geom, op2_file, op2_ascii, endian,
         if eid_max > 99999999:
             raise SixtyFourBitError(f'64-bit OP2 writing is not supported; {name} max(eid)={eid_max}')
 
-    if name == 'CHBDYP':
-        write_chbdyp(eids, spack, model, op2_file, op2_ascii)
-    elif name == 'CHBDYG':
-        write_chbdyg(eids, spack, model, op2_file, op2_ascii)
-
-    elif name == 'CPLSTN6':
+    if name == 'CPLSTN6':
         write_cplstn6(eids, spack, model, op2_file, op2_ascii, name)
     elif name == 'CPLSTN8':
         write_cplstn8(eids, spack, model, op2_file, op2_ascii, name)
@@ -1436,4 +1440,6 @@ GEOM2_MAP = {
     'CONV': write_conv,
     'CONVM': write_convm,
     'CHBDYE': write_chbdye,
+    'CHBDYP': write_chbdyp,
+    'CHBDYG': write_chbdyg,
 }

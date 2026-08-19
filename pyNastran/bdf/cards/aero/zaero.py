@@ -1138,15 +1138,14 @@ class ZAERO:
         atm_id: int,
         mass_unit: str,
         length_unit: str,
-        vref: float,
-        fluttf_id: int,
-        print_flag: int,
         mkaeroz_ids: list[int],
-        comment: str = "",
-    ) -> FIXHATM:
+        vref: float=1.0,
+        fluttf_id: int=0,
+        print_flag: int=0,
+        comment: str = "",) -> FIXHATM:
         card = FIXHATM(
-            sid, alt, atm_id, mass_unit, length_unit,
-            fluttf_id, print_flag, mkaeroz_ids,
+            sid, alt, atm_id, mass_unit, length_unit, mkaeroz_ids,
+            fluttf_id=fluttf_id, print_flag=print_flag,
             vref=vref, comment=comment,
         )
         self._add_methods.add_flutter_table_object(card)
@@ -1156,18 +1155,14 @@ class ZAERO:
         self,
         sid: int,
         mkaeroz_id: int,
+        mass_unit: str,
+        length_unit: str,
         alts: list[float],
-        atm_id: int = 0,
-        mass_unit: str='',
-        length_unit: str='',
-        fluttf_id: int=0,
-        print_flag: int=0,
-        vref: float = 1.0,
-        comment: str = "",
-    ) -> FIXMATM:
+        atm_id: int = 0, fluttf_id: int=0,
+        print_flag: int=0, vref: float = 1.0, comment: str = "",) -> FIXMATM:
         card = FIXMATM(
-            sid, mkaeroz_id, alts,
-            atm_id=atm_id,  mass_unit=mass_unit, length_unit=length_unit,
+            sid, mkaeroz_id,  mass_unit, length_unit, alts,
+            atm_id=atm_id,
             fluttf_id=fluttf_id, print_flag=print_flag,
             vref=vref, comment=comment,)
         self._add_methods.add_flutter_table_object(card)
@@ -1179,22 +1174,18 @@ class ZAERO:
         mkaeroz_id: int,
         mass_unit: str,
         length_unit: str,
-        fluttf_id: int,
-        print_flag: int,
         velocity: list[float],
         rho: list[float],
+        fluttf_id: int = 0,
+        print_flag: int = 0,
         vref: float = 1.0,
-        comment: str = "",
-    ) -> FIXMACH:
+        comment: str = "",) -> FIXMACH:
         card = FIXMACH(
-            sid,
-            mkaeroz_id,
-            mass_unit,
-            length_unit,
-            fluttf_id,
-            print_flag,
-            velocity,
-            rho,
+            sid, mkaeroz_id,
+            mass_unit, length_unit,
+            velocity, rho,
+            fluttf_id=fluttf_id,
+            print_flag=print_flag,
             vref=vref,
             comment=comment,
         )
@@ -1208,9 +1199,9 @@ class ZAERO:
         rho: float,
         mass_unit: str,
         length_unit: str,
-        fluttf_id: int,
-        print_flag: int,
         velocity: list[float],
+        fluttf_id: int = 0,
+        print_flag: int = 0,
         vref: float = 1.0,
         comment: str = "",
     ) -> FIXMDEN:
@@ -1218,11 +1209,10 @@ class ZAERO:
             sid,
             mkaeroz_id,
             rho,
-            mass_unit,
-            length_unit,
-            fluttf_id,
-            print_flag,
+            mass_unit, length_unit,
             velocity,
+            fluttf_id=fluttf_id,
+            print_flag=print_flag,
             vref=vref,
             comment=comment,
         )

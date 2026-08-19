@@ -75,11 +75,12 @@ class TestAeroZaero(unittest.TestCase):
         assert atmos.type == "ATMOS"
         assert 1 in zaero.atmos
 
-        fixhatm = zaero.add_fixhatm(2, 10000.0, 1, "SLUG", "IN", 1.0, 0, 0, [1])
+        fixhatm = zaero.add_fixhatm(2, 10000.0, 1, "SLUG", "IN", [1],
+                                    vref=1.0, fluttf_id=0, print_flag=0,)
         assert fixhatm.type == "FIXHATM"
         assert 2 in zaero.flutter_table
 
-        fixmatm = zaero.add_fixmatm(3, 1, [5000.0, 10000.0], atm_id=1, mass_unit="SLUG", length_unit="IN", vref=1.0,
+        fixmatm = zaero.add_fixmatm(3, 1, "SLUG", "IN", [5000.0, 10000.0], atm_id=1, vref=1.0,
                                     fluttf_id=0, print_flag=0)
         assert fixmatm.type == "FIXMATM"
         assert 3 in zaero.flutter_table

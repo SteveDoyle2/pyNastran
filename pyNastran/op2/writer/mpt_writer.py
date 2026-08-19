@@ -35,7 +35,7 @@ def write_mpt(op2_file, op2_ascii, model,
         #  other
         'NLPCI', 'MAT3D',
         'MATPOR',
-        'RADBC',
+        # 'RADBC',
     ]
     # these are specifically for material dependency objects (e.g., model.MATS1)
     # in general, materials (e.g., MAT1) just need to be removed from the
@@ -56,8 +56,10 @@ def write_mpt(op2_file, op2_ascii, model,
         out[mtype] = list(mat_dict.keys())
 
     for bc_id, bcs in model.bcs.items():
-        # CONV. RADBC
+        # CONV, CONVM, RADBC, RADM
         for bc in bcs:
+            if bc.type == 'RADBC':
+                continue
             if bc.type == 'RADM':
                 out[bc.type].append(bc)
             # bc_dict[bc.type].append(bc)
@@ -81,7 +83,9 @@ def write_mpt(op2_file, op2_ascii, model,
             if isinstance(objs, list):
                 for i, obji in enumerate(objs):
                     if obji.type == 'RADBC':
-                        out[obji.type].append((key, i))
+                        continue
+                    # if obji.type == 'RADBC':
+                    #     out[obji.type].append((key, i))
             else:
                 raise TypeError(objs)  # weird...was this happening or was I messing with things wrong...
                 #print('obj...')

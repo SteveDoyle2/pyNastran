@@ -32,6 +32,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
+
 class ATMOS(BaseCard):
     type = 'ATMOS'
 
@@ -184,7 +185,8 @@ class FIXHATM(BaseCard):
 
     def __init__(self, sid: int, alt: float, atm_id: int,
                  mass_unit: str, length_unit: str,
-                 fluttf_id: int, print_flag: int, mkaeroz_ids: list[int],
+                 mkaeroz_ids: list[int],
+                 fluttf_id: int = 0, print_flag: int = 0,
                  vref: float=1.0, comment: str=''):
         BaseCard.__init__(self)
         if comment:
@@ -226,7 +228,7 @@ class FIXHATM(BaseCard):
         length_unit = string(card, 5, 'length_unit')
         vref = double_or_blank(card, 6, 'vref', default=1.0)
         fluttf_id = integer_or_blank(card, 7, 'fluttf_id', default=0)
-        print_flag = integer(card, 8, 'print_flag')
+        print_flag = integer_or_blank(card, 8, 'print_flag', default=0)
 
         j = 1
         mkaeroz_ids = []
@@ -236,7 +238,8 @@ class FIXHATM(BaseCard):
             j += 1
         assert len(card) > 8, f'len(FIXEMATM card) = {len(card):d}\ncard={card}'
         return FIXHATM(sid, alt, atm_id, mass_unit,
-                       length_unit, fluttf_id, print_flag, mkaeroz_ids,
+                       length_unit, mkaeroz_ids,
+                       fluttf_id - fluttf_id, print_flag=print_flag,
                        vref=vref, comment=comment)
 
     # def validate(self):
@@ -444,8 +447,8 @@ class FIXMACH(BaseCard):
 
     def __init__(self, sid: int, mkaeroz_id: int,
                  mass_unit: str, length_unit: str,
-                 fluttf_id: int, print_flag: int,
                  velocity: list[float], rho: list[float],
+                 fluttf_id: int = 0, print_flag: int = 0,
                  vref: float=1.0, comment: str=''):
         BaseCard.__init__(self)
         if comment:
@@ -575,8 +578,8 @@ class FIXMDEN(BaseCard):
 
     def __init__(self, sid: int, mkaeroz_id: int,
                  rho: float, mass_unit: str, length_unit: str,
-                 fluttf_id: int, print_flag: int,
                  velocity: list[float],
+                 fluttf_id: int = 0, print_flag: int = 0,
                  vref: float=1.0, comment: str=''):
         BaseCard.__init__(self)
         if comment:
@@ -619,7 +622,7 @@ class FIXMDEN(BaseCard):
         length_unit = string(card, 5, 'length_unit')
         vref = double_or_blank(card, 6, 'vref', default=1.0)
         fluttf_id = integer_or_blank(card, 7, 'fluttf_id', default=0)
-        print_flag = integer_or_blank(card, 8, 'print_flag')
+        print_flag = integer_or_blank(card, 8, 'print_flag', default=0)
 
         velocity = []
         j = 1
@@ -689,4 +692,3 @@ def cross_reference_atmos_mkaeroz_fluttf(card: FIXMATM, model):
     if card.fluttf_id and 0:
         card.fluttf_ref = model.zaero.fluttf[card.fluttf_id]
     card.mkaeroz_ref = get_mkaeroz(model.zaero, card.mkaeroz_id, msg=msg)
-

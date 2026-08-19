@@ -464,6 +464,7 @@ def create_flutter(
         decimals = np.nan_to_num(decimals, nan=0.0, posinf=0.0, neginf=0.0).astype(int)
         density2 = np.array([np.round(x, d) for x, d in zip(density, decimals)])
         alts2 = alts.round(0) * alt_scale
+        # print(f'alts = {alts} ({alt_units})')
         sos2 = sos.round(0)
         atmosphere_table = np.column_stack([
                 alts2, sos2, density2, temperature.round(2),])
@@ -476,23 +477,32 @@ def create_flutter(
             f"\n sos: ({sos2.min()}, {sos2.max()}) ({velocity_units})"
             f"\n rho: ({density2.min()}, {density2.max()}) ({density_units})"
         )
-        model.zaero.add_atmos(
-            atm_id,
-            mass_unit,
-            length_unit,
-            temperature_units,
-            atmosphere_list,
-            comment=comment + msg,
-        )
         sweep_id = sid + 1
         mkaeroz_id = sid + 2
         fluttf_id = 0
         print_flag = 0
-        alts2.sort()
-        model.zaero.add_fixmatm(
-            sweep_id, mkaeroz_id, alts2,
-            atm_id=atm_id, mass_unit=mass_unit, length_unit=length_unit,
-            fluttf_id=fluttf_id, print_flag=fluttf_id, vref=1.0, comment="")
+        if sweep_method == 'alt':
+            comment = (
+                f"\n alt: ({alts.min()}, {alts.max()}) ({alt_units})\n"
+                f"\n alt: ({alts2.min()}, {alts2.max()}) ({length_unit})\n")
+            alts2.sort()
+            model.zaero.add_fixmatm(
+                sweep_id, mkaeroz_id,  mass_unit, length_unit, alts2,
+                atm_id=0, fluttf_id=fluttf_id, print_flag=print_flag, vref=1.0, comment=comment)
+        else:
+            model.zaero.add_atmos(
+                atm_id,
+                mass_unit,
+                length_unit,
+                temperature_units,
+                atmosphere_list,
+                comment=comment + msg,
+            )
+            alts2.sort()
+            model.zaero.add_fixmatm(
+                sweep_id, mkaeroz_id,  mass_unit, length_unit, alts2,
+                atm_id=atm_id,
+                fluttf_id=fluttf_id, print_flag=print_flag, vref=1.0, comment="")
 
         freqs = [0.1, 0.2, 0.5, 1.]
         model.zaero.add_mkaeroz(mkaeroz_id, mach, freqs, comment="")
