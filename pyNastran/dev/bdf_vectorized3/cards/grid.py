@@ -306,6 +306,30 @@ class GRID(VectorizedBaseCard):
         self.xyz = np.zeros((0, 3), dtype='float64')
         self._xyz_cid0 = np.zeros((0, 3), dtype='float64')
 
+    def write_h5(self, h5file, node_group):
+        from tables import Int64Col, Float64Col
+        h5_dict = {
+            'ID': Int64Col(pos=0),  # Signed 64-bit integer
+            'CP': Int64Col(pos=1),  # Signed 64-bit integer
+            'X': Float64Col(shape=(3,), pos=2),  # double (double-precision)
+            'CD': Int64Col(pos=3),  # Signed 64-bit integer
+            'PS': Int64Col(pos=4),  # Signed 64-bit integer
+            'SEID': Int64Col(pos=5),  # Signed 64-bit integer
+            'DOMAIN_ID': Int64Col(pos=6),
+        }
+        table = h5file.create_table(node_group, 'GRID', h5_dict)
+        ngrid = len(self)
+        arr = np.empty(ngrid, dtype=table.dtype)
+        arr["ID"] = self.node_id
+        arr["CP"] = self.cp
+        arr["X"] = self.xyz
+        arr["CD"] = self.cd
+        arr["PS"] = self.ps
+        arr["SEID"] = self.seid
+        arr["DOMAIN_ID"] = np.ones(ngrid, dtype='int32')
+        table.append(arr)
+        # table.flush()
+
     def add(self, nid: int, xyz: np.ndarray,
             cp: int=0, cd: int=0,
             ps: int=0, seid: int=0,

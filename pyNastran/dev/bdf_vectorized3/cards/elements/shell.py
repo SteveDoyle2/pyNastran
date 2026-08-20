@@ -70,7 +70,7 @@ class ShellElement(Element):
     def slice_card_by_property_id(self, property_id: np.ndarray):
         return slice_element_by_property_id(self, property_id)
 
-    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['property_id'].append(self.property_id)
         nodes = np.unique(self.nodes.flatten())
         nodes = nodes[nodes > 0]
@@ -686,6 +686,39 @@ class CTRIA3(ShellElement):
         ]
         return headers
 
+    def write_h5(self, h5file, element_group):
+        neid, nnode = self.nodes.shape
+        nnode_midside = self.base_nodes.shape[1]
+        if neid == 0:
+            return
+        from tables import Int64Col, Float64Col
+        h5_dict = {
+            'EID': Int64Col(pos=0),  # Signed 64-bit integer
+            'PID': Int64Col(pos=1),  # Signed 64-bit integer
+            'G': Int64Col(shape=(nnode,), pos=2),  # double (double-precision)
+            'THETA': Float64Col(pos=3),
+            'ZOFFS': Float64Col(pos=4),
+            'TFLAG': Int64Col(pos=5),
+            'T': Float64Col(shape=(nnode_midside,), pos=6),
+            'MCID': Int64Col(pos=7),
+            'DOMAIN_ID': Int64Col(pos=8),
+        }
+        table = h5file.create_table(element_group, self.type, h5_dict)
+        T = self.T.copy()
+        inan = np.isnan(T)
+        T[inan] = -1.0
+        arr = np.empty(neid, dtype=table.dtype)
+        arr["EID"] = self.element_id
+        arr["PID"] = self.property_id
+        arr["G"] = self.nodes
+        arr["THETA"] = self.theta
+        arr["ZOFFS"] = self.zoffset
+        arr["TFLAG"] = self.tflag
+        arr["T"] = T
+        arr["MCID"] = self.mcid
+        arr["DOMAIN_ID"] = np.ones(neid, dtype='int64')
+        table.append(arr)
+
     @parse_check
     def write_file_8(self, bdf_file: TextIOLike,
                      write_card_header: bool=False) -> None:
@@ -1054,6 +1087,38 @@ class CTRIAR(ShellElement):
         itflag = (self.tflag == 0)
         self.T[itflag] *= xyz_scale
 
+    def write_h5(self, h5file, element_group):
+        neid, nnode = self.nodes.shape
+        nnode_midside = self.base_nodes.shape[1]
+        if neid == 0:
+            return
+        from tables import Int64Col, Float64Col
+        h5_dict = {
+            'EID': Int64Col(pos=0),  # Signed 64-bit integer
+            'PID': Int64Col(pos=1),  # Signed 64-bit integer
+            'G': Int64Col(shape=(nnode,), pos=2),  # double (double-precision)
+            'THETA': Float64Col(pos=3),
+            'ZOFFS': Float64Col(pos=4),
+            'TFLAG': Int64Col(pos=5),
+            'T': Float64Col(shape=(nnode_midside,), pos=6),
+            'MCID': Int64Col(pos=7),
+            'DOMAIN_ID': Int64Col(pos=8),
+        }
+        table = h5file.create_table(element_group, self.type, h5_dict)
+        T = self.T.copy()
+        inan = np.isnan(T)
+        T[inan] = -1.0
+        arr = np.empty(neid, dtype=table.dtype)
+        arr["EID"] = self.element_id
+        arr["PID"] = self.property_id
+        arr["G"] = self.nodes
+        arr["THETA"] = self.theta
+        arr["ZOFFS"] = self.zoffset
+        arr["TFLAG"] = self.tflag
+        arr["T"] = T
+        arr["MCID"] = self.mcid
+        arr["DOMAIN_ID"] = np.ones(neid, dtype='int64')
+        table.append(arr)
 
     def write_file_8(self, bdf_file: TextIOLike,
                    write_card_header: bool=False) -> None:
@@ -1391,6 +1456,39 @@ class CQUAD4(ShellElement):
     def check_types(self):
         super().check_types()
         assert self.T.dtype.name in NUMPY_FLOATS, self.T.dtype.name
+
+    def write_h5(self, h5file, element_group):
+        neid, nnode = self.nodes.shape
+        nnode_midside = self.base_nodes.shape[1]
+        if neid == 0:
+            return
+        from tables import Int64Col, Float64Col
+        h5_dict = {
+            'EID': Int64Col(pos=0),  # Signed 64-bit integer
+            'PID': Int64Col(pos=1),  # Signed 64-bit integer
+            'G': Int64Col(shape=(nnode,), pos=2),  # double (double-precision)
+            'THETA': Float64Col(pos=3),
+            'ZOFFS': Float64Col(pos=4),
+            'TFLAG': Int64Col(pos=5),
+            'T': Float64Col(shape=(nnode_midside,), pos=6),
+            'MCID': Int64Col(pos=7),
+            'DOMAIN_ID': Int64Col(pos=8),
+        }
+        table = h5file.create_table(element_group, self.type, h5_dict)
+        T = self.T.copy()
+        inan = np.isnan(T)
+        T[inan] = -1.0
+        arr = np.empty(neid, dtype=table.dtype)
+        arr["EID"] = self.element_id
+        arr["PID"] = self.property_id
+        arr["G"] = self.nodes
+        arr["THETA"] = self.theta
+        arr["ZOFFS"] = self.zoffset
+        arr["TFLAG"] = self.tflag
+        arr["T"] = T
+        arr["MCID"] = self.mcid
+        arr["DOMAIN_ID"] = np.ones(neid, dtype='int64')
+        table.append(arr)
 
     def _setup_write(self, size: int=8) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                                  np.ndarray, np.ndarray, np.ndarray]:
@@ -1842,6 +1940,39 @@ class CQUADR(ShellElement):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max(), self.mcid.max())
 
+    def write_h5(self, h5file, element_group):
+        neid, nnode = self.nodes.shape
+        nnode_midside = self.base_nodes.shape[1]
+        if neid == 0:
+            return
+        from tables import Int64Col, Float64Col
+        h5_dict = {
+            'EID': Int64Col(pos=0),  # Signed 64-bit integer
+            'PID': Int64Col(pos=1),  # Signed 64-bit integer
+            'G': Int64Col(shape=(nnode,), pos=2),  # double (double-precision)
+            'THETA': Float64Col(pos=3),
+            'ZOFFS': Float64Col(pos=4),
+            'TFLAG': Int64Col(pos=5),
+            'T': Float64Col(shape=(nnode_midside,), pos=6),
+            'MCID': Int64Col(pos=7),
+            'DOMAIN_ID': Int64Col(pos=8),
+        }
+        table = h5file.create_table(element_group, self.type, h5_dict)
+        T = self.T.copy()
+        inan = np.isnan(T)
+        T[inan] = -1.0
+        arr = np.empty(neid, dtype=table.dtype)
+        arr["EID"] = self.element_id
+        arr["PID"] = self.property_id
+        arr["G"] = self.nodes
+        arr["THETA"] = self.theta
+        arr["ZOFFS"] = self.zoffset
+        arr["TFLAG"] = self.tflag
+        arr["T"] = T
+        arr["MCID"] = self.mcid
+        arr["DOMAIN_ID"] = np.ones(neid, dtype='int64')
+        table.append(arr)
+
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -2169,6 +2300,39 @@ class CTRIA6(ShellElement):
         # T is a thickness if tflag == 0 (unless T=nan)
         itflag = (self.tflag == 0)
         self.T[itflag] *= xyz_scale
+
+    def write_h5(self, h5file, element_group):
+        neid, nnode = self.nodes.shape
+        nnode_midside = self.base_nodes.shape[1]
+        if neid == 0:
+            return
+        from tables import Int64Col, Float64Col
+        h5_dict = {
+            'EID': Int64Col(pos=0),  # Signed 64-bit integer
+            'PID': Int64Col(pos=1),  # Signed 64-bit integer
+            'G': Int64Col(shape=(nnode,), pos=2),  # double (double-precision)
+            'THETA': Float64Col(pos=3),
+            'ZOFFS': Float64Col(pos=4),
+            'TFLAG': Int64Col(pos=5),
+            'T': Float64Col(shape=(nnode_midside,), pos=6),
+            'MCID': Int64Col(pos=7),
+            'DOMAIN_ID': Int64Col(pos=8),
+        }
+        table = h5file.create_table(element_group, self.type, h5_dict)
+        T = self.T.copy()
+        inan = np.isnan(T)
+        T[inan] = -1.0
+        arr = np.empty(neid, dtype=table.dtype)
+        arr["EID"] = self.element_id
+        arr["PID"] = self.property_id
+        arr["G"] = self.nodes
+        arr["THETA"] = self.theta
+        arr["ZOFFS"] = self.zoffset
+        arr["TFLAG"] = self.tflag
+        arr["T"] = T
+        arr["MCID"] = self.mcid
+        arr["DOMAIN_ID"] = np.ones(neid, dtype='int64')
+        table.append(arr)
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -2546,6 +2710,39 @@ class CQUAD8(ShellElement):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max(), self.mcid.max())
 
+    def write_h5(self, h5file, element_group):
+        neid, nnode = self.nodes.shape
+        nnode_midside = self.base_nodes.shape[1]
+        if neid == 0:
+            return
+        from tables import Int64Col, Float64Col
+        h5_dict = {
+            'EID': Int64Col(pos=0),  # Signed 64-bit integer
+            'PID': Int64Col(pos=1),  # Signed 64-bit integer
+            'G': Int64Col(shape=(nnode,), pos=2),  # double (double-precision)
+            'THETA': Float64Col(pos=3),
+            'ZOFFS': Float64Col(pos=4),
+            'TFLAG': Int64Col(pos=5),
+            'T': Float64Col(shape=(nnode_midside,), pos=6),
+            'MCID': Int64Col(pos=7),
+            'DOMAIN_ID': Int64Col(pos=8),
+        }
+        table = h5file.create_table(element_group, self.type, h5_dict)
+        T = self.T.copy()
+        inan = np.isnan(T)
+        T[inan] = -1.0
+        arr = np.empty(neid, dtype=table.dtype)
+        arr["EID"] = self.element_id
+        arr["PID"] = self.property_id
+        arr["G"] = self.nodes
+        arr["THETA"] = self.theta
+        arr["ZOFFS"] = self.zoffset
+        arr["TFLAG"] = self.tflag
+        arr["T"] = T
+        arr["MCID"] = self.mcid
+        arr["DOMAIN_ID"] = np.ones(neid, dtype='int64')
+        table.append(arr)
+
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -2785,6 +2982,39 @@ class CQUAD(ShellElement):
         used_dict['property_id'].append(self.property_id)
         used_dict['node_id'].append(self.nodes.ravel())
         used_dict['coord_id'].append(self.mcid[self.mcid >= 0])
+
+    def write_h5(self, h5file, element_group):
+        neid, nnode = self.nodes.shape
+        nnode_midside = self.base_nodes.shape[1]
+        if neid == 0:
+            return
+        from tables import Int64Col, Float64Col
+        h5_dict = {
+            'EID': Int64Col(pos=0),  # Signed 64-bit integer
+            'PID': Int64Col(pos=1),  # Signed 64-bit integer
+            'G': Int64Col(shape=(nnode,), pos=2),  # double (double-precision)
+            'THETA': Float64Col(pos=3),
+            'ZOFFS': Float64Col(pos=4),
+            'TFLAG': Int64Col(pos=5),
+            'T': Float64Col(shape=(nnode_midside,), pos=6),
+            'MCID': Int64Col(pos=7),
+            'DOMAIN_ID': Int64Col(pos=8),
+        }
+        table = h5file.create_table(element_group, self.type, h5_dict)
+        T = self.T.copy()
+        inan = np.isnan(T)
+        T[inan] = -1.0
+        arr = np.empty(neid, dtype=table.dtype)
+        arr["EID"] = self.element_id
+        arr["PID"] = self.property_id
+        arr["G"] = self.nodes
+        arr["THETA"] = self.theta
+        arr["ZOFFS"] = self.zoffset
+        arr["TFLAG"] = self.tflag
+        arr["T"] = T
+        arr["MCID"] = self.mcid
+        arr["DOMAIN_ID"] = np.ones(neid, dtype='int64')
+        table.append(arr)
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,

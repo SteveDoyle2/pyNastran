@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 from io import StringIO
 
+from pyNastran.utils import PathLike
+from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf.field_writer import print_card_8, print_card_16
 from pyNastran.bdf.bdf_interface.write_mesh import _output_helper, _fix_sizes
 
@@ -10,6 +12,7 @@ from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from tables import File
 
 
 class WriteMesh(BDFAttributes):
@@ -18,7 +21,12 @@ class WriteMesh(BDFAttributes):
         #BDFAttributes.__init__(self)
         self.writer = Writer(self)
 
-    def write_bdf(self, out_filename: Optional[str | StringIO]=None,
+    def write_h5(self, out_filename: PathLike):
+        from tables import File
+        with File(out_filename, 'w') as hdf5_file:
+            self.writer.write_h5(hdf5_file)
+
+    def write_bdf(self, out_filename: Optional[PathLike | StringIO]=None,
                   encoding: Optional[str]=None,
                   size: int=8,
                   nodes_size: Optional[int]=None,
@@ -158,6 +166,103 @@ class Writer:
     def __init__(self, model: BDF):
         self.model = model
 
+    def write_h5(self, h5file: File):
+        nastran_group = h5file.create_group('/', 'NASTRAN')
+        input_group = h5file.create_group(nastran_group, 'INPUT')
+        self.write_h5_parameters(h5file, input_group)
+        self.write_h5_nodes(h5file, input_group)
+        self.write_h5_elements(h5file, input_group)
+        self.write_h5_properties(h5file, input_group)
+
+    def write_h5_parameters(self, h5file: File, input_group):
+        model = self.model
+        if len(model.params) == 0:
+            return
+        parameter_group = h5file.create_group(input_group, 'PARAMETER')
+        pvt_group = h5file.create_group(parameter_group, 'PVT')
+
+        ints = []
+        floats = []
+        strings = []
+        domain_id = 1
+        for key, param in model.params.items():
+            if len(param.values) == 1:
+                value = param.values[0]
+                if isinstance(value, str):
+                    strings.append([key, value, domain_id])
+                elif isinstance(value, integer_types):
+                    ints.append([key, value, domain_id])
+                elif isinstance(value, float_types):
+                    floats.append([key, value, domain_id])
+                else:  # pragma: no cover
+                    raise NotImplementedError(param)
+            else:  # pragma: no cover
+                raise NotImplementedError(param)
+        from tables import Int64Col, Float64Col, StringCol
+        import numpy as np
+
+        data_types = [
+            ('CHAR', strings, StringCol(8, pos=1)),
+            ('INT', ints, Int64Col(pos=1)),
+            ('FLOAT', floats, Float64Col(pos=1)), # TODO: verify name
+        ]
+        for name, data, h5_type in data_types:
+            if len(data) == 0:
+                continue
+            nparam = len(data)
+            h5_dict = {
+                'NAME': StringCol(8, pos=0),  # Signed 64-bit integer
+                'VALUE': h5_type,  # Signed 64-bit integer
+                'DOMAIN_ID': Int64Col(pos=2),
+            }
+            table = h5file.create_table(pvt_group, name, h5_dict)
+            arr = np.empty(nparam, dtype=table.dtype)
+            arr["NAME"] = [item[0] for item in data]
+            arr["VALUE"] = [item[1] for item in data]
+            arr["DOMAIN_ID"] = np.ones(nparam, dtype='int64')
+            table.append(arr)
+
+    def write_h5_nodes(self, h5file: File, input_group):
+        model = self.model
+        node_group = h5file.create_group(input_group, 'NODE')
+        model.grid.write_h5(h5file, node_group)
+
+        if len(model.coord) > 1:
+            coord_group = h5file.create_group(input_group, 'COORDINATE_SYSTEM')
+            model.coord.write_h5(h5file, coord_group)
+
+    def write_h5_elements(self, h5file: File, input_group):
+        element_group = h5file.create_group(input_group, 'ELEMENT')
+        model = self.model
+        elements = [
+            # model.celas1, model.celas2, model.celas3, model.celas4,
+            # model.cdamp1, model.cdamp2, model.cdamp3, model.cdamp4,
+            # model.cbush, model.cbush1d, model.cgap,
+            # model.crod, model.ctube, model.conrod,
+            model.cbar, model.cbeam,
+            # shells
+            # model.cshear,
+            model.cquad, model.cquad4, model.cquad8, model.cquadr,
+            model.ctria3, model.ctria6, model.ctriar,
+            # solids
+            model.ctetra, model.cpenta, model.chexa, model.cpyram, model.chexcz,
+        ]
+        for element in elements:
+            element.write_h5(h5file, element_group)
+
+    def write_h5_properties(self, h5file: File, input_group):
+        property_group = h5file.create_group(input_group, 'PROPERTY')
+        model = self.model
+        properties = [
+            model.pshell,
+            #model.pcomp, model.pcompg, model.psolid,
+        ]
+        for prop in properties:
+            prop.write_h5(h5file, property_group)
+        # material_group = h5file.create_group(input_group, 'MATERIAL')
+        # load_group = h5file.create_group(input_group, 'LOAD')
+        # constraints_group = h5file.create_group(input_group, 'CONSTRAINTS')
+
     def write_bulk_data(self, bdf_file: TextIOLike,
                         size: int=8, is_double: bool=False,
                         interspersed: bool=False,
@@ -172,7 +277,6 @@ class Writer:
             size, coords_size, nodes_size, elements_size, loads_size, table_size, flfact_size)
 
         model = self.model
-
         if model.run_testing_checks:
             model.quality()
             #model.spcadd.get_reduced_spcs()

@@ -159,7 +159,7 @@ class SolidElement(Element):
             ifile = np.zeros(ncards, dtype='int32')
         ncards_existing = len(self.element_id)
         midside_nodes = nodes[:, self.nnode_base:]
-        if self.model.filter_midside_nodes and midside_nodes.max() == 0:
+        if midside_nodes.shape[1] > 0 and self.model.filter_midside_nodes and midside_nodes.max() == 0:
             nodes = nodes[:, :self.nnode_base]
 
         if ncards_existing != 0:
@@ -180,6 +180,25 @@ class SolidElement(Element):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max())
+
+    def write_h5(self, h5file, element_group):
+        neid, nnode = self.nodes.shape
+        if neid == 0:
+            return
+        from tables import Int64Col
+        h5_dict = {
+            'EID': Int64Col(pos=0),  # Signed 64-bit integer
+            'PID': Int64Col(pos=1),  # Signed 64-bit integer
+            'G': Int64Col(shape=(nnode,), pos=2),  # double (double-precision)
+            'DOMAIN_ID': Int64Col(pos=3),
+        }
+        table = h5file.create_table(element_group, self.type, h5_dict)
+        arr = np.empty(neid, dtype=table.dtype)
+        arr["EID"] = self.element_id
+        arr["PID"] = self.property_id
+        arr["G"] = self.nodes
+        arr["DOMAIN_ID"] = np.ones(neid, dtype='int64')
+        table.append(arr)
 
     @parse_check
     def write_file_8(self, bdf_file: TextIOLike,

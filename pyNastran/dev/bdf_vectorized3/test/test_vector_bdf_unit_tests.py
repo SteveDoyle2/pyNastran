@@ -3,14 +3,30 @@ import pathlib
 import unittest
 import numpy as np
 import pyNastran
+from cpylog import SimpleLogger
 from pyNastran.bdf.bdf import read_bdf
-from pyNastran.dev.bdf_vectorized3.bdf import read_bdf as read_bdf_vectorized
+from pyNastran.dev.bdf_vectorized3.bdf import BDF as BDFv, read_bdf as read_bdf_vectorized
+try:
+    import tables
+    IS_PYTABLES = True
+except ImportError:
+    IS_PYTABLES = False
 
 PKG_PATH = pathlib.Path(pyNastran.__path__[0])
 TEST_PATH = PKG_PATH / 'bdf' / 'test'
 MODEL_PATH = PKG_PATH / '..' / 'models'
 
 class TestBdfVectorized3(unittest.TestCase):
+    @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
+    def test_static_solid_shell_bar_h5(self):
+        log = SimpleLogger(level='warning')
+        bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
+        h5_filename = MODEL_PATH / 'sol_101_elements' / 'model_static_solid_shell_bar.h5'
+        modelv = read_bdf_vectorized(bdf_filename, validate=True, xref=True, punch=False, log=log)
+        modelv.write_h5(h5_filename)
+        modelv2 = BDFv(log=log)
+        modelv2.read_h5(h5_filename)
+
     def test_bwb(self):
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
         bdf_filename_out = MODEL_PATH / 'bwb' / 'bwb_saero_vectorized.bdf'

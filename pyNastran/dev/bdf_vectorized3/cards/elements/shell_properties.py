@@ -209,7 +209,7 @@ class PSHELL(Property):
         self.z = z
         self.n = len(property_id)
 
-    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         material_id = np.unique(self.material_id.flatten())
         material_id = material_id[material_id > 0]
         used_dict['material_id'].append(material_id)
@@ -278,6 +278,41 @@ class PSHELL(Property):
     @property
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
+
+    def write_h5(self, h5file, element_group):
+        nprop = self.property_id.shape
+        if nprop == 0:
+            return
+        from tables import Int64Col, Float64Col
+        h5_dict = {
+            'PID': Int64Col(pos=0),
+            'MID1': Int64Col(pos=1),
+            'T': Float64Col(pos=2),
+            'MID2': Int64Col(pos=3),
+            'BK': Float64Col(pos=4),
+            'MID3': Int64Col(pos=5),
+            'TS': Float64Col(pos=6),
+            'NSM': Float64Col(pos=7),
+            'Z1': Float64Col(pos=8),
+            'Z2': Float64Col(pos=9),
+            'MID4': Int64Col(pos=10),
+            'DOMAIN_ID': Int64Col(pos=11),
+        }
+        table = h5file.create_table(element_group, self.type, h5_dict)
+        arr = np.empty(nprop, dtype=table.dtype)
+        arr["PID"] = self.property_id
+        arr["MID1"] = self.material_id[:, 0]
+        arr["MID2"] = self.material_id[:, 1]
+        arr["MID3"] = self.material_id[:, 2]
+        arr["MID4"] = self.material_id[:, 3]
+        arr["T"] = self.t
+        arr["BK"] = self.twelveIt3
+        arr["TS"] = self.tst
+        arr["Z1"] = self.z[:, 0]
+        arr["Z2"] = self.z[:, 1]
+        arr["NSM"] = self.nsm
+        arr["DOMAIN_ID"] = np.ones(nprop, dtype='int64')
+        table.append(arr)
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,

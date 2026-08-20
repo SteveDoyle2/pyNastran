@@ -1,5 +1,6 @@
 from __future__ import annotations
 from itertools import count
+from collections import defaultdict
 from typing import Any, TYPE_CHECKING
 import numpy as np
 #from pyNastran.bdf.field_writer_8 import print_float_8 # print_card_8
@@ -84,6 +85,12 @@ class COORD(VectorizedBaseCard):
         #i = cls.index(coord_id)
         #coord = cls.slice_card_by_index(i)
         #return coord
+
+    @property
+    def coord_type_int(self) -> np.ndarray:
+        mapper = {'R': 1, 'C': 2, 'S': 3}
+        coord_type_int = np.array([mapper[coord_type] for coord_type in self.coord_type])
+        return coord_type_int
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         is_cord1 = (self.icoord == 1)
@@ -608,7 +615,10 @@ class COORD(VectorizedBaseCard):
 
         grid = self.model.grid
         if grid.n:
-            grid.sort()
+            unids = np.unique(grid.node_id)
+            if len(grid.node_id) != len(unids) or not np.array_equal(grid.node_id, unids):
+                # model.log.warning(f'node_id = {grid.node_id}')
+                grid.sort()
         assert len(np.unique(self.coord_id)) == len(self.coord_id)
 
         debug = False
@@ -908,6 +918,77 @@ class COORD(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.coord_id.max(), self.nodes.max(), self.ref_coord_id.max())
 
+    def write_h5(self, h5file, coord_group):
+        transform_group = h5file.create_group(coord_group, 'TRANSFORMATION')
+        from tables import Int64Col, Float64Col
+        xform_data_dict = {'DATA': Float64Col()}
+        h5_dict = {
+            'CID': Int64Col(pos=0),  # Signed 64-bit integer
+            'RID': Int64Col(pos=1),  # Signed 64-bit integer
+            'A1': Float64Col(pos=2),  # double (double-precision)
+            'A2': Float64Col(pos=3),
+            'A3': Float64Col(pos=4),
+            'B1': Float64Col(pos=5),
+            'B2': Float64Col(pos=6),
+            'B3': Float64Col(pos=7),
+            'C1': Float64Col(pos=8),
+            'C2': Float64Col(pos=9),
+            'C3': Float64Col(pos=10),
+            'DOMAIN_ID': Int64Col(pos=6),
+        }
+        coords_by_type = defaultdict(list)
+        rdata_list = []
+        ncoord = len(self.coord_id) - 1
+        for i, icoord, coord_type, cid, e1 in zip(count(), self.icoord, self.coord_type,
+                                                  self.coord_id, self.e1):
+            if cid == 0:
+                continue
+            class_name = f'CORD{icoord}{coord_type}'
+            coords_by_type[class_name].append(i)
+            xform = self.T[i, :, :].ravel()
+            rdata_list.append(e1)
+            rdata_list.append(xform)
+        rdata = np.hstack(rdata_list, dtype='float64')
+        assert len(rdata) > 0
+        table_rdata = h5file.create_table(transform_group, 'RDATA', xform_data_dict)
+        arr_rdata = np.empty(len(rdata), dtype=table_rdata.dtype)
+        arr_rdata['DATA'] = rdata
+        table_rdata.append(arr_rdata)
+
+        xform_identity_dict = {
+            'CID': Int64Col(pos=0),  # Signed 64-bit integer
+            'TYPE': Int64Col(pos=1),
+            'INDEX': Int64Col(pos=2),
+            'RINDEX': Int64Col(pos=3),
+            'DOMAIN_ID': Int64Col(pos=4),
+        }
+        table_identity = h5file.create_table(transform_group, 'INDENTITY', xform_identity_dict)
+        arr_identity = np.empty(ncoord, dtype=table_identity.dtype)
+        arr_identity['CID'] = self.coord_id[1:]
+        arr_identity['TYPE'] = self.coord_type_int[1:]
+        arr_identity['INDEX'] = self.coord_id[1:] * 0
+        arr_identity['RINDEX'] = np.arange(ncoord) * 12 + 1
+        arr_identity['DOMAIN_ID'] = np.ones(ncoord)
+        table_identity.append(arr_identity)
+
+        for coord_type, icoords in coords_by_type.items():
+            table = h5file.create_table(coord_group, coord_type, h5_dict)
+            ncoord = len(icoords)
+            arr = np.empty(ncoord, dtype=table.dtype)
+            arr["CID"] = self.coord_id[icoords]
+            arr["RID"] = self.ref_coord_id[icoords]
+            arr["A1"] = self.e1[icoords, 0]
+            arr["A2"] = self.e1[icoords, 1]
+            arr["A3"] = self.e1[icoords, 2]
+            arr["B1"] = self.e2[icoords, 0]
+            arr["B2"] = self.e2[icoords, 1]
+            arr["B3"] = self.e2[icoords, 2]
+            arr["C1"] = self.e3[icoords, 0]
+            arr["C2"] = self.e3[icoords, 1]
+            arr["C3"] = self.e3[icoords, 2]
+            arr["DOMAIN_ID"] = np.ones(ncoord)
+            table.append(arr)
+
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -917,7 +998,7 @@ class COORD(VectorizedBaseCard):
             self.write_file_8(bdf_file, write_card_header=write_card_header)
             return
 
-        class_name = self.type
+        # class_name = self.type
         nodes = array_str(self.nodes, size=size)
         ref_coord_ids = array_default_int(self.ref_coord_id, default=0, size=size)
         #array_str

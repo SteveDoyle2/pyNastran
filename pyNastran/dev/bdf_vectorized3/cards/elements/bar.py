@@ -433,6 +433,53 @@ class CBAR(Element):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max(), self.g0.max())
 
+    def write_h5(self, h5file, element_group):
+        neid, nnode = self.nodes.shape
+        if neid == 0:
+            return
+        from tables import Int64Col, Float64Col
+        h5_dict = {
+            'EID': Int64Col(pos=0),  # Signed 64-bit integer
+            'PID': Int64Col(pos=1),
+            'GA': Int64Col(pos=2),
+            'GB': Int64Col(pos=3),
+            'FLAG': Int64Col(pos=4),
+            'X1': Float64Col(pos=5),
+            'X2': Float64Col(pos=6),
+            'X3': Float64Col(pos=7),
+            'GO': Int64Col(pos=8),
+            'PA': Int64Col(pos=9),
+            'PB': Int64Col(pos=10),
+            'W1A': Float64Col(pos=11),
+            'W2A': Float64Col(pos=12),
+            'W3A': Float64Col(pos=13),
+            'W1B': Float64Col(pos=14),
+            'W2B': Float64Col(pos=15),
+            'W3B': Float64Col(pos=16),
+            'DOMAIN_ID': Int64Col(pos=17),
+        }
+        table = h5file.create_table(element_group, self.type, h5_dict)
+        arr = np.empty(neid, dtype=table.dtype)
+        arr["EID"] = self.element_id
+        arr["PID"] = self.property_id
+        arr["GA"] = self.nodes[:, 0]
+        arr["GB"] = self.nodes[:, 1]
+        arr["FLAG"] = np.ones(neid)
+        arr["X1"] = self.x[:, 0]
+        arr["X2"] = self.x[:, 1]
+        arr["X3"] = self.x[:, 2]
+        arr["GO"] = self.g0
+        arr["PA"] = self.pa
+        arr["PB"] = self.pb
+        arr["W1A"] = self.wa[:, 0]
+        arr["W2A"] = self.wa[:, 1]
+        arr["W3A"] = self.wa[:, 2]
+        arr["W1B"] = self.wb[:, 0]
+        arr["W2B"] = self.wb[:, 1]
+        arr["W3B"] = self.wb[:, 2]
+        arr["DOMAIN_ID"] = np.ones(neid, dtype='int64')
+        table.append(arr)
+
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,

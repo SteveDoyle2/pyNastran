@@ -150,25 +150,25 @@ class CBEAM(Element):
 
     @Element.clear_check
     def clear(self) -> None:
-        self.element_id: np.array = np.array([], dtype='int32')
-        self.property_id: np.array = np.array([], dtype='int32')
-        self.nodes: np.array = np.zeros((0, 2), dtype='int32')
-        self.offt: np.array = np.array([], dtype='|U3')
-        self.bit: np.array = np.array([], dtype='int32')
-        self.g0: np.array = np.array([], dtype='int32')
-        self.x: np.array = np.zeros((0, 3), dtype='float64')
+        self.element_id: np.ndarray = np.array([], dtype='int32')
+        self.property_id: np.ndarray = np.array([], dtype='int32')
+        self.nodes: np.ndarray = np.zeros((0, 2), dtype='int32')
+        self.offt: np.ndarray = np.array([], dtype='|U3')
+        self.bit: np.ndarray = np.array([], dtype='int32')
+        self.g0: np.ndarray = np.array([], dtype='int32')
+        self.x: np.ndarray = np.zeros((0, 3), dtype='float64')
 
         # pin flags
-        self.pa: np.array = np.array([], dtype='int32')
-        self.pb: np.array = np.array([], dtype='int32')
+        self.pa: np.ndarray = np.array([], dtype='int32')
+        self.pb: np.ndarray = np.array([], dtype='int32')
 
         # offset vectors at A/B
-        self.wa: np.array = np.zeros((0, 3), dtype='float64')
-        self.wb: np.array = np.zeros((0, 3), dtype='float64')
+        self.wa: np.ndarray = np.zeros((0, 3), dtype='float64')
+        self.wb: np.ndarray = np.zeros((0, 3), dtype='float64')
 
         # scalar points at end A/B for warping
-        self.sa: np.array = np.zeros([], dtype='int32')
-        self.sb: np.array = np.zeros([], dtype='int32')
+        self.sa: np.ndarray = np.zeros([], dtype='int32')
+        self.sb: np.ndarray = np.zeros([], dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int],
             x: Optional[list[float]], g0: Optional[int],
@@ -417,6 +417,45 @@ class CBEAM(Element):
         breakdown = np.column_stack([length, area, I, J, k1, k2, s1, s2,
                                      E, G])
         return breakdown
+
+    def write_h5(self, h5file, element_group):
+        neid, nnode = self.nodes.shape
+        if neid == 0:
+            return
+        from tables import Int64Col, Float64Col
+        h5_dict = {
+            'EID': Int64Col(pos=0),  # Signed 64-bit integer
+            'PID': Int64Col(pos=1),
+            'GA': Int64Col(pos=2),
+            'GB': Int64Col(pos=3),
+            'SA': Int64Col(pos=4),
+            'SB': Int64Col(pos=5),
+            'X': Float64Col(shape=(3,), pos=6),
+            'G0': Int64Col(pos=7),
+            'F': Int64Col(pos=8),
+            'PA': Int64Col(pos=9),
+            'PB': Int64Col(pos=10),
+            'WA': Float64Col(shape=(3,), pos=11),
+            'WB': Float64Col(shape=(3,), pos=12),
+            'DOMAIN_ID': Int64Col(pos=13),
+        }
+        table = h5file.create_table(element_group, self.type, h5_dict)
+        arr = np.empty(neid, dtype=table.dtype)
+        arr["EID"] = self.element_id
+        arr["PID"] = self.property_id
+        arr["GA"] = self.nodes[:, 0]
+        arr["GB"] = self.nodes[:, 1]
+        arr["F"] = np.ones(neid)
+        arr["SA"] = self.sa
+        arr["SB"] = self.sb
+        arr["X"] = self.x
+        arr["G0"] = self.g0
+        arr["PA"] = self.pa
+        arr["PB"] = self.pb
+        arr["WA"] = self.wa
+        arr["WB"] = self.wb
+        arr["DOMAIN_ID"] = np.ones(neid, dtype='int64')
+        table.append(arr)
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -1052,8 +1091,8 @@ class PBEAM(Property):
     _skip_equal_check = ['allowed_materials']
     @Property.clear_check
     def clear(self) -> None:
-        self.property_id: np.array = np.array([], dtype='int32')
-        self.material_id: np.array = np.array([], dtype='int32')
+        self.property_id: np.ndarray = np.array([], dtype='int32')
+        self.material_id: np.ndarray = np.array([], dtype='int32')
         self.nstation = np.array([], dtype='int32')
 
         self.s1 = np.array([], dtype='float64')
@@ -1611,7 +1650,7 @@ class PBEAM(Property):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         save_ifile_comment(self, ifile, comment)
-       
+
         if len(self.property_id) == 0:
             property_id = np.hstack([self.property_id, property_id])
             material_id = np.hstack([self.material_id, material_id])
@@ -1851,7 +1890,7 @@ class PBEAM(Property):
         assert len(mass_per_length) == nproperties
         return mass_per_length
 
-    def rhoarea_nsm(self) -> np.ndarray:
+    def rhoarea_nsm(self) -> tuple[np.ndarray, np.ndarray]:
         nproperties = len(self.property_id)
         rho = self.rho()
 
