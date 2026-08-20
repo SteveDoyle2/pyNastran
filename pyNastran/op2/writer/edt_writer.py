@@ -2,6 +2,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from collections import defaultdict
+from itertools import count
 from struct import pack, Struct
 from typing import Any, BinaryIO, TYPE_CHECKING
 
@@ -14,7 +15,7 @@ integer_types = (int, np.int32, np.int64)
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.cards.bdf_sets import SET1, SET2, SET3
-    from pyNastran.bdf.cards.aero.aero import CAERO1, CAERO2, CAERO5, PAERO1, PAERO2, AESURF, AESURFS
+    from pyNastran.bdf.cards.aero.aero import CAERO1, CAERO2, CAERO3, CAERO5, PAERO1, PAERO2, AESURF, AESURFS
     from pyNastran.bdf.cards.aero.static_loads import AEROS, AESTAT # , CSSCHD, DIVERG, TRIM, TRIM2
     from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, FLUTTER # , FLFACT, MKAERO2
     from pyNastran.op2.op2_geom import OP2Geom, BDF
@@ -804,7 +805,7 @@ def write_paero2(model: BDF | OP2Geom, name: str,
     nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
     for paero_id in paero_ids:
-        paero = model.paeros[paero_id] # type: PAERO2
+        paero: PAERO2 = model.paeros[paero_id]
         orient = b'%-4s' % paero.orient.encode('ascii')
         lrsb = 0 if paero.lrsb is None else paero.lrsb
         lrib = 0 if paero.lrib is None else paero.lrib
@@ -828,9 +829,9 @@ def write_paero2(model: BDF | OP2Geom, name: str,
 
         #assert len(paero.thi) == 3, paero.thi
         #assert len(paero.ltn) == 3, paero.ltn
-        for thii, thni in zip(thi, thn):
-            assert isinstance(thii, integer_types), f'i={i} thi={thii}'
-            assert isinstance(thni, integer_types), f'i={i} thn={thni}'
+        for i, thii, thni in zip(count(), thi, thn):
+            assert isinstance(thii, integer_types), f'paero_id={paero_id} i={i} thi={thii}'
+            assert isinstance(thni, integer_types), f'paero_id={paero_id} i={i} thn={thni}'
             data.extend([thii, thni])
         assert None not in data, data
         op2_ascii.write(f'  PAERO2 data={data}\n')

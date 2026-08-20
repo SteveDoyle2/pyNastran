@@ -81,10 +81,8 @@ def write_ept(op2_file, op2_ascii, model: BDF, endian=b'<',
             # log.warning(f'reading EPT-{name}')
             itable = func(name, pids, itable, op2_file, op2_ascii, model, endian=endian,
                           nastran_format=nastran_format)
-            continue
         else:
             model.log.warning(f'skipping {name}')
-            continue
 
     #-------------------------------------
     #print('itable', itable)

@@ -1,3 +1,4 @@
+import warnings
 from struct import pack, Struct
 from collections import defaultdict
 from cpylog import SimpleLogger
@@ -122,38 +123,16 @@ def write_card(op2_file: BinaryIO, op2_ascii, load_type: str, loads,
 
     if load_type in LOAD_MAP:
         func = LOAD_MAP[load_type]
-        nbytes = func(load_type, loads, nloads, op2_file, op2_ascii, endian)
-        # nbytes = _write_load(load_type, loads, nloads, op2_file, op2_ascii, endian)
-
-    elif load_type == 'PLOAD4': # msc
-        nbytes = write_pload4(load_type, loads, nloads, op2_file, op2_ascii,
-                              endian, nastran_format=nastran_format)
-
-    #elif load_type == 'ACCEL1':
-        #key = (7401,74,601)
-        #nfields = 3
-        #spack = Struct(endian + b'2i f')
-        #nbytes = write_header(load_type, nfields, nloads, key, op2_file, op2_ascii)
-        #for load in loads:
-            #1 SID    I Load set identification number
-            #2 CID    I Coordinate system identification number
-            #3 A     RS Acceleration vector scale factor
-            #4 N(3)  RS Components of a vector coordinate system defined by CID
-            #7 GRIDID I Grid ID or THRU or BY code
-            #Words 7 repeats until (-1) occurs.
-            #for nid, mag in zip(load.nodes, load.mags):
-                #data = [load.sid, nid, mag]
-                #op2_ascii.write('  SLOAD data=%s\n' % str(data))
-                #op2_file.write(spack.pack(*data))
-    elif load_type == 'QHBDY':
-        nbytes = write_qhbdy(load_type, loads, nloads, op2_file, op2_ascii, endian, log)
+        nbytes = func(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                      nastran_format=nastran_format)
     else:  # pragma: no cover
         load0 = loads[0]
         raise NotImplementedError(load0)
     return nbytes
 
 
-def write_force(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_force(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                nastran_format='nx'):
     key = (4201, 42, 18)
     nfields = 7
     spack = Struct(endian + b'3i 4f')
@@ -165,7 +144,8 @@ def write_force(load_type, loads, nloads, op2_file, op2_ascii, endian):
     return nbytes
 
 
-def write_force1(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_force1(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                  nastran_format='nx'):
     key = (4001, 40, 20)
     nfields = 5
     spack = Struct(endian + b'iifii')
@@ -178,7 +158,8 @@ def write_force1(load_type, loads, nloads, op2_file, op2_ascii, endian):
     return nbytes
 
 
-def write_force2(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_force2(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                  nastran_format='nx'):
     key = (4101, 41, 22)
     nfields = 7
     spack = Struct(endian + b'iif4i')
@@ -192,7 +173,8 @@ def write_force2(load_type, loads, nloads, op2_file, op2_ascii, endian):
     return nbytes
 
 
-def write_moment(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_moment(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                  nastran_format='nx'):
     key = (4801, 48, 19)
     nfields = 7
     spack = Struct(endian + b'3i 4f')
@@ -204,7 +186,8 @@ def write_moment(load_type, loads, nloads, op2_file, op2_ascii, endian):
     return nbytes
 
 
-def write_moment1(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_moment1(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                  nastran_format='nx'):
     key = (4601, 46, 21)
     nfields = 5
     spack = Struct(endian + b'iifii')
@@ -217,7 +200,8 @@ def write_moment1(load_type, loads, nloads, op2_file, op2_ascii, endian):
     return nbytes
 
 
-def write_moment2(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_moment2(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                  nastran_format='nx'):
     key = (4701, 47, 23)
     nfields = 7
     spack = Struct(endian + b'iif4i')
@@ -235,7 +219,6 @@ def write_pload4(load_type, loads, nloads: int,
                  op2_file, op2_ascii, endian, nastran_format='nx'):
     """writes the PLOAD4s"""
     key = (7209, 72, 299)
-
     nloads = 0
     for load in loads:
         nloads += len(load.eids)
@@ -325,7 +308,8 @@ def _get_nloads_from_elements(loads: list) -> int:
         nloads += len(load.elements)
     return nloads
 
-def write_accel(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_accel(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                nastran_format='nx'):
     """
     ACCEL(7401, 74, 601) - NX  (uses CHAR1)
     ACCEL(11302,113,600) - MSC (uses CHAR4)
@@ -355,7 +339,8 @@ def write_accel(load_type, loads, nloads, op2_file, op2_ascii, endian):
     #return nbytes
 
 def write_accel1(load_type, loads, nloads: int,
-                 op2_file, op2_ascii, endian):
+                 op2_file, op2_ascii, endian,
+                 nastran_format='nx'):
     """
     ACCEL1(7501, 75, 602) - NX
     ACCEL1(11402,114,601) - MSC
@@ -383,7 +368,8 @@ def write_accel1(load_type, loads, nloads: int,
     op2_file.write(pack(fmt, *data))
     return nbytes
 
-def write_grav(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_grav(load_type, loads, nloads, op2_file, op2_ascii, endian,
+               nastran_format='nx'):
     """writes the GRAVs"""
     key = (4401, 44, 26)
     nfields = 7
@@ -397,7 +383,8 @@ def write_grav(load_type, loads, nloads, op2_file, op2_ascii, endian):
     return nbytes
 
 def write_load(load_type, loads, nloads: int,
-               op2_file, op2_ascii, endian):
+               op2_file, op2_ascii, endian,
+               nastran_format='nx'):
     """writes the LOADs"""
     key = (4551, 61, 84)
     fmt = endian
@@ -422,7 +409,9 @@ def write_load(load_type, loads, nloads: int,
     op2_file.write(pack(fmt, *data))
     return nbytes
 
-def write_lseq(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_lseq(load_type, loads, nloads, op2_file, op2_ascii,
+               endian: bytes,
+               nastran_format: str='nx'):
     """writes the LSEQs"""
     key = (3609, 36, 188)
     nfields = 5
@@ -439,7 +428,8 @@ def write_lseq(load_type, loads, nloads, op2_file, op2_ascii, endian):
         op2_file.write(spack.pack(*datai))
     return nbytes
 
-def write_pload(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_pload(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                nastran_format='nx'):
     """writes the PLOADs"""
     key = (5101, 51, 24)
     nfields = 6
@@ -455,7 +445,8 @@ def write_pload(load_type, loads, nloads, op2_file, op2_ascii, endian):
         op2_file.write(spack.pack(*data))
     return nbytes
 
-def write_pload1(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_pload1(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                 nastran_format='nx'):
     """writes the PLOAD1s"""
     key = (6909, 69, 198)
     nfields = 8
@@ -472,7 +463,8 @@ def write_pload1(load_type, loads, nloads, op2_file, op2_ascii, endian):
     return nbytes
 
 def write_pload2(load_type, loads, nloads: int,
-                 op2_file, op2_ascii, endian):
+                 op2_file, op2_ascii, endian,
+                 nastran_format='nx'):
     """writes the PLOAD2s"""
     key = (6802, 68, 199)
     nfields = 3
@@ -489,7 +481,8 @@ def write_pload2(load_type, loads, nloads: int,
     return nbytes
 
 
-def write_ploadx1(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_ploadx1(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                  nastran_format='nx'):
     key = (7309, 73, 351)
     nfields = 7
     spack = Struct(endian + b'2i2f iif')
@@ -503,7 +496,8 @@ def write_ploadx1(load_type, loads, nloads, op2_file, op2_ascii, endian):
 
 
 def write_qbdy1(load_type, loads, nloads: int,
-                op2_file, op2_ascii, endian):
+                op2_file, op2_ascii, endian,
+                nastran_format='nx'):
     """writes the QBDY1s"""
     key = (4509, 45, 239)
     nfields = 3
@@ -519,7 +513,8 @@ def write_qbdy1(load_type, loads, nloads: int,
             op2_file.write(spack.pack(*data))
     return nbytes
 
-def write_qbdy2(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_qbdy2(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                nastran_format='nx'):
     """writes the QBDY2s"""
     key = (4909, 49, 240)
     nfields = 10
@@ -538,7 +533,8 @@ def write_qbdy2(load_type, loads, nloads, op2_file, op2_ascii, endian):
     return nbytes
 
 def write_qbdy3(load_type, loads, nloads: int,
-                op2_file, op2_ascii, endian):
+                op2_file, op2_ascii, endian,
+                nastran_format='nx'):
     """writes the QBDY3s"""
     key = (2109, 21, 414)
     nfields = 4
@@ -555,7 +551,7 @@ def write_qbdy3(load_type, loads, nloads: int,
     return nbytes
 
 def write_qhbdy(load_type, loads, nloads: int,
-                op2_file, op2_ascii, endian, log):
+                 op2_file, op2_ascii, endian, nastran_format='nx'):
     """writes the QHBDYs"""
     key = (4309, 43, 233)
     nfields = 12
@@ -594,7 +590,7 @@ def write_qhbdy(load_type, loads, nloads: int,
         for i in range(nnodes):
             nids[i] = grids[i]
             if nids[i] <= 0:
-                log.warning(f'QHBDY: nids[{i}]={nids[i]} nids={nids}')
+                warnings.warn(f'QHBDY: nids[{i}]={nids[i]} nids={nids}')
             #assert nids[i] > 0, f'QHBDY: nids[{i}]={nids[i]} nids={nids}'
 
         data = [
@@ -606,7 +602,8 @@ def write_qhbdy(load_type, loads, nloads: int,
     return nbytes
 
 def write_qvect(load_type, loads, nloads: int,
-                op2_file, op2_ascii, endian) -> int:
+                op2_file, op2_ascii, endian,
+                nastran_format='nx') -> int:
     """writes the QVECTs"""
     # ntotal = 48 * self.factor  # 12*4
     key = (2209, 22, 241)
@@ -643,7 +640,8 @@ def write_qvect(load_type, loads, nloads: int,
     return nbytes
 
 def write_qvol(load_type, loads, nloads: int,
-               op2_file, op2_ascii, endian):
+               op2_file, op2_ascii, endian,
+               nastran_format='nx'):
     """writes the QVOLs"""
     key = (2309, 23, 416)
     nfields = 4
@@ -666,7 +664,8 @@ def _get_nloads_from_temperatures(loads):
     return nloads
 
 def write_sload(load_type, loads, nloads: int,
-                op2_file, op2_ascii, endian):
+                op2_file, op2_ascii, endian,
+                nastran_format='nx'):
     """writes the SLOADs"""
     key = (5401, 54, 25)
     data = []
@@ -683,7 +682,8 @@ def write_sload(load_type, loads, nloads: int,
     op2_file.write(spack.pack(*data))
     return nbytes
 
-def write_rforce(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_rforce(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                 nastran_format='nx'):
     """writes the RFORCEs"""
     key = (5509, 55, 190)
     nfields = 10
@@ -702,7 +702,8 @@ def write_rforce(load_type, loads, nloads, op2_file, op2_ascii, endian):
     return nbytes
 
 def write_temp(load_type, loads, nloads: int,
-               op2_file: BinaryIO, op2_ascii, endian):
+               op2_file: BinaryIO, op2_ascii, endian,
+               nastran_format='nx'):
     """writes the TEMPs"""
     key = (5701, 57, 27)
     nfields = 3
@@ -718,7 +719,8 @@ def write_temp(load_type, loads, nloads: int,
             op2_file.write(spack.pack(*data))
     return nbytes
 
-def write_tempd(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_tempd(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                nastran_format='nx'):
     """writes the TEMPDs"""
     key = (5641, 65, 98)
     nfields = 2
@@ -731,7 +733,8 @@ def write_tempd(load_type, loads, nloads, op2_file, op2_ascii, endian):
         op2_file.write(spack.pack(*data))
     return nbytes
 
-def write_tempp1(load_type, loads, nloads, op2_file, op2_ascii, endian):
+def write_tempp1(load_type, loads, nloads, op2_file, op2_ascii, endian,
+                 nastran_format='nx'):
     """writes the TEMPP1s"""
     key = (8109, 81, 201)
     nfields = 6
@@ -756,6 +759,8 @@ LOAD_MAP = {
     'PLOAD': write_pload,
     'PLOAD1': write_pload1,
     'PLOAD2': write_pload2,
+    'PLOAD4': write_pload4,
+    'QHBDY': write_qhbdy,
     'PLOADX1': write_ploadx1,
 
     'LOAD': write_load,

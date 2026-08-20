@@ -14,7 +14,7 @@ from pyNastran.op2.errors import (
 
 from pyNastran.dev.op2_vectorized3.op2_geom import OP2, OP2Geom, DuplicateIDsError
 #from pyNastran.dev.op2_vectorized3.op2_interface.op2_writer import op2_write_op2
-from pyNastran.utils import is_binary_file
+from pyNastran.utils import is_binary_file, PathLike
 
 np.set_printoptions(precision=3, threshold=20)
 
@@ -124,7 +124,7 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
     return failed_cases
 
 
-def run_op2(op2_filename: str, make_geom: bool=False,
+def run_op2(op2_filename: PathLike, make_geom: bool=False,
             run_geom_check: bool=True, combine: bool=True,
             write_bdf: bool=False, read_bdf: Optional[bool]=None,
             write_f06: bool=True, write_op2: bool=False,
@@ -511,7 +511,7 @@ def get_test_op2_data(argv) -> dict[str, str]:
     is_dev = 'dev' in ver
 
     msg = "Usage:  "
-    version = f'[--nx|--autodesk]'
+    version = '[--nx|--autodesk]'
     options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
     if is_dev:
         line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--test] [--nocombine] {options} OP2_FILENAME\n"

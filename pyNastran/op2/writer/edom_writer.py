@@ -182,6 +182,7 @@ def write_dresp1(model: BDF | OP2Geom, name: str,
         natti = len(atti)
 
         nvaluesi = 0
+        msg = f', which is required by:\n{str(dresp)}'
         if response_type == 'CMPLNCE':
             #   5 UNDEF(2) None
             #   7 UNDEF I Reserved for SEID for compliance DRESP1
@@ -199,8 +200,8 @@ def write_dresp1(model: BDF | OP2Geom, name: str,
             #   -10 for DWEIGHT which is the topology optimization design weight
             # 9 ATTB   I Response attribute
             # 10 MONE  I Entry is -1 (MONE=MINUS ONE)
-            if atta is None:  atta = 33
-            if attb is None:  attb = -9999
+            atta = 33 if atta is None else atta
+            attb = -9999 if attb is None else attb
             data = (0, 0, region, atta, attb, -1)
             structi = struct6i
         elif response_type == 'VOLUME':
@@ -225,7 +226,7 @@ def write_dresp1(model: BDF | OP2Geom, name: str,
               #9 ATTB   I Response attribute
               #10 MONE  I Entry is -1
             atta = 1
-            if attb is None:  attb = 0
+            attb = 0 if attb is None else attb
             data = (0, 0, region, atta, attb, -1)
             structi = struct6i
         elif response_type == 'CEIG':
@@ -506,10 +507,8 @@ def write_desvar(model: BDF | OP2Geom, name: str,
         xub = desvar.xub
         delx = desvar.delx
         ddval = desvar.ddval
-        if delx is None:
-            delx = 0
-        if ddval is None:
-            ddval = 0
+        delx = 0 if delx is None else delx
+        ddval = 0 if ddval is None else ddval
 
         data = [desvar_id, label_bytes, xinit, xlb, xub, delx, ddval]
         assert None not in data, data

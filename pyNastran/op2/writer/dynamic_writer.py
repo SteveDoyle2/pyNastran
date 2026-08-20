@@ -2,7 +2,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from struct import pack, Struct
-from typing import Any, BinaryIO, TYPE_CHECKING
+from typing import BinaryIO, TYPE_CHECKING
 
 from pyNastran.op2.tables.geom.edom import (
     DSCREEN_RTYPE_TO_INT, DRESP_FLAG_TO_RESP_MSC, DRESP_FLAG_TO_RESP_NX)
@@ -14,7 +14,6 @@ if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.bdf.cards.aero.static_loads import AEROS # , AESTAT, CSSCHD, DIVERG, TRIM, TRIM2
     #from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, FLUTTER # , FLFACT, MKAERO2
     from pyNastran.op2.op2_geom import OP2Geom, BDF
-from pyNastran.utils.numpy_utils import integer_types, float_types
 
 #DRESP_MSC_TO_FLAG = {value: key for key, value in DRESP_FLAG_TO_RESP_MSC.items()}
 #DRESP_NX_TO_FLAG = {value: key for key, value in DRESP_FLAG_TO_RESP_NX.items()}

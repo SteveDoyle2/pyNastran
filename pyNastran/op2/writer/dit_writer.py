@@ -537,7 +537,6 @@ def write_tablest(model: BDF | OP2Geom, name: str,
 
         extrap = table.extrap
         data = [table_id, extrap, 0, 0, 0, 0, 0, 0] + xys + [-1, -1]
-        #print(data)
         assert None not in data, data
         #print(data)
         datas.extend(data)

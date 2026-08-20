@@ -17,18 +17,12 @@ from cpylog import get_logger
 #except ImportError:
     #IS_PANDAS = False
 
-#try:
-    #import h5py  # pylint: disable=unused-import
-    #IS_H5PY = True
-#except ImportError:  # pragma: no cover
-    #IS_H5PY = False
-
-
 IS_PANDAS = False
 IS_H5PY = False
 
 
 import pyNastran
+from pyNastran.utils import print_bad_path
 from pyNastran.op2.op2 import OP2, read_op2, FatalError, FortranMarkerError
 from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.dev.op2_vectorized3.op2_geom import OP2Geom, read_op2_geom
