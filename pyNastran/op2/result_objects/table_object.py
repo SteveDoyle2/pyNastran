@@ -873,6 +873,20 @@ class RealTableArray(TableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'ID': Int64Col(pos=0),
+            'X': Float64Col(pos=1),
+            'Y': Float64Col(pos=2),
+            'Z': Float64Col(pos=3),
+            'RX': Float64Col(pos=4),
+            'RY': Float64Col(pos=5),
+            'RZ': Float64Col(pos=6),
+            'DOMAIN_ID': Int64Col(pos=7),
+        }
+        return h5_table_dict
+
     def set_as_static_case(self):
         analysis_code = 1 # static
         device_code = 2  # Plot

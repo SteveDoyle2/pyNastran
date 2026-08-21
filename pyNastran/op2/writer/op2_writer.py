@@ -22,6 +22,7 @@ from .edom_writer import write_edom
 from .dynamic_writer import write_dynamic
 from .dit_writer import write_dit
 #from .dynamic_writer import write_dynamic
+from .h5_writer import get_h5_elemental_nodal, write_h5_results
 from pyNastran.utils import PathLike, PurePath
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -57,6 +58,20 @@ class OP2Writer(OP2_F06_Common):
         self.log = get_logger(log, debug)
         OP2_F06_Common.__init__(self)
         self.card_count = {}
+
+    def write_h5(self, h5_filename: PathLike,
+                 include_geometry: bool=True,
+                 op2_flags: dict[str, dict[str, bool]]=None) -> None:
+        from tables import File
+        elemental_dicts, nodal_dicts, key_to_id_map = get_h5_elemental_nodal(self)
+
+        with File(h5_filename, 'w') as h5file:
+            nastran_group = h5file.create_group('/', 'NASTRAN')
+            # if include_geometry:
+            #     print(self)
+            #     self.model.writer.write_h5(h5file, nastran_group)
+            write_h5_results(self, h5file, nastran_group, key_to_id_map,
+                             elemental_dicts, nodal_dicts)
 
     def write_op2(self, op2_out_filename: PathLike,
                   post: int=-1,

@@ -11,7 +11,11 @@ from pyNastran.op2.op2_geom import read_op2_geom, OP2Geom
 from pyNastran.op2.op2 import OP2, read_op2
 #from pyNastran.op2.test.test_op2 import run_op2
 #from pyNastran.op2.writer.op2_writer import OP2Writer
-
+try:
+    import tables
+    IS_PYTABLES = True
+except ImportError:
+    IS_PYTABLES = False
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = Path(os.path.abspath(PKG_PATH / '..' / 'models'))
 
@@ -35,6 +39,33 @@ class TestOP2Writer(unittest.TestCase):
         op2.write_op2(op2_filename_out) #, is_mag_phase=False)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out, log=log)
         assert op2 == op2b
+
+    @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
+    def test_static_solid_shell_bar_h5_op2(self):
+        log = SimpleLogger(level='warning')
+        op2_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.op2'
+
+        op2 = OP2(debug=True, log=log, mode=None)
+        op2.read_op2(op2_filename)
+
+        h5_filename = MODEL_PATH / 'sol_101_elements' / 'model_static_solid_shell_bar.h5'
+        op2.write_h5(h5_filename, include_geometry=True)
+
+    @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
+    def test_platepy_h5_op2(self):
+        log = SimpleLogger(level='warning')
+        op2_filename = MODEL_PATH / 'plate_py' / 'plate_py.op2'
+
+        op2 = OP2(debug=True, log=log, mode=None)
+        op2.read_op2(op2_filename)
+
+        h5_filename = MODEL_PATH / 'plate_py' / 'model_plate_py.h5'
+        op2.write_h5(h5_filename, include_geometry=True)
+        # modelv = read_bdf_vectorized(bdf_filename, validate=True, xref=True, punch=False, log=log)
+        # modelv.write_h5(h5_filename)
+        # modelv2 = BDFv(log=log)
+        # op2b = OP2(debug=True, log=log, mode=None)
+        # op2b.read_h5(h5_filename)
 
     def test_write_solid_bending2(self):
         """tests basic op2 writing"""

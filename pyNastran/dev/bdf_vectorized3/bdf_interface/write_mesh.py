@@ -211,8 +211,8 @@ class Writer:
                 continue
             nparam = len(data)
             h5_dict = {
-                'NAME': StringCol(8, pos=0),  # Signed 64-bit integer
-                'VALUE': h5_type,  # Signed 64-bit integer
+                'NAME': StringCol(8, pos=0),
+                'VALUE': h5_type,
                 'DOMAIN_ID': Int64Col(pos=2),
             }
             table = h5file.create_table(pvt_group, name, h5_dict)
@@ -238,10 +238,10 @@ class Writer:
             # model.celas1, model.celas2, model.celas3, model.celas4,
             # model.cdamp1, model.cdamp2, model.cdamp3, model.cdamp4,
             # model.cbush, model.cbush1d, model.cgap,
-            # model.crod, model.ctube, model.conrod,
+            model.crod, # model.ctube, model.conrod,
             model.cbar, model.cbeam,
             # shells
-            # model.cshear,
+            model.cshear,
             model.cquad, model.cquad4, model.cquad8, model.cquadr,
             model.ctria3, model.ctria6, model.ctriar,
             # solids
@@ -254,8 +254,9 @@ class Writer:
         property_group = h5file.create_group(input_group, 'PROPERTY')
         model = self.model
         properties = [
-            model.pshell,
-            #model.pcomp, model.pcompg, model.psolid,
+            model.prod,
+            model.pshell, model.pcomp, #model.pcompg,
+            model.psolid,
         ]
         for prop in properties:
             prop.write_h5(h5file, property_group)

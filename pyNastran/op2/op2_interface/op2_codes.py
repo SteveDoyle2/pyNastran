@@ -16,6 +16,11 @@ SORT1_TABLES_BYTES = [
     b'OEF1X', b'OEF1',
     b'HOEF1', b'DOEF1',
     b'OEFIT', b'OEFITSTN', b'OESRT', b'OESRTN',
+
+    # elastic/plastic/thermal strain
+    # composite
+    b'OSTR1EL', b'OSTR1PL', b'OSTR1TH',
+    b'OSTR1ELC', b'OSTR1PLC', b'OSTR1THC',
     # --------
     # random
 

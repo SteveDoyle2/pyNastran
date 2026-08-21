@@ -1571,6 +1571,27 @@ class PCOMP(CompositeProperty):
         is_symmetric = (self.lam == 'SYM')
         return is_symmetric
 
+    @property
+    def failure_theory_int(self) -> np.ndarray:
+        mapper = {
+            '': 0,
+            'HILL': 1,
+            'HOFF': 2,
+            'TSAI': 3,
+            'STRN': 4,
+            'HFAI': 5,  # secret MSC
+            'HTAP': 6,  # secret MSC
+            'HFAP': 7,  # secret MSC
+        }
+        ft = np.array([mapper[ft] for ft in self.failure_theory], dtype='int32')
+        return ft
+
+    @property
+    def sout_int(self) -> np.ndarray:
+        mapper = {'NO': 0, 'YES': 1}
+        sout = np.array([mapper[souti] for souti in self.sout], dtype='int32')
+        return sout
+
     def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMP:
         """uses a node_ids to extract GRIDs"""
         iprop = self.index(property_id)
@@ -1626,6 +1647,59 @@ class PCOMP(CompositeProperty):
     @property
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
+
+    def write_h5(self, h5file, property_group):
+        nprop = self.property_id.shape
+        if nprop == 0:
+            return
+        pcomp_group = h5file.create_group(property_group, 'PCOMP')
+        from tables import Int64Col, Float64Col
+
+        h5_identity_dict = {
+            'PID': Int64Col(pos=0),
+            'NPLIES': Int64Col(pos=1),
+            'Z0': Float64Col(pos=2),
+            'NSM': Float64Col(pos=3),
+            'SB': Float64Col(pos=4),
+            'FT': Int64Col(pos=5),
+            'TREF': Float64Col(pos=6),
+            'GE': Float64Col(pos=7),
+            'PLY_POS': Int64Col(pos=8),
+            'PLY_LEN': Int64Col(pos=9),
+            'DOMAIN_ID': Int64Col(pos=10),
+        }
+        nlayer = len(self.material_id)
+        identity_table = h5file.create_table(pcomp_group, 'IDENTITY', h5_identity_dict)
+        arr = np.empty(nprop, dtype=identity_table.dtype)
+
+        ilayer = self.ilayer
+        arr["PID"] = self.property_id
+        arr["NPLIES"] = self.nplies
+        arr["Z0"] = self.z0
+        arr["NSM"] = self.nsm
+        arr["SB"] = self.sb
+        arr["FT"] = self.failure_theory_int
+        arr["TREF"] = self.tref
+        arr["GE"] = self.ge
+        arr["PLY_POS"] = ilayer[:, 0]
+        arr["PLY_LEN"] = self.nplies
+        arr["DOMAIN_ID"] = np.ones(nprop, dtype='int64')
+        identity_table.append(arr)
+
+        #----------------------------------
+        h5_dict = {
+            'MID': Int64Col(pos=0),
+            'T': Float64Col(pos=1),
+            'THETA': Float64Col(pos=2),
+            'SOUT': Int64Col(pos=3),
+        }
+        ply_table = h5file.create_table(pcomp_group, 'PLY', h5_dict)
+        arr = np.empty(nlayer, dtype=ply_table.dtype)
+        arr["MID"] = self.material_id
+        arr["T"] = self.thickness
+        arr["THETA"] = self.theta
+        arr["SOUT"] = self.sout_int
+        ply_table.append(arr)
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -1721,11 +1795,8 @@ class PCOMP(CompositeProperty):
         #z0 = self.z0
         #z1 = self.z[:, 1]
         #mean = (z0 + z1) / 2.
-
         #thicknesses = self.get_thicknesses()
-
         #if self.mid1_ref:
-
         #if self.is_symmetrical:
             #mids_ref = copy.deepcopy(self.mids_ref)
             #mids_ref += mids_ref[::-1]

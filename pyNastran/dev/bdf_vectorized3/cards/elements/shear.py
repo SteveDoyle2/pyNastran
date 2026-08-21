@@ -136,6 +136,25 @@ class CSHEAR(Element):
         return max(self.element_id.max(), self.property_id.max(),
                    self.nodes.max())
 
+    def write_h5(self, h5file, element_group):
+        nelem = len(self.element_id)
+        if nelem == 0:
+            return
+        from tables import Int64Col
+        h5_dict = {
+            'EID': Int64Col(pos=0),
+            'PID': Int64Col(pos=1),
+            'G': Int64Col(shape=(4,), pos=2),
+            'DOMAIN_ID': Int64Col(pos=3),
+        }
+        table = h5file.create_table(element_group, self.type, h5_dict)
+        arr = np.empty(nelem, dtype=table.dtype)
+        arr["EID"] = self.element_id
+        arr["PID"] = self.property_id
+        arr["G"] = self.nodes
+        arr["DOMAIN_ID"] = np.ones(nelem, dtype='int64')
+        table.append(arr)
+
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,

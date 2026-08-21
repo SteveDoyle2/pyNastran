@@ -1477,22 +1477,18 @@ def write_pcomp(name: str, pids: np.ndarray, itable: int,
     for pid in sorted(pids):
         prop = model.properties[pid]
 
-        if prop.ft is None:
-            ft = 0
-        elif prop.ft == 'HILL':
-            ft = 1
-        elif prop.ft == 'HOFF':
-            ft = 2
-        elif prop.ft == 'TSAI':
-            ft = 3
-        elif prop.ft == 'STRN':
-            ft = 4
-        elif prop.ft == 'HFAI':  # secret MSC
-            ft = 5
-        elif prop.ft == 'HTAP':  # secret MSC
-            ft = 6
-        elif prop.ft == 'HFAB':  # secret MSC
-            ft = 7
+        mapper = {
+            None: 0,
+            'HILL': 1,
+            'HOFF': 2,
+            'TSAI': 3,
+            'STRN': 4,
+            'HFAI': 5,  # secret MSC
+            'HTAP': 6,  # secret MSC
+            'HFAP': 7,  # secret MSC
+        }
+        if prop.ft in mapper:
+            ft = mapper[prop.ft]
         else:
             raise RuntimeError(f'unsupported ft.  pid={pid} ft={prop.ft!r}.'
                                f'\nPCOMP = {prop}')
@@ -1509,11 +1505,14 @@ def write_pcomp(name: str, pids: np.ndarray, itable: int,
         op2_file.write(s1.pack(*data))
         op2_ascii.write(str(data) + '\n')
 
+        mapper = {'NO': 0, 'YES': 1}
         for (mid, t, theta, sout) in zip(prop.mids, prop.thicknesses, prop.thetas, prop.souts):
-            if sout == 'NO':
-                sout = 0
-            elif sout == 'YES':
-                sout = 1
+            if sout in mapper:
+                sout = mapper[sout]
+            # if sout == 'NO':
+            #     sout = 0
+            # elif sout == 'YES':
+            #     sout = 1
             else:
                 raise RuntimeError(f'unsupported sout.  sout={sout!r} and must be 0 or 1.'
                                    f'\nPCOMP = {data}')

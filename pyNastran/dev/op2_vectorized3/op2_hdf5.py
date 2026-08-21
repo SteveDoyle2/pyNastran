@@ -17,6 +17,8 @@ except ImportError:
 
 
 from .op2_geom import OP2, OP2Geom
+from pyNastran.op2.writer.h5_writer import get_h5_elemental_nodal, write_h5_results
+
 if IS_PANDAS and IS_TABLES:
     from pyNastran.dev.op2_vectorized3.op2_interface.h5_pytables.h5_results import read_h5_result
     from pyNastran.dev.op2_vectorized3.op2_interface.h5_pytables.h5_results import read_h5_geometry_result
@@ -32,3 +34,16 @@ class ResultsGeom(Results, OP2Geom):
     def read_h5(self, h5_filename: str | PurePath, combine=None):
         """TODO: should support geometry"""
         read_h5_geometry_result(self, h5_filename, root_path='/')
+
+    def write_h5(self, h5_filename: PathLike,
+                 include_geometry: bool=True,
+                 op2_flags: dict[str, dict[str, bool]]=None) -> None:
+        from tables import File
+        elemental_dicts, nodal_dicts, key_to_id_map = get_h5_elemental_nodal(self)
+
+        with File(h5_filename, 'w') as h5file:
+            nastran_group = h5file.create_group('/', 'NASTRAN')
+            if include_geometry:
+                self.model.writer.write_h5(h5file, nastran_group)
+            write_h5_results(self, h5file, nastran_group, key_to_id_map,
+                             elemental_dicts, nodal_dicts)

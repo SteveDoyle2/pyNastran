@@ -26,12 +26,12 @@ except ImportError:
 
 try:
     import tables
-    IS_HDF5 = True
+    IS_PYTABLES = True
 except ImportError:
-    IS_HDF5 = False
+    IS_PYTABLES = False
 
 IS_PANDAS = False
-IS_HDF5 = False
+IS_PYTABLES = False
 #import warnings
 #warnings.filterwarnings('error')
 #warnings.filterwarnings('error', category=UnicodeWarning)
@@ -261,7 +261,7 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False,
         op2_bdf = OP2Geom(debug=debug, log=log)
         set_versions([op2, op2_nv, op2_bdf], is_nx, is_autodesk, post, is_testing)
 
-        if load_as_h5 and IS_HDF5:
+        if load_as_h5 and IS_PYTABLES:
             # you can't open the same h5 file twice
             op2.load_as_h5 = load_as_h5
             #op2_nv.load_as_h5 = load_as_h5
@@ -275,7 +275,7 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False,
         op2_nv = OP2(debug=debug, log=log, debug_file=debug_file)
 
         set_versions([op2, op2_nv], is_nx, is_autodesk, post, is_testing)
-        if load_as_h5 and IS_HDF5:
+        if load_as_h5 and IS_PYTABLES:
             # you can't open the same h5 file twice
             op2.load_as_h5 = load_as_h5
             #op2_nv.load_as_h5 = load_as_h5
@@ -330,9 +330,10 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False,
         if compare:
             assert op2 == op2_nv
 
-        if IS_HDF5 and write_hdf5:
+        if IS_PYTABLES and write_hdf5:
             from pyNastran.op2.op2_interface.hdf5_interface import load_op2_from_hdf5_filename
             h5_filename = f'{model}.test_op2{name}.h5'
+            op2.write_h5('model_' + h5_filename)
             op2.export_hdf5_filename(h5_filename)
             load_op2_from_hdf5_filename(h5_filename, log=op2.log)
             if delete_hdf5:

@@ -58,7 +58,7 @@ class SolidElement(Element):
         self.nodes: np.ndarray = np.array([[]], dtype='int32')
         self.property_id: np.ndarray = np.array([], dtype='int32')
 
-    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         nodes = np.unique(self.nodes.ravel())
         nodes = nodes[nodes > 0]
         used_dict['node_id'].append(nodes)
@@ -1052,6 +1052,7 @@ class CIFPENT(SolidPenta):
         model = self.model
         allowed_properties = [model.pcohe]
         return [prop for prop in allowed_properties if prop.n > 0]
+
 class CIFHEX(SolidHex):
     """MSC cohesive zone"""
     @property
@@ -1066,6 +1067,7 @@ class CPENTA(SolidPenta):
         model = self.model
         allowed_properties = [model.psolid, model.plsolid, model.pcomps, model.pcompls]
         return [prop for prop in allowed_properties if prop.n > 0]
+
 class CHEXA(SolidHex):
     @property
     def allowed_properties(self) -> list[Any]:
@@ -1234,7 +1236,7 @@ class PSOLID(Property):
         self.fctn = fctn
         self.n = ncards
 
-    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
@@ -1251,8 +1253,50 @@ class PSOLID(Property):
                    material_id=(mids, self.material_id))
 
     @property
+    def integ_int(self) -> np.ndarray:
+        mapper = {'': 0}
+        return np.array([mapper[integi] for integi in self.integ])
+
+    @property
+    def isop_int(self) -> np.ndarray:
+        mapper = {'': 0}
+        return np.array([mapper[isopi] for isopi in self.isop])
+
+    @property
+    def stress_int(self) -> np.ndarray:
+        mapper = {'': 0}
+        return np.array([mapper[stressi] for stressi in self.stress])
+
+    @property
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max(), self.coord_id.max())
+
+    def write_h5(self, h5file, property_group):
+        nprop = self.property_id.shape
+        if nprop == 0:
+            return
+        from tables import Int64Col, StringCol
+        h5_dict = {
+            'PID': Int64Col(pos=0),
+            'MID': Int64Col(pos=1),
+            'CORDM': Int64Col(pos=2),
+            'IN': Int64Col(pos=3),
+            'STRESS': Int64Col(pos=4),
+            'ISOP': Int64Col(pos=5),
+            'FCTN': StringCol(4, pos=6),
+            'DOMAIN_ID': Int64Col(pos=7),
+        }
+        table = h5file.create_table(property_group, 'PSOLID', h5_dict)
+        arr = np.empty(nprop, dtype=table.dtype)
+        arr["PID"] = self.property_id
+        arr["MID"] = self.material_id
+        arr["CORDM"] = self.coord_id
+        arr["IN"] = self.integ_int
+        arr["STRESS"] = self.stress_int
+        arr["ISOP"] = self.isop_int
+        arr["FCTN"] = self.fctn
+        arr["DOMAIN_ID"] = np.ones(nprop, dtype='int64')
+        table.append(arr)
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -1310,7 +1354,7 @@ class PLSOLID(Property):
         self.material_id = np.array([], dtype='int32')
         self.stress_strain = np.array([], dtype='|U4')
 
-    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
 
     def __apply_slice__(self, prop: PLSOLID, i: np.ndarray) -> None:  # ignore[override]
@@ -1446,7 +1490,7 @@ class PSOLCZ(Property):
         self.mcid = np.array([], dtype='int32')
         self.thickness = np.array([], dtype='float64')
 
-    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
         used_dict['coord_id'].append(self.mcid)
 
@@ -1754,6 +1798,7 @@ class PCOMPS(Property):
               sb, nb, psdir, tref, ge, coord_id,
               ifile=None, comment=None):
         if ifile is None:
+            ncards = len(property_id)
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             ifile = np.hstack([self.ifile, ifile])
@@ -1822,7 +1867,7 @@ class PCOMPS(Property):
 
         prop.nlayer = self.nlayer[i]
 
-    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
         used_dict['coord_id'].append(self.coord_id)
 
@@ -2188,7 +2233,7 @@ class PCOMPLS(Property):
         prop.nply = self.nply[i]
         prop.write()
 
-    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
         used_dict['coord_id'].append(self.coord_id)
 

@@ -386,6 +386,25 @@ class CROD(Element):
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
 
+    def write_h5(self, h5file, element_group):
+        nelem = len(self.element_id)
+        if nelem == 0:
+            return
+        from tables import Int64Col
+        h5_dict = {
+            'EID': Int64Col(pos=0),
+            'PID': Int64Col(pos=1),
+            'G': Int64Col(shape=(2,), pos=2),
+            'DOMAIN_ID': Int64Col(pos=3),
+        }
+        table = h5file.create_table(element_group, self.type, h5_dict)
+        arr = np.empty(nelem, dtype=table.dtype)
+        arr["EID"] = self.element_id
+        arr["PID"] = self.property_id
+        arr["G"] = self.nodes
+        arr["DOMAIN_ID"] = np.ones(nelem, dtype='int64')
+        table.append(arr)
+
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -634,6 +653,31 @@ class PROD(Property):
     @property
     def max_id(self) -> int:
         return max(self.property_id.max(), self.material_id.max())
+
+    def write_h5(self, h5file, property_group):
+        nprop = self.property_id.shape
+        if nprop == 0:
+            return
+        from tables import Int64Col
+        h5_dict = {
+            'PID': Int64Col(pos=0),
+            'MID': Int64Col(pos=1),
+            'A': Int64Col(pos=2),
+            'J': Int64Col(pos=3),
+            'C': Int64Col(pos=4),
+            'NSM': Int64Col(pos=5),
+            'DOMAIN_ID': Int64Col(pos=6),
+        }
+        table = h5file.create_table(property_group, self.type, h5_dict)
+        arr = np.empty(nprop, dtype=table.dtype)
+        arr["PID"] = self.property_id
+        arr["MID"] = self.material_id
+        arr["A"] = self.A
+        arr["J"] = self.J
+        arr["C"] = self.c
+        arr["NSM"] = self.nsm
+        arr["DOMAIN_ID"] = np.ones(nprop, dtype='int64')
+        table.append(arr)
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,

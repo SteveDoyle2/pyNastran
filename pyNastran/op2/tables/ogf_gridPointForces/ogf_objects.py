@@ -190,6 +190,22 @@ class RealGridPointForcesArray(GridPointForces):
         _check_element_names(self.element_names)
         # assert self.is_unique, self.get_stats()  # TODO: disable this
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col, StringCol
+        h5_table_dict = {
+            'ID': Int64Col(pos=0),
+            'EID': Int64Col(pos=1),
+            'ELNAME': StringCol(8, pos=2),
+            'F1': Float64Col(pos=3),
+            'F2': Float64Col(pos=4),
+            'F3': Float64Col(pos=5),
+            'M1': Float64Col(pos=6),
+            'M2': Float64Col(pos=7),
+            'M3': Float64Col(pos=8),
+            'DOMAIN_ID': Int64Col(pos=9),
+        }
+        return h5_table_dict
+
     @classmethod
     def add_static_case(cls,
                         table_name: str,
