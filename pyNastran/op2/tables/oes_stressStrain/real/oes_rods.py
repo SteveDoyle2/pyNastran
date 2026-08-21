@@ -37,6 +37,25 @@ class RealRodArray(OES_Object):
         self.ielement = 0
         self.element = None
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'EID': Int64Col(pos=0),
+            'A': Float64Col(pos=1),
+            'MSA': Float64Col(pos=2),
+            'T': Float64Col(pos=3),
+            'MST': Float64Col(pos=4),
+            'DOMAIN_ID': Int64Col(pos=5),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        arr["EID"][ntime_neid0:ntime_neid1] = self.element
+        arr["A"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0]
+        arr["MSA"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1]
+        arr["T"][ntime_neid0:ntime_neid1] = self.data[itime, :, 2]
+        arr["MST"][ntime_neid0:ntime_neid1] = self.data[itime, :, 3]
+
     @classmethod
     def _add_case(cls,
                   table_name, element_name, isubcase,

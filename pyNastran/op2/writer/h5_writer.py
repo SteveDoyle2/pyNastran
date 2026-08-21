@@ -14,20 +14,59 @@ except ImportError:
 
 
 def get_h5_elemental_nodal(model: OP2):
-    real_h5_stress_rod_dict = {
-        'EID': Int64Col(pos=0),
-        'A': Float64Col(pos=1),
-        'MSA': Float64Col(pos=2),
-        'T': Float64Col(pos=3),
-        'MST': Float64Col(pos=4),
-        'DOMAIN_ID': Int64Col(pos=5),
-    }
-
     stress = model.op2_results.stress
-    elemental_dicts = [
-        # TODO: doesn't support complex/random
-        (('STRESS', 'ROD'), stress.crod_stress, real_h5_stress_rod_dict),
-    ]
+    strain = model.op2_results.strain
+    force = model.op2_results.force
+    elemental_dicts = []
+    split_table_by_type(elemental_dicts, stress.crod_stress,
+                        ('STRESS', 'ROD'), ('STRESS', 'ROD_CPLX'), ('STRESS', 'ROD_RANDOM'))
+    split_table_by_type(elemental_dicts, strain.crod_strain,
+                        ('STRAIN', 'ROD'), ('STRAIN', 'ROD_CPLX'), ('STRAIN', 'ROD_RANDOM'))
+    # split_table_by_type(elemental_dicts, stress.ctube_stress,
+    #                     ('STRESS', 'TUBE'), ('STRESS', 'TUBE_CPLX'), ('STRESS', 'TUBE_RANDOM'))
+    # split_table_by_type(elemental_dicts, strain.ctube_strain,
+    #                     ('STRAIN', 'TUBE'), ('STRAIN', 'TUBE_CPLX'), ('STRAIN', 'TUBE_RANDOM'))
+    # split_table_by_type(elemental_dicts, stress.conrod_stress,
+    #                     ('STRESS', 'CONROD'), ('STRESS', 'CONROD_CPLX'), ('STRESS', 'CONROD_RANDOM'))
+    # split_table_by_type(elemental_dicts, strain.conrod_strain,
+    #                     ('STRAIN', 'CONROD'), ('STRAIN', 'CONROD_CPLX'), ('STRAIN', 'CONROD_RANDOM'))
+    split_table_by_type(elemental_dicts, stress.ctetra_stress,
+                        ('STRESS', 'TETRA'), ('STRESS', 'TETRA_CPLX'), ('STRESS', 'TETRA_RANDOM'))
+    split_table_by_type(elemental_dicts, strain.ctetra_strain,
+                        ('STRAIN', 'TETRA'), ('STRAIN', 'TETRA_CPLX'), ('STRAIN', 'TETRA_RANDOM'))
+    #
+    split_table_by_type(elemental_dicts, stress.chexa_stress,
+                        ('STRESS', 'HEXA'), ('STRESS', 'HEXA_CPLX'), ('STRESS', 'HEXA_RANDOM'))
+    split_table_by_type(elemental_dicts, strain.chexa_strain,
+                        ('STRAIN', 'HEXA'), ('STRAIN', 'HEXA_CPLX'), ('STRAIN', 'HEXA_RANDOM'))
+    #
+    split_table_by_type(elemental_dicts, stress.cpenta_stress,
+                        ('STRESS', 'PENTA'), ('STRESS', 'PENTA_CPLX'), ('STRESS', 'PENTA_RANDOM'))
+    split_table_by_type(elemental_dicts, strain.cpenta_strain,
+                        ('STRAIN', 'PENTA'), ('STRAIN', 'PENTA_CPLX'), ('STRAIN', 'PENTA_RANDOM'))
+
+    split_table_by_type(elemental_dicts, stress.ctria3_stress,
+                        ('STRESS', 'TRIA3'), ('STRESS', 'TRIA3_CPLX'), ('STRESS', 'TRIA3_RANDOM'))
+    split_table_by_type(elemental_dicts, strain.ctria3_strain,
+                        ('STRAIN', 'TRIA3'), ('STRAIN', 'TRIA3_CPLX'), ('STRAIN', 'TRIA3_RANDOM'))
+
+    # special tables b/c element type 33 and 144 are in the same table
+    split_quad_table_by_type(elemental_dicts,
+                             stress.cquad4_stress, 'STRESS', 'QUAD')
+    split_quad_table_by_type(elemental_dicts,
+                             strain.cquad4_strain, 'STRAIN', 'QUAD')
+
+    # split_table_by_type(elemental_dicts, stress.cquad4_stress,
+    #                     ('STRESS', 'QUAD4'), ('STRESS', 'QUAD4_CPLX'), ('STRESS', 'QUAD4_RANDOM'))
+    # split_table_by_type(elemental_dicts, strain.cquad4_strain,
+    #                     ('STRAIN', 'QUAD4'), ('STRAIN', 'QUAD4_CPLX'), ('STRAIN', 'QUAD4_RANDOM'))
+    split_table_by_type(elemental_dicts, stress.cquad4_composite_stress,
+                        ('STRESS', 'QUAD4_COMP'), ('STRESS', 'QUAD4_COMP_CPLX'), ('STRESS', 'QUAD4_COMP_RANDOM'))
+    split_table_by_type(elemental_dicts, strain.cquad4_composite_strain,
+                        ('STRAIN', 'QUAD4_COMP'), ('STRAIN', 'QUAD4_COMP_CPLX'), ('STRAIN', 'QUAD4_COMP_RANDOM'))
+
+    split_table_by_type(elemental_dicts, force.crod_force,
+                        ('ELEMENT_FORCE', 'ROD'), ('ELEMENT_FORCE', 'ROD_CPLX'), ('ELEMENT_FORCE', 'ROD_RANDOM'))
 
     nodal_dicts = []
     split_table_by_type(nodal_dicts, model.displacements,
@@ -54,8 +93,8 @@ def get_h5_elemental_nodal(model: OP2):
                        for name, dicti, table_dicti in elemental_dicts if len(dicti)]
 
     key_to_id_map = []
-    for name, dicts, table_dicti in elemental_dicts:
-        for obj_key, obj in dicts.items():
+    for name, key_obj_tuple, table_dicti in elemental_dicts:
+        for obj_key, obj in key_obj_tuple:
             keys = obj_to_domain_key(obj)
             for key in keys:
                 if key not in key_to_id_map:
@@ -71,9 +110,10 @@ def get_h5_elemental_nodal(model: OP2):
 
 def split_table_by_type(nodal_dicts: list[tuple],
                         tables_dict: dict,
-                        name_real: str='',
-                        name_imag: str='',
-                        name_random: str='') -> list[tuple]:
+                        name_real: str | tuple[str, str]='',
+                        name_imag: str | tuple[str, str]='',
+                        name_random: str | tuple[str, str]='') -> list[tuple]:
+    """breaks the tables into separate blocks based on result type (e.g., real vs. imag)"""
     reals = []
     imags = []
     randoms = []
@@ -108,6 +148,37 @@ def split_table_by_type(nodal_dicts: list[tuple],
         h5_table_dict = table0.h5_table_dict()
         nodal_dicts.append((name_random, randoms, h5_table_dict))
     return nodal_dicts
+
+def split_quad_table_by_type(elemental_dicts,
+                             my_dict: dict, result_group: str, word: str):
+    # QUAD_CN vs ???
+    reals_centroid = []
+    reals_corner = []
+    for key, table in my_dict.items():
+        if table.nnodes_per_element == 1:
+            reals = reals_centroid
+        else:
+            reals = reals_corner
+
+        if table.analysis_code in {1, 2, 6}:
+            # 1: statics
+            # 2: modes
+            # 6: time
+            reals.append((key, table))
+        else:  # pragma: no cover
+            raise NotImplementedError(table)
+
+    if len(reals_centroid):
+        name_real = (result_group, 'QUAD_CEN')
+        key0, table0 = reals_corner[0]
+        h5_table_dict = table0.h5_table_dict()
+        elemental_dicts.append((name_real, reals_corner, h5_table_dict))
+    if len(reals_corner):
+        name_real = (result_group, 'QUAD_CN')  # corner
+        key0, table0 = reals_corner[0]
+        h5_table_dict = table0.h5_table_dict()
+        elemental_dicts.append((name_real, reals_corner, h5_table_dict))
+    return elemental_dicts
 
 def obj_to_domain_key(obj) -> list[tuple]:
     # print(obj.get_stats())
@@ -218,14 +289,29 @@ def write_h5_results(model: OP2, h5file: File,
                      root: str='/'):
     """
     supports:
-     - single subcase nodal results (not grid_point_forces)
-     - index for nodal results
+     - domains support
+     - nodal/elemental results
+     - nodal/elemental index support
 
     doesn't handle:
-     - multiple subcases
-     - index for elemental results
-     - modal/transient/buckling/freq for stress/strain/forces/grid_point_forces/strain_energy
+     - modal/transient/buckling/freq for grid_point_forces/strain_energy
+     - imaginary/random elemental results (stress/strain/force/strain_energy)
      - optimization
+     - matrices
+     - trim
+     - flutter
+
+    not sure if supported:
+     - multiple subcases
+
+    real result types supported:
+     - nodal: displacement, velocity, acceleration, load_vector, spc/mpc forces, grid point forces
+     - elemental stress/strain/force:
+       - crod
+     - elemental stress/strain
+       - ctria3, cquad4 (corner), composite ctria3/cquad4
+       - ctetra, cpenta, chexa
+     - strain_energy: N/A
     """
     # nastran_group = h5file.create_group('/', 'NASTRAN')
     result_group = h5file.create_group(nastran_group, 'RESULT')
@@ -244,37 +330,62 @@ def write_elemental_dicts(elemental_dicts: list[tuple],
                           result_group, index_group):
     if len(elemental_dicts) == 0:
         return
+
+    domain_table_dicti = {
+        "DOMAIN_ID": Int64Col(pos=0),
+        "POSITION": Int64Col(pos=1),
+        "LENGTH": Int64Col(pos=2),
+    }
     elemental_group_ = h5file.create_group(result_group, 'ELEMENTAL')
+    elemental_index_group_ = h5file.create_group(index_group, 'ELEMENTAL')
+
     elemental_groups = defaultdict(list)
-    for (group_name, name), objs, table_dicti in elemental_dicts:
-        elemental_groups[group_name].append((name, objs, table_dicti))
+    for (group_name, name), key_obj_tuple, table_dicti in elemental_dicts:
+        #print(f'adding group={group_name} name={name}')
+        elemental_groups[group_name].append((name, key_obj_tuple, table_dicti))
+
     for group_name, element_groups_ in elemental_groups.items():
-        for (name, objs, table_dicti) in element_groups_:
+        elemental_group = h5file.create_group(elemental_group_, group_name)
+        elemental_index_group = h5file.create_group(elemental_index_group_, group_name)
+        for (name, key_obj_tuple, table_dicti) in element_groups_:
             # print(f'adding {group_name} / {name}')
-            elemental_group = h5file.create_group(elemental_group_, group_name)
-            table = h5file.create_table(elemental_group, name, table_dicti)
             flag = (group_name, name)
 
-            for keyi, obj in objs.items():
+            # the table has to be out here in order to handle multi-subcase
+            table = h5file.create_table(elemental_group, name, table_dicti)
+            table_index = h5file.create_table(elemental_index_group, name, domain_table_dicti)
+
+            ntime, ntime_neid = get_ntime_neid(name, key_obj_tuple)
+            arr = np.empty(ntime_neid, dtype=table.dtype)
+            arr_index = np.empty(ntime, dtype=table_index.dtype)
+
+            ntime_neid0 = 0
+            for keyi, obj in key_obj_tuple:
                 domain_keys = obj_to_domain_key(obj)
                 domain_key = domain_keys[0]
                 idomain0 = key_to_id_map.index(domain_key) + 1
 
                 data = obj.data
-                ntime, neid = data.shape[:2]
-                assert ntime == 1, ntime
-                arr = np.empty(neid, dtype=table.dtype)
-                if flag == ('STRESS', 'ROD'):
-                    arr["EID"] = obj.element
-                    arr["A"] = data[0, :, 0]
-                    arr["MSA"] = data[0, :, 1]
-                    arr["T"] = data[0, :, 2]
-                    arr["MST"] = data[0, :, 3]
-                else:  # pragma: no cover0
-                    raise NotImplementedError(flag)
-                arr["DOMAIN_ID"] = np.full(neid, idomain0, dtype='int64')
+                ntime = data.shape[0]
+                neid = get_neid(obj)
+                for itime in range(ntime):
+                    idomain = idomain0 + itime
+                    ntime_neid1 = ntime_neid0 + neid
+                    # print(f'idomain={idomain} position={ntime_neid0} length={ntime_neid1-ntime_neid0} neid={neid}')
+                    # print(f'ntime_neid0={ntime_neid0} ntime_neid1={ntime_neid1} nelements={len(obj.element)}')
+                    assert ntime_neid1 > ntime_neid0
+                    obj.add_to_h5_array(arr, ntime_neid0, ntime_neid1, itime)
+                    arr["DOMAIN_ID"][ntime_neid0:ntime_neid1] = np.full(neid, idomain0, dtype='int64')
+
+                    # domain
+                    arr_index["DOMAIN_ID"][itime] = idomain
+                    arr_index["POSITION"][itime] = ntime_neid0
+                    arr_index["LENGTH"][itime] = ntime_neid1 - ntime_neid0
+
                 table.append(arr)
                 table.flush()
+                table_index.append(arr_index)
+                table_index.flush()
     return
 
 def write_nodal_dicts(nodal_dicts: list[tuple],
@@ -297,24 +408,11 @@ def write_nodal_dicts(nodal_dicts: list[tuple],
         #     print(f'obj = {obj}')
         #     print('---------------------------------------')
 
+        # the table has to be out here in order to handle multi-subcase
         table = h5file.create_table(nodal_group, name, table_dicti)
         table_index = h5file.create_table(nodal_index_group, name, domain_table_dicti)
 
-        ntime = 0
-        ntime_nnode = 0
-        if name == 'GRID_POINT_FORCE':
-            for key, obj in key_obj_tuple:
-                data = obj.data
-                ntimei, nnodei = data.shape[:2]
-                assert ntimei == 1, data.shape  # TODO: limited to statics
-                ntime += ntimei
-                ntime_nnode += nnodei * ntimei
-        else:
-            for key, obj in key_obj_tuple:
-                data = obj.data
-                ntimei, nnodei = data.shape[:2]
-                ntime += ntimei
-                ntime_nnode += nnodei * ntimei
+        ntime, ntime_nnode = get_ntime_nnode(name, key_obj_tuple)
 
         ntime_nnode0 = 0
         arr = np.empty(ntime_nnode, dtype=table.dtype)
@@ -327,28 +425,28 @@ def write_nodal_dicts(nodal_dicts: list[tuple],
             ntime, nnode = data.shape[:2]
 
             if name == 'GRID_POINT_FORCE':
-                itime = 0
-                idomain = idomain0 + itime
-                # print(f'idomain: {idomain}')
-                # assert idomain < 20, idomain
+                assert ntime == 1, data.shape  # TODO: limited to statics b/c len(node_element) changes
+                for itime in range(ntime):
+                    idomain = idomain0 + itime
+                    # print(f'idomain: {idomain}')
+                    # assert idomain < 20, idomain
 
-                ntime_nnode1 = ntime_nnode0 + nnode
-                assert ntime == 1, data.shape  # TODO: limited to statics
-                arr["ID"] = obj.node_element[0, :, 0]
-                arr["EID"] = obj.node_element[0, :, 1]
-                arr["ELNAME"] = obj.element_names[0, :]
-                arr["F1"] = data[0, :, 0]
-                arr["F2"] = data[0, :, 1]
-                arr["F3"] = data[0, :, 2]
-                arr["M1"] = data[0, :, 3]
-                arr["M2"] = data[0, :, 4]
-                arr["M3"] = data[0, :, 5]
-                arr["DOMAIN_ID"] = np.full(nnode, idomain, dtype='int64')
+                    ntime_nnode1 = ntime_nnode0 + nnode
+                    arr["ID"][ntime_nnode0:ntime_nnode1] = obj.node_element[itime, :, 0]
+                    arr["EID"][ntime_nnode0:ntime_nnode1] = obj.node_element[itime, :, 1]
+                    arr["ELNAME"][ntime_nnode0:ntime_nnode1] = obj.element_names[itime, :]
+                    arr["F1"][ntime_nnode0:ntime_nnode1] = data[itime, :, 0]
+                    arr["F2"][ntime_nnode0:ntime_nnode1] = data[itime, :, 1]
+                    arr["F3"][ntime_nnode0:ntime_nnode1] = data[itime, :, 2]
+                    arr["M1"][ntime_nnode0:ntime_nnode1] = data[itime, :, 3]
+                    arr["M2"][ntime_nnode0:ntime_nnode1] = data[itime, :, 4]
+                    arr["M3"][ntime_nnode0:ntime_nnode1] = data[itime, :, 5]
+                    arr["DOMAIN_ID"][ntime_nnode0:ntime_nnode1] = np.full(nnode, idomain, dtype='int64')
 
-                # domain
-                arr_index["DOMAIN_ID"][itime] = idomain
-                arr_index["POSITION"][itime] = ntime_nnode0
-                arr_index["LENGTH"][itime] = ntime_nnode1 - ntime_nnode0
+                    # domain
+                    arr_index["DOMAIN_ID"][itime] = idomain
+                    arr_index["POSITION"][itime] = ntime_nnode0
+                    arr_index["LENGTH"][itime] = ntime_nnode1 - ntime_nnode0
                 table.append(arr)
                 table.flush()
                 table_index.append(arr_index)
@@ -381,3 +479,46 @@ def write_nodal_dicts(nodal_dicts: list[tuple],
                 table_index.append(arr_index)
                 table_index.flush()
     return
+
+def get_ntime_nnode(name: str, key_obj_tuple) -> tuple[int, int]:
+    ntime = 0
+    ntime_nnode = 0
+    if name == 'GRID_POINT_FORCE':
+        for key, obj in key_obj_tuple:
+            data = obj.data
+            ntimei, nnodei = data.shape[:2]
+            assert ntimei == 1, data.shape  # TODO: limited to statics
+            ntime += ntimei
+            ntime_nnode += nnodei * ntimei
+    else:
+        # this block handles multiple subcases
+        for key, obj in key_obj_tuple:
+            data = obj.data
+            ntimei, nnodei = data.shape[:2]
+            ntime += ntimei
+            ntime_nnode += nnodei * ntimei
+    return ntime, ntime_nnode
+
+
+def get_ntime_neid(name: str, key_obj_tuple) -> tuple[int, int]:
+    ntime = 0
+    ntime_neid = 0
+    for key, obj in key_obj_tuple:
+        neidi = get_neid(obj)
+        data = obj.data
+        ntimei = data.shape[0]
+        ntime += ntimei
+        ntime_neid += neidi * ntimei
+    return ntime, ntime_neid
+
+
+def get_neid(obj) -> int:
+    if hasattr(obj, "element"):
+        neid = obj.element.shape[0]
+    elif hasattr(obj, "element_cid"):
+        neid = obj.element_cid.shape[0]
+    elif hasattr(obj, "element_layer"):
+        neid = obj.element_layer.shape[0]
+    else:
+        return obj.get_neid()
+    return neid

@@ -72,6 +72,91 @@ class RealPlateArray(OES_Object):
         # else:
         #     raise NotImplementedError('SORT2')
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col, StringCol
+        nnode = self.nnodes_per_element
+        if nnode == 1:
+            h5_table_dict = {
+                'EID': Int64Col(pos=0),
+                'FD1': Float64Col(pos=1),
+                'X1': Float64Col(pos=2),
+                'Y1': Float64Col(pos=3),
+                'TXY1': Float64Col(pos=4),
+                'FD2': Float64Col(pos=5),
+                'X2': Float64Col(pos=6),
+                'Y2': Float64Col(pos=7),
+                'TXY2': Float64Col(pos=8),
+                'DOMAIN_ID': Int64Col(pos=9),
+            }
+        else:
+            h5_table_dict = {
+                'EID': Int64Col(pos=0),
+                'TERM': StringCol(4, pos=0),
+                'GRID': Int64Col(shape=(nnode,), pos=0),
+                'FD1': Float64Col(shape=(nnode,), pos=1),
+                'X1': Float64Col(shape=(nnode,), pos=2),
+                'Y1': Float64Col(shape=(nnode,), pos=3),
+                'TXY1': Float64Col(shape=(nnode,), pos=4),
+                'FD2': Float64Col(shape=(nnode,), pos=5),
+                'X2': Float64Col(shape=(nnode,), pos=6),
+                'Y2': Float64Col(shape=(nnode,), pos=7),
+                'TXY2': Float64Col(shape=(nnode,), pos=8),
+                'DOMAIN_ID': Int64Col(pos=9),
+            }
+
+        return h5_table_dict
+
+    def get_neid(self) -> int:
+        neid_nnode = self.element_node.shape[0]
+        nnode = self.nnodes_per_element
+        neid = neid_nnode // nnode // 2
+        return neid
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        neid_nnode = self.element_node.shape[0]
+        nnode = self.nnodes_per_element
+        # print(f'neid_nnode = {neid_nnode}')
+        # print(f'nnode = {nnode}')
+        # neid = neid_nnode // nnode // 2
+        neid = self.get_neid()
+        eids_doubled = self.element_node[:, 0]
+        # print(f'{self.element_name}: element_nodes0={self.element_node[:, 1]}')
+        element_nodes = self.element_node[:, 1].reshape(neid, nnode, 2)[:, :, 0]
+        # print(f'{self.element_name}: element_nodes={element_nodes}')
+        # print(f'{self.element_name}: eids_doubled = {eids_doubled}')
+        # print(f'{self.element_name}: neid={neid}')
+        element = eids_doubled.reshape(neid, nnode*2)[:, 0]
+        # print(f'{self.element_name}: element={element}')
+
+        arr["EID"][ntime_neid0:ntime_neid1] = element
+        ntime, neid2, nresult = self.data.shape
+        if nnode == 1:
+            data = self.data.reshape((ntime, neid, 2, nresult))
+            assert self.data.ndim == 3, self.data.shape
+            arr["FD1"][ntime_neid0:ntime_neid1] = data[itime, :, 0, 0]
+            arr["X1"][ntime_neid0:ntime_neid1] = data[itime, :, 0, 1]
+            arr["Y1"][ntime_neid0:ntime_neid1] = data[itime, :, 0, 2]
+            arr["TXY1"][ntime_neid0:ntime_neid1] = data[itime, :, 0, 2]
+
+            arr["FD2"][ntime_neid0:ntime_neid1] = data[itime, :, 1, 0]
+            arr["X2"][ntime_neid0:ntime_neid1] = data[itime, :, 1, 1]
+            arr["Y2"][ntime_neid0:ntime_neid1] = data[itime, :, 1, 2]
+            arr["TXY2"][ntime_neid0:ntime_neid1] = data[itime, :, 1, 2]
+        else:
+            # print(f'ntime={ntime} neid={neid} nnode={nnode} nresult={nresult}')
+            data = self.data.reshape((ntime, neid, nnode, 2, nresult))
+            arr["TERM"][ntime_neid0:ntime_neid1] = 'CEN/'
+            arr["GRID"][ntime_neid0:ntime_neid1] = element_nodes
+            arr["FD1"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0, 0]
+            arr["X1"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0, 1]
+            arr["Y1"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0, 2]
+            arr["TXY1"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0, 2]
+
+            arr["FD2"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1, 0]
+            arr["X2"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1, 1]
+            arr["Y2"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1, 2]
+            arr["TXY2"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1, 2]
+
     @property
     def is_real(self) -> bool:
         return True

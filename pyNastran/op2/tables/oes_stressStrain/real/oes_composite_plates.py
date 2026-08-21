@@ -34,6 +34,31 @@ class RealCompositePlateArray(OES_Object):
         #else:
             #raise NotImplementedError('SORT2')
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'EID': Int64Col(pos=0),
+            'PLY': Int64Col(pos=1),
+            'X1': Float64Col(pos=2),
+            'Y1': Float64Col(pos=3),
+            'T1': Float64Col(pos=4),
+            'L1': Float64Col(pos=5),
+            'L2': Float64Col(pos=6),
+            'DOMAIN_ID': Int64Col(pos=7),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
+        arr["EID"][ntime_neid0:ntime_neid1] = self.element_layer[:, 0]
+        arr["PLY"][ntime_neid0:ntime_neid1] = self.element_layer[:, 1]
+        arr["X1"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0]
+        arr["Y1"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1]
+        arr["T1"][ntime_neid0:ntime_neid1] = self.data[itime, :, 2]
+        arr["L1"][ntime_neid0:ntime_neid1] = self.data[itime, :, 3]
+        arr["L2"][ntime_neid0:ntime_neid1] = self.data[itime, :, 4]
+
+
     @property
     def is_real(self) -> bool:
         return True
