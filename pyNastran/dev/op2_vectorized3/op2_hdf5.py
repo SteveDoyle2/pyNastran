@@ -16,6 +16,7 @@ except ImportError:
     IS_TABLES = False
 
 
+from pyNastran.utils import PathLike
 from .op2_geom import OP2, OP2Geom
 from pyNastran.op2.writer.h5_writer import get_h5_elemental_nodal, write_h5_results
 
