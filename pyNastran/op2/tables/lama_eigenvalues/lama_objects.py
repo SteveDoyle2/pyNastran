@@ -697,6 +697,34 @@ class BucklingEigenvalues(BaseScalarObject):
         self.generalized_stiffness = np.zeros(nmodes, dtype='float32')
         self.data_frame = None
 
+
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col, StringCol
+        h5_table_dict = {
+            'MODE': Int64Col(pos=0),
+            'ORDER': Int64Col(pos=1),
+            'EIGEN': Float64Col(pos=2),
+            'OMEGA': Float64Col(pos=3),
+            'FREQ': Float64Col(pos=4),
+            'MASS': Float64Col(pos=5),
+            'STIFF': Float64Col(pos=6),
+            'RESFLAG': Int64Col(pos=7),
+            'FLDFLAG': Int64Col(pos=8),
+            'DOMAIN_ID': Int64Col(pos=9),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr):
+        arr["MODE"] = self.mode
+        arr["ORDER"] = self.extraction_order
+        arr["EIGEN"] = self.eigenvalues
+        arr["OMEGA"] = self.omegas
+        arr["FREQ"] = self.freqs
+        arr["MASS"] = self.generalized_mass
+        arr["STIFF"] = self.generalized_stiffness
+        arr["RESFLAG"] = 0
+        arr["FLDFLAG"] = 0
+
     @classmethod
     def add_from_solution(cls,
                           mode: np.ndarray,

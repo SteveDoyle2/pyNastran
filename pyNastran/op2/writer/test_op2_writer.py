@@ -67,6 +67,29 @@ class TestOP2Writer(unittest.TestCase):
         # op2b = OP2(debug=True, log=log, mode=None)
         # op2b.read_h5(h5_filename)
 
+    @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
+    def test_buckling_solid_shell_bar_h5_op2(self):
+        log = SimpleLogger(level='warning')
+        op2_filename = MODEL_PATH / 'sol_101_elements' / 'buckling_solid_shell_bar.op2'
+
+        op2 = OP2(debug=True, log=log, mode=None)
+        op2.read_op2(op2_filename)
+
+        h5_filename = MODEL_PATH / 'sol_101_elements' / 'model_buckling_solid_shell_bar.h5'
+        op2.write_h5(h5_filename, include_geometry=True)
+
+    @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
+    def test_freq_elements2_h5_op2(self):
+        log = SimpleLogger(level='warning')
+        op2_filename = MODEL_PATH / 'elements' / 'freq_elements2.op2'
+
+        op2 = OP2(debug=True, log=log, mode=None)
+        op2.read_op2(op2_filename)
+        # print(op2.get_op2_stats())
+
+        h5_filename = MODEL_PATH / 'elements' / 'model_freq_elements2.h5'
+        op2.write_h5(h5_filename, include_geometry=True)
+
     def test_write_solid_bending2(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')

@@ -381,6 +381,21 @@ class ComplexSpringStrainArray(ComplexSpringDamperArray, StrainObject):
         ComplexSpringDamperArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'EID': Int64Col(pos=0),
+            'SR': Float64Col(pos=1),
+            'SI': Float64Col(pos=2),
+            'DOMAIN_ID': Int64Col(pos=3),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_nnode0: int, ntime_nnode1: int, itime: int):
+        arr["EID"][ntime_nnode0:ntime_nnode1] = self.element
+        arr["SR"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 0].real
+        arr["SI"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 0].imag
+
     @property
     def headers(self) -> list[str]:
         headers = ['spring_strain']

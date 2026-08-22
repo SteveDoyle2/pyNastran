@@ -76,6 +76,25 @@ class ComplexRodForceArray(ComplexForceObject):
         else:
             raise NotImplementedError('SORT2')
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col, StringCol
+        h5_table_dict = {
+            'EID': Int64Col(pos=0),
+            'AFR': Int64Col(pos=1),
+            'AFI': Float64Col(pos=2),
+            'TRQR': Float64Col(pos=3),
+            'TRQI': Float64Col(pos=4),
+            'DOMAIN_ID': Int64Col(pos=5),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        arr["EID"][ntime_neid0:ntime_neid1] = self.element
+        arr["AFR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].real
+        arr["AFI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].imag
+        arr["TRQR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].real
+        arr["TRQI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].imag
+
     @property
     def headers(self) -> list[str]:
         headers = ['axial_force', 'torque']

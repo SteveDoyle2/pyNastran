@@ -23,6 +23,25 @@ class ComplexRodArray(OES_Object):
         #self.code = [self.format_code, self.sort_code, self.s_code]
         self.nelements = 0  # result specific
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'EID': Int64Col(pos=0),
+            'AR': Float64Col(pos=1),
+            'AI': Float64Col(pos=2),
+            'TR': Float64Col(pos=3),
+            'TI': Float64Col(pos=4),
+            'DOMAIN_ID': Int64Col(pos=5),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        arr["EID"][ntime_neid0:ntime_neid1] = self.element
+        arr["AR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].real
+        arr["AI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].imag
+        arr["TR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].real
+        arr["TI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].imag
+
     @property
     def is_real(self) -> bool:
         return False

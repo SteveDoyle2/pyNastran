@@ -206,6 +206,24 @@ class RealGridPointForcesArray(GridPointForces):
         }
         return h5_table_dict
 
+    def add_to_h5_array(self, arr, ntime_nnode0: int, ntime_nnode1: int, itime: int):
+
+        datai = self.data[itime, :, 0]
+        if not np.isfinite(datai).all():
+            print(self.node_element[itime, :, :])
+            print(self.element_names[itime, :])
+            raise NotImplementedError('grid point forces nan handling')
+
+        arr["ID"][ntime_nnode0:ntime_nnode1] = self.node_element[itime, :, 0]
+        arr["EID"][ntime_nnode0:ntime_nnode1] = self.node_element[itime, :, 1]
+        arr["ELNAME"][ntime_nnode0:ntime_nnode1] = self.element_names[itime, :]
+        arr["F1"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 0]
+        arr["F2"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 1]
+        arr["F3"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 2]
+        arr["M1"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 3]
+        arr["M2"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 4]
+        arr["M3"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 5]
+
     @classmethod
     def add_static_case(cls,
                         table_name: str,
@@ -1660,6 +1678,39 @@ class ComplexGridPointForcesArray(GridPointForces):
         self.element_names = np.array([], dtype='U8')
         self.data = np.zeros((0, 0, 6), dtype='complex64')
         self.itime = 0
+
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col, StringCol
+        h5_table_dict = {
+            'ID': Int64Col(pos=0),
+            'EID': Int64Col(pos=1),
+            'ELNAME': StringCol(8, pos=2),
+            'F1': Float64Col(pos=3),
+            'F2': Float64Col(pos=4),
+            'F3': Float64Col(pos=5),
+            'M1': Float64Col(pos=6),
+            'M2': Float64Col(pos=7),
+            'M3': Float64Col(pos=8),
+            'DOMAIN_ID': Int64Col(pos=9),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_nnode0: int, ntime_nnode1: int, itime: int):
+        datai = self.data[itime, :, 0]
+        if not np.isfinite(datai).all():
+            print(self.node_element[itime, :, :])
+            print(self.element_names[itime, :])
+            raise NotImplementedError('grid point forces nan handling')
+
+        arr["ID"][ntime_nnode0:ntime_nnode1] = self.node_element[itime, :, 0]
+        arr["EID"][ntime_nnode0:ntime_nnode1] = self.node_element[itime, :, 1]
+        arr["ELNAME"][ntime_nnode0:ntime_nnode1] = self.element_names[itime, :]
+        arr["F1"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 0]
+        arr["F2"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 1]
+        arr["F3"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 2]
+        arr["M1"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 3]
+        arr["M2"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 4]
+        arr["M3"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 5]
 
     @property
     def is_real(self) -> bool:

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from itertools import count
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
@@ -17,34 +18,62 @@ def get_h5_elemental_nodal(model: OP2):
     stress = model.op2_results.stress
     strain = model.op2_results.strain
     force = model.op2_results.force
+    modal_contribution = model.op2_results.modal_contribution
     elemental_dicts = []
+
+    # rod/tube/conrod only tested for real
     split_table_by_type(elemental_dicts, stress.crod_stress,
                         ('STRESS', 'ROD'), ('STRESS', 'ROD_CPLX'), ('STRESS', 'ROD_RANDOM'))
     split_table_by_type(elemental_dicts, strain.crod_strain,
                         ('STRAIN', 'ROD'), ('STRAIN', 'ROD_CPLX'), ('STRAIN', 'ROD_RANDOM'))
-    # split_table_by_type(elemental_dicts, stress.ctube_stress,
-    #                     ('STRESS', 'TUBE'), ('STRESS', 'TUBE_CPLX'), ('STRESS', 'TUBE_RANDOM'))
-    # split_table_by_type(elemental_dicts, strain.ctube_strain,
-    #                     ('STRAIN', 'TUBE'), ('STRAIN', 'TUBE_CPLX'), ('STRAIN', 'TUBE_RANDOM'))
-    # split_table_by_type(elemental_dicts, stress.conrod_stress,
-    #                     ('STRESS', 'CONROD'), ('STRESS', 'CONROD_CPLX'), ('STRESS', 'CONROD_RANDOM'))
-    # split_table_by_type(elemental_dicts, strain.conrod_strain,
-    #                     ('STRAIN', 'CONROD'), ('STRAIN', 'CONROD_CPLX'), ('STRAIN', 'CONROD_RANDOM'))
+    split_table_by_type(elemental_dicts, force.crod_force,
+                        ('ELEMENT_FORCE', 'ROD'), ('ELEMENT_FORCE', 'ROD_CPLX'), ('ELEMENT_FORCE', 'ROD_RANDOM'))
+    split_table_by_type(elemental_dicts, modal_contribution.crod_strain,
+                        ('STRAIN', 'ROD'), ('STRAIN', 'ROD_CPLX'), ('STRAIN', 'ROD_RANDOM'))
+    split_table_by_type(elemental_dicts, modal_contribution.crod_stress,
+                        ('STRESS', 'ROD'), ('STRESS', 'ROD_CPLX'), ('STRESS', 'ROD_RANDOM'))
+
+    split_table_by_type(elemental_dicts, stress.ctube_stress,
+                        ('STRESS', 'TUBE'), ('STRESS', 'TUBE_CPLX'), ('STRESS', 'TUBE_RANDOM'))
+    split_table_by_type(elemental_dicts, strain.ctube_strain,
+                        ('STRAIN', 'TUBE'), ('STRAIN', 'TUBE_CPLX'), ('STRAIN', 'TUBE_RANDOM'))
+    split_table_by_type(elemental_dicts, force.ctube_force,
+                        ('ELEMENT_FORCE', 'TUBE'), ('ELEMENT_FORCE', 'TUBE_CPLX'), ('ELEMENT_FORCE', 'TUBE_RANDOM'))
+    split_table_by_type(elemental_dicts, modal_contribution.ctube_strain,
+                        ('STRAIN', 'TUBE'), ('STRAIN', 'TUBE_CPLX'), ('STRAIN', 'TUBE_RANDOM'))
+    split_table_by_type(elemental_dicts, modal_contribution.ctube_stress,
+                        ('STRESS', 'TUBE'), ('STRESS', 'TUBE_CPLX'), ('STRESS', 'TUBE_RANDOM'))
+
+    split_table_by_type(elemental_dicts, stress.conrod_stress,
+                        ('STRESS', 'CONROD'), ('STRESS', 'CONROD_CPLX'), ('STRESS', 'CONROD_RANDOM'))
+    split_table_by_type(elemental_dicts, strain.conrod_strain,
+                        ('STRAIN', 'CONROD'), ('STRAIN', 'CONROD_CPLX'), ('STRAIN', 'CONROD_RANDOM'))
+    split_table_by_type(elemental_dicts, force.conrod_force,
+                        ('ELEMENT_FORCE', 'CONROD'), ('ELEMENT_FORCE', 'CONROD_CPLX'), ('ELEMENT_FORCE', 'CONROD_RANDOM'))
+    split_table_by_type(elemental_dicts, modal_contribution.conrod_strain,
+                        ('STRAIN', 'CONROD'), ('STRAIN', 'CONROD_CPLX'), ('STRAIN', 'CONROD_RANDOM'))
+    split_table_by_type(elemental_dicts, modal_contribution.conrod_stress,
+                        ('STRESS', 'CONROD'), ('STRESS', 'CONROD_CPLX'), ('STRESS', 'CONROD_RANDOM'))
+
+    # only tested for real
     split_table_by_type(elemental_dicts, stress.ctetra_stress,
                         ('STRESS', 'TETRA'), ('STRESS', 'TETRA_CPLX'), ('STRESS', 'TETRA_RANDOM'))
     split_table_by_type(elemental_dicts, strain.ctetra_strain,
                         ('STRAIN', 'TETRA'), ('STRAIN', 'TETRA_CPLX'), ('STRAIN', 'TETRA_RANDOM'))
-    #
+
+    # only tested for real
     split_table_by_type(elemental_dicts, stress.chexa_stress,
                         ('STRESS', 'HEXA'), ('STRESS', 'HEXA_CPLX'), ('STRESS', 'HEXA_RANDOM'))
     split_table_by_type(elemental_dicts, strain.chexa_strain,
                         ('STRAIN', 'HEXA'), ('STRAIN', 'HEXA_CPLX'), ('STRAIN', 'HEXA_RANDOM'))
-    #
+
+    # only tested for real
     split_table_by_type(elemental_dicts, stress.cpenta_stress,
                         ('STRESS', 'PENTA'), ('STRESS', 'PENTA_CPLX'), ('STRESS', 'PENTA_RANDOM'))
     split_table_by_type(elemental_dicts, strain.cpenta_strain,
                         ('STRAIN', 'PENTA'), ('STRAIN', 'PENTA_CPLX'), ('STRAIN', 'PENTA_RANDOM'))
 
+    # only tested for real
     split_table_by_type(elemental_dicts, stress.ctria3_stress,
                         ('STRESS', 'TRIA3'), ('STRESS', 'TRIA3_CPLX'), ('STRESS', 'TRIA3_RANDOM'))
     split_table_by_type(elemental_dicts, strain.ctria3_strain,
@@ -60,15 +89,30 @@ def get_h5_elemental_nodal(model: OP2):
     #                     ('STRESS', 'QUAD4'), ('STRESS', 'QUAD4_CPLX'), ('STRESS', 'QUAD4_RANDOM'))
     # split_table_by_type(elemental_dicts, strain.cquad4_strain,
     #                     ('STRAIN', 'QUAD4'), ('STRAIN', 'QUAD4_CPLX'), ('STRAIN', 'QUAD4_RANDOM'))
+
+    # only tested for real
     split_table_by_type(elemental_dicts, stress.cquad4_composite_stress,
                         ('STRESS', 'QUAD4_COMP'), ('STRESS', 'QUAD4_COMP_CPLX'), ('STRESS', 'QUAD4_COMP_RANDOM'))
     split_table_by_type(elemental_dicts, strain.cquad4_composite_strain,
                         ('STRAIN', 'QUAD4_COMP'), ('STRAIN', 'QUAD4_COMP_CPLX'), ('STRAIN', 'QUAD4_COMP_RANDOM'))
 
-    split_table_by_type(elemental_dicts, force.crod_force,
-                        ('ELEMENT_FORCE', 'ROD'), ('ELEMENT_FORCE', 'ROD_CPLX'), ('ELEMENT_FORCE', 'ROD_RANDOM'))
+    # only tested for complex
+    split_table_by_type(elemental_dicts, modal_contribution.celas1_strain,
+                        ('STRAIN', 'ELAS1_COMP'), ('STRAIN', 'ELAS1_CPLX'), ('STRAIN', 'ELAS1_RANDOM'))
+    split_table_by_type(elemental_dicts, modal_contribution.celas2_strain,
+                        ('STRAIN', 'ELAS2_COMP'), ('STRAIN', 'ELAS2_CPLX'), ('STRAIN', 'ELAS2_RANDOM'))
+    split_table_by_type(elemental_dicts, modal_contribution.celas3_strain,
+                        ('STRAIN', 'ELAS3_COMP'), ('STRAIN', 'ELAS3_CPLX'), ('STRAIN', 'ELAS3_RANDOM'))
+    split_table_by_type(elemental_dicts, modal_contribution.celas4_strain,
+                        ('STRAIN', 'ELAS4_COMP'), ('STRAIN', 'ELAS4_CPLX'), ('STRAIN', 'ELAS4_RANDOM'))
+
+    # split_table_by_type(elemental_dicts, modal_contribution.cdamp1_strain,
+    #                     ('STRAIN', 'DAMP1_COMP'), ('STRAIN', 'DAMP1_CPLX'), ('STRAIN', 'DAMP1_RANDOM'))
+    # split_table_by_type(elemental_dicts, modal_contribution.ctria3_composite_strain,
+    #                     ('STRAIN', 'TRIA3_COMP'), ('STRAIN', 'TRIA3_COMP_CPLX'), ('STRAIN', 'TRIA3_COMP_RANDOM'))
 
     nodal_dicts = []
+    # only tested for real
     split_table_by_type(nodal_dicts, model.displacements,
                         'DISPLACEMENT', 'DISPLACEMENT_CPLX', 'DISPLACEMENT_RANDOM')
     split_table_by_type(nodal_dicts, model.velocities,
@@ -84,9 +128,9 @@ def get_h5_elemental_nodal(model: OP2):
     split_table_by_type(nodal_dicts, model.spc_forces,
                         'SPC_FORCE', 'SPC_FORCE_CPLX', 'SPC_FORCE_RANDOM')
     split_table_by_type(nodal_dicts, model.grid_point_forces,
-                        'GRID_POINT_FORCE', 'GRID_POINT_FORCE_CPLX', '')
+                        'GRID_POINT_FORCE', '', '')
 
-    assert len(model.displacements) + len(model.eigenvectors) > 0, len(nodal_dicts)
+    # assert len(model.displacements) + len(model.eigenvectors) > 0, len(nodal_dicts)
     assert len(nodal_dicts) > 0, nodal_dicts
 
     elemental_dicts = [(name, dicti, table_dicti)
@@ -118,6 +162,7 @@ def split_table_by_type(nodal_dicts: list[tuple],
     imags = []
     randoms = []
     for key, table in tables_dict.items():
+        # print(key, table.analysis_code)
         if table.analysis_code in {1, 2, 6}:
             # 1: statics
             # 2: modes
@@ -125,9 +170,13 @@ def split_table_by_type(nodal_dicts: list[tuple],
             reals.append((key, table))
         elif table.analysis_code == 5:
             # 5: freq
+            # print('5, freq, imag')
             imags.append((key, table))
-        else:
-            raise NotImplementedError(table)
+        elif table.analysis_code == 8:
+            # 5: post-buckling
+            reals.append((key, table))
+        else:  # pragma: no cover
+            raise NotImplementedError(table.analysis_code)
             # 7: pre-buckling
             # 8: post-buckling
             # 9: complex eigenvalues
@@ -137,12 +186,12 @@ def split_table_by_type(nodal_dicts: list[tuple],
         key0, table0 = reals[0]
         h5_table_dict = table0.h5_table_dict()
         nodal_dicts.append((name_real, reals, h5_table_dict))
-    if imags:
+    if imags and len(name_imag):
         assert len(name_imag), name_imag
         key0, table0 = imags[0]
         h5_table_dict = table0.h5_table_dict()
         nodal_dicts.append((name_imag, imags, h5_table_dict))
-    if randoms:
+    if randoms and len(name_random):
         assert len(name_random), name_random
         key0, table0 = randoms[0]
         h5_table_dict = table0.h5_table_dict()
@@ -160,13 +209,14 @@ def split_quad_table_by_type(elemental_dicts,
         else:
             reals = reals_corner
 
-        if table.analysis_code in {1, 2, 6}:
+        if table.analysis_code in {1, 2, 6, 8}:
             # 1: statics
             # 2: modes
             # 6: time
+            # 8: post-buckling
             reals.append((key, table))
         else:  # pragma: no cover
-            raise NotImplementedError(table)
+            raise NotImplementedError(table.analysis_code)
 
     if len(reals_centroid):
         name_real = (result_group, 'QUAD_CEN')
@@ -211,7 +261,7 @@ def obj_to_domain_key(obj) -> list[tuple]:
                    afpm, trmc, instance, module, substep, impfid, ndomains)
             keys.append(key)
     elif analysis_code == 5:  # freq
-        for freq in obj.freq:
+        for freq in obj.freqs:
             key = (subcase_id, step, analysis_code, float(freq), eigi, mode,
                    design_cycle, random, se,
                    afpm, trmc, instance, module, substep, impfid, ndomains)
@@ -222,6 +272,13 @@ def obj_to_domain_key(obj) -> list[tuple]:
                    design_cycle, random, se,
                    afpm, trmc, instance, module, substep, impfid, ndomains)
             keys.append(key)
+    elif analysis_code == 8:  # post-buckling
+        for mode, eigr in zip(count(), obj.eigrs):
+            key = (subcase_id, step, analysis_code, float(eigr), eigi, int(mode),
+                   design_cycle, random, se,
+                   afpm, trmc, instance, module, substep, impfid, ndomains)
+            keys.append(key)
+        # raise NotImplementedError(obj.get_stats())
     elif analysis_code == 9:  # complex modes
         for mode, eigr, eigi in zip(obj.modes, obj.eigrs, obj.eigis):
             key = (subcase_id, step, analysis_code, float(eigr), float(eigi), int(mode),
@@ -323,6 +380,44 @@ def write_h5_results(model: OP2, h5file: File,
 
     write_elemental_dicts(elemental_dicts, key_to_id_map, h5file, result_group, nastran_index_result_group)
     write_nodal_dicts(nodal_dicts, key_to_id_map, h5file, result_group, nastran_index_result_group)
+    write_summary(model, h5file, result_group, nastran_index_result_group)
+
+def write_summary(model: OP2, h5file: File, result_group, index_group):
+    is_summary = False
+    domain_table_dicti = {
+        "DOMAIN_ID": Int64Col(pos=0),
+        "POSITION": Int64Col(pos=1),
+        "LENGTH": Int64Col(pos=2),
+    }
+
+    if len(model.eigenvalues):
+        assert len(model.eigenvalues) == 1, model.eigenvalues
+        for key, obj in model.eigenvalues.items():
+            if not is_summary:
+                summary = h5file.create_group(result_group, 'SUMMARY')
+                summary_index = h5file.create_group(index_group, 'SUMMARY')
+                is_summary = True
+
+            name = 'EIGENVALUE'
+            h5_table_dict = obj.h5_table_dict()
+            table = h5file.create_table(summary, name, h5_table_dict)
+            table_index = h5file.create_table(summary_index, name, domain_table_dicti)
+
+            nmode = len(obj.mode)
+            arr = np.empty(nmode, dtype=table.dtype)
+            arr_index = np.empty(nmode, dtype=table_index.dtype)
+
+            idomain0 = 1
+            domains = idomain0 + obj.mode
+
+            obj.add_to_h5_array(arr)
+            arr["DOMAIN_ID"] = domains
+
+            # domain
+            arr_index["DOMAIN_ID"] = 0
+            arr_index["POSITION"] = 0
+            arr_index["LENGTH"] = nmode
+
 
 def write_elemental_dicts(elemental_dicts: list[tuple],
                           key_to_id_map,
@@ -348,7 +443,7 @@ def write_elemental_dicts(elemental_dicts: list[tuple],
         elemental_group = h5file.create_group(elemental_group_, group_name)
         elemental_index_group = h5file.create_group(elemental_index_group_, group_name)
         for (name, key_obj_tuple, table_dicti) in element_groups_:
-            # print(f'adding {group_name} / {name}')
+            print(f'adding {group_name} / {name}')
             flag = (group_name, name)
 
             # the table has to be out here in order to handle multi-subcase
@@ -425,22 +520,13 @@ def write_nodal_dicts(nodal_dicts: list[tuple],
             ntime, nnode = data.shape[:2]
 
             if name == 'GRID_POINT_FORCE':
-                assert ntime == 1, data.shape  # TODO: limited to statics b/c len(node_element) changes
                 for itime in range(ntime):
                     idomain = idomain0 + itime
                     # print(f'idomain: {idomain}')
                     # assert idomain < 20, idomain
 
                     ntime_nnode1 = ntime_nnode0 + nnode
-                    arr["ID"][ntime_nnode0:ntime_nnode1] = obj.node_element[itime, :, 0]
-                    arr["EID"][ntime_nnode0:ntime_nnode1] = obj.node_element[itime, :, 1]
-                    arr["ELNAME"][ntime_nnode0:ntime_nnode1] = obj.element_names[itime, :]
-                    arr["F1"][ntime_nnode0:ntime_nnode1] = data[itime, :, 0]
-                    arr["F2"][ntime_nnode0:ntime_nnode1] = data[itime, :, 1]
-                    arr["F3"][ntime_nnode0:ntime_nnode1] = data[itime, :, 2]
-                    arr["M1"][ntime_nnode0:ntime_nnode1] = data[itime, :, 3]
-                    arr["M2"][ntime_nnode0:ntime_nnode1] = data[itime, :, 4]
-                    arr["M3"][ntime_nnode0:ntime_nnode1] = data[itime, :, 5]
+                    obj.add_to_h5_array(arr, ntime_nnode0, ntime_nnode1, itime)
                     arr["DOMAIN_ID"][ntime_nnode0:ntime_nnode1] = np.full(nnode, idomain, dtype='int64')
 
                     # domain
@@ -456,13 +542,7 @@ def write_nodal_dicts(nodal_dicts: list[tuple],
                     idomain = idomain0 + itime
                     # assert idomain < 20, idomain
                     ntime_nnode1 = ntime_nnode0 + nnode
-                    arr["ID"][ntime_nnode0:ntime_nnode1] = obj.node_gridtype[:, 0]
-                    arr["X"][ntime_nnode0:ntime_nnode1] = data[itime, :, 0]
-                    arr["Y"][ntime_nnode0:ntime_nnode1] = data[itime, :, 1]
-                    arr["Z"][ntime_nnode0:ntime_nnode1] = data[itime, :, 2]
-                    arr["RX"][ntime_nnode0:ntime_nnode1] = data[itime, :, 3]
-                    arr["RY"][ntime_nnode0:ntime_nnode1] = data[itime, :, 4]
-                    arr["RZ"][ntime_nnode0:ntime_nnode1] = data[itime, :, 5]
+                    obj.add_to_h5_array(arr, ntime_nnode0, ntime_nnode1, itime)
                     arr["DOMAIN_ID"][ntime_nnode0:ntime_nnode1] = np.full(nnode, idomain, dtype='int64')
 
                     # domain
@@ -487,7 +567,7 @@ def get_ntime_nnode(name: str, key_obj_tuple) -> tuple[int, int]:
         for key, obj in key_obj_tuple:
             data = obj.data
             ntimei, nnodei = data.shape[:2]
-            assert ntimei == 1, data.shape  # TODO: limited to statics
+            # assert ntimei == 1, data.shape  # TODO: limited to statics
             ntime += ntimei
             ntime_nnode += nnodei * ntimei
     else:

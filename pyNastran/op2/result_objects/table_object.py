@@ -887,6 +887,15 @@ class RealTableArray(TableArray):
         }
         return h5_table_dict
 
+    def add_to_h5_array(self, arr, ntime_nnode0: int, ntime_nnode1: int, itime: int):
+        arr["ID"][ntime_nnode0:ntime_nnode1] = self.node_gridtype[:, 0]
+        arr["X"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 0]
+        arr["Y"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 1]
+        arr["Z"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 2]
+        arr["RX"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 3]
+        arr["RY"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 4]
+        arr["RZ"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 5]
+
     def set_as_static_case(self):
         analysis_code = 1 # static
         device_code = 2  # Plot
@@ -1791,6 +1800,43 @@ class ComplexTableArray(TableArray):
     """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'ID': Int64Col(pos=0),
+            'XR': Float64Col(pos=1),
+            'YR': Float64Col(pos=2),
+            'ZR': Float64Col(pos=3),
+            'RXR': Float64Col(pos=4),
+            'RYR': Float64Col(pos=5),
+            'RZR': Float64Col(pos=6),
+
+            'XI': Float64Col(pos=6),
+            'YI': Float64Col(pos=7),
+            'ZI': Float64Col(pos=8),
+            'RXI': Float64Col(pos=9),
+            'RYI': Float64Col(pos=10),
+            'RZI': Float64Col(pos=11),
+            'DOMAIN_ID': Int64Col(pos=12),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_nnode0: int, ntime_nnode1: int, itime: int):
+        arr["ID"][ntime_nnode0:ntime_nnode1] = self.node_gridtype[:, 0]
+        arr["XR"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 0].real
+        arr["YR"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 1].real
+        arr["ZR"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 2].real
+        arr["RXR"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 3].real
+        arr["RYR"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 4].real
+        arr["RZR"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 5].real
+
+        arr["XI"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 0].imag
+        arr["YI"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 1].imag
+        arr["ZI"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 2].imag
+        arr["RXI"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 3].imag
+        arr["RYI"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 4].imag
+        arr["RZI"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 5].imag
 
     @classmethod
     def add_freq_case(cls, table_name: str,
