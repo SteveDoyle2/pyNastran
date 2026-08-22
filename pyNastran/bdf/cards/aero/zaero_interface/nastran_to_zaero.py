@@ -127,8 +127,10 @@ def _convert_flutter(model: BDF, modelz: BDF,
             freqs = mkaero.reduced_freqs
             filename = f'MK_{mach:g}.out'
             mkaeroz = MKAEROZ(
-                mkaeroz_id, mach, flt_id, filename, print_flag,
-                freqs, method=0, save='SAVE')
+                mkaeroz_id, mach, freqs,
+                method=0, flt_id=flt_id, filename=filename,
+                print_flag=print_flag,
+                save='SAVE')
             add_methods.add_mkaeroz_object(mkaeroz)
             break
 
@@ -160,8 +162,10 @@ def _convert_flutter(model: BDF, modelz: BDF,
             freqs = [1.0]
         filename = f'MK{mkaeroz_id}_{mach:g}.out'
         mkaeroz = MKAEROZ(
-            mkaeroz_id, mach, flt_id, filename, print_flag,
-            freqs, method=0, save='SAVE')
+            mkaeroz_id, mach, freqs,
+            method=0, 
+            flt_id=flt_id, filename=filename,
+            print_flag=print_flag, save='SAVE')
         add_methods.add_mkaeroz_object(mkaeroz)
 
         if method in {'PKNL', 'PKNLS'}:
@@ -176,7 +180,8 @@ def _convert_flutter(model: BDF, modelz: BDF,
                 # atm_id = 100
                 # atmos = ATMOS(atm_id, mass_unit, length_unit, atmosphere_table)
                 atm = FIXMACH(sid, mkaeroz_id, mass_unit, length_unit,
-                              flutter_id, print_flag, velocity, rho)
+                              velocity, rho,
+                              fluttf_id=flutter_id, print_flag=print_flag)
             else:  # pragma: no cover
                 print(flutter.get_stats())
                 raise RuntimeError((method, is_mach_constant, is_density_constant))
