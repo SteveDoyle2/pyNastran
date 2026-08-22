@@ -449,7 +449,6 @@ def write_rbe3(card_type: str, cards: list[RBE3],
             #op2.log.warning('UM is not implemented')
         fmti += b'i'
         fieldsi += [-3]
-
         fmt += fmti
         fields += fieldsi
     nfields = len(fields)
@@ -473,9 +472,9 @@ def write_rrod(card_type: str, cards: list[RBAR],
         for elem in cards:
             ga, gb = elem.nodes
             #cna = int(elem.cna) if elem.cna != '' else 0
-            cma = int(elem.cma) if elem.cma != '' else 0
             #cnb = int(elem.cnb) if elem.cnb != '' else 0
-            cmb = int(elem.cmb) if elem.cmb != '' else 0
+            cma = int(elem.cma) if elem.cma not in ('', None) else 0
+            cmb = int(elem.cmb) if elem.cmb not in ('', None) else 0
             alpha = 0.0 if elem.alpha is None else 0.0
             fields += [
                 # eid, ga, gb, cma, cmb
@@ -490,9 +489,9 @@ def write_rrod(card_type: str, cards: list[RBAR],
         for elem in cards:
             ga, gb = elem.nodes
             #cna = int(elem.cna)
-            cma = int(elem.cma) if elem.cma != '' else 0
+            cma = int(elem.cma) if elem.cma not in ('', None) else 0
             #cnb = int(elem.cnb) if elem.cnb != '' else 0
-            cmb = int(elem.cmb)
+            cmb = int(elem.cmb) if elem.cmb not in ('', None) else 0
             fields += [
                 elem.eid, ga, gb,
                 #cna, cnb,

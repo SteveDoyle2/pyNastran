@@ -1326,11 +1326,16 @@ class TestAero(unittest.TestCase):
             eid, label, p1, x12, p4, x43, cp=0,
             nspan=nspan, nchord=nchord, lspan=0,
             p_airfoil=None, ztaic=None, comment='')
+        npoints_expected = nspan * nchord
+        nelements_expected = (nspan - 1) * (nchord - 1)
+
+        zaero = model.zaero
+        panlst = 1000
+        boxes = [eid, 'THRU', eid+nelements_expected]
+        zaero.add_panlst2(panlst, eid, boxes)
         model.cross_reference()
 
         npoints, nelements = caero.get_panel_npoints_nelements()
-        npoints_expected = nspan * nchord
-        nelements_expected = (nspan - 1) * (nchord - 1)
         #npoints_expected = 8 # 2*4
         #nelements_expected = 3 # 1*3
         assert npoints_expected == npoints
