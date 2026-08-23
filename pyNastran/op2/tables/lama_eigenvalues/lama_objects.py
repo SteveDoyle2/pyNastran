@@ -820,6 +820,7 @@ class BucklingEigenvalues(BaseScalarObject):
     def is_complex(self) -> bool:
         return False
 
+    @property
     def is_buckling(self) -> bool:
         return True
 
