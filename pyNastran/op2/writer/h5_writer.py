@@ -272,29 +272,46 @@ def write_h5_results(model: OP2, h5file: File,
                      root: str='/'):
     """
     supports:
+     - modal/transient/buckling/freq for grid_point_forces/strain_energy
      - domains support
      - nodal/elemental results
      - nodal/elemental index support
+     - buckling eigenvalues
 
     doesn't handle:
-     - modal/transient/buckling/freq for grid_point_forces/strain_energy
-     - imaginary/random elemental results (stress/strain/force/strain_energy)
+     - modal eigenvalues
+     - strain energy
+     - thermal
+     - elastic/plastic/thermal stress/strain
+     - random elemental results (stress/strain/force/strain_energy)
      - optimization
      - matrices
      - trim
      - flutter
+     - grid point weight
 
     not sure if supported:
      - multiple subcases
 
-    real result types supported:
-     - nodal: displacement, velocity, acceleration, load_vector, spc/mpc forces, grid point forces
+    real/complex result types supported:
+     - nodal:
+       - displacement, velocity, acceleration, load_vector, spc/mpc forces
+       - grid point forces
+         - might have transient issues
      - elemental stress/strain/force:
-       - crod
+       - crod, ctube, conrod
+       - celas1-4
+       - no cbar
+       - no cbeam
+       - no cshear
+       - ctria3, cquad4 (corner), ctria6, ctriar, cquad8, cquadr
+         - isotropic/composite
+       - no cquad4 (centroid)
+     - force
+       - cvisc
+       - cdamp1-4
      - elemental stress/strain
-       - ctria3, cquad4 (corner), composite ctria3/cquad4
        - ctetra, cpenta, chexa
-     - strain_energy: N/A
     """
     # nastran_group = h5file.create_group('/', 'NASTRAN')
     result_group = h5file.create_group(nastran_group, 'RESULT')
