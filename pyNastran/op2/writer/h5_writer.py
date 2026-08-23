@@ -1,10 +1,11 @@
 from __future__ import annotations
 from itertools import count
 from collections import defaultdict
+import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
-if TYPE_CHECKING:  # pramga: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 try:
@@ -15,103 +16,22 @@ except ImportError:
 
 
 def get_h5_elemental_nodal(model: OP2):
-    stress = model.op2_results.stress
-    strain = model.op2_results.strain
-    force = model.op2_results.force
-    modal_contribution = model.op2_results.modal_contribution
+    nodal_dicts = []
     elemental_dicts = []
 
-    # rod/tube/conrod only tested for real
-    split_table_by_type(elemental_dicts, stress.crod_stress,
-                        ('STRESS', 'ROD'), ('STRESS', 'ROD_CPLX'), ('STRESS', 'ROD_RANDOM'))
-    split_table_by_type(elemental_dicts, strain.crod_strain,
-                        ('STRAIN', 'ROD'), ('STRAIN', 'ROD_CPLX'), ('STRAIN', 'ROD_RANDOM'))
-    split_table_by_type(elemental_dicts, force.crod_force,
-                        ('ELEMENT_FORCE', 'ROD'), ('ELEMENT_FORCE', 'ROD_CPLX'), ('ELEMENT_FORCE', 'ROD_RANDOM'))
-    split_table_by_type(elemental_dicts, modal_contribution.crod_strain,
-                        ('STRAIN', 'ROD'), ('STRAIN', 'ROD_CPLX'), ('STRAIN', 'ROD_RANDOM'))
-    split_table_by_type(elemental_dicts, modal_contribution.crod_stress,
-                        ('STRESS', 'ROD'), ('STRESS', 'ROD_CPLX'), ('STRESS', 'ROD_RANDOM'))
+    stress = model.op2_results.stress
+    stress.get_h5_elemental_tables(elemental_dicts)
 
-    split_table_by_type(elemental_dicts, stress.ctube_stress,
-                        ('STRESS', 'TUBE'), ('STRESS', 'TUBE_CPLX'), ('STRESS', 'TUBE_RANDOM'))
-    split_table_by_type(elemental_dicts, strain.ctube_strain,
-                        ('STRAIN', 'TUBE'), ('STRAIN', 'TUBE_CPLX'), ('STRAIN', 'TUBE_RANDOM'))
-    split_table_by_type(elemental_dicts, force.ctube_force,
-                        ('ELEMENT_FORCE', 'TUBE'), ('ELEMENT_FORCE', 'TUBE_CPLX'), ('ELEMENT_FORCE', 'TUBE_RANDOM'))
-    split_table_by_type(elemental_dicts, modal_contribution.ctube_strain,
-                        ('STRAIN', 'TUBE'), ('STRAIN', 'TUBE_CPLX'), ('STRAIN', 'TUBE_RANDOM'))
-    split_table_by_type(elemental_dicts, modal_contribution.ctube_stress,
-                        ('STRESS', 'TUBE'), ('STRESS', 'TUBE_CPLX'), ('STRESS', 'TUBE_RANDOM'))
+    strain = model.op2_results.strain
+    strain.get_h5_elemental_tables(elemental_dicts)
 
-    split_table_by_type(elemental_dicts, stress.conrod_stress,
-                        ('STRESS', 'CONROD'), ('STRESS', 'CONROD_CPLX'), ('STRESS', 'CONROD_RANDOM'))
-    split_table_by_type(elemental_dicts, strain.conrod_strain,
-                        ('STRAIN', 'CONROD'), ('STRAIN', 'CONROD_CPLX'), ('STRAIN', 'CONROD_RANDOM'))
-    split_table_by_type(elemental_dicts, force.conrod_force,
-                        ('ELEMENT_FORCE', 'CONROD'), ('ELEMENT_FORCE', 'CONROD_CPLX'), ('ELEMENT_FORCE', 'CONROD_RANDOM'))
-    split_table_by_type(elemental_dicts, modal_contribution.conrod_strain,
-                        ('STRAIN', 'CONROD'), ('STRAIN', 'CONROD_CPLX'), ('STRAIN', 'CONROD_RANDOM'))
-    split_table_by_type(elemental_dicts, modal_contribution.conrod_stress,
-                        ('STRESS', 'CONROD'), ('STRESS', 'CONROD_CPLX'), ('STRESS', 'CONROD_RANDOM'))
+    force = model.op2_results.force
+    force.get_h5_elemental_tables(elemental_dicts)
 
-    # only tested for real
-    split_table_by_type(elemental_dicts, stress.ctetra_stress,
-                        ('STRESS', 'TETRA'), ('STRESS', 'TETRA_CPLX'), ('STRESS', 'TETRA_RANDOM'))
-    split_table_by_type(elemental_dicts, strain.ctetra_strain,
-                        ('STRAIN', 'TETRA'), ('STRAIN', 'TETRA_CPLX'), ('STRAIN', 'TETRA_RANDOM'))
+    modal_contribution = model.op2_results.modal_contribution
+    modal_contribution.get_h5_nodal_tables(nodal_dicts)
+    modal_contribution.get_h5_elemental_tables(elemental_dicts)
 
-    # only tested for real
-    split_table_by_type(elemental_dicts, stress.chexa_stress,
-                        ('STRESS', 'HEXA'), ('STRESS', 'HEXA_CPLX'), ('STRESS', 'HEXA_RANDOM'))
-    split_table_by_type(elemental_dicts, strain.chexa_strain,
-                        ('STRAIN', 'HEXA'), ('STRAIN', 'HEXA_CPLX'), ('STRAIN', 'HEXA_RANDOM'))
-
-    # only tested for real
-    split_table_by_type(elemental_dicts, stress.cpenta_stress,
-                        ('STRESS', 'PENTA'), ('STRESS', 'PENTA_CPLX'), ('STRESS', 'PENTA_RANDOM'))
-    split_table_by_type(elemental_dicts, strain.cpenta_strain,
-                        ('STRAIN', 'PENTA'), ('STRAIN', 'PENTA_CPLX'), ('STRAIN', 'PENTA_RANDOM'))
-
-    # only tested for real
-    split_table_by_type(elemental_dicts, stress.ctria3_stress,
-                        ('STRESS', 'TRIA3'), ('STRESS', 'TRIA3_CPLX'), ('STRESS', 'TRIA3_RANDOM'))
-    split_table_by_type(elemental_dicts, strain.ctria3_strain,
-                        ('STRAIN', 'TRIA3'), ('STRAIN', 'TRIA3_CPLX'), ('STRAIN', 'TRIA3_RANDOM'))
-
-    # special tables b/c element type 33 and 144 are in the same table
-    split_quad_table_by_type(elemental_dicts,
-                             stress.cquad4_stress, 'STRESS', 'QUAD')
-    split_quad_table_by_type(elemental_dicts,
-                             strain.cquad4_strain, 'STRAIN', 'QUAD')
-
-    # split_table_by_type(elemental_dicts, stress.cquad4_stress,
-    #                     ('STRESS', 'QUAD4'), ('STRESS', 'QUAD4_CPLX'), ('STRESS', 'QUAD4_RANDOM'))
-    # split_table_by_type(elemental_dicts, strain.cquad4_strain,
-    #                     ('STRAIN', 'QUAD4'), ('STRAIN', 'QUAD4_CPLX'), ('STRAIN', 'QUAD4_RANDOM'))
-
-    # only tested for real
-    split_table_by_type(elemental_dicts, stress.cquad4_composite_stress,
-                        ('STRESS', 'QUAD4_COMP'), ('STRESS', 'QUAD4_COMP_CPLX'), ('STRESS', 'QUAD4_COMP_RANDOM'))
-    split_table_by_type(elemental_dicts, strain.cquad4_composite_strain,
-                        ('STRAIN', 'QUAD4_COMP'), ('STRAIN', 'QUAD4_COMP_CPLX'), ('STRAIN', 'QUAD4_COMP_RANDOM'))
-
-    # only tested for complex
-    split_table_by_type(elemental_dicts, modal_contribution.celas1_strain,
-                        ('STRAIN', 'ELAS1_COMP'), ('STRAIN', 'ELAS1_CPLX'), ('STRAIN', 'ELAS1_RANDOM'))
-    split_table_by_type(elemental_dicts, modal_contribution.celas2_strain,
-                        ('STRAIN', 'ELAS2_COMP'), ('STRAIN', 'ELAS2_CPLX'), ('STRAIN', 'ELAS2_RANDOM'))
-    split_table_by_type(elemental_dicts, modal_contribution.celas3_strain,
-                        ('STRAIN', 'ELAS3_COMP'), ('STRAIN', 'ELAS3_CPLX'), ('STRAIN', 'ELAS3_RANDOM'))
-    split_table_by_type(elemental_dicts, modal_contribution.celas4_strain,
-                        ('STRAIN', 'ELAS4_COMP'), ('STRAIN', 'ELAS4_CPLX'), ('STRAIN', 'ELAS4_RANDOM'))
-
-    # split_table_by_type(elemental_dicts, modal_contribution.cdamp1_strain,
-    #                     ('STRAIN', 'DAMP1_COMP'), ('STRAIN', 'DAMP1_CPLX'), ('STRAIN', 'DAMP1_RANDOM'))
-    # split_table_by_type(elemental_dicts, modal_contribution.ctria3_composite_strain,
-    #                     ('STRAIN', 'TRIA3_COMP'), ('STRAIN', 'TRIA3_COMP_CPLX'), ('STRAIN', 'TRIA3_COMP_RANDOM'))
-
-    nodal_dicts = []
     # only tested for real
     split_table_by_type(nodal_dicts, model.displacements,
                         'DISPLACEMENT', 'DISPLACEMENT_CPLX', 'DISPLACEMENT_RANDOM')
@@ -186,11 +106,17 @@ def split_table_by_type(nodal_dicts: list[tuple],
         key0, table0 = reals[0]
         h5_table_dict = table0.h5_table_dict()
         nodal_dicts.append((name_real, reals, h5_table_dict))
+    elif reals:
+        warnings.warn(f'missing {name_real}')
+
     if imags and len(name_imag):
         assert len(name_imag), name_imag
         key0, table0 = imags[0]
         h5_table_dict = table0.h5_table_dict()
         nodal_dicts.append((name_imag, imags, h5_table_dict))
+    elif imags:
+        warnings.warn(f'missing {name_imag}')
+
     if randoms and len(name_random):
         assert len(name_random), name_random
         key0, table0 = randoms[0]
@@ -267,7 +193,7 @@ def obj_to_domain_key(obj) -> list[tuple]:
                    afpm, trmc, instance, module, substep, impfid, ndomains)
             keys.append(key)
     elif analysis_code == 6:  # time
-        for time in obj.times:
+        for time in obj._times:
             key = (subcase_id, step, analysis_code, float(time), eigi, mode,
                    design_cycle, random, se,
                    afpm, trmc, instance, module, substep, impfid, ndomains)
@@ -593,7 +519,9 @@ def get_ntime_neid(name: str, key_obj_tuple) -> tuple[int, int]:
 
 
 def get_neid(obj) -> int:
-    if hasattr(obj, "element"):
+    if hasattr(obj, "get_neid"):
+        neid = obj.get_neid()
+    elif hasattr(obj, "element"):
         neid = obj.element.shape[0]
     elif hasattr(obj, "element_cid"):
         neid = obj.element_cid.shape[0]

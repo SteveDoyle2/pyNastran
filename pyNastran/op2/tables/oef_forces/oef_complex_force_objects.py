@@ -77,7 +77,7 @@ class ComplexRodForceArray(ComplexForceObject):
             raise NotImplementedError('SORT2')
 
     def h5_table_dict(self) -> dict:
-        from tables import Int64Col, Float64Col, StringCol
+        from tables import Int64Col, Float64Col
         h5_table_dict = {
             'EID': Int64Col(pos=0),
             'AFR': Int64Col(pos=1),
@@ -732,6 +732,22 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
+
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'EID': Int64Col(pos=0),
+            'FR': Int64Col(pos=1),
+            'FI': Float64Col(pos=2),
+            'DOMAIN_ID': Int64Col(pos=5),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        arr["EID"][ntime_neid0:ntime_neid1] = self.element
+        arr["FR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].real
+        arr["FI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].imag
+
     @property
     def headers(self) -> list[str]:
         headers = ['spring_force']
@@ -1105,6 +1121,25 @@ class ComplexViscForceArray(BaseElement):
         else:
             raise NotImplementedError('SORT2')
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'EID': Int64Col(pos=0),
+            'AFR': Int64Col(pos=1),
+            'AFI': Float64Col(pos=2),
+            'TRQR': Float64Col(pos=3),
+            'TRQI': Float64Col(pos=4),
+            'DOMAIN_ID': Int64Col(pos=5),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        arr["EID"][ntime_neid0:ntime_neid1] = self.element
+        arr["AFR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].real
+        arr["AFI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].imag
+        arr["TRQR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].real
+        arr["TRQI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].imag
+
     @property
     def is_real(self) -> bool:
         return False
@@ -1330,6 +1365,52 @@ class ComplexPlateForceArray(ComplexForceObject):
             #pass
         #else:
             #raise NotImplementedError('SORT2')
+
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {  # force
+            'EID': Int64Col(pos=0),
+            'MXR': Float64Col(pos=3),
+            'MYR': Float64Col(pos=4),
+            'MXYR': Float64Col(pos=5),
+            'BMXR': Float64Col(pos=6),
+            'BMYR': Float64Col(pos=7),
+            'BMXYR': Float64Col(pos=8),
+            'TXR': Float64Col(pos=9),
+            'TYR': Float64Col(pos=10),
+
+            'MXI': Float64Col(pos=11),
+            'MYI': Float64Col(pos=12),
+            'MXYI': Float64Col(pos=13),
+            'BMXI': Float64Col(pos=14),
+            'BMYI': Float64Col(pos=15),
+            'BMXYI': Float64Col(pos=16),
+            'TXI': Float64Col(pos=17),
+            'TYI': Float64Col(pos=18),
+            'DOMAIN_ID': Int64Col(pos=19),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        #print(self.get_stats())
+        data = self.data
+        arr["MXR"][ntime_neid0:ntime_neid1] = data[itime, :, 0].real
+        arr["MYR"][ntime_neid0:ntime_neid1] = data[itime, :, 1].real
+        arr["MXYR"][ntime_neid0:ntime_neid1] = data[itime, :, 2].real
+        arr["BMXR"][ntime_neid0:ntime_neid1] = data[itime, :, 3].real
+        arr["BMYR"][ntime_neid0:ntime_neid1] = data[itime, :, 4].real
+        arr["BMXYR"][ntime_neid0:ntime_neid1] = data[itime, :, 5].real
+        arr["TXR"][ntime_neid0:ntime_neid1] = data[itime, :, 6].real
+        arr["TYR"][ntime_neid0:ntime_neid1] = data[itime, :, 7].real
+
+        arr["MXI"][ntime_neid0:ntime_neid1] = data[itime, :, 0].imag
+        arr["MYI"][ntime_neid0:ntime_neid1] = data[itime, :, 1].imag
+        arr["MXYI"][ntime_neid0:ntime_neid1] = data[itime, :, 2].imag
+        arr["BMXI"][ntime_neid0:ntime_neid1] = data[itime, :, 3].imag
+        arr["BMYI"][ntime_neid0:ntime_neid1] = data[itime, :, 4].imag
+        arr["BMXYI"][ntime_neid0:ntime_neid1] = data[itime, :, 5].imag
+        arr["TXI"][ntime_neid0:ntime_neid1] = data[itime, :, 6].imag
+        arr["TYI"][ntime_neid0:ntime_neid1] = data[itime, :, 7].imag
 
     @property
     def headers(self) -> list[str]:
@@ -1713,6 +1794,75 @@ class ComplexPlate2ForceArray(ComplexForceObject):
             #pass
         #else:
             #raise NotImplementedError('SORT2')
+
+    def h5_table_dict(self) -> dict:
+        neid = len(self.element)
+        neid_nnode = self.element_node.shape[0]
+        nnode = neid_nnode // neid
+        assert nnode > 3, nnode
+
+        from tables import Int64Col, Float64Col, StringCol
+        h5_table_dict = {  # force
+            'EID': Int64Col(pos=0),
+            'TERM': StringCol(4, pos=1),
+            'GRID': Float64Col(shape=(nnode,), pos=2),
+            'MXR': Float64Col(shape=(nnode,), pos=3),
+            'MYR': Float64Col(shape=(nnode,), pos=4),
+            'MXYR': Float64Col(shape=(nnode,), pos=5),
+            'BMXR': Float64Col(shape=(nnode,), pos=6),
+            'BMYR': Float64Col(shape=(nnode,), pos=7),
+            'BMXYR': Float64Col(shape=(nnode,), pos=8),
+            'TXR': Float64Col(shape=(nnode,), pos=9),
+            'TYR': Float64Col(shape=(nnode,), pos=10),
+
+            'MXI': Float64Col(shape=(nnode,), pos=11),
+            'MYI': Float64Col(shape=(nnode,), pos=12),
+            'MXYI': Float64Col(shape=(nnode,), pos=13),
+            'BMXI': Float64Col(shape=(nnode,), pos=14),
+            'BMYI': Float64Col(shape=(nnode,), pos=15),
+            'BMXYI': Float64Col(shape=(nnode,), pos=16),
+            'TXI': Float64Col(shape=(nnode,), pos=17),
+            'TYI': Float64Col(shape=(nnode,), pos=18),
+            'DOMAIN_ID': Int64Col(pos=19),
+        }
+        return h5_table_dict
+
+    def get_neid(self) -> int:
+        neid = len(self.element)
+        return neid
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        #print(self.get_stats())
+        #print(ntime_neid0, ntime_neid1)
+        neid = len(self.element)
+        neid_nnode = self.element_node.shape[0]
+        nnode = neid_nnode // neid
+        assert nnode > 3, nnode
+
+        ntime, neid_nnode, nresult = self.data.shape
+
+        element_node = self.element_node[:, 1].reshape(neid, nnode)
+        data = self.data.reshape(ntime, neid, nnode, nresult)
+
+        arr["TERM"][ntime_neid0:ntime_neid1] = 'CEN/'
+        arr["GRID"][ntime_neid0:ntime_neid1] = element_node
+        arr["MXR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0].real
+        arr["MYR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1].real
+        arr["MXYR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 2].real
+        arr["BMXR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 3].real
+        arr["BMYR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 4].real
+        arr["BMXYR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 5].real
+        arr["TXR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 6].real
+        arr["TYR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 7].real
+
+        arr["MXI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0].imag
+        arr["MYI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1].imag
+        arr["MXYI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 2].imag
+        arr["BMXI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 3].imag
+        arr["BMYI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 4].imag
+        arr["BMXYI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 5].imag
+        arr["TXI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 6].imag
+        arr["TYI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 7].imag
 
     @property
     def headers(self) -> list[str]:

@@ -2965,6 +2965,46 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         #     assert dt is not None
         #     self.add = self.add_sort2
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col, StringCol
+        h5_table_dict = {  # force
+            'EID': Int64Col(pos=0),
+            'MX': Float64Col(pos=1),
+            'MY': Float64Col(pos=2),
+            'MXY': Float64Col(pos=3),
+            'BMX': Float64Col(pos=4),
+            'BMY': Float64Col(pos=5),
+            'BMXY': Float64Col(pos=6),
+            'TX': Float64Col(pos=7),
+            'TY': Float64Col(pos=8),
+            'DOMAIN_ID': Int64Col(pos=9),
+        }
+        return h5_table_dict
+
+    def get_neid(self) -> int:
+        neid = len(self.element)
+        return neid
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        neid = len(self.element)
+        #neid_nnode = self.element_node.shape[0]
+        #nnode = neid_nnode // neid
+        #assert nnode > 3, nnode
+
+        ntime, neid_nnode, nresult = self.data.shape
+
+        #element_node = self.element_node[:, 1].reshape(neid, nnode)
+        data = self.data.reshape(ntime, neid, nresult)
+
+        arr["MX"][ntime_neid0:ntime_neid1] = data[itime, :, 0]
+        arr["MY"][ntime_neid0:ntime_neid1] = data[itime, :, 1]
+        arr["MXY"][ntime_neid0:ntime_neid1] = data[itime, :, 2]
+        arr["BMX"][ntime_neid0:ntime_neid1] = data[itime, :, 3]
+        arr["BMY"][ntime_neid0:ntime_neid1] = data[itime, :, 4]
+        arr["BMXY"][ntime_neid0:ntime_neid1] = data[itime, :, 5]
+        arr["TX"][ntime_neid0:ntime_neid1] = data[itime, :, 6]
+        arr["TY"][ntime_neid0:ntime_neid1] = data[itime, :, 7]
+
     def _get_msgs(self):
         raise NotImplementedError()
 
@@ -3409,6 +3449,59 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         # else:
         #     assert dt is not None
         #     self.add = self.add_sort2
+
+    def h5_table_dict(self) -> dict:
+        #neid = len(self.element)
+        #neid_nnode = self.element_node.shape[0]
+        nnode = self.nnodes_per_element # neid_nnode // neid
+        assert nnode > 3, nnode
+
+        from tables import Int64Col, Float64Col, StringCol
+        h5_table_dict = {  # force
+            'EID': Int64Col(pos=0),
+            'TERM': StringCol(4, pos=1),
+            'GRID': Float64Col(shape=(nnode,), pos=2),
+            'MX': Float64Col(shape=(nnode,), pos=3),
+            'MY': Float64Col(shape=(nnode,), pos=4),
+            'MXY': Float64Col(shape=(nnode,), pos=5),
+            'BMX': Float64Col(shape=(nnode,), pos=6),
+            'BMY': Float64Col(shape=(nnode,), pos=7),
+            'BMXY': Float64Col(shape=(nnode,), pos=8),
+            'TX': Float64Col(shape=(nnode,), pos=9),
+            'TY': Float64Col(shape=(nnode,), pos=10),
+
+            'DOMAIN_ID': Int64Col(pos=11),
+        }
+        return h5_table_dict
+
+    def get_neid(self) -> int:
+        nnode = self.nnodes_per_element # neid_nnode // neid
+        assert nnode > 3, nnode
+
+        neid_nnode = self.data.shape[1]
+        neid = neid_nnode // nnode
+        return neid
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        nnode = self.nnodes_per_element # neid_nnode // neid
+        neid = self.get_neid()
+        assert nnode > 3, nnode
+
+        ntime, neid_nnode, nresult = self.data.shape
+
+        element_node = self.element_node[:, 1].reshape(neid, nnode)
+        data = self.data.reshape(ntime, neid, nnode, nresult)
+
+        arr["TERM"][ntime_neid0:ntime_neid1] = 'CEN/'
+        arr["GRID"][ntime_neid0:ntime_neid1] = element_node
+        arr["MX"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0]
+        arr["MY"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1]
+        arr["MXY"][ntime_neid0:ntime_neid1] = data[itime, :, :, 2]
+        arr["BMX"][ntime_neid0:ntime_neid1] = data[itime, :, :, 3]
+        arr["BMY"][ntime_neid0:ntime_neid1] = data[itime, :, :, 4]
+        arr["BMXY"][ntime_neid0:ntime_neid1] = data[itime, :, :, 5]
+        arr["TX"][ntime_neid0:ntime_neid1] = data[itime, :, :, 6]
+        arr["TY"][ntime_neid0:ntime_neid1] = data[itime, :, :, 7]
 
     def _get_msgs(self):
         raise NotImplementedError()

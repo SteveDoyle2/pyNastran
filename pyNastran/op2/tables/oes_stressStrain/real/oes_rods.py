@@ -37,6 +37,10 @@ class RealRodArray(OES_Object):
         self.ielement = 0
         self.element = None
 
+    def get_neid(self) -> int:
+        neid = self.element.shape[0]
+        return neid
+
     def h5_table_dict(self) -> dict:
         from tables import Int64Col, Float64Col
         h5_table_dict = {

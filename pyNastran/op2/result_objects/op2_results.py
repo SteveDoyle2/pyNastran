@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
+from pyNastran.op2.writer.h5_writer import (
+    split_table_by_type, split_quad_table_by_type)
 from pyNastran.op2.op2_interface.random_results import (
     RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS, RARCONS, RAQCONS,
     RADEATC, RAEEATC, RASEATC, RAPEATC, RAFEATC, RAGEATC, RANEATC, RAREATC, RAQEATC,
@@ -462,6 +464,55 @@ class ModalContribution:
         self.cbush_stress = {}
         self.cbush_strain = {}
 
+    def get_h5_nodal_tables(self, nodal_dicts) -> None:
+        split_table_by_type(nodal_dicts, self.displacements,
+                            'DISPLACEMENT', 'DISPLACEMENT_CPLX', 'DISPLACEMENT_RANDOM')
+
+    def get_h5_elemental_tables(self, elemental_dicts) -> None:
+        split_table_by_type(elemental_dicts, self.crod_strain,
+                            ('STRAIN', 'ROD'), ('STRAIN', 'ROD_CPLX'), ('STRAIN', 'ROD_RANDOM'))
+        split_table_by_type(elemental_dicts, self.crod_stress,
+                            ('STRESS', 'ROD'), ('STRESS', 'ROD_CPLX'), ('STRESS', 'ROD_RANDOM'))
+
+        split_table_by_type(elemental_dicts, self.ctube_strain,
+                            ('STRAIN', 'TUBE'), ('STRAIN', 'TUBE_CPLX'), ('STRAIN', 'TUBE_RANDOM'))
+        split_table_by_type(elemental_dicts, self.ctube_stress,
+                            ('STRESS', 'TUBE'), ('STRESS', 'TUBE_CPLX'), ('STRESS', 'TUBE_RANDOM'))
+
+        split_table_by_type(elemental_dicts, self.conrod_strain,
+                            ('STRAIN', 'CONROD'), ('STRAIN', 'CONROD_CPLX'), ('STRAIN', 'CONROD_RANDOM'))
+        split_table_by_type(elemental_dicts, self.conrod_stress,
+                            ('STRESS', 'CONROD'), ('STRESS', 'CONROD_CPLX'), ('STRESS', 'CONROD_RANDOM'))
+
+        # only tested for complex
+        split_table_by_type(elemental_dicts, self.celas1_strain,
+                            ('STRAIN', 'ELAS1_COMP'), ('STRAIN', 'ELAS1_CPLX'), ('STRAIN', 'ELAS1_RANDOM'))
+        split_table_by_type(elemental_dicts, self.celas2_strain,
+                            ('STRAIN', 'ELAS2_COMP'), ('STRAIN', 'ELAS2_CPLX'), ('STRAIN', 'ELAS2_RANDOM'))
+        split_table_by_type(elemental_dicts, self.celas3_strain,
+                            ('STRAIN', 'ELAS3_COMP'), ('STRAIN', 'ELAS3_CPLX'), ('STRAIN', 'ELAS3_RANDOM'))
+        split_table_by_type(elemental_dicts, self.celas4_strain,
+                            ('STRAIN', 'ELAS4_COMP'), ('STRAIN', 'ELAS4_CPLX'), ('STRAIN', 'ELAS4_RANDOM'))
+
+        # split_table_by_type(elemental_dicts, self.cdamp1_strain,
+        #                     ('STRAIN', 'DAMP1_COMP'), ('STRAIN', 'DAMP1_CPLX'), ('STRAIN', 'DAMP1_RANDOM'))
+        # split_table_by_type(elemental_dicts, self.ctria3_composite_strain,
+        #                     ('STRAIN', 'TRIA3_COMP'), ('STRAIN', 'TRIA3_COMP_CPLX'), ('STRAIN', 'TRIA3_COMP_RANDOM'))
+
+        split_table_by_type(elemental_dicts, self.ctria3_composite_strain,
+                            ('STRAIN', 'TRIA3_COMP'), ('STRAIN', 'TRIA3_COMP_CPLX'), ('STRAIN', 'TRIA3_COMP_RANDOM'))
+        split_table_by_type(elemental_dicts, self.ctria6_composite_strain,
+                            ('STRAIN', 'TRIA6_COMP'), ('STRAIN', 'TRIA6_COMP_CPLX'), ('STRAIN', 'TRIA6_COMP_RANDOM'))
+        split_table_by_type(elemental_dicts, self.ctriar_composite_strain,
+                                    ('STRAIN', 'TRIAR_COMP'), ('STRAIN', 'TRIAR_COMP_CPLX'), ('STRAIN', 'TRIAR_COMP_RANDOM'))
+
+        split_table_by_type(elemental_dicts, self.cquad4_composite_strain,
+                            ('STRAIN', 'QUAD4_COMP'), ('STRAIN', 'QUAD4_COMP_CPLX'), ('STRAIN', 'QUAD4_COMP_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cquad8_composite_strain,
+                            ('STRAIN', 'QUAD8_COMP'), ('STRAIN', 'QUAD8_COMP_CPLX'), ('STRAIN', 'QUAD8_COMP_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cquadr_composite_strain,
+                            ('STRAIN', 'QUADR_COMP'), ('STRAIN', 'QUADR_COMP_CPLX'), ('STRAIN', 'QUADR_COMP_RANDOM'))
+
     def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             'displacements',  # 'velocities', 'accelerations',
@@ -603,6 +654,50 @@ class Force(Load):
         self.cpenta_pressure_force = {}
         self.ctetra_pressure_force = {}
         self.cpyram_pressure_force = {}
+
+    def get_h5_elemental_tables(self, elemental_dicts) -> None:
+        # only tested for real
+        split_table_by_type(elemental_dicts, self.crod_force,
+                            ('ELEMENT_FORCE', 'ROD'), ('ELEMENT_FORCE', 'ROD_CPLX'), ('ELEMENT_FORCE', 'ROD_RANDOM'))
+        split_table_by_type(elemental_dicts, self.ctube_force,
+                            ('ELEMENT_FORCE', 'TUBE'), ('ELEMENT_FORCE', 'TUBE_CPLX'), ('ELEMENT_FORCE', 'TUBE_RANDOM'))
+        split_table_by_type(elemental_dicts, self.conrod_force,
+                            ('ELEMENT_FORCE', 'CONROD'), ('ELEMENT_FORCE', 'CONROD_CPLX'), ('ELEMENT_FORCE', 'CONROD_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cvisc_force,
+                            ('ELEMENT_FORCE', 'VISC'), ('ELEMENT_FORCE', 'VISC_CPLX'), ('ELEMENT_FORCE', 'VISC_RANDOM'))
+
+        split_table_by_type(elemental_dicts, self.celas1_force,
+                            ('ELEMENT_FORCE', 'ELAS1'), ('ELEMENT_FORCE', 'ELAS1_CPLX'), ('ELEMENT_FORCE', 'ELAS1_RANDOM'))
+        split_table_by_type(elemental_dicts, self.celas2_force,
+                            ('ELEMENT_FORCE', 'ELAS2'), ('ELEMENT_FORCE', 'ELAS2_CPLX'), ('ELEMENT_FORCE', 'ELAS2_RANDOM'))
+        split_table_by_type(elemental_dicts, self.celas3_force,
+                            ('ELEMENT_FORCE', 'ELAS3'), ('ELEMENT_FORCE', 'ELAS3_CPLX'), ('ELEMENT_FORCE', 'ELAS3_RANDOM'))
+        split_table_by_type(elemental_dicts, self.celas4_force,
+                            ('ELEMENT_FORCE', 'ELAS4'), ('ELEMENT_FORCE', 'ELAS4_CPLX'), ('ELEMENT_FORCE', 'ELAS4_RANDOM'))
+
+        split_table_by_type(elemental_dicts, self.cdamp1_force,
+                            ('ELEMENT_FORCE', 'DAMP1'), ('ELEMENT_FORCE', 'DAMP1_CPLX'), ('ELEMENT_FORCE', 'ELAS1_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cdamp2_force,
+                            ('ELEMENT_FORCE', 'DAMP2'), ('ELEMENT_FORCE', 'DAMP2_CPLX'), ('ELEMENT_FORCE', 'DAMP2_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cdamp3_force,
+                            ('ELEMENT_FORCE', 'DAMP3'), ('ELEMENT_FORCE', 'DAMP3_CPLX'), ('ELEMENT_FORCE', 'DAMP3_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cdamp4_force,
+                            ('ELEMENT_FORCE', 'DAMP4'), ('ELEMENT_FORCE', 'DAMP4_CPLX'), ('ELEMENT_FORCE', 'DAMP4_RANDOM'))
+
+        split_table_by_type(elemental_dicts, self.ctria3_force,
+                            ('ELEMENT_FORCE', 'TRIA3'), ('ELEMENT_FORCE', 'TRIA3_CPLX'), ('ELEMENT_FORCE', 'TRIA3_RANDOM'))
+        split_table_by_type(elemental_dicts, self.ctria6_force,
+                            ('ELEMENT_FORCE', 'TRIA6'), ('ELEMENT_FORCE', 'TRIA6_CPLX'), ('ELEMENT_FORCE', 'TRIA6_RANDOM'))
+        split_table_by_type(elemental_dicts, self.ctriar_force,
+                                    ('ELEMENT_FORCE', 'TRIAR'), ('ELEMENT_FORCE', 'TRIAR_CPLX'), ('ELEMENT_FORCE', 'TRIAR_RANDOM'))
+
+        split_table_by_type(elemental_dicts, self.cquad4_force,
+                            ('ELEMENT_FORCE', 'QUAD4'), ('ELEMENT_FORCE', 'QUAD4_CPLX'), ('ELEMENT_FORCE', 'QUAD4_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cquad8_force,
+                            ('ELEMENT_FORCE', 'QUAD8'), ('ELEMENT_FORCE', 'QUAD8_CPLX'), ('ELEMENT_FORCE', 'QUAD8_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cquadr_force,
+                            ('ELEMENT_FORCE', 'QUADR'), ('ELEMENT_FORCE', 'QUADR_CPLX'), ('ELEMENT_FORCE', 'QUADR_RANDOM'))
+
 
     def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
@@ -798,6 +893,40 @@ class Stress:
         self.cbush1d_stress_strain = {}
         self.hyperelastic_cquad4_stress = {}
 
+    def get_h5_elemental_tables(self, elemental_dicts) -> None:
+        split_table_by_type(elemental_dicts, self.crod_stress,
+                            ('STRESS', 'ROD'), ('STRESS', 'ROD_CPLX'), ('STRESS', 'ROD_RANDOM'))
+        split_table_by_type(elemental_dicts, self.ctube_stress,
+                            ('STRESS', 'TUBE'), ('STRESS', 'TUBE_CPLX'), ('STRESS', 'TUBE_RANDOM'))
+        split_table_by_type(elemental_dicts, self.conrod_stress,
+                            ('STRESS', 'CONROD'), ('STRESS', 'CONROD_CPLX'), ('STRESS', 'CONROD_RANDOM'))
+
+        split_table_by_type(elemental_dicts, self.ctetra_stress,
+                            ('STRESS', 'TETRA'), ('STRESS', 'TETRA_CPLX'), ('STRESS', 'TETRA_RANDOM'))
+        split_table_by_type(elemental_dicts, self.chexa_stress,
+                            ('STRESS', 'HEXA'), ('STRESS', 'HEXA_CPLX'), ('STRESS', 'HEXA_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cpenta_stress,
+                            ('STRESS', 'PENTA'), ('STRESS', 'PENTA_CPLX'), ('STRESS', 'PENTA_RANDOM'))
+
+        split_table_by_type(elemental_dicts, self.ctria3_stress,
+                            ('STRESS', 'TRIA3'), ('STRESS', 'TRIA3_CPLX'), ('STRESS', 'TRIA3_RANDOM'))
+        # special tables b/c element type 33 and 144 are in the same table
+        split_quad_table_by_type(elemental_dicts,
+                                 self.cquad4_stress, 'STRESS', 'QUAD')
+
+        split_table_by_type(elemental_dicts, self.ctria3_composite_stress,
+                            ('STRESS', 'TRIA3_COMP'), ('STRESS', 'TRIA3_COMP_CPLX'), ('STRESS', 'TRIA3_COMP_RANDOM'))
+        split_table_by_type(elemental_dicts, self.ctria6_composite_stress,
+                            ('STRESS', 'TRIA6_COMP'), ('STRESS', 'TRIA6_COMP_CPLX'), ('STRESS', 'TRIA6_COMP_RANDOM'))
+        split_table_by_type(elemental_dicts, self.ctriar_composite_stress,
+                            ('STRESS', 'TRIAR_COMP'), ('STRESS', 'TRIAR_COMP_CPLX'), ('STRESS', 'TRIAR_COMP_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cquad4_composite_stress,
+                            ('STRESS', 'QUAD4_COMP'), ('STRESS', 'QUAD4_COMP_CPLX'), ('STRESS', 'QUAD4_COMP_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cquad8_composite_stress,
+                            ('STRESS', 'QUAD8_COMP'), ('STRESS', 'QUAD8_COMP_CPLX'), ('STRESS', 'QUAD8_COMP_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cquadr_composite_stress,
+                            ('STRESS', 'QUADR_COMP'), ('STRESS', 'QUADR_COMP_CPLX'), ('STRESS', 'QUADR_COMP_RANDOM'))
+
     def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
@@ -914,6 +1043,47 @@ class Strain:
         self.ctriax6_strain = {}
 
         self.hyperelastic_cquad4_strain = {}
+
+    def get_h5_elemental_tables(self, elemental_dicts) -> None:
+        # only tested for real
+        split_table_by_type(elemental_dicts, self.ctube_strain,
+                            ('STRAIN', 'TUBE'), ('STRAIN', 'TUBE_CPLX'), ('STRAIN', 'TUBE_RANDOM'))
+        split_table_by_type(elemental_dicts, self.conrod_strain,
+                            ('STRAIN', 'CONROD'), ('STRAIN', 'CONROD_CPLX'), ('STRAIN', 'CONROD_RANDOM'))
+        split_table_by_type(elemental_dicts, self.crod_strain,
+                            ('STRAIN', 'ROD'), ('STRAIN', 'ROD_CPLX'), ('STRAIN', 'ROD_RANDOM'))
+
+        split_table_by_type(elemental_dicts, self.ctetra_strain,
+                            ('STRAIN', 'TETRA'), ('STRAIN', 'TETRA_CPLX'), ('STRAIN', 'TETRA_RANDOM'))
+        split_table_by_type(elemental_dicts, self.chexa_strain,
+                            ('STRAIN', 'HEXA'), ('STRAIN', 'HEXA_CPLX'), ('STRAIN', 'HEXA_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cpenta_strain,
+                            ('STRAIN', 'PENTA'), ('STRAIN', 'PENTA_CPLX'), ('STRAIN', 'PENTA_RANDOM'))
+        split_table_by_type(elemental_dicts, self.ctria3_strain,
+                            ('STRAIN', 'TRIA3'), ('STRAIN', 'TRIA3_CPLX'), ('STRAIN', 'TRIA3_RANDOM'))
+
+        # special tables b/c element type 33 and 144 are in the same table
+        split_quad_table_by_type(elemental_dicts,
+                                 self.cquad4_strain, 'STRAIN', 'QUAD')
+
+        # split_table_by_type(elemental_dicts, stress.cquad4_stress,
+        #                     ('STRESS', 'QUAD4'), ('STRESS', 'QUAD4_CPLX'), ('STRESS', 'QUAD4_RANDOM'))
+        # split_table_by_type(elemental_dicts, strain.cquad4_strain,
+        #                     ('STRAIN', 'QUAD4'), ('STRAIN', 'QUAD4_CPLX'), ('STRAIN', 'QUAD4_RANDOM'))
+
+        split_table_by_type(elemental_dicts, self.ctria3_composite_strain,
+                            ('STRAIN', 'TRIA3_COMP'), ('STRAIN', 'TRIA3_COMP_CPLX'), ('STRAIN', 'TRIA3_COMP_RANDOM'))
+        split_table_by_type(elemental_dicts, self.ctria6_composite_strain,
+                            ('STRAIN', 'TRIA6_COMP'), ('STRAIN', 'TRIA6_COMP_CPLX'), ('STRAIN', 'TRIA6_COMP_RANDOM'))
+        split_table_by_type(elemental_dicts, self.ctriar_composite_strain,
+                                    ('STRAIN', 'TRIAR_COMP'), ('STRAIN', 'TRIAR_COMP_CPLX'), ('STRAIN', 'TRIAR_COMP_RANDOM'))
+
+        split_table_by_type(elemental_dicts, self.cquad4_composite_strain,
+                            ('STRAIN', 'QUAD4_COMP'), ('STRAIN', 'QUAD4_COMP_CPLX'), ('STRAIN', 'QUAD4_COMP_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cquad8_composite_strain,
+                            ('STRAIN', 'QUAD8_COMP'), ('STRAIN', 'QUAD8_COMP_CPLX'), ('STRAIN', 'QUAD8_COMP_RANDOM'))
+        split_table_by_type(elemental_dicts, self.cquadr_composite_strain,
+                            ('STRAIN', 'QUADR_COMP'), ('STRAIN', 'QUADR_COMP_CPLX'), ('STRAIN', 'QUADR_COMP_RANDOM'))
 
     def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
