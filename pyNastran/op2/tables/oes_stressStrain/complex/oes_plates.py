@@ -1,5 +1,6 @@
-import warnings
+import inspect
 from struct import Struct, pack
+import warnings
 
 import numpy as np
 
@@ -47,6 +48,114 @@ class ComplexPlateArray(OES_Object):
             #pass
         #else:
             #raise NotImplementedError('SORT2')
+
+    def get_neid(self) -> int:
+        nnode = self.nnodes_per_element
+        neid_nnode = len(self.element_node)
+        neid = neid_nnode // nnode // 2
+        return neid
+
+    def h5_table_dict(self) -> dict:
+        nnode = self.nnodes_per_element
+
+        from tables import Int64Col, Float64Col, StringCol
+        if nnode == 1:
+            h5_table_dict = {
+                'EID': Int64Col(pos=0),
+
+                'FD1': Float64Col(pos=1),
+                'X1R': Float64Col(pos=2),
+                'X1I': Float64Col(pos=3),
+                'Y1R': Float64Col(pos=4),
+                'Y1I': Float64Col(pos=5),
+                'TXY1R': Float64Col(pos=6),
+                'TXY1I': Float64Col(pos=7),
+
+                'FD2': Float64Col(pos=8),
+                'X2R': Float64Col(pos=9),
+                'X2I': Float64Col(pos=10),
+                'Y2R': Float64Col(pos=11),
+                'Y2I': Float64Col(pos=12),
+                'TXY2R': Float64Col(pos=13),
+                'TXY2I': Float64Col(pos=14),
+
+                'DOMAIN_ID': Int64Col(pos=15),
+            }
+        else:
+            h5_table_dict = {
+                'EID': Int64Col(pos=0),
+                'TERM': StringCol(4, pos=1),
+                'GRID': Int64Col(shape=(nnode,), pos=2),
+
+                'FD1': Float64Col(shape=(nnode,), pos=3),
+                'X1R': Float64Col(shape=(nnode,), pos=4),
+                'X1I': Float64Col(shape=(nnode,), pos=5),
+                'Y1R': Float64Col(shape=(nnode,), pos=6),
+                'Y1I': Float64Col(shape=(nnode,), pos=7),
+                'TXY1R': Float64Col(shape=(nnode,), pos=8),
+                'TXY1I': Float64Col(shape=(nnode,), pos=9),
+
+                'FD2': Float64Col(shape=(nnode,), pos=10),
+                'X2R': Float64Col(shape=(nnode,), pos=11),
+                'X2I': Float64Col(shape=(nnode,), pos=12),
+                'Y2R': Float64Col(shape=(nnode,), pos=13),
+                'Y2I': Float64Col(shape=(nnode,), pos=14),
+                'TXY2R': Float64Col(shape=(nnode,), pos=15),
+                'TXY2I': Float64Col(shape=(nnode,), pos=16),
+
+                'DOMAIN_ID': Int64Col(pos=16),
+            }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        neid_nnode = len(self.element_node)
+        nnode = self.nnodes_per_element
+        ntime, neid_nnode, nresult = self.data.shape
+        neid = neid_nnode // nnode // 2
+
+        if nnode == 1:
+            elements = self.element_node[::2, 0]
+            data = self.data.reshape(ntime, neid, 2, nresult)
+            arr["EID"][ntime_neid0:ntime_neid1] = elements
+
+            arr["FD1"][ntime_neid0:ntime_neid1] = self.fiber_distance[::2]
+            arr["X1R"][ntime_neid0:ntime_neid1] = data[itime, :, 0, 0].real
+            arr["X1I"][ntime_neid0:ntime_neid1] = data[itime, :, 0, 0].imag
+            arr["Y1R"][ntime_neid0:ntime_neid1] = data[itime, :, 0, 1].real
+            arr["Y1I"][ntime_neid0:ntime_neid1] = data[itime, :, 0, 1].imag
+            arr["TXY1R"][ntime_neid0:ntime_neid1] = data[itime, :, 0, 2].real
+            arr["TXY1I"][ntime_neid0:ntime_neid1] = data[itime, :, 0, 2].imag
+
+            arr["FD2"][ntime_neid0:ntime_neid1] = self.fiber_distance[1::2]
+            arr["X2R"][ntime_neid0:ntime_neid1] = data[itime, :, 1, 0].real
+            arr["X2I"][ntime_neid0:ntime_neid1] = data[itime, :, 1, 0].imag
+            arr["Y2R"][ntime_neid0:ntime_neid1] = data[itime, :, 1, 1].real
+            arr["Y2I"][ntime_neid0:ntime_neid1] = data[itime, :, 1, 1].imag
+            arr["TXY2R"][ntime_neid0:ntime_neid1] = data[itime, :, 1, 2].real
+            arr["TXY2I"][ntime_neid0:ntime_neid1] = data[itime, :, 1, 2].imag
+        else:
+            elements = self.element_node[::2, 0]
+            nodes = self.element_node[::2, 1].reshape(neid, nnode)
+            data = self.data.reshape(ntime, neid, nnode, 2, nresult)
+            arr["EID"][ntime_neid0:ntime_neid1] = elements[:, 0]
+            arr["TERM"][ntime_neid0:ntime_neid1] = 'CEN/'
+            arr["GRID"][ntime_neid0:ntime_neid1] = nodes
+
+            arr["FD1"][ntime_neid0:ntime_neid1] = self.fiber_distance[::2]
+            arr["X1R"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0, 0].real
+            arr["X1I"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0, 0].imag
+            arr["Y1R"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0, 1].real
+            arr["Y1I"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0, 1].imag
+            arr["TXY1R"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0, 2].real
+            arr["TXY1I"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0, 2].imag
+
+            arr["FD2"][ntime_neid0:ntime_neid1] = self.fiber_distance[1::2]
+            arr["X2R"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1, 0].real
+            arr["X2I"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1, 0].imag
+            arr["Y2R"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1, 1].real
+            arr["Y2I"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1, 1].imag
+            arr["TXY2R"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1, 2].real
+            arr["TXY2I"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1, 2].imag
 
     @property
     def is_real(self) -> bool:
@@ -387,8 +496,6 @@ class ComplexPlateArray(OES_Object):
     def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>') -> int:
         """writes an OP2"""
-        import inspect
-        from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')

@@ -93,8 +93,11 @@ def split_table_by_type(nodal_dicts: list[tuple],
             # print('5, freq, imag')
             imags.append((key, table))
         elif table.analysis_code == 8:
-            # 5: post-buckling
+            # 8: post-buckling
             reals.append((key, table))
+        elif table.analysis_code == 9:
+            # 9: complex eigenvalue
+            imags.append((key, table))
         else:  # pragma: no cover
             raise NotImplementedError(table.analysis_code)
             # 7: pre-buckling
@@ -129,11 +132,17 @@ def split_quad_table_by_type(elemental_dicts,
     # QUAD_CN vs ???
     reals_centroid = []
     reals_corner = []
+
+    imags_centroid = []
+    imags_corner = []
+
     for key, table in my_dict.items():
         if table.nnodes_per_element == 1:
             reals = reals_centroid
+            imags = imags_centroid
         else:
             reals = reals_corner
+            imags = imags_corner
 
         if table.analysis_code in {1, 2, 6, 8}:
             # 1: statics
@@ -141,12 +150,15 @@ def split_quad_table_by_type(elemental_dicts,
             # 6: time
             # 8: post-buckling
             reals.append((key, table))
+        elif table.analysis_code in {9}:
+            # complex eigenvalues
+            imags.append((key, table))
         else:  # pragma: no cover
             raise NotImplementedError(table.analysis_code)
 
     if len(reals_centroid):
         name_real = (result_group, 'QUAD_CEN')
-        key0, table0 = reals_corner[0]
+        key0, table0 = reals_centroid[0]
         h5_table_dict = table0.h5_table_dict()
         elemental_dicts.append((name_real, reals_corner, h5_table_dict))
     if len(reals_corner):
@@ -154,6 +166,17 @@ def split_quad_table_by_type(elemental_dicts,
         key0, table0 = reals_corner[0]
         h5_table_dict = table0.h5_table_dict()
         elemental_dicts.append((name_real, reals_corner, h5_table_dict))
+
+    if len(imags_centroid):
+        name_imag = (result_group, 'QUAD_CEN_CPLX')
+        key0, table0 = imags_centroid[0]
+        h5_table_dict = table0.h5_table_dict()
+        elemental_dicts.append((name_imag, reals_corner, h5_table_dict))
+    if len(imags_corner):
+        name_imag = (result_group, 'QUAD_CN_CPLX')  # corner
+        key0, table0 = imags_corner[0]
+        h5_table_dict = table0.h5_table_dict()
+        elemental_dicts.append((name_imag, reals_corner, h5_table_dict))
     return elemental_dicts
 
 def obj_to_domain_key(obj) -> list[tuple]:
@@ -272,11 +295,12 @@ def write_h5_results(model: OP2, h5file: File,
                      root: str='/'):
     """
     supports:
-     - modal/transient/buckling/freq for grid_point_forces/strain_energy
+     - static, modal, transient, buckling, freq
      - domains support
      - nodal/elemental results
      - nodal/elemental index support
      - buckling eigenvalues
+     - complex eigenvalues
 
     doesn't handle:
      - modal eigenvalues
@@ -299,19 +323,19 @@ def write_h5_results(model: OP2, h5file: File,
        - grid point forces
          - might have transient issues
      - elemental stress/strain/force:
-       - crod, ctube, conrod
-       - celas1-4
-       - no cbar
-       - no cbeam
-       - no cshear
-       - ctria3, cquad4 (corner), ctria6, ctriar, cquad8, cquadr
+       - 1d
+         - crod, ctube, conrod, cvisc
+         - celas1-4, cdamp1-4
+         - no cbush
+         - no cbar
+         - no cbeam
+         - no cshear
+       - shells
          - isotropic/composite
-       - no cquad4 (centroid)
-     - force
-       - cvisc
-       - cdamp1-4
-     - elemental stress/strain
-       - ctetra, cpenta, chexa
+         - ctria3, cquad4 (corner), ctria6, ctriar, cquad8, cquadr
+         - no cquad4 (centroid)
+       - solids:
+         - ctetra, cpenta, chexa
     """
     # nastran_group = h5file.create_group('/', 'NASTRAN')
     result_group = h5file.create_group(nastran_group, 'RESULT')
@@ -324,8 +348,100 @@ def write_h5_results(model: OP2, h5file: File,
     write_elemental_dicts(elemental_dicts, key_to_id_map, h5file, result_group, nastran_index_result_group)
     write_nodal_dicts(nodal_dicts, key_to_id_map, h5file, result_group, nastran_index_result_group)
     write_summary(model, h5file, result_group, nastran_index_result_group)
+    write_strain_energy(model, h5file, result_group, nastran_index_result_group)
+
+
+def write_strain_energy(model: OP2, h5file: File, result_group, index_group):
+    strain_energy = model.op2_results.strain_energy
+    reals, imags = strain_energy.get_h5_strain_energy_tables()
+
+    if len(reals) + len(imags) == 0:
+        return
+
+    #assert len(reals) == 0, reals
+    assert len(imags) == 0, imags
+
+    energy = h5file.create_group(result_group, 'ENERGY')
+    energy_index = h5file.create_group(index_group, 'ENERGY')
+
+    domain_table_dicti = {
+        "DOMAIN_ID": Int64Col(pos=0),
+        "POSITION": Int64Col(pos=1),
+        "LENGTH": Int64Col(pos=2),
+    }
+    ident_dict = {
+        "IDENT": Int64Col(pos=0),
+        "ELNAME": StringCol(8, pos=1),
+        "ETOTAL": Float64Col(pos=2),
+        "CVALRES": Float64Col(pos=3),
+        "ESUBT": Float64Col(pos=4),
+        "ETOTPOS": Float64Col(pos=5),
+        "ETOTNEG": Float64Col(pos=6),
+    }
+    energy_dict = {
+        "ID": Int64Col(pos=0),
+        "ENERGY": Float64Col(pos=1),
+        "PCT": Float64Col(pos=2),
+        "DEN": Float64Col(pos=3),
+        "IDENT": Int64Col(pos=4),
+        "DOMAIN_ID": Int64Col(pos=5),
+    }
+
+    table_ident  = h5file.create_table(energy, 'IDENT', ident_dict)
+    table_energy = h5file.create_table(energy, 'STRAIN_ELEM', energy_dict)
+    #table_index  = h5file.create_table(energy_index, 'STRAIN_ELEM', domain_table_dicti)
+
+    nelem_types = len(reals)
+    neids = 0
+    for key, obj in reals:
+        #print(obj.get_stats())
+        ntime, _neid, _nresult = obj.data.shape
+        for itime in range(ntime):
+            element = obj.element[itime, :]
+            ilast = np.where(element == 100000000)[0][0]
+            neids += ilast
+
+    arr_ident  = np.empty(nelem_types, dtype=table_ident.dtype)
+    arr_energy = np.empty(neids, dtype=table_energy.dtype)
+    #arr_index  = np.empty(nelem_types, dtype=table_index.dtype)
+    i0 = 0
+    eid0 = 0
+    domain_id0 = 1
+    for key, obj in reals:
+        #print(obj.get_stats())
+        ntime, neid, nresult = obj.data.shape
+        for itime in range(ntime):
+            i1 = i0 + 1
+            element = obj.element[itime, :]
+            #print(f'element = {element}')
+            ilast = np.where(element == 100000000)[0][0]
+            eid1 = eid0 + ilast
+            #print(f'ilast = {ilast}')
+            #print(obj.data[itime, :, :])
+            arr_ident["IDENT"] = i0
+            arr_ident["ELNAME"] = i0
+            arr_ident["ETOTAL"] = obj.data[itime, ilast, 0]
+            arr_ident["CVALRES"] = obj.cvalres
+            arr_ident["ESUBT"] = 0.0
+            arr_ident["ETOTPOS"] = obj.etotpos
+            arr_ident["ETOTNEG"] = obj.etotneg
+            
+            arr_energy["ID"][eid0:eid1] = element[:ilast]
+            arr_energy["ENERGY"][eid0:eid1] = obj.data[itime, :ilast, 0]
+            arr_energy["PCT"][eid0:eid1] = obj.data[itime, :ilast, 1]
+            arr_energy["DEN"][eid0:eid1] = obj.data[itime, :ilast, 2]
+            arr_energy["IDENT"][eid0:eid1] = element[:ilast]
+            arr_energy["DOMAIN_ID"][eid0:eid1] = domain_id0
+            i0 = i1
+            eid0 = eid1
+
 
 def write_summary(model: OP2, h5file: File, result_group, index_group):
+    """
+    - no modal eigenvalues
+    - buckling eigenvalues
+    - complex eigenvalues
+    """
     is_summary = False
     domain_table_dicti = {
         "DOMAIN_ID": Int64Col(pos=0),
@@ -341,7 +457,7 @@ def write_summary(model: OP2, h5file: File, result_group, index_group):
                 summary_index = h5file.create_group(index_group, 'SUMMARY')
                 is_summary = True
 
-            name = 'EIGENVALUE'
+            name = 'EIGENVALUE'  # TODO: should say _CPLX for complex eigenvalues
             h5_table_dict = obj.h5_table_dict()
             table = h5file.create_table(summary, name, h5_table_dict)
             table_index = h5file.create_table(summary_index, name, domain_table_dicti)

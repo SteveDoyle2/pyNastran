@@ -26,6 +26,64 @@ class ComplexSolidArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    def h5_table_dict(self) -> dict:
+        neid = len(self.element_cid)
+        neid_nnode = len(self.element_node)
+        nnode = neid_nnode // neid
+
+        from tables import Int64Col, Float64Col, StringCol
+        h5_table_dict = {
+            'EID': Int64Col(pos=0),
+            'CID': Int64Col(pos=1),
+            'CTYPE': StringCol(4, pos=2),
+            'GRID': Int64Col(shape=(nnode,), pos=3),
+
+            'XR': Float64Col(shape=(nnode,), pos=4),
+            'YR': Float64Col(shape=(nnode,), pos=5),
+            'ZR': Float64Col(shape=(nnode,), pos=6),
+            'TXYR': Float64Col(shape=(nnode,), pos=7),
+            'TYZR': Float64Col(shape=(nnode,), pos=8),
+            'TZXR': Float64Col(shape=(nnode,), pos=9),
+
+            'XI': Float64Col(shape=(nnode,), pos=10),
+            'YI': Float64Col(shape=(nnode,), pos=11),
+            'ZI': Float64Col(shape=(nnode,), pos=12),
+            'TXYI': Float64Col(shape=(nnode,), pos=13),
+            'TYZI': Float64Col(shape=(nnode,), pos=14),
+            'TZXI': Float64Col(shape=(nnode,), pos=15),
+
+            'DOMAIN_ID': Int64Col(pos=16),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        neid = len(self.element_cid)
+        neid_nnode = len(self.element_node)
+        nnode = neid_nnode // neid
+        ntime, neid_nnode, nresult = self.data.shape
+        
+        nodes = self.element_node[:, 1].reshape(neid, nnode)
+        data = self.data.reshape(ntime, neid, nnode, nresult)
+
+        arr["EID"][ntime_neid0:ntime_neid1] = self.element_cid[:, 0]
+        arr["CID"][ntime_neid0:ntime_neid1] = self.element_cid[:, 1]
+        arr["CTYPE"][ntime_neid0:ntime_neid1] = 'GRID'
+        arr["GRID"][ntime_neid0:ntime_neid1] = nodes
+
+        arr["XR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0].real
+        arr["YR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1].real
+        arr["ZR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 2].real
+        arr["TXYR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 3].real
+        arr["TYZR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 4].real
+        arr["TZXR"][ntime_neid0:ntime_neid1] = data[itime, :, :, 5].real
+
+        arr["XI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 0].imag
+        arr["YI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 1].imag
+        arr["ZI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 2].imag
+        arr["TXYI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 3].imag
+        arr["TYZI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 4].imag
+        arr["TZXI"][ntime_neid0:ntime_neid1] = data[itime, :, :, 5].imag
+
     @property
     def is_real(self) -> bool:
         return False

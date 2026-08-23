@@ -348,7 +348,6 @@ def _write_table_header(table_name: str, op2_file, fascii, date):
     #table_header = [8, 'BOUGV1  ', 8]
     write_table_header(op2_file, fascii, table_name)
 
-
     #read_markers -> [4, -1, 4]
     #get_nmarkers- [4, 0, 4]
     #read_record - marker = [4, 7, 4]
@@ -418,6 +417,29 @@ class ComplexEigenvalues(BaseScalarObject):
         self.cycles = np.zeros(nmodes, dtype='float32')
         self.damping = np.zeros(nmodes, dtype='float32')
         self.data_frame = None
+
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col, StringCol
+        h5_table_dict = {
+            'MODE': Int64Col(pos=0),
+            'ORDER': Int64Col(pos=1),
+            'REIGEN': Float64Col(pos=2),
+            'IEIGEN': Float64Col(pos=3),
+            'FREQ': Float64Col(pos=4),
+            'DAMP': Float64Col(pos=5),
+            'SPIN_SPEED': Float64Col(pos=6),
+            'DOMAIN_ID': Int64Col(pos=7),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr):
+        arr["MODE"] = self.mode
+        arr["ORDER"] = self.extraction_order
+        arr["REIGEN"] = self.eigenvalues.real
+        arr["IEIGEN"] = self.eigenvalues.imag
+        arr["FREQ"] = self.cycles
+        arr["DAMP"] = self.damping
+        arr["SPIN_SPEED"] = 1.0
 
     def __eq__(self, table):  # pragma: no cover
         return True
@@ -696,7 +718,6 @@ class BucklingEigenvalues(BaseScalarObject):
         self.generalized_mass = np.zeros(nmodes, dtype='float32')
         self.generalized_stiffness = np.zeros(nmodes, dtype='float32')
         self.data_frame = None
-
 
     def h5_table_dict(self) -> dict:
         from tables import Int64Col, Float64Col, StringCol

@@ -102,6 +102,18 @@ class TestOP2Writer(unittest.TestCase):
         h5_filename = MODEL_PATH / 'elements' / 'model_freq_elements2.h5'
         op2.write_h5(h5_filename, include_geometry=True)
 
+    @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
+    def test_modes_complex_elements_h5_op2(self):
+        log = SimpleLogger(level='warning')
+        op2_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.op2'
+
+        op2 = OP2(debug=True, log=log, mode=None)
+        op2.read_op2(op2_filename)
+        # print(op2.get_op2_stats())
+
+        h5_filename = MODEL_PATH / 'elements' / 'model_modes_complex_elements.h5'
+        op2.write_h5(h5_filename, include_geometry=True)
+
     def test_write_solid_bending2(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
