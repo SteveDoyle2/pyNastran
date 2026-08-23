@@ -9,6 +9,21 @@ class RealTemperatureArray(RealScalarTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealScalarTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'ID': Int64Col(pos=0),
+            'VALUE': Float64Col(pos=1),
+            'DOMAIN_ID': Int64Col(pos=2),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr,
+                        ntime_nnode0: int, ntime_nnode1: int,
+                        itime: int):
+        arr["ID"][ntime_nnode0:ntime_nnode1] = self.node_gridtype[:, 0]
+        arr["VALUE"][ntime_nnode0:ntime_nnode1] = self.data[itime, :, 0]
+
     def write_csv(self, csv_file: TextIO,
                   is_exponent_format: bool=False,
                   is_mag_phase: bool=False, is_sort1: bool=True,

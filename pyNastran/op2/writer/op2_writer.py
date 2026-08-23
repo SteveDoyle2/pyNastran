@@ -63,7 +63,7 @@ class OP2Writer(OP2_F06_Common):
                  include_geometry: bool=True,
                  op2_flags: dict[str, dict[str, bool]]=None) -> None:
         from tables import File
-        elemental_dicts, nodal_dicts, key_to_id_map = get_h5_elemental_nodal(self)
+        elemental_dicts, nodal_dicts, se_dicts, key_to_id_map = get_h5_elemental_nodal(self)
 
         with File(h5_filename, 'w') as h5file:
             nastran_group = h5file.create_group('/', 'NASTRAN')
@@ -71,7 +71,7 @@ class OP2Writer(OP2_F06_Common):
             #     print(self)
             #     self.model.writer.write_h5(h5file, nastran_group)
             write_h5_results(self, h5file, nastran_group, key_to_id_map,
-                             elemental_dicts, nodal_dicts)
+                             elemental_dicts, nodal_dicts, se_dicts, root='/')
 
     def write_op2(self, op2_out_filename: PathLike,
                   post: int=-1,

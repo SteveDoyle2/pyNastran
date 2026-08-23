@@ -582,6 +582,19 @@ class RealSpringDamperForceArray(RealForceObject):
         # if not is_sort1:
         #     raise NotImplementedError('SORT2')
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'EID': Int64Col(pos=0),
+            'F': Float64Col(pos=1),
+            'DOMAIN_ID': Int64Col(pos=2),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        arr["EID"][ntime_neid0:ntime_neid1] = self.element
+        arr["F"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0]
+
     @classmethod
     def add_static_case(cls, table_name: str, element_name: str,
                         element, data, isubcase,
@@ -1074,7 +1087,7 @@ class RealRodForceArray(RealForceObject):
             'EID': Int64Col(pos=0),
             'AF': Float64Col(pos=1),
             'TRQ': Float64Col(pos=2),
-            'DOMAIN_ID': Int64Col(pos=5),
+            'DOMAIN_ID': Int64Col(pos=3),
         }
         return h5_table_dict
 
@@ -2670,6 +2683,21 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
 
         # if not is_sort1:
         #     raise NotImplementedError('SORT2')
+
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'EID': Int64Col(pos=0),
+            'AF': Float64Col(pos=1),
+            'TRQ': Float64Col(pos=2),
+            'DOMAIN_ID': Int64Col(pos=3),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
+        arr["EID"][ntime_neid0:ntime_neid1] = self.element
+        arr["AF"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0]
+        arr["TRQ"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1]
 
     @property
     def nnodes_per_element(self) -> int:

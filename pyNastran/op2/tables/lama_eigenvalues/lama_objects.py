@@ -35,6 +35,33 @@ class RealEigenvalues(BaseScalarObject):
         self.generalized_stiffness = np.zeros(nmodes, dtype='float32')
         self.data_frame = None
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col, StringCol
+        h5_table_dict = {
+            'MODE': Int64Col(pos=0),
+            'ORDER': Int64Col(pos=1),
+            'EIGEN': Float64Col(pos=2),
+            'OMEGA': Float64Col(pos=3),
+            'FREQ': Float64Col(pos=4),
+            'MASS': Float64Col(pos=5),
+            'STIFF': Float64Col(pos=6),
+            'RESFLG': Float64Col(pos=7),
+            'FLDFLG': Float64Col(pos=8),
+            'DOMAIN_ID': Int64Col(pos=9),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr):
+        arr["MODE"] = self.mode
+        arr["ORDER"] = self.extraction_order
+        arr["EIGEN"] = self.eigenvalues
+        arr["OMEGA"] = self.radians
+        arr["FREQ"] = self.cycles
+        arr["MASS"] = self.generalized_mass
+        arr["STIFF"] = self.generalized_stiffness
+        arr["RESFLG"] = self.cycles
+        arr["FLDFLG"] = self.cycles
+
     def __eq__(self, table):  # pragma: no cover
         return True
 
@@ -74,6 +101,10 @@ class RealEigenvalues(BaseScalarObject):
 
     @property
     def is_complex(self) -> bool:
+        return False
+
+    @property
+    def is_buckling(self) -> bool:
         return False
 
     def add_f06_line(self, data, imode):
@@ -459,6 +490,10 @@ class ComplexEigenvalues(BaseScalarObject):
     @property
     def is_complex(self) -> bool:
         return True
+
+    @property
+    def is_buckling(self) -> bool:
+        return False
 
     def add_op2_line(self, data, i):
         (root_num, extract_order, eigr, eigi, cycle, damping) = data

@@ -91,6 +91,30 @@ class TestOP2Writer(unittest.TestCase):
         op2.write_h5(h5_filename, include_geometry=True)
 
     @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
+    def test_static_elements_h5_op2(self):
+        log = SimpleLogger(level='warning')
+        op2_filename = MODEL_PATH / 'elements' / 'static_elements.op2'
+
+        op2 = OP2(debug=True, log=log, mode=None)
+        op2.read_op2(op2_filename)
+        # print(op2.get_op2_stats())
+
+        h5_filename = MODEL_PATH / 'elements' / 'model_static_elements.h5'
+        op2.write_h5(h5_filename, include_geometry=True)
+
+    @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
+    def test_modes_elements_h5_op2(self):
+        log = SimpleLogger(level='warning')
+        op2_filename = MODEL_PATH / 'elements' / 'modes_elements.op2'
+
+        op2 = OP2(debug=True, log=log, mode=None)
+        op2.read_op2(op2_filename)
+        # print(op2.get_op2_stats())
+
+        h5_filename = MODEL_PATH / 'elements' / 'model_modes_elements.h5'
+        op2.write_h5(h5_filename, include_geometry=True)
+
+    @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
     def test_freq_elements2_h5_op2(self):
         log = SimpleLogger(level='warning')
         op2_filename = MODEL_PATH / 'elements' / 'freq_elements2.op2'
@@ -100,6 +124,30 @@ class TestOP2Writer(unittest.TestCase):
         # print(op2.get_op2_stats())
 
         h5_filename = MODEL_PATH / 'elements' / 'model_freq_elements2.h5'
+        op2.write_h5(h5_filename, include_geometry=True)
+
+    @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
+    def test_time_elements_h5_op2(self):
+        log = SimpleLogger(level='warning')
+        op2_filename = MODEL_PATH / 'elements' / 'time_elements.op2'
+
+        op2 = OP2(debug=True, log=log, mode=None)
+        op2.read_op2(op2_filename)
+        # print(op2.get_op2_stats())
+
+        h5_filename = MODEL_PATH / 'elements' / 'model_time_elements.h5'
+        op2.write_h5(h5_filename, include_geometry=True)
+
+    @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
+    def test_time_thermal_elements_h5_op2(self):
+        log = SimpleLogger(level='warning')
+        op2_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.op2'
+
+        op2 = OP2(debug=True, log=log, mode=None)
+        op2.read_op2(op2_filename)
+        # print(op2.get_op2_stats())
+
+        h5_filename = MODEL_PATH / 'elements' / 'model_time_thermal_elements.h5'
         op2.write_h5(h5_filename, include_geometry=True)
 
     @unittest.skipIf(not IS_PYTABLES, 'no hdf5')

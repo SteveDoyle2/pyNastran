@@ -1279,6 +1279,27 @@ class StrainEnergy:
         self.cfast_strain_energy = {}
         self.cseam_strain_energy = {}
 
+    def get_h5_strain_energy_tables(self) -> tuple[list, list]:
+        # only tested for real
+        tables = self.get_table_types(include_class=False)
+        reals = []
+        imags = []
+        for table_name in tables:
+            name = table_name.split('_')[0].upper()
+            if name.startswith('C') and name not in {'CONM2', 'CONROD'}:
+                # CBAR -> BAR
+                name = name[1:]
+            objs_dict = getattr(self, table_name)
+            for key, obj in objs_dict.items():
+                #print('SE', name)
+                if obj.is_real:
+                    reals.append((key, obj))
+                elif obj.is_complex:
+                    imags.append((key, obj))
+                else:  # pragma: no cover
+                    raise NotImplementedError(obj.get_stats())
+        return reals, imags
+
     def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             # OEE - strain energy density # tCode=18

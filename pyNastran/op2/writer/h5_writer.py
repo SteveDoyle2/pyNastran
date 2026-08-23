@@ -32,26 +32,26 @@ def get_h5_elemental_nodal(model: OP2):
     modal_contribution.get_h5_nodal_tables(nodal_dicts)
     modal_contribution.get_h5_elemental_tables(elemental_dicts)
 
-    # only tested for real
     split_table_by_type(nodal_dicts, model.displacements,
-                        'DISPLACEMENT', 'DISPLACEMENT_CPLX', 'DISPLACEMENT_RANDOM')
+                        'DISPLACEMENT', 'DISPLACEMENT_CPLX', '')
     split_table_by_type(nodal_dicts, model.velocities,
-                        'VELOCITY', 'VELOCITY_CPLX', 'VELOCITY_RANDOM')
+                        'VELOCITY', 'VELOCITY_CPLX', '')
     split_table_by_type(nodal_dicts, model.accelerations,
-                        'ACCELERATION', 'ACCELERATION_CPLX', 'ACCELERATION_RANDOM')
+                        'ACCELERATION', 'ACCELERATION_CPLX', '')
     split_table_by_type(nodal_dicts, model.eigenvectors,
-                        'EIGENVECTOR', 'EIGENVECTOR_CPLX', 'EIGENVECTOR_RANDOM')
+                        'EIGENVECTOR', 'EIGENVECTOR_CPLX', '')
     split_table_by_type(nodal_dicts, model.load_vectors,
-                        'APPLIED_LOAD', 'APPLIED_LOAD_CPLX', 'APPLIED_LOAD_RANDOM')
+                        'APPLIED_LOAD', 'APPLIED_LOAD_CPLX', '')
     split_table_by_type(nodal_dicts, model.mpc_forces,
-                        'MPC_FORCE', 'MPC_FORCE_CPLX', 'MPC_FORCE_RANDOM')
+                        'MPC_FORCE', 'MPC_FORCE_CPLX', '')
     split_table_by_type(nodal_dicts, model.spc_forces,
-                        'SPC_FORCE', 'SPC_FORCE_CPLX', 'SPC_FORCE_RANDOM')
+                        'SPC_FORCE', 'SPC_FORCE_CPLX', '')
     split_table_by_type(nodal_dicts, model.grid_point_forces,
-                        'GRID_POINT_FORCE', '', '')
+                        'GRID_POINT_FORCE', 'GRID_POINT_FORCE_CPLX', '')
+    split_table_by_type(nodal_dicts, model.temperatures,
+                        'TEMPERATURE', '', '')
 
-    # assert len(model.displacements) + len(model.eigenvectors) > 0, len(nodal_dicts)
-    assert len(nodal_dicts) > 0, nodal_dicts
+    # assert len(nodal_dicts) > 0, nodal_dicts
 
     elemental_dicts = [(name, dicti, table_dicti)
                        for name, dicti, table_dicti in elemental_dicts if len(dicti)]
@@ -63,6 +63,7 @@ def get_h5_elemental_nodal(model: OP2):
             for key in keys:
                 if key not in key_to_id_map:
                     key_to_id_map.append(key)
+
     for name, key_obj_tuple, table_dicti in nodal_dicts:
         for obj_key, obj in key_obj_tuple:
             # print('nodal', obj)
@@ -70,14 +71,37 @@ def get_h5_elemental_nodal(model: OP2):
             for key in keys:
                 if key not in key_to_id_map:
                     key_to_id_map.append(key)
-    return elemental_dicts, nodal_dicts, key_to_id_map
+
+    strain_energy = model.op2_results.strain_energy
+    se_reals, se_imags = strain_energy.get_h5_strain_energy_tables()
+
+    strain_energy_dicts = []
+    if len(se_reals):
+        strain_energy_dicts.append(('REAL', se_reals, {}))
+    if len(se_imags):
+        assert len(se_imags) == 0, se_imags
+        strain_energy_dicts.append(('IMAG', se_imags, {}))
+
+    for name, key_obj_tuple, table_dicti in strain_energy_dicts:
+        for obj_key, obj in key_obj_tuple:
+            # print('se', obj)
+            keys = obj_to_domain_key(obj)
+            for key in keys:
+                if key not in key_to_id_map:
+                    key_to_id_map.append(key)
+    
+    return elemental_dicts, nodal_dicts, strain_energy_dicts, key_to_id_map
 
 def split_table_by_type(nodal_dicts: list[tuple],
                         tables_dict: dict,
                         name_real: str | tuple[str, str]='',
                         name_imag: str | tuple[str, str]='',
-                        name_random: str | tuple[str, str]='') -> list[tuple]:
-    """breaks the tables into separate blocks based on result type (e.g., real vs. imag)"""
+                        name_random: str | tuple[str, str]='',
+                        ) -> list[tuple]:
+    """
+    breaks the tables into separate blocks based on result
+    type (e.g., real vs. imag)
+    """
     reals = []
     imags = []
     randoms = []
@@ -100,17 +124,15 @@ def split_table_by_type(nodal_dicts: list[tuple],
             imags.append((key, table))
         else:  # pragma: no cover
             raise NotImplementedError(table.analysis_code)
-            # 7: pre-buckling
-            # 8: post-buckling
-            # 9: complex eigenvalues
+        # 7: pre-buckling
 
-    if reals:
+    if reals and len(name_real):
         assert len(name_real), name_real
         key0, table0 = reals[0]
         h5_table_dict = table0.h5_table_dict()
         nodal_dicts.append((name_real, reals, h5_table_dict))
     elif reals:
-        warnings.warn(f'missing {name_real}')
+        warnings.warn(f'missing real {name_real}')
 
     if imags and len(name_imag):
         assert len(name_imag), name_imag
@@ -118,13 +140,15 @@ def split_table_by_type(nodal_dicts: list[tuple],
         h5_table_dict = table0.h5_table_dict()
         nodal_dicts.append((name_imag, imags, h5_table_dict))
     elif imags:
-        warnings.warn(f'missing {name_imag}')
+        warnings.warn(f'missing {name_imag} (real={name_real})')
 
     if randoms and len(name_random):
         assert len(name_random), name_random
         key0, table0 = randoms[0]
         h5_table_dict = table0.h5_table_dict()
         nodal_dicts.append((name_random, randoms, h5_table_dict))
+    elif randoms:
+        warnings.warn(f'missing random {name_random} (real={name_real})')
     return nodal_dicts
 
 def split_quad_table_by_type(elemental_dicts,
@@ -234,7 +258,7 @@ def obj_to_domain_key(obj) -> list[tuple]:
                    design_cycle, random, se,
                    afpm, trmc, instance, module, substep, impfid, ndomains)
             keys.append(key)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(obj.get_stats())
     # ID, SUBCASE, STEP, ANALYSIS, TIME_FREQ_EIGR, EIGI, MODE, DESIGN_CYCLE, RANDOM, SE,
     #     AFPM, TRMC, INSTANCE, MODULE, SUBSTEP, IMPFID,
@@ -291,21 +315,19 @@ def write_h5_domain(h5file: File, result_group, key_to_id_map):
 
 def write_h5_results(model: OP2, h5file: File,
                      nastran_group, key_to_id_map,
-                     elemental_dicts, nodal_dicts,
+                     elemental_dicts, nodal_dicts, se_dicts,
                      root: str='/'):
     """
     supports:
-     - static, modal, transient, buckling, freq
+     - static, modal, transient, buckling, freq, thermal
      - domains support
      - nodal/elemental results
-     - nodal/elemental index support
-     - buckling eigenvalues
-     - complex eigenvalues
+     - eigenvalues
+       - modal, buckling, complex
+     - strain energy
 
     doesn't handle:
-     - modal eigenvalues
-     - strain energy
-     - thermal
+     - thermal forces
      - elastic/plastic/thermal stress/strain
      - random elemental results (stress/strain/force/strain_energy)
      - optimization
@@ -319,7 +341,8 @@ def write_h5_results(model: OP2, h5file: File,
 
     real/complex result types supported:
      - nodal:
-       - displacement, velocity, acceleration, load_vector, spc/mpc forces
+       - displacement, velocity, acceleration
+       - load_vector, spc/mpc forces, eigenvector
        - grid point forces
          - might have transient issues
      - elemental stress/strain/force:
@@ -327,8 +350,7 @@ def write_h5_results(model: OP2, h5file: File,
          - crod, ctube, conrod, cvisc
          - celas1-4, cdamp1-4
          - no cbush
-         - no cbar
-         - no cbeam
+         - no cbar, cbeam, cbend
          - no cshear
        - shells
          - isotropic/composite
@@ -337,6 +359,7 @@ def write_h5_results(model: OP2, h5file: File,
        - solids:
          - ctetra, cpenta, chexa
     """
+    assert isinstance(root, str), root
     # nastran_group = h5file.create_group('/', 'NASTRAN')
     result_group = h5file.create_group(nastran_group, 'RESULT')
 
@@ -348,18 +371,23 @@ def write_h5_results(model: OP2, h5file: File,
     write_elemental_dicts(elemental_dicts, key_to_id_map, h5file, result_group, nastran_index_result_group)
     write_nodal_dicts(nodal_dicts, key_to_id_map, h5file, result_group, nastran_index_result_group)
     write_summary(model, h5file, result_group, nastran_index_result_group)
-    write_strain_energy(model, h5file, result_group, nastran_index_result_group)
+    write_strain_energy(
+        model, h5file, result_group, nastran_index_result_group,
+        se_dicts, key_to_id_map)
 
 
-def write_strain_energy(model: OP2, h5file: File, result_group, index_group):
-    strain_energy = model.op2_results.strain_energy
-    reals, imags = strain_energy.get_h5_strain_energy_tables()
-
-    if len(reals) + len(imags) == 0:
+def write_strain_energy(model: OP2, h5file: File,
+                        result_group, index_group,
+                        se_dicts, key_to_id_map):
+    """
+    done
+     - sort like MSC (loop over modes and then element types)
+    TODO:
+     - verify ident
+     - verify domain
+    """
+    if len(se_dicts) == 0:
         return
-
-    #assert len(reals) == 0, reals
-    assert len(imags) == 0, imags
 
     energy = h5file.create_group(result_group, 'ENERGY')
     energy_index = h5file.create_group(index_group, 'ENERGY')
@@ -385,98 +413,184 @@ def write_strain_energy(model: OP2, h5file: File, result_group, index_group):
         "DEN": Float64Col(pos=3),
         "IDENT": Int64Col(pos=4),
         "DOMAIN_ID": Int64Col(pos=5),
+        #"ELNAME": StringCol(8, pos=6),
     }
 
-    table_ident  = h5file.create_table(energy, 'IDENT', ident_dict)
-    table_energy = h5file.create_table(energy, 'STRAIN_ELEM', energy_dict)
-    #table_index  = h5file.create_table(energy_index, 'STRAIN_ELEM', domain_table_dicti)
+    assert len(se_dicts) == 1, se_dicts
 
-    nelem_types = len(reals)
-    neids = 0
-    for key, obj in reals:
-        #print(obj.get_stats())
-        ntime, _neid, _nresult = obj.data.shape
-        for itime in range(ntime):
-            element = obj.element[itime, :]
-            ilast = np.where(element == 100000000)[0][0]
-            neids += ilast
+    for group_name, key_obj_tuple, fake_dict in se_dicts:
+        table_ident  = h5file.create_table(energy, 'IDENT', ident_dict)
+        table_energy = h5file.create_table(energy, 'STRAIN_ELEM', energy_dict)
+        table_index  = h5file.create_table(energy_index, 'STRAIN_ELEM', domain_table_dicti)
 
-    arr_ident  = np.empty(nelem_types, dtype=table_ident.dtype)
-    arr_energy = np.empty(neids, dtype=table_energy.dtype)
-    #arr_index  = np.empty(nelem_types, dtype=table_index.dtype)
-    i0 = 0
-    eid0 = 0
-    domain_id0 = 1
-    for key, obj in reals:
-        #print(obj.get_stats())
-        ntime, neid, nresult = obj.data.shape
-        for itime in range(ntime):
-            i1 = i0 + 1
-            element = obj.element[itime, :]
-            #print(f'element = {element}')
-            ilast = np.where(element == 100000000)[0][0]
-            eid1 = eid0 + ilast
-            #print(f'ilast = {ilast}')
-            #print(obj.data[itime, :, :])
-            arr_ident["IDENT"] = i0
-            arr_ident["ELNAME"] = i0
-            arr_ident["ETOTAL"] = obj.data[itime, ilast, 0]
-            arr_ident["CVALRES"] = obj.cvalres
-            arr_ident["ESUBT"] = 0.0
-            arr_ident["ETOTPOS"] = obj.etotpos
-            arr_ident["ETOTNEG"] = obj.etotneg
+        neids = 0
+        nelem_types_nmodes = 0
+        
+        ntimes = 0
+        for key, obj in key_obj_tuple:
+            #print(f'nelem_types_nmodes {obj.element_name} = {nelem_types_nmodes}')
+            #print(obj.get_stats())
+            ntime, neid, _nresult = obj.data.shape
+            if ntimes == 0:
+                ntimes = ntime
+            else:
+                assert ntime == ntimes, 'verifying same number of times/modes'
             
-            arr_energy["ID"][eid0:eid1] = element[:ilast]
-            arr_energy["ENERGY"][eid0:eid1] = obj.data[itime, :ilast, 0]
-            arr_energy["PCT"][eid0:eid1] = obj.data[itime, :ilast, 1]
-            arr_energy["DEN"][eid0:eid1] = obj.data[itime, :ilast, 2]
-            arr_energy["IDENT"][eid0:eid1] = element[:ilast]
-            arr_energy["DOMAIN_ID"][eid0:eid1] = domain_id0
-            i0 = i1
-            eid0 = eid1
+            assert isinstance(obj.element_name, str), obj.element_name
+            for itime in range(ntime):
+                element = obj.element[itime, :]
+                #ilast = np.where(element == 100000000)[0][0]
+                #neids += ilast
+                neids += neid
+            nelem_types_nmodes += ntime
 
+        #print(f'{group_name} strain_energy neids={neids}')
+        arr_ident  = np.empty(nelem_types_nmodes, dtype=table_ident.dtype)
+        arr_energy = np.empty(neids, dtype=table_energy.dtype)
+        arr_index  = np.empty(nelem_types_nmodes, dtype=table_index.dtype)
+
+        i = 0
+        eid0 = 0
+        iposition = 1
+
+        key0, obj0 = key_obj_tuple[0]
+        domain_keys = obj_to_domain_key(obj0)
+        domain_key = domain_keys[0]
+        idomain0 = key_to_id_map.index(domain_key) + 1
+
+        nelement_types = len(key_obj_tuple)
+        for itime in range(ntime):
+            arr_index["DOMAIN_ID"][itime] = idomain0 + itime
+            arr_index["POSITION"][itime] = iposition
+            arr_index["LENGTH"][itime] = nelement_types
+
+            for key, obj in key_obj_tuple:
+                #print(f'nelem_types_nmodes {obj.element_name} = {i}')
+                #print(obj.get_stats())
+                ntime, neid, nresult = obj.data.shape
+
+                #----------------
+                element = obj.element[itime, :]
+                #print(f'element = {element}')
+                ilast = np.where(element == 100000000)[0][0]
+                eid1 = eid0 + neid
+                #print(f'ilast = {ilast}')
+                #print(obj.data[itime, :, :])
+                assert isinstance(i, int), i
+                arr_ident["IDENT"][i] = i + 1
+                arr_ident["ELNAME"][i] = obj.element_name
+                arr_ident["ETOTAL"][i] = obj.data[itime, ilast, 0]
+                arr_ident["CVALRES"][i] = obj.cvalres
+                arr_ident["ESUBT"][i] = 0.0   # TODO: what is this?
+                arr_ident["ETOTPOS"][i] = obj.etotpos
+                arr_ident["ETOTNEG"][i] = obj.etotneg
+
+                #print('eids', element)
+                arr_energy["ID"][eid0:eid1] = element
+                arr_energy["ENERGY"][eid0:eid1] = obj.data[itime, :, 0]
+                arr_energy["PCT"][eid0:eid1] = obj.data[itime, :, 1]
+                arr_energy["DEN"][eid0:eid1] = obj.data[itime, :, 2]
+                arr_energy["IDENT"][eid0:eid1] = i + 1
+                arr_energy["DOMAIN_ID"][eid0:eid1] = idomain0 + itime
+                #arr_energy["ELNAME"][eid0:eid1] = obj.element_name
+                eid0 = eid1
+                i += 1
+            iposition += nelement_types
+        
+        assert i == nelem_types_nmodes, f'nelem_types_nmodes={nelem_types_nmodes} i={i}'
+        assert eid0 == neids, f'neids={neids} eid0={eid0}'
+
+        table_ident.append(arr_ident)
+        table_ident.flush()
+        table_energy.append(arr_energy)
+        table_energy.flush()
+        table_index.append(arr_index)
+        table_index.flush()
+
+        #print(list(ident_dict))
+        #print(arr_ident)
+        #print(list(ident_dict))
+        #print('------------------------')
+        #print(list(energy_dict))
+        #print(arr_energy)
+        #print(list(energy_dict))
+    return
 
 def write_summary(model: OP2, h5file: File, result_group, index_group):
     """
-    - no modal eigenvalues
+    - modal eigenvalues
     - buckling eigenvalues
     - complex eigenvalues
+    TODO: modal/buckling use the same flag, but different headers
+      - need an optimization case to test
     """
-    is_summary = False
+    if len(model.eigenvalues) == 0:
+        return
+
     domain_table_dicti = {
         "DOMAIN_ID": Int64Col(pos=0),
         "POSITION": Int64Col(pos=1),
         "LENGTH": Int64Col(pos=2),
     }
+    modes = []
+    buckling = []
+    imags = []
+    assert len(model.eigenvalues) == 1, model.eigenvalues
+    for key, obj in model.eigenvalues.items():
+        if obj.is_real:
+            modes.append((key, obj))
+        if obj.is_buckling:
+            buckling.append((key, obj))
+        if obj.is_complex:
+            imags.append((key, obj))
 
-    if len(model.eigenvalues):
-        assert len(model.eigenvalues) == 1, model.eigenvalues
-        for key, obj in model.eigenvalues.items():
-            if not is_summary:
-                summary = h5file.create_group(result_group, 'SUMMARY')
-                summary_index = h5file.create_group(index_group, 'SUMMARY')
-                is_summary = True
+    eigenvalue_objs = []
+    if len(modes):
+        #print('eigenvalue modes')
+        assert len(buckling) == 0, buckling  # shares common name with modes
+        eigenvalue_objs.append(('EIGENVALUE', modes))
+    if len(buckling):
+        #print('eigenvalue buckling')
+        assert len(modes) == 0, modes  # shares common name with buckling
+        eigenvalue_objs.append(('EIGENVALUE', buckling))
+    if len(imags):
+        #print('eigenvalue imags')
+        eigenvalue_objs.append(('EIGENVALUE_CPLX', imags))
 
-            name = 'EIGENVALUE'  # TODO: should say _CPLX for complex eigenvalues
-            h5_table_dict = obj.h5_table_dict()
-            table = h5file.create_table(summary, name, h5_table_dict)
-            table_index = h5file.create_table(summary_index, name, domain_table_dicti)
+    is_summary = False
+    for name, key_obj_tuple in eigenvalue_objs:
+        #print(name)
+        assert len(key_obj_tuple) == 1, key_obj_tuple
+        key, obj = key_obj_tuple[0]
+        if not is_summary:
+            summary = h5file.create_group(result_group, 'SUMMARY')
+            summary_index = h5file.create_group(index_group, 'SUMMARY')
+            is_summary = True
 
-            nmode = len(obj.mode)
-            arr = np.empty(nmode, dtype=table.dtype)
-            arr_index = np.empty(nmode, dtype=table_index.dtype)
+        h5_table_dict = obj.h5_table_dict()
+        table = h5file.create_table(summary, name, h5_table_dict)
+        table_index = h5file.create_table(summary_index, name, domain_table_dicti)
 
-            idomain0 = 1
-            domains = idomain0 + obj.mode
+        nmode = len(obj.mode)
+        arr = np.empty(nmode, dtype=table.dtype)
+        arr_index = np.empty(nmode, dtype=table_index.dtype)
 
-            obj.add_to_h5_array(arr)
-            arr["DOMAIN_ID"] = domains
+        idomain0 = 1
+        domains = idomain0 + obj.mode
 
-            # domain
-            arr_index["DOMAIN_ID"] = 0
-            arr_index["POSITION"] = 0
-            arr_index["LENGTH"] = nmode
+        obj.add_to_h5_array(arr)
+        arr["DOMAIN_ID"] = domains
 
+        # domain
+        arr_index["DOMAIN_ID"] = 0
+        arr_index["POSITION"] = 0
+        arr_index["LENGTH"] = nmode
+
+        table.append(arr)
+        table.flush()
+        table_index.append(arr_index)
+        table_index.flush()
+    return
 
 def write_elemental_dicts(elemental_dicts: list[tuple],
                           key_to_id_map,
@@ -525,7 +639,7 @@ def write_elemental_dicts(elemental_dicts: list[tuple],
                 for itime in range(ntime):
                     idomain = idomain0 + itime
                     ntime_neid1 = ntime_neid0 + neid
-                    # print(f'idomain={idomain} position={ntime_neid0} length={ntime_neid1-ntime_neid0} neid={neid}')
+                    #print(f'idomain={idomain} position={ntime_neid0} length={ntime_neid1-ntime_neid0} neid={neid}')
                     # print(f'ntime_neid0={ntime_neid0} ntime_neid1={ntime_neid1} nelements={len(obj.element)}')
                     assert ntime_neid1 > ntime_neid0
                     obj.add_to_h5_array(arr, ntime_neid0, ntime_neid1, itime)
@@ -626,7 +740,6 @@ def get_ntime_nnode(name: str, key_obj_tuple) -> tuple[int, int]:
         for key, obj in key_obj_tuple:
             data = obj.data
             ntimei, nnodei = data.shape[:2]
-            # assert ntimei == 1, data.shape  # TODO: limited to statics
             ntime += ntimei
             ntime_nnode += nnodei * ntimei
     else:
