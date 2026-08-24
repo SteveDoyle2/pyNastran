@@ -1302,7 +1302,7 @@ def _load_eigenvalue(h5_result, encoding: str,
         return None
 
     assert obj.class_name == class_name, f'class_name={obj.class_name!r} selected; should be {class_name!r}'
-    keys_to_skip = ['class_name', 'is_complex', 'is_real', 'is_buckling', table_name_str', 'headers']
+    keys_to_skip = ['class_name', 'is_complex', 'is_real', 'is_buckling', 'table_name_str', 'headers']
     for key in h5_result.keys():
         if key in keys_to_skip:
             continue
