@@ -47,6 +47,37 @@ class RealBarArray(OES_Object):
             #self.add_new_eid = self.add_new_eid_sort2
             #self.addNewNode = self.addNewNodeSort2
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'EID': Int64Col(pos=0),
+            'SD': Float64Col(pos=1),
+            'XC': Float64Col(pos=2),
+            'XD': Float64Col(pos=3),
+            'XE': Float64Col(pos=4),
+            'XF': Float64Col(pos=5),
+            'AX': Float64Col(pos=6),
+            'MAX': Float64Col(pos=7),
+            'MIN': Float64Col(pos=8),
+            'MS': Float64Col(pos=9),
+            'DOMAIN_ID': Int64Col(pos=10),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr,
+                        ntime_neid0: int, ntime_neid1: int,
+                        itime: int):
+        arr["EID"][ntime_neid0:ntime_neid1] = self.element
+        arr["SD"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0]
+        arr["XC"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1]
+        arr["XD"][ntime_neid0:ntime_neid1] = self.data[itime, :, 2]
+        arr["XE"][ntime_neid0:ntime_neid1] = self.data[itime, :, 3]
+        arr["XF"][ntime_neid0:ntime_neid1] = self.data[itime, :, 4]
+        arr["AX"][ntime_neid0:ntime_neid1] = self.data[itime, :, 5]
+        arr["MAX"][ntime_neid0:ntime_neid1] = self.data[itime, :, 6]
+        arr["MIN"][ntime_neid0:ntime_neid1] = self.data[itime, :, 7]
+        arr["MS"][ntime_neid0:ntime_neid1] = self.data[itime, :, 8]
+
     @property
     def is_real(self) -> bool:
         return True

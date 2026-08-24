@@ -636,6 +636,7 @@ def write_elemental_dicts(elemental_dicts: list[tuple],
                 data = obj.data
                 ntime = data.shape[0]
                 neid = get_neid(obj)
+                assert neid > 0, neid
                 for itime in range(ntime):
                     idomain = idomain0 + itime
                     ntime_neid1 = ntime_neid0 + neid

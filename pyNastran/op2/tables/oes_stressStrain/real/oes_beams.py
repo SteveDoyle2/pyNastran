@@ -49,6 +49,64 @@ class RealBeamArray(OES_Object):
             #self.add_new_eid = self.add_new_eid_sort2
             #self.addNewNode = self.addNewNodeSort2
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'EID': Int64Col(pos=0),
+            # 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26
+            'GRID': Int64Col(shape=(11), pos=1),
+            'SD': Float64Col(shape=(11), pos=1),
+            'XC': Float64Col(shape=(11), pos=2),
+            'XD': Float64Col(shape=(11), pos=3),
+            'XE': Float64Col(shape=(11), pos=4),
+            'XF': Float64Col(shape=(11), pos=5),
+            #'AX': Float64Col(shape=(11), pos=6),
+            'MAX': Float64Col(shape=(11), pos=6),
+            'MIN': Float64Col(shape=(11), pos=7),
+            'MST': Float64Col(shape=(11), pos=8),
+            'MSC': Float64Col(shape=(11), pos=9),
+            'DOMAIN_ID': Int64Col(pos=10),
+        }
+        return h5_table_dict
+
+    def get_neid(self) -> int:
+        #print(self.element)
+        eids, nodes, data_full = self.data_full(0)
+        #neid = len(nodes) // 11
+        neid = len(eids)
+        assert neid > 0, neid
+        return neid
+        
+    def add_to_h5_array(self, arr,
+                        ntime_neid0: int, ntime_neid1: int,
+                        itime: int):
+        neid = self.get_neid()
+        
+        eids, nodes, data_full = self.data_full(itime)
+        #print('eids', eids)
+        #print('nodes', nodes)
+        neid_nnode, nresult = data_full.shape
+        data = data_full.reshape(neid, 11, nresult)
+        
+        nodes2 = nodes.reshape(neid, 11)
+        # self.element_node
+        #self.xxb[self.itotal] = sd
+        #self.data[self.itime, self.itotal, :] = [sxc, sxd, sxe, sxf,
+        #                                         smax, smin, mst, msc]
+
+        arr["EID"][ntime_neid0:ntime_neid1] = eids
+        arr["GRID"][ntime_neid0:ntime_neid1] = nodes2
+        arr["SD"][ntime_neid0:ntime_neid1] = data[:, :, 0]
+        arr["XC"][ntime_neid0:ntime_neid1] = data[:, :, 1]
+        arr["XD"][ntime_neid0:ntime_neid1] = data[:, :, 2]
+        arr["XE"][ntime_neid0:ntime_neid1] = data[:, :, 3]
+        arr["XF"][ntime_neid0:ntime_neid1] = data[:, :, 4]
+        #arr["AX"][ntime_neid0:ntime_neid1] = data[itime, :, 5]
+        arr["MAX"][ntime_neid0:ntime_neid1] = data[:, :, 5]
+        arr["MIN"][ntime_neid0:ntime_neid1] = data[:, :, 6]
+        arr["MST"][ntime_neid0:ntime_neid1] = data[:, :, 7]
+        arr["MSC"][ntime_neid0:ntime_neid1] = data[:, :, 8]
+
     @property
     def nnodes_per_element(self) -> int:
         return 2
@@ -482,6 +540,74 @@ class RealBeamArray(OES_Object):
         if self.nonlinear_factor in (None, np.nan):
             page_num -= 1
         return page_num
+
+    def data_full(self, itime: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        xxbs = self.xxb
+
+        ueids = np.unique(eids)
+        sxcs = self.data[itime, :, 0]
+        sxds = self.data[itime, :, 1]
+        sxes = self.data[itime, :, 2]
+        sxfs = self.data[itime, :, 3]
+        smaxs = self.data[itime, :, 4]
+        smins = self.data[itime, :, 5]
+        smts = self.data[itime, :, 6]
+        smcs = self.data[itime, :, 7]
+
+        icount = 0
+        nwide = 0
+        ielement = 0
+        eid_list = []
+        node_list = []
+        data_list = []
+        for (xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc) in zip(
+             xxbs, sxcs, sxds, sxes, sxfs, smaxs, smins, smts, smcs):
+
+            if icount == 0:
+                #eid_device = eids_device[ielement]
+                eid_list.append(eids[ielement])
+                nid = nids[ielement]
+                data = [xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc] # 11
+                #print('A', data, len(data))
+                node_list.append(nid)
+                data_list.append(data)
+                ielement += 1
+                icount = 1
+            elif xxb == 1.0:
+                # 11 total nodes, with 1, 11 getting an nid; the other 9 being
+                # xxb sections
+                data = [0., 0., 0., 0., 0., 0., 0., 0., 0.]
+                #print('***adding %s\n' % (10-icount))
+                for unused_j in range(10 - icount):
+                    node_list.append(0)
+                    #print('Z', data, len(data))
+                    data_list.append(data)
+                    nwide += len(data)
+
+                #eid_device2 = eids_device[ielement]
+                #assert eid_device == eid_device2
+                nid = nids[ielement]
+                data = [xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc] # 10
+                #print('B', data, len(data))
+                node_list.append(nid)
+                data_list.append(data)
+                ielement += 1
+                icount = 0
+            else: # elif nid == 0 and icount > 0
+                data = [xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc]  # 10
+                #print('C', data, len(data))
+                node_list.append(0)
+                data_list.append(data)
+                ielement += 1
+                icount += 1
+
+        eids_full = np.array(eid_list, dtype=self.element_node.dtype)
+        nodes = np.array(node_list, dtype=self.element_node.dtype)
+        data_full = np.array(data_list, dtype=self.xxb.dtype)
+        assert data_full.ndim == 2, data_full.shape
+        return eids_full, nodes, data_full
 
     def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):

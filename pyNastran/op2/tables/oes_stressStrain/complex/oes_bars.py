@@ -26,6 +26,66 @@ class ComplexBarArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    def h5_table_dict(self) -> dict:
+        from tables import Int64Col, Float64Col
+        h5_table_dict = {
+            'EID': Int64Col(pos=0),
+            'X1AR': Float64Col(pos=1),
+            'X2AR': Float64Col(pos=2),
+            'X3AR': Float64Col(pos=3),
+            'X4AR': Float64Col(pos=4),
+            'AXR': Float64Col(pos=5),
+
+            'X1AI': Float64Col(pos=6),
+            'X2AI': Float64Col(pos=7),
+            'X3AI': Float64Col(pos=8),
+            'X4AI': Float64Col(pos=9),
+            'AXI': Float64Col(pos=10),
+
+            'X1BR': Float64Col(pos=11),
+            'X2BR': Float64Col(pos=12),
+            'X3BR': Float64Col(pos=13),
+            'X4BR': Float64Col(pos=14),
+
+            'X1BI': Float64Col(pos=15),
+            'X2BI': Float64Col(pos=16),
+            'X3BI': Float64Col(pos=17),
+            'X4BI': Float64Col(pos=18),
+
+            'DOMAIN_ID': Int64Col(pos=19),
+        }
+        return h5_table_dict
+
+    def add_to_h5_array(self, arr,
+                        ntime_neid0: int, ntime_neid1: int,
+                        itime: int):
+
+        arr["EID"][ntime_neid0:ntime_neid1] = self.element
+        arr["X1AR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].real
+        arr["X2AR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].real
+        arr["X3AR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 2].real
+        arr["X4AR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 3].real
+        arr["AXR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 4].real
+
+        #self.data[self.itime, self.itotal, :] = [
+        #    e1a, e2a, e3a, e4a, axial,
+        #    e1b, e2b, e3b, e4b,]
+        arr["X1AI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].imag
+        arr["X2AI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].imag
+        arr["X3AI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 2].imag
+        arr["X4AI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 3].imag
+        arr["AXI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 4].imag
+
+        arr["X1BR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 5].real
+        arr["X2BR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 6].real
+        arr["X3BR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 7].real
+        arr["X4BR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 8].real
+
+        arr["X1BI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 5].imag
+        arr["X2BI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 6].imag
+        arr["X3BI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 7].imag
+        arr["X4AI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 8].imag
+
     def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
