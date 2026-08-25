@@ -7,10 +7,10 @@ from typing import TextIO, BinaryIO, Optional, Any, cast
 
 import numpy as np
 from numpy import float32, float64, complex64, complex128
-from scipy.sparse import coo_matrix  # type: ignore
 from cpylog import SimpleLogger, __version__ as CPYLOG_VERSION
 
 from pyNastran.utils import is_binary_file as file_is_binary, PathLike, PurePath
+from pyNastran.utils.scipy_sparse_utils import coo_matrix
 from pyNastran.utils.mathematics import print_matrix #, print_annotated_matrix
 from pyNastran.op2.result_objects.matrix import Matrix
 if CPYLOG_VERSION > '1.6.0':
@@ -2273,7 +2273,8 @@ def is_saved_matrix(name: str, matrix_names: Optional[list[str]]) -> bool:
     return False
 
 def get_dtype_dtval(matrix_type: int,
-                    precision: str) -> tuple[Any, Any]:
+                    precision: str,
+                    is_complex: bool) -> tuple[Any, Any]:
     matrix_type = MATRIX_TYPE_MAP[(matrix_type, precision)]
     if matrix_type in (1, 3):
         dtype = float32 if not is_complex else complex64
@@ -2340,7 +2341,7 @@ def _read_op4_ascii(op4_filename: PathLike,
         line_size = int(size_str.split(',')[1].split('E')[1].split('.')[0])
 
         is_complex = matrix_type in (3, 4)
-        dtype, dt_val = get_dtype_dtval(matrix_type, precision)
+        dtype, dt_val = get_dtype_dtval(matrix_type, precision, is_complex)
 
         # First column header
         line = lines[i]

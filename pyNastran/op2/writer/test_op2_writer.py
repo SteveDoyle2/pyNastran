@@ -112,6 +112,9 @@ class TestOP2Writer(unittest.TestCase):
     def test_modes_elements_h5_op2(self):
         log = SimpleLogger(level='warning')
         op2_filename = MODEL_PATH / 'elements' / 'modes_elements.op2'
+        h5_filename = MODEL_PATH / 'elements' / 'modes_elements.h5'
+        h5_model = OP2(debug=True, log=log, mode=None)
+        h5_model.read_h5(h5_filename)
 
         op2 = OP2(debug=True, log=log, mode=None)
         op2.read_op2(op2_filename)

@@ -494,8 +494,8 @@ class ModalContribution:
         split_table_by_type(elemental_dicts, self.celas4_strain,
                             ('STRAIN', 'ELAS4_COMP'), ('STRAIN', 'ELAS4_CPLX'), ('STRAIN', 'ELAS4_RANDOM'))
 
-        split_table_by_type(elemental_dicts, self.cbar_strain,
-                            ('STRAIN', 'BAR'), ('STRAIN', 'BAR_CPLX'), ('STRAIN', 'BAR_RANDOM'))
+        # split_table_by_type(elemental_dicts, self.cbar_strain,
+        #                     ('STRAIN', 'BAR'), ('STRAIN', 'BAR_CPLX'), ('STRAIN', 'BAR_RANDOM'))
         split_table_by_type(elemental_dicts, self.cbeam_strain,
                             ('STRAIN', 'BEAM'), ('STRAIN', 'BEAM_CPLX'), ('STRAIN', 'BEAM_RANDOM'))
 
@@ -906,8 +906,8 @@ class Stress:
         split_table_by_type(elemental_dicts, self.conrod_stress,
                             ('STRESS', 'CONROD'), ('STRESS', 'CONROD_CPLX'), ('STRESS', 'CONROD_RANDOM'))
 
-        split_table_by_type(elemental_dicts, self.cbar_stress,
-                            ('STRESS', 'BAR'), ('STRESS', 'BAR_CPLX'), ('STRESS', 'BAR_RANDOM'))
+        # split_table_by_type(elemental_dicts, self.cbar_stress,
+        #                     ('STRESS', 'BAR'), ('STRESS', 'BAR_CPLX'), ('STRESS', 'BAR_RANDOM'))
         split_table_by_type(elemental_dicts, self.cbeam_stress,
                             ('STRESS', 'BEAM'), ('STRESS', 'BEAM_CPLX'), ('STRESS', 'BEAM_RANDOM'))
 

@@ -4,12 +4,13 @@ from itertools import count
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
-import scipy  # type: ignore
+# import scipy  # type: ignore
 
 from cpylog import SimpleLogger
 from pyNastran.nptyping_interface import NDArrayNint
 from pyNastran.op2.result_objects.matrix import Matrix
 from pyNastran.op2.op2_interface.utils import reshape_bytes_block
+from pyNastran.utils.scipy_sparse_utils import coo_matrix
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -1265,6 +1266,7 @@ def _cast_matrix_matpool(table_name: str,
                          apply_symmetry: bool=False) -> Matrix:
     """helper method for _read_matpool_matrix"""
     #op2 = op2_reader.op2
+    import scipy.sparse
     make_matrix_symmetric = apply_symmetry and matrix_shape == 'symmetric'
 
     # TODO: this is way slower than it should be
@@ -1301,8 +1303,9 @@ def _cast_matrix_matpool(table_name: str,
     #print(j1)
     #print(j2)
     #print(mrows, ncols)
+    import scipy
     try:
-        matrix = scipy.sparse.coo_matrix(
+        matrix = coo_matrix(
             (real_imag_array, (j2, j1)),
             shape=(mrows, ncols), dtype=dtype)
     except ValueError:

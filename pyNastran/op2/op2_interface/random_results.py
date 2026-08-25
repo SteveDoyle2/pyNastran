@@ -1,10 +1,7 @@
 from typing import Any
 import numpy as np
-import scipy  # prevents confusing import error
-try:
-    from scipy.integrate import trapezoid
-except ImportError:  # pragma: no cover
-    from scipy.integrate import trapz as trapezoid
+from pyNastran.utils.mathematics import trapezoid
+
 
 class RandomObjects:
     prefix = ''

@@ -32,8 +32,25 @@ from numpy import (float32, float64, complex64, complex128,
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
-#from scipy.linalg import solve_banded  # type: ignore
-from scipy.integrate import quad  # type: ignore
+try:
+    import scipy  # prevents confusing import error
+    IS_SCIPY = True
+except (ImportError, NameError):
+    IS_SCIPY = False
+
+if IS_SCIPY:
+    try:
+        from scipy.integrate import trapezoid
+    except ImportError:  # pragma: no cover
+        from scipy.integrate import trapz as trapezoid
+
+    #from scipy.linalg import solve_banded  # type: ignore
+    from scipy.integrate import quad  # type: ignore
+else:
+    def trapezoid(x, y):
+        raise NotImplementedError('trapezoid')
+    def quad(x, y):
+        raise NotImplementedError('quad')
 
 # should future proof this as it handles 1.9.0.dev-d1dbf8e, 1.10.2, and 1.6.2
 #_numpy_version = [int(i) for i in numpy.__version__.split('.') if i.isdigit()]

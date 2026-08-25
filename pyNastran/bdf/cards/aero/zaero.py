@@ -2743,8 +2743,8 @@ class ZAERO:
                     model.card_count["ENDDATA"] = 1
                     if nlines - iline_bulk > 1:
                         nleftover = nlines - iline_bulk - 1
-                        msg = "exiting due to ENDDATA found with %i lines left" % nleftover
-                        model.log.debug(msg)
+                        msg = f'exiting due to ENDDATA found with {nleftover:d} lines left'
+                        self.log.warning(msg)
                     cards_list, cards_dict, card_count = fix_card_list(
                         cards_list, cards_dict, card_count
                     )

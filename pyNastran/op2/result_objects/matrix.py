@@ -2,16 +2,18 @@
 from __future__ import annotations
 from typing import Callable, Optional, TextIO, Any, TYPE_CHECKING
 from itertools import count
-import scipy.sparse
+# import scipy.sparse
 #from scipy.sparse import coo_matrix, csr_matrix  # type: ignore
 import numpy as np
 
+from pyNastran.utils import object_attributes, object_methods, object_stats
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.scipy_sparse_utils import coo_matrix, csr_matrix, csc_matrix
+
 from pyNastran.bdf.cards.dmig import DMI, dtype_to_tin_tout_str
 from pyNastran.bdf.field_writer import print_card_8, print_card_16, print_card_double
-from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
-from pyNastran.utils import object_attributes, object_methods, object_stats
-sparse_types = (scipy.sparse.coo_matrix, scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)
+
+from pyNastran.utils.scipy_sparse_utils import sparse_types
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
@@ -119,6 +121,7 @@ class Matrix:
 
     def export_to_hdf5(self, group, log: SimpleLogger) -> None:
         """exports the object to HDF5 format"""
+        from pyNastran.op2.op2_interface.write_utils_hdf5 import export_to_hdf5
         export_to_hdf5(self, group, log)
 
     def build_dataframe(self) -> None:
@@ -127,11 +130,12 @@ class Matrix:
         matrix = self.data
         if matrix is None:
             return
-        if isinstance(matrix, scipy.sparse.coo_matrix):
+
+        if isinstance(matrix, np.ndarray):
+            data_frame = pd.DataFrame(data=matrix)
+        elif isinstance(matrix, coo_matrix):
             data = {'row': matrix.row, 'col': matrix.col, 'data' : matrix.data}
             data_frame = pd.DataFrame(data=data).reindex(columns=['row', 'col', 'data'])
-        elif isinstance(matrix, np.ndarray):
-            data_frame = pd.DataFrame(data=matrix)
         else:
             raise NotImplementedError(type(matrix))
         self.data_frame = data_frame
@@ -145,7 +149,7 @@ class Matrix:
             skip_msg = f'skipping {self.name!r} because data is None\n\n'
             mat.write(skip_msg.encode('ascii'))
             return
-        if isinstance(matrix, scipy.sparse.coo_matrix):
+        if isinstance(matrix, coo_matrix):
             if print_full:
                 for row, col, value in zip(matrix.row, matrix.col, matrix.data):
                     mat.write(f'({row:d}, {col:d}) {value}\n')
@@ -238,7 +242,7 @@ class Matrix:
             #real = data.real[i, j]
             #if is_complex:
                 #imag = data.imag[i, j]
-        elif isinstance(self.data, scipy.sparse.coo_matrix):
+        elif isinstance(self.data, coo_matrix):
             i = self.data.row
             j = self.data.col
             data = self.data.data
@@ -350,13 +354,13 @@ class Matrix:
             dtype = self.data.dtype
             data_array, i, j = self.data_i_j()
             if sparse_type == 'coo':
-                data = scipy.sparse.coo_matrix(
+                data = coo_matrix(
                     (data_array, (i, j)), shape=self.shape, dtype=dtype, copy=False)
             elif sparse_type == 'csr':
-                data = scipy.sparse.csr_matrix(
+                data = csr_matrix(
                     (data_array, (i, j)), shape=self.shape, dtype=dtype, copy=False)
             elif sparse_type == 'csc':
-                data = scipy.sparse.csc_matrix(
+                data = csc_matrix(
                     (data_array, (i, j)), shape=self.shape, dtype=dtype, copy=False)
             else:  # pragma: no cover
                 raise ValueError(f'sparse_type={sparse_type!r}; supports=[coo, csr, csc]')
@@ -377,7 +381,8 @@ class Matrix:
 
     @property
     def shape(self) -> tuple[int, int]:
-        print(f'data = {self.data}')
+        str(self.data)
+        # print(f'data = {self.data}')
         return self.data.shape
 
     def write_dmi(self, size: int=8) -> str:

@@ -15,7 +15,7 @@ from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 
 from pyNastran.op2.errors import OverwriteTableError
 from pyNastran.op2.op2_interface.op2_codes import Op2Codes, get_sort_method_from_table_name
-from pyNastran.op2.op2_interface.write_utils import write_table_header, export_to_hdf5
+from pyNastran.op2.op2_interface.write_utils import write_table_header
 if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
 Date = tuple[int, int, int]
@@ -236,6 +236,7 @@ class BaseScalarObject(Op2Codes):
 
     def export_to_hdf5(self, group, log: SimpleLogger) -> None:
         """exports the object to HDF5 format"""
+        from pyNastran.op2.op2_interface.write_utils_hdf5 import export_to_hdf5
         export_to_hdf5(self, group, log)
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',

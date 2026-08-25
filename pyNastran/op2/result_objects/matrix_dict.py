@@ -43,10 +43,16 @@ Assembly into KGG::
 
 """
 from __future__ import annotations
+import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
-from scipy import sparse
+try:
+    from scipy import sparse
+    IS_SCIPY = True
+except ImportError:
+    IS_SCIPY = False
+    warnings.warn('missing scipy')
 
 from pyNastran.op2.op2_interface.op2_codes import MSC_ELEMENTS
 

@@ -96,6 +96,7 @@ jobs:
           - {python-version: '3.13', mode: 'latest_pyside2_gui'}
 
           - {python-version: '3.14', mode: 'old'}               # redundant
+          - {python-version: '3.14', mode: 'no_scipy'}
           - {python-version: '3.14', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.14', mode: 'latest_pyqt6_gui'}
           - {python-version: '3.14', mode: 'latest_pyside2_gui'}
@@ -253,9 +254,19 @@ jobs:
           pip install -e .
           #python setup.py develop
 
+      - name: Remove Scipy
+      - if: ${{ matrix.mode == 'no_scipy' }}
+        run: |
+          pip uninstall scipy
+
       - name: List dependencies
         run: |
           pip list
+
+      - name: Run No Scipy
+      - if: ${{ matrix.mode == 'no_scipy' }}
+        run: |
+         python pyNastran/all_tests_no_scipy.py
 
       - name: Run No GUI 3.12
         #if: ${{ matrix.python-version == '3.12' || (
