@@ -40,8 +40,10 @@ def read_nodal_result(model: OP2, domains: np.ndarray,
 
         elif isinstance(h5_node_, Node):
             attrs = get_attributes(h5_node_)
-            assert len(attrs) == 1, attrs
-            version = attrs['version'][0]
+            assert len(attrs) >= 1, attrs
+            version = 1
+            if len(attrs) == 1:
+                version = attrs['version'][0]
 
             #data = h5_node_.read()
             #assert isinstance(data, np.ndarray), data
@@ -110,6 +112,8 @@ def read_nodal_result(model: OP2, domains: np.ndarray,
                 #load_eigenvector_complex(
                     #basename, iresult, results, domains, group, index, ids,
                     #model, subcases=None)
+            elif name == 'GRID_POINT_FORCE_CPLX':
+                model.log.warning(f'skipping {name}')
             else:
                 raise NotImplementedError(name)
         else:

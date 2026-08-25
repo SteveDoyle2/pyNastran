@@ -43,21 +43,35 @@ class RealRodArray(OES_Object):
 
     def h5_table_dict(self) -> dict:
         from tables import Int64Col, Float64Col
-        h5_table_dict = {
-            'EID': Int64Col(pos=0),
-            'A': Float64Col(pos=1),
-            'MSA': Float64Col(pos=2),
-            'T': Float64Col(pos=3),
-            'MST': Float64Col(pos=4),
-            'DOMAIN_ID': Int64Col(pos=5),
-        }
+        if self.element_type == 3:  # CTUBE
+            h5_table_dict = {
+                'EID': Int64Col(pos=0),
+                'AS': Float64Col(pos=1),
+                'MSA': Float64Col(pos=2),
+                'TS': Float64Col(pos=3),
+                'MST': Float64Col(pos=4),
+                'DOMAIN_ID': Int64Col(pos=5),
+            }
+        else:
+            h5_table_dict = {
+                'EID': Int64Col(pos=0),
+                'A': Float64Col(pos=1),
+                'MSA': Float64Col(pos=2),
+                'T': Float64Col(pos=3),
+                'MST': Float64Col(pos=4),
+                'DOMAIN_ID': Int64Col(pos=5),
+            }
         return h5_table_dict
 
     def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
         arr["EID"][ntime_neid0:ntime_neid1] = self.element
-        arr["A"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0]
+        if self.element_type == 3:  # CTUBE
+            arr["AS"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0]
+            arr["TS"][ntime_neid0:ntime_neid1] = self.data[itime, :, 2]
+        else:
+            arr["A"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0]
+            arr["T"][ntime_neid0:ntime_neid1] = self.data[itime, :, 2]
         arr["MSA"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1]
-        arr["T"][ntime_neid0:ntime_neid1] = self.data[itime, :, 2]
         arr["MST"][ntime_neid0:ntime_neid1] = self.data[itime, :, 3]
 
     @classmethod

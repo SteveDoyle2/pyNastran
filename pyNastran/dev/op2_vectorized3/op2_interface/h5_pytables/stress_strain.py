@@ -83,8 +83,10 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
 
         elif isinstance(h5_node_, Node):
             attrs = get_attributes(h5_node_)
-            assert len(attrs) == 1, attrs
-            version = attrs['version'][0]
+            assert len(attrs) >= 1, attrs
+            version = 0
+            if 'version' in attrs:
+                version = attrs['version'][0]
 
             #data = h5_node_.read()
             name = h5_node_.name
@@ -96,6 +98,8 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 iresult = _bar_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
+            elif name == 'BARS':
+                model.log.warning(f'skipping BARS {stress_strain}')
             elif name == 'BEAM':
                 #log.warning(f'skipping {name} {stress_strain}')
                 cresult_name = f'{stress_strain}.cbeam_{stress_strain}'
@@ -394,7 +398,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
             elif name == 'HBDYE':
                 log.warning(f'skipping {name} {stress_strain}')
             else:
-                print(h5_node_)
+                log.warning(h5_node_)
                 #raise NotImplementedError(name)
         else:
             print(h5_node_)
@@ -481,7 +485,7 @@ def load_complex_element(result_name: str,
         assert version == 0, version
         nresults = 2
         A = group['ASR'] + group['ASI'] * 1j
-        T = group['TSR'] + group['TSI'] * 1j
+        T = group['TSR'] + group['TSI'] * 1j  # elements/complex_elements.h5 (MSC 2020.0)
         DATA = hstack_shape(nelements, A, T)
     elif 'cshear_' in result_name:
         assert version == 0, version
@@ -819,6 +823,7 @@ def _bar_element(result_name: str,
     nelements = len(EID)
     nlength = index['LENGTH'].sum()
 
+    model.log.info(f"bar_element: {result_name}")
     if result_name == 'force.cbar_force':
         # ('EID', 'BM1A', 'BM2A', 'BM1B', 'BM2B', 'TS1', 'TS2', 'AF', 'TRQ', 'DOMAIN_ID')
         assert version == 0, version
@@ -1129,7 +1134,6 @@ def _real_shell_element(result_name: str,
     #'ID', 'X', 'Y', 'Z', 'RX', 'RY', 'RZ', 'DOMAIN_ID',
     #'DOMAIN_ID', 'POSITION', 'LENGTH'
 
-
     #dtype=[('EID', '<i8'), ('PLY', '<i8'), ('X1', '<f8'), ('Y1', '<f8'),
     #       ('T1', '<f8'), ('L1', '<f8'), ('L2', '<f8'), ('DOMAIN_ID', '<i8')])
     EID = group['EID']
@@ -1254,7 +1258,7 @@ def _real_shell_element(result_name: str,
         element_name += '_LINEAR'
         raise RuntimeError(element_name)
     elif element_name in {'CQUAD8', 'CTRIA6'}:
-        model.log.warning(f'skipping shell {element_name}')
+        model.log.warning(f'skipping shell {element_name} {stress_strain}')
         return iresult
 
     #assert element_node.shape[1] == 4, element_node.shape

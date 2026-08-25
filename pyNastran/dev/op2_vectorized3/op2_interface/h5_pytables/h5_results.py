@@ -102,8 +102,8 @@ def get_result_domains(h5_file: File, node: Node):
     #domains = np.hstack([idi, subcase, step, analysis, time_freq_eigr, eigi, mode, design_cycle,
                          #random, se, afpm, trmc, instance, module, substep, impfid])
     attributes = get_attributes(node)
-    assert len(attributes) == 1, attributes
-    version = attributes['version'][0]  # 20200
+    assert len(attributes) >= 1, attributes
+    # version = attributes['version'][0]  # 20200
     return domains
 
 
@@ -178,7 +178,7 @@ def read_result_from_h5(model: OP2, h5_file: File,
 
     nastran = h5_file.get_node(nastran_path)
     attributes = get_attributes(nastran)
-    assert len(attributes) == 7, attributes
+    assert len(attributes) >= 7, attributes
     model.bdf_filename = attributes['INPUT'].split('\n')[0].strip()# .decode('latin1')
     model.time = attributes['TIME']# .decode('latin1')
     model.nastran_format = attributes['VERSION'] # .decode('latin1')
