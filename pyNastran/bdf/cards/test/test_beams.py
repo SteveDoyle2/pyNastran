@@ -619,7 +619,6 @@ class TestBeams(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             cbeam.Mass()
 
-
         mid = 6
         E = 1.0e7
         G = None
@@ -960,7 +959,6 @@ class TestBeams(unittest.TestCase):
         assert np.allclose(pbeaml.Area(), expected_area)
         assert np.allclose(cbeam.Mass(), expected_mass)
 
-
     def test_beam_mass_01(self):
         """tests a CBEAM/PBEAM and gets the mass_properties"""
         model = BDF(debug=False)
@@ -1019,13 +1017,20 @@ class TestBeams(unittest.TestCase):
             scale=None)
         #print('cg* =', cg)
         L = 1.0
+        # model.log.warning(f"A1={area1} A2={area2} nsm1={nsm_a} nsm2={nsm_b}")
         area = (area1 + area2) / 2.
         nsm = (nsm_a + nsm_b) / 2.
         mass_per_length = area * rho + nsm
+        mass_per_length_expected = rho * area  # for nsm = 0
+        # print(f'mass_per_length_expected={mass_per_length_expected}')
+        assert np.allclose(mass_per_length, mass_per_length_expected)
+
         unused_mass = L * mass_per_length
 
         mass_a = L / 2. * (area1 * rho + nsm_a)
         mass_b = L / 2. * (area2 * rho + nsm_b)
+        mass_total_expected = mass_a + mass_b
+        # model.log.warning(f'mass_total_expected = {mass_total_expected}')
         #xcg = (0.0 * mass_a + 1.0 * mass_b) / (mass_a + mass_b)
 
         #print(mass_a, mass_b, xcg, mass_a + mass_b)
@@ -1040,8 +1045,10 @@ class TestBeams(unittest.TestCase):
         assert np.allclose(cbeam.Length(), 1.0), cbeam.Length()
         assert np.allclose(cg[0], 0.5), 'cg=%s' % cg
         assert np.allclose(centroid[0], 0.5), 'centroid=%s' % centroid
-        #assert np.allclose(cbeam.Mass(), 10.25), cbeam.Mass()
-        #assert np.allclose(cbeam.MassPerLength(), 10.25), cbeam.MassPerLength()
+
+        assert np.allclose(cbeam.Mass(), mass_total_expected), cbeam.Mass()
+        assert np.allclose(cbeam.MassPerLength(), mass_per_length_expected), (cbeam.MassPerLength(), mass_per_length_expected)
+        # assert np.allclose(cbeam.Mass(), 10.25), cbeam.Mass()
         #assert np.allclose(mass, 10.25), mass
 
         with open('pbeam12.bdf', 'w') as bdf_file:

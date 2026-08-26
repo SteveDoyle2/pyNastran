@@ -44,10 +44,11 @@ else:
                 shape=(mrows, ncols), dtype=dtype)
             """
             # print(f'ndata = {len(data_my_indices)}')
+            # print(f'data_my_indices = {data_my_indices}')
             if len(data_my_indices) == 2:
                 arg1, arg2 = data_my_indices
                 if isinstance(arg1, (np.ndarray, list)):
-                    if isinstance(arg1, list):
+                    if isinstance(arg1, (np.ndarray, list)):
                         arg1 = np.asarray(arg1, dtype=dtype)
                         data = arg1
                         assert isinstance(data, np.ndarray), data
@@ -71,7 +72,6 @@ else:
                         #col = values.reshape((ncol, nrow)).T
                     # else:
                     #     raise NotImplementedError(arg2)
-
                 elif isinstance(arg1, integer_types):
                     # data_mat = coo_matrix((nrows, ncols), dtype=dtype)
                     assert isinstance(arg2, integer_types), arg2
@@ -79,15 +79,15 @@ else:
                     data = []
                     row = []
                     col = []
-                else:
+                else:  # pragma: no cover
                     raise NotImplementedError((arg1, type(arg1)))
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(data_my_indices)
 
             if dtype is None:
                 if isinstance(data, np.ndarray):
                     dtype = data.dtype
-                else:
+                else:  # pragma: no cover
                     raise NotImplementedError((data, type(data), dtype))
             #assert dtype is not None, dtype
 
@@ -98,8 +98,11 @@ else:
             assert len(self.row) == len(self.col)
             assert shape is not None, shape
             assert len(shape) == 2, shape
-            self.shape = np.asarray(shape, dtype='int32')
+            self.shape = tuple(np.asarray(shape, dtype='int32').tolist())
             self.dtype = self.data.dtype
+        # @property
+        # def shape(self) -> tuple[int, int]:
+        #     return self.data.shape
         @property
         def indices(self) -> np.ndarray:
             return np.column_stack([self.row, self.col])
@@ -130,10 +133,10 @@ else:
         def __repr__(self):
             # <COOrdinate sparse matrix of dtype 'float32'
             #         with 240 stored elements and shape (30, 20)>
-            shape = tuple(self.shape.tolist())
+            # shape = tuple(self.shape.tolist())
             msg = (
                 f"'<fake.COOrdinate sparse matrix of dtype {self.dtype.name!r}\n"
-                f"        with {self.nnz} stored elements and shape {shape}>"
+                f"        with {self.nnz} stored elements and shape {self.shape}>"
             )
             return msg
 

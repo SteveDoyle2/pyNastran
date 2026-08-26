@@ -27,7 +27,6 @@ import warnings
 from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
-import scipy
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran.utils import object_attributes
@@ -6266,6 +6265,7 @@ class SPLINE1(Spline):
 
             del xform
             local_spline_points_array = np.array(local_spline_points)
+            import scipy
             try:
                 hull = scipy.spatial.ConvexHull(local_spline_points_array[:, :2])
                 area_hull = hull.area

@@ -6,6 +6,11 @@ from io import StringIO
 
 from docopt import DocoptExit
 import numpy as np
+try:
+    import scipy
+    IS_SCIPY = True
+except ImportError:
+    IS_SCIPY = False
 from cpylog import SimpleLogger
 
 import pyNastran
@@ -17,8 +22,9 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
 from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
-from pyNastran.bdf.mesh_utils.pierce_shells import (
-    pierce_shell_model) #, quad_intersection, triangle_intersection)
+if IS_SCIPY:
+    from pyNastran.bdf.mesh_utils.pierce_shells import (
+        pierce_shell_model) #, quad_intersection, triangle_intersection)
 from pyNastran.bdf.mesh_utils.mirror_mesh import (
     write_bdf_symmetric, bdf_mirror, bdf_mirror_plane)
 from pyNastran.bdf.mesh_utils.mass_properties import (

@@ -5,6 +5,11 @@ import unittest
 from pathlib import Path
 
 import numpy as np
+try:
+    import scipy as sp
+    IS_SCIPY = True
+except ImportError:
+    IS_SCIPY = False
 from cpylog import SimpleLogger
 
 import pyNastran
@@ -12,7 +17,8 @@ from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.aero.deform_aero_spline import (
     deform_aero_spline, deform_aero_spline_from_files)
 from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh, get_skj, rodriguez_rotate
-from pyNastran.bdf.mesh_utils.aero.map_aero_model import map_aero_model
+if IS_SCIPY:
+    from pyNastran.bdf.mesh_utils.aero.map_aero_model import map_aero_model
 from pyNastran.bdf.mesh_utils.aero.map_pressure_to_caero import map_caero
 
 from pyNastran.bdf.cards.test.utils import save_load_deck
@@ -39,6 +45,7 @@ class TestMeshUtilsAero(unittest.TestCase):
         log = SimpleLogger(level='warning')
         map_caero(bdf_filename, log=log)
 
+    @unittest.skipIf(not IS_SCIPY, 'scipy not installed')
     def test_map_aero_model(self):
         """tests ``map_aero_model``"""
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
@@ -239,6 +246,7 @@ class TestMeshUtilsAero(unittest.TestCase):
                 '--pid', 'caero', '--skip_zero_check']
         cmd_line(argv=argv, quiet=True)
 
+    @unittest.skipIf(not IS_SCIPY, 'scipy not installed')
     def test_export_caero_mesh(self):
         """tests multiple ``bdf`` tools"""
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'

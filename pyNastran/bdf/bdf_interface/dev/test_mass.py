@@ -1,12 +1,19 @@
 import unittest
 
 import numpy as np
+try:
+    import scipy as sp
+    IS_SCIPY = True
+except ImportError:
+    IS_SCIPY = False
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.bdf_interface.dev.mass import (
-    make_gpwg, make_mass_matrix, make_reduced_mass_matrix)
+if IS_SCIPY:
+    from pyNastran.bdf.bdf_interface.dev.mass import (
+        make_gpwg, make_mass_matrix, make_reduced_mass_matrix)
 
 
 class TestMassGeneration(unittest.TestCase):
+    @unittest.skipIf(not IS_SCIPY, 'scipy not installed')
     def test_make_gpwg_1(self):
         """
         per basic_dynamics.pdf
@@ -161,6 +168,7 @@ class TestMassGeneration(unittest.TestCase):
         assert np.allclose(Q, Q_expected)
         assert np.allclose(np.diag(IQ), np.diag(IQ_expected)), f'IQ:\n{IQ}\nIQ_epected:\n{IQ_expected}'
 
+    @unittest.skipIf(not IS_SCIPY, 'scipy not installed')
     def test_make_gpwg_2(self):
         """directional dependence"""
         model = BDF()

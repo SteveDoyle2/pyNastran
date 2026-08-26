@@ -47,10 +47,21 @@ if IS_SCIPY:
     #from scipy.linalg import solve_banded  # type: ignore
     from scipy.integrate import quad  # type: ignore
 else:
-    def trapezoid(x, y):
-        raise NotImplementedError('trapezoid')
-    def quad(x, y):
-        raise NotImplementedError('quad')
+    try:
+        from numpy import trapezoid
+    except ImportError:  # pragma: no cover
+        from numpy import trapz as trapezoid
+
+    # def trapezoid(y, x=None, dx: float=1.0, axis: int=-1):
+    #     return np.trapz(y, x=x, dx=dx, axis=axis)
+
+    def quad(func, a, b, args):
+        # args=(x, y, y[0], y[-1]))
+        x, y, y0, y1 = args
+        xp = np.linspace(a, b, num=10)
+        yp = func(xp, *args)
+        abserr = 0.0
+        return trapezoid(yp, xp, dx=1.0, axis=-1), abserr
 
 # should future proof this as it handles 1.9.0.dev-d1dbf8e, 1.10.2, and 1.6.2
 #_numpy_version = [int(i) for i in numpy.__version__.split('.') if i.isdigit()]
@@ -192,8 +203,6 @@ def integrate_unit_line(x: list[float], y: list[float]) -> float:
         # print('spline Error x=%s y=%s' % (x, y))
         raise
     return out[0]
-
-
 
 
 def integrate_positive_unit_line(x, y, min_value: float=0.) -> float:

@@ -64,7 +64,7 @@ jobs:
          python-version: ['3.11', '3.12', '3.13', '3.14']
          os: [ubuntu-latest]
          # , macos-latest, windows-latest
-         mode: ['latest', 'latest_basic', 'old', 'latest_pyqt5_gui','latest_pyside2_gui', ]
+         mode: ['latest', 'latest_basic', 'old', 'no_scipy', 'latest_pyqt5_gui','latest_pyside2_gui']
                 # 'old_basic', 'old_pyside2_gui', 'old_pyqt5_gui', 'latest_pyqt6_gui', 'latest_pyside6_gui'
          experimental: [false]
          #include:
@@ -79,24 +79,26 @@ jobs:
           #- {python-version: '3.11', mode: 'latest_pyside6_gui'}
 
           - {python-version: '3.11', mode: 'old'}               # redundant
+          #- {python-version: '3.11', mode: 'no_scipy'}
           #- {python-version: '3.11', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.11', mode: 'latest_pyqt6_gui'}
           #- {python-version: '3.11', mode: 'latest_pyside2_gui'}
           #- {python-version: '3.11', mode: 'latest_pyside6_gui'}  # DLL error
 
           - {python-version: '3.12', mode: 'old'}               # redundant
+          - {python-version: '3.12', mode: 'no_scipy'}
           - {python-version: '3.12', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.12', mode: 'latest_pyqt6_gui'}
           - {python-version: '3.12', mode: 'latest_pyside2_gui'}
           - {python-version: '3.11', mode: 'latest_pyside6_gui'}
 
           - {python-version: '3.13', mode: 'old'}               # redundant
+          - {python-version: '3.13', mode: 'no_scipy'}
           - {python-version: '3.13', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.13', mode: 'latest_pyqt6_gui'}
           - {python-version: '3.13', mode: 'latest_pyside2_gui'}
 
           - {python-version: '3.14', mode: 'old'}               # redundant
-          - {python-version: '3.14', mode: 'no_scipy'}
           - {python-version: '3.14', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.14', mode: 'latest_pyqt6_gui'}
           - {python-version: '3.14', mode: 'latest_pyside2_gui'}

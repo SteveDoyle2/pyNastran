@@ -150,6 +150,7 @@ class MatrixDict:
         matrix, extract rows/columns corresponding to non-zero DOFs.
 
         """
+        from scipy import sparse
         data = kelm.data.toarray() if sparse.issparse(kelm.data) else np.asarray(kelm.data)
 
         element_matrices = {}
