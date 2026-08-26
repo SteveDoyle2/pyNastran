@@ -8,7 +8,7 @@ import pyNastran
 pkg_path = pyNastran.__path__[0]
 
 #bdf
-#from pyNastran.bdf.test.all_tests import *
+from pyNastran.bdf.test.all_tests import *
 
 #op2
 from pyNastran.op2.test.test_op2_no_scipy import *
