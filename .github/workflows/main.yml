@@ -171,42 +171,42 @@ jobs:
         #       'old', 'old_basic',
         #       'old_pyside_gui', 'old_pyqt_gui']
         #
-      - name: Install latest basic packages
-        if: ${{ matrix.mode == 'latest_basic'       || matrix.mode == 'latest' ||
+      - if: ${{ matrix.mode == 'latest_basic'       || matrix.mode == 'latest' ||
                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui' }}
+        name: Install latest basic packages
         run: |
           pip install numpy scipy
         #--no-binary  :all:
 
-      - name: Install latest packages (pandas, matplotlib)
-        if: ${{ matrix.mode == 'latest' ||
+      - if: ${{ matrix.mode == 'latest' ||
                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui' }}
+        name: Install latest packages (pandas, matplotlib)
         run: |
           pip install 'pandas>=1.0' matplotlib
 
-      - name: Install latest packages (h5py)
-        if: ${{  matrix.python-version != '3.14' && (matrix.mode == 'latest' ||
+      - if: ${{  matrix.python-version != '3.14' && (matrix.mode == 'latest' ||
                  matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                  matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
+        name: Install latest packages (h5py)
         run: |
           pip install h5py tables
 
-      - name: Install latest packages (imageio, pillow)
-        #if: ${{ (
-        if: ${{ matrix.python-version != '3.14-dev' && (
+      - if: ${{ matrix.python-version != '3.14-dev' && (
                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
+        name: Install latest packages (imageio, pillow)
+        #if: ${{ (
         #if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
         #         matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
           pip install imageio pillow>=10.1.0
 
-      - name: Install latest packages (vtk)
-        if: ${{ matrix.python-version != '3.14-dev' && (
+      - if: ${{ matrix.python-version != '3.14-dev' && (
                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
+        name: Install latest packages (vtk)
         #if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
         #         matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
@@ -256,8 +256,8 @@ jobs:
           pip install -e .
           #python setup.py develop
 
-      - name: Remove Scipy
       - if: ${{ matrix.mode == 'no_scipy' }}
+        name: Remove Scipy
         run: |
           pip uninstall scipy
 
@@ -265,24 +265,24 @@ jobs:
         run: |
           pip list
 
-      - name: Run No Scipy
       - if: ${{ matrix.mode == 'no_scipy' }}
+        name: Run No Scipy
         run: |
          python pyNastran/all_tests_no_scipy.py
 
-      - name: Run No GUI 3.12
+      - if: ${{ (matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
         #if: ${{ matrix.python-version == '3.12' || (
         #          matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
-        if: ${{ (matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
         #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        name: Run No GUI 3.12
         run: |
          python pyNastran/all_tests_no_gui.py
          coverage run pyNastran/all_tests_no_gui.py
 
         # 3.11 - No matching distribution found for vtk
-      - name: Run GUI
-        if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
+      - if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                  matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
+        name: Run GUI
         #if: ${{ matrix.python-version != '3.12' && (
         #         matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
         #         matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
