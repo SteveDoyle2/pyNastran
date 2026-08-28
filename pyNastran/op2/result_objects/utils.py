@@ -52,6 +52,7 @@ def modal_kinetic_energy_fraction(
     normalizes by the total phi^T @ M @ phi for each mode.
 
     """
+    from scipy import sparse
     phi_data = eigenvectors.data  # (nmodes, nnodes, 6)
     nmodes, nnodes, ndof_per_node = phi_data.shape
     assert ndof_per_node == 6, f'expected 6 DOF/node, got {ndof_per_node}'
