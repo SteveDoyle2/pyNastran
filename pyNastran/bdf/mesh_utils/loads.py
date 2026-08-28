@@ -1109,13 +1109,17 @@ def _get_dof_map(model: BDF) -> dict[tuple[int, int], int]:
     for nid, node_ref in model.nodes.items():
         if node_ref.type == 'GRID':
             for dof in range(1, 7):
-                dof_map[(nid, dof)] = i
+                nid_dof = (nid, dof)
+                print(f'adding GRID {nid_dof}')
+                dof_map[nid_dof] = i
                 i += 1
             for psi in node_ref.ps:
                 nid_dof = (nid, int(psi))
+                print(f'adding GRID {nid_dof}')
                 j = dof_map[nid_dof]
                 ps.append(j)
         elif node_ref.type == 'SPOINT':
+            print(f'adding SPOINT {node_ref}')
             spoints.append(node_ref)
             #dof_map[(nid, 0)] = i
             #i += 1
@@ -1148,6 +1152,7 @@ def _Fg_vector_from_loads(model: BDF, loads: list[FgLoad],
     log = model.log
     for load in loads:
         loadtype = load.type
+        # print(load)
         if load.type in ['FORCE', 'MOMENT']:
             offset = 1 if load.type[0] == 'F' else 4
             show_force_warning = _add_force(Fg, dof_map, model, load, offset, ndof_per_grid,
@@ -1162,10 +1167,12 @@ def _Fg_vector_from_loads(model: BDF, loads: list[FgLoad],
             for nid, mag in zip(load.nodes, load.mags):
                 try:
                     irow = dof_map[(nid, 0)]
-                except KeyError:
-                    print('spoints =', model.spoints)
-                    print('dof_map =', dof_map)
-                    raise
+                except KeyError as error:
+                    msg = (
+                        f'SLOAD Error (must reference an SPOINT):\n{str(load)}'
+                        f'SPOINTs: {model.spoints}\n'
+                        f'dof_map: {dof_map}\n')
+                    raise RuntimeError(msg) from error
                 Fg[irow] += mag
         elif loadtype in not_static_loads:
             continue

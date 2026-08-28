@@ -5,9 +5,8 @@ import unittest
 import numpy as np
 from numpy import ones, reshape, arange
 from numpy import ndarray, eye, array_equal, zeros
-import scipy
-import scipy.sparse
-from scipy.sparse import coo_matrix  # type: ignore
+
+from pyNastran.utils.scipy_sparse_utils import coo_matrix
 
 from pyNastran.op4.op4 import OP4, read_op4, read_op4_fast, Matrix
 import pyNastran.op4.test
@@ -15,7 +14,6 @@ import pyNastran.op4.test
 OP4_PATH = pyNastran.op4.test.__path__[0]
 PKG_PATH = pyNastran.__path__[0]
 
-#coo_matrix = scipy.sparse._coo.coo_matrix
 
 class TestOP4(unittest.TestCase):
     """runs various OP4 tests"""
@@ -82,7 +80,7 @@ class TestOP4(unittest.TestCase):
             if 's' in fname:  # sparse
                 self.assertTrue(array_equal(mat.row, range(10)))
                 self.assertTrue(array_equal(mat.col, range(10)))
-                self.assertTrue(array_equal(mat.data, [1] * 10))
+                self.assertTrue(array_equal(mat.data, [1] * 10), mat.data)
             else: # real
                 eye_matrix = eye(10)
                 self.assertTrue(array_equal(mat, eye_matrix))

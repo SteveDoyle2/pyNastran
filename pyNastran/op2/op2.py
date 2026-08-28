@@ -856,6 +856,14 @@ class OP2(OP2_Scalar, OP2Writer):
             load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
         self.combine_results(combine=combine)
 
+    def read_h5(self, h5_filename: H5File,
+                nastran_format: str='msc',
+                combine: bool=True) -> None:
+        """doesn't support geometry - need a new h5 reader that goes to the OG-BDF class"""
+        assert nastran_format == 'msc', 'this function is currently intended only for msc'
+        from pyNastran.dev.op2_vectorized3.op2_interface.h5_pytables.h5_results import read_h5_result
+        read_h5_result(self, h5_filename, root_path='/')
+
     def load_hdf5_file(self, h5_file: H5File, combine: bool=True) -> None:
         """
         Loads an h5 file object into an OP2 object

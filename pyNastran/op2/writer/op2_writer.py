@@ -1,6 +1,7 @@
 #pylint: disable=W0201,C0301,C0111
 from __future__ import annotations
 import datetime
+import socket
 from collections import defaultdict
 from struct import pack, Struct
 from typing import BinaryIO, TextIO, Optional, Any, TYPE_CHECKING
@@ -61,12 +62,29 @@ class OP2Writer(OP2_F06_Common):
 
     def write_h5(self, h5_filename: PathLike,
                  include_geometry: bool=True,
-                 op2_flags: dict[str, dict[str, bool]]=None) -> None:
+                 op2_flags: dict[str, dict[str, bool]]=None,
+                 sol: int=101,
+                 version: str='msc20200') -> None:
         from tables import File
         elemental_dicts, nodal_dicts, se_dicts, key_to_id_map = get_h5_elemental_nodal(self)
 
+        hostname = socket.gethostname()
+
+        # might change this to the run date vs. the conversion date
+        local_now = datetime.datetime.now().astimezone()
+        offset_hours = local_now.utcoffset().total_seconds() / 3600
+        local_time_str = local_now.strftime("%a %b %d %H:%M:%S %Y") + ' (UTC%+d)' % offset_hours  #  (UTC-8)
+
+        #print(utc_now.strftime("%a %b %d %H:%M:%S %Y (UTC-8)"))
         with File(h5_filename, 'w') as h5file:
             nastran_group = h5file.create_group('/', 'NASTRAN')
+            h5file.set_node_attr(nastran_group, "ARCH", 'win64i8')
+            h5file.set_node_attr(nastran_group, "HOSTNAME", hostname)
+            h5file.set_node_attr(nastran_group, "IFPSTAR", 'YES')  # yes=strict parser
+            h5file.set_node_attr(nastran_group, "INPUT", 'A1') # TODO: what is this???
+            h5file.set_node_attr(nastran_group, "SOL", str(sol))
+            h5file.set_node_attr(nastran_group, "TIME", local_time_str)  # Tue Dec 29 13:07:22 2020 (UTC-8)
+            h5file.set_node_attr(nastran_group, "VERSION", version)
             # if include_geometry:
             #     print(self)
             #     self.model.writer.write_h5(h5file, nastran_group)

@@ -3,7 +3,11 @@ from pathlib import Path
 import unittest
 
 import numpy as np
-from scipy import sparse
+try:
+    from scipy import sparse
+    IS_SCIPY = True
+except ImportError:
+    IS_SCIPY = False
 from cpylog import SimpleLogger
 
 import pyNastran
@@ -18,6 +22,7 @@ MODEL_PATH = (PKG_PATH / '..' / 'models').absolute()
 class TestOP2Matrix(unittest.TestCase):
     """various matrix tests"""
 
+    @unittest.skipIf(not IS_SCIPY, 'missing scipy and need to fix bug')
     def test_gpspc(self):
         """Tests the gspc1 MATPOOL model"""
         op2_filename = PKG_PATH / 'op2' / 'test' / 'matrices' / 'gpsc1.op2'
@@ -78,6 +83,7 @@ class TestOP2Matrix(unittest.TestCase):
             #print(sil, 'neids=%s cdof=%s ndof=%s dof/grid=%s ngrid=%s' % (sil.shape[0], ndofci, ndofi, dof_per_grid, numgrid))
         #print(kdict)
 
+    @unittest.skipIf(not IS_SCIPY, 'scipy not installed')
     def test_kelm_melm_kdict_mdict(self):
         """Tests reading KELM, MELM, KDICT, MDICT and verifying structure.
 
@@ -353,6 +359,7 @@ class TestOP2Matrix(unittest.TestCase):
             actual = op2.matrices[matrix_name].data.toarray()
             compare_dmi_matrix_from_bdf_to_op2(model, op2, expected, actual, matrix_name)
 
+    @unittest.skipIf(not IS_SCIPY, 'scipy not installed')
     def test_modal_kinetic_energy_fraction(self):
         """Tests modal kinetic energy fraction computation.
 

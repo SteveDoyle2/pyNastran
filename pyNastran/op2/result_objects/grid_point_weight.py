@@ -7,8 +7,7 @@ import numpy as np
 
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.op2.result_objects.op2_objects import _write_table_header, Date
-from pyNastran.op2.op2_interface.write_utils import (
-    get_title_subtitle_label, export_to_hdf5)
+from pyNastran.op2.op2_interface.write_utils import get_title_subtitle_label
 #from pyNastran.op2.writer.utils import fix_table3_types
 
 # restricted b/c we dont support 64-bit writing
@@ -116,6 +115,7 @@ class GridPointWeight:
 
     def export_to_hdf5(self, group, log) -> None:
         """exports the object to HDF5 format"""
+        from pyNastran.op2.op2_interface.write_utils_hdf5 import export_to_hdf5
         export_to_hdf5(self, group, log)
 
     def object_attributes(self, mode: str='public', keys_to_skip=None,

@@ -2,10 +2,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from scipy import sparse
 
 if TYPE_CHECKING:
     from pyNastran.op2.result_objects.table_object import RealTableArray
+    from scipy import sparse
 
 
 def modal_kinetic_energy_fraction(

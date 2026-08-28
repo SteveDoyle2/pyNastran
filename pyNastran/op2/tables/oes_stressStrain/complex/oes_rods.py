@@ -25,22 +25,38 @@ class ComplexRodArray(OES_Object):
 
     def h5_table_dict(self) -> dict:
         from tables import Int64Col, Float64Col
-        h5_table_dict = {
-            'EID': Int64Col(pos=0),
-            'AR': Float64Col(pos=1),
-            'AI': Float64Col(pos=2),
-            'TR': Float64Col(pos=3),
-            'TI': Float64Col(pos=4),
-            'DOMAIN_ID': Int64Col(pos=5),
-        }
+        if self.element_type == 3:  # CTUBE
+            h5_table_dict = {
+                'EID': Int64Col(pos=0),
+                'ASR': Float64Col(pos=1),
+                'ASI': Float64Col(pos=2),
+                'TSR': Float64Col(pos=3),
+                'TSI': Float64Col(pos=4),
+                'DOMAIN_ID': Int64Col(pos=5),
+            }
+        else:
+            h5_table_dict = {
+                'EID': Int64Col(pos=0),
+                'AR': Float64Col(pos=1),
+                'AI': Float64Col(pos=2),
+                'TR': Float64Col(pos=3),
+                'TI': Float64Col(pos=4),
+                'DOMAIN_ID': Int64Col(pos=5),
+            }
         return h5_table_dict
 
     def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
         arr["EID"][ntime_neid0:ntime_neid1] = self.element
-        arr["AR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].real
-        arr["AI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].imag
-        arr["TR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].real
-        arr["TI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].imag
+        if self.element_type == 3:  # CTUBE
+            arr["ASR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].real
+            arr["ASI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].imag
+            arr["TSR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].real
+            arr["TSI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].imag
+        else:
+            arr["AR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].real
+            arr["AI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0].imag
+            arr["TR"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].real
+            arr["TI"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1].imag
 
     @property
     def is_real(self) -> bool:

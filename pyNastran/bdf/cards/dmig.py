@@ -6,7 +6,7 @@ import warnings
 from typing import Callable, Optional, Any, TYPE_CHECKING
 
 import numpy as np
-from scipy.sparse import coo_matrix  # type: ignore
+from pyNastran.utils.scipy_sparse_utils import coo_matrix
 
 from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import integer_types

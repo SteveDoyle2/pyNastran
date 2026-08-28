@@ -82,20 +82,27 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                 raise NotImplementedError(name)
 
         elif isinstance(h5_node_, Node):
+            #model.log.warning(f'node = {h5_node_}')
             attrs = get_attributes(h5_node_)
-            assert len(attrs) == 1, attrs
-            version = attrs['version'][0]
+            #model.log.warning(f'  attrs = {attrs}')
+            assert len(attrs) >= 1, attrs
+            version = 0
+            if 'version' in attrs:
+                version = attrs['version'][0]
 
             #data = h5_node_.read()
             name = h5_node_.name
             group = elemental[name].read()
             index = elemental_index[name].read()
+            #model.log.warning(f'  group:\n{group.dtype.names}\n{group}')
             #print(h5_node_)
             if name == 'BAR':
                 cresult_name = f'{stress_strain}.cbar_{stress_strain}'
                 iresult = _bar_element(
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
+            elif name == 'BARS':
+                model.log.warning(f'skipping BARS {stress_strain}')
             elif name == 'BEAM':
                 #log.warning(f'skipping {name} {stress_strain}')
                 cresult_name = f'{stress_strain}.cbeam_{stress_strain}'
@@ -343,15 +350,15 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
                     cresult_name, iresult, results, domains, group, index, version,
                     ids, model, subcases=None)
 
-            elif name == 'QUAD_CN':
-                #if stress_strain == 'force':
-                    #log.warning(f'skipping {name} {stress_strain}')
-                    #return
-                log.warning(f'skipping {name} {stress_strain}')
-                #cresult_name = f'cquad_{stress_strain}'
-                #iresult = _real_shell_element(
-                    #cresult_name, iresult, results, domains, group, index, version,
-                    #ids, model, subcases=None)
+            # elif name == 'QUAD_CN':
+            #     if stress_strain == 'force':
+            #         log.warning(f'skipping {name} {stress_strain}')
+            #         return
+            #     log.warning(f'skipping {name} {stress_strain}')
+            #     cresult_name = f'cquad_{stress_strain}'
+            #     iresult = _real_shell_element(
+            #         cresult_name, iresult, results, domains, group, index, version,
+            #         ids, model, subcases=None)
             elif name == 'QUAD4_CN_CPLX':
                 if stress_strain == 'force':
                     log.warning(f'skipping {name} {stress_strain}')
@@ -394,7 +401,7 @@ def read_elemental_stress_strain(model: OP2, domains: np.ndarray,
             elif name == 'HBDYE':
                 log.warning(f'skipping {name} {stress_strain}')
             else:
-                print(h5_node_)
+                log.warning(h5_node_)
                 #raise NotImplementedError(name)
         else:
             print(h5_node_)
@@ -481,7 +488,7 @@ def load_complex_element(result_name: str,
         assert version == 0, version
         nresults = 2
         A = group['ASR'] + group['ASI'] * 1j
-        T = group['TSR'] + group['TSI'] * 1j
+        T = group['TSR'] + group['TSI'] * 1j  # elements/complex_elements.h5 (MSC 2020.0)
         DATA = hstack_shape(nelements, A, T)
     elif 'cshear_' in result_name:
         assert version == 0, version
@@ -819,6 +826,7 @@ def _bar_element(result_name: str,
     nelements = len(EID)
     nlength = index['LENGTH'].sum()
 
+    model.log.info(f"bar_element: {result_name}")
     if result_name == 'force.cbar_force':
         # ('EID', 'BM1A', 'BM2A', 'BM1B', 'BM2B', 'TS1', 'TS2', 'AF', 'TRQ', 'DOMAIN_ID')
         assert version == 0, version
@@ -905,9 +913,6 @@ def _bar_element(result_name: str,
                     random_code=0, title='', subtitle='', label='')
             elif is_modes:
                 modes, eigenvalues, freqs = modes_data
-                #if not hasattr(class_obj, 'add_modal_case'):
-                    #model.log.warning(f'skipping {result_name} - add_modal_case')
-                    #continue
                 disp = class_obj.add_modal_case(
                     table_name, element_name, elementi, data, isubcase,
                     modes, eigenvalues, freqs,
@@ -1110,13 +1115,21 @@ def _real_shell_element(result_name: str,
                         subcases: Optional[list[int]]=None) -> int:
 
     if result_name in {'stress.ctria3_stress', 'stress.ctria6_stress', 'stress.ctriar_stress',
-                       'stress.cquad4_stress', 'stress.cquad8_stress', 'stress.cquadr_stress', 'stress.cquad_stress'}:
+                       'stress.cquad4_stress', 'stress.cquad8_stress', 'stress.cquadr_stress',
+                       'stress.cquad_stress'}:
         class_obj = RealPlateStressArray
         table_name = 'OES1'
     elif result_name in {'strain.ctria3_strain', 'strain.ctria6_strain', 'strain.ctriar_strain',
-                         'strain.cquad4_strain', 'strain.cquad8_strain', 'strain.cquadr_strain', 'strain.cquad_strain'}:
+                         'strain.cquad4_strain', 'strain.cquad8_strain', 'strain.cquadr_strain',
+                         'strain.cquad_strain'}:
         class_obj = RealPlateStrainArray
         table_name = 'OSTR1'
+    elif result_name in {'force.cquad4_force'} and group_name == 'QUAD4':
+        class_obj = RealPlateBilinearForceArray
+        table_name = 'OEF1'
+    elif result_name in {'force.cquad4_force'} and group_name == 'QUAD4_CN':
+        class_obj = RealPlateForceArray
+        table_name = 'OEF1'
     else:
         raise RuntimeError(result_name)
 
@@ -1129,13 +1142,14 @@ def _real_shell_element(result_name: str,
     #'ID', 'X', 'Y', 'Z', 'RX', 'RY', 'RZ', 'DOMAIN_ID',
     #'DOMAIN_ID', 'POSITION', 'LENGTH'
 
-
     #dtype=[('EID', '<i8'), ('PLY', '<i8'), ('X1', '<f8'), ('Y1', '<f8'),
     #       ('T1', '<f8'), ('L1', '<f8'), ('L2', '<f8'), ('DOMAIN_ID', '<i8')])
     EID = group['EID']
     nelements = len(EID)
     nlength = index['LENGTH'].sum()
 
+    # ('EID', 'TERM', 'GRID', 'MX', 'MY', 'MXY', 'BMX', 'BMY', 'BMXY', 'TX', 'TY', 'DOMAIN_ID')
+    is_cen_slash = 'TERM' in group.dtype.names
     if 'ctria3' in result_name:
         nnodes = 1
         # ('EID', 'FD1', 'X1', 'Y1', 'TXY1', 'FD2', 'X2', 'Y2', 'TXY2', 'DOMAIN_ID')
@@ -1200,7 +1214,41 @@ def _real_shell_element(result_name: str,
             group['FD2'], X2, Y2, TXY2, angle, major, minor, ovm,
         ], axis=1)
         assert DATA.shape[0] == nlength, f'DATA.shape={DATA.shape}; nlength={nlength}'
+    elif is_cen_slash and 'stress' in result_name or 'strain' in result_name:
+        # ('EID', 'TERM', 'GRID', 'MX', 'MY', 'MXY', 'BMX', 'BMY', 'BMXY', 'TX', 'TY', 'DOMAIN_ID')
+        assert group_name in {'QUAD4_CN', 'QUAD8', 'TRIA6'}, f'group_name={group_name}\n{group.dtype.names}\n{group}'
+        GRID = group['GRID']
+        neid_, nnodes = GRID.shape
+        eids = np.column_stack([EID for i in range(nnodes)]).ravel()
+        element_node = np.column_stack([eids, GRID.ravel()])
+
+        X1 = group['X1']
+        Y1 = group['Y1']
+        TXY1 = group['TXY1']  # TODO: is this XY1 or TXY1?
+        X2 = group['X2']
+        Y2 = group['Y2']
+        TXY2 = group['TXY2']
+        FIBER = np.column_stack([
+            group['FD1'].ravel(),
+            group['FD2'].ravel(),
+        ])
+        X1f = X1.flatten()
+        angle = np.nan * X1f
+        major = np.nan * X1f
+        minor = np.nan * X1f
+        ovm = np.nan * X1f
+        # TODO: not 100%
+        DATA = np.stack([
+            group['FD1'].ravel(), X1.ravel(), Y1.ravel(), TXY1.ravel(), angle, major, minor, ovm,
+            group['FD2'].ravel(), X2.ravel(), Y2.ravel(), TXY2.ravel(), angle, major, minor, ovm,
+        ], axis=1)
+    elif is_cen_slash and result_name in {'force.cquad4_force'}:
+        # ('EID', 'TERM', 'GRID', 'MX', 'MY', 'MXY', 'BMX', 'BMY', 'BMXY', 'TX', 'TY', 'DOMAIN_ID')
+        raise NotImplementedError(group.dtype.names)
+    elif is_cen_slash:
+        raise NotImplementedError(f'CEN/: result_name={result_name}')
     else:# if 'cquad8' in result_name:
+        assert group_name in {}, f'group_name={group_name}\n{group.dtype.names}\n{group}'
         # ('EID', 'FD1', 'X1', 'Y1', 'TXY1', 'FD2', 'X2', 'Y2', 'TXY2', 'DOMAIN_ID')
         assert version == 0, version
         #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovmShear]
@@ -1254,7 +1302,7 @@ def _real_shell_element(result_name: str,
         element_name += '_LINEAR'
         raise RuntimeError(element_name)
     elif element_name in {'CQUAD8', 'CTRIA6'}:
-        model.log.warning(f'skipping shell {element_name}')
+        model.log.warning(f'skipping shell {element_name} {stress_strain}')
         return iresult
 
     #assert element_node.shape[1] == 4, element_node.shape
@@ -1310,9 +1358,9 @@ def _real_shell_element(result_name: str,
                     random_code=0, title='', subtitle='', label='')
             elif is_transient:
                 times = transient_data
-                if not hasattr(class_obj, 'add_transient_case'):
-                    model.log.warning(f'skipping {result_name} - add_transient_case')
-                    continue
+                # if not hasattr(class_obj, 'add_transient_case'):
+                #     model.log.warning(f'skipping {result_name} - add_transient_case')
+                #     continue
                 disp = class_obj.add_transient_case(
                     table_name, element_name, nnodes, element_nodei, fiber_distance, data, isubcase,
                     times,
@@ -1320,9 +1368,9 @@ def _real_shell_element(result_name: str,
                     random_code=0, title='', subtitle='', label='')
             elif is_modes:
                 modes, eigenvalues, freqs = modes_data
-                if not hasattr(class_obj, 'add_modal_case'):
-                    model.log.warning(f'skipping {result_name} - add_modal_case')
-                    continue
+                # if not hasattr(class_obj, 'add_modal_case'):
+                #     model.log.warning(f'skipping {result_name} - add_modal_case')
+                #     continue
                 disp = class_obj.add_modal_case(
                     table_name, element_name, nnodes, element_nodei, fiber_distance, data, isubcase,
                     modes, eigenvalues, freqs,
@@ -2095,9 +2143,9 @@ def _get_data_by_group_fiber_element(basename: str,
     INDEX_POSITION = index['POSITION']
     INDEX_LENGTH = index['LENGTH']
     total_length = INDEX_LENGTH.sum()
-    assert len(EID) == total_length, f'EID.shape={EID.shape} total_length={total_length}'
-    assert len(FIBER) == total_length, f'FIBER.shape={FIBER.shape} total_length={total_length}'
-    assert len(DATA) == total_length, f'DATA.shape={DATA.shape} total_length={total_length}'
+    assert len(EID) == total_length, f'{basename} EID.shape={EID.shape} total_length={total_length}'
+    assert len(FIBER) == total_length, f'{basename} FIBER.shape={FIBER.shape} total_length={total_length}'
+    assert len(DATA) == total_length, f'{basename} DATA.shape={DATA.shape} total_length={total_length}'
 
     ntotal = 0
 

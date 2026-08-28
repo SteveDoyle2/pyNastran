@@ -94,25 +94,39 @@ class TestOP2Writer(unittest.TestCase):
     def test_static_elements_h5_op2(self):
         log = SimpleLogger(level='warning')
         op2_filename = MODEL_PATH / 'elements' / 'static_elements.op2'
+        h5_filename = MODEL_PATH / 'elements' / 'static_elements.h5'
+        h5_model = OP2(debug=True, log=log, mode=None)
+        h5_model.read_h5(h5_filename)
 
         op2 = OP2(debug=True, log=log, mode=None)
         op2.read_op2(op2_filename)
         # print(op2.get_op2_stats())
 
-        h5_filename = MODEL_PATH / 'elements' / 'model_static_elements.h5'
-        op2.write_h5(h5_filename, include_geometry=True)
+        h5_filename_out = MODEL_PATH / 'elements' / 'model_static_elements.h5'
+        op2.write_h5(h5_filename_out, include_geometry=True)
+
+        # h5_model2 = OP2(debug=True, log=log, mode=None)
+        # h5_model2.read_h5(h5_filename_out)
 
     @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
     def test_modes_elements_h5_op2(self):
         log = SimpleLogger(level='warning')
         op2_filename = MODEL_PATH / 'elements' / 'modes_elements.op2'
+        h5_filename = MODEL_PATH / 'elements' / 'modes_elements.h5'
+        h5_model = OP2(debug=True, log=log, mode=None)
+        h5_model.read_h5(h5_filename)
 
         op2 = OP2(debug=True, log=log, mode=None)
         op2.read_op2(op2_filename)
         # print(op2.get_op2_stats())
 
-        h5_filename = MODEL_PATH / 'elements' / 'model_modes_elements.h5'
-        op2.write_h5(h5_filename, include_geometry=True)
+        h5_filename_out = MODEL_PATH / 'elements' / 'model_modes_elements.h5'
+        # op2.op2_results.stress.cbar_stress = {}
+        # op2.op2_results.strain.cbar_strain = {}
+        op2.write_h5(h5_filename_out, include_geometry=True)
+
+        # h5_model2 = OP2(debug=True, log=log, mode=None)
+        # h5_model2.read_h5(h5_filename_out)
 
     @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
     def test_freq_elements2_h5_op2(self):
@@ -123,20 +137,29 @@ class TestOP2Writer(unittest.TestCase):
         op2.read_op2(op2_filename)
         # print(op2.get_op2_stats())
 
-        h5_filename = MODEL_PATH / 'elements' / 'model_freq_elements2.h5'
-        op2.write_h5(h5_filename, include_geometry=True)
+        h5_filename_out = MODEL_PATH / 'elements' / 'model_freq_elements2.h5'
+        op2.write_h5(h5_filename_out, include_geometry=True)
+
+        h5_model2 = OP2(debug=True, log=log, mode=None)
+        h5_model2.read_h5(h5_filename_out)
 
     @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
     def test_time_elements_h5_op2(self):
         log = SimpleLogger(level='warning')
         op2_filename = MODEL_PATH / 'elements' / 'time_elements.op2'
+        h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
+        h5_model = OP2(debug=True, log=log, mode=None)
+        h5_model.read_h5(h5_filename)
 
         op2 = OP2(debug=True, log=log, mode=None)
         op2.read_op2(op2_filename)
         # print(op2.get_op2_stats())
 
-        h5_filename = MODEL_PATH / 'elements' / 'model_time_elements.h5'
-        op2.write_h5(h5_filename, include_geometry=True)
+        h5_filename_out = MODEL_PATH / 'elements' / 'model_time_elements.h5'
+        op2.write_h5(h5_filename_out, include_geometry=True)
+
+        # h5_model2 = OP2(debug=True, log=log, mode=None)
+        # h5_model2.read_h5(h5_filename_out)
 
     @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
     def test_time_thermal_elements_h5_op2(self):
@@ -147,20 +170,30 @@ class TestOP2Writer(unittest.TestCase):
         op2.read_op2(op2_filename)
         # print(op2.get_op2_stats())
 
-        h5_filename = MODEL_PATH / 'elements' / 'model_time_thermal_elements.h5'
-        op2.write_h5(h5_filename, include_geometry=True)
+        h5_filename_out = MODEL_PATH / 'elements' / 'model_time_thermal_elements.h5'
+        op2.write_h5(h5_filename_out, include_geometry=True)
+
+        # h5_model2 = OP2(debug=True, log=log, mode=None)
+        # h5_model2.read_h5(h5_filename_out)
 
     @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
     def test_modes_complex_elements_h5_op2(self):
         log = SimpleLogger(level='warning')
         op2_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.op2'
+        h5_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.h5'
+
+        h5_results = OP2(debug=True, log=log, mode=None)
+        h5_results.read_h5(h5_filename)
 
         op2 = OP2(debug=True, log=log, mode=None)
         op2.read_op2(op2_filename)
         # print(op2.get_op2_stats())
 
-        h5_filename = MODEL_PATH / 'elements' / 'model_modes_complex_elements.h5'
-        op2.write_h5(h5_filename, include_geometry=True)
+        h5_filename_out = MODEL_PATH / 'elements' / 'model_modes_complex_elements.h5'
+        op2.write_h5(h5_filename_out, include_geometry=True)
+
+        h5_model2 = OP2(debug=True, log=log, mode=None)
+        h5_model2.read_h5(h5_filename_out)
 
     def test_write_solid_bending2(self):
         """tests basic op2 writing"""

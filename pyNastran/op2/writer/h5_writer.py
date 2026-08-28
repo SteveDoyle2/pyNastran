@@ -49,7 +49,7 @@ def get_h5_elemental_nodal(model: OP2):
     split_table_by_type(nodal_dicts, model.grid_point_forces,
                         'GRID_POINT_FORCE', 'GRID_POINT_FORCE_CPLX', '')
     split_table_by_type(nodal_dicts, model.temperatures,
-                        'TEMPERATURE', '', '')
+                        'TEMPERATURE', 'TEMPERATURE_CPLX', '')
 
     # assert len(nodal_dicts) > 0, nodal_dicts
 
@@ -89,7 +89,7 @@ def get_h5_elemental_nodal(model: OP2):
             for key in keys:
                 if key not in key_to_id_map:
                     key_to_id_map.append(key)
-    
+
     return elemental_dicts, nodal_dicts, strain_energy_dicts, key_to_id_map
 
 def split_table_by_type(nodal_dicts: list[tuple],
@@ -316,7 +316,7 @@ def write_h5_domain(h5file: File, result_group, key_to_id_map):
 def write_h5_results(model: OP2, h5file: File,
                      nastran_group, key_to_id_map,
                      elemental_dicts, nodal_dicts, se_dicts,
-                     root: str='/'):
+                     root: str='/', debug: bool=False):
     """
     supports:
      - static, modal, transient, buckling, freq, thermal
@@ -368,8 +368,8 @@ def write_h5_results(model: OP2, h5file: File,
     nastran_index_result_group = h5file.create_group(nastran_index_group, 'RESULT')
     write_h5_domain(h5file, result_group, key_to_id_map)
 
-    write_elemental_dicts(elemental_dicts, key_to_id_map, h5file, result_group, nastran_index_result_group)
-    write_nodal_dicts(nodal_dicts, key_to_id_map, h5file, result_group, nastran_index_result_group)
+    write_elemental_dicts(elemental_dicts, key_to_id_map, h5file, result_group, nastran_index_result_group, debug=debug)
+    write_nodal_dicts(nodal_dicts, key_to_id_map, h5file, result_group, nastran_index_result_group, debug=debug)
     write_summary(model, h5file, result_group, nastran_index_result_group)
     write_strain_energy(
         model, h5file, result_group, nastran_index_result_group,
@@ -595,7 +595,7 @@ def write_summary(model: OP2, h5file: File, result_group, index_group):
 def write_elemental_dicts(elemental_dicts: list[tuple],
                           key_to_id_map,
                           h5file: File,
-                          result_group, index_group):
+                          result_group, index_group, debug: bool=True):
     if len(elemental_dicts) == 0:
         return
 
@@ -616,7 +616,8 @@ def write_elemental_dicts(elemental_dicts: list[tuple],
         elemental_group = h5file.create_group(elemental_group_, group_name)
         elemental_index_group = h5file.create_group(elemental_index_group_, group_name)
         for (name, key_obj_tuple, table_dicti) in element_groups_:
-            print(f'adding {group_name} / {name}')
+            if debug:
+                print(f'adding {group_name} / {name}')
             flag = (group_name, name)
 
             # the table has to be out here in order to handle multi-subcase
@@ -660,7 +661,7 @@ def write_elemental_dicts(elemental_dicts: list[tuple],
 def write_nodal_dicts(nodal_dicts: list[tuple],
                       key_to_id_map,
                       h5file: File,
-                      result_group, index_group):
+                      result_group, index_group, debug: bool=True):
     if len(nodal_dicts) == 0:
         return
     domain_table_dicti = {

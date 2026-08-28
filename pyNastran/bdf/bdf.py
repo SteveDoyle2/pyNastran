@@ -1963,8 +1963,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     self.card_count['ENDDATA'] = 1
                     if nlines - iline_bulk > 1:
                         nleftover = nlines - iline_bulk - 1
-                        msg = 'exiting due to ENDDATA found with %i lines left' % nleftover
-                        self.log.debug(msg)
+                        msg = f'exiting due to ENDDATA found with {nleftover:d} lines left'
+                        self.log.warning(msg)
                     return cards_list, cards_dict, card_count
                 #print("card_name = %s" % card_name)
 
