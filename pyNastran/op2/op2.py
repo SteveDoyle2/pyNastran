@@ -810,9 +810,32 @@ class OP2(OP2_Scalar, OP2Writer):
                     self.log.error(f'build_dataframe is broken for {class_name}')
                     raise
 
-    def load_hdf5_filename(self, hdf5_filename: PathLike, combine: bool=True) -> None:
+    def read_h5(hdf5_filename: PathLike, combine: bool=True):
         """
-        Loads an h5 file into an OP2 object
+        Loads an MSC-style h5 file into an OP2 object
+
+        Parameters
+        ----------
+        hdf5_filename : str
+            the path to the an hdf5 file
+        combine : bool; default=True
+            runs the combine routine
+
+        """
+        check_path(hdf5_filename, 'hdf5_filename')
+        self.op2_filename = hdf5_filename
+
+        self.log.info(f'hdf5_op2_filename = {hdf5_filename!r}')
+        debug = False
+        from tables imoprt File
+        with File(hdf5_filename, 'r') as h5_file:
+            load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
+        self.combine_results(combine=combine)
+
+    def load_hdf5_filename(self, hdf5_filename: PathLike,
+                           combine: bool=True) -> None:
+        """
+        Loads a pyNastran-style h5 file into an OP2 object
 
         Parameters
         ----------
