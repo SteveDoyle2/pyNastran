@@ -72,7 +72,12 @@ readme = {file="README.md", content-type="text/markdown"}
 #readme = {file="README.rst", content-type="text/x-rst"}
 #readme = "README.rst"
 
-requires-python = '>=3.9'
+# The numpy<2 pin below resolves to numpy 1.26.4, which ships no cp313
+# wheel and does not support Python 3.13+. Without an upper bound here a
+# resolver builds numpy from source on 3.13/3.14 and produces an unusable
+# one, so this cap is what makes the failure honest. Lifted on main/1.5,
+# which allow numpy 2.
+requires-python = '>=3.9,<3.13'
 
 #keywords = ["packaging", "dependency", "infer", "pyproject.toml"]
 keywords = ["nastran"]
