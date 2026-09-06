@@ -827,7 +827,7 @@ class OP2(OP2_Scalar, OP2Writer):
 
         self.log.info(f'hdf5_op2_filename = {hdf5_filename!r}')
         debug = False
-        from tables imoprt File
+        from tables import File
         with File(hdf5_filename, 'r') as h5_file:
             load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
         self.combine_results(combine=combine)
