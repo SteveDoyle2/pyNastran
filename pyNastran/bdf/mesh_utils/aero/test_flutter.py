@@ -1,12 +1,22 @@
 import os
 import unittest
-from pyNastran.bdf.mesh_utils.cmd_line.bdf_cmd_line import (
-    cmd_line, cmd_line_create_flutter)
+
+try:
+    import docopt
+    IS_DOCOPT = True
+except ImportError:
+    IS_DOCOPT = False
+NO_DOCOPT = not IS_DOCOPT
+
+if IS_DOCOPT:
+    from pyNastran.bdf.mesh_utils.cmd_line.bdf_cmd_line import (
+        cmd_line, cmd_line_create_flutter)
 TEST_DIR = os.path.dirname(__file__)
 
 
 class TestBDFFlutter(unittest.TestCase):
     """test for bdf flutter"""
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_bdf_flutter(self):
         """tests a flutter sweep"""
         #UNITS eas EAS1 EAS2 SWEEP_UNIT N CONST_TYPE CONST_VAL
@@ -52,6 +62,7 @@ class TestBDFFlutter(unittest.TestCase):
         cmd_line_create_flutter(args, quiet=True)
         cmd_line(args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_flutter_sweep_eas_const_alt_minus(self):
         args = ['bdf', 'flutter', 'english_in', 'eas', '0.1', '100.1', 'knots', '10', 'alt', '0.', 'm',
                 '--minus_eas', '60']
@@ -63,6 +74,7 @@ class TestBDFFlutter(unittest.TestCase):
         cmd_line_create_flutter(args, quiet=True)
         cmd_line(argv=args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_flutter_sweep_eas_const_alt(self):
         args = ['bdf', 'flutter', 'english_in', 'eas', '0.1', '100.1', 'knots', '10', 'alt', '0.', 'm']
         cmd_line_create_flutter(args, quiet=True)
@@ -76,26 +88,32 @@ class TestBDFFlutter(unittest.TestCase):
         with self.assertRaises(AssertionError):
             cmd_line(argv=args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_flutter_sweep_eas_const_mach(self):
         args = ['bdf', 'flutter', 'english_in', 'eas', '0.1', '100.1', 'knots', '10', 'mach', '0.4', 'none']
         cmd_line_create_flutter(args, quiet=True)
         cmd_line(argv=args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_flutter_sweep_mach_const_alt(self):
         args = ['bdf', 'flutter', 'english_in', 'mach', '0.1', '0.9', '10', 'alt', '0.', 'm']
         cmd_line_create_flutter(args, quiet=True)
         cmd_line(argv=args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_flutter_sweep_tas_const_alt(self):
+        asdf
         args = ['bdf', 'flutter', 'english_in', 'tas', '0.1', '100.1', 'ft/s', '10', 'alt', '0.', 'm']
         cmd_line_create_flutter(args, quiet=True)
         cmd_line(argv=args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_flutter_sweep_alt_const_tas(self):
         args = ['bdf', 'flutter', 'english_in', 'alt', '0', '40000', 'ft', '10', 'tas', '100.', 'm/s']
         cmd_line_create_flutter(args, quiet=True)
         cmd_line(argv=args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_flutter_sweep_alt_const_mach(self):
         args = ['bdf', 'flutter', 'english_in', 'alt', '0', '10000', 'ft', '10', 'mach', '0.5', 'none']
         cmd_line_create_flutter(args, quiet=True)
@@ -107,6 +125,7 @@ class TestBDFFlutter(unittest.TestCase):
         cmd_line_create_flutter(args, quiet=True)
         cmd_line(argv=args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_flutter_sweep_alt_const_mach_size(self):
         args = ['bdf', 'flutter', 'english_in', 'alt', '0', '10000', 'ft', '10', 'mach', '0.5', 'none', '--size', '8']
         cmd_line_create_flutter(args, quiet=True)

@@ -4,7 +4,14 @@ import unittest
 from pathlib import Path
 from io import StringIO
 
-from docopt import DocoptExit
+try:
+    import docopt
+    from docopt import DocoptExit
+    IS_DOCOPT = True
+except ImportError:
+    IS_DOCOPT = False
+NO_DOCOPT = not IS_DOCOPT
+
 import numpy as np
 try:
     import scipy
@@ -19,19 +26,23 @@ from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.cmd_line.split_by_file import split_by_file
 
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
+if IS_DOCOPT:
+    from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
 from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 if IS_SCIPY:
     from pyNastran.bdf.mesh_utils.pierce_shells import (
         pierce_shell_model) #, quad_intersection, triangle_intersection)
+if IS_DOCOPT:
+    from pyNastran.bdf.mesh_utils.cmd_line.bdf_cmd_line import (
+        cmd_line, CMD_MAPS)
+
 from pyNastran.bdf.mesh_utils.mirror_mesh import (
     write_bdf_symmetric, bdf_mirror, bdf_mirror_plane)
 from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm)  #mass_properties_breakdown
 from pyNastran.bdf.mesh_utils.make_half_model import make_half_model
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
-from pyNastran.bdf.mesh_utils.cmd_line.bdf_cmd_line import cmd_line, CMD_MAPS
 from pyNastran.bdf.mesh_utils.find_closest_nodes import find_closest_nodes
 from pyNastran.bdf.mesh_utils.find_coplanar_elements import find_coplanar_triangles
 from pyNastran.bdf.mesh_utils.force_to_pressure import force_to_pressure
@@ -108,20 +119,21 @@ class TestRbeTools(unittest.TestCase):
         elem = model.rigid_elements[eid0]
         assert elem.type == 'RBE2', elem
 
-        log.debug('starting cmd_line rbe2_to_rbe3-1')
-        # print(msg)
-        args = ['bdf', 'rbe2_to_rbe3', str(bdf_filename1), '-o', str(bdf_filename2)]
-        model32 = cmd_line(args, quiet=True, log=log)
-        assert len(model32.rigid_elements) == 3, model32.rigid_elements
-        # print(model32.get_bdf_stats())
+        if IS_DOCOPT:
+            log.debug('starting cmd_line rbe2_to_rbe3-1')
+            # print(msg)
+            args = ['bdf', 'rbe2_to_rbe3', str(bdf_filename1), '-o', str(bdf_filename2)]
+            model32 = cmd_line(args, quiet=True, log=log)
+            assert len(model32.rigid_elements) == 3, model32.rigid_elements
+            # print(model32.get_bdf_stats())
 
-        log.debug('starting cmd_line rbe3_to_rbe2-2')
-        args = ['bdf', 'rbe3_to_rbe2', str(bdf_filename2), '-o', str(bdf_filename3)]
-        cmd_line(args, quiet=True, log=log)
+            log.debug('starting cmd_line rbe3_to_rbe2-2')
+            args = ['bdf', 'rbe3_to_rbe2', str(bdf_filename2), '-o', str(bdf_filename3)]
+            cmd_line(args, quiet=True, log=log)
 
-        log.debug('finished')
-        for fname in [bdf_filename1, bdf_filename2, bdf_filename3]:
-            os.remove(fname)
+            log.debug('finished')
+            for fname in [bdf_filename1, bdf_filename2, bdf_filename3]:
+                os.remove(fname)
 
     def test_merge_rbe2(self):
         log = SimpleLogger(level='warning')
@@ -153,6 +165,7 @@ class TestRbeTools(unittest.TestCase):
 
 
 class TestMeshUtilsCmdLine(unittest.TestCase):
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_cmdline_mass(self):
         bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
         obj_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.obj'
@@ -167,6 +180,7 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         args = ['bdf', 'mass', bdf_filename, '--no_prop_mass', '--obj']
         cmd_line(args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_cmdline_solid_dof(self):
         bdf_filename = TEST_DIR / 'solid_dof.bdf'
         log = SimpleLogger(level='warning')
@@ -199,15 +213,16 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         model.write_bdf(bdf_filename)
         model, out_nids = cmd_line(args, quiet=True)
         assert len(out_nids) == 1, out_nids
-
         os.remove(bdf_filename)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_cmdline_inclzip_bwb(self):
         """tests ``inclzip``"""
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
         args = ['bdf', 'inclzip', str(bdf_filename)]
         cmd_line(args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_cmdline_stats_bwb(self):
         """tests ``stats``"""
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
@@ -220,12 +235,14 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
     #     args = ['bdf', 'free_edges', str(bdf_filename)]
     #     cmd_line(args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_cmdline_bdf_stats(self):
         """tests ```bdf stats```"""
         bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
         args = ['bdf', 'stats', str(bdf_filename)]
         cmd_line(args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_cmdline_bdf_diff(self):
         """tests ```bdf diff```"""
         bdf_filename1 = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
@@ -233,6 +250,7 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         args = ['bdf', 'diff', str(bdf_filename1), str(bdf_filename2)]
         cmd_line(args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_cmdline_bdf_replace(self):
         """tests ```bdf diff```"""
         bdf_filename1 = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
@@ -284,25 +302,27 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
 
         bdf_filename = TEST_DIR / 'test_free_edges.bdf'
         model.write_bdf(bdf_filename)
-        args = ['bdf', 'collapse_quads', str(bdf_filename), '--punch', '--size', '16']
-        cmd_line(args, quiet=True)
+        if IS_DOCOPT:
+            args = ['bdf', 'collapse_quads', str(bdf_filename), '--punch', '--size', '16']
+            cmd_line(args, quiet=True)
 
-        bdf_filename = TEST_DIR / 'test_free_edges_quad.bdf'
-        bdf_filename_out = TEST_DIR / 'test_free_edges_quad.bdf'
-        model.add_grid(100, [0., 0., 0.])
-        model.add_cquad4(100, 1, [1, 2, 3, 1])
-        model.write_bdf(bdf_filename)
-        args2 = ['bdf', 'collapse_quads', str(bdf_filename), '--punch',
-                '-o', str(bdf_filename_out)]
-        cmd_line(args2, quiet=True)
+            bdf_filename = TEST_DIR / 'test_free_edges_quad.bdf'
+            bdf_filename_out = TEST_DIR / 'test_free_edges_quad.bdf'
+            model.add_grid(100, [0., 0., 0.])
+            model.add_cquad4(100, 1, [1, 2, 3, 1])
+            model.write_bdf(bdf_filename)
+            args2 = ['bdf', 'collapse_quads', str(bdf_filename), '--punch',
+                    '-o', str(bdf_filename_out)]
+            cmd_line(args2, quiet=True)
 
-        #bdf flip_shell_normals IN_BDF_FILENAME[-o OUT_BDF_FILENAME] [--punch][--zero_zoffset]
-        args3 = ['bdf', 'flip_shell_normals', str(bdf_filename_out), '--punch']
-        cmd_line(args3, quiet=True)
+            #bdf flip_shell_normals IN_BDF_FILENAME[-o OUT_BDF_FILENAME] [--punch][--zero_zoffset]
+            args3 = ['bdf', 'flip_shell_normals', str(bdf_filename_out), '--punch']
+            cmd_line(args3, quiet=True)
 
-        args4 = ['bdf', 'remove_unused', str(bdf_filename_out), '--punch']
-        cmd_line(args4, quiet=True)
+            args4 = ['bdf', 'remove_unused', str(bdf_filename_out), '--punch']
+            cmd_line(args4, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_free_faces(self):
         """CTETRA10"""
         #bdf free_faces [-d | -l] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME
@@ -315,6 +335,7 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
                  quiet=True)
         os.remove(skin_filename)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_cmdline_nsm_split(self):
         bdf_filename = DIRNAME / 'test_nsm_split.bdf'
         model = BDF(debug=False)
@@ -346,6 +367,7 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         bdf_filename.unlink()
         bdf_filename_out.unlink()
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_exit(self):
         """tests totally failing to run"""
         with self.assertRaises(SystemExit):
@@ -600,9 +622,10 @@ class TestMeshUtils(unittest.TestCase):
 5551
 5552
 5553""")
-        args = ['bdf', 'split_by_file', bdf_filename,
-                a_csv, b_csv]
-        cmd_line(args, quiet=True)
+        if IS_DOCOPT:
+            args = ['bdf', 'split_by_file', bdf_filename,
+                    a_csv, b_csv]
+            cmd_line(args, quiet=True)
         model = read_bdf(bdf_filename, xref=False, log=log)
         split_by_file(model, eid_filenames,
                       # properties_to_skip=properties_to_skip,
@@ -616,24 +639,26 @@ class TestMeshUtils(unittest.TestCase):
         for fname in [a_csv, b_csv, bdf_filename_out]:
             fname.unlink()
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_bdf_delete_bad_shells(self):
         """tests ```bdf delete_bad_shells```"""
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
         args = ['bdf', 'delete_bad_shells', str(bdf_filename)]
         cmd_line(args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_bdf_remove_comments(self):
         """tests ```bdf remove_comments```"""
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
         args = ['bdf', 'remove_comments', str(bdf_filename)]
         cmd_line(args, quiet=True)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_bdf_list_conm2(self):
         """tests ```bdf list_conm2```"""
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
         args = ['bdf', 'list_conm2', str(bdf_filename)]
         cmd_line(args, quiet=True)
-
 
     def test_breakdown_01(self):
         """run the various breakdowns"""
@@ -663,8 +688,9 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filenames1 = [bdf_filename1, bdf_filename2]
         bdf_filenames2 = [bdf_filename1, bdf_filename2, bdf_filename3, bdf_filename4]
 
-        args = ['bdf', 'merge', '--debug'] + [str(pathi) for pathi in bdf_filenames1]
-        cmd_line_merge(args, quiet=True)
+        if IS_DOCOPT:
+            args = ['bdf', 'merge', '--debug'] + [str(pathi) for pathi in bdf_filenames1]
+            cmd_line_merge(args, quiet=True)
         bdf_merge(bdf_filenames1, bdf_filename_out=bdf_filename_out1,
                   renumber=True, encoding=None, size=8, is_double=False,
                   cards_to_skip=None, log=log)
@@ -683,6 +709,7 @@ class TestMeshUtils(unittest.TestCase):
         os.remove(bdf_filename_out2)
         os.remove(bdf_filename_out3)
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_export_mcids(self):
         """creates material coordinate systems"""
         log = SimpleLogger(level='error')
@@ -696,15 +723,16 @@ class TestMeshUtils(unittest.TestCase):
         model.safe_cross_reference()
         #os.remove('mcids.csv')
 
-        argv = ['bdf', 'export_mcids', str(bdf_filename), '-o', str(csv_filename),
-                '--iplies', '0,1,2,3,4,5,6,7,8,9,10', '--no_x', '--no_y']
-        with self.assertRaises(DocoptExit):
-            # can't define both --no_x and --no_y
-            cmd_line(argv=argv, quiet=True)
+        if IS_DOCOPT:
+            argv = ['bdf', 'export_mcids', str(bdf_filename), '-o', str(csv_filename),
+                    '--iplies', '0,1,2,3,4,5,6,7,8,9,10', '--no_x', '--no_y']
+            with self.assertRaises(DocoptExit):
+                # can't define both --no_x and --no_y
+                cmd_line(argv=argv, quiet=True)
 
-        argv = ['bdf', 'export_mcids', str(bdf_filename), '-o', str(csv_filename),
-                '--iplies', '0,1,2,3,4,5,6,7,8,9', '--no_x']
-        cmd_line(argv=argv, quiet=True)
+            argv = ['bdf', 'export_mcids', str(bdf_filename), '-o', str(csv_filename),
+                    '--iplies', '0,1,2,3,4,5,6,7,8,9', '--no_x']
+            cmd_line(argv=argv, quiet=True)
 
         eids = [1204, 1211]
         export_mcids(model, csv_filename=None, eids=eids,
@@ -729,6 +757,7 @@ class TestMeshUtils(unittest.TestCase):
                          iply=10)
         #os.remove('mcids.csv')
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_split_cbars_by_pin_flag_1(self):
         """null pin flag test"""
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar.bdf')
@@ -854,6 +883,7 @@ class TestMeshUtils(unittest.TestCase):
         model.write_bdf(bdf_file, close=False)
         #print(bdf_file.getvalue())
 
+    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_shells_add(self):
         """
         tests differential mass and material coordinate systems
