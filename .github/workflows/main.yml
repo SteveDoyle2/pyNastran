@@ -263,6 +263,7 @@ jobs:
           pip list
           pip install -e . --no-deps
           pip install numpy
+          pip install cpylog
  
       - name: List dependencies
         run: |
