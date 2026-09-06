@@ -260,7 +260,8 @@ jobs:
         name: Remove Scipy
         run: |
           pip uninstall scipy
-
+          pip install -e . --no-deps
+ 
       - name: List dependencies
         run: |
           pip list
