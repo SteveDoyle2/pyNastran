@@ -102,7 +102,6 @@ class TestBDFFlutter(unittest.TestCase):
 
     @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_flutter_sweep_tas_const_alt(self):
-        asdf
         args = ['bdf', 'flutter', 'english_in', 'tas', '0.1', '100.1', 'ft/s', '10', 'alt', '0.', 'm']
         cmd_line_create_flutter(args, quiet=True)
         cmd_line(argv=args, quiet=True)
