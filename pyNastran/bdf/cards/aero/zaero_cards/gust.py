@@ -11,8 +11,6 @@ from __future__ import annotations
 from itertools import count
 from typing import TYPE_CHECKING
 
-from matplotlib import pyplot as plt
-
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
@@ -28,6 +26,7 @@ from pyNastran.bdf.cards.aero.zaero_cards.ase import (
 from pyNastran.bdf.cards.aero.zaero_cards.cards import MLDCOMD
 
 if TYPE_CHECKING:  # pragma: no cover
+    from matplotlib import pyplot as plt
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
@@ -176,6 +175,8 @@ class GLOADS(BaseCard):
         mldcomd = self.mldcomd_ref
         ntables = len(mldcomd.extinps_ref)
         assert ntables > 0, ntables
+
+        from matplotlib import pyplot as plt
         axes = fig.subplots(nrows=ntables)
         if ntables == 1:
             axes = [axes]
@@ -290,6 +291,8 @@ class DGUST(BaseCard):
         mldcomd = self.mldcomd_ref
         ntables = len(mldcomd.extinps_ref)
         assert ntables > 0, ntables
+
+        from matplotlib import pyplot as plt
         axes = fig.subplots(nrows=ntables)
         if ntables == 1:
             axes = [axes]
@@ -403,6 +406,8 @@ class CGUST(BaseCard):
         mldcomd = self.mldcomd_ref
         ntables = len(mldcomd.extinps_ref)
         assert ntables > 0, ntables
+
+        from matplotlib import pyplot as plt
         axes = fig.subplots(nrows=ntables)
         if ntables == 1:
             axes = [axes]

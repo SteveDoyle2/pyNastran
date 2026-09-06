@@ -11,8 +11,6 @@ from __future__ import annotations
 from itertools import count
 from typing import TYPE_CHECKING
 
-from matplotlib import pyplot as plt
-
 from pyNastran.bdf.cards.aero.zaero_cards.spline import cross_reference_set
 from pyNastran.bdf.cards.aero.zaero_cards.utils import split_filename_dollar
 from pyNastran.utils.numpy_utils import integer_types
@@ -28,9 +26,9 @@ from pyNastran.bdf.cards.aero.zaero_cards.ase import (
 from pyNastran.bdf.cards.aero.zaero_cards.cards import MLDCOMD
 
 if TYPE_CHECKING:  # pragma: no cover
+    from matplotlib import pyplot as plt
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-
 
 
 class MLOADS(BaseCard):
@@ -182,6 +180,8 @@ class MLOADS(BaseCard):
         mldcomd = self.mldcomd_ref
         ntables = len(mldcomd.extinps_ref)
         assert ntables > 0, ntables
+
+        from matplotlib import pyplot as plt
         axes = fig.subplots(nrows=ntables)
         if ntables == 1:
             axes = [axes]

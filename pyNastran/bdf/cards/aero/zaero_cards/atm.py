@@ -12,7 +12,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 from pyNastran.utils.convert import convert_length
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -25,6 +24,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 from pyNastran.bdf.cards.aero.zaero_interface.get_card import get_atmos, get_mkaeroz
 if TYPE_CHECKING:  # pragma: no cover
+    from matplotlib import pyplot as plt
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 

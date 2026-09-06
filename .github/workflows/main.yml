@@ -154,7 +154,7 @@ jobs:
           echo "GITHUB_ACTION=$GITHUB_ACTION"
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
