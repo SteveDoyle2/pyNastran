@@ -45,8 +45,9 @@ jobs:
         pip install build twine
     - name: Build
       run: |
-        python -m build
+        python -m build --wheel --sdist --verbose .
         twine check dist/*
+        ls dist
     - name: Publish
       if: github.event_name == 'release'
       uses: pypa/gh-action-pypi-publish@release/v1
