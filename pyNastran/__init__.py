@@ -10,12 +10,12 @@ if sys.version_info < (3, 9):  # pragma: no cover
     raise ImportError('Upgrade your Python to >= 3.9.0; version=(%s.%s.%s)' % (
         IMAJOR, MINOR1, MINOR2))
 
-__version__ = '1.4.1'
+__version__ = '1.4.2'
 __version_release__ = __version__
 
-# only for release; 1.4.1
-__releaseDate__ = '2024/3/25'
-__releaseDate2__ = 'MARCH 25, 2024'
+# only for release
+__releaseDate__ = '2026/9/7'
+__releaseDate2__ = 'SEPTEMBER 7, 2026'
 
 __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'

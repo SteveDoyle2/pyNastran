@@ -9,6 +9,13 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 Release Notes
 =============
 
+v1.4.2 (2026/9/7)
+------------------
+This updates the version requirements to prevent trying to build numpy on unsupported python versions.
+
+Python 3.9-3.12 with numpy<2 is required unless you use the main branch.
+
+
 v1.4.1 (2024/3/25)
 ------------------
 This is a mainly a bug fix release.  There's also a couple of new acoustic cards and MSC's STRESSA table that were added to fix some errors.
