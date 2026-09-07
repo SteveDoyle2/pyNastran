@@ -1,6 +1,8 @@
 """Tests for pyNastran.bdf.bdf_interface.utils (to_fields, expand_tabs)."""
 import unittest
+from io import StringIO
 from pyNastran.bdf.bdf_interface.utils import to_fields, expand_tabs
+from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.errors import CardParseSyntaxError
 
 
@@ -245,6 +247,141 @@ class TestToFields(unittest.TestCase):
         line2 = '*        100'
         fields = to_fields([line1, line2], 'CARD')
         self.assertEqual(fields[8].strip(), '')
+
+    def test_csv_line0_overflow_raises(self):
+        """A free-field line-0 with more than 10 fields raises CardParseSyntaxError."""
+        line = 'GRID,1,,1.0,2.0,3.0,,,1,999,888'
+        with self.assertRaises(CardParseSyntaxError):
+            to_fields([line], 'GRID')
+
+    def test_csv_field10_data_raises(self):
+        """Data in field 10 (the continuation slot) raises CardParseSyntaxError."""
+        line = 'GRID,1,,1.0,2.0,3.0,,,1,999'
+        with self.assertRaises(CardParseSyntaxError):
+            to_fields([line], 'GRID')
+
+    def test_csv_field10_marker_ok(self):
+        """A continuation marker in field 10 is dropped, not an error."""
+        line = 'GRID,1,,1.0,2.0,3.0,,,1,+'
+        fields = to_fields([line], 'GRID')
+        self.assertEqual(len(fields), 9)
+        self.assertNotIn('+', fields)
+
+    def test_csv_field10_numeric_marker_ok(self):
+        """A numeric continuation marker like '+01' is allowed in field 10."""
+        line = 'TABLED1,100,,,,,,,,+01'
+        fields = to_fields([line], 'TABLED1')
+        self.assertEqual(fields[0], 'TABLED1')
+        self.assertEqual(fields[1], '100')
+
+    def test_csv_trailing_comma_marker_ok(self):
+        """A trailing comma after the field-10 marker is not counted as a field."""
+        line = 'CORD2R,5,,0.,0.,0.,0.,0.,1.0,+C1,'
+        fields = to_fields([line], 'CORD2R')
+        self.assertEqual(len(fields), 9)
+        self.assertEqual(fields[8], '1.0')
+
+    def test_csv_continuation_overflow_raises(self):
+        """A continuation line with 10 data tokens raises CardParseSyntaxError."""
+        line1 = 'PBAR,1,1,1.0,2.0,3.0,4.0,5.0,6.0'
+        line2 = ',8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0'
+        with self.assertRaises(CardParseSyntaxError):
+            to_fields([line1, line2], 'PBAR')
+
+    def test_csv_continuation_9_data_raises(self):
+        """9 data fields on a continuation line is overflow (field 10 = data)."""
+        line1 = 'GRID,1,,1.0,2.0,3.0,,,1'
+        line2 = ',100,101,102,103,104,105,106,107,108'
+        with self.assertRaises(CardParseSyntaxError):
+            to_fields([line1, line2], 'GRID')
+
+    def test_csv_line0_marker_stripped(self):
+        """A marker in the last data slot of a CSV line-0 is stripped."""
+        line = 'GRID,1,,1.0,2.0,3.0,,,+'
+        fields = to_fields([line], 'GRID')
+        self.assertEqual(len(fields), 9)
+        self.assertNotIn('+', fields)
+
+    def test_csv_continuation_marker_stripped(self):
+        """A marker in the last data slot of a CSV continuation is stripped."""
+        line1 = 'GRID,1,,1.0,2.0,3.0,,,1'
+        line2 = ',100,101,102,103,104,105,106,+B'
+        fields = to_fields([line1, line2], 'GRID')
+        self.assertEqual(len(fields), 9 + 8)
+        self.assertNotIn('+B', fields)
+
+    def test_matrix_card_free_field_row_not_truncated(self):
+        """DMI/DMIG-family rows are variable-length; the 9-field cap must not apply."""
+        fields = to_fields(['DMI,AAA,1,1,1.0,1.0,1.0,1.0,1.0,2.0,3.0'], 'DMI')
+        self.assertEqual(len(fields), 11)
+        self.assertEqual(fields[9], '2.0')
+        self.assertEqual(fields[10], '3.0')
+
+    def test_large_field_csv_line0_overflow(self):
+        """A 6-token large-field CSV line-0 exceeds the 5-field grammar."""
+        with self.assertRaises(CardParseSyntaxError):
+            to_fields(['PBAR*,1,1.0,2.0,3.0,4.0,5.0'], 'PBAR')
+
+    def test_large_field_csv_continuation_overflow(self):
+        """A large-field continuation holds 4 data fields; 5 must raise."""
+        with self.assertRaises(CardParseSyntaxError):
+            to_fields(['GRID*,1,,1.0,2.0', '*,3.0,4.0,5.0,6.0,7.0'], 'GRID')
+
+    def test_large_field_csv_valid(self):
+        """5-field line-0 and 4-field continuations still parse."""
+        fields = to_fields(['GRID*,1,,1.0,2.0'], 'GRID')
+        self.assertEqual(fields, ['GRID*', '1', '', '1.0', '2.0'])
+        fields2 = to_fields(['GRID*,1,,1.0,2.0', '*,3.0,4.0'], 'GRID')
+        self.assertEqual(fields2[:7], ['GRID*', '1', '', '1.0', '2.0', '3.0', '4.0'])
+
+
+class TestReadBdfFreeFieldOverflow(unittest.TestCase):
+    """read_bdf rejects free-field lines that exceed the 10-field line grammar."""
+
+    def test_read_bdf_grid_line0_overflow_raises(self):
+        """An 11-token GRID line raises instead of silently dropping the overflow."""
+        bdf = 'SOL 101\nCEND\nBEGIN BULK\nGRID,1,,1.0,2.0,3.0,,,1,999,888\nENDDATA\n'
+        with self.assertRaises(CardParseSyntaxError):
+            read_bdf(StringIO(bdf), validate=False, xref=False)
+
+    def test_read_bdf_pbar_continuation_overflow_raises(self):
+        """A PBAR continuation with 10 data tokens raises instead of using defaults."""
+        bdf = (
+            'SOL 101\nCEND\nBEGIN BULK\n'
+            'PBAR,1,1,1.0,2.0,3.0,4.0,5.0,6.0,7.0\n'
+            ',8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0\n'
+            'ENDDATA\n')
+        with self.assertRaises(CardParseSyntaxError):
+            read_bdf(StringIO(bdf), validate=False, xref=False)
+
+    def test_read_bdf_cord2c_one_line_rejected(self):
+        """A one-line 12-token CORD2C is malformed and raises."""
+        bdf = (
+            'SOL 101\nCEND\nBEGIN BULK\n'
+            'CORD2C,1,0,0.,0.,0.,0.,0.,1.,0.,1.,0.\n'
+            'ENDDATA\n')
+        with self.assertRaises(CardParseSyntaxError):
+            read_bdf(StringIO(bdf), validate=False, xref=False)
+
+    def test_read_bdf_cord2c_two_line_ok(self):
+        """The same CORD2C in two lines parses and gives the written frame."""
+        bdf = (
+            'SOL 101\nCEND\nBEGIN BULK\n'
+            'CORD2C,1,0,0.,0.,0.,0.,0.,1.\n'
+            ',0.,1.,0.\n'
+            'ENDDATA\n')
+        model = read_bdf(StringIO(bdf), validate=False, xref=False)
+        coord = model.coords[1]
+        self.assertEqual(coord.e2.tolist(), [0., 0., 1.])
+        self.assertEqual(coord.e3.tolist(), [0., 1., 0.])
+
+    def test_read_bdf_dmi_row_overflow_ok(self):
+        """DMI matrix data rows may exceed 10 fields (variable-length rows)."""
+        bdf = (
+            'DMI,ZRO,0,2,1,0,,11,1\n'
+            'DMI,ZRO,1,1,1.0,1.0,1.0,1.0,1.0,2.0,3.0\n')
+        model = read_bdf(StringIO(bdf), validate=False, xref=False, punch=True)
+        self.assertIn('ZRO', model.dmi)
 
 
 if __name__ == '__main__':  # pragma: no cover
