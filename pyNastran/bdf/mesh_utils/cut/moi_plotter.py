@@ -22,6 +22,7 @@ from pyNastran.bdf.cards.coordinate_systems import (
     CORD2R, Coord,
     xyz_to_rtz_array, rtz_to_xyz_array)
 from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.mesh_utils.cut.torsion import bredt_batho_gj
 from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     cut_face_model_by_coord, _setup_faces,
     # is_element_cut,
@@ -157,7 +158,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         stop_on_failure=stop_on_failure,
     )
     (thetas, stations, dx, dz, L, A, I, J, ExI, EyI, GJ, avg_centroid,
-     plane_bdf_filenames, plane_bdf_filenames2) = out
+     plane_bdf_filenames, plane_bdf_filenames2, ExA, EyA, GA) = out
 
     assert len(stations) > 0, stations
     thetas_csv_filename = dirname / thetas_csv_filename
@@ -187,15 +188,13 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
 
     if beam_model_bdf_filename:
         beam_model_bdf_filename = dirname / beam_model_bdf_filename
-        # wrong
-        EyIz = ExIz
-        EyIx = ExIx
-        EyIxz = ExIxz
+        # Ex* rather than Ey* because Ex is the modulus along the beam axis
+        # (normal to the cut plane); see the note in the docstring.
         _write_beam_model(
-            avg_centroid, A,
-            EyIz, EyIx, EyIxz, GJ,
+            avg_centroid, A, ExA, GA,
+            ExIz, ExIx, ExIxz, GJ,
             beam_model_bdf_filename,
-        )
+            nround=2,)
 
     if cut_data_span_filename:
         cut_data_span_filename = dirname / cut_data_span_filename
@@ -259,11 +258,15 @@ def load_moi_data(csv_filename: PathLike) -> tuple[np.ndarray, np.ndarray, np.nd
 
 def _write_beam_model(avg_centroid: np.ndarray,
                       A: np.ndarray,
-                      EyIz: np.ndarray,
-                      EyIx: np.ndarray,
-                      EyIxz: np.ndarray,
+                      ExA: np.ndarray,
+                      GA: np.ndarray,
+                      ExIz: np.ndarray,
+                      ExIx: np.ndarray,
+                      ExIxz: np.ndarray,
                       GJ: np.ndarray,
-                      bdf_filename: PathLike=''):
+                      bdf_filename: PathLike='',
+                      rho: float=0.1,
+                      nround: int=-100):
     """
     Assume y is down the axis of the beam
     The beam cross section is defined in the x-z plane.
@@ -272,16 +275,80 @@ def _write_beam_model(avg_centroid: np.ndarray,
     |
     |
     ----------> x
+
+    The section stiffnesses that come out of the cut are modulus-weighted
+    integrals (EA, E*I, G*J), so they have to be split into a material part
+    and a property part before they can be written.  Rather than write a
+    unit-modulus MAT1 and fold the moduli into the PBEAM (which couples EA to
+    the transverse shear term K*G*A, because both read the same A field), the
+    MAT1 carries real reference moduli::
+
+        E_ref = sum(Ex_i*dA_i) / sum(dA_i)      area-weighted axial modulus
+        G_ref = sum(Gxy_i*dA_i) / sum(dA_i)     area-weighted shear modulus
+        nu    = E_ref/(2*G_ref) - 1             consistent by construction
+
+    and the PBEAM carries effective section properties referenced to them::
+
+        A   = EA / E_ref        -> E_ref*A   == EA      (exact)
+        I1  = E*Ix / E_ref      -> E_ref*I1  == E*Ix    (exact)
+        I2  = E*Iz / E_ref      -> E_ref*I2  == E*Iz    (exact)
+        I12 = E*Ixz / E_ref
+        J   = GJ / G_ref        -> G_ref*J   == GJ      (exact)
+        K1  = K2 = GA / (G_ref*A)                       (exact)
+
+    Every stiffness is then reproduced independently.  For a homogeneous
+    section this degenerates to the physical answer: E_ref/G_ref are the real
+    moduli, A is the real area (so ``rho`` gives a meaningful mass), and
+    K1 = K2 = 1.
+
     TODO: it's possible the 1-2 axes are flipped; run a tip bend case
+    TODO: J is the polar moment (Ix+Iz), not the Bredt-Batho torsion
+          constant; exact for a closed circular section, too stiff otherwise
+    TODO: I12 sign has not been reconciled with the element frame
     """
     if isinstance(bdf_filename, str) and len(bdf_filename) == 0:
         return
 
+    # stations where no cut was found come back as NaN; writing them produces
+    # blank GRID/PBEAM fields and an unreadable deck
+    ivalid = np.where(
+        np.isfinite(A) & np.isfinite(ExA) & np.isfinite(GA) &
+        np.isfinite(avg_centroid).all(axis=1))[0]
+    if len(ivalid) < 2:
+        raise RuntimeError(
+            f'cannot write an equivalent beam model; only {len(ivalid):d} '
+            'valid station(s) were cut (2 are needed to make a CBEAM)')
+
+    avg_centroid = avg_centroid[ivalid, :]
+    A = A[ivalid]
+    ExA = ExA[ivalid]
+    GA = GA[ivalid]
+    ExIz = ExIz[ivalid]
+    ExIx = ExIx[ivalid]
+    ExIxz = ExIxz[ivalid]
+    GJ = GJ[ivalid]
+
+    # area-weighted reference moduli; a single MAT1 for the whole beam
+    Atotal = A.sum()
+    E_ref = ExA.sum() / Atotal
+    G_ref = GA.sum() / Atotal
+    nu = E_ref / (2. * G_ref) - 1.
+
+    # effective section properties referenced to E_ref/G_ref
+    area_eff = ExA / E_ref
+    i1_eff = ExIx / E_ref
+    i2_eff = ExIz / E_ref
+    i12_eff = ExIxz / E_ref
+    j_eff = GJ / G_ref
+    # shear correction factor; 1.0 when E/G is uniform over the section
+    k_eff = GA / (G_ref * area_eff)
+
     mid = 1
-    # TODO: not sure on nu
     beam_model = BDF(debug=False)
-    beam_model.add_mat1(mid=mid, E=1., G=1., nu=0.3, rho=0.1)
+    beam_model.add_mat1(mid=mid, E=E_ref, G=G_ref, nu=nu, rho=rho)
     for inid, xyz in enumerate(avg_centroid):
+        if nround != -100:
+            xyz = xyz.round(nround)
         beam_model.add_grid(inid+1, xyz)
 
     for eid in range(1, len(A)):
@@ -291,17 +358,18 @@ def _write_beam_model(avg_centroid: np.ndarray,
         g0 = None
         beam_model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                              pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
-        # j = i1 + i2
         so = ['YES', 'YES']
         xxb = [0., 1.]
-        area = [A[eid-1], A[eid]]
-        i1 = [EyIx[eid-1], EyIx[eid]]
-        i2 = [EyIz[eid-1], EyIz[eid]]
-        i12 = [EyIxz[eid-1], EyIxz[eid]]
-        j = [GJ[eid-1], GJ[eid]]
+        area = [area_eff[eid-1], area_eff[eid]]
+        i1 = [i1_eff[eid-1], i1_eff[eid]]
+        i2 = [i2_eff[eid-1], i2_eff[eid]]
+        i12 = [i12_eff[eid-1], i12_eff[eid]]
+        j = [j_eff[eid-1], j_eff[eid]]
+        # K is constant over the element; average the two ends
+        k1 = k2 = 0.5 * (k_eff[eid-1] + k_eff[eid])
         beam_model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
                              c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
-                             k1=1., k2=1., s1=0., s2=0., nsia=0., nsib=None, cwa=0., cwb=None,
+                             k1=k1, k2=k2, s1=0., s2=0., nsia=0., nsib=None, cwa=0., cwb=None,
                              m1a=0., m2a=0., m1b=None, m2b=None,
                              n1a=0., n2a=0., n1b=None, n2b=None,
                              comment='')
@@ -389,6 +457,9 @@ def _get_station_data(model: BDF,
     EyI = np.full((ny, 6), np.nan, dtype='float64')
     GJ = np.full(ny, np.nan, dtype='float64')
     avg_centroid = np.full((ny, 3), np.nan, dtype='float64')
+    ExA = np.full(ny, np.nan, dtype='float64')
+    EyA = np.full(ny, np.nan, dtype='float64')
+    GA = np.full(ny, np.nan, dtype='float64')
 
     log.debug(f'dys={dys}; n={len(dys):d}')
     assert len(dys) == len(coords), (len(dys), len(coords))
@@ -431,7 +502,8 @@ def _get_station_data(model: BDF,
         log.info(f'calculate_area_moi {icut:d} (station={dy})')
         (dxi, dzi, lengthi, areai,
          inertiai, Ji,
-         ExIi, EyIi, GJi, avg_centroidi) = calculate_area_moi(
+         ExIi, EyIi, GJi, avg_centroidi,
+         ExAi, EyAi, GAi) = calculate_area_moi(
             model, rods, normal_plane, thetas,
             moi_filename=moi_filename)
 
@@ -449,6 +521,9 @@ def _get_station_data(model: BDF,
         EyI[icut, :] = EyIi
         GJ[icut] = GJi
         avg_centroid[icut, :] = avg_centroidi
+        ExA[icut] = ExAi
+        EyA[icut] = EyAi
+        GA[icut] = GAi
         ncuts_found += 1
         #break
     if ncuts_found == 0:
@@ -458,7 +533,8 @@ def _get_station_data(model: BDF,
         thetas, y, dx, dz,
         length, area, inertia, J,
         ExI, EyI, GJ,
-        avg_centroid, plane_bdf_filenames1, plane_bdf_filenames2
+        avg_centroid, plane_bdf_filenames1, plane_bdf_filenames2,
+        ExA, EyA, GA,
     )
     return out
 
@@ -644,6 +720,7 @@ def calculate_area_moi(model: BDF,
                        thetas: dict[int, tuple[float, float, float, float]],
                        moi_filename: PathLike='',
                        eid_filename: PathLike='eid_file.csv',
+                       use_bredt_batho: bool=True,
                        ) -> tuple[np.ndarray, np.ndarray, np.ndarray,               # dxi, dyi, total_area,
                                   np.ndarray, np.ndarray,                           # Isum, Jsum,
                                   np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # ExIsum, EyIsum, GJsum, avg_centroid
@@ -677,6 +754,9 @@ def calculate_area_moi(model: BDF,
         thetas[eid] = (thetad, Ex, Ey, Gxy)
     moi_filename : str; default=None
         writes a csv file
+    use_bredt_batho : bool; default=True
+        compute the torsion constant from the cell topology; set False to
+        get the legacy GJ = G*(Ix+Iz) polar-moment approximation
 
     Returns
     -------
@@ -769,10 +849,13 @@ def calculate_area_moi(model: BDF,
     xyz[:, 2] = 0.
     rtz = xyz_to_rtz_array(xyz)
     rtz2 = rtz + delta
-    xyz2 = rtz_to_xyz_array(rtz2)
-    x2 = xyz2[:, 0]
-    y2 = xyz2[:, 1]
-    #z2 = xyz2[:, 2]
+    # NOTE: this used to be called xyz2, which shadowed the wall end
+    # coordinate of the same name computed above; _write_moi_file was being
+    # handed this rotation scratch array instead of the real wall end
+    xyz_rot = rtz_to_xyz_array(rtz2)
+    x2 = xyz_rot[:, 0]
+    y2 = xyz_rot[:, 1]
+    #z2 = xyz_rot[:, 2]
 
     #origin = d
     #zaxis = np.array([0., 1., 0.])
@@ -800,6 +883,43 @@ def calculate_area_moi(model: BDF,
     GJsum = (gxy * J).sum()
     assert len(Isum) == 6, len(Isum)
 
+    # Modulus-weighted areas.  ExA = sum(Ex_i*dA_i) is the section axial
+    # stiffness EA; GA = sum(Gxy_i*dA_i) is the transverse shear stiffness.
+    # Neither is recoverable from ExI/I on a heterogeneous section, because
+    # ExI is weighted by x^2 while EA is weighted by area, so they have to be
+    # accumulated here.
+    ExAsum = (ex * area).sum()
+    EyAsum = (ey * area).sum()
+    GAsum = (gxy * area).sum()
+
+    # Torsion.  G*(Ix+Iz) is the polar moment, which is the torsion constant
+    # only for a closed circular section; a wing box is far stiffer in the
+    # polar measure than it really is in torsion.  Recover the cell topology
+    # from the wall connectivity and solve Bredt-Batho instead.
+    if use_bredt_batho and len(xyz1) == len(thickness):
+        gj_bredt, torsion_method, ncells = bredt_batho_gj(
+            xyz1, xyz2, length, thickness, gxy, log=model.log)
+        if torsion_method == 'none':
+            model.log.warning(
+                'no usable walls for the torsion calculation; '
+                'falling back to GJ = G*(Ix+Iz)')
+        else:
+            if torsion_method == 'open':
+                # orders of magnitude softer than a closed cell, so this must
+                # not pass silently; the usual cause is a station landing on a
+                # rib/bulkhead plane, where the in-plane element filter drops
+                # the coincident shells and breaks the loop
+                model.log.warning(
+                    'no closed cell found in this cut; using the open-section '
+                    f'GJ={gj_bredt:g}, which is far softer than a closed '
+                    'section. If the section really is closed, move the '
+                    'station off the rib/bulkhead plane.')
+            else:
+                model.log.debug(
+                    f'GJ: {torsion_method} section, {ncells:d} cell(s); '
+                    f'Bredt-Batho GJ={gj_bredt:g} vs polar G*Ip={GJsum:g}')
+            GJsum = gj_bredt
+
     if moi_filename is not None:
         dirname = os.path.dirname(moi_filename)
         eid_filename = os.path.join(dirname, eid_filename)
@@ -812,6 +932,7 @@ def calculate_area_moi(model: BDF,
         dxi, dyi, total_length, total_area,
         Isum, Jsum,
         ExIsum, EyIsum, GJsum, avg_centroid,
+        ExAsum, EyAsum, GAsum,
     )
     return out
 

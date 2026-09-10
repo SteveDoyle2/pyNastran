@@ -406,6 +406,145 @@ class TestStiffnessPlot(unittest.TestCase):
         assert np.allclose(avg_centroid, centroid_expected), avg_centroid.tolist()
         del model.properties[pid]
 
+    def test_cut_ellipse_constant_area(self):
+        """
+        Prismatic 2:1 elliptical tube extruded along +y; ``cut_and_plot_moi``
+        plus the equivalent beam model it writes.
+
+        The section does not change along the span, so every station must
+        return the *same* area / inertia / centroid / GJ.  That is a strong
+        self-check that needs no closed-form value at all.
+
+        The 2:1 aspect ratio then makes the 1-2 axis mapping unambiguous.  The
+        major axis is along global x and the CBEAM v-vector is [1, 0, 0], so
+        ``y_elem`` lies along +x and ``I1 = int(y_elem^2 dA)`` must be the
+        LARGER of the two.  A circle or a square could not tell these apart.
+
+        Finally, GJ must be the Bredt-Batho closed-cell value; the polar
+        moment ``G*(Ix+Iz)`` is ~1.5x too stiff for a 2:1 ellipse.
+        """
+        dirname = TEST_PATH
+        tag = 'ellipse_'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+
+        a, b, t = 20., 10., 0.1
+        E, nu = 1.0e7, 0.3
+        G = E / (2. * (1. + nu))
+        span, nspan, ntheta = 100., 40, 120
+
+        model, pts = _build_ellipse_tube(
+            log, a, b, t, span, nspan, ntheta, E, nu)
+        model.write_bdf(dirname / 'ellipse.bdf')
+        exact = _thin_wall_section(pts, t)
+
+        # deliberately off the node planes (span/nspan = 2.5), so the cut has
+        # to interpolate rather than land on coincident grids
+        ystations = np.array([21.3, 33.7, 46.1, 58.5, 70.9])
+        coords = [CORD2R(1000 + i, rid=0, origin=[0., ys, 0.],
+                         zaxis=[0., ys, 1.], xzplane=[1., ys, 0.])
+                  for i, ys in enumerate(ystations)]
+        normal_plane = coords[0].j
+        assert np.allclose(normal_plane, [0., 1., 0.]), normal_plane
+
+        beam_bdf_filename = tag + 'equivalent_beam_model.bdf'
+        moi_data = cut_and_plot_moi(
+            model, normal_plane, log, ystations, coords,
+            dirname=dirname, plot=False, show=False, stop_on_failure=True,
+            cut_data_span_filename='',
+            beam_model_bdf_filename=beam_bdf_filename,
+            thetas_csv_filename=tag + 'thetas.csv')
+        (out_dict, plane_bdf_filenames1, plane_bdf_filenames2, unused_ifig) = moi_data
+        (y, L, A, I, J, ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+
+        assert np.isfinite(A).all(), f'missing cuts: A={A}'
+        assert np.allclose(y, ystations), y
+
+        # ------------------------------------------------------------------
+        # 1) prismatic: nothing varies along the span
+        # ------------------------------------------------------------------
+        # the cut interpolates along the element edges, so a station that does
+        # not land on a node plane picks up a little roundoff; ~1e-5 is the
+        # observed spread, so 1e-4 flags a real span dependence
+        for name, value in [('L', L), ('A', A), ('J', J), ('GJ', GJ)]:
+            assert np.allclose(value, value[0], rtol=1e-4), \
+                f'{name} varies vs span: {value}'
+        for name, value in [('I', I), ('ExI', ExI), ('EyI', EyI)]:
+            atol = 1e-4 * np.abs(value).max()
+            assert np.allclose(value, value[0, :], rtol=1e-4, atol=atol), \
+                f'{name} varies vs span:\n{value}'
+        # only the y column of the centroid varies; it *is* the station
+        assert np.allclose(avg_centroid[:, 1], ystations), avg_centroid
+
+        # ------------------------------------------------------------------
+        # 2) section integrals vs the closed-form thin-wall values
+        # ------------------------------------------------------------------
+        # area and perimeter are integrated exactly, whatever the subdivision
+        assert np.allclose(A, exact['A'], rtol=1e-6), (A[0], exact['A'])
+        assert np.allclose(L, exact['perimeter'], rtol=1e-6), (L[0], exact['perimeter'])
+
+        # lump <= cut <= strip; see _thin_wall_section
+        eps = 1e-9
+        assert (exact['int_x2_lump'] * (1. - eps) <= I[:, 0]).all() and \
+               (I[:, 0] <= exact['int_x2_strip'] * (1. + eps)).all(), \
+            (I[:, 0], exact['int_x2_lump'], exact['int_x2_strip'])
+        assert (exact['int_z2_lump'] * (1. - eps) <= I[:, 2]).all() and \
+               (I[:, 2] <= exact['int_z2_strip'] * (1. + eps)).all(), \
+            (I[:, 2], exact['int_z2_lump'], exact['int_z2_strip'])
+
+        # doubly symmetric, so the product of inertia is numerical noise
+        assert np.abs(I[:, 5]).max() < 1e-6 * exact['int_x2_lump'], I[:, 5]
+        assert np.allclose(avg_centroid[:, 0], 0., atol=1e-6 * a), avg_centroid
+        assert np.allclose(avg_centroid[:, 2], 0., atol=1e-6 * a), avg_centroid
+        assert np.allclose(ExI[:, 0] / I[:, 0], E, rtol=1e-6), ExI[0, 0] / I[0, 0]
+
+        # the whole point of a 2:1 section: int(x^2) must dominate int(z^2).
+        # for a thin elliptical shell the ratio is ~2.9, not (a/b)**2 = 4,
+        # because the wall is not uniformly distributed in x
+        ratio = I[0, 0] / I[0, 2]
+        assert 2.5 < ratio < 3.5, ratio
+        assert np.all(I[:, 0] > I[:, 2]), (I[:, 0], I[:, 2])
+
+        # ------------------------------------------------------------------
+        # 3) torsion is Bredt-Batho, not the polar moment
+        # ------------------------------------------------------------------
+        assert np.allclose(GJ, G * exact['J'], rtol=1e-3), (GJ[0], G * exact['J'])
+        gj_polar = G * (exact['int_x2_lump'] + exact['int_z2_lump'])
+        assert gj_polar > 1.3 * GJ[0], (gj_polar, GJ[0])
+
+        # ------------------------------------------------------------------
+        # 4) the equivalent beam deck reproduces every stiffness
+        # ------------------------------------------------------------------
+        beam_model = read_bdf(dirname / beam_bdf_filename, punch=True, debug=None)
+        assert len(beam_model.nodes) == len(ystations), beam_model.nodes
+        assert len(beam_model.elements) == len(ystations) - 1, beam_model.elements
+
+        mat = beam_model.materials[1]
+        # the MAT1 carries real moduli so that rho*A is a meaningful mass and
+        # K*G*A is a meaningful shear stiffness
+        assert np.allclose(mat.e, 2. * mat.g * (1. + mat.nu)), (mat.e, mat.g, mat.nu)
+        assert np.allclose(mat.e, E, rtol=1e-6), mat.e
+        assert np.allclose(mat.g, G, rtol=1e-6), mat.g
+
+        for pid, prop in sorted(beam_model.properties.items()):
+            assert np.allclose(prop.A[0], exact['A'], rtol=1e-4), (pid, prop.A)
+            assert np.allclose(mat.e * prop.A[0], E * exact['A'], rtol=1e-4)
+            assert np.allclose(mat.e * prop.i1[0], ExI[0, 0], rtol=1e-4), \
+                (pid, mat.e * prop.i1[0], ExI[0, 0])
+            assert np.allclose(mat.e * prop.i2[0], ExI[0, 2], rtol=1e-4), \
+                (pid, mat.e * prop.i2[0], ExI[0, 2])
+            assert np.allclose(mat.g * prop.j[0], G * exact['J'], rtol=1e-3)
+            # I1 is the strong axis for this section; see the docstring
+            assert prop.i1[0] > prop.i2[0], (pid, prop.i1, prop.i2)
+            k1 = 1.0 if prop.k1 is None else prop.k1
+            assert np.allclose(k1 * mat.g * prop.A[0], G * exact['A'], rtol=1e-4)
+
+        # plot=False and cut_data_span_filename='', so only these two exist;
+        # _cleanup_moi_files() would trip over the missing plots
+        for fname in plane_bdf_filenames1 + plane_bdf_filenames2:
+            os.remove(fname)
+        os.remove(dirname / beam_bdf_filename)
+        os.remove(dirname / (tag + 'thetas.csv'))
+
     def test_cut_quad_shell_mat1_zoffset(self):
         """cut_and_plot_moi"""
         dirname = TEST_PATH
@@ -964,6 +1103,98 @@ def _build_quad(log: SimpleLogger,
         zaxis=[0., dy, 1.],
         xzplane=[1., dy, 0.])
     return model, coord
+
+def _ellipse_pts(a: float, b: float, ntheta: int) -> np.ndarray:
+    """midline of an ellipse; ``a`` is along x, ``b`` is along z"""
+    theta = np.linspace(0., 2*np.pi, ntheta, endpoint=False)
+    return np.column_stack([a*np.cos(theta), b*np.sin(theta)])
+
+
+def _thin_wall_section(pts: np.ndarray, t: float) -> dict[str, float]:
+    """
+    Closed-form thin-wall section properties for a faceted closed midline.
+
+    Two versions of the second moments are returned, and the cutter must land
+    between them:
+
+    - ``*_lump`` lumps each facet's area at its own centroid
+    - ``*_strip`` integrates x^2 continuously along each facet
+
+    The cutter triangulates every CQUAD4 before cutting, so each facet comes
+    back as two sub-segments lumped at their own centroids.  Refining a
+    midpoint rule on the convex integrand x^2 always moves the answer up
+    toward the exact strip value without overshooting it, so
+    ``lump <= cut <= strip`` is guaranteed and is a much sharper statement
+    than any hand-tuned tolerance.
+    """
+    p1 = pts
+    p2 = np.roll(pts, -1, axis=0)
+    x1, z1 = p1[:, 0], p1[:, 1]
+    x2, z2 = p2[:, 0], p2[:, 1]
+    ell = np.hypot(x2 - x1, z2 - z1)
+    dA = t * ell
+
+    area = dA.sum()
+    xc = (dA * (x1 + x2) / 2).sum() / area
+    zc = (dA * (z1 + z2) / 2).sum() / area
+    xm = (x1 + x2) / 2 - xc
+    zm = (z1 + z2) / 2 - zc
+
+    # Bredt-Batho for the single closed cell, plus the open-section term
+    area_enclosed = 0.5 * abs((x1 * z2 - x2 * z1).sum())
+    j_bredt = 4. * area_enclosed ** 2 / (ell / t).sum()
+    j_open = (ell * t ** 3).sum() / 3.
+    return {
+        'A': area, 'xc': xc, 'zc': zc,
+        'int_x2_lump': (dA * xm ** 2).sum(),
+        'int_z2_lump': (dA * zm ** 2).sum(),
+        'int_x2_strip': (dA * ((x1 - xc) ** 2 + (x1 - xc) * (x2 - xc) +
+                               (x2 - xc) ** 2) / 3).sum(),
+        'int_z2_strip': (dA * ((z1 - zc) ** 2 + (z1 - zc) * (z2 - zc) +
+                               (z2 - zc) ** 2) / 3).sum(),
+        'int_xz': (dA * xm * zm).sum(),
+        'perimeter': ell.sum(),
+        'J': j_bredt + j_open,
+    }
+
+
+def _build_ellipse_tube(log: SimpleLogger,
+                        a: float, b: float, t: float,
+                        span: float, nspan: int, ntheta: int,
+                        E: float, nu: float,
+                        pid: int=11, mid: int=12) -> tuple[BDF, np.ndarray]:
+    """
+    Prismatic elliptical tube extruded along +y.
+
+    ^ z
+    |    _____
+    |  /       \\
+    | (    +    )  --> x     a (x) by b (z), constant along the span
+    |  \\ _____ /
+    """
+    model = BDF(log=log)
+    model.add_mat1(mid, E=E, G=None, nu=nu)
+    model.add_pshell(pid, mid1=mid, t=t, mid2=mid, mid3=mid)
+
+    pts = _ellipse_pts(a, b, ntheta)
+    ys = np.linspace(0., span, nspan + 1)
+
+    def nid(itheta: int, iy: int) -> int:
+        return iy * ntheta + (itheta % ntheta) + 1
+
+    for iy, y in enumerate(ys):
+        for itheta, (x, z) in enumerate(pts):
+            model.add_grid(nid(itheta, iy), [x, y, z])
+
+    eid = 1
+    for iy in range(nspan):
+        for itheta in range(ntheta):
+            model.add_cquad4(eid, pid, [nid(itheta, iy), nid(itheta+1, iy),
+                                        nid(itheta+1, iy+1), nid(itheta, iy+1)])
+            eid += 1
+    model.cross_reference()
+    return model, pts
+
 
 def _build_tet(log: SimpleLogger, dy: float):
     model = BDF(log=log)
