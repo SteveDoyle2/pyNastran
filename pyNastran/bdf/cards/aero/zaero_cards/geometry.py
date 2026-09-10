@@ -2335,7 +2335,7 @@ class CAERO7(BaseCard):
         # elements = np.vstack(element)
         # assert xyzs is not None, str(self)
         # assert elements is not None, str(self)
-        return xyzs, elements
+        # return xyzs, elements
 
     def plot(self, ax: AxesSubplot) -> None:
         """plots the panels"""

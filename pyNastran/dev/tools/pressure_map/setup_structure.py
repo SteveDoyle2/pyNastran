@@ -20,7 +20,8 @@ def get_structural_eids_from_csv_load_id(structure_model: BDF,
     csv_filename : PathLike; default=''
         ???
     load_id : int; default=0
-        ???
+        -1: use all elements
+        1+: grab the eids defined on the PLOAD, PLOAD2, or PLOAD4
     idtype : str; default='int32'
         the integer type
 

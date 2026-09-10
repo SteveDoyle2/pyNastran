@@ -11,7 +11,7 @@ import matplotlib.cm as cm
 
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
-from pyNastran.bdf.bdf import BDF, PLOAD2, FORCE, read_bdf
+from pyNastran.bdf.bdf import BDF, PLOAD2, read_bdf  # FORCE
 from pyNastran.bdf.write_path import write_include
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
 
@@ -144,9 +144,13 @@ def pressure_map(aero_filename: PathLike,
                  force_sid: int=2,
                  moment_sid: int=3,
                  cp_sid: int=4,
+                 cp_signed_sid: int=5,
                  idtype: str='int32',
                  fdtype: str='float64',
                  pressure_filename: PathLike='pressure.bdf',
+                 pressure_str: str='',
+                 flip_xy_Cp: bool=False,
+                 flip_xz_Cp: bool=False,
                  aero_xyz_scale: float=1.0,
                  qinf: float=1.0,
                  sref: float=1.0,
@@ -172,6 +176,8 @@ def pressure_map(aero_filename: PathLike,
         the element ids to map
     eid_load_id: int; default=0
         the sid for the element ids to map
+        -1: use all elements
+        1+: grab the eids defined on the PLOAD, PLOAD2, or PLOAD4
     aero_filename: str
         path to input aero filename:
           - cart3d: triq
@@ -191,16 +197,20 @@ def pressure_map(aero_filename: PathLike,
     fdtype : str; default='float64'
         the  type of the floats
     sref : float; default=1.0
-        reference area
+        reference area in structure units
     bref : float; default=1.0
-        reference length for Mx and Mz
+        reference length for Mx and Mz in structure units
     cref : float; default=1.0
-        reference length for My
+        reference length for My in structure units
     aero_xyz_scale : float; default=1.0
         scales the aero model to the structural units
         1.0 if units are consistent
-        39.3701.0 if aero model in meters and structural model in inches
+        39.3701 if aero model in meters and structural model in inches
         39,370.1  if aero model in millimeters and structural model in inches
+    flip_xy_Cp: bool; False
+        flip the Cp to account for the normal
+    flip_xz_Cp: bool; False
+        flip the Cp to account for the normal
     pressure_sid : int; default=1
         the output pressure id
     force_sid : int; default=2
@@ -210,7 +220,7 @@ def pressure_map(aero_filename: PathLike,
     cp_sid : int; default=4
         the output pressure coefficient id
     xyz_units : str; default='in'
-        the units for geometry, reference area / lengths
+        the units for geometry, reference area / lengths in structure units
     pressure_units : str; default='psi'
         the units for qinf
 
@@ -285,8 +295,11 @@ def pressure_map(aero_filename: PathLike,
             regions_to_include=regions_to_include,
             regions_to_remove=regions_to_remove,
             pressure_sid=pressure_sid,
+            flip_xy_Cp=flip_xy_Cp, flip_xz_Cp=flip_xz_Cp,
             force_sid=force_sid,
             moment_sid=moment_sid,
+            cp_sid=cp_sid,
+            cp_signed_sid=cp_signed_sid,
             # aero_format=aero_format,
             map_type=map_type,
             qinf=qinf,
@@ -321,9 +334,10 @@ def pressure_map(aero_filename: PathLike,
         raise RuntimeError(f'method={method}; expected={list(expected)}')
 
     _write_pressure_file(
-        pressure_model, pressure_filename, nastran_filename, map_type,
+        pressure_model, pressure_filename, pressure_str,
+        nastran_filename, map_type,
         cp_sid=cp_sid, pressure_sid=pressure_sid,
-        force_sid=force_sid, moment_sid=moment_sid)
+        force_sid=force_sid, moment_sid=moment_sid, cp_signed_sid=cp_signed_sid)
     return pressure_model
 
 def _check_model(structure_model: BDF) -> None:
@@ -338,18 +352,23 @@ def _check_model(structure_model: BDF) -> None:
 
 def _write_pressure_file(model: BDF,
                          pressure_filename: PathLike,
+                         pressure_str: str,
                          aero_panel_bdf_filename: PathLike,
                          map_type: str,
                          pressure_sid: int=1,
                          force_sid: int=2,
                          moment_sid: int=3,
-                         cp_sid: int=4) -> None:
+                         cp_sid: int=4,
+                         cp_signed_sid: int=5,) -> None:
     if len(str(pressure_filename)) == 0:
+        print(f'skipping pressure_filename={pressure_filename}')
         return
-    msg = (
-        'SOL 101\n'
-        'CEND\n'
-    )
+    if pressure_str == '':
+        pressure_str = (
+            'SOL 101\n'
+            'CEND\n'
+        )
+    msg = pressure_str
     log = model.log
     forces = []
     moments = []
@@ -369,6 +388,9 @@ def _write_pressure_file(model: BDF,
             'SUBCASE 4\n'
             '  SUBTITLE = Cp, Coeff Pressure\n'
             f'  LOAD = {cp_sid}\n'
+            'SUBCASE 5\n'
+            '  SUBTITLE = Cp, Coeff Pressure Signed\n'
+            f'  LOAD = {cp_signed_sid}\n'
             'BEGIN BULK\n'
             )
         forces: list[PLOAD2] = model.loads[force_sid]
@@ -392,7 +414,7 @@ def _write_pressure_file(model: BDF,
             f'  LOAD = {force_sid}\n'
             'BEGIN BULK\n'
         )
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(map_type)
     dirname = os.path.dirname(pressure_filename)
     base_ext = os.path.basename(pressure_filename)
@@ -425,7 +447,8 @@ def _write_pressure_file(model: BDF,
     log.level = level
 
     bdf_filename2 = pressure_filename
-    base = os.path.split(bdf_filename2)[0]
+    base = os.path.splitext(bdf_filename2)[0]
+    assert len(base) > 0, base
     if len(forces) and len(moments):
         eid_list: list[int] = []
         force_moment_list: list[tuple[float, float]] = []
@@ -488,12 +511,15 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
                                 structure_sid=0,
                                 map_type: str='pressure',
                                 map_directions: str='yz',
+                                flip_xy_Cp: bool=False,
+                                flip_xz_Cp: bool=False,
                                 scale: float=1.0,
                                 qinf: float=1.0,
                                 pressure_sid: int=1,
                                 force_sid: int=2,
                                 moment_sid: int=3,
                                 cp_sid: int=4,
+                                cp_signed_sid: int=5,
                                 sref: float=1.0,
                                 cref: float=1.0,
                                 bref: float=1.0,
@@ -636,9 +662,11 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
             aero_quad_nodes, aero_quad_area, aero_quad_cp, aero_quad_normal, aero_quad_centroid, aero_quad_force_coeff_per_q,
             structure_nodes, structure_xyz,
             structure_eids, structure_area, structure_centroid, iz_structure, z_structure_sign,
+            flip_Cp=flip_xy_Cp,
             qinf=qinf,
             pressure_sid=pressure_sid,
             force_sid=force_sid, moment_sid=moment_sid, cp_sid=cp_sid,
+            cp_signed_sid=cp_signed_sid,
             pressure_units=pressure_units,
         )
     if ny_structure > 0 and 'y' in map_directions:
@@ -652,6 +680,7 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
             aero_quad_nodes, aero_quad_area, aero_quad_cp, aero_quad_normal, aero_quad_centroid, aero_quad_force_coeff_per_q,
             structure_nodes, structure_xyz,
             structure_eids, structure_area, structure_centroid, iy_structure, y_structure_sign,
+            flip_Cp=flip_xz_Cp,
             qinf=qinf,
             pressure_sid=pressure_sid,
             force_sid=force_sid, moment_sid=moment_sid,
@@ -673,11 +702,13 @@ def _map_pressure_panel_model(structure_model: BDF,
                               structure_nodes, structure_xyz,
                               structure_eids, structure_area, structure_centroid,
                               iz_structure, z_structure_sign,
+                              flip_Cp: bool=False,
                               qinf: float=1.0, #pressure_units='',
                               pressure_sid: int=1,
                               force_sid: int=2,
                               moment_sid: int=3,
                               cp_sid: int=4,
+                              cp_signed_sid: int=5,
                               pressure_units: str='') -> None:
     eids_z = structure_eids[iz_structure]
 
@@ -830,10 +861,11 @@ def _map_pressure_panel_model(structure_model: BDF,
             aero_quad_area, aero_quad_cp, aero_quad_normal, aero_quad_centroid, aero_quad_force_coeff_per_q,
             structure_eids_z, structure_box_moment_center, structure_area_z, z_structure_sign,
             iaero_tri, iaero_quad,
-            qinf,
+            flip_Cp, qinf,
             pressure_sid=pressure_sid,
             force_sid=force_sid, moment_sid=moment_sid,
             pressure_units=pressure_units, cp_sid=cp_sid,
+            cp_signed_sid=cp_signed_sid,
             #force_units=force_units, moment_units=moment_units,
         )
     else:  # pragma: no cover
@@ -1035,10 +1067,11 @@ def map_panel_force_moment_centroid(
         structure_z_sign: np.ndarray,
         iaero_tri: np.ndarray,
         iaero_quad: np.ndarray,
+        flip_Cp: bool,
         qinf: float, pressure_units: str='',
         force_units: str='', moment_units: str='',
         pressure_sid: int=1, force_sid: int=2, moment_sid: int=3, cp_sid: int=4,
-        cp_signed_sid: int=4,
+        cp_signed_sid: int=5,
     ) -> None:
     """
     Maps forces and moments onto the moment reference point,
@@ -1076,6 +1109,8 @@ def map_panel_force_moment_centroid(
 
     """
     log = bdf_model_out.log
+    log.info(f'mapping force/moment to panel centroid; panel_dim={panel_dim!r}')
+    assert isinstance(flip_Cp, bool), flip_Cp
     assert isinstance(qinf, float), qinf
     structure_tri_eids = structure_eids[iaero_tri]
     structure_tri_xyz = structure_xyz[iaero_tri]
@@ -1213,6 +1248,10 @@ def map_panel_force_moment_centroid(
     comment_cp = 'Cp, Coefficient of Pressure (map_panel_force_moment_centroid)'
     comment_cpz = 'Cp, Signed Coefficient of Pressure (map_panel_force_moment_centroid)'
 
+    #Cp_scale = -1.0 if flip_Cp else 1.0
+    Cp_scale = 1.0
+    #log.warning(f'Cp_scale={Cp_scale}')
+
     force_moment_list = []
     for structure_eid, force in sorted(force_dict.items()):
         try:
@@ -1249,16 +1288,19 @@ def map_panel_force_moment_centroid(
         if is_eid_filter:
             log.debug(f'structure_eid={structure_eid:d} force={force.round(3)} structure_area={structure_area:.3f}\n'
                       f'  pressure={pressure.round(3)} pressurei={pressurei:.3g} -> Cp=p/q={pressurei/qinf:.3g}')
+
         bdf_model_out.add_pload2(pressure_sid, eids=eids, pressure=pressurei, comment=comment_p)
         bdf_model_out.add_pload2(force_sid, eids=eids, pressure=forcei, comment=comment_f)
         bdf_model_out.add_pload2(moment_sid, eids=eids, pressure=momenti, comment=comment_m)
+
         bdf_model_out.add_pload2(cp_sid, eids=eids, pressure=pressurei/qinf, comment=comment_cp)
-        bdf_model_out.add_pload2(cp_signed_sid, eids=eids, pressure=z_sign*pressurei/qinf, comment=comment_cpz)
+        bdf_model_out.add_pload2(cp_signed_sid, eids=eids, pressure=Cp_scale*z_sign*pressurei/qinf, comment=comment_cpz)
         force_moment_list.append((structure_eid, forcei, momenti))
         comment_p = ''
         comment_f = ''
         comment_m = ''
         comment_cp = ''
+        comment_cpz = ''
     # force_moment = np.array(force_moment_list, dtype='float64')
     # bdf_filename2 = r'C:\work\code\mfile.txt'
     # base = os.path.splitext(bdf_filename2)[0]

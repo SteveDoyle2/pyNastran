@@ -5317,6 +5317,7 @@ class AddAero:
         assert isinstance(mesh, str), mesh
         assert isinstance(sym_xz, str), sym_xz
         assert isinstance(sym_xy, str), sym_xy
+        assert isinstance(force, integer_types), force
         assert isinstance(dmik, str), dmik
         assert isinstance(perq, str), perq
         aeforce = AEFORCE(mach, sym_xz, sym_xy, ux_id, mesh,

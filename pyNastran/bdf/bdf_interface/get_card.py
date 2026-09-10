@@ -1345,6 +1345,7 @@ class GetCard(GetMethods):
             'CHBDYG', 'GENEL',
             # --no_similar_eid
             'CONM1', 'CONM2', # CMASS2/4?
+            'RBAR', 'RBE2', 'RBE3',  # 'RBE1',
         }
 
         log = self.log

@@ -12,7 +12,7 @@ from typing import Optional, TYPE_CHECKING
 
 from pyNastran.op2.tools.op2_merge import cmd_line_merge
 from pyNastran.op2.tools.modal_combine import cmd_line_flutter_combine
-# from pyNastran.op2.tools.envelope import cmd_line_envelope
+from pyNastran.op2.tools.envelope import cmd_line_envelope
 
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
