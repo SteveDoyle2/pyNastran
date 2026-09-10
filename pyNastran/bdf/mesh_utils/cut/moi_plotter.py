@@ -503,12 +503,20 @@ def _get_station_datai(model: BDF,
 
 
 def plot_inertia(log: SimpleLogger,
-                 y: np.ndarray, A: np.ndarray,
+                 station: np.ndarray, A: np.ndarray,
                  I: np.ndarray, J: np.ndarray,
                  ExI: np.ndarray, EyI: np.ndarray, GJ: np.ndarray,
                  avg_centroid: np.ndarray,
-                 ifig: int=1, show: bool=True,
+                 linestyle: str='-',
                  dirname: PathLike='',
+                 x: str='x',
+                 y: str='y',
+                 z: str='z',
+                 station_word='Span',
+                 save: bool=True,
+                 show: bool=True,
+                 ifig: int=1,
+                 tag: str='',
                  normalized_inertia_png_filename: PathLike='normalized_inertia_vs_span.png',
                  amoi_span_png_filename: PathLike='amoi_vs_span.png',
                  e_amoi_span_png_filename: PathLike='e_amoi_vs_span.png',
@@ -556,62 +564,72 @@ def plot_inertia(log: SimpleLogger,
     ai_max[ai_max == 0] = 1.
     aei_max[aei_max == 0] = 1.
     assert len(ai_max) == 3, (ai_max.shape, absI)
-    ax.plot(y, I[:, 0] / ai_max[0], 'ro-', label='Ixx')
-    ax.plot(y, I[:, 1] / ai_max[1], 'bo-', label='Izz')
-    ax.plot(y, I[:, 2] / ai_max[2], 'go-', label='Ixz')
+    xx = f'{x}{x}'
+    zz = f'{z}{z}'
+    xz = f'{x}{z}'
+    log.info(f'ai_max={ai_max}')
+    log.info(f'aei_max={aei_max}')
+    ax.plot(station, I[:, 0] / ai_max[0], 'ro-', label=f'I{xx}')
+    ax.plot(station, I[:, 1] / ai_max[1], 'bo-', label=f'I{zz}')
+    ax.plot(station, I[:, 2] / ai_max[2], 'go-', label=f'I{xz}')
 
-    ax.plot(y, ExI[:, 0] / aei_max[0], 'ro', label='ExIxx', linestyle='--')
-    ax.plot(y, ExI[:, 1] / aei_max[1], 'bo', label='ExIzz', linestyle='--')
-    ax.plot(y, ExI[:, 2] / aei_max[2], 'go', label='ExIxz', linestyle='--')
-    #ax.plot(y, GJ / aGJ.max(), 'go-', label='GJ', linestyle='--')
+    ax.plot(station, ExI[:, 0] / aei_max[0], 'ro', label=f'E{x}I{xx}', linestyle='--')
+    ax.plot(station, ExI[:, 1] / aei_max[1], 'bo', label=f'E{x}I{zz}', linestyle='--')
+    ax.plot(station, ExI[:, 2] / aei_max[2], 'go', label=f'E{x}I{xz}', linestyle='--')
+    #ax.plot(station, GJ / aGJ.max(), 'go-', label='GJ', linestyle='--')
 
     ax.grid(True)
-    ax.set_xlabel('Span, y')
+    ax.set_xlabel(f'{station_word}, {y}')
     ax.set_ylabel('Normalized Area MOI, I')
     ax.legend()
     png_filename = os.path.join(dirname, normalized_inertia_png_filename)
-    log.info(f'saving {png_filename}')
-    fig.savefig(png_filename)
+    if save:
+        log.info(f'saving {png_filename}')
+        fig.savefig(png_filename)
     #-------------------------------------------------------
 
     fig = plt.figure(ifig + 2)
     ax = fig.gca()
-    ax.plot(y, I[:, 0], 'ro-', label='Ixx')
-    ax.plot(y, I[:, 1], 'bo-', label='Iyy')
-    ax.plot(y, I[:, 2], 'go-', label='Izz')
+    ax.plot(station, I[:, 0], 'ro', linestyle=linestyle, label='Ixx')
+    ax.plot(station, I[:, 1], 'bo', linestyle=linestyle, label='Iyy')
+    ax.plot(station, I[:, 2], 'go', linestyle=linestyle, label='Izz')
     ax.grid(True)
-    ax.set_xlabel('Span, y')
+    ax.set_xlabel(f'{station_word}, {y}')
     ax.set_ylabel('Area MOI, I')
     ax.legend()
     png_filename = os.path.join(dirname, amoi_span_png_filename)
-    log.debug(f'saving {png_filename}')
-    fig.savefig(png_filename)
+    if save:
+        log.info(f'saving {png_filename}')
+        fig.savefig(png_filename)
     #-------------------------------------------------------
 
 
     fig = plt.figure(ifig + 3)
     ax = fig.gca()
-    ax.plot(y, ExI[:, 0], 'ro-', label='EIxx')
-    #ax.plot(y, I[:, 0], 'bo-', label='Ixx')
+    ax.plot(station, ExI[:, 0], 'ro', linestyle=linestyle, label=f'EI{xx}')
+    #ax.plot(station, I[:, 0], 'bo-', label='Ixx')
     ax.grid(True)
-    ax.set_xlabel('Span, y')
-    ax.set_ylabel('Exx*Area MOI, Exx*I')
+    ax.set_xlabel(f'{station_word}, {y}')
+    ax.set_ylabel(f'E{xx}*Area MOI, E{xx}*I')
     ax.legend()
     png_filename = os.path.join(dirname, e_amoi_span_png_filename)
-    fig.savefig(png_filename)
+    if save:
+        log.info(f'saving {png_filename}')
+        fig.savefig(png_filename)
     #-------------------------------------------------------
 
     fig = plt.figure(ifig + 4)
     ax = fig.gca()
-    ax.plot(y, avg_centroid[:, 0], 'ro-', label='xcg')
-    ax.plot(y, avg_centroid[:, 2], 'bo-', label='zcg')
+    ax.plot(station, avg_centroid[:, 0], 'ro', linestyle=linestyle, label=f'{x}cg')
+    ax.plot(station, avg_centroid[:, 2], 'bo', linestyle=linestyle, label=f'{z}cg')
     ax.grid(True)
-    ax.set_xlabel('Span, y')
+    ax.set_xlabel(f'{station_word}, {y}')
     ax.set_ylabel('Centroid')
     ax.legend()
     png_filename = os.path.join(dirname, centroid_span_png_filename)
-    log.debug(f'saving {png_filename}')
-    fig.savefig(png_filename)
+    if save:
+        log.info(f'saving {png_filename}')
+        fig.savefig(png_filename)
     #-------------------------------------------------------
 
     if show:
