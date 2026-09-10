@@ -1102,8 +1102,8 @@ def plot_compare_inertia(log: SimpleLogger,
         ax.set_ylabel('Area, A ($in^2$)')
         ax.legend()
 
+        png_filename = dirname / f'Area{y}_vs_span.png'
         if save:
-            png_filename = dirname / f'Area{y}_vs_span.png'
             log.debug(f'saving {png_filename}')
             fig.savefig(png_filename)
         ifig += 1
@@ -1122,8 +1122,9 @@ def plot_compare_inertia(log: SimpleLogger,
         ax.set_ylabel('Area MOI, I ($in^4$)')
         ax.legend()
         png_filename = dirname / f'I{xx}_I{zz}_I{xz}_J_log.png'
-        log.debug(f'saving {png_filename}')
-        fig.savefig(png_filename)
+        if save:
+            log.debug(f'saving {png_filename}')
+            fig.savefig(png_filename)
         ifig += 1
 
         fig = plt.figure(ifig)
@@ -1135,12 +1136,12 @@ def plot_compare_inertia(log: SimpleLogger,
         # ax.plot(station, Iyz, 'C4', linestyle=linestyle, marker=marker, label='Iyz')
         ax.plot(station, Ixz, 'C5', linestyle=linestyle, marker=marker, label=f'{tag}I{xz}')
         ax.plot(station, J, 'k', linestyle=linestyle, marker=marker, label=f'{tag}J')
+        ax.grid(True)
+        ax.set_xlabel(span_label)
+        ax.set_ylabel('Area MOI, I ($in^4$)')
+        ax.legend()
+        png_filename = dirname / f'I{xx}_I{zz}_I{xz}_J.png'
         if save:
-            ax.grid(True)
-            ax.set_xlabel(span_label)
-            ax.set_ylabel('Area MOI, I ($in^4$)')
-            ax.legend()
-            png_filename = dirname / f'I{xx}_I{zz}_I{xz}_J.png'
             log.debug(f'saving {png_filename}')
             fig.savefig(png_filename)
         ifig += 1
@@ -1151,12 +1152,13 @@ def plot_compare_inertia(log: SimpleLogger,
         ax = fig.gca()
         ax.plot(station, ExI[:, 2], color='r', linestyle=linestyle, marker=marker, label=f'{tag}E{y}*I{zz}')  # Ey*Izz
         #ax.plot(station, I[:, 0], 'bo-', label='Ixx')
+        ax.grid(True)
+        ax.set_xlabel(span_label)
+        ax.set_ylabel(f'Stiffness: E{y}*I{zz}')
+        ax.legend()
+        png_filename = dirname / f'stiffness_E{y}I{zz}.png'
         if save:
-            ax.grid(True)
-            ax.set_xlabel(span_label)
-            ax.set_ylabel(f'Stiffness: E{y}*I{zz}')
-            ax.legend()
-            png_filename = dirname / f'stiffness_E{y}I{zz}.png'
+            log.debug(f'saving {png_filename}')
             fig.savefig(png_filename)
         ifig += 1
 
@@ -1166,12 +1168,13 @@ def plot_compare_inertia(log: SimpleLogger,
         ax = fig.gca()
         ax.plot(station, GJ, color='k', linestyle=linestyle, marker=marker, label=f'{tag}G{xy}*J{xz}')
         #ax.plot(station, I[:, 0], 'b-', marker=marker, label='Ixx')
+        ax.grid(True)
+        ax.set_xlabel(span_label)
+        ax.set_ylabel(f'Stiffness: G{xy}*J{xz}')
+        ax.legend()
+        png_filename = dirname / f'stiffness_G{xy}J{xz}.png'
         if save:
-            ax.grid(True)
-            ax.set_xlabel(span_label)
-            ax.set_ylabel(f'Stiffness: G{xy}*J{xz}')
-            ax.legend()
-            png_filename = dirname / f'stiffness_G{xy}J{xz}.png'
+            log.info(f'saving {png_filename}')
             fig.savefig(png_filename)
         ifig += 1
 
@@ -1181,12 +1184,13 @@ def plot_compare_inertia(log: SimpleLogger,
         ax.plot(station, GJ, 'k', linestyle=linestyle, marker=marker, label=f'{tag}G{xy}*J{xz}')
         ax.plot(station, ExI[:, 0], 'r', linestyle=linestyle, marker=marker, label=f'{tag}E{y}*I{xx}')
         ax.plot(station, EyA, 'b', linestyle=linestyle, marker=marker, label=f'{tag}E{y}*A{y}')
+        ax.grid(True)
+        ax.set_xlabel(span_label)
+        ax.set_ylabel(f'Stiffness: G{xy}*J{xz}')
+        ax.legend()
+        png_filename = dirname / f'stiffness_E{x}I{xx}_G{xy}J{xz}.png'
         if save:
-            ax.grid(True)
-            ax.set_xlabel(span_label)
-            ax.set_ylabel(f'Stiffness: G{xy}*J{xz}')
-            ax.legend()
-            png_filename = dirname / f'stiffness_E{x}I{xx}_G{xy}J{xz}.png'
+            log.info(f'saving {png_filename}')
             fig.savefig(png_filename)
         ifig += 1
         #---------------------------------------------------
@@ -1195,12 +1199,13 @@ def plot_compare_inertia(log: SimpleLogger,
         ax.plot(station, G, color='k', linestyle=linestyle, marker=marker, label=f'G{xy}')
         ax.plot(station, Ex, color='r', linestyle=linestyle, marker=marker, label=f'E{y}')  # this is really flipped
         ax.plot(station, Ey, color='b', linestyle=linestyle, marker=marker, label=f'E{x}')  # this is really flipped
+        ax.grid(True)
+        ax.set_xlabel(span_label)
+        ax.set_ylabel(f'Effective Modulus: E{x}, E{z}, G{xy}')
+        ax.legend()
+        png_filename = dirname / f'stiffness_E{x}_E{z}_G{xy}.png'
         if save:
-            ax.grid(True)
-            ax.set_xlabel(span_label)
-            ax.set_ylabel(f'Effective Modulus: E{x}, E{z}, G{xy}')
-            ax.legend()
-            png_filename = dirname / f'stiffness_E{x}_E{z}_G{xy}.png'
+            log.info(f'saving {png_filename}')
             fig.savefig(png_filename)
         ifig += 1
 
@@ -1209,13 +1214,13 @@ def plot_compare_inertia(log: SimpleLogger,
         ax = fig.gca()
         ax.plot(station, avg_centroid[:, 0], color='r', linestyle=linestyle, marker=marker, label=f'{tag}xcg')
         ax.plot(station, avg_centroid[:, 2], color='b', linestyle=linestyle, marker=marker, label=f'{tag}zcg')
+        ax.grid(True)
+        ax.set_xlabel(span_label)
+        ax.set_ylabel('Centroid (in)')
+        ax.legend()
+        png_filename = dirname / 'centroid_vs_span.png'
         if save:
-            ax.grid(True)
-            ax.set_xlabel(span_label)
-            ax.set_ylabel('Centroid (in)')
-            ax.legend()
-            png_filename = dirname / 'centroid_vs_span.png'
-            log.debug(f'saving {png_filename}')
+            log.info(f'saving {png_filename}')
             fig.savefig(png_filename)
         #-------------------------------------------------------
         ifig += 4
