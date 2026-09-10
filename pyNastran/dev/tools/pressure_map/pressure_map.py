@@ -1137,38 +1137,101 @@ def map_panel_force_moment_centroid(
         cref: float=1.0,
     ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Maps forces and moments onto the moment reference point,
-    which for a panel is the 1/4 chord. We keep quads & tris split
-    to help with debugging.
+    Maps CFD aero forces onto structural panel elements via nearest-neighbor
+    (KD-tree) lookup, then writes PLOAD2 cards to a BDF output model.
+
+    This function is called once per panel orientation (panel_dim='z' for
+    XY-plane panels, panel_dim='y' for XZ-plane panels).  Each call maps
+    ALL aero elements to the nearest structural panel of that orientation,
+    so the mapped-aero totals logged here include every aero element —
+    they CANNOT be summed across z + y calls without double-counting.
+
+    Structural panels are pressure-only (no in-plane shear):
+      - z-panels carry Fz (normal to XY plane)
+      - y-panels carry Fy (normal to XZ plane)
+    Fx (drag) is not captured by either panel type.
+
+    Force/moment balance bookkeeping
+    ---------------------------------
+    Three moment vectors are tracked per structural panel:
+
+    1. ``raw_moment``  (moment_dict)
+       Full 3-D moment from the distributed aero forces about the panel
+       center:  sum_i( (aero_centroid_i - panel_center) × F_aero_i ).
+       Used for the "mapped aero" balance (all force components).
+
+    2. ``moment_normal``  (moment_normal_dict)
+       Moment from ONLY the panel-normal force component:
+         z-panels:  sum_i( dr_i × [0, 0, Fz_i] )  →  [dr_y·Fz, -dr_x·Fz, 0]
+         y-panels:  sum_i( dr_i × [0, Fy_i, 0] )  →  [-dr_z·Fy, 0, dr_x·Fy]
+       These decompose cleanly across the z + y calls with no overlap:
+         Mx = Σ(dr_y·Fz)_z + Σ(-dr_z·Fy)_y   (= Σ(y·Fz - z·Fy) exactly)
+         My = Σ(-dr_x·Fz)_z  only              (y-panels contribute 0)
+         Mz = Σ(dr_x·Fy)_y   only              (z-panels contribute 0)
+       Used for the structural side of the balance.
+
+    3. ``cross(dr_ref, struct_force_vec)``
+       Moment arm from each panel center to the reference point, using
+       the panel-normal force only ([0,0,Fz] or [0,Fy,0]).
+
+    The structural moment about the reference point for each panel is:
+        moment_normal + cross(panel_center - ref_point, struct_force_vec)
+
+    Sign convention
+    ---------------
+    ``z_sign = sign(element_normal · panel_axis)`` encodes the PLOAD2
+    convention (pressure positive in element normal direction).  It is
+    applied to ``force`` and ``moment`` for writing PLOAD2 cards, but
+    NOT to the global balance accumulators (``raw_force``, ``raw_moment``,
+    ``moment_normal``), which stay in the global coordinate system.
 
     Parameters
     ----------
-    bdf_model_out : BDF()
-        the output model
+    bdf_model_out : BDF
+        the output model that receives PLOAD2 cards
     panel_dim : str
-        y or z
-    aero_tri_centroid : (naero, 3) float np.ndarray
-        centroids of the aero panels
-    aero_tri_force_per_q_centroid : (naero, 3) float np.ndarray
-        F/q for the panel (Cp*area*normal)
-    aero_quad_centroid : (naero, 3) float np.ndarray
-        centroids of the aero panels
-    aero_quad_force_per_q_centroid : (naero, 3) float np.ndarray
-        F/q for the panel (Cp*area*normal)
-    structure_eids : (nstructure,) int np.ndarray
-        the element ids
-    structure_xyz : (nstructure,3) float np.ndarray
-        the centroid / quarter chord locations to sum moments about
-    structure_area : (nstructure,) float np.ndarray
-        the area of each aero-box to normalize by
-    pressure_sid : int; default=1
-        the output pressure id
-    force_sid : int; default=2
-        the output force id
-    moment_sid : int; default=3
-        the output moment id
-    cp_sid : int; default=4
-        the output pressure coefficient id
+        'z' for XY-plane panels (carry Fz) or 'y' for XZ-plane panels (carry Fy)
+    aero_tri_area : (ntri_aero,) float ndarray
+        areas of the aero triangles
+    aero_tri_cp : (ntri_aero,) float ndarray
+        pressure coefficient on each aero triangle
+    aero_tri_normal : (ntri_aero, 3) float ndarray
+        unit outward normals of the aero triangles
+    aero_tri_centroid : (ntri_aero, 3) float ndarray
+        centroids of the aero triangles
+    aero_tri_force_per_q_centroid : (ntri_aero, 3) float ndarray
+        F/q for each aero triangle (= Cp * area * normal)
+    aero_quad_area, aero_quad_cp, aero_quad_normal,
+    aero_quad_centroid, aero_quad_force_per_q_centroid :
+        same as tri counterparts, for quad aero elements
+    structure_eids : (nstruct,) int ndarray
+        structural element IDs (one per mapped aero element after KD-tree)
+    structure_xyz : (nstruct, 3) float ndarray
+        structural panel centers (quarter-chord locations)
+    structure_area : (nstruct,) float ndarray
+        area of each structural panel (used to convert force → pressure)
+    structure_z_sign : (nstruct,) float ndarray
+        +1/-1 per element, sign(element_normal · panel_axis)
+    iaero_tri : (ntri_aero,) int ndarray
+        index into structure arrays for each aero triangle's nearest panel
+    iaero_quad : (nquad_aero,) int ndarray
+        index into structure arrays for each aero quad's nearest panel
+    flip_Cp : bool
+        if True, negate Cp (unused in current panel_model path)
+    qinf : float
+        dynamic pressure (psi); multiplies F/q to get dimensional force
+    reference_point : (3,) float ndarray or None
+        point about which moments are summed; defaults to origin
+    sref, bref, cref : float
+        reference area (in²), span (in), chord (in) for nondimensionalization
+        CF = F/(q·Sref),  CM = M/(q·Sref·Lref)  where Lref = [bref, cref, bref]
+
+    Returns
+    -------
+    total_structure_force : (3,) float ndarray
+        panel-normal force summed over all panels [0, 0, ΣFz] or [0, ΣFy, 0]
+    total_structure_moment_about_ref : (3,) float ndarray
+        structural moment about reference_point (normal-force only, no shear)
 
     """
     log = bdf_model_out.log
@@ -1236,16 +1299,32 @@ def map_panel_force_moment_centroid(
     aero_centroid = np.vstack([aero_tri_centroid, aero_quad_centroid])
     stucture_xyz = np.vstack([structure_tri_xyz, structure_quad_xyz])
     aero_force_centroid = np.vstack([aero_tri_force_centroid, aero_quad_force_centroid])
+
+    # dr_i = (aero element centroid) - (nearest structural panel center)
+    # for each mapped aero element
     drs = aero_centroid - stucture_xyz
+
+    # Full 3-D moment of each aero element about its mapped panel center:
+    #   aero_moment_i = dr_i × F_aero_i   (includes Fx, Fy, Fz contributions)
     aero_moment = np.cross(drs, aero_force_centroid, axis=1)
 
-    # moment from ONLY the panel-normal force component
-    # (no double-counting when z-call and y-call both map all aero elements)
+    # Moment from ONLY the panel-normal force component.
+    #
+    # Both the z-call and y-call map every aero element (nearest-neighbor
+    # doesn't filter by orientation), so we must avoid double-counting when
+    # the outer function sums results from both calls.  The trick: decompose
+    # each aero force into the component the panel carries and discard the rest.
+    #
+    #   z-panels (XY plane) carry Fz only  →  dr × [0, 0, Fz] = [dr_y·Fz, -dr_x·Fz, 0]
+    #   y-panels (XZ plane) carry Fy only  →  dr × [0, Fy, 0] = [-dr_z·Fy, 0, dr_x·Fy]
+    #
+    # Summing across z + y gives the correct total with no overlap:
+    #   Mx = Σ(dr_y·Fz)_z + Σ(-dr_z·Fy)_y   (both Fy and Fz contribute — NOT Fx)
+    #   My = Σ(-dr_x·Fz)_z                    (Fz only)
+    #   Mz = Σ(dr_x·Fy)_y                     (Fy only)
     if panel_dim == 'z':
-        # z-panels carry Fz only → moment from [0, 0, Fz]
         aero_force_normal = aero_force_centroid * np.array([0., 0., 1.], dtype=fdtype)
     elif panel_dim == 'y':
-        # y-panels carry Fy only → moment from [0, Fy, 0]
         aero_force_normal = aero_force_centroid * np.array([0., 1., 0.], dtype=fdtype)
     else:
         raise RuntimeError(panel_dim)
@@ -1270,9 +1349,18 @@ def map_panel_force_moment_centroid(
     # assert aero_tri_moment.shape == drs_tri.shape, (aero_tri_moment.shape, drs_tri.shape)
     # assert aero_quad_moment.shape == drs_quad.shape, (aero_quad_moment.shape, drs_quad.shape)
 
+    # Per-panel accumulators:  multiple aero elements may map to the same
+    # structural panel (nearest-neighbor), so we sum their contributions.
+    #
+    #   force_dict[eid]          = Σ F_aero_i            (full 3-D force, all components)
+    #   moment_dict[eid]         = Σ (dr_i × F_aero_i)   (full 3-D moment about panel center)
+    #   moment_normal_dict[eid]  = Σ (dr_i × F_normal_i) (moment from panel-normal component only)
+    #
+    # force_dict / moment_dict are used for PLOAD2 cards and the "mapped aero" diagnostic.
+    # moment_normal_dict is used for the structural side of the force/moment balance.
     force_dict = {}
     moment_dict = {}
-    moment_normal_dict = {}  # moment from panel-normal force component only
+    moment_normal_dict = {}
     if is_eid_filter:  # pragma: no cover
         # preallocate
         force_dict[eid_filter] = np.zeros(3, dtype=fdtype)
@@ -1342,6 +1430,9 @@ def map_panel_force_moment_centroid(
     Cp_scale = 1.0
     #log.warning(f'Cp_scale={Cp_scale}')
 
+    # Running totals for the per-panel_dim balance log (see docstring).
+    # "mapped aero" = full 3-D aero force/moment (all components, all elements)
+    # "structure"   = panel-normal force + normal-only moment (what the FEM sees)
     total_mapped_aero_force = np.zeros(3, dtype=fdtype)
     total_mapped_aero_moment_about_ref = np.zeros(3, dtype=fdtype)
     total_structure_force = np.zeros(3, dtype=fdtype)
