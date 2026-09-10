@@ -773,7 +773,7 @@ def _cut_face_model_by_coord(log: SimpleLogger,
                     f'range=[{y_cid.min():g}, {y_cid.min():g}]')
         return found_cut, unique_geometry, unique_results, rods
     log.debug(f'  nclose_faces = {len(close_tri_eids):d}; '
-              f'range=[{y_cid.min():g}, {y_cid.min()}:g]')
+              f'range=[{y_cid.min():g}, {y_cid.min():g}]')
 
     assert np.array_equal(node_ids, np.unique(node_ids)), 'not sorted or unique'
     if ntri:

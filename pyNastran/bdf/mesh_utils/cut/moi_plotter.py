@@ -44,6 +44,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      ifig: int=1,
                      debug_vectorize: bool=True,
                      debug_v3: bool=False,
+                     rho: float=1.0,
                      stop_on_failure: bool=False,
                      cut_data_span_filename: PathLike='cut_data_vs_span.csv',
                      beam_model_bdf_filename: PathLike='equivalent_beam_model.bdf',
@@ -127,6 +128,9 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         changes the filename
      beam_model_bdf_filename : PathLike; default='equivalent_beam_model.bdf'
         changes the filename
+     rho : float; default=1.0
+        density written on the equivalent beam model's MAT1; the PBEAM A
+        field is the real geometric area, so rho*A is a meaningful mass
      thetas_csv_filename : PathLike; default='thetas.csv'
         changes the filename
      normalized_inertia_png_filename : PathLike; default='normalized_inertia_vs_span.png'
@@ -158,7 +162,8 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         stop_on_failure=stop_on_failure,
     )
     (thetas, stations, dx, dz, L, A, I, J, ExI, EyI, GJ, avg_centroid,
-     plane_bdf_filenames, plane_bdf_filenames2, ExA, EyA, GA) = out
+     plane_bdf_filenames, plane_bdf_filenames2, ExA, EyA, GA,
+     avg_centroid_global) = out
 
     assert len(stations) > 0, stations
     thetas_csv_filename = dirname / thetas_csv_filename
@@ -190,10 +195,17 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         beam_model_bdf_filename = dirname / beam_model_bdf_filename
         # Ex* rather than Ey* because Ex is the modulus along the beam axis
         # (normal to the cut plane); see the note in the docstring.
+        #
+        # avg_centroid_global, NOT avg_centroid: the latter is in the cut
+        # coord's local frame with column 1 overwritten by the station.  That
+        # happens to be the basic frame for a wing cut (the coord is built so
+        # the local axes coincide with the global ones), but for a fuselage
+        # cut the coord is rotated and the GRIDs would come out permuted.
         _write_beam_model(
-            avg_centroid, A, ExA, GA,
+            avg_centroid_global, A, ExA, GA,
             ExIz, ExIx, ExIxz, GJ,
             beam_model_bdf_filename,
+            rho=rho,
             nround=2,)
 
     if cut_data_span_filename:
@@ -460,6 +472,10 @@ def _get_station_data(model: BDF,
     ExA = np.full(ny, np.nan, dtype='float64')
     EyA = np.full(ny, np.nan, dtype='float64')
     GA = np.full(ny, np.nan, dtype='float64')
+    # avg_centroid is reported in the cut coord's LOCAL frame (the plots and
+    # the csv want in-plane coordinates), so the beam model needs its own copy
+    # transformed back to the basic frame or the GRIDs come out rotated.
+    avg_centroid_global = np.full((ny, 3), np.nan, dtype='float64')
 
     log.debug(f'dys={dys}; n={len(dys):d}')
     assert len(dys) == len(coords), (len(dys), len(coords))
@@ -521,6 +537,10 @@ def _get_station_data(model: BDF,
         EyI[icut, :] = EyIi
         GJ[icut] = GJi
         avg_centroid[icut, :] = avg_centroidi
+        # the cut plane passes through the coord origin, so the local
+        # out-of-plane component is ~0 and this lands on the real section
+        # centroid in basic coordinates
+        avg_centroid_global[icut, :] = coord.transform_node_to_global(avg_centroidi)
         ExA[icut] = ExAi
         EyA[icut] = EyAi
         GA[icut] = GAi
@@ -534,7 +554,7 @@ def _get_station_data(model: BDF,
         length, area, inertia, J,
         ExI, EyI, GJ,
         avg_centroid, plane_bdf_filenames1, plane_bdf_filenames2,
-        ExA, EyA, GA,
+        ExA, EyA, GA, avg_centroid_global,
     )
     return out
 

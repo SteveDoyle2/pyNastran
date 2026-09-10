@@ -545,6 +545,93 @@ class TestStiffnessPlot(unittest.TestCase):
         os.remove(dirname / beam_bdf_filename)
         os.remove(dirname / (tag + 'thetas.csv'))
 
+    def test_cut_ellipse_fuselage_frame(self):
+        """
+        The equivalent beam model must be written in the BASIC frame, even
+        when the cut coord is rotated relative to it.
+
+        ``avg_centroid`` comes out of the cutter in the cut coord's LOCAL
+        frame (the plots and the csv want in-plane coordinates), and column 1
+        is then overwritten with the station.  For a wing cut that happens to
+        be the basic frame, because the coord is built so its axes coincide
+        with the global ones -- so the bug is invisible there.  A fuselage cut
+        marches along +x with a rotated coord, and the GRIDs used to come out
+        permuted as ``[ycg, station, zcg]``.
+
+        The section is deliberately centered off-axis so that a permutation
+        cannot hide behind a zero.
+        """
+        dirname = TEST_PATH
+        tag = 'fuse_ellipse_'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+
+        a, b, t = 20., 10., 0.1
+        E, nu = 1.0e7, 0.3
+        ycg, zcg = 3., 7.
+        span, nspan, ntheta = 100., 40, 80
+
+        model, unused_pts = _build_ellipse_tube(
+            log, a, b, t, span, nspan, ntheta, E, nu,
+            axis=0, center=(ycg, zcg))
+
+        # the fuselage recipe: march along +x, cut in the global yz plane.
+        # the local axes are i=+y, j=-x, k=+z, so the coord IS rotated.
+        xstations = np.array([21.3, 46.1, 70.9])
+        origin = np.array([0., 0., 0.])
+        zaxis = np.array([0., 0., 1.])
+        xzplane = np.array([0., 1., 0.])
+        coords = []
+        for i, xs in enumerate(xstations):
+            dxyz = np.array([xs, 0., 0.])
+            coords.append(CORD2R(2000 + i, rid=0, origin=origin + dxyz,
+                                 zaxis=zaxis + dxyz, xzplane=xzplane + dxyz))
+        normal_plane = coords[0].j
+        assert np.allclose(normal_plane, [-1., 0., 0.]), normal_plane
+
+        beam_bdf_filename = tag + 'equivalent_beam_model.bdf'
+        moi_data = cut_and_plot_moi(
+            model, normal_plane, log, xstations, coords,
+            dirname=dirname, plot=False, show=False, stop_on_failure=True,
+            cut_data_span_filename='',
+            beam_model_bdf_filename=beam_bdf_filename,
+            thetas_csv_filename=tag + 'thetas.csv')
+        (out_dict, plane_bdf_filenames1, plane_bdf_filenames2, unused_ifig) = moi_data
+        (unused_x, unused_L, A, unused_I, unused_J, unused_ExI, unused_EyI,
+         unused_GJ, avg_centroid) = list(out_dict.values())
+        assert np.isfinite(A).all(), f'missing cuts: A={A}'
+
+        # the beam GRIDs are in the basic frame
+        beam_model = read_bdf(dirname / beam_bdf_filename, punch=True, debug=None)
+        xyz = np.array([beam_model.nodes[nid].xyz
+                        for nid in sorted(beam_model.nodes)])
+        xyz_expected = np.column_stack([
+            xstations,
+            np.full(len(xstations), ycg),
+            np.full(len(xstations), zcg)])
+        assert np.allclose(xyz, xyz_expected, atol=1e-6), \
+            f'beam GRIDs are not in the basic frame:\n{xyz}\nexpected\n{xyz_expected}'
+
+        # ...while the reported avg_centroid stays in the local frame, which
+        # is what plot_inertia and the csv header assume
+        local_expected = np.column_stack([
+            np.full(len(xstations), ycg),
+            xstations,
+            np.full(len(xstations), zcg)])
+        assert np.allclose(avg_centroid, local_expected, atol=1e-6), avg_centroid
+
+        # the CBEAM axis must run down the fuselage, not across it
+        for eid in sorted(beam_model.elements):
+            elem = beam_model.elements[eid]
+            n1, n2 = elem.node_ids
+            dxyz = beam_model.nodes[n2].xyz - beam_model.nodes[n1].xyz
+            assert abs(dxyz[0]) > 1e-6, (eid, dxyz)
+            assert np.allclose(dxyz[1:], 0., atol=1e-6), (eid, dxyz)
+
+        for fname in plane_bdf_filenames1 + plane_bdf_filenames2:
+            os.remove(fname)
+        os.remove(dirname / beam_bdf_filename)
+        os.remove(dirname / (tag + 'thetas.csv'))
+
     def test_cut_quad_shell_mat1_zoffset(self):
         """cut_and_plot_moi"""
         dirname = TEST_PATH
@@ -1162,35 +1249,49 @@ def _build_ellipse_tube(log: SimpleLogger,
                         a: float, b: float, t: float,
                         span: float, nspan: int, ntheta: int,
                         E: float, nu: float,
-                        pid: int=11, mid: int=12) -> tuple[BDF, np.ndarray]:
+                        pid: int=11, mid: int=12,
+                        axis: int=1,
+                        center: tuple[float, float]=(0., 0.),
+                        ) -> tuple[BDF, np.ndarray]:
     """
-    Prismatic elliptical tube extruded along +y.
+    Prismatic elliptical tube extruded along ``+axis``.
 
     ^ z
     |    _____
     |  /       \\
-    | (    +    )  --> x     a (x) by b (z), constant along the span
+    | (    +    )  --> x     a by b, constant along the span
     |  \\ _____ /
+
+    ``axis=1`` extrudes along +y and puts ``a`` along x and ``b`` along z
+    (a wing cut).  ``axis=0`` extrudes along +x and puts ``a`` along y and
+    ``b`` along z (a fuselage cut).  ``center`` offsets the section in those
+    same two in-plane directions, which is what makes a frame error visible.
     """
     model = BDF(log=log)
     model.add_mat1(mid, E=E, G=None, nu=nu)
     model.add_pshell(pid, mid1=mid, t=t, mid2=mid, mid3=mid)
 
-    pts = _ellipse_pts(a, b, ntheta)
-    ys = np.linspace(0., span, nspan + 1)
+    iaxes = [i for i in range(3) if i != axis]
+    pts = _ellipse_pts(a, b, ntheta) + np.asarray(center, dtype='float64')
+    stations = np.linspace(0., span, nspan + 1)
 
-    def nid(itheta: int, iy: int) -> int:
-        return iy * ntheta + (itheta % ntheta) + 1
+    def nid(itheta: int, istation: int) -> int:
+        return istation * ntheta + (itheta % ntheta) + 1
 
-    for iy, y in enumerate(ys):
-        for itheta, (x, z) in enumerate(pts):
-            model.add_grid(nid(itheta, iy), [x, y, z])
+    for istation, station in enumerate(stations):
+        for itheta, (p, q) in enumerate(pts):
+            xyz = np.zeros(3, dtype='float64')
+            xyz[axis] = station
+            xyz[iaxes[0]] = p
+            xyz[iaxes[1]] = q
+            model.add_grid(nid(itheta, istation), xyz)
 
     eid = 1
-    for iy in range(nspan):
+    for istation in range(nspan):
         for itheta in range(ntheta):
-            model.add_cquad4(eid, pid, [nid(itheta, iy), nid(itheta+1, iy),
-                                        nid(itheta+1, iy+1), nid(itheta, iy+1)])
+            model.add_cquad4(eid, pid, [
+                nid(itheta, istation), nid(itheta+1, istation),
+                nid(itheta+1, istation+1), nid(itheta, istation+1)])
             eid += 1
     model.cross_reference()
     return model, pts
