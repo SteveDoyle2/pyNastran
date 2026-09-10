@@ -37,6 +37,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      log: SimpleLogger,
                      stations: list[float] | np.ndarray,
                      coords: list[CORD2R],
+                     x_vector: list[float],
                      include_lines: bool=False,
                      include_solids: bool=False,
                      face_data: Optional[Any]=None,
@@ -45,6 +46,9 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      debug_vectorize: bool=True,
                      debug_v3: bool=False,
                      rho: float=1.0,
+                     xyz_round: int | None=None,
+                     area_round: int | None=None,
+                     inertia_round: int | None=None,
                      stop_on_failure: bool=False,
                      cut_data_span_filename: PathLike='cut_data_vs_span.csv',
                      beam_model_bdf_filename: PathLike='equivalent_beam_model.bdf',
@@ -143,6 +147,9 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         changes the filename
 
     """
+    assert isinstance(x_vector, list), x_vector
+    assert len(x_vector) == 3, x_vector
+
     if isinstance(dirname, str):
         dirname = Path(dirname)
     if isinstance(bdf_filename, PathLike):
@@ -204,9 +211,10 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         _write_beam_model(
             avg_centroid_global, A, ExA, GA,
             ExIz, ExIx, ExIxz, GJ,
-            beam_model_bdf_filename,
-            rho=rho,
-            nround=2,)
+            x_vector=x_vector,
+            bdf_filename=beam_model_bdf_filename,
+            rho=rho, xyz_round=xyz_round, area_round=area_round,
+            inertia_round=inertia_round)
 
     if cut_data_span_filename:
         cut_data_span_filename = dirname / cut_data_span_filename
@@ -276,9 +284,13 @@ def _write_beam_model(avg_centroid: np.ndarray,
                       ExIx: np.ndarray,
                       ExIxz: np.ndarray,
                       GJ: np.ndarray,
+                      x_vector: list[float],
                       bdf_filename: PathLike='',
                       rho: float=0.1,
-                      nround: int=-100):
+                      xyz_round: int | None=None,
+                      area_round: int | None=None,
+                      inertia_round: int | None=None,
+                      ):
     """
     Assume y is down the axis of the beam
     The beam cross section is defined in the x-z plane.
@@ -358,17 +370,25 @@ def _write_beam_model(avg_centroid: np.ndarray,
     mid = 1
     beam_model = BDF(debug=False)
     beam_model.add_mat1(mid=mid, E=E_ref, G=G_ref, nu=nu, rho=rho)
+    if xyz_round is not None:
+        avg_centroid = avg_centroid.round(xyz_round)
+    if area_round is not None:
+        area_eff = area_eff.round(area_round)
+    if inertia_round is not None:
+        i1_eff = i1_eff.round(inertia_round)
+        i2_eff = i2_eff.round(inertia_round)
+        i12_eff = i12_eff.round(inertia_round)
+        j_eff = j_eff.round(inertia_round)
+
     for inid, xyz in enumerate(avg_centroid):
-        if nround != -100:
-            xyz = xyz.round(nround)
         beam_model.add_grid(inid+1, xyz)
 
     for eid in range(1, len(A)):
         pid = eid
         nids = [eid, eid + 1]
-        x = [1., 0., 0.]
         g0 = None
-        beam_model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
+        beam_model.add_cbeam(eid, pid, nids, x_vector, g0,
+                             offt='GGG', bit=None,
                              pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
         so = ['YES', 'YES']
         xxb = [0., 1.]

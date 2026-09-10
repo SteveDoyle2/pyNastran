@@ -194,7 +194,13 @@ class TestStiffnessPlot(unittest.TestCase):
         J_expected = [i_expected]
         ExI_expected = [[e22 * i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
         EyI_expected = [[e11 * i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        GJ_expected = [37.5]
+        # A single cut quad is one straight wall: an OPEN section, so the
+        # torsion constant is the thin-strip value j = s*t^3/3, not the polar
+        # moment.  The old baseline was G*(Ix+Iz) = 400*0.09375 = 37.5, which
+        # is 93.75x too stiff -- Ix here is the in-plane second moment of a
+        # 3-wide strip and describes bending, not twist.
+        j_open = cut_length * t ** 3 / 3.  # 0.001
+        GJ_expected = [g12 * j_open]  # 0.4
         centroid_expected = [[1.5, 0.0, 0.0]]
         E_expected = [e11, e22, g12]
         Ex_expected = [e22]
@@ -269,9 +275,10 @@ class TestStiffnessPlot(unittest.TestCase):
             #  [ 5.00000000e-01 -5.55111512e-17  0.00000000e+00]
             #  [ 0.00000000e+00 -5.55111512e-17  0.00000000e+00]]
 
+            x_vector = [0., 0., 1.]
             moi_data = cut_and_plot_moi(
                 model, normal_plane, log,
-                ystations, coords,
+                ystations, coords, x_vector,
                 dirname=dirname,
                 plot=False, show=False, face_data=None,
                 stop_on_failure=True,
@@ -293,7 +300,10 @@ class TestStiffnessPlot(unittest.TestCase):
 
             Ex = ExI[:, 0] / I[:, 0]
             Ey = EyI[:, 0] / I[:, 0]
-            G = GJ / J
+            # GJ is now a real torsion constant, so it is NOT G*J with J the
+            # polar moment; dividing by J no longer recovers G.  Divide by the
+            # open-section constant that GJ is actually built from instead.
+            G = GJ / j_open
             # print(f'y = {y.tolist()}')
             # print(f'A = {A.tolist()}')
             # print(f'I = {I.tolist()}')
@@ -339,7 +349,10 @@ class TestStiffnessPlot(unittest.TestCase):
         J_expected = [i_expected]
         ExI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
         EyI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        GJ_expected = [1081730.7692307692]
+        # open section: one straight wall, so j = s*t^3/3 rather than the polar
+        # moment.  Old baseline was G*(Ix+Iz) = 1081730.77, 93.75x too stiff.
+        G = E / (2. * (1. + 0.3))  # 11538461.54
+        GJ_expected = [G * cut_length * t ** 3 / 3.]  # 11538.46
         centroid_expected = [[1.5, 0.0, 0.0]]
 
         cut_data_span_filename = dirname / 'test_cut_quad_shell_mat1.csv'
@@ -357,9 +370,11 @@ class TestStiffnessPlot(unittest.TestCase):
             else:  # pragma: no cover
                 raise RuntimeError(type)
         model.cross_reference()
+
+        x_vector = [0., 1., 0.]
         moi_data = cut_and_plot_moi(
             model, normal_plane, log,
-            ystations, coords,
+            ystations, coords, x_vector,
             dirname=dirname,
             plot=False, show=False, face_data=None,
             stop_on_failure=True,
@@ -402,7 +417,7 @@ class TestStiffnessPlot(unittest.TestCase):
         assert np.allclose(J, J_expected)
         assert np.allclose(ExI, ExI_expected)
         assert np.allclose(EyI, EyI_expected)
-        assert np.allclose(GJ, GJ_expected), GJ.tolist()
+        assert np.allclose(GJ, GJ_expected), (GJ_expected, GJ.tolist())
         assert np.allclose(avg_centroid, centroid_expected), avg_centroid.tolist()
         del model.properties[pid]
 
@@ -447,9 +462,13 @@ class TestStiffnessPlot(unittest.TestCase):
         assert np.allclose(normal_plane, [0., 1., 0.]), normal_plane
 
         beam_bdf_filename = tag + 'equivalent_beam_model.bdf'
+        x_vector = [0., 0., 1.]
         moi_data = cut_and_plot_moi(
-            model, normal_plane, log, ystations, coords,
+            model, normal_plane, log, ystations, coords, x_vector,
             dirname=dirname, plot=False, show=False, stop_on_failure=True,
+            xyz_round=3,
+            area_round=3,
+            inertia_round=2,
             cut_data_span_filename='',
             beam_model_bdf_filename=beam_bdf_filename,
             thetas_csv_filename=tag + 'thetas.csv')
@@ -542,7 +561,7 @@ class TestStiffnessPlot(unittest.TestCase):
         # _cleanup_moi_files() would trip over the missing plots
         for fname in plane_bdf_filenames1 + plane_bdf_filenames2:
             os.remove(fname)
-        os.remove(dirname / beam_bdf_filename)
+        # os.remove(dirname / beam_bdf_filename)
         os.remove(dirname / (tag + 'thetas.csv'))
 
     def test_cut_ellipse_fuselage_frame(self):
@@ -589,8 +608,9 @@ class TestStiffnessPlot(unittest.TestCase):
         assert np.allclose(normal_plane, [-1., 0., 0.]), normal_plane
 
         beam_bdf_filename = tag + 'equivalent_beam_model.bdf'
+        x_vector = [0., 0., 1.]
         moi_data = cut_and_plot_moi(
-            model, normal_plane, log, xstations, coords,
+            model, normal_plane, log, xstations, coords, x_vector,
             dirname=dirname, plot=False, show=False, stop_on_failure=True,
             cut_data_span_filename='',
             beam_model_bdf_filename=beam_bdf_filename,
@@ -648,9 +668,10 @@ class TestStiffnessPlot(unittest.TestCase):
         ystations = [0.]
         normal_plane = np.array([0., 1., 0.])
 
+        x_vector = [0., 0., 1.]
         moi_data = cut_and_plot_moi(
             model, normal_plane, log,
-            ystations, coords,
+            ystations, coords, x_vector,
             dirname=dirname,
             plot=False, show=False, face_data=None,
             stop_on_failure=True,
@@ -683,7 +704,10 @@ class TestStiffnessPlot(unittest.TestCase):
         J_expected = [i_expected]
         ExI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
         EyI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        GJ_expected = [1081730.7692307692]
+        # open section: one straight wall, so j = s*t^3/3 rather than the polar
+        # moment.  Old baseline was G*(Ix+Iz) = 1081730.77, 93.75x too stiff.
+        G = E / (2. * (1. + 0.3))  # 11538461.54
+        GJ_expected = [G * cut_length * t ** 3 / 3.]  # 11538.46
         centroid_expected = [[1.5, 0.0, 10.0]]
 
         assert np.allclose(y, y_expected)
@@ -712,9 +736,10 @@ class TestStiffnessPlot(unittest.TestCase):
         ystations = [0.]
         normal_plane = np.array([0., 1., 0.])
 
+        x_vector = [0., 0., 1.]
         moi_data = cut_and_plot_moi(
             model, normal_plane, log,
-            ystations, coords,
+            ystations, coords, x_vector,
             dirname=dirname,
             plot=False, show=False, face_data=None,
             stop_on_failure=True,
@@ -747,7 +772,10 @@ class TestStiffnessPlot(unittest.TestCase):
         J_expected = [i_expected]
         ExI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
         EyI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        GJ_expected = [1081730.7692307692]
+        # open section: one straight wall, so j = s*t^3/3 rather than the polar
+        # moment.  Old baseline was G*(Ix+Iz) = 1081730.77, 93.75x too stiff.
+        G = E / (2. * (1. + 0.3))  # 11538461.54
+        GJ_expected = [G * cut_length * t ** 3 / 3.]  # 11538.46
         centroid_expected = [[1.5, 0.0, 0.0]]
 
         assert np.allclose(y, y_expected)
@@ -774,11 +802,12 @@ class TestStiffnessPlot(unittest.TestCase):
         coords = [coord]
         ystations = [0.]
         normal_plane = np.array([0., 1., 0.])
+        x_vector = [0., 0., 1.]
 
         with self.assertRaises(NotImplementedError):
             moi_data = cut_and_plot_moi(
                 model, normal_plane, log,
-                ystations, coords,
+                ystations, coords, x_vector,
                 dirname=dirname,
                 plot=False, show=False, face_data=None,
                 include_solids=True,
@@ -874,11 +903,12 @@ class TestStiffnessPlot(unittest.TestCase):
         #     dirname=dirname,
         #     plot=False, show=False, face_data=face_data)
 
+        x_vector = [0., 0., 1.]
         if run_y_cuts:
             log.info('working on y-cuts')
             moi_data = cut_and_plot_moi(
                 bdf_filename, normal_plane, log,
-                ystations, coords,
+                ystations, coords, x_vector,
                 dirname=dirname,
                 plot=IS_MATPLOTLIB, show=False, face_data=face_data,
                 cut_data_span_filename='y_cut_data_vs_span.csv',
@@ -940,8 +970,15 @@ class TestStiffnessPlot(unittest.TestCase):
                 [5008238252044.59, 3.0875799633053617e-22, 110181565188.11455, 4.540787324493114e-06, -2.5512325871018163e-07, 476060331894.8157],
                 [2128603897250.3176, 2.5772461523789405e-22, 52995377672.16867, 1.7416397212813894e-05, 2.186036081758313e-06, 245172127763.47583],
                 [779303809782.374, 9.540748307180537e-23, 27469421334.232525, 3.843636626470701e-06, 3.38601732516192e-07, 119778660481.12492]]
-            GJ_expected = [1.703986879714322e+16, 5994675543453522.0, 715043894381704.6, 118078327598852.66, 28896697595393.2, 15363440774671.04,
-                           5753383451231.989, 2920241713409.1665, 1214164704037.6692, 447803875533.6692]
+            # Bredt-Batho multi-cell torsion, replacing the old G*(Ix+Iz) polar
+            # baseline.  The wing box is a closed multi-cell section, so the
+            # polar moment badly overstated it -- 42x at the root, 27x at the
+            # tip.  These are regression values, not closed-form ones; the
+            # closed-form check lives in test_cut_ellipse_constant_area.
+            GJ_expected = [406405373109638.2, 86481383450659.14, 55375491645159.75,
+                           6269981882883.581, 1178856065913.1702, 601070280743.0763,
+                           284866251513.561, 122035533137.60596, 46849456050.85022,
+                           16802569331.901482]
             assert np.allclose(y, y_expected)
             assert np.allclose(A, A_expected)
             assert np.allclose(I, I_expected)
@@ -984,7 +1021,7 @@ class TestStiffnessPlot(unittest.TestCase):
             log.debug(f'normal_plane = {normal_plane}')
             moi_data = cut_and_plot_moi(
                 bdf_filename, normal_plane, log,
-                xstations, xcoords,
+                xstations, xcoords, x_vector,
                 dirname=dirname, ifig=10,
                 plot=IS_MATPLOTLIB, show=False, face_data=face_data,
                 cut_data_span_filename='x_cut_data_vs_span.csv',
@@ -1070,10 +1107,17 @@ class TestStiffnessPlot(unittest.TestCase):
                 [181571584942580.62, 1.597938734326795e-21, 31088654693132.008, -4.1771709693110584e-05, -3.678096539091203e-06, 48978902253935.82],
                 [111308913025634.05, 8.327247466975484e-22, 48874758600414.11, -1.4205997157181862e-05, -3.273198197739828e-06, 62118990365954.03]]
 
-            GJ_expected = [2743207688607.3154, 13519468742297.812, 23529818190215.14, 35837638612444.36, 50967502623265.56,
-                  69697812451200.37, 155195580780968.66, 200997256485291.75, 270141129771216.94, 326173799506531.4,
-                  425198906188080.0, 437298336390693.6, 735240713516634.2, 1127198943532038.0, 1066322381238653.2,
-                  1236997531280349.5, 1172560428793695.0, 112820404543552.34, 85435975493538.38]
+            # Bredt-Batho, replacing the old G*(Ix+Iz) polar baseline.  This
+            # assertion was previously unreachable -- the y-cut GJ check above
+            # failed first, so this list was never exercised and silently went
+            # stale too.  Regression values, not closed-form.
+            GJ_expected = [1909997028.546258, 143618441147.58948, 253466248971.01608,
+                  326852460412.9585, 385726808364.47565, 452019448660.6323,
+                  915364684102.5784, 2018834400232.94, 4172528234519.123,
+                  7309103592385.41, 10844932249461.475, 13291126771296.396,
+                  14782088705379.807, 14372117610030.074, 32006475322096.867,
+                  22739867489634.14, 13707972167928.145, 11723023385219.502,
+                  2400531926446.8584]
 
             # print(f'x = {x.tolist()}')
             # print(f'A = {A.tolist()}')
