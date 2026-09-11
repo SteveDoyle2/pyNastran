@@ -23,6 +23,7 @@ from pyNastran.bdf.cards.coordinate_systems import (
     xyz_to_rtz_array, rtz_to_xyz_array)
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.cut.torsion import bredt_batho_gj
+from pyNastran.bdf.mesh_utils.cut.shear_center import shear_center
 from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     cut_face_model_by_coord, _setup_faces,
     # is_element_cut,
@@ -198,7 +199,8 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     )
     (thetas, stations, dx, dz, L, A, I, J, ExI, EyI, GJ, avg_centroid,
      plane_bdf_filenames, plane_bdf_filenames2, ExA, EyA, GA,
-     avg_centroid_global) = out
+     avg_centroid_global, neutral_axis_global, shear_center_global,
+     neutral_axis_offset) = out
 
     assert len(stations) > 0, stations
     thetas_csv_filename = dirname / thetas_csv_filename
@@ -231,11 +233,11 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         # Ex* rather than Ey* because Ex is the modulus along the beam axis
         # (normal to the cut plane); see the note in the docstring.
         #
-        # avg_centroid_global, NOT avg_centroid: the latter is in the cut
-        # coord's local frame with column 1 overwritten by the station.  That
-        # happens to be the basic frame for a wing cut (the coord is built so
-        # the local axes coincide with the global ones), but for a fuselage
-        # cut the coord is rotated and the GRIDs would come out permuted.
+        # *_global, NOT avg_centroid: the latter is in the cut coord's local
+        # frame with column 1 overwritten by the station.  That happens to be
+        # the basic frame for a wing cut (the coord is built so the local axes
+        # coincide with the global ones), but for a fuselage cut the coord is
+        # rotated and the GRIDs would come out permuted.
         #
         # ExIx/ExIz/ExIxz are second moments about the *cut coord's* local x
         # and z axes, so _write_beam_model needs to know where those axes
@@ -243,7 +245,8 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         plane_i = np.array([coord.i for coord in coords], dtype='float64')
         plane_k = np.array([coord.k for coord in coords], dtype='float64')
         _write_beam_model(
-            avg_centroid_global, A, ExA, GA,
+            neutral_axis_global, shear_center_global, neutral_axis_offset,
+            A, ExA, GA,
             ExIx, ExIz, ExIxz, GJ,
             x_vector=x_vector,
             plane_i=plane_i, plane_k=plane_k,
@@ -286,6 +289,9 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     out_dict = {
         'stations': stations, 'L': L, 'A': A, 'I': I, 'J': J,
         'ExI': ExI, 'EyI': EyI, 'GJ': GJ, 'avg_centroid': avg_centroid,
+        # basic frame; 'avg_centroid' is area-weighted and in the cut frame
+        'neutral_axis': neutral_axis_global,
+        'shear_center': shear_center_global,
     }
     return out_dict, plane_bdf_filenames, plane_bdf_filenames2, ifig
 
@@ -386,7 +392,9 @@ def _project_section(ixx: float, izz: float, ixz: float,
     return i1, i2, i12
 
 
-def _write_beam_model(avg_centroid: np.ndarray,
+def _write_beam_model(neutral_axis: np.ndarray,
+                      shear_center: np.ndarray,
+                      neutral_axis_offset: np.ndarray,
                       A: np.ndarray,
                       ExA: np.ndarray,
                       GA: np.ndarray,
@@ -416,6 +424,19 @@ def _write_beam_model(avg_centroid: np.ndarray,
     |
     ----------> x
 
+    Parameters
+    ----------
+    neutral_axis : (nstation, 3) float ndarray
+        the modulus-weighted centroid of each cut, in the basic frame
+    shear_center : (nstation, 3) float ndarray
+        where a transverse shear produces no twist, in the basic frame;
+        NaN for any station where it could not be found
+    neutral_axis_offset : (nstation, 2) float ndarray
+        neutral axis minus *area* centroid, in the CUT frame's in-plane axes
+        ``(plane_i, plane_k)``.  ``ExIxx``/``ExIzz``/``ExIxz`` are reported
+        about the area centroid, so this is what moves them to the neutral
+        axis; it is identically zero for a homogeneous section.
+
     The section stiffnesses that come out of the cut are modulus-weighted
     integrals (EA, E*I, G*J), so they have to be split into a material part
     and a property part before they can be written.  Rather than write a
@@ -441,19 +462,54 @@ def _write_beam_model(avg_centroid: np.ndarray,
     moduli, A is the real area (so ``rho`` gives a meaningful mass), and
     K1 = K2 = 1.
 
-    By default a GRID is written on each cut's section centroid.  Passing
+    **The element axis rides the shear center, not the centroid.**  MSC's
+    Figure 16-142 lays out three distinct lines through the section::
+
+        GA --w_a--> element origin (0,0,0)  ...on the SHEAR CENTER line
+                    + (N1(A), N2(A))        ...to the NEUTRAL AXIS line
+                    + (M1(A), M2(A))        ...to the nonstructural mass
+
+    so ``GA+WA`` is the point about which a transverse shear produces no
+    twist, and ``N1``/``N2`` say where the modulus-weighted centroid sits
+    relative to it, in the *element* frame (``N1`` along ``y_e``, ``N2``
+    along ``z_e``).  I1/I2/I12/J are taken about the neutral axis.
+
+    Putting the axis on the centroid instead and writing ``N1=N2=0`` asserts
+    centroid == shear center, which is true for a closed doubly symmetric
+    section (a fuselage barrel, a boom) and wrong for anything with a single
+    plane of symmetry or none -- a wing box, a fin, a stabilizer.  There the
+    error is not small: the shear center of an airfoil box sits well forward
+    of the centroid, and collapsing them silently couples bending into
+    torsion.  ``shear_center`` solves the transverse shear flow for the real
+    location; where it cannot (a degenerate or collinear cut) it returns NaN
+    and the axis falls back to the neutral axis with ``N1=N2=0``, which is
+    the old behavior.
+
+    By default a GRID is written on each cut's shear center.  Passing
     ``beam_grid_xyz`` moves the GRIDs onto a prescribed set of points (load
     control points, for instance) and puts the difference on the CBEAM WA/WB
     offset vectors::
 
-        WA = centroid[i]   - beam_grid_xyz[i]
-        WB = centroid[i+1] - beam_grid_xyz[i+1]
+        WA = shear_center[i]   - beam_grid_xyz[i]
+        WB = shear_center[i+1] - beam_grid_xyz[i+1]
 
     A CBEAM's elastic axis runs from GA+WA to GB+WB, so the offsets restore
     exactly the geometry the un-offset model would have had -- the section
-    properties are unchanged and still referenced to the centroid, only the
-    nodes have moved.  ``offt='GGG'`` puts the offsets in the global frame,
-    which is what the centroids are already in.
+    properties are unchanged and still referenced to the neutral axis, only
+    the nodes have moved.  ``offt='GGG'`` puts the offsets in the global
+    frame, which is what the section points are already in.
+
+    **The second moments are re-referenced to the neutral axis.**  The cutter
+    reports ``ExI`` about the *area* centroid; for a heterogeneous section
+    the neutral axis is somewhere else, and the parallel-axis theorem moves
+    it::
+
+        ExIxx_na = ExIxx - ExA*du**2       du, dv = neutral_axis_offset
+        ExIzz_na = ExIzz - ExA*dv**2
+        ExIxz_na = ExIxz - ExA*du*dv
+
+    The shift is toward the centroid of the *stiffness*, so the corrections
+    are subtractive and vanish identically for a homogeneous section.
 
     **Section properties are rotated into the element frame.**  The cutter
     reports second moments about the *cut coord's* in-plane axes::
@@ -491,11 +547,20 @@ def _write_beam_model(avg_centroid: np.ndarray,
     x_vector = np.asarray(x_vector, dtype='float64')
     plane_i = np.asarray(plane_i, dtype='float64')
     plane_k = np.asarray(plane_k, dtype='float64')
-    for nm, arr in (('plane_i', plane_i), ('plane_k', plane_k)):
+    neutral_axis = np.asarray(neutral_axis, dtype='float64')
+    shear_center = np.asarray(shear_center, dtype='float64')
+    neutral_axis_offset = np.asarray(neutral_axis_offset, dtype='float64')
+    for nm, arr in (('plane_i', plane_i), ('plane_k', plane_k),
+                    ('neutral_axis', neutral_axis),
+                    ('shear_center', shear_center)):
         if arr.shape != (nstation, 3):
             raise ValueError(
                 f'{nm} must be ({nstation:d}, 3) to match the stations; '
                 f'got {arr.shape}')
+    if neutral_axis_offset.shape != (nstation, 2):
+        raise ValueError(
+            f'neutral_axis_offset must be ({nstation:d}, 2) to match the '
+            f'stations; got {neutral_axis_offset.shape}')
     if beam_grid_xyz is not None:
         beam_grid_xyz = np.asarray(beam_grid_xyz, dtype='float64')
         if beam_grid_xyz.shape != (nstation, 3):
@@ -519,7 +584,7 @@ def _write_beam_model(avg_centroid: np.ndarray,
     # blank GRID/PBEAM fields and an unreadable deck
     ivalid = np.where(
         np.isfinite(A) & np.isfinite(ExA) & np.isfinite(GA) &
-        np.isfinite(avg_centroid).all(axis=1))[0]
+        np.isfinite(neutral_axis).all(axis=1))[0]
     if len(ivalid) < 2:
         raise RuntimeError(
             f'cannot write an equivalent beam model; only {len(ivalid):d} '
@@ -535,7 +600,9 @@ def _write_beam_model(avg_centroid: np.ndarray,
             f'had no cut and were dropped: {dropped}. If any of them is an '
             'interface point, the merged model will not connect there.')
 
-    avg_centroid = avg_centroid[ivalid, :]
+    neutral_axis = neutral_axis[ivalid, :]
+    shear_center = shear_center[ivalid, :]
+    neutral_axis_offset = neutral_axis_offset[ivalid, :]
     if beam_grid_xyz is not None:
         beam_grid_xyz = beam_grid_xyz[ivalid, :]
     if beam_grid_ids is not None:
@@ -549,6 +616,27 @@ def _write_beam_model(avg_centroid: np.ndarray,
     GJ = GJ[ivalid]
     plane_i = plane_i[ivalid, :]
     plane_k = plane_k[ivalid, :]
+
+    # The element axis goes on the shear center.  Where the shear flow solve
+    # could not place one, fall back to the neutral axis -- that is only right
+    # for a doubly symmetric section, so say so rather than quietly writing a
+    # beam whose torsion is referenced to the wrong line.
+    nofound = ~np.isfinite(shear_center).all(axis=1)
+    axis_xyz = np.where(nofound[:, np.newaxis], neutral_axis, shear_center)
+    if nofound.any() and log is not None:
+        log.warning(
+            f'{int(nofound.sum()):d} of {len(ivalid):d} stations have no shear '
+            'center; the beam axis there falls back to the neutral axis and '
+            'N1/N2 are written as 0.')
+
+    # Parallel axis: ExI comes back about the AREA centroid, but I1/I2/I12 are
+    # defined about the neutral axis.  The two coincide for a homogeneous
+    # section, so this is exactly zero there.
+    du = neutral_axis_offset[:, 0]
+    dv = neutral_axis_offset[:, 1]
+    ExIxx = ExIxx - ExA * du ** 2
+    ExIzz = ExIzz - ExA * dv ** 2
+    ExIxz = ExIxz - ExA * du * dv
 
     # area-weighted reference moduli; a single MAT1 for the whole beam
     Atotal = A.sum()
@@ -571,9 +659,9 @@ def _write_beam_model(avg_centroid: np.ndarray,
     beam_model = BDF(debug=False)
     beam_model.add_mat1(mid=mid, E=E_ref, G=G_ref, nu=nu, rho=rho)
 
-    # where the GRIDs go, and how far that is from the section centroid
+    # where the GRIDs go, and how far that is from the shear center
     if beam_grid_xyz is None:
-        grid_xyz = avg_centroid
+        grid_xyz = axis_xyz
         offset = None
         if xyz_round is not None:
             grid_xyz = grid_xyz.round(xyz_round)
@@ -582,7 +670,7 @@ def _write_beam_model(avg_centroid: np.ndarray,
         # would break the coincidence with whatever deck they came from --
         # so xyz_round is applied to the offsets instead
         grid_xyz = beam_grid_xyz
-        offset = avg_centroid - beam_grid_xyz
+        offset = axis_xyz - beam_grid_xyz
         if xyz_round is not None:
             offset = offset.round(xyz_round)
 
@@ -596,6 +684,10 @@ def _write_beam_model(avg_centroid: np.ndarray,
     for nidi, xyz in zip(nid, grid_xyz):
         beam_model.add_grid(int(nidi), xyz)
 
+    # where the element axis really ends up once WA/WB have been rounded; N1/N2
+    # are measured from that, not from the unrounded shear center
+    axis_written = grid_xyz if offset is None else grid_xyz + offset
+
     # the element axis is only normal to the cut plane for an unswept beam;
     # warn once rather than per element
     skewed = 0
@@ -607,7 +699,7 @@ def _write_beam_model(avg_centroid: np.ndarray,
             wa = wb = None
         else:
             # GA+WA -> GB+WB is the elastic axis, so this puts the element
-            # back on the centroid line no matter where the GRIDs sit
+            # back on the shear center line no matter where the GRIDs sit
             wa = offset[ielem-1, :].tolist()
             wb = offset[ielem, :].tolist()
         beam_model.add_cbeam(eid, pid, nids, x_vector.tolist(), g0,
@@ -618,10 +710,10 @@ def _write_beam_model(avg_centroid: np.ndarray,
         area = [area_eff[ielem-1], area_eff[ielem]]
 
         # rotate each end's cut-plane second moments onto this element's axes
-        xyz_a = avg_centroid[ielem-1, :]
-        xyz_b = avg_centroid[ielem, :]
+        xyz_a = axis_written[ielem-1, :]
+        xyz_b = axis_written[ielem, :]
         x_e, y_e, z_e = _element_triad(xyz_a, xyz_b, x_vector)
-        i1, i2, i12 = [], [], []
+        i1, i2, i12, n1, n2 = [], [], [], [], []
         for iend in (ielem-1, ielem):
             normal = np.cross(plane_i[iend, :], plane_k[iend, :])
             if abs(x_e.dot(normal)) < 0.966:  # ~15 deg
@@ -636,6 +728,20 @@ def _write_beam_model(avg_centroid: np.ndarray,
             i1.append(i1i)
             i2.append(i2i)
             i12.append(i12i)
+
+            # N1/N2 locate the neutral axis relative to the element axis (which
+            # is on the shear center), resolved on the element's own y_e/z_e.
+            # The offset is in the cut plane and the element axis is not quite
+            # normal to it on a swept beam, so a sliver of it falls along x_e
+            # and is simply dropped -- there is no PBEAM field for it.
+            dxyz = neutral_axis[iend, :] - axis_written[iend, :]
+            n1i = float(dxyz.dot(y_e))
+            n2i = float(dxyz.dot(z_e))
+            if xyz_round is not None:
+                n1i = round(n1i, xyz_round)
+                n2i = round(n2i, xyz_round)
+            n1.append(n1i)
+            n2.append(n2i)
         j = [j_eff[ielem-1], j_eff[ielem]]
         # K is constant over the element; average the two ends
         k1 = k2 = 0.5 * (k_eff[ielem-1] + k_eff[ielem])
@@ -643,7 +749,7 @@ def _write_beam_model(avg_centroid: np.ndarray,
                              c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
                              k1=k1, k2=k2, s1=0., s2=0., nsia=0., nsib=None, cwa=0., cwb=None,
                              m1a=0., m2a=0., m1b=None, m2b=None,
-                             n1a=0., n2a=0., n1b=None, n2b=None,
+                             n1a=n1[0], n2a=n2[0], n1b=n1[1], n2b=n2[1],
                              comment='')
     if skewed and log is not None:
         log.warning(
@@ -742,6 +848,14 @@ def _get_station_data(model: BDF,
     # the csv want in-plane coordinates), so the beam model needs its own copy
     # transformed back to the basic frame or the GRIDs come out rotated.
     avg_centroid_global = np.full((ny, 3), np.nan, dtype='float64')
+    # the neutral axis (modulus-weighted centroid) and the shear center, both
+    # in the basic frame.  These are what the CBEAM actually needs: the element
+    # axis rides the shear center and N1/N2 point from it to the neutral axis.
+    neutral_axis_global = np.full((ny, 3), np.nan, dtype='float64')
+    shear_center_global = np.full((ny, 3), np.nan, dtype='float64')
+    # ...and the in-plane offset from the area centroid to the neutral axis,
+    # kept in the CUT frame because that is the frame ExI is reported in
+    neutral_axis_offset = np.zeros((ny, 2), dtype='float64')
 
     log.debug(f'dys={dys}; n={len(dys):d}')
     assert len(dys) == len(coords), (len(dys), len(coords))
@@ -785,7 +899,8 @@ def _get_station_data(model: BDF,
         (dxi, dzi, lengthi, areai,
          inertiai, Ji,
          ExIi, EyIi, GJi, avg_centroidi,
-         ExAi, EyAi, GAi) = calculate_area_moi(
+         ExAi, EyAi, GAi,
+         neutral_axisi, shear_centeri) = calculate_area_moi(
             model, rods, normal_plane, thetas,
             moi_filename=moi_filename)
 
@@ -807,6 +922,12 @@ def _get_station_data(model: BDF,
         # out-of-plane component is ~0 and this lands on the real section
         # centroid in basic coordinates
         avg_centroid_global[icut, :] = coord.transform_node_to_global(avg_centroidi)
+        neutral_axis_global[icut, :] = coord.transform_node_to_global(neutral_axisi)
+        neutral_axis_offset[icut, :] = (neutral_axisi[[0, 2]] -
+                                        avg_centroidi[[0, 2]])
+        if np.isfinite(shear_centeri).all():
+            shear_center_global[icut, :] = coord.transform_node_to_global(
+                shear_centeri)
         ExA[icut] = ExAi
         EyA[icut] = EyAi
         GA[icut] = GAi
@@ -821,6 +942,7 @@ def _get_station_data(model: BDF,
         ExI, EyI, GJ,
         avg_centroid, plane_bdf_filenames1, plane_bdf_filenames2,
         ExA, EyA, GA, avg_centroid_global,
+        neutral_axis_global, shear_center_global, neutral_axis_offset,
     )
     return out
 
@@ -1021,6 +1143,7 @@ def calculate_area_moi(model: BDF,
                        moi_filename: PathLike='',
                        eid_filename: PathLike='eid_file.csv',
                        use_bredt_batho: bool=True,
+                       use_shear_center: bool=True,
                        ) -> tuple[np.ndarray, np.ndarray, np.ndarray,               # dxi, dyi, total_area,
                                   np.ndarray, np.ndarray,                           # Isum, Jsum,
                                   np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # ExIsum, EyIsum, GJsum, avg_centroid
@@ -1057,6 +1180,10 @@ def calculate_area_moi(model: BDF,
     use_bredt_batho : bool; default=True
         compute the torsion constant from the cell topology; set False to
         get the legacy GJ = G*(Ix+Iz) polar-moment approximation
+    use_shear_center : bool; default=True
+        solve the transverse shear flow for the shear center; set False to
+        report the area centroid for all three of centroid/neutral axis/shear
+        center, which is what the writer assumed before
 
     Returns
     -------
@@ -1066,6 +1193,14 @@ def calculate_area_moi(model: BDF,
     EIsum
     GJsum
     avg_centroid
+        the AREA-weighted centroid, in the cut coord's local frame
+    xyz_neutral_axis
+        the MODULUS-weighted centroid, in the same frame.  ExIsum is reported
+        about ``avg_centroid``, so a heterogeneous section needs a
+        parallel-axis shift of ``ExA*d**2`` to refer it to the neutral axis.
+    xyz_shear_center
+        where a transverse shear produces no twist; NaN if it could not be
+        found.  This is where the CBEAM element axis belongs.
     """
     assert isinstance(rods, tuple), type(rods)
     assert isinstance(thetas, dict), type(thetas)
@@ -1220,6 +1355,36 @@ def calculate_area_moi(model: BDF,
                     f'Bredt-Batho GJ={gj_bredt:g} vs polar G*Ip={GJsum:g}')
             GJsum = gj_bredt
 
+    # Shear center.  MSC puts the CBEAM element axis on it (Figure 16-142):
+    # GA+WA rides the shear-center line and N1/N2 then point at the neutral
+    # axis.  For a doubly symmetric section all three points coincide and none
+    # of this matters; for an airfoil box they are inches apart, and putting
+    # the axis on the centroid instead silently couples bending into torsion.
+    xyz_shear_center = np.full(3, np.nan, dtype='float64')
+    xyz_neutral_axis = avg_centroid.copy()
+    if use_shear_center and len(xyz1) == len(thickness):
+        result = shear_center(xyz1, xyz2, length, thickness, ex, gxy,
+                              log=model.log)
+        # the section lives in the cut plane, so the out-of-plane coordinate is
+        # whatever the centroid has; carrying it keeps the point on the plane
+        # when the caller transforms back to the basic frame
+        xyz_neutral_axis[0] = result.xy_neutral_axis[0]
+        xyz_neutral_axis[2] = result.xy_neutral_axis[1]
+        if result.method == 'none':
+            model.log.warning(
+                'no shear center for this cut; the beam axis will fall back '
+                'to the neutral axis, which is only right for a doubly '
+                'symmetric section')
+        else:
+            xyz_shear_center[:] = xyz_neutral_axis
+            xyz_shear_center[0] = result.xy_shear_center[0]
+            xyz_shear_center[2] = result.xy_shear_center[1]
+            model.log.debug(
+                f'shear center: {result.method} section, {result.ncells:d} '
+                f'cell(s), offset from the neutral axis '
+                f'({result.xy_shear_center - result.xy_neutral_axis}), '
+                f'force residual {result.force_error:g}')
+
     if moi_filename is not None:
         dirname = os.path.dirname(moi_filename)
         eid_filename = os.path.join(dirname, eid_filename)
@@ -1233,6 +1398,7 @@ def calculate_area_moi(model: BDF,
         Isum, Jsum,
         ExIsum, EyIsum, GJsum, avg_centroid,
         ExAsum, EyAsum, GAsum,
+        xyz_neutral_axis, xyz_shear_center,
     )
     return out
 
