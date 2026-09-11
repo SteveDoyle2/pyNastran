@@ -133,6 +133,13 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         test faster cutting method
      cut_data_span_filename : PathLike; default='cut_data_vs_span.csv'
         changes the filename
+     x_vector : list[float]
+        the CBEAM orientation vector v, in the basic frame (the emitted
+        elements use ``offt='GGG'``).  This is not cosmetic: it sets the
+        element y/z axes, and therefore which way round I1 and I2 come out
+        and what sign I12 takes.  With a beam along +y, ``[1,0,0]`` puts I1
+        on the chordwise moment while ``[0,0,1]`` puts I1 on the flapwise
+        one.  Must not be parallel to the beam axis.
      beam_model_bdf_filename : PathLike; default='equivalent_beam_model.bdf'
         changes the filename
      rho : float; default=1.0
@@ -229,10 +236,17 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         # happens to be the basic frame for a wing cut (the coord is built so
         # the local axes coincide with the global ones), but for a fuselage
         # cut the coord is rotated and the GRIDs would come out permuted.
+        #
+        # ExIx/ExIz/ExIxz are second moments about the *cut coord's* local x
+        # and z axes, so _write_beam_model needs to know where those axes
+        # point in the basic frame to rotate them into the element frame.
+        plane_i = np.array([coord.i for coord in coords], dtype='float64')
+        plane_k = np.array([coord.k for coord in coords], dtype='float64')
         _write_beam_model(
             avg_centroid_global, A, ExA, GA,
-            ExIz, ExIx, ExIxz, GJ,
+            ExIx, ExIz, ExIxz, GJ,
             x_vector=x_vector,
+            plane_i=plane_i, plane_k=plane_k,
             bdf_filename=beam_model_bdf_filename,
             rho=rho, xyz_round=xyz_round, area_round=area_round,
             inertia_round=inertia_round,
@@ -299,15 +313,90 @@ def load_moi_data(csv_filename: PathLike) -> tuple[np.ndarray, np.ndarray, np.nd
     return y, A, I, J, ExI, EyI, GJ, avg_centroid
 
 
+def _element_triad(xyz_a: np.ndarray,
+                   xyz_b: np.ndarray,
+                   x_vector: np.ndarray,
+                   ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    The MSC CBEAM element triad for ``offt='GGG'`` (orientation vector in the
+    basic frame)::
+
+        x_e  along GA+WA -> GB+WB
+        y_e  the part of v normal to x_e   (plane 1 contains x_e and v)
+        z_e  = x_e cross y_e
+
+    Raises if v is parallel to the element axis, which leaves plane 1
+    undefined -- Nastran would reject the CBEAM for the same reason.
+    """
+    dxyz = xyz_b - xyz_a
+    norm = np.linalg.norm(dxyz)
+    if norm == 0.0:
+        raise ValueError(f'coincident beam ends {xyz_a} and {xyz_b}')
+    x_e = dxyz / norm
+
+    y_e = x_vector - x_vector.dot(x_e) * x_e
+    norm_y = np.linalg.norm(y_e)
+    if norm_y < 1e-8:
+        raise ValueError(
+            f'x_vector={x_vector} is parallel to the beam axis {x_e}; '
+            'the CBEAM orientation plane is undefined')
+    y_e /= norm_y
+    z_e = np.cross(x_e, y_e)
+    return x_e, y_e, z_e
+
+
+def _project_section(ixx: float, izz: float, ixz: float,
+                     y_e: np.ndarray, z_e: np.ndarray,
+                     plane_i: np.ndarray, plane_k: np.ndarray,
+                     ) -> tuple[float, float, float]:
+    """
+    Rotates the cut-plane second moments onto the element axes.
+
+    ``ixx``, ``izz``, ``ixz`` are ``int(x_loc^2)``, ``int(z_loc^2)`` and
+    ``int(x_loc*z_loc)`` about the cut coord's local axes ``plane_i`` and
+    ``plane_k``.  They are the three independent entries of the symmetric
+    2x2 tensor ``M`` in that basis, so for any in-plane direction pair::
+
+        I1  = a.M.a      I2 = b.M.b      I12 = a.M.b
+
+    with ``a`` and ``b`` the components of ``y_e`` and ``z_e`` along
+    ``(plane_i, plane_k)``.  The element axes are normal to ``x_e``, not to
+    the cut plane, so for a swept beam they poke slightly out of plane;
+    the in-plane parts are renormalized, which is the closest the cut-plane
+    integrals can get.
+
+    Returns ``(I1, I2, I12)``.
+    """
+    def _in_plane(vec: np.ndarray) -> tuple[float, float]:
+        c = vec.dot(plane_i)
+        s = vec.dot(plane_k)
+        norm = np.hypot(c, s)
+        if norm < 1e-8:
+            raise ValueError(
+                f'element axis {vec} is normal to the cut plane spanned by '
+                f'{plane_i} and {plane_k}; the section cannot be projected')
+        return c / norm, s / norm
+
+    cy, sy = _in_plane(y_e)
+    cz, sz = _in_plane(z_e)
+
+    i1 = cy * cy * ixx + 2. * cy * sy * ixz + sy * sy * izz
+    i2 = cz * cz * ixx + 2. * cz * sz * ixz + sz * sz * izz
+    i12 = cy * cz * ixx + (cy * sz + sy * cz) * ixz + sy * sz * izz
+    return i1, i2, i12
+
+
 def _write_beam_model(avg_centroid: np.ndarray,
                       A: np.ndarray,
                       ExA: np.ndarray,
                       GA: np.ndarray,
-                      ExIz: np.ndarray,
-                      ExIx: np.ndarray,
+                      ExIxx: np.ndarray,
+                      ExIzz: np.ndarray,
                       ExIxz: np.ndarray,
                       GJ: np.ndarray,
                       x_vector: list[float],
+                      plane_i: np.ndarray,
+                      plane_k: np.ndarray,
                       bdf_filename: PathLike='',
                       rho: float=0.1,
                       xyz_round: int | None=None,
@@ -341,9 +430,9 @@ def _write_beam_model(avg_centroid: np.ndarray,
     and the PBEAM carries effective section properties referenced to them::
 
         A   = EA / E_ref        -> E_ref*A   == EA      (exact)
-        I1  = E*Ix / E_ref      -> E_ref*I1  == E*Ix    (exact)
-        I2  = E*Iz / E_ref      -> E_ref*I2  == E*Iz    (exact)
-        I12 = E*Ixz / E_ref
+        I1  = E*Iyy_e / E_ref   -> E_ref*I1  == E*Iyy_e (exact)
+        I2  = E*Izz_e / E_ref   -> E_ref*I2  == E*Izz_e (exact)
+        I12 = E*Iyz_e / E_ref
         J   = GJ / G_ref        -> G_ref*J   == GJ      (exact)
         K1  = K2 = GA / (G_ref*A)                       (exact)
 
@@ -366,15 +455,47 @@ def _write_beam_model(avg_centroid: np.ndarray,
     nodes have moved.  ``offt='GGG'`` puts the offsets in the global frame,
     which is what the centroids are already in.
 
-    TODO: it's possible the 1-2 axes are flipped; run a tip bend case
-    TODO: J is the polar moment (Ix+Iz), not the Bredt-Batho torsion
-          constant; exact for a closed circular section, too stiff otherwise
-    TODO: I12 sign has not been reconciled with the element frame
+    **Section properties are rotated into the element frame.**  The cutter
+    reports second moments about the *cut coord's* in-plane axes::
+
+        Ixx = int(x_loc^2 dA)   Izz = int(z_loc^2 dA)   Ixz = int(x_loc*z_loc dA)
+
+    where ``x_loc``/``z_loc`` are the coord's local x and z (``plane_i`` and
+    ``plane_k`` give those axes in the basic frame).  MSC wants them about the
+    *element* axes instead::
+
+        I1 = int(y_e^2 dA)   I2 = int(z_e^2 dA)   I12 = int(y_e*z_e dA)
+
+    and the element triad follows from the CBEAM orientation vector::
+
+        x_e = (GB+WB - GA-WA) / |...|
+        y_e = (v - (v.x_e) x_e) / |...|        v = ``x_vector``, offt='GGG'
+        z_e = x_e cross y_e
+
+    Those two bases differ by a rotation in the cut plane, so the three
+    second moments transform as a 2x2 tensor rather than mapping one-to-one.
+    Writing ``I1 = Ixx`` and ``I12 = +Ixz`` (what this used to do) is only
+    right when ``y_e`` happens to land on ``+x_loc``; with ``v = [0, 0, 1]``
+    and a spanwise beam it lands on ``z_loc`` instead, which swapped I1/I2
+    and flipped the sign of I12.  ``_project_section`` does the rotation.
+
+    TODO: the section is integrated in the cut plane, which is normal to the
+          coord, not normal to the element axis.  For a swept/canted beam
+          (vtail) those differ and the properties are a cosine off; a warning
+          is emitted when the misalignment exceeds ~15 deg.
     """
     if isinstance(bdf_filename, str) and len(bdf_filename) == 0:
         return
 
     nstation = len(A)
+    x_vector = np.asarray(x_vector, dtype='float64')
+    plane_i = np.asarray(plane_i, dtype='float64')
+    plane_k = np.asarray(plane_k, dtype='float64')
+    for nm, arr in (('plane_i', plane_i), ('plane_k', plane_k)):
+        if arr.shape != (nstation, 3):
+            raise ValueError(
+                f'{nm} must be ({nstation:d}, 3) to match the stations; '
+                f'got {arr.shape}')
     if beam_grid_xyz is not None:
         beam_grid_xyz = np.asarray(beam_grid_xyz, dtype='float64')
         if beam_grid_xyz.shape != (nstation, 3):
@@ -422,10 +543,12 @@ def _write_beam_model(avg_centroid: np.ndarray,
     A = A[ivalid]
     ExA = ExA[ivalid]
     GA = GA[ivalid]
-    ExIz = ExIz[ivalid]
-    ExIx = ExIx[ivalid]
+    ExIxx = ExIxx[ivalid]
+    ExIzz = ExIzz[ivalid]
     ExIxz = ExIxz[ivalid]
     GJ = GJ[ivalid]
+    plane_i = plane_i[ivalid, :]
+    plane_k = plane_k[ivalid, :]
 
     # area-weighted reference moduli; a single MAT1 for the whole beam
     Atotal = A.sum()
@@ -433,11 +556,13 @@ def _write_beam_model(avg_centroid: np.ndarray,
     G_ref = GA.sum() / Atotal
     nu = E_ref / (2. * G_ref) - 1.
 
-    # effective section properties referenced to E_ref/G_ref
+    # effective section properties referenced to E_ref/G_ref.  These are still
+    # in the cut-plane basis; the rotation into the element frame happens per
+    # element, because that is where the element axis is known.
     area_eff = ExA / E_ref
-    i1_eff = ExIx / E_ref
-    i2_eff = ExIz / E_ref
-    i12_eff = ExIxz / E_ref
+    ixx_eff = ExIxx / E_ref
+    izz_eff = ExIzz / E_ref
+    ixz_eff = ExIxz / E_ref
     j_eff = GJ / G_ref
     # shear correction factor; 1.0 when E/G is uniform over the section
     k_eff = GA / (G_ref * area_eff)
@@ -466,14 +591,14 @@ def _write_beam_model(avg_centroid: np.ndarray,
     if area_round is not None:
         area_eff = area_eff.round(area_round)
     if inertia_round is not None:
-        i1_eff = i1_eff.round(inertia_round)
-        i2_eff = i2_eff.round(inertia_round)
-        i12_eff = i12_eff.round(inertia_round)
         j_eff = j_eff.round(inertia_round)
 
     for nidi, xyz in zip(nid, grid_xyz):
         beam_model.add_grid(int(nidi), xyz)
 
+    # the element axis is only normal to the cut plane for an unswept beam;
+    # warn once rather than per element
+    skewed = 0
     for ielem in range(1, len(A)):
         eid = pid = beam_id0 + ielem - 1
         nids = [int(nid[ielem-1]), int(nid[ielem])]
@@ -485,15 +610,32 @@ def _write_beam_model(avg_centroid: np.ndarray,
             # back on the centroid line no matter where the GRIDs sit
             wa = offset[ielem-1, :].tolist()
             wb = offset[ielem, :].tolist()
-        beam_model.add_cbeam(eid, pid, nids, x_vector, g0,
+        beam_model.add_cbeam(eid, pid, nids, x_vector.tolist(), g0,
                              offt='GGG', bit=None,
                              pa=0, pb=0, wa=wa, wb=wb, sa=0, sb=0, comment='')
         so = ['YES', 'YES']
         xxb = [0., 1.]
         area = [area_eff[ielem-1], area_eff[ielem]]
-        i1 = [i1_eff[ielem-1], i1_eff[ielem]]
-        i2 = [i2_eff[ielem-1], i2_eff[ielem]]
-        i12 = [i12_eff[ielem-1], i12_eff[ielem]]
+
+        # rotate each end's cut-plane second moments onto this element's axes
+        xyz_a = avg_centroid[ielem-1, :]
+        xyz_b = avg_centroid[ielem, :]
+        x_e, y_e, z_e = _element_triad(xyz_a, xyz_b, x_vector)
+        i1, i2, i12 = [], [], []
+        for iend in (ielem-1, ielem):
+            normal = np.cross(plane_i[iend, :], plane_k[iend, :])
+            if abs(x_e.dot(normal)) < 0.966:  # ~15 deg
+                skewed += 1
+            i1i, i2i, i12i = _project_section(
+                ixx_eff[iend], izz_eff[iend], ixz_eff[iend],
+                y_e, z_e, plane_i[iend, :], plane_k[iend, :])
+            if inertia_round is not None:
+                i1i = round(i1i, inertia_round)
+                i2i = round(i2i, inertia_round)
+                i12i = round(i12i, inertia_round)
+            i1.append(i1i)
+            i2.append(i2i)
+            i12.append(i12i)
         j = [j_eff[ielem-1], j_eff[ielem]]
         # K is constant over the element; average the two ends
         k1 = k2 = 0.5 * (k_eff[ielem-1] + k_eff[ielem])
@@ -503,6 +645,12 @@ def _write_beam_model(avg_centroid: np.ndarray,
                              m1a=0., m2a=0., m1b=None, m2b=None,
                              n1a=0., n2a=0., n1b=None, n2b=None,
                              comment='')
+    if skewed and log is not None:
+        log.warning(
+            f'{skewed:d} of {2*(len(A)-1):d} beam ends have the element axis '
+            'more than ~15 deg off the cut-plane normal (swept/canted beam). '
+            'The section was integrated in the cut plane, so I1/I2/I12/A are '
+            'overstated by roughly 1/cos(angle).')
     beam_model.write_bdf(bdf_filename)
 
 

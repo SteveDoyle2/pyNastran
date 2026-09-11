@@ -547,13 +547,18 @@ class TestStiffnessPlot(unittest.TestCase):
         for pid, prop in sorted(beam_model.properties.items()):
             assert np.allclose(prop.A[0], exact['A'], rtol=1e-4), (pid, prop.A)
             assert np.allclose(mat.e * prop.A[0], E * exact['A'], rtol=1e-4)
-            assert np.allclose(mat.e * prop.i1[0], ExI[0, 0], rtol=1e-4), \
-                (pid, mat.e * prop.i1[0], ExI[0, 0])
-            assert np.allclose(mat.e * prop.i2[0], ExI[0, 2], rtol=1e-4), \
-                (pid, mat.e * prop.i2[0], ExI[0, 2])
+            # I1 = int(y_e^2 dA), I2 = int(z_e^2 dA) in the *element* frame.
+            # The beam runs along +y and x_vector = [0, 0, 1], so
+            # y_e = +z_global and z_e = +x_global: I1 picks up int(z^2) and
+            # I2 picks up int(x^2), i.e. the opposite of the cut-plane order.
+            assert np.allclose(mat.e * prop.i1[0], ExI[0, 2], rtol=1e-4), \
+                (pid, mat.e * prop.i1[0], ExI[0, 2])
+            assert np.allclose(mat.e * prop.i2[0], ExI[0, 0], rtol=1e-4), \
+                (pid, mat.e * prop.i2[0], ExI[0, 0])
             assert np.allclose(mat.g * prop.j[0], G * exact['J'], rtol=1e-3)
-            # I1 is the strong axis for this section; see the docstring
-            assert prop.i1[0] > prop.i2[0], (pid, prop.i1, prop.i2)
+            # the ellipse is 2:1 with the long axis along x = z_e, so I2 is
+            # the strong one.  Swapping x_vector to [1,0,0] swaps these.
+            assert prop.i2[0] > prop.i1[0], (pid, prop.i1, prop.i2)
             k1 = 1.0 if prop.k1 is None else prop.k1
             assert np.allclose(k1 * mat.g * prop.A[0], G * exact['A'], rtol=1e-4)
 
@@ -769,6 +774,91 @@ class TestStiffnessPlot(unittest.TestCase):
             os.remove(fname)
         os.remove(dirname / base_bdf_filename)
         os.remove(dirname / off_bdf_filename)
+        os.remove(dirname / (tag + 'thetas.csv'))
+
+    def test_cut_ellipse_element_frame(self):
+        """
+        I1/I2/I12 are written in the CBEAM element frame, not the cut frame.
+
+        MSC defines I1 = int(y_e^2 dA), I2 = int(z_e^2 dA) and
+        I12 = int(y_e*z_e dA) about the *element* axes, and those axes come
+        from the orientation vector::
+
+            x_e = GA+WA -> GB+WB        y_e = v normal to x_e        z_e = x_e cross y_e
+
+        For a beam along +y that means v = [1,0,0] gives y_e = +x_global and
+        z_e = -z_global, while v = [0,0,1] gives y_e = +z_global and
+        z_e = +x_global.  Same section, same cut, same everything else -- so
+        the two runs must come out with I1 and I2 exchanged and I12 negated.
+        This used to be written straight out of the cut-plane integrals with
+        no regard for v at all, which silently transposed the bending axes
+        and flipped the product of inertia.
+
+        A tilted ellipse is used so that all three moments are distinct and
+        I12 is comfortably non-zero.
+        """
+        dirname = TEST_PATH
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        tag = 'efr_'
+        a, b, t = 20., 10., 0.1
+        span, nspan, ntheta = 100., 20, 40
+        E, nu = 1.0e7, 0.3
+        model, unused_pts = _build_ellipse_tube(
+            log, a, b, t, span, nspan, ntheta, E, nu, axis=1, tilt=0.4)
+
+        ystations = np.array([30., 50., 70.])
+        coords = [CORD2R(4200 + i, rid=0, origin=[0., ys, 0.],
+                         zaxis=[0., ys, 1.], xzplane=[1., ys, 0.])
+                  for i, ys in enumerate(ystations)]
+        normal_plane = coords[0].j
+        kwargs = dict(
+            dirname=dirname, plot=False, show=False, face_data=None,
+            stop_on_failure=True, cut_data_span_filename='',
+            thetas_csv_filename=tag + 'thetas.csv')
+
+        outs, props = {}, {}
+        for name, x_vector in (('x', [1., 0., 0.]), ('z', [0., 0., 1.])):
+            bdf_filename = f'{tag}{name}.bdf'
+            outs[name] = cut_and_plot_moi(
+                model, normal_plane, log, ystations, coords, x_vector,
+                beam_model_bdf_filename=bdf_filename, **kwargs)
+            beam_model = read_bdf(dirname / bdf_filename, punch=True, debug=None)
+            props[name] = beam_model.properties[min(beam_model.properties)]
+
+        px, pz = props['x'], props['z']
+
+        # the section is tilted, so nothing here is degenerate
+        assert not np.allclose(px.i1[0], px.i2[0]), (px.i1, px.i2)
+        assert abs(px.i12[0]) > 0.05 * abs(px.i1[0]), px.i12
+
+        # v = [1,0,0] vs v = [0,0,1]: the 1 and 2 axes trade places.
+        # rtol is 1e-5 rather than exact because these come back through an
+        # 8-character small-field BDF, and the leading minus sign on I12
+        # costs it a significant digit relative to its positive twin.
+        assert np.allclose(pz.i1[0], px.i2[0], rtol=1e-5), (pz.i1, px.i2)
+        assert np.allclose(pz.i2[0], px.i1[0], rtol=1e-5), (pz.i2, px.i1)
+        # ...and the product of inertia changes sign with the handedness
+        assert np.allclose(pz.i12[0], -px.i12[0], rtol=1e-5), (pz.i12, px.i12)
+
+        # everything that does not depend on the orientation vector is unmoved
+        for field in ('A', 'j', 'k1', 'k2'):
+            assert np.allclose(getattr(px, field), getattr(pz, field)), \
+                (field, getattr(px, field), getattr(pz, field))
+
+        # I1 + I2 is the polar moment, which no rotation can change
+        assert np.allclose(px.i1[0] + px.i2[0], pz.i1[0] + pz.i2[0],
+                           rtol=1e-10)
+
+        # v parallel to the beam axis leaves plane 1 undefined
+        with self.assertRaises(ValueError):
+            cut_and_plot_moi(
+                model, normal_plane, log, ystations, coords, [0., 1., 0.],
+                beam_model_bdf_filename=f'{tag}bad.bdf', **kwargs)
+
+        for fname in set(sum((outs[k][1] + outs[k][2] for k in outs), [])):
+            os.remove(fname)
+        for name in ('x', 'z'):
+            os.remove(dirname / f'{tag}{name}.bdf')
         os.remove(dirname / (tag + 'thetas.csv'))
 
     def test_cut_quad_shell_mat1_zoffset(self):
@@ -1415,6 +1505,7 @@ def _build_ellipse_tube(log: SimpleLogger,
                         pid: int=11, mid: int=12,
                         axis: int=1,
                         center: tuple[float, float]=(0., 0.),
+                        tilt: float=0.,
                         ) -> tuple[BDF, np.ndarray]:
     """
     Prismatic elliptical tube extruded along ``+axis``.
@@ -1429,13 +1520,20 @@ def _build_ellipse_tube(log: SimpleLogger,
     (a wing cut).  ``axis=0`` extrudes along +x and puts ``a`` along y and
     ``b`` along z (a fuselage cut).  ``center`` offsets the section in those
     same two in-plane directions, which is what makes a frame error visible.
+    ``tilt`` (radians) rotates the section about the extrusion axis, which
+    gives it a non-zero product of inertia -- needed to see an I12 error at
+    all, since an untilted ellipse has I12 = 0 whatever the convention.
     """
     model = BDF(log=log)
     model.add_mat1(mid, E=E, G=None, nu=nu)
     model.add_pshell(pid, mid1=mid, t=t, mid2=mid, mid3=mid)
 
     iaxes = [i for i in range(3) if i != axis]
-    pts = _ellipse_pts(a, b, ntheta) + np.asarray(center, dtype='float64')
+    pts = _ellipse_pts(a, b, ntheta)
+    if tilt:
+        c, s = np.cos(tilt), np.sin(tilt)
+        pts = pts @ np.array([[c, s], [-s, c]])
+    pts = pts + np.asarray(center, dtype='float64')
     stations = np.linspace(0., span, nspan + 1)
 
     def nid(itheta: int, istation: int) -> int:
