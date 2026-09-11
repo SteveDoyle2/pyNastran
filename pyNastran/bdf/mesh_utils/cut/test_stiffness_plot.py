@@ -652,6 +652,125 @@ class TestStiffnessPlot(unittest.TestCase):
         os.remove(dirname / beam_bdf_filename)
         os.remove(dirname / (tag + 'thetas.csv'))
 
+    def test_cut_ellipse_beam_grid_offset(self):
+        """
+        cut_and_plot_moi with prescribed beam GRID locations.
+
+        The beam nodes are put on an arbitrary straight reference axis (stand-in
+        for a set of load control points) rather than on the section centroids,
+        and the difference is carried on the CBEAM WA/WB offsets.  A CBEAM's
+        element axis runs from GA+WA to GB+WB, so the emitted model has to be
+        geometrically identical to the un-offset one -- same element axis, same
+        section properties -- with only the GRIDs moved.
+
+        """
+        dirname = TEST_PATH
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        tag = 'bgo_'
+        a, b, t = 20., 10., 0.1
+        span, nspan, ntheta = 100., 20, 40
+        E, nu = 1.0e7, 0.3
+        # section deliberately off the y-axis so the offsets are nonzero
+        xcg, zcg = 4., -6.
+        model, unused_pts = _build_ellipse_tube(
+            log, a, b, t, span, nspan, ntheta, E, nu,
+            axis=1, center=(xcg, zcg))
+
+        ystations = np.array([20., 50., 80.])
+        coords = [CORD2R(4000 + i, rid=0, origin=[0., ys, 0.],
+                         zaxis=[0., ys, 1.], xzplane=[1., ys, 0.])
+                  for i, ys in enumerate(ystations)]
+        normal_plane = coords[0].j
+        x_vector = [0., 0., 1.]
+        nstation = len(ystations)
+
+        # a straight reference axis that is nowhere near the centroid
+        ref_xyz = np.column_stack([
+            np.full(nstation, 15.),
+            ystations,
+            np.full(nstation, 30.)])
+        ref_ids = np.arange(100001, 100001 + nstation)
+
+        kwargs = dict(
+            dirname=dirname, plot=False, show=False, face_data=None,
+            stop_on_failure=True, cut_data_span_filename='',
+            thetas_csv_filename=tag + 'thetas.csv')
+
+        base_bdf_filename = tag + 'base.bdf'
+        off_bdf_filename = tag + 'offset.bdf'
+        out_base = cut_and_plot_moi(
+            model, normal_plane, log, ystations, coords, x_vector,
+            beam_model_bdf_filename=base_bdf_filename, **kwargs)
+        out_off = cut_and_plot_moi(
+            model, normal_plane, log, ystations, coords, x_vector,
+            beam_grid_xyz=ref_xyz, beam_grid_ids=ref_ids, beam_id0=500,
+            beam_model_bdf_filename=off_bdf_filename, **kwargs)
+
+        base = read_bdf(dirname / base_bdf_filename, punch=True, debug=None)
+        off = read_bdf(dirname / off_bdf_filename, punch=True, debug=None)
+
+        # the GRIDs went exactly where they were told, under the given ids
+        assert sorted(off.nodes) == ref_ids.tolist(), sorted(off.nodes)
+        xyz = np.array([off.nodes[nid].xyz for nid in ref_ids])
+        assert np.allclose(xyz, ref_xyz, atol=0., rtol=0.), xyz
+
+        # ...and the default is still a GRID on each centroid, numbered 1..n
+        assert sorted(base.nodes) == [1, 2, 3], sorted(base.nodes)
+        xyz_base = np.array([base.nodes[nid].xyz for nid in sorted(base.nodes)])
+        centroid_expected = np.column_stack([
+            np.full(nstation, xcg), ystations, np.full(nstation, zcg)])
+        assert np.allclose(xyz_base, centroid_expected, atol=1e-6), xyz_base
+
+        # beam_id0 moved the elements/properties/material out of the way
+        assert sorted(off.elements) == [500, 501], sorted(off.elements)
+        assert sorted(off.properties) == [500, 501], sorted(off.properties)
+        assert sorted(off.materials) == [500], sorted(off.materials)
+        assert sorted(base.elements) == [1, 2], sorted(base.elements)
+
+        for eid_base, eid_off in zip(sorted(base.elements), sorted(off.elements)):
+            elem_base = base.elements[eid_base]
+            elem_off = off.elements[eid_off]
+
+            # GA+WA / GB+WB reproduce the un-offset element axis exactly
+            for iend in (0, 1):
+                w = elem_off.wa if iend == 0 else elem_off.wb
+                xyz_off = (np.asarray(off.nodes[elem_off.node_ids[iend]].xyz) +
+                           np.asarray(w))
+                xyz_cen = np.asarray(base.nodes[elem_base.node_ids[iend]].xyz)
+                assert np.allclose(xyz_off, xyz_cen, atol=1e-9), \
+                    f'eid={eid_off:d} end={iend:d}: {xyz_off} != {xyz_cen}'
+
+            # cutting at the station means the offset is purely in-plane;
+            # an axial component would stretch the element
+            assert abs(elem_off.wa[1]) < 1e-10, elem_off.wa
+            assert abs(elem_off.wb[1]) < 1e-10, elem_off.wb
+
+            # moving the nodes must not touch the section properties
+            prop_base = base.properties[elem_base.pid]
+            prop_off = off.properties[elem_off.pid]
+            for field in ('A', 'i1', 'i2', 'i12', 'j', 'k1', 'k2'):
+                assert np.allclose(getattr(prop_base, field),
+                                   getattr(prop_off, field)), field
+
+        # a prescribed point that is the wrong shape is a caller error
+        with self.assertRaises(ValueError):
+            cut_and_plot_moi(
+                model, normal_plane, log, ystations, coords, x_vector,
+                beam_grid_xyz=ref_xyz[:-1],
+                beam_model_bdf_filename=off_bdf_filename, **kwargs)
+        with self.assertRaises(ValueError):
+            cut_and_plot_moi(
+                model, normal_plane, log, ystations, coords, x_vector,
+                beam_grid_xyz=ref_xyz, beam_grid_ids=np.array([7, 7, 8]),
+                beam_model_bdf_filename=off_bdf_filename, **kwargs)
+
+        # both runs write the same plane_face_* names, so dedupe before unlink
+        for fname in set(out_base[1] + out_base[2] + out_off[1] + out_off[2]):
+            os.remove(fname)
+        os.remove(dirname / base_bdf_filename)
+        os.remove(dirname / off_bdf_filename)
+        os.remove(dirname / (tag + 'thetas.csv'))
+
     def test_cut_quad_shell_mat1_zoffset(self):
         """cut_and_plot_moi"""
         dirname = TEST_PATH

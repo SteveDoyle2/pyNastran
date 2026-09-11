@@ -49,6 +49,9 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      xyz_round: int | None=None,
                      area_round: int | None=None,
                      inertia_round: int | None=None,
+                     beam_grid_xyz: Optional[np.ndarray]=None,
+                     beam_grid_ids: Optional[np.ndarray]=None,
+                     beam_id0: int=1,
                      stop_on_failure: bool=False,
                      cut_data_span_filename: PathLike='cut_data_vs_span.csv',
                      beam_model_bdf_filename: PathLike='equivalent_beam_model.bdf',
@@ -135,6 +138,24 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
      rho : float; default=1.0
         density written on the equivalent beam model's MAT1; the PBEAM A
         field is the real geometric area, so rho*A is a meaningful mass
+     beam_grid_xyz : (nstation, 3) float ndarray; default=None -> use the centroids
+        where to put the equivalent beam model's GRIDs.  By default a GRID is
+        dropped on each cut's section centroid, which is convenient but means
+        the beam nodes land wherever the structure happens to put them.  Pass
+        an explicit set of points -- load control points (LCPs), an existing
+        loads-model grid, a straight reference axis -- and the GRIDs go there
+        instead, with the difference carried on the CBEAM WA/WB offsets so the
+        elastic axis still runs through the real centroids.  One row per
+        station, in the same order as ``stations``; rows for stations that
+        fail to cut are dropped along with everything else.
+     beam_grid_ids : (nstation,) int ndarray; default=None -> number 1..n
+        GRID ids to go with ``beam_grid_xyz``.  Reusing the ids from the source
+        deck lets parts that share a point merge into a connected model.
+     beam_id0 : int; default=1
+        first CBEAM/PBEAM id (and the MAT1 id) in the equivalent beam model.
+        Only matters when several beam models are merged without renumbering,
+        which is the case that makes ``beam_grid_ids`` worth using: the shared
+        GRIDs are supposed to collide, the elements are not.
      thetas_csv_filename : PathLike; default='thetas.csv'
         changes the filename
      normalized_inertia_png_filename : PathLike; default='normalized_inertia_vs_span.png'
@@ -214,7 +235,9 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
             x_vector=x_vector,
             bdf_filename=beam_model_bdf_filename,
             rho=rho, xyz_round=xyz_round, area_round=area_round,
-            inertia_round=inertia_round)
+            inertia_round=inertia_round,
+            beam_grid_xyz=beam_grid_xyz, beam_grid_ids=beam_grid_ids,
+            beam_id0=beam_id0, log=log)
 
     if cut_data_span_filename:
         cut_data_span_filename = dirname / cut_data_span_filename
@@ -290,6 +313,10 @@ def _write_beam_model(avg_centroid: np.ndarray,
                       xyz_round: int | None=None,
                       area_round: int | None=None,
                       inertia_round: int | None=None,
+                      beam_grid_xyz: Optional[np.ndarray]=None,
+                      beam_grid_ids: Optional[np.ndarray]=None,
+                      beam_id0: int=1,
+                      log=None,
                       ):
     """
     Assume y is down the axis of the beam
@@ -325,6 +352,20 @@ def _write_beam_model(avg_centroid: np.ndarray,
     moduli, A is the real area (so ``rho`` gives a meaningful mass), and
     K1 = K2 = 1.
 
+    By default a GRID is written on each cut's section centroid.  Passing
+    ``beam_grid_xyz`` moves the GRIDs onto a prescribed set of points (load
+    control points, for instance) and puts the difference on the CBEAM WA/WB
+    offset vectors::
+
+        WA = centroid[i]   - beam_grid_xyz[i]
+        WB = centroid[i+1] - beam_grid_xyz[i+1]
+
+    A CBEAM's elastic axis runs from GA+WA to GB+WB, so the offsets restore
+    exactly the geometry the un-offset model would have had -- the section
+    properties are unchanged and still referenced to the centroid, only the
+    nodes have moved.  ``offt='GGG'`` puts the offsets in the global frame,
+    which is what the centroids are already in.
+
     TODO: it's possible the 1-2 axes are flipped; run a tip bend case
     TODO: J is the polar moment (Ix+Iz), not the Bredt-Batho torsion
           constant; exact for a closed circular section, too stiff otherwise
@@ -332,6 +373,26 @@ def _write_beam_model(avg_centroid: np.ndarray,
     """
     if isinstance(bdf_filename, str) and len(bdf_filename) == 0:
         return
+
+    nstation = len(A)
+    if beam_grid_xyz is not None:
+        beam_grid_xyz = np.asarray(beam_grid_xyz, dtype='float64')
+        if beam_grid_xyz.shape != (nstation, 3):
+            raise ValueError(
+                f'beam_grid_xyz must be ({nstation:d}, 3) to match the '
+                f'stations; got {beam_grid_xyz.shape}')
+        if not np.isfinite(beam_grid_xyz).all():
+            raise ValueError('beam_grid_xyz contains NaN/inf')
+    if beam_grid_ids is not None:
+        if beam_grid_xyz is None:
+            raise ValueError('beam_grid_ids requires beam_grid_xyz')
+        beam_grid_ids = np.asarray(beam_grid_ids, dtype='int64')
+        if beam_grid_ids.shape != (nstation,):
+            raise ValueError(
+                f'beam_grid_ids must be ({nstation:d},) to match the '
+                f'stations; got {beam_grid_ids.shape}')
+        if len(np.unique(beam_grid_ids)) != nstation:
+            raise ValueError('beam_grid_ids are not unique')
 
     # stations where no cut was found come back as NaN; writing them produces
     # blank GRID/PBEAM fields and an unreadable deck
@@ -342,8 +403,22 @@ def _write_beam_model(avg_centroid: np.ndarray,
         raise RuntimeError(
             f'cannot write an equivalent beam model; only {len(ivalid):d} '
             'valid station(s) were cut (2 are needed to make a CBEAM)')
+    if beam_grid_xyz is not None and len(ivalid) != nstation and log is not None:
+        # a prescribed grid point is usually there because something else
+        # attaches to it, so silently dropping one is worth a shout
+        idropped = np.setdiff1d(np.arange(nstation), ivalid)
+        dropped = (beam_grid_ids[idropped].tolist()
+                   if beam_grid_ids is not None else idropped.tolist())
+        log.warning(
+            f'{len(idropped):d} of {nstation:d} prescribed beam grid points '
+            f'had no cut and were dropped: {dropped}. If any of them is an '
+            'interface point, the merged model will not connect there.')
 
     avg_centroid = avg_centroid[ivalid, :]
+    if beam_grid_xyz is not None:
+        beam_grid_xyz = beam_grid_xyz[ivalid, :]
+    if beam_grid_ids is not None:
+        beam_grid_ids = beam_grid_ids[ivalid]
     A = A[ivalid]
     ExA = ExA[ivalid]
     GA = GA[ivalid]
@@ -367,11 +442,27 @@ def _write_beam_model(avg_centroid: np.ndarray,
     # shear correction factor; 1.0 when E/G is uniform over the section
     k_eff = GA / (G_ref * area_eff)
 
-    mid = 1
+    mid = beam_id0
     beam_model = BDF(debug=False)
     beam_model.add_mat1(mid=mid, E=E_ref, G=G_ref, nu=nu, rho=rho)
-    if xyz_round is not None:
-        avg_centroid = avg_centroid.round(xyz_round)
+
+    # where the GRIDs go, and how far that is from the section centroid
+    if beam_grid_xyz is None:
+        grid_xyz = avg_centroid
+        offset = None
+        if xyz_round is not None:
+            grid_xyz = grid_xyz.round(xyz_round)
+    else:
+        # prescribed points are left exactly as supplied -- rounding them
+        # would break the coincidence with whatever deck they came from --
+        # so xyz_round is applied to the offsets instead
+        grid_xyz = beam_grid_xyz
+        offset = avg_centroid - beam_grid_xyz
+        if xyz_round is not None:
+            offset = offset.round(xyz_round)
+
+    nid = (np.arange(1, len(grid_xyz) + 1) if beam_grid_ids is None
+           else beam_grid_ids)
     if area_round is not None:
         area_eff = area_eff.round(area_round)
     if inertia_round is not None:
@@ -380,25 +471,32 @@ def _write_beam_model(avg_centroid: np.ndarray,
         i12_eff = i12_eff.round(inertia_round)
         j_eff = j_eff.round(inertia_round)
 
-    for inid, xyz in enumerate(avg_centroid):
-        beam_model.add_grid(inid+1, xyz)
+    for nidi, xyz in zip(nid, grid_xyz):
+        beam_model.add_grid(int(nidi), xyz)
 
-    for eid in range(1, len(A)):
-        pid = eid
-        nids = [eid, eid + 1]
+    for ielem in range(1, len(A)):
+        eid = pid = beam_id0 + ielem - 1
+        nids = [int(nid[ielem-1]), int(nid[ielem])]
         g0 = None
+        if offset is None:
+            wa = wb = None
+        else:
+            # GA+WA -> GB+WB is the elastic axis, so this puts the element
+            # back on the centroid line no matter where the GRIDs sit
+            wa = offset[ielem-1, :].tolist()
+            wb = offset[ielem, :].tolist()
         beam_model.add_cbeam(eid, pid, nids, x_vector, g0,
                              offt='GGG', bit=None,
-                             pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+                             pa=0, pb=0, wa=wa, wb=wb, sa=0, sb=0, comment='')
         so = ['YES', 'YES']
         xxb = [0., 1.]
-        area = [area_eff[eid-1], area_eff[eid]]
-        i1 = [i1_eff[eid-1], i1_eff[eid]]
-        i2 = [i2_eff[eid-1], i2_eff[eid]]
-        i12 = [i12_eff[eid-1], i12_eff[eid]]
-        j = [j_eff[eid-1], j_eff[eid]]
+        area = [area_eff[ielem-1], area_eff[ielem]]
+        i1 = [i1_eff[ielem-1], i1_eff[ielem]]
+        i2 = [i2_eff[ielem-1], i2_eff[ielem]]
+        i12 = [i12_eff[ielem-1], i12_eff[ielem]]
+        j = [j_eff[ielem-1], j_eff[ielem]]
         # K is constant over the element; average the two ends
-        k1 = k2 = 0.5 * (k_eff[eid-1] + k_eff[eid])
+        k1 = k2 = 0.5 * (k_eff[ielem-1] + k_eff[ielem])
         beam_model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
                              c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
                              k1=k1, k2=k2, s1=0., s2=0., nsia=0., nsib=None, cwa=0., cwb=None,
@@ -521,7 +619,7 @@ def _get_station_data(model: BDF,
             stop_on_failure=stop_on_failure,
             plane_bdf_filename1=plane_bdf_filename1,
             plane_bdf_filename2=plane_bdf_filename2,
-            face_data=face_data)
+            face_data=face_data, log=log)
 
         # if not os.path.exists(plane_bdf_filename1) or len(rods) == 0:
         if not found_cut:
@@ -589,7 +687,8 @@ def _get_station_datai(model: BDF,
                        stop_on_failure: bool=False,
                        plane_bdf_filename1: PathLike='',
                        plane_bdf_filename2: PathLike='',
-                       face_data=None):
+                       face_data=None,
+                       log=None):
     nodal_result = None
     try:
         out = cut_face_model_by_coord(
@@ -610,10 +709,23 @@ def _get_station_datai(model: BDF,
         print(f'failed to delete {plane_bdf_filename1}')
         raise
         # continue
-    except RuntimeError:
+    except RuntimeError as error:
         # incorrect ivalues=[0, 1, 2]; dy=771. for CRM
-        raise
-        # continue
+        #
+        # A station that lands off the end of the structure (or exactly on the
+        # last ring of nodes) legitimately has nothing to cut, and the cutter
+        # signals that by raising rather than returning found_cut=False.  That
+        # used to abort the whole run, which is the opposite of what
+        # stop_on_failure=False asks for -- and it makes prescribed stations
+        # (LCPs, which often sit at or just past a tip) unusable.  Honor the
+        # flag: re-raise when the caller said the cut must succeed, otherwise
+        # report the station as empty and march on.
+        if stop_on_failure:
+            raise
+        if log is not None:
+            log.warning(f'no cut at station={dy:g} (coord {coord.cid:d}): '
+                        f'{error}')
+        return False, []
     found_cut, unused_unique_geometry_array, unused_unique_results_array, rods = out
     return found_cut, rods
 
