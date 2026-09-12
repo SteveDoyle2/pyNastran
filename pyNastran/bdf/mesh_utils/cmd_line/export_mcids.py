@@ -1,8 +1,8 @@
 from __future__ import annotations
 import os
 import sys
+import argparse
 from cpylog import SimpleLogger
-from docopt import docopt
 
 import pyNastran
 from .utils import filter_no_args
@@ -13,57 +13,43 @@ def cmd_line_export_mcids(argv=None, quiet: bool=False) -> None:
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    msg = (
-        'Usage:\n'
-        '  bdf export_mcids IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--iplies PLIES] [--no_x | --no_y]\n'
-        '  bdf export_mcids -h | --help\n'
-        '  bdf export_mcids -v | --version\n'
-        '\n'
-
-        'Positional Arguments:\n'
-        '  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n'
-        '\n'
-
-        'Options:\n'
-        '  -o OUT, --output  OUT_CSV_FILENAME  path to output CSV file\n'
-        '  --iplies PLIES                      the plies indices to export; comma separated (default=0)\n'
-        '\n'
-
-        'Data Suppression:\n'
-        "  --no_x,  don't write the x axis\n"
-        "  --no_y,  don't write the y axis\n"
-        '\n'
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-    )
-    filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args("bdf export_mcids: use 'bdf export_mcids -h' for help",
+                   argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
-    if not quiet:  # pragma: no cover
-        print(data)
-    #size = 16
-    bdf_filename = data['IN_BDF_FILENAME']
-    csv_filename_in = data['--output']
-    if csv_filename_in is None:
-        csv_filename_in = 'mcids.csv'
 
-    export_xaxis = True
-    export_yaxis = True
-    if data['--no_x']:
-        export_xaxis = False
-    if data['--no_y']:
-        export_yaxis = False
+    parser = argparse.ArgumentParser(
+        prog='bdf export_mcids',
+        description='Export material coordinate system IDs to CSV',
+    )
+    parser.add_argument('-v', '--version', action='version', version=ver)
+    parser.add_argument('IN_BDF_FILENAME',
+                        help='path to input BDF/DAT/NAS file')
+    parser.add_argument('-o', '--output', default='mcids.csv',
+                        metavar='OUT_CSV_FILENAME',
+                        help='path to output CSV file (default=mcids.csv)')
+    parser.add_argument('--iplies', default=None, metavar='PLIES',
+                        help='the plies indices to export; comma separated (default=0)')
+
+    axis_group = parser.add_mutually_exclusive_group()
+    axis_group.add_argument('--no_x', action='store_true',
+                            help="don't write the x axis")
+    axis_group.add_argument('--no_y', action='store_true',
+                            help="don't write the y axis")
+
+    args = parser.parse_args(argv[2:])
+    if not quiet:  # pragma: no cover
+        print(vars(args))
+
+    bdf_filename = args.IN_BDF_FILENAME
+    csv_filename_in = args.output
+
+    export_xaxis = not args.no_x
+    export_yaxis = not args.no_y
     csv_filename_base = os.path.splitext(csv_filename_in)[0]
     iplies = [0]
-    if data['--iplies']:
-        iplies = data['--iplies'].split(',')
-        iplies = [int(iply) for iply in iplies]
+    if args.iplies is not None:
+        iplies = [int(iply) for iply in args.iplies.split(',')]
         if not quiet:  # pragma: no cover
             print('iplies = %s' % iplies)
 

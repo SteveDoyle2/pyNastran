@@ -35,6 +35,22 @@ PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = Path(__file__).parent
 MODEL_PATH = Path(os.path.join(PKG_PATH, '..', 'models'))
 
+#: the nine entries the tests below want out of ``cut_and_plot_moi``'s dict
+CORE_KEYS = ('stations', 'L', 'A', 'I', 'J', 'ExI', 'EyI', 'GJ', 'avg_centroid')
+
+
+def unpack_moi(out_dict: dict) -> tuple:
+    """
+    ``(stations, L, A, I, J, ExI, EyI, GJ, avg_centroid)``, by name.
+
+    The dict has grown entries over time (neutral axis, shear center), so
+    unpacking ``out_dict.values()`` positionally breaks every test at once
+    the next time something is added.
+    """
+    missing = [key for key in CORE_KEYS if key not in out_dict]
+    assert not missing, f'cut_and_plot_moi stopped returning {missing}'
+    return tuple(out_dict[key] for key in CORE_KEYS)
+
 
 class TestStiffnessPlot(unittest.TestCase):
     def test_shell_inertia(self):
@@ -296,7 +312,7 @@ class TestStiffnessPlot(unittest.TestCase):
             )
             out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
             (y, L, A, I, J,
-             ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+             ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
 
             Ex = ExI[:, 0] / I[:, 0]
             Ey = EyI[:, 0] / I[:, 0]
@@ -390,7 +406,7 @@ class TestStiffnessPlot(unittest.TestCase):
         )
         (out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig) = moi_data
         (y, L, A, I, J,
-         ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+         ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
 
         if IS_PANDAS:
             y1, A1, I1, J1, ExI1, EyI1, GJ1, avg_centroid1 = load_moi_data(cut_data_span_filename)
@@ -473,7 +489,7 @@ class TestStiffnessPlot(unittest.TestCase):
             beam_model_bdf_filename=beam_bdf_filename,
             thetas_csv_filename=tag + 'thetas.csv')
         (out_dict, plane_bdf_filenames1, plane_bdf_filenames2, unused_ifig) = moi_data
-        (y, L, A, I, J, ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+        (y, L, A, I, J, ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
 
         assert np.isfinite(A).all(), f'missing cuts: A={A}'
         assert np.allclose(y, ystations), y
@@ -622,7 +638,7 @@ class TestStiffnessPlot(unittest.TestCase):
             thetas_csv_filename=tag + 'thetas.csv')
         (out_dict, plane_bdf_filenames1, plane_bdf_filenames2, unused_ifig) = moi_data
         (unused_x, unused_L, A, unused_I, unused_J, unused_ExI, unused_EyI,
-         unused_GJ, avg_centroid) = list(out_dict.values())
+         unused_GJ, avg_centroid) = unpack_moi(out_dict)
         assert np.isfinite(A).all(), f'missing cuts: A={A}'
 
         # the beam GRIDs are in the basic frame
@@ -896,7 +912,7 @@ class TestStiffnessPlot(unittest.TestCase):
         )
         out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
         (y, L, A, I, J,
-         ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+         ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
         # print(f'y = {y.tolist()}')
         # print(f'A = {A.tolist()}')
         # print(f'I = {I.tolist()}')
@@ -964,7 +980,7 @@ class TestStiffnessPlot(unittest.TestCase):
         )
         out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
         (y, L, A, I, J,
-         ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+         ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
         # print(f'y = {y.tolist()}')
         # print(f'A = {A.tolist()}')
         # print(f'I = {I.tolist()}')
@@ -1132,7 +1148,7 @@ class TestStiffnessPlot(unittest.TestCase):
             )
             out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
             (y, L, A, I, J,
-             ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+             ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
             # assert np.allclose(avg_centroid, avg_centroid0)
             # print(f'y = {y.tolist()}')
             # print(f'A = {A.tolist()}')
@@ -1245,7 +1261,7 @@ class TestStiffnessPlot(unittest.TestCase):
             )
             out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
             (x, L, A, I, J,
-             ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+             ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
             # log.warning(f'x = {x.tolist()}')
             # log.warning(f'A = {A.tolist()}')
             x_expected = [80.844464, 161.54580800000002, 242.24715200000003, 322.94849600000003, 403.64984000000004, 484.35118400000005,

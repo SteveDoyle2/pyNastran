@@ -1,5 +1,6 @@
 import os
 import sys
+import argparse
 from cpylog import SimpleLogger
 
 # testing these imports are up to date
@@ -13,48 +14,40 @@ def cmd_line_equivalence(argv=None, quiet: bool=False) -> None:
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    from docopt import docopt
-    msg = (
-        'Usage:\n'
-        '  bdf equivalence IN_BDF_FILENAME EQ_TOL [-o OUT_BDF_FILENAME] [--punch]\n'
-        '  bdf equivalence -h | --help\n'
-        '  bdf equivalence -v | --version\n'
-        '\n'
-
-        'Positional Arguments:\n'
-        '  IN_BDF_FILENAME   path to input BDF/DAT/NAS file\n'
-        '  EQ_TOL            the spherical equivalence tolerance\n'
-        '  --punch           flag to identify a *.pch/*.inc file\n'
-        #"  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
-        '\n'
-
-        'Options:\n'
-        '  -o OUT, --output OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n'
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-    )
     if len(argv) == 1:
-        sys.exit(msg)
+        sys.exit("bdf equivalence: use 'bdf equivalence -h' for help")
 
     ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
+
+    parser = argparse.ArgumentParser(
+        prog='bdf equivalence',
+        description='Equivalence nodes in a BDF model',
+    )
+    parser.add_argument('-v', '--version', action='version', version=ver)
+    parser.add_argument('IN_BDF_FILENAME',
+                        help='path to input BDF/DAT/NAS file')
+    parser.add_argument('EQ_TOL', type=float,
+                        help='the spherical equivalence tolerance')
+    parser.add_argument('-o', '--output', default=None,
+                        metavar='OUT_BDF_FILENAME',
+                        help='path to output BDF/DAT/NAS file')
+    parser.add_argument('--punch', action='store_true',
+                        help='flag to identify a *.pch/*.inc file')
+
+    args = parser.parse_args(argv[2:])
     if not quiet:  # pragma: no cover
-        print(data)
-    bdf_filename = data['IN_BDF_FILENAME']
-    bdf_filename_out = data['--output']
+        print(vars(args))
+
+    bdf_filename = args.IN_BDF_FILENAME
+    bdf_filename_out = args.output
     if bdf_filename_out is None:
         dirname = os.path.dirname(bdf_filename)
         bdf_filename_out = os.path.join(dirname, 'merged.bdf')
     else:
         dirname = os.path.dirname(bdf_filename_out)
 
-    tol = float(data['EQ_TOL'])
-    punch = data['--punch']
+    tol = args.EQ_TOL
+    punch = args.punch
     size = 16
     from pyNastran.bdf.bdf import read_bdf
     from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes

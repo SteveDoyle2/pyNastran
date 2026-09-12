@@ -5006,6 +5006,10 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
                 (0, 0, 0),
                 (0, 1, 0),
             ]
+            # NX:
+            # $     ACSID  RCSID  REFC  REFB    REFS    SYMXZ   SYMXY
+            # AEROS     0   1000  6.95    75.    521.
+            # -> Expected b'OAEROSCD' (chord,span,sref) flags can be [(0, 0, 0), (0, 1, 0)]; got (75,521,0)
             if (chord, span, sref) not in allowed_cbs:
                 log.error(f'Expected {op2.table_name} (chord,span,sref) flags can be {allowed_cbs}; got ({chord},{span},{sref})')
 

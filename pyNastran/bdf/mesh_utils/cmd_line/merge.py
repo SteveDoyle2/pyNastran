@@ -1,47 +1,40 @@
 import sys
+import argparse
+
 
 def cmd_line_merge(argv=None, quiet: bool=False) -> None:
     """command line interface to bdf_merge"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    from docopt import docopt
     import pyNastran
-    msg = (
-        "Usage:\n"
-        '  bdf merge (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME] [--debug]\n'
-        '  bdf merge -h | --help\n'
-        '  bdf merge -v | --version\n'
-        '\n'
 
-        'Positional Arguments:\n'
-        '  IN_BDF_FILENAMES   path to input BDF/DAT/NAS files\n'
-        '\n'
-
-        'Options:\n'
-        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n'
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-    )
     if len(argv) == 1:
-        sys.exit(msg)
+        sys.exit("bdf merge: use 'bdf merge -h' for help")
 
     ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
+
+    parser = argparse.ArgumentParser(
+        prog='bdf merge',
+        description='Merge multiple BDF files into one',
+    )
+    parser.add_argument('-v', '--version', action='version', version=ver)
+    parser.add_argument('IN_BDF_FILENAMES', nargs='+',
+                        help='path to input BDF/DAT/NAS files')
+    parser.add_argument('-o', '--output', default='merged.bdf',
+                        metavar='OUT_BDF_FILENAME',
+                        help='path to output BDF/DAT/NAS file (default=merged.bdf)')
+    parser.add_argument('--debug', action='store_true',
+                        help='enable debug output')
+
+    args = parser.parse_args(argv[2:])
     if not quiet:  # pragma: no cover
-        print(data)
+        print(vars(args))
+
     size = 16
-    bdf_filenames = data['IN_BDF_FILENAMES']
-    bdf_filename_out = data['--output']
-    debug = data['--debug']
-    assert debug in {True, False}, debug
-    if bdf_filename_out is None:
-        bdf_filename_out = 'merged.bdf'
+    bdf_filenames = args.IN_BDF_FILENAMES
+    bdf_filename_out = args.output
+    debug = args.debug
 
     #cards_to_skip = [
         #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
