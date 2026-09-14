@@ -496,7 +496,8 @@ class AELINK(BaseCard):
         Parameters
         ----------
         aelink_id : int/str
-            unique id
+            int: unique id
+            str: ALWAYS (MSC only)
         label : str
             name of the dependent AESURF card
         independent_labels : list[str, ..., str]

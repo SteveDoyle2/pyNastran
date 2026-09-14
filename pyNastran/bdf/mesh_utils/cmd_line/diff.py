@@ -27,57 +27,39 @@ def cmd_line_diff(argv=None, quiet: bool=False) -> None:
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    from docopt import docopt
+    import argparse
     import pyNastran
-    msg = (
-        "Usage:\n"
-        '  bdf diff IN_BDF_FILENAME1 IN_BDF_FILENAME2 [--punch] [--skip_cards CARDS]\n'
-        '  bdf diff -h | --help\n'
-        '  bdf diff -v | --version\n'
-        '\n'
 
-        'Positional Arguments:\n'
-        '  IN_BDF_FILENAME1   path to input BDF/DAT/NAS files\n'
-        '  IN_BDF_FILENAME2   path to input BDF/DAT/NAS files\n'
-        '\n'
-
-        'Options:\n'
-        '  --punch      uses a punch file\n'
-        '  --debug      increase debug logging\n\n'
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-    )
     if len(argv) == 1:
-        sys.exit(msg)
+        sys.exit("bdf diff: use 'bdf diff -h' for help")
 
     ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
+
+    parser = argparse.ArgumentParser(
+        prog='bdf diff',
+        description='Diff two BDF files',
+    )
+    parser.add_argument('-v', '--version', action='version', version=ver)
+    parser.add_argument('IN_BDF_FILENAME1',
+                        help='path to input BDF/DAT/NAS file')
+    parser.add_argument('IN_BDF_FILENAME2',
+                        help='path to input BDF/DAT/NAS file')
+    parser.add_argument('--punch', action='store_true',
+                        help='uses a punch file')
+    parser.add_argument('--skip_cards', default=None, metavar='CARDS',
+                        help='comma-separated list of cards to skip')
+
+    args = parser.parse_args(argv[2:])
     if not quiet:  # pragma: no cover
-        print(data)
-    size = 16
-    bdf_filename1 = data['IN_BDF_FILENAME1']
-    bdf_filename2 = data['IN_BDF_FILENAME2']
+        print(vars(args))
+
+    bdf_filename1 = args.IN_BDF_FILENAME1
+    bdf_filename2 = args.IN_BDF_FILENAME2
     skip_cards = []
-    if data['CARDS']:
-        skip_cards = data['CARDS'].split(',')
-    # assert len(skip_cards) > 0, skip_cards
+    if args.skip_cards:
+        skip_cards = args.skip_cards.split(',')
 
-    #bdf_filename_out = data['--output']
-    #debug = data['--debug']
-    #assert debug in {True, False}, debug
     debug = None if quiet else True
-    # if bdf_filename_out is None:
-    #     bdf_filename_out = 'merged.bdf'
-
-    #cards_to_skip = [
-        #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
-        #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
-    #cards_to_skip = []
 
     from cpylog import SimpleLogger
     from pyNastran.bdf.mesh_utils.bdf_diff import get_diff_bdfs

@@ -5059,7 +5059,7 @@ class AddAero:
         self._add_methods.add_aestat_object(aestat)
         return aestat
 
-    def add_aelink(self, aelink_id: int, label: str,
+    def add_aelink(self, aelink_id: int | str, label: str,
                    independent_labels: list[str], linking_coefficients: list[float],
                    comment: str='') -> AELINK:
         """
@@ -5068,8 +5068,9 @@ class AddAero:
 
         Parameters
         ----------
-        aelink_id : int
-            unique id
+        aelink_id : int | str
+            int: unique id
+            str: ALWAYS (MSC only)
         label : str
             name of the dependent AESURF card
         independent_labels : list[str, ..., str]
@@ -5080,7 +5081,8 @@ class AddAero:
             a comment for the card
 
         """
-        aelink = AELINK(aelink_id, label, independent_labels, linking_coefficients, comment=comment)
+        aelink = AELINK(aelink_id, label, independent_labels,
+            linking_coefficients, comment=comment)
         self._add_methods.add_aelink_object(aelink)
         return aelink
 
