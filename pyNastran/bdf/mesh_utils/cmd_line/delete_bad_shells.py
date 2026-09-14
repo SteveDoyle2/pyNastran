@@ -1,63 +1,71 @@
 from __future__ import annotations
 import sys
-from typing import Any, TYPE_CHECKING
-from docopt import docopt
+import argparse
+from typing import TYPE_CHECKING
+from cpylog import SimpleLogger
 
 import pyNastran
-from .utils import (
-    get_bdf_filename_punch_log, filter_no_args,
-    get_bdf_outfilename)
+from .utils import filter_no_args, get_bdf_outfilename
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
-
 
 SHELL_QUALITY = (
     '[--skew SKEW] [--max_theta MAX_THETA] [--min_theta MIN_THETA] '
     '[--max_ar MAX_AR] [--max_taper MAX_TAPER] [--max_warp MAX_WARP]'
 )
+
 def cmd_line_delete_bad_shells(argv=None, quiet: bool=False) -> None:
     """command line interface to ``delete_bad_shells``"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    msg = (
-        'Usage:\n'
-        f'  bdf delete_bad_shells IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] {SHELL_QUALITY}\n'
-        '  bdf delete_bad_shells -h | --help\n'
-        '  bdf delete_bad_shells -v | --version\n'
-        '\n'
-
-        "Positional Arguments:\n"
-        "  IN_BDF_FILENAME        path to input BDF/DAT/NAS file\n"
-        #"  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
-        '\n'
-
-        'Options:\n'
-        "  -o OUT, --output OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
-        '  --punch                            flag to identify a *.pch/*.inc file\n'
-        "  --skew SKEW            The maximum skew angle (default=70.0)\n"
-        "  --max_theta MAX_THETA  The maximum interior angle (default=175.0)\n"
-        "  --min_theta MIN_THETA  The minimum interior angle (default=0.1)\n"
-        "  --max_ar MAX_AR        The maximum aspect ratio (default=100.0)\n"
-        "  --max_taper MAX_TAPER  The maximum taper ratio (default=4.0)\n"
-        "  --max_warp MAX_WARP    The maximum warp angle (default=90.0)\n\n"
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-    )
-    filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args("bdf delete_bad_shells: use 'bdf delete_bad_shells -h' for help",
+                   argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
-    bdf_filename, punch, log = get_bdf_filename_punch_log(data, quiet)
+
+    parser = argparse.ArgumentParser(
+        prog='bdf delete_bad_shells',
+        description='Delete bad shell elements based on quality metrics',
+    )
+    parser.add_argument('-v', '--version', action='version', version=ver)
+    parser.add_argument('IN_BDF_FILENAME',
+                        help='path to input BDF/DAT/NAS file')
+    parser.add_argument('-o', '--output', default=None,
+                        metavar='OUT_BDF_FILENAME',
+                        help='path to output BDF/DAT/NAS file')
+    parser.add_argument('--punch', action='store_true',
+                        help='flag to identify a *.pch/*.inc file')
+    parser.add_argument('--skew', type=float, default=70.,
+                        help='the maximum skew angle (default=70.0)')
+    parser.add_argument('--max_theta', type=float, default=175.,
+                        help='the maximum interior angle (default=175.0)')
+    parser.add_argument('--min_theta', type=float, default=0.1,
+                        help='the minimum interior angle (default=0.1)')
+    parser.add_argument('--max_ar', type=float, default=100.,
+                        help='the maximum aspect ratio (default=100.0)')
+    parser.add_argument('--max_taper', type=float, default=4.,
+                        help='the maximum taper ratio (default=4.0)')
+    parser.add_argument('--max_warp', type=float, default=90.,
+                        help='the maximum warp angle (default=90.0)')
+
+    args = parser.parse_args(argv[2:])
+
+    bdf_filename = args.IN_BDF_FILENAME
+    punch = args.punch
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8')
 
     bdf_filename_out = get_bdf_outfilename(
         bdf_filename, bdf_filename_out=None,
         tag='fixedquality')
+
+    skew = args.skew
+    max_theta = args.max_theta
+    min_theta = args.min_theta
+    max_aspect_ratio = args.max_ar
+    max_taper_ratio = args.max_taper
+    max_warping = args.max_warp
 
     #TOLERANCE LIMITS ARE:
     #   SA = 30.00
@@ -81,46 +89,9 @@ def cmd_line_delete_bad_shells(argv=None, quiet: bool=False) -> None:
     # element to the mean plane of the grid points divided by the average of the element diagonal
     # lengths. For flat elements (such that all the grid points lie in a plane), this factor is zero.
 
-    defaults = {
-        '--skew': 70.,
-        '--max_theta': 175.,
-        '--min_theta': 0.1,
-        '--max_ar': 100.,
-        '--max_taper': 4.,
-        '--max_warp': 90.,
-
-        #'SKEW': 70.,
-        #'MAX_THETA': 175.,
-        #'MIN_THETA': 0.1,
-        #'MAX_AR': 100.,
-        #'MAX_TAPER': 4.,
-        #'MAX_WARP': 90.,
-    }
-    _apply_float_values_to_dict(data, defaults)
-    try:
-        skew = float(data['--skew'])
-        max_theta = float(data['--max_theta'])
-        min_theta = float(data['--min_theta'])
-        max_aspect_ratio = float(data['--max_ar'])
-        max_taper_ratio = float(data['--max_taper'])
-        max_warping = float(data['--max_warp'])
-        #skew = float(data['SKEW'])
-        #max_theta = float(data['MAX_THETA'])
-        #min_theta = float(data['MIN_THETA'])
-        #max_aspect_ratio = float(data['MAX_AR'])
-        #max_taper_ratio = float(data['MAX_TAPER'])
-        #max_warping = float(data['MAX_WARP'])
-    except:
-        if not quiet:  # pragma: no cover
-            print(data)
-        raise
-
     if not quiet:  # pragma: no cover
-        print(data)
-    #print('max_aspect_ratio =', max_aspect_ratio)
-    #sss
-    #if bdf_filename_out is None:
-        #bdf_filename_out = 'merged.bdf'
+        print(vars(args))
+
     size = 8
     from pyNastran.bdf.bdf import read_bdf, BDF
     from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells
@@ -135,9 +106,3 @@ def cmd_line_delete_bad_shells(argv=None, quiet: bool=False) -> None:
                     nodes_size=16, elements_size=16, loads_size=8)
 
 
-def _apply_float_values_to_dict(data: dict[str, Any],
-                                defaults: dict[str, float]) -> None:
-    for name, default_value in defaults.items():
-        if data[name] is None:
-            #print(f'applying {name}')
-            data[name] = default_value

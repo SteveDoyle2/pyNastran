@@ -1,73 +1,59 @@
 import sys
+import argparse
 from io import StringIO
 from cpylog import SimpleLogger
-from docopt import docopt
 
 import pyNastran
-from .utils import (
-    get_bdf_filename_punch_log, filter_no_args)
+from .utils import filter_no_args
 
 
 def cmd_line_mirror(argv=None, quiet: bool=False) -> None:
     """command line interface to write_bdf_symmetric"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
-    msg = (
-        'Usage:\n'
-        '  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--plane PLANE] [--tol TOL]\n'
-        '  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--plane PLANE] [--noeq]\n'
-        '  bdf mirror -h | --help\n'
-        '  bdf mirror -v | --version\n'
-        '\n'
 
-        "Positional Arguments:\n"
-        "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
-        #"  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
-        '\n'
-
-        'Options:\n'
-        "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
-        '  --punch                             flag to identify a *.pch/*.inc file\n'
-        "  --plane PLANE                       the symmetry plane (xz, yz, xy); default=xz\n"
-        '  --tol   TOL                         the spherical equivalence tolerance; default=1e-6\n'
-        '  --noeq                              disable equivalencing\n'
-        "\n"  # (default=0.000001)
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-    )
-    filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args("bdf mirror: use 'bdf mirror -h' for help",
+                   argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
-    if data['--tol'] is False:
-        data['TOL'] = 0.000001
 
-    if isinstance(data['TOL'], str):
-        data['TOL'] = float(data['TOL'])
-    tol = data['TOL']
+    parser = argparse.ArgumentParser(
+        prog='bdf mirror',
+        description='Mirror a BDF model across a symmetry plane',
+    )
+    parser.add_argument('-v', '--version', action='version', version=ver)
+    parser.add_argument('IN_BDF_FILENAME',
+                        help='path to input BDF/DAT/NAS file')
+    parser.add_argument('-o', '--output', default='mirrored.bdf',
+                        metavar='OUT_BDF_FILENAME',
+                        help='path to output BDF/DAT/NAS file (default=mirrored.bdf)')
+    parser.add_argument('--punch', action='store_true',
+                        help='flag to identify a *.pch/*.inc file')
+    parser.add_argument('--plane', default='xz',
+                        help='the symmetry plane: xz, yz, xy (default=xz)')
+    parser.add_argument('--tol', type=float, default=1e-6,
+                        help='the spherical equivalence tolerance (default=1e-6)')
+    parser.add_argument('--noeq', action='store_true',
+                        help='disable equivalencing')
 
-    assert data['--noeq'] in [True, False]
-    if data['--noeq']:
+    args = parser.parse_args(argv[2:])
+
+    tol = args.tol
+    if args.noeq:
         tol = -1.
 
-    plane = 'xz'
-    if data['--plane'] is not None:  # None or str
-        plane = data['--plane']
+    plane = args.plane
 
     if not quiet:  # pragma: no cover
-        print(data)
+        print(vars(args))
 
     size = 16
-    bdf_filename, punch, log = get_bdf_filename_punch_log(data, quiet)
+    bdf_filename = args.IN_BDF_FILENAME
+    punch = args.punch
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8')
     log.debug(f'plane = {plane!r}')
-    bdf_filename_out = data['--output']
-    if bdf_filename_out is None:
-        bdf_filename_out = 'mirrored.bdf'
+    bdf_filename_out = args.output
 
     from pyNastran.bdf.bdf import read_bdf, BDF
     from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes

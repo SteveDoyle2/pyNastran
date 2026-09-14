@@ -5145,14 +5145,16 @@ def _get_coords_to_update(coords: dict[int, Coord],
 
 def save_traceback_file(model: BDF, card_obj: BDFCard, card: list[str],
                         ifile: int, exception) -> None:
-    filename = model.active_filenames[ifile]
-    model.log.error(card_obj)
-    model.log.error(f' - {filename}')
     var_list = traceback.format_exception_only(type(exception), exception)
-    # print(f'var_listA: {var_list}')
-    # print('len(varlist) = ', len(var_list))
-    var_list[0] += f'\n - {filename}'
-    # print(f'var_listB: {var_list}')
+    model.log.error(card_obj)
+    if ifile is not None:
+        assert isinstance(ifile, int), f'ifile={ifile} type={type(ifile)}'
+        filename = model.active_filenames[ifile]
+        model.log.error(f' - {filename}')
+        # print(f'var_listA: {var_list}')
+        # print('len(varlist) = ', len(var_list))
+        var_list[0] += f'\n - {filename}'
+        # print(f'var_listB: {var_list}')
     model._stored_parse_errors.append((card, var_list))
     if model._iparse_errors > model._nparse_errors:
         model.pop_parse_errors()

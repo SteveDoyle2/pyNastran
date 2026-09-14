@@ -1,52 +1,47 @@
 import sys
-from docopt import docopt
+import argparse
+from cpylog import SimpleLogger
 import pyNastran
-from .utils import filter_no_args, get_bdf_filename_punch_log
+from .utils import filter_no_args
 
 
 def cmd_line_flip_shell_normals(argv=None, quiet: bool=False) -> None:
     """command line interface to flip_shell_normals"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
-    msg = (
-        "Usage:\n"
-        "  bdf flip_shell_normals IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--zero_zoffset]\n"
-        "  bdf flip_shell_normals IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--zero_zoffset]\n"
-        '  bdf flip_shell_normals -h | --help\n'
-        '  bdf flip_shell_normals -v | --version\n'
-        '\n'
 
-        "Positional Arguments:\n"
-        "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
-        #"  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
-        '\n'
-
-        'Options:\n'
-        "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
-        '  --punch                             flag to identify a *.pch/*.inc file\n'
-        "\n"  # (default=0.000001)
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-    )
-    filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args("bdf flip_shell_normals: use 'bdf flip_shell_normals -h' for help",
+                   argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
+
+    parser = argparse.ArgumentParser(
+        prog='bdf flip_shell_normals',
+        description='Flip shell element normals',
+    )
+    parser.add_argument('-v', '--version', action='version', version=ver)
+    parser.add_argument('IN_BDF_FILENAME',
+                        help='path to input BDF/DAT/NAS file')
+    parser.add_argument('-o', '--output', default='flipped_shell_normals.bdf',
+                        metavar='OUT_BDF_FILENAME',
+                        help='path to output BDF/DAT/NAS file (default=flipped_shell_normals.bdf)')
+    parser.add_argument('--punch', action='store_true',
+                        help='flag to identify a *.pch/*.inc file')
+    parser.add_argument('--zero_zoffset', action='store_true',
+                        help='zero out the z-offset')
+
+    args = parser.parse_args(argv[2:])
 
     if not quiet:  # pragma: no cover
-        print(data)
+        print(vars(args))
     size = 16
 
-    bdf_filename, punch, log = get_bdf_filename_punch_log(data, quiet)
-    zero_zoffset = data['--zero_zoffset']
-    bdf_filename_out = data['--output']
-    if bdf_filename_out is None:
-        bdf_filename_out = 'flipped_shell_normals.bdf'
+    bdf_filename = args.IN_BDF_FILENAME
+    punch = args.punch
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8')
+    zero_zoffset = args.zero_zoffset
+    bdf_filename_out = args.output
 
     #from io import StringIO
     from pyNastran.bdf.bdf import read_bdf, BDF

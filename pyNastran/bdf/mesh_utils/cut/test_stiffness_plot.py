@@ -2,6 +2,7 @@
 import os
 # import copy
 import time
+import tempfile
 from pathlib import Path
 import unittest
 import numpy as np
@@ -53,6 +54,55 @@ def unpack_moi(out_dict: dict) -> tuple:
 
 
 class TestStiffnessPlot(unittest.TestCase):
+    def test_load_moi_data_column_order(self):
+        """
+        ``load_moi_data`` must hand back the I/ExI/EyI blocks in the same order
+        ``cut_and_plot_moi`` wrote them, so that a CSV round-trip is the identity
+        and ``I[:, 5]`` still means in memory what it meant on disk.
+
+        The column *names* are local-frame labels -- on a swept cut there is no
+        right answer for which in-plane product is "Ixz" vs "Iyz" -- so this
+        pins the *ordering* contract only, not the naming.
+
+        Regression: the reader used to select '..., Iyz, Ixz' against a header
+        ending '..., Ixz, Iyz', permuting the last two columns on load.
+        ``plot_compare_inertia`` reads ``Ixz = I[:, 5]`` straight off this, so it
+        plotted the out-of-plane term (~1e-14) instead of the real one (2.4e3 on
+        a real wing) -- a flat-zero curve.  The existing round-trip assert in
+        ``test_cut_box_beam`` could not see it: those sections are symmetric, so
+        Ixz and Iyz are both ~0 and swapping them is invisible.  Hence the
+        distinct sentinel values below.
+        """
+        if not IS_PANDAS:
+            return
+        header = (
+            '# station,dx,dz,A,'
+            'Ix,Iy,Iz,Ixy,Ixz,Iyz,J,'
+            'Ex*Ix,Ex*Iy,Ex*Iz,Ex*Ixy,Ex*Ixz,Ex*Iyz,'
+            'Ey*Ix,Ey*Iy,Ey*Iz,Ey*Ixy,Ey*Ixz,Ey*Iyz,'
+            'GJ,'
+            'xcentroid,ycentroid,zcentroid')
+        # every field distinct so any permutation shows up
+        row = [float(i) for i in range(1, 28)]
+        fd, csv_filename = tempfile.mkstemp(suffix='.csv', prefix='moi_order_')
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as csv_file:
+                csv_file.write(header + '\n')
+                csv_file.write(','.join(str(val) for val in row) + '\n')
+
+            station, A, I, J, ExI, EyI, GJ, avg_centroid = load_moi_data(csv_filename)
+            # column offsets follow the header above
+            assert np.allclose(station, [row[0]]), station
+            assert np.allclose(A, [row[3]]), A
+            assert np.allclose(I, [row[4:10]]), I
+            assert np.allclose(J, [row[10]]), J
+            assert np.allclose(ExI, [row[11:17]]), ExI
+            assert np.allclose(EyI, [row[17:23]]), EyI
+            assert np.allclose(GJ, [row[23]]), GJ
+            assert np.allclose(avg_centroid, [row[24:27]]), avg_centroid
+        finally:
+            os.remove(csv_filename)
+
     def test_shell_inertia(self):
         log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(debug=False, log=log, mode='msc')

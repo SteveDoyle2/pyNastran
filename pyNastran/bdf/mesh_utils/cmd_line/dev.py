@@ -1,17 +1,15 @@
 from __future__ import annotations
 import sys
+import argparse
 from typing import Optional, TYPE_CHECKING
 from cpylog import SimpleLogger
-from docopt import docopt
 import numpy as np
 
 import pyNastran
 from pyNastran.bdf.mesh_utils.shift import update_nodes
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
-from .utils import (
-    get_bdf_filename_punch_log, filter_no_args,
-)
+from .utils import filter_no_args
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
@@ -21,62 +19,43 @@ def cmd_line_bin(argv=None, quiet: bool=False) -> None:  # pragma: no cover
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    from docopt import docopt
-    msg = (
-        "Usage:\n"
-        #"  bdf bin IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n"
-        "  bdf bin IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--nbins NBINS]\n"
-        '  bdf bin -h | --help\n'
-        '  bdf bin -v | --version\n'
-        '\n'
-
-        "Positional Arguments:\n"
-        "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
-        "  AXIS1              axis to loop over\n"
-        "  AXIS2              axis to bin\n"
-        '\n'
-
-        'Options:\n'
-        "  --cid CID     the coordinate system to bin (default:0)\n"
-        "  --step SIZE   the step size for binning\n\n"
-        "  --nbins NBINS the number of bins\n\n"
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n\n"
-
-        'Plot z (2) as a function of y (1) in y-stepsizes of 0.1:\n'
-        '  bdf bin fem.bdf 1 2 --cid 0 --step 0.1\n\n'
-
-        'Plot z (2) as a function of y (1) with 50 bins:\n'
-        '  bdf bin fem.bdf 1 2 --cid 0 --nbins 50'
-    )
-
     if len(argv) == 1:
-        sys.exit(msg)
+        sys.exit("bdf bin: use 'bdf bin -h' for help")
 
     ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
-    bdf_filename = data['IN_BDF_FILENAME']
-    axis1 = int(data['AXIS1'])
-    axis2 = int(data['AXIS2'])
-    cid = 0
-    if data['--cid']:
-        cid = int(data['--cid'])
 
-    #stepsize = 0.1
-    #if data['--step']:
-        #stepsize = float(data['--step'])
+    parser = argparse.ArgumentParser(
+        prog='bdf bin',
+        description='Bin a BDF model',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            'Plot z (2) as a function of y (1) in y-stepsizes of 0.1:\n'
+            '  bdf bin fem.bdf 1 2 --cid 0 --step 0.1\n\n'
+            'Plot z (2) as a function of y (1) with 50 bins:\n'
+            '  bdf bin fem.bdf 1 2 --cid 0 --nbins 50\n'
+        ),
+    )
+    parser.add_argument('-v', '--version', action='version', version=ver)
+    parser.add_argument('IN_BDF_FILENAME',
+                        help='path to input BDF/DAT/NAS file')
+    parser.add_argument('AXIS1', type=int,
+                        help='axis to loop over')
+    parser.add_argument('AXIS2', type=int,
+                        help='axis to bin')
+    parser.add_argument('--cid', type=int, default=0,
+                        help='the coordinate system to bin (default=0)')
+    parser.add_argument('--nbins', type=int, default=10,
+                        help='the number of bins (default=10)')
 
-    nbins = 10
-    if data['--nbins']:
-        nbins = int(data['--nbins'])
+    args = parser.parse_args(argv[2:])
+    bdf_filename = args.IN_BDF_FILENAME
+    axis1 = args.AXIS1
+    axis2 = args.AXIS2
+    cid = args.cid
+    nbins = args.nbins
     assert nbins >= 2, nbins
     if not quiet:  # pragma: no cover
-        print(data)
+        print(vars(args))
 
     from pyNastran.bdf.bdf import read_bdf
     level = 'debug' if not quiet else 'warning'
@@ -134,45 +113,39 @@ def cmd_line_transform(argv=None, quiet: bool=False) -> None:
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    msg = (
-        'Usage:\n'
-        '  bdf transform IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--shift XYZ]\n'
-        '  bdf transform -h | --help\n'
-        '  bdf transform -v | --version\n'
-        '\n'
-
-        'Positional Arguments:\n'
-        '  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n'
-        '\n'
-
-        'Options:\n'
-        ' -o OUT, --output  OUT_BDF_FILENAME         path to output BDF file\n'
-        '  --punch                                   flag to identify a *.pch/*.inc file\n'
-        '\n'
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-    )
-    filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args("bdf transform: use 'bdf transform -h' for help",
+                   argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
-    if not quiet:  # pragma: no cover
-        print(data)
 
-    #size = 16
-    bdf_filename, punch, log = get_bdf_filename_punch_log(data, quiet)
-    bdf_filename_out = data['--output']
-    if bdf_filename_out is None:
-        bdf_filename_out = 'transform.bdf'
+    parser = argparse.ArgumentParser(
+        prog='bdf transform',
+        description='Transform a BDF model',
+    )
+    parser.add_argument('-v', '--version', action='version', version=ver)
+    parser.add_argument('IN_BDF_FILENAME',
+                        help='path to input BDF/DAT/NAS file')
+    parser.add_argument('-o', '--output', default='transform.bdf',
+                        metavar='OUT_BDF_FILENAME',
+                        help='path to output BDF file (default=transform.bdf)')
+    parser.add_argument('--punch', action='store_true',
+                        help='flag to identify a *.pch/*.inc file')
+    parser.add_argument('--shift', default=None, metavar='XYZ',
+                        help='shift the model by XYZ (comma separated, e.g. 1.0,2.0,3.0)')
+
+    args = parser.parse_args(argv[2:])
+    if not quiet:  # pragma: no cover
+        print(vars(args))
+
+    bdf_filename = args.IN_BDF_FILENAME
+    punch = args.punch
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8')
+    bdf_filename_out = args.output
 
     dxyz = None
-    if data['--shift']:
-        xyz = data['XYZ'].split(',')
+    if args.shift is not None:
+        xyz = args.shift.split(',')
         dxyz = np.array(xyz, dtype='float64')
         assert len(dxyz) == 3, dxyz
 
@@ -198,50 +171,47 @@ def cmd_line_filter(argv=None, quiet: bool=False) -> None:  # pragma: no cover
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    msg = (
-        'Usage:\n'
-        '  bdf filter IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch]\n'
-        '  bdf filter IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--x YSIGN_X] [--y YSIGN_Y] [--z YSIGN_Z]\n'
-        '  bdf filter -h | --help\n'
-        '  bdf filter -v | --version\n'
-        '\n'
-
-        'Positional Arguments:\n'
-        '  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n'
-        '\n'
-
-        'Options:\n'
-        ' -o OUT, --output  OUT_BDF_FILENAME    path to output BDF file (default=filter.bdf)\n'
-        '  --punch                              flag to identify a *.pch/*.inc file\n'
-        " --x YSIGN_X                           a string (e.g., '< 0.')\n"
-        " --y YSIGN_Y                           a string (e.g., '< 0.')\n"
-        " --z YSIGN_Z                           a string (e.g., '< 0.')\n"
-        '\n'
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-        '\n'
-        'Examples\n'
-        '1. remove unused cards:\n'
-        '   >>> bdf filter fem.bdf'
-        '2. remove GRID points and associated cards with y value < 0:\n'
-        "   >>> bdf filter fem.bdf --y '< 0.'"
-    )
-    filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args("bdf filter: use 'bdf filter -h' for help",
+                   argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
+
+    parser = argparse.ArgumentParser(
+        prog='bdf filter',
+        description='Filter a BDF model',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            'Examples:\n'
+            '  1. remove unused cards:\n'
+            '     bdf filter fem.bdf\n'
+            '  2. remove GRID points and associated cards with y value < 0:\n'
+            "     bdf filter fem.bdf --y '< 0.'\n"
+        ),
+    )
+    parser.add_argument('-v', '--version', action='version', version=ver)
+    parser.add_argument('IN_BDF_FILENAME',
+                        help='path to input BDF/DAT/NAS file')
+    parser.add_argument('-o', '--output', default='filter.bdf',
+                        metavar='OUT_BDF_FILENAME',
+                        help='path to output BDF file (default=filter.bdf)')
+    parser.add_argument('--punch', action='store_true',
+                        help='flag to identify a *.pch/*.inc file')
+    parser.add_argument('--x', default=None, metavar='YSIGN_X',
+                        help="a string (e.g., '< 0.')")
+    parser.add_argument('--y', default=None, metavar='YSIGN_Y',
+                        help="a string (e.g., '< 0.')")
+    parser.add_argument('--z', default=None, metavar='YSIGN_Z',
+                        help="a string (e.g., '< 0.')")
+
+    args = parser.parse_args(argv[2:])
     if not quiet:  # pragma: no cover
-        print(data)
-    #size = 16
-    bdf_filename, punch, log = get_bdf_filename_punch_log(data, quiet)
-    bdf_filename_out = data['--output']
-    if bdf_filename_out is None:
-        bdf_filename_out = 'filter.bdf'
+        print(vars(args))
+
+    bdf_filename = args.IN_BDF_FILENAME
+    punch = args.punch
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8')
+    bdf_filename_out = args.output
 
     func_map = {
         '<': np.less,
@@ -252,16 +222,16 @@ def cmd_line_filter(argv=None, quiet: bool=False) -> None:  # pragma: no cover
     xsign = None
     ysign = None
     zsign = None
-    if data['--x']:
-        xsign, xval_str = data['--x'].split(' ')
+    if args.x:
+        xsign, xval_str = args.x.split(' ')
         xval = float(xval_str)
         assert xsign in ['<', '>', '<=', '>='], xsign
-    if data['--y']:  # --y < 0
-        ysign, yval_str = data['--y'].split(' ')
+    if args.y:  # --y < 0
+        ysign, yval_str = args.y.split(' ')
         yval = float(yval_str)
         assert ysign in ['<', '>', '<=', '>='], ysign
-    if data['--z']:
-        zsign, zval_str = data['--z'].split(' ')
+    if args.z:
+        zsign, zval_str = args.z.split(' ')
         zval = float(zval_str)
         assert zsign in ['<', '>', '<=', '>='], zsign
 

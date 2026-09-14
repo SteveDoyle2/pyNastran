@@ -1,13 +1,17 @@
 """
 defines:
  - bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None, size=8,
-             is_double=False, cards_to_skip=None, log=None, skip_case_control_deck=False)
+             is_double=False, cards_to_skip=None, log=None, skip_case_control_deck=False,
+             blind=False, dup_node_tol=0.0)
+ - DuplicateNodeError
 
 """
 from __future__ import annotations
 from io import StringIO
 from pathlib import PurePath
 from typing import Optional, Any, TYPE_CHECKING
+
+import numpy as np
 
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck
@@ -17,12 +21,24 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     MAPPER = dict[str, dict[int, int]]
 
+
+class DuplicateNodeError(RuntimeError):
+    """
+    Raised by ``bdf_merge(blind=True)`` when one GRID id means two different
+    locations.  A blind merge welds decks together *by node id*, so an id
+    collision that is not a coincident point is a modeling error rather than
+    something to silently renumber away.
+    """
+
+
 def bdf_merge(bdf_filenames: list[str],
               bdf_filename_out: Optional[str]=None,
               renumber: bool=True, encoding: Optional[str]=None,
               size: int=8, is_double: bool=False,
               cards_to_skip: Optional[list[str]]=None,
               skip_case_control_deck: bool=False,
+              blind: bool=False,
+              dup_node_tol: float=0.0,
               log: Optional[SimpleLogger]=None) -> tuple[BDF, list[MAPPER]]:
     """
     Merges multiple BDF into one file
@@ -47,6 +63,22 @@ def bdf_merge(bdf_filenames: list[str],
         that case (e.g. all aero cards).
     skip_case_control_deck : bool, optional, default : False
         If true, don't consider the case control deck while merging.
+    blind : bool; default=False
+        Blind merge: do NOT renumber the GRIDs, so decks that already share a
+        common node numbering are welded together on those ids.  A node id
+        present in more than one deck is collapsed to a single GRID when the
+        two locations agree (see ``dup_node_tol``) and raises
+        :class:`DuplicateNodeError` when they don't.  Everything else
+        (elements, properties, materials, coords, ...) is still renumbered to
+        dodge collisions, so only the node numbering is load bearing.
+        Implies ``renumber=False``; the final 1..n compaction would otherwise
+        throw away the very ids that were preserved.
+    dup_node_tol : float; default=0.0
+        Distance below which two GRIDs sharing an id are treated as the same
+        point.  The default of 0.0 requires an *exact* match, which is the
+        right answer when the decks were written by the same tool from the
+        same source points.  Raise it only to absorb known round-tripping loss
+        (e.g. ~1e-4 for small-field BDF).
 
     Returns
     -------
@@ -103,6 +135,10 @@ def bdf_merge(bdf_filenames: list[str],
         #]),
         #'mid' : max(model.material_ids),
     #}
+    if blind and renumber:
+        # the final 1..n compaction would undo the whole point of a blind merge
+        renumber = False
+
     bdf_filename0 = bdf_filenames[0]
     bdf_filenames_other = bdf_filenames[1:]
     model = get_bdf_model(
@@ -126,9 +162,17 @@ def bdf_merge(bdf_filenames: list[str],
         'coords', 'nodes', 'elements', 'masses', 'properties', 'properties_mass',
         'materials', 'sets', 'rigid_elements', 'mpcs', 'caeros', 'splines',
     ]
+    if blind:
+        model.log.info('blind merge: GRID ids are preserved and welded across decks')
+
     mappers = []
+    nwelded_total = 0
     for bdf_filename in bdf_filenames_other:
         starting_id_dict = get_renumber_starting_ids_from_model(model)
+        if blind:
+            # nid=None -> identity nid_map, i.e. leave the GRID ids alone.
+            # Everything else still renumbers past the current max.
+            starting_id_dict['nid'] = None
         #for param, val in sorted(starting_id_dict.items()):
             #print('  %-3s %s' % (param, val))
 
@@ -161,7 +205,12 @@ def bdf_merge(bdf_filenames: list[str],
         for data_member in data_members:
             data1 = getattr(model, data_member)
             data2 = getattr(model2, data_member)
-            if isinstance(data1, dict):
+            if blind and data_member == 'nodes':
+                # ids were deliberately NOT renumbered, so a collision here is
+                # either a weld (same point) or a modeling error (different point)
+                nwelded_total += _merge_nodes_blind(
+                    data1, data2, bdf_filename, dup_node_tol, model.log)
+            elif isinstance(data1, dict):
                 #model.log.info('  working on %s' % (data_member))
                 for key, value in data2.items():
                     if data_member in 'coords' and key == 0:
@@ -178,6 +227,10 @@ def bdf_merge(bdf_filenames: list[str],
                 raise NotImplementedError(type(data1))
     #if bdf_filename_out:
         #model.write_bdf(bdf_filename_out, size=size)
+
+    if blind:
+        model.log.info(f'blind merge: {len(model.nodes):d} GRIDs, '
+                       f'{nwelded_total:d} welded on shared ids')
 
     mapper_renumber = None
     if renumber:
@@ -209,6 +262,69 @@ def bdf_merge(bdf_filenames: list[str],
     mappers_final = _assemble_mapper(mappers, _mapper_0, data_members,
                                      mapper_renumber=mapper_renumber)
     return model, mappers_final
+
+def _node_position(node) -> np.ndarray:
+    """global position of a GRID, falling back to the raw field if unxrefed"""
+    try:
+        return np.asarray(node.get_position(), dtype='float64')
+    except (AttributeError, RuntimeError, KeyError):
+        return np.asarray(node.xyz, dtype='float64')
+
+
+def _merge_nodes_blind(nodes1: dict[int, Any],
+                       nodes2: dict[int, Any],
+                       bdf_filename: Any,
+                       dup_node_tol: float,
+                       log) -> int:
+    """
+    Merge ``nodes2`` into ``nodes1`` without renumbering.
+
+    A node id that appears in both is collapsed to the one already in
+    ``nodes1`` when the two global positions agree to within ``dup_node_tol``
+    (0.0 -> exact).  Any id that means two different points raises
+    :class:`DuplicateNodeError` listing every offender, so one run reports the
+    whole problem instead of one node at a time.
+
+    Returns
+    -------
+    nwelded : int
+        number of ids that were shared and collapsed
+
+    """
+    nwelded = 0
+    bad = []
+    for nid, node2 in sorted(nodes2.items()):
+        node1 = nodes1.get(nid)
+        if node1 is None:
+            nodes1[nid] = node2
+            continue
+
+        xyz1 = _node_position(node1)
+        xyz2 = _node_position(node2)
+        if np.array_equal(xyz1, xyz2):
+            nwelded += 1
+            continue
+
+        dxyz = float(np.linalg.norm(xyz2 - xyz1))
+        if dup_node_tol > 0.0 and dxyz <= dup_node_tol:
+            nwelded += 1
+            continue
+        bad.append((nid, xyz1, xyz2, dxyz))
+
+    if bad:
+        msg = (f'blind merge: {len(bad):d} GRID id(s) in {bdf_filename!s} already '
+               f'exist at a different location; a blind merge welds decks by node '
+               f'id, so these must be fixed in the source model (or raise '
+               f'dup_node_tol={dup_node_tol!r} if this is round-off):\n')
+        for nid, xyz1, xyz2, dxyz in bad:
+            msg += (f'  nid={nid:d}: existing={xyz1.tolist()} '
+                    f'new={xyz2.tolist()} d={dxyz:g}\n')
+        raise DuplicateNodeError(msg)
+
+    if nwelded and log is not None:
+        log.debug(f'  welded {nwelded:d} shared GRID(s) from {bdf_filename!s}')
+    return nwelded
+
 
 def _apply_scalar_cards(model: BDF, model2_renumber: BDF) -> None:
     """apply cards from model2 to model if they don't exist in model"""

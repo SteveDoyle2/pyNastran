@@ -310,9 +310,21 @@ def load_moi_data(csv_filename: PathLike) -> tuple[np.ndarray, np.ndarray, np.nd
     # print(df.columns)
     y = df['station'].to_numpy()
     A = df['A'].to_numpy()
-    I = df[['Ix', 'Iy', 'Iz', 'Ixy', 'Iyz', 'Ixz']].to_numpy()
-    ExI = df[['Ex*Ix', 'Ex*Iy', 'Ex*Iz', 'Ex*Ixy', 'Ex*Iyz', 'Ex*Ixz']].to_numpy()
-    EyI = df[['Ey*Ix', 'Ey*Iy', 'Ey*Iz', 'Ey*Ixy', 'Ey*Iyz', 'Ey*Ixz']].to_numpy()
+
+    # The column *names* are local-frame labels and carry no global meaning --
+    # on a swept cut there is no right answer for which in-plane product is
+    # "Ixz" vs "Iyz", so they are not worth arguing about.  What does matter is
+    # that this reads back in the same order `cut_and_plot_moi` wrote, so that a
+    # CSV round-trip is the identity and `I[:, 5]` still means what it meant in
+    # memory.  These lists must therefore match the header exactly.
+    #
+    # They used to end '..., Iyz, Ixz' against a header ending '..., Ixz, Iyz',
+    # which permuted the last two columns on load.  `plot_compare_inertia` takes
+    # `Ixz = I[:, 5]` straight off this, so it plotted the ~1e-14 out-of-plane
+    # term instead of the real one (2.4e3 on the wing) -- a flat-zero curve.
+    I = df[['Ix', 'Iy', 'Iz', 'Ixy', 'Ixz', 'Iyz']].to_numpy()
+    ExI = df[['Ex*Ix', 'Ex*Iy', 'Ex*Iz', 'Ex*Ixy', 'Ex*Ixz', 'Ex*Iyz']].to_numpy()
+    EyI = df[['Ey*Ix', 'Ey*Iy', 'Ey*Iz', 'Ey*Ixy', 'Ey*Ixz', 'Ey*Iyz']].to_numpy()
     GJ = df['GJ'].to_numpy()
     J = df['J'].to_numpy()
     avg_centroid = df[['xcentroid', 'ycentroid', 'zcentroid']].to_numpy()

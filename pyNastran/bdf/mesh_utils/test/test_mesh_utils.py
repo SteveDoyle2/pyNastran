@@ -26,8 +26,7 @@ from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.cmd_line.split_by_file import split_by_file
 
 from pyNastran.bdf.cards.test.utils import save_load_deck
-if IS_DOCOPT:
-    from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
+from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
 from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 if IS_SCIPY:
@@ -42,7 +41,7 @@ from pyNastran.bdf.mesh_utils.mirror_mesh import (
 from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm)  #mass_properties_breakdown
 from pyNastran.bdf.mesh_utils.make_half_model import make_half_model
-from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
+from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge, DuplicateNodeError
 from pyNastran.bdf.mesh_utils.find_closest_nodes import find_closest_nodes
 from pyNastran.bdf.mesh_utils.find_coplanar_elements import find_coplanar_triangles
 from pyNastran.bdf.mesh_utils.force_to_pressure import force_to_pressure
@@ -674,6 +673,75 @@ class TestMeshUtils(unittest.TestCase):
         get_material_mass_breakdown_table(model)
         get_property_mass_breakdown_table(model)
 
+    def test_merge_blind(self):
+        """
+        blind merge: GRID ids are load bearing, so a shared id is a weld when the
+        two locations agree and an error when they don't.  Element/property/
+        material ids are still renumbered out of each other's way.
+        """
+        log = SimpleLogger(level='error')
+
+        def make_deck(nids, xyzs):
+            """3 grids in a row wired with CRODs; every deck reuses eid/pid/mid"""
+            model = BDF(log=log)
+            for nid, xyz in zip(nids, xyzs):
+                model.add_grid(nid, xyz)
+            model.add_prod(100, 1000, A=1.0, j=0.0)
+            model.add_mat1(1000, 3.0e7, None, 0.3)
+            for i in range(len(nids) - 1):
+                model.add_crod(10 + i, 100, [nids[i], nids[i + 1]])
+            model.validate()
+            return model
+
+        left = [[0., 0., 0.], [1., 0., 0.], [2., 0., 0.]]
+        # node 3 is the shared joint, at exactly the same place in both decks
+        right_ok = [[2., 0., 0.], [3., 0., 0.], [4., 0., 0.]]
+
+        model, unused_mappers = bdf_merge(
+            [make_deck([1, 2, 3], left), make_deck([3, 4, 5], right_ok)],
+            blind=True, log=log)
+
+        # the shared id collapsed; nothing was renumbered away
+        self.assertEqual(sorted(model.nodes), [1, 2, 3, 4, 5])
+        # ...but the colliding eid/pid/mid were all pushed apart
+        self.assertEqual(len(model.elements), 4)
+        self.assertEqual(len(model.properties), 2)
+        self.assertEqual(len(model.materials), 2)
+        for elem in model.elements.values():
+            self.assertIn(elem.Pid(), model.properties)
+            for nid in elem.node_ids:
+                self.assertIn(nid, model.nodes)
+
+        # blind implies renumber=False -- the final 1..n compaction would throw
+        # away the ids we just went to the trouble of preserving
+        model, unused_mappers = bdf_merge(
+            [make_deck([1, 2, 3], left), make_deck([3, 4, 5], right_ok)],
+            blind=True, renumber=True, log=log)
+        self.assertEqual(sorted(model.nodes), [1, 2, 3, 4, 5])
+
+        # same id, different location -> hard error naming the offender
+        right_bad = [[2., 0., 99.], [3., 0., 0.], [4., 0., 0.]]
+        with self.assertRaises(DuplicateNodeError) as cm:
+            bdf_merge([make_deck([1, 2, 3], left), make_deck([3, 4, 5], right_bad)],
+                      blind=True, log=log)
+        self.assertIn('nid=3', str(cm.exception))
+
+        # a near-miss is exact-compared by default, and absorbed by dup_node_tol
+        right_close = [[2. + 1e-6, 0., 0.], [3., 0., 0.], [4., 0., 0.]]
+        with self.assertRaises(DuplicateNodeError):
+            bdf_merge([make_deck([1, 2, 3], left), make_deck([3, 4, 5], right_close)],
+                      blind=True, log=log)
+        model, unused_mappers = bdf_merge(
+            [make_deck([1, 2, 3], left), make_deck([3, 4, 5], right_close)],
+            blind=True, dup_node_tol=1e-3, log=log)
+        self.assertEqual(sorted(model.nodes), [1, 2, 3, 4, 5])
+
+        # a plain (non-blind) merge still renumbers everything apart
+        model, unused_mappers = bdf_merge(
+            [make_deck([1, 2, 3], left), make_deck([3, 4, 5], right_ok)],
+            renumber=False, log=log)
+        self.assertEqual(len(model.nodes), 6)
+
     def test_merge_01(self):
         """merges multiple bdfs into a single deck"""
         log = SimpleLogger(level='error')
@@ -723,16 +791,15 @@ class TestMeshUtils(unittest.TestCase):
         model.safe_cross_reference()
         #os.remove('mcids.csv')
 
-        if IS_DOCOPT:
-            argv = ['bdf', 'export_mcids', str(bdf_filename), '-o', str(csv_filename),
-                    '--iplies', '0,1,2,3,4,5,6,7,8,9,10', '--no_x', '--no_y']
-            with self.assertRaises(DocoptExit):
-                # can't define both --no_x and --no_y
-                cmd_line(argv=argv, quiet=True)
-
-            argv = ['bdf', 'export_mcids', str(bdf_filename), '-o', str(csv_filename),
-                    '--iplies', '0,1,2,3,4,5,6,7,8,9', '--no_x']
+        argv = ['bdf', 'export_mcids', str(bdf_filename), '-o', str(csv_filename),
+                '--iplies', '0,1,2,3,4,5,6,7,8,9,10', '--no_x', '--no_y']
+        with self.assertRaises(SystemExit):
+            # can't define both --no_x and --no_y
             cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_mcids', str(bdf_filename), '-o', str(csv_filename),
+                '--iplies', '0,1,2,3,4,5,6,7,8,9', '--no_x']
+        cmd_line(argv=argv, quiet=True)
 
         eids = [1204, 1211]
         export_mcids(model, csv_filename=None, eids=eids,
