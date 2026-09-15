@@ -1196,7 +1196,18 @@ def get_dof_map(model: BDF,
 
     suport_nid_to_components = {}
     if suport1_id:
-        suport1 = model.suport1[suport1_id]
+        try:
+            suport1 = model.suport1[suport1_id]
+        except KeyError:
+            msg = (
+                f'Could not find suport1={suport1_id}\n'
+                f'SUPORT1s = {list(model.suport1)}\n'
+                f'SUPORT1 = {str(model.suport1)}\n'
+                f'SUPORT = {str(model.suport)}\n'
+            )
+            log.error(msg)
+            raise
+
         assert len(suport1.nodes) == len(suport1.Cs), suport1.get_stats()
         for nid, comp in zip(suport1.nodes, suport1.Cs):
             add_comps(spc_nid_to_components, nid, comp)

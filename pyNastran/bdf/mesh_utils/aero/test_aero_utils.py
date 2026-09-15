@@ -11,13 +11,6 @@ try:
 except ImportError:
     IS_SCIPY = False
 
-try:
-    import docopt
-    IS_DOCOPT = True
-except ImportError:
-    IS_DOCOPT = False
-NO_DOCOPT = not IS_DOCOPT
-
 from cpylog import SimpleLogger
 
 import pyNastran
@@ -30,8 +23,7 @@ if IS_SCIPY:
 from pyNastran.bdf.mesh_utils.aero.map_pressure_to_caero import map_caero
 
 from pyNastran.bdf.cards.test.utils import save_load_deck
-if IS_DOCOPT:
-    from pyNastran.bdf.mesh_utils.cmd_line.bdf_cmd_line import cmd_line
+from pyNastran.bdf.mesh_utils.cmd_line.bdf_cmd_line import cmd_line
 
 from pyNastran.bdf.mesh_utils.normals import get_normals_at_nodes, get_normals_at_elements
 import pyNastran.bdf.mesh_utils.add_remove_mesh
@@ -205,7 +197,6 @@ class TestMeshUtilsAero(unittest.TestCase):
         save_load_deck(model, run_remove_unused=False,
                        run_mirror=False)
 
-    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_export_caero_mesh_caero5_wtfact(self):
         """tests multiple ``bdf`` tools"""
         path = MODEL_PATH / 'aero'
@@ -245,7 +236,6 @@ class TestMeshUtilsAero(unittest.TestCase):
                 '--pid', 'paero']
         cmd_line(argv=argv, log=log, quiet=True)
 
-    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_export_caero_mesh_w2gj(self):
         path = MODEL_PATH / 'aero'
         bdf_filename = str(path / 'cpmopt.bdf')
@@ -257,7 +247,6 @@ class TestMeshUtilsAero(unittest.TestCase):
                 '--pid', 'caero', '--skip_zero_check']
         cmd_line(argv=argv, quiet=True)
 
-    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     @unittest.skipIf(not IS_SCIPY, 'scipy not installed')
     def test_export_caero_mesh(self):
         """tests multiple ``bdf`` tools"""
