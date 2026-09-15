@@ -962,10 +962,10 @@ class Settings:
 
         self.python_dock_visible = _set_setting(
             self, settings, setting_keys, ['python_dock_visible'],
-            default=False, save=False)
+            default=False, save=False, auto_type=bool)
         self.log_dock_visible = _set_setting(
             self, settings, setting_keys, ['log_dock_visible'],
-            default=True, save=False)
+            default=True, save=False, auto_type=bool)
 
         font = QtGui.QFont()
         font.setPointSize(self.font_size)

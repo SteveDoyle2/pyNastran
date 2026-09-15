@@ -9689,7 +9689,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_dmiji_object(dmiji)
         return dmiji
 
-    def add_dmik(self, name, ifo: int,
+    def add_dmik(self, name: str, ifo: int,
                  tin: int, ncols: int,
                  GCj: np.ndarray, GCi: np.ndarray,
                  Real: np.ndarray, Complex=None,
@@ -9727,10 +9727,14 @@ class AddCards(AddCoords, AddContact, AddBolts,
             Integer > 0 indicates amplitude, phase format
         ncols : int
             ???
-        GCj  : list[(node, dof)]
+        GCj : (ndof, 2) int np.ndarray
+            columns are (node, dof)
             the jnode, jDOFs
-        GCi  : list[(node, dof)]
+            DOFs should be 3 or 5
+        GCi : (ndof, 2) int np.ndarray
+            columns are (node, dof)
             the inode, iDOFs
+            DOFs should be 3 or 5
         Real : list[float]
             The real values
         Complex : list[float]; default=None

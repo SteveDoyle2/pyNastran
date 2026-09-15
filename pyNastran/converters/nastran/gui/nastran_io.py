@@ -218,7 +218,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         """gets the Nastran wildcard loader used in the file load menu"""
         geom_methods_pch = 'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
         combined_methods_op2 = 'Nastran Geometry + Results - OP2 (*.bdf; *.dat; *.nas; *.ecd; *.pch; *.op2)'
-        results_fmts = ['Nastran OP2 (*.op2)',]
+        results_fmts = ['Nastran OP2 (*.op2)',
+                        'Nastran Aero Panel Results (*.op2)']
         if IS_H5PY:
             results_fmts.append('pyNastran H5 (*.h5)')
         results_fmts.append('Patran nod (*.nod)')
@@ -2702,7 +2703,17 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         if self.save_data:
             self.model_results = model
+        cases = gui.result_cases
+        form = gui.get_form()
+        icase = len(cases)
 
+        if is_early_return_aero(self, model):
+            load_nastran_results_aero(
+                results_filename, model,
+                cases, form, icase)
+            gui._finish_results_io2(model_name, form, cases)
+            return
+        # if nnode
         #print(model.print_results())
         #self.isubcase_name_map[self.isubcase] = [Subtitle, Label]
 
@@ -2722,9 +2733,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             #form = []
             #icase = 0
         #else:
-        cases = gui.result_cases
-        form = gui.get_form()
-        icase = len(cases)
         # form = self.res_widget.get_form()
 
         #subcase_ids = model.isubcase_name_map.keys()
@@ -3919,3 +3927,97 @@ def plotels_to_groups(model: BDF) -> tuple[
         else:  # pragma: no cover
             log.warning(f'skipping {etype} eid={eid}')
     return lines, tris, quads
+
+
+def is_early_return_aero(self: NastranIO, model: OP2) -> bool:
+    early_return_aero = False
+    # for aero identification
+    nnode = len(self.node_ids)
+    nelement = len(self.element_ids)
+
+    trim_results = model.op2_results.trim
+    if trim_results.aero_pressure:
+        model.log.error(f'fem: nnode={nnode} nelement={nelement}')
+        for key, case in trim_results.aero_pressure.items():
+            # case.cp
+            # case.pressure
+            # case.nodes
+            ncp = len(case.cp)
+            if ncp == nelement:
+                early_return_aero = True
+                break
+    elif trim_results.aero_force:
+        for key, case in trim_results.aero_force.items():
+            # aero_force[8]:
+            #   nodes:        n=3108
+            #   force:        (3108, 6)
+            #   force_label:  (3108,)
+            # print(case.get_stats())
+            nforce = len(case.force)
+            if nforce == nelement:
+                early_return_aero = True
+                break
+    return early_return_aero
+
+def load_nastran_results_aero(results_filename: PathLike,
+                              model: OP2,
+                              cases, form, icase: int):
+    """create results for aero models"""
+    results_filename = str(results_filename).strip(r'.\\')
+    trim_results = model.op2_results.trim
+    results_form = []
+    if 0:
+        # TODO: extract trim deflections to view aero panel results
+        for key, case in model.displacements.items():
+            # (8, 1, 1, 0, 0, '', '')
+            # 9,217,362
+            print(f'key = {key}')
+            print(case.get_stats())
+            continue
+            all_nodes = case.node_gridtype[:, 0]
+            print(f'all_nodes = {all_nodes.tolist()}')
+
+            iaero_node = (all_nodes > 1e8)
+            nodes = all_nodes[iaero_node]
+            print(f'nid_max = {nodes.max()}')
+            print(f'nids = {nodes.tolist()}')
+            print(case.get_stats())
+            txyz = case.data[0, :, :3]
+            print(f'txyz.shape={txyz.shape}; nnodes={len(nodes)}')
+            asedfed
+
+
+    for key, aero_pressure in trim_results.aero_pressure.items():
+        print(f'key = {key}')
+        subcase_id = key[0]
+        cp = aero_pressure.cp
+        cp_res = GuiResult(
+            subcase_id, header='Aero Cp', title='Aero Cp',
+            location='centroid', scalar=cp)
+        # (8, 1, 1, 0, 0, '', '')
+        print(aero_pressure.get_stats())
+        subcase_word = f'Subcase {subcase_id}'
+        cases[icase] = (cp_res, (0, 'Aero Cp'))
+        # Subcase 1: Aero Cp
+        results_form.append((f'{subcase_word}: Aero Cp', icase, []))
+        icase += 1
+
+    # for key, aero_force in trim_results.aero_force.items():
+    #     # aero_force[8]:
+    #     # fem: nnode=4522 nelement=3108
+    #     #   nodes:        n=3108
+    #     #   force:        (3108, 6)
+    #     #   force_label:  (3108,)
+    #     print(f'key = {key}')
+    #     cp = aero_pressure.cp
+    #     cp_res = ForceResult(
+    #         0, header='Aero Force', title='Aero Force',
+    #         location='centroid', scalar=cp)
+    #     cases[icase] = (cp_res, (0, 'Aero Force'))
+    #     results_form.append(('Aero Force', icase, []))
+    #     icase += 1
+
+    if len(results_form):
+        form.append((results_filename, None, results_form))
+        # form_results = (basename + '-Results', None, form_optimization)
+
