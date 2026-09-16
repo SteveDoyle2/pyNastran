@@ -3,6 +3,7 @@ defines:
  - export_caero_mesh(model, caero_bdf_filename='caero.bdf', is_aerobox_model=True)
 
 """
+import io
 import os
 import math
 import warnings
@@ -11,7 +12,7 @@ import numpy as np
 
 from pyNastran.utils import PathLike
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
-from pyNastran.bdf.bdf import read_bdf, BDF, Coord, AELIST
+from pyNastran.bdf.bdf import BDF, Coord, AELIST
 from pyNastran.bdf.cards.aero.aero import CAERO1, CAERO2
 from pyNastran.bdf.field_writer_8 import print_card_8
 
@@ -20,7 +21,8 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
                       caero_bdf_filename: PathLike='caero.bdf',
                       is_aerobox_model: bool=True,
                       pid_method: str='aesurf',
-                      rotate_panel_angle_deg: float=0.0,
+                      rotate_panel_angle_deg: float | list[float]=0.0,
+                      rotate_surface_labels: list[str] | None=None,
                       write_panel_xyz: bool=True,
                       xref: bool=True,
                       skip_zero_check: bool=False,
@@ -43,8 +45,16 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
                    main structure will be pid=1
         'caero' : write the CAERO1 as the property id
         'paero' : write the PAERO1 as the property id
-    rotate_panel_angle_deg : float; default=0.0
-        panel angle to rotate (e.g., rotate all surfaces by 30 degrees)
+    rotate_panel_angle_deg : float | list[float]; default=0.0
+        angle(s) in degrees to rotate control surfaces about the hinge line.
+        If a single float, every surface in rotate_surface_labels (or all
+        AESURF surfaces when that is None) is deflected by the same amount.
+        If a list, its length must equal len(rotate_surface_labels) and each
+        surface is deflected by the corresponding angle.
+    rotate_surface_labels : list[str] | None; default=None
+        AESURF labels to rotate (e.g., ['LFLAP', 'RFLAP']).
+        If None and rotate_panel_angle_deg != 0, all AESURF surfaces are rotated.
+        Comparison is case-insensitive.
     write_panel_xyz : bool; default=True
         write the following table...
         $$  CAEROID      EID       XLE       YLE       ZLE     CHORD      SPAN   XLE+C/4
@@ -59,7 +69,39 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
     write_end_data : bool; default=True
         add an ENDDATA at the end
     """
-    rotate_panel_angle = np.radians(rotate_panel_angle_deg)
+    # ---------------------------------------------------------------
+    # normalise rotate_panel_angle_deg into a per-label radian map
+    # ---------------------------------------------------------------
+    if isinstance(rotate_panel_angle_deg, (int, float)):
+        angles_deg = [rotate_panel_angle_deg]
+    else:
+        angles_deg = list(rotate_panel_angle_deg)
+
+    if len(angles_deg) == 1:
+        # single angle → will be applied to every (filtered) surface
+        default_angle_rad: float = np.radians(angles_deg[0])
+        label_angle_rad_map: dict[str, float] | None = None
+    else:
+        # per-surface angles → must pair with rotate_surface_labels
+        if rotate_surface_labels is None:
+            raise ValueError(
+                f'rotate_surface_labels is required when multiple '
+                f'rotate_panel_angle_deg values are given '
+                f'(got {len(angles_deg)} angles)')
+        if len(angles_deg) != len(rotate_surface_labels):
+            raise ValueError(
+                f'len(rotate_panel_angle_deg)={len(angles_deg)} != '
+                f'len(rotate_surface_labels)={len(rotate_surface_labels)}')
+        default_angle_rad = 0.0
+        label_angle_rad_map = {
+            lbl.strip().upper(): np.radians(deg)
+            for lbl, deg in zip(rotate_surface_labels, angles_deg)
+        }
+    has_rotation = (
+        (label_angle_rad_map is not None and
+         any(a != 0.0 for a in label_angle_rad_map.values())) or
+        (label_angle_rad_map is None and default_angle_rad != 0.0)
+    )
 
     cards_to_include = [
         'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
@@ -83,8 +125,6 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
     if pid_method not in {'aesurf', 'caero', 'paero'}:
         raise RuntimeError(f'pid_method={pid_method!r} is not [aesurf, caero, paero]')
 
-    inid = 1
-    mid = 1
     log.info(f'export_caero_mesh -> {caero_bdf_filename}')
 
     #all_points = []
@@ -130,153 +170,180 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
             raise RuntimeError(f'aesurf_type={aesurf.type} is not supported')
     aesurf_aerobox_eids = np.array(aesurf_aerobox_eid_list, dtype='int32')
 
-    with open(caero_bdf_filename, 'w') as bdf_file:
-        #bdf_file.write('$ pyNastran: punch=True\n')
-        if write_header:
-            bdf_file.write('SOL 101\n')
-            bdf_file.write('CEND\n')
-            bdf_file.write(subcases)
-            bdf_file.write('BEGIN BULK\n')
+    # filter to only the requested surfaces for rotation
+    if rotate_surface_labels is not None:
+        labels_upper = {label.strip().upper() for label in rotate_surface_labels}
+        all_labels = sorted({key[0] for key in eids_to_rotate_dict})
+        eids_to_rotate_dict = {
+            key: value for key, value in eids_to_rotate_dict.items()
+            if key[0].strip().upper() in labels_upper
+        }
+        if len(eids_to_rotate_dict) == 0 and rotate_panel_angle_deg != 0.0:
+            log.warning(f'rotate_surface_labels={rotate_surface_labels!r} '
+                        f'matched no AESURF surfaces; '
+                        f'available labels: {all_labels}')
 
-        for cid, coord in sorted(model.coords.items()):
-            bdf_file.write(str(coord))
-        bdf_file.write(loads)
-        _write_properties(model, bdf_file, pid_method=pid_method)
-
-        for caero_eid, caero in sorted(model.caeros.items()):
-            #assert caero_eid != 1, 'CAERO eid=1 is reserved for non-flaps'
-            scaero = str(caero).rstrip().split('\n')
-            if is_aerobox_model:
-                if caero.type == 'CAERO2':
-                    _write_caero2_aerobox(bdf_file, caero)
-                    continue
-                if caero.type == 'BODY7':
-                    log.warning(f'skipping BODY7={caero.eid}')
-                    continue
-
-                bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
-                if hasattr(caero, 'lspan'):
-                    assert caero.type in {'CAERO1', 'CAERO4', 'CAERO5', 'CAERO7'}, caero
-                    if caero.lspan_ref:
-                        aefact_chord = str(caero.lspan_ref).rstrip().split('\n')
-                        bdf_file.write('$ ' + '\n$ '.join(aefact_chord) + '\n')
-                if hasattr(caero, 'lchord'):
-                    assert caero.type in {'CAERO1', }, caero
-                    if caero.lchord_ref:
-                        aefact_span = str(caero.lchord_ref).rstrip().split('\n')
-                        bdf_file.write('$ ' + '\n$ '.join(aefact_span) + '\n')
-
-                #bdf_file.write("$   CAEROID       ID       XLE      YLE      ZLE     CHORD      SPAN\n")
-                points, elements = caero.panel_points_elements()
-                if write_panel_xyz:
-                    _write_aerobox_strips(bdf_file, model, caero, caero_eid, points, elements)
-
-                box_ids = caero.box_ids.flatten()
-                eids_aesurf = np.union1d(box_ids, aesurf_aerobox_eids)
-
-                # verify eids_aesurf is sorted
-                assert np.allclose(eids_aesurf, np.unique(eids_aesurf))
-                if len(eids_aesurf) and rotate_panel_angle != 0.0:
-                    nid_all = np.unique(elements.ravel())
-                    # get the aesurf and fixed ids
-                    # eids_aesurf = np.intersect1d(box_ids, aesurf_aerobox_eids)
-                    eids_fixed = np.setdiff1d(box_ids, aesurf_aerobox_eids)
-
-                    # get the index for each element
-                    assert isinstance(box_ids, np.ndarray), box_ids
-                    assert box_ids.ndim == 1, box_ids.shape
-                    assert eids_fixed.ndim == 1, eids_fixed.shape
-                    ieid_fixed = np.searchsorted(box_ids, eids_fixed)
-                    # ieid_aesurf = np.searchsorted(box_ids, eids_aesurf)
-
-                    # get the node ids associated with each element
-                    nid_fixed = np.unique(elements[ieid_fixed, :])
-                    # nid_aesurf = np.unique(elements[ieid_aesurf, :])
-
-                    # get their index (so we can write the nodes in a rotated frame)
-                    inid_fixed = np.searchsorted(nid_all, nid_fixed)
-
-                    # get the base points and the points we're going to rotate
-                    # note that they might overlap or be used by multiple flaps
-                    #
-                    # we'll write points_fixed later
-                    points_fixed = points[inid_fixed, :]
-                    elements_fixed = elements[ieid_fixed, :]
-
-                    # now get do the same thing for each flap
-                    for (label, idi), (cid_ref, eid_surface) in eids_to_rotate_dict.items():
-                        eids_aesurf = np.intersect1d(box_ids, eid_surface)
-                        if len(eids_aesurf) == 0:
-                            continue
-
-                        # print(f'box_ids     = {box_ids}; n={len(box_ids)}')
-                        # print(f'eids_aesurf = {eids_aesurf}; n={len(eids_aesurf)}')
-                        ieid_aesurf = np.searchsorted(box_ids, eids_aesurf)
-                        # print(f'ieid_aesurf = {ieid_aesurf}')
-                        # print('elements:\n', elements)
-                        nid_aesurf = np.unique(elements[ieid_aesurf, :])
-
-                        inid_aesurf = np.searchsorted(nid_all, nid_aesurf)
-                        points_to_rotate = points[inid_aesurf, :]
-                        elements_to_rotate = elements[ieid_aesurf, :]
-                        xyz_rotated = rodriguez_rotate(
-                            points_to_rotate, rotate_panel_angle,
-                            cid_ref, iaxis=1)  # y-axis
-
-                        # TODO: still need to renumber the points
-                        #       and figure out what the offset is
-                    raise NotImplementedError(f'rotate_panel_angle_deg={rotate_panel_angle_deg:g}; '
-                                              f'rotate_panel_angle={rotate_panel_angle:g}')
-                else:
-                    npoints = points.shape[0]
-                    #nelements = elements.shape[0]
-                    for ipoint, point in enumerate(points):
-                        x, y, z = point
-                        bdf_file.write(print_card_8(['GRID', inid+ipoint, None, x, y, z]))
-
-                #pid = caero_eid
-                #mid = caero_eid
-                jeid = 0
-                for elem in elements + inid:
-                    p1, p4, p3, p2 = elem
-                    eid2 = jeid + caero_eid
-                    pidi = _get_aerobox_property(
-                        model, caero_eid, eid2, pid_method=pid_method)
-                    fields = ['CQUAD4', eid2, pidi, p1, p2, p3, p4]
-                    bdf_file.write(print_card_8(fields))
-                    jeid += 1
-            else:
-                # macro model
-                if caero.type == 'CAERO2':
-                    continue
-                bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
-                points = caero.get_points()
-                npoints = 4
-                for ipoint, point in enumerate(points):
-                    x, y, z = point
-                    bdf_file.write(print_card_8(['GRID', inid+ipoint, None, x, y, z]))
-
-                pid = _get_aerobox_property(
-                    model, caero_eid, caero_eid, pid_method=pid_method)
-                p1 = inid
-                p2 = inid + 1
-                p3 = inid + 2
-                p4 = inid + 3
-                bdf_file.write(print_card_8(['CQUAD4', caero_eid, pid, p1, p2, p3, p4]))
-            inid += npoints
-
-        for cid, coord in sorted(coords_to_write_dict.items()):
-            bdf_file.write(str(coord))
-
-        # aluminum
-        E = 350e9  # 350 GPa
-        #G = None
-        nu = 0.3
-        rho = 2700.  # 2700 kg/m^3
-        bdf_file.write(f'MAT1,{mid},{E},,{nu},{rho}\n')
-        if write_end_data:
-            bdf_file.write('ENDDATA\n')
+    if isinstance(caero_bdf_filename, PathLike):
+        with open(caero_bdf_filename, 'w') as bdf_file:
+            #bdf_file.write('$ pyNastran: punch=True\n')
+            _write_file(
+                bdf_file, write_header, write_end_data,
+                model, subcases, loads, pid_method,
+                coords_to_write_dict,
+                is_aerobox_model,
+                eids_to_rotate_dict, write_panel_xyz, has_rotation,
+                label_angle_rad_map, default_angle_rad)
+    else:
+        assert isinstance(caero_bdf_filename, io.StringIO), caero_bdf_filename
+        bdf_file = caero_bdf_filename
+        _write_file(
+            bdf_file, write_header, write_end_data,
+            model, subcases, loads, pid_method,
+            coords_to_write_dict,
+            is_aerobox_model,
+            eids_to_rotate_dict, write_panel_xyz, has_rotation,
+            label_angle_rad_map, default_angle_rad)
     log.debug(f'  ---finished export_caero_mesh of {caero_bdf_filename}---')
+    return
+
+def _write_file(bdf_file: TextIO,
+                write_header: bool,
+                write_end_data: bool,
+                model: BDF,
+                subcases: str,
+                loads,
+                pid_method: str,
+                coords_to_write_dict: dict[int, Coord],
+                is_aerobox_model,
+                eids_to_rotate_dict, write_panel_xyz, has_rotation,
+                label_angle_rad_map, default_angle_rad: float):
+    inid = 1
+    mid = 1
+    log = model.log
+    if write_header:
+        bdf_file.write('SOL 101\n')
+        bdf_file.write('CEND\n')
+        bdf_file.write(subcases)
+        bdf_file.write('BEGIN BULK\n')
+
+    for cid, coord in sorted(model.coords.items()):
+        bdf_file.write(str(coord))
+    bdf_file.write(loads)
+    _write_properties(model, bdf_file, pid_method=pid_method)
+
+    for caero_eid, caero in sorted(model.caeros.items()):
+        #assert caero_eid != 1, 'CAERO eid=1 is reserved for non-flaps'
+        scaero = str(caero).rstrip().split('\n')
+        if is_aerobox_model:
+            if caero.type == 'CAERO2':
+                _write_caero2_aerobox(bdf_file, caero)
+                continue
+            if caero.type == 'BODY7':
+                log.warning(f'skipping BODY7={caero.eid}')
+                continue
+
+            bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
+            if hasattr(caero, 'lspan'):
+                assert caero.type in {'CAERO1', 'CAERO4', 'CAERO5', 'CAERO7'}, caero
+                if caero.lspan_ref:
+                    aefact_chord = str(caero.lspan_ref).rstrip().split('\n')
+                    bdf_file.write('$ ' + '\n$ '.join(aefact_chord) + '\n')
+            if hasattr(caero, 'lchord'):
+                assert caero.type in {'CAERO1', }, caero
+                if caero.lchord_ref:
+                    aefact_span = str(caero.lchord_ref).rstrip().split('\n')
+                    bdf_file.write('$ ' + '\n$ '.join(aefact_span) + '\n')
+
+            #bdf_file.write("$   CAEROID       ID       XLE      YLE      ZLE     CHORD      SPAN\n")
+            points, elements = caero.panel_points_elements()
+            if write_panel_xyz:
+                _write_aerobox_strips(bdf_file, model, caero, caero_eid, points, elements)
+
+            box_ids = caero.box_ids.flatten()
+            if len(eids_to_rotate_dict) and has_rotation:
+                # Rotate the requested control surface aero panels
+                # about their AESURF hinge lines.
+                #
+                # Nodes on the hinge line lie on the rotation axis
+                # and are unchanged by the rotation, so shared nodes
+                # between fixed and rotated regions stay consistent.
+                points = points.copy()
+                nid_all = np.unique(elements.ravel())
+
+                for (label, idi), (cid_ref, eid_surface) in eids_to_rotate_dict.items():
+                    # look up the angle for this surface
+                    if label_angle_rad_map is not None:
+                        angle_rad = label_angle_rad_map.get(label.strip().upper(), 0.0)
+                    else:
+                        angle_rad = default_angle_rad
+                    if angle_rad == 0.0:
+                        continue
+
+                    eids_on_panel = np.intersect1d(box_ids, eid_surface)
+                    if len(eids_on_panel) == 0:
+                        continue
+
+                    ieid = np.searchsorted(box_ids, eids_on_panel)
+                    nids_surface = np.unique(elements[ieid, :])
+                    inids = np.searchsorted(nid_all, nids_surface)
+
+                    xyz_rotated = rodriguez_rotate(
+                        points[inids, :], angle_rad,
+                        cid_ref, iaxis=1)  # y-axis = hinge line
+                    points[inids, :] = xyz_rotated
+                    angle_deg = np.degrees(angle_rad)
+                    log.info(f'  rotated {label!r} ({len(eids_on_panel)} boxes, '
+                             f'{len(nids_surface)} nodes) by '
+                             f'{angle_deg:g} deg')
+
+            npoints = points.shape[0]
+            #nelements = elements.shape[0]
+            for ipoint, point in enumerate(points):
+                x, y, z = point
+                bdf_file.write(print_card_8(['GRID', inid+ipoint, None, x, y, z]))
+
+            #pid = caero_eid
+            #mid = caero_eid
+            jeid = 0
+            for elem in elements + inid:
+                p1, p4, p3, p2 = elem
+                eid2 = jeid + caero_eid
+                pidi = _get_aerobox_property(
+                    model, caero_eid, eid2, pid_method=pid_method)
+                fields = ['CQUAD4', eid2, pidi, p1, p2, p3, p4]
+                bdf_file.write(print_card_8(fields))
+                jeid += 1
+        else:
+            # macro model
+            if caero.type == 'CAERO2':
+                continue
+            bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
+            points = caero.get_points()
+            npoints = 4
+            for ipoint, point in enumerate(points):
+                x, y, z = point
+                bdf_file.write(print_card_8(['GRID', inid+ipoint, None, x, y, z]))
+
+            pid = _get_aerobox_property(
+                model, caero_eid, caero_eid, pid_method=pid_method)
+            p1 = inid
+            p2 = inid + 1
+            p3 = inid + 2
+            p4 = inid + 3
+            bdf_file.write(print_card_8(['CQUAD4', caero_eid, pid, p1, p2, p3, p4]))
+        inid += npoints
+
+    for cid, coord in sorted(coords_to_write_dict.items()):
+        bdf_file.write(str(coord))
+
+    # aluminum
+    E = 350e9  # 350 GPa
+    #G = None
+    nu = 0.3
+    rho = 2700.  # 2700 kg/m^3
+    bdf_file.write(f'MAT1,{mid},{E},,{nu},{rho}\n')
+    if write_end_data:
+        bdf_file.write('ENDDATA\n')
     return
 
 

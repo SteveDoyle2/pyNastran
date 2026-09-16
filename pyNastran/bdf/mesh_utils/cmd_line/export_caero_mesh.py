@@ -35,6 +35,16 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
                         help="sets the pid; {aesurf, caero, paero} (default=aesurf)")
     parser.add_argument('--skip_zero_check', action='store_true',
                         help='flag to skip W2GJ, WKK, etc. checks (default=False)')
+    parser.add_argument('--rotate_panel_angle_deg', type=float, nargs='+',
+                        default=[0.0], metavar='ANGLE',
+                        help='angle(s) in degrees to rotate control surfaces '
+                             'about the hinge line. A single value rotates all '
+                             'surfaces uniformly; multiple values are paired '
+                             '1:1 with --rotate_surfaces (default=0.0)')
+    parser.add_argument('--rotate_surfaces', nargs='+', default=None,
+                        metavar='LABEL',
+                        help='AESURF labels to rotate (e.g., LFLAP RFLAP); '
+                             'if omitted all AESURF surfaces are rotated')
 
     args = parser.parse_args(argv[2:])
     if not quiet:  # pragma: no cover
@@ -51,6 +61,10 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     skip_zero_check = args.skip_zero_check
 
     pid_method = args.pid
+    rotate_panel_angle_deg = args.rotate_panel_angle_deg
+    if len(rotate_panel_angle_deg) == 1:
+        rotate_panel_angle_deg = rotate_panel_angle_deg[0]
+    rotate_surface_labels = args.rotate_surfaces
 
     # from pyNastran.bdf.bdf import read_bdf
     from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
@@ -92,5 +106,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     export_caero_mesh(bdf_filename, caero_bdf_filename,
                       is_aerobox_model=is_aerobox_model,
                       pid_method=pid_method,
+                      rotate_panel_angle_deg=rotate_panel_angle_deg,
+                      rotate_surface_labels=rotate_surface_labels,
                       xref=xref,
                       skip_zero_check=skip_zero_check)
