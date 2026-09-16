@@ -1719,7 +1719,7 @@ def _build_circular_tube_with_bars(
 
 
 class TestBarBeamContributions(unittest.TestCase):
-    """Tests for CBAR/CBEAM contributions via ``include_bars=True``."""
+    """Tests for CBAR/CBEAM contributions via ``include_lines=True``."""
 
     # ------------------------------------------------------------------
     # unit tests for the rotation helper
@@ -1917,7 +1917,7 @@ class TestBarBeamContributions(unittest.TestCase):
                 tag = f'bar_radius_{name}_'
                 moi_data = cut_and_plot_moi(
                     model, normal_plane, log, ystations, coord_list, x_vector,
-                    include_bars=True,
+                    include_lines=True,
                     dirname=dirname, plot=False, show=False,
                     stop_on_failure=True,
                     cut_data_span_filename='',
@@ -1965,11 +1965,11 @@ class TestBarBeamContributions(unittest.TestCase):
         assert abs(I_B[5]) < 1e-3 * abs(I_B[0]), f'Ixz_B = {I_B[5]}'
 
     # ------------------------------------------------------------------
-    # regression test: include_bars=False ignores bars entirely
+    # regression test: include_lines=False ignores bars entirely
     # ------------------------------------------------------------------
-    def test_include_bars_false_unchanged(self):
+    def test_include_lines_false_unchanged(self):
         """
-        ``include_bars=False`` (the default) gives identical section
+        ``include_lines=False`` (the default) gives identical section
         properties whether or not the model contains CBAR elements.
         """
         log = SimpleLogger(level='warning')
@@ -2001,7 +2001,7 @@ class TestBarBeamContributions(unittest.TestCase):
                                  xzplane=[1., ystations[0], 0.])]
             moi_off = cut_and_plot_moi(
                 model_bars, normal_plane, log, ystations, coords_off, x_vector,
-                include_bars=False, **kwargs)
+                include_lines=False, **kwargs)
 
             coords_on = [CORD2R(6001, rid=0,
                                 origin=[0., ystations[0], 0.],
@@ -2009,14 +2009,14 @@ class TestBarBeamContributions(unittest.TestCase):
                                 xzplane=[1., ystations[0], 0.])]
             moi_on = cut_and_plot_moi(
                 model_bars, normal_plane, log, ystations, coords_on, x_vector,
-                include_bars=True, **kwargs)
+                include_lines=True, **kwargs)
 
         out_off = moi_off[0]
         out_on = moi_on[0]
 
         # bars-off area < bars-on area (bars add area)
         assert out_on['A'][0] > out_off['A'][0], \
-            'include_bars=True should add area'
+            'include_lines=True should add area'
 
         # bars-off should equal a pure-shell model (area ≈ 2*pi*R*t;
         # the 40-segment polygon is ~0.1% short of a true circle)

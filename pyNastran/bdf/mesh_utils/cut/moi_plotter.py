@@ -52,7 +52,6 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      x_vector: list[float],
                      include_lines: bool=False,
                      include_solids: bool=False,
-                     include_bars: bool=False,
                      face_data: Optional[Any]=None,
                      dirname: PathLike='',
                      ifig: int=1,
@@ -102,7 +101,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     area, so ``ExI`` and ``EyI`` carry the real bending stiffness even
     for multi-material sections.
 
-    When ``include_bars=True``, CBAR/CBEAM elements that straddle the
+    When ``include_lines=True``, CBAR/CBEAM elements that straddle the
     cut plane contribute concentrated area, bending stiffness (EA, EI),
     and torsion stiffness (GJ).  Their own bending inertia is rotated
     from the element's local axes into the cut-plane frame.  They do
@@ -134,16 +133,14 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         on the chordwise moment while ``[0,0,1]`` puts I1 on the flapwise
         one.  Must not be parallel to the beam axis.
     include_lines : bool; default=False
-        unused, reserved for future line-element support
-    include_solids : bool; default=False
-        unused, reserved for future solid-element support
-    include_bars : bool; default=False
         when True, CBAR and CBEAM elements that straddle each cut plane
         are included in the EA, EI and GJ totals.  Their own bending
         inertia (I1, I2, I12 from the PBAR/PBEAM) is rotated into the
         cut-plane frame and added on top of the parallel-axis A*d^2 term.
         Torsion uses the element's actual J, not a polar-moment
         approximation.  Bredt-Batho and shear-center remain shell-only.
+    include_solids : bool; default=False
+        unused, reserved for future solid-element support
     face_data : tuple | None; default=None
         pre-computed face topology from ``_setup_faces``; if None it is
         built automatically from the model.  Structure::
@@ -245,7 +242,6 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         stations, coords, normal_plane,
         dirname, face_data=face_data,
         include_lines=include_lines, include_solids=include_solids,
-        include_bars=include_bars,
         debug_vectorize=debug_vectorize,
         debug_v3=debug_v3,
         stop_on_failure=stop_on_failure,
@@ -865,7 +861,6 @@ def _get_station_data(model: BDF,
                       debug_vectorize: bool=True,
                       debug_v3: bool=False,
                       stop_on_failure: bool=False,
-                      include_bars: bool=False,
                       face_data=None) -> tuple[
                          dict[int, tuple[float, float, float, float]],  # thetas
                          #y, dx, dz,
@@ -905,7 +900,8 @@ def _get_station_data(model: BDF,
     plane_atol : float; default=1e-5
         absolute tolerance for the cutting-plane intersection
     include_lines : bool; default=False
-        unused
+        find CBAR/CBEAM elements straddling each cut and pass them to
+        ``calculate_area_moi`` for inclusion in EA, EI and GJ
     include_solids : bool; default=False
         unused
     debug_vectorize : bool; default=True
@@ -914,9 +910,6 @@ def _get_station_data(model: BDF,
         use the experimental v3 cutting path
     stop_on_failure : bool; default=False
         if True, raise when a station cannot be cut; if False, skip it
-    include_bars : bool; default=False
-        find CBAR/CBEAM elements straddling each cut and pass them to
-        ``calculate_area_moi`` for inclusion in EA, EI and GJ
     face_data : tuple | None; default=None
         pre-computed face topology; built automatically when None
 
@@ -1021,7 +1014,7 @@ def _get_station_data(model: BDF,
         moi_filename = None
         log.info(f'calculate_area_moi {icut:d} (station={dy})')
         bar_data = None
-        if include_bars:
+        if include_lines:
             bar_data = _find_bar_beam_crossings(model, coord, log=log)
         (dxi, dzi, lengthi, areai,
          inertiai, Ji,
@@ -1206,7 +1199,7 @@ def plot_inertia(log: SimpleLogger,
     tag : str; default=''
         prefix for legend labels (useful when overlaying multiple cuts)
     normalized_inertia_png_filename : PathLike
-        filename for the normalised-inertia figure
+        filename for the normalized-inertia figure
     amoi_span_png_filename : PathLike
         filename for the area-MOI figure
     e_amoi_span_png_filename : PathLike
