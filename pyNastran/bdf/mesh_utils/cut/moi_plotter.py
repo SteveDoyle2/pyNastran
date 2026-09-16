@@ -52,6 +52,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      x_vector: list[float],
                      include_lines: bool=False,
                      include_solids: bool=False,
+                     torsion_mode: str='auto',
                      face_data: Optional[Any]=None,
                      dirname: PathLike='',
                      ifig: int=1,
@@ -141,6 +142,31 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         approximation.  Bredt-Batho and shear-center remain shell-only.
     include_solids : bool; default=False
         unused, reserved for future solid-element support
+    torsion_mode : str; default='auto'
+        how to compute the shell torsion constant at each station.
+        The three thin-wall methods (``'auto'``, ``'closed'``,
+        ``'open'``) all derive GJ from the wall connectivity:
+
+        - ``'auto'`` — run Bredt-Batho and trust whatever topology
+          it detects (closed or open).
+        - ``'closed'`` — run Bredt-Batho; if a closed cell is found
+          use it.  If the topology appears open (e.g. a rib broke
+          the loop), discard the open-section answer and keep the
+          polar-moment ``G*(Ix+Iz)`` as a safer fallback.
+        - ``'open'`` — force the open-section thin-wall formula
+          ``GJ = sum(G_i * s_i * t_i^3) / 3``.  This is the
+          correct answer for a section with no closed cell (a
+          channel, an I-beam, etc.) but is orders of magnitude
+          too soft for a closed box or tube.
+
+        The fourth mode bypasses thin-wall theory entirely:
+
+        - ``'polar'`` — ``GJ = G * (Ix + Iz)``, the polar second
+          moment of the wall areas.  This is *not* a true torsion
+          constant — it is exact only for a solid circular shaft
+          and overpredicts GJ for every other shape.  It is
+          provided as a quick sanity-check baseline; for real
+          stiffness use one of the three modes above.
     face_data : tuple | None; default=None
         pre-computed face topology from ``_setup_faces``; if None it is
         built automatically from the model.  Structure::
@@ -245,6 +271,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         debug_vectorize=debug_vectorize,
         debug_v3=debug_v3,
         stop_on_failure=stop_on_failure,
+        torsion_mode=torsion_mode,
     )
     (thetas, stations, dx, dz, L, A, I, J, ExI, EyI, GJ, avg_centroid,
      plane_bdf_filenames, plane_bdf_filenames2, ExA, EyA, GA,
@@ -862,7 +889,8 @@ def _get_station_data(model: BDF,
                       debug_vectorize: bool=True,
                       debug_v3: bool=False,
                       stop_on_failure: bool=False,
-                      face_data=None) -> tuple[
+                      face_data=None,
+                      torsion_mode: str='auto') -> tuple[
                          dict[int, tuple[float, float, float, float]],  # thetas
                          #y, dx, dz,
                          Any, Any, Any,
@@ -913,6 +941,10 @@ def _get_station_data(model: BDF,
         if True, raise when a station cannot be cut; if False, skip it
     face_data : tuple | None; default=None
         pre-computed face topology; built automatically when None
+    torsion_mode : str; default='auto'
+        passed to ``calculate_area_moi``; see its docstring for the
+        four accepted values (``'auto'``, ``'closed'``, ``'open'``,
+        ``'polar'``)
 
     Returns
     -------
@@ -1033,7 +1065,8 @@ def _get_station_data(model: BDF,
             model, rods, normal_plane, thetas,
             moi_filename=moi_filename,
             bar_data=bar_data,
-            shell_prop_cache=shell_prop_cache)
+            shell_prop_cache=shell_prop_cache,
+            torsion_mode=torsion_mode)
 
         #print(out)
         y[icut] = dy
@@ -1314,7 +1347,7 @@ def calculate_area_moi(model: BDF,
                        thetas: dict[int, tuple[float, float, float, float]],
                        moi_filename: PathLike='',
                        eid_filename: PathLike='eid_file.csv',
-                       use_bredt_batho: bool=True,
+                       torsion_mode: str='auto',
                        use_shear_center: bool=True,
                        bar_data=None,
                        shell_prop_cache: dict[int, tuple[float, float, float, float, float]] | None = None,
@@ -1350,10 +1383,31 @@ def calculate_area_moi(model: BDF,
         when non-empty, write a diagnostic BDF/CSV of the cut geometry
     eid_filename : PathLike; default='eid_file.csv'
         companion CSV for *moi_filename*
-    use_bredt_batho : bool; default=True
-        compute the torsion constant from the closed-cell topology
-        (Bredt-Batho); when False, fall back to the polar-moment
-        approximation ``GJ = G * (Ix + Iz)``
+    torsion_mode : str; default='auto'
+        how to compute the torsion constant.  The first three modes
+        use thin-wall theory (wall connectivity matters):
+
+        - ``'auto'`` — run Bredt-Batho; use whatever topology the
+          algorithm detects (closed or open).  This is the original
+          default behaviour.
+        - ``'closed'`` — run Bredt-Batho; if a closed cell is found,
+          use it.  If the topology appears open (e.g. a rib broke
+          the loop), **discard** the open-section answer and keep the
+          polar-moment ``G*(Ix+Iz)`` instead, which is a much better
+          approximation for a section the user knows is really
+          closed.  A warning is logged when this fallback triggers.
+        - ``'open'`` — force the open-section thin-wall formula
+          ``GJ = sum(G_i * s_i * t_i^3) / 3``.  Correct for
+          sections with no closed cell (channels, I-beams) but
+          orders of magnitude too soft for a closed box or tube.
+
+        The fourth mode ignores wall connectivity entirely:
+
+        - ``'polar'`` — ``GJ = G * (Ix + Iz)``, the polar second
+          moment of the wall areas.  This is exact only for a solid
+          circular shaft and overpredicts GJ for everything else;
+          it is provided as a sanity-check baseline, not for real
+          stiffness extraction.
     use_shear_center : bool; default=True
         solve the transverse shear flow for the shear center; when
         False, the area centroid is reported for all three reference
@@ -1561,24 +1615,51 @@ def calculate_area_moi(model: BDF,
     # only for a closed circular section; a wing box is far stiffer in the
     # polar measure than it really is in torsion.  Recover the cell topology
     # from the wall connectivity and solve Bredt-Batho instead.
-    if use_bredt_batho and len(xyz1) == len(thickness):
+    #
+    # torsion_mode controls the strategy:
+    #   'auto'   — run Bredt-Batho, trust whatever it finds
+    #   'closed' — run Bredt-Batho; if it says 'open', discard that
+    #              (open GJ is way too soft for a truly closed section)
+    #              and keep the polar-moment GJsum as a safer fallback
+    #   'open'   — force Bredt-Batho to return the open-section formula
+    #   'polar'  — skip Bredt-Batho entirely, keep G*(Ix+Iz)
+    _valid_torsion_modes = ('auto', 'closed', 'open', 'polar')
+    if torsion_mode not in _valid_torsion_modes:
+        raise ValueError(
+            f'torsion_mode={torsion_mode!r} not in {_valid_torsion_modes}')
+
+    if torsion_mode != 'polar' and len(xyz1) == len(thickness):
+        force = 'auto'
+        if torsion_mode == 'open':
+            force = 'open'
         gj_bredt, torsion_method, ncells = bredt_batho_gj(
-            xyz1, xyz2, length, thickness, gxy[:nshell], log=model.log)
+            xyz1, xyz2, length, thickness, gxy[:nshell],
+            log=model.log, force_mode=force)
+
         if torsion_method == 'none':
             model.log.warning(
                 'no usable walls for the torsion calculation; '
                 'falling back to GJ = G*(Ix+Iz)')
+        elif torsion_method == 'open' and torsion_mode == 'closed':
+            # The user said the section is closed, but topology detection
+            # disagrees (e.g. a rib broke the loop).  The open-section
+            # formula would give a GJ orders of magnitude too soft; the
+            # polar moment is a much safer approximation for a section
+            # the user knows is really closed.
+            model.log.warning(
+                'torsion_mode="closed" but no closed cell found in '
+                f'this cut; discarding open-section GJ={gj_bredt:g} '
+                f'and keeping polar G*Ip={GJsum:g} as a safer '
+                'fallback. Consider moving the station off the '
+                'rib/bulkhead plane.')
         else:
             if torsion_method == 'open':
-                # orders of magnitude softer than a closed cell, so this must
-                # not pass silently; the usual cause is a station landing on a
-                # rib/bulkhead plane, where the in-plane element filter drops
-                # the coincident shells and breaks the loop
                 model.log.warning(
                     'no closed cell found in this cut; using the open-section '
                     f'GJ={gj_bredt:g}, which is far softer than a closed '
-                    'section. If the section really is closed, move the '
-                    'station off the rib/bulkhead plane.')
+                    'section. If the section really is closed, try '
+                    'torsion_mode="closed" or move the station off the '
+                    'rib/bulkhead plane.')
             else:
                 model.log.debug(
                     f'GJ: {torsion_method} section, {ncells:d} cell(s); '
@@ -1621,7 +1702,7 @@ def calculate_area_moi(model: BDF,
     if bar_own_J_arr is not None and len(bar_own_J_arr) > 0:
         GJsum += (gxy[nshell:] * bar_own_J_arr).sum()
 
-    if moi_filename is not None:
+    if moi_filename:
         dirname = os.path.dirname(moi_filename)
         eid_filename = os.path.join(dirname, eid_filename)
         _write_moi_file(

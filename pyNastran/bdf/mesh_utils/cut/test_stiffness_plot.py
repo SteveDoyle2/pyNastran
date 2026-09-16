@@ -2025,5 +2025,122 @@ class TestBarBeamContributions(unittest.TestCase):
             (out_off['A'][0], expected_shell_area)
 
 
+class TestBredtBatho(unittest.TestCase):
+    """Direct tests for the Bredt-Batho torsion solver."""
+
+    @staticmethod
+    def _arc_segments(x, z):
+        """Turn a polyline (x, z) into (p1, p2) wall-segment arrays."""
+        p1 = np.column_stack([x[:-1], np.zeros(len(x) - 1), z[:-1]])
+        p2 = np.column_stack([x[1:],  np.zeros(len(x) - 1), z[1:]])
+        return p1, p2
+
+    def test_single_circle(self):
+        """Single closed circle: GJ should match 2*pi*R^3*G*t."""
+        from pyNastran.bdf.mesh_utils.cut.torsion import bredt_batho_gj
+        R = 10.0
+        n = 80
+        t = 0.1
+        G = 1e7
+        theta = np.linspace(0, 2 * np.pi, n + 1)
+        x = R * np.cos(theta)
+        z = R * np.sin(theta)
+        p1, p2 = self._arc_segments(x, z)
+        length = np.linalg.norm(p2 - p1, axis=1)
+        thickness = np.full(n, t)
+        gxy = np.full(n, G)
+
+        gj, method, ncells = bredt_batho_gj(p1, p2, length, thickness, gxy)
+        gj_exact = 2 * np.pi * R ** 3 * G * t
+        assert method == 'closed', method
+        assert ncells == 1, ncells
+        assert np.isclose(gj, gj_exact, rtol=2e-3), (gj, gj_exact)
+
+    def test_double_bubble(self):
+        """Two overlapping circles sharing a common chord (double bubble).
+
+        The solver must find 2 closed cells and couple the shear flows
+        through the shared wall.  GJ should be less than twice the
+        single-circle value because the shared wall adds compliance.
+        """
+        from pyNastran.bdf.mesh_utils.cut.torsion import bredt_batho_gj
+        R = 10.0
+        d = 7.0       # centre offset; d < R so circles overlap
+        n_arc = 60     # segments per arc
+        n_wall = 10    # segments on the common chord
+        t = 0.1
+        G = 1e7
+
+        x_junc = np.sqrt(R ** 2 - d ** 2)
+
+        # Upper arc (centre at 0, +d): right junction -> left junction CCW
+        theta_jr = np.arctan2(-d, x_junc)
+        theta_jl = np.arctan2(-d, -x_junc)
+        theta_u = np.linspace(theta_jr, theta_jl, n_arc + 1)
+        xu = R * np.cos(theta_u)
+        zu = R * np.sin(theta_u) + d
+
+        # Lower arc (centre at 0, -d): left junction -> right junction CW
+        theta_lr = np.arctan2(d, x_junc)
+        theta_ll = np.arctan2(d, -x_junc)
+        theta_l = np.linspace(theta_ll, theta_lr - 2 * np.pi, n_arc + 1)
+        xl = R * np.cos(theta_l)
+        zl = R * np.sin(theta_l) - d
+
+        # Common wall: straight chord from right junction to left junction
+        x_wall = np.linspace(x_junc, -x_junc, n_wall + 1)
+        z_wall = np.zeros(n_wall + 1)
+
+        p1u, p2u = self._arc_segments(xu, zu)
+        p1l, p2l = self._arc_segments(xl, zl)
+        p1w, p2w = self._arc_segments(x_wall, z_wall)
+
+        xyz1 = np.vstack([p1u, p1l, p1w])
+        xyz2 = np.vstack([p2u, p2l, p2w])
+        length = np.linalg.norm(xyz2 - xyz1, axis=1)
+        nw = len(xyz1)
+        thickness = np.full(nw, t)
+        gxy = np.full(nw, G)
+
+        gj, method, ncells = bredt_batho_gj(xyz1, xyz2, length, thickness, gxy)
+        assert method == 'closed', method
+        assert ncells == 2, ncells
+
+        # GJ must be positive and less than 2x the single-circle value
+        # (shared wall compliance reduces GJ relative to two independent cells)
+        gj_single = 2 * np.pi * R ** 3 * G * t
+        assert gj > 0., gj
+        assert gj < 2 * gj_single, (gj, 2 * gj_single)
+
+    def test_force_mode_open(self):
+        """force_mode='open' must return the open-section GJ even for a
+        closed ring."""
+        from pyNastran.bdf.mesh_utils.cut.torsion import bredt_batho_gj
+        R = 10.0
+        n = 40
+        t = 0.1
+        G = 1e7
+        theta = np.linspace(0, 2 * np.pi, n + 1)
+        x = R * np.cos(theta)
+        z = R * np.sin(theta)
+        p1, p2 = self._arc_segments(x, z)
+        length = np.linalg.norm(p2 - p1, axis=1)
+        thickness = np.full(n, t)
+        gxy = np.full(n, G)
+
+        gj_auto, method_auto, _ = bredt_batho_gj(
+            p1, p2, length, thickness, gxy, force_mode='auto')
+        gj_open, method_open, _ = bredt_batho_gj(
+            p1, p2, length, thickness, gxy, force_mode='open')
+
+        assert method_auto == 'closed', method_auto
+        assert method_open == 'open', method_open
+        # open-section GJ is orders of magnitude smaller than closed
+        assert gj_open < gj_auto * 0.01, (gj_open, gj_auto)
+        # open-section value should match sum(G*s*t^3)/3
+        gj_open_exact = (G * length * t ** 3).sum() / 3.
+        assert np.isclose(gj_open, gj_open_exact), (gj_open, gj_open_exact)
+
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

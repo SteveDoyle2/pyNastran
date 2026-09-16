@@ -154,7 +154,8 @@ def bredt_batho_gj(xyz1: np.ndarray,
                    gxy: np.ndarray,
                    iaxes: tuple[int, int]=(0, 2),
                    weld_tol: float=1e-4,
-                   log: Optional[Any]=None) -> tuple[float, str, int]:
+                   log: Optional[Any]=None,
+                   force_mode: str='auto') -> tuple[float, str, int]:
     """
     Torsional stiffness GJ of a thin-walled section.
 
@@ -170,6 +171,16 @@ def bredt_batho_gj(xyz1: np.ndarray,
     weld_tol : float; default=1e-4
         node welding tolerance as a fraction of the median wall length
     log : logger; optional
+    force_mode : str; default='auto'
+        override the automatic open/closed classification:
+
+        - ``'auto'`` — detect from topology (original behaviour)
+        - ``'closed'`` — force the Bredt-Batho closed-cell answer
+          even when topology detection says open.  If no closed
+          cells can be found at all, fall back to open-section GJ
+          and log a warning.
+        - ``'open'`` — always return the open-section
+          ``GJ = sum(G*s*t^3)/3`` regardless of topology
 
     Returns
     -------
@@ -196,6 +207,10 @@ def bredt_batho_gj(xyz1: np.ndarray,
     # open-section value; also the fallback when nothing closes
     gj_open = float((gxy * length * thickness ** 3).sum() / 3.)
 
+    # honour the forced mode early when possible
+    if force_mode == 'open':
+        return gj_open, 'open', 0
+
     tol = weld_tol * float(np.median(length))
     if tol <= 0.:  # pragma: no cover
         return gj_open, 'open', 0
@@ -205,11 +220,19 @@ def bredt_batho_gj(xyz1: np.ndarray,
     adjacency, compliance = _build_graph(nid1, nid2, xy, delta)
     _prune_dangling(adjacency, compliance)
     if not compliance:
+        if force_mode == 'closed' and log is not None:
+            log.warning(
+                'torsion_mode="closed" but no wall graph survived pruning; '
+                'falling back to open-section GJ')
         return gj_open, 'open', 0
 
     faces = _find_faces(adjacency, xy)
     cells = [f for f in faces if _signed_area(f, xy) > 0.]
     if not cells:
+        if force_mode == 'closed' and log is not None:
+            log.warning(
+                'torsion_mode="closed" but no closed cells found in the '
+                'topology; falling back to open-section GJ')
         return gj_open, 'open', 0
 
     ncell = len(cells)
