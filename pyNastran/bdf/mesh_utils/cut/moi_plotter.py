@@ -40,7 +40,7 @@ from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     # is_element_cut,
 )
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.cards.elements.shell import CTRIA3, CQUAD4
+    from pyNastran.bdf.cards.elements.shell import CTRIA3, CQUAD4, CTRIA6, CQUAD8
 Rods = tuple[np.ndarray, np.ndarray, np.ndarray]
 
 
@@ -196,7 +196,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
     thetas_csv_filename : PathLike; default='thetas.csv'
         per-element material-angle diagnostic file
     normalized_inertia_png_filename : PathLike; default='normalized_inertia_vs_span.png'
-        filename for the normalised inertia plot
+        filename for the normalized inertia plot
     area_span_png_filename : PathLike; default='area_vs_span.png'
         filename for the area-vs-span plot
     amoi_span_png_filename : PathLike; default='amoi_vs_span.png'
@@ -785,7 +785,8 @@ def _write_beam_model(neutral_axis: np.ndarray,
         nids = [int(nid[ielem-1]), int(nid[ielem])]
         g0 = None
         if offset is None:
-            wa = wb = None
+            wa = None
+            wb = None
         else:
             # GA+WA -> GB+WB is the elastic axis, so this puts the element
             # back on the shear center line no matter where the GRIDs sit
@@ -1019,7 +1020,7 @@ def _get_station_data(model: BDF,
         # eid, nid, inid1, inid2
         #print(unique_geometry_array)
         #moi_filename = 'amoi_%i.bdf' % i
-        moi_filename = None
+        moi_filename = ''
         log.info(f'calculate_area_moi {icut:d} (station={dy})')
         bar_data = None
         if include_lines:
@@ -1317,9 +1318,11 @@ def calculate_area_moi(model: BDF,
                        use_shear_center: bool=True,
                        bar_data=None,
                        shell_prop_cache: dict[int, tuple[float, float, float, float, float]] | None = None,
-                       ) -> tuple[np.ndarray, np.ndarray, np.ndarray,               # dxi, dyi, total_area,
+                       ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray,   # dxi, dyi, length, total_area,
                                   np.ndarray, np.ndarray,                           # Isum, Jsum,
-                                  np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # ExIsum, EyIsum, GJsum, avg_centroid
+                                  np.ndarray, np.ndarray, np.ndarray,               # ExIsum, EyIsum, GJsum, avg_centroid
+                                  np.ndarray, np.ndarray, np.ndarray,               # ExAi, EyAi, GAi
+                                  np.ndarray, np.ndarray]:                          # neutral_axisi, shear_centeri
     """
     Integrate section properties at a single cut.
 
@@ -1361,10 +1364,12 @@ def calculate_area_moi(model: BDF,
         into the shell data before integration.  Bar elements do NOT
         enter the Bredt-Batho or shear-center solves.
     shell_prop_cache : dict | None; default=None
-        pre-computed ``{eid: (thickness, theta_deg, Ex, Ey, Gxy)}``
-        from ``_precompute_shell_props``.  Eliminates the expensive
-        per-element ``material_coordinate_system`` and
-        ``get_Ainv_equivalent_pshell`` calls inside the station loop.
+        lazily-populated ``{eid: (thickness, theta_deg, Ex, Ey, Gxy)}``
+        cache.  When a dict is passed, each element's material
+        properties are computed once on first encounter and reused
+        for subsequent stations, eliminating repeated
+        ``material_coordinate_system`` / ``get_Ainv_equivalent_pshell``
+        calls.
 
     Returns
     -------
@@ -1407,11 +1412,6 @@ def calculate_area_moi(model: BDF,
     assert isinstance(rod_eid_nodes, np.ndarray), type(rod_eid_nodes)
     assert isinstance(rod_nids, np.ndarray), type(rod_nids)
     assert isinstance(rod_xyzs, np.ndarray), type(rod_xyzs)
-
-    if 0:
-        print(f'rod_eid_nodes:\n{rod_eid_nodes}')
-        print(f'rod_nids:\n{rod_nids}')
-        print(f'rod_xyzs:\n{rod_xyzs}')
 
     eids = np.abs(rod_eid_nodes[:, 0])
     neids = len(eids)
@@ -1688,14 +1688,15 @@ def _write_moi_file(moi_filename: PathLike,
             eid_file.write(fmt % (eidi, pidi, areai, thicknessi, Ii[0], Ii[1], Ii[2]))
 
 
-def get_element_inertias(model: BDF,
-                         normal_plane: np.ndarray,
-                         thetas: dict[int, tuple[float, float, float, float]],
-                         eids: list[int],
-                         length: list[float],
-                         centroid: list[np.ndarray],
-                         shell_prop_cache: dict[int, tuple[float, float, float, float, float]] | None = None,
-                         ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def get_element_inertias(
+        model: BDF,
+        normal_plane: np.ndarray,
+        thetas: dict[int, tuple[float, float, float, float]],
+        eids: list[int],
+        length: list[float],
+        centroid: list[np.ndarray],
+        shell_prop_cache: dict[int, tuple[float, float, float, float, float]] | None = None,
+        ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Extract per-element thickness, area, and equivalent moduli for every
     shell element in the cut ring.
@@ -1723,10 +1724,9 @@ def get_element_inertias(model: BDF,
     centroid : (n, 3) float ndarray
         segment centroids
     shell_prop_cache : dict or None
-        pre-computed ``{eid: (thickness, theta_deg, Ex, Ey, Gxy)}``
-        from ``_precompute_shell_props``.  When provided the expensive
-        per-element ``material_coordinate_system`` and
-        ``get_Ainv_equivalent_pshell`` calls are skipped.
+        lazily-populated ``{eid: (thickness, theta_deg, Ex, Ey, Gxy)}``
+        cache.  When a dict is passed, each element is computed at
+        most once; subsequent stations get a cache hit.
 
     Returns
     -------
@@ -1783,80 +1783,8 @@ def get_element_inertias(model: BDF,
 _SHELL_TYPES = frozenset(['CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8'])
 
 
-def _precompute_shell_props(
-        model: BDF,
-        normal_plane: np.ndarray,
-        candidate_eids: set[int] | None = None,
-        ) -> dict[int, tuple[float, float, float, float, float]]:
-    """
-    Pre-compute the thickness and equivalent moduli for shell elements.
 
-    The result is a cache ``{eid: (thickness, theta_deg, Ex, Ey, Gxy)}``
-    that is valid for all stations sharing the same *normal_plane*.
-    Elements whose normals are nearly in-plane with the cut
-    (``|cos θ| > 0.9``) are stored with zeroed properties so they
-    contribute no stiffness, matching the behaviour of
-    ``_get_shell_inertia``.
-
-    When *candidate_eids* is supplied, only those elements are
-    processed (typically the set of element ids that appear in the
-    triangulated face mesh).  This avoids computing expensive material
-    properties for elements that can never be intersected by any
-    station.
-
-    This is the single biggest performance win in the module: the
-    ``material_coordinate_system`` and ``get_Ainv_equivalent_pshell``
-    calls are expensive (~0.3 ms each), and the per-element material
-    properties do not depend on *which* station the cut is at — only
-    the segment length changes.
-    """
-    normal_plane_vector = normal_plane.copy().reshape((3, 1))
-    cache: dict[int, tuple[float, float, float, float, float]] = {}
-
-    for eid, element in model.elements.items():
-        if element.type not in _SHELL_TYPES:
-            continue
-        if candidate_eids is not None and eid not in candidate_eids:
-            continue
-
-        pid_ref = element.pid_ref
-        thicknessi = element.Thickness()
-
-        dxyz, centroid_unused, imat, unused_jmat, element_normal = \
-            element.material_coordinate_system()
-
-        n1, n2, n3 = element_normal
-        R1 = np.array([
-            [0., -n3, n2],
-            [n3, 0., -n1],
-            [-n2, n1, 0.],
-        ], dtype='float64')
-        R2 = np.array([
-            [1 - n1 ** 2, -n1 * n2, -n1 * n3],
-            [-n1 * n2, 1 - n2 ** 2, -n2 * n3],
-            [-n1 * n3, -n2 * n3, 1 - n3 ** 2],
-        ])
-        imat_col = imat.reshape(3, 1)
-        b = np.linalg.multi_dot([normal_plane_vector.T, R1, imat_col])
-        c = np.linalg.multi_dot([normal_plane_vector.T, R2, imat_col])
-        imat_rotation_angle = np.arctan2(b, c).item()
-        imat_rotation_angle_deg = np.degrees(imat_rotation_angle)
-        if imat_rotation_angle_deg <= -90.:
-            imat_rotation_angle_deg += 180.
-        elif imat_rotation_angle_deg > 90.:
-            imat_rotation_angle_deg -= 180.
-
-        abs_cos_theta = abs(normal_plane @ element_normal)
-        if abs_cos_theta > 0.9:  # <25.8 degrees off the cut → in-plane element
-            cache[eid] = (0., 0., 0., 0., 0.)
-        else:
-            Ex, Ey, Gxy, nu_xy = pid_ref.get_Ainv_equivalent_pshell(
-                imat_rotation_angle_deg, thicknessi)
-            cache[eid] = (thicknessi, imat_rotation_angle_deg, Ex, Ey, Gxy)
-    return cache
-
-
-def _get_shell_inertia(element: CTRIA3 | CQUAD4,
+def _get_shell_inertia(element: CTRIA3 | CQUAD4 | CTRIA6 | CQUAD8,
                        normal_plane: np.ndarray,
                        normal_plane_vector: np.ndarray,
                        lengthi: float,) -> tuple[float, float, float,
@@ -1864,8 +1792,8 @@ def _get_shell_inertia(element: CTRIA3 | CQUAD4,
     """
     Parameters
     ----------
-    element : CTRIA3 / CQUAD4
-        the object to cut
+    element : CTRIA3 / CQUAD4 / CTRIA6 / CQUAD8
+        the shell element being cut
     normal_plane : (3,) float ndarray
         the normal vector of the cutting plane (should be roughly normal to the element face)
     normal_plane_vector : (3,1) float ndarray
@@ -2312,6 +2240,7 @@ def plot_compare_inertia(log: SimpleLogger,
     data = []
     for ifile, (cut_data_span_filename, tag, linestyle) in enumerate(csv_filenames):
         is_last_file = (ifile == ilast_file)
+        linestyle_marker = {'linestyle': linestyle, 'marker': marker}
         if is_last_file:
             # last file
             save = save0
@@ -2341,7 +2270,7 @@ def plot_compare_inertia(log: SimpleLogger,
         ifig = 1
         fig = plt.figure(ifig)
         ax = fig.gca()
-        ax.plot(station, A, 'r', marker=marker, label=f'{tag}Area', linestyle=linestyle)
+        ax.plot(station, A, 'r', label=f'{tag}Area', **linestyle_marker)
         ax.grid(True)
         ax.set_xlabel(span_label)
         ax.set_ylabel('Area, A ($in^2$)')
@@ -2355,13 +2284,13 @@ def plot_compare_inertia(log: SimpleLogger,
         #-------------------------------------------------------
         fig = plt.figure(ifig)
         ax = fig.gca()
-        ax.semilogy(station, Ixx, 'C0', linestyle=linestyle, marker=marker, label=f'{tag}I{xx}')
-        # ax.semilogy(station, Iyy, 'C1', linestyle=linestyle, marker=marker, label='Iyy')
-        ax.semilogy(station, Izz, 'C2', linestyle=linestyle, marker=marker, label=f'{tag}I{zz}')
-        # ax.semilogy(station, Ixy, 'C3', linestyle=linestyle, marker=marker, label='Ixy')
-        # ax.semilogy(station, Iyz, 'C4', linestyle=linestyle, marker=marker, label='Iyz')
-        ax.semilogy(station, np.abs(Ixz), 'C5', linestyle=linestyle, marker=marker, label=f'{tag}I{xz}')
-        ax.semilogy(station, J, 'k', linestyle=linestyle, marker=marker, label=f'{tag}J')
+        ax.semilogy(station, Ixx, 'C0', label=f'{tag}I{xx}', **linestyle_marker)
+        # ax.semilogy(station, Iyy, 'C1', label='Iyy', **linestyle_marker)
+        ax.semilogy(station, Izz, 'C2', label=f'{tag}I{zz}', **linestyle_marker)
+        # ax.semilogy(station, Ixy, 'C3', label='Ixy', **linestyle_marker)
+        # ax.semilogy(station, Iyz, 'C4', label='Iyz', **linestyle_marker)
+        ax.semilogy(station, np.abs(Ixz), 'C5', label=f'{tag}I{xz}', **linestyle_marker)
+        ax.semilogy(station, J, 'k', label=f'{tag}J', **linestyle_marker)
         ax.grid(True)
         ax.set_xlabel(span_label)
         ax.set_ylabel('Area MOI, I ($in^4$)')
@@ -2374,13 +2303,13 @@ def plot_compare_inertia(log: SimpleLogger,
 
         fig = plt.figure(ifig)
         ax = fig.gca()
-        ax.plot(station, Ixx, 'C0', linestyle=linestyle, marker=marker, label=f'{tag}I{xx}')
-        # ax.plot(station, Iyy, 'C1', linestyle=linestyle, marker=marker, label='Iyy')
-        ax.plot(station, Izz, 'C2', linestyle=linestyle, marker=marker, label=f'{tag}I{zz}')
-        # ax.plot(station, Ixy, 'C3', linestyle=linestyle, marker=marker, label='Ixy')
-        # ax.plot(station, Iyz, 'C4', linestyle=linestyle, marker=marker, label='Iyz')
-        ax.plot(station, Ixz, 'C5', linestyle=linestyle, marker=marker, label=f'{tag}I{xz}')
-        ax.plot(station, J, 'k', linestyle=linestyle, marker=marker, label=f'{tag}J')
+        ax.plot(station, Ixx, 'C0', label=f'{tag}I{xx}', **linestyle_marker)
+        # ax.plot(station, Iyy, 'C1', label='Iyy', **linestyle_marker)
+        ax.plot(station, Izz, 'C2', label=f'{tag}I{zz}', **linestyle_marker)
+        # ax.plot(station, Ixy, 'C3', label='Ixy', **linestyle_marker)
+        # ax.plot(station, Iyz, 'C4', label='Iyz', **linestyle_marker)
+        ax.plot(station, Ixz, 'C5', label=f'{tag}I{xz}', **linestyle_marker)
+        ax.plot(station, J, 'k', label=f'{tag}J', **linestyle_marker)
         ax.grid(True)
         ax.set_xlabel(span_label)
         ax.set_ylabel('Area MOI, I ($in^4$)')
@@ -2395,7 +2324,7 @@ def plot_compare_inertia(log: SimpleLogger,
         # ifig_EyIzz = ifig
         fig = plt.figure(ifig)
         ax = fig.gca()
-        ax.plot(station, ExI[:, 2], color='r', linestyle=linestyle, marker=marker, label=f'{tag}E{y}*I{zz}')  # Ey*Izz
+        ax.plot(station, ExI[:, 2], color='r', label=f'{tag}E{y}*I{zz}', **linestyle_marker)  # Ey*Izz
         #ax.plot(station, I[:, 0], 'bo-', label='Ixx')
         ax.grid(True)
         ax.set_xlabel(span_label)
@@ -2411,7 +2340,7 @@ def plot_compare_inertia(log: SimpleLogger,
         # ifig_GJ = ifig
         fig = plt.figure(ifig)
         ax = fig.gca()
-        ax.plot(station, GJ, color='k', linestyle=linestyle, marker=marker, label=f'{tag}G{xy}*J{xz}')
+        ax.plot(station, GJ, color='k', label=f'{tag}G{xy}*J{xz}', **linestyle_marker)
         #ax.plot(station, I[:, 0], 'b-', marker=marker, label='Ixx')
         ax.grid(True)
         ax.set_xlabel(span_label)
@@ -2426,9 +2355,9 @@ def plot_compare_inertia(log: SimpleLogger,
         #---------------------------------------------------
         fig = plt.figure(ifig)
         ax = fig.gca()
-        ax.plot(station, GJ, 'k', linestyle=linestyle, marker=marker, label=f'{tag}G{xy}*J{xz}')
-        ax.plot(station, ExI[:, 0], 'r', linestyle=linestyle, marker=marker, label=f'{tag}E{y}*I{xx}')
-        ax.plot(station, EyA, 'b', linestyle=linestyle, marker=marker, label=f'{tag}E{y}*A{y}')
+        ax.plot(station, GJ, 'k', label=f'{tag}G{xy}*J{xz}', **linestyle_marker)
+        ax.plot(station, ExI[:, 0], 'r', label=f'{tag}E{y}*I{xx}', **linestyle_marker)
+        ax.plot(station, EyA, 'b', label=f'{tag}E{y}*A{y}', **linestyle_marker)
         ax.grid(True)
         ax.set_xlabel(span_label)
         ax.set_ylabel(f'Stiffness: G{xy}*J{xz}')
@@ -2441,9 +2370,9 @@ def plot_compare_inertia(log: SimpleLogger,
         #---------------------------------------------------
         fig = plt.figure(ifig)
         ax = fig.gca()
-        ax.plot(station, G, color='k', linestyle=linestyle, marker=marker, label=f'G{xy}')
-        ax.plot(station, Ex, color='r', linestyle=linestyle, marker=marker, label=f'E{y}')  # this is really flipped
-        ax.plot(station, Ey, color='b', linestyle=linestyle, marker=marker, label=f'E{x}')  # this is really flipped
+        ax.plot(station, G, color='k', label=f'G{xy}', **linestyle_marker)
+        ax.plot(station, Ex, color='r', label=f'E{y}', **linestyle_marker)  # flipped
+        ax.plot(station, Ey, color='b', label=f'E{x}', **linestyle_marker)  # flipped
         ax.grid(True)
         ax.set_xlabel(span_label)
         ax.set_ylabel(f'Effective Modulus: E{x}, E{z}, G{xy}')
@@ -2457,8 +2386,8 @@ def plot_compare_inertia(log: SimpleLogger,
         #-------------------------------------------------------
         fig = plt.figure(ifig)
         ax = fig.gca()
-        ax.plot(station, avg_centroid[:, 0], color='r', linestyle=linestyle, marker=marker, label=f'{tag}xcg')
-        ax.plot(station, avg_centroid[:, 2], color='b', linestyle=linestyle, marker=marker, label=f'{tag}zcg')
+        ax.plot(station, avg_centroid[:, 0], color='r', label=f'{tag}xcg', **linestyle_marker)
+        ax.plot(station, avg_centroid[:, 2], color='b', label=f'{tag}zcg', **linestyle_marker)
         ax.grid(True)
         ax.set_xlabel(span_label)
         ax.set_ylabel('Centroid (in)')
@@ -2510,7 +2439,7 @@ def plot_compare_inertia(log: SimpleLogger,
         ax2 = ax.twinx()
         # 1 / 2 will give us less
         ExA_ratio = ExA1[istation1] / ExA2[istation2] - 1
-        ax.plot(station1, ExA1, color='r', linestyle='-', marker=marker, label=f'{tag1}E{y}*A{y}')  # this is really Ey*Ay; just some bad names upstream
+        ax.plot(station1, ExA1, color='r', linestyle='-', marker=marker, label=f'{tag1}E{y}*A{y}')  # Ey*Ay; just some bad names upstream
         ax.plot(station2, ExA2, color='b', linestyle='--', marker=marker, label=f'{tag2}E{y}*A{y}')
         ax2.plot(common_station, ExA_ratio*100, color='k', linestyle='-', marker=marker, label='ratio')  # Ey*A
         ax.grid()
@@ -2528,7 +2457,7 @@ def plot_compare_inertia(log: SimpleLogger,
         # 1 / 2 will give us less
         ax.grid()
         ExI_ratio = ExI1[istation1, 2] / ExI2[istation2, 2] - 1
-        ax.plot(station1, ExI1[:, 2], color='r', linestyle='-', marker=marker, label=f'{tag1}E{y}*I{xx}')  # this is really Ey*Ixx; just some bad names upstream
+        ax.plot(station1, ExI1[:, 2], color='r', linestyle='-', marker=marker, label=f'{tag1}E{y}*I{xx}')  # Ey*Ixx; just some bad names upstream
         ax.plot(station2, ExI2[:, 2], color='b', linestyle='--', marker=marker, label=f'{tag2}E{y}*I{xx}')
         ax2.plot(common_station, ExI_ratio*100, color='k', linestyle='-', marker=marker, label='ratio')
         if ylim_EyIzz_ratio:
