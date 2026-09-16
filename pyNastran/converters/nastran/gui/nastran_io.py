@@ -2462,7 +2462,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         solid face)
         """
         fdtype = 'float32'
-        # quit out if we're going to make pressure plots anyways
+        # quit out if we're going to make pressure plots anyway
         #if self.plot_applied_loads:
             #return icase
 
@@ -3930,14 +3930,15 @@ def plotels_to_groups(model: BDF) -> tuple[
 
 
 def is_early_return_aero(self: NastranIO, model: OP2) -> bool:
+    """identify an aero model"""
     early_return_aero = False
     # for aero identification
-    nnode = len(self.node_ids)
+    # nnode = len(self.node_ids)
     nelement = len(self.element_ids)
 
     trim_results = model.op2_results.trim
     if trim_results.aero_pressure:
-        model.log.error(f'fem: nnode={nnode} nelement={nelement}')
+        # model.log.error(f'fem: nnode={nnode} nelement={nelement}')
         for key, case in trim_results.aero_pressure.items():
             # case.cp
             # case.pressure
@@ -3966,7 +3967,7 @@ def load_nastran_results_aero(results_filename: PathLike,
     results_filename = str(results_filename).strip(r'.\\')
     trim_results = model.op2_results.trim
     results_form = []
-    if 0:
+    if 0:  # pragma: no cover
         # TODO: extract trim deflections to view aero panel results
         for key, case in model.displacements.items():
             # (8, 1, 1, 0, 0, '', '')
@@ -3984,7 +3985,6 @@ def load_nastran_results_aero(results_filename: PathLike,
             print(case.get_stats())
             txyz = case.data[0, :, :3]
             print(f'txyz.shape={txyz.shape}; nnodes={len(nodes)}')
-            asedfed
 
 
     for key, aero_pressure in trim_results.aero_pressure.items():

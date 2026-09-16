@@ -28,7 +28,8 @@ from pyNastran.bdf.bdf import read_bdf, BDF, CORD2R
 from cpylog import SimpleLogger
 
 from pyNastran.bdf.mesh_utils.cut.moi_plotter import (
-    cut_and_plot_moi, plot_inertia, _get_shell_inertia, load_moi_data)
+    cut_and_plot_moi, plot_inertia, _get_shell_inertia, load_moi_data,
+    _find_bar_beam_crossings, _bar_own_I_in_cut_frame, _get_bar_section_props)
 from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     _setup_faces)
 
@@ -1648,6 +1649,380 @@ def fadd_coords(model: BDF, coords: list,
         assert cid not in model.coords
         model.coords[cid] = coord
     model.write_bdf(bdf_filename_out)
+
+
+def _build_circular_tube_with_bars(
+        log: SimpleLogger,
+        R: float, t: float, span: float,
+        nspan: int, ntheta: int,
+        E: float, nu: float,
+        bar_angles_deg: list[float],
+        A_bar: float, i1_bar: float, i2_bar: float,
+        i12_bar: float, j_bar: float,
+        pid_shell: int = 11, pid_bar: int = 21, mid: int = 12,
+        ) -> BDF:
+    """
+    Circular tube along +y with CBAR spar caps at given angular positions.
+
+    Each bar spans the full tube length from y=0 to y=span and gets an
+    orientation vector tangent to the circle at its angular position, i.e.
+    ``v = (-sin(theta), 0, cos(theta))``.
+    """
+    model = BDF(log=log)
+    model.add_mat1(mid, E=E, G=None, nu=nu)
+    model.add_pshell(pid_shell, mid1=mid, t=t, mid2=mid, mid3=mid)
+    model.add_pbar(pid_bar, mid, A=A_bar, i1=i1_bar, i2=i2_bar,
+                   i12=i12_bar, j=j_bar)
+
+    theta = np.linspace(0., 2 * np.pi, ntheta, endpoint=False)
+    stations = np.linspace(0., span, nspan + 1)
+
+    def nid(itheta: int, istation: int) -> int:
+        return istation * ntheta + (itheta % ntheta) + 1
+
+    for istation, ys in enumerate(stations):
+        for ith in range(ntheta):
+            model.add_grid(nid(ith, istation),
+                           [R * np.cos(theta[ith]), ys, R * np.sin(theta[ith])])
+
+    eid = 1
+    for istation in range(nspan):
+        for ith in range(ntheta):
+            model.add_cquad4(eid, pid_shell, [
+                nid(ith, istation), nid(ith + 1, istation),
+                nid(ith + 1, istation + 1), nid(ith, istation + 1)])
+            eid += 1
+
+    nid_base = (nspan + 1) * ntheta + 100
+    for i, angle_deg in enumerate(bar_angles_deg):
+        th = np.radians(angle_deg)
+        xb = R * np.cos(th)
+        zb = R * np.sin(th)
+        vx = -np.sin(th)
+        vz = np.cos(th)
+        # if tangent is near-zero in one component, keep it exact
+        if abs(vx) < 1e-14:
+            vx = 0.
+        if abs(vz) < 1e-14:
+            vz = 0.
+
+        nid_a = nid_base + 2 * i
+        nid_b = nid_a + 1
+        bar_eid = eid + i
+        model.add_grid(nid_a, [xb, 0., zb])
+        model.add_grid(nid_b, [xb, span, zb])
+        model.add_cbar(bar_eid, pid_bar, [nid_a, nid_b],
+                       x=[vx, 0., vz], g0=None, offt='GGG')
+
+    model.cross_reference()
+    return model
+
+
+class TestBarBeamContributions(unittest.TestCase):
+    """Tests for CBAR/CBEAM contributions via ``include_bars=True``."""
+
+    # ------------------------------------------------------------------
+    # unit tests for the rotation helper
+    # ------------------------------------------------------------------
+    def test_bar_own_I_rotation(self):
+        """
+        ``_bar_own_I_in_cut_frame`` rotates a 2:1 rectangular section
+        correctly at 0deg, 90deg, and 45deg orientations.
+        """
+        I1 = 2. / 3.   # strong axis
+        I2 = 1. / 6.   # weak axis
+        ga = np.array([0., 0., 0.])
+        gb = np.array([0., 100., 0.])
+        plane_i = np.array([1., 0., 0.])
+        plane_k = np.array([0., 0., 1.])
+
+        class _Elem:
+            g0 = None
+            x = [1., 0., 0.]
+
+        elem = _Elem()
+
+        # v = [1,0,0]:  y_e = +x, z_e = -z  → ixx = I1, izz = I2
+        elem.x = [1., 0., 0.]
+        ixx, izz, ixz = _bar_own_I_in_cut_frame(
+            I1, I2, 0., ga, gb, elem, plane_i, plane_k, None)
+        assert np.allclose(ixx, I1), f'ixx={ixx}'
+        assert np.allclose(izz, I2), f'izz={izz}'
+        assert np.allclose(ixz, 0.), f'ixz={ixz}'
+
+        # v = [0,0,1]:  y_e = +z, z_e = +x  → ixx = I2, izz = I1
+        elem.x = [0., 0., 1.]
+        ixx, izz, ixz = _bar_own_I_in_cut_frame(
+            I1, I2, 0., ga, gb, elem, plane_i, plane_k, None)
+        assert np.allclose(ixx, I2), f'ixx={ixx}'
+        assert np.allclose(izz, I1), f'izz={izz}'
+        assert np.allclose(ixz, 0.), f'ixz={ixz}'
+
+        # v = [1,0,1]/sqrt(2):  45deg tilt → ixx = izz = (I1+I2)/2
+        elem.x = [1., 0., 1.]
+        ixx, izz, ixz = _bar_own_I_in_cut_frame(
+            I1, I2, 0., ga, gb, elem, plane_i, plane_k, None)
+        avg = (I1 + I2) / 2.
+        diff = (I1 - I2) / 2.
+        assert np.allclose(ixx, avg), f'ixx={ixx} expected {avg}'
+        assert np.allclose(izz, avg), f'izz={izz} expected {avg}'
+        # trace invariant: ixx + izz = I1 + I2
+        assert np.allclose(ixx + izz, I1 + I2)
+        # non-zero product of inertia
+        assert abs(ixz) > 0.1, f'ixz={ixz} should be non-zero'
+
+    # ------------------------------------------------------------------
+    # unit test for crossing detection
+    # ------------------------------------------------------------------
+    def test_find_bar_crossings(self):
+        """``_find_bar_beam_crossings`` locates bars straddling the cut plane."""
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=False, log=log)
+        mid, pid = 1, 1
+        E, nu = 1e7, 0.3
+        model.add_mat1(mid, E=E, G=None, nu=nu)
+        model.add_pbar(pid, mid, A=1.5, i1=0.5, i2=0.2, i12=0., j=0.3)
+
+        # bar 1: y = -10 to y = 10, crosses y = 0 at midpoint  ✓
+        model.add_grid(101, [5., -10., 0.])
+        model.add_grid(102, [5.,  10., 0.])
+        model.add_cbar(1, pid, [101, 102], x=[1., 0., 0.], g0=None, offt='GGG')
+
+        # bar 2: y = 5 to y = 15, entirely above the cut plane  ✗
+        model.add_grid(201, [0., 5., 3.])
+        model.add_grid(202, [0., 15., 3.])
+        model.add_cbar(2, pid, [201, 202], x=[1., 0., 0.], g0=None, offt='GGG')
+
+        # bar 3: y = -2 to y = 6, crosses at t = 0.25 (y = 0)  ✓
+        model.add_grid(301, [3., -2., 1.])
+        model.add_grid(302, [3.,  6., 1.])
+        model.add_cbar(3, pid, [301, 302], x=[0., 0., 1.], g0=None, offt='GGG')
+
+        model.cross_reference()
+
+        coord = CORD2R(99, rid=0,
+                        origin=np.array([0., 0., 0.]),
+                        zaxis=np.array([0., 0., 1.]),
+                        xzplane=np.array([1., 0., 0.]))
+
+        centroids, areas, own_I, own_J, E_arr = _find_bar_beam_crossings(
+            model, coord, log=log)
+
+        assert len(areas) == 2, f'expected 2 crossings, got {len(areas)}'
+        assert np.allclose(areas, 1.5), areas
+
+        # bar 1 crosses at global (5, 0, 0) → local (5, 0, 0) for this coord
+        assert np.allclose(centroids[0, 0], 5., atol=1e-10)
+        assert np.allclose(centroids[0, 2], 0., atol=1e-10)
+        # bar 3 crosses at global (3, 0, 1) → local (3, 0, 1)
+        assert np.allclose(centroids[1, 0], 3., atol=1e-10)
+        assert np.allclose(centroids[1, 2], 1., atol=1e-10)
+
+    # ------------------------------------------------------------------
+    # unit test for PBAR / PBEAM property extraction
+    # ------------------------------------------------------------------
+    def test_get_bar_section_props_pbar(self):
+        """``_get_bar_section_props`` returns correct values for PBAR."""
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=False, log=log)
+        model.add_mat1(1, E=1e7, G=4e6, nu=0.25)
+        model.add_pbar(10, 1, A=3.5, i1=1.2, i2=0.4, i12=0.05, j=0.9)
+        model.cross_reference()
+        prop = model.properties[10]
+        A, i1, i2, i12, j = _get_bar_section_props(prop)
+        assert np.allclose(A, 3.5)
+        assert np.allclose(i1, 1.2)
+        assert np.allclose(i2, 0.4)
+        assert np.allclose(i12, 0.05)
+        assert np.allclose(j, 0.9)
+
+    def test_get_bar_section_props_pbeam(self):
+        """``_get_bar_section_props`` interpolates along PBEAM xxb stations."""
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=False, log=log)
+        model.add_mat1(1, E=1e7, G=4e6, nu=0.25)
+        # two-station PBEAM: A from 4 to 2 linearly
+        model.add_pbeam(10, 1,
+                        xxb=[0., 1.],
+                        so=['YES', 'YES'],
+                        area=[4., 2.],
+                        i1=[1.0, 0.5],
+                        i2=[0.4, 0.2],
+                        i12=[0., 0.],
+                        j=[0.8, 0.4])
+        model.cross_reference()
+        prop = model.properties[10]
+        # t = 0.5 → midpoint interpolation
+        A, i1, i2, i12, j = _get_bar_section_props(prop, t=0.5)
+        assert np.allclose(A, 3.0), A
+        assert np.allclose(i1, 0.75), i1
+        assert np.allclose(i2, 0.3), i2
+        assert np.allclose(j, 0.6), j
+
+    # ------------------------------------------------------------------
+    # integration test: 2:1 rectangular bars at different angles
+    # ------------------------------------------------------------------
+    def test_bars_around_radius_rectangular(self):
+        """
+        Two 2:1 rectangular bars placed symmetrically on a circular tube,
+        with the orientation vector tangent to the skin.
+
+        Config A: bars at 0deg and 180deg (left / right of the section)
+        Config B: bars at 90deg and 270deg (top / bottom of the section)
+
+        The shell part is identical and cancels in the difference, leaving
+        an exact analytical prediction for the bar delta-I.
+        """
+        log = SimpleLogger(level='warning')
+
+        R, t_shell = 10., 0.1
+        E, nu = 1e7, 0.3
+        G = E / (2. * (1. + nu))
+        span, nspan, ntheta = 60., 12, 40
+
+        # 2:1 rectangular bar section
+        w, h = 1., 2.
+        A_bar = w * h                # 2.0
+        I1_bar = w * h ** 3 / 12.    # 2/3  (strong axis)
+        I2_bar = h * w ** 3 / 12.    # 1/6  (weak axis)
+        I12_bar = 0.
+        J_bar = 0.5
+
+        configs = {
+            'A': [0., 180.],     # bars on the sides (right / left)
+            'B': [90., 270.],    # bars on the top / bottom
+        }
+
+        ystations = np.array([span / 2.])
+        coords_A = [CORD2R(5000, rid=0,
+                           origin=[0., ystations[0], 0.],
+                           zaxis=[0., ystations[0], 1.],
+                           xzplane=[1., ystations[0], 0.])]
+        coords_B = [CORD2R(5001, rid=0,
+                           origin=[0., ystations[0], 0.],
+                           zaxis=[0., ystations[0], 1.],
+                           xzplane=[1., ystations[0], 0.])]
+        normal_plane = coords_A[0].j
+        x_vector = [0., 0., 1.]
+        results = {}
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dirname = Path(tmpdir)
+            for name, angles in configs.items():
+                model = _build_circular_tube_with_bars(
+                    log, R, t_shell, span, nspan, ntheta, E, nu,
+                    angles, A_bar, I1_bar, I2_bar, I12_bar, J_bar)
+
+                coord_list = coords_A if name == 'A' else coords_B
+                tag = f'bar_radius_{name}_'
+                moi_data = cut_and_plot_moi(
+                    model, normal_plane, log, ystations, coord_list, x_vector,
+                    include_bars=True,
+                    dirname=dirname, plot=False, show=False,
+                    stop_on_failure=True,
+                    cut_data_span_filename='',
+                    beam_model_bdf_filename='',
+                    thetas_csv_filename=tag + 'thetas.csv')
+                out_dict = moi_data[0]
+                results[name] = {k: out_dict[k] for k in CORE_KEYS}
+
+        I_A = results['A']['I'][0]   # (6,) at the one station
+        I_B = results['B']['I'][0]
+        A_A = results['A']['A'][0]
+        A_B = results['B']['A'][0]
+        GJ_A = results['A']['GJ'][0]
+        GJ_B = results['B']['GJ'][0]
+
+        # same number of bars, same section → total area must match
+        assert np.allclose(A_A, A_B), (A_A, A_B)
+
+        # same J, same number of bars → GJ must match
+        assert np.allclose(GJ_A, GJ_B, rtol=1e-4), (GJ_A, GJ_B)
+
+        # ---- analytical prediction for the DIFFERENCE (shell cancels) ----
+        # Config A bars at (R,0) and (-R,0), tangent v = (0,0,±1):
+        #   ΔIxx_A = 2*(A*R² + I2),  ΔIzz_A = 2*I1
+        # Config B bars at (0,R) and (0,-R), tangent v = (∓1,0,0):
+        #   ΔIxx_B = 2*I1,            ΔIzz_B = 2*(A*R² + I2)
+        delta_Ixx = 2. * (A_bar * R ** 2 + I2_bar) - 2. * I1_bar
+        delta_Izz = 2. * I1_bar - 2. * (A_bar * R ** 2 + I2_bar)
+
+        assert np.allclose(I_A[0] - I_B[0], delta_Ixx, rtol=1e-3), \
+            f'dIxx: got {I_A[0]-I_B[0]:.4f}, expected {delta_Ixx:.4f}'
+        assert np.allclose(I_A[2] - I_B[2], delta_Izz, rtol=1e-3), \
+            f'dIzz: got {I_A[2]-I_B[2]:.4f}, expected {delta_Izz:.4f}'
+
+        # the 2:1 aspect ratio makes the own-I correction visible:
+        #   without own-I:  delta_Ixx = 2*A*R² = 400
+        #   with own-I:     delta_Ixx = 2*A*R² + 2*(I2-I1) = 400 - 1.0 = 399.0
+        # so the correction is ~0.25%; enough to detect but small
+        delta_pure_area = 2. * A_bar * R ** 2
+        assert abs(delta_Ixx - delta_pure_area) > 0.5, \
+            'own-I correction should be visible in the difference'
+
+        # Ixz should be zero by symmetry in both configs
+        assert abs(I_A[5]) < 1e-3 * abs(I_A[0]), f'Ixz_A = {I_A[5]}'
+        assert abs(I_B[5]) < 1e-3 * abs(I_B[0]), f'Ixz_B = {I_B[5]}'
+
+    # ------------------------------------------------------------------
+    # regression test: include_bars=False ignores bars entirely
+    # ------------------------------------------------------------------
+    def test_include_bars_false_unchanged(self):
+        """
+        ``include_bars=False`` (the default) gives identical section
+        properties whether or not the model contains CBAR elements.
+        """
+        log = SimpleLogger(level='warning')
+
+        R, t_shell = 10., 0.1
+        E, nu = 1e7, 0.3
+        span, nspan, ntheta = 60., 12, 40
+
+        model_bars = _build_circular_tube_with_bars(
+            log, R, t_shell, span, nspan, ntheta, E, nu,
+            [0., 90., 180., 270.], 2., 2. / 3., 1. / 6., 0., 0.5)
+
+        ystations = np.array([span / 2.])
+        normal_plane = np.array([0., 1., 0.])
+        x_vector = [0., 0., 1.]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dirname = Path(tmpdir)
+            tag = 'bars_off_'
+            kwargs = dict(
+                dirname=dirname, plot=False, show=False,
+                stop_on_failure=True, cut_data_span_filename='',
+                beam_model_bdf_filename='',
+                thetas_csv_filename=tag + 'thetas.csv')
+
+            coords_off = [CORD2R(6000, rid=0,
+                                 origin=[0., ystations[0], 0.],
+                                 zaxis=[0., ystations[0], 1.],
+                                 xzplane=[1., ystations[0], 0.])]
+            moi_off = cut_and_plot_moi(
+                model_bars, normal_plane, log, ystations, coords_off, x_vector,
+                include_bars=False, **kwargs)
+
+            coords_on = [CORD2R(6001, rid=0,
+                                origin=[0., ystations[0], 0.],
+                                zaxis=[0., ystations[0], 1.],
+                                xzplane=[1., ystations[0], 0.])]
+            moi_on = cut_and_plot_moi(
+                model_bars, normal_plane, log, ystations, coords_on, x_vector,
+                include_bars=True, **kwargs)
+
+        out_off = moi_off[0]
+        out_on = moi_on[0]
+
+        # bars-off area < bars-on area (bars add area)
+        assert out_on['A'][0] > out_off['A'][0], \
+            'include_bars=True should add area'
+
+        # bars-off should equal a pure-shell model (area ≈ 2*pi*R*t;
+        # the 40-segment polygon is ~0.1% short of a true circle)
+        expected_shell_area = 2. * np.pi * R * t_shell
+        assert np.allclose(out_off['A'][0], expected_shell_area, rtol=2e-3), \
+            (out_off['A'][0], expected_shell_area)
 
 
 if __name__ == '__main__':  # pragma: no cover

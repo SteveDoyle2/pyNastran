@@ -10,17 +10,26 @@ def cmd_line_caero_to_wkk():
     parser = argparse.ArgumentParser()
     parser.add_argument('bdf_filename', type=str)
     # parser.add_argument('output_filename', type=str, default='')
+    dmi_dmik_group = parser.add_mutually_exclusive_group()
+    dmi_dmik_group.add_argument('--dmi', action='store_true')
+    dmi_dmik_group.add_argument('--dmik', action='store_true')
     args = parser.parse_args()
     print('args', args)
+
+    dmi_type = 'DMIK'
+    if args.dmi:
+        dmi_type = 'DMI'
+    dmi_type_lower = dmi_type.lower()
 
     bdf_filename = args.bdf_filename
     if 1: # args.output_filename != '':
         base, ext = os.path.splitext(bdf_filename)
         # bdf_filename_out = base + '_' + 'out' + ext
-        bdf_filename_out = 'dmi_wkk.blk'
+        bdf_filename_out = f'{dmi_type_lower}_wkk.blk'
     else:  # pragma: no cover
         bdf_filename_out = args.output_filename
-    caero_to_wkk(bdf_filename, bdf_filename_out=bdf_filename_out)
+    caero_to_wkk(bdf_filename, bdf_filename_out=bdf_filename_out,
+                 dmi_type=dmi_type)
 
 def caero_to_wkk(bdf_filename: str, bdf_filename_out: str='',
                  dmi_type: str='DMIK'):
@@ -109,7 +118,9 @@ def caero_to_wkk(bdf_filename: str, bdf_filename_out: str='',
         if bdf_filename_out:
             model_out.write_bdf(bdf_filename_out)
     else:
+        model.log.info(f'writing {bdf_filename_out}')
         with open(bdf_filename_out, 'w') as bdf_file:
+            bdf_file.write(f'$ form = {form} (square)\n')
             if dmi_type == 'DMI':
                 write_dmi_wkk(
                     bdf_file,
@@ -132,6 +143,8 @@ def write_dmi_wkk(bdf_file: TextIO,
     npanel2 = npanel * 2
     real = 1.0
 
+    card0 = ['$ DMI', 'name', '0', 'form', 'tin', 'tout', '', 'npanel2', 'npanel2',]
+    bdf_file.write(print_card_8(card0))
     card = ['DMI', name, '0', form, tin, tout, '', npanel2, npanel2,]
     bdf_file.write(print_card_8(card))
     bdf_file.write('$ ---------- force ----------\n')
@@ -167,12 +180,14 @@ def write_dmik_wkk(bdf_file: TextIO,
                    form: int, tin: int, tout: int, npanel: int,
                    panels_initial: list[int], panels: np.ndarray):
     name = '%-8s' % 'WKK'
-    # npanel2 = npanel * 2
+    npanel2 = npanel * 2
     real = 1.0
     assert form == 1, (form, 'square')
     polar = ''
-    ncol = ''
-    card = ['DMIK', name, '0', form, tin, tout, polar, '', ncol,]
+
+    card0 = ['$ DMIK', 'name', '0', 'form', 'tin', 'tout', 'polar', '', 'ncol']
+    bdf_file.write(print_card_8(card0))
+    card = ['DMIK', name, '0', form, tin, tout, polar, '', npanel2,]
     bdf_file.write(print_card_8(card))
     bdf_file.write('$ ---------- force ----------\n')
     dof = 3

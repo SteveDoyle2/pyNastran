@@ -1,5 +1,16 @@
 """
-Calculate EI(y) and GJ(y)
+Section-stiffness extraction along a structural span.
+
+Cuts a shell (and optionally bar/beam) FEM at user-specified stations,
+integrates the section properties at each cut, and produces:
+
+- area, second moments of area, and polar moment (A, I, J)
+- modulus-weighted stiffnesses (EA, EI, GJ) with composite laminate support
+- Bredt-Batho torsion and transverse-shear-flow shear center
+- an equivalent CBEAM stick model that reproduces every stiffness exactly
+- span-wise CSV and PNG plots of all quantities
+
+The primary entry point is ``cut_and_plot_moi``.
 """
 from __future__ import annotations
 import os
@@ -41,6 +52,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      x_vector: list[float],
                      include_lines: bool=False,
                      include_solids: bool=False,
+                     include_bars: bool=False,
                      face_data: Optional[Any]=None,
                      dirname: PathLike='',
                      ifig: int=1,
@@ -66,115 +78,155 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
                      show: bool=False) -> tuple[dict[str, np.ndarray],       # y, L, A, I, J, ExI, EyI, GJ, avg_centroid,
                                                 list[str], list[str], int]:  # plane_bdf_filenames1, plane_bdf_filenames2, ifig
     """
-    For a shell structure, cut and plot
-     - moments of inertia
-     - stiffness
+    Cut a shell (and optionally bar/beam) FEM at prescribed stations and
+    return the section stiffness distribution along the span.
 
-    The cutting plane tool works by marching along "y" and defining a cut
-    in the "xz" plane. The cut element is in roughly the xy plane or any
-    z-rotated plane (e.g., a cylinder).
+    The cutting plane marches along the coord's local y-axis.  At each
+    station, a cut in the local xz-plane intersects every shell face that
+    straddles the plane, producing a ring of wall segments whose areas,
+    centroids and moduli are integrated into the six independent second
+    moments, Bredt-Batho torsion constant, and shear center.
 
-    Thus, the primary inertias are:
-      Ixx = sum of A*dz^2
-      Izz = sum of A*dx^2
-      Ixz = sum of A*dx*dz
-      J = Ixx + Izz
-    with the other terms containing a y (the out of plane dimension) and are 0.
+    The primary second moments in the cut-plane frame are::
 
-    Due to some messy notation in the code, these names may be flipped.
-    To verify, for an standard aircraft (x-aft, y-right, z-up), on an
-    airfoil section, Izz will be largest. Thus, the bending axis is Ixx.
+        Ixx = sum(A * x^2)      second moment about the z-axis
+        Izz = sum(A * z^2)      second moment about the x-axis
+        Ixz = sum(A * x * z)    product of inertia
+        J   = Ixx + Izz         polar moment
 
-    There is some additional complexity with the way Ex, Ey, Gxy are flagged.
-    Those definitions are from composites book and are in the element frame
-    (e.g., element is in xy plane). This is consistent for a real wing example,
-    but x is used as the primary "fiber" that is normal to the plane and not y.
-    Thus, for Ey*Ixx, you'd use Ex*Ixx and vice versa.
+    Terms involving the out-of-plane coordinate y are zero by construction.
+
+    Composite laminates are handled via the ``[A]^{-1}`` equivalent
+    modulus: each element's Ex (normal to the cut) and Ey (tangential)
+    are resolved into the cut frame before multiplying by the element's
+    area, so ``ExI`` and ``EyI`` carry the real bending stiffness even
+    for multi-material sections.
+
+    When ``include_bars=True``, CBAR/CBEAM elements that straddle the
+    cut plane contribute concentrated area, bending stiffness (EA, EI),
+    and torsion stiffness (GJ).  Their own bending inertia is rotated
+    from the element's local axes into the cut-plane frame.  They do
+    NOT participate in the thin-walled Bredt-Batho or shear-center
+    solves, which remain shell-only.
 
     Parameters
     ----------
-    bdf_filename : PathLike
-        the path to the bdf
+    bdf_filename : PathLike | BDF
+        path to a bulk-data file, or an already-loaded cross-referenced
+        ``BDF`` object
     normal_plane : (3,) float ndarray
-        the plane normal that defines ???
+        unit normal of the cutting plane in the basic frame; for a wing
+        cut along +y this is ``[0, 1, 0]``
     log : SimpleLogger
-        the logger
-    stations : list[float] or ystations
-        the y-stations to march down
+        logging object
+    stations : list[float] | (nstation,) ndarray
+        the y-coordinates (in the basic frame) at which to cut
     coords : list[CORD2R]
-        coords to take cuts at; cutting plane normal is the y-axis?
-        x:   defines axial direction (E1*A)
-        y/z: defines transverse directions (E1*Iy)
-    face_data : tuple
-        nids : np.ndarray
-            node ids
-        xyz_cid0 : (nnode, 3) np.ndarray
-            xyz values
-        elements = dict[key, value]
-            key: str
-                'line', 'tri3', 'tet4'
-            value: tuple[eids, node_ids]
-                The element ids and associated node ids
-                Tri3s have negative element ids, which correspond to the split CQUAD4s?
-    include_lines: bool=False
-        unused
-    include_solids: bool=False
-        unused
-    dirname : PathLike; default=''
-        directory for output plots/csv/bdfs
-    plot : bool; default=True
-        not used
-    show : bool; default=False
-        show the plots at the end
-    ifig : int; default=1
-        lets you change the figure ID, useful when you do multiple cuts
-    stop_on_failure : bool; default=False
-        useful for debugging or things you know should be cut
-    debug_vectorize : bool; default=True
-        test faster cutting method
-     cut_data_span_filename : PathLike; default='cut_data_vs_span.csv'
-        changes the filename
-     x_vector : list[float]
-        the CBEAM orientation vector v, in the basic frame (the emitted
+        one coordinate system per station, centred on that station;
+        its local y-axis is the march direction (normal to the cut
+        plane) and its local xz-plane defines the in-plane axes for
+        the section integrals
+    x_vector : list[float]
+        the CBEAM orientation vector *v*, in the basic frame (the emitted
         elements use ``offt='GGG'``).  This is not cosmetic: it sets the
         element y/z axes, and therefore which way round I1 and I2 come out
         and what sign I12 takes.  With a beam along +y, ``[1,0,0]`` puts I1
         on the chordwise moment while ``[0,0,1]`` puts I1 on the flapwise
         one.  Must not be parallel to the beam axis.
-     beam_model_bdf_filename : PathLike; default='equivalent_beam_model.bdf'
-        changes the filename
-     rho : float; default=1.0
-        density written on the equivalent beam model's MAT1; the PBEAM A
-        field is the real geometric area, so rho*A is a meaningful mass
-     beam_grid_xyz : (nstation, 3) float ndarray; default=None -> use the centroids
-        where to put the equivalent beam model's GRIDs.  By default a GRID is
-        dropped on each cut's section centroid, which is convenient but means
-        the beam nodes land wherever the structure happens to put them.  Pass
-        an explicit set of points -- load control points (LCPs), an existing
-        loads-model grid, a straight reference axis -- and the GRIDs go there
-        instead, with the difference carried on the CBEAM WA/WB offsets so the
-        elastic axis still runs through the real centroids.  One row per
-        station, in the same order as ``stations``; rows for stations that
-        fail to cut are dropped along with everything else.
-     beam_grid_ids : (nstation,) int ndarray; default=None -> number 1..n
-        GRID ids to go with ``beam_grid_xyz``.  Reusing the ids from the source
-        deck lets parts that share a point merge into a connected model.
-     beam_id0 : int; default=1
-        first CBEAM/PBEAM id (and the MAT1 id) in the equivalent beam model.
-        Only matters when several beam models are merged without renumbering,
-        which is the case that makes ``beam_grid_ids`` worth using: the shared
-        GRIDs are supposed to collide, the elements are not.
-     thetas_csv_filename : PathLike; default='thetas.csv'
-        changes the filename
-     normalized_inertia_png_filename : PathLike; default='normalized_inertia_vs_span.png'
-        changes the filename
-     amoi_span_png_filename : PathLike; default='amoi_vs_span.png'
-        changes the filename
-     e_amoi_span_png_filename : PathLike; default='e_amoi_vs_span.png'
-        changes the filename
-     cg_span_png_filename : PathLike; default='centroid_vs_span.png'
-        changes the filename
+    include_lines : bool; default=False
+        unused, reserved for future line-element support
+    include_solids : bool; default=False
+        unused, reserved for future solid-element support
+    include_bars : bool; default=False
+        when True, CBAR and CBEAM elements that straddle each cut plane
+        are included in the EA, EI and GJ totals.  Their own bending
+        inertia (I1, I2, I12 from the PBAR/PBEAM) is rotated into the
+        cut-plane frame and added on top of the parallel-axis A*d^2 term.
+        Torsion uses the element's actual J, not a polar-moment
+        approximation.  Bredt-Batho and shear-center remain shell-only.
+    face_data : tuple | None; default=None
+        pre-computed face topology from ``_setup_faces``; if None it is
+        built automatically from the model.  Structure::
 
+            (nids, xyz_cid0, elements)
+
+        where *elements* is a dict keyed by ``'tri3'`` (etc.) whose
+        values are ``(eids, node_ids, zoffset)`` tuples
+    dirname : PathLike; default=''
+        directory for all output files (CSV, BDF, PNG)
+    ifig : int; default=1
+        starting matplotlib figure number; useful when making multiple
+        cuts so the plots do not overwrite each other
+    debug_vectorize : bool; default=True
+        use the faster vectorized cutting-plane method
+    debug_v3 : bool; default=False
+        use the experimental v3 cutting path
+    rho : float; default=1.0
+        density written on the equivalent beam model's MAT1; the PBEAM A
+        field is the real geometric area, so ``rho * A`` gives a
+        meaningful mass
+    xyz_round : int | None; default=None
+        decimal places to round GRID coordinates to
+    area_round : int | None; default=None
+        decimal places to round area values to
+    inertia_round : int | None; default=None
+        decimal places to round I / J values to
+    beam_grid_xyz : (nstation, 3) float ndarray | None; default=None
+        where to put the equivalent beam model's GRIDs.  By default a
+        GRID is dropped on each cut's shear center.  Pass an explicit
+        set of points (load control points, an existing loads-model
+        grid, a straight reference axis) and the GRIDs go there instead,
+        with the difference carried on the CBEAM WA/WB offsets so the
+        elastic axis still runs through the real shear centers.  One row
+        per station, in the same order as *stations*; rows for stations
+        that fail to cut are dropped.
+    beam_grid_ids : (nstation,) int ndarray | None; default=None
+        GRID ids to use with *beam_grid_xyz*.  Reusing the ids from the
+        source deck lets parts that share a point merge into a connected
+        model.
+    beam_id0 : int; default=1
+        first CBEAM/PBEAM id (and the MAT1 id) in the equivalent beam
+        model.  Only matters when several beam models are merged without
+        renumbering.
+    stop_on_failure : bool; default=False
+        if True, raise on any station that cannot be cut; if False,
+        skip it and continue to the next station
+    cut_data_span_filename : PathLike; default='cut_data_vs_span.csv'
+        CSV file with all section data vs. span; set to ``''`` to skip
+    beam_model_bdf_filename : PathLike; default='equivalent_beam_model.bdf'
+        punch-format BDF of the equivalent CBEAM model; set to ``''``
+        to skip
+    thetas_csv_filename : PathLike; default='thetas.csv'
+        per-element material-angle diagnostic file
+    normalized_inertia_png_filename : PathLike; default='normalized_inertia_vs_span.png'
+        filename for the normalised inertia plot
+    area_span_png_filename : PathLike; default='area_vs_span.png'
+        filename for the area-vs-span plot
+    amoi_span_png_filename : PathLike; default='amoi_vs_span.png'
+        filename for the area-MOI-vs-span plot
+    e_amoi_span_png_filename : PathLike; default='e_amoi_vs_span.png'
+        filename for the E*I-vs-span plot
+    centroid_span_png_filename : PathLike; default='centroid_vs_span.png'
+        filename for the centroid-vs-span plot
+    plot : bool; default=True
+        generate matplotlib PNG plots
+    show : bool; default=False
+        call ``plt.show()`` after plotting (blocks until closed)
+
+    Returns
+    -------
+    out_dict : dict[str, ndarray]
+        section data keyed by name; the nine core entries are
+        ``'stations'``, ``'L'``, ``'A'``, ``'I'``, ``'J'``,
+        ``'ExI'``, ``'EyI'``, ``'GJ'``, ``'avg_centroid'``.
+        Additional keys: ``'neutral_axis'``, ``'shear_center'``
+        (both in the basic frame).
+    plane_bdf_filenames1 : list[str]
+        paths to the cut-plane face BDFs (side 1)
+    plane_bdf_filenames2 : list[str]
+        paths to the cut-plane face BDFs (side 2)
+    ifig : int
+        the next unused figure number
     """
     assert isinstance(x_vector, list), x_vector
     assert len(x_vector) == 3, x_vector
@@ -193,6 +245,7 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
         stations, coords, normal_plane,
         dirname, face_data=face_data,
         include_lines=include_lines, include_solids=include_solids,
+        include_bars=include_bars,
         debug_vectorize=debug_vectorize,
         debug_v3=debug_v3,
         stop_on_failure=stop_on_failure,
@@ -298,6 +351,34 @@ def cut_and_plot_moi(bdf_filename: PathLike | BDF,
 
 def load_moi_data(csv_filename: PathLike) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray,
                                                    np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Read a ``cut_data_vs_span.csv`` written by ``cut_and_plot_moi`` and
+    return the same arrays it produces in memory.
+
+    Parameters
+    ----------
+    csv_filename : PathLike
+        path to the CSV file
+
+    Returns
+    -------
+    y : (nstation,) float ndarray
+        span stations
+    A : (nstation,) float ndarray
+        section area at each station
+    I : (nstation, 6) float ndarray
+        second moments ``[Ixx, Iyy, Izz, Ixy, Ixz, Iyz]``
+    J : (nstation,) float ndarray
+        polar moment ``Ixx + Izz``
+    ExI : (nstation, 6) float ndarray
+        modulus-weighted second moments (Ex * I)
+    EyI : (nstation, 6) float ndarray
+        modulus-weighted second moments (Ey * I)
+    GJ : (nstation,) float ndarray
+        torsion stiffness
+    avg_centroid : (nstation, 3) float ndarray
+        section centroid ``(x, y, z)``
+    """
     import pandas as pd
     # 'station, dx, dz, A, '
     # 'Ix, Iy, Iz, Ixy, Ixz, Iyz, J, '
@@ -784,6 +865,7 @@ def _get_station_data(model: BDF,
                       debug_vectorize: bool=True,
                       debug_v3: bool=False,
                       stop_on_failure: bool=False,
+                      include_bars: bool=False,
                       face_data=None) -> tuple[
                          dict[int, tuple[float, float, float, float]],  # thetas
                          #y, dx, dz,
@@ -795,26 +877,56 @@ def _get_station_data(model: BDF,
                          #avg_centroid, plane_bdf_filenames, plane_bdf_filenames2,
                          Any, list[str], list[str]]:
     """
-    Helper for ``cut_and_plot_moi``
+    Loop over stations, cut the model at each one, and accumulate all
+    section properties into span-length arrays.
+
+    This is the inner workhorse of ``cut_and_plot_moi``; it handles the
+    station loop, the optional bar/beam crossing detection, and the call
+    to ``calculate_area_moi`` for each successful cut.
 
     Parameters
     ----------
-    model : BDF()
-        ???
-    model_static : BDF()
-        ???
+    model : BDF
+        cross-referenced model used for element property look-ups and
+        bar/beam crossing detection
+    model_static : BDF
+        a (possibly deep-copied) model used by the face-cutting
+        geometry routines, so that adding temporary coords to *model*
+        does not mutate the caller's object
     dys : list[float]
-        the y values to make cuts at
+        y-stations (in the basic frame) at which to cut
     coords : list[CORD2R]
-    normal_plane : np.ndarray
-    dirname : Path | str
-        base directory for output files/pictures
-    face_data : ???
-        ???
-    stop_on_failure : bool; default=False
-        useful for debugging or things you know should be cut
+        one coordinate system per station; cutting plane is its local
+        xz-plane (y_local = 0)
+    normal_plane : (3,) float ndarray
+        unit normal of the cutting planes in the basic frame
+    dirname : Path
+        base directory for intermediate BDF / CSV files
+    plane_atol : float; default=1e-5
+        absolute tolerance for the cutting-plane intersection
+    include_lines : bool; default=False
+        unused
+    include_solids : bool; default=False
+        unused
+    debug_vectorize : bool; default=True
+        use the faster vectorized cutting-plane method
     debug_v3 : bool; default=False
-        vectorized cutting plane
+        use the experimental v3 cutting path
+    stop_on_failure : bool; default=False
+        if True, raise when a station cannot be cut; if False, skip it
+    include_bars : bool; default=False
+        find CBAR/CBEAM elements straddling each cut and pass them to
+        ``calculate_area_moi`` for inclusion in EA, EI and GJ
+    face_data : tuple | None; default=None
+        pre-computed face topology; built automatically when None
+
+    Returns
+    -------
+    tuple
+        ``(thetas, y, dx, dz, L, A, I, J, ExI, EyI, GJ,
+        avg_centroid, plane_bdf_filenames1, plane_bdf_filenames2,
+        ExA, EyA, GA, avg_centroid_global, neutral_axis_global,
+        shear_center_global, neutral_axis_offset)``
     """
     log = model.log
 
@@ -908,13 +1020,17 @@ def _get_station_data(model: BDF,
         #moi_filename = 'amoi_%i.bdf' % i
         moi_filename = None
         log.info(f'calculate_area_moi {icut:d} (station={dy})')
+        bar_data = None
+        if include_bars:
+            bar_data = _find_bar_beam_crossings(model, coord, log=log)
         (dxi, dzi, lengthi, areai,
          inertiai, Ji,
          ExIi, EyIi, GJi, avg_centroidi,
          ExAi, EyAi, GAi,
          neutral_axisi, shear_centeri) = calculate_area_moi(
             model, rods, normal_plane, thetas,
-            moi_filename=moi_filename)
+            moi_filename=moi_filename,
+            bar_data=bar_data)
 
         #print(out)
         y[icut] = dy
@@ -971,6 +1087,22 @@ def _get_station_datai(model: BDF,
                        plane_bdf_filename2: PathLike='',
                        face_data=None,
                        log=None):
+    """
+    Cut the model at a single station and return the rod connectivity.
+
+    Wraps ``cut_face_model_by_coord`` with error handling: when
+    *stop_on_failure* is False, a station that cannot be cut returns
+    ``(False, [])`` instead of raising.
+
+    Returns
+    -------
+    found_cut : bool
+        whether the cutting plane intersected any element faces
+    rods : tuple
+        ``(rod_eid_nodes, rod_nids, rod_xyzs)`` describing the wall
+        segments that make up the cut ring; empty when *found_cut*
+        is False
+    """
     nodal_result = None
     try:
         out = cut_face_model_by_coord(
@@ -1032,35 +1164,60 @@ def plot_inertia(log: SimpleLogger,
                  e_amoi_span_png_filename: PathLike='e_amoi_vs_span.png',
                  centroid_span_png_filename: PathLike='centroid_vs_span.png') -> int:
     """
-    The cutting plane tool works by marching along "y" and defining a cut
-    in the "xz" plane. The cut element is in roughly the xy plane or any
-    z-rotated plane (e.g., a cylinder).
+    Generate matplotlib span-wise plots of section properties.
 
-    Thus, the primary inertias are:
-    Ixx = sum of A*dz^2
-    Izz = sum of A*dx^2
-    Ixz = sum of A*dx*dz
-    with the other terms containing a y (the out of plane dimension) and are 0.
+    Produces four figures: normalised inertia, raw area-MOI, E*I, and
+    centroid position, all versus station.
 
-    Due to some messy notation in the code, these names may be flipped.
-    To verify, for an standard aircraft (x-aft, y-right, z-up), on an
-    airfoil section, Izz will be largest. Thus, the bending axis is Ixx.
+    Parameters
+    ----------
+    log : SimpleLogger
+        logging object
+    station : (nstation,) float ndarray
+        span positions
+    A : (nstation,) float ndarray
+        section area
+    I : (nstation, 6) float ndarray
+        second moments ``[Ixx, Iyy, Izz, Ixy, Iyz, Ixz]``
+    J : (nstation,) float ndarray
+        polar moment
+    ExI : (nstation, 6) float ndarray
+        Ex-weighted second moments
+    EyI : (nstation, 6) float ndarray
+        Ey-weighted second moments
+    GJ : (nstation,) float ndarray
+        torsion stiffness
+    avg_centroid : (nstation, 3) float ndarray
+        section centroid at each station
+    linestyle : str; default='-'
+        matplotlib line-style string
+    dirname : PathLike; default=''
+        directory for saving PNG files
+    x, y, z : str; default='x', 'y', 'z'
+        axis labels used in legends and axis titles
+    station_word : str; default='Span'
+        label for the x-axis (e.g. ``'Span'`` or ``'Buttline'``)
+    save : bool; default=True
+        write PNG files to *dirname*
+    show : bool; default=True
+        call ``plt.show()`` after the last figure
+    ifig : int; default=1
+        starting figure number
+    tag : str; default=''
+        prefix for legend labels (useful when overlaying multiple cuts)
+    normalized_inertia_png_filename : PathLike
+        filename for the normalised-inertia figure
+    amoi_span_png_filename : PathLike
+        filename for the area-MOI figure
+    e_amoi_span_png_filename : PathLike
+        filename for the E*I figure
+    centroid_span_png_filename : PathLike
+        filename for the centroid figure
 
-    There is some additional complexity with the way Ex, Ey, Gxy are flagged.
-    Those definitions are from composites book and are in the element frame
-    (e.g., element is in xy plane). This is consistent for a real wing example,
-    but x is used as the primary "fiber" that is normal to the plane and not y.
-    Thus, for Ey*Ixx, you'd use Ex*Ixx and vice versa.
-
-    There are a lot of ways to plot the data here. Be careful of the orientations.
-
-    inertia: [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
-    Note
-    ----
-    Ex : (nstation,) float np.ndarray
-        normal to the cut plane
-    Ey : (nstation,) float np.ndarray
-        tangential to the cut plane
+    Returns
+    -------
+    ifig : int
+        the next unused figure number
     """
     absI = np.abs(I)
     absExI = np.abs(ExI)
@@ -1156,63 +1313,85 @@ def calculate_area_moi(model: BDF,
                        eid_filename: PathLike='eid_file.csv',
                        use_bredt_batho: bool=True,
                        use_shear_center: bool=True,
+                       bar_data=None,
                        ) -> tuple[np.ndarray, np.ndarray, np.ndarray,               # dxi, dyi, total_area,
                                   np.ndarray, np.ndarray,                           # Isum, Jsum,
                                   np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # ExIsum, EyIsum, GJsum, avg_centroid
     """
-    The inertia of a square plate about the midplane is:
-     Ixx = 1/12*b*h^3
-     Iyy = 1/12*h*b^3
-     Izz = 0.
-     Ixy = Ixz = Iyz = 0.
-    These terms are small for a real structure
-    and the math gets harder for odd shapes,
-    so we calculate just the A*d^2 terms.
+    Integrate section properties at a single cut.
 
-    TODO: nevermind...this is just a 2d inertial formula
-          of a flat plat that's been rotated
+    Each shell wall segment contributes ``A = t * L`` of area at its
+    centroid.  The second moments are the parallel-axis (A * d^2) terms;
+    the elements' own bending inertia is negligible for thin shells.
+    When bar/beam data is supplied, each bar adds a concentrated area at
+    its crossing point plus its own bending inertia rotated into the
+    cut-plane frame.
 
     Parameters
     ----------
     model : BDF
-        the model object
-    rods : (eids, nids, xyzs)
-        eids : (nelements,) int ndarray
-            the element id that was split
-        nids : (nelements, 2) int ndarray
-            the n1, n2 in xyzs that define the cut shell element
-        xyzs : (nnodes, 3) float ndarray
-            the xyz of the nodes
+        cross-referenced model (used for element look-ups and logging)
+    rods : tuple[ndarray, ndarray, ndarray]
+        ``(rod_eid_nodes, rod_nids, rod_xyzs)`` from the face cutter,
+        describing the wall segments that make up the cut ring
     normal_plane : (3,) float ndarray
-        the direction of the cut plane
-    thetas : dict[eid] = (thetad, Ex, Ey, Gxy)???
-        thetas[eid] = (thetad, Ex, Ey, Gxy)
-    moi_filename : str; default=None
-        writes a csv file
+        unit normal of the cutting plane in the basic frame
+    thetas : dict[int, tuple[float, float, float, float]]
+        mutable mapping ``{eid: (theta_deg, Ex, Ey, Gxy)}``; updated
+        in-place with the material-angle data for every shell element
+        that participates in this cut
+    moi_filename : PathLike; default=''
+        when non-empty, write a diagnostic BDF/CSV of the cut geometry
+    eid_filename : PathLike; default='eid_file.csv'
+        companion CSV for *moi_filename*
     use_bredt_batho : bool; default=True
-        compute the torsion constant from the cell topology; set False to
-        get the legacy GJ = G*(Ix+Iz) polar-moment approximation
+        compute the torsion constant from the closed-cell topology
+        (Bredt-Batho); when False, fall back to the polar-moment
+        approximation ``GJ = G * (Ix + Iz)``
     use_shear_center : bool; default=True
-        solve the transverse shear flow for the shear center; set False to
-        report the area centroid for all three of centroid/neutral axis/shear
-        center, which is what the writer assumed before
+        solve the transverse shear flow for the shear center; when
+        False, the area centroid is reported for all three reference
+        points (centroid, neutral axis, shear center)
+    bar_data : tuple | None; default=None
+        output of ``_find_bar_beam_crossings``; when not None, the five
+        arrays ``(centroids, areas, own_I, own_J, E_arr)`` are merged
+        into the shell data before integration.  Bar elements do NOT
+        enter the Bredt-Batho or shear-center solves.
 
     Returns
     -------
-    total_area
-    Isum
-    Jsum
-    EIsum
-    GJsum
-    avg_centroid
-        the AREA-weighted centroid, in the cut coord's local frame
-    xyz_neutral_axis
-        the MODULUS-weighted centroid, in the same frame.  ExIsum is reported
-        about ``avg_centroid``, so a heterogeneous section needs a
-        parallel-axis shift of ``ExA*d**2`` to refer it to the neutral axis.
-    xyz_shear_center
-        where a transverse shear produces no twist; NaN if it could not be
-        found.  This is where the CBEAM element axis belongs.
+    dxi : float
+        section width (max x - min x after rotation)
+    dyi : float
+        section height
+    total_length : float
+        sum of wall-segment arc lengths (perimeter)
+    total_area : float
+        sum of all wall-segment and bar areas
+    Isum : (6,) float ndarray
+        ``[Ixx, Iyy, Izz, Ixy, Iyz, Ixz]`` about the area centroid
+    Jsum : float
+        polar moment ``Ixx + Izz``
+    ExIsum : (6,) float ndarray
+        modulus-weighted ``Ex * I`` about the area centroid
+    EyIsum : (6,) float ndarray
+        modulus-weighted ``Ey * I``
+    GJsum : float
+        torsion stiffness (Bredt-Batho for shells + G*J for bars)
+    avg_centroid : (3,) float ndarray
+        area-weighted centroid in the cut coord's local frame
+    ExAsum : float
+        section axial stiffness ``sum(Ex * dA)``
+    EyAsum : float
+        section transverse stiffness ``sum(Ey * dA)``
+    GAsum : float
+        section shear stiffness ``sum(G * dA)``
+    xyz_neutral_axis : (3,) float ndarray
+        modulus-weighted centroid (neutral axis) in the local frame;
+        identical to *avg_centroid* for a homogeneous section
+    xyz_shear_center : (3,) float ndarray
+        where a transverse shear produces no twist; NaN when it could
+        not be determined.  This is where the CBEAM element axis belongs.
     """
     assert isinstance(rods, tuple), type(rods)
     assert isinstance(thetas, dict), type(thetas)
@@ -1242,6 +1421,25 @@ def calculate_area_moi(model: BDF,
     centroid, length, area, thickness, E = get_element_inertias(
         model, normal_plane, thetas,
         eids, length, centroid)
+
+    # ---- bar / beam contributions (lumped areas) ----
+    # Bars add concentrated area at their crossing point but do NOT
+    # participate in the thin-walled Bredt-Batho or shear-center solves,
+    # so the shell-only wall arrays (xyz1, xyz2, thickness, length) are
+    # kept untouched.
+    nshell = len(area)
+    bar_own_I_arr = None
+    bar_own_J_arr = None
+    if bar_data is not None:
+        bar_centroids, bar_areas, bar_own_I, bar_own_J, bar_E = bar_data
+        if len(bar_areas) > 0:
+            centroid = np.vstack([centroid, bar_centroids])
+            area = np.concatenate([area, bar_areas])
+            E = np.vstack([E, bar_E])
+            bar_own_I_arr = bar_own_I
+            bar_own_J_arr = bar_own_J
+            model.log.debug(f'  {len(bar_areas):d} bar/beam element(s) cross '
+                           f'this cut (total bar area = {bar_areas.sum():g})')
 
     # [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
     inertia: np.ndarray = np.zeros((len(area), 6), dtype='float64')
@@ -1318,6 +1516,14 @@ def calculate_area_moi(model: BDF,
     inertia[:, 4] = area * (y * z)  # just 0
     inertia[:, 5] = area * (x * z)  # Ixz
 
+    # Add bar/beam elements' own bending inertia (about their centroids,
+    # already rotated into the cut-plane frame).  The A*d^2 parallel-axis
+    # terms are already included above; these are the self-inertia remainder.
+    if bar_own_I_arr is not None and len(bar_own_I_arr) > 0:
+        inertia[nshell:, 0] += bar_own_I_arr[:, 0]  # Ixx_own
+        inertia[nshell:, 2] += bar_own_I_arr[:, 1]  # Izz_own
+        inertia[nshell:, 5] += bar_own_I_arr[:, 2]  # Ixz_own
+
     # cut is in xz plane
     ix = inertia[:, 0]
     iz = inertia[:, 2]
@@ -1327,7 +1533,10 @@ def calculate_area_moi(model: BDF,
     Jsum = J.sum()
     ExIsum = (ex[:, np.newaxis] * inertia).sum(axis=0)
     EyIsum = (ey[:, np.newaxis] * inertia).sum(axis=0)
-    GJsum = (gxy * J).sum()
+    # Shell GJ uses the polar-moment approximation as a default; Bredt-Batho
+    # may replace it below.  Bar/beam GJ is always the element's own torsion
+    # constant G*J_bar (added after Bredt-Batho), NOT its polar second moment.
+    GJsum = (gxy[:nshell] * J[:nshell]).sum()
     assert len(Isum) == 6, len(Isum)
 
     # Modulus-weighted areas.  ExA = sum(Ex_i*dA_i) is the section axial
@@ -1345,7 +1554,7 @@ def calculate_area_moi(model: BDF,
     # from the wall connectivity and solve Bredt-Batho instead.
     if use_bredt_batho and len(xyz1) == len(thickness):
         gj_bredt, torsion_method, ncells = bredt_batho_gj(
-            xyz1, xyz2, length, thickness, gxy, log=model.log)
+            xyz1, xyz2, length, thickness, gxy[:nshell], log=model.log)
         if torsion_method == 'none':
             model.log.warning(
                 'no usable walls for the torsion calculation; '
@@ -1375,8 +1584,8 @@ def calculate_area_moi(model: BDF,
     xyz_shear_center = np.full(3, np.nan, dtype='float64')
     xyz_neutral_axis = avg_centroid.copy()
     if use_shear_center and len(xyz1) == len(thickness):
-        result = shear_center(xyz1, xyz2, length, thickness, ex, gxy,
-                              log=model.log)
+        result = shear_center(xyz1, xyz2, length, thickness,
+                              ex[:nshell], gxy[:nshell], log=model.log)
         # the section lives in the cut plane, so the out-of-plane coordinate is
         # whatever the centroid has; carrying it keeps the point on the plane
         # when the caller transforms back to the basic frame
@@ -1396,6 +1605,12 @@ def calculate_area_moi(model: BDF,
                 f'cell(s), offset from the neutral axis '
                 f'({result.xy_shear_center - result.xy_neutral_axis}), '
                 f'force residual {result.force_error:g}')
+
+    # Add bar/beam torsion stiffness (G * J_bar) on top of the shell GJ.
+    # This is the element's true torsion constant, not a polar-moment
+    # approximation -- it is correct even for open cross-sections.
+    if bar_own_J_arr is not None and len(bar_own_J_arr) > 0:
+        GJsum += (gxy[nshell:] * bar_own_J_arr).sum()
 
     if moi_filename is not None:
         dirname = os.path.dirname(moi_filename)
@@ -1420,6 +1635,14 @@ def _write_moi_file(moi_filename: PathLike,
                     eids, n1, n2, xyz1, xyz2,
                     length, thickness, area,
                     centroid, avg_centroid, I, E) -> None:
+    """
+    Write a diagnostic BDF of the cut geometry as CONROD elements and a
+    companion CSV of per-element section data.
+
+    The BDF can be loaded in a viewer to visually verify that the cut
+    ring looks correct; the CONROD areas carry the element's cut-area
+    contribution so the ring's total area matches the integrated value.
+    """
     eidi = 1
     mid = 1
     nid0 = max(n1.max(), n2.max()) + 1
@@ -1463,6 +1686,44 @@ def get_element_inertias(model: BDF,
                          length: list[float],
                          centroid: list[np.ndarray],
                          ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Extract per-element thickness, area, and equivalent moduli for every
+    shell element in the cut ring.
+
+    Iterates over the element ids produced by the face cutter, resolves
+    each element's material orientation angle relative to the cut plane,
+    and calls ``get_Ainv_equivalent_pshell`` to obtain ``(Ex, Ey, Gxy)``
+    in the cut frame.  Elements whose normals are nearly in-plane with
+    the cut (> ~25 deg off the cut-plane normal) are zeroed out so they
+    do not contribute stiffness (they are skins seen edge-on, not
+    structural walls).
+
+    Parameters
+    ----------
+    model : BDF
+        cross-referenced model
+    normal_plane : (3,) float ndarray
+        unit normal of the cutting plane
+    thetas : dict
+        mutable ``{eid: (theta, Ex, Ey, Gxy)}``; updated in-place
+    eids : (n,) int ndarray
+        element ids from the face cutter
+    length : (n,) float ndarray
+        segment lengths of each wall piece
+    centroid : (n, 3) float ndarray
+        segment centroids
+
+    Returns
+    -------
+    centroid : (n, 3) float ndarray
+        (may be filtered from the input)
+    length : (n,) float ndarray
+    area : (n,) float ndarray
+        ``thickness * length`` for each segment
+    thickness : (n,) float ndarray
+    E : (n, 3) float ndarray
+        ``(Ex, Ey, Gxy)`` per element
+    """
     normal_plane_vector = normal_plane.copy().reshape((3, 1))
     cg_list: list[np.ndarray] = []
     area_list: list[float] = []
@@ -1630,6 +1891,235 @@ def _get_shell_inertia(element: CTRIA3 | CQUAD4,
     return thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy
 
 
+def _get_bar_section_props(prop, t: float=0.5,
+                           ) -> tuple[float, float, float, float, float]:
+    """
+    Extract cross-section constants from a bar/beam property card.
+
+    For PBEAM (tapered), properties are linearly interpolated at fraction
+    *t* along the element's ``xxb`` stations (0 = end A, 1 = end B).
+    For PBAR, PBARL and PBEAML the section is constant and *t* is
+    ignored.
+
+    Parameters
+    ----------
+    prop : PBAR | PBEAM | PBARL | PBEAML
+        cross-referenced property object
+    t : float; default=0.5
+        fractional position along the element (used only for PBEAM)
+
+    Returns
+    -------
+    A : float
+        cross-section area
+    i1 : float
+        second moment of area about the element y-axis (I1)
+    i2 : float
+        second moment of area about the element z-axis (I2)
+    i12 : float
+        product of inertia (I12); zero for symmetric standard shapes
+    j : float
+        torsion constant (Saint-Venant J)
+    """
+    # PBEAM: tapered, properties vary along xxb
+    if hasattr(prop, 'xxb') and prop.xxb is not None and len(prop.xxb) > 1:
+        xxb = np.asarray(prop.xxb, dtype='float64')
+        A = float(np.interp(t, xxb, prop.A))
+        i1 = float(np.interp(t, xxb, prop.i1))
+        i2 = float(np.interp(t, xxb, prop.i2))
+        i12 = float(np.interp(t, xxb, prop.i12))
+        j = float(np.interp(t, xxb, prop.j))
+        return A, i1, i2, i12, j
+
+    # PBAR, PBARL, PBEAML: constant section
+    A = prop.Area()
+    i1 = prop.I11()
+    i2 = prop.I22()
+    j = prop.J()
+    # I12: available as attribute on PBAR; 0 for standard shapes (PBARL/PBEAML)
+    i12 = getattr(prop, 'i12', 0.0)
+    if i12 is None:
+        i12 = 0.0
+    return A, i1, i2, i12, j
+
+
+def _bar_own_I_in_cut_frame(i1: float, i2: float, i12: float,
+                             ga_global: np.ndarray,
+                             gb_global: np.ndarray,
+                             elem,
+                             plane_i: np.ndarray,
+                             plane_k: np.ndarray,
+                             model: BDF,
+                             ) -> tuple[float, float, float]:
+    """
+    Rotate a bar/beam element's own bending inertias from its element
+    y_e / z_e axes into the cut-plane ``(plane_i, plane_k)`` system.
+
+    The element triad is built from the node positions and the CBAR/CBEAM
+    orientation vector (``elem.x`` or ``elem.g0``), following the same
+    convention as MSC Nastran with ``offt='GGG'``.  The element's
+    ``y_e`` and ``z_e`` directions are then projected onto the cut-plane
+    axes and the 2x2 inertia tensor is rotated::
+
+        M_cut = R^T  M_elem  R
+
+    where ``R = [[cy, sy], [cz, sz]]`` are the in-plane direction
+    cosines of ``y_e`` and ``z_e`` relative to ``plane_i`` and
+    ``plane_k``.
+
+    Parameters
+    ----------
+    i1, i2, i12 : float
+        second moments and product of inertia about the element's own
+        y_e and z_e axes (from the PBAR/PBEAM card)
+    ga_global, gb_global : (3,) float ndarray
+        end-point positions of the bar in the basic frame
+    elem : CBAR | CBEAM
+        the element object (used to read the orientation vector)
+    plane_i, plane_k : (3,) float ndarray
+        unit vectors of the cut coord's local x and z axes
+    model : BDF | None
+        used only when ``elem.g0`` is set (to look up the G0 grid);
+        may be None when the orientation is given by ``elem.x``
+
+    Returns
+    -------
+    ixx : float
+        ``int(x_loc^2 dA)`` — second moment about the cut-plane z-axis
+    izz : float
+        ``int(z_loc^2 dA)`` — second moment about the cut-plane x-axis
+    ixz : float
+        ``int(x_loc * z_loc dA)`` — product of inertia in the cut plane
+    """
+    dxyz = gb_global - ga_global
+    L = np.linalg.norm(dxyz)
+    if L < 1e-12:
+        return 0., 0., 0.
+    x_e = dxyz / L
+
+    # orientation vector  (global frame, same convention as CBEAM offt='GGG')
+    if elem.g0 is not None:
+        g0_xyz = elem.g0_ref.get_position()
+        v = g0_xyz - ga_global
+    else:
+        v = np.asarray(elem.x, dtype='float64')
+
+    y_e = v - v.dot(x_e) * x_e
+    norm_y = np.linalg.norm(y_e)
+    if norm_y < 1e-8:
+        return 0., 0., 0.
+    y_e /= norm_y
+    z_e = np.cross(x_e, y_e)
+
+    # project element axes onto the cut plane
+    def _components(vec):
+        c = vec.dot(plane_i)
+        s = vec.dot(plane_k)
+        n = np.hypot(c, s)
+        if n < 1e-8:
+            return 0., 0.
+        return c / n, s / n
+
+    cy, sy = _components(y_e)
+    cz, sz = _components(z_e)
+
+    # 2-D tensor rotation:  M_cut = R^T  M_elem  R
+    # with R = [[cy, sy], [cz, sz]]
+    ixx = cy * cy * i1 + 2. * cy * cz * i12 + cz * cz * i2
+    izz = sy * sy * i1 + 2. * sy * sz * i12 + sz * sz * i2
+    ixz = cy * sy * i1 + (cy * sz + sy * cz) * i12 + cz * sz * i2
+    return ixx, izz, ixz
+
+
+def _find_bar_beam_crossings(model: BDF,
+                              coord: CORD2R,
+                              log=None,
+                              ) -> tuple[np.ndarray, np.ndarray,
+                                         np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Find every CBAR / CBEAM that crosses the cut plane (y_local = 0 in
+    *coord*) and return its section contribution.
+
+    Returns
+    -------
+    centroids : (nbar, 3) float ndarray
+        crossing-point coordinates in *coord*'s local frame
+    areas : (nbar,) float ndarray
+        cross-section area at the cut
+    own_I : (nbar, 3) float ndarray
+        ``(Ixx, Izz, Ixz)`` of each bar's own bending inertia about its
+        centroid, rotated into the cut-plane frame
+    own_J : (nbar,) float ndarray
+        torsion constant at the cut
+    E_arr : (nbar, 3) float ndarray
+        ``(E, E, G)`` -- axial / transverse / shear moduli
+    """
+    centroids: list[np.ndarray] = []
+    areas: list[float] = []
+    own_I: list[tuple[float, float, float]] = []
+    own_J: list[float] = []
+    E_arr: list[tuple[float, float, float]] = []
+
+    plane_i = coord.i
+    plane_k = coord.k
+
+    for eid, elem in model.elements.items():
+        if elem.type not in ('CBAR', 'CBEAM'):
+            continue
+
+        nids = elem.node_ids
+        ga = model.nodes[nids[0]].get_position()
+        gb = model.nodes[nids[1]].get_position()
+
+        ga_local = coord.transform_node_to_local(ga)
+        gb_local = coord.transform_node_to_local(gb)
+
+        ya = ga_local[1]
+        yb = gb_local[1]
+
+        # must straddle (or touch) y = 0
+        if ya * yb > 0.:
+            continue
+        dy = yb - ya
+        if abs(dy) < 1e-12:
+            continue
+
+        t = -ya / dy  # fraction from A to B at y = 0
+        xyz_cross = ga_local + t * (gb_local - ga_local)
+
+        # section properties at the crossing fraction
+        prop = elem.pid_ref
+        mat = prop.mid_ref
+        E_val = mat.E()
+        G_val = mat.G()
+
+        A_val, i1, i2, i12_val, j_val = _get_bar_section_props(prop, t)
+        if A_val <= 0.:
+            continue
+
+        ixx, izz, ixz = _bar_own_I_in_cut_frame(
+            i1, i2, i12_val, ga, gb, elem, plane_i, plane_k, model)
+
+        centroids.append(xyz_cross)
+        areas.append(A_val)
+        own_I.append((ixx, izz, ixz))
+        own_J.append(j_val)
+        E_arr.append((E_val, E_val, G_val))
+
+    if len(centroids) == 0:
+        return (np.empty((0, 3), dtype='float64'),
+                np.empty(0, dtype='float64'),
+                np.empty((0, 3), dtype='float64'),
+                np.empty(0, dtype='float64'),
+                np.empty((0, 3), dtype='float64'))
+
+    return (np.array(centroids, dtype='float64'),
+            np.array(areas, dtype='float64'),
+            np.array(own_I, dtype='float64'),
+            np.array(own_J, dtype='float64'),
+            np.array(E_arr, dtype='float64'))
+
+
 def plot_compare_inertia(log: SimpleLogger,
                          csv_filenames: list[tuple[Path, str, str]],
                          # ifig: int=1,
@@ -1642,9 +2132,40 @@ def plot_compare_inertia(log: SimpleLogger,
                          ylim_GJ_ratio=None,
                          ylim_EyIzz_ratio=None,
                          show: bool=True) -> int:
-    """helper method for test
+    """
+    Overlay section-property span plots from multiple CSV files for
+    comparison (e.g. shell-only vs. shell+bars, or two mesh densities).
 
-    inertia: [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
+    Each CSV is loaded via ``load_moi_data`` and plotted on shared axes
+    with the caller-supplied line style and tag.
+
+    Parameters
+    ----------
+    log : SimpleLogger
+        logging object
+    csv_filenames : list[tuple[Path, str, str]]
+        ``[(csv_path, legend_tag, linestyle), ...]`` for each data set
+    x, y, z : str
+        axis-label characters (default ``'x'``, ``'y'``, ``'z'``)
+    yrange : tuple | None
+        ``(ymin, ymax)`` to clip the span axis; None for auto
+    span_label : str
+        x-axis label, e.g. ``'Span, y (in)'``
+    dirname : Path
+        directory for saving PNG files
+    save : bool; default=True
+        write PNG files
+    ylim_GJ_ratio : tuple | None
+        y-axis limits for the GJ-ratio subplot
+    ylim_EyIzz_ratio : tuple | None
+        y-axis limits for the EyIzz-ratio subplot
+    show : bool; default=True
+        call ``plt.show()`` after the last figure
+
+    Returns
+    -------
+    ifig : int
+        the next unused figure number
     """
     xx = f'{x}{x}'
     xy = f'{x}{y}'

@@ -3474,8 +3474,8 @@ class AddAcoustic:
              1/AML:  the pressure and velocities on the AML boundary
                      are used to compute results in the far field.
              2/PHYB: the pressure and velocities on the physical
-                     boundary (that is, all free fluid faces with the
-                     exception of faces on the AML and the infinite
+                     boundary (that is, all free fluid faces except
+                     for faces on the AML and the infinite
                      planes) are used to compute results in the far field.
              0/NONE: the region does not radiate.
 
@@ -4019,7 +4019,7 @@ class AddMaterial:
             +========+=======+========+=======+=======+======+======+======+======+
             | MATCID |  CID  | EID1   | EID2  | EID3  | EID4 | EID5 | EID6 | EID7 |
             +--------+-------+--------+-------+-------+------+------+------+------+
-            |        | EID8  | EID9   | -etc- |       |      |      |      |      |
+            |        | EID8  | EID9   |  etc. |       |      |      |      |      |
             +--------+-------+--------+-------+-------+------+------+------+------+
 
         Format (alternative 2):
@@ -5945,7 +5945,7 @@ class AddOptimization:
         self._add_methods.add_desvar_object(desvar)
         return desvar
 
-    def add_topvar(self, opt_id: int, label: str, prop_type: int, xinit: float,
+    def add_topvar(self, opt_id: int, label: str, prop_type: str, xinit: float,
                    pid: int, xlb: float=0.001, delxv: float=0.2,
                    power: float=3.0, options=None, comment: str='') -> TOPVAR:
         """adds a TOPVAR"""
