@@ -2037,8 +2037,31 @@ def _find_bar_beam_crossings(model: BDF,
                               ) -> tuple[np.ndarray, np.ndarray,
                                          np.ndarray, np.ndarray, np.ndarray]:
     """
-    Find every CBAR / CBEAM that crosses the cut plane (y_local = 0 in
-    *coord*) and return its section contribution.
+    Find every CBAR / CBEAM that straddles the cut plane and return
+    its section contribution.
+
+    The cut plane is defined as ``y_local = 0`` in *coord*.  A bar
+    "straddles" it when its two end nodes have opposite signs of
+    y_local (strictly: ``ya * yb <= 0`` with ``|ya - yb| > 0``).
+    The crossing point is found by linear interpolation along the
+    element, and the section properties are evaluated at that fraction
+    (constant for PBAR, interpolated for tapered PBEAM).
+
+    The bar's own bending inertia ``(I1, I2, I12)`` is rotated from
+    the element's local axes into the cut-plane frame via
+    ``_bar_own_I_in_cut_frame``, so that a rectangular cross-section
+    oriented tangentially to the skin contributes the correct amounts
+    to the section's Ixx and Izz.
+
+    Parameters
+    ----------
+    model : BDF
+        cross-referenced model
+    coord : CORD2R
+        the cutting coordinate system; the cut plane is its local
+        xz-plane (y_local = 0)
+    log : SimpleLogger | None
+        logger for debug messages
 
     Returns
     -------
@@ -2047,12 +2070,13 @@ def _find_bar_beam_crossings(model: BDF,
     areas : (nbar,) float ndarray
         cross-section area at the cut
     own_I : (nbar, 3) float ndarray
-        ``(Ixx, Izz, Ixz)`` of each bar's own bending inertia about its
-        centroid, rotated into the cut-plane frame
+        ``(Ixx, Izz, Ixz)`` of each bar's own bending inertia about
+        its centroid, already rotated into the cut-plane frame
     own_J : (nbar,) float ndarray
-        torsion constant at the cut
+        torsion constant (Saint-Venant J) at the cut
     E_arr : (nbar, 3) float ndarray
-        ``(E, E, G)`` -- axial / transverse / shear moduli
+        ``(E, E, G)`` per bar — axial modulus (twice, for Ex/Ey
+        compatibility with the shell convention) and shear modulus
     """
     centroids: list[np.ndarray] = []
     areas: list[float] = []
