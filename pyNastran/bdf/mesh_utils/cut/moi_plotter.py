@@ -976,6 +976,14 @@ def _get_station_data(model: BDF,
 
     log.debug(f'dys={dys}; n={len(dys):d}')
     assert len(dys) == len(coords), (len(dys), len(coords))
+
+    # Lazily-populated cache for shell material properties.  The expensive
+    # material_coordinate_system / get_Ainv_equivalent_pshell calls depend
+    # only on the element, not the station, so each element is computed at
+    # most once.  An empty dict signals "use and populate the cache"; the
+    # get_element_inertias fast path fills it on first encounter.
+    shell_prop_cache: dict[int, tuple[float, float, float, float, float]] = {}
+
     ncuts_found = 0
     for icut, dy, coord in zip(count(), dys, coords):
         # itri_nodes = np.searchsorted(nodes, tri_nodes)
@@ -1023,7 +1031,8 @@ def _get_station_data(model: BDF,
          neutral_axisi, shear_centeri) = calculate_area_moi(
             model, rods, normal_plane, thetas,
             moi_filename=moi_filename,
-            bar_data=bar_data)
+            bar_data=bar_data,
+            shell_prop_cache=shell_prop_cache)
 
         #print(out)
         y[icut] = dy
@@ -1307,6 +1316,7 @@ def calculate_area_moi(model: BDF,
                        use_bredt_batho: bool=True,
                        use_shear_center: bool=True,
                        bar_data=None,
+                       shell_prop_cache: dict[int, tuple[float, float, float, float, float]] | None = None,
                        ) -> tuple[np.ndarray, np.ndarray, np.ndarray,               # dxi, dyi, total_area,
                                   np.ndarray, np.ndarray,                           # Isum, Jsum,
                                   np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # ExIsum, EyIsum, GJsum, avg_centroid
@@ -1350,6 +1360,11 @@ def calculate_area_moi(model: BDF,
         arrays ``(centroids, areas, own_I, own_J, E_arr)`` are merged
         into the shell data before integration.  Bar elements do NOT
         enter the Bredt-Batho or shear-center solves.
+    shell_prop_cache : dict | None; default=None
+        pre-computed ``{eid: (thickness, theta_deg, Ex, Ey, Gxy)}``
+        from ``_precompute_shell_props``.  Eliminates the expensive
+        per-element ``material_coordinate_system`` and
+        ``get_Ainv_equivalent_pshell`` calls inside the station loop.
 
     Returns
     -------
@@ -1413,7 +1428,8 @@ def calculate_area_moi(model: BDF,
 
     centroid, length, area, thickness, E = get_element_inertias(
         model, normal_plane, thetas,
-        eids, length, centroid)
+        eids, length, centroid,
+        shell_prop_cache=shell_prop_cache)
 
     # ---- bar / beam contributions (lumped areas) ----
     # Bars add concentrated area at their crossing point but do NOT
@@ -1678,6 +1694,7 @@ def get_element_inertias(model: BDF,
                          eids: list[int],
                          length: list[float],
                          centroid: list[np.ndarray],
+                         shell_prop_cache: dict[int, tuple[float, float, float, float, float]] | None = None,
                          ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Extract per-element thickness, area, and equivalent moduli for every
@@ -1705,6 +1722,11 @@ def get_element_inertias(model: BDF,
         segment lengths of each wall piece
     centroid : (n, 3) float ndarray
         segment centroids
+    shell_prop_cache : dict or None
+        pre-computed ``{eid: (thickness, theta_deg, Ex, Ey, Gxy)}``
+        from ``_precompute_shell_props``.  When provided the expensive
+        per-element ``material_coordinate_system`` and
+        ``get_Ainv_equivalent_pshell`` calls are skipped.
 
     Returns
     -------
@@ -1717,7 +1739,6 @@ def get_element_inertias(model: BDF,
     E : (n, 3) float ndarray
         ``(Ex, Ey, Gxy)`` per element
     """
-    normal_plane_vector = normal_plane.copy().reshape((3, 1))
     cg_list: list[np.ndarray] = []
     area_list: list[float] = []
     length_list: list[float] = []
@@ -1725,20 +1746,29 @@ def get_element_inertias(model: BDF,
     E_list: list[tuple[float, float, float]] = []
 
     log = model.log
+    normal_plane_vector = normal_plane.copy().reshape((3, 1))
     for eid, lengthi, centroidi in zip(eids, length, centroid):
-        #print(eid, lengthi)
         element = model.elements[eid]
-        if element.type in ['CTRIA3', 'CQUAD4']:
-            thicknessi, areai, thetad, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
-                element, normal_plane, normal_plane_vector, lengthi)
-            thetas[eid] = (thetad, Ex, Ey, Gxy)
-            thickness_list.append(thicknessi)
-            length_list.append(lengthi)
-            area_list.append(areai)
-            cg_list.append(centroidi)
-            E_list.append((Ex, Ey, Gxy))
-        else:
+        if element.type not in _SHELL_TYPES:
             log.warning(element)
+            continue
+
+        # look up the cache first; on a miss compute once and store
+        if shell_prop_cache is not None and eid in shell_prop_cache:
+            thicknessi, thetad, Ex, Ey, Gxy = shell_prop_cache[eid]
+        else:
+            thicknessi, _areai, thetad, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
+                element, normal_plane, normal_plane_vector, lengthi)
+            if shell_prop_cache is not None:
+                shell_prop_cache[eid] = (thicknessi, thetad, Ex, Ey, Gxy)
+
+        areai = thicknessi * lengthi
+        thetas[eid] = (thetad, Ex, Ey, Gxy)
+        thickness_list.append(thicknessi)
+        length_list.append(lengthi)
+        area_list.append(areai)
+        cg_list.append(centroidi)
+        E_list.append((Ex, Ey, Gxy))
 
     centroid = np.array(cg_list, dtype='float64')
     length2 = np.array(length_list, dtype='float64')
@@ -1747,6 +1777,84 @@ def get_element_inertias(model: BDF,
     thickness = np.array(thickness_list, dtype='float64')
     E = np.array(E_list, dtype='float64')
     return centroid, length, area, thickness, E
+
+
+# element types handled by the section-property extraction
+_SHELL_TYPES = frozenset(['CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8'])
+
+
+def _precompute_shell_props(
+        model: BDF,
+        normal_plane: np.ndarray,
+        candidate_eids: set[int] | None = None,
+        ) -> dict[int, tuple[float, float, float, float, float]]:
+    """
+    Pre-compute the thickness and equivalent moduli for shell elements.
+
+    The result is a cache ``{eid: (thickness, theta_deg, Ex, Ey, Gxy)}``
+    that is valid for all stations sharing the same *normal_plane*.
+    Elements whose normals are nearly in-plane with the cut
+    (``|cos θ| > 0.9``) are stored with zeroed properties so they
+    contribute no stiffness, matching the behaviour of
+    ``_get_shell_inertia``.
+
+    When *candidate_eids* is supplied, only those elements are
+    processed (typically the set of element ids that appear in the
+    triangulated face mesh).  This avoids computing expensive material
+    properties for elements that can never be intersected by any
+    station.
+
+    This is the single biggest performance win in the module: the
+    ``material_coordinate_system`` and ``get_Ainv_equivalent_pshell``
+    calls are expensive (~0.3 ms each), and the per-element material
+    properties do not depend on *which* station the cut is at — only
+    the segment length changes.
+    """
+    normal_plane_vector = normal_plane.copy().reshape((3, 1))
+    cache: dict[int, tuple[float, float, float, float, float]] = {}
+
+    for eid, element in model.elements.items():
+        if element.type not in _SHELL_TYPES:
+            continue
+        if candidate_eids is not None and eid not in candidate_eids:
+            continue
+
+        pid_ref = element.pid_ref
+        thicknessi = element.Thickness()
+
+        dxyz, centroid_unused, imat, unused_jmat, element_normal = \
+            element.material_coordinate_system()
+
+        n1, n2, n3 = element_normal
+        R1 = np.array([
+            [0., -n3, n2],
+            [n3, 0., -n1],
+            [-n2, n1, 0.],
+        ], dtype='float64')
+        R2 = np.array([
+            [1 - n1 ** 2, -n1 * n2, -n1 * n3],
+            [-n1 * n2, 1 - n2 ** 2, -n2 * n3],
+            [-n1 * n3, -n2 * n3, 1 - n3 ** 2],
+        ])
+        imat_col = imat.reshape(3, 1)
+        b = np.linalg.multi_dot([normal_plane_vector.T, R1, imat_col])
+        c = np.linalg.multi_dot([normal_plane_vector.T, R2, imat_col])
+        imat_rotation_angle = np.arctan2(b, c).item()
+        imat_rotation_angle_deg = np.degrees(imat_rotation_angle)
+        if imat_rotation_angle_deg <= -90.:
+            imat_rotation_angle_deg += 180.
+        elif imat_rotation_angle_deg > 90.:
+            imat_rotation_angle_deg -= 180.
+
+        abs_cos_theta = abs(normal_plane @ element_normal)
+        if abs_cos_theta > 0.9:  # <25.8 degrees off the cut → in-plane element
+            cache[eid] = (0., 0., 0., 0., 0.)
+        else:
+            Ex, Ey, Gxy, nu_xy = pid_ref.get_Ainv_equivalent_pshell(
+                imat_rotation_angle_deg, thicknessi)
+            cache[eid] = (thicknessi, imat_rotation_angle_deg, Ex, Ey, Gxy)
+    return cache
+
 
 def _get_shell_inertia(element: CTRIA3 | CQUAD4,
                        normal_plane: np.ndarray,
