@@ -532,12 +532,20 @@ class TrimDerivatives(Statics):
     def write_f06(self, f06_file, header: list[str], page_stamp: str, page_num: int=1,
                   is_mag_phase: bool=False, is_sort1: bool=True):
         f06_file.write(''.join(header))
+        config = 'AEROSG2D'
+        xz_sym = 'ASYMMETRIC'
         msg = (
+            '    N O N - D I M E N S I O N A L   S T A B I L I T Y   A N D   C O N T R O L   D E R I V A T I V E   C O E F F I C I E N T S\n'
+            f'                         CONFIGURATION = {config:8}     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = {xz_sym}\n'
+            f'                                         MACH = {self.mach:10.4E}                    Q = {self.q:10.4E}\n'
+            f'                         CHORD = {self.cref:10.4E}           SPAN = {self.bref:10.4E}            AREA = {self.sref:10.4E}\n'
+            '\n'
+            '    CONTROLLER STATE: INTERCEPT ONLY, ALL CONTROLLERS ARE ZERO\n\n'
             '    TRIM VARIABLE   COEFFICIENT              RIGID                         ELASTIC                          INERTIAL                  ELASTIC/RIGID\n'
             '                                   UNSPLINED        SPLINED       RESTRAINED      UNRESTRAINED     RESTRAINED      UNRESTRAINED    UNSPLINED  SPLINED\n'
-            '\n')
+            '\n\n')
 
-        coeffs = ['Cx', 'Cy', 'Cz', 'Cmx', 'Cmy', 'Cmz']
+        coeffs = ['CX', 'CY', 'CZ', 'CMX', 'CMY', 'CMZ']
         for name, derivs in zip(self.names, self.data):
             # msg += f'    {name}:\n'
             name_str = name
@@ -722,20 +730,26 @@ class ControlSurfacePositionHingeMoment(Statics):
     def write_f06(self, f06_file, header: list[str], page_stamp: str, page_num: int=1,
                   is_mag_phase: bool=False, is_sort1: bool=True):
         f06_file.write(''.join(header))
-        # msg = (
-        #     '    TRIM VARIABLE   COEFFICIENT              RIGID                         ELASTIC                          INERTIAL                  ELASTIC/RIGID\n'
-        #     '                                   UNSPLINED        SPLINED       RESTRAINED      UNRESTRAINED     RESTRAINED      UNRESTRAINED    UNSPLINED  SPLINED\n'
-        #     '\n')
-        msg = 'name, trim_value, position_lower, position_upper, hinge_moment, hinge_moment_lower, hinge_moment_upper\n'
+        msg = (
+            '                                           CONTROL SURFACE POSITION AND HINGE MOMENT RESULTS\n\n'
+            '                            ACTIVE LIMITS ARE FLAGGED WITH AN (A),  VIOLATED LIMITS ARE FLAGGED WITH A (V).\n'
+            '\n'
+            '                                                POSITION                                         HINGE MOMENT\n'
+            '          CONTROL SURFACE      LOWER LIMIT       VALUE         UPPER LIMIT        LOWER LIMIT       VALUE         UPPER LIMIT\n'
+        )
+        assert len(self.names), self.names
+        assert len(self.trim_values), self.trim_values
+        assert len(self.data), self.data
         for name, trim_value, values in zip(self.names, self.trim_values, self.data):
             # values = [-1.571e+00  1.571e+00  1.673e+06 - 1.000e+10  1.000e+10]
             (position_lower, position_upper, hinge_moment,
              hinge_moment_lower, hinge_moment_upper) = values
+            hinge_moment_lower = f'{hinge_moment_lower:>13.6E}' if not np.allclose(hinge_moment_lower, -1e10) else '    N/A    '
+            hinge_moment_upper = f'{hinge_moment_upper:>13.6E}' if not np.allclose(hinge_moment_upper, 1e10) else '    N/A    '
             msg += (
-                f'    {name:<14}   {trim_value:>13.6E}   '
-                f'{position_lower:>13.6E}  {position_upper:>13.6E}  {hinge_moment:>13.6E}  '
-                f'{hinge_moment_lower:>13.6E}  {hinge_moment_upper:>13.6E}\n')
-            msg += '\n'
+                f'              {name:<14} '
+                f'{position_lower:>13.6E}   {trim_value:>13.6E}   {position_upper:>13.6E}        '
+                f'{hinge_moment_lower}   {hinge_moment:>13.6E}     {hinge_moment_upper}\n')
         f06_file.write(msg)
         f06_file.write(page_stamp % page_num)
         return page_num + 1

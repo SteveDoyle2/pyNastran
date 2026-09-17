@@ -1940,7 +1940,7 @@ class DMIK(NastranMatrix):
                                comment=comment,
                                finalize=finalize)
         if len(self.GCj):
-            print(self.GCj, type(self.GCj))
+            # print(self.GCj, type(self.GCj))
             dofs_j = np.unique(self.GCj[:, 1])
             dofs_i = np.unique(self.GCi[:, 1])
             for dof_j in dofs_j:

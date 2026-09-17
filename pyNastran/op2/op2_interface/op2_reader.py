@@ -5415,6 +5415,8 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
             assert subcase_key[-1] == '', subcase_key
             subcase_list = list(subcase_key)
             subcase_list[-1] = cs_name
+
+            # -> (subcase, cs_name) I think?
             subcase_key2 = tuple(subcase_list)
 
             assert subcase_key2 not in trim.hinge_moment_derivatives, subcase_key2

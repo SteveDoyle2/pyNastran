@@ -661,6 +661,7 @@ class F06Writer(OP2_F06_Common):
 
                 if res_key not in model.eigenvectors:
                     continue
+                print(res_key)
                 result = model.eigenvectors[res_key]
                 if repr_check:
                     str(result)
@@ -704,10 +705,10 @@ class F06Writer(OP2_F06_Common):
             'cstm',
         ]
         res_types = [model.get_result(table_type)
-                     for table_type in sorted(model.get_table_types())
+                     # for table_type in sorted(model.get_table_types())
+                     for table_type in model.get_table_types()
                      if table_type not in unallowed_results and
                      not table_type.startswith('responses.')]
-
         for isubcase, res_keys in sorted(res_keys_subcase.items()):
             for res_key in res_keys:
                 #if isinstance(res_key, tuple):
