@@ -81,11 +81,17 @@ class DisplacementResults2(DispForceVectorResults):
         # setup the node mapping
         #node_id # the nodes in the bdf
         disp_nodes = dxyz.node_gridtype[:, 0]  # local node id
+        assert len(disp_nodes) > 0, disp_nodes
+
         self.common_nodes = np.intersect1d(node_id, disp_nodes)
         self.inode_common = np.searchsorted(node_id, self.common_nodes)
         self.inode_result = np.searchsorted(disp_nodes, self.common_nodes)
         assert disp_nodes.max() > 0, disp_nodes
-        assert len(self.inode_result) > 0, self.inode_result
+        try:
+            assert len(self.inode_result) > 0, self.inode_result
+        except:
+            raise RuntimeError(f'No common nodes\ndisp_nodes={disp_nodes}; node_id={node_id}')
+
 
         # dense -> no missing nodes in the results set
         self.is_dense = (len(node_id) == len(disp_nodes))

@@ -129,6 +129,7 @@ from .nastran_io_utils import (
     get_model_unvectorized,
     create_ugrid_from_elements,
 )
+from pyNastran.gui.gui_objects.displacement_results import DisplacementResults2
 
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
@@ -136,6 +137,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
     from pyNastran.converters.nastran.gui.types import KeysMap, NastranKey, HeaderDict
     #from pyNastran.bdf.bdf import MONPNT1, CORD2R, AECOMP, SET1
+    from pyNastran.op2.result_objects.table_object import (
+        RealTableArray, ComplexTableArray)
 
 DESIRED_RESULTS = [
     # nodal
@@ -2709,7 +2712,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         if is_early_return_aero(self, model):
             load_nastran_results_aero(
-                results_filename, model,
+                results_filename, self.model, model, self.xyz_cid0,
                 cases, form, icase)
             gui._finish_results_io2(model_name, form, cases)
             return
@@ -3961,54 +3964,84 @@ def is_early_return_aero(self: NastranIO, model: OP2) -> bool:
     return early_return_aero
 
 def load_nastran_results_aero(results_filename: PathLike,
-                              model: OP2,
+                              model_aero: BDF,
+                              results_model: OP2,
+                              xyz_cid0: np.ndarray,
                               cases, form, icase: int):
     """create results for aero models"""
+    nodal_normal, model_nodes = get_aero_nodal_normals(model_aero)
+
+    aero_nids = np.array(list(model_aero.nodes), dtype='int32')
+    aero_eids = np.array(list(model_aero.elements), dtype='int32')
+
+    subcase_keys = list(results_model.displacements)
+    trim_results = results_model.op2_results.trim
+    for key in trim_results.aero_pressure:
+        if key not in subcase_keys:
+            subcase_keys.append(key)
+
+    key_to_subcase_word = {}
+    for key in subcase_keys:
+        if key in results_model.displacements:
+            subcase_id = key[0]
+            case = results_model.displacements[key]
+            subtitle = case.subtitle
+            label = case.label
+            subcase_word = f'Subcase {subcase_id}'
+            if subtitle:
+                subcase_word += f'; subtitle={subtitle}'
+            if subtitle:
+                subcase_word += f'; label={label}'
+            key_to_subcase_word[key] = subcase_word
+
     results_filename = str(results_filename).strip(r'.\\')
-    trim_results = model.op2_results.trim
     results_form = []
-    if 0:  # pragma: no cover
-        # TODO: extract trim deflections to view aero panel results
-        for key, case in model.displacements.items():
-            # (8, 1, 1, 0, 0, '', '')
-            # 9,217,362
-            print(f'key = {key}')
-            print(case.get_stats())
-            continue
-            all_nodes = case.node_gridtype[:, 0]
-            print(f'all_nodes = {all_nodes.tolist()}')
+    mmax = xyz_cid0.max(axis=0)
+    mmin = xyz_cid0.min(axis=0)
+    dim_max = (mmax - mmin).max()
 
-            iaero_node = (all_nodes > 1e8)
-            nodes = all_nodes[iaero_node]
-            print(f'nid_max = {nodes.max()}')
-            print(f'nids = {nodes.tolist()}')
-            print(case.get_stats())
-            txyz = case.data[0, :, :3]
-            print(f'txyz.shape={txyz.shape}; nnodes={len(nodes)}')
+    for key in subcase_keys:
+        # key = (8, 1, 1, 0, 0, '', '')
 
-
-    for key, aero_pressure in trim_results.aero_pressure.items():
-        print(f'key = {key}')
+        subcase_form = []
         subcase_id = key[0]
-        cp = aero_pressure.cp
-        cp_res = GuiResult(
-            subcase_id, header='Aero Cp', title='Aero Cp',
-            location='centroid', scalar=cp)
-        # (8, 1, 1, 0, 0, '', '')
-        print(aero_pressure.get_stats())
-        subcase_word = f'Subcase {subcase_id}'
-        cases[icase] = (cp_res, (0, 'Aero Cp'))
-        # Subcase 1: Aero Cp
-        results_form.append((f'{subcase_word}: Aero Cp', icase, []))
-        icase += 1
+        subcase_word = key_to_subcase_word[key]
+        icase = _aero_deflection(
+            results_model, results_model.log,
+            aero_nids,
+            aero_eids,
+            xyz_cid0, dim_max,
+            cases, subcase_form, icase, key)
 
-    # for key, aero_force in trim_results.aero_force.items():
+        if key in trim_results.aero_pressure:
+            # print(f'key = {key}')
+            aero_pressure = trim_results.aero_pressure[key]
+            cp = aero_pressure.cp
+            cp_res = GuiResult(
+                subcase_id, header='Aero Cp', title='Aero Cp',
+                location='centroid', scalar=cp)
+            # (8, 1, 1, 0, 0, '', '')
+            # print(aero_pressure.get_stats())
+            cases[icase] = (cp_res, (0, 'Aero Cp'))
+            # Subcase 1: Aero Cp
+
+            # self.title = title
+            # self.subtitle = subtitle
+            # self.label = label
+            subcase_form.append(('Aero Cp', icase, []))
+            icase += 1
+        if len(subcase_form):
+            results_form.append((subcase_word, None, subcase_form))
+
+    #-------------------------------------
+
+    # if key in  in trim_results.aero_force:
+    #     aero_force = trim_results.aero_force[key]
     #     # aero_force[8]:
     #     # fem: nnode=4522 nelement=3108
     #     #   nodes:        n=3108
     #     #   force:        (3108, 6)
     #     #   force_label:  (3108,)
-    #     print(f'key = {key}')
     #     cp = aero_pressure.cp
     #     cp_res = ForceResult(
     #         0, header='Aero Force', title='Aero Force',
@@ -4021,3 +4054,95 @@ def load_nastran_results_aero(results_filename: PathLike,
         form.append((results_filename, None, results_form))
         # form_results = (basename + '-Results', None, form_optimization)
 
+
+def get_aero_nodal_normals(model_aero: BDF) -> tuple[np.ndarray, np.ndarray]:
+    model_nodes = np.array(list(model_aero.nodes))
+    nelements = len(model_aero.elements)
+    nnodes = len(model_nodes)
+
+    assert nelements > 0, nelements
+    assert nnodes > 0, nnodes
+    nodal_count = np.zeros(nnodes)
+    nodal_normal = np.zeros((nnodes, 3))
+    ielem = 0
+    for eid, elem in model_aero.elements.items():
+        normal = elem.Normal()
+        inodes = np.searchsorted(model_nodes, elem.nodes)
+        for inid, nidi in zip(inodes, elem.nodes):
+            nodal_normal[inid, :] += normal
+            nodal_count[inid] += 1
+        ielem += 1
+
+    # normalize the normals
+    # the normals have flipped signs because reasons
+    nodal_normal /= -nodal_count[:, np.newaxis]
+    return nodal_normal, model_nodes
+
+
+class DisplacementReduced:
+    def __init__(self, case: RealTableArray | ComplexTableArray,
+                 nodal_disp: np.ndarray,
+                 node_gridtype: np.ndarray):
+        self.data = nodal_disp
+        self.node_gridtype = node_gridtype
+
+
+def _aero_deflection(results_model: OP2,
+                     log: SimpleLogger,
+                     aero_nids: np.ndarray,
+                     aero_eids: np.ndarray,
+                     xyz_cid0: np.ndarray,
+                     dim_max: float,
+                     cases, form, icase: int,
+                     key: tuple) -> int:
+    """
+    aero deflection results are appended to the OUGV1 displacement table as:
+      - [structure_nodes, aero_nodes, aero_elements]
+    """
+    node_ids = aero_nids
+    naero_nodes = len(aero_nids)
+    naero_eids = len(aero_eids)
+
+    nextra_nodes = naero_nodes + naero_eids
+    log.debug(f'naero_nodes = {naero_nodes}')
+    log.debug(f'naero_eids = {naero_eids}')
+    log.debug(f'ntotal = {nextra_nodes}')
+
+    # --------------------------------------------------------------------------
+    log.debug('--------------------------------------------------------------')
+    disp_case = results_model.displacements[key]
+
+    subcase_id = key[0]
+    node_gridtype = disp_case.node_gridtype
+    all_nids = node_gridtype[:, 0]
+    max_nid = all_nids.max()
+    nids_aero = all_nids[-naero_nodes:]
+    log.debug(f'nids_aero = {nids_aero}')
+    log.debug(f'max_nid = {max_nid}')
+
+    node_gridtype = disp_case.node_gridtype[-nextra_nodes:-naero_eids, :].copy()
+    node_gridtype[:, 0] = node_ids
+    nodal_disp = disp_case.data[:, -nextra_nodes:-naero_eids, :]
+    element_disp = disp_case.data[:, -naero_eids:, :]
+    log.debug(f'aero_data.shape = {str(nodal_disp.shape)}')
+    log.debug(f'element_disp.shape = {str(element_disp.shape)}')
+    assert nodal_disp.shape[1] == naero_nodes, nodal_disp.shape
+    assert element_disp.shape[1] == naero_eids, element_disp.shape
+
+    # ---------------------------------------------------------------------
+
+    resname = 'Deflection'
+    disp_case_aero = DisplacementReduced(disp_case, nodal_disp, node_gridtype)
+    deflection_res = DisplacementResults2(
+        subcase_id, node_ids, xyz_cid0, disp_case_aero,
+        title=resname,
+        t123_offset=0,
+        dim_max=dim_max,
+        data_format='%g', nlabels=None, labelsize=None,
+        ncolors=None, colormap='', set_max_min=False,
+        # uname=resname,
+    )
+    cases[icase] = (deflection_res, (0, 'Aero Deflection'))
+    form.append(('Aero Deflection', icase, []))
+    icase += 1
+    return icase

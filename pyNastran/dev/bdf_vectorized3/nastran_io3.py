@@ -1648,7 +1648,7 @@ def _load_oug(model: OP2,
                     ncolors=None, colormap='', set_max_min=False,
                     uname=res_name)
             else:  # pragma: no cover
-                raise RuntimeError((name, deflects_str))
+                raise RuntimeError((res_name, deflects_str))
 
             headers2 = []
             for itime in range(ntimes):
