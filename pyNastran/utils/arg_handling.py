@@ -2,6 +2,24 @@
 import sys
 import pyNastran
 
+def replace_args(argv: list[str],
+                 replace_map: dict[str, str]) -> list[str]:
+    """
+    silently fixes arg typos
+
+    >>> argv = ['test_bdf', 'fem.bdf', '--skip_eid_check']
+    replace_map = {
+        '--skip_eid_check': '--skip_eid_checks',
+    }
+    >>> replace(args, args, replace_map)
+    argv = ['test_bdf', 'fem.bdf', '--skip_eid_checks']
+    """
+    for initial_key, final_key in replace_map.items():
+        if initial_key in argv:
+            iarg = argv.index(initial_key)
+            argv[iarg] = final_key
+    return argv
+
 def swap_key(mydict, key_orig, key_new, flip=False):
     """replaces a key in a dictionary"""
     if flip:

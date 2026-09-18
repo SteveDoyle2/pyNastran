@@ -2706,7 +2706,8 @@ def test_bdf_argparse(argv=None):
 
     #argv
     #print(argv)
-    from pyNastran.utils.arg_handling import argparse_to_dict, update_message  # swap_key
+    from pyNastran.utils.arg_handling import (
+        replace_args, argparse_to_dict, update_message)  # swap_key
     update_message(parent_parser, usage, args, examples)
 
     # try:
@@ -2717,6 +2718,15 @@ def test_bdf_argparse(argv=None):
     #     parent_parser.print_usage(file=fobj)
     #     args = fobj.getvalue()
     #     raise
+    replace_map = {
+        '--skip_eid_check': '--skip_eid_checks',
+        '--skip_load': '--skip_loads',
+        '--skip_mcids': '--skip_mcid',
+        '--no_similar_eids': '--no_similar_eid',
+        '--notab': '--notabs',
+        '--dumpline': '--dumplines',
+    }
+    argv = replace_args(argv, replace_map)
     args = parent_parser.parse_args(args=argv)
 
     args2 = argparse_to_dict(args)
