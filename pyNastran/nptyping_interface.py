@@ -13,14 +13,18 @@ def get_numpy_typing():
     #Array3x3 = Annotated[npt.NDArray[DType], Literal[3, 3]]
     #ArrayNxNx3 = Annotated[npt.NDArray[DType], Literal["N", "N", 3]]
 
+    float_dtype = np.dtype[np.float64]
+    int_dtype = np.dtype[np.int_]
     FloatArray = npt.NDArray[np.float64]
     IntArray = npt.NDArray[np.int_]
     BoolArray = npt.NDArray[np.bool_]
 
     # vector:
     # [0., 0., 0.]
-    NDArray3float = Annotated[FloatArray, Literal[3]]
-    NDArray33float = Annotated[FloatArray, Literal[3, 3]]
+    NDArray3float = np.ndarray[Literal[3], float_dtype]
+    NDArray33float = np.ndarray[tuple[Literal[3], Literal[3]], float_dtype]
+    # NDArray3float = Annotated[FloatArray, Literal[3]]
+    # NDArray33float = Annotated[FloatArray, Literal[3, 3]]
     test = Optional[NDArray3float]
     del test
 

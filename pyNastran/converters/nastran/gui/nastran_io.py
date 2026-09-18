@@ -5,10 +5,10 @@ import os
 import sys
 from pathlib import PurePath
 import traceback
-from itertools import chain
+from itertools import count, chain
 from io import StringIO
 from collections import defaultdict
-from typing import Optional, Any, TYPE_CHECKING
+from typing import cast, Optional, Any, TYPE_CHECKING
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -44,7 +44,7 @@ else:  # pragma: no cover
     raise NotImplementedError(qt_version)
 
 from qtpy import QtCore
-from qtpy.QtWidgets import QDockWidget
+from qtpy.QtWidgets import QDockWidget, QAction
 
 from pyNastran.gui.vtk_common_core import vtkPoints
 from pyNastran.gui.vtk_interface import (
@@ -56,7 +56,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.femutils.nan import (
     isfinite, isfinite_and_greater_than, isfinite_and_nonzero,
 )
-from pyNastran.femutils.utils import duplicates, is_monotonic, safe_norm
+from pyNastran.femutils.utils import duplicates, is_monotonic
 
 from pyNastran.converters.neu.neu import read_neu
 from pyNastran.bdf.patran_utils.colon_syntax import _apply_colon_set
@@ -132,6 +132,7 @@ from .nastran_io_utils import (
 from pyNastran.gui.gui_objects.displacement_results import DisplacementResults2
 
 if TYPE_CHECKING:  # pragma: no cover
+    import numpy.typing as npt
     from cpylog import SimpleLogger
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     from pyNastran.gui.main_window import MainWindow
@@ -592,10 +593,16 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.nnodes = ngui_nodes
         self.nelements = nelements  # approximate...
 
-        out = self.make_caeros(model)
-        (has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
-         ncaeros_points, ncaero_sub_points,
-         has_control_surface, box_id_to_caero_element_map, cs_box_ids) = out
+        out_dict = self.make_caeros(model)
+        has_caero = out_dict['has_caero']
+        ncaeros = out_dict['ncaeros']
+        ncaeros_sub = out_dict['ncaeros_sub']
+        ncaeros_cs = out_dict['ncaeros_cs']
+        has_control_surface = out_dict['has_control_surface']
+        box_id_to_caero_element_map = out_dict['box_id_to_caero_element_map']
+        cs_box_ids = out_dict['cs_box_ids']
+        caero_points = out_dict['caero_points']
+
         self.has_caero = has_caero
 
         #-----------------------------------------------------------------------
@@ -720,11 +727,13 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         obj.uncross_reference()
         obj.safe_cross_reference(model, xref_errors)
 
-        out = self.make_caeros(model)
-        (has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
-         ncaeros_points, ncaero_sub_points,
-         has_control_surface, box_id_to_caero_element_map, cs_box_ids) = out
-        self.has_caero = has_caero
+        out_dict = self.make_caeros(model)
+        box_id_to_caero_element_map = out_dict['box_id_to_caero_element_map']
+        cs_box_ids = out_dict['cs_box_ids']
+        caero_points = out_dict['caero_points']
+        has_control_surface = out_dict['has_control_surface']
+
+        self.has_caero = out_dict['has_caero']
         self._create_aero(model, box_id_to_caero_element_map, cs_box_ids,
                           caero_points, has_control_surface)
         self.Render()
@@ -948,8 +957,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         if stored_msg:
             log.warning('\n' + '\n'.join(stored_msg))
 
-    def make_caeros(self, model: BDF) -> tuple[np.ndarray, int, int, int, int, bool,
-                                               dict[int, int], list[int]]:
+    def make_caeros(self, model: BDF) -> dict[str, Any]:
         """
         Creates the CAERO panel inputs including:
          - caero
@@ -1005,14 +1013,21 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             cs_box_ids = defaultdict(list)
             all_control_surface_name = ''
             #caero_control_surface_names = []
-            out = (
-                has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
-                ncaeros_points, ncaero_sub_points,
-                has_control_surface, box_id_to_caero_element_map, cs_box_ids,
-            )
-            return out
+            out_dict = {
+                'has_caero': has_caero,
+                'caero_points': caero_points,
+                'ncaeros': ncaeros,
+                'ncaeros_sub': ncaeros_sub,
+                'ncaeros_cs': ncaeros_cs,
+                'ncaeros_points': ncaeros_points,
+                'ncaero_sub_points': ncaero_sub_points,
+                'has_control_surface': has_control_surface,
+                'box_id_to_caero_element_map': box_id_to_caero_element_map,
+                'cs_box_ids': cs_box_ids,
+            }
+            return out_dict
 
-        all_control_surface_name, caero_control_surfaces, out = build_caero_paneling(model)
+        all_control_surface_name, caero_control_surfaces, out, out_dict = build_caero_paneling(model)
         if all_control_surface_name:
             gui.create_alternate_vtk_grid(
                 'caero_control_surfaces', color=PINK_FLOAT, line_width=5, opacity=1.0,
@@ -1022,7 +1037,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             gui.create_alternate_vtk_grid(
                 cs_name, color=PINK_FLOAT, line_width=5, opacity=0.5,
                 representation='surface')
-        return out
+        return out_dict
 
     def set_caero_grid(self, model: BDF) -> None:
         """
@@ -1152,7 +1167,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         grid.SetPoints(vtk_points)
         return
 
-    def set_caero_control_surface_grid(self, name: str, cs_box_ids: list[int],
+    def set_caero_control_surface_grid(self, name: str,
+                                       cs_box_ids: list[int] | npt.NDArray[np.int32],
                                        box_id_to_caero_element_map: dict[int, Any],
                                        caero_points: np.ndarray,
                                        note: Optional[str]=None,
@@ -1259,8 +1275,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         return stored_msg
 
     def set_spc_mpc_suport_grid(self, model: BDF,
-                                nid_to_pid_map: dict[int, int],
-                                idtype: str):
+                                nid_to_pid_map: dict[int, list[int]],
+                                idtype: npt.DTypeLike):
         """
         for each subcase, make secondary actors including:
          - spc_id=spc_id
@@ -1441,6 +1457,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         node_ids = []
         for nid, c1 in node_ids_c1.items():
+            assert isinstance(nid, int), nid
+            nid = cast(int, nid)
             if nid_to_pid_map is not None:
                 plot_node = False
                 pids = nid_to_pid_map[nid]
@@ -1480,7 +1498,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         nids = []
         text = []
         #result_name = self.icase
-        result_name = str('ElementID')
+        result_name = 'ElementID'
         for nid, data in sorted(self.nid_release_map.items()):
             sub_release_map = defaultdict(str)
             for (eid, pin_flagi) in data:
@@ -1662,7 +1680,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         return mpc_names
 
     def _add_nastran_nodes_to_grid(self, name: str,
-                                   node_ids: list[int],
+                                   node_ids: list[int] | npt.NDArray[np.int_],
                                    model: BDF,
                                    msg: str, store_msg: bool=False):
         """used to create MPC independent/dependent nodes"""
@@ -1925,7 +1943,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             icase += 1
             self.element_ids = eids
 
-        if superelements is not None:
+        if len(superelements):
             nid_res = GuiResult(0, header='SuperelementID', title='SuperelementID',
                                 location='centroid', scalar=superelements)
             cases[icase] = (nid_res, (0, 'SuperelementID'))
@@ -3037,19 +3055,20 @@ class NastranIO(NastranIO_):
         #self.gui.menu_help2 = self.gui.menubar.addMenu('&HelpMenuNew')
         #self.gui.menu_help.menuAction().setVisible(False)
         gui: MainWindow = self.gui
+        gui_actions: dict[str, QAction] = gui.actions
         if hasattr(self, 'nastran_toolbar'):
-            self.nastran_tools_menu.setVisible(True)
+            gui.nastran_tools_menu.setVisible(True)
             gui.nastran_toolbar.setVisible(True)
-            gui.actions['nastran'].setVisible(True)
+            gui_actions['nastran'].setVisible(True)
         else:
             #self.menubar.addMenu('&File')
             self.create_nastran_tools_menu(gui)
 
-            gui.nastran_toolbar = self.addToolBar('Nastran Toolbar')
+            gui.nastran_toolbar = gui.addToolBar('Nastran Toolbar')
             gui.nastran_toolbar.setObjectName('nastran_toolbar')
             #gui.nastran_toolbar.setStatusTip("Show/Hide nastran toolbar")
-            gui.actions['nastran'] = self.nastran_toolbar.toggleViewAction()
-            gui.actions['nastran'].setStatusTip("Show/Hide application toolbar")
+            gui_actions['nastran'] = gui.nastran_toolbar.toggleViewAction()
+            gui_actions['nastran'].setStatusTip("Show/Hide application toolbar")
         #gui.file.menuAction().setVisible(False)
         #gui.menu_help.
 
@@ -3208,7 +3227,7 @@ def _build_sort1_table(key_itimes: list[tuple[NastranKey, int]],
         #  superelement_adaptivity_index, pval_step) = key
         #print('key =', key)
         subcase_id = key[0]
-        count = key[3]
+        counti = key[3]
         ogs = key[4]
         #print('*ogs =', ogs)
         #subtitle = key[4]
@@ -3236,7 +3255,7 @@ def _build_sort1_table(key_itimes: list[tuple[NastranKey, int]],
 
         #print('key =', key)
         if subcase_id != subcase_id_old or subtitle != subtitle_old or ogs != ogs_old:
-            count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
+            count_str = '' if counti == 0 else ' ; opt_count=%s' % count_old
             ogs_str = '' if ogs == 0 else '; OGS=%s' % ogs_old
             subcase_str = 'Subcase %s; %s%s%s%s' % (
                 subcase_id_old, subtitle_old, superelement_adaptivity_index, count_str, ogs_str)
@@ -3250,7 +3269,7 @@ def _build_sort1_table(key_itimes: list[tuple[NastranKey, int]],
             form_resultsi_subcase = []
             subcase_id_old = subcase_id
             subtitle_old = subtitle
-            count_old = count
+            count_old = counti
             ogs_old = ogs
 
         try:
@@ -3264,7 +3283,7 @@ def _build_sort1_table(key_itimes: list[tuple[NastranKey, int]],
             msg += f'    subcase={subcase}\n'
             msg += f'    analysis_code={analysis_code}\n'
             msg += f'    sort_method={sort_method}\n'
-            msg += f'    count={count}\n'
+            msg += f'    count={counti}\n'
             msg += f'    ogs={ogs}\n'
             msg += f'    superelement_adaptivity_index={superelement_adaptivity_index!r}\n'
             msg += f'    pval_step={pval_step!r}\n'
@@ -3320,7 +3339,7 @@ def _build_sort1_table(key_itimes: list[tuple[NastranKey, int]],
 
     #print("subcase_id = ", subcase_id)
     if subcase_id:
-        count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
+        count_str = '' if counti == 0 else ' ; opt_count=%s' % count_old
         ogs_str = '' if ogs == 0 else '; OGS=%s' % ogs_old
         subcase_str = 'Subcase %s; %s%s%s' % (subcase_id, subtitle, count_str, ogs_str)
         #print('*', subcase_str)
@@ -3350,8 +3369,8 @@ def _build_sort1_table(key_itimes: list[tuple[NastranKey, int]],
 
 
 def _build_materials(model: BDF,
-                     pcomp: dict[str, np.ndarray],
-                     pshell: dict[str, np.ndarray],
+                     pcomp: dict[str, npt.NDArray],
+                     pshell: dict[str, npt.NDArray],
                      is_pshell_pcomp: tuple[bool, bool],
                      cases: dict[int, Any],
                      form0, icase: int) -> int:
@@ -3368,7 +3387,7 @@ def _build_materials(model: BDF,
         mids = pshell_pcompi['mids']
         thickness = pshell_pcompi['thickness']
 
-        theta = None
+        theta = np.array([])
         if 'nplies' in pshell_pcompi:
             nplies = pshell_pcompi['nplies']
             if nplies is not None and nplies.max() > 0:
@@ -3377,7 +3396,7 @@ def _build_materials(model: BDF,
                 cases[icase] = (nplies_res, (0, 'Number of Plies'))
                 form0.append(('Number of Plies', icase, []))
                 icase += 1
-            theta = pshell_pcompi['theta']
+            theta: npt.NDArray = pshell_pcompi['theta']
 
         if mids is None:
             continue
@@ -3411,7 +3430,7 @@ def _build_materials(model: BDF,
                     form_layer.append((tword, icase, []))
                     icase += 1
 
-            if i == 1 and ilayer > 0 and theta is not None:
+            if i == 1 and ilayer > 0 and len(theta):
                 # i=1 -> PCOMP
                 # ilayer=0 is null
                 # theta is None for pshell
@@ -3906,7 +3925,15 @@ class Case2D:
     def __init__(self, node_id: np.ndarray, data: np.ndarray):
         nnode = len(node_id)
         self.node_gridtype = np.zeros((nnode, 2), dtype='int32')
+        self.node_gridtype[:, 0] = node_id
         self.data = data.reshape(1, nnode, 3)
+
+class DisplacementReduced:
+    def __init__(self, case: RealTableArray | ComplexTableArray,
+                 nodal_disp: np.ndarray,
+                 node_gridtype: np.ndarray):
+        self.node_gridtype = node_gridtype
+        self.data = nodal_disp
 
 
 def plotels_to_groups(model: BDF) -> tuple[
@@ -3967,9 +3994,11 @@ def load_nastran_results_aero(results_filename: PathLike,
                               results_model: OP2,
                               xyz_cid0: np.ndarray,
                               cases, form, icase: int):
-    """create results for aero models"""
-    nodal_normal, model_nodes = get_aero_nodal_normals(model_aero)
-
+    """
+    create results for aero models
+     - displacements
+     - no spc_forces or load_vectors for aero
+    """
     aero_nids = np.array(list(model_aero.nodes), dtype='int32')
     aero_eids = np.array(list(model_aero.elements), dtype='int32')
 
@@ -4029,61 +4058,94 @@ def load_nastran_results_aero(results_filename: PathLike,
             # self.label = label
             subcase_form.append(('Aero Cp', icase, []))
             icase += 1
+
+        if key in trim_results.aero_force:
+            aero_force = trim_results.aero_force[key]
+            # aero_force[8]:
+            # fem: nnode=4522 nelement=3108
+            #   nodes:        n=3108
+            #   force:        (3108, 6)
+            #   force_label:  (3108,)
+            fz_res = GuiResult(
+                subcase_id, header='Aero Force - Fz', title='Aero Force - Fz',
+                location='centroid', scalar=aero_force.force[:, 2])
+            my_res = GuiResult(
+                subcase_id, header='Aero Force - My', title='Aero Force - My',
+                location='centroid', scalar=aero_force.force[:, 4])
+
+            # ---- elemental_forces_to_nodal_forces ----
+            nodal_force_dict = {}
+            nodal_moment_dict = {}
+            nnodes_dict = {}
+            for nid in aero_nids:
+                nodal_force_dict[nid] = np.zeros(3)
+                nodal_moment_dict[nid] = np.zeros(3)
+                nnodes_dict[nid] = 0
+            for eid, forcei in zip(aero_eids, aero_force.force):
+                elem = model_aero.elements[eid]
+                element_normal = elem.Normal()
+                for nid in elem.nodes:
+                    nodal_force_dict[nid] += forcei[2] * element_normal  # Fz
+                    nodal_moment_dict[nid] += forcei[4] * element_normal  # My
+                    nnodes_dict[nid] += 1
+
+            naero_node = len(aero_nids)
+            nodal_forces = np.zeros((naero_node, 3), dtype='float64')
+            nodal_moments = np.zeros((naero_node, 3), dtype='float64')
+            for i, (nid, nnodei) in zip(count(), nnodes_dict.items()):
+                force = nodal_force_dict[nid]
+                moment = nodal_moment_dict[nid]
+                nnodei = nnodes_dict[nid]
+                nodal_forces[i] = force / nnodei
+                nodal_moments[i] = moment / nnodei
+            #-----------------------------------------------
+
+            force_case = Case2D(aero_nids, nodal_forces)
+            moment_case = Case2D(aero_nids, nodal_moments)
+            methods_txyz_rxyz_force = ['Fx', 'Fy', 'Fz']
+            methods_txyz_rxyz_moment = ['Mx', 'My', 'Mz']
+            index_to_base_title_annotation_force = {
+                0: {'title': 'F_', 'corner': 'F_'},
+            }
+            index_to_base_title_annotation_moment = {
+                0: {'title': 'M_', 'corner': 'M_'},
+            }
+            force_res = ForceResults2(
+                subcase_id,
+                aero_nids, xyz_cid0,
+                force_case, aero_force.title,
+                index_to_base_title_annotation=index_to_base_title_annotation_force,
+                t123_offset=0, methods_txyz_rxyz=methods_txyz_rxyz_force,
+                dim_max=1.0, data_format='%g',
+                is_variable_data_format=False,
+                nlabels=None, labelsize=None, ncolors=None, colormap='',
+                set_max_min=False, uname='NastranGeometry-ForceResults2')
+            moment_res = ForceResults2(
+                subcase_id,
+                aero_nids, xyz_cid0,
+                moment_case, aero_force.title,
+                index_to_base_title_annotation=index_to_base_title_annotation_moment,
+                t123_offset=0, methods_txyz_rxyz=methods_txyz_rxyz_moment,
+                dim_max=1.0, data_format='%g',
+                is_variable_data_format=False,
+                nlabels=None, labelsize=None, ncolors=None, colormap='',
+                set_max_min=False, uname='NastranGeometry-ForceResults2')
+            cases[icase] = (fz_res, (0, 'Aero Force - Fz'))
+            cases[icase+1] = (my_res, (0, 'Aero Force - My'))
+            cases[icase+2] = (force_res, (0, 'Aero Force'))
+            cases[icase+3] = (moment_res, (0, 'Aero Moment'))
+            subcase_form.append(('Aero Force - Fz', icase, []))
+            subcase_form.append(('Aero Force - My', icase+1, []))
+            subcase_form.append(('Aero Force', icase+2, []))
+            subcase_form.append(('Aero Moment', icase+3, []))
+            icase += 4
+
         if len(subcase_form):
             results_form.append((subcase_word, None, subcase_form))
-
-    #-------------------------------------
-
-    # if key in  in trim_results.aero_force:
-    #     aero_force = trim_results.aero_force[key]
-    #     # aero_force[8]:
-    #     # fem: nnode=4522 nelement=3108
-    #     #   nodes:        n=3108
-    #     #   force:        (3108, 6)
-    #     #   force_label:  (3108,)
-    #     cp = aero_pressure.cp
-    #     cp_res = ForceResult(
-    #         0, header='Aero Force', title='Aero Force',
-    #         location='centroid', scalar=cp)
-    #     cases[icase] = (cp_res, (0, 'Aero Force'))
-    #     results_form.append(('Aero Force', icase, []))
-    #     icase += 1
 
     if len(results_form):
         form.append((results_filename, None, results_form))
         # form_results = (basename + '-Results', None, form_optimization)
-
-
-def get_aero_nodal_normals(model_aero: BDF) -> tuple[np.ndarray, np.ndarray]:
-    model_nodes = np.array(list(model_aero.nodes))
-    nelements = len(model_aero.elements)
-    nnodes = len(model_nodes)
-
-    assert nelements > 0, nelements
-    assert nnodes > 0, nnodes
-    nodal_count = np.zeros(nnodes)
-    nodal_normal = np.zeros((nnodes, 3))
-    ielem = 0
-    for eid, elem in model_aero.elements.items():
-        normal = elem.Normal()
-        inodes = np.searchsorted(model_nodes, elem.nodes)
-        for inid, nidi in zip(inodes, elem.nodes):
-            nodal_normal[inid, :] += normal
-            nodal_count[inid] += 1
-        ielem += 1
-
-    # normalize the normals
-    # the normals have flipped signs because reasons
-    nodal_normal /= -nodal_count[:, np.newaxis]
-    return nodal_normal, model_nodes
-
-
-class DisplacementReduced:
-    def __init__(self, case: RealTableArray | ComplexTableArray,
-                 nodal_disp: np.ndarray,
-                 node_gridtype: np.ndarray):
-        self.data = nodal_disp
-        self.node_gridtype = node_gridtype
 
 
 def _aero_deflection(results_model: OP2,

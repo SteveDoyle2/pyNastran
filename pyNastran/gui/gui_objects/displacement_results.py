@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.gui.gui_objects.vector_results import (
@@ -8,6 +8,7 @@ from pyNastran.gui.gui_objects.vector_results import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.result_objects.table_object import (
         RealTableArray, ComplexTableArray)
+    from pyNastran.converters.nastran.gui.nastran_io import DisplacementReduced
 
 
 ## default legend button (on Legend menu) should go back to OG legend
@@ -80,21 +81,22 @@ class DisplacementResults2(DispForceVectorResults):
 
         # setup the node mapping
         #node_id # the nodes in the bdf
-        disp_nodes = dxyz.node_gridtype[:, 0]  # local node id
-        assert len(disp_nodes) > 0, disp_nodes
+        case_node_ids = dxyz.node_gridtype[:, 0]  # local node id
+        assert case_node_ids.max() > 0, case_node_ids
+        assert len(case_node_ids) > 0, case_node_ids
 
-        self.common_nodes = np.intersect1d(node_id, disp_nodes)
+        self.common_nodes = np.intersect1d(node_id, case_node_ids)
         self.inode_common = np.searchsorted(node_id, self.common_nodes)
-        self.inode_result = np.searchsorted(disp_nodes, self.common_nodes)
-        assert disp_nodes.max() > 0, disp_nodes
+        self.inode_result = np.searchsorted(case_node_ids, self.common_nodes)
+        assert case_node_ids.max() > 0, case_node_ids
         try:
             assert len(self.inode_result) > 0, self.inode_result
         except:
-            raise RuntimeError(f'No common nodes\ndisp_nodes={disp_nodes}; node_id={node_id}')
+            raise RuntimeError(f'No common nodes\ncase_node_ids={case_node_ids}; node_id={node_id}')
 
 
         # dense -> no missing nodes in the results set
-        self.is_dense = (len(node_id) == len(disp_nodes))
+        self.is_dense = (len(node_id) == len(case_node_ids))
 
         self.xyz = xyz
         assert len(self.xyz.shape) == 2, self.xyz.shape

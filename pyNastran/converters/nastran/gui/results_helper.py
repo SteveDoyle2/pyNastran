@@ -6,7 +6,6 @@ from collections import defaultdict
 from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
-#from numpy.linalg import norm  # type: ignore
 
 from pyNastran.femutils.utils import safe_norm
 from pyNastran.gui.gui_objects.gui_result import GuiResult, GuiResultIDs
@@ -22,6 +21,7 @@ from pyNastran.op2.result_objects.stress_object import (
 from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
 from pyNastran.gui.gui_objects.types import Form, FormDict, HeaderDict, Case, Cases
 from pyNastran.converters.nastran.gui.types import KeysMap, KeyMap, NastranKey
+from pyNastran.op2.tables.oef_forces.oef_force_objects import RealCBarForceArray
 
 from .geometry_helper import NastranGuiAttributes
 from .stress import (
@@ -49,7 +49,6 @@ Form = tuple[str, Optional[int], Any]
 FormDict = dict[tuple[Any, Any], Form]
 Case = tuple[GuiResult, tuple[int, str]]
 Cases = dict[int, Case]
-#CRASH = True
 
 
 class NastranGuiResults(NastranGuiAttributes):
@@ -223,6 +222,8 @@ class NastranGuiResults(NastranGuiAttributes):
         has_strain_energy = [key in res[0] for res in strain_energies]
         if not any(has_strain_energy):
             return icase
+
+        header = ''
         itrue = has_strain_energy.index(True)
         unused_ese0 = strain_energies[itrue][0]
         #times = ese0._times
@@ -383,7 +384,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         if key in force.cbar_force:
             found_force = True
-            case: np.ndarray = force.cbar_force[key]
+            case: RealCBarForceArray = force.cbar_force[key]
             if case.element_type == 34:
                 ## CBAR-34
                 if case.is_real:
@@ -1035,7 +1036,7 @@ class NastranGuiResults(NastranGuiAttributes):
         #max_shear = np.full(nelements, np.nan, dtype='float32')
         ovm = np.full(nelements, np.nan, dtype='float32')
 
-        vm_word = None
+        vm_word = ''
         #-------------------------------------------------------------
         #vm_word = get_spring_stress_strain(
             #model, key, is_stress, vm_word, itime,
@@ -1163,7 +1164,7 @@ class NastranGuiResults(NastranGuiAttributes):
         #            oyy
         #            ozz
 
-        if vm_word is None:
+        if vm_word == '':
             #print('vm_word is None')
             return icase
 
@@ -1177,6 +1178,7 @@ class NastranGuiResults(NastranGuiAttributes):
         if is_stress and itime == 0:
             if is_element_on.min() == 0:  # if all elements aren't on
                 print_empty_elements(self.model, eids, is_element_on, log)
+                print(f'is_element_on = {is_element_on}')
 
                 is_element_on = np.isfinite(oxx)
                 is_element_on = is_element_on.astype('|i1')

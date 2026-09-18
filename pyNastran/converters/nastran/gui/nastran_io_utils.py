@@ -1875,11 +1875,12 @@ def map_elements1_no_quality_helper(self,
     #print('mapped elements')
 
     nelements = i
-    #print('nelements=%s pids=%s' % (nelements, list(pids)))
+    #print('nelements=%d pids=%s' % (nelements, list(pids)))
     pids = pids[:nelements]
 
+    nid_to_pid_map2 = dict(nid_to_pid_map)
     out = (
-        nid_to_pid_map, xyz_cid0, superelements, pids, nelements,
+        nid_to_pid_map2, xyz_cid0, superelements, pids, nelements,
         material_coord, material_theta,
     )
     return out

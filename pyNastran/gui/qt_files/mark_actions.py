@@ -203,7 +203,7 @@ class MarkActions:
         grid = self.gui.grid_selected
         cell = grid.GetCell(cell_id)
         if cell is None:
-            return
+            return None
         nnodes = cell.GetNumberOfPoints()
         points = cell.GetPoints()
         cell_type = cell.GetCellType()
@@ -310,10 +310,10 @@ class MarkActions:
         """
         actors = []
         if eids and representation in {'wire', 'surface'}:
-            actor = self.highlight_elements(self, eids, model_name=model_name)
+            actor = self.highlight_elements(eids, model_name=model_name, add_actor=True)
             actors.append(actor)
         if nids and representation == 'points':
-            actor = self.highlight_nodes(self, nids, model_name=model_name)
+            actor = self.highlight_nodes(nids, model_name=model_name, add_actor=True)
             actors.append(actor)
         return actors
 
@@ -396,7 +396,7 @@ class MarkActions:
             ugrid, representation=representation, add_actor=add_actor)
         return actor
 
-    def mark_nodes(self, nids: list[int], icase: int, text: str) -> None:
+    def mark_nodes(self, nids: list[int], icase: int, text: list[str] | str) -> None:
         """
         Marks a series of nodes with custom text labels
 

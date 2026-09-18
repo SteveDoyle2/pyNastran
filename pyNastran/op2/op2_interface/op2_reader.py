@@ -4428,7 +4428,7 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
         0: ('Intercept', ''),
         1: ('Rigid body', 'load/rate'),
         2: ('Control surface', 'RADIANS'),
-        3: ('General control', 'RADIANS'),
+        3: ('General control', '???'),
     }
     trim_status_map = {
         1: 'Free',
@@ -4487,8 +4487,11 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
             op2.subtable_name = ''
             op2.parse_approach_code(data)
 
+            assert isinstance(cref, float), cref
+            assert isinstance(bref, float), bref
+            assert isinstance(sref, float), sref
             log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy} symxz={symxz}\n'
-                      f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
+                      f'  cbs_ref=[{cref:.3f},{bref:.3f},{sref:.3f}]')
             if max(outi) != 0 or min(outi) != 0:
                 log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 
@@ -4540,7 +4543,6 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
                     name = 'INTERCEPT'
                     units = ''   # trim_type_int is wrong...
                     # assert units is None, (name, trim_type, units, trim_status)
-
                 elif units == 'load/rate':
                     if name in ['ROLL', 'PITCH', 'YAW']:
                         units = 'NONDIMEN. RATE'
@@ -4551,7 +4553,7 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
 
                 name_trimtype_trimstatus_units_list.append((name, trim_type, trim_status, units))
                 trim_values_list.append(value)
-                #print(f'name={name!r} ai={ai} bi={bi} value={value}')
+                # print(f'name={name!r} trim_type_int={trim_type_int} trim_status_int={trim_status_int} value={value}')
                 # (b'INTERCPT', 1, 3, 1.0)
                 # (b'ANGLEA  ', 1, 1, 0.104)
                 # (b'PITCH   ', 1, 3, 0.0)
@@ -4559,30 +4561,39 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
                 # (b'URDD5   ', 1, 3, 0.0)
                 # (b'PITCH   ', 1, 3, 0.0)
                 # (b'TFLAP   ', 2, 2, -0.45418)
+                # (b'BTL     ', 3, 1, -21)
                 idata += 5
 
             op2._results._found_result(result_name)
             name_type_status_units = np.array(name_trimtype_trimstatus_units_list, dtype='U16')
             trim_values_array = np.array(trim_values_list)
 
-            names = name_type_status_units[:, 0]
-            names_list = names.tolist()
+            names = name_type_status_units[:, 0].tolist()
+            trim_type = name_type_status_units[:, 1].tolist()
+            trim_status = name_type_status_units[:, 2].tolist()
+            units = name_type_status_units[:, 3].tolist()
+            # names_list = names.tolist()
             nnames = len(names)
             ids = np.full(nnames, -1, dtype='int32')
             if hasattr(op2, 'aestats'):
                 for aestat_id, aestat in op2.aestats.items():
-                    index = names_list.index(aestat.label)
+                    index = names.index(aestat.label)
                     ids[index] = aestat_id
                 for aesurf_id, aesurf in op2.aesurf.items():
-                    index = names_list.index(aesurf.label)
+                    index = names.index(aesurf.label)
                     ids[index] = aesurf_id
+                for aeparm_id, aeparm in op2.aeparams.items():
+                    index = names.index(aeparm.label)
+                    ids[index] = aeparm_id
 
             trim_vars = TrimVariables(
                 mach, q, cref, bref, sref,
-                name_type_status_units, trim_values_array,
+                names, trim_type, trim_status, units,
+                trim_values_array,
                 ids=ids,
                 subcase=subcase_id, title=title,
-                subtitle=subtitle, label=label)
+                subtitle=subtitle, label=label,
+                symxy=symxy, symxz=symxz)
             trim_vars.print_f06()
             assert subcase_key not in trim.variables, subcase_key
             log.debug(f'trim.variables: {subcase_key}')
@@ -4733,7 +4744,8 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
                 subcase_id,
                 mach, q, cref, bref, sref,
                 nodes, force, force_labels,
-                title=title, subtitle=subtitle, label=label)
+                title=title, subtitle=subtitle, label=label,
+                symxy=0, symxz=0)
 
             assert subcase_key not in op2.op2_results.trim.aero_force
             op2.op2_results.trim.aero_force[subcase_key] = aforce
@@ -4879,7 +4891,8 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
                 subcase_id,
                 mach, q, cref, bref, sref,
                 nodes, elements, cp, pressure,  # labels,
-                title=title, subtitle=subtitle, label=label)
+                title=title, subtitle=subtitle, label=label,
+                symxy=0, symxz=0)
 
             assert subcase_key not in op2.op2_results.trim.aero_force
             log.debug(f'trim.aero_pressure: {subcase_key}')
@@ -5162,8 +5175,11 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
             op2.subtable_name = ''
             op2.parse_approach_code(data)
 
+            assert isinstance(cref, float), cref
+            assert isinstance(bref, float), bref
+            assert isinstance(sref, float), sref
             log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}')
-            log.debug(f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
+            log.debug(f'  cbs_ref=[{cref:.3f},{bref:.3f},{sref:.3f}]')
             #assert zero == 0, zero
             if max(outi) != 0 or min(outi) != 0:
                 log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')

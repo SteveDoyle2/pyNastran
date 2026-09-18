@@ -10,6 +10,7 @@ from typing import Any, Optional, TYPE_CHECKING
 import numpy as np
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 if TYPE_CHECKING:  # pragma: no cover
+    import numpy.typing as npt
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForceArray
 
 REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
@@ -470,7 +471,7 @@ class GuiResult(GuiResultCommon):
     deflects = False
 
     def __init__(self, subcase_id: int, header: str, title: str, location: str,
-                 scalar: np.ndarray,
+                 scalar: npt.NDArray[np.int_] | npt.NDArray[np.float64],
                  mask_value: Optional[int]=None, nlabels: Optional[int]=None,
                  labelsize: Optional[int]=None, ncolors: Optional[int]=None,
                  colormap: str='jet',

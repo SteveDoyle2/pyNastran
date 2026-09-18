@@ -9,6 +9,7 @@ from pyNastran.gui.gui_objects.vector_results import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.result_objects.table_object import (
         RealTableArray, ComplexTableArray)
+    from pyNastran.converters.nastran.gui.nastran_io import Case2D
 
 translation = ['Magnitude', 'Fx', 'Fy', 'Fz']
 rotation = ['Magnitude', 'Mx', 'My', 'Mz']
@@ -19,11 +20,11 @@ class ForceResults2(DispForceVectorResults):
                  subcase_id: int,
                  node_id: np.ndarray,
                  xyz: np.ndarray,
-                 case: RealTableArray | ComplexTableArray,
+                 case: RealTableArray | ComplexTableArray | Case2D,
                  title: str,
                  t123_offset: int,
                  methods_txyz_rxyz: list[str],
-                 index_to_base_title_annotation: dict[int, tuple[str, str]],
+                 index_to_base_title_annotation: dict[int, dict[str, str]],
                  dim_max: float=1.0,
                  data_format: str='%g',
                  is_variable_data_format: bool=False,
@@ -83,15 +84,16 @@ class ForceResults2(DispForceVectorResults):
         #location = 'node'
 
         # setup the node mapping
-        disp_nodes = case.node_gridtype[:, 0]  # local node id
-        self.common_nodes = np.intersect1d(node_id, disp_nodes)
+        case_node_ids = case.node_gridtype[:, 0]  # local node id
+        assert case_node_ids.max() > 0, case_node_ids
+
+        self.common_nodes = np.intersect1d(node_id, case_node_ids)
         self.inode_common = np.searchsorted(node_id, self.common_nodes)
-        self.inode_result = np.searchsorted(disp_nodes, self.common_nodes)
-        assert disp_nodes.max() > 0, disp_nodes
+        self.inode_result = np.searchsorted(case_node_ids, self.common_nodes)
         assert len(self.inode_result) > 0, self.inode_result
 
         # dense -> no missing nodes in the results set
-        self.is_dense = (len(node_id) == len(disp_nodes))
+        self.is_dense = (len(node_id) == len(case_node_ids))
 
         self.xyz = xyz
         assert len(self.xyz.shape) == 2, self.xyz.shape

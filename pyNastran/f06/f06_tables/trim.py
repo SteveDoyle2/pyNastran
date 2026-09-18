@@ -7,6 +7,11 @@ from pyNastran.utils.numpy_utils import integer_types
 TrimVariable = tuple[int, str, str, float, str]
 ControllerState = dict[str, float]
 
+aero_symmetry_map = {
+    0: 'ASYMMETRIC',
+    1: 'SYMMETRIC',
+}
+
 
 class Statics:
     def __init__(self, title: str, subtitle: str, label: str):
@@ -67,7 +72,8 @@ class AeroPressure(Statics):
                  nodes: np.ndarray,
                  elements: np.ndarray,
                  cp: np.ndarray, pressure: np.ndarray,  # labels: np.ndarray,
-                 subtitle: str='', title: str='', label: str=''):
+                 subtitle: str='', title: str='', label: str='',
+                 symxy: int=0, symxz: int=0):
         super().__init__(title, subtitle, label)
         self.subcase = subcase
         assert isinstance(self.subcase, integer_types), self.subcase
@@ -76,6 +82,8 @@ class AeroPressure(Statics):
         self.cref = cref
         self.bref = bref
         self.sref = sref
+        self.symxy = symxy
+        self.symxz = symxz
 
         self.nodes = nodes  # centroidal nodes
         self.elements = elements
@@ -143,8 +151,8 @@ class AeroPressure(Statics):
                   is_mag_phase: bool=False, is_sort1: bool=True):
         f06_file.write(''.join(header))
         config = 'AEROSG2D'
-        xy_sym = 'ASYMMETRIC'
-        xz_sym = 'SYMMETRIC'
+        xy_sym = aero_symmetry_map[self.symxy]
+        xz_sym = aero_symmetry_map[self.symxz]
         msg = (
             '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S\n'
             f'                         CONFIGURATION = {config:8s}     XY-SYMMETRY = {xy_sym:<10}     XZ-SYMMETRY = {xz_sym}\n'
@@ -181,7 +189,8 @@ class AeroForce(Statics):
                  nodes: np.ndarray,
                  force: np.ndarray,
                  force_label: np.ndarray,
-                 title: str='', subtitle: str='', label=''):
+                 title: str='', subtitle: str='', label='',
+                 symxy: int=0, symxz: int=0):
         super().__init__(title, subtitle, label)
         self.subcase = subcase
         assert isinstance(self.subcase, integer_types), self.subcase
@@ -190,6 +199,8 @@ class AeroForce(Statics):
         self.cref = cref
         self.bref = bref
         self.sref = sref
+        self.symxy = symxy
+        self.symxz = symxz
 
         self.nodes = nodes  # centroidal nodes
         self.force = force
@@ -240,8 +251,8 @@ class AeroForce(Statics):
                   is_mag_phase: bool=False, is_sort1: bool=True):
         f06_file.write(''.join(header))
         config = 'AEROSG2D'
-        xy_sym = 'ASYMMETRIC'
-        xz_sym = 'SYMMETRIC'
+        xy_sym = aero_symmetry_map[self.symxy]
+        xz_sym = aero_symmetry_map[self.symxz]
         msg = (
             '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S\n'
             '\n'
@@ -347,9 +358,14 @@ class TrimVariables(Statics):
     """
     def __init__(self, mach: float, q: float,
                  cref: float, bref: float, sref: float,
-                 name_type_status_units: np.ndarray, data: np.ndarray,
+                 names: list[str],
+                 trim_type: list[str],
+                 trim_status: list[str],
+                 units: list[str],
+                 data: np.ndarray,
                  ids: Optional[np.ndarray]=None,
-                 subcase: int=1, title: str='', subtitle: str='', label: str=''):
+                 subcase: int=1, title: str='', subtitle: str='', label: str='',
+                 symxy: int=0, symxz: int=0):
         super().__init__(title, subtitle, label)
         self.mach = mach
         self.q = q
@@ -357,13 +373,18 @@ class TrimVariables(Statics):
         self.bref = bref
         self.sref = sref
         self.subcase = subcase
+        self.symxy = symxy
+        self.symxz = symxz
         assert isinstance(self.subcase, integer_types), self.subcase
+        self.names = names
+        self.trim_type = trim_type
+        self.trim_status = trim_status
+        self.units = units
 
         if ids is None:
-            nnames = len(name_type_status_units)
+            nnames = len(names)
             ids = np.full(nnames, -1, dtype='int32')
         self.ids = ids
-        self.name_type_status_units = name_type_status_units
         self.data = data
 
     @classmethod
@@ -372,12 +393,18 @@ class TrimVariables(Statics):
         nvars = len(trim_variables)
         ids = np.full(nvars, -1, dtype='int32')
         values = np.zeros(nvars, dtype='float64')
-        name_type_status_units = np.zeros((nvars, 4), dtype='U16')
         i = 0
-        for name, (idi, trim_type, trim_status, ux, ux_unit) in trim_variables.items():
+        name = []
+        trim_type = []
+        trim_status = []
+        trim_unit = []
+        for namei, (idi, trim_typei, trim_statusi, uxi, ux_uniti) in trim_variables.items():
             ids[i] = idi
-            name_type_status_units[i, :] = [name, trim_type, trim_status, ux_unit]
-            values[i] = ux
+            name.append(namei)
+            trim_type.append(trim_typei)
+            trim_status.append(trim_statusi)
+            trim_unit.append(ux_uniti)
+            values[i] = uxi
             i += 1
 
         # 'mach': mach, 'q': q,
@@ -391,7 +418,8 @@ class TrimVariables(Statics):
         subtitle = metadata.get('subtitle', '')
         label = metadata.get('label', '')
         out = TrimVariables(
-            mach, q, cref, bref, sref, name_type_status_units, values,
+            mach, q, cref, bref, sref,
+            name, trim_type, trim_status, trim_unit, values,
             ids=ids,
             subcase=isubcase, title=title, subtitle=subtitle, label=label)
         return out
@@ -402,15 +430,22 @@ class TrimVariables(Statics):
     def get_stats(self, short: bool=False) -> str:
         msg = ''
         msg += f'  variables[{self.subcase}]:\n'
-        # self.name_type_status = name_type_status
         # self.data = data
 
         if short:
-            nnames = len(self.name_type_status_units)
-            msg += f'    name_type_status_units: {self.name_type_status_units.tolist()}; n={nnames}\n'
-            msg += f'    data.shape = {str(self.data.shape)}\n'
+            nnames = len(self.names)
+            #msg += f'    name_type_status_units: {self.name_type_status_units.tolist()}; n={nnames}\n'
+            #msg += f'    data.shape = {str(self.data.shape)}\n'
+            msg += (
+                f'    names: {self.names.tolist()}; n={nnames}\n'
+                f'    trim_type: {self.trim_type}\n'
+                f'    status: {self.status}\n'
+                f'    units: {self.units.tolist()}\n'
+                f'    data.shape = {str(self.data.shape)}\n'
+            )
         else:
-            for (name, typei, status, units), data in zip(self.name_type_status_units, self.data):
+            for name, typei, status, units, data in zip(
+                    self.names, self.trim_type, self.trim_status, self.units, self.data):
                 msg += f'   {name:<8} {typei:<8} {status:<8}: {data} {units}\n'
         return msg
 
@@ -419,8 +454,8 @@ class TrimVariables(Statics):
         f06_file.write(''.join(header))
 
         config = 'AEROSG2D'
-        xy_sym = 'ASYMMETRIC'
-        xz_sym = 'SYMMETRIC'
+        xy_sym = aero_symmetry_map[self.symxy]
+        xz_sym = aero_symmetry_map[self.symxz]
         msg = (
             ''
             '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S\n'
@@ -452,8 +487,8 @@ class TrimVariables(Statics):
             # '              TFLAP          -1.570796E+00   -4.541439E-01    1.570796E+00            N/A        1.672770E+06         N/A     \n'
         )
         # for (name, typei, status) in self.name_type_status:
-        for idi, (name, typei, status, units), data in zip(
-                self.ids, self.name_type_status_units.tolist(), self.data):
+        for idi, name, typei, status, units, data in zip(
+                self.ids, self.names, self.trim_type, self.trim_status, self.units, self.data):
             value = data
             extra = ''
 
@@ -543,7 +578,7 @@ class TrimDerivatives(Statics):
             '    CONTROLLER STATE: INTERCEPT ONLY, ALL CONTROLLERS ARE ZERO\n\n'
             '    TRIM VARIABLE   COEFFICIENT              RIGID                         ELASTIC                          INERTIAL                  ELASTIC/RIGID\n'
             '                                   UNSPLINED        SPLINED       RESTRAINED      UNRESTRAINED     RESTRAINED      UNRESTRAINED    UNSPLINED  SPLINED\n'
-            '\n\n')
+            '\n')
 
         coeffs = ['CX', 'CY', 'CZ', 'CMX', 'CMY', 'CMZ']
         for name, derivs in zip(self.names, self.data):
