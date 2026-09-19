@@ -1,6 +1,8 @@
 """various mesh_utils tests"""
 import os
+import io
 import copy
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -10,13 +12,6 @@ try:
     IS_SCIPY = True
 except ImportError:
     IS_SCIPY = False
-
-try:
-    import docopt
-    IS_DOCOPT = True
-except ImportError:
-    IS_DOCOPT = False
-NO_DOCOPT = not IS_DOCOPT
 
 from cpylog import SimpleLogger
 
@@ -30,8 +25,7 @@ if IS_SCIPY:
 from pyNastran.bdf.mesh_utils.aero.map_pressure_to_caero import map_caero
 
 from pyNastran.bdf.cards.test.utils import save_load_deck
-if IS_DOCOPT:
-    from pyNastran.bdf.mesh_utils.cmd_line.bdf_cmd_line import cmd_line
+from pyNastran.bdf.mesh_utils.cmd_line.bdf_cmd_line import cmd_line
 
 from pyNastran.bdf.mesh_utils.normals import get_normals_at_nodes, get_normals_at_elements
 import pyNastran.bdf.mesh_utils.add_remove_mesh
@@ -205,7 +199,6 @@ class TestMeshUtilsAero(unittest.TestCase):
         save_load_deck(model, run_remove_unused=False,
                        run_mirror=False)
 
-    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_export_caero_mesh_caero5_wtfact(self):
         """tests multiple ``bdf`` tools"""
         path = MODEL_PATH / 'aero'
@@ -245,7 +238,6 @@ class TestMeshUtilsAero(unittest.TestCase):
                 '--pid', 'paero']
         cmd_line(argv=argv, log=log, quiet=True)
 
-    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     def test_export_caero_mesh_w2gj(self):
         path = MODEL_PATH / 'aero'
         bdf_filename = str(path / 'cpmopt.bdf')
@@ -257,7 +249,6 @@ class TestMeshUtilsAero(unittest.TestCase):
                 '--pid', 'caero', '--skip_zero_check']
         cmd_line(argv=argv, quiet=True)
 
-    @unittest.skipIf(NO_DOCOPT, 'no docopt')
     @unittest.skipIf(not IS_SCIPY, 'scipy not installed')
     def test_export_caero_mesh(self):
         """tests multiple ``bdf`` tools"""
@@ -410,6 +401,236 @@ class TestRodriguezRotate(unittest.TestCase):
         xyz = np.array([[1., 0., 0.]])
         with self.assertRaises(RuntimeError):
             rodriguez_rotate(xyz, 0.5, coord, iaxis=3)
+
+
+class TestExportCaeroMeshRotation(unittest.TestCase):
+    """Tests for rotating AESURF control surfaces in export_caero_mesh."""
+
+    @staticmethod
+    def _build_model_with_aesurf():
+        """Build a simple CAERO1 model with two AESURF surfaces.
+
+        Layout (nchord=4, nspan=2):
+          chordwise boxes 1-2 are the main surface,
+          chordwise boxes 3-4 are the flap.
+          Two spanwise strips → 8 boxes total (IDs 100-107).
+
+          LFLAP uses aelist covering the left-strip flap boxes,
+          RFLAP uses aelist covering the right-strip flap boxes.
+
+        The AESURF hinge coordinate y-axis runs spanwise along
+        the hinge line (x=0.5) so that rotating about iaxis=1
+        deflects the flap panels.
+        """
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log, debug=None)
+        model.bdf_filename = 'rotation_test'
+
+        eid = 100
+        pid = 10
+        igroup = 1
+        # wing from x=0..1, y=0..2 (two spanwise strips)
+        p1 = [0., 0., 0.]
+        p4 = [0., 2., 0.]
+        model.add_caero1(eid, pid, igroup,
+                         p1=p1, x12=1.0,
+                         p4=p4, x43=1.0,
+                         nspan=2, nchord=4)
+        model.add_paero1(pid)
+        model.add_aero(velocity=0., cref=1.0, rho_ref=1.0)
+        model.add_aeros(cref=1.0, bref=2.0, sref=2.0)
+
+        # hinge line coord at x=0.5, y-axis along span
+        # CORD2R: origin at hinge, z-axis up, x-axis aft
+        hinge_origin = [0.5, 0., 0.]
+        hinge_zaxis = [0.5, 0., 1.]
+        hinge_xzplane = [1.5, 0., 0.]
+        cid_hinge = 100
+        model.add_cord2r(cid_hinge, origin=hinge_origin,
+                         zaxis=hinge_zaxis, xzplane=hinge_xzplane)
+
+        # Box layout (nchord=4, nspan=2):
+        #   strip 0 (y=0..1): 100, 101, 102, 103
+        #   strip 1 (y=1..2): 104, 105, 106, 107
+        # flap boxes (last 2 chordwise per strip):
+        #   strip 0 flap: 102, 103
+        #   strip 1 flap: 106, 107
+
+        # AELIST for left flap (strip 0 flap boxes)
+        model.add_aelist(2000, [102, 103])
+        # AELIST for right flap (strip 1 flap boxes)
+        model.add_aelist(2001, [106, 107])
+
+        # AESURF: LFLAP and RFLAP
+        model.add_aesurf(aesid=501, label='LFLAP',
+                         cid1=cid_hinge, aelist_id1=2000)
+        model.add_aesurf(aesid=502, label='RFLAP',
+                         cid1=cid_hinge, aelist_id1=2001)
+
+        model.cross_reference()
+        return model
+
+    def _export_and_read_grids(self, model, **kwargs):
+        """Run export_caero_mesh and read back GRID positions via read_bdf."""
+        fname = io.StringIO()
+        export_caero_mesh(model, caero_bdf_filename=fname,
+                          is_aerobox_model=True,
+                          write_panel_xyz=False,
+                          **kwargs)
+        log = SimpleLogger(level='error')
+        out_model = read_bdf(fname, log=log, debug=False)
+        grids = {}
+        for nid, node in out_model.nodes.items():
+            grids[nid] = node.get_position()
+        return grids
+
+    def test_no_rotation_baseline(self):
+        """With angle=0, all z-coords should be 0."""
+        model = self._build_model_with_aesurf()
+        grids = self._export_and_read_grids(model)
+        for nid, xyz in grids.items():
+            self.assertAlmostEqual(xyz[2], 0.0, places=10,
+                                   msg=f'GRID {nid} z should be 0 without rotation')
+
+    def test_single_angle_all_surfaces(self):
+        """Single angle, no labels → all AESURF surfaces rotated."""
+        model = self._build_model_with_aesurf()
+        angle_deg = 30.0
+        grids_base = self._export_and_read_grids(model)
+        grids_rot = self._export_and_read_grids(
+            model, rotate_panel_angle_deg=angle_deg)
+        # Nodes at x <= 0.5 (hinge line or leading edge) should be unchanged
+        # Nodes at x > 0.5 in flap region should have moved (z != 0)
+        moved = [nid for nid, xyz in grids_rot.items()
+                 if not np.allclose(xyz, grids_base[nid], atol=1e-10)]
+        self.assertGreater(len(moved), 0,
+                           'Some nodes should have moved with rotation')
+
+        # Check that moved nodes have nonzero z
+        for nid in moved:
+            self.assertNotAlmostEqual(grids_rot[nid][2], 0.0, places=5,
+                                      msg=f'GRID {nid} should have nonzero z after rotation')
+
+    def test_single_angle_single_surface(self):
+        """Single angle + one label → only that surface rotated."""
+        model = self._build_model_with_aesurf()
+        angle_deg = 30.0
+        grids_base = self._export_and_read_grids(model)
+
+        # Rotate only LFLAP (strip 0)
+        grids_rot = self._export_and_read_grids(
+            model,
+            rotate_panel_angle_deg=angle_deg,
+            rotate_surface_labels=['LFLAP'])
+
+        grids_all = self._export_and_read_grids(
+            model,
+            rotate_panel_angle_deg=angle_deg)
+
+        # Some nodes moved (LFLAP region)
+        moved = [nid for nid, xyz in grids_rot.items()
+                 if not np.allclose(xyz, grids_base[nid], atol=1e-10)]
+        self.assertGreater(len(moved), 0, 'LFLAP nodes should have moved')
+
+        # But fewer nodes moved than when all surfaces are rotated
+        moved_all = [nid for nid, xyz in grids_all.items()
+                     if not np.allclose(xyz, grids_base[nid], atol=1e-10)]
+        self.assertGreater(len(moved_all), len(moved),
+                           'All-surface rotation should move more nodes')
+
+    def test_per_surface_angles(self):
+        """Different angle per surface."""
+        model = self._build_model_with_aesurf()
+        grids_base = self._export_and_read_grids(model)
+
+        # 30 deg for LFLAP, -15 deg for RFLAP
+        grids_rot = self._export_and_read_grids(
+            model,
+            rotate_panel_angle_deg=[30.0, -15.0],
+            rotate_surface_labels=['LFLAP', 'RFLAP'])
+
+        # Compare against single-surface runs
+        grids_lflap_only = self._export_and_read_grids(
+            model,
+            rotate_panel_angle_deg=30.0,
+            rotate_surface_labels=['LFLAP'])
+
+        grids_rflap_only = self._export_and_read_grids(
+            model,
+            rotate_panel_angle_deg=-15.0,
+            rotate_surface_labels=['RFLAP'])
+
+        # Nodes that moved only in LFLAP-only should match the multi-angle run
+        # (unless shared with RFLAP, which they aren't in this geometry)
+        for nid in grids_rot:
+            lflap_moved = not np.allclose(grids_lflap_only[nid], grids_base[nid], atol=1e-10)
+            rflap_moved = not np.allclose(grids_rflap_only[nid], grids_base[nid], atol=1e-10)
+            if lflap_moved and not rflap_moved:
+                np.testing.assert_allclose(
+                    grids_rot[nid], grids_lflap_only[nid], atol=1e-10,
+                    err_msg=f'GRID {nid}: multi-angle should match LFLAP-only')
+            elif rflap_moved and not lflap_moved:
+                np.testing.assert_allclose(
+                    grids_rot[nid], grids_rflap_only[nid], atol=1e-10,
+                    err_msg=f'GRID {nid}: multi-angle should match RFLAP-only')
+
+    def test_multi_angle_without_labels_raises(self):
+        """Multiple angles without labels → ValueError."""
+        model = self._build_model_with_aesurf()
+        with self.assertRaises(ValueError):
+            self._export_and_read_grids(
+                model,
+                rotate_panel_angle_deg=[30.0, -15.0])
+
+    def test_mismatched_angle_label_count_raises(self):
+        """len(angles) != len(labels) → ValueError."""
+        model = self._build_model_with_aesurf()
+        with self.assertRaises(ValueError):
+            self._export_and_read_grids(
+                model,
+                rotate_panel_angle_deg=[30.0, -15.0, 5.0],
+                rotate_surface_labels=['LFLAP', 'RFLAP'])
+
+    def test_rotation_cli_single_angle(self):
+        """CLI with --rotate_panel_angle_deg and --rotate_surfaces."""
+        model = self._build_model_with_aesurf()
+        # Write model to a temp file so we can use the CLI
+        with tempfile.NamedTemporaryFile(suffix='.bdf', delete=False, mode='w') as f:
+            bdf_fname = f.name
+        out_fname = bdf_fname.replace('.bdf', '.caero.bdf')
+        try:
+            model.write_bdf(bdf_fname)
+            argv = ['bdf', 'export_caero_mesh', bdf_fname,
+                    '-o', out_fname, '--aerobox',
+                    '--rotate_panel_angle_deg', '25',
+                    '--rotate_surfaces', 'LFLAP']
+            cmd_line(argv=argv, quiet=True)
+            self.assertTrue(os.path.exists(out_fname))
+        finally:
+            if os.path.exists(bdf_fname):
+                os.remove(bdf_fname)
+            if os.path.exists(out_fname):
+                os.remove(out_fname)
+
+    def test_rotation_cli_multi_angle(self):
+        """CLI with multiple --rotate_panel_angle_deg values."""
+        model = self._build_model_with_aesurf()
+        with tempfile.NamedTemporaryFile(suffix='.bdf', delete=False, mode='w') as f:
+            bdf_fname = f.name
+        out_fname = bdf_fname.replace('.bdf', '.caero.bdf')
+        try:
+            model.write_bdf(bdf_fname)
+            argv = ['bdf', 'export_caero_mesh', bdf_fname,
+                    '-o', out_fname, '--aerobox',
+                    '--rotate_panel_angle_deg', '25', '-10',
+                    '--rotate_surfaces', 'LFLAP', 'RFLAP']
+            cmd_line(argv=argv, quiet=True)
+            self.assertTrue(os.path.exists(out_fname))
+        finally:
+            if os.path.exists(bdf_fname):
+                os.remove(bdf_fname)
+            if os.path.exists(out_fname):
+                os.remove(out_fname)
 
 
 class TestGetSKJAgainstNastran(unittest.TestCase):

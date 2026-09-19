@@ -243,7 +243,7 @@ def _save_layered_table_results(icase: int,
 
 def nastran_to_vtk(bdf_filename: PathLike | BDF,
                    op2_filename: Optional[PathLike | OP2],
-                   vtu_filename: str,
+                   vtu_filename: PathLike,
                    log_level: str='error',
                    compression_level: int=5) -> vtkUnstructuredGrid:
     """

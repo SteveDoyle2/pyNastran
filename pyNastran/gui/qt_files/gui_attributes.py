@@ -75,15 +75,13 @@ if TYPE_CHECKING:  # pragma: no cover
     #from vtkmodules.vtkFiltersGeneral import vtkAxes
     from vtkmodules.vtkCommonDataModel import vtkUnstructuredGrid, vtkPointData
     from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-
+    from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 
     FollowerFunction = Callable[[dict[int, int], vtkUnstructuredGrid,
                                  vtkPointData, np.ndarray], None]
 
 
 class GeometryObject(BaseGui):
-    """
-    """
     def __init__(self, gui: MainWindow):
         super().__init__(gui)
         #self.gui = parent
@@ -175,7 +173,7 @@ class GuiAttributes:
         self.is_gui = True
 
         # testing enables additional checks
-        # it's different than if we're just running tests
+        # it's different if we're just running tests
         if 'test' in inputs:
             self.is_testing_flag = inputs['test']
         else:
@@ -1368,7 +1366,9 @@ class GuiAttributes:
     #def mark_min_elements(self, neids, show_command: bool=True):
         #"""mark the elements by the top/btm x elements"""
 
-    def mark_nodes(self, nids, icase, text) -> None:
+    def mark_nodes(self, nids: list[int] | int,
+                   icase: int,
+                   text: list[str] | str) -> None:
         """
         Marks a series of nodes with custom text labels
 
@@ -1441,7 +1441,7 @@ class GuiAttributes:
         edit geometry properties dialog if it is open.
 
         Parameters
-        -----------
+        ----------
         geometry_properties : dict {str : CoordProperties or AltGeometry}
             Dictionary from name to properties object. Only the names included in
             ``geometry_properties`` are modified.

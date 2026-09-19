@@ -40,7 +40,7 @@ class StressObject:
                  is_stress: bool=True) -> None:
         #print('--StressObject--')
         self.model = model
-        self.vm_word = None
+        self.vm_word = ''
         self.header_dict: dict[Any, str] = {}
         self.keys_map: dict[NastranKey, str] = {}
         self.composite_ieids: dict[str, str] = {}
@@ -76,6 +76,7 @@ class StressObject:
                                  max_principal: np.ndarray, min_principal: np.ndarray,
                                  ovm: np.ndarray, is_element_on: np.ndarray,
                                  header_dict: HeaderDict) -> str:
+        vm_word = ''
         for element_type, composite_data in self.composite_data_dict.items():
             try:
                 element_layer, unused_ueids, data2, vm_word, unused_ntimes, headers = composite_data[key]
@@ -109,6 +110,7 @@ class StressObject:
                                       key: int, itime: int, nelements: int,
                                       header_dict: HeaderDict) -> str:
         """get all the ply stresses/strains"""
+        vm_word = ''
         nlayers = 0
         nelements2 = 0
         for element_type, composite_data in self.composite_data_dict.items():

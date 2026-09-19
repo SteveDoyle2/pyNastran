@@ -847,7 +847,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                                              text=label)
         del image
 
-    def _logg_msg(self, log_type: str, filename: str, lineno: int, msg: str) -> None:
+    def _logg_msg(self, log_type: str, filename: str, lineno: int, msg: str) -> str:
         """
         Add message to log widget trying to choose right color for it.
 
@@ -868,19 +868,19 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             filename_n = '%s:%s' % (filename, lineno)
             msg2 = ' %-28s %s\n' % (filename_n, msg)
             print(name, msg2)
-            return
+            return msg
 
         settings = self.settings
         if 'DEBUG' in log_type and not settings.show_debug:
-            return
+            return msg
         elif 'INFO' in log_type and not settings.show_info:
-            return
+            return msg
         elif 'COMMAND' in log_type and not settings.show_command:
-            return
+            return msg
         elif 'WARNING' in log_type and not settings.show_warning:
-            return
+            return msg
         elif 'ERROR' in log_type and not settings.show_error:
-            return
+            return msg
 
         if log_type in ['GUI ERROR', 'GUI COMMAND', 'GUI DEBUG', 'GUI INFO', 'GUI WARNING']:
             log_type = log_type[4:] # drop the GUI
@@ -891,6 +891,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             self._log_messages.append(html_msg)
         else:
             self._log_msg(html_msg)
+        return html_msg
 
     def _log_msg(self, msg: str) -> None:
         """prints an HTML log message"""

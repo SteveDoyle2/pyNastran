@@ -496,7 +496,8 @@ class AELINK(BaseCard):
         Parameters
         ----------
         aelink_id : int/str
-            unique id
+            int: unique id
+            str: ALWAYS (MSC only)
         label : str
             name of the dependent AESURF card
         independent_labels : list[str, ..., str]
@@ -7561,8 +7562,20 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], AeroPaneling]:
         ncaeros_points, ncaero_sub_points,
         has_control_surface, box_id_to_caero_element_map, cs_box_ids,
     )
+    out_dict = {
+        'has_caero': has_caero,
+        'caero_points': caero_points,
+        'ncaeros': ncaeros,
+        'ncaeros_sub': ncaeros_sub,
+        'ncaeros_cs': ncaeros_cs,
+        'ncaeros_points': ncaeros_points,
+        'ncaero_sub_points': ncaero_sub_points,
+        'has_control_surface': has_control_surface,
+        'box_id_to_caero_element_map': box_id_to_caero_element_map,
+        'cs_box_ids': cs_box_ids,
+    }
     #print(all_control_surface_name, caero_control_surface_names)
-    return all_control_surface_name, caero_control_surface_names, out
+    return all_control_surface_name, caero_control_surface_names, out, out_dict
 
 
 CAEROs = CAERO1 | CAERO2 | CAERO3 | CAERO4 | CAERO5

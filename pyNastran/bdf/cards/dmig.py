@@ -1939,6 +1939,14 @@ class DMIK(NastranMatrix):
                                tout=tout, polar=polar,
                                comment=comment,
                                finalize=finalize)
+        if len(self.GCj):
+            # print(self.GCj, type(self.GCj))
+            dofs_j = np.unique(self.GCj[:, 1])
+            dofs_i = np.unique(self.GCi[:, 1])
+            for dof_j in dofs_j:
+                assert dof_j in {3, 5}, f'DOFs={dof_j}; Only 3 and 5 are allowed'
+            for dof_i in dofs_i:
+                assert dof_i in {3, 5}, f'DOFs={dof_i}; Only 3 and 5 are allowed'
 
 
 DMI_MATRIX_MAP = {

@@ -31,7 +31,6 @@ from pyNastran.bdf.cards.test.test_zaero import get_zaero_model
 from pyNastran.bdf.errors import DuplicateIDsError
 
 from pyNastran.gui import (
-    USE_NEW_SIDEBAR_OBJS_ as USE_NEW_SIDEBAR_OBJS,
     USE_NEW_TERMS_ as USE_NEW_TERMS)
 
 USE_OLD_TERMS = not USE_NEW_TERMS
@@ -513,7 +512,7 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(obj_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 56, len(test.result_cases)
         else:
             assert len(test.result_cases) == 56, len(test.result_cases)
@@ -525,13 +524,13 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 56, len(test.result_cases)
         else:
             assert len(test.result_cases) == 56, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 190, len(test.result_cases)
             #assert len(test.result_cases) == 206, len(test.result_cases)  # new? faked
         else:
@@ -637,7 +636,7 @@ class TestNastranGUI(unittest.TestCase):
         assert len(test.models['main'].elements) > 0
         #test.write_result_cases()
 
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 430, len(test.result_cases)
         else:
             assert USE_OLD_TERMS
@@ -732,7 +731,8 @@ class TestNastranGUI(unittest.TestCase):
         # fail mapping strain energy because we're on NodeID
         test.icase = 0  # NodeID
         test.icase_fringe = 0  # NodeID
-        is_passed = test.map_element_centroid_to_node_fringe_result(update_limits=True, show_msg=True)
+        is_passed = test.map_element_centroid_to_node_fringe_result(
+            update_limits=True, show_msg=True)
 
         obj, (itime, name) = test.result_cases[test.icase]
         str(obj)
@@ -740,7 +740,7 @@ class TestNastranGUI(unittest.TestCase):
 
         # map strain energy
         keys = list(test.result_cases.keys())
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 430, len(test.result_cases)
             #assert len(test.result_cases) == 478, len(test.result_cases)  # new?; faked
         else:
@@ -820,14 +820,14 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.stop_on_failure = True
         test.load_nastran_geometry(bdf_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             # we lost 3 cases for SPCD
             assert len(test.result_cases) == 57, len(test.result_cases)
         else:
             assert len(test.result_cases) == 57, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             # we lost 3 cases for SPCD
             assert len(test.result_cases) == 640, len(test.result_cases)
             #assert len(test.result_cases) == 684, len(test.result_cases)  # new terms?
@@ -845,7 +845,7 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 10, len(test.result_cases)
         else:
             assert len(test.result_cases) == 10, len(test.result_cases)
@@ -866,7 +866,7 @@ class TestNastranGUI(unittest.TestCase):
             nsolid_stress=1, nsolid_strain=0,
             nabs_stress=1, nabs_strain=0,
             nstrain_energy=0, ngrid_point_forces=0)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert nresults == 24, nresults
             assert len(test.result_cases) == 34, len(test.result_cases)
         else:
@@ -923,13 +923,13 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(model)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 10, len(test.result_cases)
         else:
             assert len(test.result_cases) == 10, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 34, len(test.result_cases)
         else:
             assert USE_NEW_TERMS
@@ -970,7 +970,7 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 10, len(test.result_cases)
         else:
             assert len(test.result_cases) == 10, len(test.result_cases)
@@ -996,7 +996,7 @@ class TestNastranGUI(unittest.TestCase):
             nbeam_force=nmodes)  # beam force is dropped
         #assert nresults == 231, nresults  # 238-7
         #test.write_result_cases()
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 238, len(test.result_cases)
         else:
             assert len(test.result_cases) == 238, len(test.result_cases)
@@ -1327,7 +1327,7 @@ class TestNastranGUI(unittest.TestCase):
         )
         test.write_result_cases()
         #assert nresults == 139, nresults  # 202-139; alt is 196-63=133
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 203, len(test.result_cases)
         else:
             assert USE_OLD_TERMS
@@ -1415,13 +1415,13 @@ class TestNastranGUI(unittest.TestCase):
         model = read_bdf(bdf_filename)
         test = NastranGUI()
         test.load_nastran_geometry(model)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 62, len(test.result_cases)
         else:
             assert len(test.result_cases) == 62, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 203, len(test.result_cases)
         else:
             assert USE_OLD_TERMS
@@ -1478,11 +1478,9 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
 
-        assert USE_NEW_SIDEBAR_OBJS
         assert len(test.result_cases) == 57, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
-        assert USE_NEW_SIDEBAR_OBJS
         assert len(test.result_cases) == 198, len(test.result_cases)
 
         #test = NastranGUI()
@@ -1495,15 +1493,15 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(op2_filename)
 
     def test_gui_elements_missing_pcomp_subcase(self):
-        op2_filename = MODEL_PATH / 'bugs' / 'flat_plate_pcomp_test' / 'flat_plate_tip_loads_mixed_2cases.op2'
+        dirname = MODEL_PATH / 'bugs' / 'flat_plate_pcomp_test'
+        op2_filename = dirname / 'flat_plate_tip_loads_mixed_2cases.op2'
         test = NastranGUI()
         #test.stop_on_failure = False
         test.load_nastran_geometry(op2_filename)
-        assert USE_NEW_SIDEBAR_OBJS
         assert len(test.result_cases) == 58, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 116, len(test.result_cases)  # old terms
         else:
             assert len(test.result_cases) == 120, len(test.result_cases)  # new terms
@@ -1515,7 +1513,6 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         #test.stop_on_failure = False
         test.load_nastran_geometry(op2_filename)
-        assert USE_NEW_SIDEBAR_OBJS
         assert len(test.result_cases) == 56, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
@@ -1526,7 +1523,7 @@ class TestNastranGUI(unittest.TestCase):
             #for key, value in test.result_cases.items():
                 #fobj.write(f'{key}: {value}\n')
 
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 503, len(test.result_cases)  # old terms
         else:
             assert USE_OLD_TERMS
@@ -1867,7 +1864,8 @@ class TestNastranGUI(unittest.TestCase):
 
     def test_gui_superelement_1(self):
         """tests flyswatter"""
-        bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'flyswatter', 'flyswatter_renumber.bdf')
+        dirname = MODEL_PATH / 'superelements' / 'flyswatter'
+        bdf_filename = dirname / 'flyswatter_renumber.bdf'
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         #test.load_nastran_results(op2_filename)
@@ -2000,7 +1998,7 @@ def get_nreal_nresults_from_model(
         ndisplacement=0, neigenvectors=0, nspc=0, nmpc=0,
         nstress=0, nstrain=0, nforce=0):  # pragma: no cover
     #cc = model.case_control_deck
-    nspring = model.card_count['CELAS1'] + model.card_count['CELAS2'] + model.card_count['CELAS3'] + model.card_count['CELAS4']
+    nspring = sum([model.card_count[card] for card in ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4']])
     nshear = model.card_count['CSHEAR']
     ncrod = model.card_count['CROD']
     ntube = model.card_count['CTUBE']
@@ -2135,14 +2133,14 @@ def get_nreal_nresults(
         (nshear_stress + nshear_strain) * 2 +
 
         #[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises]; # 8; old
-        nplate_stress_strain * 8 * USE_NEW_SIDEBAR_OBJS * 1 * USE_OLD_TERMS +  # 1 layer
+        nplate_stress_strain * 8 * 1 * USE_OLD_TERMS +  # 1 layer
 
         #[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises, oabs, max_shear]  # 10; new
-        nplate_stress_strain * 10 * USE_NEW_SIDEBAR_OBJS * 1 * USE_NEW_TERMS +  # 1 layer
+        nplate_stress_strain * 10 * 1 * USE_NEW_TERMS +  # 1 layer
         #added abs_princpal and von_mises/max_shear, so +2 results; disabld for now for testing
 
         # [o11, o22, t12, t1z, t2z, angle, major, minor, max_shea]
-        ncomposite_stress_strain * 9 * USE_NEW_SIDEBAR_OBJS +
+        ncomposite_stress_strain * 9 +
 
         # [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, von_mises]
         (nsolid_stress + nsolid_strain) * 10  # OLD

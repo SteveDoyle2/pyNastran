@@ -350,9 +350,12 @@ class Trim(Load):
 
     def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
-            'variables', 'derivatives',
-            'control_surface_position_hinge_moment',
+            # derivatives are first b/c they are used to calculate
+            # the trim state (variables)
+            'derivatives',
+            'variables',
             'hinge_moment_derivatives',
+            'control_surface_position_hinge_moment',
             #'hinge_moments',
             'aero_pressure', 'aero_force',
         ]

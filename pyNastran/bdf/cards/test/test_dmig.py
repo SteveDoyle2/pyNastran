@@ -142,7 +142,7 @@ class TestDMI(unittest.TestCase):
         assert np.array_equal(alternate, alternate_expected), (
             f"alternate={alternate};\nalternate_expected={alternate_expected}"
         )
-        print(str(dmi))
+        str(dmi)
 
     def test_dmi_thru_real(self):
         model = BDF(debug=True)
@@ -158,7 +158,7 @@ class TestDMI(unittest.TestCase):
         rrr = rrr.flatten()
         rrr_expected = np.array([0.0] + [1.0] * 9 + [0.0, 2.0])
         assert np.array_equal(rrr, rrr_expected), f"rrr={rrr};\nrrr_expected={rrr_expected}"
-        print(str(dmi))
+        str(dmi)
 
     def test_dmi_thru_complex(self):
         model = BDF(debug=True)
@@ -182,7 +182,7 @@ class TestDMI(unittest.TestCase):
         assert np.array_equal(rrr.imag, rrr_expected_imag), (
             f"rrr={rrr.imag};\nrrr_expected={rrr_expected_imag}"
         )
-        print(str(dmi))
+        str(dmi)
 
     def test_dmi_01(self):
         """tests a DMI card"""
@@ -331,7 +331,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         save_load_deck(model2)
 
     def test_dmi_wkk_diagonal(self):
-        log = SimpleLogger(level="debug")
+        log = SimpleLogger(level="warning")
         model = BDF(log=log)
         nrows = 100
         GCi = np.arange(1, nrows + 1, dtype="int32")
@@ -842,14 +842,14 @@ class TestDMIGReal(unittest.TestCase):
         ncols = None
         reals = [1.0, 2.0, 3.0]
         GCj = [
-            [1, 1],  # grid, component
-            [2, 1],
-            [3, 1],
+            [1, 3],  # grid, component
+            [2, 3],
+            [3, 3],
         ]
         GCi = [
-            [1, 1],  # grid, component
-            [4, 1],
-            [5, 1],
+            [1, 5],  # grid, component
+            [4, 5],
+            [5, 5],
         ]
         dmig = model.add_dmig(
             name, matrix_form, tin, ncols, GCj, GCi, Real=reals, Complex=None, comment="dmig"
@@ -1258,14 +1258,14 @@ class TestDMIGImag(unittest.TestCase):
         reals = np.array([1.0, 2.0, 3.0])
         # complexs = reals
         GCj = [
-            [1, 1],  # grid, component
-            [2, 1],
-            [3, 1],
+            [1, 3],  # grid, component
+            [2, 3],
+            [3, 3],
         ]
         GCi = [
-            [1, 1],  # grid, component
-            [4, 1],
-            [5, 1],
+            [1, 5],  # grid, component
+            [4, 5],
+            [5, 5],
         ]
         dmig = model.add_dmig(
             name, ifo, tin, ncols, GCj, GCi, Real=reals, Complex=10 * reals, comment="dmig"
@@ -1304,14 +1304,14 @@ class TestDMIGImag(unittest.TestCase):
         reals = [1.0, 2.0, 3.0]
         # complexs = reals
         GCj = [
-            [1, 1],  # grid, component
-            [2, 1],
-            [3, 1],
+            [1, 3],  # grid, component
+            [2, 3],
+            [3, 3],
         ]
         GCi = [
-            [1, 1],  # grid, component
-            [4, 1],
-            [5, 1],
+            [1, 5],  # grid, component
+            [4, 5],
+            [5, 5],
         ]
         dmig = model.add_dmig(
             name, ifo, tin, ncols, GCj, GCi, Real=reals, Complex=reals, polar=1, comment="dmig"
@@ -1511,6 +1511,16 @@ class TestMatrixLineLength(unittest.TestCase):
                 GCi.append((row, 1))
         return GCj, GCi
 
+    def _make_gc_pairs_dmik(self, nrows: int, ncols: int):
+        """Build GCi/GCj as list of (grid, component) tuples for NastranMatrix cards."""
+        GCj = []
+        GCi = []
+        for col in range(1, ncols + 1):
+            for row in range(1, nrows + 1):
+                GCj.append((col, 3))
+                GCi.append((row, 5))
+        return GCj, GCi
+
     def test_dmig_line_length(self):
         """DMIG write_card must not exceed 72 chars per line for all TIN values."""
         rng = np.random.default_rng(43)
@@ -1560,7 +1570,7 @@ class TestMatrixLineLength(unittest.TestCase):
         rng = np.random.default_rng(45)
         nrows = 20
         ncols = 5
-        GCj, GCi = self._make_gc_pairs(nrows, ncols)
+        GCj, GCi = self._make_gc_pairs_dmik(nrows, ncols)
         Real = rng.standard_normal(len(GCi)).tolist()
         Complex = rng.standard_normal(len(GCi)).tolist()
 

@@ -3366,13 +3366,13 @@ def solve_eigenvector(
     ndof = Kaa.shape[0]
     ndof2 = Maa2.shape[0]
     backend = get_solver()
-    print(f'eig backend = {backend}')
+    # print(f'eig backend = {backend}')
     if ndof2 <= neigenvalues:
-        print(f'  ndof={ndof2}; neig={neigenvalues}')
+        # print(f'  ndof={ndof2}; neig={neigenvalues}')
         Kaa2_dense = Kaa2.todense()
         eigenvalues, xa = scipy.linalg.eigh(Kaa2_dense, Maa2)
     elif use_lobpcg:
-        print(f'  use_lobpcg; neig={neigenvalues}')
+        # print(f'  use_lobpcg; neig={neigenvalues}')
         X0_reduced = None
         if X0 is not None:
             X0_reduced = X0[is_modes, :]
@@ -3381,7 +3381,7 @@ def solve_eigenvector(
         xa[no_modes, :] = 0
         xa[is_modes, :] = xa_
     else:
-        print(f'  eigsh; neig={neigenvalues}')
+        # print(f'  eigsh; neig={neigenvalues}')
         try:
             eigenvalues, xa_ = backend.eigsh(
                 Kaa2, k=neigenvalues, M=Maa2, which="SM", return_eigenvectors=True

@@ -3474,8 +3474,8 @@ class AddAcoustic:
              1/AML:  the pressure and velocities on the AML boundary
                      are used to compute results in the far field.
              2/PHYB: the pressure and velocities on the physical
-                     boundary (that is, all free fluid faces with the
-                     exception of faces on the AML and the infinite
+                     boundary (that is, all free fluid faces except
+                     for faces on the AML and the infinite
                      planes) are used to compute results in the far field.
              0/NONE: the region does not radiate.
 
@@ -4019,7 +4019,7 @@ class AddMaterial:
             +========+=======+========+=======+=======+======+======+======+======+
             | MATCID |  CID  | EID1   | EID2  | EID3  | EID4 | EID5 | EID6 | EID7 |
             +--------+-------+--------+-------+-------+------+------+------+------+
-            |        | EID8  | EID9   | -etc- |       |      |      |      |      |
+            |        | EID8  | EID9   |  etc. |       |      |      |      |      |
             +--------+-------+--------+-------+-------+------+------+------+------+
 
         Format (alternative 2):
@@ -5059,7 +5059,7 @@ class AddAero:
         self._add_methods.add_aestat_object(aestat)
         return aestat
 
-    def add_aelink(self, aelink_id: int, label: str,
+    def add_aelink(self, aelink_id: int | str, label: str,
                    independent_labels: list[str], linking_coefficients: list[float],
                    comment: str='') -> AELINK:
         """
@@ -5068,8 +5068,9 @@ class AddAero:
 
         Parameters
         ----------
-        aelink_id : int
-            unique id
+        aelink_id : int | str
+            int: unique id
+            str: ALWAYS (MSC only)
         label : str
             name of the dependent AESURF card
         independent_labels : list[str, ..., str]
@@ -5080,7 +5081,8 @@ class AddAero:
             a comment for the card
 
         """
-        aelink = AELINK(aelink_id, label, independent_labels, linking_coefficients, comment=comment)
+        aelink = AELINK(aelink_id, label, independent_labels,
+            linking_coefficients, comment=comment)
         self._add_methods.add_aelink_object(aelink)
         return aelink
 
@@ -5317,6 +5319,7 @@ class AddAero:
         assert isinstance(mesh, str), mesh
         assert isinstance(sym_xz, str), sym_xz
         assert isinstance(sym_xy, str), sym_xy
+        assert isinstance(force, integer_types), force
         assert isinstance(dmik, str), dmik
         assert isinstance(perq, str), perq
         aeforce = AEFORCE(mach, sym_xz, sym_xy, ux_id, mesh,
@@ -5942,7 +5945,7 @@ class AddOptimization:
         self._add_methods.add_desvar_object(desvar)
         return desvar
 
-    def add_topvar(self, opt_id: int, label: str, prop_type: int, xinit: float,
+    def add_topvar(self, opt_id: int, label: str, prop_type: str, xinit: float,
                    pid: int, xlb: float=0.001, delxv: float=0.2,
                    power: float=3.0, options=None, comment: str='') -> TOPVAR:
         """adds a TOPVAR"""
@@ -9686,7 +9689,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_dmiji_object(dmiji)
         return dmiji
 
-    def add_dmik(self, name, ifo: int,
+    def add_dmik(self, name: str, ifo: int,
                  tin: int, ncols: int,
                  GCj: np.ndarray, GCi: np.ndarray,
                  Real: np.ndarray, Complex=None,
@@ -9724,10 +9727,14 @@ class AddCards(AddCoords, AddContact, AddBolts,
             Integer > 0 indicates amplitude, phase format
         ncols : int
             ???
-        GCj  : list[(node, dof)]
+        GCj : (ndof, 2) int np.ndarray
+            columns are (node, dof)
             the jnode, jDOFs
-        GCi  : list[(node, dof)]
+            DOFs should be 3 or 5
+        GCi : (ndof, 2) int np.ndarray
+            columns are (node, dof)
             the inode, iDOFs
+            DOFs should be 3 or 5
         Real : list[float]
             The real values
         Complex : list[float]; default=None

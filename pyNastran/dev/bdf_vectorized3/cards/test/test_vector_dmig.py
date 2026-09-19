@@ -1,6 +1,7 @@
 import unittest
 import os
 import copy
+import tempfile
 import numpy as np
 
 import pyNastran
@@ -447,12 +448,12 @@ class TestDMIGReal(unittest.TestCase):
         polar = 0
         ncols = None
         reals = [1.0, 2.0, 3.0]
-        GCj = [[1, 1],  # grid, component
-               [2, 1],
-               [3, 1]]
-        GCi = [[1, 1],  # grid, component
-               [4, 1],
-               [5, 1]]
+        GCj = [[1, 3],  # grid, component
+               [2, 3],
+               [3, 3]]
+        GCi = [[1, 5],  # grid, component
+               [4, 5],
+               [5, 5]]
         dmig = model.add_dmig(name, matrix_form, tin, ncols, GCj, GCi,
                               Real=reals, Complex=None,
                               tout=tout, polar=polar, comment='dmig')
@@ -808,12 +809,12 @@ class TestDMIGImag(unittest.TestCase):
         ncols = None
         reals = np.array([1.0, 2.0, 3.0])
         #complexs = reals
-        GCj = [[1, 1],  # grid, component
-               [2, 1],
-               [3, 1]]
-        GCi = [[1, 1],  # grid, component
-               [4, 1],
-               [5, 1]]
+        GCj = [[1, 3],  # grid, component
+               [2, 3],
+               [3, 3]]
+        GCi = [[1, 3],  # grid, component
+               [4, 5],
+               [5, 3]]
         dmig = model.add_dmig(name, ifo, tin, ncols, GCj, GCi,
                               Real=reals, Complex=10*reals,
                               tout=tout, polar=polar, comment='dmig')
@@ -843,12 +844,12 @@ class TestDMIGImag(unittest.TestCase):
         ncols = None
         reals = [1.0, 2.0, 3.0]
         #complexs = reals
-        GCj = [[1, 1],  # grid, component
-               [2, 1],
-               [3, 1]]
-        GCi = [[1, 1],  # grid, component
-               [4, 1],
-               [5, 1]]
+        GCj = [[1, 3],  # grid, component
+               [2, 5],
+               [3, 3]]
+        GCi = [[1, 3],  # grid, component
+               [4, 3],
+               [5, 5]]
         dmig = model.add_dmig(name, ifo, tin, ncols, GCj, GCi,
                               Real=reals, Complex=reals,
                               tout=tout, polar=polar, comment='dmig')
@@ -989,7 +990,6 @@ class TestDMIWritePerformance(unittest.TestCase):
         assert len(card_str) > 1000
 
         # Round-trip: write to file, read back, compare dense matrices
-        import tempfile, os
         fname = tempfile.mktemp(suffix='.bdf')
         try:
             with open(fname, 'w') as f:
@@ -1027,7 +1027,6 @@ class TestDMIWritePerformance(unittest.TestCase):
         card_str = model.dmi['CPLXMAT'].write_card(size=8)
         assert 'CPLXMAT' in card_str
 
-        import tempfile, os
         fname = tempfile.mktemp(suffix='.bdf')
         try:
             with open(fname, 'w') as f:
@@ -1058,7 +1057,6 @@ class TestDMIWritePerformance(unittest.TestCase):
         card_str = model.dmi['THRUMAT'].write_card(size=8)
         assert 'THRU' in card_str, 'Expected THRU compression for constant values'
 
-        import tempfile, os
         fname = tempfile.mktemp(suffix='.bdf')
         try:
             with open(fname, 'w') as f:
@@ -1089,7 +1087,6 @@ class TestDMIWritePerformance(unittest.TestCase):
         card_str = model.dmig['TESTDMIG'].write_card(size=8)
         assert 'TESTDMIG' in card_str
 
-        import tempfile, os
         fname = tempfile.mktemp(suffix='.bdf')
         try:
             with open(fname, 'w') as f:
@@ -1128,7 +1125,6 @@ class TestDMIWritePerformance(unittest.TestCase):
         card_str = model.dmi['DBL_MAT'].write_card(size=16)
         assert 'DBL_MAT' in card_str
 
-        import tempfile, os
         fname = tempfile.mktemp(suffix='.bdf')
         try:
             with open(fname, 'w') as f:

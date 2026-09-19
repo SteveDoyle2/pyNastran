@@ -5,6 +5,7 @@ import numpy as np
 from cpylog import properties as log_properties
 from pyNastran.bdf.cards.elements.shell import ShellElement
 if TYPE_CHECKING:  # pragma: no cover
+    import numpy.typing as npt
     from pyNastran.bdf.bdf import BDF, CTRIA3, CTRIA6, CTRIAR, CQUAD4, CQUAD8, CQUADR, CQUAD
 
 
@@ -21,7 +22,8 @@ def get_shell_material_coord(element: CTRIA3 | CTRIA6 | CTRIAR |
         return element.theta_mcid, np.nan
 
 
-def get_nastran_gui_layer_word(i: int, ilayer: int, is_pshell_pcomp: bool) -> str:
+def get_nastran_gui_layer_word(i: int, ilayer: int,
+                               is_pshell_pcomp: tuple[bool, bool]) -> str:
     """gets the PSHELL/PCOMP layer word"""
     ## TODO: this makes no sense...
     is_pshell, unused_is_pcomp = is_pshell_pcomp
@@ -88,18 +90,20 @@ def store_warning(log, store_msg: bool, msg: str) -> str:
     return out_msg
 
 
-def make_nid_map(nid_map: dict[int, int], nids: list[int]) -> dict[int, int]:
+def make_nid_map(nid_map: dict[int, int], nids: npt.NDArray[np.int_]) -> dict[int, int]:
     """make the node map"""
     for i, nid in enumerate(nids):
         nid_map[nid] = i
     return nid_map
 
 
-def get_elements_nelements_unvectorized(model: BDF) -> tuple[Any, int, list[dict[int, Any]]]:
+def get_elements_nelements_unvectorized(model: BDF) -> tuple[dict[int, Any],
+                                                             int,
+                                                             npt.NDArray[np.int_]]:
     nelements = len(model.elements)
     #eid_map = self.gui.eid_map
     elements = model.elements
-    superelements = None
+    superelements = np.array([], dtype='int32')
     if model.superelement_models:
         superelements = []
         if nelements:
@@ -381,7 +385,7 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
                 try:
                     normali = element.Normal()
                 except AttributeError:
-                    msg += (
+                    msg = (
                         f'{element}'
                         f'nodes_ref = {element}\n'
                         f'nodes = {element.node_ids}'

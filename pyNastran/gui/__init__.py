@@ -16,13 +16,9 @@ IS_DEV = (
     'GITHUB_ACTOR' in os.environ
 )
 
-USE_NEW_SIDEBAR_OBJS_ = True   # DisplacementResults2
-#USE_OLD_SIDEBAR_OBJS_ = False  # DisplacementResults
-
 # False for ease of testing (it's the same length as the OG plate)
 USE_NEW_TERMS_ = False    #  only for USE_NEW_SIDEBAR_OBJS=True
 if IS_DEV:  # pragma: no cover
-    USE_NEW_SIDEBAR_OBJS_ = True
     USE_NEW_TERMS_ = False
 
 

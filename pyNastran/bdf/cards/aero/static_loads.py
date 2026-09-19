@@ -1297,7 +1297,7 @@ class AEFORCE(BaseCard):
 
     def __init__(self, mach: float, sym_xz: str, sym_xy: str,
                  uxid: int, mesh: str,
-                 force: str='',
+                 force: int=0,
                  dmik: str='', perq: str='', comment: str=''):
         """
         Creates an AEFORCE card.
@@ -1315,7 +1315,7 @@ class AEFORCE(BaseCard):
             AERO or STRUCT that declares whether the force vector
             is defined on the aerodynamic ks-set mesh or the structural
             g-set mesh.
-        force : str=''
+        force : int=0
             ID of a FORCE/MOMENT set that defines the vector.
             Required if mesh='STRUCT'.
         dmik: str=''
@@ -1332,6 +1332,8 @@ class AEFORCE(BaseCard):
         self.mesh = mesh
         self.force = force
         self.dmik = dmik
+        assert isinstance(force, integer_types), f'force={force}'
+        assert isinstance(dmik, str), f'dmik={dmik!r}'
         self.uxid_ref = None
         self.force_ref = None
         self.dmik_ref = None
@@ -1354,7 +1356,8 @@ class AEFORCE(BaseCard):
         sym_xy = string(card, 3, 'sym_xy')
         uxid = integer(card, 4, 'uxid')
         mesh = string(card, 5, 'mesh')
-        force = string_or_blank(card, 6, 'force', default='')
+        assert mesh in {'STRUCT', 'AERO'}, f'mesh={mesh!r}'
+        force = integer_or_blank(card, 6, 'force', default='')
         dmik = string_or_blank(card, 7, 'dmik', default='')
         assert len(card) <= 8, f'len(AEFORCE card) = {len(card):d}\ncard={card}'
         return AEFORCE(mach, sym_xz, sym_xy, uxid, mesh, force, dmik, comment=comment)

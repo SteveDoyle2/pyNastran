@@ -1,11 +1,10 @@
 import sys
-from docopt import docopt
+import argparse
 
 import pyNastran
+from cpylog import SimpleLogger
 
-from .utils import (
-    get_bdf_filename_punch_log, filter_no_args,
-)
+from .utils import filter_no_args
 
 
 def cmd_line_stats(argv=None, quiet: bool = False) -> None:
@@ -13,35 +12,29 @@ def cmd_line_stats(argv=None, quiet: bool = False) -> None:
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    msg = (
-        'Usage:\n'
-        '  bdf stats IN_BDF_FILENAME [--punch]\n'
-        '  bdf stats -h | --help\n'
-        '  bdf stats -v | --version\n'
-        '\n'
-
-        "Positional Arguments:\n"
-        "  IN_BDF_FILENAME  path to input BDF/DAT/NAS file\n"
-        '\n'
-
-        'Options:\n'
-        '  --punch          flag to identify a *.pch/*.inc file\n'
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-    )
-    filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args("bdf stats: use 'bdf stats -h' for help",
+                   argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
-    # type_defaults = {
-    #    '--nerrors' : [int, 100],
-    # }
-    data = docopt(msg, version=ver, argv=argv[1:])
 
-    bdf_filename, punch, log = get_bdf_filename_punch_log(data, quiet)
+    parser = argparse.ArgumentParser(
+        prog='bdf stats',
+        description='List the cards in a BDF model',
+    )
+    parser.add_argument('-v', '--version', action='version', version=ver)
+    parser.add_argument('IN_BDF_FILENAME',
+                        help='path to input BDF/DAT/NAS file')
+    parser.add_argument('--punch', action='store_true',
+                        help='flag to identify a *.pch/*.inc file')
+
+    args = parser.parse_args(argv[2:])
+
+    bdf_filename = args.IN_BDF_FILENAME
+    punch = args.punch
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8')
     if not quiet:  # pragma: no cover
-        print(data)
+        print(vars(args))
 
     from pyNastran.bdf.bdf import read_bdf, BDF
     model: BDF = read_bdf(bdf_filename, validate=True, xref=True, punch=punch,

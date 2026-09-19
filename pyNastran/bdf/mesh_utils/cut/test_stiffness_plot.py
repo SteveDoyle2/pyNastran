@@ -2,6 +2,7 @@
 import os
 # import copy
 import time
+import tempfile
 from pathlib import Path
 import unittest
 import numpy as np
@@ -27,7 +28,8 @@ from pyNastran.bdf.bdf import read_bdf, BDF, CORD2R
 from cpylog import SimpleLogger
 
 from pyNastran.bdf.mesh_utils.cut.moi_plotter import (
-    cut_and_plot_moi, plot_inertia, _get_shell_inertia, load_moi_data)
+    cut_and_plot_moi, plot_inertia, _get_shell_inertia, load_moi_data,
+    _find_bar_beam_crossings, _bar_own_I_in_cut_frame, _get_bar_section_props)
 from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     _setup_faces)
 
@@ -35,8 +37,73 @@ PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = Path(__file__).parent
 MODEL_PATH = Path(os.path.join(PKG_PATH, '..', 'models'))
 
+#: the nine entries the tests below want out of ``cut_and_plot_moi``'s dict
+CORE_KEYS = ('stations', 'L', 'A', 'I', 'J', 'ExI', 'EyI', 'GJ', 'avg_centroid')
+
+
+def unpack_moi(out_dict: dict) -> tuple:
+    """
+    ``(stations, L, A, I, J, ExI, EyI, GJ, avg_centroid)``, by name.
+
+    The dict has grown entries over time (neutral axis, shear center), so
+    unpacking ``out_dict.values()`` positionally breaks every test at once
+    the next time something is added.
+    """
+    missing = [key for key in CORE_KEYS if key not in out_dict]
+    assert not missing, f'cut_and_plot_moi stopped returning {missing}'
+    return tuple(out_dict[key] for key in CORE_KEYS)
+
 
 class TestStiffnessPlot(unittest.TestCase):
+    def test_load_moi_data_column_order(self):
+        """
+        ``load_moi_data`` must hand back the I/ExI/EyI blocks in the same order
+        ``cut_and_plot_moi`` wrote them, so that a CSV round-trip is the identity
+        and ``I[:, 5]`` still means in memory what it meant on disk.
+
+        The column *names* are local-frame labels -- on a swept cut there is no
+        right answer for which in-plane product is "Ixz" vs "Iyz" -- so this
+        pins the *ordering* contract only, not the naming.
+
+        Regression: the reader used to select '..., Iyz, Ixz' against a header
+        ending '..., Ixz, Iyz', permuting the last two columns on load.
+        ``plot_compare_inertia`` reads ``Ixz = I[:, 5]`` straight off this, so it
+        plotted the out-of-plane term (~1e-14) instead of the real one (2.4e3 on
+        a real wing) -- a flat-zero curve.  The existing round-trip assert in
+        ``test_cut_box_beam`` could not see it: those sections are symmetric, so
+        Ixz and Iyz are both ~0 and swapping them is invisible.  Hence the
+        distinct sentinel values below.
+        """
+        if not IS_PANDAS:
+            return
+        header = (
+            '# station,dx,dz,A,'
+            'Ix,Iy,Iz,Ixy,Ixz,Iyz,J,'
+            'Ex*Ix,Ex*Iy,Ex*Iz,Ex*Ixy,Ex*Ixz,Ex*Iyz,'
+            'Ey*Ix,Ey*Iy,Ey*Iz,Ey*Ixy,Ey*Ixz,Ey*Iyz,'
+            'GJ,'
+            'xcentroid,ycentroid,zcentroid')
+        # every field distinct so any permutation shows up
+        row = [float(i) for i in range(1, 28)]
+        fd, csv_filename = tempfile.mkstemp(suffix='.csv', prefix='moi_order_')
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as csv_file:
+                csv_file.write(header + '\n')
+                csv_file.write(','.join(str(val) for val in row) + '\n')
+
+            station, A, I, J, ExI, EyI, GJ, avg_centroid = load_moi_data(csv_filename)
+            # column offsets follow the header above
+            assert np.allclose(station, [row[0]]), station
+            assert np.allclose(A, [row[3]]), A
+            assert np.allclose(I, [row[4:10]]), I
+            assert np.allclose(J, [row[10]]), J
+            assert np.allclose(ExI, [row[11:17]]), ExI
+            assert np.allclose(EyI, [row[17:23]]), EyI
+            assert np.allclose(GJ, [row[23]]), GJ
+            assert np.allclose(avg_centroid, [row[24:27]]), avg_centroid
+        finally:
+            os.remove(csv_filename)
+
     def test_shell_inertia(self):
         log = SimpleLogger(level='warning', encoding='utf-8')
         model = BDF(debug=False, log=log, mode='msc')
@@ -194,7 +261,13 @@ class TestStiffnessPlot(unittest.TestCase):
         J_expected = [i_expected]
         ExI_expected = [[e22 * i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
         EyI_expected = [[e11 * i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        GJ_expected = [37.5]
+        # A single cut quad is one straight wall: an OPEN section, so the
+        # torsion constant is the thin-strip value j = s*t^3/3, not the polar
+        # moment.  The old baseline was G*(Ix+Iz) = 400*0.09375 = 37.5, which
+        # is 93.75x too stiff -- Ix here is the in-plane second moment of a
+        # 3-wide strip and describes bending, not twist.
+        j_open = cut_length * t ** 3 / 3.  # 0.001
+        GJ_expected = [g12 * j_open]  # 0.4
         centroid_expected = [[1.5, 0.0, 0.0]]
         E_expected = [e11, e22, g12]
         Ex_expected = [e22]
@@ -269,9 +342,10 @@ class TestStiffnessPlot(unittest.TestCase):
             #  [ 5.00000000e-01 -5.55111512e-17  0.00000000e+00]
             #  [ 0.00000000e+00 -5.55111512e-17  0.00000000e+00]]
 
+            x_vector = [0., 0., 1.]
             moi_data = cut_and_plot_moi(
                 model, normal_plane, log,
-                ystations, coords,
+                ystations, coords, x_vector,
                 dirname=dirname,
                 plot=False, show=False, face_data=None,
                 stop_on_failure=True,
@@ -289,11 +363,14 @@ class TestStiffnessPlot(unittest.TestCase):
             )
             out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
             (y, L, A, I, J,
-             ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+             ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
 
             Ex = ExI[:, 0] / I[:, 0]
             Ey = EyI[:, 0] / I[:, 0]
-            G = GJ / J
+            # GJ is now a real torsion constant, so it is NOT G*J with J the
+            # polar moment; dividing by J no longer recovers G.  Divide by the
+            # open-section constant that GJ is actually built from instead.
+            G = GJ / j_open
             # print(f'y = {y.tolist()}')
             # print(f'A = {A.tolist()}')
             # print(f'I = {I.tolist()}')
@@ -339,7 +416,10 @@ class TestStiffnessPlot(unittest.TestCase):
         J_expected = [i_expected]
         ExI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
         EyI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        GJ_expected = [1081730.7692307692]
+        # open section: one straight wall, so j = s*t^3/3 rather than the polar
+        # moment.  Old baseline was G*(Ix+Iz) = 1081730.77, 93.75x too stiff.
+        G = E / (2. * (1. + 0.3))  # 11538461.54
+        GJ_expected = [G * cut_length * t ** 3 / 3.]  # 11538.46
         centroid_expected = [[1.5, 0.0, 0.0]]
 
         cut_data_span_filename = dirname / 'test_cut_quad_shell_mat1.csv'
@@ -357,9 +437,11 @@ class TestStiffnessPlot(unittest.TestCase):
             else:  # pragma: no cover
                 raise RuntimeError(type)
         model.cross_reference()
+
+        x_vector = [0., 1., 0.]
         moi_data = cut_and_plot_moi(
             model, normal_plane, log,
-            ystations, coords,
+            ystations, coords, x_vector,
             dirname=dirname,
             plot=False, show=False, face_data=None,
             stop_on_failure=True,
@@ -375,7 +457,7 @@ class TestStiffnessPlot(unittest.TestCase):
         )
         (out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig) = moi_data
         (y, L, A, I, J,
-         ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+         ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
 
         if IS_PANDAS:
             y1, A1, I1, J1, ExI1, EyI1, GJ1, avg_centroid1 = load_moi_data(cut_data_span_filename)
@@ -402,9 +484,449 @@ class TestStiffnessPlot(unittest.TestCase):
         assert np.allclose(J, J_expected)
         assert np.allclose(ExI, ExI_expected)
         assert np.allclose(EyI, EyI_expected)
-        assert np.allclose(GJ, GJ_expected), GJ.tolist()
+        assert np.allclose(GJ, GJ_expected), (GJ_expected, GJ.tolist())
         assert np.allclose(avg_centroid, centroid_expected), avg_centroid.tolist()
         del model.properties[pid]
+
+    def test_cut_ellipse_constant_area(self):
+        """
+        Prismatic 2:1 elliptical tube extruded along +y; ``cut_and_plot_moi``
+        plus the equivalent beam model it writes.
+
+        The section does not change along the span, so every station must
+        return the *same* area / inertia / centroid / GJ.  That is a strong
+        self-check that needs no closed-form value at all.
+
+        The 2:1 aspect ratio then makes the 1-2 axis mapping unambiguous.  The
+        major axis is along global x and the CBEAM v-vector is [1, 0, 0], so
+        ``y_elem`` lies along +x and ``I1 = int(y_elem^2 dA)`` must be the
+        LARGER of the two.  A circle or a square could not tell these apart.
+
+        Finally, GJ must be the Bredt-Batho closed-cell value; the polar
+        moment ``G*(Ix+Iz)`` is ~1.5x too stiff for a 2:1 ellipse.
+        """
+        dirname = TEST_PATH
+        tag = 'ellipse_'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+
+        a, b, t = 20., 10., 0.1
+        E, nu = 1.0e7, 0.3
+        G = E / (2. * (1. + nu))
+        span, nspan, ntheta = 100., 40, 120
+
+        model, pts = _build_ellipse_tube(
+            log, a, b, t, span, nspan, ntheta, E, nu)
+        model.write_bdf(dirname / 'ellipse.bdf')
+        exact = _thin_wall_section(pts, t)
+
+        # deliberately off the node planes (span/nspan = 2.5), so the cut has
+        # to interpolate rather than land on coincident grids
+        ystations = np.array([21.3, 33.7, 46.1, 58.5, 70.9])
+        coords = [CORD2R(1000 + i, rid=0, origin=[0., ys, 0.],
+                         zaxis=[0., ys, 1.], xzplane=[1., ys, 0.])
+                  for i, ys in enumerate(ystations)]
+        normal_plane = coords[0].j
+        assert np.allclose(normal_plane, [0., 1., 0.]), normal_plane
+
+        beam_bdf_filename = tag + 'equivalent_beam_model.bdf'
+        x_vector = [0., 0., 1.]
+        moi_data = cut_and_plot_moi(
+            model, normal_plane, log, ystations, coords, x_vector,
+            dirname=dirname, plot=False, show=False, stop_on_failure=True,
+            xyz_round=3,
+            area_round=3,
+            inertia_round=2,
+            cut_data_span_filename='',
+            beam_model_bdf_filename=beam_bdf_filename,
+            thetas_csv_filename=tag + 'thetas.csv')
+        (out_dict, plane_bdf_filenames1, plane_bdf_filenames2, unused_ifig) = moi_data
+        (y, L, A, I, J, ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
+
+        assert np.isfinite(A).all(), f'missing cuts: A={A}'
+        assert np.allclose(y, ystations), y
+
+        # ------------------------------------------------------------------
+        # 1) prismatic: nothing varies along the span
+        # ------------------------------------------------------------------
+        # the cut interpolates along the element edges, so a station that does
+        # not land on a node plane picks up a little roundoff; ~1e-5 is the
+        # observed spread, so 1e-4 flags a real span dependence
+        for name, value in [('L', L), ('A', A), ('J', J), ('GJ', GJ)]:
+            assert np.allclose(value, value[0], rtol=1e-4), \
+                f'{name} varies vs span: {value}'
+        for name, value in [('I', I), ('ExI', ExI), ('EyI', EyI)]:
+            atol = 1e-4 * np.abs(value).max()
+            assert np.allclose(value, value[0, :], rtol=1e-4, atol=atol), \
+                f'{name} varies vs span:\n{value}'
+        # only the y column of the centroid varies; it *is* the station
+        assert np.allclose(avg_centroid[:, 1], ystations), avg_centroid
+
+        # ------------------------------------------------------------------
+        # 2) section integrals vs the closed-form thin-wall values
+        # ------------------------------------------------------------------
+        # area and perimeter are integrated exactly, whatever the subdivision
+        assert np.allclose(A, exact['A'], rtol=1e-6), (A[0], exact['A'])
+        assert np.allclose(L, exact['perimeter'], rtol=1e-6), (L[0], exact['perimeter'])
+
+        # lump <= cut <= strip; see _thin_wall_section
+        eps = 1e-9
+        assert (exact['int_x2_lump'] * (1. - eps) <= I[:, 0]).all() and \
+               (I[:, 0] <= exact['int_x2_strip'] * (1. + eps)).all(), \
+            (I[:, 0], exact['int_x2_lump'], exact['int_x2_strip'])
+        assert (exact['int_z2_lump'] * (1. - eps) <= I[:, 2]).all() and \
+               (I[:, 2] <= exact['int_z2_strip'] * (1. + eps)).all(), \
+            (I[:, 2], exact['int_z2_lump'], exact['int_z2_strip'])
+
+        # doubly symmetric, so the product of inertia is numerical noise
+        assert np.abs(I[:, 5]).max() < 1e-6 * exact['int_x2_lump'], I[:, 5]
+        assert np.allclose(avg_centroid[:, 0], 0., atol=1e-6 * a), avg_centroid
+        assert np.allclose(avg_centroid[:, 2], 0., atol=1e-6 * a), avg_centroid
+        assert np.allclose(ExI[:, 0] / I[:, 0], E, rtol=1e-6), ExI[0, 0] / I[0, 0]
+
+        # the whole point of a 2:1 section: int(x^2) must dominate int(z^2).
+        # for a thin elliptical shell the ratio is ~2.9, not (a/b)**2 = 4,
+        # because the wall is not uniformly distributed in x
+        ratio = I[0, 0] / I[0, 2]
+        assert 2.5 < ratio < 3.5, ratio
+        assert np.all(I[:, 0] > I[:, 2]), (I[:, 0], I[:, 2])
+
+        # ------------------------------------------------------------------
+        # 3) torsion is Bredt-Batho, not the polar moment
+        # ------------------------------------------------------------------
+        assert np.allclose(GJ, G * exact['J'], rtol=1e-3), (GJ[0], G * exact['J'])
+        gj_polar = G * (exact['int_x2_lump'] + exact['int_z2_lump'])
+        assert gj_polar > 1.3 * GJ[0], (gj_polar, GJ[0])
+
+        # ------------------------------------------------------------------
+        # 4) the equivalent beam deck reproduces every stiffness
+        # ------------------------------------------------------------------
+        beam_model = read_bdf(dirname / beam_bdf_filename, punch=True, debug=None)
+        assert len(beam_model.nodes) == len(ystations), beam_model.nodes
+        assert len(beam_model.elements) == len(ystations) - 1, beam_model.elements
+
+        mat = beam_model.materials[1]
+        # the MAT1 carries real moduli so that rho*A is a meaningful mass and
+        # K*G*A is a meaningful shear stiffness
+        assert np.allclose(mat.e, 2. * mat.g * (1. + mat.nu)), (mat.e, mat.g, mat.nu)
+        assert np.allclose(mat.e, E, rtol=1e-6), mat.e
+        assert np.allclose(mat.g, G, rtol=1e-6), mat.g
+
+        for pid, prop in sorted(beam_model.properties.items()):
+            assert np.allclose(prop.A[0], exact['A'], rtol=1e-4), (pid, prop.A)
+            assert np.allclose(mat.e * prop.A[0], E * exact['A'], rtol=1e-4)
+            # I1 = int(y_e^2 dA), I2 = int(z_e^2 dA) in the *element* frame.
+            # The beam runs along +y and x_vector = [0, 0, 1], so
+            # y_e = +z_global and z_e = +x_global: I1 picks up int(z^2) and
+            # I2 picks up int(x^2), i.e. the opposite of the cut-plane order.
+            assert np.allclose(mat.e * prop.i1[0], ExI[0, 2], rtol=1e-4), \
+                (pid, mat.e * prop.i1[0], ExI[0, 2])
+            assert np.allclose(mat.e * prop.i2[0], ExI[0, 0], rtol=1e-4), \
+                (pid, mat.e * prop.i2[0], ExI[0, 0])
+            assert np.allclose(mat.g * prop.j[0], G * exact['J'], rtol=1e-3)
+            # the ellipse is 2:1 with the long axis along x = z_e, so I2 is
+            # the strong one.  Swapping x_vector to [1,0,0] swaps these.
+            assert prop.i2[0] > prop.i1[0], (pid, prop.i1, prop.i2)
+            k1 = 1.0 if prop.k1 is None else prop.k1
+            assert np.allclose(k1 * mat.g * prop.A[0], G * exact['A'], rtol=1e-4)
+
+        # plot=False and cut_data_span_filename='', so only these two exist;
+        # _cleanup_moi_files() would trip over the missing plots
+        for fname in plane_bdf_filenames1 + plane_bdf_filenames2:
+            os.remove(fname)
+        # os.remove(dirname / beam_bdf_filename)
+        os.remove(dirname / (tag + 'thetas.csv'))
+
+    def test_cut_ellipse_fuselage_frame(self):
+        """
+        The equivalent beam model must be written in the BASIC frame, even
+        when the cut coord is rotated relative to it.
+
+        ``avg_centroid`` comes out of the cutter in the cut coord's LOCAL
+        frame (the plots and the csv want in-plane coordinates), and column 1
+        is then overwritten with the station.  For a wing cut that happens to
+        be the basic frame, because the coord is built so its axes coincide
+        with the global ones -- so the bug is invisible there.  A fuselage cut
+        marches along +x with a rotated coord, and the GRIDs used to come out
+        permuted as ``[ycg, station, zcg]``.
+
+        The section is deliberately centered off-axis so that a permutation
+        cannot hide behind a zero.
+        """
+        dirname = TEST_PATH
+        tag = 'fuse_ellipse_'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+
+        a, b, t = 20., 10., 0.1
+        E, nu = 1.0e7, 0.3
+        ycg, zcg = 3., 7.
+        span, nspan, ntheta = 100., 40, 80
+
+        model, unused_pts = _build_ellipse_tube(
+            log, a, b, t, span, nspan, ntheta, E, nu,
+            axis=0, center=(ycg, zcg))
+
+        # the fuselage recipe: march along +x, cut in the global yz plane.
+        # the local axes are i=+y, j=-x, k=+z, so the coord IS rotated.
+        xstations = np.array([21.3, 46.1, 70.9])
+        origin = np.array([0., 0., 0.])
+        zaxis = np.array([0., 0., 1.])
+        xzplane = np.array([0., 1., 0.])
+        coords = []
+        for i, xs in enumerate(xstations):
+            dxyz = np.array([xs, 0., 0.])
+            coords.append(CORD2R(2000 + i, rid=0, origin=origin + dxyz,
+                                 zaxis=zaxis + dxyz, xzplane=xzplane + dxyz))
+        normal_plane = coords[0].j
+        assert np.allclose(normal_plane, [-1., 0., 0.]), normal_plane
+
+        beam_bdf_filename = tag + 'equivalent_beam_model.bdf'
+        x_vector = [0., 0., 1.]
+        moi_data = cut_and_plot_moi(
+            model, normal_plane, log, xstations, coords, x_vector,
+            dirname=dirname, plot=False, show=False, stop_on_failure=True,
+            cut_data_span_filename='',
+            beam_model_bdf_filename=beam_bdf_filename,
+            thetas_csv_filename=tag + 'thetas.csv')
+        (out_dict, plane_bdf_filenames1, plane_bdf_filenames2, unused_ifig) = moi_data
+        (unused_x, unused_L, A, unused_I, unused_J, unused_ExI, unused_EyI,
+         unused_GJ, avg_centroid) = unpack_moi(out_dict)
+        assert np.isfinite(A).all(), f'missing cuts: A={A}'
+
+        # the beam GRIDs are in the basic frame
+        beam_model = read_bdf(dirname / beam_bdf_filename, punch=True, debug=None)
+        xyz = np.array([beam_model.nodes[nid].xyz
+                        for nid in sorted(beam_model.nodes)])
+        xyz_expected = np.column_stack([
+            xstations,
+            np.full(len(xstations), ycg),
+            np.full(len(xstations), zcg)])
+        assert np.allclose(xyz, xyz_expected, atol=1e-6), \
+            f'beam GRIDs are not in the basic frame:\n{xyz}\nexpected\n{xyz_expected}'
+
+        # ...while the reported avg_centroid stays in the local frame, which
+        # is what plot_inertia and the csv header assume
+        local_expected = np.column_stack([
+            np.full(len(xstations), ycg),
+            xstations,
+            np.full(len(xstations), zcg)])
+        assert np.allclose(avg_centroid, local_expected, atol=1e-6), avg_centroid
+
+        # the CBEAM axis must run down the fuselage, not across it
+        for eid in sorted(beam_model.elements):
+            elem = beam_model.elements[eid]
+            n1, n2 = elem.node_ids
+            dxyz = beam_model.nodes[n2].xyz - beam_model.nodes[n1].xyz
+            assert abs(dxyz[0]) > 1e-6, (eid, dxyz)
+            assert np.allclose(dxyz[1:], 0., atol=1e-6), (eid, dxyz)
+
+        for fname in plane_bdf_filenames1 + plane_bdf_filenames2:
+            os.remove(fname)
+        os.remove(dirname / beam_bdf_filename)
+        os.remove(dirname / (tag + 'thetas.csv'))
+
+    def test_cut_ellipse_beam_grid_offset(self):
+        """
+        cut_and_plot_moi with prescribed beam GRID locations.
+
+        The beam nodes are put on an arbitrary straight reference axis (stand-in
+        for a set of load control points) rather than on the section centroids,
+        and the difference is carried on the CBEAM WA/WB offsets.  A CBEAM's
+        element axis runs from GA+WA to GB+WB, so the emitted model has to be
+        geometrically identical to the un-offset one -- same element axis, same
+        section properties -- with only the GRIDs moved.
+
+        """
+        dirname = TEST_PATH
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        tag = 'bgo_'
+        a, b, t = 20., 10., 0.1
+        span, nspan, ntheta = 100., 20, 40
+        E, nu = 1.0e7, 0.3
+        # section deliberately off the y-axis so the offsets are nonzero
+        xcg, zcg = 4., -6.
+        model, unused_pts = _build_ellipse_tube(
+            log, a, b, t, span, nspan, ntheta, E, nu,
+            axis=1, center=(xcg, zcg))
+
+        ystations = np.array([20., 50., 80.])
+        coords = [CORD2R(4000 + i, rid=0, origin=[0., ys, 0.],
+                         zaxis=[0., ys, 1.], xzplane=[1., ys, 0.])
+                  for i, ys in enumerate(ystations)]
+        normal_plane = coords[0].j
+        x_vector = [0., 0., 1.]
+        nstation = len(ystations)
+
+        # a straight reference axis that is nowhere near the centroid
+        ref_xyz = np.column_stack([
+            np.full(nstation, 15.),
+            ystations,
+            np.full(nstation, 30.)])
+        ref_ids = np.arange(100001, 100001 + nstation)
+
+        kwargs = dict(
+            dirname=dirname, plot=False, show=False, face_data=None,
+            stop_on_failure=True, cut_data_span_filename='',
+            thetas_csv_filename=tag + 'thetas.csv')
+
+        base_bdf_filename = tag + 'base.bdf'
+        off_bdf_filename = tag + 'offset.bdf'
+        out_base = cut_and_plot_moi(
+            model, normal_plane, log, ystations, coords, x_vector,
+            beam_model_bdf_filename=base_bdf_filename, **kwargs)
+        out_off = cut_and_plot_moi(
+            model, normal_plane, log, ystations, coords, x_vector,
+            beam_grid_xyz=ref_xyz, beam_grid_ids=ref_ids, beam_id0=500,
+            beam_model_bdf_filename=off_bdf_filename, **kwargs)
+
+        base = read_bdf(dirname / base_bdf_filename, punch=True, debug=None)
+        off = read_bdf(dirname / off_bdf_filename, punch=True, debug=None)
+
+        # the GRIDs went exactly where they were told, under the given ids
+        assert sorted(off.nodes) == ref_ids.tolist(), sorted(off.nodes)
+        xyz = np.array([off.nodes[nid].xyz for nid in ref_ids])
+        assert np.allclose(xyz, ref_xyz, atol=0., rtol=0.), xyz
+
+        # ...and the default is still a GRID on each centroid, numbered 1..n
+        assert sorted(base.nodes) == [1, 2, 3], sorted(base.nodes)
+        xyz_base = np.array([base.nodes[nid].xyz for nid in sorted(base.nodes)])
+        centroid_expected = np.column_stack([
+            np.full(nstation, xcg), ystations, np.full(nstation, zcg)])
+        assert np.allclose(xyz_base, centroid_expected, atol=1e-6), xyz_base
+
+        # beam_id0 moved the elements/properties/material out of the way
+        assert sorted(off.elements) == [500, 501], sorted(off.elements)
+        assert sorted(off.properties) == [500, 501], sorted(off.properties)
+        assert sorted(off.materials) == [500], sorted(off.materials)
+        assert sorted(base.elements) == [1, 2], sorted(base.elements)
+
+        for eid_base, eid_off in zip(sorted(base.elements), sorted(off.elements)):
+            elem_base = base.elements[eid_base]
+            elem_off = off.elements[eid_off]
+
+            # GA+WA / GB+WB reproduce the un-offset element axis exactly
+            for iend in (0, 1):
+                w = elem_off.wa if iend == 0 else elem_off.wb
+                xyz_off = (np.asarray(off.nodes[elem_off.node_ids[iend]].xyz) +
+                           np.asarray(w))
+                xyz_cen = np.asarray(base.nodes[elem_base.node_ids[iend]].xyz)
+                assert np.allclose(xyz_off, xyz_cen, atol=1e-9), \
+                    f'eid={eid_off:d} end={iend:d}: {xyz_off} != {xyz_cen}'
+
+            # cutting at the station means the offset is purely in-plane;
+            # an axial component would stretch the element
+            assert abs(elem_off.wa[1]) < 1e-10, elem_off.wa
+            assert abs(elem_off.wb[1]) < 1e-10, elem_off.wb
+
+            # moving the nodes must not touch the section properties
+            prop_base = base.properties[elem_base.pid]
+            prop_off = off.properties[elem_off.pid]
+            for field in ('A', 'i1', 'i2', 'i12', 'j', 'k1', 'k2'):
+                assert np.allclose(getattr(prop_base, field),
+                                   getattr(prop_off, field)), field
+
+        # a prescribed point that is the wrong shape is a caller error
+        with self.assertRaises(ValueError):
+            cut_and_plot_moi(
+                model, normal_plane, log, ystations, coords, x_vector,
+                beam_grid_xyz=ref_xyz[:-1],
+                beam_model_bdf_filename=off_bdf_filename, **kwargs)
+        with self.assertRaises(ValueError):
+            cut_and_plot_moi(
+                model, normal_plane, log, ystations, coords, x_vector,
+                beam_grid_xyz=ref_xyz, beam_grid_ids=np.array([7, 7, 8]),
+                beam_model_bdf_filename=off_bdf_filename, **kwargs)
+
+        # both runs write the same plane_face_* names, so dedupe before unlink
+        for fname in set(out_base[1] + out_base[2] + out_off[1] + out_off[2]):
+            os.remove(fname)
+        os.remove(dirname / base_bdf_filename)
+        os.remove(dirname / off_bdf_filename)
+        os.remove(dirname / (tag + 'thetas.csv'))
+
+    def test_cut_ellipse_element_frame(self):
+        """
+        I1/I2/I12 are written in the CBEAM element frame, not the cut frame.
+
+        MSC defines I1 = int(y_e^2 dA), I2 = int(z_e^2 dA) and
+        I12 = int(y_e*z_e dA) about the *element* axes, and those axes come
+        from the orientation vector::
+
+            x_e = GA+WA -> GB+WB        y_e = v normal to x_e        z_e = x_e cross y_e
+
+        For a beam along +y that means v = [1,0,0] gives y_e = +x_global and
+        z_e = -z_global, while v = [0,0,1] gives y_e = +z_global and
+        z_e = +x_global.  Same section, same cut, same everything else -- so
+        the two runs must come out with I1 and I2 exchanged and I12 negated.
+        This used to be written straight out of the cut-plane integrals with
+        no regard for v at all, which silently transposed the bending axes
+        and flipped the product of inertia.
+
+        A tilted ellipse is used so that all three moments are distinct and
+        I12 is comfortably non-zero.
+        """
+        dirname = TEST_PATH
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        tag = 'efr_'
+        a, b, t = 20., 10., 0.1
+        span, nspan, ntheta = 100., 20, 40
+        E, nu = 1.0e7, 0.3
+        model, unused_pts = _build_ellipse_tube(
+            log, a, b, t, span, nspan, ntheta, E, nu, axis=1, tilt=0.4)
+
+        ystations = np.array([30., 50., 70.])
+        coords = [CORD2R(4200 + i, rid=0, origin=[0., ys, 0.],
+                         zaxis=[0., ys, 1.], xzplane=[1., ys, 0.])
+                  for i, ys in enumerate(ystations)]
+        normal_plane = coords[0].j
+        kwargs = dict(
+            dirname=dirname, plot=False, show=False, face_data=None,
+            stop_on_failure=True, cut_data_span_filename='',
+            thetas_csv_filename=tag + 'thetas.csv')
+
+        outs, props = {}, {}
+        for name, x_vector in (('x', [1., 0., 0.]), ('z', [0., 0., 1.])):
+            bdf_filename = f'{tag}{name}.bdf'
+            outs[name] = cut_and_plot_moi(
+                model, normal_plane, log, ystations, coords, x_vector,
+                beam_model_bdf_filename=bdf_filename, **kwargs)
+            beam_model = read_bdf(dirname / bdf_filename, punch=True, debug=None)
+            props[name] = beam_model.properties[min(beam_model.properties)]
+
+        px, pz = props['x'], props['z']
+
+        # the section is tilted, so nothing here is degenerate
+        assert not np.allclose(px.i1[0], px.i2[0]), (px.i1, px.i2)
+        assert abs(px.i12[0]) > 0.05 * abs(px.i1[0]), px.i12
+
+        # v = [1,0,0] vs v = [0,0,1]: the 1 and 2 axes trade places.
+        # rtol is 1e-5 rather than exact because these come back through an
+        # 8-character small-field BDF, and the leading minus sign on I12
+        # costs it a significant digit relative to its positive twin.
+        assert np.allclose(pz.i1[0], px.i2[0], rtol=1e-5), (pz.i1, px.i2)
+        assert np.allclose(pz.i2[0], px.i1[0], rtol=1e-5), (pz.i2, px.i1)
+        # ...and the product of inertia changes sign with the handedness
+        assert np.allclose(pz.i12[0], -px.i12[0], rtol=1e-5), (pz.i12, px.i12)
+
+        # everything that does not depend on the orientation vector is unmoved
+        for field in ('A', 'j', 'k1', 'k2'):
+            assert np.allclose(getattr(px, field), getattr(pz, field)), \
+                (field, getattr(px, field), getattr(pz, field))
+
+        # I1 + I2 is the polar moment, which no rotation can change
+        assert np.allclose(px.i1[0] + px.i2[0], pz.i1[0] + pz.i2[0],
+                           rtol=1e-10)
+
+        # v parallel to the beam axis leaves plane 1 undefined
+        with self.assertRaises(ValueError):
+            cut_and_plot_moi(
+                model, normal_plane, log, ystations, coords, [0., 1., 0.],
+                beam_model_bdf_filename=f'{tag}bad.bdf', **kwargs)
+
+        for fname in set(sum((outs[k][1] + outs[k][2] for k in outs), [])):
+            os.remove(fname)
+        for name in ('x', 'z'):
+            os.remove(dirname / f'{tag}{name}.bdf')
+        os.remove(dirname / (tag + 'thetas.csv'))
 
     def test_cut_quad_shell_mat1_zoffset(self):
         """cut_and_plot_moi"""
@@ -422,9 +944,10 @@ class TestStiffnessPlot(unittest.TestCase):
         ystations = [0.]
         normal_plane = np.array([0., 1., 0.])
 
+        x_vector = [0., 0., 1.]
         moi_data = cut_and_plot_moi(
             model, normal_plane, log,
-            ystations, coords,
+            ystations, coords, x_vector,
             dirname=dirname,
             plot=False, show=False, face_data=None,
             stop_on_failure=True,
@@ -440,7 +963,7 @@ class TestStiffnessPlot(unittest.TestCase):
         )
         out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
         (y, L, A, I, J,
-         ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+         ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
         # print(f'y = {y.tolist()}')
         # print(f'A = {A.tolist()}')
         # print(f'I = {I.tolist()}')
@@ -457,7 +980,10 @@ class TestStiffnessPlot(unittest.TestCase):
         J_expected = [i_expected]
         ExI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
         EyI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        GJ_expected = [1081730.7692307692]
+        # open section: one straight wall, so j = s*t^3/3 rather than the polar
+        # moment.  Old baseline was G*(Ix+Iz) = 1081730.77, 93.75x too stiff.
+        G = E / (2. * (1. + 0.3))  # 11538461.54
+        GJ_expected = [G * cut_length * t ** 3 / 3.]  # 11538.46
         centroid_expected = [[1.5, 0.0, 10.0]]
 
         assert np.allclose(y, y_expected)
@@ -486,9 +1012,10 @@ class TestStiffnessPlot(unittest.TestCase):
         ystations = [0.]
         normal_plane = np.array([0., 1., 0.])
 
+        x_vector = [0., 0., 1.]
         moi_data = cut_and_plot_moi(
             model, normal_plane, log,
-            ystations, coords,
+            ystations, coords, x_vector,
             dirname=dirname,
             plot=False, show=False, face_data=None,
             stop_on_failure=True,
@@ -504,7 +1031,7 @@ class TestStiffnessPlot(unittest.TestCase):
         )
         out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
         (y, L, A, I, J,
-         ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+         ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
         # print(f'y = {y.tolist()}')
         # print(f'A = {A.tolist()}')
         # print(f'I = {I.tolist()}')
@@ -521,7 +1048,10 @@ class TestStiffnessPlot(unittest.TestCase):
         J_expected = [i_expected]
         ExI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
         EyI_expected = [[E*i_expected, 0.0, 0.0, 0.0, 0.0, 0.0]]  # 2812500.0
-        GJ_expected = [1081730.7692307692]
+        # open section: one straight wall, so j = s*t^3/3 rather than the polar
+        # moment.  Old baseline was G*(Ix+Iz) = 1081730.77, 93.75x too stiff.
+        G = E / (2. * (1. + 0.3))  # 11538461.54
+        GJ_expected = [G * cut_length * t ** 3 / 3.]  # 11538.46
         centroid_expected = [[1.5, 0.0, 0.0]]
 
         assert np.allclose(y, y_expected)
@@ -548,11 +1078,12 @@ class TestStiffnessPlot(unittest.TestCase):
         coords = [coord]
         ystations = [0.]
         normal_plane = np.array([0., 1., 0.])
+        x_vector = [0., 0., 1.]
 
         with self.assertRaises(NotImplementedError):
             moi_data = cut_and_plot_moi(
                 model, normal_plane, log,
-                ystations, coords,
+                ystations, coords, x_vector,
                 dirname=dirname,
                 plot=False, show=False, face_data=None,
                 include_solids=True,
@@ -648,11 +1179,12 @@ class TestStiffnessPlot(unittest.TestCase):
         #     dirname=dirname,
         #     plot=False, show=False, face_data=face_data)
 
+        x_vector = [0., 0., 1.]
         if run_y_cuts:
             log.info('working on y-cuts')
             moi_data = cut_and_plot_moi(
                 bdf_filename, normal_plane, log,
-                ystations, coords,
+                ystations, coords, x_vector,
                 dirname=dirname,
                 plot=IS_MATPLOTLIB, show=False, face_data=face_data,
                 cut_data_span_filename='y_cut_data_vs_span.csv',
@@ -667,7 +1199,7 @@ class TestStiffnessPlot(unittest.TestCase):
             )
             out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
             (y, L, A, I, J,
-             ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+             ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
             # assert np.allclose(avg_centroid, avg_centroid0)
             # print(f'y = {y.tolist()}')
             # print(f'A = {A.tolist()}')
@@ -714,8 +1246,15 @@ class TestStiffnessPlot(unittest.TestCase):
                 [5008238252044.59, 3.0875799633053617e-22, 110181565188.11455, 4.540787324493114e-06, -2.5512325871018163e-07, 476060331894.8157],
                 [2128603897250.3176, 2.5772461523789405e-22, 52995377672.16867, 1.7416397212813894e-05, 2.186036081758313e-06, 245172127763.47583],
                 [779303809782.374, 9.540748307180537e-23, 27469421334.232525, 3.843636626470701e-06, 3.38601732516192e-07, 119778660481.12492]]
-            GJ_expected = [1.703986879714322e+16, 5994675543453522.0, 715043894381704.6, 118078327598852.66, 28896697595393.2, 15363440774671.04,
-                           5753383451231.989, 2920241713409.1665, 1214164704037.6692, 447803875533.6692]
+            # Bredt-Batho multi-cell torsion, replacing the old G*(Ix+Iz) polar
+            # baseline.  The wing box is a closed multi-cell section, so the
+            # polar moment badly overstated it -- 42x at the root, 27x at the
+            # tip.  These are regression values, not closed-form ones; the
+            # closed-form check lives in test_cut_ellipse_constant_area.
+            GJ_expected = [406405373109638.2, 86481383450659.14, 55375491645159.75,
+                           6269981882883.581, 1178856065913.1702, 601070280743.0763,
+                           284866251513.561, 122035533137.60596, 46849456050.85022,
+                           16802569331.901482]
             assert np.allclose(y, y_expected)
             assert np.allclose(A, A_expected)
             assert np.allclose(I, I_expected)
@@ -758,7 +1297,7 @@ class TestStiffnessPlot(unittest.TestCase):
             log.debug(f'normal_plane = {normal_plane}')
             moi_data = cut_and_plot_moi(
                 bdf_filename, normal_plane, log,
-                xstations, xcoords,
+                xstations, xcoords, x_vector,
                 dirname=dirname, ifig=10,
                 plot=IS_MATPLOTLIB, show=False, face_data=face_data,
                 cut_data_span_filename='x_cut_data_vs_span.csv',
@@ -773,7 +1312,7 @@ class TestStiffnessPlot(unittest.TestCase):
             )
             out_dict, plane_bdf_filenames1, plane_bdf_filenames2, ifig = moi_data
             (x, L, A, I, J,
-             ExI, EyI, GJ, avg_centroid) = list(out_dict.values())
+             ExI, EyI, GJ, avg_centroid) = unpack_moi(out_dict)
             # log.warning(f'x = {x.tolist()}')
             # log.warning(f'A = {A.tolist()}')
             x_expected = [80.844464, 161.54580800000002, 242.24715200000003, 322.94849600000003, 403.64984000000004, 484.35118400000005,
@@ -844,10 +1383,17 @@ class TestStiffnessPlot(unittest.TestCase):
                 [181571584942580.62, 1.597938734326795e-21, 31088654693132.008, -4.1771709693110584e-05, -3.678096539091203e-06, 48978902253935.82],
                 [111308913025634.05, 8.327247466975484e-22, 48874758600414.11, -1.4205997157181862e-05, -3.273198197739828e-06, 62118990365954.03]]
 
-            GJ_expected = [2743207688607.3154, 13519468742297.812, 23529818190215.14, 35837638612444.36, 50967502623265.56,
-                  69697812451200.37, 155195580780968.66, 200997256485291.75, 270141129771216.94, 326173799506531.4,
-                  425198906188080.0, 437298336390693.6, 735240713516634.2, 1127198943532038.0, 1066322381238653.2,
-                  1236997531280349.5, 1172560428793695.0, 112820404543552.34, 85435975493538.38]
+            # Bredt-Batho, replacing the old G*(Ix+Iz) polar baseline.  This
+            # assertion was previously unreachable -- the y-cut GJ check above
+            # failed first, so this list was never exercised and silently went
+            # stale too.  Regression values, not closed-form.
+            GJ_expected = [1909997028.546258, 143618441147.58948, 253466248971.01608,
+                  326852460412.9585, 385726808364.47565, 452019448660.6323,
+                  915364684102.5784, 2018834400232.94, 4172528234519.123,
+                  7309103592385.41, 10844932249461.475, 13291126771296.396,
+                  14782088705379.807, 14372117610030.074, 32006475322096.867,
+                  22739867489634.14, 13707972167928.145, 11723023385219.502,
+                  2400531926446.8584]
 
             # print(f'x = {x.tolist()}')
             # print(f'A = {A.tolist()}')
@@ -965,6 +1511,120 @@ def _build_quad(log: SimpleLogger,
         xzplane=[1., dy, 0.])
     return model, coord
 
+def _ellipse_pts(a: float, b: float, ntheta: int) -> np.ndarray:
+    """midline of an ellipse; ``a`` is along x, ``b`` is along z"""
+    theta = np.linspace(0., 2*np.pi, ntheta, endpoint=False)
+    return np.column_stack([a*np.cos(theta), b*np.sin(theta)])
+
+
+def _thin_wall_section(pts: np.ndarray, t: float) -> dict[str, float]:
+    """
+    Closed-form thin-wall section properties for a faceted closed midline.
+
+    Two versions of the second moments are returned, and the cutter must land
+    between them:
+
+    - ``*_lump`` lumps each facet's area at its own centroid
+    - ``*_strip`` integrates x^2 continuously along each facet
+
+    The cutter triangulates every CQUAD4 before cutting, so each facet comes
+    back as two sub-segments lumped at their own centroids.  Refining a
+    midpoint rule on the convex integrand x^2 always moves the answer up
+    toward the exact strip value without overshooting it, so
+    ``lump <= cut <= strip`` is guaranteed and is a much sharper statement
+    than any hand-tuned tolerance.
+    """
+    p1 = pts
+    p2 = np.roll(pts, -1, axis=0)
+    x1, z1 = p1[:, 0], p1[:, 1]
+    x2, z2 = p2[:, 0], p2[:, 1]
+    ell = np.hypot(x2 - x1, z2 - z1)
+    dA = t * ell
+
+    area = dA.sum()
+    xc = (dA * (x1 + x2) / 2).sum() / area
+    zc = (dA * (z1 + z2) / 2).sum() / area
+    xm = (x1 + x2) / 2 - xc
+    zm = (z1 + z2) / 2 - zc
+
+    # Bredt-Batho for the single closed cell, plus the open-section term
+    area_enclosed = 0.5 * abs((x1 * z2 - x2 * z1).sum())
+    j_bredt = 4. * area_enclosed ** 2 / (ell / t).sum()
+    j_open = (ell * t ** 3).sum() / 3.
+    return {
+        'A': area, 'xc': xc, 'zc': zc,
+        'int_x2_lump': (dA * xm ** 2).sum(),
+        'int_z2_lump': (dA * zm ** 2).sum(),
+        'int_x2_strip': (dA * ((x1 - xc) ** 2 + (x1 - xc) * (x2 - xc) +
+                               (x2 - xc) ** 2) / 3).sum(),
+        'int_z2_strip': (dA * ((z1 - zc) ** 2 + (z1 - zc) * (z2 - zc) +
+                               (z2 - zc) ** 2) / 3).sum(),
+        'int_xz': (dA * xm * zm).sum(),
+        'perimeter': ell.sum(),
+        'J': j_bredt + j_open,
+    }
+
+
+def _build_ellipse_tube(log: SimpleLogger,
+                        a: float, b: float, t: float,
+                        span: float, nspan: int, ntheta: int,
+                        E: float, nu: float,
+                        pid: int=11, mid: int=12,
+                        axis: int=1,
+                        center: tuple[float, float]=(0., 0.),
+                        tilt: float=0.,
+                        ) -> tuple[BDF, np.ndarray]:
+    """
+    Prismatic elliptical tube extruded along ``+axis``.
+
+    ^ z
+    |    _____
+    |  /       \\
+    | (    +    )  --> x     a by b, constant along the span
+    |  \\ _____ /
+
+    ``axis=1`` extrudes along +y and puts ``a`` along x and ``b`` along z
+    (a wing cut).  ``axis=0`` extrudes along +x and puts ``a`` along y and
+    ``b`` along z (a fuselage cut).  ``center`` offsets the section in those
+    same two in-plane directions, which is what makes a frame error visible.
+    ``tilt`` (radians) rotates the section about the extrusion axis, which
+    gives it a non-zero product of inertia -- needed to see an I12 error at
+    all, since an untilted ellipse has I12 = 0 whatever the convention.
+    """
+    model = BDF(log=log)
+    model.add_mat1(mid, E=E, G=None, nu=nu)
+    model.add_pshell(pid, mid1=mid, t=t, mid2=mid, mid3=mid)
+
+    iaxes = [i for i in range(3) if i != axis]
+    pts = _ellipse_pts(a, b, ntheta)
+    if tilt:
+        c, s = np.cos(tilt), np.sin(tilt)
+        pts = pts @ np.array([[c, s], [-s, c]])
+    pts = pts + np.asarray(center, dtype='float64')
+    stations = np.linspace(0., span, nspan + 1)
+
+    def nid(itheta: int, istation: int) -> int:
+        return istation * ntheta + (itheta % ntheta) + 1
+
+    for istation, station in enumerate(stations):
+        for itheta, (p, q) in enumerate(pts):
+            xyz = np.zeros(3, dtype='float64')
+            xyz[axis] = station
+            xyz[iaxes[0]] = p
+            xyz[iaxes[1]] = q
+            model.add_grid(nid(itheta, istation), xyz)
+
+    eid = 1
+    for istation in range(nspan):
+        for itheta in range(ntheta):
+            model.add_cquad4(eid, pid, [
+                nid(itheta, istation), nid(itheta+1, istation),
+                nid(itheta+1, istation+1), nid(itheta, istation+1)])
+            eid += 1
+    model.cross_reference()
+    return model, pts
+
+
 def _build_tet(log: SimpleLogger, dy: float):
     model = BDF(log=log)
     model.add_grid(101, [0., 0., 0.])
@@ -989,6 +1649,497 @@ def fadd_coords(model: BDF, coords: list,
         assert cid not in model.coords
         model.coords[cid] = coord
     model.write_bdf(bdf_filename_out)
+
+
+def _build_circular_tube_with_bars(
+        log: SimpleLogger,
+        R: float, t: float, span: float,
+        nspan: int, ntheta: int,
+        E: float, nu: float,
+        bar_angles_deg: list[float],
+        A_bar: float, i1_bar: float, i2_bar: float,
+        i12_bar: float, j_bar: float,
+        pid_shell: int = 11, pid_bar: int = 21, mid: int = 12,
+        ) -> BDF:
+    """
+    Circular tube along +y with CBAR spar caps at given angular positions.
+
+    Each bar spans the full tube length from y=0 to y=span and gets an
+    orientation vector tangent to the circle at its angular position, i.e.
+    ``v = (-sin(theta), 0, cos(theta))``.
+    """
+    model = BDF(log=log)
+    model.add_mat1(mid, E=E, G=None, nu=nu)
+    model.add_pshell(pid_shell, mid1=mid, t=t, mid2=mid, mid3=mid)
+    model.add_pbar(pid_bar, mid, A=A_bar, i1=i1_bar, i2=i2_bar,
+                   i12=i12_bar, j=j_bar)
+
+    theta = np.linspace(0., 2 * np.pi, ntheta, endpoint=False)
+    stations = np.linspace(0., span, nspan + 1)
+
+    def nid(itheta: int, istation: int) -> int:
+        return istation * ntheta + (itheta % ntheta) + 1
+
+    for istation, ys in enumerate(stations):
+        for ith in range(ntheta):
+            model.add_grid(nid(ith, istation),
+                           [R * np.cos(theta[ith]), ys, R * np.sin(theta[ith])])
+
+    eid = 1
+    for istation in range(nspan):
+        for ith in range(ntheta):
+            model.add_cquad4(eid, pid_shell, [
+                nid(ith, istation), nid(ith + 1, istation),
+                nid(ith + 1, istation + 1), nid(ith, istation + 1)])
+            eid += 1
+
+    nid_base = (nspan + 1) * ntheta + 100
+    for i, angle_deg in enumerate(bar_angles_deg):
+        th = np.radians(angle_deg)
+        xb = R * np.cos(th)
+        zb = R * np.sin(th)
+        vx = -np.sin(th)
+        vz = np.cos(th)
+        # if tangent is near-zero in one component, keep it exact
+        if abs(vx) < 1e-14:
+            vx = 0.
+        if abs(vz) < 1e-14:
+            vz = 0.
+
+        nid_a = nid_base + 2 * i
+        nid_b = nid_a + 1
+        bar_eid = eid + i
+        model.add_grid(nid_a, [xb, 0., zb])
+        model.add_grid(nid_b, [xb, span, zb])
+        model.add_cbar(bar_eid, pid_bar, [nid_a, nid_b],
+                       x=[vx, 0., vz], g0=None, offt='GGG')
+
+    model.cross_reference()
+    return model
+
+
+class TestBarBeamContributions(unittest.TestCase):
+    """Tests for CBAR/CBEAM contributions via ``include_lines=True``."""
+
+    # ------------------------------------------------------------------
+    # unit tests for the rotation helper
+    # ------------------------------------------------------------------
+    def test_bar_own_I_rotation(self):
+        """
+        ``_bar_own_I_in_cut_frame`` rotates a 2:1 rectangular section
+        correctly at 0deg, 90deg, and 45deg orientations.
+        """
+        I1 = 2. / 3.   # strong axis
+        I2 = 1. / 6.   # weak axis
+        ga = np.array([0., 0., 0.])
+        gb = np.array([0., 100., 0.])
+        plane_i = np.array([1., 0., 0.])
+        plane_k = np.array([0., 0., 1.])
+
+        class _Elem:
+            g0 = None
+            x = [1., 0., 0.]
+
+        elem = _Elem()
+
+        # v = [1,0,0]:  y_e = +x, z_e = -z  → ixx = I1, izz = I2
+        elem.x = [1., 0., 0.]
+        ixx, izz, ixz = _bar_own_I_in_cut_frame(
+            I1, I2, 0., ga, gb, elem, plane_i, plane_k, None)
+        assert np.allclose(ixx, I1), f'ixx={ixx}'
+        assert np.allclose(izz, I2), f'izz={izz}'
+        assert np.allclose(ixz, 0.), f'ixz={ixz}'
+
+        # v = [0,0,1]:  y_e = +z, z_e = +x  → ixx = I2, izz = I1
+        elem.x = [0., 0., 1.]
+        ixx, izz, ixz = _bar_own_I_in_cut_frame(
+            I1, I2, 0., ga, gb, elem, plane_i, plane_k, None)
+        assert np.allclose(ixx, I2), f'ixx={ixx}'
+        assert np.allclose(izz, I1), f'izz={izz}'
+        assert np.allclose(ixz, 0.), f'ixz={ixz}'
+
+        # v = [1,0,1]/sqrt(2):  45deg tilt → ixx = izz = (I1+I2)/2
+        elem.x = [1., 0., 1.]
+        ixx, izz, ixz = _bar_own_I_in_cut_frame(
+            I1, I2, 0., ga, gb, elem, plane_i, plane_k, None)
+        avg = (I1 + I2) / 2.
+        diff = (I1 - I2) / 2.
+        assert np.allclose(ixx, avg), f'ixx={ixx} expected {avg}'
+        assert np.allclose(izz, avg), f'izz={izz} expected {avg}'
+        # trace invariant: ixx + izz = I1 + I2
+        assert np.allclose(ixx + izz, I1 + I2)
+        # non-zero product of inertia
+        assert abs(ixz) > 0.1, f'ixz={ixz} should be non-zero'
+
+    # ------------------------------------------------------------------
+    # unit test for crossing detection
+    # ------------------------------------------------------------------
+    def test_find_bar_crossings(self):
+        """``_find_bar_beam_crossings`` locates bars straddling the cut plane."""
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=False, log=log)
+        mid, pid = 1, 1
+        E, nu = 1e7, 0.3
+        model.add_mat1(mid, E=E, G=None, nu=nu)
+        model.add_pbar(pid, mid, A=1.5, i1=0.5, i2=0.2, i12=0., j=0.3)
+
+        # bar 1: y = -10 to y = 10, crosses y = 0 at midpoint  ✓
+        model.add_grid(101, [5., -10., 0.])
+        model.add_grid(102, [5.,  10., 0.])
+        model.add_cbar(1, pid, [101, 102], x=[1., 0., 0.], g0=None, offt='GGG')
+
+        # bar 2: y = 5 to y = 15, entirely above the cut plane  ✗
+        model.add_grid(201, [0., 5., 3.])
+        model.add_grid(202, [0., 15., 3.])
+        model.add_cbar(2, pid, [201, 202], x=[1., 0., 0.], g0=None, offt='GGG')
+
+        # bar 3: y = -2 to y = 6, crosses at t = 0.25 (y = 0)  ✓
+        model.add_grid(301, [3., -2., 1.])
+        model.add_grid(302, [3.,  6., 1.])
+        model.add_cbar(3, pid, [301, 302], x=[0., 0., 1.], g0=None, offt='GGG')
+
+        model.cross_reference()
+
+        coord = CORD2R(99, rid=0,
+                        origin=np.array([0., 0., 0.]),
+                        zaxis=np.array([0., 0., 1.]),
+                        xzplane=np.array([1., 0., 0.]))
+
+        centroids, areas, own_I, own_J, E_arr = _find_bar_beam_crossings(
+            model, coord, log=log)
+
+        assert len(areas) == 2, f'expected 2 crossings, got {len(areas)}'
+        assert np.allclose(areas, 1.5), areas
+
+        # bar 1 crosses at global (5, 0, 0) → local (5, 0, 0) for this coord
+        assert np.allclose(centroids[0, 0], 5., atol=1e-10)
+        assert np.allclose(centroids[0, 2], 0., atol=1e-10)
+        # bar 3 crosses at global (3, 0, 1) → local (3, 0, 1)
+        assert np.allclose(centroids[1, 0], 3., atol=1e-10)
+        assert np.allclose(centroids[1, 2], 1., atol=1e-10)
+
+    # ------------------------------------------------------------------
+    # unit test for PBAR / PBEAM property extraction
+    # ------------------------------------------------------------------
+    def test_get_bar_section_props_pbar(self):
+        """``_get_bar_section_props`` returns correct values for PBAR."""
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=False, log=log)
+        model.add_mat1(1, E=1e7, G=4e6, nu=0.25)
+        model.add_pbar(10, 1, A=3.5, i1=1.2, i2=0.4, i12=0.05, j=0.9)
+        model.cross_reference()
+        prop = model.properties[10]
+        A, i1, i2, i12, j = _get_bar_section_props(prop)
+        assert np.allclose(A, 3.5)
+        assert np.allclose(i1, 1.2)
+        assert np.allclose(i2, 0.4)
+        assert np.allclose(i12, 0.05)
+        assert np.allclose(j, 0.9)
+
+    def test_get_bar_section_props_pbeam(self):
+        """``_get_bar_section_props`` interpolates along PBEAM xxb stations."""
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=False, log=log)
+        model.add_mat1(1, E=1e7, G=4e6, nu=0.25)
+        # two-station PBEAM: A from 4 to 2 linearly
+        model.add_pbeam(10, 1,
+                        xxb=[0., 1.],
+                        so=['YES', 'YES'],
+                        area=[4., 2.],
+                        i1=[1.0, 0.5],
+                        i2=[0.4, 0.2],
+                        i12=[0., 0.],
+                        j=[0.8, 0.4])
+        model.cross_reference()
+        prop = model.properties[10]
+        # t = 0.5 → midpoint interpolation
+        A, i1, i2, i12, j = _get_bar_section_props(prop, t=0.5)
+        assert np.allclose(A, 3.0), A
+        assert np.allclose(i1, 0.75), i1
+        assert np.allclose(i2, 0.3), i2
+        assert np.allclose(j, 0.6), j
+
+    # ------------------------------------------------------------------
+    # integration test: 2:1 rectangular bars at different angles
+    # ------------------------------------------------------------------
+    def test_bars_around_radius_rectangular(self):
+        """
+        Two 2:1 rectangular bars placed symmetrically on a circular tube,
+        with the orientation vector tangent to the skin.
+
+        Config A: bars at 0deg and 180deg (left / right of the section)
+        Config B: bars at 90deg and 270deg (top / bottom of the section)
+
+        The shell part is identical and cancels in the difference, leaving
+        an exact analytical prediction for the bar delta-I.
+        """
+        log = SimpleLogger(level='warning')
+
+        R, t_shell = 10., 0.1
+        E, nu = 1e7, 0.3
+        G = E / (2. * (1. + nu))
+        span, nspan, ntheta = 60., 12, 40
+
+        # 2:1 rectangular bar section
+        w, h = 1., 2.
+        A_bar = w * h                # 2.0
+        I1_bar = w * h ** 3 / 12.    # 2/3  (strong axis)
+        I2_bar = h * w ** 3 / 12.    # 1/6  (weak axis)
+        I12_bar = 0.
+        J_bar = 0.5
+
+        configs = {
+            'A': [0., 180.],     # bars on the sides (right / left)
+            'B': [90., 270.],    # bars on the top / bottom
+        }
+
+        ystations = np.array([span / 2.])
+        coords_A = [CORD2R(5000, rid=0,
+                           origin=[0., ystations[0], 0.],
+                           zaxis=[0., ystations[0], 1.],
+                           xzplane=[1., ystations[0], 0.])]
+        coords_B = [CORD2R(5001, rid=0,
+                           origin=[0., ystations[0], 0.],
+                           zaxis=[0., ystations[0], 1.],
+                           xzplane=[1., ystations[0], 0.])]
+        normal_plane = coords_A[0].j
+        x_vector = [0., 0., 1.]
+        results = {}
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dirname = Path(tmpdir)
+            for name, angles in configs.items():
+                model = _build_circular_tube_with_bars(
+                    log, R, t_shell, span, nspan, ntheta, E, nu,
+                    angles, A_bar, I1_bar, I2_bar, I12_bar, J_bar)
+
+                coord_list = coords_A if name == 'A' else coords_B
+                tag = f'bar_radius_{name}_'
+                moi_data = cut_and_plot_moi(
+                    model, normal_plane, log, ystations, coord_list, x_vector,
+                    include_lines=True,
+                    dirname=dirname, plot=False, show=False,
+                    stop_on_failure=True,
+                    cut_data_span_filename='',
+                    beam_model_bdf_filename='',
+                    thetas_csv_filename=tag + 'thetas.csv')
+                out_dict = moi_data[0]
+                results[name] = {k: out_dict[k] for k in CORE_KEYS}
+
+        I_A = results['A']['I'][0]   # (6,) at the one station
+        I_B = results['B']['I'][0]
+        A_A = results['A']['A'][0]
+        A_B = results['B']['A'][0]
+        GJ_A = results['A']['GJ'][0]
+        GJ_B = results['B']['GJ'][0]
+
+        # same number of bars, same section → total area must match
+        assert np.allclose(A_A, A_B), (A_A, A_B)
+
+        # same J, same number of bars → GJ must match
+        assert np.allclose(GJ_A, GJ_B, rtol=1e-4), (GJ_A, GJ_B)
+
+        # ---- analytical prediction for the DIFFERENCE (shell cancels) ----
+        # Config A bars at (R,0) and (-R,0), tangent v = (0,0,±1):
+        #   ΔIxx_A = 2*(A*R² + I2),  ΔIzz_A = 2*I1
+        # Config B bars at (0,R) and (0,-R), tangent v = (∓1,0,0):
+        #   ΔIxx_B = 2*I1,            ΔIzz_B = 2*(A*R² + I2)
+        delta_Ixx = 2. * (A_bar * R ** 2 + I2_bar) - 2. * I1_bar
+        delta_Izz = 2. * I1_bar - 2. * (A_bar * R ** 2 + I2_bar)
+
+        assert np.allclose(I_A[0] - I_B[0], delta_Ixx, rtol=1e-3), \
+            f'dIxx: got {I_A[0]-I_B[0]:.4f}, expected {delta_Ixx:.4f}'
+        assert np.allclose(I_A[2] - I_B[2], delta_Izz, rtol=1e-3), \
+            f'dIzz: got {I_A[2]-I_B[2]:.4f}, expected {delta_Izz:.4f}'
+
+        # the 2:1 aspect ratio makes the own-I correction visible:
+        #   without own-I:  delta_Ixx = 2*A*R² = 400
+        #   with own-I:     delta_Ixx = 2*A*R² + 2*(I2-I1) = 400 - 1.0 = 399.0
+        # so the correction is ~0.25%; enough to detect but small
+        delta_pure_area = 2. * A_bar * R ** 2
+        assert abs(delta_Ixx - delta_pure_area) > 0.5, \
+            'own-I correction should be visible in the difference'
+
+        # Ixz should be zero by symmetry in both configs
+        assert abs(I_A[5]) < 1e-3 * abs(I_A[0]), f'Ixz_A = {I_A[5]}'
+        assert abs(I_B[5]) < 1e-3 * abs(I_B[0]), f'Ixz_B = {I_B[5]}'
+
+    # ------------------------------------------------------------------
+    # regression test: include_lines=False ignores bars entirely
+    # ------------------------------------------------------------------
+    def test_include_lines_false_unchanged(self):
+        """
+        ``include_lines=False`` (the default) gives identical section
+        properties whether or not the model contains CBAR elements.
+        """
+        log = SimpleLogger(level='warning')
+
+        R, t_shell = 10., 0.1
+        E, nu = 1e7, 0.3
+        span, nspan, ntheta = 60., 12, 40
+
+        model_bars = _build_circular_tube_with_bars(
+            log, R, t_shell, span, nspan, ntheta, E, nu,
+            [0., 90., 180., 270.], 2., 2. / 3., 1. / 6., 0., 0.5)
+
+        ystations = np.array([span / 2.])
+        normal_plane = np.array([0., 1., 0.])
+        x_vector = [0., 0., 1.]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dirname = Path(tmpdir)
+            tag = 'bars_off_'
+            kwargs = dict(
+                dirname=dirname, plot=False, show=False,
+                stop_on_failure=True, cut_data_span_filename='',
+                beam_model_bdf_filename='',
+                thetas_csv_filename=tag + 'thetas.csv')
+
+            coords_off = [CORD2R(6000, rid=0,
+                                 origin=[0., ystations[0], 0.],
+                                 zaxis=[0., ystations[0], 1.],
+                                 xzplane=[1., ystations[0], 0.])]
+            moi_off = cut_and_plot_moi(
+                model_bars, normal_plane, log, ystations, coords_off, x_vector,
+                include_lines=False, **kwargs)
+
+            coords_on = [CORD2R(6001, rid=0,
+                                origin=[0., ystations[0], 0.],
+                                zaxis=[0., ystations[0], 1.],
+                                xzplane=[1., ystations[0], 0.])]
+            moi_on = cut_and_plot_moi(
+                model_bars, normal_plane, log, ystations, coords_on, x_vector,
+                include_lines=True, **kwargs)
+
+        out_off = moi_off[0]
+        out_on = moi_on[0]
+
+        # bars-off area < bars-on area (bars add area)
+        assert out_on['A'][0] > out_off['A'][0], \
+            'include_lines=True should add area'
+
+        # bars-off should equal a pure-shell model (area ≈ 2*pi*R*t;
+        # the 40-segment polygon is ~0.1% short of a true circle)
+        expected_shell_area = 2. * np.pi * R * t_shell
+        assert np.allclose(out_off['A'][0], expected_shell_area, rtol=2e-3), \
+            (out_off['A'][0], expected_shell_area)
+
+
+class TestBredtBatho(unittest.TestCase):
+    """Direct tests for the Bredt-Batho torsion solver."""
+
+    @staticmethod
+    def _arc_segments(x, z):
+        """Turn a polyline (x, z) into (p1, p2) wall-segment arrays."""
+        p1 = np.column_stack([x[:-1], np.zeros(len(x) - 1), z[:-1]])
+        p2 = np.column_stack([x[1:],  np.zeros(len(x) - 1), z[1:]])
+        return p1, p2
+
+    def test_single_circle(self):
+        """Single closed circle: GJ should match 2*pi*R^3*G*t."""
+        from pyNastran.bdf.mesh_utils.cut.torsion import bredt_batho_gj
+        R = 10.0
+        n = 80
+        t = 0.1
+        G = 1e7
+        theta = np.linspace(0, 2 * np.pi, n + 1)
+        x = R * np.cos(theta)
+        z = R * np.sin(theta)
+        p1, p2 = self._arc_segments(x, z)
+        length = np.linalg.norm(p2 - p1, axis=1)
+        thickness = np.full(n, t)
+        gxy = np.full(n, G)
+
+        gj, method, ncells = bredt_batho_gj(p1, p2, length, thickness, gxy)
+        gj_exact = 2 * np.pi * R ** 3 * G * t
+        assert method == 'closed', method
+        assert ncells == 1, ncells
+        assert np.isclose(gj, gj_exact, rtol=2e-3), (gj, gj_exact)
+
+    def test_double_bubble(self):
+        """Two overlapping circles sharing a common chord (double bubble).
+
+        The solver must find 2 closed cells and couple the shear flows
+        through the shared wall.  GJ should be less than twice the
+        single-circle value because the shared wall adds compliance.
+        """
+        from pyNastran.bdf.mesh_utils.cut.torsion import bredt_batho_gj
+        R = 10.0
+        d = 7.0       # centre offset; d < R so circles overlap
+        n_arc = 60     # segments per arc
+        n_wall = 10    # segments on the common chord
+        t = 0.1
+        G = 1e7
+
+        x_junc = np.sqrt(R ** 2 - d ** 2)
+
+        # Upper arc (centre at 0, +d): right junction -> left junction CCW
+        theta_jr = np.arctan2(-d, x_junc)
+        theta_jl = np.arctan2(-d, -x_junc)
+        theta_u = np.linspace(theta_jr, theta_jl, n_arc + 1)
+        xu = R * np.cos(theta_u)
+        zu = R * np.sin(theta_u) + d
+
+        # Lower arc (centre at 0, -d): left junction -> right junction CW
+        theta_lr = np.arctan2(d, x_junc)
+        theta_ll = np.arctan2(d, -x_junc)
+        theta_l = np.linspace(theta_ll, theta_lr - 2 * np.pi, n_arc + 1)
+        xl = R * np.cos(theta_l)
+        zl = R * np.sin(theta_l) - d
+
+        # Common wall: straight chord from right junction to left junction
+        x_wall = np.linspace(x_junc, -x_junc, n_wall + 1)
+        z_wall = np.zeros(n_wall + 1)
+
+        p1u, p2u = self._arc_segments(xu, zu)
+        p1l, p2l = self._arc_segments(xl, zl)
+        p1w, p2w = self._arc_segments(x_wall, z_wall)
+
+        xyz1 = np.vstack([p1u, p1l, p1w])
+        xyz2 = np.vstack([p2u, p2l, p2w])
+        length = np.linalg.norm(xyz2 - xyz1, axis=1)
+        nw = len(xyz1)
+        thickness = np.full(nw, t)
+        gxy = np.full(nw, G)
+
+        gj, method, ncells = bredt_batho_gj(xyz1, xyz2, length, thickness, gxy)
+        assert method == 'closed', method
+        assert ncells == 2, ncells
+
+        # GJ must be positive and less than 2x the single-circle value
+        # (shared wall compliance reduces GJ relative to two independent cells)
+        gj_single = 2 * np.pi * R ** 3 * G * t
+        assert gj > 0., gj
+        assert gj < 2 * gj_single, (gj, 2 * gj_single)
+
+    def test_force_mode_open(self):
+        """force_mode='open' must return the open-section GJ even for a
+        closed ring."""
+        from pyNastran.bdf.mesh_utils.cut.torsion import bredt_batho_gj
+        R = 10.0
+        n = 40
+        t = 0.1
+        G = 1e7
+        theta = np.linspace(0, 2 * np.pi, n + 1)
+        x = R * np.cos(theta)
+        z = R * np.sin(theta)
+        p1, p2 = self._arc_segments(x, z)
+        length = np.linalg.norm(p2 - p1, axis=1)
+        thickness = np.full(n, t)
+        gxy = np.full(n, G)
+
+        gj_auto, method_auto, _ = bredt_batho_gj(
+            p1, p2, length, thickness, gxy, force_mode='auto')
+        gj_open, method_open, _ = bredt_batho_gj(
+            p1, p2, length, thickness, gxy, force_mode='open')
+
+        assert method_auto == 'closed', method_auto
+        assert method_open == 'open', method_open
+        # open-section GJ is orders of magnitude smaller than closed
+        assert gj_open < gj_auto * 0.01, (gj_open, gj_auto)
+        # open-section value should match sum(G*s*t^3)/3
+        gj_open_exact = (G * length * t ** 3).sum() / 3.
+        assert np.isclose(gj_open, gj_open_exact), (gj_open, gj_open_exact)
 
 
 if __name__ == '__main__':  # pragma: no cover

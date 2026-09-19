@@ -279,7 +279,12 @@ def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
                 raise TypeError(msg)
 
         if key == 'nid':
-            nid = int(value)
+            # nid=None leaves the GRID ids alone (identity nid_map); this is what
+            # bdf_merge(blind=True) uses to preserve shared ids across decks
+            if value is None:
+                nid = None
+            else:
+                nid = int(value)
         elif key == 'cid':
             if value is None:
                 cid = None

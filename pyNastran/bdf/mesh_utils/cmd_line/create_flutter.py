@@ -1,6 +1,6 @@
 from __future__ import annotations
 import sys
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from cpylog import SimpleLogger
@@ -30,149 +30,148 @@ def cmd_line_create_flutter(argv=None, quiet: bool = False) -> None:
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    from docopt import docopt
+    import argparse
     import pyNastran
 
-    options = "[-o OUT_BDF_FILENAME] [--size SIZE | --clean] [--sid SID] [--rhoref] [--minus_eas MINUS_EAS] [--zaero]"
-    msg = (
-        "Usage:\n"
-        # SWEEP_UNIT
-        # CONST_TYPEs = [mach, alt]
-        # CONST_TYPE = mach
-        #'  bdf flutter gui\n'
-        f"  bdf flutter UNITS eas  EAS1  EAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT {options}\n"
-        f"  bdf flutter UNITS tas  TAS1  TAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] {options}\n"
-        f"  bdf flutter UNITS alt  ALT1  ALT2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] {options}\n"
-        # CONST_TYPE = alt
-        # f'  bdf flutter UNITS eas  EAS1  EAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT {options}\n'
-        # f'  bdf flutter UNITS tas  TAS1  TAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] {options}\n'
-        f"  bdf flutter UNITS mach MACH1 MACH2            N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] {options}\n"
-        "  bdf flutter -h | --help\n"
-        "  bdf flutter -v | --version\n"
-        "\n"
-        "Positional Arguments:\n"
-        #'  gui                 enables the gui\n'
-        "  alt, ALT1, ALT2     altitude;            units = [m, ft, kft]\n"
-        "  eas, EAS1, EAS2     equivalent airspeed; units = [m/s, cm/s, in/s, ft/s, knots]\n"
-        "  tas, TAS1, EAS2     true airspeed;       units = [m/s, cm/s, in/s, ft/s, knots]\n"
-        "  mach, MACH1, MACH2  mach number;         units = [none, na]\n"
-        "  SWEEP_UNIT          the unit for sweeping across\n"
-        "  N                   the number of points in the sweep\n"
-        "  alt, mach           the parameter to be held constant when sweeping (alt, mach)\n"
-        "  CONST_VAL           the value corresponding to CONST_TYPE\n"
-        "  CONST_UNIT          the unit for the altitude that is held constant\n"
-        "\n"
-        "Options:\n"
-        "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file (default=flutter_cards.inc)\n"
-        " --size SIZE                          size of the BDF (8/16; default=16)\n"
-        " --clean                              writes a BDF with at least 1 whitespace in an FLFACT field (for readability)\n"
-        " --sid SID                            updates the flutter ID\n"
-        " --minus_eas MINUS_EAS                request flutter mode shapes at the closest point ('400,500')\n"
-        " --zaero                              zaero flag\n"
-        "\n"
-        "Info:\n"
-        "  -h, --help      show this help message and exit\n"
-        "  -v, --version   show program's version number and exit\n"
-        "\n"
-        "Examples:\n"
-        "  bdf flutter english_in eas  1   800. knots 101 mach 0.8 na\n"
-        "  bdf flutter english_in eas  1   800. knots 101 mach 0.8 na --minus_eas '100,200'\n"
-        "  bdf flutter english_in tas  .1  800. ft/s  101 alt 2500 m\n"
-        "  bdf flutter english_in mach .05 0.5        101 alt 2500\n"
-        "  bdf flutter english_in mach .05 0.5        101 alt 2500 m --eas_limit 300 knots --out flutter_cards_temp.inc --size 16\n"
-    )
-    filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args("bdf flutter: use 'bdf flutter -h' for help", argv, quiet=quiet)
 
-    ver = str(pyNastran.__version__)
-    # type_defaults = {
-    #    '--nerrors' : [int, 100],
-    # }
     if "gui" in argv or '--gui' in argv:
         from pyNastran.bdf.mesh_utils.gui_tools.gui_flutter import cmd_line_gui
         data = cmd_line_gui()
         return
-    else:
-        argv = [str(arg) for arg in argv]
-        cmd = "bdf " + " ".join(argv[1:])
-        data = docopt(msg, version=ver, argv=argv[1:])
+
+    ver = str(pyNastran.__version__)
+
+    # shared optional arguments — defined on a parent parser so that
+    # each subparser inherits them and they are recognised even when
+    # they appear *after* the subparser's positional arguments
+    option_parser = argparse.ArgumentParser(add_help=False)
+    option_parser.add_argument('-o', '--output', default='flutter_cards.inc',
+                               metavar='OUT_BDF_FILENAME',
+                               help='path to output BDF/DAT/NAS file (default=flutter_cards.inc)')
+
+    size_group = option_parser.add_mutually_exclusive_group()
+    size_group.add_argument('--size', type=int, default=None,
+                            help='size of the BDF (8/16; default=16)')
+    size_group.add_argument('--clean', action='store_true',
+                            help='writes a BDF with at least 1 whitespace in an FLFACT field (for readability)')
+
+    option_parser.add_argument('--sid', type=int, default=None,
+                               help='updates the flutter ID')
+    option_parser.add_argument('--rhoref', action='store_true',
+                               help='rhoref flag')
+    option_parser.add_argument('--minus_eas', default=None, metavar='MINUS_EAS',
+                               help="request flutter mode shapes at the closest point (e.g., '400,500')")
+    option_parser.add_argument('--zaero', action='store_true',
+                               help='zaero flag')
+    option_parser.add_argument('--eas_limit', nargs=2, default=None,
+                               metavar=('EAS', 'EAS_UNITS'),
+                               help='EAS limit value and units')
+
+    parser = argparse.ArgumentParser(
+        prog='bdf flutter',
+        description='Create flutter analysis cards',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "Examples:\n"
+            "  bdf flutter english_in eas  1   800. knots 101 mach 0.8 na\n"
+            "  bdf flutter english_in eas  1   800. knots 101 mach 0.8 na --minus_eas '100,200'\n"
+            "  bdf flutter english_in tas  .1  800. ft/s  101 alt 2500 m\n"
+            "  bdf flutter english_in mach .05 0.5        101 alt 2500\n"
+            "  bdf flutter english_in mach .05 0.5        101 alt 2500 m "
+            "--eas_limit 300 knots --output flutter_cards_temp.inc --size 16\n"
+        ),
+    )
+    parser.add_argument('-v', '--version', action='version', version=ver)
+    parser.add_argument('units', metavar='UNITS',
+                        choices=list(UNITS_MAP.keys()),
+                        help='unit system: english_in, english_ft, si, si_mm')
+
+    subparsers = parser.add_subparsers(dest='sweep_method',
+                                       help='sweep method: eas, tas, alt, mach')
+    subparsers.required = True
+
+    def _add_sweep_positionals(sub, val1_name, val2_name, has_sweep_unit=True):
+        """add the common positional arguments to a sweep subparser"""
+        sub.add_argument('value1', type=float, metavar=val1_name)
+        sub.add_argument('value2', type=float, metavar=val2_name)
+        if has_sweep_unit:
+            sub.add_argument('sweep_unit', metavar='SWEEP_UNIT',
+                             help='unit for sweep variable')
+        sub.add_argument('n', type=int, metavar='N',
+                         help='number of points in the sweep')
+        sub.add_argument('const_type', metavar='CONST_TYPE',
+                         help='parameter held constant (alt, mach, eas, tas)')
+        sub.add_argument('const_val', type=float, metavar='CONST_VAL',
+                         help='value for constant parameter')
+        sub.add_argument('const_unit', metavar='CONST_UNIT',
+                         help='unit for constant parameter')
+
+    eas_sub = subparsers.add_parser('eas', parents=[option_parser],
+                                    help='sweep equivalent airspeed')
+    _add_sweep_positionals(eas_sub, 'EAS1', 'EAS2')
+
+    tas_sub = subparsers.add_parser('tas', parents=[option_parser],
+                                    help='sweep true airspeed')
+    _add_sweep_positionals(tas_sub, 'TAS1', 'TAS2')
+
+    alt_sub = subparsers.add_parser('alt', parents=[option_parser],
+                                    help='sweep altitude')
+    _add_sweep_positionals(alt_sub, 'ALT1', 'ALT2')
+
+    mach_sub = subparsers.add_parser('mach', parents=[option_parser],
+                                     help='sweep Mach number')
+    _add_sweep_positionals(mach_sub, 'MACH1', 'MACH2', has_sweep_unit=False)
+
+    argv = [str(arg) for arg in argv]
+    cmd = "bdf " + " ".join(argv[1:])
+    args = parser.parse_args(argv[2:])
 
     if not quiet:  # pragma: no cover
-        print(data)
+        print(vars(args))
 
-    size = 16
-    if data["--size"]:
-        size = _int(data, "--size")
-
-    sid = 1
-    if data["--sid"]:
-        sid = _int(data, "--sid")
+    size = args.size if args.size is not None else 16
+    sid = args.sid if args.sid is not None else 1
 
     minus_eas = []
-    is_minus_eas = data["--minus_eas"]
-    if is_minus_eas is None:
-        pass
-    elif isinstance(is_minus_eas, bool):
-        if is_minus_eas:
-            minus_eas = _float_list(data, "MINUS_EAS")
-    elif isinstance(is_minus_eas, str):
-        minus_eas = _float_list(data, "--minus_eas")
-    else:
-        raise TypeError(data["--minus_eas"])
-        # raise NotImplementedError(data)
+    if args.minus_eas is not None:
+        svalue = args.minus_eas
+        if "," in svalue:
+            svalues = svalue.strip(",").split(",")
+            minus_eas = [float(sv) for sv in svalues]
+        else:
+            minus_eas = [float(svalue)]
 
-    units_out = data["UNITS"]
+    units_out = args.units
     if units_out.lower() not in UNITS_MAP:  # pragma: no cover
         raise NotImplementedError(units_out)
 
-    is_zaero = data["--zaero"]
-    assert isinstance(is_zaero, bool), is_zaero
-    rhoref_flag = data["--rhoref"]
-    npoints = _int(data, "N")
-    clean = data["--clean"]
-    assert clean in [True, False], clean
+    is_zaero = args.zaero
+    rhoref_flag = args.rhoref
+    npoints = args.n
+    clean = args.clean
 
-    const_type = data["CONST_TYPE"].lower()
+    const_type = args.const_type.lower()
     assert const_type in {"alt", "mach", "eas", "tas"}, f"const_type={const_type!r}"
-    const_value = _float(data, "CONST_VAL")
-    const_unit = data["CONST_UNIT"].lower()
+    const_value = args.const_val
+    const_unit = args.const_unit.lower()
 
     eas_units = ""
     eas_limit = 1_000_000.0
-    if data["--eas_limit"]:
-        eas_limit = _float(data, "EAS")
-        eas_units = data["EAS_UNITS"]
+    if args.eas_limit is not None:
+        eas_limit = float(args.eas_limit[0])
+        eas_units = args.eas_limit[1]
         assert eas_units not in {None, ""}, eas_units
         eas_units = eas_units.lower()
-        # assert eas_units in VELOCITY_UNITS, f'eas_unit={eas_unit!r}; allowed={VELOCITY_UNITS}'
 
-    sweep_unit = ""
-    if data["alt"]:
-        sweep_method = "alt"
-        value1 = _float(data, "ALT1")
-        value2 = _float(data, "ALT2")
-        sweep_unit = data["SWEEP_UNIT"].lower()
-    elif data["mach"]:
-        sweep_method = "mach"
-        value1 = _float(data, "MACH1")
-        value2 = _float(data, "MACH2")
-    elif data["eas"]:
-        sweep_method = "eas"
-        value1 = _float(data, "EAS1")
-        value2 = _float(data, "EAS2")
-        sweep_unit = data["SWEEP_UNIT"].lower()
-    elif data["tas"]:
-        sweep_method = "tas"
-        value1 = _float(data, "TAS1")
-        value2 = _float(data, "TAS2")
-        sweep_unit = data["SWEEP_UNIT"].lower()
-    else:  # pragma: no cover
-        raise NotImplementedError(data)
+    sweep_method = args.sweep_method
+    sweep_unit = getattr(args, 'sweep_unit', '')
+    if sweep_unit is None:
+        sweep_unit = ''
+    value1 = args.value1
+    value2 = args.value2
 
-    # alts = np.linspace(alt1, alt2, num=npoints)
-
-    bdf_filename_out = data["--output"]
-    if bdf_filename_out is None:
-        bdf_filename_out = "flutter_cards.inc"
+    bdf_filename_out = args.output
 
     level = "debug" if not quiet else "warning"
     log = SimpleLogger(level=level, encoding="utf-8")
@@ -585,40 +584,3 @@ def create_flutter(
     return model, density_units, velocity_units
 
 
-def _float(data: dict[str, Any], name: str):
-    svalue = data[name]
-    try:
-        value = float(svalue)
-    except:
-        raise SyntaxError(f"name={name} value={svalue!r} is not a float")
-    return value
-
-
-def _float_list(data: dict[str, Any], name: str) -> list[float]:
-    svalue = data[name]
-    if "," in svalue:
-        svalues = svalue.strip(",").split(",")
-        try:
-            values = [float(svalue) for svalue in svalues]
-        except:
-            raise SyntaxError(
-                f"name={name} value={svalue!r} is not a float or list of floats (e.g., 2,4,10)"
-            )
-    else:
-        try:
-            value = float(svalue)
-        except:
-            raise SyntaxError(
-                f"name={name} value={svalue!r} is not a float or list of floats (e.g., 2,4,10)"
-            )
-        values = [value]
-    return values
-
-
-def _int(data: dict[str, Any], name: str):
-    svalue = data[name]
-    try:
-        value = int(svalue)
-    except:
-        raise SyntaxError(f"name={name} value={svalue!r} is not an integer")
-    return value

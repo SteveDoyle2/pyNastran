@@ -1481,6 +1481,6 @@ def export_to_hdf5(h5_file, plot_type: str,
     h5_file.create_dataset('nodes', data=nodes)
 
 
-PLOTELs = (PLOTEL | PLOTEL3 | PLOTEL4 |
-           PLOTEL6 | PLOTEL8 |
-           PLOTTET | PLOTPYR | PLOTPEN | PLOTHEX)
+PLOTELs = tuple[PLOTEL | PLOTEL3 | PLOTEL4 |
+                PLOTEL6 | PLOTEL8 |
+                PLOTTET | PLOTPYR | PLOTPEN | PLOTHEX]

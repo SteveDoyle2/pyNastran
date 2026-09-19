@@ -1196,7 +1196,18 @@ def get_dof_map(model: BDF,
 
     suport_nid_to_components = {}
     if suport1_id:
-        suport1 = model.suport1[suport1_id]
+        try:
+            suport1 = model.suport1[suport1_id]
+        except KeyError:
+            msg = (
+                f'Could not find suport1={suport1_id}\n'
+                f'SUPORT1s = {list(model.suport1)}\n'
+                f'SUPORT1 = {str(model.suport1)}\n'
+                f'SUPORT = {str(model.suport)}\n'
+            )
+            log.error(msg)
+            raise
+
         assert len(suport1.nodes) == len(suport1.Cs), suport1.get_stats()
         for nid, comp in zip(suport1.nodes, suport1.Cs):
             add_comps(spc_nid_to_components, nid, comp)
@@ -2695,7 +2706,8 @@ def test_bdf_argparse(argv=None):
 
     #argv
     #print(argv)
-    from pyNastran.utils.arg_handling import argparse_to_dict, update_message  # swap_key
+    from pyNastran.utils.arg_handling import (
+        replace_args, argparse_to_dict, update_message)  # swap_key
     update_message(parent_parser, usage, args, examples)
 
     # try:
@@ -2706,6 +2718,15 @@ def test_bdf_argparse(argv=None):
     #     parent_parser.print_usage(file=fobj)
     #     args = fobj.getvalue()
     #     raise
+    replace_map = {
+        '--skip_eid_check': '--skip_eid_checks',
+        '--skip_load': '--skip_loads',
+        '--skip_mcids': '--skip_mcid',
+        '--no_similar_eids': '--no_similar_eid',
+        '--notab': '--notabs',
+        '--dumpline': '--dumplines',
+    }
+    argv = replace_args(argv, replace_map)
     args = parent_parser.parse_args(args=argv)
 
     args2 = argparse_to_dict(args)

@@ -104,6 +104,37 @@ PLATE_STRESS_STRAIN_KEYS = [
 COMP_PLATE_STRESS_STRAIN_KEYS = BASE_STRESS_STRAIN
 
 
+def cmd_line_flutter_combine(argv=None, quiet: bool=False, log=None):
+    import sys
+    if argv is None:
+        argv = sys.argv
+
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('modal_combine', help='')
+    parser.add_argument('bdf_filename', help='input bdf')
+    parser.add_argument('op2_filename', help='input op2')
+
+    args = parser.parse_args(args=argv[1:])
+    if not quiet:  # pragma: no cover
+        print(args)
+    bdf_filename = args.bdf_filename
+    op2_filename = args.op2_filename
+
+    names = {
+        'rod_stress': '',
+        'bar_stress': '',
+
+        'rod_strain': '',
+        'bar_strain': '',
+    }
+    out_subcases = envelope(
+        bdf_filename, op2_filename,
+        # include_results=include_results,
+        # exclude_results=exclude_results,
+    )
+    #print(f'out_subcases = {out_subcases}')
+
 def envelope(
     bdf_filename: PathLike | BDF,
     op2_filename: PathLike | OP2,
@@ -138,8 +169,7 @@ def envelope(
     transform_to_global_coord: bool = False,
     transform_to_material_coord: bool = True,
     percent_nids_target: float = 1.00,
-    percent_eids_target: float = 1.00,
-) -> np.ndarray:
+    percent_eids_target: float = 1.00,) -> np.ndarray:
     """
     Pick one (i.e., solid_stress or solid_strain) per group.
 

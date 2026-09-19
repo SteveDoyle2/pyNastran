@@ -108,7 +108,7 @@ class TestAero(unittest.TestCase):
         model.add_caero1(caero_id, paero_id, igroup,
                          p1, x12, p4, x43, nspan=1, nchord=10)
         model.add_spline1(104, caero_id, 101, 110, set_id2)
-        
+
         model.add_flutter(4, 'PKNL', 1, 2, 3)
         model.add_flfact(1, [0.5])
         model.add_flfact(2, [0.5])
@@ -131,19 +131,19 @@ class TestAero(unittest.TestCase):
 
         mesh = 'AERO'
         model.add_aeforce(mach, sym_xz, sym_xy, ux_id,
-                          mesh, force='',
+                          mesh, #force='',
                           dmik='', perq='',
                           comment='aeforce')
         list_type = 'CAERO'
         lists = [101]
         model.add_aecomp('MYCOMP', list_type, lists,
                    comment='aecomp')
-                   
+
         model.validate()
         model.cross_reference()
         save_load_deck(model, nastran_format='nx', run_remove_unused=False)
         save_load_deck(model, nastran_format='msc')
-    
+
     def test_caero1_symmetric(self):
         """
         verifies flipping the caero1 flips
@@ -551,7 +551,9 @@ class TestAero(unittest.TestCase):
         mesh = 'STRUCT'
         labels = ['A', 'B']
         uxs = [1., 2.,]
-        model.add_aeforce(mach, sym_xz, sym_xy, uxid, mesh, force='', dmik='', comment='aeforce')
+        model.add_aeforce(mach, sym_xz, sym_xy, uxid, mesh,
+                          # force='',
+                          dmik='', comment='aeforce')
         #model.add_uxvec(uxid, labels, uxs, comment='uxvec')
         model.add_set1(6003, [11, 12, 13])
         model.add_grid(11, [0., 0., 0.])
@@ -946,7 +948,7 @@ class TestAero(unittest.TestCase):
 
         #print(caero.get_stats())
         caero.cross_reference(model)
-        all_control_surface_name, caero_control_surfaces, out = build_caero_paneling(model)
+        all_control_surface_name, caero_control_surfaces, out, out_dict = build_caero_paneling(model)
         box_id_to_caero_element_map_expected = {
             2000: np.array([0, 3, 4, 1]),
             2001: np.array([1, 4, 5, 2]),
@@ -962,7 +964,7 @@ class TestAero(unittest.TestCase):
         for key, data in out.box_id_to_caero_element_map.items():
             assert np.array_equal(data, box_id_to_caero_element_map_expected[key])
 
-        all_control_surface_name, caero_control_surfaces, out = build_caero_paneling(model)
+        all_control_surface_name, caero_control_surfaces, out, out_dict = build_caero_paneling(model)
         if IS_MATPLOTLIB:
             caero.plot(ax)
             fig.show()
@@ -1273,7 +1275,7 @@ class TestAero(unittest.TestCase):
         #assert np.allclose(x, chord_expected)
         #assert np.allclose(y, span_expected)
 
-        all_control_surface_name, caero_control_surfaces, out = build_caero_paneling(model)
+        all_control_surface_name, caero_control_surfaces, out, out_dict = build_caero_paneling(model)
         box_id_to_caero_element_map_expected = {
             100: np.array([0, 2, 3, 1]),
             101: np.array([2, 4, 5, 3]),
@@ -1354,7 +1356,7 @@ class TestAero(unittest.TestCase):
             caero.plot(ax)
             fig.show()
 
-        all_control_surface_name, caero_control_surfaces, out = build_caero_paneling(model)
+        all_control_surface_name, caero_control_surfaces, out, out_dict = build_caero_paneling(model)
         box_id_to_caero_element_map_expected = {
             100: np.array([0, 5, 6, 1]),
             101: np.array([1, 6, 7, 2]),
