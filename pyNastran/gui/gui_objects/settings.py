@@ -44,12 +44,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
 from pyNastran.gui import (
-    USE_NEW_SIDEBAR_OBJS_ as USE_NEW_SIDEBAR_OBJECTS,
     USE_NEW_TERMS_ as USE_NEW_TERMS)
 
-USE_NEW_SIDEBAR = False
-if USE_NEW_SIDEBAR_OBJECTS:
-    USE_NEW_SIDEBAR = False
+USE_NEW_SIDEBAR = True
 
 
 IS_WINDOWS = 'nt' in os.name
@@ -567,7 +564,6 @@ class Settings:
         # True:  startup directory
         self.use_startup_directory = True
 
-        self.use_new_sidebar_objects = USE_NEW_SIDEBAR_OBJECTS
         self.use_new_sidebar = USE_NEW_SIDEBAR
         self.use_new_terms = USE_NEW_TERMS
 
@@ -646,7 +642,6 @@ class Settings:
             'use_startup_directory': self.use_startup_directory,
             'recent_files': self.recent_files,
 
-            'use_new_sidebar_objects': self.use_new_sidebar_objects,
             'use_new_terms': self.use_new_terms,
 
             # rgb tuple
@@ -754,10 +749,7 @@ class Settings:
         else:
             self.startup_directory = ''
 
-        _set_setting(self, settings, setting_keys, ['use_new_sidebar_objects'],
-                     default=self.use_new_sidebar_objects,
-                     save=True, auto_type=bool)
-        self.use_new_sidebar = self.use_new_sidebar_objects
+        self.use_new_sidebar = True
         # _set_setting(self, settings, setting_keys, ['use_new_sidebar'], self.use_new_sidebar,
         #              USE_NEW_SIDEBAR, auto_type=bool)
         _set_setting(self, settings, setting_keys, ['use_new_terms'],

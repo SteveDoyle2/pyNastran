@@ -2597,11 +2597,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                             is_variable_data_format=False,
                             nlabels=None, labelsize=None, ncolors=None, colormap='',
                             set_max_min=False, uname='NastranGeometry-ForceResults2')
-
-                        if settings.use_new_sidebar_objects:
-                            cases[icase] = (force_xyz_res2, (0, 'Force XYZ'))
-                            form0.append(('Force XYZ', icase, []))
-                            icase += 1
+                        cases[icase] = (force_xyz_res2, (0, 'Force XYZ'))
+                        form0.append(('Force XYZ', icase, []))
+                        icase += 1
 
                 if np.abs(moments.max() - moments.min()) > 0.0:
                     mxyz = moments[:, :3]
@@ -2630,11 +2628,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                             is_variable_data_format=False,
                             nlabels=None, labelsize=None, ncolors=None, colormap='',
                             set_max_min=False, uname='NastranGeometry-MomentResults2')
-
-                        if settings.use_new_sidebar_objects:
-                            cases[icase] = (moment_xyz_res2, (0, 'Moment XYZ'))
-                            form0.append(('Moment XYZ', icase, []))
-                            icase += 1
+                        cases[icase] = (moment_xyz_res2, (0, 'Moment XYZ'))
+                        form0.append(('Moment XYZ', icase, []))
+                        icase += 1
 
                 if np.abs(spcd.max() - spcd.min()) > 0.0:
                     # SPCD has displacements only
@@ -2673,13 +2669,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     #     nlabels=None, labelsize=None, ncolors=None, colormap='',
                     #     set_max_min=False, uname='NastranGeometry-SPCD-RXYZ_Results2')
 
-                    if settings.use_new_sidebar_objects:
-                        cases[icase] = (enforced_txyz_res2, (0, 'SPCD T'))
-                        form0.append(('SPCD Translation', icase, []))
-                        icase += 1
-                        # cases[icase] = (enforced_rxyz_res2, (0, 'SPCD R'))
-                        # form0.append(('SPCD Rotation', icase, []))
-                        # icase += 1
+                    cases[icase] = (enforced_txyz_res2, (0, 'SPCD T'))
+                    form0.append(('SPCD Translation', icase, []))
+                    icase += 1
+                    # cases[icase] = (enforced_rxyz_res2, (0, 'SPCD R'))
+                    # form0.append(('SPCD Rotation', icase, []))
+                    # icase += 1
 
             if is_temperatures:
                 temperature_key, temperatures = temperature_data

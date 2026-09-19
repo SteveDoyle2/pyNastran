@@ -808,7 +808,6 @@ def get_plate_stress_strains2(cases: CasesDict,
                               keys_map: KeysMap,
                               eid_to_nid_map: dict[int, list[int]],
                               log: SimpleLogger,
-                              use_new_sidebar_objects: bool,
                               use_new_terms: bool,
                               is_stress: bool,
                               prefix: str='') -> int:
@@ -821,9 +820,6 @@ def get_plate_stress_strains2(cases: CasesDict,
         (isubcase, analysis_code, sort_method, count, ogs,
          superelement_adaptivity_index, pval_step)
     """
-    if not use_new_sidebar_objects:  # pragma: no cover
-        return icase
-
     plate_cases, subcase_id = get_real_plate_cases(
         element_id, model, key, is_stress, prefix,
         require_results=False)
@@ -1037,11 +1033,7 @@ def get_composite_plate_stress_strains2(#log: SimpleLogger,
                                         form_dict, header_dict,
                                         keys_map: KeysMap,
                                         log: SimpleLogger,
-                                        use_new_sidebar_objects: bool,
                                         is_stress: bool=True) -> int:
-    if not use_new_sidebar_objects:  # pragma: no cover
-        return icase
-
     case_map, keys_map2, cases2 = _stack_composite_results(
         model, log, is_stress, key=key)
     subcase_id = key[0]
@@ -1220,12 +1212,11 @@ def get_composite_plate_stress_strains(cases: CasesDict,
                 layer_name = f' Layer {ilayer+1}'
                 form_layeri = form_layers[layer_name]
                 #cases[icase] = (res, (subcase_id, header))
-                #if use_new_sidebar_objects:
-                    #cases[icase] = (res2, (subcase_id, (itime, ilayer, imethod, header)))
-                    #form_layeri.append((f'{method} ({layer_name})', icase, []))
-                    #form_name2 = f'{element_type} Composite Plate2 {word}: {method} ({layer_name})'
-                    #form_names.append(form_name2)
-                    #icase += 1
+                #cases[icase] = (res2, (subcase_id, (itime, ilayer, imethod, header)))
+                #form_layeri.append((f'{method} ({layer_name})', icase, []))
+                #form_name2 = f'{element_type} Composite Plate2 {word}: {method} ({layer_name})'
+                #form_names.append(form_name2)
+                #icase += 1
 
                 cases[icase] = (res, (subcase_id, (itime, ilayer, imethod, header)))
                 form_layeri.append((f'{method} ({layer_name})', icase, []))
@@ -1246,7 +1237,6 @@ def get_solid_stress_strains2(cases: CasesDict,
                               form_dict, header_dict,
                               keys_map: KeysMap,
                               log: SimpleLogger,
-                              use_new_sidebar_objects: bool,
                               use_new_terms: bool,
                               is_stress: bool,
                               prefix: str='') -> int:
@@ -1260,9 +1250,6 @@ def get_solid_stress_strains2(cases: CasesDict,
          superelement_adaptivity_index, pval_step)
 
     """
-    if not use_new_sidebar_objects:  # pragma: no cover
-        return icase
-
     solid_cases, subcase_id = get_real_solid_cases(
         element_id, model,
         key, is_stress, prefix,

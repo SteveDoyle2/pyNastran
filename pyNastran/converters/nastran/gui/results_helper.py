@@ -744,7 +744,6 @@ class NastranGuiResults(NastranGuiAttributes):
         log = model.log
         settings: Settings = self.settings
         nastran_settings: NastranSettings = settings.nastran_settings
-        use_new_sidebar_objects = settings.use_new_sidebar_objects
         use_new_terms = settings.use_new_terms
         assert isinstance(icase, int), icase
         if nastran_settings.stress:
@@ -779,12 +778,12 @@ class NastranGuiResults(NastranGuiAttributes):
                 log, stop_on_failure,
                 cases, nids, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, eid_to_nid_map,
-                log, use_new_sidebar_objects, use_new_terms, is_stress=True)
+                log, use_new_terms, is_stress=True)
             icase = get_plate_stress_strains2(
                 log, stop_on_failure,
                 cases, nids, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, eid_to_nid_map,
-                log, use_new_sidebar_objects, use_new_terms, is_stress=True,
+                log, use_new_terms, is_stress=True,
                  prefix='modal_contribution')
 
         if nastran_settings.composite_plate_stress:
@@ -792,7 +791,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 log, stop_on_failure,
                 cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map,
-                log, use_new_sidebar_objects, is_stress=True)
+                log, is_stress=True)
 
         if nastran_settings.rod_stress:
             icase = get_rod_stress_strains(
@@ -817,7 +816,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 log, stop_on_failure,
                 cases, nids, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log,
-                use_new_sidebar_objects, use_new_terms, is_stress=True)
+                use_new_terms, is_stress=True)
 
         if nastran_settings.spring_stress:
             icase = get_spring_stress_strains(
@@ -923,7 +922,6 @@ class NastranGuiResults(NastranGuiAttributes):
                                     stop_on_failure: bool) -> int:
         """Creates the time accurate strain objects"""
         settings = self.settings
-        use_new_sidebar_objects = settings.use_new_sidebar_objects
         use_new_terms = settings.use_new_terms
         nastran_settings: NastranSettings = settings.nastran_settings
         if nastran_settings.strain:
@@ -949,13 +947,13 @@ class NastranGuiResults(NastranGuiAttributes):
                 log, stop_on_failure,
                 cases, nids, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, eid_to_nid_map,
-                log, use_new_sidebar_objects, use_new_terms,
+                log, use_new_terms,
                 is_stress=False)
             icase = get_plate_stress_strains2(
                 log, stop_on_failure,
                 cases, nids, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, eid_to_nid_map,
-                log, use_new_sidebar_objects, use_new_terms,
+                log, use_new_terms,
                 is_stress=False,
                 prefix='modal_contribution')
 
@@ -964,7 +962,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 log, stop_on_failure,
                 cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map,
-                log, use_new_sidebar_objects, is_stress=False)
+                log, is_stress=False)
 
         if nastran_settings.rod_strain:
             icase = get_rod_stress_strains(
@@ -989,7 +987,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 log, stop_on_failure,
                 cases, nids, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log,
-                use_new_sidebar_objects, use_new_terms, is_stress=False)
+                use_new_terms, is_stress=False)
 
         if nastran_settings.spring_strain:
             icase = get_spring_stress_strains(
