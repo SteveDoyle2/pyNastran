@@ -19,7 +19,6 @@ class NonlinearGapStressArray(OES_Object):
         self.ielement = 0
         self.nelements = 0  # result specific
 
- 
     def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
         eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
@@ -28,7 +27,7 @@ class NonlinearGapStressArray(OES_Object):
         self.nelements = len(ieid)
         return obj
 
-   @property
+    @property
     def is_real(self) -> bool:
         return True
 

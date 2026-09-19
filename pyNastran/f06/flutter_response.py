@@ -514,9 +514,10 @@ class FlutterResponse:
         self.nopoints = False
         self._symbols: list[str] = []
         self._colors: list[str] = []
-        self.generate_symbols()
-        self.set_symbol_settings()
-        self.set_font_settings(font_size=None)
+        if IS_MATPLOTLIB:
+            self.generate_symbols()
+            self.set_symbol_settings()
+            self.set_font_settings(font_size=None)
 
         self._xtick_major_locator_multiple = None
         self._ytick_major_locator_multiple = None

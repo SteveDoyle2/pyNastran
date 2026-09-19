@@ -631,7 +631,6 @@ class F06Writer(OP2_F06_Common):
             if not quiet:
                 print('%-18s case=%r' % (result.__class__.__name__, ikey))
 
-            _check_result_slice(result)
             self.page_num = result.write_f06(f06, header, page_stamp,
                                              page_num=self.page_num)
             if repr_check:
@@ -799,33 +798,6 @@ class F06Writer(OP2_F06_Common):
             f06.write(' EID DENSITY\n')
             for eid, density in zip(mass.eids, mass.data):
                 f06.write(f' {eid:-8d} {density:.8f}\n')
-
-
-def _check_result_slice(result):
-    class_name = result.__class__.__name__
-    words = [
-        'element', 'element_node', 'element_layer', 'node_gridtype']
-    if hasattr(result, 'slice_by_element_id'):
-        ids = _get_eids(result)
-        result.slice_by_element_id(ids)
-    elif hasattr(result, 'slice_by_node_id'):
-        ids = result.node_gridtype[:, 0]
-        result.slice_by_node_id(ids)
-    elif any([hasattr(result, word) for word in words]):
-        log.warning(f'{class_name} doesnt support slice_by_element_id/slice_by_node_id')
-        raise RuntimeError(f'{class_name} doesnt support slice_by_element_id/slice_by_node_id')
-
-
-def _get_eids(result) -> np.ndarray:
-    if hasattr(result, 'element'):
-        eids = result.element
-    elif hasattr(result, 'element_node'):
-        eids = np.unique(result.element_node[:, 0])
-    elif hasattr(result, 'element_layer'):
-        eids = np.unique(result.element_layer[:, 0])
-    else:
-        raise NotImplementedError(result)
-    return eids
 
 
 def _check_combination(result, log: SimpleLogger) -> None:

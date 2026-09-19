@@ -653,3 +653,17 @@ def update_stress_force_time_word(obj) -> None:
         class_name = obj.__class__.__name__
         #assert obj._times.min() != obj._times.max(), f'{class_name}: old_times={old_times} -> times={obj._times}; data.shape={obj.data.shape}\n{obj.code_information()}'
     #print(obj.object_attributes())
+
+def slice_eids_by_index(
+        element: np.ndarray,
+        eids: np.ndarray,
+        assume_exists: bool=True,
+        ) -> tuple[np.ndarray, int]:
+    eids = np.asarray(eids)
+    eids.sort()
+    if not assume_exists:
+        eids = np.intersect1d(element, eids)
+    ieid = np.searchsorted(element, eids)
+    neid2 = len(ieid)
+    assert len(ieid) > 0, ieid
+    return eids, ieid, neid2

@@ -10,6 +10,7 @@ from pyNastran.op2.result_objects.op2_objects import (
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
+    slice_eids_by_index,
     oes_real_data_code, set_element_node_xxb_case,
     set_static_case, set_modal_case, set_transient_case, set_post_buckling_case,
 )
@@ -106,6 +107,16 @@ class RealBeamArray(OES_Object):
         arr["MIN"][ntime_neid0:ntime_neid1] = data[:, :, 6]
         arr["MST"][ntime_neid0:ntime_neid1] = data[:, :, 7]
         arr["MSC"][ntime_neid0:ntime_neid1] = data[:, :, 8]
+
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        ieid = np.where(np.isin(element, eids))[0]
+
+        self.element = obj.element[ieid]
+        self.data = obj.data[:, ieid, :]
+        self.nelements = len(ieid)
+        return obj
 
     @property
     def nnodes_per_element(self) -> int:

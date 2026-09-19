@@ -6,7 +6,7 @@ from numpy import zeros
 from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype, combination_inplace
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object, slice_by_element_id
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object, slice_eids_by_index
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 

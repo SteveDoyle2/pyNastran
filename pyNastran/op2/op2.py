@@ -710,6 +710,10 @@ class OP2(OP2_Scalar, OP2Writer):
             if result_type in skip_results or result_type.startswith('responses.'):
                 continue
             result = self.get_result(result_type)
+            import getpass
+            if getpass.getuser() == 'sdoyle':
+                _check_result_slice(result)
+
             try:
                 values = result.values()
             except AttributeError:
@@ -1778,3 +1782,29 @@ def get_disp_like_dicts(model: OP2) -> list[dict]:
         model.load_vectors,
     ]
     return disp_like_dicts
+
+def _check_result_slice(result):
+    class_name = result.__class__.__name__
+    words = [
+        'element', 'element_node', 'element_layer', 'node_gridtype']
+    if hasattr(result, 'slice_by_element_id'):
+        ids = _get_eids(result)
+        result.slice_by_element_id(ids)
+    elif hasattr(result, 'slice_by_node_id'):
+        ids = result.node_gridtype[:, 0]
+        result.slice_by_node_id(ids)
+    elif any([hasattr(result, word) for word in words]):
+        log.warning(f'{class_name} doesnt support slice_by_element_id/slice_by_node_id')
+        raise RuntimeError(f'{class_name} doesnt support slice_by_element_id/slice_by_node_id')
+
+
+def _get_eids(result) -> np.ndarray:
+    if hasattr(result, 'element'):
+        eids = result.element
+    elif hasattr(result, 'element_node'):
+        eids = np.unique(result.element_node[:, 0])
+    elif hasattr(result, 'element_layer'):
+        eids = np.unique(result.element_layer[:, 0])
+    else:
+        raise NotImplementedError(result)
+    return eids

@@ -1159,17 +1159,3 @@ def _get_solid_stress_strain_real(eids: np.ndarray,
         #ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 6]]), axis=0)
         #assert len(oxxi) == len(j)
     #return oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, ovmi
-
-def slice_eids_by_index(
-        element: np.ndarray,
-        eids: np.ndarray,
-        assume_exists: bool=True,
-        ) -> tuple[np.ndarray, int]:
-    eids = np.asarray(eids)
-    eids.sort()
-    if not assume_exists:
-        eids = np.intersect1d(element, eids)
-    ieid = np.searchsorted(element, eids)
-    neid2 = len(ieid)
-    assert len(ieid) > 0, ieid
-    return eids, ieid, neid2

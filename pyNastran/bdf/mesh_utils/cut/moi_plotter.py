@@ -34,7 +34,16 @@ from pyNastran.bdf.cards.coordinate_systems import (
     xyz_to_rtz_array, rtz_to_xyz_array)
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.cut.torsion import bredt_batho_gj
-from pyNastran.bdf.mesh_utils.cut.shear_center import shear_center
+try:
+    from pyNastran.bdf.mesh_utils.cut.shear_center import shear_center
+    shear_center + 1  # invalid
+except ImportError:  # pragma: no cover
+    class ShearCenter:
+        def __init__(self):
+            self.xy_neutral_axis = np.zeros((1, 2))
+    def shear_center(*args, **kwargs):
+        return ShearCenter()
+
 from pyNastran.bdf.mesh_utils.cut.cut_model_by_plane import (
     cut_face_model_by_coord, _setup_faces,
     # is_element_cut,
