@@ -106,6 +106,24 @@ class RealPlateArray(OES_Object):
 
         return h5_table_dict
 
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        nnode = self.nnodes_per_element
+        neid = self.get_neid()
+        nlayer = 2 * nnode
+        ntime, _, nresult = self.data.shape
+
+        element_node = self.element_node.reshape(neid, nlayer)
+        element = element_node[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(element, eids, assume_exists)
+        assert len(ieid) > 0, ieid
+        obj = self if inplace else copy.deepcopy(self)
+        element_node2 = element_node[ieid, :]
+        data2 = self.data.reshape(ntime, neid, 2, nresult)
+        self.element_node = element_node2.reshape(neid2*2, nnode)
+        self.data = data2[:, ieid, :, :].reshape(ntime, neid2*2, nresult)
+        self.nelements = len(ieid)
+        return obj
+
     def get_neid(self) -> int:
         neid_nnode = self.element_node.shape[0]
         nnode = self.nnodes_per_element

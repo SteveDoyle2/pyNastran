@@ -10,6 +10,7 @@ from pyNastran.op2.result_objects.op2_objects import (
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
+    slice_eids_by_index,
     oes_real_data_code, set_static_case, set_modal_case,
     set_transient_case, set_post_buckling_case, set_element_case)
 from pyNastran.f06.f06_formatting import write_float_13e, write_float_13e_long, _eigenvalue_header
@@ -117,6 +118,14 @@ class RealSpringArray(OES_Object):
         obj = set_post_buckling_case(cls, is_sort1, isubcase, data_code,
                                      set_element_case, (element, data),
                                      modes, eigrs, eigis)
+        return obj
+
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        self.element = obj.element[ieid]
+        self.data = obj.data[:, ieid, :]
+        self.nelements = len(ieid)
         return obj
 
     @property

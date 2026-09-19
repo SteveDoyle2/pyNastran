@@ -1,3 +1,4 @@
+import copy
 from typing import TextIO, Optional
 import numpy as np
 
@@ -9,7 +10,9 @@ from pyNastran.op2.result_objects.op2_objects import (
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.stress_reduction import von_mises_2d, max_shear
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object, oes_real_data_code,
+    StressObject, StrainObject, OES_Object, 
+    slice_eids_by_index,
+    oes_real_data_code,
     set_element_case, set_static_case, set_modal_case,
     set_transient_case, set_post_buckling_case)
 from pyNastran.op2.op2_interface.write_utils import view_dtype, view_idtype_as_fdtype
@@ -36,6 +39,14 @@ class RealRodArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
         self.element = None
+
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        self.element = obj.element[ieid]
+        self.data = obj.data[:, ieid, :]
+        self.nelements = len(ieid)
+        return obj
 
     def get_neid(self) -> int:
         neid = self.element.shape[0]

@@ -59,6 +59,33 @@ class RealCompositePlateArray(OES_Object):
         arr["L2"][ntime_neid0:ntime_neid1] = self.data[itime, :, 4]
 
 
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        row_eids = self.element_layer[:, 0]
+        col_layers = self.element_layer[:, 1]
+        elements = np.unique(row_eids)
+        ulayers = np.unique(col_layers)
+        nlayer = len(ulayers)
+
+        #neid = self.get_neid()
+        ntime, nelement_layer, nresult = self.data.shape
+
+        #-------------------------
+
+        # throw most of the results in the trash
+        eids, _, _ = slice_eids_by_index(element, eids, assume_exists)
+        
+        eids, ieid, neid2 = slice_eids_by_index(element, eids, assume_exists)
+        assert len(ieid) > 0, ieid
+
+        obj = self if inplace else copy.deepcopy(self)
+        ieid = np.where(np.isin(element, eids))[0]
+
+        obj.element_layer = obj.element_layer[ieid, :]
+        obj.data = obj.data[:, ieid, :]
+        element_node2 = element_node[ieid, :]
+        self.nelements = len(ieid)
+        return obj
+
     @property
     def is_real(self) -> bool:
         return True

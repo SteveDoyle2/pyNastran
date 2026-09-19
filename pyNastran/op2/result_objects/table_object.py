@@ -78,6 +78,21 @@ table_name_to_table_code = {
     # spc/mpc forces
     'OQG1' : 3,
 }
+
+def slice_nids_by_index(
+        nodes: np.ndarray,
+        nids: np.ndarray,
+        assume_exists: bool=True,
+        ) -> tuple[np.ndarray, int]:
+    nids = np.asarray(nids)
+    nids.sort()
+    if not assume_exists:
+        nids = np.intersect1d(nodes, nids)
+    inid = np.searchsorted(nodes, nids)
+    nnid2 = len(nid)
+    assert len(inid) > 0, inid
+    return inid, nnid2
+
 def append_sort1_sort2(data1, data2, to_sort1=True):
     """
     data1 : (ntimes, nnids, 6)
@@ -326,6 +341,14 @@ class TableArray(ScalarObject):  # displacement style table
         # self.node_gridtype = np.zeros((0,2))
         # print(object_stats(self, 'all'))
         return msg
+
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        inid, nnid2 = slice_nids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        self.node_gridtype = obj.node_gridtype[inid, :]
+        self.data = obj.data[:, inid, :]
+        self.nnodes = len(inid)
+        return obj
 
     @property
     def headers(self) -> list[str]:
