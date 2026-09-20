@@ -89,7 +89,7 @@ def slice_nids_by_index(
     if not assume_exists:
         nids = np.intersect1d(nodes, nids)
     inid = np.searchsorted(nodes, nids)
-    nnid2 = len(nid)
+    nnid2 = len(inid)
     assert len(inid) > 0, inid
     return inid, nnid2
 
@@ -342,8 +342,9 @@ class TableArray(ScalarObject):  # displacement style table
         # print(object_stats(self, 'all'))
         return msg
 
-    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
-        inid, nnid2 = slice_nids_by_index(self.element, eids, assume_exists)
+    def slice_by_node_id(self, nids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        nodes = self.node_gridtype[:, 0]
+        inid, nnid2 = slice_nids_by_index(nodes, nids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
         self.node_gridtype = obj.node_gridtype[inid, :]
         self.data = obj.data[:, inid, :]

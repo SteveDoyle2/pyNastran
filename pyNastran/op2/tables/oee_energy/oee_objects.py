@@ -1,3 +1,4 @@
+import copy
 from typing import TextIO
 import numpy as np
 
@@ -8,7 +9,7 @@ from pyNastran.f06.f06_formatting import (
     write_float_13e, write_floats_13e_long, _eigenvalue_header)
 from pyNastran.op2.op2_interface.write_utils import (
     set_table3_field, get_title_subtitle_label)
-
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import slice_eids_by_index
 from pyNastran.op2.writer.utils import fix_table3_types
 from pyNastran.op2.result_objects.op2_objects import set_as_sort1
 
@@ -76,6 +77,38 @@ class RealEnergyArray(BaseElement):
             #pass
         #else:
             #raise NotImplementedError('SORT2')
+
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        ntime, nelement, nresult = self.data.shape
+
+        #-------------------------
+
+        # throw most of the results in the trash
+        neids_max = 0
+        obj = self if inplace else copy.deepcopy(self)
+        for itime in range(ntime):
+            element = self.element[itime, :]
+            
+            # verify eids exist
+            eids, _, _ = slice_eids_by_index(element, eids, assume_exists)
+            itotal = np.searchsorted(element, 100000000)
+
+            ieid = np.where(np.isin(element, eids))[0]
+            neid2 = len(ieid)
+            neids_max = max(neids_max, neid2)
+
+            ieid2 = np.arange(neid2)
+            assert len(ieid) == len(ieid2)
+            #iend = np.arange(neid2, nelement)
+
+            obj.element[itime, ieid2] = self.element[itime, ieid]
+            obj.element[itime, itotal] = 100000000
+            obj.data[itime, ieid2, :] = obj.data[itime, ieid, :]
+            obj.data[itime, ieid2+1, :] = obj.data[itime, itotal, :]
+        obj.element = obj.element[:, neid_max+1]
+        obj.data = obj.data[:, neid_max+1, :]
+        obj.nelements = len(ieid)
+        return obj
 
     @property
     def is_real(self) -> bool:

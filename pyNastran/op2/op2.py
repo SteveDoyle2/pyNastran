@@ -49,6 +49,7 @@ from pyNastran.op2.op2_interface.transforms import (
 from pyNastran.utils import check_path
 if TYPE_CHECKING:  # pragma: no cover
     from h5py import File as H5File
+    from cpylog import SimpleLogger
     from pyNastran.op2.op2_geom import OP2Geom
 
 
@@ -709,12 +710,11 @@ class OP2(OP2_Scalar, OP2Writer):
         )
         import getpass
         is_user = (getpass.getuser() == 'sdoyle')
+        dev = (IS_CI or is_user)
         for result_type in result_types:
             if result_type in skip_results or result_type.startswith('responses.'):
                 continue
             result = self.get_result(result_type)
-            if IS_CI or is_user:
-                _check_result_slice(result)
 
             try:
                 values = result.values()
@@ -726,6 +726,8 @@ class OP2(OP2_Scalar, OP2Writer):
 
             #print(result_type)
             for obj in values:
+                if dev:
+                    _check_result_slice(obj, self.log)
                 if hasattr(obj, 'finalize'):
                     obj.finalize()
                 elif hasattr(obj, 'tCode') and not obj.is_sort1:
@@ -1785,7 +1787,7 @@ def get_disp_like_dicts(model: OP2) -> list[dict]:
     ]
     return disp_like_dicts
 
-def _check_result_slice(result):
+def _check_result_slice(result, log: SimpleLogger):
     class_name = result.__class__.__name__
     words = [
         'element', 'element_node', 'element_layer',

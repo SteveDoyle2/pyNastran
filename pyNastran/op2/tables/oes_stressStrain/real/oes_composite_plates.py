@@ -73,10 +73,6 @@ class RealCompositePlateArray(OES_Object):
 
         # throw most of the results in the trash
         eids, _, _ = slice_eids_by_index(element, eids, assume_exists)
-        
-        eids, ieid, neid2 = slice_eids_by_index(element, eids, assume_exists)
-        assert len(ieid) > 0, ieid
-
         obj = self if inplace else copy.deepcopy(self)
         ieid = np.where(np.isin(element, eids))[0]
 
