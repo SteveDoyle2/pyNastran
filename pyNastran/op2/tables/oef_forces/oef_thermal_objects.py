@@ -1,4 +1,5 @@
 #pylint disable=C0103,C0301
+import copy
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -8,6 +9,8 @@ from pyNastran.f06.f06_formatting import (
     write_float_13e, write_floats_13e, _eigenvalue_header)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.result_objects.element_table_object import RealElementTableArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    slice_eids_by_index,)
 
 
 class Real1DHeatFluxArray(BaseElement):
@@ -26,6 +29,14 @@ class Real1DHeatFluxArray(BaseElement):
 
         if not is_sort1:
             raise NotImplementedError('SORT2')
+
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        return obj
 
     @property
     def is_real(self) -> bool:
@@ -111,11 +122,6 @@ class Real1DHeatFluxArray(BaseElement):
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join(df2)
-            #data_frame = pd.Panel(self.data,
-                                  #major_axis=self.element,
-                                  #minor_axis=headers).to_frame()
-            #data_frame.columns.names = ['Static']
-            #data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
@@ -352,6 +358,16 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         #[free_conv, free_conv_k]
         self.data = np.zeros((self.ntimes, self.ntotal, 2), dtype=fdtype)
 
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        print(self.element_node)
+        asdf
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        return obj
+
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
@@ -393,11 +409,6 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             index = pd.MultiIndex.from_arrays(self.element_node.T, names=['ElementID', 'NodeID'])
             data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
             data_frame.columns.names = ['Static']
-            #data_frame = pd.Panel(self.data,
-                                  #major_axis=element_node,
-                                  #minor_axis=headers).to_frame()
-            #data_frame.columns.names = ['Static']
-            #data_frame.index.names = ['ElementID', 'Node', 'Item']
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
@@ -525,6 +536,14 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         if not is_sort1:
             raise NotImplementedError('SORT2')
 
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        return obj
+
     @property
     def is_real(self) -> bool:
         """is the result real?"""
@@ -616,9 +635,6 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
             data_frame.index.name = 'ElementID'
             data_frame.columns.names = ['Static']
-            #data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
-            #data_frame.columns.names = ['Static']
-            #data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
@@ -736,6 +752,7 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             page_num += 1
         return page_num - 1
 
+
 class RealHeatFluxVUShellArray(BaseElement):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.nonlinear_factor = np.nan
@@ -750,6 +767,14 @@ class RealHeatFluxVUShellArray(BaseElement):
         #self.ntimes = 0  # or frequency/mode
         self.ntotal = 0
         self.nelements = 0  # result specific
+
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        return obj
 
     @property
     def is_real(self) -> bool:

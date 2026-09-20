@@ -40,7 +40,8 @@ class RealRodArray(OES_Object):
         self.ielement = 0
         self.element = None
 
-    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
         eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
         obj.element = obj.element[ieid]

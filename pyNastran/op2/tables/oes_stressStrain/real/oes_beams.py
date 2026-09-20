@@ -108,12 +108,15 @@ class RealBeamArray(OES_Object):
         arr["MST"][ntime_neid0:ntime_neid1] = data[:, :, 7]
         arr["MSC"][ntime_neid0:ntime_neid1] = data[:, :, 8]
 
-    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
-        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+        uelement = np.unique(element)
+        eids, ieid, neid2 = slice_eids_by_index(uelement, eids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
         ieid = np.where(np.isin(element, eids))[0]
 
-        obj.element_node = obj.element[ieid, :]
+        obj.element_node = obj.element_node[ieid, :]
         obj.xxb = obj.xxb[ieid]
         obj.data = obj.data[:, ieid, :]
         obj.nelements = len(ieid)

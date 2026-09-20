@@ -8,6 +8,7 @@ Defines the Solid Stress/Strain Result
 
 """
 # pylint: disable=C0301,C0103,R0913,R0914,R0904,C0111,R0201,R0902
+import copy
 from itertools import count
 from struct import Struct, pack
 

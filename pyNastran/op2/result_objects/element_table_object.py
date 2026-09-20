@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 from numpy import zeros, float32, searchsorted, empty
 from numpy import allclose, asarray, vstack
@@ -6,6 +7,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.table_object import append_sort1_sort2
 from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import slice_eids_by_index
 
 
 class ElementTableArray(BaseElement):  # displacement style table
@@ -132,6 +134,14 @@ class ElementTableArray(BaseElement):  # displacement style table
                       [int(i) for i in self.data.shape], self.data.dtype))
         msg += self.get_data_code()
         return msg
+
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        return obj
 
     @property
     def headers(self):

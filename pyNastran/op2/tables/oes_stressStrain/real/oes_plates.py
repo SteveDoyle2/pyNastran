@@ -1,5 +1,6 @@
 # coding: utf-8
 #pylint disable=C0103
+import copy
 from itertools import count
 # import warnings
 from typing import TextIO, Optional
@@ -11,6 +12,7 @@ from pyNastran.op2.op2_interface.write_utils import to_column_bytes, view_dtype,
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
+    slice_eids_by_index,
     oes_real_data_code, get_scode,
     set_static_case, set_modal_case, set_transient_case)
 from pyNastran.op2.stress_reduction import von_mises_2d, principal_2d, max_shear, ovm_shear_2d
@@ -106,21 +108,24 @@ class RealPlateArray(OES_Object):
 
         return h5_table_dict
 
-    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
         nnode = self.nnodes_per_element
         neid = self.get_neid()
-        nlayer = 2 * nnode
+        nlayer = nnode * 2
         ntime, _, nresult = self.data.shape
 
-        element_node = self.element_node.reshape(neid, nlayer)
-        element = element_node[:, 0]
+        element_node = self.element_node.reshape(neid, nlayer, 2)
+        element = element_node[:, 0, 0]
         eids, ieid, neid2 = slice_eids_by_index(element, eids, assume_exists)
-        assert len(ieid) > 0, ieid
+        neid2_nlayer = neid2 * nlayer
+        data = self.data.reshape(ntime, neid, nlayer, nresult)
+
         obj = self if inplace else copy.deepcopy(self)
-        element_node2 = element_node[ieid, :]
-        data2 = self.data.reshape(ntime, neid, 2, nresult)
-        obj.element_node = element_node2.reshape(neid2*2, nnode)
-        obj.data = data2[:, ieid, :, :].reshape(ntime, neid2*2, nresult)
+        element_node2 = element_node[ieid, :, :]
+        data2 = data[:, ieid, :, :]
+        obj.element_node = element_node2.reshape(neid2_nlayer, 2)
+        obj.data = data2.reshape(ntime, neid2_nlayer, nresult)
         obj.nelements = len(ieid)
         return obj
 

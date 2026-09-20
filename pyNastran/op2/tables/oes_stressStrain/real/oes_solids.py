@@ -103,16 +103,17 @@ class RealSolidArray(OES_Object):
         ntime, _, nresult = self.data.shape
 
         element_node = self.element_node.reshape(neid, nnode, 2)
-        element_b = element_node[:, :, 0]
-        assert np.array_equal(element, element_b)
+        #element_b = element_node[:, 0, 0]
+        #assert np.array_equal(element, element_b), (element, element_b)
         eids, ieid, neid2 = slice_eids_by_index(element, eids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
-        element_node2 = element_node[ieid, :, :]
         data = self.data.reshape(ntime, neid, nnode, nresult)
-        
+        element_node2 = element_node[ieid, :, :]
+        data2 = data[:, ieid, :, :]
+
         obj.element_cid = obj.element_cid[ieid, :]
         obj.element_node = element_node2.reshape(neid2*nnode, 2)
-        obj.data = data[:, ieid, :, :].reshape(ntime, neid2*nnode, nresult)
+        obj.data = data2.reshape(ntime, neid2*nnode, nresult)
         obj.nelements = len(ieid)
         return obj
 

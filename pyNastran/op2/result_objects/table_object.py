@@ -83,7 +83,7 @@ def slice_nids_by_index(
         nodes: np.ndarray,
         nids: np.ndarray,
         assume_exists: bool=True,
-        ) -> tuple[np.ndarray, int]:
+        ) -> tuple[np.ndarray, np.ndarray, int]:
     nids = np.asarray(nids)
     nids.sort()
     if not assume_exists:
@@ -91,7 +91,7 @@ def slice_nids_by_index(
     inid = np.searchsorted(nodes, nids)
     nnid2 = len(inid)
     assert len(inid) > 0, inid
-    return inid, nnid2
+    return nids, inid, nnid2
 
 def append_sort1_sort2(data1, data2, to_sort1=True):
     """
@@ -344,7 +344,7 @@ class TableArray(ScalarObject):  # displacement style table
 
     def slice_by_node_id(self, nids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
         nodes = self.node_gridtype[:, 0]
-        inid, nnid2 = slice_nids_by_index(nodes, nids, assume_exists)
+        nids, inid, nnid2 = slice_nids_by_index(nodes, nids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
         self.node_gridtype = obj.node_gridtype[inid, :]
         self.data = obj.data[:, inid, :]
@@ -717,7 +717,6 @@ class TableArray(ScalarObject):  # displacement style table
         assert self.is_sort2, self.sort_method
         if grid_type in NULL_GRIDTYPE:
             grid_type = -1
-        #self
         #if node_id < 1:
             #msg = self.code_information()
             #msg += "(%s, %s) dt=%g node_id=%s v1=%g v2=%g v3=%g" % (

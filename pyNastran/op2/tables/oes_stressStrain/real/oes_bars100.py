@@ -1,3 +1,4 @@
+import copy
 from itertools import count
 import numpy as np
 from numpy import zeros, searchsorted

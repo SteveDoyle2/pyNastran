@@ -1,4 +1,6 @@
+import copy
 from typing import TextIO, Optional
+
 import numpy as np
 from numpy import zeros, searchsorted, ravel
 

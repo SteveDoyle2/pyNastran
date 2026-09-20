@@ -5,6 +5,7 @@ from pyNastran.f06.f06_formatting import (
 import numpy as np
 from pyNastran.op2.result_objects.scalar6_table_object import RealScalarTableArray
 
+
 class RealTemperatureArray(RealScalarTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealScalarTableArray.__init__(self, data_code, is_sort1, isubcase, dt)

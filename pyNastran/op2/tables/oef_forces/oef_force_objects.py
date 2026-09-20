@@ -25,6 +25,7 @@ from pyNastran.f06.f06_formatting import (
 from pyNastran.op2.result_objects.op2_objects import combination_inplace
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     # update_stress_force_time_word,
+    slice_eids_by_index,
     set_element_case, set_element_node_xxb_case,
     set_static_case, set_modal_case, set_transient_case,
     set_post_buckling_case)
@@ -451,6 +452,21 @@ class FailureIndicesArray(RealForceObject):
         #[failure_stress_for_ply, interlaminar_stress, max_value]
         self.data = np.zeros((self.ntimes, self.nelements, 3), dtype=fdtype)
 
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        uelement = np.unique(self.element_layer[:, 0])
+        eids, ieid, neid2 = slice_eids_by_index(
+            uelement, eids, assume_exists)
+        ilayer = np.where(np.isin(self.element_layer[:, 0], eids))[0]
+
+        obj = self if inplace else copy.deepcopy(self)
+        obj.failure_theory = obj.failure_theory[ilayer]
+        obj.element_layer = obj.element_layer[ilayer, :]
+        obj.data = obj.data[:, ilayer, :]
+        obj.nelements = neid2 # len(ieid)
+        obj.ntotal = len(ilayer)
+        return obj
+
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
@@ -525,22 +541,22 @@ class FailureIndicesArray(RealForceObject):
             ]
 
         ntimes = self.data.shape[0]
-        nelements = self.data.shape[1]
+        ntotal = self.data.shape[1]
         assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
-        assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
+        assert self.ntotal == ntotal, 'ntotal=%s expected=%s' % (self.ntotal, ntotal)
 
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
-                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
+            msg.append('  type=%s ntimes=%d nelements=%d; table_name=%r\n'
+                       % (self.__class__.__name__, ntimes, ntotal, self.table_name))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i; table_name=%r\n'
-                       % (self.__class__.__name__, nelements, self.table_name))
+            msg.append('  type=%s nelements=%d; table_name=%r\n'
+                       % (self.__class__.__name__, ntotal, self.table_name))
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nelements, %d] where %d=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
@@ -594,6 +610,14 @@ class RealSpringDamperForceArray(RealForceObject):
     def add_to_h5_array(self, arr, ntime_neid0: int, ntime_neid1: int, itime: int):
         arr["EID"][ntime_neid0:ntime_neid1] = self.element
         arr["F"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0]
+
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        return obj
 
     @classmethod
     def add_static_case(cls, table_name: str, element_name: str,
@@ -1158,6 +1182,14 @@ class RealRodForceArray(RealForceObject):
         obj.is_built = True
         return obj
 
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        return obj
+
     @property
     def nnodes_per_element(self) -> int:
         return 1
@@ -1604,6 +1636,23 @@ class RealCBeamForceArray(RealForceObject):
         self.element = self.element[i]
         self.element_node = self.element_node[i, :]
         self.data = self.data[:, i, :]
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        assert len(self.element) == len(self.element_node)
+        element = np.unique(self.element)
+        eids, ieid, neid2 = slice_eids_by_index(element, eids, assume_exists)
+        ieid_node = np.where(np.isin(self.element_node[:, 0], eids))[0]
+
+        obj = self if inplace else copy.deepcopy(self)
+
+        #obj.element = obj.element[ieid]
+        #obj.element = np.unique(obj.element_node[ieid_node, 0])
+        obj.element = obj.element_node[ieid_node, 0]
+        obj.element_node = obj.element_node[ieid_node, :]
+        obj.data = obj.data[:, ieid_node, :]
+        obj.nelements = len(obj.element)
+        return obj
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -2185,6 +2234,14 @@ class RealCShearForceArray(RealForceObject):
         # if not is_sort1:
         #     raise NotImplementedError('SORT2')
 
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        return obj
+
     @property
     def nnodes_per_element(self) -> int:
         return 1
@@ -2699,6 +2756,14 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         arr["AF"][ntime_neid0:ntime_neid1] = self.data[itime, :, 0]
         arr["TRQ"][ntime_neid0:ntime_neid1] = self.data[itime, :, 1]
 
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        return obj
+
     @property
     def nnodes_per_element(self) -> int:
         return 1
@@ -3036,6 +3101,22 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
     def _get_msgs(self):
         raise NotImplementedError()
 
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        #assert len(self.element) == 8, self.element
+        #assert self.nelements == 8, self.nelements
+
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        #assert len(ieid) == len(self.element), f'testing ieid={len(ieid)}'
+        obj = self if inplace else copy.deepcopy(self)
+
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        #assert len(obj.element) == 8, obj.element
+        #assert obj.nelements == 8, obj.nelements
+        return obj
+
     @property
     def headers(self) -> list[str]:
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
@@ -3053,7 +3134,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
     def build(self):
         """sizes the vectorized attributes of the RealPlateForceArray"""
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        #print('start_build ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
 
@@ -3061,7 +3142,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        #self.nelements //= self.ntimes
+        self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -3072,6 +3153,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         ntimes, nelements, ntotal = self._get_sort_element_sizes()
+        self.nelements = nelements
         self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
         self.element = np.zeros(ntotal, dtype=idtype)
 
@@ -3534,6 +3616,20 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
     def _get_msgs(self):
         raise NotImplementedError()
 
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+
+        uelement = np.unique(element)
+        eids, ieid, neid2 = slice_eids_by_index(uelement, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        ieid = np.where(np.isin(element, eids))[0]
+
+        obj.element_node = obj.element_node[ieid, :]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = neid2
+        return obj
+
     @property
     def headers(self) -> list[str]:
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
@@ -3577,11 +3673,13 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         self.data = np.zeros((ntimes, ntotal, 8), dtype=fdtype)
 
     def _get_sort_element_sizes(self, debug: bool=False):
+        #debug = True
+        nnodes = self.nnodes_per_element
         if debug:
             print("RAW: ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         if self.is_sort1:
             ntimes = self.ntimes
-            nelements = self.nelements
+            nelements = self.nelements // ntimes
             ntotal = self.ntotal
             if debug:
                 print("SORT1: ntimes=%s nelements=%s ntotal=%s" % (ntimes, nelements, ntotal))
@@ -3590,7 +3688,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             #ntimes = self.nelements // self.ntimes
             ntimes = self.ntotal
             nelements = self.ntimes
-            ntotal = nelements * self.nnodes_per_element
+            ntotal = nelements * nnodes
             #raise RuntimeError("SORT2: ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
             if debug:
                 print("SORT2: ntimes=%s nelements=%s ntotal=%s" % (ntimes, nelements, ntotal))
@@ -4051,6 +4149,14 @@ class RealCBarFastForceArray(RealForceObject):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        return obj
+
     @property
     def nnodes_per_element(self) -> int:
         return 1
@@ -4482,6 +4588,14 @@ class RealConeAxForceArray(RealForceObject):
     def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
+
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        return obj
 
     @property
     def headers(self) -> list[str]:
@@ -4987,6 +5101,14 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
     def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
+
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        return obj
 
     @property
     def nnodes_per_element(self) -> int:
@@ -5548,7 +5670,7 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         itotal = self.itime
         ntimes = len(self._times)
         ntotal = self.data.shape[1]
-        print(f'RealSolidPressureForceArray: itime={itime}/{ntimes} itotal={itotal}/{ntotal} -> dt={dt:g} eid={eid}')
+        #print(f'RealSolidPressureForceArray: itime={itime}/{ntimes} itotal={itotal}/{ntotal} -> dt={dt:g} eid={eid}')
         self._times[itime] = dt
         self.element[itotal] = eid
         self.data[itime, itotal, :] = [ax, ay, az, vx, vy, vz, pressure]

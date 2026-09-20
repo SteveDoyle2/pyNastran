@@ -1,3 +1,4 @@
+import copy
 from typing import TextIO, Optional
 import numpy as np
 
@@ -7,7 +8,8 @@ from pyNastran.op2.stress_reduction import von_mises_2d, max_shear
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype, combination_inplace
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object, oes_real_data_code, get_scode,
+    StressObject, StrainObject, OES_Object,
+    slice_eids_by_index, oes_real_data_code, get_scode,
     set_static_case, set_modal_case, set_transient_case, set_post_buckling_case,
 )
 from pyNastran.f06.f06_formatting import write_floats_12e, write_floats_12e_long, _eigenvalue_header
@@ -60,26 +62,31 @@ class RealCompositePlateArray(OES_Object):
 
 
     def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
-        row_eids = self.element_layer[:, 0]
-        col_layers = self.element_layer[:, 1]
-        elements = np.unique(row_eids)
-        ulayers = np.unique(col_layers)
-        nlayer = len(ulayers)
+        element = self.element_layer[:, 0]
+        #col_layer = self.element_layer[:, 1]
+        uelement = np.unique(element)
+        #ulayer = np.unique(col_layer)
+        #nlayer = len(ulayer)
+        neid_layer = len(element)
 
         #neid = self.get_neid()
         ntime, nelement_layer, nresult = self.data.shape
+        assert len(eids) == len(np.unique(eids))
 
         #-------------------------
 
         # throw most of the results in the trash
-        eids, _, _ = slice_eids_by_index(element, eids, assume_exists)
+        eids, _, _ = slice_eids_by_index(uelement, eids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
-        ieid = np.where(np.isin(element, eids))[0]
 
-        obj.element_layer = obj.element_layer[ieid, :]
-        obj.data = obj.data[:, ieid, :]
-        element_node2 = element_node[ieid, :]
-        obj.nelements = len(ieid)
+        ilayer = np.where(np.isin(element, eids))[0]
+
+        # testing when we pass in all eids
+        #assert len(ilayer) == neid_layer, (len(ilayer), neid_layer)
+
+        obj.element_layer = obj.element_layer[ilayer, :]
+        obj.data = obj.data[:, ilayer, :]
+        obj.nelements = len(ilayer)
         return obj
 
     @property

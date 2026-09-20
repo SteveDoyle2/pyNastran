@@ -90,10 +90,18 @@ class RealEnergyArray(BaseElement):
         for itime in range(ntime):
             if is2d:
                 element = self.element[itime, :]
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError('not 2d element')
-            # verify eids exist
-            eids, _, _ = slice_eids_by_index(element, eids, assume_exists)
+
+            #print('oee eids=', eids)
+            if len(eids):
+                # verify eids exist
+                # filter out duplicate 0s and sort
+                uelement = np.unique(element)
+                eids, _, _ = slice_eids_by_index(
+                    uelement, eids, assume_exists)
+            else:  # total only
+                neid2 = 0
             itotal = np.where(element == 100000000)[0]
 
             ieid = np.where(np.isin(element, eids))[0]
@@ -101,19 +109,19 @@ class RealEnergyArray(BaseElement):
             neid2 = len(ieid)
             itotal2 = neid2 #+ 1
             neid_max = max(neids_max, neid2)
-            print('itotal', itotal, itotal2)
+            #print('itotal', itotal, itotal2)
 
             ieid2 = np.arange(neid2)
             assert len(ieid) == len(ieid2)
             #iend = np.arange(neid2, nelement)
-            # TestOp2NoScipy.test_op2_solid_bending_skip
             #print(element)
             assert 100000000 not in element[ieid], element[ieid]
 
             obj.element[itime, itotal2:] = 0
             obj.element[itime, itotal2] = 100000000
             obj.element[itime, ieid2] = self.element[itime, ieid]
-            
+            #print('obj.element', obj.element[itime, :])
+
             obj.data[itime, ieid2, :] = self.data[itime, ieid, :]
             obj.data[itime, itotal2:, :] = np.nan
             obj.data[itime, itotal2, :] = self.data[itime, itotal, :]
@@ -121,7 +129,7 @@ class RealEnergyArray(BaseElement):
         #downslice - breaks the shape?
         #obj.element = obj.element[:, neid_max+1]
         #obj.data = obj.data[:, neid_max+1, :]
-        #obj.nelements = len(ieid)
+        obj.nelements = neid2 + 1
         return obj
 
     @property

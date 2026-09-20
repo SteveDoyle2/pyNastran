@@ -3,6 +3,7 @@ defines:
  - ScalarTableObject
 
 """
+import copy
 from struct import Struct, pack
 import warnings
 
@@ -10,7 +11,7 @@ import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject, set_as_sort1
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
-from pyNastran.op2.result_objects.table_object import append_sort1_sort2
+from pyNastran.op2.result_objects.table_object import append_sort1_sort2, slice_nids_by_index
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e
 from pyNastran.op2.op2_interface.write_utils import (
     set_table3_field, get_title_subtitle_label)
@@ -147,6 +148,16 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         #msg.append('  gridTypes\n  ')
         msg += self.get_data_code()
         return msg
+
+    def slice_by_node_id(self, nids: np.ndarray,
+                         assume_exists: bool=False, inplace: bool=False):
+        nodes = self.node_gridtype[:, 0]
+        nids, inid, nnid2 = slice_nids_by_index(nodes, nids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.node_gridtype = obj.node_gridtype[inid, :]
+        obj.data = obj.data[:, inid, :]
+        obj.nnodes = len(inid)
+        return obj
 
     @property
     def headers(self):

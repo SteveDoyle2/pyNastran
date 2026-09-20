@@ -1,10 +1,11 @@
+import copy
 import numpy as np
 from numpy import zeros, searchsorted, ravel
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object, slice_eids_by_index
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 
 
@@ -22,13 +23,20 @@ class RealTriaxArray(OES_Object):
         self.element_node = None
 
     def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
-        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        neid_node = len(self.element_node)
+        #print(self.element_node)
+        nnode = self.nnodes_per_element
+        assert neid_node % nnode == 0
+        neid = neid_node // nnode
+        element = self.element_node
+        uelement = element.reshape(neid, nnode, 2)[:, 0, 0]
+        eids, ieid_, neid2 = slice_eids_by_index(uelement, eids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
-        ieid = np.where(np.isin(element, eids))[0]
+        ieid_node = np.where(np.isin(element, eids))[0]
 
-        obj.element_node = obj.element[ieid]
-        obj.data = obj.data[:, ieid, :]
-        obj.nelements = len(ieid)
+        obj.element_node = obj.element_node[ieid_node, :]
+        obj.data = obj.data[:, ieid_node, :]
+        obj.nelements = neid2
         return obj
 
     @property
@@ -42,8 +50,8 @@ class RealTriaxArray(OES_Object):
     @property
     def nnodes_per_element(self) -> int:
         if self.element_type == 53:
-            nnodes_per_element = 1
-        else:
+            nnodes_per_element = 4  # centroid + 3
+        else:  # pragma: no cover
             raise NotImplementedError(self.element_type)
         return nnodes_per_element
 
@@ -138,9 +146,6 @@ class RealTriaxArray(OES_Object):
             df1 = pd.DataFrame(data)
             df2 = pd.DataFrame(self.data[0], columns=headers)
             data_frame = df1.join(df2).set_index(['ElementID', 'NodeID'])
-            #self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
-            #self.data_frame.columns.names = ['Static']
-            #self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover

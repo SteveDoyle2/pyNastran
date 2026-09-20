@@ -711,6 +711,8 @@ class OP2(OP2_Scalar, OP2Writer):
         import getpass
         is_user = (getpass.getuser() == 'sdoyle')
         dev = (IS_CI or is_user)
+        failed_classes_set = set()
+
         for result_type in result_types:
             if result_type in skip_results or result_type.startswith('responses.'):
                 continue
@@ -727,13 +729,17 @@ class OP2(OP2_Scalar, OP2Writer):
             #print(result_type)
             for obj in values:
                 if dev:
-                    _check_result_slice(obj, self.log)
+                    _check_result_slice(obj, self.log, failed_classes_set)
                 if hasattr(obj, 'finalize'):
                     obj.finalize()
                 elif hasattr(obj, 'tCode') and not obj.is_sort1:
                     raise RuntimeError('object has not implemented finalize\n%s' % (
                         ''.join(obj.get_stats())))
         self.del_structs()
+        if len(failed_classes_set):
+            failed_classes_list = list(failed_classes_set)
+            failed_classes_list.sort()
+            #raise RuntimeError(f'The following classes dont support slice_by_element_id/slice_by_node_id:\n - {failed_classes_list}')
 
     def build_dataframe(self) -> None:
         """
@@ -1787,37 +1793,63 @@ def get_disp_like_dicts(model: OP2) -> list[dict]:
     ]
     return disp_like_dicts
 
-def _check_result_slice(result, log: SimpleLogger):
+def _check_result_slice(result, log: SimpleLogger,
+                        failed_classes_set: set[str]):
     class_name = result.__class__.__name__
     words = [
         'element', 'element_node', 'element_layer',
-        'node_gridtype']
+        'node_gridtype', 'node_element',
+    ]
+    skip_words = ['eigenvalues', 'mass']
     if hasattr(result, 'slice_by_element_id'):
+        nelements = result.nelements
         eids = _get_eids(result)
         obj = result.slice_by_element_id(eids)
         obj_eids = _get_eids(obj)
         assert len(obj_eids) == len(eids), (eids, obj_eids)
+        if obj.nelements != nelements:
+            log.warning(f'{class_name} lost/gained elements old={nelements} -> new={obj.nelements}')
     elif hasattr(result, 'slice_by_node_id'):
         ids = result.node_gridtype[:, 0]
         obj = result.slice_by_node_id(ids)
         assert len(result.node_gridtype) == len(ids), result
+    elif any([hasattr(result, word) for word in skip_words]):
+        return
     elif any([hasattr(result, word) for word in words]):
         log.warning(f'{class_name} doesnt support slice_by_element_id/slice_by_node_id')
-        raise RuntimeError(f'{class_name} doesnt support slice_by_element_id/slice_by_node_id')
+        failed_classes_set.add(class_name)
+        return
+    else:  # pragma: no cover
+        raise NotImplementedError(result.get_stats())
+    obj.get_stats()
 
 
 def _get_eids(result) -> np.ndarray:
-    if hasattr(result, 'element'):
-        eids = result.element
-        if eids.ndim == 2:
-            eids0 = eids[0, :]
-            itotal = np.searchsorted(eids0, 100000000)
-            eids = eids0[:itotal] # drop the last id
-            assert 100000000 not in eids
-    elif hasattr(result, 'element_node'):
+    # TODO: what result has element=None?
+    if hasattr(result, 'element_node'):
         eids = np.unique(result.element_node[:, 0])
     elif hasattr(result, 'element_layer'):
         eids = np.unique(result.element_layer[:, 0])
+
+    elif hasattr(result, 'element') and result.element is None:
+        # TODO: RealPlateBilinearForceArray
+        raise NotImplementedError(result.get_stats())
+
+    elif hasattr(result, 'element') and result.element is not None:
+        eids = result.element
+        if eids.ndim == 2:
+            # strain energy
+            eids0 = eids[0, :]
+            itotal = np.where(eids0 == 100000000)[0][0]
+            eids = eids0[:itotal] # drop the last id
+            assert 100000000 not in eids, (itotal, eids0, eids)
+            eids = np.unique(eids)
+        # TODO: what result needs this?
+        #       probably RealStrainEnergyArray...moving to if check
+        #
+        # TODO: do I need a unique check for other types?
+        #       RealCBeamForceArray? (it was a beam)
+        #eids = np.unique(eids)
     else:  # pragma: no cover
         raise NotImplementedError(result)
     return eids

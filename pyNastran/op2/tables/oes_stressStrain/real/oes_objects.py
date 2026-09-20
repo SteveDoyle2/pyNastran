@@ -663,6 +663,7 @@ def slice_eids_by_index(
     eids.sort()
     if not assume_exists:
         eids = np.intersect1d(element, eids)
+    assert len(element) == len(np.unique(element))
     ieid = np.searchsorted(element, eids)
     neid2 = len(ieid)
     assert len(ieid) > 0, ieid
