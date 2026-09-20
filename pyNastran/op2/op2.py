@@ -1793,10 +1793,10 @@ def _check_result_slice(result, log: SimpleLogger):
         'element', 'element_node', 'element_layer',
         'node_gridtype']
     if hasattr(result, 'slice_by_element_id'):
-        ids = _get_eids(result)
-        obj = result.slice_by_element_id(ids)
-        obj_ids = _get_eids(obj)
-        assert len(obj_eids) == len(eids), result
+        eids = _get_eids(result)
+        obj = result.slice_by_element_id(eids)
+        obj_eids = _get_eids(obj)
+        assert len(obj_eids) == len(eids), (eids, obj_eids)
     elif hasattr(result, 'slice_by_node_id'):
         ids = result.node_gridtype[:, 0]
         obj = result.slice_by_node_id(ids)
@@ -1809,10 +1809,15 @@ def _check_result_slice(result, log: SimpleLogger):
 def _get_eids(result) -> np.ndarray:
     if hasattr(result, 'element'):
         eids = result.element
+        if eids.ndim == 2:
+            eids0 = eids[0, :]
+            itotal = np.searchsorted(eids0, 100000000)
+            eids = eids0[:itotal] # drop the last id
+            assert 100000000 not in eids
     elif hasattr(result, 'element_node'):
         eids = np.unique(result.element_node[:, 0])
     elif hasattr(result, 'element_layer'):
         eids = np.unique(result.element_layer[:, 0])
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(result)
     return eids

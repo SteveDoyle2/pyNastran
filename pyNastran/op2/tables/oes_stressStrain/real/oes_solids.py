@@ -1,4 +1,5 @@
 # pylint: disable=C0301,C0103,R0913,R0914,R0904,C0111,R0201,R0902
+import copy
 from itertools import count
 from struct import pack
 import warnings
@@ -97,15 +98,17 @@ class RealSolidArray(OES_Object):
 
     def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
         nnode = self.nnodes_per_element
-        neid = self.get_neid()
+        element = self.element_cid[:, 0]
+        neid = len(element)
         ntime, _, nresult = self.data.shape
 
         element_node = self.element_node.reshape(neid, nnode, 2)
-        element = element_node[:, :, 0]
+        element_b = element_node[:, :, 0]
+        assert np.array_equal(element, element_b)
         eids, ieid, neid2 = slice_eids_by_index(element, eids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
         element_node2 = element_node[ieid, :, :]
-        data = self.data.reshape(ntime, neid, 2, nresult)
+        data = self.data.reshape(ntime, neid, nnode, nresult)
         
         obj.element_cid = obj.element_cid[ieid, :]
         obj.element_node = element_node2.reshape(neid2*nnode, 2)

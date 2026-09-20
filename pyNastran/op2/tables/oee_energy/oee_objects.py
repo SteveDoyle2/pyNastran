@@ -86,28 +86,42 @@ class RealEnergyArray(BaseElement):
         # throw most of the results in the trash
         neids_max = 0
         obj = self if inplace else copy.deepcopy(self)
+        is2d = (self.element.ndim == 2)
         for itime in range(ntime):
-            element = self.element[itime, :]
-            
+            if is2d:
+                element = self.element[itime, :]
+            else:
+                raise NotImplementedError('not 2d element')
             # verify eids exist
             eids, _, _ = slice_eids_by_index(element, eids, assume_exists)
-            itotal = np.searchsorted(element, 100000000)
+            itotal = np.where(element == 100000000)[0]
 
             ieid = np.where(np.isin(element, eids))[0]
+            assert itotal not in ieid, itotal
             neid2 = len(ieid)
-            neids_max = max(neids_max, neid2)
+            itotal2 = neid2 #+ 1
+            neid_max = max(neids_max, neid2)
+            print('itotal', itotal, itotal2)
 
             ieid2 = np.arange(neid2)
             assert len(ieid) == len(ieid2)
             #iend = np.arange(neid2, nelement)
+            # TestOp2NoScipy.test_op2_solid_bending_skip
+            #print(element)
+            assert 100000000 not in element[ieid], element[ieid]
 
+            obj.element[itime, itotal2:] = 0
+            obj.element[itime, itotal2] = 100000000
             obj.element[itime, ieid2] = self.element[itime, ieid]
-            obj.element[itime, itotal] = 100000000
-            obj.data[itime, ieid2, :] = obj.data[itime, ieid, :]
-            obj.data[itime, ieid2+1, :] = obj.data[itime, itotal, :]
-        obj.element = obj.element[:, neid_max+1]
-        obj.data = obj.data[:, neid_max+1, :]
-        obj.nelements = len(ieid)
+            
+            obj.data[itime, ieid2, :] = self.data[itime, ieid, :]
+            obj.data[itime, itotal2:, :] = np.nan
+            obj.data[itime, itotal2, :] = self.data[itime, itotal, :]
+
+        #downslice - breaks the shape?
+        #obj.element = obj.element[:, neid_max+1]
+        #obj.data = obj.data[:, neid_max+1, :]
+        #obj.nelements = len(ieid)
         return obj
 
     @property
