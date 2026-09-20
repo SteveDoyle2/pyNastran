@@ -15,9 +15,9 @@ from pyNastran.op2.op2_interface.op2_classes import (
     RealBarStressArray, # ComplexBarStressArray,
     #RealSolidStressArray, RealSolidStressArrayNx, ComplexSolidStressArray,
 )
-from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
-from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidArray
+# from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
+# from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx
+# from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidArray
 
 from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
 from pyNastran.converters.nastran.gui.result_objects.layered_table_results import (
@@ -26,7 +26,9 @@ from pyNastran.converters.nastran.gui.result_objects.layered_table_results impor
 from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import (
     PlateStrainStressResults2, get_real_plate_cases, plate_cases_to_iresult, _get_plates)
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import (
-    SolidStrainStressResults2, get_real_solid_cases, solid_cases_to_iresult, _get_solids)
+    SolidStrainStressResults2, get_real_solid_cases, solid_cases_to_iresult,
+    # _get_solids,
+)
 from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import (
     CompositeStrainStressResults2, get_composite_methods, _composite_method_map)
 from pyNastran.converters.nastran.gui.types import CasesDict, NastranKey, KeysMap, KeyMap
@@ -1259,7 +1261,8 @@ def get_solid_stress_strains2(cases: CasesDict,
         return icase
 
     solid_case = solid_cases[0]
-    iresult_to_title_annotation_map, word, max_sheari = solid_cases_to_iresult(solid_cases, is_stress)
+    iresult_to_title_annotation_map, word, max_sheari = solid_cases_to_iresult(
+        solid_cases, is_stress)
 
     if not use_new_terms:
         del iresult_to_title_annotation_map[max_sheari]
@@ -1320,13 +1323,15 @@ def get_solid_stress_strains2(cases: CasesDict,
 #     if is_stress:
 #         results = model.op2_results.stress
 #         solids = [
-#             results.ctetra_stress, results.cpenta_stress, results.chexa_stress, # results.cpyram_stress,
+#             results.ctetra_stress, results.cpenta_stress, results.chexa_stress,
+#             results.cpyram_stress,
 #         ]
 #         word = 'Stress (centroid)'
 #     else:
 #         results = model.op2_results.strain
 #         solids = [
-#             results.ctetra_strain, results.cpenta_strain, results.chexa_strain, # results.cpyram_strain,
+#             results.ctetra_strain, results.cpenta_strain, results.chexa_strain,
+#             results.cpyram_strain,
 #         ]
 #         word = 'Strain (centroid)'
 #

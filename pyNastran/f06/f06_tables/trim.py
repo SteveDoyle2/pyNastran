@@ -242,6 +242,15 @@ class AeroForce(Statics):
         return msg
 
     @property
+    def PK(self) -> tuple[np.ndarray, np.ndarray]:
+        """only handles CAERO1s"""
+        dof3 = self.force[:, 2]
+        dof5 = self.force[:, 4]
+        PK = np.column_stack((dof3, dof5))
+        PK_NORM = np.linalg.norm(PK)
+        return PK.ravel(), PK_NORM
+
+    @property
     def total_force(self) -> np.ndarray:
         force = self.force[:, :3]
         total_force = force.sum(axis=0)
