@@ -113,9 +113,10 @@ class RealBeamArray(OES_Object):
         obj = self if inplace else copy.deepcopy(self)
         ieid = np.where(np.isin(element, eids))[0]
 
-        self.element = obj.element[ieid]
-        self.data = obj.data[:, ieid, :]
-        self.nelements = len(ieid)
+        obj.element_node = obj.element[ieid, :]
+        obj.xxb = obj.xxb[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
         return obj
 
     @property

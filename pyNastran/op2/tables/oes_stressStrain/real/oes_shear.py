@@ -34,9 +34,9 @@ class RealShearArray(OES_Object):
     def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
         eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
-        self.element = obj.element[ieid]
-        self.data = obj.data[:, ieid, :]
-        self.nelements = len(ieid)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
         return obj
 
     @property

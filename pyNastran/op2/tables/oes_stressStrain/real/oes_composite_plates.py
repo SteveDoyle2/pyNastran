@@ -83,7 +83,7 @@ class RealCompositePlateArray(OES_Object):
         obj.element_layer = obj.element_layer[ieid, :]
         obj.data = obj.data[:, ieid, :]
         element_node2 = element_node[ieid, :]
-        self.nelements = len(ieid)
+        obj.nelements = len(ieid)
         return obj
 
     @property

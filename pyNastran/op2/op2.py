@@ -30,6 +30,7 @@ from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 #import pyNastran
+from pyNastran import IS_CI
 from pyNastran.utils import (
     object_attributes, object_methods, ipython_info, PathLike)
 from pyNastran.utils.numpy_utils import integer_types
@@ -706,12 +707,13 @@ class OP2(OP2_Scalar, OP2Writer):
             'params', 'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3',
             'cstm', 'trmbu', 'trmbd',
         )
+        import getpass
+        is_user = (getpass.getuser() == 'sdoyle')
         for result_type in result_types:
             if result_type in skip_results or result_type.startswith('responses.'):
                 continue
             result = self.get_result(result_type)
-            import getpass
-            if getpass.getuser() == 'sdoyle':
+            if IS_CI or is_user:
                 _check_result_slice(result)
 
             try:
@@ -1786,13 +1788,17 @@ def get_disp_like_dicts(model: OP2) -> list[dict]:
 def _check_result_slice(result):
     class_name = result.__class__.__name__
     words = [
-        'element', 'element_node', 'element_layer', 'node_gridtype']
+        'element', 'element_node', 'element_layer',
+        'node_gridtype']
     if hasattr(result, 'slice_by_element_id'):
         ids = _get_eids(result)
-        result.slice_by_element_id(ids)
+        obj = result.slice_by_element_id(ids)
+        obj_ids = _get_eids(obj)
+        assert len(obj_eids) == len(eids), result
     elif hasattr(result, 'slice_by_node_id'):
         ids = result.node_gridtype[:, 0]
-        result.slice_by_node_id(ids)
+        obj = result.slice_by_node_id(ids)
+        assert len(result.node_gridtype) == len(ids), result
     elif any([hasattr(result, word) for word in words]):
         log.warning(f'{class_name} doesnt support slice_by_element_id/slice_by_node_id')
         raise RuntimeError(f'{class_name} doesnt support slice_by_element_id/slice_by_node_id')

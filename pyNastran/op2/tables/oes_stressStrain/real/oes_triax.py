@@ -21,6 +21,16 @@ class RealTriaxArray(OES_Object):
         self.itotal = 0
         self.element_node = None
 
+    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        ieid = np.where(np.isin(element, eids))[0]
+
+        obj.element_node = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
+        return obj
+
     @property
     def is_real(self) -> bool:
         return True

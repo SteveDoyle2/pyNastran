@@ -85,6 +85,13 @@ __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'
 
 DEV = 'dev' in __version__
+IS_CI = (
+    'TRAVIS' in os.environ or
+    'TRAVIS_PYTHON_VERSION' in os.environ or
+    'APPVEYOR' in os.environ or
+    #'READTHEDOCS' in os.environ or
+    'GITHUB_ACTOR' in os.environ
+)
 if DEV:
     __docs__ = 'https://pynastran-git.readthedocs.io/en/latest/quick_start/index.html'
 else:

@@ -119,9 +119,9 @@ class RealPlateArray(OES_Object):
         obj = self if inplace else copy.deepcopy(self)
         element_node2 = element_node[ieid, :]
         data2 = self.data.reshape(ntime, neid, 2, nresult)
-        self.element_node = element_node2.reshape(neid2*2, nnode)
-        self.data = data2[:, ieid, :, :].reshape(ntime, neid2*2, nresult)
-        self.nelements = len(ieid)
+        obj.element_node = element_node2.reshape(neid2*2, nnode)
+        obj.data = data2[:, ieid, :, :].reshape(ntime, neid2*2, nresult)
+        obj.nelements = len(ieid)
         return obj
 
     def get_neid(self) -> int:

@@ -100,11 +100,11 @@ class RealSolidArray(OES_Object):
         neid = self.get_neid()
         ntime, _, nresult = self.data.shape
 
-        element_node = self.element_node.reshape(neid, nlayer)
-        element = element_node[:, 0]
+        element_node = self.element_node.reshape(neid, nnode, 2)
+        element = element_node[:, :, 0]
         eids, ieid, neid2 = slice_eids_by_index(element, eids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
-        element_node2 = element_node[ieid, :]
+        element_node2 = element_node[ieid, :, :]
         data = self.data.reshape(ntime, neid, 2, nresult)
         
         obj.element_cid = obj.element_cid[ieid, :]
