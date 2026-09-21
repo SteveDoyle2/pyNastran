@@ -78,66 +78,67 @@ class RealEnergyArray(BaseElement):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
-        ntime, nelement, nresult = self.data.shape
-
-        #-------------------------
-
-        # throw most of the results in the trash
-        neids_max = 0
-        obj = self if inplace else copy.deepcopy(self)
-        is2d = (self.element.ndim == 2)
-        for itime in range(ntime):
-            if is2d:
-                element = self.element[itime, :]
-            else:  # pragma: no cover
-                raise NotImplementedError('not 2d element')
-
-            #print('oee element=', element.tolist())
-            #print('oee eids=', eids.tolist())
-            neid2 = 0  # total only
-            if len(eids):
-                # verify eids exist
-                # filter out duplicate 0s and sort
-                uelement = np.unique(element)
-                try:
-                    eids, _, _ = slice_eids_by_index(
-                        uelement, eids, assume_exists)
-                    #print('new_eids', eids)
-                except AssertionError:
-                    pass
-            itotal = np.where(element == 100000000)[0]
-
-            ieid = np.where(np.isin(element, eids))[0]
-            assert itotal not in ieid, itotal
-            neid2 = len(ieid)
-            itotal2 = neid2 #+ 1
-            neid_max = max(neids_max, neid2)
-            #print('itotal', itotal, itotal2)
-
-            ieid2 = np.arange(neid2)
-            assert len(ieid) == len(ieid2)
-            #iend = np.arange(neid2, nelement)
-            #print(element)
-            assert 100000000 not in element[ieid], element[ieid]
-
-            obj.element[itime, itotal2:] = 0
-            obj.element[itime, itotal2] = 100000000
-            obj.element[itime, ieid2] = self.element[itime, ieid]
-            #print('obj.element', obj.element[itime, :])
-
-            obj.data[itime, ieid2, :] = self.data[itime, ieid, :]
-            obj.data[itime, itotal2:, :] = np.nan
-            obj.data[itime, itotal2, :] = self.data[itime, itotal, :]
-            #print('-----------')
-
-        #downslice - breaks the shape?
-        #obj.element = obj.element[:, neid_max+1]
-        #obj.data = obj.data[:, neid_max+1, :]
-        obj.nelements = neid2 + 1
-        #print('obj.element', obj.element)
-        #print('===============')
-        return obj
+   #def slice_by_element_id(self, eids: np.ndarray,
+   #                        assume_exists: bool=False, inplace: bool=False):
+   #    ntime, nelement, nresult = self.data.shape
+   #
+   #    #-------------------------
+   #
+   #    # throw most of the results in the trash
+   #    neids_max = 0
+   #    obj = self if inplace else copy.deepcopy(self)
+   #    is2d = (self.element.ndim == 2)
+   #    for itime in range(ntime):
+   #        if is2d:
+   #            element = self.element[itime, :]
+   #        else:  # pragma: no cover
+   #            raise NotImplementedError('not 2d element')
+   #
+   #        #print('oee element=', element.tolist())
+   #        #print('oee eids=', eids.tolist())
+   #        neid2 = 0  # total only
+   #        if len(eids):
+   #            # verify eids exist
+   #            # filter out duplicate 0s and sort
+   #            uelement = np.unique(element)
+   #            try:
+   #                eids, _, _ = slice_eids_by_index(
+   #                    uelement, eids, assume_exists)
+   #                #print('new_eids', eids)
+   #            except AssertionError:
+   #                pass
+   #        itotal = np.where(element == 100000000)[0]
+   #
+   #        ieid = np.where(np.isin(element, eids))[0]
+   #        assert itotal not in ieid, itotal
+   #        neid2 = len(ieid)
+   #        itotal2 = neid2 #+ 1
+   #        neid_max = max(neids_max, neid2)
+   #        #print('itotal', itotal, itotal2)
+   #
+   #        ieid2 = np.arange(neid2)
+   #        assert len(ieid) == len(ieid2)
+   #        #iend = np.arange(neid2, nelement)
+   #        #print(element)
+   #        assert 100000000 not in element[ieid], element[ieid]
+   #
+   #        obj.element[itime, itotal2:] = 0
+   #        obj.element[itime, itotal2] = 100000000
+   #        obj.element[itime, ieid2] = self.element[itime, ieid]
+   #        #print('obj.element', obj.element[itime, :])
+   #
+   #        obj.data[itime, ieid2, :] = self.data[itime, ieid, :]
+   #        obj.data[itime, itotal2:, :] = np.nan
+   #        obj.data[itime, itotal2, :] = self.data[itime, itotal, :]
+   #        #print('-----------')
+   #
+   #    #downslice - breaks the shape?
+   #    #obj.element = obj.element[:, neid_max+1]
+   #    #obj.data = obj.data[:, neid_max+1, :]
+   #    obj.nelements = neid2 + 1
+   #    #print('obj.element', obj.element)
+   #    #print('===============')
+   #    return obj
 
     @property
     def is_real(self) -> bool:

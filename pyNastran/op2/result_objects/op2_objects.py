@@ -147,6 +147,35 @@ SORT1_TABLES.extend([
 SORT2_TABLES = list(SORT2_TABLE_NAME_MAP.keys())
 
 
+def h5_deepcopy(self, memo):
+    """deepcopy an op2 object without using h5py"""
+    # Create result without calling __init__ to avoid side effects
+    cls = self.__class__
+    result = cls.__new__(cls)
+    
+    # Add new object to memo to prevent infinite loops
+    memo[id(self)] = result
+    1
+    # Copy attributes
+    for key, value in self.__dict__.items():
+        #elif key in {'data', 'element', 'element_node', 'node_gridtype'}:
+        #    setattr(result, key, None)
+        #    continue
+
+        class_name = type(value).__name__
+        if class_name == 'Dataset':
+            # un-h5py the array
+            value = value[:]
+        elif class_name == 'File':
+            # skip h5.File
+            continue
+
+        # Safely deepcopy all other attributes
+        #print(key, value, type(value), class_name)
+        setattr(result, key, copy.deepcopy(value, memo))
+    return result
+
+
 class BaseScalarObject(Op2Codes):
     """
     The base scalar class is used by:
@@ -176,6 +205,9 @@ class BaseScalarObject(Op2Codes):
         #self.ntimes = 0
         #self.ntotal = 0
         #assert isinstance(self.name, (str, bytes)), 'name=%s type=%s' % (self.name, type(self.name))
+
+    def __deepcopy__(self, memo: dict[str, Any]):
+        return h5_deepcopy(self, memo)
 
     def object_attributes(self, mode: str='public', keys_to_skip=None,
                           filter_properties: bool=False) -> list[str]:
@@ -787,6 +819,9 @@ class BaseElement(ScalarObject):
         #self.element_type = None
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
 
+    def __deepcopy__(self, memo: dict[str, Any]):
+        return h5_deepcopy(self, memo)
+
     def _eq_header(self, table):
         ScalarObject._eq_header(self, table)
         is_nan = (self.nonlinear_factor is not None and
@@ -800,6 +835,7 @@ class BaseElement(ScalarObject):
         log = SimpleLogger()
         _check_element(self, table, log)
         _check_element_node(self, table, log)
+
 
 def get_times_dtype(nonlinear_factor: int | float, size: int,
                     analysis_code_fmt=None) -> tuple[str, str, str]:

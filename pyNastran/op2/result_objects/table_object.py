@@ -346,9 +346,9 @@ class TableArray(ScalarObject):  # displacement style table
         nodes = self.node_gridtype[:, 0]
         nids, inid, nnid2 = slice_nids_by_index(nodes, nids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
-        self.node_gridtype = obj.node_gridtype[inid, :]
-        self.data = obj.data[:, inid, :]
-        self.nnodes = len(inid)
+        obj.node_gridtype = self.node_gridtype[inid, :]
+        obj.data = self.data[:, inid, :]
+        obj.nnodes = len(inid)
         return obj
 
     @property
