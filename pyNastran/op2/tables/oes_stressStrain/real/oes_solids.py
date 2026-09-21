@@ -98,22 +98,33 @@ class RealSolidArray(OES_Object):
 
     def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
         nnode = self.nnodes_per_element
-        element = self.element_cid[:, 0]
-        neid = len(element)
+        uelement = self.element_cid[:, 0]
+        element = self.element_node[:, 0]
+        #print(f'uelement = {uelement}')
+        neid = len(uelement)
         ntime, _, nresult = self.data.shape
 
-        element_node = self.element_node.reshape(neid, nnode, 2)
+        #print(neid, nnode, self.element_name)
+        #print(self.element_node.tolist())
+        #element_node = self.element_node.reshape(neid, nnode, 2)
         #element_b = element_node[:, 0, 0]
         #assert np.array_equal(element, element_b), (element, element_b)
-        eids, ieid, neid2 = slice_eids_by_index(element, eids, assume_exists)
+        eids, ieid, neid2 = slice_eids_by_index(uelement, eids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
-        data = self.data.reshape(ntime, neid, nnode, nresult)
-        element_node2 = element_node[ieid, :, :]
-        data2 = data[:, ieid, :, :]
+        if 0:  # pragma: no cover
+            data = self.data.reshape(ntime, neid, nnode, nresult)
+            element_node2 = element_node[ieid, :, :]
+            data2 = data[:, ieid, :, :]
+            neid_nnode_new = neid2 * nnode
+            obj.element_node = element_node2.reshape(neid_nnode_new, 2)
+            obj.data = data2.reshape(ntime, neid_nnode_new, nresult)
+        else:
+            ieid_node = np.where(np.isin(element, eids))[0]
+            #neid_nnode_new = len(ieid_node)
+            obj.element_node = self.element_node[ieid_node, :]
+            obj.data = self.data[:, ieid_node, :]
 
         obj.element_cid = obj.element_cid[ieid, :]
-        obj.element_node = element_node2.reshape(neid2*nnode, 2)
-        obj.data = data2.reshape(ntime, neid2*nnode, nresult)
         obj.nelements = len(ieid)
         return obj
 

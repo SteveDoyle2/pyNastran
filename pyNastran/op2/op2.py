@@ -1800,7 +1800,11 @@ def _check_result_slice(result, log: SimpleLogger,
         'element', 'element_node', 'element_layer',
         'node_gridtype', 'node_element',
     ]
-    skip_words = ['eigenvalues', 'mass']
+    skip_classes = [
+        'FlutterResponse', 'CampbellData',
+        'GridPointWeight']
+    skip_words = ['eigenvalues', #'mass', 'cddata_list',
+    ]
     if hasattr(result, 'slice_by_element_id'):
         nelements = result.nelements
         eids = _get_eids(result)
@@ -1814,6 +1818,8 @@ def _check_result_slice(result, log: SimpleLogger,
         obj = result.slice_by_node_id(ids)
         assert len(result.node_gridtype) == len(ids), result
     elif any([hasattr(result, word) for word in skip_words]):
+        return
+    elif class_name in skip_classes:
         return
     elif any([hasattr(result, word) for word in words]):
         log.warning(f'{class_name} doesnt support slice_by_element_id/slice_by_node_id')

@@ -3106,7 +3106,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         #assert len(self.element) == 8, self.element
         #assert self.nelements == 8, self.nelements
 
-        # TODO: why is this required?
+        # TODO: shouldn't need unique
         uelement = np.unique(self.element)
         #assert len(self.element) == len(uelement), self.element
         eids, ieid_, neid2 = slice_eids_by_index(uelement, eids, assume_exists)
@@ -4595,7 +4595,11 @@ class RealConeAxForceArray(RealForceObject):
         self.ielement = 0
 
     def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
-        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        #print('element', self.element)
+        # TODO: shouldn't need unique
+        uelement = np.unique(self.element)
+        eids, ieid_, neid2 = slice_eids_by_index(uelement, eids, assume_exists)
+        ieid = np.where(np.isin(self.element, eids))[0]
         obj = self if inplace else copy.deepcopy(self)
         obj.element = obj.element[ieid]
         obj.data = obj.data[:, ieid, :]
