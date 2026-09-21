@@ -1840,9 +1840,16 @@ def _get_eids(result) -> np.ndarray:
         if eids.ndim == 2:
             # strain energy
             eids0 = eids[0, :]
-            itotal = np.where(eids0 == 100000000)[0][0]
-            eids = eids0[:itotal] # drop the last id
-            assert 100000000 not in eids, (itotal, eids0, eids)
+            #print(f'eids(itime=0) = {eids0}')
+            if isinstance(eids0[0], integer_types):
+                itotal = np.where(eids0 == 100000000)[0][0]
+                eids = eids0[:itotal] # drop the last id
+                assert 100000000 not in eids, (itotal, eids0, eids)
+            else:
+                # string; buggy
+                itotal = np.where(eids0 == '')[0][0]
+                eids = eids0[:itotal] # drop the last id
+                assert '' not in eids, (itotal, eids0, eids)
             eids = np.unique(eids)
         # TODO: what result needs this?
         #       probably RealStrainEnergyArray...moving to if check

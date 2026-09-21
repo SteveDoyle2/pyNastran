@@ -3106,7 +3106,12 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         #assert len(self.element) == 8, self.element
         #assert self.nelements == 8, self.nelements
 
-        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        # TODO: why is this required?
+        uelement = np.unique(self.element)
+        #assert len(self.element) == len(uelement), self.element
+        eids, ieid_, neid2 = slice_eids_by_index(uelement, eids, assume_exists)
+
+        ieid = np.where(np.isin(self.element, eids))[0]
         #assert len(ieid) == len(self.element), f'testing ieid={len(ieid)}'
         obj = self if inplace else copy.deepcopy(self)
 

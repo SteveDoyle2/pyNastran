@@ -93,15 +93,19 @@ class RealEnergyArray(BaseElement):
             else:  # pragma: no cover
                 raise NotImplementedError('not 2d element')
 
-            #print('oee eids=', eids)
+            #print('oee element=', element.tolist())
+            #print('oee eids=', eids.tolist())
+            neid2 = 0  # total only
             if len(eids):
                 # verify eids exist
                 # filter out duplicate 0s and sort
                 uelement = np.unique(element)
-                eids, _, _ = slice_eids_by_index(
-                    uelement, eids, assume_exists)
-            else:  # total only
-                neid2 = 0
+                try:
+                    eids, _, _ = slice_eids_by_index(
+                        uelement, eids, assume_exists)
+                    #print('new_eids', eids)
+                except AssertionError:
+                    pass
             itotal = np.where(element == 100000000)[0]
 
             ieid = np.where(np.isin(element, eids))[0]
@@ -125,11 +129,14 @@ class RealEnergyArray(BaseElement):
             obj.data[itime, ieid2, :] = self.data[itime, ieid, :]
             obj.data[itime, itotal2:, :] = np.nan
             obj.data[itime, itotal2, :] = self.data[itime, itotal, :]
+            #print('-----------')
 
         #downslice - breaks the shape?
         #obj.element = obj.element[:, neid_max+1]
         #obj.data = obj.data[:, neid_max+1, :]
         obj.nelements = neid2 + 1
+        #print('obj.element', obj.element)
+        #print('===============')
         return obj
 
     @property
