@@ -1801,8 +1801,13 @@ def _check_result_slice(result, log: SimpleLogger,
         'node_gridtype', 'node_element',
     ]
     skip_classes = [
-        'FlutterResponse', 'CampbellData',
-        'GridPointWeight']
+        'CampbellData',
+        'FlutterResponse',
+        'GridPointWeight',
+        'RealSolidCompositeStressArray',
+        'RealSolidCompositeStrainArray',
+        'SeparationDistanceArray',
+    ]
     skip_words = ['eigenvalues', #'mass', 'cddata_list',
     ]
     if hasattr(result, 'slice_by_element_id'):
