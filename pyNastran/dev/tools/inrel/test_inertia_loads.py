@@ -3,7 +3,8 @@ import unittest
 
 import numpy as np
 from pyNastran.dev.tools.inrel.inertia_loads import (
-    inertia_loads, resultant, expected_resultant)
+    inertia_loads, resultant, expected_resultant,
+    _skew, _packed_inertia_dot, _inertia_tensor)
 
 
 def get_cloud(nnode: int = 7, seed: int = 12, self_inertia: bool = True):
@@ -339,6 +340,38 @@ class TestInertiaLoads(unittest.TestCase):
         assert np.allclose(total[0], expected[0]), (total[0], expected[0])
         assert np.allclose(total[1], expected[1]), (total[1], expected[1])
 
+    def test_steady_turn_resultant2(self):
+        """
+        a time history of distinct motion states, all terms active
+
+        The per-step state must actually vary: repeating one state ntime times
+        checks nothing the single-state test above doesn't already cover, and a
+        bug that drops a term would be equally invisible in all ten steps.
+        """
+        mass, cg, inertia = get_cloud(nnode=5000)
+        ref_xyz = np.array([2.0, -3.0, 1.0])
+
+        ntime = 10
+        rng = np.random.default_rng(31)
+        accel = rng.uniform(-10.0, 10.0, (ntime, 3))
+        alpha = rng.uniform(-1.0, 1.0, (ntime, 3))
+        omega = rng.uniform(-2.0, 2.0, (ntime, 3))
+        # pin one step to a pure steady turn: no angular acceleration at all
+        alpha[0, :] = 0.0
+
+        for itime in range(ntime):
+            force, moment = inertia_loads(
+                mass, cg, inertia, accel[itime, :], alpha[itime, :],
+                ref_xyz, omega=omega[itime, :])
+            total = resultant(force, moment, cg, ref_xyz)
+            expected = expected_resultant(
+                mass, cg, inertia, accel[itime, :], alpha[itime, :],
+                ref_xyz, omega=omega[itime, :])
+            assert np.allclose(total[0], expected[0]), (
+                itime, total[0], expected[0])
+            assert np.allclose(total[1], expected[1]), (
+                itime, total[1], expected[1])
+
     def test_omega_resultant_with_offset_grids(self):
         """all rate terms active and moments reported at offset grids"""
         mass, cg, inertia = get_cloud()
@@ -374,6 +407,76 @@ class TestInertiaLoads(unittest.TestCase):
             omega=omega)
         assert np.allclose(force1, force2)
         assert np.allclose(moment1, moment2)
+
+    def test_fast_path_matches_reference(self):
+        """
+        inertia_loads folds both rate terms into small constant matrices and
+        never builds the (nnode,3,3) tensor stack.  Check that against the
+        literal, slow statement of the same physics -- np.cross and the
+        explicit tensor from _inertia_tensor.
+        """
+        mass, cg, inertia = get_cloud(nnode=9, seed=5)
+        ref_xyz = np.array([0.3, -1.7, 2.2])
+        accel = np.array([1.1, -2.2, 3.3])
+        alpha = np.array([0.15, -0.4, 0.62])
+        omega = np.array([-0.9, 0.55, 1.3])
+
+        force, moment = inertia_loads(
+            mass, cg, inertia, accel, alpha, ref_xyz, omega=omega)
+
+        radius = cg - ref_xyz
+        accel_ref = (accel
+                     + np.cross(alpha, radius)
+                     + np.cross(omega, np.cross(omega, radius)))
+        force_ref = -mass[:, np.newaxis] * accel_ref
+
+        imat = _inertia_tensor(inertia)
+        moment_ref = -np.einsum('nij,j->ni', imat, alpha)
+        moment_ref -= np.cross(omega, np.einsum('nij,j->ni', imat, omega))
+
+        assert np.allclose(force, force_ref), force - force_ref
+        assert np.allclose(moment, moment_ref), moment - moment_ref
+
+    def test_skew_matches_cross(self):
+        """_skew(a) @ b == cross(a, b)"""
+        rng = np.random.default_rng(21)
+        for unused in range(5):
+            a = rng.uniform(-2.0, 2.0, 3)
+            b = rng.uniform(-2.0, 2.0, 3)
+            assert np.allclose(_skew(a) @ b, np.cross(a, b))
+
+    def test_packed_inertia_dot_matches_tensor(self):
+        """_packed_inertia_dot(v) @ packed == [I] @ v, signs included"""
+        mass, cg, inertia = get_cloud(nnode=6, seed=7)
+        del mass, cg
+        imat = _inertia_tensor(inertia)
+        rng = np.random.default_rng(22)
+        for unused in range(5):
+            vector = rng.uniform(-2.0, 2.0, 3)
+            fast = inertia @ _packed_inertia_dot(vector).T
+            slow = np.einsum('nij,j->ni', imat, vector)
+            assert np.allclose(fast, slow), (fast, slow)
+
+    def test_no_input_mutation(self):
+        """
+        the force is now accumulated in place; make sure it is a fresh array
+        and that no caller-owned input is modified
+        """
+        mass, cg, inertia = get_cloud()
+        accel = np.array([1.0, 2.0, 3.0])
+        alpha = np.array([0.1, 0.2, 0.3])
+        omega = np.array([0.4, 0.5, 0.6])
+        ref_xyz = np.array([1.0, 1.0, 1.0])
+        args = (mass, cg, inertia, accel, alpha, ref_xyz)
+        before = [a.copy() for a in args]
+
+        force, unused = inertia_loads(*args, omega=omega)
+        force *= 2.0  # must not alias anything
+
+        for name, now, was in zip(
+                ('mass', 'cg', 'inertia', 'accel', 'alpha', 'ref_xyz'),
+                args, before):
+            assert np.array_equal(now, was), f'{name} was mutated'
 
     def test_shape_errors(self):
         mass, cg, inertia = get_cloud(nnode=4)

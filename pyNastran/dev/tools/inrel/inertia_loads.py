@@ -190,23 +190,47 @@ def inertia_loads(mass: np.ndarray,
     massi = mass * wtmass
     inertiai = inertia * wtmass
 
-    # a_i = accel + alpha x r_i + omega x (omega x r_i)
     radius = cg - ref_xyz[np.newaxis, :]
-    accel_node = accel[np.newaxis, :] + np.cross(alpha[np.newaxis, :], radius)
+    # old
+    # a_i = accel + alpha x r_i + omega x (omega x r_i)
+    #radius = cg - ref_xyz[np.newaxis, :]
+    #accel_node = accel[np.newaxis, :] + np.cross(alpha[np.newaxis, :], radius)
     # centrifugal; zero when omega is zero, so no branch is needed
-    accel_node += np.cross(omega[np.newaxis, :],
-                           np.cross(omega[np.newaxis, :], radius))
-
+    #accel_node += np.cross(omega[np.newaxis, :],
+    #                       np.cross(omega[np.newaxis, :], radius))
+    #
     # d'Alembert force
-    force = -massi[:, np.newaxis] * accel_node
+    #force = -massi[:, np.newaxis] * accel_node
+
+    # a_i = accel + alpha x r_i + omega x (omega x r_i)
+    #     = accel + (skew(alpha) + skew(omega) skew(omega)) r_i
+    # Both rate terms are linear in r_i, so they fold into one 3x3 and the
+    # whole acceleration field is a single (nnode,3) @ (3,3) matmul.  The
+    # centrifugal block is zero when omega is zero, so no branch is needed.
+    skew_omega = _skew(omega)
+    amat = _skew(alpha) + skew_omega @ skew_omega
+
+    # d'Alembert force, built in place to avoid (nnode,3) temporaries
+    force = radius @ amat.T
+    force += accel[np.newaxis, :]
+    force *= -massi[:, np.newaxis]
 
     # M_i = -([I_i] alpha + omega x ([I_i] omega))
+    # [I_i] v is linear in the packed 6-vector, so this is a (nnode,6) @ (6,3)
+    # matmul and the (nnode,3,3) tensor stack never has to be built.
+    # The second term is the rate coupling; it vanishes when omega is along a
+    # principal axis of [I_i].
+    #
+    # old
     # tensor stack carries the negated off-diagonals
-    imat = _inertia_tensor(inertiai)
-    moment = -np.einsum('nij,j->ni', imat, alpha)
+    #imat = _inertia_tensor(inertiai)
     # rate coupling; vanishes when omega is along a principal axis of [I_i]
-    moment -= np.cross(omega[np.newaxis, :],
-                       np.einsum('nij,j->ni', imat, omega))
+    #moment = -np.einsum('nij,j->ni', imat, alpha)
+    #moment -= np.cross(omega[np.newaxis, :],
+    #                   np.einsum('nij,j->ni', imat, omega))
+    #
+    bmat = _packed_inertia_dot(alpha) + skew_omega @ _packed_inertia_dot(omega)
+    moment = inertiai @ -bmat.T
 
     if xyz is not None:
         xyz = np.asarray(xyz, dtype='float64')
@@ -250,7 +274,20 @@ def resultant(force: np.ndarray,
 
     force_total = force.sum(axis=0)
     radius = xyz - ref_xyz[np.newaxis, :]
-    moment_total = moment.sum(axis=0) + np.cross(radius, force).sum(axis=0)
+
+    # sum(r x F) componentwise as six dot products.  np.cross would build an
+    # (nnode,3) temporary only to reduce it away immediately.
+    #
+    # old
+    # moment_total = moment.sum(axis=0) + np.cross(radius, force).sum(axis=0)
+    #
+    rx, ry, rz = radius[:, 0], radius[:, 1], radius[:, 2]
+    fx, fy, fz = force[:, 0], force[:, 1], force[:, 2]
+    moment_total = moment.sum(axis=0) + np.array([
+        ry @ fz - rz @ fy,
+        rz @ fx - rx @ fz,
+        rx @ fy - ry @ fx,
+    ])
     return force_total, moment_total
 
 
@@ -315,11 +352,32 @@ def expected_resultant(mass: np.ndarray,
         + np.cross(omega, np.cross(omega, cg_radius)))
 
     # [I] about ref = sum( I_self + m ((r.r) I3 - r r^T) )
-    imat = _inertia_tensor(inertiai).sum(axis=0)
-    rdotr = np.einsum('ni,ni->n', radius, radius)
+    # The self term sums in the packed (6,) form first -- summing 6 columns is
+    # far cheaper than building and reducing an (nnode,3,3) stack -- and the
+    # parallel-axis term is a weighted Gram matrix, i.e. one (3,nnode)@(nnode,3)
+    #
+    # old
+    #imat = _inertia_tensor(inertiai).sum(axis=0)
+    #rdotr = np.einsum('ni,ni->n', radius, radius)
+    #
+    # matmul rather than a three-index einsum.
+    inertia_self = inertiai.sum(axis=0)
+    ixx, iyy, izz, ixy, ixz, iyz = inertia_self
+    imat = np.array([
+        [ixx, -ixy, -ixz],
+        [-ixy, iyy, -iyz],
+        [-ixz, -iyz, izz],
+    ], dtype='float64')
+
+    mass_radius = massi[:, np.newaxis] * radius
     eye = np.eye(3, dtype='float64')
-    parallel = np.einsum('n,n,ij->ij', massi, rdotr, eye)
-    parallel -= np.einsum('n,ni,nj->ij', massi, radius, radius)
+
+    # old
+    #parallel = np.einsum('n,n,ij->ij', massi, rdotr, eye)
+    #parallel -= np.einsum('n,ni,nj->ij', massi, radius, radius)
+
+    parallel = eye * (mass_radius * radius).sum()
+    parallel -= mass_radius.T @ radius
     imat = imat + parallel
 
     moment_total = (-mass_total * np.cross(cg_radius, accel)
@@ -328,12 +386,59 @@ def expected_resultant(mass: np.ndarray,
     return force_total, moment_total
 
 
+def _skew(vector: np.ndarray) -> np.ndarray:
+    """
+    The 3x3 skew-symmetric matrix with ``_skew(a) @ b == cross(a, b)``.
+
+    Lets a cross product against many vectors be written as one matmul, which
+    is several times faster than ``np.cross`` on large arrays because it hands
+    the work to BLAS instead of building intermediates.
+
+    """
+    x, y, z = vector
+    return np.array([
+        [0.0, -z, y],
+        [z, 0.0, -x],
+        [-y, x, 0.0],
+    ], dtype='float64')
+
+
+def _packed_inertia_dot(vector: np.ndarray) -> np.ndarray:
+    """
+    The 3x6 matrix ``B`` with ``B @ inertia_packed == [I] @ vector``.
+
+    ``[I] v`` is linear in both ``[I]`` and ``v``, so contracting the packed
+    6-term inertia with a fixed vector can be written as a small constant
+    matrix.  That turns a per-node ``(nnode,3,3)`` tensor build plus an einsum
+    into one ``(nnode,6) @ (6,3)`` matmul.
+
+    The packed order is ``[Ixx, Iyy, Izz, Ixy, Ixz, Iyz]`` with the products of
+    inertia stored as positive integrals, so the columns for ``Ixy``, ``Ixz``,
+    and ``Iyz`` carry the minus signs of the physical tensor.
+
+    """
+    x, y, z = vector
+    #                Ixx  Iyy  Izz  Ixy  Ixz  Iyz
+    return np.array([
+        [x, 0.0, 0.0, -y, -z, 0.0],
+        [0.0, y, 0.0, -x, 0.0, -z],
+        [0.0, 0.0, z, 0.0, -x, -y],
+    ], dtype='float64')
+
+
 def _inertia_tensor(inertia: np.ndarray) -> np.ndarray:
     """
     Builds an (nnode,3,3) tensor stack from the packed (nnode,6) array.
 
     The packed form stores products of inertia as positive integrals, so the
     off-diagonals are negated here.  See the module docstring.
+
+    .. note::
+        The hot paths in ``inertia_loads`` and ``expected_resultant`` avoid
+        this: materializing ``(nnode,3,3)`` costs 9 floats per node where 6
+        suffice, and it is the single most expensive step at large ``nnode``.
+        Kept because it is the clearest statement of the sign convention, and
+        the tests check the fast paths against it.
 
     """
     ixx = inertia[:, 0]
