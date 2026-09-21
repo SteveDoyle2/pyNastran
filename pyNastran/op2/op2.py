@@ -1807,6 +1807,11 @@ def _check_result_slice(result, log: SimpleLogger,
         'RealSolidCompositeStressArray',
         'RealSolidCompositeStrainArray',
         'SeparationDistanceArray',
+        'TrimDerivatives', 'TrimVariables',
+        'HingeMomentDerivatives',
+        'ControlSurfacePositionHingeMoment',
+        'AeroPressure', 'AeroForce',
+        
     ]
     skip_words = ['eigenvalues', #'mass', 'cddata_list',
     ]
@@ -1831,7 +1836,7 @@ def _check_result_slice(result, log: SimpleLogger,
         failed_classes_set.add(class_name)
         return
     else:  # pragma: no cover
-        raise NotImplementedError(result.get_stats())
+        raise NotImplementedError((class_name, result.get_stats()))
     obj.get_stats()
 
 
