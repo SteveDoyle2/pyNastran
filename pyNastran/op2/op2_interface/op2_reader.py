@@ -40,6 +40,7 @@ Defines various tables that don't fit in other sections:
 from __future__ import annotations
 import os
 import sys
+import warnings
 from copy import deepcopy
 from itertools import count
 from functools import partial
@@ -5128,7 +5129,8 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
     assert data == b'OAERCSHM', data
 
     itable = -3
-    if op2_reader.read_mode == 1:
+    # log.info('op2_reader.read_mode = %s' % op2_reader.read_mode)
+    if op2_reader.read_mode == 1 and 0:
         _skip_table(op2_reader, itable)
         return
 
@@ -5207,11 +5209,22 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
 
         op2_reader.read_3_markers([itable-1, 1, 0])
         next_marker = op2_reader.get_marker1(rewind=True)
-        if next_marker == itable-2:  # -5
-            op2_reader.read_3_markers([itable-2, 1, 0], macro_rewind=False)
-            next_marker2 = op2_reader.get_marker1(rewind=False)
-            #log.debug(f'{op2.table_name}; exit on marker={next_marker2}')
-            return
+        # log.info(f'next_marker={next_marker} itable-2={itable-2}')
+        if next_marker < 0:
+            # A negative marker here means this subcase has no table-4 data
+            # record - the next subcase header follows immediately.  It does
+            # NOT mean the table is over, so don't consume the marker and
+            # don't return; the top of the loop reads [itable, 1, 0].
+            # Returning here used to leave the file positioned mid-record,
+            # which surfaced later as a struct.error inside _read_table_name.
+            warnings.warn(
+                f'{op2.table_name!r}: no data record for subcase {subcase_id} '
+                f'(expected marker {itable-1}, found {next_marker}); '
+                'skipping the subcase')
+            log.warning(f'{op2.table_name!r}: empty data record for '
+                        f'subcase {subcase_id}; skipping')
+            itable -= 2
+            continue
 
         if is_saved:
             #op2_reader.show(80, types='ifs')
