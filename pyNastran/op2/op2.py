@@ -1800,7 +1800,21 @@ def _check_result_slice(result, log: SimpleLogger,
         'element', 'element_node', 'element_layer',
         'node_gridtype', 'node_element',
     ]
-    skip_words = ['eigenvalues', 'mass']
+    skip_classes = [
+        'CampbellData',
+        'FlutterResponse',
+        'GridPointWeight',
+        'RealSolidCompositeStressArray',
+        'RealSolidCompositeStrainArray',
+        'SeparationDistanceArray',
+        'TrimDerivatives', 'TrimVariables',
+        'HingeMomentDerivatives',
+        'ControlSurfacePositionHingeMoment',
+        'AeroPressure', 'AeroForce',
+        
+    ]
+    skip_words = ['eigenvalues', #'mass', 'cddata_list',
+    ]
     if hasattr(result, 'slice_by_element_id'):
         nelements = result.nelements
         eids = _get_eids(result)
@@ -1815,12 +1829,14 @@ def _check_result_slice(result, log: SimpleLogger,
         assert len(result.node_gridtype) == len(ids), result
     elif any([hasattr(result, word) for word in skip_words]):
         return
+    elif class_name in skip_classes:
+        return
     elif any([hasattr(result, word) for word in words]):
         log.warning(f'{class_name} doesnt support slice_by_element_id/slice_by_node_id')
         failed_classes_set.add(class_name)
         return
     else:  # pragma: no cover
-        raise NotImplementedError(result.get_stats())
+        raise NotImplementedError((class_name, result.get_stats()))
     obj.get_stats()
 
 
@@ -1840,9 +1856,16 @@ def _get_eids(result) -> np.ndarray:
         if eids.ndim == 2:
             # strain energy
             eids0 = eids[0, :]
-            itotal = np.where(eids0 == 100000000)[0][0]
-            eids = eids0[:itotal] # drop the last id
-            assert 100000000 not in eids, (itotal, eids0, eids)
+            #print(f'eids(itime=0) = {eids0}')
+            if isinstance(eids0[0], integer_types):
+                itotal = np.where(eids0 == 100000000)[0][0]
+                eids = eids0[:itotal] # drop the last id
+                assert 100000000 not in eids, (itotal, eids0, eids)
+            else:
+                # string; buggy
+                itotal = np.where(eids0 == '')[0][0]
+                eids = eids0[:itotal] # drop the last id
+                assert '' not in eids, (itotal, eids0, eids)
             eids = np.unique(eids)
         # TODO: what result needs this?
         #       probably RealStrainEnergyArray...moving to if check

@@ -1,3 +1,4 @@
+import copy
 from struct import pack
 import inspect
 

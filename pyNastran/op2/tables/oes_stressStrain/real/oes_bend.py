@@ -1,3 +1,4 @@
+import copy
 from itertools import cycle
 from typing import Optional
 
@@ -7,7 +8,7 @@ from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 from pyNastran.op2.result_objects.op2_objects import (
     get_times_dtype, combination_inplace)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object)
+    StressObject, StrainObject, OES_Object, slice_eids_by_index)
 from pyNastran.f06.f06_formatting import write_floats_13e, write_floats_8p1e
 
 
@@ -31,6 +32,19 @@ class RealBendArray(OES_Object):
             #pass
         #else:
             #raise NotImplementedError('SORT2')
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+        uelement = np.unique(element)
+        eids, ieid, neid2 = slice_eids_by_index(uelement, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        ieid_nid = np.where(np.isin(element, eids))[0]
+
+        obj.element_node = obj.element_node[ieid_nid, :]
+        obj.data = obj.data[:, ieid_nid, :]
+        obj.nelements = len(ieid_nid)
+        return obj
 
     @property
     def is_real(self) -> bool:

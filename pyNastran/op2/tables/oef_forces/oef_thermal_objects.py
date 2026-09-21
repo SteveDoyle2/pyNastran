@@ -358,12 +358,19 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         #[free_conv, free_conv_k]
         self.data = np.zeros((self.ntimes, self.ntotal, 2), dtype=fdtype)
 
-    def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
-        print(self.element_node)
-        asdf
-        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        #print(self.element_node)
+        #[[1 0]
+        # [2 0]
+        # [3 0]
+        # [4 0]
+        # [5 0]
+        # [6 0]]
+        element = self.element_node[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(element, eids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
-        obj.element = obj.element[ieid]
+        obj.element_node = obj.element_node[ieid, :]
         obj.data = obj.data[:, ieid, :]
         obj.nelements = len(ieid)
         return obj
