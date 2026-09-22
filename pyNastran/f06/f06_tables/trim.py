@@ -8,6 +8,7 @@ TrimVariable = tuple[int, str, str, float, str]
 ControllerState = dict[str, float]
 
 aero_symmetry_map = {
+    -1: 'ANTISYMMETRIC',
     0: 'ASYMMETRIC',
     1: 'SYMMETRIC',
 }

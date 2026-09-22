@@ -4420,6 +4420,32 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
         _skip_table(op2_reader, itable)
         return
 
+    # Word Name Type Description
+    # 1  ACODE(C)    I Device code + 10* Approach Code = 12
+    # 2  TCODE(C)    I Table code = 103
+    # 3  DATCOD      I Data code = 0
+    # 4  SUBCASE     I Subcase identification number
+    # 5  UNDEF None
+    # 6  MACHNUM     RS Mach number
+    # 7  Q           RS Dynamic pressure
+    # 8 CONFIG(2) CHAR4 Aerodynamic configuration name
+    # 10 NUMWDE I Number of words per entry in DATA, set to 8
+    # 11 SYMXY I Aerodynamic configuration XY symmetry - ***nastran lies about this***
+    #   -1 = SYMMETRIC
+    #    0 = ASYMMETRIC
+    #    1 = ANTISYMMETRIC
+    # 12 SYMXZ I Aerodynamic configuration XZ symmetry - ***missing***
+    #   -1 = ANTISYMMETRIC
+    #    0 = ASYMMETRIC
+    #    1 = SYMMETRIC
+    # 13 CHORD          RS Reference chord length
+    # 14 SPAN           RS Reference span length
+    # 15 AREA           RS Reference area
+    # 16 UNDEF(35)         None
+    # 51 TITLE(32)   CHAR4 Title
+    # 83 SUBTITL(32) CHAR4 Subtitle
+    # 115 LABEL(32)  CHAR4 Label
+
     #6: f
     #7: f
     #                              Ma q aero ? ? ? c.b.Sref ?            subcase title subtitle
@@ -4454,21 +4480,22 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
 
         if is_saved:
             data = op2_reader._read_record(debug=False)  # table 3
-            #ni = -128*3
+            # ni = -128*3
+            # print(op2.show_data(data[9*size:ni-34*size]))
             #print(op2.show_data(data[:12*4]))
             #print(op2.show_data(data[15*4:ni]))
             out = structi.unpack(data)
 
-            #1  ACODE(C)    I Device code + 10*Approach Code
-            #2  TCODE(C)    I 2002
-            # 3 DATCOD I Data code = 0
-            # 4 SUBCASE I Subcase identification number
+            #1  ACODE(C)      I Device code + 10*Approach Code
+            #2  TCODE(C)      I 2002
+            # 3 DATCOD        I Data code = 0
+            # 4 SUBCASE       I Subcase identification number
             # 5 UNDEF None
-            # 6 MACHNUM RS Mach number
-            # 7 Q RS Dynamic pressure
+            # 6 MACHNUM      RS Mach number
+            # 7 Q            RS Dynamic pressure
             # 8 CONFIG(2) CHAR4 Aerodynamic configuration name
-            # 10 NUMWDE I Number of words per entry in DATA, set to 8
-            # 11 SYMXY I Aerodynamic configuration XY symmetry
+            # 10 NUMWDE       I Number of words per entry in DATA, set to 8...***this is 5***
+            # 11 SYMXY        I Aerodynamic configuration XY symmetry
             #     -1 = SYMMETRIC
             #      0 = ASYMMETRIC
             #      1 = ANTISYMMETRIC
@@ -4485,8 +4512,21 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
              cref, bref, sref, *outi,
              title, subtitle, subcase) = out
 
+            # assert acode == 12, acode
+            assert tcode == 103, tcode
+            assert numwide == 5, numwide
+
             op2.subtable_name = ''
             op2.parse_approach_code(data)
+            # log.info(
+            #     f'subcase={subcase_id} point_device={point_device} '
+            #     f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} '
+            #     f'symxy={symxy} symxz={symxz} cref={cref} bref={bref} sref={sref} '
+            #     f'out={outi}')
+
+            # nastran lies about what the values are
+            symxy = 0
+            symxz = 0
 
             assert isinstance(cref, float), cref
             assert isinstance(bref, float), bref
@@ -4695,7 +4735,9 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
             op2._results._found_result(result_name)
             log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
                       f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
-            assert zero == 0, zero
+            if zero != 0:
+                log.error(f'Expected zero; got {zero}')
+            # assert zero == 0, zero
             if max(outi) != 0 or min(outi) != 0:
                 log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 
@@ -4834,7 +4876,10 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
 
             log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
                       f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
-            assert zero == 0, zero
+
+            if zero != 0:
+                log.error(f'Expected zero; got {zero}')
+            # assert zero == 0, zero
             if max(outi) != 0 or min(outi) != 0:
                 log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 

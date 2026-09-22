@@ -1461,7 +1461,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             nid = cast(int, nid)
             if nid_to_pid_map is not None:
                 plot_node = False
-                pids = nid_to_pid_map[nid]
+                try:
+                    pids = nid_to_pid_map[nid]
+                except KeyError:
+                    pids = []
                 for pid in pids:
                     if pid == 0:
                         # CONROD
@@ -4002,12 +4005,24 @@ def load_nastran_results_aero(results_filename: PathLike,
     for key in trim_results.aero_pressure:
         if key not in subcase_keys:
             subcase_keys.append(key)
+    for key in trim_results.aero_force:
+        if key not in subcase_keys:
+            subcase_keys.append(key)
 
-    key_to_subcase_word = {}
+    subcase_id_to_subcase_word = {}
+    mydicts = [
+        results_model.displacements,
+        trim_results.aero_pressure,
+        trim_results.aero_force,
+    ]
     for key in subcase_keys:
-        if key in results_model.displacements:
+        for mydict in mydicts:
+            if key not in mydict:
+                continue
             subcase_id = key[0]
-            case = results_model.displacements[key]
+            if subcase_id in subcase_id_to_subcase_word:
+                continue
+            case = mydict[key]
             subtitle = case.subtitle
             label = case.label
             subcase_word = f'Subcase {subcase_id}'
@@ -4015,7 +4030,7 @@ def load_nastran_results_aero(results_filename: PathLike,
                 subcase_word += f'; subtitle={subtitle}'
             if subtitle:
                 subcase_word += f'; label={label}'
-            key_to_subcase_word[key] = subcase_word
+            subcase_id_to_subcase_word[subcase_id] = subcase_word
 
     results_filename = str(results_filename).strip(r'.\\')
     results_form = []
@@ -4028,13 +4043,19 @@ def load_nastran_results_aero(results_filename: PathLike,
 
         subcase_form = []
         subcase_id = key[0]
-        subcase_word = key_to_subcase_word[key]
-        icase = _aero_deflection(
-            results_model, results_model.log,
-            aero_nids,
-            aero_eids,
-            xyz_cid0, dim_max,
-            cases, subcase_form, icase, key)
+        try:
+            subcase_word = subcase_id_to_subcase_word[subcase_id]
+        except KeyError:
+            print(f'key={key}')
+            print(subcase_id_to_subcase_word)
+            raise
+        if key in results_model.displacements:
+            icase = _aero_deflection(
+                results_model, results_model.log,
+                aero_nids,
+                aero_eids,
+                xyz_cid0, dim_max,
+                cases, subcase_form, icase, key)
 
         if key in trim_results.aero_pressure:
             # print(f'key = {key}')
