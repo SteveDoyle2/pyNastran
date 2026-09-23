@@ -3,6 +3,7 @@ defines readers for BDF objects in the OP2 GEOM1/GEOM1S table
 """
 #pylint: disable=C0301,C0103,W0612,R0914,C0326
 from __future__ import annotations
+import itertools
 from struct import Struct
 from collections import defaultdict
 from typing import Callable, TYPE_CHECKING
@@ -23,6 +24,12 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 from .utils import get_minus1_start_end
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
+
+_VALID_EXTRN_COMPS = frozenset(
+    int(''.join(combo))
+    for r in range(1, 7)
+    for combo in itertools.combinations('123456', r)
+) | {0}
 
 
 class GEOM1:
@@ -956,7 +963,9 @@ class GEOM1:
             #print(nids)
             #print(comps)
             for c in comps:
-                assert c in [1, 2, 3, 4, 5, 6, 123, 123456], f'c={c}; nids={nids} comps={comps}'
+                if c not in _VALID_EXTRN_COMPS:
+                    op2.log.warning(
+                        f'EXTRN: unexpected component c={c}; nids={nids} comps={comps}')
             op2.add_aset(nids, comps)
             #self.add_extrn(nids, comps)
             assert len(nids) == len(comps)
