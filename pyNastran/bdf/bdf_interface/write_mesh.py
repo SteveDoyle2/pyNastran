@@ -29,6 +29,10 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, DESVAR
     TextFile = StringIO | TextIO
 
+class Dummy:
+    def __init__(self, model: BDF):
+        self.model = model
+
 
 class WriteMesh(BDFAttributes):
     """
@@ -43,6 +47,7 @@ class WriteMesh(BDFAttributes):
     def __init__(self):
         """creates methods for writing cards"""
         BDFAttributes.__init__(self)
+        self.dummy = Dummy(self)
         self._auto_reject = True
         self.cards_to_read = set()
 

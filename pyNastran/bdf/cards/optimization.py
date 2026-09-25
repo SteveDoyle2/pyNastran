@@ -2029,6 +2029,7 @@ class DRESP1(OptConstraint):
         >>> label = 'resp2'
         >>> response_type = 'CSTRESS'
         >>> property_type = 'ELEM'
+        >>> eid = 10
         >>> pid = 3
         >>> layer = 4
         >>> atta = 3 # ???
@@ -2042,6 +2043,7 @@ class DRESP1(OptConstraint):
         >>> dresp_id = 105
         >>> label = 'resp3'
         >>> response_type = 'DISP'
+        >>> nid = 10
         >>> #atta = ???
         >>> #region = ???
         >>> #attb = ???

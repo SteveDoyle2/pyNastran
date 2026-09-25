@@ -24,6 +24,8 @@ from pyNastran.gui.utils.qt.pydialog import PyDialog
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.utils.qt.version import Background
+from pyNastran.gui.menus.edit_geometry_properties.group_tree import GroupTreeView
+from pyNastran.gui.menus.edit_geometry_properties.group_names import NON_ACTOR_KEYS
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import EditGeometryPropertiesObject
 
@@ -187,15 +189,17 @@ class EditGeometryProperties(PyDialog):
     show_representation_toggles = False
     force = True
     def __init__(self, data, gui_obj: EditGeometryPropertiesObject,
-                 is_gui: bool=True, win_parent=None):
+                 is_gui: bool=True, win_parent=None, group_func=None):
         """
         +------------------+
         | Edit Actor Props |
         +------------------+------+
-        |  Name1                  |
-        |  Name2                  |
-        |  Name3                  |
-        |  Name4                  |
+        |  v Coords (5)           |
+        |      Global XYZ         |
+        |      Coord 1            |
+        |  v Bar Axes (4)         |
+        |      BAR_y              |
+        |  main                   |
         |                         |
         |  Active_Name    main    |
         |  Color          box     |
@@ -207,6 +211,13 @@ class EditGeometryProperties(PyDialog):
         |                         |
         |    Apply   OK   Cancel  |
         +-------------------------+
+
+        Parameters
+        ----------
+        group_func : callable(name, obj) -> str | None; default=None
+            overrides how names are bucketed into groups;
+            see ``group_names.group_geometry_names``
+
         """
         PyDialog.__init__(self, data, win_parent)
         self.set_font_size(data['font_size'])
@@ -227,7 +238,7 @@ class EditGeometryProperties(PyDialog):
 
         self.keys = data.keys()
         keys = self.keys
-        items = list(keys)
+        items = [key for key in keys if key not in NON_ACTOR_KEYS]
 
         #nrows = len(keys)
         active_key = 'main'
@@ -235,11 +246,15 @@ class EditGeometryProperties(PyDialog):
             active_key = items[0]
         self.active_key = active_key
 
-        header_labels = ['Groups']
-        table_model = Model(items, header_labels, self)
-        view = SingleChoiceQTableView(self) #Call your custom QTableView here
-        view.setModel(table_model)
+        # the set of actors the widgets currently edit; for a single-row
+        # selection this is just [active_key]
+        self.active_names = [active_key]
+        # True when a group header row is selected, which switches the widgets
+        # into "only write the fields you touch" mode
+        self.is_group_mode = False
 
+        self.group_func = group_func
+        view = GroupTreeView(self, data, group_func=group_func)
         self.table = view
         #self.opacity_edit.valueChanged.connect(self.on_opacity)
         #mListWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(itemClicked(QListWidgetItem*)));
@@ -265,10 +280,6 @@ class EditGeometryProperties(PyDialog):
             show = actor_obj.is_visible
             representation = actor_obj.representation
         self.representation = representation
-
-        # table
-        header = self.table.horizontalHeader()
-        header.setStretchLastSection(True)
 
         self._default_is_apply = False
         self.name = QLabel("Name:")
@@ -303,6 +314,10 @@ class EditGeometryProperties(PyDialog):
         #self.check_point = QCheckBox()
 
         self.use_slider = True
+        # True while the widgets are being repopulated from a newly selected
+        # actor; suppresses the valueChanged handlers so that merely selecting
+        # a group doesn't write the sampled values onto every member
+        self._is_seeding = False
         self.is_opacity_edit_active = False
         self.is_opacity_edit_slider_active = False
         self.is_line_width_edit_active = False
@@ -406,6 +421,10 @@ class EditGeometryProperties(PyDialog):
         self.create_layout()
         self.set_connections()
 
+        # highlight the starting row now that every property widget exists
+        # (the tree's selectionChanged handler touches them)
+        self.table.select_name(self.active_key)
+
         if isinstance(actor_obj, CoordProperties):
             self.color_edit.hide()
             self.color.hide()
@@ -416,31 +435,29 @@ class EditGeometryProperties(PyDialog):
             self.line_width_edit.hide()
             self.line_width_slider_edit.hide()
 
-    def on_delete(self, irow):
-        """deletes an actor based on the row number"""
-        if irow == 0:  # main
+    def on_delete_names(self, names: list[str]) -> None:
+        """deletes one or more actors by name"""
+        names = [name for name in names
+                 if name != 'main' and name in self.out_data]
+        if not names:
             return
-        nkeys = len(self.keys)
-        if nkeys in [0, 1]:
-            return
-        name = self.keys[irow]
-        nrows = nkeys - 1
-        self.keys.pop(irow)
 
-        header_labels = ['Groups']
-        table_model = Model(self.keys, header_labels, self)
-        self.table.setModel(table_model)
+        for name in names:
+            del self.out_data[name]
+            if self.is_gui:
+                self.win_parent.delete_actor(name)
 
-        if len(self.keys) == 0:
+        self.table.set_data(self.out_data)
+
+        remaining = [name for name in self.out_data if name not in NON_ACTOR_KEYS]
+        if not remaining:
             self.update()
             self.set_as_null()
             return
-        if irow == nrows:
-            irow -= 1
-        new_name = self.keys[irow]
-        self.update_active_name(new_name)
-        if self.is_gui:
-            self.win_parent.delete_actor(name)
+
+        new_name = 'main' if 'main' in remaining else remaining[0]
+        self.table.select_name(new_name)
+        self.update_active_names([new_name], is_group=False)
 
     def set_as_null(self):
         """sets the null case"""
@@ -488,13 +505,66 @@ class EditGeometryProperties(PyDialog):
             the storage object for things like line_width, point_size, etc.
         """
         name = str(index.data())
-            #print('name = %r' % name)
-        #i = self.keys.index(self.active_key)
-        self.update_active_name(name)
+        if name not in self.out_data:
+            # a group header row; its label is decorated with a count
+            return
+        self.update_active_names([name], is_group=False)
 
-    def update_active_name(self, name: str) -> None:
+    def update_active_names(self, names: list[str],
+                            is_group: bool=False) -> None:
+        """
+        Points the property widgets at one or more actors.
+
+        Parameters
+        ----------
+        names : list[str]
+            the actors the widgets now edit
+        is_group : bool; default=False
+            True when a group header row was clicked; combined with a
+            multi-name selection this puts the dialog in "only apply the
+            fields you touch" mode so that selecting a group doesn't
+            flatten per-actor differences (e.g. distinct colors)
+
+        """
+        names = [name for name in names if name in self.out_data]
+        if not names:
+            return
+
+        self.active_names = names
+        # a multi-actor selection never writes back wholesale
+        self.is_group_mode = is_group or len(names) > 1
+
+        name = names[0]
+        if self.is_group_mode:
+            self.name_edit.setText(f'{len(names)} actors: ' + ', '.join(names[:3]) +
+                                   ('...' if len(names) > 3 else ''))
+        self.update_active_name(name, set_text=not self.is_group_mode)
+        self._show_mixed_state(names)
+
+    def _show_mixed_state(self, names: list[str]) -> None:
+        """
+        Greys out the label of any property whose value differs across the
+        selection, so it's obvious the displayed number is only a sample.
+        """
+        if len(names) < 2:
+            for label in (self.color, self.opacity, self.line_width,
+                          self.point_size, self.bar_scale):
+                _set_mixed(label, False)
+            return
+
+        objs = [self.out_data[name] for name in names]
+        for label, attr in ((self.color, 'color'),
+                            (self.opacity, 'opacity'),
+                            (self.line_width, 'line_width'),
+                            (self.point_size, 'point_size'),
+                            (self.bar_scale, 'bar_scale')):
+            values = {getattr(obj, attr, None) for obj in objs}
+            _set_mixed(label, len(values) > 1)
+
+    def update_active_name(self, name: str, set_text: bool=True) -> None:
         self.active_key = name
-        self.name_edit.setText(name)
+        if set_text:
+            self.name_edit.setText(name)
         obj = self.out_data[name]
         if isinstance(obj, CoordProperties):
             opacity = 1.0
@@ -514,9 +584,11 @@ class EditGeometryProperties(PyDialog):
                                           "}")
             self.allow_update = False
             self.force = False
+            self._is_seeding = True
             self.line_width_edit.setValue(line_width)
             self.point_size_edit.setValue(point_size)
             self.bar_scale_edit.setValue(bar_scale)
+            self._is_seeding = False
             self.force = True
             self.allow_update = True
         else:  # pragma: no cover
@@ -621,10 +693,12 @@ class EditGeometryProperties(PyDialog):
 
             #if self.representation in ['wire', 'surface']:
 
+        self._is_seeding = True
         self.opacity_edit.setValue(opacity)
         #if self.use_slider:
             #self.opacity_slider_edit.setValue(opacity*10)
         self.checkbox_show.setChecked(is_visible)
+        self._is_seeding = False
 
         passed = self.on_validate()
         #self.on_apply(force=True)  # TODO: was turned on...do I want this???
@@ -683,6 +757,8 @@ class EditGeometryProperties(PyDialog):
         wire_surf_checkboxes.addButton(self.checkbox_point)
         for key, datai in self.out_data.items():
             #print(key, datai)
+            if key in NON_ACTOR_KEYS:
+                continue
             self.representation = datai.representation
             self.on_set_representation()
 
@@ -756,38 +832,60 @@ class EditGeometryProperties(PyDialog):
     def closeEvent(self, event) -> None:
         self.on_cancel()
 
+    def _targets(self):
+        """the actor objects the current edit applies to"""
+        names = getattr(self, 'active_names', None) or [self.active_key]
+        return [self.out_data[name] for name in names if name in self.out_data]
+
+    def _set_on_targets(self, attr: str, value) -> None:
+        """
+        Writes a property to every selected actor.
+
+        Skipped entirely while the widgets are being seeded from a new
+        selection, which is what makes "only apply the fields you touch"
+        work: an untouched widget never reaches this function.
+        """
+        if self._is_seeding:
+            return
+        for obj in self._targets():
+            if hasattr(obj, attr):
+                setattr(obj, attr, value)
+
     def on_color(self):
         """called when the user clicks on the color box"""
         name = self.active_key
         obj = self.out_data[name]
         rgb_color_ints = obj.color
 
-        msg = name
+        names = getattr(self, 'active_names', None) or [name]
+        msg = name if len(names) == 1 else f'{len(names)} actors'
         col = QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), self, "Choose a %s color" % msg)
         if col.isValid():
             color_float = col.getRgbF()[:3]
-            obj.color = color_float
+            self._set_on_targets('color', color_float)
             color_int = [int(colori * 255) for colori in color_float]
             self.color_edit.setStyleSheet("QPushButton {"
                                           "background-color: rgb(%s, %s, %s);" % tuple(color_int) +
                                           #"border:1px solid rgb(255, 170, 255); "
                                           "}")
+            _set_mixed(self.color, False)
         self.on_apply(force=self.force)
         #print(self.allow_update)
 
     def on_show(self):
-        """shows the actor"""
-        name = self.active_key
+        """shows the actor(s)"""
         is_checked = self.checkbox_show.isChecked()
-        self.out_data[name].is_visible = is_checked
+        self._set_on_targets('is_visible', is_checked)
         self.on_apply(force=self.force)
 
     def on_line_width(self):
         """increases/decreases the wireframe (for solid bodies) or the bar thickness"""
+        if self._is_seeding:
+            return
         self.is_line_width_edit_active = True
-        name = self.active_key
         line_width = self.line_width_edit.value()
-        self.out_data[name].line_width = line_width
+        self._set_on_targets('line_width', line_width)
+        _set_mixed(self.line_width, False)
         if not self.is_line_width_edit_slider_active:
             if self.use_slider:
                 self.line_width_slider_edit.setValue(line_width)
@@ -806,10 +904,12 @@ class EditGeometryProperties(PyDialog):
 
     def on_point_size(self):
         """increases/decreases the point size"""
+        if self._is_seeding:
+            return
         self.is_point_size_edit_active = True
-        name = self.active_key
         point_size = self.point_size_edit.value()
-        self.out_data[name].point_size = point_size
+        self._set_on_targets('point_size', point_size)
+        _set_mixed(self.point_size, False)
         if not self.is_point_size_edit_slider_active:
             if self.use_slider:
                 self.point_size_slider_edit.setValue(point_size)
@@ -831,10 +931,12 @@ class EditGeometryProperties(PyDialog):
         Vectors start at some xyz coordinate and can increase in length.
         Increases/decreases the length scale factor.
         """
+        if self._is_seeding:
+            return
         self.is_bar_scale_edit_active = True
-        name = self.active_key
         float_bar_scale = self.bar_scale_edit.value()
-        self.out_data[name].bar_scale = float_bar_scale
+        self._set_on_targets('bar_scale', float_bar_scale)
+        _set_mixed(self.bar_scale, False)
         if not self.is_bar_scale_edit_slider_active:
             #int_bar_scale = int(round(float_bar_scale * 20, 0))
             #if self.use_slider:
@@ -861,10 +963,12 @@ class EditGeometryProperties(PyDialog):
         opacity = 1.0 (solid/opaque)
         opacity = 0.0 (invisible)
         """
+        if self._is_seeding:
+            return
         self.is_opacity_edit_active = True
-        name = self.active_key
         float_opacity = self.opacity_edit.value()
-        self.out_data[name].opacity = float_opacity
+        self._set_on_targets('opacity', float_opacity)
+        _set_mixed(self.opacity, False)
         if not self.is_opacity_edit_slider_active:
             int_opacity = int(round(float_opacity * 10, 0))
             if self.use_slider:
@@ -890,6 +994,13 @@ class EditGeometryProperties(PyDialog):
         self.out_data['clicked_ok'] = True
         self.out_data['clicked_cancel'] = False
 
+        if getattr(self, 'is_group_mode', False):
+            # multi-actor selection: the individual on_* handlers have already
+            # written the fields the user actually touched.  Flushing every
+            # widget here would overwrite the per-actor values we're
+            # deliberately preserving.
+            return True
+
         old_obj = self.out_data[self.active_key]
         old_obj.line_width = self.line_width_edit.value()
         old_obj.point_size = self.point_size_edit.value()
@@ -910,7 +1021,10 @@ class EditGeometryProperties(PyDialog):
         #print("passed=%s force=%s allow=%s" % (passed, force, self.allow_update))
         if (passed or force) and self.allow_update and self.is_gui:
             #print('obj = %s' % self.out_data[self.active_key])
-            self.gui_obj.on_update_geometry_properties(self.out_data, name=self.active_key)
+            names = getattr(self, 'active_names', None) or [self.active_key]
+            for name in names:
+                if name in self.out_data:
+                    self.gui_obj.on_update_geometry_properties(self.out_data, name=name)
         return passed
 
     def on_cancel(self):
@@ -922,6 +1036,21 @@ class EditGeometryProperties(PyDialog):
 def rounded_int(value: int | float) -> int:
     """rounds a value that *should* be an integer"""
     return int(round(value, 0))
+
+
+def _set_mixed(label: QLabel, is_mixed: bool) -> None:
+    """
+    Marks a property label as 'mixed' when the selected actors disagree
+    on its value, so it's clear the displayed number is only a sample and
+    that the actors won't be changed unless the widget is touched.
+    """
+    base = label.text().replace(' (mixed)', '')
+    if is_mixed:
+        label.setText(base + ' (mixed)')
+        label.setStyleSheet('QLabel { color: gray; font-style: italic; }')
+    else:
+        label.setText(base)
+        label.setStyleSheet('')
 
 
 def get_representation_flags(representation: str) -> tuple[bool, bool, bool, bool]:
@@ -988,9 +1117,15 @@ def main():  # pragma: no cover
     # * surface - always surface
     # * bar - this can use bar scale
     data = {
-        'font_size' : 18,
+        'font_size' : 10,
         'toggle' : AltGeometry(parent, 'toggle', color=green, line_width=3, opacity=0.2, representation='toggle'),
-        'coord': CoordProperties('label', 'xyz', True, 1.0),
+        'Global XYZ': CoordProperties('Global XYZ', 'xyz', True, 1.0),
+        'Coord 1': CoordProperties('Coord 1', 'xyz', True, 1.0),
+        'Coord 2': CoordProperties('Coord 2', 'xyz', True, 1.0),
+        'Coord 10': CoordProperties('Coord 10', 'xyz', True, 1.0),
+        'BAR_y' : AltGeometry(parent, 'BAR_y', color=green, line_width=2, opacity=0.4, bar_scale=1.0, representation='bar'),
+        'BAR_z' : AltGeometry(parent, 'BAR_z', color=purple, line_width=2, opacity=0.4, bar_scale=1.0, representation='bar'),
+        'TUBE_y' : AltGeometry(parent, 'TUBE_y', color=blue, line_width=2, opacity=0.4, bar_scale=1.0, representation='bar'),
         'wire' : AltGeometry(parent, 'wire', color=purple, line_width=4, opacity=0.3, representation='wire'),
         'wire+point' : AltGeometry(parent, 'wire+point', color=blue, line_width=2, opacity=0.1, bar_scale=1.0, representation='wire+point'),
         'wire+surf' : AltGeometry(parent, 'wire+surf', display='Surface', color=blue, line_width=2, opacity=0.1, bar_scale=1.0, representation='wire+surf'),

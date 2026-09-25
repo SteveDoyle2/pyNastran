@@ -24,7 +24,7 @@ from pyNastran.bdf.cards.constraints import (
 from pyNastran.bdf.cards.optimization import DCONADD
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.op2.op2_geom import OP2Geom
+    from pyNastran.op2.op2_geom import OP2Geom, BDF
 
 class GEOM4(GeomCommon):
     """defines methods for reading op2 constraints"""
@@ -110,6 +110,7 @@ class GEOM4(GeomCommon):
             (1010, 10, 320): ['SECSET1', self.read_secset1],  # record
             (910,   9, 319): ['SECSET', self.read_secset],  # record
             (710,   7, 317): ['SEBSET', self.read_sebset],  # record
+            # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sdr_s111se.op2
             (810,   8, 318): ['SEBSET1', self.read_sebset1],  # record
 
             (1810, 18, 334): ['SEUSET', self.read_seuset],  # record
@@ -138,7 +139,6 @@ class GEOM4(GeomCommon):
 
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sdr_s111se.op2
             (210, 2, 0) : ['', self.read_fake],
-            (810, 8, 318) : ['SESET?', self.read_fake],
 
             (8420, 84, 641) : ['CYCADD', self.read_fake],
             (8510, 85, 643) : ['CYCAXIS', self.read_fake],
@@ -248,7 +248,8 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_xset1(self, data: bytes, n: int, card_name: str,
-                    cls: Type[ASET1 | BSET1 | CSET1 | QSET1 | OMIT1], add_method, debug: bool=False):
+                    cls: Type[ASET1 | BSET1 | CSET1 | QSET1 | OMIT1], add_method,
+                    debug: bool=False):
         r"""
         common method for ASET1, QSET1; not USET1
 
@@ -311,7 +312,8 @@ class GEOM4(GeomCommon):
             #print('out[5:] =', out[5:])
             self._add_superset_card(cls, card_name, add_method, out[5:])
 
-    def _read_superxset1(self, data: bytes, n: int, card_name: str, cls, add_method, debug: bool=False):
+    def _read_superxset1(self, data: bytes, n: int, card_name: str, cls, add_method,
+                         debug: bool=False):
         r"""
         common method for ASET1, QSET1; not USET1
 
@@ -416,12 +418,12 @@ class GEOM4(GeomCommon):
         return self._read_xset1(data, n, 'CSET1', CSET1, self.op2._add_methods.add_cset_object)
 
     def read_cyax(self, data: bytes, n: int) -> int:
-        """CYAX(1510,15,328) - Record 8 """
+        """CYAX(1510,15,328) - Record 8"""
         self.op2.log.info('geom skipping CYAX in GEOM4')
         return len(data)
 
     def read_cyjoin(self, data: bytes, n: int) -> int:
-        """CYJOIN(5210,52,257) - Record 9 """
+        """CYJOIN(5210,52,257) - Record 9"""
         self.op2.log.info('geom skipping CYJOIN in GEOM4')
         return len(data)
 
@@ -1079,11 +1081,11 @@ class GEOM4(GeomCommon):
         2 C I Component numbers
         3 THRUFLAG I Thru range flag
         THRUFLAG=0 No
-        4 ID I Grid or scalar point identification number
-        Word 4 repeats until End of Record
+          4 ID I Grid or scalar point identification number
+          Word 4 repeats until End of Record
         THRUFLAG=1 Yes
-        4 ID1 I First grid or scalar point identification number
-        5 ID2 I Second grid or scalar point identification number
+          4 ID1 I First grid or scalar point identification number
+          5 ID2 I Second grid or scalar point identification number
         End THRUFLAG
 
         Word Name Type Description
@@ -1891,7 +1893,7 @@ def fill_rbe3_wt_comp_gijs(i: int, j: int,
     assert len(weights) > 0, weights
     return i, weights, comps, grids
 
-def _read_spcadd_mpcadd(model: OP2Geom, card_name: str,
+def _read_spcadd_mpcadd(model: BDF, card_name: str,
                         datai: np.ndarray) -> None:
     """
     reads a SPCADD/MPCADD card
@@ -1978,7 +1980,8 @@ def check_component(component: int, msg: str) -> None:
 
 
 
-def ints_to_secset1s(card_name: str, ints: np.ndarray) -> tuple[int, list[tuple[int, int, list[int]]]]:
+def ints_to_secset1s(card_name: str, ints: np.ndarray,
+                     ) -> tuple[int, list[tuple[int, int, list[int]]]]:
     """
     [61,  123456,    1, 610101, 610124]
     [100,    123,    0,     41,     42,  -1,

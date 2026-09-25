@@ -26,6 +26,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.bdf.bdf import BDF
+    import numpy.typing as npt
     import scipy
 
 
@@ -465,8 +466,8 @@ class NastranMatrix(BaseCard):
         self.polar = polar
 
         self.ncols = ncols
-        self.GCj = GCj
-        self.GCi = GCi
+        self.GCj: npt.NDArray = GCj
+        self.GCi: npt.NDArray = GCi
 
         self.Real = Real
         if len(Complex) or self.is_complex:
@@ -493,7 +494,7 @@ class NastranMatrix(BaseCard):
 
     @classmethod
     def from_array(cls, name: str,
-                   myarray: np.ndarray,
+                   myarray: npt.NDArray,
                    matrix_form: int | str,
                    tin=None, tout=None,
                    polar: int=0,
@@ -715,7 +716,7 @@ class NastranMatrix(BaseCard):
         #if self.is_complex:
             #self.Complex(double(card, v, 'complex')
 
-    def write_csv(self, csv_filename: PathLike) -> np.ndarray:
+    def write_csv(self, csv_filename: PathLike) -> npt.NDArray:
         mat = self.get_matrix(is_sparse=False, apply_symmetry=True)[0]
         #self.plot_matrix(mat[:20,:20])
         if 0:  # pragma: no cover
@@ -731,7 +732,7 @@ class NastranMatrix(BaseCard):
         # np.savetxt(csv_filename, mat, delimiter='\t')
         return mat
 
-    def plot_matrix(self, matrix: np.ndarray):  # pragma: no cover
+    def plot_matrix(self, matrix: npt.NDArray):  # pragma: no cover
         """
         Colormaps and plots a 2D matrix using a specified colormap, defaulting to Red-Blue.
 
@@ -776,7 +777,7 @@ class NastranMatrix(BaseCard):
         plt.show()
 
     def get_matrix(self, is_sparse: bool=False,
-                   apply_symmetry: bool=True) -> tuple[np.ndarray | scipy.coomatrix,
+                   apply_symmetry: bool=True) -> tuple[npt.NDArray | scipy.coomatrix,
                                                        dict[int, tuple[int, int]],
                                                        dict[int, tuple[int, int]],
                                                        ]:
@@ -1194,8 +1195,8 @@ class DMIG(NastranMatrix):
     def __init__(self, name: str, ifo: int,
                  tin: int,
                  ncols: int,
-                 GCj: np.ndarray, GCi: np.ndarray,
-                 Real: np.ndarray, Complex: np.ndarray | None=None,
+                 GCj: npt.NDArray, GCi: npt.NDArray,
+                 Real: npt.NDArray, Complex: npt.NDArray | None=None,
                  tout: int=0, polar: int=0,
                  comment: str='', finalize: bool=True):
         """
@@ -1689,8 +1690,8 @@ class DMIJ(NastranMatrix):
 
     def __init__(self, name: str, matrix_form: int,
                  tin: int, ncols: int,
-                 GCj: np.ndarray, GCi: np.ndarray,
-                 Real: np.ndarray, Complex=None,
+                 GCj: npt.NDArray, GCi: npt.NDArray,
+                 Real: npt.NDArray, Complex=None,
                  tout: int=0, polar: int=0,
                  comment: str='',
                  finalize: bool=True):
@@ -1885,8 +1886,8 @@ class DMIK(NastranMatrix):
 
     def __init__(self, name: str, ifo: int,
                  tin: int, ncols: int,
-                 GCj: np.ndarray, GCi: np.ndarray,
-                 Real: np.ndarray, Complex=None,
+                 GCj: npt.NDArray, GCi: npt.NDArray,
+                 Real: npt.NDArray, Complex=None,
                  tout: int=0, polar: int=0,
                  comment: str='', finalize=True):
         """
@@ -2075,7 +2076,7 @@ class DMI(NastranMatrix):
 
     @classmethod
     def from_array(cls, name: str,
-                   myarray: np.ndarray,
+                   myarray: npt.NDArray,
                    form: int | str,
                    tin=None, tout=None,
                    comment: str=''):
@@ -2430,7 +2431,7 @@ class DMI(NastranMatrix):
 
     def get_matrix(self,
                    is_sparse: bool=False,
-                   apply_symmetry: bool=True) -> tuple[np.array, None, None]:
+                   apply_symmetry: bool=True) -> tuple[npt.NDArray, None, None]:
         """
         Builds the Matrix
 
@@ -2459,15 +2460,15 @@ class DMI(NastranMatrix):
             self, is_sparse=is_sparse, apply_symmetry=apply_symmetry)
         return mat, rows, cols
 
-    def write_card_16(self):
+    def write_card_16(self) -> str:
         """writes the card in single precision"""
         return self._write_card(print_card_16)
 
-    def write_card_double(self):
+    def write_card_double(self) -> str:
         """writes the card in double precision"""
         return self._write_card(print_card_double)
 
-    def _write_card(self, func):
+    def _write_card(self, func) -> str:
         """writes the card in single/double precision"""
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % ('DMI', self.name)
@@ -2493,7 +2494,7 @@ class DMI(NastranMatrix):
             return self.comment + self.write_card_double()
         return self.comment + self.write_card_16()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         .. todo:: support shortened output format.  There's a very low 1000
                   DMI cap, I assume this is entries and not matrices.
@@ -2754,9 +2755,9 @@ def _dmi_write_complex_columns_8(name: str, GCi, GCj, Real, Complex,
 
 
 def get_row_col_map(matrix: DMIG,
-                    GCi: np.ndarray, GCj: np.ndarray,
+                    GCi: npt.NDArray, GCj: npt.NDArray,
                     ifo: int) -> tuple[int, int, int,
-                                       np.ndarray, np.ndarray,
+                                       npt.NDArray, npt.NDArray,
                                        dict[int, Any],
                                        dict[int, Any]]:
     ndim = len(GCi.shape)
@@ -2936,7 +2937,7 @@ def _fill_sparse_matrix(matrix: DMIG, nrows: int, ncols: int,
     return sparse_matrix
 
 
-def _build_gc_map(GC: np.ndarray) -> dict[tuple[int, int], int]:
+def _build_gc_map(GC: npt.NDArray) -> dict[tuple[int, int], int]:
     """helper method for ``gc_to_index``"""
     i = 0
     gc_map = {}
@@ -2949,7 +2950,7 @@ def _build_gc_map(GC: np.ndarray) -> dict[tuple[int, int], int]:
     return gc_map
 
 
-def gc_to_index(GC: np.ndarray) -> tuple[np.ndarray, int]:
+def gc_to_index(GC: npt.NDArray) -> tuple[npt.NDArray, int]:
     """helper method for ``_fill_sparse_matrix``"""
     gc_map = _build_gc_map(GC)
     ngrid_map = len(gc_map)
@@ -2965,7 +2966,7 @@ def gc_to_index(GC: np.ndarray) -> tuple[np.ndarray, int]:
 def _fill_dense_rectangular_matrix(matrix: DMIG,
                                    nrows: int, ncols: int, ndim: int,
                                    rows: dict[Any, int], cols: dict[Any, int],
-                                   apply_symmetry: bool) -> np.ndarray:
+                                   apply_symmetry: bool) -> npt.NDArray:
     """helper method for ``get_matrix``"""
     if matrix.is_complex:
         dense_mat = _fill_dense_rectangular_matrix_complex(
@@ -2980,7 +2981,7 @@ def _fill_dense_rectangular_matrix(matrix: DMIG,
 def _fill_dense_rectangular_matrix_complex(matrix: DMIG,
                                            nrows: int, ncols: int, ndim: int,
                                            rows: dict[Any, int], cols: dict[Any, int],
-                                           apply_symmetry: bool) -> np.ndarray:
+                                           apply_symmetry: bool) -> npt.NDArray:
     """helper method for ``_fill_dense_rectangular_matrix``"""
     dense_mat = np.zeros((nrows, ncols), dtype=matrix.tin_dtype)
     real_imag = matrix.Real + 1j * matrix.Complex
@@ -3004,7 +3005,7 @@ def _fill_dense_rectangular_matrix_complex(matrix: DMIG,
     return dense_mat
 
 
-def _get_diagonal_symmetric(matrix: DMIG) -> tuple[np.ndarray, np.ndarray]:
+def _get_diagonal_symmetric(matrix: DMIG) -> tuple[npt.NDArray, npt.NDArray]:
     """helper for ``apply_symmetry``"""
     assert matrix.GCi.ndim == 2, matrix.GCi.ndim
     assert matrix.GCj.ndim == 2, matrix.GCj.ndim
@@ -3018,7 +3019,7 @@ def _get_diagonal_symmetric(matrix: DMIG) -> tuple[np.ndarray, np.ndarray]:
 def _fill_dense_rectangular_matrix_real(matrix: DMIG,
                                         nrows: int, ncols: int, ndim: int,
                                         rows: dict[Any, int], cols: dict[Any, int],
-                                        apply_symmetry: bool) -> np.ndarray:
+                                        apply_symmetry: bool) -> npt.NDArray:
     """helper method for ``_fill_dense_rectangular_matrix``"""
     dense_mat = np.zeros((nrows, ncols), dtype=matrix.tin_dtype)
     i = -1
@@ -3100,7 +3101,7 @@ def _fill_dense_rectangular_matrix_real(matrix: DMIG,
 def _fill_dense_column_matrix(matrix: DMIG,
                               nrows: int, ncols: int, ndim: int,
                               rows: dict[Any, int], cols: dict[Any, int],
-                              apply_symmetry: bool) -> np.ndarray:
+                              apply_symmetry: bool) -> npt.NDArray:
     """helper method for ``get_matrix``"""
     if matrix.is_complex:
         dense_mat = _fill_dense_column_matrix_complex(
@@ -3114,7 +3115,7 @@ def _fill_dense_column_matrix(matrix: DMIG,
 def _fill_dense_column_matrix_real(matrix: DMIG,
                                    nrows: int, ncols: int, ndim: int,
                                    rows: dict[Any, int], cols: dict[Any, int],
-                                   apply_symmetry: bool) -> np.ndarray:
+                                   apply_symmetry: bool) -> npt.NDArray:
     """helper method for ``_fill_dense_column_matrix``
 
     What does symmetry mean for a column matrix?!!!
@@ -3150,7 +3151,7 @@ def _fill_dense_column_matrix_real(matrix: DMIG,
 def _fill_dense_column_matrix_complex(matrix: DMIG,
                                       nrows: int, ncols: int, ndim: int,
                                       rows: dict[Any, int], cols: dict[Any, int],
-                                      apply_symmetry: bool) -> np.ndarray:
+                                      apply_symmetry: bool) -> npt.NDArray:
     """
     helper method for ``_fill_dense_column_matrix``
 
@@ -3167,7 +3168,7 @@ def _fill_dense_column_matrix_complex(matrix: DMIG,
             #dense_mat[i, j] += complex(reali, complexi)
             #dense_mat[j, i] += complex(reali, complexi)
     elif matrix.matrix_form == 2:  # rectangular
-        assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
+        assert nrows == ncols, f'nrows={nrows:d} ncols={ncols:d}'
         for (gcj, gci, reali, complexi) in zip(matrix.GCj, matrix.GCi,
                                                matrix.Real, matrix.Complex):
             i = rows[gci]
@@ -3253,7 +3254,7 @@ def get_dmi_matrix(matrix: DMI,
         M = _set_matrix(nrows, ncols,
                         data, GCi, GCj,
                         dtype)
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(matrix_form_str)
         nrows = matrix.nrows
         ncols = matrix.ncols
@@ -3280,7 +3281,7 @@ def get_dmi_matrix(matrix: DMI,
 
 def get_matrix(self: DMIG,
                is_sparse: bool=False,
-               apply_symmetry: bool=False) -> tuple[np.ndarray,
+               apply_symmetry: bool=False) -> tuple[npt.NDArray,
                                                     dict[int, Any],
                                                     dict[int, Any]]:
     """
@@ -3333,8 +3334,8 @@ def get_matrix(self: DMIG,
 
 
 def _set_matrix(nrows: int, ncols: int,
-                data: np.ndarray,
-                GCi: np.ndarray, GCj: np.ndarray,
+                data: npt.NDArray,
+                GCi: npt.NDArray, GCj: npt.NDArray,
                 dtype: str) -> coo_matrix:
     try:
         matrixi = coo_matrix((data, (GCi, GCj)),
@@ -3504,7 +3505,7 @@ def _get_real_dtype(type_flag: int) -> str:
     return dtype
 
 
-def dtype_to_tin_tout_str(myarray: np.ndarray) -> str:
+def dtype_to_tin_tout_str(myarray: npt.NDArray) -> str:
     tin_real = myarray.real.dtype.itemsize
     tin_total = myarray.dtype.itemsize
     if tin_real == 8 and tin_total == 16:
@@ -3550,10 +3551,10 @@ def map_form(form: int | str,
     return form_str, nrows, ncols
 
 
-def _get_gcj_gci_data(myarray: np.ndarray,
+def _get_gcj_gci_data(myarray: npt.NDArray,
                       nrows: int, ncols: int,
-                      tin: str | int) -> tuple[np.ndarray, np.ndarray,
-                                               Optional[np.ndarray]]:
+                      tin: str | int) -> tuple[npt.NDArray, npt.NDArray,
+                                               Optional[npt.NDArray]]:
     """helper for ```from_array```"""
     # ncols = 2
     GCi = np.repeat(list(range(1, nrows + 1)), ncols, axis=0).reshape(nrows, ncols).flatten()
