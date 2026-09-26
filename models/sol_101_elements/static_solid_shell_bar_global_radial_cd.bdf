@@ -66,5 +66,6 @@ SPC1     123456     456  5       thru    13
 $ Nodal Forces of Load Set : 10000
 FORCE    10000   13      0      10000.   0.      0.     1.
 $ Referenced Coordinate Frames
-CORD2C,1,0, 0.,0.,0., 0.,0.,1., 0.,1.,0.
+CORD2C,1,0,0.,0.,0.,0.,0.,1.
+,0.,1.,0.
 ENDDATA 58e050da
