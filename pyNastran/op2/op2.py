@@ -728,13 +728,14 @@ class OP2(OP2_Scalar, OP2Writer):
 
             #print(result_type)
             for obj in values:
-                if dev:
-                    _check_result_slice(obj, self.log, failed_classes_set)
                 if hasattr(obj, 'finalize'):
                     obj.finalize()
                 elif hasattr(obj, 'tCode') and not obj.is_sort1:
                     raise RuntimeError('object has not implemented finalize\n%s' % (
                         ''.join(obj.get_stats())))
+                if dev:
+                    _check_result_slice(obj, self.log, failed_classes_set)
+
         self.del_structs()
         if len(failed_classes_set):
             failed_classes_list = list(failed_classes_set)
@@ -1811,7 +1812,6 @@ def _check_result_slice(result, log: SimpleLogger,
         'HingeMomentDerivatives',
         'ControlSurfacePositionHingeMoment',
         'AeroPressure', 'AeroForce',
-        
     ]
     skip_words = ['eigenvalues', #'mass', 'cddata_list',
     ]

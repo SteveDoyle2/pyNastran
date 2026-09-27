@@ -54,10 +54,10 @@ def nastran_to_zaero(bdf_filename: PathLike | BDF,
     # print(aeros.get_stats())
     naeroz, coords = _convert_aeros(
         model, modelz, mass_unit, length_unit)
-    modelz._write_coords(bdf_file)
+    modelz.writer.write_coords(bdf_file)
 
     ncaero7 = _convert_caeros(model, modelz)
-    modelz._write_coords(bdf_file)
+    modelz.writer.write_coords(bdf_file)
     ncord2r, nspline1, nspline2, nspline3 = _convert_splines(
         model, modelz)
 
@@ -77,10 +77,10 @@ def nastran_to_zaero(bdf_filename: PathLike | BDF,
         nxyz_root, pqr_dot_root,
         trimvar_dict, aesurf_dict,
     )
-    modelz._write_coords(bdf_file)
+    modelz.writer.write_coords(bdf_file)
     nflutter, nmkaeroz_flutter = _convert_flutter(
         model, modelz, mass_unit, length_unit)
-    modelz._write_coords(bdf_file)
+    modelz.writer.write_coords(bdf_file)
     card_count_dict = {
         'CORD2R': ncord2r,
         'AEROZ': naeroz,
@@ -344,7 +344,7 @@ def _convert_aeros(model: BDF,
     coords[rcsid] = aeros.rcsid_ref
     modelz.coords = coords
     bdf_file = io.StringIO()
-    modelz._write_coords(bdf_file)
+    modelz.writer.write_coords(bdf_file)
     # (aeroz.acsid, aeroz.bref, aeroz.sref, aeroz.sym_xy, aeroz.sym_xz))
     return naeroz, coords
 

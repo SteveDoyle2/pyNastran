@@ -198,7 +198,8 @@ from .bdf_methods import BDFMethods
 from .bdf_interface.get_card import GetCard
 from .bdf_interface.add_card import AddCards
 from .bdf_interface.bdf_card import BDFCard
-from .bdf_interface.write_mesh_file import WriteMeshs
+from .bdf_interface.write_mesh import Writer
+from .bdf_interface.write_mesh_file import WriteMesh
 from .bdf_interface.uncross_reference import UnXrefMesh
 from .bdf_interface.verify_validate import verify_bdf, validate_bdf
 from .bdf_interface.stats import get_bdf_stats
@@ -562,7 +563,7 @@ def load_bdf_object(obj_filename: str, xref: bool=True, log=None, debug: bool=Tr
     return model
 
 
-class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
+class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     """NASTRAN BDF Reader/Writer/Editor class."""
     _properties = ['nid_map', 'wtmass', 'type_slot_str'] + [
         'nastran_format', 'is_long_ids', 'sol', 'subcases',
@@ -625,8 +626,10 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         GetCard.__init__(self)
         AddCards.__init__(self)
         BDFMethods.__init__(self)
-        WriteMeshs.__init__(self)
+        WriteMesh.__init__(self)
         UnXrefMesh.__init__(self)
+        self.writer = Writer(self)
+        assert self is self.writer.model
 
         #: stores SPOINT, GRID cards
         self.nodes: dict[int, GRID | SPOINT | EPOINT] = {}
@@ -1165,7 +1168,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'point_ids', 'subcases',
             '_card_parser', '_card_parser_prepare',
             'wtmass',
-            'zona',
+            'zona', 'writer',
         ]
         attrs = object_attributes(self, mode='all', keys_to_skip=keys_to_skip)
         for key in attrs:
@@ -1188,6 +1191,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         for model in self.superelement_models.values():
             model.log = self.log
         self.xref_obj.model = self
+        self.writer.model = self
 
     def replace_cards(self, replace_model: BDF,
                       write_log: bool=True) -> None:
@@ -4897,6 +4901,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         memo[id(self)] = result
         for key, value in self.__dict__.items():
             setattr(result, key, deepcopy(value, memo))
+        #self.writer.model = self
         if result._xref:
             result.cross_reference(
                 xref=True, xref_nodes=True, xref_elements=True, xref_nodes_with_elements=False,
@@ -5048,6 +5053,7 @@ def read_bdf(bdf_filename: Optional[PathLike | StringIO]=None,
     #             #delattr(model, method_name)
     #             pass
     #     model.get_bdf_stats()
+    assert model is model.writer.model
     return model
 
 

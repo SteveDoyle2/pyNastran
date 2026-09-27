@@ -85,9 +85,9 @@ class OP2Writer(OP2_F06_Common):
             h5file.set_node_attr(nastran_group, "SOL", str(sol))
             h5file.set_node_attr(nastran_group, "TIME", local_time_str)  # Tue Dec 29 13:07:22 2020 (UTC-8)
             h5file.set_node_attr(nastran_group, "VERSION", version)
-            # if include_geometry:
+            if include_geometry:
             #     print(self)
-            #     self.model.writer.write_h5(h5file, nastran_group)
+                self.model.writer.write_h5(h5file, nastran_group)
             write_h5_results(self, h5file, nastran_group, key_to_id_map,
                              elemental_dicts, nodal_dicts, se_dicts, root='/')
 

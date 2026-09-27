@@ -101,7 +101,7 @@ def get_stats_groups():
         # not handled
         'acmodl',
         'baror', 'beamor', 'doptprm', 'dtable',
-        'zona', 'zaero',
+        'zona', 'zaero', 'writer',
     ]
 
     list_attrs = [
