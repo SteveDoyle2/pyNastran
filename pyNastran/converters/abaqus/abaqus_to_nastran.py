@@ -708,8 +708,10 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
             umat_names = np.unique(mat_names)
             mids = np.zeros(len(mat_names), dtype='int32')
             imid = 0
+            assert len(umat_names) > 0, shell_section
+            mat_names_array = np.array(mat_names)
             for mat_name in umat_names:
-                imidi = (mat_name == mat_names)
+                imidi = (mat_name == mat_names_array)
 
                 if mat_name in mat_name_to_mid_dict:
                     midi = mat_name_to_mid_dict[mat_name]
@@ -723,10 +725,13 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
                     mat_name_to_mid_dict[mat_name] = midi
                     imid += 1
                     delta_mid += 1
+                assert midi > 0, (mat_name, imidi, midi)
                 mids[imidi] = midi
 
             thicknesses = shell_section.thickness
             thetas = shell_section.theta
+            mid_min = min(mids)
+            assert mid_min > 0, mids
             comp = nastran_model.add_pcomp(
                 pid, mids, thicknesses, thetas=thetas, souts=None,
                 nsm=0., sb=0., ft=None, tref=0., ge=0.,
@@ -881,6 +886,7 @@ def _create_material(nastran_model: BDF,
                      comment: str,
                      is_solid: bool=None) -> MAT1 | MAT8:
     """creates a material"""
+    assert mid > 0, mid
     assert isinstance(is_solid, bool), is_solid
     G = None
     rho = 0.0

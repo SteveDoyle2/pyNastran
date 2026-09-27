@@ -1,6 +1,7 @@
 import os
 import unittest
 from io import StringIO
+from pathlib import Path
 from cpylog import get_logger
 
 import pyNastran
@@ -9,9 +10,9 @@ from pyNastran.converters.abaqus.abaqus_to_nastran import abaqus_to_nastran_file
 from pyNastran.converters.abaqus.nastran_to_abaqus import nastran_to_abaqus_filename
 from pyNastran.converters.format_converter import cmd_line_format_converter
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'abaqus', 'models')
-NASTRAN_MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = PKG_PATH / 'converters' / 'abaqus' / 'models'
+NASTRAN_MODEL_PATH = PKG_PATH / '..' / 'models'
 
 
 class TestAbaqus(unittest.TestCase):
@@ -268,9 +269,14 @@ class TestAbaqus(unittest.TestCase):
         with open(abaqus_inp_filename, 'w') as abaqus_file:
             abaqus_file.writelines('\n'.join(lines))
 
-        bdf_filename = os.path.join(MODEL_PATH, 'composite.bdf')
+        bdf_filename = MODEL_PATH / 'composite.bdf'
         abaqus_to_nastran_filename(model, bdf_filename, log=log)
+
+        abaqus_inp_filename2 = MODEL_PATH / 'composite_out2.inp'
+        nastran_to_abaqus_filename(bdf_filename, abaqus_inp_filename2, log=log)
         os.remove(bdf_filename)
+        os.remove(abaqus_inp_filename2)
+
 
 def make_model():
     """makes a test model"""

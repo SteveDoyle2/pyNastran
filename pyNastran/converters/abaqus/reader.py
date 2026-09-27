@@ -857,7 +857,7 @@ def read_shell_section(iline: int, line0: str, lines: list[str],
     assert '*shell' in line0, line0
 
     iline, line0, flags, lines_out = read_generic_section(iline, line0, lines, log)
-    print(f'flags = {flags}')
+    #print(f'flags = {flags}')
     is_composite = 'composite' in flags
     if is_composite:
         flags.remove('composite')
@@ -867,7 +867,7 @@ def read_shell_section(iline: int, line0: str, lines: list[str],
         'orientation': '',
     }
     for key, value in split_strict_flags(flags):
-        print(f'key={key!r} value={value!r}')
+        #print(f'key={key!r} value={value!r}')
         if key == 'material':
             params_map[key] = value.lower()
         elif key == 'elset':

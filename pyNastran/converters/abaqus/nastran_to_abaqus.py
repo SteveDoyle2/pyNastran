@@ -73,25 +73,37 @@ def _get_properties(nastran_model: BDF) -> tuple[Any, Any, list[ShellSection], l
     for pid, prop in nastran_model.properties.items():
         pid_to_name_map[pid] = f'{prop.type}_{pid}'  # PSHELL_20
         element_sets_temp[pid] = []  # 20
-        if prop.type == 'PSHELL':
+
+        prop_type = prop.type
+        if prop_type == 'PSHELL':
             mid = prop.mid1
             elset = None
             material_name = f'{prop.mid1_ref.type}_{mid}'
             thickness = prop.t
-            shell_section = ShellSection(material_name, elset, thickness, log)
+            theta = []
+            shell_section = ShellSection(material_name, elset, thickness, theta, log)
             shell_sections.append(shell_section)
-        elif prop.type == 'PSOLID':
+        elif prop_type == 'PSOLID':
             material_name = f'{prop.mid_ref.type}_{mid}'
             elset = None
             thickness = None
             solid_section = SolidSection(material_name, elset, thickness, log)
             solid_sections.append(solid_section)
+        elif prop_type in {'PCOMP', 'PCOMPG'}:
+            elset = None
+            material_name = [f'{mat.type}_{mat.mid}' 
+                             for mat in prop.mids_ref]
+            thickness = prop.thicknesses
+            theta = prop.thetas
+            shell_section = ShellSection(material_name, elset, thickness, theta, log)
+            shell_sections.append(shell_section)
         else:
-            print(prop)
+            log.warning(prop)
         #elif prop.type == 'PSHELL':
     return pid_to_name_map, element_sets_temp, shell_sections, solid_sections
 
 def _get_elements(nastran_model: BDF, element_sets_temp: dict[str, list[int]]):
+    log = nastran_model.log
     ctria3s = []
     cquad4s = []
     ctetra4s = []
@@ -123,7 +135,7 @@ def _get_elements(nastran_model: BDF, element_sets_temp: dict[str, list[int]]):
         elif elem.type == 'CHEXA20':
             chexa20s.append([eid] + nidsi)
         else:
-            print(elem)
+            log.warning(elem)
         element_sets_temp[pid].append(eid)
     assert len(element_sets_temp)
     assert len(element_types)
@@ -132,6 +144,7 @@ def _get_elements(nastran_model: BDF, element_sets_temp: dict[str, list[int]]):
 
 def _process_constraints(nastran_model: BDF, node_sets: dict[str, np.ndarray]) -> dict[str, Any]:
     """creates node_sets"""
+    log = nastran_model.log
     all_cloads = []
     spc_dict = defaultdict(list)
     for subcase_id, subcase in nastran_model.subcases.items():
@@ -146,7 +159,7 @@ def _process_constraints(nastran_model: BDF, node_sets: dict[str, np.ndarray]) -
                 spc_dict[name].extend(spc.nodes)
                 x = 1
             else:
-                print(spc)
+                log.warning(spc)
         _process_loads(nastran_model, subcase_id, load_id, all_cloads)
 
     for key, mylist in spc_dict.items():
@@ -157,6 +170,7 @@ def _process_loads(nastran_model: BDF,
                    subcase_id: int, load_id: int, all_cloads: list[Any]) -> None:
     #if load_id:
         #return
+    log = nastran_model.log
     name = f'subcase={subcase_id}_LOAD={load_id}'
     cloads = []
     loads, scale_factors, is_grav = nastran_model.get_reduced_loads(
@@ -175,7 +189,7 @@ def _process_loads(nastran_model: BDF,
                     cload = [nid, dof, scale * mag]
                     cloads.append(cload)
         else:
-            print(load)
+            log.warning(load)
     if cloads:
         all_cloads.append(cloads)
 
@@ -190,8 +204,13 @@ def _get_materials(nastran_model: BDF, model: Abaqus):
         if mat.type == 'MAT1':
             sections['elastic'] = [mat.e, mat.g]
             sections['expansion'] = [mat.tref, mat.a]
+        elif mat.type == 'MAT8':
+            e3 = nu1z = nu2z = g23 = 0.
+            sections['engineering constants'] = [
+                mat.e11, mat.e22, e3, mat.nu12, nu1z, nu2z, mat.g12, mat.g1z,
+                g23, mat.tref]
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(mat)
         material = Material(name, sections, density=density,
                             ndepvars=None, ndelete=None)
         model.materials[name] = material

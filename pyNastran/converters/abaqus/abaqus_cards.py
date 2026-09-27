@@ -204,7 +204,7 @@ class ShellSection:
                 material_name.append(material_namei)
 
                 orientation_name.append(orientation_namei)
-            print(f'composite: thickness={thickness} material={material_name} orientation={orientation_name}')
+            #print(f'composite: thickness={thickness} material={material_name} orientation={orientation_name}')
         else:
             orientation_name = None
             material_name = param_map['material']
@@ -649,11 +649,13 @@ def write_name(name):
 
 def write_element_set_to_file(abq_file, set_name, values_array):
     """writes an element set"""
+    assert len(values_array) > 0, f'invalid elset={set_name!r} ids={values_array}'
     abq_file.write('*Elset, elset=%s\n' % write_name(set_name))
     write_set_to_file(abq_file, values_array)
 
 def write_node_set_to_file(abq_file, set_name, values_array):
     """writes a node set"""
+    assert len(values_array) > 0, f'invalid nset={set_name!r} ids={values_array}'
     abq_file.write('*Nset, nset=%s\n' % write_name(set_name))
     write_set_to_file(abq_file, values_array)
 
