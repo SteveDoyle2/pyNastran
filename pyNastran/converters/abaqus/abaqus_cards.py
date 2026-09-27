@@ -145,11 +145,15 @@ class ShellSection:
     0.005,,CF
     0.005,,CF
     0.005,,CF
+    *Shell Section, elset=Laminate, composite
+    # thickness, theta, material_name
+    0.005, 10., Carbon0
 
     """
     def __init__(self, log: SimpleLogger,
                  material_name: str, elset: str,
                  thickness: list[float],
+                 theta: list[float],
                  orientation: int=-1,
                  offset: float=0.0):
         #self.data_lines = data_lines
@@ -157,6 +161,7 @@ class ShellSection:
         self.material_name = material_name
         self.elset = elset
         self.thickness = thickness
+        self.theta = theta
         self.orientation = orientation
         self.offset = offset
         self.log = log
@@ -172,6 +177,7 @@ class ShellSection:
         if param_map['is_composite']:
             material_name = []
             thickness = []
+            theta = []
             orientation_name = []
             for line in data_lines:
                 #thickness (required)
@@ -180,18 +186,25 @@ class ShellSection:
                 #name of the orientation to be used for this layer (optional)
                 sline = line.split(',')
                 if len(sline) == 3:
-                    thickness_stri, junk, material_namei = sline
-                    orientation_namei = None
+                    thickness_stri, thetai_stri, material_namei = sline
+                    thetai = float(thetai_stri)
+                    orientation_namei = ''
                 else:
+                    # 0.005, , CarbonMaterial, MyGlobalCsys
                     thickness_stri, junk, material_namei, orientation_namei = sline
+                    thetai = np.nan
                     ## TODO: how does orientation work (from the flags)
                     ##       with the orientation name in this table?
                     raise RuntimeError(sline)
                 material_namei = material_namei.strip().lower()
                 thicknessi = float(thickness_stri)
+
                 thickness.append(thicknessi)
+                theta.append(thetai)
                 material_name.append(material_namei)
+
                 orientation_name.append(orientation_namei)
+            print(f'composite: thickness={thickness} material={material_name} orientation={orientation_name}')
         else:
             orientation_name = None
             material_name = param_map['material']
@@ -200,6 +213,7 @@ class ShellSection:
             #if len(data_lines) == 0:
                 #pass
             thicknessi = 0.0
+            theta = [0.]
             if len(data_lines) == 1:
                 assert len(data_lines) == 1, data_lines
                 line0 = data_lines[0].split()
@@ -212,7 +226,9 @@ class ShellSection:
         for line in data_lines:
             log.debug(f'shell - {line!r}')
         return ShellSection(log,
-                            material_name, elset, thickness,
+                            material_name, elset,
+                            thickness,
+                            theta=theta,
                             orientation=orientation,
                             offset=offset)
 
@@ -222,6 +238,7 @@ class ShellSection:
         #msg += '    param_map = %r,\n' % self.param_map
         msg += f'    material_name = {self.material_name},\n'
         msg += f'    thickness = {self.thickness},\n'
+        msg += f'    theta = {self.theta},\n'
         msg += f'    orientation = {self.orientation},\n'
         msg += f'    offset = {self.offset},\n'
         msg += ')\n'
@@ -359,8 +376,8 @@ class Material:
             assert len(args1) == 8, args1
             assert len(args2) == 2, args2
             abq_file.write(f'*Elastic,type=Engineering Constants\n')
-            abq_file.write.write(','.join(args1))
-            abq_file.write.write(','.join(args2))
+            abq_file.write(','.join(args1))
+            abq_file.write(','.join(args2))
 
         if self.density > 0.:
             abq_file.write(f'*Density\n  {self.density},\n')
@@ -371,6 +388,7 @@ class Material:
             nconstants = ''
             abq_file.write(f'*User Material{nconstants}\n  {self.user_material},\n')
         #abq_file.write('** skipping Material %s\n' % self.name)
+
 
 class Assembly:
     def __init__(self, element_types, node_sets, element_sets):
@@ -393,6 +411,7 @@ class Assembly:
             f'  element_sets = {esets}\n'
         )
         return msg
+
 
 class Part:
     """a Part object is a series of nodes & elements (of various types)"""

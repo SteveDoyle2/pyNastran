@@ -489,9 +489,9 @@ class Abaqus:
             for unused_mat_name, mat in self.materials.items():
                 mat.write(abq_file)
             for set_name, seti in self.node_sets.items():
-                raise NotImplementedError(('node_set', set_name, seti))
+                self.log.warning((f'cant write node_set name={set_name!r} ids={seti}'))
             for set_name, seti in self.element_sets.items():
-                raise NotImplementedError(('element_set', set_name, seti))
+                self.log.warning((f'cant write element_set name={set_name!r} ids={seti}'))
             for step in self.steps:
                 #print(step)
                 #print(abq_file)
