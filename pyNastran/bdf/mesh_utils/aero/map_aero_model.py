@@ -127,13 +127,14 @@ def map_aero_model(model_old: PathLike | BDF,
     model_new.log.debug('Out Model:')
     model_new.log.debug(model_new.get_bdf_stats())
     coord_ids = np.unique(coord_ids_list)
+    writer = model_new.writer
     with open(bdf_filename_out, 'w') as bdf_file:
-        model_new._write_aero(bdf_file)
-        model_new._write_aero_control(bdf_file)
-        model_new._write_static_aero(bdf_file)
-        model_new._write_flutter(bdf_file)
-        model_new._write_gust(bdf_file)
-        model_new._write_sets(bdf_file)
+        writer.write_aero(bdf_file)
+        writer.write_aero_control(bdf_file)
+        writer.write_static_aero(bdf_file)
+        writer.write_flutter(bdf_file)
+        writer.write_gust(bdf_file)
+        writer.write_sets(bdf_file)
 
         if include_mapped_grids:
             cid = 0
