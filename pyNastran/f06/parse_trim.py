@@ -635,9 +635,9 @@ def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
 
     #print('%r %r %r %r ux=%r %r' % (int_id, name, Type, trim_status, ux_str, ux_unit))
     ux = float(ux_str)
-    assert trim_type in {'RIGID BODY', 'CONTROL SURFACE'}, trim_type
+    assert trim_type in {'RIGID BODY', 'CONTROL SURFACE', 'GENERAL CONTROL'}, trim_type
     assert trim_status in {'FIXED', 'FREE', 'LINKED'}, trim_status
-    assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE', 'LENGTH/S/S', 'RAD/S/S PER G'}, ux_unit
+    assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE', 'LENGTH/S/S', 'RAD/S/S PER G', 'LBS'}, ux_unit
 
     return int_id, name, trim_type, trim_status, ux, ux_unit
 

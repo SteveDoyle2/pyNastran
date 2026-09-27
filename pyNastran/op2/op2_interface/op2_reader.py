@@ -40,6 +40,7 @@ Defines various tables that don't fit in other sections:
 from __future__ import annotations
 import os
 import sys
+import warnings
 from copy import deepcopy
 from itertools import count
 from functools import partial
@@ -4419,6 +4420,32 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
         _skip_table(op2_reader, itable)
         return
 
+    # Word Name Type Description
+    # 1  ACODE(C)    I Device code + 10* Approach Code = 12
+    # 2  TCODE(C)    I Table code = 103
+    # 3  DATCOD      I Data code = 0
+    # 4  SUBCASE     I Subcase identification number
+    # 5  UNDEF None
+    # 6  MACHNUM     RS Mach number
+    # 7  Q           RS Dynamic pressure
+    # 8 CONFIG(2) CHAR4 Aerodynamic configuration name
+    # 10 NUMWDE I Number of words per entry in DATA, set to 8
+    # 11 SYMXY I Aerodynamic configuration XY symmetry - ***nastran lies about this***
+    #   -1 = SYMMETRIC
+    #    0 = ASYMMETRIC
+    #    1 = ANTISYMMETRIC
+    # 12 SYMXZ I Aerodynamic configuration XZ symmetry - ***missing***
+    #   -1 = ANTISYMMETRIC
+    #    0 = ASYMMETRIC
+    #    1 = SYMMETRIC
+    # 13 CHORD          RS Reference chord length
+    # 14 SPAN           RS Reference span length
+    # 15 AREA           RS Reference area
+    # 16 UNDEF(35)         None
+    # 51 TITLE(32)   CHAR4 Title
+    # 83 SUBTITL(32) CHAR4 Subtitle
+    # 115 LABEL(32)  CHAR4 Label
+
     #6: f
     #7: f
     #                              Ma q aero ? ? ? c.b.Sref ?            subcase title subtitle
@@ -4453,21 +4480,22 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
 
         if is_saved:
             data = op2_reader._read_record(debug=False)  # table 3
-            #ni = -128*3
+            # ni = -128*3
+            # print(op2.show_data(data[9*size:ni-34*size]))
             #print(op2.show_data(data[:12*4]))
             #print(op2.show_data(data[15*4:ni]))
             out = structi.unpack(data)
 
-            #1  ACODE(C)    I Device code + 10*Approach Code
-            #2  TCODE(C)    I 2002
-            # 3 DATCOD I Data code = 0
-            # 4 SUBCASE I Subcase identification number
+            #1  ACODE(C)      I Device code + 10*Approach Code
+            #2  TCODE(C)      I 2002
+            # 3 DATCOD        I Data code = 0
+            # 4 SUBCASE       I Subcase identification number
             # 5 UNDEF None
-            # 6 MACHNUM RS Mach number
-            # 7 Q RS Dynamic pressure
+            # 6 MACHNUM      RS Mach number
+            # 7 Q            RS Dynamic pressure
             # 8 CONFIG(2) CHAR4 Aerodynamic configuration name
-            # 10 NUMWDE I Number of words per entry in DATA, set to 8
-            # 11 SYMXY I Aerodynamic configuration XY symmetry
+            # 10 NUMWDE       I Number of words per entry in DATA, set to 8...***this is 5***
+            # 11 SYMXY        I Aerodynamic configuration XY symmetry
             #     -1 = SYMMETRIC
             #      0 = ASYMMETRIC
             #      1 = ANTISYMMETRIC
@@ -4484,8 +4512,21 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
              cref, bref, sref, *outi,
              title, subtitle, subcase) = out
 
+            # assert acode == 12, acode
+            assert tcode == 103, tcode
+            assert numwide == 5, numwide
+
             op2.subtable_name = ''
             op2.parse_approach_code(data)
+            # log.info(
+            #     f'subcase={subcase_id} point_device={point_device} '
+            #     f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} '
+            #     f'symxy={symxy} symxz={symxz} cref={cref} bref={bref} sref={sref} '
+            #     f'out={outi}')
+
+            # nastran lies about what the values are
+            symxy = 0
+            symxz = 0
 
             assert isinstance(cref, float), cref
             assert isinstance(bref, float), bref
@@ -4596,7 +4637,7 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
                 symxy=symxy, symxz=symxz)
             trim_vars.print_f06()
             assert subcase_key not in trim.variables, subcase_key
-            log.debug(f'trim.variables: {subcase_key}')
+            # log.debug(f'trim.variables: {subcase_key}')
             trim.variables[subcase_key] = trim_vars
         else:
             data = op2_reader._skip_record()  # table 4
@@ -4649,7 +4690,6 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
     result_name = 'trim.aero_force'
     is_saved = op2._results.is_saved(result_name)
     while 1:
-
         #       trimid    coord
         # AEROS ACSID RCSID       REFC      REFB      REFS SYMXZ SYMXY
         # AEROS   1       1       131.0   2556.4  734000.01       0
@@ -4695,7 +4735,9 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
             op2._results._found_result(result_name)
             log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
                       f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
-            assert zero == 0, zero
+            if zero != 0:
+                log.error(f'Expected zero; got {zero}')
+            # assert zero == 0, zero
             if max(outi) != 0 or min(outi) != 0:
                 log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 
@@ -4834,7 +4876,10 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
 
             log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
                       f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
-            assert zero == 0, zero
+
+            if zero != 0:
+                log.error(f'Expected zero; got {zero}')
+            # assert zero == 0, zero
             if max(outi) != 0 or min(outi) != 0:
                 log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 
@@ -4856,7 +4901,7 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
             op2.tCode = tcode  # trim
             op2.sort_code = 0  # SORT1, real, not-random
             subcase_key = op2._get_code()
-            log.debug(f'aero_pressure.subcase_key = {subcase_key}')
+            # log.debug(f'aero_pressure.subcase_key = {subcase_key}')
 
             op2_reader.read_3_markers([itable-1, 1, 0])
             data = op2_reader._read_record(debug=False)  # table 4
@@ -4895,7 +4940,7 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
                 symxy=0, symxz=0)
 
             assert subcase_key not in op2.op2_results.trim.aero_force
-            log.debug(f'trim.aero_pressure: {subcase_key}')
+            # log.debug(f'trim.aero_pressure: {subcase_key}')
             op2.op2_results.trim.aero_pressure[subcase_key] = apress
         else:
             data = op2_reader._skip_record()  # table 3
@@ -4944,8 +4989,9 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
 
     # TODO: QRG incorrectly casts (chord, span, sref) to floats instead of integers
     #       I think this is related to defaults for the AESURF (blank vs. specified)
-    #                              Ma q cofnig numwide symxy symxz chord,span,sref zero subcase title subtitle
-    #structf = Struct(endian + b'5i f  f 8s     i       i     i     3f              35i  128s    128s  128s')
+    #                              Ma q cofnig numwide symxy symxz chord,span,sref zeros subcase title subtitle (no)
+    #                              Ma q cofnig numwide symxy       chord,span,sref zeros subcase title subtitle
+    # structi = Struct(endian + b'5i f  f 8s     i       i     f     3f              35i  128s    128s  128s')
     structi = Struct(endian + b'5i f  f 8s     i       i     i     3i              35i  128s    128s  128s')
     structi2 = Struct(endian + b'8s 36f')
     result_name = 'trim.derivatives'
@@ -4956,9 +5002,14 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
     # subtitle = ''
     # label = ''
     while 1:
+        # bwb_saero
+        #
         #       trimid    coord
         # AEROS ACSID RCSID       REFC      REFB      REFS SYMXZ SYMXY
         # AEROS   1       1       131.0   2556.4  734000.01       0
+        # TRIM    1       0.789   1.5     PITCH   0.0     URDD3   2.5
+        #         URDD5   0.0
+        # mach=0.789 q=1.5 chord=131
         op2_reader.read_3_markers([itable, 1, 0])
         itablei = op2_reader.get_marker1()
         if itablei == 0:
@@ -4977,7 +5028,8 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
         # floats  = (12,      106,       0, 1,      0, 0.5, 50000.0, 'AEROSG2D', 38,     -1, 1,     0.0, 1.401298464324817e-45, 0.0)
         if is_saved:
             data = op2_reader._read_record(debug=False)  # table 3
-            ni = -128 * 3
+            # ni = -128 * 3  # remove the title, subtitle, label
+            # op2.show_data(data[10*size:ni-38*size], types='ifs')
             # op2.show_data(data[:15*4], types='ifs')
             # op2.show_data(data[15*4:ni], types='if')
             out = structi.unpack(data)
@@ -4995,19 +5047,28 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
             #   -1 = SYMMETRIC
             #    0 = ASYMMETRIC
             #    1 = ANTISYMMETRIC
-            # 12 SYMXZ  I Aerodynamic configuration XZ symmetry
+            # 12 SYMXZ  I Aerodynamic configuration XZ symmetry - *** missing ***
             #   -1 = ANTISYMMETRIC
             #    0 = ASYMMETRIC
             #    1 = SYMMETRIC
             # 13 CHORD RS Reference chord length  ## QRG is wrong...this is an int
-            # 14 SPAN  RS Reference span length   ## QRG is wrong...this is an int
-            # 15 AREA  RS Reference area          ## QRG is wrong...this is an int
+            # 14 SPAN  RS Reference span length   ## QRG is wrong...this is an int and sometimes blank
+            # 15 AREA  RS Reference area          ## QRG is wrong...this is an int and sometimes blank
             # 16 UNDEF(35) None
             #
             (acode, tcode, method_int, subcase_id,
-             point_device, mach, q, aerosg2d, numwide, symxy, symxz,
+             point_device, mach, q, aerosg2d, numwide, symxy,
              chord, span, sref, *outi,
              title_bytes, subtitle_bytes, subcase) = out
+            assert (acode, tcode, method_int, numwide) == (12, 106, 0, 38), (acode, tcode, method_int, numwide)
+            assert symxy in {-1, 0, 1}, symxy
+
+            symxz = 0
+            # log.info(
+            #     f'subcase={subcase_id} point_device={point_device} '
+            #     f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} '
+            #     f'symxy={symxy} symxz={symxz} chord={chord} span={span} sref={sref} '
+            #     f'out={outi}')
 
             op2.isubcase = subcase_id
             data_code = op2._read_title_helper(data)
@@ -5015,18 +5076,20 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
             subtitle = data_code['subtitle']
             label = data_code['label']
 
-            allowed_cbs = [
-                (0, 0, 0),
-                (0, 1, 0),
-            ]
+            # allowed_cbs = [
+            #     (0, 0, 0),
+            #     (0, 1, 0),
+            # ]
             # NX:
             # $     ACSID  RCSID  REFC  REFB    REFS    SYMXZ   SYMXY
             # AEROS     0   1000  6.95    75.    521.
             # -> Expected b'OAEROSCD' (chord,span,sref) flags can be [(0, 0, 0), (0, 1, 0)]; got (75,521,0)
-            if (chord, span, sref) not in allowed_cbs:
-                log.error(f'Expected {op2.table_name} (chord,span,sref) flags can be {allowed_cbs}; got ({chord},{span},{sref})')
+            # if sref != 0:
+            #     log.error(f'Expected {op2.table_name} (chord,span,sref) = ({chord},{span},{sref}); sref != 0')
+            # if (chord, span, sref) not in allowed_cbs:
+            #     log.error(f'Expected {op2.table_name} (chord,span,sref) flags can be {allowed_cbs}; got ({chord},{span},{sref})')
 
-            log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy}; symxz={symxz}')
+            log.debug(f'mach={mach:g} q={q:g} symxy={symxy}; symxz={symxz}')
             assert numwide == 38, numwide
             if max(outi) != 0 or min(outi) != 0:
                 log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
@@ -5128,9 +5191,12 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
     assert data == b'OAERCSHM', data
 
     itable = -3
-    if op2_reader.read_mode == 1:
-        _skip_table(op2_reader, itable)
-        return
+    # log.info('op2_reader.read_mode = %s' % op2_reader.read_mode)
+
+    # doesn't work if there is no hinge moment data
+    # if op2_reader.read_mode == 1 and 0:
+    #     _skip_table(op2_reader, itable)
+    #     return
 
     #                              Ma q aero ? ? ? cbs_ref zero subcase title subtitle
     structi = Struct(endian + b'5i f  f 8s   i i i 3f      35i  128s    128s  128s')
@@ -5140,6 +5206,7 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
 
     result_name = 'trim.control_surface_position_hinge_moment'
     is_saved = op2._results.is_saved(result_name)
+    subcase_id = -1
     while 1:
         #       trimid    coord
         # AEROS ACSID RCSID       REFC      REFB      REFS SYMXZ SYMXY
@@ -5207,13 +5274,27 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
 
         op2_reader.read_3_markers([itable-1, 1, 0])
         next_marker = op2_reader.get_marker1(rewind=True)
-        if next_marker == itable-2:  # -5
-            op2_reader.read_3_markers([itable-2, 1, 0], macro_rewind=False)
-            next_marker2 = op2_reader.get_marker1(rewind=False)
-            #log.debug(f'{op2.table_name}; exit on marker={next_marker2}')
-            return
+        # log.info(f'next_marker={next_marker} itable-2={itable-2}')
+        if next_marker < 0:
+            # Nastran writes a dummy (empty) table-4 when a subcase has no
+            # hinge moments, so the next subcase header follows the -4 marker
+            # immediately.  This is normal output, not a corrupt file.
+            #
+            # It does NOT mean the table is over, so don't consume the marker
+            # and don't return; the top of the loop reads [itable, 1, 0].
+            # Returning here used to leave the file positioned mid-record,
+            # which surfaced later as a struct.error inside _read_table_name.
+            if subcase_id != -1:
+                log.debug(
+                    f'{op2.table_name!r}: subcase {subcase_id} has no hinge '
+                    'moments; Nastran wrote a dummy table, so no results are '
+                    'stored for it')
+                log.debug(f'{op2.table_name!r}: dummy data record for '
+                          f'subcase {subcase_id} (no hinge moments)')
+            itable -= 2
+            continue
 
-        if is_saved:
+        if is_saved and op2_reader.read_mode == 2:
             #op2_reader.show(80, types='ifs')
             data = op2_reader._read_record(debug=False)  # table 4
             idata = 0
@@ -5247,6 +5328,7 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
                 names, trim_values, data_array,
                 subcase=subcase_id, title=title,
                 subtitle=subtitle, label=label)
+            #log.info(f'adding control_surface_position_hinge_moment subcase_key={subcase_key}')
             assert subcase_key not in trim.control_surface_position_hinge_moment, subcase_key
             trim.control_surface_position_hinge_moment[subcase_key] = trim_control_surface_position_hinge_moment
         else:
@@ -5346,14 +5428,18 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
          point_device, mach, q, aerosg2d_bytes, numwide, symxy, symxz,
          cs_name_bytes, one_a, one_b, *outi,
          title, subtitle, subcase) = out
+        cs_name = cs_name_bytes.decode('latin1').rstrip()
+        aerosg2d = aerosg2d_bytes.decode('latin1').rstrip()
+        # log.info(f'acode={acode} tcode={tcode}; method={method_int} subcase={subcase_id} point_device={point_device} '
+        #          f'mach={mach} q={q} aerosg2d={aerosg2d!r} numwide={numwide} '
+        #          f'symxy={symxy} symxz={symxz} cs_name={cs_name!r} one_a={one_a} one_b={one_b} '
+        #          f'out={outi}')
         # print(f'cs_name = {cs_name_bytes}')
 
         op2.subtable_name = ''
         op2.parse_approach_code(data)
 
         #op2.show_data(data[14*4:15*4])
-        cs_name = cs_name_bytes.decode('latin1').rstrip()
-        aerosg2d = aerosg2d_bytes.decode('latin1').rstrip()
         log.debug(f'mach={mach:g} q={q:.3f} cs_name={cs_name!r} aerosg2d={aerosg2d!r} symxy={symxy}; symxz={symxz}')
         #log.debug(f'  name=[{name}]')
 
