@@ -1400,11 +1400,11 @@ class PLOAD4(Load):
             solid_elements = [card for card in self.solid_elements if card.n > 0]
             for card in shell_elements:
                 # TODO: use is_shell
-                self.model.log.debug(card.type)
+                #self.model.log.debug(card.type)
                 i_lookup, i_all = searchsorted_filter(card.element_id, self.element_ids, msg=f'{card.type} eids', debug=True)
                 if len(i_lookup) == 0:
                     continue
-                log.debug(f'ilookup = {i_lookup}')
+                #log.debug(f'ilookup = {i_lookup}')
 
                 # we're at least using some loads
                 nnids = card.base_nodes.shape[1]
@@ -1564,8 +1564,8 @@ def get_solid_face_area(element_type: str, element: CTETRA | CHEXA | CPENTA | CP
     ids_with_34 = all_ids[i34]
     ids_no_34 = all_ids[iblank34]
     log = element.model.log
-    log.debug(f'g1 = {g1}')
-    log.debug(f'g3/4 = {g34}')
+    #log.debug(f'g1 = {g1}')
+    #log.debug(f'g3/4 = {g34}')
 
     #ig1_list = []
     #ig34_list = []
@@ -1687,7 +1687,7 @@ def get_solid_face_area(element_type: str, element: CTETRA | CHEXA | CPENTA | CP
                                                  g1[iblank34],
                                                  g34[iblank34]):
         ig1 = enodes_list.index(g1i)
-        log.debug(f'{element_type}: nnodes={nnodes}; ig1={ig1}; g3/4={g34}')
+        #log.debug(f'{element_type}: nnodes={nnodes}; ig1={ig1}; g3/4={g34}')
         ig34 = -1
         #card.map_node_index_to_face_number(ig1, ig34)
 
@@ -1702,12 +1702,12 @@ def get_solid_face_area(element_type: str, element: CTETRA | CHEXA | CPENTA | CP
                 #face_acn = elem.get_face_area_centroid_normal(g1, load.g34_ref.nid)
                 #nface = 4
             facei = CPENTA_FACE_MAPPER[(ig1, ig34)]
-            log.debug(f'  face={facei}')
+            #log.debug(f'  face={facei}')
         elif element_type == 'CHEXA':
             facei = CHEXA_FACE_MAPPER[(ig1, ig34)]
-            log.debug(f'  face={facei}')
+            #log.debug(f'  face={facei}')
         elif element_type == 'CTETRA':
-            log.debug('(ig1, ig34)=', (ig1, ig34))
+            #log.debug('(ig1, ig34)=', (ig1, ig34))
             #
             #
             #
@@ -1724,16 +1724,14 @@ def get_solid_face_area(element_type: str, element: CTETRA | CHEXA | CPENTA | CP
             for face in _ctetra_faces:
                 if ig1 in face and ig34 not in face:
                     found_face = face
-            log.debug(f'(ig1={ig1} ig34={ig34} found_face={found_face}')
+            #log.debug(f'(ig1={ig1} ig34={ig34} found_face={found_face}')
 
             face = CTETRA_FACE_MAPPER[(ig1, ig34)]
             facei = found_face
             del found_face
-            log.debug(f'  face={facei}')
-            #adsf
+            #log.debug(f'  face={facei}')
         else:
             raise NotImplementedError(element)
-        #x = 1
         #print(enodes, type(enodes))
         #print(facei, type(facei))
         enodes2 = enodes[facei]
@@ -1755,7 +1753,7 @@ def get_solid_face_area(element_type: str, element: CTETRA | CHEXA | CPENTA | CP
     assert len(face_list) > 0, face_list
 
     face = np.array(face_list)
-    log.debug(f'face = {face}')
+    #log.debug(f'face = {face}')
 
     #if element_type == 'CHEXA':
         #face = np.array(face_list)

@@ -5,7 +5,8 @@ from io import StringIO
 from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf.field_writer import print_card_8, print_card_16
-from pyNastran.bdf.bdf_interface.write_mesh import _output_helper, _fix_sizes
+from pyNastran.bdf.bdf_interface.write_mesh import _fix_sizes
+from pyNastran.bdf.bdf_interface.write_mesh_file import _output_helper
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import BDFAttributes
 from pyNastran.dev.bdf_vectorized3.types import TextIOLike
