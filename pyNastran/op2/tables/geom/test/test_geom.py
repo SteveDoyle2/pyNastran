@@ -262,6 +262,17 @@ class TestOP2GeomUnit(unittest.TestCase):
         data_bytes = struct.pack(fmt1, *data)
         op2.reader_geom1._read_extrn(data_bytes, 12)
 
+        # any sorted DOF 1-6 combination is valid, not just a small subset
+        # (e.g. 456, 1234, 0); these must not raise an AssertionError (issue #876)
+        data2 = (
+            1627, 16, 463,
+            1, 456, 2, 1234, 3, 123456, 4, 0,
+            -1, -1)
+        fmt2 = b'i' * len(data2)
+        data_bytes2 = struct.pack(fmt2, *data2)
+        op2.reader_geom1._read_extrn(data_bytes2, 12)
+        assert len(op2.asets) == 2, op2.asets
+
     def test_ints_to_secset1s(self):
         ints_to_secset1s('SECSET1', [61,  123456,    1, 610101, 610124])
         ints_to_secset1s('SECSET1', [100,    123,    0,     41,     42,  -1,

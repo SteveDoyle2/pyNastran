@@ -101,7 +101,7 @@ def get_stats_groups():
         # not handled
         'acmodl',
         'baror', 'beamor', 'doptprm', 'dtable',
-        'zona', 'zaero',
+        'zona', 'zaero', 'writer',
     ]
 
     list_attrs = [
@@ -202,7 +202,7 @@ def get_bdf_stats(model: BDF,
         #new
         'bolt', 'boltld', 'boltfor', 'boltseq', 'boltfrc',
         'use_new_deck_parser', 'allow_overwrites_set', '_parse',
-        'allow_tabs', 'dummy',
+        'allow_tabs', 'writer',
 
         # to remove
         'zaero',

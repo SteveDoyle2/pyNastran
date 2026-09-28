@@ -1,6 +1,7 @@
 import os
 import unittest
 from io import StringIO
+from pathlib import Path
 from cpylog import get_logger
 
 import pyNastran
@@ -9,9 +10,9 @@ from pyNastran.converters.abaqus.abaqus_to_nastran import abaqus_to_nastran_file
 from pyNastran.converters.abaqus.nastran_to_abaqus import nastran_to_abaqus_filename
 from pyNastran.converters.format_converter import cmd_line_format_converter
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'abaqus', 'models')
-NASTRAN_MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = PKG_PATH / 'converters' / 'abaqus' / 'models'
+NASTRAN_MODEL_PATH = PKG_PATH / '..' / 'models'
 
 
 class TestAbaqus(unittest.TestCase):
@@ -163,6 +164,7 @@ class TestAbaqus(unittest.TestCase):
                 'nastran', bdf_filename, '--encoding', 'utf-8-sig']
         cmd_line_format_converter(argv=argv, quiet=True, log=log)
         os.remove(bdf_filename)
+
     def test_abaqus_to_nastran_force_cquad4(self):
         abaqus_filename = os.path.join(MODEL_PATH, 'force_cquad4.inp')
         bdf_filename = os.path.join(MODEL_PATH, 'force_cquad4.bdf')
@@ -171,6 +173,7 @@ class TestAbaqus(unittest.TestCase):
                 'nastran', bdf_filename, '--encoding', 'utf-8-sig']
         cmd_line_format_converter(argv=argv, quiet=True, log=log)
         os.remove(bdf_filename)
+
     def test_abaqus_to_nastran_grav_chexa8(self):
         abaqus_filename = os.path.join(MODEL_PATH, 'grav_chexa8.inp')
         bdf_filename = os.path.join(MODEL_PATH, 'grav_chexa8.bdf')
@@ -179,6 +182,7 @@ class TestAbaqus(unittest.TestCase):
                 'nastran', bdf_filename, '--encoding', 'utf-8-sig']
         cmd_line_format_converter(argv=argv, quiet=True, log=log)
         os.remove(bdf_filename)
+
     def test_abaqus_to_nastran_pload4_chexa20(self):
         abaqus_filename = os.path.join(MODEL_PATH, 'pload4_chexa20.inp')
         bdf_filename = os.path.join(MODEL_PATH, 'pload4_chexa20.bdf')
@@ -187,6 +191,7 @@ class TestAbaqus(unittest.TestCase):
                 'nastran', bdf_filename, '--encoding', 'utf-8-sig']
         cmd_line_format_converter(argv=argv, quiet=True, log=log)
         os.remove(bdf_filename)
+
     def test_abaqus_to_nastran_force_chexa8(self):
         abaqus_filename = os.path.join(MODEL_PATH, 'force_chexa8.inp')
         bdf_filename = os.path.join(MODEL_PATH, 'force_chexa8.bdf')
@@ -197,6 +202,7 @@ class TestAbaqus(unittest.TestCase):
         argv = ['abaqus_to_nastran', abaqus_filename, bdf_filename, '--encoding', 'utf-8-sig']
         cmd_abaqus_to_nastran(argv, log=log, quiet=True)
         os.remove(bdf_filename)
+
     def test_b31h(self):
         """
         B31H - 3d euler-bernoulli beam element
@@ -219,6 +225,58 @@ class TestAbaqus(unittest.TestCase):
         log = get_logger(level='debug', encoding='utf-8')
         argv = ['abaqus_to_nastran', abaqus_filename, bdf_filename, '--encoding', 'utf-8-sig']
         cmd_abaqus_to_nastran(argv, log=log, quiet=True)
+
+    def test_composite(self):
+        lines = [
+            '*node',
+            '1,0.,0.,0.',
+            '2,1.,0.,0.',
+            '3,1.,1.,0.',
+            '4,0.,1.,0.',
+            '*element, type=cpe4',
+            '2,1,2,3,4',
+            '*elset,elset=Laminate',
+            '2',
+            #*SHELL SECTION, ELSET=element_set_name, COMPOSITE, OFFSET=offset_value
+            #thickness_1, orientation_1, material_name_1
+            '*Shell Section, elset=Laminate, composite',
+            '0.005, 10., Carbon0',
+            '0.005, 90, Carbon90',
+            '0.005, 0, Carbon0',
+            '*Material, name=Carbon0',
+            '*Elastic, type=ENGINEERING CONSTANTS',
+            '1.4e7, 1.2e6, 1.2e6, 0.3, 0.3, 0.4, 6.e5, 6.e5',
+            '6.e5',
+            '*Material, name=Carbon90',
+            '*Elastic, type=ENGINEERING CONSTANTS',
+            '1.2e6, 1.4e7, 1.2e6, 0.3, 0.3, 0.4, 6.e5, 6.e5',
+            '6.e5',
+          #'*end assembly',
+
+          #'*step',
+          #'*static',
+          #'1,3,4,2.0',
+          #'*end step',
+        ]
+        log = get_logger(level='warning', encoding='utf-8')
+        model = read_abaqus(lines, log=log, debug=False)
+        str(model)
+        abaqus_inp_filename = os.path.join(MODEL_PATH, 'composite.inp')
+        model.write(abaqus_inp_filename)
+        os.remove(abaqus_inp_filename)
+
+        abaqus_inp_filename = os.path.join(MODEL_PATH, 'composite_out.inp')
+        with open(abaqus_inp_filename, 'w') as abaqus_file:
+            abaqus_file.writelines('\n'.join(lines))
+
+        bdf_filename = MODEL_PATH / 'composite.bdf'
+        abaqus_to_nastran_filename(model, bdf_filename, log=log)
+
+        abaqus_inp_filename2 = MODEL_PATH / 'composite_out2.inp'
+        nastran_to_abaqus_filename(bdf_filename, abaqus_inp_filename2, log=log)
+        os.remove(bdf_filename)
+        os.remove(abaqus_inp_filename2)
+
 
 def make_model():
     """makes a test model"""

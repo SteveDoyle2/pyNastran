@@ -430,7 +430,8 @@ def read_nset(iline: int, line0: str, lines: list[str],
               log: SimpleLogger,
               is_instance: bool) -> tuple[int, str, str, np.ndarray]:
     #line0_backup = line0
-    iline, line0, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    keys = ['instance', 'nset']
+    iline, line0, flags, lines_out = read_set_section(iline, line0, lines, keys, log)
 
     generate = False
     nset = ''
@@ -466,16 +467,21 @@ def read_elset(iline: int, line0: str, lines: list[str],
                log: SimpleLogger,
                is_instance: bool) -> tuple[int, str, str, np.ndarray]:
     #line0_backup = line0
-    iline, line0, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    keys = ['instance', 'generate', 'elset']
+    iline, line0, flags, lines_out = read_set_section(iline, line0, lines, keys, log)
 
     generate = False
     instance_name = ''
     elset = ''
+    log.info(f'flags = {flags}')
     for key_value in flags:
         if key_value == 'generate':
             generate = True
             continue
-        key, value = key_value.split('=', 1)
+        try:
+            key, value = key_value.split('=', 1)
+        except ValueError as error:
+            raise RuntimeError(f'cannot split {key_value!r} by =') from error
         key = key.strip().lower()
         value = value.strip().lower()
 
@@ -683,17 +689,17 @@ def read_material(iline: int, word: str,
                 sline = line0.split(',')
                 iline += 1
                 line0 = lines[iline].strip('\n\r\t, ').lower()
-        elif word.startswith('initial conditions'):
-            asdf
-            # TODO: skips header parsing
-            #iline += 1
-            #line0 = lines[iline].strip().lower()
-            unused_data = []
-            while '*' not in line0:
-                sline = line0.split(',')
-                iline += 1
-                line0 = lines[iline].strip().lower()
-            log.debug(line0)
+        #elif word.startswith('initial conditions'):
+        #    asdf
+        #    # TODO: skips header parsing
+        #    #iline += 1
+        #    #line0 = lines[iline].strip().lower()
+        #    unused_data = []
+        #    while '*' not in line0:
+        #        sline = line0.split(',')
+        #        iline += 1
+        #        line0 = lines[iline].strip().lower()
+        #    log.debug(line0)
         elif word_lower.startswith('hyperelastic, mooney-rivlin'):
             key = 'hyperelastic, mooney-rivlin'
             iline, line0, flags, lines_out = read_generic_section(iline, word_line, lines, log)
@@ -790,6 +796,8 @@ def _read_material_elastic(iline: int,
         e1, e2, e3, nu12, nu13, n23, g12, g13 = [float(val) if val else 0. for val in sline]
         iline += 1
         sline = lines[iline].split(',')
+        if len(sline) < 2:
+            sline = sline + [0.] * (2 - len(sline))
         g23, tref = [float(val) if val else 0. for val in sline]
         key = 'engineering constants'
         sections['engineering constants'] = [e1, e2, e3, nu12, nu13, n23, g12, g13,
@@ -849,6 +857,7 @@ def read_shell_section(iline: int, line0: str, lines: list[str],
     assert '*shell' in line0, line0
 
     iline, line0, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    #print(f'flags = {flags}')
     is_composite = 'composite' in flags
     if is_composite:
         flags.remove('composite')
@@ -858,6 +867,7 @@ def read_shell_section(iline: int, line0: str, lines: list[str],
         'orientation': '',
     }
     for key, value in split_strict_flags(flags):
+        #print(f'key={key!r} value={value!r}')
         if key == 'material':
             params_map[key] = value.lower()
         elif key == 'elset':
@@ -869,7 +879,8 @@ def read_shell_section(iline: int, line0: str, lines: list[str],
         else:  # pragma: no cover
             raise RuntimeError(key)
 
-    shell_section = ShellSection.add_from_data_lines(params_map, lines_out, log)
+    shell_section = ShellSection.add_from_data_lines(
+        params_map, lines_out, log)
     return iline, shell_section
 
 def read_hourglass_stiffness(iline: int, line0: str, lines: list[str],
@@ -1295,6 +1306,73 @@ def read_mass(iline: int, line0: str, lines: list[str],
 
     return iline, line0, mass
 
+def read_set_section(iline: int, line0: str, lines: list[str],
+                     allowed_keys: list[str],
+                     log: SimpleLogger,
+                     require_lines_out: bool=True) -> tuple[int, str, list[str], list[str]]:
+    """
+    Parameters
+    ----------
+    iline: int
+        points to first line (not header line)
+    line0: str
+        the header line
+    allowed_keys : list[str]
+        allowed keys
+
+    Returns
+    -------
+    iline: int
+        pointer to line
+    line : str
+        is the start of the next header
+    flags : list[str]
+        [key, value]
+    lines_out : list[str]
+        the lines in the main block
+
+    """
+    return read_generic_section(
+        iline, line0, lines,
+        log, require_lines_out=require_lines_out)
+    assert isinstance(iline, int)
+    assert isinstance(line0, str)
+    iline0 = iline
+    assert '*' in line0, line0
+    #'*element, type=s8, elset=shell_structure' to ['type=s8', 'elset=shell_structure']
+
+    #'elset,elset=laminate, composite' -> ['elset=laminate, composite']
+    flag_str = line0.split(',', 1)[1].strip()
+    
+    print(f'flag_str = {flag_str!r}')
+
+    #'elset=laminate, composite' -> ['elset=laminate, composite']
+    flags = []
+    while '=' in flag_str:
+        key, value = flag_str.split('=')
+        assert '=' not in value, value
+        assert key in allowed_keys, f'key={key!r} allowed_keys={allowed_keys}'
+        flags.append(f'{key}={value}')
+        for keyi in allowed_keys:
+            assert keyi not in value, flag_str
+        break
+
+    line = ''
+    lines_out = []
+    line = lines[iline]
+    while '*' not in line:
+        lines_out.append(line)
+        iline += 1
+        if iline == len(lines):
+            # hack if the deck isn't closed off
+            break
+        line = lines[iline]
+
+    if require_lines_out:
+        assert len(lines_out), line0
+    iline -= 1
+    return iline, line, flags, lines_out
+
 def read_generic_section(iline: int, line0: str, lines: list[str],
                          log: SimpleLogger,
                          require_lines_out: bool=True) -> tuple[int, str, list[str], list[str]]:
@@ -1323,7 +1401,8 @@ def read_generic_section(iline: int, line0: str, lines: list[str],
     iline0 = iline
     assert '*' in line0, line0
     #'*element, type=s8, elset=shell_structure' to ['type=s8', 'elset=shell_structure']
-    flags = [val.strip() for val in line0.split(',')[1:]]
+    flag_str = line0.split(',')[1:]
+    flags = [val.strip() for val in flag_str]
 
     line = ''
     lines_out = []

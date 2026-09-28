@@ -21,6 +21,7 @@ from pyNastran.converters.abaqus.abaqus_cards import (
 )
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
+    from pyNastran.utils import PathLike
 
 chexa_face_map = {
     # take the first and 3rd nodes
@@ -707,8 +708,10 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
             umat_names = np.unique(mat_names)
             mids = np.zeros(len(mat_names), dtype='int32')
             imid = 0
+            assert len(umat_names) > 0, shell_section
+            mat_names_array = np.array(mat_names)
             for mat_name in umat_names:
-                imidi = (mat_name == mat_name)
+                imidi = (mat_name == mat_names_array)
 
                 if mat_name in mat_name_to_mid_dict:
                     midi = mat_name_to_mid_dict[mat_name]
@@ -722,11 +725,15 @@ def _create_shell_properties(model: Abaqus, nastran_model: BDF,
                     mat_name_to_mid_dict[mat_name] = midi
                     imid += 1
                     delta_mid += 1
+                assert midi > 0, (mat_name, imidi, midi)
                 mids[imidi] = midi
 
             thicknesses = shell_section.thickness
-            nastran_model.add_pcomp(
-                pid, mids, thicknesses, thetas=None, souts=None,
+            thetas = shell_section.theta
+            mid_min = min(mids)
+            assert mid_min > 0, mids
+            comp = nastran_model.add_pcomp(
+                pid, mids, thicknesses, thetas=thetas, souts=None,
                 nsm=0., sb=0., ft=None, tref=0., ge=0.,
                 lam=None, z0=None, comment=shell_comment)
 
@@ -879,6 +886,7 @@ def _create_material(nastran_model: BDF,
                      comment: str,
                      is_solid: bool=None) -> MAT1 | MAT8:
     """creates a material"""
+    assert mid > 0, mid
     assert isinstance(is_solid, bool), is_solid
     G = None
     rho = 0.0
@@ -907,7 +915,7 @@ def _create_material(nastran_model: BDF,
             g23, tref = sections['engineering constants']
         material = nastran_model.add_mat8(
             mid, e11, e22, nu12, g12=g12, g1z=g13, g2z=g23,
-            rho=rho, a1=0., a2=0., tref=0.,
+            rho=rho, a1=0., a2=0., tref=tref,
             Xt=0., Xc=None, Yt=0., Yc=None, S=0.,
             ge=0., F12=0., strn=0., comment=comment)
     else:  # pragma: no cover
@@ -915,8 +923,8 @@ def _create_material(nastran_model: BDF,
     return material
 
 
-def abaqus_to_nastran_filename(abaqus_inp_filename: str,
-                               nastran_filename_out: str,
+def abaqus_to_nastran_filename(abaqus_inp_filename: PathLike,
+                               nastran_filename_out: PathLike,
                                size: int=8,
                                xform: bool=False,
                                encoding: Optional[str]=None,
@@ -1349,6 +1357,7 @@ def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None,
         encoding=encoding, size=size,
         xform=xform, log=log)
     nastran_model.log.info(f"finished creating Nastran BDF = '{nastran_filename_out}'")
+
 
 if __name__ == '__main__':
     cmd_abaqus_to_nastran()

@@ -8,7 +8,9 @@ from cpylog import SimpleLogger, get_logger
 from pyNastran.converters.abaqus.abaqus_cards import (
     Assembly, Part, Elements, Step, cast_nodes,
     ShellSection, SolidSection, Surface, BeamSection,
-    Mass, Boundary, Material)
+    Mass, Boundary, Material,
+    write_node_set_to_file,
+    write_element_set_to_file,)
 import pyNastran.converters.abaqus.reader as reader
 from pyNastran.converters.abaqus.reader_utils import print_data, clean_lines
 
@@ -489,9 +491,9 @@ class Abaqus:
             for unused_mat_name, mat in self.materials.items():
                 mat.write(abq_file)
             for set_name, seti in self.node_sets.items():
-                raise NotImplementedError(('node_set', set_name, seti))
+                write_node_set_to_file(abq_file, set_name, seti)
             for set_name, seti in self.element_sets.items():
-                raise NotImplementedError(('element_set', set_name, seti))
+                write_element_set_to_file(abq_file, set_name, seti)
             for step in self.steps:
                 #print(step)
                 #print(abq_file)

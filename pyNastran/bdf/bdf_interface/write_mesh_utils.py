@@ -9,6 +9,7 @@ This file defines:
 
 """
 from __future__ import annotations
+import warnings
 from collections import defaultdict
 from typing import TextIO, Any, TYPE_CHECKING
 from pyNastran.bdf.bdf_interface.utils import sorteddict
@@ -96,6 +97,76 @@ def write_list(bdf_file: TextIO, my_list: list[BaseCard],
             bdf_file.write(card.write_card(size, is_double))
 
 
+def _write_bdf_dict_cards(bdf_file, cards, size, is_double, is_long_ids):
+    """writes a dictionary"""
+    if bdf_file is None:
+        return
+    if is_long_ids:
+        for card in cards:
+            bdf_file.write(card.write_card_16(is_double))
+    else:
+        for card in cards:
+            bdf_file.write(card.write_card(size, is_double))
+
+
+def _get_ifiles_dict(cards_dict: dict) -> dict:
+    """gets the ids for a dictionary by file number"""
+    assert isinstance(cards_dict, dict), cards_dict
+    ifiles_dict = defaultdict(list)
+    for unused_id, card in sorted(cards_dict.items()):
+        ifiles_dict[card.ifile].append(card)
+    return ifiles_dict
+
+
+def _get_ifiles_dict_list(cards):
+    """gets the ids for a dictionary of lists by file number"""
+    assert isinstance(cards, dict), cards
+    ifiles_dict_list = defaultdict(list)
+    for (unused_id, cardsi) in sorted(cards.items()):
+        assert isinstance(cardsi, list), cardsi
+        for card in cardsi:
+            ifiles_dict_list[card.ifile].append(card)
+    return ifiles_dict_list
+
+
+def write_xpoints_file(bdf_files, cardtype: str,
+                       points: dict[int, Any],
+                       comment: str='') -> None:
+    """writes SPOINTs/EPOINTs"""
+    assert isinstance(points, dict), points
+    for point_id, point in points.items():
+        bdf_files[point.ifile].write(point.write_card())
+
+
+def write_bdfs_dict(bdf_files, cards, size, is_double, is_long_ids):
+    """writes a dictionary by ifile"""
+    assert isinstance(cards, dict), cards
+    ifiles_dict = _get_ifiles_dict(cards)
+    for file_id, file_cards in ifiles_dict.items():
+        bdf_file = bdf_files[file_id]
+        _write_bdf_dict_cards(bdf_file, file_cards, size, is_double, is_long_ids)
+
+
+def write_bdfs_list(bdf_files, cards, size, is_double, is_long_ids):
+    """writes a list by ifile"""
+    assert isinstance(cards, list), cards
+    if is_long_ids:
+        for card in cards:
+            bdf_files[card.ifile].write(card.write_card_16(size, is_double))
+    else:
+        for card in cards:
+            bdf_files[card.ifile].write(card.write_card(size, is_double))
+
+
+def write_bdfs_dict_list(bdf_files, cards, size, is_double, is_long_ids):
+    """writes a dictionary of lists by ifile"""
+    ifiles_dict_list = _get_ifiles_dict_list(cards)
+    for file_id, file_cards in ifiles_dict_list.items():
+        bdf_file = bdf_files[file_id]
+        _write_bdf_dict_cards(bdf_file, file_cards, size, is_double, is_long_ids)
+
+
+
 def find_aero_location(model: BDF) -> tuple[bool, bool]:
     """Determines where the AERO card should be written"""
     write_aero_in_flutter = False
@@ -144,3 +215,12 @@ def get_properties_by_element_type(model: BDF) -> tuple[dict[str, list[str]],
             prop_class = property_type_to_property_class[prop.type]
             properties_by_class[prop_class].append(prop)
     return propertys_class_to_property_types, property_type_to_property_class, properties_by_class
+
+
+def _ifile(card) -> int:
+    try:
+        ifile = card.ifile
+    except AttributeError:
+        warnings.warn(f'cant find ifile in\n{str(card)}')
+        ifile = -1
+    return ifile
