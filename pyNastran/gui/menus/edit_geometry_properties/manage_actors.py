@@ -189,7 +189,8 @@ class EditGeometryProperties(PyDialog):
     show_representation_toggles = False
     force = True
     def __init__(self, data, gui_obj: EditGeometryPropertiesObject,
-                 is_gui: bool=True, win_parent=None, group_func=None):
+                 is_gui: bool=True, win_parent=None,
+                 group_func=None, group_rules=None):
         """
         +------------------+
         | Edit Actor Props |
@@ -217,6 +218,9 @@ class EditGeometryProperties(PyDialog):
         group_func : callable(name, obj) -> str | None; default=None
             overrides how names are bucketed into groups;
             see ``group_names.group_geometry_names``
+        group_rules : list[(str, str)]; default=None
+            ``(group_name, regex)`` pairs supplied by the active format's IO
+            class; None/empty leaves the list flat
 
         """
         PyDialog.__init__(self, data, win_parent)
@@ -254,7 +258,9 @@ class EditGeometryProperties(PyDialog):
         self.is_group_mode = False
 
         self.group_func = group_func
-        view = GroupTreeView(self, data, group_func=group_func)
+        self.group_rules = group_rules
+        view = GroupTreeView(self, data, group_func=group_func,
+                             group_rules=group_rules)
         self.table = view
         #self.opacity_edit.valueChanged.connect(self.on_opacity)
         #mListWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(itemClicked(QListWidgetItem*)));

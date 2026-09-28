@@ -109,6 +109,7 @@ from pyNastran.gui.gui_objects.force_results import ForceResults2
 
 
 from pyNastran.converters.nastran.gui.types import CasesDict
+from pyNastran.converters.nastran.gui.geometry_groups import NastranGeometryGroups
 from .wildcards import IS_H5PY, GEOM_METHODS_BDF
 from .beams3d import get_bar_nids, get_beam_sections_map  # create_3d_beams
 from .geometry_helper import NastranGeometryHelper, get_material_arrays, get_suport_node_ids
@@ -3015,7 +3016,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         return form
 
 
-class NastranIO(NastranIO_):
+class NastranIO(NastranIO_, NastranGeometryGroups):
     """Defines the GUI class for Nastran."""
     def __init__(self):
         super().__init__()
