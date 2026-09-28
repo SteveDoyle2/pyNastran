@@ -63,7 +63,7 @@ class Boundary:
                     raise RuntimeError(f'Boundary field 1 must be an integer or string without a space; nid_name={nid_name!r}')
                 if ' ' in nid_name:
                     raise RuntimeError(f'Boundary field 1 must be an integer or string without a space; nid_name={nid_name!r}')
-                nid = nid_name
+                nid = nid_name.lower()
 
             dof1 = int(sline[1])
             if nsline == 2:
@@ -165,6 +165,9 @@ class ShellSection:
         self.orientation = orientation
         self.offset = offset
         self.log = log
+        assert isinstance(orientation, (str, int)), orientation
+        if isinstance(orientation, str):
+            assert orientation == orientation.lower(), orientation
 
     @classmethod
     def add_from_data_lines(cls, param_map: dict[str, str],
@@ -198,6 +201,7 @@ class ShellSection:
                     raise RuntimeError(sline)
                 material_namei = material_namei.strip().lower()
                 thicknessi = float(thickness_stri)
+                orientation_namei = orientation_namei.lower()
 
                 thickness.append(thicknessi)
                 theta.append(thetai)
@@ -208,7 +212,7 @@ class ShellSection:
         else:
             orientation_name = None
             material_name = param_map['material']
-            log.debug(f'material_name = {material_name}')
+            #log.debug(f'material_name = {material_name}')
 
             #if len(data_lines) == 0:
                 #pass
@@ -223,8 +227,8 @@ class ShellSection:
                 raise RuntimeError(data_lines)
             thickness = [thicknessi]
 
-        for line in data_lines:
-            log.debug(f'shell - {line!r}')
+        #for line in data_lines:
+        #    log.debug(f'shell - {line!r}')
         return ShellSection(log,
                             material_name, elset,
                             thickness,
@@ -236,10 +240,11 @@ class ShellSection:
         """prints a summary for the solid section"""
         msg = 'ShellSection(\n'
         #msg += '    param_map = %r,\n' % self.param_map
+        msg += f'    elset = {self.elset!r},\n'
         msg += f'    material_name = {self.material_name},\n'
         msg += f'    thickness = {self.thickness},\n'
         msg += f'    theta = {self.theta},\n'
-        msg += f'    orientation = {self.orientation},\n'
+        msg += f'    orientation = {self.orientation!r},\n'
         msg += f'    offset = {self.offset},\n'
         msg += ')\n'
         return msg
@@ -696,6 +701,7 @@ class Transform:
 class Surface:
     def __init__(self, name: str, surface_type: str,
                  set_names: list[str], faces: list[str]):
+        assert name == name.lower(), name
         self.name = name
         self.surface_type = surface_type
         self.set_names = set_names
@@ -730,7 +736,7 @@ class Orientation:
                  origin: np.ndarray,
                  x_axis=None, xy_plane=None,
                  axis=None, alpha=None):
-        self.name = name.lower()
+        self.name = name
         self.system = system
 
         self.origin = origin
