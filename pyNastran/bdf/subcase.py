@@ -1,17 +1,16 @@
 """Subcase creation/extraction class"""
 from __future__ import annotations
-import getpass
-from typing import Optional, Any
+# import getpass
+from typing import Any
 import numpy as np
 
+from cpylog import SimpleLogger
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.utils import deprecated # object_attributes,
 
 from pyNastran.bdf.bdf_interface.subcase.utils import (
     write_stress_type, write_set, expand_thru_case_control)
-USER_NAME = getpass.getuser()
-
-from cpylog import SimpleLogger
+# USER_NAME = getpass.getuser()
 
 
 INT_CARDS = (
@@ -91,8 +90,8 @@ class Subcase:
         2x (tested with timeit).
 
         Default method is a bit slow for a list of lists and can take a
-        long time to read a bdf with many subcases this method removes
-        some of the overhead if the subcase is the default subcase, it
+        long time to read a bdf with many subcases. This method removes
+        some of the overhead if the subcase is the default subcase. It
         is shallow copied instead this greatly improves bdf read speed,
         since it avoids deepcopying large sets defined in the default
         subcase for every subcase that is defined.
@@ -148,7 +147,9 @@ class Subcase:
     def add_op2_data(self, data_code: dict[str, Any], msg: str,
                      log: SimpleLogger) -> None:
         """
-        >>> self.subcase.add_op2_data(self.data_code, 'VECTOR')
+        >>> subcase = Subcase()
+        >>> data_code = {'table_name': b'OUGV1', 'table_code': 3}
+        >>> subcase.add_op2_data(data_code, 'VECTOR')
         """
         assert log is not None, log
         # assert self.log is not None, self.log
@@ -1250,7 +1251,8 @@ def _simplify_set(key: str, value: Any, options: list[Any],
     key: str
         'SET 1'
     value : list[str]
-        [' 1.*MAT1', '2.*MAT2', '3.*MAT3', '4.*MAT4', '5.*MAT5', '6.*MAT6', ' 7.*MAT7', '8.*MAT8', '9.*MAT9']
+        [' 1.*MAT1', '2.*MAT2', '3.*MAT3', '4.*MAT4', '5.*MAT5',
+         '6.*MAT6', ' 7.*MAT7', '8.*MAT8', '9.*MAT9']
     options : int
         the SET id
     """

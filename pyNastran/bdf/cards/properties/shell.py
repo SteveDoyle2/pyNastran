@@ -1884,8 +1884,8 @@ class PCOMPG(CompositeShellProperty):
             mids_ref += mids_ref[::-1]
 
         assert len(mids) == len(mids_ref), f'mids={mids} ({len(mids)}) mids_ref:\n{mids_ref}; {len(mids_ref)}'
-        for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip_longest(mids, mids_ref, theta,
-                                                                            thicknesses, zmeans, z0, z1):
+        for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip_longest(
+                mids, mids_ref, theta, thicknesses, zmeans, z0, z1):
             Qbar = get_Qbar_matrix(mid_ref, thetai)
             A += Qbar * thickness
             #B += Qbar * thickness * zmean
@@ -2160,7 +2160,8 @@ class PPLANE(Property):
         mid = 1
         return PPLANE(pid, mid, t=0., nsm=0., formulation_option=0, comment='')
 
-    def __init__(self, pid: int, mid: int, t: float=0., nsm: float=0., formulation_option: int=0, comment: str=''):
+    def __init__(self, pid: int, mid: int, t: float=0., nsm: float=0.,
+                 formulation_option: int=0, comment: str=''):
         """NX specific card"""
         Property.__init__(self)
         if comment:
@@ -2243,7 +2244,8 @@ class PPLANE(Property):
         """
         Calculates mass per area.
 
-        .. math:: \frac{m}{A} = nsm + \rho t"""
+        .. math:: \frac{m}{A} = nsm + \rho t
+        """
         mid_ref = self.mid_ref
         rho = mid_ref.Rho()
         thickness = self.Thickness()  # Thickness(tflag=tflag, tscales=tscales)
@@ -2289,7 +2291,6 @@ class PGPLSN(Property):
     def __init__(self, pid: int, mid: int, cgid: int, t: float,
                  kn: float | int = 0., kr1: float | int = 0., kr2: float | int = 0.,
                  comment: str=''):
-
         """
         Generalized Plane Strain Element Property for SOL 401 (NX Nastran)
         :param pid: Property identification number. (Integer > 0)
