@@ -290,7 +290,7 @@ class MainWindow(GuiCommon, NastranIO):
                         module_name, plugin_file))
                 continue
 
-            my_class = load_plugin_class(module_name, plugin_file, class_name, self.log):
+            my_class = load_plugin_class(module_name, plugin_file, class_name, self.log)
             class_obj = my_class(self)
             self.modules[module_name] = class_obj
 
