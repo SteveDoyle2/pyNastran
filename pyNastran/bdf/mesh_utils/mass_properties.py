@@ -3669,6 +3669,8 @@ def mass_properties_breakdown(
     nids_dict = defaultdict(list)
     pids_dict = defaultdict(list)
     mids_dict = defaultdict(list)
+    conrod_mass_per_length = []
+    conrod_nsm_per_length = []
     theta_mcid_dict = defaultdict(list)
     g0_dict = defaultdict(list)
     x_dict = defaultdict(list)
@@ -3711,9 +3713,12 @@ def mass_properties_breakdown(
             nids_dict[etype].append(elem.nodes)
             pids_dict[etype].append(elem.pid)
         elif etype == "CONROD":
+            # CONROD has no property card; A, NSM and the material live on the
+            # element, so store the per-element mass/length here
             nids_dict[etype].append(elem.nodes)
             mids_dict[etype].append(elem.mid)
-            # element_nsm_dict[etype].append(elem.nsm)
+            conrod_mass_per_length.append(elem.Rho() * elem.Area())
+            conrod_nsm_per_length.append(elem.Nsm())
         elif etype in "CSHEAR":
             nids_dict[etype].append(elem.nodes)
             pids_dict[etype].append(elem.pid)
@@ -3793,11 +3798,10 @@ def mass_properties_breakdown(
             pids = pids_dict[etype]
             assert len(pids) > 0, pids
             all_pids = np.array(pids_per_length_dict["PROD"], dtype="int32")
-            mass_per_length = np.array(mass_per_length_dict["PROD"], dtype="int32")
-            nsm_per_length = np.array(nsm_per_length_dict["PROD"], dtype="int32")
-            assert len(nsm_per_length) > 0, nsm_per_length
+            mass_per_length = np.array(mass_per_length_dict["PROD"], dtype="float64")
+            nsm_per_length = np.array(nsm_per_length_dict["PROD"], dtype="float64")
 
-            ipids = np.searchsorted(all_pids, pids)
+            ipids = _breakdown_ipids(all_pids, pids, etype)
             inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
             p1 = xyz_cid0[inids[:, 0], :]
             p2 = xyz_cid0[inids[:, 1], :]
@@ -3821,12 +3825,9 @@ def mass_properties_breakdown(
         elif etype == "CONROD":
             mids = mids_dict[etype]
             assert len(mids) > 0, mids
-            mass_per_length = np.array(mass_per_length_dict["CONROD"], dtype="int32")
-            nsm_per_length = np.array(nsm_per_length_dict["CONROD"], dtype="int32")
-            # assert len(mass_per_length) > 0, mass_per_length
-            # assert len(nsm_per_length) > 0, nsm_per_length
-
-            # imids = np.searchsorted(all_mids, mids)
+            # per-element values (sorted by eid, same order as eids/nids)
+            mpl = np.array(conrod_mass_per_length, dtype="float64")
+            npl = np.array(conrod_nsm_per_length, dtype="float64")
             inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
             p1 = xyz_cid0[inids[:, 0], :]
             p2 = xyz_cid0[inids[:, 1], :]
@@ -3843,9 +3844,6 @@ def mass_properties_breakdown(
             # exx = eyy = ezz = 1. / e2[:, 0, 0]
             # exx = eyy = ezz = 1.
 
-            mpl = npl = 0.0
-            # mpl = mass_per_length[imids]
-            # npl = nsm_per_length[imids]
             mass = mpl * length
             nsm = npl * length
             size = length
@@ -3853,11 +3851,10 @@ def mass_properties_breakdown(
             pids = pids_dict[etype]
             assert len(pids) > 0, pids
             all_pids = np.array(pids_per_length_dict["PTUBE"], dtype="int32")
-            mass_per_length = np.array(mass_per_length_dict["PTUBE"], dtype="int32")
-            nsm_per_length = np.array(nsm_per_length_dict["PTUBE"], dtype="int32")
-            assert len(nsm_per_length) > 0, nsm_per_length
+            mass_per_length = np.array(mass_per_length_dict["PTUBE"], dtype="float64")
+            nsm_per_length = np.array(nsm_per_length_dict["PTUBE"], dtype="float64")
 
-            ipids = np.searchsorted(all_pids, pids)
+            ipids = _breakdown_ipids(all_pids, pids, etype)
             inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
             p1 = xyz_cid0[inids[:, 0], :]
             p2 = xyz_cid0[inids[:, 1], :]
@@ -3889,9 +3886,8 @@ def mass_properties_breakdown(
 
             mass_per_length = np.array(mass_per_length_dict["bar"])
             nsm_per_length = np.array(nsm_per_length_dict["bar"])
-            assert len(nsm_per_length) > 0, nsm_per_length
 
-            ipids = np.searchsorted(all_pids, pids)
+            ipids = _breakdown_ipids(all_pids, pids, etype)
             inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
             p1 = xyz_cid0[inids[:, 0], :]
             p2 = xyz_cid0[inids[:, 1], :]
@@ -3938,9 +3934,7 @@ def mass_properties_breakdown(
 
             mass_per_length = np.array(mass_per_length_dict["beam"])
             nsm_per_length = np.array(nsm_per_length_dict["beam"])
-            # print(nsm_per_length_dict)
-            assert len(nsm_per_length) > 0, nsm_per_length
-            ipids = np.searchsorted(all_pids, pids)
+            ipids = _breakdown_ipids(all_pids, pids, etype)
             # print(all_pids, pids, ipids)
             inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
             p1 = xyz_cid0[inids[:, 0], :]
@@ -4097,7 +4091,12 @@ def mass_properties_breakdown(
                 msg += f"  {nidsi}; n={len(nidsi)}\n"
             raise ValueError(msg) from e
 
-        mass, nsm, centroid, size = _get_mass(etype, eids, nids)
+        try:
+            mass, nsm, centroid, size = _get_mass(etype, eids, nids)
+        except BreakdownPropertyError as error:
+            pids = np.array(pids_dict[etype])
+            msg = _breakdown_property_error_msg(model, etype, eids, pids, error.pids)
+            raise BreakdownPropertyError(etype, error.pids, msg=msg) from None
         if mass is None:
             continue
         if size is not None:
@@ -4213,12 +4212,39 @@ def _breakdown_ipids(all_pids: np.ndarray, pids: np.ndarray, etype: str) -> np.n
     else:
         is_missing = all_pids[ipids_clipped] != pids
     if is_missing.any():
-        missing = np.unique(pids[is_missing]).tolist()
-        raise RuntimeError(
-            f"mass_properties_breakdown: {etype} references property ids {missing} "
-            "whose type is not supported by the breakdown"
-        )
+        raise BreakdownPropertyError(etype, np.unique(pids[is_missing]).tolist())
     return ipids
+
+
+class BreakdownPropertyError(RuntimeError):
+    """an element references a property the breakdown has no mass data for"""
+    def __init__(self, etype: str, pids: list[int], msg: str = ""):
+        self.etype = etype
+        self.pids = pids
+        if not msg:
+            msg = (
+                f"mass_properties_breakdown: {etype} references property ids {pids}, "
+                "which have no mass data in the breakdown"
+            )
+        super().__init__(msg)
+
+
+def _breakdown_property_error_msg(
+    model: BDF, etype: str, eids: np.ndarray, pids: np.ndarray, missing_pids: list[int]
+) -> str:
+    """builds a message that says which property types/elements are the problem"""
+    lines = [f"mass_properties_breakdown: {etype} elements reference unsupported properties:"]
+    for pid in missing_pids:
+        prop = model.properties.get(pid)
+        ptype = "<missing property>" if prop is None else prop.type
+        eids_pid = eids[pids == pid]
+        neids = len(eids_pid)
+        eids_str = str(eids_pid[:10].tolist())
+        if neids > 10:
+            eids_str = eids_str[:-1] + ", ...]"
+        lines.append(f"  {ptype} pid={pid} is used by {neids} {etype}(s): eids={eids_str}")
+    lines.append(f"  the breakdown can't compute {etype} mass for these property types")
+    return "\n".join(lines)
 
 
 AREA_ETYPES = {
@@ -4374,8 +4400,6 @@ def _breakdown_tri(
     mass_per_area = np.array(mass_per_area_dict["shell"])
     nsm_per_area = np.array(nsm_per_area_dict["shell"])
     thickness = np.array(thickness_dict["shell"])
-    assert len(mass_per_area) > 0, mass_per_area_dict
-    assert len(thickness) > 0, thickness
 
     ipids = _breakdown_ipids(all_pids, pids, etype)
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 3)
@@ -4433,8 +4457,6 @@ def _breakdown_quad(
     mass_per_area = np.array(mass_per_area_dict["shell"])
     nsm_per_area = np.array(nsm_per_area_dict["shell"])
     thickness = np.array(thickness_dict["shell"])
-    assert len(mass_per_area) > 0, mass_per_area_dict
-    assert len(thickness) > 0, thickness
 
     ipids = _breakdown_ipids(all_pids, pids, etype)
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 4)
@@ -4471,8 +4493,6 @@ def _breakdown_quad(
     nsm = npa * area
 
     # assume the panel is square to calculate w; then multiply by t to get tw
-    assert len(area) > 0, area
-    assert len(thickness) > 0, thickness
     # tw = thickness[ipids] * np.sqrt(area)
     # Ax = tw * np.linalg.norm(np.cross(xaxis, normal), axis=1)
     # Ay = tw * np.linalg.norm(np.cross(yaxis, normal), axis=1)
@@ -4498,7 +4518,6 @@ def _breakdown_cshear(
     mass_per_area = np.array(mass_per_area_dict["shear"])
     nsm_per_area = np.array(nsm_per_area_dict["shear"])
     thickness = np.array(thickness_dict["shear"])
-    assert len(mass_per_area) > 0, mass_per_area_dict
     ipids = _breakdown_ipids(all_pids, pids, etype)
     inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 4)
     p1 = xyz_cid0[inids[:, 0], :]
@@ -4555,7 +4574,7 @@ def _breakdown_ctetra(
 ):
     nids2 = nids[:, :4]
 
-    rho = _solid_density(pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
+    rho = _solid_density(etype, pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
 
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 4)
     p1 = xyz_cid0[inids[:, 0], :]
@@ -4576,6 +4595,7 @@ def _breakdown_ctetra(
 
 
 def _solid_density(
+    etype: str,
     pids_list: list[int],
     pids_per_volume_dict: [dict, list[int]],
     mass_per_volume_dict: dict[str, list[float]],
@@ -4590,16 +4610,14 @@ def _solid_density(
         else:
             raise RuntimeError(card_type)
 
-    pids_array = np.hstack(pids_list_)
-    rhos_array = np.hstack(rho_list_)
-    assert len(pids_array) > 0, pids_array
+    pids_array = np.hstack(pids_list_).astype("int64")
+    rhos_array = np.hstack(rho_list_).astype("float64")
 
     isort = np.argsort(pids_array)
     pids_sorted = pids_array[isort]
     rho_sorted = rhos_array[isort]
-    ipids = np.searchsorted(pids_sorted, pids_list)
+    ipids = _breakdown_ipids(pids_sorted, np.asarray(pids_list), etype)
     rho = rho_sorted[ipids]
-    assert len(rho) > 0, rho
     return rho
 
 
@@ -4615,7 +4633,7 @@ def _breakdown_chexa(
 ):
     nids2 = nids[:, :8]
 
-    rho = _solid_density(pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
+    rho = _solid_density(etype, pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
 
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 8)
     p1 = xyz_cid0[inids[:, 0], :]
@@ -4664,7 +4682,7 @@ def _breakdown_cpenta(
 ):
     nids2 = nids[:, :6]
 
-    rho = _solid_density(pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
+    rho = _solid_density(etype, pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
 
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 6)
     p1 = xyz_cid0[inids[:, 0], :]
@@ -4702,7 +4720,7 @@ def _breakdown_cpyram(
 ):
     nids2 = nids[:, :5]
 
-    rho = _solid_density(pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
+    rho = _solid_density(etype, pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
 
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 5)
     p1 = xyz_cid0[inids[:, 0], :]

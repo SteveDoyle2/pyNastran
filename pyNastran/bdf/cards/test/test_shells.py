@@ -1890,6 +1890,76 @@ class TestShells(unittest.TestCase):
         assert np.allclose(total_mass, 4.5), total_mass
         assert np.allclose(total_mass, mass_expected), (total_mass, mass_expected)
 
+    def test_mass_breakdown_pmic(self):
+        """PMIC is massless and allowed on CROD, CTRIA3, CQUAD4, CHEXA, CPENTA, CTETRA, CPYRAM"""
+        model = BDF(log=SimpleLogger(level='warning'))
+        xyz = [[0., 0., 0.], [1., 0., 0.], [1., 1., 0.], [0., 1., 0.],
+               [0., 0., 1.], [1., 0., 1.], [1., 1., 1.], [0., 1., 1.], [0.5, 0.5, 2.]]
+        for nid, xyzi in enumerate(xyz, start=1):
+            model.add_grid(nid, xyzi)
+        model.add_mat1(1, 1e7, None, 0.3, rho=0.1)
+        model.add_pshell(1, mid1=1, t=1.0)
+        model.add_pmic(2)
+        model.add_cquad4(10, 1, [1, 2, 3, 4])  # mass=0.1
+        model.add_cquad4(11, 2, [1, 2, 3, 4])
+        model.add_ctria3(12, 2, [1, 2, 3])
+        model.add_crod(13, 2, [1, 2])
+        model.add_ctetra(14, 2, [1, 2, 3, 5])
+        model.add_cpenta(15, 2, [1, 2, 3, 5, 6, 7])
+        model.add_chexa(16, 2, [1, 2, 3, 4, 5, 6, 7, 8])
+        model.add_cpyram(17, 2, [5, 6, 7, 8, 9])
+        model.cross_reference()
+
+        total_mass, unused_cg, unused_inertia, mass, unused_cgs, unused_inertias = mass_properties_breakdown(model)
+        assert mass.shape == (8, 3), mass.shape
+        assert np.allclose(mass[:, 0], [0.1, 0., 0., 0., 0., 0., 0., 0.]), mass
+        assert np.allclose(total_mass, 0.1), total_mass
+
+        elem_mass = [elem.Mass() for eid, elem in sorted(model.elements.items())]
+        assert np.allclose(elem_mass, mass[:, 0]), elem_mass
+        mass_expected = mass_properties(model)[0]
+        assert np.allclose(mass_expected, 0.1), mass_expected
+
+    def test_mass_breakdown_unsupported_pid_message(self):
+        """unsupported properties on line/shell/solid elements fail loudly and say why"""
+        log = SimpleLogger(level='error')
+        xyz = [[0., 0., 0.], [1., 0., 0.], [1., 1., 0.], [0., 0., 1.]]
+        # (element adder, nodes, property adder); the good property is pid=10,
+        # the unsupported one is pid=5 (sorts first) or pid=20 (sorts last)
+        cases = [
+            ('CROD', lambda m, eid, pid: m.add_crod(eid, pid, [1, 2]),
+             lambda m, pid: m.add_prod(pid, 1, A=1.0)),
+            ('CTUBE', lambda m, eid, pid: m.add_ctube(eid, pid, [1, 2]),
+             lambda m, pid: m.add_ptube(pid, 1, OD1=1.0, t=0.1)),
+            ('CBAR', lambda m, eid, pid: m.add_cbar(eid, pid, [1, 2], [0., 0., 1.], None),
+             lambda m, pid: m.add_pbar(pid, 1, A=1.0)),
+            ('CBEAM', lambda m, eid, pid: m.add_cbeam(eid, pid, [1, 2], [0., 0., 1.], None),
+             lambda m, pid: m.add_pbeam(pid, 1, [0.], ['C'], [1.0], [1.], [1.], [0.], [1.])),
+            ('CQUAD4', lambda m, eid, pid: m.add_cquad4(eid, pid, [1, 2, 3, 4]),
+             lambda m, pid: m.add_pshell(pid, mid1=1, t=1.0)),
+            ('CSHEAR', lambda m, eid, pid: m.add_cshear(eid, pid, [1, 2, 3, 4]),
+             lambda m, pid: m.add_pshear(pid, 1, 1.0)),
+            ('CTETRA', lambda m, eid, pid: m.add_ctetra(eid, pid, [1, 2, 3, 4]),
+             lambda m, pid: m.add_psolid(pid, 1)),
+        ]
+        for etype, add_element, add_property in cases:
+            for bad_pid in [5, 20]:
+                with self.subTest(etype=etype, bad_pid=bad_pid):
+                    model = BDF(log=log)
+                    for nid, xyzi in enumerate(xyz, start=1):
+                        model.add_grid(nid, xyzi)
+                    model.add_mat1(1, 1e7, None, 0.3, rho=0.1)
+                    add_property(model, 10)
+                    # a massless-by-design property the breakdown doesn't list
+                    model.add_pvisc(bad_pid, 1.0, 0.0)
+                    add_element(model, 1, 10)
+                    add_element(model, 2, bad_pid)
+                    model.cross_reference()
+                    with self.assertRaises(RuntimeError) as context:
+                        mass_properties_breakdown(model)
+                    msg = str(context.exception)
+                    assert f'PVISC pid={bad_pid} is used by 1 {etype}(s): eids=[2]' in msg, msg
+
     def test_mass_breakdown_missing_pid(self):
         """an unsupported property must not silently use a neighbor's mass/area"""
         all_pids = np.array([10, 30])

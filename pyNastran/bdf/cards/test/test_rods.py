@@ -8,6 +8,7 @@ from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.bdf import CROD, CONROD, PROD, CTUBE, PTUBE, GRID, MAT1
 from pyNastran.bdf.cards.test.test_shells import make_dvprel_optimization
 from pyNastran.bdf.cards.test.utils import save_load_deck, mass_properties
+from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_breakdown
 
 #from pyNastran.bdf.field_writer_8 import print_card_8
 
@@ -449,6 +450,52 @@ class TestRods(unittest.TestCase):
 
         model.cross_reference()
         model.update_model_by_desvars()
+
+    def test_rod_mass_breakdown(self):
+        """
+        mass_properties_breakdown for CROD/CTUBE/CONROD must match elem.Mass()
+
+        Non-integer rho/A/nsm catch the old int32 truncation of the
+        PROD/PTUBE tables, and the CONROD rows catch the old hardcoded zero.
+        """
+        model = BDF(debug=None)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [10., 0., 0.])
+        model.add_grid(3, [0., 2.5, 0.])
+        model.add_mat1(1, 3e7, None, 0.3, rho=0.1)
+        model.add_mat1(2, 3e7, None, 0.3, rho=0.25)
+
+        model.add_prod(10, 1, A=1.5, nsm=0.25)
+        model.add_ptube(20, 1, OD1=1.0, t=0.1, nsm=0.35)
+        model.add_crod(1, 10, [1, 2])           # L=10
+        model.add_ctube(2, 20, [1, 3])          # L=2.5
+        # two CONRODs with different materials/A/nsm to check they don't
+        # share a row
+        model.add_conrod(3, 1, [1, 2], A=0.75, nsm=0.15)
+        model.add_conrod(4, 2, [1, 3], A=1.25, nsm=0.45)
+        model.cross_reference()
+
+        total_mass, unused_cg, unused_inertia, mass, unused_cgs, unused_inertias = (
+            mass_properties_breakdown(model))
+
+        # rows follow element type then eid: CROD, CTUBE, CONROD, CONROD
+        crod, ctube, conrod3, conrod4 = [model.elements[eid] for eid in (1, 2, 3, 4)]
+        struct = [
+            0.1 * 1.5 * 10.,                       # CROD
+            ctube.Rho() * ctube.Area() * 2.5,      # CTUBE
+            0.1 * 0.75 * 10.,                      # CONROD 3
+            0.25 * 1.25 * 2.5,                     # CONROD 4
+        ]
+        nsm = [0.25 * 10., 0.35 * 2.5, 0.15 * 10., 0.45 * 2.5]
+        expected_total = [crod.Mass(), ctube.Mass(), conrod3.Mass(), conrod4.Mass()]
+
+        assert np.allclose(mass[:, 1], struct), mass
+        assert np.allclose(mass[:, 2], nsm), mass
+        assert np.allclose(mass[:, 0], expected_total), mass
+        assert np.allclose(total_mass, sum(expected_total)), total_mass
+
+        mass_expected = mass_properties(model)[0]
+        assert np.allclose(total_mass, mass_expected), (total_mass, mass_expected)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
