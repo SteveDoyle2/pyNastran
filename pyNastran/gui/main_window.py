@@ -58,6 +58,9 @@ try:
 except ModuleNotFoundError:
     IS_DARK = False
 
+from cpylog import SimpleLogger
+
+
 def get_stylesheet():
     stylesheet = None
     #if IS_DARK:
@@ -287,15 +290,7 @@ class MainWindow(GuiCommon, NastranIO):
                         module_name, plugin_file))
                 continue
 
-            loader = importlib.machinery.SourceFileLoader(module_name, plugin_file)
-            module = loader.load_module()
-            try:
-                my_class = getattr(module, class_name)
-            except AttributeError:
-                self.log_warning('Failed to load plugin %r because class %s doesnt exist' % (
-                    module_name, class_name))
-                return
-
+            my_class = load_plugin_class(module_name, plugin_file, class_name, self.log):
             class_obj = my_class(self)
             self.modules[module_name] = class_obj
 
@@ -424,3 +419,73 @@ class MainWindow(GuiCommon, NastranIO):
         if q_app is None:
             sys.exit()
         q_app.quit()
+
+
+# def load_module(loader):
+#     if sys.version_info < (3, 15):
+#         module = loader.load_module()
+#     else:
+#         module = loader.exec_module()
+#     return module
+
+def load_module_compat(loader, spec):
+    # For Python 3.15 and newer
+    if sys.version_info >= (3, 15):
+        # 1. Create the module object from the spec
+        module = importlib.util.module_from_spec(spec)
+        # 2. Add it to sys.modules before executing it
+        sys.modules[spec.name] = module
+        # 3. Execute the module code in-place (returns None)
+        loader.exec_module(module)
+    else:
+        # Fallback for older legacy setups
+        module = loader.load_module(spec.name)
+    return module
+
+
+# def load_plugin_class(module_name: str, plugin_file: str, class_name: str,
+#                       log: SimpleLogger):
+#     """old code (doesn't work in python 3.15, but kept for legacy"""
+#     loader = importlib.machinery.SourceFileLoader(module_name, plugin_file)
+#     module = loader.load_module()
+#     try:
+#         my_class = getattr(module, class_name)
+#     except AttributeError:
+#         log.warning('Failed to load plugin %r because class %s doesnt exist' % (
+#             module_name, class_name))
+#         return
+#     return my_class
+
+def load_plugin_class(module_name: str, plugin_file: str, class_name: str,
+                      log: SimpleLogger) -> type:
+    """Dynamically loads a Python file and returns a specific class from it.
+
+    Compatible with Python 3.5-3.15+ (avoids deprecated load_module).
+    """
+    # 1. Generate the module metadata (spec)
+    spec = importlib.util.spec_from_file_location(module_name, plugin_file)
+    if spec is None or spec.loader is None:
+        log.warning(f"Could not load spec for {plugin_file}")
+        return
+
+    # 2. Create the empty module object
+    module = importlib.util.module_from_spec(spec)
+
+    # 3. Register it in sys.modules so internal imports work correctly
+    sys.modules[module_name] = module
+
+    try:
+        # 4. Execute the file contents to populate the module
+        spec.loader.exec_module(module)
+    except Exception:
+        # Clean up sys.modules if the plugin has a syntax/runtime error on load
+        sys.modules.pop(module_name, None)
+        log.warning(f"Could not load spec for {plugin_file}")
+        return
+
+    # 5. Extract and return the requested class
+    try:
+        my_class = getattr(module, class_name)
+    except AttributeError:
+        log.warning(f"Class '{class_name}' not found in {plugin_file}")
+    return my_class

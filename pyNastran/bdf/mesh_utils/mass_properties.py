@@ -501,8 +501,7 @@ def mass_properties(
     reference_point: Optional[np.ndarray] = None,
     sym_axis: str = "",
     scale: Optional[float] = None,
-    inertia_reference: str = "cg",
-):
+    inertia_reference: str = "cg",):
     """
     Calculates mass properties in the global system about the
     reference point, while considering WTMASS.
@@ -541,6 +540,7 @@ def mass_properties(
     .. seealso:: model.mass_properties
 
     """
+    scale = _check_scale(scale)
     coord1 = model.coords[0]
     reference_xyz, coord2, is_cg = _update_reference_point(
         model, reference_point, inertia_reference
@@ -602,14 +602,14 @@ def mass_properties_no_xref(
     reference_point=None,
     sym_axis: str = "",
     scale: Optional[float]=None,
-    inertia_reference="cg",
-):
+    inertia_reference="cg",):
     """
     Calculates mass properties without cross-referencing the model.
 
     .. see:: mass_properties
 
     """
+    scale = _check_scale(scale)
     coord1 = model.coords[0]
     reference_xyz, coord2, is_cg = _update_reference_point(
         model, reference_point, inertia_reference
@@ -788,6 +788,7 @@ def _get_shell_mpa(element, prop, pid_cache: dict[int, tuple]) -> float:
 
         # check for per-element thickness override
         has_override = False
+        t = None
         if element.type in ("CQUAD4", "CQUAD8", "CQUADR"):
             if (
                 element.T1 is not None
@@ -1312,6 +1313,7 @@ def mass_properties_nsm(
        will be considered, even if not included in the element set
 
     """
+    scale = _check_scale(scale)
     # TODO: check CG for F:\work\pyNastran\examples\Dropbox\move_tpl\ac11102g.bdf
     coord1 = model.coords[0]
     reference_xyz, coord2, is_cg = _update_reference_point(
@@ -3548,9 +3550,6 @@ def _apply_mass_symmetry(
     and the PARAM WTMASS card
 
     """
-    if scale is not None:
-        assert isinstance(scale, float_types), scale
-
     sym_axis_set = _get_sym_axis(model, sym_axis)
     del sym_axis
 
@@ -3611,8 +3610,7 @@ def mass_properties_breakdown(
     sym_axis: Optional[str] = None,
     scale: Optional[float] = None,
     inertia_reference: str = "cg",
-    debug: bool = False,
-):
+    debug: bool = False,):
     """
     Gets a "incomplete" breakdown the mass properties on a per element basis.
     This lets you see that 20% of the shell mass came from area material density
@@ -3624,6 +3622,7 @@ def mass_properties_breakdown(
         the NSM/NSM1/NSML/NSML1/NSMADD set to apply; the NSM mass is
         lumped at the element centroid and reported in the nsm column
     """
+    scale = _check_scale(scale)
     coord1 = model.coords[0]
     reference_xyz, coord2, is_cg = _update_reference_point(
         model, reference_point, inertia_reference
@@ -4938,6 +4937,21 @@ def _breakdown_property_dicts(
             thickness_dict["shell"].append(thickness)
             mass_per_area_dict["shell"].append(rhoi * thickness)
             nsm_per_area_dict["shell"].append(prop.nsm)
+        elif ptype == "PMIC":
+            # acoustic microphone property; massless (same as mass_properties).
+            # Allowed on CROD, CTRIA3, CQUAD4, CHEXA, CPENTA, CTETRA, CPYRAM,
+            # so register it in the length (CROD), area and volume tables.
+            pids_per_length_dict["PROD"].append(pid)
+            mass_per_length_dict["PROD"].append(0.0)
+            nsm_per_length_dict["PROD"].append(0.0)
+
+            pids_per_area_dict["shell"].append(pid)
+            thickness_dict["shell"].append(0.0)
+            mass_per_area_dict["shell"].append(0.0)
+            nsm_per_area_dict["shell"].append(0.0)
+
+            pids_per_volume_dict["PSOLID"].append(pid)
+            mass_per_volume_dict["PSOLID"].append(0.0)
         elif ptype in ("PCOMP", "PCOMPG"):
             # PCOMPG has the same mids/thicknesses/lam layout as PCOMP;
             # the global ply ids don't affect mass
@@ -5122,3 +5136,9 @@ def _bar_axes(
 # ezz[iezz] = 1 / ezz_inv[iezz]
 # print(exx.tolist())
 # return exx, eyy, ezz
+
+def _check_scale(scale: Optional[float]) -> Optional[float]:
+    if scale is None:
+        return scale
+    scale = float(scale)  # cast int to float
+    return scale
