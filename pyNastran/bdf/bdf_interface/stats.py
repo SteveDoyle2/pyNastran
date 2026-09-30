@@ -202,7 +202,7 @@ def get_bdf_stats(model: BDF,
         #new
         'bolt', 'boltld', 'boltfor', 'boltseq', 'boltfrc',
         'use_new_deck_parser', 'allow_overwrites_set', '_parse',
-        'allow_tabs',
+        'allow_tabs', 'writer',
 
         # to remove
         'zaero',

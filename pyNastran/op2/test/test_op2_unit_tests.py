@@ -39,7 +39,8 @@ from pyNastran.op2.op2 import OP2, read_op2  # FatalError, FortranMarkerError
 from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2, main as test_op2
-from pyNastran.op2.result_objects.contact_traction_and_pressure import RealContactTractionAndPressureArray
+from pyNastran.op2.result_objects.contact_traction_and_pressure import (
+    RealContactTractionAndPressureArray)
 from pyNastran.op2.result_objects.glue_force import GlueForceArray
 
 from pyNastran.bdf.test.test_bdf_unit_tests import Tester
@@ -56,15 +57,15 @@ from pyNastran.femutils.test.utils import is_array_close
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
 from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
 from pyNastran.f06.csv_writer import write_csv
+from pyNastran.op2.stress_reduction import (
+    von_mises_2d, principal_2d, max_shear_2d,
+    max_shear,
+    von_mises_3d, principal_components_3d)
 
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
 OP2_TEST_PATH = (PKG_PATH / 'op2' / 'test' / 'examples').resolve()
 OP2_TEST = PKG_PATH / 'op2' / 'test'
-from pyNastran.op2.stress_reduction import (
-    von_mises_2d, principal_2d, max_shear_2d,
-    max_shear,
-    von_mises_3d, principal_components_3d)
 
 
 class TestOP2Unit(Tester):
@@ -849,8 +850,9 @@ class TestSATKOP2(Tester):
 
         assert len(op2.op2_results.force.cbar_force[1].modes) == 8
         # type=RealCBarForceArray ntimes=8 nelements=5; table_name='OEF1'
-        # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1,
-        #                                   bending_moment_b2, shear1, shear2, axial, torque]
+        # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2,
+        #                                   bending_moment_b1, bending_moment_b2,
+        #                                   shear1, shear2, axial, torque]
         # data.shape = (8, 5, 8)
         # element.shape = (5,)
         # element name: CBAR-34
@@ -873,7 +875,8 @@ class TestSATKOP2(Tester):
         case = op2.op2_results.psd.cbar_force[key]
         assert len(case.freqs) == 127, len(case.freqs)
         # type=RealCBarForceArray ntimes=127 nelements=5; table_name='OEFPSD1'
-        # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
+        # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2,
+        #                                    bending_moment_b1, bending_moment_b2,
         #                                    shear1, shear2, axial, torque]
         # data.shape = (127, 10, 8)
         # element.shape = (5,)
@@ -927,7 +930,8 @@ class TestSATKOP2(Tester):
 
         assert len(op2.op2_results.no.cbar_force[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
         # type=RealCBarForceArray nelements=5; table_name='OEFNO1'
-        # data: [1, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
+        # data: [1, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2,
+        #                               bending_moment_b1, bending_moment_b2,
         #                               shear1, shear2, axial, torque]
         # data.shape = (1, 5, 8)
         # element.shape = (5,)
@@ -946,12 +950,13 @@ class TestSATKOP2(Tester):
 
         str(op2.eigenvalues[''])
         # type=RealEigenvalues neigenvalues=8
-        # title, extraction_order, eigenvalues, radians, cycles, generalized_mass, generalized_stiffness
+        #   title, extraction_order, eigenvalues, radians, cycles,
+        #   generalized_mass, generalized_stiffness
 
         str(op2.matrices['BHH'])
         str(op2.matrices['KHH'])
-        # Matrix['BHH'];      shape=(8, 8);     type=scipy.sparse._coo.coo_matrix;     dtype=float64;   desc=symmetric
-        # Matrix['KHH'];      shape=(8, 8);     type=scipy.sparse._coo.coo_matrix;     dtype=complex128; desc=symmetric
+        # Matrix['BHH']; shape=(8, 8); type=scipy.sparse._coo.coo_matrix; dtype=float64;    desc=symmetric
+        # Matrix['KHH']; shape=(8, 8); type=scipy.sparse._coo.coo_matrix; dtype=complex128; desc=symmetric
 
         str(op2.get_op2_stats())
 
@@ -988,7 +993,8 @@ class TestSATKOP2(Tester):
         assert len(op2.op2_results.psd.cbar_force[(1, 5, 2, 0, 0, '', '')].freqs) == 298
         # type=RealCBarForceArray ntimes=298 nelements=5; table_name='OEFPSD1'
         # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2,
-        #                                   bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+        #                                    bending_moment_b1, bending_moment_b2,
+        #                                    shear1, shear2, axial, torque]
         # data.shape = (298, 10, 8)
         # element.shape = (5,)
         # element name: CBAR-34
@@ -2479,13 +2485,16 @@ class TestOP2Main(Tester):
         log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'api3.bdf'
         op2_filename = MODEL_PATH / 'other' / 'api3.op2'
-        fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, run_skin_solids=False, log=log)
+        fem1, unused_fem2, diff_cards = self.run_bdf(
+            '', bdf_filename, run_skin_solids=False, log=log)
         expected = {
-            'ENDDATA': 1, 'PARAM': 4, 'MAT1': 1, 'RLOAD1': 1, 'TLOAD2': 1, 'TABLED1': 1, 'FREQ': 1, 'TSTEP': 1,
-            'RANDPS': 2, 'RANDT1': 1, 'TABRNDG': 1, 'GRID': 144, 'CBEAM': 2, 'SPC1': 35, 'FORCE': 48, 'MOMENT': 3,
-            'DAREA': 19, 'DESVAR': 6, 'DVPREL1': 6, 'PBEAM': 2, 'CQUAD4': 2, 'PSHELL': 6, 'CBAR': 2, 'PBAR': 2,
-            'CQUAD8': 4, 'CHEXA': 3, 'PSOLID': 2, 'CPENTA': 4, 'CBEND': 2, 'PBEND': 2, 'CTRIAR': 2, 'CTRIA3': 2,
-            'CTRIA6': 4, 'CQUADR': 2}
+            'ENDDATA': 1, 'PARAM': 4, 'MAT1': 1, 'RLOAD1': 1, 'TLOAD2': 1, 'TABLED1': 1,
+            'FREQ': 1, 'TSTEP': 1, 'RANDPS': 2, 'RANDT1': 1, 'TABRNDG': 1, 'GRID': 144,
+            'CBEAM': 2, 'SPC1': 35, 'FORCE': 48, 'MOMENT': 3, 'DAREA': 19,
+            'DESVAR': 6, 'DVPREL1': 6, 'PBEAM': 2,
+            'CQUAD4': 2, 'PSHELL': 6, 'CBAR': 2, 'PBAR': 2, 'CQUAD8': 4,
+            'CHEXA': 3, 'PSOLID': 2, 'CPENTA': 4, 'CBEND': 2, 'PBEND': 2,
+            'CTRIAR': 2, 'CTRIA3': 2, 'CTRIA6': 4, 'CQUADR': 2}
         assert fem1.card_count == expected
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
@@ -3266,8 +3275,8 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_40(self):
         """tests:
-         = ComplexLayeredCompositeStressArray12
-         - ComplexLayeredCompositeStrainArray12
+        - ComplexLayeredCompositeStressArray12
+        - ComplexLayeredCompositeStrainArray12
         """
         log = get_logger(level='warning')
         # bdf_filename = MODEL_PATH / 'other' / 'ranco07a.bdf'
@@ -3298,17 +3307,17 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_41(self):
         """tests:
-         = force.ctria3_force
-         - force.ctria6_force
-         - force.ctriar_force
-         - stress.cquadr_stress
-         - stress.ctria3_composite_stress
-         - stress.ctriar_composite_stress
-         - ato.cquadr_stress
-         - psd.cquadr_stress
-         - rms.cquadr_stress
-         - no.cquadr_stress
-         - crm.cquadr_stress
+        - force.ctria3_force
+        - force.ctria6_force
+        - force.ctriar_force
+        - stress.cquadr_stress
+        - stress.ctria3_composite_stress
+        - stress.ctriar_composite_stress
+        - ato.cquadr_stress
+        - psd.cquadr_stress
+        - rms.cquadr_stress
+        - no.cquadr_stress
+        - crm.cquadr_stress
         """
         log = get_logger(level='debug')
         # bdf_filename = MODEL_PATH / 'other' / 'pmultrand.bdf'

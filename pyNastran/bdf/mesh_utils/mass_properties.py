@@ -17,7 +17,7 @@ from typing import cast, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 # from pyNastran.bdf.cards.materials import get_mat_props_S
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line
 
 CHECK_MASS = False  # should additional checks be done
@@ -501,8 +501,7 @@ def mass_properties(
     reference_point: Optional[np.ndarray] = None,
     sym_axis: str = "",
     scale: Optional[float] = None,
-    inertia_reference: str = "cg",
-):
+    inertia_reference: str = "cg",):
     """
     Calculates mass properties in the global system about the
     reference point, while considering WTMASS.
@@ -535,9 +534,13 @@ def mass_properties(
     I : (6, ) float ndarray
         moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]); wtmass is considered
 
+    .. note:: Inertia matches FEMAP. Put negative signs on the cross terms when
+              forming an inertia matrix.
+
     .. seealso:: model.mass_properties
 
     """
+    scale = _check_scale(scale)
     coord1 = model.coords[0]
     reference_xyz, coord2, is_cg = _update_reference_point(
         model, reference_point, inertia_reference
@@ -598,15 +601,15 @@ def mass_properties_no_xref(
     mass_ids=None,
     reference_point=None,
     sym_axis: str = "",
-    scale=None,
-    inertia_reference="cg",
-):
+    scale: Optional[float]=None,
+    inertia_reference="cg",):
     """
     Calculates mass properties without cross-referencing the model.
 
     .. see:: mass_properties
 
     """
+    scale = _check_scale(scale)
     coord1 = model.coords[0]
     reference_xyz, coord2, is_cg = _update_reference_point(
         model, reference_point, inertia_reference
@@ -785,6 +788,7 @@ def _get_shell_mpa(element, prop, pid_cache: dict[int, tuple]) -> float:
 
         # check for per-element thickness override
         has_override = False
+        t = None
         if element.type in ("CQUAD4", "CQUAD8", "CQUADR"):
             if (
                 element.T1 is not None
@@ -1309,6 +1313,7 @@ def mass_properties_nsm(
        will be considered, even if not included in the element set
 
     """
+    scale = _check_scale(scale)
     # TODO: check CG for F:\work\pyNastran\examples\Dropbox\move_tpl\ac11102g.bdf
     coord1 = model.coords[0]
     reference_xyz, coord2, is_cg = _update_reference_point(
@@ -3605,9 +3610,19 @@ def mass_properties_breakdown(
     sym_axis: Optional[str] = None,
     scale: Optional[float] = None,
     inertia_reference: str = "cg",
-    debug: bool = False,
-):
-    """Gets an incomplete breakdown the mass properties on a per element basis"""
+    debug: bool = False,):
+    """
+    Gets a "incomplete" breakdown the mass properties on a per element basis.
+    This lets you see that 20% of the shell mass came from area material density
+     and 80% came from NSM id=2.
+
+    Parameters
+    ----------
+    nsm_id : int; default=None
+        the NSM/NSM1/NSML/NSML1/NSMADD set to apply; the NSM mass is
+        lumped at the element centroid and reported in the nsm column
+    """
+    scale = _check_scale(scale)
     coord1 = model.coords[0]
     reference_xyz, coord2, is_cg = _update_reference_point(
         model, reference_point, inertia_reference
@@ -3654,6 +3669,8 @@ def mass_properties_breakdown(
     nids_dict = defaultdict(list)
     pids_dict = defaultdict(list)
     mids_dict = defaultdict(list)
+    conrod_mass_per_length = []
+    conrod_nsm_per_length = []
     theta_mcid_dict = defaultdict(list)
     g0_dict = defaultdict(list)
     x_dict = defaultdict(list)
@@ -3696,9 +3713,12 @@ def mass_properties_breakdown(
             nids_dict[etype].append(elem.nodes)
             pids_dict[etype].append(elem.pid)
         elif etype == "CONROD":
+            # CONROD has no property card; A, NSM and the material live on the
+            # element, so store the per-element mass/length here
             nids_dict[etype].append(elem.nodes)
             mids_dict[etype].append(elem.mid)
-            # element_nsm_dict[etype].append(elem.nsm)
+            conrod_mass_per_length.append(elem.Rho() * elem.Area())
+            conrod_nsm_per_length.append(elem.Nsm())
         elif etype in "CSHEAR":
             nids_dict[etype].append(elem.nodes)
             pids_dict[etype].append(elem.pid)
@@ -3778,11 +3798,10 @@ def mass_properties_breakdown(
             pids = pids_dict[etype]
             assert len(pids) > 0, pids
             all_pids = np.array(pids_per_length_dict["PROD"], dtype="int32")
-            mass_per_length = np.array(mass_per_length_dict["PROD"], dtype="int32")
-            nsm_per_length = np.array(nsm_per_length_dict["PROD"], dtype="int32")
-            assert len(nsm_per_length) > 0, nsm_per_length
+            mass_per_length = np.array(mass_per_length_dict["PROD"], dtype="float64")
+            nsm_per_length = np.array(nsm_per_length_dict["PROD"], dtype="float64")
 
-            ipids = np.searchsorted(all_pids, pids)
+            ipids = _breakdown_ipids(all_pids, pids, etype)
             inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
             p1 = xyz_cid0[inids[:, 0], :]
             p2 = xyz_cid0[inids[:, 1], :]
@@ -3802,15 +3821,13 @@ def mass_properties_breakdown(
             npl = nsm_per_length[ipids]
             mass = mpl * length
             nsm = npl * length
+            size = length
         elif etype == "CONROD":
             mids = mids_dict[etype]
             assert len(mids) > 0, mids
-            mass_per_length = np.array(mass_per_length_dict["CONROD"], dtype="int32")
-            nsm_per_length = np.array(nsm_per_length_dict["CONROD"], dtype="int32")
-            # assert len(mass_per_length) > 0, mass_per_length
-            # assert len(nsm_per_length) > 0, nsm_per_length
-
-            # imids = np.searchsorted(all_mids, mids)
+            # per-element values (sorted by eid, same order as eids/nids)
+            mpl = np.array(conrod_mass_per_length, dtype="float64")
+            npl = np.array(conrod_nsm_per_length, dtype="float64")
             inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
             p1 = xyz_cid0[inids[:, 0], :]
             p2 = xyz_cid0[inids[:, 1], :]
@@ -3827,20 +3844,17 @@ def mass_properties_breakdown(
             # exx = eyy = ezz = 1. / e2[:, 0, 0]
             # exx = eyy = ezz = 1.
 
-            mpl = npl = 0.0
-            # mpl = mass_per_length[imids]
-            # npl = nsm_per_length[imids]
             mass = mpl * length
             nsm = npl * length
+            size = length
         elif etype == "CTUBE":
             pids = pids_dict[etype]
             assert len(pids) > 0, pids
             all_pids = np.array(pids_per_length_dict["PTUBE"], dtype="int32")
-            mass_per_length = np.array(mass_per_length_dict["PTUBE"], dtype="int32")
-            nsm_per_length = np.array(nsm_per_length_dict["PTUBE"], dtype="int32")
-            assert len(nsm_per_length) > 0, nsm_per_length
+            mass_per_length = np.array(mass_per_length_dict["PTUBE"], dtype="float64")
+            nsm_per_length = np.array(nsm_per_length_dict["PTUBE"], dtype="float64")
 
-            ipids = np.searchsorted(all_pids, pids)
+            ipids = _breakdown_ipids(all_pids, pids, etype)
             inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
             p1 = xyz_cid0[inids[:, 0], :]
             p2 = xyz_cid0[inids[:, 1], :]
@@ -3859,6 +3873,7 @@ def mass_properties_breakdown(
             npl = nsm_per_length[ipids]
             mass = mpl * length
             nsm = npl * length
+            size = length
         elif etype == "CBAR":
             pids = pids_dict[etype]
             assert len(pids) > 0, pids
@@ -3871,9 +3886,8 @@ def mass_properties_breakdown(
 
             mass_per_length = np.array(mass_per_length_dict["bar"])
             nsm_per_length = np.array(nsm_per_length_dict["bar"])
-            assert len(nsm_per_length) > 0, nsm_per_length
 
-            ipids = np.searchsorted(all_pids, pids)
+            ipids = _breakdown_ipids(all_pids, pids, etype)
             inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
             p1 = xyz_cid0[inids[:, 0], :]
             p2 = xyz_cid0[inids[:, 1], :]
@@ -3907,6 +3921,7 @@ def mass_properties_breakdown(
             npl = nsm_per_length[ipids]
             mass = mpl * length
             nsm = npl * length
+            size = length
         elif etype == "CBEAM":
             pids = pids_dict[etype]
             assert len(pids) > 0, pids
@@ -3919,9 +3934,7 @@ def mass_properties_breakdown(
 
             mass_per_length = np.array(mass_per_length_dict["beam"])
             nsm_per_length = np.array(nsm_per_length_dict["beam"])
-            # print(nsm_per_length_dict)
-            assert len(nsm_per_length) > 0, nsm_per_length
-            ipids = np.searchsorted(all_pids, pids)
+            ipids = _breakdown_ipids(all_pids, pids, etype)
             # print(all_pids, pids, ipids)
             inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
             p1 = xyz_cid0[inids[:, 0], :]
@@ -3958,13 +3971,14 @@ def mass_properties_breakdown(
             npl = nsm_per_length[ipids]
             mass = mpl * length
             nsm = npl * length
+            size = length
 
         elif etype in {
             "CTRIA3",
             "CTRIA6",
             "CTRIAR",
         }:
-            centroid, mass, nsm = _breakdown_tri(
+            centroid, mass, nsm, size = _breakdown_tri(
                 xyz_cid0,
                 nids,
                 nelementsi,
@@ -3977,7 +3991,7 @@ def mass_properties_breakdown(
                 thickness_dict,
             )
         elif etype == "CSHEAR":
-            centroid, mass, nsm = _breakdown_cshear(
+            centroid, mass, nsm, size = _breakdown_cshear(
                 xyz_cid0,
                 nids,
                 nelementsi,
@@ -3995,7 +4009,7 @@ def mass_properties_breakdown(
             "CQUADR",
             "CQUAD",
         }:
-            centroid, mass, nsm = _breakdown_quad(
+            centroid, mass, nsm, size = _breakdown_quad(
                 xyz_cid0,
                 nids,
                 nelementsi,
@@ -4009,6 +4023,7 @@ def mass_properties_breakdown(
             )
 
         elif etype == "CTETRA":
+            size = None  # NSM cards do not apply to solids
             centroid, mass, nsm = _breakdown_ctetra(
                 xyz_cid0,
                 nids,
@@ -4020,6 +4035,7 @@ def mass_properties_breakdown(
                 mass_per_volume_dict,
             )
         elif etype == "CHEXA":
+            size = None  # NSM cards do not apply to solids
             centroid, mass, nsm = _breakdown_chexa(
                 xyz_cid0,
                 nids,
@@ -4031,6 +4047,7 @@ def mass_properties_breakdown(
                 mass_per_volume_dict,
             )
         elif etype == "CPENTA":
+            size = None  # NSM cards do not apply to solids
             centroid, mass, nsm = _breakdown_cpenta(
                 xyz_cid0,
                 nids,
@@ -4042,6 +4059,7 @@ def mass_properties_breakdown(
                 mass_per_volume_dict,
             )
         elif etype == "CPYRAM":
+            size = None  # NSM cards do not apply to solids
             centroid, mass, nsm = _breakdown_cpyram(
                 xyz_cid0,
                 nids,
@@ -4054,10 +4072,14 @@ def mass_properties_breakdown(
             )
         else:
             model.log.warning(f"skipping mass_properties_breakdown for {etype}")
-            return None, None, None
-        return mass, nsm, centroid
+            return None, None, None, None
+        return mass, nsm, centroid, size
 
     data = np.zeros((nelements, 12), dtype="float64")
+    # per-element area/length used to distribute NSM/NSM1/NSML/NSML1 cards;
+    # nan means NSM cards cannot be applied to that element (e.g., solids)
+    nsm_size = np.full(nelements, np.nan, dtype="float64")
+    nsm_is_area = np.zeros(nelements, dtype="bool")
     for etype, nids_list in nids_dict.items():
         eids = np.hstack(eids_dict[etype])
         ieids = np.searchsorted(all_eids, eids)
@@ -4069,9 +4091,18 @@ def mass_properties_breakdown(
                 msg += f"  {nidsi}; n={len(nidsi)}\n"
             raise ValueError(msg) from e
 
-        mass, nsm, centroid = _get_mass(etype, eids, nids)
+        try:
+            mass, nsm, centroid, size = _get_mass(etype, eids, nids)
+        except BreakdownPropertyError as error:
+            pids = np.array(pids_dict[etype])
+            msg = _breakdown_property_error_msg(model, etype, eids, pids, error.pids)
+            raise BreakdownPropertyError(etype, error.pids, msg=msg) from None
         if mass is None:
             continue
+        if size is not None:
+            # area for shells/shear panels, length for line elements
+            nsm_size[ieids] = size
+            nsm_is_area[ieids] = etype in AREA_ETYPES
 
         # [mass + nsm, mass, nsm], [x, y, z], [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
         data[ieids, 0] = mass + nsm  # total mass
@@ -4085,6 +4116,13 @@ def mass_properties_breakdown(
         # data[ieids, 12] = Ax
         # data[ieids, 13] = Ay
         # data[ieids, 14] = Az
+
+    if nsm_id and nelements:
+        # NSM cards are lumped at the element centroid, so only the mass
+        # columns change: [mass + nsm, mass, nsm]
+        nsm_card_mass = _breakdown_nsm_cards(model, nsm_id, all_eids, nsm_size, nsm_is_area)
+        data[:, 0] += nsm_card_mass
+        data[:, 2] += nsm_card_mass
 
     if nmasses and nelements:
         # [mass + nsm, mass, nsm], [x, y, z], [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
@@ -4157,6 +4195,178 @@ def mass_properties_breakdown(
     return total_mass_overall, cg_overall, inertia_overall, mass, cg, inertia
 
 
+def _breakdown_ipids(all_pids: np.ndarray, pids: np.ndarray, etype: str) -> np.ndarray:
+    """
+    Maps element property ids to rows of the (sorted) per-property arrays.
+
+    np.searchsorted returns an insertion point, not a match, so an element
+    whose property wasn't tabulated would silently pick up a neighboring
+    property's mass/area (or index out of bounds).  Fail loudly instead.
+    """
+    all_pids = np.asarray(all_pids)
+    pids = np.asarray(pids)
+    ipids = np.searchsorted(all_pids, pids)
+    ipids_clipped = np.minimum(ipids, max(len(all_pids) - 1, 0))
+    if len(all_pids) == 0:
+        is_missing = np.ones(len(pids), dtype="bool")
+    else:
+        is_missing = all_pids[ipids_clipped] != pids
+    if is_missing.any():
+        raise BreakdownPropertyError(etype, np.unique(pids[is_missing]).tolist())
+    return ipids
+
+
+class BreakdownPropertyError(RuntimeError):
+    """an element references a property the breakdown has no mass data for"""
+    def __init__(self, etype: str, pids: list[int], msg: str = ""):
+        self.etype = etype
+        self.pids = pids
+        if not msg:
+            msg = (
+                f"mass_properties_breakdown: {etype} references property ids {pids}, "
+                "which have no mass data in the breakdown"
+            )
+        super().__init__(msg)
+
+
+def _breakdown_property_error_msg(
+    model: BDF, etype: str, eids: np.ndarray, pids: np.ndarray, missing_pids: list[int]
+) -> str:
+    """builds a message that says which property types/elements are the problem"""
+    lines = [f"mass_properties_breakdown: {etype} elements reference unsupported properties:"]
+    for pid in missing_pids:
+        prop = model.properties.get(pid)
+        ptype = "<missing property>" if prop is None else prop.type
+        eids_pid = eids[pids == pid]
+        neids = len(eids_pid)
+        eids_str = str(eids_pid[:10].tolist())
+        if neids > 10:
+            eids_str = eids_str[:-1] + ", ...]"
+        lines.append(f"  {ptype} pid={pid} is used by {neids} {etype}(s): eids={eids_str}")
+    lines.append(f"  the breakdown can't compute {etype} mass for these property types")
+    return "\n".join(lines)
+
+
+AREA_ETYPES = {
+    "CQUAD4", "CTRIA3", "CQUAD8", "CTRIA6", "CTRIAR", "CQUADR", "CQUAD", "CSHEAR",
+}
+
+# property type -> NSM property group; an NSM card of type PSHELL/PCOMP/PCOMPG
+# applies to all three (same as mass_properties_nsm)
+_BREAKDOWN_NSM_GROUP = {
+    "PSHELL": "PSHELL",
+    "PCOMP": "PSHELL",
+    "PCOMPG": "PSHELL",
+    "PSHEAR": "PSHEAR",
+    "PBAR": "PBAR",
+    "PBARL": "PBAR",
+    "PBEAM": "PBEAM",
+    "PBEAML": "PBEAM",
+    "PBCOMP": "PBEAM",
+    "PROD": "PROD",
+    "PTUBE": "PTUBE",
+    "CONROD": "CONROD",
+}
+
+
+def _breakdown_nsm_cards(
+    model: BDF,
+    nsm_id: int,
+    all_eids: np.ndarray,
+    size: np.ndarray,
+    is_area: np.ndarray,
+) -> np.ndarray:
+    """
+    Gets the per-element mass from the NSM/NSM1/NSML/NSML1 cards
+    (including NSMADD) for mass_properties_breakdown.
+
+    Parameters
+    ----------
+    all_eids : (nelements,) int ndarray
+        sorted element ids
+    size : (nelements,) float ndarray
+        area (shells) or length (line elements); nan if NSM cards
+        don't apply to the element (e.g., solids)
+    is_area : (nelements,) bool ndarray
+        is size an area
+
+    Returns
+    -------
+    nsm_mass : (nelements,) float ndarray
+        the NSM card mass for each element
+
+    NSM/NSM1 : mass = value * area (or length)
+    NSML/NSML1 : mass = value * area / sum(area), where the sum is over
+                 all elements selected by the card
+    Per MSC QRG, undefined property/element ids are ignored.
+    """
+    nelements = len(all_eids)
+    nsm_mass = np.zeros(nelements, dtype="float64")
+    nsms = model.get_reduced_nsms(nsm_id, consider_nsmadd=True, stop_on_failure=True)
+    if len(nsms) == 0:
+        model.log.warning(f"no NSM cards found for nsm_id={nsm_id}")
+        return nsm_mass
+
+    pids = np.full(nelements, -1, dtype="int64")
+    groups = np.full(nelements, "", dtype=object)
+    for i, eid in enumerate(all_eids):
+        elem = model.elements[eid]
+        if elem.type == "CONROD":
+            groups[i] = "CONROD"
+            continue
+        pid = elem.pid
+        pids[i] = pid
+        prop = model.properties.get(pid)
+        if prop is not None:
+            groups[i] = _BREAKDOWN_NSM_GROUP.get(prop.type, prop.type)
+    has_size = ~np.isnan(size)
+
+    for nsm in nsms:
+        nsm_type = nsm.nsm_type
+        ids = nsm.ids
+        is_all = len(ids) == 1 and ids[0] == "ALL"
+        if nsm_type == "ELEMENT":
+            if is_all:
+                selected = np.ones(nelements, dtype="bool")
+            else:
+                selected = np.isin(all_eids, np.array(ids, dtype="int64"))
+        else:
+            group = _BREAKDOWN_NSM_GROUP.get(nsm_type)
+            if group is None:
+                raise NotImplementedError(
+                    f"mass_properties_breakdown: NSM type={nsm_type!r} is not supported\n{nsm}"
+                )
+            selected = groups == group
+            if not is_all:
+                if group == "CONROD":
+                    selected &= np.isin(all_eids, np.array(ids, dtype="int64"))
+                else:
+                    selected &= np.isin(pids, np.array(ids, dtype="int64"))
+
+        no_size = selected & ~has_size
+        if no_size.any():
+            model.log.warning(
+                f"mass_properties_breakdown: skipping NSM on elements without "
+                f"an area/length: {all_eids[no_size].tolist()}\n{nsm}"
+            )
+        selected &= has_size
+        if not selected.any():
+            model.log.warning(f"no elements associated with:\n{nsm}")
+            continue
+
+        sizei = size[selected]
+        if nsm.type in ("NSML", "NSML1"):
+            if len(np.unique(is_area[selected])) != 1:
+                raise RuntimeError(f"Mixed Line/Area element types for:\n{nsm}")
+            size_sum = sizei.sum()
+            nsm_mass[selected] += nsm.value * sizei / size_sum
+        elif nsm.type in ("NSM", "NSM1"):
+            nsm_mass[selected] += nsm.value * sizei
+        else:
+            model.log.warning(f"skipping {nsm.type}\n{nsm}")
+    return nsm_mass
+
+
 def hstack_dict_values(adict: dict[Any, list[int]]) -> np.ndarray:
     a_list = []
     for values in adict.values():
@@ -4190,10 +4400,8 @@ def _breakdown_tri(
     mass_per_area = np.array(mass_per_area_dict["shell"])
     nsm_per_area = np.array(nsm_per_area_dict["shell"])
     thickness = np.array(thickness_dict["shell"])
-    assert len(mass_per_area) > 0, mass_per_area_dict
-    assert len(thickness) > 0, thickness
 
-    ipids = np.searchsorted(all_pids, pids)
+    ipids = _breakdown_ipids(all_pids, pids, etype)
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 3)
     p1 = xyz_cid0[inids[:, 0], :]
     p2 = xyz_cid0[inids[:, 1], :]
@@ -4225,7 +4433,7 @@ def _breakdown_tri(
     npa = nsm_per_area[ipids]
     mass = mpa * area
     nsm = npa * area
-    return centroid, mass, nsm
+    return centroid, mass, nsm, area
 
 
 def _breakdown_quad(
@@ -4249,10 +4457,8 @@ def _breakdown_quad(
     mass_per_area = np.array(mass_per_area_dict["shell"])
     nsm_per_area = np.array(nsm_per_area_dict["shell"])
     thickness = np.array(thickness_dict["shell"])
-    assert len(mass_per_area) > 0, mass_per_area_dict
-    assert len(thickness) > 0, thickness
 
-    ipids = np.searchsorted(all_pids, pids)
+    ipids = _breakdown_ipids(all_pids, pids, etype)
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 4)
     p1 = xyz_cid0[inids[:, 0], :]
     p2 = xyz_cid0[inids[:, 1], :]
@@ -4287,13 +4493,11 @@ def _breakdown_quad(
     nsm = npa * area
 
     # assume the panel is square to calculate w; then multiply by t to get tw
-    assert len(area) > 0, area
-    assert len(thickness) > 0, thickness
     # tw = thickness[ipids] * np.sqrt(area)
     # Ax = tw * np.linalg.norm(np.cross(xaxis, normal), axis=1)
     # Ay = tw * np.linalg.norm(np.cross(yaxis, normal), axis=1)
     # Az = tw * np.linalg.norm(np.cross(zaxis, normal), axis=1)
-    return centroid, mass, nsm
+    return centroid, mass, nsm, area
 
 
 def _breakdown_cshear(
@@ -4314,8 +4518,7 @@ def _breakdown_cshear(
     mass_per_area = np.array(mass_per_area_dict["shear"])
     nsm_per_area = np.array(nsm_per_area_dict["shear"])
     thickness = np.array(thickness_dict["shear"])
-    assert len(mass_per_area) > 0, mass_per_area_dict
-    ipids = np.searchsorted(all_pids, pids)
+    ipids = _breakdown_ipids(all_pids, pids, etype)
     inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 4)
     p1 = xyz_cid0[inids[:, 0], :]
     p2 = xyz_cid0[inids[:, 1], :]
@@ -4356,7 +4559,7 @@ def _breakdown_cshear(
     # Ax = tw * np.linalg.norm(np.cross(xaxis, normal), axis=1)
     # Ay = tw * np.linalg.norm(np.cross(yaxis, normal), axis=1)
     # Az = tw * np.linalg.norm(np.cross(zaxis, normal), axis=1)
-    return centroid, mass, nsm
+    return centroid, mass, nsm, area
 
 
 def _breakdown_ctetra(
@@ -4371,7 +4574,7 @@ def _breakdown_ctetra(
 ):
     nids2 = nids[:, :4]
 
-    rho = _solid_density(pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
+    rho = _solid_density(etype, pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
 
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 4)
     p1 = xyz_cid0[inids[:, 0], :]
@@ -4392,6 +4595,7 @@ def _breakdown_ctetra(
 
 
 def _solid_density(
+    etype: str,
     pids_list: list[int],
     pids_per_volume_dict: [dict, list[int]],
     mass_per_volume_dict: dict[str, list[float]],
@@ -4406,16 +4610,14 @@ def _solid_density(
         else:
             raise RuntimeError(card_type)
 
-    pids_array = np.hstack(pids_list_)
-    rhos_array = np.hstack(rho_list_)
-    assert len(pids_array) > 0, pids_array
+    pids_array = np.hstack(pids_list_).astype("int64")
+    rhos_array = np.hstack(rho_list_).astype("float64")
 
     isort = np.argsort(pids_array)
     pids_sorted = pids_array[isort]
     rho_sorted = rhos_array[isort]
-    ipids = np.searchsorted(pids_sorted, pids_list)
+    ipids = _breakdown_ipids(pids_sorted, np.asarray(pids_list), etype)
     rho = rho_sorted[ipids]
-    assert len(rho) > 0, rho
     return rho
 
 
@@ -4431,7 +4633,7 @@ def _breakdown_chexa(
 ):
     nids2 = nids[:, :8]
 
-    rho = _solid_density(pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
+    rho = _solid_density(etype, pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
 
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 8)
     p1 = xyz_cid0[inids[:, 0], :]
@@ -4480,7 +4682,7 @@ def _breakdown_cpenta(
 ):
     nids2 = nids[:, :6]
 
-    rho = _solid_density(pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
+    rho = _solid_density(etype, pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
 
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 6)
     p1 = xyz_cid0[inids[:, 0], :]
@@ -4518,7 +4720,7 @@ def _breakdown_cpyram(
 ):
     nids2 = nids[:, :5]
 
-    rho = _solid_density(pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
+    rho = _solid_density(etype, pids_dict[etype], pids_per_volume_dict, mass_per_volume_dict)
 
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 5)
     p1 = xyz_cid0[inids[:, 0], :]
@@ -4753,7 +4955,24 @@ def _breakdown_property_dicts(
             thickness_dict["shell"].append(thickness)
             mass_per_area_dict["shell"].append(rhoi * thickness)
             nsm_per_area_dict["shell"].append(prop.nsm)
-        elif ptype == "PCOMP":
+        elif ptype == "PMIC":
+            # acoustic microphone property; massless (same as mass_properties).
+            # Allowed on CROD, CTRIA3, CQUAD4, CHEXA, CPENTA, CTETRA, CPYRAM,
+            # so register it in the length (CROD), area and volume tables.
+            pids_per_length_dict["PROD"].append(pid)
+            mass_per_length_dict["PROD"].append(0.0)
+            nsm_per_length_dict["PROD"].append(0.0)
+
+            pids_per_area_dict["shell"].append(pid)
+            thickness_dict["shell"].append(0.0)
+            mass_per_area_dict["shell"].append(0.0)
+            nsm_per_area_dict["shell"].append(0.0)
+
+            pids_per_volume_dict["PSOLID"].append(pid)
+            mass_per_volume_dict["PSOLID"].append(0.0)
+        elif ptype in ("PCOMP", "PCOMPG"):
+            # PCOMPG has the same mids/thicknesses/lam layout as PCOMP;
+            # the global ply ids don't affect mass
             pids_per_area_dict["shell"].append(pid)
             mids_ref = prop.mids_ref
 
@@ -4935,3 +5154,9 @@ def _bar_axes(
 # ezz[iezz] = 1 / ezz_inv[iezz]
 # print(exx.tolist())
 # return exx, eyy, ezz
+
+def _check_scale(scale: Optional[float]) -> Optional[float]:
+    if scale is None:
+        return scale
+    scale = float(scale)  # cast int to float
+    return scale

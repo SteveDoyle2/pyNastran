@@ -1146,6 +1146,23 @@ class PMIC(Property):
     def uncross_reference(self) -> None:
         return
 
+    # PMIC (microphone) is massless; it may be used by CROD, CTRIA3,
+    # CQUAD4, CHEXA, CPENTA, CTETRA, and CPYRAM
+    def Rho(self) -> float:
+        return 0.0
+
+    def Area(self) -> float:
+        return 0.0
+
+    def Nsm(self) -> float:
+        return 0.0
+
+    def MassPerLength(self) -> float:
+        return 0.0
+
+    def MassPerArea(self, *args, **kwargs) -> float:
+        return 0.0
+
     def raw_fields(self):
         return ['PMIC', self.pid]
 

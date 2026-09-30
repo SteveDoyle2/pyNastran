@@ -464,15 +464,6 @@ def _open_bdf_files(ifile_out_filenames, active_filenames, encoding, log):
     bdf_file0 = bdf_files[0]
     return bdf_files, bdf_file0
 
-
-def _ifile(card) -> int:
-    try:
-        ifile = card.ifile
-    except AttributeError:
-        warnings.warn(f'cant find ifile in\n{str(card)}')
-        ifile = -1
-    return ifile
-
 def _output_helper(out_filename: Optional[str], interspersed: bool,
                    size: int, is_double: bool, log: SimpleLogger) -> tuple[str, int]:
     """Performs type checking on the write_bdf inputs"""

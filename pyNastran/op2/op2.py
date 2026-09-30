@@ -898,7 +898,7 @@ class OP2(OP2_Scalar, OP2Writer):
         load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
         self.combine_results(combine=combine)
 
-    def export_hdf5_filename(self, hdf5_filename: str) -> None:
+    def export_hdf5_filename(self, hdf5_filename: PathLike) -> None:
         """
         Converts the OP2 objects into hdf5 object
 

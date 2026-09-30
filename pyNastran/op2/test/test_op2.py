@@ -146,7 +146,7 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
             delete_f06: bool=False, delete_op2: bool=False, delete_hdf5: bool=False,
             delete_debug_out: bool=False,
             build_pandas: bool=True,
-            subcases: Optional[str] | list[str]=None,
+            subcases: list[int] | Optional[str] | list[str]=None,
             include_results: Optional[str]=None,
             exclude_results: Optional[str]=None,
             stop_on_skip: bool=True,
@@ -633,7 +633,7 @@ def get_test_op2_data0(argv=None) -> TestOp2Args:
         parent_parser.add_argument('--test', action='store_true', help="Adds additional table checks")
         parent_parser.add_argument('--stop_on_skip', action='store_true', help="Crash on result skipping")
 
-    version = f'[--nx|--autodesk]'
+    version = '[--nx|--autodesk]'
     pre_options = '[-p] [-d] [-z] [-w] [-t] [-s <sub>] [--node NIDFILE] [--element EIDFILE]'
     #options = f'{pre_options} [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
     options = f'{pre_options} [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5]'
@@ -727,14 +727,14 @@ def get_test_op2_data0(argv=None) -> TestOp2Args:
     assert 'stop_on_skip' in data, list(data)
     return data
 
-def get_test_op2_data(argv) -> dict[str, str]:
+def get_test_op2_data(argv) -> dict[str, Any]:
     """defines the docopt interface"""
     from docopt import docopt
     ver = str(pyNastran.__version__)
     is_dev = 'dev' in ver
 
     msg = "Usage:  "
-    version = f'[--nx|--optistruct|--autodesk]'
+    version = '[--nx|--optistruct|--autodesk]'
     pre_options = '[-p] [-d] [-z] [-w] [-t] [-s <sub>] [--node NIDFILE] [--element EIDFILE]'
     #options = f'{pre_options} [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
     options = f'{pre_options} [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5] [--debug]'

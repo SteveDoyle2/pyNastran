@@ -10,6 +10,7 @@ import numpy as np
 
 from pyNastran.gui.vtk_rendering_core import vtkActor, vtkAxesActor, vtkProperty
 from pyNastran.gui.menus.edit_geometry_properties.manage_actors import EditGeometryProperties
+from pyNastran.gui.menus.edit_geometry_properties.group_names import get_group_rules_for_format
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.base_gui import BaseGui
@@ -66,8 +67,14 @@ class EditGeometryPropertiesObject(BaseGui):
             data[key] = deepcopy(value)
 
         data['font_size'] = gui.settings.font_size
+
+        # ask the active format (nastran, cart3d, ...) how to bucket the
+        # actor names into groups; formats without the hook get a flat list
+        group_rules = get_group_rules_for_format(gui)
+
         if not self.window_shown:
-            self.window = EditGeometryProperties(data, self, is_gui=True, win_parent=gui)
+            self.window = EditGeometryProperties(data, self, is_gui=True, win_parent=gui,
+                                                 group_rules=group_rules)
             self.window.show()
             self.window_shown = True
             self.window.exec_()

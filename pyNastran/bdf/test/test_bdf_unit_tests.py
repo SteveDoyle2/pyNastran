@@ -1,7 +1,9 @@
 import os
-import unittest
+from copy import deepcopy
 from pathlib import Path
 from io import StringIO
+import unittest
+
 import numpy as np
 from cpylog import SimpleLogger
 
@@ -58,7 +60,6 @@ class TestBDFUnit(Tester):
         """verify we get 5 include files if they are one after the other"""
         log = SimpleLogger(level='warning')
         model = BDF(debug=False, log=log)
-        #from copy import deepcopy
         #from pyNastran.bdf.bdf import read_bdf
         #from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
 
@@ -70,6 +71,9 @@ class TestBDFUnit(Tester):
         model.log.debug('model')
         model2 = model.__deepcopy__({})
         model2.log.debug('model2')
+
+        model3 = deepcopy(model)
+        model3.log.debug('model3')
 
         #model2.cross_reference()
         mass = mass_properties(model2)[0]  # fails because of missing cross-reference, comment to reach next line

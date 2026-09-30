@@ -1110,16 +1110,16 @@ def _get_dof_map(model: BDF) -> dict[tuple[int, int], int]:
         if node_ref.type == 'GRID':
             for dof in range(1, 7):
                 nid_dof = (nid, dof)
-                print(f'adding GRID {nid_dof}')
+                # print(f'adding GRID {nid_dof}')
                 dof_map[nid_dof] = i
                 i += 1
             for psi in node_ref.ps:
                 nid_dof = (nid, int(psi))
-                print(f'adding GRID {nid_dof}')
+                # print(f'adding GRID {nid_dof}')
                 j = dof_map[nid_dof]
                 ps.append(j)
         elif node_ref.type == 'SPOINT':
-            print(f'adding SPOINT {node_ref}')
+            # print(f'adding SPOINT {node_ref}')
             spoints.append(node_ref)
             #dof_map[(nid, 0)] = i
             #i += 1

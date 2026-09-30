@@ -208,6 +208,8 @@ class CROD(RodElement):
         if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
+        if self.pid_ref.type == 'PMIC':
+            return 0.0
         return self.pid_ref.mid_ref.rho
 
     def Centroid(self):
@@ -229,12 +231,16 @@ class CROD(RodElement):
         if self.pid_ref is None:
             msg = 'Element eid=%d has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
+        if self.pid_ref.type == 'PMIC':
+            return 0.0
         return self.pid_ref.A
 
     def Nsm(self):
         if self.pid_ref is None:
             msg = 'Element eid=%d has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
+        if self.pid_ref.type == 'PMIC':
+            return 0.0
         return self.pid_ref.nsm
 
     def E(self):
@@ -265,6 +271,8 @@ class CROD(RodElement):
         if self.pid_ref is None:
             msg = 'Element eid=%d has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
+        if self.pid_ref.type == 'PMIC':
+            return 0.0
         mass_per_length = self.pid_ref.mid_ref.rho * self.pid_ref.A + self.pid_ref.nsm
         return mass_per_length
 

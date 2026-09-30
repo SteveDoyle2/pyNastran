@@ -9,6 +9,7 @@ This file defines:
 
 """
 from __future__ import annotations
+import warnings
 from collections import defaultdict
 from typing import TextIO, Any, TYPE_CHECKING
 from pyNastran.bdf.bdf_interface.utils import sorteddict
@@ -214,3 +215,12 @@ def get_properties_by_element_type(model: BDF) -> tuple[dict[str, list[str]],
             prop_class = property_type_to_property_class[prop.type]
             properties_by_class[prop_class].append(prop)
     return propertys_class_to_property_types, property_type_to_property_class, properties_by_class
+
+
+def _ifile(card) -> int:
+    try:
+        ifile = card.ifile
+    except AttributeError:
+        warnings.warn(f'cant find ifile in\n{str(card)}')
+        ifile = -1
+    return ifile

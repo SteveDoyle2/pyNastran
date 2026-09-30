@@ -11,7 +11,8 @@ from pyNastran.bdf.cards.properties.shell import PCOMP, get_Qbar_matrix
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mass_properties import (
-    mass_properties, mass_properties_no_xref, mass_properties_nsm)
+    mass_properties, mass_properties_no_xref, mass_properties_nsm,
+    mass_properties_breakdown, _breakdown_ipids)
 
 
 try:
@@ -1810,6 +1811,185 @@ class TestShells(unittest.TestCase):
         assert np.allclose(imat, imat_expected), imat
         assert np.allclose(jmat, jmat_expected), jmat
         assert np.allclose(normal, normal_expected), normal
+
+    def test_mass_breakdown_pcompg(self):
+        """PCOMPG used to be skipped by mass_properties_breakdown"""
+        for pid_pcompg in [5, 20]:  # sorts before/after the PSHELL
+            with self.subTest(pid_pcompg=pid_pcompg):
+                model = _mass_breakdown_model(pid_pcompg)
+                total_mass, cg, unused_inertia, mass, cgs, unused_inertias = mass_properties_breakdown(model)
+
+                # [mass + nsm, mass, nsm] per element: PSHELL, PCOMPG, PCOMP
+                expected = [0.4, 1.6, 1.6]
+                assert np.allclose(mass[:, 0], expected), mass
+                assert np.allclose(mass[:, 1], expected), mass
+                assert np.allclose(mass[:, 2], 0.), mass
+                assert np.allclose(cgs[:, 0], [1., 3., 5.]), cgs
+
+                elem_mass = [model.elements[eid].Mass() for eid in [1, 2, 3]]
+                assert np.allclose(elem_mass, expected), elem_mass
+                mass_expected, cg_expected, unused_inertia = mass_properties(model)
+                assert np.allclose(total_mass, mass_expected), (total_mass, mass_expected)
+                assert np.allclose(cg, cg_expected), (cg, cg_expected)
+
+    def test_mass_breakdown_nsm_id(self):
+        """nsm_id used to be ignored by mass_properties_breakdown"""
+        for pid_pcompg in [5, 20]:
+            with self.subTest(pid_pcompg=pid_pcompg):
+                model = _mass_breakdown_model(pid_pcompg)
+                pid_pcomp = 30
+                # 3.0 split by area over the PCOMPG and PCOMP elements
+                model.add_nsml1(100, 'PCOMPG', 3.0, [pid_pcompg, pid_pcomp])
+                # 0.05/area on PSHELL/PCOMP/PCOMPG elements
+                model.add_nsm1(101, 'PSHELL', 0.05, 'ALL')
+                # 0.25/area on element 1
+                model.add_nsm(102, 'ELEMENT', 1, 0.25)
+                model.add_nsmadd(200, [100, 101, 102])
+                model.cross_reference()
+
+                # nsm_id: expected nsm per element
+                cases = [
+                    (100, [0.0, 1.5, 1.5]),
+                    (101, [0.2, 0.2, 0.2]),
+                    (102, [1.0, 0.0, 0.0]),
+                    (200, [1.2, 1.7, 1.7]),
+                ]
+                structure = np.array([0.4, 1.6, 1.6])
+                for nsm_id, nsm_expected in cases:
+                    total_mass, cg, unused_inertia, mass, unused_cgs, unused_inertias = mass_properties_breakdown(
+                        model, nsm_id=nsm_id)
+                    assert np.allclose(mass[:, 1], structure), (nsm_id, mass)
+                    assert np.allclose(mass[:, 2], nsm_expected), (nsm_id, mass)
+                    assert np.allclose(mass[:, 0], structure + nsm_expected), (nsm_id, mass)
+
+                    mass_expected, cg_expected, unused_inertia = mass_properties_nsm(
+                        model, nsm_id=nsm_id, scale=1.0)
+                    assert np.allclose(total_mass, mass_expected), (nsm_id, total_mass, mass_expected)
+                    assert np.allclose(cg, cg_expected), (nsm_id, cg, cg_expected)
+
+    def test_mass_breakdown_nsml1_pcompg_only(self):
+        """a PCOMPG-only model used to crash mass_properties_breakdown"""
+        model = BDF(log=SimpleLogger(level='warning'))
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [2., 0., 0.])
+        model.add_grid(3, [2., 2., 0.])
+        model.add_grid(4, [0., 2., 0.])
+        model.add_grid(5, [1., 3., 0.])
+        model.add_mat1(1, 1e7, None, 0.3, rho=0.1)
+        model.add_pcompg(5, [1, 2], [1, 1], [1., 3.], thetas=[0., 90.])
+        model.add_cquad4(1, 5, [1, 2, 3, 4])  # area=4
+        model.add_ctria3(2, 5, [4, 3, 5])     # area=1
+        model.add_nsml1(10, 'PCOMPG', 2.5, 'ALL')
+        model.cross_reference()
+
+        total_mass, unused_cg, unused_inertia, mass, unused_cgs, unused_inertias = mass_properties_breakdown(
+            model, nsm_id=10)
+        assert np.allclose(mass[:, 1], [1.6, 0.4]), mass
+        assert np.allclose(mass[:, 2], [2.0, 0.5]), mass
+        mass_expected = mass_properties_nsm(model, nsm_id=10, scale=1.0)[0]
+        assert np.allclose(total_mass, 4.5), total_mass
+        assert np.allclose(total_mass, mass_expected), (total_mass, mass_expected)
+
+    def test_mass_breakdown_pmic(self):
+        """PMIC is massless and allowed on CROD, CTRIA3, CQUAD4, CHEXA, CPENTA, CTETRA, CPYRAM"""
+        model = BDF(log=SimpleLogger(level='warning'))
+        xyz = [[0., 0., 0.], [1., 0., 0.], [1., 1., 0.], [0., 1., 0.],
+               [0., 0., 1.], [1., 0., 1.], [1., 1., 1.], [0., 1., 1.], [0.5, 0.5, 2.]]
+        for nid, xyzi in enumerate(xyz, start=1):
+            model.add_grid(nid, xyzi)
+        model.add_mat1(1, 1e7, None, 0.3, rho=0.1)
+        model.add_pshell(1, mid1=1, t=1.0)
+        model.add_pmic(2)
+        model.add_cquad4(10, 1, [1, 2, 3, 4])  # mass=0.1
+        model.add_cquad4(11, 2, [1, 2, 3, 4])
+        model.add_ctria3(12, 2, [1, 2, 3])
+        model.add_crod(13, 2, [1, 2])
+        model.add_ctetra(14, 2, [1, 2, 3, 5])
+        model.add_cpenta(15, 2, [1, 2, 3, 5, 6, 7])
+        model.add_chexa(16, 2, [1, 2, 3, 4, 5, 6, 7, 8])
+        model.add_cpyram(17, 2, [5, 6, 7, 8, 9])
+        model.cross_reference()
+
+        total_mass, unused_cg, unused_inertia, mass, unused_cgs, unused_inertias = mass_properties_breakdown(model)
+        assert mass.shape == (8, 3), mass.shape
+        assert np.allclose(mass[:, 0], [0.1, 0., 0., 0., 0., 0., 0., 0.]), mass
+        assert np.allclose(total_mass, 0.1), total_mass
+
+        elem_mass = [elem.Mass() for eid, elem in sorted(model.elements.items())]
+        assert np.allclose(elem_mass, mass[:, 0]), elem_mass
+        mass_expected = mass_properties(model)[0]
+        assert np.allclose(mass_expected, 0.1), mass_expected
+
+    def test_mass_breakdown_unsupported_pid_message(self):
+        """unsupported properties on line/shell/solid elements fail loudly and say why"""
+        log = SimpleLogger(level='error')
+        xyz = [[0., 0., 0.], [1., 0., 0.], [1., 1., 0.], [0., 0., 1.]]
+        # (element adder, nodes, property adder); the good property is pid=10,
+        # the unsupported one is pid=5 (sorts first) or pid=20 (sorts last)
+        cases = [
+            ('CROD', lambda m, eid, pid: m.add_crod(eid, pid, [1, 2]),
+             lambda m, pid: m.add_prod(pid, 1, A=1.0)),
+            ('CTUBE', lambda m, eid, pid: m.add_ctube(eid, pid, [1, 2]),
+             lambda m, pid: m.add_ptube(pid, 1, OD1=1.0, t=0.1)),
+            ('CBAR', lambda m, eid, pid: m.add_cbar(eid, pid, [1, 2], [0., 0., 1.], None),
+             lambda m, pid: m.add_pbar(pid, 1, A=1.0)),
+            ('CBEAM', lambda m, eid, pid: m.add_cbeam(eid, pid, [1, 2], [0., 0., 1.], None),
+             lambda m, pid: m.add_pbeam(pid, 1, [0.], ['C'], [1.0], [1.], [1.], [0.], [1.])),
+            ('CQUAD4', lambda m, eid, pid: m.add_cquad4(eid, pid, [1, 2, 3, 4]),
+             lambda m, pid: m.add_pshell(pid, mid1=1, t=1.0)),
+            ('CSHEAR', lambda m, eid, pid: m.add_cshear(eid, pid, [1, 2, 3, 4]),
+             lambda m, pid: m.add_pshear(pid, 1, 1.0)),
+            ('CTETRA', lambda m, eid, pid: m.add_ctetra(eid, pid, [1, 2, 3, 4]),
+             lambda m, pid: m.add_psolid(pid, 1)),
+        ]
+        for etype, add_element, add_property in cases:
+            for bad_pid in [5, 20]:
+                with self.subTest(etype=etype, bad_pid=bad_pid):
+                    model = BDF(log=log)
+                    for nid, xyzi in enumerate(xyz, start=1):
+                        model.add_grid(nid, xyzi)
+                    model.add_mat1(1, 1e7, None, 0.3, rho=0.1)
+                    add_property(model, 10)
+                    # a massless-by-design property the breakdown doesn't list
+                    model.add_pvisc(bad_pid, 1.0, 0.0)
+                    add_element(model, 1, 10)
+                    add_element(model, 2, bad_pid)
+                    model.cross_reference()
+                    with self.assertRaises(RuntimeError) as context:
+                        mass_properties_breakdown(model)
+                    msg = str(context.exception)
+                    assert f'PVISC pid={bad_pid} is used by 1 {etype}(s): eids=[2]' in msg, msg
+
+    def test_mass_breakdown_missing_pid(self):
+        """an unsupported property must not silently use a neighbor's mass/area"""
+        all_pids = np.array([10, 30])
+        ipids = _breakdown_ipids(all_pids, np.array([30, 10, 30]), 'CQUAD4')
+        assert np.array_equal(ipids, [1, 0, 1]), ipids
+        for pids in ([5], [20], [40]):  # before, between, after
+            with self.assertRaises(RuntimeError):
+                _breakdown_ipids(all_pids, np.array(pids), 'CQUAD4')
+
+
+def _mass_breakdown_model(pid_pcompg: int) -> BDF:
+    """
+    Three 2x2 quads in a row (area=4 each), rho=0.1:
+      - eid=1: PSHELL pid=10, t=1           -> mass/area=0.1
+      - eid=2: PCOMPG pid=pid_pcompg, t=1+3 -> mass/area=0.4
+      - eid=3: PCOMP  pid=30, t=2, SYM      -> mass/area=0.4
+    """
+    model = BDF(log=SimpleLogger(level='warning'))
+    for i, x in enumerate([0., 2., 4., 6.]):
+        model.add_grid(2 * i + 1, [x, 0., 0.])
+        model.add_grid(2 * i + 2, [x, 2., 0.])
+    model.add_mat1(1, 1e7, None, 0.3, rho=0.1)
+    model.add_pshell(10, mid1=1, t=1.0)
+    model.add_pcompg(pid_pcompg, [1, 2], [1, 1], [1., 3.], thetas=[0., 90.])
+    model.add_pcomp(30, [1], [2.0], thetas=[45.], lam='SYM')
+    model.add_cquad4(1, 10, [1, 3, 4, 2])
+    model.add_cquad4(2, pid_pcompg, [3, 5, 6, 4])
+    model.add_cquad4(3, 30, [5, 7, 8, 6])
+    model.cross_reference()
+    return model
 
 
 def make_dvcrel_optimization(model, params, element_type, eid, i=1):

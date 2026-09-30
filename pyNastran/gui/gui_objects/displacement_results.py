@@ -17,7 +17,7 @@ class DisplacementResults2(DispForceVectorResults):
                  subcase_id: int,
                  node_id: np.ndarray,
                  xyz: np.ndarray,
-                 dxyz: RealTableArray | ComplexTableArray,
+                 dxyz: RealTableArray | ComplexTableArray | DisplacementReduced,
                  title: str,
                  t123_offset: int,
                  dim_max: float=1.0,

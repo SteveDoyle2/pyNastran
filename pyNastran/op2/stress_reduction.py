@@ -1,6 +1,7 @@
 from typing import Callable
 import functools
 import numpy as np
+import numpy.typing as npt
 
 
 def underflow(func: Callable):
@@ -97,11 +98,11 @@ def von_mises_2d(oxx: np.ndarray,
     return ovm
 
 
-def ovm_shear_2d(oxx: np.ndarray,
-                 oyy: np.ndarray,
-                 txy: np.ndarray,
-                 o1: np.ndarray,
-                 o2: np.ndarray,
+def ovm_shear_2d(oxx: npt.NDArray,
+                 oyy: npt.NDArray,
+                 txy: npt.NDArray,
+                 o1: npt.NDArray,
+                 o2: npt.NDArray,
                  is_von_mises: bool,
                  is_stress: bool):
     if is_von_mises:
@@ -112,10 +113,10 @@ def ovm_shear_2d(oxx: np.ndarray,
     return ovm_shear
 
 @underflow
-def principal_2d(oxx: np.ndarray,
-                 oyy: np.ndarray,
-                 txy: np.ndarray,
-                 is_stress: bool) -> tuple[np.ndarray, np.ndarray]:
+def principal_2d(oxx: npt.NDArray,
+                 oyy: npt.NDArray,
+                 txy: npt.NDArray,
+                 is_stress: bool) -> tuple[npt.NDArray, npt.NDArray]:
     """
     https://www.simscale.com/docs/simwiki/fea-finite-element-analysis/principal-stress-and-principal-strain/
     """
@@ -131,13 +132,13 @@ def principal_2d(oxx: np.ndarray,
 
 
 @underflow
-def von_mises_3d(oxx: np.ndarray,
-                 oyy: np.ndarray,
-                 ozz: np.ndarray,
-                 txy: np.ndarray,
-                 tyz: np.ndarray,
-                 txz: np.ndarray,
-                 is_stress: bool) -> np.ndarray:
+def von_mises_3d(oxx: npt.NDArray,
+                 oyy: npt.NDArray,
+                 ozz: npt.NDArray,
+                 txy: npt.NDArray,
+                 tyz: npt.NDArray,
+                 txz: npt.NDArray,
+                 is_stress: bool) -> npt.NDArray:
     """
     verified for von mises stress/strain
     """
@@ -166,9 +167,9 @@ def von_mises_3d(oxx: np.ndarray,
     return vm
 
 
-def ovm_shear_3d(oxx: np.ndarray, oyy: np.ndarray, ozz: np.ndarray,
-                 txy: np.ndarray, tyz: np.ndarray, txz: np.ndarray,
-                 o1: np.ndarray, o3: np.ndarray,
+def ovm_shear_3d(oxx: npt.NDArray, oyy: npt.NDArray, ozz: npt.NDArray,
+                 txy: npt.NDArray, tyz: npt.NDArray, txz: npt.NDArray,
+                 o1: npt.NDArray, o3: npt.NDArray,
                  is_von_mises: bool,
                  is_stress: bool):
     """

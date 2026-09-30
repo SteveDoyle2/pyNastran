@@ -114,10 +114,10 @@ def inertia_loads(mass: np.ndarray,
         Units of M*L^2 (or W*L^2, scaled by ``wtmass``).
     accel : (3,) float ndarray
         translational acceleration **of the reference point**, not of the cg.
-        Units of L/T^2.  For a gravity/load-factor case pass e.g.
+        Units of L/s^2.  For a gravity/load-factor case pass e.g.
         ``[0, 0, -n_z*g]``.
     alpha : (3,) float ndarray
-        angular acceleration about ``ref_xyz``.  Units of 1/T^2.
+        angular acceleration about ``ref_xyz``.  Units of rad/s^2.
     ref_xyz : (3,) float ndarray
         the point that ``accel`` is measured at and that ``alpha`` rotates
         about.  Required, and not defaulted to the cg on purpose: an
@@ -125,7 +125,7 @@ def inertia_loads(mass: np.ndarray,
         station, and silently re-referencing it to the cg would change the
         answer by ``alpha x (cg - station)``.
     omega : (3,) float ndarray; default=None -> zeros
-        angular rate about ``ref_xyz``.  Units of 1/T.  Supply this for a
+        angular rate about ``ref_xyz``.  Units of rad/s.  Supply this for a
         steady roll (``omega = [p, 0, 0]``, ``alpha = 0``) or a steady turn.
         Adds the centrifugal force and rate-coupling moment described in the
         module docstring.  Leave as None for a pure maneuver-acceleration case.

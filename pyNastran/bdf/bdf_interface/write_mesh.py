@@ -1,14 +1,13 @@
 from __future__ import annotations
 import sys
 from typing import TextIO, Optional, Any, cast, TYPE_CHECKING
-from pyNastran.utils import PathLike
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.write_mesh_utils import (
     find_aero_location,
     write_dict, write_list,
     write_bdfs_dict, write_bdfs_list, write_bdfs_dict_list, write_xpoints_file,
-    get_properties_by_element_type,
+    get_properties_by_element_type, _ifile,
 )
 from pyNastran.bdf.cards.nodes import write_xpoints
 from pyNastran.bdf.bdf_interface.utils import sorteddict
@@ -19,7 +18,9 @@ except ModuleNotFoundError:
 
 if TYPE_CHECKING:
     from pathlib import PathLike
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, DESVAR
+    from io import StringIO
+    TextFile = StringIO | TextIO
 
 
 class Writer:
@@ -44,7 +45,7 @@ class Writer:
                 encoding = sys.getdefaultencoding()
             elif isinstance(encoding, bytes):
                 # needed for hdf5 loader for some reason...
-                encoding = model._encoding.decode('latin1')
+                encoding = encoding.decode('latin1')
                 model._encoding = encoding
         encoding = cast(str, encoding)  # just for typing
         assert isinstance(encoding, str), encoding
@@ -405,9 +406,9 @@ class Writer:
                                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the elements and properties in and interspersed order"""
         model = self.model
-        from pyNastran.bdf.bdf import BDF
-        assert isinstance(model, BDF), type(model)
-        model.log
+        # from pyNastran.bdf.bdf import BDF
+        # assert isinstance(model, BDF), type(model)
+        # model.log
         missing_properties = []
         if model.properties:
             bdf_file.write('$ELEMENTS_WITH_PROPERTIES\n')
@@ -559,16 +560,16 @@ class Writer:
             return
 
         out = get_properties_by_element_type(model)
-        propertys_class_to_property_types, property_type_to_property_class, properties_by_class = out
+        prop_class_to_property_types, prop_type_to_property_class, props_by_class = out
 
         bdf_file.write('$PROPERTIES\n')
-        for prop_class, prop_types in propertys_class_to_property_types.items():
+        for prop_class, prop_types in prop_class_to_property_types.items():
             # print(prop_class, prop_types)
             # for prop_type in prop_types:
             #     if prop_type not in properties_by_class:
             #         continue
             #     print('  ', prop_type)
-            props = properties_by_class[prop_class]
+            props = props_by_class[prop_class]
             if not props:
                 continue
             bdf_file.write('$' + '-' * 80 + '\n')
@@ -629,7 +630,7 @@ class Writer:
         if is_big_materials:
             for unused_mid, mat in sorteddict(model.big_materials, sort_cards):
                 bdf_file.write(mat.write_card_16(is_double))
-    
+
     def write_rigid_elements(self, bdf_file: TextFile,
                              size: int=8, is_double: bool=False,
                              sort_cards: bool=True,
@@ -1272,14 +1273,10 @@ class Writer:
         bdf_file.write('$THERMAL\n')
         is_csv = False
         write_dict(bdf_file, model.phbdys, size, is_double, is_csv, is_long_ids, sort_cards)
-        # for (unused_key, phbdy) in sorteddict(model.phbdys, sort_cards):
-        #     bdf_file.write(phbdy.write_card(size, is_double))
 
         #for unused_key, prop in sorted(model.thermal_properties.items()):
         #    bdf_file.write(str(prop))
         write_dict(bdf_file, model.convection_properties, size, is_double, is_csv, is_long_ids, sort_cards)
-        # for (unused_key, prop) in sorteddict(model.convection_properties, sort_cards):
-        #     bdf_file.write(prop.write_card(size, is_double))
 
         # BCs
         for (unused_key, bcs) in sorteddict(model.bcs, sort_cards):
@@ -1288,15 +1285,9 @@ class Writer:
 
         write_dict(bdf_file, model.views, size, is_double, is_csv, is_long_ids, sort_cards)
         write_dict(bdf_file, model.view3ds, size, is_double, is_csv, is_long_ids, sort_cards)
-        # for (unused_key, view) in sorteddict(model.views, sort_cards):
-        #     bdf_file.write(view.write_card(size, is_double))
-        # for (unused_key, view3d) in sorteddict(model.view3ds, sort_cards):
-        #     bdf_file.write(view3d.write_card(size, is_double))
         if model.radset:
             bdf_file.write(model.radset.write_card(size, is_double))
         write_dict(bdf_file, model.radcavs, size, is_double, is_csv, is_long_ids, sort_cards)
-        # for unused_icavity, radcav in sorteddict(model.radcavs, sort_cards):
-        #     bdf_file.write(radcav.write_card(size, is_double))
 
     def write_thermal_materials(self, bdf_file: TextFile,
                                 size: int=8, is_double: bool=False,
@@ -1308,8 +1299,6 @@ class Writer:
             bdf_file.write('$THERMAL MATERIALS\n')
             is_csv = False
             write_dict(bdf_file, model.thermal_materials, size, is_double, is_csv, is_long_ids, sort_cards)
-            # for (unused_mid, material) in sorteddict(model.thermal_materials, sort_cards):
-            #     bdf_file.write(material.write_card(size, is_double))
 
     def write_common(self, bdf_file: TextFile,
                      size: int=8,
@@ -1327,10 +1316,16 @@ class Writer:
         ----------
         bdf_file : file
             the file object
-        size : int (default=8)
+        size : int; default=8
             the field width
-        is_double : bool (default=False)
+        is_double : bool; default=False
             is this double precision
+         coords_size: int; default=8
+            takes priority over size
+         table_size: int; default=8
+            takes priority over size
+         flfact_size: int; default=8
+            takes priority over size
 
         """
         model = self.model
@@ -1422,7 +1417,6 @@ class Writer:
         """Writes the nsm in a sorted order"""
         model = self.model
         if model.nsms or model.nsmadds:
-            # write_bdfs_dict(bdf_files, model.nsmadds, size, is_double, is_long_ids)  # TODO: is this right?
             write_bdfs_dict_list(bdf_files, model.nsmadds, size, is_double, is_long_ids)
             write_bdfs_dict_list(bdf_files, model.nsms, size, is_double, is_long_ids)
 
@@ -1492,7 +1486,8 @@ class Writer:
                     bdf_files[_ifile(aero)].write(aero.write_card(size, is_double))
             write_bdfs_dict(bdf_files, model.gusts, size, is_double, is_long_ids)
 
-    def write_common_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
+    def write_common_file(self, bdf_files: TextFile,
+                          size: int=8, is_double: bool=False,
                           is_long_ids: Optional[bool]=None) -> None:
         """
         Write the common outputs so none get missed...
