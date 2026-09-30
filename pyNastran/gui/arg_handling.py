@@ -29,6 +29,7 @@ INPUT_FORMAT_TO_EXTENSION = {
     # an extension should not be added to this list if it is
     # shared with another type
     'nastran': ['.bdf', '.ecd', '.nas', '.op2', '.pch', '.blk', '.neu'],  # '.dat'
+    #'nastran_aero': [],
     'h5nastran': ['.h5'],
     #'nastran2': ['.bdf', '.ecd', '.nas',],
 
@@ -122,7 +123,9 @@ def determine_format(input_filename: str,
     if allowed_formats is None:
         # used to include None...
         allowed_formats = [
-            'nastran', 'stl', 'cart3d', 'fld', 'fluent', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
+            'nastran', 'nastran_aero',
+            'stl', 'cart3d', 'fld', 'fluent', 'tecplot',
+            'ugrid', 'ugrid3d', 'panair',
             #'plot3d',
             'surf', 'lawgs', 'shabp', 'avus', 'fast', 'abaqus',
             'usm3d', 'bedge', 'su2', 'tetgen',
@@ -145,8 +148,8 @@ def determine_format(input_filename: str,
         formati = 'nastran'
     else:
         #print('allowed_formats =', allowed_formats)
-        msg = 'format=%r was not found\nSpecify the format as [%s]' % (
-            in_ext, ', '.join(allowed_formats))
+        fmts = ', '.join(allowed_formats)
+        msg = f'format={in_ext!r} was not found\nSpecify the format as [{fmts}]'
         raise TypeError(msg)
     return formati
 
@@ -533,7 +536,8 @@ def _update_format(argdict: dict[str, Any],
 def _validate_format(input_formats: list[str]) -> None:
     # None is for custom geometry
     allowed_formats = [
-        'nastran', 'stl', 'cart3d', 'fld', 'fluent', 'tecplot',
+        'nastran', 'nastran_aero',
+        'stl', 'cart3d', 'fld', 'fluent', 'tecplot',
         'ugrid', 'ugrid3d', 'panair',
         #'plot3d',
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',

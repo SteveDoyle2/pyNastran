@@ -120,6 +120,7 @@ class MainWindow(GuiCommon, NastranIO):
         fmt_order = [
             # no results unless specified
             'nastran',  # results
+            'nastran_aero', # results (aero box model)
         ]
         if DEV:
             # fmt_order += ['h5nastran', 'nastran2']
