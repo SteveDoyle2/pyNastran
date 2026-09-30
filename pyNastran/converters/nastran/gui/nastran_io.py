@@ -2703,14 +2703,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         """
         Loads the Nastran results into the GUI
         """
-        self.log.warning(f'load_nastran_results')
         gui: MainWindow = self.gui
         model_name = 'main'
         self.scalar_bar_actor.VisibilityOn()
         self.scalar_bar_actor.Modified()
 
         log = gui.log
-        self.log.warning(f'start of op2')
         if isinstance(results_filename, (str, PurePath)):
             model = self._load_nastran_results_str(results_filename, log)
             if model is None:
