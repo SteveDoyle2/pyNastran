@@ -103,8 +103,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_types,
 )
 from pyNastran.gui.qt_files.colors import (
-    RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, LIGHT_GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
-    YELLOW_FLOAT, ORANGE_FLOAT)
+    RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
+    YELLOW_FLOAT, ORANGE_FLOAT)  # LIGHT_GREEN_FLOAT,
 from pyNastran.gui.errors import NoGeometry, NoSuperelements
 from pyNastran.gui.gui_objects.gui_result import GuiResult  # NormalResult
 #from pyNastran.gui.gui_objects.displacements import ElementalTableResults
@@ -498,7 +498,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             code is being called from load_nastran_geometry_and_results
             not used...
         """
-        assert is_aero, is_aero
         if isinstance(bdf_filename, PurePath):
             bdf_filename = str(bdf_filename)
         gui: MainWindow = self.gui
@@ -750,11 +749,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
     def update_caeros(self, obj: BDF) -> None:
         """the update call for the ModifyMenu"""
         model: BDF = self.model
-        xref_errors = {}
         model._uncross_reference_aero()
         model._cross_reference_aero(check_caero_element_ids=False)
         obj.uncross_reference()
-        obj.safe_cross_reference(model, xref_errors)
+        obj.safe_cross_reference()
 
         out_dict = self.make_caeros(model)
         box_id_to_caero_element_map = out_dict['box_id_to_caero_element_map']
@@ -1962,6 +1960,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         # set to True to enable elementIDs as a result
         eids_set = True
+        eids = np.array([])
         if eids_set and nelements:
             eids = np.zeros(nelements, dtype=nid_cp_cd.dtype)
             eid_map = self.gui.eid_map

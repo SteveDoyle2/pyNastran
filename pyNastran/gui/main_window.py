@@ -291,6 +291,8 @@ class MainWindow(GuiCommon, NastranIO):
                 continue
 
             my_class = load_plugin_class(module_name, plugin_file, class_name, self.log)
+            if my_class is None:
+                continue
             class_obj = my_class(self)
             self.modules[module_name] = class_obj
 
@@ -466,7 +468,7 @@ def load_plugin_class(module_name: str, plugin_file: str, class_name: str,
     spec = importlib.util.spec_from_file_location(module_name, plugin_file)
     if spec is None or spec.loader is None:
         log.warning(f"Could not load spec for {plugin_file}")
-        return
+        return None
 
     # 2. Create the empty module object
     module = importlib.util.module_from_spec(spec)
@@ -477,15 +479,18 @@ def load_plugin_class(module_name: str, plugin_file: str, class_name: str,
     try:
         # 4. Execute the file contents to populate the module
         spec.loader.exec_module(module)
-    except Exception:
+    except Exception as error:
         # Clean up sys.modules if the plugin has a syntax/runtime error on load
         sys.modules.pop(module_name, None)
-        log.warning(f"Could not load spec for {plugin_file}")
-        return
+        log.warning(f"Could not load module for {plugin_file}")
+        log.warning(str(error))
+        return None
 
     # 5. Extract and return the requested class
     try:
         my_class = getattr(module, class_name)
-    except AttributeError:
+    except AttributeError as error:
         log.warning(f"Class '{class_name}' not found in {plugin_file}")
+        log.warning(str(error))
+        return None
     return my_class

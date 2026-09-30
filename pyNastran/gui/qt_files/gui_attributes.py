@@ -1002,7 +1002,7 @@ class GuiAttributes:
         fmts: list[Format] = []
         self.supported_formats = []
         #assert 'h5nastran' in fmt_order
-        assert 'nastran_aero' in fmt_order, fmt_order
+        #assert 'nastran_aero' in fmt_order, fmt_order
         for fmt in fmt_order:
             geom_results_funcs = f'get_{fmt}_wildcard_geometry_results_functions'
 
