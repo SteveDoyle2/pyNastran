@@ -21,6 +21,9 @@ if TYPE_CHECKING:
 
 def is_early_return_aero(self: NastranIO, model: OP2) -> bool:
     """identify an aero model"""
+    if not self.aero_is_quad_mesh:
+        return False
+
     early_return_aero = False
     # for aero identification
     nnode = len(self.node_ids)

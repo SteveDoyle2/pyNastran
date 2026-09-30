@@ -602,6 +602,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         caero_points = out_dict['caero_points']
 
         self.has_caero = has_caero
+        self.aero_is_quad_mesh = True
+        for card_name in model.card_count:
+            if card_name not in {'GRID', 'CQUAD4', 'PSHELL', 'MAT1'}:
+                self.aero_is_quad_mesh = False
+                break
 
         #-----------------------------------------------------------------------
         gui.log_info(f'nnodes={self.nnodes:d} nelements={self.nelements:d}')
@@ -2698,12 +2703,14 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         """
         Loads the Nastran results into the GUI
         """
+        self.log.warning(f'load_nastran_results')
         gui: MainWindow = self.gui
         model_name = 'main'
         self.scalar_bar_actor.VisibilityOn()
         self.scalar_bar_actor.Modified()
 
         log = gui.log
+        self.log.warning(f'start of op2')
         if isinstance(results_filename, (str, PurePath)):
             model = self._load_nastran_results_str(results_filename, log)
             if model is None:
