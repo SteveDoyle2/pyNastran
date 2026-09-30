@@ -119,7 +119,7 @@ class MainWindow(GuiCommon, NastranIO):
         # this includes the bedge, surf, ugrid line (listed as AFLR in the gui)
         fmt_order = [
             # no results unless specified
-            'nastran',  # results
+            'nastran', 'nastran_aero', # results
         ]
         if DEV:
             # fmt_order += ['h5nastran', 'nastran2']

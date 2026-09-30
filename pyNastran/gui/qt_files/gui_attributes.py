@@ -1002,16 +1002,22 @@ class GuiAttributes:
         fmts: list[Format] = []
         self.supported_formats = []
         #assert 'h5nastran' in fmt_order
+        assert 'nastran_aero' in fmt_order, fmt_order
         for fmt in fmt_order:
-            geom_results_funcs = 'get_%s_wildcard_geometry_results_functions' % fmt
+            geom_results_funcs = f'get_{fmt}_wildcard_geometry_results_functions'
 
             if fmt in self.format_class_map:
-                cls = self.format_class_map[fmt](self)
-                data = getattr(cls, geom_results_funcs)()
+                cls = self.format_class_map[fmt]
+                if cls is None:
+                    # nastran_aero
+                    data = getattr(self, geom_results_funcs)()
+                else:
+                    cls_obj = cls(self)
+                    data = getattr(cls_obj, geom_results_funcs)()
             elif hasattr(self, geom_results_funcs):
                 data = getattr(self, geom_results_funcs)()
             else:
-                msg = 'get_%s_wildcard_geometry_results_functions does not exist' % fmt
+                msg = f'get_{fmt}_wildcard_geometry_results_functions does not exist'
                 if stop_on_failure:
                     raise RuntimeError(msg)
                 if not IS_OFFICIAL_RELEASE:

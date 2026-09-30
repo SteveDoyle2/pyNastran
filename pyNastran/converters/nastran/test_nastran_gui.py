@@ -66,10 +66,20 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         self.build_fmts(['nastran'], stop_on_failure=True)
         self.stop_on_failure = True
 
+    def load_nastran_aero_geometry(self, bdf_filename: PathLike | BDF,
+                                   name: str='main',
+                                   plot: bool=True,
+                                   is_aero: bool=True,
+                                   stop_on_failure: bool=False):
+        return self.load_nastran_geometry(
+            bdf_filename, name=name, plot=plot,
+            is_aero=is_aero, stop_on_failure=stop_on_failure)
+
     def load_nastran_geometry(self, bdf_filename: PathLike | BDF,
-                         name: str='main',
-                         plot: bool=True,
-                         stop_on_failure: bool=False):
+                              name: str='main',
+                              plot: bool=True,
+                              is_aero: bool=False,
+                              stop_on_failure: bool=False):
         super().load_nastran_geometry(
             bdf_filename, name=name,
             plot=plot, stop_on_failure=stop_on_failure)
