@@ -299,8 +299,8 @@ def _create_nastran_nodes_elements(model: Abaqus,
         nid_offset += nnodesi
 
     eid_offset = 0
-    for unused_part_name, part in model.parts.items():
-        log.warning(f'part_name = {unused_part_name!r} eid_offset={eid_offset:d}')
+    for part_name, part in model.parts.items():
+        log.warning(f'skipping part_name={part_name!r} eid_offset={eid_offset:d}')
         nnodesi = part.nodes.shape[0]
         #nidsi = part.nids
 
@@ -311,11 +311,11 @@ def _create_nastran_nodes_elements(model: Abaqus,
         assert eid_offset > 0, eid_offset
         nid_offset += nnodesi
         for beam_section in part.beam_sections:
-            log.info('beam')
+            log.info('   beam')
         for shell_section in part.shell_sections:
-            log.info('shell')
+            log.info('  shell')
         for shell_section in part.solid_sections:
-            log.info('solid')
+            log.info('  solid')
     #nids = np.hstack(nids)
 
     pid = 1
@@ -519,6 +519,7 @@ def _create_solid_properties(model: Abaqus, nastran_model: BDF,
 
     return pid, mid
 
+
 def build_coord(model: Abaqus,
                 nastran_model: BDF,
                 cid: int,
@@ -535,7 +536,11 @@ def build_coord(model: Abaqus,
      - spherical
 
     """
-    orient = model.orientations[orientation_name]
+    try:
+        orient = model.orientations[orientation_name]
+    except KeyError:
+        model.log.error(f'orientation_name={orientation_name}; allowed={list(model.orientations)}')
+        raise
     if orient.axis is None:
         R = np.eye(3)
         comment = orient.name
@@ -764,7 +769,11 @@ def map_mass_ids(model: Abaqus, nastran_model: BDF,
         log.debug(f'mapping section with elset={element_set_name} to {eids}')
         element_name_to_type = {value: key for key, value in
                                 model.elements.element_type_to_elset_name.items()}
-        etype = element_name_to_type[eids]
+        try:
+            etype = element_name_to_type[eids]
+        except KeyError:
+            log.error(f'element_name_to_type = {element_name_to_type}')
+            raise
         eids = getattr(model.elements, f'{etype}_eids')
         #return
     etypes_eids = defaultdict(list)
@@ -797,7 +806,11 @@ def map_bar_property_ids(model: Abaqus, nastran_model: BDF,
         log.debug(f'mapping section with elset={element_set_name} to {eids}')
         element_name_to_type = {value: key for key, value in
                                 model.elements.element_type_to_elset_name.items()}
-        etype = element_name_to_type[eids]
+        try:
+            etype = element_name_to_type[eids]
+        except KeyError:
+            log.error(f'element_name_to_type = {element_name_to_type}')
+            raise
         eids = getattr(model.elements, f'{etype}_eids')
         #return
     etypes_eids = defaultdict(list)
@@ -832,7 +845,11 @@ def map_solid_property_ids(model: Abaqus, nastran_model: BDF,
         log.debug(f'mapping section with elset={element_set_name} to {eids}')
         element_name_to_type = {value: key for key, value in
                                 model.elements.element_type_to_elset_name.items()}
-        etype = element_name_to_type[eids]
+        try:
+            etype = element_name_to_type[eids]
+        except KeyError:
+            log.error(f'element_name_to_type = {element_name_to_type}')
+            raise
         eids = getattr(model.elements, f'{etype}_eids')
         #return
     etypes_eids = defaultdict(list)
@@ -854,14 +871,19 @@ def map_shell_property_ids(model: Abaqus, nastran_model: BDF,
     try:
         eids = get_eids_from_recursive_element_set(model, element_set_name)
     except KeyError:
-        log.error(f'cant map section with elset={element_set_name}')
+        log.error(f'cant map section with elset={element_set_name}; '
+                f'names={list(model.element_sets)}')
         return
 
     if isinstance(eids, str):
         log.debug(f'mapping section with elset={element_set_name} to {eids}')
         element_name_to_type = {value: key for key, value in
                                 model.elements.element_type_to_elset_name.items()}
-        etype = element_name_to_type[eids]
+        try:
+            etype = element_name_to_type[eids]
+        except KeyError:
+            log.error(f'element_name_to_type = {element_name_to_type}')
+            raise
         eids = getattr(model.elements, f'{etype}_eids')
         #return
 
@@ -877,7 +899,7 @@ def get_eids_from_recursive_element_set(model: Abaqus,
     """returns None if we cant find a set of eids"""
     eids = model.element_sets[element_set_name]
     if isinstance(eids, str):
-        return eids.lower()
+        return eids
     return eids
 
 def _create_material(nastran_model: BDF,
@@ -1266,14 +1288,24 @@ def _get_nodes(model: Abaqus, nid: int | str) -> list[int]:
     if isinstance(nid, integer_types):
         nids = [nid]
     else:
-        nids = model.node_sets[nid.lower()]
+        assert isinstance(nid, str), nid
+        try:
+            nids = model.node_sets[nid.lower()]
+        except KeyError:
+            model.log.error(f'nid={nid!r} node_sets={list(model.node_sets)}')
+            raise
     return nids
 
 def _get_elements(model: Abaqus, eid: int | str) -> list[int]:
     if isinstance(eid, integer_types):
         eids = [eid]
     else:
-        eids = model.element_sets[eid.lower()]
+        assert isinstance(eid, str), eid
+        try:
+            eids = model.element_sets[eid.lower()]
+        except KeyError:
+            model.log.error(f'eid={eid!r} element_sets={list(model.element_sets)}')
+            raise
     return eids
 
 def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None,

@@ -6,6 +6,7 @@ from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.abaqus.abaqus import read_abaqus
+from pyNastran.converters.abaqus.reader import parse_abaqus_keyword
 from pyNastran.converters.abaqus.abaqus_to_nastran import abaqus_to_nastran_filename, cmd_abaqus_to_nastran
 from pyNastran.converters.abaqus.nastran_to_abaqus import nastran_to_abaqus_filename
 from pyNastran.converters.format_converter import cmd_line_format_converter
@@ -32,11 +33,11 @@ class TestAbaqus(unittest.TestCase):
         """plate conversion"""
         log = get_logger(level='warning', encoding='utf-8')
         #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
-        abaqus_inp_filename = os.path.join(MODEL_PATH, 'in.inp')
+        abaqus_inp_filename = MODEL_PATH / 'in.inp'
         #nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
 
         #model = read_abaqus(abaqus_filename, debug=True)
-        nastran_filename_out = os.path.join(MODEL_PATH, 'out.bdf')
+        nastran_filename_out = MODEL_PATH / 'out.bdf'
         abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out, log=log)
 
     def test_abaqus_to_nastran_3(self):
@@ -235,11 +236,11 @@ class TestAbaqus(unittest.TestCase):
             '4,0.,1.,0.',
             '*element, type=cpe4',
             '2,1,2,3,4',
-            '*elset,elset=Laminate',
+            '*elset,elset="Laminate B"',
             '2',
             #*SHELL SECTION, ELSET=element_set_name, COMPOSITE, OFFSET=offset_value
-            #thickness_1, orientation_1, material_name_1
-            '*Shell Section, elset=Laminate, composite',
+            #thickness_1, orientation_1, material_name_B
+            '*Shell Section, elset="Laminate B", composite',
             '0.005, 10., Carbon0',
             '0.005, 90, Carbon90',
             '0.005, 0, Carbon0',
@@ -276,6 +277,23 @@ class TestAbaqus(unittest.TestCase):
         nastran_to_abaqus_filename(bdf_filename, abaqus_inp_filename2, log=log)
         os.remove(bdf_filename)
         os.remove(abaqus_inp_filename2)
+
+    def test_parse_name_line(self):
+        line = '*Shell Section, elset="Laminate 2", composite'
+        keyword, parameters = parse_abaqus_keyword(line)
+        #print(keyword, parameters)
+
+        line = '*Shell Section, elset=Laminate 2, composite'
+        keyword, parameters = parse_abaqus_keyword(line)
+        #print(keyword, parameters)
+
+        line = '*Shell Section, generate,elset=Laminate 2, composite'
+        keyword, parameters = parse_abaqus_keyword(line)
+        #print(keyword, parameters)
+
+        line = '*Shell Section, generate,elset="Laminate 2,word", composite'
+        keyword, parameters = parse_abaqus_keyword(line)
+        #print(keyword, parameters)
 
 
 def make_model():

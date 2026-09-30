@@ -942,7 +942,6 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename2 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_extra_nodes.op2')
 
         model = read_op2(op2_filename=op2_filename1, debug=False, combine=False)
-        print(list(model.displacements.keys()))
         disp = model.displacements[(1, 1, 1, 0, 0, '', '')]
         # print(disp.object_attributes())
 
@@ -965,7 +964,7 @@ class TestNastranGUI(unittest.TestCase):
         datai = disp.data[0, :, :]
         data = np.vstack([datai, datai])
         disp.node_gridtype = np.vstack([disp.node_gridtype, node_gridtype2])
-        print(disp.node_gridtype)
+        #print(disp.node_gridtype)
         disp.data = data.reshape(1, 2*nnids, 6)
 
         test = NastranGUI()

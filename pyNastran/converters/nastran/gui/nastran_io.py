@@ -602,6 +602,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         caero_points = out_dict['caero_points']
 
         self.has_caero = has_caero
+        self.aero_is_quad_mesh = True
+        for card_name in model.card_count:
+            if card_name not in {'GRID', 'CQUAD4', 'PSHELL', 'MAT1'}:
+                self.aero_is_quad_mesh = False
+                break
 
         #-----------------------------------------------------------------------
         gui.log_info(f'nnodes={self.nnodes:d} nelements={self.nelements:d}')

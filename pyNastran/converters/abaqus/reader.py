@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
@@ -252,15 +253,15 @@ def read_surface(iline: int, line0: str, lines: list[str],
     """
     log.debug(f'read_surface {line0!r}')
     iline += 1
-    iline, line, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    iline, line, flags, lines_out = read_section_dict(iline, line0, lines, log)
 
     surface_name = ''
     surface_type = ''
-    for key, value in split_strict_flags(flags):
+    for key, value in flags.items():
         if key == 'name':
-            surface_name = value
+            surface_name = value.lower()
         elif key == 'type':
-            surface_type = value
+            surface_type = value.lower()
         else:  # pragma: no cover
             raise NotImplementedError((key, value))
     assert surface_type in {'element'}, surface_type
@@ -285,10 +286,11 @@ def read_frequency(iline: int, line0: str, lines: list[str],
     """
     log.debug(f'read_frequency {line0!r}')
     iline += 1
-    iline, line, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    iline, line, flags, lines_out = read_section_dict(iline, line0, lines, log)
 
     solver = ''
-    for key, value in split_strict_flags(flags):
+    #solver = flags.get('solver', '')
+    for key, value in flags.items():
         if key == 'solver':
             solver = value
         else:  # pragma: no cover
@@ -302,12 +304,12 @@ def read_frequency(iline: int, line0: str, lines: list[str],
     frequency = Frequency(solver, nmodes)
     return iline, line0, frequency
 
-def split_strict_flags(flags: list[str]) -> list[tuple[str, str]]:
-    for key_value in flags:
-        key, value = key_value.split('=')
-        key = key.strip().lower()
-        value = value.strip().lower()
-        yield (key, value)
+#def split_strict_flags(flags: list[str]) -> list[tuple[str, str]]:
+#    for key_value in flags:
+#        key, value = key_value.split('=')
+#        key = key.strip().lower()
+#        value = value.strip().lower()
+#        yield (key, value)
 
 def read_node(iline: int, lines: list[str], log: SimpleLogger,
               skip_star: bool=False) -> tuple[int, str,
@@ -360,7 +362,8 @@ def read_element(iline: int, line0: str, lines: list[str],
     assert isinstance(iline, int), iline
     assert isinstance(line0, str), line0
     assert '*' in line0, line0
-    iline, line_out, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    iline, line_out, flags, lines_out = read_section_dict(
+        iline, line0, lines, log)
     assert len(lines_out), lines_out
 
     if len(flags) < 1:
@@ -370,16 +373,16 @@ def read_element(iline: int, line0: str, lines: list[str],
 
     etype = ''
     elset = ''
-    for flag_value in flags:
-        flag, value = flag_value.split('=')
-        flag = flag.strip().lower()
-        value = value.strip()
+    for flag, value in flags.items():
+        #flag, value = flag_value.split('=')
+        #flag = flag.strip().lower()
+        #value = value.strip()
         if flag == 'type':
             assert etype == '', etype
-            etype = value
+            etype = value.lower()
         elif flag == 'elset':
             elset = value
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(flag_value)
 
     if etype not in allowed_element_types:
@@ -430,25 +433,22 @@ def read_nset(iline: int, line0: str, lines: list[str],
               log: SimpleLogger,
               is_instance: bool) -> tuple[int, str, str, np.ndarray]:
     #line0_backup = line0
-    keys = ['instance', 'nset']
-    iline, line0, flags, lines_out = read_set_section(iline, line0, lines, keys, log)
+    #keys = ['instance', 'nset']
+    iline, line0, flags, lines_out = read_section_dict(iline, line0, lines, log)
 
     generate = False
     nset = ''
     instance_name = ''
-    for key_value in flags:
-        if key_value == 'generate':
+    for key, value in flags.items():
+        if key == 'generate':
             generate = True
             continue
-        key, value = key_value.split('=', 1)
-        key = key.strip().lower()
-        value = value.strip().lower()
 
         instance_name = ''
         if key == 'instance':
-            instance_name = value
+            instance_name = value.lower()
         elif key == 'nset':
-            nset = value
+            nset = value.lower()
         else:  # pragma: no cover
             raise RuntimeError((key, value))
 
@@ -467,23 +467,23 @@ def read_elset(iline: int, line0: str, lines: list[str],
                log: SimpleLogger,
                is_instance: bool) -> tuple[int, str, str, np.ndarray]:
     #line0_backup = line0
-    keys = ['instance', 'generate', 'elset']
-    iline, line0, flags, lines_out = read_set_section(iline, line0, lines, keys, log)
+    #keys = ['instance', 'generate', 'elset']
+    iline, line0, flags, lines_out = read_section_dict(iline, line0, lines, log)
 
     generate = False
     instance_name = ''
     elset = ''
     log.info(f'flags = {flags}')
-    for key_value in flags:
-        if key_value == 'generate':
+    for key, value in flags.items():
+        if key == 'generate':
             generate = True
             continue
-        try:
-            key, value = key_value.split('=', 1)
-        except ValueError as error:
-            raise RuntimeError(f'cannot split {key_value!r} by =') from error
-        key = key.strip().lower()
-        value = value.strip().lower()
+        #try:
+        #    key, value = key_value.split('=', 1)
+        #except ValueError as error:
+        #    raise RuntimeError(f'cannot split {key_value!r} by =') from error
+        #key = key.strip().lower()
+        #value = value.strip().lower()
 
         if key == 'instance':
             assert elset == '', elset
@@ -500,47 +500,49 @@ def read_elset(iline: int, line0: str, lines: list[str],
     else:
         assert instance_name == '', instance_name
         set_name = elset
+    set_name = set_name.lower()
 
     set_ids = _generate_set(lines_out, generate)
     assert isinstance(iline, int), iline
     assert len(set_name) > 0, flags
-    assert set_name == set_name.lower()
+    #assert set_name == set_name.lower()
     return iline, line0, set_name, set_ids
 
-def read_material(iline: int, word: str,
+def read_material(iline: int, line0: str,
                   lines: list[str],
                   log: SimpleLogger) -> tuple[int, str, str, Material]:
     """reads a Material card"""
     lines2 = lines[iline:]
     assert isinstance(iline, int), iline
-    assert isinstance(word, str), word
+    assert isinstance(line0, str), line0
 
-    param_map = get_param_map(iline, word, required_keys=['name'])
-    #print(param_map)
-    name = param_map['name']
+    #param_map = get_param_map(iline, word, required_keys=['name'])
+    #print(f'word = {word}')
+    keyword, param_map = parse_abaqus_keyword(line0)
+    mat_name = param_map['name']
 
     iline += 1
     word_line = lines[iline].strip().lower()
     word = word_line.strip('*').lower()
-    unused_allowed_words = ['elastic']
+    #unused_allowed_words = ['elastic']
     unallowed_words = [
         'shell section', 'solid section', 'beam section',
         'material', 'step', 'boundary', 'amplitude', 'surface interaction',
         'assembly', 'spring', 'orientation']
     #orientations = {}
     iline += 1
-    line0 = lines[iline].strip('\n\r\t, ').lower()
+    line0 = lines[iline].strip('\n\r\t, ')
     #print('  wordA =', word)
     #while word in allowed_words:
     sections = {}
     density = 0.0
     ndelete = None
     ndepvars = None
+    word = word.lower()
     while word not in unallowed_words:
         data_lines = []
-        log.info('  mat_word = %r' % word)
+        #log.info('  mat_word = %r' % word)
         #print(sections)
-        word_lower = word.lower()
         if word.startswith('elastic'):
             iline, key = _read_material_elastic(
                 iline, line0, lines,
@@ -594,7 +596,7 @@ def read_material(iline: int, word: str,
                 sline = line0.split(',')
                 assert len(sline) == 3, sline
                 iline += 1
-                line0 = lines[iline].strip().lower()
+                line0 = lines[iline].strip()
             log.debug(line0)
         elif word == 'damage stabilization':
             key = 'damage stabilization'
@@ -667,7 +669,7 @@ def read_material(iline: int, word: str,
                         msg = 'mat_type=%r; allowed_types=[%s]'  % (
                             mat_type, ', '.join(allowed_types))
                         raise NotImplementedError(msg)
-                else:
+                else:  # pragma: no cover
                     raise NotImplementedError('mat_word=%r' % mat_word)
 
             if not is_constants:
@@ -684,36 +686,36 @@ def read_material(iline: int, word: str,
                 assert len(sline) == 8, 'len(sline)=%s; sline=%s' % (len(sline), sline)
                 mat_data += sline
                 iline += 1
-                line0 = lines[iline].strip('\n\r\t, ').lower()
+                line0 = lines[iline].strip('\n\r\t, ')
             if nleftover:
                 sline = line0.split(',')
                 iline += 1
-                line0 = lines[iline].strip('\n\r\t, ').lower()
+                line0 = lines[iline].strip('\n\r\t, ')
         #elif word.startswith('initial conditions'):
         #    asdf
         #    # TODO: skips header parsing
         #    #iline += 1
-        #    #line0 = lines[iline].strip().lower()
+        #    #line0 = lines[iline].strip()
         #    unused_data = []
         #    while '*' not in line0:
         #        sline = line0.split(',')
         #        iline += 1
-        #        line0 = lines[iline].strip().lower()
+        #        line0 = lines[iline].strip()
         #    log.debug(line0)
-        elif word_lower.startswith('hyperelastic, mooney-rivlin'):
+        elif word.startswith('hyperelastic, mooney-rivlin'):
             key = 'hyperelastic, mooney-rivlin'
             iline, line0, flags, lines_out = read_generic_section(iline, word_line, lines, log)
             iline += 1
             log.debug(str((iline, line0)))
 
-        elif word_lower.startswith('expansion'):
+        elif word.startswith('expansion'):
             iline, line0 = _read_material_expansion(iline, word_line, lines, sections, log)
         else:
             msg = print_data(lines, iline, word, 'is this an unallowed word for *Material?\n')
             raise NotImplementedError(msg)
 
         if key in sections:
-            msg = f'  key={key!r} already defined for Material name={name!r}'
+            msg = f'  key={key!r} already defined for Material name={mat_name!r}'
             log.warning(msg)
         else:
             #raise RuntimeError(msg)
@@ -725,13 +727,13 @@ def read_material(iline: int, word: str,
             is_broken = True
             log.debug('  breaking on end of file')
             break
-        word_line = line.strip('\n\r\t, ').lower()
+        word_line = line.strip('\n\r\t, ')
         del line
         word = word_line.strip('*').lower()
         log.debug(f'{iline}: word_line={word_line!r}; word={word!r}')
 
         iline += 1
-        line0 = lines[iline].strip('\n\r\t, ').lower()
+        line0 = lines[iline].strip('\n\r\t, ')
         #log.debug('  lineB = %r' % line0)
         #log.debug('  wordB = %r' % word)
 
@@ -746,11 +748,13 @@ def read_material(iline: int, word: str,
             break
     #print(name, sections)
     #assert 'elastic' in sections or 'engineering constants' in sections, sections
-    material = Material(name, sections=sections,
+    mat_name = mat_name.lower()
+    material = Material(mat_name, sections=sections,
                         #is_elastic=True,
                         density=density,
                         #conductivity=conductivity, specific_heat=specific_heat,
                         ndepvars=ndepvars, ndelete=ndelete)
+    log.debug(material)
     iline -= 1
     return iline, line0, word, material
 
@@ -822,7 +826,7 @@ def read_boundary(iline: int, line0: str, lines: list[str]) -> tuple[int, str, B
         sline = line0.strip().split(',')
         boundary_lines.append(sline)
         iline += 1
-        line0 = lines[iline].strip().lower()
+        line0 = lines[iline].strip()
     boundary = Boundary.from_data(boundary_lines)
     return iline, line0, boundary
 
@@ -833,10 +837,10 @@ def read_solid_section(iline: int, line0: str, lines: list[str],
     assert isinstance(line0, str), line0
 
     #print(line0)
-    iline, line0, flags, lines_out = read_generic_section(
+    iline, line0, flags, lines_out = read_section_dict(
         iline, line0, lines, log, require_lines_out=False)
     params_map = {}
-    for key, value in split_strict_flags(flags):
+    for key, value in flags.items():
         if key == 'material':
             params_map[key] = value.lower()
         elif key == 'elset':
@@ -854,19 +858,19 @@ def read_shell_section(iline: int, line0: str, lines: list[str],
                        log: SimpleLogger) -> tuple[int, ShellSection]:
     """reads *shell section"""
     assert isinstance(iline, int), iline
-    assert '*shell' in line0, line0
+    assert '*shell' in line0.lower(), line0
 
-    iline, line0, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    iline, line0, flags, lines_out = read_section_dict(iline, line0, lines, log)
     #print(f'flags = {flags}')
     is_composite = 'composite' in flags
     if is_composite:
-        flags.remove('composite')
+        del flags['composite']
 
     params_map = {
         'is_composite': is_composite,
         'orientation': '',
     }
-    for key, value in split_strict_flags(flags):
+    for key, value in flags.items():
         #print(f'key={key!r} value={value!r}')
         if key == 'material':
             params_map[key] = value.lower()
@@ -881,6 +885,7 @@ def read_shell_section(iline: int, line0: str, lines: list[str],
 
     shell_section = ShellSection.add_from_data_lines(
         params_map, lines_out, log)
+    log.debug(shell_section)
     return iline, shell_section
 
 def read_hourglass_stiffness(iline: int, line0: str, lines: list[str],
@@ -914,14 +919,14 @@ def read_star_block(iline: int, line0: str, lines: list[str],
     data_lines = []
     try:
         iline += 1
-        line0 = lines[iline].strip().lower()
+        line0 = lines[iline].strip()
         while not line0.startswith('*'):
             data_lines.append(line0.split(','))
             iline += 1
-            line0 = lines[iline].strip().lower()
+            line0 = lines[iline].strip()
             #log.debug('line = %r' % line0)
         iline -= 1
-        line0 = lines[iline].strip().lower()
+        line0 = lines[iline].strip()
     except IndexError:
         pass
     if debug:
@@ -940,13 +945,13 @@ def read_star_block2(iline: int, line0: str,
     """
     assert isinstance(iline, int), iline
     assert isinstance(line0, str), line0
-    line0 = lines[iline].strip().lower()
+    line0 = lines[iline].strip()
     data_lines = []
     while not line0.startswith('*'):
         sline = line0.strip(', ').split(',')
         data_lines.append(sline)
         iline += 1
-        line0 = lines[iline].strip().lower()
+        line0 = lines[iline].strip()
     if debug:
         for line in data_lines:
             log.debug(line)
@@ -975,21 +980,25 @@ def _generate_set(lines_out: list[str], generate: bool) -> np.ndarray:
 def read_orientation(iline: int, line0: str, lines: list[str],
                      log: SimpleLogger) -> tuple[int, str, Orientation]:
     assert isinstance(iline, int)
+    #print(f'  orient line0 = {line0}')
 
-    iline, line, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    iline, line, flags, lines_out = read_section_dict(iline, line0, lines, log)
     #assert len(flags) == 2, flags
 
+    # flags = {'system': 'R', 'name': 'GLOBAL'}
     system = 'rectangular'
     definition = 'coordinates'
     name = ''
-    for key, value in split_strict_flags(flags):
+    #print(f'flags = {flags}')
+    for key, value in flags.items():
         if key == 'system':
-            system = value
-            assert system in ('cylindrical'), system
+            system = value.lower()
+            #assert system in ('cylindrical'), system
+            assert system in ('r',), system
         elif key == 'name':
-            name = value
-        elif key == 'name':
-            definition = value
+            name = value.lower()
+        #elif key == 'name':
+            #definition = value
         else:  # pramga: no cover
             raise RuntimeError((key, value))
 
@@ -1041,15 +1050,15 @@ def read_system(iline: int, line0: str, lines: list[str],
     """
     coordinate_system_fields = []
     iline += 1
-    line0 = lines[iline].strip().lower()
+    line0 = lines[iline].strip()
     while '*' not in line0:
         sline = line0.split(',')
         iline += 1
-        line0 = lines[iline].strip().lower()
+        line0 = lines[iline].strip()
         coordinate_system_fields.extend(sline)
     log.debug(line0)
     iline -= 1
-    line0 = lines[iline].strip().lower()
+    line0 = lines[iline].strip()
     assert len(coordinate_system_fields) == 9, coordinate_system_fields
     return iline, line0, coordinate_system_fields
 
@@ -1070,15 +1079,15 @@ def read_transform(iline: int, line0: str, lines: list[str],
       Global Z-coordinate of point b
     """
     iline += 1
-    iline, line_out, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    iline, line_out, flags, lines_out = read_section_dict(iline, line0, lines, log)
 
     transform_type = ''
     nset = ''
-    for key, value in split_strict_flags(flags):
+    for key, value in flags.items():
         if key == 'type':
             transform_type = value.upper()
         elif key == 'nset':
-            nset = value
+            nset = value.lower()
         else:  # pragma: no cover
             raise RuntimeError((key, value))
 
@@ -1102,11 +1111,11 @@ def _read_material_expansion(iline: int, word_line: str, lines: list[str],
     *Expansion, zero=20.
     80.,
     """
-    iline, line0, flags, lines_out = read_generic_section(iline, word_line, lines, log)
+    iline, line0, flags, lines_out = read_section_dict(iline, word_line, lines, log)
     iline += 1
 
     tref = 0.
-    for key, value in split_strict_flags(flags):
+    for key, value in flags.items():
         if key == 'zero':
             tref = float(value)
         else:  # pragma: no cover
@@ -1218,7 +1227,7 @@ def read_beam_section(iline: int, line0: str, lines: list[str],
     - THICK PIPE, for a thick-walled circular section (Abaqus/Standard only).
     - TRAPEZOID, for a trapezoidal section.
     """
-    iline, line_out, flags, lines_out = read_generic_section(iline, line0, lines, log)
+    iline, line_out, flags, lines_out = read_section_dict(iline, line0, lines, log)
     assert len(lines_out), lines_out
 
     allowed_beam_section = ['ELSET', 'MATERIAL', 'SECTION']
@@ -1231,19 +1240,16 @@ def read_beam_section(iline: int, line0: str, lines: list[str],
     elset = ''
     material = ''
     section = ''
-    for flag_value in flags:
-        flag, value = flag_value.split('=')
-        flag = flag.strip().lower()
-        value = value.strip()
+    for flag, value in flags.items():
         #if flag == 'name':
             #assert etype == '', etype
             #name = value
         if flag == 'elset':
             assert elset == '', elset
-            elset = value
+            elset = value.lower()
         elif flag == 'material':
             assert material == '', material
-            material = value
+            material = value.lower()
         elif flag == 'section':
             assert section == '', section
             section = value.upper()
@@ -1306,10 +1312,10 @@ def read_mass(iline: int, line0: str, lines: list[str],
 
     return iline, line0, mass
 
-def read_set_section(iline: int, line0: str, lines: list[str],
-                     allowed_keys: list[str],
-                     log: SimpleLogger,
-                     require_lines_out: bool=True) -> tuple[int, str, list[str], list[str]]:
+def read_section_dict(iline: int, line0: str, lines: list[str],
+                      #allowed_keys: list[str],
+                      log: SimpleLogger,
+                      require_lines_out: bool=True) -> tuple[int, str, list[str], list[str]]:
     """
     Parameters
     ----------
@@ -1332,30 +1338,13 @@ def read_set_section(iline: int, line0: str, lines: list[str],
         the lines in the main block
 
     """
-    return read_generic_section(
-        iline, line0, lines,
-        log, require_lines_out=require_lines_out)
     assert isinstance(iline, int)
     assert isinstance(line0, str)
     iline0 = iline
     assert '*' in line0, line0
     #'*element, type=s8, elset=shell_structure' to ['type=s8', 'elset=shell_structure']
-
-    #'elset,elset=laminate, composite' -> ['elset=laminate, composite']
-    flag_str = line0.split(',', 1)[1].strip()
     
-    print(f'flag_str = {flag_str!r}')
-
-    #'elset=laminate, composite' -> ['elset=laminate, composite']
-    flags = []
-    while '=' in flag_str:
-        key, value = flag_str.split('=')
-        assert '=' not in value, value
-        assert key in allowed_keys, f'key={key!r} allowed_keys={allowed_keys}'
-        flags.append(f'{key}={value}')
-        for keyi in allowed_keys:
-            assert keyi not in value, flag_str
-        break
+    keyword, parameters = parse_abaqus_keyword(line0)
 
     line = ''
     lines_out = []
@@ -1371,7 +1360,7 @@ def read_set_section(iline: int, line0: str, lines: list[str],
     if require_lines_out:
         assert len(lines_out), line0
     iline -= 1
-    return iline, line, flags, lines_out
+    return iline, line, parameters, lines_out
 
 def read_generic_section(iline: int, line0: str, lines: list[str],
                          log: SimpleLogger,
@@ -1434,27 +1423,23 @@ def read_heading(iline: int, line0: str, lines: list[str],
 def read_part(lines: list[str], iline: int, line0: str,
               word: str,
               log: SimpleLogger,
-              debug: bool) -> tuple[int, str, str, Part]:
+              debug: bool) -> tuple[int, str, Part]:
     """reads a Part object"""
-    sline2 = word.split(',', 1)[1:]
-
-    assert len(sline2) == 1, f'looking for part_name; word={word!r} sline2={sline2}'
-    name_slot = sline2[0]
-    assert 'name' in name_slot, name_slot
-    part_name = name_slot.split('=', 1)[1]
+    keyword, params = parse_abaqus_keyword('*' + word)
+    log.info(f'part params = {params}')
+    part_name = params['name']
     log.debug(f'part_name = {part_name!r}')
     #self.part_name = part_name
 
     iline += 1
-    line0 = lines[iline].strip().lower()
-    assert line0.startswith('*node'), line0
-
-
-    #iline += 1
-    #line0 = lines[iline].strip().lower()
+    line0 = lines[iline].strip()
+    assert line0.lower().startswith('*node'), line0
 
     #iline += 1
-    #line0 = lines[iline].strip().lower()
+    #line0 = lines[iline].strip()
+
+    #iline += 1
+    #line0 = lines[iline].strip()
     #print('line0 * = ', line0)
     element_types = {}
     node_sets: dict[str, np.ndarray] = {}
@@ -1468,76 +1453,80 @@ def read_part(lines: list[str], iline: int, line0: str,
     shell_sections: list[ShellSection] = []
     masses: dict[str, Mass] = {}
     orientations: dict[str, Orientation]= {}
-    while not line0.startswith('*end part'):
+    word = line0.strip('*')
+    log.info(f'part0: word={word!r}')
+    while not word.startswith('end part'):
+        log.info(f'  part1: word={word!r}')
         #if is_start:
         iline += 1 # skips over the header line
         log.debug('  ' + line0)
-        iword = line0.strip('*').lower()
-        log.info(f'part: {iword:s}')
-        if '*node' in line0:
+        word = line0.strip('*').lower()
+        log.info(f'  part: line0={line0!r}')
+        log.info(f'  part: word={word!r}')
+        if word.startswith('node'):
             assert len(nids) == 0, nids
             iline, line0, nids, nodes = read_node(iline, lines, log)
 
-        elif '*element' in line0:
+        elif word.startswith('element'):
             #print(line0)
             iline, line0, etype, elset, elements = read_element(
                 iline, line0, lines, log, debug)
             element_types[etype] = (elements, elset)
             iline += 1
 
-        elif '*nset' in line0:
+        elif word.startswith('nset'):
             iline, line0, set_name, set_ids = read_nset(
                 iline, line0, lines, log, is_instance=False)
             node_sets[set_name] = set_ids
             iline += 1
 
-        elif '*elset' in line0:
+        elif word.startswith('elset'):
             iline, line0, set_name, set_ids = read_elset(
                 iline, line0, lines, log, is_instance=False)
             element_sets[set_name] = set_ids
             iline += 1
 
-        elif '*surface' in line0:
+        elif word.startswith('surface'):
             raise RuntimeError('surface part')
             # TODO: skips header parsing
             #iline += 1
-            line0 = lines[iline].strip().lower()
+            line0 = lines[iline].strip()
             data_lines = []
             while not line0.startswith('*'):
                 data_lines.append(line0.split(','))
                 iline += 1
-                line0 = lines[iline].strip().lower()
+                line0 = lines[iline].strip()
 
-        elif '*solid section' in line0:
+        elif word.startswith('solid section'):
             iline, solid_section = read_solid_section(iline, line0, lines, log)
             iline += 1
             solid_sections.append(solid_section)
-        elif '*shell section' in line0:
+        elif word.startswith('shell section'):
             iline, shell_section = read_shell_section(iline, line0, lines, log)
             iline += 1
             shell_sections.append(shell_section)
 
-        elif '*cohesive section' in line0:
+        elif word.startswith('cohesive section'):
             # TODO: skips header parsing
             #iline += 1
             #cohesive_section
-            line0 = lines[iline].strip().lower()
+            line0 = lines[iline].strip()
             data_lines = []
             while not line0.startswith('*'):
                 data_lines.append(line0.split(','))
                 iline += 1
-                line0 = lines[iline].strip().lower()
-        elif '*mass' in line0:
+                line0 = lines[iline].strip()
+        elif word.startswith('mass'):
             iline, line0, mass = read_mass(iline, line0, lines, log)
             masses[mass.elset] = mass
             # TODO: skips header parsing
             #iline, line0, flags, data_lines = reader.read_generic_section(iline, line0, lines, log)
             iline += 1
-        elif '*rotary inertia' in line0:
+        elif word.startswith('rotary inertia'):
             # TODO: skips header parsing
             iline, line0, flags, data_lines = read_generic_section(iline, line0, lines, log)
             iline += 1
-        elif '*orientation' in line0:
+        elif word.startswith('orientation'):
             iline, line0, orientation = read_orientation(iline, line0, lines, log)
             orientations[orientation.name] = orientation
         else:
@@ -1547,7 +1536,8 @@ def read_part(lines: list[str], iline: int, line0: str,
             msg += 'expected=[%r]' % ', '.join(allowed)
             raise NotImplementedError(msg)
 
-        line0 = lines[iline].strip().lower()
+        line0 = lines[iline].strip()
+        word = line0.lstrip('*').lower()
         unused_is_start = False
 
         #print(line0)
@@ -1559,10 +1549,11 @@ def read_part(lines: list[str], iline: int, line0: str,
     #print('part.shell_sections =', shell_sections)
 
     del masses, orientations
+    part_name = part_name.lower()
     part = Part(part_name, nids, nodes, element_types,
                 node_sets, element_sets,
                 beam_sections, solid_sections, shell_sections, log)
-    return iline, line0, part_name, part
+    return iline, line0, part
 
 def read_step(lines: list[str], iline: int, line0: str, istep: int,
               log: SimpleLogger) -> tuple[int, str, Step]:
@@ -1597,14 +1588,13 @@ def read_step(lines: list[str], iline: int, line0: str, istep: int,
     # LOAD,2,-25
 
     iline += 1
-    line0 = lines[iline].strip().lower()
+    line0 = lines[iline].strip()
     step_name = ''
     if not line0.startswith('*'):
         step_name = lines[iline].strip()
         iline += 1
-        line0 = lines[iline].strip().lower()
+        line0 = lines[iline].strip()
     word = line0.strip('*').lower()
-
 
     #allowed_words = ['static', 'boundary', 'dsload', 'restart', 'output', 'node',
                      #'element output']
@@ -1613,7 +1603,7 @@ def read_step(lines: list[str], iline: int, line0: str, istep: int,
     while word != 'end step':
         log.debug('    step_word = %r' % word)
         iline += 1
-        line0 = lines[iline].strip().lower()
+        line0 = lines[iline].strip()
         #print('word =', word)
         #print('active_line =', line0)
         unused_data_lines = []
@@ -1633,7 +1623,7 @@ def read_step(lines: list[str], iline: int, line0: str, istep: int,
                 assert len(sline) == 4, sline
                 iline += 1
         elif word.startswith('restart'):
-            line0 = lines[iline].strip().lower()
+            line0 = lines[iline].strip()
             word = line0.strip('*').lower()
             continue
             #print('  line_sline =', line0)
@@ -1661,7 +1651,7 @@ def read_step(lines: list[str], iline: int, line0: str, istep: int,
             iline += 1
         elif word.startswith('temperature'):
             iline -= 1
-            line0 = lines[iline].strip().lower()
+            line0 = lines[iline].strip()
             iline, line0, unused_data_lines = read_star_block(
                 iline, line0, lines, log, debug=True)
             iline += 1
@@ -1670,12 +1660,12 @@ def read_step(lines: list[str], iline: int, line0: str, istep: int,
             iline, line0, unused_data_lines = read_star_block(
                 iline, line0, lines, log)
             iline += 1
-            line0 = lines[iline].strip().lower()
+            line0 = lines[iline].strip()
             #for line in data_lines:
                 #print(line)
 
         elif word.startswith('output'):
-            line0 = lines[iline].strip().lower()
+            line0 = lines[iline].strip()
             word = line0.strip('*').lower()
             continue
         elif word == 'node output':
@@ -1684,21 +1674,21 @@ def read_step(lines: list[str], iline: int, line0: str, istep: int,
                 sline = line0.split(',')
                 node_output += [val.strip() for val in sline]
                 iline += 1
-                line0 = lines[iline].strip().lower()
+                line0 = lines[iline].strip()
         elif word.startswith('element output'):
             element_output = []
             while '*' not in line0:
                 sline = line0.split(',')
                 element_output += [val.strip() for val in sline]
                 iline += 1
-                line0 = lines[iline].strip().lower()
+                line0 = lines[iline].strip()
         elif word.startswith('contact output'):
             unused_contact_output = []
             while '*' not in line0:
                 sline = line0.split(',')
                 element_output += [val.strip() for val in sline]
                 iline += 1
-                line0 = lines[iline].strip().lower()
+                line0 = lines[iline].strip()
         elif word.startswith('boundary'):
             iline, line0, boundary = read_boundary(iline, line0, lines)
             if boundary:
@@ -1727,21 +1717,21 @@ def read_step(lines: list[str], iline: int, line0: str, istep: int,
                 sline = line0.split(',')
                 node_output += sline
                 iline += 1
-                line0 = lines[iline].strip().lower()
+                line0 = lines[iline].strip()
         elif word.startswith('node file'):
             node_output = []
             while '*' not in line0:
                 sline = line0.split(',')
                 node_output += [val.strip() for val in sline]
                 iline += 1
-                line0 = lines[iline].strip().lower()
+                line0 = lines[iline].strip()
         elif word.startswith('el file'):
             element_output = []
             while '*' not in line0:
                 sline = line0.strip().split(',')
                 element_output += [val.strip() for val in sline]
                 iline += 1
-                line0 = lines[iline].strip().lower()
+                line0 = lines[iline].strip()
         elif word.startswith('frequency'):
             iline -= 1
             line0 = lines[iline]
@@ -1751,12 +1741,13 @@ def read_step(lines: list[str], iline: int, line0: str, istep: int,
         else:
             msg = print_data(lines, iline, word, 'is this an unallowed word for *Step?\n')
             raise NotImplementedError(msg)
-        line0 = lines[iline].strip().lower()
+        line0 = lines[iline].strip()
         word = line0.strip('*').lower()
         #print('  lineB =', line0)
         #print('  word2 =', word)
     #iline += 1
     #iline -= 1
+    step_name = step_name.lower()
     step = Step(step_name, boundaries,
                 node_output, element_output,
                 cloads, dloads, surfaces,
@@ -1764,3 +1755,39 @@ def read_step(lines: list[str], iline: int, line0: str, istep: int,
                 is_nlgeom=False)
     log.debug('  end of step %i...' % istep)
     return iline, line0, step
+
+
+def parse_abaqus_keyword(line: str) -> tuple[str, dict[str, Any]]:
+    """thanks AI
+
+    line = '*Shell Section, elset="Laminate 2", composite'
+    out = {'keyword': 'Shell Section',
+           'parameters': {'elset': 'Laminate 2', 'composite': ''}}
+    """
+    # Strip whitespace and trailing commas
+    line = line.strip().rstrip(',')
+    assert line.startswith('*'), line
+
+    # Split the main keyword from its parameters
+    sline = line.split(',', 1)
+    keyword = sline[0].strip('*').strip()
+
+    parameters = {}
+    if len(sline) > 1:
+        # Match standalone flags or key=value pairs (handling optional quotes)
+        pattern = r'([a-zA-Z_][\w\s]*)(?:=(?:"([^"]*)"|\'([^\']*)\'|([^,]*)))?'
+        matches = re.findall(pattern, sline[1])
+
+        for match in matches:
+            param_name = match[0].strip().lower()
+            
+            # Extract value from the capturing groups (quoted or unquoted)
+            param_value = match[1] or match[2] or match[3]
+            #print(f'match={match}; {param_name}={param_value!r}')
+
+            if param_value == '':
+                # It's a standalone flag (like 'composite')
+                parameters[param_name] = True
+            else:
+                parameters[param_name] = param_value.strip()
+    return keyword, parameters
