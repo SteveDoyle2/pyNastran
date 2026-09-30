@@ -9,29 +9,14 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.result_objects.stress_object import _get_nastran_header
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.op2.result_objects.table_object import (
-    RealTableArray, ComplexTableArray)
 from pyNastran.gui.gui_objects.force_results import ForceResults2
 from pyNastran.gui.gui_objects.displacement_results import DisplacementResults2
+from .result_objects.displacement_reduced import DisplacementReduced
+from .result_objects.case2d import Case2D
 
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
     from .nastran_io import NastranIO
-
-
-class Case2D:
-    def __init__(self, node_id: np.ndarray, data: np.ndarray):
-        nnode = len(node_id)
-        self.node_gridtype = np.zeros((nnode, 2), dtype='int32')
-        self.node_gridtype[:, 0] = node_id
-        self.data = data.reshape(1, nnode, 3)
-
-class DisplacementReduced:
-    def __init__(self, case: RealTableArray | ComplexTableArray,
-                 nodal_disp: np.ndarray,
-                 node_gridtype: np.ndarray):
-        self.node_gridtype = node_gridtype
-        self.data = nodal_disp
 
 
 def is_early_return_aero(self: NastranIO, model: OP2) -> bool:
@@ -148,7 +133,6 @@ def load_nastran_results_aero(results_filename: PathLike,
             print(subcase_id_to_subcase_word)
             raise
         if key in results_model.displacements:
-            print('adding aero deflection')
             icase = _aero_deflection(
                 results_model.displacements,
                 results_model.log,
@@ -158,7 +142,6 @@ def load_nastran_results_aero(results_filename: PathLike,
                 cases, subcase_form, icase, key,
                 resname='Deflection')
         if key in results_model.eigenvectors:
-            print('adding aero eigenvector')
             icase = _aero_deflection(
                 results_model.eigenvectors,
                 results_model.log,
