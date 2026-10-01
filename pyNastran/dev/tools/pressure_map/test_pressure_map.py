@@ -1,6 +1,5 @@
 from pathlib import Path
 import unittest
-from unittest import mock
 import numpy as np
 
 from cpylog import SimpleLogger
@@ -16,7 +15,6 @@ from pyNastran.dev.tools.pressure_map.pressure_map import (
     pressure_map, pressure_filename_to_fa2j, pressure_filename_to_wkk_diag,
     map_panel_force_moment_centroid, pressure_map_to_panel_model,
     pressure_map_to_structure_model)
-from pyNastran.dev.tools.pressure_map import pressure_map as pressure_map_module
 from pyNastran.dev.tools.pressure_map.setup_aero import (
     get_aero_model, get_aero_pressure_centroid)
 
@@ -939,64 +937,175 @@ class TestAeroCombinedArrays(unittest.TestCase):
         np.testing.assert_allclose(aero_dict['normal'], [[0., 0., 1.], [0., 0., 1.]])
 
 
+def _capture_log() -> tuple[SimpleLogger, list[str]]:
+    """info-level logger whose messages are appended to the returned list"""
+    msgs = []
+    log = SimpleLogger(level='info',
+                       log_func=lambda typ, filename, lineno, msg: msgs.append(msg))
+    return log, msgs
+
+
+def _parse_balance(msgs: list[str], title: str) -> dict[str, np.ndarray]:
+    """
+    Reads the dimensional rows of the logged force/moment balance table.
+
+    Returns {'aero_f', 'aero_m', 'struct_f', 'struct_m'}; values are
+    printed with 6 significant figures.
+    """
+    lines = '\n'.join(msgs).splitlines()
+    istart = [i for i, line in enumerate(lines) if line.strip() == title]
+    assert len(istart) == 1, f'{title!r} found {len(istart)} times'
+    labels = {
+        'Aero  Force  (dim)': 'aero_f',
+        'Struct Force (dim)': 'struct_f',
+        'Aero  Moment (dim)': 'aero_m',
+        'Struct Moment(dim)': 'struct_m',
+    }
+    out = {}
+    for line in lines[istart[0]:]:
+        sline = line.strip()
+        for label, key in labels.items():
+            if sline.startswith(label) and key not in out:
+                out[key] = np.array(sline[len(label):].split(), dtype='float64')
+        if len(out) == len(labels):
+            break
+    assert len(out) == len(labels), out
+    return out
+
+
+BALANCE_PRESSURE = 'Force/Moment Balance: Aero vs Mapped Structure (full_model)'
+BALANCE_FORCE = 'Force/Moment Balance: Aero vs Mapped Structure (full_model, force)'
+LOG_TOL = dict(rtol=1e-5, atol=1e-9)  # table prints 6 significant figures
+
+
 class TestFullModelBalance(unittest.TestCase):
     """full_model logs aero vs structure force/moment about reference_point"""
 
-    def _balance_args(self, aero_model, reference_point=None):
-        structure_model = _one_quad_structure(aero_model.log)
-        with mock.patch.object(pressure_map_module, '_log_force_moment_balance') as balance:
-            out_model = pressure_map_to_structure_model(
-                aero_model, structure_model, np.array([1], dtype='int32'),
-                reference_point, map_type='pressure', qinf=PANEL_QINF,
-                sref=4.0, bref=2.0, cref=0.5)
-        self.assertEqual(balance.call_count, 1)
-        args = balance.call_args[0]
-        # (log, title, aero_F, aero_M, struct_F, struct_M, ref, qinf, sref, bref, cref)
-        self.assertEqual(args[7:], (PANEL_QINF, 4.0, 2.0, 0.5))
-        return out_model, args[2], args[3], args[4], args[5]
+    def _balance(self, aero_model, reference_point=None):
+        log, msgs = _capture_log()
+        aero_model.log = log
+        structure_model = _one_quad_structure(log)
+        out_model = pressure_map_to_structure_model(
+            aero_model, structure_model, np.array([1], dtype='int32'),
+            reference_point, map_type='pressure', qinf=PANEL_QINF,
+            sref=4.0, bref=2.0, cref=0.5)
+        text = '\n'.join(msgs)
+        self.assertIn('sref=4.0; bref=2.0; cref=0.5', text)
+        bal = _parse_balance(msgs, BALANCE_PRESSURE)
+        return out_model, bal['aero_f'], bal['aero_m'], bal['struct_f'], bal['struct_m']
 
     def test_full_model_balance_tri_aero(self):
         log = SimpleLogger(level='warning')
-        out_model, aero_f, aero_m, struct_f, struct_m = self._balance_args(
+        out_model, aero_f, aero_m, struct_f, struct_m = self._balance(
             _two_tri_cart3d(log))
 
         # aero: F_flat = 2*1*1*[0,0,1] = [0,0,2] at (7/6, 5/6, 1/2)
         #       F_tilt = 2*2*(sqrt2/2)*[-1,0,1]/sqrt2 = [-2,0,2] at (17/6, 5/6, 5/6)
         #       M = r x F = [5/3, -7/3, 0] + [5/3, -22/3, 5/3]
-        np.testing.assert_allclose(aero_f, [-2., 0., 4.], atol=1e-12)
-        np.testing.assert_allclose(aero_m, [10/3, -29/3, 5/3], atol=1e-12)
+        np.testing.assert_allclose(aero_f, [-2., 0., 4.], **LOG_TOL)
+        np.testing.assert_allclose(aero_m, [10/3, -29/3, 5/3], **LOG_TOL)
 
         # structure: centroid (2,1,0) is nearest the flat tri -> p = 2*1 = 2
         #   F = 2*8*[0,0,1] = [0,0,16];  M = (2,1,0) x F = [16,-32,0]
         #   (same as pyNastran's sum_forces_moments on the PLOAD2)
         self.assertAlmostEqual(_pload2_values(out_model)[1], 2.0)
-        np.testing.assert_allclose(struct_f, [0., 0., 16.], atol=1e-12)
-        np.testing.assert_allclose(struct_m, [16., -32., 0.], atol=1e-12)
+        np.testing.assert_allclose(struct_f, [0., 0., 16.], **LOG_TOL)
+        np.testing.assert_allclose(struct_m, [16., -32., 0.], **LOG_TOL)
 
     def test_full_model_balance_reference_point(self):
         """M(ref) = M(0) - ref x F on both sides"""
         log = SimpleLogger(level='warning')
         ref = np.array([1., -2., 3.])
-        unused, aero_f0, aero_m0, struct_f0, struct_m0 = self._balance_args(
+        unused, aero_f0, aero_m0, struct_f0, struct_m0 = self._balance(
             _two_tri_cart3d(log))
-        unused, aero_f, aero_m, struct_f, struct_m = self._balance_args(
+        unused, aero_f, aero_m, struct_f, struct_m = self._balance(
             _two_tri_cart3d(log), reference_point=ref)
         np.testing.assert_allclose(aero_f, aero_f0)
         np.testing.assert_allclose(struct_f, struct_f0)
-        np.testing.assert_allclose(aero_m, aero_m0 - np.cross(ref, aero_f0), atol=1e-12)
-        np.testing.assert_allclose(struct_m, struct_m0 - np.cross(ref, struct_f0), atol=1e-12)
+        np.testing.assert_allclose(aero_m, aero_m0 - np.cross(ref, aero_f0), **LOG_TOL)
+        np.testing.assert_allclose(struct_m, struct_m0 - np.cross(ref, struct_f0), **LOG_TOL)
 
     def test_full_model_balance_logs(self):
         """the table actually reaches the log"""
-        msgs = []
-        log = SimpleLogger(level='info',
-                           log_func=lambda typ, filename, lineno, msg: msgs.append(msg))
+        log, msgs = _capture_log()
         pressure_map_to_structure_model(
             _two_tri_cart3d(log), _one_quad_structure(log),
             np.array([1], dtype='int32'), None, qinf=PANEL_QINF)
         text = '\n'.join(msgs)
-        self.assertIn('Force/Moment Balance: Aero vs Mapped Structure (full_model)', text)
+        self.assertIn(BALANCE_PRESSURE, text)
         self.assertIn('Struct Moment(CM=M/qSL)', text)
+
+
+class TestFullModelForce(unittest.TestCase):
+    """full_model map_type='force': aero force vectors -> nearest shell node"""
+
+    def _map(self, structure_model, aero_model, eids=(1,)):
+        log, msgs = _capture_log()
+        structure_model.log = log
+        out_model = pressure_map_to_structure_model(
+            aero_model, structure_model, np.array(eids, dtype='int32'),
+            None, map_type='force', qinf=PANEL_QINF, force_sid=2)
+        text = '\n'.join(msgs)
+        self.assertEqual(text.count(BALANCE_FORCE), 1)
+        return out_model, _parse_balance(msgs, BALANCE_FORCE), text
+
+    def _forces(self, out_model, sid=2) -> dict[int, np.ndarray]:
+        self.assertEqual(list(out_model.loads), [sid])
+        return {load.node: load.scaled_vector for load in out_model.loads[sid]}
+
+    def test_force_vectors_and_balance(self):
+        """drag (Fx) is kept and the total force is conserved exactly"""
+        log = SimpleLogger(level='warning')
+        out_model, bal, text = self._map(
+            _one_quad_structure(log), _two_tri_cart3d(log))
+
+        # flat tri   (7/6, 5/6, 1/2) -> nearest node 1 (0,0,0): F=[0,0,2]
+        # tilted tri (17/6,5/6, 5/6) -> nearest node 2 (4,0,0): F=[-2,0,2]
+        forces = self._forces(out_model)
+        self.assertEqual(sorted(forces), [1, 2])
+        np.testing.assert_allclose(forces[1], [0., 0., 2.], atol=1e-12)
+        np.testing.assert_allclose(forces[2], [-2., 0., 2.], atol=1e-12)
+        for load in out_model.loads[2]:
+            self.assertEqual(load.type, 'FORCE')
+            self.assertAlmostEqual(np.linalg.norm(load.xyz), 1.0)
+
+        # exact conservation from the FORCE cards themselves
+        np.testing.assert_allclose(sum(forces.values()), [-2., 0., 4.], atol=1e-12)
+
+        # logged balance table (6 significant figures)
+        np.testing.assert_allclose(bal['aero_f'], [-2., 0., 4.], **LOG_TOL)
+        np.testing.assert_allclose(bal['struct_f'], bal['aero_f'], **LOG_TOL)
+        np.testing.assert_allclose(bal['aero_m'], [10/3, -29/3, 5/3], **LOG_TOL)
+        # moment at the nodes: (4,0,0) x (-2,0,2) = (0,-8,0)
+        np.testing.assert_allclose(bal['struct_m'], [0., -8., 0.], **LOG_TOL)
+
+    def test_force_only_on_mapped_element_nodes(self):
+        """a closer node on an unmapped element (e.g. a bulkhead) gets nothing"""
+        log = SimpleLogger(level='warning')
+        structure_model = _one_quad_structure(log)
+        # small quad (eid=2) right at the flat tri centroid; not mapped
+        xyzs = [(1.1, 0.8, 0.5), (1.3, 0.8, 0.5), (1.3, 0.9, 0.5), (1.1, 0.9, 0.5)]
+        for nid, xyz in enumerate(xyzs, start=5):
+            structure_model.add_grid(nid, list(xyz))
+        structure_model.add_cquad4(2, 10, [5, 6, 7, 8])
+        structure_model.cross_reference()
+
+        out_model, unused_args, unused_text = self._map(
+            structure_model, _two_tri_cart3d(log), eids=(1,))
+        self.assertEqual(sorted(self._forces(out_model)), [1, 2])
+
+        out_model, unused_args, unused_text = self._map(
+            structure_model, _two_tri_cart3d(log), eids=(1, 2))
+        forces = self._forces(out_model)
+        self.assertIn(5, forces)  # now it's mapped, the flat tri goes there
+        np.testing.assert_allclose(sum(forces.values()), [-2., 0., 4.], atol=1e-12)
+
+    def test_force_moment_map_type_raises(self):
+        log = SimpleLogger(level='warning')
+        with self.assertRaises(NotImplementedError):
+            pressure_map_to_structure_model(
+                _two_tri_cart3d(log), _one_quad_structure(log),
+                np.array([1], dtype='int32'), None, map_type='force_moment')
 
 
 class TestAeroXyzScale(unittest.TestCase):

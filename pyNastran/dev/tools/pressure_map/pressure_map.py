@@ -79,21 +79,52 @@ wrong (missing or applied twice).
 
 Known limitations (as of 2026-10)
 ---------------------------------
- - method='full_model', map_type='force' is broken; don't use it.  In
-   pressure_map_to_structure_model, the k=4 KD-tree query unpacks
-   ``irows, icols = np.where(ieq < n)``, so ``istructure`` is the neighbor
-   slot (0..3) and ``iaero`` is the structure-node index.  The result is
-   FORCE cards on GRIDs 1-4 only, with a scalar force broadcast to
-   Fx=Fy=Fz (no normal).  The FORCE cards also use pressure_sid while
-   the main deck says LOAD = force_sid.  Use map_type='pressure'
-   (full_model) or method='panel_model' instead.
+ - method='full_model', map_type='force' (fixed 2026-10) lumps each aero
+   element's force vector qinf*Cp*A*n onto the nearest node of the
+   mapped shell elements and writes summed FORCE cards under force_sid.
+   Total force (including drag) is conserved exactly.  The moment
+   differs by the aero-centroid -> node transfer offsets (no MOMENT
+   cards are written).  These are point loads, so local stresses next to
+   loaded nodes are approximate; global loads are right.  Surfaces with
+   no structure nearby (e.g. the base of an open aft end) still get their
+   force, on the nearest structural node (e.g. the aft skirt edge).
  - eid_load_id=-1 includes every element id; skipped elements (CBUSH,
    CBAR, ...) keep a zero area/centroid row and can receive loads.
    Prefer an explicit eids_structure / load id that selects shells only.
+
+full_model: closed aero OML -> shell structure
+.............................................
+The items below apply to map_type='pressure' (PLOAD2).  For a closed OML,
+map_type='force' avoids all of them except the point-load caveat above.
+
+The full_model pressure balance (aero vs structure F/M) can only agree when the
+two models wet the same surface with the same normal convention.  For a
+closed CFD OML mapped onto a Nastran shell model, expect these deltas:
+
+ - Normal sign is not reconciled.  The written PLOAD2 is p = qinf*Cp and
+   acts along the STRUCTURAL element normal.  The aero element normal is
+   only used in the logged aero sum; it never flips the PLOAD2.  So if
+   the shell normals point the opposite way from the aero normals (e.g.
+   outward-facing skin vs. an aero mesh whose sum gives +drag with
+   inward normals), every skin panel is loaded backwards.  Check the
+   sign of the balance; the fix is p = qinf*Cp*sign(n_struct . n_aero).
+ - Surfaces the structure doesn't have are in the aero total only.
+   Example: an open aft end (no base closure) drops base drag.  Thin
+   lifting surfaces (fins/strakes) modeled as midplane shells have
+   n_x = 0, so leading-edge/wave drag can't appear in Fx at all.  These
+   are model limitations; no mapping change recovers them.
+ - Midplane shells for fins/strakes get the Cp of whichever side's aero
+   face is nearest (one-sided), not the Cp jump across the surface, so
+   their normal force is unreliable (noise at alpha=0, wrong under
+   alpha/beta).
+ - Every structural element passed in gets the Cp of its nearest aero
+   face, including internal/unwetted structure (bulkheads, domes,
+   mounts).  This is wrong and must be avoided by excluding those
+   elements from eids_structure; it is a separate issue from the
+   balance mismatch above.
 """
 import os
 from itertools import zip_longest
-from collections import defaultdict
 from typing import Optional
 import numpy as np
 
@@ -103,7 +134,7 @@ import matplotlib.cm as cm
 
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
-from pyNastran.bdf.bdf import BDF, PLOAD2, read_bdf  # FORCE
+from pyNastran.bdf.bdf import BDF, PLOAD2, FORCE, read_bdf
 from pyNastran.bdf.write_path import write_include
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
 
@@ -537,8 +568,8 @@ def _write_pressure_file(model: BDF,
             'BEGIN BULK\n'
             )
     elif map_type == 'force':
-        assert len(model.loads) == 1, list(model.loads)
-        forces: list[PLOAD2] = model.loads[1]
+        assert list(model.loads) == [force_sid], (list(model.loads), force_sid)
+        forces: list[FORCE] = model.loads[force_sid]
         msg += (
             'SUBCASE 1\n'
             '  SUBTITLE = Force\n'
@@ -612,13 +643,13 @@ def _write_pressure_file(model: BDF,
     elif len(forces):
         eid_force_list = []
         for force_obj in forces:
-            fi = force_obj.xyz
+            fi = force_obj.scaled_vector  # mag*xyz (xyz is a unit vector)
             nid = force_obj.node
             eid_force_list.append((nid, *fi))
         eid_force_array = np.array(eid_force_list)
         force_filename = base + '.force.csv'
         model.log.debug(f'writing {str(force_filename)}')
-        np.savetxt(force_filename, eid_force_array, header='Element,Fx,Fy,Fz',
+        np.savetxt(force_filename, eid_force_array, header='Node,Fx,Fy,Fz',
                    delimiter=',', fmt=['%d', '%.18e', '%.18e', '%.18e'])
     elif len(pressures):
         eid_pressure_list = []
@@ -1297,28 +1328,94 @@ def map_pressure_centroid(bdf_model_out: BDF,
     return
 
 
-def map_force_centroid_tri(bdf_model_out: BDF,
-                           aero_area, aero_cp_centroid, iaero,
-                           structure_nodes, istructure,
-                           pressure_sid: int=1,
-                           force_sid: int=2,
-                           moment_sid: int=3,
-                           qinf: float=1.0) -> None:
-    aero_pressure_centroid = aero_cp_centroid[iaero] * qinf
-    aero_force_centroid = aero_pressure_centroid * aero_area[iaero]
-    mapped_structure_nodes = structure_nodes[istructure]
+def get_wetted_structure_nodes(structure_model: BDF,
+                               structure_eids: np.ndarray,
+                               structure_nodes: np.ndarray,
+                               structure_xyz: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Gets the node ids/xyz (basic) used by the mapped shell elements.
 
-    forces_temp = defaultdict(array3)
-    nforce_total = defaultdict(int)
-    for nid, force in zip(mapped_structure_nodes, aero_force_centroid):
-        forces_temp[nid] += force
-        nforce_total[nid] += 1
+    Only these nodes can receive FORCE cards, so nodes that belong only to
+    excluded elements (internal bulkheads, RBE2 centers, CBUSH ends, ...)
+    get nothing.  Elements that get_mapped_structure skips (CBUSH, CBAR,
+    ...) are skipped here too.
+    """
+    skip_types = {
+        'CROD', 'CTUBE', 'CONROD', 'CBAR', 'CBEAM',
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+        'CBUSH', 'CVISC',
+    }
+    nids_set = set()
+    for eid in structure_eids:
+        elem = structure_model.elements[eid]
+        if elem.type in skip_types:
+            continue
+        nids_set.update(nid for nid in elem.node_ids if nid is not None)
+    if len(nids_set) == 0:
+        raise RuntimeError('no structural shell nodes to map forces to')
+    wetted_nids = np.array(sorted(nids_set), dtype=structure_nodes.dtype)
 
-    mag = 1.0
-    for nid, force in forces_temp.items():
-        nforce_totali = nforce_total[nid]
-        force2 = force / nforce_totali
-        bdf_model_out.add_force(pressure_sid, nid, mag, force2, cid=0)
+    isort = np.argsort(structure_nodes)
+    inode = isort[np.searchsorted(structure_nodes, wetted_nids, sorter=isort)]
+    assert np.array_equal(structure_nodes[inode], wetted_nids)
+    return wetted_nids, structure_xyz[inode, :]
+
+
+def map_force_nodes(bdf_model_out: BDF,
+                    aero_force: np.ndarray,
+                    aero_centroid: np.ndarray,
+                    node_ids: np.ndarray,
+                    node_xyz: np.ndarray,
+                    qinf: float,
+                    pressure_units: str='',
+                    force_sid: int=2) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Lumps each aero element force onto its nearest structural node.
+
+    Every aero element force (qinf*Cp*A*n, a full 3-D vector, so drag is
+    kept) goes to exactly one node.  The vectors are summed per node (not
+    averaged), so the total force is conserved exactly.  The moment is
+    conserved up to the transfer offsets sum((c_i - x_node) x F_i), which
+    are not written (no MOMENT cards; shell drilling DOFs).
+
+    Parameters
+    ----------
+    aero_force : (naero, 3) float ndarray
+        per-element aero force in structure units
+    aero_centroid : (naero, 3) float ndarray
+        aero element centroids (structure units, basic)
+    node_ids / node_xyz : (nnode,) int / (nnode, 3) float ndarray
+        candidate structural nodes (basic)
+
+    Returns
+    -------
+    nids : (nloaded,) int ndarray
+        the nodes that got a FORCE card
+    node_force : (nloaded, 3) float ndarray
+        the summed force at each of those nodes (basic)
+    """
+    tree = _get_tree(node_xyz)
+    unused_dist, inode = tree.query(aero_centroid, k=1)
+    nnode = len(node_ids)
+    assert inode.max() < nnode, (inode.max(), nnode)
+
+    node_force_all = np.zeros((nnode, 3), dtype=aero_force.dtype)
+    np.add.at(node_force_all, inode, aero_force)
+
+    iloaded = np.unique(inode)
+    nids = node_ids[iloaded]
+    node_force = node_force_all[iloaded, :]
+
+    comment = f'Force; qinf={qinf} {pressure_units} (map_force_nodes)'
+    for nid, force in zip(nids, node_force):
+        mag = np.linalg.norm(force)
+        if mag == 0.0:
+            continue
+        bdf_model_out.add_force(force_sid, nid, mag, force / mag, cid=0,
+                                comment=comment)
+        comment = ''
+    return nids, node_force
     return
 
 
@@ -1831,15 +1928,25 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
      - 3d aero model
      - 3d structure model
 
+    map_type:
+      'pressure' : PLOAD2 p = qinf*Cp of the nearest aero centroid, per
+                   mapped structural element (pressure_sid)
+      'force'    : each aero element force qinf*Cp*A*n goes to the nearest
+                   node of the mapped elements; summed FORCE cards
+                   (force_sid).  Keeps drag; total force is exact.
+
     Logs a force/moment balance about reference_point (log only; the
     cards are not changed):
       Aero   : F = sum(qinf*Cp_i*A_i*n_i) over every aero element
                (after region filtering)
-      Struct : F = sum(p_j*A_j*n_j) over the mapped structural elements,
-               with p_j the written PLOAD2 pressure (map_type='pressure')
+      Struct : 'pressure': F = sum(p_j*A_j*n_j) over the mapped elements
+               'force'   : F = sum of the FORCE cards, M taken at the nodes
       M = sum((centroid - reference_point) x F_i) for both
     The two match only if the structure wets the same surface as the
-    aero elements; mapping a subset of the vehicle shows up as a delta.
+    aero elements, with the same normal convention.  See the module
+    docstring "full_model: closed aero OML -> shell structure" for the
+    expected deltas (unreconciled normal sign, missing base/fin
+    leading-edge surfaces, one-sided midplane fins, internal elements).
     """
     aero_format = aero_model.__class__.__name__.lower()
     assert aero_format in {'cart3d', 'fluent', 'tecplot'}, aero_format
@@ -1851,8 +1958,10 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
 
     if map_type == 'pressure':
         map_location = 'centroid'
-    else:
+    elif map_type == 'force':
         map_location = 'node'
+    else:
+        raise NotImplementedError(f"full_model map_type={map_type!r}; use 'pressure' or 'force'")
     #stop_on_failure = True
     #---------------------------------------------------------------
 
@@ -1895,15 +2004,9 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
         # istructure = ieq[slots]
 
     elif map_location == 'node':
-        tree = _get_tree(aero_xyz_nodal)
-        unused_deq, ieq = tree.query(structure_xyz, k=4)
-        slots = np.where(ieq[:, :] < naero_node)
-
-        # irows: aero?
-        # icols: structure?
-        irows, icols = slots
-        iaero = irows
-        istructure = icols
+        # candidate nodes: only those on the mapped shell elements
+        wetted_nids, wetted_xyz = get_wetted_structure_nodes(
+            structure_model, structure_eids, structure_nodes, structure_xyz)
     else:  # pragma: no cover
         raise RuntimeError(map_location)
 
@@ -1944,21 +2047,28 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
     #         qinf=qinf,
     #     )
     elif map_type == 'force':
-        # TODO: can only happen with map_location=node?
-        log.warning("full_model map_type='force' is broken; no force/moment balance is logged")
-        map_force_centroid_tri(
+        # aero element force vectors (drag included) -> nearest wetted node
+        aero_force_i = (qinf * aero_cp_centroid * aero_area)[:, np.newaxis] * aero_normal
+        nids, node_force = map_force_nodes(
             bdf_model_out,
-            aero_area, aero_cp_centroid, iaero,
-            structure_nodes, istructure,
-            pressure_sid=pressure_sid,
+            aero_force_i, aero_centroid,
+            wetted_nids, wetted_xyz,
+            qinf, pressure_units=pressure_units,
             force_sid=force_sid,
-            moment_sid=moment_sid,
-            qinf=qinf,
         )
+        log.info(f'mapped {naero_elem} aero element forces to {len(nids)} '
+                 f'of {len(wetted_nids)} structural nodes')
+        # structure totals from the FORCE cards just written (at the nodes)
+        structure_force = node_force.sum(axis=0)
+        structure_moment = np.cross(
+            wetted_xyz[np.searchsorted(wetted_nids, nids)] - reference_point,
+            node_force).sum(axis=0)
+        _log_force_moment_balance(
+            log, 'Force/Moment Balance: Aero vs Mapped Structure (full_model, force)',
+            aero_force, aero_moment,
+            structure_force, structure_moment,
+            reference_point, qinf, sref, bref, cref,
+            xyz_units=xyz_units, pressure_units=pressure_units)
     else:  # pragma: no cover
         raise RuntimeError(map_type)
     return bdf_model_out
-
-
-def array3() -> np.ndarray:
-    return np.zeros(3, dtype='float64')
