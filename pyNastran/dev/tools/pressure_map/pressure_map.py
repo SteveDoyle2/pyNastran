@@ -1,6 +1,100 @@
-# import os
+"""
+Maps CFD surface pressure (Cp) onto a Nastran structural model as PLOAD2/FORCE cards.
+
+Units guide (read this first)
+=============================
+The mapper never converts units on its own.  It does two things:
+
+  1. multiplies the aero xyz by ``aero_xyz_scale`` (in place), and
+  2. computes  F = qinf * Cp * A * n  and  p = qinf * Cp.
+
+Everything else (``xyz_units``, ``pressure_units``) is only a label for
+log messages and card comments.  So the rule is:
+
+  **After scaling, everything is in structure units.**
+
+  +---------------------+-----------------------------------------------+
+  | input               | units it must be in                           |
+  +=====================+===============================================+
+  | aero xyz (file)     | whatever the CFD wrote (e.g. m)               |
+  | aero_xyz_scale      | CFD length -> structure length (m->in: 39.3701)|
+  | Cp                  | nondimensional; must be a TRUE Cp             |
+  | qinf                | structure pressure units (psi for in/lbf)     |
+  | sref                | structure length**2 (in^2)                    |
+  | bref, cref          | structure length (in)                         |
+  | reference_point     | structure length, basic coords (in)           |
+  +---------------------+-----------------------------------------------+
+
+  Outputs are then consistent with the structure:
+    pressure  [qinf units]                 e.g. psi
+    force     [qinf units * length**2]     e.g. psi*in^2 = lbf
+    moment    [force * length]             e.g. in-lbf
+    Cp        [-]
+
+Common aero_xyz_scale values (aero -> structure):
+    m  -> in : 39.3701        mm -> in : 1/25.4 = 0.0393701
+    m  -> mm : 1000.          ft -> in : 12.
+    same     : 1.0
+
+Example: CFD in meters, structure in inches/lbf/psi
+---------------------------------------------------
+Option A (simplest) - let pressure_map read and scale the aero file::
+
+    pressure_map(
+        cel_filename, bdf_filename,
+        aero_format='fluent',
+        aero_xyz_scale=39.3701,          # m -> in
+        qinf=21.79,                      # psi  (NOT Pa)
+        sref=50.27, cref=8.0, bref=8.0,  # in^2, in, in
+        reference_point=np.array([80., 0., 0.]),  # in
+        xyz_units='in', pressure_units='psi', ...)
+
+Option B - load the aero model yourself (e.g. to inspect/fix results), then
+pass the *object* in with ``aero_xyz_scale=1.0``::
+
+    aero_model, variables = get_aero_model(
+        cel_filename, 'fluent', aero_xyz_scale=39.3701, xyz_units='in')
+    pressure_map(aero_model, structure_model,
+                 aero_format='fluent',
+                 aero_xyz_scale=1.0,      # <-- already scaled above!
+                 qinf=21.79, ...)
+
+.. warning::
+    ``get_aero_model`` scales the coordinates **in place**, including when
+    you pass it an already-loaded model object.  ``pressure_map`` calls
+    ``get_aero_model`` internally.  So if you scale in ``get_aero_model``
+    *and* pass ``aero_xyz_scale=39.3701`` to ``pressure_map``, the aero
+    model ends up 39.37**2 = 1550x too big, nothing lines up, and the
+    nearest-neighbor search silently maps garbage.  Scale exactly once.
+
+Sanity check: after scaling, the "aero xyz range" and "structure xyz range"
+log lines should overlap.  If they differ by ~39x or ~1550x, the scale is
+wrong (missing or applied twice).
+
+.. note::
+    Cp is used as-is from the aero model (Fluent: the
+    'Pressure Coefficient' column).  Its min/max are logged by
+    ``get_aero_pressure_centroid``; check them.
+
+Known limitations (as of 2026-10)
+---------------------------------
+ - method='full_model', map_type='force' is broken; don't use it.  In
+   pressure_map_to_structure_model, the k=4 KD-tree query unpacks
+   ``irows, icols = np.where(ieq < n)``, so ``istructure`` is the neighbor
+   slot (0..3) and ``iaero`` is the structure-node index.  The result is
+   FORCE cards on GRIDs 1-4 only, with a scalar force broadcast to
+   Fx=Fy=Fz (no normal).  The FORCE cards also use pressure_sid while
+   the main deck says LOAD = force_sid.  Use map_type='pressure'
+   (full_model) or method='panel_model' instead.
+ - method='full_model' hardcodes the 'Pa' label in the PLOAD2 comment
+   regardless of ``pressure_units`` (label only; the numbers are not
+   converted).
+ - eid_load_id=-1 includes every element id; skipped elements (CBUSH,
+   CBAR, ...) keep a zero area/centroid row and can receive loads.
+   Prefer an explicit eids_structure / load id that selects shells only.
+"""
 import os
-from itertools import count, zip_longest
+from itertools import zip_longest
 from collections import defaultdict
 from typing import Optional
 import numpy as np
@@ -138,7 +232,8 @@ def pressure_map(aero_filename: PathLike,
                  aero_format: str='cart3d',
                  map_type: str='pressure',
                  method: str='full_model',
-                 xyz_units: str='???',
+                 xyz_units_in: str='???',
+                 xyz_units_out: str='???',
                  pressure_units: str='???',
                  pressure_sid: int=1,
                  force_sid: int=2,
@@ -161,12 +256,25 @@ def pressure_map(aero_filename: PathLike,
                  regions_to_remove=None,
                  log: Optional[SimpleLogger]=None) -> BDF:
     """
+    Maps CFD Cp onto a structural model and writes the load deck.
+
+    See the module docstring "Units guide" for the full story.  Short
+    version: ``aero_xyz_scale`` converts CFD lengths to structure lengths;
+    every other dimensional input (qinf, sref, bref, cref,
+    reference_point) is in STRUCTURE units; ``xyz_units`` and
+    ``pressure_units`` are labels only.
+
     Parameters
     ----------
-    aero_filename : PathLike
-        the path to the aero model
-    nastran_filename : PathLike
-        the path to the nastran model
+    aero_filename : PathLike | Cart3D | Fluent
+        the path to the aero model, or an already-loaded model.
+        If you pass a model that you already scaled with
+        ``get_aero_model(..., aero_xyz_scale=s)``, pass
+        ``aero_xyz_scale=1.0`` here; this function scales it again
+        (in place) otherwise.
+    nastran_filename : PathLike | BDF
+        the path to the nastran model, or a loaded BDF.  Defines the
+        target units (e.g. in/lbf/psi).
     is_obj : bool; default=False
         save/use the obj_filename that is determined from
         nastran_filename
@@ -191,22 +299,32 @@ def pressure_map(aero_filename: PathLike,
     method : str
         full_model, panel_model
     qinf : float; default=1.0
-        dynamic pressure
+        dynamic pressure in the STRUCTURE's pressure units
+        (psi for an in/lbf model; Pa for m/N; MPa for mm/N).
+        The written pressure is qinf*Cp, so qinf=1.0 writes Cp itself.
+        Not converted; ``pressure_units`` is only a label.
     idtype : str; default='int32'
         the type of the integers
     fdtype : str; default='float64'
         the  type of the floats
     sref : float; default=1.0
-        reference area in structure units
+        reference area in structure units (e.g. in^2).  Only used to
+        nondimensionalize the logged CF/CM; does not change the loads.
     bref : float; default=1.0
-        reference length for Mx and Mz in structure units
+        reference length for Mx and Mz in structure units (e.g. in);
+        logged CM only
     cref : float; default=1.0
-        reference length for My in structure units
+        reference length for My in structure units (e.g. in);
+        logged CM only
     aero_xyz_scale : float; default=1.0
-        scales the aero model to the structural units
-        1.0 if units are consistent
-        39.3701 if aero model in meters and structural model in inches
-        39,370.1  if aero model in millimeters and structural model in inches
+        multiplies the aero xyz (in place) to get structure lengths:
+        xyz_structure = aero_xyz_scale * xyz_aero
+          1.0        units are already consistent (or already scaled)
+          39.3701    aero in m,  structure in in
+          0.0393701  aero in mm, structure in in  (= 1/25.4)
+          1000.      aero in m,  structure in mm
+        Areas scale by aero_xyz_scale**2 automatically, since they are
+        recomputed from the scaled xyz.
     flip_xy_Cp: bool; False
         flip the Cp to account for the normal
     flip_xz_Cp: bool; False
@@ -219,10 +337,14 @@ def pressure_map(aero_filename: PathLike,
         the output moment id
     cp_sid : int; default=4
         the output pressure coefficient id
-    xyz_units : str; default='in'
-        the units for geometry, reference area / lengths in structure units
-    pressure_units : str; default='psi'
-        the units for qinf
+    reference_point : (3,) float ndarray; default=None -> [0, 0, 0]
+        moment reference point in STRUCTURE units, basic coordinates
+    xyz_units : str; default='???'
+        label for the structure length unit (e.g. 'in'); used only in
+        log messages.  Does not scale anything.
+    pressure_units : str; default='???'
+        label for qinf's unit (e.g. 'psi'); used only in log
+        messages/card comments.  Does not scale anything.
 
     +-------------------+----------+-------+---------------+
     | method / map_type | pressure | force | force_moment  |
@@ -281,7 +403,8 @@ def pressure_map(aero_filename: PathLike,
         aero_filename, aero_format,
         aero_xyz_scale=aero_xyz_scale,
         stop_on_failure=stop_on_failure,
-        xyz_units=xyz_units,
+        xyz_units_in=xyz_units_in,
+        xyz_units_out=xyz_units_out,
         # regions_to_remove=regions_to_remove,
         # regions_to_include=regions_to_include,
     )
@@ -306,7 +429,7 @@ def pressure_map(aero_filename: PathLike,
             sref=sref,
             bref=bref,
             cref=cref,
-            xyz_units=xyz_units,
+            xyz_units=xyz_units_out,
             pressure_units=pressure_units,
             # idtype=idtype,
             fdtype=fdtype)
@@ -573,7 +696,8 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
     aero_tri_area = aero_dict['tri_area']
     aero_tri_centroid = aero_dict['tri_centroid']
     aero_tri_normal = aero_dict['tri_normal']
-    assert np.abs(aero_tri_normal).max() <= 1.001, (aero_tri_normal.min(), aero_tri_normal.max())
+    if len(aero_tri_normal):
+        assert np.abs(aero_tri_normal).max() <= 1.001, (aero_tri_normal.min(), aero_tri_normal.max())
 
     aero_quad_nodes = aero_dict['quad_nodes']
     aero_quad_cp = aero_dict['quad_Cp_centroid']
@@ -700,7 +824,8 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
             flip_Cp=flip_xz_Cp,
             qinf=qinf,
             pressure_sid=pressure_sid,
-            force_sid=force_sid, moment_sid=moment_sid,
+            force_sid=force_sid, moment_sid=moment_sid, cp_sid=cp_sid,
+            cp_signed_sid=cp_signed_sid,
             reference_point=reference_point,
             sref=sref, bref=bref, cref=cref,
         )
@@ -816,7 +941,9 @@ def _map_pressure_panel_model(structure_model: BDF,
     fdtype = structure_area.dtype
     structure_box_moment_center = np.zeros((nz_structure, 3), dtype=fdtype)
 
-    for i, eid, aero_forcei in zip(count(), eids_z, aero_tri_force_coeff_per_q):
+    # one moment center per structural panel (independent of the aero
+    # element count/type, so quad-only aero models are handled)
+    for i, eid in enumerate(eids_z):
         elem = structure_model.elements[eid]
         assert elem.type == 'CQUAD4', elem
         inids = np.searchsorted(structure_nodes, elem.nodes)
@@ -836,14 +963,16 @@ def _map_pressure_panel_model(structure_model: BDF,
         span = np.linalg.norm(d14)
         chord = abs(p23[0] - p14[0])
         x12 = p2[0] - p1[0]
-        x43 = p2[0] - p1[0]
+        x43 = p3[0] - p4[0]
         # print(f'x12={x12}')
         assert x12.min() >= 0., x12
         assert x43.min() >= 0., x43
         assert chord > 0, chord
         assert span > 0, span
-        # for p1, p2, p3, p4, moment_center in zip(p1, p2, p3, p4, moment_center):
-        structure_box_moment_center[i, :] = p14 + chord/4.
+        # quarter chord: shift the leading-edge midpoint aft in x only
+        moment_center = p14.copy()
+        moment_center[0] += chord / 4.
+        structure_box_moment_center[i, :] = moment_center
 
     # for each aero element, get the closest structure box
     assert len(structure_box_centroid) > 0, structure_box_centroid

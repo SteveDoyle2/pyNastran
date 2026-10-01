@@ -5,13 +5,15 @@ import numpy as np
 from cpylog import SimpleLogger
 
 import pyNastran
-from pyNastran.bdf.bdf import read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
+from pyNastran.converters.cart3d.cart3d import Cart3D
+from pyNastran.converters.fluent.fluent import Fluent
 from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 
 from pyNastran.dev.tools.pressure_map.pressure_map import (
     pressure_map, pressure_filename_to_fa2j, pressure_filename_to_wkk_diag,
-    map_panel_force_moment_centroid)
+    map_panel_force_moment_centroid, pressure_map_to_panel_model)
 from pyNastran.dev.tools.pressure_map.setup_aero import (
     get_aero_model, get_aero_pressure_centroid)
 
@@ -739,6 +741,205 @@ class TestPanelModelBalance(unittest.TestCase):
                                    err_msg='force does not scale with qinf')
         np.testing.assert_allclose(sm3, 3.0 * sm1, atol=1e-12,
                                    err_msg='moment does not scale with qinf')
+
+
+#---------------------------------------------------------------------------
+# PLOAD2 values written by the panel model
+#
+# Structure: one 4x2 CQUAD4 in z=0 (area=8), nodes counter-clockwise
+# from (0,0), normal +z -> z_sign=+1.
+#   leading-edge midpoint p14 = (0, 1, 0), chord = 4
+#   quarter-chord moment center = (1, 1, 0)
+#   (the old code added chord/4 to x, y AND z -> (1, 2, 1))
+#
+# Aero: one flat element (n=+z, Cp=1) and one element tilted 45 deg in x
+# (n=[-1,0,1]/sqrt(2), Cp=2), both at z>0, so Fx contributes to My.
+# Everything maps to the one panel.
+#
+# PLOAD2 sids written per panel (z-panels):
+#   1 pressure = Fz/A        2 force = Fz       3 moment = My about the
+#   4 Cp = p/qinf            5 signed Cp = z_sign*Cp      moment center
+#---------------------------------------------------------------------------
+PANEL_QINF = 2.0
+
+
+def _one_quad_structure(log: SimpleLogger) -> BDF:
+    """single 4x2 CQUAD4 in the z=0 plane; eid=1"""
+    model = BDF(log=log)
+    xyzs = [(0., 0., 0.), (4., 0., 0.), (4., 2., 0.), (0., 2., 0.)]
+    for nid, xyz in enumerate(xyzs, start=1):
+        model.add_grid(nid, list(xyz))
+    model.add_cquad4(1, 10, [1, 2, 3, 4])
+    model.add_pshell(10, mid1=100, t=0.1)
+    model.add_mat1(100, 1.0e7, None, 0.3)
+    model.cross_reference()
+    return model
+
+
+def _two_tri_cart3d(log: SimpleLogger, xyz_scale: float=1.0) -> Cart3D:
+    """
+    flat tri:   area=1,         n=+z,            Cp=1, centroid=(7/6, 5/6, 1/2)
+    tilted tri: area=sqrt(2)/2, n=[-1,0,1]/sqrt2, Cp=2, centroid=(17/6, 5/6, 5/6)
+    """
+    model = Cart3D(log=log)
+    model.points = xyz_scale * np.array([
+        [0.5, 0.5, 0.5],
+        [2.5, 0.5, 0.5],
+        [0.5, 1.5, 0.5],
+        [3.5, 0.5, 1.5],
+        [2.5, 1.5, 0.5],
+    ])
+    model.elements = np.array([[0, 1, 2],
+                               [1, 3, 4]], dtype='int32')
+    model.loads = {'Cp': np.array([1.0, 2.0])}
+    return model
+
+
+def _two_quad_fluent(log: SimpleLogger) -> Fluent:
+    """
+    no tris
+    flat quad:   area=2,       n=+z,             Cp=1, centroid=(1.5, 1, 0.5)
+    tilted quad: area=sqrt(2), n=[-1,0,1]/sqrt2, Cp=2, centroid=(3, 1, 1)
+    """
+    node_id = np.arange(1, 7, dtype='int32')
+    xyz = np.array([
+        [0.5, 0.5, 0.5],
+        [2.5, 0.5, 0.5],
+        [2.5, 1.5, 0.5],
+        [0.5, 1.5, 0.5],
+        [3.5, 0.5, 1.5],
+        [3.5, 1.5, 1.5],
+    ])
+    # [eid, region, n1, n2, n3, n4]
+    quads = np.array([[1, 3, 1, 2, 3, 4],
+                      [2, 3, 2, 5, 6, 3]], dtype='int32')
+    tris = np.zeros((0, 5), dtype='int32')
+    titles = np.array(['ElementID', 'Pressure Coefficient'])
+    quad_results = np.array([[1.0], [2.0]])
+    tri_results = np.zeros((0, 1))
+    return Fluent.from_data(
+        node_id, xyz, tris, quads,
+        np.array([1, 2], dtype='int32'), titles,
+        quad_results, tri_results,
+        auto_read_write_h5=False, log=log, debug=False)
+
+
+def _pload2_values(model: BDF) -> dict[int, float]:
+    """{sid: pressure} for a model with one PLOAD2 per sid"""
+    values = {}
+    for sid, loads in model.loads.items():
+        assert len(loads) == 1, (sid, loads)
+        values[sid] = loads[0].pressure
+    return values
+
+
+class TestPanelModelLoads(unittest.TestCase):
+    """End-to-end checks of the PLOAD2 card values from the panel model."""
+
+    def _map(self, aero_model):
+        log = aero_model.log
+        structure_model = _one_quad_structure(log)
+        out_model = pressure_map_to_panel_model(
+            aero_model, structure_model,
+            np.array([1], dtype='int32'),
+            reference_point=None,
+            map_type='force_moment',
+            qinf=PANEL_QINF)
+        return _pload2_values(out_model)
+
+    def test_pload2_values_tri_aero(self):
+        """pressure/force/moment/Cp cards for a known 2-tri aero model"""
+        log = SimpleLogger(level='warning')
+        values = self._map(_two_tri_cart3d(log))
+
+        # F/q = sum(Cp*A*n) = [0,0,1] + [-1,0,1] = [-1, 0, 2]
+        # F = qinf*F/q = [-2, 0, 4]
+        # My about (1,1,0) = sum(dz*Fx - dx*Fz):
+        #   flat:   d=(1/6, -1/6, 1/2),   F=(0,0,2)  -> -1/3
+        #   tilted: d=(11/6, -1/6, 5/6),  F=(-2,0,2) -> -16/3
+        #   total = -17/3
+        #   (with the old (1,2,1) center this was -11/3)
+        expected = {
+            1: 4.0 / 8.0,                 # pressure = Fz/A
+            2: 4.0,                       # Fz
+            3: -17.0 / 3.0,               # My about the quarter chord
+            4: 4.0 / 8.0 / PANEL_QINF,    # Cp
+            5: 4.0 / 8.0 / PANEL_QINF,    # signed Cp (z_sign=+1)
+        }
+        self.assertEqual(sorted(values), sorted(expected))
+        for sid, value in expected.items():
+            self.assertAlmostEqual(values[sid], value, places=10, msg=f'sid={sid}')
+
+    def test_pload2_values_quad_only_aero(self):
+        """a quad-only aero model must still get the quarter-chord moment center"""
+        log = SimpleLogger(level='warning')
+        values = self._map(_two_quad_fluent(log))
+
+        # F/q = [0,0,2] + [-2,0,2] = [-2, 0, 4];  F = [-4, 0, 8]
+        # My about (1,1,0):
+        #   flat:   d=(0.5, 0, 0.5), F=(0,0,4)  -> -2
+        #   tilted: d=(2, 0, 1),     F=(-4,0,4) -> -12
+        #   total = -14
+        #   (old (1,2,1) center -> -10; old loop never ran without
+        #    tris -> center=(0,0,0) -> -22)
+        expected = {
+            1: 8.0 / 8.0,
+            2: 8.0,
+            3: -14.0,
+            4: 8.0 / 8.0 / PANEL_QINF,
+            5: 8.0 / 8.0 / PANEL_QINF,
+        }
+        self.assertEqual(sorted(values), sorted(expected))
+        for sid, value in expected.items():
+            self.assertAlmostEqual(values[sid], value, places=10, msg=f'sid={sid}')
+
+    def test_no_aero_elements_raises(self):
+        """no tris and no quads (e.g., region filter removed everything) must fail"""
+        log = SimpleLogger(level='error')
+        with self.assertRaises(RuntimeError):
+            get_aero_pressure_centroid(
+                _two_quad_fluent(log), 'fluent', 'force_moment',
+                regions_to_include=[99])
+
+
+class TestAeroXyzScale(unittest.TestCase):
+    """aero_xyz_scale is the only unit conversion; check it end to end"""
+
+    def test_get_aero_model_scales_in_place(self):
+        """a passed-in model is scaled in place (scale exactly once)"""
+        log = SimpleLogger(level='warning')
+        aero_model = _two_tri_cart3d(log)
+        points0 = aero_model.points.copy()
+        model2, unused_variables = get_aero_model(
+            aero_model, 'cart3d', aero_xyz_scale=2.0, log=log)
+        self.assertIs(model2, aero_model)
+        np.testing.assert_allclose(aero_model.points, 2.0 * points0)
+
+    def test_pressure_map_aero_xyz_scale(self):
+        """aero in m, structure in in -> same PLOAD2s as an all-inch model"""
+        log = SimpleLogger(level='warning')
+        m_to_in = 39.3701
+
+        def _run(aero_model, aero_xyz_scale: float) -> dict[int, float]:
+            out_model = pressure_map(
+                aero_model, _one_quad_structure(log),
+                eids_structure=np.array([1], dtype='int32'),
+                eid_load_id=0,
+                aero_format='cart3d',
+                map_type='force_moment',
+                method='panel_model',
+                xyz_units='in', pressure_units='psi',
+                pressure_filename='',  # don't write files
+                aero_xyz_scale=aero_xyz_scale,
+                qinf=PANEL_QINF,
+                log=log)
+            return _pload2_values(out_model)
+
+        values_in = _run(_two_tri_cart3d(log), 1.0)
+        values_m = _run(_two_tri_cart3d(log, xyz_scale=1.0 / m_to_in), m_to_in)
+        self.assertEqual(sorted(values_in), sorted(values_m))
+        for sid, value in values_in.items():
+            self.assertAlmostEqual(values_m[sid], value, places=8, msg=f'sid={sid}')
 
 
 if __name__ == '__main__':  # pragma: no cover

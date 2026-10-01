@@ -2,18 +2,58 @@ import os
 from typing import cast, Any, Optional
 import numpy as np
 
+from cpylog import SimpleLogger
 from pyNastran.utils import PathLike, print_bad_path
-
 from pyNastran.converters.cart3d.cart3d import read_cart3d, Cart3D
 from pyNastran.converters.fluent.fluent import read_fluent, Fluent, filter_by_region
 from pyNastran.converters.tecplot.tecplot import read_tecplot, Tecplot
-from cpylog import SimpleLogger
+from .utils import log_range
 
 def get_aero_model(aero_filename: PathLike, aero_format: str,
                    aero_xyz_scale: float=1.0,
-                   xyz_units: str='???',
+                   xyz_units_in: str='???',
+                   xyz_units_out: str='???',
                    stop_on_failure: bool=True,
                    log: Optional[SimpleLogger]=None) -> tuple[Any, list[str]]:
+    """
+    Loads (or accepts) an aero surface model and scales its xyz to
+    structure units.
+
+    Parameters
+    ----------
+    aero_filename : PathLike | Cart3D | Fluent
+        a file path, or an already-loaded model.  Tecplot must be a path.
+    aero_format : str
+        'cart3d', 'fluent', 'tecplot'
+    aero_xyz_scale : float; default=1.0
+        xyz_structure = aero_xyz_scale * xyz_aero, applied IN PLACE.
+          39.3701    aero m  -> structure in
+          0.0393701  aero mm -> structure in
+          1000.      aero m  -> structure mm
+        Passing a loaded model scales that same object again, so call
+        this once per model.  If you then hand the model to
+        ``pressure_map``, pass ``aero_xyz_scale=1.0`` there.
+    xyz_units_in / xyz_units_out : str; default='???'
+        label for the scaled (structure) length unit; log-only, does not
+        scale anything
+    stop_on_failure : bool; default=True
+        raise on an unknown aero_format (else return None, [])
+
+    Returns
+    -------
+    model : Cart3D | Fluent | Tecplot
+        the (scaled) aero model; the same object if one was passed in
+    variables : list[str]
+        result names (e.g. ['Pressure Coefficient'] for Fluent)
+
+    Cp, not pressure, is read from the model, so no pressure conversion
+    happens here; dimensional pressure is qinf*Cp in ``pressure_map``.
+    """
+    if log is None:
+        log = SimpleLogger(level='debug')
+    # log.debug(f'aero_filename={aero_filename}')
+    # log.info(f'get_aero_model')
+    log.info(f'get_aero_model (aero_xyz_scale={aero_xyz_scale}):')
     if isinstance(aero_filename, PathLike):
         assert os.path.exists(aero_filename), print_bad_path(aero_filename)
 
@@ -30,6 +70,8 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
             model: Cart3D = read_cart3d(aero_filename, log=log)
         log = model.log
         variables = list(model.loads)
+        log.info(f'aero xyz range:')
+        log_range(log.debug, model.xyz, xyz_units_in)
         model.points *= aero_xyz_scale
         xyz = model.points
     # elif aero_format == 'Fund3D':
@@ -42,6 +84,8 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
         #print(model.object_stats())
         variables = model.result_variables
         model.xyz *= aero_xyz_scale
+        log.info(f'aero xyz range:')
+        log_range(log.debug, model.xyz, xyz_units_in)
         xyz = model.xyz
     elif aero_format == 'fluent':
         if isinstance(aero_filename, Fluent):
@@ -51,23 +95,15 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
         log = model.log
         # print(model.object_stats())
         variables = model.titles[1:]
+        log.info(f'aero xyz range:')
+        log_range(log.debug, model.xyz, xyz_units_in)
         model.xyz *= aero_xyz_scale
-        log.info(f'regions (aero_xyz_scale={aero_xyz_scale}):')
         xyz = model.xyz
     else:  # pragma: no cover
-        if stop_on_failure:
-            raise NotImplementedError(aero_format)
-        else:
-            return None, []
+        raise NotImplementedError(aero_format)
 
-    xyz_min = xyz.min(axis=0)
-    xyz_max = xyz.max(axis=0)
-    dxyz = xyz_max - xyz_min
     log.info(f'aero xyz range (aero_xyz_scale={aero_xyz_scale}):')
-    log.info(f'    xyz_min  ({xyz_units}) = {xyz_min}')
-    log.info(f'    xyz_max  ({xyz_units}) = {xyz_max}')
-    log.info(f'    dxyz     ({xyz_units}) = {dxyz}')
-
+    log_range(log.debug, xyz, xyz_units_out)
     return model, variables
 
 
@@ -80,6 +116,12 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
                                idtype: str='int32',
                                fdtype: str='float64') -> dict[str, np.ndarray]:
     """
+    Gets per-element Cp, area, centroid, and unit normal.
+
+    All lengths come from the model's current xyz, so they are in
+    whatever units ``get_aero_model`` scaled to (area in length**2).
+    Cp is returned as-is (no qinf applied).
+
     variable: str
         cart3d: 'Cp' only; variable is ignored
         tecplot: use variable
@@ -173,8 +215,20 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
         raise RuntimeError(aero_format)
 
     assert xyz_nodal.shape[1] == 3, xyz_nodal
+    if len(tri_nodes) + len(quad_nodes) == 0:
+        raise RuntimeError(
+            f'no aero elements (ntris=0, nquads=0); '
+            f'regions_to_include={regions_to_include} '
+            f'regions_to_remove={regions_to_remove}')
     log.info(f'aero: nnodes={len(node_id)} nxyz={len(xyz_nodal)} '
              f'ntris={len(tri_nodes)} nquads={len(quad_nodes)} ncentroid={len(centroid)} narea={len(area)}')
+
+    if len(Cp_centroid):
+        msg = f'aero Cp: min={Cp_centroid.min():g} max={Cp_centroid.max():g}'
+        if np.abs(Cp_centroid).max() > 2:
+            log.warning(msg)
+        else:
+            log.info(msg)
 
     ntri = len(tri_nodes)
     nquad = len(quad_nodes)
