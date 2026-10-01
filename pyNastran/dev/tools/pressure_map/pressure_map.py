@@ -8,7 +8,7 @@ The mapper never converts units on its own.  It does two things:
   1. multiplies the aero xyz by ``aero_xyz_scale`` (in place), and
   2. computes  F = qinf * Cp * A * n  and  p = qinf * Cp.
 
-Everything else (``xyz_units``, ``pressure_units``) is only a label for
+Everything else (``xyz_units_in``, ``xyz_units_out``, ``pressure_units``) is only a label for
 log messages and card comments.  So the rule is:
 
   **After scaling, everything is in structure units.**
@@ -47,13 +47,14 @@ Option A (simplest) - let pressure_map read and scale the aero file::
         qinf=21.79,                      # psi  (NOT Pa)
         sref=50.27, cref=8.0, bref=8.0,  # in^2, in, in
         reference_point=np.array([80., 0., 0.]),  # in
-        xyz_units='in', pressure_units='psi', ...)
+        xyz_units_in='m', xyz_units_out='in', pressure_units='psi', ...)
 
 Option B - load the aero model yourself (e.g. to inspect/fix results), then
 pass the *object* in with ``aero_xyz_scale=1.0``::
 
     aero_model, variables = get_aero_model(
-        cel_filename, 'fluent', aero_xyz_scale=39.3701, xyz_units='in')
+        cel_filename, 'fluent', aero_xyz_scale=39.3701,
+        xyz_units_in='m', xyz_units_out='in')
     pressure_map(aero_model, structure_model,
                  aero_format='fluent',
                  aero_xyz_scale=1.0,      # <-- already scaled above!
@@ -86,9 +87,6 @@ Known limitations (as of 2026-10)
    Fx=Fy=Fz (no normal).  The FORCE cards also use pressure_sid while
    the main deck says LOAD = force_sid.  Use map_type='pressure'
    (full_model) or method='panel_model' instead.
- - method='full_model' hardcodes the 'Pa' label in the PLOAD2 comment
-   regardless of ``pressure_units`` (label only; the numbers are not
-   converted).
  - eid_load_id=-1 includes every element id; skipped elements (CBUSH,
    CBAR, ...) keep a zero area/centroid row and can receive loads.
    Prefer an explicit eids_structure / load id that selects shells only.
@@ -316,6 +314,14 @@ def pressure_map(aero_filename: PathLike,
     cref : float; default=1.0
         reference length for My in structure units (e.g. in);
         logged CM only
+
+    Both methods log a "Force/Moment Balance: Aero vs Mapped Structure"
+    table about ``reference_point``: the aero total (qinf*Cp*A*n over
+    every aero element) next to the total of the written structural
+    loads, in dimensional form and as CF=F/(qinf*sref),
+    CM=M/(qinf*sref*Lref) with Lref=[bref, cref, bref].  It is a log
+    only; the cards are not changed.  (full_model: map_type='pressure'
+    only.)
     aero_xyz_scale : float; default=1.0
         multiplies the aero xyz (in place) to get structure lengths:
         xyz_structure = aero_xyz_scale * xyz_aero
@@ -339,9 +345,10 @@ def pressure_map(aero_filename: PathLike,
         the output pressure coefficient id
     reference_point : (3,) float ndarray; default=None -> [0, 0, 0]
         moment reference point in STRUCTURE units, basic coordinates
-    xyz_units : str; default='???'
-        label for the structure length unit (e.g. 'in'); used only in
-        log messages.  Does not scale anything.
+    xyz_units_in / xyz_units_out : str; default='???'
+        labels for the aero length unit before / after aero_xyz_scale
+        (e.g. 'm' / 'in'); used only in log messages.  Does not scale
+        anything.
     pressure_units : str; default='???'
         label for qinf's unit (e.g. 'psi'); used only in log
         messages/card comments.  Does not scale anything.
@@ -446,10 +453,11 @@ def pressure_map(aero_filename: PathLike,
             cp_sid=cp_sid,
             #aero_format=aero_format,
             map_type=map_type,
-            qinf=qinf, pressure_units='Pa',
+            qinf=qinf, pressure_units=pressure_units,
             sref=sref, bref=bref, cref=cref,
             regions_to_include=regions_to_include,
             regions_to_remove=regions_to_remove,
+            xyz_units=xyz_units_out,
             #idtype=idtype,
             fdtype=fdtype)
     else:
@@ -625,6 +633,77 @@ def _write_pressure_file(model: BDF,
                    delimiter=',', fmt=['%d', '%.18e'])
     else:  # pragma: no cover
         raise NotImplementedError(map_type)
+
+
+def _sum_pressure_force_moment(pressure: np.ndarray,
+                               area: np.ndarray,
+                               normal: np.ndarray,
+                               centroid: np.ndarray,
+                               reference_point: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Sums F_i = p_i*A_i*n_i and M_i = (c_i - reference_point) x F_i.
+
+    Same sign convention as PLOAD2 (positive pressure acts along the
+    element normal) and as the aero side (F = qinf*Cp*A*n).
+
+    Returns
+    -------
+    force : (3,) float ndarray
+    moment : (3,) float ndarray
+        about reference_point
+    """
+    force_i = (pressure * area)[:, np.newaxis] * normal
+    moment_i = np.cross(centroid - reference_point, force_i)
+    return force_i.sum(axis=0), moment_i.sum(axis=0)
+
+
+def _log_force_moment_balance(log: SimpleLogger,
+                              title: str,
+                              aero_force: np.ndarray,
+                              aero_moment: np.ndarray,
+                              structure_force: np.ndarray,
+                              structure_moment: np.ndarray,
+                              reference_point: np.ndarray,
+                              qinf: float, sref: float,
+                              bref: float, cref: float,
+                              xyz_units: str='',
+                              pressure_units: str='') -> None:
+    """
+    Logs dimensional and nondimensional (CF=F/qS, CM=M/qSL) totals.
+
+    Lref = [bref, cref, bref] for [Mx, My, Mz].  Log only; no loads change.
+    """
+    lref = np.array([bref, cref, bref])
+    qs = qinf * sref
+    aero_force_coeff = aero_force / qs
+    aero_moment_coeff = aero_moment / (qs * lref)
+    structure_force_coeff = structure_force / qs
+    structure_moment_coeff = structure_moment / (qs * lref)
+
+    def _f(label, vals):
+        return f'  {label:30s} {vals[0]:14.6g} {vals[1]:14.6g} {vals[2]:14.6g}'
+
+    log.info('================================================================')
+    log.info(f'  {title}')
+    log.info(f'  reference_point ({xyz_units}) = {reference_point}')
+    log.info(f'  qinf={qinf} {pressure_units}; sref={sref}; bref={bref}; cref={cref} ({xyz_units})')
+    log.info('----------------------------------------------------------------')
+    log.info(f'  {"":30s} {"Fx":>14s} {"Fy":>14s} {"Fz":>14s}')
+    log.info(_f('Aero  Force  (dim)', aero_force))
+    log.info(_f('Struct Force (dim)', structure_force))
+    log.info(_f('Delta  Force (dim)', structure_force - aero_force))
+    log.info(_f('Aero  Force  (CF=F/qS)', aero_force_coeff))
+    log.info(_f('Struct Force (CF=F/qS)', structure_force_coeff))
+    log.info(_f('Delta  Force (CF)', structure_force_coeff - aero_force_coeff))
+    log.info('----------------------------------------------------------------')
+    log.info(f'  {"":30s} {"Mx":>14s} {"My":>14s} {"Mz":>14s}')
+    log.info(_f('Aero  Moment (dim)', aero_moment))
+    log.info(_f('Struct Moment(dim)', structure_moment))
+    log.info(_f('Delta  Moment(dim)', structure_moment - aero_moment))
+    log.info(_f('Aero  Moment (CM=M/qSL)', aero_moment_coeff))
+    log.info(_f('Struct Moment(CM=M/qSL)', structure_moment_coeff))
+    log.info(_f('Delta  Moment(CM)', structure_moment_coeff - aero_moment_coeff))
+    log.info('================================================================')
 
 
 def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
@@ -855,39 +934,12 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
     #                is second-order in the panel spacing.
     total_aero_force_dim = total_aero_force_coeff * qinf * sref
     total_aero_moment_dim = total_aero_moment_coeff * qinf * sref * lref
-
-    total_structure_force_coeff = total_structure_force / (qinf * sref)
-    total_structure_moment_coeff = total_structure_moment / (qinf * sref * lref)
-
-    delta_force = total_structure_force - total_aero_force_dim
-    delta_moment = total_structure_moment - total_aero_moment_dim
-    delta_force_coeff = total_structure_force_coeff - total_aero_force_coeff
-    delta_moment_coeff = total_structure_moment_coeff - total_aero_moment_coeff
-
-    def _f(label, vals):
-        return f'  {label:30s} {vals[0]:14.6g} {vals[1]:14.6g} {vals[2]:14.6g}'
-
-    log.info('================================================================')
-    log.info('  Force/Moment Balance: Aero vs Mapped Structure')
-    log.info(f'  reference_point ({xyz_units}) = {reference_point}')
-    log.info(f'  qinf={qinf} {pressure_units}; sref={sref}; bref={bref}; cref={cref} ({xyz_units})')
-    log.info('----------------------------------------------------------------')
-    log.info(f'  {"":30s} {"Fx":>14s} {"Fy":>14s} {"Fz":>14s}')
-    log.info(_f('Aero  Force  (dim)', total_aero_force_dim))
-    log.info(_f('Struct Force (dim)', total_structure_force))
-    log.info(_f('Delta  Force (dim)', delta_force))
-    log.info(_f('Aero  Force  (CF=F/qS)', total_aero_force_coeff))
-    log.info(_f('Struct Force (CF=F/qS)', total_structure_force_coeff))
-    log.info(_f('Delta  Force (CF)', delta_force_coeff))
-    log.info('----------------------------------------------------------------')
-    log.info(f'  {"":30s} {"Mx":>14s} {"My":>14s} {"Mz":>14s}')
-    log.info(_f('Aero  Moment (dim)', total_aero_moment_dim))
-    log.info(_f('Struct Moment(dim)', total_structure_moment))
-    log.info(_f('Delta  Moment(dim)', delta_moment))
-    log.info(_f('Aero  Moment (CM=M/qSL)', total_aero_moment_coeff))
-    log.info(_f('Struct Moment(CM=M/qSL)', total_structure_moment_coeff))
-    log.info(_f('Delta  Moment(CM)', delta_moment_coeff))
-    log.info('================================================================')
+    _log_force_moment_balance(
+        log, 'Force/Moment Balance: Aero vs Mapped Structure (panel_model)',
+        total_aero_force_dim, total_aero_moment_dim,
+        total_structure_force, total_structure_moment,
+        reference_point, qinf, sref, bref, cref,
+        xyz_units=xyz_units, pressure_units=pressure_units)
     return bdf_model_out
 
 
@@ -1771,17 +1823,31 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
                                     cp_sid: int=4,
                                     regions_to_include=None,
                                     regions_to_remove=None,
+                                    xyz_units: str='',
                                     #idtype: str='int32',
                                     fdtype: str='float64', ) -> BDF:
     """
     Maps pressure from an aero model to a structural model. assumes:
      - 3d aero model
      - 3d structure model
+
+    Logs a force/moment balance about reference_point (log only; the
+    cards are not changed):
+      Aero   : F = sum(qinf*Cp_i*A_i*n_i) over every aero element
+               (after region filtering)
+      Struct : F = sum(p_j*A_j*n_j) over the mapped structural elements,
+               with p_j the written PLOAD2 pressure (map_type='pressure')
+      M = sum((centroid - reference_point) x F_i) for both
+    The two match only if the structure wets the same surface as the
+    aero elements; mapping a subset of the vehicle shows up as a delta.
     """
     aero_format = aero_model.__class__.__name__.lower()
     assert aero_format in {'cart3d', 'fluent', 'tecplot'}, aero_format
     assert map_type in {'pressure', 'force', 'force_moment'}, aero_format
     assert isinstance(scale, float), scale
+    if reference_point is None:
+        reference_point = np.zeros(3, dtype=fdtype)
+    log = structure_model.log
 
     if map_type == 'pressure':
         map_location = 'centroid'
@@ -1799,7 +1865,13 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
     aero_centroid = aero_dict['centroid']
     aero_cp_centroid = aero_dict['Cp_centroid']
     aero_area = aero_dict['area']
+    aero_normal = aero_dict['normal']
     naero_elem = len(aero_area)
+
+    # aero totals: F = qinf*Cp*A*n, M about reference_point
+    aero_force, aero_moment = _sum_pressure_force_moment(
+        qinf * aero_cp_centroid, aero_area, aero_normal, aero_centroid,
+        reference_point)
     naero_node = len(aero_xyz_nodal)
 
     structure_nodes, structure_xyz = get_structure_xyz(structure_model)
@@ -1851,6 +1923,16 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
             pressure_units,
             pressure_sid=pressure_sid,
         )
+        # structure totals from the PLOAD2 pressures just written
+        structure_force, structure_moment = _sum_pressure_force_moment(
+            aero_pressure_centroid, structure_areas, structure_normals,
+            structure_centroids, reference_point)
+        _log_force_moment_balance(
+            log, 'Force/Moment Balance: Aero vs Mapped Structure (full_model)',
+            aero_force, aero_moment,
+            structure_force, structure_moment,
+            reference_point, qinf, sref, bref, cref,
+            xyz_units=xyz_units, pressure_units=pressure_units)
     # elif map_type == 'force_moment':
     #     map_force_moment_centroid(
     #         bdf_model_out,
@@ -1863,6 +1945,7 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
     #     )
     elif map_type == 'force':
         # TODO: can only happen with map_location=node?
+        log.warning("full_model map_type='force' is broken; no force/moment balance is logged")
         map_force_centroid_tri(
             bdf_model_out,
             aero_area, aero_cp_centroid, iaero,

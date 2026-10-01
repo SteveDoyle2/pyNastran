@@ -71,7 +71,7 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
         log = model.log
         variables = list(model.loads)
         log.info(f'aero xyz range:')
-        log_range(log.debug, model.xyz, xyz_units_in)
+        log_range(log.debug, model.points, xyz_units_in)  # Cart3D has no .xyz
         model.points *= aero_xyz_scale
         xyz = model.points
     # elif aero_format == 'Fund3D':
@@ -204,12 +204,14 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
         except ValueError:
             log.error(f'cant find {name!r} in titles={list(aero_model.titles)}')
             raise
-        area = np.hstack([quad_area, tri_area])
+        # all combined arrays are stacked [tri, quad] so row i of
+        # area/Cp_centroid/centroid/normal is the same element
+        area = np.hstack([tri_area, quad_area])
         quad_Cp_centroid = quad_results[:, iresult]
         tri_Cp_centroid = tri_results[:, iresult]
         Cp_centroid = np.hstack([
-            quad_Cp_centroid,
             tri_Cp_centroid,
+            quad_Cp_centroid,
         ])
     else:  # pragma: no cover
         raise RuntimeError(aero_format)
@@ -232,6 +234,11 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
 
     ntri = len(tri_nodes)
     nquad = len(quad_nodes)
+    nelem = ntri + nquad
+    assert len(area) == nelem, (len(area), nelem)
+    assert len(Cp_centroid) == nelem, (len(Cp_centroid), nelem)
+    assert len(centroid) == nelem, (len(centroid), nelem)
+    assert len(normal) == nelem, (len(normal), nelem)
 
     assert len(tri_area) == ntri, (len(tri_area), ntri)
     assert len(tri_centroid) == ntri, (len(tri_centroid), ntri)

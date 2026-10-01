@@ -1,5 +1,6 @@
 from pathlib import Path
 import unittest
+from unittest import mock
 import numpy as np
 
 from cpylog import SimpleLogger
@@ -13,7 +14,9 @@ from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 
 from pyNastran.dev.tools.pressure_map.pressure_map import (
     pressure_map, pressure_filename_to_fa2j, pressure_filename_to_wkk_diag,
-    map_panel_force_moment_centroid, pressure_map_to_panel_model)
+    map_panel_force_moment_centroid, pressure_map_to_panel_model,
+    pressure_map_to_structure_model)
+from pyNastran.dev.tools.pressure_map import pressure_map as pressure_map_module
 from pyNastran.dev.tools.pressure_map.setup_aero import (
     get_aero_model, get_aero_pressure_centroid)
 
@@ -43,7 +46,7 @@ class TestPressureMap(unittest.TestCase):
         aero_model, variables = get_aero_model(
             cart3d_filename, aero_format,
                    aero_xyz_scale=1.0,
-                   xyz_units='in',
+                   xyz_units_out='in',
                    stop_on_failure=True, log=log)
 
         neids = len(aero_model.elements)
@@ -60,7 +63,7 @@ class TestPressureMap(unittest.TestCase):
             aero_format=aero_format,
             map_type='pressure',
             method='full_model',
-            xyz_units='in',
+            xyz_units_out='in',
             pressure_units='psi',
             pressure_sid=1,
             force_sid=2,
@@ -83,7 +86,7 @@ class TestPressureMap(unittest.TestCase):
             aero_format=aero_format,
             map_type='force',
             method='full_model',
-            xyz_units='in',
+            xyz_units_out='in',
             pressure_units='psi',
             pressure_sid=1,
             force_sid=2,
@@ -107,7 +110,7 @@ class TestPressureMap(unittest.TestCase):
                 aero_format=aero_format,
                 map_type='force_moment',
                 method='full_model',
-                xyz_units='in',
+                xyz_units_out='in',
                 pressure_units='psi',
                 pressure_sid=1,
                 force_sid=2,
@@ -135,7 +138,7 @@ class TestPressureMap(unittest.TestCase):
             aero_format=aero_format,
             map_type='force_moment',
             method='panel_model',
-            xyz_units='in',
+            xyz_units_out='in',
             pressure_units='psi',
             pressure_sid=1,
             force_sid=2,
@@ -190,7 +193,7 @@ class TestPressureMap(unittest.TestCase):
         aero_model, variables = get_aero_model(
             vrt_filename, aero_format,
                    aero_xyz_scale=1.0,
-                   xyz_units='in',
+                   xyz_units_out='in',
                    stop_on_failure=True, log=log)
         aero_model.titles = ['ElementID', 'Pressure Coefficient']
         # get_aero_pressure_centroid(
@@ -209,7 +212,7 @@ class TestPressureMap(unittest.TestCase):
             aero_format=aero_format,
             map_type='force_moment',
             method='panel_model',
-            xyz_units='in',
+            xyz_units_out='in',
             pressure_units='psi',
             pressure_sid=1,
             force_sid=2,
@@ -233,7 +236,7 @@ class TestPressureMap(unittest.TestCase):
             aero_format=aero_format,
             map_type='force',
             method='full_model',
-            xyz_units='in',
+            xyz_units_out='in',
             pressure_units='psi',
             pressure_sid=1,
             force_sid=2,
@@ -902,6 +905,100 @@ class TestPanelModelLoads(unittest.TestCase):
                 regions_to_include=[99])
 
 
+def _tri_quad_fluent(log: SimpleLogger) -> Fluent:
+    """
+    mixed mesh; the quad is listed first in the results (eid 1 < eid 2)
+    quad: eid=1, z=0,  2x1 -> area=2,   n=+z, Cp=1
+    tri:  eid=2, z=5,  1x1 -> area=0.5, n=+z, Cp=3
+    """
+    node_id = np.arange(1, 8, dtype='int32')
+    xyz = np.array([
+        [0., 0., 0.], [2., 0., 0.], [2., 1., 0.], [0., 1., 0.],
+        [0., 0., 5.], [1., 0., 5.], [0., 1., 5.],
+    ])
+    quads = np.array([[1, 3, 1, 2, 3, 4]], dtype='int32')
+    tris = np.array([[2, 3, 5, 6, 7]], dtype='int32')
+    titles = np.array(['ElementID', 'Pressure Coefficient'])
+    return Fluent.from_data(
+        node_id, xyz, tris, quads,
+        np.array([1, 2], dtype='int32'), titles,
+        np.array([[1.0]]), np.array([[3.0]]),
+        auto_read_write_h5=False, log=log, debug=False)
+
+
+class TestAeroCombinedArrays(unittest.TestCase):
+    def test_fluent_tri_quad_rows_align(self):
+        """area/Cp/centroid/normal must all be stacked [tri, quad]"""
+        log = SimpleLogger(level='warning')
+        aero_dict = get_aero_pressure_centroid(
+            _tri_quad_fluent(log), 'fluent', 'pressure')
+        # row 0 = tri (z=5), row 1 = quad (z=0)
+        np.testing.assert_allclose(aero_dict['centroid'][:, 2], [5., 0.])
+        np.testing.assert_allclose(aero_dict['area'], [0.5, 2.0])
+        np.testing.assert_allclose(aero_dict['Cp_centroid'], [3.0, 1.0])
+        np.testing.assert_allclose(aero_dict['normal'], [[0., 0., 1.], [0., 0., 1.]])
+
+
+class TestFullModelBalance(unittest.TestCase):
+    """full_model logs aero vs structure force/moment about reference_point"""
+
+    def _balance_args(self, aero_model, reference_point=None):
+        structure_model = _one_quad_structure(aero_model.log)
+        with mock.patch.object(pressure_map_module, '_log_force_moment_balance') as balance:
+            out_model = pressure_map_to_structure_model(
+                aero_model, structure_model, np.array([1], dtype='int32'),
+                reference_point, map_type='pressure', qinf=PANEL_QINF,
+                sref=4.0, bref=2.0, cref=0.5)
+        self.assertEqual(balance.call_count, 1)
+        args = balance.call_args[0]
+        # (log, title, aero_F, aero_M, struct_F, struct_M, ref, qinf, sref, bref, cref)
+        self.assertEqual(args[7:], (PANEL_QINF, 4.0, 2.0, 0.5))
+        return out_model, args[2], args[3], args[4], args[5]
+
+    def test_full_model_balance_tri_aero(self):
+        log = SimpleLogger(level='warning')
+        out_model, aero_f, aero_m, struct_f, struct_m = self._balance_args(
+            _two_tri_cart3d(log))
+
+        # aero: F_flat = 2*1*1*[0,0,1] = [0,0,2] at (7/6, 5/6, 1/2)
+        #       F_tilt = 2*2*(sqrt2/2)*[-1,0,1]/sqrt2 = [-2,0,2] at (17/6, 5/6, 5/6)
+        #       M = r x F = [5/3, -7/3, 0] + [5/3, -22/3, 5/3]
+        np.testing.assert_allclose(aero_f, [-2., 0., 4.], atol=1e-12)
+        np.testing.assert_allclose(aero_m, [10/3, -29/3, 5/3], atol=1e-12)
+
+        # structure: centroid (2,1,0) is nearest the flat tri -> p = 2*1 = 2
+        #   F = 2*8*[0,0,1] = [0,0,16];  M = (2,1,0) x F = [16,-32,0]
+        #   (same as pyNastran's sum_forces_moments on the PLOAD2)
+        self.assertAlmostEqual(_pload2_values(out_model)[1], 2.0)
+        np.testing.assert_allclose(struct_f, [0., 0., 16.], atol=1e-12)
+        np.testing.assert_allclose(struct_m, [16., -32., 0.], atol=1e-12)
+
+    def test_full_model_balance_reference_point(self):
+        """M(ref) = M(0) - ref x F on both sides"""
+        log = SimpleLogger(level='warning')
+        ref = np.array([1., -2., 3.])
+        unused, aero_f0, aero_m0, struct_f0, struct_m0 = self._balance_args(
+            _two_tri_cart3d(log))
+        unused, aero_f, aero_m, struct_f, struct_m = self._balance_args(
+            _two_tri_cart3d(log), reference_point=ref)
+        np.testing.assert_allclose(aero_f, aero_f0)
+        np.testing.assert_allclose(struct_f, struct_f0)
+        np.testing.assert_allclose(aero_m, aero_m0 - np.cross(ref, aero_f0), atol=1e-12)
+        np.testing.assert_allclose(struct_m, struct_m0 - np.cross(ref, struct_f0), atol=1e-12)
+
+    def test_full_model_balance_logs(self):
+        """the table actually reaches the log"""
+        msgs = []
+        log = SimpleLogger(level='info',
+                           log_func=lambda typ, filename, lineno, msg: msgs.append(msg))
+        pressure_map_to_structure_model(
+            _two_tri_cart3d(log), _one_quad_structure(log),
+            np.array([1], dtype='int32'), None, qinf=PANEL_QINF)
+        text = '\n'.join(msgs)
+        self.assertIn('Force/Moment Balance: Aero vs Mapped Structure (full_model)', text)
+        self.assertIn('Struct Moment(CM=M/qSL)', text)
+
+
 class TestAeroXyzScale(unittest.TestCase):
     """aero_xyz_scale is the only unit conversion; check it end to end"""
 
@@ -928,7 +1025,7 @@ class TestAeroXyzScale(unittest.TestCase):
                 aero_format='cart3d',
                 map_type='force_moment',
                 method='panel_model',
-                xyz_units='in', pressure_units='psi',
+                xyz_units_out='in', pressure_units='psi',
                 pressure_filename='',  # don't write files
                 aero_xyz_scale=aero_xyz_scale,
                 qinf=PANEL_QINF,
