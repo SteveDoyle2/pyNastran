@@ -545,9 +545,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         xmax, ymax, zmax = maxi
         xmin, ymin, zmin = mini
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-
         self._create_nastran_coords(model, dim_max)
 
+        gui.log_info(model.get_bdf_stats())
         gui.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
         gui.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
         gui.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))

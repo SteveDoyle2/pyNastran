@@ -60,6 +60,7 @@ class TestPressureMap(unittest.TestCase):
             eid_load_id=-1,
             aero_format=aero_format,
             map_type='pressure',
+            force_to_pressure_tol=0.02,
             method='full_model',
             xyz_units_out='in',
             pressure_units='psi',
@@ -247,6 +248,29 @@ class TestPressureMap(unittest.TestCase):
             regions_to_include=None,
             regions_to_remove=None,
             log=log)
+
+        log.info('running 3rd prssure map (force -> pressure)')
+        pressure_filename = DIRNAME / 'fluent_force_pressure_fullmodel_3.bdf'
+        pressure_model = pressure_map(
+            aero_model,
+            caero_bdf_filename,
+            eid_load_id=-1,
+            aero_format=aero_format,
+            map_type='force',
+            method='full_model',
+            xyz_units_out='in',
+            pressure_units='psi',
+            force_sid=2,
+            pressure_filename=pressure_filename,
+            aero_xyz_scale=1.0, qinf=1.0,
+            force_to_pressure_tol=0.05,
+            log=log)
+        load_types = {load.type for load in pressure_model.loads[2]}
+        self.assertTrue(load_types <= {'FORCE', 'PLOAD2'}, load_types)
+        if 'PLOAD2' in load_types:
+            self.assertTrue(pressure_filename.with_suffix('.pressure.csv').exists())
+        if 'FORCE' in load_types:
+            self.assertTrue(pressure_filename.with_suffix('.force.csv').exists())
 
 
 def _empty_quad_arrays():
@@ -975,6 +999,43 @@ def _parse_balance(msgs: list[str], title: str) -> dict[str, np.ndarray]:
 
 BALANCE_PRESSURE = 'Force/Moment Balance: Aero vs Mapped Structure (full_model)'
 BALANCE_FORCE = 'Force/Moment Balance: Aero vs Mapped Structure (full_model, force)'
+BALANCE_FORCE_PRESSURE = 'Force/Moment Balance: Aero vs Mapped Structure (full_model, force+pressure)'
+
+
+def _plate_fin_structure(log: SimpleLogger, flip_plate: bool=False) -> BDF:
+    """
+    eid=1: 4x2 plate at z=0, n=+z (n=-z if flip_plate); nodes 1-4
+    eid=2: 2x2 fin in the y=1 plane, x=10..12, z=0..2; nodes 5-8
+    """
+    model = BDF(log=log)
+    xyzs = [(0., 0., 0.), (4., 0., 0.), (4., 2., 0.), (0., 2., 0.),
+            (10., 1., 0.), (12., 1., 0.), (12., 1., 2.), (10., 1., 2.)]
+    for nid, xyz in enumerate(xyzs, start=1):
+        model.add_grid(nid, list(xyz))
+    model.add_cquad4(1, 10, [1, 4, 3, 2] if flip_plate else [1, 2, 3, 4])
+    model.add_cquad4(2, 10, [5, 6, 7, 8])
+    model.add_pshell(10, mid1=100, t=0.1)
+    model.add_mat1(100, 1.0e7, None, 0.3)
+    model.cross_reference()
+    return model
+
+
+def _skin_fin_cart3d(log: SimpleLogger) -> Cart3D:
+    """
+    skin tri:         area=1,   n=+z, Cp=1, centroid=(5/3, 5/6, 0.1)
+                      -> F = qinf*[0,0,1] = [0,0,2]
+    fin leading edge: area=0.5, n=-x, Cp=2, centroid=(10, 5/6, 5/6)
+                      -> F = qinf*[-1,0,0] = [-2,0,0]
+    """
+    model = Cart3D(log=log)
+    model.points = np.array([
+        [1., 0.5, 0.1], [3., 0.5, 0.1], [1., 1.5, 0.1],
+        [10., 0.5, 0.5], [10., 0.5, 1.5], [10., 1.5, 0.5],
+    ])
+    model.elements = np.array([[0, 1, 2],
+                               [3, 4, 5]], dtype='int32')
+    model.loads = {'Cp': np.array([1.0, 2.0])}
+    return model
 LOG_TOL = dict(rtol=1e-5, atol=1e-9)  # table prints 6 significant figures
 
 
@@ -1099,6 +1160,78 @@ class TestFullModelForce(unittest.TestCase):
         forces = self._forces(out_model)
         self.assertIn(5, forces)  # now it's mapped, the flat tri goes there
         np.testing.assert_allclose(sum(forces.values()), [-2., 0., 4.], atol=1e-12)
+
+    def _map_tol(self, structure_model, aero_model, tol, eids=(1,)):
+        log, msgs = _capture_log()
+        structure_model.log = log
+        out_model = pressure_map_to_structure_model(
+            aero_model, structure_model, np.array(eids, dtype='int32'),
+            None, map_type='force', qinf=PANEL_QINF, force_sid=2,
+            force_to_pressure_tol=tol)
+        self.assertEqual(list(out_model.loads), [2])
+        loads = out_model.loads[2]
+        pressures = {load.eids[0]: load.pressure for load in loads if load.type == 'PLOAD2'}
+        forces = {load.node: load.scaled_vector for load in loads if load.type == 'FORCE'}
+        bal = _parse_balance(msgs, BALANCE_FORCE_PRESSURE)
+        return pressures, forces, bal, '\n'.join(msgs)
+
+    def test_force_to_pressure_skin_and_fin(self):
+        """skin force (normal) -> PLOAD2; fin leading-edge drag (in-plane) -> FORCE"""
+        log = SimpleLogger(level='warning')
+        pressures, forces, bal, text = self._map_tol(
+            _plate_fin_structure(log), _skin_fin_cart3d(log), tol=0.01, eids=(1, 2))
+
+        # skin: F=[0,0,2] along +z on the 8 in^2 plate -> p = 2/8
+        self.assertEqual(sorted(pressures), [1])
+        self.assertAlmostEqual(pressures[1], 0.25)
+        # fin: F=[-2,0,0] is in the fin plane -> FORCE at node 5 (10,1,0)
+        self.assertEqual(sorted(forces), [5])
+        np.testing.assert_allclose(forces[5], [-2., 0., 0.], atol=1e-12)
+
+        # nothing dropped -> force conserved
+        np.testing.assert_allclose(bal['aero_f'], [-2., 0., 2.], **LOG_TOL)
+        np.testing.assert_allclose(bal['struct_f'], bal['aero_f'], **LOG_TOL)
+        self.assertIn('1 of 2 elements -> PLOAD2', text)
+
+    def test_force_to_pressure_flipped_normal(self):
+        """the PLOAD2 sign follows F.n, so a reversed shell still pushes the right way"""
+        log = SimpleLogger(level='warning')
+        pressures, unused_forces, bal, unused_text = self._map_tol(
+            _plate_fin_structure(log, flip_plate=True), _skin_fin_cart3d(log),
+            tol=0.01, eids=(1, 2))
+        self.assertAlmostEqual(pressures[1], -0.25)
+        np.testing.assert_allclose(bal['struct_f'], [-2., 0., 2.], **LOG_TOL)
+
+    def test_force_to_pressure_tolerance(self):
+        """
+        both tris -> the one plate: F=[-2,0,4], p=4/8, in-plane r=[-2,0,0]
+        |r|/|F| = 2/sqrt(20) = 0.447
+        """
+        log = SimpleLogger(level='warning')
+        # within tol: PLOAD2; the in-plane part is dropped and logged
+        pressures, forces, bal, text = self._map_tol(
+            _one_quad_structure(log), _two_tri_cart3d(log), tol=0.5)
+        self.assertEqual(pressures, {1: 0.5})
+        self.assertEqual(forces, {})
+        np.testing.assert_allclose(bal['struct_f'], [0., 0., 4.], **LOG_TOL)
+        self.assertIn('dropped in-plane force = [-2.', text)
+
+        # outside tol: same FORCE cards as force_to_pressure_tol=None
+        pressures, forces, bal, unused_text = self._map_tol(
+            _one_quad_structure(log), _two_tri_cart3d(log), tol=0.4)
+        self.assertEqual(pressures, {})
+        self.assertEqual(sorted(forces), [1, 2])
+        np.testing.assert_allclose(forces[1], [0., 0., 2.], atol=1e-12)
+        np.testing.assert_allclose(forces[2], [-2., 0., 2.], atol=1e-12)
+        np.testing.assert_allclose(bal['struct_f'], [-2., 0., 4.], **LOG_TOL)
+
+    def test_force_to_pressure_tol_requires_force(self):
+        log = SimpleLogger(level='warning')
+        with self.assertRaises(ValueError):
+            pressure_map_to_structure_model(
+                _two_tri_cart3d(log), _one_quad_structure(log),
+                np.array([1], dtype='int32'), None, map_type='pressure',
+                force_to_pressure_tol=0.05)
 
     def test_force_moment_map_type_raises(self):
         log = SimpleLogger(level='warning')
