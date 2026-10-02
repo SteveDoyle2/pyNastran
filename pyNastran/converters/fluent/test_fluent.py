@@ -153,6 +153,95 @@ class TestFluent(unittest.TestCase):
         assert np.allclose(tri_centroid, [2/3, 1/3, 0.]), tri_centroid
         assert np.allclose(quad_centroid, [0.5, 0.5, 0.]), quad_centroid
 
+    def test_slice_by_element_id(self):
+        """keep tri 5 and quad 3; everything else is removed in place"""
+        model = _tri_quad_model()
+        out = model.slice_by_element_id(tri_ids=[5], quad_ids=np.array([3]))
+        assert out is None
+
+        assert np.array_equal(model.tris, [[5, 9, 2, 5, 6]]), model.tris
+        assert np.array_equal(model.quads, [[3, 7, 2, 5, 6, 3]]), model.quads
+        assert np.array_equal(model.result_element_id, [3, 5]), model.result_element_id
+        assert np.array_equal(model.results, [[30., -3.], [50., -5.]]), model.results
+        assert np.array_equal(model.element_ids, [3, 5]), model.element_ids
+        # nodes 1 and 4 were only used by the removed elements
+        assert np.array_equal(model.node_id, [2, 3, 5, 6]), model.node_id
+        assert np.array_equal(model.xyz, [[1., 0., 0.], [1., 1., 0.],
+                                          [2., 0., 0.], [2., 1., 0.]]), model.xyz
+        assert np.array_equal(model.region, [7, 9]), model.region
+
+        # the sliced model still works
+        (tri_area, quad_area, unused_tri_centroid, unused_quad_centroid,
+         unused_tri_normal, unused_quad_normal) = model.get_area_centroid_normal(
+            model.tris, model.quads)
+        assert np.allclose(tri_area, [0.5]), tri_area
+        assert np.allclose(quad_area, [1.0]), quad_area
+
+    def test_slice_by_element_id_tris_or_quads_only(self):
+        model = _tri_quad_model()
+        model.slice_by_element_id(tri_ids=[2, 4])
+        assert model.quads.shape == (0, 6), model.quads.shape
+        assert np.array_equal(model.tris[:, 0], [2, 4]), model.tris
+        assert np.array_equal(model.result_element_id, [2, 4])
+        assert np.array_equal(model.node_id, [1, 2, 3, 4]), model.node_id
+
+        model = _tri_quad_model()
+        model.slice_by_element_id(quad_ids=[1])
+        assert model.tris.shape == (0, 5), model.tris.shape
+        assert np.array_equal(model.quads[:, 0], [1]), model.quads
+        assert np.array_equal(model.results, [[10., -1.]]), model.results
+        assert np.array_equal(model.node_id, [1, 2, 3, 4]), model.node_id
+
+    def test_slice_by_element_id_unsorted_results(self):
+        """result_element_id doesn't need to be sorted"""
+        model = _tri_quad_model()
+        iorder = np.array([3, 0, 4, 2, 1])
+        model.result_element_id = model.result_element_id[iorder]
+        model.results = model.results[iorder, :]
+        model.slice_by_element_id(tri_ids=[2, 4], quad_ids=[1])
+        # results stay paired with their ids
+        assert np.array_equal(model.results[:, 0], 10. * model.result_element_id)
+        assert np.array_equal(np.sort(model.result_element_id), [1, 2, 4])
+
+    def test_slice_by_element_id_errors(self):
+        model = _tri_quad_model()
+        with self.assertRaises(KeyError):
+            model.slice_by_element_id(tri_ids=[1])  # 1 is a quad
+        with self.assertRaises(KeyError):
+            model.slice_by_element_id(quad_ids=[2])  # 2 is a tri
+        with self.assertRaises(KeyError):
+            model.slice_by_element_id(tri_ids=[99])
+        with self.assertRaises(ValueError):
+            model.slice_by_element_id()
+        # failed calls don't change the model
+        assert len(model.tris) == 3 and len(model.quads) == 2
+        assert len(model.result_element_id) == 5
+
+
+def _tri_quad_model() -> Fluent:
+    """2 quads (1, 3) and 3 tris (2, 4, 5); results = [10*eid, -eid]"""
+    model = Fluent(auto_read_write_h5=False, log=SimpleLogger(level='warning'))
+    model.node_id = np.array([1, 2, 3, 4, 5, 6])
+    model.xyz = np.array([
+        [0., 0., 0.], [1., 0., 0.], [1., 1., 0.],
+        [0., 1., 0.], [2., 0., 0.], [2., 1., 0.],
+    ])
+    model.quads = np.array([
+        [1, 7, 1, 2, 3, 4],
+        [3, 7, 2, 5, 6, 3],
+    ])
+    model.tris = np.array([
+        [2, 8, 1, 2, 3],
+        [4, 8, 1, 3, 4],
+        [5, 9, 2, 5, 6],
+    ])
+    model.titles = np.array(['ElementID', 'Pressure Coefficient', 'Other'])
+    model.result_element_id = np.array([1, 2, 3, 4, 5])
+    model.results = np.column_stack([
+        10. * model.result_element_id, -1. * model.result_element_id])
+    model.element_ids = np.array([1, 2, 3, 4, 5])
+    return model
+
 
 def main():  # pragma: no cover
     import time

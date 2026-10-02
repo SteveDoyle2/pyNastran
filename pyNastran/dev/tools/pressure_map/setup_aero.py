@@ -14,6 +14,10 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
                    xyz_units_in: str='???',
                    xyz_units_out: str='???',
                    stop_on_failure: bool=True,
+                   qinf: float=1.0,
+                   reference_point: Optional[np.ndarray]=None,
+                   pressure_units: str='',
+                   regions_to_include=None,
                    log: Optional[SimpleLogger]=None) -> tuple[Any, list[str]]:
     """
     Loads (or accepts) an aero surface model and scales its xyz to
@@ -38,6 +42,19 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
         scale anything
     stop_on_failure : bool; default=True
         raise on an unknown aero_format (else return None, [])
+    qinf : float; default=1.0
+        dynamic pressure for the logged force/moment sum (structure
+        pressure units).  1.0 logs F/q and M/q.
+    reference_point : (3,) float ndarray; default=None -> [0, 0, 0]
+        moment reference point in the SCALED (structure) units, basic
+    pressure_units : str; default=''
+        label for qinf; log only
+
+    Before returning, logs the aero force/moment sum over every aero
+    element (F = sum(qinf*Cp*A*n), M = sum((c - reference_point) x F))
+    using the scaled xyz.  It's skipped with a warning if the model has
+    no Cp ('Cp' for Cart3D, 'Pressure Coefficient' for Fluent) or is
+    Tecplot.  Log only; the model isn't changed.
 
     Returns
     -------
@@ -61,6 +78,16 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
     #     regions_to_include = []
     # if regions_to_remove is None:
     #     regions_to_remove = []
+
+    if aero_xyz_scale == 1.0 and not isinstance(aero_filename, PathLike):
+        if isinstance(aero_filename, Fluent):
+            model = aero_filename
+            variables = model.titles[1:]
+            # xyz = model.xyz
+            log_aero_force_moment(
+                model, 'fluent', qinf=qinf, reference_point=reference_point,
+                xyz_units=xyz_units_out, pressure_units=pressure_units)
+            return model, variables
 
     aero_format = aero_format.lower()
     if aero_format == 'cart3d':
@@ -104,7 +131,62 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
 
     log.info(f'aero xyz range (aero_xyz_scale={aero_xyz_scale}):')
     log_range(log.debug, xyz, xyz_units_out)
+    log_aero_force_moment(
+        model, aero_format, qinf=qinf, reference_point=reference_point,
+        xyz_units=xyz_units_out, pressure_units=pressure_units)
     return model, variables
+
+
+def log_aero_force_moment(model: Cart3D | Tecplot | Fluent,
+                          aero_format: str,
+                          qinf: float=1.0,
+                          reference_point: Optional[np.ndarray]=None,
+                          xyz_units: str='',
+                          pressure_units: str='') -> Optional[tuple[np.ndarray, np.ndarray]]:
+    """
+    Logs the aero force/moment over every aero element.
+
+    F = sum(qinf*Cp_i*A_i*n_i);  M = sum((c_i - reference_point) x F_i)
+
+    Uses the model's current xyz (so the scaled units) and the element
+    normals as the mesh defines them (no flipping).
+
+    Returns
+    -------
+    (force, moment) : (3,) float ndarrays, or None if skipped
+    """
+    log = model.log
+    aero_format = aero_format.lower()
+    if reference_point is None:
+        reference_point = np.zeros(3)
+    reference_point = np.asarray(reference_point, dtype='float64')
+
+    if aero_format == 'cart3d':
+        cp_name = 'Cp'
+        has_cp = cp_name in model.loads
+    elif aero_format == 'fluent':
+        cp_name = 'Pressure Coefficient'
+        has_cp = cp_name in list(model.titles[1:])
+    else:
+        log.warning(f'aero force/moment sum: not supported for aero_format={aero_format!r}; skipping')
+        return None
+    if not has_cp:
+        log.warning(f'aero force/moment sum: no {cp_name!r} result; skipping')
+        return None
+
+    aero_dict = get_aero_pressure_centroid(model, aero_format, 'pressure')
+    force_i = (qinf * aero_dict['Cp_centroid'] * aero_dict['area'])[:, np.newaxis] * aero_dict['normal']
+    moment_i = np.cross(aero_dict['centroid'] - reference_point, force_i)
+    force = force_i.sum(axis=0)
+    moment = moment_i.sum(axis=0)
+    area = aero_dict['area'].sum()
+
+    log.info(f'aero force/moment sum (all {len(force_i)} aero elements):')
+    log.info(f'  qinf={qinf} {pressure_units}; reference_point={reference_point.tolist()} {xyz_units}; '
+             f'area={area:g} {xyz_units}^2')
+    log.info(f'  F = [{force[0]:g}, {force[1]:g}, {force[2]:g}]')
+    log.info(f'  M = [{moment[0]:g}, {moment[1]:g}, {moment[2]:g}]')
+    return force, moment
 
 
 def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,

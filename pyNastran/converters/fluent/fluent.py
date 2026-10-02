@@ -383,6 +383,59 @@ class Fluent:
             return model2
         return result_element_id, tris, quads, region, results
 
+    def slice_by_element_id(self,
+                            tri_ids: Optional[np.ndarray]=None,
+                            quad_ids: Optional[np.ndarray]=None) -> None:
+        """
+        Keeps only the given tris/quads, in place.
+
+        Everything else is removed from the model: the other tris/quads,
+        their results (result_element_id/results), element_ids, and any
+        nodes (node_id/xyz) the kept elements don't use.  The kept
+        elements stay in their original order; node ids aren't renumbered.
+
+        Parameters
+        ----------
+        tri_ids : (ntri,) int ndarray; default=None
+            tri element ids to keep (self.tris[:, 0]); None -> no tris
+        quad_ids : (nquad,) int ndarray; default=None
+            quad element ids to keep (self.quads[:, 0]); None -> no quads
+
+        Raises
+        ------
+        KeyError
+            an id isn't a tri (tri_ids) or a quad (quad_ids)
+        ValueError
+            no elements would remain
+        """
+        tri_ids = _as_ids(tri_ids)
+        quad_ids = _as_ids(quad_ids)
+        missing_tris = np.setdiff1d(tri_ids, self.tris[:, 0])
+        missing_quads = np.setdiff1d(quad_ids, self.quads[:, 0])
+        if len(missing_tris) or len(missing_quads):
+            raise KeyError(f'tri ids not found: {missing_tris.tolist()}; '
+                           f'quad ids not found: {missing_quads.tolist()}')
+        if len(tri_ids) + len(quad_ids) == 0:
+            raise ValueError('no elements would remain; pass tri_ids and/or quad_ids')
+
+        self.tris = self.tris[np.isin(self.tris[:, 0], tri_ids), :]
+        self.quads = self.quads[np.isin(self.quads[:, 0], quad_ids), :]
+        kept_ids = np.hstack([self.tris[:, 0], self.quads[:, 0]])
+
+        iresult = np.isin(self.result_element_id, kept_ids)
+        self.result_element_id = self.result_element_id[iresult]
+        self.results = self.results[iresult, :]
+        self.element_ids = self.element_ids[np.isin(self.element_ids, kept_ids)]
+
+        used_nodes = np.unique(np.hstack([
+            self.tris[:, 2:].ravel(), self.quads[:, 2:].ravel()]))
+        inode = np.isin(self.node_id, used_nodes)
+        self.node_id = self.node_id[inode]
+        self.xyz = self.xyz[inode, :]
+        self.log.debug(f'sliced fluent model: ntris={len(self.tris)} '
+                       f'nquads={len(self.quads)} nnodes={len(self.node_id)} '
+                       f'nresults={len(self.result_element_id)}')
+
     @property
     def region(self) -> np.ndarray:
         return np.hstack([self.quads[:, 1], self.tris[:, 1]])
@@ -405,6 +458,13 @@ class Fluent:
             f' - region = {self.region}\n'
         )
         return msg
+
+def _as_ids(ids: Optional[np.ndarray]) -> np.ndarray:
+    """None -> empty; else a flat int array"""
+    if ids is None:
+        return np.zeros(0, dtype='int64')
+    return np.asarray(ids).ravel()
+
 
 def read_fluent(fluent_filename: PathLike,
                 auto_read_write_h5: bool=True,

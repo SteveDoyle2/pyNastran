@@ -40,6 +40,9 @@ class Cart3D(Cart3dReaderWriter):
         self.points = None
         self.elements = None
 
+    def xyz(self) -> np.ndarray:
+        return self.points
+
     def cut_model_centroid(self, result: np.ndarray,
                            yslices: np.ndarray,
                            xyz=None) -> tuple[np.ndarray, np.ndarray]:  # pragma: no cover
