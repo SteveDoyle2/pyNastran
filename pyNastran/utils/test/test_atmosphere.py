@@ -12,14 +12,23 @@ from pyNastran.utils.atmosphere import (
     get_alt_for_mach_eas,
     get_alt_for_q_with_constant_mach,
     get_alt_for_eas_with_constant_mach,
+    # mach
+    get_mach_for_alt_eas,
+    get_mach_for_alt_cas,
+    # cas
+    #cas_to_mach,
+    #------
     atm_unit_reynolds_number,
+    sutherland_viscoscity,
+    _reynolds_factor,
+    create_atmosphere_table,
+)
+
+from pyNastran.utils.atmosphere_sweep import (
     make_flfacts_alt_sweep_constant_mach,
     make_flfacts_mach_sweep_constant_alt,
     make_flfacts_eas_sweep_constant_alt,
     make_flfacts_eas_sweep_constant_mach,
-    sutherland_viscoscity,
-    _reynolds_factor,
-    create_atmosphere_table,
 )
 
 from pyNastran.utils.convert import (
@@ -605,6 +614,30 @@ class TestAtm(unittest.TestCase):
 
         #get_alt_for_q_mach(q, mach, pressure_units='psf', alt_units='ft')
 
+    def test_get_mach_for_alt_eas(self):
+        data = [
+            (0, 0.2),
+            (0, 0.8),
+            (30000, 0.2),
+            (30000, 0.8),
+        ]
+        for alti, machi in data:
+            easi = atm_equivalent_airspeed(alti, machi, alt_units='ft', eas_units='knots')
+            mach = get_mach_for_alt_eas(alti, easi, alt_units='ft', eas_units='knots')
+            assert np.allclose(mach, machi), (alti, machi, mach)
+
+    def test_get_mach_for_alt_cas(self):
+        data = [
+            (0, 0.2),
+            (0, 0.8),
+            (30000, 0.2),
+            (30000, 0.8),
+        ]
+        for alti, machi in data:
+            casi = atm_calibrated_airspeed(alti, machi, alt_units='ft', cas_units='knots')
+            mach = get_mach_for_alt_cas(alti, casi, alt_units='ft', cas_units='knots')
+            assert np.allclose(mach, machi), (alti, machi, mach)
+
     def test_get_alt_for_eas_with_constant_mach(self):
         """tests get_alt_for_q_with_constant_mach"""
         mach = 0.8
@@ -619,15 +652,15 @@ class TestAtm(unittest.TestCase):
                 alt_target*1000., mach, alt_units='ft', eas_units='ft/s')
             veq2 = atm_equivalent_airspeed(
                 alt_target, mach, alt_units='kft', eas_units='knots')
-            print(f'veq_ft/s={veq1:.4f} veq_knots={veq2:.4f}')
+            #print(f'veq_ft/s={veq1:.4f} veq_knots={veq2:.4f}')
             tol = 5. # 5 feet
             alt1 = get_alt_for_eas_with_constant_mach(
                 veq1, mach, velocity_units='ft/s', alt_units='ft', nmax=20, tol=tol)
-            print(f'alt1={alt1:.4f}')
+            #print(f'alt1={alt1:.4f}')
             tol = 5/1000. # 5 feet
             alt2 = get_alt_for_eas_with_constant_mach(
                 veq2, mach, velocity_units='knots', alt_units='kft', nmax=20, tol=tol)
-            print(f'alt2={alt2:.4f}')
+            #print(f'alt2={alt2:.4f}')
 
             assert np.allclose(alt1/1000., alt_target, atol=1e-3), 'alt1=%s alt_target=%s' % (alt1, alt_target)
             assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
