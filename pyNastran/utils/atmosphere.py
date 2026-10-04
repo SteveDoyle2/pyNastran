@@ -323,6 +323,68 @@ def get_alt_for_mach_eas(mach: float,
     return alt_final
 
 
+def get_alt_for_cas_mach(calibrated_airspeed: float,
+                         mach: float,
+                         cas_units: str='ft/s',
+                         alt_units: str='ft',
+                         nmax: int=20, tol: float=0.1) -> float:
+    """
+    Gets the altitude associated with a calibrated airspeed.
+
+    Parameters
+    ----------
+    calibrated_airspeed : float
+        the calibrated airspeed in velocity_units
+    mach : float
+        the mach to hold constant
+    alt_units : str; default='ft'
+        the altitude units; ft, kft, m
+    cas_units : str; default=ft/s
+        the calibrated airspeed units; ft/s, m/s, in/s, knots
+    nmax : int; default=20
+        max number of iterations for convergence
+    tol : float; default=5.
+        tolerance in alt_units
+
+    Returns
+    -------
+    alt : float
+        the altitude in alt units
+
+    """
+    calibrated_airspeed = convert_velocity(
+        calibrated_airspeed, cas_units, 'ft/s')
+    tol = convert_altitude(tol, alt_units, 'ft')
+    dalt = 500.
+    alt_old = 0.
+    alt_final = 5000.
+    n = 0
+
+    log_cas = np.log(calibrated_airspeed)
+    # Newton's method
+    while abs(alt_final - alt_old) > tol and n < nmax:
+        alt_old = alt_final
+        alt1 = alt_old
+        alt2 = alt_old + dalt
+        
+        cas1 = atm_calibrated_airspeed(alt1, mach)
+        cas2 = atm_calibrated_airspeed(alt2, mach)
+        # print(f'alt1 = {alt1}')
+        # print(f'alt2 = {alt2}')
+        # print(f'cas1 = {cas1}')
+        # print(f'cas2 = {cas2}')
+        # print('-------')
+        log_cas1 = np.log(cas1)
+        log_cas2 = np.log(cas2)
+        m = dalt / (log_cas2 - log_cas1)
+        alt_final = m * (log_cas - log_cas1) + alt1
+        n += 1
+
+    if n > nmax - 1:
+        print(f'n = {n}')
+    alt_final = convert_altitude(alt_final, 'ft', alt_units)
+    return alt_final
+
 def get_mach_for_alt_eas(alt: float,
                          eas: float, eas_units: str='knots',
                          alt_units: str='ft',
@@ -349,11 +411,14 @@ def get_mach_for_alt_eas(alt: float,
         the altitude in alt_units
 
     """
-    rho0 = atm_density(alt, alt_units=alt_units, density_units='slug/ft^3')
-    p0 = atm_pressure(alt, alt_units=alt_units, pressure_units='psf')
-    vel = convert_velocity(eas, eas_units, 'ft/s')
-    q0 = 0.5 * rho0 * vel ** 2
-    mach = ((2 * q0) / (gamma * p0)) ** 0.5
+    p = atm_pressure(alt, alt_units=alt_units, pressure_units='psf')
+    rho0 = atm_density(0., alt_units=alt_units, density_units='slug/ft^3')
+    vel0 = convert_velocity(eas, eas_units, 'ft/s')
+    q0 = 0.5 * rho0 * vel0 ** 2
+
+    # q = gamma/2 * p * mach^2
+    # 2*q/gamma = p * mach^2
+    mach = ((2 * q0) / (gamma * p)) ** 0.5
     return mach
 
 
@@ -722,6 +787,14 @@ def cas_to_mach(alt: float,
     mach = np.sqrt(5 * ((qc/p+1)**(1/3.5) - 1))
     return mach
 
+def cas_to_alt_with_constant_mach(
+        vcas: float, mach: float,
+        alt_units: str='ft', cas_units: str='ft/s'):
+    cas = convert_velocity(vcas, cas_units, 'ft/s')
+    
+    alt0 = 0.
+
+    return alt
 
 def atm_mach(alt: float,
              V: float,
