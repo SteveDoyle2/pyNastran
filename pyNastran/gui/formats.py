@@ -1,6 +1,8 @@
 """import various codes with backup for failed imports"""
-CLASS_MAP = {}
 from pyNastran import DEV
+CLASS_MAP = {
+    'nastran_aero': None,
+}
 
 CLASS_MAP['nastran_aero'] = None
 try:

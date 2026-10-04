@@ -353,7 +353,6 @@ def update_cards(model: BDF,
     invalid ids
     """
     log = model.log
-    log.warning('update_cards')
     #print(f'new_node_ids = {new_node_ids}')
     unique_new_node_ids = np.unique(new_node_ids)
     #print(f'unique_new_node_ids = {unique_new_node_ids}')

@@ -4,10 +4,10 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import PurePath
-from functools import partial
 import traceback
-from itertools import chain
 from io import StringIO
+from itertools import chain
+from functools import partial
 from collections import defaultdict
 from typing import cast, Optional, Any, TYPE_CHECKING
 
@@ -33,6 +33,8 @@ from numpy.linalg import norm  # type: ignore
 #: we have to call this before vtk; you can't just try-except it
 #: unused_import
 from pyNastran.gui.qt_version import qt_version
+from ...fast.fast_io import FastIO
+
 if qt_version == 'pyqt5':
     import PyQt5
 elif qt_version == 'pyside2':
@@ -101,8 +103,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_types,
 )
 from pyNastran.gui.qt_files.colors import (
-    RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, LIGHT_GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
-    YELLOW_FLOAT, ORANGE_FLOAT)
+    RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
+    YELLOW_FLOAT, ORANGE_FLOAT)  # LIGHT_GREEN_FLOAT,
 from pyNastran.gui.errors import NoGeometry, NoSuperelements
 from pyNastran.gui.gui_objects.gui_result import GuiResult  # NormalResult
 #from pyNastran.gui.gui_objects.displacements import ElementalTableResults
@@ -218,27 +220,24 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.gui.isubcase_name_map = {}
 
     def get_nastran_wildcard_geometry_results_functions(self):
-        return self._get_nastran_wildcard_geometry_results_functions(
-            'nastran', '')
+        """gets the Nastran wildcard loader used in the file load menu"""
+        return self._get_nastran_wildcard_geometry_results_functions('nastran', '')
 
     def get_nastran_aero_wildcard_geometry_results_functions(self):
-        return self._get_nastran_wildcard_geometry_results_functions(
-            'nastran_aero', ' Aero')
-
-    def _get_nastran_wildcard_geometry_results_functions(self, fmt: str, tag: str=''):
         """gets the Nastran wildcard loader used in the file load menu"""
+        return self._get_nastran_wildcard_geometry_results_functions('nastran_aero', ' Aero')
+
+    def _get_nastran_wildcard_geometry_results_functions(self, fmt: str, tag: str):
         geom_methods_pch = f'Nastran{tag} Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
         combined_methods_op2 = f'Nastran{tag} Geometry + Results - OP2 (*.bdf; *.dat; *.nas; *.ecd; *.pch; *.op2)'
         results_fmts = [f'Nastran{tag} OP2 (*.op2)']
         if fmt == 'nastran':
-            if IS_H5PY:
-                results_fmts.append(f'pyNastran H5 (*.h5)')
-            results_fmts.append(f'Patran nod (*.nod)')
             is_aero = False
-        elif fmt == 'nastran_aero':
-            is_aero = True
+            if IS_H5PY:
+                results_fmts.append('pyNastran H5 (*.h5)')
+            results_fmts.append('Patran nod (*.nod)')
         else:
-            raise NotImplementedError(fmt)
+            is_aero = True
         results_fmt = ';;'.join(results_fmts)
         #results_fmt = 'Nastran OP2 (*.op2)'
 
@@ -253,17 +252,16 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             geom_methods_pch, geom_func,
             results_fmt, self.load_nastran_results)
 
-        #unused_data_geom_results = (
-        #    'nastran',
-        #    combined_methods_op2, self.load_nastran_geometry_and_results,
-        #    results_fmt, self.load_nastran_results)
+        unused_data_geom_results = (
+            fmt,
+            combined_methods_op2, self.load_nastran_geometry_and_results,
+            results_fmt, self.load_nastran_results)
 
         return [data_geom, data_geom_pch]
         #return [data_geom, data_geom_pch, data_geom_results]
 
     def load_nastran_geometry_and_results(self, op2_filename: PathLike,
-                                          name: str='main', plot: bool=True,
-                                          is_aero: bool=False):
+                                          name: str='main', plot: bool=True, is_aero: bool=False):
         """
         loads geometry and results, so you don't have to
         double define the same BDF/OP2
@@ -468,10 +466,18 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.model_type = 'nastran'
         return model, xref_nodes
 
+    def load_nastran_aero_geometry(self, bdf_filename: PathLike | BDF,
+                                   name: str='main',
+                                   plot: bool=True,
+                                   is_aero: bool=True,
+                                   stop_on_failure: bool=False):
+        return self.load_nastran_geometry(
+            bdf_filename, name=name, plot=plot,
+            is_aero=is_aero, stop_on_failure=stop_on_failure)
+
     def load_nastran_geometry(self, bdf_filename: str | BDF,
                               name: str='main',
-                              plot: bool=True,
-                              is_aero: bool=False, **kwargs):
+                              plot: bool=True, is_aero: bool=False, **kwargs):
         """
         The entry point for Nastran geometry loading.
 
@@ -485,8 +491,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         plot : bool; default=True
             should the model be generated or should we wait until
             after the results are loaded
-        is_aero : bool; default=False
-            is this an aero box result
 
         kwargs:
         -------
@@ -521,8 +525,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         # if isinstance(bdf_filename, str) and bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
         #     # if we're running test_pynastrangui or we have the --test flag on the command line
         #     # this has (technically) nothing to do with if we're running the tests or not
-        self.load_nastran_geometry_unvectorized(
-            bdf_filename, plot=plot, is_aero=is_aero)
+        self.load_nastran_geometry_unvectorized(bdf_filename, is_aero, plot=plot)
         gui.format = 'nastran'
 
     def _points_to_vtkpoints_coords(self, model: BDF, xyz_cid0: np.ndarray) -> float:
@@ -542,17 +545,17 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         xmax, ymax, zmax = maxi
         xmin, ymin, zmin = mini
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-
         self._create_nastran_coords(model, dim_max)
 
+        gui.log_info(model.get_bdf_stats())
         gui.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
         gui.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
         gui.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
         return dim_max
 
     def load_nastran_geometry_unvectorized(self, bdf_filename: str,
-                                           plot: bool=True,
-                                           is_aero: bool=False) -> None:
+                                           is_aero: bool,
+                                           plot: bool=True) -> None:
         """
         The entry point for Nastran geometry loading.
 
@@ -625,11 +628,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         self.has_caero = has_caero
         self.aero_is_quad_mesh = is_aero
-        #if is_aero:
-        #    for card_name in model.card_count:
-        #        if card_name not in {'GRID', 'CQUAD4', 'PSHELL', 'MAT1'}:
-        #            self.aero_is_quad_mesh = False
-        #            break
+        # for card_name in model.card_count:
+        #     if card_name not in {'GRID', 'CQUAD4', 'PSHELL', 'MAT1'}:
+        #         self.aero_is_quad_mesh = False
+        #         break
 
         #-----------------------------------------------------------------------
         gui.log_info(f'nnodes={self.nnodes:d} nelements={self.nelements:d}')
@@ -747,11 +749,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
     def update_caeros(self, obj: BDF) -> None:
         """the update call for the ModifyMenu"""
         model: BDF = self.model
-        xref_errors = {}
         model._uncross_reference_aero()
         model._cross_reference_aero(check_caero_element_ids=False)
         obj.uncross_reference()
-        obj.safe_cross_reference(model, xref_errors)
+        obj.safe_cross_reference()
 
         out_dict = self.make_caeros(model)
         box_id_to_caero_element_map = out_dict['box_id_to_caero_element_map']
@@ -1959,6 +1960,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         # set to True to enable elementIDs as a result
         eids_set = True
+        eids = np.array([])
         if eids_set and nelements:
             eids = np.zeros(nelements, dtype=nid_cp_cd.dtype)
             eid_map = self.gui.eid_map

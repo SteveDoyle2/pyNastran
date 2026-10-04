@@ -32,13 +32,17 @@ def is_early_return_aero(self: NastranIO, model: OP2) -> bool:
     for key, case in model.displacements.items():
         ngrid = len(case.node_gridtype)
         if ngrid > nnode:
-            # I hate nastran aero
+            # I hate nastran aero; this isn't robust.
+            # it puts [nodes, aero_nodes, aero_elements] in the result.
+            # This is broken by adding a single grid in the model.
             early_return_aero = True
             break
     for key, case in model.eigenvectors.items():
         ngrid = len(case.node_gridtype)
         if ngrid > nnode:
-            # I hate nastran aero
+            # I hate nastran aero; this isn't robust.
+            # it puts [nodes, aero_nodes, aero_elements] in the result.
+            # this is broken by adding a single grid in the model.
             early_return_aero = True
             break
 
@@ -73,8 +77,10 @@ def load_nastran_results_aero(results_filename: PathLike,
                               cases, form, icase: int):
     """
     create results for aero models
-     - displacements
+     - displacements or real/complex eigenvectors
      - no spc_forces or load_vectors for aero
+
+    TODO: improve case tagging (e.g., mode=3; freq=10 Hz) in the lower-left corner
     """
     aero_nids = np.array(list(model_aero.nodes), dtype='int32')
     aero_eids = np.array(list(model_aero.elements), dtype='int32')

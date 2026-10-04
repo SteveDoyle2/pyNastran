@@ -3,6 +3,7 @@ import numpy as np
 
 from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.bdf.bdf import BDF
+from .utils import log_range
 
 
 def get_structural_eids_from_csv_load_id(structure_model: BDF,
@@ -133,14 +134,8 @@ def get_structure_xyz(structure_model: BDF,
     structure_xyz = xyz_cid0
 
     log = structure_model.log
-    xyz_min = xyz_cid0.min(axis=0)
-    xyz_max = xyz_cid0.max(axis=0)
-    dxyz = xyz_max - xyz_min
-
     log.info(f'structure xyz range:')
-    log.info(f'    xyz_min ({xyz_units}) = {xyz_min}')
-    log.info(f'    xyz_max ({xyz_units}) = {xyz_max}')
-    log.info(f'    dxyz    ({xyz_units}) = {dxyz}')
+    log_range(log.debug, xyz_cid0, xyz_units)
 
     return structure_nodes, structure_xyz
 
@@ -176,8 +171,16 @@ def get_mapped_structure(structure_model: BDF,
     structure_areas = np.zeros(nelements, dtype=fdtype)
     structure_centroids = np.zeros((nelements, 3), dtype=fdtype)
     structure_normals = np.zeros((nelements, 3), dtype=fdtype)
+    SKIP_ELEMENTS = {
+        'CROD', 'CTUBE', 'CONROD', 'CBAR', 'CBEAM',
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+        'CBUSH', 'CVISC',
+    }
     for ieid, eid in enumerate(structure_eids):
         elem = structure_model.elements[eid]
+        if elem.type in SKIP_ELEMENTS:
+            continue
         assert elem.type in {'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUAD'}, elem
         area, centroid, normal = elem.AreaCentroidNormal()
         structure_areas[ieid] = area

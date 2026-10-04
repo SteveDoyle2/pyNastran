@@ -40,6 +40,9 @@ class Cart3D(Cart3dReaderWriter):
         self.points = None
         self.elements = None
 
+    def xyz(self) -> np.ndarray:
+        return self.points
+
     def cut_model_centroid(self, result: np.ndarray,
                            yslices: np.ndarray,
                            xyz=None) -> tuple[np.ndarray, np.ndarray]:  # pragma: no cover
@@ -469,6 +472,29 @@ class Cart3D(Cart3dReaderWriter):
                the load array
 
         """
+        # NOTE: nondimensionalization (comments only; code left as-is)
+        # ---------------------------------------------------------
+        # There is more than one way to nondimensionalize these
+        # variables; the derived quantities below were checked on real
+        # problems with the convention used there.  For reference, the
+        # Cart3D documentation convention is:
+        #   rho_inf = 1, a_inf = 1  ->  p_inf = 1/gamma, q_inf = 0.5*M_inf^2
+        #   rho   : LOCAL density / rho_inf (not freestream)
+        #   rhoU  : LOCAL momentum / (rho_inf*a_inf); U = rhoU/rho is in a_inf units
+        #   rhoE  : LOCAL total energy per volume / (rho_inf*a_inf^2)
+        #   Cp    = (p - 1/gamma) / (0.5*M_inf^2)
+        #   p     = (gamma-1)*(rhoE - 0.5*(rhoU^2+rhoV^2+rhoW^2)/rho)
+        # Under that convention, the derived terms below would differ:
+        #   - Pressure: qinf=1.0 is hardcoded, so p = Cp + 1/gamma;
+        #               with q_inf = 0.5*M_inf^2 it'd be Cp*0.5*M_inf^2 + 1/gamma
+        #   - Mach:     sqrt(rhoU^2+rhoV^2+rhoW^2) is the momentum magnitude;
+        #               local Mach = |rhoU/rho| / sqrt(gamma*p/rho)
+        #               (equal only when rho ~ 1 and a ~ 1)
+        #   - q:        0.5*rho*Mach^2 inherits the Mach definition
+        #   - E:        loads['E'] stores results[:, 5], i.e., rhoE
+        #   - the 'V' branch in the ibad block is guarded by `if 'U' in ...`
+        # Cp -> CFxyz/CMxyz integration only uses Cp + geometry, so it is
+        # independent of rho and of the choices above.
         if loads is None:
             loads = {}
         Cp = results[:, 0]

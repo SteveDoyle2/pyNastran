@@ -56,13 +56,25 @@ class FakeGUI(FakeGUIMethods, NastranIO):
         """loads a model"""
         load_geometry_name = f'load_{self._formati}_geometry'
         if self._formati in self.format_class_map:
-            cls = self.format_class_map[self._formati](self)
-            getattr(cls, load_geometry_name)(input_filename)
+            cls = self.format_class_map[self._formati]
+            self.log.warning(self._formati)
+            self.log.warning(cls)
+            if cls is None:
+                # nastran_aero
+                self.log.warning('nastran_aero')
+                # load_geometry_name = f'load_nastran_geometry'
+                getattr(self, load_geometry_name)(input_filename)
+            else:
+                self.log.warning('B')
+                cls_obj = cls(self)
+                getattr(cls_obj, load_geometry_name)(input_filename)
         elif hasattr(self, load_geometry_name):
+            self.log.warning('C')
             # self.load_nastran_geometry(bdf_filename, None)
             getattr(self, load_geometry_name)(input_filename)
             cls = self
         else:
+            self.log.warning('D')
             msg = f"load_geometry_name={load_geometry_name} doesn't exist"
             raise NotImplementedError(msg)
         self._cls = cls

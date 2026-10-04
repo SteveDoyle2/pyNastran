@@ -29,7 +29,6 @@ INPUT_FORMAT_TO_EXTENSION = {
     # an extension should not be added to this list if it is
     # shared with another type
     'nastran': ['.bdf', '.ecd', '.nas', '.op2', '.pch', '.blk', '.neu'],  # '.dat'
-    #'nastran_aero': [],
     'h5nastran': ['.h5'],
     #'nastran2': ['.bdf', '.ecd', '.nas',],
 
@@ -124,8 +123,7 @@ def determine_format(input_filename: str,
         # used to include None...
         allowed_formats = [
             'nastran', 'nastran_aero',
-            'stl', 'cart3d', 'fld', 'fluent', 'tecplot',
-            'ugrid', 'ugrid3d', 'panair',
+            'stl', 'cart3d', 'fld', 'fluent', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
             #'plot3d',
             'surf', 'lawgs', 'shabp', 'avus', 'fast', 'abaqus',
             'usm3d', 'bedge', 'su2', 'tetgen',
@@ -148,8 +146,8 @@ def determine_format(input_filename: str,
         formati = 'nastran'
     else:
         #print('allowed_formats =', allowed_formats)
-        fmts = ', '.join(allowed_formats)
-        msg = f'format={in_ext!r} was not found\nSpecify the format as [{fmts}]'
+        msg = 'format=%r was not found\nSpecify the format as [%s]' % (
+            in_ext, ', '.join(allowed_formats))
         raise TypeError(msg)
     return formati
 

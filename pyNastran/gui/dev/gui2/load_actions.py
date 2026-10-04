@@ -111,11 +111,15 @@ class LoadActions:
                     #print('geometry_format=%r geometry_format2=%s' % (geometry_format, geometry_format2))
 
                     # TODO: was geometry_format going into this...
-                    cls = self.gui.format_class_map[geometry_format2](self.gui)
-
-                    function_name2 = 'load_%s_geometry' % geometry_format2
-                    load_function2 = getattr(cls, function_name2)
-                    has_results = load_function2(infile_name, name=name, plot=plot)
+                    cls = self.gui.format_class_map[geometry_format2]
+                    if cls is None:
+                        # nastran_aero
+                        has_results = load_function(infile_name, name=name, plot=plot, is_aero=True)  # self.last_dir,
+                    else:
+                        cls_obj = cls(self.gui)
+                        function_name2 = 'load_%s_geometry' % geometry_format2
+                        load_function2 = getattr(cls_obj, function_name2)
+                        has_results = load_function2(infile_name, name=name, plot=plot)
                 else:
                     has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
 

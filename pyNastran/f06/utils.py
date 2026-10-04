@@ -86,6 +86,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
         parent_parser.add_argument('--cp', help='plot Cp (pressure coefficients)', action='store_true')
         parent_parser.add_argument('--force', help='plot aerodynamic forces (Fz)', action='store_true')
         parent_parser.add_argument('--moment', help='plot aerodynamic moments (My)', action='store_true')
+        parent_parser.add_argument('--debug', help='add debug messages', action='store_true')
         parent_parser.add_argument('-v', '--version', action='version', version=ver)
         args = parent_parser.parse_args(args=argv[1:])
 
@@ -95,6 +96,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
         plot_cp = args.cp
         plot_force = args.force
         plot_moment = args.moment
+        debug = args.debug
     else:  # pragma: no cover
         if argv is None:  # pragma: no cover
             argv = sys.argv
@@ -134,11 +136,12 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
     if f06_filename.lower().endswith(('.bdf', '.op2')):
         f06_filename = base + '.f06'
 
-    from cpylog import SimpleLogger
+    from cpylog import get_logger
     from pyNastran.f06.f06_to_pressure_loads import f06_to_pressure_loads
     nid_csv_filename = os.path.join(dirname, 'nid_pyNastran.csv')
     eid_csv_filename = os.path.join(dirname, 'eid_pyNastran.csv')
-    log = SimpleLogger(level='debug')
+
+    log = get_logger(log, debug, encoding='utf-8')
     loads = f06_to_pressure_loads(f06_filename,
                                   aerobox_caero_filename,
                                   loads_filename,

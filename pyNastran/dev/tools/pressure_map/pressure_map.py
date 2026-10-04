@@ -1,7 +1,134 @@
-# import os
+"""
+Maps CFD surface pressure (Cp) onto a Nastran structural model as PLOAD2/FORCE cards.
+
+Units guide (read this first)
+=============================
+The mapper never converts units on its own.  It does two things:
+
+  1. multiplies the aero xyz by ``aero_xyz_scale`` (in place), and
+  2. computes  F = qinf * Cp * A * n  and  p = qinf * Cp.
+
+Everything else (``xyz_units_in``, ``xyz_units_out``, ``pressure_units``) is only a label for
+log messages and card comments.  So the rule is:
+
+  **After scaling, everything is in structure units.**
+
+  +---------------------+-----------------------------------------------+
+  | input               | units it must be in                           |
+  +=====================+===============================================+
+  | aero xyz (file)     | whatever the CFD wrote (e.g. m)               |
+  | aero_xyz_scale      | CFD length -> structure length (m->in: 39.3701)|
+  | Cp                  | nondimensional; must be a TRUE Cp             |
+  | qinf                | structure pressure units (psi for in/lbf)     |
+  | sref                | structure length**2 (in^2)                    |
+  | bref, cref          | structure length (in)                         |
+  | reference_point     | structure length, basic coords (in)           |
+  +---------------------+-----------------------------------------------+
+
+  Outputs are then consistent with the structure:
+    pressure  [qinf units]                 e.g. psi
+    force     [qinf units * length**2]     e.g. psi*in^2 = lbf
+    moment    [force * length]             e.g. in-lbf
+    Cp        [-]
+
+Common aero_xyz_scale values (aero -> structure):
+    m  -> in : 39.3701        mm -> in : 1/25.4 = 0.0393701
+    m  -> mm : 1000.          ft -> in : 12.
+    same     : 1.0
+
+Example: CFD in meters, structure in inches/lbf/psi
+---------------------------------------------------
+Option A (simplest) - let pressure_map read and scale the aero file::
+
+    pressure_map(
+        cel_filename, bdf_filename,
+        aero_format='fluent',
+        aero_xyz_scale=39.3701,          # m -> in
+        qinf=21.79,                      # psi  (NOT Pa)
+        sref=50.27, cref=8.0, bref=8.0,  # in^2, in, in
+        reference_point=np.array([80., 0., 0.]),  # in
+        xyz_units_in='m', xyz_units_out='in', pressure_units='psi', ...)
+
+Option B - load the aero model yourself (e.g. to inspect/fix results), then
+pass the *object* in with ``aero_xyz_scale=1.0``::
+
+    aero_model, variables = get_aero_model(
+        cel_filename, 'fluent', aero_xyz_scale=39.3701,
+        xyz_units_in='m', xyz_units_out='in')
+    pressure_map(aero_model, structure_model,
+                 aero_format='fluent',
+                 aero_xyz_scale=1.0,      # <-- already scaled above!
+                 qinf=21.79, ...)
+
+.. warning::
+    ``get_aero_model`` scales the coordinates **in place**, including when
+    you pass it an already-loaded model object.  ``pressure_map`` calls
+    ``get_aero_model`` internally.  So if you scale in ``get_aero_model``
+    *and* pass ``aero_xyz_scale=39.3701`` to ``pressure_map``, the aero
+    model ends up 39.37**2 = 1550x too big, nothing lines up, and the
+    nearest-neighbor search silently maps garbage.  Scale exactly once.
+
+Sanity check: after scaling, the "aero xyz range" and "structure xyz range"
+log lines should overlap.  If they differ by ~39x or ~1550x, the scale is
+wrong (missing or applied twice).
+
+.. note::
+    Cp is used as-is from the aero model (Fluent: the
+    'Pressure Coefficient' column).  Its min/max are logged by
+    ``get_aero_pressure_centroid``; check them.
+
+Known limitations (as of 2026-10)
+---------------------------------
+ - method='full_model', map_type='force' (fixed 2026-10) lumps each aero
+   element's force vector qinf*Cp*A*n onto the nearest node of the
+   mapped shell elements and writes summed FORCE cards under force_sid.
+   Total force (including drag) is conserved exactly.  The moment
+   differs by the aero-centroid -> node transfer offsets (no MOMENT
+   cards are written).  These are point loads, so local stresses next to
+   loaded nodes are approximate; global loads are right.  Surfaces with
+   no structure nearby (e.g. the base of an open aft end) still get their
+   force, on the nearest structural node (e.g. the aft skirt edge).
+   force_to_pressure_tol=tol turns shell elements whose mapped force is
+   normal to within tol*|F| into PLOAD2s (cleaner display, no point
+   loads); the dropped in-plane force is logged.  Fin leading edges,
+   the base, and in-plane fin drag stay FORCE cards.
+ - eid_load_id=-1 includes every element id; skipped elements (CBUSH,
+   CBAR, ...) keep a zero area/centroid row and can receive loads.
+   Prefer an explicit eids_structure / load id that selects shells only.
+
+full_model: closed aero OML -> shell structure
+.............................................
+The items below apply to map_type='pressure' (PLOAD2).  For a closed OML,
+map_type='force' avoids all of them except the point-load caveat above.
+
+The full_model pressure balance (aero vs structure F/M) can only agree when the
+two models wet the same surface with the same normal convention.  For a
+closed CFD OML mapped onto a Nastran shell model, expect these deltas:
+
+ - Normal sign is not reconciled.  The written PLOAD2 is p = qinf*Cp and
+   acts along the STRUCTURAL element normal.  The aero element normal is
+   only used in the logged aero sum; it never flips the PLOAD2.  So if
+   the shell normals point the opposite way from the aero normals (e.g.
+   outward-facing skin vs. an aero mesh whose sum gives +drag with
+   inward normals), every skin panel is loaded backwards.  Check the
+   sign of the balance; the fix is p = qinf*Cp*sign(n_struct . n_aero).
+ - Surfaces the structure doesn't have are in the aero total only.
+   Example: an open aft end (no base closure) drops base drag.  Thin
+   lifting surfaces (fins/strakes) modeled as midplane shells have
+   n_x = 0, so leading-edge/wave drag can't appear in Fx at all.  These
+   are model limitations; no mapping change recovers them.
+ - Midplane shells for fins/strakes get the Cp of whichever side's aero
+   face is nearest (one-sided), not the Cp jump across the surface, so
+   their normal force is unreliable (noise at alpha=0, wrong under
+   alpha/beta).
+ - Every structural element passed in gets the Cp of its nearest aero
+   face, including internal/unwetted structure (bulkheads, domes,
+   mounts).  This is wrong and must be avoided by excluding those
+   elements from eids_structure; it is a separate issue from the
+   balance mismatch above.
+"""
 import os
-from itertools import count, zip_longest
-from collections import defaultdict
+from itertools import zip_longest
 from typing import Optional
 import numpy as np
 
@@ -11,7 +138,7 @@ import matplotlib.cm as cm
 
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
-from pyNastran.bdf.bdf import BDF, PLOAD2, read_bdf  # FORCE
+from pyNastran.bdf.bdf import BDF, PLOAD2, FORCE, read_bdf
 from pyNastran.bdf.write_path import write_include
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
 
@@ -138,7 +265,8 @@ def pressure_map(aero_filename: PathLike,
                  aero_format: str='cart3d',
                  map_type: str='pressure',
                  method: str='full_model',
-                 xyz_units: str='???',
+                 xyz_units_in: str='???',
+                 xyz_units_out: str='???',
                  pressure_units: str='???',
                  pressure_sid: int=1,
                  force_sid: int=2,
@@ -159,14 +287,29 @@ def pressure_map(aero_filename: PathLike,
                  reference_point: np.ndarray | None=None,
                  regions_to_include=None,
                  regions_to_remove=None,
+                 force_to_pressure_tol: float | None=None,
+                 punch: bool=False,
                  log: Optional[SimpleLogger]=None) -> BDF:
     """
+    Maps CFD Cp onto a structural model and writes the load deck.
+
+    See the module docstring "Units guide" for the full story.  Short
+    version: ``aero_xyz_scale`` converts CFD lengths to structure lengths;
+    every other dimensional input (qinf, sref, bref, cref,
+    reference_point) is in STRUCTURE units; ``xyz_units`` and
+    ``pressure_units`` are labels only.
+
     Parameters
     ----------
-    aero_filename : PathLike
-        the path to the aero model
-    nastran_filename : PathLike
-        the path to the nastran model
+    aero_filename : PathLike | Cart3D | Fluent
+        the path to the aero model, or an already-loaded model.
+        If you pass a model that you already scaled with
+        ``get_aero_model(..., aero_xyz_scale=s)``, pass
+        ``aero_xyz_scale=1.0`` here; this function scales it again
+        (in place) otherwise.
+    nastran_filename : PathLike | BDF
+        the path to the nastran model, or a loaded BDF.  Defines the
+        target units (e.g. in/lbf/psi).
     is_obj : bool; default=False
         save/use the obj_filename that is determined from
         nastran_filename
@@ -191,22 +334,40 @@ def pressure_map(aero_filename: PathLike,
     method : str
         full_model, panel_model
     qinf : float; default=1.0
-        dynamic pressure
+        dynamic pressure in the STRUCTURE's pressure units
+        (psi for an in/lbf model; Pa for m/N; MPa for mm/N).
+        The written pressure is qinf*Cp, so qinf=1.0 writes Cp itself.
+        Not converted; ``pressure_units`` is only a label.
     idtype : str; default='int32'
         the type of the integers
     fdtype : str; default='float64'
         the  type of the floats
     sref : float; default=1.0
-        reference area in structure units
+        reference area in structure units (e.g. in^2).  Only used to
+        nondimensionalize the logged CF/CM; does not change the loads.
     bref : float; default=1.0
-        reference length for Mx and Mz in structure units
+        reference length for Mx and Mz in structure units (e.g. in);
+        logged CM only
     cref : float; default=1.0
-        reference length for My in structure units
+        reference length for My in structure units (e.g. in);
+        logged CM only
+
+    Both methods log a "Force/Moment Balance: Aero vs Mapped Structure"
+    table about ``reference_point``: the aero total (qinf*Cp*A*n over
+    every aero element) next to the total of the written structural
+    loads, in dimensional form and as CF=F/(qinf*sref),
+    CM=M/(qinf*sref*Lref) with Lref=[bref, cref, bref].  It is a log
+    only; the cards are not changed.  (full_model: map_type='pressure'
+    only.)
     aero_xyz_scale : float; default=1.0
-        scales the aero model to the structural units
-        1.0 if units are consistent
-        39.3701 if aero model in meters and structural model in inches
-        39,370.1  if aero model in millimeters and structural model in inches
+        multiplies the aero xyz (in place) to get structure lengths:
+        xyz_structure = aero_xyz_scale * xyz_aero
+          1.0        units are already consistent (or already scaled)
+          39.3701    aero in m,  structure in in
+          0.0393701  aero in mm, structure in in  (= 1/25.4)
+          1000.      aero in m,  structure in mm
+        Areas scale by aero_xyz_scale**2 automatically, since they are
+        recomputed from the scaled xyz.
     flip_xy_Cp: bool; False
         flip the Cp to account for the normal
     flip_xz_Cp: bool; False
@@ -219,10 +380,21 @@ def pressure_map(aero_filename: PathLike,
         the output moment id
     cp_sid : int; default=4
         the output pressure coefficient id
-    xyz_units : str; default='in'
-        the units for geometry, reference area / lengths in structure units
-    pressure_units : str; default='psi'
-        the units for qinf
+    reference_point : (3,) float ndarray; default=None -> [0, 0, 0]
+        moment reference point in STRUCTURE units, basic coordinates
+    xyz_units_in / xyz_units_out : str; default='???'
+        labels for the aero length unit before / after aero_xyz_scale
+        (e.g. 'm' / 'in'); used only in log messages.  Does not scale
+        anything.
+    pressure_units : str; default='???'
+        label for qinf's unit (e.g. 'psi'); used only in log
+        messages/card comments.  Does not scale anything.
+    force_to_pressure_tol : float | None; default=None
+        full_model, map_type='force' only.  None writes FORCE cards
+        only.  A float (e.g. 0.05) converts a shell element's mapped
+        force to a PLOAD2 when its in-plane part is <= tol*|F|; the rest
+        (fin leading edges, base, in-plane fin drag) stay FORCE cards.
+        Both go under force_sid.  The dropped in-plane force is logged.
 
     +-------------------+----------+-------+---------------+
     | method / map_type | pressure | force | force_moment  |
@@ -269,7 +441,7 @@ def pressure_map(aero_filename: PathLike,
             structure_model.load(obj_filename)
             _check_model(structure_model)
         else:
-            structure_model = read_bdf(nastran_filename, xref=False, log=log)
+            structure_model = read_bdf(nastran_filename, punch=punch, xref=False, log=log)
             _check_model(structure_model)
             structure_model.save(obj_filename)
         structure_model.cross_reference()
@@ -281,13 +453,22 @@ def pressure_map(aero_filename: PathLike,
         aero_filename, aero_format,
         aero_xyz_scale=aero_xyz_scale,
         stop_on_failure=stop_on_failure,
-        xyz_units=xyz_units,
+        xyz_units_in=xyz_units_in,
+        xyz_units_out=xyz_units_out,
+        qinf=qinf,
+        reference_point=reference_point,
+        pressure_units=pressure_units,
         # regions_to_remove=regions_to_remove,
         # regions_to_include=regions_to_include,
     )
     log = structure_model.log
     log.info(f'qinf ({pressure_units}) = {qinf:.3f}')
+    _check_force_to_pressure_tol(force_to_pressure_tol)
+    if force_to_pressure_tol is not None and method != 'full_model':
+        log.warning(f"force_to_pressure_tol={force_to_pressure_tol} is only used by "
+                    f"method='full_model', map_type='force'; method={method!r}")
 
+    log.info(f'pressure_map; method={method!r}')
     if method == 'panel_model':
         pressure_model = pressure_map_to_panel_model(
             aero_model, structure_model, structure_eids,
@@ -306,7 +487,7 @@ def pressure_map(aero_filename: PathLike,
             sref=sref,
             bref=bref,
             cref=cref,
-            xyz_units=xyz_units,
+            xyz_units=xyz_units_out,
             pressure_units=pressure_units,
             # idtype=idtype,
             fdtype=fdtype)
@@ -321,12 +502,15 @@ def pressure_map(aero_filename: PathLike,
             force_sid=force_sid,
             moment_sid=moment_sid,
             cp_sid=cp_sid,
+            cp_signed_sid=cp_signed_sid,
             #aero_format=aero_format,
             map_type=map_type,
-            qinf=qinf, pressure_units='Pa',
+            qinf=qinf, pressure_units=pressure_units,
             sref=sref, bref=bref, cref=cref,
             regions_to_include=regions_to_include,
             regions_to_remove=regions_to_remove,
+            xyz_units=xyz_units_out,
+            force_to_pressure_tol=force_to_pressure_tol,
             #idtype=idtype,
             fdtype=fdtype)
     else:
@@ -367,9 +551,15 @@ def _write_pressure_file(model: BDF,
         pressure_str = (
             'SOL 101\n'
             'CEND\n'
+            'ECHO = NONE\n'
+            'DISPLACEMENT(PLOT) = ALL\n'
+            'OLOAD(PLOT) = ALL\n'
+            'SPCFORCE(PLOT) = ALL\n'
+            'ESE(PLOT) = ALL\n'
         )
     msg = pressure_str
     log = model.log
+    cp_signeds = []
     forces = []
     moments = []
     pressures = []
@@ -391,7 +581,6 @@ def _write_pressure_file(model: BDF,
             'SUBCASE 5\n'
             '  SUBTITLE = Cp, Coeff Pressure Signed\n'
             f'  LOAD = {cp_signed_sid}\n'
-            'BEGIN BULK\n'
             )
         forces: list[PLOAD2] = model.loads[force_sid]
         moments: list[PLOAD2] = model.loads[moment_sid]
@@ -403,17 +592,27 @@ def _write_pressure_file(model: BDF,
             'SUBCASE 1\n'
             '  SUBTITLE = Pressure\n'
             f'  LOAD = {pressure_sid}\n'
-            'BEGIN BULK\n'
             )
     elif map_type == 'force':
-        assert len(model.loads) == 1, list(model.loads)
-        forces: list[PLOAD2] = model.loads[1]
+        # FORCE cards, plus PLOAD2s if force_to_pressure_tol was used;
+        # cp_signed_sid (display only) exists only with force_to_pressure_tol
+        assert set(model.loads) <= {force_sid, cp_signed_sid}, (list(model.loads), force_sid, cp_signed_sid)
+        loads = model.loads[force_sid]
+        forces: list[FORCE] = [load for load in loads if load.type == 'FORCE']
+        pressures: list[PLOAD2] = [load for load in loads if load.type == 'PLOAD2']
+        assert len(forces) + len(pressures) == len(loads), sorted({load.type for load in loads})
+        cp_signeds: list[PLOAD2] = model.loads.get(cp_signed_sid, [])
         msg += (
             'SUBCASE 1\n'
             '  SUBTITLE = Force\n'
             f'  LOAD = {force_sid}\n'
-            'BEGIN BULK\n'
         )
+        if len(cp_signeds):
+            msg += (
+                'SUBCASE 2\n'
+                '  SUBTITLE = Cp, Coeff Pressure Signed\n'
+                f'  LOAD = {cp_signed_sid}\n'
+            )
     else:  # pragma: no cover
         raise NotImplementedError(map_type)
     dirname = os.path.dirname(pressure_filename)
@@ -430,6 +629,11 @@ def _write_pressure_file(model: BDF,
         rel_main_filename = os.path.relpath(aero_panel_bdf_filename.bdf_filename, dirname)
     else:
         log.warning('cant write main pressure file because the wrong type was found...')
+
+    msg += (
+        'BEGIN BULK\n'
+        'PARAM,INREL,-2\n'
+    )
     msg += write_include(rel_main_filename)
     msg += write_include(os.path.basename(pressure_filename))
     msg += 'ENDDATA\n'
@@ -478,30 +682,112 @@ def _write_pressure_file(model: BDF,
         model.log.debug(f'writing csv: {str(force_moment_filename)}')
         np.savetxt(force_moment_filename, result, header='Element,Force,Moment',
                    delimiter=',', fmt=['%d', '%.18e', '%.18e'])
-    elif len(forces):
+        return
+    if len(forces):
         eid_force_list = []
         for force_obj in forces:
-            fi = force_obj.xyz
+            fi = force_obj.scaled_vector  # mag*xyz (xyz is a unit vector)
             nid = force_obj.node
             eid_force_list.append((nid, *fi))
         eid_force_array = np.array(eid_force_list)
         force_filename = base + '.force.csv'
         model.log.debug(f'writing {str(force_filename)}')
-        np.savetxt(force_filename, eid_force_array, header='Element,Fx,Fy,Fz',
+        np.savetxt(force_filename, eid_force_array, header='Node,Fx,Fy,Fz',
                    delimiter=',', fmt=['%d', '%.18e', '%.18e', '%.18e'])
-    elif len(pressures):
+    if len(pressures):
         eid_pressure_list = []
         for pressure_obj in pressures:
             fi = pressure_obj.pressure
             feid = pressure_obj.eids[0]
             eid_pressure_list.append((feid, fi))
         eid_pressure_array = np.array(eid_pressure_list)
+        header = 'Element,Pressure'
+        fmt = ['%d', '%.18e']
+        if map_type == 'force' and len(cp_signeds):
+            # same element order as the force_sid PLOAD2s
+            cp_signed_eids = [load.eids[0] for load in cp_signeds]
+            assert cp_signed_eids == eid_pressure_array[:, 0].astype(int).tolist()
+            cp_signed = np.array([load.pressure for load in cp_signeds])
+            eid_pressure_array = np.column_stack([eid_pressure_array, cp_signed])
+            header += ',Cp_signed'
+            fmt.append('%.18e')
         pressure_filenamei = base + '.pressure.csv'
         model.log.debug(f'writing {str(pressure_filenamei)}')
-        np.savetxt(pressure_filenamei, eid_pressure_array, header='Element,Pressure',
-                   delimiter=',', fmt=['%d', '%.18e'])
-    else:  # pragma: no cover
+        np.savetxt(pressure_filenamei, eid_pressure_array, header=header,
+                   delimiter=',', fmt=fmt)
+    if len(forces) == 0 and len(pressures) == 0:  # pragma: no cover
         raise NotImplementedError(map_type)
+
+
+def _sum_pressure_force_moment(pressure: np.ndarray,
+                               area: np.ndarray,
+                               normal: np.ndarray,
+                               centroid: np.ndarray,
+                               reference_point: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Sums F_i = p_i*A_i*n_i and M_i = (c_i - reference_point) x F_i.
+
+    Same sign convention as PLOAD2 (positive pressure acts along the
+    element normal) and as the aero side (F = qinf*Cp*A*n).
+
+    Returns
+    -------
+    force : (3,) float ndarray
+    moment : (3,) float ndarray
+        about reference_point
+    """
+    force_i = (pressure * area)[:, np.newaxis] * normal
+    moment_i = np.cross(centroid - reference_point, force_i)
+    return force_i.sum(axis=0), moment_i.sum(axis=0)
+
+
+def _log_force_moment_balance(log: SimpleLogger,
+                              title: str,
+                              aero_force: np.ndarray,
+                              aero_moment: np.ndarray,
+                              structure_force: np.ndarray,
+                              structure_moment: np.ndarray,
+                              reference_point: np.ndarray,
+                              qinf: float, sref: float,
+                              bref: float, cref: float,
+                              xyz_units: str='',
+                              pressure_units: str='') -> None:
+    """
+    Logs dimensional and nondimensional (CF=F/qS, CM=M/qSL) totals.
+
+    Lref = [bref, cref, bref] for [Mx, My, Mz].  Log only; no loads change.
+    """
+    lref = np.array([bref, cref, bref])
+    qs = qinf * sref
+    aero_force_coeff = aero_force / qs
+    aero_moment_coeff = aero_moment / (qs * lref)
+    structure_force_coeff = structure_force / qs
+    structure_moment_coeff = structure_moment / (qs * lref)
+
+    def _f(label, vals):
+        return f'  {label:30s} {vals[0]:14.6g} {vals[1]:14.6g} {vals[2]:14.6g}'
+
+    log.info('================================================================')
+    log.info(f'  {title}')
+    log.info(f'  reference_point ({xyz_units}) = {reference_point}')
+    log.info(f'  qinf={qinf} {pressure_units}; sref={sref}; bref={bref}; cref={cref} ({xyz_units})')
+    log.info('----------------------------------------------------------------')
+    log.info(f'  {"":30s} {"Fx":>14s} {"Fy":>14s} {"Fz":>14s}')
+    log.info(_f('Aero  Force  (dim)', aero_force))
+    log.info(_f('Struct Force (dim)', structure_force))
+    log.info(_f('Delta  Force (dim)', structure_force - aero_force))
+    log.info(_f('Aero  Force  (CF=F/qS)', aero_force_coeff))
+    log.info(_f('Struct Force (CF=F/qS)', structure_force_coeff))
+    log.info(_f('Delta  Force (CF)', structure_force_coeff - aero_force_coeff))
+    log.info('----------------------------------------------------------------')
+    log.info(f'  {"":30s} {"Mx":>14s} {"My":>14s} {"Mz":>14s}')
+    log.info(_f('Aero  Moment (dim)', aero_moment))
+    log.info(_f('Struct Moment(dim)', structure_moment))
+    log.info(_f('Delta  Moment(dim)', structure_moment - aero_moment))
+    log.info(_f('Aero  Moment (CM=M/qSL)', aero_moment_coeff))
+    log.info(_f('Struct Moment(CM=M/qSL)', structure_moment_coeff))
+    log.info(_f('Delta  Moment(CM)', structure_moment_coeff - aero_moment_coeff))
+    log.info('================================================================')
 
 
 def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
@@ -573,7 +859,8 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
     aero_tri_area = aero_dict['tri_area']
     aero_tri_centroid = aero_dict['tri_centroid']
     aero_tri_normal = aero_dict['tri_normal']
-    assert np.abs(aero_tri_normal).max() <= 1.001, (aero_tri_normal.min(), aero_tri_normal.max())
+    if len(aero_tri_normal):
+        assert np.abs(aero_tri_normal).max() <= 1.001, (aero_tri_normal.min(), aero_tri_normal.max())
 
     aero_quad_nodes = aero_dict['quad_nodes']
     aero_quad_cp = aero_dict['quad_Cp_centroid']
@@ -700,7 +987,8 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
             flip_Cp=flip_xz_Cp,
             qinf=qinf,
             pressure_sid=pressure_sid,
-            force_sid=force_sid, moment_sid=moment_sid,
+            force_sid=force_sid, moment_sid=moment_sid, cp_sid=cp_sid,
+            cp_signed_sid=cp_signed_sid,
             reference_point=reference_point,
             sref=sref, bref=bref, cref=cref,
         )
@@ -730,39 +1018,12 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
     #                is second-order in the panel spacing.
     total_aero_force_dim = total_aero_force_coeff * qinf * sref
     total_aero_moment_dim = total_aero_moment_coeff * qinf * sref * lref
-
-    total_structure_force_coeff = total_structure_force / (qinf * sref)
-    total_structure_moment_coeff = total_structure_moment / (qinf * sref * lref)
-
-    delta_force = total_structure_force - total_aero_force_dim
-    delta_moment = total_structure_moment - total_aero_moment_dim
-    delta_force_coeff = total_structure_force_coeff - total_aero_force_coeff
-    delta_moment_coeff = total_structure_moment_coeff - total_aero_moment_coeff
-
-    def _f(label, vals):
-        return f'  {label:30s} {vals[0]:14.6g} {vals[1]:14.6g} {vals[2]:14.6g}'
-
-    log.info('================================================================')
-    log.info('  Force/Moment Balance: Aero vs Mapped Structure')
-    log.info(f'  reference_point ({xyz_units}) = {reference_point}')
-    log.info(f'  qinf={qinf} {pressure_units}; sref={sref}; bref={bref}; cref={cref} ({xyz_units})')
-    log.info('----------------------------------------------------------------')
-    log.info(f'  {"":30s} {"Fx":>14s} {"Fy":>14s} {"Fz":>14s}')
-    log.info(_f('Aero  Force  (dim)', total_aero_force_dim))
-    log.info(_f('Struct Force (dim)', total_structure_force))
-    log.info(_f('Delta  Force (dim)', delta_force))
-    log.info(_f('Aero  Force  (CF=F/qS)', total_aero_force_coeff))
-    log.info(_f('Struct Force (CF=F/qS)', total_structure_force_coeff))
-    log.info(_f('Delta  Force (CF)', delta_force_coeff))
-    log.info('----------------------------------------------------------------')
-    log.info(f'  {"":30s} {"Mx":>14s} {"My":>14s} {"Mz":>14s}')
-    log.info(_f('Aero  Moment (dim)', total_aero_moment_dim))
-    log.info(_f('Struct Moment(dim)', total_structure_moment))
-    log.info(_f('Delta  Moment(dim)', delta_moment))
-    log.info(_f('Aero  Moment (CM=M/qSL)', total_aero_moment_coeff))
-    log.info(_f('Struct Moment(CM=M/qSL)', total_structure_moment_coeff))
-    log.info(_f('Delta  Moment(CM)', delta_moment_coeff))
-    log.info('================================================================')
+    _log_force_moment_balance(
+        log, 'Force/Moment Balance: Aero vs Mapped Structure (panel_model)',
+        total_aero_force_dim, total_aero_moment_dim,
+        total_structure_force, total_structure_moment,
+        reference_point, qinf, sref, bref, cref,
+        xyz_units=xyz_units, pressure_units=pressure_units)
     return bdf_model_out
 
 
@@ -816,7 +1077,9 @@ def _map_pressure_panel_model(structure_model: BDF,
     fdtype = structure_area.dtype
     structure_box_moment_center = np.zeros((nz_structure, 3), dtype=fdtype)
 
-    for i, eid, aero_forcei in zip(count(), eids_z, aero_tri_force_coeff_per_q):
+    # one moment center per structural panel (independent of the aero
+    # element count/type, so quad-only aero models are handled)
+    for i, eid in enumerate(eids_z):
         elem = structure_model.elements[eid]
         assert elem.type == 'CQUAD4', elem
         inids = np.searchsorted(structure_nodes, elem.nodes)
@@ -836,14 +1099,16 @@ def _map_pressure_panel_model(structure_model: BDF,
         span = np.linalg.norm(d14)
         chord = abs(p23[0] - p14[0])
         x12 = p2[0] - p1[0]
-        x43 = p2[0] - p1[0]
+        x43 = p3[0] - p4[0]
         # print(f'x12={x12}')
         assert x12.min() >= 0., x12
         assert x43.min() >= 0., x43
         assert chord > 0, chord
         assert span > 0, span
-        # for p1, p2, p3, p4, moment_center in zip(p1, p2, p3, p4, moment_center):
-        structure_box_moment_center[i, :] = p14 + chord/4.
+        # quarter chord: shift the leading-edge midpoint aft in x only
+        moment_center = p14.copy()
+        moment_center[0] += chord / 4.
+        structure_box_moment_center[i, :] = moment_center
 
     # for each aero element, get the closest structure box
     assert len(structure_box_centroid) > 0, structure_box_centroid
@@ -1116,29 +1381,356 @@ def map_pressure_centroid(bdf_model_out: BDF,
     return
 
 
-def map_force_centroid_tri(bdf_model_out: BDF,
-                           aero_area, aero_cp_centroid, iaero,
-                           structure_nodes, istructure,
-                           pressure_sid: int=1,
-                           force_sid: int=2,
-                           moment_sid: int=3,
-                           qinf: float=1.0) -> None:
-    aero_pressure_centroid = aero_cp_centroid[iaero] * qinf
-    aero_force_centroid = aero_pressure_centroid * aero_area[iaero]
-    mapped_structure_nodes = structure_nodes[istructure]
+def get_wetted_structure_nodes(structure_model: BDF,
+                               structure_eids: np.ndarray,
+                               structure_nodes: np.ndarray,
+                               structure_xyz: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Gets the node ids/xyz (basic) used by the mapped shell elements.
 
-    forces_temp = defaultdict(array3)
-    nforce_total = defaultdict(int)
-    for nid, force in zip(mapped_structure_nodes, aero_force_centroid):
-        forces_temp[nid] += force
-        nforce_total[nid] += 1
+    Only these nodes can receive FORCE cards, so nodes that belong only to
+    excluded elements (internal bulkheads, RBE2 centers, CBUSH ends, ...)
+    get nothing.  Elements that get_mapped_structure skips (CBUSH, CBAR,
+    ...) are skipped here too.
+    """
+    skip_types = {
+        'CROD', 'CTUBE', 'CONROD', 'CBAR', 'CBEAM',
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+        'CBUSH', 'CVISC',
+    }
+    nids_set = set()
+    for eid in structure_eids:
+        elem = structure_model.elements[eid]
+        if elem.type in skip_types:
+            continue
+        nids_set.update(nid for nid in elem.node_ids if nid is not None)
+    if len(nids_set) == 0:
+        raise RuntimeError('no structural shell nodes to map forces to')
+    wetted_nids = np.array(sorted(nids_set), dtype=structure_nodes.dtype)
 
-    mag = 1.0
-    for nid, force in forces_temp.items():
-        nforce_totali = nforce_total[nid]
-        force2 = force / nforce_totali
-        bdf_model_out.add_force(pressure_sid, nid, mag, force2, cid=0)
-    return
+    isort = np.argsort(structure_nodes)
+    inode = isort[np.searchsorted(structure_nodes, wetted_nids, sorter=isort)]
+    assert np.array_equal(structure_nodes[inode], wetted_nids)
+    return wetted_nids, structure_xyz[inode, :]
+
+
+def map_force_nodes(bdf_model_out: BDF,
+                    aero_force: np.ndarray,
+                    aero_centroid: np.ndarray,
+                    node_ids: np.ndarray,
+                    node_xyz: np.ndarray,
+                    qinf: float,
+                    pressure_units: str='',
+                    force_sid: int=2) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Lumps each aero element force onto its nearest structural node.
+
+    Every aero element force (qinf*Cp*A*n, a full 3-D vector, so drag is
+    kept) goes to exactly one node.  The vectors are summed per node (not
+    averaged), so the total force is conserved exactly.  The moment is
+    conserved up to the transfer offsets sum((c_i - x_node) x F_i), which
+    are not written (no MOMENT cards; shell drilling DOFs).
+
+    Parameters
+    ----------
+    aero_force : (naero, 3) float ndarray
+        per-element aero force in structure units
+    aero_centroid : (naero, 3) float ndarray
+        aero element centroids (structure units, basic)
+    node_ids / node_xyz : (nnode,) int / (nnode, 3) float ndarray
+        candidate structural nodes (basic)
+
+    Returns
+    -------
+    nids : (nloaded,) int ndarray
+        the nodes that got a FORCE card
+    node_force : (nloaded, 3) float ndarray
+        the summed force at each of those nodes (basic)
+    """
+    tree = _get_tree(node_xyz)
+    unused_dist, inode = tree.query(aero_centroid, k=1)
+    nnode = len(node_ids)
+    assert inode.max() < nnode, (inode.max(), nnode)
+
+    node_force_all = np.zeros((nnode, 3), dtype=aero_force.dtype)
+    np.add.at(node_force_all, inode, aero_force)
+
+    iloaded = np.unique(inode)
+    nids = node_ids[iloaded]
+    node_force = node_force_all[iloaded, :]
+
+    comment = f'Force; qinf={qinf} {pressure_units} (map_force_nodes)'
+    for nid, force in zip(nids, node_force):
+        mag = np.linalg.norm(force)
+        if mag == 0.0:
+            continue
+        bdf_model_out.add_force(force_sid, nid, mag, force / mag, cid=0,
+                                comment=comment)
+        comment = ''
+    return nids, node_force
+
+
+def _check_force_to_pressure_tol(force_to_pressure_tol) -> None:
+    """None or a finite float >= 0; anything else raises"""
+    if force_to_pressure_tol is None:
+        return
+    if (isinstance(force_to_pressure_tol, bool) or
+            not isinstance(force_to_pressure_tol, (int, float, np.floating, np.integer))):
+        raise TypeError(f'force_to_pressure_tol={force_to_pressure_tol!r} must be None '
+                        f'or a float; type={type(force_to_pressure_tol).__name__}')
+    if not np.isfinite(force_to_pressure_tol) or force_to_pressure_tol < 0.0:
+        raise ValueError(f'force_to_pressure_tol={force_to_pressure_tol} must be >= 0')
+
+
+def get_shell_triangles(structure_model: BDF,
+                        structure_eids: np.ndarray,
+                        structure_nodes: np.ndarray,
+                        structure_xyz: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Splits the mapped shells into triangles (basic xyz).
+
+    Returns
+    -------
+    tri_xyz : (ntri, 3, 3) float ndarray
+        CTRIA3/CTRIA6 -> 1 tri (corner nodes); CQUAD4/CQUAD8/CQUAD -> 2
+    tri_ielem : (ntri,) int ndarray
+        row of the owning element in structure_eids
+    """
+    isort = np.argsort(structure_nodes)
+    ielem_list = []
+    nids_list = []
+    for ielem, eid in enumerate(structure_eids):
+        elem = structure_model.elements[eid]
+        if elem.type in {'CTRIA3', 'CTRIA6'}:
+            n1, n2, n3 = elem.node_ids[:3]
+            nids_list.append((n1, n2, n3))
+            ielem_list.append(ielem)
+        elif elem.type in {'CQUAD4', 'CQUAD8', 'CQUAD'}:
+            n1, n2, n3, n4 = elem.node_ids[:4]
+            nids_list.extend([(n1, n2, n3), (n1, n3, n4)])
+            ielem_list.extend([ielem, ielem])
+    if len(nids_list) == 0:
+        raise RuntimeError('no structural shell elements to map pressures to')
+    tri_nids = np.array(nids_list, dtype=structure_nodes.dtype)
+    inode = isort[np.searchsorted(structure_nodes, tri_nids, sorter=isort)]
+    assert np.array_equal(structure_nodes[inode], tri_nids)
+    return structure_xyz[inode, :], np.array(ielem_list, dtype='int64')
+
+
+def _closest_point_triangles(points: np.ndarray,
+                             tri_xyz: np.ndarray) -> np.ndarray:
+    """
+    Distance from each point to its paired triangle (exact; Ericson,
+    Real-Time Collision Detection 5.1.5).
+
+    points : (n, 3);  tri_xyz : (n, 3, 3)  ->  dist : (n,)
+    """
+    a = tri_xyz[:, 0, :]
+    b = tri_xyz[:, 1, :]
+    c = tri_xyz[:, 2, :]
+    ab = b - a
+    ac = c - a
+    ap = points - a
+    bp = points - b
+    cp = points - c
+    d1 = (ab * ap).sum(axis=1)
+    d2 = (ac * ap).sum(axis=1)
+    d3 = (ab * bp).sum(axis=1)
+    d4 = (ac * bp).sum(axis=1)
+    d5 = (ab * cp).sum(axis=1)
+    d6 = (ac * cp).sum(axis=1)
+    va = d3 * d6 - d5 * d4
+    vb = d5 * d2 - d1 * d6
+    vc = d1 * d4 - d3 * d2
+
+    # default: interior (projection onto the plane)
+    denom = va + vb + vc
+    denom = np.where(denom == 0.0, 1.0, denom)
+    v = vb / denom
+    w = vc / denom
+    closest = a + ab * v[:, np.newaxis] + ac * w[:, np.newaxis]
+    done = np.zeros(len(points), dtype='bool')
+
+    def _set(mask, value):
+        mask = mask & ~done
+        closest[mask] = value[mask]
+        done[mask] = True
+
+    _set((d1 <= 0) & (d2 <= 0), a)                       # vertex a
+    _set((d3 >= 0) & (d4 <= d3), b)                      # vertex b
+    _set((d6 >= 0) & (d5 <= d6), c)                      # vertex c
+    with np.errstate(divide='ignore', invalid='ignore'):
+        t = np.nan_to_num(d1 / (d1 - d3))
+        _set((vc <= 0) & (d1 >= 0) & (d3 <= 0), a + ab * t[:, np.newaxis])  # edge ab
+        t = np.nan_to_num(d2 / (d2 - d6))
+        _set((vb <= 0) & (d2 >= 0) & (d6 <= 0), a + ac * t[:, np.newaxis])  # edge ac
+        t = np.nan_to_num((d4 - d3) / ((d4 - d3) + (d5 - d6)))
+        _set((va <= 0) & (d4 - d3 >= 0) & (d5 - d6 >= 0),
+             b + (c - b) * t[:, np.newaxis])                                # edge bc
+    return np.linalg.norm(points - closest, axis=1)
+
+
+def find_owner_elements(points: np.ndarray,
+                        tri_xyz: np.ndarray,
+                        tri_ielem: np.ndarray,
+                        k: int=16,
+                        chunk: int=100_000) -> np.ndarray:
+    """
+    For each point, the structural element whose surface is closest
+    (point-to-triangle distance, not centroid distance).
+
+    The nearest centroid is wrong next to an element of a different
+    size: the small element's centroid captures area that lies inside
+    its big neighbor.  The closest surface gives each element its real
+    footprint.  The k nearest triangles (by centroid) are the candidates.
+    """
+    tri_centroid = tri_xyz.mean(axis=1)
+    k = min(k, len(tri_xyz))
+    tree = _get_tree(tri_centroid)
+    npoint = len(points)
+    ielem = np.zeros(npoint, dtype='int64')
+    for i0 in range(0, npoint, chunk):
+        pts = points[i0:i0+chunk, :]
+        unused_d, itri = tree.query(pts, k=k)
+        itri = itri.reshape(len(pts), k)
+        dist = _closest_point_triangles(
+            np.repeat(pts, k, axis=0), tri_xyz[itri.ravel()]).reshape(len(pts), k)
+        ibest = itri[np.arange(len(pts)), dist.argmin(axis=1)]
+        ielem[i0:i0+chunk] = tri_ielem[ibest]
+    return ielem
+
+
+def map_force_to_pressure(bdf_model_out: BDF,
+                          aero_force: np.ndarray,
+                          aero_centroid: np.ndarray,
+                          structure_eids: np.ndarray,
+                          structure_areas: np.ndarray,
+                          structure_centroids: np.ndarray,
+                          structure_normals: np.ndarray,
+                          node_ids: np.ndarray,
+                          node_xyz: np.ndarray,
+                          tol: float,
+                          qinf: float,
+                          tri_xyz: np.ndarray,
+                          tri_ielem: np.ndarray,
+                          aero_normal: np.ndarray | None=None,
+                          aero_area: np.ndarray | None=None,
+                          pressure_units: str='',
+                          force_sid: int=2,
+                          cp_signed_sid: int | None=None) -> dict[str, np.ndarray]:
+    """
+    map_type='force' with PLOAD2 where a pressure represents the force.
+
+    1. Each aero element force F_i = qinf*Cp_i*A_i*n_i goes to the mapped
+       shell whose surface is closest to the aero centroid
+       (find_owner_elements; not the nearest shell centroid) and is
+       summed: F_j.  With an aero mesh finer than the structure, element
+       j collects ~A_j of aero area, so p_j ~ qinf*Cp.
+    2. The pressure that best reproduces F_j along the STRUCTURAL normal
+       is p_j = (F_j . n_j) / A_j.  The in-plane leftover is
+       r_j = F_j - p_j*A_j*n_j.
+    3. If |r_j| <= tol*|F_j|, element j gets PLOAD2 p_j and r_j is
+       dropped.  Otherwise the aero forces assigned to element j go to
+       their nearest wetted node as FORCE cards (map_force_nodes), so
+       nothing is dropped there.
+
+    Skin panels (force ~ along the shell normal) become PLOAD2s; fin
+    leading edges, the base, and any element whose force is mostly
+    in-plane (drag on a fin at alpha=0) stay FORCE.  The normal sign is
+    taken from F_j . n_j, so the shell normal direction doesn't matter.
+    Both card types are written under force_sid.
+
+    Shell elements that own no aero centroid get no load; use an aero
+    mesh finer than the structure.
+
+    Parameters
+    ----------
+    tol : float
+        allowed in-plane force change per element, relative to |F_j|
+        (e.g. 0.05 -> 5%)
+    tri_xyz / tri_ielem :
+        the shells split into triangles (get_shell_triangles)
+    aero_normal / aero_area : (naero, 3) / (naero,) float ndarray
+        needed for cp_signed
+    cp_signed_sid : int | None; default=None
+        if set, also write Cp_signed = s_j*p_j/qinf as PLOAD2s (display
+        only), where s_j = sign(n_struct_j . sum_i(A_i*n_aero_i)) over the
+        aero elements mapped to j.  It ignores the structural normal
+        direction, so it's comparable to the raw CFD Cp.
+
+    Returns
+    -------
+    out : dict
+        'pressure_eids', 'pressure' : the PLOAD2 elements and values
+        'cp_signed' : Cp_signed for those elements (if cp_signed_sid)
+        'pressure_rows' : index of those elements in structure_eids
+        'force_nids', 'node_force' : the FORCE nodes and summed vectors
+        'dropped_force' : (3,) sum of the dropped r_j
+        'naero_force' : number of aero elements sent to FORCE cards
+    """
+    assert tol >= 0.0, tol
+    ishell = np.where(structure_areas > 0.0)[0]
+    if len(ishell) == 0:
+        raise RuntimeError('no structural shell elements to map pressures to')
+    ielem = find_owner_elements(aero_centroid, tri_xyz, tri_ielem)
+
+    nelem = len(structure_eids)
+    elem_force = np.zeros((nelem, 3), dtype=aero_force.dtype)
+    np.add.at(elem_force, ielem, aero_force)
+
+    pressure = np.zeros(nelem, dtype=aero_force.dtype)
+    pressure[ishell] = (
+        (elem_force[ishell, :] * structure_normals[ishell, :]).sum(axis=1)
+        / structure_areas[ishell])
+    residual = elem_force - (pressure * structure_areas)[:, np.newaxis] * structure_normals
+    force_mag = np.linalg.norm(elem_force, axis=1)
+    residual_mag = np.linalg.norm(residual, axis=1)
+    is_pressure = (force_mag > 0.0) & (residual_mag <= tol * force_mag)
+
+    ipressure = np.where(is_pressure)[0]
+    comment = (f'Pressure; qinf={qinf} {pressure_units} '
+               f'(map_force_to_pressure, tol={tol})')
+    for eid, p in zip(structure_eids[ipressure], pressure[ipressure]):
+        bdf_model_out.add_pload2(force_sid, pressure=p, eids=[eid], comment=comment)
+        comment = ''
+
+    cp_signed = None
+    if cp_signed_sid is not None:
+        # sign relative to the aero normal, not the structural normal
+        aero_area_normal = np.zeros((nelem, 3), dtype=aero_force.dtype)
+        np.add.at(aero_area_normal, ielem, aero_area[:, np.newaxis] * aero_normal)
+        sign = np.sign((structure_normals * aero_area_normal).sum(axis=1))
+        cp_signed = sign[ipressure] * pressure[ipressure] / qinf
+        comment = (f'Cp_signed (sign from the aero normal); display only '
+                   f'(map_force_to_pressure, tol={tol})')
+        for eid, cpi in zip(structure_eids[ipressure], cp_signed):
+            bdf_model_out.add_pload2(cp_signed_sid, pressure=cpi, eids=[eid], comment=comment)
+            comment = ''
+
+    # everything else keeps its full force vector at the nearest node
+    iaero_force = np.where(~is_pressure[ielem])[0]
+    if len(iaero_force):
+        force_nids, node_force = map_force_nodes(
+            bdf_model_out,
+            aero_force[iaero_force, :], aero_centroid[iaero_force, :],
+            node_ids, node_xyz,
+            qinf, pressure_units=pressure_units, force_sid=force_sid)
+    else:
+        force_nids = np.zeros(0, dtype=node_ids.dtype)
+        node_force = np.zeros((0, 3), dtype=aero_force.dtype)
+
+    out = {
+        'pressure_rows': ipressure,
+        'pressure_eids': structure_eids[ipressure],
+        'pressure': pressure[ipressure],
+        'cp_signed': cp_signed,
+        'force_nids': force_nids,
+        'node_force': node_force,
+        'dropped_force': residual[ipressure, :].sum(axis=0),
+        'naero_force': len(iaero_force),
+    }
+    return out
 
 
 def map_panel_force_moment_centroid(
@@ -1640,24 +2232,72 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
                                     force_sid: int=2,
                                     moment_sid: int=3,
                                     cp_sid: int=4,
+                                    cp_signed_sid: int=5,
                                     regions_to_include=None,
                                     regions_to_remove=None,
+                                    xyz_units: str='',
+                                    force_to_pressure_tol: float | None=None,
                                     #idtype: str='int32',
                                     fdtype: str='float64', ) -> BDF:
     """
     Maps pressure from an aero model to a structural model. assumes:
      - 3d aero model
      - 3d structure model
+
+    map_type:
+      'pressure' : PLOAD2 p = qinf*Cp of the nearest aero centroid, per
+                   mapped structural element (pressure_sid)
+      'force'    : each aero element force qinf*Cp*A*n goes to the nearest
+                   node of the mapped elements; summed FORCE cards
+                   (force_sid).  Keeps drag; total force is exact.
+
+    force_to_pressure_tol : float | None; default=None
+        map_type='force' only.  None: FORCE cards only.  A float (e.g.
+        0.05): the aero forces are summed per nearest shell element; an
+        element whose summed force is along its normal to within
+        tol*|F| (in-plane part) gets PLOAD2 p = F.n/A instead, and the
+        in-plane part is dropped.  The rest (fin leading edges, base,
+        in-plane fin drag) stay FORCE cards, so drag is still captured.
+        Both card types go under force_sid.  The dropped force is logged.
+        Also writes Cp_signed PLOAD2s under cp_signed_sid (display only;
+        not in the force subcase).  See ``map_force_to_pressure``.
+    cp_signed_sid : int; default=5
+        force_to_pressure_tol only.  Cp_signed = sign*p/qinf, with the
+        sign taken from the aero normal, so it ignores which way the
+        structural normal points and is comparable to the raw CFD Cp.
+
+    Logs a force/moment balance about reference_point (log only; the
+    cards are not changed):
+      Aero   : F = sum(qinf*Cp_i*A_i*n_i) over every aero element
+               (after region filtering)
+      Struct : 'pressure': F = sum(p_j*A_j*n_j) over the mapped elements
+               'force'   : F = sum of the FORCE cards, M taken at the nodes
+      M = sum((centroid - reference_point) x F_i) for both
+    The two match only if the structure wets the same surface as the
+    aero elements, with the same normal convention.  See the module
+    docstring "full_model: closed aero OML -> shell structure" for the
+    expected deltas (unreconciled normal sign, missing base/fin
+    leading-edge surfaces, one-sided midplane fins, internal elements).
     """
     aero_format = aero_model.__class__.__name__.lower()
     assert aero_format in {'cart3d', 'fluent', 'tecplot'}, aero_format
     assert map_type in {'pressure', 'force', 'force_moment'}, aero_format
     assert isinstance(scale, float), scale
+    if reference_point is None:
+        reference_point = np.zeros(3, dtype=fdtype)
+    log = structure_model.log
+    # invalid values raise even when unused; a valid unused value just warns
+    _check_force_to_pressure_tol(force_to_pressure_tol)
+    if force_to_pressure_tol is not None and map_type != 'force':
+        log.warning(f"force_to_pressure_tol={force_to_pressure_tol} requires "
+                    f"map_type='force'; map_type={map_type!r}")
 
     if map_type == 'pressure':
         map_location = 'centroid'
-    else:
+    elif map_type == 'force':
         map_location = 'node'
+    else:
+        raise NotImplementedError(f"full_model map_type={map_type!r}; use 'pressure' or 'force'")
     #stop_on_failure = True
     #---------------------------------------------------------------
 
@@ -1670,7 +2310,13 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
     aero_centroid = aero_dict['centroid']
     aero_cp_centroid = aero_dict['Cp_centroid']
     aero_area = aero_dict['area']
+    aero_normal = aero_dict['normal']
     naero_elem = len(aero_area)
+
+    # aero totals: F = qinf*Cp*A*n, M about reference_point
+    aero_force, aero_moment = _sum_pressure_force_moment(
+        qinf * aero_cp_centroid, aero_area, aero_normal, aero_centroid,
+        reference_point)
     naero_node = len(aero_xyz_nodal)
 
     structure_nodes, structure_xyz = get_structure_xyz(structure_model)
@@ -1681,6 +2327,7 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
     nstructure_elem = len(structure_eids)
     assert len(structure_centroids) == len(structure_eids)
 
+    log.info(f'pressure_map_to_structure_model; type={map_type!r} location={map_location!r}')
     if map_location == 'centroid':
         tree = _get_tree(aero_centroid)
         unused_deq, ieq = tree.query(structure_centroids, k=1)
@@ -1694,15 +2341,9 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
         # istructure = ieq[slots]
 
     elif map_location == 'node':
-        tree = _get_tree(aero_xyz_nodal)
-        unused_deq, ieq = tree.query(structure_xyz, k=4)
-        slots = np.where(ieq[:, :] < naero_node)
-
-        # irows: aero?
-        # icols: structure?
-        irows, icols = slots
-        iaero = irows
-        istructure = icols
+        # candidate nodes: only those on the mapped shell elements
+        wetted_nids, wetted_xyz = get_wetted_structure_nodes(
+            structure_model, structure_eids, structure_nodes, structure_xyz)
     else:  # pragma: no cover
         raise RuntimeError(map_location)
 
@@ -1722,6 +2363,16 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
             pressure_units,
             pressure_sid=pressure_sid,
         )
+        # structure totals from the PLOAD2 pressures just written
+        structure_force, structure_moment = _sum_pressure_force_moment(
+            aero_pressure_centroid, structure_areas, structure_normals,
+            structure_centroids, reference_point)
+        _log_force_moment_balance(
+            log, 'Force/Moment Balance: Aero vs Mapped Structure (full_model)',
+            aero_force, aero_moment,
+            structure_force, structure_moment,
+            reference_point, qinf, sref, bref, cref,
+            xyz_units=xyz_units, pressure_units=pressure_units)
     # elif map_type == 'force_moment':
     #     map_force_moment_centroid(
     #         bdf_model_out,
@@ -1733,20 +2384,72 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
     #         qinf=qinf,
     #     )
     elif map_type == 'force':
-        # TODO: can only happen with map_location=node?
-        map_force_centroid_tri(
-            bdf_model_out,
-            aero_area, aero_cp_centroid, iaero,
-            structure_nodes, istructure,
-            pressure_sid=pressure_sid,
-            force_sid=force_sid,
-            moment_sid=moment_sid,
-            qinf=qinf,
-        )
+        # aero element force vectors (drag included)
+        aero_force_i = (qinf * aero_cp_centroid * aero_area)[:, np.newaxis] * aero_normal
+
+        if force_to_pressure_tol is None:
+            # every aero force -> FORCE card at the nearest wetted node
+            nids, node_force = map_force_nodes(
+                bdf_model_out,
+                aero_force_i, aero_centroid,
+                wetted_nids, wetted_xyz,
+                qinf, pressure_units=pressure_units,
+                force_sid=force_sid,
+            )
+            log.info(f'mapped {naero_elem} aero element forces to {len(nids)} '
+                     f'of {len(wetted_nids)} structural nodes')
+            pload_force = np.zeros(3)
+            pload_moment = np.zeros(3)
+            title = 'Force/Moment Balance: Aero vs Mapped Structure (full_model, force)'
+        else:
+            # PLOAD2 where the element force is normal to the shell within
+            # force_to_pressure_tol, else FORCE at the nearest wetted node
+            tri_xyz, tri_ielem = get_shell_triangles(
+                structure_model, structure_eids, structure_nodes, structure_xyz)
+            out = map_force_to_pressure(
+                bdf_model_out,
+                aero_force_i, aero_centroid,
+                structure_eids, structure_areas, structure_centroids, structure_normals,
+                wetted_nids, wetted_xyz,
+                force_to_pressure_tol, qinf,
+                tri_xyz, tri_ielem,
+                aero_normal=aero_normal, aero_area=aero_area,
+                pressure_units=pressure_units, force_sid=force_sid,
+                cp_signed_sid=cp_signed_sid)
+            cp_signed = out['cp_signed']
+            log.info(f'Cp_signed (sid={cp_signed_sid}): min={cp_signed.min():g} '
+                     f'max={cp_signed.max():g}' if len(cp_signed) else
+                     f'Cp_signed (sid={cp_signed_sid}): no PLOAD2 elements')
+            irow = out['pressure_rows']
+            nids = out['force_nids']
+            node_force = out['node_force']
+            dropped = out['dropped_force']
+            aero_force_mag = np.linalg.norm(aero_force)
+            dropped_pct = 100. * np.linalg.norm(dropped) / aero_force_mag if aero_force_mag > 0 else 0.
+            log.info(
+                f'force_to_pressure_tol={force_to_pressure_tol}: '
+                f'{len(irow)} of {nstructure_elem} elements -> PLOAD2; '
+                f'{out["naero_force"]} of {naero_elem} aero elements -> '
+                f'{len(nids)} FORCE cards')
+            log.info(f'dropped in-plane force = {dropped} '
+                     f'({dropped_pct:.3g}% of |F_aero|)')
+            # PLOAD2 totals from the pressures just written
+            pload_force, pload_moment = _sum_pressure_force_moment(
+                out['pressure'], structure_areas[irow], structure_normals[irow, :],
+                structure_centroids[irow, :], reference_point)
+            title = 'Force/Moment Balance: Aero vs Mapped Structure (full_model, force+pressure)'
+
+        # structure totals: PLOAD2s (if any) + FORCE cards (M taken at the nodes)
+        structure_force = pload_force + node_force.sum(axis=0)
+        structure_moment = pload_moment + np.cross(
+            wetted_xyz[np.searchsorted(wetted_nids, nids)] - reference_point,
+            node_force).sum(axis=0)
+        _log_force_moment_balance(
+            log, title,
+            aero_force, aero_moment,
+            structure_force, structure_moment,
+            reference_point, qinf, sref, bref, cref,
+            xyz_units=xyz_units, pressure_units=pressure_units)
     else:  # pragma: no cover
         raise RuntimeError(map_type)
     return bdf_model_out
-
-
-def array3() -> np.ndarray:
-    return np.zeros(3, dtype='float64')
