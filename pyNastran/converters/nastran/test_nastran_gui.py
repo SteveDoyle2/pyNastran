@@ -69,10 +69,12 @@ class NastranGUI(NastranIO, FakeGUIMethods):
     def load_nastran_geometry(self, bdf_filename: PathLike | BDF,
                          name: str='main',
                          plot: bool=True,
+                         is_aero: bool=False,
                          stop_on_failure: bool=False):
         super().load_nastran_geometry(
             bdf_filename, name=name,
-            plot=plot, stop_on_failure=stop_on_failure)
+            plot=plot, is_aero=is_aero,
+            stop_on_failure=stop_on_failure)
         self.validate_result_object_methods()
 
     def load_nastran_results(self, op2_filename: PathLike | OP2):
