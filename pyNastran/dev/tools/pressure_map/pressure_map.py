@@ -127,14 +127,19 @@ closed CFD OML mapped onto a Nastran shell model, expect these deltas:
    elements from eids_structure; it is a separate issue from the
    balance mismatch above.
 """
+from __future__ import annotations
 import os
 from itertools import zip_longest
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-import matplotlib.cm as cm
+try:
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+    import matplotlib.cm as cm
+    IS_MATPLOTLIB = True
+except ImportError:
+    IS_MATPLOTLIB = False
 
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
@@ -150,6 +155,8 @@ from pyNastran.converters.tecplot.tecplot import Tecplot
 from pyNastran.dev.tools.pressure_map.setup_structure import (
     get_structural_eids_from_csv_load_id, get_structure_xyz, get_mapped_structure)
 from pyNastran.dev.tools.pressure_map.setup_aero import get_aero_model, get_aero_pressure_centroid
+if TYPE_CHECKING:
+    import matplotlib.pyplot as plt
 
 
 def pressure_filename_to_fa2j(pressure_filename: PathLike,
@@ -1189,17 +1196,18 @@ def _map_pressure_panel_model(structure_model: BDF,
         plot_scatter = False
         plot_aero_model = False
 
-        _plot_panel_model(
-            log, plot_scatter, plot_aero_model, eid_filter,
-            structure_model, eids_z,
-            iaero_tri,
-            aero_node_id, aero_xyz,
-            aero_tri_nodes, aero_tri_centroid,
-            aero_tri_cp,
-            aero_quad_nodes,
-            istructure_box_id,
-            structure_nodes, structure_xyz,
-            fig, ax)
+        if IS_MATPLOTLIB:
+            _plot_panel_model(
+                log, plot_scatter, plot_aero_model, eid_filter,
+                structure_model, eids_z,
+                iaero_tri,
+                aero_node_id, aero_xyz,
+                aero_tri_nodes, aero_tri_centroid,
+                aero_tri_cp,
+                aero_quad_nodes,
+                istructure_box_id,
+                structure_nodes, structure_xyz,
+                fig, ax)
 
         # assert len(istructure) == len(iaero), (len(istructure), len(iaero))
         # structure_eids_z[iaero_tri]
