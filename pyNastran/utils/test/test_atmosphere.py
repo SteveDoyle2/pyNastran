@@ -1,6 +1,8 @@
 """various atmosphere tests"""
+import io
 import os
 import unittest
+from contextlib import redirect_stderr
 import numpy as np
 
 from pyNastran.utils.atmosphere import (
@@ -17,6 +19,11 @@ from pyNastran.utils.atmosphere import (
     # mach
     get_mach_for_alt_eas,
     get_mach_for_alt_cas,
+    get_alt_for_cas_mach,
+    atm_speed_of_sound,
+    eas_from_alts_machs,
+    constant_mach_line_alt1_alt2,
+    constant_alt_line_alt_mach,
     # cas
     #cas_to_mach,
     #------
@@ -803,6 +810,339 @@ class TestAtm(unittest.TestCase):
         quantity_list = ['alt'] + quantities
         header = ','.join(quantity_list)
         np.savetxt(csv_filename, x, delimiter=',', header=header)
+
+
+class TestAtmConsistency(unittest.TestCase):
+    """cross-checks between the atmosphere functions (physics + units)"""
+    # layer boundaries in ft used by atm_temperature/atm_pressure
+    boundaries_ft = [36151.725, 82344.678, 155347.756,
+                     175346.171, 249000.304, 299515.564]
+    alts_ft = [0., 5000., 10000., 36000., 40000., 60000., 100000.,
+               160000., 200000., 270000.]
+
+    def test_layer_continuity(self):
+        """temperature and pressure don't jump at the layer boundaries"""
+        eps = 1e-6
+        for z in self.boundaries_ft:
+            t_lo = atm_temperature(z - eps)
+            t_hi = atm_temperature(z + eps)
+            p_lo = atm_pressure(z - eps)
+            p_hi = atm_pressure(z + eps)
+            # the table coefficients are rounded, so allow a small mismatch
+            assert np.allclose(t_lo, t_hi, rtol=2e-3), (z, t_lo, t_hi)
+            assert np.allclose(p_lo, p_hi, rtol=1e-4), (z, p_lo, p_hi)
+
+    def test_monotonic_pressure_density(self):
+        """pressure and density drop as altitude goes up"""
+        alts = np.linspace(0., 350000., num=351)
+        pressure = np.array([atm_pressure(alt) for alt in alts])
+        density = np.array([atm_density(alt) for alt in alts])
+        assert np.all(np.diff(pressure) < 0.)
+        assert np.all(np.diff(density) < 0.)
+
+    def test_temperature_units(self):
+        """K = 5/9 R and m/kft/ft give the same temperature"""
+        for alt_ft in self.alts_ft:
+            t_r = atm_temperature(alt_ft)
+            t_k = atm_temperature(alt_ft, temperature_units='K')
+            t_m = atm_temperature(alt_ft * 0.3048, alt_units='m')
+            t_kft = atm_temperature(alt_ft / 1000., alt_units='kft')
+            assert np.allclose(t_k, t_r * 5. / 9.), (alt_ft, t_k, t_r)
+            assert np.allclose(t_m, t_r), (alt_ft, t_m, t_r)
+            assert np.allclose(t_kft, t_r), (alt_ft, t_kft, t_r)
+
+    def test_ideal_gas(self):
+        """rho = p / (R T)"""
+        R = 1716.
+        for alt_ft in self.alts_ft:
+            rho = atm_density(alt_ft)
+            p = atm_pressure(alt_ft)
+            T = atm_temperature(alt_ft)
+            assert np.allclose(rho, p / (R * T)), alt_ft
+
+        # the gas constant is an input
+        rho_a = atm_density(10000., R=1716.)
+        rho_b = atm_density(10000., R=2 * 1716.)
+        assert np.allclose(rho_a, 2 * rho_b)
+
+    def test_density_units(self):
+        """same altitude in different units gives the same density"""
+        rho_ft = atm_density(10000., alt_units='ft', density_units='kg/m^3')
+        rho_m = atm_density(3048., alt_units='m', density_units='kg/m^3')
+        rho_kft = atm_density(10., alt_units='kft', density_units='kg/m^3')
+        assert np.allclose(rho_ft, rho_m)
+        assert np.allclose(rho_ft, rho_kft)
+        rho_slug = atm_density(10000.)
+        assert np.allclose(rho_ft, rho_slug * 515.379, rtol=1e-5)
+
+    def test_speed_of_sound(self):
+        """a = sqrt(gamma R T)"""
+        a0 = atm_speed_of_sound(0.)
+        self.assertAlmostEqual(a0, 1115.5461442719434, delta=1e-8)
+        a0_ms = atm_speed_of_sound(0., velocity_units='m/s')
+        assert np.allclose(a0_ms, a0 * 0.3048, rtol=1e-5)
+        a0_knots = atm_speed_of_sound(0., velocity_units='knots')
+        assert np.allclose(a0_knots, a0 / 1.68781, rtol=1e-5)
+
+        # a scales with sqrt(gamma)
+        a_gamma1 = atm_speed_of_sound(0., gamma=1.0)
+        assert np.allclose(a_gamma1, a0 / np.sqrt(1.4))
+
+        # a is constant in the isothermal layer (36-82 kft)
+        a_40 = atm_speed_of_sound(40., alt_units='kft')
+        a_60 = atm_speed_of_sound(60., alt_units='kft')
+        self.assertEqual(a_40, a_60)
+
+        for alt_ft in self.alts_ft:
+            a = atm_speed_of_sound(alt_ft)
+            T = atm_temperature(alt_ft)
+            assert np.allclose(a, (1.4 * 1716. * T) ** 0.5), alt_ft
+            a_m = atm_speed_of_sound(alt_ft * 0.3048, alt_units='m')
+            assert np.allclose(a_m, a), alt_ft
+
+    def test_velocity_mach_roundtrip(self):
+        """atm_mach(atm_velocity(M)) = M"""
+        for alt_ft in self.alts_ft:
+            for mach in [0.3, 0.8, 2.0]:
+                for vel_units in ['ft/s', 'm/s', 'in/s', 'knots']:
+                    vel = atm_velocity(alt_ft, mach, velocity_units=vel_units)
+                    mach2 = atm_mach(alt_ft, vel, velocity_units=vel_units)
+                    assert np.allclose(mach2, mach), (alt_ft, mach, vel_units, mach2)
+
+    def test_dynamic_pressure(self):
+        """q = gamma/2 p M^2 = 1/2 rho V^2"""
+        for alt_ft in self.alts_ft:
+            for mach in [0.5, 0.8, 1.5]:
+                q = atm_dynamic_pressure(alt_ft, mach)
+                p = atm_pressure(alt_ft)
+                assert np.allclose(q, 0.7 * p * mach ** 2), (alt_ft, mach)
+
+                rho = atm_density(alt_ft)
+                vel = atm_velocity(alt_ft, mach)
+                assert np.allclose(q, 0.5 * rho * vel ** 2), (alt_ft, mach)
+
+        q_psf = atm_dynamic_pressure(10000., 0.8)
+        q_pa = atm_dynamic_pressure(10000., 0.8, pressure_units='Pa')
+        q_psi = atm_dynamic_pressure(10000., 0.8, pressure_units='psi')
+        q_m = atm_dynamic_pressure(3048., 0.8, alt_units='m')
+        assert np.allclose(q_pa, q_psf * 47.880208)
+        assert np.allclose(q_psi, q_psf / 144.)
+        assert np.allclose(q_m, q_psf)
+
+    def test_equivalent_airspeed_definition(self):
+        """EAS = TAS * sqrt(rho / rho0)"""
+        rho0 = atm_density(0.)
+        for alt_ft in self.alts_ft:
+            for mach in [0.3, 0.8, 2.0]:
+                eas = atm_equivalent_airspeed(alt_ft, mach)
+                tas = atm_velocity(alt_ft, mach)
+                rho = atm_density(alt_ft)
+                assert np.allclose(eas, tas * np.sqrt(rho / rho0)), (alt_ft, mach)
+
+                # EAS is linear in Mach
+                eas1 = atm_equivalent_airspeed(alt_ft, 1.0)
+                assert np.allclose(eas, mach * eas1)
+
+        # EAS = TAS at sea level
+        assert np.allclose(atm_equivalent_airspeed(0., 0.5), atm_velocity(0., 0.5))
+
+        eas_ft = atm_equivalent_airspeed(10000., 0.8, alt_units='ft', eas_units='knots')
+        eas_m = atm_equivalent_airspeed(3048., 0.8, alt_units='m', eas_units='knots')
+        assert np.allclose(eas_ft, eas_m)
+
+    def test_calibrated_airspeed(self):
+        """CAS = TAS at sea level; CAS > EAS at altitude (compressibility)"""
+        for mach in [0.2, 0.5, 0.8]:
+            cas0 = atm_calibrated_airspeed(0., mach)
+            tas0 = atm_velocity(0., mach)
+            assert np.allclose(cas0, tas0), (mach, cas0, tas0)
+
+        for alt_ft in [10000., 30000., 50000.]:
+            for mach in [0.5, 0.8]:
+                cas = atm_calibrated_airspeed(alt_ft, mach)
+                eas = atm_equivalent_airspeed(alt_ft, mach)
+                tas = atm_velocity(alt_ft, mach)
+                assert eas < cas < tas, (alt_ft, mach, eas, cas, tas)
+
+        # units
+        cas_fts = atm_calibrated_airspeed(30000., 0.8, cas_units='ft/s')
+        cas_knots = atm_calibrated_airspeed(30000., 0.8, cas_units='knots')
+        cas_m = atm_calibrated_airspeed(9144., 0.8, alt_units='m', cas_units='knots')
+        assert np.allclose(cas_fts, cas_knots * 1.68781, rtol=1e-5)
+        assert np.allclose(cas_knots, cas_m)
+
+    def test_get_alt_for_cas_mach(self):
+        """round trip: alt -> CAS -> alt"""
+        mach = 0.7
+        for alt_ft in [0., 5000., 20000., 40000.]:
+            cas = atm_calibrated_airspeed(alt_ft, mach)
+            alt = get_alt_for_cas_mach(cas, mach, tol=1e-6)
+            assert np.allclose(alt, alt_ft, atol=0.01), (alt_ft, alt)
+
+        cas = atm_calibrated_airspeed(20., mach, alt_units='kft', cas_units='knots')
+        alt = get_alt_for_cas_mach(cas, mach, cas_units='knots', alt_units='kft', tol=1e-6)
+        assert np.allclose(alt, 20., atol=1e-5), alt
+
+    def test_get_mach_for_alt_eas_si(self):
+        """get_mach_for_alt_eas round trip in SI units"""
+        for alt_m in [0., 3000., 10000.]:
+            for mach in [0.3, 0.6, 0.9]:
+                eas = atm_equivalent_airspeed(alt_m, mach, alt_units='m', eas_units='m/s')
+                mach2 = get_mach_for_alt_eas(alt_m, eas, eas_units='m/s', alt_units='m')
+                assert np.allclose(mach2, mach), (alt_m, mach, mach2)
+
+    def test_get_alt_for_pressure_si(self):
+        """get_alt_for_pressure round trip in m/kPa"""
+        for alt_m in [0., 1000., 11000., 20000.]:
+            p = atm_pressure(alt_m, alt_units='m', pressure_units='kPa')
+            alt = get_alt_for_pressure(p, pressure_units='kPa', alt_units='m', tol=1e-4)
+            assert np.allclose(alt, alt_m, atol=0.01), (alt_m, alt)
+
+    def test_get_alt_for_mach_eas_units(self):
+        """get_alt_for_mach_eas round trip in m & m/s"""
+        mach = 0.8
+        for alt_m in [1000., 5000., 10000.]:
+            eas = atm_equivalent_airspeed(alt_m, mach, alt_units='m', eas_units='m/s')
+            alt = get_alt_for_mach_eas(mach, eas, eas_units='m/s', alt_units='m', tol=1e-6)
+            assert np.allclose(alt, alt_m, atol=0.01), (alt_m, alt)
+
+    def test_get_alt_for_density_no_convergence(self):
+        """get_alt_for_density raises if it runs out of iterations"""
+        rho = atm_density(30000.)
+        with self.assertRaises(RuntimeError):
+            get_alt_for_density(rho, nmax=1, tol=1e-6)
+
+    def test_kinematic_viscosity(self):
+        """nu = mu / rho"""
+        for alt_ft in self.alts_ft:
+            nu = atm_kinematic_viscosity_nu(alt_ft)
+            mu = atm_dynamic_viscosity_mu(alt_ft)
+            rho = atm_density(alt_ft)
+            assert np.allclose(nu, mu / rho), alt_ft
+
+    def test_kinematic_viscosity_units(self):
+        """the m^2/s conversion doesn't depend on alt_units"""
+        nu_ft2 = atm_kinematic_viscosity_nu(5000., alt_units='ft', visc_units='ft^2/s')
+        for alt, alt_units in [(5000., 'ft'), (5., 'kft'), (1524., 'm')]:
+            nu_m2 = atm_kinematic_viscosity_nu(alt, alt_units=alt_units, visc_units='m^2/s')
+            assert np.allclose(nu_m2, nu_ft2 * 0.3048 ** 2), (alt_units, nu_m2)
+
+    def test_dynamic_viscosity_units(self):
+        """the 4 viscosity unit names map to 2 factors"""
+        mu_lbf = atm_dynamic_viscosity_mu(10000., visc_units='(lbf*s)/ft^2')
+        mu_psf = atm_dynamic_viscosity_mu(10000., visc_units='psf*s')
+        mu_ns = atm_dynamic_viscosity_mu(10000., visc_units='(N*s)/m^2')
+        mu_pa = atm_dynamic_viscosity_mu(10000., visc_units='Pa*s')
+        self.assertEqual(mu_lbf, mu_psf)
+        self.assertEqual(mu_ns, mu_pa)
+        assert np.allclose(mu_ns, mu_lbf * 47.88026)
+
+    def test_sutherland_continuity(self):
+        """the linear (T<225 R) and Sutherland branches meet at 225 R"""
+        mu_lo = sutherland_viscoscity(225. - 1e-9)
+        mu_hi = sutherland_viscoscity(225.)
+        assert np.allclose(mu_lo, mu_hi, rtol=1e-6), (mu_lo, mu_hi)
+
+    def test_sutherland_high_temperature_warning(self):
+        """T > 5400 R writes a warning to stderr"""
+        stderr = io.StringIO()
+        with redirect_stderr(stderr):
+            sutherland_viscoscity(5000.)
+        self.assertEqual(stderr.getvalue(), '')
+
+        stderr = io.StringIO()
+        with redirect_stderr(stderr):
+            sutherland_viscoscity(6000.)
+        assert 'Temperature is too large' in stderr.getvalue(), stderr.getvalue()
+
+    def test_reynolds_definition(self):
+        """Re/L = rho V / mu"""
+        for alt_ft in self.alts_ft:
+            for mach in [0.3, 0.8, 2.0]:
+                rel = atm_unit_reynolds_number(alt_ft, mach)
+                rho = atm_density(alt_ft)
+                vel = atm_velocity(alt_ft, mach)
+                mu = atm_dynamic_viscosity_mu(alt_ft)
+                assert np.allclose(rel, rho * vel / mu), (alt_ft, mach)
+
+        rel_ft = atm_unit_reynolds_number(10000., 0.8)
+        rel_m = atm_unit_reynolds_number(3048., 0.8, alt_units='m')
+        assert np.allclose(rel_ft, rel_m)
+
+    def test_reynolds_factor_bad_units(self):
+        """invalid reynolds units"""
+        with self.assertRaises(RuntimeError):
+            _reynolds_factor('1/mm', '1/ft')
+        with self.assertRaises(RuntimeError):
+            _reynolds_factor('1/ft', '1/mm')
+
+    def test_eas_from_alts_machs(self):
+        """vectorized EAS matches the scalar function"""
+        alts = [0., 10000., 30000.]
+        machs = [0.3, 0.6, 0.9]
+        eas = eas_from_alts_machs(alts, machs, alt_units='ft', eas_units='knots')
+        self.assertEqual(eas.shape, (3,))
+        for i, (alt, mach) in enumerate(zip(alts, machs)):
+            expected = atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='knots')
+            self.assertEqual(eas[i], expected)
+
+    def test_constant_mach_line(self):
+        """constant Mach line: EAS falls with altitude"""
+        machs, alts, eas = constant_mach_line_alt1_alt2(
+            0.8, 0., 10000., num=3, alt_units='ft', eas_units='knots')
+        assert np.allclose(machs, [0.8, 0.8, 0.8])
+        assert np.allclose(alts, [0., 5000., 10000.])
+        assert np.all(np.diff(eas) < 0.)
+        assert np.allclose(eas[0], atm_velocity(0., 0.8, velocity_units='knots'))
+
+    def test_constant_alt_line(self):
+        """constant altitude line: EAS is linear in Mach"""
+        machs, alts, eas = constant_alt_line_alt_mach(
+            10000., 0.2, 0.8, num=4, alt_units='ft', eas_units='knots')
+        assert np.allclose(machs, [0.2, 0.4, 0.6, 0.8])
+        assert np.allclose(alts, 10000.)
+        assert np.allclose(eas / machs, eas[0] / machs[0])
+
+    def test_create_atmosphere_table_values(self):
+        """table columns match the scalar functions"""
+        mach = 0.8
+        quantities = ['density', 'pressure', 'temperature', 'speed_of_sound',
+                      'velocity', 'dynamic_viscosity',
+                      'calibrated_airspeed', 'equivalent_airspeed']
+        out = create_atmosphere_table(
+            quantities, mach, 0., 9000., nalt=4,
+            alt_units='m', density_units='kg/m^3', pressure_units='Pa',
+            temperature_units='K', velocity_units='m/s',
+            dynamic_viscosity_units='Pa*s')
+        self.assertEqual(out.shape, (4, 1 + len(quantities)))
+        assert np.allclose(out[:, 0], [0., 3000., 6000., 9000.])
+
+        for alt, row in zip(out[:, 0], out):
+            expected = [
+                atm_density(alt, alt_units='m', density_units='kg/m^3'),
+                atm_pressure(alt, alt_units='m', pressure_units='Pa'),
+                atm_temperature(alt, alt_units='m', temperature_units='K'),
+                atm_speed_of_sound(alt, alt_units='m', velocity_units='m/s'),
+                atm_velocity(alt, mach, alt_units='m', velocity_units='m/s'),
+                atm_dynamic_viscosity_mu(alt, alt_units='m', visc_units='Pa*s'),
+                atm_calibrated_airspeed(alt, mach, alt_units='m', cas_units='m/s'),
+                atm_equivalent_airspeed(alt, mach, alt_units='m', eas_units='m/s'),
+            ]
+            assert np.allclose(row[1:], expected), (alt, row[1:], expected)
+
+    def test_create_atmosphere_table_dalt(self):
+        """dalt includes alt_max"""
+        out = create_atmosphere_table(['pressure'], 0.5, 0., 10000., dalt=2500.)
+        assert np.allclose(out[:, 0], [0., 2500., 5000., 7500., 10000.])
+
+    def test_create_atmosphere_table_errors(self):
+        """bad quantity; nalt and dalt both set or both unset"""
+        with self.assertRaises(AssertionError):
+            create_atmosphere_table(['bad'], 0.5, 0., 1000., nalt=2)
+        with self.assertRaises(AssertionError):
+            create_atmosphere_table(['pressure'], 0.5, 0., 1000., nalt=2, dalt=100.)
+        with self.assertRaises(AssertionError):
+            create_atmosphere_table(['pressure'], 0.5, 0., 1000.)
 
 
 if __name__ == "__main__":  # pragma: no cover
