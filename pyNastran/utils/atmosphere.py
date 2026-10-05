@@ -739,7 +739,7 @@ def atm_calibrated_airspeed(alt: float,
     # mach2 = np.sqrt(5 * ((qc/p+1)**(1/3.5) - 1))  # good?
 
     mach_comp = np.sqrt(5 * ((qc/p0+1)**(1/3.5) - 1))
-    vcas = a0 * mach_comp  # czs_units b/c a0
+    vcas = a0 * mach_comp  # cas_units b/c a0
 
     #tas = a * mach
     #eas = a0 * mach * np.sqrt(p / p0)
@@ -1184,3 +1184,5 @@ def constant_alt_line_alt_mach(alt: float,
     return machs, alts, eas
 
 cas_to_mach = get_mach_for_alt_cas
+#get_alt_for_mach_q = get_alt_for_q_with_constant_mach
+#get_alt_for_mach_eas = get_alt_for_eas_with_constant_mach

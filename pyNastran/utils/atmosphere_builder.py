@@ -10,8 +10,10 @@ from pyNastran.utils.atmosphere import (
     #get_alt_for_pressure,
     get_alt_for_mach_eas,
     get_mach_for_alt_eas,
-    cas_to_mach,
+    get_mach_for_alt_cas,
+    #cas_to_mach,
     get_alt_for_cas_mach,
+    #get_alt_for_mach_cas,
 )
 
 
@@ -21,8 +23,11 @@ def build_envelope():
     cas_units = 'knots'
 
     xaxis = 'mach'
-    yaxis = 'alt'
-    yaxis = 'eas'
+    #xaxis = 'cas'
+    #xaxis = 'eas'
+    #yaxis = 'alt'
+    #yaxis = 'eas'
+    yaxis = 'cas'
     data = [
         # const_type, (var_start, val_start), (var_end, val_end, name)),
         {
@@ -83,20 +88,34 @@ def build_envelope():
             'npoints': 10,
             'end_name': 'maxQ_maxAlt',
         },
-        #{
-        #    'tag': 'max_cas_alt',
-        #    'const_type': 'cas',
-        #    'start': {'alt': 40000, 'mach': 0.8},
-        #    'end': {'alt': 10000,},
-        #    'npoints': 10,
-        #},
-        #{
-        #    'tag': 'max_cas_mach',
-        #    'const_type': 'cas',
-        #    'start': {'alt': 40000, 'mach': 0.8},
-        #    'end': {'mach': 0.},
-        #    'npoints': 10,
-        #},
+        {
+            'tag': 'max_cas_alt',
+            'const_type': 'cas',
+            'start': {'alt': 40000, 'mach': 0.8},
+            'end': {'alt': 10000,},
+            'npoints': 10,
+        },
+       #{
+       #    'tag': 'max_cas_mach',
+       #    'const_type': 'cas',
+       #    'start': {'alt': 40000, 'mach': 0.8},
+       #    'end': {'mach': 0.},
+       #    'npoints': 10,
+       #},
+       #{
+       #    'tag': 'cas_alt',
+       #    'const_type': 'mach',
+       #    'start': {'alt': 40000, 'cas': 200},
+       #    'end': {'alt': 0.},
+       #    'npoints': 10,
+       #},
+       #{
+       #    'tag': 'cas_mach',
+       #    'const_type': 'mach',
+       #    'start': {'mach': 0.5, 'cas': 200},
+       #    'end': {'alt': 0.},
+       #    'npoints': 10,
+       #},
     ]
     start = {}
     end = {}
@@ -184,8 +203,8 @@ def build_envelope():
         alt = data_outi['alt']
         mach = data_outi['mach']
         eas = data_outi['eas']
-        print(f'**alt={alt}')
-        print(f'**eas={eas}')
+        #print(f'**alt={alt}')
+        #print(f'**eas={eas}')
         #starti = {'alt': alt[0], 'mach': mach[0], 'eas': eas[0]}
         #endi = {'alt': alt[-1], 'mach': mach[-1], 'eas': eas[-1]}
         #starts.append(starti)
@@ -232,7 +251,7 @@ def _build_line(idata: int, data: dict[str, Any],
         assert len(end) >= 1, (tag, end)
         end_data = end
 
-    print(f'  start_data = {start_data}')
+    #print(f'  start_data = {start_data}')
     if 'alt' in start_data and 'mach' in start_data:
         alt1, mach1 = start_data['alt'], start_data['mach']
     else:
@@ -245,7 +264,7 @@ def _build_line(idata: int, data: dict[str, Any],
 
     #print(f'  eas1 = {eas1:.0f} {eas_units}')
     if const_type == 'eas' and 'alt' in end_data:
-        print('  eas-alt', start_data, end_data)
+        #print('  eas-alt', start_data, end_data)
         alt2 = end_data['alt']
         eas2 = eas1
         # get_alt_for_eas_with_constant_mach
@@ -287,8 +306,8 @@ def _build_line(idata: int, data: dict[str, Any],
         alt2 = end_data['alt']
         cas2 = cas1
         alt = np.linspace(alt1, alt2, num=npoints)
-        mach = [cas_to_mach(alti, cas2, alt_units=alt_units,
-                            cas_units=cas_units)
+        mach = [get_alt_for_cas_mach(cas2, alti, alt_units=alt_units,
+                                     cas_units=cas_units)
                for alti in alt]
     elif const_type == 'cas' and 'mach' in end_data:
         mach2 = end_data['mach']
@@ -297,45 +316,53 @@ def _build_line(idata: int, data: dict[str, Any],
         alt = [get_alt_for_cas_mach(
                   cas2, machi, alt_units=alt_units,
                   cas_units=cas_units) for machi in mach]
+    #elif const_type == 'mach' and 'alt' in end_data:
     else:
         raise NotImplementedError((const_type, end_data))
 
     eas = [atm_equivalent_airspeed(alti, machi, alt_units=alt_units, eas_units=eas_units)
            for alti, machi in zip(alt, mach)]
 
-    alt = np.array(alt).round(0)
-    mach = np.array(mach).round(3)
-    eas = np.array(eas).round(0)
+
+    cas = [atm_calibrated_airspeed(alti, machi, alt_units=alt_units, cas_units=cas_units)
+           for alti, machi in zip(alt, mach)]
+    
+    alt = np.array(alt) #.round(0)
+    mach = np.array(mach) #.round(3)
+    eas = np.array(eas) #.round(0)
+    cas = np.array(cas) #.round(0)
     #print('alt =', alt)
     #print('mach =', mach)
     #print('eas =', eas)
 
-    cas = [atm_calibrated_airspeed(alti, machi, alt_units=alt_units, cas_units=cas_units)
-           for alti, machi in zip(alt, mach)]
-    cas = np.array(cas).round(0)
-    
-    alt1 = float(round(alt1, 0))
-    mach1 = float(round(mach1, 3))
-    eas1 = float(round(eas1, 0))
-    cas1 = float(round(cas1, 0))
+    alt2 = alt[-1]
+    mach2 = mach[-1]
+    eas2 = eas[-1]
+    cas2 = cas[-1]
 
-    alt2 = float(round(alt[-1], 0))
-    mach2 = float(round(mach[-1], 3))
-    eas2 = float(round(eas[-1], 0))
-    cas2 = float(round(cas[-1], 0))
+    if 0:  # pragma: no cover
+        alt1 = float(round(alt1, 0))
+        mach1 = float(round(mach1, 3))
+        eas1 = float(round(eas1, 0))
+        cas1 = float(round(cas1, 0))
+        
+        alt2 = float(round(alt2, 0))
+        mach2 = float(round(mach2, 3))
+        eas2 = float(round(eas2, 0))
+        cas2 = float(round(cas2, 0))
 
     start_data = {
         'alt': alt1, 'mach': mach1,
         'eas': eas1, 'cas': cas1, }
     if start_name:
-        print(f'  saving start_name {start_name!r}; {start_data}')
+        #print(f'  saving start_name {start_name!r}; {start_data}')
         stored_data[start_name] = start_data
 
     end_data = {
         'alt': alt2, 'mach': mach2,
         'eas': eas2, 'cas': cas2,}
     if end_name:
-        print(f'  saving end_name {end_name!r}; {end_data}')
+        #print(f'  saving end_name {end_name!r}; {end_data}')
         stored_data[end_name] = end_data
 
     #const_type = data['const_type']
@@ -347,23 +374,42 @@ def _build_line(idata: int, data: dict[str, Any],
     }
     return data_out
 
-def alt_mach(alt: float, mach: float, **kwargs):
+def _alt_mach(alt: float, mach: float, **kwargs):
     return alt, mach
 
-def alt_eas(alt: float, eas: float, **kwargs):
-    #print(kwargs)
+def _alt_eas(alt: float, eas: float, **kwargs):
     alt_units = kwargs['alt_units']
     eas_units = kwargs['eas_units']
     mach = get_mach_for_alt_eas(
         alt, eas, alt_units=alt_units, eas_units=eas_units)
     return alt, mach
 
-def eas_mach(eas: float, mach: float, **kwargs):
-    #print(kwargs)
+def _alt_cas(alt: float, cas: float, **kwargs):
+    alt_units = kwargs['alt_units']
+    cas_units = kwargs['cas_units']
+    mach = get_mach_for_alt_cas(
+        alt, cas, alt_units=alt_units, cas_units=cas_units)
+    return alt, mach
+
+def _eas_mach(eas: float, mach: float, **kwargs):
     alt_units = kwargs['alt_units']
     eas_units = kwargs['eas_units']
     alt = get_alt_for_eas_with_constant_mach(
         eas, mach, alt_units=alt_units, velocity_units=eas_units)
+    return alt, mach
+
+def _cas_mach(cas: float, mach: float, **kwargs):
+    alt_units = kwargs['alt_units']
+    cas_units = kwargs['cas_units']
+    alt = get_alt_for_cas_mach(
+        cas, mach, alt_units=alt_units, cas_units=cas_units)
+    return alt, mach
+
+def _cas_eas(cas: float, mach: float, **kwargs):
+    cas_units = kwargs['cas_units']
+    eas_units = kwargs['eas_units']
+    #get_alt_mach_for_cas_eas(cas, eas, cas_units=cas_units, eas_units=eas_units)
+    raise NotImplementedError('cas_eas')
     return alt, mach
 
 def _point_to_data(tag: str,
@@ -372,6 +418,10 @@ def _point_to_data(tag: str,
                    stored_data: dict[str, tuple[float, float]],
                    alt_units: str, eas_units: str,
                    cas_units: str) -> tuple[float, float]:
+    """
+    maps 2 arbitrary quantities (alt, mach, eas, cas) to
+    (alt, mach)
+    """
     if isinstance(point_data, str):
         outi = stored_data[point_data]
         assert isinstance(outi, dict), outi
@@ -386,15 +436,19 @@ def _point_to_data(tag: str,
     for arg_typei, valuei in sorted(point_data.items()):
         arg_type.append(arg_typei)
         value.append(valuei)
-    arg_type1, arg_type2 = arg_type
-    val1, val2 = value
+    arg_type1, arg_type2 = arg_type[:2]
+    val1, val2 = value[:2]
     assert arg_type1 != arg_type2
 
     # alt, mach -> (eas, cas)
     func_map = {
-        ('alt', 'mach'): alt_mach,
-        ('alt', 'eas'): alt_eas,
-        ('eas', 'mach'): eas_mach,
+        ('alt', 'mach'): _alt_mach,
+        ('alt', 'eas'): _alt_eas,
+        ('alt', 'cas'): _alt_cas,
+
+        ('cas', 'eas'): _cas_eas,
+        ('eas', 'mach'): _eas_mach,
+        ('cas', 'mach'): _cas_mach,
         #(const_type, 'alt', 'mach'): passer,
         #{'eas': atm_equivalent_airspeed, atm_calibrated_airspeed)},
     }
@@ -409,11 +463,18 @@ def _point_to_data(tag: str,
         alt, mach, alt_units=alt_units, eas_units=eas_units)
     cas = atm_calibrated_airspeed(
         alt, mach, alt_units=alt_units, cas_units=cas_units)
+
+    #if 0:  # pragma: no cover
+    #    alt = round(alt, 0)
+    #    mach = round(mach, 3)
+    #    eas = round(eas, 1)
+    #    cas =round(cas, 1)
+
     out = {
-        'alt': round(float(alt), 0),
-        'mach': round(float(mach), 3),
-        'eas': round(float(eas), 1),
-        'cas': round(float(cas), 1),
+        'alt': float(alt),
+        'mach': float(mach),
+        'eas': float(eas),
+        'cas': float(cas),
     }
     return out # alt, mach
     

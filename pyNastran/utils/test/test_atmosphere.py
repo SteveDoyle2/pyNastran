@@ -12,6 +12,8 @@ from pyNastran.utils.atmosphere import (
     get_alt_for_mach_eas,
     get_alt_for_q_with_constant_mach,
     get_alt_for_eas_with_constant_mach,
+    #get_alt_for_mach_q,
+    #get_alt_for_mach_eas,
     # mach
     get_mach_for_alt_eas,
     get_mach_for_alt_cas,
