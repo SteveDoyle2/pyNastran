@@ -4,6 +4,7 @@ CLASS_MAP = {
     'nastran_aero': None,
 }
 
+CLASS_MAP['nastran_aero'] = None
 try:
     from pyNastran.converters.dev.avus.avus_io import AvusIO
     CLASS_MAP['avus'] = AvusIO
