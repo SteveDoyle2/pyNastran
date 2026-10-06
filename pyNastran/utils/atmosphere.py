@@ -10,6 +10,7 @@ Contains the following atmospheric functions:
  - mu = atm_dynamic_viscosity_mu(alt)
  - nu = atm_kinematic_viscosity_nu(alt)
  - eas = atm_equivalent_airspeed(alt, mach)
+ - alt, mach = get_alt_mach_for_eas_cas(eas, cas)
  - rho, machs, velocity = make_flfacts_alt_sweep_constant_mach(
        mach, alts, eas_limit=1000.,
        alt_units='m', velocity_units='m/s', density_units='kg/m^3',
@@ -787,6 +788,94 @@ def get_mach_for_alt_cas(alt: float, vcas: float,
     mach = np.sqrt(5 * ((qc/p+1)**(1/3.5) - 1))
     return mach
 
+
+def get_alt_mach_for_eas_cas(equivalent_airspeed: float,
+                             calibrated_airspeed: float,
+                             eas_units: str='ft/s',
+                             cas_units: str='ft/s',
+                             alt_units: str='ft',
+                             tol: float=1e-12) -> tuple[float, float]:
+    """
+    Gets the altitude and Mach number for an equivalent and calibrated
+    airspeed.
+
+    Parameters
+    ----------
+    equivalent_airspeed : float
+        the equivalent airspeed in eas_units
+    calibrated_airspeed : float
+        the calibrated airspeed in cas_units
+    eas_units / cas_units : str; default='ft/s'
+        the airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
+    alt_units : str; default='ft'
+        the altitude units; ft, kft, m
+    tol : float; default=1e-12
+        Mach number tolerance
+
+    Returns
+    -------
+    alt : float
+        the altitude in alt_units (negative = below sea level)
+    mach : float
+        the Mach number
+
+    EAS sets the dynamic pressure and CAS sets the impact pressure:
+        q  = 1/2 * rho0 * eas^2 = gamma/2 * p * M^2
+        qc = p0 * ((1 + 0.2*(cas/a0)^2)^3.5 - 1) = p * ((1 + 0.2*M^2)^3.5 - 1)
+    Their ratio only depends on Mach, so
+        qc/q = ((1 + 0.2*M^2)^3.5 - 1) / (0.7*M^2)
+    is solved for M (it increases monotonically from 1 at M=0), then
+        p = q / (0.7*M^2) -> alt
+
+    .. note ::
+        At sea level CAS = EAS; the difference grows with Mach and
+        altitude. At low speed the difference is small, so a small error
+        in either airspeed gives a large altitude error.
+
+    """
+    eas = convert_velocity(equivalent_airspeed, eas_units, 'ft/s')
+    cas = convert_velocity(calibrated_airspeed, cas_units, 'ft/s')
+    if eas <= 0. or cas <= 0.:
+        raise ValueError(f'eas={equivalent_airspeed} and cas={calibrated_airspeed} '
+                         'must be > 0')
+    p0 = atm_pressure(0.)  # psf
+    a0 = atm_speed_of_sound(0.)  # ft/s
+
+    q = 0.7 * p0 * (eas / a0) ** 2
+    qc = p0 * ((1. + 0.2 * (cas / a0) ** 2) ** 3.5 - 1.)
+    ratio = qc / q
+    if ratio < 1.:
+        raise ValueError(
+            f'eas={equivalent_airspeed} {eas_units} is too large for '
+            f'cas={calibrated_airspeed} {cas_units}; impact pressure qc={qc:g} psf '
+            f'must be >= dynamic pressure q={q:g} psf')
+
+    def ratio_func(mach: float) -> float:
+        msq = mach ** 2
+        return ((1. + 0.2 * msq) ** 3.5 - 1.) / (0.7 * msq)
+
+    # bracket, then bisect (ratio_func is monotonic)
+    mach_low = 0.
+    mach_high = 1.
+    while ratio_func(mach_high) < ratio:
+        mach_low = mach_high
+        mach_high *= 2.
+        if mach_high > 1000.:  # pragma: no cover
+            raise ValueError(f'no Mach number found for qc/q={ratio}')
+    while mach_high - mach_low > tol:
+        mach = 0.5 * (mach_low + mach_high)
+        if mach == 0. or ratio_func(mach) < ratio:
+            mach_low = mach
+        else:
+            mach_high = mach
+    mach = 0.5 * (mach_low + mach_high)
+
+    pressure = q / (0.7 * mach ** 2)
+    alt = get_alt_for_pressure(pressure, pressure_units='psf', alt_units=alt_units,
+                               tol=convert_altitude(1e-4, 'ft', alt_units))
+    return alt, mach
+
+
 #def cas_to_alt_with_constant_mach(
 #        vcas: float, mach: float,
 #        alt_units: str='ft', cas_units: str='ft/s'):
@@ -898,7 +987,7 @@ def atm_kinematic_viscosity_nu(alt: float,
     if visc_units == 'ft^2/s':
         factor = 1.
     elif visc_units == 'm^2/s':
-        factor = _feet_to_alt_units(alt_units) ** 2
+        factor = 0.3048 ** 2  # ft^2/s -> m^2/s
     else:  # pragma: no cover
         raise NotImplementedError(f'visc_units={visc_units!r}; use [m^2/s, ft^2/s]')
     return nu * factor

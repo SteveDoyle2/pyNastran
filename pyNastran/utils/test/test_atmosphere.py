@@ -20,6 +20,7 @@ from pyNastran.utils.atmosphere import (
     get_mach_for_alt_eas,
     get_mach_for_alt_cas,
     get_alt_for_cas_mach,
+    get_alt_mach_for_eas_cas,
     atm_speed_of_sound,
     eas_from_alts_machs,
     constant_mach_line_alt1_alt2,
@@ -646,6 +647,36 @@ class TestAtm(unittest.TestCase):
             casi = atm_calibrated_airspeed(alti, machi, alt_units='ft', cas_units='knots')
             mach = get_mach_for_alt_cas(alti, casi, alt_units='ft', cas_units='knots')
             assert np.allclose(mach, machi), (alti, machi, mach)
+
+    def test_get_alt_mach_for_eas_cas(self):
+        data = [
+            (0., 0.2),
+            (0., 0.8),
+            (10000., 0.5),
+            (30000., 0.8),
+            (-16000., 0.33),
+            (60000., 1.5),
+        ]
+        for alti, machi in data:
+            easi = atm_equivalent_airspeed(alti, machi, alt_units='ft', eas_units='knots')
+            casi = atm_calibrated_airspeed(alti, machi, alt_units='ft', cas_units='knots')
+            alt, mach = get_alt_mach_for_eas_cas(easi, casi, eas_units='knots',
+                                                 cas_units='knots', alt_units='ft')
+            self.assertAlmostEqual(alt, alti, delta=0.01, msg=(alti, machi))
+            self.assertAlmostEqual(mach, machi, places=8, msg=(alti, machi))
+
+        # SI
+        alt, mach = get_alt_mach_for_eas_cas(
+            atm_equivalent_airspeed(3000., 0.6, alt_units='m', eas_units='m/s'),
+            atm_calibrated_airspeed(3000., 0.6, alt_units='m', cas_units='m/s'),
+            eas_units='m/s', cas_units='m/s', alt_units='m')
+        self.assertAlmostEqual(alt, 3000., delta=0.01)
+        self.assertAlmostEqual(mach, 0.6, places=8)
+
+        with self.assertRaises(ValueError):
+            get_alt_mach_for_eas_cas(300., 200., eas_units='knots', cas_units='knots')
+        with self.assertRaises(ValueError):
+            get_alt_mach_for_eas_cas(0., 200., eas_units='knots', cas_units='knots')
 
     def test_get_alt_for_eas_with_constant_mach(self):
         """tests get_alt_for_q_with_constant_mach"""
