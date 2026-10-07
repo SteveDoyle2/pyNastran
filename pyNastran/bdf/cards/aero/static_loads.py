@@ -958,6 +958,7 @@ class TRIM(BaseCard):
         nminus = ntrim + naelink + nsuport_dofs + nsuport1_dofs
 
         ndelta = nplus - nminus + 0*2*ntrim_aesurfs
+        unused_names = list(set(labels) - set(trim_labels) - set(aelink_labels))
         if ndelta != 0:
             # msg = (
             #     '(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + '
@@ -984,6 +985,7 @@ class TRIM(BaseCard):
                 f'  -naelink = {naelink}; {aelink_labels}\n'
                 f'  -nsuport_dofs = {nsuport_dofs}\n'
                 f'  -nsuport1_dofs = {nsuport1_dofs}\n'
+                f'  unused = {unused_names}\n'
                 f'{suport_dof_msg2}\n\n'
             )
             msg += str(self)

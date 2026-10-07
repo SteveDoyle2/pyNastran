@@ -1,4 +1,5 @@
 import os
+import shutil
 import warnings
 import subprocess
 from typing import Optional
@@ -43,14 +44,15 @@ def run_nastran(bdf_filename: PathLike,
     bdf_filename: string
         Filename of the Nastran .bdf file
     nastran_cmd: str; default='nastran'
-        path to Nastran executable
+        path to Nastran executable or a command on the PATH
+        (e.g., 'nastran' finds nastran.bat/nastran.exe on Windows)
     keywords: str/dict/list of strings, optional
         Default keywords are `'scr=yes'`, `'bat=no'`, `'old=no'`, and `'news=no'`
     run: bool; default=True
         lets you disable actually running Nastran to test out code/get the call arguments
     run_in_bdf_dir: bool; default=True
-        True  : output (e.g., *.f06) will go to the current working directory (default)
-        False : outputs (e.g., *.f06) will go to the input BDF directory
+        True  : outputs (e.g., *.f06) will go to the input BDF directory (default)
+        False : outputs (e.g., *.f06) will go to the current working directory
     cleanup: bool; default=False
         removes the *.asg, *.asm, *.log, *.f04, *.mon1, *.mon2 and *.plt files
 
@@ -77,22 +79,20 @@ def run_nastran(bdf_filename: PathLike,
     """
     keywords_list = _get_keywords_list(
         keywords=keywords, log=log)
-    assert os.path.exists(bdf_filename), bdf_filename
-    base = os.path.basename(bdf_filename)[0]
-    op2_filename = os.path.splitext(bdf_filename)[0] + '.op2'
+    assert os.path.exists(bdf_filename), print_bad_path(bdf_filename)
 
-    pwd = os.getcwd()
-    bdf_directory = os.path.dirname(bdf_filename)
-    switch_dir = bdf_directory != '' and run_in_bdf_dir
-    if switch_dir:
-        os.chdir(bdf_directory)
+    # resolve everything before any chdir so relative paths stay valid
+    bdf_filename_str = os.path.abspath(bdf_filename)
+    bdf_directory = os.path.dirname(bdf_filename_str)
+    base = os.path.splitext(os.path.basename(bdf_filename_str))[0]
+    op2_filename = os.path.splitext(bdf_filename_str)[0] + '.op2'
+    nastran_cmd_str = _resolve_nastran_cmd(nastran_cmd, required=run)
 
-    if nastran_cmd != 'nastran':
-        assert os.path.exists(nastran_cmd), nastran_cmd
-    nastran_cmd_str = str(nastran_cmd)
-    call_args = [nastran_cmd_str, str(bdf_filename)] + keywords_list
-    if '=' in str(bdf_filename):
-        msg1 = f'Nastran cant run files with an = sign in them; {str(bdf_filename)}'
+    # match the command line ("nastran old=no model.bdf" from the bdf dir)
+    bdf_arg = os.path.basename(bdf_filename_str) if run_in_bdf_dir else bdf_filename_str
+    call_args = [nastran_cmd_str, bdf_arg] + keywords_list
+    if '=' in os.path.basename(bdf_filename_str):
+        msg1 = f'Nastran cant run files with an = sign in them; {bdf_filename_str}'
         if log:
             log.debug(msg1)
         else:
@@ -103,32 +103,51 @@ def run_nastran(bdf_filename: PathLike,
             log.debug(msg2)
         else:
             print(msg2)
-    return_code = None
-    if run and (not os.path.exists(op2_filename) or run_if_op2_exists):
-        try:
-            return_code = subprocess.call(call_args)
-        except FileNotFoundError: # pragma: no cover
-            print(call_args)
-            raise
 
-    if run and cleanup:
-        fnames = [
-            base + '.asg',
-            base + '.asm',
-            base + '.f04',
-            base + '.log',
-            base + '.plt',
-            base + '.mon1',
-            base + '.mon2',
-        ]
-        for fname in fnames:
-            if os.path.exists(fname):
-                print(f'removing {fname}')
-                os.remove(fname)
-
+    pwd = os.getcwd()
+    switch_dir = run_in_bdf_dir
     if switch_dir:
-        os.chdir(pwd)
+        os.chdir(bdf_directory)
+
+    return_code = None
+    try:
+        if run and (not os.path.exists(op2_filename) or run_if_op2_exists):
+            return_code = subprocess.call(call_args)
+
+        if run and cleanup:
+            # outputs land in the current working directory
+            exts = ['.asg', '.asm', '.f04', '.log', '.plt', '.mon1', '.mon2']
+            for ext in exts:
+                fname = base + ext
+                if os.path.exists(fname):
+                    print(f'removing {fname}')
+                    os.remove(fname)
+    finally:
+        if switch_dir:
+            os.chdir(pwd)
     return return_code, call_args
+
+
+def _resolve_nastran_cmd(nastran_cmd: PathLike, required: bool=True) -> str:
+    """
+    Gets the full path to the Nastran executable.
+
+    An explicit path is used as-is. Otherwise, the PATH is searched with
+    shutil.which, which honors PATHEXT on Windows, so 'nastran' finds
+    nastran.bat. subprocess with shell=False only appends '.exe', so
+    passing the bare 'nastran' would raise FileNotFoundError.
+    """
+    nastran_cmd_str = str(nastran_cmd)
+    if os.path.isfile(nastran_cmd_str):
+        return os.path.abspath(nastran_cmd_str)
+
+    exe = shutil.which(nastran_cmd_str)
+    if exe is not None:
+        return exe
+    if required:
+        raise FileNotFoundError(
+            f'nastran_cmd={nastran_cmd_str!r} is not a file and was not found on the PATH')
+    return nastran_cmd_str
 
 
 def _get_keywords_list(keywords: Optional[str | list[str] |

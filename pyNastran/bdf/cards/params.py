@@ -3,6 +3,7 @@ defines the following card:
  - PARAM
 """
 # pylint: disable=C0103,R0902,R0904,R0914
+from typing import Any
 import numpy as np
 from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.cards.base_card import BaseCard
@@ -187,8 +188,30 @@ PARAMS = (
     ('OUGCORD', '', ['', 'GLOBAL', 'BASIC']),
     ('UNITSYS', '', unit_systems),
     # L
+    # P
+    ('POST', 0, [1, 0, -1, -2], False),
 )
+
+def _value_default(value, param,
+                   param_dict: dict[str, Any],
+                   param_dict_allowed: dict[str, Any]) -> None:
+    """
+    key, value
+    key, value, allowed
+    """
+    key = param[0]
+    nparam = len(param)
+    if nparam == 2:
+        param_dict[key] = value
+    else:  # 3
+        allowed = param[2]
+        try:
+            param_dict_allowed[key] = (value, allowed)
+        except TypeError:
+            raise RuntimeError(f'allowed dict is empty for key={key!r} value={value!r} allowed={allowed}')
+
 string_params = {}
+string_params_allowed = {}
 int_params = {}
 int_params_allowed = {}
 float_params = {}
@@ -196,18 +219,15 @@ float2_params = {}
 for param in PARAMS:
     key = param[0]
     value = param[1]
-    nparam = len(param)
     if isinstance(value, str):
-        allowed = param[2]
-        string_params[key] = (value, allowed)
+        _value_default(value, param, string_params, string_params_allowed)
+        # allowed = param[2]
+        # string_params[key] = (value, allowed)
     elif isinstance(value, int):
-        if nparam == 2:
-            int_params[key] = value
-        else: # 3
-            allowed = param[2]
-            int_params_allowed[key] = (value, allowed)
+        _value_default(value, param, int_params, int_params_allowed)
     elif isinstance(value, float):
-        float_params[key] = value
+        _value_default(value, param, float_params, None)
+        # float_params[key] = value
     else: # two values
         nvalues = len(value)
         assert nvalues == 2, param
@@ -215,7 +235,15 @@ for param in PARAMS:
             float2_params[key] = value
         else:
             raise RuntimeError(param)
-del allowed
+# del allowed
+PARAM_NAMES_DOCUMENTED = set(
+    list(int_params) + list(int_params_allowed) +
+    list(float_params) + list(float2_params) +
+    list(string_params) + list(string_params_allowed)
+)
+assert len(string_params) == 0, string_params
+del string_params
+# assert len(string_params_allowed) == 0, string_params_allowed
 
 STR_WORDS_1 = {
     'POSTEXT', 'PRTMAXIM', 'AUTOSPC', 'OGEOM', 'PRGPST',
@@ -295,15 +323,16 @@ FLOAT_PARAMS = {
     'LAMLIM', 'MARCAUTX', 'MARCRSCL', 'BIGER1', 'DYCOWPRD', 'DYDTOUT', 'FZERO',
     'BIGER2', 'DYCOWPRP', 'MTRFMAX', 'REAL1', 'REAL2', 'REAL3',
 }
-
 FLOAT2_PARAMS = {'BETA1', 'CA1', 'CA2'}
 
-STR_WORDS_1.update(set(string_params.keys()))
+STR_WORDS_1.update(set(string_params_allowed.keys()))
 INT_WORDS_1.update(set(int_params.keys()))
 FLOAT_PARAMS.update(set(float_params.keys()))
 FLOAT2_PARAMS.update(set(float2_params.keys()))
 
 INT_STR_WORDS_1 = INT_WORDS_1 | STR_WORDS_1
+PARAMS_ALLOWED = STR_WORDS_1 | INT_WORDS_1 | FLOAT_PARAMS | FLOAT2_PARAMS | PARAM_NAMES_DOCUMENTED
+
 
 class PARAM(BaseCard):
     type = 'PARAM'
@@ -423,8 +452,8 @@ class PARAM(BaseCard):
 
         #-------------------------------------------------------------
         # strings; has defaults
-        elif key in string_params:
-            default, allowed_values = string_params[key]
+        elif key in string_params_allowed:
+            default, allowed_values = string_params_allowed[key]
             value = string_or_blank(card, 2, 'value', default=default)
             assert value in allowed_values, f'value={value} allowed={allowed_values}'
 
@@ -502,7 +531,9 @@ class PARAM(BaseCard):
             optional value
 
         If you want to access the data directly, use:
-        >>>  param = bdf.params['POST']
+        >>> from pyNastran.bdf.bdf import read_bdf
+        >>> model = read_bdf('fem.bdf')
+        >>> param = model.params['POST']
         >>> param.values[0] = -1  # value1
         >>> param.values[1] = 3   # value2
         >>>

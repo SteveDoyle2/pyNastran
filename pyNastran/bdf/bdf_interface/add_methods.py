@@ -2,6 +2,8 @@
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
+from pyNastran.bdf.cards.params import PARAMS_ALLOWED
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import (
         BDF, Element, Property, Material, ThermalMaterial,
@@ -246,6 +248,8 @@ class AddMethods:
         """adds a PARAM object"""
         key = param.key
         model = self.model
+        if key not in PARAMS_ALLOWED:
+            model.log.warning(f'Possible invalid PARAM={key!r}\n{str(param)}')
         if key in model.params and not allow_overwrites:
             if not param == model.params[key]:
                 # if param.key in self.params:

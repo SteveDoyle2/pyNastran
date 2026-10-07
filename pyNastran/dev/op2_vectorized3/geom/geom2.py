@@ -362,8 +362,8 @@ class GEOM2:
             (13001, 130, 483): ['GMINTS', self.read_fake],
             #(2801, 28, 630): ['MICPNT', self.read_fake],
             (5201, 52, 11): ['PLOTEL', self.read_plotel],
-            #(5202, 52, 669): ['PLOTEL3', self.read_fake],
-            (5203, 52, 670): ['PLOTEL4', self.read_fake],
+            (5202, 52, 669): ['PLOTEL3', self.read_plotel3], # nx
+            (5203, 52, 670): ['PLOTEL4', self.read_plotel4], # nx
             #(5204, 52, 671): ['PLOTEL6', self.read_fake],
             #(5205, 52, 672): ['PLOTEL8', self.read_fake],
             #(5206, 52, 673): ['PLOTHEX', self.read_fake],
@@ -382,6 +382,7 @@ class GEOM2:
             #(12501, 125, 147): ['VUTETRA', self.read_fake],
             #(11501, 115, 9941): ['VUTRIA3', self.read_fake],
             #(65535, 65535, 65535): ['EODB', self.read_fake],
+            (3002, 46, 0): ['Q4AERO', self.read_fake], # nx
 
 
             #------------------------------------------------------------------------------
@@ -3212,6 +3213,55 @@ class GEOM2:
             #self.add_op2_element(elem)
             #n += ntotal
         op2.card_count['CPENTA'] = nelements
+        return n
+
+    def read_plotel3(self, data: bytes, n: int) -> int:
+        """NX 2506"""
+        op2 = self.op2
+        ntotal = 16 * self.factor  # 4*4
+        assert len(data) % ntotal == 0, len(data)
+        s = Struct(mapfmt(op2._endian + b'4i', self.size))
+        nelements = (len(data) - n) // ntotal
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+
+            out = s.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PLOTEL3=%s\n' % str(out))
+            # (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+            #  g11, g12, g13, g14, g15,
+            #  dummy1, dummy2, dummy3, dummy4, dummy5, dummy6, dummy7) = out
+            # dummy = (dummy1, dummy2, dummy3, dummy4, dummy5, dummy6, dummy7)
+            # assert dummy == (0, 0, 0, 0, 0, 0, 0), dummy
+            print(out)
+
+            eid, g1, g2, g3 = out
+            elem = self.add_plotel3(eid, [g1, g2, g3])
+            n += ntotal
+        op2.card_count['PLOTEL3'] = nelements
+        return n
+
+    def read_plotel4(self, data: bytes, n: int) -> int:
+        """NX 2506"""
+        op2 = self.op2
+        ntotal = 20 * self.factor  # 5*4
+        assert len(data) % ntotal == 0, len(data)
+
+        s = Struct(mapfmt(op2._endian + b'5i', self.size))
+        nelements = (len(data) - n) // ntotal
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+
+            out = s.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PLOTEL4=%s\n' % str(out))
+            print(out)
+
+            eid, g1, g2, g3, g4 = out
+            elem = self.add_plotel4(eid, [g1, g2, g3, g4])
+            self.add_op2_element(elem)
+            n += ntotal
+        op2.card_count['PLOTEL4'] = nelements
         return n
 
     def read_cpenta_cz(self, data: bytes, n: int) -> int:

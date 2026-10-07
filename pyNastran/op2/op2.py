@@ -1694,6 +1694,8 @@ def read_op2(op2_filename: Optional[PathLike]=None,
     """
     if op2_filename:
         check_path(op2_filename, name='op2_filename')
+    assert isinstance(load_geometry, bool), load_geometry
+    assert isinstance(skip_undefined_matrices, bool), skip_undefined_matrices
 
     if load_geometry:
         from pyNastran.op2.op2_geom import read_op2_geom
