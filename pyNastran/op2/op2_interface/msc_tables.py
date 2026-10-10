@@ -408,13 +408,13 @@ MSC_RESULT_TABLES: list[bytes] = [b'ASSIG', b'ASEPS'] + [
     b'MKLIST',
 
     # stress
-    b'OES1X1', b'OES1', b'OES1X', b'OES1C', b'OESCP',
+    b'OES1X1', b'OES1', b'OES1X', b'OES1XMC', b'OES1C', b'OESCP',
     b'OESNLXR', b'OESNLXD', b'OESNLBR', b'OESTRCP',
     b'OESNL1X', b'OESRT',
     b'OES1A',
     #----------------------
     # strain
-    b'OSTR1', b'OSTR1X', b'OSTR1C',
+    b'OSTR1', b'OSTR1X', b'OSTR1XMC', b'OSTR1C',
 
     #----------------------
     # forces
@@ -422,8 +422,10 @@ MSC_RESULT_TABLES: list[bytes] = [b'ASSIG', b'ASEPS'] + [
     # HOEF1 - Element heat flux
     # OEF1X - Element forces with intermediate (CBAR and CBEAM) station forces
     #         and forces on nonlinear elements
+    # OEF1XMC/OES1XMC/OSTR1XMC - XMC variants of the base tables written by
+    #         newer MSC Nastran versions; format-identical to the base tables
     # DOEF1 - Scaled Response Spectra
-    b'OEFIT', b'OEF1X', b'OEF1', b'DOEF1',
+    b'OEFIT', b'OEF1X', b'OEF1XMC', b'OEF1', b'DOEF1',
     b'OEFITSTN', # output.op2
     b'OGPSTRS', b'OGPFI', b'OQS2SGT1', b'OGTEMP', b'OERPM',
 

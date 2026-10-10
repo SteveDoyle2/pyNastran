@@ -7,13 +7,13 @@ from pyNastran.op2.op2_interface.msc_tables import MSC_ELEMENTS, MSC_TABLE_CONTE
 SORT1_TABLES_BYTES = [
     b'OUG1S',
 
-    b'OES1', b'OES1C', b'OES1X', b'OES1X1', b'OESVM1', b'OESVM1C',
-    b'OSTR1', b'OSTR1C', b'OSTR1X', b'OSTRVM1', b'OSTRVM1C',
+    b'OES1', b'OES1C', b'OES1X', b'OES1X1', b'OES1XMC', b'OESVM1', b'OESVM1C',
+    b'OSTR1', b'OSTR1C', b'OSTR1X', b'OSTR1XMC', b'OSTRVM1', b'OSTRVM1C',
     b'OSTRMS1C',
 
     b'OESNLXR', b'OESTRCP',
     # ----------
-    b'OEF1X', b'OEF1',
+    b'OEF1X', b'OEF1XMC', b'OEF1',
     b'HOEF1', b'DOEF1',
     b'OEFIT', b'OEFITSTN', b'OESRT', b'OESRTN',
 
