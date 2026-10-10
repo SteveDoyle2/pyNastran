@@ -820,6 +820,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OEFITSTN' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'failure indices strain????'],
             b'OEFIT' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'failure indices'],  # failure indices
             b'OEF1X' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'element force at intermediate stations'],  # element forces at intermediate stations
+            b'OEF1XMC' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'element force at intermediate stations'],  # XMC variant of OEF1X; format-identical
             b'OEF1'  : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'element force/heat flux'],  # element forces or heat flux
             b'HOEF1' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'element heat flux'],  # element heat flux
 
@@ -874,6 +875,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OES1X1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'linear/nonlinear stress'], # stress - nonlinear elements
             b'OES1'   : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'linear stress'], # stress - linear only
             b'OES1X'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'linear stress'], # element stresses at intermediate stations & nonlinear stresses
+            b'OES1XMC'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'linear stress'], # XMC variant of OES1X; format-identical
             b'OES1C'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'composite stress'], # stress - composite
             b'OESCP'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'nonlinear? stress'], # stress - nonlinear???
             b'OESRT'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'ply strength ratio'], # ply strength ratio
@@ -882,6 +884,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             # strain
             b'OSTR1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'linear strain'],  # strain - autodesk/9zk6b5uuo.op2
             b'OSTR1X'  : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'isotropic linear strain'],  # strain - isotropic
+            b'OSTR1XMC'  : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'isotropic linear strain'],  # XMC variant of OSTR1X; format-identical
             b'OSTR1C'  : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'composite strain'],  # strain - composite
             b'OESTRCP' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'composite ply strain'],  # strain - composite ply
 
