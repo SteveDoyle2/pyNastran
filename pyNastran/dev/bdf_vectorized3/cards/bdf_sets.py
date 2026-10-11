@@ -1894,15 +1894,19 @@ class SET1(VectorizedBaseCard):
         """
         sid = integer(card, 1, 'sid')
         ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
+
         is_skin = False
         i = 0
-        if len(ids) > 0:
-            if isinstance(ids[0], str) and ids[0] == 'SKIN':
-                is_skin = True
-                i += 1
-        else:
-            assert len(card) > 2, card
-        self.cards.append((sid, is_skin, ids[i:], comment))
+        ids2 = ids
+        if isinstance(ids[0], str) and ids[0] == 'SKIN':
+            is_skin = True
+            i += 1
+            ids2 = ids[i:]
+
+        if None in ids2:
+            ids2 = [idi for idi in ids if idi is not None]
+        assert len(ids2) > 0, card
+        self.cards.append((sid, is_skin, ids2, comment))
         #return SET1(sid, ids[i:], is_skin=is_skin, comment=comment)
         self.n += 1
         return self.n - 1
@@ -1915,14 +1919,13 @@ class SET1(VectorizedBaseCard):
         set_id = np.zeros(ncards, dtype='int32')
         is_skin = np.zeros(ncards, dtype='bool')
         num_ids = np.zeros(ncards, dtype='int32')
-        #ids = np.array([], dtype='int32')
 
         all_ids = []
         for icard, card in enumerate(self.cards):
             sid, is_skini, idsi, comment = card
             set_id[icard] = sid
             is_skin[icard] = is_skini
-            ids2 = expand_thru(idsi)
+            ids2 = expand_thru(idsi, set_fields=False, sort_fields=False)
             num_ids[icard] = len(ids2)
             all_ids.extend(ids2)
         ids = np.array(all_ids, dtype=idtype)
@@ -1985,7 +1988,7 @@ class SET1(VectorizedBaseCard):
 
     @property
     def max_id(self) -> int:
-        return self.set_id.max()
+        return max(self.set_id.max(), self.ids.max())
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -2135,7 +2138,7 @@ class SET2(VectorizedBaseCard):
 
     @property
     def max_id(self) -> int:
-        return self.set_id.max()
+        return max(self.set_id.max(), self.ids.max())
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -2333,9 +2336,13 @@ def split_set3_ids(idsi: list[int, str]) -> list[int]:
 
 class SET4(VectorizedBaseCard):
     """
+    +------+-----+-------+--------+------+------+-----+-----+-----+
     | SET4 |  ID | CLASS |  TYPE  | ID1  | ID2  | ID3 | ID4 | ID5 |
+    +------+-----+-------+--------+------+------+-----+-----+-----+
     |      | ID6 |  ID7  |  ID8   | etc. |      |     |     |     |
+    +------+-----+-------+--------+------+------+-----+-----+-----+
     | SET4 | 22  |  PROP | PSOLID |   1  | THRU |  20 |     |     |
+    +------+-----+-------+--------+------+------+-----+-----+-----+
 
     TYPE may be {PSOLID, PSHELL, PSHEAR, PBAR, PBEAM, PWELD}
     """
@@ -2346,11 +2353,6 @@ class SET4(VectorizedBaseCard):
         self.property_type = np.array([], dtype='|U8')
         self.property_ids = np.array([], dtype='int32')
         self.num_ids = np.array([], dtype='int32')
-
-    #def add(self, sid: int, desc: str, ids: list[int], comment: str='') -> int:
-        #self.cards.append((sid, desc, ids, comment))
-        #self.n += 1
-        #return self.n - 1
 
     def add(self, set_id, property_type: str, property_ids: list[int],
             comment: str='') -> int:
@@ -2578,7 +2580,7 @@ class SESET(VectorizedBaseCard):
 
     @property
     def max_id(self) -> int:
-        return max(self.seid.max(), self.node_id.max())
+        return max(self.seid.max(), self.node_id.max(), self.seid.max())
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,

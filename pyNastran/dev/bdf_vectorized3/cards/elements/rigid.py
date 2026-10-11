@@ -789,8 +789,8 @@ class RBE2(RigidElement):
     def add(self, eid: int,
             gn: int, # independent
             cm: str, Gmi: list[int],  # dependent
-            alpha: float=0.0, tref: float=0.0, comment: str='') -> int:
-        self.cards.append((eid, gn, cm, Gmi, alpha, tref, 0, comment))
+            alpha: float=0.0, tref: float=0.0, ifile: int=0, comment: str='') -> int:
+        self.cards.append((eid, gn, cm, Gmi, alpha, tref, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -822,7 +822,7 @@ class RBE2(RigidElement):
         j = 4
         Gmi = []
         for i in range(len(card) - 4 - n):
-            gmi = integer(card, j + i, 'Gm%i' % (i + 1))
+            gmi = integer(card, j + i, 'Gm%d' % (i + 1))
             Gmi.append(gmi)
         self.cards.append((eid, gn, cm, Gmi, alpha, tref, ifile, comment))
         self.n += 1

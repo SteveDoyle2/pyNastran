@@ -1005,6 +1005,7 @@ class COORD(VectorizedBaseCard):
         e1s = array_float(self.e1, size=size, is_double=is_double)
         e2s = array_float(self.e2, size=size, is_double=is_double)
         e3s = array_float(self.e3, size=size, is_double=is_double)
+        lines = []
         if size == 8:
             for icoord, coord_type, cid, rid, nodesi, origin, zaxis, xzplane in zip(
                     self.icoord, self.coord_type,
@@ -1025,7 +1026,7 @@ class COORD(VectorizedBaseCard):
                         xzplane[0], xzplane[1], xzplane[2],
                     )
                     assert rid != '-1'
-                bdf_file.write(msg)
+                lines.append(msg)
         else:
             for icoord, coord_type, cid, rid, nodesi, origin, zaxis, xzplane in zip(
                     self.icoord, self.coord_type,
@@ -1044,7 +1045,8 @@ class COORD(VectorizedBaseCard):
                               xzplane[0], xzplane[1], xzplane[2],
                               ]
                     assert rid != '-1'
-                bdf_file.write(print_card(fields))
+                lines.append(print_card(fields))
+        bdf_file.writelines(lines)
         return
 
     @parse_check
@@ -1079,7 +1081,7 @@ class COORD(VectorizedBaseCard):
             lines = [f'CORD2{ct}  {cid}{rid}{a1}{a2}{a3}{b1}{b2}{b3}\n        {c1}{c2}{c3}\n'
                      for ct, cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3
                      in zip(ctypes.tolist(), cids, rids, o1, o2, o3, z1, z2, z3, x1, x2, x3)]
-            bdf_file.write(''.join(lines))
+            bdf_file.writelines(lines)
 
         # batch CORD1x cards
         mask1 = is_cord1 & non_zero
@@ -1093,7 +1095,7 @@ class COORD(VectorizedBaseCard):
             lines = [f'CORD1{ct}  {cid}{n1}{n2}{n3}\n'
                      for ct, cid, n1, n2, n3
                      in zip(ctypes.tolist(), cids, n1s, n2s, n3s)]
-            bdf_file.write(''.join(lines))
+            bdf_file.writelines(lines)
 
     def transform_force_local_to_global(self, force: np.ndarray, local_coord_id: int=0) -> np.ndarray:
         force2 = np.full(force.shape, np.nan, dtype=force.dtype)

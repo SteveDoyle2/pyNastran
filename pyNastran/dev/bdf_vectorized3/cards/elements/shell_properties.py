@@ -436,15 +436,15 @@ class PSHELL(Property):
             return
 
         pids = np.char.rjust(array_str(self.property_id, size=8), 8).tolist()
-        ts = np.char.rjust(array_float(t, size=8, is_double=False), 8).tolist()
+        t_str = np.char.rjust(array_float(t, size=8, is_double=False), 8).tolist()
 
         # mid1/mid2: -1 means blank
         mid1_str = np.char.rjust(array_default_int(mid1, default=-1, size=8), 8).tolist()
         mid2_str = np.char.rjust(array_default_int(mid2, default=-1, size=8), 8).tolist()
         lines = [f'PSHELL  {pid}{m1}{th}{m2}'.rstrip() + '\n'
                  for pid, m1, th, m2
-                 in zip(pids, mid1_str, ts, mid2_str)]
-        bdf_file.write(''.join(lines))
+                 in zip(pids, mid1_str, t_str, mid2_str)]
+        bdf_file.writelines(lines)
 
     @property
     def allowed_materials(self) -> list[Any]:

@@ -44,24 +44,24 @@ OBJ_NAME_LISTS = [
     'mkaeros', 
 ]
 
-COMMON_KEYS = [
+COMMON_SINGLETON_CARDS = ['aero', 'aeros', 'dtable',]
+COMMON_CARDS = [
     #'mkaeros',
-    'superelement_models', 'log',
-    'system_command_lines',
-    'executive_control_lines',
-    'case_control_deck',
-    'card_count', 'punch', 'dumplines', 
-    'reject_cards', 'reject_lines',
     #-----------------------------------
     'params', #'rotors',
     'tables', 'tables_d', #'tables_h'
     'tables_m',
     'tables_sdamping',
-    'aero', 'aeros',
     'methods', 'cMethods',
-    'dtable',
+]
+COMMON_KEYS = [
+    'superelement_models', 'log',
+    'system_command_lines',
+    'executive_control_lines',
+    'case_control_deck',
+    'punch', 'dumplines', 
+    'reject_cards', 'reject_lines',
     'active_filenames',
-    # new---------------
     # bool
     'echo', 'debug', 'read_includes',
     # str
@@ -69,6 +69,7 @@ COMMON_KEYS = [
 ]
 
 REMOVE_PARAMS = [
+    'card_count', 
     'active_filename', 
     'allow_duplicate_element_rbe_mass',
     'writer', 'xref_obj', 'zaero', #'zona',
@@ -250,7 +251,7 @@ def bdf_to_bdf_vectorized(model: BDF,
                     elif isinstance(obj, dict):
                         log.warning(f' {key} is a dict')
                     else:
-                        raise TypeError(obj)
+                        raise TypeError(f'{key} is invalid')
  
         assert len(attrs) == 0, attrs
     modelv.setup()
@@ -284,6 +285,7 @@ REMOVE_ATTRSV = [
     # dict
     'rsolmap_to_str',
     'reject_count',
+    'card_count', # dict[str, int]
     # other
     'writer', 'zaero',
     'values_to_skip', 'special_cards',
@@ -339,56 +341,144 @@ IGNORE_ATTRSV = [
     'dresp_ids',
 ]
 OBJ_NAME_DICTSV = [
-    #'elements', 'rigid_elements', 'materials',
-    #'masses', 'properties_mass',
     'dmig', 'dmi', 'dmij', 'dmik', 'dmiji', 'dti', 'dmiax',
-
-    #'caeros', 'paeros', 'trims', 'splines', 'csschds', 'divergs',
-    #'flutters', 'flfacts', 'gusts', 
-    #'aefacts', 'aelists', 'aeparams',
-    #'aestats', 'aesurf', 'aesurfs', 
-    #'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9', 'MATT11',
-    #'MATS1', 'MATS3', 'MATS8',
-    'nlparms', 'nlpcis', #'normals', 'plotels',
+    'nlparms', 'nlpcis',
     'tsteps', 'tstepnls', 'nxstrats',
-    #'aecomps',
-    #'pbusht', 'pdampt', 'pelast',
-    #'sets',
     'random_tables', 'frequencies', 'dequations',
 ]
 OBJ_NAME_LISTSV = ['mkaeros',]
 
 class CardStorageWriter:
-    def __init__(self):
+    def __init__(self, debug: bool=False):
         self.cards = []
+        self.debug = debug
     def write(self, msg: str) -> None:
-        raise RuntimeError(msg)
+        if self.debug:
+            print(msg)
+            print('------------------')
+        self.cards.append(msg)
     def writelines(self, lines: list[str]) -> None:
         self.cards.extend(lines)
 
+
+def _v2b_grid(modelv: BDFv, model: BDF) -> None:
+    grid = modelv.grid
+    coord = modelv.coord
+
+    grid = modelv.grid
+    if len(grid):
+        for nid, xyz, cp, cd, ps, seid in zip(
+            grid.node_id.tolist(), grid.xyz, grid.cp.tolist(),
+            grid.cd.tolist(), grid.ps.tolist(), grid.seid.tolist()):
+            ps = '' if ps == 0 else str(ps)
+            #seid = None if seid == 0 else seid
+            #cd = None if cd == 0 else cd
+            model.add_grid(nid, xyz, cp=cp, cd=cd, ps=ps, seid=seid)
+        model.card_count['GRID'] = len(grid)
+
+    # no card count needed for coords because add_card does it
+    file_obj = CardStorageWriter()
+    modelv.coord.write_file(file_obj, size=16)
+    for card in file_obj.cards:
+        card_lines = card.split('\n')
+        card_name = _get_card_name(card_lines, '')
+        fields = to_fields(card_lines, card_name)
+        model.add_card(fields, card_name)
+    return ['grid', 'coord']
+
+def _v2b_prop(modelv: BDFv, model: BDF) -> None:
+    pcomp = modelv.pcomp
+    if len(pcomp):
+        for pid, nsm, sb, ft, ge, tref, lam, z0, \
+            nlayer, ilayer in zip(
+                pcomp.property_id.tolist(),
+                pcomp.nsm.tolist(),
+                pcomp.shear_bonding.tolist(),
+                pcomp.failure_theory.tolist(),
+                pcomp.tref.tolist(), pcomp.ge.tolist(),
+                pcomp.lam.tolist(), pcomp.z0.tolist(),
+                pcomp.nlayer, pcomp.ilayer):
+
+            ilayer0, ilayer1 = ilayer
+            material_ids = pcomp.material_id[ilayer0 : ilayer1].tolist()
+            thetas = pcomp.theta[ilayer0 : ilayer1].tolist()
+            thicknesses = pcomp.thickness[ilayer0 : ilayer1].tolist()
+            souts = pcomp.sout[ilayer0 : ilayer1].tolist()
+            ft = ft if ft != '' else None
+            lam = lam if lam != '' else None
+            model.add_pcomp(
+                pid, mids=material_ids, thetas=thetas, thicknesses=thicknesses,
+                souts=souts,
+                nsm=nsm, sb=sb, ft=ft,
+                ge=ge, tref=tref, lam=lam, z0=z0, comment='')
+        model.card_count['PCOMP'] = len(pcomp)
+    return ['pcomp']
+
+def _v2b_mat(modelv: BDFv, model: BDF) -> None:
+    mat1 = modelv.mat1
+    if len(mat1):
+        for mid, e, g, nu, rho, alpha, tref, st, sc, ss, mcsid in zip(
+            mat1.material_id, mat1.E, mat1.G, mat1.nu, mat1.rho,
+            mat1.alpha, mat1.tref,
+            mat1.St, mat1.Sc, mat1.Ss, mat1.mcsid):
+            mat1i = model.add_mat1(
+                mid, e, g, nu, rho=rho, a=alpha, tref=tref,
+                St=st, Sc=sc, Ss=ss, mcsid=mcsid,
+                comment='')
+        model.card_count['MAT1'] = len(mat1)
+
+    #mat2 = modelv.mat2
+    #mat4 = modelv.mat4
+    #mat5 = modelv.mat5
+    return ['mat1']
+
+def _v2b_rigid(modelv: BDFv, model: BDF) -> None:
+    rbe2 = modelv.rbe2
+    if len(rbe2):
+        for eid, ind_node, ind_dof, alpha, tref, idim in zip(
+            rbe2.element_id.tolist(),
+            rbe2.independent_node.tolist(),
+            rbe2.independent_dof.tolist(),
+            rbe2.alpha.tolist(), rbe2.tref.tolist(), rbe2.idim):
+            idim0, idim1 = idim
+            dep = rbe2.dependent_nodes[idim0:idim1].tolist()
+            gn = ind_node
+            cm = str(ind_dof)
+            Gmi = dep
+            elem = model.add_rbe2(eid,
+                           gn, # independent
+                           cm, Gmi,  # dependent
+                           alpha=alpha, tref=tref, comment='',
+                           validate=True)
+        model.card_count['RBE2'] = len(rbe2)
+    return ['rbe2']
+
+def _v2b_aero(modelv: BDFv, model: BDF) -> None:
+    monpnt1 = modelv.monpnt1
+
+    if len(monpnt1):
+        for name, label, axes, comp, xyz, cp, cd in zip(
+            monpnt1.name, monpnt1.label, monpnt1.axes, monpnt1.comp,
+            monpnt1.xyz, monpnt1.cp, monpnt1.cd):
+            model.add_monpnt1(
+                name, label, axes, comp, xyz,
+                cp=cp, cd=cd, comment='')
+        model.card_count['MONPNT1'] = len(monpnt1)
+
+    return ['monpnt1']
 
 def bdf_vectorized_to_bdf(modelv: BDFv,
                           clean_parent: bool=False) -> BDF:
     model = BDF(log=modelv.log)
     log = model.log
 
-    grid = modelv.grid
-    mat1 = modelv.mat1
-    #mat2 = modelv.mat2
-    #mat4 = modelv.mat4
-    #mat5 = modelv.mat5
+    EXPLICITV = []
 
-    for nid, xyz, cp, cd, ps, seid in zip(
-        grid.node_id, grid.xyz, grid.cp, grid.cd, grid.ps, grid.seid):
-        model.add_grid(nid, xyz, cp=cp, cd=cd, ps=ps, seid=seid)
-
-    #print(grid.get_stats())
-    #print(object_methods(grid))
-    #file_obj = CardStorageWriter()
-    #grid.write_file(file_obj)
-
-    for mid, e, g, nu, rho, alpha, tref in zip(mat1.material_id, mat1.E, mat1.G, mat1.nu, mat1.rho, mat1.alpha, mat1.tref):
-        modelv.add_mat1(mid, e, g, nu, rho=rho, alpha=alpha, tref=tref)
+    EXPLICITV += _v2b_grid(modelv, model)
+    EXPLICITV += _v2b_prop(modelv, model)
+    EXPLICITV += _v2b_mat(modelv, model)
+    EXPLICITV += _v2b_rigid(modelv, model)
+    EXPLICITV += _v2b_aero(modelv, model)
 
     for obj_name in OBJ_NAME_DICTSV:
         objv_dict = getattr(modelv, obj_name)
@@ -398,23 +488,23 @@ def bdf_vectorized_to_bdf(modelv: BDFv,
             obj = getattr(model, elem_type.lower())
             fields = elem.raw_fields()
             card = BDFCard(fields)
-            obj.add_card(card, ifile=0)
+            model.add_card(card, ifile=0)
 
     for obj_name in OBJ_NAME_LISTSV:
         lst = getattr(modelv, obj_name)
         assert isinstance(lst, list), (obj_name, lst)
-        for obj in lst:
-            obj_type = obj.type
-            obj = getattr(model, obj_type.lower())
+        for obji in lst:
+            obj_type = obji.type
+            obj = getattr(model, obj_type.lower())  # mkaeros
             fields = obj.raw_fields()
             card = BDFCard(fields)
-            obj.add_card(card, ifile=0)
+            model.add_card(card, ifile=0)
 
     _copy_common(modelv, model, clean_parent=clean_parent)
 
     remove_attrs = (
         IGNORE_ATTRSV + OBJ_NAME_DICTSV + 
-        REMOVE_ATTRSV + OBJ_NAME_LISTSV + ['grid', 'mat1'])
+        REMOVE_ATTRSV + OBJ_NAME_LISTSV + EXPLICITV)
 
     # short & slow way of writing the cards
     # relies on using writelines
@@ -428,16 +518,23 @@ def bdf_vectorized_to_bdf(modelv: BDFv,
             continue
         if obj.n == 0:
             continue
-        file_obj = CardStorageWriter()
+        
+        #debug = (attr in {'pcomp'})
+        debug = False
+        file_obj = CardStorageWriter(debug=debug)
+        size = 8 if debug else 16
+
+        obj.write_file(file_obj, size=size)
         for card in file_obj.cards:
             card_lines = card.split('\n')
             card_name = _get_card_name(card_lines, '')
             fields = to_fields(card_lines, card_name)
-            modelv.add_card(fields, card_name)
+            model.add_card(fields, card_name)
         converted_attrs.append(attr)
     
     if clean_parent:
-        del modelv.grid, modelv.mat1
+        for obj_name in EXPLICITV:
+            delattr(modelv, obj_name)
         for obj_name in OBJ_NAME_DICTSV:
             delattr(modelv, obj_name)
         for obj_name in REMOVE_ATTRSV:
@@ -447,9 +544,7 @@ def bdf_vectorized_to_bdf(modelv: BDFv,
         for obj_name in converted_attrs:
             delattr(modelv, obj_name)
 
-        attrs = object_attributes(modelv)
-        set_attrs = set(attrs)
-        set_attrs -= set(IGNORE_ATTRSV)
+        set_attrs = set(object_attributes(modelv)) - set(IGNORE_ATTRSV)
         attrs = list(set_attrs)
         attrs.sort()
 
@@ -465,7 +560,7 @@ def bdf_vectorized_to_bdf(modelv: BDFv,
         attrs = attrs2
 
         if len(attrs):
-            log.warning(str(attrs))
+            #log.warning(str(attrs))
             for attr in attrs:
                 obj = getattr(modelv, attr)
 
@@ -474,7 +569,6 @@ def bdf_vectorized_to_bdf(modelv: BDFv,
                 except AttributeError:
                     log.warning(f' {attr} is not a card; {str(obj.__class__.__name__)}')
                     log.warning(str(obj))
-                    
     return model
 
 
@@ -482,16 +576,35 @@ def _copy_common(model: BDF | BDFv,
                  model_out: BDF | BDFv,
                  clean_parent: bool=False) -> None:
     #model_out.case_control_deck = model.case_control_deck
-    for key in COMMON_KEYS:
+    COMMON = COMMON_KEYS+COMMON_SINGLETON_CARDS+COMMON_CARDS
+    for key in COMMON:
         obj = getattr(model, key)
         objv = getattr(model_out, key)
 
         # verify they're the same base type
         # e.g., params is a dict
         if objv is not None:
+            assert obj is not None, key
             assert isinstance(obj, type(objv)), (key, type(obj), type(objv))
 
-        setattr(model_out, key, objv)
+        if key in COMMON_SINGLETON_CARDS and obj is not None:
+            assert obj is not None, obj
+            assert objv is None, objv
+            model_out.card_count[key.upper()] = 1
+        elif key in COMMON_CARDS:
+            assert isinstance(obj, dict), (key, obj)
+            for idi, obji in obj.items():
+                assert hasattr(obji, 'type'), obji
+                cls_type = obji.type
+                if cls_type in model_out.card_count:
+                    model_out.card_count[cls_type] += 1
+                else:
+                    model_out.card_count[cls_type] = 1
+        #print(f'saving {key}')
+        setattr(model_out, key, obj)
+    if 'ENDDATA' in model.card_count:
+        model_out.card_count['ENDDATA'] = model.card_count['ENDDATA']
+    #print(model_out)
 
     if isinstance(model, BDF):
         func_to_model = bdf_to_bdf_vectorized
@@ -504,6 +617,6 @@ def _copy_common(model: BDF | BDFv,
         model.initial_superelement_models.append(modelvi)
 
     if clean_parent:
-        for key in COMMON_KEYS:
+        for key in COMMON:
             delattr(model, key)
         del model.initial_superelement_models

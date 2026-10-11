@@ -950,7 +950,7 @@ class RBE2(RigidElementBase):
                  gn: int,  # independent
                  cm: str, Gmi: list[int],  # dependent
                  alpha: float=0.0, tref: float=0.0,
-                 comment: str='', sort: bool=False):
+                 comment: str='', sort: bool=True):
         """
         Creates an RBE2 element
 
@@ -1046,7 +1046,7 @@ class RBE2(RigidElementBase):
         for i in range(len(card) - 4 - n):
             gmi = integer(card, j + i, 'Gm%i' % (i + 1))
             Gmi.append(gmi)
-        return RBE2(eid, gn, cm, Gmi, alpha=alpha, tref=tref, comment=comment)
+        return RBE2(eid, gn, cm, Gmi, alpha=alpha, tref=tref, comment=comment, sort=True)
 
     @classmethod
     def add_op2_data(cls, data, comment: str=''):
@@ -1074,7 +1074,7 @@ class RBE2(RigidElementBase):
               #% (self.eid, self.gn, self.cm, self.Gmi, self.alpha))
         #raise NotImplementedError('RBE2 data...')
         assert len(Gmi) > 0, Gmi
-        return RBE2(eid, gn, cm, Gmi, alpha, tref, comment=comment)
+        return RBE2(eid, gn, cm, Gmi, alpha, tref, comment=comment, sort=True)
 
     def update(self, maps):
         """

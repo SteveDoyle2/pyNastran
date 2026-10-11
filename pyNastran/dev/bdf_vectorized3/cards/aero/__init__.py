@@ -6,6 +6,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types # , cast_ints
 from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default # print_float_8,
+from pyNastran.bdf.field_writer_16 import print_float_16
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string,
     double, double_or_blank,
@@ -4373,7 +4374,8 @@ class AESURF(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int=0,
+                 comment: str='') -> int:
         """
         Adds an AESURF card from ``BDF.add_card(...)``
 
@@ -4430,11 +4432,15 @@ class AESURF(VectorizedBaseCard):
         refc = np.zeros(ncards, dtype='float64')
         refs = np.zeros(ncards, dtype='float64')
 
+        # control surface limits
         pllim = np.zeros(ncards, dtype='float64')
         pulim = np.zeros(ncards, dtype='float64')
-        hmllim = np.zeros(ncards, dtype='float64')
 
+        # hinge moment limits
+        hmllim = np.zeros(ncards, dtype='float64')
         hmulim = np.zeros(ncards, dtype='float64')
+
+        # TABLED1 deflection limits
         tqllim = np.zeros(ncards, dtype='int32')
         tqulim = np.zeros(ncards, dtype='int32')
         comment = {}
@@ -4540,7 +4546,7 @@ class AESURF(VectorizedBaseCard):
             self,
             missing,
             coord=(model.coord.coord_id, ucoords),
-            #aelist=(model.aelist.aelist_id, aelist_ids),
+            #aelist=(model.aelist.aelist_id, uaelist),  # TODO: add me
             #caero=(model.caero1.caero_id, caero_ids),
         )
 
@@ -4558,6 +4564,7 @@ class AESURF(VectorizedBaseCard):
         aesurf_id_ = array_str(self.aesurf_id, size=size)
         cid1_ = array_str(self.coord_id[:, 0], size=size)
         cid2_ = array_str(self.coord_id[:, 1], size=size)
+        cids2 = self.coord_id[:, 1]
 
         #elem.label = self.label[i]
         #elem.eff = self.eff[i]
@@ -4574,12 +4581,29 @@ class AESURF(VectorizedBaseCard):
 
         aelist_id1_ = array_str(self.aelist_id[:, 0], size=size)
         aelist_id2_ = array_str(self.aelist_id[:, 1], size=size)
+        # get rid of cid=0
+        aelist_id2s = self.aelist_id[:, 1]
+        i0 = (aelist_id2s == 0)
+        assert np.all(cids2[i0] == 0), cids2[i0]
+        aelist_id2_[i0] = ''
+        cid2_[i0] = ''
+
+        ppi2 = print_float_8(np.pi/2) if size == 8 else print_float_16(np.pi/2)
+        npi2 = print_float_8(-np.pi/2) if size == 8 else print_float_16(-np.pi/2)
 
         hmllims = array_float_nan(self.hmllim, size=size, is_double=False)
         hmulims = array_float_nan(self.hmulim, size=size, is_double=False)
 
         tqllims = array_str(self.tqllim, size=size)
         tqulims = array_str(self.tqulim, size=size)
+
+        #pulims = array_default_float(self.pulim, default=np.pi/2, size=size, is_double=False)
+        #pllims = array_default_float(self.pllim, default=-np.pi/2, size=size, is_double=False)
+
+        pulims = array_float(self.pulim, size=size, is_double=False)
+        pllims = array_float(self.pllim, size=size, is_double=False)
+        pulims[(pulims == ppi2)] = ' '*size
+        pllims[(pllims == npi2)] = ' '*size
 
         effs = array_default_float(self.eff, default=0., size=size, is_double=False)
         ldws = array_default_str(self.ldw, default='LDW', size=size)
@@ -4589,14 +4613,16 @@ class AESURF(VectorizedBaseCard):
             tqllim, tqulim in zip_longest(
                 aesurf_id_, self.label, cid1_, aelist_id1_, cid2_, aelist_id2_,
                 effs, ldws, self.refc, self.refs,
-                self.pllim, self.pulim, hmllims, hmulims, tqllims, tqulims):
+                pllims, pulims, hmllims, hmulims, tqllims, tqulims):
             #eff = set_blank_if_default(eff, 1.0)
             #ldw = set_blank_if_default(ldw, 'LDW')
             crefc = set_blank_if_default(crefc, 1.0)
             crefs = set_blank_if_default(crefs, 1.0)
 
-            pllim = set_blank_if_default(pllim, -np.pi / 2.)
-            pulim = set_blank_if_default(pulim, np.pi / 2.)
+            #pllim = set_blank_if_default(pllim, -np.pi / 2.)
+            #pulim = set_blank_if_default(pulim, np.pi / 2.)
+            #pulim = pulim if pulim != ppi2 else ''
+            #pllim = pllim if pllim != npi2 else ''
 
             list_fields = ['AESURF', aesurf_id, label, cid1, aelist_id1,
                            cid2, aelist_id2, eff, ldw, crefc, crefs,
