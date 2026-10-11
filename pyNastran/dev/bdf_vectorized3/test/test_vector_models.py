@@ -7,6 +7,8 @@ from pyNastran.dev.bdf_vectorized3.test.test_bdf import (
     read_bdfv, main as test_bdf, IS_PYTABLES)
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.op2_vectorized3.test.test_op2 import main as test_op2
+from pyNastran.dev.bdf_vectorized3.to_bdf import (
+    bdf_to_bdf_vectorized, bdf_vectorized_to_bdf)
 
 PKG_PATH = pathlib.Path(pyNastran.__path__[0])
 TEST_PATH = PKG_PATH / 'bdf' / 'test'
@@ -23,6 +25,15 @@ class TestModelsLax(unittest.TestCase):
 
 
 class TestModels(unittest.TestCase):
+
+    def test_to_bdf_bwb(self):
+        """tests ``inclzip``"""
+        log = SimpleLogger(level='warning')
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        model = read_bdf(bdf_filename, log=log)
+        modelv = bdf_to_bdf_vectorized(model, clean_parent=False)
+        bdf_vectorized_to_bdf(modelv, clean_parent=False)
+
     def test_h5_freq(self):
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
         args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']

@@ -780,8 +780,8 @@ class BDFAttributes:
         #self.coords = {0 : coord}   # type: dict[int, Any]
 
         ## old style
-        self.ringaxs = {}
-        self.gridb = {}
+        #self.ringaxs = {}
+        #self.gridb = {}
         self.mdlprm = None
 
         # optimization
