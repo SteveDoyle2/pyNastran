@@ -262,19 +262,17 @@ jobs:
       - if: ${{ matrix.mode == 'latest_pyside6_gui' && matrix.python-version != '3.15' }}
         name: Install PySide6
         run: |
-          sudo apt-get install -y xvfb libegl1 libgl1 libxcb-cursor0
           pip install PySide6
 
+        #sudo apt-get install -y xvfb libegl1 libgl1 libxcb-cursor0
       - if: ${{ matrix.mode == 'latest_pyqt5_gui' && matrix.python-version != '3.15' }}
         name: Install PyQt5
         run: |
-          sudo apt-get install -y xvfb libegl1 libgl1 libxcb-cursor0
           pip install PyQt5
 
       - if: ${{ matrix.mode == 'latest_pyqt6_gui' && matrix.python-version != '3.15' }}
         name: Install PyQt6
         run: |
-          sudo apt-get install -y xvfb libegl1 libgl1 libxcb-cursor0
           pip install PyQt6
 
 #-----------------------------------------------------------------------------------
@@ -316,7 +314,7 @@ jobs:
       - if: ${{ matrix.mode == 'no_scipy' }}
         name: Run No Scipy
         run: |
-         python pyNastran/all_tests_no_scipy.py
+         coverage run pyNastran/all_tests_no_scipy.py
 
       - if: ${{ (matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
         #if: ${{ matrix.python-version == '3.12' || (
@@ -379,9 +377,14 @@ jobs:
         #run: |
         #  xvfb-run --server-args="-screen 0 1024x768x24" python pyNastran/all_tests_gui.py
 
+        # identified vtk core dump issue
+        #run: |
+        #  sudo apt-get update && sudo apt-get install -y gdb
+        #  xvfb-run --server-args="-screen 0 1024x768x24" gdb -ex "run" -ex "bt" -ex "quit" --args python pyNastran/all_tests_gui.py
+
+        # final version
         run: |
-          sudo apt-get update && sudo apt-get install -y gdb
-          xvfb-run --server-args="-screen 0 1024x768x24" gdb -ex "run" -ex "bt" -ex "quit" --args python pyNastran/all_tests_gui.py
+         coverage run pyNastran/all_tests_gui.py
 
       #- name: Upload coverage
       #  run: |
