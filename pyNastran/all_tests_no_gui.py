@@ -55,4 +55,5 @@ if IS_TABLES:
 
 if __name__ == "__main__":  # pragma: no cover
     import unittest
-    unittest.main()
+    with np.errstate(divide='raise', over='raise', under='raise', invalid='raise'):
+        unittest.main()

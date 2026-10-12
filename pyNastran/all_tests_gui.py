@@ -39,7 +39,33 @@ from pyNastran.gui.test.all_tests_gui import *
     #from pyNastran.dev.h5.test.test_h5 import *
 
 
-if __name__ == "__main__":  # pragma: no cover
+def run_tests_cleanup():
+    import os
     import unittest
     with np.errstate(divide='raise', over='raise', under='raise', invalid='raise'):
-        unittest.main()
+        #standard - has CI core dump issue
+        #unittest.main()
+
+        # 1. Run unittest without letting it invoke sys.exit()
+        res = unittest.main(exit=False)
+
+        # 2. Force coverage.py to save data before we kill the process
+        try:
+            import coverage
+            cov = coverage.Coverage.current()
+            if cov is not None:
+                cov.stop()
+                cov.save()
+        except ImportError:
+            pass  # Safe fallback if coverage isn't running locally
+
+        # 3. Bypass VTK's crashing destructors using a hard exit
+        if res.result.wasSuccessful():
+            # Bypass VTK's crashing destructors and exit clean
+            os._exit(0)
+        else:
+            # Properly fail the CI pipeline if an actual test failed
+            os._exit(1)
+
+if __name__ == "__main__":  # pragma: no cover
+    run_tests_cleanup()
