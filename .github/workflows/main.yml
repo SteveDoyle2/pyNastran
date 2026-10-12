@@ -323,16 +323,18 @@ jobs:
         #          matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
         #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         name: Run No GUI 3.12
+        #run: |
+        # python pyNastran/all_tests_no_gui.py
+        # coverage run pyNastran/all_tests_no_gui.py
         run: |
-         python pyNastran/all_tests_no_gui.py
          coverage run pyNastran/all_tests_no_gui.py
 
         # 3.11 - No matching distribution found for vtk
       - if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                  matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
         name: Run GUI
-        env:
-          QT_QPA_PLATFORM: offscreen
+        #env:
+        #  QT_QPA_PLATFORM: offscreen
         #if: ${{ matrix.python-version != '3.12' && (
         #         matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
         #         matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
@@ -343,9 +345,12 @@ jobs:
         #run: |
         # python pyNastran/all_tests.py
         # coverage run pyNastran/all_tests.py
+        #run: |
+        # xvfb-run python pyNastran/all_tests_gui.py
+        # coverage run pyNastran/all_tests_gui.py
         run: |
-         xvfb-run python pyNastran/all_tests_gui.py
-         coverage run pyNastran/all_tests_gui.py
+         xvfb-run coverage run pyNastran/all_tests_gui.py
+
 
       #- name: Upload coverage
       #  run: |
