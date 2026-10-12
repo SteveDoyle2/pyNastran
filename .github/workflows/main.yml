@@ -256,25 +256,25 @@ jobs:
       - if: ${{ matrix.mode == 'latest_pyside2_gui' && matrix.python-version != '3.15' }}
         name: Install PySide2
         run: |
-          sudo apt-get install -y xvfb 
+          sudo apt-get install -y xvfb libegl1 libgl1 libxcb-cursor0
           pip install PySide2
 
       - if: ${{ matrix.mode == 'latest_pyside6_gui' && matrix.python-version != '3.15' }}
         name: Install PySide6
         run: |
-          sudo apt-get install -y xvfb 
+          sudo apt-get install -y xvfb libegl1 libgl1 libxcb-cursor0
           pip install PySide6
 
       - if: ${{ matrix.mode == 'latest_pyqt5_gui' && matrix.python-version != '3.15' }}
         name: Install PyQt5
         run: |
-          sudo apt-get install -y xvfb 
+          sudo apt-get install -y xvfb libegl1 libgl1 libxcb-cursor0
           pip install PyQt5
 
       - if: ${{ matrix.mode == 'latest_pyqt6_gui' && matrix.python-version != '3.15' }}
         name: Install PyQt6
         run: |
-          sudo apt-get install -y xvfb 
+          sudo apt-get install -y xvfb libegl1 libgl1 libxcb-cursor0
           pip install PyQt6
 
 #-----------------------------------------------------------------------------------
