@@ -3886,7 +3886,7 @@ class AELINK(VectorizedBaseCard):
         print_card, size = get_print_card_size(size, self.max_id)
 
         aelink_ids = array_str(self.aelink_id, size=size)
-        linking_coefficients = array_float(self.linking_coefficents, size=size).tolist()
+        linking_coefficients = array_float(self.linking_coefficients, size=size).tolist()
         for aelink_id, label, (icoeff0, icoeff1) in zip(aelink_ids, self.label, self.icoeff):
 
             independent_labels = self.independent_labels[icoeff0:icoeff1]

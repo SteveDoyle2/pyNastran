@@ -75,22 +75,19 @@ jobs:
          #  os: ubuntu-18.04
          #  experimental: true
          exclude:
-          #- {python-version: '3.11', mode: 'latest_pyside2_gui'}
-          #- {python-version: '3.11', mode: 'latest_pyside6_gui'}
-
           - {python-version: '3.11', mode: 'old'}               # redundant
           #- {python-version: '3.11', mode: 'no_scipy'}
           #- {python-version: '3.11', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.11', mode: 'latest_pyqt6_gui'}
           #- {python-version: '3.11', mode: 'latest_pyside2_gui'}
           #- {python-version: '3.11', mode: 'latest_pyside6_gui'}  # DLL error
+          - {python-version: '3.11', mode: 'latest_pyside6_gui'}
 
           - {python-version: '3.12', mode: 'old'}               # redundant
           - {python-version: '3.12', mode: 'no_scipy'}
           - {python-version: '3.12', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.12', mode: 'latest_pyqt6_gui'}
           - {python-version: '3.12', mode: 'latest_pyside2_gui'}
-          - {python-version: '3.11', mode: 'latest_pyside6_gui'}
 
           - {python-version: '3.13', mode: 'old'}               # redundant
           - {python-version: '3.13', mode: 'no_scipy'}
@@ -102,11 +99,13 @@ jobs:
           - {python-version: '3.14', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.14', mode: 'latest_pyqt6_gui'}
           - {python-version: '3.14', mode: 'latest_pyside2_gui'}
+          #- {python-version: '3.14', mode: 'latest_pyside6_gui'}
 
           - {python-version: '3.15', mode: 'old'}               # redundant
           - {python-version: '3.15', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.15', mode: 'latest_pyqt6_gui'}
-          - {python-version: '3.15', mode: 'latest_pyside2_gui'}
+          - {python-version: '3.12', mode: 'latest_pyside2_gui'}
+          - {python-version: '3.15', mode: 'latest_pyside6_gui'}
           #- {python-version: '3.15-dev', mode: 'old'}
       fail-fast: false
      #- continue-on-error: ${{ matrix.experimental }}
@@ -190,14 +189,14 @@ jobs:
         run: |
           pip install 'pandas>=1.0' matplotlib
 
-      - if: ${{  matrix.python-version != '3.14' && (matrix.mode == 'latest' ||
+      - if: ${{  matrix.python-version != '3.15' && (matrix.mode == 'latest' ||
                  matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                  matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         name: Install latest packages (h5py)
         run: |
           pip install h5py tables
 
-      - if: ${{ matrix.python-version != '3.14-dev' && (
+      - if: ${{ matrix.python-version != '3.15' && (
                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         name: Install latest packages (imageio, pillow)
@@ -207,7 +206,7 @@ jobs:
         run: |
           pip install imageio pillow>=10.1.0
 
-      - if: ${{ matrix.python-version != '3.14-dev' && (
+      - if: ${{ matrix.python-version != '3.15' && (
                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         name: Install latest packages (vtk)
@@ -216,22 +215,22 @@ jobs:
         run: |
           pip install vtk qtpy
 
-      - if: ${{ matrix.mode == 'latest_pyside2_gui' && matrix.python-version != '3.15-dev' }}
+      - if: ${{ matrix.mode == 'latest_pyside2_gui' && matrix.python-version != '3.15' }}
         name: Install PySide2
         run: |
           pip install PySide2
 
-      - if: ${{ matrix.mode == 'latest_pyside6_gui' && matrix.python-version != '3.15-dev' }}
+      - if: ${{ matrix.mode == 'latest_pyside6_gui' && matrix.python-version != '3.15' }}
         name: Install PySide6
         run: |
           pip install PySide6
 
-      - if: ${{ matrix.mode == 'latest_pyqt5_gui' && matrix.python-version != '3.15-dev' }}
+      - if: ${{ matrix.mode == 'latest_pyqt5_gui' && matrix.python-version != '3.15' }}
         name: Install PyQt5
         run: |
           pip install PyQt5
 
-      - if: ${{ matrix.mode == 'latest_pyqt6_gui' && matrix.python-version != '3.15-dev' }}
+      - if: ${{ matrix.mode == 'latest_pyqt6_gui' && matrix.python-version != '3.15' }}
         name: Install PyQt6
         run: |
           pip install PyQt6
@@ -253,7 +252,7 @@ jobs:
         # python 3.9 gets everything
         # any python 3.8 test that can't be run in the previous block
       - if: ${{ matrix.mode != 'no_scipy' }}
-        name: Install dependencies (bdist_wheel & develop)
+        name: Install dependencies (pip)
          #pip install dist/pyNastran*.whl
          #python setup.py bdist_wheel
         #if: ${{  (matrix.python-version == '3.9') || (matrix.python-version == '3.10') }}
