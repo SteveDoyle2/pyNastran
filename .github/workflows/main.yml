@@ -358,8 +358,10 @@ jobs:
         #
         # xvfb-run: fakes a display
         #   --auto-servernum: makes xvfb find the right display port
+        #run: |
+        # xvfb-run --auto-servernum coverage run pyNastran/all_tests_gui.py
         run: |
-         xvfb-run --auto-servernum coverage run pyNastran/all_tests_gui.py
+         xvfb-run --auto-servernum pyNastran/all_tests_gui.py
 
 
       #- name: Upload coverage
