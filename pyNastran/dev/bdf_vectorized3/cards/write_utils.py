@@ -151,11 +151,17 @@ def array_float_nan(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> 
     str_array[inan] = ''
     return str_array
 
-def func_to_float(svalue: str) -> float:
+def func_to_floate(svalue: str) -> float:
     svalue = svalue.lstrip()
     if svalue.lstrip('+-').isdigit():
         return float(svalue)
     return nastran_str_to_float(svalue)
+
+def func_to_floatd(svalue: str) -> float:
+    svalue = svalue.lstrip()
+    if svalue.lstrip('+-').isdigit():
+        return float(svalue)
+    return nastran_str_to_float(svalue.replace('E', 'D'))
 
 def array_default_float(ndarray: np.ndarray, default: float=0.,
                         size: int=8, is_double: bool=False) -> np.ndarray:
@@ -164,16 +170,16 @@ def array_default_float(ndarray: np.ndarray, default: float=0.,
     if np.any(np.isnan(ndarray)):
         raise RuntimeError('nans found')
 
+    to_float = func_to_floate
     if size == 8:
-        to_float = func_to_float
         str_array = np.zeros(ndarray.shape, dtype='|U8')
         print_float = print_float_8
     else:
-        to_float = float
         str_array = np.zeros(ndarray.shape, dtype='|U16')
         print_float = print_float_16
         if is_double:
             print_float = print_scientific_double
+            to_float = func_to_floatd
 
     default_str = print_float(default)
     default_float = to_float(default_str)
@@ -197,16 +203,16 @@ def array_default_float_nan(ndarray: np.ndarray, default=0.,
                             size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
     assert ndarray.dtype.name in {'float32', 'float64'}, ndarray.dtype.name
+    to_float = func_to_floate
     if size == 8:
-        to_float = func_to_float
         str_array = np.zeros(ndarray.shape, dtype='|U8')
         print_float = print_float_8
     else:
-        to_float = float
         str_array = np.zeros(ndarray.shape, dtype='|U16')
         print_float = print_float_16
         if is_double:
             print_float = print_scientific_double
+            to_float = func_to_floatd
 
     default_str = print_float(default)
     default_float = to_float(default_str)
