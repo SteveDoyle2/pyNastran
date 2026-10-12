@@ -75,36 +75,70 @@ jobs:
          #  os: ubuntu-18.04
          #  experimental: true
          exclude:
-          - {python-version: '3.11', mode: 'old'}               # redundant
-          #- {python-version: '3.11', mode: 'no_scipy'}
+          # remove most versions to limit jobs
+
+          #---------------------------------------------------------
+          # never tested...
+          - {python-version: '3.11', mode: 'old'}
+          - {python-version: '3.12', mode: 'old'}
+          - {python-version: '3.13', mode: 'old'}
+          - {python-version: '3.14', mode: 'old'}
+          - {python-version: '3.15', mode: 'old'}
+
+          #---------------------------------------------------------
+          # only test this twice; min/max version
+          - {python-version: '3.11', mode: 'no_scipy'}
+          #- {python-version: '3.12', mode: 'no_scipy'}
+          #- {python-version: '3.13', mode: 'no_scipy'}
+          #- {python-version: '3.14', mode: 'no_scipy'}
+          - {python-version: '3.15', mode: 'no_scipy'}
+
+          #---------------------------------------------------------
+          # cut testing in the middle?
+          #   keep 3.13 because there is no gui testing for it
+          #
+          # keep all testing b/c gui testing fails a lot
+          #
+          #- {python-version: '3.11', mode: 'latest'}
+          #- {python-version: '3.12', mode: 'latest'}
+          #- {python-version: '3.13', mode: 'latest'}
+          #- {python-version: '3.14', mode: 'latest'}
+          #- {python-version: '3.15', mode: 'latest'}
+
+          #---------------------------------------------------------
+          # remove most versions to limit jobs
+
+          # all for now; lowest version
+          # old pyqt/pyside only
           #- {python-version: '3.11', mode: 'latest_pyqt5_gui'}
-          - {python-version: '3.11', mode: 'latest_pyqt6_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyqt6_gui'}   # doen't exist?
           #- {python-version: '3.11', mode: 'latest_pyside2_gui'}
-          #- {python-version: '3.11', mode: 'latest_pyside6_gui'}  # DLL error
-          - {python-version: '3.11', mode: 'latest_pyside6_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyside6_gui'}   # doen't exist?
 
-          - {python-version: '3.12', mode: 'old'}               # redundant
-          - {python-version: '3.12', mode: 'no_scipy'}
+          # first v6 testing
           - {python-version: '3.12', mode: 'latest_pyqt5_gui'}
-          - {python-version: '3.12', mode: 'latest_pyqt6_gui'}
+          #- {python-version: '3.12', mode: 'latest_pyqt6_gui'}
           - {python-version: '3.12', mode: 'latest_pyside2_gui'}
+          #- {python-version: '3.12', mode: 'latest_pyside6_gui'}
 
-          - {python-version: '3.13', mode: 'old'}               # redundant
-          - {python-version: '3.13', mode: 'no_scipy'}
+          # skipping because all is next
+          # pyside only...later
           - {python-version: '3.13', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.13', mode: 'latest_pyqt6_gui'}
           - {python-version: '3.13', mode: 'latest_pyside2_gui'}
+          - {python-version: '3.13', mode: 'latest_pyside6_gui'}
 
-          - {python-version: '3.14', mode: 'old'}               # redundant
-          - {python-version: '3.14', mode: 'latest_pyqt5_gui'}
-          - {python-version: '3.14', mode: 'latest_pyqt6_gui'}
-          - {python-version: '3.14', mode: 'latest_pyside2_gui'}
+          # latest gui - all
+          # pyqt only...later
+          #- {python-version: '3.14', mode: 'latest_pyqt5_gui'}
+          #- {python-version: '3.14', mode: 'latest_pyqt6_gui'}
+          #- {python-version: '3.14', mode: 'latest_pyside2_gui'}
           #- {python-version: '3.14', mode: 'latest_pyside6_gui'}
 
-          - {python-version: '3.15', mode: 'old'}               # redundant
+          # gui not supported
           - {python-version: '3.15', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.15', mode: 'latest_pyqt6_gui'}
-          - {python-version: '3.12', mode: 'latest_pyside2_gui'}
+          - {python-version: '3.15', mode: 'latest_pyside2_gui'}
           - {python-version: '3.15', mode: 'latest_pyside6_gui'}
           #- {python-version: '3.15-dev', mode: 'old'}
       fail-fast: false
@@ -140,7 +174,10 @@ jobs:
     #env: ${{ matrix.env }}
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      #- uses: actions/checkout@v3  # works
+      #
+      # version per google claude on 2026/10
+      - uses: actions/checkout@v7   # testing
 
       - name: Print environment variables exposed by GitHub
         run: |
@@ -187,7 +224,7 @@ jobs:
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui' }}
         name: Install latest packages (pandas, matplotlib)
         run: |
-          pip install 'pandas>=1.0' matplotlib
+          pip install pandas matplotlib
 
       - if: ${{  matrix.python-version != '3.15' && (matrix.mode == 'latest' ||
                  matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
@@ -294,6 +331,9 @@ jobs:
         #         matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
         #         matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
         #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        #run: |
+        # python pyNastran/all_tests.py
+        # coverage run pyNastran/all_tests.py
         run: |
          python pyNastran/all_tests.py
          coverage run pyNastran/all_tests.py
@@ -301,8 +341,10 @@ jobs:
       #- name: Upload coverage
       #  run: |
       #   codecov
+      #
+      # version per https://github.com/codecov/codecov-action on 2026/10
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v7
         env:
          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
