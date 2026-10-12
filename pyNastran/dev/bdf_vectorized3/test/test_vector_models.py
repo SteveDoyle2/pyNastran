@@ -54,10 +54,10 @@ class TestModels(unittest.TestCase):
         cards2 = sorted(model2.card_count)
         assert len(model2.card_count) == len(model1.card_count), model2.card_count
 
-        skip_cards = ['PCOMP']
+        skip_cards = []
         diff_cards = compare(model1, model2, xref=False,
                              run_mass=False, check=True,
-                             print_stats=True, quiet=False,
+                             print_stats=False, quiet=True,
                              skip_cards=skip_cards)
         assert len(diff_cards) == 0, diff_cards
 

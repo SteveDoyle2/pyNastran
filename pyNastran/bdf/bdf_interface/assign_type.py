@@ -17,7 +17,7 @@ RE_INT = re.compile('^[-+]?[0-9]+$', flags=0)
 _D_TO_E = str.maketrans('dD', 'eE')
 
 
-def _nastran_str_to_float(svalue: str) -> float:
+def nastran_str_to_float(svalue: str) -> float:
     """Fast conversion of a Nastran field string to float.
 
     Handles standard floats, E-notation (1.0E+3), D-notation (1.0D+3),
@@ -520,7 +520,7 @@ def double(card: BDFCard, ifield: int, fieldname: str,
                           'card=%s\n%s' % (card, print_card(card)))
 
     try:
-        return _nastran_str_to_float(svalue)
+        return nastran_str_to_float(svalue)
     except (ValueError, TypeError):
         dtype = _get_dtype(svalue)
         raise SyntaxError(f'{fieldname} = {svalue!r} (field #{ifield:d}) on card must be a float (not {dtype}).{end}\n'
@@ -546,7 +546,7 @@ def double_from_str(svalue: str) -> float:
         dtype = _get_dtype(svalue)
         raise SyntaxError(f'field = {svalue} on card must be a float (not {dtype}).')
     try:
-        return _nastran_str_to_float(svalue)
+        return nastran_str_to_float(svalue)
     except (ValueError, TypeError):
         dtype = _get_dtype(svalue)
         raise SyntaxError(f'field = {svalue} on card must be a float (not {dtype}).')
@@ -585,7 +585,7 @@ def double_or_blank(card: BDFCard, ifield: int, fieldname: str,
             raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
                               'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
         try:
-            return _nastran_str_to_float(svalue)
+            return nastran_str_to_float(svalue)
         except (ValueError, TypeError):
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'

@@ -2725,7 +2725,9 @@ def check_mass(fem1: BDFs, quiet: bool=False):
 
 def compare(fem1: BDFs, fem2: BDFs, xref=True, check=True, print_stats=True, quiet=False):
     """compares two fem objects"""
-    diff_cards = compare_card_count(fem1, fem2, print_stats=print_stats, quiet=quiet)
+    diff_cards = compare_card_count(
+        fem1, fem2, skip_cards=[],
+        print_stats=print_stats, quiet=quiet)
     return
     if xref and check:
         get_element_stats(fem1, fem2, quiet=quiet)

@@ -975,8 +975,6 @@ class RBE2(RigidElementBase):
         RigidElementBase.__init__(self)
         if comment:
             self.comment = comment
-        if sort:
-            Gmi.sort()
 
         #: Element identification number
         self.eid = eid
@@ -999,6 +997,9 @@ class RBE2(RigidElementBase):
             Gmi = [Gmi]
         elif isinstance(Gmi, np.ndarray):
             Gmi = Gmi.tolist()
+        if sort:
+            Gmi.sort()
+
         self.Gmi = Gmi
         #self.nodes_ref = None
         self.Gmi_ref = None

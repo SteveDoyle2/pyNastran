@@ -387,6 +387,7 @@ def _v2b_grid(modelv: BDFv, model: BDF) -> None:
     return ['grid', 'coord']
 
 def _v2b_prop(modelv: BDFv, model: BDF) -> None:
+    return []
     pcomp = modelv.pcomp
     if len(pcomp):
         for pid, nsm, sb, ft, ge, tref, lam, z0, \

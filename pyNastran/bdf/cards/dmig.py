@@ -22,7 +22,7 @@ from pyNastran.bdf.field_writer_16 import array_float_16
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string, string_or_blank,
     parse_components, integer_double_string_or_blank,
-    _nastran_str_to_float)
+    nastran_str_to_float)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.bdf.bdf import BDF
@@ -2250,7 +2250,7 @@ class DMI(NastranMatrix):
         GCi = self.GCi
         Real = self.Real
         n_added = 0
-        _to_float = _nastran_str_to_float
+        _to_float = nastran_str_to_float
 
         while ifield < nfields:
             i1 = int(fields[ifield])
@@ -2319,7 +2319,7 @@ class DMI(NastranMatrix):
         Real = self.Real
         Complex = self.Complex
         n_added = 0
-        _to_float = _nastran_str_to_float
+        _to_float = nastran_str_to_float
 
         while ifield < nfields:
             i1 = int(fields[ifield])
