@@ -342,6 +342,10 @@ jobs:
           # Force software rendering for VTK/OpenGL (instead of GPU)
           LIBGL_ALWAYS_SOFTWARE: "1"
           GALLIUM_DRIVER: "llvmpipe"
+
+          # Explicitly block any accidental Wayland bypass
+          QT_QPA_PLATFORM: "xcb"
+
         #if: ${{ matrix.python-version != '3.12' && (
         #         matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
         #         matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
@@ -372,9 +376,12 @@ jobs:
 
         # latest AI hallucination
         # env:   COVERAGE_CORE: sys
-        run: |
-          xvfb-run --server-args="-screen 0 1024x768x24" python pyNastran/all_tests_gui.py
+        #run: |
+        #  xvfb-run --server-args="-screen 0 1024x768x24" python pyNastran/all_tests_gui.py
 
+        run: |
+          sudo apt-get update && sudo apt-get install -y gdb
+          xvfb-run --server-args="-screen 0 1024x768x24" gdb -ex "run" -ex "bt" -ex "quit" --args python pyNastran/all_tests_gui.py
 
       #- name: Upload coverage
       #  run: |
