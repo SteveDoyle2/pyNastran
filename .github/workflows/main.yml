@@ -334,7 +334,14 @@ jobs:
                  matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
         name: Run GUI
         #env:
+        #  # run headless
+        #  # don't use this with xvfb
         #  QT_QPA_PLATFORM: offscreen
+        env:
+          # used with xvfb
+          # Force software rendering for VTK/OpenGL (instead of GPU)
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: "llvmpipe"
         #if: ${{ matrix.python-version != '3.12' && (
         #         matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
         #         matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
@@ -348,8 +355,11 @@ jobs:
         #run: |
         # xvfb-run python pyNastran/all_tests_gui.py
         # coverage run pyNastran/all_tests_gui.py
+        #
+        # xvfb-run: fakes a display
+        #   --auto-servernum: makes xvfb find the right display port
         run: |
-         xvfb-run coverage run pyNastran/all_tests_gui.py
+         xvfb-run --auto-servernum coverage run pyNastran/all_tests_gui.py
 
 
       #- name: Upload coverage
