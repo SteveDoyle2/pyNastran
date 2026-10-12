@@ -331,12 +331,15 @@ jobs:
         #         matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
         #         matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
         #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        
+        # includes all tests, but core dumps on CI
+        # is that due to taking too long?
         #run: |
         # python pyNastran/all_tests.py
         # coverage run pyNastran/all_tests.py
         run: |
-         python pyNastran/all_tests.py
-         coverage run pyNastran/all_tests.py
+         python pyNastran/all_tests_gui.py
+         coverage run pyNastran/all_tests_gui.py
 
       #- name: Upload coverage
       #  run: |
