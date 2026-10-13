@@ -1196,21 +1196,14 @@ class OES:
         table_name_bytes = op2.table_name
         assert isinstance(table_name_bytes, bytes), table_name_bytes
 
-        # OES1XMC/OSTR1XMC are format-identical to OES1X/OSTR1X (the XMC
-        # suffix is written by newer MSC Nastran versions), so remap the
-        # table name to reuse the base table logic
-        if table_name_bytes in [b'OES1XMC', b'OSTR1XMC']:
-            table_name_bytes = op2.table_name = table_name_bytes[:-2]
-
         is_sort1 = table_name_bytes in SORT1_TABLES_BYTES
-
         if table_name_bytes in [b'OES1X1', b'OES1X',
-                                b'OES1C', b'OES1']:
+                                b'OES1C', b'OES1', b'OES1XMC',]:
             prefix = 'stress.'
             self._set_as_sort1()
         elif table_name_bytes == b'OES1A':
             prefix = 'stressa.'
-        elif table_name_bytes in [b'OSTR1X', b'OSTR1', b'OSTR1C']:
+        elif table_name_bytes in [b'OSTR1X', b'OSTR1', b'OSTR1C', b'OSTR1XMC']:
             prefix = 'strain.'
             self._set_as_sort1()
         elif table_name_bytes in [b'OES2', b'OSTR2', b'OES2C', b'OSTR2C']:

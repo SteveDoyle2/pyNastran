@@ -17,6 +17,7 @@ from io import BytesIO, StringIO
 from pathlib import Path
 
 import numpy as np
+from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.op2.op2 import read_op2
@@ -32,6 +33,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealSpringStr
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray
 from unittest.mock import MagicMock
+
+from pyNastran.op2.test.test_op2 import run_op2
 from pyNastran.op2.tables.oes_stressStrain import utils_cshear
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray, ComplexDisplacementArray
@@ -1880,7 +1883,15 @@ class TestXmcTables(unittest.TestCase):
     def test_xmc_tables_read(self):
         """OES1XMC/OSTR1XMC/OEF1XMC are read as their base tables."""
         op2_filename = MODEL_PATH / 'bugs' / 'xmc_tables' / 'xmc_20elem.op2'
+        op2_filename_out = MODEL_PATH / 'bugs' / 'xmc_tables' / 'xmc_20elem_out.op2'
+        log = SimpleLogger(level='warning')
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, write_f06=True,
+            log=log, stop_on_failure=True, binary_debug=False, quiet=True)
+
         model = read_op2(op2_filename, debug=None)
+        model.write_op2(op2_filename_out)
+        model2 = read_op2(op2_filename_out, debug=None)
 
         expected_results = {
             'stress.cbar_stress', 'stress.cquad4_stress',
