@@ -1925,11 +1925,12 @@ class TestXmcTables(unittest.TestCase):
 
         # spot checks: distinct values within a table (not all zeros/identical)
         crod_stress = model.op2_results.stress.crod_stress[isubcase]
-        assert not np.allclose(crod_stress.data[0, 0], crod_stress.data[0, 1])
+        assert not np.allclose(crod_stress.data[0, 0].astype('float64'), crod_stress.data[0, 1].astype('float64'))
 
         cweld_force = model.op2_results.force.cweld_force[isubcase]
         assert cweld_force.nelements == 4
 
 
 if __name__ == '__main__':  # pragma: no cover
-    unittest.main()
+    with np.errstate(divide='raise', over='raise', under='raise', invalid='raise'):
+        unittest.main()
