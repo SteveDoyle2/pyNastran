@@ -87,12 +87,20 @@ jobs:
           - {python-version: '3.15', mode: 'old'}
 
           #---------------------------------------------------------
+          # first/mid/last
+          #- {python-version: '3.11', mode: 'latest_basic'}
+          - {python-version: '3.12', mode: 'latest_basic'}
+          #- {python-version: '3.13', mode: 'latest_basic'}
+          - {python-version: '3.14', mode: 'latest_basic'}
+          #- {python-version: '3.15', mode: 'latest_basic'}
+
+          #---------------------------------------------------------
           # only test this twice; min/max version
-          - {python-version: '3.11', mode: 'no_scipy'}
-          #- {python-version: '3.12', mode: 'no_scipy'}
-          #- {python-version: '3.13', mode: 'no_scipy'}
-          #- {python-version: '3.14', mode: 'no_scipy'}
-          - {python-version: '3.15', mode: 'no_scipy'}
+          #- {python-version: '3.11', mode: 'no_scipy'}
+          - {python-version: '3.12', mode: 'no_scipy'}
+          - {python-version: '3.13', mode: 'no_scipy'}
+          - {python-version: '3.14', mode: 'no_scipy'}
+          #- {python-version: '3.15', mode: 'no_scipy'}
 
           #---------------------------------------------------------
           # cut testing in the middle?
@@ -116,7 +124,7 @@ jobs:
           #- {python-version: '3.11', mode: 'latest_pyside2_gui'}
           #- {python-version: '3.11', mode: 'latest_pyside6_gui'}   # doen't exist?
 
-          # first v6 testing
+          # v6 testing
           - {python-version: '3.12', mode: 'latest_pyqt5_gui'}
           #- {python-version: '3.12', mode: 'latest_pyqt6_gui'}
           - {python-version: '3.12', mode: 'latest_pyside2_gui'}
