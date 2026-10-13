@@ -5,7 +5,7 @@ from pyNastran.dev.tools.pressure_map.test_pressure_map import (
     TestPressureMap,
     TestPanelModelBalance, TestPanelModelLoads,
     TestAeroCombinedArrays, TestAeroXyzScale,
-    TestFullModelForce, )
+    TestFullModelForce, TestFullModelBalance)
 
 
 if __name__ == '__main__':  # pragma: no cover
