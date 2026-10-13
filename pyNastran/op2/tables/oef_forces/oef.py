@@ -1119,6 +1119,13 @@ def get_oef_prefix_postfix(op2: OP2) -> tuple[str, str]:
     postfix = ''
     table_name_bytes = op2.table_name
     assert isinstance(table_name_bytes, bytes), table_name_bytes
+
+    # OEF1XMC is format-identical to OEF1X (the XMC suffix is written by
+    # newer MSC Nastran versions), so remap the table name to reuse the
+    # base table logic
+    if table_name_bytes == b'OEF1XMC':
+        table_name_bytes = op2.table_name = b'OEF1X'
+
     is_sort1 = table_name_bytes in SORT1_TABLES_BYTES
     assert table_name_bytes in TABLES_BYTES, table_name_bytes
 
