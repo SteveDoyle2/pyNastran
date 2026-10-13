@@ -126,7 +126,7 @@ jobs:
           # pyside only...later
           - {python-version: '3.13', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.13', mode: 'latest_pyqt6_gui'}
-          #- {python-version: '3.13', mode: 'latest_pyside2_gui'}  # last version?
+          - {python-version: '3.13', mode: 'latest_pyside2_gui'}  # doesnt support numpy 2
           - {python-version: '3.13', mode: 'latest_pyside6_gui'}
 
           # latest gui - all
@@ -385,8 +385,11 @@ jobs:
         #  xvfb-run --server-args="-screen 0 1024x768x24" gdb -ex "run" -ex "bt" -ex "quit" --args python pyNastran/all_tests_gui.py
 
         # final version
+        #run: |
+        # coverage run pyNastran/all_tests_gui.py
+        # coverage run --append pyNastran/all_tests_no_gui.py
         run: |
-         coverage run pyNastran/all_tests_gui.py
+         coverage run pyNastran/all_tests.py
 
       #- name: Upload coverage
       #  run: |
