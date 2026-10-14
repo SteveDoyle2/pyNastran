@@ -2994,7 +2994,7 @@ class OP2Reader:
                         if last_table_name:
                             self.log.error(f'finished table_name = {last_table_name}')
 
-                        msg = ('There was a Nastran FATAL Error.  Check the F06.\n'
+                        msg = (f'There was a Nastran FATAL Error.  Check the F06 for {op2.op2_filename}.\n'
                                f'last table={op2.table_name!r}; post={op2.post} '
                                f'version={self.op2._nastran_format!r}')
                         self.log.error(msg)

@@ -189,18 +189,20 @@ class EIGC(Method):
     def _init_from_empty(cls):
         sid = 1
         method = 'CLAN'
-        grid = 1
-        component = 1
         epsilon = 0.1
         neigenvalues = 10
-        return EIGC(sid, method, grid, component, epsilon, neigenvalues,
+        return EIGC(sid, method, epsilon, neigenvalues,
+                    grid=0, component=0,
                     norm='MAX', mblkszs=None, iblkszs=None, ksteps=None,
                     NJIs=None, alphaAjs=None, omegaAjs=None, alphaBjs=None,
                     omegaBjs=None, LJs=None, NEJs=None, NDJs=None,
                     shift_r1=None, shift_i1=None, isrr_flag=None, nd1=None)
 
-    def __init__(self, sid, method, grid, component, epsilon, neigenvalues,
-                 norm='MAX', # common
+    def __init__(self, sid: int, method: str,
+                 epsilon: float | None,
+                 neigenvalues: int,
+                 grid: int=0, component: int=0,
+                 norm: str='MAX', # common
                  mblkszs=None, iblkszs=None, ksteps=None, NJIs=None, # CLAN
                  alphaAjs=None, omegaAjs=None, alphaBjs=None, omegaBjs=None, # HESS/INV
                  LJs=None, NEJs=None, NDJs=None, # HESS/INV
@@ -286,14 +288,20 @@ class EIGC(Method):
 
         #: Method for normalizing eigenvectors
         self.norm = norm
-        #: Grid or scalar point identification number. Required only if
-        #: NORM='POINT'. (Integer>0)
-        self.G = grid
 
+        self.G = 0
+        self.C = 0
+        if self.method == 'POINT':
+            #: Grid or scalar point identification number. Required only if
+            #: NORM='POINT'. (Integer>0)
+            self.G = grid
 
-        #: Component number. Required only if NORM='POINT' and G is a
-        #: geometric grid point. (1<Integer<6)
-        self.C = component
+            #: Component number. Required only if NORM='POINT' and G is a
+            #: geometric grid point. (1<Integer<6)
+            self.C = component
+        else:
+            assert grid == 0, grid
+            assert component == 0, component
 
         #: Convergence criterion. (Real > 0.0. Default values are:
         #: 10^-4 for METHOD = "INV",
@@ -405,8 +413,8 @@ class EIGC(Method):
             grid = integer(card, 4, 'G')
             component = parse_components(card, 5, 'C')
         else:
-            grid = None
-            component = None
+            grid = 0
+            component = 0
             blank(card, 4, 'G')
             blank(card, 5, 'C')
 
@@ -463,11 +471,16 @@ class EIGC(Method):
         else:
             raise RuntimeError(f'invalid EIGC method...method={method!r}')
         #assert card.nfields() < 8, 'card = %s' % card
-        return EIGC(sid, method, grid, component, epsilon, neigenvalues,
-                    norm, # common
-                    mblkszs, iblkszs, ksteps, NJIs, # CLAN
-                    alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs, # HESS/INV
-                    shift_r1, shift_i1, isrr_flag, nd1, # ISRR
+        return EIGC(sid, method, epsilon, neigenvalues,
+                    norm=norm, # common
+                    grid=grid, component=component,  # for NORM='POINT'
+                    # method = CLAN
+                    mblkszs=mblkszs, iblkszs=iblkszs, ksteps=ksteps, NJIs=NJIs,
+                    # method = HESS/INV
+                    alphaAjs=alphaAjs, omegaAjs=omegaAjs, alphaBjs=alphaBjs, omegaBjs=omegaBjs,
+                    LJs=LJs, NEJs=NEJs, NDJs=NDJs,
+                    # # method = ISRR
+                    shift_r1=shift_r1, shift_i1=shift_i1, isrr_flag=isrr_flag, nd1=nd1,
                     comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -538,7 +551,9 @@ class EIGC(Method):
         return self.raw_method()
 
     def raw_fields(self):
-        list_fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
+        grid = set_blank_if_default(self.G, 0)
+        component = set_blank_if_default(self.C, 0)
+        list_fields = ['EIGC', self.sid, self.method, self.norm, grid, component,
                        self.epsilon, self.neigenvalues, None]
         list_fields += self.raw_method()
         return list_fields
@@ -548,7 +563,9 @@ class EIGC(Method):
             epsilon = None
         else:
             epsilon = self.epsilon
-        list_fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
+        grid = set_blank_if_default(self.G, 0)
+        component = set_blank_if_default(self.C, 0)
+        list_fields = ['EIGC', self.sid, self.method, self.norm, grid, component,
                        epsilon, self.neigenvalues, None]
         list_fields += self.repr_method()
         return list_fields
@@ -879,7 +896,9 @@ class EIGRL(Method):
         return EIGRL(sid, v1=None, v2=None, nd=None, msglvl=0, maxset=None,
                      shfscl=None, norm=None, options=None, values=None)
 
-    def __init__(self, sid: int, v1=None, v2=None, nd=None,
+    def __init__(self, sid: int,
+                 v1: float | None=None, v2: float | None=None,
+                 nd: int | None=None,
                  msglvl: int=0, maxset=None, shfscl=None,
                  norm: str='', options=None, values=None, comment: str=''):
         """
@@ -1181,7 +1200,8 @@ class MODTRAK(BaseCard):
     MODTRAK 100   1      26      0.80
     """
     type = 'MODTRAK'
-    def __init__(self, sid: int, low_range: int, high_range: int, mt_filter: float, comment: str=''):
+    def __init__(self, sid: int, low_range: int, high_range: int, mt_filter: float,
+                 comment: str=''):
         BaseCard.__init__(self)
         self.sid = sid
         self.low_range = low_range

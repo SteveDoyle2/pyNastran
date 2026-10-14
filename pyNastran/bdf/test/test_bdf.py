@@ -1539,7 +1539,7 @@ def _validate_case_control(fem: BDF, p0: Any, sol_base: int,
 
 
 def check_for_flag_in_subcases(fem2: BDF, subcase: Any,
-                               parameters: list[str] | tuple[str, ...]) -> None:
+                               parameters: str | list[str] | tuple[str, ...]) -> None:
     """
     For a multi-subcase deck, you can define specific required cards
     (e.g., TSTEP) in secondary cases, but not primary cases.  This
@@ -1896,6 +1896,10 @@ def _check_static_aero_case(fem2: BDF, log: SimpleLogger, sol: int,
             sol, subcase)
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
+
+    if any(subcase.has_parameter('DIVERG')):
+        check_for_flag_in_subcases(fem2, subcase, ('CMETHOD',))
+
     if fem2.aeros is None:
         msg = 'An AEROS card is required for STATIC AERO - SOL %i; AEROS=%s' % (sol, fem2.aeros)
         log.error(msg)

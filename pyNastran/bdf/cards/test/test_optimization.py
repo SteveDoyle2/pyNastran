@@ -332,6 +332,13 @@ class TestOpt(unittest.TestCase):
 
         op2 = OP2(log=log, debug=True, debug_file='temp.debug')
         op2.read_op2(op2_filename)
+
+        op2_filename_out = 'junk.op2'
+        op2.write_op2(op2_filename_out)
+
+        op2b = OP2(log=log, debug=True)
+        op2b.read_op2(op2_filename_out)
+
         unused_subcase_ids = op2.subcase_key.keys()
         #for subcase_id in subcase_ids:
             #assert isinstance(subcase_id, integer_types), subcase_id

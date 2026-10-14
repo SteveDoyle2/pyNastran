@@ -700,13 +700,13 @@ class DYNAMICS(GeomCommon):
             if op2.is_debug_file:
                 op2.binary_debug.write('  EIGC=%s\n' % str(datai))
 
-            if grid == 0:
-                grid = None
+            if grid == 0 or component == 0:
+                assert grid == 0, grid
                 assert component == 0, component
-                component = None
 
             eigc = op2.add_eigc(
-                sid, method, grid, component, epsilon, neigenvalues, norm=norm,
+                sid, method, epsilon, neigenvalues,
+                norm=norm, grid=grid, component=component,
                 mblkszs=mblkszs, iblkszs=iblkszs, ksteps=ksteps, NJIs=NJIs,
                 alphaAjs=alphaAjs, omegaAjs=omegaAjs,
                 alphaBjs=alphaBjs, omegaBjs=omegaBjs,

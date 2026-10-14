@@ -354,8 +354,8 @@ class GEOM2:
             (13001, 130, 483): ['GMINTS', self.read_fake],
             (2801, 28, 630): ['MICPNT', self.read_micpnt],
             (5201, 52, 11): ['PLOTEL', self.read_plotel],
-            #(5202, 52, 669): ['PLOTEL3', self.read_fake],
-            (5203, 52, 670): ['PLOTEL4', self.read_fake],
+            (5202, 52, 669): ['PLOTEL3', self.read_plotel3],
+            (5203, 52, 670): ['PLOTEL4', self.read_plotel4],
             #(5204, 52, 671): ['PLOTEL6', self.read_fake],
             #(5205, 52, 672): ['PLOTEL8', self.read_fake],
             #(5206, 52, 673): ['PLOTHEX', self.read_fake],
@@ -5109,6 +5109,51 @@ class GEOM2:
             op2._add_methods.add_plotel_object(elem)
             n += ntotal
         op2.card_count['PLOTEL'] = nelements
+        return n
+
+    def read_plotel3(self, data: bytes, n: int) -> int:
+        """NX 2506"""
+        op2 = self.op2
+        # op2.show_data(data)
+        ntotal = 16 * self.factor  # 4*4
+        nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0, len(data)
+        s = Struct(mapfmt(op2._endian + b'4i', self.size))
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+
+            out = s.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PLOTEL3=%s\n' % str(out))
+            # print(out)
+
+            eid, g1, g2, g3 = out
+            elem = op2.add_plotel3(eid, [g1, g2, g3])
+            n += ntotal
+        op2.card_count['PLOTEL3'] = nelements
+        return n
+
+    def read_plotel4(self, data: bytes, n: int) -> int:
+        """NX 2506"""
+        op2 = self.op2
+        ntotal = 20 * self.factor  # 5*4
+        assert (len(data) - n) % ntotal == 0, len(data)
+
+        s = Struct(mapfmt(op2._endian + b'5i', self.size))
+        nelements = (len(data) - n) // ntotal
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+
+            out = s.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PLOTEL4=%s\n' % str(out))
+            # print(out)
+
+            eid, g1, g2, g3, g4 = out
+            elem = op2.add_plotel4(eid, [g1, g2, g3, g4])
+            # self.add_op2_element(elem)
+            n += ntotal
+        op2.card_count['PLOTEL4'] = nelements
         return n
 
     def read_radbc(self, data: bytes, n: int) -> int:

@@ -25,6 +25,8 @@ from .dit_writer import write_dit
 #from .dynamic_writer import write_dynamic
 from .h5_writer import get_h5_elemental_nodal, write_h5_results
 from pyNastran.utils import PathLike, PurePath
+from ..result_objects.scalar6_table_object import integer_types, float_types
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
@@ -245,6 +247,7 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
                nastran_revision: str='') -> tuple[int, list[str]]:
     """actually writes the op2"""
     date = obj.date
+    size = 4
     #op2_ascii.write('writing [3, 7, 0] header\n')
 
     struct_3i = Struct(endian + b'3i')
@@ -257,6 +260,10 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
 
     # <class 'pyNastran.op2.op2.OP2'>
     obj_type = str(type(obj))
+
+    if hasattr(obj, 'params'):
+        write_params(op2_file, fop2_ascii, obj, obj.params,
+                     endian=endian, size=size)
 
     if not obj_type.endswith("OP2'>"):
         if 'GEOM1' not in skips:  # nodes
@@ -671,3 +678,111 @@ def write_op2_header(model: OP2, op2_file, fop2_ascii,
         _write_markers(op2_file, fop2_ascii, [2, 4])
     else:  # pragma: no cover
         raise RuntimeError(f'post = {post:d}; use -1 or -2')
+
+def write_params(op2_file: BinaryIO,
+                 op2_ascii,
+                 op2: OP2,
+                 params: dict[str, Any],
+                 endian: bytes=b'<',
+                 size: int=4, ):
+    """
+    Writes the PVT0 table (PARAM cards); doesn't handle size=8
+
+    Layout (matches what _read_pvto_4 expects; from an NX op2):
+      [2] 'PVT0    ' [-1] [7] (101, nwords, 0, 0, 0, 0, 0)
+      [-2, 1, 0] [2] 'PVT     '
+      [-3, 1, 0] [nwords] (key(2), flag, value(1 or 2), ...)
+      [-4, 1, 0] [0]
+
+    where each entry is:
+      flag=1 int:     8s i i
+      flag=2 float:   8s i f
+      flag=3 string:  8s i 8s
+      flag=5 2 float: 8s i ff
+    """
+    assert size == 4, size
+    if not params:
+        return
+
+    from pyNastran.bdf.cards.params import FLOAT2_PARAMS
+
+    data_bytes_list = []
+    for param_name, param in params.items():
+        # Nastran pads with spaces (not nulls); the reader only strips spaces
+        assert len(param_name) <= 8, f'PARAM name={param_name!r} is too long'
+        param_name_bytes = b'%-8s' % param_name.encode('ascii')
+        values = param.values
+        nvalue = len(values)
+        if nvalue == 1:
+            value = values[0]
+            if isinstance(value, integer_types):  # flag=1
+                values_list = [param_name_bytes, 1, value]
+                fmt = b'8s 2i'
+            elif isinstance(value, float_types):  # flag=2
+                values_list = [param_name_bytes, 2, value]
+                fmt = b'8s if'
+            elif isinstance(value, str):  # flag=3
+                assert len(value) <= 8, f'PARAM {param_name} value={value!r} is too long'
+                word_bytes = b'%-8s' % value.encode('ascii')
+                values_list = [param_name_bytes, 3, word_bytes]
+                fmt = b'8s i 8s'
+            # elif flag == 7:  # logical/int
+            else:
+                raise NotImplementedError(f'invalid length=1 PARAM\n{str(param)}')
+        elif nvalue == 2:
+            if param_name in FLOAT2_PARAMS or (
+                    param_name[0] == 'G' and param_name[1:].isdigit()):  # flag=5  CMPLXS
+                values_list = [param_name_bytes, 5] + list(values)
+                fmt = b'8s i 2f'
+            else:
+                raise NotImplementedError(f'invalid length=2 PARAM\n{str(param)}')
+        else:
+            raise NotImplementedError(f'invalid PARAM (must be of length = [1,2])\n{str(param)}')
+        data_bytes_list.append(pack(endian + fmt, *values_list))
+
+    data_bytes = b''.join(data_bytes_list)
+    nbytes = len(data_bytes)
+    nwords = nbytes // 4
+
+    # table name + header record: (101, nwords, 0, 0, 0, 0, 0)
+    header = [
+        4, 2, 4,
+        8, b'PVT0    ', 8,
+        4, -1, 4,
+        4, 7, 4,
+        28, 101, nwords, 0, 0, 0, 0, 0, 28,
+    ]
+    op2_file.write(pack(endian + b'4i 8s i 6i 9i', *header))
+    op2_ascii.write(f'PVT0 header = {header}\n')
+
+    # subtable name (no date)
+    subtable = [
+        4, -2, 4,
+        4, 1, 4,
+        4, 0, 4,
+        4, 2, 4,
+        8, b'PVT     ', 8,
+    ]
+    op2_file.write(pack(endian + b'13i 8s i', *subtable))
+    op2_ascii.write(f'PVT0 subtable = {subtable}\n')
+
+    # PARAM record
+    op2_file.write(pack(endian + b'13i', *[
+        4, -3, 4,
+        4, 1, 4,
+        4, 0, 4,
+        4, nwords, 4,
+        nbytes]))
+    op2_file.write(data_bytes)
+    op2_file.write(pack(endian + b'i', nbytes))
+    op2_ascii.write(f'PVT0 params (nwords={nwords}) = {list(params)}\n')
+
+    # close the table
+    close = [
+        4, -4, 4,
+        4, 1, 4,
+        4, 0, 4,
+        4, 0, 4,
+    ]
+    op2_file.write(pack(endian + b'12i', *close))
+    op2_ascii.write(f'PVT0 close = {close}\n')

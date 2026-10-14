@@ -8571,8 +8571,9 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_method_object(method)
         return method
 
-    def add_eigc(self, sid: int, method: str, grid: int, component: int,
-                 epsilon: float, neigenvalues: int,
+    def add_eigc(self, sid: int, method: str,
+                 epsilon: float | None, neigenvalues: int,
+                 grid: int=0, component: int=0,  # norm=POINT only
                  norm: str='MAX',  # common
                  mblkszs=None, iblkszs=None, ksteps=None, NJIs=None,
                  alphaAjs=None, omegaAjs=None,
@@ -8581,7 +8582,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
                  shift_r1=None, shift_i1=None, isrr_flag=None,
                  nd1=None, comment: str='') -> EIGC:
         """Creates an EIGC card"""
-        method = EIGC(sid, method, grid, component, epsilon, neigenvalues, norm=norm,
+        method = EIGC(sid, method, epsilon, neigenvalues,
+                      norm=norm, grid=grid, component=component,
                       mblkszs=mblkszs, iblkszs=iblkszs, ksteps=ksteps, NJIs=NJIs,
 
                       alphaAjs=alphaAjs, omegaAjs=omegaAjs,

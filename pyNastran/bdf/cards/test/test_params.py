@@ -1,36 +1,35 @@
+import numpy as np
 import unittest
 
 #import pyNastran
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.cards.params import (
     PARAM, MDLPRM,
-    string_params,
+    string_params_allowed,
     int_params, int_params_allowed,
     float_params, float2_params,)
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
-#ROOT_PATH = pyNastran.__path__[0]
-#test_path = os.path.join(ROOT_PATH, 'bdf', 'cards', 'test')
 
 class TestParams(unittest.TestCase):
     def test_all_params(self):
         model = BDF(debug=False, log=None, mode='msc')
 
-        for key, (value, allowed) in string_params.items():
-            model.add_param(key, value)
+        for key, (value, allowed, required) in string_params_allowed.items():
+            param = model.add_param(key, value)
             add_param_card(model, key, value)
 
         for key, value in int_params.items():
             add_param_card(model, key, value)
-            model.add_param(key, value)
-        for key, (value, allowed) in int_params_allowed.items():
+            param = model.add_param(key, value)
+        for key, (value, allowed, required) in int_params_allowed.items():
             add_param_card(model, key, value)
             model.add_param(key, value)
         for key, value in float_params.items():
             add_param_card(model, key, value)
             model.add_param(key, value)
         for key, values in float2_params.items():
-            add_param_card(model, key, value)
+            add_param_card(model, key, values)
             model.add_param(key, values)
         model.pop_parse_errors()
 
@@ -58,7 +57,7 @@ class TestParams(unittest.TestCase):
         assert str(card) == 'PARAM     NOCOMP      -1\n', '%r' % str(card)
         #print('%r' % card)
 
-    def test_param_02(self):
+    def test_param_post_01(self):
         model = BDF(debug=False)
         param = model.add_param('POST', -1, comment='param post')
         param.raw_fields()
@@ -67,6 +66,17 @@ class TestParams(unittest.TestCase):
         param.write_card(size=16, is_double=True)
         param.write_card_16(is_double=False)
         param.write_card_16(is_double=True)
+
+    # def test_param_post_02(self):
+        # ('POST', 0, [1, 0, -1, -2], False),
+
+    def test_param_ca1(self):
+        model = BDF(debug=True)
+        cardi = BDFCard(['PARAM', 'CA1', '1.', '2.'])
+        card = PARAM.add_card(cardi)
+        assert np.allclose(card.values, [1., 2.]), card.values
+        param1 = model.add_param('CA1', (1., 2.), comment='')
+        assert np.allclose(param1.values, [1., 2.]), param1.values
 
     def test_param_mystran(self):
         model = BDF(debug=False, log=None, mode='mystran')
@@ -175,7 +185,7 @@ class TestParams(unittest.TestCase):
         model.add_card(fields, 'PARAM', comment='param', ifile=None, is_list=True, has_none=True)
 
 
-def add_param_card(model: BDF, key: str, value) -> list:
+def add_param_card(model: BDF, key: str, value) -> None:
     if isinstance(value, tuple):
         card = ['PARAM', key] + list(value)
     elif isinstance(value, (int, float, str)):

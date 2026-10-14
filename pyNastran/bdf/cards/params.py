@@ -3,6 +3,7 @@ defines the following card:
  - PARAM
 """
 # pylint: disable=C0103,R0902,R0904,R0914
+import warnings
 from typing import Any
 import numpy as np
 from pyNastran.bdf import MAX_INT
@@ -185,11 +186,81 @@ PARAMS = (
     ('KGGCPCH', 0, [0, 1]),
     ('KGGLPCH', 0, [0, 1]),
 
-    ('OUGCORD', '', ['', 'GLOBAL', 'BASIC']),
-    ('UNITSYS', '', unit_systems),
+    #-------------------------------------------------
+    # below have been checked vs. NX 2506
+    # not everything has been considered
     # L
+    ('LGDISP', -1, [-1, 0, 1, 2]),
+    ('LGSTRN', 0, [0, 1]),
+    # ('AUTOSPC', 'YES'),  # TODO: default changes based on solution; not considered
+    ('GRDPNT', 0),
+
+    ('MACH', 0.0),
+    # ('MAXRATIO', ),
+    ('MODACC', -1),
+    ('NOCOMPS', 1, [-1, 0, 1]),  # controls if stress/strain are computed for the composite elements, the equivalent homogeneous elements, or both
+    ('NOFISR', 1, [0, 1]),  # controls output of the composite failure indices and strength ratios.
+
+    ('NOGPF', 1, [-1, 1]),  # suppress GPFORCE printing
+    ('OCMP', 'YES', ['YES', 'NO']),  # ?
+    ('OEE', 'YES', ['YES', 'NO']),  # strain energy
+    ('OEF', 'YES', ['YES', 'NO']),  # force
+    ('OEFX', 'YES', ['YES', 'NO']),  # force line elements?
+    ('OEPT', 'YES', ['YES', 'NO']),  # element property table
+    ('OES', 'YES', ['YES', 'NO']),   # stress (mabye strain?)
+    ('OESE', 'YES', ['YES', 'NO']),  # strain energy?
+    ('OESX', 'YES', ['YES', 'NO']),  # s-line elements?
+    ('OGEOM', 'YES', ['YES', 'NO']),
+    ('OIBULK', 'NO', ['YES', 'NO']),
+    ('OP2FMT', 32, [0, 32, 64]),
+    ('OP4FMT', 32, [32, 64]),
+    ('OPG', 'YES', ['YES', 'NO']),
+    ('OPGTKG', -1, [-1, 0, 1]),   # prints interpolation matrix between the structural and aero DOFs (GTKG)
+    ('OPPHIB', -1, [-1, 0, 1]),   # SOL 145/146/200: output real vibration modes in the basic frame (PHIB)
+    ('OPPHIPA', -1, [-1, 0, 1]),  # SOL 145/146/200: output real vibration modes at all DOFs including aero DOFs (PHIPA)
+    ('OPTEXIT', 0, [0, 1, 2, 3, 4, 5, 6, 7, 8]),
+    ('OPTION', 'ABS', ['ABS', 'SRSS', 'NRL', 'NRLO']),
+    ('OQG', 'YES', ['YES', 'NO']),
+    ('OUG', 'YES', ['YES', 'NO']),
+    ('OUGCORD', '', ['', 'GLOBAL', 'BASIC']),  # TODO: docs
+    # ('OUNIT1', 12),  # TODO: default depends on OUNIT2
+    ('OUNIT2', 12),
     # P
-    ('POST', 0, [1, 0, -1, -2], False),
+    # ('PATVER', 3.0, [3.0]),  # TODO: defaults are weird...
+    ('POST', -1, [1, 0, -1, -2, -5], False),  # 1=per NX 2512; -1 default for pyNastran
+    ('POSTHDF5', 1, [0, 1]),
+    ('POSTEXT', 'YES', ['YES', 'NO']),  # write additional datablocks for PARAM,POST,-1/-2
+    ('PRINT', 'NO', ['YES', 'NO']),  # suppress flutter summary printing
+    ('PRGPST', 'NO', ['YES', 'NO']),  # print grid point singularities
+    ('Q', 0.0),
+    # R
+    ('RSPRINT', 0, [-1, 0]),
+    ('RVMASS', 'NO', ['YES', 'NO']),
+    ('RVMTV', 'NO', ['YES', 'NO']),
+    # S
+    ('SECOMB', 'NO', ['YES', 'NO']),
+    ('SEMAP', 'SEMAP', ['SEMAP']),
+    ('SEMAPOPT', 42),
+    ('SEMAPPRT', 3),
+    ('SESDAMP', 'NO', ['YES', 'NO']),
+    ('SFEF70', 'NO', ['YES', 'NO']),
+    ('SHLDAMP', 'SAME', ['SAME', 'DIFF']),
+    ('SIGMA', 0.0),
+    ('SMALLQ', 1e-10),
+    ('SNORM', 20.0),
+    ('SNORMPRT', -1, [-1, 0, 1, 2, 3]),
+    ('SOFTEXIT', 'NO', ['YES', 'NO']),
+    ('SPCGEN', 0),
+    ('SRCOMPS', 'NO', ['YES', 'NO']),  # controls the printing of ply strength ratios
+    # T
+    ('TINY', 1.0e-3),
+    ('TORSIN', 0, [0, 1, 2, 3]),
+    # U
+    ('UNITSYS', '', unit_systems),
+    ('UNITTIME', 'S', ['MS', 'S', 'H']),
+    ('UNSYMF', 'NO', ['YES', 'NO']),  # SOL 106: include damping in complex eigenvalues
+    # ('USETPRT', -1, ),
+    ('WTMASS', 1.0),
 )
 
 def _value_default(value, param,
@@ -203,12 +274,17 @@ def _value_default(value, param,
     nparam = len(param)
     if nparam == 2:
         param_dict[key] = value
-    else:  # 3
+    elif nparam == 3:
         allowed = param[2]
         try:
-            param_dict_allowed[key] = (value, allowed)
+            param_dict_allowed[key] = (value, allowed, True)
         except TypeError:
             raise RuntimeError(f'allowed dict is empty for key={key!r} value={value!r} allowed={allowed}')
+    elif nparam == 4:
+        allowed, required = param[2:]
+        param_dict_allowed[key] = (value, allowed, required)
+    else:  # 3
+        raise IndexError(f'Invalid length; key={key!r}; param={param[1:]}')
 
 string_params = {}
 string_params_allowed = {}
@@ -241,7 +317,7 @@ PARAM_NAMES_DOCUMENTED = set(
     list(float_params) + list(float2_params) +
     list(string_params) + list(string_params_allowed)
 )
-assert len(string_params) == 0, string_params
+# assert len(string_params) == 0, string_params
 del string_params
 # assert len(string_params_allowed) == 0, string_params_allowed
 
@@ -325,8 +401,10 @@ FLOAT_PARAMS = {
 }
 FLOAT2_PARAMS = {'BETA1', 'CA1', 'CA2'}
 
+# STR_WORDS_1.update(set(string_params.keys()))
 STR_WORDS_1.update(set(string_params_allowed.keys()))
 INT_WORDS_1.update(set(int_params.keys()))
+INT_WORDS_1.update(set(int_params_allowed.keys()))
 FLOAT_PARAMS.update(set(float_params.keys()))
 FLOAT2_PARAMS.update(set(float2_params.keys()))
 
@@ -417,11 +495,6 @@ class PARAM(BaseCard):
             #value = string_or_blank(card, 2, 'value', default=0) ## TODO: 0 is not a string
         elif key == 'ADSDISC':
             value = double_or_blank(card, 2, 'value', default=1e-8)
-        elif key == 'AESMAXIT':
-            value = integer_or_blank(card, 2, 'value', default=15)
-        elif key == 'AESMETH':
-            value = string_or_blank(card, 2, 'value', 'SELECT')
-            assert value in ['SELECT', 'AUTO', 'DIRECT', 'RITZ', 'ITER'], 'value=%s' % value
         elif key == 'AESTOL':
             value = double_or_blank(card, 2, 'value', default=1e-10)
         elif key in ['ALPHA1FL', 'ALPHA2FL']:  # check alpha1/alpha1FL
@@ -441,30 +514,35 @@ class PARAM(BaseCard):
             value2 = blank(card, 3, 'blank', default=None)
             if value1 in 'ROE-SCHEME':
                 value1 = 'ROE'
-        elif key == 'POST':
-            value = integer_or_blank(card, 2, 'value', default=1)
-        elif key == 'UNITSYS':
-            value = string_or_blank(card, 2, 'value', default='')
         elif key == 'MDOF':
             # NX  - integer
             # MSC - string
             value = integer_string_or_blank(card, 2, 'value', default=None)
 
         #-------------------------------------------------------------
+        # elif key in string_params:
+        #     value = string(card, 2, 'value')
+
         # strings; has defaults
         elif key in string_params_allowed:
-            default, allowed_values = string_params_allowed[key]
+            default, allowed_values, required = string_params_allowed[key]
             value = string_or_blank(card, 2, 'value', default=default)
-            assert value in allowed_values, f'value={value} allowed={allowed_values}'
+            if required:
+                assert value in allowed_values, f'{key!r} value={value} allowed={allowed_values}'
+            if value not in allowed_values:
+                warnings.warn(f'{key!r} value={value} allowed={allowed_values}')
 
         # ints; has defaults
         elif key in int_params:
-            default=int_params[key]
+            default = int_params[key]
             value = integer_or_blank(card, 2, 'value', default=default)
         elif key in int_params_allowed:
-            default, allowed_values = int_params_allowed[key]
+            default, allowed_values, required = int_params_allowed[key]
             value = integer_or_blank(card, 2, 'value', default=default)
-            assert value in allowed_values, f'value={value} allowed={allowed_values}'
+            if required:
+                assert value in allowed_values, f'{key!r} value={value} allowed={allowed_values}'
+            if value not in allowed_values:
+                warnings.warn(f'{key!r} value={value} allowed={allowed_values}')
 
         # floats; has defaults
         elif key in float_params:
@@ -472,8 +550,9 @@ class PARAM(BaseCard):
             value = double_or_blank(card, 2, 'value', default=default)
         elif key in float2_params:
             defaults = float2_params[key]
-            value = double_or_blank(card, 2, 'value', default=defaults[0])
-            value = double_or_blank(card, 2, 'value', default=defaults[1])
+            value1 = double_or_blank(card, 2, 'value1', default=defaults[0])
+            value2 = double_or_blank(card, 3, 'value2', default=defaults[1])
+            # values = [value1, value2]
             n = 2
 
         # unchecked catch all
@@ -484,9 +563,10 @@ class PARAM(BaseCard):
         elif key in FLOAT_PARAMS:
             value = double(card, 2, 'value')
         elif key in FLOAT2_PARAMS:
+            warnings.warn(f'found FLOAT2 key={key!r}')
             value1 = double(card, 2, 'value1')
             value2 = double(card, 3, 'value2')
-            values = [value1, value2]
+            # values = [value1, value2]
             n = 2
 
         #-------------------------------------------------------------
@@ -501,6 +581,7 @@ class PARAM(BaseCard):
 
         if value is None:
             # n=2 or blank
+            assert n in {1, 2}, f'n={n} is not blank or 2; typo'
             if isinstance(value1, str):
                 assert ' ' not in value1, f'PARAM value1={value1!r}'
             if isinstance(value2, str):
@@ -508,6 +589,7 @@ class PARAM(BaseCard):
             values = [value1, value2]
         else:
             # n=1
+            assert n == 1, card
             if isinstance(value, str):
                 assert ' ' not in value, f'PARAM value={value!r}'
             values = [value]
@@ -541,7 +623,34 @@ class PARAM(BaseCard):
         .. note::  Most PARAM cards only have one value.  Some have two.
 
         """
-        if self.key == 'ACOUT':
+        if self.key in int_params:
+            assert value2 is None, (value1, value2)
+            assert isinstance(value1, integer_types), value1
+        elif self.key in float_params:
+            assert value2 is None, (value1, value2)
+            assert isinstance(value1, float_types), value1
+        elif self.key in float2_params:
+            assert value1 is not None, (value1, value2)
+            assert value2 is not None, (value1, value2)
+            assert isinstance(value1, float_types), value1
+            assert isinstance(value2, float_types), value2
+
+        # elif self.key in string_params:
+        #     assert value2 is None, (value1, value2)
+        #     assert isinstance(value1, str), value1
+        elif self.key in string_params_allowed:
+            assert value2 is None, (value1, value2)
+            default, allowed_values, required = string_params_allowed[self.key]
+            if value1 is None:
+                value1 = default
+            else:
+                assert isinstance(value1, str), value1
+            if required:
+                assert value1 in allowed_values, f'value={value1} allowed={allowed_values}'
+            if value1 not in allowed_values:
+                warnings.warn(f'value={value1} allowed={allowed_values}')
+
+        elif self.key == 'ACOUT':
             if value1 is None:
                 value1 = 'PEAK'
             if not isinstance(value1, str):
@@ -555,12 +664,12 @@ class PARAM(BaseCard):
                 msg = f'key={self.key} value1={value1!r} must be a string.'
                 raise TypeError(msg)
 
-        elif self.key == 'ACSYM':
-            if value1 is None:
-                value1 = 'YES'
-            if not isinstance(value1, str):
-                msg = f'key={self.key} value1={value1!r} must be a string.'
-                raise TypeError(msg)
+        # elif self.key == 'ACSYM':
+        #     if value1 is None:
+        #         value1 = 'YES'
+        #     if not isinstance(value1, str):
+        #         msg = f'key={self.key} value1={value1!r} must be a string.'
+        #         raise TypeError(msg)
 
         elif self.key == 'ADJMETH':
             if value1 is None:
@@ -1192,11 +1301,11 @@ class PARAM_MYSTRAN(BaseCard):
             # ['PARAM', 'MEFMLOC', 'CG']
             values = [string_or_blank(card, 2, 'enabled', 'GRDPNT')]
             assert values[0] in ['GRDPNT', 'CG', 'GRID'], values
-        elif key == 'POST':
-            #['PARAM', 'POST', '-1']
-            values = [
-                integer_or_blank(card, 2, 'POST', -1),
-            ]
+        # elif key == 'POST':
+        #     #['PARAM', 'POST', '-1']
+        #     values = [
+        #         integer_or_blank(card, 2, 'POST', -1),
+        #     ]
         elif key == 'RCONDK':
             #['PARAM', 'RCONDK', 'Y']
             values = [

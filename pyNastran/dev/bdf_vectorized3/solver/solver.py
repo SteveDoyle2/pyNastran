@@ -1574,7 +1574,7 @@ class Solver:
             assert np.allclose(Kff2, Kff.toarray())
 
             osetmap = get_omit_set(model)
-            print(f'osetmap = {osetmap}')
+            # print(f'osetmap = {osetmap}')
 
             Maa, Kaa, Pa, Goa, ua, uo0, aset_bool, aset_idx = dynamic_fset_to_aset(
                 model,
