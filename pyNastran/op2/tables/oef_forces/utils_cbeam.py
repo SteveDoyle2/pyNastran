@@ -75,11 +75,6 @@ def oef_cbeam(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
 
     factor = op2.factor
     if result_type in [0, 2] and op2.num_wide == 100:  # real/random
-        if op2.sort_method == 2:
-            if op2.read_mode == 2:
-                msg = op2.code_information()
-                ndata = op2._not_implemented_or_skip(data, ndata, msg)
-            return ndata, None, None
         # real - format_code == 1
         # random - format_code == 2
         # result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
@@ -88,7 +83,9 @@ def oef_cbeam(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
         auto_return, is_vectorized = op2._create_oes_object4(
             nelements, result_name, slot, RealCBeamForceArray)
         if auto_return:
-            op2._data_factor = 11
+            # SORT1: 1 record = nelements*11 stations
+            # SORT2: 1 record = 1 element at nfreq/ntimes; sized in build()
+            op2._data_factor = 11 if op2.sort_method == 1 else 1
             return nelements * ntotal, None, None
         obj = op2.obj
 
@@ -196,17 +193,21 @@ def oef_cbeam(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
 
 def oef_cbeam_real_100(op2: OP2, data: bytes, obj: RealCBeamForceArray,
                        nelements: int, ntotal: int, dt: Any) -> int:
+    """
+    SORT1: [eid_device, (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)*11]
+    SORT2: [dt,         (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)*11]
+      where the eid comes from table 3 (nonlinear_factor) and dt is
+      the time/freq (e.g., OEFPSD2/OEFATO2/OEFCRM2)
+    """
     n = 0
     ntotal1 = 4 * op2.factor
     ntotal2 = 36 * op2.factor
-    if op2.size == 4:
-        s1 = op2.struct_i
-        s2 = Struct(op2._endian + b'i8f')  # 36
-    else:
-        s1 = op2.struct_q
-        s2 = Struct(op2._endian + b'q8d')  # 36
-
     sort_method = op2.sort_method
+    # the 1st word is eid_device (int) for SORT1 and dt (int/float) for SORT2
+    s1 = Struct(mapfmt(op2._endian + op2._analysis_code_fmt, op2.size)
+                if sort_method == 2 else
+                mapfmt(op2._endian + b'i', op2.size))
+    s2 = Struct(mapfmt(op2._endian + b'i8f', op2.size))  # 36
     add_sort_x = getattr(obj, 'add_sort' + str(sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+ntotal1]
@@ -222,7 +223,9 @@ def oef_cbeam_real_100(op2: OP2, data: bytes, obj: RealCBeamForceArray,
                 op2.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
             (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
 
-            if istation == 0 or sd > 0:
+            # SORT2 indexes by station, so keep every station;
+            # finalize() removes the unused ones
+            if sort_method == 2 or istation == 0 or sd > 0:
                 add_sort_x(dt, eid, nid, sd, bm1, bm2, ts1, ts2,
                            af, ttrq, wtrq)
             n += ntotal2

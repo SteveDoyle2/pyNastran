@@ -232,6 +232,7 @@ PARAMS = (
     ('POSTEXT', 'YES', ['YES', 'NO']),  # write additional datablocks for PARAM,POST,-1/-2
     ('PRINT', 'NO', ['YES', 'NO']),  # suppress flutter summary printing
     ('PRGPST', 'NO', ['YES', 'NO']),  # print grid point singularities
+    ('RSATT', 'NO', ['YES', 'NO']),
     ('Q', 0.0),
     # R
     ('RSPRINT', 0, [-1, 0]),

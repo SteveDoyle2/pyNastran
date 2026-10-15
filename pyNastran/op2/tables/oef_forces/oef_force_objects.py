@@ -1606,6 +1606,9 @@ class RealCBeamForceArray(RealForceObject):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(
             self.nonlinear_factor, self.size, self.analysis_fmt)
+        if self.is_sort2:
+            self._build_sort2(nnodes, idtype, fdtype)
+            return
         ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=False)
         self._times = np.zeros(ntimes, dtype)
         self.element = np.zeros(ntotal, idtype)
@@ -1621,6 +1624,38 @@ class RealCBeamForceArray(RealForceObject):
                 raise RuntimeError(msg)
             else:
                 warnings.warn(msg)
+        #[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
+        self.data = np.full((ntimes, ntotal, 8), np.nan, fdtype)
+
+    def _build_sort2(self, nnodes: int, idtype: str, fdtype: str) -> None:
+        """
+        SORT2 (e.g., OEFPSD2/OEFATO2/OEFCRM2) has 1 table3/table4 pair
+        per element and each table4 row is a time/frequency, so after
+        the sizing pass:
+          - ntimes    = number of elements (one per table3)
+          - ntotal    = number of times/frequencies (rows per record)
+          - nelements = ntimes (after the //= ntimes)
+
+        We store it as SORT1 (ntimes, nelements*11, 8) like the other
+        SORT2 arrays, so finalize() can drop the unused stations.
+        """
+        nelements = self.ntimes
+        ntimes = self.ntotal
+        ntotal = nelements * nnodes
+        self.ntimes = ntimes
+        self.nelements = nelements
+        self.ntotal = ntotal
+
+        # the nonlinear_factor is the element id for SORT2, so
+        # flip the time/freq name back to the SORT1 form
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
+        name = self.analysis_method + 's'
+        setattr(self, name, self._times)
+        self.data_code['name'] = self.analysis_method
+        self.data_names[0] = self.analysis_method
+
+        self.element = np.zeros(ntotal, idtype)
+        self.element_node = np.zeros((ntotal, 2), idtype)
         #[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
         self.data = np.full((ntimes, ntotal, 8), np.nan, fdtype)
 
@@ -1942,6 +1977,27 @@ class RealCBeamForceArray(RealForceObject):
         self.data[self.itime, self.itotal, :] = [sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
         self.element[self.itotal] = eid
         self.element_node[self.itotal, :] = [eid, nid]
+        self.itotal += 1
+
+    def add_sort2(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+        """
+        unvectorized method for adding SORT2 data
+
+        SORT2 has 1 record per element (self.itime is the element
+        counter) with 11 stations for every time/frequency
+        (self.itotal counts the stations within the record).  All 11
+        stations must be passed; finalize() drops the unused ones.
+        """
+        assert self.is_sort2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        nnodes = 11
+        ielement = self.itime
+        itime, istation = divmod(self.itotal, nnodes)
+        jelement = ielement * nnodes + istation
+        self._times[itime] = dt
+        self.data[itime, jelement, :] = [sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
+        self.element[jelement] = eid
+        self.element_node[jelement, :] = [eid, nid]
         self.itotal += 1
 
     def get_stats(self, short: bool=False) -> list[str]:

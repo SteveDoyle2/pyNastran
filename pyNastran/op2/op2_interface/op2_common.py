@@ -1671,6 +1671,7 @@ class OP2Common(Op2Codes, F06Writer):
                 self.table_name, self.table_code, msg, self.code_information())
             raise NotImplementedError(msg)
 
+        raise NotImplementedError(self.code_information())
         if self.warn_on_op2_missed_table:
             if msg != self._last_comment:
                 #print(self.code_information())
