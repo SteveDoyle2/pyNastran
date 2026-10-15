@@ -346,6 +346,7 @@ class TestOpt(unittest.TestCase):
                 #print(dresp)
                 #dresp.calculate(op2, subcase_id)
         os.remove('temp.debug')
+        os.remove(op2_filename_out)
 
     def test_opt_2(self):
         """tests updating model based on DESVARs"""

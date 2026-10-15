@@ -197,7 +197,6 @@ class OP2Reader:
             #MSC
             #msc / units_mass_spring_damper
             b'UNITS': (self._read_units, 'units'),
-            #b'CPHSF': self._read_cphsf,
 
             # element matrices
             #b'KELM': self._read_element_matrix,

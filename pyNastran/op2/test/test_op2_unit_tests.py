@@ -70,6 +70,27 @@ OP2_TEST = PKG_PATH / 'op2' / 'test'
 
 class TestOP2Unit(Tester):
     """various OP2 tests"""
+    def test_params_flag3_double(self):
+        """
+        PVT0 flag=3 is 8 bytes: text or a double.  Numeric flag=3 values
+        must be read as a double, not the top 4 bytes as a float.
+
+        deck: PARAM,K6ROT,100. / PARAM,MAXRATIO,1.+7 / PARAM,WTMASS,.002588
+              PARAM,UNITSYS,LBF-IN
+        """
+        log = get_logger(level='error')
+        op2_filename = MODEL_PATH / 'bugs' / 'flat_plate_pcomp_test' / 'flat_plate_tip_loads_mixed_2cases.op2'
+        model = OP2(log=log)
+        model.IS_TESTING = True
+        model.read_op2(op2_filename, build_dataframe=False)
+        params = model.params
+        assert params['K6ROT'].values == [100.0], params['K6ROT']
+        assert params['MAXRATIO'].values == [1.0e7], params['MAXRATIO']
+        assert np.allclose(params['WTMASS'].values, [0.002588], rtol=0., atol=1e-15), params['WTMASS']
+        assert params['UNITSYS'].values == ['LBF-IN'], params['UNITSYS']
+        assert params['GRDPNT'].values == [0], params['GRDPNT']
+        assert params['POST'].values == [-2], params['POST']
+
     def test_stress_transform_2d(self):
         is_stress = True
         oxx = -10.
@@ -1560,16 +1581,24 @@ class TestMSC(Tester):
         # save_load_deck(model, run_save_load=False)
 
         log = get_logger(level='warning')
-        with self.assertRaises(NotImplementedError):
-            run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
-                    write_f06=True, write_op2=False,
-                    is_mag_phase=False,
-                    is_sort2=False, is_nx=None, delete_f06=True,
-                    subcases=None, exclude_results=None, short_stats=False,
-                    compare=False, debug=False, binary_debug=True,
-                    quiet=True,
-                    stop_on_failure=True, dev=False,
-                    build_pandas=True, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=False, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False,
+            build_pandas=True, log=log)
+
+        # CPHSF: 1x2 complex double (tout=4) matrix
+        cphsf = op2.matrices['CPHSF'].data.toarray()
+        assert cphsf.shape == (1, 2), cphsf.shape
+        assert cphsf.dtype == np.complex128, cphsf.dtype
+        expected = np.array([[0.034635167996216576-0.03878865282190708j,
+                              0.004334146986123152-0.0046695190746185505j]])
+        assert np.array_equal(cphsf, expected), cphsf
 
     def test_msc_2021_cbush_rbe3(self):
         """

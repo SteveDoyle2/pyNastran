@@ -693,6 +693,9 @@ class TableArray(ScalarObject):  # displacement style table
         #asdf
         #del self.itotal, self.itime
 
+    def update_data_components(self):
+        return
+
     def set_as_sort1(self):
         """changes the table into SORT1"""
         #print(self.class_name, self._times.dtype)
@@ -1169,9 +1172,6 @@ class RealTableArray(TableArray):
         combination_inplace(self.data, data, factor)
         # if update:
         #     self.update_data_components()
-
-    def update_data_components(self):
-        return
 
     def _check_math(self, table: RealTableArray) -> None:
         """verifies that the shapes are the same"""

@@ -1686,6 +1686,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             flag_data = data[(i+2)*xword:(i+3)*xword]
             flag = structi.unpack(flag_data)[0]
 
+            # -----------------------------
             # =1
             # 4 INT     I* =2
             # 4 REAL    RS* =3
@@ -1706,19 +1707,21 @@ class OP2_Scalar(OP2Common, FortranFormat):
             # =5 4 CMPLXS  CS*
             # =6 4 CMPLXD  CD
             # =7 4 LOGICAL LOGIC*
+            # -----------------------------
+
+            # Each entry is: name (2 words), flag (1 word), value
+            #   flag=1 int        1 word   -> 4 words total
+            #   flag=2 float      1 word   -> 4 words total
+            #   flag=3 8 bytes    2 words  -> 5 words total
+            #          either text ('YES     ', 'MN-MM   ') or a double
+            #          (e.g., K6ROT=100., WTMASS=.002588); the flag doesn't
+            #          say which, so we check if the bytes look like text
+            #   flag=5 2 floats   2 words  -> 5 words total (e.g., G123)
+            #   flag=7 logical    1 word   -> 4 words total
 
             if debug_param:  # pragma: no cover
                 print(f'word={word!r} flag={flag}')
-            #word = s8.unpack(word)[0]#.decode(self._encoding)
 
-            #if flag == 1:
-                #flag_str = 'int'
-            #elif flag == 2:
-                #flag_str = 'float'
-            #elif flag == 3:
-                #flag_str = 'str'
-
-            # the first two entries are typically trash, then we can get values
             if flag == 1:  # int
                 #self.show_data(data[i*xword:(i+4)*xword], types='isq', endian=None, force=False)
                 assert self.size in [4, 8], (key, self.size, flag)
@@ -1737,10 +1740,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
                 #assert word in FLOAT_PARAMS_1, f'word={word}'
                 i += 4
 
-            elif flag == 3:  # float / string
+            elif flag == 3:  # 8 bytes: string or double
                 assert self.size in [4, 8], (key, self.size, flag)
-                #slot = data[(i+3)*xword:(i+4)*xword]
-                #i += 4
                 slot = data[(i+3)*xword:(i+5)*xword]
                 try:
                     bvalue, = structs8.unpack(slot)
@@ -1763,7 +1764,14 @@ class OP2_Scalar(OP2Common, FortranFormat):
                         else:
                             assert value.isalnum(), f'{key} = {value!r}'
                 except AssertionError:
-                    value, = structf.unpack(slot[4:])
+                    # not text, so it's a double (all 8 bytes);
+                    # e.g., PARAM,K6ROT,100. -> 00 00 00 00 00 00 59 40
+                    if self.size != 4:
+                        # no 64-bit examples of this yet
+                        raise NotImplementedError(
+                            f'PARAM {key} flag=3 numeric value for size={self.size}; '
+                            f'slot={slot!r}')
+                    value, = Struct(self._endian + b'd').unpack(slot)
                 values = [value]
 
                 if isinstance(value, str):
@@ -2118,6 +2126,15 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         op2_reader = self.op2_reader
         self.table_count = defaultdict(int)
+        #if table_name.startswith(b'PVT'):
+        #     self.log.warning(f'{table_name} tell={self.n}')
+        #     ia = self.n
+        #else:
+        #    self.log.warning(f'{table_name} tell={self.n}')
+        #    bbb
+        #
+        #     op2_reader.show(700-12, types='ifs')
+        #     asdf
         while table_name is not None:
             self.table_count[table_name] += 1
             table_names.append(table_name)
@@ -2203,6 +2220,17 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             table_name = op2_reader._read_table_name(last_table_name=table_name,
                                                      rewind=True, stop_on_failure=False)
+            #
+            # if table_name is not None and table_name.startswith(b'PVT'):
+            #      self.log.warning(f'{table_name} tell={self.n}')
+            #      ia = self.n
+            # else:
+            #     self.log.warning(f'{table_name} tell={self.n}')
+            #     ib = self.n
+                # ndata = ib - ia
+                # op2_reader._goto(ia)
+                # self.show(ndata)
+                # eee
 
     def set_additional_generalized_tables_to_read(self, tables: dict[bytes, Callable]) -> None:
         """

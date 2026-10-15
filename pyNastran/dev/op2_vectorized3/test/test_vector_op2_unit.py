@@ -3432,10 +3432,11 @@ class TestOP2(unittest.TestCase):
         assert len(model.spcadd) == 2, model.spcadd
         assert len(model.mpcadd) == 2, model.mpcadd
 
-def _verify_ids(bdf: BDF, op2: OP2, isubcase: int=1) -> None:
+def _verify_ids(model: BDF, op2: OP2, isubcase: int=1) -> None:
     """helper function for tests"""
     #types = ['CQUAD4', 'CTRIA3', 'CHEXA', 'CPENTA', 'CTETRA', 'CROD', 'CONROD', 'CTUBE']
-    #out = bdf.get_card_ids_by_card_types(types)
+    out = {}
+    #out = model.get_card_ids_by_card_types(types)
 
     stress = op2.op2_results.stress
     strain = op2.op2_results.strain
